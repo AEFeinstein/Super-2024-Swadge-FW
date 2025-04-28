@@ -541,7 +541,7 @@ void pl_destroyEntity(plEntity_t* self, bool respawn)
 
 void animatePlayer(plEntity_t* self)
 {
-    if (self->spriteIndex == SP_PLAYER_WIN || self->spriteIndex == SP_PLAYER_HURT)
+    if (self->spriteIndex == PL_SP_PLAYER_WIN || self->spriteIndex == PL_SP_PLAYER_HURT)
     {
         // Win pose has been set; don't change it!
         return;
@@ -549,7 +549,7 @@ void animatePlayer(plEntity_t* self)
 
     if (!self->gravityEnabled)
     {
-        self->spriteIndex = SP_PLAYER_CLIMB;
+        self->spriteIndex = PL_SP_PLAYER_CLIMB;
         if (self->yspeed < 0 && self->gameData->frameCount % 10 == 0)
         {
             self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
@@ -560,12 +560,12 @@ void animatePlayer(plEntity_t* self)
         if (self->yspeed < 0)
         {
             // Jumping
-            self->spriteIndex = SP_PLAYER_JUMP;
+            self->spriteIndex = PL_SP_PLAYER_JUMP;
         }
         else
         {
             // Falling
-            self->spriteIndex = SP_PLAYER_WALK1;
+            self->spriteIndex = PL_SP_PLAYER_WALK1;
         }
     }
     else if (self->xspeed != 0)
@@ -583,13 +583,13 @@ void animatePlayer(plEntity_t* self)
         }
         else
         {
-            self->spriteIndex = SP_PLAYER_SLIDE;
+            self->spriteIndex = PL_SP_PLAYER_SLIDE;
         }
     }
     else
     {
         // Standing
-        self->spriteIndex = SP_PLAYER_IDLE;
+        self->spriteIndex = PL_SP_PLAYER_IDLE;
     }
 }
 
@@ -649,7 +649,7 @@ void pl_playerCollisionHandler(plEntity_t* self, plEntity_t* other)
                     self->type                  = ENTITY_DEAD;
                     self->xspeed                = 0;
                     self->yspeed                = -60;
-                    self->spriteIndex           = SP_PLAYER_HURT;
+                    self->spriteIndex           = PL_SP_PLAYER_HURT;
                     self->gameData->changeState = PL_ST_DEAD;
                     self->gravityEnabled        = true;
                     self->falling               = true;
@@ -794,7 +794,7 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
                 hitBlock->jumpPower = tileId;
                 if (tileId == PL_TILEBRICK_BLOCK)
                 {
-                    hitBlock->spriteIndex = SP_HITBLOCK_BRICKS;
+                    hitBlock->spriteIndex = PL_SP_HITBLOCK_BRICKS;
                     if (abs(self->xspeed) > 51 && self->yspeed <= 0)
                     {
                         hitBlock->yDamping = 1;
@@ -855,7 +855,7 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
                 pl_scorePoints(self->gameData, 100);
                 soundStop(true);
                 soundPlaySfx(&(self->soundManager->sndLevelClearD), BZR_LEFT);
-                self->spriteIndex           = SP_PLAYER_WIN;
+                self->spriteIndex           = PL_SP_PLAYER_WIN;
                 self->updateFunction        = &pl_updateDummy;
                 self->gameData->changeState = PL_ST_LEVEL_CLEAR;
             }
@@ -868,7 +868,7 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
                 pl_scorePoints(self->gameData, 500);
                 soundStop(true);
                 soundPlaySfx(&(self->soundManager->sndLevelClearC), BZR_LEFT);
-                self->spriteIndex           = SP_PLAYER_WIN;
+                self->spriteIndex           = PL_SP_PLAYER_WIN;
                 self->updateFunction        = &pl_updateDummy;
                 self->gameData->changeState = PL_ST_LEVEL_CLEAR;
             }
@@ -881,7 +881,7 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
                 pl_scorePoints(self->gameData, 1000);
                 soundStop(true);
                 soundPlaySfx(&(self->soundManager->sndLevelClearB), BZR_LEFT);
-                self->spriteIndex           = SP_PLAYER_WIN;
+                self->spriteIndex           = PL_SP_PLAYER_WIN;
                 self->updateFunction        = &pl_updateDummy;
                 self->gameData->changeState = PL_ST_LEVEL_CLEAR;
             }
@@ -894,7 +894,7 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
                 pl_scorePoints(self->gameData, 2000);
                 soundStop(true);
                 soundPlaySfx(&(self->soundManager->sndLevelClearA), BZR_LEFT);
-                self->spriteIndex           = SP_PLAYER_WIN;
+                self->spriteIndex           = PL_SP_PLAYER_WIN;
                 self->updateFunction        = &pl_updateDummy;
                 self->gameData->changeState = PL_ST_LEVEL_CLEAR;
             }
@@ -907,7 +907,7 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
                 pl_scorePoints(self->gameData, 5000);
                 soundStop(true);
                 soundPlaySfx(&(self->soundManager->sndLevelClearS), BZR_LEFT);
-                self->spriteIndex           = SP_PLAYER_WIN;
+                self->spriteIndex           = PL_SP_PLAYER_WIN;
                 self->updateFunction        = &pl_updateDummy;
                 self->gameData->changeState = PL_ST_LEVEL_CLEAR;
             }
@@ -1107,7 +1107,7 @@ void updatePowerUp(plEntity_t* self)
     if (self->gameData->frameCount % 10 == 0)
     {
         self->spriteIndex
-            = ((self->entityManager->playerEntity->hp < 2) ? SP_GAMING_1 : SP_MUSIC_1) + ((self->spriteIndex + 1) % 3);
+            = ((self->entityManager->playerEntity->hp < 2) ? PL_SP_GAMING_1 : PL_SP_MUSIC_1) + ((self->spriteIndex + 1) % 3);
     }
 
     pl_moveEntityWithTileCollisions(self);
@@ -1119,7 +1119,7 @@ void update1up(plEntity_t* self)
 {
     if (self->gameData->frameCount % 10 == 0)
     {
-        self->spriteIndex = SP_1UP_1 + ((self->spriteIndex + 1) % 3);
+        self->spriteIndex = PL_SP_1UP_1 + ((self->spriteIndex + 1) % 3);
     }
 
     pl_moveEntityWithTileCollisions(self);
@@ -1131,7 +1131,7 @@ void updateWarp(plEntity_t* self)
 {
     if (self->gameData->frameCount % 10 == 0)
     {
-        self->spriteIndex = SP_WARP_1 + ((self->spriteIndex + 1) % 3);
+        self->spriteIndex = PL_SP_WARP_1 + ((self->spriteIndex + 1) % 3);
     }
 
     // Destroy self and respawn warp container block when offscreen
@@ -1166,7 +1166,7 @@ void updateDustBunny(plEntity_t* self)
                     self->falling              = true;
                     self->xDamping             = 1;
                     self->yDamping             = (1 + esp_random() % 3) * 9;
-                    self->spriteIndex          = SP_DUSTBUNNY_JUMP;
+                    self->spriteIndex          = PL_SP_DUSTBUNNY_JUMP;
                     self->spriteFlipHorizontal = directionToPlayer;
                     break;
                 }
@@ -1174,7 +1174,7 @@ void updateDustBunny(plEntity_t* self)
                 {
                     self->xDamping             = 0;
                     self->yDamping             = 30;
-                    self->spriteIndex          = SP_DUSTBUNNY_CHARGE;
+                    self->spriteIndex          = PL_SP_DUSTBUNNY_CHARGE;
                     self->spriteFlipHorizontal = directionToPlayer;
                     break;
                 }
@@ -1206,14 +1206,14 @@ void updateDustBunnyL2(plEntity_t* self)
                     self->yspeed      = (int32_t)(1 + esp_random() % 4) * -24;
                     self->xDamping    = 1;
                     self->yDamping    = (esp_random() % 3) * 6;
-                    self->spriteIndex = SP_DUSTBUNNY_L2_JUMP;
+                    self->spriteIndex = PL_SP_DUSTBUNNY_L2_JUMP;
                     break;
                 }
                 case 1:
                 {
                     self->xDamping    = 0;
                     self->yDamping    = 15;
-                    self->spriteIndex = SP_DUSTBUNNY_L2_CHARGE;
+                    self->spriteIndex = PL_SP_DUSTBUNNY_L2_CHARGE;
                     break;
                 }
                 default:
@@ -1246,7 +1246,7 @@ void updateDustBunnyL3(plEntity_t* self)
                     self->yspeed               = (int32_t)(1 + esp_random() % 4) * -24;
                     self->xDamping             = 1;
                     self->yDamping             = (esp_random() % 3) * 30;
-                    self->spriteIndex          = SP_DUSTBUNNY_L3_JUMP;
+                    self->spriteIndex          = PL_SP_DUSTBUNNY_L3_JUMP;
                     self->spriteFlipHorizontal = directionToPlayer;
                     break;
                 }
@@ -1254,7 +1254,7 @@ void updateDustBunnyL3(plEntity_t* self)
                 {
                     self->xDamping             = 0;
                     self->yDamping             = 30;
-                    self->spriteIndex          = SP_DUSTBUNNY_L3_CHARGE;
+                    self->spriteIndex          = PL_SP_DUSTBUNNY_L3_CHARGE;
                     self->spriteFlipHorizontal = directionToPlayer;
                     break;
                 }
@@ -1340,7 +1340,7 @@ bool dustBunnyTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
                 self->falling     = false;
                 self->yspeed      = 0;
                 self->xspeed      = 0;
-                self->spriteIndex = SP_DUSTBUNNY_IDLE;
+                self->spriteIndex = PL_SP_DUSTBUNNY_IDLE;
                 break;
             default: // Should never hit
                 return false;
@@ -1423,7 +1423,7 @@ bool dustBunnyL2TileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t t
                 self->falling     = false;
                 self->yspeed      = 0;
                 self->xspeed      = 0;
-                self->spriteIndex = SP_DUSTBUNNY_L2_IDLE;
+                self->spriteIndex = PL_SP_DUSTBUNNY_L2_IDLE;
                 break;
             default: // Should never hit
                 return false;
@@ -1504,7 +1504,7 @@ bool dustBunnyL3TileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t t
                 self->falling     = false;
                 self->yspeed      = 0;
                 self->xspeed      = 0;
-                self->spriteIndex = SP_DUSTBUNNY_L3_IDLE;
+                self->spriteIndex = PL_SP_DUSTBUNNY_L3_IDLE;
                 break;
             default: // Should never hit
                 return false;
@@ -1523,7 +1523,7 @@ void updateWasp(plEntity_t* self)
         case 0:
             if (self->gameData->frameCount % 5 == 0)
             {
-                self->spriteIndex = SP_WASP_1 + ((self->spriteIndex + 1) % 2);
+                self->spriteIndex = PL_SP_WASP_1 + ((self->spriteIndex + 1) % 2);
             }
             self->yDamping--;
 
@@ -1533,7 +1533,7 @@ void updateWasp(plEntity_t* self)
                 self->xDamping       = 1;
                 self->gravityEnabled = true;
                 self->falling        = true;
-                self->spriteIndex    = SP_WASP_DIVE;
+                self->spriteIndex    = PL_SP_WASP_DIVE;
                 self->xspeed         = 0;
                 self->yspeed         = 64;
             }
@@ -1555,7 +1555,7 @@ void updateWasp(plEntity_t* self)
         case 2:
             if (self->gameData->frameCount % 2 == 0)
             {
-                self->spriteIndex = SP_WASP_1 + ((self->spriteIndex + 1) % 2);
+                self->spriteIndex = PL_SP_WASP_1 + ((self->spriteIndex + 1) % 2);
             }
 
             self->yDamping--;
@@ -1583,7 +1583,7 @@ void updateWaspL2(plEntity_t* self)
         case 0:
             if (self->gameData->frameCount % 5 == 0)
             {
-                self->spriteIndex = SP_WASP_L2_1 + ((self->spriteIndex) % 2);
+                self->spriteIndex = PL_SP_WASP_L2_1 + ((self->spriteIndex) % 2);
             }
 
             self->yDamping--;
@@ -1600,7 +1600,7 @@ void updateWaspL2(plEntity_t* self)
                 self->xDamping       = 1;
                 self->gravityEnabled = true;
                 self->falling        = true;
-                self->spriteIndex    = SP_WASP_L2_DIVE;
+                self->spriteIndex    = PL_SP_WASP_L2_DIVE;
                 self->xspeed         = 0;
                 self->yspeed         = 96;
             }
@@ -1623,7 +1623,7 @@ void updateWaspL2(plEntity_t* self)
         case 2:
             if (self->gameData->frameCount % 2 == 0)
             {
-                self->spriteIndex = SP_WASP_L2_1 + ((self->spriteIndex) % 2);
+                self->spriteIndex = PL_SP_WASP_L2_1 + ((self->spriteIndex) % 2);
             }
 
             self->yDamping--;
@@ -1652,7 +1652,7 @@ void updateWaspL3(plEntity_t* self)
         case 0:
             if (self->gameData->frameCount % 5 == 0)
             {
-                self->spriteIndex = SP_WASP_L3_1 + ((self->spriteIndex + 1) % 2);
+                self->spriteIndex = PL_SP_WASP_L3_1 + ((self->spriteIndex + 1) % 2);
             }
 
             self->yDamping--;
@@ -1669,7 +1669,7 @@ void updateWaspL3(plEntity_t* self)
                 self->xDamping       = 1;
                 self->gravityEnabled = true;
                 self->falling        = true;
-                self->spriteIndex    = SP_WASP_L3_DIVE;
+                self->spriteIndex    = PL_SP_WASP_L3_DIVE;
                 self->xspeed         = 0;
                 self->yspeed         = 128;
             }
@@ -1692,7 +1692,7 @@ void updateWaspL3(plEntity_t* self)
         case 2:
             if (self->gameData->frameCount % 2 == 0)
             {
-                self->spriteIndex = SP_WASP_L3_1 + ((self->spriteIndex + 1) % 2);
+                self->spriteIndex = PL_SP_WASP_L3_1 + ((self->spriteIndex + 1) % 2);
             }
 
             self->yDamping--;
@@ -1998,7 +1998,7 @@ void killPlayer(plEntity_t* self)
     self->type                  = ENTITY_DEAD;
     self->xspeed                = 0;
     self->yspeed                = -60;
-    self->spriteIndex           = SP_PLAYER_HURT;
+    self->spriteIndex           = PL_SP_PLAYER_HURT;
     self->gameData->changeState = PL_ST_DEAD;
     self->falling               = true;
 }
