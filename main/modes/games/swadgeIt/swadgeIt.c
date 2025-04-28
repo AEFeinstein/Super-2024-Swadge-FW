@@ -648,15 +648,15 @@ static void swadgeItInput(swadgeItEvt_t evt)
         // Remove first element
         shift(&si->inputQueue);
 
-        // Set LEDs for new event
-        swadgeItUpdateDisplay();
-
         // If the queue is empty
         if (0 == si->inputQueue.length)
         {
             // Increment the score
             si->score++;
         }
+
+        // Set LEDs for new event
+        swadgeItUpdateDisplay();
     }
     else if ((SI_REACTION == si->screen) || (SI_MEMORY == si->screen))
     {
@@ -695,6 +695,7 @@ static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt)
             // TODO hysteresis?
             if (si->micFrameEnergy > 500)
             {
+                // TODO this is triggering immediately, even when quiet?
                 swadgeItInput(EVT_YELL_IT);
             }
         }
