@@ -23,6 +23,7 @@ typedef enum
     SI_REACTION,
     SI_MEMORY,
     SI_HIGH_SCORES,
+    SI_GAME_OVER,
 } swadgeItScreen_t;
 
 typedef enum
@@ -87,6 +88,12 @@ typedef struct
     int32_t micFrameEnergy;
 
     touchSpinState_t touchSpinState;
+
+    int32_t memoryHighScore;
+    int32_t reactionHighScore;
+
+    int32_t gameOverTimer;
+    bool newHighScore;
 } swadgeIt_t;
 
 //==============================================================================
@@ -116,6 +123,9 @@ static const char swadgeItStrReaction[]   = "Reaction";
 static const char swadgeItStrMemory[]     = "Memory";
 static const char swadgeItStrHighScores[] = "High Scores";
 static const char swadgeItStrExit[]       = "Exit";
+
+static const char SI_REACTION_HS_KEY[] = "si_r_hs";
+static const char SI_MEMORY_HS_KEY[]   = "si_m_hs";
 
 /** Must match order of swadgeItEvt_t */
 const swadgeItEvtData_t siEvtData[] = {
@@ -228,6 +238,18 @@ static void swadgeItEnterMode(void)
     clear(&si->inputQueue);
     clear(&si->memoryQueue);
     clear(&si->speechQueue);
+
+    // Read high scores from NVS
+    if (!readNvs32(SI_REACTION_HS_KEY, &si->reactionHighScore))
+    {
+        writeNvs32(SI_REACTION_HS_KEY, 0);
+        si->reactionHighScore = 0;
+    }
+    if (!readNvs32(SI_MEMORY_HS_KEY, &si->memoryHighScore))
+    {
+        writeNvs32(SI_MEMORY_HS_KEY, 0);
+        si->memoryHighScore = 0;
+    }
 }
 
 /**
@@ -345,6 +367,16 @@ static void swadgeItMainLoop(int64_t elapsedUs)
                 if (evt.down)
                 {
                     si->screen = SI_MENU;
+                }
+                break;
+            }
+            case SI_GAME_OVER:
+            {
+                if (si->gameOverTimer <= 0 && evt.down)
+                {
+                    si->screen       = SI_MENU;
+                    si->score        = 0;
+                    si->newHighScore = false;
                 }
                 break;
             }
@@ -471,6 +503,31 @@ static void swadgeItMainLoop(int64_t elapsedUs)
             // TODO high score rendering
             break;
         }
+        case SI_GAME_OVER:
+        {
+            // Run timer to not exit high score too early
+            if (si->gameOverTimer > 0)
+            {
+                si->gameOverTimer -= elapsedUs;
+            }
+
+            // Draw round score
+            font_t* font = si->menuRenderer->menuFont;
+            char gameOverStr[64];
+            snprintf(gameOverStr, sizeof(gameOverStr) - 1, "Game Over: %d", si->score);
+            int16_t tWidth = textWidth(font, gameOverStr);
+            drawText(font, c555, gameOverStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - font->height) / 2);
+
+            // Draw extra if it's a new high score
+            if (si->newHighScore)
+            {
+                const char newHighScoreStr[] = "New High Score!";
+                tWidth                       = textWidth(font, newHighScoreStr);
+                drawText(font, c555, newHighScoreStr, (TFT_WIDTH - tWidth) / 2,
+                         ((TFT_HEIGHT - font->height) / 2) + 2 + font->height);
+            }
+            break;
+        }
     }
 }
 
@@ -504,6 +561,11 @@ static void swadgeItBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int1
         {
             // TODO high score rendering
             fillDisplayArea(x, y, x + w, y + h, c132);
+            break;
+        }
+        case SI_GAME_OVER:
+        {
+            fillDisplayArea(x, y, x + w, y + h, c000);
             break;
         }
     }
@@ -666,8 +728,22 @@ static bool swadgeItCheckForShake(void)
  */
 static void swadgeItGameOver(void)
 {
-    // TODO game over logic
-    si->screen = SI_MENU;
+    // Record high score
+    si->newHighScore = false;
+    if (SI_REACTION == si->screen && si->score > si->reactionHighScore)
+    {
+        writeNvs32(SI_REACTION_HS_KEY, si->score);
+        si->newHighScore = true;
+    }
+    else if (SI_MEMORY == si->screen && si->score > si->memoryHighScore)
+    {
+        writeNvs32(SI_MEMORY_HS_KEY, si->score);
+        si->newHighScore = true;
+    }
+
+    // Display round score
+    si->screen        = SI_GAME_OVER;
+    si->gameOverTimer = 1000000;
 }
 
 /**
