@@ -53,40 +53,41 @@ typedef struct
 
 typedef struct
 {
-    menu_t* menu;
-    menuManiaRenderer_t* menuRenderer;
-    swadgeItScreen_t screen;
-
-    rawSample_t sfx[MAX_NUM_EVTS];
-
-    uint32_t sampleIdx;
-    bool pendingSwitchToMic;
-
-    uint32_t timeToNextEvent;
-    uint32_t nextEvtTimer;
-    list_t inputQueue;
-    list_t memoryQueue;
-    list_t speechQueue;
-    int32_t speechDelayUs;
-    int32_t score;
-
-    vec3d_t lastOrientation;
-
-    uint32_t micSamplesProcessed;
-    uint32_t micEnergy;
-    uint32_t micFrameEnergy;
-
-    touchSpinState_t touchSpinState;
-} swadgeIt_t;
-
-typedef struct
-{
     const char* label;
     const char* sfx_fname;
     const paletteColor_t bgColor;
     const paletteColor_t txColor;
     const led_t ledColor;
 } swadgeItEvtData_t;
+
+typedef struct
+{
+    menu_t* menu;
+    menuManiaRenderer_t* menuRenderer;
+    swadgeItScreen_t screen;
+
+    rawSample_t sfx[MAX_NUM_EVTS];
+
+    int32_t sampleIdx;
+    bool pendingSwitchToMic;
+
+    int32_t timeToNextEvent;
+    int32_t nextEvtTimer;
+    list_t inputQueue;
+    list_t memoryQueue;
+    list_t speechQueue;
+    int32_t speechDelayUs;
+    int32_t score;
+    const swadgeItEvtData_t* dispEvt;
+
+    vec3d_t lastOrientation;
+
+    int32_t micSamplesProcessed;
+    int32_t micEnergy;
+    int32_t micFrameEnergy;
+
+    touchSpinState_t touchSpinState;
+} swadgeIt_t;
 
 //==============================================================================
 // Function Declarations
@@ -104,7 +105,7 @@ static void swadgeItMenuCb(const char* label, bool selected, uint32_t value);
 static void swadgeItInput(swadgeItEvt_t evt);
 static bool swadgeItCheckForShake(void);
 static void swadgeItGameOver(void);
-static void swadgeItSetLeds(void);
+static void swadgeItUpdateDisplay(void);
 
 //==============================================================================
 // Const data
@@ -156,6 +157,22 @@ const swadgeItEvtData_t siGoodData = {
     .ledColor  = {.r = 0xCC, .g = 0xFF, .b = 0x99},
 };
 
+const swadgeItEvtData_t siWaitData = {
+    .sfx_fname = NULL,
+    .label     = "Wait",
+    .bgColor   = c000,
+    .txColor   = c555,
+    .ledColor  = {.r = 0x00, .g = 0x00, .b = 0x00},
+};
+
+const swadgeItEvtData_t siGoData = {
+    .sfx_fname = NULL,
+    .label     = "Go!",
+    .bgColor   = c555,
+    .txColor   = c000,
+    .ledColor  = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
+};
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -203,7 +220,7 @@ static void swadgeItEnterMode(void)
     addSingleItemToMenu(si->menu, swadgeItStrExit);
     si->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
-    for (uint8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
+    for (int8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
     {
         si->sfx[i].samples = readHeatshrinkFile(siEvtData[i].sfx_fname, &si->sfx[i].len, true);
     }
@@ -222,7 +239,7 @@ static void swadgeItExitMode(void)
     deinitMenuManiaRenderer(si->menuRenderer);
     deinitMenu(si->menu);
 
-    for (uint8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
+    for (int8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
     {
         heap_caps_free(si->sfx[i].samples);
     }
@@ -278,7 +295,7 @@ static void swadgeItMainLoop(int64_t elapsedUs)
         si->sampleIdx = 0;
 
         // Set new LEDs
-        swadgeItSetLeds();
+        swadgeItUpdateDisplay();
     }
 
     // Check button input
@@ -348,29 +365,16 @@ static void swadgeItMainLoop(int64_t elapsedUs)
         {
             font_t* font = si->menuRenderer->menuFont;
 
-            const swadgeItEvtData_t* sieData = &siGoodData;
-            if (si->speechQueue.length)
-            {
-                sieData = &siEvtData[(swadgeItEvt_t)si->speechQueue.first->val];
-            }
-            else if (si->inputQueue.length)
-            {
-                sieData = &siEvtData[(swadgeItEvt_t)si->inputQueue.first->val];
-            }
-
             // Draw command
-            int16_t tWidth = textWidth(font, sieData->label);
-            drawText(font, sieData->txColor, sieData->label, (TFT_WIDTH - tWidth) / 2,
+            int16_t tWidth = textWidth(font, si->dispEvt->label);
+            drawText(font, si->dispEvt->txColor, si->dispEvt->label, (TFT_WIDTH - tWidth) / 2,
                      TFT_HEIGHT / 2 - font->height - 2);
-
-            // TODO draw "WAIT" before first action
-            // TODO draw generic "GO" in memory mode, not specific action
 
             // Draw current score
             char scoreStr[32];
             snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, si->score);
             tWidth = textWidth(font, scoreStr);
-            drawText(font, sieData->txColor, scoreStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) + 2);
+            drawText(font, si->dispEvt->txColor, scoreStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) + 2);
 
             // Check for motion events
             if (swadgeItCheckForShake())
@@ -413,13 +417,14 @@ static void swadgeItMainLoop(int64_t elapsedUs)
                         push(&si->speechQueue, (void*)newEvt);
 
                         // Set the LEDs for the new event
-                        swadgeItSetLeds();
+                        swadgeItUpdateDisplay();
 
-                        // TODO Decrement the time between events
-                        // if (si->timeToNextEvent > 500000)
-                        // {
-                        //     si->timeToNextEvent -= 100000;
-                        // }
+                        // Decrement the time between events
+                        // TODO tune gameplay
+                        if (si->timeToNextEvent > 500000)
+                        {
+                            si->timeToNextEvent -= 100000;
+                        }
                     }
                     else
                     {
@@ -430,8 +435,13 @@ static void swadgeItMainLoop(int64_t elapsedUs)
             }
             else if (SI_MEMORY == si->screen)
             {
+                // Run intro timer
+                if (si->timeToNextEvent > 0)
+                {
+                    si->timeToNextEvent -= elapsedUs;
+                }
                 // If the queue was cleared
-                if (0 == si->inputQueue.length)
+                else if (0 == si->inputQueue.length)
                 {
                     // Enable speaker for a new verbal command and reset sample count
                     switchToSpeaker();
@@ -451,7 +461,7 @@ static void swadgeItMainLoop(int64_t elapsedUs)
                     }
 
                     // Set new LEDs
-                    swadgeItSetLeds();
+                    swadgeItUpdateDisplay();
                 }
             }
             break;
@@ -486,24 +496,8 @@ static void swadgeItBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int1
         case SI_REACTION:
         case SI_MEMORY:
         {
-            // TODO draw "WAIT" before first action
-            // TODO draw generic "GO" in memory mode, not specific action
-
-            if (si->speechQueue.length)
-            {
-                // Draw background color for current command
-                fillDisplayArea(x, y, x + w, y + h, siEvtData[(swadgeItEvt_t)si->speechQueue.first->val].bgColor);
-            }
-            else if (si->inputQueue.length)
-            {
-                // Draw background color for current command
-                fillDisplayArea(x, y, x + w, y + h, siEvtData[(swadgeItEvt_t)si->inputQueue.first->val].bgColor);
-            }
-            else
-            {
-                // draw good background color
-                fillDisplayArea(x, y, x + w, y + h, siGoodData.bgColor);
-            }
+            // Draw background color for current command
+            fillDisplayArea(x, y, x + w, y + h, si->dispEvt->bgColor);
             break;
         }
         case SI_HIGH_SCORES:
@@ -589,7 +583,7 @@ static void swadgeItInput(swadgeItEvt_t evt)
         shift(&si->inputQueue);
 
         // Set LEDs for new event
-        swadgeItSetLeds();
+        swadgeItUpdateDisplay();
 
         // If the queue is empty
         if (0 == si->inputQueue.length)
@@ -657,7 +651,7 @@ static bool swadgeItCheckForShake(void)
                 .z = ABS(si->lastOrientation.z - orientation.z),
             };
             si->lastOrientation = orientation;
-            uint32_t tDelta     = delta.x + delta.y + delta.z;
+            int32_t tDelta      = delta.x + delta.y + delta.z;
             if (tDelta > 300)
             {
                 return true;
@@ -690,12 +684,13 @@ static void swadgeItMenuCb(const char* label, bool selected, uint32_t value)
         {
             si->screen = (swadgeItStrReaction == label) ? SI_REACTION : SI_MEMORY;
 
+            si->dispEvt         = &siWaitData;
             si->timeToNextEvent = 2000000;
             si->nextEvtTimer    = 0;
             clear(&si->inputQueue);
             clear(&si->memoryQueue);
             clear(&si->speechQueue);
-            swadgeItSetLeds();
+            swadgeItUpdateDisplay();
 
             si->score = 0;
         }
@@ -714,24 +709,39 @@ static void swadgeItMenuCb(const char* label, bool selected, uint32_t value)
 /**
  * @brief Set the LEDs according to the current event
  */
-static void swadgeItSetLeds(void)
+static void swadgeItUpdateDisplay(void)
 {
-    // Pick a color, good by default
-    const led_t* src = &siGoodData.ledColor;
+    // If there's a speech event
     if (si->speechQueue.length)
     {
-        src = &siEvtData[(swadgeItEvt_t)si->speechQueue.first->val].ledColor;
+        // Display what is spoken
+        si->dispEvt = &siEvtData[(swadgeItEvt_t)si->speechQueue.first->val];
     }
+    // Otherwise if there's an input event
     else if (si->inputQueue.length)
     {
-        src = &siEvtData[(swadgeItEvt_t)si->inputQueue.first->val].ledColor;
+        if (SI_REACTION == si->screen)
+        {
+            // Reaction mode, show the current event
+            si->dispEvt = &siEvtData[(swadgeItEvt_t)si->inputQueue.first->val];
+        }
+        else
+        {
+            // Memory mode, just show "Go"
+            si->dispEvt = &siGoData;
+        }
+    }
+    // Otherwise all inputs are finished and the score isn't zero
+    else if (si->score)
+    {
+        si->dispEvt = &siGoodData;
     }
 
     // Copy to all LEDs
     led_t leds[CONFIG_NUM_LEDS];
     for (int i = 0; i < ARRAY_SIZE(leds); i++)
     {
-        memcpy(&leds[i], src, sizeof(led_t));
+        memcpy(&leds[i], &si->dispEvt->ledColor, sizeof(led_t));
     }
 
     // Set LEDs
