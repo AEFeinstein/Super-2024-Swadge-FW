@@ -42,53 +42,53 @@ void pl_initializeEntityManager(plEntityManager_t* entityManager, plTilemap_t* t
 
 void pl_loadSprites(plEntityManager_t* entityManager)
 {
-    loadWsg("sprite000.wsg", &entityManager->sprites[SP_PLAYER_IDLE], false);
-    loadWsg("sprite001.wsg", &entityManager->sprites[SP_PLAYER_WALK1], false);
-    loadWsg("sprite002.wsg", &entityManager->sprites[SP_PLAYER_WALK2], false);
-    loadWsg("sprite003.wsg", &entityManager->sprites[SP_PLAYER_WALK3], false);
-    loadWsg("sprite004.wsg", &entityManager->sprites[SP_PLAYER_JUMP], false);
-    loadWsg("sprite005.wsg", &entityManager->sprites[SP_PLAYER_SLIDE], false);
-    loadWsg("sprite006.wsg", &entityManager->sprites[SP_PLAYER_HURT], false);
-    loadWsg("sprite007.wsg", &entityManager->sprites[SP_PLAYER_CLIMB], false);
-    loadWsg("sprite008.wsg", &entityManager->sprites[SP_PLAYER_WIN], false);
-    loadWsg("sprite009.wsg", &entityManager->sprites[SP_ENEMY_BASIC], false);
-    loadWsg("tile066.wsg", &entityManager->sprites[SP_HITBLOCK_CONTAINER], false);
-    loadWsg("tile034.wsg", &entityManager->sprites[SP_HITBLOCK_BRICKS], false);
-    loadWsg("sprite012.wsg", &entityManager->sprites[SP_DUSTBUNNY_IDLE], false);
-    loadWsg("sprite013.wsg", &entityManager->sprites[SP_DUSTBUNNY_CHARGE], false);
-    loadWsg("sprite014.wsg", &entityManager->sprites[SP_DUSTBUNNY_JUMP], false);
-    loadWsg("sprite015.wsg", &entityManager->sprites[SP_GAMING_1], false);
-    loadWsg("sprite016.wsg", &entityManager->sprites[SP_GAMING_2], false);
-    loadWsg("sprite017.wsg", &entityManager->sprites[SP_GAMING_3], false);
-    loadWsg("sprite018.wsg", &entityManager->sprites[SP_MUSIC_1], false);
-    loadWsg("sprite019.wsg", &entityManager->sprites[SP_MUSIC_2], false);
-    loadWsg("sprite020.wsg", &entityManager->sprites[SP_MUSIC_3], false);
-    loadWsg("sprite021.wsg", &entityManager->sprites[SP_WARP_1], false);
-    loadWsg("sprite022.wsg", &entityManager->sprites[SP_WARP_2], false);
-    loadWsg("sprite023.wsg", &entityManager->sprites[SP_WARP_3], false);
-    loadWsg("sprite024.wsg", &entityManager->sprites[SP_WASP_1], false);
-    loadWsg("sprite025.wsg", &entityManager->sprites[SP_WASP_2], false);
-    loadWsg("sprite026.wsg", &entityManager->sprites[SP_WASP_DIVE], false);
-    loadWsg("sprite027.wsg", &entityManager->sprites[SP_1UP_1], false);
-    loadWsg("sprite028.wsg", &entityManager->sprites[SP_1UP_2], false);
-    loadWsg("sprite029.wsg", &entityManager->sprites[SP_1UP_3], false);
+    loadWsg("sprite000.wsg", &entityManager->sprites[PL_SP_PLAYER_IDLE], false);
+    loadWsg("sprite001.wsg", &entityManager->sprites[PL_SP_PLAYER_WALK1], false);
+    loadWsg("sprite002.wsg", &entityManager->sprites[PL_SP_PLAYER_WALK2], false);
+    loadWsg("sprite003.wsg", &entityManager->sprites[PL_SP_PLAYER_WALK3], false);
+    loadWsg("sprite004.wsg", &entityManager->sprites[PL_SP_PLAYER_JUMP], false);
+    loadWsg("sprite005.wsg", &entityManager->sprites[PL_SP_PLAYER_SLIDE], false);
+    loadWsg("sprite006.wsg", &entityManager->sprites[PL_SP_PLAYER_HURT], false);
+    loadWsg("sprite007.wsg", &entityManager->sprites[PL_SP_PLAYER_CLIMB], false);
+    loadWsg("sprite008.wsg", &entityManager->sprites[PL_SP_PLAYER_WIN], false);
+    loadWsg("sprite009.wsg", &entityManager->sprites[PL_SP_ENEMY_BASIC], false);
+    loadWsg("tile066.wsg", &entityManager->sprites[PL_SP_HITBLOCK_CONTAINER], false);
+    loadWsg("tile034.wsg", &entityManager->sprites[PL_SP_HITBLOCK_BRICKS], false);
+    loadWsg("sprite012.wsg", &entityManager->sprites[PL_SP_DUSTBUNNY_IDLE], false);
+    loadWsg("sprite013.wsg", &entityManager->sprites[PL_SP_DUSTBUNNY_CHARGE], false);
+    loadWsg("sprite014.wsg", &entityManager->sprites[PL_SP_DUSTBUNNY_JUMP], false);
+    loadWsg("sprite015.wsg", &entityManager->sprites[PL_SP_GAMING_1], false);
+    loadWsg("sprite016.wsg", &entityManager->sprites[PL_SP_GAMING_2], false);
+    loadWsg("sprite017.wsg", &entityManager->sprites[PL_SP_GAMING_3], false);
+    loadWsg("sprite018.wsg", &entityManager->sprites[PL_SP_MUSIC_1], false);
+    loadWsg("sprite019.wsg", &entityManager->sprites[PL_SP_MUSIC_2], false);
+    loadWsg("sprite020.wsg", &entityManager->sprites[PL_SP_MUSIC_3], false);
+    loadWsg("sprite021.wsg", &entityManager->sprites[PL_SP_WARP_1], false);
+    loadWsg("sprite022.wsg", &entityManager->sprites[PL_SP_WARP_2], false);
+    loadWsg("sprite023.wsg", &entityManager->sprites[PL_SP_WARP_3], false);
+    loadWsg("sprite024.wsg", &entityManager->sprites[PL_SP_WASP_1], false);
+    loadWsg("sprite025.wsg", &entityManager->sprites[PL_SP_WASP_2], false);
+    loadWsg("sprite026.wsg", &entityManager->sprites[PL_SP_WASP_DIVE], false);
+    loadWsg("sprite027.wsg", &entityManager->sprites[PL_SP_1UP_1], false);
+    loadWsg("sprite028.wsg", &entityManager->sprites[PL_SP_1UP_2], false);
+    loadWsg("sprite029.wsg", &entityManager->sprites[PL_SP_1UP_3], false);
     loadWsg("sprite030.wsg", &entityManager->sprites[SP_WAVEBALL_1], false);
     loadWsg("sprite031.wsg", &entityManager->sprites[SP_WAVEBALL_2], false);
     loadWsg("sprite032.wsg", &entityManager->sprites[SP_WAVEBALL_3], false);
-    loadWsg("sprite033.wsg", &entityManager->sprites[SP_ENEMY_BUSH_L2], false);
-    loadWsg("sprite034.wsg", &entityManager->sprites[SP_ENEMY_BUSH_L3], false);
-    loadWsg("sprite035.wsg", &entityManager->sprites[SP_DUSTBUNNY_L2_IDLE], false);
-    loadWsg("sprite036.wsg", &entityManager->sprites[SP_DUSTBUNNY_L2_CHARGE], false);
-    loadWsg("sprite037.wsg", &entityManager->sprites[SP_DUSTBUNNY_L2_JUMP], false);
-    loadWsg("sprite038.wsg", &entityManager->sprites[SP_DUSTBUNNY_L3_IDLE], false);
-    loadWsg("sprite039.wsg", &entityManager->sprites[SP_DUSTBUNNY_L3_CHARGE], false);
-    loadWsg("sprite040.wsg", &entityManager->sprites[SP_DUSTBUNNY_L3_JUMP], false);
-    loadWsg("sprite041.wsg", &entityManager->sprites[SP_WASP_L2_1], false);
-    loadWsg("sprite042.wsg", &entityManager->sprites[SP_WASP_L2_2], false);
-    loadWsg("sprite043.wsg", &entityManager->sprites[SP_WASP_L2_DIVE], false);
-    loadWsg("sprite044.wsg", &entityManager->sprites[SP_WASP_L3_1], false);
-    loadWsg("sprite045.wsg", &entityManager->sprites[SP_WASP_L3_2], false);
-    loadWsg("sprite046.wsg", &entityManager->sprites[SP_WASP_L3_DIVE], false);
+    loadWsg("sprite033.wsg", &entityManager->sprites[PL_SP_ENEMY_BUSH_L2], false);
+    loadWsg("sprite034.wsg", &entityManager->sprites[PL_SP_ENEMY_BUSH_L3], false);
+    loadWsg("sprite035.wsg", &entityManager->sprites[PL_SP_DUSTBUNNY_L2_IDLE], false);
+    loadWsg("sprite036.wsg", &entityManager->sprites[PL_SP_DUSTBUNNY_L2_CHARGE], false);
+    loadWsg("sprite037.wsg", &entityManager->sprites[PL_SP_DUSTBUNNY_L2_JUMP], false);
+    loadWsg("sprite038.wsg", &entityManager->sprites[PL_SP_DUSTBUNNY_L3_IDLE], false);
+    loadWsg("sprite039.wsg", &entityManager->sprites[PL_SP_DUSTBUNNY_L3_CHARGE], false);
+    loadWsg("sprite040.wsg", &entityManager->sprites[PL_SP_DUSTBUNNY_L3_JUMP], false);
+    loadWsg("sprite041.wsg", &entityManager->sprites[PL_SP_WASP_L2_1], false);
+    loadWsg("sprite042.wsg", &entityManager->sprites[PL_SP_WASP_L2_2], false);
+    loadWsg("sprite043.wsg", &entityManager->sprites[PL_SP_WASP_L2_DIVE], false);
+    loadWsg("sprite044.wsg", &entityManager->sprites[PL_SP_WASP_L3_1], false);
+    loadWsg("sprite045.wsg", &entityManager->sprites[PL_SP_WASP_L3_2], false);
+    loadWsg("sprite046.wsg", &entityManager->sprites[PL_SP_WASP_L3_DIVE], false);
     loadWsg("sprite047.wsg", &entityManager->sprites[SP_CHECKPOINT_INACTIVE], false);
     loadWsg("sprite048.wsg", &entityManager->sprites[SP_CHECKPOINT_ACTIVE_1], false);
     loadWsg("sprite049.wsg", &entityManager->sprites[SP_CHECKPOINT_ACTIVE_2], false);
@@ -353,7 +353,7 @@ plEntity_t* pl_createPlayer(plEntityManager_t* entityManager, uint16_t x, uint16
     entity->animationTimer     = 0; // Used as a cooldown for shooting square wave balls
 
     entity->type                 = ENTITY_PLAYER;
-    entity->spriteIndex          = SP_PLAYER_IDLE;
+    entity->spriteIndex          = PL_SP_PLAYER_IDLE;
     entity->updateFunction       = &pl_updatePlayer;
     entity->collisionHandler     = &pl_playerCollisionHandler;
     entity->tileCollisionHandler = &pl_playerTileCollisionHandler;
@@ -387,7 +387,7 @@ plEntity_t* createTestObject(plEntityManager_t* entityManager, uint16_t x, uint1
     entity->scoreValue           = 100;
 
     entity->type                 = plEntity_tEST;
-    entity->spriteIndex          = SP_ENEMY_BASIC;
+    entity->spriteIndex          = PL_SP_ENEMY_BASIC;
     entity->updateFunction       = &updateTestObject;
     entity->collisionHandler     = &pl_enemyCollisionHandler;
     entity->tileCollisionHandler = &pl_enemyTileCollisionHandler;
@@ -538,7 +538,7 @@ plEntity_t* createHitBlock(plEntityManager_t* entityManager, uint16_t x, uint16_
     entity->spriteFlipVertical   = false;
 
     entity->type                 = ENTITY_HIT_BLOCK;
-    entity->spriteIndex          = SP_HITBLOCK_CONTAINER;
+    entity->spriteIndex          = PL_SP_HITBLOCK_CONTAINER;
     entity->animationTimer       = 0;
     entity->updateFunction       = &updateHitBlock;
     entity->collisionHandler     = &pl_dummyCollisionHandler;
@@ -572,7 +572,7 @@ plEntity_t* createPowerUp(plEntityManager_t* entityManager, uint16_t x, uint16_t
     entity->spriteFlipVertical   = false;
 
     entity->type                 = ENTITY_POWERUP;
-    entity->spriteIndex          = (entityManager->playerEntity->hp < 2) ? SP_GAMING_1 : SP_MUSIC_1;
+    entity->spriteIndex          = (entityManager->playerEntity->hp < 2) ? PL_SP_GAMING_1 : PL_SP_MUSIC_1;
     entity->animationTimer       = 0;
     entity->updateFunction       = &updatePowerUp;
     entity->collisionHandler     = &powerUpCollisionHandler;
@@ -607,7 +607,7 @@ plEntity_t* createWarp(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
     entity->spriteFlipVertical = false;
 
     entity->type                 = ENTITY_WARP;
-    entity->spriteIndex          = SP_WARP_1;
+    entity->spriteIndex          = PL_SP_WARP_1;
     entity->animationTimer       = 0;
     entity->updateFunction       = &updateWarp;
     entity->collisionHandler     = &pl_dummyCollisionHandler;
@@ -645,7 +645,7 @@ plEntity_t* createDustBunny(plEntityManager_t* entityManager, uint16_t x, uint16
     entity->scoreValue = 150;
 
     entity->type                 = ENTITY_DUST_BUNNY;
-    entity->spriteIndex          = SP_DUSTBUNNY_IDLE;
+    entity->spriteIndex          = PL_SP_DUSTBUNNY_IDLE;
     entity->updateFunction       = &updateDustBunny;
     entity->collisionHandler     = &pl_enemyCollisionHandler;
     entity->tileCollisionHandler = &dustBunnyTileCollisionHandler;
@@ -683,7 +683,7 @@ plEntity_t* createWasp(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
     entity->xspeed = (entity->spriteFlipHorizontal) ? -16 : 16;
 
     entity->type                 = ENTITY_WASP;
-    entity->spriteIndex          = SP_WASP_1;
+    entity->spriteIndex          = PL_SP_WASP_1;
     entity->updateFunction       = &updateWasp;
     entity->collisionHandler     = &pl_enemyCollisionHandler;
     entity->tileCollisionHandler = &waspTileCollisionHandler;
@@ -718,7 +718,7 @@ plEntity_t* createEnemyBushL2(plEntityManager_t* entityManager, uint16_t x, uint
     entity->scoreValue           = 150;
 
     entity->type                 = ENTITY_BUSH_2;
-    entity->spriteIndex          = SP_ENEMY_BUSH_L2;
+    entity->spriteIndex          = PL_SP_ENEMY_BUSH_L2;
     entity->updateFunction       = &updateTestObject;
     entity->collisionHandler     = &pl_enemyCollisionHandler;
     entity->tileCollisionHandler = &pl_enemyTileCollisionHandler;
@@ -755,7 +755,7 @@ plEntity_t* createEnemyBushL3(plEntityManager_t* entityManager, uint16_t x, uint
     entity->yDamping = 20; // This will be repurposed as a state timer
 
     entity->type                 = ENTITY_BUSH_3;
-    entity->spriteIndex          = SP_ENEMY_BUSH_L3;
+    entity->spriteIndex          = PL_SP_ENEMY_BUSH_L3;
     entity->updateFunction       = &updateEnemyBushL3;
     entity->collisionHandler     = &pl_enemyCollisionHandler;
     entity->tileCollisionHandler = &pl_enemyTileCollisionHandler;
@@ -792,7 +792,7 @@ plEntity_t* createDustBunnyL2(plEntityManager_t* entityManager, uint16_t x, uint
     entity->scoreValue           = 200;
 
     entity->type                 = ENTITY_DUST_BUNNY_2;
-    entity->spriteIndex          = SP_DUSTBUNNY_L2_IDLE;
+    entity->spriteIndex          = PL_SP_DUSTBUNNY_L2_IDLE;
     entity->updateFunction       = &updateDustBunnyL2;
     entity->collisionHandler     = &pl_enemyCollisionHandler;
     entity->tileCollisionHandler = &dustBunnyL2TileCollisionHandler;
@@ -829,7 +829,7 @@ plEntity_t* createDustBunnyL3(plEntityManager_t* entityManager, uint16_t x, uint
     entity->scoreValue           = 300;
 
     entity->type                 = ENTITY_DUST_BUNNY_3;
-    entity->spriteIndex          = SP_DUSTBUNNY_L3_IDLE;
+    entity->spriteIndex          = PL_SP_DUSTBUNNY_L3_IDLE;
     entity->updateFunction       = &updateDustBunnyL3;
     entity->collisionHandler     = &pl_enemyCollisionHandler;
     entity->tileCollisionHandler = &dustBunnyL3TileCollisionHandler;
@@ -869,7 +869,7 @@ plEntity_t* createWaspL2(plEntityManager_t* entityManager, uint16_t x, uint16_t 
     entity->xspeed = (entity->spriteFlipHorizontal) ? -24 : 24;
 
     entity->type                 = ENTITY_WASP_2;
-    entity->spriteIndex          = SP_WASP_L2_1;
+    entity->spriteIndex          = PL_SP_WASP_L2_1;
     entity->updateFunction       = &updateWaspL2;
     entity->collisionHandler     = &pl_enemyCollisionHandler;
     entity->tileCollisionHandler = &waspTileCollisionHandler;
@@ -908,7 +908,7 @@ plEntity_t* createWaspL3(plEntityManager_t* entityManager, uint16_t x, uint16_t 
     entity->xspeed = (entity->spriteFlipHorizontal) ? -24 : 24;
 
     entity->type                 = ENTITY_WASP_3;
-    entity->spriteIndex          = SP_WASP_L3_1;
+    entity->spriteIndex          = PL_SP_WASP_L3_1;
     entity->updateFunction       = &updateWaspL3;
     entity->collisionHandler     = &pl_enemyCollisionHandler;
     entity->tileCollisionHandler = &waspTileCollisionHandler;
@@ -1158,7 +1158,7 @@ plEntity_t* create1up(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
     entity->spriteFlipVertical   = false;
 
     entity->type                 = ENTITY_1UP;
-    entity->spriteIndex          = SP_1UP_1;
+    entity->spriteIndex          = PL_SP_1UP_1;
     entity->animationTimer       = 0;
     entity->updateFunction       = &update1up;
     entity->collisionHandler     = &powerUpCollisionHandler;
