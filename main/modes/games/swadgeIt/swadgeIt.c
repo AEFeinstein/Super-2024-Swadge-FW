@@ -278,48 +278,6 @@ static void swadgeItExitMode(void)
  */
 static void swadgeItMainLoop(int64_t elapsedUs)
 {
-    // Check if the flag is raised to switch from speaker to microphone
-    bool dequeueSpeech = false;
-    if (si->pendingSwitchToMic)
-    {
-        // Then switch back to the microphone
-        switchToMicrophone();
-
-        // Reset mic values
-        si->micSamplesProcessed = 0;
-        si->micFrameEnergy      = 0;
-        si->micEnergy           = 0;
-
-        // Lower flag
-        si->pendingSwitchToMic = false;
-
-        // Dequeue the speech that raised the flag
-        dequeueSpeech = true;
-    }
-    // If the timer between verbal actions is running
-    else if (si->speechDelayUs > 0)
-    {
-        // Decrement it
-        si->speechDelayUs -= elapsedUs;
-
-        // If the timer elapsed
-        if (si->speechDelayUs <= 0)
-        {
-            dequeueSpeech = true;
-        }
-    }
-
-    if (dequeueSpeech)
-    {
-        // Remove from the speech queue
-        shift(&si->speechQueue);
-        // Reset sample index
-        si->sampleIdx = 0;
-
-        // Set new LEDs
-        swadgeItUpdateDisplay();
-    }
-
     // Check button input
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
@@ -338,27 +296,8 @@ static void swadgeItMainLoop(int64_t elapsedUs)
                 // Check for pushbutton events
                 if (evt.down)
                 {
-                    switch (evt.button)
-                    {
-                        case PB_A:
-                        case PB_B:
-                        case PB_UP:
-                        case PB_DOWN:
-                        case PB_LEFT:
-                        case PB_RIGHT:
-                        {
-                            // These buttons are events
-                            swadgeItInput(EVT_PRESS_IT);
-                            break;
-                        }
-                        default:
-                        {
-                            // All other buttons quit
-                            si->screen = SI_MENU;
-                            break;
-                        }
-                    }
-                    break;
+                    // Every button is input
+                    swadgeItInput(EVT_PRESS_IT);
                 }
                 break;
             }
@@ -395,18 +334,47 @@ static void swadgeItMainLoop(int64_t elapsedUs)
         case SI_REACTION:
         case SI_MEMORY:
         {
-            font_t* font = si->menuRenderer->menuFont;
+            // Check if the flag is raised to switch from speaker to microphone
+            bool dequeueSpeech = false;
+            if (si->pendingSwitchToMic)
+            {
+                // Then switch back to the microphone
+                switchToMicrophone();
 
-            // Draw command
-            int16_t tWidth = textWidth(font, si->dispEvt->label);
-            drawText(font, si->dispEvt->txColor, si->dispEvt->label, (TFT_WIDTH - tWidth) / 2,
-                     TFT_HEIGHT / 2 - font->height - 2);
+                // Reset mic values
+                si->micSamplesProcessed = 0;
+                si->micFrameEnergy      = 0;
+                si->micEnergy           = 0;
 
-            // Draw current score
-            char scoreStr[32];
-            snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, si->score);
-            tWidth = textWidth(font, scoreStr);
-            drawText(font, si->dispEvt->txColor, scoreStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) + 2);
+                // Lower flag
+                si->pendingSwitchToMic = false;
+
+                // Dequeue the speech that raised the flag
+                dequeueSpeech = true;
+            }
+            // If the timer between verbal actions is running
+            else if (si->speechDelayUs > 0)
+            {
+                // Decrement it
+                si->speechDelayUs -= elapsedUs;
+
+                // If the timer elapsed
+                if (si->speechDelayUs <= 0)
+                {
+                    dequeueSpeech = true;
+                }
+            }
+
+            if (dequeueSpeech)
+            {
+                // Remove from the speech queue
+                shift(&si->speechQueue);
+                // Reset sample index
+                si->sampleIdx = 0;
+
+                // Set new LEDs
+                swadgeItUpdateDisplay();
+            }
 
             // Check for motion events
             if (swadgeItCheckForShake())
@@ -432,6 +400,7 @@ static void swadgeItMainLoop(int64_t elapsedUs)
                 si->touchSpinState.startSet = false;
             }
 
+            // Run game specific logic
             if (SI_REACTION == si->screen)
             {
                 // For reaction mode, check the gameplay timer
@@ -496,11 +465,42 @@ static void swadgeItMainLoop(int64_t elapsedUs)
                     swadgeItUpdateDisplay();
                 }
             }
+
+            font_t* font = si->menuRenderer->menuFont;
+
+            // Draw command
+            int16_t tWidth = textWidth(font, si->dispEvt->label);
+            drawText(font, si->dispEvt->txColor, si->dispEvt->label, (TFT_WIDTH - tWidth) / 2,
+                     TFT_HEIGHT / 2 - font->height - 2);
+
+            // Draw current score
+            char scoreStr[32];
+            snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, si->score);
+            tWidth = textWidth(font, scoreStr);
+            drawText(font, si->dispEvt->txColor, scoreStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) + 2);
+
             break;
         }
         case SI_HIGH_SCORES:
         {
-            // TODO high score rendering
+            // Draw high scores
+            font_t* font = si->menuRenderer->menuFont;
+            char hsString[64];
+
+            // Draw reaction string
+            snprintf(hsString, sizeof(hsString) - 1, "%s: %" PRId32, swadgeItStrReaction, si->reactionHighScore);
+            int16_t tWidth = textWidth(font, hsString);
+            drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) - font->height);
+
+            // Draw memory string
+            snprintf(hsString, sizeof(hsString) - 1, "%s: %" PRId32, swadgeItStrMemory, si->memoryHighScore);
+            tWidth = textWidth(font, hsString);
+            drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2));
+
+            // Turn off LEDs
+            led_t leds[CONFIG_NUM_LEDS] = {0};
+            setLeds(leds, ARRAY_SIZE(leds));
+
             break;
         }
         case SI_GAME_OVER:
@@ -514,7 +514,7 @@ static void swadgeItMainLoop(int64_t elapsedUs)
             // Draw round score
             font_t* font = si->menuRenderer->menuFont;
             char gameOverStr[64];
-            snprintf(gameOverStr, sizeof(gameOverStr) - 1, "Game Over: %d", si->score);
+            snprintf(gameOverStr, sizeof(gameOverStr) - 1, "Game Over: %" PRId32, si->score);
             int16_t tWidth = textWidth(font, gameOverStr);
             drawText(font, c555, gameOverStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - font->height) / 2);
 
@@ -526,6 +526,11 @@ static void swadgeItMainLoop(int64_t elapsedUs)
                 drawText(font, c555, newHighScoreStr, (TFT_WIDTH - tWidth) / 2,
                          ((TFT_HEIGHT - font->height) / 2) + 2 + font->height);
             }
+
+            // Turn off LEDs
+            led_t leds[CONFIG_NUM_LEDS] = {0};
+            setLeds(leds, ARRAY_SIZE(leds));
+
             break;
         }
     }
@@ -559,8 +564,7 @@ static void swadgeItBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int1
         }
         case SI_HIGH_SCORES:
         {
-            // TODO high score rendering
-            fillDisplayArea(x, y, x + w, y + h, c132);
+            fillDisplayArea(x, y, x + w, y + h, c000);
             break;
         }
         case SI_GAME_OVER:
@@ -675,9 +679,11 @@ static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt)
         // Get and process the sample
         int16_t samp = *(samples++);
         samp /= 2048;
+
         // Sum the absolute values
         si->micEnergy += ABS(samp);
         si->micSamplesProcessed++;
+
         // If we've captured a visual frame's worth of samples
         if ((ADC_SAMPLE_RATE_HZ / SWADGE_IT_FPS) == si->micSamplesProcessed)
         {
@@ -732,11 +738,13 @@ static void swadgeItGameOver(void)
     si->newHighScore = false;
     if (SI_REACTION == si->screen && si->score > si->reactionHighScore)
     {
+        si->reactionHighScore = si->score;
         writeNvs32(SI_REACTION_HS_KEY, si->score);
         si->newHighScore = true;
     }
     else if (SI_MEMORY == si->screen && si->score > si->memoryHighScore)
     {
+        si->memoryHighScore = si->score;
         writeNvs32(SI_MEMORY_HS_KEY, si->score);
         si->newHighScore = true;
     }
@@ -767,8 +775,6 @@ static void swadgeItMenuCb(const char* label, bool selected, uint32_t value)
             clear(&si->memoryQueue);
             clear(&si->speechQueue);
             swadgeItUpdateDisplay();
-
-            si->score = 0;
         }
         else if (swadgeItStrHighScores == label)
         {
