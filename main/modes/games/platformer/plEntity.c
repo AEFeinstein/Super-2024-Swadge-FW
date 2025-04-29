@@ -247,45 +247,45 @@ void updateHitBlock(plEntity_t* self)
 
         switch (aboveTile)
         {
-            case PL_TILECTNR_COIN:
-            case PL_TILECTNR_10COIN:
+            case PL_TILE_CTNR_COIN:
+            case PL_TILE_CTNR_10COIN:
             {
                 addCoins(self->gameData, 1);
                 pl_scorePoints(self->gameData, 10);
-                self->jumpPower = PL_TILECONTAINER_2;
+                self->jumpPower = PL_TILE_CONTAINER_2;
                 break;
             }
-            case PL_TILECTNR_POW1:
+            case PL_TILE_CTNR_POW1:
             {
                 createdEntity = pl_createEntity(
                     self->entityManager, ENTITY_POWERUP, (self->homeTileX * PL_TILESIZE) + PL_HALF_TILESIZE,
                     ((self->homeTileY
-                      + ((self->yspeed < 0 && (!pl_isSolid(belowTile) && belowTile != PL_TILEBOUNCE_BLOCK)) ? 1 : -1))
+                      + ((self->yspeed < 0 && (!pl_isSolid(belowTile) && belowTile != PL_TILE_BOUNCE_BLOCK)) ? 1 : -1))
                      * PL_TILESIZE)
                         + PL_HALF_TILESIZE);
                 createdEntity->homeTileX = 0;
                 createdEntity->homeTileY = 0;
 
-                self->jumpPower = PL_TILECONTAINER_2;
+                self->jumpPower = PL_TILE_CONTAINER_2;
                 break;
             }
-            case PL_TILEWARP_0 ... PL_TILEWARP_F:
+            case PL_TILE_WARP_0 ... PL_TILE_WARP_F:
             {
                 createdEntity = pl_createEntity(
                     self->entityManager, ENTITY_WARP, (self->homeTileX * PL_TILESIZE) + PL_HALF_TILESIZE,
                     ((self->homeTileY
-                      + ((self->yspeed < 0 && (!pl_isSolid(belowTile) && belowTile != PL_TILEBOUNCE_BLOCK)) ? 1 : -1))
+                      + ((self->yspeed < 0 && (!pl_isSolid(belowTile) && belowTile != PL_TILE_BOUNCE_BLOCK)) ? 1 : -1))
                      * PL_TILESIZE)
                         + PL_HALF_TILESIZE);
 
                 createdEntity->homeTileX = self->homeTileX;
                 createdEntity->homeTileY = self->homeTileY;
 
-                createdEntity->jumpPower = aboveTile - PL_TILEWARP_0;
-                self->jumpPower          = PL_TILECONTAINER_2;
+                createdEntity->jumpPower = aboveTile - PL_TILE_WARP_0;
+                self->jumpPower          = PL_TILE_CONTAINER_2;
                 break;
             }
-            case PL_TILECTNR_1UP:
+            case PL_TILE_CTNR_1UP:
             {
                 if (self->gameData->extraLifeCollected)
                 {
@@ -297,7 +297,7 @@ void updateHitBlock(plEntity_t* self)
                     createdEntity = pl_createEntity(
                         self->entityManager, ENTITY_1UP, (self->homeTileX * PL_TILESIZE) + PL_HALF_TILESIZE,
                         ((self->homeTileY
-                          + ((self->yspeed < 0 && (!pl_isSolid(belowTile) && belowTile != PL_TILEBOUNCE_BLOCK)) ? 1
+                          + ((self->yspeed < 0 && (!pl_isSolid(belowTile) && belowTile != PL_TILE_BOUNCE_BLOCK)) ? 1
                                                                                                                 : -1))
                          * PL_TILESIZE)
                             + PL_HALF_TILESIZE);
@@ -306,7 +306,7 @@ void updateHitBlock(plEntity_t* self)
                     self->gameData->extraLifeCollected = true;
                 }
 
-                self->jumpPower = PL_TILECONTAINER_2;
+                self->jumpPower = PL_TILE_CONTAINER_2;
                 break;
             }
             default:
@@ -315,9 +315,9 @@ void updateHitBlock(plEntity_t* self)
             }
         }
 
-        if (self->jumpPower == PL_TILEBRICK_BLOCK && (self->yspeed > 0 || self->yDamping == 1) && createdEntity == NULL)
+        if (self->jumpPower == PL_TILE_BRICK_BLOCK && (self->yspeed > 0 || self->yDamping == 1) && createdEntity == NULL)
         {
-            self->jumpPower = PL_TILEEMPTY;
+            self->jumpPower = PL_TILE_EMPTY;
             pl_scorePoints(self->gameData, 10);
             soundPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
         }
@@ -380,7 +380,7 @@ void pl_moveEntityWithTileCollisions(plEntity_t* self)
             {
                 uint8_t newVerticalTile = pl_getTile(self->tilemap, tx, newTy);
 
-                if (newVerticalTile > PL_TILEUNUSED_29 && newVerticalTile < PL_TILEBG_GOAL_ZONE)
+                if (newVerticalTile > PL_TILE_UNUSED_29 && newVerticalTile < PL_TILE_BG_GOAL_ZONE)
                 {
                     if (self->tileCollisionHandler(self, newVerticalTile, tx, newTy, 2 << (self->yspeed > 0)))
                     {
@@ -411,7 +411,7 @@ void pl_moveEntityWithTileCollisions(plEntity_t* self)
             {
                 uint8_t newHorizontalTile = pl_getTile(self->tilemap, newTx, ty);
 
-                if (newHorizontalTile > PL_TILEUNUSED_29 && newHorizontalTile < PL_TILEBG_GOAL_ZONE)
+                if (newHorizontalTile > PL_TILE_UNUSED_29 && newHorizontalTile < PL_TILE_BG_GOAL_ZONE)
                 {
                     if (self->tileCollisionHandler(self, newHorizontalTile, newTx, ty, (self->xspeed > 0)))
                     {
@@ -709,9 +709,9 @@ void pl_playerCollisionHandler(plEntity_t* self, plEntity_t* other)
                 uint8_t aboveTile
                     = self->tilemap->map[(other->homeTileY - 1) * self->tilemap->mapWidth + other->homeTileX];
 
-                if (aboveTile >= PL_TILEWARP_0 && aboveTile <= PL_TILEWARP_F)
+                if (aboveTile >= PL_TILE_WARP_0 && aboveTile <= PL_TILE_WARP_F)
                 {
-                    self->gameData->checkpoint = aboveTile - PL_TILEWARP_0;
+                    self->gameData->checkpoint = aboveTile - PL_TILE_WARP_0;
                     other->xDamping            = 1;
                     soundPlaySfx(&(self->soundManager->sndCheckpoint), BZR_LEFT);
                 }
@@ -777,10 +777,10 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
 {
     switch (tileId)
     {
-        case PL_TILECONTAINER_1:
-        case PL_TILEBRICK_BLOCK:
-        case PL_TILEINVISIBLE_CONTAINER:
-        case PL_TILEBOUNCE_BLOCK:
+        case PL_TILE_CONTAINER_1:
+        case PL_TILE_BRICK_BLOCK:
+        case PL_TILE_INVISIBLE_CONTAINER:
+        case PL_TILE_BOUNCE_BLOCK:
         {
             plEntity_t* hitBlock
                 = pl_createEntity(self->entityManager, ENTITY_HIT_BLOCK, (tx * PL_TILESIZE) + PL_HALF_TILESIZE,
@@ -788,11 +788,11 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
 
             if (hitBlock != NULL)
             {
-                pl_setTile(self->tilemap, tx, ty, PL_TILEINVISIBLE_BLOCK);
+                pl_setTile(self->tilemap, tx, ty, PL_TILE_INVISIBLE_BLOCK);
                 hitBlock->homeTileX = tx;
                 hitBlock->homeTileY = ty;
                 hitBlock->jumpPower = tileId;
-                if (tileId == PL_TILEBRICK_BLOCK)
+                if (tileId == PL_TILE_BRICK_BLOCK)
                 {
                     hitBlock->spriteIndex = PL_SP_HITBLOCK_BRICKS;
                     if (abs(self->xspeed) > 51 && self->yspeed <= 0)
@@ -801,7 +801,7 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
                     }
                 }
 
-                if (tileId == PL_TILEBOUNCE_BLOCK)
+                if (tileId == PL_TILE_BOUNCE_BLOCK)
                 {
                     hitBlock->spriteIndex = SP_BOUNCE_BLOCK;
                 }
@@ -810,28 +810,28 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
                 {
                     case 0:
                         hitBlock->xspeed = -24;
-                        if (tileId == PL_TILEBOUNCE_BLOCK)
+                        if (tileId == PL_TILE_BOUNCE_BLOCK)
                         {
                             self->xspeed = 48;
                         }
                         break;
                     case 1:
                         hitBlock->xspeed = 24;
-                        if (tileId == PL_TILEBOUNCE_BLOCK)
+                        if (tileId == PL_TILE_BOUNCE_BLOCK)
                         {
                             self->xspeed = -48;
                         }
                         break;
                     case 2:
                         hitBlock->yspeed = -48;
-                        if (tileId == PL_TILEBOUNCE_BLOCK)
+                        if (tileId == PL_TILE_BOUNCE_BLOCK)
                         {
                             self->yspeed = 48;
                         }
                         break;
                     case 4:
-                        hitBlock->yspeed = (tileId == PL_TILEBRICK_BLOCK) ? 16 : 24;
-                        if (tileId == PL_TILEBOUNCE_BLOCK)
+                        hitBlock->yspeed = (tileId == PL_TILE_BRICK_BLOCK) ? 16 : 24;
+                        if (tileId == PL_TILE_BOUNCE_BLOCK)
                         {
                             self->yspeed = -64;
                             if (self->gameData->btnState & PB_A)
@@ -848,7 +848,7 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
             }
             break;
         }
-        case PL_TILEGOAL_100PTS:
+        case PL_TILE_GOAL_100PTS:
         {
             if (direction == 4)
             {
@@ -861,7 +861,7 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
             }
             break;
         }
-        case PL_TILEGOAL_500PTS:
+        case PL_TILE_GOAL_500PTS:
         {
             if (direction == 4)
             {
@@ -874,7 +874,7 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
             }
             break;
         }
-        case PL_TILEGOAL_1000PTS:
+        case PL_TILE_GOAL_1000PTS:
         {
             if (direction == 4)
             {
@@ -887,7 +887,7 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
             }
             break;
         }
-        case PL_TILEGOAL_2000PTS:
+        case PL_TILE_GOAL_2000PTS:
         {
             if (direction == 4)
             {
@@ -900,7 +900,7 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
             }
             break;
         }
-        case PL_TILEGOAL_5000PTS:
+        case PL_TILE_GOAL_5000PTS:
         {
             if (direction == 4)
             {
@@ -964,34 +964,34 @@ bool pl_enemyTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, 
 {
     switch (tileId)
     {
-        case PL_TILEBOUNCE_BLOCK:
+        case PL_TILE_BOUNCE_BLOCK:
         {
             switch (direction)
             {
                 case 0:
                     // hitBlock->xspeed = -64;
-                    if (tileId == PL_TILEBOUNCE_BLOCK)
+                    if (tileId == PL_TILE_BOUNCE_BLOCK)
                     {
                         self->xspeed = 48;
                     }
                     break;
                 case 1:
                     // hitBlock->xspeed = 64;
-                    if (tileId == PL_TILEBOUNCE_BLOCK)
+                    if (tileId == PL_TILE_BOUNCE_BLOCK)
                     {
                         self->xspeed = -48;
                     }
                     break;
                 case 2:
                     // hitBlock->yspeed = -128;
-                    if (tileId == PL_TILEBOUNCE_BLOCK)
+                    if (tileId == PL_TILE_BOUNCE_BLOCK)
                     {
                         self->yspeed = 48;
                     }
                     break;
                 case 4:
                     // hitBlock->yspeed = (tileId == PL_TILEBRICK_BLOCK) ? 32 : 64;
-                    if (tileId == PL_TILEBOUNCE_BLOCK)
+                    if (tileId == PL_TILE_BOUNCE_BLOCK)
                     {
                         self->yspeed = -48;
                     }
@@ -1143,7 +1143,7 @@ void updateWarp(plEntity_t* self)
                > (self->tilemap->mapOffsetY + PL_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD))
     {
         // In pl_destroyEntity, this will overflow to the correct value.
-        self->type = 128 + PL_TILECONTAINER_1;
+        self->type = 128 + PL_TILE_CONTAINER_1;
 
         pl_destroyEntity(self, true);
     }
@@ -1275,34 +1275,34 @@ bool dustBunnyTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
 {
     switch (tileId)
     {
-        case PL_TILEBOUNCE_BLOCK:
+        case PL_TILE_BOUNCE_BLOCK:
         {
             switch (direction)
             {
                 case 0:
                     // hitBlock->xspeed = -64;
-                    if (tileId == PL_TILEBOUNCE_BLOCK)
+                    if (tileId == PL_TILE_BOUNCE_BLOCK)
                     {
                         self->xspeed = 48;
                     }
                     break;
                 case 1:
                     // hitBlock->xspeed = 64;
-                    if (tileId == PL_TILEBOUNCE_BLOCK)
+                    if (tileId == PL_TILE_BOUNCE_BLOCK)
                     {
                         self->xspeed = -48;
                     }
                     break;
                 case 2:
                     // hitBlock->yspeed = -128;
-                    if (tileId == PL_TILEBOUNCE_BLOCK)
+                    if (tileId == PL_TILE_BOUNCE_BLOCK)
                     {
                         self->yspeed = 48;
                     }
                     break;
                 case 4:
                     // hitBlock->yspeed = (tileId == PL_TILEBRICK_BLOCK) ? 32 : 64;
-                    if (tileId == PL_TILEBOUNCE_BLOCK)
+                    if (tileId == PL_TILE_BOUNCE_BLOCK)
                     {
                         self->xDamping = 0;
                         self->xspeed   = 0;
@@ -1356,34 +1356,34 @@ bool dustBunnyL2TileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t t
 {
     switch (tileId)
     {
-        case PL_TILEBOUNCE_BLOCK:
+        case PL_TILE_BOUNCE_BLOCK:
         {
             switch (direction)
             {
                 case 0:
                     // hitBlock->xspeed = -64;
-                    if (tileId == PL_TILEBOUNCE_BLOCK)
+                    if (tileId == PL_TILE_BOUNCE_BLOCK)
                     {
                         self->xspeed = 48;
                     }
                     break;
                 case 1:
                     // hitBlock->xspeed = 64;
-                    if (tileId == PL_TILEBOUNCE_BLOCK)
+                    if (tileId == PL_TILE_BOUNCE_BLOCK)
                     {
                         self->xspeed = -48;
                     }
                     break;
                 case 2:
                     // hitBlock->yspeed = -128;
-                    if (tileId == PL_TILEBOUNCE_BLOCK)
+                    if (tileId == PL_TILE_BOUNCE_BLOCK)
                     {
                         self->yspeed = 48;
                     }
                     break;
                 case 4:
                     // hitBlock->yspeed = (tileId == PL_TILEBRICK_BLOCK) ? 32 : 64;
-                    if (tileId == PL_TILEBOUNCE_BLOCK)
+                    if (tileId == PL_TILE_BOUNCE_BLOCK)
                     {
                         self->xDamping = 0;
                         self->xspeed   = 0;
@@ -1439,34 +1439,34 @@ bool dustBunnyL3TileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t t
 {
     switch (tileId)
     {
-        case PL_TILEBOUNCE_BLOCK:
+        case PL_TILE_BOUNCE_BLOCK:
         {
             switch (direction)
             {
                 case 0:
                     // hitBlock->xspeed = -64;
-                    if (tileId == PL_TILEBOUNCE_BLOCK)
+                    if (tileId == PL_TILE_BOUNCE_BLOCK)
                     {
                         self->xspeed = 48;
                     }
                     break;
                 case 1:
                     // hitBlock->xspeed = 64;
-                    if (tileId == PL_TILEBOUNCE_BLOCK)
+                    if (tileId == PL_TILE_BOUNCE_BLOCK)
                     {
                         self->xspeed = -48;
                     }
                     break;
                 case 2:
                     // hitBlock->yspeed = -128;
-                    if (tileId == PL_TILEBOUNCE_BLOCK)
+                    if (tileId == PL_TILE_BOUNCE_BLOCK)
                     {
                         self->yspeed = 48;
                     }
                     break;
                 case 4:
                     // hitBlock->yspeed = (tileId == PL_TILEBRICK_BLOCK) ? 32 : 64;
-                    if (tileId == PL_TILEBOUNCE_BLOCK)
+                    if (tileId == PL_TILE_BOUNCE_BLOCK)
                     {
                         self->xDamping = 0;
                         self->xspeed   = 0;
@@ -1718,7 +1718,7 @@ bool waspTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint
 {
     switch (tileId)
     {
-        case PL_TILEBOUNCE_BLOCK:
+        case PL_TILE_BOUNCE_BLOCK:
         {
             self->xDamping = 1;
             self->falling  = false;
@@ -1853,14 +1853,14 @@ void pl_playerOverlapTileHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, u
 {
     switch (tileId)
     {
-        case PL_TILECOIN_1 ... PL_TILECOIN_3:
+        case PL_TILE_COIN_1 ... PL_TILE_COIN_3:
         {
-            pl_setTile(self->tilemap, tx, ty, PL_TILEEMPTY);
+            pl_setTile(self->tilemap, tx, ty, PL_TILE_EMPTY);
             addCoins(self->gameData, 1);
             pl_scorePoints(self->gameData, 50);
             break;
         }
-        case PL_TILELADDER:
+        case PL_TILE_LADDER:
         {
             if (self->gravityEnabled)
             {
@@ -1875,7 +1875,7 @@ void pl_playerOverlapTileHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, u
         }
     }
 
-    if (!self->gravityEnabled && tileId != PL_TILELADDER)
+    if (!self->gravityEnabled && tileId != PL_TILE_LADDER)
     {
         self->gravityEnabled = true;
         self->falling        = true;
@@ -1951,7 +1951,7 @@ void updateWaveBall(plEntity_t* self)
 
 void waveBallOverlapTileHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty)
 {
-    if (pl_isSolid(tileId) || tileId == PL_TILEBOUNCE_BLOCK)
+    if (pl_isSolid(tileId) || tileId == PL_TILE_BOUNCE_BLOCK)
     {
         pl_destroyEntity(self, false);
         soundPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
