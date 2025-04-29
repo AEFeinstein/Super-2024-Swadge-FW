@@ -66,7 +66,7 @@ void pl_drawTileMap(plTilemap_t* tilemap)
 
             uint8_t tile = tilemap->map[(y * tilemap->mapWidth) + x];
 
-            if (tile < PL_TILEGRASS)
+            if (tile < PL_TILE_GRASS)
             {
                 continue;
             }
@@ -322,16 +322,16 @@ bool pl_isSolid(uint8_t tileId)
 {
     switch (tileId)
     {
-        case PL_TILEEMPTY ... PL_TILEUNUSED_29:
+        case PL_TILE_EMPTY ... PL_TILE_UNUSED_29:
             return false;
             break;
-        case PL_TILEINVISIBLE_BLOCK ... PL_TILEMETAL_PIPE_V:
+        case PL_TILE_INVISIBLE_BLOCK ... PL_TILE_METAL_PIPE_V:
             return true;
             break;
-        case PL_TILEBOUNCE_BLOCK:
+        case PL_TILE_BOUNCE_BLOCK:
             return false;
             break;
-        case PL_TILEDIRT_PATH ... PL_TILECONTAINER_3:
+        case PL_TILE_DIRT_PATH ... PL_TILE_CONTAINER_3:
             return true;
             break;
         default:
@@ -357,12 +357,12 @@ bool pl_needsTransparency(uint8_t tileId)
 {
     switch (tileId)
     {
-        case PL_TILEBOUNCE_BLOCK:
+        case PL_TILE_BOUNCE_BLOCK:
         case PL_TILEGIRDER:
-        case PL_TILECONTAINER_1 ... PL_TILECONTAINER_3:
-        case PL_TILECOIN_1 ... PL_TILECOIN_3:
-        case PL_TILELADDER:
-        case PL_TILEBG_GOAL_ZONE ... PL_TILEBG_CLOUD_D:
+        case PL_TILE_CONTAINER_1 ... PL_TILE_CONTAINER_3:
+        case PL_TILE_COIN_1 ... PL_TILE_COIN_3:
+        case PL_TILE_LADDER:
+        case PL_TILE_BG_GOAL_ZONE ... PL_TILEBG_CLOUD_D:
             return true;
         case PL_TILEBG_CLOUD:
             return false;
@@ -372,7 +372,7 @@ bool pl_needsTransparency(uint8_t tileId)
             return false;
         case PL_TILEBG_CHAINS:
             return true;
-        case PL_TILEBG_WALL:
+        case PL_TILE_BG_WALL:
             return false;
         default:
             return false;
