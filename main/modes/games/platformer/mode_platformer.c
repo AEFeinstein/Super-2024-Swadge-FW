@@ -18,8 +18,10 @@
 
 #include "mode_platformer.h"
 #include "esp_random.h"
+#include <esp_heap_caps.h>
 
 #include "platformer_typedef.h"
+#include "plWsgManager.h"
 #include "plTilemap.h"
 #include "plGameData.h"
 #include "plEntityManager.h"
@@ -70,6 +72,7 @@ typedef void (*gameUpdateFuncton_t)(platformer_t* self);
 struct platformer_t
 {
     font_t radiostars;
+    plWsgManager_t wsgManager;
 
     plTilemap_t tilemap;
     plEntityManager_t entityManager;
@@ -202,7 +205,7 @@ static const char KEY_UNLOCKS[] = "pf_unlocks";
 void platformerEnterMode(void)
 {
     // Allocate memory for this mode
-    platformer = (platformer_t*)calloc(1, sizeof(platformer_t));
+    platformer = (platformer_t*)heap_caps_calloc(1, sizeof(platformer_t), MALLOC_CAP_8BIT);
     memset(platformer, 0, sizeof(platformer_t));
 
     platformer->menuState     = 0;
@@ -219,8 +222,9 @@ void platformerEnterMode(void)
     }
 
     loadFont("radiostars.font", &platformer->radiostars, false);
+    pl_initializeWsgManager(&(platformer->wsgManager));
 
-    pl_initializeTileMap(&(platformer->tilemap));
+    pl_initializeTileMap(&(platformer->tilemap), &(platformer->wsgManager));
     pl_loadMapFromFile(&(platformer->tilemap), leveldef[0].filename);
 
     pl_initializeSoundManager(&(platformer->soundManager));
@@ -244,10 +248,11 @@ void platformerEnterMode(void)
 void platformerExitMode(void)
 {
     freeFont(&platformer->radiostars);
+    pl_freeWsgManager(&(platformer->wsgManager));
     pl_freeTilemap(&(platformer->tilemap));
     pl_freeSoundManager(&(platformer->soundManager));
     pl_freeEntityManager(&(platformer->entityManager));
-    free(platformer);
+    heap_caps_free(platformer);
 }
 
 /**
