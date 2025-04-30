@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "platformer_typedef.h"
+#include "plWsgManager.h"
 #include "plEntity.h"
 #include "plTilemap.h"
 #include "plGameData.h"
@@ -26,7 +27,7 @@
 
 struct plEntityManager_t
 {
-    wsg_t sprites[SPRITESET_SIZE];
+    plWsgManager_t* wsgManager;
     plEntity_t* entities;
     uint8_t activeEntities;
 
@@ -39,9 +40,8 @@ struct plEntityManager_t
 //==============================================================================
 // Prototypes
 //==============================================================================
-void pl_initializeEntityManager(plEntityManager_t* entityManager, plTilemap_t* tilemap, plGameData_t* gameData,
+void pl_initializeEntityManager(plEntityManager_t* entityManager, plWsgManager_t* wsgManager, plTilemap_t* tilemap, plGameData_t* gameData,
                                 plSoundManager_t* soundManager);
-void pl_loadSprites(plEntityManager_t* entityManager);
 void pl_updateEntities(plEntityManager_t* entityManager);
 void pl_deactivateAllEntities(plEntityManager_t* entityManager, bool excludePlayer);
 void pl_drawEntities(plEntityManager_t* entityManager);
