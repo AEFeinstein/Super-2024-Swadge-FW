@@ -13,6 +13,10 @@
 
 #define SWADGE_IT_FPS 40
 
+// TODO tune values
+#define MIC_ENERGY_THRESHOLD  1000
+#define MIC_ENERGY_HYSTERESIS 10
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -85,7 +89,8 @@ typedef struct
 
     int32_t micSamplesProcessed;
     int32_t micEnergy;
-    int32_t micFrameEnergy;
+    list_t micFrameEnergyHistory;
+    bool isYelling;
 
     touchSpinState_t touchSpinState;
 
@@ -343,8 +348,9 @@ static void swadgeItMainLoop(int64_t elapsedUs)
 
                 // Reset mic values
                 si->micSamplesProcessed = 0;
-                si->micFrameEnergy      = 0;
-                si->micEnergy           = 0;
+                clear(&si->micFrameEnergyHistory);
+                si->micEnergy = 0;
+                si->isYelling = false;
 
                 // Lower flag
                 si->pendingSwitchToMic = false;
@@ -379,6 +385,7 @@ static void swadgeItMainLoop(int64_t elapsedUs)
             // Check for motion events
             if (swadgeItCheckForShake())
             {
+                // TODO hysteresis?
                 swadgeItInput(EVT_SHAKE_IT);
             }
 
@@ -398,6 +405,40 @@ static void swadgeItMainLoop(int64_t elapsedUs)
             else
             {
                 si->touchSpinState.startSet = false;
+            }
+
+            // Check for yells
+            if (si->micFrameEnergyHistory.length)
+            {
+                if (false == si->isYelling && (intptr_t)si->micFrameEnergyHistory.last->val > MIC_ENERGY_THRESHOLD)
+                {
+                    swadgeItInput(EVT_YELL_IT);
+                    si->isYelling = true;
+                }
+                else if (si->isYelling)
+                {
+                    int32_t quietSamples = 0;
+                    node_t* micNode      = si->micFrameEnergyHistory.first;
+                    while (micNode)
+                    {
+                        if ((intptr_t)micNode->val > MIC_ENERGY_THRESHOLD)
+                        {
+                            // Still yelling
+                            break;
+                        }
+                        else
+                        {
+                            quietSamples++;
+                        }
+                        micNode = micNode->next;
+                    }
+
+                    if (quietSamples >= MIC_ENERGY_HYSTERESIS)
+                    {
+                        clear(&si->micFrameEnergyHistory);
+                        si->isYelling = false;
+                    }
+                }
             }
 
             // Run game specific logic
@@ -642,6 +683,12 @@ static void swadgeItInput(swadgeItEvt_t evt)
         return;
     }
 
+    // Ignore game input if not in a game mode
+    if (!(SI_MEMORY == si->screen || SI_REACTION == si->screen))
+    {
+        return;
+    }
+
     // If the input matches the current event
     if (evt == (swadgeItEvt_t)si->inputQueue.first->val)
     {
@@ -687,17 +734,14 @@ static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt)
         // If we've captured a visual frame's worth of samples
         if ((ADC_SAMPLE_RATE_HZ / SWADGE_IT_FPS) == si->micSamplesProcessed)
         {
-            // Save to micFrameEnergy and reset
+            // Save to micFrameEnergyHistory and reset
             si->micSamplesProcessed = 0;
-            si->micFrameEnergy      = si->micEnergy;
-            si->micEnergy           = 0;
-
-            // TODO hysteresis?
-            if (si->micFrameEnergy > 500)
+            push(&si->micFrameEnergyHistory, (void*)((intptr_t)si->micEnergy));
+            while (si->micFrameEnergyHistory.length > MIC_ENERGY_HYSTERESIS)
             {
-                // TODO this is triggering immediately, even when quiet?
-                swadgeItInput(EVT_YELL_IT);
+                shift(&si->micFrameEnergyHistory);
             }
+            si->micEnergy = 0;
         }
     }
 }
