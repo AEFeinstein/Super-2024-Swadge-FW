@@ -14,7 +14,7 @@
 // Constants
 //==============================================================================
 #define PL_WSGS_SIZE      94
-#define PL_SPRITESET_SIZE 33
+#define PL_SPRITESET_SIZE 51
 #define PL_TILE_SET_SIZE  72
 
 //==============================================================================
@@ -32,7 +32,7 @@ typedef struct
 
     uint8_t globalTileAnimationFrame;
     int16_t globalTileAnimationTimer;
-} pLWsgManager_t;
+} plWsgManager_t;
 
 //==============================================================================
 // Function Definitions

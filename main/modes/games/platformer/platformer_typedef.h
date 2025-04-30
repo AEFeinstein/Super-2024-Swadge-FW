@@ -310,6 +310,6 @@ typedef enum {
     PL_WSG_BG_METAL,
     PL_WSG_BG_CHAINS,
     PL_WSG_BG_WALL
-} pl_wsgIndex_t
+} pl_wsgIndex_t;
 
 #endif

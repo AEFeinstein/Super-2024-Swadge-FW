@@ -21,7 +21,7 @@ void pl_initializeWsgManager(plWsgManager_t* self)
 
 void pl_freeWsgManager(plWsgManager_t* self)
 {
-    for (uint16_t i = 0; i < PA_WSGS_SIZE; i++)
+    for (uint16_t i = 0; i < PL_WSGS_SIZE; i++)
     {
         freeWsg(&self->wsgs[i]);
     }
@@ -441,8 +441,8 @@ void pl_animateTiles(plWsgManager_t* self)
         // Assumption: all animated tiles have 6 frames of animation
         self->globalTileAnimationFrame = ((self->globalTileAnimationFrame + 1) % 6);
 
-        pl_remapWsgToTile(self, 9, PA_WSG_BLOCK_BLUE + self->globalTileAnimationFrame);
-        pl_remapWsgToSprite(self, PA_SP_BONUS_BLOCK, PA_WSG_BLOCK_BLUE + self->globalTileAnimationFrame);
+        //pl_remapWsgToTile(self, 9, PA_WSG_BLOCK_BLUE + self->globalTileAnimationFrame);
+        //pl_remapWsgToSprite(self, PA_SP_BONUS_BLOCK, PA_WSG_BLOCK_BLUE + self->globalTileAnimationFrame);
 
         self->globalTileAnimationTimer = 6;
     }
@@ -451,5 +451,5 @@ void pl_animateTiles(plWsgManager_t* self)
 void pl_remapBlockTile(plWsgManager_t* self, uint16_t newBlockWsgIndex)
 {
     pl_remapWsgToTile(self, 8, newBlockWsgIndex);
-    pl_remapWsgToSprite(self, PA_SP_BLOCK, newBlockWsgIndex);
+    //pl_remapWsgToSprite(self, PA_SP_BLOCK, newBlockWsgIndex);
 }

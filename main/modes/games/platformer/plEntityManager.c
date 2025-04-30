@@ -72,9 +72,9 @@ void pl_loadSprites(plEntityManager_t* entityManager)
     loadWsg("sprite027.wsg", &entityManager->sprites[PL_SP_1UP_1], false);
     loadWsg("sprite028.wsg", &entityManager->sprites[PL_SP_1UP_2], false);
     loadWsg("sprite029.wsg", &entityManager->sprites[PL_SP_1UP_3], false);
-    loadWsg("sprite030.wsg", &entityManager->sprites[SP_WAVEBALL_1], false);
-    loadWsg("sprite031.wsg", &entityManager->sprites[SP_WAVEBALL_2], false);
-    loadWsg("sprite032.wsg", &entityManager->sprites[SP_WAVEBALL_3], false);
+    loadWsg("sprite030.wsg", &entityManager->sprites[PL_SP_WAVEBALL_1], false);
+    loadWsg("sprite031.wsg", &entityManager->sprites[PL_SP_WAVEBALL_2], false);
+    loadWsg("sprite032.wsg", &entityManager->sprites[PL_SP_WAVEBALL_3], false);
     loadWsg("sprite033.wsg", &entityManager->sprites[PL_SP_ENEMY_BUSH_L2], false);
     loadWsg("sprite034.wsg", &entityManager->sprites[PL_SP_ENEMY_BUSH_L3], false);
     loadWsg("sprite035.wsg", &entityManager->sprites[PL_SP_DUSTBUNNY_L2_IDLE], false);
@@ -89,10 +89,10 @@ void pl_loadSprites(plEntityManager_t* entityManager)
     loadWsg("sprite044.wsg", &entityManager->sprites[PL_SP_WASP_L3_1], false);
     loadWsg("sprite045.wsg", &entityManager->sprites[PL_SP_WASP_L3_2], false);
     loadWsg("sprite046.wsg", &entityManager->sprites[PL_SP_WASP_L3_DIVE], false);
-    loadWsg("sprite047.wsg", &entityManager->sprites[SP_CHECKPOINT_INACTIVE], false);
-    loadWsg("sprite048.wsg", &entityManager->sprites[SP_CHECKPOINT_ACTIVE_1], false);
-    loadWsg("sprite049.wsg", &entityManager->sprites[SP_CHECKPOINT_ACTIVE_2], false);
-    loadWsg("tile039.wsg", &entityManager->sprites[SP_BOUNCE_BLOCK], false);
+    loadWsg("sprite047.wsg", &entityManager->sprites[PL_SP_CHECKPOINT_INACTIVE], false);
+    loadWsg("sprite048.wsg", &entityManager->sprites[PL_SP_CHECKPOINT_ACTIVE_1], false);
+    loadWsg("sprite049.wsg", &entityManager->sprites[PL_SP_CHECKPOINT_ACTIVE_2], false);
+    loadWsg("tile039.wsg", &entityManager->sprites[PL_SP_BOUNCE_BLOCK], false);
 }
 
 void pl_updateEntities(plEntityManager_t* entityManager)
@@ -1195,7 +1195,7 @@ plEntity_t* createWaveBall(plEntityManager_t* entityManager, uint16_t x, uint16_
     entity->xDamping             = 0; // This will be repurposed as a state tracker
 
     entity->type                 = ENTITY_WAVE_BALL;
-    entity->spriteIndex          = SP_WAVEBALL_1;
+    entity->spriteIndex          = PL_SP_WAVEBALL_1;
     entity->animationTimer       = 0;
     entity->updateFunction       = &updateWaveBall;
     entity->collisionHandler     = &pl_dummyCollisionHandler;
@@ -1232,7 +1232,7 @@ plEntity_t* createCheckpoint(plEntityManager_t* entityManager, uint16_t x, uint1
     entity->xDamping = 0; // State of the checkpoint. 0 = inactive, 1 = active
 
     entity->type                 = ENTITY_CHECKPOINT;
-    entity->spriteIndex          = SP_CHECKPOINT_INACTIVE;
+    entity->spriteIndex          = PL_SP_CHECKPOINT_INACTIVE;
     entity->animationTimer       = 0;
     entity->updateFunction       = &updateCheckpoint;
     entity->collisionHandler     = &pl_dummyCollisionHandler;
