@@ -803,7 +803,7 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
 
                 if (tileId == PL_TILE_BOUNCE_BLOCK)
                 {
-                    hitBlock->spriteIndex = SP_BOUNCE_BLOCK;
+                    hitBlock->spriteIndex = PL_SP_BOUNCE_BLOCK;
                 }
 
                 switch (direction)
@@ -1842,7 +1842,7 @@ void updateCheckpoint(plEntity_t* self)
     {
         if (self->gameData->frameCount % 15 == 0)
         {
-            self->spriteIndex = SP_CHECKPOINT_ACTIVE_1 + ((self->spriteIndex + 1) % 2);
+            self->spriteIndex = PL_SP_CHECKPOINT_ACTIVE_1 + ((self->spriteIndex + 1) % 2);
         }
     }
 
@@ -1901,7 +1901,7 @@ void updateWaveBall(plEntity_t* self)
 {
     if (self->gameData->frameCount % 4 == 0)
     {
-        self->spriteIndex = (SP_WAVEBALL_1 + ((self->spriteIndex + 1) % 3));
+        self->spriteIndex = (PL_SP_WAVEBALL_1 + ((self->spriteIndex + 1) % 3));
     }
 
     if (self->gameData->frameCount % 4 == 0)
