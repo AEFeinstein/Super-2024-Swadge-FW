@@ -2002,3 +2002,13 @@ void killPlayer(plEntity_t* self)
     self->gameData->changeState = PL_ST_DEAD;
     self->falling               = true;
 }
+
+void pl_defaultEntityDrawHandler(plEntity_t* self)
+{
+    drawWsg(self->entityManager->wsgManager->sprites[self->spriteIndex].wsg,
+            (self->x >> SUBPIXEL_RESOLUTION) - self->entityManager->wsgManager->sprites[self->spriteIndex].originX
+                - self->entityManager->tilemap->mapOffsetX,
+            (self->y >> SUBPIXEL_RESOLUTION) - self->entityManager->tilemap->mapOffsetY
+                - self->entityManager->wsgManager->sprites[self->spriteIndex].originY,
+            self->spriteFlipHorizontal, self->spriteFlipVertical, 0);
+}

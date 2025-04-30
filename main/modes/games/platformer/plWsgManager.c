@@ -51,9 +51,9 @@ void pl_loadWsgs(plWsgManager_t* self)
     loadWsg("sprite021.wsg", &self->wsgs[PL_WSG_WARP_1], false);
     loadWsg("sprite022.wsg", &self->wsgs[PL_WSG_WARP_2], false);
     loadWsg("sprite023.wsg", &self->wsgs[PL_WSG_WARP_3], false);
-    loadWsg("sprite024.wsg", &self->wsgs[PL_WSG_WAPL_WSG_1], false);
-    loadWsg("sprite025.wsg", &self->wsgs[PL_WSG_WAPL_WSG_2], false);
-    loadWsg("sprite026.wsg", &self->wsgs[PL_WSG_WAPL_WSG_DIVE], false);
+    loadWsg("sprite024.wsg", &self->wsgs[PL_WSG_WASP_1], false);
+    loadWsg("sprite025.wsg", &self->wsgs[PL_WSG_WASP_2], false);
+    loadWsg("sprite026.wsg", &self->wsgs[PL_WSG_WASP_DIVE], false);
     loadWsg("sprite027.wsg", &self->wsgs[PL_WSG_1UP_1], false);
     loadWsg("sprite028.wsg", &self->wsgs[PL_WSG_1UP_2], false);
     loadWsg("sprite029.wsg", &self->wsgs[PL_WSG_1UP_3], false);
@@ -68,12 +68,12 @@ void pl_loadWsgs(plWsgManager_t* self)
     loadWsg("sprite038.wsg", &self->wsgs[PL_WSG_DUSTBUNNY_L3_IDLE], false);
     loadWsg("sprite039.wsg", &self->wsgs[PL_WSG_DUSTBUNNY_L3_CHARGE], false);
     loadWsg("sprite040.wsg", &self->wsgs[PL_WSG_DUSTBUNNY_L3_JUMP], false);
-    loadWsg("sprite041.wsg", &self->wsgs[PL_WSG_WAPL_WSG_L2_1], false);
-    loadWsg("sprite042.wsg", &self->wsgs[PL_WSG_WAPL_WSG_L2_2], false);
-    loadWsg("sprite043.wsg", &self->wsgs[PL_WSG_WAPL_WSG_L2_DIVE], false);
-    loadWsg("sprite044.wsg", &self->wsgs[PL_WSG_WAPL_WSG_L3_1], false);
-    loadWsg("sprite045.wsg", &self->wsgs[PL_WSG_WAPL_WSG_L3_2], false);
-    loadWsg("sprite046.wsg", &self->wsgs[PL_WSG_WAPL_WSG_L3_DIVE], false);
+    loadWsg("sprite041.wsg", &self->wsgs[PL_WSG_WASP_L2_1], false);
+    loadWsg("sprite042.wsg", &self->wsgs[PL_WSG_WASP_L2_2], false);
+    loadWsg("sprite043.wsg", &self->wsgs[PL_WSG_WASP_L2_DIVE], false);
+    loadWsg("sprite044.wsg", &self->wsgs[PL_WSG_WASP_L3_1], false);
+    loadWsg("sprite045.wsg", &self->wsgs[PL_WSG_WASP_L3_2], false);
+    loadWsg("sprite046.wsg", &self->wsgs[PL_WSG_WASP_L3_DIVE], false);
     loadWsg("sprite047.wsg", &self->wsgs[PL_WSG_CHECKPOINT_INACTIVE], false);
     loadWsg("sprite048.wsg", &self->wsgs[PL_WSG_CHECKPOINT_ACTIVE_1], false);
     loadWsg("sprite049.wsg", &self->wsgs[PL_WSG_CHECKPOINT_ACTIVE_2], false);
@@ -130,207 +130,207 @@ void pl_loadWsgs(plWsgManager_t* self)
 
 void pl_initializeSprites(plWsgManager_t* self)
 {
-    self->sprites[PL_SP_PLAYER_IDLE].wsg     = &self->wsgs[PL_SP_PLAYER_IDLE];
+    self->sprites[PL_SP_PLAYER_IDLE].wsg     = &self->wsgs[PL_WSG_PLAYER_IDLE];
     self->sprites[PL_SP_PLAYER_IDLE].originX = 8;
     self->sprites[PL_SP_PLAYER_IDLE].originY = 8;
 
-    self->sprites[PL_SP_PLAYER_WALK1].wsg     = &self->wsgs[PL_SP_PLAYER_WALK1];
+    self->sprites[PL_SP_PLAYER_WALK1].wsg     = &self->wsgs[PL_WSG_PLAYER_WALK1];
     self->sprites[PL_SP_PLAYER_WALK1].originX = 8;
     self->sprites[PL_SP_PLAYER_WALK1].originY = 8;
 
-    self->sprites[PL_SP_PLAYER_WALK2].wsg     = &self->wsgs[PL_SP_PLAYER_WALK2];
+    self->sprites[PL_SP_PLAYER_WALK2].wsg     = &self->wsgs[PL_WSG_PLAYER_WALK2];
     self->sprites[PL_SP_PLAYER_WALK2].originX = 8;
     self->sprites[PL_SP_PLAYER_WALK2].originY = 8;
 
-    self->sprites[PL_SP_PLAYER_WALK3].wsg     = &self->wsgs[PL_SP_PLAYER_WALK3];
+    self->sprites[PL_SP_PLAYER_WALK3].wsg     = &self->wsgs[PL_WSG_PLAYER_WALK3];
     self->sprites[PL_SP_PLAYER_WALK3].originX = 8;
     self->sprites[PL_SP_PLAYER_WALK3].originY = 8;
 
-    self->sprites[PL_SP_PLAYER_JUMP].wsg     = &self->wsgs[PL_SP_PLAYER_JUMP];
+    self->sprites[PL_SP_PLAYER_JUMP].wsg     = &self->wsgs[PL_WSG_PLAYER_JUMP];
     self->sprites[PL_SP_PLAYER_JUMP].originX = 8;
     self->sprites[PL_SP_PLAYER_JUMP].originY = 8;
 
-    self->sprites[PL_SP_PLAYER_SLIDE].wsg     = &self->wsgs[PL_SP_PLAYER_SLIDE];
+    self->sprites[PL_SP_PLAYER_SLIDE].wsg     = &self->wsgs[PL_WSG_PLAYER_SLIDE];
     self->sprites[PL_SP_PLAYER_SLIDE].originX = 8;
     self->sprites[PL_SP_PLAYER_SLIDE].originY = 8;
 
-    self->sprites[PL_SP_PLAYER_HURT].wsg     = &self->wsgs[PL_SP_PLAYER_HURT];
+    self->sprites[PL_SP_PLAYER_HURT].wsg     = &self->wsgs[PL_WSG_PLAYER_HURT];
     self->sprites[PL_SP_PLAYER_HURT].originX = 8;
     self->sprites[PL_SP_PLAYER_HURT].originY = 8;
 
-    self->sprites[PL_SP_PLAYER_CLIMB].wsg     = &self->wsgs[PL_SP_PLAYER_CLIMB];
+    self->sprites[PL_SP_PLAYER_CLIMB].wsg     = &self->wsgs[PL_WSG_PLAYER_CLIMB];
     self->sprites[PL_SP_PLAYER_CLIMB].originX = 8;
     self->sprites[PL_SP_PLAYER_CLIMB].originY = 8;
 
-    self->sprites[PL_SP_PLAYER_WIN].wsg     = &self->wsgs[PL_SP_PLAYER_WIN];
+    self->sprites[PL_SP_PLAYER_WIN].wsg     = &self->wsgs[PL_WSG_PLAYER_WIN];
     self->sprites[PL_SP_PLAYER_WIN].originX = 8;
     self->sprites[PL_SP_PLAYER_WIN].originY = 8;
 
-    self->sprites[PL_SP_ENEMY_BASIC].wsg     = &self->wsgs[PL_SP_ENEMY_BASIC];
+    self->sprites[PL_SP_ENEMY_BASIC].wsg     = &self->wsgs[PL_WSG_ENEMY_BASIC];
     self->sprites[PL_SP_ENEMY_BASIC].originX = 8;
     self->sprites[PL_SP_ENEMY_BASIC].originY = 8;
 
-    self->sprites[PL_SP_HITBLOCK_CONTAINER].wsg     = &self->wsgs[PL_SP_HITBLOCK_CONTAINER];
+    self->sprites[PL_SP_HITBLOCK_CONTAINER].wsg     = &self->wsgs[PL_WSG_CONTAINER_1];
     self->sprites[PL_SP_HITBLOCK_CONTAINER].originX = 8;
     self->sprites[PL_SP_HITBLOCK_CONTAINER].originY = 8;
 
-    self->sprites[PL_SP_HITBLOCK_BRICKS].wsg     = &self->wsgs[PL_SP_HITBLOCK_BRICKS];
+    self->sprites[PL_SP_HITBLOCK_BRICKS].wsg     = &self->wsgs[PL_WSG_BRICK_BLOCK];
     self->sprites[PL_SP_HITBLOCK_BRICKS].originX = 8;
     self->sprites[PL_SP_HITBLOCK_BRICKS].originY = 8;
 
-    self->sprites[PL_SP_DUSTBUNNY_IDLE].wsg     = &self->wsgs[PL_SP_DUSTBUNNY_IDLE];
+    self->sprites[PL_SP_DUSTBUNNY_IDLE].wsg     = &self->wsgs[PL_WSG_DUSTBUNNY_IDLE];
     self->sprites[PL_SP_DUSTBUNNY_IDLE].originX = 8;
     self->sprites[PL_SP_DUSTBUNNY_IDLE].originY = 8;
 
-    self->sprites[PL_SP_DUSTBUNNY_CHARGE].wsg     = &self->wsgs[PL_SP_DUSTBUNNY_CHARGE];
+    self->sprites[PL_SP_DUSTBUNNY_CHARGE].wsg     = &self->wsgs[PL_WSG_DUSTBUNNY_CHARGE];
     self->sprites[PL_SP_DUSTBUNNY_CHARGE].originX = 8;
     self->sprites[PL_SP_DUSTBUNNY_CHARGE].originY = 8;
 
-    self->sprites[PL_SP_DUSTBUNNY_JUMP].wsg     = &self->wsgs[PL_SP_DUSTBUNNY_JUMP];
+    self->sprites[PL_SP_DUSTBUNNY_JUMP].wsg     = &self->wsgs[PL_WSG_DUSTBUNNY_JUMP];
     self->sprites[PL_SP_DUSTBUNNY_JUMP].originX = 8;
     self->sprites[PL_SP_DUSTBUNNY_JUMP].originY = 8;
 
-    self->sprites[PL_SP_GAMING_1].wsg     = &self->wsgs[PL_SP_GAMING_1];
+    self->sprites[PL_SP_GAMING_1].wsg     = &self->wsgs[PL_WSG_GAMING_1];
     self->sprites[PL_SP_GAMING_1].originX = 8;
     self->sprites[PL_SP_GAMING_1].originY = 8;
 
-    self->sprites[PL_SP_GAMING_2].wsg     = &self->wsgs[PL_SP_GAMING_2];
+    self->sprites[PL_SP_GAMING_2].wsg     = &self->wsgs[PL_WSG_GAMING_2];
     self->sprites[PL_SP_GAMING_2].originX = 8;
     self->sprites[PL_SP_GAMING_2].originY = 8;
 
-    self->sprites[PL_SP_GAMING_3].wsg     = &self->wsgs[PL_SP_GAMING_3];
+    self->sprites[PL_SP_GAMING_3].wsg     = &self->wsgs[PL_WSG_GAMING_3];
     self->sprites[PL_SP_GAMING_3].originX = 8;
     self->sprites[PL_SP_GAMING_3].originY = 8;
 
-    self->sprites[PL_SP_MUSIC_1].wsg     = &self->wsgs[PL_SP_MUSIC_1];
+    self->sprites[PL_SP_MUSIC_1].wsg     = &self->wsgs[PL_WSG_MUSIC_1];
     self->sprites[PL_SP_MUSIC_1].originX = 8;
     self->sprites[PL_SP_MUSIC_1].originY = 8;
 
-    self->sprites[PL_SP_MUSIC_2].wsg     = &self->wsgs[PL_SP_MUSIC_2];
+    self->sprites[PL_SP_MUSIC_2].wsg     = &self->wsgs[PL_WSG_MUSIC_2];
     self->sprites[PL_SP_MUSIC_2].originX = 8;
     self->sprites[PL_SP_MUSIC_2].originY = 8;
 
-    self->sprites[PL_SP_MUSIC_3].wsg     = &self->wsgs[PL_SP_MUSIC_3];
+    self->sprites[PL_SP_MUSIC_3].wsg     = &self->wsgs[PL_WSG_MUSIC_3];
     self->sprites[PL_SP_MUSIC_3].originX = 8;
     self->sprites[PL_SP_MUSIC_3].originY = 8;
 
-    self->sprites[PL_SP_WARP_1].wsg     = &self->wsgs[PL_SP_WARP_1];
+    self->sprites[PL_SP_WARP_1].wsg     = &self->wsgs[PL_WSG_WARP_1];
     self->sprites[PL_SP_WARP_1].originX = 8;
     self->sprites[PL_SP_WARP_1].originY = 8;
 
-    self->sprites[PL_SP_WARP_2].wsg     = &self->wsgs[PL_SP_WARP_2];
+    self->sprites[PL_SP_WARP_2].wsg     = &self->wsgs[PL_WSG_WARP_2];
     self->sprites[PL_SP_WARP_2].originX = 8;
     self->sprites[PL_SP_WARP_2].originY = 8;
 
-    self->sprites[PL_SP_WARP_3].wsg     = &self->wsgs[PL_SP_WARP_3];
+    self->sprites[PL_SP_WARP_3].wsg     = &self->wsgs[PL_WSG_WARP_3];
     self->sprites[PL_SP_WARP_3].originX = 8;
     self->sprites[PL_SP_WARP_3].originY = 8;
 
-    self->sprites[PL_SP_WASP_1].wsg     = &self->wsgs[PL_SP_WASP_1];
+    self->sprites[PL_SP_WASP_1].wsg     = &self->wsgs[PL_WSG_WASP_1];
     self->sprites[PL_SP_WASP_1].originX = 8;
     self->sprites[PL_SP_WASP_1].originY = 8;
 
-    self->sprites[PL_SP_WASP_2].wsg     = &self->wsgs[PL_SP_WASP_2];
+    self->sprites[PL_SP_WASP_2].wsg     = &self->wsgs[PL_WSG_WASP_2];
     self->sprites[PL_SP_WASP_2].originX = 8;
     self->sprites[PL_SP_WASP_2].originY = 8;
 
-    self->sprites[PL_SP_WASP_DIVE].wsg     = &self->wsgs[PL_SP_WASP_DIVE];
+    self->sprites[PL_SP_WASP_DIVE].wsg     = &self->wsgs[PL_WSG_WASP_DIVE];
     self->sprites[PL_SP_WASP_DIVE].originX = 8;
     self->sprites[PL_SP_WASP_DIVE].originY = 8;
 
-    self->sprites[PL_SP_1UP_1].wsg     = &self->wsgs[PL_SP_1UP_1];
+    self->sprites[PL_SP_1UP_1].wsg     = &self->wsgs[PL_WSG_1UP_1];
     self->sprites[PL_SP_1UP_1].originX = 8;
     self->sprites[PL_SP_1UP_1].originY = 8;
 
-    self->sprites[PL_SP_1UP_2].wsg     = &self->wsgs[PL_SP_1UP_2];
+    self->sprites[PL_SP_1UP_2].wsg     = &self->wsgs[PL_WSG_1UP_2];
     self->sprites[PL_SP_1UP_2].originX = 8;
     self->sprites[PL_SP_1UP_2].originY = 8;
 
-    self->sprites[PL_SP_1UP_3].wsg     = &self->wsgs[PL_SP_1UP_3];
+    self->sprites[PL_SP_1UP_3].wsg     = &self->wsgs[PL_WSG_1UP_3];
     self->sprites[PL_SP_1UP_3].originX = 8;
     self->sprites[PL_SP_1UP_3].originY = 8;
 
-    self->sprites[PL_SP_WAVEBALL_1].wsg     = &self->wsgs[PL_SP_WAVEBALL_1];
+    self->sprites[PL_SP_WAVEBALL_1].wsg     = &self->wsgs[PL_WSG_WAVEBALL_1];
     self->sprites[PL_SP_WAVEBALL_1].originX = 8;
     self->sprites[PL_SP_WAVEBALL_1].originY = 8;
 
-    self->sprites[PL_SP_WAVEBALL_2].wsg     = &self->wsgs[PL_SP_WAVEBALL_2];
+    self->sprites[PL_SP_WAVEBALL_2].wsg     = &self->wsgs[PL_WSG_WAVEBALL_2];
     self->sprites[PL_SP_WAVEBALL_2].originX = 8;
     self->sprites[PL_SP_WAVEBALL_2].originY = 8;
 
-    self->sprites[PL_SP_WAVEBALL_3].wsg     = &self->wsgs[PL_SP_WAVEBALL_3];
+    self->sprites[PL_SP_WAVEBALL_3].wsg     = &self->wsgs[PL_WSG_WAVEBALL_3];
     self->sprites[PL_SP_WAVEBALL_3].originX = 8;
     self->sprites[PL_SP_WAVEBALL_3].originY = 8;
 
-    self->sprites[PL_SP_ENEMY_BUSH_L2].wsg     = &self->wsgs[PL_SP_ENEMY_BUSH_L2];
+    self->sprites[PL_SP_ENEMY_BUSH_L2].wsg     = &self->wsgs[PL_WSG_ENEMY_BUSH_L2];
     self->sprites[PL_SP_ENEMY_BUSH_L2].originX = 8;
     self->sprites[PL_SP_ENEMY_BUSH_L2].originY = 8;
 
-    self->sprites[PL_SP_ENEMY_BUSH_L3].wsg     = &self->wsgs[PL_SP_ENEMY_BUSH_L3];
+    self->sprites[PL_SP_ENEMY_BUSH_L3].wsg     = &self->wsgs[PL_WSG_ENEMY_BUSH_L3];
     self->sprites[PL_SP_ENEMY_BUSH_L3].originX = 8;
     self->sprites[PL_SP_ENEMY_BUSH_L3].originY = 8;
 
-    self->sprites[PL_SP_DUSTBUNNY_L2_IDLE].wsg     = &self->wsgs[PL_SP_DUSTBUNNY_L2_IDLE];
+    self->sprites[PL_SP_DUSTBUNNY_L2_IDLE].wsg     = &self->wsgs[PL_WSG_DUSTBUNNY_L2_IDLE];
     self->sprites[PL_SP_DUSTBUNNY_L2_IDLE].originX = 8;
     self->sprites[PL_SP_DUSTBUNNY_L2_IDLE].originY = 8;
 
-    self->sprites[PL_SP_DUSTBUNNY_L2_CHARGE].wsg     = &self->wsgs[PL_SP_DUSTBUNNY_L2_CHARGE];
+    self->sprites[PL_SP_DUSTBUNNY_L2_CHARGE].wsg     = &self->wsgs[PL_WSG_DUSTBUNNY_L2_CHARGE];
     self->sprites[PL_SP_DUSTBUNNY_L2_CHARGE].originX = 8;
     self->sprites[PL_SP_DUSTBUNNY_L2_CHARGE].originY = 8;
 
-    self->sprites[PL_SP_DUSTBUNNY_L2_JUMP].wsg     = &self->wsgs[PL_SP_DUSTBUNNY_L2_JUMP];
+    self->sprites[PL_SP_DUSTBUNNY_L2_JUMP].wsg     = &self->wsgs[PL_WSG_DUSTBUNNY_L2_JUMP];
     self->sprites[PL_SP_DUSTBUNNY_L2_JUMP].originX = 8;
     self->sprites[PL_SP_DUSTBUNNY_L2_JUMP].originY = 8;
 
-    self->sprites[PL_SP_DUSTBUNNY_L3_IDLE].wsg     = &self->wsgs[PL_SP_DUSTBUNNY_L3_IDLE];
+    self->sprites[PL_SP_DUSTBUNNY_L3_IDLE].wsg     = &self->wsgs[PL_WSG_DUSTBUNNY_L3_IDLE];
     self->sprites[PL_SP_DUSTBUNNY_L3_IDLE].originX = 8;
     self->sprites[PL_SP_DUSTBUNNY_L3_IDLE].originY = 8;
 
-    self->sprites[PL_SP_DUSTBUNNY_L3_CHARGE].wsg     = &self->wsgs[PL_SP_DUSTBUNNY_L3_CHARGE];
+    self->sprites[PL_SP_DUSTBUNNY_L3_CHARGE].wsg     = &self->wsgs[PL_WSG_DUSTBUNNY_L3_CHARGE];
     self->sprites[PL_SP_DUSTBUNNY_L3_CHARGE].originX = 8;
     self->sprites[PL_SP_DUSTBUNNY_L3_CHARGE].originY = 8;
 
-    self->sprites[PL_SP_DUSTBUNNY_L3_JUMP].wsg     = &self->wsgs[PL_SP_DUSTBUNNY_L3_JUMP];
+    self->sprites[PL_SP_DUSTBUNNY_L3_JUMP].wsg     = &self->wsgs[PL_WSG_DUSTBUNNY_L3_JUMP];
     self->sprites[PL_SP_DUSTBUNNY_L3_JUMP].originX = 8;
     self->sprites[PL_SP_DUSTBUNNY_L3_JUMP].originY = 8;
 
-    self->sprites[PL_SP_WASP_L2_1].wsg     = &self->wsgs[PL_SP_WASP_L2_1];
+    self->sprites[PL_SP_WASP_L2_1].wsg     = &self->wsgs[PL_WSG_WASP_L2_1];
     self->sprites[PL_SP_WASP_L2_1].originX = 8;
     self->sprites[PL_SP_WASP_L2_1].originY = 8;
 
-    self->sprites[PL_SP_WASP_L2_2].wsg     = &self->wsgs[PL_SP_WASP_L2_2];
+    self->sprites[PL_SP_WASP_L2_2].wsg     = &self->wsgs[PL_WSG_WASP_L2_2];
     self->sprites[PL_SP_WASP_L2_2].originX = 8;
     self->sprites[PL_SP_WASP_L2_2].originY = 8;
 
-    self->sprites[PL_SP_WASP_L2_DIVE].wsg     = &self->wsgs[PL_SP_WASP_L2_DIVE];
+    self->sprites[PL_SP_WASP_L2_DIVE].wsg     = &self->wsgs[PL_WSG_WASP_L2_DIVE];
     self->sprites[PL_SP_WASP_L2_DIVE].originX = 8;
     self->sprites[PL_SP_WASP_L2_DIVE].originY = 8;
 
-    self->sprites[PL_SP_WASP_L3_1].wsg     = &self->wsgs[PL_SP_WASP_L3_1];
+    self->sprites[PL_SP_WASP_L3_1].wsg     = &self->wsgs[PL_WSG_WASP_L3_1];
     self->sprites[PL_SP_WASP_L3_1].originX = 8;
     self->sprites[PL_SP_WASP_L3_1].originY = 8;
 
-    self->sprites[PL_SP_WASP_L3_2].wsg     = &self->wsgs[PL_SP_WASP_L3_2];
+    self->sprites[PL_SP_WASP_L3_2].wsg     = &self->wsgs[PL_WSG_WASP_L3_2];
     self->sprites[PL_SP_WASP_L3_2].originX = 8;
     self->sprites[PL_SP_WASP_L3_2].originY = 8;
 
-    self->sprites[PL_SP_WASP_L3_DIVE].wsg     = &self->wsgs[PL_SP_WASP_L3_DIVE];
+    self->sprites[PL_SP_WASP_L3_DIVE].wsg     = &self->wsgs[PL_WSG_WASP_L3_DIVE];
     self->sprites[PL_SP_WASP_L3_DIVE].originX = 8;
     self->sprites[PL_SP_WASP_L3_DIVE].originY = 8;
 
-    self->sprites[PL_SP_CHECKPOINT_INACTIVE].wsg     = &self->wsgs[PL_SP_CHECKPOINT_INACTIVE];
+    self->sprites[PL_SP_CHECKPOINT_INACTIVE].wsg     = &self->wsgs[PL_WSG_CHECKPOINT_INACTIVE];
     self->sprites[PL_SP_CHECKPOINT_INACTIVE].originX = 8;
     self->sprites[PL_SP_CHECKPOINT_INACTIVE].originY = 8;
 
-    self->sprites[PL_SP_CHECKPOINT_ACTIVE_1].wsg     = &self->wsgs[PL_SP_CHECKPOINT_ACTIVE_1];
+    self->sprites[PL_SP_CHECKPOINT_ACTIVE_1].wsg     = &self->wsgs[PL_WSG_CHECKPOINT_ACTIVE_1];
     self->sprites[PL_SP_CHECKPOINT_ACTIVE_1].originX = 8;
     self->sprites[PL_SP_CHECKPOINT_ACTIVE_1].originY = 8;
 
-    self->sprites[PL_SP_CHECKPOINT_ACTIVE_2].wsg     = &self->wsgs[PL_SP_CHECKPOINT_ACTIVE_2];
+    self->sprites[PL_SP_CHECKPOINT_ACTIVE_2].wsg     = &self->wsgs[PL_WSG_CHECKPOINT_ACTIVE_2];
     self->sprites[PL_SP_CHECKPOINT_ACTIVE_2].originX = 8;
     self->sprites[PL_SP_CHECKPOINT_ACTIVE_2].originY = 8;
 
-    self->sprites[PL_SP_BOUNCE_BLOCK].wsg     = &self->wsgs[PL_SP_BOUNCE_BLOCK];
+    self->sprites[PL_SP_BOUNCE_BLOCK].wsg     = &self->wsgs[PL_WSG_BOUNCE_BLOCK];
     self->sprites[PL_SP_BOUNCE_BLOCK].originX = 8;
     self->sprites[PL_SP_BOUNCE_BLOCK].originY = 8;
 }
