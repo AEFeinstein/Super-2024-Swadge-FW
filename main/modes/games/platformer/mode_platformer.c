@@ -230,7 +230,7 @@ void platformerEnterMode(void)
     pl_initializeSoundManager(&(platformer->soundManager));
 
     pl_initializeGameData(&(platformer->gameData), &(platformer->soundManager));
-    pl_initializeEntityManager(&(platformer->entityManager), &(platformer->tilemap), &(platformer->gameData),
+    pl_initializeEntityManager(&(platformer->entityManager), &(platformer->wsgManager), &(platformer->tilemap), &(platformer->gameData),
                                &(platformer->soundManager));
 
     platformer->tilemap.entityManager    = &(platformer->entityManager);

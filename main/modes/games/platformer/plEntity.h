@@ -67,6 +67,7 @@ typedef bool (*pl_tileCollisionHandler_t)(struct plEntity_t* self, uint8_t tileI
                                           uint8_t direction);
 typedef void (*pl_fallOffTileHandler_t)(struct plEntity_t* self);
 typedef void (*pl_overlapTileHandler_t)(struct plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
+typedef void (*pl_drawHandler_t)(struct plEntity_t* self);
 
 struct plEntity_t
 {
@@ -118,6 +119,7 @@ struct plEntity_t
     pl_tileCollisionHandler_t tileCollisionHandler;
     pl_fallOffTileHandler_t fallOffTileHandler;
     pl_overlapTileHandler_t overlapTileHandler;
+    pl_drawHandler_t drawHandler;
 };
 
 //==============================================================================
@@ -202,5 +204,6 @@ void updateWaveBall(plEntity_t* self);
 void waveBallOverlapTileHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
 void powerUpCollisionHandler(plEntity_t* self, plEntity_t* other);
 void killPlayer(plEntity_t* self);
+void pl_defaultEntityDrawHandler(plEntity_t* self);
 
 #endif
