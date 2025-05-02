@@ -6,6 +6,7 @@
 #include "mainMenu.h"
 #include "heatshrink_helper.h"
 #include "touchUtils.h"
+#include "embeddedOut.h"
 
 //==============================================================================
 // Defines
@@ -14,8 +15,8 @@
 #define SWADGE_IT_FPS 40
 
 // TODO tune values
-#define MIC_ENERGY_THRESHOLD  1000
-#define MIC_ENERGY_HYSTERESIS 10
+#define MIC_ENERGY_THRESHOLD  100000
+#define MIC_ENERGY_HYSTERESIS 20
 
 //==============================================================================
 // Enums
@@ -88,9 +89,13 @@ typedef struct
     vec3d_t lastOrientation;
 
     int32_t micSamplesProcessed;
-    int32_t micEnergy;
     list_t micFrameEnergyHistory;
     bool isYelling;
+    bool yellInput;
+
+    // Spectral audio data
+    dft32_data dd;
+    embeddedNf_data end;
 
     touchSpinState_t touchSpinState;
 
@@ -244,6 +249,9 @@ static void swadgeItEnterMode(void)
     clear(&si->memoryQueue);
     clear(&si->speechQueue);
 
+    // For yell detection
+    InitColorChord(&si->end, &si->dd);
+
     // Read high scores from NVS
     if (!readNvs32(SI_REACTION_HS_KEY, &si->reactionHighScore))
     {
@@ -346,12 +354,6 @@ static void swadgeItMainLoop(int64_t elapsedUs)
                 // Then switch back to the microphone
                 switchToMicrophone();
 
-                // Reset mic values
-                si->micSamplesProcessed = 0;
-                clear(&si->micFrameEnergyHistory);
-                si->micEnergy = 0;
-                si->isYelling = false;
-
                 // Lower flag
                 si->pendingSwitchToMic = false;
 
@@ -407,38 +409,11 @@ static void swadgeItMainLoop(int64_t elapsedUs)
                 si->touchSpinState.startSet = false;
             }
 
-            // Check for yells
-            if (si->micFrameEnergyHistory.length)
+            // Check for yell input
+            if (si->yellInput)
             {
-                if (false == si->isYelling && (intptr_t)si->micFrameEnergyHistory.last->val > MIC_ENERGY_THRESHOLD)
-                {
-                    swadgeItInput(EVT_YELL_IT);
-                    si->isYelling = true;
-                }
-                else if (si->isYelling)
-                {
-                    int32_t quietSamples = 0;
-                    node_t* micNode      = si->micFrameEnergyHistory.first;
-                    while (micNode)
-                    {
-                        if ((intptr_t)micNode->val > MIC_ENERGY_THRESHOLD)
-                        {
-                            // Still yelling
-                            break;
-                        }
-                        else
-                        {
-                            quietSamples++;
-                        }
-                        micNode = micNode->next;
-                    }
-
-                    if (quietSamples >= MIC_ENERGY_HYSTERESIS)
-                    {
-                        clear(&si->micFrameEnergyHistory);
-                        si->isYelling = false;
-                    }
-                }
+                si->yellInput = false;
+                swadgeItInput(EVT_YELL_IT);
             }
 
             // Run game specific logic
@@ -452,6 +427,13 @@ static void swadgeItMainLoop(int64_t elapsedUs)
                         // Enable speaker for a new verbal command and reset sample count
                         switchToSpeaker();
                         si->sampleIdx = 0;
+
+                        // Reset mic values
+                        si->micSamplesProcessed = 0;
+                        clear(&si->micFrameEnergyHistory);
+                        si->yellInput = false;
+                        si->isYelling = false;
+                        InitColorChord(&si->end, &si->dd);
 
                         // Pick a new event and enqueue it
                         swadgeItEvt_t newEvt = esp_random() % MAX_NUM_EVTS;
@@ -513,6 +495,11 @@ static void swadgeItMainLoop(int64_t elapsedUs)
             int16_t tWidth = textWidth(font, si->dispEvt->label);
             drawText(font, si->dispEvt->txColor, si->dispEvt->label, (TFT_WIDTH - tWidth) / 2,
                      TFT_HEIGHT / 2 - font->height - 2);
+
+            if (SI_MEMORY == si->screen)
+            {
+                // TODO draw some event count to indicate a successful input
+            }
 
             // Draw current score
             char scoreStr[32];
@@ -725,23 +712,68 @@ static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt)
     {
         // Get and process the sample
         int16_t samp = *(samples++);
-        samp /= 2048;
 
-        // Sum the absolute values
-        si->micEnergy += ABS(samp);
+        // Push to colorchord
+        PushSample32(&si->dd, samp);
+
+        // If enough samples have been processed
         si->micSamplesProcessed++;
-
-        // If we've captured a visual frame's worth of samples
-        if ((ADC_SAMPLE_RATE_HZ / SWADGE_IT_FPS) == si->micSamplesProcessed)
+        if (128 == si->micSamplesProcessed)
         {
-            // Save to micFrameEnergyHistory and reset
+            // Handle the frame
             si->micSamplesProcessed = 0;
-            push(&si->micFrameEnergyHistory, (void*)((intptr_t)si->micEnergy));
-            while (si->micFrameEnergyHistory.length > MIC_ENERGY_HYSTERESIS)
+            HandleFrameInfo(&si->end, &si->dd);
+
+            // Sum total energy
+            int32_t totalEnergy = 0;
+            for (uint16_t i = 0; i < FIX_BINS; i++)
+            {
+                totalEnergy += si->end.fuzzed_bins[i];
+            }
+
+            // Add total energy to queue
+            // TODO more efficient ringbuf?
+            push(&si->micFrameEnergyHistory, (void*)((intptr_t)totalEnergy));
+            if (si->micFrameEnergyHistory.length > MIC_ENERGY_HYSTERESIS)
             {
                 shift(&si->micFrameEnergyHistory);
             }
-            si->micEnergy = 0;
+
+            // Check for yelling and not yelling
+            if (!si->isYelling)
+            {
+                // One sample is enough to yell
+                if (totalEnergy > MIC_ENERGY_THRESHOLD)
+                {
+                    si->isYelling = true;
+                    // Process the input on the main loop
+                    si->yellInput = true;
+                }
+            }
+            else // Is yelling, check for return to quiet
+            {
+                // Returning to quiet takes a few samples
+                int32_t quietSamples = 0;
+                node_t* energyNode   = si->micFrameEnergyHistory.first;
+                while (energyNode)
+                {
+                    if ((intptr_t)energyNode->val > MIC_ENERGY_THRESHOLD)
+                    {
+                        // Still yelling
+                        break;
+                    }
+                    else
+                    {
+                        quietSamples++;
+                    }
+                    energyNode = energyNode->next;
+                }
+
+                if (quietSamples >= MIC_ENERGY_HYSTERESIS)
+                {
+                    si->isYelling = false;
+                }
+            }
         }
     }
 }
