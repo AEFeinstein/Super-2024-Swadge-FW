@@ -1093,7 +1093,7 @@ for (uint8_t idx = 0; idx < ARRAY_SIZE(obstacleImageNames); idx++)
 {
     freeWsg(&rd->obstacleImgs[idx]);
 }
-heap_caps_free(&rd->obstacleImgs); 
+heap_caps_free(rd->obstacleImgs); 
 ```
 
 Here's a breakdown of the process:
@@ -1103,7 +1103,7 @@ Here's a breakdown of the process:
 - We loop through each item and assign them in order
 - Lastly, we di-allocate each image and then the containing memory in the exit function
 
-Next, let's discuss how we want to spawn the objects.
+Next, let's discuss how we want to handle the objects. First, we need to give them an initial spawning position and give it a sprite to draw. Next, we need to get them to move based on how long the game's been running. Third, we need to spawn them randomly.
 
 
 

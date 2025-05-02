@@ -10,11 +10,16 @@
 
 const char runnerModeName[] = "Robo Runner";
 
-static const char* const obstacleImageNames[] =
-{
+static const char* const obstacleImageNames[] = {
     "Barrel-1.wsg",
     "Lamp.wsg",
 };
+
+typedef enum
+{
+    BARREL,
+    LAMP,
+} ObstacleType_t;
 
 typedef struct
 {
@@ -34,17 +39,19 @@ typedef struct
 typedef struct
 {
     // Robot
-    player_t robot;
+    player_t robot; // Player object
 
     // Obstacles
-    wsg_t* obstacleImgs;
-    obstacle_t obstacles[MAX_OBSTACLES];
+    wsg_t* obstacleImgs;                 // Array of obstacle images
+    obstacle_t obstacles[MAX_OBSTACLES]; // Object data
+    int obstacleIdx;                     // Index of the next obstacle
 } runnerData_t;
 
 static void runnerEnterMode(void);
 static void runnerExitMode(void);
 static void runnerMainLoop(int64_t elapsedUs);
 static void runnerLogic(int64_t elapsedUS);
+static void spawnObstacle(ObstacleType_t type, int idx);
 static void draw(void);
 
 swadgeMode_t roboRunnerMode = {
@@ -86,7 +93,7 @@ static void runnerExitMode()
     {
         freeWsg(&rd->obstacleImgs[idx]);
     }
-    heap_caps_free(&rd->obstacleImgs); 
+    heap_caps_free(rd->obstacleImgs);
 
     freeWsg(&rd->robot.img);
     free(rd);
@@ -124,6 +131,29 @@ static void runnerLogic(int64_t elapsedUS)
         rd->robot.onGround   = true;
         rd->robot.rect.pos.y = PLAYER_GROUND_OFFSET;
         rd->robot.ySpeed     = 0;
+    }
+}
+
+static void spawnObstacle(ObstacleType_t type, int idx)
+{
+    // Set data that's not going to change
+    rd->obstacles[idx].rect.pos.x = TFT_WIDTH;
+
+    // Swtich based on type
+    switch (type)
+    {
+        case BARREL:
+        default:
+        {
+            // Set box size
+            // Set Y position
+            // Set sprite
+            break;
+        }
+        case LAMP:
+        {
+            break;
+        }
     }
 }
 
