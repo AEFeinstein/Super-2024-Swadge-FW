@@ -18,6 +18,9 @@
 #define MIC_ENERGY_THRESHOLD  100000
 #define MIC_ENERGY_HYSTERESIS 20
 
+#define SHAKE_THRESHOLD  300
+#define SHAKE_HYSTERESIS 10
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -85,6 +88,7 @@ typedef struct
     int32_t speechDelayUs;
     int32_t score;
     const swadgeItEvtData_t* dispEvt;
+    int32_t inputIdx;
 
     vec3d_t lastOrientation;
 
@@ -92,6 +96,9 @@ typedef struct
     list_t micFrameEnergyHistory;
     bool isYelling;
     bool yellInput;
+
+    list_t shakeHistory;
+    bool isShook;
 
     // Spectral audio data
     dft32_data dd;
@@ -387,7 +394,6 @@ static void swadgeItMainLoop(int64_t elapsedUs)
             // Check for motion events
             if (swadgeItCheckForShake())
             {
-                // TODO hysteresis?
                 swadgeItInput(EVT_SHAKE_IT);
             }
 
@@ -491,21 +497,36 @@ static void swadgeItMainLoop(int64_t elapsedUs)
 
             font_t* font = si->menuRenderer->menuFont;
 
+            // Center text vertically
+            int numLines = 2;
+            if (SI_MEMORY == si->screen && 0 != si->inputIdx)
+            {
+                numLines = 3;
+            }
+#define TEXT_Y_SPACING 4
+            int16_t yOff = (TFT_HEIGHT - (numLines * font->height + (numLines - 1) * TEXT_Y_SPACING)) / 2;
+
             // Draw command
             int16_t tWidth = textWidth(font, si->dispEvt->label);
-            drawText(font, si->dispEvt->txColor, si->dispEvt->label, (TFT_WIDTH - tWidth) / 2,
-                     TFT_HEIGHT / 2 - font->height - 2);
+            drawText(font, si->dispEvt->txColor, si->dispEvt->label, (TFT_WIDTH - tWidth) / 2, yOff);
+            yOff += font->height + TEXT_Y_SPACING;
 
-            if (SI_MEMORY == si->screen)
+            // Draw action index for memory mode when there is one
+            if (SI_MEMORY == si->screen && 0 != si->inputIdx)
             {
-                // TODO draw some event count to indicate a successful input
+                char idxStr[32];
+                snprintf(idxStr, sizeof(idxStr) - 1, "Action %" PRId32, si->inputIdx);
+                tWidth = textWidth(font, idxStr);
+                drawText(font, si->dispEvt->txColor, idxStr, (TFT_WIDTH - tWidth) / 2, yOff);
+                yOff += font->height + TEXT_Y_SPACING;
             }
 
             // Draw current score
             char scoreStr[32];
-            snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, si->score);
+            snprintf(scoreStr, sizeof(scoreStr) - 1, "Score %" PRId32, si->score);
             tWidth = textWidth(font, scoreStr);
-            drawText(font, si->dispEvt->txColor, scoreStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) + 2);
+            drawText(font, si->dispEvt->txColor, scoreStr, (TFT_WIDTH - tWidth) / 2, yOff);
+            yOff += font->height + TEXT_Y_SPACING;
 
             break;
         }
@@ -785,21 +806,53 @@ static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt)
  */
 static bool swadgeItCheckForShake(void)
 {
+    // Get the raw IMU value
     if (ESP_OK == accelIntegrate())
     {
         vec3d_t orientation;
         if (ESP_OK == accelGetAccelVecRaw(&orientation.x, &orientation.y, &orientation.z))
         {
+            // Get the difference between the last frame and now
             vec3d_t delta = {
                 .x = ABS(si->lastOrientation.x - orientation.x),
                 .y = ABS(si->lastOrientation.y - orientation.y),
                 .z = ABS(si->lastOrientation.z - orientation.z),
             };
             si->lastOrientation = orientation;
-            int32_t tDelta      = delta.x + delta.y + delta.z;
-            if (tDelta > 300)
+
+            // Sum the deltas
+            int32_t tDelta = delta.x + delta.y + delta.z;
+
+            // Add the value to the history list
+            push(&si->shakeHistory, (void*)((intptr_t)tDelta));
+            if (si->shakeHistory.length > SHAKE_HYSTERESIS)
             {
+                shift(&si->shakeHistory);
+            }
+
+            // If it's not shaking and over the threshold
+            if (!si->isShook && tDelta > SHAKE_THRESHOLD)
+            {
+                // Mark it as shaking
+                si->isShook = true;
                 return true;
+            }
+            else if (si->isShook)
+            {
+                // If it's shaking, check for stability
+                node_t* shakeNode = si->shakeHistory.first;
+                while (shakeNode)
+                {
+                    if (shakeNode->val > SHAKE_THRESHOLD)
+                    {
+                        // Shake in the history, return
+                        return false;
+                    }
+                    shakeNode = shakeNode->next;
+                }
+
+                // No shake in the history, mark it as not shaking
+                si->isShook = false;
             }
         }
     }
@@ -870,11 +923,20 @@ static void swadgeItMenuCb(const char* label, bool selected, uint32_t value)
  */
 static void swadgeItUpdateDisplay(void)
 {
+    // Assume no input index
+    si->inputIdx = 0;
+
     // If there's a speech event
     if (si->speechQueue.length)
     {
         // Display what is spoken
         si->dispEvt = &siEvtData[(swadgeItEvt_t)si->speechQueue.first->val];
+
+        // For memory, get the current index
+        if (SI_MEMORY == si->screen)
+        {
+            si->inputIdx = si->inputQueue.length - si->speechQueue.length + 1;
+        }
     }
     // Otherwise if there's an input event
     else if (si->inputQueue.length)
@@ -884,10 +946,11 @@ static void swadgeItUpdateDisplay(void)
             // Reaction mode, show the current event
             si->dispEvt = &siEvtData[(swadgeItEvt_t)si->inputQueue.first->val];
         }
-        else
+        else if (SI_MEMORY == si->screen)
         {
-            // Memory mode, just show "Go"
-            si->dispEvt = &siGoData;
+            // Memory mode, show "Go" and input index
+            si->dispEvt  = &siGoData;
+            si->inputIdx = si->memoryQueue.length - si->inputQueue.length + 1;
         }
     }
     // Otherwise all inputs are finished and the score isn't zero
