@@ -1,8 +1,8 @@
 /**
  * @file mode_platformer.c
  * @author J.Vega (JVeg199X)
- * @brief Super Swadge Land (port to Swadge 2024)
- * @date 2023-09-22
+ * @brief Super Swadge Land (2025 Update)
+ * @date 2025-04-27
  *
  */
 
@@ -727,6 +727,7 @@ void changeStateReadyScreen(platformer_t* self)
 {
     self->gameData.frameCount = 0;
 
+    globalMidiPlayerGet(MIDI_BGM)->loop = false;
     soundPlayBgm(&(self->soundManager.bgmIntro), BZR_STEREO);
 
     pl_resetGameDataLeds(&(self->gameData));
@@ -823,54 +824,17 @@ void detectGameStateChange(platformer_t* self)
 
 void detectBgmChange(platformer_t* self)
 {
-    if (!self->gameData.changeBgm)
+    if (self->gameData.changeBgm == PL_BGM_NO_CHANGE)
     {
         return;
     }
 
-    switch (self->gameData.changeBgm)
-    {
-        case PL_BGM_NULL:
-            if (self->gameData.currentBgm != PL_BGM_NULL)
-            {
-                soundStop(true);
-            }
-            break;
-
-        case PL_BGM_MAIN:
-            if (self->gameData.currentBgm != PL_BGM_MAIN)
-            {
-                soundPlayBgm(&(self->soundManager.bgmDemagio), BZR_STEREO);
-            }
-            break;
-
-        case PL_BGM_ATHLETIC:
-            if (self->gameData.currentBgm != PL_BGM_ATHLETIC)
-            {
-                soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
-            }
-            break;
-
-        case PL_BGM_UNDERGROUND:
-            if (self->gameData.currentBgm != PL_BGM_UNDERGROUND)
-            {
-                soundPlayBgm(&(self->soundManager.bgmUnderground), BZR_STEREO);
-            }
-            break;
-
-        case PL_BGM_FORTRESS:
-            if (self->gameData.currentBgm != PL_BGM_FORTRESS)
-            {
-                soundPlayBgm(&(self->soundManager.bgmCastle), BZR_STEREO);
-            }
-            break;
-
-        default:
-            break;
+    if(pl_setBgm(&(self->soundManager), self->gameData.changeBgm)){
+        soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
     }
 
     self->gameData.currentBgm = self->gameData.changeBgm;
-    self->gameData.changeBgm  = 0;
+    self->gameData.changeBgm  = PL_BGM_NO_CHANGE;
 }
 
 void changeStateDead(platformer_t* self)
@@ -883,6 +847,7 @@ void changeStateDead(platformer_t* self)
     self->gameData.initialHp  = 1;
 
     soundStop(true);
+    globalMidiPlayerGet(MIDI_BGM)->loop = false;
     soundPlayBgm(&(self->soundManager.sndDie), BZR_STEREO);
 
     self->update = &updateDead;
@@ -954,6 +919,7 @@ void changeStateGameOver(platformer_t* self)
 {
     self->gameData.frameCount = 0;
     pl_resetGameDataLeds(&(self->gameData));
+    globalMidiPlayerGet(MIDI_BGM)->loop = false;
     soundPlayBgm(&(self->soundManager.bgmGameOver), BZR_STEREO);
     self->update = &updateGameOver;
 }
@@ -996,6 +962,7 @@ void updateLevelClear(platformer_t* self)
 
             if (self->gameData.countdown % 2)
             {
+                globalMidiPlayerGet(MIDI_BGM)->loop = false;
                 soundPlayBgm(&(self->soundManager.sndTally), BZR_STEREO);
             }
 
@@ -1093,7 +1060,8 @@ void changeStateGameClear(platformer_t* self)
     self->gameData.frameCount = 0;
     self->update              = &updateGameClear;
     pl_resetGameDataLeds(&(self->gameData));
-    soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
+    pl_setBgm(&(self->soundManager), PL_BGM_ATHLETIC);
+    soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
 }
 
 void updateGameClear(platformer_t* self)
@@ -1292,7 +1260,8 @@ void changeStateNameEntry(platformer_t* self)
         return;
     }
 
-    soundPlayBgm(&(self->soundManager.bgmNameEntry), BZR_STEREO);
+    pl_setBgm(&(self->soundManager), PL_BGM_NAME_ENTRY);
+    soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
     self->menuSelection = self->gameData.initials[0];
     self->update        = &updateNameEntry;
 }
@@ -1428,7 +1397,7 @@ void drawShowHighScores(font_t* font, uint8_t menuState)
 
 void changeStatePause(platformer_t* self)
 {
-    soundStop(true);
+    soundPause();
     soundPlaySfx(&(self->soundManager.sndPause), BZR_STEREO);
     self->update = &updatePause;
 }
@@ -1437,9 +1406,8 @@ void updatePause(platformer_t* self)
 {
     if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START)))
     {
+        soundResume();
         soundPlaySfx(&(self->soundManager.sndPause), BZR_STEREO);
-        self->gameData.changeBgm  = self->gameData.currentBgm;
-        self->gameData.currentBgm = PL_BGM_NULL;
         self->update              = &updateGame;
     }
 

@@ -62,7 +62,7 @@ typedef struct
     uint8_t rank;
     bool debugMode;
 
-    uint8_t changeBgm;
+    int8_t changeBgm;
     uint8_t currentBgm;
 
     bool continuesUsed;
