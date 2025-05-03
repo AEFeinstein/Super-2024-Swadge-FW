@@ -11,6 +11,9 @@
 #define PL_HALF_TILESIZE           8
 #define DESPAWN_THRESHOLD          64
 
+static const char* const PL_BGMS[]
+    = {"bgmDeMAGio.mid", "bgmSmooth.mid", "bgmUnderground.mid", "bgmCastle.mid", "bgmNameEntry.mid"};
+
 //==============================================================================
 // Macros
 //==============================================================================
@@ -43,12 +46,13 @@ typedef enum
 
 typedef enum
 {
-    PL_BGM_NO_CHANGE,
+    PL_BGM_NO_CHANGE = -1,
+    PL_BGM_NULL,
     PL_BGM_MAIN,
     PL_BGM_ATHLETIC,
     PL_BGM_UNDERGROUND,
     PL_BGM_FORTRESS,
-    PL_BGM_NULL
+    PL_BGM_NAME_ENTRY
 } pl_bgmEnum_t;
 
 typedef enum

@@ -19,12 +19,10 @@
 
 typedef struct
 {
-    midiFile_t bgmDemagio;
+    midiFile_t currentBgm;
+    uint16_t currentBgmIndex;
+
     midiFile_t bgmIntro;
-    midiFile_t bgmSmooth;
-    midiFile_t bgmUnderground;
-    midiFile_t bgmCastle;
-    midiFile_t bgmGameStart;
     midiFile_t sndDie;
     midiFile_t sndMenuSelect;
     midiFile_t sndMenuConfirm;
@@ -49,7 +47,6 @@ typedef struct
     midiFile_t sndLevelClearA;
     midiFile_t sndLevelClearS;
     midiFile_t sndTally;
-    midiFile_t bgmNameEntry;
     midiFile_t bgmGameOver;
     midiFile_t sndOuttaTime;
 } plSoundManager_t;
@@ -59,5 +56,6 @@ typedef struct
 //==============================================================================
 void pl_initializeSoundManager(plSoundManager_t* self);
 void pl_freeSoundManager(plSoundManager_t* self);
+bool pl_setBgm(plSoundManager_t* self, uint16_t newBgmIndex);
 
 #endif

@@ -5,24 +5,15 @@
 #include <stdlib.h>
 #include "plSoundManager.h"
 #include "soundFuncs.h"
+#include "platformer_typedef.h"
 
 //==============================================================================
 // Functions
 //==============================================================================
 void pl_initializeSoundManager(plSoundManager_t* self)
 {
-    loadMidiFile("bgmCastle.mid", &self->bgmCastle, true);
-
-    loadMidiFile("bgmDeMAGio.mid", &self->bgmDemagio, true);
-
-    loadMidiFile("bgmGameStart.mid", &self->bgmGameStart, true);
+    self->currentBgmIndex = PL_BGM_NULL;
     loadMidiFile("bgmIntro.mid", &self->bgmIntro, true);
-    loadMidiFile("bgmNameEntry.mid", &self->bgmNameEntry, true);
-
-    loadMidiFile("bgmSmooth.mid", &self->bgmSmooth, true);
-
-    loadMidiFile("bgmUnderground.mid", &self->bgmUnderground, true);
-
     loadMidiFile("snd1up.mid", &self->snd1up, true);
     loadMidiFile("sndBreak.mid", &self->sndBreak, true);
     loadMidiFile("sndCheckpoint.mid", &self->sndCheckpoint, true);
@@ -53,13 +44,11 @@ void pl_initializeSoundManager(plSoundManager_t* self)
 
 void pl_freeSoundManager(plSoundManager_t* self)
 {
-    unloadMidiFile(&self->bgmCastle);
-    unloadMidiFile(&self->bgmDemagio);
-    unloadMidiFile(&self->bgmGameStart);
-    unloadMidiFile(&self->bgmIntro);
-    unloadMidiFile(&self->bgmNameEntry);
-    unloadMidiFile(&self->bgmSmooth);
-    unloadMidiFile(&self->bgmUnderground);
+    if (self->currentBgmIndex != PL_BGM_NULL)
+    {
+        unloadMidiFile(&self->currentBgm);
+    }
+
     unloadMidiFile(&self->snd1up);
     unloadMidiFile(&self->sndBreak);
     unloadMidiFile(&self->sndCheckpoint);
@@ -86,4 +75,33 @@ void pl_freeSoundManager(plSoundManager_t* self)
     unloadMidiFile(&self->sndTally);
     unloadMidiFile(&self->sndWarp);
     unloadMidiFile(&self->sndWaveBall);
+}
+
+/*
+    Loads the indexed BGM into memory.
+    Returns true if the BGM was actually changed, otherwise false
+*/
+bool pl_setBgm(plSoundManager_t* self, uint16_t newBgmIndex)
+{
+    // All BGM's are intended to loop!
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    player->loop         = true;
+    if (self->currentBgmIndex == newBgmIndex)
+    {
+        return false;
+    }
+
+    if (self->currentBgmIndex != PL_BGM_NULL)
+    {
+        player->paused = true;
+        unloadMidiFile(&self->currentBgm);
+    }
+
+    if (newBgmIndex != PL_BGM_NULL)
+    {
+        loadMidiFile(PL_BGMS[newBgmIndex - 1], &self->currentBgm, true);
+    }
+
+    self->currentBgmIndex = newBgmIndex;
+    return true;
 }

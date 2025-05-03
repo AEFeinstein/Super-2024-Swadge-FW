@@ -56,7 +56,7 @@ void pl_initializeGameDataFromTitleScreen(plGameData_t* gameData)
     gameData->checkpoint         = 0;
     gameData->levelDeaths        = 0;
     gameData->currentBgm         = 0;
-    gameData->changeBgm          = 0;
+    gameData->changeBgm          = PL_BGM_NO_CHANGE;
     gameData->initialHp          = 1;
     gameData->continuesUsed      = (gameData->world == 1 && gameData->level == 1) ? false : true;
     gameData->inGameTimer        = 0;
