@@ -495,7 +495,7 @@ First, we need to make an image to display. I'm going to make the little robot t
 
 Did I mention I don't do art? I don't do art. Still, it's better to have this guy than nothing. 
 
-If you're following along feel free to use any other small PNGs or make your own. They don't need to be perfect, just something to see what's going on. Don't worry about quality, making programmer art is a time honored tradition among game developers. Remember, if you make something fun and want better art, we have artists who love to help work on the games we make. You can ask for their help, or help from other people in your circle who like to make art. Swadeg games are collaborative, so don't be shy!
+If you're following along feel free to use any other small PNGs or make your own. They don't need to be perfect, just something to see what's going on. Don't worry about quality, making programmer art is a time honored tradition among game developers. Remember, if you make something fun and want better art, we have artists who love to help work on the games we make. You can ask for their help, or help from other people in your circle who like to make art. Swadge games are collaborative, so don't be shy!
 
 Some notes:
 - The swadge color palette can be found [here](./SwadgePalette.gpl). The swadge will crunch down other colors to closest match, but for better control, you can use this subset of colors to ensure it looks the same as originally designed if using Aseprite
@@ -776,7 +776,7 @@ Let's hit F5!
 
 Well, that's not right.
 
-If you restart the program and spam the jump key, you'll see that the robot can actually stay in frame if oyu jump fast enough. Congratulations, we've just made flappy robot. Seeing as that's not the goal, let's take an inventory of the issues:
+If you restart the program and spam the jump key, you'll see that the robot can actually stay in frame if you jump fast enough. Congratulations, we've just made flappy robot. Seeing as that's not the goal, let's take an inventory of the issues:
 - The robot never stops falling
 - The robot can jump in the air
 - The swadge just draws over the previous frame, resulting in a series of images instead of what you'd expect.
@@ -960,7 +960,7 @@ We're going to have two obstacles: One for the top of the screen to make sure yo
 
 First, let's make a new struct for the obstacle.
 
-#### Geometry.h
+#### The struct and geometry.h
 
 ```C
 typedef struct
@@ -968,6 +968,7 @@ typedef struct
     rectangle_t rect; // Contains the x, y, width and height
     wsg_t img;        // Image to display
     int speed;        // Speed of the obstacle
+    bool active;      // If the obstacle is in play
 } obstacle_t;
 ```
 
@@ -993,6 +994,7 @@ typedef struct
     rectangle_t rect; // Contains the x, y, width and height
     wsg_t img;        // Image to display
     int speed;        // Speed of the obstacle
+    bool active;      // If the obstacle is in play
 } obstacle_t;
 
 typedef struct
@@ -1105,8 +1107,62 @@ Here's a breakdown of the process:
 
 Next, let's discuss how we want to handle the objects. First, we need to give them an initial spawning position and give it a sprite to draw. Next, we need to get them to move based on how long the game's been running. Third, we need to spawn them randomly.
 
+We're gonna need a bunch of code for this, so let's get to typing.
+
+First, let's make a spawn function.
+
+```C
+static void spawnObstacle(ObstacleType_t type, int idx)
+{
+    // Change this obstacle to active only if not already active, and abort if not.
+    if (rd->obstacles[idx].active)
+    {
+        return;
+    }
+    // Might want to be more explicit
+    rd->obstacles[idx].active = true;
+
+    // Set data that's not going to change
+    rd->obstacles[idx].rect.pos.x = TFT_WIDTH - 64;
+
+    // Set box size
+    // Note that both my obstacles are the same size, so changing it at all is redundant
+    // Since they only need to be set once, we can even move them to the initialization step
+    // If they were different, we could put them below.
+    rd->obstacles[idx].rect.height = 24;
+    rd->obstacles[idx].rect.width  = 12;
+
+    // Switch based on type
+    switch (type)
+    {
+        case BARREL:
+        default:
+        {
+            // Set Y position
+            rd->obstacles[idx].rect.pos.y = BARREL_GROUND_OFFSET;
+
+            // Set sprite
+            rd->obstacles[idx].img
+                = BARREL; // Only works because the order we loaded the sprites into the initializer list.
+            break;
+        }
+        case LAMP:
+        {
+            // Set y position
+            rd->obstacles[idx].rect.pos.y = 0; // 0 is the top of the screen
+
+            // Set sprite
+            rd->obstacles[idx].img = LAMP;
+            break;
+        }
+    }
+}
+```
 
 
+- Unset variables
+- Can't hit the lights, too high. Lower them.
+- Color makes seeing the lamps hard. Change.
 - Spawning objects
   - Randomness
   - Variable speeds using US timers instead of frames for consistency

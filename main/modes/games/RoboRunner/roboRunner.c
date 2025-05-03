@@ -5,6 +5,7 @@
 #define Y_ACCEL              1
 #define GROUND_HEIGHT        184
 #define PLAYER_GROUND_OFFSET (GROUND_HEIGHT - 56)
+#define BARREL_GROUND_OFFSET (GROUND_HEIGHT - 18)
 #define PLAYER_X             32
 #define MAX_OBSTACLES        2
 
@@ -34,6 +35,7 @@ typedef struct
     rectangle_t rect; // Contains the x, y, width and height
     int img;          // Image to display
     int speed;        // Speed of the obstacle
+    bool active;      // If the obstacle is in play
 } obstacle_t;
 
 typedef struct
@@ -84,6 +86,16 @@ static void runnerEnterMode()
     {
         loadWsg(obstacleImageNames[idx], &rd->obstacleImgs[idx], true);
     }
+
+    // Initialize the obstacles so we don't accidentally
+    for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+    {
+        rd->obstacles[idx].active = false;
+    }
+
+    // Temp
+    spawnObstacle(BARREL, 0);
+    spawnObstacle(LAMP, 1);
 }
 
 static void runnerExitMode()
@@ -136,22 +148,45 @@ static void runnerLogic(int64_t elapsedUS)
 
 static void spawnObstacle(ObstacleType_t type, int idx)
 {
-    // Set data that's not going to change
-    rd->obstacles[idx].rect.pos.x = TFT_WIDTH;
+    // Change this obstacle to active only if not already active, and abort if not.
+    if (rd->obstacles[idx].active)
+    {
+        return;
+    }
+    // Might want to be more explicit
+    rd->obstacles[idx].active = true;
 
-    // Swtich based on type
+    // Set data that's not going to change
+    rd->obstacles[idx].rect.pos.x = TFT_WIDTH - 64;
+
+    // Set box size
+    // Note that both my obstacles are the same size, so changing it at all is redundant
+    // Since they only need to be set once, we can even move them to the initialization step
+    // If they were different, we could put them below.
+    rd->obstacles[idx].rect.height = 24;
+    rd->obstacles[idx].rect.width  = 12;
+
+    // Switch based on type
     switch (type)
     {
         case BARREL:
         default:
         {
-            // Set box size
             // Set Y position
+            rd->obstacles[idx].rect.pos.y = BARREL_GROUND_OFFSET;
+
             // Set sprite
+            rd->obstacles[idx].img
+                = BARREL; // Only works because the order we loaded the sprites into the initializer list.
             break;
         }
         case LAMP:
         {
+            // Set y position
+            rd->obstacles[idx].rect.pos.y = 0; // 0 is the top of the screen
+
+            // Set sprite
+            rd->obstacles[idx].img = LAMP;
             break;
         }
     }
@@ -161,5 +196,13 @@ static void draw()
 {
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
     drawLine(0, GROUND_HEIGHT, TFT_WIDTH, GROUND_HEIGHT, c555, 0);
+    for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+    {
+        if (rd->obstacles[idx].active)
+        {
+            drawWsgSimple(&rd->obstacleImgs[rd->obstacles[idx].img], rd->obstacles[idx].rect.pos.x,
+                          rd->obstacles[idx].rect.pos.y);
+        }
+    }
     drawWsgSimple(&rd->robot.img, PLAYER_X, rd->robot.rect.pos.y);
 }
