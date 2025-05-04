@@ -104,6 +104,8 @@ typedef struct
 
     // IMU Variables
     vec3d_t lastOrientation;
+    list_t shakeHistory;
+    bool isShook;
 
     // Microphone variables
     int32_t micSamplesProcessed;
@@ -112,10 +114,6 @@ typedef struct
     bool yellInput;
     dft32_data dd;       // Colorchord is used for spectral analysis
     embeddedNf_data end; // Colorchord is used for spectral analysis
-
-    // IMU variables
-    list_t shakeHistory;
-    bool isShook;
 
     // Touchpad variables
     touchSpinState_t touchSpinState;
@@ -150,6 +148,9 @@ static void swadgeItGameplayRender(void);
 
 static void swadgeItHighScoreRender(void);
 static void swadgeItGameOverRender(int64_t elapsedUs);
+
+static void swadgeItSwitchToScreen(swadgeItScreen_t newScreen);
+static void swadgeItClearMicState(void);
 
 //==============================================================================
 // Const data
@@ -351,7 +352,7 @@ static void swadgeItMainLoop(int64_t elapsedUs)
                 // A button returns to the main menu
                 if (evt.down)
                 {
-                    si->screen = SI_MENU;
+                    swadgeItSwitchToScreen(SI_MENU);
                 }
                 break;
             }
@@ -360,9 +361,7 @@ static void swadgeItMainLoop(int64_t elapsedUs)
                 // A button returns to the main menu after the timer
                 if (si->gameOverTimer <= 0 && evt.down)
                 {
-                    si->screen       = SI_MENU;
-                    si->score        = 0;
-                    si->newHighScore = false;
+                    swadgeItSwitchToScreen(SI_MENU);
                 }
                 break;
             }
@@ -599,11 +598,7 @@ static void swadgeItGameplayLogic(int64_t elapsedUs)
                 si->sampleIdx = 0;
 
                 // Reset mic values
-                si->micSamplesProcessed = 0;
-                clear(&si->micFrameEnergyHistory);
-                si->yellInput = false;
-                si->isYelling = false;
-                InitColorChord(&si->end, &si->dd);
+                swadgeItClearMicState();
 
                 // Pick a new event and enqueue it
                 swadgeItEvt_t newEvt = esp_random() % MAX_NUM_EVTS;
@@ -642,11 +637,7 @@ static void swadgeItGameplayLogic(int64_t elapsedUs)
             si->sampleIdx = 0;
 
             // Reset mic values
-            si->micSamplesProcessed = 0;
-            clear(&si->micFrameEnergyHistory);
-            si->yellInput = false;
-            si->isYelling = false;
-            InitColorChord(&si->end, &si->dd);
+            swadgeItClearMicState();
 
             // Add a new event to the memory queue
             swadgeItEvt_t newEvt = esp_random() % MAX_NUM_EVTS;
@@ -959,7 +950,9 @@ static void swadgeItGameOver(void)
     }
 
     // Display round score
-    si->screen        = SI_GAME_OVER;
+    int32_t roundScore = si->score;
+    swadgeItSwitchToScreen(SI_GAME_OVER);
+    si->score         = roundScore;
     si->gameOverTimer = 1000000;
 }
 
@@ -975,19 +968,12 @@ static void swadgeItMenuCb(const char* label, bool selected, uint32_t value)
     {
         if ((swadgeItStrReaction == label) || (swadgeItStrMemory == label))
         {
-            si->screen = (swadgeItStrReaction == label) ? SI_REACTION : SI_MEMORY;
-
-            si->dispEvt         = &siWaitData;
-            si->timeToNextEvent = 2000000;
-            si->nextEvtTimer    = 0;
-            clear(&si->inputQueue);
-            clear(&si->memoryQueue);
-            clear(&si->speechQueue);
+            swadgeItSwitchToScreen((swadgeItStrReaction == label) ? SI_REACTION : SI_MEMORY);
             swadgeItUpdateDisplay();
         }
         else if (swadgeItStrHighScores == label)
         {
-            si->screen = SI_HIGH_SCORES;
+            swadgeItSwitchToScreen(SI_HIGH_SCORES);
         }
         else if (swadgeItStrExit == label)
         {
@@ -1047,4 +1033,57 @@ static void swadgeItUpdateDisplay(void)
 
     // Set LEDs
     setLeds(leds, ARRAY_SIZE(leds));
+}
+
+/**
+ * @brief Clear transient internal state and switch to displaying a new screen
+ *
+ * @param newScreen The new screen to display
+ */
+static void swadgeItSwitchToScreen(swadgeItScreen_t newScreen)
+{
+    // Clear game over UI variables
+    si->gameOverTimer = 0;
+    si->newHighScore  = false;
+
+    // Clear SFX & SPK variables
+    si->sampleIdx          = 0;
+    si->pendingSwitchToMic = false;
+
+    // Clear gameplay variables
+    si->timeToNextEvent = 2000000;
+    si->nextEvtTimer    = 0;
+    clear(&si->inputQueue);
+    clear(&si->memoryQueue);
+    clear(&si->speechQueue);
+    si->speechDelayUs = 0;
+    si->score         = 0;
+    si->dispEvt       = &siWaitData;
+    si->inputIdx      = 0;
+
+    // Clear IMU variables
+    memset(&si->lastOrientation, 0, sizeof(vec3d_t));
+    clear(&si->shakeHistory);
+    si->isShook = false;
+
+    // Clear microphone variables
+    swadgeItClearMicState();
+
+    // Clear touchpad variables
+    memset(&si->touchSpinState, 0, sizeof(touchSpinState_t));
+
+    // Set the new screen
+    si->screen = newScreen;
+}
+
+/**
+ * @brief Helper function to clear microphone state
+ */
+static void swadgeItClearMicState(void)
+{
+    si->micSamplesProcessed = 0;
+    clear(&si->micFrameEnergyHistory);
+    si->isYelling = false;
+    si->yellInput = false;
+    InitColorChord(&si->end, &si->dd);
 }
