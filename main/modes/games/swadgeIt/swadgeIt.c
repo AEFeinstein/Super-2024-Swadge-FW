@@ -168,28 +168,28 @@ static const char SI_MEMORY_HS_KEY[]   = "si_m_hs";
 /** Must match order of swadgeItEvt_t */
 const swadgeItEvtData_t siEvtData[] = {
     {
-        .sfx_fname = "bopit.raw",
+        .sfx_fname = "press_it.raw",
         .label     = "Press it!",
         .bgColor   = c531,
         .txColor   = c555,
         .ledColor  = {.r = 0xFF, .g = 0x99, .b = 0x33},
     },
     {
-        .sfx_fname = "flickit.raw",
+        .sfx_fname = "shake_it.raw",
         .label     = "Shake it!",
         .bgColor   = c325,
         .txColor   = c555,
         .ledColor  = {.r = 0x99, .g = 0x66, .b = 0xFF},
     },
     {
-        .sfx_fname = "pullit.raw",
-        .label     = "Yell it!",
+        .sfx_fname = "shout_it.raw",
+        .label     = "Shout it!",
         .bgColor   = c222,
         .txColor   = c555,
         .ledColor  = {.r = 0x66, .g = 0x66, .b = 0x66},
     },
     {
-        .sfx_fname = "spinit.raw",
+        .sfx_fname = "swirl_it.raw",
         .label     = "Swirl it!",
         .bgColor   = c412,
         .txColor   = c555,
