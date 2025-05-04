@@ -12,16 +12,28 @@
 // Defines
 //==============================================================================
 
-#define SWADGE_IT_FPS 40
+// UI
+#define SWADGE_IT_FPS  40
+#define TEXT_Y_SPACING 4
 
-// TODO tune values
+// Limits for detecting yells
 #define MIC_ENERGY_THRESHOLD  100000
 #define MIC_ENERGY_HYSTERESIS 20
 
+// Limits for detecting shakes
 #define SHAKE_THRESHOLD  300
 #define SHAKE_HYSTERESIS 10
 
-#define TEXT_Y_SPACING 4
+// Limits for the Reaction timers
+#define INIT_EVENT_INPUT_US    3000000
+#define MIN_EVENT_INPUT_US     600000
+#define EVENT_SPEEDUP_INTERVAL ((INIT_EVENT_INPUT_US - MIN_EVENT_INPUT_US) / 20)
+
+// Limit between verbal commands in memory mode
+#define TIME_BETWEEN_VERBAL_COMMANDS_US 750000
+
+// Time before the game over screen can be exited
+#define GAME_OVER_TIME_US 1000000
 
 //==============================================================================
 // Enums
@@ -90,6 +102,7 @@ typedef struct
 
     // Flag to switch from speaker to mic mode
     bool pendingSwitchToMic;
+    bool isListening;
 
     // Gameplay variables
     int32_t timeToNextEvent;
@@ -368,6 +381,9 @@ static void swadgeItMainLoop(int64_t elapsedUs)
         }
     }
 
+    // Check speech regardless of mode to switch back to mic mode
+    swadgeItCheckSpeech(elapsedUs);
+
     // Main game logic and drawing
     switch (si->screen)
     {
@@ -380,7 +396,6 @@ static void swadgeItMainLoop(int64_t elapsedUs)
         case SI_REACTION:
         case SI_MEMORY:
         {
-            swadgeItCheckSpeech(elapsedUs);
             swadgeItCheckInputs();
             swadgeItGameplayLogic(elapsedUs);
             swadgeItGameplayRender();
@@ -475,7 +490,7 @@ static void swadgeItDacCallback(uint8_t* samples, int16_t len)
                 else
                 {
                     // Otherwise set a timer to pause between verbal commands
-                    si->speechDelayUs = 1000000;
+                    si->speechDelayUs = TIME_BETWEEN_VERBAL_COMMANDS_US;
                 }
             }
 
@@ -507,6 +522,7 @@ static void swadgeItCheckSpeech(int64_t elapsedUs)
     {
         // Then switch back to the microphone
         switchToMicrophone();
+        si->isListening = true;
 
         // Lower flag
         si->pendingSwitchToMic = false;
@@ -588,39 +604,43 @@ static void swadgeItGameplayLogic(int64_t elapsedUs)
     // Run game specific logic
     if (SI_REACTION == si->screen)
     {
-        // For reaction mode, check if input was received before the gameplay timer elapsed
-        RUN_TIMER_EVERY(si->nextEvtTimer, si->timeToNextEvent, elapsedUs, {
-            // If there was successful event input (i.e. the queue was emptied)
-            if (0 == si->inputQueue.length)
-            {
-                // Enable speaker for a new verbal command and reset sample count
-                switchToSpeaker();
-                si->sampleIdx = 0;
-
-                // Reset mic values
-                swadgeItClearMicState();
-
-                // Pick a new event and enqueue it
-                swadgeItEvt_t newEvt = esp_random() % MAX_NUM_EVTS;
-                push(&si->inputQueue, (void*)newEvt);
-                push(&si->speechQueue, (void*)newEvt);
-
-                // Set the LEDs for the new event
-                swadgeItUpdateDisplay();
-
-                // Decrement the time between events
-                // TODO tune gameplay
-                if (si->timeToNextEvent > 500000)
+        // Only run the timer while input is being accepted
+        if (si->isListening)
+        {
+            // For reaction mode, check if input was received before the gameplay timer elapsed
+            RUN_TIMER_EVERY(si->nextEvtTimer, si->timeToNextEvent, elapsedUs, {
+                // If there was successful event input (i.e. the queue was emptied)
+                if (0 == si->inputQueue.length)
                 {
-                    si->timeToNextEvent -= 100000;
+                    // Enable speaker for a new verbal command and reset sample count
+                    switchToSpeaker();
+                    si->sampleIdx   = 0;
+                    si->isListening = false;
+
+                    // Reset mic values
+                    swadgeItClearMicState();
+
+                    // Pick a new event and enqueue it
+                    swadgeItEvt_t newEvt = esp_random() % MAX_NUM_EVTS;
+                    push(&si->inputQueue, (void*)newEvt);
+                    push(&si->speechQueue, (void*)newEvt);
+
+                    // Set the LEDs for the new event
+                    swadgeItUpdateDisplay();
+
+                    // Decrement the time between events
+                    if (si->timeToNextEvent > MIN_EVENT_INPUT_US)
+                    {
+                        si->timeToNextEvent -= EVENT_SPEEDUP_INTERVAL;
+                    }
                 }
-            }
-            else
-            {
-                // Input not received in time
-                swadgeItGameOver();
-            }
-        });
+                else
+                {
+                    // Input not received in time
+                    swadgeItGameOver();
+                }
+            });
+        }
     }
     else if (SI_MEMORY == si->screen)
     {
@@ -634,7 +654,8 @@ static void swadgeItGameplayLogic(int64_t elapsedUs)
         {
             // Enable speaker for a new verbal command and reset sample count
             switchToSpeaker();
-            si->sampleIdx = 0;
+            si->sampleIdx   = 0;
+            si->isListening = false;
 
             // Reset mic values
             swadgeItClearMicState();
@@ -706,15 +727,21 @@ static void swadgeItHighScoreRender(void)
     font_t* font = si->menuRenderer->menuFont;
     char hsString[64];
 
+    // Center text vertically
+    int numLines = 2;
+    int16_t yOff = (TFT_HEIGHT - (numLines * font->height + (numLines - 1) * TEXT_Y_SPACING)) / 2;
+
     // Draw reaction string
     snprintf(hsString, sizeof(hsString) - 1, "%s: %" PRId32, swadgeItStrReaction, si->reactionHighScore);
     int16_t tWidth = textWidth(font, hsString);
-    drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) - font->height);
+    drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
+    yOff += font->height + TEXT_Y_SPACING;
 
     // Draw memory string
     snprintf(hsString, sizeof(hsString) - 1, "%s: %" PRId32, swadgeItStrMemory, si->memoryHighScore);
     tWidth = textWidth(font, hsString);
-    drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2));
+    drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
+    yOff += font->height + TEXT_Y_SPACING;
 
     // Turn off LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
@@ -734,20 +761,26 @@ static void swadgeItGameOverRender(int64_t elapsedUs)
         si->gameOverTimer -= elapsedUs;
     }
 
-    // Draw round score
     font_t* font = si->menuRenderer->menuFont;
+
+    // Center text vertically
+    int numLines = si->newHighScore ? 2 : 1;
+    int16_t yOff = (TFT_HEIGHT - (numLines * font->height + (numLines - 1) * TEXT_Y_SPACING)) / 2;
+
+    // Draw round score
     char gameOverStr[64];
     snprintf(gameOverStr, sizeof(gameOverStr) - 1, "Game Over: %" PRId32, si->score);
     int16_t tWidth = textWidth(font, gameOverStr);
-    drawText(font, c555, gameOverStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - font->height) / 2);
+    drawText(font, c555, gameOverStr, (TFT_WIDTH - tWidth) / 2, yOff);
+    yOff += font->height + TEXT_Y_SPACING;
 
     // Draw extra if it's a new high score
     if (si->newHighScore)
     {
         const char newHighScoreStr[] = "New High Score!";
         tWidth                       = textWidth(font, newHighScoreStr);
-        drawText(font, c555, newHighScoreStr, (TFT_WIDTH - tWidth) / 2,
-                 ((TFT_HEIGHT - font->height) / 2) + 2 + font->height);
+        drawText(font, c555, newHighScoreStr, (TFT_WIDTH - tWidth) / 2, yOff);
+        yOff += font->height + TEXT_Y_SPACING;
     }
 
     // Turn off LEDs
@@ -830,7 +863,6 @@ static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt)
             }
 
             // Add total energy to queue
-            // TODO more efficient ringbuf?
             push(&si->micFrameEnergyHistory, (void*)((intptr_t)totalEnergy));
             if (si->micFrameEnergyHistory.length > MIC_ENERGY_HYSTERESIS)
             {
@@ -953,7 +985,7 @@ static void swadgeItGameOver(void)
     int32_t roundScore = si->score;
     swadgeItSwitchToScreen(SI_GAME_OVER);
     si->score         = roundScore;
-    si->gameOverTimer = 1000000;
+    si->gameOverTimer = GAME_OVER_TIME_US;
 }
 
 /**
@@ -1048,10 +1080,10 @@ static void swadgeItSwitchToScreen(swadgeItScreen_t newScreen)
 
     // Clear SFX & SPK variables
     si->sampleIdx          = 0;
-    si->pendingSwitchToMic = false;
+    si->pendingSwitchToMic = true;
 
     // Clear gameplay variables
-    si->timeToNextEvent = 2000000;
+    si->timeToNextEvent = INIT_EVENT_INPUT_US;
     si->nextEvtTimer    = 0;
     clear(&si->inputQueue);
     clear(&si->memoryQueue);
