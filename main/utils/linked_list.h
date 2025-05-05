@@ -100,6 +100,7 @@ void addAfter(list_t* list, void* val, node_t* entry);
 void* removeIdx(list_t* list, uint16_t index);
 void* removeEntry(list_t* list, node_t* entry);
 void clear(list_t* list);
+node_t* getNextWraparound(list_t* list, node_t* node);
 
 #ifdef TEST_LIST
 // Exercise the linked list functions

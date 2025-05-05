@@ -28,6 +28,9 @@
 #include "fill.h"
 #include "shapes.h"
 
+// Data Structure
+#include "linked_list.h"
+
 //==============================================================================
 // Defines
 //==============================================================================
@@ -69,9 +72,8 @@ typedef struct
     trophySettings_t* settings; //< The settings of how the trophies behave
 
     // Data
-    trophyDataWrapper_t trophyQueue[TROPHY_MAX_BANNERS]; //< List of trophy updates to display
-    int8_t idx;                                          //< Index of next queue slot to fill
-    int8_t currIdx;                                      //< The current display index
+    list_t trophyQueue; //< List of trophy updates to display. Holds type \ref trophyDataWrapper_t*
+    node_t* currDisp;   //< The current trophy being displayed. Holds type \ref trophyDataWrapper_t*
 
     // Drawing
     bool active;                //< If the mode should be drawing a banner
@@ -102,7 +104,7 @@ static trophySystem_t trophySystem = {}; //< Should be one instance per swadge, 
  * @param t Data to write
  * @param newVal Value to save
  */
-static void _save(trophyDataWrapper_t t, int newVal);
+static void _save(trophyDataWrapper_t* t, int newVal);
 
 /**
  * @brief Loads data into a wrapper
@@ -137,7 +139,7 @@ static void _getTrophyData(char* modeName, trophyData_t* tList, int tLen, int of
  * @param frame Which frame is being drawn. STATIC_POSITION is fully visible, other values change the offset.
  * @param fnt Font used in draw call
  */
-static void _draw(trophyDataWrapper_t t, int frame, font_t* fnt);
+static void _draw(trophyDataWrapper_t* t, int frame, font_t* fnt);
 
 /**
  * @brief Sub function of _draw() so code can be reused in list draw command
@@ -146,7 +148,7 @@ static void _draw(trophyDataWrapper_t t, int frame, font_t* fnt);
  * @param yOffset y coordinate to start at
  * @param fnt Font used in draw call
  */
-static void _drawAtYCoord(trophyDataWrapper_t t, int yOffset, font_t* fnt);
+static void _drawAtYCoord(trophyDataWrapper_t* t, int yOffset, font_t* fnt);
 
 /**
  * @brief Truncates a string down to a specified length
@@ -158,19 +160,15 @@ static void _drawAtYCoord(trophyDataWrapper_t t, int yOffset, font_t* fnt);
 static void _truncateStr(char* to, char* from, int len);
 
 /**
- * @brief Automatically resets number to 0 after it gets up to max val
- *
- * @param val current value
- * @param max Number to reset at, non-inclusive
- * @return int number
- */
-static int _incWithOverflow(int val, int max);
-
-/**
- * @brief Loads the palette for the grescale conversion
+ * @brief Loads the palette for the grayscale conversion
  *
  */
 static void _loadPalette(void);
+
+/**
+ * @brief Get the currently displayed trophy
+ */
+static trophyDataWrapper_t* getCurrentDisplayTrophy(void);
 
 //==============================================================================
 // Functions
@@ -199,10 +197,11 @@ void trophySystemInit(trophySettings_t* settings, char* modeName)
     // Init palette
     _loadPalette();
 
-    // Clear queue
-    for (int idx = 0; idx < TROPHY_MAX_BANNERS; idx++)
+    // Clear queue, freeing all entries
+    void* toFree;
+    while ((toFree = pop(&trophySystem.trophyQueue)))
     {
-        trophySystem.trophyQueue[idx].active = false;
+        heap_caps_free(toFree);
     }
 
     // Draw defaults unless re-called by dev
@@ -239,41 +238,45 @@ int trophySystemGetPoints(char* modeName)
 void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
 {
     // Load
-    trophyDataWrapper_t tw = {};
-    _load(&tw, t);
+    trophyDataWrapper_t* tw = heap_caps_calloc(1, sizeof(trophyDataWrapper_t), MALLOC_CAP_8BIT);
+    _load(tw, t);
 
     // Check if trophy is already won and return if true
-    if (tw.trophyData.type == TROPHY_TYPE_CHECKLIST)
+    if (tw->trophyData.type == TROPHY_TYPE_CHECKLIST)
     {
         // TODO: Handle just sending bit flags?
-        if (tw.currentVal == tw.trophyData.maxVal)
+        if (tw->currentVal == tw->trophyData.maxVal)
         {
+            heap_caps_free(tw);
             return;
         }
     }
-    else if (tw.trophyData.type == TROPHY_TYPE_TRIGGER)
+    else if (tw->trophyData.type == TROPHY_TYPE_TRIGGER)
     {
-        if (tw.currentVal >= 1)
+        if (tw->currentVal >= 1)
         {
+            heap_caps_free(tw);
             return;
         }
     }
     else
     {
-        if (tw.currentVal >= tw.trophyData.maxVal)
+        if (tw->currentVal >= tw->trophyData.maxVal)
         {
+            heap_caps_free(tw);
             return;
         }
     }
 
     // If the new value is the same as the previously saved value, return
-    if (tw.currentVal >= newVal)
+    if (tw->currentVal >= newVal)
     {
+        heap_caps_free(tw);
         return;
     }
     else
     { // If the newValue has exceeded maxVal, Save value (should work for checklist)
-        tw.currentVal = newVal;
+        tw->currentVal = newVal;
         _save(tw, newVal);
         // TODO: Check if won
         // TODO: Update trophyScore
@@ -282,10 +285,11 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
     // Load into draw queue is requested
     if (drawUpdate)
     {
-        trophySystem.trophyQueue[trophySystem.idx] = tw;
+        // Push into queue
+        push(&trophySystem.trophyQueue, tw);
+
         // Load sprite
-        loadWsg(trophySystem.trophyQueue[trophySystem.idx].trophyData.imageString,
-                &trophySystem.trophyQueue[trophySystem.idx].image, true);
+        loadWsg(tw->trophyData.imageString, &tw->image, true);
 
         // Set system and this index to active
         if (!trophySystem.active)
@@ -298,14 +302,12 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
             trophySystem.beingDrawn    = true;
         }
 
-        trophySystem.trophyQueue[trophySystem.idx].active = true;
+        // Set active
+        tw->active = true;
 
         // TODO: the rest of this
 
         // TODO: Play sound
-
-        // Increment idx
-        trophySystem.idx = _incWithOverflow(trophySystem.idx, TROPHY_MAX_BANNERS);
     }
 }
 
@@ -336,7 +338,7 @@ void trophyClear(trophyData_t t)
 {
     trophyDataWrapper_t tw = {};
     _copyTrophy(&tw, t);
-    _save(tw, 0);
+    _save(&tw, 0);
 }
 
 // Helpers
@@ -392,9 +394,9 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
         }
         else if (trophySystem.animationTick == TROPHY_BANNER_HEIGHT * 2)
         {
-            // FIXME: Stops drawing, prolly not interating right
-            trophySystem.currIdx = _incWithOverflow(trophySystem.currIdx, TROPHY_MAX_BANNERS);
-            if (trophySystem.trophyQueue[trophySystem.currIdx].active)
+            // FIXME: Stops drawing, probably not iterating right
+            trophySystem.currDisp = getNextWraparound(&trophySystem.trophyQueue, trophySystem.currDisp);
+            if (getCurrentDisplayTrophy()->active)
             {
                 // Reset for new run
                 trophySystem.animationTick = 0;
@@ -404,11 +406,11 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
                 trophySystem.beingDrawn    = true;
                 return;
             }
-            trophySystem.currIdx = _incWithOverflow(trophySystem.currIdx, TROPHY_MAX_BANNERS);
-            trophySystem.active  = false;
+            trophySystem.currDisp = getNextWraparound(&trophySystem.trophyQueue, trophySystem.currDisp);
+            trophySystem.active   = false;
         }
         // Draw
-        _draw(trophySystem.trophyQueue[trophySystem.currIdx], trophySystem.animationTick, fnt);
+        _draw(getCurrentDisplayTrophy(), trophySystem.animationTick, fnt);
     }
     else if (trophySystem.beingDrawn) // Static on screen
     {
@@ -417,20 +419,20 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
         if (trophySystem.drawTimer >= trophySystem.settings->drawMaxDuration * TENTH_SECOND_US)
         {
             // Stop drawing
-            trophySystem.beingDrawn                               = false;
-            trophySystem.trophyQueue[trophySystem.currIdx].active = false;
-            trophySystem.sliding = trophySystem.settings->animated; // Starts sliding again if set
+            trophySystem.beingDrawn           = false;
+            getCurrentDisplayTrophy()->active = false;
+            trophySystem.sliding              = trophySystem.settings->animated; // Starts sliding again if set
         }
         // Draw
-        _draw(trophySystem.trophyQueue[trophySystem.currIdx], STATIC_POSITION, fnt);
+        _draw(getCurrentDisplayTrophy(), STATIC_POSITION, fnt);
     }
     else // Has ended
     {
         // Seek next active queue slot
         for (int idx = 0; idx < TROPHY_MAX_BANNERS; idx++)
         {
-            trophySystem.currIdx = _incWithOverflow(trophySystem.currIdx, TROPHY_MAX_BANNERS);
-            if (trophySystem.trophyQueue[trophySystem.currIdx].active)
+            trophySystem.currDisp = getNextWraparound(&trophySystem.trophyQueue, trophySystem.currDisp);
+            if (getCurrentDisplayTrophy()->active)
             {
                 // Reset for new run
                 trophySystem.animationTick = 0;
@@ -441,8 +443,8 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
                 return;
             }
         }
-        trophySystem.currIdx = _incWithOverflow(trophySystem.currIdx, TROPHY_MAX_BANNERS);
-        trophySystem.active  = false;
+        trophySystem.currDisp = getNextWraparound(&trophySystem.trophyQueue, trophySystem.currDisp);
+        trophySystem.active   = false;
     }
 }
 
@@ -462,10 +464,10 @@ void trophyDrawList(char* modeName, int idx)
 // Static functions
 //==============================================================================
 
-static void _save(trophyDataWrapper_t t, int newVal)
+static void _save(trophyDataWrapper_t* t, int newVal)
 {
     char buffer[MAX_NVS_KEY_LEN];
-    _truncateStr(buffer, t.trophyData.title, MAX_NVS_KEY_LEN);
+    _truncateStr(buffer, t->trophyData.title, MAX_NVS_KEY_LEN);
     writeNamespaceNvs32(trophySystem.settings->namespaceKey, buffer, newVal);
 }
 
@@ -504,7 +506,7 @@ static void _getTrophyData(char* modeName, trophyData_t* tList, int tLen, int of
     // Load all trophies associated with a mode
 }
 
-static void _draw(trophyDataWrapper_t t, int frame, font_t* fnt)
+static void _draw(trophyDataWrapper_t* t, int frame, font_t* fnt)
 {
     // Get offset
     int yOffset;
@@ -547,7 +549,7 @@ static void _draw(trophyDataWrapper_t t, int frame, font_t* fnt)
     _drawAtYCoord(t, yOffset, fnt);
 }
 
-static void _drawAtYCoord(trophyDataWrapper_t t, int yOffset, font_t* fnt)
+static void _drawAtYCoord(trophyDataWrapper_t* t, int yOffset, font_t* fnt)
 {
     // Draw box (Gray box, black border)
     fillDisplayArea(0, yOffset, TFT_WIDTH, yOffset + TROPHY_BANNER_HEIGHT, c111);
@@ -555,10 +557,11 @@ static void _drawAtYCoord(trophyDataWrapper_t t, int yOffset, font_t* fnt)
 
     int endX = TFT_WIDTH - TROPHY_SCREEN_CORNER_CLEARANCE;
     // Draw numbers if required
-    if ((t.trophyData.type == TROPHY_TYPE_ADDITIVE || t.trophyData.type == TROPHY_TYPE_PROGRESS) && t.currentVal < t.trophyData.maxVal)
+    if ((t->trophyData.type == TROPHY_TYPE_ADDITIVE || t->trophyData.type == TROPHY_TYPE_PROGRESS)
+        && t->currentVal < t->trophyData.maxVal)
     {
         char buffer[32];
-        snprintf(buffer, sizeof(buffer) - 1, "%d/%d", t.currentVal, t.trophyData.maxVal);
+        snprintf(buffer, sizeof(buffer) - 1, "%d/%d", t->currentVal, t->trophyData.maxVal);
         int16_t xOff = TFT_WIDTH - (textWidth(fnt, buffer) + TROPHY_SCREEN_CORNER_CLEARANCE + 8);
         endX         = xOff - 8;
         drawText(fnt, c444, buffer, xOff, yOffset + 4);
@@ -568,7 +571,7 @@ static void _drawAtYCoord(trophyDataWrapper_t t, int yOffset, font_t* fnt)
     int xOffset;
     int16_t startX = TROPHY_SCREEN_CORNER_CLEARANCE;
     int16_t startY = yOffset + ((TROPHY_BANNER_HEIGHT - TROPHY_BANNER_MAX_ICON_DIM) >> 1);
-    if (strcmp(t.trophyData.imageString, "") == 0)
+    if (strcmp(t->trophyData.imageString, "") == 0)
     {
         // Draw text at start of buffer area
         xOffset = TROPHY_SCREEN_CORNER_CLEARANCE;
@@ -583,29 +586,29 @@ static void _drawAtYCoord(trophyDataWrapper_t t, int yOffset, font_t* fnt)
 
         // Draw WSG
         wsgPalette_t* wp = &trophySystem.grayPalette;
-        if (t.currentVal >= t.trophyData.maxVal)
+        if (t->currentVal >= t->trophyData.maxVal)
         {
             wp = &trophySystem.normalPalette;
         }
-        drawWsgPaletteSimple(&t.image, startX + ((TROPHY_BANNER_MAX_ICON_DIM - t.image.w) >> 1),
-                             startY + ((TROPHY_BANNER_MAX_ICON_DIM - t.image.h) >> 1), wp);
+        drawWsgPaletteSimple(&t->image, startX + ((TROPHY_BANNER_MAX_ICON_DIM - t->image.w) >> 1),
+                             startY + ((TROPHY_BANNER_MAX_ICON_DIM - t->image.h) >> 1), wp);
     }
 
     // Draw text, starting after image if present
     // FIXME: Limit length of title text based on if there's space and there's no numbers
     startX = xOffset;
     startY = yOffset + 4;
-    drawTextWordWrap(fnt, c555, t.trophyData.title, &startX, &startY, endX, yOffset + 18); // Title
+    drawTextWordWrap(fnt, c555, t->trophyData.title, &startX, &startY, endX, yOffset + 18); // Title
     startX = xOffset;
     startY = yOffset + 20;
-    drawTextWordWrap(fnt, c444, t.trophyData.description, &startX, &startY, TFT_WIDTH - TROPHY_SCREEN_CORNER_CLEARANCE,
+    drawTextWordWrap(fnt, c444, t->trophyData.description, &startX, &startY, TFT_WIDTH - TROPHY_SCREEN_CORNER_CLEARANCE,
                      yOffset + TROPHY_BANNER_HEIGHT); // Description
 
     // Draw check box
     fillDisplayArea(TFT_WIDTH - 16, yOffset + 20, TFT_WIDTH - 11, yOffset + 25, c222);
 
     // Draw check if done
-    if (t.currentVal >= t.trophyData.maxVal)
+    if (t->currentVal >= t->trophyData.maxVal)
     {
         drawLine(TFT_WIDTH - 14, yOffset + 23, TFT_WIDTH - 8, yOffset + 13, c050, 0);
         drawLine(TFT_WIDTH - 14, yOffset + 23, TFT_WIDTH - 19, yOffset + 20, c050, 0);
@@ -616,16 +619,6 @@ static void _truncateStr(char* to, char* from, int len)
 {
     strncpy(to, from, len);
     to[len - 1] = '\0';
-}
-
-static int _incWithOverflow(int val, int max)
-{
-    val++;
-    if (val >= max)
-    {
-        val = 0;
-    }
-    return val;
 }
 
 static void _loadPalette(void)
@@ -717,4 +710,22 @@ static void _loadPalette(void)
             }
         }
     }
+}
+
+static trophyDataWrapper_t* getCurrentDisplayTrophy(void)
+{
+    // If there's nothing being currently displayed, set it
+    if (!trophySystem.currDisp)
+    {
+        trophySystem.currDisp = trophySystem.trophyQueue.first;
+    }
+
+    // Make sure there's something to display
+    if (trophySystem.currDisp)
+    {
+        return (trophyDataWrapper_t*)trophySystem.currDisp->val;
+    }
+
+    // Nothing in the queue...
+    return NULL;
 }
