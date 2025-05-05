@@ -149,8 +149,8 @@ static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 
 static void swadgeItMenuCb(const char* label, bool selected, uint32_t value);
 
-static void swadgeItInput(swadgeItEvt_t evt);
-static bool swadgeItCheckForShake(void);
+static bool swadgeItInput(swadgeItEvt_t evt);
+static void swadgeItCheckForShake(void);
 static void swadgeItGameOver(void);
 static void swadgeItUpdateDisplay(void);
 
@@ -163,7 +163,6 @@ static void swadgeItHighScoreRender(void);
 static void swadgeItGameOverRender(int64_t elapsedUs);
 
 static void swadgeItSwitchToScreen(swadgeItScreen_t newScreen);
-static void swadgeItClearMicState(void);
 
 //==============================================================================
 // Const data
@@ -563,10 +562,7 @@ static void swadgeItCheckSpeech(int64_t elapsedUs)
 static void swadgeItCheckInputs(void)
 {
     // Check for motion events
-    if (swadgeItCheckForShake())
-    {
-        swadgeItInput(EVT_SHAKE_IT);
-    }
+    swadgeItCheckForShake();
 
     // Check for touchpad spin events
     int32_t phi       = 0;
@@ -577,8 +573,10 @@ static void swadgeItCheckInputs(void)
         getTouchSpins(&si->touchSpinState, phi, intensity);
         if (si->touchSpinState.spins)
         {
-            swadgeItInput(EVT_SWIRL_IT);
-            si->touchSpinState.spins = 0;
+            if (swadgeItInput(EVT_SWIRL_IT))
+            {
+                si->touchSpinState.spins = 0;
+            }
         }
     }
     else
@@ -617,9 +615,6 @@ static void swadgeItGameplayLogic(int64_t elapsedUs)
                     si->sampleIdx   = 0;
                     si->isListening = false;
 
-                    // Reset mic values
-                    swadgeItClearMicState();
-
                     // Pick a new event and enqueue it
                     swadgeItEvt_t newEvt = esp_random() % MAX_NUM_EVTS;
                     push(&si->inputQueue, (void*)newEvt);
@@ -656,9 +651,6 @@ static void swadgeItGameplayLogic(int64_t elapsedUs)
             switchToSpeaker();
             si->sampleIdx   = 0;
             si->isListening = false;
-
-            // Reset mic values
-            swadgeItClearMicState();
 
             // Add a new event to the memory queue
             swadgeItEvt_t newEvt = esp_random() % MAX_NUM_EVTS;
@@ -792,19 +784,26 @@ static void swadgeItGameOverRender(int64_t elapsedUs)
  * @brief Process Swadge It inputs (button, shake, touch spin, yells)
  *
  * @param evt The event that occurred
+ * @return true if the input was accepted, false if it wasn't
  */
-static void swadgeItInput(swadgeItEvt_t evt)
+static bool swadgeItInput(swadgeItEvt_t evt)
 {
     // Event already cleared, return
     if (0 == si->inputQueue.length)
     {
-        return;
+        return false;
     }
 
     // Ignore game input if not in a game mode
     if (!(SI_MEMORY == si->screen || SI_REACTION == si->screen))
     {
-        return;
+        return false;
+    }
+
+    // Ignore input when not listening
+    if (!si->isListening)
+    {
+        return false;
     }
 
     // If the input matches the current event
@@ -828,6 +827,7 @@ static void swadgeItInput(swadgeItEvt_t evt)
         // Input event doesn't match
         swadgeItGameOver();
     }
+    return true;
 }
 
 /**
@@ -903,10 +903,8 @@ static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt)
 
 /**
  * @brief Check if a shake was detected
- *
- * @return true if a shake was detected, false otherwise
  */
-static bool swadgeItCheckForShake(void)
+static void swadgeItCheckForShake(void)
 {
     // Get the raw IMU value
     if (ESP_OK == accelIntegrate())
@@ -935,9 +933,11 @@ static bool swadgeItCheckForShake(void)
             // If it's not shaking and over the threshold
             if (!si->isShook && tDelta > SHAKE_THRESHOLD)
             {
-                // Mark it as shaking
-                si->isShook = true;
-                return true;
+                if (swadgeItInput(EVT_SHAKE_IT))
+                {
+                    // Mark it as shaking
+                    si->isShook = true;
+                }
             }
             else if (si->isShook)
             {
@@ -948,7 +948,7 @@ static bool swadgeItCheckForShake(void)
                     if ((intptr_t)shakeNode->val > SHAKE_THRESHOLD)
                     {
                         // Shake in the history, return
-                        return false;
+                        return;
                     }
                     shakeNode = shakeNode->next;
                 }
@@ -958,7 +958,6 @@ static bool swadgeItCheckForShake(void)
             }
         }
     }
-    return false;
 }
 
 /**
@@ -1098,24 +1097,9 @@ static void swadgeItSwitchToScreen(swadgeItScreen_t newScreen)
     clear(&si->shakeHistory);
     si->isShook = false;
 
-    // Clear microphone variables
-    swadgeItClearMicState();
-
     // Clear touchpad variables
     memset(&si->touchSpinState, 0, sizeof(touchSpinState_t));
 
     // Set the new screen
     si->screen = newScreen;
-}
-
-/**
- * @brief Helper function to clear microphone state
- */
-static void swadgeItClearMicState(void)
-{
-    si->micSamplesProcessed = 0;
-    clear(&si->micFrameEnergyHistory);
-    si->isYelling = false;
-    si->yellInput = false;
-    InitColorChord(&si->end, &si->dd);
 }
