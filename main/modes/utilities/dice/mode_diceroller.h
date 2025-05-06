@@ -1,7 +1,5 @@
-#ifndef MODES_MODE_DICEROLLER_H
-#define MODES_MODE_DICEROLLER_H
+#pragma once
 
-extern swadgeMode modeDiceRoller;
+#include "swadge2024.h"
 
-
-#endif
+extern swadgeMode_t modeDiceRoller;

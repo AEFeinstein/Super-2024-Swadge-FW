@@ -168,6 +168,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 // Useful ESP things
 #include <esp_heap_caps.h>

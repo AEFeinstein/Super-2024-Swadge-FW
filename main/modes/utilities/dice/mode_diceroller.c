@@ -1,50 +1,19 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <string.h>
-#include <stdlib.h>
-#include <malloc.h>
-
-#define _USE_MATH_DEFINES
-#include <math.h>
-
-#include "cndraw.h"
-#include "esp_timer.h"
-#include "swadgeMode.h"
-#include "swadge_esp32.h"
-#include "led_util.h" // leds
-#include "meleeMenu.h"
-#include "mode_main_menu.h"
-#include "nvs_manager.h"
-#include "bresenham.h"
-#include "display.h"
-#include "embeddednf.h"
-#include "embeddedout.h"
-#include "musical_buzzer.h"
-#include "settingsManager.h"
-#include "linked_list.h"
-//#include "bootloader_random.h"
-#include "esp_random.h"
-#include "aabb_utils.h"
-#include "esp_log.h"
-
-#include "swadge_util.h"
-#include "text_entry.h"
-
 #include "mode_diceroller.h"
 
 
 //TODO: Add Doxygen Blocks
 //TODO: Add Cosmetic Features of Colored background/foreground objects. Add Smoother animations. Add LED interaction.
 
+typedef struct {
+    int32_t x;
+    int32_t y;
+}vector_t;
 
-void diceEnterMode(display_t* disp);
+void diceEnterMode(void);
 void diceExitMode(void);
 void diceMainLoop(int64_t elapsedUs);
 void diceButtonCb(buttonEvt_t* evt);
-//void diceTouchCb(touch_event_t* evt);
-//void diceAccelerometerCb(accel_t* accel);
-//void diceAudioCb(uint16_t* samples, uint32_t sampleCnt);
+
 vector_t* getRegularPolygonVertices(int8_t sides, float rotDeg, int16_t radius);
 void drawRegularPolygon(int xCenter, int yCenter, int8_t sides, float rotDeg, int16_t radius, paletteColor_t col, int dashWidth);
 void changeActiveSelection(void);
@@ -113,26 +82,27 @@ enum dr_stateVals
 //int polygonOuterSides[] = []
 //Consider adding outer geometry of dice to make them more recognizable
 
-swadgeMode modeDiceRoller =
+swadgeMode_t modeDiceRoller =
 {
     .modeName = DR_NAMESTRING,
+    .wifiMode = NO_WIFI,
+    .overrideUsb = false,
+    .usesAccelerometer = true,
+    .usesThermometer = false,
+    .overrideSelectBtn = false,
     .fnEnterMode = diceEnterMode,
     .fnExitMode = diceExitMode,
     .fnMainLoop = diceMainLoop,
-    .fnButtonCallback = diceButtonCb,
-    .fnTouchCallback = NULL,
-    .wifiMode = NO_WIFI,
+    .fnAudioCallback = NULL,
+    .fnBackgroundDrawCallback = NULL,
     .fnEspNowRecvCb = NULL,
     .fnEspNowSendCb = NULL,
-    .fnAccelerometerCallback = NULL,
-    .fnAudioCallback = NULL,
-    .fnTemperatureCallback = NULL,
-    .overrideUsb = false
+    .fnAdvancedUSB = NULL,
+    .fnDacCb = NULL,
 };
 
 typedef struct
 {
-    display_t* disp;
     font_t ibm_vga8;
     wsg_t woodTexture;
     wsg_t cursor;
@@ -172,16 +142,14 @@ typedef struct
 
 diceRoller_t* diceRoller;
 
-void diceEnterMode(display_t* disp)
+void diceEnterMode(void)
 {
     diceRoller = calloc(1, sizeof(diceRoller_t));
     
-    diceRoller->disp = disp;
-
-    loadFont("ibm_vga8.font", &diceRoller->ibm_vga8);
-    loadWsg("woodTexture64.wsg",&diceRoller->woodTexture);
-    loadWsg("upCursor8.wsg",&diceRoller->cursor);
-    loadWsg("goldCornerTR.wsg",&diceRoller->corner);
+    loadFont("ibm_vga8.font", &diceRoller->ibm_vga8, false);
+    loadWsg("woodTexture64.wsg",&diceRoller->woodTexture, false);
+    loadWsg("upCursor8.wsg",&diceRoller->cursor, false);
+    loadWsg("goldCornerTR.wsg",&diceRoller->corner, false);
 
     diceRoller->rolls = NULL;
 
@@ -223,6 +191,11 @@ void diceExitMode(void)
 
 void diceMainLoop(int64_t elapsedUs)
 {
+    buttonEvt_t evt;
+    while(checkButtonQueueWrapper(&evt))
+    {
+        diceButtonCb(&evt);
+    }
     doStateMachine(elapsedUs);
 }
 
@@ -233,7 +206,7 @@ void diceButtonCb(buttonEvt_t* evt)
 {
     switch(evt->button)
     {
-        case BTN_A:
+        case PB_A:
         {
             if(evt->down && (diceRoller->state != DR_ROLLING))
             {
@@ -249,7 +222,7 @@ void diceButtonCb(buttonEvt_t* evt)
             }
             break;
         }
-        case BTN_B:
+        case PB_B:
         {
             if(evt->down && (diceRoller->state != DR_ROLLING))
             {
@@ -265,7 +238,7 @@ void diceButtonCb(buttonEvt_t* evt)
             }
             break;
         }
-        case UP:
+        case PB_UP:
         {
             if(evt->down && (diceRoller->state != DR_ROLLING))
             {
@@ -280,7 +253,7 @@ void diceButtonCb(buttonEvt_t* evt)
             }
             break;
         }
-        case DOWN:
+        case PB_DOWN:
         {
             if(evt->down && (diceRoller->state != DR_ROLLING))
             {
@@ -295,7 +268,7 @@ void diceButtonCb(buttonEvt_t* evt)
             }
             break;
         }
-        case LEFT:
+        case PB_LEFT:
         {
             if(evt->down && (diceRoller->state != DR_ROLLING))
             {
@@ -303,7 +276,7 @@ void diceButtonCb(buttonEvt_t* evt)
             }
             break;
         }
-        case RIGHT:
+        case PB_RIGHT:
         {
             if(evt->down && (diceRoller->state != DR_ROLLING))
             {
@@ -324,16 +297,16 @@ void diceButtonCb(buttonEvt_t* evt)
 void drawBackgroundTable(void)
 {
     int edgeSize = 64;
-    int x_seg = diceRoller->disp->w/edgeSize+1;
-    int y_seg = diceRoller->disp->h/edgeSize+1;
+    int x_seg = TFT_WIDTH/edgeSize+1;
+    int y_seg = TFT_HEIGHT/edgeSize+1;
     for (int j = 0; j < y_seg; j++)
     {
         for (int k = 0; k < x_seg; k++)
         {
-            drawWsg(diceRoller->disp,&diceRoller->woodTexture,edgeSize*k,edgeSize*j,false,false,0);
+            drawWsg(&diceRoller->woodTexture,edgeSize*k,edgeSize*j,false,false,0);
         }
     }
-    //drawWsg(diceRoller->disp,&diceRoller->woodTexture,diceRoller->disp->w/2,diceRoller->disp->h/2,false,false,0);
+    //drawWsg(&diceRoller->woodTexture,TFT_WIDTH/2,TFT_HEIGHT/2,false,false,0);
 }
 
 
@@ -343,19 +316,19 @@ void doStateMachine(int64_t elapsedUs)
     {
         case DR_STARTUP:
         {
-                diceRoller->disp->clearPx();
+            clearPxTft();
                 drawBackgroundTable();
                 drawText(
-                    diceRoller->disp,
+                    
                     &diceRoller->ibm_vga8, c555,
                     DR_NAMESTRING,
-                    diceRoller->disp->w/2 - textWidth(&diceRoller->ibm_vga8,DR_NAMESTRING)/2,
-                    diceRoller->disp->h/2
+                    TFT_WIDTH/2 - textWidth(&diceRoller->ibm_vga8,DR_NAMESTRING)/2,
+                    TFT_HEIGHT/2
                 );
                 
 
-                int w = diceRoller->disp->w;
-                int h = diceRoller->disp->h;
+                int w = TFT_WIDTH;
+                int h = TFT_HEIGHT;
                 char rollStr[32];
                 drawSelectionText(w,h,rollStr,32);
                 drawSelectionPointerSprite(w,h,rollStr,32);
@@ -372,10 +345,10 @@ void doStateMachine(int64_t elapsedUs)
         }
         case DR_SHOWROLL:
         {
-            diceRoller->disp->clearPx();
+            clearPxTft();
             drawBackgroundTable();
-            int w = diceRoller->disp->w;
-            int h = diceRoller->disp->h;
+            int w = TFT_WIDTH;
+            int h = TFT_HEIGHT;
             char rollStr[32];
             drawSelectionText(w,h,rollStr,32);
             drawSelectionPointerSprite(w,h,rollStr,32);
@@ -405,11 +378,11 @@ void doStateMachine(int64_t elapsedUs)
         }
         case DR_ROLLING:
         {
-            diceRoller->disp->clearPx();
+            clearPxTft();
             drawBackgroundTable();
 
-            int w = diceRoller->disp->w;
-            int h = diceRoller->disp->h;
+            int w = TFT_WIDTH;
+            int h = TFT_HEIGHT;
             char rollStr[32];
             drawSelectionText(w,h,rollStr,32);
 
@@ -452,23 +425,23 @@ void drawPanel(int x0, int y0, int x1, int y1)
     paletteColor_t outerGold = c550;
     paletteColor_t innerGold = c540;
     paletteColor_t panelColor = c400;
-    plotRect(diceRoller->disp,x0,y0,x1,y1,outerGold);
-    plotRect(diceRoller->disp,x0+1,y0+1,x1-1,y1-1,innerGold);
-    oddEvenFill(diceRoller->disp,x0,y0,x1,y1,innerGold,panelColor);
+    drawRect(x0,y0,x1,y1,outerGold);
+    drawRect(x0+1,y0+1,x1-1,y1-1,innerGold);
+    oddEvenFill(x0,y0,x1,y1,innerGold,panelColor);
 
     int cornerEdge = 8;
-    drawWsg(diceRoller->disp,&diceRoller->corner,x0,y0,true,false,0); //Draw TopLeft
-    drawWsg(diceRoller->disp,&diceRoller->corner,x1-cornerEdge,y0,false,false,0); //Draw TopRight
-    drawWsg(diceRoller->disp,&diceRoller->corner,x0,y1-cornerEdge,true,true,0); //Draw BotLeft
-    drawWsg(diceRoller->disp,&diceRoller->corner,x1-cornerEdge,y1-cornerEdge,false,true,0); //Draw BotRight
+    drawWsg(&diceRoller->corner,x0,y0,true,false,0); //Draw TopLeft
+    drawWsg(&diceRoller->corner,x1-cornerEdge,y0,false,false,0); //Draw TopRight
+    drawWsg(&diceRoller->corner,x0,y1-cornerEdge,true,true,0); //Draw BotLeft
+    drawWsg(&diceRoller->corner,x1-cornerEdge,y1-cornerEdge,false,true,0); //Draw BotRight
 
 
 }
 
 void drawHistoryPanel(void)
 {
-    int histX = diceRoller->disp->w/14 + 30;
-    int histY = diceRoller->disp->h/8 + 40;
+    int histX = TFT_WIDTH/14 + 30;
+    int histY = TFT_HEIGHT/8 + 40;
     int histYEntryOffset = 15;
     int xMargin = 45;
     int yMargin = 10;
@@ -479,14 +452,14 @@ void drawHistoryPanel(void)
 
 void printHistory(void)
 {
-    int histX = diceRoller->disp->w/14 + 30;
-    int histY = diceRoller->disp->h/8 + 40;
+    int histX = TFT_WIDTH/14 + 30;
+    int histY = TFT_HEIGHT/8 + 40;
     int histYEntryOffset = 15;
 
     char totalStr[32];
     snprintf(totalStr,sizeof(totalStr),"History");
     drawText(
-        diceRoller->disp,
+        
         &diceRoller->ibm_vga8, totalTextColor,
         totalStr,
         histX - textWidth(&diceRoller->ibm_vga8,totalStr)/2,
@@ -497,7 +470,7 @@ void printHistory(void)
     {
         snprintf(totalStr,sizeof(totalStr),"%dd%d: %d",diceRoller->histCounts[i],diceRoller->histSides[i],diceRoller->histTotals[i]);
         drawText(
-            diceRoller->disp,
+            
             &diceRoller->ibm_vga8, histTextColor,
             totalStr,
             histX - textWidth(&diceRoller->ibm_vga8,totalStr)/2,
@@ -566,11 +539,11 @@ void drawCurrentTotal(int w, int h )
     char totalStr[32];
     snprintf(totalStr,sizeof(totalStr),"Total: %d",diceRoller->rollTotal);
     drawText(
-        diceRoller->disp,
+        
         &diceRoller->ibm_vga8, totalTextColor,
         totalStr,
-        diceRoller->disp->w/2 - textWidth(&diceRoller->ibm_vga8,totalStr)/2,
-        diceRoller->disp->h*7/8
+        TFT_WIDTH/2 - textWidth(&diceRoller->ibm_vga8,totalStr)/2,
+        TFT_HEIGHT*7/8
     );
 }
 
@@ -660,8 +633,8 @@ void drawRegularPolygon(int xCenter, int yCenter, int8_t sides, float rotDeg, in
     {
         int8_t endInd = (vertInd+1)%sides;
         
-        plotLine(
-            diceRoller->disp,
+        drawLine(
+            
             xCenter + vertices[vertInd].x, yCenter + vertices[vertInd].y,
             xCenter + vertices[endInd].x, yCenter + vertices[endInd].y,
             col, dashWidth
@@ -677,11 +650,11 @@ void drawSelectionText(int w,int h,char* rollStr, int bfrSize)
     snprintf(rollStr, bfrSize, str_next_roll_format, diceRoller->requestCount, diceRoller->requestSides);
 
     drawText(
-        diceRoller->disp,
+        
         &diceRoller->ibm_vga8, selectionTextColor,
         rollStr,
-        diceRoller->disp->w/2 - textWidth(&diceRoller->ibm_vga8,rollStr)/2,
-        diceRoller->disp->h/8
+        TFT_WIDTH/2 - textWidth(&diceRoller->ibm_vga8,rollStr)/2,
+        TFT_HEIGHT/8
     );
 }
 
@@ -736,7 +709,7 @@ void drawSelectionPointerSprite(int w,int h,char* rollStr,int bfrSize)
 
     int countSelX = w/2 + centerToEndPix - endToNumStartPix + firstNumPix/2 - 3;
     int sideSelX = w/2 + centerToEndPix - lastNumPix/2 - 3;
-    drawWsg(diceRoller->disp,&diceRoller->cursor,diceRoller->activeSelection ? sideSelX : countSelX, h/8+yPointerOffset - 4, false, false, 0);
+    drawWsg(&diceRoller->cursor,diceRoller->activeSelection ? sideSelX : countSelX, h/8+yPointerOffset - 4, false, false, 0);
     //drawRegularPolygon(diceRoller->activeSelection ? sideSelX : countSelX,
     //    h/8+yPointerOffset, 3, -90, 5, selectionArrowColor, 0
     //);
@@ -751,7 +724,7 @@ void drawDiceBackground(int* xGridOffsets,int* yGridOffsets)
         );
         int oERadius = 23;
         
-        oddEvenFill(diceRoller->disp, xGridOffsets[m]-oERadius,
+        oddEvenFill( xGridOffsets[m]-oERadius,
         yGridOffsets[m]-oERadius+5,
         xGridOffsets[m]+oERadius,
         yGridOffsets[m]+oERadius+5,
@@ -770,7 +743,7 @@ void drawDiceText(int* xGridOffsets,int* yGridOffsets)
         snprintf(rollOutcome,sizeof(rollOutcome),"%d",diceRoller->rolls[m]);
     
         drawText(
-            diceRoller->disp,
+            
             &diceRoller->ibm_vga8, diceTextColor,
             rollOutcome,
             xGridOffsets[m] - textWidth(&diceRoller->ibm_vga8,rollOutcome)/2,
@@ -792,7 +765,7 @@ void drawDiceBackgroundAnimation(int* xGridOffsets, int* yGridOffsets, int32_t r
 
         int oERadius = 23;
 
-        oddEvenFill(diceRoller->disp, xGridOffsets[m]-oERadius,
+        oddEvenFill( xGridOffsets[m]-oERadius,
         yGridOffsets[m]-oERadius+5,
         xGridOffsets[m]+oERadius,
         yGridOffsets[m]+oERadius+5,
@@ -808,7 +781,7 @@ void drawFakeDiceText(int* xGridOffsets, int* yGridOffsets){
                         snprintf(rollOutcome,sizeof(rollOutcome),"%d",diceRoller->fakeVal);
                         
                         drawText(
-                            diceRoller->disp,
+                            
                             &diceRoller->ibm_vga8, diceTextColor,
                             rollOutcome,
                             xGridOffsets[m] - textWidth(&diceRoller->ibm_vga8,rollOutcome)/2,
