@@ -1,13 +1,83 @@
+// TODO: Add Cosmetic Features of Colored background/foreground objects. Add Smoother animations. Add LED interaction.
+// TODO: Consider adding outer geometry of dice to make them more recognizable
+
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include "mode_diceroller.h"
 
-// TODO: Add Doxygen Blocks
-// TODO: Add Cosmetic Features of Colored background/foreground objects. Add Smoother animations. Add LED interaction.
+//==============================================================================
+// Defines
+//==============================================================================
+
+#define DR_MAX_HIST 6
+#define MAX_DICE    6
+#define COUNT_COUNT 8
+
+//==============================================================================
+// Enums
+//==============================================================================
+
+enum dr_stateVals
+{
+    DR_STARTUP   = 0,
+    DR_SHOW_ROLL = 1,
+    DR_ROLLING   = 2
+};
+
+//==============================================================================
+// Structs
+//==============================================================================
 
 typedef struct
 {
     int32_t x;
     int32_t y;
 } vector_t;
+
+typedef struct
+{
+    font_t ibm_vga8;
+    wsg_t woodTexture;
+    wsg_t cursor;
+    wsg_t corner;
+
+    float timeAngle;
+
+    int stateAdvanceFlag;
+    int state;
+
+    int requestCount;
+    int requestSides;
+    int sideIndex;
+
+    // esp_timer_handle_t rollTimer;
+    int64_t rollStartTimeUs;
+    int fakeVal;
+    int fakeValIndex;
+
+    bool activeSelection;
+
+    int rollIndex;
+    int rollSides;
+    int rollSize;
+    int* rolls;
+    int rollTotal;
+
+    uint32_t timeUs;
+    uint32_t lastCallTimeUs;
+    uint32_t rollerNum;
+
+    int histTotals[DR_MAX_HIST];
+    int histSides[DR_MAX_HIST];
+    int histCounts[DR_MAX_HIST];
+    int histSize;
+} diceRoller_t;
+
+//==============================================================================
+// Function Prototypes
+//==============================================================================
 
 void diceEnterMode(void);
 void diceExitMode(void);
@@ -23,66 +93,51 @@ void changeDiceSidesRequest(int change);
 void doRoll(int count, int sides, int index);
 void doStateMachine(int64_t elapsedUs);
 
-void drawSelectionText(int w, int h, char* rollStr, int bfrSize);
-// void drawSelectionPointer(int w,int h,char* rollStr,int bfrSize);
-void drawSelectionPointerSprite(int w, int h, char* rollStr, int bfrSize);
+void drawSelectionText(void);
+void drawSelectionPointerSprite(void);
 void drawDiceBackground(int* xGridOffsets, int* yGridOffsets);
 void drawDiceText(int* xGridOffsets, int* yGridOffsets);
 void drawDiceBackgroundAnimation(int* xGridOffsets, int* yGridOffsets, int32_t rollAnimationTimUs,
-                                 double rotationOffsetDeg);
+                                 float rotationOffsetDeg);
 void drawFakeDiceText(int* xGridOffsets, int* yGridOffsets);
-void genFakeVal(int32_t rollAnimationTimeUs, double rotationOffsetDeg);
+void genFakeVal(int32_t rollAnimationTimeUs, float rotationOffsetDeg);
 
-void drawCurrentTotal(int w, int h);
+void drawCurrentTotal(void);
 
 void printHistory(void);
 void addTotalToHistory(void);
-// void dbgPrintHist(void);
 
 void drawPanel(int x0, int y0, int x1, int y1);
 void drawHistoryPanel(void);
 
 void drawBackgroundTable(void);
 
-double cosDeg(double degrees);
-double sinDeg(double degrees);
+float cosDeg(float degrees);
+float sinDeg(float degrees);
 
-#define DR_MAXHIST 6
+//==============================================================================
+// Const Variables
+//==============================================================================
 
-const int MAXDICE         = 6;
-const int COUNTCOUNT      = 8;
-const int8_t validSides[] = {2, 4, 6, 8, 10, 12, 20, 100};
-// const int8_t polygonSides[] = {3, 4, 3, 4, 5, 3, 6};
-const int8_t polygonSides[] = {10, 3, 4, 6, 4, 10, 6, 6};
+static const int8_t validSides[]   = {2, 4, 6, 8, 10, 12, 20, 100};
+static const int8_t polygonSides[] = {10, 3, 4, 6, 4, 10, 6, 6};
 
-const int32_t rollAnimationPeriod = 1000000; // 1 Second Spin
-// const int32_t fakeValRerollPeriod = 200000; //200 ms
-// const uint8_t ticksPerRollAnimation = 10;
-const int32_t fakeValRerollPeriod = 90919; //(rollAnimationPeriod / (ticksPerRollAnimation + 1)) + 10;
-const float spinScaler            = 1;
+static const int32_t rollAnimationPeriod = 1000000; // 1 Second Spin
+static const int32_t fakeValRerollPeriod = 90919;   //(rollAnimationPeriod / (ticksPerRollAnimation + 1)) + 10;
 
-const char DR_NAMESTRING[]               = "Dice Roller";
+static const char DR_NAMESTRING[]        = "Dice Roller";
 static const char str_next_roll_format[] = "Next roll is %dd%d";
 
-const paletteColor_t diceBackgroundColor = c112;
-const paletteColor_t diceTextColor       = c550;
-const paletteColor_t selectionArrowColor = c555;
-const paletteColor_t selectionTextColor  = c555;
-const paletteColor_t diceOutlineColor    = c223;
-// const paletteColor_t diceSecondaryOutlineColor = c224;
-const paletteColor_t rollTextColor  = c555;
-const paletteColor_t totalTextColor = c555;
-const paletteColor_t histTextColor  = c444;
+static const paletteColor_t diceBackgroundColor = c112;
+static const paletteColor_t diceTextColor       = c550;
+static const paletteColor_t selectionTextColor  = c555;
+static const paletteColor_t diceOutlineColor    = c223;
+static const paletteColor_t totalTextColor      = c555;
+static const paletteColor_t histTextColor       = c444;
 
-enum dr_stateVals
-{
-    DR_STARTUP  = 0,
-    DR_SHOWROLL = 1,
-    DR_ROLLING  = 2
-};
-
-// int polygonOuterSides[] = []
-// Consider adding outer geometry of dice to make them more recognizable
+//==============================================================================
+// Variables
+//==============================================================================
 
 swadgeMode_t modeDiceRoller = {
     .modeName                 = DR_NAMESTRING,
@@ -102,50 +157,18 @@ swadgeMode_t modeDiceRoller = {
     .fnDacCb                  = NULL,
 };
 
-typedef struct
-{
-    font_t ibm_vga8;
-    wsg_t woodTexture;
-    wsg_t cursor;
-    wsg_t corner;
-
-    double timeAngle;
-
-    int stateAdvanceFlag;
-    int state;
-
-    int requestCount;
-    int requestSides;
-    int sideIndex;
-
-    // esp_timer_handle_t rollTimer;
-    int64_t rollStartTimeUs;
-    int fakeVal;
-    int fakeValIndex;
-
-    int activeSelection;
-
-    int rollIndex;
-    int rollSides;
-    int rollSize;
-    int* rolls;
-    int rollTotal;
-
-    uint32_t timeUs;
-    uint32_t lastCallTimeUs;
-    uint32_t rollerNum;
-
-    int histTotals[DR_MAXHIST];
-    int histSides[DR_MAXHIST];
-    int histCounts[DR_MAXHIST];
-    int histSize;
-} diceRoller_t;
-
 diceRoller_t* diceRoller;
 
+//==============================================================================
+// Functions
+//==============================================================================
+
+/**
+ * @brief Enter and set up the dice roller
+ */
 void diceEnterMode(void)
 {
-    diceRoller = calloc(1, sizeof(diceRoller_t));
+    diceRoller = heap_caps_calloc(1, sizeof(diceRoller_t), MALLOC_CAP_8BIT);
 
     loadFont("ibm_vga8.font", &diceRoller->ibm_vga8, false);
     loadWsg("woodTexture64.wsg", &diceRoller->woodTexture, false);
@@ -165,7 +188,7 @@ void diceEnterMode(void)
     diceRoller->sideIndex    = 6;
     diceRoller->requestSides = validSides[diceRoller->sideIndex];
 
-    diceRoller->activeSelection = 0;
+    diceRoller->activeSelection = false;
 
     diceRoller->state            = DR_STARTUP;
     diceRoller->stateAdvanceFlag = 0;
@@ -173,6 +196,9 @@ void diceEnterMode(void)
     diceRoller->histSize = 0;
 }
 
+/**
+ * @brief Free dice roller memory and exit
+ */
 void diceExitMode(void)
 {
     freeFont(&diceRoller->ibm_vga8);
@@ -182,12 +208,16 @@ void diceExitMode(void)
 
     if (diceRoller->rolls != NULL)
     {
-        free(diceRoller->rolls);
+        heap_caps_free(diceRoller->rolls);
     }
-    free(diceRoller);
-    // bootloader_random_disable();
+    heap_caps_free(diceRoller);
 }
 
+/**
+ * @brief Dice roller main loop, handle buttons, state machine, and animation
+ *
+ * @param elapsedUs The time since this function was last called
+ */
 void diceMainLoop(int64_t elapsedUs)
 {
     buttonEvt_t evt;
@@ -198,30 +228,21 @@ void diceMainLoop(int64_t elapsedUs)
     doStateMachine(elapsedUs);
 }
 
+/**
+ * @brief Handle a dice roller button event. Moves cursor and rolls dice
+ *
+ * @param evt The button event
+ */
 void diceButtonCb(buttonEvt_t* evt)
 {
     switch (evt->button)
     {
         case PB_A:
-        {
-            if (evt->down && (diceRoller->state != DR_ROLLING))
-            {
-                // diceRoller->rollerNum = (esp_random() % 20) + 1;
-                if (diceRoller->requestCount > 0 && diceRoller->requestSides > 0)
-                {
-                    doRoll(diceRoller->requestCount, diceRoller->requestSides, diceRoller->sideIndex);
-                    diceRoller->rollStartTimeUs = esp_timer_get_time();
-                    diceRoller->fakeValIndex    = -1;
-                    diceRoller->state           = DR_ROLLING;
-                }
-            }
-            break;
-        }
         case PB_B:
+        default:
         {
             if (evt->down && (diceRoller->state != DR_ROLLING))
             {
-                // diceRoller->rollerNum = (esp_random() % 20) + 1;
                 if (diceRoller->requestCount > 0 && diceRoller->requestSides > 0)
                 {
                     doRoll(diceRoller->requestCount, diceRoller->requestSides, diceRoller->sideIndex);
@@ -233,43 +254,23 @@ void diceButtonCb(buttonEvt_t* evt)
             break;
         }
         case PB_UP:
-        {
-            if (evt->down && (diceRoller->state != DR_ROLLING))
-            {
-                if (!(diceRoller->activeSelection))
-                {
-                    changeDiceCountRequest(1);
-                }
-                else
-                {
-                    changeDiceSidesRequest(1);
-                }
-            }
-            break;
-        }
         case PB_DOWN:
         {
+            int dir = (evt->button == PB_UP) ? 1 : -1;
             if (evt->down && (diceRoller->state != DR_ROLLING))
             {
                 if (!(diceRoller->activeSelection))
                 {
-                    changeDiceCountRequest(-1);
+                    changeDiceCountRequest(dir);
                 }
                 else
                 {
-                    changeDiceSidesRequest(-1);
+                    changeDiceSidesRequest(dir);
                 }
             }
             break;
         }
         case PB_LEFT:
-        {
-            if (evt->down && (diceRoller->state != DR_ROLLING))
-            {
-                changeActiveSelection();
-            }
-            break;
-        }
         case PB_RIGHT:
         {
             if (evt->down && (diceRoller->state != DR_ROLLING))
@@ -278,85 +279,99 @@ void diceButtonCb(buttonEvt_t* evt)
             }
             break;
         }
-        default:
-        {
-            break;
-        }
     }
 }
-//{
 
-//}
-
+/**
+ * @brief Draws a tiled wood texture on the entire background
+ *
+ * TODO move this function to background callback?
+ */
 void drawBackgroundTable(void)
 {
-    int edgeSize = 64;
+    int edgeSize = diceRoller->woodTexture.w;
     int x_seg    = TFT_WIDTH / edgeSize + 1;
     int y_seg    = TFT_HEIGHT / edgeSize + 1;
     for (int j = 0; j < y_seg; j++)
     {
         for (int k = 0; k < x_seg; k++)
         {
-            drawWsg(&diceRoller->woodTexture, edgeSize * k, edgeSize * j, false, false, 0);
+            drawWsgTile(&diceRoller->woodTexture, edgeSize * k, edgeSize * j);
         }
     }
-    // drawWsg(&diceRoller->woodTexture,TFT_WIDTH/2,TFT_HEIGHT/2,false,false,0);
 }
 
+/**
+ * @brief Main state machine for the dice roller. Handles rolling, drawing, and animation
+ *
+ * @param elapsedUs The time since this function was last called
+ */
 void doStateMachine(int64_t elapsedUs)
 {
+    // Always draw the background table first
+    drawBackgroundTable();
+
+    // Always draw the selection text
+    drawSelectionText();
+
     switch (diceRoller->state)
     {
         case DR_STARTUP:
+        default:
         {
-            clearPxTft();
-            drawBackgroundTable();
-            drawText(
+            // Draw the mode name
+            drawText(&diceRoller->ibm_vga8, c555, DR_NAMESTRING,
+                     TFT_WIDTH / 2 - textWidth(&diceRoller->ibm_vga8, DR_NAMESTRING) / 2, TFT_HEIGHT / 2);
 
-                &diceRoller->ibm_vga8, c555, DR_NAMESTRING,
-                TFT_WIDTH / 2 - textWidth(&diceRoller->ibm_vga8, DR_NAMESTRING) / 2, TFT_HEIGHT / 2);
+            // Draw selection pointer
+            drawSelectionPointerSprite();
 
-            int w = TFT_WIDTH;
-            int h = TFT_HEIGHT;
-            char rollStr[32];
-            drawSelectionText(w, h, rollStr, 32);
-            drawSelectionPointerSprite(w, h, rollStr, 32);
-
+            // If a roll should begin
             if (diceRoller->stateAdvanceFlag)
             {
+                // Set the flags
                 diceRoller->state            = DR_ROLLING;
                 diceRoller->stateAdvanceFlag = 0;
             }
             break;
         }
-        case DR_SHOWROLL:
+        case DR_SHOW_ROLL:
         {
-            clearPxTft();
-            drawBackgroundTable();
-            int w = TFT_WIDTH;
-            int h = TFT_HEIGHT;
-            char rollStr[32];
-            drawSelectionText(w, h, rollStr, 32);
-            drawSelectionPointerSprite(w, h, rollStr, 32);
+            // Draw selection pointer
+            drawSelectionPointerSprite();
 
-            int xGridOffset = w / 8;
-            // int xGridMargin = w/4;
-            int xGridMargin = w / 5;
-            // int yGridMargin = h/7;
-            int yGridMargin = h / 7;
-            int xGridOffsets[]
-                = {w / 2 - xGridMargin + xGridOffset, w / 2 + xGridOffset, w / 2 + xGridMargin + xGridOffset,
-                   w / 2 - xGridMargin + xGridOffset, w / 2 + xGridOffset, w / 2 + xGridMargin + xGridOffset};
-            int yGridOffsets[] = {h / 2 - yGridMargin, h / 2 - yGridMargin, h / 2 - yGridMargin,
-                                  h / 2 + yGridMargin, h / 2 + yGridMargin, h / 2 + yGridMargin};
+            // Calculate grid offsets for drawing dice
+            int xGridOffset    = TFT_WIDTH / 8;
+            int xGridMargin    = TFT_WIDTH / 5;
+            int yGridMargin    = TFT_HEIGHT / 7;
+            int xGridOffsets[] = {
+                TFT_WIDTH / 2 - xGridMargin + xGridOffset, //
+                TFT_WIDTH / 2 + xGridOffset,               //
+                TFT_WIDTH / 2 + xGridMargin + xGridOffset, //
+                TFT_WIDTH / 2 - xGridMargin + xGridOffset, //
+                TFT_WIDTH / 2 + xGridOffset,               //
+                TFT_WIDTH / 2 + xGridMargin + xGridOffset,
+            };
+            int yGridOffsets[] = {
+                TFT_HEIGHT / 2 - yGridMargin, //
+                TFT_HEIGHT / 2 - yGridMargin, //
+                TFT_HEIGHT / 2 - yGridMargin, //
+                TFT_HEIGHT / 2 + yGridMargin, //
+                TFT_HEIGHT / 2 + yGridMargin, //
+                TFT_HEIGHT / 2 + yGridMargin,
+            };
+
+            // Draw everything
             drawDiceBackground(xGridOffsets, yGridOffsets);
             drawDiceText(xGridOffsets, yGridOffsets);
-            drawCurrentTotal(w, h);
-            // dbgPrintHist();
+            drawCurrentTotal();
             drawHistoryPanel();
             printHistory();
+
+            // If a roll should begin
             if (diceRoller->stateAdvanceFlag)
             {
+                // Set the flags
                 diceRoller->state            = DR_ROLLING;
                 diceRoller->stateAdvanceFlag = 0;
             }
@@ -364,56 +379,72 @@ void doStateMachine(int64_t elapsedUs)
         }
         case DR_ROLLING:
         {
-            clearPxTft();
-            drawBackgroundTable();
+            // Calculate grid offsets for drawing dice
+            int xGridOffset    = TFT_WIDTH / 8;
+            int xGridMargin    = TFT_WIDTH / 5;
+            int yGridMargin    = TFT_HEIGHT / 7;
+            int xGridOffsets[] = {
+                TFT_WIDTH / 2 - xGridMargin + xGridOffset, //
+                TFT_WIDTH / 2 + xGridOffset,               //
+                TFT_WIDTH / 2 + xGridMargin + xGridOffset, //
+                TFT_WIDTH / 2 - xGridMargin + xGridOffset, //
+                TFT_WIDTH / 2 + xGridOffset,               //
+                TFT_WIDTH / 2 + xGridMargin + xGridOffset,
+            };
+            int yGridOffsets[] = {
+                TFT_HEIGHT / 2 - yGridMargin, //
+                TFT_HEIGHT / 2 - yGridMargin, //
+                TFT_HEIGHT / 2 - yGridMargin, //
+                TFT_HEIGHT / 2 + yGridMargin, //
+                TFT_HEIGHT / 2 + yGridMargin, //
+                TFT_HEIGHT / 2 + yGridMargin,
+            };
 
-            int w = TFT_WIDTH;
-            int h = TFT_HEIGHT;
-            char rollStr[32];
-            drawSelectionText(w, h, rollStr, 32);
-
-            int xGridOffset = w / 8;
-            // int xGridMargin = w/4;
-            int xGridMargin = w / 5;
-            // int yGridMargin = h/7;
-            int yGridMargin = h / 7;
-            int xGridOffsets[]
-                = {w / 2 - xGridMargin + xGridOffset, w / 2 + xGridOffset, w / 2 + xGridMargin + xGridOffset,
-                   w / 2 - xGridMargin + xGridOffset, w / 2 + xGridOffset, w / 2 + xGridMargin + xGridOffset};
-            int yGridOffsets[] = {h / 2 - yGridMargin, h / 2 - yGridMargin, h / 2 - yGridMargin,
-                                  h / 2 + yGridMargin, h / 2 + yGridMargin, h / 2 + yGridMargin};
-
-            // int total = 0;
+            // Run animation timers
+            // TODO use elapsedUs rather than esp_timer_get_time()?
             int32_t rollAnimationTimeUs = esp_timer_get_time() - diceRoller->rollStartTimeUs;
-            double rotationOffsetDeg    = rollAnimationTimeUs / (double)rollAnimationPeriod * 360.0 * spinScaler;
+            float rotationOffsetDeg     = rollAnimationTimeUs / (float)rollAnimationPeriod * 360.0f;
             genFakeVal(rollAnimationTimeUs, rotationOffsetDeg);
+
+            // Draw everything
             drawDiceBackgroundAnimation(xGridOffsets, yGridOffsets, rollAnimationTimeUs, rotationOffsetDeg);
             drawFakeDiceText(xGridOffsets, yGridOffsets);
             drawHistoryPanel();
             printHistory();
+
+            // If the roll elapsed
             if (rollAnimationTimeUs > rollAnimationPeriod)
             {
-                diceRoller->state = DR_SHOWROLL;
+                // Add to history and change the state
                 addTotalToHistory();
+                diceRoller->state = DR_SHOW_ROLL;
             }
-            break;
-        }
-        default:
-        {
             break;
         }
     }
 }
 
+/**
+ * @brief Draw a panel with a filled background and border
+ *
+ * @param x0 The X offset to start the panel at
+ * @param y0 The Y offset to start the panel at
+ * @param x1 The X offset to end the panel at
+ * @param y1 The Y offset to end the panel at
+ */
 void drawPanel(int x0, int y0, int x1, int y1)
 {
+    // Panel colors
     paletteColor_t outerGold  = c550;
     paletteColor_t innerGold  = c540;
     paletteColor_t panelColor = c400;
+
+    // Draw the panel
     drawRect(x0, y0, x1, y1, outerGold);
     drawRect(x0 + 1, y0 + 1, x1 - 1, y1 - 1, innerGold);
     oddEvenFill(x0, y0, x1, y1, innerGold, panelColor);
 
+    // Draw corners around the panel
     int cornerEdge = 8;
     drawWsg(&diceRoller->corner, x0, y0, true, false, 0);                           // Draw TopLeft
     drawWsg(&diceRoller->corner, x1 - cornerEdge, y0, false, false, 0);             // Draw TopRight
@@ -421,43 +452,62 @@ void drawPanel(int x0, int y0, int x1, int y1)
     drawWsg(&diceRoller->corner, x1 - cornerEdge, y1 - cornerEdge, false, true, 0); // Draw BotRight
 }
 
+/**
+ * @brief Draw the panel for dice history
+ */
 void drawHistoryPanel(void)
 {
+    // Calculate margins
     int histX            = TFT_WIDTH / 14 + 30;
     int histY            = TFT_HEIGHT / 8 + 40;
     int histYEntryOffset = 15;
     int xMargin          = 45;
     int yMargin          = 10;
 
-    drawPanel(histX - xMargin, histY - yMargin, histX + xMargin, histY + (DR_MAXHIST + 1) * histYEntryOffset + yMargin);
+    // Draw the panel
+    drawPanel(histX - xMargin, //
+              histY - yMargin, //
+              histX + xMargin, //
+              histY + (DR_MAX_HIST + 1) * histYEntryOffset + yMargin);
 }
 
+/**
+ * @brief Draw dice history to the TFT
+ */
 void printHistory(void)
 {
+    // Calculate offsets
     int histX            = TFT_WIDTH / 14 + 30;
     int histY            = TFT_HEIGHT / 8 + 40;
     int histYEntryOffset = 15;
 
+    // Draw the header
     char totalStr[32];
     snprintf(totalStr, sizeof(totalStr), "History");
-    drawText(
+    drawText(&diceRoller->ibm_vga8, totalTextColor, totalStr,        //
+             histX - textWidth(&diceRoller->ibm_vga8, totalStr) / 2, //
+             histY);
 
-        &diceRoller->ibm_vga8, totalTextColor, totalStr, histX - textWidth(&diceRoller->ibm_vga8, totalStr) / 2, histY);
-
+    // For all the history
     for (int i = 0; i < diceRoller->histSize; i++)
     {
+        // Draw this history entry
         snprintf(totalStr, sizeof(totalStr), "%dd%d: %d", diceRoller->histCounts[i], diceRoller->histSides[i],
                  diceRoller->histTotals[i]);
-        drawText(
-
-            &diceRoller->ibm_vga8, histTextColor, totalStr, histX - textWidth(&diceRoller->ibm_vga8, totalStr) / 2,
-            histY + (i + 1) * histYEntryOffset);
+        drawText(&diceRoller->ibm_vga8, histTextColor, totalStr,         //
+                 histX - textWidth(&diceRoller->ibm_vga8, totalStr) / 2, //
+                 histY + (i + 1) * histYEntryOffset);
     }
 }
 
+/**
+ * @brief Add the last dice roll to the history
+ *
+ * TODO convert history to a list_t?
+ */
 void addTotalToHistory(void)
 {
-    if (diceRoller->histSize < DR_MAXHIST) // S
+    if (diceRoller->histSize < DR_MAX_HIST)
     {
         int size = diceRoller->histSize;
         for (int i = 0; i < size; i++)
@@ -492,76 +542,101 @@ void addTotalToHistory(void)
     }
 }
 
-// void dbgPrintHist(void)
-// {
-//     ESP_LOGD("DICEROLLER","History:");
-//     for(int i = 0; i < diceRoller->histSize; i++)
-//     {
-//         ESP_LOGD("DICEROLLER","%dd%d:%d",diceRoller->histCounts[i],diceRoller->histSides[i],diceRoller->histTotals[i]);
-//         if(i < diceRoller->histSize-1)
-//         {
-//             ESP_LOGD("DICEROLLER",", ");
-//         }
-//     }
-//     ESP_LOGD("DICEROLLER","\n");
-// }
-
-void drawCurrentTotal(int w, int h)
+/**
+ * @brief Draw the current dice roll total
+ */
+void drawCurrentTotal(void)
 {
     char totalStr[32];
     snprintf(totalStr, sizeof(totalStr), "Total: %d", diceRoller->rollTotal);
-    drawText(
-
-        &diceRoller->ibm_vga8, totalTextColor, totalStr, TFT_WIDTH / 2 - textWidth(&diceRoller->ibm_vga8, totalStr) / 2,
-        TFT_HEIGHT * 7 / 8);
+    drawText(&diceRoller->ibm_vga8, totalTextColor, totalStr,
+             TFT_WIDTH / 2 - textWidth(&diceRoller->ibm_vga8, totalStr) / 2, TFT_HEIGHT * 7 / 8);
 }
 
+/**
+ * @brief Change the cursor selection between number of dice and number of faces
+ */
 void changeActiveSelection(void)
 {
     diceRoller->activeSelection = !(diceRoller->activeSelection);
 }
 
-// Never less than 1 except at mode start, never greater than MAXDICE
+/**
+ * @brief Change the number of dice to roll
+ *
+ * Never less than 1 except at mode start, never greater than MAX_DICE
+ *
+ * @param change
+ */
 void changeDiceCountRequest(int change)
 {
-    diceRoller->requestCount = (diceRoller->requestCount - 1 + change + MAXDICE) % MAXDICE + 1;
+    diceRoller->requestCount = (diceRoller->requestCount - 1 + change + MAX_DICE) % MAX_DICE + 1;
 }
 
+/**
+ * @brief Change the number of faces of the dice to roll
+ *
+ * @param change
+ */
 void changeDiceSidesRequest(int change)
 {
-    diceRoller->sideIndex    = (diceRoller->sideIndex + COUNTCOUNT + change) % COUNTCOUNT;
+    diceRoller->sideIndex    = (diceRoller->sideIndex + change + COUNT_COUNT) % COUNT_COUNT;
     diceRoller->requestSides = validSides[diceRoller->sideIndex];
 }
 
+/**
+ * @brief Roll the dice
+ *
+ * @param count The number of dice to roll
+ * @param sides The number of faces per die
+ * @param ind The index for the number of faces, see validSides[]
+ */
 void doRoll(int count, int sides, int ind)
 {
-    free(diceRoller->rolls);
-    diceRoller->rolls = (int*)malloc(sizeof(int) * count);
-    int total         = 0;
+    // Reallocate rolls because the number of rolls may have changed
+    heap_caps_free(diceRoller->rolls);
+    diceRoller->rolls = (int*)heap_caps_calloc(count, sizeof(int), MALLOC_CAP_8BIT);
+
+    // Roll the dice!
+    int total = 0;
     for (int m = 0; m < count; m++)
     {
         int curVal           = (esp_random() % sides) + 1;
         diceRoller->rolls[m] = curVal;
         total += curVal;
     }
+
+    // Save the roll
     diceRoller->rollSize  = count;
     diceRoller->rollSides = sides;
     diceRoller->rollIndex = ind;
     diceRoller->rollTotal = total;
 }
 
-double cosDeg(double degrees)
+/**
+ * @brief Helper function to get cosine in degrees
+ *
+ * @param degrees The number, in degrees, to get the cosine of
+ * @return The cosine of the input
+ */
+float cosDeg(float degrees)
 {
-    return cos(degrees / 360.0 * 2 * M_PI);
-}
-
-double sinDeg(double degrees)
-{
-    return sin(degrees / 360.0 * 2 * M_PI);
+    return cosf(degrees / 360.0f * 2 * M_PI);
 }
 
 /**
- * @brief Get the Regular Polygon Vertices object. Used in drawRegularPolygon. The vector array returned
+ * @brief Helper function to get sine in degrees
+ *
+ * @param degrees The number, in degrees, to get the sine of
+ * @return The csine of the input
+ */
+float sinDeg(float degrees)
+{
+    return sinf(degrees / 360.0f * 2 * M_PI);
+}
+
+/**
+ * @brief Get the Regular Polygon Vertices object. Used in drawRegularPolygon(). The vector array returned
  * by this function must be freed to prevent memory leaks.
  *
  * @param sides Number of sides of regular polygon
@@ -571,11 +646,10 @@ double sinDeg(double degrees)
  */
 vector_t* getRegularPolygonVertices(int8_t sides, float rotDeg, int16_t radius)
 {
-    vector_t* vertices = (vector_t*)malloc(sizeof(vector_t) * sides);
-    double increment   = 360.0 / sides;
+    vector_t* vertices = (vector_t*)heap_caps_calloc(sides, sizeof(vector_t), MALLOC_CAP_8BIT);
+    float increment    = 360.0f / sides;
     for (int k = 0; k < sides; k++)
     {
-        // use display.c math functions
         vertices[k].x = round(radius * cosDeg(increment * k + rotDeg));
         vertices[k].y = round(radius * sinDeg(increment * k + rotDeg));
     }
@@ -585,6 +659,7 @@ vector_t* getRegularPolygonVertices(int8_t sides, float rotDeg, int16_t radius)
 /**
  * @brief Draw a regular polygon given a center point, number of sides, rotation, radius, outline color, and dash width.
  * WARNING: Lines are not guaranteed to be exactly one pixel thick due to behavior of the plotLine function.
+ *
  * @param xCenter x axis center of polygon
  * @param yCenter y axis center of polygon
  * @param sides number of sides of polygon
@@ -596,84 +671,69 @@ vector_t* getRegularPolygonVertices(int8_t sides, float rotDeg, int16_t radius)
 void drawRegularPolygon(int xCenter, int yCenter, int8_t sides, float rotDeg, int16_t radius, paletteColor_t col,
                         int dashWidth)
 {
+    // For each vertex in the polygon
     vector_t* vertices = getRegularPolygonVertices(sides, rotDeg, radius);
-
     for (int vertInd = 0; vertInd < sides; vertInd++)
     {
+        // Find the next vertex, may wrap around
         int8_t endInd = (vertInd + 1) % sides;
 
-        drawLine(
-
-            xCenter + vertices[vertInd].x, yCenter + vertices[vertInd].y, xCenter + vertices[endInd].x,
-            yCenter + vertices[endInd].y, col, dashWidth);
+        // Draw a line
+        drawLine(xCenter + vertices[vertInd].x, yCenter + vertices[vertInd].y, xCenter + vertices[endInd].x,
+                 yCenter + vertices[endInd].y, col, dashWidth);
     }
 
-    free(vertices);
+    // Free the vertices
+    heap_caps_free(vertices);
 }
 
-void drawSelectionText(int w, int h, char* rollStr, int bfrSize)
+/**
+ * @brief Draw text for what the current selection is
+ */
+void drawSelectionText(void)
 {
-    snprintf(rollStr, bfrSize, str_next_roll_format, diceRoller->requestCount, diceRoller->requestSides);
+    // Create the string
+    char rollStr[32];
+    snprintf(rollStr, sizeof(rollStr) - 1, str_next_roll_format, diceRoller->requestCount, diceRoller->requestSides);
 
-    drawText(
-
-        &diceRoller->ibm_vga8, selectionTextColor, rollStr,
-        TFT_WIDTH / 2 - textWidth(&diceRoller->ibm_vga8, rollStr) / 2, TFT_HEIGHT / 8);
+    // Draw it to the screen
+    drawText(&diceRoller->ibm_vga8, selectionTextColor, rollStr,            //
+             TFT_WIDTH / 2 - textWidth(&diceRoller->ibm_vga8, rollStr) / 2, //
+             TFT_HEIGHT / 8);
 }
 
-// void drawSelectionPointer(int w,int h,char* rollStr,int bfrSize)
-// {
-
-//     // int xPointerOffset = 40;
-//     // int xPointerSelectionOffset = 16;
-//     int yPointerOffset = 17;
-//     //printf("rollStrSize: %d\n",(int)sizeof(rollStr));
-//     snprintf(rollStr,bfrSize,"Next roll is %dd%d",diceRoller->requestCount,diceRoller->requestSides);
-//     int centerToEndPix = textWidth(&diceRoller->ibm_vga8,rollStr)/2;
-//     snprintf(rollStr,bfrSize,"%dd%d",diceRoller->requestCount,diceRoller->requestSides);
-//     int endToNumStartPix = textWidth(&diceRoller->ibm_vga8,rollStr);
-//     snprintf(rollStr,bfrSize,"%d",diceRoller->requestCount);
-//     int firstNumPix = textWidth(&diceRoller->ibm_vga8,rollStr);
-//     // int dWidth = textWidth(&diceRoller->ibm_vga8,"d");
-//     snprintf(rollStr,bfrSize,"%d",diceRoller->requestSides);
-//     int lastNumPix = textWidth(&diceRoller->ibm_vga8,rollStr);
-
-//     //printf("%s\n", rollStr);
-
-//     int countSelX = w/2 + centerToEndPix - endToNumStartPix + firstNumPix/2;
-//     int sideSelX = w/2 + centerToEndPix - lastNumPix/2;
-//     drawRegularPolygon(diceRoller->activeSelection ? sideSelX : countSelX,
-//         h/8+yPointerOffset, 3, -90, 5, selectionArrowColor, 0
-//     );
-// }
-
-void drawSelectionPointerSprite(int w, int h, char* rollStr, int bfrSize)
+/**
+ * @brief Draw the cursor for the number of dice or faces
+ */
+void drawSelectionPointerSprite(void)
 {
-    // int xPointerOffset = 40;
-    // int xPointerSelectionOffset = 16;
-    int yPointerOffset = 17;
-    // printf("rollStrSize: %d\n",(int)sizeof(rollStr));
-    snprintf(rollStr, bfrSize, str_next_roll_format, diceRoller->requestCount, diceRoller->requestSides);
+    char rollStr[32];
+
+    // Measure exactly where to draw the cursor based on the string
+    snprintf(rollStr, sizeof(rollStr) - 1, str_next_roll_format, diceRoller->requestCount, diceRoller->requestSides);
     int centerToEndPix = textWidth(&diceRoller->ibm_vga8, rollStr) / 2;
-    snprintf(rollStr, bfrSize, "%dd%d", diceRoller->requestCount, diceRoller->requestSides);
+    snprintf(rollStr, sizeof(rollStr) - 1, "%dd%d", diceRoller->requestCount, diceRoller->requestSides);
     int endToNumStartPix = textWidth(&diceRoller->ibm_vga8, rollStr);
-    snprintf(rollStr, bfrSize, "%d", diceRoller->requestCount);
+    snprintf(rollStr, sizeof(rollStr) - 1, "%d", diceRoller->requestCount);
     int firstNumPix = textWidth(&diceRoller->ibm_vga8, rollStr);
-    // int dWidth = textWidth(&diceRoller->ibm_vga8,"d");
-    snprintf(rollStr, bfrSize, "%d", diceRoller->requestSides);
+    snprintf(rollStr, sizeof(rollStr) - 1, "%d", diceRoller->requestSides);
     int lastNumPix = textWidth(&diceRoller->ibm_vga8, rollStr);
+    int countSelX  = TFT_WIDTH / 2 + centerToEndPix - endToNumStartPix + firstNumPix / 2 - 3;
+    int sideSelX   = TFT_WIDTH / 2 + centerToEndPix - lastNumPix / 2 - 3;
 
-    // printf("%s\n", rollStr);
-
-    int countSelX = w / 2 + centerToEndPix - endToNumStartPix + firstNumPix / 2 - 3;
-    int sideSelX  = w / 2 + centerToEndPix - lastNumPix / 2 - 3;
-    drawWsg(&diceRoller->cursor, diceRoller->activeSelection ? sideSelX : countSelX, h / 8 + yPointerOffset - 4, false,
-            false, 0);
-    // drawRegularPolygon(diceRoller->activeSelection ? sideSelX : countSelX,
-    //     h/8+yPointerOffset, 3, -90, 5, selectionArrowColor, 0
-    //);
+    // Draw the cursor
+    int yPointerOffset = 17;
+    drawWsgSimple(&diceRoller->cursor,                                //
+                  diceRoller->activeSelection ? sideSelX : countSelX, //
+                  TFT_HEIGHT / 8 + yPointerOffset - 4);
 }
 
+/**
+ * @brief TODO doc
+ *
+ * @param xGridOffsets
+ * @param yGridOffsets
+ */
 void drawDiceBackground(int* xGridOffsets, int* yGridOffsets)
 {
     for (int m = 0; m < diceRoller->rollSize; m++)
@@ -687,6 +747,12 @@ void drawDiceBackground(int* xGridOffsets, int* yGridOffsets)
     }
 }
 
+/**
+ * @brief TODO doc
+ *
+ * @param xGridOffsets
+ * @param yGridOffsets
+ */
 void drawDiceText(int* xGridOffsets, int* yGridOffsets)
 {
     for (int m = 0; m < diceRoller->rollSize; m++)
@@ -701,8 +767,16 @@ void drawDiceText(int* xGridOffsets, int* yGridOffsets)
     }
 }
 
+/**
+ * @brief TODO doc
+ *
+ * @param xGridOffsets
+ * @param yGridOffsets
+ * @param rollAnimationTimUs
+ * @param rotationOffsetDeg
+ */
 void drawDiceBackgroundAnimation(int* xGridOffsets, int* yGridOffsets, int32_t rollAnimationTimUs,
-                                 double rotationOffsetDeg)
+                                 float rotationOffsetDeg)
 {
     for (int m = 0; m < diceRoller->rollSize; m++)
     {
@@ -716,6 +790,12 @@ void drawDiceBackgroundAnimation(int* xGridOffsets, int* yGridOffsets, int32_t r
     }
 }
 
+/**
+ * @brief TODO doc
+ *
+ * @param xGridOffsets
+ * @param yGridOffsets
+ */
 void drawFakeDiceText(int* xGridOffsets, int* yGridOffsets)
 {
     for (int m = 0; m < diceRoller->rollSize; m++)
@@ -731,7 +811,13 @@ void drawFakeDiceText(int* xGridOffsets, int* yGridOffsets)
     }
 }
 
-void genFakeVal(int32_t rollAnimationTimeUs, double rotationOffsetDeg)
+/**
+ * @brief TODO doc
+ *
+ * @param rollAnimationTimeUs
+ * @param rotationOffsetDeg
+ */
+void genFakeVal(int32_t rollAnimationTimeUs, float rotationOffsetDeg)
 {
     if (floor(rollAnimationTimeUs / fakeValRerollPeriod) > diceRoller->fakeValIndex)
     {
@@ -739,12 +825,3 @@ void genFakeVal(int32_t rollAnimationTimeUs, double rotationOffsetDeg)
         diceRoller->fakeVal      = esp_random() % diceRoller->rollSides + 1;
     }
 }
-
-void maskDiceTexture();
-void drawDie(int sides, int value);
-void drawDice(int sides, int* values);
-
-// void diceState(int input)
-//{
-
-//}
