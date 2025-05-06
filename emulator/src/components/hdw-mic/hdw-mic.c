@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 
+#include <esp_log.h>
 #include "hdw-mic.h"
 #include "hdw-mic_emu.h"
 #include "emu_main.h"
@@ -22,6 +23,8 @@ static int sshead               = 0;
 static int sstail               = 0;
 static bool adcSampling         = false;
 
+static const char MIC_TAG[] = "MIC";
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -35,7 +38,8 @@ static bool adcSampling         = false;
  */
 void initMic(gpio_num_t gpio)
 {
-    // Nothing to do here, emulator sound is initialized in initBuzzer()
+    ESP_LOGI(MIC_TAG, " ");
+    adcSampling = true;
 }
 
 /**
@@ -43,7 +47,8 @@ void initMic(gpio_num_t gpio)
  */
 void powerDownMic(void)
 {
-    WARN_UNIMPLEMENTED();
+    ESP_LOGI(MIC_TAG, " ");
+    stopMic();
 }
 
 /**
@@ -51,7 +56,8 @@ void powerDownMic(void)
  */
 void powerUpMic(void)
 {
-    WARN_UNIMPLEMENTED();
+    ESP_LOGI(MIC_TAG, " ");
+    startMic();
 }
 
 /**
@@ -59,6 +65,7 @@ void powerUpMic(void)
  */
 void startMic(void)
 {
+    ESP_LOGI(MIC_TAG, " ");
     adcSampling = true;
 }
 
@@ -87,6 +94,7 @@ uint32_t loopMic(uint16_t* outSamples, uint32_t outSamplesMax)
  */
 void stopMic(void)
 {
+    ESP_LOGI(MIC_TAG, " ");
     adcSampling = false;
 }
 
@@ -95,12 +103,12 @@ void stopMic(void)
  */
 void deinitMic(void)
 {
-    // Nothing to do here, emulator sound is deinitialized in deinitBuzzer()
+    ESP_LOGI(MIC_TAG, " ");
+    adcSampling = false;
 }
 
 /**
- * @brief Callback for sound events, both input and output
- * Only handle input here
+ * @brief Callback for input sound events
  *
  * @param in A pointer to read samples from. May be NULL
  * @param framesr The number of samples to read
