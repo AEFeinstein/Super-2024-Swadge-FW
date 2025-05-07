@@ -787,6 +787,8 @@ void changeStateGame(platformer_t* self)
 
     self->tilemap.executeTileSpawnAll = true;
 
+    soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
+
     self->update = &updateGame;
 }
 
