@@ -1,5 +1,4 @@
 // TODO: Add LED interaction.
-// TODO: Add shake to roll
 // TODO: Add outer geometry of dice to make them more recognizable
 
 //==============================================================================
@@ -74,6 +73,10 @@ typedef struct
     int* fakeVals;
 
     list_t history;
+
+    vec3d_t lastOrientation;
+    list_t shakeHistory;
+    bool isShook;
 } diceRoller_t;
 
 //==============================================================================
@@ -262,6 +265,14 @@ void diceMainLoop(int64_t elapsedUs)
     {
         diceButtonCb(&evt);
     }
+
+    if (checkForShake(&diceRoller->lastOrientation, &diceRoller->shakeHistory, &diceRoller->isShook))
+    {
+        if (diceRoller->isShook)
+        {
+            doRoll(diceRoller->requestCount, &dice[diceRoller->requestDieIdx]);
+        }
+    }
     doStateMachine(elapsedUs);
 }
 
@@ -278,13 +289,9 @@ void diceButtonCb(buttonEvt_t* evt)
         case PB_B:
         default:
         {
-            if (evt->down && (diceRoller->state != DR_ROLLING))
+            if (evt->down)
             {
-                if (diceRoller->requestCount > 0 && diceRoller->requestDieIdx > 0)
-                {
-                    doRoll(diceRoller->requestCount, &dice[diceRoller->requestDieIdx]);
-                    diceRoller->state = DR_ROLLING;
-                }
+                doRoll(diceRoller->requestCount, &dice[diceRoller->requestDieIdx]);
             }
             break;
         }
@@ -408,7 +415,7 @@ void doStateMachine(int64_t elapsedUs)
             printHistory();
 
             // If the roll elapsed
-            if (diceRoller->rollRotAnimTimerUs > rollAnimationPeriod)
+            if (!diceRoller->isShook && diceRoller->rollRotAnimTimerUs > rollAnimationPeriod)
             {
                 // Add to history and change the state
                 addTotalToHistory();
@@ -563,6 +570,18 @@ void changeDiceSidesRequest(int change)
  */
 void doRoll(int count, const die_t* die)
 {
+    // Check if it's already rolling
+    if (diceRoller->state == DR_ROLLING)
+    {
+        return;
+    }
+
+    // Validate input
+    if (0 >= count || NULL == die)
+    {
+        return;
+    }
+
     // Reallocate rolls because the number of rolls may have changed
     if (diceRoller->rolls)
     {
@@ -597,6 +616,9 @@ void doRoll(int count, const die_t* die)
 
     // Generate fake values to start
     genFakeVals();
+
+    // Set the state to rolling
+    diceRoller->state = DR_ROLLING;
 }
 
 /**

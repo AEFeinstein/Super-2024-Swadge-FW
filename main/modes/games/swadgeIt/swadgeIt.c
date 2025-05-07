@@ -20,10 +20,6 @@
 #define MIC_ENERGY_THRESHOLD  100000
 #define MIC_ENERGY_HYSTERESIS 20
 
-// Limits for detecting shakes
-#define SHAKE_THRESHOLD  300
-#define SHAKE_HYSTERESIS 10
-
 // Limits for the Reaction timers
 #define INIT_EVENT_INPUT_US    3000000
 #define MIN_EVENT_INPUT_US     600000
@@ -60,13 +56,6 @@ typedef enum
 //==============================================================================
 // Structs
 //==============================================================================
-
-typedef struct
-{
-    int16_t x;
-    int16_t y;
-    int16_t z;
-} vec3d_t;
 
 typedef struct
 {
@@ -906,54 +895,16 @@ static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt)
  */
 static void swadgeItCheckForShake(void)
 {
-    // Get the raw IMU value
-    if (ESP_OK == accelIntegrate())
+    // Check if there is a shake state change
+    if (checkForShake(&si->lastOrientation, &si->shakeHistory, &si->isShook))
     {
-        vec3d_t orientation;
-        if (ESP_OK == accelGetAccelVecRaw(&orientation.x, &orientation.y, &orientation.z))
+        // There was a change, check if it's shaking
+        if (si->isShook)
         {
-            // Get the difference between the last frame and now
-            vec3d_t delta = {
-                .x = ABS(si->lastOrientation.x - orientation.x),
-                .y = ABS(si->lastOrientation.y - orientation.y),
-                .z = ABS(si->lastOrientation.z - orientation.z),
-            };
-            si->lastOrientation = orientation;
-
-            // Sum the deltas
-            int32_t tDelta = delta.x + delta.y + delta.z;
-
-            // Add the value to the history list
-            push(&si->shakeHistory, (void*)((intptr_t)tDelta));
-            if (si->shakeHistory.length > SHAKE_HYSTERESIS)
+            // It is shaking, check if inputs are accepted
+            if (!swadgeItInput(EVT_SHAKE_IT))
             {
-                shift(&si->shakeHistory);
-            }
-
-            // If it's not shaking and over the threshold
-            if (!si->isShook && tDelta > SHAKE_THRESHOLD)
-            {
-                if (swadgeItInput(EVT_SHAKE_IT))
-                {
-                    // Mark it as shaking
-                    si->isShook = true;
-                }
-            }
-            else if (si->isShook)
-            {
-                // If it's shaking, check for stability
-                node_t* shakeNode = si->shakeHistory.first;
-                while (shakeNode)
-                {
-                    if ((intptr_t)shakeNode->val > SHAKE_THRESHOLD)
-                    {
-                        // Shake in the history, return
-                        return;
-                    }
-                    shakeNode = shakeNode->next;
-                }
-
-                // No shake in the history, mark it as not shaking
+                // Input not accepted, mark as not shaking
                 si->isShook = false;
             }
         }
