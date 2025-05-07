@@ -1,4 +1,5 @@
 // TODO: Add LED interaction.
+// TODO: Add shake to roll
 // TODO: Add outer geometry of dice to make them more recognizable
 
 //==============================================================================
