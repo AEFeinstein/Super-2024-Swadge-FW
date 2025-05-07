@@ -840,7 +840,7 @@ void drawDiceText(int* diceVals)
         snprintf(rollOutcome, sizeof(rollOutcome), "%d", diceVals[m]);
 
         paletteColor_t color = diceTextColor;
-        if (m >= diceRoller->cRoll.keep)
+        if (m >= diceRoller->cRoll.keep && diceRoller->state != DR_ROLLING)
         {
             color = diceTextColorNoKeep;
         }
