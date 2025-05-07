@@ -4,6 +4,7 @@
 
 #include <stddef.h>
 #include <string.h>
+#include <esp_log.h>
 #include "hdw-dac.h"
 #include "hdw-dac_emu.h"
 #include "emu_main.h"
@@ -16,8 +17,11 @@
 // Variables
 //==============================================================================
 
-fnDacCallback_t dacCb = NULL;
-static bool shdn      = false;
+static const char DAC_TAG[] = "DAC";
+
+static fnDacCallback_t dacCb = NULL;
+static bool shutdownState    = false;
+static bool dacWriting       = false;
 
 //==============================================================================
 // Functions
@@ -32,8 +36,10 @@ static bool shdn      = false;
  */
 void initDac(dac_channel_mask_t channel, gpio_num_t shdn_gpio, fnDacCallback_t cb)
 {
-    // TODO
-    dacCb = cb;
+    ESP_LOGI(DAC_TAG, " ");
+    dacCb         = cb;
+    shutdownState = false;
+    dacWriting    = true;
 }
 
 /**
@@ -42,6 +48,9 @@ void initDac(dac_channel_mask_t channel, gpio_num_t shdn_gpio, fnDacCallback_t c
  */
 void deinitDac(void)
 {
+    ESP_LOGI(DAC_TAG, " ");
+    shutdownState = true;
+    dacWriting    = false;
 }
 
 /**
@@ -49,7 +58,8 @@ void deinitDac(void)
  */
 void powerDownDac(void)
 {
-    WARN_UNIMPLEMENTED();
+    ESP_LOGI(DAC_TAG, " ");
+    setDacShutdown(true);
 }
 
 /**
@@ -57,7 +67,8 @@ void powerDownDac(void)
  */
 void powerUpDac(void)
 {
-    WARN_UNIMPLEMENTED();
+    ESP_LOGI(DAC_TAG, " ");
+    setDacShutdown(false);
 }
 
 /**
@@ -66,7 +77,8 @@ void powerUpDac(void)
  */
 void dacStart(void)
 {
-    // TODO
+    ESP_LOGI(DAC_TAG, " ");
+    dacWriting = true;
 }
 
 /**
@@ -75,7 +87,8 @@ void dacStart(void)
  */
 void dacStop(void)
 {
-    // TODO
+    ESP_LOGI(DAC_TAG, " ");
+    dacWriting = false;
 }
 
 /**
@@ -100,7 +113,7 @@ void dacHandleSoundOutput(short* out, int framesp, short numChannels)
     if (NULL != out)
     {
         // Make sure there is a callback function to call
-        if (NULL != dacCb)
+        if (NULL != dacCb && dacWriting)
         {
             // Get samples from the Swadge mode
             uint8_t tempSamps[framesp];
@@ -113,7 +126,7 @@ void dacHandleSoundOutput(short* out, int framesp, short numChannels)
                 // Copy the same sample to each channel
                 for (int j = 0; j < numChannels; j++)
                 {
-                    if (shdn)
+                    if (shutdownState)
                     {
                         out[i * numChannels + j] = 0;
                     }
@@ -139,5 +152,14 @@ void dacHandleSoundOutput(short* out, int framesp, short numChannels)
  */
 void setDacShutdown(bool shutdown)
 {
-    shdn = shutdown;
+    ESP_LOGI(DAC_TAG, " ");
+    shutdownState = shutdown;
+    if (shutdown)
+    {
+        dacStop();
+    }
+    else
+    {
+        dacStart();
+    }
 }

@@ -19,8 +19,7 @@
  * Most discussions happen in the Magfest Slack, in the \#circuitboards channel. If you are interested in joining and
  * contributing to this project, email circuitboards@magfest.org.
  *
- * General Swadge design principles <a
- * href="/docs/DESIGN_PRINCIPLES.md">can be found here</a>.
+ * General Swadge design principles can be found in the \ref design_principles.
  *
  * \section start Where to Start
  *
@@ -249,6 +248,9 @@ static uint32_t frameRateUs = DEFAULT_FRAME_RATE_US;
 /// @brief Timer to return to the main menu
 static int64_t timeExitPressed = 0;
 
+/// @brief Infinite impulse response filter for mic samples
+static uint32_t samp_iir = 0;
+
 //==============================================================================
 // Function declarations
 //==============================================================================
@@ -427,8 +429,6 @@ void app_main(void)
                 // Run all samples through an IIR filter
                 for (uint32_t i = 0; i < sampleCnt; i++)
                 {
-                    static uint32_t samp_iir = 0;
-
                     int32_t sample  = adcSamples[i];
                     samp_iir        = samp_iir - (samp_iir >> 9) + sample;
                     int32_t newSamp = (sample - (samp_iir >> 9));
@@ -878,6 +878,9 @@ void switchToMicrophone(void)
     deinitGlobalMidiPlayer();
     setDacShutdown(true);
     deinitDac();
+
+    // Reset the IIR
+    samp_iir = 0;
 
     // Initialize and start the mic as a continuous ADC
     initMic(GPIO_NUM_7);
