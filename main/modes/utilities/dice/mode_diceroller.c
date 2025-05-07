@@ -85,7 +85,7 @@ void diceExitMode(void);
 void diceMainLoop(int64_t elapsedUs);
 void diceButtonCb(buttonEvt_t* evt);
 
-vector_t* getRegularPolygonVertices(int8_t sides, float rotDeg, int16_t radius);
+void getRegularPolygonVertices(int8_t sides, float rotDeg, int16_t radius, vector_t* vertices);
 void drawRegularPolygon(int xCenter, int yCenter, int8_t sides, float rotDeg, int16_t radius, paletteColor_t col,
                         int dashWidth);
 void changeActiveSelection(void);
@@ -628,18 +628,17 @@ float sinDeg(float degrees)
  * @param sides Number of sides of regular polygon
  * @param rotDeg rotation of regular polygon clockwise in degrees (first point is draw pointing to the right)
  * @param radius Radius in pixels on which vertices will be placed.
- * @return vector_t* Returns vertices in an array of (x,y) coordinates in pixels centered at (0,0) of length sides.
+ * @param vertices [OUT] where the vertices are written, an array of (x,y) coordinates in pixels centered at (0,0) of
+ * length sides.
  */
-vector_t* getRegularPolygonVertices(int8_t sides, float rotDeg, int16_t radius)
+void getRegularPolygonVertices(int8_t sides, float rotDeg, int16_t radius, vector_t* vertices)
 {
-    vector_t* vertices = (vector_t*)heap_caps_calloc(sides, sizeof(vector_t), MALLOC_CAP_8BIT);
-    float increment    = 360.0f / sides;
+    float increment = 360.0f / sides;
     for (int k = 0; k < sides; k++)
     {
         vertices[k].x = round(radius * cosDeg(increment * k + rotDeg));
         vertices[k].y = round(radius * sinDeg(increment * k + rotDeg));
     }
-    return vertices;
 }
 
 /**
@@ -658,7 +657,8 @@ void drawRegularPolygon(int xCenter, int yCenter, int8_t sides, float rotDeg, in
                         int dashWidth)
 {
     // For each vertex in the polygon
-    vector_t* vertices = getRegularPolygonVertices(sides, rotDeg, radius);
+    vector_t vertices[sides];
+    getRegularPolygonVertices(sides, rotDeg, radius, vertices);
     for (int vertInd = 0; vertInd < sides; vertInd++)
     {
         // Find the next vertex, may wrap around
@@ -668,9 +668,6 @@ void drawRegularPolygon(int xCenter, int yCenter, int8_t sides, float rotDeg, in
         drawLine(xCenter + vertices[vertInd].x, yCenter + vertices[vertInd].y, xCenter + vertices[endInd].x,
                  yCenter + vertices[endInd].y, col, dashWidth);
     }
-
-    // Free the vertices
-    heap_caps_free(vertices);
 }
 
 /**
@@ -680,7 +677,8 @@ void drawSelectionText(void)
 {
     // Create the string
     char rollStr[32];
-    snprintf(rollStr, sizeof(rollStr) - 1, str_next_roll_format, diceRoller->requestCount, dice[diceRoller->requestDieIdx].numFaces);
+    snprintf(rollStr, sizeof(rollStr) - 1, str_next_roll_format, diceRoller->requestCount,
+             dice[diceRoller->requestDieIdx].numFaces);
 
     // Draw it to the screen
     drawText(&diceRoller->ibm_vga8, selectionTextColor, rollStr,            //
@@ -696,7 +694,8 @@ void drawSelectionPointerSprite(void)
     char rollStr[32];
 
     // Measure exactly where to draw the cursor based on the string
-    snprintf(rollStr, sizeof(rollStr) - 1, str_next_roll_format, diceRoller->requestCount, dice[diceRoller->requestDieIdx].numFaces);
+    snprintf(rollStr, sizeof(rollStr) - 1, str_next_roll_format, diceRoller->requestCount,
+             dice[diceRoller->requestDieIdx].numFaces);
     int centerToEndPix = textWidth(&diceRoller->ibm_vga8, rollStr) / 2;
     snprintf(rollStr, sizeof(rollStr) - 1, "%dd%d", diceRoller->requestCount, dice[diceRoller->requestDieIdx].numFaces);
     int endToNumStartPix = textWidth(&diceRoller->ibm_vga8, rollStr);
