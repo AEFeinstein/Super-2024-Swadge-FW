@@ -6,6 +6,7 @@
 //==============================================================================
 
 #include "mode_diceroller.h"
+#include "portableDance.h"
 
 //==============================================================================
 // Defines
@@ -90,6 +91,10 @@ typedef struct
     vec3d_t lastOrientation;
     list_t shakeHistory;
     bool isShook;
+    int32_t noShakeTimer;
+
+    // LED Variables
+    portableDance_t* pDance;
 } diceRoller_t;
 
 //==============================================================================
@@ -218,8 +223,6 @@ void diceEnterMode(void)
     loadWsg("upCursor8.wsg", &diceRoller->cursor, false);
     loadWsg("goldCornerTR.wsg", &diceRoller->corner, false);
 
-    diceRoller->rolls = NULL;
-
     memset(&diceRoller->cRoll, 0, sizeof(rollHistoryEntry_t));
 
     diceRoller->requestCount  = 1;
@@ -232,9 +235,16 @@ void diceEnterMode(void)
 
     clear(&diceRoller->history);
 
+    // Init LED animations
+    diceRoller->pDance = initPortableDance(NULL);
+    portableDanceSetByName(diceRoller->pDance, "Rainbow Fast");
+
     // Turn LEDs off
     led_t leds[CONFIG_NUM_LEDS] = {0};
     setLeds(leds, CONFIG_NUM_LEDS);
+
+    // Set timer to not accept motion right after start
+    diceRoller->noShakeTimer = 1000000;
 }
 
 /**
@@ -262,6 +272,8 @@ void diceExitMode(void)
         heap_caps_free(pop(&diceRoller->history));
     }
 
+    freePortableDance(diceRoller->pDance);
+
     heap_caps_free(diceRoller);
 }
 
@@ -272,19 +284,29 @@ void diceExitMode(void)
  */
 void diceMainLoop(int64_t elapsedUs)
 {
+    // Handle buttons
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
         diceButtonCb(&evt);
     }
 
+    // Timer to not accept shakes immediately after start
+    if (diceRoller->noShakeTimer > 0)
+    {
+        diceRoller->noShakeTimer -= elapsedUs;
+    }
+
+    // Handle motion
     if (checkForShake(&diceRoller->lastOrientation, &diceRoller->shakeHistory, &diceRoller->isShook))
     {
-        if (diceRoller->isShook)
+        if ((diceRoller->noShakeTimer <= 0) && (diceRoller->isShook))
         {
             doRoll(diceRoller->requestCount, &dice[diceRoller->requestDieIdx], diceRoller->requestKeep);
         }
     }
+
+    // Handle logic
     doStateMachine(elapsedUs);
 }
 
@@ -398,6 +420,9 @@ void doStateMachine(int64_t elapsedUs)
         }
         case DR_ROLLING:
         {
+            // Animate LEDs when rolling
+            portableDanceMainLoop(diceRoller->pDance, elapsedUs);
+
             // Run animation timers
             diceRoller->rollRotAnimTimerUs += elapsedUs;
 
@@ -421,6 +446,10 @@ void doStateMachine(int64_t elapsedUs)
                 // Add to history and change the state
                 addTotalToHistory();
                 diceRoller->state = DR_SHOW_ROLL;
+
+                // Turn LEDs off
+                led_t leds[CONFIG_NUM_LEDS] = {0};
+                setLeds(leds, CONFIG_NUM_LEDS);
             }
             break;
         }
