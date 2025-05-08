@@ -95,6 +95,13 @@ typedef struct
 
     // LED Variables
     portableDance_t* pDance;
+
+    // DAC variables
+    int32_t cScalePeriodSamples[8];
+    int32_t dacPeriodSample;
+    int32_t dacPeriodSampleChangeTimer;
+    int32_t sampleCount;
+    bool dacLow;
 } diceRoller_t;
 
 //==============================================================================
@@ -105,6 +112,7 @@ void diceEnterMode(void);
 void diceExitMode(void);
 void diceMainLoop(int64_t elapsedUs);
 void diceButtonCb(buttonEvt_t* evt);
+void diceDacCallback(uint8_t* samples, int16_t len);
 
 void getRegularPolygonVertices(int8_t sides, float rotDeg, int16_t radius, vector_t* vertices);
 void drawRegularPolygon(int xCenter, int yCenter, int8_t sides, float rotDeg, int16_t radius, paletteColor_t col,
@@ -123,7 +131,7 @@ void genFakeVals(void);
 
 void drawCurrentTotal(void);
 
-void printHistory(void);
+void drawHistory(void);
 void addTotalToHistory(void);
 
 void drawPanel(int x0, int y0, int x1, int y1);
@@ -183,6 +191,10 @@ static const int yGridOffsets[] = {
     TFT_HEIGHT / 2 + yGridMargin,
 };
 
+static float cScaleFrequencies[] = {
+    261.63f, 293.66f, 329.63f, 349.23f, 392.0f, 440.0f, 493.88f, 523.25f,
+};
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -202,7 +214,7 @@ swadgeMode_t modeDiceRoller = {
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
-    .fnDacCb                  = NULL,
+    .fnDacCb                  = diceDacCallback,
 };
 
 diceRoller_t* diceRoller;
@@ -245,6 +257,13 @@ void diceEnterMode(void)
 
     // Set timer to not accept motion right after start
     diceRoller->noShakeTimer = 1000000;
+
+    // Calculate sample periods
+    for (int i = 0; i < ARRAY_SIZE(diceRoller->cScalePeriodSamples); i++)
+    {
+        diceRoller->cScalePeriodSamples[i] = (uint32_t)roundf(DAC_SAMPLE_RATE_HZ / cScaleFrequencies[i]);
+    }
+    diceRoller->dacPeriodSample = diceRoller->cScalePeriodSamples[0];
 }
 
 /**
@@ -415,7 +434,7 @@ void doStateMachine(int64_t elapsedUs)
             drawDiceText(diceRoller->rolls);
             drawCurrentTotal();
             drawHistoryPanel();
-            printHistory();
+            drawHistory();
             break;
         }
         case DR_ROLLING:
@@ -423,22 +442,29 @@ void doStateMachine(int64_t elapsedUs)
             // Animate LEDs when rolling
             portableDanceMainLoop(diceRoller->pDance, elapsedUs);
 
-            // Run animation timers
+            // Run animation timer
             diceRoller->rollRotAnimTimerUs += elapsedUs;
 
             // Run a timer to generate 'fake' numbers
-            diceRoller->rollNumAnimTimerUs += elapsedUs;
-            while (diceRoller->rollNumAnimTimerUs >= fakeValRerollPeriod)
-            {
-                diceRoller->rollNumAnimTimerUs -= fakeValRerollPeriod;
-                genFakeVals();
-            }
+            RUN_TIMER_EVERY(diceRoller->rollNumAnimTimerUs, fakeValRerollPeriod, elapsedUs, { genFakeVals(); });
+
+            // Run timer for SFX
+            RUN_TIMER_EVERY(diceRoller->dacPeriodSampleChangeTimer, rollAnimationPeriod / 6, elapsedUs, {
+                // Pick a new, random value from cScalePeriodSamples
+                int32_t newPeriod = diceRoller->dacPeriodSample;
+                while (newPeriod == diceRoller->dacPeriodSample)
+                {
+                    newPeriod
+                        = diceRoller->cScalePeriodSamples[esp_random() % ARRAY_SIZE(diceRoller->cScalePeriodSamples)];
+                }
+                diceRoller->dacPeriodSample = newPeriod;
+            });
 
             // Draw everything
             drawDiceBackground((diceRoller->rollRotAnimTimerUs * 360) / rollAnimationPeriod);
             drawDiceText(diceRoller->fakeVals);
             drawHistoryPanel();
-            printHistory();
+            drawHistory();
 
             // If the roll elapsed
             if (!diceRoller->isShook && diceRoller->rollRotAnimTimerUs > rollAnimationPeriod)
@@ -501,7 +527,7 @@ void drawHistoryPanel(void)
 /**
  * @brief Draw dice history to the TFT
  */
-void printHistory(void)
+void drawHistory(void)
 {
     // Calculate offsets
     int histX            = TFT_WIDTH / 14 + 30;
@@ -702,6 +728,11 @@ void doRoll(int count, const die_t* die, int keep)
 
     // Set the state to rolling
     diceRoller->state = DR_ROLLING;
+
+    // Reset SFX timer
+    diceRoller->dacPeriodSampleChangeTimer = 0;
+    diceRoller->sampleCount                = 0;
+    diceRoller->dacLow                     = false;
 }
 
 /**
@@ -889,5 +920,45 @@ void genFakeVals(void)
     {
         // Pick a random number
         diceRoller->fakeVals[m] = esp_random() % diceRoller->cRoll.die.numFaces + 1;
+    }
+}
+
+/**
+ * @brief A callback which requests DAC samples from the application
+ *
+ * @param samples A buffer to fill with 8 bit unsigned DAC samples
+ * @param len The length of the buffer to fill
+ */
+void diceDacCallback(uint8_t* samples, int16_t len)
+{
+    // If the dice are rolling
+    if (diceRoller->state == DR_ROLLING)
+    {
+        // Output a square wave
+        while (len--)
+        {
+            // Write a square wave sample
+            *samples = diceRoller->dacLow ? (128 - 64) : (128 + 64);
+            samples++;
+
+            // Increment sample count and check if the wave should flip
+            diceRoller->sampleCount++;
+            if (!diceRoller->dacLow && diceRoller->sampleCount >= diceRoller->dacPeriodSample / 2)
+            {
+                // Halfway finished, set the wave low
+                diceRoller->dacLow = true;
+            }
+            else if (diceRoller->sampleCount >= diceRoller->dacPeriodSample)
+            {
+                // All done, set the wave high
+                diceRoller->dacLow      = false;
+                diceRoller->sampleCount = 0;
+            }
+        }
+    }
+    else
+    {
+        // Not rolling, zero the output
+        memset(samples, 128, len);
     }
 }
