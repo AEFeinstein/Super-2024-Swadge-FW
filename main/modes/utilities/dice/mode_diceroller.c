@@ -1,6 +1,3 @@
-// TODO: Add LED interaction.
-// TODO: Add outer geometry of dice to make them more recognizable
-
 //==============================================================================
 // Includes
 //==============================================================================
