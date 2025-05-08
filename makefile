@@ -317,7 +317,7 @@ EXECUTABLE = swadge_emulator
 ################################################################################
 
 # This list of targets do not build files which match their name
-.PHONY: all assets $(CNFS_FILE) bundle clean fullclean docs format gen-coverage update-submodules bigbug-memory clean-firmware firmware usbflash monitor installudev cppcheck print-%
+.PHONY: all assets $(CNFS_FILE) bundle clean fullclean docs format gen-coverage update-deps bigbug-memory clean-firmware firmware usbflash monitor installudev cppcheck print-%
 
 # Build the executable
 all: $(EXECUTABLE)
@@ -409,12 +409,13 @@ gen-coverage:
 	genhtml ./coverage.info --output-directory ./coverage
 	firefox ./coverage/index.html &
 
-update-submodules:
+update-deps:
 	for submodule in $(SUBMODULES) ; do \
 		echo Updating $$submodule to latest ; \
 		git -C $$submodule fetch --prune ; \
 		git -C $$submodule checkout origin/HEAD ; \
 	done
+	idf.py update-dependencies
 
 bigbug-memory: all
 	./swadge_emulator -m "Big Bug" -t -r | grep -P "(Operation|alloc|free|DUMP)," > bigbug-mem.csv 2> /dev/null
