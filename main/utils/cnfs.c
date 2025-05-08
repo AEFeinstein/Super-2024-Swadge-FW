@@ -64,7 +64,7 @@ bool deinitCnfs(void)
  */
 const uint8_t* cnfsGetFile(cnfsFileIdx_t fIdx, size_t* flen)
 {
-    if (fIdx < CNFS_NUM_FILES)
+    if (0 <= fIdx && fIdx < CNFS_NUM_FILES)
     {
         *flen = cnfsFiles[fIdx].len;
         return &cnfsData[cnfsFiles[fIdx].offset];
