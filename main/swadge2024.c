@@ -411,7 +411,7 @@ void app_main(void)
     {
         if (NULL != cSwadgeMode->trophyData)
         {
-            trophySystemInit(cSwadgeMode->trophyData->settings, cSwadgeMode->modeName);
+            trophySystemInit(cSwadgeMode->trophyData, cSwadgeMode->modeName);
         }
         cSwadgeMode->fnEnterMode();
     }
@@ -726,7 +726,7 @@ static void setSwadgeMode(void* swadgeMode)
     {
         if (NULL != cSwadgeMode->trophyData)
         {
-            trophySystemInit(cSwadgeMode->trophyData->settings, cSwadgeMode->modeName);
+            trophySystemInit(cSwadgeMode->trophyData, cSwadgeMode->modeName);
         }
         cSwadgeMode->fnEnterMode();
     }
@@ -773,7 +773,7 @@ void softSwitchToPendingSwadge(void)
         {
             if (NULL != cSwadgeMode->trophyData)
             {
-                trophySystemInit(cSwadgeMode->trophyData->settings, cSwadgeMode->modeName);
+                trophySystemInit(cSwadgeMode->trophyData, cSwadgeMode->modeName);
             }
             cSwadgeMode->fnEnterMode();
         }

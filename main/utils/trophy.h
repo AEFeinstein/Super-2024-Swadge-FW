@@ -263,15 +263,7 @@ typedef struct
  * @param settings The settings data
  * @param modeName Name of the mode
  */
-void trophySystemInit(trophySettings_t* settings, const char* modeName);
-
-/**
- * @brief Loads the current number of points
- *
- * @param modeName Name of the made for namespace. NULL gets total of all modes.
- * @return int Number of points total for the provided mode
- */
-int trophySystemGetPoints(char* modeName);
+void trophySystemInit(trophyDataList_t* settings, const char* modeName);
 
 // Utilize trophies
 
@@ -286,7 +278,7 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate);
 
 /**
  * @brief Updates just like trophyUpdate(), but only draws when crossing percentage boundary
- * 
+ *
  * @param t Trophy to update
  * @param newVal Value to attempt to set
  * @param threshold Value (0-100, representing a percent) to draw at
@@ -311,9 +303,28 @@ void trophyClear(trophyData_t t);
 // Helpers
 
 /**
- * @brief Gets the total number of trophies from a specified mode.
+ * @brief Checks an individual bit flag out of a int32
  *
- * @param modeName Name of the mode from which to grab trophy quantity. NULL returns quantity of all modes.
+ * @param flags int32 containing the flag to check
+ * @param idx Index of the bit
+ * @return true If bit is set
+ * @return false If bit is not set
+ */
+bool checkBitFlag(int32_t flags, int8_t idx);
+
+/**
+ * @brief Get the point totals for the gamer score
+ * 
+ * @param total If loading the full score or for the current mode
+ * @param nameName Mode name to load. Set to NULL to get currently loaded mode
+ * @return int Value of the score
+ */
+int trophyGetPoints(bool total, char* modeName);
+
+/**
+ * @brief Gets the number of trophies associated with a mode, or current mode if NULL
+ *
+ * @param modeName Name of the mode from which to grab trophy quantity. NULL returns quantity of current mode.
  * @return int total number of trophies in given mode.
  */
 int trophyGetNumTrophies(char* modeName);
@@ -327,15 +338,6 @@ int trophyGetNumTrophies(char* modeName);
  * @param offset Where to start grabbing from. Useful in batch mode
  */
 void trophyGetTrophyList(char* modeName, trophyData_t* tList, int* tLen, int offset);
-
-/**
- * @brief Grabs data for specified Trophy.
- *
- * @param modeName Name of the mode
- * @param title Title of the Trophy
- * @return trophy_t trophy data struct
- */
-trophyData_t trophyGetData(char* modeName, char* title);
 
 // Drawing functions
 

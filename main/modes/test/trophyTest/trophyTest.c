@@ -163,16 +163,6 @@ static void runTrophy(int64_t elapsedUs);
  */
 static void trophyMenuCb(const char* label, bool selected, uint32_t settingVal);
 
-/**
- * @brief Checks an individual bit flag out of a int32
- *
- * @param flags int32 containing the flag to check
- * @param idx Index of the bit
- * @return true If bit is set
- * @return false If bit is not set
- */
-static bool checkBitFlag(int32_t flags, int8_t idx);
-
 //==============================================================================
 // Variables
 //==============================================================================
@@ -183,7 +173,7 @@ trophySettings_t tSettings = {.animated         = false,
                               .staticDurationUs = DRAW_STATIC_US,
                               .slideDurationUs  = DRAW_SLIDE_US};
 
-trophyDataList_t trophyTestData = {.settings = &tSettings, .list = testTrophies};
+trophyDataList_t trophyTestData = {.settings = &tSettings, .list = testTrophies, .length = ARRAY_SIZE(testTrophies)};
 
 swadgeMode_t trophyTestMode = {.modeName                 = trophyModeName,
                                .wifiMode                 = NO_WIFI,
@@ -352,6 +342,12 @@ static void runTrophy(int64_t elapsedUs)
 
             // Go to menu
             drawText(getSysFont(), c555, textBlobs[4], 32, TFT_HEIGHT - 32);
+
+            // Draw points
+            int modeTotal = trophyGetPoints(false, NULL);
+            int total     = trophyGetPoints(true, NULL);
+            snprintf(buffer, sizeof(buffer) - 1, "Mode Total: %d, total: %d", modeTotal, total);
+            drawText(getSysFont(), c555, buffer, 32, 190);
             break;
         }
     }
@@ -388,9 +384,4 @@ static void trophyMenuCb(const char* label, bool selected, uint32_t settingVal)
             tt->state = TROPHY_TEST_TESTING;
         }
     }
-}
-
-static bool checkBitFlag(int32_t flags, int8_t idx)
-{
-    return ((flags & (1 << idx)) != 0);
 }
