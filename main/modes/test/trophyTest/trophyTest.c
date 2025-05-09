@@ -1,9 +1,7 @@
 /**
  * @file trophyTest.h
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
- * @author GEMESIS
  * @brief Tests the functionality of the trophies.
- * @version 0.1
  * @date 2025-01-15
  *
  * @copyright Copyright (c) 2025
@@ -220,18 +218,42 @@ static void runTrophy(int64_t elapsedUs)
                     }
                     else if (evt.button == PB_DOWN)
                     {
-                        tt->checklistFlags |= 1 << 0;
-                        trophyUpdate(testTrophies[3], tt->checklistFlags, true);
+                        if (checkBitFlag(tt->checklistFlags, CLT_DOWN))
+                        {
+                            setBitFlag(&tt->checklistFlags, CLT_DOWN, false);
+                            trophySetFlag(testTrophies[3], CLT_DOWN, false, true);
+                        }
+                        else
+                        {
+                            setBitFlag(&tt->checklistFlags, CLT_DOWN, true);
+                            trophySetFlag(testTrophies[3], CLT_DOWN, true, true);
+                        }
                     }
                     else if (evt.button == PB_LEFT)
                     {
-                        tt->checklistFlags |= 1 << 1;
-                        trophyUpdate(testTrophies[3], tt->checklistFlags, true);
+                        if (checkBitFlag(tt->checklistFlags, CLT_LEFT))
+                        {
+                            setBitFlag(&tt->checklistFlags, CLT_LEFT, false);
+                            trophySetFlag(testTrophies[3], CLT_LEFT, false, true);
+                        }
+                        else
+                        {
+                            setBitFlag(&tt->checklistFlags, CLT_LEFT, true);
+                            trophySetFlag(testTrophies[3], CLT_LEFT, true, true);
+                        }
                     }
                     else if (evt.button == PB_RIGHT)
                     {
-                        tt->checklistFlags |= 1 << 2;
-                        trophyUpdate(testTrophies[3], tt->checklistFlags, true);
+                        if (checkBitFlag(tt->checklistFlags, CLT_RIGHT))
+                        {
+                            setBitFlag(&tt->checklistFlags, CLT_RIGHT, false);
+                            trophySetFlag(testTrophies[3], CLT_RIGHT, false, true);
+                        }
+                        else
+                        {
+                            setBitFlag(&tt->checklistFlags, CLT_RIGHT, true);
+                            trophySetFlag(testTrophies[3], CLT_RIGHT, true, true);
+                        }
                     }
                     else if (evt.button == PB_START)
                     {
@@ -276,11 +298,11 @@ static void runTrophy(int64_t elapsedUs)
             int16_t startX = 32;
             int16_t startY = 146;
             drawTextWordWrap(getSysFont(), c555, textBlobs[3], &startX, &startY, TFT_WIDTH - 32, TFT_HEIGHT);
-            paletteColor_t c = checkBitFlag(tt->checklistFlags, 0) ? c550 : c333;
+            paletteColor_t c = checkBitFlag(tt->checklistFlags, CLT_DOWN) ? c550 : c333;
             drawText(getSysFont(), c, "Down", 70, 170);
-            c = checkBitFlag(tt->checklistFlags, 1) ? c505 : c333;
+            c = checkBitFlag(tt->checklistFlags, CLT_LEFT) ? c505 : c333;
             drawText(getSysFont(), c, "Left", 32, 170);
-            c = checkBitFlag(tt->checklistFlags, 2) ? c055 : c333;
+            c = checkBitFlag(tt->checklistFlags, CLT_RIGHT) ? c055 : c333;
             drawText(getSysFont(), c, "Right", 108, 170);
 
             // Go to menu

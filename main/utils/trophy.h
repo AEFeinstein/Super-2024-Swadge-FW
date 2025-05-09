@@ -2,7 +2,6 @@
  * @file trophy.h
  * @author Jeremy.Stintzcum@gmail.com
  * @brief Trophies for swadge modes
- * @version 0.1
  * @date 2025-01-13
  *
  * @copyright Copyright (c) 2025
@@ -234,9 +233,7 @@ typedef struct
 /// @brief Settings for the trophy system
 typedef struct
 {
-    bool animated;            //< If being animated to slide in and out
     bool drawFromBottom;      //< If banner should be drawn from the bottom of the screen
-    bool silent;              //< If the system should draw trophies or not
     int32_t staticDurationUs; //< How long the banner will be drawn fully extended
     int32_t slideDurationUs;  //< How long the banner will take to slide in and out
     char namespaceKey[16];    //< key used for trophy namespace
@@ -294,6 +291,16 @@ void trophyUpdateMilestone(trophyData_t t, int newVal, int threshold);
 int32_t trophyGetSavedValue(trophyData_t t);
 
 /**
+ * @brief Sets or unsets a checklist item.
+ *
+ * @param t Trophy to set
+ * @param flag Task that was just completed
+ * @param unset If we're unsetting the bit
+ * @param drawUpdate If this update should be drawn
+ */
+void trophySetChecklistTask(trophyData_t t, int32_t flag, bool unset, bool drawUpdate);
+
+/**
  * @brief Erases completion data from swadge. Only use in extreme circumstances.
  *
  * @param t Trophy to set to 0
@@ -313,8 +320,17 @@ void trophyClear(trophyData_t t);
 bool checkBitFlag(int32_t flags, int8_t idx);
 
 /**
+ * @brief Set a bit flag
+ *
+ * @param flags pointer to variable to store flags
+ * @param idx Index of the bit to set
+ * @param setTrue Set to false to unset the
+ */
+void setBitFlag(int32_t* flags, int8_t idx, bool setTrue);
+
+/**
  * @brief Get the point totals for the gamer score
- * 
+ *
  * @param total If loading the full score or for the current mode
  * @param nameName Mode name to load. Set to NULL to get currently loaded mode
  * @return int Value of the score
@@ -328,8 +344,12 @@ int trophyGetPoints(bool total, char* modeName);
  */
 int trophyGetNumTrophies(void);
 
-
-void trophyGetTrophyList(void);
+/**
+ * @brief Returns a pointer to the data struct containing all the trophy data
+ *
+ * @return const trophyData_t*
+ */
+const trophyData_t* trophyGetTrophyList(void);
 
 // Drawing functions
 

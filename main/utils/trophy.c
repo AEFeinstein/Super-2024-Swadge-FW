@@ -2,7 +2,6 @@
  * @file trophy.c
  * @author Jeremy.Stintzcum@gmail.com
  * @brief Trophies for swadge modes
- * @version 0.1
  * @date 2025-01-13
  *
  * @copyright Copyright (c) 2025
@@ -92,6 +91,7 @@ static trophySystem_t trophySystem = {}; //< Should be one instance per swadge, 
 //==============================================================================
 
 // NVS
+
 /**
  * @brief Truncates a string down to a specified length
  *
@@ -132,7 +132,19 @@ static void _setPoints(int points);
  */
 static int _loadPoints(bool total, char* modeName);
 
+// Checklist Helpers
+
+/**
+ * @brief Returns the number of flags set
+ *
+ * @param t Trophy to evaluate
+ * @param maxFlags If we're getting the max number of flags for this trophy or number currently owned
+ * @return int number of flags captured
+ */
+static int _GetNumFlags(trophyDataWrapper_t* t, bool maxFlags);
+
 // Drawing
+
 /**
  * @brief Draws the banner
  *
@@ -264,18 +276,33 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
     }
 
     // If the new value is the same as the previously saved value, return
-    if (tw->currentVal >= newVal)
+    if (tw->trophyData.type == TROPHY_TYPE_CHECKLIST)
+    {
+        // If check removed, don't draw
+        drawUpdate = tw->currentVal < newVal;
+
+        // If the newValue has exceeded currVal, Save value
+        tw->currentVal = newVal;
+        _save(tw, newVal);
+
+        // If the trophy has been won, add to score
+        if (tw->currentVal == tw->trophyData.maxVal)
+        {
+            _setPoints(_genPoints(t.difficulty));
+        }
+    }
+    else if (tw->currentVal >= newVal)
     {
         heap_caps_free(tw);
         return;
     }
     else
     {
-        // If the newValue has exceeded maxVal, Save value
+        // If the newValue has exceeded currVal, Save value
         tw->currentVal = newVal;
         _save(tw, newVal);
 
-        // Update score
+        // If the trophy has been won, add to score
         if (tw->currentVal >= tw->trophyData.maxVal)
         {
             _setPoints(_genPoints(t.difficulty));
@@ -337,6 +364,27 @@ int32_t trophyGetSavedValue(trophyData_t t)
     return 0;
 }
 
+void trophySetChecklistTask(trophyData_t t, int32_t flag, bool set, bool drawUpdate)
+{
+    // If not a checklist, abort
+    if (t.type != TROPHY_TYPE_CHECKLIST)
+    {
+        return;
+    }
+
+    // Load
+    trophyDataWrapper_t* tw = heap_caps_calloc(1, sizeof(trophyDataWrapper_t), MALLOC_CAP_8BIT);
+    _load(tw, t);
+
+    int32_t newVal = tw->currentVal;
+    setBitFlag(&newVal, flag, set);
+
+    // Run Update
+    trophyUpdate(t, newVal, drawUpdate);
+
+    heap_caps_free(tw);
+}
+
 void trophyClear(trophyData_t t)
 {
     trophyDataWrapper_t tw = {};
@@ -358,6 +406,16 @@ bool checkBitFlag(int32_t flags, int8_t idx)
     return ((flags & (1 << idx)) != 0);
 }
 
+void setBitFlag(int32_t* flags, int8_t idx, bool setTrue)
+{
+    if (!setTrue)
+    {
+        *flags &= ~(1 << idx);
+    } else {
+        *flags |= 1 << idx;
+    }
+}
+
 int trophyGetPoints(bool total, char* modeName)
 {
     return _loadPoints(total, modeName);
@@ -368,10 +426,9 @@ int trophyGetNumTrophies()
     return trophySystem.data->length;
 }
 
-void trophyGetTrophyList()
+const trophyData_t* trophyGetTrophyList(void)
 {
-    // If modeName is NULL, get all trophies. Order by game, but do no sorting.
-    // Populate tList starting from offset up to tLen
+    return trophySystem.data->list;
 }
 
 // Draw
@@ -548,6 +605,28 @@ static int _loadPoints(bool total, char* modeName)
     return val;
 }
 
+// Checklist Helpers
+
+static int _GetNumFlags(trophyDataWrapper_t* t, bool maxFlags)
+{
+    int total = 0;
+    if (maxFlags)
+    {
+        for (int idx = 0; idx < 32; idx++)
+        {
+            total += checkBitFlag(t->trophyData.maxVal, idx) ? 1 : 0;
+        }
+    }
+    else
+    {
+        for (int idx = 0; idx < 32; idx++)
+        {
+            total += checkBitFlag(t->currentVal, idx) ? 1 : 0;
+        }
+    }
+    return total;
+}
+
 // Drawing
 
 static void _drawAtYCoord(trophyDataWrapper_t* t, int yOffset, font_t* fnt)
@@ -563,6 +642,15 @@ static void _drawAtYCoord(trophyDataWrapper_t* t, int yOffset, font_t* fnt)
     {
         char buffer[32];
         snprintf(buffer, sizeof(buffer) - 1, "%d/%" PRId32, t->currentVal, t->trophyData.maxVal);
+        int16_t xOff = TFT_WIDTH - (textWidth(fnt, buffer) + TROPHY_SCREEN_CORNER_CLEARANCE + 8);
+        endX         = xOff - 8;
+        drawText(fnt, c444, buffer, xOff, yOffset + 4);
+    }
+    else if (t->trophyData.type == TROPHY_TYPE_CHECKLIST)
+    {
+        char buffer[32];
+        // Get total num of checks and curr num of checks
+        snprintf(buffer, sizeof(buffer) - 1, "%d/%d", _GetNumFlags(t, false), _GetNumFlags(t, true));
         int16_t xOff = TFT_WIDTH - (textWidth(fnt, buffer) + TROPHY_SCREEN_CORNER_CLEARANCE + 8);
         endX         = xOff - 8;
         drawText(fnt, c444, buffer, xOff, yOffset + 4);

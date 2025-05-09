@@ -1,5 +1,15 @@
 #include "trophy.h"
 
+// ENUM
+typedef enum 
+{
+    CLT_DOWN,
+    CLT_LEFT,
+    CLT_RIGHT,
+} ChecklistTask_t;
+
+// Trophy Data
+
 const trophyData_t testTrophies[] = {
     {
         .title       = "Trigger Trophy",
@@ -51,8 +61,10 @@ const trophyData_t testTrophies[] = {
     },
 };
 
-trophySettings_t tSettings = {.animated         = false,
-                              .drawFromBottom   = false,
-                              .silent           = false,
-                              .staticDurationUs = DRAW_STATIC_US,
-                              .slideDurationUs  = DRAW_SLIDE_US};
+// Individual mode settings
+
+trophySettings_t tSettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US,
+    .slideDurationUs  = DRAW_SLIDE_US,
+};

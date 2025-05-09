@@ -536,7 +536,7 @@ void app_main(void)
             }
 
             // If trophies are not null, draw
-            if (NULL != cSwadgeMode->trophyData && !cSwadgeMode->trophyData->settings->silent)
+            if (NULL != cSwadgeMode->trophyData)
             {
                 trophyDraw(&sysFont, mainLoopCallDelay);
             }
