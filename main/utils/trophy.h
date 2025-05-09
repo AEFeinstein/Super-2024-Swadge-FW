@@ -202,7 +202,7 @@ typedef enum
     TROPHY_TYPE_PROGRESS,  //< Tracks how far a user got per update (How long player survived, how far player ran)
     TROPHY_TYPE_CHECKLIST, //< Each bit is a flag for a specific action. Repeating actions does not increment.
                            //< (Used for collecting different objects, like chaos emeralds)
-} trophyTypes_t;
+} trophyType_t;
 
 /// @brief Dev inferred difficulty of achieving, used to distribute points.
 typedef enum
@@ -223,7 +223,7 @@ typedef struct
     char title[TROPHY_MAX_TITLE_LEN];       //< Name of the Trophy, used as ID
     char description[TROPHY_MAX_DESC_LEN];  //< Short description of task required
     char imageString[TROPHY_IMAGE_STR_LEN]; //< String leading to the .wsg file.
-    trophyTypes_t type;                     //< Type of trophy. See "trophy.h" for descriptions
+    trophyType_t type;                      //< Type of trophy. See "trophy.h" for descriptions
     trophyDifficulty_t difficulty;          //< How many points the trophy is worth
     int32_t maxVal;                         //< The value that
 } trophyData_t;

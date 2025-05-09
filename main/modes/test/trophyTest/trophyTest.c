@@ -279,7 +279,7 @@ static void runTrophy(int64_t elapsedUs)
                     else if (evt.button == PB_UP)
                     {
                         // Check how long held down
-                        tt->timing = true;
+                        tt->timing    = true;
                         tt->heldTimer = 0; // Reset each time;
                     }
                     else if (evt.button == PB_DOWN)
@@ -370,10 +370,10 @@ static void trophyMenuCb(const char* label, bool selected, uint32_t settingVal)
             {
                 trophyClear(testTrophies[idx]);
             }
-            tt->aPresses = 0;
-            tt->bPresses = 0;
-            tt->upTime = 0;
-            tt->heldTimer = 0;
+            tt->aPresses       = 0;
+            tt->bPresses       = 0;
+            tt->upTime         = 0;
+            tt->heldTimer      = 0;
             tt->checklistFlags = 0;
         }
         else if (label == textBlobs[7])
