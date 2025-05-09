@@ -36,15 +36,16 @@
 //==============================================================================
 
 // Standard defines
-#define STATIC_POSITION -1
 #define MAX_NVS_KEY_LEN 16
 
 // Visuals
-#define TROPHY_MAX_BANNERS             5
 #define TROPHY_BANNER_HEIGHT           48
 #define TROPHY_BANNER_MAX_ICON_DIM     36
 #define TROPHY_SCREEN_CORNER_CLEARANCE 19
 #define TROPHY_IMAGE_BUFFER            8
+
+#define DRAW_SLIDE_US  262144 // A power of two close to a quarter second, makes nice division
+#define DRAW_STATIC_US 524288 // A power of two close to a half second, makes nice division
 
 //==============================================================================
 // Consts
@@ -72,19 +73,12 @@ typedef struct
 
     // Data
     list_t trophyQueue; //< List of trophy updates to display. Holds type \ref trophyDataWrapper_t*
-    node_t* currDisp;   //< The current trophy being displayed. Holds type \ref trophyDataWrapper_t*
 
     // Drawing
     bool active;                //< If the mode should be drawing a banner
-    bool beingDrawn;            //< If banner is currently being drawn statically
-    int32_t drawTimer;          //< Accumulates until more than Max duration
+    int32_t animTimer;          //< Timer used for sliding in and out
     wsgPalette_t grayPalette;   //< Grayscale palette for locked trophies
     wsgPalette_t normalPalette; //< Normal colors
-
-    // Animation
-    bool sliding;          //< If currently sliding
-    int32_t slideTimer;    //< Accumulates until more than Max duration
-    int16_t animationTick; //< What tick of the animation is active based on timer
 } trophySystem_t;
 
 //==============================================================================
@@ -134,15 +128,6 @@ static void _getTrophyData(char* modeName, trophyData_t* tList, int tLen, int of
 /**
  * @brief Draws the banner
  *
- * @param t Data to feed
- * @param frame Which frame is being drawn. STATIC_POSITION is fully visible, other values change the offset.
- * @param fnt Font used in draw call
- */
-static void _draw(trophyDataWrapper_t* t, int frame, font_t* fnt);
-
-/**
- * @brief Sub function of _draw() so code can be reused in list draw command
- *
  * @param t Trophy to draw
  * @param yOffset y coordinate to start at
  * @param fnt Font used in draw call
@@ -178,9 +163,7 @@ static trophyDataWrapper_t* getCurrentDisplayTrophy(void);
 void trophySystemInit(trophySettings_t* settings, const char* modeName)
 {
     // Defaults
-    trophySystem.beingDrawn = false;
-    trophySystem.drawTimer  = 0;
-    trophySystem.slideTimer = 0;
+    trophySystem.animTimer = 0;
 
     // Copy settings
     trophySystem.settings = settings;
@@ -274,7 +257,8 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
         return;
     }
     else
-    { // If the newValue has exceeded maxVal, Save value (should work for checklist)
+    {
+        // If the newValue has exceeded maxVal, Save value (should work for checklist)
         tw->currentVal = newVal;
         _save(tw, newVal);
 
@@ -297,19 +281,9 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
         // Set system and this index to active
         if (!trophySystem.active)
         {
-            trophySystem.active        = true;
-            trophySystem.animationTick = 0;
-            trophySystem.drawTimer     = 0;
-            trophySystem.slideTimer    = 0;
-            trophySystem.sliding       = trophySystem.settings->animated;
-            trophySystem.beingDrawn    = true;
+            trophySystem.active    = true;
+            trophySystem.animTimer = 0;
         }
-
-        // Set active
-        tw->active = true;
-
-        // Set active
-        tw->active = true;
 
         // TODO: the rest of this
 
@@ -374,84 +348,65 @@ trophyData_t trophyGetData(char* modeName, char* title)
 
 void trophyDraw(font_t* fnt, int64_t elapsedUs)
 {
-    // Exit immediately if not being drawn
-    if (!trophySystem.active)
+    // Exit immediately if not being drawn or there is no trophy
+    if (!trophySystem.active || !getCurrentDisplayTrophy())
     {
         return;
     }
 
-    // Handle which part of the animation is happening (sliding, displaying, or ending)
-    if (trophySystem.settings->animated && trophySystem.sliding) // Sliding in or out
+    // Calculate the yOffset from the animation time
+    int16_t yOffset = 0;
+    trophySystem.animTimer += elapsedUs;
+    if (trophySystem.animTimer >= 2 * DRAW_SLIDE_US + DRAW_STATIC_US)
     {
-        // Based on delta time, update current frame
-        trophySystem.slideTimer += elapsedUs;
-        int frameLen = (trophySystem.settings->slideMaxDurationUs) / TROPHY_BANNER_HEIGHT;
-        while (trophySystem.slideTimer >= frameLen)
-        {
-            trophySystem.animationTick++;
-            trophySystem.slideTimer -= frameLen;
-        }
-        // Change state if fully slid
-        if (trophySystem.animationTick == TROPHY_BANNER_HEIGHT)
-        {
-            // Halfway through
-            trophySystem.sliding    = false;
-            trophySystem.beingDrawn = true;
-        }
-        else if (trophySystem.animationTick == TROPHY_BANNER_HEIGHT * 2)
-        {
-            // FIXME: Stops drawing, probably not iterating right
-            trophySystem.currDisp = getNextWraparound(&trophySystem.trophyQueue, trophySystem.currDisp);
-            if (getCurrentDisplayTrophy()->active)
-            {
-                // Reset for new run
-                trophySystem.animationTick = 0;
-                trophySystem.drawTimer     = 0;
-                trophySystem.slideTimer    = 0;
-                trophySystem.sliding       = trophySystem.settings->animated;
-                trophySystem.beingDrawn    = true;
-                return;
-            }
-            trophySystem.currDisp = getNextWraparound(&trophySystem.trophyQueue, trophySystem.currDisp);
-            trophySystem.active   = false;
-        }
-        // Draw
-        _draw(getCurrentDisplayTrophy(), trophySystem.animationTick, fnt);
+        // Finished off screen.
+        // trophySystem.animTimer is after (2 * DRAW_SLIDE_US + DRAW_STATIC_US)
+        // Offset is an easy -TROPHY_BANNER_HEIGHT (off screen)
+        yOffset = -TROPHY_BANNER_HEIGHT;
+
+        // Remove the trophy wrapper from the queue and free memory
+        trophyDataWrapper_t* tw = shift(&trophySystem.trophyQueue);
+        freeWsg(&tw->image);
+        heap_caps_free(tw);
+
+        // Reset animation
+        trophySystem.animTimer = 0;
+        // Remain active if the queue isn't empty
+        trophySystem.active = (trophySystem.trophyQueue.length > 0);
+
+        // Return before drawing because we're all done
+        return;
     }
-    else if (trophySystem.beingDrawn) // Static on screen
+    else if (trophySystem.animTimer >= DRAW_SLIDE_US + DRAW_STATIC_US)
     {
-        // Regular timer
-        trophySystem.drawTimer += elapsedUs;
-        if (trophySystem.drawTimer >= trophySystem.settings->drawMaxDurationUs)
-        {
-            // Stop drawing
-            trophySystem.beingDrawn           = false;
-            getCurrentDisplayTrophy()->active = false;
-            trophySystem.sliding              = trophySystem.settings->animated; // Starts sliding again if set
-        }
-        // Draw
-        _draw(getCurrentDisplayTrophy(), STATIC_POSITION, fnt);
+        // Sliding out.
+        // trophySystem.animTimer is between (DRAW_SLIDE_US + DRAW_STATIC_US) and (2 * DRAW_SLIDE_US + DRAW_STATIC_US)
+        // Offset is between 0 and -TROPHY_BANNER_HEIGHT
+        yOffset = (-TROPHY_BANNER_HEIGHT * (trophySystem.animTimer - (DRAW_SLIDE_US + DRAW_STATIC_US))) / DRAW_SLIDE_US;
     }
-    else // Has ended
+    else if (trophySystem.animTimer >= DRAW_SLIDE_US)
     {
-        // Seek next active queue slot
-        for (int idx = 0; idx < TROPHY_MAX_BANNERS; idx++)
-        {
-            trophySystem.currDisp = getNextWraparound(&trophySystem.trophyQueue, trophySystem.currDisp);
-            if (getCurrentDisplayTrophy()->active)
-            {
-                // Reset for new run
-                trophySystem.animationTick = 0;
-                trophySystem.drawTimer     = 0;
-                trophySystem.slideTimer    = 0;
-                trophySystem.sliding       = trophySystem.settings->animated;
-                trophySystem.beingDrawn    = true;
-                return;
-            }
-        }
-        trophySystem.currDisp = getNextWraparound(&trophySystem.trophyQueue, trophySystem.currDisp);
-        trophySystem.active   = false;
+        // Static on screen.
+        // trophySystem.animTimer is between (DRAW_SLIDE_US) and (DRAW_SLIDE_US + DRAW_STATIC_US)
+        // Offset is an easy 0
+        yOffset = 0;
     }
+    else
+    {
+        // Sliding in.
+        // trophySystem.animTimer is between 0 and DRAW_SLIDE_US
+        // Offset is between -TROPHY_BANNER_HEIGHT and 0
+        yOffset = ((TROPHY_BANNER_HEIGHT * trophySystem.animTimer) / DRAW_SLIDE_US) - TROPHY_BANNER_HEIGHT;
+    }
+
+    // yOffset is assumed to be from the top, so flip it if necessary
+    if (trophySystem.settings->drawFromBottom)
+    {
+        yOffset = TFT_HEIGHT - yOffset - TROPHY_BANNER_HEIGHT;
+    }
+
+    // Draw the banner
+    _drawAtYCoord(getCurrentDisplayTrophy(), yOffset, fnt);
 }
 
 void trophyDrawListInit(void)
@@ -510,49 +465,6 @@ static void _copyTrophy(trophyDataWrapper_t* tw, trophyData_t t)
 static void _getTrophyData(char* modeName, trophyData_t* tList, int tLen, int offset)
 {
     // Load all trophies associated with a mode
-}
-
-static void _draw(trophyDataWrapper_t* t, int frame, font_t* fnt)
-{
-    // Get offset
-    int yOffset;
-    if (frame == STATIC_POSITION)
-    {
-        if (trophySystem.settings->drawFromBottom)
-        {
-            yOffset = TFT_HEIGHT - TROPHY_BANNER_HEIGHT;
-        }
-        else
-        {
-            yOffset = 0;
-        }
-    }
-    else
-    {
-        if (frame < TROPHY_BANNER_HEIGHT)
-        {
-            if (trophySystem.settings->drawFromBottom)
-            {
-                yOffset = TFT_HEIGHT - frame;
-            }
-            else
-            {
-                yOffset = -TROPHY_BANNER_HEIGHT + frame;
-            }
-        }
-        else
-        {
-            if (trophySystem.settings->drawFromBottom)
-            {
-                yOffset = TFT_HEIGHT - (TROPHY_BANNER_HEIGHT * 2 - frame);
-            }
-            else
-            {
-                yOffset = TROPHY_BANNER_HEIGHT - frame;
-            }
-        }
-    }
-    _drawAtYCoord(t, yOffset, fnt);
 }
 
 static void _drawAtYCoord(trophyDataWrapper_t* t, int yOffset, font_t* fnt)
@@ -731,18 +643,9 @@ static void _loadPalette(void)
 
 static trophyDataWrapper_t* getCurrentDisplayTrophy(void)
 {
-    // If there's nothing being currently displayed, set it
-    if (!trophySystem.currDisp)
+    if (trophySystem.trophyQueue.first)
     {
-        trophySystem.currDisp = trophySystem.trophyQueue.first;
+        return trophySystem.trophyQueue.first->val;
     }
-
-    // Make sure there's something to display
-    if (trophySystem.currDisp)
-    {
-        return (trophyDataWrapper_t*)trophySystem.currDisp->val;
-    }
-
-    // Nothing in the queue...
     return NULL;
 }
