@@ -83,6 +83,7 @@
  * - hdw-btn.h: Learn how to use both push and touch button input
  *     - touchUtils.h: Utilities to interpret touch button input as a virtual joystick, spin wheel, or cartesian plane
  * - hdw-imu.h: Learn how to use the inertial measurement unit
+ *     - imu_utils.h: Utilities to process IMU data
  * - hdw-temperature.h: Learn how to use the temperature sensor
  *
  * \subsection nwk_api Network APIs

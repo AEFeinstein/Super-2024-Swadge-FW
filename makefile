@@ -382,7 +382,8 @@ clean:
 
 # This cleans everything
 fullclean: clean
-	rm -rf build/ managed_components/
+	-@rm -rf managed_components/
+	-@rm -rf build/
 	idf.py fullclean
 	git clean -dfX
 	git clean -df

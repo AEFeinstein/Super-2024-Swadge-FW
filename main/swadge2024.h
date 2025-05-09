@@ -168,6 +168,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 // Useful ESP things
 #include <esp_heap_caps.h>
@@ -218,6 +219,7 @@
 #include "touchUtils.h"
 #include "vectorFl2d.h"
 #include "geometryFl.h"
+#include "imu_utils.h"
 
 // Sound utilities
 #include "soundFuncs.h"
