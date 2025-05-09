@@ -227,10 +227,10 @@ void diceEnterMode(void)
 {
     diceRoller = heap_caps_calloc(1, sizeof(diceRoller_t), MALLOC_CAP_8BIT);
 
-    loadFont("ibm_vga8.font", &diceRoller->ibm_vga8, false);
-    loadWsg("woodTexture64.wsg", &diceRoller->woodTexture, false);
-    loadWsg("upCursor8.wsg", &diceRoller->cursor, false);
-    loadWsg("goldCornerTR.wsg", &diceRoller->corner, false);
+    loadFont(IBM_VGA_8_FONT, &diceRoller->ibm_vga8, false);
+    loadWsg(WOOD_TEXTURE_64_WSG, &diceRoller->woodTexture, false);
+    loadWsg(UP_CURSOR_8_WSG, &diceRoller->cursor, false);
+    loadWsg(GOLD_CORNER_TR_WSG, &diceRoller->corner, false);
 
     memset(&diceRoller->cRoll, 0, sizeof(rollHistoryEntry_t));
 

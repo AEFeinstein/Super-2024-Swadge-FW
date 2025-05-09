@@ -6,6 +6,9 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
+
+#include "cnfs_image.h"
 
 //==============================================================================
 // Enums
@@ -259,15 +262,26 @@ typedef struct
 //==============================================================================
 
 /**
+ * @brief Load a MIDI file from raw data, without copying it
+ *
+ * @param data The raw data for the MIDI file, uncompressed
+ * @param size The length of the MIDI data in bytes
+ * @param file A pointer to a midiFile_t struct to load the data into
+ * @return true If the data contained a valid MIDI file and the load succeeded
+ * @return false If the load failed
+ */
+bool loadMidiData(uint8_t* data, size_t size, midiFile_t* file);
+
+/**
  * @brief Load a MIDI file from the filesystem
  *
  * @param file A pointer to a midiFile_t struct to load the file into
- * @param name The name of the MIDI file to load
+ * @param fIdx The cnfsFileIdx_t of the MIDI file to load
  * @param spiRam Whether to load the MIDI file into SPIRAM
  * @return true If the load succeeded
  * @return false If the load failed
  */
-bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam);
+bool loadMidiFile(cnfsFileIdx_t fIdx, midiFile_t* file, bool spiRam);
 
 /**
  * @brief Free the data associated with the given MIDI file

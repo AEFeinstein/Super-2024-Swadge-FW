@@ -105,7 +105,7 @@ void sandbox_main(void)
 
 	advancedUsbHandler = sandboxAdvancedUSB;
 
-    loadFont("ibm_vga8.font", &ibm, false);
+    loadFont(IBM_VGA_8_FONT, &ibm, false);
 
 	fillDisplayArea(0, 0, 280, 240, 5 );
 

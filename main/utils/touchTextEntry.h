@@ -59,7 +59,7 @@
  *     uint16_t entryX = (TFT_WIDTH - entryW) / 2;
  *     uint16_t entryY = (TFT_HEIGHT - entryH) / 2;
  *
- *     loadFont("ibm_vga8.font", &modeData->font);
+ *     loadFont(IBM_VGA_8_FONT, &modeData->font);
  *
  *     modeData->textEntry = initTextEntry(entryX, entryY, entryW, entryH, &font, ENTRY_ALPHANUM, textEntryCb);
  *

@@ -66,7 +66,7 @@ typedef struct
 typedef struct
 {
     const char* label;
-    const char* sfx_fname;
+    cnfsFileIdx_t sfx_fidx;
     const paletteColor_t bgColor;
     const paletteColor_t txColor;
     const led_t ledColor;
@@ -169,57 +169,57 @@ static const char SI_MEMORY_HS_KEY[]   = "si_m_hs";
 /** Must match order of swadgeItEvt_t */
 const swadgeItEvtData_t siEvtData[] = {
     {
-        .sfx_fname = "press_it.raw",
-        .label     = "Press it!",
-        .bgColor   = c531,
-        .txColor   = c555,
-        .ledColor  = {.r = 0xFF, .g = 0x99, .b = 0x33},
+        .sfx_fidx = PRESS_IT_RAW,
+        .label    = "Press it!",
+        .bgColor  = c531,
+        .txColor  = c555,
+        .ledColor = {.r = 0xFF, .g = 0x99, .b = 0x33},
     },
     {
-        .sfx_fname = "shake_it.raw",
-        .label     = "Shake it!",
-        .bgColor   = c325,
-        .txColor   = c555,
-        .ledColor  = {.r = 0x99, .g = 0x66, .b = 0xFF},
+        .sfx_fidx = SHAKE_IT_RAW,
+        .label    = "Shake it!",
+        .bgColor  = c325,
+        .txColor  = c555,
+        .ledColor = {.r = 0x99, .g = 0x66, .b = 0xFF},
     },
     {
-        .sfx_fname = "shout_it.raw",
-        .label     = "Shout it!",
-        .bgColor   = c222,
-        .txColor   = c555,
-        .ledColor  = {.r = 0x66, .g = 0x66, .b = 0x66},
+        .sfx_fidx = SHOUT_IT_RAW,
+        .label    = "Shout it!",
+        .bgColor  = c222,
+        .txColor  = c555,
+        .ledColor = {.r = 0x66, .g = 0x66, .b = 0x66},
     },
     {
-        .sfx_fname = "swirl_it.raw",
-        .label     = "Swirl it!",
-        .bgColor   = c412,
-        .txColor   = c555,
-        .ledColor  = {.r = 0xCC, .g = 0x33, .b = 0x66},
+        .sfx_fidx = SWIRL_IT_RAW,
+        .label    = "Swirl it!",
+        .bgColor  = c412,
+        .txColor  = c555,
+        .ledColor = {.r = 0xCC, .g = 0x33, .b = 0x66},
     },
 };
 
 const swadgeItEvtData_t siGoodData = {
-    .sfx_fname = NULL,
-    .label     = "Good!",
-    .bgColor   = c453,
-    .txColor   = c000,
-    .ledColor  = {.r = 0xCC, .g = 0xFF, .b = 0x99},
+    .sfx_fidx = -1,
+    .label    = "Good!",
+    .bgColor  = c453,
+    .txColor  = c000,
+    .ledColor = {.r = 0xCC, .g = 0xFF, .b = 0x99},
 };
 
 const swadgeItEvtData_t siWaitData = {
-    .sfx_fname = NULL,
-    .label     = "Wait",
-    .bgColor   = c000,
-    .txColor   = c555,
-    .ledColor  = {.r = 0x00, .g = 0x00, .b = 0x00},
+    .sfx_fidx = -1,
+    .label    = "Wait",
+    .bgColor  = c000,
+    .txColor  = c555,
+    .ledColor = {.r = 0x00, .g = 0x00, .b = 0x00},
 };
 
 const swadgeItEvtData_t siGoData = {
-    .sfx_fname = NULL,
-    .label     = "Go!",
-    .bgColor   = c555,
-    .txColor   = c000,
-    .ledColor  = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
+    .sfx_fidx = -1,
+    .label    = "Go!",
+    .bgColor  = c555,
+    .txColor  = c000,
+    .ledColor = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
 };
 
 //==============================================================================
@@ -272,7 +272,7 @@ static void swadgeItEnterMode(void)
     // Load all SFX samples
     for (int8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
     {
-        si->sfx[i].samples = readHeatshrinkFile(siEvtData[i].sfx_fname, &si->sfx[i].len, true);
+        si->sfx[i].samples = readHeatshrinkFile(siEvtData[i].sfx_fidx, &si->sfx[i].len, true);
     }
 
     // For yell detection
