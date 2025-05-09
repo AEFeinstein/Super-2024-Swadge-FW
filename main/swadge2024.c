@@ -416,6 +416,9 @@ void app_main(void)
         cSwadgeMode->fnEnterMode();
     }
 
+    // AMount fo time between main loop calls
+    static uint64_t mainLoopCallDelay = 0;
+
     // Run the main loop, forever
     while (true)
     {
@@ -483,8 +486,9 @@ void app_main(void)
                 {
                     tLastMainLoopCall = tNowUs;
                 }
+                mainLoopCallDelay = tNowUs - tLastMainLoopCall;
 
-                cSwadgeMode->fnMainLoop(tNowUs - tLastMainLoopCall);
+                cSwadgeMode->fnMainLoop(mainLoopCallDelay);
                 tLastMainLoopCall = tNowUs;
             }
 
@@ -534,7 +538,7 @@ void app_main(void)
             // If trophies are not null, draw
             if (NULL != cSwadgeMode->trophyData && !cSwadgeMode->trophyData->settings->silent)
             {
-                trophyDraw(&sysFont, tElapsedUs);
+                trophyDraw(&sysFont, mainLoopCallDelay);
             }
 
             // Draw to the TFT

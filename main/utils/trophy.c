@@ -17,6 +17,7 @@
 
 // C
 #include <string.h>
+#include <inttypes.h>
 
 // Hardware
 #include "hdw-nvs.h"
@@ -480,7 +481,7 @@ static void _drawAtYCoord(trophyDataWrapper_t* t, int yOffset, font_t* fnt)
         && t->currentVal < t->trophyData.maxVal)
     {
         char buffer[32];
-        snprintf(buffer, sizeof(buffer) - 1, "%d/%d", t->currentVal, t->trophyData.maxVal);
+        snprintf(buffer, sizeof(buffer) - 1, "%d/%" PRId32, t->currentVal, t->trophyData.maxVal);
         int16_t xOff = TFT_WIDTH - (textWidth(fnt, buffer) + TROPHY_SCREEN_CORNER_CLEARANCE + 8);
         endX         = xOff - 8;
         drawText(fnt, c444, buffer, xOff, yOffset + 4);
