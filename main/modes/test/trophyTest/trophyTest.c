@@ -99,9 +99,9 @@ const trophyData_t testTrophies[] = {
 
 typedef enum
 {
-    TROPHYTEST_TESTING,
-    TROPHYTEST_MENU,
-    TROPHYTEST_DISPLAYING,
+    TROPHY_TEST_TESTING,
+    TROPHY_TEST_MENU,
+    TROPHY_TEST_DISPLAYING,
 } trophyTestStateEnum_t;
 
 //==============================================================================
@@ -158,7 +158,7 @@ static void runTrophy(int64_t elapsedUs);
  * @brief Callback for options menu
  *
  * @param label Used to locate option
- * @param selected If optin was selected or just highlit
+ * @param selected If option was selected or just highlighted
  * @param settingVal Value when a setting is changed
  */
 static void trophyMenuCb(const char* label, bool selected, uint32_t settingVal);
@@ -166,7 +166,7 @@ static void trophyMenuCb(const char* label, bool selected, uint32_t settingVal);
 /**
  * @brief Checks an individual bit flag out of a int32
  *
- * @param flags int32 containging the flag to check
+ * @param flags int32 containing the flag to check
  * @param idx Index of the bit
  * @return true If bit is set
  * @return false If bit is not set
@@ -212,7 +212,7 @@ static void enterTrophy()
     // Allocate memory
     tt = heap_caps_calloc(sizeof(trophyTest_t), 1, MALLOC_CAP_8BIT);
 
-    // Inititalize vars from disk
+    // Initialize vars from disk
     tt->aPresses       = trophyGetSavedValue(testTrophies[0]);
     tt->bPresses       = trophyGetSavedValue(testTrophies[1]);
     tt->upTime         = trophyGetSavedValue(testTrophies[2]);
@@ -227,7 +227,7 @@ static void enterTrophy()
     addSingleItemToMenu(tt->menu, textBlobs[7]);
     addSingleItemToMenu(tt->menu, textBlobs[8]);
 
-    tt->state = TROPHYTEST_TESTING;
+    tt->state = TROPHY_TEST_TESTING;
 }
 
 static void exitTrophy()
@@ -242,7 +242,7 @@ static void runTrophy(int64_t elapsedUs)
     buttonEvt_t evt;
     switch (tt->state)
     {
-        case TROPHYTEST_MENU:
+        case TROPHY_TEST_MENU:
         {
             while (checkButtonQueueWrapper(&evt))
             {
@@ -251,13 +251,13 @@ static void runTrophy(int64_t elapsedUs)
             drawMenuMania(tt->menu, tt->rndr, elapsedUs);
             break;
         }
-        case TROPHYTEST_DISPLAYING:
+        case TROPHY_TEST_DISPLAYING:
         {
             while (checkButtonQueueWrapper(&evt))
             {
                 if (evt.down)
                 {
-                    tt->state = TROPHYTEST_MENU;
+                    tt->state = TROPHY_TEST_MENU;
                 }
             }
             // TODO: Draw the current status screen
@@ -302,7 +302,7 @@ static void runTrophy(int64_t elapsedUs)
                     }
                     else if (evt.button == PB_START)
                     {
-                        tt->state = TROPHYTEST_MENU;
+                        tt->state = TROPHY_TEST_MENU;
                     }
                 }
                 else if (evt.button & PB_UP)
@@ -381,11 +381,11 @@ static void trophyMenuCb(const char* label, bool selected, uint32_t settingVal)
         }
         else if (label == textBlobs[7])
         {
-            tt->state = TROPHYTEST_DISPLAYING;
+            tt->state = TROPHY_TEST_DISPLAYING;
         }
         else
         {
-            tt->state = TROPHYTEST_TESTING;
+            tt->state = TROPHY_TEST_TESTING;
         }
     }
 }
