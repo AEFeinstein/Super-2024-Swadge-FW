@@ -19,6 +19,8 @@
 #include "rmd_processor.h"
 #include "raw_processor.h"
 
+#include "assets_preprocessor.h"
+
 /**
  * @brief A mapping of file extensions that should be compressed using heatshrink without any other processing
  *
@@ -27,6 +29,19 @@ static const char* rawFileTypes[][2] = {
     {"mid", "mid"},
     {"midi", "mid"},
     {"raw", "raw"},
+};
+
+static const assetProcessor_t processors[] = {
+    {.inExt = "font.png", .outExt = "font.wsg", .type = FUNCTION, .function = process_font},
+    {.inExt = "png",      .outExt = "wsg",      .type = FUNCTION, .function = process_image},
+    {.inExt = "chart",    .outExt = "cch",      .type = FUNCTION, .function = process_chart},
+    {.inExt = "json",     .outExt = "json",     .type = FUNCTION, .function = process_json},
+    {.inExt = "bin",      .outExt = "bin",      .type = FUNCTION, .function = process_bin},
+    {.inExt = "txt",      .outExt = "txt",      .type = FUNCTION, .function = process_txt},
+    {.inExt = "rmd",      .outExt = "rmh",      .type = FUNCTION, .function = process_rmd},
+    {.inExt = "mid",      .outExt = "mid",      .type = FUNCTION, .function = process_raw},
+    {.inExt = "midi",     .outExt = "mid",      .type = FUNCTION, .function = process_raw},
+    {.inExt = "raw",      .outExt = "raw",      .type = FUNCTION, .function = process_raw},
 };
 
 const char* outDirName = NULL;
@@ -74,6 +89,30 @@ static int processFile(const char* fpath, const struct stat* st __attribute__((u
     {
         case FTW_F: // file
         {
+            char extBuf[16];
+            char inFile[256];
+            char outFile[256];
+
+            for (int i = 0; i < (sizeof(processors) / sizeof(*processors)); i++)
+            {
+                snprintf(extBuf, sizeof(extBuf), ".%s", processors[i].inExt);
+                if (endsWith(fpath, extBuf))
+                {
+                    switch (processors[i].type)
+                    {
+                        case FUNCTION:
+                        {
+                            bool result = processors[i].function(inFile, outFile);
+                            break;
+                        }
+
+                        case EXEC:
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
             if (endsWith(fpath, ".font.png"))
             {
                 process_font(fpath, outDirName);
