@@ -177,11 +177,11 @@ static bool checkBitFlag(int32_t flags, int8_t idx);
 // Variables
 //==============================================================================
 
-trophySettings_t tSettings = {.animated           = false,
-                              .drawFromBottom     = false,
-                              .silent             = false,
-                              .drawMaxDurationUs  = 500000,
-                              .slideMaxDurationUs = 2000000};
+trophySettings_t tSettings = {.animated         = false,
+                              .drawFromBottom   = false,
+                              .silent           = false,
+                              .staticDurationUs = DRAW_STATIC_US,
+                              .slideDurationUs  = DRAW_SLIDE_US};
 
 trophyDataList_t trophyTestData = {.settings = &tSettings, .list = testTrophies};
 

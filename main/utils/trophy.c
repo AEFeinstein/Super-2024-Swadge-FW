@@ -44,9 +44,6 @@
 #define TROPHY_SCREEN_CORNER_CLEARANCE 19
 #define TROPHY_IMAGE_BUFFER            8
 
-#define DRAW_SLIDE_US  262144 // A power of two close to a quarter second, makes nice division
-#define DRAW_STATIC_US 524288 // A power of two close to a half second, makes nice division
-
 //==============================================================================
 // Consts
 //==============================================================================
@@ -180,9 +177,10 @@ void trophySystemInit(trophySettings_t* settings, const char* modeName)
     _loadPalette();
 
     // Clear queue, freeing all entries
-    void* toFree;
+    trophyDataWrapper_t* toFree;
     while ((toFree = pop(&trophySystem.trophyQueue)))
     {
+        freeWsg(&toFree->image);
         heap_caps_free(toFree);
     }
 
@@ -355,12 +353,15 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
     }
 
     // Calculate the yOffset from the animation time
-    int16_t yOffset = 0;
+    int16_t yOffset  = 0;
+    int32_t slideUs  = trophySystem.settings->slideDurationUs;
+    int32_t staticUs = trophySystem.settings->staticDurationUs;
+
     trophySystem.animTimer += elapsedUs;
-    if (trophySystem.animTimer >= 2 * DRAW_SLIDE_US + DRAW_STATIC_US)
+    if (trophySystem.animTimer >= 2 * slideUs + staticUs)
     {
         // Finished off screen.
-        // trophySystem.animTimer is after (2 * DRAW_SLIDE_US + DRAW_STATIC_US)
+        // trophySystem.animTimer is after (2 * slideUs + staticUs)
         // Offset is an easy -TROPHY_BANNER_HEIGHT (off screen)
         yOffset = -TROPHY_BANNER_HEIGHT;
 
@@ -377,26 +378,26 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
         // Return before drawing because we're all done
         return;
     }
-    else if (trophySystem.animTimer >= DRAW_SLIDE_US + DRAW_STATIC_US)
+    else if (trophySystem.animTimer >= slideUs + staticUs)
     {
         // Sliding out.
-        // trophySystem.animTimer is between (DRAW_SLIDE_US + DRAW_STATIC_US) and (2 * DRAW_SLIDE_US + DRAW_STATIC_US)
+        // trophySystem.animTimer is between (slideUs + staticUs) and (2 * slideUs + staticUs)
         // Offset is between 0 and -TROPHY_BANNER_HEIGHT
-        yOffset = (-TROPHY_BANNER_HEIGHT * (trophySystem.animTimer - (DRAW_SLIDE_US + DRAW_STATIC_US))) / DRAW_SLIDE_US;
+        yOffset = (-TROPHY_BANNER_HEIGHT * (trophySystem.animTimer - (slideUs + staticUs))) / slideUs;
     }
-    else if (trophySystem.animTimer >= DRAW_SLIDE_US)
+    else if (trophySystem.animTimer >= slideUs)
     {
         // Static on screen.
-        // trophySystem.animTimer is between (DRAW_SLIDE_US) and (DRAW_SLIDE_US + DRAW_STATIC_US)
+        // trophySystem.animTimer is between (slideUs) and (slideUs + staticUs)
         // Offset is an easy 0
         yOffset = 0;
     }
     else
     {
         // Sliding in.
-        // trophySystem.animTimer is between 0 and DRAW_SLIDE_US
+        // trophySystem.animTimer is between 0 and slideUs
         // Offset is between -TROPHY_BANNER_HEIGHT and 0
-        yOffset = ((TROPHY_BANNER_HEIGHT * trophySystem.animTimer) / DRAW_SLIDE_US) - TROPHY_BANNER_HEIGHT;
+        yOffset = ((TROPHY_BANNER_HEIGHT * trophySystem.animTimer) / slideUs) - TROPHY_BANNER_HEIGHT;
     }
 
     // yOffset is assumed to be from the top, so flip it if necessary

@@ -190,6 +190,9 @@
 #define TROPHY_MAX_DESC_LEN  128
 #define TROPHY_IMAGE_STR_LEN 32
 
+#define DRAW_SLIDE_US  262144 // Recommended slide time, a power of 2 about a quarter second
+#define DRAW_STATIC_US 524288 // Recommended static time, a power of 2 about a half second
+
 //==============================================================================
 // Enum
 //==============================================================================
@@ -231,12 +234,12 @@ typedef struct
 /// @brief Settings for the trophy system
 typedef struct
 {
-    bool silent;                //< If the system should draw trophies or not
-    bool drawFromBottom;        //< If banner should be drawn from the bottom of the screen
-    int32_t drawMaxDurationUs;  //< How long the banner will be drawn fully extended
-    bool animated;              //< If being animated to slide in and out
-    int32_t slideMaxDurationUs; //< How long the banner will take to slide in and out
-    char namespaceKey[16];      //< key used for trophy namespace
+    bool silent;              //< If the system should draw trophies or not
+    bool drawFromBottom;      //< If banner should be drawn from the bottom of the screen
+    bool animated;            //< If being animated to slide in and out
+    int32_t staticDurationUs; //< How long the banner will be drawn fully extended
+    int32_t slideDurationUs;  //< How long the banner will take to slide in and out
+    char namespaceKey[16];    //< key used for trophy namespace
 } trophySettings_t;
 
 /// @brief The data object dev hands to the trophy showcase that contains all the const data.
