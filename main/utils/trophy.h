@@ -234,9 +234,9 @@ typedef struct
 /// @brief Settings for the trophy system
 typedef struct
 {
-    bool silent;              //< If the system should draw trophies or not
-    bool drawFromBottom;      //< If banner should be drawn from the bottom of the screen
     bool animated;            //< If being animated to slide in and out
+    bool drawFromBottom;      //< If banner should be drawn from the bottom of the screen
+    bool silent;              //< If the system should draw trophies or not
     int32_t staticDurationUs; //< How long the banner will be drawn fully extended
     int32_t slideDurationUs;  //< How long the banner will take to slide in and out
     char namespaceKey[16];    //< key used for trophy namespace
@@ -324,20 +324,12 @@ int trophyGetPoints(bool total, char* modeName);
 /**
  * @brief Gets the number of trophies associated with a mode, or current mode if NULL
  *
- * @param modeName Name of the mode from which to grab trophy quantity. NULL returns quantity of current mode.
  * @return int total number of trophies in given mode.
  */
-int trophyGetNumTrophies(char* modeName);
+int trophyGetNumTrophies(void);
 
-/**
- * @brief Grabs a list of titles from specified mode.
- *
- * @param modeName Name of the mode from which to grab trophies. NULL returns all values in unspecified order
- * @param tList outFile that contains a list of strings which are the titles of the trophies
- * @param tLen Max number of trophies to grab. If actual total is less than provided tLen, value is set to total
- * @param offset Where to start grabbing from. Useful in batch mode
- */
-void trophyGetTrophyList(char* modeName, trophyData_t* tList, int* tLen, int offset);
+
+void trophyGetTrophyList(void);
 
 // Drawing functions
 

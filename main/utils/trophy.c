@@ -91,6 +91,16 @@ static trophySystem_t trophySystem = {}; //< Should be one instance per swadge, 
 // Static function declarations
 //==============================================================================
 
+// NVS
+/**
+ * @brief Truncates a string down to a specified length
+ *
+ * @param to The string/buffer to copy the text into
+ * @param from The source string
+ * @param len Length to copy
+ */
+static void _truncateStr(char* to, const char* from, int len);
+
 /**
  * @brief Saves a trophy.
  *
@@ -108,30 +118,6 @@ static void _save(trophyDataWrapper_t* t, int newVal);
 static void _load(trophyDataWrapper_t* tw, trophyData_t t);
 
 /**
- * @brief Draws the banner
- *
- * @param t Trophy to draw
- * @param yOffset y coordinate to start at
- * @param fnt Font used in draw call
- */
-static void _drawAtYCoord(trophyDataWrapper_t* t, int yOffset, font_t* fnt);
-
-/**
- * @brief Truncates a string down to a specified length
- *
- * @param to The string/buffer to copy the text into
- * @param from The source string
- * @param len Length to copy
- */
-static void _truncateStr(char* to, const char* from, int len);
-
-/**
- * @brief Loads the palette for the grayscale conversion
- *
- */
-static void _loadPalette(void);
-
-/**
  * @brief Saves new points value to NVS. Saves both overall value and mode-specific
  *
  * @param points Adjustment value
@@ -146,12 +132,36 @@ static void _setPoints(int points);
  */
 static int _loadPoints(bool total, char* modeName);
 
-static int _genPoints(trophyDifficulty_t td);
+// Drawing
+/**
+ * @brief Draws the banner
+ *
+ * @param t Trophy to draw
+ * @param yOffset y coordinate to start at
+ * @param fnt Font used in draw call
+ */
+static void _drawAtYCoord(trophyDataWrapper_t* t, int yOffset, font_t* fnt);
+
+/**
+ * @brief Loads the palette for the grayscale conversion
+ *
+ */
+static void _loadPalette(void);
 
 /**
  * @brief Get the currently displayed trophy
  */
 static trophyDataWrapper_t* _getCurrentDisplayTrophy(void);
+
+// Points
+
+/**
+ * @brief Get appropriate number of points based on teh difficulty
+ *
+ * @param td Difficulty to evaluate
+ * @return int Score
+ */
+static int _genPoints(trophyDifficulty_t td);
 
 //==============================================================================
 // Functions
@@ -336,7 +346,7 @@ void trophyClear(trophyData_t t)
     {
         _setPoints(_genPoints(t.difficulty) * -1);
     }
-    
+
     // Finalize
     _save(&tw, 0);
 }
@@ -353,13 +363,12 @@ int trophyGetPoints(bool total, char* modeName)
     return _loadPoints(total, modeName);
 }
 
-int trophyGetNumTrophies(char* modeName)
+int trophyGetNumTrophies()
 {
-    // Gets the number of trophies associated with a mode, or current mode if NULL
-    return 0;
+    return trophySystem.data->length;
 }
 
-void trophyGetTrophyList(char* modeName, trophyData_t* tList, int* tLen, int offset)
+void trophyGetTrophyList()
 {
     // If modeName is NULL, get all trophies. Order by game, but do no sorting.
     // Populate tList starting from offset up to tLen
@@ -449,6 +458,14 @@ void trophyDrawList(char* modeName, int idx)
 // Static functions
 //==============================================================================
 
+// NVS
+
+static void _truncateStr(char* to, const char* from, int len)
+{
+    strncpy(to, from, len);
+    to[len - 1] = '\0';
+}
+
 static void _save(trophyDataWrapper_t* t, int newVal)
 {
     char buffer[MAX_NVS_KEY_LEN];
@@ -480,6 +497,58 @@ static void _load(trophyDataWrapper_t* tw, trophyData_t t)
         writeNamespaceNvs32(trophySystem.data->settings->namespaceKey, buffer, 0);
     }
 }
+
+static void _setPoints(int points)
+{
+    int prevVal;
+    // Mode specific
+    if (!readNamespaceNvs32(trophySystem.data->settings->namespaceKey, systemPointsNVS[1], &prevVal))
+    {
+        prevVal = 0;
+    }
+    prevVal += points;
+    writeNamespaceNvs32(trophySystem.data->settings->namespaceKey, systemPointsNVS[1], prevVal);
+
+    // Overall
+    if (!readNamespaceNvs32(systemPointsNVS[0], systemPointsNVS[1], &prevVal))
+    {
+        prevVal = 0;
+    }
+    prevVal += points;
+    writeNamespaceNvs32(systemPointsNVS[0], systemPointsNVS[1], prevVal);
+}
+
+static int _loadPoints(bool total, char* modeName)
+{
+    int val;
+    if (!total)
+    {
+        if (modeName == NULL)
+        {
+            if (!readNamespaceNvs32(trophySystem.data->settings->namespaceKey, systemPointsNVS[1], &val))
+            {
+                val = 0;
+            }
+        }
+        else
+        {
+            if (!readNamespaceNvs32(modeName, systemPointsNVS[1], &val))
+            {
+                val = 0;
+            }
+        }
+    }
+    else
+    {
+        if (!readNamespaceNvs32(systemPointsNVS[0], systemPointsNVS[1], &val))
+        {
+            val = 0;
+        }
+    }
+    return val;
+}
+
+// Drawing
 
 static void _drawAtYCoord(trophyDataWrapper_t* t, int yOffset, font_t* fnt)
 {
@@ -556,12 +625,6 @@ static void _drawAtYCoord(trophyDataWrapper_t* t, int yOffset, font_t* fnt)
         drawLine(TFT_WIDTH - 14, yOffset + 23, TFT_WIDTH - 8, yOffset + 13, c050, 0);
         drawLine(TFT_WIDTH - 14, yOffset + 23, TFT_WIDTH - 19, yOffset + 20, c050, 0);
     }
-}
-
-static void _truncateStr(char* to, const char* from, int len)
-{
-    strncpy(to, from, len);
-    to[len - 1] = '\0';
 }
 
 static void _loadPalette(void)
@@ -655,59 +718,20 @@ static void _loadPalette(void)
     }
 }
 
-static void _setPoints(int points)
+static trophyDataWrapper_t* _getCurrentDisplayTrophy(void)
 {
-    int prevVal;
-    // Mode specific
-    if (!readNamespaceNvs32(trophySystem.data->settings->namespaceKey, systemPointsNVS[1], &prevVal))
+    if (trophySystem.trophyQueue.first)
     {
-        prevVal = 0;
+        return trophySystem.trophyQueue.first->val;
     }
-    prevVal += points;
-    writeNamespaceNvs32(trophySystem.data->settings->namespaceKey, systemPointsNVS[1], prevVal);
-
-    // Overall
-    if (!readNamespaceNvs32(systemPointsNVS[0], systemPointsNVS[1], &prevVal))
-    {
-        prevVal = 0;
-    }
-    prevVal += points;
-    writeNamespaceNvs32(systemPointsNVS[0], systemPointsNVS[1], prevVal);
+    return NULL;
 }
 
-static int _loadPoints(bool total, char* modeName)
-{
-    int val;
-    if (!total)
-    {
-        if (modeName == NULL)
-        {
-            if (!readNamespaceNvs32(trophySystem.data->settings->namespaceKey, systemPointsNVS[1], &val))
-            {
-                val = 0;
-            }
-        }
-        else
-        {
-            if (!readNamespaceNvs32(modeName, systemPointsNVS[1], &val))
-            {
-                val = 0;
-            }
-        }
-    }
-    else
-    {
-        if (!readNamespaceNvs32(systemPointsNVS[0], systemPointsNVS[1], &val))
-        {
-            val = 0;
-        }
-    }
-    return val;
-}
+// Points
 
 static int _genPoints(trophyDifficulty_t td)
 {
-    int scorePer = 1000 / trophySystem.numTrophiesScore; 
+    int scorePer = 1000 / trophySystem.numTrophiesScore;
 
     switch (td)
     {
@@ -728,13 +752,4 @@ static int _genPoints(trophyDifficulty_t td)
             return scorePer;
         }
     }
-}
-
-static trophyDataWrapper_t* _getCurrentDisplayTrophy(void)
-{
-    if (trophySystem.trophyQueue.first)
-    {
-        return trophySystem.trophyQueue.first->val;
-    }
-    return NULL;
 }
