@@ -277,7 +277,7 @@ static void runTrophy(int64_t elapsedUs)
                     else if (evt.button == PB_B)
                     {
                         tt->bPresses++;
-                        trophyUpdate(testTrophies[1], tt->bPresses, true);
+                        trophyUpdateMilestone(testTrophies[1], tt->bPresses, 20);
                     }
                     else if (evt.button == PB_UP)
                     {

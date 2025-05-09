@@ -285,19 +285,19 @@ int trophySystemGetPoints(char* modeName);
 void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate);
 
 /**
- * @brief Updates just like trophyUpdate(), but automatically mutes updates that aren't breaking
- *
- * @param modeName Name of the mode
- * @param title Title of trophy to update
- * @param value New value to assign
+ * @brief Updates just like trophyUpdate(), but only draws when crossing percentage boundary
+ * 
+ * @param t Trophy to update
+ * @param newVal Value to attempt to set
+ * @param threshold Value (0-100, representing a percent) to draw at
  */
-void trophyUpdateMilestone(char* modeName, char* title, int value);
+void trophyUpdateMilestone(trophyData_t t, int newVal, int threshold);
 
 /**
  * @brief Returns the value saved to the NVS or 0 if the key isn't found.
  *
- * @param t
- * @return int32_t
+ * @param t Trophy to grab value for
+ * @return int32_t Stored value for the requested trophy
  */
 int32_t trophyGetSavedValue(trophyData_t t);
 

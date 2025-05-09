@@ -37,7 +37,8 @@
 //==============================================================================
 
 // Standard defines
-#define MAX_NVS_KEY_LEN 16
+#define MAX_NVS_KEY_LEN   16
+#define DEFAULT_MILESTONE 25
 
 // Visuals
 #define TROPHY_BANNER_HEIGHT           48
@@ -268,7 +269,7 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
         }
     }
 
-    // Load into draw queue is requested
+    // Load into draw queue if requested
     if (drawUpdate)
     {
         // Push into queue
@@ -283,22 +284,32 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
             trophySystem.active    = true;
             trophySystem.animTimer = 0;
         }
-
-        // TODO: the rest of this
-
-        // TODO: Play sound
     }
 }
 
-void trophyUpdateMilestone(char* modeName, char* title, int value)
+void trophyUpdateMilestone(trophyData_t t, int newVal, int threshold)
 {
-    // Checks if first time past 25%, 50%, 75%, or 100% completion.
-    // Load saved data
-    // Compare saved MavVal to value
-    // if (value >= maxVal >> 2 && oldValue < maxVal >> 2) || (value >= maxVal >> 1 && oldValue < maxVal >> 1) || (value
-    // >= (maxVal >> 2) * 3 && oldValue < (maxVal >> 2) * 3)
-    // Load into queue to draw
-    // Else, just save data
+    trophyDataWrapper_t* tw = heap_caps_calloc(1, sizeof(trophyDataWrapper_t), MALLOC_CAP_8BIT);
+    _load(tw, t);
+
+    // Check if completed
+    if (newVal >= t.maxVal)
+    {
+        trophyUpdate(t, newVal, true);
+        heap_caps_free(tw);
+        return;
+    }
+
+    // Check if past a milestone for the first time
+    // Verify Percentage isn't out of bounds
+    if (threshold < 1 || threshold >= 100)
+    {
+        threshold = DEFAULT_MILESTONE;
+    }
+    int32_t prev = (tw->currentVal * 100 / t.maxVal) / threshold; // Intentionally truncates to an integer
+    int32_t new = (newVal * 100 / t.maxVal) / threshold;
+    trophyUpdate(t, newVal, prev < new);
+    heap_caps_free(tw);
 }
 
 int32_t trophyGetSavedValue(trophyData_t t)
@@ -330,7 +341,7 @@ int trophyGetNumTrophies(char* modeName)
 
 void trophyGetTrophyList(char* modeName, trophyData_t* tList, int* tLen, int offset)
 {
-    // If modeName is NULL, get all trophies. Order by game, but do not sorting.
+    // If modeName is NULL, get all trophies. Order by game, but do no sorting.
     // Populate tList starting from offset up to tLen
 }
 
