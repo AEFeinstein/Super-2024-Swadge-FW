@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #include "cnfs_image.h"
 
@@ -259,6 +260,17 @@ typedef struct
 //==============================================================================
 // Function Declarations
 //==============================================================================
+
+/**
+ * @brief Load a MIDI file from raw data, without copying it
+ *
+ * @param data The raw data for the MIDI file, uncompressed
+ * @param size The length of the MIDI data in bytes
+ * @param file A pointer to a midiFile_t struct to load the data into
+ * @return true If the data contained a valid MIDI file and the load succeeded
+ * @return false If the load failed
+ */
+bool loadMidiData(uint8_t* data, size_t size, midiFile_t* file);
 
 /**
  * @brief Load a MIDI file from the filesystem

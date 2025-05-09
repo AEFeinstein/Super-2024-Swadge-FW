@@ -792,6 +792,32 @@ static void readFirstEvents(midiFileReader_t* reader)
     }
 }
 
+bool loadMidiData(uint8_t* data, size_t size, midiFile_t* file)
+{
+    if (data != NULL)
+    {
+        file->data   = data;
+        file->length = (uint32_t)size;
+        if (parseMidiHeader(file))
+        {
+            return true;
+        }
+        else
+        {
+            // Parsing failed, so free the data and return false
+            if (file->tracks != NULL)
+            {
+                // TODO should this be handled in the parser?
+                heap_caps_free(file->tracks);
+            }
+
+            memset(file, 0, sizeof(midiFile_t));
+        }
+    }
+
+    return false;
+}
+
 bool loadMidiFile(cnfsFileIdx_t fIdx, midiFile_t* file, bool spiRam)
 {
     uint32_t size;
@@ -838,23 +864,13 @@ bool loadMidiFile(cnfsFileIdx_t fIdx, midiFile_t* file, bool spiRam)
     if (data != NULL)
     {
         ESP_LOGI("MIDIFileParser", "Song %d has %" PRIu32 " bytes", fIdx, size);
-        file->data   = data;
-        file->length = (uint32_t)size;
-        if (parseMidiHeader(file))
+        if (loadMidiData(data, size, file))
         {
             return true;
         }
         else
         {
-            // Parsing failed, so free the data and return false
-            if (file->tracks != NULL)
-            {
-                // TODO should this be handled in the parser?
-                heap_caps_free(file->tracks);
-                file->tracks = NULL;
-            }
             heap_caps_free(data);
-            memset(file, 0, sizeof(midiFile_t));
             return false;
         }
     }

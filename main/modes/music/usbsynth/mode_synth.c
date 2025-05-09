@@ -239,6 +239,7 @@ typedef struct
     midiFile_t midiFile;
     midiPlayer_t midiPlayer;
     bool fileMode;
+    bool nvsMode;
     const char* filename;
     char* filenameBuf;
     bool customFile;
@@ -1066,6 +1067,7 @@ static const char* const nvsKeyGmEnabled        = "synth_gmmode";
 static const char* const menuItemModeOptions[] = {
     "Streaming",
     "File",
+    "Custom",
 };
 
 static const char* const menuItemViewOptions[] = {
@@ -1115,6 +1117,7 @@ static const char* const menuItemChannelsOptions[] = {
 static const int32_t menuItemModeValues[] = {
     0,
     1,
+    2,
 };
 
 static const int32_t menuItemViewValues[] = {
@@ -1203,7 +1206,7 @@ static const int32_t menuItemGmValues[] = {
 static settingParam_t menuItemModeBounds = {
     .def = 0,
     .min = 0,
-    .max = 1,
+    .max = 2,
     .key = nvsKeyMode,
 };
 
@@ -1407,7 +1410,20 @@ static void synthEnterMode(void)
     {
         nvsRead = 0;
     }
-    sd->fileMode = nvsRead ? true : false;
+    switch (nvsRead)
+    {
+        default:
+        case 0:
+            sd->fileMode = false;
+            break;
+        case 1:
+            sd->fileMode = true;
+            break;
+        case 2:
+            sd->fileMode = true;
+            sd->nvsMode  = true;
+            break;
+    }
 
     // View mode
     if (!readNvs32(nvsKeyViewMode, &nvsRead))
@@ -1527,7 +1543,11 @@ static void synthEnterMode(void)
         }
     }
 
-    if (sd->fileMode)
+    if (sd->nvsMode)
+    {
+        synthSetFile(CNFS_NUM_FILES);
+    }
+    else if (sd->fileMode)
     {
         int32_t fIdx;
         if (readNvs32(nvsKeyLastSong, &fIdx))
@@ -1539,57 +1559,9 @@ static void synthEnterMode(void)
         {
             ESP_LOGI("Synth", "No filename saved");
         }
-
-        // sd->filenameBuf = heap_caps_malloc(savedNameLen < 128 ? 128 : savedNameLen + 1, MALLOC_CAP_SPIRAM);
-
-        // if (readNvsBlob(nvsKeyLastSong, sd->filenameBuf, &savedNameLen))
-        // {
-        //     sd->filenameBuf[savedNameLen] = '\0';
-        //     sd->customFile                = true;
-        //     sd->filename                  = sd->filenameBuf;
-        //     synthSetFile(sd->filename);
-        // }
-        // else
-        // {
-        //     ESP_LOGI("Synth", "Failed to load filename");
-        //     heap_caps_free(sd->filenameBuf);
-        //     sd->filenameBuf = NULL;
-        // }
     }
 
     sd->screen = SS_VIEW;
-
-    // const cnfsFileEntry* files = getCnfsFiles();
-    // for (const cnfsFileEntry* file = files; file < files + CNFS_NUM_FILES; file++)
-    // {
-    //     if ((strlen(file->name) > 4
-    //          && (!strcmp(&file->name[strlen(file->name) - 4], ".mid")
-    //              || !strcmp(&file->name[strlen(file->name) - 4], ".kar")))
-    //         || (strlen(file->name) > 5 && !strcmp(&file->name[strlen(file->name) - 5], ".midi")))
-    //     {
-    //         // No longer strictly necessary with CNFS, but let's keep it how it was
-    //         char* copyStr = strdup(file->name);
-    //         if (copyStr)
-    //         {
-    //             // Insert the file into the list in a sorted manner
-    //             node_t* last = NULL;
-    //             node_t* node = sd->customFiles.first;
-
-    //             while (node != NULL)
-    //             {
-    //                 if (strcasecmp((char*)node->val, copyStr) >= 0)
-    //                 {
-    //                     break;
-    //                 }
-
-    //                 last = node;
-    //                 node = node->next;
-    //             }
-
-    //             addAfter(&sd->customFiles, copyStr, last);
-    //         }
-    //     }
-    // }
 
     sd->wheelTextArea.pos.x  = 15;
     sd->wheelTextArea.pos.y  = TFT_HEIGHT - sd->betterFont.height - 2;
@@ -2665,8 +2637,46 @@ static void synthSetFile(cnfsFileIdx_t fIdx)
     sd->karaoke.timeSignature.num32ndNotesPerBeat        = 8;
     sd->karaoke.timeSignature.midiClocksPerMetronomeTick = 24;
 
+    bool midiLoaded = false;
+    bool nvsMode    = (fIdx >= CNFS_NUM_FILES);
+
+    if (nvsMode)
+    {
+        // NVS mode
+
+        size_t size;
+        if (readNvsBlob("synth_usersong", NULL, &size))
+        {
+            uint8_t* data = malloc(size);
+            if (NULL != data)
+            {
+                if (readNvsBlob("synth_usersong", data, &size))
+                {
+                    if (loadMidiData(data, size, &sd->midiFile))
+                    {
+                        midiLoaded = true;
+                    }
+                    else
+                    {
+                        free(data);
+                        data = NULL;
+                    }
+                }
+                else
+                {
+                    free(data);
+                    data = NULL;
+                }
+            }
+        }
+    }
+    else
+    {
+        midiLoaded = loadMidiFile(fIdx, &sd->midiFile, true);
+    }
+
     // Cleanup done, now load the new file
-    if (loadMidiFile(fIdx, &sd->midiFile, true))
+    if (midiLoaded)
     {
         sd->fileMode = true;
 
