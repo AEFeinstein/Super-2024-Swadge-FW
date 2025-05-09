@@ -36,7 +36,6 @@
 //==============================================================================
 
 // Standard defines
-#define TENTH_SECOND_US 10000
 #define STATIC_POSITION -1
 #define MAX_NVS_KEY_LEN 16
 
@@ -157,7 +156,7 @@ static void _drawAtYCoord(trophyDataWrapper_t* t, int yOffset, font_t* fnt);
  * @param from The source string
  * @param len Length to copy
  */
-static void _truncateStr(char* to, char* from, int len);
+static void _truncateStr(char* to, const char* from, int len);
 
 /**
  * @brief Loads the palette for the grayscale conversion
@@ -176,7 +175,7 @@ static trophyDataWrapper_t* getCurrentDisplayTrophy(void);
 
 // System
 
-void trophySystemInit(trophySettings_t* settings, char* modeName)
+void trophySystemInit(trophySettings_t* settings, const char* modeName)
 {
     // Defaults
     trophySystem.beingDrawn = false;
@@ -386,7 +385,7 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
     {
         // Based on delta time, update current frame
         trophySystem.slideTimer += elapsedUs;
-        int frameLen = (trophySystem.settings->slideMaxDuration * TENTH_SECOND_US) / TROPHY_BANNER_HEIGHT;
+        int frameLen = (trophySystem.settings->slideMaxDurationUs) / TROPHY_BANNER_HEIGHT;
         while (trophySystem.slideTimer >= frameLen)
         {
             trophySystem.animationTick++;
@@ -423,7 +422,7 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
     {
         // Regular timer
         trophySystem.drawTimer += elapsedUs;
-        if (trophySystem.drawTimer >= trophySystem.settings->drawMaxDuration * TENTH_SECOND_US)
+        if (trophySystem.drawTimer >= trophySystem.settings->drawMaxDurationUs)
         {
             // Stop drawing
             trophySystem.beingDrawn           = false;
@@ -606,7 +605,7 @@ static void _drawAtYCoord(trophyDataWrapper_t* t, int yOffset, font_t* fnt)
     startY = yOffset + 4;
     if (drawTextWordWrap(fnt, c555, t->trophyData.title, &startX, &startY, endX, yOffset + 18) != NULL) // Title
     {
-        // Draw a gray box and elipses
+        // Draw a gray box and ellipses
         fillDisplayArea(endX - (textWidth(fnt, "...") + 4), yOffset + 4, endX, yOffset + 16, c111);
         drawText(fnt, c555, "...", endX - textWidth(fnt, "..."), yOffset + 4);
     }
@@ -633,7 +632,7 @@ static void _drawAtYCoord(trophyDataWrapper_t* t, int yOffset, font_t* fnt)
     }
 }
 
-static void _truncateStr(char* to, char* from, int len)
+static void _truncateStr(char* to, const char* from, int len)
 {
     strncpy(to, from, len);
     to[len - 1] = '\0';

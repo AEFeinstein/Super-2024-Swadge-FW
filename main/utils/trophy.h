@@ -187,7 +187,7 @@
 
 // FIXME: Find actual good max values
 #define TROPHY_MAX_TITLE_LEN 32
-#define TROPHY_MAX_DESC_LEN  64
+#define TROPHY_MAX_DESC_LEN  128
 #define TROPHY_IMAGE_STR_LEN 32
 
 //==============================================================================
@@ -231,12 +231,12 @@ typedef struct
 /// @brief Settings for the trophy system
 typedef struct
 {
-    bool silent;              //< If the system should draw trophies or not
-    bool drawFromBottom;      //< If banner should be drawn from the bottom of the screen
-    int32_t drawMaxDuration;  //< How long the banner will be drawn fully extended
-    bool animated;            //< If being animated to slide in and out
-    int32_t slideMaxDuration; //< How long the banner will take to slide in and out
-    char namespaceKey[16];    //< key used for trophy namespace
+    bool silent;                //< If the system should draw trophies or not
+    bool drawFromBottom;        //< If banner should be drawn from the bottom of the screen
+    int32_t drawMaxDurationUs;  //< How long the banner will be drawn fully extended
+    bool animated;              //< If being animated to slide in and out
+    int32_t slideMaxDurationUs; //< How long the banner will take to slide in and out
+    char namespaceKey[16];      //< key used for trophy namespace
 } trophySettings_t;
 
 /// @brief The data object dev hands to the trophy showcase that contains all the const data.
@@ -260,7 +260,7 @@ typedef struct
  * @param settings The settings data
  * @param modeName Name of the mode
  */
-void trophySystemInit(trophySettings_t* settings, char* modeName);
+void trophySystemInit(trophySettings_t* settings, const char* modeName);
 
 /**
  * @brief Loads the current number of points
