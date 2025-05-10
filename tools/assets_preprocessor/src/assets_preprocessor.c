@@ -26,16 +26,6 @@
 
 #include "assets_preprocessor.h"
 
-/**
- * @brief A mapping of file extensions that should be compressed using heatshrink without any other processing
- *
- */
-static const char* rawFileTypes[][2] = {
-    {"mid", "mid"},
-    {"midi", "mid"},
-    {"raw", "raw"},
-};
-
 static const assetProcessor_t processors[] = {
     {.inExt = "font.png", .outExt = "font", .type = FUNCTION, .function = process_font},
     {.inExt = "png", .outExt = "wsg", .type = FUNCTION, .function = process_image},
@@ -50,7 +40,7 @@ static const assetProcessor_t processors[] = {
 };
 
 const char* outDirName = NULL;
-bool anyFileChanged    = false;
+int filesUpdated       = 0;
 int processingErrors   = 0;
 
 void print_usage(void);
@@ -125,7 +115,7 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                     printf("[assets-preprocessor] %s modified! Regenerating %s\n", get_filename(inFile),
                            get_filename(outFile));
                 }
-                anyFileChanged = true;
+                filesUpdated++;
 
                 bool result = false;
 
@@ -253,7 +243,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    if (NULL != timestampFileName && anyFileChanged)
+    if (NULL != timestampFileName && filesUpdated > 0)
     {
         if (0 != writeTimestampFile(timestampFileName))
         {
@@ -267,6 +257,11 @@ int main(int argc, char** argv)
         fprintf(stderr, "[assets-preprocessor] %d file%s failed to process!!\n", processingErrors,
                 (processingErrors == 1) ? "" : "s");
         return 1;
+    }
+
+    if (filesUpdated > 0)
+    {
+        printf("[assets-preprocessor] %d file%s updated!\n", filesUpdated, (filesUpdated == 1) ? "" : "s");
     }
     return 0;
 }
