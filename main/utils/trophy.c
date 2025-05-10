@@ -814,7 +814,7 @@ static void _drawAtYCoord(trophyDataWrapper_t* t, int yOffset, font_t* fnt)
 
     int endX = TFT_WIDTH - SCREEN_CORNER_CLEARANCE;
     // Draw numbers if required
-    if (!t->trophyData.type == TROPHY_TYPE_TRIGGER && t->currentVal < t->trophyData.maxVal)
+    if (t->trophyData.type != TROPHY_TYPE_TRIGGER && t->currentVal < t->trophyData.maxVal)
     {
         char buffer[NUMBER_TEXT_BUFFER];
         if (t->trophyData.type == TROPHY_TYPE_CHECKLIST)
@@ -1000,7 +1000,7 @@ static int _getListItemHeight(trophyData_t t, font_t* fnt)
     int titleStart = SCREEN_CORNER_CLEARANCE;
     int titleEnd   = TFT_WIDTH - SCREEN_CORNER_CLEARANCE;
     // Get numbers space
-    if (!t.type == TROPHY_TYPE_TRIGGER)
+    if (t.type != TROPHY_TYPE_TRIGGER)
     {
         char buffer[NUMBER_TEXT_BUFFER];
         if (t.type != TROPHY_TYPE_CHECKLIST)
@@ -1050,7 +1050,7 @@ static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t*
     int titleEnd   = TFT_WIDTH - SCREEN_CORNER_CLEARANCE;
 
     // Draw Numbers
-    if (!t.type == TROPHY_TYPE_TRIGGER)
+    if (t.type != TROPHY_TYPE_TRIGGER)
     {
         char buffer[NUMBER_TEXT_BUFFER];
         if (t.type != TROPHY_TYPE_CHECKLIST)
