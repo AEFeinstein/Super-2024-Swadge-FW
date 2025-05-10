@@ -97,7 +97,7 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                 // Calculate the outFile name (replace the extension) and
 
                 strcat(outFile, outDirName);
-                strcat(outFile, "/");
+                //strcat(outFile, "/");
                 strcat(outFile, get_filename(inFile));
 
                 // Clip off the input file extension
@@ -129,7 +129,69 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
 
                     case EXEC:
                     {
-                        result = false;
+                        // 2048 chars ought to be enough for anybody!!
+                        char buf[2048];
+                        bool escaped = false;
+                        bool quoted = false;
+                        char *out = buf;
+
+                        const char* cur = processors[i].exec;
+                        while (*cur)
+                        {
+                            switch (*cur)
+                            {
+                                case '%':
+                                {
+                                    const char* substStr = NULL;
+                                    cur++;
+                                    switch (*cur)
+                                    {
+                                        // %i -> input file path
+                                        case 'i': substStr = inFile; break;
+                                        // %f -> input file name
+                                        case 'f': substStr = get_filename(inFile); break;
+                                        // %o -> output file path
+                                        case 'o': substStr = outFile; break;
+                                        // %a -> input file extension
+                                        case 'a': substStr = processors[i].inExt; break;
+                                        // %b -> output file extension
+                                        case 'b': substStr = processors[i].outExt; break;
+                                        // %% -> % (escape)
+                                        case '%':
+                                        {
+                                            *out++ = *cur;
+                                            break;
+                                        }
+                                        default:
+                                        {
+                                            *out++ = '%';
+                                            *out++ = *cur;
+                                            break;
+                                        }
+                                    }
+                                    if (substStr)
+                                    {
+                                        out = stpcpy(out, substStr);
+                                    }
+                                    break;
+                                }
+
+                                default:
+                                {
+                                    *out++ = *cur;
+                                }
+                                break;
+                            }
+                            cur++;
+                        }
+                        *out = '\0';
+
+                        result = (0 == system(buf));
+
+                        if (!result)
+                        {
+                            fprintf(stderr, "Command failed!!!\n");
+                        }
                         break;
                     }
                 }
