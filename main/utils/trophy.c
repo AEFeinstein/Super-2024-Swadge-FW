@@ -44,14 +44,14 @@
 #define BANNER_MAX_ICON_DIM     36
 #define SCREEN_CORNER_CLEARANCE 19
 #define IMAGE_BUFFER            8
-#define NUMBER_TEXT_BUFFER      40 // Two 10 digit numbers, slash, 0x00
+#define NUMBER_TEXT_BUFFER      25
 #define NUM_COLORS              6
 
 //==============================================================================
 // Consts
 //==============================================================================
 
-static const char* const systemPointsNVS[] = {"trophy", "points"};
+static const char* const NVSstrings[] = {"trophy", "points", "latest", "mode", "trphName"};
 
 //==============================================================================
 // Structs
@@ -132,6 +132,21 @@ static void _save(trophyDataWrapper_t* t, int newVal);
  * @param t Trophy Data
  */
 static void _load(trophyDataWrapper_t* tw, trophyData_t t);
+
+/**
+ * @brief Saves the latest unlocked trophy to NVS for later retrieval
+ *
+ * @param tw TrophyWrapper_t to save
+ */
+static void _saveLatestWin(trophyDataWrapper_t* tw);
+
+/**
+ * @brief Loads the latest win from NVS
+ *
+ * @param mode Mode string to be returned
+ * @param name Name of the trophy returned
+ */
+static void _loadLatestWin(char* mode, char* name);
 
 /**
  * @brief Saves new points value to NVS. Saves both overall value and mode-specific
@@ -338,6 +353,7 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
         if (tw->currentVal >= tw->trophyData.maxVal)
         {
             _setPoints(_genPoints(t.difficulty));
+            _saveLatestWin(tw);
         }
     }
 
@@ -463,6 +479,11 @@ int trophyGetNumTrophies()
 const trophyData_t* trophyGetTrophyList(void)
 {
     return trophySystem.data->list;
+}
+
+void getLatestTrophy(char* modeName, char* trophyName)
+{
+    _loadLatestWin(modeName, trophyName);
 }
 
 // Draw
@@ -693,24 +714,42 @@ static void _load(trophyDataWrapper_t* tw, trophyData_t t)
     }
 }
 
+static void _saveLatestWin(trophyDataWrapper_t* tw)
+{
+    char buffer[MAX_NVS_KEY_LEN];
+    _truncateStr(buffer, trophySystem.data->settings->namespaceKey, MAX_NVS_KEY_LEN);
+    writeNamespaceNvsBlob(NVSstrings[2], NVSstrings[3], buffer, strlen(buffer));
+    _truncateStr(buffer, tw->trophyData.title, MAX_NVS_KEY_LEN);
+    writeNamespaceNvsBlob(NVSstrings[2], NVSstrings[4], buffer, strlen(buffer));
+}
+
+static void _loadLatestWin(char* mode, char* name)
+{
+    size_t blobLen;
+    readNamespaceNvsBlob(NVSstrings[2], NVSstrings[3], NULL, &blobLen);
+    readNamespaceNvsBlob(NVSstrings[2], NVSstrings[3], mode, &blobLen);
+    readNamespaceNvsBlob(NVSstrings[2], NVSstrings[4], NULL, &blobLen);
+    readNamespaceNvsBlob(NVSstrings[2], NVSstrings[4], name, &blobLen);
+}
+
 static void _setPoints(int points)
 {
     int32_t prevVal;
     // Mode specific
-    if (!readNamespaceNvs32(trophySystem.data->settings->namespaceKey, systemPointsNVS[1], &prevVal))
+    if (!readNamespaceNvs32(trophySystem.data->settings->namespaceKey, NVSstrings[1], &prevVal))
     {
         prevVal = 0;
     }
     prevVal += points;
-    writeNamespaceNvs32(trophySystem.data->settings->namespaceKey, systemPointsNVS[1], prevVal);
+    writeNamespaceNvs32(trophySystem.data->settings->namespaceKey, NVSstrings[1], prevVal);
 
     // Overall
-    if (!readNamespaceNvs32(systemPointsNVS[0], systemPointsNVS[1], &prevVal))
+    if (!readNamespaceNvs32(NVSstrings[0], NVSstrings[1], &prevVal))
     {
         prevVal = 0;
     }
     prevVal += points;
-    writeNamespaceNvs32(systemPointsNVS[0], systemPointsNVS[1], prevVal);
+    writeNamespaceNvs32(NVSstrings[0], NVSstrings[1], prevVal);
 }
 
 static int _loadPoints(bool total, char* modeName)
@@ -720,14 +759,14 @@ static int _loadPoints(bool total, char* modeName)
     {
         if (modeName == NULL)
         {
-            if (!readNamespaceNvs32(trophySystem.data->settings->namespaceKey, systemPointsNVS[1], &val))
+            if (!readNamespaceNvs32(trophySystem.data->settings->namespaceKey, NVSstrings[1], &val))
             {
                 val = 0;
             }
         }
         else
         {
-            if (!readNamespaceNvs32(modeName, systemPointsNVS[1], &val))
+            if (!readNamespaceNvs32(modeName, NVSstrings[1], &val))
             {
                 val = 0;
             }
@@ -735,7 +774,7 @@ static int _loadPoints(bool total, char* modeName)
     }
     else
     {
-        if (!readNamespaceNvs32(systemPointsNVS[0], systemPointsNVS[1], &val))
+        if (!readNamespaceNvs32(NVSstrings[0], NVSstrings[1], &val))
         {
             val = 0;
         }

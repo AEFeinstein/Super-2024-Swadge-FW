@@ -1,3 +1,4 @@
+#pragma once
 #include "trophy.h"
 
 // ENUM
@@ -10,7 +11,7 @@ typedef enum
 
 // Trophy Data
 
-const trophyData_t testTrophies[] = {
+const trophyData_t trophyTestModeTrophies[] = {
     {
         .title       = "Trigger Trophy",
         .description = "You pressed A!",
@@ -65,7 +66,7 @@ const trophyData_t testTrophies[] = {
 
 // Individual mode settings
 
-trophySettings_t tSettings = {
+trophySettings_t trophyTestModeTrophySettings = {
     .drawFromBottom   = false,
     .staticDurationUs = DRAW_STATIC_US,
     .slideDurationUs  = DRAW_SLIDE_US,

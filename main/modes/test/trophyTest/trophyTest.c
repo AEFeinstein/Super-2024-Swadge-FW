@@ -14,7 +14,7 @@
 
 #include "trophyTest.h"
 #include "menu.h"
-#include "tt_trophyList.h"
+#include "trophyTest_TL.h"
 
 //==============================================================================
 // Includes
@@ -117,7 +117,7 @@ static void trophyMenuCb(const char* label, bool selected, uint32_t settingVal);
 // Variables
 //==============================================================================
 
-trophyDataList_t trophyTestData = {.settings = &tSettings, .list = testTrophies, .length = ARRAY_SIZE(testTrophies)};
+trophyDataList_t trophyTestData = {.settings = &trophyTestModeTrophySettings, .list = trophyTestModeTrophies, .length = ARRAY_SIZE(trophyTestModeTrophies)};
 
 swadgeMode_t trophyTestMode = {.modeName                 = trophyModeName,
                                .wifiMode                 = NO_WIFI,
@@ -147,10 +147,10 @@ static void enterTrophy()
     tt = heap_caps_calloc(sizeof(trophyTest_t), 1, MALLOC_CAP_8BIT);
 
     // Initialize vars from disk
-    tt->aPresses       = trophyGetSavedValue(testTrophies[0]);
-    tt->bPresses       = trophyGetSavedValue(testTrophies[1]);
-    tt->upTime         = trophyGetSavedValue(testTrophies[2]);
-    tt->checklistFlags = trophyGetSavedValue(testTrophies[3]);
+    tt->aPresses       = trophyGetSavedValue(trophyTestModeTrophies[0]);
+    tt->bPresses       = trophyGetSavedValue(trophyTestModeTrophies[1]);
+    tt->upTime         = trophyGetSavedValue(trophyTestModeTrophies[2]);
+    tt->checklistFlags = trophyGetSavedValue(trophyTestModeTrophies[3]);
 
     tt->heldTimer = 0;
 
@@ -227,12 +227,12 @@ static void runTrophy(int64_t elapsedUs)
                     if (evt.button == PB_A)
                     {
                         tt->aPresses++;
-                        trophyUpdate(testTrophies[0], 1, true);
+                        trophyUpdate(trophyTestModeTrophies[0], 1, true);
                     }
                     else if (evt.button == PB_B)
                     {
                         tt->bPresses++;
-                        trophyUpdateMilestone(testTrophies[1], tt->bPresses, 20);
+                        trophyUpdateMilestone(trophyTestModeTrophies[1], tt->bPresses, 20);
                     }
                     else if (evt.button == PB_UP)
                     {
@@ -245,12 +245,12 @@ static void runTrophy(int64_t elapsedUs)
                         if (checkBitFlag(tt->checklistFlags, CLT_DOWN))
                         {
                             setBitFlag(&tt->checklistFlags, CLT_DOWN, false);
-                            trophySetChecklistTask(testTrophies[3], CLT_DOWN, false, true);
+                            trophySetChecklistTask(trophyTestModeTrophies[3], CLT_DOWN, false, true);
                         }
                         else
                         {
                             setBitFlag(&tt->checklistFlags, CLT_DOWN, true);
-                            trophySetChecklistTask(testTrophies[3], CLT_DOWN, true, true);
+                            trophySetChecklistTask(trophyTestModeTrophies[3], CLT_DOWN, true, true);
                         }
                     }
                     else if (evt.button == PB_LEFT)
@@ -258,12 +258,12 @@ static void runTrophy(int64_t elapsedUs)
                         if (checkBitFlag(tt->checklistFlags, CLT_LEFT))
                         {
                             setBitFlag(&tt->checklistFlags, CLT_LEFT, false);
-                            trophySetChecklistTask(testTrophies[3], CLT_LEFT, false, true);
+                            trophySetChecklistTask(trophyTestModeTrophies[3], CLT_LEFT, false, true);
                         }
                         else
                         {
                             setBitFlag(&tt->checklistFlags, CLT_LEFT, true);
-                            trophySetChecklistTask(testTrophies[3], CLT_LEFT, true, true);
+                            trophySetChecklistTask(trophyTestModeTrophies[3], CLT_LEFT, true, true);
                         }
                     }
                     else if (evt.button == PB_RIGHT)
@@ -271,12 +271,12 @@ static void runTrophy(int64_t elapsedUs)
                         if (checkBitFlag(tt->checklistFlags, CLT_RIGHT))
                         {
                             setBitFlag(&tt->checklistFlags, CLT_RIGHT, false);
-                            trophySetChecklistTask(testTrophies[3], CLT_RIGHT, false, true);
+                            trophySetChecklistTask(trophyTestModeTrophies[3], CLT_RIGHT, false, true);
                         }
                         else
                         {
                             setBitFlag(&tt->checklistFlags, CLT_RIGHT, true);
-                            trophySetChecklistTask(testTrophies[3], CLT_RIGHT, true, true);
+                            trophySetChecklistTask(trophyTestModeTrophies[3], CLT_RIGHT, true, true);
                         }
                     }
                     else if (evt.button == PB_START)
@@ -293,7 +293,7 @@ static void runTrophy(int64_t elapsedUs)
                     {
                         tt->upTime = (tt->heldTimer / SECOND_US);
                     }
-                    trophyUpdate(testTrophies[2], tt->upTime, true);
+                    trophyUpdate(trophyTestModeTrophies[2], tt->upTime, true);
                 }
             }
             // Draw instructions
@@ -337,6 +337,12 @@ static void runTrophy(int64_t elapsedUs)
             int total     = trophyGetPoints(true, NULL);
             snprintf(buffer, sizeof(buffer) - 1, "Mode Total: %d, total: %d", modeTotal, total);
             drawText(getSysFont(), c555, buffer, 32, 190);
+
+            // Latest Win
+            char modeBuffer[16];
+            char trophyBuffer[16];
+            getLatestTrophy(modeBuffer, trophyBuffer);
+
             break;
         }
     }
@@ -354,9 +360,9 @@ static void trophyMenuCb(const char* label, bool selected, uint32_t settingVal)
     {
         if (label == textBlobs[6])
         {
-            for (int idx = 0; idx < ARRAY_SIZE(testTrophies); idx++)
+            for (int idx = 0; idx < ARRAY_SIZE(trophyTestModeTrophies); idx++)
             {
-                trophyClear(testTrophies[idx]);
+                trophyClear(trophyTestModeTrophies[idx]);
             }
             tt->aPresses       = 0;
             tt->bPresses       = 0;

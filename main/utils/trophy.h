@@ -152,6 +152,9 @@
 
 // TODO: Can grab data from index or name
 // TODO: Remove unecessary functions
+// TODO: Write section on how to load individual mode data
+// TODO: Write section on formatting the external files
+// TODO: trophyMasterList.h
 // TODO: Warnings:
 // - No overflow protection
 // - If the first fifteen characters of NVS Namespace or two or more trophy names inside the same mode there will be
@@ -358,6 +361,14 @@ int trophyGetNumTrophies(void);
  * @return const trophyData_t*
  */
 const trophyData_t* trophyGetTrophyList(void);
+
+/**
+ * @brief Get the Latest Trophy object
+ * 
+ * @param modeName Name of the mode associated with the trophy
+ * @param trophyName Name of the trophy, but truncated
+ */
+void getLatestTrophy(char* modeName, char* trophyName);
 
 // Drawing functions
 
