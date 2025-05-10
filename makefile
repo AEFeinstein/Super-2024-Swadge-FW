@@ -323,9 +323,15 @@ EXECUTABLE = swadge_emulator
 # Build the executable
 all: $(EXECUTABLE)
 
-assets:
-	$(MAKE) -C ./tools/assets_preprocessor/
-	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
+# Asset Processing Prereqs
+./tools/assets_preprocessor/assets_preprocessor:
+	$(MAKE) -C ./tools/assets_preprocessor
+
+./tools/cnfs/cnfs_gen:
+	$(MAKE) -C ./tools/cnfs/
+
+assets ./.assets_ts &: | ./tools/assets_preprocessor/assets_preprocessor
+	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/ -t ./.assets_ts
 
 # To build the main file, you have to compile the objects
 $(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
@@ -339,10 +345,7 @@ $(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
 	$(CC) $(CFLAGS) $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) $(DEFINES) $(INC) $< -o $@
 
 # To create CNFS_FILE, first the assets must be processed
-$(CNFS_FILE):
-	$(MAKE) -C ./tools/assets_preprocessor/
-	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
-	$(MAKE) -C ./tools/cnfs/
+$(CNFS_FILE) main/utils/cnfs_image.h &: ./.assets_ts | ./tools/cnfs/cnfs_gen assets
 	./tools/cnfs/cnfs_gen assets_image/ main/utils/cnfs_image.c main/utils/cnfs_image.h
 
 bundle: SwadgeEmulator.app
