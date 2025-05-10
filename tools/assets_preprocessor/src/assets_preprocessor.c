@@ -42,6 +42,7 @@ static const assetProcessor_t processors[] = {
 const char* outDirName = NULL;
 int filesUpdated       = 0;
 int processingErrors   = 0;
+bool verbose           = false;
 
 void print_usage(void);
 bool endsWith(const char* filename, const char* suffix);
@@ -53,7 +54,7 @@ bool endsWith(const char* filename, const char* suffix);
 void print_usage(void)
 {
     printf("Usage:\n  assets_preprocessor\n    -i INPUT_DIRECTORY\n    -o OUTPUT_DIRECTORY\n    [-t "
-           "TIMESTAMP_FILE_OUTPUT]\n");
+           "TIMESTAMP_FILE_OUTPUT]\n    [-v]\n");
 }
 
 /**
@@ -108,6 +109,10 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
 
                 if (!isSourceFileNewer(inFile, outFile))
                 {
+                    if (verbose)
+                    {
+                        printf("[%s] SKIP %s -> %s\n", processors[i].inExt, get_filename(inFile), outFile);
+                    }
                     break;
                 }
                 else if (doesFileExist(outFile))
@@ -124,6 +129,10 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                     case FUNCTION:
                     {
                         result = processors[i].function(inFile, outFile);
+                        if (verbose)
+                        {
+                            printf("[%s] FUNC %s -> %s\n", processors[i].inExt, get_filename(inFile), outFile);
+                        }
                         break;
                     }
 
@@ -185,6 +194,12 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                             cur++;
                         }
                         *out = '\0';
+
+                        if (verbose)
+                        {
+                            printf("[%s] EXEC %s -> %s\n", processors[i].inExt, get_filename(inFile), outFile);
+                            printf(" >>> %s\n", buf);
+                        }
 
                         result = (0 == system(buf));
 
@@ -251,7 +266,7 @@ int main(int argc, char** argv)
     const char* timestampFileName = NULL;
 
     opterr = 0;
-    while ((c = getopt(argc, argv, "i:o:t:")) != -1)
+    while ((c = getopt(argc, argv, "i:o:t:v")) != -1)
     {
         switch (c)
         {
@@ -268,6 +283,11 @@ int main(int argc, char** argv)
             case 't':
             {
                 timestampFileName = optarg;
+                break;
+            }
+            case 'v':
+            {
+                verbose = true;
                 break;
             }
             default:

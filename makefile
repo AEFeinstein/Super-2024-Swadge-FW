@@ -331,7 +331,7 @@ all: $(EXECUTABLE)
 	$(MAKE) -C ./tools/cnfs/
 
 assets ./.assets_ts &: | ./tools/assets_preprocessor/assets_preprocessor
-	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/ -t ./.assets_ts
+	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/ -t ./.assets_ts -v
 
 # To build the main file, you have to compile the objects
 $(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
