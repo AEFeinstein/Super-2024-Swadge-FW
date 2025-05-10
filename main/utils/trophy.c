@@ -594,9 +594,58 @@ void trophyDrawList(font_t* fnt, int yOffset)
     int cumulativeHeight = 0;
     for (int idx = 0; idx < trophySystem.data->length; idx++)
     {
-        _drawTrophyListItem(trophySystem.data->list[idx], -yOffset + cumulativeHeight, tdl->heights[idx], fnt,
-                            &tdl->images[idx]);
-        cumulativeHeight += tdl->heights[idx];
+        switch (tdl->mode)
+        {
+            case TROPHY_DISPLAY_ALL:
+            {
+                // If hidden and not unlocked, skip
+                trophyDataWrapper_t* tw = heap_caps_calloc(1, sizeof(trophyDataWrapper_t), MALLOC_CAP_8BIT);
+                _load(tw, trophySystem.data->list[idx]);
+                if (!trophySystem.data->list[idx].hidden || (trophySystem.data->list[idx].maxVal <= tw->currentVal))
+                {
+                    _drawTrophyListItem(trophySystem.data->list[idx], -yOffset + cumulativeHeight, tdl->heights[idx],
+                                        fnt, &tdl->images[idx]);
+                    cumulativeHeight += tdl->heights[idx];
+                }
+                heap_caps_free(tw);
+                break;
+            }
+            case TROPHY_DISPLAY_UNLOCKED:
+            {
+                // If hidden and not unlocked or just not unlocked, skip
+                trophyDataWrapper_t* tw = heap_caps_calloc(1, sizeof(trophyDataWrapper_t), MALLOC_CAP_8BIT);
+                _load(tw, trophySystem.data->list[idx]);
+                if (trophySystem.data->list[idx].maxVal <= tw->currentVal)
+                {
+                    _drawTrophyListItem(trophySystem.data->list[idx], -yOffset + cumulativeHeight, tdl->heights[idx],
+                                        fnt, &tdl->images[idx]);
+                    cumulativeHeight += tdl->heights[idx];
+                }
+                heap_caps_free(tw);
+                break;
+            }
+            case TROPHY_DISPLAY_LOCKED:
+            {
+                // If hidden and unlocked, skip
+                trophyDataWrapper_t* tw = heap_caps_calloc(1, sizeof(trophyDataWrapper_t), MALLOC_CAP_8BIT);
+                _load(tw, trophySystem.data->list[idx]);
+                if (!trophySystem.data->list[idx].hidden && trophySystem.data->list[idx].maxVal > tw->currentVal)
+                {
+                    _drawTrophyListItem(trophySystem.data->list[idx], -yOffset + cumulativeHeight, tdl->heights[idx],
+                                        fnt, &tdl->images[idx]);
+                    cumulativeHeight += tdl->heights[idx];
+                }
+                heap_caps_free(tw);
+                break;
+            }
+            default:
+            {
+                _drawTrophyListItem(trophySystem.data->list[idx], -yOffset + cumulativeHeight, tdl->heights[idx], fnt,
+                                    &tdl->images[idx]);
+                cumulativeHeight += tdl->heights[idx];
+            }
+            break;
+        }
     }
 }
 
@@ -975,7 +1024,8 @@ static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t*
                      _GetNumFlags(tw, true));
         }
         titleEnd -= textWidth(fnt, buffer) + 16;
-        drawText(fnt, tdl->colorList[3], buffer, titleEnd + 8, yOffset + 4);
+        drawText(fnt, (tw->currentVal >= t.maxVal) ? tdl->colorList[5] : tdl->colorList[3], buffer, titleEnd + 8,
+                 yOffset + 4);
     }
 
     // Draw image
@@ -1006,17 +1056,20 @@ static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t*
     startX = SCREEN_CORNER_CLEARANCE;
     startY = yOffset + 12;
     startY += hasImg ? BANNER_MAX_ICON_DIM : fnt->height;
-    drawTextWordWrap(fnt, tdl->colorList[3], tw->trophyData.description, &startX, &startY, TFT_WIDTH - SCREEN_CORNER_CLEARANCE,
-                     yOffset + height);
+    drawTextWordWrap(fnt, tdl->colorList[3], tw->trophyData.description, &startX, &startY,
+                     TFT_WIDTH - SCREEN_CORNER_CLEARANCE, yOffset + height);
 
     // Draw check box
-    fillDisplayArea(TFT_WIDTH - 16, yOffset + (height >> 1) - 2, TFT_WIDTH - 11, yOffset + (height >> 1) + 3, tdl->colorList[2]);
+    fillDisplayArea(TFT_WIDTH - 16, yOffset + (height >> 1) - 2, TFT_WIDTH - 11, yOffset + (height >> 1) + 3,
+                    tdl->colorList[2]);
 
     // Draw check if done
     if (tw->currentVal >= tw->trophyData.maxVal)
     {
-        drawLine(TFT_WIDTH - 14, yOffset + (height >> 1), TFT_WIDTH - 8, yOffset + (height >> 1) - 10, tdl->colorList[5], 0);
-        drawLine(TFT_WIDTH - 14, yOffset + (height >> 1), TFT_WIDTH - 19, yOffset + (height >> 1) - 3, tdl->colorList[5], 0);
+        drawLine(TFT_WIDTH - 14, yOffset + (height >> 1), TFT_WIDTH - 8, yOffset + (height >> 1) - 10,
+                 tdl->colorList[5], 0);
+        drawLine(TFT_WIDTH - 14, yOffset + (height >> 1), TFT_WIDTH - 19, yOffset + (height >> 1) - 3,
+                 tdl->colorList[5], 0);
     }
 
     // Free tw

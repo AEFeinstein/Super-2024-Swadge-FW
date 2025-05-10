@@ -1,7 +1,7 @@
 #include "trophy.h"
 
 // ENUM
-typedef enum 
+typedef enum
 {
     CLT_DOWN,
     CLT_LEFT,
@@ -34,6 +34,7 @@ const trophyData_t testTrophies[] = {
         .type        = TROPHY_TYPE_PROGRESS,
         .difficulty  = TROPHY_DIFF_EXTREME,
         .maxVal      = 8,
+        .hidden      = true,
     },
     {
         .title       = "Checklist",
