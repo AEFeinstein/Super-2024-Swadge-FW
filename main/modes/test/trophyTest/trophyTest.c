@@ -196,15 +196,15 @@ static void runTrophy(int64_t elapsedUs)
                         tt->idx--;
                         if (tt->idx < -1)
                         {
-                            tt->idx = 19;
+                            tt->idx = 14;
                         }
                     }
                     else if (evt.button & PB_DOWN)
                     {
                         tt->idx++;
-                        if (tt->idx >= 20)
+                        if (tt->idx >= 14)
                         {
-                            tt->idx = 0;
+                            tt->idx = -1;
                         }
                     }
                     else
@@ -367,7 +367,8 @@ static void trophyMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == textBlobs[7])
         {
             tt->state = TROPHY_TEST_DISPLAYING;
-            trophyDrawListInit(TROPHY_DISPLAY_INCL_HIDDEN, NULL);
+            trophyDrawListInit(TROPHY_DISPLAY_INCL_HIDDEN);
+            trophyDrawListColors(c000, c111, c222, c333, c555, c500);
         }
         else
         {

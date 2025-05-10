@@ -181,8 +181,24 @@ static void _loadPalette(void);
  */
 static trophyDataWrapper_t* _getCurrentDisplayTrophy(void);
 
+/**
+ * @brief Gets the height of a a trophy on the list
+ *
+ * @param t Trophy to display
+ * @param fnt Font used
+ * @return int Height
+ */
 static int _getListItemHeight(trophyData_t t, font_t* fnt);
 
+/**
+ * @brief Draws the trophy list item
+ *
+ * @param t Trophy data
+ * @param yOffset Offset into the list
+ * @param height Height of the individual list item
+ * @param fnt Font used
+ * @param image The image used, if any
+ */
 static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t* fnt, wsg_t* image);
 
 // Points
@@ -517,21 +533,13 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
     _drawAtYCoord(_getCurrentDisplayTrophy(), yOffset, fnt);
 }
 
-void trophyDrawListInit(trophyListDisplayMode_t mode, paletteColor_t* colors)
+void trophyDrawListInit(trophyListDisplayMode_t mode)
 {
     // Set mode
     trophySystem.tdl.mode = mode;
 
     // Colors
-    if (colors == NULL)
-    {
-        trophySystem.tdl.colorList[0] = c000; // Clear
-        trophySystem.tdl.colorList[1] = c111; // Text box
-        trophySystem.tdl.colorList[2] = c222; // Shadow box + check box
-        trophySystem.tdl.colorList[3] = c444; // Numbers + desc text
-        trophySystem.tdl.colorList[4] = c555; // Title text
-        trophySystem.tdl.colorList[5] = c050; // Check mark
-    }
+    trophyDrawListColors(c000, c111, c222, c444, c555, c050);
 
     // Load all the WSGs
     trophySystem.tdl.images = heap_caps_calloc(trophySystem.data->length, sizeof(wsg_t), MALLOC_CAP_8BIT);
@@ -543,6 +551,17 @@ void trophyDrawListInit(trophyListDisplayMode_t mode, paletteColor_t* colors)
         }
         loadWsg(trophySystem.data->list->imageString, &trophySystem.tdl.images[idx], true);
     }
+}
+
+void trophyDrawListColors(paletteColor_t background, paletteColor_t panel, paletteColor_t shadowBoxes,
+                          paletteColor_t dimText, paletteColor_t titleText, paletteColor_t checkmark)
+{
+    trophySystem.tdl.colorList[0] = background;  // Clear
+    trophySystem.tdl.colorList[1] = panel;       // Text box
+    trophySystem.tdl.colorList[2] = shadowBoxes; // Shadow box + check box
+    trophySystem.tdl.colorList[3] = dimText;     // Numbers + desc text
+    trophySystem.tdl.colorList[4] = titleText;   // Title text
+    trophySystem.tdl.colorList[5] = checkmark;   // Check mark
 }
 
 void trophyDrawListDeinit()
@@ -968,7 +987,7 @@ static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t*
         hasImg = true;
         titleStart += BANNER_MAX_ICON_DIM + IMAGE_BUFFER;
         // Draw shadowbox
-        drawRectFilled(startX, startY, startX + BANNER_MAX_ICON_DIM, startY + BANNER_MAX_ICON_DIM, c222);
+        drawRectFilled(startX, startY, startX + BANNER_MAX_ICON_DIM, startY + BANNER_MAX_ICON_DIM, tdl->colorList[2]);
 
         // Draw WSG
         wsgPalette_t* wp = &trophySystem.grayPalette;
@@ -983,21 +1002,21 @@ static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t*
     // Draw text, starting after image if present
     startX = titleStart;
     startY = yOffset + 4;
-    drawTextWordWrap(fnt, c555, tw->trophyData.title, &startX, &startY, titleEnd, yOffset + height);
+    drawTextWordWrap(fnt, tdl->colorList[4], tw->trophyData.title, &startX, &startY, titleEnd, yOffset + height);
     startX = SCREEN_CORNER_CLEARANCE;
     startY = yOffset + 12;
     startY += hasImg ? BANNER_MAX_ICON_DIM : fnt->height;
-    drawTextWordWrap(fnt, c444, tw->trophyData.description, &startX, &startY, TFT_WIDTH - SCREEN_CORNER_CLEARANCE,
+    drawTextWordWrap(fnt, tdl->colorList[3], tw->trophyData.description, &startX, &startY, TFT_WIDTH - SCREEN_CORNER_CLEARANCE,
                      yOffset + height);
 
     // Draw check box
-    fillDisplayArea(TFT_WIDTH - 16, yOffset + (height >> 1) - 2, TFT_WIDTH - 11, yOffset + (height >> 1) + 3, c222);
+    fillDisplayArea(TFT_WIDTH - 16, yOffset + (height >> 1) - 2, TFT_WIDTH - 11, yOffset + (height >> 1) + 3, tdl->colorList[2]);
 
     // Draw check if done
     if (tw->currentVal >= tw->trophyData.maxVal)
     {
-        drawLine(TFT_WIDTH - 14, yOffset + (height >> 1), TFT_WIDTH - 8, yOffset + (height >> 1) - 10, c050, 0);
-        drawLine(TFT_WIDTH - 14, yOffset + (height >> 1), TFT_WIDTH - 19, yOffset + (height >> 1) - 3, c050, 0);
+        drawLine(TFT_WIDTH - 14, yOffset + (height >> 1), TFT_WIDTH - 8, yOffset + (height >> 1) - 10, tdl->colorList[5], 0);
+        drawLine(TFT_WIDTH - 14, yOffset + (height >> 1), TFT_WIDTH - 19, yOffset + (height >> 1) - 3, tdl->colorList[5], 0);
     }
 
     // Free tw

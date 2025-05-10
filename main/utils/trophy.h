@@ -214,7 +214,7 @@ typedef enum
     TROPHY_DIFF_EXTREME,
 } trophyDifficulty_t;
 
-typedef enum 
+typedef enum
 {
     TROPHY_DISPLAY_ALL,
     TROPHY_DISPLAY_UNLOCKED,
@@ -370,23 +370,36 @@ const trophyData_t* trophyGetTrophyList(void);
 void trophyDraw(font_t* fnt, int64_t elapsedUs);
 
 /**
- * @brief 
- * 
- * @param mode 
- * @param colors 
+ * @brief Initialize the trophy Draw list
+ *
+ * @param mode What display mode to draw
+ * @param colors COlors to re-skin the list
  */
-void trophyDrawListInit(trophyListDisplayMode_t mode, paletteColor_t* colors);
+void trophyDrawListInit(trophyListDisplayMode_t mode);
 
 /**
- * @brief 
- * 
+ * @brief Set the colors of the panel to custom. Call after initialization of the list, or it'll be overwritten
+ *
+ * @param background Color of the background behind the panels
+ * @param panel The main panel color
+ * @param shadowBoxes The check box and image shadowbox colors
+ * @param dimText Description text and numbers
+ * @param titleText Title of the trophy
+ * @param checkmark Color of the checkmark
+ */
+void trophyDrawListColors(paletteColor_t background, paletteColor_t panel, paletteColor_t shadowBoxes,
+                          paletteColor_t dimText, paletteColor_t titleText, paletteColor_t checkmark);
+
+/**
+ * @brief Tears down the WSGs and height list
+ *
  */
 void trophyDrawListDeinit(void);
 
 /**
- * @brief 
- * 
- * @param fnt 
- * @param yOffset 
+ * @brief Draws the list.
+ *
+ * @param fnt Font to use
+ * @param yOffset Current Y offset. Higher numbers effectively scroll down
  */
 void trophyDrawList(font_t* fnt, int yOffset);
