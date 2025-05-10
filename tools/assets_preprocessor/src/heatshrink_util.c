@@ -12,7 +12,7 @@
  * @param len The length of the bytes to compress and write
  * @param outFilePath The filename to write to
  */
-void writeHeatshrinkFile(uint8_t* input, uint32_t len, const char* outFilePath)
+bool writeHeatshrinkFile(uint8_t* input, uint32_t len, const char* outFilePath)
 {
     int32_t errLine = -1;
     /* Set up variables for compression */
@@ -157,5 +157,8 @@ heatshrink_error:
     if (-1 != errLine)
     {
         fprintf(stderr, "[%d]: Heatshrink error\n", errLine);
+        return false;
     }
+
+    return true;
 }

@@ -33,25 +33,15 @@ long remove_chars(char* str, long len, char c)
     return newLen;
 }
 
-void process_txt(const char* infile, const char* outdir)
+bool process_txt(const char* infile, const char* outFilePath)
 {
-    /* Determine if the output file already exists */
-    char outFilePath[128] = {0};
-    strcat(outFilePath, outdir);
-    strcat(outFilePath, "/");
-    strcat(outFilePath, get_filename(infile));
-
-    if (!isSourceFileNewer(infile, outFilePath))
-    {
-        return;
-    }
-    else if (doesFileExist(outFilePath))
-    {
-        printf("[assets-preprocessor] %s modified! Regenerating %s\n", infile, get_filename(outFilePath));
-    }
-
     /* Read input file */
     FILE* fp = fopen(infile, "rb");
+
+    if (!fp)
+    {
+        return false;
+    }
     fseek(fp, 0L, SEEK_END);
     long sz = ftell(fp);
     fseek(fp, 0L, SEEK_SET);
@@ -63,6 +53,13 @@ void process_txt(const char* infile, const char* outdir)
 
     /* Write input directly to output */
     FILE* outFile = fopen(outFilePath, "wb");
+
+    if (!outFile)
+    {
+        return false;
+    }
     fwrite(txtInStr, newSz, 1, outFile);
     fclose(outFile);
+
+    return true;
 }

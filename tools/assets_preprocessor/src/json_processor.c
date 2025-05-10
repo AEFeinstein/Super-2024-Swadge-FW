@@ -11,31 +11,22 @@
 
 #define JSON_COMPRESSION
 
-void process_json(const char* infile, const char* outdir)
+bool process_json(const char* infile, const char* outFilePath)
 {
-    /* Determine if the output file already exists */
-    char outFilePath[128] = {0};
-    strcat(outFilePath, outdir);
-    strcat(outFilePath, "/");
-    strcat(outFilePath, get_filename(infile));
-
 #ifdef JSON_COMPRESSION
     /* Change the file extension */
-    char* dotptr = strrchr(outFilePath, '.');
-    snprintf(&dotptr[1], strlen(dotptr), "hjs");
+    // TODO
+    //char* dotptr = strrchr(outFilePath, '.');
+    //snprintf(&dotptr[1], strlen(dotptr), "hjs");
 #endif
-
-    if (!isSourceFileNewer(infile, outFilePath))
-    {
-        return;
-    }
-    else if (doesFileExist(outFilePath))
-    {
-        printf("[assets-preprocessor] %s modified! Regenerating %s\n", infile, get_filename(outFilePath));
-    }
 
     /* Read input file */
     FILE* fp = fopen(infile, "rb");
+
+    if (!fp)
+    {
+        return false;
+    }
     fseek(fp, 0L, SEEK_END);
     long sz = ftell(fp);
     fseek(fp, 0L, SEEK_SET);
@@ -47,9 +38,18 @@ void process_json(const char* infile, const char* outdir)
 #ifndef JSON_COMPRESSION
     /* Write input directly to output */
     FILE* outFile = fopen(outFilePath, "wb");
+    if (!outFile)
+    {
+        return false;
+    }
     fwrite(jsonInStr, sz, 1, outFile);
     fclose(outFile);
 #else
-    writeHeatshrinkFile((uint8_t*)jsonInStr, sz, outFilePath);
+    if (!writeHeatshrinkFile((uint8_t*)jsonInStr, sz, outFilePath))
+    {
+        return false;
+    }
 #endif
+
+    return true;
 }

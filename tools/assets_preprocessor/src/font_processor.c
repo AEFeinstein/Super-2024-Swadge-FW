@@ -77,31 +77,18 @@ void appendCharToFile(FILE* fp, unsigned char* data, int w, int h, int charStart
  * @param infile
  * @param outdir
  */
-void process_font(const char* infile, const char* outdir)
+bool process_font(const char* infile, const char* outFilePath)
 {
+    FILE* fp                     = fopen(outFilePath, "wb+");
 
-    /* Open up the output file */
-    char outFilePath[128] = {0};
-    strcat(outFilePath, outdir);
-    strcat(outFilePath, "/");
-    strcat(outFilePath, get_filename(infile));
-    /* Clip off the ".png", leaving ".font" */
-    *(strrchr(outFilePath, '.')) = 0;
-
-    if (!isSourceFileNewer(infile, outFilePath))
+    if (!fp)
     {
-        return;
-    }
-    else if (doesFileExist(outFilePath))
-    {
-        printf("[assets-preprocessor] %s modified! Regenerating %s\n", infile, get_filename(outFilePath));
+        return false;
     }
 
     /* Load the font PNG */
     int w, h, n;
     unsigned char* data = stbi_load(infile, &w, &h, &n, 4);
-
-    FILE* fp                     = fopen(outFilePath, "wb+");
 
     int charsWritten = 0;
 
@@ -158,4 +145,6 @@ void process_font(const char* infile, const char* outdir)
     /* Cleanup */
     fclose(fp);
     stbi_image_free(data);
+
+    return true;
 }

@@ -14,32 +14,15 @@ typedef enum
     CS_NOTES,
 } charSection_t;
 
-void process_chart(const char* infile, const char* outdir)
+bool process_chart(const char* infile, const char* outFilePath)
 {
-    /* Determine if the output file already exists */
-    char outFilePath[128] = {0};
-    strcat(outFilePath, outdir);
-    strcat(outFilePath, "/");
-    strcat(outFilePath, get_filename(infile));
-
-    char* dotptr = strrchr(outFilePath, '.');
-    snprintf(&dotptr[1], strlen(dotptr), "cch");
-
-    if (!isSourceFileNewer(infile, outFilePath))
-    {
-        //printf("Output for %s already exists and is up-to-date\n", infile);
-        return;
-    }
-    else if (doesFileExist(outFilePath))
-    {
-        printf("[assets-preprocessor] %s modified! Regenerating %s\n", infile, get_filename(outFilePath));
-    }
-
     charSection_t section = CS_NONE;
     bool inSection        = false;
 
     /* Read input file */
     FILE* fp = fopen(infile, "rb");
+
+    bool ok = false;
 
     if (fp)
     {
@@ -123,9 +106,14 @@ void process_chart(const char* infile, const char* outdir)
                     }
                 }
             }
+
+            ok = true;
+
             free(tmpSpace);
             fclose(outFile);
         }
         fclose(fp);
     }
+
+    return ok;
 }

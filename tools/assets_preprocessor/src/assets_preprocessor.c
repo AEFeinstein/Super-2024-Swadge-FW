@@ -2,13 +2,17 @@
 #include <fcntl.h>
 #include <ftw.h>
 #include <getopt.h>
+#include <inttypes.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#include "fileUtils.h"
 
 #include "chart_processor.h"
 #include "image_processor.h"
@@ -83,93 +87,71 @@ bool endsWith(const char* filename, const char* suffix)
  * @param tflag
  * @return int
  */
-static int processFile(const char* fpath, const struct stat* st __attribute__((unused)), int tflag)
+static int processFile(const char* inFile, const struct stat* st __attribute__((unused)), int tflag)
 {
-    switch (tflag)
+    if (FTW_F == tflag)
     {
-        case FTW_F: // file
+        char extBuf[16] = {0};
+        char outFile[256] = {0};
+
+        for (int i = 0; i < (sizeof(processors) / sizeof(*processors)); i++)
         {
-            char extBuf[16];
-            char inFile[256];
-            char outFile[256];
-
-            for (int i = 0; i < (sizeof(processors) / sizeof(*processors)); i++)
+            snprintf(extBuf, sizeof(extBuf), ".%s", processors[i].inExt);
+            if (endsWith(inFile, extBuf))
             {
-                snprintf(extBuf, sizeof(extBuf), ".%s", processors[i].inExt);
-                if (endsWith(fpath, extBuf))
-                {
-                    switch (processors[i].type)
-                    {
-                        case FUNCTION:
-                        {
-                            bool result = processors[i].function(inFile, outFile);
-                            break;
-                        }
+                // This is the matching processor!
+                // Calculate the outFile name (replace the extension) and
 
-                        case EXEC:
-                        {
-                            break;
-                        }
-                    }
+                strcat(outFile, outDirName);
+                strcat(outFile, "/");
+                strcat(outFile, get_filename(inFile));
+
+                // Clip off the input file extension
+                outFile[strlen(outFile) - strlen(processors[i].inExt)] = '\0';
+
+                // Add the output extension
+                strcat(outFile, processors[i].outExt);
+
+                if (!isSourceFileNewer(inFile, outFile))
+                {
+                    break;
                 }
-            }
-            if (endsWith(fpath, ".font.png"))
-            {
-                process_font(fpath, outDirName);
-            }
-            else if (endsWith(fpath, ".png"))
-            {
-                process_image(fpath, outDirName);
-            }
-            else if (endsWith(fpath, ".chart"))
-            {
-                process_chart(fpath, outDirName);
-            }
-            else if (endsWith(fpath, ".json"))
-            {
-                process_json(fpath, outDirName);
-            }
-            else if (endsWith(fpath, ".bin"))
-            {
-                process_bin(fpath, outDirName);
-            }
-            else if (endsWith(fpath, ".txt"))
-            {
-                process_txt(fpath, outDirName);
-            }
-            else if (endsWith(fpath, ".rmd"))
-            {
-                process_rmd(fpath, outDirName);
-            }
-            else
-            {
-                char extBuf[16];
-                for (int i = 0; i < (sizeof(rawFileTypes) / sizeof(rawFileTypes[0])); i++)
+                else if (doesFileExist(outFile))
                 {
-                    snprintf(extBuf, sizeof(extBuf), ".%s", rawFileTypes[i][0]);
+                    printf("[assets-preprocessor] %s modified! Regenerating %s\n", get_filename(inFile), get_filename(outFile));
+                }
 
-                    if (endsWith(fpath, extBuf))
+                bool result = false;
+
+                switch (processors[i].type)
+                {
+                    case FUNCTION:
                     {
-                        // printf("Processing %s to raw .%s file\n", fpath, rawFileTypes[i][1]);
-                        process_raw(fpath, outDirName, rawFileTypes[i][1]);
+                        result = processors[i].function(inFile, outFile);
+                        break;
+                    }
+
+                    case EXEC:
+                    {
+                        result = false;
                         break;
                     }
                 }
+
+                if (!result)
+                {
+                    fprintf(stderr, "[assets-preprocessor] Error! Failed to process %s!\n", get_filename(inFile));
+                }
+
+                break;
             }
-            break;
-        }
-        case FTW_D: // directory
-        {
-            break;
-        }
-        default:
-        // case FTW_SL: // symlink
-        case FTW_NS:  // failed
-        case FTW_DNR: // failed
-        {
-            return -1;
         }
     }
+    else if (FTW_D != tflag)
+    {
+        return -1;
+    }
+    
     return 0;
 }
 

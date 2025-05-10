@@ -8,27 +8,8 @@
 
 #include "raw_processor.h"
 
-void process_raw(const char* inFile, const char* outDir, const char* outExt)
+bool process_raw(const char* inFile, const char* outFilePath)
 {
-    // Determine if the output file already exists
-    char outFilePath[128] = {0};
-    strcat(outFilePath, outDir);
-    strcat(outFilePath, "/");
-    strcat(outFilePath, get_filename(inFile));
-
-    // Change the file extension
-    char* dotPtr = strrchr(outFilePath, '.');
-    strncpy(&dotPtr[1], outExt, sizeof(outFilePath) - (dotPtr - outFilePath) - 1);
-
-    if (!isSourceFileNewer(inFile, outFilePath))
-    {
-        return;
-    }
-    else if (doesFileExist(outFilePath))
-    {
-        printf("[assets-preprocessor] %s modified! Regenerating %s\n", inFile, get_filename(outFilePath));
-    }
-
     // Read input file
     const char* errdesc = NULL;
     errno               = 0;
@@ -37,7 +18,7 @@ void process_raw(const char* inFile, const char* outDir, const char* outExt)
     {
         errdesc = strerror(errno);
         fprintf(stderr, "ERR: raw_processor.c: Failed to open file %s: %d - %s\n", inFile, errno, errdesc);
-        return;
+        return false;
     }
 
     fseek(fp, 0L, SEEK_END);
@@ -48,7 +29,7 @@ void process_raw(const char* inFile, const char* outDir, const char* outExt)
     {
         fprintf(stderr, "ERR: raw_processor.c: Failed to allocate memory processing file %s\n", inFile);
         fclose(fp);
-        return;
+        return false;
     }
 
     errno       = 0;
@@ -61,14 +42,20 @@ void process_raw(const char* inFile, const char* outDir, const char* outExt)
 
         free(byteString);
         fclose(fp);
-        return;
+        return false;
     }
     byteString[sz] = 0;
     fclose(fp);
 
     // Write the compressed bytes to a file
-    writeHeatshrinkFile(byteString, sz, outFilePath);
+    if (!writeHeatshrinkFile(byteString, sz, outFilePath))
+    {
+        free(byteString);
+        return false;
+    }
 
     // Cleanup
     free(byteString);
+
+    return true;
 }

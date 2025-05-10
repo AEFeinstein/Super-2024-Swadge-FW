@@ -124,27 +124,8 @@ void spreadError(pixel_t** img, int x, int y, int w, int h, int teR, int teG, in
  * @param infile
  * @param outdir
  */
-void process_image(const char* infile, const char* outdir)
+bool process_image(const char* infile, const char* outFilePath)
 {
-    /* Determine if the output file already exists */
-    char outFilePath[128] = {0};
-    strcat(outFilePath, outdir);
-    strcat(outFilePath, "/");
-    strcat(outFilePath, get_filename(infile));
-
-    /* Change the file extension */
-    char* dotptr = strrchr(outFilePath, '.');
-    snprintf(&dotptr[1], strlen(dotptr), "wsg");
-
-    if (!isSourceFileNewer(infile, outFilePath))
-    {
-        return;
-    }
-    else if (doesFileExist(outFilePath))
-    {
-        printf("[assets-preprocessor] %s modified! Regenerating %s\n", infile, get_filename(outFilePath));
-    }
-
     /* Load the source PNG */
     int w, h, n;
     unsigned char* data = stbi_load(infile, &w, &h, &n, 4);
@@ -294,9 +275,14 @@ void process_image(const char* infile, const char* outdir)
         hdrAndImg[3]         = LO_BYTE(h);
         memcpy(&hdrAndImg[4], paletteBuf, paletteBufSize);
         /* Write the compressed file */
-        writeHeatshrinkFile(hdrAndImg, hdrAndImgSz, outFilePath);
+
+        bool result = writeHeatshrinkFile(hdrAndImg, hdrAndImgSz, outFilePath);
         /* Cleanup */
         free(hdrAndImg);
         free(paletteBuf);
+
+        return result;
     }
+
+    return false;
 }

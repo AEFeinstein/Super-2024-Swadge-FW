@@ -1,3 +1,5 @@
 #pragma once
 
-void process_raw(const char* inFile, const char* outDir, const char* outExt);
+#include <stdbool.h>
+
+bool process_raw(const char* inFile, const char* outFilePath);
