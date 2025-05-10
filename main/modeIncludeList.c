@@ -18,7 +18,7 @@
 swadgeMode_t* const allSwadgeModes[] = {
     &accelTestMode, &colorchordMode, &danceMode,     &factoryTestMode, &gamepadMode,    &introMode,
     &jukeboxMode,   &keebTestMode,   &mainMenuMode,  &modeCredits,     &modeDiceRoller, &sequencerMode,
-    &swadgeItMode,  &synthMode,      &touchTestMode, &tunernomeMode,
+    &swadgeItMode,  &swadgedokuMode, &synthMode,     &touchTestMode,   &tunernomeMode,
 };
 
 //==============================================================================
@@ -35,6 +35,7 @@ void modeListSetMenu(menu_t* menu)
     // Games sub menu
     menu = startSubMenu(menu, "Games");
     addSingleItemToMenu(menu, swadgeItMode.modeName);
+    addSingleItemToMenu(menu, swadgedokuMode.modeName);
     menu = endSubMenu(menu);
 
     // Music sub menu
