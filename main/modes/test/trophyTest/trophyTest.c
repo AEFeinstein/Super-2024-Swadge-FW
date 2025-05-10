@@ -72,6 +72,9 @@ typedef struct
     // Checklist
     int32_t checklistFlags;
 
+    // Trophy Case
+    int idx; //< Current display index
+
     // Menu
     trophyTestStateEnum_t state;
     menu_t* menu;
@@ -188,10 +191,31 @@ static void runTrophy(int64_t elapsedUs)
             {
                 if (evt.down)
                 {
-                    tt->state = TROPHY_TEST_MENU;
+                    if (evt.button & PB_UP)
+                    {
+                        tt->idx--;
+                        if (tt->idx < -1)
+                        {
+                            tt->idx = 19;
+                        }
+                    }
+                    else if (evt.button & PB_DOWN)
+                    {
+                        tt->idx++;
+                        if (tt->idx >= 20)
+                        {
+                            tt->idx = 0;
+                        }
+                    }
+                    else
+                    {
+                        tt->state = TROPHY_TEST_MENU;
+                        trophyDrawListDeinit();
+                        return;
+                    }
                 }
             }
-            // TODO: Draw the current status screen
+            trophyDrawList(getSysFont(), tt->idx * 20);
             break;
         }
         default:
@@ -221,12 +245,12 @@ static void runTrophy(int64_t elapsedUs)
                         if (checkBitFlag(tt->checklistFlags, CLT_DOWN))
                         {
                             setBitFlag(&tt->checklistFlags, CLT_DOWN, false);
-                            trophySetFlag(testTrophies[3], CLT_DOWN, false, true);
+                            trophySetChecklistTask(testTrophies[3], CLT_DOWN, false, true);
                         }
                         else
                         {
                             setBitFlag(&tt->checklistFlags, CLT_DOWN, true);
-                            trophySetFlag(testTrophies[3], CLT_DOWN, true, true);
+                            trophySetChecklistTask(testTrophies[3], CLT_DOWN, true, true);
                         }
                     }
                     else if (evt.button == PB_LEFT)
@@ -234,12 +258,12 @@ static void runTrophy(int64_t elapsedUs)
                         if (checkBitFlag(tt->checklistFlags, CLT_LEFT))
                         {
                             setBitFlag(&tt->checklistFlags, CLT_LEFT, false);
-                            trophySetFlag(testTrophies[3], CLT_LEFT, false, true);
+                            trophySetChecklistTask(testTrophies[3], CLT_LEFT, false, true);
                         }
                         else
                         {
                             setBitFlag(&tt->checklistFlags, CLT_LEFT, true);
-                            trophySetFlag(testTrophies[3], CLT_LEFT, true, true);
+                            trophySetChecklistTask(testTrophies[3], CLT_LEFT, true, true);
                         }
                     }
                     else if (evt.button == PB_RIGHT)
@@ -247,12 +271,12 @@ static void runTrophy(int64_t elapsedUs)
                         if (checkBitFlag(tt->checklistFlags, CLT_RIGHT))
                         {
                             setBitFlag(&tt->checklistFlags, CLT_RIGHT, false);
-                            trophySetFlag(testTrophies[3], CLT_RIGHT, false, true);
+                            trophySetChecklistTask(testTrophies[3], CLT_RIGHT, false, true);
                         }
                         else
                         {
                             setBitFlag(&tt->checklistFlags, CLT_RIGHT, true);
-                            trophySetFlag(testTrophies[3], CLT_RIGHT, true, true);
+                            trophySetChecklistTask(testTrophies[3], CLT_RIGHT, true, true);
                         }
                     }
                     else if (evt.button == PB_START)
@@ -343,6 +367,7 @@ static void trophyMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == textBlobs[7])
         {
             tt->state = TROPHY_TEST_DISPLAYING;
+            trophyDrawListInit(TROPHY_DISPLAY_INCL_HIDDEN, NULL);
         }
         else
         {

@@ -20,7 +20,7 @@ const trophyData_t testTrophies[] = {
         .maxVal      = 1, // For trigger type, set to one
     },
     {
-        .title       = "Additive Trophy - Testing",
+        .title       = "Additive Trophy - Testing a very long trophy na",
         .description = "Pressed B ten times!",
         .imageString = "kid1.wsg",
         .type        = TROPHY_TYPE_ADDITIVE,
@@ -44,7 +44,7 @@ const trophyData_t testTrophies[] = {
         .maxVal      = 0x0007, // Three tasks, 0x01, 0x02, and 0x04
     },
     {
-        .title       = "Placeholder",
+        .title       = "Bro, like, what?",
         .description = "If our eyes aren't real, why can't bees fly?",
         .imageString = "",
         .type        = TROPHY_TYPE_ADDITIVE,
@@ -52,12 +52,13 @@ const trophyData_t testTrophies[] = {
         .maxVal      = 12000000,
     },
     {
-        .title       = "Placeholder 2",
-        .description = "",
+        .title       = "Crouching Swadge, Hidden Trophy",
+        .description = "This one is hidden. You shouldn't be able to see it!",
         .imageString = "kid1.wsg",
         .type        = TROPHY_TYPE_ADDITIVE,
         .difficulty  = TROPHY_DIFF_HARD,
         .maxVal      = 1024,
+        .hidden      = true,
     },
 };
 

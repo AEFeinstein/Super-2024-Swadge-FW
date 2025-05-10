@@ -184,8 +184,7 @@
 // Defines
 //==============================================================================
 
-// FIXME: Find actual good max values
-#define TROPHY_MAX_TITLE_LEN 32
+#define TROPHY_MAX_TITLE_LEN 48
 #define TROPHY_MAX_DESC_LEN  128
 #define TROPHY_IMAGE_STR_LEN 32
 
@@ -215,6 +214,14 @@ typedef enum
     TROPHY_DIFF_EXTREME,
 } trophyDifficulty_t;
 
+typedef enum 
+{
+    TROPHY_DISPLAY_ALL,
+    TROPHY_DISPLAY_UNLOCKED,
+    TROPHY_DISPLAY_LOCKED,
+    TROPHY_DISPLAY_INCL_HIDDEN,
+} trophyListDisplayMode_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -228,6 +235,7 @@ typedef struct
     trophyType_t type;                      //< Type of trophy. See "trophy.h" for descriptions
     trophyDifficulty_t difficulty;          //< How many points the trophy is worth
     int32_t maxVal;                         //< The value that
+    bool hidden;                            //< If trophy is hidden by default
 } trophyData_t;
 
 /// @brief Settings for the trophy system
@@ -362,17 +370,23 @@ const trophyData_t* trophyGetTrophyList(void);
 void trophyDraw(font_t* fnt, int64_t elapsedUs);
 
 /**
- * @brief Changes the colors of the default list of trophies.
- *
- * // TODO: Define color variables to set. Should not take void as argument.
+ * @brief 
+ * 
+ * @param mode 
+ * @param colors 
  */
-void trophyDrawListInit(void);
+void trophyDrawListInit(trophyListDisplayMode_t mode, paletteColor_t* colors);
 
 /**
- * @brief Draws a list of trophies for provided mode.
- *
- * @param modeName Name of the Mode. Set to NULL to get all trophies in an undefined order.
- * @param idx Index to start displaying at. Program will ensure it's not out of bounds, but developer is required to
- * update index as they see fit.
+ * @brief 
+ * 
  */
-void trophyDrawList(char* modeName, int idx);
+void trophyDrawListDeinit(void);
+
+/**
+ * @brief 
+ * 
+ * @param fnt 
+ * @param yOffset 
+ */
+void trophyDrawList(font_t* fnt, int yOffset);
