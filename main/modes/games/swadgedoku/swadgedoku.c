@@ -114,21 +114,6 @@ typedef struct
 
 typedef struct
 {
-    //< Cursor position
-    uint8_t curX, curY;
-
-    /// @brief Digit selected to be entered
-    uint8_t selectedDigit;
-
-    /// @brief Whether the player is taking notes or setting digits
-    bool noteTaking;
-
-    /// @brief Some sort of score for the player, TBD how it's calculated
-    int32_t score;
-} sudokuPlayer_t;
-
-typedef struct
-{
     enum {
         OVERLAY_RECT,
         OVERLAY_CIRCLE,
@@ -155,6 +140,27 @@ typedef struct
     /// @brief A list of dynamic shapes to draw on top of the grid
     list_t shapes;
 } sudokuOverlay_t;
+
+typedef struct
+{
+    //< Cursor position
+    uint8_t curX, curY;
+
+    /// @brief Digit selected to be entered
+    uint8_t selectedDigit;
+
+    /// @brief Whether the player is taking notes or setting digits
+    bool noteTaking;
+
+    /// @brief A grid-sized array of notes for each cell
+    uint16_t* notes;
+
+    /// @brief A set of overlay data to show this player
+    sudokuOverlay_t overlay;
+
+    /// @brief Some sort of score for the player, TBD how it's calculated
+    int32_t score;
+} sudokuPlayer_t;
 
 typedef struct
 {
@@ -187,6 +193,11 @@ static void swadgedokuMainLoop(int64_t elapsedUs);
 static void swadgedokuBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t value);
+
+void deinitSudokuGame(sudokuGrid_t* game);
+bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size);
+void setupSudokuPlayer(sudokuPlayer_t* player, const sudokuGrid_t* game);
+void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay, const paletteColor_t borderCol, paletteColor_t gridColor, paletteColor_t bgColor);
 
 //==============================================================================
 // Const data
@@ -227,6 +238,8 @@ static void swadgedokuEnterMode(void)
 {
     sd = calloc(1, sizeof(swadgedoku_t));
 
+    sd->screen = SWADGEDOKU_MAIN_MENU;
+
     loadFont(RADIOSTARS_FONT, &sd->gridFont, true);
     loadFont(IBM_VGA_8_FONT, &sd->noteFont, true);
     loadFont(SONIC_FONT, &sd->uiFont, true);
@@ -251,11 +264,19 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
     {
         case SWADGEDOKU_MAIN_MENU:
         {
+            buttonEvt_t evt = {0};
+            while (checkButtonQueueWrapper(&evt))
+            {
+                sd->menu = menuButton(sd->menu, evt);
+            }
+
+            drawMenuMania(sd->menu, sd->menuRenderer, elapsedUs);
             break;
         }
 
         case SWADGEDOKU_GAME:
         {
+            swadgedokuDrawGame(&sd->game, sd->player.notes, &sd->player.overlay, c000, c222, c555);
             break;
         }
     }
@@ -268,9 +289,17 @@ static void swadgedokuBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, in
 
 static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t value)
 {
-    if (label == menuItemPlaySudoku && selected)
+    if (selected)
     {
-        
+        if (menuItemPlaySudoku == label)
+        {
+            if (!setupSudokuGame(&sd->game, SM_CLASSIC, 9, 9))
+            {
+                ESP_LOGE("Swadgedoku", "Couldn't setup game???");
+            }
+            setupSudokuPlayer(&sd->player, &sd->game);
+            sd->screen = SWADGEDOKU_GAME;
+        }
     }
 }
 
@@ -351,7 +380,7 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
 
             uint8_t* grid = calloc(totalSquares, sizeof(uint8_t));
 
-            if (grid)
+            if (!grid)
             {
                 return false;
             }
@@ -415,12 +444,37 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
     }
 }
 
-void swadgedokuDrawGame(sudokuGrid_t* game, uint16_t* notes, sudokuOverlay_t* overlay, paletteColor_t borderCol, paletteColor_t gridColor, paletteColor_t bgColor)
+void setupSudokuPlayer(sudokuPlayer_t* player, const sudokuGrid_t* game)
+{
+    if (player->notes != NULL)
+    {
+        free(player->notes);
+        player->notes = NULL;
+    }
+
+    // TODO: Have an init/deinit function for overlays
+    if (player->overlay.gridOpts != NULL)
+    {
+        free(player->overlay.gridOpts);
+        player->overlay.gridOpts = NULL;
+    }
+
+    sudokuOverlayShape_t* shape = NULL;
+    while (NULL != (shape = pop(&player->overlay.shapes)))
+    {
+        free(shape);
+    }
+
+    player->notes = calloc(game->size * game->size, sizeof(uint16_t));
+    player->overlay.gridOpts = calloc(game->size * game->size, sizeof(sudokuOverlayOpt_t));
+}
+
+void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay, paletteColor_t borderCol, paletteColor_t gridColor, paletteColor_t bgColor)
 {
     // Max size of individual square
     int maxSquareSize = (TFT_HEIGHT - 1) / game->size;
     // Total size of the grid (add 1px for border)
-    int gridSize = game->size * maxSquareSize + 1;
+    int gridSize = game->size * maxSquareSize;
 
     // Take off 1px for border and 2px for 1px of padding on each side
     int squareInterior = maxSquareSize - 3;
@@ -429,7 +483,30 @@ void swadgedokuDrawGame(sudokuGrid_t* game, uint16_t* notes, sudokuOverlay_t* ov
     int gridY = (TFT_HEIGHT - gridSize) / 2;
     
     // Align the grid to the left to leave some space to the right for UI
-    int gridX = gridY;
+    int gridX = (TFT_WIDTH - gridSize) / 2;
+
+    paletteColor_t voidColor = c333;
+
+    // Efficiently fill in the edges of the screen, not covered by the grid
+    if (gridY > 0)
+    {
+        fillDisplayArea(0, 0, TFT_WIDTH, gridY, voidColor);
+    }
+
+    if (gridY + gridSize < TFT_HEIGHT)
+    {
+        fillDisplayArea(0, gridY + gridSize, TFT_WIDTH, TFT_HEIGHT, voidColor);
+    }
+
+    if (gridX > 0)
+    {
+        fillDisplayArea(0, gridY, gridX, gridY + gridSize, voidColor);
+    }
+
+    if (gridX + gridSize < TFT_WIDTH)
+    {
+        fillDisplayArea(gridX + gridSize, gridY, TFT_WIDTH, gridY + gridSize, voidColor);
+    }
 
     // Draw border around the grid
     drawLineFast(gridX, gridY, gridX + gridSize, gridY, borderCol); // Top
@@ -440,13 +517,13 @@ void swadgedokuDrawGame(sudokuGrid_t* game, uint16_t* notes, sudokuOverlay_t* ov
     // Draw lines between the columns
     for (int col = 1; col < game->base; col++)
     {
-        drawLineFast(gridX + col * maxSquareSize, gridY, gridX + col * maxSquareSize, gridY + gridSize, gridColor);
+        drawLineFast(gridX + col * maxSquareSize, gridY + 1, gridX + col * maxSquareSize, gridY + gridSize - 1, gridColor);
     }
 
     // Draw lines between the rows
     for (int row = 1; row < game->base; row++)
     {
-        drawLineFast(gridX, gridY + row * maxSquareSize, gridX + gridSize, gridY + row * maxSquareSize, gridColor);
+        drawLineFast(gridX + 1, gridY + row * maxSquareSize, gridX + gridSize - 1, gridY + row * maxSquareSize, gridColor);
     }
 
     // Draw extra borders around the boxes and fill in the background
@@ -521,6 +598,8 @@ void swadgedokuDrawGame(sudokuGrid_t* game, uint16_t* notes, sudokuOverlay_t* ov
                 }
             }
 
+            fillDisplayArea(x + 1, y + 1, x + maxSquareSize, y + maxSquareSize, bgColor);
+
             // For each of the four cardinal directions,
             // that side gets an extra border if either:
             //  - That side has no neighbor cell (it's at the edge of the grid), or
@@ -534,7 +613,7 @@ void swadgedokuDrawGame(sudokuGrid_t* game, uint16_t* notes, sudokuOverlay_t* ov
             if (r == 0 || game->boxMap[(r-1) * game->size + c] != thisBox)
             {
                 // Draw north border
-                drawLineFast(x + 1, y + 1, x + maxSquareSize - 1, y + maxSquareSize - 1, borderCol);
+                drawLineFast(x + 1, y + 1, x + maxSquareSize - 1, y + 1, borderCol);
             }
             // east
             if (c == (game->size - 1) || game->boxMap[r * game->size + c + 1] != thisBox)
