@@ -15,7 +15,7 @@ bool process_bin(const char* infile, const char* outFilePath)
     {
         return false;
     }
-    
+
     fseek(fp, 0L, SEEK_END);
     long sz = ftell(fp);
     fseek(fp, 0L, SEEK_SET);

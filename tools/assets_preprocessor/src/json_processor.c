@@ -16,8 +16,8 @@ bool process_json(const char* infile, const char* outFilePath)
 #ifdef JSON_COMPRESSION
     /* Change the file extension */
     // TODO
-    //char* dotptr = strrchr(outFilePath, '.');
-    //snprintf(&dotptr[1], strlen(dotptr), "hjs");
+    // char* dotptr = strrchr(outFilePath, '.');
+    // snprintf(&dotptr[1], strlen(dotptr), "hjs");
 #endif
 
     /* Read input file */

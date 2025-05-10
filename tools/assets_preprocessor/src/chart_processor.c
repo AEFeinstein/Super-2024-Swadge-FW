@@ -30,14 +30,14 @@ bool process_chart(const char* infile, const char* outFilePath)
 
         if (outFile)
         {
-            uint8_t* tmpSpace = malloc(1024 * 1024);
-            uint32_t tmpIdx = 0;
+            uint8_t* tmpSpace  = malloc(1024 * 1024);
+            uint32_t tmpIdx    = 0;
             uint32_t noteCount = 0;
 
             char line[512]        = {0};
             char sectionName[512] = {0};
-            int lastTick = -1;
-            int lastNote = -1;
+            int lastTick          = -1;
+            int lastNote          = -1;
             while (NULL != fgets(line, sizeof(line), fp))
             {
                 int tick, note, length;
@@ -65,7 +65,7 @@ bool process_chart(const char* infile, const char* outFilePath)
                 }
                 else if (strstr(line, "}"))
                 {
-                    if(CS_NOTES == section)
+                    if (CS_NOTES == section)
                     {
                         fputc((noteCount >> 8) & 0xFF, outFile);
                         fputc((noteCount >> 0) & 0xFF, outFile);
@@ -78,7 +78,7 @@ bool process_chart(const char* infile, const char* outFilePath)
                 else if (inSection && (CS_NOTES == section) && //
                          sscanf(line, "%d = N %d %d", &tick, &note, &length))
                 {
-                    if(lastTick == tick && lastNote == note)
+                    if (lastTick == tick && lastNote == note)
                     {
                         // Don't allow overlapping notes
                         continue;

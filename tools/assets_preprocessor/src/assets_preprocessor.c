@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -36,19 +37,21 @@ static const char* rawFileTypes[][2] = {
 };
 
 static const assetProcessor_t processors[] = {
-    {.inExt = "font.png", .outExt = "font.wsg", .type = FUNCTION, .function = process_font},
-    {.inExt = "png",      .outExt = "wsg",      .type = FUNCTION, .function = process_image},
-    {.inExt = "chart",    .outExt = "cch",      .type = FUNCTION, .function = process_chart},
-    {.inExt = "json",     .outExt = "json",     .type = FUNCTION, .function = process_json},
-    {.inExt = "bin",      .outExt = "bin",      .type = FUNCTION, .function = process_bin},
-    {.inExt = "txt",      .outExt = "txt",      .type = FUNCTION, .function = process_txt},
-    {.inExt = "rmd",      .outExt = "rmh",      .type = FUNCTION, .function = process_rmd},
-    {.inExt = "mid",      .outExt = "mid",      .type = FUNCTION, .function = process_raw},
-    {.inExt = "midi",     .outExt = "mid",      .type = FUNCTION, .function = process_raw},
-    {.inExt = "raw",      .outExt = "raw",      .type = FUNCTION, .function = process_raw},
+    {.inExt = "font.png", .outExt = "font", .type = FUNCTION, .function = process_font},
+    {.inExt = "png", .outExt = "wsg", .type = FUNCTION, .function = process_image},
+    {.inExt = "chart", .outExt = "cch", .type = FUNCTION, .function = process_chart},
+    {.inExt = "json", .outExt = "json", .type = FUNCTION, .function = process_json},
+    {.inExt = "bin", .outExt = "bin", .type = FUNCTION, .function = process_bin},
+    {.inExt = "txt", .outExt = "txt", .type = FUNCTION, .function = process_txt},
+    {.inExt = "rmd", .outExt = "rmh", .type = FUNCTION, .function = process_rmd},
+    {.inExt = "mid", .outExt = "mid", .type = FUNCTION, .function = process_raw},
+    {.inExt = "midi", .outExt = "mid", .type = FUNCTION, .function = process_raw},
+    {.inExt = "raw", .outExt = "raw", .type = FUNCTION, .function = process_raw},
 };
 
 const char* outDirName = NULL;
+bool anyFileChanged    = false;
+int processingErrors   = 0;
 
 void print_usage(void);
 bool endsWith(const char* filename, const char* suffix);
@@ -59,7 +62,8 @@ bool endsWith(const char* filename, const char* suffix);
  */
 void print_usage(void)
 {
-    printf("Usage:\n  assets_preprocessor\n    -i INPUT_DIRECTORY\n    -o OUTPUT_DIRECTORY\n");
+    printf("Usage:\n  assets_preprocessor\n    -i INPUT_DIRECTORY\n    -o OUTPUT_DIRECTORY\n    [-t "
+           "TIMESTAMP_FILE_OUTPUT]\n");
 }
 
 /**
@@ -91,7 +95,7 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
 {
     if (FTW_F == tflag)
     {
-        char extBuf[16] = {0};
+        char extBuf[16]   = {0};
         char outFile[256] = {0};
 
         for (int i = 0; i < (sizeof(processors) / sizeof(*processors)); i++)
@@ -118,8 +122,10 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                 }
                 else if (doesFileExist(outFile))
                 {
-                    printf("[assets-preprocessor] %s modified! Regenerating %s\n", get_filename(inFile), get_filename(outFile));
+                    printf("[assets-preprocessor] %s modified! Regenerating %s\n", get_filename(inFile),
+                           get_filename(outFile));
                 }
+                anyFileChanged = true;
 
                 bool result = false;
 
@@ -141,6 +147,7 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                 if (!result)
                 {
                     fprintf(stderr, "[assets-preprocessor] Error! Failed to process %s!\n", get_filename(inFile));
+                    processingErrors++;
                 }
 
                 break;
@@ -151,8 +158,31 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
     {
         return -1;
     }
-    
+
     return 0;
+}
+
+static int writeTimestampFile(const char* fpath)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+
+    // Turns out time_t doesn't printf well, so stick it in something that does
+    uint64_t timeSec    = (uint64_t)ts.tv_sec;
+    uint64_t timeMillis = (uint64_t)ts.tv_nsec / 1000000;
+
+    FILE* out = fopen(fpath, "w");
+
+    if (NULL != out)
+    {
+        fprintf(out, "%" PRIu64 "%03" PRIu64 "\n", timeSec, timeMillis);
+
+        fclose(out);
+
+        return 0;
+    }
+
+    return -1;
 }
 
 /**
@@ -165,10 +195,11 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
 int main(int argc, char** argv)
 {
     int c;
-    const char* inDirName = NULL;
+    const char* inDirName         = NULL;
+    const char* timestampFileName = NULL;
 
     opterr = 0;
-    while ((c = getopt(argc, argv, "i:o:")) != -1)
+    while ((c = getopt(argc, argv, "i:o:t:")) != -1)
     {
         switch (c)
         {
@@ -180,6 +211,11 @@ int main(int argc, char** argv)
             case 'o':
             {
                 outDirName = optarg;
+                break;
+            }
+            case 't':
+            {
+                timestampFileName = optarg;
                 break;
             }
             default:
@@ -217,5 +253,20 @@ int main(int argc, char** argv)
         return -1;
     }
 
+    if (NULL != timestampFileName && anyFileChanged)
+    {
+        if (0 != writeTimestampFile(timestampFileName))
+        {
+            fprintf(stderr, "Failed to write timestamp to '%s'!\n", timestampFileName);
+            return -1;
+        }
+    }
+
+    if (processingErrors > 0)
+    {
+        fprintf(stderr, "[assets-preprocessor] %d file%s failed to process!!\n", processingErrors,
+                (processingErrors == 1) ? "" : "s");
+        return 1;
+    }
     return 0;
 }

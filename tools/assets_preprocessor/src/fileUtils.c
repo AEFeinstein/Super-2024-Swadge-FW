@@ -51,10 +51,10 @@ const char* get_filename(const char* filename)
     return slash + 1;
 }
 
-
 /**
- * @brief Returns true if the file `sourceFile` has a last-modified time after that of `destFile`, or if `destFile` does not exist.
- * 
+ * @brief Returns true if the file `sourceFile` has a last-modified time after that of `destFile`, or if `destFile` does
+ * not exist.
+ *
  * @param sourceFile The path to the "source" file, from which `destFile` is generated
  * @param destFile The path to the "destination" file path, which should be regenerated if older than `sourceFile`.
  * @return true sourceFile was modified after destFile, so destFile should be updated
@@ -62,14 +62,13 @@ const char* get_filename(const char* filename)
  */
 bool isSourceFileNewer(const char* sourceFile, const char* destFile)
 {
-
-    long long srcMtime = 0;
+    long long srcMtime  = 0;
     long long destMtime = 0;
 
     // Just use stat()
     struct stat statVal = {0};
-    errno = 0;
-    int statResult = stat(sourceFile, &statVal);
+    errno               = 0;
+    int statResult      = stat(sourceFile, &statVal);
     if (statResult == 0)
     {
         srcMtime = statVal.st_mtime;
@@ -80,7 +79,7 @@ bool isSourceFileNewer(const char* sourceFile, const char* destFile)
     }
 
     memset(&statVal, 0, sizeof(struct stat));
-    errno = 0;
+    errno      = 0;
     statResult = stat(destFile, &statVal);
     if (statResult == 0)
     {

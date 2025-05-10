@@ -79,7 +79,7 @@ void appendCharToFile(FILE* fp, unsigned char* data, int w, int h, int charStart
  */
 bool process_font(const char* infile, const char* outFilePath)
 {
-    FILE* fp                     = fopen(outFilePath, "wb+");
+    FILE* fp = fopen(outFilePath, "wb+");
 
     if (!fp)
     {
