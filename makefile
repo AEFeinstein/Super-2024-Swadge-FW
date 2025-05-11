@@ -53,7 +53,9 @@ endif
 # Source Files
 ################################################################################
 
-CNFS_FILE = main/utils/cnfs_image.c
+ASSET_FILES = $(shell $(FIND) assets -type f)
+CNFS_FILE   = main/utils/cnfs_image.c
+CNFS_FILE_H = main/utils/cnfs_image.h
 
 # This is a list of directories to scan for c files recursively
 SRC_DIRS_RECURSIVE = emulator/src main
@@ -328,7 +330,7 @@ assets:
 	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
 
 # To build the main file, you have to compile the objects
-$(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
+$(EXECUTABLE): $(OBJECTS)
 	$(CC) $(OBJECTS) $(LIBRARY_FLAGS) -o $@
 
 # This compiles each c file into an o file
@@ -339,11 +341,11 @@ $(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
 	$(CC) $(CFLAGS) $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) $(DEFINES) $(INC) $< -o $@
 
 # To create CNFS_FILE, first the assets must be processed
-$(CNFS_FILE):
+$(CNFS_FILE): $(ASSET_FILES)
 	$(MAKE) -C ./tools/assets_preprocessor/
 	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
 	$(MAKE) -C ./tools/cnfs/
-	./tools/cnfs/cnfs_gen assets_image/ main/utils/cnfs_image.c main/utils/cnfs_image.h
+	./tools/cnfs/cnfs_gen assets_image/ $(CNFS_FILE) $(CNFS_FILE_H)
 
 bundle: SwadgeEmulator.app
 
@@ -378,7 +380,7 @@ clean:
 	$(MAKE) -C ./tools/cnfs clean
 	-@rm -f $(OBJECTS) $(EXECUTABLE)
 	-@rm -rf ./docs/html
-	-@rm -rf ./main/utils/cnfs/cnfs_image.c
+	-@rm -rf $(CNFS_FILE) $(CNFS_FILE_H)
 
 # This cleans everything
 fullclean: clean
