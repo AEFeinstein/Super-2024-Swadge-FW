@@ -114,6 +114,7 @@ typedef struct
 
 typedef struct
 {
+    paletteColor_t color;
     enum {
         OVERLAY_RECT,
         OVERLAY_CIRCLE,
@@ -158,6 +159,9 @@ typedef struct
     /// @brief A set of overlay data to show this player
     sudokuOverlay_t overlay;
 
+    /// @brief If the player is playing, this shape refers to the cursor
+    sudokuOverlayShape_t* cursorShape;
+
     /// @brief Some sort of score for the player, TBD how it's calculated
     int32_t score;
 } sudokuPlayer_t;
@@ -197,7 +201,9 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
 void deinitSudokuGame(sudokuGrid_t* game);
 bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size);
 void setupSudokuPlayer(sudokuPlayer_t* player, const sudokuGrid_t* game);
-void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay, const paletteColor_t borderCol, paletteColor_t gridColor, paletteColor_t bgColor);
+void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags);
+void swadgedokuGameButton(buttonEvt_t evt);
+void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay, const paletteColor_t borderCol, paletteColor_t gridColor, paletteColor_t bgColor, paletteColor_t textColor);
 
 //==============================================================================
 // Const data
@@ -276,7 +282,13 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
 
         case SWADGEDOKU_GAME:
         {
-            swadgedokuDrawGame(&sd->game, sd->player.notes, &sd->player.overlay, c000, c222, c555);
+            buttonEvt_t evt = {0};
+            while (checkButtonQueueWrapper(&evt))
+            {
+                swadgedokuGameButton(evt);
+            }
+
+            swadgedokuDrawGame(&sd->game, sd->player.notes, &sd->player.overlay, c000, c222, c555, c000);
             break;
         }
     }
@@ -296,8 +308,14 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             if (!setupSudokuGame(&sd->game, SM_CLASSIC, 9, 9))
             {
                 ESP_LOGE("Swadgedoku", "Couldn't setup game???");
+                return;
             }
             setupSudokuPlayer(&sd->player, &sd->game);
+            sd->game.grid[0] = 9;
+            sd->game.flags[0] = SF_LOCKED;
+            sd->player.notes[1] = 127;
+            sd->game.flags[8] = SF_VOID;
+            sd->game.grid[2] = 8;
             sd->screen = SWADGEDOKU_GAME;
         }
     }
@@ -459,6 +477,8 @@ void setupSudokuPlayer(sudokuPlayer_t* player, const sudokuGrid_t* game)
         player->overlay.gridOpts = NULL;
     }
 
+    player->cursorShape = NULL;
+
     sudokuOverlayShape_t* shape = NULL;
     while (NULL != (shape = pop(&player->overlay.shapes)))
     {
@@ -467,9 +487,182 @@ void setupSudokuPlayer(sudokuPlayer_t* player, const sudokuGrid_t* game)
 
     player->notes = calloc(game->size * game->size, sizeof(uint16_t));
     player->overlay.gridOpts = calloc(game->size * game->size, sizeof(sudokuOverlayOpt_t));
+
+    player->cursorShape = calloc(1, sizeof(sudokuOverlayShape_t));
+    player->cursorShape->color = c505;
+    //player->cursorShape->type = OVERLAY_RECT;
+    player->cursorShape->type = OVERLAY_CIRCLE;
+    player->cursorShape->circle.pos.x = player->curX;
+    player->cursorShape->circle.pos.y = player->curY;
+    player->cursorShape->circle.radius = 1;
+    //player->cursorShape->rectangle.pos.x = player->curX;
+    //player->cursorShape->rectangle.pos.y = player->curY;
+    //player->cursorShape->rectangle.width = 1;
+    //player->cursorShape->rectangle.height = 1;
+    push(&player->overlay.shapes, player->cursorShape);
 }
 
-void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay, paletteColor_t borderCol, paletteColor_t gridColor, paletteColor_t bgColor)
+void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
+{
+    uint16_t rowNotes[game->size];
+    uint16_t colNotes[game->size];
+    uint16_t boxNotes[game->base];
+
+    // This means 'all values are possible in this row/cell'
+    const uint16_t allNotes = (1 << game->base) - 1;
+    for (int n = 0; n < game->size; n++)
+    {
+        rowNotes[n] = allNotes;
+        colNotes[n] = allNotes;
+    }
+
+    for (int n = 0; n < game->base; n++)
+    {
+        boxNotes[n] = allNotes;
+    }
+
+    for (int row = 0; row < game->size; row++)
+    {
+        for (int col = 0; col < game->size; col++)
+        {
+            uint8_t box = game->boxMap[row * game->size + col];
+            uint8_t digit = game->grid[row * game->size + col];
+
+            if (digit != 0)
+            {
+                const uint16_t digitUnmask = ~(1 << (digit - 1));
+                rowNotes[row] &= digitUnmask;
+                colNotes[col] &= digitUnmask;
+
+                if (box != BOX_NONE && box < game->base)
+                {
+                    boxNotes[box] &= digitUnmask;
+                }
+            }
+        }
+    }
+
+    for (int row = 0; row < game->size; row++)
+    {
+        for (int col = 0; col < game->size; col++)
+        {
+            uint8_t box = game->boxMap[row * game->size + col];
+            uint8_t digit = game->grid[row * game->size + col];
+
+            if (digit != 0)
+            {
+                uint16_t boxNote = (box < game->base) ? boxNotes[box] : allNotes;
+                notes[row * game->size + col] = (rowNotes[row] & colNotes[col] & boxNote);
+            }
+            else
+            {
+                notes[row * game->size + col] = 0;
+            }
+        }
+    }
+}
+
+void swadgedokuGameButton(buttonEvt_t evt)
+{
+    if (evt.down)
+    {
+        switch (evt.button)
+        {
+            case PB_A:
+            {
+                if (sd->player.selectedDigit && !((SF_LOCKED | SF_VOID) & sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]))
+                {
+                    // Not locked or void, proceed setting the digit
+                    sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX] = sd->player.selectedDigit;
+                }
+                break;
+            }
+
+            case PB_B:
+            {
+                break;
+            }
+
+            case PB_SELECT:
+            {
+                break;
+            }
+
+            case PB_START:
+            {
+                break;
+            }
+
+            case PB_UP:
+            {
+                do {
+                    if (sd->player.curY == 0)
+                    {
+                        sd->player.curY = sd->game.size - 1;
+                    }
+                    else
+                    {
+                        sd->player.curY--;
+                    }
+                } while (SF_VOID & (sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]));
+                break;
+            }
+
+            case PB_DOWN:
+            {
+                do {
+                    if (sd->player.curY >= sd->game.size - 1)
+                    {
+                        sd->player.curY = 0;
+                    }
+                    else
+                    {
+                        sd->player.curY++;
+                    }
+                } while (SF_VOID & (sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]));
+                break;
+            }
+
+            case PB_LEFT:
+            {
+                do {
+                    if (sd->player.curX == 0)
+                    {
+                        sd->player.curX = sd->game.size - 1;
+                    }
+                    else
+                    {
+                        sd->player.curX--;
+                    }
+                } while (SF_VOID & (sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]));
+                break;
+            }
+
+            case PB_RIGHT:
+            {
+                do {
+                    if (sd->player.curX >= sd->game.size - 1)
+                    {
+                        sd->player.curX = 0;
+                    }
+                    else
+                    {
+                        sd->player.curX++;
+                    }
+                } while (SF_VOID & (sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]));
+                break;
+            }
+        }
+
+        if (sd->player.cursorShape)
+        {
+            sd->player.cursorShape->rectangle.pos.x = sd->player.curX;
+            sd->player.cursorShape->rectangle.pos.y = sd->player.curY;
+        }
+    }
+}
+
+void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay, paletteColor_t borderCol, paletteColor_t gridColor, paletteColor_t bgColor, paletteColor_t textColor)
 {
     // Max size of individual square
     int maxSquareSize = (TFT_HEIGHT - 1) / game->size;
@@ -540,7 +733,11 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
             sudokuOverlayOpt_t opts = OVERLAY_NONE;
             sudokuFlag_t flags = game->flags[r * game->size + c];
 
-            if (overlay)
+            if (flags & SF_VOID)
+            {
+                fillColor = voidColor;
+            }
+            else if (overlay)
             {
                 opts = overlay->gridOpts[r * game->size + c];
 
@@ -595,11 +792,14 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                         r += 2;
                     }
 
-                    fillColor = r * 36 + g * 6 + b;
+                    if (r || g || b)
+                    {
+                        fillColor = r * 36 + g * 6 + b;
+                    }
                 }
             }
 
-            fillDisplayArea(x + 1, y + 1, x + maxSquareSize, y + maxSquareSize, bgColor);
+            fillDisplayArea(x + 1, y + 1, x + maxSquareSize, y + maxSquareSize, fillColor);
 
             // For each of the four cardinal directions,
             // that side gets an extra border if either:
@@ -676,7 +876,7 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                         int noteX = x + (n % baseRoot) * maxSquareSize / baseRoot + (miniSquareSize - textWidth(&sd->noteFont, buf)) / 2 + 1;
                         int noteY = y + (n / baseRoot) * maxSquareSize / baseRoot + (miniSquareSize - sd->noteFont.height) / 2 + 2;
 
-                        drawText(&sd->noteFont, c000, buf, noteX, noteY);
+                        drawText(&sd->noteFont, textColor, buf, noteX, noteY);
                     }
                 }
             }
@@ -689,7 +889,7 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                 int textX = x + (maxSquareSize - textWidth(&sd->gridFont, buf)) / 2;
                 int textY = y + (maxSquareSize - sd->gridFont.height) / 2;
                 
-                paletteColor_t color = (flags & SF_LOCKED) ? c000 : c444;
+                paletteColor_t color = (flags & SF_LOCKED) ? textColor : c444;
                 if (overlay)
                 {
                     if (opts & OVERLAY_ERROR)
@@ -741,18 +941,53 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
             switch (shape->type)
             {
                 case OVERLAY_RECT:
+                drawRect(gridX + maxSquareSize * shape->rectangle.pos.x, gridY + maxSquareSize * shape->rectangle.pos.y, gridX + maxSquareSize * (shape->rectangle.pos.x + shape->rectangle.width), gridY + maxSquareSize * (shape->rectangle.pos.y + shape->rectangle.height), shape->color);
                 break;
 
                 case OVERLAY_CIRCLE:
+                drawCircle(gridX + maxSquareSize * shape->circle.pos.x + maxSquareSize / 2, gridY + maxSquareSize * shape->circle.pos.y + maxSquareSize / 2, shape->circle.radius * maxSquareSize * 3 / 5, shape->color);
                 break;
 
                 case OVERLAY_LINE:
+                drawLineFast(
+                    gridX + maxSquareSize + shape->line.p1.x * maxSquareSize + maxSquareSize / 2,
+                    gridY + maxSquareSize * shape->line.p1.y * maxSquareSize + maxSquareSize / 2,
+                    gridX + maxSquareSize * shape->line.p2.x * maxSquareSize + maxSquareSize / 2,
+                    gridY + maxSquareSize * shape->line.p2.y * maxSquareSize + maxSquareSize / 2,
+                    shape->color
+                );
                 break;
 
                 case OVERLAY_ARROW:
-                break;
+                {
+                    drawLineFast(
+                        gridX + maxSquareSize + shape->arrow.base.x * maxSquareSize + maxSquareSize / 2,
+                        gridY + maxSquareSize * shape->arrow.base.y * maxSquareSize + maxSquareSize / 2,
+                        gridX + maxSquareSize * shape->arrow.tip.x * maxSquareSize + maxSquareSize / 2,
+                        gridY + maxSquareSize * shape->arrow.tip.y * maxSquareSize + maxSquareSize / 2,
+                        shape->color
+                    );
+                    drawLineFast(
+                        gridX + maxSquareSize + shape->arrow.wing1.x * maxSquareSize + maxSquareSize / 2,
+                        gridY + maxSquareSize * shape->arrow.wing1.y * maxSquareSize + maxSquareSize / 2,
+                        gridX + maxSquareSize * shape->arrow.tip.x * maxSquareSize + maxSquareSize / 2,
+                        gridY + maxSquareSize * shape->arrow.tip.y * maxSquareSize + maxSquareSize / 2,
+                        shape->color
+                    );
+                    drawLineFast(
+                        gridX + maxSquareSize + shape->arrow.wing2.x * maxSquareSize + maxSquareSize / 2,
+                        gridY + maxSquareSize * shape->arrow.wing2.y * maxSquareSize + maxSquareSize / 2,
+                        gridX + maxSquareSize * shape->arrow.tip.x * maxSquareSize + maxSquareSize / 2,
+                        gridY + maxSquareSize * shape->arrow.tip.y * maxSquareSize + maxSquareSize / 2,
+                        shape->color
+                    );
+                    break;
+                }
 
                 case OVERLAY_TEXT:
+                {
+                    // TODO
+                }
                 break;
             }
         }
