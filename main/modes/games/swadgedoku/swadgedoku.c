@@ -245,6 +245,9 @@ void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags);
 void swadgedokuGameButton(buttonEvt_t evt);
 void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay, const sudokuTheme_t* theme);
 
+bool setDigit(sudokuGrid_t* game, uint8_t number, uint8_t x, uint8_t y);
+
+
 //==============================================================================
 // Const data
 //==============================================================================
@@ -342,7 +345,7 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
                 swadgedokuGameButton(evt);
             }
 
-            swadgedokuDrawGame(&sd->game, sd->player.notes, &sd->player.overlay, &lightTheme);
+            swadgedokuDrawGame(&sd->game, sd->game.notes, &sd->player.overlay, &lightTheme);
             break;
         }
     }
@@ -367,9 +370,13 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             setupSudokuPlayer(&sd->player, &sd->game);
             sd->game.grid[0] = 9;
             sd->game.flags[0] = SF_LOCKED;
+
+            sudokuGetNotes(sd->game.notes, &sd->game, 0);
+
             sd->player.notes[1] = 127;
             sd->game.flags[8] = SF_VOID;
-            sd->game.grid[2] = 8;
+            //sd->game.grid[2] = 8;
+            setDigit(&sd->game, 8, 2, 0);
             sd->screen = SWADGEDOKU_GAME;
         }
     }
@@ -501,6 +508,16 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
                 }
             }
 
+            // Set the notes to all possible
+            uint16_t allNotes = (1 << game->base) - 1;
+            for (int i = 0; i < game->size * game->size; i++)
+            {
+                if (!((SF_VOID | SF_LOCKED) & game->flags[i]))
+                {
+                    game->notes[i] = allNotes;
+                }
+            }
+
             return true;
         }
 
@@ -584,7 +601,8 @@ void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
 
             if (digit != 0)
             {
-                const uint16_t digitUnmask = ~(1 << (digit - 1));
+                uint16_t digitUnmask = ~(1 << (digit - 1));
+                ESP_LOGE("Swadgedoku", "Unmasking %" PRIu8 " into %" PRIX16, digit, digitUnmask);
                 rowNotes[row] &= digitUnmask;
                 colNotes[col] &= digitUnmask;
 
@@ -603,7 +621,7 @@ void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
             uint8_t box = game->boxMap[row * game->size + col];
             uint8_t digit = game->grid[row * game->size + col];
 
-            if (digit != 0)
+            if (digit == 0)
             {
                 uint16_t boxNote = (box < game->base) ? boxNotes[box] : allNotes;
                 notes[row * game->size + col] = (rowNotes[row] & colNotes[col] & boxNote);
@@ -627,13 +645,15 @@ void swadgedokuGameButton(buttonEvt_t evt)
                 if (sd->player.selectedDigit && !((SF_LOCKED | SF_VOID) & sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]))
                 {
                     // Not locked or void, proceed setting the digit
-                    sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX] = sd->player.selectedDigit;
+                    //sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX] = sd->player.selectedDigit;
+                    setDigit(&sd->game, sd->player.selectedDigit, sd->player.curX, sd->player.curY);
                 }
                 break;
             }
 
             case PB_B:
             {
+                sd->player.selectedDigit = (sd->player.selectedDigit) % (sd->game.base) + 1;
                 break;
             }
 
@@ -1046,4 +1066,49 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
             }
         }
     }
+}
+
+bool setDigit(sudokuGrid_t* game, uint8_t number, uint8_t x, uint8_t y)
+{
+    bool ok = true;
+    if (x < game->size && y < game->size)
+    {
+        if (number <= game->base)
+        {
+            if (0 == (game->flags[y * game->size + x] & (SF_VOID | SF_LOCKED)))
+            {
+                // Proceed
+                uint16_t bits = ~(1 << (number - 1));
+
+                int ourRow = y;
+                int ourCol = x;
+                uint8_t ourBox = game->boxMap[y * game->size + x];
+
+
+                for (int r = 0; r < game->size; r++)
+                {
+                    for (int c = 0; c < game->size; c++)
+                    {
+                        uint8_t box = game->boxMap[r * game->size + c];
+                        if (r == ourRow || c == ourCol || box == ourBox)
+                        {
+                            if (r != ourRow || c != ourCol)
+                            {
+                                game->notes[r * game->size + c] &= bits;
+                                if (!game->notes[r * game->size + c])
+                                {
+                                    ESP_LOGW("Swadgedoku", "No possible solutions!");
+                                    ok = false;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                game->notes[y * game->size + x] = 0;
+                game->grid[y * game->size + x] = number;
+            }
+        }
+    }
+    return ok;
 }
