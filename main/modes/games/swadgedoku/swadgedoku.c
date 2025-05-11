@@ -346,6 +346,15 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
             }
 
             swadgedokuDrawGame(&sd->game, sd->game.notes, &sd->player.overlay, &lightTheme);
+            
+            if (sd->player.selectedDigit)
+            {
+                char curDigitStr[16];
+                snprintf(curDigitStr, sizeof(curDigitStr), "%" PRIX8, sd->player.selectedDigit);
+                int textW = textWidth(&sd->gridFont, curDigitStr);
+
+                drawText(&sd->gridFont, lightTheme.uiTextColor, curDigitStr, TFT_WIDTH - 5 - textW, (TFT_HEIGHT - sd->gridFont.height) / 2);
+            }
             break;
         }
     }
