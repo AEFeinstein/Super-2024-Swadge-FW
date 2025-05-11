@@ -241,7 +241,7 @@ static void swadgedokuEnterMode(void)
     sd->screen = SWADGEDOKU_MAIN_MENU;
 
     loadFont(RADIOSTARS_FONT, &sd->gridFont, true);
-    loadFont(IBM_VGA_8_FONT, &sd->noteFont, true);
+    loadFont(TINY_NUMBERS_FONT, &sd->noteFont, true);
     loadFont(SONIC_FONT, &sd->uiFont, true);
 
     sd->menu = initMenu(swadgedokuModeName, swadgedokuMainMenuCb);
@@ -490,29 +490,30 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
     // Efficiently fill in the edges of the screen, not covered by the grid
     if (gridY > 0)
     {
+        // Fill top
         fillDisplayArea(0, 0, TFT_WIDTH, gridY, voidColor);
     }
 
     if (gridY + gridSize < TFT_HEIGHT)
     {
+        // Fill bottom
         fillDisplayArea(0, gridY + gridSize, TFT_WIDTH, TFT_HEIGHT, voidColor);
     }
 
     if (gridX > 0)
     {
+        // Fill left
         fillDisplayArea(0, gridY, gridX, gridY + gridSize, voidColor);
     }
 
     if (gridX + gridSize < TFT_WIDTH)
     {
+        // Fill right
         fillDisplayArea(gridX + gridSize, gridY, TFT_WIDTH, gridY + gridSize, voidColor);
     }
 
     // Draw border around the grid
-    drawLineFast(gridX, gridY, gridX + gridSize, gridY, borderCol); // Top
-    drawLineFast(gridX, gridY, gridX, gridY + gridSize, borderCol); // Left
-    drawLineFast(gridX, gridY + gridSize, gridX + gridSize, gridY + gridSize, borderCol); // Bottom
-    drawLineFast(gridX + gridSize, gridY, gridX + gridSize, gridY + gridSize, borderCol); // Right
+    drawRect(gridX, gridY, gridX + gridSize + 1, gridY + gridSize + 1, borderCol);
 
     // Draw lines between the columns
     for (int col = 1; col < game->base; col++)
@@ -669,9 +670,11 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                             case 16: baseRoot = 4; break;
                             default: break;
                         }
+
+                        int miniSquareSize = maxSquareSize / baseRoot;
                         
-                        int noteX = x + (n % baseRoot) * maxSquareSize / baseRoot;
-                        int noteY = y + (n / baseRoot) * maxSquareSize / baseRoot;
+                        int noteX = x + (n % baseRoot) * maxSquareSize / baseRoot + (miniSquareSize - textWidth(&sd->noteFont, buf)) / 2 + 1;
+                        int noteY = y + (n / baseRoot) * maxSquareSize / baseRoot + (miniSquareSize - sd->noteFont.height) / 2 + 2;
 
                         drawText(&sd->noteFont, c000, buf, noteX, noteY);
                     }
