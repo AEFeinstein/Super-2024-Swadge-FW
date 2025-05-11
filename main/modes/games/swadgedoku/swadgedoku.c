@@ -241,6 +241,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
 void deinitSudokuGame(sudokuGrid_t* game);
 bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size);
 void setupSudokuPlayer(sudokuPlayer_t* player, const sudokuGrid_t* game);
+void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, int col, int flags);
 void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags);
 void swadgedokuGameButton(buttonEvt_t evt);
 void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay, const sudokuTheme_t* theme);
@@ -582,14 +583,22 @@ void setupSudokuPlayer(sudokuPlayer_t* player, const sudokuGrid_t* game)
     push(&player->overlay.shapes, player->cursorShape);
 }
 
-void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
+void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, int col, int flags)
 {
     uint16_t rowNotes[game->size];
     uint16_t colNotes[game->size];
     uint16_t boxNotes[game->base];
+    
+    // List of square coordinates for peers in the source box
+    uint8_t sourceBoxRows[game->base];
+    uint8_t sourceBoxCols[game->base];
+    int boxCount = 0;
 
     // This means 'all values are possible in this row/cell'
+    // We'll whittle it down from there
     const uint16_t allNotes = (1 << game->base) - 1;
+
+    // Initialize
     for (int n = 0; n < game->size; n++)
     {
         rowNotes[n] = allNotes;
@@ -601,6 +610,112 @@ void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
         boxNotes[n] = allNotes;
     }
 
+    uint16_t sourceBox = game->boxMap[row * game->size + col];
+    
+    // First pass: construct row/column possibiliies
+    for (int r = 0; r < game->size; r++)
+    {
+        for (int c = 0; c < game->size; c++)
+        {
+            uint16_t box = game->boxMap[r * game->size + c];
+            uint16_t digit = game->grid[r * game->size + c];
+
+            if (digit != 0)
+            {
+                uint16_t digitUnmask = ~(1 << (digit - 1));
+
+                rowNotes[r] &= digitUnmask;
+                colNotes[c] &= digitUnmask;
+
+                if (BOX_NONE != box && box < game->base)
+                {
+                    boxNotes[box] &= digitUnmask;
+                }
+            }
+
+            // We only care about the source box squares that are NOT already part of the row/col
+            // So skip anything on the same row or column as the source square
+            if (box == sourceBox && r != row && c != col)
+            {
+                sourceBoxRows[boxCount] = r;
+                sourceBoxCols[boxCount++] = c;
+            }
+        }
+    }
+
+    // Second pass: apply changes to notes
+    // We don't need to do a full grid sweep though, just the peers (as the function name suggests)
+
+    // First, just the column -- this will include the target square itself
+    for (int r = 0; r < game->size; r++)
+    {
+        uint16_t box = game->boxMap[r * game->size + col];
+        uint16_t boxNote = (box < game->base) ? boxNotes[box] : allNotes;
+        notes[r * game->size + col] = (rowNotes[r] & colNotes[col] & boxNote);
+        if (!notes[r * game->size + col])
+        {
+            ESP_LOGW("Swadgedoku", "Cell r=%d, c=%d has no valid entries!", r, col);
+        }
+    }
+
+    // Next, just the row, skipping the square we already did (the target square)
+    for (int c = 0; c < game->size; c++)
+    {
+        // Skip the source column, it's already done by the previous loop
+        if (c == col) { continue; }
+
+        uint16_t box = game->boxMap[row * game->size + c];
+        uint16_t boxNote = (box < game->base) ? boxNotes[box] : allNotes;
+        notes[row * game->size + c] = (rowNotes[row] & colNotes[c] & boxNote);
+        if (!notes[row * game->size + c])
+        {
+            ESP_LOGW("Swadgedoku", "Cell r=%d, c=%d has no valid entries!", row, c);
+        }
+    }
+
+    // Maybe redundant check since nothing should get added to sourceBox{rows,cols} but idk
+    if (BOX_NONE != sourceBox)
+    {
+        uint16_t sourceBoxNote = boxNotes[sourceBox];
+        for (int n = 0; n < boxCount; n++)
+        {
+            int r = sourceBoxRows[n];
+            int c = sourceBoxCols[n];
+
+            ESP_LOGI("Swadgedoku", "Box[r=%d][c=%d] == sourceBox (%" PRIu16 ")", r, c, sourceBox);
+            notes[r * game->size + c] = (rowNotes[r] & colNotes[c] & sourceBoxNote);
+            if (!notes[r * game->size + c])
+            {
+                ESP_LOGW("Swadgedoku", "Cell r=%d, c=%d has no valid entries!", r, c);
+            }
+        }
+    }
+}
+
+void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
+{
+    // Summaries of the possibilities for each row, box, and column
+    // We will construct these from
+    uint16_t rowNotes[game->size];
+    uint16_t colNotes[game->size];
+    uint16_t boxNotes[game->base];
+
+    // This means 'all values are possible in this row/cell'
+    const uint16_t allNotes = (1 << game->base) - 1;
+
+    // Initialize
+    for (int n = 0; n < game->size; n++)
+    {
+        rowNotes[n] = allNotes;
+        colNotes[n] = allNotes;
+    }
+
+    for (int n = 0; n < game->base; n++)
+    {
+        boxNotes[n] = allNotes;
+    }
+
+    // 
     for (int row = 0; row < game->size; row++)
     {
         for (int col = 0; col < game->size; col++)
@@ -615,7 +730,7 @@ void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
                 rowNotes[row] &= digitUnmask;
                 colNotes[col] &= digitUnmask;
 
-                if (box != BOX_NONE && box < game->base)
+                if (BOX_NONE != box && box < game->base)
                 {
                     boxNotes[box] &= digitUnmask;
                 }
@@ -747,8 +862,11 @@ void swadgedokuGameButton(buttonEvt_t evt)
 
 void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay, const sudokuTheme_t* theme)
 {
+    // Total space around the grid
+    int gridMargin = 1;
+
     // Max size of individual square
-    int maxSquareSize = (TFT_HEIGHT - 1) / game->size;
+    int maxSquareSize = (TFT_HEIGHT - gridMargin) / game->size;
     // Total size of the grid (add 1px for border)
     int gridSize = game->size * maxSquareSize;
 
@@ -1084,38 +1202,47 @@ bool setDigit(sudokuGrid_t* game, uint8_t number, uint8_t x, uint8_t y)
     {
         if (number <= game->base)
         {
-            if (0 == (game->flags[y * game->size + x] & (SF_VOID | SF_LOCKED)))
+            if (!((SF_VOID | SF_LOCKED) & game->flags[y * game->size + x]))
             {
-                // Proceed
-                uint16_t bits = ~(1 << (number - 1));
-
-                int ourRow = y;
-                int ourCol = x;
-                uint8_t ourBox = game->boxMap[y * game->size + x];
-
-
-                for (int r = 0; r < game->size; r++)
+                if (number != 0)
                 {
-                    for (int c = 0; c < game->size; c++)
+                    // Number is nonzero, set a value
+                    // Proceed
+                    /*  uint16_t bits = ~(1 << (number - 1));
+
+                    int ourRow = y;
+                    int ourCol = x;
+                    uint8_t ourBox = game->boxMap[y * game->size + x];
+
+
+                    for (int r = 0; r < game->size; r++)
                     {
-                        uint8_t box = game->boxMap[r * game->size + c];
-                        if (r == ourRow || c == ourCol || box == ourBox)
+                        for (int c = 0; c < game->size; c++)
                         {
-                            if (r != ourRow || c != ourCol)
+                            uint8_t box = game->boxMap[r * game->size + c];
+                            if (r == ourRow || c == ourCol || box == ourBox)
                             {
-                                game->notes[r * game->size + c] &= bits;
-                                if (!game->notes[r * game->size + c])
+                                if (r != ourRow || c != ourCol)
                                 {
-                                    ESP_LOGW("Swadgedoku", "No possible solutions!");
-                                    ok = false;
+                                    game->notes[r * game->size + c] &= bits;
+                                    if (!game->notes[r * game->size + c])
+                                    {
+                                        ESP_LOGW("Swadgedoku", "No possible solutions!");
+                                        ok = false;
+                                    }
                                 }
                             }
                         }
-                    }
-                }
+                    }*/
 
-                game->notes[y * game->size + x] = 0;
-                game->grid[y * game->size + x] = number;
+                    game->notes[y * game->size + x] = 0;
+                    game->grid[y * game->size + x] = number;
+                }
+                else
+                {
+                    game->grid[y * game->size + x] = 0;
+                }
+                sudokuReevaluatePeers(game->notes, game, y, x, 0);
             }
         }
     }
