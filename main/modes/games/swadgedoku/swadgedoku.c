@@ -1206,42 +1206,9 @@ bool setDigit(sudokuGrid_t* game, uint8_t number, uint8_t x, uint8_t y)
             {
                 if (number != 0)
                 {
-                    // Number is nonzero, set a value
-                    // Proceed
-                    /*  uint16_t bits = ~(1 << (number - 1));
-
-                    int ourRow = y;
-                    int ourCol = x;
-                    uint8_t ourBox = game->boxMap[y * game->size + x];
-
-
-                    for (int r = 0; r < game->size; r++)
-                    {
-                        for (int c = 0; c < game->size; c++)
-                        {
-                            uint8_t box = game->boxMap[r * game->size + c];
-                            if (r == ourRow || c == ourCol || box == ourBox)
-                            {
-                                if (r != ourRow || c != ourCol)
-                                {
-                                    game->notes[r * game->size + c] &= bits;
-                                    if (!game->notes[r * game->size + c])
-                                    {
-                                        ESP_LOGW("Swadgedoku", "No possible solutions!");
-                                        ok = false;
-                                    }
-                                }
-                            }
-                        }
-                    }*/
-
                     game->notes[y * game->size + x] = 0;
-                    game->grid[y * game->size + x] = number;
                 }
-                else
-                {
-                    game->grid[y * game->size + x] = 0;
-                }
+                game->grid[y * game->size + x] = number;
                 sudokuReevaluatePeers(game->notes, game, y, x, 0);
             }
         }
