@@ -429,35 +429,6 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
     {
         case SM_CLASSIC:
         {
-            // Basically, this is the size of the square boxes
-            // And also the number of boxes per row
-            int baseRoot = 0;
-
-            switch (base)
-            {
-                case 4:
-                {
-                    baseRoot = 2;
-                    break;
-                }
-                case 9:
-                {
-                    baseRoot = 3;
-                    break;
-                }
-                case 16:
-                {
-                    baseRoot = 4;
-                    break;
-                }
-                // OK, cool
-                break;
-                
-                default:
-                ESP_LOGE("Swadgedoku", "Non-square base %d not supported by classic sudoku", base);
-                return false;
-            }
-
             if (size < base)
             {
                 ESP_LOGE("Swadgedoku", "%1$dx%1$d Grid not large enough for base %2$d", size, base);
@@ -506,16 +477,208 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
             game->mode = mode;
             game->size = size;
             game->base = base;
-            
-            // Setup square boxes!
-            for (int box = 0; box < base; box++)
+
+            // Now, define the boxes!
+
+            // First, check if the base is a square.
+            // It's much easier if it is...
+
+            int baseRoot = 0;
+            /*switch (base)
             {
-                for (int n = 0; n < base; n++)
+                case 1: baseRoot = 1; break;
+                case 4: baseRoot = 2; break;
+                case 9: baseRoot = 3; break;
+                case 16: baseRoot = 4; break;
+                default: break;
+            }*/
+            
+            if (baseRoot != 0)
+            {
+                // Setup square boxes!
+                for (int box = 0; box < base; box++)
                 {
-                    int x = (box % baseRoot) * baseRoot + (n % baseRoot);
-                    int y = (box / baseRoot) * baseRoot + (n / baseRoot);
-                    game->boxMap[y * size + x] = box;
+                    for (int n = 0; n < base; n++)
+                    {
+                        int x = (box % baseRoot) * baseRoot + (n % baseRoot);
+                        int y = (box / baseRoot) * baseRoot + (n / baseRoot);
+                        game->boxMap[y * size + x] = box;
+                    }
                 }
+            }
+            else
+            {
+                uint16_t totalSquares = game->base * game->base;
+                uint8_t boxSquareCounts[game->base];
+                uint16_t assignedSquareCount = 0;
+
+                uint16_t adjacencyMap[game->base];
+
+                memset(boxSquareCounts, 0, game->base * sizeof(uint8_t));
+                memset(adjacencyMap, 0, game->base * sizeof(uint16_t));
+
+                // Ok, here's how we're going to set up the non-square boxes:
+                // - Move in a spiral, always assigning each square to a box as we encounter it
+                // - This generates a spiral box pattern that is guaranteed to be contiguous, but is very boring
+                // - Make random permutations to the box assignments such that they always remain valid
+
+                // First clear all the boxes from the map for reasons
+                for (int n = 0; n < game->size * game->size; n++)
+                {
+                    game->boxMap[n] = BOX_NONE;
+                }
+
+                int curBox = 0;
+
+                // Move in a clockwise spiral from the top left around the board
+                // 0123 right down left up
+                int dir = 0;
+                int minX = 0;
+                int minY = 0;
+                int maxX = game->size - 1;
+                int maxY = game->size - 1;
+                for (int x = 0, y = 0;;)
+                {
+                    game->boxMap[y * size + x] = curBox;
+
+                    // Check for adjacent squares
+                    if (x > 0)
+                    {
+                        uint8_t leftBox = game->boxMap[y * game->size + x - 1];
+
+                        if (leftBox != BOX_NONE)
+                        {
+                            adjacencyMap[leftBox] |= (1 << curBox);
+                            adjacencyMap[curBox] |= (1 << leftBox);
+                        }
+                    }
+
+                    if (y > 0)
+                    {
+                        uint8_t topBox = game->boxMap[(y - 1) * game->size + x];
+                        if (topBox != BOX_NONE)
+                        {
+                            adjacencyMap[topBox] |= (1 << curBox);
+                            adjacencyMap[curBox] |= (1 << topBox);
+                        }
+                    }
+
+                    if (x < game->size - 1)
+                    {
+                        uint8_t rightBox = game->boxMap[y * game->size + x + 1];
+                        if (rightBox != BOX_NONE)
+                        {
+                            adjacencyMap[rightBox] |= (1 << curBox);
+                            adjacencyMap[curBox] |= (1 << rightBox);
+                        }
+                    }
+
+                    if (y < game->size - 1)
+                    {
+                        uint8_t bottomBox = game->boxMap[(y + 1) * game->size + x];
+                        if (bottomBox != BOX_NONE)
+                        {
+                            adjacencyMap[bottomBox] |= (1 << curBox);
+                            adjacencyMap[curBox] |= (1 << bottomBox);
+                        }
+                    }
+
+                    // Advance to the next box if we've assigned all its squares
+                    if (0 == (++assignedSquareCount % game->base))
+                    {
+                        curBox++;
+                    }
+
+
+                    ////////////////////////////////////////////////////////
+                    // The rest of the loop is just for the spiral pattern
+                    ////////////////////////////////////////////////////////
+
+                    bool changeDir = false;
+                    switch (dir)
+                    {
+                        case 0:
+                        {
+                            // right
+                            if (x == maxX)
+                            {
+                                minY++;
+                                y++;
+                                changeDir = true;
+                            }
+                            else
+                            {
+                                x++;
+                            }
+                            break;
+                        }
+                        case 1:
+                        {
+                            // down
+                            if (y == maxY)
+                            {
+                                maxX--;
+                                x--;
+                                changeDir = true;
+                            }
+                            else
+                            {
+                                y++;
+                            }
+                            break;
+                        }
+                        case 2:
+                        {
+                            // left
+                            if (x == minX)
+                            {
+                                maxY--;
+                                y--;
+                                changeDir = true;
+                            }
+                            else
+                            {
+                                x--;
+                            }
+                            break;
+                        }
+                        case 3:
+                        {
+                            // up
+                            if (y == minY)
+                            {
+                                minX++;
+                                x++;
+                                changeDir = true;
+                            }
+                            else
+                            {
+                                y--;
+                            }
+                            break;
+                        }
+                    }
+
+                    if (changeDir)
+                    {
+                        dir = (dir + 1) % 4;
+                        if (minX > maxX || minY > maxY)
+                        {
+                            // We've reached the center and are trying to go beyond, exit the loop
+                            break;
+                        }
+                    }
+                }
+
+                if (assignedSquareCount != game->base * game->base)
+                {
+                    ESP_LOGE("Swadgedoku", "Could not generated boxes for game of base %d", base);
+                }
+
+                // Start randomly permuting the squares
+                uint8_t boxA = (esp_random() % game->base);
+                uint8_t boxB = (esp_random() % (game->base - 1));
+                if (boxB >= boxA) { boxB++; }
             }
 
             // Set the notes to all possible
