@@ -315,19 +315,24 @@ endif
 # These are the files to build
 EXECUTABLE = swadge_emulator
 
+MACOS_APP     = SwadgeEmulator.app
+MACOS_ICON    = build/SwadgeEmulator.icns
+MACOS_ICONSET = build/SwadgeEmulator.iconset
+MACOS_PLIST   = emulator/resources/Info.plist
+
 ################################################################################
 # Targets for Building
 ################################################################################
 
 # This list of targets do not build files which match their name
-.PHONY: all assets bundle clean fullclean docs format gen-coverage update-submodules clean-firmware firmware usbflash monitor installudev cppcheck print-%
-
+.PHONY: all assets firmware bundle \
+	clean clean-firmware clean-docs clean-assets clean-git clean-utils fullclean \
+	docs format gen-coverage update-dependencies cppcheck \
+	usbflash monitor installudev \
+	print-%
+	
 # Build the executable
 all: $(EXECUTABLE)
-
-assets:
-	$(MAKE) -C ./tools/assets_preprocessor/
-	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
 
 # To build the main file, you have to compile the objects
 $(EXECUTABLE): $(OBJECTS)
@@ -341,62 +346,93 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(CFLAGS) $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) $(DEFINES) $(INC) $< -o $@
 
 # To create CNFS_FILE, first the assets must be processed
-$(CNFS_FILE): $(ASSET_FILES)
-	$(MAKE) -C ./tools/assets_preprocessor/
-	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
+$(CNFS_FILE): assets
 	$(MAKE) -C ./tools/cnfs/
 	./tools/cnfs/cnfs_gen assets_image/ $(CNFS_FILE) $(CNFS_FILE_H)
 
-bundle: SwadgeEmulator.app
+# The "assets" target is dependent on all the asset files
+assets: $(ASSET_FILES)
+	$(MAKE) -C ./tools/assets_preprocessor/
+	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
 
-SwadgeEmulator.app: $(EXECUTABLE) build/SwadgeEmulator.icns emulator/resources/Info.plist
-	rm -rf SwadgeEmulator.app
-	mkdir -p SwadgeEmulator.app/Contents/{MacOS,Resources,libs}
-	cat emulator/resources/Info.plist | sed "s/##GIT_HASH##/$(GIT_HASH)/" > SwadgeEmulator.app/Contents/Info.plist
-	echo "APPLSwadgeEmulator" > SwadgeEmulator.app/Contents/PkgInfo
-	cp build/SwadgeEmulator.icns SwadgeEmulator.app/Contents/Resources/
-	vtool -set-build-version macos 10.0 10.0 -replace -output SwadgeEmulator.app/Contents/MacOS/SwadgeEmulator $(EXECUTABLE)
-	dylibbundler -od -b -x ./SwadgeEmulator.app/Contents/MacOS/SwadgeEmulator -d ./SwadgeEmulator.app/Contents/libs/
+# Build the firmware. Cmake will take care of generating the CNFS files
+firmware:
+	idf.py build
 
-build/SwadgeEmulator.icns: emulator/resources/icon.png
-	rm -rf build/SwadgeEmulator.iconset
-	mkdir -p build/SwadgeEmulator.iconset
-	sips -z 16 16     $< --out build/SwadgeEmulator.iconset/icon_16x16.png
-	sips -z 32 32     $< --out build/SwadgeEmulator.iconset/icon_16x16@2x.png
-	sips -z 32 32     $< --out build/SwadgeEmulator.iconset/icon_32x32.png
-	sips -z 64 64     $< --out build/SwadgeEmulator.iconset/icon_32x32@2x.png
-	sips -z 128 128   $< --out build/SwadgeEmulator.iconset/icon_128x128.png
-	sips -z 256 256   $< --out build/SwadgeEmulator.iconset/icon_128x128@2x.png
-	sips -z 256 256   $< --out build/SwadgeEmulator.iconset/icon_256x256.png
-	sips -z 512 512   $< --out build/SwadgeEmulator.iconset/icon_256x256@2x.png
-	sips -z 512 512   $< --out build/SwadgeEmulator.iconset/icon_512x512.png
-	sips -z 1024 1024 $< --out build/SwadgeEmulator.iconset/icon_512x512@2x.png
-	iconutil -c icns -o build/SwadgeEmulator.icns build/SwadgeEmulator.iconset
-	rm -r build/SwadgeEmulator.iconset
+# Build an macOS bundle, which depends on a .app
+bundle: $(MACOS_APP)
 
-# This cleans emulator files
-clean:
+# Build an macOS app, which depends on ab executable, icon, and plist
+$(MACOS_APP): $(EXECUTABLE) $(MACOS_ICON) $(MACOS_PLIST)
+	rm -rf $(MACOS_APP)
+	mkdir -p $(MACOS_APP)/Contents/{MacOS,Resources,libs}
+	cat $(MACOS_PLIST) | sed "s/##GIT_HASH##/$(GIT_HASH)/" > $(MACOS_APP)/Contents/Info.plist
+	echo "APPLSwadgeEmulator" > $(MACOS_APP)/Contents/PkgInfo
+	cp $(MACOS_ICON) $(MACOS_APP)/Contents/Resources/
+	vtool -set-build-version macos 10.0 10.0 -replace -output $(MACOS_APP)/Contents/MacOS/SwadgeEmulator $(EXECUTABLE)
+	dylibbundler -od -b -x ./$(MACOS_APP)/Contents/MacOS/SwadgeEmulator -d ./$(MACOS_APP)/Contents/libs/
+
+# Build a macOS icon, which depends on a png
+$(MACOS_ICON): emulator/resources/icon.png
+	rm -rf $(MACOS_ICONSET)
+	mkdir -p $(MACOS_ICONSET)
+	sips -z 16 16     $< --out $(MACOS_ICONSET)/icon_16x16.png
+	sips -z 32 32     $< --out $(MACOS_ICONSET)/icon_16x16@2x.png
+	sips -z 32 32     $< --out $(MACOS_ICONSET)/icon_32x32.png
+	sips -z 64 64     $< --out $(MACOS_ICONSET)/icon_32x32@2x.png
+	sips -z 128 128   $< --out $(MACOS_ICONSET)/icon_128x128.png
+	sips -z 256 256   $< --out $(MACOS_ICONSET)/icon_128x128@2x.png
+	sips -z 256 256   $< --out $(MACOS_ICONSET)/icon_256x256.png
+	sips -z 512 512   $< --out $(MACOS_ICONSET)/icon_256x256@2x.png
+	sips -z 512 512   $< --out $(MACOS_ICONSET)/icon_512x512.png
+	sips -z 1024 1024 $< --out $(MACOS_ICONSET)/icon_512x512@2x.png
+	iconutil -c icns -o $(MACOS_ICON) $(MACOS_ICONSET)
+	rm -r $(MACOS_ICONSET)
+
+################################################################################
+# Targets for cleaning
+################################################################################
+
+# Clean emulator files, depends on cleaning assets too
+clean: clean-assets
+	-@rm -f $(OBJECTS) $(EXECUTABLE)
+
+# Clean firmware files, depends on cleaning assets too
+clean-firmware: clean-assets
+	idf.py clean
+
+# Clean docs
+clean-docs:
+	-@rm -rf ./docs/html
+
+# Clean assets
+clean-assets:
 	$(MAKE) -C ./tools/assets_preprocessor/ clean
 	$(MAKE) -C ./tools/cnfs clean
-	-@rm -f $(OBJECTS) $(EXECUTABLE)
-	-@rm -rf ./docs/html
 	-@rm -rf $(CNFS_FILE) $(CNFS_FILE_H)
+	-@rm -rf ./assets_image/*
 
-# This cleans everything
-fullclean: clean
-	-@rm -rf managed_components/
-	-@rm -rf build/
-	idf.py fullclean
+# Clean git. Be careful, since this will wipe uncommitted changes
+clean-git:
 	git clean -dfX
 	git clean -df
 	git clean -fX
 	git clean -f
+
+# Clean utilities
+clean-utils:
 	$(MAKE) -C ./tools/sandbox_test clean
 	$(MAKE) -C ./tools/hidapi_test clean
 	$(MAKE) -C ./tools/bootload_reboot_stub clean
 	$(MAKE) -C ./tools/font_maker clean
 	$(MAKE) -C ./tools/swadgeterm clean
 	$(MAKE) -C ./tools/reboot_into_bootloader clean
+
+# This cleans everything
+fullclean: clean clean-firmware clean-docs clean-assets clean-git clean-utils
+	-@rm -rf managed_components/
+	-@rm -rf build/
+	idf.py fullclean
 
 ################################################################################
 # Utility targets
@@ -416,30 +452,19 @@ gen-coverage:
 	genhtml ./coverage.info --output-directory ./coverage
 	firefox ./coverage/index.html &
 
-update-submodules:
+update-dependencies:
 	for submodule in $(SUBMODULES) ; do \
 		echo Updating $$submodule to latest ; \
 		git -C $$submodule fetch --prune ; \
 		git -C $$submodule checkout origin/HEAD ; \
 	done
-
-################################################################################
-# Firmware targets
-################################################################################
-
-clean-firmware:
-	idf.py clean
-	$(MAKE) -C ./tools/assets_preprocessor/ clean
-	-@rm -rf ./docs/html
-	-@rm -rf ./assets_image/*
-
-firmware:
-	idf.py build
+	idf.py update-dependencies
 
 ################################################################################
 # Flashing targets
 ################################################################################
 
+# Target to flash over USB. 
 ifeq ($(HOST_OS),Windows)
 usbflash :
 	tools/reflash_and_monitor.bat
@@ -455,9 +480,11 @@ usbflash :
 	$(MAKE) -C tools/swadgeterm monitor
 endif
 
+# Target to launch a USB monitor for firmware debugging
 monitor :
 	$(MAKE) -C tools/swadgeterm monitor
 
+# Targt to create 99-swadge.rules if it doesn't already exist
 /etc/udev/rules.d/99-swadge.rules :
 	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", MODE=\"0664\", GROUP=\"%s\", ATTRS{idVendor}==\"1209\", ATTRS{idProduct}==\"4269\"\n" $(UDEV_GROUP) > /tmp/99-swadge.rules
 	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", ATTRS{idVendor}==\"1209\", ATTRS{idProduct}==\"4269\", GROUP=\"%s\", MODE=\"0660\"\n" $(UDEV_GROUP) >> /tmp/99-swadge.rules
@@ -465,6 +492,7 @@ monitor :
 	printf "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", ATTRS{idVendor}==\"303a\", ATTRS{idProduct}==\"00??\", GROUP=\"%s\", MODE=\"0660\"\n" $(UDEV_GROUP) >> /tmp/99-swadge.rules
 	sudo cp -a /tmp/99-swadge.rules /etc/udev/rules.d/99-swadge.rules
 
+# Target to automatically add udev rules on Linux
 installudev : /etc/udev/rules.d/99-swadge.rules
 	getent group plugdev >/dev/null && sudo usermod -aG plugdev $(USER) || true
 	sudo udevadm control --reload
