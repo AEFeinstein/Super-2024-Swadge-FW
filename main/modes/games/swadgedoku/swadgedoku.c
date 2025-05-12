@@ -964,7 +964,16 @@ void swadgedokuGameButton(buttonEvt_t evt)
                 {
                     // Not locked or void, proceed setting the digit
                     //sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX] = sd->player.selectedDigit;
-                    setDigit(&sd->game, sd->player.selectedDigit, sd->player.curX, sd->player.curY);
+                    if (sd->player.selectedDigit == sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX])
+                    {
+                        // Unset number
+                        setDigit(&sd->game, 0, sd->player.curX, sd->player.curY);
+                    }
+                    else
+                    {
+                        // Set number
+                        setDigit(&sd->game, sd->player.selectedDigit, sd->player.curX, sd->player.curY);
+                    }
                 }
                 break;
             }
