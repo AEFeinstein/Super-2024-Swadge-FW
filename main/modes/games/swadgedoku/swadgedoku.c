@@ -77,6 +77,14 @@ typedef enum
 
 typedef enum
 {
+    /// @brief This shape is a cursor and shouldn't be removed
+    ST_CURSOR,
+    /// @brief This is a temporary annotation added by sudokuAnnotate()
+    ST_ANNOTATE,
+} sudokuShapeTag_t;
+
+typedef enum
+{
     OVERLAY_RECT,
     OVERLAY_CIRCLE,
     OVERLAY_LINE,
@@ -160,6 +168,7 @@ typedef struct
 
 typedef struct
 {
+    sudokuShapeTag_t tag;
     paletteColor_t color;
     sudokuOverlayShapeType_t type;
 
@@ -733,6 +742,7 @@ void setupSudokuPlayer(sudokuPlayer_t* player, const sudokuGrid_t* game)
     player->overlay.gridOpts = calloc(game->size * game->size, sizeof(sudokuOverlayOpt_t));
 
     player->cursorShape = calloc(1, sizeof(sudokuOverlayShape_t));
+    player->cursorShape->tag = ST_CURSOR;
     player->cursorShape->color = c505;
     //player->cursorShape->type = OVERLAY_RECT;
     player->cursorShape->type = OVERLAY_CIRCLE;
@@ -919,6 +929,27 @@ void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
             }
         }
     }
+}
+
+// Annotate the overlay with
+void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuGrid_t* grid)
+{
+    // 1. Remove all the existing annotations
+    node_t* next = NULL;
+    for (node_t* node = overlay->shapes.first; node != NULL; node = next)
+    {
+        sudokuOverlayShape_t* shape = (sudokuOverlayShape_t*)node->val;
+        // Save the next node pointer in case we remove the current one
+        next = node->next;
+
+        if (shape->tag == ST_ANNOTATE)
+        {
+            removeEntry(&overlay->shapes, node);
+            free(shape);
+        }
+    }
+
+    // TODO other stuff
 }
 
 void swadgedokuGameButton(buttonEvt_t evt)
