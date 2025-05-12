@@ -239,6 +239,7 @@ typedef struct
     midiFile_t midiFile;
     midiPlayer_t midiPlayer;
     bool fileMode;
+    bool nvsMode;
     const char* filename;
     char* filenameBuf;
     bool customFile;
@@ -355,7 +356,7 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config);
 static void synthSetupMenu(bool forceReset);
 static void preloadLyrics(karaokeInfo_t* karInfo, const midiFile_t* midiFile);
 static void unloadLyrics(karaokeInfo_t* karInfo);
-static void synthSetFile(const char* filename);
+static void synthSetFile(cnfsFileIdx_t fIdx);
 static void synthHandleButton(const buttonEvt_t evt);
 static void handleButtonTimer(int64_t* timer, int64_t interval, int64_t elapsedUs, buttonBit_t button);
 static void synthHandleInput(int64_t elapsedUs);
@@ -1066,6 +1067,7 @@ static const char* const nvsKeyGmEnabled        = "synth_gmmode";
 static const char* const menuItemModeOptions[] = {
     "Streaming",
     "File",
+    "Custom",
 };
 
 static const char* const menuItemViewOptions[] = {
@@ -1115,6 +1117,7 @@ static const char* const menuItemChannelsOptions[] = {
 static const int32_t menuItemModeValues[] = {
     0,
     1,
+    2,
 };
 
 static const int32_t menuItemViewValues[] = {
@@ -1203,7 +1206,7 @@ static const int32_t menuItemGmValues[] = {
 static settingParam_t menuItemModeBounds = {
     .def = 0,
     .min = 0,
-    .max = 1,
+    .max = 2,
     .key = nvsKeyMode,
 };
 
@@ -1387,8 +1390,8 @@ static synthData_t* sd;
 static void synthEnterMode(void)
 {
     sd = heap_caps_calloc(1, sizeof(synthData_t), MALLOC_CAP_SPIRAM);
-    loadFont("ibm_vga8.font", &sd->font, true);
-    loadFont("sonic.font", &sd->betterFont, true);
+    loadFont(IBM_VGA_8_FONT, &sd->font, true);
+    loadFont(SONIC_FONT, &sd->betterFont, true);
     makeOutlineFont(&sd->betterFont, &sd->betterOutline, true);
 
     sd->perc[9] = true;
@@ -1407,7 +1410,20 @@ static void synthEnterMode(void)
     {
         nvsRead = 0;
     }
-    sd->fileMode = nvsRead ? true : false;
+    switch (nvsRead)
+    {
+        default:
+        case 0:
+            sd->fileMode = false;
+            break;
+        case 1:
+            sd->fileMode = true;
+            break;
+        case 2:
+            sd->fileMode = true;
+            sd->nvsMode  = true;
+            break;
+    }
 
     // View mode
     if (!readNvs32(nvsKeyViewMode, &nvsRead))
@@ -1527,26 +1543,17 @@ static void synthEnterMode(void)
         }
     }
 
-    if (sd->fileMode)
+    if (sd->nvsMode)
     {
-        size_t savedNameLen;
-        if (readNvsBlob(nvsKeyLastSong, NULL, &savedNameLen))
+        synthSetFile(CNFS_NUM_FILES);
+    }
+    else if (sd->fileMode)
+    {
+        int32_t fIdx;
+        if (readNvs32(nvsKeyLastSong, &fIdx))
         {
-            sd->filenameBuf = heap_caps_malloc(savedNameLen < 128 ? 128 : savedNameLen + 1, MALLOC_CAP_SPIRAM);
-
-            if (readNvsBlob(nvsKeyLastSong, sd->filenameBuf, &savedNameLen))
-            {
-                sd->filenameBuf[savedNameLen] = '\0';
-                sd->customFile                = true;
-                sd->filename                  = sd->filenameBuf;
-                synthSetFile(sd->filename);
-            }
-            else
-            {
-                ESP_LOGI("Synth", "Failed to load filename");
-                heap_caps_free(sd->filenameBuf);
-                sd->filenameBuf = NULL;
-            }
+            sd->customFile = true;
+            synthSetFile(fIdx);
         }
         else
         {
@@ -1555,38 +1562,6 @@ static void synthEnterMode(void)
     }
 
     sd->screen = SS_VIEW;
-
-    const cnfsFileEntry* files = getCnfsFiles();
-    for (const cnfsFileEntry* file = files; file < files + getCnfsNumFiles(); file++)
-    {
-        if ((strlen(file->name) > 4
-             && (!strcmp(&file->name[strlen(file->name) - 4], ".mid")
-                 || !strcmp(&file->name[strlen(file->name) - 4], ".kar")))
-            || (strlen(file->name) > 5 && !strcmp(&file->name[strlen(file->name) - 5], ".midi")))
-        {
-            // No longer strictly necessary with CNFS, but let's keep it how it was
-            char* copyStr = strdup(file->name);
-            if (copyStr)
-            {
-                // Insert the file into the list in a sorted manner
-                node_t* last = NULL;
-                node_t* node = sd->customFiles.first;
-
-                while (node != NULL)
-                {
-                    if (strcasecmp((char*)node->val, copyStr) >= 0)
-                    {
-                        break;
-                    }
-
-                    last = node;
-                    node = node->next;
-                }
-
-                addAfter(&sd->customFiles, copyStr, last);
-            }
-        }
-    }
 
     sd->wheelTextArea.pos.x  = 15;
     sd->wheelTextArea.pos.y  = TFT_HEIGHT - sd->betterFont.height - 2;
@@ -1601,54 +1576,54 @@ static void synthEnterMode(void)
     hashInit(&sd->menuMap, 512);
 
     // GM Instrument Category Images
-    loadWsg("piano.wsg", &sd->instrumentImages[0], true);
-    loadWsg("chromatic_percussion.wsg", &sd->instrumentImages[1], true);
-    loadWsg("organ.wsg", &sd->instrumentImages[2], true);
-    loadWsg("guitar.wsg", &sd->instrumentImages[3], true);
-    loadWsg("bass.wsg", &sd->instrumentImages[4], true);
-    loadWsg("solo_strings.wsg", &sd->instrumentImages[5], true);
-    loadWsg("ensemble.wsg", &sd->instrumentImages[6], true);
-    loadWsg("brass.wsg", &sd->instrumentImages[7], true);
-    loadWsg("reed.wsg", &sd->instrumentImages[8], true);
-    loadWsg("pipe.wsg", &sd->instrumentImages[9], true);
-    loadWsg("synth_lead.wsg", &sd->instrumentImages[10], true);
-    loadWsg("synth_pad.wsg", &sd->instrumentImages[11], true);
-    loadWsg("synth_effects.wsg", &sd->instrumentImages[12], true);
-    loadWsg("ethnic.wsg", &sd->instrumentImages[13], true);
-    loadWsg("percussive.wsg", &sd->instrumentImages[14], true);
-    loadWsg("sound_effects.wsg", &sd->instrumentImages[15], true);
+    loadWsg(PIANO_WSG, &sd->instrumentImages[0], true);
+    loadWsg(CHROMATIC_PERCUSSION_WSG, &sd->instrumentImages[1], true);
+    loadWsg(ORGAN_WSG, &sd->instrumentImages[2], true);
+    loadWsg(GUITAR_WSG, &sd->instrumentImages[3], true);
+    loadWsg(BASS_WSG, &sd->instrumentImages[4], true);
+    loadWsg(SOLO_STRINGS_WSG, &sd->instrumentImages[5], true);
+    loadWsg(ENSEMBLE_WSG, &sd->instrumentImages[6], true);
+    loadWsg(BRASS_WSG, &sd->instrumentImages[7], true);
+    loadWsg(REED_WSG, &sd->instrumentImages[8], true);
+    loadWsg(PIPE_WSG, &sd->instrumentImages[9], true);
+    loadWsg(SYNTH_LEAD_WSG, &sd->instrumentImages[10], true);
+    loadWsg(SYNTH_PAD_WSG, &sd->instrumentImages[11], true);
+    loadWsg(SYNTH_EFFECTS_WSG, &sd->instrumentImages[12], true);
+    loadWsg(ETHNIC_WSG, &sd->instrumentImages[13], true);
+    loadWsg(PERCUSSIVE_WSG, &sd->instrumentImages[14], true);
+    loadWsg(SOUND_EFFECTS_WSG, &sd->instrumentImages[15], true);
 
     // Percussion channel image
-    loadWsg("percussion.wsg", &sd->percussionImage, true);
+    loadWsg(PERCUSSION_WSG, &sd->percussionImage, true);
 
     // Custom bank image
-    loadWsg("magfest_bank.wsg", &sd->magfestBankImage, true);
+    loadWsg(MAGFEST_BANK_WSG, &sd->magfestBankImage, true);
 
     // Play/Pause/Etc Icons
-    loadWsg("pause.wsg", &sd->pauseIcon, true);
-    loadWsg("play.wsg", &sd->playIcon, true);
-    loadWsg("playpause.wsg", &sd->playPauseIcon, true);
-    loadWsg("fast_forward.wsg", &sd->ffwIcon, true);
-    loadWsg("skip.wsg", &sd->skipIcon, true);
-    loadWsg("loop.wsg", &sd->loopIcon, true);
-    loadWsg("shuffle.wsg", &sd->shuffleIcon, true);
-    loadWsg("stop.wsg", &sd->stopIcon, true);
+    loadWsg(PAUSE_WSG, &sd->pauseIcon, true);
+    loadWsg(PLAY_WSG, &sd->playIcon, true);
+    loadWsg(PLAYPAUSE_WSG, &sd->playPauseIcon, true);
+    loadWsg(FAST_FORWARD_WSG, &sd->ffwIcon, true);
+    loadWsg(SKIP_WSG, &sd->skipIcon, true);
+    loadWsg(LOOP_WSG, &sd->loopIcon, true);
+    loadWsg(SHUFFLE_WSG, &sd->shuffleIcon, true);
+    loadWsg(STOP_WSG, &sd->stopIcon, true);
 
     // Images for Wheel Menu
-    loadWsg("open_song.wsg", &sd->fileImage, true);
-    loadWsg("player.wsg", &sd->playerImage, true);
-    loadWsg("channels.wsg", &sd->channelSetupImage, true);
-    loadWsg("interface.wsg", &sd->uiImage, true);
-    loadWsg("midi_volume.wsg", &sd->volumeImage, true);
-    loadWsg("button_a.wsg", &sd->buttonImage, true);
-    loadWsg("touchpad.wsg", &sd->touchImage, true);
-    loadWsg("view_mode.wsg", &sd->viewModeImage, true);
-    loadWsg("usb_mode.wsg", &sd->usbModeImage, true);
-    loadWsg("hamburger.wsg", &sd->menuImage, true);
-    loadWsg("pitch_wheel.wsg", &sd->pitchImage, true);
-    loadWsg("reset.wsg", &sd->resetImage, true);
-    loadWsg("ignore.wsg", &sd->ignoreImage, true);
-    loadWsg("enable.wsg", &sd->enableImage, true);
+    loadWsg(OPEN_SONG_WSG, &sd->fileImage, true);
+    loadWsg(PLAYER_WSG, &sd->playerImage, true);
+    loadWsg(CHANNELS_WSG, &sd->channelSetupImage, true);
+    loadWsg(INTERFACE_WSG, &sd->uiImage, true);
+    loadWsg(MIDI_VOLUME_WSG, &sd->volumeImage, true);
+    loadWsg(BUTTON_A_WSG, &sd->buttonImage, true);
+    loadWsg(TOUCHPAD_WSG, &sd->touchImage, true);
+    loadWsg(VIEW_MODE_WSG, &sd->viewModeImage, true);
+    loadWsg(USB_MODE_WSG, &sd->usbModeImage, true);
+    loadWsg(HAMBURGER_WSG, &sd->menuImage, true);
+    loadWsg(PITCH_WHEEL_WSG, &sd->pitchImage, true);
+    loadWsg(RESET_WSG, &sd->resetImage, true);
+    loadWsg(IGNORE_WSG, &sd->ignoreImage, true);
+    loadWsg(ENABLE_WSG, &sd->enableImage, true);
 
     synthSetupMenu(true);
     setupShuffle(sd->customFiles.length);
@@ -1857,7 +1832,7 @@ static void synthMainLoop(int64_t elapsedUs)
             // Entry is finished
             if (sd->filenameBuf && *sd->filenameBuf)
             {
-                synthSetFile(sd->filenameBuf);
+                // synthSetFile(sd->filenameBuf);
                 if (sd->fileMode)
                 {
                     // Setting file succeeded
@@ -2637,7 +2612,7 @@ static void unloadLyrics(karaokeInfo_t* karInfo)
     }
 }
 
-static void synthSetFile(const char* filename)
+static void synthSetFile(cnfsFileIdx_t fIdx)
 {
     // First: stop and reset the MIDI player
     midiPlayerReset(&sd->midiPlayer);
@@ -2662,31 +2637,66 @@ static void synthSetFile(const char* filename)
     sd->karaoke.timeSignature.num32ndNotesPerBeat        = 8;
     sd->karaoke.timeSignature.midiClocksPerMetronomeTick = 24;
 
-    if (NULL != filename)
+    bool midiLoaded = false;
+    bool nvsMode    = (fIdx >= CNFS_NUM_FILES);
+
+    if (nvsMode)
     {
-        // Cleanup done, now load the new file
-        if (loadMidiFile(filename, &sd->midiFile, true))
+        // NVS mode
+
+        size_t size;
+        if (readNvsBlob("synth_usersong", NULL, &size))
         {
-            sd->fileMode = true;
-
-            midiPlayerReset(&sd->midiPlayer);
-            synthSetupPlayer();
-            midiSetFile(&sd->midiPlayer, &sd->midiFile);
-            preloadLyrics(&sd->karaoke, &sd->midiFile);
-
-            // And tell it to play immediately
-            midiPause(&sd->midiPlayer, false);
-
-            writeNvsBlob(nvsKeyLastSong, filename, strlen(filename));
-            sd->stopped = false;
+            uint8_t* data = malloc(size);
+            if (NULL != data)
+            {
+                if (readNvsBlob("synth_usersong", data, &size))
+                {
+                    if (loadMidiData(data, size, &sd->midiFile))
+                    {
+                        midiLoaded = true;
+                    }
+                    else
+                    {
+                        free(data);
+                        data = NULL;
+                    }
+                }
+                else
+                {
+                    free(data);
+                    data = NULL;
+                }
+            }
         }
-        else
-        {
-            // We failed to open the file
-            sd->fileMode    = false;
-            const char* msg = "Failed to open MIDI file!";
-            midiTextCallback(TEXT, msg, strlen(msg));
-        }
+    }
+    else
+    {
+        midiLoaded = loadMidiFile(fIdx, &sd->midiFile, true);
+    }
+
+    // Cleanup done, now load the new file
+    if (midiLoaded)
+    {
+        sd->fileMode = true;
+
+        midiPlayerReset(&sd->midiPlayer);
+        synthSetupPlayer();
+        midiSetFile(&sd->midiPlayer, &sd->midiFile);
+        preloadLyrics(&sd->karaoke, &sd->midiFile);
+
+        // And tell it to play immediately
+        midiPause(&sd->midiPlayer, false);
+
+        writeNvs32(nvsKeyLastSong, fIdx);
+        sd->stopped = false;
+    }
+    else
+    {
+        // We failed to open the file
+        sd->fileMode    = false;
+        const char* msg = "Failed to open MIDI file!";
+        midiTextCallback(TEXT, msg, strlen(msg));
     }
 }
 
@@ -3532,7 +3542,7 @@ static void synthHandleButton(const buttonEvt_t evt)
                     {
                         if (sd->stopped && sd->filename)
                         {
-                            synthSetFile(sd->filename);
+                            // synthSetFile(sd->filename);
                         }
                         else
                         {
@@ -4059,7 +4069,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
                 // fileMode
                 if (sd->filename != NULL && *sd->filename)
                 {
-                    synthSetFile(sd->filename);
+                    // synthSetFile(sd->filename);
                     if (sd->fileMode)
                     {
                         // Loading was successful
@@ -4086,7 +4096,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
                 sd->fileMode = false;
 
                 // not file mode
-                synthSetFile(NULL);
+                // synthSetFile(NULL);
                 midiPlayerReset(&sd->midiPlayer);
 
                 synthSetupPlayer();
@@ -4397,7 +4407,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
                 char* str = (char*)node->val;
                 if (label == str)
                 {
-                    synthSetFile(label);
+                    // synthSetFile(label);
 
                     if (sd->fileMode)
                     {
@@ -4464,7 +4474,7 @@ static void prevSong(void)
         if (node && node->val)
         {
             pickedSong = (const char*)node->val;
-            synthSetFile(pickedSong);
+            // synthSetFile(pickedSong);
         }
     }
     else
@@ -4478,14 +4488,14 @@ static void prevSong(void)
                     if (node->prev && node->prev->val)
                     {
                         pickedSong = (const char*)node->prev->val;
-                        synthSetFile(pickedSong);
+                        // synthSetFile(pickedSong);
                     }
                     else if (sd->loop && sd->customFiles.last)
                     {
                         if (sd->customFiles.last->val)
                         {
                             pickedSong = (const char*)sd->customFiles.last->val;
-                            synthSetFile(pickedSong);
+                            // synthSetFile(pickedSong);
                         }
                     }
 
@@ -4529,7 +4539,7 @@ static void nextSong(void)
         if (node && node->val)
         {
             pickedSong = (const char*)node->val;
-            synthSetFile(pickedSong);
+            // synthSetFile(pickedSong);
         }
     }
     else
@@ -4543,14 +4553,14 @@ static void nextSong(void)
                     if (node->next && node->next->val)
                     {
                         pickedSong = (const char*)node->next->val;
-                        synthSetFile(pickedSong);
+                        // synthSetFile(pickedSong);
                     }
                     else if (sd->loop && sd->customFiles.first)
                     {
                         if (sd->customFiles.first->val)
                         {
                             pickedSong = (const char*)sd->customFiles.first->val;
-                            synthSetFile(pickedSong);
+                            // synthSetFile(pickedSong);
                         }
                     }
 

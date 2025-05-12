@@ -53,3 +53,6 @@ cnfs_gen : cnfs_gen.c
 
 clean :
 	rm -rf image.c cnfs_gen image.h
+
+format:
+	clang-format -style=file -i cnfs_gen.c

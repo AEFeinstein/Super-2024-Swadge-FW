@@ -170,11 +170,11 @@ void testEnterMode(void)
     test = (factoryTest_t*)heap_caps_calloc(1, sizeof(factoryTest_t), MALLOC_CAP_8BIT);
 
     // Load a font
-    loadFont("ibm_vga8.font", &test->ibm_vga8, true);
+    loadFont(IBM_VGA_8_FONT, &test->ibm_vga8, true);
 
     // Load a sprite
-    loadWsg("kid0.wsg", &test->kd_idle0, true);
-    loadWsg("kid1.wsg", &test->kd_idle1, true);
+    loadWsg(KID_0_WSG, &test->kd_idle0, true);
+    loadWsg(KID_1_WSG, &test->kd_idle1, true);
 
     // Init last touchState index to indicate no previous state
     test->lastTouchStateIdx = UINT8_MAX;
@@ -191,7 +191,7 @@ void testEnterMode(void)
     setMicGainSetting(MAX_MIC_GAIN);
 
     // Play a song
-    loadMidiFile("hd_credits.mid", &test->song, true);
+    loadMidiFile(HD_CREDITS_MID, &test->song, true);
     switchToSpeaker();
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     midiGmOn(player);

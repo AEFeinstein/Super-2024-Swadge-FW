@@ -390,25 +390,25 @@ static void introEnterMode(void)
 {
     iv = heap_caps_calloc(1, sizeof(introVars_t), MALLOC_CAP_8BIT);
 
-    loadFont("ibm_vga8.font", &iv->smallFont, true);
-    loadFont("righteous_150.font", &iv->bigFont, true);
-    loadFont("retro_logo.font", &iv->logoFont, true);
+    loadFont(IBM_VGA_8_FONT, &iv->smallFont, true);
+    loadFont(RIGHTEOUS_150_FONT, &iv->bigFont, true);
+    loadFont(RETRO_LOGO_FONT, &iv->logoFont, true);
     makeOutlineFont(&iv->logoFont, &iv->logoFontOutline, true);
 
 #ifdef CUSTOM_INTRO_SOUND
-    iv->samplePlayer.sample = cnfsGetFile("magfest.bin", &iv->samplePlayer.sampleCount);
+    iv->samplePlayer.sample = cnfsGetFile(MAGFEST_BIN, &iv->samplePlayer.sampleCount);
     iv->samplePlayer.factor = 2;
 #endif
 
-    loadWsg("button_a.wsg", &iv->icon.button.a, true);
-    loadWsg("button_b.wsg", &iv->icon.button.b, true);
-    loadWsg("button_menu.wsg", &iv->icon.button.menu, true);
-    loadWsg("button_pause.wsg", &iv->icon.button.pause, true);
-    loadWsg("button_up.wsg", &iv->icon.button.up, true);
+    loadWsg(BUTTON_A_WSG, &iv->icon.button.a, true);
+    loadWsg(BUTTON_B_WSG, &iv->icon.button.b, true);
+    loadWsg(BUTTON_MENU_WSG, &iv->icon.button.menu, true);
+    loadWsg(BUTTON_PAUSE_WSG, &iv->icon.button.pause, true);
+    loadWsg(BUTTON_UP_WSG, &iv->icon.button.up, true);
 
-    loadWsg("spk.wsg", &iv->icon.speaker, true);
-    loadWsg("touch-gem.wsg", &iv->icon.touchGem, true);
-    loadWsg("intro_swadge.wsg", &iv->icon.swadge, true);
+    loadWsg(SPK_WSG, &iv->icon.speaker, true);
+    loadWsg(TOUCH_GEM_WSG, &iv->icon.touchGem, true);
+    loadWsg(INTRO_SWADGE_WSG, &iv->icon.swadge, true);
 
     iv->bgMenu   = initMenu(startTitle, NULL);
     iv->renderer = initMenuManiaRenderer(&iv->bigFont, NULL, &iv->smallFont);
@@ -476,7 +476,7 @@ static void introEnterMode(void)
 #endif
 
     // Load the MIDI file
-    loadMidiFile("hd_credits.mid", &iv->song, true);
+    loadMidiFile(HD_CREDITS_MID, &iv->song, true);
 
     // Init CC
     InitColorChord(&iv->end, &iv->dd);

@@ -645,7 +645,7 @@ int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_
         static size_t colossusLen            = 0;
         if (!colossusLoaded)
         {
-            colossusSample = cnfsGetFile("colossus.bin", &colossusLen);
+            colossusSample = cnfsGetFile(COLOSSUS_BIN, &colossusLen);
             colossusLoaded = true;
         }
 
@@ -665,7 +665,7 @@ int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_
         if (!magLoaded)
         {
             // TODO: Use .raw instead of .bin, and try on-the-fly
-            magSample = cnfsGetFile("donut_mag.bin", &magLen);
+            magSample = cnfsGetFile(DONUT_MAG_BIN, &magLen);
             magLoaded = true;
         }
 
@@ -685,7 +685,7 @@ int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_
         static size_t festLen            = 0;
         if (!festLoaded)
         {
-            festSample = cnfsGetFile("donut_fest.bin", &festLen);
+            festSample = cnfsGetFile(DONUT_FEST_BIN, &festLen);
             festLoaded = true;
         }
 
