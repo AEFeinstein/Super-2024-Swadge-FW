@@ -23,6 +23,7 @@
 #include "txt_processor.h"
 #include "rmd_processor.h"
 #include "raw_processor.h"
+#include "sudoku_processor.h"
 
 #include "assets_preprocessor.h"
 
@@ -37,6 +38,8 @@ static const assetProcessor_t processors[] = {
     {.inExt = "mid", .outExt = "mid", .type = FUNCTION, .function = process_raw},
     {.inExt = "midi", .outExt = "mid", .type = FUNCTION, .function = process_raw},
     {.inExt = "raw", .outExt = "raw", .type = FUNCTION, .function = process_raw},
+    {.inExt = "sdk", .outExt = "bsp", .type = FUNCTION, .function = process_sudoku},
+    {.inExt = "ss", .outExt = "bsp", .type = FUNCTION, .function = process_sudoku},
 };
 
 const char* outDirName = NULL;
