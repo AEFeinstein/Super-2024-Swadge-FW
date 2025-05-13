@@ -31,6 +31,8 @@ typedef enum
 {
     /// @brief Your classic everyday sudoku with a square grid and boxes
     SM_CLASSIC = 0,
+    /// @brief Same rules as classic, but with irregularly shaped boxes
+    SM_JIGSAW,
     /// @brief Five games of sudoku in an X, with each corner game sharing a box with the central game
     SM_X_GRID,
 } sudokuMode_t;
@@ -330,6 +332,17 @@ static void swadgedokuEnterMode(void)
 
 static void swadgedokuExitMode(void)
 {
+    deinitSudokuGame(&sd->game);
+    
+    void* val = NULL;
+    while (NULL != (val = pop(&sd->player.overlay.shapes)))
+    {
+        free(val);
+    }
+
+    free(sd->player.notes);
+    free(sd->player.overlay.gridOpts);
+
     deinitMenuManiaRenderer(sd->menuRenderer);
     deinitMenu(sd->menu);
     free(sd);
@@ -469,7 +482,7 @@ bool loadSudokuData(const uint8_t* data, size_t length, sudokuGrid_t* game)
     ESP_LOGD("Swadgedoku", "- Size: %" PRIu8 "x%" PRIu8, size, size);
     ESP_LOGD("Swadgedoku", "- Base: %" PRIu8, base);
     ESP_LOGD("Swadgedoku", "- Format (Box/Grid/Note/Flags): %" PRIu8 "/%" PRIu8 "/%" PRIu8 "/%" PRIu8, boxFormat, gridFormat, noteFormat, flagsFormat);
-    
+
 
     if (version != 0)
     {
@@ -1094,6 +1107,63 @@ void deinitSudokuGame(sudokuGrid_t* game)
     game->size = 0;
 }
 
+bool squaresTouch(uint8_t ax, uint8_t ay, uint8_t bx, uint8_t by)
+{
+    return ((ay == by) && ((ax+1 == bx) || (bx + 1 == ax))) || ((ax == bx) && ((ay+1 == by) || (by+1 == ay)));
+}
+
+/**
+ * @brief Gets the list and count of adjacent squares in two boxes
+ * 
+ * The 'indices' value will be constructed as follows:
+ * - Each item corresponds to the square in box A at the same index
+ * - The value represents a bitmask of which squares in box B touch the box A square at that index
+ * - So, if square 0 of box A touches square 2 of box B, then 0 != (indices[0] & (1 << 2))
+ * - And an index value of 0 means that square of box A does not touch any squares of box B
+ * 
+ * @param[out] indices A list where the adjacent squares are designated
+ * @param game 
+ * @param aXs 
+ * @param aYs 
+ * @param bXs 
+ * @param bYs 
+ * @return int The number of adjacent squares
+ */
+int boxGetAdjacentSquares(uint16_t* indices, const sudokuGrid_t* game, uint8_t* aXs, uint8_t* aYs, uint8_t* bXs, uint8_t* bYs)
+{
+    int count = 0;
+    
+    for (int aIdx = 0; aIdx < game->base; aIdx++)
+    {
+        int touches = 0;
+        indices[aIdx] = 0;
+
+        for (int bIdx = 0; bIdx < game->base; bIdx++)
+        {
+            uint8_t* ax = &aXs[aIdx];
+            uint8_t* ay = &aYs[aIdx];
+            uint8_t* bx = &bXs[bIdx];
+            uint8_t* by = &bYs[bIdx];
+
+            if (squaresTouch(*ax, *ay, *bx, *by))
+            {
+                touches++;
+                indices[aIdx] |= (1 << bIdx);
+            }
+        }
+
+        // We're only counting the number of **box A** squares that touch any box B square
+        // NOT the number of times those squares touch box B squares
+        // We don't care if one square touches multiple other squares here, just count each once
+        if (touches)
+        {
+            count++;
+        }
+    }
+
+    return count;
+}
+
 bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
 {
     switch (mode)
@@ -1183,10 +1253,17 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
                 uint8_t boxSquareCounts[game->base];
                 uint16_t assignedSquareCount = 0;
 
-                uint16_t adjacencyMap[game->base];
+                //uint8_t adjacencyCount[game->base][game->base];
+
+                uint8_t boxXs[game->base][game->base];
+                uint8_t boxYs[game->base][game->base];
+                uint8_t boxCounts[game->base];
 
                 memset(boxSquareCounts, 0, game->base * sizeof(uint8_t));
-                memset(adjacencyMap, 0, game->base * sizeof(uint16_t));
+                //memset(adjacencyCount, 0, game->base * game->base * sizeof(uint8_t));
+                memset(boxXs, 0, game->base * game->base * sizeof(uint8_t));
+                memset(boxYs, 0, game->base * game->base * sizeof(uint8_t));
+                memset(boxCounts, 0, game->base * sizeof(uint8_t));
 
                 // Ok, here's how we're going to set up the non-square boxes:
                 // - Move in a spiral, always assigning each square to a box as we encounter it
@@ -1211,55 +1288,14 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
                 for (int x = 0, y = 0;;)
                 {
                     game->boxMap[y * size + x] = curBox;
-
-                    // Check for adjacent squares
-                    if (x > 0)
-                    {
-                        uint8_t leftBox = game->boxMap[y * game->size + x - 1];
-
-                        if (leftBox != BOX_NONE)
-                        {
-                            adjacencyMap[leftBox] |= (1 << curBox);
-                            adjacencyMap[curBox] |= (1 << leftBox);
-                        }
-                    }
-
-                    if (y > 0)
-                    {
-                        uint8_t topBox = game->boxMap[(y - 1) * game->size + x];
-                        if (topBox != BOX_NONE)
-                        {
-                            adjacencyMap[topBox] |= (1 << curBox);
-                            adjacencyMap[curBox] |= (1 << topBox);
-                        }
-                    }
-
-                    if (x < game->size - 1)
-                    {
-                        uint8_t rightBox = game->boxMap[y * game->size + x + 1];
-                        if (rightBox != BOX_NONE)
-                        {
-                            adjacencyMap[rightBox] |= (1 << curBox);
-                            adjacencyMap[curBox] |= (1 << rightBox);
-                        }
-                    }
-
-                    if (y < game->size - 1)
-                    {
-                        uint8_t bottomBox = game->boxMap[(y + 1) * game->size + x];
-                        if (bottomBox != BOX_NONE)
-                        {
-                            adjacencyMap[bottomBox] |= (1 << curBox);
-                            adjacencyMap[curBox] |= (1 << bottomBox);
-                        }
-                    }
+                    boxXs[curBox][boxCounts[curBox]] = x;
+                    boxYs[curBox][boxCounts[curBox]++] = y;
 
                     // Advance to the next box if we've assigned all its squares
                     if (0 == (++assignedSquareCount % game->base))
                     {
                         curBox++;
                     }
-
 
                     ////////////////////////////////////////////////////////
                     // The rest of the loop is just for the spiral pattern
@@ -1346,10 +1382,64 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
                     ESP_LOGE("Swadgedoku", "Could not generated boxes for game of base %d", base);
                 }
 
-                // Start randomly permuting the squares
-                uint8_t boxA = (esp_random() % game->base);
-                uint8_t boxB = (esp_random() % (game->base - 1));
-                if (boxB >= boxA) { boxB++; }
+                int mutCount = 1; //esp_random() % (game->base * game->base / 4);
+                for (int mut = 0; mut < mutCount; mut++)
+                {
+                    // Start randomly permuting the squares
+                    uint8_t boxA = (esp_random() % game->base);
+                    uint8_t boxB = boxA;
+
+                    uint16_t touches[game->base];
+
+                    int adjacentCount = 0;
+
+                    int aIdxSel = -1;
+                    int aIdxSelB = -1;
+                    int bIdxSel = -1;
+                    int bIdxSelA = -1;
+                    do
+                    {
+                        boxB = esp_random() % (game->base - 1);
+                        if (boxB >= boxA)
+                        {
+                            boxB++;
+                        }
+
+                        adjacentCount = boxGetAdjacentSquares(touches, game, boxXs[boxA], boxYs[boxA], boxXs[boxB], boxYs[boxB]);
+                    } while (adjacentCount < 2);
+
+                    // Now select two indices
+                    int selOne = esp_random() % adjacentCount;
+                    int selTwo = esp_random() % (adjacentCount - 1);
+                    if (selTwo >= selOne) selTwo++;
+
+                    ESP_LOGI("Swadgedoku", "We will swap touching squares #%d and #%d from box %" PRIu8 " and %" PRIu8, selOne, selTwo, boxA, boxB);
+            
+                    if (aIdxSel >= 0 && bIdxSel >= 0)
+                    {
+                        bool whichSwap = !(esp_random() % 2);
+                        uint8_t* ax = &boxXs[boxA][aIdxSel];
+                        uint8_t* ay = &boxYs[boxA][aIdxSel];
+                        uint8_t* bx = &boxXs[boxB][bIdxSel];
+                        uint8_t* by = &boxYs[boxB][bIdxSel];
+                        // They touch!?
+                        // Swap the actual box assignments
+                        game->boxMap[game->size * *ay + *ax] = boxB;
+                        game->boxMap[game->size * *by + *bx] = boxA;
+
+                        ESP_LOGI("Swadgedoku", "Swapping [%" PRIu8 ",%" PRIu8 "] and [%" PRIu8 ",%" PRIu8 "] boxes %" PRIu8 " -> %" PRIu8,
+                                    *ax, *ay, *bx, *by, boxA, boxB);
+                        
+                        // Swap the box mapping coordinates also
+                        uint8_t tmp = *ax;
+                        *ax = *bx;
+                        *bx = tmp;
+
+                        tmp = *ay;
+                        *ay = *by;
+                        *by = tmp;
+                    }
+                }
             }
 
             // Set the notes to all possible
@@ -1447,7 +1537,7 @@ void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, i
 
     uint16_t sourceBox = game->boxMap[row * game->size + col];
     
-    // First pass: construct row/column possibiliies
+    // First pass: construct row/column possibilities
     for (int r = 0; r < game->size; r++)
     {
         for (int c = 0; c < game->size; c++)
@@ -1561,7 +1651,6 @@ void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
             if (digit != 0)
             {
                 uint16_t digitUnmask = ~(1 << (digit - 1));
-                ESP_LOGE("Swadgedoku", "Unmasking %" PRIu8 " into %" PRIX16, digit, digitUnmask);
                 rowNotes[row] &= digitUnmask;
                 colNotes[col] &= digitUnmask;
 
