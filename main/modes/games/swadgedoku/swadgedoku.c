@@ -24,7 +24,7 @@
 typedef enum
 {
     SWADGEDOKU_MAIN_MENU = 0,
-    SWADGEDOKU_GAME = 1,
+    SWADGEDOKU_GAME      = 1,
 } sudokuScreen_t;
 
 typedef enum
@@ -71,7 +71,7 @@ typedef enum
     OVERLAY_CROSS_OUT = 256,
     /// @brief Mark this square as a 'maybe' or 'unknown'
     OVERLAY_QUESTION = 512,
-    /// @brief Mark this square as 
+    /// @brief Mark this square as
     OVERLAY_CHECK = 1024,
     /// @brief Overlays the computed notes onto the square
     OVERLAY_NOTES = 2048,
@@ -107,11 +107,12 @@ typedef struct
     uint8_t size;
 
     /// @brief The number of digits per line/box, and the number of boxes.
-    /// Can be anywhere from 2 to 16, though who knows if I'll do non-square bases with irregular boxes (like killer sudoku?)
+    /// Can be anywhere from 2 to 16, though who knows if I'll do non-square bases with irregular boxes (like killer
+    /// sudoku?)
     uint8_t base;
 
     /// @brief The box configuration for this grid
-    //sudokuBox_t* boxes;
+    // sudokuBox_t* boxes;
 
     /// @brief A grid-sized array of actual filled numbers; 0 used for empty squares
     uint8_t* grid;
@@ -139,7 +140,7 @@ typedef struct
 
     /// @brief The fill color of the individual squares without any overlays
     paletteColor_t fillColor;
-    
+
     /// @brief The fill color of any non-playable squares (for irregular grids)
     paletteColor_t voidColor;
 
@@ -151,13 +152,13 @@ typedef struct
 
     /// @brief The line color of the additional border separating boxes
     paletteColor_t boxBorderColor;
-    
+
     /// @brief The text color of pre-filled numbers and notes
     paletteColor_t inkColor;
 
     /// @brief The text color of user-filled numbers
     paletteColor_t pencilColor;
-    
+
     /// @brief The text color for the UI, not the grid
     paletteColor_t uiTextColor;
 
@@ -174,7 +175,8 @@ typedef struct
     paletteColor_t color;
     sudokuOverlayShapeType_t type;
 
-    union {
+    union
+    {
         rectangle_t rectangle;
         circle_t circle;
         line_t line;
@@ -260,10 +262,10 @@ void setupSudokuPlayer(sudokuPlayer_t* player, const sudokuGrid_t* game);
 void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, int col, int flags);
 void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags);
 void swadgedokuGameButton(buttonEvt_t evt);
-void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay, const sudokuTheme_t* theme);
+void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay,
+                        const sudokuTheme_t* theme);
 
 bool setDigit(sudokuGrid_t* game, uint8_t number, uint8_t x, uint8_t y);
-
 
 //==============================================================================
 // Const data
@@ -272,19 +274,17 @@ bool setDigit(sudokuGrid_t* game, uint8_t number, uint8_t x, uint8_t y);
 static const char swadgedokuModeName[] = "Swadgedoku";
 static const char menuItemPlaySudoku[] = "Play Sudoku";
 
-static const sudokuTheme_t lightTheme = {
-    .bgColor = c333,
-    .fillColor = c555,
-    .voidColor = c333,
-    .borderColor = c000,
-    .gridColor = c222,
-    .boxBorderColor = c000,
-    .inkColor = c000,
-    .pencilColor = c222,
-    .uiTextColor = c000,
-    .cursorColor = c505,
-    .cursorShape = OVERLAY_CIRCLE
-};
+static const sudokuTheme_t lightTheme = {.bgColor        = c333,
+                                         .fillColor      = c555,
+                                         .voidColor      = c333,
+                                         .borderColor    = c000,
+                                         .gridColor      = c222,
+                                         .boxBorderColor = c000,
+                                         .inkColor       = c000,
+                                         .pencilColor    = c222,
+                                         .uiTextColor    = c000,
+                                         .cursorColor    = c505,
+                                         .cursorShape    = OVERLAY_CIRCLE};
 
 //==============================================================================
 // Variables
@@ -324,7 +324,7 @@ static void swadgedokuEnterMode(void)
     loadFont(TINY_NUMBERS_FONT, &sd->noteFont, true);
     loadFont(SONIC_FONT, &sd->uiFont, true);
 
-    sd->menu = initMenu(swadgedokuModeName, swadgedokuMainMenuCb);
+    sd->menu         = initMenu(swadgedokuModeName, swadgedokuMainMenuCb);
     sd->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
     addSingleItemToMenu(sd->menu, menuItemPlaySudoku);
@@ -333,7 +333,7 @@ static void swadgedokuEnterMode(void)
 static void swadgedokuExitMode(void)
 {
     deinitSudokuGame(&sd->game);
-    
+
     void* val = NULL;
     while (NULL != (val = pop(&sd->player.overlay.shapes)))
     {
@@ -374,14 +374,15 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
             }
 
             swadgedokuDrawGame(&sd->game, sd->game.notes, &sd->player.overlay, &lightTheme);
-            
+
             if (sd->player.selectedDigit)
             {
                 char curDigitStr[16];
                 snprintf(curDigitStr, sizeof(curDigitStr), "%" PRIX8, sd->player.selectedDigit);
                 int textW = textWidth(&sd->gridFont, curDigitStr);
 
-                drawText(&sd->gridFont, lightTheme.uiTextColor, curDigitStr, TFT_WIDTH - 5 - textW, (TFT_HEIGHT - sd->gridFont.height) / 2);
+                drawText(&sd->gridFont, lightTheme.uiTextColor, curDigitStr, TFT_WIDTH - 5 - textW,
+                         (TFT_HEIGHT - sd->gridFont.height) / 2);
             }
             break;
         }
@@ -390,7 +391,6 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
 
 static void swadgedokuBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-    
 }
 
 static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t value)
@@ -412,15 +412,15 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             }
 
             setupSudokuPlayer(&sd->player, &sd->game);
-            //sd->game.grid[0] = 9;
-            //sd->game.flags[0] = SF_LOCKED;
+            // sd->game.grid[0] = 9;
+            // sd->game.flags[0] = SF_LOCKED;
 
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
 
-            //sd->player.notes[1] = 127;
-            //sd->game.flags[8] = SF_VOID;
-            //sd->game.grid[2] = 8;
-            //setDigit(&sd->game, 8, 2, 0);
+            // sd->player.notes[1] = 127;
+            // sd->game.flags[8] = SF_VOID;
+            // sd->game.grid[2] = 8;
+            // setDigit(&sd->game, 8, 2, 0);
             sd->screen = SWADGEDOKU_GAME;
         }
     }
@@ -435,7 +435,7 @@ bool loadSudokuData(const uint8_t* data, size_t length, sudokuGrid_t* game)
 
     // Clear the sudoku game
     deinitSudokuGame(game);
-    
+
     const uint8_t* cur = data;
 
     // 8 bytes of header
@@ -481,8 +481,8 @@ bool loadSudokuData(const uint8_t* data, size_t length, sudokuGrid_t* game)
     ESP_LOGD("Swadgedoku", "- Mode: %" PRIu8, mode);
     ESP_LOGD("Swadgedoku", "- Size: %" PRIu8 "x%" PRIu8, size, size);
     ESP_LOGD("Swadgedoku", "- Base: %" PRIu8, base);
-    ESP_LOGD("Swadgedoku", "- Format (Box/Grid/Note/Flags): %" PRIu8 "/%" PRIu8 "/%" PRIu8 "/%" PRIu8, boxFormat, gridFormat, noteFormat, flagsFormat);
-
+    ESP_LOGD("Swadgedoku", "- Format (Box/Grid/Note/Flags): %" PRIu8 "/%" PRIu8 "/%" PRIu8 "/%" PRIu8, boxFormat,
+             gridFormat, noteFormat, flagsFormat);
 
     if (version != 0)
     {
@@ -504,11 +504,20 @@ bool loadSudokuData(const uint8_t* data, size_t length, sudokuGrid_t* game)
             int baseRoot = 0;
             switch (base)
             {
-                case 1: baseRoot = 1; break;
-                case 4: baseRoot = 2; break;
-                case 9: baseRoot = 3; break;
-                case 16: baseRoot = 4; break;
-                default: break;
+                case 1:
+                    baseRoot = 1;
+                    break;
+                case 4:
+                    baseRoot = 2;
+                    break;
+                case 9:
+                    baseRoot = 3;
+                    break;
+                case 16:
+                    baseRoot = 4;
+                    break;
+                default:
+                    break;
             }
 
             if (baseRoot == 0)
@@ -523,12 +532,12 @@ bool loadSudokuData(const uint8_t* data, size_t length, sudokuGrid_t* game)
             {
                 for (int n = 0; n < base; n++)
                 {
-                    int x = (box % baseRoot) * baseRoot + (n % baseRoot);
-                    int y = (box / baseRoot) * baseRoot + (n / baseRoot);
+                    int x                      = (box % baseRoot) * baseRoot + (n % baseRoot);
+                    int y                      = (box / baseRoot) * baseRoot + (n / baseRoot);
                     game->boxMap[y * size + x] = box;
                 }
             }
-            
+
             break;
         }
 
@@ -547,12 +556,12 @@ bool loadSudokuData(const uint8_t* data, size_t length, sudokuGrid_t* game)
 
                 // First box in the pair is stored in the most-significant nibble
                 game->boxMap[n] = (*cur >> 4) & 0x0F;
-                
+
                 // Make sure we don't have an empty LSB here
-                if (n+1 < size * size)
+                if (n + 1 < size * size)
                 {
                     // Second box in the pair is stored in the least-significant nibble
-                    game->boxMap[n+1] = *cur & 0x0F;
+                    game->boxMap[n + 1] = *cur & 0x0F;
                 }
 
                 cur++;
@@ -611,7 +620,7 @@ bool loadSudokuData(const uint8_t* data, size_t length, sudokuGrid_t* game)
             // So, we need a full byte, with 0 and 1-16 -- technically 5 bytes
             // 3 wasted bits, unless we use it to store pen/not-pen status? no...
             const uint8_t* gridStart = cur;
-            const uint8_t* gridEnd = cur + game->size * game->size;
+            const uint8_t* gridEnd   = cur + game->size * game->size;
 
             while (cur < gridEnd)
             {
@@ -630,9 +639,9 @@ bool loadSudokuData(const uint8_t* data, size_t length, sudokuGrid_t* game)
             // Mapped
             // It's 3 bytes per square here!!!
             // 1 byte for the location and 2 for the actual notes
-            uint8_t mapLength = *cur++;
+            uint8_t mapLength         = *cur++;
             const uint8_t* notesStart = cur;
-            const uint8_t* notesEnd = cur + 3 * mapLength;
+            const uint8_t* notesEnd   = cur + 3 * mapLength;
 
             while (cur < notesEnd)
             {
@@ -649,7 +658,7 @@ bool loadSudokuData(const uint8_t* data, size_t length, sudokuGrid_t* game)
         case 1:
         {
             const uint8_t* notesStart = cur;
-            const uint8_t* notesEnd = cur + 2 * game->size * game->size;
+            const uint8_t* notesEnd   = cur + 2 * game->size * game->size;
 
             while (cur < notesEnd)
             {
@@ -668,13 +677,13 @@ bool loadSudokuData(const uint8_t* data, size_t length, sudokuGrid_t* game)
         {
             // Mapped
             // It's 2 bytes per square so we can have up to 8 flags
-            uint8_t mapLength = *cur++;
+            uint8_t mapLength       = *cur++;
             const uint8_t* mapStart = cur;
-            const uint8_t* mapEnd = cur + 2 * mapLength;
+            const uint8_t* mapEnd   = cur + 2 * mapLength;
 
             while (cur < mapEnd)
             {
-                uint8_t pos = *cur++;
+                uint8_t pos  = *cur++;
                 uint8_t flag = *cur++;
 
                 game->flags[((pos >> 4) & 0x0F) * game->size + (pos & 0x0F)] = (sudokuFlag_t)flag;
@@ -685,8 +694,8 @@ bool loadSudokuData(const uint8_t* data, size_t length, sudokuGrid_t* game)
         {
             // Individual
             const uint8_t* flagsStart = cur;
-            const uint8_t* flagsEnd = cur + game->size * game->size;
-            
+            const uint8_t* flagsEnd   = cur + game->size * game->size;
+
             while (cur < flagsEnd)
             {
                 game->flags[cur - flagsStart] = (sudokuFlag_t)*cur;
@@ -723,12 +732,12 @@ size_t writeSudokuData(uint8_t* data, const sudokuGrid_t* game)
     *out++ = noteFmt;
     // flags format
     *out++ = flagFmt;
-    
+
     switch (boxFmt)
     {
         case 0:
-        // Write no data
-        break;
+            // Write no data
+            break;
 
         case 1:
         {
@@ -738,7 +747,7 @@ size_t writeSudokuData(uint8_t* data, const sudokuGrid_t* game)
 
                 if (n + 1 < game->size * game->size)
                 {
-                    boxPair |= (game->boxMap[n+1] & 0x0F);
+                    boxPair |= (game->boxMap[n + 1] & 0x0F);
                 }
 
                 *out++ = boxPair;
@@ -764,7 +773,7 @@ size_t writeSudokuData(uint8_t* data, const sudokuGrid_t* game)
             *out++ = (count & 0xFF);
 
             // Holds the nibble for the cell value
-            uint8_t buf = 0;
+            uint8_t buf  = 0;
             bool pending = false;
 
             for (int n = 0; n < game->size * game->size; n++)
@@ -780,14 +789,14 @@ size_t writeSudokuData(uint8_t* data, const sudokuGrid_t* game)
                         *out++ = ((r & 0x0F) << 4) | (c & 0x0F);
                         buf |= (game->grid[n] - 1);
                         // Write accompanying numerical values
-                        *out++ = buf;
+                        *out++  = buf;
                         pending = false;
                     }
                     else
                     {
                         // Write first location of pair
-                        *out++ = ((r & 0x0F) << 4) | (c & 0x0F);
-                        buf = (game->grid[n] - 1) << 4;
+                        *out++  = ((r & 0x0F) << 4) | (c & 0x0F);
+                        buf     = (game->grid[n] - 1) << 4;
                         pending = true;
                     }
                 }
@@ -837,8 +846,8 @@ size_t writeSudokuData(uint8_t* data, const sudokuGrid_t* game)
             {
                 if (game->notes[n] != 0)
                 {
-                    int r = n / game->size;
-                    int c = n % game->size;
+                    int r  = n / game->size;
+                    int c  = n % game->size;
                     *out++ = ((r & 0x0F) << 4) | (c & 0x0F);
                     *out++ = (game->notes[n] >> 8) & 0xFF;
                     *out++ = (game->notes[n]) & 0xFF;
@@ -877,11 +886,10 @@ size_t writeSudokuData(uint8_t* data, const sudokuGrid_t* game)
             *out++ = (count & 0xFF);
             for (int n = 0; n < game->size * game->size; n++)
             {
-
                 if (game->flags[n] != SF_NONE)
                 {
-                    int r = n / game->size;
-                    int c = n % game->size;
+                    int r  = n / game->size;
+                    int c  = n % game->size;
                     *out++ = ((r & 0x0F) << 4) | (c & 0x0F);
                     *out++ = (uint8_t)game->flags[n];
                 }
@@ -918,11 +926,20 @@ size_t getSudokuSaveSize(const sudokuGrid_t* game, int* boxFmt, int* gridFmt, in
     int baseRoot = 0;
     switch (game->base)
     {
-        case 1: baseRoot = 1; break;
-        case 4: baseRoot = 2; break;
-        case 9: baseRoot = 3; break;
-        case 16: baseRoot = 4; break;
-        default: break;
+        case 1:
+            baseRoot = 1;
+            break;
+        case 4:
+            baseRoot = 2;
+            break;
+        case 9:
+            baseRoot = 3;
+            break;
+        case 16:
+            baseRoot = 4;
+            break;
+        default:
+            break;
     }
 
     if (baseRoot != 0)
@@ -949,7 +966,7 @@ size_t getSudokuSaveSize(const sudokuGrid_t* game, int* boxFmt, int* gridFmt, in
         boxFormat = 1;
     }
 
-    int numCount = 0;
+    int numCount  = 0;
     int noteCount = 0;
     int flagCount = 0;
 
@@ -988,7 +1005,7 @@ size_t getSudokuSaveSize(const sudokuGrid_t* game, int* boxFmt, int* gridFmt, in
     int noteFormat = (noteLenF0 < noteLenF1) ? 0 : 1;
     int flagFormat = (flagLenF0 < flagLenF1) ? 0 : 1;
 
-    int boxLen = boxFormat ? ((gridArea + 1) / 2) : 0;
+    int boxLen  = boxFormat ? ((gridArea + 1) / 2) : 0;
     int gridLen = gridFormat ? gridLenF1 : gridLenF0;
     int noteLen = noteFormat ? noteLenF1 : noteLenF0;
     int flagLen = flagFormat ? flagLenF1 : flagLenF0;
@@ -1020,10 +1037,8 @@ size_t getSudokuSaveSize(const sudokuGrid_t* game, int* boxFmt, int* gridFmt, in
     return totalLen;
 }
 
-
 bool initSudokuGame(sudokuGrid_t* game, int size, int base, sudokuMode_t mode)
 {
-
     if (size < base)
     {
         ESP_LOGE("Swadgedoku", "%1$dx%1$d Grid not large enough for base %2$d", size, base);
@@ -1039,14 +1054,14 @@ bool initSudokuGame(sudokuGrid_t* game, int size, int base, sudokuMode_t mode)
     {
         return false;
     }
-    
+
     sudokuFlag_t* flags = calloc(totalSquares, sizeof(sudokuFlag_t));
     if (!flags)
     {
         free(grid);
         return false;
     }
-    
+
     uint16_t* notes = calloc(totalSquares, sizeof(uint16_t));
     if (!notes)
     {
@@ -1064,9 +1079,9 @@ bool initSudokuGame(sudokuGrid_t* game, int size, int base, sudokuMode_t mode)
         return false;
     }
 
-    game->grid = grid;
-    game->flags = flags;
-    game->notes = notes;
+    game->grid   = grid;
+    game->flags  = flags;
+    game->notes  = notes;
     game->boxMap = boxMap;
 
     game->mode = mode;
@@ -1109,33 +1124,34 @@ void deinitSudokuGame(sudokuGrid_t* game)
 
 bool squaresTouch(uint8_t ax, uint8_t ay, uint8_t bx, uint8_t by)
 {
-    return ((ay == by) && ((ax+1 == bx) || (bx + 1 == ax))) || ((ax == bx) && ((ay+1 == by) || (by+1 == ay)));
+    return ((ay == by) && ((ax + 1 == bx) || (bx + 1 == ax))) || ((ax == bx) && ((ay + 1 == by) || (by + 1 == ay)));
 }
 
 /**
  * @brief Gets the list and count of adjacent squares in two boxes
- * 
+ *
  * The 'indices' value will be constructed as follows:
  * - Each item corresponds to the square in box A at the same index
  * - The value represents a bitmask of which squares in box B touch the box A square at that index
  * - So, if square 0 of box A touches square 2 of box B, then 0 != (indices[0] & (1 << 2))
  * - And an index value of 0 means that square of box A does not touch any squares of box B
- * 
+ *
  * @param[out] indices A list where the adjacent squares are designated
- * @param game 
- * @param aXs 
- * @param aYs 
- * @param bXs 
- * @param bYs 
+ * @param game
+ * @param aXs
+ * @param aYs
+ * @param bXs
+ * @param bYs
  * @return int The number of adjacent squares
  */
-int boxGetAdjacentSquares(uint16_t* indices, const sudokuGrid_t* game, uint8_t* aXs, uint8_t* aYs, uint8_t* bXs, uint8_t* bYs)
+int boxGetAdjacentSquares(uint16_t* indices, const sudokuGrid_t* game, uint8_t* aXs, uint8_t* aYs, uint8_t* bXs,
+                          uint8_t* bYs)
 {
     int count = 0;
-    
+
     for (int aIdx = 0; aIdx < game->base; aIdx++)
     {
-        int touches = 0;
+        int touches   = 0;
         indices[aIdx] = 0;
 
         for (int bIdx = 0; bIdx < game->base; bIdx++)
@@ -1185,14 +1201,14 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
             {
                 return false;
             }
-            
+
             sudokuFlag_t* flags = calloc(totalSquares, sizeof(sudokuFlag_t));
             if (!flags)
             {
                 free(grid);
                 return false;
             }
-            
+
             uint16_t* notes = calloc(totalSquares, sizeof(uint16_t));
             if (!notes)
             {
@@ -1210,9 +1226,9 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
                 return false;
             }
 
-            game->grid = grid;
-            game->flags = flags;
-            game->notes = notes;
+            game->grid   = grid;
+            game->flags  = flags;
+            game->notes  = notes;
             game->boxMap = boxMap;
 
             game->mode = mode;
@@ -1233,7 +1249,7 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
                 case 16: baseRoot = 4; break;
                 default: break;
             }*/
-            
+
             if (baseRoot != 0)
             {
                 // Setup square boxes!
@@ -1241,8 +1257,8 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
                 {
                     for (int n = 0; n < base; n++)
                     {
-                        int x = (box % baseRoot) * baseRoot + (n % baseRoot);
-                        int y = (box / baseRoot) * baseRoot + (n / baseRoot);
+                        int x                      = (box % baseRoot) * baseRoot + (n % baseRoot);
+                        int y                      = (box / baseRoot) * baseRoot + (n / baseRoot);
                         game->boxMap[y * size + x] = box;
                     }
                 }
@@ -1253,14 +1269,14 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
                 uint8_t boxSquareCounts[game->base];
                 uint16_t assignedSquareCount = 0;
 
-                //uint8_t adjacencyCount[game->base][game->base];
+                // uint8_t adjacencyCount[game->base][game->base];
 
                 uint8_t boxXs[game->base][game->base];
                 uint8_t boxYs[game->base][game->base];
                 uint8_t boxCounts[game->base];
 
                 memset(boxSquareCounts, 0, game->base * sizeof(uint8_t));
-                //memset(adjacencyCount, 0, game->base * game->base * sizeof(uint8_t));
+                // memset(adjacencyCount, 0, game->base * game->base * sizeof(uint8_t));
                 memset(boxXs, 0, game->base * game->base * sizeof(uint8_t));
                 memset(boxYs, 0, game->base * game->base * sizeof(uint8_t));
                 memset(boxCounts, 0, game->base * sizeof(uint8_t));
@@ -1280,15 +1296,15 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
 
                 // Move in a clockwise spiral from the top left around the board
                 // 0123 right down left up
-                int dir = 0;
+                int dir  = 0;
                 int minX = 0;
                 int minY = 0;
                 int maxX = game->size - 1;
                 int maxY = game->size - 1;
                 for (int x = 0, y = 0;;)
                 {
-                    game->boxMap[y * size + x] = curBox;
-                    boxXs[curBox][boxCounts[curBox]] = x;
+                    game->boxMap[y * size + x]         = curBox;
+                    boxXs[curBox][boxCounts[curBox]]   = x;
                     boxYs[curBox][boxCounts[curBox]++] = y;
 
                     // Advance to the next box if we've assigned all its squares
@@ -1382,7 +1398,7 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
                     ESP_LOGE("Swadgedoku", "Could not generated boxes for game of base %d", base);
                 }
 
-                int mutCount = 1; //esp_random() % (game->base * game->base / 4);
+                int mutCount = 1; // esp_random() % (game->base * game->base / 4);
                 for (int mut = 0; mut < mutCount; mut++)
                 {
                     // Start randomly permuting the squares
@@ -1393,9 +1409,9 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
 
                     int adjacentCount = 0;
 
-                    int aIdxSel = -1;
+                    int aIdxSel  = -1;
                     int aIdxSelB = -1;
-                    int bIdxSel = -1;
+                    int bIdxSel  = -1;
                     int bIdxSelA = -1;
                     do
                     {
@@ -1405,35 +1421,40 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
                             boxB++;
                         }
 
-                        adjacentCount = boxGetAdjacentSquares(touches, game, boxXs[boxA], boxYs[boxA], boxXs[boxB], boxYs[boxB]);
+                        adjacentCount
+                            = boxGetAdjacentSquares(touches, game, boxXs[boxA], boxYs[boxA], boxXs[boxB], boxYs[boxB]);
                     } while (adjacentCount < 2);
 
                     // Now select two indices
                     int selOne = esp_random() % adjacentCount;
                     int selTwo = esp_random() % (adjacentCount - 1);
-                    if (selTwo >= selOne) selTwo++;
+                    if (selTwo >= selOne)
+                        selTwo++;
 
-                    ESP_LOGI("Swadgedoku", "We will swap touching squares #%d and #%d from box %" PRIu8 " and %" PRIu8, selOne, selTwo, boxA, boxB);
-            
+                    ESP_LOGI("Swadgedoku", "We will swap touching squares #%d and #%d from box %" PRIu8 " and %" PRIu8,
+                             selOne, selTwo, boxA, boxB);
+
                     if (aIdxSel >= 0 && bIdxSel >= 0)
                     {
                         bool whichSwap = !(esp_random() % 2);
-                        uint8_t* ax = &boxXs[boxA][aIdxSel];
-                        uint8_t* ay = &boxYs[boxA][aIdxSel];
-                        uint8_t* bx = &boxXs[boxB][bIdxSel];
-                        uint8_t* by = &boxYs[boxB][bIdxSel];
+                        uint8_t* ax    = &boxXs[boxA][aIdxSel];
+                        uint8_t* ay    = &boxYs[boxA][aIdxSel];
+                        uint8_t* bx    = &boxXs[boxB][bIdxSel];
+                        uint8_t* by    = &boxYs[boxB][bIdxSel];
                         // They touch!?
                         // Swap the actual box assignments
                         game->boxMap[game->size * *ay + *ax] = boxB;
                         game->boxMap[game->size * *by + *bx] = boxA;
 
-                        ESP_LOGI("Swadgedoku", "Swapping [%" PRIu8 ",%" PRIu8 "] and [%" PRIu8 ",%" PRIu8 "] boxes %" PRIu8 " -> %" PRIu8,
-                                    *ax, *ay, *bx, *by, boxA, boxB);
-                        
+                        ESP_LOGI("Swadgedoku",
+                                 "Swapping [%" PRIu8 ",%" PRIu8 "] and [%" PRIu8 ",%" PRIu8 "] boxes %" PRIu8
+                                 " -> %" PRIu8,
+                                 *ax, *ay, *bx, *by, boxA, boxB);
+
                         // Swap the box mapping coordinates also
                         uint8_t tmp = *ax;
-                        *ax = *bx;
-                        *bx = tmp;
+                        *ax         = *bx;
+                        *bx         = tmp;
 
                         tmp = *ay;
                         *ay = *by;
@@ -1490,21 +1511,21 @@ void setupSudokuPlayer(sudokuPlayer_t* player, const sudokuGrid_t* game)
         free(shape);
     }
 
-    player->notes = calloc(game->size * game->size, sizeof(uint16_t));
+    player->notes            = calloc(game->size * game->size, sizeof(uint16_t));
     player->overlay.gridOpts = calloc(game->size * game->size, sizeof(sudokuOverlayOpt_t));
 
-    player->cursorShape = calloc(1, sizeof(sudokuOverlayShape_t));
-    player->cursorShape->tag = ST_CURSOR;
+    player->cursorShape        = calloc(1, sizeof(sudokuOverlayShape_t));
+    player->cursorShape->tag   = ST_CURSOR;
     player->cursorShape->color = c505;
-    //player->cursorShape->type = OVERLAY_RECT;
-    player->cursorShape->type = OVERLAY_CIRCLE;
-    player->cursorShape->circle.pos.x = player->curX;
-    player->cursorShape->circle.pos.y = player->curY;
+    // player->cursorShape->type = OVERLAY_RECT;
+    player->cursorShape->type          = OVERLAY_CIRCLE;
+    player->cursorShape->circle.pos.x  = player->curX;
+    player->cursorShape->circle.pos.y  = player->curY;
     player->cursorShape->circle.radius = 1;
-    //player->cursorShape->rectangle.pos.x = player->curX;
-    //player->cursorShape->rectangle.pos.y = player->curY;
-    //player->cursorShape->rectangle.width = 1;
-    //player->cursorShape->rectangle.height = 1;
+    // player->cursorShape->rectangle.pos.x = player->curX;
+    // player->cursorShape->rectangle.pos.y = player->curY;
+    // player->cursorShape->rectangle.width = 1;
+    // player->cursorShape->rectangle.height = 1;
     push(&player->overlay.shapes, player->cursorShape);
 }
 
@@ -1513,7 +1534,7 @@ void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, i
     uint16_t rowNotes[game->size];
     uint16_t colNotes[game->size];
     uint16_t boxNotes[game->base];
-    
+
     // List of square coordinates for peers in the source box
     uint8_t sourceBoxRows[game->base];
     uint8_t sourceBoxCols[game->base];
@@ -1536,13 +1557,13 @@ void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, i
     }
 
     uint16_t sourceBox = game->boxMap[row * game->size + col];
-    
+
     // First pass: construct row/column possibilities
     for (int r = 0; r < game->size; r++)
     {
         for (int c = 0; c < game->size; c++)
         {
-            uint16_t box = game->boxMap[r * game->size + c];
+            uint16_t box   = game->boxMap[r * game->size + c];
             uint16_t digit = game->grid[r * game->size + c];
 
             if (digit != 0)
@@ -1562,7 +1583,7 @@ void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, i
             // So skip anything on the same row or column as the source square
             if (box == sourceBox && r != row && c != col)
             {
-                sourceBoxRows[boxCount] = r;
+                sourceBoxRows[boxCount]   = r;
                 sourceBoxCols[boxCount++] = c;
             }
         }
@@ -1574,8 +1595,8 @@ void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, i
     // First, just the column -- this will include the target square itself
     for (int r = 0; r < game->size; r++)
     {
-        uint16_t box = game->boxMap[r * game->size + col];
-        uint16_t boxNote = (box < game->base) ? boxNotes[box] : allNotes;
+        uint16_t box                = game->boxMap[r * game->size + col];
+        uint16_t boxNote            = (box < game->base) ? boxNotes[box] : allNotes;
         notes[r * game->size + col] = (rowNotes[r] & colNotes[col] & boxNote);
         if (!notes[r * game->size + col])
         {
@@ -1587,10 +1608,13 @@ void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, i
     for (int c = 0; c < game->size; c++)
     {
         // Skip the source column, it's already done by the previous loop
-        if (c == col) { continue; }
+        if (c == col)
+        {
+            continue;
+        }
 
-        uint16_t box = game->boxMap[row * game->size + c];
-        uint16_t boxNote = (box < game->base) ? boxNotes[box] : allNotes;
+        uint16_t box                = game->boxMap[row * game->size + c];
+        uint16_t boxNote            = (box < game->base) ? boxNotes[box] : allNotes;
         notes[row * game->size + c] = (rowNotes[row] & colNotes[c] & boxNote);
         if (!notes[row * game->size + c])
         {
@@ -1640,12 +1664,12 @@ void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
         boxNotes[n] = allNotes;
     }
 
-    // 
+    //
     for (int row = 0; row < game->size; row++)
     {
         for (int col = 0; col < game->size; col++)
         {
-            uint8_t box = game->boxMap[row * game->size + col];
+            uint8_t box   = game->boxMap[row * game->size + col];
             uint8_t digit = game->grid[row * game->size + col];
 
             if (digit != 0)
@@ -1666,12 +1690,12 @@ void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
     {
         for (int col = 0; col < game->size; col++)
         {
-            uint8_t box = game->boxMap[row * game->size + col];
+            uint8_t box   = game->boxMap[row * game->size + col];
             uint8_t digit = game->grid[row * game->size + col];
 
             if (digit == 0)
             {
-                uint16_t boxNote = (box < game->base) ? boxNotes[box] : allNotes;
+                uint16_t boxNote              = (box < game->base) ? boxNotes[box] : allNotes;
                 notes[row * game->size + col] = (rowNotes[row] & colNotes[col] & boxNote);
             }
             else
@@ -1711,10 +1735,11 @@ void swadgedokuGameButton(buttonEvt_t evt)
         {
             case PB_A:
             {
-                if (sd->player.selectedDigit && !((SF_LOCKED | SF_VOID) & sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]))
+                if (sd->player.selectedDigit
+                    && !((SF_LOCKED | SF_VOID) & sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]))
                 {
                     // Not locked or void, proceed setting the digit
-                    //sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX] = sd->player.selectedDigit;
+                    // sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX] = sd->player.selectedDigit;
                     if (sd->player.selectedDigit == sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX])
                     {
                         // Unset number
@@ -1747,7 +1772,8 @@ void swadgedokuGameButton(buttonEvt_t evt)
 
             case PB_UP:
             {
-                do {
+                do
+                {
                     if (sd->player.curY == 0)
                     {
                         sd->player.curY = sd->game.size - 1;
@@ -1762,7 +1788,8 @@ void swadgedokuGameButton(buttonEvt_t evt)
 
             case PB_DOWN:
             {
-                do {
+                do
+                {
                     if (sd->player.curY >= sd->game.size - 1)
                     {
                         sd->player.curY = 0;
@@ -1777,7 +1804,8 @@ void swadgedokuGameButton(buttonEvt_t evt)
 
             case PB_LEFT:
             {
-                do {
+                do
+                {
                     if (sd->player.curX == 0)
                     {
                         sd->player.curX = sd->game.size - 1;
@@ -1792,7 +1820,8 @@ void swadgedokuGameButton(buttonEvt_t evt)
 
             case PB_RIGHT:
             {
-                do {
+                do
+                {
                     if (sd->player.curX >= sd->game.size - 1)
                     {
                         sd->player.curX = 0;
@@ -1814,7 +1843,8 @@ void swadgedokuGameButton(buttonEvt_t evt)
     }
 }
 
-void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay, const sudokuTheme_t* theme)
+void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay,
+                        const sudokuTheme_t* theme)
 {
     // Total space around the grid
     int gridMargin = 1;
@@ -1829,7 +1859,7 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
 
     // Center the grid vertically
     int gridY = (TFT_HEIGHT - gridSize) / 2;
-    
+
     // Align the grid to the left to leave some space to the right for UI
     int gridX = (TFT_WIDTH - gridSize) / 2;
 
@@ -1866,13 +1896,15 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
     // Draw lines between the columns
     for (int col = 1; col < game->base; col++)
     {
-        drawLineFast(gridX + col * maxSquareSize, gridY + 1, gridX + col * maxSquareSize, gridY + gridSize - 1, theme->gridColor);
+        drawLineFast(gridX + col * maxSquareSize, gridY + 1, gridX + col * maxSquareSize, gridY + gridSize - 1,
+                     theme->gridColor);
     }
 
     // Draw lines between the rows
     for (int row = 1; row < game->base; row++)
     {
-        drawLineFast(gridX + 1, gridY + row * maxSquareSize, gridX + gridSize - 1, gridY + row * maxSquareSize, theme->gridColor);
+        drawLineFast(gridX + 1, gridY + row * maxSquareSize, gridX + gridSize - 1, gridY + row * maxSquareSize,
+                     theme->gridColor);
     }
 
     // Draw extra borders around the boxes and fill in the background
@@ -1886,7 +1918,7 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
             paletteColor_t fillColor = theme->fillColor;
 
             sudokuOverlayOpt_t opts = OVERLAY_NONE;
-            sudokuFlag_t flags = game->flags[r * game->size + c];
+            sudokuFlag_t flags      = game->flags[r * game->size + c];
 
             if (flags & SF_VOID)
             {
@@ -1966,7 +1998,7 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
             uint16_t thisBox = game->boxMap[r * game->size + c];
 
             // north
-            if (r == 0 || game->boxMap[(r-1) * game->size + c] != thisBox)
+            if (r == 0 || game->boxMap[(r - 1) * game->size + c] != thisBox)
             {
                 // Draw north border
                 drawLineFast(x + 1, y + 1, x + maxSquareSize - 1, y + 1, theme->borderColor);
@@ -1975,13 +2007,15 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
             if (c == (game->size - 1) || game->boxMap[r * game->size + c + 1] != thisBox)
             {
                 // Draw east border
-                drawLineFast(x + maxSquareSize - 1, y + 1, x + maxSquareSize - 1, y + maxSquareSize - 1, theme->borderColor);
+                drawLineFast(x + maxSquareSize - 1, y + 1, x + maxSquareSize - 1, y + maxSquareSize - 1,
+                             theme->borderColor);
             }
             // south
-            if (r == (game->size - 1) || game->boxMap[(r+1) * game->size + c] != thisBox)
+            if (r == (game->size - 1) || game->boxMap[(r + 1) * game->size + c] != thisBox)
             {
                 // Draw south border
-                drawLineFast(x + 1, y + maxSquareSize - 1, x + maxSquareSize - 1, y + maxSquareSize - 1, theme->borderColor);
+                drawLineFast(x + 1, y + maxSquareSize - 1, x + maxSquareSize - 1, y + maxSquareSize - 1,
+                             theme->borderColor);
             }
             // west
             if (c == 0 || game->boxMap[r * game->size + c - 1] != thisBox)
@@ -2005,16 +2039,20 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                         snprintf(buf, sizeof(buf), "%X", n + 1);
 
                         // TODO center?
-                        //int charW = textWidth(&sd->noteFont, buf);
+                        // int charW = textWidth(&sd->noteFont, buf);
 
                         int baseRoot = 3;
                         switch (game->base)
                         {
-                            case 1: baseRoot = 1; break;
+                            case 1:
+                                baseRoot = 1;
+                                break;
 
                             case 2:
                             case 3:
-                            case 4: baseRoot = 2; break;
+                            case 4:
+                                baseRoot = 2;
+                                break;
 
                             case 10:
                             case 11:
@@ -2022,14 +2060,19 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                             case 13:
                             case 14:
                             case 15:
-                            case 16: baseRoot = 4; break;
-                            default: break;
+                            case 16:
+                                baseRoot = 4;
+                                break;
+                            default:
+                                break;
                         }
 
                         int miniSquareSize = maxSquareSize / baseRoot;
-                        
-                        int noteX = x + (n % baseRoot) * maxSquareSize / baseRoot + (miniSquareSize - textWidth(&sd->noteFont, buf)) / 2 + 1;
-                        int noteY = y + (n / baseRoot) * maxSquareSize / baseRoot + (miniSquareSize - sd->noteFont.height) / 2 + 2;
+
+                        int noteX = x + (n % baseRoot) * maxSquareSize / baseRoot
+                                    + (miniSquareSize - textWidth(&sd->noteFont, buf)) / 2 + 1;
+                        int noteY = y + (n / baseRoot) * maxSquareSize / baseRoot
+                                    + (miniSquareSize - sd->noteFont.height) / 2 + 2;
 
                         drawText(&sd->noteFont, theme->inkColor, buf, noteX, noteY);
                     }
@@ -2040,10 +2083,10 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                 // Draw number
                 char buf[16];
                 snprintf(buf, sizeof(buf), "%X", squareVal);
-                
+
                 int textX = x + (maxSquareSize - textWidth(&sd->gridFont, buf)) / 2;
                 int textY = y + (maxSquareSize - sd->gridFont.height) / 2;
-                
+
                 paletteColor_t color = (flags & SF_LOCKED) ? theme->inkColor : theme->pencilColor;
                 if (overlay)
                 {
@@ -2092,50 +2135,47 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
         for (node_t* node = overlay->shapes.first; node != NULL; node = node->next)
         {
             const sudokuOverlayShape_t* shape = (sudokuOverlayShape_t*)node->val;
-            
+
             switch (shape->type)
             {
                 case OVERLAY_RECT:
-                drawRect(gridX + maxSquareSize * shape->rectangle.pos.x, gridY + maxSquareSize * shape->rectangle.pos.y, gridX + maxSquareSize * (shape->rectangle.pos.x + shape->rectangle.width), gridY + maxSquareSize * (shape->rectangle.pos.y + shape->rectangle.height), shape->color);
-                break;
+                    drawRect(gridX + maxSquareSize * shape->rectangle.pos.x,
+                             gridY + maxSquareSize * shape->rectangle.pos.y,
+                             gridX + maxSquareSize * (shape->rectangle.pos.x + shape->rectangle.width),
+                             gridY + maxSquareSize * (shape->rectangle.pos.y + shape->rectangle.height), shape->color);
+                    break;
 
                 case OVERLAY_CIRCLE:
-                drawCircle(gridX + maxSquareSize * shape->circle.pos.x + maxSquareSize / 2, gridY + maxSquareSize * shape->circle.pos.y + maxSquareSize / 2, shape->circle.radius * maxSquareSize * 3 / 5, shape->color);
-                break;
+                    drawCircle(gridX + maxSquareSize * shape->circle.pos.x + maxSquareSize / 2,
+                               gridY + maxSquareSize * shape->circle.pos.y + maxSquareSize / 2,
+                               shape->circle.radius * maxSquareSize * 3 / 5, shape->color);
+                    break;
 
                 case OVERLAY_LINE:
-                drawLineFast(
-                    gridX + maxSquareSize + shape->line.p1.x * maxSquareSize + maxSquareSize / 2,
-                    gridY + maxSquareSize * shape->line.p1.y * maxSquareSize + maxSquareSize / 2,
-                    gridX + maxSquareSize * shape->line.p2.x * maxSquareSize + maxSquareSize / 2,
-                    gridY + maxSquareSize * shape->line.p2.y * maxSquareSize + maxSquareSize / 2,
-                    shape->color
-                );
-                break;
+                    drawLineFast(gridX + maxSquareSize + shape->line.p1.x * maxSquareSize + maxSquareSize / 2,
+                                 gridY + maxSquareSize * shape->line.p1.y * maxSquareSize + maxSquareSize / 2,
+                                 gridX + maxSquareSize * shape->line.p2.x * maxSquareSize + maxSquareSize / 2,
+                                 gridY + maxSquareSize * shape->line.p2.y * maxSquareSize + maxSquareSize / 2,
+                                 shape->color);
+                    break;
 
                 case OVERLAY_ARROW:
                 {
-                    drawLineFast(
-                        gridX + maxSquareSize + shape->arrow.base.x * maxSquareSize + maxSquareSize / 2,
-                        gridY + maxSquareSize * shape->arrow.base.y * maxSquareSize + maxSquareSize / 2,
-                        gridX + maxSquareSize * shape->arrow.tip.x * maxSquareSize + maxSquareSize / 2,
-                        gridY + maxSquareSize * shape->arrow.tip.y * maxSquareSize + maxSquareSize / 2,
-                        shape->color
-                    );
-                    drawLineFast(
-                        gridX + maxSquareSize + shape->arrow.wing1.x * maxSquareSize + maxSquareSize / 2,
-                        gridY + maxSquareSize * shape->arrow.wing1.y * maxSquareSize + maxSquareSize / 2,
-                        gridX + maxSquareSize * shape->arrow.tip.x * maxSquareSize + maxSquareSize / 2,
-                        gridY + maxSquareSize * shape->arrow.tip.y * maxSquareSize + maxSquareSize / 2,
-                        shape->color
-                    );
-                    drawLineFast(
-                        gridX + maxSquareSize + shape->arrow.wing2.x * maxSquareSize + maxSquareSize / 2,
-                        gridY + maxSquareSize * shape->arrow.wing2.y * maxSquareSize + maxSquareSize / 2,
-                        gridX + maxSquareSize * shape->arrow.tip.x * maxSquareSize + maxSquareSize / 2,
-                        gridY + maxSquareSize * shape->arrow.tip.y * maxSquareSize + maxSquareSize / 2,
-                        shape->color
-                    );
+                    drawLineFast(gridX + maxSquareSize + shape->arrow.base.x * maxSquareSize + maxSquareSize / 2,
+                                 gridY + maxSquareSize * shape->arrow.base.y * maxSquareSize + maxSquareSize / 2,
+                                 gridX + maxSquareSize * shape->arrow.tip.x * maxSquareSize + maxSquareSize / 2,
+                                 gridY + maxSquareSize * shape->arrow.tip.y * maxSquareSize + maxSquareSize / 2,
+                                 shape->color);
+                    drawLineFast(gridX + maxSquareSize + shape->arrow.wing1.x * maxSquareSize + maxSquareSize / 2,
+                                 gridY + maxSquareSize * shape->arrow.wing1.y * maxSquareSize + maxSquareSize / 2,
+                                 gridX + maxSquareSize * shape->arrow.tip.x * maxSquareSize + maxSquareSize / 2,
+                                 gridY + maxSquareSize * shape->arrow.tip.y * maxSquareSize + maxSquareSize / 2,
+                                 shape->color);
+                    drawLineFast(gridX + maxSquareSize + shape->arrow.wing2.x * maxSquareSize + maxSquareSize / 2,
+                                 gridY + maxSquareSize * shape->arrow.wing2.y * maxSquareSize + maxSquareSize / 2,
+                                 gridX + maxSquareSize * shape->arrow.tip.x * maxSquareSize + maxSquareSize / 2,
+                                 gridY + maxSquareSize * shape->arrow.tip.y * maxSquareSize + maxSquareSize / 2,
+                                 shape->color);
                     break;
                 }
 
