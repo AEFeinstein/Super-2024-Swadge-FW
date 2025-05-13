@@ -15,6 +15,7 @@
 #include "dance.h"
 #include "settingsManager.h"
 #include "mainMenu.h"
+#include "swadgePass.h"
 
 #define DANCE_IMPLEMENTATION
 #include "dance_Comet.h"
@@ -348,8 +349,7 @@ void danceMainLoop(int64_t elapsedUs)
         danceState->bcastTimer = (5625000 + (esp_random() % 3750000));
         // Turn on WiFi before transmitting
         espNowPostLightSleep();
-        const char bcastData[16] = "BROADCAST";
-        espNowSend(bcastData, sizeof(bcastData));
+        sendSwadgePass();
         // Stay awake after packet transmission
         danceState->maySleep = false;
     }
@@ -430,7 +430,7 @@ uint32_t danceRand(uint32_t bound)
  */
 static void danceEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
 {
-    // TODO something when receiving a SwadgePass packet
+    receiveSwadgePass(esp_now_info, data, len, rssi);
     danceState->swadgePassCount++;
 }
 
