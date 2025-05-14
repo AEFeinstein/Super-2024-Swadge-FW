@@ -9,7 +9,7 @@
 #include "ext_replay.h"
 #include "ext_fuzzer.h"
 #include "ext_gamepad.h"
-#include "hdw-nvs_emu.h"
+#include "emu_nvs.h"
 #include "emu_cnfs.h"
 
 // Console command handlers

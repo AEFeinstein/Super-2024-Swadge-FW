@@ -16,7 +16,7 @@
  * hardware peripheral (the TFT), and is persistent across reboots (once the brightness is set by the user, it should
  * stay that way).
  *
- * Settings rely heavily on, and can be thought of a wrapper around, hdw-nvs.h.
+ * Settings rely heavily on, and can be thought of a wrapper around, nvs_utils.h.
  *
  * Settings can be easily added to menus with the function addSettingsItemToMenu(). Be sure to set the setting in the
  * ::menuCb callback according to the new \c value.

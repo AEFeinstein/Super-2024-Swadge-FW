@@ -184,7 +184,6 @@
 #include "hdw-esp-now.h"
 #include "hdw-led.h"
 #include "hdw-mic.h"
-#include "hdw-nvs.h"
 #include "hdw-temperature.h"
 #include "hdw-tft.h"
 #include "hdw-usb.h"
@@ -220,6 +219,7 @@
 #include "vectorFl2d.h"
 #include "geometryFl.h"
 #include "imu_utils.h"
+#include "nvs_utils.h"
 
 // Sound utilities
 #include "soundFuncs.h"

@@ -10,7 +10,7 @@
 #include <esp_heap_caps.h>
 
 #include "cnfs.h"
-#include "hdw-nvs.h"
+#include "nvs_utils.h"
 #include "fs_wsg.h"
 #include "macros.h"
 

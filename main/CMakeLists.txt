@@ -61,8 +61,10 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                             "utils/hashMap.c"
                             "utils/imu_utils.c"
                             "utils/linked_list.c"
+                            "utils/nvs_utils.c"
                             "utils/p2pConnection.c"
                             "utils/settingsManager.c"
+                            "utils/swadgePass.c"
                             "utils/swSynth.c"
                             "utils/textEntry.c"
                             "utils/touchTextEntry.c"
@@ -77,13 +79,13 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                                   hdw-esp-now
                                   hdw-led
                                   hdw-mic
-                                  hdw-nvs
                                   hdw-tft
                                   hdw-temperature
                                   hdw-usb
                                   crashwrap
                     REQUIRES esp_timer
                              spi_flash
+                             nvs_flash
                     INCLUDE_DIRS "./"
                                 "./asset_loaders"
                                 "./asset_loaders/common"

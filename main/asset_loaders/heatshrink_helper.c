@@ -6,7 +6,7 @@
 #include <esp_err.h>
 
 #include "cnfs.h"
-#include "hdw-nvs.h"
+#include "nvs_utils.h"
 #include <nvs.h>
 
 #include "heatshrink_helper.h"

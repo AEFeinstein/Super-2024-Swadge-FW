@@ -3,7 +3,7 @@
 #include "emu_main.h"
 #include "emu_utils.h"
 
-#include "hdw-nvs_emu.h"
+#include "emu_nvs.h"
 #include "emu_cnfs.h"
 #include "ext_modes.h"
 #include "mode_synth.h"

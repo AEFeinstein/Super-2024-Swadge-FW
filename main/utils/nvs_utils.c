@@ -7,7 +7,7 @@
 #include <nvs_flash.h>
 #include <nvs.h>
 
-#include "hdw-nvs.h"
+#include "nvs_utils.h"
 #if defined(CONFIG_SOUND_OUTPUT_BUZZER)
     #include "hdw-bzr.h"
 #endif

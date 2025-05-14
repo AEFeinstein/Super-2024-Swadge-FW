@@ -13,7 +13,7 @@
 #include "esp_memory_utils.h"
 #include "esp_cpu_utils.h"
 #include <xtensa_context.h>
-#include "hdw-nvs.h"
+#include "nvs_utils.h"
 
 //==============================================================================
 // Function Prototypes

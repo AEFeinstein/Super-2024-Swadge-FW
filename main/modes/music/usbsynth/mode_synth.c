@@ -12,7 +12,7 @@
 #include "trigonometry.h"
 #include "linked_list.h"
 #include "wheel_menu.h"
-#include "hdw-nvs.h"
+#include "nvs_utils.h"
 #include "textEntry.h"
 #include "macros.h"
 #include "cnfs_image.h"

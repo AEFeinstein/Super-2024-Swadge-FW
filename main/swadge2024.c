@@ -93,7 +93,7 @@
  *
  * \subsection pm_api Persistent Memory APIs
  *
- * - hdw-nvs.h: Learn how to save and load persistent runtime data
+ * - nvs_utils.h: Learn how to save and load persistent runtime data
  * - cnfs.h: Learn how to load and use assets from the CNFS blob! These file types have their own loaders:
  *     - fs_font.h: Load font bitmaps
  *     - fs_wsg.h: Load WSG images

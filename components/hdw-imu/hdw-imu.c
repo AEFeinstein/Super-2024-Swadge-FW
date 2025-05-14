@@ -14,7 +14,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include "hdw-imu.h"
-#include "hdw-nvs.h"
+#include "nvs_utils.h"
 #include "quaternions.h"
 
 #define DSCL_OUTPUT                             \
