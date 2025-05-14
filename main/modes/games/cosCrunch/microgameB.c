@@ -30,7 +30,7 @@ microgameB_t* microgameB = NULL;
 static void microgameBInitMicrogame(void)
 {
     microgameB = heap_caps_calloc(1, sizeof(microgameB_t), MALLOC_CAP_8BIT);
-    loadFont("ibm_vga8.font", &microgameB->font, false);
+    loadFont(IBM_VGA_8_FONT, &microgameB->font, false);
 }
 
 static void microgameBDestroyMicrogame(void)

@@ -9,6 +9,12 @@ static const char cosCrunchName[]             = "Cosplay Crunch";
 static const char cosCrunchStartCraftingLbl[] = "Start Crafting";
 static const char cosCrunchExitLbl[]          = "Exit";
 
+static const char cosCrunchTimeFormat[]  = "Time: %0.2f";
+static const char cosCrunchLivesFormat[] = "Days 'Til MAG: %d";
+
+static const char cosCrunchGameOverTitle[]   = "Womp, Womp";
+static const char cosCrunchGameOverMessage[] = "Press A to retry";
+
 typedef enum
 {
     CC_MENU,
@@ -83,8 +89,8 @@ static void cosCrunchEnterMode(void)
     addSingleItemToMenu(cosCrunch->menu, cosCrunchExitLbl);
     cosCrunch->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
-    loadFont("ibm_vga8.font", &cosCrunch->font, false);
-    loadFont("righteous_150.font", &cosCrunch->big_font, false);
+    loadFont(IBM_VGA_8_FONT, &cosCrunch->font, false);
+    loadFont(RIGHTEOUS_150_FONT, &cosCrunch->big_font, false);
 }
 
 static void cosCrunchExitMode(void)
@@ -207,10 +213,10 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                                                         cosCrunch->activeMicrogame.state, evts, evtCount);
 
             char buf[19];
-            snprintf(buf, sizeof(buf), "Time: %0.2f", cosCrunch->activeMicrogame.gameTimeRemainingUs / 1000000.f);
+            snprintf(buf, sizeof(buf), cosCrunchTimeFormat, cosCrunch->activeMicrogame.gameTimeRemainingUs / 1000000.f);
             drawText(&cosCrunch->font, c333, buf, UI_TEXT_MARGIN, TFT_HEIGHT - cosCrunch->font.height - UI_TEXT_MARGIN);
 
-            snprintf(buf, sizeof(buf), "Days 'Til MAG: %d", cosCrunch->lives);
+            snprintf(buf, sizeof(buf), cosCrunchLivesFormat, cosCrunch->lives);
             uint16_t tw = textWidth(&cosCrunch->font, buf);
             drawText(&cosCrunch->font, c333, buf, TFT_WIDTH - tw - UI_TEXT_MARGIN,
                      TFT_HEIGHT - cosCrunch->font.height - UI_TEXT_MARGIN);
@@ -220,12 +226,11 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
 
         case CC_GAME_OVER:
         {
-            char* text  = "Womp, Womp";
-            uint16_t tw = textWidth(&cosCrunch->big_font, text);
-            drawText(&cosCrunch->big_font, c555, text, (TFT_WIDTH - tw) / 2, 60);
-            text = "Press A to retry";
-            tw   = textWidth(&cosCrunch->font, text);
-            drawText(&cosCrunch->font, c555, text, (TFT_WIDTH - tw) / 2, 150);
+            uint16_t tw = textWidth(&cosCrunch->big_font, cosCrunchGameOverTitle);
+            drawText(&cosCrunch->big_font, c555, cosCrunchGameOverTitle, (TFT_WIDTH - tw) / 2, 60);
+
+            tw   = textWidth(&cosCrunch->font, cosCrunchGameOverMessage);
+            drawText(&cosCrunch->font, c555, cosCrunchGameOverMessage, (TFT_WIDTH - tw) / 2, 150);
             break;
         }
     }

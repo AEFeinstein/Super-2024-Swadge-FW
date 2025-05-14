@@ -1,3 +1,28 @@
+/*! \file cosCrunch.h
+ *
+ * \section whats_a_microgame What's A Microgame?
+ *
+ * Microgames are single-screen, single-objective games lasting around 5 seconds, designed to be presented to the player
+ * in rapid-fire fashion. Cosplay Crunch is a collection of cosplay- and crafting-themed microgames, intended to mirror
+ * the frantic pace of last-minute crafting.
+ *
+ * \section design_considerations Design Considerations
+ *
+ * Microgames should have a cosplay/crafting theme, but eclectic visual, audio, and gameplay design is encouraged.
+ * Gameplay-wise, microgames should have a single objective that is clearly conveyed to the player through choice of
+ * verb and visual cues. A frustrated player is not a returning player. Accessibility is also important to consider,
+ * e.g., don't rely on audio being heard.
+ *
+ * \section writing_a_microgame Writing A Microgame
+ *
+ * Microgames are implemented similarly to pared-down Swadge modes: they have a similar init/main loop/deinit cycle that
+ * is managed by the Cosplay Crunch game mode. Microgames go through a series of states as defined in
+ * ::cosCrunchMicrogameState, allowing them time before gameplay to display helpful animations and time after gameplay
+ * to congratulate or taunt the player. Once a player succeeds or fails the microgame, send the result with
+ * cosCrunchMicrogameResult() to signify that the microgame is over. If you don't send a result, the game will be failed
+ * once the timer runs out.
+ */
+
 #pragma once
 
 #include "swadge2024.h"
@@ -29,16 +54,9 @@ typedef enum
 } cosCrunchMicrogameState;
 
 /**
- * @brief The definition for a Cosplay Crunch microgame. Microgames are similar to pared-down Swadge modes: they have a
- * similar init/main loop/deinit cycle that is managed by the Cosplay Crunch game mode. Microgames go through a series
- * of states as defined in cosCrunchMicrogameState, allowing them time before and after the game runs to display
- * animations and congratulate or taunt the player before and after gameplay. Once a player succeeds or fails the
- * microgame, send the result with cosCrunchMicrogameResult() to signify that the microgame is over. If you don't send a
- * result, the game will be failed once the timer runs out.
- *
- * Once your microgame is built, add this struct to the microgames[] array in cosCrunch.c to include it in the
- * randomized rotation. While testing a microgame, you can comment out the other microgames in the array to play only
- * yours on repeat.
+ * @brief The definition for a Cosplay Crunch microgame. Once your microgame is built, add this struct to the
+ * `microgames[]` array in `cosCrunch.c` to include it in the randomized rotation. While testing a microgame, you can
+ * comment out the other microgames in the array to play only yours on repeat.
  */
 typedef struct
 {
