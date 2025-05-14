@@ -166,8 +166,8 @@ may cause slowdowns.
 handled automatically.
  *
  * The banner notifications look like this:
- * \image html inProgress.png
- * \image html Completed.png
+ * \image html InProgressTrophy.png
+ * \image html CompletedTrophy.png
  *
  * The banner will scroll in from the top by default, but can be set to the bottom in the settings. See system
  * initialization. The banner will be fully visible for the set duration, not including scroll in and scroll out
@@ -215,7 +215,7 @@ providing new y values. Remember to deinit the list with `trophyDrawListDeinit()
 #define DRAW_SLIDE_US  262144 // Recommended slide time, a power of 2 about a quarter second
 #define DRAW_STATIC_US 524288 // Recommended static time, a power of 2 about a half second
 
-#define NO_IMAGE_SET CNFS_NUM_FILES 
+#define NO_IMAGE_SET CNFS_NUM_FILES
 #define TROPHY_PLAT  -1
 
 //==============================================================================
@@ -368,7 +368,7 @@ void setBitFlag(int32_t* flags, int8_t idx, bool setTrue);
  * @brief Get the point totals for the gamer score
  *
  * @param total If loading the full score or for the current mode
- * @param nameName Mode name to load. Set to NULL to get currently loaded mode
+ * @param modeName Mode name to load. Set to NULL to get currently loaded mode
  * @return int Value of the score
  */
 int trophyGetPoints(bool total, char* modeName);
@@ -409,7 +409,6 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs);
  * @brief Initialize the trophy Draw list
  *
  * @param mode What display mode to draw
- * @param colors COlors to re-skin the list
  */
 void trophyDrawListInit(trophyListDisplayMode_t mode);
 
