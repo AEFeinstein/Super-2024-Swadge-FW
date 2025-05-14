@@ -62,6 +62,7 @@ docs/*.pu
 
 .vscode/c_cpp_properties.json
 .vscode/settings.json
+.idea
 
 assets_image
 managed_components
