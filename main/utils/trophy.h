@@ -214,6 +214,8 @@ providing new y values. Remember to deinit the list with `trophyDrawListDeinit()
 #define DRAW_SLIDE_US  262144 // Recommended slide time, a power of 2 about a quarter second
 #define DRAW_STATIC_US 524288 // Recommended static time, a power of 2 about a half second
 
+#define NO_IMAGE_SET CNFS_NUM_FILES
+
 //==============================================================================
 // Enum
 //==============================================================================
@@ -252,13 +254,13 @@ typedef enum
 /// @brief Individual Trophy data objects
 typedef struct
 {
-    char title[TROPHY_MAX_TITLE_LEN];       //< Name of the Trophy, used as ID
-    char description[TROPHY_MAX_DESC_LEN];  //< Short description of task required
-    char imageString[TROPHY_IMAGE_STR_LEN]; //< String leading to the .wsg file.
-    trophyType_t type;                      //< Type of trophy. See "trophy.h" for descriptions
-    trophyDifficulty_t difficulty;          //< How many points the trophy is worth
-    int32_t maxVal;                         //< The value that
-    bool hidden;                            //< If trophy is hidden by default
+    char title[TROPHY_MAX_TITLE_LEN];      //< Name of the Trophy, used as ID
+    char description[TROPHY_MAX_DESC_LEN]; //< Short description of task required
+    cnfsFileIdx_t image;                  //< Index of the image
+    trophyType_t type;                     //< Type of trophy. See "trophy.h" for descriptions
+    trophyDifficulty_t difficulty;         //< How many points the trophy is worth
+    int32_t maxVal;                        //< The value that
+    bool hidden;                           //< If trophy is hidden by default
 } trophyData_t;
 
 /// @brief Settings for the trophy system

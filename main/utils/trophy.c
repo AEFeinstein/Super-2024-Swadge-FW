@@ -364,7 +364,7 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
         push(&trophySystem.trophyQueue, tw);
 
         // Load sprite
-        loadWsg(tw->trophyData.imageString, &tw->image, true);
+        loadWsg(tw->trophyData.image, &tw->image, true);
 
         // Set system and this index to active
         if (!trophySystem.active)
@@ -566,11 +566,11 @@ void trophyDrawListInit(trophyListDisplayMode_t mode)
     trophySystem.tdl.images = heap_caps_calloc(trophySystem.data->length, sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < trophySystem.data->length; idx++)
     {
-        if (strcmp(trophySystem.data->list->imageString, "") == 0)
+        if (trophySystem.data->list->image == 0)
         {
             continue;
         }
-        loadWsg(trophySystem.data->list->imageString, &trophySystem.tdl.images[idx], true);
+        loadWsg(trophySystem.data->list->image, &trophySystem.tdl.images[idx], true);
     }
 }
 
@@ -694,7 +694,7 @@ static void _load(trophyDataWrapper_t* tw, trophyData_t t)
     // Copy t into tw
     strcpy(tw->trophyData.title, t.title);
     strcpy(tw->trophyData.description, t.description);
-    strcpy(tw->trophyData.imageString, t.imageString);
+    tw->trophyData.image = t.image;
     tw->trophyData.type       = t.type;
     tw->trophyData.difficulty = t.difficulty;
     tw->trophyData.maxVal     = t.maxVal;
@@ -835,7 +835,7 @@ static void _drawAtYCoord(trophyDataWrapper_t* t, int yOffset, font_t* fnt)
     int xOffset;
     int16_t startX = SCREEN_CORNER_CLEARANCE;
     int16_t startY = yOffset + ((BANNER_HEIGHT - BANNER_MAX_ICON_DIM) >> 1);
-    if (strcmp(t->trophyData.imageString, "") == 0)
+    if (t->trophyData.image == NO_IMAGE_SET)
     {
         // Draw text at start of buffer area
         xOffset = SCREEN_CORNER_CLEARANCE;
@@ -1016,14 +1016,14 @@ static int _getListItemHeight(trophyData_t t, font_t* fnt)
     }
 
     // Get image space
-    if (strcmp(tw->trophyData.imageString, "") != 0)
+    if (tw->trophyData.image != NO_IMAGE_SET)
     {
         titleStart += BANNER_MAX_ICON_DIM + IMAGE_BUFFER;
     }
 
     // Lay out text
     boxHeight = textWordWrapHeight(fnt, t.title, titleEnd - titleStart, 100) + IMAGE_BUFFER;
-    if (BANNER_MAX_ICON_DIM + IMAGE_BUFFER > boxHeight && strcmp(tw->trophyData.imageString, "") != 0)
+    if (BANNER_MAX_ICON_DIM + IMAGE_BUFFER > boxHeight && tw->trophyData.image != NO_IMAGE_SET)
     {
         boxHeight = BANNER_MAX_ICON_DIM + IMAGE_BUFFER;
     }
@@ -1071,7 +1071,7 @@ static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t*
     int16_t startX = SCREEN_CORNER_CLEARANCE;
     int16_t startY = yOffset + ((BANNER_HEIGHT - BANNER_MAX_ICON_DIM) >> 1);
     bool hasImg    = false;
-    if (strcmp(tw->trophyData.imageString, "") != 0)
+    if (tw->trophyData.image != NO_IMAGE_SET)
     {
         hasImg = true;
         titleStart += BANNER_MAX_ICON_DIM + IMAGE_BUFFER;

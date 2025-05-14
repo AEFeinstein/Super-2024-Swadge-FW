@@ -1,7 +1,6 @@
 /**
  * @file trophyTest.h
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
- * @author GEMESIS
  * @brief Tests the functionality of the trophies.
  * @version 0.1
  * @date 2025-01-15

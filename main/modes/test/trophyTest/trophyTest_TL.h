@@ -15,7 +15,7 @@ const trophyData_t trophyTestModeTrophies[] = {
     {
         .title       = "Trigger Trophy",
         .description = "You pressed A!",
-        .imageString = "kid0.wsg",
+        .image       = KID_0_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1, // For trigger type, set to one
@@ -23,7 +23,7 @@ const trophyData_t trophyTestModeTrophies[] = {
     {
         .title       = "Additive Trophy - Testing a very long trophy na",
         .description = "Pressed B ten times!",
-        .imageString = "kid1.wsg",
+        .image       = KID_1_WSG,
         .type        = TROPHY_TYPE_ADDITIVE,
         .difficulty  = TROPHY_DIFF_HARD,
         .maxVal      = 10,
@@ -31,7 +31,7 @@ const trophyData_t trophyTestModeTrophies[] = {
     {
         .title       = "Progress Trophy",
         .description = "Hold down the up button for eight seconds",
-        .imageString = "",
+        .image       = NO_IMAGE_SET, // Hardcoded "Ignore" value
         .type        = TROPHY_TYPE_PROGRESS,
         .difficulty  = TROPHY_DIFF_EXTREME,
         .maxVal      = 8,
@@ -40,7 +40,7 @@ const trophyData_t trophyTestModeTrophies[] = {
     {
         .title       = "Checklist",
         .description = "This is gonna need a bunch of verification, but like has a very long description",
-        .imageString = "kid1.wsg",
+        .image       = KID_0_WSG,
         .type        = TROPHY_TYPE_CHECKLIST,
         .difficulty  = TROPHY_DIFF_HARD,
         .maxVal      = 0x0007, // Three tasks, 0x01, 0x02, and 0x04
@@ -48,7 +48,7 @@ const trophyData_t trophyTestModeTrophies[] = {
     {
         .title       = "Bro, like, what?",
         .description = "If our eyes aren't real, why can't bees fly?",
-        .imageString = "",
+        .image       = KID_0_WSG,
         .type        = TROPHY_TYPE_ADDITIVE,
         .difficulty  = TROPHY_DIFF_HARD,
         .maxVal      = 12000000,
@@ -56,7 +56,7 @@ const trophyData_t trophyTestModeTrophies[] = {
     {
         .title       = "Crouching Swadge, Hidden Trophy",
         .description = "This one is hidden. You shouldn't be able to see it!",
-        .imageString = "kid1.wsg",
+        .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_ADDITIVE,
         .difficulty  = TROPHY_DIFF_HARD,
         .maxVal      = 1024,
@@ -68,6 +68,6 @@ const trophyData_t trophyTestModeTrophies[] = {
 
 trophySettings_t trophyTestModeTrophySettings = {
     .drawFromBottom   = false,
-    .staticDurationUs = DRAW_STATIC_US * 10,
+    .staticDurationUs = DRAW_STATIC_US,
     .slideDurationUs  = DRAW_SLIDE_US,
 };

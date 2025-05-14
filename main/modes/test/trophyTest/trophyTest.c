@@ -36,9 +36,14 @@ static const char* const textBlobs[] = {
     "Press pause to go to menu",
     "Trophy Test",
     "Clear progress",
-    "Trophy Status",
+    "Trophy Case",
+    "Display mode: ",
     "Go back",
 };
+
+static const char* const caseOptions[] = {"All", "Unlocked", "Locked", "Hidden"};
+static const int32_t caseSettings[]
+    = {TROPHY_DISPLAY_ALL, TROPHY_DISPLAY_UNLOCKED, TROPHY_DISPLAY_LOCKED, TROPHY_DISPLAY_INCL_HIDDEN};
 
 //==============================================================================
 // Enums
@@ -74,6 +79,7 @@ typedef struct
 
     // Trophy Case
     int idx; //< Current display index
+    trophyListDisplayMode_t dm;
 
     // Menu
     trophyTestStateEnum_t state;
@@ -117,7 +123,9 @@ static void trophyMenuCb(const char* label, bool selected, uint32_t settingVal);
 // Variables
 //==============================================================================
 
-trophyDataList_t trophyTestData = {.settings = &trophyTestModeTrophySettings, .list = trophyTestModeTrophies, .length = ARRAY_SIZE(trophyTestModeTrophies)};
+trophyDataList_t trophyTestData = {.settings = &trophyTestModeTrophySettings,
+                                   .list     = trophyTestModeTrophies,
+                                   .length   = ARRAY_SIZE(trophyTestModeTrophies)};
 
 swadgeMode_t trophyTestMode = {.modeName                 = trophyModeName,
                                .wifiMode                 = NO_WIFI,
@@ -159,7 +167,9 @@ static void enterTrophy()
     tt->rndr = initMenuManiaRenderer(NULL, NULL, NULL);
     addSingleItemToMenu(tt->menu, textBlobs[6]);
     addSingleItemToMenu(tt->menu, textBlobs[7]);
-    addSingleItemToMenu(tt->menu, textBlobs[8]);
+    addSettingsOptionsItemToMenu(tt->menu, textBlobs[8], caseOptions, caseSettings, ARRAY_SIZE(caseOptions),
+                                 getScreensaverTimeSettingBounds(), 0);
+    addSingleItemToMenu(tt->menu, textBlobs[9]);
 
     tt->state = TROPHY_TEST_TESTING;
 }
@@ -373,12 +383,16 @@ static void trophyMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == textBlobs[7])
         {
             tt->state = TROPHY_TEST_DISPLAYING;
-            trophyDrawListInit(TROPHY_DISPLAY_ALL);
+            trophyDrawListInit(tt->dm);
             trophyDrawListColors(c000, c111, c222, c333, c555, c500);
         }
         else
         {
             tt->state = TROPHY_TEST_TESTING;
         }
+    }
+    if (label == textBlobs[8])
+    {
+        tt->dm = settingVal;
     }
 }

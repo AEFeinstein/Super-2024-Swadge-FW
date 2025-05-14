@@ -406,8 +406,8 @@ void app_main(void)
     tLastLoopUs                = esp_timer_get_time();
 
     // Initialize system font and trophy-get sound
-    loadFont("ibm_vga8.font", &sysFont, true);
-    loadMidiFile("block1.mid", &sysSound, true); // FIXME: Need new sound. Temp sound picked
+    loadFont(IBM_VGA_8_FONT, &sysFont, true);
+    loadMidiFile(BLOCK_1_MID, &sysSound, true); // FIXME: Need new sound. Temp sound picked
 
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)
@@ -419,7 +419,7 @@ void app_main(void)
         cSwadgeMode->fnEnterMode();
     }
 
-    // AMount fo time between main loop calls
+    // Amount fo time between main loop calls
     static uint64_t mainLoopCallDelay = 0;
 
     // Run the main loop, forever
