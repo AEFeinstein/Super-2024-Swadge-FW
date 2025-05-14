@@ -29,8 +29,8 @@ adjusted. All NVS activity is handled for the Dev.
  * \section trophy_system The trophy system
  *
  * Like Cthulu creeping into your mind, the trophy system sits on top of the swadge mode. It's always there, but sits
-disabled unless explicitly set active by a developer. To activate it, create the following structs in a .h file separate
-from the main mode:
+disabled unless explicitly set active by a developer. To activate it, create the following structs in the .c file for
+the mode:
  * \code {.c}
 const trophyData_t exampleTrophies[] = {
     {
@@ -48,11 +48,6 @@ trophySettings_t exampleTrophySettings = {
     .staticDurationUs = DRAW_STATIC_US,
     .slideDurationUs  = DRAW_SLIDE_US,
 };
- * \endcode
- *
- * Once these have been created and included into the main mode .c file, do the following:
- *
- * \code {.c}
  trophyDataList_t trophyTestData = {.settings = &trophyTestModeTrophySettings,
                                     .list = trophyTestModeTrophies,
                                     .length = ARRAY_SIZE(trophyTestModeTrophies)};
@@ -65,7 +60,8 @@ swadgeMode_t trophyTestMode = {.modeName      = modeName,
  * \endcode
  *
  * This will allow the trophy system to access your trophies and make sure the right text and images are displayed when
-a trophy is triggered.
+a trophy is triggered. Also, add the setting data as `extern` to ensure that the data can be accessed by the trophy case
+and swadgepass
  *
  * \section trophy_settings Settings
  *

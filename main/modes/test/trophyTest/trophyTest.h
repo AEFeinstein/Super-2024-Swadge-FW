@@ -21,3 +21,5 @@
 //==============================================================================
 
 extern swadgeMode_t trophyTestMode;
+extern trophyData_t trophyTestModeTrophies;
+extern trophySettings_t trophyTestModeTrophySettings;

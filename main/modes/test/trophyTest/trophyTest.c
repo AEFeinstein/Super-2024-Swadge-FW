@@ -14,7 +14,6 @@
 
 #include "trophyTest.h"
 #include "menu.h"
-#include "trophyTest_TL.h"
 
 //==============================================================================
 // Includes
@@ -45,6 +44,50 @@ static const char* const caseOptions[] = {"All", "Unlocked", "Locked", "Hidden"}
 static const int32_t caseSettings[]
     = {TROPHY_DISPLAY_ALL, TROPHY_DISPLAY_UNLOCKED, TROPHY_DISPLAY_LOCKED, TROPHY_DISPLAY_INCL_HIDDEN};
 
+// Trophy Data
+const trophyData_t trophyTestModeTrophies[] = {
+    {
+        .title       = "Trigger Trophy",
+        .description = "You pressed A!",
+        .image       = KID_0_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Additive Trophy - Testing a very long trophy na",
+        .description = "Pressed B ten times!",
+        .image       = KID_1_WSG,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 10,
+    },
+    {
+        .title       = "Progress Trophy",
+        .description = "Hold down the up button for eight seconds",
+        .image       = NO_IMAGE_SET, // Hardcoded "Ignore" value
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 8,
+        .hidden      = true,
+    },
+    {
+        .title       = "Checklist",
+        .description = "This is gonna need a bunch of verification, but like has a very long description",
+        .image       = KID_0_WSG,
+        .type        = TROPHY_TYPE_CHECKLIST,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 0x0007, // Three tasks, 0x01, 0x02, and 0x04
+    },
+};
+
+// Individual mode settings
+trophySettings_t trophyTestModeTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 2,
+    .slideDurationUs  = DRAW_SLIDE_US,
+};
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -55,6 +98,13 @@ typedef enum
     TROPHY_TEST_MENU,
     TROPHY_TEST_DISPLAYING,
 } trophyTestStateEnum_t;
+
+typedef enum
+{
+    CLT_DOWN,
+    CLT_LEFT,
+    CLT_RIGHT,
+} ChecklistTask_t;
 
 //==============================================================================
 // Structs
