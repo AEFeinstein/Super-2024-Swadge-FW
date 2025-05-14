@@ -26,8 +26,8 @@
  * bool confirmed = false;
  * font_t dialogFont;
  * wsg_t infoIcon;
- * loadFont("ibm_vga8.font", &dialogFont, false);
- * loadWsg("info.wsg", &infoIcon, false);
+ * loadFont(IBM_VGA_8_FONT, &dialogFont, false);
+ * loadWsg(INFO_WSG, &infoIcon, false);
  * dialogBox_t* dialog = initDialogBox(dialogTitle, dialogDetail, &infoIcon, dialogBoxCb);
  * \endcode
  *

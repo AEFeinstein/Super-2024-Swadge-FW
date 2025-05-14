@@ -32,7 +32,7 @@
  * \code{.c}
  * // Declare and load a font
  * font_t ibm;
- * loadFont("ibm_vga8.font", &ibm, false);
+ * loadFont(IBM_VGA_8_FONT, &ibm, false);
  * // Draw some white text
  * drawText(&ibm, c555, "Hello World", 0, 0);
  * // Free the font

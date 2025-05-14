@@ -1087,6 +1087,42 @@ static FILE* openNvsFile(const char* mode)
     return fopen(buffer, mode);
 }
 
+bool emuNvsInjectBlobFile(const char* namespace, const char* key, const char* filename)
+{
+    char buffer[1024];
+    expandPath(buffer, sizeof(buffer), filename);
+
+    bool ok = false;
+
+    FILE* file = fopen(buffer, "rb");
+    if (NULL != file)
+    {
+        fseek(file, 0L, SEEK_END);
+        size_t fsize = ftell(file);
+        fseek(file, 0L, SEEK_SET);
+
+        uint8_t* data = malloc(fsize);
+
+        if (NULL != data)
+        {
+            size_t count = fread(data, fsize, 1, file);
+            if (0 != count)
+            {
+                emuInjectNvsBlob(namespace, key, fsize, data);
+
+                ok = true;
+            }
+
+            free(data);
+            data = NULL;
+        }
+
+        fclose(file);
+    }
+
+    return ok;
+}
+
 void emuInjectNvsBlob(const char* namespace, const char* key, size_t length, const void* blob)
 {
     if (!nvsInjectedDataInit)

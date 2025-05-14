@@ -168,6 +168,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 // Useful ESP things
 #include <esp_heap_caps.h>
@@ -218,6 +219,7 @@
 #include "touchUtils.h"
 #include "vectorFl2d.h"
 #include "geometryFl.h"
+#include "imu_utils.h"
 #include "trophy.h"
 
 // Sound utilities
@@ -308,7 +310,7 @@ typedef struct
      * @param w the width of the rectangle to be updated
      * @param h the height of the rectangle to be updated
      * @param up update number
-     * @param numUp update number denominator
+     * @param upNum update number denominator
      */
     void (*fnBackgroundDrawCallback)(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 

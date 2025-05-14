@@ -203,25 +203,25 @@ static void quickSettingsEnterMode(void)
     setLeds(leds, ARRAY_SIZE(leds));
 
     // Load a font
-    loadFont("ibm_vga8.font", &quickSettings->font, true);
+    loadFont(IBM_VGA_8_FONT, &quickSettings->font, true);
 
 #ifdef SW_VOL_CONTROL
     // Load the buzzer song
-    loadMidiFile("jingle.mid", &quickSettings->jingle, true);
+    loadMidiFile(JINGLE_MID, &quickSettings->jingle, true);
 #endif
     // Load graphics
     // Use SPI because we're not the only mode, I guess?
-    loadWsg("defaultSetting.wsg", &quickSettings->iconGeneric, true);
-    loadWsg("ledsEnabled.wsg", &quickSettings->iconLedsOn, true);
-    loadWsg("ledsDisabled.wsg", &quickSettings->iconLedsOff, true);
+    loadWsg(DEFAULT_SETTING_WSG, &quickSettings->iconGeneric, true);
+    loadWsg(LEDS_ENABLED_WSG, &quickSettings->iconLedsOn, true);
+    loadWsg(LEDS_DISABLED_WSG, &quickSettings->iconLedsOff, true);
 #ifdef SW_VOL_CONTROL
-    loadWsg("musicEnabled.wsg", &quickSettings->iconBgmOn, true);
-    loadWsg("musicDisabled.wsg", &quickSettings->iconBgmOff, true);
-    loadWsg("sfxEnabled.wsg", &quickSettings->iconSfxOn, true);
-    loadWsg("sfxDisabled.wsg", &quickSettings->iconSfxOff, true);
+    loadWsg(MUSIC_ENABLED_WSG, &quickSettings->iconBgmOn, true);
+    loadWsg(MUSIC_DISABLED_WSG, &quickSettings->iconBgmOff, true);
+    loadWsg(SFX_ENABLED_WSG, &quickSettings->iconSfxOn, true);
+    loadWsg(SFX_DISABLED_WSG, &quickSettings->iconSfxOff, true);
 #endif
-    loadWsg("backlightEnabled.wsg", &quickSettings->iconTftOn, true);
-    loadWsg("backlightDisabled.wsg", &quickSettings->iconTftOff, true);
+    loadWsg(BACKLIGHT_ENABLED_WSG, &quickSettings->iconTftOn, true);
+    loadWsg(BACKLIGHT_DISABLED_WSG, &quickSettings->iconTftOff, true);
 
     // Initialize the menu
     quickSettings->menu                  = initMenu(quickSettingsName, quickSettingsMenuCb);

@@ -22,18 +22,18 @@
  * @brief Load a WSG from ROM to RAM. WSGs placed in the assets_image folder
  * before compilation will be automatically flashed to ROM
  *
- * @param name The filename of the WSG to load
+ * @param fIdx The cnfsFileIdx_t the WSG to load
  * @param wsg  A handle to load the WSG to
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
  * than normal RAM
  * @return true if the WSG was loaded successfully,
  *         false if the WSG load failed and should not be used
  */
-bool loadWsg(const char* name, wsg_t* wsg, bool spiRam)
+bool loadWsg(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam)
 {
     // Read and decompress file
     uint32_t decompressedSize = 0;
-    uint8_t* decompressedBuf  = readHeatshrinkFile(name, &decompressedSize, spiRam);
+    uint8_t* decompressedBuf  = readHeatshrinkFile(fIdx, &decompressedSize, spiRam);
 
     if (NULL == decompressedBuf)
     {
@@ -45,7 +45,7 @@ bool loadWsg(const char* name, wsg_t* wsg, bool spiRam)
     wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
     // The rest of the bytes are pixels
     wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * wsg->w * wsg->h,
-                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, name);
+                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, "wsg");
 
     if (NULL != wsg->px)
     {
@@ -65,7 +65,7 @@ bool loadWsg(const char* name, wsg_t* wsg, bool spiRam)
  * You must provide a decoder and decode space to this function. It's useful
  * when creating one decoder & space to decode many consecutive WSGs
  *
- * @param name The filename of the WSG to load
+ * @param fIdx The cnfsFileIdx_t the WSG to load
  * @param wsg  A handle to load the WSG to
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
  * than normal RAM
@@ -74,11 +74,11 @@ bool loadWsg(const char* name, wsg_t* wsg, bool spiRam)
  * @return true if the WSG was loaded successfully,
  *         false if the WSG load failed and should not be used
  */
-bool loadWsgInplace(const char* name, wsg_t* wsg, bool spiRam, uint8_t* decompressedBuf, heatshrink_decoder* hsd)
+bool loadWsgInplace(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam, uint8_t* decompressedBuf, heatshrink_decoder* hsd)
 {
     // Read and decompress file
     uint32_t decompressedSize = 0;
-    decompressedBuf           = readHeatshrinkFileInplace(name, &decompressedSize, decompressedBuf, hsd);
+    decompressedBuf           = readHeatshrinkFileInplace(fIdx, &decompressedSize, decompressedBuf, hsd);
 
     if (NULL == decompressedBuf)
     {
@@ -90,7 +90,7 @@ bool loadWsgInplace(const char* name, wsg_t* wsg, bool spiRam, uint8_t* decompre
     wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
     // The rest of the bytes are pixels
     wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * wsg->w * wsg->h,
-                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, name);
+                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, "wsg_inplace");
 
     if (NULL != wsg->px)
     {

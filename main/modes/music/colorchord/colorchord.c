@@ -102,7 +102,7 @@ void colorchordEnterMode(void)
     colorchord->sampleHistHead = 0;
 
     // Load a font
-    loadFont("ibm_vga8.font", &colorchord->ibm_vga8, false);
+    loadFont(IBM_VGA_8_FONT, &colorchord->ibm_vga8, false);
 
     // Init CC
     InitColorChord(&colorchord->end, &colorchord->dd);
@@ -138,13 +138,32 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
     // Clear everything
     clearPxTft();
 
-    // Draw the spectrum as a bar graph. Figure out bar and margin size
-    int16_t binWidth  = (TFT_WIDTH / FIX_BINS);
-    int16_t binMargin = (TFT_WIDTH - (binWidth * FIX_BINS)) / 2;
-
     // This is the center line to draw the graph around
-    uint8_t centerLine
-        = (TEXT_Y + colorchord->ibm_vga8.height + 2) + (TFT_HEIGHT - (TEXT_Y + colorchord->ibm_vga8.height + 2)) / 2;
+    uint8_t centerLine = TFT_HEIGHT / 2;
+
+    // Draw sine wave
+    uint16_t* sampleHist     = colorchord->sampleHist;
+    uint16_t sampleHistCount = colorchord->sampleHistCount;
+    int16_t sampleHistMark   = colorchord->sampleHistHead - 1;
+
+    int16_t lastX = 0xFF;
+    int16_t lastY = 0;
+    for (int16_t x = 0; x < TFT_WIDTH; x++)
+    {
+        if (sampleHistMark < 0)
+        {
+            sampleHistMark = sampleHistCount - 1;
+        }
+        int16_t sample = sampleHist[sampleHistMark];
+        sampleHistMark--;
+        uint16_t y = ((sample * TFT_HEIGHT) >> 16) + centerLine;
+        if (0xFF != lastX)
+        {
+            drawLineFast(lastX, lastY, x, y, c333);
+        }
+        lastX = x;
+        lastY = y;
+    }
 
     // Find the max value
     for (uint16_t i = 0; i < FIX_BINS; i++)
@@ -154,6 +173,10 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
             colorchord->maxValue = colorchord->end.fuzzed_bins[i];
         }
     }
+
+    // Draw the spectrum as a bar graph. Figure out bar and margin size
+    int16_t binWidth  = (TFT_WIDTH / FIX_BINS);
+    int16_t binMargin = (TFT_WIDTH - (binWidth * FIX_BINS)) / 2;
 
     // Plot the bars
     for (uint16_t i = 0; i < FIX_BINS; i++)
@@ -174,31 +197,6 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
         {
             // Big enough, fill an area
             fillDisplayArea(x0, centerLine - (height / 2), x1, centerLine + (height / 2), color);
-        }
-    }
-
-    // Draw sine wave
-    {
-        SETUP_FOR_TURBO();
-        int x;
-        uint16_t* sampleHist     = colorchord->sampleHist;
-        uint16_t sampleHistCount = colorchord->sampleHistCount;
-        int16_t sampleHistMark   = colorchord->sampleHistHead - 1;
-
-        for (x = 0; x < TFT_WIDTH; x++)
-        {
-            if (sampleHistMark < 0)
-            {
-                sampleHistMark = sampleHistCount - 1;
-            }
-            int16_t sample = sampleHist[sampleHistMark];
-            sampleHistMark--;
-            uint16_t y = ((sample * TFT_HEIGHT) >> 16) + (TFT_HEIGHT / 2);
-            if (y >= TFT_HEIGHT)
-            {
-                continue;
-            }
-            TURBO_SET_PIXEL(x, y, 215);
         }
     }
 
