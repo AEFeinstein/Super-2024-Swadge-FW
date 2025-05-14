@@ -8,49 +8,97 @@
  *
  */
 
-// FIXME: Documentation is out of date
 /*! \file trophy.h
  *
  * \section trophy_overview Overview
  *
- * The trophy system should be almost 100% handled by five easy to use functions. This system is designed to be as
- * compact as possible without compromising usability while also not hammering the NVS with every update, or requiring
- * more overhead. Each trophy has options as shown in the initializations section.
+ * Welcome to the swadge's trophy system! THis fun addition to your game gives players an extrinsic reason to keep
+ * playing your game again and again.asm
  *
- * Each trophy has a "point" value associated with it which is totalled up to a "Gamer Score" type value to compare with
- * friends.
+ * The trophies work similarly to a mix of the big three: Valve's Achievements, Xbox's gamer score, and Playstation's
+ * Trophies. THere are several different unlock conditions that can be specifed, there's minimal overhead on teh swadge
+ * (when set up properly) and trophies give the player points that they can use as bragging rights.
+ *
+ * As a dev, you will have to put together a "modeName_TL.h" file that will contain a few data stuctures that will
+ * define how the trophy system interacts with your mode and also all of the static data for your trophies. After all,
+ * it's not a minor amount of data!
+ *
+ * Trophies are drawn from either the top or the bottom of the screen, and the duration thy're on screen can be
+adjusted. All NVS activity is handled for the Dev.
  *
  * \section trophy_system The trophy system
  *
- * It is recommended to call `trophySystemInit()` in the mode entry function in case other modes have been accessed
- * which changed the settings.
+ * Like Cthulu creeping into your mind, the trophy system sits on top of the swadge mode. It's always there, but sits
+disabled unless explicitly set active by a developer. To activate it, create the following structs in a .h file separate
+from the main mode:
+ * \code {.c}
+const trophyData_t exampleTrophies[] = {
+    {
+        .title       = "Trigger Trophy",
+        .description = "You pressed A!",
+        .imageString = "kid0.wsg",
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+}
+
+trophySettings_t exampleTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US,
+    .slideDurationUs  = DRAW_SLIDE_US,
+};
+ * \endcode
  *
- * Options:
- * - Banner Top/Bottom: Choose if the banner is viewed from the top or bottom.
- * - Display Duration: How long the banners display by. Units is tenths of a second.
- * - Animate Banners: If the banners should animate by default
- * - Slide Duration: How long the banner should take to slide in. Units is tenths of a second.
+ * Once these have been created and included into the main mode .c file, do the following:
  *
- * Call `trophySystemGetPoints()` to retrieve the number of points the player has per mode. Use NULL to get points for
- * whole system.
+ * \code {.c}
+ trophyDataList_t trophyTestData = {.settings = &trophyTestModeTrophySettings,
+                                    .list = trophyTestModeTrophies,
+                                    .length = ARRAY_SIZE(trophyTestModeTrophies)};
+
+swadgeMode_t trophyTestMode = {.modeName      = modeName,
+                               .wifiMode      = NO_WIFI,
+                                //...
+                               .fnAdvancedUSB = NULL,
+                               .trophyData    = &trophyTestData};
+ * \endcode
  *
- * \section trophy_init Initialization of each individual trophy
+ * This will allow the trophy system to access your trophies and make sure the right text and images are displayed when
+a trophy is triggered.
  *
- * Call `trophyInit()` near the start of the program. Only initializes once, so it can be put anywhere in the code
- * without worry, so long as it's called before the player tries to operate on it. Recommendation is in the mode entry
- * function so it is fully initialized before the player can run any inputs to avoid errors.
+ * \section trophy_settings Settings
  *
- * Options:
+ * There are four settings that can be set for the mode overall:
+ * - drawFromBottom: If set to true, draws the banner at the bottom
+ * - staticDurationUs: How long the banner stays on screen for. The default value (DRAW_STATIC_US) is about half a
+second
+ * - slideDurationUS: How long it takes for the banner to slide in and out. Set to (DRAW_SLIDE_US) for quarter second
+slide, or 0 to have the banner pop in.
+ * - namespaceKey: A text string used to save data to the NVS. This is set automatically if left blank, and should only
+be manually set when there's a conflict between modes
+ *
+ * These can be loaded into the settings struct as shown above.
+ *
+ * \section trophy_individual Individual trophy settings
+ *
+ * The largest portion of the work required to set up the trophies it to create all the trophies from scratch. Here's
+the types of data available to set for each individual trophy:
  * - Title: The name of the trophy. Make it unique! This is used as the identifier and having two of the same names will
  * confuse the program. There's no need to worry about sharing the name with other modes though, that's handled
  * internally.
  * - Description: Displays text to help the player figure out how to get the trophy. Text-box size is limited, and too
  * long descriptions will get truncated. Descriptions can be off-topic, but may confuse players.
- * - Image: Provide a 36x36 sprite that will be displayed. If "NULL" is provided, will not draw and will give more space
- * for text
+ * - Image string: Provide a 36x36 sprite that will be displayed. If string is empty (""), the system will not draw and
+will give more space for the text
  * - Type: See type descriptions below
- * - Points: Number of arbitrary points player gets for winning trophy. Like gamer score on XBOX.
- * - Max Value: Depending on the type, this number is the value that the player is trying to get to
+ * - Difficulty: Instead of setting specific values, set the expected difficulty and the program will automatically
+assign score based on the number of trophies in the mode and their relative difficulty.
+ * - Max Value: Depending on the type, this number is the value that the player is trying to get to. See the type
+discussion below for more info.
+ * - hidden: If set to true, does not appear in lists of trophies until won.
+ *
+ * \warning NVS keys have a max length of 15 characters. Trophies with the same first 15 character will have conflicts
  *
  * Types of trophies:
  * - Trigger: Only required to trigger once. These are best suited to trophies that are secrets, milestones, etc.
@@ -59,81 +107,79 @@
  * - Progress: Each time the trophy is updated, it takes the highest value and uses that. This is best for trophies that
  * are expected to be completed in a single run, such as farthest distance climbed in a race or highest amount of coins
  * collected per life.
- * - Task List: When a trophy is updated, it sets bits based on task ID. This allows unique tasks to be separated off,
- * such as visiting all games or collecting all types of gems, not just a quantity of gems.
+ * - Checklist: When a trophy is updated, it sets bits based on task ID. This allows unique tasks to be separated off,
+ * such as visiting all games or collecting all types of gems, not just a quantity of gems. CHecklists can also be
+"unchecked" in case the player has to balance two things, like having two torches lit at the same time. Checklists have
+a hard limit of 32 flags.
  *
  * A special "All trophies gotten" trophy is automatically generated when the first standard trophy is generated.
- *
- * It is encouraged for developers to equate all trophies values to add up to 1000. The default trophy has a value of
- * 100, leaving 900 to be divide by all other trophies. Any points over 1000 earned by a mode will result in
  *
  * \section trophy_update Updating the Trophy
  *
  * Use either `trophyUpdate()` or `trophyUpdateMilestone()` to update the status of the trophy. If the trophy is a
  * 'Trigger' type, it will automatically set the trophy to having been won regardless of the value entered. If the
- * trophy is one of the other two modes, it will either add or replace the previous value if appropriate.
+ * trophy is either 'Additive' or 'Progress' modes, it will either add or replace the previous value if appropriate.
+Lastly, if it's a checklist, you can use either the standard update command or `trophySetChecklistTask()` to shortcut
+needing to set bit flags yourself.
  *
- * If the developer wants to update quietly, set the drawUpdate to false. This allows smaller updates if required.
+ * If the developer wants to update quietly, there is a argument to disable drawing. This allows smaller updates if
+required.
  * Otherwise, set to true to show the banner automatically.
  *
- * Using the milestone system, the program will automatically display trophy progress at 25%, 50%, 75% and 100%
- * completion rate. This is great for trophies that have frequent updates and wish to display partial milestones.
+ * Using the milestone system, the program will automatically display trophy progress at the set percentage thresholds.
+ * This is great for trophies that have frequent updates and wish to display milestones instead of for every little
+update.
  *
- * If a custom milestone is desired, use `trophyGetData()` to get a struct of the trophy data, and then compare the max
- * value inside the struct to the current value the player has, or just keep an external reference tot eh max value. Set
- * the conditions for each milestone desired, then set the draw argument to true if a milestone has been crossed.
- * Example code below:
+ * Here's some important notes on sending updates:
+ * - No overflow protection: You
+ * - If the first fifteen characters of NVS Namespace or two or more trophy names inside the same mode there will be
+ *   data clashes
+ * - Does not save values once trophy is won. For example, if 10 key presses unlocks a trophy, even if a hundred presses
+ *   are registered, the number 10 will be saved to NVS.
+ * - When testing, renaming and reordering trophies (especially items inside a checklist) may cause hard to discover
+ *   errors. You may have to clear NVS on ESP32 / delete the nvs.json file to fix issues.
+ * - Only update as often as you need: While the trophy system has a few safeguards, if you're asking it to update every
+cm moved forward in a marathon, you're going to be saving a lot of writes, which could harm the swadge
+ * - Every trophyUpdate() call has the potential to save to NVS. NVS has a limited amount of writes over it's lifetime
+which we're not likely to hit, but maybe don't hammer the NVS by incrementing by one every frame. Only update when
+reasonable. The code will cut out a lot of frivolous requests such as:
+ *   - Trying to update trophy after it's been won
+ *   - Trying to save the same value into NVS
+ *   - Trying to save a lower value into NVS (Unless it's a Checklist. You can un-check Checklists)
+ * - In the above cases, it's safe to keep the update code running without issue, but incrementing by one every frame
+may cause slowdowns.
  *
- * \code {.c}
- * //TODO: Example of custom milestone boolean structure
- * \endcode
- *
- * Updates should be as large and as infrequent as possible. Only update when the developer has to to avoid the overhead
- * of reading from the NVS to check if it's been updated, as that's slow. The system checks if the NVS needs writing so
- * the user don't have to worry about the NVS being destroyed by too many updates. The worst case scenario is rapidly
- * adding 1 to a very large number constantly, as this will hit the NVS every time, so try to avoid this.
+ * Once set, the value can be pulled back out by running `trophyGetSavedValue()`.
  *
  * \section trophy_helpers Helper functions
  *
  * Several helper functions exist for the developer to get critical information
- * - trophyGetNumTrophies(): Gets the total number of trophies for a mode, or for all modes if NULL
- * - trophyGetTrophyList(): Returns a list of trophy titles, which can then be used to pull individual data or just
- * display on the screen. Setting NULL as the mode name will grab all trophy titles in unspecified order.
- * - trophyGetData(): Grabs the data stored for the specified trophy, such as sprite name, description, and current
- * value.
+ * - check/setBitFlags(): Two complimentary functions to handle that pesky bit shifting
+ * - trophyGetPoints(): Get either the total number of points for this mode of for the entire swadge
+ * - trophyGetNumTrophies(): Gets the total number of trophies for a mode
+ * - trophyGetTrophyList(): Returns a list of all trophy data
+ * - trophyGetLatestTrophy(): Grabs the data stored for the latest saved trophy.
  *
  * \section trophy_draw Drawing a trophy
  *
- * Individual trophies can be viewed at any time by calling `trophyDraw()` and providing it an index. Set animations
- * to false to draw the box immediately. This function should be last in the draw stack to ensure it draws on top of all
- * other items in the mode.
+ * The Swadge will automatically display trophies as they're unlocked. You do not need to provide draw calls, it is
+handled automatically.
  *
- * The standard single trophy draw function draws a banner across the top of the screen using the provided data. It will
- * display:
- * - An image if provided
- * - The title text
- * - The description
- * - If a value is required, draw current value and progress
+ * The banner notifications look like this:
+ * FIXME: Include pictures in docs/Trophy/ folder here.
  *
- * //TODO: Example image
- *
- * The banner will scroll in from the top by default, but can be set to the bottom with `trophySystemSet()`. See system
+ * The banner will scroll in from the top by default, but can be set to the bottom in the settings. See system
  * initialization. The banner will be fully visible for the set duration, not including scroll in and scroll out
  * duration.
  *
- * There can be up to five banners in the queue, and will display one after another.
+ * Banners will automatically queue up. A significant number of calls may slow down the swadge as it has to allocate
+data for each update.
  *
  * \section trophy_draw_list Drawing all the trophies
  *
- * The trophies can be drawn in one of two ways: By calling `trophyDrawList()` or by getting the list of trophies and
- * making a separate display function.
- *
- * The list draw function can be re-initialized to change the colors to theme the menu without recreating it from
- * scratch.
- *
- * //TODO: Example image
- *
- * The colors can be changed to theme the display with `trophyDrawListInit()`.
+ * A trophy 'gallery' type function has been provided. Initialize with `trophyDrawListInit()`, set the colors with
+`trophyDrawListColors()`, and display with `trophyDrawListDraw()`. It displays a long list that can be scrolled by
+providing new y values. Remember to deinit the list with `trophyDrawListDeinit()` to cover any memory leaks.
  *
  * \section trophy_clear Clearing a trophy
  *
@@ -144,33 +190,7 @@
  *
  * Clearing a trophy will delete the points acquired if it was previously won.
  *
- * \code {.C}
- * // TODO: Examples of all code
- * \endcode
- *
  */
-
-// TODO: Can grab data from index or name
-// TODO: Remove unecessary functions
-// TODO: Write section on how to load individual mode data
-// TODO: Write section on formatting the external files
-// TODO: trophyMasterList.h
-// TODO: Warnings:
-// - No overflow protection
-// - If the first fifteen characters of NVS Namespace or two or more trophy names inside the same mode there will be
-//   data clashes
-// - Does not save values once trophy is won. For example, if 10 key presses unlocks a trophy, even if a hundred presses
-//   are registered, the number 10 will be saved to NVS.
-// - When testing, renaming and reordering trophies (especially items inside a checklist) may cause hard to discover
-// errors. You may have to clear NVS on ESP32 / delete the nvs.json file to fix issues.
-// - Every trophyUpdate() call has the potential to save to NVS. NVS has a limited amount of writes over it's lifetime
-//   which we're not likely to hit, but maybe don't hammer the NVS by incrementing by one every frame. Only update when
-//   reasonable. The code will cut out a lot of frivolous requests such as:
-//   - Trying to update trophy after it's been won
-//   - Trying to save the same value into NVS
-//   - Trying to save a lower value into NVS
-//   In the above cases, it's safe to keep the update code running without issue, but incrementing by one every frame
-//   may cause slowdowns.
 
 #pragma once
 
@@ -364,7 +384,7 @@ const trophyData_t* trophyGetTrophyList(void);
 
 /**
  * @brief Get the Latest Trophy object
- * 
+ *
  * @param modeName Name of the mode associated with the trophy
  * @param trophyName Name of the trophy, but truncated
  */
