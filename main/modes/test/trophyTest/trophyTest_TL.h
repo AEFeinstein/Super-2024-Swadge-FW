@@ -45,29 +45,12 @@ const trophyData_t trophyTestModeTrophies[] = {
         .difficulty  = TROPHY_DIFF_HARD,
         .maxVal      = 0x0007, // Three tasks, 0x01, 0x02, and 0x04
     },
-    {
-        .title       = "Bro, like, what?",
-        .description = "If our eyes aren't real, why can't bees fly?",
-        .image       = KID_0_WSG,
-        .type        = TROPHY_TYPE_ADDITIVE,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 12000000,
-    },
-    {
-        .title       = "Crouching Swadge, Hidden Trophy",
-        .description = "This one is hidden. You shouldn't be able to see it!",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_ADDITIVE,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1024,
-        .hidden      = true,
-    },
 };
 
 // Individual mode settings
 
 trophySettings_t trophyTestModeTrophySettings = {
     .drawFromBottom   = false,
-    .staticDurationUs = DRAW_STATIC_US,
+    .staticDurationUs = DRAW_STATIC_US * 4,
     .slideDurationUs  = DRAW_SLIDE_US,
 };

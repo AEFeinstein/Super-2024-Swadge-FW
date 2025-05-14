@@ -353,7 +353,7 @@ static void runTrophy(int64_t elapsedUs)
             char trophyBuffer[16];
             getLatestTrophy(modeBuffer, trophyBuffer);
 
-            break;
+            break; 
         }
     }
 

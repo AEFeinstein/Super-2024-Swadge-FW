@@ -209,12 +209,13 @@ providing new y values. Remember to deinit the list with `trophyDrawListDeinit()
 
 #define TROPHY_MAX_TITLE_LEN 48
 #define TROPHY_MAX_DESC_LEN  128
-#define TROPHY_IMAGE_STR_LEN 32
+#define MAX_NVS_KEY_LEN      16
 
 #define DRAW_SLIDE_US  262144 // Recommended slide time, a power of 2 about a quarter second
 #define DRAW_STATIC_US 524288 // Recommended static time, a power of 2 about a half second
 
-#define NO_IMAGE_SET CNFS_NUM_FILES
+#define NO_IMAGE_SET CNFS_NUM_FILES 
+#define TROPHY_PLAT  -1
 
 //==============================================================================
 // Enum
@@ -239,6 +240,7 @@ typedef enum
     TROPHY_DIFF_EXTREME,
 } trophyDifficulty_t;
 
+/// @brief What display mode to use to draw trophies
 typedef enum
 {
     TROPHY_DISPLAY_ALL,
@@ -256,7 +258,7 @@ typedef struct
 {
     char title[TROPHY_MAX_TITLE_LEN];      //< Name of the Trophy, used as ID
     char description[TROPHY_MAX_DESC_LEN]; //< Short description of task required
-    cnfsFileIdx_t image;                  //< Index of the image
+    cnfsFileIdx_t image;                   //< Index of the image
     trophyType_t type;                     //< Type of trophy. See "trophy.h" for descriptions
     trophyDifficulty_t difficulty;         //< How many points the trophy is worth
     int32_t maxVal;                        //< The value that
@@ -266,10 +268,10 @@ typedef struct
 /// @brief Settings for the trophy system
 typedef struct
 {
-    bool drawFromBottom;      //< If banner should be drawn from the bottom of the screen
-    int32_t staticDurationUs; //< How long the banner will be drawn fully extended
-    int32_t slideDurationUs;  //< How long the banner will take to slide in and out
-    char namespaceKey[16];    //< key used for trophy namespace
+    bool drawFromBottom;                //< If banner should be drawn from the bottom of the screen
+    int32_t staticDurationUs;           //< How long the banner will be drawn fully extended
+    int32_t slideDurationUs;            //< How long the banner will take to slide in and out
+    char namespaceKey[MAX_NVS_KEY_LEN]; //< key used for trophy namespace
 } trophySettings_t;
 
 /// @brief The data object dev hands to the trophy showcase that contains all the const data.
