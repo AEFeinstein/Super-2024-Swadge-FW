@@ -51,6 +51,6 @@ const trophyData_t trophyTestModeTrophies[] = {
 
 trophySettings_t trophyTestModeTrophySettings = {
     .drawFromBottom   = false,
-    .staticDurationUs = DRAW_STATIC_US * 4,
+    .staticDurationUs = DRAW_STATIC_US * 2,
     .slideDurationUs  = DRAW_SLIDE_US,
 };

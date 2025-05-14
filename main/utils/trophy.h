@@ -166,7 +166,8 @@ may cause slowdowns.
 handled automatically.
  *
  * The banner notifications look like this:
- * FIXME: Include pictures in docs/Trophy/ folder here.
+ * \image html inProgress.png
+ * \image html Completed.png
  *
  * The banner will scroll in from the top by default, but can be set to the bottom in the settings. See system
  * initialization. The banner will be fully visible for the set duration, not including scroll in and scroll out
