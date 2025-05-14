@@ -950,6 +950,7 @@ WARN_LOGFILE           = doxy_warnings.txt
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = ./main \
+                         ./main/modes/games/cosCrunch/cosCrunch.h \
                          ./components \
                          ./docs/CODE_OF_CONDUCT.md \
                          ./docs/CONTRIBUTING.md \
