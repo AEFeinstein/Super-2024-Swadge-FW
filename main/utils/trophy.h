@@ -384,12 +384,11 @@ int trophyGetNumTrophies(void);
 const trophyData_t* trophyGetTrophyList(void);
 
 /**
- * @brief Get the Latest Trophy object
- *
- * @param modeName Name of the mode associated with the trophy
- * @param trophyName Name of the trophy, but truncated
+ * @brief Get the Latest Trophy saved as data
+ * 
+ * @return trophyData_t Data
  */
-void getLatestTrophy(char* modeName, char* trophyName);
+trophyData_t getLatestTrophy(void);
 
 // Drawing functions
 

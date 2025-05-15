@@ -51,7 +51,7 @@
 // Consts
 //==============================================================================
 
-static const char* const NVSstrings[] = {"trophy", "points", "latest", "mode", "trphName"};
+static const char* const NVSstrings[] = {"trophy", "points", "latest"};
 
 static const char* const platStrings[] = {"All ", " Trophies Won!", "Win all the trophies for "};
 
@@ -143,12 +143,11 @@ static void _load(trophyDataWrapper_t* tw, trophyData_t t);
 static void _saveLatestWin(trophyDataWrapper_t* tw);
 
 /**
- * @brief Loads the latest win from NVS
- *
- * @param mode Mode string to be returned
- * @param name Name of the trophy returned
+ * @brief Loads ther index of the latest win
+ * 
+ * @return int32_t index of the trophy
  */
-static void _loadLatestWin(char* mode, char* name);
+int32_t _loadLatestWin();
 
 /**
  * @brief Saves new points value to NVS. Saves both overall value and mode-specific
@@ -525,9 +524,9 @@ const trophyData_t* trophyGetTrophyList(void)
     return trophySystem.data->list;
 }
 
-void getLatestTrophy(char* modeName, char* trophyName)
+trophyData_t getLatestTrophy()
 {
-    _loadLatestWin(modeName, trophyName);
+    return trophySystem.data->list[_loadLatestWin()];
 }
 
 // Draw
@@ -798,20 +797,21 @@ static void _load(trophyDataWrapper_t* tw, trophyData_t t)
 
 static void _saveLatestWin(trophyDataWrapper_t* tw)
 {
-    char buffer[MAX_NVS_KEY_LEN];
-    _truncateStr(buffer, trophySystem.data->settings->namespaceKey, MAX_NVS_KEY_LEN);
-    writeNamespaceNvsBlob(NVSstrings[2], NVSstrings[3], buffer, strlen(buffer));
-    _truncateStr(buffer, tw->trophyData.title, MAX_NVS_KEY_LEN);
-    writeNamespaceNvsBlob(NVSstrings[2], NVSstrings[4], buffer, strlen(buffer));
+    for (int idx = 0; idx < trophySystem.data->length; idx++)
+    {
+        if (strcmp(tw->trophyData.title, trophySystem.data->list[idx].title) == 0)
+        {
+            writeNamespaceNvs32(NVSstrings[0], NVSstrings[2], idx);
+            return;
+        }
+    }
 }
 
-static void _loadLatestWin(char* mode, char* name)
+int32_t _loadLatestWin()
 {
-    size_t blobLen;
-    readNamespaceNvsBlob(NVSstrings[2], NVSstrings[3], NULL, &blobLen);
-    readNamespaceNvsBlob(NVSstrings[2], NVSstrings[3], mode, &blobLen);
-    readNamespaceNvsBlob(NVSstrings[2], NVSstrings[4], NULL, &blobLen);
-    readNamespaceNvsBlob(NVSstrings[2], NVSstrings[4], name, &blobLen);
+    int32_t idx;
+    readNamespaceNvs32(NVSstrings[0], NVSstrings[0], &idx);
+    return idx;
 }
 
 static void _setPoints(int points)

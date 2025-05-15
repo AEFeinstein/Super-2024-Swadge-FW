@@ -59,11 +59,17 @@
 int modeListGetCount(void);
 
 /**
- * @brief Iniitalizes a menu with all the current swadge modes
+ * @brief Initializes a menu with all the current swadge modes
  *
  * @param menu Menu to set
  */
 void modeListSetMenu(menu_t* menu);
+
+// Get mode index
+int getModeIndex(char* modeName);
+
+// Get trophy master index
+trophyData_t getTrophyFromIdx(int idx);
 
 //==============================================================================
 // Externs
