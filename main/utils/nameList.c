@@ -16,12 +16,12 @@
 #include "macros.h"
 #include <esp_wifi.h>
 #include <esp_log.h>
+#include <esp_random.h>
 
 //==============================================================================
 // Consts
 //==============================================================================
 
-// TODO: Fill out lists with non-AI generated text
 static const char* const nameList1[] = {"Large", "Small", "Obsequent", "Malignant"};
 static const char* const nameList2[] = {"Poisonous", "Surreptitious", "Crazed", "Loltastic"};
 static const char* const nameList3[] = {"Marmoset", "Kalina", "Spooder", "Shikikan"};
@@ -30,7 +30,7 @@ static const char* const nameList3[] = {"Marmoset", "Kalina", "Spooder", "Shikik
 // Function Declarations
 //==============================================================================
 
-void generateMACName(nameStruct_t* ns, char* buffer, int buffLen)
+void generateMACName(nameStruct_t* ns, char* outBuffer, int buffLen)
 {
     uint8_t baseMac[6];
     esp_err_t ret = esp_wifi_get_mac(WIFI_IF_STA, baseMac);
@@ -38,22 +38,32 @@ void generateMACName(nameStruct_t* ns, char* buffer, int buffLen)
     {
         // NOTE: There's a large assumption that the vendor code is in the first bytes
         // May need to re-eval if this generates the same names over and over/some names more often than others.
-        ns->nameIdxs[0] = baseMac[2] % ARRAY_SIZE(nameList1);
-        ns->nameIdxs[1] = baseMac[3] % ARRAY_SIZE(nameList2);
-        ns->nameIdxs[2] = baseMac[4] % ARRAY_SIZE(nameList3);
+        ns->nameIdxs[LIST1] = baseMac[2] % ARRAY_SIZE(nameList1);
+        ns->nameIdxs[LIST2] = baseMac[3] % ARRAY_SIZE(nameList2);
+        ns->nameIdxs[LIST3] = baseMac[4] % ARRAY_SIZE(nameList3);
         ns->randCode    = baseMac[5];
     }
     else
     {
         ESP_LOGE("NGEN", "Failed to read MAC address");
         // Should be obvious something went wrong
-        ns->nameIdxs[0] = 0;
-        ns->nameIdxs[1] = 0;
-        ns->nameIdxs[2] = 0;
+        ns->nameIdxs[LIST1] = 0;
+        ns->nameIdxs[LIST2] = 0;
+        ns->nameIdxs[LIST3] = 0;
         ns->randCode    = 0;
     }
-    snprintf(buffer, buffLen - 1, "%s-%s-%s-%d", nameList1[ns->nameIdxs[0]], nameList2[ns->nameIdxs[1]],
-             nameList3[ns->nameIdxs[2]], ns->randCode);
+    snprintf(outBuffer, buffLen - 1, "%s-%s-%s-%" PRId32, nameList1[ns->nameIdxs[LIST1]], nameList2[ns->nameIdxs[LIST2]],
+             nameList3[ns->nameIdxs[LIST3]], ns->randCode);
+}
+
+void generateRandName(nameStruct_t* ns, char* outBuffer, int buffLen)
+{
+    ns->nameIdxs[LIST1] = esp_random() % ARRAY_SIZE(nameList1);
+    ns->nameIdxs[LIST2] = esp_random() % ARRAY_SIZE(nameList2);
+    ns->nameIdxs[LIST3] = esp_random() % ARRAY_SIZE(nameList3);
+    ns->randCode    = esp_random() % 256;
+    snprintf(outBuffer, buffLen - 1, "%s-%s-%s-%" PRId32, nameList1[ns->nameIdxs[LIST1]], nameList2[ns->nameIdxs[LIST2]],
+             nameList3[ns->nameIdxs[LIST3]], ns->randCode);
 }
 
 void getTextFromList(int listIdx, int idx, char* buffer, int buffLen)
@@ -80,4 +90,13 @@ void getTextFromList(int listIdx, int idx, char* buffer, int buffLen)
             snprintf(buffer, buffLen - 1, "%s", "Bad request");
         }
     }
+}
+
+void getFullName(nameStruct_t name, char* outBuffer, int buffLen)
+{
+    char buff1[32], buff2[32], buff3[32];
+    getTextFromList(LIST1, name.nameIdxs[LIST1], buff1, 32);
+    getTextFromList(LIST2, name.nameIdxs[LIST2], buff2, 32);
+    getTextFromList(LIST3, name.nameIdxs[LIST3], buff3, 32);
+    snprintf(outBuffer, buffLen - 1, "%s-%s-%s-%" PRId32, buff1, buff2, buff3, name.randCode);
 }

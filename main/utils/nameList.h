@@ -46,17 +46,35 @@ typedef struct
  * @brief Generates a name from Swadge's MAC address
  *
  * @param ns Name object new name is generated from
- * @param buffer Buffer to write name to
+ * @param outBuffer Buffer to write name to
  * @param buffLen Length of the buffer
  */
-void generateMACName(nameStruct_t* ns, char* buffer, int buffLen);
+void generateMACName(nameStruct_t* ns, char* outBuffer, int buffLen);
 
 /**
- * @brief Grabs the text from the specified list
+ * @brief 
+ * 
+ * @param ns 
+ * @param outBuffer 
+ * @param buffLen 
+ */
+void generateRandName(nameStruct_t* ns, char* outBuffer, int buffLen);
+
+/**
+ * @brief Get the Full Name from nameStruct
+ * 
+ * @param name 
+ * @param outBuffer 
+ * @param buffLen 
+ */
+void getFullName(nameStruct_t name, char* outBuffer, int buffLen);
+
+/**
+ * @brief Grabs one word from the specified list
  *
  * @param listIdx Which list to grab from
  * @param idx Index of the text asked for
- * @param buffer Buffer to store text
+ * @param outBuffer Buffer to store text
  * @param buffLen Length of the buffer
  */
-void getTextFromList(int listIdx, int idx, char* buffer, int buffLen);
+void getTextFromList(int listIdx, int idx, char* outBuffer, int buffLen);
