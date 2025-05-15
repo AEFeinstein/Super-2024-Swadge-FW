@@ -15,6 +15,7 @@
 #include <esp_log.h>
 #include "soundFuncs.h"
 #include "platformer_typedef.h"
+#include "shapes.h"
 
 //==============================================================================
 // Constants
@@ -197,7 +198,7 @@ void pl_updatePlayer(plEntity_t* self)
         self->gameData->changeState = PL_ST_PAUSE;
     }
 
-    pl_moveEntityWithTileCollisions(self);
+    pl_moveEntityWithTileCollisions3(self);
     dieWhenFallingOffScreen(self);
     applyGravity(self);
     applyDamping(self);
@@ -435,6 +436,185 @@ void pl_moveEntityWithTileCollisions(plEntity_t* self)
 
     self->x = newX + self->xspeed;
     self->y = newY + self->yspeed;
+}
+
+void pl_moveEntityWithTileCollisions2(plEntity_t* self)
+{
+    uint16_t x = TO_PIXEL_COORDS(self->x);
+    uint16_t y = TO_PIXEL_COORDS(self->y);
+    int16_t xspeed = self->xspeed;
+    int16_t yspeed = self->yspeed;
+
+    int16_t offX, offY, tempX, tempY, tempE, tempTx, tempTy, tempNtx, tempNty, tempT, newX, newY;
+
+    newX = 0;
+    newY = 0;
+
+    for(int i=0; i<2; i++){
+        offX = PL_1x2_TILE_COLLISION_OFFSETS_IN_PIXELS[(i*3) + 0];
+        offY = PL_1x2_TILE_COLLISION_OFFSETS_IN_PIXELS[(i*3) + 1];
+        tempX = x + offX;
+        tempY = y + offY;
+        tempE = PL_1x2_TILE_COLLISION_OFFSETS_IN_PIXELS[(i*3) + 2];
+
+        tempTx = PL_TO_TILECOORDS(tempX);
+        tempTy = PL_TO_TILECOORDS(tempY);
+
+        tempNty = PL_TO_TILECOORDS(tempY - (yspeed < 0) + (SIGNOF(yspeed) * PL_HALF_TILESIZE));
+        tempNtx = (tempTy == tempNty) ? PL_TO_TILECOORDS(tempX - (xspeed < 0) + (SIGNOF(xspeed) * PL_HALF_TILESIZE)) : PL_TO_TILECOORDS(tempX);
+        
+
+        drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
+        drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
+        drawRect((tempNtx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempNty << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempNtx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempNty << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c050);
+
+
+        tempT = pl_getTile(self->tilemap, tempNtx, tempNty);
+
+        if(pl_isSolid(tempT)){
+            if((tempTx > tempNtx) && (tempE & PL_EDGE_LEFT) ) {
+               newX = (((tempNtx + 1)) << PL_TILESIZE_IN_POWERS_OF_2) + PL_HALF_TILESIZE - offX;
+               tempNtx = PL_TO_TILECOORDS(tempX - (xspeed < 0) + (SIGNOF(xspeed) * PL_HALF_TILESIZE));
+               xspeed = 0;
+            } else if((tempTx < tempNtx) && (tempE & PL_EDGE_RIGHT) ) {
+               newX = (((tempNtx)) << PL_TILESIZE_IN_POWERS_OF_2) - PL_HALF_TILESIZE - offX;
+               tempNtx = PL_TO_TILECOORDS(tempX - (xspeed < 0) + (SIGNOF(xspeed) * PL_HALF_TILESIZE));
+               xspeed = 0;
+            }
+        }
+        
+        tempT = pl_getTile(self->tilemap, tempNtx, tempNty);
+        if(pl_isSolid(tempT)){
+            if((tempTy > tempNty) && (tempE & PL_EDGE_TOP) ) {
+               newY = (((tempNty + 1)) << PL_TILESIZE_IN_POWERS_OF_2) + PL_HALF_TILESIZE - offY;
+               tempNty = PL_TO_TILECOORDS(tempY - (yspeed < 0) + (SIGNOF(yspeed) * PL_HALF_TILESIZE));
+               yspeed = 0;
+            } else if((tempTy < tempNty) && (tempE & PL_EDGE_BOTTOM) ) {
+               newY = (((tempNty )) << PL_TILESIZE_IN_POWERS_OF_2) - PL_HALF_TILESIZE - offY;
+               tempNty = PL_TO_TILECOORDS(tempY - (yspeed < 0) + (SIGNOF(yspeed) * PL_HALF_TILESIZE));
+               yspeed = 0;
+            }
+
+
+            //continue;
+        }
+    }
+
+    self->x = newX ? TO_SUBPIXEL_COORDS(newX) : self->x+self->xspeed;
+    self->y = newY ? TO_SUBPIXEL_COORDS(newY) : self->y+self->yspeed;
+
+    if(newX) {
+        self->xspeed = 0;
+    }
+
+    if(newY) {
+        self->yspeed = 0;
+    }
+}
+
+
+void pl_moveEntityWithTileCollisions3(plEntity_t* self)
+{
+    uint16_t x = TO_PIXEL_COORDS(self->x);
+    uint16_t y = TO_PIXEL_COORDS(self->y);
+    int16_t xspeed = TO_PIXEL_COORDS(self->xspeed);
+    int16_t yspeed = TO_PIXEL_COORDS(self->yspeed);
+
+    int16_t offX, offY, tempX, tempY, tempE, tempTx, tempTy, tempNtx, tempNty, tempT, newX, newY;
+
+    newX = 0;
+    newY = 0;
+
+    if(self->xspeed > 0){
+        for(int i=0; i<3; i++){
+            offX = PL_TILE_COLLISION_OFFSETS_1x2_RIGHT_EDGE[(i*2) + 0];
+            offY = PL_TILE_COLLISION_OFFSETS_1x2_RIGHT_EDGE[(i*2) + 1];
+            tempX = x + offX + xspeed;
+            tempY = y + offY;// + yspeed;
+
+            tempTx = PL_TO_TILECOORDS(tempX);
+            tempTy = PL_TO_TILECOORDS(tempY);
+
+            drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
+            drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
+
+            tempT = pl_getTile(self->tilemap, tempTx, tempTy);
+            
+            if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, (self->xspeed > 0))){
+                newX = ((tempTx) << PL_TILESIZE_IN_POWERS_OF_2) - offX;
+            }
+        }
+    } else if(self->xspeed < 0){
+        for(int i=0; i<3; i++){
+            offX = PL_TILE_COLLISION_OFFSETS_1x2_LEFT_EDGE[(i*2) + 0];
+            offY = PL_TILE_COLLISION_OFFSETS_1x2_LEFT_EDGE[(i*2) + 1];
+            tempX = x + offX + xspeed;
+            tempY = y + offY;// + yspeed;
+
+            tempTx = PL_TO_TILECOORDS(tempX);
+            tempTy = PL_TO_TILECOORDS(tempY);
+
+            drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
+            drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
+
+            tempT = pl_getTile(self->tilemap, tempTx, tempTy);
+            
+            if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, (self->xspeed > 0))){
+                newX = ((tempTx+1) << PL_TILESIZE_IN_POWERS_OF_2) - offX;
+            }
+        }
+    }
+
+    if(self->yspeed > 0){
+        for(int i=0; i<3; i++){
+            offX = PL_TILE_COLLISION_OFFSETS_1x2_BOTTOM_EDGE[(i*2) + 0];
+            offY = PL_TILE_COLLISION_OFFSETS_1x2_BOTTOM_EDGE[(i*2) + 1];
+            tempX = x + offX; //+ xspeed;
+            tempY = y + offY + yspeed;
+
+            tempTx = PL_TO_TILECOORDS(tempX);
+            tempTy = PL_TO_TILECOORDS(tempY);
+
+            drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
+            drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
+
+            tempT = pl_getTile(self->tilemap, tempTx, tempTy);
+            
+            if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 2 << (self->yspeed > 0))){
+                newY = ((tempTy) << PL_TILESIZE_IN_POWERS_OF_2) /*+ PL_HALF_TILESIZE*/ - offY;
+            }
+        }
+    } else if(self->yspeed < 0){
+        for(int i=0; i<3; i++){
+            offX = PL_TILE_COLLISION_OFFSETS_1x2_TOP_EDGE[(i*2) + 0];
+            offY = PL_TILE_COLLISION_OFFSETS_1x2_TOP_EDGE[(i*2) + 1];
+            tempX = x + offX; //+ xspeed;
+            tempY = y + offY + yspeed;
+
+            tempTx = PL_TO_TILECOORDS(tempX);
+            tempTy = PL_TO_TILECOORDS(tempY);
+
+            drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
+            drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
+
+            tempT = pl_getTile(self->tilemap, tempTx, tempTy);
+            
+            if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 2 << (self->yspeed > 0))){
+                newY = ((tempTy+1) << PL_TILESIZE_IN_POWERS_OF_2) /*+ PL_HALF_TILESIZE;*/ - offY;
+            }
+        }
+    }
+
+    self->x = newX ? TO_SUBPIXEL_COORDS(newX) : self->x+self->xspeed;
+    self->y = newY ? TO_SUBPIXEL_COORDS(newY) : self->y+self->yspeed;
+
+    if(newX) {
+        //self->xspeed = 0;
+    }
+
+    if(newY) {
+        self->yspeed = 0;
+    }
 }
 
 void defaultFallOffTileHandler(plEntity_t* self)
