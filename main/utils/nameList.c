@@ -23,32 +23,25 @@
 //==============================================================================
 
 static const char* const nameList1[] = {
-    "outgoing",     "bent",    "flaky",      "unfair",        "fearless",      "understood",   "debonair",
-    "righteous",    "global",  "equal",      "loose",         "psychological", "sparkling",    "symptomatic",
-    "laughable",    "quick",   "itchy",      "zany",          "successfully",  "entertaining", "aback",
-    "hot",          "like",    "noiseless",  "dysfunctional", "skinny",        "glorious",     "assorted",
-    "spiteful",     "former",  "scientific", "accurate",      "noxious",       "adaptable",    "sassy",
-    "elastic",      "similar", "lacking",    "known",         "loutish",       "suitable",     "grey",
-    "rambunctious", "amusing", "standing",   "absurd",        "acid",          "available",
+    "outgoing", "fearless",     "debonair", "righteous", "psychological", "sparkling", "symptomatic", "quick",
+    "zany",     "entertaining", "hot",      "noiseless", "dysfunctional", "glorious",  "scientific",  "accurate",
+    "noxious",  "adaptable",    "sassy",    "elastic",   "known",         "loutish",   "suitable",    "rambunctious",
+    "amusing",  "absurd",       "rhythmic", "modal",     "syncopated",    "sharp",     "auxilary",    "deafening",
+    "plain",    "sudden",       "ordinary", "eminent",   "orchestral",    "speedy",    "lovely",      "zany",
 };
 static const char* const nameList2[] = {
-    "wry",          "bright",    "educated",    "hulking",      "mammoth",    "lumpy",       "overwrought",
-    "rabid",        "faded",     "therapeutic", "rambunctious", "odd",        "cooperative", "psychotic",
-    "skinny",       "actually",  "ruddy",       "untidy",       "mysterious", "gentle",      "shaggy",
-    "ill-informed", "exciting",  "magnificent", "recent",       "uppity",     "foreign",     "succinct",
-    "voracious",    "meek",      "near",        "smoggy",       "abnormal",   "useful",      "macho",
-    "measly",       "truthful",  "healthy",     "every",        "dazzling",   "nutty",       "former",
-    "round",        "deafening", "plain",       "sudden",       "ordinary",   "eminent",     "labored",
+    "wry",       "bright",      "educated",     "hulking",  "mammoth",     "lumpy",       "overwrought", "rabid",
+    "faded",     "therapeutic", "rambunctious", "odd",      "cooperative", "psychotic",   "skinny",      "ruddy",
+    "untidy",    "mysterious",  "gentle",       "shaggy",   "exciting",    "magnificent", "uppity",      "succinct",
+    "voracious", "meek",        "smoggy",       "abnormal", "useful",      "macho",       "measly",      "truthful",
+    "healthy",   "dazzling",    "nutty",        "round",    "magnanimous", "suspended",   "dissonant",   "consonant",
 };
 static const char* const nameList3[] = {
-
-    "expression",  "shirt",          "pollution",   "county",     "king",     "statement",    "promotion",
-    "maintenance", "administration", "football",    "initiative", "extent",   "introduction", "volume",
-    "estate",      "transportation", "improvement", "industry",   "policy",   "department",   "property",
-    "charity",     "camera",         "cheek",       "delivery",   "way",      "lab",          "highway",
-    "perspective", "complaint",      "discussion",  "payment",    "language", "pie",          "library",
-    "tale",        "enthusiasm",     "movie",       "marriage",   "bathroom", "alcohol",      "apartment",
-    "skill",       "analyst",        "child",       "argument",   "soup",     "significance", "potato",
+    "woodwind", "percussion", "harmony",  "percussion", "octave",    "cat",      "dog",      "weasel",
+    "deer",     "seahorse",   "warthog",  "hamster",    "chameleon", "snake",    "lizard",   "pitch",
+    "hedgehog", "ghost",      "string",   "noob",       "smurf",     "boss",     "aardvark", "lemon",
+    "eagle",    "foxbat",     "seahawk",  "osprey",     "badger",    "drums",    "bass",     "wolf",
+    "guitar",   "keyboard",   "vocalist", "developer",  "rocker",    "musician", "artist",   "controller",
 };
 
 //==============================================================================
