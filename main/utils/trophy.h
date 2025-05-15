@@ -384,18 +384,11 @@ int trophyGetNumTrophies(void);
 const trophyData_t* trophyGetTrophyList(void);
 
 /**
- * @brief Get the Latest Trophy saved as data
- * 
- * @return trophyData_t Data
- */
-trophyData_t getLatestTrophy(void);
-
-/**
  * @brief Get the Latest Trophy Idx object
  * 
  * @return int32_t Returned idx
  */
-int32_t getLatestTrophyIdx(void);
+int32_t getLatestTrophyIdx(char* buffer);
 
 trophyData_t getTrophyDataFromIdx(int idx);
 

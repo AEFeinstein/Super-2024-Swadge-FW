@@ -56,3 +56,23 @@ void modeListSetMenu(menu_t* menu)
 
     addSingleItemToMenu(menu, modeCredits.modeName);
 }
+
+trophyData_t getLatestTrophyFromIndex(trophyIdx_t ti)
+{
+    return allSwadgeModes[ti.modeIdx]->trophyData->list[ti.trophyIdx];
+}
+
+trophyIdx_t getLatestTrophyModeIdx()
+{
+    char buffer[16];
+    trophyIdx_t ti = {};
+    ti.trophyIdx = getLatestTrophyIdx(buffer);
+    for (int idx = 0; idx < modeListGetCount(); idx++)
+    {
+        if (strcmp(buffer, allSwadgeModes[idx]->trophyData->settings->namespaceKey))
+        {
+            ti.modeIdx = idx;
+        }
+    }
+    return ti;
+}

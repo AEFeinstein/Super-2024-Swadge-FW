@@ -47,6 +47,12 @@
 #include "trophyTest.h"
 #include "tunernome.h"
 
+typedef struct 
+{
+  int trophyIdx;
+  int modeIdx;
+} trophyIdx_t;
+
 //==============================================================================
 // Function Prototypes
 //==============================================================================
@@ -65,11 +71,20 @@ int modeListGetCount(void);
  */
 void modeListSetMenu(menu_t* menu);
 
-// Get mode index
-int getModeIndex(char* modeName);
+/**
+ * @brief Get the Latest Trophy From Index object
+ * 
+ * @param 
+ * @return trophyData_t 
+ */
+trophyData_t getLatestTrophyFromIndex(trophyIdx_t ti);
 
-// Get trophy master index
-trophyData_t getTrophyFromIdx(int idx);
+/**
+ * @brief Get the Latest Trophy Mode Idx object
+ * 
+ * @return trophyIdx_t 
+ */
+trophyIdx_t getLatestTrophyModeIdx(void);
 
 //==============================================================================
 // Externs

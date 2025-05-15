@@ -397,10 +397,6 @@ static void runTrophy(int64_t elapsedUs)
             int total     = trophyGetPoints(true, NULL);
             snprintf(buffer, sizeof(buffer) - 1, "Mode Total: %d, total: %d", modeTotal, total);
             drawText(getSysFont(), c555, buffer, 32, 190);
-
-            // Latest Win
-            getLatestTrophy();
-
             break;
         }
     }

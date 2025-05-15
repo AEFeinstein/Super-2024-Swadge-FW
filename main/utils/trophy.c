@@ -51,7 +51,7 @@
 // Consts
 //==============================================================================
 
-static const char* const NVSstrings[] = {"trophy", "points", "latest"};
+static const char* const NVSstrings[] = {"trophy", "points", "latest", "mode"};
 
 static const char* const platStrings[] = {"All ", " Trophies Won!", "Win all the trophies for "};
 
@@ -144,10 +144,11 @@ static void _saveLatestWin(trophyDataWrapper_t* tw);
 
 /**
  * @brief Loads ther index of the latest win
- * 
+ *
+ * @param buffer Array to shove modename into
  * @return int32_t index of the trophy
  */
-int32_t _loadLatestWin(void);
+int32_t _loadLatestWin(char* buffer);
 
 /**
  * @brief Saves new points value to NVS. Saves both overall value and mode-specific
@@ -524,14 +525,9 @@ const trophyData_t* trophyGetTrophyList(void)
     return trophySystem.data->list;
 }
 
-trophyData_t getLatestTrophy()
+int32_t getLatestTrophyIdx(char* buffer)
 {
-    return trophySystem.data->list[_loadLatestWin()];
-}
-
-int32_t getLatestTrophyIdx()
-{
-    return _loadLatestWin();
+    return _loadLatestWin(buffer);
 }
 
 trophyData_t getTrophyDataFromIdx(int idx)
@@ -812,15 +808,20 @@ static void _saveLatestWin(trophyDataWrapper_t* tw)
         if (strcmp(tw->trophyData.title, trophySystem.data->list[idx].title) == 0)
         {
             writeNamespaceNvs32(NVSstrings[0], NVSstrings[2], idx);
+            writeNamespaceNvsBlob(NVSstrings[0], NVSstrings[3], trophySystem.data->settings->namespaceKey,
+                                  MAX_NVS_KEY_LEN);
             return;
         }
     }
 }
 
-int32_t _loadLatestWin()
+int32_t _loadLatestWin(char* buffer)
 {
     int32_t idx;
-    readNamespaceNvs32(NVSstrings[0], NVSstrings[0], &idx);
+    size_t blobLen;
+    readNamespaceNvs32(NVSstrings[0], NVSstrings[2], &idx);
+    readNamespaceNvsBlob(NVSstrings[0], NVSstrings[3], NULL, &blobLen);
+    readNamespaceNvsBlob(NVSstrings[0], NVSstrings[3], buffer, &blobLen);
     return idx;
 }
 
