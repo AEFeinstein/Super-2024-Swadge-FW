@@ -390,7 +390,21 @@ const trophyData_t* trophyGetTrophyList(void);
  */
 int32_t getLatestTrophyIdx(char* buffer);
 
+/**
+ * @brief Get the Trophy Data From Idx object
+ * 
+ * @param idx 
+ * @return trophyData_t 
+ */
 trophyData_t getTrophyDataFromIdx(int idx);
+
+/**
+ * @brief Set the Trophy System to a specific mode's values
+ * 
+ * @param dl Data object from the mode
+ * @param modeName Name of the mode
+ */
+void setTrophySystemData(trophyDataList_t* dl, char* modeName);
 
 // Drawing functions
 

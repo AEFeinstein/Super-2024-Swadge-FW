@@ -535,6 +535,14 @@ trophyData_t getTrophyDataFromIdx(int idx)
     return trophySystem.data->list[idx];
 }
 
+void setTrophySystemData(trophyDataList_t* dl, char* modeName)
+{
+    trophySystem.data = dl;
+    _truncateStr(trophySystem.data->settings->namespaceKey, modeName, MAX_NVS_KEY_LEN);
+    _genPlat(modeName);
+    _loadPalette();
+}
+
 // Draw
 
 void trophyDraw(font_t* fnt, int64_t elapsedUs)

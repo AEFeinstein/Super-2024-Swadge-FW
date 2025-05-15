@@ -25,7 +25,7 @@
 // Consts
 //==============================================================================
 
-static const char trophyModeName[] = "Trophy Test - Long name, short results!";
+static const char trophyModeName[] = "Trophy Test";
 
 static const char* const textBlobs[] = {
     "Press A once",
