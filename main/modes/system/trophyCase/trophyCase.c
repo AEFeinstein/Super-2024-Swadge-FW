@@ -25,7 +25,7 @@
 const char tCaseModeName[]           = "Trophy Case";
 static const char* const menuItems[] = {"Scores", "Mode: "};
 static const char scoreStr[]         = "Scores";
-static const char indiviualStr[]     = "Individual modes";
+static const char individualStr[]     = "Individual modes";
 
 static const char* const caseOptions[] = {"All", "Unlocked", "Locked"};
 static const int32_t caseSettings[]    = {TROPHY_DISPLAY_ALL, TROPHY_DISPLAY_UNLOCKED, TROPHY_DISPLAY_LOCKED};
@@ -239,7 +239,7 @@ static void tCaseDrawStats(font_t* fnt, int yOffset)
     snprintf(buffer, sizeof(buffer) - 1, "Total score: %" PRId32, trophyGetPoints(true, NULL));
     drawText(fnt, c544, buffer, 96, 8 - yOffset);
     drawLine(32, 24 - yOffset, TFT_WIDTH - 32, 24 - yOffset, c555, 0);
-    drawText(fnt, c454, indiviualStr, 32, 32 - yOffset);
+    drawText(fnt, c454, individualStr, 32, 32 - yOffset);
     int line = 1;
     for (int idx = 0; idx < modeListGetCount(); idx++)
     {
