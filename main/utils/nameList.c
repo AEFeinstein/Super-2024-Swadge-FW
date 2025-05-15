@@ -77,7 +77,7 @@ void generateMACName(nameStruct_t* ns, char* outBuffer, int buffLen)
         ns->nameIdxs[LIST3] = 0;
         ns->randCode        = 0;
     }
-    snprintf(outBuffer, buffLen - 1, "%s-%s-%s-%" PRId32, nameList1[ns->nameIdxs[LIST1]],
+    snprintf(outBuffer, buffLen - 1, "%s-%s-%s-%" PRId16, nameList1[ns->nameIdxs[LIST1]],
              nameList2[ns->nameIdxs[LIST2]], nameList3[ns->nameIdxs[LIST3]], ns->randCode);
 }
 
@@ -87,7 +87,7 @@ void generateRandName(nameStruct_t* ns, char* outBuffer, int buffLen)
     ns->nameIdxs[LIST2] = esp_random() % ARRAY_SIZE(nameList2);
     ns->nameIdxs[LIST3] = esp_random() % ARRAY_SIZE(nameList3);
     ns->randCode        = esp_random() % 256;
-    snprintf(outBuffer, buffLen - 1, "%s-%s-%s-%" PRId32, nameList1[ns->nameIdxs[LIST1]],
+    snprintf(outBuffer, buffLen - 1, "%s-%s-%s-%" PRId16, nameList1[ns->nameIdxs[LIST1]],
              nameList2[ns->nameIdxs[LIST2]], nameList3[ns->nameIdxs[LIST3]], ns->randCode);
 }
 
@@ -123,5 +123,5 @@ void getFullName(nameStruct_t name, char* outBuffer, int buffLen)
     getTextFromList(LIST1, name.nameIdxs[LIST1], buff1, 32);
     getTextFromList(LIST2, name.nameIdxs[LIST2], buff2, 32);
     getTextFromList(LIST3, name.nameIdxs[LIST3], buff3, 32);
-    snprintf(outBuffer, buffLen - 1, "%s-%s-%s-%" PRId32, buff1, buff2, buff3, name.randCode);
+    snprintf(outBuffer, buffLen - 1, "%s-%s-%s-%" PRId16, buff1, buff2, buff3, name.randCode);
 }

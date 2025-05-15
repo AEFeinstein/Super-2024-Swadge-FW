@@ -52,20 +52,20 @@ typedef struct
 void generateMACName(nameStruct_t* ns, char* outBuffer, int buffLen);
 
 /**
- * @brief 
- * 
- * @param ns 
- * @param outBuffer 
- * @param buffLen 
+ * @brief
+ *
+ * @param ns
+ * @param outBuffer
+ * @param buffLen
  */
 void generateRandName(nameStruct_t* ns, char* outBuffer, int buffLen);
 
 /**
  * @brief Get the Full Name from nameStruct
- * 
- * @param name 
- * @param outBuffer 
- * @param buffLen 
+ *
+ * @param name
+ * @param outBuffer
+ * @param buffLen
  */
 void getFullName(nameStruct_t name, char* outBuffer, int buffLen);
 
