@@ -1,3 +1,4 @@
+#include <esp_log.h>
 #include <hdw-nvs.h>
 #include "swadgePass.h"
 
@@ -40,6 +41,32 @@ void sendSwadgePass(void)
 void receiveSwadgePass(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
 {
     char macStr[MAC_STR_LEN];
-    macToStr(esp_now_info->src_addr, macStr, sizeof(macStr) - 1);
+    macToStr(esp_now_info->src_addr, macStr, sizeof(macStr));
     writeNamespaceNvsBlob(NS_SP, macStr, data, len);
+}
+
+/**
+ * @brief TODO
+ *
+ */
+void listSwadgePass(void)
+{
+    // Get Keys
+    list_t list = {0};
+    getNvsKeys(NS_SP, &list);
+
+    // Print keys
+    node_t* keyNode = list.first;
+    while (keyNode)
+    {
+        ESP_LOGI("KEY", "%s", (char*)keyNode->val);
+        keyNode = keyNode->next;
+    }
+
+    // Free keys
+    void* val;
+    while ((val = pop(&list)))
+    {
+        heap_caps_free(val);
+    }
 }

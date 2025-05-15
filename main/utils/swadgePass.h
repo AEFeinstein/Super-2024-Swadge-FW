@@ -22,3 +22,4 @@
 
 void sendSwadgePass(void);
 void receiveSwadgePass(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
+void listSwadgePass(void);
