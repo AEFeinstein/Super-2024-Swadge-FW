@@ -1,8 +1,8 @@
 #ifndef _JSON_PROCESSOR_H_
 #define _JSON_PROCESSOR_H_
 
-#include <stdbool.h>
+#include "assets_preprocessor.h"
 
-bool process_json(const char* infile, const char* outFilePath);
+extern const assetProcessor_t jsonProcessor;
 
 #endif

@@ -14,6 +14,32 @@
  */
 bool writeHeatshrinkFile(uint8_t* input, uint32_t len, const char* outFilePath)
 {
+    FILE* outFile = fopen(outFilePath, "wb");
+
+    bool ok = false;
+
+    if (len == 0)
+    {
+        fprintf(stderr, "len is 0 here too!\n");
+    }
+    else if (NULL != outFile)
+    {
+        ok = writeHeatshrinkFileHandle(input, len, outFile);
+        fclose(outFile);
+    }
+
+    return ok;
+}
+
+/**
+ * @brief Utility to compress the given bytes and write them to a file handle
+ *
+ * @param input The bytes to compress and write to a file
+ * @param len The length of the bytes to compress and write
+ * @param outFile An open file handle to write to
+ */
+bool writeHeatshrinkFileHandle(uint8_t* input, uint32_t len, FILE* outFile)
+{
     int32_t errLine = -1;
     /* Set up variables for compression */
     uint32_t outputSize = len;
@@ -21,10 +47,30 @@ bool writeHeatshrinkFile(uint8_t* input, uint32_t len, const char* outFilePath)
     uint32_t outputIdx  = 0;
     uint32_t inputIdx   = 0;
     size_t copied       = 0;
-    FILE* shrunkFile    = NULL;
+
+    if (!output)
+    {
+        fprintf(stderr, "Couldn't allocate output buffer\n");
+        return false;
+    }
+
+    if (!outputSize)
+    {
+        fprintf(stderr, "Why is outputSize == 0?\n");
+        free(output);
+        return false;
+    }
 
     /* Creete the encoder */
     heatshrink_encoder* hse = heatshrink_encoder_alloc(8, 4);
+
+    if (!hse)
+    {
+        fprintf(stderr, "Couldn't allocate heatshrink encoder\n");
+        free(output);
+        return false;
+    }
+
     heatshrink_encoder_reset(hse);
 
     /* Stream the data in chunks */
@@ -125,21 +171,18 @@ bool writeHeatshrinkFile(uint8_t* input, uint32_t len, const char* outFilePath)
         }
     }
 
-    /* Write a compressed file */
-    shrunkFile = fopen(outFilePath, "wb");
-    if (shrunkFile == NULL)
+    if (outFile == NULL)
     {
         perror("Error occurred while writing file.\n");
+        return false;
     }
     /* First four bytes are decompresed size */
-    putc(HI_BYTE(HI_WORD(len)), shrunkFile);
-    putc(LO_BYTE(HI_WORD(len)), shrunkFile);
-    putc(HI_BYTE(LO_WORD(len)), shrunkFile);
-    putc(LO_BYTE(LO_WORD(len)), shrunkFile);
+    putc(HI_BYTE(HI_WORD(len)), outFile);
+    putc(LO_BYTE(HI_WORD(len)), outFile);
+    putc(HI_BYTE(LO_WORD(len)), outFile);
+    putc(LO_BYTE(LO_WORD(len)), outFile);
     /* Then dump the compressed bytes */
-    fwrite(output, outputIdx, 1, shrunkFile);
-    /* Done writing to the file */
-    fclose(shrunkFile);
+    fwrite(output, outputIdx, 1, outFile);
 
     /* Print results */
     // printf("  Source length: %d\n  Shrunk length: %d\n", inputIdx, 4 + outputIdx);

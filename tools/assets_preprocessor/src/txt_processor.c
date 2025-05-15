@@ -8,6 +8,14 @@
 #include "fileUtils.h"
 
 long remove_chars(char* str, long len, char c);
+bool process_txt(processorInput_t* arg);
+
+const assetProcessor_t textProcessor = {
+    .type = FUNCTION,
+    .function = process_txt,
+    .inFmt = FMT_TEXT,
+    .outFmt = FMT_TEXT,
+};
 
 /**
  * @brief Removes all instances of a given char from a string. Modifies the string in-place and sets a new null
@@ -33,33 +41,12 @@ long remove_chars(char* str, long len, char c)
     return newLen;
 }
 
-bool process_txt(const char* infile, const char* outFilePath)
+bool process_txt(processorInput_t* arg)
 {
     /* Read input file */
-    FILE* fp = fopen(infile, "rb");
-
-    if (!fp)
-    {
-        return false;
-    }
-    fseek(fp, 0L, SEEK_END);
-    long sz = ftell(fp);
-    fseek(fp, 0L, SEEK_SET);
-    char txtInStr[sz + 1];
-    fread(txtInStr, sz, 1, fp);
-    txtInStr[sz] = 0;
-    long newSz   = remove_chars(txtInStr, sz, '\r');
-    fclose(fp);
-
-    /* Write input directly to output */
-    FILE* outFile = fopen(outFilePath, "wb");
-
-    if (!outFile)
-    {
-        return false;
-    }
-    fwrite(txtInStr, newSz, 1, outFile);
-    fclose(outFile);
+    long newSz = remove_chars(arg->in.text, arg->in.textSize, '\r');
+    arg->out.text = arg->in.text;
+    arg->out.textSize = newSz;
 
     return true;
 }

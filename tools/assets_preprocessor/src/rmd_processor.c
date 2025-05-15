@@ -8,22 +8,16 @@
 #include "fileUtils.h"
 #include "heatshrink_util.h"
 
-bool process_rmd(const char* infile, const char* outFilePath)
+bool process_rmd(processorInput_t* arg);
+
+const assetProcessor_t rmdProcessor = {
+    .type = FUNCTION,
+    .function = process_rmd,
+    .inFmt = FMT_TEXT,
+    .outFmt = FMT_FILE_BIN,
+};
+
+bool process_rmd(processorInput_t* arg)
 {
-    /* Read input file */
-    FILE* fp = fopen(infile, "rb");
-
-    if (!fp)
-    {
-        return false;
-    }
-    fseek(fp, 0L, SEEK_END);
-    long sz = ftell(fp);
-    fseek(fp, 0L, SEEK_SET);
-    char rmdInStr[sz + 1];
-    fread(rmdInStr, sz, 1, fp);
-    rmdInStr[sz] = 0;
-    fclose(fp);
-
-    return writeHeatshrinkFile((uint8_t*)rmdInStr, sz, outFilePath);
+    return writeHeatshrinkFileHandle((uint8_t*)arg->in.text, arg->in.textSize, arg->out.file);
 }

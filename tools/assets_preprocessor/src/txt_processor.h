@@ -1,8 +1,8 @@
 #ifndef _TXT_PROCESSOR_H_
 #define _TXT_PROCESSOR_H_
 
-#include <stdbool.h>
+#include "assets_preprocessor.h"
 
-bool process_txt(const char* infile, const char* outFilePath);
+extern const assetProcessor_t textProcessor;
 
 #endif

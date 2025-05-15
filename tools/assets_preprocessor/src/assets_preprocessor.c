@@ -26,17 +26,17 @@
 
 #include "assets_preprocessor.h"
 
-static const assetProcessor_t processors[] = {
-    {.inExt = "font.png", .outExt = "font", .type = FUNCTION, .function = process_font},
-    {.inExt = "png", .outExt = "wsg", .type = FUNCTION, .function = process_image},
-    {.inExt = "chart", .outExt = "cch", .type = FUNCTION, .function = process_chart},
-    {.inExt = "json", .outExt = "json", .type = FUNCTION, .function = process_json},
-    {.inExt = "bin", .outExt = "bin", .type = FUNCTION, .function = process_bin},
-    {.inExt = "txt", .outExt = "txt", .type = FUNCTION, .function = process_txt},
-    {.inExt = "rmd", .outExt = "rmh", .type = FUNCTION, .function = process_rmd},
-    {.inExt = "mid", .outExt = "mid", .type = FUNCTION, .function = process_raw},
-    {.inExt = "midi", .outExt = "mid", .type = FUNCTION, .function = process_raw},
-    {.inExt = "raw", .outExt = "raw", .type = FUNCTION, .function = process_raw},
+static const fileProcessorMap_t fileHandlerMap[] = {
+    {.inExt = "font.png", .outExt = "font", .processor = &fontProcessor},
+    {.inExt = "png", .outExt = "wsg", .processor = &imageProcessor},
+    {.inExt = "chart", .outExt = "cch", .processor = &chartProcessor},
+    {.inExt = "json", .outExt = "json", .processor = &jsonProcessor},
+    {.inExt = "txt", .outExt = "txt", .processor = &textProcessor},
+    {.inExt = "rmd", .outExt = "rmh", .processor = &rmdProcessor},
+    {.inExt = "mid", .outExt = "mid", .processor = &heatshrinkProcessor},
+    {.inExt = "midi", .outExt = "mid", .processor = &heatshrinkProcessor},
+    {.inExt = "raw", .outExt = "raw", .processor = &heatshrinkProcessor},
+    {.inExt = "bin", .outExt = "bin", .processor = &binProcessor},
 };
 
 const char* outDirName = NULL;
@@ -89,29 +89,32 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
         char extBuf[16]   = {0};
         char outFile[256] = {0};
 
-        for (int i = 0; i < (sizeof(processors) / sizeof(*processors)); i++)
+        for (int i = 0; i < (sizeof(fileHandlerMap) / sizeof(*fileHandlerMap)); i++)
         {
-            snprintf(extBuf, sizeof(extBuf), ".%s", processors[i].inExt);
+            const fileProcessorMap_t* extMap  = &fileHandlerMap[i];
+            const assetProcessor_t* processor = extMap->processor;
+
+            snprintf(extBuf, sizeof(extBuf), ".%s", extMap->inExt);
             if (endsWith(inFile, extBuf))
             {
                 // This is the matching processor!
                 // Calculate the outFile name (replace the extension) and
 
                 strcat(outFile, outDirName);
-                //strcat(outFile, "/");
+                // strcat(outFile, "/");
                 strcat(outFile, get_filename(inFile));
 
                 // Clip off the input file extension
-                outFile[strlen(outFile) - strlen(processors[i].inExt)] = '\0';
+                outFile[strlen(outFile) - strlen(extMap->inExt)] = '\0';
 
                 // Add the output extension
-                strcat(outFile, processors[i].outExt);
+                strcat(outFile, extMap->outExt);
 
                 if (!isSourceFileNewer(inFile, outFile))
                 {
                     if (verbose)
                     {
-                        printf("[%s] SKIP %s -> %s\n", processors[i].inExt, get_filename(inFile), outFile);
+                        printf("[%s] SKIP %s -> %s\n", extMap->inExt, get_filename(inFile), outFile);
                     }
                     break;
                 }
@@ -122,94 +125,384 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                 }
                 filesUpdated++;
 
-                bool result = false;
+                bool result    = false;
+                bool readError = false;
 
-                switch (processors[i].type)
+                if (FUNCTION == processor->type)
                 {
-                    case FUNCTION:
+                    FILE* inHandle             = NULL;
+                    FILE* outHandle            = NULL;
+                    processorFileData_t inData = {0};
+
+                    switch (processor->inFmt)
                     {
-                        result = processors[i].function(inFile, outFile);
-                        if (verbose)
+                        case FMT_FILE:
+                        case FMT_TEXT:
+                        case FMT_LINES:
                         {
-                            printf("[%s] FUNC %s -> %s\n", processors[i].inExt, get_filename(inFile), outFile);
+                            inHandle = fopen(inFile, "r");
+                            break;
                         }
+
+                        case FMT_FILE_BIN:
+                        case FMT_DATA:
+                        {
+                            inHandle = fopen(inFile, "rb");
+                            break;
+                        }
+                    }
+
+                    if (!inHandle)
+                    {
+                        fprintf(stderr, "[%s] FAILED! Cannot open input file '%s'\n", extMap->inExt, inFile);
                         break;
                     }
 
-                    case EXEC:
+                    switch (processor->outFmt)
                     {
-                        // 2048 chars ought to be enough for anybody!!
-                        char buf[2048];
-                        bool escaped = false;
-                        bool quoted = false;
-                        char *out = buf;
-
-                        const char* cur = processors[i].exec;
-                        while (*cur)
+                        case FMT_FILE:
+                        case FMT_TEXT:
+                        case FMT_LINES:
                         {
-                            switch (*cur)
+                            outHandle = fopen(outFile, "w");
+                            break;
+                        }
+
+                        case FMT_FILE_BIN:
+                        case FMT_DATA:
+                        {
+                            outHandle = fopen(outFile, "wb");
+                            break;
+                        }
+                    }
+
+                    if (!outHandle)
+                    {
+                        fprintf(stderr, "[%s] FAILED! Cannot open output file '%s'\n", extMap->inExt, outFile);
+                        break;
+                    }
+
+                    // Input and output files have been opened!
+                    // Now, handle any extra processing for the input:
+                    switch (processor->inFmt)
+                    {
+                        case FMT_FILE:
+                        case FMT_FILE_BIN:
+                        {
+                            inData.file = inHandle;
+                            break;
+                        }
+
+                        case FMT_TEXT:
+                        case FMT_DATA:
+                            // Open file, read text
                             {
-                                case '%':
+                                bool binFile = (processor->inFmt == FMT_DATA);
+                                fseek(inHandle, 0L, SEEK_END);
+                                long size = ftell(inHandle);
+                                fseek(inHandle, 0L, SEEK_SET);
+
+                                char* data = malloc(size + (binFile ? 0 : 1));
+
+                                if (!data)
                                 {
-                                    const char* substStr = NULL;
-                                    cur++;
-                                    switch (*cur)
-                                    {
-                                        // %i -> input file path
-                                        case 'i': substStr = inFile; break;
-                                        // %f -> input file name
-                                        case 'f': substStr = get_filename(inFile); break;
-                                        // %o -> output file path
-                                        case 'o': substStr = outFile; break;
-                                        // %a -> input file extension
-                                        case 'a': substStr = processors[i].inExt; break;
-                                        // %b -> output file extension
-                                        case 'b': substStr = processors[i].outExt; break;
-                                        // %% -> % (escape)
-                                        case '%':
-                                        {
-                                            *out++ = *cur;
-                                            break;
-                                        }
-                                        default:
-                                        {
-                                            *out++ = '%';
-                                            *out++ = *cur;
-                                            break;
-                                        }
-                                    }
-                                    if (substStr)
-                                    {
-                                        out = stpcpy(out, substStr);
-                                    }
+                                    readError = true;
                                     break;
                                 }
 
-                                default:
+                                fread(data, size, 1, inHandle);
+
+                                if (binFile)
                                 {
-                                    *out++ = *cur;
+                                    inData.data   = (uint8_t*)data;
+                                    inData.length = size;
+                                }
+                                else
+                                {
+                                    data[size]      = '\0';
+                                    inData.text     = data;
+                                    inData.textSize = size + 1;
                                 }
                                 break;
                             }
-                            cur++;
-                        }
-                        *out = '\0';
 
+                        case FMT_LINES:
+                        {
+                            int lines = 0;
+                            int last  = 0;
+                            int ch    = 0;
+                            long size = 0;
+                            while (-1 != (ch = getc(inHandle)))
+                            {
+                                switch (ch)
+                                {
+                                    case '\n':
+                                    {
+                                        lines++;
+                                        break;
+                                    }
+
+                                    default:
+                                        break;
+                                }
+
+                                last = ch;
+                                size++;
+                            }
+
+                            // Handle when a file doesn't end with a newline
+                            if ('\n' != last)
+                            {
+                                lines++;
+                            }
+
+                            // Go back to the beginning for real reading
+                            fseek(inHandle, 0L, SEEK_SET);
+
+                            char* data = (char*)malloc(size + 1);
+                            if (!data)
+                            {
+                                readError = true;
+                                break;
+                            }
+
+                            char** lineList = malloc(lines * sizeof(char*));
+                            if (!lineList)
+                            {
+                                free(data);
+                                readError = true;
+                                break;
+                            }
+                            fread(data, size, 1, inHandle);
+                            fclose(inHandle);
+
+                            int outLine     = 0;
+                            char* cur       = data;
+                            const char* end = data + size;
+                            char* lineStart = cur;
+                            while (cur < end)
+                            {
+                                switch (*cur)
+                                {
+                                    case '\r':
+                                    {
+                                        if (cur + 1 < end && *(cur + 1) == '\n')
+                                        {
+                                            *cur = '\0';
+                                        }
+                                        break;
+                                    }
+
+                                    case '\n':
+                                    {
+                                        *cur                = '\0';
+                                        lineList[outLine++] = lineStart;
+                                        lineStart           = NULL;
+
+                                        break;
+                                    }
+
+                                    default:
+                                    {
+                                        if (!lineStart)
+                                        {
+                                            lineStart = cur;
+                                        }
+                                    }
+                                }
+                                cur++;
+                            }
+                            *cur = '\0';
+
+                            inData.lines     = lineList;
+                            inData.lineCount = lines;
+                            break;
+                        }
+                    }
+
+                    processorInput_t arg = {
+                        .in         = inData,
+                        .out        = {.file = outHandle},
+                        .inFilename = get_filename(inFile),
+                        .data       = NULL,
+                    };
+
+                    if (!readError)
+                    {
+                        result = processor->function(&arg);
                         if (verbose)
                         {
-                            printf("[%s] EXEC %s -> %s\n", processors[i].inExt, get_filename(inFile), outFile);
-                            printf(" >>> %s\n", buf);
+                            printf("[%s] FUNC %s -> %s\n", extMap->inExt, arg.inFilename, outFile);
                         }
+                    }
 
-                        result = (0 == system(buf));
+                    fclose(inHandle);
 
-                        if (!result)
+                    switch (processor->outFmt)
+                    {
+                        case FMT_FILE:
+                        case FMT_FILE_BIN:
+                            // Nothing else necessary
+                            break;
+
+                        case FMT_DATA:
                         {
-                            fprintf(stderr, "Command failed!!!\n");
+                            fwrite(arg.out.data, arg.out.length, 1, outHandle);
+
+                            if ((processor->inFmt != FMT_DATA || arg.out.data != arg.in.data)
+                                && (processor->inFmt != FMT_TEXT || (void*)arg.out.data != (void*)arg.in.text))
+                            {
+                                free(arg.out.data);
+                            }
+                            break;
                         }
-                        break;
+
+                        case FMT_TEXT:
+                        {
+                            fwrite(arg.out.text, strlen(arg.out.text), 1, outHandle);
+
+                            if ((processor->inFmt != FMT_TEXT || arg.out.text != arg.in.text)
+                                && (processor->inFmt != FMT_DATA || (void*)arg.out.text != (void*)arg.in.data))
+                            {
+                                free(arg.out.text);
+                            }
+                            break;
+                        }
+
+                        case FMT_LINES:
+                        {
+                            for (size_t n = 0; n < arg.out.lineCount; n++)
+                            {
+                                fwrite(arg.out.lines[n], strlen(arg.out.lines[n]), 1, outHandle);
+                                putc('\n', outHandle);
+                            }
+
+                            if (processor->inFmt != FMT_LINES || arg.out.lines != arg.in.lines)
+                            {
+                                free(arg.out.lines[0]);
+                                free(arg.out.lines);
+                            }
+                            break;
+                        }
+                    }
+
+                    fclose(outHandle);
+
+                    // And clean up the input file however necessary
+                    switch (processor->inFmt)
+                    {
+                        case FMT_FILE:
+                        case FMT_FILE_BIN:
+                        {
+                            break;
+                        }
+
+                        case FMT_DATA:
+                        {
+                            free(arg.in.data);
+                            break;
+                        }
+
+                        case FMT_TEXT:
+                        {
+                            free(arg.in.text);
+                            break;
+                        }
+
+                        case FMT_LINES:
+                        {
+                            free(arg.in.lines[0]);
+                            free(arg.in.lines);
+                            break;
+                        }
+
+                        default:
+                            break;
                     }
                 }
+                else if (EXEC == processor->type)
+                {
+                    // 2048 chars ought to be enough for anybody!!
+                    char buf[2048];
+                    bool escaped = false;
+                    bool quoted  = false;
+                    char* out    = buf;
+
+                    const char* cur = processor->exec;
+                    while (*cur)
+                    {
+                        switch (*cur)
+                        {
+                            case '%':
+                            {
+                                const char* substStr = NULL;
+                                cur++;
+                                switch (*cur)
+                                {
+                                    // %i -> input file path
+                                    case 'i':
+                                        substStr = inFile;
+                                        break;
+                                    // %f -> input file name
+                                    case 'f':
+                                        substStr = get_filename(inFile);
+                                        break;
+                                    // %o -> output file path
+                                    case 'o':
+                                        substStr = outFile;
+                                        break;
+                                    // %a -> input file extension
+                                    case 'a':
+                                        substStr = extMap->inExt;
+                                        break;
+                                    // %b -> output file extension
+                                    case 'b':
+                                        substStr = extMap->outExt;
+                                        break;
+                                    // %% -> % (escape)
+                                    case '%':
+                                    {
+                                        *out++ = *cur;
+                                        break;
+                                    }
+                                    default:
+                                    {
+                                        *out++ = '%';
+                                        *out++ = *cur;
+                                        break;
+                                    }
+                                }
+                                if (substStr)
+                                {
+                                    out = stpcpy(out, substStr);
+                                }
+                                break;
+                            }
+
+                            default:
+                            {
+                                *out++ = *cur;
+                            }
+                            break;
+                        }
+                        cur++;
+                    }
+                    *out = '\0';
+
+                    if (verbose)
+                    {
+                        printf("[%s] EXEC %s -> %s\n", extMap->inExt, get_filename(inFile), outFile);
+                        printf(" >>> %s\n", buf);
+                    }
+
+                    result = (0 == system(buf));
+
+                    if (!result)
+                    {
+                        fprintf(stderr, "Command failed!!!\n");
+                    }
+                }
+
 
                 if (!result)
                 {

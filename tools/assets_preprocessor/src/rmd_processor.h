@@ -1,8 +1,8 @@
 #ifndef _RMD_PROCESSOR_H_
 #define _RMD_PROCESSOR_H_
 
-#include <stdbool.h>
+#include "assets_preprocessor.h"
 
-bool process_rmd(const char* infile, const char* outFilePath);
+extern const assetProcessor_t rmdProcessor;
 
 #endif

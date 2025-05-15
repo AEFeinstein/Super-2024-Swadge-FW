@@ -24,6 +24,7 @@
     #pragma GCC diagnostic pop
 #endif
 
+#include "assets_preprocessor.h"
 #include "image_processor.h"
 
 #include "heatshrink_encoder.h"
@@ -48,6 +49,14 @@ typedef struct
 void shuffleArray(uint32_t* ar, uint32_t len);
 int isNeighborNotDrawn(pixel_t** img, int x, int y, int w, int h);
 void spreadError(pixel_t** img, int x, int y, int w, int h, int teR, int teG, int teB, float diagScalar);
+
+const assetProcessor_t imageProcessor =
+{
+    .type     = FUNCTION,
+    .function = process_image,
+    .inFmt    = FMT_FILE_BIN,
+    .outFmt   = FMT_FILE_BIN
+};
 
 /**
  * @brief TODO
@@ -124,11 +133,11 @@ void spreadError(pixel_t** img, int x, int y, int w, int h, int teR, int teG, in
  * @param infile
  * @param outdir
  */
-bool process_image(const char* infile, const char* outFilePath)
+bool process_image(processorInput_t* arg)
 {
     /* Load the source PNG */
     int w, h, n;
-    unsigned char* data = stbi_load(infile, &w, &h, &n, 4);
+    unsigned char* data = stbi_load_from_file(arg->in.file, &w, &h, &n, 4);
 
     if (NULL != data)
     {
@@ -276,7 +285,7 @@ bool process_image(const char* infile, const char* outFilePath)
         memcpy(&hdrAndImg[4], paletteBuf, paletteBufSize);
         /* Write the compressed file */
 
-        bool result = writeHeatshrinkFile(hdrAndImg, hdrAndImgSz, outFilePath);
+        bool result = writeHeatshrinkFileHandle(hdrAndImg, hdrAndImgSz, arg->out.file);
         /* Cleanup */
         free(hdrAndImg);
         free(paletteBuf);

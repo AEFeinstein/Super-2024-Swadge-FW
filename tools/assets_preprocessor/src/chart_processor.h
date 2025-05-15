@@ -1,8 +1,8 @@
 #ifndef _CHART_PROCESSOR_H_
 #define _CHART_PROCESSOR_H_
 
-#include <stdbool.h>
+#include "assets_preprocessor.h"
 
-bool process_chart(const char* infile, const char* outFilePath);
+extern const assetProcessor_t chartProcessor;
 
 #endif

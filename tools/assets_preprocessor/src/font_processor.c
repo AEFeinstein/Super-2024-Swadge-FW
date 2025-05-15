@@ -4,8 +4,18 @@
 #include <string.h>
 
 #include "stb_image.h"
+#include "assets_preprocessor.h"
 #include "font_processor.h"
 #include "fileUtils.h"
+
+bool process_font(processorInput_t* arg);
+
+const assetProcessor_t fontProcessor = {
+    .type = FUNCTION,
+    .function = process_font,
+    .inFmt = FMT_FILE_BIN,
+    .outFmt = FMT_FILE_BIN,
+};
 
 uint32_t getPx(unsigned char* data, int w, int x, int y);
 void appendCharToFile(FILE* fp, unsigned char* data, int w, int h, int charStartX, int charEndX);
@@ -77,18 +87,19 @@ void appendCharToFile(FILE* fp, unsigned char* data, int w, int h, int charStart
  * @param infile
  * @param outdir
  */
-bool process_font(const char* infile, const char* outFilePath)
+bool process_font(processorInput_t* arg)
 {
-    FILE* fp = fopen(outFilePath, "wb+");
-
-    if (!fp)
-    {
-        return false;
-    }
+    FILE* fp = arg->out.file; // fopen(outFilePath, "wb+");
 
     /* Load the font PNG */
     int w, h, n;
-    unsigned char* data = stbi_load(infile, &w, &h, &n, 4);
+    unsigned char* data = stbi_load_from_file(arg->in.file, &w, &h, &n, 4);
+
+    if (!data)
+    {
+        fprintf(stderr, "ERR: Could not load font with stbi_load_from_file(%s, ...)", arg->inFilename);
+        return false;
+    }
 
     int charsWritten = 0;
 
@@ -139,11 +150,10 @@ bool process_font(const char* infile, const char* outFilePath)
     /* Error check */
     if (95 != charsWritten && 96 != charsWritten)
     {
-        fprintf(stderr, "ERROR: font %s isnt 95 or 96 chars (%d chars)\n", infile, charsWritten);
+        fprintf(stderr, "ERROR: font %s isnt 95 or 96 chars (%d chars)\n", arg->inFilename, charsWritten);
     }
 
     /* Cleanup */
-    fclose(fp);
     stbi_image_free(data);
 
     return true;

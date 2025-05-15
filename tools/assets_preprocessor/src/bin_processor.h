@@ -2,7 +2,8 @@
 #define _BIN_PROCESSOR_H_
 
 #include <stdbool.h>
+#include "assets_preprocessor.h"
 
-bool process_bin(const char* infile, const char* outFilePath);
+extern const assetProcessor_t binProcessor;
 
 #endif /* _BIN_PROCESSOR_H_ */

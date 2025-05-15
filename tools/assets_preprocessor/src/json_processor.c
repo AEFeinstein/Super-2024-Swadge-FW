@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,7 +12,16 @@
 
 #define JSON_COMPRESSION
 
-bool process_json(const char* infile, const char* outFilePath)
+bool process_json(processorInput_t* arg);
+
+const assetProcessor_t jsonProcessor = {
+    .type = FUNCTION,
+    .function = process_json,
+    .inFmt = FMT_TEXT,
+    .outFmt = FMT_FILE_BIN,
+};
+
+bool process_json(processorInput_t* arg)
 {
 #ifdef JSON_COMPRESSION
     /* Change the file extension */
@@ -20,32 +30,11 @@ bool process_json(const char* infile, const char* outFilePath)
     // snprintf(&dotptr[1], strlen(dotptr), "hjs");
 #endif
 
-    /* Read input file */
-    FILE* fp = fopen(infile, "rb");
-
-    if (!fp)
-    {
-        return false;
-    }
-    fseek(fp, 0L, SEEK_END);
-    long sz = ftell(fp);
-    fseek(fp, 0L, SEEK_SET);
-    char jsonInStr[sz + 1];
-    fread(jsonInStr, sz, 1, fp);
-    jsonInStr[sz] = 0;
-    fclose(fp);
-
 #ifndef JSON_COMPRESSION
     /* Write input directly to output */
-    FILE* outFile = fopen(outFilePath, "wb");
-    if (!outFile)
-    {
-        return false;
-    }
-    fwrite(jsonInStr, sz, 1, outFile);
-    fclose(outFile);
+    fwrite(arg->in.text, arg->in.textSize - 1, 1, arg->out.file);
 #else
-    if (!writeHeatshrinkFile((uint8_t*)jsonInStr, sz, outFilePath))
+    if (!writeHeatshrinkFileHandle((uint8_t*)arg->in.text, arg->in.textSize - 1, arg->out.file))
     {
         return false;
     }
