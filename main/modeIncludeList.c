@@ -66,7 +66,7 @@ trophyIdx_t getLatestTrophyModeIdx()
 {
     char buffer[16];
     trophyIdx_t ti = {};
-    ti.trophyIdx = getLatestTrophyIdx(buffer);
+    ti.trophyIdx   = getLatestTrophyIdx(buffer);
     for (int idx = 0; idx < modeListGetCount(); idx++)
     {
         if (strcmp(buffer, allSwadgeModes[idx]->trophyData->settings->namespaceKey))

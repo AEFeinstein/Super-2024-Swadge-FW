@@ -8,6 +8,8 @@
 
 #include "modeIncludeList.h"
 
+#include "trophyCase.h"
+
 #include "settingsManager.h"
 
 //==============================================================================
@@ -147,8 +149,10 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = initMenu(mainMenuTitle, mainMenuCb);
 
 #ifdef CONFIG_FACTORY_TEST_NORMAL
-    // Iniitalize all the modes in modeList
+    // Initialize all the modes in modeList
     modeListSetMenu(mainMenu->menu);
+
+    addSingleItemToMenu(mainMenu->menu, tCaseMode.modeName);
 
     // Start a submenu for settings
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
@@ -323,6 +327,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
             {
                 switchToSwadgeMode(current);
             }
+        }
+        if (label == tCaseMode.modeName)
+        {
+            switchToSwadgeMode(&tCaseMode);
         }
         if (label == confirmResetName)
         {
