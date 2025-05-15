@@ -24,6 +24,8 @@
 
 const char tCaseModeName[]           = "Trophy Case";
 static const char* const menuItems[] = {"Scores", "Mode: "};
+static const char scoreStr[]         = "Scores";
+static const char indiviualStr[]     = "Individual modes";
 
 static const char* const caseOptions[] = {"All", "Unlocked", "Locked"};
 static const int32_t caseSettings[]    = {TROPHY_DISPLAY_ALL, TROPHY_DISPLAY_UNLOCKED, TROPHY_DISPLAY_LOCKED};
@@ -211,7 +213,7 @@ static void tCaseMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             if (label == allSwadgeModes[idx]->modeName)
             {
-                setTrophySystemData(allSwadgeModes[idx]->trophyData, allSwadgeModes[idx]->modeName);
+                trophySetSystemData(allSwadgeModes[idx]->trophyData, allSwadgeModes[idx]->modeName);
                 trophyDrawListInit(tc->dm);
                 tc->state = TC_DISPLAY;
                 tc->idx   = 0;
@@ -223,15 +225,21 @@ static void tCaseMenuCb(const char* label, bool selected, uint32_t settingVal)
             tc->idx   = 0;
         }
     }
+    if (label == menuItems[1])
+    {
+        tc->dm = settingVal;
+    }
 }
 
 static void tCaseDrawStats(font_t* fnt, int yOffset)
 {
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
+    drawText(fnt, c555, scoreStr, 32, 8 - yOffset);
     char buffer[64];
     snprintf(buffer, sizeof(buffer) - 1, "Total score: %" PRId32, trophyGetPoints(true, NULL));
-    drawText(fnt, c555, buffer, 32, 32 - yOffset);
+    drawText(fnt, c544, buffer, 96, 8 - yOffset);
+    drawLine(32, 24 - yOffset, TFT_WIDTH - 32, 24 - yOffset, c555, 0);
+    drawText(fnt, c454, indiviualStr, 32, 32 - yOffset);
     int line = 1;
     for (int idx = 0; idx < modeListGetCount(); idx++)
     {
@@ -239,7 +247,7 @@ static void tCaseDrawStats(font_t* fnt, int yOffset)
         {
             snprintf(buffer, sizeof(buffer) - 1, "%s: %" PRId32, allSwadgeModes[idx]->modeName,
                      trophyGetPoints(false, allSwadgeModes[idx]->modeName));
-            drawText(fnt, c555, buffer, 32, (32 + (line++) * 24) - yOffset);
+            drawText(fnt, c454, buffer, 32, (32 + (line++) * 24) - yOffset);
         }
     }
 }

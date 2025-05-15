@@ -163,7 +163,7 @@ static void _setPoints(int points);
  * @param total True returns overall score, false returns score for mode
  * @return int Current score
  */
-static int _loadPoints(bool total, char* modeName);
+static int _loadPoints(bool total, const char* modeName);
 
 // Platinum trophy
 
@@ -510,7 +510,7 @@ void setBitFlag(int32_t* flags, int8_t idx, bool setTrue)
     }
 }
 
-int trophyGetPoints(bool total, char* modeName)
+int trophyGetPoints(bool total, const char* modeName)
 {
     return _loadPoints(total, modeName);
 }
@@ -535,7 +535,7 @@ trophyData_t getTrophyDataFromIdx(int idx)
     return trophySystem.data->list[idx];
 }
 
-void setTrophySystemData(trophyDataList_t* dl, char* modeName)
+void trophySetSystemData(trophyDataList_t* dl, const char* modeName)
 {
     trophySystem.data = dl;
     _truncateStr(trophySystem.data->settings->namespaceKey, modeName, MAX_NVS_KEY_LEN);
@@ -853,7 +853,7 @@ static void _setPoints(int points)
     writeNamespaceNvs32(NVSstrings[0], NVSstrings[1], prevVal);
 }
 
-static int _loadPoints(bool total, char* modeName)
+static int _loadPoints(bool total, const char* modeName)
 {
     int32_t val;
     if (!total)
@@ -867,7 +867,9 @@ static int _loadPoints(bool total, char* modeName)
         }
         else
         {
-            if (!readNamespaceNvs32(modeName, NVSstrings[1], &val))
+            char buffer[MAX_NVS_KEY_LEN];
+            _truncateStr(buffer, modeName, MAX_NVS_KEY_LEN);
+            if (!readNamespaceNvs32(buffer, NVSstrings[1], &val))
             {
                 val = 0;
             }

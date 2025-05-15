@@ -367,7 +367,7 @@ void setBitFlag(int32_t* flags, int8_t idx, bool setTrue);
  * @param modeName Mode name to load. Set to NULL to get currently loaded mode
  * @return int Value of the score
  */
-int trophyGetPoints(bool total, char* modeName);
+int trophyGetPoints(bool total, const char* modeName);
 
 /**
  * @brief Gets the number of trophies associated with a mode, or current mode if NULL
@@ -385,26 +385,26 @@ const trophyData_t* trophyGetTrophyList(void);
 
 /**
  * @brief Get the Latest Trophy Idx object
- * 
+ *
  * @return int32_t Returned idx
  */
 int32_t getLatestTrophyIdx(char* buffer);
 
 /**
  * @brief Get the Trophy Data From Idx object
- * 
- * @param idx 
- * @return trophyData_t 
+ *
+ * @param idx
+ * @return trophyData_t
  */
 trophyData_t getTrophyDataFromIdx(int idx);
 
 /**
  * @brief Set the Trophy System to a specific mode's values
- * 
+ *
  * @param dl Data object from the mode
  * @param modeName Name of the mode
  */
-void setTrophySystemData(trophyDataList_t* dl, char* modeName);
+void trophySetSystemData(trophyDataList_t* dl, const char* modeName);
 
 // Drawing functions
 
