@@ -23,6 +23,16 @@ const assetProcessor_t jsonProcessor = {
 
 bool process_json(processorInput_t* arg)
 {
+    // Parse the JSON to make sure it's valid
+    cJSON* json = cJSON_Parse(arg->in.text);
+    if (!json)
+    {
+        fprintf(stderr, "[ERR] Invalid JSON in %s\n", arg->inFilename);
+        return false;
+    }
+    // Cool, it's valid, don't need it anymore!
+    cJSON_Delete(json);
+
 #ifdef JSON_COMPRESSION
     /* Change the file extension */
     // TODO

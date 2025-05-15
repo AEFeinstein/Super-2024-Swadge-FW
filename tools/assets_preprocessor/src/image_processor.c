@@ -49,6 +49,7 @@ typedef struct
 void shuffleArray(uint32_t* ar, uint32_t len);
 int isNeighborNotDrawn(pixel_t** img, int x, int y, int w, int h);
 void spreadError(pixel_t** img, int x, int y, int w, int h, int teR, int teG, int teB, float diagScalar);
+bool process_image(processorInput_t* arg);
 
 const assetProcessor_t imageProcessor =
 {

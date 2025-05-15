@@ -1,3 +1,8 @@
+//==============================================================================
+// Includes
+//==============================================================================
+
+
 #include <ctype.h>
 #include <fcntl.h>
 #include <ftw.h>
@@ -13,20 +18,33 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "assets_preprocessor.h"
 #include "fileUtils.h"
 
-#include "chart_processor.h"
-#include "image_processor.h"
-#include "font_processor.h"
-#include "json_processor.h"
+//==============================================================================
+// Asset Processor Includes
+//==============================================================================
+// Include your <type>_processor.h file here (alphabetized, please)
+//==============================================================================
 #include "bin_processor.h"
-#include "txt_processor.h"
-#include "rmd_processor.h"
+#include "chart_processor.h"
+#include "font_processor.h"
+#include "image_processor.h"
+#include "json_processor.h"
 #include "raw_processor.h"
+#include "rmd_processor.h"
+#include "txt_processor.h"
+//==============================================================================
+// END Asset Processor Includes
+//==============================================================================
 
-#include "assets_preprocessor.h"
 
-static const fileProcessorMap_t fileHandlerMap[] = {
+//==============================================================================
+// File Type -> Asset Processor Map
+//==============================================================================
+// EDIT HERE to map a file extension and output extension to its processor
+//==============================================================================
+static const fileProcessorMap_t fileProcessorMap[] = {
     {.inExt = "font.png", .outExt = "font", .processor = &fontProcessor},
     {.inExt = "png", .outExt = "wsg", .processor = &imageProcessor},
     {.inExt = "chart", .outExt = "cch", .processor = &chartProcessor},
@@ -38,14 +56,31 @@ static const fileProcessorMap_t fileHandlerMap[] = {
     {.inExt = "raw", .outExt = "raw", .processor = &heatshrinkProcessor},
     {.inExt = "bin", .outExt = "bin", .processor = &binProcessor},
 };
+//==============================================================================
+// END File Processor Map
+//==============================================================================
+
+
+//==============================================================================
+// Variables
+//==============================================================================
 
 const char* outDirName = NULL;
 int filesUpdated       = 0;
 int processingErrors   = 0;
 bool verbose           = false;
 
+//==============================================================================
+// Function declarations
+//==============================================================================
+
 void print_usage(void);
 bool endsWith(const char* filename, const char* suffix);
+
+//==============================================================================
+// Functions
+//==============================================================================
+
 
 /**
  * @brief TODO
@@ -89,9 +124,9 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
         char extBuf[16]   = {0};
         char outFile[256] = {0};
 
-        for (int i = 0; i < (sizeof(fileHandlerMap) / sizeof(*fileHandlerMap)); i++)
+        for (int i = 0; i < (sizeof(fileProcessorMap) / sizeof(*fileProcessorMap)); i++)
         {
-            const fileProcessorMap_t* extMap  = &fileHandlerMap[i];
+            const fileProcessorMap_t* extMap  = &fileProcessorMap[i];
             const assetProcessor_t* processor = extMap->processor;
 
             snprintf(extBuf, sizeof(extBuf), ".%s", extMap->inExt);
