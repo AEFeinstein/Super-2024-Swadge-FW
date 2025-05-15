@@ -31,6 +31,7 @@
 
 #include "accelTest.h"
 #include "colorchord.h"
+#include "cosCrunch.h"
 #include "dance.h"
 #include "factoryTest.h"
 #include "gamepad.h"
