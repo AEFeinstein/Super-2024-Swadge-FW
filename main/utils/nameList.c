@@ -22,9 +22,34 @@
 // Consts
 //==============================================================================
 
-static const char* const nameList1[] = {"Large", "Small", "Obsequent", "Malignant"};
-static const char* const nameList2[] = {"Poisonous", "Surreptitious", "Crazed", "Loltastic"};
-static const char* const nameList3[] = {"Marmoset", "Kalina", "Spooder", "Shikikan"};
+static const char* const nameList1[] = {
+    "outgoing",     "bent",    "flaky",      "unfair",        "fearless",      "understood",   "debonair",
+    "righteous",    "global",  "equal",      "loose",         "psychological", "sparkling",    "symptomatic",
+    "laughable",    "quick",   "itchy",      "zany",          "successfully",  "entertaining", "aback",
+    "hot",          "like",    "noiseless",  "dysfunctional", "skinny",        "glorious",     "assorted",
+    "spiteful",     "former",  "scientific", "accurate",      "noxious",       "adaptable",    "sassy",
+    "elastic",      "similar", "lacking",    "known",         "loutish",       "suitable",     "grey",
+    "rambunctious", "amusing", "standing",   "absurd",        "acid",          "available",
+};
+static const char* const nameList2[] = {
+    "wry",          "bright",    "educated",    "hulking",      "mammoth",    "lumpy",       "overwrought",
+    "rabid",        "faded",     "therapeutic", "rambunctious", "odd",        "cooperative", "psychotic",
+    "skinny",       "actually",  "ruddy",       "untidy",       "mysterious", "gentle",      "shaggy",
+    "ill-informed", "exciting",  "magnificent", "recent",       "uppity",     "foreign",     "succinct",
+    "voracious",    "meek",      "near",        "smoggy",       "abnormal",   "useful",      "macho",
+    "measly",       "truthful",  "healthy",     "every",        "dazzling",   "nutty",       "former",
+    "round",        "deafening", "plain",       "sudden",       "ordinary",   "eminent",     "labored",
+};
+static const char* const nameList3[] = {
+
+    "expression",  "shirt",          "pollution",   "county",     "king",     "statement",    "promotion",
+    "maintenance", "administration", "football",    "initiative", "extent",   "introduction", "volume",
+    "estate",      "transportation", "improvement", "industry",   "policy",   "department",   "property",
+    "charity",     "camera",         "cheek",       "delivery",   "way",      "lab",          "highway",
+    "perspective", "complaint",      "discussion",  "payment",    "language", "pie",          "library",
+    "tale",        "enthusiasm",     "movie",       "marriage",   "bathroom", "alcohol",      "apartment",
+    "skill",       "analyst",        "child",       "argument",   "soup",     "significance", "potato",
+};
 
 //==============================================================================
 // Function Declarations
@@ -41,7 +66,7 @@ void generateMACName(nameStruct_t* ns, char* outBuffer, int buffLen)
         ns->nameIdxs[LIST1] = baseMac[2] % ARRAY_SIZE(nameList1);
         ns->nameIdxs[LIST2] = baseMac[3] % ARRAY_SIZE(nameList2);
         ns->nameIdxs[LIST3] = baseMac[4] % ARRAY_SIZE(nameList3);
-        ns->randCode    = baseMac[5];
+        ns->randCode        = baseMac[5];
     }
     else
     {
@@ -50,10 +75,10 @@ void generateMACName(nameStruct_t* ns, char* outBuffer, int buffLen)
         ns->nameIdxs[LIST1] = 0;
         ns->nameIdxs[LIST2] = 0;
         ns->nameIdxs[LIST3] = 0;
-        ns->randCode    = 0;
+        ns->randCode        = 0;
     }
-    snprintf(outBuffer, buffLen - 1, "%s-%s-%s-%" PRId32, nameList1[ns->nameIdxs[LIST1]], nameList2[ns->nameIdxs[LIST2]],
-             nameList3[ns->nameIdxs[LIST3]], ns->randCode);
+    snprintf(outBuffer, buffLen - 1, "%s-%s-%s-%" PRId32, nameList1[ns->nameIdxs[LIST1]],
+             nameList2[ns->nameIdxs[LIST2]], nameList3[ns->nameIdxs[LIST3]], ns->randCode);
 }
 
 void generateRandName(nameStruct_t* ns, char* outBuffer, int buffLen)
@@ -61,9 +86,9 @@ void generateRandName(nameStruct_t* ns, char* outBuffer, int buffLen)
     ns->nameIdxs[LIST1] = esp_random() % ARRAY_SIZE(nameList1);
     ns->nameIdxs[LIST2] = esp_random() % ARRAY_SIZE(nameList2);
     ns->nameIdxs[LIST3] = esp_random() % ARRAY_SIZE(nameList3);
-    ns->randCode    = esp_random() % 256;
-    snprintf(outBuffer, buffLen - 1, "%s-%s-%s-%" PRId32, nameList1[ns->nameIdxs[LIST1]], nameList2[ns->nameIdxs[LIST2]],
-             nameList3[ns->nameIdxs[LIST3]], ns->randCode);
+    ns->randCode        = esp_random() % 256;
+    snprintf(outBuffer, buffLen - 1, "%s-%s-%s-%" PRId32, nameList1[ns->nameIdxs[LIST1]],
+             nameList2[ns->nameIdxs[LIST2]], nameList3[ns->nameIdxs[LIST3]], ns->randCode);
 }
 
 void getTextFromList(int listIdx, int idx, char* buffer, int buffLen)
