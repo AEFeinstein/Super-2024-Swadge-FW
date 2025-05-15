@@ -147,7 +147,7 @@ static void _saveLatestWin(trophyDataWrapper_t* tw);
  * 
  * @return int32_t index of the trophy
  */
-int32_t _loadLatestWin();
+int32_t _loadLatestWin(void);
 
 /**
  * @brief Saves new points value to NVS. Saves both overall value and mode-specific
@@ -527,6 +527,16 @@ const trophyData_t* trophyGetTrophyList(void)
 trophyData_t getLatestTrophy()
 {
     return trophySystem.data->list[_loadLatestWin()];
+}
+
+int32_t getLatestTrophyIdx()
+{
+    return _loadLatestWin();
+}
+
+trophyData_t getTrophyDataFromIdx(int idx)
+{
+    return trophySystem.data->list[idx];
 }
 
 // Draw

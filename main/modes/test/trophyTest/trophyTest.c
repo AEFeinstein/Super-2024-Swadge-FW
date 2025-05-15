@@ -399,9 +399,7 @@ static void runTrophy(int64_t elapsedUs)
             drawText(getSysFont(), c555, buffer, 32, 190);
 
             // Latest Win
-            char modeBuffer[16];
-            char trophyBuffer[16];
-            getLatestTrophy(modeBuffer, trophyBuffer);
+            getLatestTrophy();
 
             break;
         }

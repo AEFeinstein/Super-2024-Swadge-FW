@@ -390,6 +390,15 @@ const trophyData_t* trophyGetTrophyList(void);
  */
 trophyData_t getLatestTrophy(void);
 
+/**
+ * @brief Get the Latest Trophy Idx object
+ * 
+ * @return int32_t Returned idx
+ */
+int32_t getLatestTrophyIdx(void);
+
+trophyData_t getTrophyDataFromIdx(int idx);
+
 // Drawing functions
 
 /**

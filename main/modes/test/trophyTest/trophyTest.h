@@ -2,7 +2,6 @@
  * @file trophyTest.h
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief Tests the functionality of the trophies.
- * @version 0.1
  * @date 2025-01-15
  *
  * @copyright Copyright (c) 2025
@@ -21,5 +20,5 @@
 //==============================================================================
 
 extern swadgeMode_t trophyTestMode;
-extern trophyData_t trophyTestModeTrophies;
+extern const trophyData_t trophyTestModeTrophies[];
 extern trophySettings_t trophyTestModeTrophySettings;
