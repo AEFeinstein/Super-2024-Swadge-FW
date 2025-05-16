@@ -236,7 +236,7 @@ static void tCaseDrawStats(font_t* fnt, int yOffset)
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
     drawText(fnt, c555, scoreStr, 32, 8 - yOffset);
     char buffer[64];
-    snprintf(buffer, sizeof(buffer) - 1, "Total score: %" PRId32, trophyGetPoints(true, NULL));
+    snprintf(buffer, sizeof(buffer) - 1, "Total score: %" PRId16, trophyGetPoints(true, NULL));
     drawText(fnt, c544, buffer, 96, 8 - yOffset);
     drawLine(32, 24 - yOffset, TFT_WIDTH - 32, 24 - yOffset, c555, 0);
     drawText(fnt, c454, individualStr, 32, 32 - yOffset);
@@ -245,7 +245,7 @@ static void tCaseDrawStats(font_t* fnt, int yOffset)
     {
         if (allSwadgeModes[idx]->trophyData != NULL)
         {
-            snprintf(buffer, sizeof(buffer) - 1, "%s: %" PRId32, allSwadgeModes[idx]->modeName,
+            snprintf(buffer, sizeof(buffer) - 1, "%s: %" PRId16, allSwadgeModes[idx]->modeName,
                      trophyGetPoints(false, allSwadgeModes[idx]->modeName));
             drawText(fnt, c454, buffer, 32, (32 + (line++) * 24) - yOffset);
         }
