@@ -185,6 +185,7 @@
 #include "quickSettings.h"
 #include "midiPlayer.h"
 #include "introMode.h"
+#include "nameList.h"
 
 //==============================================================================
 // Defines
@@ -405,6 +406,9 @@ void app_main(void)
     {
         cSwadgeMode->fnEnterMode();
     }
+
+    // Initialize username settings
+    initUsernameSystem();
 
     // Run the main loop, forever
     while (true)
