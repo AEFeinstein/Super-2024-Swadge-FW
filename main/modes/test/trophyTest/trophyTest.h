@@ -20,5 +20,3 @@
 //==============================================================================
 
 extern swadgeMode_t trophyTestMode;
-extern const trophyData_t trophyTestModeTrophies[];
-extern trophySettings_t trophyTestModeTrophySettings;

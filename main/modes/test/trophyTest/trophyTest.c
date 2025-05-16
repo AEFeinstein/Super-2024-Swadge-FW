@@ -128,7 +128,7 @@ typedef struct
     int32_t checklistFlags;
 
     // Trophy Case
-    int idx; //< Current display index
+    int idx; ///< Current display index
     trophyListDisplayMode_t dm;
 
     // Menu

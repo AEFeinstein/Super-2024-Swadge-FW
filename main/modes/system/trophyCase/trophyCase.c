@@ -25,7 +25,7 @@
 const char tCaseModeName[]           = "Trophy Case";
 static const char* const menuItems[] = {"Scores", "Mode: "};
 static const char scoreStr[]         = "Scores";
-static const char individualStr[]     = "Individual modes";
+static const char individualStr[]    = "Individual modes";
 
 static const char* const caseOptions[] = {"All", "Unlocked", "Locked"};
 static const int32_t caseSettings[]    = {TROPHY_DISPLAY_ALL, TROPHY_DISPLAY_UNLOCKED, TROPHY_DISPLAY_LOCKED};

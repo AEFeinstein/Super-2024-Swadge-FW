@@ -61,19 +61,19 @@ static const char* const platStrings[] = {"All ", " Trophies Won!", "Win all the
 
 typedef struct
 {
-    trophyData_t trophyData; //< Individual trophy data
-    int32_t currentVal;      //< Saved value of the trophy
-    wsg_t image;             //< Where the image is loaded
-    bool active;             //< If this slot is loaded and ready to animate
+    trophyData_t trophyData; ///< Individual trophy data
+    int32_t currentVal;      ///< Saved value of the trophy
+    wsg_t image;             ///< Where the image is loaded
+    bool active;             ///< If this slot is loaded and ready to animate
 } trophyDataWrapper_t;
 
 // Used to display the list of trophies
 typedef struct
 {
-    int* heights;                 //< Total height of the stack
-    int platHeight;               //< Height of ther palt frame
-    wsg_t* images;                //< Array of images to display
-    trophyListDisplayMode_t mode; //< Current display mode
+    int* heights;                 ///< Total height of the stack
+    int platHeight;               ///< Height of ther plat frame
+    wsg_t* images;                ///< Array of images to display
+    trophyListDisplayMode_t mode; ///< Current display mode
 
     // Colors
     paletteColor_t colorList[NUM_COLORS];
@@ -83,26 +83,26 @@ typedef struct
 typedef struct
 {
     // Data
-    trophyDataList_t* data;   //< The settings of how the trophies behave
-    list_t trophyQueue;       //< List of trophy updates to display. Holds type \ref trophyDataWrapper_t*
-    int numTrophiesScore;     //< Num of trophies adjusted for difficulty
-    trophyDataWrapper_t plat; //< Platinum trophy data
+    trophyDataList_t* data;   ///< The settings of how the trophies behave
+    list_t trophyQueue;       ///< List of trophy updates to display. Holds type \ref trophyDataWrapper_t*
+    int numTrophiesScore;     ///< Num of trophies adjusted for difficulty
+    trophyDataWrapper_t plat; ///< Platinum trophy data
 
     // Drawing
-    bool active;                //< If the mode should be drawing a banner
-    int32_t animTimer;          //< Timer used for sliding in and out
-    wsgPalette_t grayPalette;   //< Grayscale palette for locked trophies
-    wsgPalette_t normalPalette; //< Normal colors
+    bool active;                ///< If the mode should be drawing a banner
+    int32_t animTimer;          ///< Timer used for sliding in and out
+    wsgPalette_t grayPalette;   ///< Grayscale palette for locked trophies
+    wsgPalette_t normalPalette; ///< Normal colors
 
     // Draw list of trophies
-    trophyDisplayList_t tdl; //< Display list data
+    trophyDisplayList_t tdl; ///< Display list data
 } trophySystem_t;
 
 //==============================================================================
 // Variables
 //==============================================================================
 
-static trophySystem_t trophySystem = {}; //< Should be one instance per swadge, should always be in memory
+static trophySystem_t trophySystem = {}; ///< Should be one instance per swadge, should always be in memory
 
 //==============================================================================
 // Static function declarations

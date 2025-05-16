@@ -12,11 +12,11 @@
  *
  * \section trophy_overview Overview
  *
- * Welcome to the swadge's trophy system! THis fun addition to your game gives players an extrinsic reason to keep
- * playing your game again and again.asm
+ * Welcome to the swadge's trophy system! This fun addition to your game gives players an extrinsic reason to keep
+ * playing your game again and again.
  *
- * The trophies work similarly to a mix of the big three: Valve's Achievements, Xbox's gamer score, and Playstation's
- * Trophies. THere are several different unlock conditions that can be specifed, there's minimal overhead on teh swadge
+ * The trophies work similarly to a mix of the big three: Valve's Achievements, Xbox's Gamer Score, and Playstation's
+ * Trophies. There are several different unlock conditions that can be specifed, there's minimal overhead on the swadge
  * (when set up properly) and trophies give the player points that they can use as bragging rights.
  *
  * As a dev, you will have to put together a "modeName_TL.h" file that will contain a few data stuctures that will
@@ -48,31 +48,31 @@ trophySettings_t exampleTrophySettings = {
     .staticDurationUs = DRAW_STATIC_US,
     .slideDurationUs  = DRAW_SLIDE_US,
 };
- trophyDataList_t trophyTestData = {.settings = &trophyTestModeTrophySettings,
-                                    .list = trophyTestModeTrophies,
-                                    .length = ARRAY_SIZE(trophyTestModeTrophies)};
+trophyDataList_t trophyTestData = {.settings = &trophyTestModeTrophySettings,
+                                   .list = trophyTestModeTrophies,
+                                   .length = ARRAY_SIZE(trophyTestModeTrophies)};
 
 swadgeMode_t trophyTestMode = {.modeName      = modeName,
                                .wifiMode      = NO_WIFI,
-                                //...
+                               //...
                                .fnAdvancedUSB = NULL,
                                .trophyData    = &trophyTestData};
  * \endcode
  *
  * This will allow the trophy system to access your trophies and make sure the right text and images are displayed when
 a trophy is triggered. Also, add the setting data as `extern` to ensure that the data can be accessed by the trophy case
-and swadgepass
+and swadgepass.
  *
  * \section trophy_settings Settings
  *
  * There are four settings that can be set for the mode overall:
- * - drawFromBottom: If set to true, draws the banner at the bottom
- * - staticDurationUs: How long the banner stays on screen for. The default value (DRAW_STATIC_US) is about half a
-second
- * - slideDurationUS: How long it takes for the banner to slide in and out. Set to (DRAW_SLIDE_US) for quarter second
-slide, or 0 to have the banner pop in.
- * - namespaceKey: A text string used to save data to the NVS. This is set automatically if left blank, and should only
-be manually set when there's a conflict between modes
+ * - \ref trophySettings_t.drawFromBottom : If set to true, draws the banner at the bottom
+ * - \ref trophySettings_t.staticDurationUs : How long the banner stays on screen for. The default value (\ref
+DRAW_STATIC_US) is about half a second
+ * - \ref trophySettings_t.slideDurationUs : How long it takes for the banner to slide in and out. Set to (\ref
+DRAW_SLIDE_US) for quarter second slide, or 0 to have the banner pop in.
+ * - \ref trophySettings_t.namespaceKey : A text string used to save data to the NVS. This is set automatically if left
+blank, and should only be manually set when there's a conflict between modes
  *
  * These can be loaded into the settings struct as shown above.
  *
@@ -80,31 +80,37 @@ be manually set when there's a conflict between modes
  *
  * The largest portion of the work required to set up the trophies it to create all the trophies from scratch. Here's
 the types of data available to set for each individual trophy:
- * - Title: The name of the trophy. Make it unique! This is used as the identifier and having two of the same names will
+ * - \ref trophyData_t.title : The name of the trophy. Make it unique! This is used as the identifier and having two of
+the same names will
  * confuse the program. There's no need to worry about sharing the name with other modes though, that's handled
  * internally.
- * - Description: Displays text to help the player figure out how to get the trophy. Text-box size is limited, and too
+ * - \ref trophyData_t.description : Displays text to help the player figure out how to get the trophy. Text-box size is
+limited, and too
  * long descriptions will get truncated. Descriptions can be off-topic, but may confuse players.
- * - Image string: Provide a 36x36 sprite that will be displayed. If string is empty (""), the system will not draw and
-will give more space for the text
- * - Type: See type descriptions below
- * - Difficulty: Instead of setting specific values, set the expected difficulty and the program will automatically
-assign score based on the number of trophies in the mode and their relative difficulty.
- * - Max Value: Depending on the type, this number is the value that the player is trying to get to. See the type
-discussion below for more info.
- * - hidden: If set to true, does not appear in lists of trophies until won.
+ * - \ref trophyData_t.image : Provide a 36x36 sprite that will be displayed. If string is empty (""), the system will
+not draw and will give more space for the text
+ * - \ref trophyData_t.type : See type descriptions below
+ * - \ref trophyData_t.difficulty : Instead of setting specific values, set the expected difficulty and the program will
+automatically assign score based on the number of trophies in the mode and their relative difficulty.
+ * - \ref trophyData_t.maxVal : Depending on the type, this number is the value that the player is trying to get to. See
+the type discussion below for more info.
+ * - \ref trophyData_t.hidden : If set to true, does not appear in lists of trophies until won.
  *
  * \warning NVS keys have a max length of 15 characters. Trophies with the same first 15 character will have conflicts
  *
  * Types of trophies:
- * - Trigger: Only required to trigger once. These are best suited to trophies that are secrets, milestones, etc.
- * - Additive: Each time update is called, adds to the tracker until the max value is reached. Useful for lifetime
+ * - \ref TROPHY_TYPE_TRIGGER : Only required to trigger once. These are best suited to trophies that are secrets,
+milestones, etc.
+ * - \ref TROPHY_TYPE_ADDITIVE : Each time update is called, adds to the tracker until the max value is reached. Useful
+for lifetime
  * stats.
- * - Progress: Each time the trophy is updated, it takes the highest value and uses that. This is best for trophies that
+ * - \ref TROPHY_TYPE_PROGRESS : Each time the trophy is updated, it takes the highest value and uses that. This is best
+for trophies that
  * are expected to be completed in a single run, such as farthest distance climbed in a race or highest amount of coins
  * collected per life.
- * - Checklist: When a trophy is updated, it sets bits based on task ID. This allows unique tasks to be separated off,
- * such as visiting all games or collecting all types of gems, not just a quantity of gems. CHecklists can also be
+ * - \ref TROPHY_TYPE_CHECKLIST : When a trophy is updated, it sets bits based on task ID. This allows unique tasks to
+be separated off,
+ * such as visiting all games or collecting all types of gems, not just a quantity of gems. Checklists can also be
 "unchecked" in case the player has to balance two things, like having two torches lit at the same time. Checklists have
 a hard limit of 32 flags.
  *
@@ -135,8 +141,8 @@ update.
  * - When testing, renaming and reordering trophies (especially items inside a checklist) may cause hard to discover
  *   errors. You may have to clear NVS on ESP32 / delete the nvs.json file to fix issues.
  * - Only update as often as you need: While the trophy system has a few safeguards, if you're asking it to update every
-cm moved forward in a marathon, you're going to be saving a lot of writes, which could harm the swadge
- * - Every trophyUpdate() call has the potential to save to NVS. NVS has a limited amount of writes over it's lifetime
+centimeter moved forward in a marathon, you're going to be doing a lot of writes, which could harm the swadge
+ * - Every `trophyUpdate()` call has the potential to save to NVS. NVS has a limited amount of writes over it's lifetime
 which we're not likely to hit, but maybe don't hammer the NVS by incrementing by one every frame. Only update when
 reasonable. The code will cut out a lot of frivolous requests such as:
  *   - Trying to update trophy after it's been won
@@ -150,11 +156,11 @@ may cause slowdowns.
  * \section trophy_helpers Helper functions
  *
  * Several helper functions exist for the developer to get critical information
- * - check/setBitFlags(): Two complimentary functions to handle that pesky bit shifting
- * - trophyGetPoints(): Get either the total number of points for this mode of for the entire swadge
- * - trophyGetNumTrophies(): Gets the total number of trophies for a mode
- * - trophyGetTrophyList(): Returns a list of all trophy data
- * - trophyGetLatestTrophy(): Grabs the data stored for the latest saved trophy.
+ * - `checkBitFlag()` & `setBitFlag()`: Two complimentary functions to handle that pesky bit shifting
+ * - `trophyGetPoints()`: Get either the total number of points for this mode of for the entire swadge
+ * - `trophyGetNumTrophies()`: Gets the total number of trophies for a mode
+ * - `trophyGetTrophyList()`: Returns a list of all trophy data
+ * - `getLatestTrophyIdx()`: Grabs the index for the latest saved trophy.
  *
  * \section trophy_draw Drawing a trophy
  *
@@ -175,7 +181,7 @@ data for each update.
  * \section trophy_draw_list Drawing all the trophies
  *
  * A trophy 'gallery' type function has been provided. Initialize with `trophyDrawListInit()`, set the colors with
-`trophyDrawListColors()`, and display with `trophyDrawListDraw()`. It displays a long list that can be scrolled by
+`trophyDrawListColors()`, and display with `trophyDrawList()`. It displays a long list that can be scrolled by
 providing new y values. Remember to deinit the list with `trophyDrawListDeinit()` to cover any memory leaks.
  *
  * \section trophy_clear Clearing a trophy
@@ -208,8 +214,8 @@ providing new y values. Remember to deinit the list with `trophyDrawListDeinit()
 #define TROPHY_MAX_DESC_LEN  128
 #define MAX_NVS_KEY_LEN      16
 
-#define DRAW_SLIDE_US  262144 // Recommended slide time, a power of 2 about a quarter second
-#define DRAW_STATIC_US 524288 // Recommended static time, a power of 2 about a half second
+#define DRAW_SLIDE_US  262144 ///< Recommended slide time, a power of 2 about a quarter second
+#define DRAW_STATIC_US 524288 ///< Recommended static time, a power of 2 about a half second
 
 #define NO_IMAGE_SET CNFS_NUM_FILES
 #define TROPHY_PLAT  -1
@@ -221,11 +227,11 @@ providing new y values. Remember to deinit the list with `trophyDrawListDeinit()
 /// @brief Types of trophies the devs can instantiate
 typedef enum
 {
-    TROPHY_TYPE_TRIGGER,   //< Only needs to be triggered once (Did a handstand, found a hidden message)
-    TROPHY_TYPE_ADDITIVE,  //< Each update adds to teh previous (Lifetime distance, number of cakes eaten)
-    TROPHY_TYPE_PROGRESS,  //< Tracks how far a user got per update (How long player survived, how far player ran)
-    TROPHY_TYPE_CHECKLIST, //< Each bit is a flag for a specific action. Repeating actions does not increment.
-                           //< (Used for collecting different objects, like chaos emeralds)
+    TROPHY_TYPE_TRIGGER,   ///< Only needs to be triggered once (Did a handstand, found a hidden message)
+    TROPHY_TYPE_ADDITIVE,  ///< Each update adds to the previous (Lifetime distance, number of cakes eaten)
+    TROPHY_TYPE_PROGRESS,  ///< Tracks how far a user got per update (How long player survived, how far player ran)
+    TROPHY_TYPE_CHECKLIST, ///< Each bit is a flag for a specific action. Repeating actions does not increment.
+                           ///< (Used for collecting different objects, like chaos emeralds)
 } trophyType_t;
 
 /// @brief Dev inferred difficulty of achieving, used to distribute points.
@@ -253,30 +259,30 @@ typedef enum
 /// @brief Individual Trophy data objects
 typedef struct
 {
-    char title[TROPHY_MAX_TITLE_LEN];      //< Name of the Trophy, used as ID
-    char description[TROPHY_MAX_DESC_LEN]; //< Short description of task required
-    cnfsFileIdx_t image;                   //< Index of the image
-    trophyType_t type;                     //< Type of trophy. See "trophy.h" for descriptions
-    trophyDifficulty_t difficulty;         //< How many points the trophy is worth
-    int32_t maxVal;                        //< The value that
-    bool hidden;                           //< If trophy is hidden by default
+    char title[TROPHY_MAX_TITLE_LEN];      ///< Name of the Trophy, used as ID
+    char description[TROPHY_MAX_DESC_LEN]; ///< Short description of task required
+    cnfsFileIdx_t image;                   ///< Index of the image
+    trophyType_t type;                     ///< Type of trophy. See "trophy.h" for descriptions
+    trophyDifficulty_t difficulty;         ///< How many points the trophy is worth
+    int32_t maxVal;                        ///< The value that
+    bool hidden;                           ///< If trophy is hidden by default
 } trophyData_t;
 
 /// @brief Settings for the trophy system
 typedef struct
 {
-    bool drawFromBottom;                //< If banner should be drawn from the bottom of the screen
-    int32_t staticDurationUs;           //< How long the banner will be drawn fully extended
-    int32_t slideDurationUs;            //< How long the banner will take to slide in and out
-    char namespaceKey[MAX_NVS_KEY_LEN]; //< key used for trophy namespace
+    bool drawFromBottom;                ///< If banner should be drawn from the bottom of the screen
+    int32_t staticDurationUs;           ///< How long the banner will be drawn fully extended
+    int32_t slideDurationUs;            ///< How long the banner will take to slide in and out
+    char namespaceKey[MAX_NVS_KEY_LEN]; ///< key used for trophy namespace
 } trophySettings_t;
 
 /// @brief The data object dev hands to the trophy showcase that contains all the const data.
 typedef struct
 {
-    int32_t length;                 //< Length of the trophy arrays
-    const trophyData_t* const list; //< Array of trophies
-    trophySettings_t* settings;     //< Setting data
+    int32_t length;                 ///< Length of the trophy arrays
+    const trophyData_t* const list; ///< Array of trophies
+    trophySettings_t* settings;     ///< Setting data
 } trophyDataList_t;
 
 //==============================================================================
@@ -306,7 +312,7 @@ void trophySystemInit(trophyDataList_t* settings, const char* modeName);
 void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate);
 
 /**
- * @brief Updates just like trophyUpdate(), but only draws when crossing percentage boundary
+ * @brief Updates just like `trophyUpdate()`, but only draws when crossing percentage boundary
  *
  * @param t Trophy to update
  * @param newVal Value to attempt to set
@@ -412,7 +418,7 @@ void trophySetSystemData(trophyDataList_t* dl, const char* modeName);
  * @brief Draws the banner if one is queued
  *
  * @param fnt Font to be used
- * @param elapsedUs TIme since last frame
+ * @param elapsedUs Time since last frame
  */
 void trophyDraw(font_t* fnt, int64_t elapsedUs);
 
