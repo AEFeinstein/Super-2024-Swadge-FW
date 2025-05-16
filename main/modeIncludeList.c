@@ -18,6 +18,7 @@
 swadgeMode_t* const allSwadgeModes[] = {
     &accelTestMode, &colorchordMode, &danceMode,   &factoryTestMode, &gamepadMode, &introMode,     &jukeboxMode,
     &keebTestMode,  &mainMenuMode,   &modeCredits, &sequencerMode,   &synthMode,   &touchTestMode, &tunernomeMode,
+    &nameTestMode,
 };
 
 //==============================================================================

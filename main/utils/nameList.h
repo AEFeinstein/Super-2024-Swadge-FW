@@ -14,19 +14,14 @@
 //==============================================================================
 
 #include <stdint.h>
+#include "hdw-btn.h"
 
-#define USERNAME_MAX_LEN 64
+#define MAX_ADJ1_LEN 15 // Length of longest word in list
+#define MAX_ADJ2_LEN 14 // Length of longest word in list
+#define MAX_NOUN_LEN 12 // Length of longest word in list
 
-//==============================================================================
-// Enums
-//==============================================================================
-
-typedef enum
-{
-    LIST1,
-    LIST2,
-    LIST3
-} nameListEnum_t;
+// +3 for number, +1 for end, +3 for '-' = +7
+#define USERNAME_MAX_LEN (MAX_ADJ1_LEN + MAX_ADJ2_LEN + MAX_NOUN_LEN + 7)
 
 //==============================================================================
 // Structs
@@ -34,47 +29,71 @@ typedef enum
 
 typedef struct
 {
-    uint8_t nameIdxs[3];
+    int8_t idxs[3];
     uint8_t randCode;
-} nameStruct_t;
+    int arrayIdx;
+    char nameBuffer[USERNAME_MAX_LEN];
+} nameData_t;
 
 //==============================================================================
 // Function Declarations
 //==============================================================================
 
 /**
- * @brief Generates a name from Swadge's MAC address
+ * @brief Call this to initialize the MAC variable. Call inside the swadge2024.h file.
  *
- * @param ns Name object new name is generated from
- * @param outBuffer Buffer to write name to
- * @param buffLen Length of the buffer
  */
-void generateMACName(nameStruct_t* ns, char* outBuffer, int buffLen);
+void initUsernameSystem(void);
 
 /**
- * @brief
+ * @brief Generates a username based on the MAC of the swadge
  *
- * @param ns
- * @param outBuffer
- * @param buffLen
+ * @param nd Data struct the name is saved to
  */
-void generateRandName(nameStruct_t* ns, char* outBuffer, int buffLen);
+void generateMACUsername(nameData_t* nd);
 
 /**
- * @brief Get the Full Name from nameStruct
+ * @brief Generates a random username. If user is true, locks the end code.
  *
- * @param name
- * @param outBuffer
- * @param buffLen
+ * @param nd Data struct the name is saved to
+ * @param user If this is a username or not
  */
-void getFullName(nameStruct_t name, char* outBuffer, int buffLen);
+void generateRandUsername(nameData_t* nd, bool user);
 
 /**
- * @brief Grabs one word from the specified list
+ * @brief Sets the username from a predefined nd
  *
- * @param listIdx Which list to grab from
- * @param idx Index of the text asked for
- * @param outBuffer Buffer to store text
- * @param buffLen Length of the buffer
+ * @param nd nd containing the data
+ * @param user if this is a user or not
  */
-void getTextFromList(int listIdx, int idx, char* outBuffer, int buffLen);
+void setUsernameFromND(nameData_t* nd, bool user);
+
+/**
+ * @brief Set the Username From indexs. Useful for loading data from swadgepass
+ *
+ * @param nd Data struct to receive the objects
+ * @param idx1 First index
+ * @param idx2 Second index
+ * @param idx3 Third index
+ * @param randomCode numbers at the end of the swadge
+ * @param user If this is the user of the swadge. Locks the random code to THIS swadge's MAC
+ */
+void setUsernameFromIdxs(nameData_t* nd, int idx1, int idx2, int idx3, int randomCode, bool user);
+
+/**
+ * @brief Handles the input of the username.
+ *
+ * @param evt The button event object
+ * @param nd Data structure to store data in
+ * @param user If this is a user (locks the end code)
+ * @return true If the user presses A to finalize the name
+ * @return false If the user is still selecting a name
+ */
+bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user);
+
+/**
+ * @brief Draws the picker input
+ * 
+ * @param user If it's a user (greys out number)
+ */
+void drawUsernamePicker(bool user);
