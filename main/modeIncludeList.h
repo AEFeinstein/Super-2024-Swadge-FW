@@ -45,7 +45,14 @@
 #include "sequencerMode.h"
 #include "swadgeIt.h"
 #include "touchTest.h"
+#include "trophyTest.h"
 #include "tunernome.h"
+
+typedef struct
+{
+    int trophyIdx;
+    int modeIdx;
+} trophyIdx_t;
 
 //==============================================================================
 // Function Prototypes
@@ -59,11 +66,26 @@
 int modeListGetCount(void);
 
 /**
- * @brief Iniitalizes a menu with all the current swadge modes
+ * @brief Initializes a menu with all the current swadge modes
  *
  * @param menu Menu to set
  */
 void modeListSetMenu(menu_t* menu);
+
+/**
+ * @brief Get the Latest Trophy From Index object
+ *
+ * @param
+ * @return trophyData_t
+ */
+trophyData_t getLatestTrophyFromIndex(trophyIdx_t ti);
+
+/**
+ * @brief Get the Latest Trophy Mode Idx object
+ *
+ * @return trophyIdx_t
+ */
+trophyIdx_t getLatestTrophyModeIdx(void);
 
 //==============================================================================
 // Externs

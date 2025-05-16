@@ -249,6 +249,11 @@ static uint32_t frameRateUs = DEFAULT_FRAME_RATE_US;
 /// @brief Timer to return to the main menu
 static int64_t timeExitPressed = 0;
 
+/// @brief System font
+static font_t sysFont;
+/// @brief System notification sound
+static midiFile_t sysSound;
+
 /// @brief Infinite impulse response filter for mic samples
 static uint32_t samp_iir = 0;
 
@@ -400,11 +405,22 @@ void app_main(void)
     static int64_t tLastLoopUs = 0;
     tLastLoopUs                = esp_timer_get_time();
 
+    // Initialize system font and trophy-get sound
+    loadFont(IBM_VGA_8_FONT, &sysFont, true);
+    loadMidiFile(BLOCK_1_MID, &sysSound, true); // FIXME: Need new sound. Temp sound picked
+
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)
     {
+        if (NULL != cSwadgeMode->trophyData)
+        {
+            trophySystemInit(cSwadgeMode->trophyData, cSwadgeMode->modeName);
+        }
         cSwadgeMode->fnEnterMode();
     }
+
+    // Amount fo time between main loop calls
+    static uint64_t mainLoopCallDelay = 0;
 
     // Run the main loop, forever
     while (true)
@@ -471,8 +487,9 @@ void app_main(void)
                 {
                     tLastMainLoopCall = tNowUs;
                 }
+                mainLoopCallDelay = tNowUs - tLastMainLoopCall;
 
-                cSwadgeMode->fnMainLoop(tNowUs - tLastMainLoopCall);
+                cSwadgeMode->fnMainLoop(mainLoopCallDelay);
                 tLastMainLoopCall = tNowUs;
             }
 
@@ -517,6 +534,12 @@ void app_main(void)
                 quickSettingsMode.fnExitMode();
                 // Restore the mode
                 cSwadgeMode = modeBehindQuickSettings;
+            }
+
+            // If trophies are not null, draw
+            if (NULL != cSwadgeMode->trophyData)
+            {
+                trophyDraw(&sysFont, mainLoopCallDelay);
             }
 
             // Draw to the TFT
@@ -617,6 +640,10 @@ static void initOptionalPeripherals(void)
  */
 void deinitSystem(void)
 {
+    // Deinit font and sfx
+    freeFont(&sysFont);
+    unloadMidiFile(&sysSound);
+
     // Deinit the swadge mode
     if (NULL != cSwadgeMode->fnExitMode)
     {
@@ -698,6 +725,10 @@ static void setSwadgeMode(void* swadgeMode)
     cSwadgeMode = swadgeMode;
     if (cSwadgeMode->fnEnterMode)
     {
+        if (NULL != cSwadgeMode->trophyData)
+        {
+            trophySystemInit(cSwadgeMode->trophyData, cSwadgeMode->modeName);
+        }
         cSwadgeMode->fnEnterMode();
     }
 }
@@ -741,6 +772,10 @@ void softSwitchToPendingSwadge(void)
         // Enter the next mode
         if (NULL != cSwadgeMode->fnEnterMode)
         {
+            if (NULL != cSwadgeMode->trophyData)
+            {
+                trophySystemInit(cSwadgeMode->trophyData, cSwadgeMode->modeName);
+            }
             cSwadgeMode->fnEnterMode();
         }
 
@@ -942,4 +977,22 @@ void powerUpPeripherals(void)
     {
         powerUpTemperatureSensor();
     }
+}
+
+/**
+ * @brief Get the Sys Ibm Font. Font is pre-loaded fto ensure a font is always available for devs to use.
+ *
+ */
+font_t* getSysFont(void)
+{
+    return &sysFont;
+}
+
+/**
+ * @brief Returns the system sound to be used
+ *
+ */
+midiFile_t* getSysSound(void)
+{
+    return &sysSound;
 }

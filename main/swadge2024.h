@@ -220,6 +220,7 @@
 #include "vectorFl2d.h"
 #include "geometryFl.h"
 #include "imu_utils.h"
+#include "trophy.h"
 
 // Sound utilities
 #include "soundFuncs.h"
@@ -349,6 +350,11 @@ typedef struct
      * globalMidiPlayerFillBuffer() will be used instead to fill sample buffers
      */
     fnDacCallback_t fnDacCb;
+
+    /**
+     * @brief A struct with the settings and data required for trophy behavior. Set to NULL for no trophies
+     */
+    trophyDataList_t* trophyData;
 } swadgeMode_t;
 
 bool checkButtonQueueWrapper(buttonEvt_t* evt);
@@ -367,5 +373,9 @@ void switchToMicrophone(void);
 
 void powerDownPeripherals(void);
 void powerUpPeripherals(void);
+
+// Getters
+font_t* getSysFont(void);
+midiFile_t* getSysSound(void);
 
 #endif
