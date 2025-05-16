@@ -134,7 +134,7 @@ void setUsernameFromND(nameData_t* nd, bool user)
         nd->idxs[ADJ1] = _mutateIdx(arrayLens[ADJ1], nd->idxs[ADJ1], baseMac[2]);
         nd->idxs[ADJ2] = _mutateIdx(ARRAY_SIZE(adjList2), nd->idxs[ADJ2], baseMac[3]);
         nd->idxs[NOUN] = _mutateIdx(ARRAY_SIZE(nounList), nd->idxs[NOUN], baseMac[4]);
-        nd->randCode = baseMac[5];
+        nd->randCode   = baseMac[5];
     }
 
     char buff1[MAX_ADJ1_LEN], buff2[MAX_ADJ2_LEN], buff3[MAX_NOUN_LEN];
@@ -242,7 +242,6 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user)
 
 void drawUsernamePicker(bool user)
 {
-
 }
 
 //==============================================================================

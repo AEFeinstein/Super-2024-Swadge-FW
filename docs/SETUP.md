@@ -74,12 +74,12 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
         ```
 2. Install `doxygen` separately from their website (https://www.doxygen.nl/download.html). Note that the version used in this project is currently 1.10.0 and the version in many package managers is less than that. You will need to extract the binary somewhere and add it to your `PATH` variable. For example, GitHub Actions installs `doxygen` like this:
     ```bash
-    wget -q -P ~ https://www.doxygen.nl/files/doxygen-1.10.0.linux.bin.tar.gz
-    tar -xf ~/doxygen-1.10.0.linux.bin.tar.gz -C ~
+    wget -q -P ~ https://www.doxygen.nl/files/doxygen-1.13.2.linux.bin.tar.gz
+    tar -xf ~/doxygen-1.13.2.linux.bin.tar.gz -C ~
 
     # This will temporarily add doxygen to the PATH.
     # To do this permanently, add this line to the bottom of your ~/.bashrc file
-    export PATH="$PATH:$HOME/doxygen-1.10.0/bin"
+    export PATH="$PATH:$HOME/doxygen-1.13.2/bin"
     ```
     It is recommended that you uninstall any prior doxygen versions as well:
     ```bash

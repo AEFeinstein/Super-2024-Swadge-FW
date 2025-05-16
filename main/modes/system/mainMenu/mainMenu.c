@@ -133,13 +133,13 @@ static void mainMenuEnterMode(void)
     mainMenu = heap_caps_calloc(1, sizeof(mainMenu_t), MALLOC_CAP_8BIT);
 
     // Load a font
-    loadFont("rodin_eb.font", &mainMenu->font_rodin, false);
+    loadFont(RODIN_EB_FONT, &mainMenu->font_rodin, false);
 
     // Load a song for when the volume changes
 #ifdef SW_VOL_CONTROL
-    loadMidiFile("jingle.mid", &mainMenu->jingle, false);
+    loadMidiFile(JINGLE_MID, &mainMenu->jingle, false);
 #endif
-    loadMidiFile("secret.mid", &mainMenu->fanfare, true);
+    loadMidiFile(SECRET_MID, &mainMenu->fanfare, true);
     initGlobalMidiPlayer();
     midiGmOn(globalMidiPlayerGet(MIDI_BGM));
 
@@ -406,6 +406,7 @@ void addSecretsMenu(void)
     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, swadgePassTestMode.modeName);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, factoryResetName);
     addSingleItemToMenu(mainMenu->menu, confirmResetName);

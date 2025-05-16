@@ -93,7 +93,7 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user);
 
 /**
  * @brief Draws the picker input
- * 
+ *
  * @param user If it's a user (greys out number)
  */
 void drawUsernamePicker(bool user);

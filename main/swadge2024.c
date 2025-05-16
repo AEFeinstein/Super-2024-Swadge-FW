@@ -34,7 +34,7 @@
  *
  * -# First, follow the guide to \ref setup. This will walk you through setting up the toolchain and compiling the
  * firmware and emulator.
- * -# Next, read about the basics of a Swadge Mode at \ref swadge2024.h.
+ * -# Next, read about the basics of a Swadge Mode at swadge2024.h.
  * -# Once you understand the basics of a Swadge Mode, check out the \ref swadge_mode_example to see a simple mode in
  * action.
  * -# After you grasp the example, you can go deeper and read the full \ref apis to understand the full capability of
@@ -83,12 +83,14 @@
  * - hdw-btn.h: Learn how to use both push and touch button input
  *     - touchUtils.h: Utilities to interpret touch button input as a virtual joystick, spin wheel, or cartesian plane
  * - hdw-imu.h: Learn how to use the inertial measurement unit
+ *     - imu_utils.h: Utilities to process IMU data
  * - hdw-temperature.h: Learn how to use the temperature sensor
  *
  * \subsection nwk_api Network APIs
  *
  * - hdw-esp-now.h: Broadcast and receive messages. This is fast and unreliable.
  * - p2pConnection.h: Connect to another Swadge and exchange messages. This is slower and more reliable.
+ * - swadgePass.h: Send and receive small amounts of data like avatars or high scores while the Swadge is idle.
  *
  * \subsection pm_api Persistent Memory APIs
  *
@@ -248,6 +250,9 @@ static uint32_t frameRateUs = DEFAULT_FRAME_RATE_US;
 
 /// @brief Timer to return to the main menu
 static int64_t timeExitPressed = 0;
+
+/// @brief Infinite impulse response filter for mic samples
+static uint32_t samp_iir = 0;
 
 //==============================================================================
 // Function declarations
@@ -430,8 +435,6 @@ void app_main(void)
                 // Run all samples through an IIR filter
                 for (uint32_t i = 0; i < sampleCnt; i++)
                 {
-                    static uint32_t samp_iir = 0;
-
                     int32_t sample  = adcSamples[i];
                     samp_iir        = samp_iir - (samp_iir >> 9) + sample;
                     int32_t newSamp = (sample - (samp_iir >> 9));
@@ -881,6 +884,9 @@ void switchToMicrophone(void)
     deinitGlobalMidiPlayer();
     setDacShutdown(true);
     deinitDac();
+
+    // Reset the IIR
+    samp_iir = 0;
 
     // Initialize and start the mic as a continuous ADC
     initMic(GPIO_NUM_7);

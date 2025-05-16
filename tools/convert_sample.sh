@@ -32,7 +32,7 @@ fi
 
 OUTFILE="${1%.*}.raw"
 
-if $FFMPEG -hide_banner -loglevel warning -i "$1" -f wav - | sox -t wav - -t raw -r 32768 -b 8 -c 1 -e unsigned-integer "$OUTFILE" $TRIM ; then
+if $FFMPEG -hide_banner -loglevel warning -i "$1" -f wav - | sox -t wav - -t raw -r 16384 -b 8 -c 1 -e unsigned-integer "$OUTFILE" $TRIM ; then
     echo "Converted output saved to $OUTFILE"
 else
     CODE=$?
@@ -40,4 +40,4 @@ else
     exit $CODE
 fi
 # To use sox directly on an audio file:
-# sox "$1" -t raw -r 32768 -b 8 -c 1 -e unsigned-integer "$OUTFILE" $TRIM
+# sox "$1" -t raw -r 16384 -b 8 -c 1 -e unsigned-integer "$OUTFILE" $TRIM

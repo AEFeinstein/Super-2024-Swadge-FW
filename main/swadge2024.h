@@ -168,6 +168,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 // Useful ESP things
 #include <esp_heap_caps.h>
@@ -218,6 +219,8 @@
 #include "touchUtils.h"
 #include "vectorFl2d.h"
 #include "geometryFl.h"
+#include "imu_utils.h"
+#include "swadgePass.h"
 
 // Sound utilities
 #include "soundFuncs.h"
@@ -228,12 +231,15 @@
 /// @brief the default time between drawn frames, in microseconds (40FPS)
 #define DEFAULT_FRAME_RATE_US (1000000 / 40)
 
+// Forward declaration
+struct swadgePassPacket;
+
 /**
  * @struct swadgeMode_t
  * @brief A struct of all the function pointers necessary for a swadge mode. If a mode does not need a particular
  * function, for example it doesn't do audio handling, it is safe to set the pointer to NULL. It just won't be called.
  */
-typedef struct
+typedef struct swadgeMode
 {
     /**
      * @brief This swadge mode's name, used in menus. This is not a function pointer.
@@ -307,7 +313,7 @@ typedef struct
      * @param w the width of the rectangle to be updated
      * @param h the height of the rectangle to be updated
      * @param up update number
-     * @param numUp update number denominator
+     * @param upNum update number denominator
      */
     void (*fnBackgroundDrawCallback)(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
@@ -347,6 +353,17 @@ typedef struct
      * globalMidiPlayerFillBuffer() will be used instead to fill sample buffers
      */
     fnDacCallback_t fnDacCb;
+
+    /**
+     * @brief This function is called to fill in a SwadgePass packet with mode-specific data. The Swadge mode should
+     * only fill in it's relevant data and not touch other mode's data.
+     *
+     * @warning This function will be called when the mode is not initialized or running, so it MUST NOT rely on memory
+     * allocated or data loaded in the mode's initializer.
+     *
+     * @param packet The packet to fill in
+     */
+    void (*fnAddToSwadgePassPacket)(struct swadgePassPacket* packet);
 } swadgeMode_t;
 
 bool checkButtonQueueWrapper(buttonEvt_t* evt);

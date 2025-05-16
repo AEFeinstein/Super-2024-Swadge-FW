@@ -439,12 +439,12 @@ static void initTimbre(midiTimbre_t* dest, const midiTimbre_t* config)
         // Sample-based timbres need to do a tiny bit of data loading
         size_t sampleSize;
         // TODO should sample.data just be a uint8_t instead? We probably need to convert it anyway
-        dest->sample.data  = cnfsGetFile(config->sample.config.sampleName, &sampleSize);
+        dest->sample.data  = cnfsGetFile(config->sample.config.fIdx, &sampleSize);
         dest->sample.count = (uint32_t)sampleSize;
 
         if (!dest->sample.data)
         {
-            ESP_LOGE("MIDI", "Failed to get data for sample '%s'!", config->sample.config.sampleName);
+            ESP_LOGE("MIDI", "Failed to get data for sample '%d'!", config->sample.config.fIdx);
             dest->sample.count = 0;
         }
     }
