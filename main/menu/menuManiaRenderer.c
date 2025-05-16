@@ -68,11 +68,11 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
 /**
  * @brief Initialize a and return a menu renderer.
  *
- * @param titleFont The font used to draw the title, preferably "righteous_150.font". If this is NULL it will be
+ * @param titleFont The font used to draw the title, preferably RIGHTEOUS_150_FONT. If this is NULL it will be
  * allocated by the renderer in SPIRAM.
  * @param titleFontOutline The outline font used to draw the title. If this is NULL it will be allocated by the renderer
  * in SPIRAM.
- * @param menuFont The font used to draw this menu, preferably "rodin_eb.font". If this is NULL it will be allocated by
+ * @param menuFont The font used to draw this menu, preferably RODIN_EB_FONT. If this is NULL it will be allocated by
  * the renderer in SPIRAM.
  * @return A pointer to the menu renderer. This memory is allocated and must be freed with deinitMenuManiaRenderer()
  * when done
@@ -103,7 +103,7 @@ menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontO
     if (NULL == titleFont)
     {
         renderer->titleFont = heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_SPIRAM);
-        loadFont("righteous_150.font", renderer->titleFont, true);
+        loadFont(RIGHTEOUS_150_FONT, renderer->titleFont, true);
         renderer->titleFontAllocated = true;
     }
     else
@@ -129,7 +129,7 @@ menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontO
     if (NULL == menuFont)
     {
         renderer->menuFont = heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_SPIRAM);
-        loadFont("rodin_eb.font", renderer->menuFont, true);
+        loadFont(RODIN_EB_FONT, renderer->menuFont, true);
         renderer->menuFontAllocated = true;
     }
     else
@@ -139,10 +139,10 @@ menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontO
     }
 
     // Load battery images
-    loadWsg("batt1.wsg", &renderer->batt[0], false);
-    loadWsg("batt2.wsg", &renderer->batt[1], false);
-    loadWsg("batt3.wsg", &renderer->batt[2], false);
-    loadWsg("batt4.wsg", &renderer->batt[3], false);
+    loadWsg(BATT_1_WSG, &renderer->batt[0], false);
+    loadWsg(BATT_2_WSG, &renderer->batt[1], false);
+    loadWsg(BATT_3_WSG, &renderer->batt[2], false);
+    loadWsg(BATT_4_WSG, &renderer->batt[3], false);
 
     // Initialize LEDs
     setLeds(renderer->leds, CONFIG_NUM_LEDS);

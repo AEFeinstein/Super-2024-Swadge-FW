@@ -185,7 +185,7 @@ void dacStop(void)
  */
 void dacPoll(void)
 {
-    if (dac_handle && dacWriting)
+    if (dac_handle && dacIsrQueue && dacWriting)
     {
         /* If there is an event to receive, receive it */
         dac_event_data_t evt_data;

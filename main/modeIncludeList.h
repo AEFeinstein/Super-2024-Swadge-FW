@@ -31,6 +31,7 @@
 
 #include "accelTest.h"
 #include "colorchord.h"
+#include "cosCrunch.h"
 #include "dance.h"
 #include "factoryTest.h"
 #include "gamepad.h"
@@ -39,8 +40,10 @@
 #include "keebTest.h"
 #include "mainMenu.h"
 #include "mode_credits.h"
+#include "mode_diceroller.h"
 #include "mode_synth.h"
 #include "sequencerMode.h"
+#include "swadgeIt.h"
 #include "touchTest.h"
 #include "tunernome.h"
 

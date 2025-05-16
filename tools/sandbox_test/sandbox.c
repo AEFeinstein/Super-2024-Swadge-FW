@@ -80,7 +80,7 @@ void sandbox_main(void)
     addSingleItemToMenu(menu, menu_GraphicsTestMode);
     addSingleItemToMenu(menu, mainMenuMode.modeName);
     addSingleItemToMenu(menu, menu_Bootload);
-    loadFont("logbook.font", &logbook, false);
+    loadFont(LOGBOOK_FONT, &logbook, false);
     menuManiaRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
     loadWsg("kid0.wsg", &example_sprite, true);
