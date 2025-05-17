@@ -31,6 +31,12 @@
 
 #define USER_LIST_SHIFT 1
 
+// Screen arrangement
+#define ADJ1_X      47
+#define ADJ2_X      119
+#define NOUN_X      191
+#define WORD_OFFSET 20
+
 //==============================================================================
 // Consts
 //==============================================================================
@@ -95,7 +101,6 @@ static void _drawWordCenteredOnX(int x, int y, const char* str, paletteColor_t c
 //==============================================================================
 
 static macBits_t macBits;
-static uint8_t arrayLens[3];
 static font_t fnt;
 
 //==============================================================================
@@ -105,17 +110,14 @@ static font_t fnt;
 void initUsernameSystem()
 {
     _getMacAddress();
-    arrayLens[0] = ARRAY_SIZE(adjList1);
-    arrayLens[1] = ARRAY_SIZE(adjList2);
-    arrayLens[2] = ARRAY_SIZE(nounList);
     loadFont(IBM_VGA_8_FONT, &fnt, true);
 }
 
 void generateMACUsername(nameData_t* nd)
 {
-    nd->idxs[ADJ1] = macBits.adj1 % arrayLens[ADJ1]; // Functionally equivalent to _mutateIdx() w/ idx = 0
-    nd->idxs[ADJ2] = macBits.adj2 % arrayLens[ADJ2];
-    nd->idxs[NOUN] = macBits.noun % arrayLens[NOUN];
+    nd->idxs[ADJ1] = macBits.adj1 % ARRAY_SIZE(adjList1); // Functionally equivalent to _mutateIdx() w/ idx = 0
+    nd->idxs[ADJ2] = macBits.adj2 % ARRAY_SIZE(adjList2);
+    nd->idxs[NOUN] = macBits.noun % ARRAY_SIZE(nounList);
     nd->randCode   = macBits.baseMac[5];
     snprintf(nd->nameBuffer, USERNAME_MAX_LEN - 1, "%s-%s-%s-%" PRId16, adjList1[nd->idxs[ADJ1]],
              adjList2[nd->idxs[ADJ2]], nounList[nd->idxs[NOUN]], nd->randCode);
@@ -125,14 +127,14 @@ void generateRandUsername(nameData_t* nd, bool user)
 {
     if (user)
     {
-        nd->idxs[ADJ1] = _mutateIdx(arrayLens[ADJ1], esp_random(), macBits.adj1);
+        nd->idxs[ADJ1] = _mutateIdx(ARRAY_SIZE(adjList1), esp_random(), macBits.adj1);
         nd->idxs[ADJ2] = _mutateIdx(ARRAY_SIZE(adjList2), esp_random(), macBits.adj2);
         nd->idxs[NOUN] = _mutateIdx(ARRAY_SIZE(nounList), esp_random(), macBits.noun);
         nd->randCode   = macBits.baseMac[5];
     }
     else
     {
-        nd->idxs[ADJ1] = esp_random() % arrayLens[ADJ1];
+        nd->idxs[ADJ1] = esp_random() % ARRAY_SIZE(adjList1);
         nd->idxs[ADJ2] = esp_random() % ARRAY_SIZE(adjList2);
         nd->idxs[NOUN] = esp_random() % ARRAY_SIZE(nounList);
         nd->randCode   = esp_random() % 256;
@@ -145,7 +147,7 @@ void setUsernameFromND(nameData_t* nd, bool user)
 {
     if (user)
     {
-        nd->idxs[ADJ1] = _mutateIdx(arrayLens[ADJ1], nd->idxs[ADJ1], macBits.adj1);
+        nd->idxs[ADJ1] = _mutateIdx(ARRAY_SIZE(adjList1), nd->idxs[ADJ1], macBits.adj1);
         nd->idxs[ADJ2] = _mutateIdx(ARRAY_SIZE(adjList2), nd->idxs[ADJ2], macBits.adj2);
         nd->idxs[NOUN] = _mutateIdx(ARRAY_SIZE(nounList), nd->idxs[NOUN], macBits.noun);
         nd->randCode   = macBits.baseMac[5];
@@ -216,12 +218,16 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user)
             {
                 if (user)
                 {
-                    nd->idxs[nd->arrayIdx] = _mutateIdx(arrayLens[nd->arrayIdx], nd->idxs[nd->arrayIdx],
-                                                        macBits.baseMac[nd->arrayIdx + 2]);
+                    /* nd->idxs[nd->arrayIdx] = _mutateIdx(arrayLens[nd->arrayIdx], nd->idxs[nd->arrayIdx],
+                                                        macBits.baseMac[ndww->arrayIdx + 2]); */
                 }
                 else
                 {
-                    nd->idxs[nd->arrayIdx] = (nd->idxs[nd->arrayIdx]) % arrayLens[nd->arrayIdx];
+                    nd->idxs[nd->arrayIdx]--;
+                    if (nd->idxs[nd->arrayIdx] < 0)
+                    {
+                        nd->idxs[nd->arrayIdx] = ARRAY_SIZE(adjList1) - 1; // Assumes all arrays are the same length
+                    }
                 }
             }
         }
@@ -236,12 +242,15 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user)
             {
                 if (user)
                 {
-                    nd->idxs[nd->arrayIdx] = _mutateIdx(arrayLens[nd->arrayIdx], nd->idxs[nd->arrayIdx] + 1,
-                                                        macBits.baseMac[nd->arrayIdx + 2]);
+                    nd->idxs[nd->arrayIdx] = _mutateIdx(ARRAY_SIZE(adjList1), nd->idxs[nd->arrayIdx] + 1, macBits.adj1);
                 }
                 else
                 {
-                    nd->idxs[nd->arrayIdx] = (nd->idxs[nd->arrayIdx] + 1) % arrayLens[nd->arrayIdx];
+                    nd->idxs[nd->arrayIdx]++;
+                    if (nd->idxs[nd->arrayIdx] >= ARRAY_SIZE(adjList1))
+                    {
+                        nd->idxs[nd->arrayIdx] = 0;
+                    }
                 }
             }
         }
@@ -260,21 +269,71 @@ void drawUsernamePicker(nameData_t* nd, bool user)
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
     // Draw current selection
-    _drawWordCenteredOnX(50, 0, adjList1[nd->idxs[ADJ1]], c544);
-    _drawWordCenteredOnX(120, 0, adjList2[nd->idxs[ADJ2]], c454);
-    _drawWordCenteredOnX(190, 0, nounList[nd->idxs[NOUN]], c445);
+    _drawWordCenteredOnX(ADJ1_X, 0, adjList1[nd->idxs[ADJ1]], c544);
+    _drawWordCenteredOnX(ADJ2_X, 0, adjList2[nd->idxs[ADJ2]], c454);
+    _drawWordCenteredOnX(NOUN_X, 0, nounList[nd->idxs[NOUN]], c445);
     char buffer[32];
     snprintf(buffer, sizeof(buffer) - 1, "%" PRIu8, nd->randCode);
-    _drawWordCenteredOnX(240, 0, buffer, user ? c444 : c555);
+    _drawWordCenteredOnX(245, 0, buffer, user ? c444 : c555);
 
     // draw tack marks
+    _drawWordCenteredOnX(83, 0, "-", c555);
+    _drawWordCenteredOnX(155, 0, "-", c555);
+    _drawWordCenteredOnX(227, 0, "-", c555);
 
     // Draw other options above and below
+    // If I could programmatically change the colors from 433 -> 322, this could be a for loop
+    _drawWordCenteredOnX(ADJ1_X, -WORD_OFFSET, adjList1[(nd->idxs[ADJ1] - 1) % ARRAY_SIZE(adjList1)], c433);
+    _drawWordCenteredOnX(ADJ2_X, -WORD_OFFSET, adjList2[(nd->idxs[ADJ2] - 1) % ARRAY_SIZE(adjList2)], c343);
+    _drawWordCenteredOnX(NOUN_X, -WORD_OFFSET, nounList[(nd->idxs[NOUN] - 1) % ARRAY_SIZE(nounList)], c334);
+    _drawWordCenteredOnX(ADJ1_X, -WORD_OFFSET * 2, adjList1[(nd->idxs[ADJ1] - 2) % ARRAY_SIZE(adjList1)], c322);
+    _drawWordCenteredOnX(ADJ2_X, -WORD_OFFSET * 2, adjList2[(nd->idxs[ADJ2] - 2) % ARRAY_SIZE(adjList2)], c232);
+    _drawWordCenteredOnX(NOUN_X, -WORD_OFFSET * 2, nounList[(nd->idxs[NOUN] - 2) % ARRAY_SIZE(nounList)], c223);
+    _drawWordCenteredOnX(ADJ1_X, -WORD_OFFSET * 3, adjList1[(nd->idxs[ADJ1] - 3) % ARRAY_SIZE(adjList1)], c211);
+    _drawWordCenteredOnX(ADJ2_X, -WORD_OFFSET * 3, adjList2[(nd->idxs[ADJ2] - 3) % ARRAY_SIZE(adjList2)], c121);
+    _drawWordCenteredOnX(NOUN_X, -WORD_OFFSET * 3, nounList[(nd->idxs[NOUN] - 3) % ARRAY_SIZE(nounList)], c112);
+    _drawWordCenteredOnX(ADJ1_X, WORD_OFFSET, adjList1[(nd->idxs[ADJ1] + 1) % ARRAY_SIZE(adjList1)], c433);
+    _drawWordCenteredOnX(ADJ2_X, WORD_OFFSET, adjList2[(nd->idxs[ADJ2] + 1) % ARRAY_SIZE(adjList2)], c343);
+    _drawWordCenteredOnX(NOUN_X, WORD_OFFSET, nounList[(nd->idxs[NOUN] + 1) % ARRAY_SIZE(nounList)], c334);
+    _drawWordCenteredOnX(ADJ1_X, WORD_OFFSET * 2, adjList1[(nd->idxs[ADJ1] + 2) % ARRAY_SIZE(adjList1)], c322);
+    _drawWordCenteredOnX(ADJ2_X, WORD_OFFSET * 2, adjList2[(nd->idxs[ADJ2] + 2) % ARRAY_SIZE(adjList2)], c232);
+    _drawWordCenteredOnX(NOUN_X, WORD_OFFSET * 2, nounList[(nd->idxs[NOUN] + 2) % ARRAY_SIZE(nounList)], c223);
+    _drawWordCenteredOnX(ADJ1_X, WORD_OFFSET * 3, adjList1[(nd->idxs[ADJ1] + 3) % ARRAY_SIZE(adjList1)], c211);
+    _drawWordCenteredOnX(ADJ2_X, WORD_OFFSET * 3, adjList2[(nd->idxs[ADJ2] + 3) % ARRAY_SIZE(adjList2)], c121);
+    _drawWordCenteredOnX(NOUN_X, WORD_OFFSET * 3, nounList[(nd->idxs[NOUN] + 3) % ARRAY_SIZE(nounList)], c112);
 
-    // draw selection box
+    // draw selection line
+    switch(nd->arrayIdx)
+    {
+        case ADJ1:
+        {
+            drawLine(ADJ1_X - 35, (TFT_HEIGHT + fnt.height + 4) >> 1, ADJ1_X + 35, (TFT_HEIGHT + fnt.height + 4) >> 1, c550, 0);
+            break;
+        }
+        case ADJ2:
+        {
+            drawLine(ADJ2_X - 35, (TFT_HEIGHT + fnt.height + 4) >> 1, ADJ2_X + 35, (TFT_HEIGHT + fnt.height + 4) >> 1, c550, 0);
+            break;
+        }
+        case NOUN:
+        {
+            drawLine(NOUN_X - 35, (TFT_HEIGHT + fnt.height + 4) >> 1, NOUN_X + 35, (TFT_HEIGHT + fnt.height + 4) >> 1, c550, 0);
+            break;
+        }
+        case RAND_NUM:
+        {
+            drawLine(235, (TFT_HEIGHT + fnt.height + 4) >> 1, 255, (TFT_HEIGHT + fnt.height + 4) >> 1, c550, 0);
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
 
     // Draw currently set name
-    drawText(&fnt, c444, nd->nameBuffer, 16, TFT_HEIGHT - 48);
+    drawText(&fnt, c444, "Current:", 16, TFT_HEIGHT - 48);
+    drawText(&fnt, c555, nd->nameBuffer, 16, TFT_HEIGHT - 32);
 }
 
 //==============================================================================
