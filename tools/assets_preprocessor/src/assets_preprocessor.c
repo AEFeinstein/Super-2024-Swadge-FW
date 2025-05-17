@@ -617,7 +617,7 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                                 }
                                 if (substStr)
                                 {
-                                    out = stpcpy(out, substStr);
+                                    out = strcpy(out, substStr) + strlen(substStr);
                                 }
                                 break;
                             }

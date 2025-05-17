@@ -458,7 +458,7 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
                             optsOut[pairs].section = textOutCur;
                             lastSectionOut = textOutCur;
 
-                            textOutCur = stpcpy(textOutCur, sectionName);
+                            textOutCur = strcpy(textOutCur, sectionName) + strlen(sectionName);
                             *textOutCur++ = '\0';
                         }
                         else
@@ -468,13 +468,13 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
 
                         optsOut[pairs].name = textOutCur;
 
-                        textOutCur = stpcpy(textOutCur, key);
+                        textOutCur = strcpy(textOutCur, key) + strlen(key);
 
                         // Leave a space between them
                         *textOutCur++ = '\0';
 
                         optsOut[pairs].value = textOutCur;
-                        textOutCur = stpcpy(textOutCur, val);
+                        textOutCur = strcpy(textOutCur, val) + strlen(val);
                         *textOutCur++ = '\0';
 
                         iniPrintf("PAIR: key=\"%s\", val=\"%s\"", optsOut[pairs].name, optsOut[pairs].value);
