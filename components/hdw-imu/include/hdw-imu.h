@@ -86,6 +86,8 @@ extern LSM6DSLData LSM6DSL;
 
 esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup);
 esp_err_t deInitAccelerometer(void);
+void powerDownAccel(void);
+void powerUpAccel(void);
 esp_err_t accelGetAccelVecRaw(int16_t* x, int16_t* y, int16_t* z);
 esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z);
 esp_err_t accelGetQuaternion(float* q);

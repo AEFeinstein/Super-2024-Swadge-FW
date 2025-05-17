@@ -100,7 +100,7 @@ void creditsEnterMode(void)
 
     // Load a font
     font_t* creditsFont = (font_t*)heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_8BIT);
-    loadFont("sonic.font", creditsFont, false);
+    loadFont(SONIC_FONT, creditsFont, false);
 
     // Initialize credits
     initCredits(credits, creditsFont, entries, ARRAY_SIZE(entries));

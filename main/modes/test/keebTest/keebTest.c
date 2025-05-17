@@ -158,12 +158,12 @@ static void keebEnterMode(void)
     kbTest = (keebTest_t*)heap_caps_calloc(1, sizeof(keebTest_t), MALLOC_CAP_8BIT);
 
     // Get resources
-    loadWsg("exampleBG.wsg", &kbTest->bg, false);
-    loadFont("ibm_vga8.font", &kbTest->fnt[0], false);
-    loadFont("radiostars.font", &kbTest->fnt[1], false);
-    loadFont("rodin_eb.font", &kbTest->fnt[2], false);
-    loadFont("righteous_150.font", &kbTest->fnt[3], false);
-    loadFont("retro_logo.font", &kbTest->fnt[4], false);
+    loadWsg(EXAMPLE_BG_WSG, &kbTest->bg, false);
+    loadFont(IBM_VGA_8_FONT, &kbTest->fnt[0], false);
+    loadFont(RADIOSTARS_FONT, &kbTest->fnt[1], false);
+    loadFont(RODIN_EB_FONT, &kbTest->fnt[2], false);
+    loadFont(RIGHTEOUS_150_FONT, &kbTest->fnt[3], false);
+    loadFont(RETRO_LOGO_FONT, &kbTest->fnt[4], false);
 
     // Init Menu
     kbTest->menu = initMenu(keebTestName, kbMenuCb);

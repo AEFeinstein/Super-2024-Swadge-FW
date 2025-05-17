@@ -20,6 +20,22 @@ void deinitBattmon(void)
 }
 
 /**
+ * @brief
+ */
+void powerDownBattmon(void)
+{
+    WARN_UNIMPLEMENTED();
+}
+
+/**
+ * @brief
+ */
+void powerUpBattmon(void)
+{
+    WARN_UNIMPLEMENTED();
+}
+
+/**
  * @brief Read and return the battery voltage
  *
  * @return The voltage if read, or -1 if there was an error

@@ -22,7 +22,7 @@
  * \code{.c}
  * // Declare and load a font
  * font_t ibm;
- * loadFont("ibm_vga8.font", &ibm, false);
+ * loadFont(IBM_VGA_8_FONT, &ibm, false);
  * // Draw some white text
  * drawText(&ibm, c555, "Hello World", 0, 0);
  * // Free the font
@@ -36,9 +36,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "cnfs_image.h"
 #include "font.h"
 
-bool loadFont(const char* name, font_t* font, bool spiRam);
+bool loadFont(cnfsFileIdx_t fIdx, font_t* font, bool spiRam);
 void freeFont(font_t* font);
 
 #endif

@@ -361,9 +361,9 @@ void tunernomeEnterMode(void)
     // Allocate zero'd memory for the mode
     tunernome = heap_caps_calloc(1, sizeof(tunernome_t), MALLOC_CAP_8BIT);
 
-    loadFont("ibm_vga8.font", &tunernome->ibm_vga8, false);
-    loadFont("radiostars.font", &tunernome->radiostars, false);
-    loadFont("logbook.font", &tunernome->logbook, false);
+    loadFont(IBM_VGA_8_FONT, &tunernome->ibm_vga8, false);
+    loadFont(RADIOSTARS_FONT, &tunernome->radiostars, false);
+    loadFont(LOGBOOK_FONT, &tunernome->logbook, false);
 
     float intermedX     = cosf(TONAL_DIFF_IN_TUNE_DEVIATION * M_PI / 17);
     float intermedY     = sinf(TONAL_DIFF_IN_TUNE_DEVIATION * M_PI / 17);
@@ -371,12 +371,12 @@ void tunernomeEnterMode(void)
     TUNER_FLAT_THRES_X  = round(METRONOME_CENTER_X + (intermedX * TUNER_RADIUS));
     TUNER_THRES_Y       = round(TUNER_CENTER_Y - (ABS(intermedY) * TUNER_RADIUS));
 
-    loadWsg("arrow12.wsg", &(tunernome->radiostarsArrowWsg), false);
-    loadWsg("arrow18.wsg", &(tunernome->logbookArrowWsg), false);
-    loadWsg("flat_logbook.wsg", &(tunernome->flatWsg), false);
-    loadWsg("woodBackground.wsg", &(tunernome->backgroundWsg), false);
-    loadWsg("metronomeTop.wsg", &(tunernome->metronomeTopWsg), false);
-    loadWsg("metronomeBottom.wsg", &(tunernome->metronomeBottomWsg), false);
+    loadWsg(ARROW_12_WSG, &(tunernome->radiostarsArrowWsg), false);
+    loadWsg(ARROW_18_WSG, &(tunernome->logbookArrowWsg), false);
+    loadWsg(FLAT_LOGBOOK_WSG, &(tunernome->flatWsg), false);
+    loadWsg(WOOD_BACKGROUND_WSG, &(tunernome->backgroundWsg), false);
+    loadWsg(METRONOME_TOP_WSG, &(tunernome->metronomeTopWsg), false);
+    loadWsg(METRONOME_BOTTOM_WSG, &(tunernome->metronomeBottomWsg), false);
 
     tunernome->beatLength   = 4;
     tunernome->beatCtr      = 0;
@@ -573,7 +573,7 @@ void plotInstrumentNameAndNotesAndStrings(const char* instrumentName, const char
     // tunernome->logbookArrowWsg.h / 2;
 
     // Note names of strings, arranged to match LED positions
-    for (int i = 0; i < numNotes && i < CONFIG_NUM_LEDS && i < NUM_MAX_STRINGS; i++)
+    for (int8_t i = 0; i < numNotes && i < CONFIG_NUM_LEDS && i < NUM_MAX_STRINGS; i++)
     {
         int16_t stringXOffset = TUNER_STRING_X_PADDING + perStringXOffset * i;
 
@@ -602,8 +602,12 @@ void plotInstrumentNameAndNotesAndStrings(const char* instrumentName, const char
         }
 
         // Draw instrument note
-        int ledIdx = stringIdxToLedIdx == NULL ? i : stringIdxToLedIdx[i];
-        ledIdx     = ledIdx < CONFIG_NUM_LEDS ? ledIdx : i;
+        int8_t ledIdx = i;
+        if (stringIdxToLedIdx)
+        {
+            ledIdx = stringIdxToLedIdx[i];
+        }
+        ledIdx = CLAMP(ledIdx, 0, CONFIG_NUM_LEDS);
         drawText(&tunernome->logbook, c555, instrumentNotes[i],
                  stringXOffset + (TUNER_STRING_WIDTH - 1 - textWidth(&tunernome->logbook, instrumentNotes[i])) / 2,
                  ledIdxToPos[ledIdx] == LED_POS_UP ? yOffUp : yOffDown);

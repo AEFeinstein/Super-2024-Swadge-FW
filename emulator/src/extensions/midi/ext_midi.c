@@ -131,8 +131,8 @@ static bool midiInjectFile(const char* path)
 {
     if (emuCnfsInjectFile(midiFile, midiFile))
     {
-        emuInjectNvs32("storage", "synth_playmode", 1);
-        emuInjectNvsBlob("storage", "synth_lastsong", strlen(midiFile), midiFile);
+        emuInjectNvs32("storage", "synth_playmode", 2);
+        emuNvsInjectBlobFile("storage", "synth_usersong", midiFile);
         emulatorSetSwadgeModeByName(synthMode.modeName);
 
         return true;

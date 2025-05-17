@@ -14,7 +14,7 @@
  * The individual touch-pads are only represented as a single, larger, circular analog touchpad which reports touches in
  * polar coordinates.
  *
- * \section pbtn_design Pushbutton Design Philosophy
+ * \section p_btn_design Pushbutton Design Philosophy
  *
  * The push-buttons are polled continuously at 1ms intervals in an interrupt, but these readings are not reported to the
  * Swadge modes. The interrupt saves the prior ::DEBOUNCE_HIST_LEN polled button states and the last reported button
@@ -23,7 +23,7 @@
  * to be received by the Swadge mode.
  *
  * The push-button GPIOs are all read at the same time using <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.3/esp32s2/api-reference/peripherals/dedic_gpio.html">Dedicated
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-reference/peripherals/dedic_gpio.html">Dedicated
  * GPIO</a>.
  *
  * Originally the push-buttons would trigger an interrupt, but we found that to have less reliable results with more
@@ -35,7 +35,7 @@
  * Instead of forcing each mode to queue button events, now each mode must dequeue them rather than having a callback
  * called.
  *
- * \section tpad_design Touch-pad Design Philosophy
+ * \section t_pad_design Touch-pad Design Philosophy
  *
  * Unlike push-buttons, the touch-pads are treated as a single circular area (not discrete touch areas) and are not
  * polled. Events like touches are not queued to be processed later. The individual Swadge mode must poll the current
@@ -43,7 +43,7 @@
  * well as the intensity of the touch.
  *
  * Touch-pad areas are set up and read with <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.3/esp32s2/api-reference/peripherals/touch_pad.html">Touch
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-reference/peripherals/touch_pad.html">Touch
  * Sensor</a>.
  *
  * \section btn_usage Usage
@@ -121,8 +121,11 @@ typedef struct
     uint32_t time;      ///!< The time of this event, in us since boot
 } buttonEvt_t;
 
-void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchPads, uint8_t numTouchPads);
+void initButtons(const gpio_num_t* pushButtons, uint8_t numPushButtons, const touch_pad_t* touchPads,
+                 uint8_t numTouchPads);
 void deinitButtons(void);
+void powerDownButtons(void);
+void powerUpButtons(void);
 bool checkButtonQueue(buttonEvt_t*);
 
 int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity);

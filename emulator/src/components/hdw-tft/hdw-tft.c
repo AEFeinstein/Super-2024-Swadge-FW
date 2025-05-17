@@ -162,6 +162,22 @@ void deinitTFT(void)
 }
 
 /**
+ * @brief
+ */
+void powerDownTft(void)
+{
+    WARN_UNIMPLEMENTED();
+}
+
+/**
+ * @brief
+ */
+void powerUpTft(void)
+{
+    WARN_UNIMPLEMENTED();
+}
+
+/**
  * @brief Return the pixel framebuffer, which is (TFT_WIDTH * TFT_HEIGHT) pixels
  * in row order, starting from the top left. This can be used t directly modify
  * individual pixels without calling ::setPxTft()

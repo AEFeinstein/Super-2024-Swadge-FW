@@ -33,7 +33,7 @@
  * \code{.c}
  * // Declare and load an image
  * wsg_t king_donut;
- * loadWsg("kid0.wsg", &king_donut, true);
+ * loadWsg(KID_0_WSG, &king_donut, true);
  *
  * // Draw the image to the display
  * drawWsg(&king_donut, 100, 100, false, false, 0);

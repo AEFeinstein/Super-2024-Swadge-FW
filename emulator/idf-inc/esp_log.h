@@ -35,11 +35,11 @@ typedef enum
                        output. */
 } esp_log_level_t;
 
-#define ESP_LOGE(tag, format, ...) esp_log_write(ESP_LOG_ERROR, tag, format, ##__VA_ARGS__)
-#define ESP_LOGW(tag, format, ...) esp_log_write(ESP_LOG_WARN, tag, format, ##__VA_ARGS__)
-#define ESP_LOGI(tag, format, ...) esp_log_write(ESP_LOG_INFO, tag, format, ##__VA_ARGS__)
-#define ESP_LOGD(tag, format, ...) esp_log_write(ESP_LOG_DEBUG, tag, format, ##__VA_ARGS__)
-#define ESP_LOGV(tag, format, ...) esp_log_write(ESP_LOG_VERBOSE, tag, format, ##__VA_ARGS__)
+#define ESP_LOGE(tag, format, ...) esp_log_write(ESP_LOG_ERROR, __FILE__, __LINE__, __func__, tag, format, ##__VA_ARGS__)
+#define ESP_LOGW(tag, format, ...) esp_log_write(ESP_LOG_WARN, __FILE__, __LINE__, __func__, tag, format, ##__VA_ARGS__)
+#define ESP_LOGI(tag, format, ...) esp_log_write(ESP_LOG_INFO, __FILE__, __LINE__, __func__, tag, format, ##__VA_ARGS__)
+#define ESP_LOGD(tag, format, ...) esp_log_write(ESP_LOG_DEBUG, __FILE__, __LINE__, __func__, tag, format, ##__VA_ARGS__)
+#define ESP_LOGV(tag, format, ...) esp_log_write(ESP_LOG_VERBOSE, __FILE__, __LINE__, __func__, tag, format, ##__VA_ARGS__)
 
 /**
  * @brief Write message into the log
@@ -49,7 +49,7 @@ typedef enum
  *
  * This function or these macros should not be used from an interrupt.
  */
-void esp_log_write(esp_log_level_t level, const char* tag, const char* format, ...)
-    __attribute__((format(printf, 3, 4)));
+void esp_log_write(esp_log_level_t level, const char* file, int line, const char* func, const char* tag, const char* format, ...)
+    __attribute__((format(printf, 6, 7)));
 
 #endif /* __ESP_LOG_H__ */

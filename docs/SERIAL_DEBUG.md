@@ -169,7 +169,7 @@ I (692) gpio: GPIO[5]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldow
 I (752) gpio: GPIO[21]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0
 I (752) gpio: GPIO[38]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0
 ```
-To figure out where your last crash was, xecute the `xtensa-esp32s2-elf-addr2line` line as it appears in the log. I.e.
+To figure out where your last crash was, execute the `xtensa-esp32s2-elf-addr2line` line as it appears in the log. I.e.
 
 ```bash
 $ xtensa-esp32s2-elf-addr2line -e build/swadge2024.elf 0x4008aab0:0x00060930

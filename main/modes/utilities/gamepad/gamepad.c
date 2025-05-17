@@ -278,8 +278,8 @@ void gamepadEnterMode(void)
     gamepad = (gamepad_t*)heap_caps_calloc(1, sizeof(gamepad_t), MALLOC_CAP_8BIT);
 
     // Load the fonts
-    loadFont("logbook.font", &(gamepad->logbookFont), false);
-    loadFont("ibm_vga8.font", &(gamepad->ibmFont), false);
+    loadFont(LOGBOOK_FONT, &(gamepad->logbookFont), false);
+    loadFont(IBM_VGA_8_FONT, &(gamepad->ibmFont), false);
 
     // Initialize menu
     gamepad->menu = initMenu(gamepadMode.modeName, gamepadMainMenuCb);

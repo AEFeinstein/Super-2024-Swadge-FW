@@ -6,6 +6,9 @@
 
 CC = gcc
 FIND = find
+ifeq ($(HOST_OS),Windows)
+        FIND:=$(shell cygpath `where find | grep bin | grep -v " "`)
+endif
 
 ################################################################################
 # Source Files

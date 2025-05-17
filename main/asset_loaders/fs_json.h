@@ -18,7 +18,7 @@
  * \section fs_json_example Example
  *
  * \code{.c}
- * char* jsonStr = loadJson("level_data.json", true);
+ * char* jsonStr = loadJson(LEVEL_DATA_JSON, true);
  * // Free the json
  * freeJson(&jsonStr);
  * \endcode
@@ -27,7 +27,9 @@
 #ifndef _FS_JSON_H_
 #define _FS_JSON_H_
 
-char* loadJson(const char* name, bool spiRam);
+#include "cnfs_image.h"
+
+char* loadJson(cnfsFileIdx_t fIdx, bool spiRam);
 void freeJson(char* jsonStr);
 
 #endif

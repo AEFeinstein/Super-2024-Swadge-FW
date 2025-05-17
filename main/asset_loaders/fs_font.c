@@ -22,23 +22,23 @@
  * PNGs placed in the assets folder before compilation will be automatically
  * flashed to ROM
  *
- * @param name The name of the font to load. The ::font_t is not allocated by this function
+ * @param fIdx The cnfsFileIdx_t of the font to load. The ::font_t is not allocated by this function
  * @param font A handle to load the font to
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
  * than normal RAM
  * @return true if the font was loaded successfully
  *         false if the font failed to load and should not be used
  */
-bool loadFont(const char* name, font_t* font, bool spiRam)
+bool loadFont(cnfsFileIdx_t fIdx, font_t* font, bool spiRam)
 {
     // Read font from file
     size_t bufIdx = 0;
     uint8_t chIdx = 0;
     size_t sz;
-    const uint8_t* buf = cnfsGetFile(name, &sz);
+    const uint8_t* buf = cnfsGetFile(fIdx, &sz);
     if (NULL == buf)
     {
-        ESP_LOGE("FONT", "Failed to read %s", name);
+        ESP_LOGE("FONT", "Failed to read %d", fIdx);
         return false;
     }
 
@@ -60,7 +60,7 @@ bool loadFont(const char* name, font_t* font, bool spiRam)
 
         // Allocate space for this char and copy it over
         this->bitmap = (uint8_t*)heap_caps_malloc_tag(sizeof(uint8_t) * bytes,
-                                                      spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, name);
+                                                      spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, "font");
         memcpy(this->bitmap, &buf[bufIdx], bytes);
         bufIdx += bytes;
     }

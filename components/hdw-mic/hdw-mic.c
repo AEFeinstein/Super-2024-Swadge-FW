@@ -10,6 +10,7 @@
 //==============================================================================
 
 static adc_continuous_handle_t adc_handle = NULL;
+static bool adcRunning                    = false;
 
 //==============================================================================
 // Functions
@@ -79,13 +80,43 @@ void initMic(gpio_num_t gpio)
 }
 
 /**
+ * @brief Deinitialize the ADC which continuously samples the microphone
+ */
+void deinitMic(void)
+{
+    if (adc_handle)
+    {
+        stopMic();
+        ESP_ERROR_CHECK(adc_continuous_deinit(adc_handle));
+        adc_handle = NULL;
+    }
+}
+
+/**
+ * @brief Power down the ADC (microphone)
+ */
+void powerDownMic(void)
+{
+    stopMic();
+}
+
+/**
+ * @brief Power up the ADC (microphone)
+ */
+void powerUpMic(void)
+{
+    startMic();
+}
+
+/**
  * @brief Start sampling the microphone's ADC
  */
 void startMic(void)
 {
-    if (adc_handle)
+    if (adc_handle && !adcRunning)
     {
         ESP_ERROR_CHECK(adc_continuous_start(adc_handle));
+        adcRunning = true;
     }
 }
 
@@ -99,7 +130,7 @@ void startMic(void)
  */
 uint32_t loopMic(uint16_t* outSamples, uint32_t outSamplesMax)
 {
-    if (adc_handle)
+    if (adc_handle && adcRunning)
     {
         // Read the continuous ADC to this memory
         uint8_t result[ADC_READ_LEN];
@@ -129,21 +160,9 @@ uint32_t loopMic(uint16_t* outSamples, uint32_t outSamplesMax)
  */
 void stopMic(void)
 {
-    if (adc_handle)
+    if (adc_handle && adcRunning)
     {
+        adcRunning = false;
         ESP_ERROR_CHECK(adc_continuous_stop(adc_handle));
-    }
-}
-
-/**
- * @brief Deinitialize the ADC which continuously samples the microphone
- */
-void deinitMic(void)
-{
-    if (adc_handle)
-    {
-        stopMic();
-        ESP_ERROR_CHECK(adc_continuous_deinit(adc_handle));
-        adc_handle = NULL;
     }
 }

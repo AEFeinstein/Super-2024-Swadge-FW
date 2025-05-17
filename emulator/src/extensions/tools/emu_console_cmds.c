@@ -106,7 +106,7 @@ static int setModeCommandCb(const char** args, int argCount, char* out)
         }
         else
         {
-            swadgeMode_t* swadgeMode = emulatorFindSwadgeMode(args[0]);
+            const swadgeMode_t* swadgeMode = emulatorFindSwadgeMode(args[0]);
             if (swadgeMode)
             {
                 return snprintf(out, 1024, "Opening mode '%s'", swadgeMode->modeName);
@@ -120,7 +120,7 @@ static int setModeCommandCb(const char** args, int argCount, char* out)
         char* cur = out;
 
         int modeCount;
-        swadgeMode_t** swadgeModes = emulatorGetSwadgeModes(&modeCount);
+        swadgeMode_t* const* swadgeModes = emulatorGetSwadgeModes(&modeCount);
         for (int i = 0; i < modeCount; i++)
         {
             cur += snprintf(cur, 1024 - (cur - out), "%s\n", swadgeModes[i]->modeName);

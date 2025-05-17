@@ -3,7 +3,7 @@
  * \section temperature_design Design Philosophy
  *
  * Temperature sensor code  code is based on <a
- * href="https://github.com/espressif/esp-idf/tree/v5.2.3/examples/peripherals/temp_sensor">Temperature Sensor
+ * href="https://github.com/espressif/esp-idf/tree/v5.2.5/examples/peripherals/temp_sensor">Temperature Sensor
  * Example</a>.
  *
  * \section temperature_usage Usage
@@ -25,6 +25,8 @@
 
 void initTemperatureSensor(void);
 void deinitTemperatureSensor(void);
+void powerDownTemperatureSensor(void);
+void powerUpTemperatureSensor(void);
 float readTemperatureSensor(void);
 
 #endif
