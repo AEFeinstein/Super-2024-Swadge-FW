@@ -12,6 +12,7 @@
 bool process_chart(processorInput_t* arg);
 
 const assetProcessor_t chartProcessor = {
+    .name = "chart",
     .type = FUNCTION,
     .function = process_chart,
     .inFmt = FMT_FILE_BIN,

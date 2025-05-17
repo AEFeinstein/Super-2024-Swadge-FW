@@ -11,6 +11,7 @@
 bool process_font(processorInput_t* arg);
 
 const assetProcessor_t fontProcessor = {
+    .name = "font",
     .type = FUNCTION,
     .function = process_font,
     .inFmt = FMT_FILE_BIN,

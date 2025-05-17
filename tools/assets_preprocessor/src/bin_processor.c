@@ -12,6 +12,7 @@ bool process_bin(processorInput_t* in);
 
 const assetProcessor_t binProcessor =
 {
+    .name = "bin",
     .inFmt = FMT_DATA,
     .outFmt = FMT_DATA,
     .type = FUNCTION,

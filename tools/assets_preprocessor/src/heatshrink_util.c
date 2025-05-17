@@ -42,11 +42,16 @@ bool writeHeatshrinkFileHandle(uint8_t* input, uint32_t len, FILE* outFile)
 {
     int32_t errLine = -1;
     /* Set up variables for compression */
-    uint32_t outputSize = len;
+    /* The compressed data IS NOT guaranteed to be smaller than the original,
+       but it almost always is. When it's not, it's only a few bytes larger,
+       so allocate 16 bytes of extra space.
+    */
+    uint32_t outputSize = len + 16;
     uint8_t* output     = calloc(1, outputSize);
     uint32_t outputIdx  = 0;
     uint32_t inputIdx   = 0;
     size_t copied       = 0;
+    uint32_t originalSize = outputSize;
 
     if (!output)
     {
@@ -183,6 +188,11 @@ bool writeHeatshrinkFileHandle(uint8_t* input, uint32_t len, FILE* outFile)
     putc(LO_BYTE(LO_WORD(len)), outFile);
     /* Then dump the compressed bytes */
     fwrite(output, outputIdx, 1, outFile);
+
+    if (outputIdx > originalSize)
+    {
+        fprintf(stderr, "[WRN] Heatshrink-encoded data is %d bytes larger than original buffer!", outputIdx - originalSize);
+    }
 
     /* Print results */
     // printf("  Source length: %d\n  Shrunk length: %d\n", inputIdx, 4 + outputIdx);

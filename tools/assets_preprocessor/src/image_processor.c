@@ -53,6 +53,7 @@ bool process_image(processorInput_t* arg);
 
 const assetProcessor_t imageProcessor =
 {
+    .name =     "wsg",
     .type     = FUNCTION,
     .function = process_image,
     .inFmt    = FMT_FILE_BIN,
@@ -140,6 +141,8 @@ bool process_image(processorInput_t* arg)
     int w, h, n;
     unsigned char* data = stbi_load_from_file(arg->in.file, &w, &h, &n, 4);
 
+    bool dither = getBoolOption(arg->options, "wsg.dither", false);
+
     if (NULL != data)
     {
         /* Create an array for output */
@@ -178,40 +181,41 @@ bool process_image(processorInput_t* arg)
             image8b[y][x].a = (sourceA >= 128) ? 0xFF : 0x00;
 
 // Don't dither small sprites, it just doesn't look good
-#if defined(DITHER)
-            /* Find the total error, 8 bits per channel */
-            int teR = sourceR - ((image8b[y][x].r * 255) / 5);
-            int teG = sourceG - ((image8b[y][x].g * 255) / 5);
-            int teB = sourceB - ((image8b[y][x].b * 255) / 5);
+            if (dither)
+            {
+                /* Find the total error, 8 bits per channel */
+                int teR = sourceR - ((image8b[y][x].r * 255) / 5);
+                int teG = sourceG - ((image8b[y][x].g * 255) / 5);
+                int teB = sourceB - ((image8b[y][x].b * 255) / 5);
 
-            /* Count all the neighbors that haven't been drawn yet */
-            int adjNeighbors = 0;
-            adjNeighbors += isNeighborNotDrawn(image8b, x + 0, y + 1, w, h);
-            adjNeighbors += isNeighborNotDrawn(image8b, x + 0, y - 1, w, h);
-            adjNeighbors += isNeighborNotDrawn(image8b, x + 1, y + 0, w, h);
-            adjNeighbors += isNeighborNotDrawn(image8b, x - 1, y + 0, w, h);
-            int diagNeighbors = 0;
-            diagNeighbors += isNeighborNotDrawn(image8b, x - 1, y - 1, w, h);
-            diagNeighbors += isNeighborNotDrawn(image8b, x + 1, y - 1, w, h);
-            diagNeighbors += isNeighborNotDrawn(image8b, x - 1, y + 1, w, h);
-            diagNeighbors += isNeighborNotDrawn(image8b, x + 1, y + 1, w, h);
+                /* Count all the neighbors that haven't been drawn yet */
+                int adjNeighbors = 0;
+                adjNeighbors += isNeighborNotDrawn(image8b, x + 0, y + 1, w, h);
+                adjNeighbors += isNeighborNotDrawn(image8b, x + 0, y - 1, w, h);
+                adjNeighbors += isNeighborNotDrawn(image8b, x + 1, y + 0, w, h);
+                adjNeighbors += isNeighborNotDrawn(image8b, x - 1, y + 0, w, h);
+                int diagNeighbors = 0;
+                diagNeighbors += isNeighborNotDrawn(image8b, x - 1, y - 1, w, h);
+                diagNeighbors += isNeighborNotDrawn(image8b, x + 1, y - 1, w, h);
+                diagNeighbors += isNeighborNotDrawn(image8b, x - 1, y + 1, w, h);
+                diagNeighbors += isNeighborNotDrawn(image8b, x + 1, y + 1, w, h);
 
-            /* Spread the error to all neighboring unquantized pixels, with
-             * twice as much error to the adjacent pixels as the diagonal ones
-             */
-            float diagScalar = 1 / (float)((2 * adjNeighbors) + diagNeighbors);
-            float adjScalar  = 2 * diagScalar;
+                /* Spread the error to all neighboring unquantized pixels, with
+                * twice as much error to the adjacent pixels as the diagonal ones
+                */
+                float diagScalar = 1 / (float)((2 * adjNeighbors) + diagNeighbors);
+                float adjScalar  = 2 * diagScalar;
 
-            /* Write the error */
-            spreadError(image8b, x - 1, y - 1, w, h, teR, teG, teB, diagScalar);
-            spreadError(image8b, x - 1, y + 1, w, h, teR, teG, teB, diagScalar);
-            spreadError(image8b, x + 1, y - 1, w, h, teR, teG, teB, diagScalar);
-            spreadError(image8b, x + 1, y + 1, w, h, teR, teG, teB, diagScalar);
-            spreadError(image8b, x - 1, y + 0, w, h, teR, teG, teB, adjScalar);
-            spreadError(image8b, x + 1, y + 0, w, h, teR, teG, teB, adjScalar);
-            spreadError(image8b, x + 0, y - 1, w, h, teR, teG, teB, adjScalar);
-            spreadError(image8b, x + 0, y + 1, w, h, teR, teG, teB, adjScalar);
-#endif
+                /* Write the error */
+                spreadError(image8b, x - 1, y - 1, w, h, teR, teG, teB, diagScalar);
+                spreadError(image8b, x - 1, y + 1, w, h, teR, teG, teB, diagScalar);
+                spreadError(image8b, x + 1, y - 1, w, h, teR, teG, teB, diagScalar);
+                spreadError(image8b, x + 1, y + 1, w, h, teR, teG, teB, diagScalar);
+                spreadError(image8b, x - 1, y + 0, w, h, teR, teG, teB, adjScalar);
+                spreadError(image8b, x + 1, y + 0, w, h, teR, teG, teB, adjScalar);
+                spreadError(image8b, x + 0, y - 1, w, h, teR, teG, teB, adjScalar);
+                spreadError(image8b, x + 0, y + 1, w, h, teR, teG, teB, adjScalar);
+            }
 
             /* Mark the random pixel as drawn */
             image8b[y][x].isDrawn = true;

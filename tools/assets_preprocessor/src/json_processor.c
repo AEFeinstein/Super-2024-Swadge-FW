@@ -10,11 +10,10 @@
 #include "fileUtils.h"
 #include "heatshrink_util.h"
 
-#define JSON_COMPRESSION
-
 bool process_json(processorInput_t* arg);
 
 const assetProcessor_t jsonProcessor = {
+    .name = "json",
     .type = FUNCTION,
     .function = process_json,
     .inFmt = FMT_TEXT,
@@ -30,25 +29,32 @@ bool process_json(processorInput_t* arg)
         fprintf(stderr, "[ERR] Invalid JSON in %s\n", arg->inFilename);
         return false;
     }
+
+    // cJSON says to allocate 5 more bytes than we actually need, so...
+    char textBuf[arg->in.textSize + 10];
+    char* jsonText = textBuf;
+    if (!cJSON_PrintPreallocated(json, textBuf, sizeof(textBuf), false))
+    {
+        fprintf(stderr, "[WRN] Unable to print JSON text; using original text\n");
+        jsonText = arg->in.text;
+    }
+
     // Cool, it's valid, don't need it anymore!
     cJSON_Delete(json);
 
-#ifdef JSON_COMPRESSION
+    // TODO should we have a way to change the output extension in general?
     /* Change the file extension */
-    // TODO
     // char* dotptr = strrchr(outFilePath, '.');
     // snprintf(&dotptr[1], strlen(dotptr), "hjs");
-#endif
 
-#ifndef JSON_COMPRESSION
-    /* Write input directly to output */
-    fwrite(arg->in.text, arg->in.textSize - 1, 1, arg->out.file);
-#else
-    if (!writeHeatshrinkFileHandle((uint8_t*)arg->in.text, arg->in.textSize - 1, arg->out.file))
+    bool compress = getBoolOption(arg->options, "json.compress", true);
+
+    if (compress)
     {
-        return false;
+        return writeHeatshrinkFileHandle((uint8_t*)jsonText, strlen(jsonText), arg->out.file);
     }
-#endif
-
-    return true;
+    else
+    {
+        return 0 != fwrite(arg->in.text, arg->in.textSize - 1, 1, arg->out.file);
+    }
 }

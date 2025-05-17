@@ -351,9 +351,9 @@ $(CNFS_FILE): assets
 	./tools/cnfs/cnfs_gen assets_image/ $(CNFS_FILE) $(CNFS_FILE_H)
 
 # The "assets" target is dependent on all the asset files
-assets: $(ASSET_FILES)
+assets: ./assets.conf $(ASSET_FILES)
 	$(MAKE) -C ./tools/assets_preprocessor/
-	./tools/assets_preprocessor/assets_preprocessor -i ./assets/ -o ./assets_image/
+	./tools/assets_preprocessor/assets_preprocessor -c ./assets.conf -i ./assets/ -o ./assets_image/
 
 # Build the firmware. Cmake will take care of generating the CNFS files
 firmware:

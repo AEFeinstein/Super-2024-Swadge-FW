@@ -6,7 +6,11 @@ total = 0
 raw_total = 0
 comp_total = 0
 def main():
-    print("Starting soko tmx conversion")
+    #print("Starting soko tmx conversion")
+
+    convertAndSave(sys.argv[1], sys.argv[2])
+
+    return
 
     inputdir = sys.argv[1]
     # check if output is real directory and create it if it does not exist.
@@ -54,9 +58,9 @@ def convertAndSave(filepath,output):
     rawbytes, r,c = convertTMX(filepath)
     raw_total += r
     comp_total += c
-    fname = getNameFromPath(filepath)
-    outfile_file = output+fname+".bin"
-    with open(outfile_file,"wb") as binary_file:
+    #fname = getNameFromPath(filepath)
+    #outfile_file = output+fname+".bin"
+    with open(output,"wb") as binary_file:
             binary_file.write(rawbytes)
 
 def getNameFromPath(p):

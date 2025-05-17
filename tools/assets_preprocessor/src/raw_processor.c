@@ -11,6 +11,7 @@
 bool process_heatshrink(processorInput_t* arg);
 
 const assetProcessor_t heatshrinkProcessor = {
+    .name = "heatshrink",
     .type = FUNCTION,
     .function = process_heatshrink,
     .inFmt = FMT_DATA,
@@ -19,7 +20,6 @@ const assetProcessor_t heatshrinkProcessor = {
 
 bool process_heatshrink(processorInput_t* arg)
 {
-
     // Write the compressed bytes to a file
     return writeHeatshrinkFileHandle(arg->in.data, arg->in.length, arg->out.file);
 }
