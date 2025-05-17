@@ -54,7 +54,7 @@ typedef struct
     font_t font;
     font_t big_font;
 } cosCrunch_t;
-cosCrunch_t* cosCrunch = NULL;
+cosCrunch_t* cc = NULL;
 
 static void cosCrunchEnterMode(void);
 static void cosCrunchExitMode(void);
@@ -97,48 +97,48 @@ cosCrunchMicrogame_t* const microgames[] = {
 
 static void cosCrunchEnterMode(void)
 {
-    cosCrunch        = heap_caps_calloc(1, sizeof(cosCrunch_t), MALLOC_CAP_8BIT);
-    cosCrunch->state = CC_MENU;
+    cc        = heap_caps_calloc(1, sizeof(cosCrunch_t), MALLOC_CAP_8BIT);
+    cc->state = CC_MENU;
 
-    cosCrunch->menu = initMenu(cosCrunchName, cosCrunchMenu);
-    addSingleItemToMenu(cosCrunch->menu, cosCrunchStartCraftingLbl);
-    addSingleItemToMenu(cosCrunch->menu, cosCrunchExitLbl);
-    cosCrunch->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    cc->menu = initMenu(cosCrunchName, cosCrunchMenu);
+    addSingleItemToMenu(cc->menu, cosCrunchStartCraftingLbl);
+    addSingleItemToMenu(cc->menu, cosCrunchExitLbl);
+    cc->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
-    wsgPaletteReset(&cosCrunch->tintPalette);
+    wsgPaletteReset(&cc->tintPalette);
 
-    loadWsg(CC_BACKGROUND_WSG, &cosCrunch->wsg.background, false);
-    loadWsg(CC_CALENDAR_WSG, &cosCrunch->wsg.calendar, false);
-    loadWsg(CC_PAINT_LABEL_WSG, &cosCrunch->wsg.paintLabel, false);
-    loadWsg(CC_PAINT_TUBE_WSG, &cosCrunch->wsg.paintTube, false);
-    loadWsg(CC_TIMER_LEFT_WSG, &cosCrunch->wsg.timerLeft, false);
-    loadWsg(CC_TIMER_RIGHT_WSG, &cosCrunch->wsg.timerRight, false);
+    loadWsg(CC_BACKGROUND_WSG, &cc->wsg.background, false);
+    loadWsg(CC_CALENDAR_WSG, &cc->wsg.calendar, false);
+    loadWsg(CC_PAINT_LABEL_WSG, &cc->wsg.paintLabel, false);
+    loadWsg(CC_PAINT_TUBE_WSG, &cc->wsg.paintTube, false);
+    loadWsg(CC_TIMER_LEFT_WSG, &cc->wsg.timerLeft, false);
+    loadWsg(CC_TIMER_RIGHT_WSG, &cc->wsg.timerRight, false);
 
-    loadFont(IBM_VGA_8_FONT, &cosCrunch->font, false);
-    loadFont(RIGHTEOUS_150_FONT, &cosCrunch->big_font, false);
+    loadFont(IBM_VGA_8_FONT, &cc->font, false);
+    loadFont(RIGHTEOUS_150_FONT, &cc->big_font, false);
 }
 
 static void cosCrunchExitMode(void)
 {
-    if (cosCrunch->activeMicrogame.game != NULL)
+    if (cc->activeMicrogame.game != NULL)
     {
-        cosCrunch->activeMicrogame.game->fnDestroyMicrogame();
+        cc->activeMicrogame.game->fnDestroyMicrogame();
     }
 
-    deinitMenuManiaRenderer(cosCrunch->menuRenderer);
-    deinitMenu(cosCrunch->menu);
+    deinitMenuManiaRenderer(cc->menuRenderer);
+    deinitMenu(cc->menu);
 
-    freeWsg(&cosCrunch->wsg.background);
-    freeWsg(&cosCrunch->wsg.calendar);
-    freeWsg(&cosCrunch->wsg.paintLabel);
-    freeWsg(&cosCrunch->wsg.paintTube);
-    freeWsg(&cosCrunch->wsg.timerLeft);
-    freeWsg(&cosCrunch->wsg.timerRight);
+    freeWsg(&cc->wsg.background);
+    freeWsg(&cc->wsg.calendar);
+    freeWsg(&cc->wsg.paintLabel);
+    freeWsg(&cc->wsg.paintTube);
+    freeWsg(&cc->wsg.timerLeft);
+    freeWsg(&cc->wsg.timerRight);
 
-    freeFont(&cosCrunch->font);
-    freeFont(&cosCrunch->big_font);
+    freeFont(&cc->font);
+    freeFont(&cc->big_font);
 
-    heap_caps_free(cosCrunch);
+    heap_caps_free(cc);
 }
 
 static void cosCrunchMenu(const char* label, bool selected, uint32_t value)
@@ -147,8 +147,8 @@ static void cosCrunchMenu(const char* label, bool selected, uint32_t value)
     {
         if (label == cosCrunchStartCraftingLbl)
         {
-            cosCrunch->lives = NUM_LIVES;
-            cosCrunch->state = CC_MICROGAME_PENDING;
+            cc->lives = NUM_LIVES;
+            cc->state = CC_MICROGAME_PENDING;
         }
         else if (label == cosCrunchExitLbl)
         {
@@ -165,64 +165,62 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
     while (checkButtonQueueWrapper(&evt))
     {
         evts[evtCount++] = evt;
-        if (cosCrunch->state == CC_MENU)
+        if (cc->state == CC_MENU)
         {
-            cosCrunch->menu = menuButton(cosCrunch->menu, evt);
+            cc->menu = menuButton(cc->menu, evt);
         }
-        else if (cosCrunch->state == CC_GAME_OVER && (evt.button == PB_A || evt.button == PB_START) && evt.down)
+        else if (cc->state == CC_GAME_OVER && (evt.button == PB_A || evt.button == PB_START) && evt.down)
         {
-            cosCrunch->state = CC_MENU;
+            cc->state = CC_MENU;
         }
     }
 
-    switch (cosCrunch->state)
+    switch (cc->state)
     {
         case CC_MENU:
-            drawMenuMania(cosCrunch->menu, cosCrunch->menuRenderer, elapsedUs);
+            drawMenuMania(cc->menu, cc->menuRenderer, elapsedUs);
             break;
 
         case CC_MICROGAME_PENDING:
-            if (cosCrunch->activeMicrogame.game != NULL)
+            if (cc->activeMicrogame.game != NULL)
             {
-                cosCrunch->activeMicrogame.game->fnDestroyMicrogame();
+                cc->activeMicrogame.game->fnDestroyMicrogame();
             }
 
-            cosCrunch->activeMicrogame.game
-                = microgames[esp_random() % (sizeof(microgames) / sizeof(cosCrunchMicrogame_t*))];
-            cosCrunch->activeMicrogame.game->fnInitMicrogame();
+            cc->activeMicrogame.game = microgames[esp_random() % (sizeof(microgames) / sizeof(cosCrunchMicrogame_t*))];
+            cc->activeMicrogame.game->fnInitMicrogame();
 
-            cosCrunch->activeMicrogame.gameTimeRemainingUs = cosCrunch->activeMicrogame.game->timeoutUs;
-            cosCrunch->activeMicrogame.state               = CC_MG_GET_READY;
-            cosCrunch->activeMicrogame.stateElapsedUs      = 0;
-            cosCrunch->state                               = CC_MICROGAME_RUNNING;
+            cc->activeMicrogame.gameTimeRemainingUs = cc->activeMicrogame.game->timeoutUs;
+            cc->activeMicrogame.state               = CC_MG_GET_READY;
+            cc->activeMicrogame.stateElapsedUs      = 0;
+            cc->state                               = CC_MICROGAME_RUNNING;
             break;
 
         case CC_MICROGAME_RUNNING:
         {
-            drawWsgTile(&cosCrunch->wsg.background, 0, 0);
+            drawWsgTile(&cc->wsg.background, 0, 0);
 
-            cosCrunch->activeMicrogame.stateElapsedUs += elapsedUs;
+            cc->activeMicrogame.stateElapsedUs += elapsedUs;
 
-            switch (cosCrunch->activeMicrogame.state)
+            switch (cc->activeMicrogame.state)
             {
                 case CC_MG_GET_READY:
-                    if (cosCrunch->activeMicrogame.stateElapsedUs >= MICROGAME_GET_READY_TIME_US)
+                    if (cc->activeMicrogame.stateElapsedUs >= MICROGAME_GET_READY_TIME_US)
                     {
-                        cosCrunch->activeMicrogame.state          = CC_MG_PLAYING;
-                        cosCrunch->activeMicrogame.stateElapsedUs = 0;
+                        cc->activeMicrogame.state          = CC_MG_PLAYING;
+                        cc->activeMicrogame.stateElapsedUs = 0;
                     }
                     else
                     {
-                        uint16_t tw = textWidth(&cosCrunch->big_font, cosCrunch->activeMicrogame.game->verb);
-                        drawText(&cosCrunch->big_font, c555, cosCrunch->activeMicrogame.game->verb,
-                                 (TFT_WIDTH - tw) / 2, 60);
+                        uint16_t tw = textWidth(&cc->big_font, cc->activeMicrogame.game->verb);
+                        drawText(&cc->big_font, c555, cc->activeMicrogame.game->verb, (TFT_WIDTH - tw) / 2, 60);
                     }
                     break;
 
                 case CC_MG_PLAYING:
-                    cosCrunch->activeMicrogame.gameTimeRemainingUs
-                        = CLAMP(cosCrunch->activeMicrogame.gameTimeRemainingUs - elapsedUs, 0, INT64_MAX);
-                    if (cosCrunch->activeMicrogame.gameTimeRemainingUs == 0)
+                    cc->activeMicrogame.gameTimeRemainingUs
+                        = CLAMP(cc->activeMicrogame.gameTimeRemainingUs - elapsedUs, 0, INT64_MAX);
+                    if (cc->activeMicrogame.gameTimeRemainingUs == 0)
                     {
                         cosCrunchMicrogameResult(false);
                     }
@@ -230,44 +228,43 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
 
                 case CC_MG_CELEBRATING:
                 case CC_MG_DESPAIRING:
-                    if (cosCrunch->activeMicrogame.stateElapsedUs >= MICROGAME_RESULT_DISPLAY_TIME_US)
+                    if (cc->activeMicrogame.stateElapsedUs >= MICROGAME_RESULT_DISPLAY_TIME_US)
                     {
-                        if (cosCrunch->lives == 0)
+                        if (cc->lives == 0)
                         {
-                            cosCrunch->state = CC_GAME_OVER;
+                            cc->state = CC_GAME_OVER;
                         }
                         else
                         {
-                            cosCrunch->state = CC_MICROGAME_PENDING;
+                            cc->state = CC_MICROGAME_PENDING;
                         }
                     }
                     break;
             }
 
-            cosCrunch->activeMicrogame.game->fnMainLoop(elapsedUs, cosCrunch->activeMicrogame.gameTimeRemainingUs,
-                                                        cosCrunch->activeMicrogame.state, evts, evtCount);
+            cc->activeMicrogame.game->fnMainLoop(elapsedUs, cc->activeMicrogame.gameTimeRemainingUs,
+                                                 cc->activeMicrogame.state, evts, evtCount);
 
             cosCrunchDrawTimer();
 
-            drawWsgSimple(&cosCrunch->wsg.calendar, TFT_WIDTH - cosCrunch->wsg.calendar.w - 7,
-                          TFT_HEIGHT - cosCrunch->wsg.calendar.h - 1);
+            drawWsgSimple(&cc->wsg.calendar, TFT_WIDTH - cc->wsg.calendar.w - 7, TFT_HEIGHT - cc->wsg.calendar.h - 1);
             char buf[4];
-            snprintf(buf, sizeof(buf), "%d", cosCrunch->lives);
-            uint16_t tw = textWidth(&cosCrunch->font, buf);
-            drawText(&cosCrunch->font, c000, buf, TFT_WIDTH - 25 - tw, TFT_HEIGHT - cosCrunch->font.height - 19);
+            snprintf(buf, sizeof(buf), "%d", cc->lives);
+            uint16_t tw = textWidth(&cc->font, buf);
+            drawText(&cc->font, c000, buf, TFT_WIDTH - 25 - tw, TFT_HEIGHT - cc->font.height - 19);
 
             break;
         }
 
         case CC_GAME_OVER:
         {
-            drawWsgTile(&cosCrunch->wsg.background, 0, 0);
+            drawWsgTile(&cc->wsg.background, 0, 0);
 
-            uint16_t tw = textWidth(&cosCrunch->big_font, cosCrunchGameOverTitle);
-            drawText(&cosCrunch->big_font, c555, cosCrunchGameOverTitle, (TFT_WIDTH - tw) / 2, 60);
+            uint16_t tw = textWidth(&cc->big_font, cosCrunchGameOverTitle);
+            drawText(&cc->big_font, c555, cosCrunchGameOverTitle, (TFT_WIDTH - tw) / 2, 60);
 
-            tw = textWidth(&cosCrunch->font, cosCrunchGameOverMessage);
-            drawText(&cosCrunch->font, c555, cosCrunchGameOverMessage, (TFT_WIDTH - tw) / 2, 150);
+            tw = textWidth(&cc->font, cosCrunchGameOverMessage);
+            drawText(&cc->font, c555, cosCrunchGameOverMessage, (TFT_WIDTH - tw) / 2, 150);
             break;
         }
     }
@@ -275,34 +272,34 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
 
 static void cosCrunchDrawTimer()
 {
-    if (cosCrunch->activeMicrogame.gameTimeRemainingUs <= 1000000)
+    if (cc->activeMicrogame.gameTimeRemainingUs <= 1000000)
     {
         // Red
-        wsgPaletteSet(&cosCrunch->tintPalette, PALETTE_LOWLIGHT, c300);
-        wsgPaletteSet(&cosCrunch->tintPalette, PALETTE_BASE, c500);
-        wsgPaletteSet(&cosCrunch->tintPalette, PALETTE_HIGHLIGHT, c533);
+        wsgPaletteSet(&cc->tintPalette, PALETTE_LOWLIGHT, c300);
+        wsgPaletteSet(&cc->tintPalette, PALETTE_BASE, c500);
+        wsgPaletteSet(&cc->tintPalette, PALETTE_HIGHLIGHT, c533);
     }
-    else if (cosCrunch->activeMicrogame.gameTimeRemainingUs <= cosCrunch->activeMicrogame.game->timeoutUs / 2)
+    else if (cc->activeMicrogame.gameTimeRemainingUs <= cc->activeMicrogame.game->timeoutUs / 2)
     {
         // Yellow
-        wsgPaletteSet(&cosCrunch->tintPalette, PALETTE_LOWLIGHT, c430);
-        wsgPaletteSet(&cosCrunch->tintPalette, PALETTE_BASE, c540);
-        wsgPaletteSet(&cosCrunch->tintPalette, PALETTE_HIGHLIGHT, c554);
+        wsgPaletteSet(&cc->tintPalette, PALETTE_LOWLIGHT, c430);
+        wsgPaletteSet(&cc->tintPalette, PALETTE_BASE, c540);
+        wsgPaletteSet(&cc->tintPalette, PALETTE_HIGHLIGHT, c554);
     }
     else
     {
         // Green
-        wsgPaletteSet(&cosCrunch->tintPalette, PALETTE_LOWLIGHT, c030);
-        wsgPaletteSet(&cosCrunch->tintPalette, PALETTE_BASE, c040);
-        wsgPaletteSet(&cosCrunch->tintPalette, PALETTE_HIGHLIGHT, c353);
+        wsgPaletteSet(&cc->tintPalette, PALETTE_LOWLIGHT, c030);
+        wsgPaletteSet(&cc->tintPalette, PALETTE_BASE, c040);
+        wsgPaletteSet(&cc->tintPalette, PALETTE_HIGHLIGHT, c353);
     }
 
-    if (cosCrunch->activeMicrogame.gameTimeRemainingUs > 0)
+    if (cc->activeMicrogame.gameTimeRemainingUs > 0)
     {
-        uint8_t timer_width = TIMER_PIXELS_PER_SECOND * cosCrunch->activeMicrogame.gameTimeRemainingUs / 1000000.f;
+        uint8_t timer_width = TIMER_PIXELS_PER_SECOND * cc->activeMicrogame.gameTimeRemainingUs / 1000000.f;
 
         // These offsets are to animate the paint going back into the tube when the timer nears the end
-        int8_t offsetX = MIN(timer_width - cosCrunch->wsg.timerLeft.w, 0);
+        int8_t offsetX = MIN(timer_width - cc->wsg.timerLeft.w, 0);
         int8_t offsetY = 0;
         if (timer_width == 2 || timer_width == 1)
         {
@@ -314,46 +311,43 @@ static void cosCrunchDrawTimer()
         }
 
         // Squiggly bit near the tube
-        drawWsgPaletteSimple(&cosCrunch->wsg.timerLeft, 61 + offsetX,
-                             TFT_HEIGHT - cosCrunch->wsg.timerLeft.h - 11 + offsetY, &cosCrunch->tintPalette);
+        drawWsgPaletteSimple(&cc->wsg.timerLeft, 61 + offsetX, TFT_HEIGHT - cc->wsg.timerLeft.h - 11 + offsetY,
+                             &cc->tintPalette);
 
         // Long straight paint line
-        int16_t timerX = 61 + offsetX + cosCrunch->wsg.timerLeft.w;
+        int16_t timerX = 61 + offsetX + cc->wsg.timerLeft.w;
         int16_t timerY = TFT_HEIGHT - 17 + offsetY;
-        fillDisplayArea(timerX, timerY, timerX + timer_width, timerY + 4,
-                        cosCrunch->tintPalette.newColors[PALETTE_BASE]);
+        fillDisplayArea(timerX, timerY, timerX + timer_width, timerY + 4, cc->tintPalette.newColors[PALETTE_BASE]);
 
         // Paint line highlight, lowlight, shadow
         drawLineFast(timerX, timerY + 1, timerX + timer_width, timerY + 1,
-                     cosCrunch->tintPalette.newColors[PALETTE_HIGHLIGHT]);
-        drawLineFast(timerX, timerY + 4, timerX + timer_width, timerY + 4,
-                     cosCrunch->tintPalette.newColors[PALETTE_LOWLIGHT]);
+                     cc->tintPalette.newColors[PALETTE_HIGHLIGHT]);
+        drawLineFast(timerX, timerY + 4, timerX + timer_width, timerY + 4, cc->tintPalette.newColors[PALETTE_LOWLIGHT]);
         drawLineFast(timerX, timerY + 5, timerX + timer_width, timerY + 5, c210);
 
         // Round end cap
-        drawWsgPaletteSimple(&cosCrunch->wsg.timerRight, 66 + timer_width + offsetX,
-                             TFT_HEIGHT - cosCrunch->wsg.timerRight.h - 11 + offsetY, &cosCrunch->tintPalette);
+        drawWsgPaletteSimple(&cc->wsg.timerRight, 66 + timer_width + offsetX,
+                             TFT_HEIGHT - cc->wsg.timerRight.h - 11 + offsetY, &cc->tintPalette);
     }
 
-    drawWsgSimple(&cosCrunch->wsg.paintTube, 8, TFT_HEIGHT - cosCrunch->wsg.paintTube.h - 4);
-    drawWsgPaletteSimple(&cosCrunch->wsg.paintLabel, 37, TFT_HEIGHT - cosCrunch->wsg.paintLabel.h - 8,
-                         &cosCrunch->tintPalette);
+    drawWsgSimple(&cc->wsg.paintTube, 8, TFT_HEIGHT - cc->wsg.paintTube.h - 4);
+    drawWsgPaletteSimple(&cc->wsg.paintLabel, 37, TFT_HEIGHT - cc->wsg.paintLabel.h - 8, &cc->tintPalette);
 }
 
 void cosCrunchMicrogameResult(bool successful)
 {
-    if (cosCrunch->state == CC_MICROGAME_RUNNING && cosCrunch->activeMicrogame.state == CC_MG_PLAYING)
+    if (cc->state == CC_MICROGAME_RUNNING && cc->activeMicrogame.state == CC_MG_PLAYING)
     {
         if (successful)
         {
-            cosCrunch->score++;
-            cosCrunch->activeMicrogame.state = CC_MG_CELEBRATING;
+            cc->score++;
+            cc->activeMicrogame.state = CC_MG_CELEBRATING;
         }
         else
         {
-            cosCrunch->lives--;
-            cosCrunch->activeMicrogame.state = CC_MG_DESPAIRING;
+            cc->lives--;
+            cc->activeMicrogame.state = CC_MG_DESPAIRING;
         }
-        cosCrunch->activeMicrogame.stateElapsedUs = 0;
+        cc->activeMicrogame.stateElapsedUs = 0;
     }
 }
