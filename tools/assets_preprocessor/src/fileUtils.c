@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <ctype.h>
+#include <inttypes.h>
 
 #if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) || defined(WIN32) || defined(WIN64) \
     || defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(_MSC_VER)
@@ -181,7 +182,7 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
     {
         if (*textLength != 0)
         {
-            iniPrintf("Allocating text buffer of %zu bytes", *textLength);
+            iniPrintf("Allocating text buffer of %" PRIu32 " bytes", (uint32_t)*textLength);
             textOut = calloc(1, *textLength);
 
             if (!textOut)
@@ -198,7 +199,7 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
 
         if (*count != 0)
         {
-            iniPrintf("Allocating opts buffer of %zu items", *count);
+            iniPrintf("Allocating opts buffer of %z" PRIu32 " items", (uint32_t)*count);
             optsOut = calloc(*count, sizeof(optPair_t));
 
             if (!optsOut)
@@ -526,7 +527,7 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
 
     if (measuring)
     {
-        iniPrintf("Counted %zu pairs and %zu chars of text buffer", pairs, textChars);
+        iniPrintf("Counted %" PRIu32 " pairs and %" PRIu32 " chars of text buffer", (uint32_t)pairs, (uint32_t)textChars);
         if (count)
         {
             *count = pairs;

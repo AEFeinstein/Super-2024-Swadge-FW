@@ -439,7 +439,7 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                         {
                             if (verbose)
                             {
-                                printf("[%s] OPTS %s <- %s (%zu)\n", extMap->inExt, get_filename(inFile), optionsFilename + strlen(inDirName), options.optionCount);
+                                printf("[%s] OPTS %s <- %s (%" PRIu32 ")\n", extMap->inExt, get_filename(inFile), optionsFilename + strlen(inDirName), (uint32_t)options.optionCount);
                             }
                         }
                         else
@@ -861,7 +861,7 @@ static void setupConfig(assetProcessor_t* execProcessors, size_t* procCount, fil
 
     if (verbose)
     {
-        printf("CONF Loaded %zu processors and %zu extension mappings\n", procsOut, mapsOut);
+        printf("CONF Loaded %" PRIu32 " processors and %" PRIu32 " extension mappings\n", (uint32_t)procsOut, (uint32_t)mapsOut);
     }
 }
 
