@@ -73,7 +73,7 @@ output file paths into the command being executed. These are listed in the table
 | `%b`        | Output file extension, without leading '.' |
 | `%%`        | Literal `%` character                      |
 
-## <a name="Options_Files">Options Files</a>
+## <a name="options-files">Options Files</a>
 
 Some asset processors support the use of options files, which can be used to configure
 how a specific asset or directory of assets are processed. To set the options for a single
@@ -202,4 +202,4 @@ Generate Clone Hero charts [using this tool](https://efhiii.github.io/midi-ch/),
 
 [heatshrink]: https://github.com/atomicobject/heatshrink
 [paletteColor_t]: https://adam.feinste.in/Super-2024-Swadge-FW/palette_8h.html#aed8c673902cb720e5754e04d1cd66f97
-[processorOptions]: #Options_Files
+[processorOptions]: #options-files

@@ -61,10 +61,10 @@ const assetProcessor_t imageProcessor =
 };
 
 /**
- * @brief TODO
+ * @brief Randomizes the order of the given array of ints
  *
- * @param ar
- * @param len
+ * @param ar The array to randomize
+ * @param len The number of items in the array
  */
 void shuffleArray(uint32_t* ar, uint32_t len)
 {
@@ -78,16 +78,6 @@ void shuffleArray(uint32_t* ar, uint32_t len)
     }
 }
 
-/**
- * @brief TODO
- *
- * @param img
- * @param x
- * @param y
- * @param w
- * @param h
- * @return int
- */
 int isNeighborNotDrawn(pixel_t** img, int x, int y, int w, int h)
 {
     if (0 <= x && x < w)
@@ -100,19 +90,6 @@ int isNeighborNotDrawn(pixel_t** img, int x, int y, int w, int h)
     return 0;
 }
 
-/**
- * @brief TODO
- *
- * @param image8b
- * @param x
- * @param y
- * @param w
- * @param h
- * @param teR
- * @param teG
- * @param teB
- * @param diagScalar
- */
 void spreadError(pixel_t** img, int x, int y, int w, int h, int teR, int teG, int teB, float diagScalar)
 {
     if (0 <= x && x < w)
@@ -129,12 +106,6 @@ void spreadError(pixel_t** img, int x, int y, int w, int h, int teR, int teG, in
     }
 }
 
-/**
- * @brief TODO
- *
- * @param infile
- * @param outdir
- */
 bool process_image(processorInput_t* arg)
 {
     /* Load the source PNG */

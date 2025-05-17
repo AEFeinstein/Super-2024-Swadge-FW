@@ -82,12 +82,6 @@ void appendCharToFile(FILE* fp, unsigned char* data, int w, int h, int charStart
     }
 }
 
-/**
- * @brief TODO
- *
- * @param infile
- * @param outdir
- */
 bool process_font(processorInput_t* arg)
 {
     FILE* fp = arg->out.file; // fopen(outFilePath, "wb+");

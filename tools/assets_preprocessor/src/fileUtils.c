@@ -19,10 +19,10 @@
 static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t* textLength,  char** text);
 
 /**
- * TODO
+ * @brief Return the total size of the given file by opening it and seeking to the end
  *
- * @param fname
- * @return long
+ * @param fname The path to the file to measure
+ * @return long The total size of the file in bytes
  */
 long getFileSize(const char* fname)
 {
@@ -34,11 +34,11 @@ long getFileSize(const char* fname)
 }
 
 /**
- * @brief TODO
+ * @brief Returns true if the file at the given path exists
  *
- * @param fname
- * @return true
- * @return false
+ * @param fname The path to the file to check
+ * @return true if the file exists
+ * @return false if the file does not exist or otherwise cannot be read
  */
 bool doesFileExist(const char* fname)
 {
@@ -46,7 +46,7 @@ bool doesFileExist(const char* fname)
 }
 
 /**
- * @brief Get the filename part of a file path
+ * @brief Get the filename part of a file path, after the last '/'
  *
  * @param filename The path to return the filename of
  * @return const char* A pointer to the filename within filename
@@ -595,7 +595,7 @@ bool getOptionsFromIniFile(processorOptions_t* options, const char* file)
 }
 
 /**
- * @brief Writes the <section>.<key> value to the given buffer and returns the key.
+ * @brief Writes the &lt;section&gt;.&lt;key&gt; value to the given buffer and returns the key.
  *
  * If the given option has no section, the original key may be returned without using
  * the buffer.
