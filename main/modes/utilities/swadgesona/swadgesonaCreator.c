@@ -43,7 +43,8 @@ static swadgesonaCreatorMode_t* sc; // initializing
 static void enterMode(void)
 {
     sc = (swadgesonaCreatorMode_t*)heap_caps_calloc(1, sizeof(swadgesonaCreatorMode_t), MALLOC_CAP_8BIT);
-    loadWsg("midi.wsg", &sc->test, true);
+    loadWsg(MIDI_WSG, &sc->test, true);
+    sc->isDisplaying = true;
 }
 
 static void exitMode(void)

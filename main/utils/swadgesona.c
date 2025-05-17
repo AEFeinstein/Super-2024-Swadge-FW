@@ -27,7 +27,7 @@
 // Consts
 //==============================================================================
 
-static const char* const nvsStr = {"swadgesona", "swadgesona-"};
+static const char* const nvsStr[] = {"swadgesona", "swadgesona-"};
 
 //==============================================================================
 // Functions
@@ -48,7 +48,7 @@ void saveSwadgesona(swadgesona_t* s, int idx)
 void loadSwadgesona(swadgesona_t* s, int idx)
 {
     char nvsTag[NVS_KEY_LEN];
-    size_t len = NULL;
+    size_t len = 0;
     snprintf(nvsTag, NVS_KEY_LEN - 1, "%s%" PRIu8, nvsStr[1], idx);
     readNamespaceNvsBlob(nvsStr[0], nvsTag, s, &len);
     if (!readNamespaceNvsBlob(nvsStr[0], nvsTag, s, &len))
@@ -72,7 +72,7 @@ void generateRandomSwadgesona(swadgesona_t* s)
     s->mouthShape   = esp_random() % MOUTH_COUNT;
     s->noseShape    = esp_random() % NOSE_COUNT;
     s->skin         = esp_random() % SKIN_COLOR_COUNT;
-    s->name; // TODO: Generate based on name lists + random number
+    //s->name; // TODO: Generate based on name lists + random number
 }
 
 // Drawing
