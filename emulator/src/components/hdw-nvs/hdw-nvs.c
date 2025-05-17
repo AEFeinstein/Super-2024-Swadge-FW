@@ -1233,3 +1233,16 @@ static bool emuGetInjected32(const char* namespace, const char* key, int32_t* ou
 
     return false;
 }
+
+/**
+ * @brief TODO
+ *
+ * List elements must be heap_caps_free()
+ *
+ * @param namespace
+ * @param list
+ */
+void getNvsKeys(const char* namespace, list_t* list)
+{
+    WARN_UNIMPLEMENTED();
+}

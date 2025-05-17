@@ -220,6 +220,7 @@
 #include "vectorFl2d.h"
 #include "geometryFl.h"
 #include "imu_utils.h"
+#include "swadgePass.h"
 
 // Sound utilities
 #include "soundFuncs.h"
@@ -349,6 +350,17 @@ typedef struct
      * globalMidiPlayerFillBuffer() will be used instead to fill sample buffers
      */
     fnDacCallback_t fnDacCb;
+
+    /**
+     * @brief This function is called to fill in a SwadgePass packet with mode-specific data. The Swadge mode should
+     * only fill in it's relevant data and not touch other mode's data.
+     *
+     * @warning This function will be called when the mode is not initialized or running, so it MUST NOT rely on memory
+     * allocated or data loaded in the mode's initializer.
+     *
+     * @param packet The packet to fill in
+     */
+    void (*fnAddToSwadgePassPacket)(swadgePassPacket_t* packet);
 } swadgeMode_t;
 
 bool checkButtonQueueWrapper(buttonEvt_t* evt);

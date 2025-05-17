@@ -44,6 +44,7 @@
 #include "mode_synth.h"
 #include "sequencerMode.h"
 #include "swadgeIt.h"
+#include "swadgePassTest.h"
 #include "touchTest.h"
 #include "tunernome.h"
 
@@ -59,7 +60,7 @@
 int modeListGetCount(void);
 
 /**
- * @brief Iniitalizes a menu with all the current swadge modes
+ * @brief Initializes a menu with all the current swadge modes
  *
  * @param menu Menu to set
  */

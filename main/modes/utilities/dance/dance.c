@@ -68,6 +68,7 @@ typedef struct
     int32_t listenTimer;
     bool maySleep;
 
+    swadgePassPacket_t packet;
     int32_t swadgePassCount;
 } danceMode_t;
 
@@ -230,6 +231,10 @@ void danceEnterMode(void)
 
     // Add exit to the menu
     addSingleItemToMenu(danceState->menu, str_exit);
+
+    // Initialize SwadgePass
+    fillSwadgePassPacket(&danceState->packet);
+    danceState->swadgePassCount = 0;
 }
 
 /**
@@ -349,7 +354,8 @@ void danceMainLoop(int64_t elapsedUs)
         danceState->bcastTimer = (5625000 + (esp_random() % 3750000));
         // Turn on WiFi before transmitting
         espNowPostLightSleep();
-        sendSwadgePass();
+        // Transmit a packet
+        sendSwadgePass(&danceState->packet);
         // Stay awake after packet transmission
         danceState->maySleep = false;
     }
