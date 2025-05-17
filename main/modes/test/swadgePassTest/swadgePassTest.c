@@ -14,7 +14,7 @@ typedef struct
     font_t ibm; ///< The font used to display text
     menu_t* menu;
     menuManiaRenderer_t* renderer;
-    list_t swadgePassKeys;
+    list_t swadgePasses;
 } swadgePassTest_t;
 
 //==============================================================================
@@ -72,18 +72,19 @@ static void swadgePassTestEnterMode(void)
     // Load a font
     loadFont(IBM_VGA_8_FONT, &spt->ibm, false);
 
-    // Get SwadgePass keys
-    getSwadgePassKeys(&spt->swadgePassKeys);
+    // Get SwadgePasses
+    getSwadgePasses(&spt->swadgePasses, &swadgePassTestMode, true);
 
     // Initialize menu
     spt->menu = initMenu(swadgePassTestName, swadgePassTestMenuCb);
 
     // Add all keys to the menu
-    node_t* keyNode = spt->swadgePassKeys.first;
-    while (keyNode)
+    node_t* passNode = spt->swadgePasses.first;
+    while (passNode)
     {
-        addSingleItemToMenu(spt->menu, keyNode->val);
-        keyNode = keyNode->next;
+        swadgePassData_t* spd = (swadgePassData_t*)passNode->val;
+        addSingleItemToMenu(spt->menu, spd->key);
+        passNode = passNode->next;
     }
 
     // Initialize renderer
@@ -102,11 +103,8 @@ static void swadgePassTestExitMode(void)
     deinitMenu(spt->menu);
     deinitMenuManiaRenderer(spt->renderer);
 
-    // Free the keys
-    while (spt->swadgePassKeys.length)
-    {
-        heap_caps_free(pop(&spt->swadgePassKeys));
-    }
+    // Free the swadge passes
+    freeSwadgePasses(&spt->swadgePasses);
 
     // Free the mode
     heap_caps_free(spt);

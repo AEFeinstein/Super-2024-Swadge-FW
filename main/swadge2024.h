@@ -231,12 +231,15 @@
 /// @brief the default time between drawn frames, in microseconds (40FPS)
 #define DEFAULT_FRAME_RATE_US (1000000 / 40)
 
+// Forward declaration
+struct swadgePassPacket;
+
 /**
  * @struct swadgeMode_t
  * @brief A struct of all the function pointers necessary for a swadge mode. If a mode does not need a particular
  * function, for example it doesn't do audio handling, it is safe to set the pointer to NULL. It just won't be called.
  */
-typedef struct
+typedef struct swadgeMode
 {
     /**
      * @brief This swadge mode's name, used in menus. This is not a function pointer.
@@ -360,7 +363,7 @@ typedef struct
      *
      * @param packet The packet to fill in
      */
-    void (*fnAddToSwadgePassPacket)(swadgePassPacket_t* packet);
+    void (*fnAddToSwadgePassPacket)(struct swadgePassPacket* packet);
 } swadgeMode_t;
 
 bool checkButtonQueueWrapper(buttonEvt_t* evt);

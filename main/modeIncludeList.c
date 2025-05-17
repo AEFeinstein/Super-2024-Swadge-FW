@@ -57,3 +57,15 @@ void modeListSetMenu(menu_t* menu)
 
     addSingleItemToMenu(menu, modeCredits.modeName);
 }
+
+int32_t getModeIdx(const swadgeMode_t* mode)
+{
+    for (uint32_t idx = 0; idx < ARRAY_SIZE(allSwadgeModes); idx++)
+    {
+        if (allSwadgeModes[idx] == mode)
+        {
+            return idx;
+        }
+    }
+    return -1;
+}
