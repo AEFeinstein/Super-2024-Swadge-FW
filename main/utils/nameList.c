@@ -15,6 +15,7 @@
 // Swadge
 #include "nameList.h"
 #include "macros.h"
+#include "swadge2024.h"
 
 // C
 #include <string.h>
@@ -35,25 +36,23 @@
 //==============================================================================
 
 static const char* const adjList1[] = {
-    "outgoing", "fearless",     "debonair", "righteous", "psychological", "sparkling", "symptomatic", "quick",
-    "zany",     "entertaining", "hot",      "noiseless", "dysfunctional", "glorious",  "scientific",  "accurate",
-    "noxious",  "adaptable",    "sassy",    "elastic",   "known",         "loutish",   "suitable",    "rambunctious",
-    "amusing",  "absurd",       "rhythmic", "modal",     "syncopated",    "sharp",     "auxilary",    "deafening",
-    "plain",    "sudden",       "ordinary", "eminent",   "orchestral",    "speedy",    "lovely",      "zany",
+    "suitable", "eminent",  "shiny",    "modal",    "playful",  "fun",      "flexible", "wiggly",
+    "live",     "rhythmic", "amusing",  "fearless", "hot",      "debonair", "quirky",   "pleasant",
+    "sick",     "lovely",   "sassy",    "logical",  "smart",    "speedy",   "silent",   "correct",
+    "quick",    "elastic",  "accurate", "outgoing", "ordinary", "plain",    "loud",     "zany",
+    "festive",  "loutish",  "noxious",  "sly",      "known",    "sudden",   "sharp",    "glorious",
 };
 static const char* const adjList2[] = {
-    "wry",       "bright",      "educated",     "hulking",  "mammoth",     "lumpy",       "overwrought", "rabid",
-    "faded",     "therapeutic", "rambunctious", "odd",      "cooperative", "psychotic",   "skinny",      "ruddy",
-    "untidy",    "mysterious",  "gentle",       "shaggy",   "exciting",    "magnificent", "uppity",      "succinct",
-    "voracious", "meek",        "smoggy",       "abnormal", "useful",      "macho",       "measly",      "truthful",
-    "healthy",   "dazzling",    "nutty",        "round",    "magnanimous", "suspended",   "dissonant",   "consonant",
+    "lazy",    "weepy",    "creative", "faded",    "shaggy",  "truthful", "dazzling", "measly", "absurd", "healthy",
+    "mammoth", "generous", "educated", "scraggly", "upset",   "cheeky",   "abnormal", "gentle", "useful", "ruddy",
+    "gentle",  "smoggy",   "lumpy",    "odd",      "helpful", "round",    "succinct", "weird",  "rabid",  "steady",
+    "untidy",  "bright",   "macho",    "nutty",    "hulking", "tuned",    "exciting", "wry",    "meek",   "hungry",
 };
 static const char* const nounList[] = {
-    "woodwind", "driver",   "harmony",  "percussion", "octave",    "cat",      "dog",      "weasel",
-    "deer",     "seahorse", "warthog",  "hamster",    "chameleon", "snake",    "lizard",   "pitch",
-    "hedgehog", "ghost",    "string",   "noob",       "smurf",     "boss",     "aardvark", "lemon",
-    "eagle",    "foxbat",   "seahawk",  "osprey",     "badger",    "drums",    "bass",     "wolf",
-    "guitar",   "keyboard", "vocalist", "developer",  "rocker",    "musician", "artist",   "controller",
+    "lizard",   "hedgehog", "vocalist", "smurf",   "noob",     "bass",    "boss",     "badger", "drums",   "keyboard",
+    "pitch",    "octave",   "aardvark", "warthog", "cat",      "gamepad", "lemon",    "dog",    "harmony", "ghost",
+    "deer",     "guitar",   "gecko",    "seahawk", "musician", "osprey",  "hamster",  "string", "weasel",  "gamedev",
+    "woodwind", "drummer",  "rocker",   "wolf",    "snake",    "driver",  "seahorse", "artist", "foxbat",  "eagle",
 };
 
 //==============================================================================
@@ -68,6 +67,15 @@ typedef enum
     RAND_NUM,
 } listArrayIdx_t;
 
+typedef struct __attribute__((packed))
+{
+    uint8_t baseMac[6];
+    uint8_t adj1 : 6; // MAC bits 18-23
+    uint8_t adj2 : 6; // MAC bits 12-17
+    uint8_t noun : 6; // MAC bits 6-11
+    uint8_t code : 6; // MAC bits 0-5
+} macBits_t;
+
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -78,12 +86,17 @@ static void _getWordFromList(int listIdx, int idx, char* buffer, int buffLen);
 
 static uint8_t _mutateIdx(uint8_t arrSize, uint8_t idx, uint8_t mac);
 
+// Drawing functions
+
+static void _drawWordCenteredOnX(int x, int y, const char* str, paletteColor_t col);
+
 //==============================================================================
 // Variables
 //==============================================================================
 
-static uint8_t baseMac[6];
+static macBits_t macBits;
 static uint8_t arrayLens[3];
+static font_t fnt;
 
 //==============================================================================
 // Functions
@@ -95,14 +108,15 @@ void initUsernameSystem()
     arrayLens[0] = ARRAY_SIZE(adjList1);
     arrayLens[1] = ARRAY_SIZE(adjList2);
     arrayLens[2] = ARRAY_SIZE(nounList);
+    loadFont(IBM_VGA_8_FONT, &fnt, true);
 }
 
 void generateMACUsername(nameData_t* nd)
 {
-    nd->idxs[ADJ1] = baseMac[2 + ADJ1] % arrayLens[ADJ1]; // Functionally equivalent to _mutateIdx() w/ idx = 0
-    nd->idxs[ADJ2] = baseMac[2 + ADJ2] % arrayLens[ADJ2];
-    nd->idxs[NOUN] = baseMac[2 + NOUN] % arrayLens[NOUN];
-    nd->randCode   = baseMac[5];
+    nd->idxs[ADJ1] = macBits.adj1 % arrayLens[ADJ1]; // Functionally equivalent to _mutateIdx() w/ idx = 0
+    nd->idxs[ADJ2] = macBits.adj2 % arrayLens[ADJ2];
+    nd->idxs[NOUN] = macBits.noun % arrayLens[NOUN];
+    nd->randCode   = macBits.baseMac[5];
     snprintf(nd->nameBuffer, USERNAME_MAX_LEN - 1, "%s-%s-%s-%" PRId16, adjList1[nd->idxs[ADJ1]],
              adjList2[nd->idxs[ADJ2]], nounList[nd->idxs[NOUN]], nd->randCode);
 }
@@ -111,10 +125,10 @@ void generateRandUsername(nameData_t* nd, bool user)
 {
     if (user)
     {
-        nd->idxs[ADJ1] = _mutateIdx(arrayLens[ADJ1], esp_random(), baseMac[2]);
-        nd->idxs[ADJ2] = _mutateIdx(ARRAY_SIZE(adjList2), esp_random(), baseMac[3]);
-        nd->idxs[NOUN] = _mutateIdx(ARRAY_SIZE(nounList), esp_random(), baseMac[4]);
-        nd->randCode   = baseMac[5];
+        nd->idxs[ADJ1] = _mutateIdx(arrayLens[ADJ1], esp_random(), macBits.adj1);
+        nd->idxs[ADJ2] = _mutateIdx(ARRAY_SIZE(adjList2), esp_random(), macBits.adj2);
+        nd->idxs[NOUN] = _mutateIdx(ARRAY_SIZE(nounList), esp_random(), macBits.noun);
+        nd->randCode   = macBits.baseMac[5];
     }
     else
     {
@@ -131,10 +145,10 @@ void setUsernameFromND(nameData_t* nd, bool user)
 {
     if (user)
     {
-        nd->idxs[ADJ1] = _mutateIdx(arrayLens[ADJ1], nd->idxs[ADJ1], baseMac[2]);
-        nd->idxs[ADJ2] = _mutateIdx(ARRAY_SIZE(adjList2), nd->idxs[ADJ2], baseMac[3]);
-        nd->idxs[NOUN] = _mutateIdx(ARRAY_SIZE(nounList), nd->idxs[NOUN], baseMac[4]);
-        nd->randCode   = baseMac[5];
+        nd->idxs[ADJ1] = _mutateIdx(arrayLens[ADJ1], nd->idxs[ADJ1], macBits.adj1);
+        nd->idxs[ADJ2] = _mutateIdx(ARRAY_SIZE(adjList2), nd->idxs[ADJ2], macBits.adj2);
+        nd->idxs[NOUN] = _mutateIdx(ARRAY_SIZE(nounList), nd->idxs[NOUN], macBits.noun);
+        nd->randCode   = macBits.baseMac[5];
     }
 
     char buff1[MAX_ADJ1_LEN], buff2[MAX_ADJ2_LEN], buff3[MAX_NOUN_LEN];
@@ -195,19 +209,19 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user)
         {
             if (nd->arrayIdx == RAND_NUM)
             {
-                // Not set by user, overflow takes car of value
-                nd->idxs[nd->arrayIdx]--;
+                // Not set by user, overflow takes care of value
+                nd->randCode--;
             }
             else
             {
                 if (user)
                 {
-                    nd->idxs[nd->arrayIdx]
-                        = _mutateIdx(arrayLens[nd->arrayIdx], nd->idxs[nd->arrayIdx] - 1, baseMac[nd->arrayIdx + 2]);
+                    nd->idxs[nd->arrayIdx] = _mutateIdx(arrayLens[nd->arrayIdx], nd->idxs[nd->arrayIdx],
+                                                        macBits.baseMac[nd->arrayIdx + 2]);
                 }
                 else
                 {
-                    nd->idxs[nd->arrayIdx] = (nd->idxs[nd->arrayIdx] - 1) % arrayLens[nd->arrayIdx];
+                    nd->idxs[nd->arrayIdx] = (nd->idxs[nd->arrayIdx]) % arrayLens[nd->arrayIdx];
                 }
             }
         }
@@ -215,15 +229,15 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user)
         {
             if (nd->arrayIdx == RAND_NUM)
             {
-                // Not set by user, overflow takes car of value
-                nd->idxs[nd->arrayIdx]++;
+                // Not set by user, overflow takes care of value
+                nd->randCode++;
             }
             else
             {
                 if (user)
                 {
-                    nd->idxs[nd->arrayIdx]
-                        = _mutateIdx(arrayLens[nd->arrayIdx], nd->idxs[nd->arrayIdx] + 1, baseMac[nd->arrayIdx + 2]);
+                    nd->idxs[nd->arrayIdx] = _mutateIdx(arrayLens[nd->arrayIdx], nd->idxs[nd->arrayIdx] + 1,
+                                                        macBits.baseMac[nd->arrayIdx + 2]);
                 }
                 else
                 {
@@ -240,8 +254,27 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user)
     return false;
 }
 
-void drawUsernamePicker(bool user)
+void drawUsernamePicker(nameData_t* nd, bool user)
 {
+    // Clear display
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+
+    // Draw current selection
+    _drawWordCenteredOnX(50, 0, adjList1[nd->idxs[ADJ1]], c544);
+    _drawWordCenteredOnX(120, 0, adjList2[nd->idxs[ADJ2]], c454);
+    _drawWordCenteredOnX(190, 0, nounList[nd->idxs[NOUN]], c445);
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer) - 1, "%" PRIu8, nd->randCode);
+    _drawWordCenteredOnX(240, 0, buffer, user ? c444 : c555);
+
+    // draw tack marks
+
+    // Draw other options above and below
+
+    // draw selection box
+
+    // Draw currently set name
+    drawText(&fnt, c444, nd->nameBuffer, 16, TFT_HEIGHT - 48);
 }
 
 //==============================================================================
@@ -250,17 +283,24 @@ void drawUsernamePicker(bool user)
 
 static void _getMacAddress()
 {
-    esp_err_t ret = esp_wifi_get_mac(WIFI_IF_STA, baseMac);
+    esp_err_t ret = esp_wifi_get_mac(WIFI_IF_STA, macBits.baseMac);
     if (ret != ESP_OK)
     {
         ESP_LOGE("USRN", "Failed to read MAC address");
         for (int idx = 0; idx < 6; idx++)
         {
             // Produces an obvious, statistically unlikely result
-            baseMac[idx] = 0;
+            macBits.baseMac[idx] = 0;
         }
     }
-    ESP_LOGI("USRN", "MAC:%d:%d:%d:%d:%d:%d", baseMac[0], baseMac[1], baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
+    ESP_LOGI("USRN", "MAC:%d:%d:%d:%d:%d:%d", macBits.baseMac[0], macBits.baseMac[1], macBits.baseMac[2],
+             macBits.baseMac[3], macBits.baseMac[4], macBits.baseMac[5]);
+
+    // load bits into packed data
+    // TODO: Add bit shuffling to increase entropy
+    macBits.adj1 = (macBits.baseMac[3] & 0xFC) >> 2; // 6 bits, 23-18
+    macBits.adj2 = ((macBits.baseMac[3] & 0x03) << 4) | ((macBits.baseMac[4] & 0xF0) >> 2);
+    macBits.noun = ((macBits.baseMac[4] & 0x0F) << 4) | ((macBits.baseMac[5] & 0xC0) >> 2);
 }
 
 static void _getWordFromList(int listIdx, int idx, char* buffer, int buffLen)
@@ -292,4 +332,13 @@ static void _getWordFromList(int listIdx, int idx, char* buffer, int buffLen)
 static uint8_t _mutateIdx(uint8_t arrSize, uint8_t idx, uint8_t mac)
 {
     return (mac + (idx % (arrSize >> USER_LIST_SHIFT))) % arrSize;
+}
+
+// Drawing functions
+
+static void _drawWordCenteredOnX(int xCenter, int yOffset, const char* str, paletteColor_t col)
+{
+    int xCoord = xCenter - (textWidth(&fnt, str) >> 1);
+    int yCoord = ((TFT_HEIGHT - fnt.height) >> 1) + yOffset;
+    drawText(&fnt, col, str, xCoord, yCoord);
 }

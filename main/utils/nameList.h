@@ -16,9 +16,9 @@
 #include <stdint.h>
 #include "hdw-btn.h"
 
-#define MAX_ADJ1_LEN 15 // Length of longest word in list
-#define MAX_ADJ2_LEN 14 // Length of longest word in list
-#define MAX_NOUN_LEN 12 // Length of longest word in list
+#define MAX_ADJ1_LEN 10 // Length of longest word in list
+#define MAX_ADJ2_LEN 10 // Length of longest word in list
+#define MAX_NOUN_LEN 10 // Length of longest word in list
 
 // +3 for number, +1 for end, +3 for '-' = +7
 #define USERNAME_MAX_LEN (MAX_ADJ1_LEN + MAX_ADJ2_LEN + MAX_NOUN_LEN + 7)
@@ -93,7 +93,8 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user);
 
 /**
  * @brief Draws the picker input
- *
+ * 
+ * @param nd The data
  * @param user If it's a user (greys out number)
  */
-void drawUsernamePicker(bool user);
+void drawUsernamePicker(nameData_t* nd, bool user);
