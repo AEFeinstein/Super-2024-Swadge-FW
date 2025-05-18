@@ -16,9 +16,9 @@
 
 /// @brief Add swadgeMode_t pointers to this struct to include them in emulator and main menu
 swadgeMode_t* const allSwadgeModes[] = {
-    &accelTestMode, &colorchordMode, &cosCrunchMode, &danceMode,     &factoryTestMode, &gamepadMode,
-    &introMode,     &jukeboxMode,    &keebTestMode,  &mainMenuMode,  &modeCredits,     &modeDiceRoller,
-    &sequencerMode, &swadgeItMode,   &synthMode,     &touchTestMode, &tunernomeMode,
+    &accelTestMode, &colorchordMode, &cosCrunchMode,  &danceMode,    &factoryTestMode, &gamepadMode,
+    &introMode,     &jukeboxMode,    &keebTestMode,   &mainMenuMode, &modeCredits,     &modeDiceRoller,
+    &sequencerMode, &swadgeItMode,   &swadgedokuMode, &synthMode,    &touchTestMode,   &tunernomeMode,
 };
 
 //==============================================================================
@@ -36,6 +36,7 @@ void modeListSetMenu(menu_t* menu)
     menu = startSubMenu(menu, "Games");
     addSingleItemToMenu(menu, cosCrunchMode.modeName);
     addSingleItemToMenu(menu, swadgeItMode.modeName);
+    addSingleItemToMenu(menu, swadgedokuMode.modeName);
     menu = endSubMenu(menu);
 
     // Music sub menu

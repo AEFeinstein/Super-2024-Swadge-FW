@@ -44,6 +44,7 @@
 #include "mode_synth.h"
 #include "sequencerMode.h"
 #include "swadgeIt.h"
+#include "swadgedoku.h"
 #include "touchTest.h"
 #include "tunernome.h"
 
