@@ -48,10 +48,17 @@ typedef enum
 // Colors
 typedef enum
 {
-    BLUE,
-    GREEN,
-    PURPLE,
-    PEACH,
+    BLUE_SKIN, //done
+    GREEN_SKIN, //DONE
+    PURPLE_SKIN, //DONE
+    RED_SKIN, 
+    GREY_SKIN,
+    PINK_SKIN,
+    ZERO_SKIN, //default skin
+    ONE_SKIN, //done
+    TWO_SKIN,
+    THREE_SKIN,
+    FOUR_SKIN,
     SKIN_COLOR_COUNT
 } skinColor_t;
 
@@ -65,8 +72,23 @@ typedef enum
 typedef enum 
 {
     ANIME_EYES,
+    BIG_EYES,
     EYE_SHAPE_COUNT
 } eyeShape_t;
+
+typedef enum
+{
+    BLUE_EYES,
+    GREEN_EYES,
+    BLACK_EYES,
+    RED_EYES,
+    BROWN_EYES,
+    PURPLE_EYES,
+    YELLOW_EYES,
+    PINK_EYES,
+    GREY_EYES,
+    EYE_COLOR_COUNT
+} eyeColor_t;
 
 typedef enum 
 {
@@ -124,8 +146,7 @@ typedef struct
     // Use the grabPaletteFromIndex()
     skinColor_t skin;
     hairColor_t hairColor;
-    // Normal paletteColor
-    paletteColor_t eyeColor;
+    eyeColor_t eyeColor;
     
     // Clothes
     clothing_t clothes;

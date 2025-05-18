@@ -44,7 +44,6 @@ static void enterMode(void)
 {
     sc = (swadgesonaCreatorMode_t*)heap_caps_calloc(1, sizeof(swadgesonaCreatorMode_t), MALLOC_CAP_8BIT);
     loadWsg(MIDI_WSG, &sc->test, true);
-    sc->isDisplaying = true;
 }
 
 static void exitMode(void)
@@ -70,10 +69,16 @@ static void runMode(int64_t elapsedUs) // microseconds since the last time it lo
             else if (evt.button == PB_UP)
             {
                 sc->index -= 1;
+                if(sc->index<0){
+                    sc->index=4;
+                }
             }
             else if (evt.button == PB_DOWN)
             {
                 sc->index += 1;
+                if(sc->index>=5){
+                    sc->index=0;
+                }
             }
             else if (evt.button == PB_LEFT)
             {
@@ -83,6 +88,8 @@ static void runMode(int64_t elapsedUs) // microseconds since the last time it lo
             }
         }
     }
+    sc->swadgesona.skin=sc->index;
+
     draw(); // does not require something in the paren
 }
 
@@ -93,4 +100,8 @@ static void draw()
     {
         drawWsgSimple(&sc->test, 120, 120);
     }
+    
+    drawSwadgesona(sc->swadgesona,32,32);
+
 }
+    
