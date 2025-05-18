@@ -17,6 +17,9 @@
 /// @brief Value for when a square does not map to any box, such as a void square
 #define BOX_NONE UINT8_MAX
 
+#define SUDOKU_PUZ_MIN SUDOKU_PUZ_000_BSP
+#define SUDOKU_PUZ_MAX SUDOKU_PUZ_000_BSP
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -46,6 +49,16 @@ typedef enum
     //< Square is not considered part of the playable area, for irregular puzzles
     SF_VOID = 2,
 } sudokuFlag_t;
+
+typedef enum
+{
+    SD_BEGINNER = 0,
+    SD_EASY     = 1,
+    SD_MEDIUM   = 2,
+    SD_HARD     = 3,
+    SD_EXPERT   = 4,
+    SD_HARDEST  = 5,
+} sudokuDifficulty_t;
 
 typedef enum
 {
@@ -234,10 +247,27 @@ typedef struct
     sudokuGrid_t game;
     int64_t playTimer;
 
+    /// @brief The last (or next) level to play, the default to select
+    int lastLevel;
+
+    /// @brief The maximum unlocked level
+    int maxLevel;
+
+    int randState;
+
     sudokuPlayer_t player;
 
     menu_t* menu;
     menuManiaRenderer_t* menuRenderer;
+
+    menuItem_t* customModeMenuItem;
+    menuItem_t* customSizeMenuItem;
+    menuItem_t* customDifficultyMenuItem;
+
+    bool jigsawForced;
+    sudokuMode_t prevMode;
+    bool squareForced;
+    int prevSize;
 } swadgedoku_t;
 
 //==============================================================================
@@ -249,6 +279,7 @@ static void swadgedokuExitMode(void);
 static void swadgedokuMainLoop(int64_t elapsedUs);
 static void swadgedokuBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
+static void swadgedokuSetupMenu(void);
 static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t value);
 
 bool loadSudokuData(const uint8_t* data, size_t length, sudokuGrid_t* game);
@@ -265,14 +296,68 @@ void swadgedokuGameButton(buttonEvt_t evt);
 void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay,
                         const sudokuTheme_t* theme);
 
+int swadgedokuRand(int* seed);
+
 bool setDigit(sudokuGrid_t* game, uint8_t number, uint8_t x, uint8_t y);
+void clearOverlayOpts(sudokuOverlay_t* overlay, const sudokuGrid_t* game, sudokuOverlayOpt_t optMask);
 
 //==============================================================================
 // Const data
 //==============================================================================
 
-static const char swadgedokuModeName[] = "Swadgedoku";
-static const char menuItemPlaySudoku[] = "Play Sudoku";
+static const char swadgedokuModeName[]  = "Swadgedoku";
+static const char menuItemContinue[]    = "Continue";
+static const char menuItemLevelSelect[] = "Play Puzzle: ";
+static const char menuItemPlaySudoku[]  = "Classic";
+static const char menuItemPlayJigsaw[]  = "Jigsaw";
+static const char menuItemPlayCustom[]  = "Infinite";
+static const char menuItemStartCustom[] = "Start";
+static const char menuItemCustomMode[]  = "Mode: ";
+static const char menuItemCustomSize[]  = "Size: ";
+static const char menuItemDifficulty[]  = "Rating: ";
+static const char menuItemSettings[]    = "Settings";
+
+static const int32_t menuOptValsCustomSize[] = {
+    2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+};
+
+static const char* const menuOptLabelsCustomSize[] = {
+    "2x2",   "3x3",   "4x4",   "5x5",   "6x6",   "7x7",   "8x8",   "9x9",
+    "10x10", "11x11", "12x12", "13x13", "14x14", "15x15", "16x16",
+};
+
+static const int32_t menuOptValsCustomMode[] = {
+    SM_CLASSIC,
+    SM_JIGSAW,
+    SM_X_GRID,
+};
+
+static const char* const menuOptLabelsCustomMode[] = {
+    "Classic",
+    "Jigsaw",
+    "X",
+};
+
+static const int32_t menuOptValsDifficulty[] = {
+    SD_BEGINNER, SD_EASY, SD_MEDIUM, SD_HARD, SD_EXPERT, SD_HARDEST,
+};
+
+static const char* const menuOptLabelsDifficulty[] = {
+    "Beginner", "Easy", "Medium", "Hard", "Expert", "Pain",
+};
+
+static const char settingKeyLastLevel[] = "sdku_lastlevel";
+static const char settingKeyMaxLevel[]  = "sdku_maxlevel";
+static const settingParam_t settingLevelSelectBounds
+    = {.min = 1, .max = (SUDOKU_PUZ_MAX - SUDOKU_PUZ_MIN) + 1, .def = 1, .key = settingKeyLastLevel};
+
+static const char settingKeyProgress[] = "sdku_progress";
+
+// static const char settingKeyCustomSettings[] = "sdku_custom";
+static const settingParam_t settingCustomSizeBounds = {.min = 2, .max = 16, .def = 9, .key = ""};
+
+static const settingParam_t settingCustomModeBounds = {.min = 0, .max = 2, .def = 0, .key = ""};
+static const settingParam_t settingDifficultyBounds = {.min = SD_BEGINNER, .max = SD_HARDEST, .def = 0, .key = ""};
 
 static const sudokuTheme_t lightTheme = {.bgColor        = c333,
                                          .fillColor      = c555,
@@ -324,10 +409,19 @@ static void swadgedokuEnterMode(void)
     loadFont(TINY_NUMBERS_FONT, &sd->noteFont, true);
     loadFont(SONIC_FONT, &sd->uiFont, true);
 
-    sd->menu         = initMenu(swadgedokuModeName, swadgedokuMainMenuCb);
+    if (!readNvs32(settingKeyMaxLevel, &sd->maxLevel))
+    {
+        sd->maxLevel = 1;
+    }
+
+    if (!readNvs32(settingKeyLastLevel, &sd->lastLevel))
+    {
+        sd->lastLevel = sd->maxLevel;
+    }
+
     sd->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
-    addSingleItemToMenu(sd->menu, menuItemPlaySudoku);
+    swadgedokuSetupMenu();
 }
 
 static void swadgedokuExitMode(void)
@@ -393,19 +487,92 @@ static void swadgedokuBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, in
 {
 }
 
+static void swadgedokuSetupMenu(void)
+{
+    bool hasProgress  = false;
+    size_t progLength = 0;
+    if (readNvsBlob(settingKeyProgress, NULL, &progLength))
+    {
+        hasProgress = true;
+    }
+
+    if (sd->menu != NULL)
+    {
+        deinitMenu(sd->menu);
+        sd->menu = NULL;
+    }
+
+    sd->menu = initMenu(swadgedokuModeName, swadgedokuMainMenuCb);
+
+    if (hasProgress)
+    {
+        addSingleItemToMenu(sd->menu, menuItemContinue);
+    }
+    ESP_LOGE("Swadgedoku", "Last level is %d", sd->lastLevel);
+    sd->menu = startSubMenu(sd->menu, menuItemPlaySudoku);
+    addSettingsItemToMenu(sd->menu, menuItemLevelSelect, &settingLevelSelectBounds, sd->lastLevel);
+    sd->menu = endSubMenu(sd->menu);
+
+    addSingleItemToMenu(sd->menu, menuItemPlayJigsaw);
+
+    sd->menu = startSubMenu(sd->menu, menuItemPlayCustom);
+    addSingleItemToMenu(sd->menu, menuItemStartCustom);
+    sd->customModeMenuItem
+        = addSettingsOptionsItemToMenu(sd->menu, menuItemCustomMode, menuOptLabelsCustomMode, menuOptValsCustomMode,
+                                       ARRAY_SIZE(menuOptValsCustomMode), &settingCustomModeBounds, 0);
+    sd->customSizeMenuItem
+        = addSettingsOptionsItemToMenu(sd->menu, menuItemCustomSize, menuOptLabelsCustomSize, menuOptValsCustomSize,
+                                       ARRAY_SIZE(menuOptValsCustomSize), &settingCustomSizeBounds, 9);
+    sd->customDifficultyMenuItem
+        = addSettingsOptionsItemToMenu(sd->menu, menuItemDifficulty, menuOptLabelsDifficulty, menuOptValsDifficulty,
+                                       ARRAY_SIZE(menuOptValsDifficulty), &settingDifficultyBounds, 0);
+
+    sd->menu = endSubMenu(sd->menu);
+
+    sd->menu = startSubMenu(sd->menu, menuItemSettings);
+    sd->menu = endSubMenu(sd->menu);
+}
+
 static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
-        if (menuItemPlaySudoku == label)
+        if (menuItemContinue == label)
         {
-            if (!setupSudokuGame(&sd->game, SM_CLASSIC, 5, 5))
+            size_t progLength = 0;
+            if (readNvsBlob(settingKeyProgress, NULL, &progLength))
+            {
+                uint8_t buffer[progLength];
+                if (readNvsBlob(settingKeyProgress, buffer, &progLength))
+                {
+                    if (loadSudokuData(buffer, progLength, &sd->game))
+                    {
+                        setupSudokuPlayer(&sd->player, &sd->game);
+                        sudokuGetNotes(sd->game.notes, &sd->game, 0);
+                        sd->screen = SWADGEDOKU_GAME;
+                    }
+                    else
+                    {
+                        ESP_LOGE("Swadgedoku", "Can't load saved game: bad data");
+                    }
+                }
+            }
+        }
+        else if (menuItemLevelSelect == label)
+        {
+            /*if (!setupSudokuGame(&sd->game, SM_CLASSIC, 9, 9))
             {
                 ESP_LOGE("Swadgedoku", "Couldn't setup game???");
                 return;
+            }*/
+            cnfsFileIdx_t file = value + SUDOKU_PUZ_000_BSP;
+            if (file > SUDOKU_PUZ_MAX)
+            {
+                ESP_LOGE("Swadgedoku", "Tried to load illegal game file ");
+                return;
             }
             size_t fileLen;
-            const uint8_t* sudokuData = cnfsGetFile(TEST_BSP, &fileLen);
+            const uint8_t* sudokuData = cnfsGetFile(file, &fileLen);
             if (!loadSudokuData(sudokuData, fileLen, &sd->game))
             {
                 ESP_LOGE("Swadgedoku", "Couldn't load game file");
@@ -422,6 +589,100 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             // sd->game.grid[2] = 8;
             // setDigit(&sd->game, 8, 2, 0);
             sd->screen = SWADGEDOKU_GAME;
+        }
+        else if (menuItemStartCustom == label)
+        {
+            if (!setupSudokuGame(&sd->game, sd->customModeMenuItem->currentSetting,
+                                 sd->customSizeMenuItem->currentSetting, sd->customSizeMenuItem->currentSetting))
+            {
+                ESP_LOGE("Swadgedoku", "Couldn't setup custom game???");
+                return;
+            }
+
+            setupSudokuPlayer(&sd->player, &sd->game);
+            sudokuGetNotes(sd->game.notes, &sd->game, 0);
+            sd->screen = SWADGEDOKU_GAME;
+        }
+        else if (menuItemPlayJigsaw == label)
+        {
+            if (!setupSudokuGame(&sd->game, SM_JIGSAW, 9, 9))
+            {
+                return;
+            }
+
+            setupSudokuPlayer(&sd->player, &sd->game);
+            sudokuGetNotes(sd->game.notes, &sd->game, 0);
+            sd->screen = SWADGEDOKU_GAME;
+        }
+    }
+    else
+    {
+        if (menuItemLevelSelect == label)
+        {
+            sd->lastLevel = value;
+        }
+        else if (menuItemCustomSize == label)
+        {
+            // If the selected size is non-square, automatically switch to jigsaw mode
+            bool forceJigsaw = false;
+            switch (value)
+            {
+                case 1:
+                case 4:
+                case 9:
+                case 16:
+                    break;
+
+                default:
+                    forceJigsaw = true;
+                    break;
+            }
+            if (forceJigsaw && sd->customModeMenuItem->currentOpt != SM_JIGSAW)
+            {
+                sd->prevMode                           = sd->customModeMenuItem->currentOpt;
+                sd->customModeMenuItem->currentOpt     = SM_JIGSAW;
+                sd->customModeMenuItem->currentSetting = SM_JIGSAW;
+                sd->jigsawForced                       = true;
+            }
+            else if (!forceJigsaw && sd->customModeMenuItem->currentOpt == SM_JIGSAW && sd->jigsawForced)
+            {
+                // And when they switch away from a jigsaw-only size, return to the previous mode
+                sd->customModeMenuItem->currentSetting = sd->prevMode;
+                sd->customModeMenuItem->currentOpt     = sd->prevMode;
+                sd->jigsawForced                       = false;
+            }
+        }
+        else if (menuItemCustomMode == label)
+        {
+            // If the selected mode is changed to classic, switch away from incompatible non-square sizes
+
+            bool forceSquare = false;
+            switch (sd->customSizeMenuItem->currentSetting)
+            {
+                case 1:
+                case 4:
+                case 9:
+                case 16:
+                    break;
+
+                default:
+                    forceSquare = true;
+                    break;
+            }
+            if (forceSquare && value == SM_CLASSIC)
+            {
+                sd->prevSize                           = sd->customSizeMenuItem->currentSetting;
+                sd->customSizeMenuItem->currentSetting = 9;
+                sd->customSizeMenuItem->currentOpt     = 7;
+                sd->squareForced                       = true;
+            }
+            else if (!forceSquare && value != SM_CLASSIC && sd->squareForced)
+            {
+                // And when they switch away from the incompatible size, restore the previous selection
+                sd->customSizeMenuItem->currentSetting = sd->prevSize;
+                sd->customSizeMenuItem->currentOpt     = sd->prevSize - 2;
+                sd->squareForced                       = false;
+            }
         }
     }
 }
@@ -1041,7 +1302,7 @@ bool initSudokuGame(sudokuGrid_t* game, int size, int base, sudokuMode_t mode)
 {
     if (size < base)
     {
-        ESP_LOGE("Swadgedoku", "%1$dx%1$d Grid not large enough for base %2$d", size, base);
+        ESP_LOGE("Swadgedoku", "%dx%d Grid not large enough for base %d", size, size, base);
         return false;
     }
 
@@ -1185,10 +1446,11 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
     switch (mode)
     {
         case SM_CLASSIC:
+        case SM_JIGSAW:
         {
             if (size < base)
             {
-                ESP_LOGE("Swadgedoku", "%1$dx%1$d Grid not large enough for base %2$d", size, base);
+                ESP_LOGE("Swadgedoku", "%dx%d Grid not large enough for base %d", size, size, base);
                 return false;
             }
 
@@ -1241,16 +1503,25 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
             // It's much easier if it is...
 
             int baseRoot = 0;
-            /*switch (base)
+            switch (base)
             {
-                case 1: baseRoot = 1; break;
-                case 4: baseRoot = 2; break;
-                case 9: baseRoot = 3; break;
-                case 16: baseRoot = 4; break;
-                default: break;
-            }*/
+                case 1:
+                    baseRoot = 1;
+                    break;
+                case 4:
+                    baseRoot = 2;
+                    break;
+                case 9:
+                    baseRoot = 3;
+                    break;
+                case 16:
+                    baseRoot = 4;
+                    break;
+                default:
+                    break;
+            }
 
-            if (baseRoot != 0)
+            if (mode != SM_JIGSAW && baseRoot != 0)
             {
                 // Setup square boxes!
                 for (int box = 0; box < base; box++)
@@ -1517,15 +1788,15 @@ void setupSudokuPlayer(sudokuPlayer_t* player, const sudokuGrid_t* game)
     player->cursorShape        = calloc(1, sizeof(sudokuOverlayShape_t));
     player->cursorShape->tag   = ST_CURSOR;
     player->cursorShape->color = c505;
-    // player->cursorShape->type = OVERLAY_RECT;
-    player->cursorShape->type          = OVERLAY_CIRCLE;
+    /*player->cursorShape->type          = OVERLAY_CIRCLE;
     player->cursorShape->circle.pos.x  = player->curX;
     player->cursorShape->circle.pos.y  = player->curY;
-    player->cursorShape->circle.radius = 1;
-    // player->cursorShape->rectangle.pos.x = player->curX;
-    // player->cursorShape->rectangle.pos.y = player->curY;
-    // player->cursorShape->rectangle.width = 1;
-    // player->cursorShape->rectangle.height = 1;
+    player->cursorShape->circle.radius = 1;*/
+    player->cursorShape->type             = OVERLAY_RECT;
+    player->cursorShape->rectangle.pos.x  = player->curX;
+    player->cursorShape->rectangle.pos.y  = player->curY;
+    player->cursorShape->rectangle.width  = 1;
+    player->cursorShape->rectangle.height = 1;
     push(&player->overlay.shapes, player->cursorShape);
 }
 
@@ -2139,8 +2410,12 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
             switch (shape->type)
             {
                 case OVERLAY_RECT:
-                    drawRect(gridX + maxSquareSize * shape->rectangle.pos.x,
-                             gridY + maxSquareSize * shape->rectangle.pos.y,
+                    drawRect(
+                        gridX + maxSquareSize * shape->rectangle.pos.x, gridY + maxSquareSize * shape->rectangle.pos.y,
+                        gridX + maxSquareSize * (shape->rectangle.pos.x + shape->rectangle.width) + 1,
+                        gridY + maxSquareSize * (shape->rectangle.pos.y + shape->rectangle.height) + 1, shape->color);
+                    drawRect(gridX + maxSquareSize * shape->rectangle.pos.x + 1,
+                             gridY + maxSquareSize * shape->rectangle.pos.y + 1,
                              gridX + maxSquareSize * (shape->rectangle.pos.x + shape->rectangle.width),
                              gridY + maxSquareSize * (shape->rectangle.pos.y + shape->rectangle.height), shape->color);
                     break;
@@ -2189,6 +2464,16 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
     }
 }
 
+int swadgedokuRand(int* seed)
+{
+    // Adapted from https://stackoverflow.com/a/1280765
+    int val = *seed;
+    val *= 0x343fd;
+    val += 0x269EC3;
+    *seed = val;
+    return (val >> 0x10) & 0x7FFF;
+}
+
 bool setDigit(sudokuGrid_t* game, uint8_t number, uint8_t x, uint8_t y)
 {
     bool ok = true;
@@ -2208,4 +2493,12 @@ bool setDigit(sudokuGrid_t* game, uint8_t number, uint8_t x, uint8_t y)
         }
     }
     return ok;
+}
+
+void clearOverlayOpts(sudokuOverlay_t* overlay, const sudokuGrid_t* game, sudokuOverlayOpt_t optMask)
+{
+    for (int n = 0; n < game->size * game->size; n++)
+    {
+        overlay->gridOpts[n] &= ~optMask;
+    }
 }

@@ -401,9 +401,9 @@ void removeSettingsItemFromMenu(menu_t* menu, const char* label)
  * @param currentValue The current value of the setting. Must be one of the values
  *                     in \c optionValues.
  */
-void addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const char* const* optionLabels,
-                                  const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
-                                  int32_t currentValue)
+menuItem_t* addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const char* const* optionLabels,
+                                         const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
+                                         int32_t currentValue)
 {
     menuItem_t* newItem     = heap_caps_calloc(1, sizeof(menuItem_t), MALLOC_CAP_SPIRAM);
     newItem->label          = settingLabel;
@@ -438,6 +438,8 @@ void addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const 
     {
         menu->currentItem = menu->items->first;
     }
+
+    return newItem;
 }
 
 /**
