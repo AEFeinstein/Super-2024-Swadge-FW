@@ -23,5 +23,6 @@ bool process_bin(processorInput_t* data)
 {
     // this one's _REAL_ simple now
     data->out.data = data->in.data;
+    data->out.length = data->in.length;
     return true;
 }
