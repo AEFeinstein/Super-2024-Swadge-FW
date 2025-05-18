@@ -33,6 +33,7 @@ typedef struct
     uint8_t randCode;
     int arrayIdx;
     char nameBuffer[USERNAME_MAX_LEN];
+    bool user;
 } nameData_t;
 
 //==============================================================================
@@ -58,7 +59,7 @@ void generateMACUsername(nameData_t* nd);
  * @param nd Data struct the name is saved to
  * @param user If this is a username or not
  */
-void generateRandUsername(nameData_t* nd, bool user);
+void generateRandUsername(nameData_t* nd);
 
 /**
  * @brief Sets the username from a predefined nd
@@ -66,7 +67,7 @@ void generateRandUsername(nameData_t* nd, bool user);
  * @param nd nd containing the data
  * @param user if this is a user or not
  */
-void setUsernameFromND(nameData_t* nd, bool user);
+void setUsernameFromND(nameData_t* nd);
 
 /**
  * @brief Set the Username From indexs. Useful for loading data from swadgepass
@@ -78,7 +79,7 @@ void setUsernameFromND(nameData_t* nd, bool user);
  * @param randomCode numbers at the end of the swadge
  * @param user If this is the user of the swadge. Locks the random code to THIS swadge's MAC
  */
-void setUsernameFromIdxs(nameData_t* nd, int idx1, int idx2, int idx3, int randomCode, bool user);
+void setUsernameFromIdxs(nameData_t* nd, int idx1, int idx2, int idx3, int randomCode);
 
 /**
  * @brief Handles the input of the username.
@@ -89,7 +90,7 @@ void setUsernameFromIdxs(nameData_t* nd, int idx1, int idx2, int idx3, int rando
  * @return true If the user presses A to finalize the name
  * @return false If the user is still selecting a name
  */
-bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user);
+bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd);
 
 /**
  * @brief Draws the picker input
@@ -97,4 +98,4 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user);
  * @param nd The data
  * @param user If it's a user (greys out number)
  */
-void drawUsernamePicker(nameData_t* nd, bool user);
+void drawUsernamePicker(nameData_t* nd);

@@ -11,7 +11,6 @@ static void ntTestWPrint(void);
 typedef struct
 {
     nameData_t nd;
-    bool user;
 } ntData_t;
 
 swadgeMode_t nameTestMode = {
@@ -30,11 +29,11 @@ static ntData_t* nt;
 
 static void ntEnterMode(void)
 {
-    nt = heap_caps_calloc(sizeof(ntData_t), 1, MALLOC_CAP_8BIT);
-    nt->user = false;
+    nt          = heap_caps_calloc(sizeof(ntData_t), 1, MALLOC_CAP_8BIT);
+    nt->nd.user = false;
 
     // Run all things for testing purposes
-    ntTestWPrint();
+    // ntTestWPrint();
 }
 
 static void ntExitMode(void)
@@ -45,40 +44,53 @@ static void ntExitMode(void)
 static void ntMainLoop(int64_t elapsedUs)
 {
     buttonEvt_t evt;
+    bool finished = false;
     while (checkButtonQueueWrapper(&evt))
     {
         if (evt.down && evt.button & PB_B)
         {
-            nt->user = !nt->user;
+            nt->nd.user = !nt->nd.user;
         }
-        handleUsernamePickerInput(&evt, &nt->nd, nt->user);
+        finished = handleUsernamePickerInput(&evt, &nt->nd);
+    }
+
+    if (finished)
+    {
+        // do more code
     }
 
     // Draw nt->string
-    drawUsernamePicker(&nt->nd, nt->user);
+    drawUsernamePicker(&nt->nd);
 }
 
 static void ntTestWPrint()
 {
+    nt->nd.user = true;
     generateMACUsername(&nt->nd);
     ESP_LOGI("NAME", "MAC-Based: %s", nt->nd.nameBuffer);
+
     // FIXME: 20 is hardcoded half of lists, all three lists are 40
     for (int idx = 0; idx < 20; idx++)
     {
-        setUsernameFromIdxs(&nt->nd, idx, idx, idx, idx, true);
+        setUsernameFromIdxs(&nt->nd, idx, idx, idx, idx);
         ESP_LOGI("NAME", "User: %s", nt->nd.nameBuffer);
     }
+
     // FIXME: 40 is len of lists, all three lists are equal. Will break if changed
+    nt->nd.user = false;
     for (int idx = 0; idx < 40; idx++)
     {
-        setUsernameFromIdxs(&nt->nd, idx, idx, idx, idx, false);
+        setUsernameFromIdxs(&nt->nd, idx, idx, idx, idx);
         ESP_LOGI("NAME", "Sona: %s", nt->nd.nameBuffer);
     }
-    generateRandUsername(&nt->nd, false);
+
+    generateRandUsername(&nt->nd);
     ESP_LOGI("NAME", "Rand1: %s", nt->nd.nameBuffer);
-    generateRandUsername(&nt->nd, true);
+    nt->nd.user = true;
+    generateRandUsername(&nt->nd);
     ESP_LOGI("NAME", "Rand2: %s", nt->nd.nameBuffer);
 
     // Set the longest name for testing
-    setUsernameFromIdxs(&nt->nd, 26, 13, 24, 255, false);
+    nt->nd.user = false;
+    setUsernameFromIdxs(&nt->nd, 26, 13, 24, 255);
 }

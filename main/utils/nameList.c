@@ -37,6 +37,11 @@
 #define NOUN_X      191
 #define WORD_OFFSET 20
 
+// Color
+// All colors go down index every 43.
+// For instance, c454 - 43 = c343
+#define COLOR_OFFSET 43
+
 //==============================================================================
 // Consts
 //==============================================================================
@@ -87,6 +92,8 @@ static uint8_t _mutateIdx(uint8_t arrSize, uint8_t idx, uint8_t seed);
 
 static void _drawWordCenteredOnX(int x, int y, const char* str, paletteColor_t col);
 
+static void _drawFadingWords(nameData_t* nd);
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -119,9 +126,9 @@ void generateMACUsername(nameData_t* nd)
              adjList2[nd->idxs[ADJ2]], nounList[nd->idxs[NOUN]], nd->randCode);
 }
 
-void generateRandUsername(nameData_t* nd, bool user)
+void generateRandUsername(nameData_t* nd)
 {
-    if (user)
+    if (nd->user)
     {
         nd->idxs[ADJ1] = _mutateIdx(listLen[ADJ1], esp_random(), mutatorSeeds[ADJ1]);
         nd->idxs[ADJ2] = _mutateIdx(listLen[ADJ2], esp_random(), mutatorSeeds[ADJ2]);
@@ -139,9 +146,9 @@ void generateRandUsername(nameData_t* nd, bool user)
              adjList2[nd->idxs[ADJ2]], nounList[nd->idxs[NOUN]], nd->randCode);
 }
 
-void setUsernameFromND(nameData_t* nd, bool user)
+void setUsernameFromND(nameData_t* nd)
 {
-    if (user)
+    if (nd->user)
     {
         nd->idxs[ADJ1] = _mutateIdx(listLen[ADJ1], nd->idxs[ADJ1], mutatorSeeds[ADJ1]);
         nd->idxs[ADJ2] = _mutateIdx(listLen[ADJ2], nd->idxs[ADJ2], mutatorSeeds[ADJ2]);
@@ -156,17 +163,17 @@ void setUsernameFromND(nameData_t* nd, bool user)
     snprintf(nd->nameBuffer, USERNAME_MAX_LEN - 1, "%s-%s-%s-%" PRId16, buff1, buff2, buff3, nd->randCode);
 }
 
-void setUsernameFromIdxs(nameData_t* nd, int idx1, int idx2, int idx3, int randomCode, bool user)
+void setUsernameFromIdxs(nameData_t* nd, int idx1, int idx2, int idx3, int randomCode)
 {
     // setUsernameFromND() will convert these if user == true
     nd->idxs[ADJ1] = idx1;
     nd->idxs[ADJ2] = idx2;
     nd->idxs[NOUN] = idx3;
     nd->randCode   = randomCode;
-    setUsernameFromND(nd, user);
+    setUsernameFromND(nd);
 }
 
-bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user)
+bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd)
 {
     if (evt->down)
     {
@@ -175,7 +182,7 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user)
             nd->arrayIdx--;
             if (nd->arrayIdx < ADJ1)
             {
-                if (user) // Can't change last number
+                if (nd->user) // Can't change last number
                 {
                     nd->arrayIdx = NOUN;
                 }
@@ -188,7 +195,7 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user)
         else if (evt->button & PB_RIGHT)
         {
             nd->arrayIdx++;
-            if (user)
+            if (nd->user)
             {
                 if (nd->arrayIdx >= RAND_NUM) // Can't change last number
                 {
@@ -212,7 +219,7 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user)
             else
             {
                 nd->idxs[nd->arrayIdx]--;
-                if (user)
+                if (nd->user)
                 {
                     if (nd->idxs[nd->arrayIdx] < _mutateIdx(listLen[nd->arrayIdx], 0, mutatorSeeds[nd->arrayIdx]))
                     {
@@ -238,7 +245,7 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user)
             else
             {
                 nd->idxs[nd->arrayIdx]++;
-                if (user)
+                if (nd->user)
                 {
                     if (nd->idxs[nd->arrayIdx]
                         > _mutateIdx(listLen[nd->arrayIdx], listLen[nd->arrayIdx] - 1, mutatorSeeds[nd->arrayIdx]))
@@ -257,14 +264,14 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user)
         }
         else if (evt->button & PB_A)
         {
-            setUsernameFromND(nd, user);
+            setUsernameFromND(nd);
             return true;
         }
     }
     return false;
 }
 
-void drawUsernamePicker(nameData_t* nd, bool user)
+void drawUsernamePicker(nameData_t* nd)
 {
     // Clear display
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
@@ -275,7 +282,7 @@ void drawUsernamePicker(nameData_t* nd, bool user)
     _drawWordCenteredOnX(NOUN_X, 0, nounList[nd->idxs[NOUN]], c445);
     char buffer[32];
     snprintf(buffer, sizeof(buffer) - 1, "%" PRIu8, nd->randCode);
-    _drawWordCenteredOnX(245, 0, buffer, user ? c444 : c555);
+    _drawWordCenteredOnX(245, 0, buffer, nd->user ? c444 : c555);
 
     // draw tack marks
     _drawWordCenteredOnX(83, 0, "-", c555);
@@ -283,25 +290,7 @@ void drawUsernamePicker(nameData_t* nd, bool user)
     _drawWordCenteredOnX(227, 0, "-", c555);
 
     // Draw other options above and below
-    // If I could programmatically change the colors from 433 -> 322, this could be a for loop
-    _drawWordCenteredOnX(ADJ1_X, -WORD_OFFSET, adjList1[(nd->idxs[ADJ1] - 1) % ARRAY_SIZE(adjList1)], c433);
-    _drawWordCenteredOnX(ADJ2_X, -WORD_OFFSET, adjList2[(nd->idxs[ADJ2] - 1) % ARRAY_SIZE(adjList2)], c343);
-    _drawWordCenteredOnX(NOUN_X, -WORD_OFFSET, nounList[(nd->idxs[NOUN] - 1) % ARRAY_SIZE(nounList)], c334);
-    _drawWordCenteredOnX(ADJ1_X, -WORD_OFFSET * 2, adjList1[(nd->idxs[ADJ1] - 2) % ARRAY_SIZE(adjList1)], c322);
-    _drawWordCenteredOnX(ADJ2_X, -WORD_OFFSET * 2, adjList2[(nd->idxs[ADJ2] - 2) % ARRAY_SIZE(adjList2)], c232);
-    _drawWordCenteredOnX(NOUN_X, -WORD_OFFSET * 2, nounList[(nd->idxs[NOUN] - 2) % ARRAY_SIZE(nounList)], c223);
-    _drawWordCenteredOnX(ADJ1_X, -WORD_OFFSET * 3, adjList1[(nd->idxs[ADJ1] - 3) % ARRAY_SIZE(adjList1)], c211);
-    _drawWordCenteredOnX(ADJ2_X, -WORD_OFFSET * 3, adjList2[(nd->idxs[ADJ2] - 3) % ARRAY_SIZE(adjList2)], c121);
-    _drawWordCenteredOnX(NOUN_X, -WORD_OFFSET * 3, nounList[(nd->idxs[NOUN] - 3) % ARRAY_SIZE(nounList)], c112);
-    _drawWordCenteredOnX(ADJ1_X, WORD_OFFSET, adjList1[(nd->idxs[ADJ1] + 1) % ARRAY_SIZE(adjList1)], c433);
-    _drawWordCenteredOnX(ADJ2_X, WORD_OFFSET, adjList2[(nd->idxs[ADJ2] + 1) % ARRAY_SIZE(adjList2)], c343);
-    _drawWordCenteredOnX(NOUN_X, WORD_OFFSET, nounList[(nd->idxs[NOUN] + 1) % ARRAY_SIZE(nounList)], c334);
-    _drawWordCenteredOnX(ADJ1_X, WORD_OFFSET * 2, adjList1[(nd->idxs[ADJ1] + 2) % ARRAY_SIZE(adjList1)], c322);
-    _drawWordCenteredOnX(ADJ2_X, WORD_OFFSET * 2, adjList2[(nd->idxs[ADJ2] + 2) % ARRAY_SIZE(adjList2)], c232);
-    _drawWordCenteredOnX(NOUN_X, WORD_OFFSET * 2, nounList[(nd->idxs[NOUN] + 2) % ARRAY_SIZE(nounList)], c223);
-    _drawWordCenteredOnX(ADJ1_X, WORD_OFFSET * 3, adjList1[(nd->idxs[ADJ1] + 3) % ARRAY_SIZE(adjList1)], c211);
-    _drawWordCenteredOnX(ADJ2_X, WORD_OFFSET * 3, adjList2[(nd->idxs[ADJ2] + 3) % ARRAY_SIZE(adjList2)], c121);
-    _drawWordCenteredOnX(NOUN_X, WORD_OFFSET * 3, nounList[(nd->idxs[NOUN] + 3) % ARRAY_SIZE(nounList)], c112);
+    _drawFadingWords(nd);
 
     // draw selection line
     switch (nd->arrayIdx)
@@ -336,8 +325,8 @@ void drawUsernamePicker(nameData_t* nd, bool user)
     }
 
     // Draw currently set name
-    drawText(&fnt, c444, "Current:", 16, TFT_HEIGHT - 48);
-    drawText(&fnt, c555, nd->nameBuffer, 16, TFT_HEIGHT - 32);
+    drawText(&fnt, c444, "Current:", 32, TFT_HEIGHT - 32);
+    drawText(&fnt, c555, nd->nameBuffer, 32, TFT_HEIGHT - 16);
 }
 
 //==============================================================================
@@ -402,4 +391,59 @@ static void _drawWordCenteredOnX(int xCenter, int yOffset, const char* str, pale
     int xCoord = xCenter - (textWidth(&fnt, str) >> 1);
     int yCoord = ((TFT_HEIGHT - fnt.height) >> 1) + yOffset;
     drawText(&fnt, col, str, xCoord, yCoord);
+}
+
+static void _drawFadingWords(nameData_t* nd)
+{
+    for (int offset = 1; offset < 4; offset++)
+    {
+        if (nd->user)
+        {
+            // TODO: Figure out if I can merge word lists to cut this in three
+            // FIXME: Very odd behavior
+            // Adj1
+            _drawWordCenteredOnX(
+                ADJ1_X, -WORD_OFFSET * offset,
+                adjList1[_mutateIdx(listLen[ADJ1], nd->idxs[ADJ1] - offset + listLen[ADJ1], mutatorSeeds[ADJ1])],
+                c544 - offset * COLOR_OFFSET);
+            _drawWordCenteredOnX(ADJ1_X, WORD_OFFSET * offset,
+                                 adjList1[_mutateIdx(listLen[ADJ1], nd->idxs[ADJ1] + offset, mutatorSeeds[ADJ1])],
+                                 c544 - offset * COLOR_OFFSET);
+            // Adj2
+            _drawWordCenteredOnX(
+                ADJ2_X, -WORD_OFFSET * offset,
+                adjList2[_mutateIdx(listLen[ADJ2], nd->idxs[ADJ2] - offset + listLen[ADJ2], mutatorSeeds[ADJ2])],
+                c454 - offset * COLOR_OFFSET);
+            _drawWordCenteredOnX(ADJ2_X, WORD_OFFSET * offset,
+                                 adjList2[_mutateIdx(listLen[ADJ2], nd->idxs[ADJ2] + offset, mutatorSeeds[ADJ2])],
+                                 c454 - offset * COLOR_OFFSET);
+            // Noun
+            _drawWordCenteredOnX(
+                NOUN_X, -WORD_OFFSET * offset,
+                nounList[_mutateIdx(listLen[NOUN], nd->idxs[NOUN] - offset + listLen[NOUN], mutatorSeeds[NOUN])],
+                c445 - offset * COLOR_OFFSET);
+            _drawWordCenteredOnX(NOUN_X, WORD_OFFSET * offset,
+                                 nounList[_mutateIdx(listLen[NOUN], nd->idxs[NOUN] + offset, mutatorSeeds[NOUN])],
+                                 c445 - offset * COLOR_OFFSET);
+        }
+        else
+        {
+            // TODO: Figure out if I can merge word lists to cut this in three
+            _drawWordCenteredOnX(ADJ1_X, -WORD_OFFSET * offset,
+                                 adjList1[(nd->idxs[ADJ1] - offset + listLen[ADJ1]) % listLen[ADJ1]],
+                                 c544 - offset * COLOR_OFFSET);
+            _drawWordCenteredOnX(ADJ1_X, WORD_OFFSET * offset, adjList1[(nd->idxs[ADJ1] + offset) % listLen[ADJ1]],
+                                 c544 - offset * COLOR_OFFSET);
+            _drawWordCenteredOnX(ADJ2_X, -WORD_OFFSET * offset,
+                                 adjList2[(nd->idxs[ADJ2] - offset + listLen[ADJ2]) % listLen[ADJ2]],
+                                 c454 - offset * COLOR_OFFSET);
+            _drawWordCenteredOnX(ADJ2_X, WORD_OFFSET * offset, adjList2[(nd->idxs[ADJ2] + offset) % listLen[ADJ2]],
+                                 c454 - offset * COLOR_OFFSET);
+            _drawWordCenteredOnX(NOUN_X, -WORD_OFFSET * offset,
+                                 nounList[(nd->idxs[NOUN] - offset + listLen[NOUN]) % listLen[NOUN]],
+                                 c445 - offset * COLOR_OFFSET);
+            _drawWordCenteredOnX(NOUN_X, WORD_OFFSET * offset, nounList[(nd->idxs[NOUN] + offset) % listLen[NOUN]],
+                                 c445 - offset * COLOR_OFFSET);
+        }
+    }
 }
