@@ -29,7 +29,7 @@
 // Defines
 //==============================================================================
 
-#define USER_LIST_SHIFT 1
+#define USER_LIST_SHIFT 2
 
 // Screen arrangement
 #define ADJ1_X      47
@@ -73,15 +73,6 @@ typedef enum
     RAND_NUM,
 } listArrayIdx_t;
 
-typedef struct __attribute__((packed))
-{
-    uint8_t baseMac[6];
-    uint8_t adj1 : 6; // MAC bits 18-23
-    uint8_t adj2 : 6; // MAC bits 12-17
-    uint8_t noun : 6; // MAC bits 6-11
-    uint8_t code : 6; // MAC bits 0-5
-} macBits_t;
-
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -90,7 +81,7 @@ static void _getMacAddress(void);
 
 static void _getWordFromList(int listIdx, int idx, char* buffer, int buffLen);
 
-static uint8_t _mutateIdx(uint8_t arrSize, uint8_t idx, uint8_t mac);
+static uint8_t _mutateIdx(uint8_t arrSize, uint8_t idx, uint8_t seed);
 
 // Drawing functions
 
@@ -100,7 +91,9 @@ static void _drawWordCenteredOnX(int x, int y, const char* str, paletteColor_t c
 // Variables
 //==============================================================================
 
-static macBits_t macBits;
+static uint8_t baseMac[6];
+static int listLen[3];
+static uint8_t mutatorSeeds[3];
 static font_t fnt;
 
 //==============================================================================
@@ -110,15 +103,18 @@ static font_t fnt;
 void initUsernameSystem()
 {
     _getMacAddress();
+    listLen[0] = ARRAY_SIZE(adjList1);
+    listLen[1] = ARRAY_SIZE(adjList2);
+    listLen[2] = ARRAY_SIZE(nounList);
     loadFont(IBM_VGA_8_FONT, &fnt, true);
 }
 
 void generateMACUsername(nameData_t* nd)
 {
-    nd->idxs[ADJ1] = macBits.adj1 % ARRAY_SIZE(adjList1); // Functionally equivalent to _mutateIdx() w/ idx = 0
-    nd->idxs[ADJ2] = macBits.adj2 % ARRAY_SIZE(adjList2);
-    nd->idxs[NOUN] = macBits.noun % ARRAY_SIZE(nounList);
-    nd->randCode   = macBits.baseMac[5];
+    nd->idxs[ADJ1] = mutatorSeeds[0] % listLen[ADJ1]; // Functionally equivalent to _mutateIdx() w/ idx = 0
+    nd->idxs[ADJ2] = mutatorSeeds[1] % listLen[ADJ2];
+    nd->idxs[NOUN] = mutatorSeeds[2] % listLen[NOUN];
+    nd->randCode   = baseMac[5];
     snprintf(nd->nameBuffer, USERNAME_MAX_LEN - 1, "%s-%s-%s-%" PRId16, adjList1[nd->idxs[ADJ1]],
              adjList2[nd->idxs[ADJ2]], nounList[nd->idxs[NOUN]], nd->randCode);
 }
@@ -127,16 +123,16 @@ void generateRandUsername(nameData_t* nd, bool user)
 {
     if (user)
     {
-        nd->idxs[ADJ1] = _mutateIdx(ARRAY_SIZE(adjList1), esp_random(), macBits.adj1);
-        nd->idxs[ADJ2] = _mutateIdx(ARRAY_SIZE(adjList2), esp_random(), macBits.adj2);
-        nd->idxs[NOUN] = _mutateIdx(ARRAY_SIZE(nounList), esp_random(), macBits.noun);
-        nd->randCode   = macBits.baseMac[5];
+        nd->idxs[ADJ1] = _mutateIdx(listLen[ADJ1], esp_random(), mutatorSeeds[ADJ1]);
+        nd->idxs[ADJ2] = _mutateIdx(listLen[ADJ2], esp_random(), mutatorSeeds[ADJ2]);
+        nd->idxs[NOUN] = _mutateIdx(listLen[NOUN], esp_random(), mutatorSeeds[NOUN]);
+        nd->randCode   = baseMac[5];
     }
     else
     {
-        nd->idxs[ADJ1] = esp_random() % ARRAY_SIZE(adjList1);
-        nd->idxs[ADJ2] = esp_random() % ARRAY_SIZE(adjList2);
-        nd->idxs[NOUN] = esp_random() % ARRAY_SIZE(nounList);
+        nd->idxs[ADJ1] = esp_random() % listLen[ADJ1];
+        nd->idxs[ADJ2] = esp_random() % listLen[ADJ2];
+        nd->idxs[NOUN] = esp_random() % listLen[NOUN];
         nd->randCode   = esp_random() % 256;
     }
     snprintf(nd->nameBuffer, USERNAME_MAX_LEN - 1, "%s-%s-%s-%" PRId16, adjList1[nd->idxs[ADJ1]],
@@ -147,10 +143,10 @@ void setUsernameFromND(nameData_t* nd, bool user)
 {
     if (user)
     {
-        nd->idxs[ADJ1] = _mutateIdx(ARRAY_SIZE(adjList1), nd->idxs[ADJ1], macBits.adj1);
-        nd->idxs[ADJ2] = _mutateIdx(ARRAY_SIZE(adjList2), nd->idxs[ADJ2], macBits.adj2);
-        nd->idxs[NOUN] = _mutateIdx(ARRAY_SIZE(nounList), nd->idxs[NOUN], macBits.noun);
-        nd->randCode   = macBits.baseMac[5];
+        nd->idxs[ADJ1] = _mutateIdx(listLen[ADJ1], nd->idxs[ADJ1], mutatorSeeds[ADJ1]);
+        nd->idxs[ADJ2] = _mutateIdx(listLen[ADJ2], nd->idxs[ADJ2], mutatorSeeds[ADJ2]);
+        nd->idxs[NOUN] = _mutateIdx(listLen[NOUN], nd->idxs[NOUN], mutatorSeeds[NOUN]);
+        nd->randCode   = baseMac[5];
     }
 
     char buff1[MAX_ADJ1_LEN], buff2[MAX_ADJ2_LEN], buff3[MAX_NOUN_LEN];
@@ -211,22 +207,24 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user)
         {
             if (nd->arrayIdx == RAND_NUM)
             {
-                // Not set by user, overflow takes care of value
                 nd->randCode--;
             }
             else
             {
+                nd->idxs[nd->arrayIdx]--;
                 if (user)
                 {
-                    /* nd->idxs[nd->arrayIdx] = _mutateIdx(arrayLens[nd->arrayIdx], nd->idxs[nd->arrayIdx],
-                                                        macBits.baseMac[ndww->arrayIdx + 2]); */
+                    if (nd->idxs[nd->arrayIdx] < _mutateIdx(listLen[nd->arrayIdx], 0, mutatorSeeds[nd->arrayIdx]))
+                    {
+                        nd->idxs[nd->arrayIdx]
+                            = _mutateIdx(listLen[nd->arrayIdx], listLen[nd->arrayIdx] - 1, mutatorSeeds[nd->arrayIdx]);
+                    }
                 }
                 else
                 {
-                    nd->idxs[nd->arrayIdx]--;
                     if (nd->idxs[nd->arrayIdx] < 0)
                     {
-                        nd->idxs[nd->arrayIdx] = ARRAY_SIZE(adjList1) - 1; // Assumes all arrays are the same length
+                        nd->idxs[nd->arrayIdx] = listLen[nd->arrayIdx] - 1;
                     }
                 }
             }
@@ -235,19 +233,22 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd, bool user)
         {
             if (nd->arrayIdx == RAND_NUM)
             {
-                // Not set by user, overflow takes care of value
                 nd->randCode++;
             }
             else
             {
+                nd->idxs[nd->arrayIdx]++;
                 if (user)
                 {
-                    nd->idxs[nd->arrayIdx] = _mutateIdx(ARRAY_SIZE(adjList1), nd->idxs[nd->arrayIdx] + 1, macBits.adj1);
+                    if (nd->idxs[nd->arrayIdx]
+                        > _mutateIdx(listLen[nd->arrayIdx], listLen[nd->arrayIdx] - 1, mutatorSeeds[nd->arrayIdx]))
+                    {
+                        nd->idxs[nd->arrayIdx] = _mutateIdx(listLen[nd->arrayIdx], 0, mutatorSeeds[nd->arrayIdx]);
+                    }
                 }
                 else
                 {
-                    nd->idxs[nd->arrayIdx]++;
-                    if (nd->idxs[nd->arrayIdx] >= ARRAY_SIZE(adjList1))
+                    if (nd->idxs[nd->arrayIdx] >= listLen[nd->arrayIdx])
                     {
                         nd->idxs[nd->arrayIdx] = 0;
                     }
@@ -303,21 +304,24 @@ void drawUsernamePicker(nameData_t* nd, bool user)
     _drawWordCenteredOnX(NOUN_X, WORD_OFFSET * 3, nounList[(nd->idxs[NOUN] + 3) % ARRAY_SIZE(nounList)], c112);
 
     // draw selection line
-    switch(nd->arrayIdx)
+    switch (nd->arrayIdx)
     {
         case ADJ1:
         {
-            drawLine(ADJ1_X - 35, (TFT_HEIGHT + fnt.height + 4) >> 1, ADJ1_X + 35, (TFT_HEIGHT + fnt.height + 4) >> 1, c550, 0);
+            drawLine(ADJ1_X - 35, (TFT_HEIGHT + fnt.height + 4) >> 1, ADJ1_X + 35, (TFT_HEIGHT + fnt.height + 4) >> 1,
+                     c550, 0);
             break;
         }
         case ADJ2:
         {
-            drawLine(ADJ2_X - 35, (TFT_HEIGHT + fnt.height + 4) >> 1, ADJ2_X + 35, (TFT_HEIGHT + fnt.height + 4) >> 1, c550, 0);
+            drawLine(ADJ2_X - 35, (TFT_HEIGHT + fnt.height + 4) >> 1, ADJ2_X + 35, (TFT_HEIGHT + fnt.height + 4) >> 1,
+                     c550, 0);
             break;
         }
         case NOUN:
         {
-            drawLine(NOUN_X - 35, (TFT_HEIGHT + fnt.height + 4) >> 1, NOUN_X + 35, (TFT_HEIGHT + fnt.height + 4) >> 1, c550, 0);
+            drawLine(NOUN_X - 35, (TFT_HEIGHT + fnt.height + 4) >> 1, NOUN_X + 35, (TFT_HEIGHT + fnt.height + 4) >> 1,
+                     c550, 0);
             break;
         }
         case RAND_NUM:
@@ -342,24 +346,22 @@ void drawUsernamePicker(nameData_t* nd, bool user)
 
 static void _getMacAddress()
 {
-    esp_err_t ret = esp_wifi_get_mac(WIFI_IF_STA, macBits.baseMac);
+    esp_err_t ret = esp_wifi_get_mac(WIFI_IF_STA, baseMac);
     if (ret != ESP_OK)
     {
         ESP_LOGE("USRN", "Failed to read MAC address");
         for (int idx = 0; idx < 6; idx++)
         {
             // Produces an obvious, statistically unlikely result
-            macBits.baseMac[idx] = 0;
+            baseMac[idx] = 0;
         }
     }
-    ESP_LOGI("USRN", "MAC:%d:%d:%d:%d:%d:%d", macBits.baseMac[0], macBits.baseMac[1], macBits.baseMac[2],
-             macBits.baseMac[3], macBits.baseMac[4], macBits.baseMac[5]);
+    ESP_LOGI("USRN", "MAC:%d:%d:%d:%d:%d:%d", baseMac[0], baseMac[1], baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
 
-    // load bits into packed data
-    // TODO: Add bit shuffling to increase entropy
-    macBits.adj1 = (macBits.baseMac[3] & 0xFC) >> 2; // 6 bits, 23-18
-    macBits.adj2 = ((macBits.baseMac[3] & 0x03) << 4) | ((macBits.baseMac[4] & 0xF0) >> 2);
-    macBits.noun = ((macBits.baseMac[4] & 0x0F) << 4) | ((macBits.baseMac[5] & 0xC0) >> 2);
+    // Generate seeds
+    mutatorSeeds[NOUN] = baseMac[4] ^ baseMac[5];
+    mutatorSeeds[ADJ2] = baseMac[3] ^ baseMac[5];
+    mutatorSeeds[ADJ1] = baseMac[3] ^ mutatorSeeds[NOUN];
 }
 
 static void _getWordFromList(int listIdx, int idx, char* buffer, int buffLen)
@@ -388,9 +390,9 @@ static void _getWordFromList(int listIdx, int idx, char* buffer, int buffLen)
     }
 }
 
-static uint8_t _mutateIdx(uint8_t arrSize, uint8_t idx, uint8_t mac)
+static uint8_t _mutateIdx(uint8_t arrSize, uint8_t idx, uint8_t seed)
 {
-    return (mac + (idx % (arrSize >> USER_LIST_SHIFT))) % arrSize;
+    return (seed + (idx % (arrSize >> USER_LIST_SHIFT))) % arrSize;
 }
 
 // Drawing functions

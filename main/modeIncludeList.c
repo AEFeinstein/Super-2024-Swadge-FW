@@ -56,6 +56,8 @@ void modeListSetMenu(menu_t* menu)
     addSingleItemToMenu(menu, modeDiceRoller.modeName);
     menu = endSubMenu(menu);
 
+    addSingleItemToMenu(menu, nameTestMode.modeName);
+
     addSingleItemToMenu(menu, modeCredits.modeName);
 }
 
