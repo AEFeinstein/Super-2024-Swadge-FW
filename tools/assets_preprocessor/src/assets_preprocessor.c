@@ -523,12 +523,6 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                         }
                     }
 
-                    if (verbose)
-                    {
-                        int pos = ftell(outHandle);
-                        printf("[INF]  Wrote %d bytes to %s\n", pos, outFile);
-                    }
-
                     fclose(outHandle);
 
                     // And clean up the input file however necessary
