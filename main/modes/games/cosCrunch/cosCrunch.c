@@ -288,10 +288,10 @@ static void cosCrunchDrawTimer()
     }
     else
     {
-        // Green
-        wsgPaletteSet(&cc->tintPalette, PALETTE_LOWLIGHT, c030);
-        wsgPaletteSet(&cc->tintPalette, PALETTE_BASE, c040);
-        wsgPaletteSet(&cc->tintPalette, PALETTE_HIGHLIGHT, c353);
+        // Blue
+        wsgPaletteSet(&cc->tintPalette, PALETTE_LOWLIGHT, c013);
+        wsgPaletteSet(&cc->tintPalette, PALETTE_BASE, c125);
+        wsgPaletteSet(&cc->tintPalette, PALETTE_HIGHLIGHT, c235);
     }
 
     if (cc->activeMicrogame.gameTimeRemainingUs > 0)
