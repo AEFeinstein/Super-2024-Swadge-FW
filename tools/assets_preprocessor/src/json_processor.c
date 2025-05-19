@@ -13,11 +13,11 @@
 bool process_json(processorInput_t* arg);
 
 const assetProcessor_t jsonProcessor = {
-    .name = "json",
-    .type = FUNCTION,
+    .name     = "json",
+    .type     = FUNCTION,
     .function = process_json,
-    .inFmt = FMT_TEXT,
-    .outFmt = FMT_FILE_BIN,
+    .inFmt    = FMT_TEXT,
+    .outFmt   = FMT_FILE_BIN,
 };
 
 bool process_json(processorInput_t* arg)

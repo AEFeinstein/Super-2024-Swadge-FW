@@ -11,11 +11,11 @@
 bool process_heatshrink(processorInput_t* arg);
 
 const assetProcessor_t heatshrinkProcessor = {
-    .name = "heatshrink",
-    .type = FUNCTION,
+    .name     = "heatshrink",
+    .type     = FUNCTION,
     .function = process_heatshrink,
-    .inFmt = FMT_DATA,
-    .outFmt = FMT_FILE_BIN,
+    .inFmt    = FMT_DATA,
+    .outFmt   = FMT_FILE_BIN,
 };
 
 bool process_heatshrink(processorInput_t* arg)

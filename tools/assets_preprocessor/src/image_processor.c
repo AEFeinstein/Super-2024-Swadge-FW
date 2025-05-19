@@ -51,14 +51,8 @@ int isNeighborNotDrawn(pixel_t** img, int x, int y, int w, int h);
 void spreadError(pixel_t** img, int x, int y, int w, int h, int teR, int teG, int teB, float diagScalar);
 bool process_image(processorInput_t* arg);
 
-const assetProcessor_t imageProcessor =
-{
-    .name =     "wsg",
-    .type     = FUNCTION,
-    .function = process_image,
-    .inFmt    = FMT_FILE_BIN,
-    .outFmt   = FMT_FILE_BIN
-};
+const assetProcessor_t imageProcessor
+    = {.name = "wsg", .type = FUNCTION, .function = process_image, .inFmt = FMT_FILE_BIN, .outFmt = FMT_FILE_BIN};
 
 /**
  * @brief Randomizes the order of the given array of ints
@@ -151,7 +145,7 @@ bool process_image(processorInput_t* arg)
             image8b[y][x].b = CLAMP((127 + ((sourceB + image8b[y][x].eB) * 5)) / 255, 0, 5);
             image8b[y][x].a = (sourceA >= 128) ? 0xFF : 0x00;
 
-// Don't dither small sprites, it just doesn't look good
+            // Don't dither small sprites, it just doesn't look good
             if (dither)
             {
                 /* Find the total error, 8 bits per channel */
@@ -172,8 +166,8 @@ bool process_image(processorInput_t* arg)
                 diagNeighbors += isNeighborNotDrawn(image8b, x + 1, y + 1, w, h);
 
                 /* Spread the error to all neighboring unquantized pixels, with
-                * twice as much error to the adjacent pixels as the diagonal ones
-                */
+                 * twice as much error to the adjacent pixels as the diagonal ones
+                 */
                 float diagScalar = 1 / (float)((2 * adjNeighbors) + diagNeighbors);
                 float adjScalar  = 2 * diagScalar;
 

@@ -2,7 +2,6 @@
 // Includes
 //==============================================================================
 
-
 #include <ctype.h>
 #include <fcntl.h>
 #include <ftw.h>
@@ -43,13 +42,8 @@
 // EDIT HERE to register a new asset processor
 //==============================================================================
 static const assetProcessor_t* allAssetProcessors[] = {
-    &binProcessor,
-    &chartProcessor,
-    &fontProcessor,
-    &heatshrinkProcessor,
-    &imageProcessor,
-    &jsonProcessor,
-    &textProcessor,
+    &binProcessor,   &chartProcessor, &fontProcessor, &heatshrinkProcessor,
+    &imageProcessor, &jsonProcessor,  &textProcessor,
 };
 //==============================================================================
 // END Asset Processor List
@@ -59,15 +53,15 @@ static const assetProcessor_t* allAssetProcessors[] = {
 // Variables
 //==============================================================================
 
-const char* inDirName  = NULL;
-const char* outDirName = NULL;
-int filesUpdated       = 0;
-int processingErrors   = 0;
-bool verbose           = false;
+const char* inDirName                  = NULL;
+const char* outDirName                 = NULL;
+int filesUpdated                       = 0;
+int processingErrors                   = 0;
+bool verbose                           = false;
 const processorOptions_t* globalConfig = NULL;
 
-static const fileProcessorMap_t* loadedExtMappings    = NULL;
-static size_t loadedExtMappingCount                   = 0;
+static const fileProcessorMap_t* loadedExtMappings = NULL;
+static size_t loadedExtMappingCount                = 0;
 
 //==============================================================================
 // Function declarations
@@ -77,7 +71,8 @@ void print_usage(void);
 bool startsWith(const char* path, const char* prefix);
 bool endsWith(const char* filename, const char* suffix);
 static const assetProcessor_t* findProcessor(const char* name);
-static void setupConfig(assetProcessor_t* execProcessors, size_t* procCount, fileProcessorMap_t* mappings, size_t* mapCount, const processorOptions_t* options);
+static void setupConfig(assetProcessor_t* execProcessors, size_t* procCount, fileProcessorMap_t* mappings,
+                        size_t* mapCount, const processorOptions_t* options);
 
 //==============================================================================
 // Const data
@@ -88,7 +83,6 @@ static const char optionsFileExtension[] = "opts";
 //==============================================================================
 // Functions
 //==============================================================================
-
 
 /**
  * @brief TODO
@@ -145,8 +139,8 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
 {
     if (FTW_F == tflag)
     {
-        char extBuf[16]   = {0};
-        char outFile[256] = {0};
+        char extBuf[16]           = {0};
+        char outFile[256]         = {0};
         char optionsFilename[256] = {0};
 
         for (size_t i = 0; i < loadedExtMappingCount; i++)
@@ -171,7 +165,6 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                 // Add the output file extension
                 strcat(outFile, extMap->outExt);
 
-
                 // Now, construct the options filename
 
                 // Add the whole input file path to the buffer
@@ -190,7 +183,7 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                 {
                     // First, just remove the filename and replace it with the opts extension
                     // This should be guaranteed to be inside the assets dir still...
-                    char* lastSlash = strrchr(optionsFilename, '/');
+                    char* lastSlash  = strrchr(optionsFilename, '/');
                     *(lastSlash + 1) = '\0';
                     strcat(optionsFilename, ".");
                     strcat(optionsFilename, optionsFileExtension);
@@ -198,9 +191,10 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                     hasOptions = doesFileExist(optionsFilename);
                     if (!hasOptions)
                     {
-                        do {
+                        do
+                        {
                             // Trim the first slash, of "/.opts"
-                            lastSlash = strrchr(optionsFilename, '/');
+                            lastSlash  = strrchr(optionsFilename, '/');
                             *lastSlash = '\0';
                             // Find the next previous slash
                             lastSlash = strrchr(optionsFilename, '/');
@@ -212,14 +206,15 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                             // Then, at the end of the loop, first we make sure the new filename is still inside
                             // the assets directory. We don't want to touch anything outside the input directory!
                             // Next, if that's true, we set hasOptions based on if the file exists and exit if so
-                        } while (startsWith(optionsFilename, inDirName) && !(hasOptions = doesFileExist(optionsFilename)));
+                        } while (startsWith(optionsFilename, inDirName)
+                                 && !(hasOptions = doesFileExist(optionsFilename)));
                     }
                 }
 
                 // And if the options file has been modified since the output was generated,
                 // regenerate it the same as though the source file was modified
                 bool optionsModified = hasOptions && isSourceFileNewer(optionsFilename, outFile);
-                bool inFileModified = isSourceFileNewer(inFile, outFile);
+                bool inFileModified  = isSourceFileNewer(inFile, outFile);
 
                 if (!inFileModified && !optionsModified)
                 {
@@ -439,25 +434,27 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                         {
                             if (verbose)
                             {
-                                printf("[%s] OPTS %s <- %s (%" PRIu32 ")\n", extMap->inExt, get_filename(inFile), optionsFilename + strlen(inDirName), (uint32_t)options.optionCount);
+                                printf("[%s] OPTS %s <- %s (%" PRIu32 ")\n", extMap->inExt, get_filename(inFile),
+                                       optionsFilename + strlen(inDirName), (uint32_t)options.optionCount);
                             }
                         }
                         else
                         {
                             if (verbose)
                             {
-                                fprintf(stderr, "[WRN] Options file %s exists but contains no options! Is it a valid INI file?\n", optionsFilename);
+                                fprintf(
+                                    stderr,
+                                    "[WRN] Options file %s exists but contains no options! Is it a valid INI file?\n",
+                                    optionsFilename);
                             }
                             hasOptions = false;
                         }
                     }
 
-                    processorInput_t arg = {
-                        .in         = inData,
-                        .out        = {.file = outHandle},
-                        .inFilename = get_filename(inFile),
-                        .options = hasOptions ? &options : NULL
-                    };
+                    processorInput_t arg = {.in         = inData,
+                                            .out        = {.file = outHandle},
+                                            .inFilename = get_filename(inFile),
+                                            .options    = hasOptions ? &options : NULL};
 
                     if (!readError)
                     {
@@ -561,7 +558,9 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                     {
                         if (!deleteFile(outFile))
                         {
-                            fprintf(stderr, "[WRN] Could not clean up invalid output file %s after failed proecessing\n", outFile);
+                            fprintf(stderr,
+                                    "[WRN] Could not clean up invalid output file %s after failed proecessing\n",
+                                    outFile);
                         }
                     }
                 }
@@ -569,7 +568,7 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                 {
                     // 2048 chars ought to be enough for anybody!!
                     char buf[2048];
-                    char* out    = buf;
+                    char* out = buf;
 
                     const char* cur = processor->exec;
                     while (*cur)
@@ -646,7 +645,6 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                     }
                 }
 
-
                 if (!result)
                 {
                     fprintf(stderr, "[assets-preprocessor] Error! Failed to process %s!\n", get_filename(inFile));
@@ -680,15 +678,16 @@ static const assetProcessor_t* findProcessor(const char* name)
     return NULL;
 }
 
-static void setupConfig(assetProcessor_t* execProcessors, size_t* procCount, fileProcessorMap_t* mappings, size_t* mapCount, const processorOptions_t* options)
+static void setupConfig(assetProcessor_t* execProcessors, size_t* procCount, fileProcessorMap_t* mappings,
+                        size_t* mapCount, const processorOptions_t* options)
 {
     const size_t maxProcs = *procCount;
-    const size_t maxMaps = *mapCount;
+    const size_t maxMaps  = *mapCount;
 
     size_t procsOut = 0;
-    size_t mapsOut = 0;
+    size_t mapsOut  = 0;
 
-    assetProcessor_t pendingProc = {0};
+    assetProcessor_t pendingProc  = {0};
     fileProcessorMap_t pendingMap = {0};
 
     const char* lastSectionName = NULL;
@@ -708,7 +707,7 @@ static void setupConfig(assetProcessor_t* execProcessors, size_t* procCount, fil
     // paragraph but I already wrote it so oh well!
     for (const optPair_t* opt = options->pairs; opt <= maxOpt; opt++)
     {
-        char* sectionName = opt->section;
+        char* sectionName   = opt->section;
         const char* optName = opt->name;
 
         // Okay so it got a bit weirder since I wrote the last paragraph.
@@ -761,7 +760,8 @@ static void setupConfig(assetProcessor_t* execProcessors, size_t* procCount, fil
             {
                 if (verbose)
                 {
-                    printf("CONF Loaded new %s processor '%s'\n", (pendingProc.type == FUNCTION) ? "FUNCTION" : "EXEC", pendingProc.name);
+                    printf("CONF Loaded new %s processor '%s'\n", (pendingProc.type == FUNCTION) ? "FUNCTION" : "EXEC",
+                           pendingProc.name);
                 }
 
                 memcpy(&execProcessors[procsOut++], &pendingProc, sizeof(assetProcessor_t));
@@ -773,7 +773,8 @@ static void setupConfig(assetProcessor_t* execProcessors, size_t* procCount, fil
             {
                 if (verbose)
                 {
-                    printf("CONF Mapped *.%s -> *.%s to processor '%s'\n", pendingMap.inExt, pendingMap.outExt, pendingMap.processor->name);
+                    printf("CONF Mapped *.%s -> *.%s to processor '%s'\n", pendingMap.inExt, pendingMap.outExt,
+                           pendingMap.processor->name);
                 }
 
                 memcpy(&mappings[mapsOut++], &pendingMap, sizeof(fileProcessorMap_t));
@@ -812,7 +813,7 @@ static void setupConfig(assetProcessor_t* execProcessors, size_t* procCount, fil
                 pendingMap.outExt = opt->value;
 
                 // Strip off a leading '.' because I'm nice
-                while ('.' == *pendingMap.outExt && *(pendingMap.outExt+1))
+                while ('.' == *pendingMap.outExt && *(pendingMap.outExt + 1))
                 {
                     pendingMap.outExt++;
                 }
@@ -822,7 +823,7 @@ static void setupConfig(assetProcessor_t* execProcessors, size_t* procCount, fil
                 pendingMap.inExt = opt->value;
 
                 // Strip off a leading '.' but this time only because I have to
-                while ('.' == *pendingMap.inExt && *(pendingMap.inExt+1))
+                while ('.' == *pendingMap.inExt && *(pendingMap.inExt + 1))
                 {
                     pendingMap.outExt++;
                 }
@@ -861,7 +862,8 @@ static void setupConfig(assetProcessor_t* execProcessors, size_t* procCount, fil
 
     if (verbose)
     {
-        printf("CONF Loaded %" PRIu32 " processors and %" PRIu32 " extension mappings\n", (uint32_t)procsOut, (uint32_t)mapsOut);
+        printf("CONF Loaded %" PRIu32 " processors and %" PRIu32 " extension mappings\n", (uint32_t)procsOut,
+               (uint32_t)mapsOut);
     }
 }
 
@@ -969,10 +971,10 @@ int main(int argc, char** argv)
     fileProcessorMap_t dynamicMappings[64];
 
     const size_t maxProcCount = sizeof(dynamicAssetProcessors) / sizeof(assetProcessor_t);
-    const size_t maxMapCount = sizeof(dynamicMappings) / sizeof(fileProcessorMap_t);
+    const size_t maxMapCount  = sizeof(dynamicMappings) / sizeof(fileProcessorMap_t);
 
     size_t procCount = maxProcCount;
-    size_t mapCount = maxMapCount;
+    size_t mapCount  = maxMapCount;
 
     processorOptions_t configOptions = {0};
     if (configFile)
@@ -985,7 +987,7 @@ int main(int argc, char** argv)
         }
     }
 
-    loadedExtMappings = dynamicMappings;
+    loadedExtMappings     = dynamicMappings;
     loadedExtMappingCount = mapCount;
 
     if (ftw(inDirName, processFile, 99) == -1)

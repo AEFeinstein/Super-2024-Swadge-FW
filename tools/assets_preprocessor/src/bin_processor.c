@@ -10,19 +10,13 @@
 
 bool process_bin(processorInput_t* in);
 
-const assetProcessor_t binProcessor =
-{
-    .name = "bin",
-    .inFmt = FMT_DATA,
-    .outFmt = FMT_DATA,
-    .type = FUNCTION,
-    .function = process_bin
-};
+const assetProcessor_t binProcessor
+    = {.name = "bin", .inFmt = FMT_DATA, .outFmt = FMT_DATA, .type = FUNCTION, .function = process_bin};
 
 bool process_bin(processorInput_t* data)
 {
     // this one's _REAL_ simple now
-    data->out.data = data->in.data;
+    data->out.data   = data->in.data;
     data->out.length = data->in.length;
     return true;
 }

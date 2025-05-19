@@ -111,13 +111,14 @@
  * for input and output. `arg` refers to the processorInput_t* passed as the argument to a
  * processFn_t.
  *
- * | Format       | In Data        | In Length           | In Mode | Out Data         | Out Length           | Out Mode |
+ * | Format       | In Data        | In Length           | In Mode | Out Data         | Out Length           | Out Mode
+ * |
  * |--------------|----------------|---------------------|---------|------------------|----------------------|----------|
- * | FMT_DATA     | `arg->in.data` | `arg->in.length`    | `rb`    | `arg->out.data`  | `arg->out.length`    | `wb`     |
- * | FMT_TEXT     | `arg->in.text` | `arg->in.textSize`  | `r`     | `arg->out.text`  | `arg->out.textSize`  | `w`      |
- * | FMT_FILE_BIN | `arg->in.file` |                     | `rb`    | `arg->out.file`  |                      | `wb`     |
- * | FMT_FILE     | `arg->in.file` |                     | `r`     | `arg->out.file`  |                      | `w`      |
- * | FMT_LINES    | `arg->in.lines`| `arg->in.lineCount` | `r`     | `arg->out.lines` | `arg->out.lineCount` | `w`      |
+ * | FMT_DATA     | `arg->in.data` | `arg->in.length`    | `rb`    | `arg->out.data`  | `arg->out.length`    | `wb` | |
+ * FMT_TEXT     | `arg->in.text` | `arg->in.textSize`  | `r`     | `arg->out.text`  | `arg->out.textSize`  | `w`      |
+ * | FMT_FILE_BIN | `arg->in.file` |                     | `rb`    | `arg->out.file`  |                      | `wb` | |
+ * FMT_FILE     | `arg->in.file` |                     | `r`     | `arg->out.file`  |                      | `w`      |
+ * | FMT_LINES    | `arg->in.lines`| `arg->in.lineCount` | `r`     | `arg->out.lines` | `arg->out.lineCount` | `w` |
  *
  *
  * \subsubsection assetProc_structOptions Options
@@ -366,13 +367,16 @@
  * \section assetProc_adding Adding a New Processor
  * To create a new asset processor function, follow these steps.
  *
- * 1. Create new `<type>_processor.h` and `.c` files in `/tools/assets_preprocessor/src/` -- see [above](#assetProc_examples) for an example.
+ * 1. Create new `<type>_processor.h` and `.c` files in `/tools/assets_preprocessor/src/` -- see
+ * [above](#assetProc_examples) for an example.
  * 2. Include the newly-added `.h` file in asset_preprocessor.c
  * 3. Add an entry to fileProcessorMap in assets_preprocessor.c for each file extension the processor should handle
- * 4. Update \link md_tools_2assets__preprocessor_2README#config-file `assets.conf` \endlink to configure the file extensions to be handled by the new processor.
- * 5. Document the new processor in the \link md_tools_2assets__preprocessor_2README README \endlink, especially if it might be used by other modes in the future.
+ * 4. Update \link md_tools_2assets__preprocessor_2README#config-file `assets.conf` \endlink to configure the file
+ * extensions to be handled by the new processor.
+ * 5. Document the new processor in the \link md_tools_2assets__preprocessor_2README README \endlink, especially if it
+ * might be used by other modes in the future.
  * 6. Run `make clean all`
- * 
+ *
  */
 
 /**
@@ -419,7 +423,8 @@ typedef union
     /**
      * @brief Holds data for FMT_DATA format
      */
-    struct {
+    struct
+    {
         /// @brief Buffer holding binary data
         uint8_t* data;
         /// @brief Length of binary data
@@ -430,7 +435,8 @@ typedef union
      * @brief Holds data for FMT_LINES format
      *
      */
-    struct {
+    struct
+    {
         /// @brief Array of string pointers for each line
         char** lines;
         /// @brief The number of string pointers in the array
@@ -441,7 +447,8 @@ typedef union
      * @brief Holds data for FMT_TEXT format
      *
      */
-    struct {
+    struct
+    {
         /// @brief Buffer holding text data
         char* text;
         /// @brief The size of the text data, including NUL terminator
