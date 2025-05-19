@@ -302,36 +302,36 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
 
                         case FMT_TEXT:
                         case FMT_DATA:
+                        {
                             // Open file, read text
+                            bool binFile = (processor->inFmt == FMT_DATA);
+                            fseek(inHandle, 0L, SEEK_END);
+                            long size = ftell(inHandle);
+                            fseek(inHandle, 0L, SEEK_SET);
+
+                            char* data = malloc(size + (binFile ? 0 : 1));
+
+                            if (!data)
                             {
-                                bool binFile = (processor->inFmt == FMT_DATA);
-                                fseek(inHandle, 0L, SEEK_END);
-                                long size = ftell(inHandle);
-                                fseek(inHandle, 0L, SEEK_SET);
-
-                                char* data = malloc(size + (binFile ? 0 : 1));
-
-                                if (!data)
-                                {
-                                    readError = true;
-                                    break;
-                                }
-
-                                fread(data, size, 1, inHandle);
-
-                                if (binFile)
-                                {
-                                    inData.data   = (uint8_t*)data;
-                                    inData.length = size;
-                                }
-                                else
-                                {
-                                    data[size]      = '\0';
-                                    inData.text     = data;
-                                    inData.textSize = size + 1;
-                                }
+                                readError = true;
                                 break;
                             }
+
+                            fread(data, size, 1, inHandle);
+
+                            if (binFile)
+                            {
+                                inData.data   = (uint8_t*)data;
+                                inData.length = size;
+                            }
+                            else
+                            {
+                                data[size]      = '\0';
+                                inData.text     = data;
+                                inData.textSize = size + 1;
+                            }
+                            break;
+                        }
 
                         case FMT_LINES:
                         {
