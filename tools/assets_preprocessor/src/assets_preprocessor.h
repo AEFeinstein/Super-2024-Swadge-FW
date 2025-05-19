@@ -110,20 +110,26 @@
  * Here is a summary of the various input and output options available and how to use them
  * for input and output. `arg` refers to the processorInput_t* passed as the argument to a
  * processFn_t.
- *
- * | Format       | In Data        | In Length           | In Mode | Out Data         | Out Length           | Out Mode
- * |
+ */
+
+// clang-format off
+
+ /*! \file assets_preprocessor.h
+ * | Format       | In Data        | In Length           | In Mode | Out Data         | Out Length           | Out Mode |
  * |--------------|----------------|---------------------|---------|------------------|----------------------|----------|
- * | FMT_DATA     | `arg->in.data` | `arg->in.length`    | `rb`    | `arg->out.data`  | `arg->out.length`    | `wb` | |
- * FMT_TEXT     | `arg->in.text` | `arg->in.textSize`  | `r`     | `arg->out.text`  | `arg->out.textSize`  | `w`      |
- * | FMT_FILE_BIN | `arg->in.file` |                     | `rb`    | `arg->out.file`  |                      | `wb` | |
- * FMT_FILE     | `arg->in.file` |                     | `r`     | `arg->out.file`  |                      | `w`      |
- * | FMT_LINES    | `arg->in.lines`| `arg->in.lineCount` | `r`     | `arg->out.lines` | `arg->out.lineCount` | `w` |
- *
- *
+ * | FMT_DATA     | `arg->in.data` | `arg->in.length`    | `rb`    | `arg->out.data`  | `arg->out.length`    | `wb`     |
+ * | FMT_TEXT     | `arg->in.text` | `arg->in.textSize`  | `r`     | `arg->out.text`  | `arg->out.textSize`  | `w`      |
+ * | FMT_FILE_BIN | `arg->in.file` |                     | `rb`    | `arg->out.file`  |                      | `wb`     |
+ * | FMT_FILE     | `arg->in.file` |                     | `r`     | `arg->out.file`  |                      | `w`      |
+ * | FMT_LINES    | `arg->in.lines`| `arg->in.lineCount` | `r`     | `arg->out.lines` | `arg->out.lineCount` | `w`      |
+ */
+
+// clang-format on
+
+/*! \file assets_preprocessor.h
  * \subsubsection assetProc_structOptions Options
  * For information on configuring asset processor options for asset files and directories,
- * see the \link md_tools_2assets__preprocessor_2README README \endlink.
+ * see the \ref md_tools_2assets__preprocessor_2README.
  *
  *
  * \subsection assetProc_structExecs Exec Preprocessors
