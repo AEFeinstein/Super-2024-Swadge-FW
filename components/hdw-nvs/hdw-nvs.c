@@ -645,12 +645,14 @@ bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nv
 }
 
 /**
- * @brief TODO
+ * @brief Fill a given \ref list_t with all the NVS string keys for the given namespace.
+ *
+ * The \ref list_t should be empty before passing into this function.
  *
  * List elements must be heap_caps_free()
  *
- * @param namespace
- * @param list
+ * @param namespace The namespace to get keys from
+ * @param list A list to fill with keys.
  */
 void getNvsKeys(const char* namespace, list_t* list)
 {
