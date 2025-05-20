@@ -136,7 +136,7 @@ void getSwadgePasses(list_t* swadgePasses, const struct swadgeMode* mode, bool g
         if (sizeof(swadgePassNvs_t) == outLen)
         {
             // Add to the list if either all data is requested or it hasn't been used yet
-            if (!getUsed || !isPacketUsedByMode(spd, mode))
+            if (getUsed || !isPacketUsedByMode(spd, mode))
             {
                 // Add key to the data
                 memcpy(spd->key, key, strlen(key));

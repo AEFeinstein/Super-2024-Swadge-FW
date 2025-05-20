@@ -11,10 +11,10 @@
 /// @brief The struct that holds all the state for the SwadgePass test mode
 typedef struct
 {
-    font_t ibm; ///< The font used to display text
     menu_t* menu;
     menuManiaRenderer_t* renderer;
     list_t swadgePasses;
+    swadgePassData_t* currSpd;
 } swadgePassTest_t;
 
 //==============================================================================
@@ -69,9 +69,6 @@ static void swadgePassTestEnterMode(void)
 {
     spt = heap_caps_calloc(1, sizeof(swadgePassTest_t), MALLOC_CAP_8BIT);
 
-    // Load a font
-    loadFont(IBM_VGA_8_FONT, &spt->ibm, false);
-
     // Get SwadgePasses
     getSwadgePasses(&spt->swadgePasses, &swadgePassTestMode, true);
 
@@ -96,9 +93,6 @@ static void swadgePassTestEnterMode(void)
  */
 static void swadgePassTestExitMode(void)
 {
-    // Free the font
-    freeFont(&spt->ibm);
-
     // Free the menu
     deinitMenu(spt->menu);
     deinitMenuManiaRenderer(spt->renderer);
@@ -121,11 +115,66 @@ static void swadgePassTestMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        spt->menu = menuButton(spt->menu, evt);
+        if (NULL == spt->currSpd)
+        {
+            // Not showing individual data, show the menu
+            spt->menu = menuButton(spt->menu, evt);
+        }
+        else
+        {
+            // Showing individual data
+            if (evt.down)
+            {
+                if (PB_A == evt.button)
+                {
+                    // Toggle is Used
+                    bool isUsed = isPacketUsedByMode(spt->currSpd, &swadgePassTestMode);
+                    setPacketUsedByMode(spt->currSpd, &swadgePassTestMode, !isUsed);
+                }
+                else if (PB_B == evt.button)
+                {
+                    // return to menu
+                    spt->currSpd = NULL;
+                }
+            }
+        }
     }
 
-    // Draw menu
-    drawMenuMania(spt->menu, spt->renderer, elapsedUs);
+    if (NULL == spt->currSpd)
+    {
+        // Draw menu
+        drawMenuMania(spt->menu, spt->renderer, elapsedUs);
+    }
+    else
+    {
+        font_t* font = spt->renderer->menuFont;
+        int16_t xOff = 20;
+        int16_t yOff = 20;
+
+        // Show key
+        fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c111);
+        char buf[1024];
+        sprintf(buf, "MAC: %s", spt->currSpd->key);
+        drawText(font, c555, buf, xOff, yOff);
+        yOff += font->height + 2;
+
+        // Show if it's used or not
+        bool isUsed = isPacketUsedByMode(spt->currSpd, &swadgePassTestMode);
+        sprintf(buf, "%sUsed", isUsed ? "" : "Not ");
+        drawText(font, c555, buf, xOff, yOff);
+        yOff += font->height + 2;
+
+        // Show raw data
+        memset(buf, 0, sizeof(buf));
+        uint8_t* rawData = (uint8_t*)&spt->currSpd->data.packet;
+        for (int16_t idx = 0; idx < sizeof(swadgePassPacket_t); idx++)
+        {
+            char tmp[16];
+            sprintf(tmp, "%02X ", rawData[idx]);
+            strcat(buf, tmp);
+        }
+        drawTextWordWrap(font, c555, buf, &xOff, &yOff, TFT_WIDTH - 20, TFT_HEIGHT);
+    }
 }
 
 /**
@@ -136,5 +185,24 @@ static void swadgePassTestMainLoop(int64_t elapsedUs)
  */
 void swadgePassTestMenuCb(const char* label, bool selected, uint32_t value)
 {
-    // TODO show more data from the packet
+    if (selected)
+    {
+        // Iterate through all the nodes
+        node_t* passNode = spt->swadgePasses.first;
+        while (passNode)
+        {
+            // Check if the label matches
+            swadgePassData_t* spd = (swadgePassData_t*)passNode->val;
+            if (!strcmp(label, spd->key))
+            {
+                spt->currSpd = spd;
+                return;
+            }
+            else
+            {
+                // Iterate to the next
+                passNode = passNode->next;
+            }
+        }
+    }
 }

@@ -114,7 +114,7 @@
 /**
  * @brief A SwadgePass packet which is transmitted over ESP NOW
  */
-typedef struct swadgePassPacket
+typedef struct __attribute__((packed)) swadgePassPacket
 {
     uint16_t preamble; ///< Two bytes that specifically begin a SwadgePass packet
     uint8_t version;   ///< A version byte to differentiate packets per-year
