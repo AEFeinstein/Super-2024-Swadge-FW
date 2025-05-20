@@ -103,7 +103,7 @@ static void swadgePassTestExitMode(void)
     deinitMenu(spt->menu);
     deinitMenuManiaRenderer(spt->renderer);
 
-    // Free the swadge passes
+    // Free the swadgePasses
     freeSwadgePasses(&spt->swadgePasses);
 
     // Free the mode

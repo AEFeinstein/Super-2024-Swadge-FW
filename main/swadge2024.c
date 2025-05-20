@@ -90,6 +90,7 @@
  *
  * - hdw-esp-now.h: Broadcast and receive messages. This is fast and unreliable.
  * - p2pConnection.h: Connect to another Swadge and exchange messages. This is slower and more reliable.
+ * - swadgePass.h: Send and receive small amounts of data like avatars or high scores while the Swadge is idle.
  *
  * \subsection pm_api Persistent Memory APIs
  *

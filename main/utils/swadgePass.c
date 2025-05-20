@@ -15,6 +15,7 @@
 #define MAC_STR_LEN  ((2 * MAC_ADDR_LEN) + 1)
 
 #define SWADGE_PASS_PREAMBLE 0x5350 // 'SP' in ASCII
+#define SWADGE_PASS_VERSION  0      // Version 0 for 2026
 
 //==============================================================================
 // Const Variables
@@ -35,6 +36,7 @@ void fillSwadgePassPacket(swadgePassPacket_t* packet)
 {
     // Set the preamble
     packet->preamble = SWADGE_PASS_PREAMBLE;
+    packet->version  = SWADGE_PASS_VERSION;
 
     // Ask each mode to fill in the rest
     int modeCount = modeListGetCount();
@@ -84,9 +86,9 @@ void receiveSwadgePass(const esp_now_recv_info_t* esp_now_info, const uint8_t* d
     // Validate length
     if (len == sizeof(swadgePassPacket_t))
     {
-        // Validate preamble
+        // Validate preamble and version
         const swadgePassPacket_t* packet = (const swadgePassPacket_t*)data;
-        if (SWADGE_PASS_PREAMBLE == packet->preamble)
+        if (SWADGE_PASS_PREAMBLE == packet->preamble && SWADGE_PASS_VERSION == packet->version)
         {
             // Convert the incoming MAC to a key for NVS
             char macStr[MAC_STR_LEN];
@@ -106,9 +108,9 @@ void receiveSwadgePass(const esp_now_recv_info_t* esp_now_info, const uint8_t* d
 }
 
 /**
- * @brief Get the Swadge Passes object
+ * @brief Fill a list with SwadgePass data. The list should be empty before calling this function.
  *
- * @param swadgePasses Fill with type \ref swadgePassData_t
+ * @param swadgePasses A list to fill with type \ref swadgePassData_t
  * @param mode The Swadge Mode getting SwadgePass data
  * @param getUsed true to return all SwadgePass data, false to return only unused SwadgePass data
  */
@@ -188,7 +190,7 @@ bool isPacketUsedByMode(swadgePassData_t* data, const struct swadgeMode* mode)
 
 /**
  * @brief Set if a given mode has used this SwadgePass data yet.
- * 
+ *
  * This will write changes to NVS.
  *
  * @param data The SwadgePass data
