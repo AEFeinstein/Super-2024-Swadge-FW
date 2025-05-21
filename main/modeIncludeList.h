@@ -45,6 +45,7 @@
 #include "sequencerMode.h"
 #include "swadgeIt.h"
 #include "touchTest.h"
+#include "trophyCase.h"
 #include "trophyTest.h"
 #include "tunernome.h"
 

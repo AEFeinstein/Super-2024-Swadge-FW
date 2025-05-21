@@ -8,8 +8,6 @@
 
 #include "modeIncludeList.h"
 
-#include "trophyCase.h"
-
 #include "settingsManager.h"
 
 //==============================================================================
@@ -151,8 +149,6 @@ static void mainMenuEnterMode(void)
 #ifdef CONFIG_FACTORY_TEST_NORMAL
     // Initialize all the modes in modeList
     modeListSetMenu(mainMenu->menu);
-
-    addSingleItemToMenu(mainMenu->menu, tCaseMode.modeName);
 
     // Start a submenu for settings
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
