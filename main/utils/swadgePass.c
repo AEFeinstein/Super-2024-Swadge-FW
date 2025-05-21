@@ -191,17 +191,18 @@ void receiveSwadgePass(const esp_now_recv_info_t* esp_now_info, const uint8_t* d
                 spNode = spNode->next;
             }
 
-            // Made it this far, which means the data isn't in the local list or NVS
-            if (0 == maxBitsUsed)
+            // Made it this far, which means the data isn't in the local list or NVS.
+            // Check if the local list is at capacity first
+            if (MAX_NUM_SWADGE_PASSES == rxSwadgePasses.length)
             {
-                // The most used data hasn't been used at all!
-                // The user must use their data before collecting new ones
-                // Return without saving the received data to NVS
-                return;
-            }
-            // If the local list is at capacity, evict the most used data first
-            else if (MAX_NUM_SWADGE_PASSES == rxSwadgePasses.length)
-            {
+                // If the local list is at capacity, but no data has been used yet,
+                // don't delete, don't add.
+                if (0 == maxBitsUsed)
+                {
+                    // The user must use their data before collecting new ones, so return here
+                    return;
+                }
+
                 // Remove from the local list
                 swadgePassData_t* removedVal = removeEntry(&rxSwadgePasses, mostUsedNode);
 
