@@ -416,14 +416,13 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
 
 void trophyUpdateMilestone(trophyData_t t, int newVal, int threshold)
 {
-    trophyDataWrapper_t* tw = heap_caps_calloc(1, sizeof(trophyDataWrapper_t), MALLOC_CAP_8BIT);
-    _load(tw, t);
+    trophyDataWrapper_t tw = {};
+    _load(&tw, t);
 
     // Check if completed
     if (newVal >= t.maxVal)
     {
         trophyUpdate(t, newVal, true);
-        heap_caps_free(tw);
         return;
     }
 
@@ -433,10 +432,9 @@ void trophyUpdateMilestone(trophyData_t t, int newVal, int threshold)
     {
         threshold = DEFAULT_MILESTONE;
     }
-    int32_t prev = (tw->currentVal * 100 / t.maxVal) / threshold; // Intentionally truncates to an integer
+    int32_t prev = (tw.currentVal * 100 / t.maxVal) / threshold; // Intentionally truncates to an integer
     int32_t new  = (newVal * 100 / t.maxVal) / threshold;
     trophyUpdate(t, newVal, prev < new);
-    heap_caps_free(tw);
 }
 
 int32_t trophyGetSavedValue(trophyData_t t)
@@ -720,43 +718,40 @@ void trophyDrawList(font_t* fnt, int yOffset)
             case TROPHY_DISPLAY_ALL:
             {
                 // If hidden and not unlocked, skip
-                trophyDataWrapper_t* tw = heap_caps_calloc(1, sizeof(trophyDataWrapper_t), MALLOC_CAP_8BIT);
-                _load(tw, trophySystem.data->list[idx]);
-                if (!trophySystem.data->list[idx].hidden || (trophySystem.data->list[idx].maxVal <= tw->currentVal))
+                trophyDataWrapper_t tw = {};
+                _load(&tw, trophySystem.data->list[idx]);
+                if (!trophySystem.data->list[idx].hidden || (trophySystem.data->list[idx].maxVal <= tw.currentVal))
                 {
                     _drawTrophyListItem(trophySystem.data->list[idx], -yOffset + cumulativeHeight, tdl->heights[idx],
                                         fnt, &tdl->images[idx]);
                     cumulativeHeight += tdl->heights[idx];
                 }
-                heap_caps_free(tw);
                 break;
             }
             case TROPHY_DISPLAY_UNLOCKED:
             {
                 // If hidden and not unlocked or just not unlocked, skip
-                trophyDataWrapper_t* tw = heap_caps_calloc(1, sizeof(trophyDataWrapper_t), MALLOC_CAP_8BIT);
-                _load(tw, trophySystem.data->list[idx]);
-                if (trophySystem.data->list[idx].maxVal <= tw->currentVal)
+                trophyDataWrapper_t tw = {};
+                _load(&tw, trophySystem.data->list[idx]);
+                if (trophySystem.data->list[idx].maxVal <= tw.currentVal)
                 {
                     _drawTrophyListItem(trophySystem.data->list[idx], -yOffset + cumulativeHeight, tdl->heights[idx],
                                         fnt, &tdl->images[idx]);
                     cumulativeHeight += tdl->heights[idx];
                 }
-                heap_caps_free(tw);
                 break;
             }
             case TROPHY_DISPLAY_LOCKED:
             {
                 // If hidden and unlocked, skip
-                trophyDataWrapper_t* tw = heap_caps_calloc(1, sizeof(trophyDataWrapper_t), MALLOC_CAP_8BIT);
-                _load(tw, trophySystem.data->list[idx]);
-                if (!trophySystem.data->list[idx].hidden && trophySystem.data->list[idx].maxVal > tw->currentVal)
+                trophyDataWrapper_t tw = {};
+                _load(&tw, trophySystem.data->list[idx]);
+                if (!trophySystem.data->list[idx].hidden && trophySystem.data->list[idx].maxVal > tw.currentVal)
                 {
                     _drawTrophyListItem(trophySystem.data->list[idx], -yOffset + cumulativeHeight, tdl->heights[idx],
                                         fnt, &tdl->images[idx]);
                     cumulativeHeight += tdl->heights[idx];
                 }
-                heap_caps_free(tw);
                 break;
             }
             default:
@@ -1118,8 +1113,8 @@ static trophyDataWrapper_t* _getCurrentDisplayTrophy(void)
 static int _getListItemHeight(trophyData_t t, font_t* fnt)
 {
     // Load data
-    trophyDataWrapper_t* tw = heap_caps_calloc(1, sizeof(trophyDataWrapper_t), MALLOC_CAP_8BIT);
-    _load(tw, t);
+    trophyDataWrapper_t tw = {};
+    _load(&tw, t);
 
     // Calculate space
     int boxHeight  = 0;
@@ -1131,32 +1126,31 @@ static int _getListItemHeight(trophyData_t t, font_t* fnt)
         char buffer[NUMBER_TEXT_BUFFER];
         if (t.type != TROPHY_TYPE_CHECKLIST)
         {
-            snprintf(buffer, sizeof(buffer) - 1, "%" PRId32 "/%" PRId32, tw->currentVal, tw->trophyData.maxVal);
+            snprintf(buffer, sizeof(buffer) - 1, "%" PRId32 "/%" PRId32, tw.currentVal, tw.trophyData.maxVal);
         }
         else
         {
-            snprintf(buffer, sizeof(buffer) - 1, "%" PRId32 "/%" PRId32, _GetNumFlags(tw, false),
-                     _GetNumFlags(tw, true));
+            snprintf(buffer, sizeof(buffer) - 1, "%" PRId32 "/%" PRId32, _GetNumFlags(&tw, false),
+                     _GetNumFlags(&tw, true));
         }
         titleEnd -= textWidth(fnt, buffer) + 16;
     }
 
     // Get image space
-    if (tw->trophyData.image != NO_IMAGE_SET)
+    if (tw.trophyData.image != NO_IMAGE_SET)
     {
         titleStart += BANNER_MAX_ICON_DIM + IMAGE_BUFFER;
     }
 
     // Lay out text
     boxHeight = textWordWrapHeight(fnt, t.title, titleEnd - titleStart, 100) + IMAGE_BUFFER;
-    if (BANNER_MAX_ICON_DIM + IMAGE_BUFFER > boxHeight && tw->trophyData.image != NO_IMAGE_SET)
+    if (BANNER_MAX_ICON_DIM + IMAGE_BUFFER > boxHeight && tw.trophyData.image != NO_IMAGE_SET)
     {
         boxHeight = BANNER_MAX_ICON_DIM + IMAGE_BUFFER;
     }
     boxHeight += textWordWrapHeight(fnt, t.description, TFT_WIDTH - (SCREEN_CORNER_CLEARANCE * 2), 300) + IMAGE_BUFFER;
 
     // Close out
-    heap_caps_free(tw);
     return boxHeight;
 }
 
