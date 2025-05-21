@@ -81,7 +81,7 @@ static void ntTestWPrint()
     for (int idx = 0; idx < 40; idx++)
     {
         setUsernameFromIdxs(&nt->nd, idx, idx, idx, idx);
-        //ESP_LOGI("NAME", "Sona: %s", nt->nd.nameBuffer);
+        // ESP_LOGI("NAME", "Sona: %s", nt->nd.nameBuffer);
     }
 
     generateRandUsername(&nt->nd);
