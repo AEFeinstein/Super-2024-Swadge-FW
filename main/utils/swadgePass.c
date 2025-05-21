@@ -17,11 +17,20 @@
 #define SWADGE_PASS_PREAMBLE 0x5350 // 'SP' in ASCII
 #define SWADGE_PASS_VERSION  0      // Version 0 for 2026
 
+#define MAX_NUM_SWADGE_PASSES 100
+
 //==============================================================================
 // Const Variables
 //==============================================================================
 
 static const char NS_SP[] = "SP";
+
+//==============================================================================
+// Variables
+//==============================================================================
+
+static list_t rxSwadgePasses = {0};
+static bool swadgePassRxInit = false;
 
 //==============================================================================
 // Functions
@@ -73,7 +82,39 @@ static inline void macToStr(const uint8_t* macAddr, char* outStr, size_t outStrL
 }
 
 /**
+ * @brief Initialize the SwadgePass receiver. This reads SwadgePass data from NVS to SPIRAM so that each reception
+ * doesn't require a bunch of NVS reads
+ */
+void initSwadgePassReceiver(void)
+{
+    if (false == swadgePassRxInit)
+    {
+        getSwadgePasses(&rxSwadgePasses, NULL, true);
+        swadgePassRxInit = true;
+    }
+}
+
+/**
+ * @brief Deinitialize the SwadgePass receiver. This frees memory
+ */
+void deinitSwadgePassReceiver(void)
+{
+    if (true == swadgePassRxInit)
+    {
+        swadgePassRxInit = false;
+        freeSwadgePasses(&rxSwadgePasses);
+    }
+}
+
+/**
  * @brief Receive an ESP NOW packet and save it if it is a SwadgePass packet
+ *
+ * This limits the number of received SwadgePasses to ::MAX_NUM_SWADGE_PASSES. If a SwadgePass is received while at
+ * capacity, the most used SwadgePass will be deleted first, as determined by the most number of bits set in
+ * swadgePassNvs_t.usedModeMask.
+ *
+ * If a SwadgePass is received from a Swadge for which there already is data, the old data will be overwritten if it's
+ * different and the swadgePassNvs_t.usedModeMask will always be cleared.
  *
  * @param esp_now_info Metadata for the packet, including src and dst MAC addresses
  * @param data The received data
@@ -83,6 +124,13 @@ static inline void macToStr(const uint8_t* macAddr, char* outStr, size_t outStrL
 void receiveSwadgePass(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len,
                        int8_t rssi __attribute__((unused)))
 {
+    // Make sure it's initialized first
+    if (false == swadgePassRxInit)
+    {
+        // Not initialized, so ignore this packet
+        return;
+    }
+
     // Validate length
     if (len == sizeof(swadgePassPacket_t))
     {
@@ -94,15 +142,90 @@ void receiveSwadgePass(const esp_now_recv_info_t* esp_now_info, const uint8_t* d
             char macStr[MAC_STR_LEN];
             macToStr(esp_now_info->src_addr, macStr, sizeof(macStr));
 
-            // Create the NVS data, which is the packet and a mask of if it was used by modes
-            swadgePassNvs_t packetNvs;
-            memcpy(&packetNvs.packet, data, sizeof(swadgePassPacket_t));
+            // Variables to find the most used data
+            int maxBitsUsed      = 0;
+            node_t* mostUsedNode = rxSwadgePasses.first;
 
-            // Clear the used mode mask because this is a new packet
-            packetNvs.usedModeMask = 0;
+            // Iterate through the known SwadgePass data
+            node_t* spNode = rxSwadgePasses.first;
+            while (spNode)
+            {
+                // Convenience pointer
+                swadgePassData_t* spd = (swadgePassData_t*)spNode->val;
+
+                // If the received key matches a key in the local list
+                if (0 == strcmp(spd->key, macStr))
+                {
+                    // SwadgePass data already exists, so check if it's different or if it's been used
+                    if (0 != memcmp(&spd->data.packet, data, sizeof(swadgePassPacket_t)) || //
+                        0 != spd->data.usedModeMask)
+                    {
+                        // Packet is different, copy into local list
+                        memcpy(&spd->data.packet, data, sizeof(swadgePassPacket_t));
+
+                        // Clear the used mode mask too
+                        spd->data.usedModeMask = 0;
+
+                        // Write to NVS. This will overwrite the old entry
+                        writeNamespaceNvsBlob(NS_SP, spd->key, &spd->data, sizeof(swadgePassNvs_t));
+                    }
+
+                    // Return here because the data is already in the local list and NVS
+                    return;
+                }
+                else
+                {
+                    // Count the number of bits set in this data's usedModeMask
+                    int bitsUsed = __builtin_popcount(spd->data.usedModeMask);
+
+                    // If this data has more bits set (i.e. more used)
+                    if (bitsUsed > maxBitsUsed)
+                    {
+                        // Save it for potential removal later
+                        maxBitsUsed  = bitsUsed;
+                        mostUsedNode = spNode;
+                    }
+                }
+
+                // Iterate to the next node
+                spNode = spNode->next;
+            }
+
+            // Made it this far, which means the data isn't in the local list or NVS
+            if (0 == maxBitsUsed)
+            {
+                // The most used data hasn't been used at all!
+                // The user must use their data before collecting new ones
+                // Return without saving the received data to NVS
+                return;
+            }
+            // If the local list is at capacity, evict the most used data first
+            else if (MAX_NUM_SWADGE_PASSES == rxSwadgePasses.length)
+            {
+                // Remove from the local list
+                swadgePassData_t* removedVal = removeEntry(&rxSwadgePasses, mostUsedNode);
+
+                // Remove from NVS
+                eraseNamespaceNvsKey(NS_SP, removedVal->key);
+
+                // Free from memory
+                heap_caps_free(removedVal);
+            }
+
+            // By here, we know that the SwadgePass data isn't in the local list, and there's room for it.
+            // add it to NVS and the local list
+
+            // Allocate for storage for the local list
+            swadgePassData_t* newSpd = heap_caps_calloc(1, sizeof(swadgePassData_t), MALLOC_CAP_SPIRAM);
+            memcpy(newSpd->key, macStr, sizeof(macStr));
+            newSpd->data.usedModeMask = 0;
+            memcpy(&newSpd->data.packet, data, sizeof(swadgePassPacket_t));
+
+            // Push into the local local list
+            push(&rxSwadgePasses, newSpd);
 
             // Write the received data to NVS
-            writeNamespaceNvsBlob(NS_SP, macStr, (void*)&packetNvs, sizeof(swadgePassNvs_t));
+            writeNamespaceNvsBlob(NS_SP, newSpd->key, (void*)&newSpd->data, sizeof(swadgePassNvs_t));
         }
     }
 }
@@ -110,8 +233,8 @@ void receiveSwadgePass(const esp_now_recv_info_t* esp_now_info, const uint8_t* d
 /**
  * @brief Fill a list with SwadgePass data. The list should be empty before calling this function.
  *
- * @param swadgePasses A list to fill with type \ref swadgePassData_t
- * @param mode The Swadge Mode getting SwadgePass data
+ * @param swadgePasses A list to fill with type ::swadgePassData_t
+ * @param mode The Swadge Mode getting SwadgePass data (may be NULL)
  * @param getUsed true to return all SwadgePass data, false to return only unused SwadgePass data
  */
 void getSwadgePasses(list_t* swadgePasses, const struct swadgeMode* mode, bool getUsed)
@@ -136,7 +259,7 @@ void getSwadgePasses(list_t* swadgePasses, const struct swadgeMode* mode, bool g
         if (sizeof(swadgePassNvs_t) == outLen)
         {
             // Add to the list if either all data is requested or it hasn't been used yet
-            if (getUsed || !isPacketUsedByMode(spd, mode))
+            if (getUsed || (mode && false == isPacketUsedByMode(spd, mode)))
             {
                 // Add key to the data
                 memcpy(spd->key, key, strlen(key));
@@ -165,7 +288,7 @@ void getSwadgePasses(list_t* swadgePasses, const struct swadgeMode* mode, bool g
 /**
  * @brief Free SwadgePass data loaded with getSwadgePasses()
  *
- * @param swadgePasses A list of SwadgePasses to free. The list should contain \ref swadgePassData_t
+ * @param swadgePasses A list of SwadgePasses to free. The list should contain ::swadgePassData_t
  */
 void freeSwadgePasses(list_t* swadgePasses)
 {

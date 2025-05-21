@@ -6,7 +6,7 @@
  * inspired by Nintendo's [StreetPass](https://en.wikipedia.org/wiki/SpotPass_and_StreetPass). SwadgePass data may
  * include things like avatar data or high scores from all Swadge Modes.
  *
- * SwadgePass uses ESP-NOW, not WiFi or Bluetooth. See \ref hdw-esp-now.h.
+ * SwadgePass uses ESP-NOW, not WiFi or Bluetooth. See hdw-esp-now.h.
  *
  * \subsection swadgePass_tx_rx Transmission and Reception
  *
@@ -16,21 +16,23 @@
  * Swadge stays awake and listening for 700ms. While not transmitting or listening, the Swadge light sleeps for 100ms
  * increments, updating the LEDs ten times per second.
  *
- * Packets are received with receiveSwadgePass(). Any incoming packet may be passed to this function, including from
- * modes which are using ESP-NOW for other purposes.
+ * The receiver is initialized with initSwadgePassReceiver() and packets are received with receiveSwadgePass(). Any
+ * incoming packet may be passed to this function, including from modes which are using ESP-NOW for other purposes,
+ * as long as the receiver was initialized. deinitSwadgePassReceiver() frees memory allocated for the receiver.
  *
  * During normal operation, if not explicitly used the WiFi radio is turned off and SwadgePass data is neither
  * transmitted nor received.
  *
  * \section swadgePass_usage Usage
  *
- * Transmission and reception of SwadgePass data is automatic and does not need to be managed by each SwadgeMode (see
- * \ref swadgePass_tx_rx).
+ * Transmission and reception of SwadgePass data is automatic in `dance.c` and does not need to be managed by each
+ * SwadgeMode (see \ref swadgePass_tx_rx). Other modes may transmit and receive SwadgePass data, but it is discouraged
+ * for battery reasons.
  *
  * \subsection sp_building_packet Building a Packet for Transmission
  *
- * A \ref swadgePassPacket_t is built with the function fillSwadgePassPacket(), which calls each mode's
- * swadgeMode_t.fnAddToSwadgePassPacket function. Each mode may add data to \ref swadgePassPacket_t, and modes must not
+ * A ::swadgePassPacket_t is built with the function fillSwadgePassPacket(), which calls each mode's
+ * swadgeMode_t.fnAddToSwadgePassPacket function. Each mode may add data to ::swadgePassPacket_t, and modes must not
  modify data which is not their own. The total packet size must be less than 250 bytes, which is the largest possible
  ESP-NOW packet.
  *
@@ -40,9 +42,9 @@
  *
  * \subsection sp_using_packets Using Received SwadgePass Data
  *
- * Swadge Modes may check received SwadgePass data by giving an empty \ref list_t to getSwadgePasses() to fill.
+ * Swadge Modes may check received SwadgePass data by giving an empty ::list_t to getSwadgePasses() to fill.
  * getSwadgePasses() may fill the list with all received SwadgePass data, or only SwadgePass data which has not been
- * used by the given mode yet. After being filled, the list contain pointers to \ref swadgePassData_t and may be
+ * used by the given mode yet. After being filled, the list contain pointers to ::swadgePassData_t and may be
  * iterated through. swadgePassData_t.key is the string representation of the source MAC address. SwadgePass data will
  * not change during Swadge Modes (aside from `dance.c`), so the data should be loaded once and saved for the mode's
  * lifetime. getSwadgePasses() should not be called repeatedly.
@@ -147,6 +149,9 @@ struct swadgeMode;
 //==============================================================================
 // Function Declarations
 //==============================================================================
+
+void initSwadgePassReceiver(void);
+void deinitSwadgePassReceiver(void);
 
 void fillSwadgePassPacket(swadgePassPacket_t* packet);
 void sendSwadgePass(swadgePassPacket_t* packet);

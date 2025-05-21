@@ -233,6 +233,7 @@ void danceEnterMode(void)
     addSingleItemToMenu(danceState->menu, str_exit);
 
     // Initialize SwadgePass
+    initSwadgePassReceiver();
     fillSwadgePassPacket(&danceState->packet);
     danceState->swadgePassCount = 0;
 }
@@ -250,6 +251,8 @@ void danceExitMode(void)
     }
     deinitMenuManiaRenderer(danceState->menuRenderer);
     deinitMenu(danceState->menu);
+
+    deinitSwadgePassReceiver();
 
     heap_caps_free(danceState->danceNames);
     heap_caps_free(danceState->danceVals);
