@@ -87,7 +87,7 @@ static void _getMacAddress(void);
 
 static void _getWordFromList(int listIdx, int idx, char* buffer, int buffLen);
 
-static uint8_t _mutateIdx(uint8_t arrSize, uint8_t idx, uint8_t seed);
+static uint8_t _checkIfUserIdxInBounds(int8_t idx, uint8_t arrSize, uint8_t seed);
 
 // Drawing functions
 
@@ -110,18 +110,18 @@ static font_t fnt;
 
 void initUsernameSystem()
 {
-    _getMacAddress();
     listLen[0] = ARRAY_SIZE(adjList1);
     listLen[1] = ARRAY_SIZE(adjList2);
     listLen[2] = ARRAY_SIZE(nounList);
+    _getMacAddress();
     loadFont(IBM_VGA_8_FONT, &fnt, true);
 }
 
 void generateMACUsername(nameData_t* nd)
 {
-    nd->idxs[ADJ1] = mutatorSeeds[0] % listLen[ADJ1]; // Functionally equivalent to _mutateIdx() w/ idx = 0
-    nd->idxs[ADJ2] = mutatorSeeds[1] % listLen[ADJ2];
-    nd->idxs[NOUN] = mutatorSeeds[2] % listLen[NOUN];
+    nd->idxs[ADJ1] = mutatorSeeds[0];
+    nd->idxs[ADJ2] = mutatorSeeds[1];
+    nd->idxs[NOUN] = mutatorSeeds[2];
     nd->randCode   = baseMac[5];
     snprintf(nd->nameBuffer, USERNAME_MAX_LEN - 1, "%s-%s-%s-%" PRId16, adjList1[nd->idxs[ADJ1]],
              adjList2[nd->idxs[ADJ2]], nounList[nd->idxs[NOUN]], nd->randCode);
@@ -131,9 +131,9 @@ void generateRandUsername(nameData_t* nd)
 {
     if (nd->user)
     {
-        nd->idxs[ADJ1] = _mutateIdx(listLen[ADJ1], esp_random(), mutatorSeeds[ADJ1]);
-        nd->idxs[ADJ2] = _mutateIdx(listLen[ADJ2], esp_random(), mutatorSeeds[ADJ2]);
-        nd->idxs[NOUN] = _mutateIdx(listLen[NOUN], esp_random(), mutatorSeeds[NOUN]);
+        nd->idxs[ADJ1] = _checkIfUserIdxInBounds(esp_random(), listLen[ADJ1], mutatorSeeds[ADJ1]);
+        nd->idxs[ADJ2] = _checkIfUserIdxInBounds(esp_random(), listLen[ADJ2], mutatorSeeds[ADJ2]);
+        nd->idxs[NOUN] = _checkIfUserIdxInBounds(esp_random(), listLen[NOUN], mutatorSeeds[NOUN]);
         nd->randCode   = baseMac[5];
     }
     else
@@ -151,9 +151,11 @@ void setUsernameFromND(nameData_t* nd)
 {
     if (nd->user)
     {
-        nd->idxs[ADJ1] = _mutateIdx(listLen[ADJ1], nd->idxs[ADJ1], mutatorSeeds[ADJ1]);
-        nd->idxs[ADJ2] = _mutateIdx(listLen[ADJ2], nd->idxs[ADJ2], mutatorSeeds[ADJ2]);
-        nd->idxs[NOUN] = _mutateIdx(listLen[NOUN], nd->idxs[NOUN], mutatorSeeds[NOUN]);
+        // FIXME: Need to keep the ID unless it's outside the bounds, not always mutate it.
+
+        nd->idxs[ADJ1] = _checkIfUserIdxInBounds(nd->idxs[ADJ1], listLen[ADJ1], mutatorSeeds[ADJ1]);
+        nd->idxs[ADJ2] = _checkIfUserIdxInBounds(nd->idxs[ADJ2], listLen[ADJ2], mutatorSeeds[ADJ2]);
+        nd->idxs[NOUN] = _checkIfUserIdxInBounds(nd->idxs[NOUN], listLen[NOUN], mutatorSeeds[NOUN]);
         nd->randCode   = baseMac[5];
     }
 
@@ -222,11 +224,8 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd)
                 nd->idxs[nd->arrayIdx]--;
                 if (nd->user)
                 {
-                    if (nd->idxs[nd->arrayIdx] < _mutateIdx(listLen[nd->arrayIdx], 0, mutatorSeeds[nd->arrayIdx]))
-                    {
-                        nd->idxs[nd->arrayIdx]
-                            = _mutateIdx(listLen[nd->arrayIdx], listLen[nd->arrayIdx] - 1, mutatorSeeds[nd->arrayIdx]);
-                    }
+                    nd->idxs[nd->arrayIdx] = _checkIfUserIdxInBounds(nd->idxs[nd->arrayIdx], listLen[nd->arrayIdx],
+                                                                     mutatorSeeds[nd->arrayIdx]);
                 }
                 else
                 {
@@ -248,11 +247,8 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd)
                 nd->idxs[nd->arrayIdx]++;
                 if (nd->user)
                 {
-                    if (nd->idxs[nd->arrayIdx]
-                        > _mutateIdx(listLen[nd->arrayIdx], listLen[nd->arrayIdx] - 1, mutatorSeeds[nd->arrayIdx]))
-                    {
-                        nd->idxs[nd->arrayIdx] = _mutateIdx(listLen[nd->arrayIdx], 0, mutatorSeeds[nd->arrayIdx]);
-                    }
+                    nd->idxs[nd->arrayIdx] = _checkIfUserIdxInBounds(nd->idxs[nd->arrayIdx], listLen[nd->arrayIdx],
+                                                                     mutatorSeeds[nd->arrayIdx]);
                 }
                 else
                 {
@@ -349,9 +345,11 @@ static void _getMacAddress()
     ESP_LOGI("USRN", "MAC:%d:%d:%d:%d:%d:%d", baseMac[0], baseMac[1], baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
 
     // Generate seeds
-    mutatorSeeds[NOUN] = baseMac[4] ^ baseMac[5];
-    mutatorSeeds[ADJ2] = baseMac[3] ^ baseMac[5];
-    mutatorSeeds[ADJ1] = baseMac[3] ^ mutatorSeeds[NOUN];
+    mutatorSeeds[NOUN] = (baseMac[4] ^ baseMac[5]) % listLen[NOUN];
+    mutatorSeeds[ADJ2] = (baseMac[3] ^ baseMac[5]) % listLen[ADJ2];
+    mutatorSeeds[ADJ1] = (baseMac[3] ^ baseMac[4] ^ baseMac[5]) % listLen[ADJ1];
+    ESP_LOGI("USRN", "Seeds: Adj1: %d, Adj2: %d, Noun: %d, Number: %d", mutatorSeeds[0], mutatorSeeds[1],
+             mutatorSeeds[2], baseMac[5]);
 }
 
 static void _getWordFromList(int listIdx, int idx, char* buffer, int buffLen)
@@ -380,9 +378,16 @@ static void _getWordFromList(int listIdx, int idx, char* buffer, int buffLen)
     }
 }
 
-static uint8_t _mutateIdx(uint8_t arrSize, uint8_t idx, uint8_t seed)
+static uint8_t _checkIfUserIdxInBounds(int8_t idx, uint8_t arrSize, uint8_t seed)
 {
-    return (seed + (idx % (arrSize >> USER_LIST_SHIFT))) % arrSize;
+    // This function is going to kill me
+    int range = arrSize >> USER_LIST_SHIFT;
+    while (idx < seed)
+    {
+        idx += range;
+    }
+    idx %= arrSize;
+    return idx;
 }
 
 // Drawing functions
@@ -429,13 +434,14 @@ static void _drawFadingWords(nameData_t* nd)
         {
             if (nd->user)
             {
+                _drawWordCenteredOnX(ADJ1_X + listId * WORDSPACING, -WORD_OFFSET * offset,
+                                     curr[_checkIfUserIdxInBounds(nd->idxs[listId] - offset + listLen[listId],
+                                                                  listLen[listId], mutatorSeeds[listId])],
+                                     color - offset * COLOR_OFFSET);
                 _drawWordCenteredOnX(
-                    ADJ1_X + listId * WORDSPACING, -WORD_OFFSET * offset,
-                    curr[_mutateIdx(listLen[listId], nd->idxs[listId] - offset + listLen[listId], mutatorSeeds[listId])],
-                    c544 - offset * COLOR_OFFSET);
-                _drawWordCenteredOnX(ADJ1_X + listId * WORDSPACING, WORD_OFFSET * offset,
-                                     curr[_mutateIdx(listLen[listId], nd->idxs[listId] + offset, mutatorSeeds[listId])],
-                                     c544 - offset * COLOR_OFFSET);
+                    ADJ1_X + listId * WORDSPACING, WORD_OFFSET * offset,
+                    curr[_checkIfUserIdxInBounds(nd->idxs[listId] + offset, listLen[listId], mutatorSeeds[listId])],
+                    color - offset * COLOR_OFFSET);
             }
             else
             {

@@ -70,7 +70,7 @@ static void ntTestWPrint()
     ESP_LOGI("NAME", "MAC-Based: %s", nt->nd.nameBuffer);
 
     // FIXME: 20 is hardcoded half of lists, all three lists are 40
-    for (int idx = 0; idx < 20; idx++)
+    for (int idx = 0; idx < 12; idx++)
     {
         setUsernameFromIdxs(&nt->nd, idx, idx, idx, idx);
         ESP_LOGI("NAME", "User: %s", nt->nd.nameBuffer);
@@ -81,7 +81,7 @@ static void ntTestWPrint()
     for (int idx = 0; idx < 40; idx++)
     {
         setUsernameFromIdxs(&nt->nd, idx, idx, idx, idx);
-        ESP_LOGI("NAME", "Sona: %s", nt->nd.nameBuffer);
+        //ESP_LOGI("NAME", "Sona: %s", nt->nd.nameBuffer);
     }
 
     generateRandUsername(&nt->nd);
@@ -91,6 +91,6 @@ static void ntTestWPrint()
     ESP_LOGI("NAME", "Rand2: %s", nt->nd.nameBuffer);
 
     // Set the longest name for testing
-    nt->nd.user = false;
-    setUsernameFromIdxs(&nt->nd, 26, 13, 24, 255);
+    nt->nd.user = true;
+    setUsernameFromIdxs(&nt->nd, 0, 0, 0, 0);
 }
