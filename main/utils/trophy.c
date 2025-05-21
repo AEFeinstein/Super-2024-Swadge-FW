@@ -23,6 +23,9 @@
 #include "hdw-tft.h"
 #include "esp_log.h"
 
+// ModeList
+#include "modeIncludeList.h"
+
 // Drawing
 #include "fs_font.h"
 #include "fs_wsg.h"
@@ -515,24 +518,26 @@ int trophyGetPoints(bool total, const char* modeName)
     return _loadPoints(total, modeName);
 }
 
-int trophyGetNumTrophies()
+trophyData_t trophyGetLatest()
 {
-    return trophySystem.data->length;
-}
+    // Fetch data from NVS
+    char buffer[NVS_KEY_NAME_MAX_SIZE];
+    int trophyIdx   = _loadLatestWin(buffer);
+    trophyData_t td = {};
 
-const trophyData_t* trophyGetTrophyList(void)
-{
-    return trophySystem.data->list;
-}
-
-int32_t getLatestTrophyIdx(char* buffer)
-{
-    return _loadLatestWin(buffer);
-}
-
-trophyData_t getTrophyDataFromIdx(int idx)
-{
-    return trophySystem.data->list[idx];
+    // Match mode
+    for (int idx = 0; idx < modeListGetCount(); idx++)
+    {
+        if (allSwadgeModes[idx]->trophyData == NULL)
+        {
+            continue;
+        }
+        else if (strcmp(buffer, allSwadgeModes[idx]->trophyData->settings->namespaceKey) == 0)
+        {
+            td = allSwadgeModes[idx]->trophyData->list[trophyIdx];
+        }
+    }
+    return td;
 }
 
 void trophySetSystemData(trophyDataList_t* dl, const char* modeName)

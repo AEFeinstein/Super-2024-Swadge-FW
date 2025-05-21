@@ -362,41 +362,46 @@ static void runTrophy(int64_t elapsedUs)
             char buffer[64];
 
             // Trigger
-            drawText(getSysFont(), c555, textBlobs[0], 32, 32);
+            drawText(getSysFont(), c555, textBlobs[0], 32, 16);
             snprintf(buffer, sizeof(buffer) - 1, "Current: %" PRId32, tt->aPresses);
-            drawText(getSysFont(), c500, buffer, 32, 48);
+            drawText(getSysFont(), c500, buffer, 32, 32);
 
             // Additive
-            drawText(getSysFont(), c555, textBlobs[1], 32, 64);
+            drawText(getSysFont(), c555, textBlobs[1], 32, 48);
             snprintf(buffer, sizeof(buffer) - 1, "Current: %" PRId32, tt->bPresses);
-            drawText(getSysFont(), c050, buffer, 32, 80);
+            drawText(getSysFont(), c050, buffer, 32, 64);
 
             // Progress
-            drawText(getSysFont(), c555, textBlobs[2], 32, 96);
+            drawText(getSysFont(), c555, textBlobs[2], 32, 80);
             snprintf(buffer, sizeof(buffer) - 1, "Previous Best: %" PRId32, tt->upTime);
-            drawText(getSysFont(), c005, buffer, 32, 112);
+            drawText(getSysFont(), c005, buffer, 32, 96);
             snprintf(buffer, sizeof(buffer) - 1, "Current: %f", (tt->heldTimer * 1.0f) / SECOND_US);
-            drawText(getSysFont(), c005, buffer, 32, 128);
+            drawText(getSysFont(), c005, buffer, 32, 112);
 
             // Checklist
             int16_t startX = 32;
-            int16_t startY = 146;
+            int16_t startY = 130;
             drawTextWordWrap(getSysFont(), c555, textBlobs[3], &startX, &startY, TFT_WIDTH - 32, TFT_HEIGHT);
             paletteColor_t c = checkBitFlag(tt->checklistFlags, CLT_DOWN) ? c550 : c333;
-            drawText(getSysFont(), c, "Down", 70, 170);
+            drawText(getSysFont(), c, "Down", 70, 154);
             c = checkBitFlag(tt->checklistFlags, CLT_LEFT) ? c505 : c333;
-            drawText(getSysFont(), c, "Left", 32, 170);
+            drawText(getSysFont(), c, "Left", 32, 154);
             c = checkBitFlag(tt->checklistFlags, CLT_RIGHT) ? c055 : c333;
-            drawText(getSysFont(), c, "Right", 108, 170);
+            drawText(getSysFont(), c, "Right", 108, 154);
 
-            // Go to menu
-            drawText(getSysFont(), c555, textBlobs[4], 32, TFT_HEIGHT - 32);
+            // Get latest trophy
+            trophyData_t td = trophyGetLatest();
+            snprintf(buffer, sizeof(buffer) - 1, "Latest trophy: %s", td.title);
+            drawText(getSysFont(), c555, buffer, 32, 190);
 
             // Draw points
             int modeTotal = trophyGetPoints(false, NULL);
             int total     = trophyGetPoints(true, NULL);
             snprintf(buffer, sizeof(buffer) - 1, "Mode Total: %d, total: %d", modeTotal, total);
-            drawText(getSysFont(), c555, buffer, 32, 190);
+            drawText(getSysFont(), c555, buffer, 32, 206);
+
+            // Go to menu
+            drawText(getSysFont(), c555, textBlobs[4], 32, TFT_HEIGHT - 16);
             break;
         }
     }

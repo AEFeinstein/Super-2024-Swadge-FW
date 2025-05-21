@@ -376,33 +376,11 @@ void setBitFlag(int32_t* flags, int8_t idx, bool setTrue);
 int trophyGetPoints(bool total, const char* modeName);
 
 /**
- * @brief Gets the number of trophies associated with a mode, or current mode if NULL
- *
- * @return int total number of trophies in given mode.
- */
-int trophyGetNumTrophies(void);
-
-/**
- * @brief Returns a pointer to the data struct containing all the trophy data
- *
- * @return const trophyData_t*
- */
-const trophyData_t* trophyGetTrophyList(void);
-
-/**
  * @brief Get the Latest Trophy Idx object
  *
- * @return int32_t Returned idx
+ * @return trophyData_t data for the latest win
  */
-int32_t getLatestTrophyIdx(char* buffer);
-
-/**
- * @brief Get the Trophy Data From Idx object
- *
- * @param idx
- * @return trophyData_t
- */
-trophyData_t getTrophyDataFromIdx(int idx);
+trophyData_t trophyGetLatest(void);
 
 /**
  * @brief Set the Trophy System to a specific mode's values
