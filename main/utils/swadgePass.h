@@ -120,6 +120,11 @@ typedef struct __attribute__((packed)) swadgePassPacket
 {
     uint16_t preamble; ///< Two bytes that specifically begin a SwadgePass packet
     uint8_t version;   ///< A version byte to differentiate packets per-year
+    struct
+    {
+        int8_t reactHs;
+        int8_t memHs;
+    } swadgeIt;
 } swadgePassPacket_t;
 
 /**
