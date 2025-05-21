@@ -1235,9 +1235,9 @@ static bool emuGetInjected32(const char* namespace, const char* key, int32_t* ou
 }
 
 /**
- * @brief Fill a given \ref list_t with all the NVS string keys for the given namespace.
+ * @brief Fill a given ::list_t with all the NVS string keys for the given namespace.
  *
- * The \ref list_t should be empty before passing into this function.
+ * The ::list_t should be empty before passing into this function.
  *
  * List elements must be heap_caps_free()
  *
