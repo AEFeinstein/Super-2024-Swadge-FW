@@ -316,10 +316,11 @@ void danceMainLoop(int64_t elapsedUs)
             // Screen is not blank, draw to it
             drawMenuMania(danceState->menu, danceState->menuRenderer, elapsedUs);
 
-            font_t* f = danceState->menuRenderer->menuFont;
-            char str[16];
-            sprintf(str, "SP: %" PRId32, danceState->swadgePassCount);
-            drawText(f, c000, str, (TFT_WIDTH - textWidth(f, str)) / 2, TFT_HEIGHT - f->height);
+            // Uncomment to draw a count of SwadgePasses received this session
+            // font_t* f = danceState->menuRenderer->menuFont;
+            // char str[16];
+            // sprintf(str, "SP: %" PRId32, danceState->swadgePassCount);
+            // drawText(f, c000, str, (TFT_WIDTH - textWidth(f, str)) / 2, TFT_HEIGHT - f->height);
         }
     }
 

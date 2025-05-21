@@ -306,7 +306,7 @@ static void swadgeItEnterMode(void)
     }
 
     // Get unused SwadgePasses for this mode
-    list_t swadgePasses;
+    list_t swadgePasses = {0};
     getSwadgePasses(&swadgePasses, &swadgeItMode, false);
 
     // Iterate through the SwadgePass data
