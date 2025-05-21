@@ -34,7 +34,7 @@
  *
  * -# First, follow the guide to \ref setup. This will walk you through setting up the toolchain and compiling the
  * firmware and emulator.
- * -# Next, read about the basics of a Swadge Mode at \ref swadge2024.h.
+ * -# Next, read about the basics of a Swadge Mode at swadge2024.h.
  * -# Once you understand the basics of a Swadge Mode, check out the \ref swadge_mode_example to see a simple mode in
  * action.
  * -# After you grasp the example, you can go deeper and read the full \ref apis to understand the full capability of
@@ -90,6 +90,7 @@
  *
  * - hdw-esp-now.h: Broadcast and receive messages. This is fast and unreliable.
  * - p2pConnection.h: Connect to another Swadge and exchange messages. This is slower and more reliable.
+ * - swadgePass.h: Send and receive small amounts of data like avatars or high scores while the Swadge is idle.
  *
  * \subsection pm_api Persistent Memory APIs
  *

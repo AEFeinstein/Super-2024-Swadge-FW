@@ -44,6 +44,7 @@
 #include "mode_synth.h"
 #include "sequencerMode.h"
 #include "swadgeIt.h"
+#include "swadgePassTest.h"
 #include "touchTest.h"
 #include "tunernome.h"
 
@@ -59,11 +60,19 @@
 int modeListGetCount(void);
 
 /**
- * @brief Iniitalizes a menu with all the current swadge modes
+ * @brief Initializes a menu with all the current swadge modes
  *
  * @param menu Menu to set
  */
 void modeListSetMenu(menu_t* menu);
+
+/**
+ * @brief Get the unique index of a mode
+ *
+ * @param mode The mode to get an index for
+ * @return The index of the mode
+ */
+int32_t getModeIdx(const swadgeMode_t* mode);
 
 //==============================================================================
 // Externs
