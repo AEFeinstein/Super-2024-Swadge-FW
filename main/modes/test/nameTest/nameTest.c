@@ -33,7 +33,7 @@ static void ntEnterMode(void)
     nt->nd.user = false;
 
     // Run all things for testing purposes
-    // ntTestWPrint();
+    ntTestWPrint();
 }
 
 static void ntExitMode(void)

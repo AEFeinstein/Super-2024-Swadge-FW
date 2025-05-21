@@ -33,8 +33,9 @@
 
 // Screen arrangement
 #define ADJ1_X      47
-#define ADJ2_X      119
-#define NOUN_X      191
+#define WORDSPACING 72
+#define ADJ2_X      (ADJ1_X + WORDSPACING)
+#define NOUN_X      (ADJ2_X + WORDSPACING)
 #define WORD_OFFSET 20
 
 // Color
@@ -210,7 +211,7 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd)
                 }
             }
         }
-        else if (evt->button & PB_UP)
+        else if (evt->button & PB_UP) // FIXME: Allow holding down after a pause
         {
             if (nd->arrayIdx == RAND_NUM)
             {
@@ -285,7 +286,7 @@ void drawUsernamePicker(nameData_t* nd)
     _drawWordCenteredOnX(245, 0, buffer, nd->user ? c444 : c555);
 
     // draw tack marks
-    _drawWordCenteredOnX(83, 0, "-", c555);
+    _drawWordCenteredOnX(83, 0, "-", c555); // Numbers determined experimentally
     _drawWordCenteredOnX(155, 0, "-", c555);
     _drawWordCenteredOnX(227, 0, "-", c555);
 
@@ -395,55 +396,56 @@ static void _drawWordCenteredOnX(int xCenter, int yOffset, const char* str, pale
 
 static void _drawFadingWords(nameData_t* nd)
 {
-    for (int offset = 1; offset < 4; offset++)
+    for (int listId = 0; listId < 3; listId++)
     {
-        if (nd->user)
+        const char* const* curr;
+        paletteColor_t color;
+        switch (listId)
         {
-            // TODO: Figure out if I can merge word lists to cut this in three
-            // FIXME: Very odd behavior
-            // Adj1
-            _drawWordCenteredOnX(
-                ADJ1_X, -WORD_OFFSET * offset,
-                adjList1[_mutateIdx(listLen[ADJ1], nd->idxs[ADJ1] - offset + listLen[ADJ1], mutatorSeeds[ADJ1])],
-                c544 - offset * COLOR_OFFSET);
-            _drawWordCenteredOnX(ADJ1_X, WORD_OFFSET * offset,
-                                 adjList1[_mutateIdx(listLen[ADJ1], nd->idxs[ADJ1] + offset, mutatorSeeds[ADJ1])],
-                                 c544 - offset * COLOR_OFFSET);
-            // Adj2
-            _drawWordCenteredOnX(
-                ADJ2_X, -WORD_OFFSET * offset,
-                adjList2[_mutateIdx(listLen[ADJ2], nd->idxs[ADJ2] - offset + listLen[ADJ2], mutatorSeeds[ADJ2])],
-                c454 - offset * COLOR_OFFSET);
-            _drawWordCenteredOnX(ADJ2_X, WORD_OFFSET * offset,
-                                 adjList2[_mutateIdx(listLen[ADJ2], nd->idxs[ADJ2] + offset, mutatorSeeds[ADJ2])],
-                                 c454 - offset * COLOR_OFFSET);
-            // Noun
-            _drawWordCenteredOnX(
-                NOUN_X, -WORD_OFFSET * offset,
-                nounList[_mutateIdx(listLen[NOUN], nd->idxs[NOUN] - offset + listLen[NOUN], mutatorSeeds[NOUN])],
-                c445 - offset * COLOR_OFFSET);
-            _drawWordCenteredOnX(NOUN_X, WORD_OFFSET * offset,
-                                 nounList[_mutateIdx(listLen[NOUN], nd->idxs[NOUN] + offset, mutatorSeeds[NOUN])],
-                                 c445 - offset * COLOR_OFFSET);
+            case ADJ1:
+            {
+                curr  = adjList1;
+                color = c544;
+                break;
+            }
+            case ADJ2:
+            {
+                curr  = adjList2;
+                color = c454;
+                break;
+            }
+            case NOUN:
+            {
+                curr  = nounList;
+                color = c445;
+                break;
+            }
+            default:
+            {
+                break;
+            }
         }
-        else
+        for (int offset = 1; offset < 4; offset++)
         {
-            // TODO: Figure out if I can merge word lists to cut this in three
-            _drawWordCenteredOnX(ADJ1_X, -WORD_OFFSET * offset,
-                                 adjList1[(nd->idxs[ADJ1] - offset + listLen[ADJ1]) % listLen[ADJ1]],
-                                 c544 - offset * COLOR_OFFSET);
-            _drawWordCenteredOnX(ADJ1_X, WORD_OFFSET * offset, adjList1[(nd->idxs[ADJ1] + offset) % listLen[ADJ1]],
-                                 c544 - offset * COLOR_OFFSET);
-            _drawWordCenteredOnX(ADJ2_X, -WORD_OFFSET * offset,
-                                 adjList2[(nd->idxs[ADJ2] - offset + listLen[ADJ2]) % listLen[ADJ2]],
-                                 c454 - offset * COLOR_OFFSET);
-            _drawWordCenteredOnX(ADJ2_X, WORD_OFFSET * offset, adjList2[(nd->idxs[ADJ2] + offset) % listLen[ADJ2]],
-                                 c454 - offset * COLOR_OFFSET);
-            _drawWordCenteredOnX(NOUN_X, -WORD_OFFSET * offset,
-                                 nounList[(nd->idxs[NOUN] - offset + listLen[NOUN]) % listLen[NOUN]],
-                                 c445 - offset * COLOR_OFFSET);
-            _drawWordCenteredOnX(NOUN_X, WORD_OFFSET * offset, nounList[(nd->idxs[NOUN] + offset) % listLen[NOUN]],
-                                 c445 - offset * COLOR_OFFSET);
+            if (nd->user)
+            {
+                _drawWordCenteredOnX(
+                    ADJ1_X + listId * WORDSPACING, -WORD_OFFSET * offset,
+                    curr[_mutateIdx(listLen[listId], nd->idxs[listId] - offset + listLen[listId], mutatorSeeds[listId])],
+                    c544 - offset * COLOR_OFFSET);
+                _drawWordCenteredOnX(ADJ1_X + listId * WORDSPACING, WORD_OFFSET * offset,
+                                     curr[_mutateIdx(listLen[listId], nd->idxs[listId] + offset, mutatorSeeds[listId])],
+                                     c544 - offset * COLOR_OFFSET);
+            }
+            else
+            {
+                _drawWordCenteredOnX(ADJ1_X + listId * WORDSPACING, -WORD_OFFSET * offset,
+                                     curr[(nd->idxs[listId] - offset + listLen[listId]) % listLen[listId]],
+                                     color - offset * COLOR_OFFSET);
+                _drawWordCenteredOnX(ADJ1_X + listId * WORDSPACING, WORD_OFFSET * offset,
+                                     curr[(nd->idxs[listId] + offset) % listLen[listId]],
+                                     color - offset * COLOR_OFFSET);
+            }
         }
     }
 }
