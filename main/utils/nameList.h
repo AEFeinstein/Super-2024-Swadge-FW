@@ -57,7 +57,6 @@ void generateMACUsername(nameData_t* nd);
  * @brief Generates a random username. If user is true, locks the end code.
  *
  * @param nd Data struct the name is saved to
- * @param user If this is a username or not
  */
 void generateRandUsername(nameData_t* nd);
 
@@ -65,7 +64,6 @@ void generateRandUsername(nameData_t* nd);
  * @brief Sets the username from a predefined nd
  *
  * @param nd nd containing the data
- * @param user if this is a user or not
  */
 void setUsernameFromND(nameData_t* nd);
 
@@ -77,7 +75,6 @@ void setUsernameFromND(nameData_t* nd);
  * @param idx2 Second index
  * @param idx3 Third index
  * @param randomCode numbers at the end of the swadge
- * @param user If this is the user of the swadge. Locks the random code to THIS swadge's MAC
  */
 void setUsernameFromIdxs(nameData_t* nd, int idx1, int idx2, int idx3, int randomCode);
 
@@ -86,7 +83,6 @@ void setUsernameFromIdxs(nameData_t* nd, int idx1, int idx2, int idx3, int rando
  *
  * @param evt The button event object
  * @param nd Data structure to store data in
- * @param user If this is a user (locks the end code)
  * @return true If the user presses A to finalize the name
  * @return false If the user is still selecting a name
  */
@@ -96,6 +92,5 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd);
  * @brief Draws the picker input
  *
  * @param nd The data
- * @param user If it's a user (greys out number)
  */
 void drawUsernamePicker(nameData_t* nd);
