@@ -89,8 +89,11 @@ typedef struct
     trophyDataList_t* data; ///< The settings of how the trophies behave
     list_t trophyQueue;     ///< List of trophy updates to display. Holds type \ref trophyDataWrapper_t*
     int numTrophiesScore;   ///< Num of trophies adjusted for difficulty
-    trophyData_t plat;      ///< Platinum trophy data
-    int32_t platVal;        ///< Value of the platinum trophy
+
+    // Platinum
+    trophyData_t plat; ///< Platinum trophy data
+    int32_t platVal;   ///< Value of the platinum trophy
+    wsg_t platImg;     ///< Platinum's image
 
     // Drawing
     bool active;                ///< If the mode should be drawing a banner
@@ -227,6 +230,8 @@ static int _getListItemHeight(trophyData_t t, font_t* fnt);
  * @param image The image used, if any
  */
 static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t* fnt, wsg_t* image);
+
+static void _loadDefaultTrophyImage(trophyDifficulty_t td, wsg_t* image);
 
 // Points
 
@@ -387,9 +392,18 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
         push(&trophySystem.trophyQueue, tw);
 
         // Load sprite
-        if (tw->trophyData.image != NO_IMAGE_SET)
+        if (!tw->trophyData.noImage)
         {
-            loadWsg(tw->trophyData.image, &tw->image, true);
+            if (tw->trophyData.image == NO_IMAGE_SET)
+            {
+                // Use default image
+                _loadDefaultTrophyImage(tw->trophyData.difficulty, &tw->image);
+            }
+            else
+            {
+                // Use dev defined image
+                loadWsg(tw->trophyData.image, &tw->image, true);
+            }
         }
 
         // Set system and this index to active
@@ -629,11 +643,18 @@ void trophyDrawListInit(trophyListDisplayMode_t mode)
     trophySystem.tdl.images = heap_caps_calloc(trophySystem.data->length, sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < trophySystem.data->length; idx++)
     {
-        if (trophySystem.data->list->image == 0)
+        if (trophySystem.data->list[idx].image == NO_IMAGE_SET)
         {
-            continue;
+            if (!trophySystem.data->list[idx].noImage)
+            {
+                _loadDefaultTrophyImage(trophySystem.data->list[idx].difficulty, &trophySystem.tdl.images[idx]);
+                //loadWsg(BRONZE_TROPHY_WSG, &trophySystem.tdl.images[idx], true);
+            }
         }
-        loadWsg(trophySystem.data->list->image, &trophySystem.tdl.images[idx], true);
+        else
+        {
+            loadWsg(trophySystem.data->list[idx].image, &trophySystem.tdl.images[idx], true);
+        }
     }
 }
 
@@ -685,8 +706,10 @@ void trophyDrawList(font_t* fnt, int yOffset)
         {
             if (trophySystem.platVal == 0)
             {
-                _drawTrophyListItem(trophySystem.plat, -yOffset, tdl->platHeight, fnt, &trophySystem.plat.image);
+                loadWsg(trophySystem.plat.image, &trophySystem.platImg, true);
+                _drawTrophyListItem(trophySystem.plat, -yOffset, tdl->platHeight, fnt, &trophySystem.platImg);
                 cumulativeHeight += tdl->platHeight;
+                freeWsg(&trophySystem.platImg);
             }
             break;
         }
@@ -694,15 +717,19 @@ void trophyDrawList(font_t* fnt, int yOffset)
         {
             if (trophySystem.platVal == 1)
             {
-                _drawTrophyListItem(trophySystem.plat, -yOffset, tdl->platHeight, fnt, &trophySystem.plat.image);
+                loadWsg(trophySystem.plat.image, &trophySystem.platImg, true);
+                _drawTrophyListItem(trophySystem.plat, -yOffset, tdl->platHeight, fnt, &trophySystem.platImg);
                 cumulativeHeight += tdl->platHeight;
+                freeWsg(&trophySystem.platImg);
             }
             break;
         }
         default:
         {
-            _drawTrophyListItem(trophySystem.plat, -yOffset, tdl->platHeight, fnt, &trophySystem.plat.image);
+            loadWsg(trophySystem.plat.image, &trophySystem.platImg, true);
+            _drawTrophyListItem(trophySystem.plat, -yOffset, tdl->platHeight, fnt, &trophySystem.platImg);
             cumulativeHeight += tdl->platHeight;
+            freeWsg(&trophySystem.platImg);
             break;
         }
     }
@@ -970,7 +997,7 @@ static void _drawAtYCoord(trophyDataWrapper_t* t, int yOffset, font_t* fnt)
     int xOffset;
     int16_t startX = SCREEN_CORNER_CLEARANCE;
     int16_t startY = yOffset + ((BANNER_HEIGHT - BANNER_MAX_ICON_DIM) >> 1);
-    if (t->trophyData.image == NO_IMAGE_SET)
+    if (t->trophyData.noImage)
     {
         // Draw text at start of buffer area
         xOffset = SCREEN_CORNER_CLEARANCE;
@@ -1151,14 +1178,14 @@ static int _getListItemHeight(trophyData_t t, font_t* fnt)
     }
 
     // Get image space
-    if (tw.trophyData.image != NO_IMAGE_SET)
+    if (!tw.trophyData.noImage)
     {
         titleStart += BANNER_MAX_ICON_DIM + IMAGE_BUFFER;
     }
 
     // Lay out text
     boxHeight = textWordWrapHeight(fnt, t.title, titleEnd - titleStart, 100) + IMAGE_BUFFER;
-    if (BANNER_MAX_ICON_DIM + IMAGE_BUFFER > boxHeight && tw.trophyData.image != NO_IMAGE_SET)
+    if (BANNER_MAX_ICON_DIM + IMAGE_BUFFER > boxHeight && !tw.trophyData.noImage)
     {
         boxHeight = BANNER_MAX_ICON_DIM + IMAGE_BUFFER;
     }
@@ -1205,7 +1232,7 @@ static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t*
     int16_t startX = SCREEN_CORNER_CLEARANCE;
     int16_t startY = yOffset + ((BANNER_HEIGHT - BANNER_MAX_ICON_DIM) >> 1);
     bool hasImg    = false;
-    if (tw->trophyData.image != NO_IMAGE_SET)
+    if (!tw->trophyData.noImage)
     {
         hasImg = true;
         titleStart += BANNER_MAX_ICON_DIM + IMAGE_BUFFER;
@@ -1249,6 +1276,34 @@ static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t*
     heap_caps_free(tw);
 }
 
+static void _loadDefaultTrophyImage(trophyDifficulty_t td, wsg_t* image)
+{
+    switch (td)
+    {
+        case TROPHY_DIFF_EXTREME:
+        {
+            loadWsg(WINGED_TROPHY_WSG, image, true);
+            break;
+        }
+        case TROPHY_DIFF_HARD:
+        {
+            loadWsg(GOLD_TROPHY_WSG, image, true);
+            break;
+        }
+        case TROPHY_DIFF_MEDIUM:
+        {
+            loadWsg(SILVER_TROPHY_WSG, image, true);
+            break;
+        }
+        case TROPHY_DIFF_EASY:
+        default:
+        {
+            loadWsg(BRONZE_TROPHY_WSG, image, true);
+            break;
+        }
+    }
+}
+
 // Points
 
 static int _genPoints(trophyDifficulty_t td)
@@ -1273,7 +1328,7 @@ static void _genPlat(const char* modeName)
     char buffer2[TROPHY_MAX_DESC_LEN];
     snprintf(buffer2, sizeof(buffer2) - 1, "%s%s", platStrings[2], modeName);
     strcpy(trophySystem.plat.description, buffer2);
-    trophySystem.plat.image      = SWADGE_2026_TROPHY_WSG; // FIXME: Use Platinum trophy
+    trophySystem.plat.image      = MMX_TROPHY_WSG;
     trophySystem.plat.type       = TROPHY_TYPE_TRIGGER;
     trophySystem.plat.difficulty = TROPHY_DIFF_FINAL;
     trophySystem.plat.maxVal     = 1;

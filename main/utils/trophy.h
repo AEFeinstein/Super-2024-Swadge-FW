@@ -266,6 +266,7 @@ typedef struct
     trophyDifficulty_t difficulty;         ///< How many points the trophy is worth
     int32_t maxVal;                        ///< The value that
     bool hidden;                           ///< If trophy is hidden by default
+    bool noImage;                          ///< If trophy will use an image
 } trophyData_t;
 
 /// @brief Settings for the trophy system

@@ -70,11 +70,12 @@ const trophyData_t trophyTestModeTrophies[] = {
         .difficulty  = TROPHY_DIFF_EXTREME,
         .maxVal      = 8,
         .hidden      = true,
+        //.noImage     = true,
     },
     {
         .title       = "Checklist",
         .description = "This is gonna need a bunch of verification, but like has a very long description",
-        .image       = KID_0_WSG,
+        .image       = NO_IMAGE_SET, // If set like this, it will draw a default trophy
         .type        = TROPHY_TYPE_CHECKLIST,
         .difficulty  = TROPHY_DIFF_HARD,
         .maxVal      = 0x0007, // Three tasks, 0x01, 0x02, and 0x04
