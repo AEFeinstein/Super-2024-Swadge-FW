@@ -31,6 +31,9 @@ typedef struct
     bool fanfarePlaying;
 #endif
     int32_t autoLightDanceTimer;
+
+    bool modeEnterTrophyShowing;
+    const swadgeMode_t* pendingMode;
 } mainMenu_t;
 
 //==============================================================================
@@ -43,7 +46,7 @@ static void mainMenuMainLoop(int64_t elapsedUs);
 static void mainMenuCb(const char* label, bool selected, uint32_t settingVal);
 void addSecretsMenu(void);
 static void fanfareFinishedCb(void);
-static void _winTrophy(swadgeMode_t* sm);
+static bool _winTrophy(swadgeMode_t* sm);
 
 //==============================================================================
 // Variables
@@ -388,11 +391,23 @@ static void mainMenuMainLoop(int64_t elapsedUs)
                 mainMenu->cheatCodeIdx = 0;
             }
         }
-        mainMenu->menu = menuButton(mainMenu->menu, evt);
+
+        // Only accept button input if a trophy isn't showing
+        if (false == mainMenu->modeEnterTrophyShowing)
+        {
+            mainMenu->menu = menuButton(mainMenu->menu, evt);
+        }
     }
 
     // Draw the menu
     drawMenuMania(mainMenu->menu, mainMenu->renderer, elapsedUs);
+
+    // If a trophy was showing, but the animation is done
+    if (mainMenu->modeEnterTrophyShowing && !isTrophyDrawing())
+    {
+        // Finally switch to the pending mode
+        switchToSwadgeMode(mainMenu->pendingMode);
+    }
 
 #ifdef CONFIG_FACTORY_TEST_WARNING
     const char warning[] = "Take me to VR Zone to get flashed please!";
@@ -438,8 +453,18 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
             swadgeMode_t* current = allSwadgeModes[i];
             if (label == current->modeName)
             {
-                _winTrophy(current);
-                switchToSwadgeMode(current);
+                // If entering this mode won a trophy
+                if (_winTrophy(current))
+                {
+                    // Wait for the trophy to be shown before switching modes
+                    mainMenu->modeEnterTrophyShowing = true;
+                    mainMenu->pendingMode            = current;
+                }
+                else
+                {
+                    // Otherwise immediately enter the mode
+                    switchToSwadgeMode(current);
+                }
             }
         }
         if (label == tCaseMode.modeName)
@@ -541,24 +566,17 @@ void addSecretsMenu(void)
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     // Get a trophy
-    for (int32_t idx = 0; idx < ARRAY_SIZE(mainMenuTrophies); idx++)
-    {
-        if (NULL == mainMenuTrophies[idx].identifier)
-        {
-            trophyUpdate(mainMenuTrophies[idx], 1, true);
-            break;
-        }
-    }
+    _winTrophy(NULL);
 }
 
-static void _winTrophy(swadgeMode_t* sm)
+static bool _winTrophy(swadgeMode_t* sm)
 {
     for (int32_t idx = 0; idx < ARRAY_SIZE(mainMenuTrophies); idx++)
     {
         if (mainMenuTrophies[idx].identifier == sm)
         {
-            trophyUpdate(mainMenuTrophies[idx], 1, true);
-            break;
+            return trophyUpdate(mainMenuTrophies[idx], 1, true);
         }
     }
+    return false;
 }

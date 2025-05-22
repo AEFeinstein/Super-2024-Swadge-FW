@@ -348,8 +348,9 @@ void trophySystemInit(trophyDataList_t* settings, const char* modeName);
  * @param t Trophy to update
  * @param newVal New value to try to set. Behavior is set by trophy type
  * @param drawUpdate If this update should be drawn to the screen
+ * @return true if a notification is being drawn, false otherwise
  */
-void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate);
+bool trophyUpdate(trophyData_t t, int newVal, bool drawUpdate);
 
 /**
  * @brief Updates just like `trophyUpdate()`, but only draws when crossing percentage boundary
@@ -357,8 +358,9 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate);
  * @param t Trophy to update
  * @param newVal Value to attempt to set
  * @param threshold Value (0-100, representing a percent) to draw at
+ * @return true if a notification is being drawn, false otherwise
  */
-void trophyUpdateMilestone(trophyData_t t, int newVal, int threshold);
+bool trophyUpdateMilestone(trophyData_t t, int newVal, int threshold);
 
 /**
  * @brief Returns the value saved to the NVS or 0 if the key isn't found.
@@ -375,8 +377,9 @@ int32_t trophyGetSavedValue(trophyData_t t);
  * @param flag Task that was just completed
  * @param unset If we're unsetting the bit
  * @param drawUpdate If this update should be drawn
+ * @return true if a notification is being drawn, false otherwise
  */
-void trophySetChecklistTask(trophyData_t t, int32_t flag, bool unset, bool drawUpdate);
+bool trophySetChecklistTask(trophyData_t t, int32_t flag, bool unset, bool drawUpdate);
 
 /**
  * @brief Erases completion data from swadge. Only use in extreme circumstances.
@@ -473,3 +476,10 @@ void trophyDrawListDeinit(void);
  * @param yOffset Current Y offset. Higher numbers effectively scroll down
  */
 void trophyDrawList(font_t* fnt, int yOffset);
+
+/**
+ * @brief Check if a trophy is currently being drawn
+ *
+ * @return true if a trophy is being drawn, false otherwise
+ */
+bool isTrophyDrawing(void);

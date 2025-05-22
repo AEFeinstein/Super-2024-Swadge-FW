@@ -314,7 +314,7 @@ void trophySystemInit(trophyDataList_t* data, const char* modeName)
 
 // Trophies
 
-void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
+bool trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
 {
     // Load
     trophyDataWrapper_t* tw = heap_caps_calloc(1, sizeof(trophyDataWrapper_t), MALLOC_CAP_8BIT);
@@ -327,7 +327,7 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
         if (tw->currentVal == tw->trophyData.maxVal)
         {
             heap_caps_free(tw);
-            return;
+            return false;
         }
     }
     else if (tw->trophyData.type == TROPHY_TYPE_TRIGGER)
@@ -335,7 +335,7 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
         if (tw->currentVal >= 1)
         {
             heap_caps_free(tw);
-            return;
+            return false;
         }
     }
     else
@@ -343,7 +343,7 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
         if (tw->currentVal >= tw->trophyData.maxVal)
         {
             heap_caps_free(tw);
-            return;
+            return false;
         }
     }
 
@@ -367,7 +367,7 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
     else if (tw->currentVal >= newVal)
     {
         heap_caps_free(tw);
-        return;
+        return false;
     }
     else
     {
@@ -422,10 +422,14 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
             _saveLatestWin(twf);
             loadWsg(twf->trophyData.image, &twf->image, true);
         }
+        // drawing an update
+        return true;
     }
+    // not drawing an update
+    return false;
 }
 
-void trophyUpdateMilestone(trophyData_t t, int newVal, int threshold)
+bool trophyUpdateMilestone(trophyData_t t, int newVal, int threshold)
 {
     trophyDataWrapper_t tw = {};
     _load(&tw, t);
@@ -433,8 +437,7 @@ void trophyUpdateMilestone(trophyData_t t, int newVal, int threshold)
     // Check if completed
     if (newVal >= t.maxVal)
     {
-        trophyUpdate(t, newVal, true);
-        return;
+        return trophyUpdate(t, newVal, true);
     }
 
     // Check if past a milestone for the first time
@@ -445,7 +448,7 @@ void trophyUpdateMilestone(trophyData_t t, int newVal, int threshold)
     }
     int32_t prev = (tw.currentVal * 100 / t.maxVal) / threshold; // Intentionally truncates to an integer
     int32_t new  = (newVal * 100 / t.maxVal) / threshold;
-    trophyUpdate(t, newVal, prev < new);
+    return trophyUpdate(t, newVal, prev < new);
 }
 
 int32_t trophyGetSavedValue(trophyData_t t)
@@ -460,12 +463,12 @@ int32_t trophyGetSavedValue(trophyData_t t)
     return 0;
 }
 
-void trophySetChecklistTask(trophyData_t t, int32_t flag, bool set, bool drawUpdate)
+bool trophySetChecklistTask(trophyData_t t, int32_t flag, bool set, bool drawUpdate)
 {
     // If not a checklist, abort
     if (t.type != TROPHY_TYPE_CHECKLIST)
     {
-        return;
+        return false;
     }
 
     // Load
@@ -476,9 +479,11 @@ void trophySetChecklistTask(trophyData_t t, int32_t flag, bool set, bool drawUpd
     setBitFlag(&newVal, flag, set);
 
     // Run Update
-    trophyUpdate(t, newVal, drawUpdate);
+    bool ret = trophyUpdate(t, newVal, drawUpdate);
 
     heap_caps_free(tw);
+
+    return ret;
 }
 
 void trophyClear(trophyData_t t)
@@ -557,6 +562,11 @@ void trophySetSystemData(trophyDataList_t* dl, const char* modeName)
 }
 
 // Draw
+
+bool isTrophyDrawing(void)
+{
+    return trophySystem.active && _getCurrentDisplayTrophy();
+}
 
 void trophyDraw(font_t* fnt, int64_t elapsedUs)
 {
