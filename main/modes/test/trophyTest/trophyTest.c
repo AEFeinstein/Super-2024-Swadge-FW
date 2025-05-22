@@ -70,7 +70,7 @@ const trophyData_t trophyTestModeTrophies[] = {
         .difficulty  = TROPHY_DIFF_EXTREME,
         .maxVal      = 8,
         .hidden      = true,
-        //.noImage     = true,
+        .noImage     = true,
     },
     {
         .title       = "Checklist",

@@ -2,10 +2,7 @@
  * @file trophy.c
  * @author Jeremy.Stintzcum@gmail.com
  * @brief Trophies for swadge modes
- * @date 2025-01-13
- *
- * @copyright Copyright (c) 2025
- *
+ * @date 2025-05-22
  */
 
 //==============================================================================
