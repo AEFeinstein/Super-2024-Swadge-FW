@@ -173,7 +173,7 @@ static int _loadPoints(bool total, const char* modeName);
 
 /**
  * @brief Checks if the final trophy should be triggering
- * 
+ *
  * @return true Final trophy should be drawn
  * @return false Not the final trophy's turn
  */
@@ -181,7 +181,7 @@ static bool _isFinalTrophy(void);
 
 /**
  * @brief Called when a trophy is won
- * 
+ *
  * @param tw Trophy data to work with
  * @return true If the final trophy has been won
  * @return false If the final trophy has not been won
@@ -243,7 +243,7 @@ static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t*
 
 /**
  * @brief Loads the default image to the wsg_t slot provided based on difficulty
- * 
+ *
  * @param td Difficulty to get trophy for
  * @param image Place to store image
  */
