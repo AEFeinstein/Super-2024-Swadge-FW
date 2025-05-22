@@ -68,7 +68,7 @@ void generateRandUsername(nameData_t* nd);
 void setUsernameFromND(nameData_t* nd);
 
 /**
- * @brief Set the Username From indexs. Useful for loading data from swadgepass
+ * @brief Set the Username From indices. Useful for loading data from swadgepass
  *
  * @param nd Data struct to receive the objects
  * @param idx1 First index
