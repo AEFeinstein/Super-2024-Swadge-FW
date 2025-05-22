@@ -125,7 +125,8 @@ static void enterTCase(void)
     // Add all other modes to menu
     for (int idx = 0; idx < modeListGetCount(); idx++)
     {
-        if (allSwadgeModes[idx]->trophyData != NULL)
+        if (allSwadgeModes[idx]->trophyData != NULL
+            && strcmp(allSwadgeModes[idx]->modeName, trophyTestMode.modeName) != 0)
         {
             addSingleItemToMenu(tc->menu, allSwadgeModes[idx]->modeName);
         }
@@ -243,7 +244,8 @@ static void tCaseDrawStats(font_t* fnt, int yOffset)
     int line = 1;
     for (int idx = 0; idx < modeListGetCount(); idx++)
     {
-        if (allSwadgeModes[idx]->trophyData != NULL)
+        if (allSwadgeModes[idx]->trophyData != NULL
+            && strcmp(allSwadgeModes[idx]->modeName, trophyTestMode.modeName) != 0)
         {
             snprintf(buffer, sizeof(buffer) - 1, "%s: %" PRId16, allSwadgeModes[idx]->modeName,
                      trophyGetPoints(false, allSwadgeModes[idx]->modeName));
