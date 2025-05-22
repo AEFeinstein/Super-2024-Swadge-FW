@@ -648,7 +648,6 @@ void trophyDrawListInit(trophyListDisplayMode_t mode)
             if (!trophySystem.data->list[idx].noImage)
             {
                 _loadDefaultTrophyImage(trophySystem.data->list[idx].difficulty, &trophySystem.tdl.images[idx]);
-                //loadWsg(BRONZE_TROPHY_WSG, &trophySystem.tdl.images[idx], true);
             }
         }
         else
@@ -939,6 +938,9 @@ static bool _trophyIsWon(trophyDataWrapper_t* tw)
     if (_isFinalTrophy())
     {
         trophySystem.platVal = 1;
+        trophyDataWrapper_t twf = {};
+        _load(&twf, trophySystem.plat);
+        _save(&twf, 1);
         return true;
     }
     return false;
