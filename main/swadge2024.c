@@ -76,6 +76,7 @@
  * \subsection swadge_mode_api Swadge Mode APIs
  *
  * - swadge2024.h: Write a mode. This is a good starting place
+ * - trophy.h: Add trophies to the swadge mode.
  *
  * \subsection input_api Input APIs
  *
