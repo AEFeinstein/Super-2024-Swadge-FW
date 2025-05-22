@@ -58,6 +58,7 @@ const trophyData_t mainMenuTrophies[] = {
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1,
         .hidden      = true,
+        .identifier  = NULL,
     },
     {
         .title       = "Day -1",
@@ -66,6 +67,7 @@ const trophyData_t mainMenuTrophies[] = {
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
+        .identifier  = &cosCrunchMode,
     },
     {
         .title       = "Get it!",
@@ -74,6 +76,7 @@ const trophyData_t mainMenuTrophies[] = {
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
+        .identifier  = &swadgeItMode,
     },
     {
         .title       = "Daft Punk would be proud",
@@ -82,6 +85,7 @@ const trophyData_t mainMenuTrophies[] = {
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
+        .identifier  = &colorchordMode,
     },
     {
         .title       = "A jukebox hero",
@@ -90,6 +94,7 @@ const trophyData_t mainMenuTrophies[] = {
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
+        .identifier  = &jukeboxMode,
     },
     {
         .title       = "Make some tunes",
@@ -98,6 +103,7 @@ const trophyData_t mainMenuTrophies[] = {
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
+        .identifier  = &sequencerMode,
     },
     {
         .title       = "Who needs a tuning fork?",
@@ -106,6 +112,7 @@ const trophyData_t mainMenuTrophies[] = {
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
+        .identifier  = &tunernomeMode,
     },
     {
         .title       = "The smallest player",
@@ -114,6 +121,7 @@ const trophyData_t mainMenuTrophies[] = {
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
+        .identifier  = &synthMode,
     },
     {
         .title       = "Blinded by the lights",
@@ -122,6 +130,7 @@ const trophyData_t mainMenuTrophies[] = {
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
+        .identifier  = &danceMode,
     },
     {
         .title       = "I still like physical dice",
@@ -130,6 +139,7 @@ const trophyData_t mainMenuTrophies[] = {
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
+        .identifier  = &modeDiceRoller,
     },
     {
         .title       = "Switch Amateur Controller",
@@ -138,6 +148,7 @@ const trophyData_t mainMenuTrophies[] = {
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
+        .identifier  = &gamepadMode,
     },
 };
 
@@ -530,49 +541,24 @@ void addSecretsMenu(void)
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     // Get a trophy
-    trophyUpdate(mainMenuTrophies[0], 1, true);
+    for (int32_t idx = 0; idx < ARRAY_SIZE(mainMenuTrophies); idx++)
+    {
+        if (NULL == mainMenuTrophies[idx].identifier)
+        {
+            trophyUpdate(mainMenuTrophies[idx], 1, true);
+            break;
+        }
+    }
 }
 
 static void _winTrophy(swadgeMode_t* sm)
 {
-    if (strcmp(sm->modeName, cosCrunchMode.modeName) == 0)
+    for (int32_t idx = 0; idx < ARRAY_SIZE(mainMenuTrophies); idx++)
     {
-        trophyUpdate(mainMenuTrophies[1], 1, true);
-    }
-    else if (strcmp(sm->modeName, swadgeItMode.modeName) == 0)
-    {
-        trophyUpdate(mainMenuTrophies[2], 1, true);
-    }
-    else if (strcmp(sm->modeName, colorchordMode.modeName) == 0)
-    {
-        trophyUpdate(mainMenuTrophies[3], 1, true);
-    }
-    else if (strcmp(sm->modeName, jukeboxMode.modeName) == 0)
-    {
-        trophyUpdate(mainMenuTrophies[4], 1, true);
-    }
-    else if (strcmp(sm->modeName, sequencerMode.modeName) == 0)
-    {
-        trophyUpdate(mainMenuTrophies[5], 1, true);
-    }
-    else if (strcmp(sm->modeName, tunernomeMode.modeName) == 0)
-    {
-        trophyUpdate(mainMenuTrophies[6], 1, true);
-    }
-    else if (strcmp(sm->modeName, synthMode.modeName) == 0)
-    {
-        trophyUpdate(mainMenuTrophies[7], 1, true);
-    }
-    else if (strcmp(sm->modeName, danceMode.modeName) == 0)
-    {
-        trophyUpdate(mainMenuTrophies[8], 1, true);
-    }
-    else if (strcmp(sm->modeName, modeDiceRoller.modeName) == 0)
-    {
-        trophyUpdate(mainMenuTrophies[9], 1, true);
-    }
-    else if (strcmp(sm->modeName, gamepadMode.modeName) == 0)
-    {
-        trophyUpdate(mainMenuTrophies[10], 1, true);
+        if (mainMenuTrophies[idx].identifier == sm)
+        {
+            trophyUpdate(mainMenuTrophies[idx], 1, true);
+            break;
+        }
     }
 }

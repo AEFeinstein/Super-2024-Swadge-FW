@@ -122,6 +122,9 @@ automatically assign score based on the number of trophies in the mode and their
 the type discussion below for more info.
  * - ::trophyData_t.hidden : If set to true, does not appear in lists of trophies until won.
  * - ::trophyData_t.noImage : If set to true, does not draw an image for this trophy.
+ * - ::trophyData_t.identifier : This is a convenience identifier not used by the Trophy code. It can be set to a
+pointer value or an integer cast to `intptr_t` and used by the Swadge Mode to find a specific trophy in a list of
+trophyData_t[].
  *
  * \warning NVS keys have a max length of 15 characters. Trophies with the same first 15 character will have conflicts
  *
@@ -301,6 +304,8 @@ typedef struct
     int32_t maxVal;                        ///< The value that
     bool hidden;                           ///< If trophy is hidden by default
     bool noImage;                          ///< If trophy will use an image
+    const void* identifier; ///< An optional identifier to find trophy data. May be set to a pointer or an integer cast
+                            ///< to `intptr_t`
 } trophyData_t;
 
 /// @brief Settings for the trophy system
