@@ -1233,3 +1233,55 @@ static bool emuGetInjected32(const char* namespace, const char* key, int32_t* ou
 
     return false;
 }
+
+/**
+ * @brief Fill a given ::list_t with all the NVS string keys for the given namespace.
+ *
+ * The ::list_t should be empty before passing into this function.
+ *
+ * List elements must be heap_caps_free()
+ *
+ * @param namespace The namespace to get keys from
+ * @param list A list to fill with keys.
+ */
+void getNvsKeys(const char* namespace, list_t* list)
+{
+    // Open the file
+    FILE* nvsFile = openNvsFile("rb");
+    if (NULL != nvsFile)
+    {
+        // Get the file size
+        fseek(nvsFile, 0L, SEEK_END);
+        size_t fsize = ftell(nvsFile);
+        fseek(nvsFile, 0L, SEEK_SET);
+
+        // Read the file
+        char fbuf[fsize + 1];
+        fbuf[fsize] = 0;
+        if (fsize == fread(fbuf, 1, fsize, nvsFile))
+        {
+            // Parse the JSON
+            cJSON* json = cJSON_Parse(fbuf);
+
+            // Check if the key exists
+            cJSON* jsonIter;
+            cJSON* jsonNs = cJSON_GetObjectItemCaseSensitive(json, namespace);
+
+            if (NULL != jsonNs)
+            {
+                cJSON_ArrayForEach(jsonIter, jsonNs)
+                {
+                    // Make a copy of the key
+                    size_t keySize = sizeof(char) * (strlen(jsonIter->string) + 1);
+                    char* keyCopy  = heap_caps_calloc(1, keySize, MALLOC_CAP_8BIT);
+                    memcpy(keyCopy, jsonIter->string, keySize);
+                    // Push it into the list
+                    push(list, keyCopy);
+                }
+            }
+            cJSON_Delete(json);
+        }
+        // Close the file
+        fclose(nvsFile);
+    }
+}

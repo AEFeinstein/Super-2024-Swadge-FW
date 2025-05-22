@@ -243,7 +243,7 @@ int main(int argc, char** argv)
     fprintf(f, "#include <stdint.h>\n");
     fprintf(f, "#include \"%s\"\n", hdrNoPath);
     fprintf(f, "\n");
-    fprintf(f, "/** An array of file lengths and offsets in \\ref cnfs_data */\n");
+    fprintf(f, "/** An array of file lengths and offsets in ::cnfs_data */\n");
     fprintf(f, "const cnfsFileEntry cnfs_files[CNFS_NUM_FILES] = {\n");
     for (int i = 0; i < nr_file; i++)
     {
@@ -300,7 +300,7 @@ int main(int argc, char** argv)
     fprintf(f, "/**\n");
     fprintf(f, " * @brief Get the CNFS file data (length & offset)\n");
     fprintf(f, " * \n");
-    fprintf(f, " * @return The cnfs_files[] array with file lengths and offsets, indexed by \\ref cnfsFileIdx_t\n");
+    fprintf(f, " * @return The cnfs_files[] array with file lengths and offsets, indexed by ::cnfsFileIdx_t\n");
     fprintf(f, " */\n");
     fprintf(f, "const cnfsFileEntry* getCnfsFiles(void)\n");
     fprintf(f, "{\n");

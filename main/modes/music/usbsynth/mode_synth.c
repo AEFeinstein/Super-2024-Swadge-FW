@@ -2647,7 +2647,7 @@ static void synthSetFile(cnfsFileIdx_t fIdx)
         size_t size;
         if (readNvsBlob("synth_usersong", NULL, &size))
         {
-            uint8_t* data = malloc(size);
+            uint8_t* data = heap_caps_malloc(size, MALLOC_CAP_8BIT);
             if (NULL != data)
             {
                 if (readNvsBlob("synth_usersong", data, &size))
@@ -2658,13 +2658,13 @@ static void synthSetFile(cnfsFileIdx_t fIdx)
                     }
                     else
                     {
-                        free(data);
+                        heap_caps_free(data);
                         data = NULL;
                     }
                 }
                 else
                 {
-                    free(data);
+                    heap_caps_free(data);
                     data = NULL;
                 }
             }

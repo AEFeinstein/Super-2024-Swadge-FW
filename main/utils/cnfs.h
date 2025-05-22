@@ -16,7 +16,7 @@
  *
  * cnfsGetFile() gets a reference to the file in flash, to obviate need to "load it into RAM"
  *
- * cnfs doesn't use string filenames. Instead it assigns each file a \ref cnfsFileIdx_t for reference. Using an enum
+ * cnfs doesn't use string filenames. Instead it assigns each file a ::cnfsFileIdx_t for reference. Using an enum
  * means cases like missing files or filename collisions will result in compilation errors.
  *
  * Each asset type has it's own file loader which handles things like decompression if the asset type is compressed,

@@ -229,7 +229,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             uint16_t tw = textWidth(&cosCrunch->big_font, cosCrunchGameOverTitle);
             drawText(&cosCrunch->big_font, c555, cosCrunchGameOverTitle, (TFT_WIDTH - tw) / 2, 60);
 
-            tw   = textWidth(&cosCrunch->font, cosCrunchGameOverMessage);
+            tw = textWidth(&cosCrunch->font, cosCrunchGameOverMessage);
             drawText(&cosCrunch->font, c555, cosCrunchGameOverMessage, (TFT_WIDTH - tw) / 2, 150);
             break;
         }
