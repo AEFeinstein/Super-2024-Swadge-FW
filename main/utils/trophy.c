@@ -84,7 +84,7 @@ typedef struct
 {
     // Data
     trophyDataList_t* data; ///< The settings of how the trophies behave
-    list_t trophyQueue;     ///< List of trophy updates to display. Holds type \ref trophyDataWrapper_t*
+    list_t trophyQueue;     ///< List of trophy updates to display. Holds type ::trophyDataWrapper_t*
     int numTrophiesScore;   ///< Num of trophies adjusted for difficulty
 
     // Platinum
