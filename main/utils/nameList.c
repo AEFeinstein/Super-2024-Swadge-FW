@@ -323,25 +323,26 @@ void drawUsernamePicker(nameData_t* nd)
     {
         case ADJ1:
         {
-            drawLine(ADJ1_X - 35, (TFT_HEIGHT + getSysFont()->height + 4) >> 1, ADJ1_X + 35, (TFT_HEIGHT + getSysFont()->height + 4) >> 1,
-                     c550, 0);
+            drawLine(ADJ1_X - 35, (TFT_HEIGHT + getSysFont()->height + 4) >> 1, ADJ1_X + 35,
+                     (TFT_HEIGHT + getSysFont()->height + 4) >> 1, c550, 0);
             break;
         }
         case ADJ2:
         {
-            drawLine(ADJ2_X - 35, (TFT_HEIGHT + getSysFont()->height + 4) >> 1, ADJ2_X + 35, (TFT_HEIGHT + getSysFont()->height + 4) >> 1,
-                     c550, 0);
+            drawLine(ADJ2_X - 35, (TFT_HEIGHT + getSysFont()->height + 4) >> 1, ADJ2_X + 35,
+                     (TFT_HEIGHT + getSysFont()->height + 4) >> 1, c550, 0);
             break;
         }
         case NOUN:
         {
-            drawLine(NOUN_X - 35, (TFT_HEIGHT + getSysFont()->height + 4) >> 1, NOUN_X + 35, (TFT_HEIGHT + getSysFont()->height + 4) >> 1,
-                     c550, 0);
+            drawLine(NOUN_X - 35, (TFT_HEIGHT + getSysFont()->height + 4) >> 1, NOUN_X + 35,
+                     (TFT_HEIGHT + getSysFont()->height + 4) >> 1, c550, 0);
             break;
         }
         case RAND_NUM:
         {
-            drawLine(235, (TFT_HEIGHT + getSysFont()->height + 4) >> 1, 255, (TFT_HEIGHT + getSysFont()->height + 4) >> 1, c550, 0);
+            drawLine(235, (TFT_HEIGHT + getSysFont()->height + 4) >> 1, 255,
+                     (TFT_HEIGHT + getSysFont()->height + 4) >> 1, c550, 0);
             break;
         }
         default:

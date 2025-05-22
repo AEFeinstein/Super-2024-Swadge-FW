@@ -481,7 +481,7 @@ void app_main(void)
         {
             // Decrement the accumulation
             tAccumDraw -= frameRateUs;
-            
+
             // Amount fo time between main loop calls
             uint64_t mainLoopCallDelay = 0;
 
