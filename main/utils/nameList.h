@@ -54,7 +54,7 @@ void initUsernameSystem(void);
 void generateMACUsername(nameData_t* nd);
 
 /**
- * @brief Generates a random username. If user is true, locks the end code.
+ * @brief Generates a random username.
  *
  * @param nd Data struct the name is saved to
  */
