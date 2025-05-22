@@ -1,4 +1,4 @@
-# `assets_preprocessor`
+# Assets Preprocessor
 
 ## Usage
 ```
@@ -29,7 +29,7 @@ processing `.big` assets, and to run a simple `sed` command to process `.game` a
 Note that the section name will be used as `inExt` if one is not explicitly provided.
 Any leading `.` in the section name, `inExt`, or `outExt` will be ignored.
 
-```config.ini
+```ini
 [big]
 outExt=smol
 func=heatshrink
@@ -42,7 +42,7 @@ exec=sed 's/[aoeui]/y/g' "%i" > "%o"
 This config is functionally equivalent to the previous one, but with more readable
 formatting and explicitly set input and output file extensions.
 
-```config.ini
+```ini
 ; This processor shrinks big files for My Game with heatshrink
 [my-big-game-files]
 inExt = .big
@@ -83,7 +83,7 @@ with each section (marked by a `[section-name]` line) noting the options for tha
 For example, to configure the WSG image processor to use dithering for `myImage.png`, create
 `myImage.opts` with the following content:
 
-```myImage.opts
+```opts
 [wsg]
 dither=yes
 ```
@@ -140,7 +140,7 @@ No processing is done on `.bin` files. They are copied from the input directory 
 
 ### `.font.png`
 
-Font files are black and white `.png` images where each ASCII character from `' '` to `'~'` is drawn in order in a single line, and each character is underlined with a one pixel black line. These files are sliced into characters and processed into a `.font` file. A `.font` file is:
+Font files are black and white `.png` images where each ASCII character from ` ` (space) to `~` is drawn in order in a single line, and each character is underlined with a one pixel black line. These files are sliced into characters and processed into a `.font` file. A `.font` file is:
 
 ```
 Character height (one byte). All characters are the same height
@@ -203,3 +203,4 @@ Generate Clone Hero charts [using this tool](https://efhiii.github.io/midi-ch/),
 [heatshrink]: https://github.com/atomicobject/heatshrink
 [paletteColor_t]: https://adam.feinste.in/Super-2024-Swadge-FW/palette_8h.html#aed8c673902cb720e5754e04d1cd66f97
 [processorOptions]: #options-files
+[ini]: https://en.wikipedia.org/wiki/INI_file

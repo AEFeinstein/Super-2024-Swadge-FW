@@ -37,7 +37,7 @@
  * same extension if needed. Asset processors follow a similar pattern to mode
  * structs, where each asset processor struct is defined in its own file and made
  * available to other files via an `extern` variable in its header file. Then, in
- * asset_preprocessor.c, all asset processors are included and then mapped onto file
+ * assets_preprocessor.c, all asset processors are included and then mapped onto file
  * extensions in one place.
  *
  * In order to reduce the need for repetitive path manipulation, file opening, and
@@ -135,13 +135,13 @@
  * \subsection assetProc_structExecs Exec Preprocessors
  *
  * In addition to the function-based implementation used by most processors, they may also
- * be defined as an processorType_t::EXEC processor, which executes some other program (e.g.
+ * be defined as an \ref processorType_t::EXEC processor, which executes some other program (e.g.
  * a Python script) in order to process an asset. It's very important to keep in mind that
  * this program must be available on all platforms in order for assets to process properly.
  * If an executable that will be called by an exec processor must be compiled, it must be
  * added to the makefile in order to ensure it is built before the asset processor runs.
  *
- * An EXEC processor is defined by a command string in its assetProcessor_t::exec field.
+ * An EXEC processor is defined by a command string in its `exec` field.
  * For example, `.exec = "cp %i %o"` would copy the input file directly to its output.
  * Several placeholders are available to be used in this string in order to fill in file
  * path information, and are listed in a table below.
@@ -151,9 +151,9 @@
  * | \%i         | Full path to the input file                |
  * | \%f         | Filename portion of the input file path    |
  * | \%o         | Full path to the output file               |
- * | \%a         | Input file extension, without leading '.'  |
- * | \%b         | Output file extension, without leading '.' |
- * | \%\%        | Literal '%' character                      |
+ * | \%a         | Input file extension, without leading `.`  |
+ * | \%b         | Output file extension, without leading `.` |
+ * | \%\%        | Literal `%` character                      |
  *
  * \subsection assetProc_examples Function Processor Examples
  *
@@ -375,7 +375,7 @@
  *
  * 1. Create new `<type>_processor.h` and `.c` files in `/tools/assets_preprocessor/src/` -- see
  * [above](#assetProc_examples) for an example.
- * 2. Include the newly-added `.h` file in asset_preprocessor.c
+ * 2. Include the newly-added `.h` file in assets_preprocessor.c
  * 3. Add an entry to fileProcessorMap in assets_preprocessor.c for each file extension the processor should handle
  * 4. Update \link md_tools_2assets__preprocessor_2README#config-file `assets.conf` \endlink to configure the file
  * extensions to be handled by the new processor.
