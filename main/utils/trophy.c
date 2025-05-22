@@ -581,12 +581,8 @@ void trophyDraw(font_t* fnt, int64_t elapsedUs)
 
         // Remove the trophy wrapper from the queue and free memory
         trophyDataWrapper_t* tw = shift(&trophySystem.trophyQueue);
-        // Don't free if it's the final trophy
-        if (tw->trophyData.image != SWADGE_2026_TROPHY_WSG)
-        {
-            freeWsg(&tw->image);
-            heap_caps_free(tw);
-        }
+        freeWsg(&tw->image);
+        heap_caps_free(tw);
 
         // Reset animation
         trophySystem.animTimer = 0;
@@ -813,6 +809,8 @@ static void _load(trophyDataWrapper_t* tw, trophyData_t t)
     tw->trophyData.type       = t.type;
     tw->trophyData.difficulty = t.difficulty;
     tw->trophyData.maxVal     = t.maxVal;
+    tw->trophyData.hidden     = t.hidden;
+    tw->trophyData.noImage    = t.noImage;
 
     // Pull Current Val from disk
     int32_t val;
@@ -934,7 +932,7 @@ static bool _trophyIsWon(trophyDataWrapper_t* tw)
     _saveLatestWin(tw);
     if (_isFinalTrophy())
     {
-        trophySystem.platVal = 1;
+        trophySystem.platVal    = 1;
         trophyDataWrapper_t twf = {};
         _load(&twf, trophySystem.plat);
         _save(&twf, 1);
@@ -1198,8 +1196,8 @@ static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t*
 {
     // Load relevant data
     trophyDisplayList_t* tdl = &trophySystem.tdl;
-    trophyDataWrapper_t* tw  = heap_caps_calloc(1, sizeof(trophyDataWrapper_t), MALLOC_CAP_8BIT);
-    _load(tw, t);
+    trophyDataWrapper_t tw   = {};
+    _load(&tw, t);
 
     // Draw
     fillDisplayArea(1, yOffset, TFT_WIDTH - 2, yOffset + height, tdl->colorList[1]);
@@ -1215,32 +1213,30 @@ static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t*
         char buffer[NUMBER_TEXT_BUFFER];
         if (t.type != TROPHY_TYPE_CHECKLIST)
         {
-            snprintf(buffer, sizeof(buffer) - 1, "%" PRId32 "/%" PRId32, tw->currentVal, tw->trophyData.maxVal);
+            snprintf(buffer, sizeof(buffer) - 1, "%" PRId32 "/%" PRId32, tw.currentVal, tw.trophyData.maxVal);
         }
         else
         {
-            snprintf(buffer, sizeof(buffer) - 1, "%" PRId32 "/%" PRId32, _GetNumFlags(tw, false),
-                     _GetNumFlags(tw, true));
+            snprintf(buffer, sizeof(buffer) - 1, "%" PRId32 "/%" PRId32, _GetNumFlags(&tw, false),
+                     _GetNumFlags(&tw, true));
         }
         titleEnd -= textWidth(fnt, buffer) + 16;
-        drawText(fnt, (tw->currentVal >= t.maxVal) ? tdl->colorList[5] : tdl->colorList[3], buffer, titleEnd + 8,
+        drawText(fnt, (tw.currentVal >= t.maxVal) ? tdl->colorList[5] : tdl->colorList[3], buffer, titleEnd + 8,
                  yOffset + 4);
     }
 
     // Draw image
     int16_t startX = SCREEN_CORNER_CLEARANCE;
     int16_t startY = yOffset + ((BANNER_HEIGHT - BANNER_MAX_ICON_DIM) >> 1);
-    bool hasImg    = false;
-    if (!tw->trophyData.noImage)
+    if (!tw.trophyData.noImage)
     {
-        hasImg = true;
         titleStart += BANNER_MAX_ICON_DIM + IMAGE_BUFFER;
         // Draw shadowbox
         drawRectFilled(startX, startY, startX + BANNER_MAX_ICON_DIM, startY + BANNER_MAX_ICON_DIM, tdl->colorList[2]);
 
         // Draw WSG
         wsgPalette_t* wp = &trophySystem.grayPalette;
-        if (tw->currentVal >= tw->trophyData.maxVal)
+        if (tw.currentVal >= tw.trophyData.maxVal)
         {
             wp = &trophySystem.normalPalette;
         }
@@ -1251,11 +1247,11 @@ static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t*
     // Draw text, starting after image if present
     startX = titleStart;
     startY = yOffset + 4;
-    drawTextWordWrap(fnt, tdl->colorList[4], tw->trophyData.title, &startX, &startY, titleEnd, yOffset + height);
+    drawTextWordWrap(fnt, tdl->colorList[4], tw.trophyData.title, &startX, &startY, titleEnd, yOffset + height);
     startX = SCREEN_CORNER_CLEARANCE;
     startY = yOffset + 12;
-    startY += hasImg ? BANNER_MAX_ICON_DIM : fnt->height;
-    drawTextWordWrap(fnt, tdl->colorList[3], tw->trophyData.description, &startX, &startY,
+    startY += tw.trophyData.noImage ? fnt->height : BANNER_MAX_ICON_DIM;
+    drawTextWordWrap(fnt, tdl->colorList[3], tw.trophyData.description, &startX, &startY,
                      TFT_WIDTH - SCREEN_CORNER_CLEARANCE, yOffset + height);
 
     // Draw check box
@@ -1263,16 +1259,13 @@ static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t*
                     tdl->colorList[2]);
 
     // Draw check if done
-    if (tw->currentVal >= tw->trophyData.maxVal)
+    if (tw.currentVal >= tw.trophyData.maxVal)
     {
         drawLine(TFT_WIDTH - 14, yOffset + (height >> 1), TFT_WIDTH - 8, yOffset + (height >> 1) - 10,
                  tdl->colorList[5], 0);
         drawLine(TFT_WIDTH - 14, yOffset + (height >> 1), TFT_WIDTH - 19, yOffset + (height >> 1) - 3,
                  tdl->colorList[5], 0);
     }
-
-    // Free tw
-    heap_caps_free(tw);
 }
 
 static void _loadDefaultTrophyImage(trophyDifficulty_t td, wsg_t* image)

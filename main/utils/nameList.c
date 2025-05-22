@@ -135,7 +135,6 @@ static void _drawFadingWords(nameData_t* nd);
 static uint8_t baseMac[6];
 static int listLen[3];
 static uint8_t mutatorSeeds[3];
-static font_t fnt;
 
 //==============================================================================
 // Functions
@@ -147,7 +146,6 @@ void initUsernameSystem()
     listLen[1] = ARRAY_SIZE(adjList2);
     listLen[2] = ARRAY_SIZE(nounList);
     _getMacAddress();
-    loadFont(IBM_VGA_8_FONT, &fnt, true);
 }
 
 void generateMACUsername(nameData_t* nd)
@@ -325,25 +323,25 @@ void drawUsernamePicker(nameData_t* nd)
     {
         case ADJ1:
         {
-            drawLine(ADJ1_X - 35, (TFT_HEIGHT + fnt.height + 4) >> 1, ADJ1_X + 35, (TFT_HEIGHT + fnt.height + 4) >> 1,
+            drawLine(ADJ1_X - 35, (TFT_HEIGHT + getSysFont()->height + 4) >> 1, ADJ1_X + 35, (TFT_HEIGHT + getSysFont()->height + 4) >> 1,
                      c550, 0);
             break;
         }
         case ADJ2:
         {
-            drawLine(ADJ2_X - 35, (TFT_HEIGHT + fnt.height + 4) >> 1, ADJ2_X + 35, (TFT_HEIGHT + fnt.height + 4) >> 1,
+            drawLine(ADJ2_X - 35, (TFT_HEIGHT + getSysFont()->height + 4) >> 1, ADJ2_X + 35, (TFT_HEIGHT + getSysFont()->height + 4) >> 1,
                      c550, 0);
             break;
         }
         case NOUN:
         {
-            drawLine(NOUN_X - 35, (TFT_HEIGHT + fnt.height + 4) >> 1, NOUN_X + 35, (TFT_HEIGHT + fnt.height + 4) >> 1,
+            drawLine(NOUN_X - 35, (TFT_HEIGHT + getSysFont()->height + 4) >> 1, NOUN_X + 35, (TFT_HEIGHT + getSysFont()->height + 4) >> 1,
                      c550, 0);
             break;
         }
         case RAND_NUM:
         {
-            drawLine(235, (TFT_HEIGHT + fnt.height + 4) >> 1, 255, (TFT_HEIGHT + fnt.height + 4) >> 1, c550, 0);
+            drawLine(235, (TFT_HEIGHT + getSysFont()->height + 4) >> 1, 255, (TFT_HEIGHT + getSysFont()->height + 4) >> 1, c550, 0);
             break;
         }
         default:
@@ -353,8 +351,8 @@ void drawUsernamePicker(nameData_t* nd)
     }
 
     // Draw currently set name
-    drawText(&fnt, c444, "Current:", 32, TFT_HEIGHT - 32);
-    drawText(&fnt, c555, nd->nameBuffer, 32, TFT_HEIGHT - 16);
+    drawText(getSysFont(), c444, "Current:", 32, TFT_HEIGHT - 32);
+    drawText(getSysFont(), c555, nd->nameBuffer, 32, TFT_HEIGHT - 16);
 }
 
 //==============================================================================
@@ -424,9 +422,9 @@ static uint8_t _checkIfUserIdxInBounds(int8_t idx, uint8_t arrSize, uint8_t seed
 
 static void _drawWordCenteredOnX(int xCenter, int yOffset, const char* str, paletteColor_t col)
 {
-    int xCoord = xCenter - (textWidth(&fnt, str) >> 1);
-    int yCoord = ((TFT_HEIGHT - fnt.height) >> 1) + yOffset;
-    drawText(&fnt, col, str, xCoord, yCoord);
+    int xCoord = xCenter - (textWidth(getSysFont(), str) >> 1);
+    int yCoord = ((TFT_HEIGHT - getSysFont()->height) >> 1) + yOffset;
+    drawText(getSysFont(), col, str, xCoord, yCoord);
 }
 
 static void _drawFadingWords(nameData_t* nd)
