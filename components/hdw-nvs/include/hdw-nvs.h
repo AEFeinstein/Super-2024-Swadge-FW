@@ -49,6 +49,7 @@
 #include <stddef.h>
 
 #include "nvs.h"
+#include "linked_list.h"
 
 //==============================================================================
 // Defines
@@ -80,4 +81,6 @@ bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t* outEntryInfos
 bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nvs_entry_info_t* outEntryInfos,
                                 size_t* numEntryInfos);
 bool nvsNamespaceInUse(const char* namespace);
+void getNvsKeys(const char* namespace, list_t* list);
+
 #endif
