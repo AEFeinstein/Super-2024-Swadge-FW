@@ -221,6 +221,7 @@
 #include "geometryFl.h"
 #include "imu_utils.h"
 #include "swadgePass.h"
+#include "trophy.h"
 
 // Sound utilities
 #include "soundFuncs.h"
@@ -364,6 +365,11 @@ typedef struct swadgeMode
      * @param packet The packet to fill in
      */
     void (*fnAddToSwadgePassPacket)(struct swadgePassPacket* packet);
+
+    /**
+     * @brief A struct with the settings and data required for trophy behavior. Set to NULL for no trophies
+     */
+    trophyDataList_t* trophyData;
 } swadgeMode_t;
 
 bool checkButtonQueueWrapper(buttonEvt_t* evt);
@@ -382,5 +388,9 @@ void switchToMicrophone(void);
 
 void powerDownPeripherals(void);
 void powerUpPeripherals(void);
+
+// Getters
+font_t* getSysFont(void);
+midiFile_t* getSysSound(void);
 
 #endif

@@ -46,6 +46,8 @@
 #include "swadgeIt.h"
 #include "swadgePassTest.h"
 #include "touchTest.h"
+#include "trophyCase.h"
+#include "trophyTest.h"
 #include "tunernome.h"
 
 #include "nameTest.h"
