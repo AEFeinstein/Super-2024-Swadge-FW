@@ -136,7 +136,7 @@ static void exitTCase(void)
 {
     deinitMenuManiaRenderer(tc->rnd);
     deinitMenu(tc->menu);
-    free(tc);
+    heap_caps_free(tc);
 }
 
 static void runTCase(int64_t elapsedUs)

@@ -420,9 +420,6 @@ void app_main(void)
         cSwadgeMode->fnEnterMode();
     }
 
-    // Amount fo time between main loop calls
-    static uint64_t mainLoopCallDelay = 0;
-
     // Run the main loop, forever
     while (true)
     {
@@ -478,6 +475,9 @@ void app_main(void)
         {
             // Decrement the accumulation
             tAccumDraw -= frameRateUs;
+            
+            // Amount fo time between main loop calls
+            uint64_t mainLoopCallDelay = 0;
 
             // Call the mode's main loop
             if (NULL != cSwadgeMode->fnMainLoop)
