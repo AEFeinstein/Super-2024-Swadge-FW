@@ -43,10 +43,115 @@ static void mainMenuMainLoop(int64_t elapsedUs);
 static void mainMenuCb(const char* label, bool selected, uint32_t settingVal);
 void addSecretsMenu(void);
 static void fanfareFinishedCb(void);
+static void _winTrophy(swadgeMode_t* sm);
 
 //==============================================================================
 // Variables
 //==============================================================================
+
+const trophyData_t mainMenuTrophies[] = {
+    {
+        .title       = "Wait, this is a thing?!",
+        .description = "Unlocked the secret menu",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+        .hidden      = true,
+    },
+    {
+        .title       = "Day -1",
+        .description = "Played Cosplay Crunch for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Get it!",
+        .description = "Played Swadge It! for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Daft Punk would be proud",
+        .description = "Opened Colorchord for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "A jukebox hero",
+        .description = "Opened Jukebox for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Make some tunes",
+        .description = "Opened the Sequencer for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Who needs a tuning fork?",
+        .description = "Opened Tunernome for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "The smallest player",
+        .description = "Opened MIDI Player for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Blinded by the lights",
+        .description = "Opened Light dances on purpose for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "I still like physical dice",
+        .description = "Opened Dice Roller for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Switch Amateur Controller",
+        .description = "Opened Gamepad for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+};
+
+trophySettings_t menuTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 2,
+    .slideDurationUs  = DRAW_SLIDE_US,
+};
+
+trophyDataList_t menuTrophyData = {
+    .settings = &menuTrophySettings,
+    .list     = mainMenuTrophies,
+    .length   = ARRAY_SIZE(mainMenuTrophies),
+};
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
 const char mainMenuName[]                       = "Main Menu";
@@ -70,6 +175,7 @@ swadgeMode_t mainMenuMode = {
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
+    .trophyData               = &menuTrophyData,
 };
 
 mainMenu_t* mainMenu;
@@ -321,6 +427,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
             swadgeMode_t* current = allSwadgeModes[i];
             if (label == current->modeName)
             {
+                _winTrophy(current);
                 switchToSwadgeMode(current);
             }
         }
@@ -421,4 +528,51 @@ void addSecretsMenu(void)
 
     // End the secrets menu
     mainMenu->menu = endSubMenu(mainMenu->menu);
+
+    // Get a trophy
+    trophyUpdate(mainMenuTrophies[0], 1, true);
+}
+
+static void _winTrophy(swadgeMode_t* sm)
+{
+    if (strcmp(sm->modeName, cosCrunchMode.modeName) == 0)
+    {
+        trophyUpdate(mainMenuTrophies[1], 1, true);
+    }
+    else if (strcmp(sm->modeName, swadgeItMode.modeName) == 0)
+    {
+        trophyUpdate(mainMenuTrophies[2], 1, true);
+    }
+    else if (strcmp(sm->modeName, colorchordMode.modeName) == 0)
+    {
+        trophyUpdate(mainMenuTrophies[3], 1, true);
+    }
+    else if (strcmp(sm->modeName, jukeboxMode.modeName) == 0)
+    {
+        trophyUpdate(mainMenuTrophies[4], 1, true);
+    }
+    else if (strcmp(sm->modeName, sequencerMode.modeName) == 0)
+    {
+        trophyUpdate(mainMenuTrophies[5], 1, true);
+    }
+    else if (strcmp(sm->modeName, tunernomeMode.modeName) == 0)
+    {
+        trophyUpdate(mainMenuTrophies[6], 1, true);
+    }
+    else if (strcmp(sm->modeName, synthMode.modeName) == 0)
+    {
+        trophyUpdate(mainMenuTrophies[7], 1, true);
+    }
+    else if (strcmp(sm->modeName, danceMode.modeName) == 0)
+    {
+        trophyUpdate(mainMenuTrophies[8], 1, true);
+    }
+    else if (strcmp(sm->modeName, modeDiceRoller.modeName) == 0)
+    {
+        trophyUpdate(mainMenuTrophies[9], 1, true);
+    }
+    else if (strcmp(sm->modeName, gamepadMode.modeName) == 0)
+    {
+        trophyUpdate(mainMenuTrophies[10], 1, true);
+    }
 }
