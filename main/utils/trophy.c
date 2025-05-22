@@ -86,10 +86,11 @@ typedef struct
 typedef struct
 {
     // Data
-    trophyDataList_t* data;   ///< The settings of how the trophies behave
-    list_t trophyQueue;       ///< List of trophy updates to display. Holds type \ref trophyDataWrapper_t*
-    int numTrophiesScore;     ///< Num of trophies adjusted for difficulty
-    trophyDataWrapper_t plat; ///< Platinum trophy data
+    trophyDataList_t* data; ///< The settings of how the trophies behave
+    list_t trophyQueue;     ///< List of trophy updates to display. Holds type \ref trophyDataWrapper_t*
+    int numTrophiesScore;   ///< Num of trophies adjusted for difficulty
+    trophyData_t plat;      ///< Platinum trophy data
+    int32_t platVal;        ///< Value of the platinum trophy
 
     // Drawing
     bool active;                ///< If the mode should be drawing a banner
@@ -168,9 +169,11 @@ static void _setPoints(int points);
  */
 static int _loadPoints(bool total, const char* modeName);
 
-// Platinum trophy
+// Trophy handling
 
 static bool _isFinalTrophy(void);
+
+static bool _trophyIsWon(trophyDataWrapper_t* tw);
 
 // Checklist Helpers
 
@@ -267,7 +270,7 @@ void trophySystemInit(trophyDataList_t* data, const char* modeName)
     _genPlat(modeName);
 
     // Calculate number of trophies and adjustment for difficulty
-    trophySystem.numTrophiesScore = trophySystem.plat.trophyData.difficulty; // Plat trophy
+    trophySystem.numTrophiesScore = trophySystem.plat.difficulty; // Plat trophy
     for (int idx = 0; idx < trophySystem.data->length; idx++)
     {
         switch (trophySystem.data->list[idx].difficulty)
@@ -356,9 +359,7 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
         // If the trophy has been won, add to score
         if (tw->currentVal == tw->trophyData.maxVal)
         {
-            _setPoints(_genPoints(t.difficulty));
-            _saveLatestWin(tw);
-            final = _isFinalTrophy();
+            final = _trophyIsWon(tw);
         }
     }
     else if (tw->currentVal >= newVal)
@@ -375,9 +376,7 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
         // If the trophy has been won, add to score
         if (tw->currentVal >= tw->trophyData.maxVal)
         {
-            _setPoints(_genPoints(t.difficulty));
-            _saveLatestWin(tw);
-            final = _isFinalTrophy();
+            final = _trophyIsWon(tw);
         }
     }
 
@@ -393,23 +392,24 @@ void trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
             loadWsg(tw->trophyData.image, &tw->image, true);
         }
 
-        // Check if final trophy
-        if (final)
-        {
-            // Save to NVS
-            trophySystem.plat.currentVal = 1;
-            _save(&trophySystem.plat, 1);
-            _setPoints(1000 - (trophySystem.numTrophiesScore * _genPoints(0)));
-            _saveLatestWin(&trophySystem.plat);
-            // Add to end of queue
-            push(&trophySystem.trophyQueue, &trophySystem.plat);
-        }
-
         // Set system and this index to active
         if (!trophySystem.active)
         {
             trophySystem.active    = true;
             trophySystem.animTimer = 0;
+        }
+
+        // If final trophy has been won, add to queue
+        // Done here to be the last trophy pushed.
+        if (final)
+        {
+            trophyDataWrapper_t* twf = heap_caps_calloc(1, sizeof(trophyDataWrapper_t), MALLOC_CAP_8BIT);
+            _load(twf, trophySystem.plat);
+            push(&trophySystem.trophyQueue, twf);
+            twf->currentVal = trophySystem.platVal;
+            _setPoints(_genPoints(twf->trophyData.difficulty));
+            _saveLatestWin(twf);
+            loadWsg(twf->trophyData.image, &twf->image, true);
         }
     }
 }
@@ -472,14 +472,6 @@ void trophySetChecklistTask(trophyData_t t, int32_t flag, bool set, bool drawUpd
 
 void trophyClear(trophyData_t t)
 {
-    if (trophySystem.plat.currentVal == 1)
-    {
-        _save(&trophySystem.plat, 0);
-        trophySystem.plat.currentVal = 0;
-        int rmPoints                 = 1000 - (trophySystem.numTrophiesScore * _genPoints(0));
-        _setPoints(rmPoints * -1);
-    }
-
     trophyDataWrapper_t tw = {};
     _load(&tw, t);
     // Reset points
@@ -487,9 +479,16 @@ void trophyClear(trophyData_t t)
     {
         _setPoints(_genPoints(t.difficulty) * -1);
     }
-
-    // Finalize
     _save(&tw, 0);
+
+    // if Final trophy is set, clear it
+    if (trophySystem.platVal > 0)
+    {
+        trophySystem.platVal = 0;
+        _load(&tw, trophySystem.plat);
+        _setPoints(_genPoints(tw.trophyData.difficulty) * -1);
+        _save(&tw, 0);
+    }
 }
 
 // Helpers
@@ -672,7 +671,7 @@ void trophyDrawList(font_t* fnt, int yOffset)
         {
             tdl->heights[idx] = _getListItemHeight(trophySystem.data->list[idx], fnt);
         }
-        tdl->platHeight = _getListItemHeight(trophySystem.plat.trophyData, fnt);
+        tdl->platHeight = _getListItemHeight(trophySystem.plat, fnt);
     }
 
     // Draw
@@ -684,27 +683,25 @@ void trophyDrawList(font_t* fnt, int yOffset)
     {
         case TROPHY_DISPLAY_LOCKED:
         {
-            if (trophySystem.plat.currentVal == 0)
+            if (trophySystem.platVal == 0)
             {
-                _drawTrophyListItem(trophySystem.plat.trophyData, -yOffset, tdl->platHeight, fnt,
-                                    &trophySystem.plat.image);
+                _drawTrophyListItem(trophySystem.plat, -yOffset, tdl->platHeight, fnt, &trophySystem.plat.image);
                 cumulativeHeight += tdl->platHeight;
             }
             break;
         }
         case TROPHY_DISPLAY_UNLOCKED:
         {
-            if (trophySystem.plat.currentVal == 1)
+            if (trophySystem.platVal == 1)
             {
-                _drawTrophyListItem(trophySystem.plat.trophyData, -yOffset, tdl->platHeight, fnt,
-                                    &trophySystem.plat.image);
+                _drawTrophyListItem(trophySystem.plat, -yOffset, tdl->platHeight, fnt, &trophySystem.plat.image);
                 cumulativeHeight += tdl->platHeight;
             }
             break;
         }
         default:
         {
-            _drawTrophyListItem(trophySystem.plat.trophyData, -yOffset, tdl->platHeight, fnt, &trophySystem.plat.image);
+            _drawTrophyListItem(trophySystem.plat, -yOffset, tdl->platHeight, fnt, &trophySystem.plat.image);
             cumulativeHeight += tdl->platHeight;
             break;
         }
@@ -885,11 +882,16 @@ static int _loadPoints(bool total, const char* modeName)
     return val;
 }
 
-// Platinum trophy
+// Trophy
 
 static bool _isFinalTrophy(void)
 {
     bool final = true;
+    if (trophySystem.platVal > 0)
+    {
+        // Trophy already got
+        return false;
+    }
     for (int idx = 0; idx < trophySystem.data->length; idx++)
     {
         trophyDataWrapper_t tw = {};
@@ -901,6 +903,18 @@ static bool _isFinalTrophy(void)
         }
     }
     return final;
+}
+
+static bool _trophyIsWon(trophyDataWrapper_t* tw)
+{
+    _setPoints(_genPoints(tw->trophyData.difficulty));
+    _saveLatestWin(tw);
+    if (_isFinalTrophy())
+    {
+        trophySystem.platVal = 1;
+        return true;
+    }
+    return false;
 }
 
 // Checklist Helpers
@@ -1240,22 +1254,32 @@ static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t*
 static int _genPoints(trophyDifficulty_t td)
 {
     int scorePer = 1000 / trophySystem.numTrophiesScore;
-
-    return scorePer *= (1 + td);
+    if (td == TROPHY_DIFF_FINAL)
+    {
+        scorePer = 1000 - (scorePer * trophySystem.numTrophiesScore);
+        return scorePer;
+    }
+    else
+    {
+        return scorePer *= td;
+    }
 }
 
 static void _genPlat(const char* modeName)
 {
     char buffer[TROPHY_MAX_TITLE_LEN];
     snprintf(buffer, sizeof(buffer) - 1, "%s%s%s", platStrings[0], modeName, platStrings[1]);
-    strcpy(trophySystem.plat.trophyData.title, buffer);
+    strcpy(trophySystem.plat.title, buffer);
     char buffer2[TROPHY_MAX_DESC_LEN];
     snprintf(buffer2, sizeof(buffer2) - 1, "%s%s", platStrings[2], modeName);
-    strcpy(trophySystem.plat.trophyData.description, buffer2);
-    trophySystem.plat.trophyData.image      = SWADGE_2026_TROPHY_WSG;
-    trophySystem.plat.trophyData.type       = TROPHY_TYPE_TRIGGER;
-    trophySystem.plat.trophyData.difficulty = TROPHY_DIFF_EASY;
-    trophySystem.plat.trophyData.maxVal     = 1;
-    loadWsg(trophySystem.plat.trophyData.image, &trophySystem.plat.image, true);
-    _load(&trophySystem.plat, trophySystem.plat.trophyData);
+    strcpy(trophySystem.plat.description, buffer2);
+    trophySystem.plat.image      = SWADGE_2026_TROPHY_WSG; // FIXME: Use Platinum trophy
+    trophySystem.plat.type       = TROPHY_TYPE_TRIGGER;
+    trophySystem.plat.difficulty = TROPHY_DIFF_FINAL;
+    trophySystem.plat.maxVal     = 1;
+
+    // get current val
+    trophyDataWrapper_t tw = {};
+    _load(&tw, trophySystem.plat);
+    trophySystem.platVal = tw.currentVal;
 }

@@ -218,7 +218,6 @@ providing new y values. Remember to deinit the list with `trophyDrawListDeinit()
 #define DRAW_STATIC_US 524288 ///< Recommended static time, a power of 2 about a half second
 
 #define NO_IMAGE_SET CNFS_NUM_FILES
-#define TROPHY_PLAT  -1
 
 //==============================================================================
 // Enum
@@ -237,6 +236,7 @@ typedef enum
 /// @brief Dev inferred difficulty of achieving, used to distribute points.
 typedef enum
 {
+    TROPHY_DIFF_FINAL,
     TROPHY_DIFF_EASY,
     TROPHY_DIFF_MEDIUM,
     TROPHY_DIFF_HARD,
