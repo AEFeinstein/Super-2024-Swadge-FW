@@ -576,20 +576,20 @@ Remember, the order of allocating memory matters! If item X contains item Y, and
 
 The two new functions we need are easy to find in the documentation, so if you checked it out you've probably already seen them.
 
-FIXME: We're moving to a new way of loading assets. Update.
-
 ```C
-loadWsg("RoboStanding.wsg", &rd->character, true);
-freeWsg(&rd->character);
+loadWsg(image, &storedImage, true);
+freeWsg(&storedImage);
 ```
 
-`rd->character` is how we point specifically to the character image inside the rd struct. We know rd is a pointer, so it points to the data. 
+`storedImage` is where we are storing an image to. We need to store it so it doesn't get deleted before we use it.
 
 The ampersand "&" symbol means "grab the data inside the mailbox, not the number on the side of the mailbox". Conversely, an asterisk "*" indicated that you want the number of the mailbox instead of the data you're looking at, a pointer.
 
-The "RoboStanding.wsg" is the name of the file, but with `.png` replaced by `.wsg`. This is done automatically by the program at compilation time, so you don't have ot do it by hand.
+The `image` is the name of the image to load. Any .png file in the assets folder will automatically be converted. `roboStanding.png` will be converted to `ROBO_STANDING_WSG` next time the code is compiled. If it's already been compiled once, the program will autocomplete the word for you.
 
 Lastly, that last `true` at the end of the load function tells the swadge which RAM to put the image into. When in doubt, leave it on true, as this will load it into SPI RAM. SPI RAM is slower, but a lot more plentiful.
+
+We want to store the image into rd, which means we can replace `storedImage` with `rd->character` and `image` with `ROBO_STANDING_WSG` and then put them in our existing functions. The arrow notation between rd and character indicated that rd points to the character data.
 
 Given we know that rd needs to be allocated, we need to put the `loadWsg()` function after the `heap_caps_calloc()` and the `freeWsg()` before the `free(rd)` functions. 
 
@@ -597,7 +597,7 @@ Given we know that rd needs to be allocated, we need to put the `loadWsg()` func
 static void runnerEnterMode()
 {
     rd = (runnerData_t*)heap_caps_calloc(1, sizeof(runnerData_t), MALLOC_CAP_8BIT);
-    loadWsg("RoboStanding.wsg", &rd->character, true);
+    loadWsg(ROBO_STANDING_WSG, &rd->character, true);
 }
 
 static void runnerExitMode()
@@ -620,7 +620,7 @@ The Swadge draws images assuming the top left corner is the start. For our examp
 
 <img src="./TutorialImages/drawingFirstImage.png">
 
-Some things you'll note if you start to play with the numbers is that the corners of the screen are obscured. This is because the real screen we're using has rounded corners. The shrouded portions are roughly equivalent to the real screen. Another thing to note is that the last time the pixel is updated is what's going to be drawn. SO if you want to draw text over a textbox, the box needs to be drawn first or the box will overwrite the text.
+Some things you'll note if you start to play with the numbers is that the corners of the screen are obscured. This is because the real screen we're using has rounded corners. The shrouded portions are roughly equivalent to the real screen. Another thing to note is that the last time the pixel is updated is what's going to be drawn. So if you want to draw text over a textbox, the box needs to be drawn first or the box will overwrite the text.
 
 Next, we'll add some ground to stand on
 
@@ -676,7 +676,7 @@ runnerData_t* rd;
 static void runnerEnterMode()
 {
     rd = (runnerData_t*)heap_caps_calloc(1, sizeof(runnerData_t), MALLOC_CAP_8BIT);
-    loadWsg("RoboStanding.wsg", &rd->character, true);
+    loadWsg(ROBO_STANDING_WSG, &rd->character, true);
 }
 
 static void runnerExitMode()
@@ -907,7 +907,7 @@ runnerData_t* rd;
 static void runnerEnterMode()
 {
     rd = (runnerData_t*)heap_caps_calloc(1, sizeof(runnerData_t), MALLOC_CAP_8BIT);
-    loadWsg("RoboStanding.wsg", &rd->character, true);
+    loadWsg(ROBO_STANDING_WSG, &rd->character, true);
 }
 
 static void runnerExitMode()
@@ -1070,32 +1070,29 @@ As before, art is essential to get a general feel for a game so it's not all jus
 
 First, let's load and unload these new files. The following snippits of code are a really useful pattern, since you only have to add the file name once and it will be automagically loaded and unloaded.
 
-FIXME: Chenge if loading process is updated.
-
 ```C
 // Put this below the defines. If you use different filenames, make sure to change them accordingly.
-static const char* const obstacleImageNames[] =
-{
-    "Barrel-1.wsg",
-    "Lamp.wsg",
+static const cnfsFileIdx_t obstacleImages[] = {
+    BARREL_1_WSG,
+    LAMP_WSG,
 };
 
 // Add this to the Data struct
 wsg_t* obstacleImgs;
 
 // Useful for loading a lot of sprites into one place. Put in the enter function
-rd->obstacleImgs = heap_caps_calloc(ARRAY_SIZE(obstacleImageNames), sizeof(wsg_t), MALLOC_CAP_8BIT);
-for (int32_t idx = 0; idx < ARRAY_SIZE(obstacleImageNames); idx++)
+rd->obstacleImgs = heap_caps_calloc(ARRAY_SIZE(obstacleImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
+for (int32_t idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
 {
-    loadWsg(obstacleImageNames[idx], &rd->obstacleImgs[idx], true);
+    loadWsg(obstacleImages[idx], &rd->obstacleImgs[idx], true);
 }
 
 // Remember to de-allocate whatever you use inside the exit function!
-for (uint8_t idx = 0; idx < ARRAY_SIZE(obstacleImageNames); idx++)
+for (uint8_t idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
 {
     freeWsg(&rd->obstacleImgs[idx]);
 }
-heap_caps_free(rd->obstacleImgs); 
+heap_caps_free(rd->obstacleImgs);
 ```
 
 Here's a breakdown of the process:

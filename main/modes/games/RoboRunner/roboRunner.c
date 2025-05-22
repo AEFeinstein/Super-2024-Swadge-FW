@@ -11,9 +11,9 @@
 
 const char runnerModeName[] = "Robo Runner";
 
-static const char* const obstacleImageNames[] = {
-    "Barrel-1.wsg",
-    "Lamp.wsg",
+static const cnfsFileIdx_t obstacleImages[] = {
+    BARREL_1_WSG,
+    LAMP_WSG,
 };
 
 typedef enum
@@ -78,13 +78,13 @@ runnerData_t* rd;
 static void runnerEnterMode()
 {
     rd = (runnerData_t*)heap_caps_calloc(1, sizeof(runnerData_t), MALLOC_CAP_8BIT);
-    loadWsg("RoboStanding.wsg", &rd->robot.img, true);
+    loadWsg(ROBO_STANDING_WSG, &rd->robot.img, true);
 
     // Useful for loading a lot of sprites into one place.
-    rd->obstacleImgs = heap_caps_calloc(ARRAY_SIZE(obstacleImageNames), sizeof(wsg_t), MALLOC_CAP_8BIT);
-    for (int32_t idx = 0; idx < ARRAY_SIZE(obstacleImageNames); idx++)
+    rd->obstacleImgs = heap_caps_calloc(ARRAY_SIZE(obstacleImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
+    for (int32_t idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
     {
-        loadWsg(obstacleImageNames[idx], &rd->obstacleImgs[idx], true);
+        loadWsg(obstacleImages[idx], &rd->obstacleImgs[idx], true);
     }
 
     // Initialize the obstacles so we don't accidentally
@@ -101,7 +101,7 @@ static void runnerEnterMode()
 static void runnerExitMode()
 {
     // Remember to de-allocate whatever you use!
-    for (uint8_t idx = 0; idx < ARRAY_SIZE(obstacleImageNames); idx++)
+    for (uint8_t idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
     {
         freeWsg(&rd->obstacleImgs[idx]);
     }
