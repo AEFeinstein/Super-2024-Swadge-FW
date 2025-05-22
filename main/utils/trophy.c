@@ -263,8 +263,8 @@ void trophySystemInit(trophyDataList_t* data, const char* modeName)
     // If no namespace is provided, auto generate
     if (strcmp(data->settings->namespaceKey, "") == 0)
     {
-        char buffer[MAX_NVS_KEY_LEN];
-        _truncateStr(buffer, modeName, MAX_NVS_KEY_LEN);
+        char buffer[NVS_KEY_NAME_MAX_SIZE];
+        _truncateStr(buffer, modeName, NVS_KEY_NAME_MAX_SIZE);
         strcpy(trophySystem.data->settings->namespaceKey, buffer);
     }
 
@@ -454,8 +454,8 @@ bool trophyUpdateMilestone(trophyData_t t, int newVal, int threshold)
 int32_t trophyGetSavedValue(trophyData_t t)
 {
     int32_t val;
-    char buffer[MAX_NVS_KEY_LEN];
-    _truncateStr(buffer, t.title, MAX_NVS_KEY_LEN);
+    char buffer[NVS_KEY_NAME_MAX_SIZE];
+    _truncateStr(buffer, t.title, NVS_KEY_NAME_MAX_SIZE);
     if (readNamespaceNvs32(trophySystem.data->settings->namespaceKey, buffer, &val))
     {
         return val;
@@ -556,7 +556,7 @@ trophyData_t trophyGetLatest()
 void trophySetSystemData(trophyDataList_t* dl, const char* modeName)
 {
     trophySystem.data = dl;
-    _truncateStr(trophySystem.data->settings->namespaceKey, modeName, MAX_NVS_KEY_LEN);
+    _truncateStr(trophySystem.data->settings->namespaceKey, modeName, NVS_KEY_NAME_MAX_SIZE);
     _genPlat(modeName);
     _loadPalette();
 }
@@ -805,8 +805,8 @@ static void _truncateStr(char* to, const char* from, int len)
 
 static void _save(trophyDataWrapper_t* t, int newVal)
 {
-    char buffer[MAX_NVS_KEY_LEN];
-    _truncateStr(buffer, t->trophyData.title, MAX_NVS_KEY_LEN);
+    char buffer[NVS_KEY_NAME_MAX_SIZE];
+    _truncateStr(buffer, t->trophyData.title, NVS_KEY_NAME_MAX_SIZE);
     writeNamespaceNvs32(trophySystem.data->settings->namespaceKey, buffer, newVal);
 }
 
@@ -824,8 +824,8 @@ static void _load(trophyDataWrapper_t* tw, trophyData_t t)
 
     // Pull Current Val from disk
     int32_t val;
-    char buffer[MAX_NVS_KEY_LEN];
-    _truncateStr(buffer, t.title, MAX_NVS_KEY_LEN);
+    char buffer[NVS_KEY_NAME_MAX_SIZE];
+    _truncateStr(buffer, t.title, NVS_KEY_NAME_MAX_SIZE);
     if (readNamespaceNvs32(trophySystem.data->settings->namespaceKey, buffer, &val))
     {
         tw->currentVal = val;
@@ -845,7 +845,7 @@ static void _saveLatestWin(trophyDataWrapper_t* tw)
         {
             writeNamespaceNvs32(NVSstrings[0], NVSstrings[2], idx);
             writeNamespaceNvsBlob(NVSstrings[0], NVSstrings[3], trophySystem.data->settings->namespaceKey,
-                                  MAX_NVS_KEY_LEN);
+                                  NVS_KEY_NAME_MAX_SIZE);
             return;
         }
     }
@@ -895,8 +895,8 @@ static int _loadPoints(bool total, const char* modeName)
         }
         else
         {
-            char buffer[MAX_NVS_KEY_LEN];
-            _truncateStr(buffer, modeName, MAX_NVS_KEY_LEN);
+            char buffer[NVS_KEY_NAME_MAX_SIZE];
+            _truncateStr(buffer, modeName, NVS_KEY_NAME_MAX_SIZE);
             if (!readNamespaceNvs32(buffer, NVSstrings[1], &val))
             {
                 val = 0;
