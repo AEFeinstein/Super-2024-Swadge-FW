@@ -315,7 +315,7 @@
  * or ::FMT_TEXT, this data may also be freely modified in-place and can be assigned directly
  * into processorInput_t::out.
  *
- * To use FMT_LINES when outputting data, the asset processor must allocate two buffers;
+ * To use ::FMT_LINES when outputting data, the asset processor must allocate two buffers;
  * one `char**` for the list of string pointers (`lines`), and one `char*` for the entire
  * string data. Additionally, the first entry in `lines` _must_ be a pointer to the very
  * beginning of the text buffer in order to ensure that it can be properly freed. The
@@ -325,20 +325,20 @@
  * end of the file.
  *
  * Here is a summary of the various input and output options available and how to use them
- * for input and output. `arg` refers to the processorInput_t* passed as the argument to a
+ * for input and output. `arg` refers to the processorInput_t * passed as the argument to a
  * \ref processFn_t.
  */
 
 // clang-format off
 
  /*! \file assets_preprocessor.h
- * | Format       | In Data        | In Length           | In Mode | Out Data         | Out Length           | Out Mode |
- * |--------------|----------------|---------------------|---------|------------------|----------------------|----------|
- * | FMT_DATA     | `arg->in.data` | `arg->in.length`    | `rb`    | `arg->out.data`  | `arg->out.length`    | `wb`     |
- * | FMT_TEXT     | `arg->in.text` | `arg->in.textSize`  | `r`     | `arg->out.text`  | `arg->out.textSize`  | `w`      |
- * | FMT_FILE_BIN | `arg->in.file` |                     | `rb`    | `arg->out.file`  |                      | `wb`     |
- * | FMT_FILE     | `arg->in.file` |                     | `r`     | `arg->out.file`  |                      | `w`      |
- * | FMT_LINES    | `arg->in.lines`| `arg->in.lineCount` | `r`     | `arg->out.lines` | `arg->out.lineCount` | `w`      |
+ * | Format         | In Data        | In Length           | In Mode | Out Data         | Out Length           | Out Mode |
+ * |----------------|----------------|---------------------|---------|------------------|----------------------|----------|
+ * | ::FMT_DATA     | `arg->in.data` | `arg->in.length`    | `rb`    | `arg->out.data`  | `arg->out.length`    | `wb`     |
+ * | ::FMT_TEXT     | `arg->in.text` | `arg->in.textSize`  | `r`     | `arg->out.text`  | `arg->out.textSize`  | `w`      |
+ * | ::FMT_FILE_BIN | `arg->in.file` |                     | `rb`    | `arg->out.file`  |                      | `wb`     |
+ * | ::FMT_FILE     | `arg->in.file` |                     | `r`     | `arg->out.file`  |                      | `w`      |
+ * | ::FMT_LINES    | `arg->in.lines`| `arg->in.lineCount` | `r`     | `arg->out.lines` | `arg->out.lineCount` | `w`      |
  */
 
 // clang-format on
@@ -634,13 +634,13 @@ typedef enum
 typedef union
 {
     /**
-     * @brief Holds file handle for FMT_FILE or FMT_FILE_BIN formats
+     * @brief Holds file handle for ::FMT_FILE or ::FMT_FILE_BIN formats
      *
      */
     FILE* file;
 
     /**
-     * @brief Holds data for FMT_DATA format
+     * @brief Holds data for ::FMT_DATA format
      */
     struct
     {
@@ -651,7 +651,7 @@ typedef union
     };
 
     /**
-     * @brief Holds data for FMT_LINES format
+     * @brief Holds data for ::FMT_LINES format
      *
      */
     struct
@@ -663,7 +663,7 @@ typedef union
     };
 
     /**
-     * @brief Holds data for FMT_TEXT format
+     * @brief Holds data for ::FMT_TEXT format
      *
      */
     struct
