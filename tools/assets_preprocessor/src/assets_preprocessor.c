@@ -904,7 +904,7 @@ int main(int argc, char** argv)
     const char* timestampFileName = NULL;
 
     opterr = 0;
-    while ((c = getopt(argc, argv, "i:o:t:vc:")) != -1)
+    while ((c = getopt(argc, argv, "i:o:t:vc:h")) != -1)
     {
         switch (c)
         {
