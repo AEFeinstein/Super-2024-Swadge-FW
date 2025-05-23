@@ -117,19 +117,19 @@ static void dn_MainLoop(int64_t elapsedUs)
                 //all unselected tiles approach neighboring tiles
                 if (y > gameData->selection[1])
                 {
-                    tile->yVel += (((int16_t)(gameData->tiles[y - 1][x].yOffset - tile->yOffset)) / 3);
+                    tile->yVel += (((int16_t)(gameData->tiles[y - 1][x].yOffset - tile->yOffset)) / (1 + (y - gameData->selection[1])*2));
                 }
                 if (y < gameData->selection[1])
                 {
-                    tile->yVel += (((int16_t)(gameData->tiles[y + 1][x].yOffset - tile->yOffset)) / 3);
+                    tile->yVel += (((int16_t)(gameData->tiles[y + 1][x].yOffset - tile->yOffset)) / (1 + (gameData->selection[1] - y)*2));
                 }
                 if (x > gameData->selection[0])
                 {
-                    tile->yVel += (((int16_t)(gameData->tiles[y][x - 1].yOffset - tile->yOffset)) / 3);
+                    tile->yVel += (((int16_t)(gameData->tiles[y][x - 1].yOffset - tile->yOffset)) / (1 + (x - gameData->selection[0])*2));
                 }
                 if (x < gameData->selection[0])
                 {
-                    tile->yVel += (((int16_t)(gameData->tiles[y][x + 1].yOffset - tile->yOffset)) / 3);
+                    tile->yVel += (((int16_t)(gameData->tiles[y][x + 1].yOffset - tile->yOffset)) / (1 + (gameData->selection[0] - x)*2));
                 }
             }
 
