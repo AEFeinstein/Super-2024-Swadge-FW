@@ -59,6 +59,11 @@ typedef struct
     wsg_t* obstacleImgs;                 // Array of obstacle images
     obstacle_t obstacles[MAX_OBSTACLES]; // Object data
     int obstacleIdx;                     // Index of the next obstacle
+
+    // Score
+    uint32_t score; // Current score
+    uint32_t prevScore; // Previous high score
+    int64_t remainingTime; // Time left over after we've added points
 } runnerData_t;
 
 static void runnerEnterMode(void);
@@ -163,6 +168,14 @@ static void runnerMainLoop(int64_t elapsedUs)
     }
     trySpawnObstacle();
 
+    // Update score
+    rd->remainingTime += elapsedUs;
+    while(rd->remainingTime > 10000)
+    {
+        rd->remainingTime -= 10000;
+        rd->score++;
+    }
+
     // Draw screen
     draw();
 }
@@ -175,6 +188,12 @@ static void resetGame()
         rd->obstacles[idx].active     = false;
         rd->obstacles[idx].rect.pos.x = -40;
     }
+    if(rd->prevScore < rd->score)
+    {
+        rd->prevScore = rd->score;
+    }
+    rd->remainingTime = 0;
+    rd->score = 0;
 }
 
 static void runnerLogic(int64_t elapsedUS)
@@ -289,6 +308,13 @@ static void draw()
     // Draw the player
     drawWsgSimple(&rd->robot.img, PLAYER_X - PLAYER_X_IMG_OFFSET, rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET);
     
+    // Draw the score
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer) - 1, "Score: %" PRIu32, rd->score);
+    drawText(getSysFont(), c555, buffer, 32, 4);
+    snprintf(buffer, sizeof(buffer) - 1, "High score: %" PRIu32, rd->prevScore);
+    drawText(getSysFont(), c555, buffer, 32, 20);
+
     // Uncomment these to draw the hitboxes
     /* drawRect(rd->robot.rect.pos.x, rd->robot.rect.pos.y, rd->robot.rect.pos.x + rd->robot.rect.width,
              rd->robot.rect.pos.y + rd->robot.rect.height, c500);

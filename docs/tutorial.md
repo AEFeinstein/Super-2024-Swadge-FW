@@ -1731,8 +1731,84 @@ static void draw()
 
 ## Score
 
-- Numbers and displaying text on screen
+First, we have to define how we want to be scored. Do we want to increase the score each frame? probably not, since that can vary. How about once a second? Well, the obstacles might come faster later, and we want to reward holding on to the very last second.
+
+How about each hundredth of a second? That seems pretty granular and will generate large fun numbers.
+
+Let's add the following code:
+```C
+// To runner data structure
+uint32_t data;
+int64_t remainingTime;
+
+// To mode loop function
+rd->remainingTime += elapsedUs;
+while(rd->remainingTime > 10000) // 10,000 microseconds = 10 milliseconds = 1/100th a second
+{
+    rd->remainingTime -= 10000;
+    rd->score++;
+}
+
+// To reset function
+rd->remainingTime = 0;
+rd->score = 0;
+```
+
+This should handle generating the score. We save `remainingTime` so we don't cheat the player out of points because our frames are too fast.
+
+Now let's draw the text.
+
+```C
+char buffer[32];
+snprintf(buffer, sizeof(buffer) - 1, "Score: %" PRIu32, rd->score);
+drawText(getSysFont(), c555, buffer, 32, 4);
+```
+
+That's easy to understand, right? No? Alright, let's go through it:
+- `char buffer[32]`: This will contain a set number of characters. I've picked 32 arbitrarily. If you want to draw text, you will need to make a char array to hold it is some form or another
+- `snprintf()`: This function copies a string (char*/char a[] are both strings) into another.
+  - `buffer`: The char array/string to copy the text into
+  - `sizeof(buffer) - 1`: The size of the array, so we don't run out of space. We set it to -1 the full length because the last character of a string needs to be empty to signal the end of the string. This is done automatically as long as we've set this up properly.
+  - `"Score: %" PRIu32`: This is the string to copy into the buffer, but with a few twists:
+    - The "%" means that we're loading a variable into the string. 
+    - The PRIu32 is the format of the variable being loaded. It *has* to match the variable or the program will not compile.
+      - %s can be used for strings without an extra format specifier
+      - %d can be used for `int` without a format specifier, but might behave differently on a swadge versus the emulator (`int` doesn't have a specific length)
+      - Formats can be looked at [here](https://cplusplus.com/reference/cinttypes/). If lost, just ask for help from a friendly swadge dev, this one is complicated.
+  - `rd->score`: The variable to load into the % sign of the string. If we had multiple variables, we'd add more separated by commas.
+- `drawText()`: Draws text to the screen
+  - `getSysFont()`: This one is a bit misleading. There are several fonts on a swadge, but one of them is always loaded by default. This pulls that font for use. Fonts can generally be used just like WSGs except they go into `font_t` structs and only fit into `drawText()` and not `drawWsg()`.
+  - `c555`: The color fo the text to draw
+  - `buffer`: The string to draw. We made space for it, loaded text into it, and now we're drawing it.
+  - `32`: x coordinate to start drawing at. To avoid the corner curves, I set it to 32
+  - `4` : y coordinate
+
+Great. Now we have a score drawing on the screen that resets when the player collides with an obstacle. Too bad it resets immediately.
+
+### Previous score
+
+Easy enough to do. 
+
+```C
+// Runner data
+uint32_t prevScore;
+
+// Reset function, before we set the value to 0
+if(rd->prevScore < rd->score)
+{
+    rd->prevScore = rd->score;
+}
+
+// Draw function
+// If we draw this after buffer is already initialized, we can reuse the buffer. Neat!
+snprintf(buffer, sizeof(buffer) - 1, "High score: %" PRIu32, rd->prevScore);
+drawText(getSysFont(), c555, buffer, 32, 20);
+```
+
 - NVS and good NVS behavior
+
+## Sounds
+
 - Making sounds
   - MIDI tracks
 
