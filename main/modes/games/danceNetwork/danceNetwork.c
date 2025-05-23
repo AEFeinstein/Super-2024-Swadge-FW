@@ -77,25 +77,25 @@ static void dn_MainLoop(int64_t elapsedUs)
             {
                 gameData->selection[1]--;
                 gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
-                gameData->tiles[gameData->selection[1]][gameData->selection[0]].yVel = 1000;
+                gameData->tiles[gameData->selection[1]][gameData->selection[0]].yVel = -700;
             }
             else if(evt.button == PB_DOWN && gameData->selection[1] < BOARD_SIZE - 1)
             {
                 gameData->selection[1]++;
                 gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
-                gameData->tiles[gameData->selection[1]][gameData->selection[0]].yVel = 1000;
+                gameData->tiles[gameData->selection[1]][gameData->selection[0]].yVel = -700;
             }
             else if(evt.button == PB_LEFT && gameData->selection[0] > 0)
             {
                 gameData->selection[0]--;
                 gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
-                gameData->tiles[gameData->selection[1]][gameData->selection[0]].yVel = 1000;
+                gameData->tiles[gameData->selection[1]][gameData->selection[0]].yVel = -700;
             }
             else if(evt.button == PB_RIGHT && gameData->selection[0] < BOARD_SIZE - 1)
             {
                 gameData->selection[0]++;
                 gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
-                gameData->tiles[gameData->selection[1]][gameData->selection[0]].yVel = 1000;
+                gameData->tiles[gameData->selection[1]][gameData->selection[0]].yVel = -700;
             }
         }
     }
@@ -118,22 +118,22 @@ static void dn_MainLoop(int64_t elapsedUs)
                 //all unselected tiles approach neighboring tiles
                 if (y > gameData->selection[1])
                 {
-                    tile->yVel += (((int16_t)(gameData->tiles[y - 1][x].yOffset - tile->yOffset)) / 2);
+                    tile->yVel += (((int16_t)(gameData->tiles[y - 1][x].yOffset - tile->yOffset)) / 1);
                     dampen += y - gameData->selection[1];
                 }
                 if (y < gameData->selection[1])
                 {
-                    tile->yVel += (((int16_t)(gameData->tiles[y + 1][x].yOffset - tile->yOffset)) / 2);
+                    tile->yVel += (((int16_t)(gameData->tiles[y + 1][x].yOffset - tile->yOffset)) / 1);
                     dampen += gameData->selection[1] - y;
                 }
                 if (x > gameData->selection[0])
                 {
-                    tile->yVel += (((int16_t)(gameData->tiles[y][x - 1].yOffset - tile->yOffset)) / 2);
+                    tile->yVel += (((int16_t)(gameData->tiles[y][x - 1].yOffset - tile->yOffset)) / 1);
                     dampen += x - gameData->selection[0];
                 }
                 if (x < gameData->selection[0])
                 {
-                    tile->yVel += (((int16_t)(gameData->tiles[y][x + 1].yOffset - tile->yOffset)) / 2);
+                    tile->yVel += (((int16_t)(gameData->tiles[y][x + 1].yOffset - tile->yOffset)) / 1);
                     dampen += gameData->selection[0] - x;
                 }
             }
