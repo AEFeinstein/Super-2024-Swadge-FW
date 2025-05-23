@@ -22,6 +22,7 @@
 #define MAX_OBSTACLES 2
 
 const char runnerModeName[] = "Robo Runner";
+const char roboRunnerNVSKey[] = "roboRunner";
 
 static const cnfsFileIdx_t obstacleImages[] = {
     BARREL_1_WSG,
@@ -113,6 +114,12 @@ static void runnerEnterMode()
         rd->obstacles[idx].active = false;
     }
 
+    // Initialize the high score
+    if(!readNvs32(roboRunnerNVSKey, rd->prevScore))
+    {
+        rd->prevScore = 0;
+    }
+
     resetGame();
 
     // Set Robot's rect
@@ -191,6 +198,7 @@ static void resetGame()
     if(rd->prevScore < rd->score)
     {
         rd->prevScore = rd->score;
+        writeNvs32(roboRunnerNVSKey, rd->score);
     }
     rd->remainingTime = 0;
     rd->score = 0;

@@ -1796,6 +1796,7 @@ uint32_t prevScore;
 // Reset function, before we set the value to 0
 if(rd->prevScore < rd->score)
 {
+    // Only sets the previous score if the new score is higher.
     rd->prevScore = rd->score;
 }
 
@@ -1805,18 +1806,45 @@ snprintf(buffer, sizeof(buffer) - 1, "High score: %" PRIu32, rd->prevScore);
 drawText(getSysFont(), c555, buffer, 32, 20);
 ```
 
-- NVS and good NVS behavior
+### Saving the data
 
-## Sounds
+Something you'll quickly note if you try this a few times is that when you close the emulator or change modes the score isn't saved. That's because we're working in RAM, which dies every time memory is freed. What we need to do is write to the ESP's onboard Non-Volatile Storage (NVS). The NVS isn't that big, but we can store plenty of info for what we're attempting. We're only saving one number!
 
-- Making sounds
-  - MIDI tracks
+There are a few things you do need to watch out for though. NVS has a limit to the amount of times it can be written to. This isn't something that's likely to come up in normal usage, but if you're saving data ***Constantly*** you will burn out the NVS sooner rather than later. Reading incurs no penalty. There's a lot of hardware trickery going on in the background to ensure the data is saved properly, so it's best not to worry about it too much.
+
+To save the final score, let's add a function to save the high score when it's set:
+```C
+// We need to make a constant string for the NVS key, which is used to retrieve the data later
+const char roboRunnerNVSKey[] = "roboRunner";
+
+// In reset
+if(rd->prevScore < rd->score)
+{
+    // Only sets the previous score if the new score is higher.
+    rd->prevScore = rd->score;
+    writeNvs32(roboRunnerNVSKey, rd->score); // This writes the data
+}
+
+// In enter mode function
+if(!readNvs32(roboRunnerNVSKey, rd->prevScore))
+{
+    // We check if it found a value and if it didn't, we set it to zero to be safe.
+    rd->prevScore = 0;
+}
+```
+
+And that's it. More complex objects can be saved, just refer to the NVS file in the docs for hints on that.
 
 ## Difficulty (Speed up)
 
 We really should increase the difficulty with time.
 
 We have two ways of tweaking that: The frequency that obstacles spawn and how fast they scroll across the screen. 
+
+## Sounds
+
+- Making sounds
+  - MIDI tracks
 
 ## Animations
 
