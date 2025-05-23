@@ -1826,7 +1826,7 @@ if(rd->prevScore < rd->score)
 }
 
 // In enter mode function
-if(!readNvs32(roboRunnerNVSKey, rd->prevScore))
+if(!readNvs32(roboRunnerNVSKey, &rd->prevScore))
 {
     // We check if it found a value and if it didn't, we set it to zero to be safe.
     rd->prevScore = 0;
@@ -1835,11 +1835,121 @@ if(!readNvs32(roboRunnerNVSKey, rd->prevScore))
 
 And that's it. More complex objects can be saved, just refer to the NVS file in the docs for hints on that.
 
+### Bonus points: Successfully dodged objects
+
+Why not add bonus score when the player's cleared an obstacle? Basically, if it's off screen behind the player, we can add points.
+
+```C
+// In updateObstacle()
+if (obs->rect.pos.x < -40)
+{
+    obs->active = false;
+    rd->score += 50;
+}
+```
+
+This reveals another bug. We kind of... never stopped moving the obstacles off the screen. Let's check that they're not false before updating.
+
+```C
+// In updateObstacle()
+if(!obs->active)
+{
+    return;
+}
+```
+
+There we go!
+
 ## Difficulty (Speed up)
 
 We really should increase the difficulty with time.
 
-We have two ways of tweaking that: The frequency that obstacles spawn and how fast they scroll across the screen. 
+We have three ways of tweaking that: 
+- The frequency that obstacles spawn 
+- How fast they scroll across the screen
+- How many can appear on the screen at once
+
+Let's start with spawning rate. It's currently at 1 out of 80 chance to try to spawn a new obstacle, so let's give it a variable to change over time.
+
+```C
+// Define the following
+#define SPAWN_RATE_TIMER 15000000 // Fifteen seconds
+
+// In runner Data struct
+int spawnRate;
+int64_t spawnRateTimer;
+
+// In reset function
+rd->spawnRate = 80; // Resets to base rate
+rd->spawnRateTimer = 0;
+
+// In main mode loop
+rd->spawnRateTimer += elapsedUs;
+if (rd->spawnRateTimer > SPAWN_RATE_TIMER && rd->spawnRate > 1)
+{
+    rd->spawnRate--;
+    rd->spawnRateTimer = 0;
+}
+
+// In trySpawnObstacle() replace 80 with rd->spawnRate
+bool spawn = (esp_random() % rd->spawnRate) == 0; 
+```
+
+Now the objects will spawn slightly more frequently. We can do something pretty similar for the speed across the screen.
+
+```C
+// Runner Data
+int speedDivisor;          // 10,000 / speedDivisor
+int64_t speedDivisorTimer; // Timer until we increase speed
+
+// Reset
+rd->speedDivisor      = 150;
+rd->speedDivisorTimer = 0;
+
+// Main loop
+rd->speedDivisorTimer += elapsedUs;
+if (rd->speedDivisorTimer > SPEED_TIMER && rd->speedDivisor < 10000)
+{
+    rd->speedDivisor++; // Note we increase this one to make the final number smaller.
+    rd->speedDivisorTimer = 0;
+}
+
+// Update Obstacle
+int moveSpeed = 1000000 / rd->speedDivisor; 
+
+```
+
+Now it's starting to feel like a game.
+
+Last little bit of difficulty we'll add is increasing the number of obstacles we can have at once.
+
+```C
+// Change max obstacles to 5
+#define MAX_OBSTACLES 5
+// Add a new macro
+#define START_OBSTACLES 2
+
+// Runner data
+int currentMaxObstacles;
+int64_t maxObstacleTimer; 
+
+// Reset
+rd->currentMaxObstacles = START_OBSTACLES;
+rd->maxObstacleTImer    = 0;
+
+// Main loop
+rd->maxObstacleTimer += elapsedUs;
+if (rd->speedDivisorTimer > SPEED_TIMER && rd->currentMaxObstacles < MAX_OBSTACLES)
+{
+    rd->currentMaxObstacles++;
+    rd->maxObstacleTimer = 0;
+}
+
+// trySpawnObstacle()
+for (int idx = 0; idx < rd->currentMaxObstacles; idx++) // Change from MAX_OBSTACLES
+```
+
+And that's it!
 
 ## Sounds
 
@@ -1857,15 +1967,16 @@ We have two ways of tweaking that: The frequency that obstacles spawn and how fa
 ## Polish
 
 - Finishing up the game
-  - Commenting the code
+  - Commenting your code
   - Better controls (Variable jump heights)
   - Splash screen
   - Death screen
   - SFX
   - Avoid spawning object immediately
-- Provide finished code (.c and .h)
+- Link to finished code (.c and .h)
 - Other functions, like LEDs. Encourage exploration.
   - Trophies
   - Swadgepass
   - LEDs
+  - Powerups?
 - Look at the pong mode for a complete, simple mode.

@@ -19,9 +19,18 @@
 #define BARREL_GROUND_OFFSET (GROUND_HEIGHT - 18)
 
 // Obstacles
-#define MAX_OBSTACLES 2
+#define MAX_OBSTACLES    5
+#define START_OBSTACLES  2
+#define SPAWN_RATE_BASE  80
+#define SPAWN_RATE_TIMER 15000000 // Fifteen seconds
+#define SPEED_BASE       15
+#define SPEED_TIMER      3000000 // Three seconds
+#define SPEED_NUMERATOR  100000
 
-const char runnerModeName[] = "Robo Runner";
+// Score
+#define SCORE_MOD 10000
+
+const char runnerModeName[]   = "Robo Runner";
 const char roboRunnerNVSKey[] = "roboRunner";
 
 static const cnfsFileIdx_t obstacleImages[] = {
@@ -62,9 +71,17 @@ typedef struct
     int obstacleIdx;                     // Index of the next obstacle
 
     // Score
-    uint32_t score; // Current score
-    uint32_t prevScore; // Previous high score
+    int32_t score;         // Current score
+    int32_t prevScore;     // Previous high score
     int64_t remainingTime; // Time left over after we've added points
+
+    // Difficulty
+    int spawnRate;             // 1 / spawnRate per frame
+    int64_t spawnRateTimer;    // Timer until we increase rate
+    int speedDivisor;          // 10,000 / speedDivisor
+    int64_t speedDivisorTimer; // Timer until we increase speed
+    int currentMaxObstacles;   // 2-5
+    int64_t maxObstacleTimer;  // Timer until we increase max obstacles
 } runnerData_t;
 
 static void runnerEnterMode(void);
@@ -115,7 +132,7 @@ static void runnerEnterMode()
     }
 
     // Initialize the high score
-    if(!readNvs32(roboRunnerNVSKey, rd->prevScore))
+    if (!readNvs32(roboRunnerNVSKey, &rd->prevScore))
     {
         rd->prevScore = 0;
     }
@@ -177,10 +194,34 @@ static void runnerMainLoop(int64_t elapsedUs)
 
     // Update score
     rd->remainingTime += elapsedUs;
-    while(rd->remainingTime > 10000)
+    while (rd->remainingTime > SCORE_MOD)
     {
-        rd->remainingTime -= 10000;
+        rd->remainingTime -= SCORE_MOD;
         rd->score++;
+    }
+
+    // Adjust spawn rate
+    rd->spawnRateTimer += elapsedUs;
+    if (rd->spawnRateTimer > SPAWN_RATE_TIMER && rd->spawnRate > 1)
+    {
+        rd->spawnRate--;
+        rd->spawnRateTimer = 0;
+    }
+
+    // Adjust speed
+    rd->speedDivisorTimer += elapsedUs;
+    if (rd->speedDivisorTimer > SPEED_TIMER && rd->speedDivisor < SPEED_NUMERATOR)
+    {
+        rd->speedDivisor++;
+        rd->speedDivisorTimer = 0;
+    }
+
+    // Increase obstacles
+    rd->maxObstacleTimer += elapsedUs;
+    if (rd->speedDivisorTimer > SPEED_TIMER && rd->currentMaxObstacles < MAX_OBSTACLES)
+    {
+        rd->currentMaxObstacles++;
+        rd->maxObstacleTimer = 0;
     }
 
     // Draw screen
@@ -195,13 +236,19 @@ static void resetGame()
         rd->obstacles[idx].active     = false;
         rd->obstacles[idx].rect.pos.x = -40;
     }
-    if(rd->prevScore < rd->score)
+    if (rd->prevScore < rd->score)
     {
         rd->prevScore = rd->score;
         writeNvs32(roboRunnerNVSKey, rd->score);
     }
-    rd->remainingTime = 0;
-    rd->score = 0;
+    rd->remainingTime       = 0;
+    rd->score               = 0;
+    rd->spawnRate           = SPAWN_RATE_BASE;
+    rd->spawnRateTimer      = 0;
+    rd->speedDivisor        = SPEED_BASE;
+    rd->speedDivisorTimer   = 0;
+    rd->currentMaxObstacles = START_OBSTACLES;
+    rd->maxObstacleTimer    = 0;
 }
 
 static void runnerLogic(int64_t elapsedUS)
@@ -264,8 +311,14 @@ static void spawnObstacle(ObstacleType_t type, int idx)
 
 static void updateObstacle(obstacle_t* obs, int64_t elapsedUs)
 {
+    // Ditch if not active
+    if (!obs->active)
+    {
+        return;
+    }
+
     // Set value to subtract
-    int moveSpeed = 1000000 / 150; // We will vary this later to change the speed of the obstacles.
+    int moveSpeed = SPEED_NUMERATOR / rd->speedDivisor;
     while (elapsedUs > moveSpeed)
     {
         elapsedUs -= moveSpeed; // This ensures we don't get locked into a loop
@@ -276,16 +329,17 @@ static void updateObstacle(obstacle_t* obs, int64_t elapsedUs)
     if (obs->rect.pos.x < -40)
     {
         obs->active = false;
+        rd->score += 50;
     }
 }
 
 static void trySpawnObstacle()
 {
     // Get a random number to try
-    bool spawn = (esp_random() % 80) == 0; // One in 80 chance per loop
+    bool spawn = (esp_random() % rd->spawnRate) == 0;
     if (spawn)
     {
-        for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+        for (int idx = 0; idx < rd->currentMaxObstacles; idx++)
         {
             if (!rd->obstacles[idx].active) // If the obstacle is already being used, we don't want set it!
             {
@@ -315,7 +369,7 @@ static void draw()
 
     // Draw the player
     drawWsgSimple(&rd->robot.img, PLAYER_X - PLAYER_X_IMG_OFFSET, rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET);
-    
+
     // Draw the score
     char buffer[32];
     snprintf(buffer, sizeof(buffer) - 1, "Score: %" PRIu32, rd->score);
