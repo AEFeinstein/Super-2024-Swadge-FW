@@ -107,6 +107,7 @@ static void dn_MainLoop(int64_t elapsedUs)
         {
             // Get the current tile
             tileData_t* tile = &gameData->tiles[y][x];
+            int8_t dampen = 3;
             if(x == gameData->selection[0] && y == gameData->selection[1])
             {
                 //the selected tile approaches a particular offset
@@ -117,24 +118,27 @@ static void dn_MainLoop(int64_t elapsedUs)
                 //all unselected tiles approach neighboring tiles
                 if (y > gameData->selection[1])
                 {
-                    tile->yVel += (((int16_t)(gameData->tiles[y - 1][x].yOffset - tile->yOffset)) / (1 + (y - gameData->selection[1])*2));
+                    tile->yVel += (((int16_t)(gameData->tiles[y - 1][x].yOffset - tile->yOffset)) / 2);
+                    dampen += y - gameData->selection[1];
                 }
                 if (y < gameData->selection[1])
                 {
-                    tile->yVel += (((int16_t)(gameData->tiles[y + 1][x].yOffset - tile->yOffset)) / (1 + (gameData->selection[1] - y)*2));
+                    tile->yVel += (((int16_t)(gameData->tiles[y + 1][x].yOffset - tile->yOffset)) / 2);
+                    dampen += gameData->selection[1] - y;
                 }
                 if (x > gameData->selection[0])
                 {
-                    tile->yVel += (((int16_t)(gameData->tiles[y][x - 1].yOffset - tile->yOffset)) / (1 + (x - gameData->selection[0])*2));
+                    tile->yVel += (((int16_t)(gameData->tiles[y][x - 1].yOffset - tile->yOffset)) / 2);
+                    dampen += x - gameData->selection[0];
                 }
                 if (x < gameData->selection[0])
                 {
-                    tile->yVel += (((int16_t)(gameData->tiles[y][x + 1].yOffset - tile->yOffset)) / (1 + (gameData->selection[0] - x)*2));
+                    tile->yVel += (((int16_t)(gameData->tiles[y][x + 1].yOffset - tile->yOffset)) / 2);
+                    dampen += gameData->selection[0] - x;
                 }
             }
 
-            // dampen the velocity
-            tile->yVel /= 3;
+            tile->yVel /= dampen;
 
             // Update position with smaller time step
             uint16_t newYOffset = tile->yOffset + tile->yVel * (elapsedUs >> 14);
