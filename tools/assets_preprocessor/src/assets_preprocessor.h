@@ -376,7 +376,7 @@
  *
  * #include "assets_preprocessor.h"
  *
- * // Export the asset processors so they can be included from asset_processor.c
+ * // Export the asset processors so they can be included from assets_processor.c
  * extern const assetProcessor_t fileInFileOutProcessor;
  * extern const assetProcessor_t dataInDataOutProcessor;
  * extern const assetProcessor_t textInDataOutProcessor;
