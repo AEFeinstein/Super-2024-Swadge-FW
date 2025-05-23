@@ -1,13 +1,25 @@
 #include "roboRunner.h"
 #include "geometry.h"
 
-#define JUMP_HEIGHT          -12
-#define Y_ACCEL              1
-#define GROUND_HEIGHT        184
-#define PLAYER_GROUND_OFFSET (GROUND_HEIGHT - 56)
+// Level
+#define GROUND_HEIGHT  184
+#define CEILING_HEIGHT 48
+
+// Robot
+#define JUMP_HEIGHT -12
+#define Y_ACCEL     1
+#define HBOX_WIDTH  30
+#define HBOX_HEIGHT 24
+
+// Positioning
+#define PLAYER_X             48
+#define PLAYER_X_IMG_OFFSET  12
+#define PLAYER_Y_IMG_OFFSET  16
+#define PLAYER_GROUND_OFFSET (GROUND_HEIGHT - 40)
 #define BARREL_GROUND_OFFSET (GROUND_HEIGHT - 18)
-#define PLAYER_X             32
-#define MAX_OBSTACLES        2
+
+// Obstacles
+#define MAX_OBSTACLES 2
 
 const char runnerModeName[] = "Robo Runner";
 
@@ -20,6 +32,7 @@ typedef enum
 {
     BARREL,
     LAMP,
+    NUM_OBSTACLE_TYPES
 } ObstacleType_t;
 
 typedef struct
@@ -34,7 +47,6 @@ typedef struct
 {
     rectangle_t rect; // Contains the x, y, width and height
     int img;          // Image to display
-    int speed;        // Speed of the obstacle
     bool active;      // If the obstacle is in play
 } obstacle_t;
 
@@ -52,8 +64,11 @@ typedef struct
 static void runnerEnterMode(void);
 static void runnerExitMode(void);
 static void runnerMainLoop(int64_t elapsedUs);
+static void resetGame(void);
 static void runnerLogic(int64_t elapsedUS);
 static void spawnObstacle(ObstacleType_t type, int idx);
+static void updateObstacle(obstacle_t* obs, int64_t elapsedUs);
+static void trySpawnObstacle(void);
 static void draw(void);
 
 swadgeMode_t roboRunnerMode = {
@@ -82,26 +97,29 @@ static void runnerEnterMode()
 
     // Useful for loading a lot of sprites into one place.
     rd->obstacleImgs = heap_caps_calloc(ARRAY_SIZE(obstacleImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
-    for (int32_t idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
+    for (int idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
     {
         loadWsg(obstacleImages[idx], &rd->obstacleImgs[idx], true);
     }
 
-    // Initialize the obstacles so we don't accidentally
+    // Initialize the obstacles so we don't accidentally call unloaded data.
     for (int idx = 0; idx < MAX_OBSTACLES; idx++)
     {
         rd->obstacles[idx].active = false;
     }
 
-    // Temp
-    spawnObstacle(BARREL, 0);
-    spawnObstacle(LAMP, 1);
+    resetGame();
+
+    // Set Robot's rect
+    rd->robot.rect.height = rd->robot.img.h - HBOX_HEIGHT;
+    rd->robot.rect.width  = rd->robot.img.w - HBOX_WIDTH;
+    rd->robot.rect.pos.x  = PLAYER_X;
 }
 
 static void runnerExitMode()
 {
     // Remember to de-allocate whatever you use!
-    for (uint8_t idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
+    for (int idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
     {
         freeWsg(&rd->obstacleImgs[idx]);
     }
@@ -130,8 +148,35 @@ static void runnerMainLoop(int64_t elapsedUs)
     // Update player position
     runnerLogic(elapsedUs);
 
+    // Update obstacles
+    for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+    {
+        // Update the obstacle
+        updateObstacle(&rd->obstacles[idx], elapsedUs);
+
+        // Check for a collision
+        vec_t colVec;
+        if (rd->obstacles[idx].active && rectRectIntersection(rd->robot.rect, rd->obstacles[idx].rect, &colVec))
+        {
+            resetGame();
+        }
+    }
+    trySpawnObstacle();
+
+    
+
     // Draw screen
     draw();
+}
+
+static void resetGame()
+{
+    // Initialize the obstacles
+    for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+    {
+        rd->obstacles[idx].active = false;
+        rd->obstacles[idx].rect.pos.x = -40;
+    }
 }
 
 static void runnerLogic(int64_t elapsedUS)
@@ -157,12 +202,12 @@ static void spawnObstacle(ObstacleType_t type, int idx)
     rd->obstacles[idx].active = true;
 
     // Set data that's not going to change
-    rd->obstacles[idx].rect.pos.x = TFT_WIDTH - 64;
+    rd->obstacles[idx].rect.pos.x = TFT_WIDTH;
 
     // Set box size
     // Note that both my obstacles are the same size, so changing it at all is redundant
     // Since they only need to be set once, we can even move them to the initialization step
-    // If they were different, we could put them below.
+    // If they were different, we could put them below and adjust based on the specific requirements.
     rd->obstacles[idx].rect.height = 24;
     rd->obstacles[idx].rect.width  = 12;
 
@@ -183,7 +228,7 @@ static void spawnObstacle(ObstacleType_t type, int idx)
         case LAMP:
         {
             // Set y position
-            rd->obstacles[idx].rect.pos.y = 0; // 0 is the top of the screen
+            rd->obstacles[idx].rect.pos.y = CEILING_HEIGHT; // 0 is the top of the screen
 
             // Set sprite
             rd->obstacles[idx].img = LAMP;
@@ -192,10 +237,44 @@ static void spawnObstacle(ObstacleType_t type, int idx)
     }
 }
 
+static void updateObstacle(obstacle_t* obs, int64_t elapsedUs)
+{
+    // Set value to subtract
+    int moveSpeed = 1000000 / 150; // We will vary this later to change the speed of the obstacles.
+    while (elapsedUs > moveSpeed)
+    {
+        elapsedUs -= moveSpeed; // This ensures we don't get locked into a loop
+        obs->rect.pos.x -= 1;   // Each time the loop executes, subtract 1
+    }
+
+    if (obs->rect.pos.x < -40)
+    {
+        obs->active = false;
+    }
+}
+
+static void trySpawnObstacle()
+{
+    // Get a random number to try
+    bool spawn = (esp_random() % 80) == 0; // One in 300 chance per
+    if (spawn)
+    {
+        for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+        {
+            if (!rd->obstacles[idx].active) // If the obstacle is already being used, we don't want set it!
+            {
+                spawnObstacle(esp_random() % NUM_OBSTACLE_TYPES, idx);
+                return; // Exits function to stop it filling every slot
+            }
+        }
+    }
+}
+
 static void draw()
 {
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c112);
     drawLine(0, GROUND_HEIGHT, TFT_WIDTH, GROUND_HEIGHT, c555, 0);
+    drawLine(0, CEILING_HEIGHT, TFT_WIDTH, CEILING_HEIGHT, c555, 0);
     for (int idx = 0; idx < MAX_OBSTACLES; idx++)
     {
         if (rd->obstacles[idx].active)
@@ -204,5 +283,13 @@ static void draw()
                           rd->obstacles[idx].rect.pos.y);
         }
     }
-    drawWsgSimple(&rd->robot.img, PLAYER_X, rd->robot.rect.pos.y);
+    drawWsgSimple(&rd->robot.img, PLAYER_X - PLAYER_X_IMG_OFFSET, rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET);
+    drawRect(rd->robot.rect.pos.x, rd->robot.rect.pos.y, rd->robot.rect.pos.x + rd->robot.rect.width,
+             rd->robot.rect.pos.y + rd->robot.rect.height, c500);
+    for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+    {
+        drawRect(rd->obstacles[idx].rect.pos.x, rd->obstacles[idx].rect.pos.y,
+                 rd->obstacles[idx].rect.pos.x + rd->obstacles[idx].rect.width,
+                 rd->obstacles[idx].rect.pos.y + rd->obstacles[idx].rect.height, c500);
+    }
 }

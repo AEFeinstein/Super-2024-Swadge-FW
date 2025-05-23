@@ -966,8 +966,7 @@ First, let's make a new struct for the obstacle.
 typedef struct
 {
     rectangle_t rect; // Contains the x, y, width and height
-    wsg_t img;        // Image to display
-    int speed;        // Speed of the obstacle
+    int img;          // Image to display
     bool active;      // If the obstacle is in play
 } obstacle_t;
 ```
@@ -992,8 +991,7 @@ typedef struct
 typedef struct
 {
     rectangle_t rect; // Contains the x, y, width and height
-    wsg_t img;        // Image to display
-    int speed;        // Speed of the obstacle
+    int img;          // Image to display
     bool active;      // If the obstacle is in play
 } obstacle_t;
 
@@ -1024,7 +1022,7 @@ static void runnerLogic(int64_t elapsedUS);
 static void draw(void);
 ```
 
-We're not using the elapsedUS right this moment, but we're probably going to need to soon. Cut the drawing functions and add them to the draw function, then add the draw function tot he end of the loop. Do the same with the plater logic as well.
+We're not using the `elapsedUS` right this moment, but we're probably going to need to soon. Cut the drawing functions and add them to the draw function, then add the draw function tot he end of the loop. Do the same with the plater logic as well.
 
 ```C
 static void runnerMainLoop(int64_t elapsedUs)
@@ -1058,9 +1056,9 @@ static void draw()
 }
 ```
 
-Now we've added a lot of code and nothing has changed behavior-wise. That's what refactoring is like, but now we have our code split a bit more and can follow where everything goes easier.
+We've added a lot of code and nothing has changed behavior-wise. That's what refactoring is like, but now we have our code split a bit more and can follow where everything goes easier.
 
-#### Spawning obstacles
+### Spawning obstacles
 
 Now we can start spawning some obstacles. I've drawn the obstacles with my expert artistic skills.
 
@@ -1077,18 +1075,26 @@ static const cnfsFileIdx_t obstacleImages[] = {
     LAMP_WSG,
 };
 
+// These will be used to select between types later.
+typedef enum
+{
+    BARREL,
+    LAMP,
+    NUM_OBSTACLE_TYPES // Always last in enum, will equal qty of types above it.
+} ObstacleType_t;
+
 // Add this to the Data struct
 wsg_t* obstacleImgs;
 
 // Useful for loading a lot of sprites into one place. Put in the enter function
 rd->obstacleImgs = heap_caps_calloc(ARRAY_SIZE(obstacleImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
-for (int32_t idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
+for (int idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
 {
     loadWsg(obstacleImages[idx], &rd->obstacleImgs[idx], true);
 }
 
 // Remember to de-allocate whatever you use inside the exit function!
-for (uint8_t idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
+for (int idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
 {
     freeWsg(&rd->obstacleImgs[idx]);
 }
@@ -1096,11 +1102,36 @@ heap_caps_free(rd->obstacleImgs);
 ```
 
 Here's a breakdown of the process:
-- First, we make a list of the names. These are held in the plentiful ROM due to the CONST keywords. (Two consts are needed to ensure both the array pointer is const and cant be reassigned and that the data inside the array is constant)
+- First, we make a list of the image indexes.
+- We create an enum of types for later
 - We add a place to put a pointer for reference later into the data struct
 - We initialize the memory space with heap_caps_calloc() to the same size as the const array from before to automatically get th correct size
 - We loop through each item and assign them in order
 - Lastly, we di-allocate each image and then the containing memory in the exit function
+
+#### Loops
+
+An important part of programming is loops. There's three primarily used in C:
+- For: Set the number of times the loop executes ahead of time
+- While: Loop until a condition is met
+- Do while: Execute a loop once, then if a condition isn't met yet, continue doing it.
+
+For loops are extremely common, and they have their own loop counting variables built in. in this case, `idx`. YOu can see that first we set it's initial state to 0, tell it to continue until it matches the array size of `obstacleImages` and finally tell it to increment by one each loop (idx++). Note that if we want to, we can change idx inside the loop, but doing that thoughtlessly could get the computer stuck in the loop. The condition to exit the loop is that `idx` needs to be larger than the array, or 2. If we set `idx` to 0 at the end of each loop, the end of the loop will change the value to 1 and it will get stuck doing this infinitely.
+
+The "++" notation can be used on any variable. It's just faster to write `idx++;` than writing either `idx += 1;` or `idx = idx + 1;` and can sometimes be used in tricky ways to speed up the program, but that's far outside the scope of what someone new to developing needs to worry about. "--" works iun teh same way to subtract one.
+
+While loops check that a condition is true and loop if it's not. `while(y > 0) {}` will execute everything inside the curly braces until y is less than or equal to 0. It's important to update y inside the loop or the program will get stuck.
+
+Do While loops are just while loops, but will run the content of the curly braces once before checking the condition.
+```C
+do
+{
+
+} while (y > 0);
+```
+In this case, even if y is already less than 0 it will execute once anyway. 
+
+### Back to obstacles
 
 Next, let's discuss how we want to handle the objects. First, we need to give them an initial spawning position and give it a sprite to draw. Next, we need to get them to move based on how long the game's been running. Third, we need to spawn them randomly.
 
@@ -1120,12 +1151,12 @@ static void spawnObstacle(ObstacleType_t type, int idx)
     rd->obstacles[idx].active = true;
 
     // Set data that's not going to change
-    rd->obstacles[idx].rect.pos.x = TFT_WIDTH - 64;
+    rd->obstacles[idx].rect.pos.x = TFT_WIDTH - 64; // This magic -64 makes sure the images start on screen to make sure they're loading. We'll remove it later.
 
     // Set box size
     // Note that both my obstacles are the same size, so changing it at all is redundant
     // Since they only need to be set once, we can even move them to the initialization step
-    // If they were different, we could put them below.
+    // If they were different, we could put them below and adjust based on the specific requirements.
     rd->obstacles[idx].rect.height = 24;
     rd->obstacles[idx].rect.width  = 12;
 
@@ -1140,7 +1171,7 @@ static void spawnObstacle(ObstacleType_t type, int idx)
 
             // Set sprite
             rd->obstacles[idx].img
-                = BARREL; // Only works because the order we loaded the sprites into the initializer list.
+                = BARREL; // Only works because the order we loaded the sprites into the initializer list. If barrel was second in the enum or we flipped the order to load the images into the obstacle array this would break
             break;
         }
         case LAMP:
@@ -1156,19 +1187,243 @@ static void spawnObstacle(ObstacleType_t type, int idx)
 }
 ```
 
+and temporarily, we can thrown the following into the mode entry function to test that they draw:
 
-- Unset variables
-- Can't hit the lights, too high. Lower them.
-- Color makes seeing the lamps hard. Change.
-- Spawning objects
-  - Randomness
-  - Variable speeds using US timers instead of frames for consistency
+```C
+// Initialize the obstacles so we don't accidentally call unloaded data.
+for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+{
+    rd->obstacles[idx].active = false;
+}
+// Temp
+spawnObstacle(BARREL, 0);
+spawnObstacle(LAMP, 1);
+```
 
-#### Collisions
+#### Unset variables
 
-- Collisions
-  - Visualizing the collisions by drawing a rectangle.
-  - Handling the collisions.
+Something to remember about C is that the variables don't have a default state when initialized. `int abc;` could hold literally any value that `int` can hold. Thus, we need to set it first. Things that only need to be set once can be set to const or during the mode entry function, whereas other items may need to be set more often, like our obstacles. Each time a new one is made, it has to be moved to the far side of the screen, set to either a lamp or a barrel, and then assigned the appropriate height and image. All common variables can be set regardless, which makes the code shorter and easier to read.
+
+We have to have to set both obstacles to false before any code could try to call them, find a random `true` in the .active slot and then try to load who knows what data.
+
+#### Fixing up the lamps
+
+Now we check how it looks, and... well, the lamps are really hard to see on the black background, and they're too high. it would be impossible for the robot to hit them evan at max jump height.
+
+Let's change the color of the background to something easier to see the lamps on. Using `c112` instead of `c001` in the `fillDisplayArea()` function will lighten the colors one shade. That will make the lamps easier to see.
+
+Next, let's create a ceiling to lower the lamp without having it suspend in space. Much line we draw the ground, we can draw the ceiling with a single white line. Just copy and paste the ground line and make a `CEILING_HEIGHT` define to a value below the jump height.
+
+Lastly, change the lamp to start at `CEILING_HEIGHT` instead of 0.
+
+This leaves a lot of space over top of the play area, but we can use that fro displaying the high score or current score later.
+
+### Moving the obstacles
+
+We don't want the obstacles to just sit there and taunt us, we need them to charge us. Well, we want it to look more like our robot is charging the obstacles, but functionally we'll just have the obstacles come to us.
+
+As a first, "let's just get it to work" type start, let's subtract one from it's x position every loop of the game. 
+
+```C
+for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+{
+    rd->obstacles[idx].rect.pos.x--;
+}
+```
+
+<img src="./TutorialImages/slowObstacles.gif">
+
+That turns out to be too slow. A snails pace. The actual speed will depend on the hardware, which is actually worse but we'll fix that in a bit.
+
+We can speed it up by changing the amount that is subtracted each round. Trying `rd->obstacles[idx].rect.pos.x -= 3;` This feels okay, but reveals a problem. We're locked to integers, which are kind of restrictive.
+
+Instead, we're going to use `elapsedUs`. This value is how much time has passed between the most recent call to the main loop and the previous. This is useful if we want the timing to be consistent despite framerate. For example, `elapsedUs` would be 1,000,000 if the swadge is operating at 1 update a second, and roughly 16,377 if it's operating at 60 updates a second. Since each update is basically a frame, this equates with frames per second. Each frame has a length of time it took to execute, and it can change frame to frame. We want to minimize the impacts this has.
+
+Let's make this a new function, `static void updateObstacle(obstacle_t* obs, int64_t elapsedUs){}` and add that instead of subtracting a constant value.
+
+```C
+static void updateObstacle(obstacle_t* obs, int64_t elapsedUs)
+{
+    // Set value to subtract
+    int moveSpeed = 1000000 / 150; // We will vary this later to change the speed of the obstacles.
+    while (elapsedUs > moveSpeed)
+    {
+        elapsedUs -= moveSpeed; // This ensures we don't get locked into a loop
+        obs->rect.pos.x -= 1; // Each time the loop executes, subtract 1
+    }
+}
+```
+
+With these settings, every 6.7 milliseconds the obstacles will move a pixel to the left. After one second, it will have moved 150 pixels. It doesn't even matter how many frames per second the swadge is getting, if there's fewer frames it'll just subtract more per frame.
+
+You really should base all time dependant things on the `elapsedUs` variable instead of relying on a steady FPS, especially animations. We'll get to those later though.
+
+Now is a great time to delete the `- 64` from the x coordinate of the `spawnObstacle()` function. We know it'll scroll onto screen almost immediately, so we don't have to pop it onto screen to test if it's actually spawning.
+
+### Randomness
+
+Currently, we spawn two obstacles in the initialization stage, but never again. This would be a very short game. As long as you dodge the first two obstacles you'll be able to go forever.
+
+Instead, let's spawn them randomly.
+
+```C
+static void trySpawnObstacle()
+{
+    // Get a random number to try
+    bool spawn = (esp_random() % 300) == 0; // One in 300 chance per
+    if (spawn)
+    {
+        for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+        {
+            if (!rd->obstacles[idx].active) // If the obstacle is already being used, we don't want set it!
+            {
+                spawnObstacle(esp_random() % NUM_OBSTACLE_TYPES, idx);
+                return; // Exits function to stop it filling every slot
+            }
+        }
+    }
+}
+```
+
+`esp_random()` is a function that generates a random number between 0 and 4,294,967,295. We don't need all those values, so we pull off a math trick.
+
+#### Division!
+
+I swear this isn't scary. If math is scary to you, I promise that this won't hurt and I'll make it easy.
+
+First off, know that division sucks for computers. While addition, subtraction and multiplication are very easy, division doesn't calculate as easily. There's tricks to get around it, but that's not the point of this exercise. 
+
+When a computer divides integers (whole numbers, 1, 2, 54389820, but not 0.3453 or 438290.5) and it's an uneven division, it calculates with a remainder. For example, 10 / 3 is equal to 3 remainder 1, not 3.333. Of course, the remainder isn't tracked in a division operation. Instead, we can used the modulo operator (%) to get the remainder. So, 10 / 3 = 3, and 10 % 3 = 1.
+
+#### Back to randomness
+
+Why is this useful? Well, let's say we want to pick between two obstacles. If we take the random number we generated (0 to 4 million-ish) and modulo by 2, the result will either be 0 or 1, and those are the values corresponding to a barrel and a lamp! 
+
+Note that modulo never gets the value it is. If modulo is 2, it can only generate 0 and 1. If it's eight, it will generate 0 through 7. 
+
+We also used `esp_random()` to make a spawn chance. Every loop, there's a 1 in 80 chance to spawn a new obstacle if there's a slot free. We calculate this chance by doing modulo 80 which provides a value between 0 and 79, roughly at all the same chance of occurring. Then, we ask if it happened to land on 0. If so, yay! We can spawn an obstacle. If not, then we'll try again in the future.
+
+Now delete the two `spawnObstacles()` in the mode enter function, and try the game out.
+
+#### Only two obstacles
+
+Well, should've seen this coming. We only have two slots for the obstacles, but we never let anything else use them after we set them to active.
+
+All we need to do is make sure they're off screen before setting .active to false. Add the following to `updateObstacle()`:
+
+```C
+if (obs->rect.pos.x < -40)
+{
+    obs->active = false;
+}
+```
+
+Now we're almost done with the core gameplay. We can jump and try to avoid collisions... but we don't lose if we collide. Let's set that final part up and we'll have something we could actually call a game!
+
+### Collisions
+
+If we go way back, we added the `geometry.h` library and used `rect` for the position, height and width of the obstacles. We also changes the robot's position data to be based on a `rect`. Fortunately for us, there's already a performant collision checking algorithm built into `geometry.h` so we don't have to think too hard about axis-aligned bounding boxes if we don't want to.
+
+Of course, the first thing we need to do is set the robot's rect's size. We never did that, since it wasn't important until now! Add these into the enter mode function:
+
+```C
+// Set Robot's hitbox
+rd->robot.rect.height = rd->robot.img.h;
+rd->robot.rect.width  = rd->robot.img.w;
+```
+
+Now, something that's really helpful is to visualize the hitboxes. Right now we know that the hitboxes are the right size... probably, but it's always better to verify.
+
+Inside the draw function, let's add the following lines:
+
+```C
+drawRect(rd->robot.rect.pos.x, rd->robot.rect.pos.y, rd->robot.rect.pos.x + rd->robot.rect.width,
+            rd->robot.rect.pos.y + rd->robot.rect.height, c500);
+for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+{
+    drawRect(rd->obstacles[idx].rect.pos.x, rd->obstacles[idx].rect.pos.y,
+                rd->obstacles[idx].rect.pos.x + rd->obstacles[idx].rect.width,
+                rd->obstacles[idx].rect.pos.y + rd->obstacles[idx].rect.height, c500);
+}
+```
+
+And make sure to put them at the end of the draw function or the rectangles will be drawn over.
+
+<img src="./TutorialImages/badHitboxes.png">
+
+Alright, the two main obstacles look okay, but something's up with the robot. What did we do? The size looks about right... ah, we never set the robot's rect.pos.x. Again, we never needed to, so why bother? `rd->robot.rect.pos.x = PLAYER_X;` can be added after defining the box and we can try again.
+
+<img src="./TutorialImages/tooLargeHitbox.png">
+
+Well, that's better, but probably going to feel very unfair. The hitbox is really big compared to the robot.
+
+```C
+rd->robot.rect.width  = rd->robot.img.w - 24;
+```
+
+Of course, this doesn't actually shift the box into the right position, it just pulls it back. We want it to match the player's image as closely as possible to not feel cheap.
+
+Since the rect's position needs to be adjusted, we're going to have to move the box forward and down, and then move the image back and up by the same amount so the image doesn't change it's position on screen, but the hitbox is in the right place.
+
+```C
+// Defines
+#define HBOX_WIDTH           30
+#define HBOX_HEIGHT          24
+#define PLAYER_X             48
+#define PLAYER_X_IMG_OFFSET  12
+#define PLAYER_Y_IMG_OFFSET  16
+#define PLAYER_GROUND_OFFSET (GROUND_HEIGHT - 40)
+#define BARREL_GROUND_OFFSET (GROUND_HEIGHT - 18)
+
+// Enter mode function
+rd->robot.rect.height = rd->robot.img.h - HBOX_HEIGHT;  
+rd->robot.rect.width  = rd->robot.img.w - HBOX_WIDTH;
+rd->robot.rect.pos.x = PLAYER_X;
+
+// Draw function
+drawWsgSimple(&rd->robot.img, PLAYER_X - PLAYER_X_IMG_OFFSET, rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET);
+```
+
+<img src="./TutorialImages/fixedHitbox.png">
+
+Much better. Now, let's handle the collision instead of letting the obstacles just phase through the robot, shall we?
+
+It's actually really easy: 
+```C
+for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+{
+    updateObstacle(&rd->obstacles[idx], elapsedUs);
+    vec_t colVec;
+    if (rd->obstacles[idx].active && rectRectIntersection(rd->robot.rect, rd->obstacles[idx].rect, &colVec))
+    {
+        //...
+    }
+}
+```
+
+We have to check each obstacle. Well, we have to check every *active* obstacle, and we should check if it's active first because that's a lot faster than than checking the collision. Then we check the collision by passing in both the rects for the obstacle and the robot.
+
+The collision vector indicates a direction pointing from the second vector to the first. This means that it will point from the obstacle being checked toward the robot if they collide. This could be useful... but not for us right now.
+
+Now that we've checked for a collision, we need to decide what to do with it. Probably just reset the game, right?
+
+```C
+static void resetGame()
+{
+    // Initialize the obstacles
+    for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+    {
+        rd->obstacles[idx].active = false;
+        rd->obstacles[idx].rect.pos.x = -40;
+    }
+}
+```
+
+We can replace the obstacle initialization in the enter mode function with `resetGame()`as well.
+
+And... well, it's functional. There's a lot to be desired in terms of functionality, but it's technically a game. It's really hard to tell when we reset and also how far we get, so let's add a score system next!
+
+### Code so far
 
 ## Score
 
@@ -1176,6 +1431,12 @@ static void spawnObstacle(ObstacleType_t type, int idx)
 - NVS and good NVS behavior
 - Making sounds
   - MIDI tracks
+
+## Difficulty (Speed up)
+
+We really should increase the difficulty with time.
+
+We have two ways of tweaking that: The frequency that obstacles spawn and how fast they scroll across the screen. 
 
 ## Animations
 
@@ -1189,11 +1450,14 @@ static void spawnObstacle(ObstacleType_t type, int idx)
 
 - Finishing up the game
   - Commenting the code
-  - Better controls (allow jump a frame early) 
+  - Better controls (Variable jump heights)
   - Splash screen
   - Death screen
   - SFX
   - Avoid spawning object immediately
 - Provide finished code (.c and .h)
 - Other functions, like LEDs. Encourage exploration.
+  - Trophies
+  - Swadgepass
+  - LEDs
 - Look at the pong mode for a complete, simple mode.
