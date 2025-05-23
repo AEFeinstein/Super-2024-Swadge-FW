@@ -163,8 +163,6 @@ static void runnerMainLoop(int64_t elapsedUs)
     }
     trySpawnObstacle();
 
-    
-
     // Draw screen
     draw();
 }
@@ -174,7 +172,7 @@ static void resetGame()
     // Initialize the obstacles
     for (int idx = 0; idx < MAX_OBSTACLES; idx++)
     {
-        rd->obstacles[idx].active = false;
+        rd->obstacles[idx].active     = false;
         rd->obstacles[idx].rect.pos.x = -40;
     }
 }
@@ -247,6 +245,7 @@ static void updateObstacle(obstacle_t* obs, int64_t elapsedUs)
         obs->rect.pos.x -= 1;   // Each time the loop executes, subtract 1
     }
 
+    // If the obstacle is off-screen, disable it
     if (obs->rect.pos.x < -40)
     {
         obs->active = false;
@@ -256,7 +255,7 @@ static void updateObstacle(obstacle_t* obs, int64_t elapsedUs)
 static void trySpawnObstacle()
 {
     // Get a random number to try
-    bool spawn = (esp_random() % 80) == 0; // One in 300 chance per
+    bool spawn = (esp_random() % 80) == 0; // One in 80 chance per loop
     if (spawn)
     {
         for (int idx = 0; idx < MAX_OBSTACLES; idx++)
@@ -272,9 +271,12 @@ static void trySpawnObstacle()
 
 static void draw()
 {
+    // Draw the level
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c112);
     drawLine(0, GROUND_HEIGHT, TFT_WIDTH, GROUND_HEIGHT, c555, 0);
     drawLine(0, CEILING_HEIGHT, TFT_WIDTH, CEILING_HEIGHT, c555, 0);
+
+    // Draw the obstacles
     for (int idx = 0; idx < MAX_OBSTACLES; idx++)
     {
         if (rd->obstacles[idx].active)
@@ -283,13 +285,17 @@ static void draw()
                           rd->obstacles[idx].rect.pos.y);
         }
     }
+
+    // Draw the player
     drawWsgSimple(&rd->robot.img, PLAYER_X - PLAYER_X_IMG_OFFSET, rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET);
-    drawRect(rd->robot.rect.pos.x, rd->robot.rect.pos.y, rd->robot.rect.pos.x + rd->robot.rect.width,
+    
+    // Uncomment these to draw the hitboxes
+    /* drawRect(rd->robot.rect.pos.x, rd->robot.rect.pos.y, rd->robot.rect.pos.x + rd->robot.rect.width,
              rd->robot.rect.pos.y + rd->robot.rect.height, c500);
     for (int idx = 0; idx < MAX_OBSTACLES; idx++)
     {
         drawRect(rd->obstacles[idx].rect.pos.x, rd->obstacles[idx].rect.pos.y,
                  rd->obstacles[idx].rect.pos.x + rd->obstacles[idx].rect.width,
                  rd->obstacles[idx].rect.pos.y + rd->obstacles[idx].rect.height, c500);
-    }
+    } */
 }
