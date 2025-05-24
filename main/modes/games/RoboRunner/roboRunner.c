@@ -35,7 +35,16 @@ const char roboRunnerNVSKey[] = "roboRunner";
 
 static const cnfsFileIdx_t obstacleImages[] = {
     BARREL_1_WSG,
+    BARREL_2_WSG,
+    BARREL_3_WSG,
     LAMP_WSG,
+};
+
+static const cnfsFileIdx_t robotImages[] = {
+    ROBO_STANDING_WSG,
+    ROBO_RIGHT_WSG,
+    ROBO_LEFT_WSG,
+    ROBO_DEAD_WSG,
 };
 
 typedef enum
@@ -47,17 +56,19 @@ typedef enum
 
 typedef struct
 {
-    rectangle_t rect; // Contains the x, y, width and height
-    wsg_t img;        // The image
-    bool onGround;    // If the player is touching the ground
-    int ySpeed;       // The vertical speed. negative numbers are up.
+    rectangle_t rect;  // Contains the x, y, width and height
+    wsg_t* imgs;       // The images
+    int animIdx;       // Animation index
+    int64_t walkTimer; // time until we change animations
+    bool onGround;     // If the player is touching the ground
+    int ySpeed;        // The vertical speed. negative numbers are up.
 } player_t;
 
 typedef struct
 {
     rectangle_t rect; // Contains the x, y, width and height
-    int img;          // Image to display
     bool active;      // If the obstacle is in play
+    ObstacleType_t t; // Type of obstacle
 } obstacle_t;
 
 typedef struct
@@ -86,6 +97,10 @@ typedef struct
     // Audio
     midiFile_t bgm;          // BGM
     midiPlayer_t* sfxPlayer; // Player for SFX
+
+    // Animation
+    int64_t barrelAnimTimer; // Time until the animation move to the next flame
+    int barrelAnimIdx;       // Which index the barrel is using.
 } runnerData_t;
 
 static void runnerEnterMode(void);
@@ -120,7 +135,13 @@ runnerData_t* rd;
 static void runnerEnterMode()
 {
     rd = (runnerData_t*)heap_caps_calloc(1, sizeof(runnerData_t), MALLOC_CAP_8BIT);
-    loadWsg(ROBO_STANDING_WSG, &rd->robot.img, true);
+
+    // Load all robot WSGs
+    rd->robot.imgs = heap_caps_calloc(ARRAY_SIZE(robotImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
+    for (int idx = 0; idx < ARRAY_SIZE(robotImages); idx++)
+    {
+        loadWsg(robotImages[idx], &rd->robot.imgs[idx], true);
+    }
 
     // Useful for loading a lot of sprites into one place.
     rd->obstacleImgs = heap_caps_calloc(ARRAY_SIZE(obstacleImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
@@ -134,6 +155,7 @@ static void runnerEnterMode()
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     player->loop         = true;
     midiGmOn(player);
+    globalMidiPlayerSetVolume(MIDI_BGM, 12);
     globalMidiPlayerPlaySong(&rd->bgm, MIDI_BGM);
 
     // Init SFX
@@ -156,8 +178,8 @@ static void runnerEnterMode()
     resetGame();
 
     // Set Robot's rect
-    rd->robot.rect.height = rd->robot.img.h - HBOX_HEIGHT;
-    rd->robot.rect.width  = rd->robot.img.w - HBOX_WIDTH;
+    rd->robot.rect.height = rd->robot.imgs[0].h - HBOX_HEIGHT;
+    rd->robot.rect.width  = rd->robot.imgs[0].w - HBOX_WIDTH;
     rd->robot.rect.pos.x  = PLAYER_X;
 }
 
@@ -172,8 +194,11 @@ static void runnerExitMode()
         freeWsg(&rd->obstacleImgs[idx]);
     }
     heap_caps_free(rd->obstacleImgs);
-
-    freeWsg(&rd->robot.img);
+    for (int idx = 0; idx < ARRAY_SIZE(robotImages); idx++)
+    {
+        freeWsg(&rd->robot.imgs[idx]);
+    }
+    heap_caps_free(&rd->robot.imgs);
     free(rd);
 }
 
@@ -244,6 +269,29 @@ static void runnerMainLoop(int64_t elapsedUs)
         rd->maxObstacleTimer = 0;
     }
 
+    // Barrel animations
+    rd->barrelAnimTimer += elapsedUs;
+    if (rd->barrelAnimTimer > 300000)
+    {
+        rd->barrelAnimIdx++;
+        if (rd->barrelAnimIdx > 2)
+        {
+            rd->barrelAnimIdx = 0;
+        }
+    }
+
+    // Player animations
+    rd->robot.walkTimer += elapsedUs;
+    if (rd->robot.walkTimer > 50 * SPEED_NUMERATOR / rd->speedDivisor)
+    {
+        rd->robot.walkTimer = 0;
+        rd->robot.animIdx++;
+        if (rd->robot.animIdx > 1)
+        {
+            rd->robot.animIdx = 0;
+        }
+    }
+
     // Draw screen
     draw();
 }
@@ -302,6 +350,7 @@ static void spawnObstacle(ObstacleType_t type, int idx)
     // If they were different, we could put them below and adjust based on the specific requirements.
     rd->obstacles[idx].rect.height = 24;
     rd->obstacles[idx].rect.width  = 12;
+    rd->obstacles[idx].t           = type;
 
     // Switch based on type
     switch (type)
@@ -311,19 +360,12 @@ static void spawnObstacle(ObstacleType_t type, int idx)
         {
             // Set Y position
             rd->obstacles[idx].rect.pos.y = BARREL_GROUND_OFFSET;
-
-            // Set sprite
-            rd->obstacles[idx].img
-                = BARREL; // Only works because the order we loaded the sprites into the initializer list.
             break;
         }
         case LAMP:
         {
             // Set y position
             rd->obstacles[idx].rect.pos.y = CEILING_HEIGHT; // 0 is the top of the screen
-
-            // Set sprite
-            rd->obstacles[idx].img = LAMP;
             break;
         }
     }
@@ -382,13 +424,37 @@ static void draw()
     {
         if (rd->obstacles[idx].active)
         {
-            drawWsgSimple(&rd->obstacleImgs[rd->obstacles[idx].img], rd->obstacles[idx].rect.pos.x,
-                          rd->obstacles[idx].rect.pos.y);
+            switch (rd->obstacles[idx].t)
+            {
+                case BARREL:
+                {
+                    drawWsgSimple(&rd->obstacleImgs[rd->barrelAnimIdx], rd->obstacles[idx].rect.pos.x,
+                                  rd->obstacles[idx].rect.pos.y);
+                    break;
+                }
+                case LAMP:
+                {
+                    drawWsgSimple(&rd->obstacleImgs[3], rd->obstacles[idx].rect.pos.x, rd->obstacles[idx].rect.pos.y);
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
         }
     }
 
     // Draw the player
-    drawWsgSimple(&rd->robot.img, PLAYER_X - PLAYER_X_IMG_OFFSET, rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET);
+    if (!rd->robot.onGround)
+    {
+        drawWsgSimple(&rd->robot.imgs[0], PLAYER_X - PLAYER_X_IMG_OFFSET, rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET);
+    }
+    else
+    {
+        drawWsgSimple(&rd->robot.imgs[rd->robot.animIdx + 1], PLAYER_X - PLAYER_X_IMG_OFFSET,
+                      rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET);
+    }
 
     // Draw the score
     char buffer[32];

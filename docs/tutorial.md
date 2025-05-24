@@ -2000,15 +2000,143 @@ midiNoteOn(rd->sfxPlayer, 9, HIGH_BONGO, 0x7F);
 
 Because this is the percussion instrument channel 10 (number 9, second argument) we can just play and it'll stop byu itself. Individual notes are more complicated.
 
+The BGM is kinda loud too, so lets also set the volumes of the BGM channel:
+```C
+globalMidiPlayerSetVolume(MIDI_BGM, 12);
+```
+
 ***NOTE:*** Midi system is undergoing upgrades to make it more user-friendly. This tutorial will be updated when that happens.
 
 ## Animations
 
-- Microsecond based vs frame based
-- Walk animation
-- Death animation
-- Jump animation
-- Getting the background to move
+Alright, we're getting to the end of this tutorial. The last thing we're gonna implement is some nice and simple animations:
+- Walk animation: Alternate legs being shorter. We're going to tie this animation to the speed objects are moving
+- Death animation: Once a collision happens, we'll pause everything and watch the robot fall over before resetting.
+- Jump animation: Just going to be the standing animation in the air, but we need to stop the feet moving.
+- Simple moving background: Also based on the speed things are moving.
+- Barrel flames: Animated barrel flames to make them seem nicer.
+
+The easiest of these is the barrel flames. It's not tied into any system so it can just animate. We still need to refactor a few things though.
+
+```C
+// Add more images
+static const cnfsFileIdx_t obstacleImages[] = {
+    BARREL_1_WSG,
+    BARREL_2_WSG,
+    BARREL_3_WSG,
+    LAMP_WSG,
+};
+
+// Delete the image field and add obstacleType_t
+typedef struct
+{
+    rectangle_t rect; // Contains the x, y, width and height
+    bool active;      // If the obstacle is in play
+    ObstacleType_t t; // Type of obstacle
+} obstacle_t;
+
+// Add the type to the obstacle struct
+int64_t barrelAnimTimer; 
+int barrelAnimIdx; 
+
+// Main loop
+rd->barrelAnimTimer += elapsedUs;
+if (rd->barrelAnimTimer > 300000)
+{
+    rd->barrelAnimIdx++;
+    if(rd->barrelAnimIdx > 2)
+    {
+        rd->barrelAnimIdx = 0;
+    }
+}
+
+// Add to spawn obstacle in the after the box size. Also delete the "set image" lines
+rd->obstacles[idx].t = type; 
+
+// Draw 
+// Replace drawWsgSimple with the following:
+switch(rd->obstacles[idx].t)
+{
+    case BARREL:
+    {
+        drawWsgSimple(&rd->obstacleImgs[rd->barrelAnimIdx], rd->obstacles[idx].rect.pos.x,
+                rd->obstacles[idx].rect.pos.y);
+        break;
+    }
+    case LAMP:
+    {
+        drawWsgSimple(&rd->obstacleImgs[3], rd->obstacles[idx].rect.pos.x,
+                rd->obstacles[idx].rect.pos.y);
+        break;
+    }
+    default:
+    {
+        break;
+    }
+}
+
+```
+
+Now the barrels animate!
+
+Next let's get the walking working.
+
+```C
+// New images
+static const cnfsFileIdx_t robotImages[] = {
+    ROBO_STANDING_WSG,
+    ROBO_RIGHT_WSG,
+    ROBO_LEFT_WSG,
+    ROBO_DEAD_WSG,
+};
+
+// Edit player_t struct to take an array
+wsg_t* imgs; // Was wsg_t img;
+int animIdx;
+
+// Update the wsg loading...
+rd->robot.imgs = heap_caps_calloc(ARRAY_SIZE(robotImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
+for (int idx = 0; idx < ARRAY_SIZE(robotImages); idx++)
+{
+    loadWsg(robotImages[idx], &rd->robot.imgs[idx], true);
+}
+//...and freeing
+for (int idx = 0; idx < ARRAY_SIZE(robotImages); idx++)
+{
+    freeWsg(&rd->robot.imgs[idx]);
+}
+heap_caps_free(&rd->robot.imgs);
+
+// Main loop
+rd->robot.walkTimer += elapsedUs;
+if (rd->robot.walkTimer > 50 * SPEED_NUMERATOR / rd->speedDivisor)
+{
+    rd->robot.walkTimer = 0;
+    rd->robot.animIdx++;
+    if (rd->robot.animIdx > 1)
+    {
+        rd->robot.animIdx = 0;
+    }
+}
+
+// Set the robot's rect
+rd->robot.rect.height = rd->robot.imgs[0].h - HBOX_HEIGHT;
+rd->robot.rect.width  = rd->robot.imgs[0].w - HBOX_WIDTH;
+
+// Draw
+if (!rd->robot.onGround)
+{
+    drawWsgSimple(&rd->robot.imgs[0], PLAYER_X - PLAYER_X_IMG_OFFSET, rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET);
+}
+else
+{
+    drawWsgSimple(&rd->robot.imgs[rd->robot.animIdx + 1], PLAYER_X - PLAYER_X_IMG_OFFSET,
+                    rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET);
+}
+```
+
+### Final code
+
 
 ## Polish
 
