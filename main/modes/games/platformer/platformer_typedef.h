@@ -1,6 +1,8 @@
 #ifndef PLATFORMER_COMMON_TYPEDEF_INCLUDED
 #define PLATFORMER_COMMON_TYPEDEF_INCLUDED
 
+#include "cnfs.h"
+
 //==============================================================================
 // Constants
 //==============================================================================
@@ -11,8 +13,8 @@
 #define PL_HALF_TILESIZE           8
 #define DESPAWN_THRESHOLD          64
 
-static const char* const PL_BGMS[]
-    = {"bgmDeMAGio.mid", "bgmSmooth.mid", "bgmUnderground.mid", "bgmCastle.mid", "bgmNameEntry.mid"};
+static const cnfsFileIdx_t PL_BGMS[]
+    = {BGM_DE_MAGIO_MID, BGM_SMOOTH_MID, BGM_UNDERGROUND_MID, BGM_CASTLE_MID, BGM_NAME_ENTRY_MID};
 
 //==============================================================================
 // Macros

@@ -148,7 +148,7 @@ void pl_scrollTileMap(plTilemap_t* tilemap, int16_t x, int16_t y)
     }
 }
 
-bool pl_loadMapFromFile(plTilemap_t* tilemap, const char* name)
+bool pl_loadMapFromFile(plTilemap_t* tilemap, cnfsFileIdx_t name)
 {
     if (tilemap->map != NULL)
     {
@@ -160,7 +160,7 @@ bool pl_loadMapFromFile(plTilemap_t* tilemap, const char* name)
 
     if (NULL == buf)
     {
-        ESP_LOGE("MAP", "Failed to read %s", name);
+        ESP_LOGE("MAP", "Failed to read %i", name);
         return false;
     }
 
