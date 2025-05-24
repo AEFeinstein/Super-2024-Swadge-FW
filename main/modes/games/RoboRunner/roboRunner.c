@@ -36,7 +36,8 @@
 #define SPEED_NUMERATOR  100000
 
 // Score
-#define SCORE_MOD 10000
+#define SCORE_MOD      10000
+#define DEV_HIGH_SCORE 17145
 
 // Drawing
 #define WINDOW_PANE   25
@@ -66,7 +67,44 @@ static const cnfsFileIdx_t robotImages[] = {
 };
 
 static const char* const strings[] = {
-    "ROBO", "RUNNER", "Game over! Press A to play again.",
+    "ROBO",
+    "RUNNER",
+    "Game over! Press A to play again.",
+};
+
+const trophyData_t roboRunnerTrophies[] = {
+    {
+        .title       = "Legendary",
+        .description = "Beat the dev's high score",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Marathon",
+        .description = "Accumulate 26.2 miles ran (in feet)",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 138336,
+    },
+    {
+        .title       = "Stop hitting yourself",
+        .description = "Hit your head 100 times",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 100,
+    },
+    {
+        .title       = "Neo would be proud",
+        .description = "Run 1,000 feet in one life",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1000,
+    },
 };
 
 //==============================================================================
@@ -143,6 +181,12 @@ typedef struct
     int64_t barrelAnimTimer;         // Time until the animation move to the next flame
     int barrelAnimIdx;               // Which index the barrel is using.
     int windowXCoords[WINDOW_COUNT]; // The window x coordinates
+
+    // Trophies
+    int32_t feetTraveled;
+    int64_t feetTraveledTimer;
+    int32_t feetTraveledTotal;
+    int32_t deaths;
 } runnerData_t;
 
 //==============================================================================
@@ -170,21 +214,29 @@ static void draw(int64_t elapsedUs);
 // Variables
 //==============================================================================
 
+trophySettings_t runnerTrophySettings = {
+    .drawFromBottom   = true,
+    .staticDurationUs = DRAW_STATIC_US,
+    .slideDurationUs  = DRAW_SLIDE_US,
+};
+
+trophyDataList_t runnerTrophyData = {
+    .settings = &runnerTrophySettings,
+    .list     = roboRunnerTrophies,
+    .length   = ARRAY_SIZE(roboRunnerTrophies),
+};
+
 swadgeMode_t roboRunnerMode = {
-    .modeName                 = runnerModeName,
-    .wifiMode                 = NO_WIFI,
-    .overrideUsb              = false,
-    .usesAccelerometer        = false,
-    .usesThermometer          = false,
-    .overrideSelectBtn        = false,
-    .fnEnterMode              = runnerEnterMode,
-    .fnExitMode               = runnerExitMode,
-    .fnMainLoop               = runnerMainLoop,
-    .fnAudioCallback          = NULL,
-    .fnBackgroundDrawCallback = NULL,
-    .fnEspNowRecvCb           = NULL,
-    .fnEspNowSendCb           = NULL,
-    .fnAdvancedUSB            = NULL,
+    .modeName          = runnerModeName,
+    .wifiMode          = NO_WIFI,
+    .overrideUsb       = false,
+    .usesAccelerometer = false,
+    .usesThermometer   = false,
+    .overrideSelectBtn = false,
+    .fnEnterMode       = runnerEnterMode,
+    .fnExitMode        = runnerExitMode,
+    .fnMainLoop        = runnerMainLoop,
+    .trophyData        = &runnerTrophyData,
 };
 
 runnerData_t* rd;
@@ -207,7 +259,6 @@ static void runnerEnterMode()
         loadWsg(obstacleImages[idx], &rd->obstacleImgs[idx], true);
     }
     loadFont(RODIN_EB_FONT, &rd->titleFont, true);
-
     loadMidiFile(CHOWA_RACE_MID, &rd->bgm, true);
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     player->loop         = true;
@@ -234,7 +285,9 @@ static void runnerEnterMode()
     {
         rd->prevScore = 0;
     }
-    rd->state = SPLASH;
+    rd->feetTraveledTotal = trophyGetSavedValue(roboRunnerTrophies[1]);
+    rd->deaths            = trophyGetSavedValue(roboRunnerTrophies[2]);
+    rd->state             = SPLASH;
 }
 
 static void runnerExitMode()
@@ -251,7 +304,7 @@ static void runnerExitMode()
     {
         freeWsg(&rd->robot.imgs[idx]);
     }
-    heap_caps_free(&rd->robot.imgs);
+    heap_caps_free(rd->robot.imgs);
     heap_caps_free(rd);
 }
 
@@ -331,6 +384,8 @@ static void resetGame()
     rd->maxObstacleTimer    = 0;
     rd->robot.animIdx       = 0;
     rd->robot.dead          = false;
+    rd->feetTraveled        = 0;
+    rd->feetTraveledTimer   = 0;
 }
 
 static void runnerLogic(int64_t elapsedUs)
@@ -356,6 +411,13 @@ static void runnerLogic(int64_t elapsedUs)
             rd->remainingTime -= SCORE_MOD;
             rd->score++;
         }
+        // Update distance moved
+        rd->feetTraveledTimer += elapsedUs;
+        if (rd->feetTraveledTimer > 30 * SPEED_NUMERATOR / rd->speedDivisor)
+        {
+            rd->feetTraveledTimer -= 30 * SPEED_NUMERATOR / rd->speedDivisor;
+            rd->feetTraveled++;
+        }
     }
 }
 
@@ -378,6 +440,15 @@ static void handleObstacles(int64_t elapsedUs)
                 midiNoteOn(rd->sfxPlayer, 9, HIGH_TOM, 0x7F);
                 rd->robot.dead    = true;
                 rd->robot.animIdx = 0;
+                rd->feetTraveledTotal += rd->feetTraveled;
+                // Trophies
+                trophyUpdateMilestone(roboRunnerTrophies[3], rd->feetTraveled, 10);
+                trophyUpdateMilestone(roboRunnerTrophies[2], ++rd->deaths, 25);
+                trophyUpdateMilestone(roboRunnerTrophies[1], rd->feetTraveledTotal, 10);
+                if(DEV_HIGH_SCORE <= rd->score)
+                {
+                    trophyUpdate(roboRunnerTrophies[0], 1, true);
+                }
             }
             if (rd->obstacles[idx].rect.pos.x < -rd->obstacleImgs[0].w)
             {
@@ -602,10 +673,15 @@ static void draw(int64_t elapsedUs)
     snprintf(buffer, sizeof(buffer) - 1, "Score: %" PRIu32, rd->score);
     drawText(getSysFont(), c555, buffer, 32, 4);
     snprintf(buffer, sizeof(buffer) - 1, "High score: %" PRIu32, rd->prevScore);
-    drawText(getSysFont(), c555, buffer, 32, 20);
+    drawText(getSysFont(), c555, buffer, 32, 18);
+    // Draw feet traveled
+    snprintf(buffer, sizeof(buffer) - 1, "Feet traveled: %" PRIu32, rd->feetTraveled);
+    drawText(getSysFont(), c555, buffer, 32, 32);
 
     if (rd->robot.dead)
     {
         drawText(getSysFont(), c555, strings[2], 16, (TFT_HEIGHT - (getSysFont()->height + 60)) >> 1);
     }
+
+    
 }
