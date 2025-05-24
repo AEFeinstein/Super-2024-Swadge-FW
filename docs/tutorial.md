@@ -405,7 +405,7 @@ First up, we need to tell the other modes about our mode. Open `main/modeInclude
 
 Next, open `main/modeIncludeList.c` and add the following:
 - Inside the `allSwadgeModes[]` list, add `&roboRunnerMode,` at the end of the list before the end curly brace.
-- Add `addSingleItemToMenu(menu, roboRunnerMode.modeName);` inside one of the submenus. Whichever submenu you put this in is where it'll be in the main menu. It's best to put games in teh games folder, obviously.
+- Add `addSingleItemToMenu(menu, roboRunnerMode.modeName);` inside one of the submenus. Whichever submenu you put this in is where it'll be in the main menu. It's best to put games in the games folder, obviously.
 
 <img src="./TutorialImages/includeList2.png">
 
