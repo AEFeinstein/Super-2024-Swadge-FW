@@ -97,7 +97,7 @@ void drawUsernamePicker(nameData_t* nd);
 
 /**
  * @brief Get the System Username object
- * 
+ *
  * @return nameData_t* The username for the system at large
  */
 nameData_t* getSystemUsername(void);

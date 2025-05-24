@@ -152,8 +152,8 @@ void initUsernameSystem()
 
     // Initialize
     swadgeUsername.user = true;
-    size_t blobLen = 3 * sizeof(int8_t);
-    if(!readNvsBlob(nvsKeys, &swadgeUsername.idxs, &blobLen))
+    size_t blobLen      = 3 * sizeof(int8_t);
+    if (!readNvsBlob(nvsKeys, &swadgeUsername.idxs, &blobLen))
     {
         generateMACUsername(&swadgeUsername);
         writeNvsBlob(nvsKeys, swadgeUsername.idxs, 3 * sizeof(int8_t));

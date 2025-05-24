@@ -50,12 +50,11 @@ void fillSwadgePassPacket(swadgePassPacket_t* packet)
 
     // Automatically fill in username
     nameData_t* user = getSystemUsername();
-    for(int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; i++)
     {
         packet->username.nameIdxs[i] = user->idxs[i];
     }
     packet->username.nameIdxs[3] = user->randCode;
-    
 
     // Ask each mode to fill in the rest
     int modeCount = modeListGetCount();
