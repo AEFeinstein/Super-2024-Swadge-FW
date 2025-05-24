@@ -30,6 +30,12 @@
 // Score
 #define SCORE_MOD 10000
 
+// Drawing
+#define WINDOW_PANE   25
+#define WINDOW_BORDER 5
+#define WINDOW_HEIGHT 120
+#define WINDOW_COUNT  4
+
 const char runnerModeName[]   = "Robo Runner";
 const char roboRunnerNVSKey[] = "roboRunner";
 
@@ -100,8 +106,9 @@ typedef struct
     midiPlayer_t* sfxPlayer; // Player for SFX
 
     // Animation
-    int64_t barrelAnimTimer; // Time until the animation move to the next flame
-    int barrelAnimIdx;       // Which index the barrel is using.
+    int64_t barrelAnimTimer;         // Time until the animation move to the next flame
+    int barrelAnimIdx;               // Which index the barrel is using.
+    int windowXCoords[WINDOW_COUNT]; // The window x coordinates
 } runnerData_t;
 
 static void runnerEnterMode(void);
@@ -112,6 +119,7 @@ static void runnerLogic(int64_t elapsedUS);
 static void spawnObstacle(ObstacleType_t type, int idx);
 static void updateObstacle(obstacle_t* obs, int64_t elapsedUs);
 static void trySpawnObstacle(void);
+static void drawWindow(int xCoord);
 static void draw(void);
 
 swadgeMode_t roboRunnerMode = {
@@ -177,6 +185,12 @@ static void runnerEnterMode()
     }
 
     resetGame();
+
+    // Initializer windows
+    for (int idx = 0; idx < WINDOW_COUNT; idx++)
+    {
+        rd->windowXCoords[idx] = idx * (TFT_WIDTH + 4 * WINDOW_BORDER + WINDOW_BORDER) / WINDOW_COUNT;
+    }
 
     // Set Robot's rect
     rd->robot.rect.height = rd->robot.imgs[0].h - HBOX_HEIGHT;
@@ -306,6 +320,24 @@ static void runnerMainLoop(int64_t elapsedUs)
         rd->robot.walkTimer = 0;
     }
 
+    // Windows
+    if (!rd->robot.dead)
+    {
+        int64_t windowTimer = elapsedUs;
+        while (windowTimer > SPEED_NUMERATOR / rd->speedDivisor)
+        {
+            windowTimer -= SPEED_NUMERATOR / rd->speedDivisor;
+            for (int idx = 0; idx < WINDOW_COUNT; idx++)
+            {
+                rd->windowXCoords[idx] -= 1;
+                if (rd->windowXCoords[idx] < -(4 * WINDOW_PANE + WINDOW_BORDER))
+                {
+                    rd->windowXCoords[idx] = TFT_WIDTH;
+                }
+            }
+        }
+    }
+
     // Draw screen
     draw();
 }
@@ -428,12 +460,28 @@ static void trySpawnObstacle()
     }
 }
 
+static void drawWindow(int xCoord)
+{
+    fillDisplayArea(xCoord, WINDOW_HEIGHT, xCoord + WINDOW_PANE, WINDOW_HEIGHT + WINDOW_PANE, c035);
+    fillDisplayArea(xCoord + WINDOW_BORDER + WINDOW_PANE, WINDOW_HEIGHT, xCoord + 2 * WINDOW_PANE + WINDOW_BORDER,
+                    WINDOW_HEIGHT + WINDOW_PANE, c035);
+    fillDisplayArea(xCoord, WINDOW_HEIGHT + WINDOW_BORDER + WINDOW_PANE, xCoord + WINDOW_PANE,
+                    WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c035);
+    fillDisplayArea(xCoord + WINDOW_BORDER + WINDOW_PANE, WINDOW_HEIGHT + WINDOW_BORDER + WINDOW_PANE,
+                    xCoord + 2 * WINDOW_PANE + WINDOW_BORDER, WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c035);
+}
+
 static void draw()
 {
     // Draw the level
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c112);
     drawLine(0, GROUND_HEIGHT, TFT_WIDTH, GROUND_HEIGHT, c555, 0);
     drawLine(0, CEILING_HEIGHT, TFT_WIDTH, CEILING_HEIGHT, c555, 0);
+
+    for (int idx = 0; idx < WINDOW_COUNT; idx++)
+    {
+        drawWindow(rd->windowXCoords[idx]);
+    }
 
     // Draw the obstacles
     for (int idx = 0; idx < MAX_OBSTACLES; idx++)
