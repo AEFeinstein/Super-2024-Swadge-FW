@@ -67,6 +67,8 @@ static const char* const nounList[] = {
     "woodwind", "drummer",  "rocker",   "wolf",    "snake",    "driver",  "seahorse", "artist", "foxbat",  "eagle",
 };
 
+static const char nvsKeys[] = "username";
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -135,6 +137,7 @@ static void _drawFadingWords(nameData_t* nd);
 static uint8_t baseMac[6];
 static int listLen[3];
 static uint8_t mutatorSeeds[3];
+nameData_t swadgeUsername;
 
 //==============================================================================
 // Functions
@@ -146,6 +149,16 @@ void initUsernameSystem()
     listLen[1] = ARRAY_SIZE(adjList2);
     listLen[2] = ARRAY_SIZE(nounList);
     _getMacAddress();
+
+    // Initialize
+    swadgeUsername.user = true;
+    size_t blobLen = 3 * sizeof(int8_t);
+    if(!readNvsBlob(nvsKeys, &swadgeUsername.idxs, &blobLen))
+    {
+        generateMACUsername(&swadgeUsername);
+        writeNvsBlob(nvsKeys, swadgeUsername.idxs, 3 * sizeof(int8_t));
+    }
+    setUsernameFromND(&swadgeUsername);
 }
 
 void generateMACUsername(nameData_t* nd)
@@ -483,4 +496,9 @@ static void _drawFadingWords(nameData_t* nd)
             }
         }
     }
+}
+
+nameData_t* getSystemUsername(void)
+{
+    return &swadgeUsername;
 }
