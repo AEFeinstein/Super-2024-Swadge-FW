@@ -567,7 +567,7 @@ static void drawSplash(int64_t elapsedUs)
     if (true)
     {
         char buffer[64];
-        snprintf(buffer, sizeof(buffer) - 1, "High Score: %d", rd->otherHS);
+        snprintf(buffer, sizeof(buffer) - 1, "High Score: %" PRId32, rd->otherHS);
         drawText(getSysFont(), c555, buffer, 32, TFT_HEIGHT - 32);
         // FIXME: Display name once that's passed through swadgepass
         snprintf(buffer, sizeof(buffer) - 1, "By: %s", rd->remotePlayer.nameBuffer);
@@ -711,7 +711,7 @@ static void draw(int64_t elapsedUs)
 // SwadgePass
 static void roboRunnerPacket(swadgePassPacket_t* packet)
 {
-    int score = 0;
+    int32_t score = 0;
     readNvs32(roboRunnerNVSKey, &score);
     packet->roboRunner.highScore = score;
 }
