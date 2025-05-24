@@ -214,7 +214,7 @@ static void runnerExitMode()
         freeWsg(&rd->robot.imgs[idx]);
     }
     heap_caps_free(&rd->robot.imgs);
-    free(rd);
+    heap_caps_free(rd);
 }
 
 static void runnerMainLoop(int64_t elapsedUs)

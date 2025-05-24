@@ -28,7 +28,7 @@ Documentation!
 
 I know, that stuff seems boring. But when you're writing the documentation there's a bunch of great benefits:
 - Fleshing out the project: If you have a seed of an idea, Great! Maybe you want to make a block pusher, or flappy bird, or a Sonic 2 and Knuckles clone. But, what does that entail? If you're making flappy bird, you need a lot less resources than if you want to remakes even a single level of Sonic. You also need to consider each mechanic. Does your game need physics? Motion controls? Precisely timed inputs? If you write it out, you have a chance to think these things through before starting.
-- Scope: Once you have the documentation, you know what you're making. It helps to know you don't need to make a food/stamina system for your block puzzler, so maybe don't add that. It also keeps the scope from becoming unmanageable due to scope creep, where the size of the project becomes impossible to comprehend. FOr larger projects, it also helps compartmentalize each task into an easier part to code.
+- Scope: Once you have the documentation, you know what you're making. It helps to know you don't need to make a food/stamina system for your block puzzler, so maybe don't add that. It also keeps the scope from becoming unmanageable due to scope creep, where the size of the project becomes impossible to comprehend. For larger projects, it also helps compartmentalize each task into an easier part to code.
 - Remembering the project later: Sometimes, life gets in the way. If you spend a month away, having a document that tells you what you are expecting to accomplish can help.
 - Collaboration: I don't know what you're making until you tell me. And, if you need art or music and want to lean on some of the helpful MAGFest folks, they're going to need to know what you're making and how they can help. If you write it all down and give it to them, they have a better chance of helping you.
 - Verification: Okay, the project's done. Does it do what you wanted it to? Do the pets in your pet simulator act properly? Did you cut an entire feature for later and forget about it? Having documentation allows you to look back and check that you're happy with where you got.
@@ -116,7 +116,7 @@ This button will show the file system of the project. Here you can see the statu
 
 Extensions provide extra functionality to VS Code. Some common ones are provide the code needed to compile the C code we're writing, spell checkers, syntax highlighters (how we get that colorful text automatically), and even tracking what we still need to get done!
 
-Some of the extensions provided are critical to have installed, such as the C compiler. Others, such as the spellchecker, are just nice to have. if you're unsure, download all of the ones in the "recommended" tab inside the extensions bar and you'll be fine.
+Some of the extensions provided are critical to have installed, such as the C syntax highlighter. Others, such as the spellchecker, are just nice to have. if you're unsure, download all of the ones in the "recommended" tab inside the extensions bar and you'll be fine.
 
 The recommended extensions are per-project, so if you haven't loaded the correct repository they won't show up.
 
@@ -148,6 +148,7 @@ If you're in the project directory, why not try running `make all`? See what com
 - Ctrl+Shift+F5: If you've changed the code with the emulator running, you can use this key combo to restart it with the new code changes.
 - Ctrl+B: Closes the side pane for more room
 - Alt+Shift+A: Comment/uncomment all selected code
+- Ctrl+S: Save the file. This should become a habit.
 
 ## Using Git
 
@@ -157,7 +158,7 @@ Almost! First we need to learn a little bit about git. Git is a versioning softw
 
 Right now, we need to set up a git branch. Since this codebase is worked on by a lot of people at once, everyone creates their own branch to keep their code separate from everyone else's while it's being worked on. You start on the `main` branch, which is where the core codebase is. All projects should be created off of the main files, since that's the core everyone should be using. 
 
-Everyone can use each branch, so you can theoretically load up someone else's branch and start working in it, but that's inadvisable. You might not know what they're doing! Similarly, others can go into your branch and look at/modify your code. It's rude to do it without permission, but it can happen. When you `git pull` from github, you'll download all changes that have been uploaded.
+Everyone can use each branch, so you can theoretically load up someone else's branch and start working in it, but that's inadvisable if you don't know what they're doing! Similarly, others can go into your branch and look at/modify your code. It's rude to do it without permission, but it can happen. When you `git pull` from github, you'll download all changes that have been uploaded.
 
 Your branch will contain all of your code until you eventually have it pulled into the main branch when it's done. This step is the final step, so we're not there yet.
 
@@ -264,7 +265,7 @@ Here's the three functions we're going to declare:
 
 Some notes:
 - `static` means that this item is only available inside this file. This is good practice, we don't want other people to accidentally use your variables or functions.
-- `void`: THis is the value the function returns. In this case, it's nothing, or void, for all three.
+- `void`: This is the value the function returns. In this case, it's nothing, or void, for all three.
 - `runnerEnterMode()`: This is a function name and declaration. When we want to use this function later, this is what we need to type.
 - `int64_t elapsedUS`: This is an argument. If a function doesn't need arguments, you can put void in as well. The specific argument being passed is the number of microseconds since the last time the loop functions was called. It's very useful, and you're required to have it.
 
@@ -280,20 +281,20 @@ We'll look at the structure and what each option means.
 
 ```C
 swadgeMode_t roboRunnerMode = {
-    .modeName                 = runnerModeName, // Assign the name we created here
-    .wifiMode                 = NO_WIFI,        // If we want WiFi 
-    .overrideUsb              = false,          // Overrides the default USB behavior.
-    .usesAccelerometer        = false,          // If we're using motion controls
-    .usesThermometer          = false,          // If we're using the internal thermometer
-    .overrideSelectBtn        = false,          // The select/Menu button has a default behavior. If you want to override it, you can set this to true but you'll need to re-implement the behavior.
+    .modeName                 = runnerModeName,  // Assign the name we created here
+    .wifiMode                 = NO_WIFI,         // If we want WiFi 
+    .overrideUsb              = false,           // Overrides the default USB behavior.
+    .usesAccelerometer        = false,           // If we're using motion controls
+    .usesThermometer          = false,           // If we're using the internal thermometer
+    .overrideSelectBtn        = false,           // The select/Menu button has a default behavior. If you want to override it, you can set this to true but you'll need to re-implement the behavior.
     .fnEnterMode              = runnerEnterMode, // The enter mode function
     .fnExitMode               = runnerExitMode,  // The exit mode function
     .fnMainLoop               = runnerMainLoop,  // The loop function
-    .fnAudioCallback          = NULL,           // If the mode uses the microphone
-    .fnBackgroundDrawCallback = NULL,           // Draws a section of the display
-    .fnEspNowRecvCb           = NULL,           // If using Wifi, add the receive function here
-    .fnEspNowSendCb           = NULL,           // If using Wifi, add the send function here
-    .fnAdvancedUSB            = NULL, // If using advanced USB things.
+    .fnAudioCallback          = NULL,            // If the mode uses the microphone
+    .fnBackgroundDrawCallback = NULL,            // Draws a section of the display
+    .fnEspNowRecvCb           = NULL,            // If using Wifi, add the receive function here
+    .fnEspNowSendCb           = NULL,            // If using Wifi, add the send function here
+    .fnAdvancedUSB            = NULL,            // If using advanced USB things.
 };
 ```
 
@@ -319,7 +320,7 @@ static void runnerMainLoop(int64_t elapsedUs)
 
 Seems pretty similar to the declarations, right? Instead of the semicolon we have curly braces, and we don't need to include the `void` inside the parens. 
 
-The names need ot be identical, and the `elapsedUs` needs to be the same, or else the compiler won't realize that these are the same functions and bind them.
+The names need to be identical, and the `elapsedUs` needs to be the same, or else the compiler won't realize that these are the same functions and bind them.
 
 If we decided not to forward declare these, then the `swadgeMode_t` struct wouldn't know what a `runnerEnterMode` was and would throw an error.
 
@@ -376,9 +377,9 @@ Assuming it works, you can look around a bunch. Of course, you might be surprise
 
 #### Include errors
 
-Sometimes there's an error where VS Code doesn't recognize all of the #includes, known as an include error. If this happens, try running the following and restarting your VS Code after saving all the files. Don't worry, VS Code will load the repo and all your tabs right back open. This doesn't stop it from compiling, but the red may hide more serious errors, so it's best to get rid of them.
+Sometimes there's an error where VS Code doesn't recognize all of the #includes, known as an include error. If this happens, try restarting your VS Code after saving all the files. Don't worry, VS Code will load the repo and all your tabs right back open. This doesn't stop it from compiling, but the red may hide more serious errors, so it's best to get rid of them.
 
-The solution appears to be compiling with the idf, so follow the instructions for building the program for the swadge (idf.py) below and it should get fixed.
+if this doesn't help, another potential solution appears to be compiling with the idf, so follow the instructions for building the program for the swadge (idf.py) below and it should get fixed.
 
 #### Debugging
 
@@ -404,7 +405,7 @@ First up, we need to tell the other modes about our mode. Open `main/modeInclude
 
 Next, open `main/modeIncludeList.c` and add the following:
 - Inside the `allSwadgeModes[]` list, add `&roboRunnerMode,` at the end of the list before the end curly brace.
-- Add `addSingleItemToMenu(menu, roboRunnerMode.modeName);` inside one of the submenus. Whichever submenu you put this in is where it'll be in the main menu.
+- Add `addSingleItemToMenu(menu, roboRunnerMode.modeName);` inside one of the submenus. Whichever submenu you put this in is where it'll be in the main menu. It's best to put games in teh games folder, obviously.
 
 <img src="./TutorialImages/includeList2.png">
 
@@ -412,7 +413,7 @@ Now, we can recompile and load the emulator with F5 and we'll be able to navigat
 
 <img src="./TutorialImages/emptyScreen.png">
 
-Congrats! The mode is running. It's just not doing anything, since we didn't actually provide any code for it to execute. We didn't even give it any way to handle input, so we can't even get out o fit, we just need to close it down. But, it works!
+Congrats! The mode is running. It's just not doing anything, since we didn't actually provide any code for it to execute. We didn't even give it any way to handle input, so we can't even get out of it, we just need to close it down. But, it works!
 
 #### idf.py
 
@@ -427,7 +428,7 @@ After that command completes, run `idf.py build`.
 
 It should fail. Why? The idf doesn't know about these new files we made. See, there's two build systems included in this project, one for the emulator and one for the swadge hardware. The emulator uses `make` and the swadge uses `CMake` via `idf.py`. `Make` is able to find the files as long as they're inside the project, but we need to tell `CMake` where the files are.
 
-Inside `main/CMakeLists.txt` you'll see two big lists: SRCS and INCLUDE_DIRS. In SRCS, add any .c files you have. In INCLUDE_DIRS, include all directories you've made. THis tells CMake to look inside this folder for files and sub folders, so if you forget to add them you're not going to be able to build the program.
+Inside `main/CMakeLists.txt` you'll see two big lists: SRCS and INCLUDE_DIRS. In SRCS, add any .c files you have. In INCLUDE_DIRS, include all directories you've made. This tells CMake to look inside this folder for files and sub folders, so if you forget to add them you're not going to be able to build the program.
 
 <img src="./TutorialImages/SRCS.png">
 <img src="./TutorialImages/INCLUDE_DIRS.png">
@@ -477,7 +478,7 @@ Now you can run `git status` again and verify all the files you want are added, 
 
 Once you're satisfied with the file list, run the following command: `git commit -m "Initial Commit"` This will add the message to the commit so you don't have to memorize a hash to come back. THe message should be as descriptive as required, such as "misc bug fixes" or "Added blowing on microphone to jump". If you're writing paragraphs, you probably need to commit more.
 
-The last step can only be done if we have write access to the github repository. If oyu have access, you can push to the external repo, saving your code outside you computer so other devs can work on it and if your computer dies you'll be able to pull the files back down.
+The last step can only be done if we have write access to the github repository. If you have access, you can push to the external repo, saving your code outside you computer so other devs can work on it and if your computer dies you'll be able to pull the files back down.
 
 Run `git push --set-upstream origin RoboRunner` to create the branch on the github server and send the files to it. You will have to log in.
 
@@ -500,7 +501,7 @@ If you're following along feel free to use any other small PNGs or make your own
 Some notes:
 - The swadge color palette can be found [here](./SwadgePalette.gpl). The swadge will crunch down other colors to closest match, but for better control, you can use this subset of colors to ensure it looks the same as originally designed if using Aseprite
 - The Swadge's screen was 280 wide x 240 tall for at least '23 through '25. This isn't that large, so a super detailed 1000 pixel square character isn't going to fit.
-- The Swadge's screen is pretty small in reality. The emulator's screen will make them a lot larger which is good for debugging but can foll your brain into thinking that's the end size.
+- The Swadge's screen is pretty small in reality. The emulator's screen will make them a lot larger which is good for debugging but can fool your brain into thinking that's the end size.
 - images that are too large will not load. It has to do with memory size, not just pixel size, so there's no specific limit. Just keep the files a reasonable size and it'll be alright.
 
 All art and sounds go into the `assets/` folder in the repository. Make a new folder and copy all the assets into it. During compilation, they will be converted automatically to a format the swadge can use.
@@ -550,7 +551,7 @@ That's a lot, but here's the breakdown:
 - (runnerData_t*): The memory that heap_caps_calloc() assigned to us isn't typed, it's just a bunch of holes to fill numbers into. This snippit of code tells the compiler that memory we just allocated fits into rd
 - rd: A pointer to the memory we've just allocated.
 
-So, pointers. It's not complicated, but when you're unfamiliar it does seem overwhelming. A pointer is an address to a value. Think of it like a mailbox. The mailbox contains the value, whether it's a single true/false or an entire swadgeMode_t struct. THe pointer is the number on the side of the mailbox. Sometimes it's a lot easier to say "grab whatever's in mailbox 20" instead of describing each part of the data inside the mailbox.
+So, pointers. It's not complicated, but when you're unfamiliar it does seem overwhelming. A pointer is an address to a value. Think of it like a mailbox. The mailbox contains the value, whether it's a single true/false or an entire swadgeMode_t struct. The pointer is the number on the side of the mailbox. Sometimes it's a lot easier to say "grab whatever's in mailbox 20" instead of describing each part of the data inside the mailbox.
 
 In our case we're doing this because we don't actually know which mailbox out runnerData_t is assigned to. What we do know is that whatever that mailbox ends up being we've stored the number inside `rd`. 
 
@@ -562,7 +563,7 @@ We can accomplish this by changing the exit mode function like so:
 ```C
 static void runnerExitMode()
 {
-    free(rd);
+    heap_caps_free(rd);
 }
 ```
 
@@ -591,7 +592,7 @@ Lastly, that last `true` at the end of the load function tells the swadge which 
 
 We want to store the image into rd, which means we can replace `storedImage` with `rd->character` and `image` with `ROBO_STANDING_WSG` and then put them in our existing functions. The arrow notation between rd and character indicated that rd points to the character data.
 
-Given we know that rd needs to be allocated, we need to put the `loadWsg()` function after the `heap_caps_calloc()` and the `freeWsg()` before the `free(rd)` functions. 
+Given we know that rd needs to be allocated, we need to put the `loadWsg()` function after the `heap_caps_calloc()` and the `freeWsg()` before the `heap_caps_free(rd)` functions. 
 
 ```C
 static void runnerEnterMode()
@@ -603,7 +604,7 @@ static void runnerEnterMode()
 static void runnerExitMode()
 {
     freeWsg(&rd->character);
-    free(rd);
+    heap_caps_free(rd);
 }
 ```
 
@@ -622,7 +623,7 @@ The Swadge draws images assuming the top left corner is the start. For our examp
 
 Some things you'll note if you start to play with the numbers is that the corners of the screen are obscured. This is because the real screen we're using has rounded corners. The shrouded portions are roughly equivalent to the real screen. Another thing to note is that the last time the pixel is updated is what's going to be drawn. So if you want to draw text over a textbox, the box needs to be drawn first or the box will overwrite the text.
 
-Next, we'll add some ground to stand on
+Next, we'll add some ground to stand on.
 
 Before the function drawing the sprite, add the following line: `drawLine(0, 184, TFT_WIDTH, 184, c555, 0);`
 - `drawline()`: Draws a line as defines by the first four numbers
@@ -634,7 +635,7 @@ If you look into the documentation for drawLine() (shapes.h) you can see that if
 
 Play with the colors (try c500, c050, c005, and c123) and the x and y positions on either end and watch how the line moves. Make sure to save the file before reloading the emulator!
 
-If you place teh draw line function after the `drawWsg()` you'll notice the line draws on top of the robot, which definitely looks wrong. Remember, draw order matters. 
+If you place the draw line function after the `drawWsg()` you'll notice the line draws on top of the robot, which definitely looks wrong. Remember, draw order matters. 
 
 Right now, we're drawing the robot standing in the same place every frame, which is boring. Let's get some actual movement on screen!
 
@@ -682,7 +683,7 @@ static void runnerEnterMode()
 static void runnerExitMode()
 {
     freeWsg(&rd->character);
-    free(rd);
+    heap_caps_free(rd);
 }
 
 static void runnerMainLoop(int64_t elapsedUs)
@@ -795,7 +796,7 @@ Add a simple `fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);` before the li
 
 Really, we should have seen it coming. We didn't use onGround, so obviously it's not going to work!
 
-Change the `(evt.button & PB_A || evt.button & PB_UP)` to `((evt.button & PB_A || evt.button & PB_UP) && rd->onGround)`. The parenthesis are import for grouping here, so make sure you get it right. Whatever is inside the innermost set of parenthesis will evaluate first, and we want that to the button check. If either of the buttons are pressed, we can check if we're ont eh ground. `&&` is the logical AND operation, so what just told the program is: "If a or up is pressed, and the character is on the ground" you can add the negative speed.
+Change the `(evt.button & PB_A || evt.button & PB_UP)` to `((evt.button & PB_A || evt.button & PB_UP) && rd->onGround)`. The parenthesis are import for grouping here, so make sure you get it right. Whatever is inside the innermost set of parenthesis will evaluate first, and we want that to the button check. If either of the buttons are pressed, we can check if we're on the ground. `&&` is the logical AND operation, so what just told the program is: "If A or up is pressed, and the character is on the ground" you can add the negative speed.
 
 If we run the program now, all we've managed to accomplish is stopping the double jumps. This is because we've never set onGround to true, so we can't ever jump. Instead of doing an actual collision check, let's just use where the robot is on the screen to determine if it should be on the ground or not.
 
@@ -838,7 +839,7 @@ Because they can be very useful in getting rid of magic numbers, that's why. Rig
 
 The code works the way we have it, but what if you want to raise the height of the ground line by one pixel? You have to change it in several places. Or, we could forget what -12 means. Or, what if we don't know how wide the screen is?
 
-Remember, we used TFT_WIDTH and TFT_HEIGHT before. We didn't make these, someone else did. Presumably, if the screen size is changed, we can assume that these Macros are being change appropriately, so we don't suddenly find our code doesn't work because the screen is 32 pixels wider or something. It also helps us as devs since we don't need to remember how wide the screen is, we can just grab the number.
+Remember, we used the TFT_WIDTH and TFT_HEIGHT macros before. We didn't make these, someone else did. Presumably, if the screen size is changed, we can assume that these Macros are being changed appropriately, so we don't suddenly find our code doesn't work because the screen is 32 pixels wider or something. It also helps us as devs since we don't need to remember how wide the screen is, we can just grab the number.
 
 In the same way, we can define our own Macros to provide us with an easy way to tweak the program, and recall what the value is.
 
@@ -850,7 +851,7 @@ At the top of the file, just under the `#import` statement, let's add the follow
 #define PLAYER_GROUND_OFFSET (GROUND_HEIGHT - 56)
 #define PLAYER_X             32
 ```
-This will allow us to use the tags we've written to replace the magic numbers. Go back through the file and replace the numbers with teh Macros.
+This will allow us to use the tags we've written to replace the magic numbers. Go back through the file and replace the numbers with the Macros.
 
 Note that you shouldn't be replacing every value. 0, for instance, isn't the same value in all instances. Sometimes it's the initial x or y coordinate, sometimes it's the length of the dashed line. If we had two numbers that were both 32, but only one of them relates to the player, we don't want to adjust the player and this other number when we're not expecting to.
 
@@ -858,7 +859,7 @@ In addition, obvious numbers don't need to be included. We don't want dashed lin
 
 ### Completed section code
 
-Now that we've put int he Macros, the code should look similar to this:
+Now that we've put in the Macros, the code should look similar to this:
 ```C
 #include "roboRunner.h"
 
@@ -913,7 +914,7 @@ static void runnerEnterMode()
 static void runnerExitMode()
 {
     freeWsg(&rd->character);
-    free(rd);
+    heap_caps_free(rd);
 }
 
 static void runnerMainLoop(int64_t elapsedUs)
@@ -1022,7 +1023,7 @@ static void runnerLogic(int64_t elapsedUS);
 static void draw(void);
 ```
 
-We're not using the `elapsedUS` right this moment, but we're probably going to need to soon. Cut the drawing functions and add them to the draw function, then add the draw function tot he end of the loop. Do the same with the plater logic as well.
+We're not using the `elapsedUS` right this moment, but we're probably going to need to soon. Cut the drawing functions and add them to the draw function, then add the draw function to the end of the loop. Do the same with the player logic as well.
 
 ```C
 static void runnerMainLoop(int64_t elapsedUs)
@@ -1066,7 +1067,7 @@ Now we can start spawning some obstacles. I've drawn the obstacles with my exper
 
 As before, art is essential to get a general feel for a game so it's not all just code, but it doesn't need to be perfect, especially at this stage. If you want to go overboard with the art, that's fine too. I lean toward the former, obviously.
 
-First, let's load and unload these new files. The following snippits of code are a really useful pattern, since you only have to add the file name once and it will be automagically loaded and unloaded.
+First, let's load and unload these new files. The following snippits of code are a really useful pattern, since you only have to add the file identifier once and it will be automagically loaded and unloaded.
 
 ```C
 // Put this below the defines. If you use different filenames, make sure to change them accordingly.
@@ -1105,9 +1106,9 @@ Here's a breakdown of the process:
 - First, we make a list of the image indexes.
 - We create an enum of types for later
 - We add a place to put a pointer for reference later into the data struct
-- We initialize the memory space with heap_caps_calloc() to the same size as the const array from before to automatically get th correct size
+- We initialize the memory space with heap_caps_calloc() to the same size as the const array from before to automatically get the correct size
 - We loop through each item and assign them in order
-- Lastly, we di-allocate each image and then the containing memory in the exit function
+- Lastly, we de-allocate each image and then the containing memory in the exit function
 
 #### Loops
 
@@ -1118,7 +1119,7 @@ An important part of programming is loops. There's three primarily used in C:
 
 For loops are extremely common, and they have their own loop counting variables built in. in this case, `idx`. YOu can see that first we set it's initial state to 0, tell it to continue until it matches the array size of `obstacleImages` and finally tell it to increment by one each loop (idx++). Note that if we want to, we can change idx inside the loop, but doing that thoughtlessly could get the computer stuck in the loop. The condition to exit the loop is that `idx` needs to be larger than the array, or 2. If we set `idx` to 0 at the end of each loop, the end of the loop will change the value to 1 and it will get stuck doing this infinitely.
 
-The "++" notation can be used on any variable. It's just faster to write `idx++;` than writing either `idx += 1;` or `idx = idx + 1;` and can sometimes be used in tricky ways to speed up the program, but that's far outside the scope of what someone new to developing needs to worry about. "--" works iun teh same way to subtract one.
+The "++" notation can be used on any variable. It's just faster to write `idx++;` than writing either `idx += 1;` or `idx = idx + 1;` and can sometimes be used in tricky ways to speed up the program, but that's far outside the scope of what someone new to developing needs to worry about. "--" works in the same way to subtract one.
 
 While loops check that a condition is true and loop if it's not. `while(y > 0) {}` will execute everything inside the curly braces until y is less than or equal to 0. It's important to update y inside the loop or the program will get stuck.
 
@@ -1212,7 +1213,7 @@ Now we check how it looks, and... well, the lamps are really hard to see on the 
 
 Let's change the color of the background to something easier to see the lamps on. Using `c112` instead of `c001` in the `fillDisplayArea()` function will lighten the colors one shade. That will make the lamps easier to see.
 
-Next, let's create a ceiling to lower the lamp without having it suspend in space. Much line we draw the ground, we can draw the ceiling with a single white line. Just copy and paste the ground line and make a `CEILING_HEIGHT` define to a value below the jump height.
+Next, let's create a ceiling to lower the lamp without having it suspend in space. Much like we draw the ground, we can draw the ceiling with a single white line. Just copy and paste the ground line and make a `CEILING_HEIGHT` define to a value below the jump height.
 
 Lastly, change the lamp to start at `CEILING_HEIGHT` instead of 0.
 
@@ -1245,7 +1246,7 @@ Let's make this a new function, `static void updateObstacle(obstacle_t* obs, int
 static void updateObstacle(obstacle_t* obs, int64_t elapsedUs)
 {
     // Set value to subtract
-    int moveSpeed = 1000000 / 150; // We will vary this later to change the speed of the obstacles.
+    int moveSpeed = 100000 / 15; // We will vary this later to change the speed of the obstacles.
     while (elapsedUs > moveSpeed)
     {
         elapsedUs -= moveSpeed; // This ensures we don't get locked into a loop
@@ -1554,7 +1555,7 @@ static void runnerExitMode()
     heap_caps_free(rd->obstacleImgs);
 
     freeWsg(&rd->robot.img);
-    free(rd);
+    heap_caps_free(rd);
 }
 
 static void runnerMainLoop(int64_t elapsedUs)
@@ -1666,7 +1667,7 @@ static void spawnObstacle(ObstacleType_t type, int idx)
 static void updateObstacle(obstacle_t* obs, int64_t elapsedUs)
 {
     // Set value to subtract
-    int moveSpeed = 1000000 / 150; // We will vary this later to change the speed of the obstacles.
+    int moveSpeed = 100000 / 15; // We will vary this later to change the speed of the obstacles.
     while (elapsedUs > moveSpeed)
     {
         elapsedUs -= moveSpeed; // This ensures we don't get locked into a loop
@@ -1848,7 +1849,7 @@ if (obs->rect.pos.x < -40)
 }
 ```
 
-This reveals another bug. We kind of... never stopped moving the obstacles off the screen. Let's check that they're not false before updating.
+This reveals another bug. We kind of... never stopped moving the obstacles off the screen. Let's check that they're active before updating.
 
 ```C
 // In updateObstacle()
@@ -2497,7 +2498,7 @@ static void runnerExitMode()
         freeWsg(&rd->robot.imgs[idx]);
     }
     heap_caps_free(&rd->robot.imgs);
-    free(rd);
+    heap_caps_free(rd);
 }
 
 static void runnerMainLoop(int64_t elapsedUs)
@@ -2865,6 +2866,7 @@ So, what's next? Well, we can either claim this one it done and move on to the n
 - LEDs: There's LEDs around the Swadge. Make them light up in response to what's going on in the game
 - Accelerometer: Shake to jump?
 - Add Power-ups: Invincibility? Super jump? Bonus score? See what you can make!
+- Fiddle with the code: Code is a form of art as much as drawings or music is. Adjust the cde we've already made to see what can change!
 
 Some other things:
 - Comment all your code! Commenting code helps other people figure out what the heck you were doing, and helps you know what you were doing three months ago last time you were working on the
