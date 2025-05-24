@@ -71,6 +71,12 @@ static const cnfsFileIdx_t robotImages[] = {
 
 typedef enum
 {
+    RUNNING,
+    SPLASH,
+} modeState_t;
+
+typedef enum
+{
     BARREL,
     LAMP,
     NUM_OBSTACLE_TYPES
@@ -100,13 +106,17 @@ typedef struct
 
 typedef struct
 {
+    // Mode
+    modeState_t state;
+    font_t titleFont;
+    int64_t attractToggle;
+
     // Robot
     player_t robot; // Player object
 
     // Obstacles
     wsg_t* obstacleImgs;                 // Array of obstacle images
     obstacle_t obstacles[MAX_OBSTACLES]; // Object data
-    int obstacleIdx;                     // Index of the next obstacle
 
     // Score
     int32_t score;         // Current score
@@ -138,13 +148,15 @@ typedef struct
 static void runnerEnterMode(void);
 static void runnerExitMode(void);
 static void runnerMainLoop(int64_t elapsedUs);
+
+// Logic
 static void resetGame(void);
-static void runnerLogic(int64_t elapsedUS);
-static void spawnObstacle(ObstacleType_t type, int idx);
-static void updateObstacle(obstacle_t* obs, int64_t elapsedUs);
-static void trySpawnObstacle(void);
+static void runnerLogic(int64_t elapsedUs);
+static void handleObstacles(int64_t elapsedUs);
+static void increaseDifficulty(int64_t elapsedUs);
 
 // Drawing functions
+static void drawSplash(int64_t elapsedUs);
 static void drawWindow(int xCoord);
 static void drawObstacles(int64_t elapsedUs);
 static void drawPlayer(int64_t elapsedUs);
@@ -179,67 +191,53 @@ runnerData_t* rd;
 
 static void runnerEnterMode()
 {
-    rd = (runnerData_t*)heap_caps_calloc(1, sizeof(runnerData_t), MALLOC_CAP_8BIT);
-
-    // Load all robot WSGs
+    rd             = (runnerData_t*)heap_caps_calloc(1, sizeof(runnerData_t), MALLOC_CAP_8BIT);
     rd->robot.imgs = heap_caps_calloc(ARRAY_SIZE(robotImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(robotImages); idx++)
     {
         loadWsg(robotImages[idx], &rd->robot.imgs[idx], true);
     }
-
-    // Useful for loading a lot of sprites into one place.
     rd->obstacleImgs = heap_caps_calloc(ARRAY_SIZE(obstacleImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
     {
         loadWsg(obstacleImages[idx], &rd->obstacleImgs[idx], true);
     }
+    loadFont(RODIN_EB_FONT, &rd->titleFont, true);
 
-    // Load BGM
     loadMidiFile(CHOWA_RACE_MID, &rd->bgm, true);
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     player->loop         = true;
     midiGmOn(player);
     globalMidiPlayerSetVolume(MIDI_BGM, 12);
     globalMidiPlayerPlaySong(&rd->bgm, MIDI_BGM);
-
-    // Init SFX
     rd->sfxPlayer = globalMidiPlayerGet(MIDI_SFX);
     midiGmOn(rd->sfxPlayer);
     midiPause(rd->sfxPlayer, false);
-
-    // Initialize the obstacles so we don't accidentally call unloaded data.
-    for (int idx = 0; idx < MAX_OBSTACLES; idx++)
-    {
-        rd->obstacles[idx].active = false;
-    }
-
-    // Initialize the high score
-    if (!readNvs32(roboRunnerNVSKey, &rd->prevScore))
-    {
-        rd->prevScore = 0;
-    }
-
-    resetGame();
-
-    // Initializer windows
     for (int idx = 0; idx < WINDOW_COUNT; idx++)
     {
         rd->windowXCoords[idx] = idx * (TFT_WIDTH + 4 * WINDOW_BORDER + WINDOW_BORDER) / WINDOW_COUNT;
     }
-
-    // Set Robot's rect
+    for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+    {
+        rd->obstacles[idx].active      = false;
+        rd->obstacles[idx].rect.height = 24;
+        rd->obstacles[idx].rect.width  = 12;
+    }
     rd->robot.rect.height = rd->robot.imgs[0].h - HBOX_HEIGHT;
     rd->robot.rect.width  = rd->robot.imgs[0].w - HBOX_WIDTH;
     rd->robot.rect.pos.x  = PLAYER_X;
+    if (!readNvs32(roboRunnerNVSKey, &rd->prevScore))
+    {
+        rd->prevScore = 0;
+    }
+    rd->state = SPLASH;
 }
 
 static void runnerExitMode()
 {
     globalMidiPlayerStop(MIDI_BGM);
     unloadMidiFile(&rd->bgm);
-
-    // Remember to de-allocate whatever you use!
+    freeFont(&rd->titleFont);
     for (int idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
     {
         freeWsg(&rd->obstacleImgs[idx]);
@@ -257,43 +255,96 @@ static void runnerMainLoop(int64_t elapsedUs)
 {
     // Check input
     buttonEvt_t evt;
-    while (checkButtonQueueWrapper(&evt))
+    switch (rd->state)
     {
-        if (evt.down)
+        case SPLASH:
         {
-            if (rd->robot.dead)
+            while (checkButtonQueueWrapper(&evt))
             {
-                resetGame();
+                if (evt.down)
+                {
+                    rd->state = RUNNING;
+                    resetGame();
+                }
             }
-            else if ((evt.button & PB_A || evt.button & PB_UP) && rd->robot.onGround)
+            drawSplash(elapsedUs);
+            break;
+        }
+        case RUNNING:
+        default:
+        {
+            while (checkButtonQueueWrapper(&evt))
             {
-                rd->robot.ySpeed   = JUMP_HEIGHT;
-                rd->robot.onGround = false;
+                if (evt.down)
+                {
+                    if (rd->robot.dead)
+                    {
+                        if (evt.button & PB_A)
+                        {
+                            resetGame();
+                        }
+                        else if (evt.button & PB_B)
+                        {
+                            rd->state = RUNNING;
+                        }
+                    }
+                    else if ((evt.button & PB_A || evt.button & PB_UP) && rd->robot.onGround)
+                    {
+                        rd->robot.ySpeed   = JUMP_HEIGHT;
+                        rd->robot.onGround = false;
+                    }
+                }
             }
+            runnerLogic(elapsedUs);
+            draw(elapsedUs);
+            break;
         }
     }
+}
 
-    // Update player position
-    runnerLogic(elapsedUs);
+// Logic
 
-    // Update obstacles
+static void resetGame()
+{
+    // Initialize the obstacles
+    for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+    {
+        rd->obstacles[idx].active     = false;
+        rd->obstacles[idx].rect.pos.x = -rd->obstacleImgs[0].w;
+    }
+    if (rd->prevScore < rd->score)
+    {
+        rd->prevScore = rd->score;
+        writeNvs32(roboRunnerNVSKey, rd->score);
+    }
+    rd->remainingTime       = 0;
+    rd->score               = 0;
+    rd->spawnRate           = SPAWN_RATE_BASE;
+    rd->spawnRateTimer      = 0;
+    rd->speedDivisor        = SPEED_BASE;
+    rd->speedDivisorTimer   = 0;
+    rd->currentMaxObstacles = START_OBSTACLES;
+    rd->maxObstacleTimer    = 0;
+    rd->robot.animIdx       = 0;
+    rd->robot.dead          = false;
+}
+
+static void runnerLogic(int64_t elapsedUs)
+{
+    rd->robot.rect.pos.y += rd->robot.ySpeed;
+    rd->robot.ySpeed += Y_ACCEL;
+    if (rd->robot.rect.pos.y > PLAYER_GROUND_OFFSET)
+    {
+        rd->robot.onGround   = true;
+        rd->robot.rect.pos.y = PLAYER_GROUND_OFFSET;
+        rd->robot.ySpeed     = 0;
+    }
     if (!rd->robot.dead)
     {
-        for (int idx = 0; idx < MAX_OBSTACLES; idx++)
-        {
-            // Update the obstacle
-            updateObstacle(&rd->obstacles[idx], elapsedUs);
-
-            // Check for a collision
-            vec_t colVec;
-            if (rd->obstacles[idx].active && rectRectIntersection(rd->robot.rect, rd->obstacles[idx].rect, &colVec))
-            {
-                midiNoteOn(rd->sfxPlayer, 9, HIGH_TOM, 0x7F);
-                rd->robot.dead    = true;
-                rd->robot.animIdx = 0;
-            }
-        }
-        trySpawnObstacle();
+        // Move/spawn obstacles
+        handleObstacles(elapsedUs);
+        // Increase difficulty
+        increaseDifficulty(elapsedUs);
         // Update score
         rd->remainingTime += elapsedUs;
         while (rd->remainingTime > SCORE_MOD)
@@ -302,7 +353,68 @@ static void runnerMainLoop(int64_t elapsedUs)
             rd->score++;
         }
     }
+}
 
+static void handleObstacles(int64_t elapsedUs)
+{
+    for (int idx = 0; idx < rd->currentMaxObstacles; idx++)
+    {
+        if (rd->obstacles[idx].active)
+        {
+            int moveTiming = SPEED_NUMERATOR / rd->speedDivisor;
+            int64_t time   = elapsedUs;
+            while (time > moveTiming)
+            {
+                time -= moveTiming;
+                rd->obstacles[idx].rect.pos.x -= 1;
+            }
+            vec_t colVec;
+            if (rd->obstacles[idx].active && rectRectIntersection(rd->robot.rect, rd->obstacles[idx].rect, &colVec))
+            {
+                midiNoteOn(rd->sfxPlayer, 9, HIGH_TOM, 0x7F);
+                rd->robot.dead    = true;
+                rd->robot.animIdx = 0;
+            }
+            if (rd->obstacles[idx].rect.pos.x < -rd->obstacleImgs[0].w)
+            {
+                rd->obstacles[idx].active = false;
+                rd->score += 50;
+            }
+        }
+    }
+    bool spawn = (esp_random() % rd->spawnRate) == 0;
+    if (spawn)
+    {
+        for (int idx = 0; idx < rd->currentMaxObstacles; idx++)
+        {
+            if (!rd->obstacles[idx].active)
+            {
+                rd->obstacles[idx].active     = true;
+                rd->obstacles[idx].rect.pos.x = TFT_WIDTH;
+                switch (esp_random() % NUM_OBSTACLE_TYPES)
+                {
+                    case BARREL:
+                    default:
+                    {
+                        rd->obstacles[idx].rect.pos.y = BARREL_GROUND_OFFSET;
+                        rd->obstacles[idx].t          = BARREL;
+                        break;
+                    }
+                    case LAMP:
+                    {
+                        rd->obstacles[idx].rect.pos.y = CEILING_HEIGHT;
+                        rd->obstacles[idx].t          = LAMP;
+                        break;
+                    }
+                }
+                return;
+            }
+        }
+    }
+}
+
+static void increaseDifficulty(int64_t elapsedUs)
+{
     // Adjust spawn rate
     rd->spawnRateTimer += elapsedUs;
     if (rd->spawnRateTimer > SPAWN_RATE_TIMER && rd->spawnRate > 1)
@@ -326,130 +438,44 @@ static void runnerMainLoop(int64_t elapsedUs)
         rd->currentMaxObstacles++;
         rd->maxObstacleTimer = 0;
     }
-
-    // Draw screen
-    draw(elapsedUs);
-}
-
-static void resetGame()
-{
-    // Initialize the obstacles
-    for (int idx = 0; idx < MAX_OBSTACLES; idx++)
-    {
-        rd->obstacles[idx].active     = false;
-        rd->obstacles[idx].rect.pos.x = -40;
-    }
-    if (rd->prevScore < rd->score)
-    {
-        rd->prevScore = rd->score;
-        writeNvs32(roboRunnerNVSKey, rd->score);
-    }
-    rd->remainingTime       = 0;
-    rd->score               = 0;
-    rd->spawnRate           = SPAWN_RATE_BASE;
-    rd->spawnRateTimer      = 0;
-    rd->speedDivisor        = SPEED_BASE;
-    rd->speedDivisorTimer   = 0;
-    rd->currentMaxObstacles = START_OBSTACLES;
-    rd->maxObstacleTimer    = 0;
-    rd->robot.animIdx       = 0;
-    rd->robot.dead          = false;
-}
-
-static void runnerLogic(int64_t elapsedUS)
-{
-    rd->robot.rect.pos.y += rd->robot.ySpeed;
-    rd->robot.ySpeed += Y_ACCEL;
-    if (rd->robot.rect.pos.y > PLAYER_GROUND_OFFSET)
-    {
-        rd->robot.onGround   = true;
-        rd->robot.rect.pos.y = PLAYER_GROUND_OFFSET;
-        rd->robot.ySpeed     = 0;
-    }
-}
-
-static void spawnObstacle(ObstacleType_t type, int idx)
-{
-    // Change this obstacle to active only if not already active, and abort if not.
-    if (rd->obstacles[idx].active)
-    {
-        return;
-    }
-    // Might want to be more explicit
-    rd->obstacles[idx].active = true;
-
-    // Set data that's not going to change
-    rd->obstacles[idx].rect.pos.x = TFT_WIDTH;
-
-    // Set box size
-    // Note that both my obstacles are the same size, so changing it at all is redundant
-    // Since they only need to be set once, we can even move them to the initialization step
-    // If they were different, we could put them below and adjust based on the specific requirements.
-    rd->obstacles[idx].rect.height = 24;
-    rd->obstacles[idx].rect.width  = 12;
-    rd->obstacles[idx].t           = type;
-
-    // Switch based on type
-    switch (type)
-    {
-        case BARREL:
-        default:
-        {
-            // Set Y position
-            rd->obstacles[idx].rect.pos.y = BARREL_GROUND_OFFSET;
-            break;
-        }
-        case LAMP:
-        {
-            // Set y position
-            rd->obstacles[idx].rect.pos.y = CEILING_HEIGHT; // 0 is the top of the screen
-            break;
-        }
-    }
-}
-
-static void updateObstacle(obstacle_t* obs, int64_t elapsedUs)
-{
-    // Ditch if not active
-    if (!obs->active)
-    {
-        return;
-    }
-
-    // Set value to subtract
-    int moveSpeed = SPEED_NUMERATOR / rd->speedDivisor;
-    while (elapsedUs > moveSpeed)
-    {
-        elapsedUs -= moveSpeed; // This ensures we don't get locked into a loop
-        obs->rect.pos.x -= 1;   // Each time the loop executes, subtract 1
-    }
-
-    // If the obstacle is off-screen, disable it
-    if (obs->rect.pos.x < -40)
-    {
-        obs->active = false;
-        rd->score += 50;
-    }
-}
-
-static void trySpawnObstacle()
-{
-    // Get a random number to try
-    bool spawn = (esp_random() % rd->spawnRate) == 0;
-    if (spawn)
-    {
-        for (int idx = 0; idx < rd->currentMaxObstacles; idx++)
-        {
-            if (!rd->obstacles[idx].active) // If the obstacle is already being used, we don't want set it!
-            {
-                spawnObstacle(esp_random() % NUM_OBSTACLE_TYPES, idx);
-                return; // Exits function to stop it filling every slot
-            }
-        }
-    }
 }
 
 // Draw functions
+static void drawSplash(int64_t elapsedUs)
+{
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c112);
+    drawLine(0, GROUND_HEIGHT, TFT_WIDTH, GROUND_HEIGHT, c555, 0);
+    drawLine(0, CEILING_HEIGHT, TFT_WIDTH, CEILING_HEIGHT, c555, 0);
+    for (int idx = 0; idx < 4; idx++)
+    {
+        drawWindow((idx * TFT_WIDTH / 4) + 20);
+    }
+    drawWsgSimple(&rd->obstacleImgs[3], 200, CEILING_HEIGHT);
+    rd->attractToggle += elapsedUs;
+    if (rd->attractToggle < 300000)
+    {
+        drawWsgSimple(&rd->obstacleImgs[0], 120, BARREL_GROUND_OFFSET);
+    }
+    else if (rd->attractToggle < 600000)
+    {
+        drawWsgSimple(&rd->obstacleImgs[1], 120, BARREL_GROUND_OFFSET);
+    }
+    else
+    {
+        drawWsgSimple(&rd->obstacleImgs[2], 120, BARREL_GROUND_OFFSET);
+    }
+    drawText(&rd->titleFont, c550, "ROBO", 32, 55);
+    drawText(&rd->titleFont, c550, "RUNNER", 32, 80);
+    if (rd->attractToggle > 1000000)
+    {
+        rd->attractToggle = 0;
+    }
+    else if (rd->attractToggle > 500000)
+    {
+        drawText(getSysFont(), c555, "Press any button to continue", 32, TFT_HEIGHT - 32);
+    }
+}
+
 static void drawWindow(int xCoord)
 {
     fillDisplayArea(xCoord, WINDOW_HEIGHT, xCoord + WINDOW_PANE, WINDOW_HEIGHT + WINDOW_PANE, c035);
