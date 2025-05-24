@@ -192,6 +192,10 @@ typedef struct
 
     // Swadgepass
     nameData_t remotePlayer;
+
+    // LEDs
+    led_t leds[CONFIG_NUM_LEDS];
+    int ledAnimIdx;
 } runnerData_t;
 
 //==============================================================================
@@ -218,6 +222,9 @@ static void draw(int64_t elapsedUs);
 // SwadgePass
 static void roboRunnerPacket(swadgePassPacket_t* packet);
 static int32_t getLatestRemoteScore(void);
+
+// LEDs
+static void updateLEDs(int idx);
 
 //==============================================================================
 // Variables
@@ -401,6 +408,7 @@ static void resetGame()
     rd->robot.dead          = false;
     rd->feetTraveled        = 0;
     rd->feetTraveledTimer   = 0;
+    updateLEDs(-1);
 }
 
 static void runnerLogic(int64_t elapsedUs)
@@ -433,6 +441,7 @@ static void runnerLogic(int64_t elapsedUs)
             rd->feetTraveledTimer -= 30 * SPEED_NUMERATOR / rd->speedDivisor;
             rd->feetTraveled++;
         }
+        updateLEDs((rd->feetTraveled >> 1) % 6);
     }
 }
 
@@ -567,7 +576,7 @@ static void drawSplash(int64_t elapsedUs)
     if (true)
     {
         char buffer[64];
-        snprintf(buffer, sizeof(buffer) - 1, "High Score: %" PRId32, rd->otherHS);
+        snprintf(buffer, sizeof(buffer) - 1, "High Score: %" PRId16, rd->otherHS);
         drawText(getSysFont(), c555, buffer, 32, TFT_HEIGHT - 32);
         // FIXME: Display name once that's passed through swadgepass
         snprintf(buffer, sizeof(buffer) - 1, "By: %s", rd->remotePlayer.nameBuffer);
@@ -736,4 +745,58 @@ static int32_t getLatestRemoteScore()
         spNode = spNode->next;
     }
     return val;
+}
+
+// LEDs
+static void updateLEDs(int idx)
+{
+    for (int idx = 0; idx < CONFIG_NUM_LEDS; idx++)
+    {
+        led_t led     = {0};
+        rd->leds[idx] = led;
+    }
+    switch (idx)
+    {
+        case 0:
+        {
+            rd->leds[1].b = 255;
+            rd->leds[8].b = 255;
+            break;
+        }
+        case 1:
+        {
+            rd->leds[1].b = 255;
+            rd->leds[0].b = 255;
+            break;
+        }
+        case 2:
+        {
+            rd->leds[2].b = 255;
+            rd->leds[7].b = 255;
+            break;
+        }
+        case 3:
+        {
+            rd->leds[2].b = 255;
+            rd->leds[6].b = 255;
+            break;
+        }
+        case 4:
+        {
+            rd->leds[3].b = 255;
+            rd->leds[4].b = 255;
+            break;
+        }
+        case 5:
+        {
+            rd->leds[3].b = 255;
+            rd->leds[5].b = 255;
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+    setLeds(rd->leds, CONFIG_NUM_LEDS);
 }
