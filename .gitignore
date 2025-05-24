@@ -62,7 +62,9 @@ docs/*.pu
 
 .vscode/c_cpp_properties.json
 .vscode/settings.json
+.idea
 
+.assets_ts
 assets_image
 managed_components
 nvs.json

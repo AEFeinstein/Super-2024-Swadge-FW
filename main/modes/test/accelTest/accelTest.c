@@ -158,7 +158,7 @@ static void accelTestEnterMode(void)
     accelTest = heap_caps_calloc(1, sizeof(accelTest_t), MALLOC_CAP_8BIT);
 
     // Load a font
-    loadFont("ibm_vga8.font", &accelTest->ibm, false);
+    loadFont(IBM_VGA_8_FONT, &accelTest->ibm, false);
 
     // writeTextlabels doesn't get reset by accelTestReset(), so initialize that here
     accelTest->writeTextLabels = true;
