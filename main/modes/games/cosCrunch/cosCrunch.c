@@ -60,6 +60,7 @@ static void cosCrunchEnterMode(void);
 static void cosCrunchExitMode(void);
 static void cosCrunchMenu(const char* label, bool selected, uint32_t value);
 static void cosCrunchMainLoop(int64_t elapsedUs);
+static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void cosCrunchDrawTimer(void);
 
 swadgeMode_t cosCrunchMode = {
@@ -73,7 +74,7 @@ swadgeMode_t cosCrunchMode = {
     .fnExitMode               = cosCrunchExitMode,
     .fnMainLoop               = cosCrunchMainLoop,
     .fnAudioCallback          = NULL,
-    .fnBackgroundDrawCallback = NULL,
+    .fnBackgroundDrawCallback = cosCrunchBackgroundDrawCallback,
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
@@ -198,8 +199,6 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
 
         case CC_MICROGAME_RUNNING:
         {
-            drawWsgTile(&cc->wsg.background, 0, 0);
-
             cc->activeMicrogame.stateElapsedUs += elapsedUs;
 
             switch (cc->activeMicrogame.state)
@@ -258,8 +257,6 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
 
         case CC_GAME_OVER:
         {
-            drawWsgTile(&cc->wsg.background, 0, 0);
-
             uint16_t tw = textWidth(&cc->big_font, cosCrunchGameOverTitle);
             drawText(&cc->big_font, c555, cosCrunchGameOverTitle, (TFT_WIDTH - tw) / 2, 60);
 
@@ -267,6 +264,28 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             drawText(&cc->font, c555, cosCrunchGameOverMessage, (TFT_WIDTH - tw) / 2, 150);
             break;
         }
+    }
+}
+
+static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
+{
+    switch (cc->state)
+    {
+        case CC_MICROGAME_RUNNING:
+        case CC_GAME_OVER:
+        {
+            paletteColor_t* tftFb = getPxTftFramebuffer();
+            for (int16_t row = y; row < y + h; row++)
+            {
+                memcpy(&tftFb[row * TFT_WIDTH + x], &cc->wsg.background.px[row * TFT_WIDTH + x],
+                       w * sizeof(paletteColor_t));
+            }
+            break;
+        }
+
+        case CC_MENU:
+        case CC_MICROGAME_PENDING: // Nothing is drawn while loading a microgame, so don't blank the screen then
+            break;
     }
 }
 
