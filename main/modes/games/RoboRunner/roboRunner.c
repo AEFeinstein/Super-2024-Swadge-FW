@@ -4,6 +4,7 @@
 
 #include "roboRunner.h"
 #include "geometry.h"
+#include "nameList.h"
 
 //==============================================================================
 // Defines
@@ -164,6 +165,7 @@ typedef struct
     int32_t score;         // Current score
     int32_t prevScore;     // Previous high score
     int64_t remainingTime; // Time left over after we've added points
+    int32_t otherHS;       // High score form other swadges
 
     // Difficulty
     int spawnRate;             // 1 / spawnRate per frame
@@ -187,6 +189,9 @@ typedef struct
     int64_t feetTraveledTimer;
     int32_t feetTraveledTotal;
     int32_t deaths;
+
+    // Swadgepass
+    nameData_t remotePlayer;
 } runnerData_t;
 
 //==============================================================================
@@ -210,6 +215,10 @@ static void drawObstacles(int64_t elapsedUs);
 static void drawPlayer(int64_t elapsedUs);
 static void draw(int64_t elapsedUs);
 
+// SwadgePass
+static void roboRunnerPacket(swadgePassPacket_t* packet);
+static int32_t getLatestRemoteScore(void);
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -227,16 +236,17 @@ trophyDataList_t runnerTrophyData = {
 };
 
 swadgeMode_t roboRunnerMode = {
-    .modeName          = runnerModeName,
-    .wifiMode          = NO_WIFI,
-    .overrideUsb       = false,
-    .usesAccelerometer = false,
-    .usesThermometer   = false,
-    .overrideSelectBtn = false,
-    .fnEnterMode       = runnerEnterMode,
-    .fnExitMode        = runnerExitMode,
-    .fnMainLoop        = runnerMainLoop,
-    .trophyData        = &runnerTrophyData,
+    .modeName                = runnerModeName,
+    .wifiMode                = NO_WIFI,
+    .overrideUsb             = false,
+    .usesAccelerometer       = false,
+    .usesThermometer         = false,
+    .overrideSelectBtn       = false,
+    .fnEnterMode             = runnerEnterMode,
+    .fnExitMode              = runnerExitMode,
+    .fnMainLoop              = runnerMainLoop,
+    .trophyData              = &runnerTrophyData,
+    .fnAddToSwadgePassPacket = roboRunnerPacket,
 };
 
 runnerData_t* rd;
@@ -285,6 +295,11 @@ static void runnerEnterMode()
     {
         rd->prevScore = 0;
     }
+    // SwadgePass
+    rd->otherHS           = getLatestRemoteScore();
+    rd->remotePlayer.user = false;
+    generateRandUsername(&rd->remotePlayer);
+    // Trophy
     rd->feetTraveledTotal = trophyGetSavedValue(roboRunnerTrophies[1]);
     rd->deaths            = trophyGetSavedValue(roboRunnerTrophies[2]);
     rd->state             = SPLASH;
@@ -445,7 +460,7 @@ static void handleObstacles(int64_t elapsedUs)
                 trophyUpdateMilestone(roboRunnerTrophies[3], rd->feetTraveled, 10);
                 trophyUpdateMilestone(roboRunnerTrophies[2], ++rd->deaths, 25);
                 trophyUpdateMilestone(roboRunnerTrophies[1], rd->feetTraveledTotal, 10);
-                if(DEV_HIGH_SCORE <= rd->score)
+                if (DEV_HIGH_SCORE <= rd->score)
                 {
                     trophyUpdate(roboRunnerTrophies[0], 1, true);
                 }
@@ -547,7 +562,16 @@ static void drawSplash(int64_t elapsedUs)
     }
     else if (rd->attractToggle > 500000)
     {
-        drawText(getSysFont(), c555, "Press any button to continue", 32, TFT_HEIGHT - 32);
+        drawText(getSysFont(), c555, "Press any button to continue", 32, TFT_HEIGHT - 48);
+    }
+    if (true)
+    {
+        char buffer[64];
+        snprintf(buffer, sizeof(buffer) - 1, "High Score: %d", rd->otherHS);
+        drawText(getSysFont(), c555, buffer, 32, TFT_HEIGHT - 32);
+        // FIXME: Display name once that's passed through swadgepass
+        snprintf(buffer, sizeof(buffer) - 1, "By: %s", rd->remotePlayer.nameBuffer);
+        drawText(getSysFont(), c555, buffer, 32, TFT_HEIGHT - 16);
     }
 }
 
@@ -682,6 +706,34 @@ static void draw(int64_t elapsedUs)
     {
         drawText(getSysFont(), c555, strings[2], 16, (TFT_HEIGHT - (getSysFont()->height + 60)) >> 1);
     }
+}
 
-    
+// SwadgePass
+static void roboRunnerPacket(swadgePassPacket_t* packet)
+{
+    int score = 0;
+    readNvs32(roboRunnerNVSKey, &score);
+    packet->roboRunner.highScore = score;
+}
+
+static int32_t getLatestRemoteScore()
+{
+    // Get all SwadgePasses, including used ones
+    list_t spList = {0};
+    getSwadgePasses(&spList, &roboRunnerMode, false);
+    // Iterate through the list
+    node_t* spNode = spList.first;
+    int32_t val    = 0;
+    while (spNode)
+    {
+        swadgePassData_t* spd = (swadgePassData_t*)spNode->val;
+        ESP_LOGI("SP", "Receive from %s. Preamble is %d", spd->key, spd->data.packet.preamble);
+        setPacketUsedByMode(spd, &roboRunnerMode, true);
+        if (val < spd->data.packet.roboRunner.highScore)
+        {
+            val = spd->data.packet.roboRunner.highScore;
+        }
+        spNode = spNode->next;
+    }
+    return val;
 }
