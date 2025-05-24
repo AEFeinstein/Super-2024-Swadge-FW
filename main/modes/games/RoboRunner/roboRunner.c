@@ -372,6 +372,8 @@ static void runnerMainLoop(int64_t elapsedUs)
                         rd->robot.ySpeed   = JUMP_HEIGHT;
                         rd->robot.onGround = false;
                     }
+                } else if ((evt.button & PB_A || evt.button & PB_UP) && rd->robot.ySpeed < JUMP_HEIGHT / 2) {
+                    rd->robot.ySpeed = JUMP_HEIGHT / 2;
                 }
             }
             runnerLogic(elapsedUs);
