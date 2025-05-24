@@ -520,7 +520,7 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
     int16_t xspeed = TO_PIXEL_COORDS(self->xspeed);
     int16_t yspeed = TO_PIXEL_COORDS(self->yspeed);
 
-    int16_t offX, offY, tempX, tempY, tempE, tempTx, tempTy, tempNtx, tempNty, tempT, newX, newY;
+    int16_t offX, offY, tempX, tempY, tempTx, tempTy, tempT, newX, newY, onGround;
 
     newX = 0;
     newY = 0;
@@ -530,7 +530,7 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
             offX = PL_TILE_COLLISION_OFFSETS_1x2_RIGHT_EDGE[(i*2) + 0];
             offY = PL_TILE_COLLISION_OFFSETS_1x2_RIGHT_EDGE[(i*2) + 1];
             tempX = x + offX + xspeed;
-            tempY = y + offY;// + yspeed;
+            tempY = y + offY;
 
             tempTx = PL_TO_TILECOORDS(tempX);
             tempTy = PL_TO_TILECOORDS(tempY);
@@ -549,7 +549,7 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
             offX = PL_TILE_COLLISION_OFFSETS_1x2_LEFT_EDGE[(i*2) + 0];
             offY = PL_TILE_COLLISION_OFFSETS_1x2_LEFT_EDGE[(i*2) + 1];
             tempX = x + offX + xspeed;
-            tempY = y + offY;// + yspeed;
+            tempY = y + offY;
 
             tempTx = PL_TO_TILECOORDS(tempX);
             tempTy = PL_TO_TILECOORDS(tempY);
@@ -569,7 +569,7 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
         for(int i=0; i<3; i++){
             offX = PL_TILE_COLLISION_OFFSETS_1x2_BOTTOM_EDGE[(i*2) + 0];
             offY = PL_TILE_COLLISION_OFFSETS_1x2_BOTTOM_EDGE[(i*2) + 1];
-            tempX = x + offX; //+ xspeed;
+            tempX = x + offX;
             tempY = y + offY + yspeed;
 
             tempTx = PL_TO_TILECOORDS(tempX);
@@ -581,14 +581,14 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
             tempT = pl_getTile(self->tilemap, tempTx, tempTy);
             
             if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 2 << (self->yspeed > 0))){
-                newY = ((tempTy) << PL_TILESIZE_IN_POWERS_OF_2) /*+ PL_HALF_TILESIZE*/ - offY;
+                newY = ((tempTy) << PL_TILESIZE_IN_POWERS_OF_2) - offY;
             }
         }
     } else if(self->yspeed < 0){
         for(int i=0; i<3; i++){
             offX = PL_TILE_COLLISION_OFFSETS_1x2_TOP_EDGE[(i*2) + 0];
             offY = PL_TILE_COLLISION_OFFSETS_1x2_TOP_EDGE[(i*2) + 1];
-            tempX = x + offX; //+ xspeed;
+            tempX = x + offX;
             tempY = y + offY + yspeed;
 
             tempTx = PL_TO_TILECOORDS(tempX);
@@ -600,17 +600,33 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
             tempT = pl_getTile(self->tilemap, tempTx, tempTy);
             
             if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 2 << (self->yspeed > 0))){
-                newY = ((tempTy+1) << PL_TILESIZE_IN_POWERS_OF_2) /*+ PL_HALF_TILESIZE;*/ - offY;
+                newY = ((tempTy+1) << PL_TILESIZE_IN_POWERS_OF_2) - offY;
             }
         }
-    }
+    } else if (!self->falling) {
+        onGround = false;
+
+        for(int i=0; i<3; i++){
+            offX = PL_TILE_COLLISION_OFFSETS_1x2_BOTTOM_EDGE[(i*2) + 0];
+            offY = PL_TILE_COLLISION_OFFSETS_1x2_BOTTOM_EDGE[(i*2) + 1];
+            tempX = x + offX;
+            tempY = y + offY + 1;
+
+            tempTx = PL_TO_TILECOORDS(tempX);
+            tempTy = PL_TO_TILECOORDS(tempY);
+
+             tempT = pl_getTile(self->tilemap, tempTx, tempTy);
+            
+            if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 2 << (1))){
+                onGround = true;
+            }
+        }
+
+        self->falling = !onGround;
+    }    
 
     self->x = newX ? TO_SUBPIXEL_COORDS(newX) : self->x+self->xspeed;
     self->y = newY ? TO_SUBPIXEL_COORDS(newY) : self->y+self->yspeed;
-
-    if(newX) {
-        //self->xspeed = 0;
-    }
 
     if(newY) {
         self->yspeed = 0;
@@ -1093,19 +1109,22 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
             }
             break;
         }
-        /*case PL_TILECOIN_1 ... PL_TILECOIN_3:
+        case PL_TILE_COIN_1 ... PL_TILE_COIN_3:
         {
-            pl_setTile(self->tilemap, tx, ty, PL_TILEEMPTY);
+            pl_setTile(self->tilemap, tx, ty, PL_TILE_EMPTY);
             addCoins(self->gameData, 1);
             pl_scorePoints(self->gameData, 50);
             break;
         }
-        case PL_TILELADDER:
+        case PL_TILE_LADDER:
         {
-            self->gravityEnabled = false;
-            self->falling = false;
+            if (self->gravityEnabled)
+            {
+                self->gravityEnabled = false;
+                self->xspeed         = 0;
+            }
             break;
-        }*/
+        }
         default:
         {
             break;
