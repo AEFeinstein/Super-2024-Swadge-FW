@@ -134,7 +134,7 @@ static void runnerEnterMode()
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     player->loop         = true;
     midiGmOn(player);
-    //globalMidiPlayerPlaySong(&rd->bgm, MIDI_BGM);
+    globalMidiPlayerPlaySong(&rd->bgm, MIDI_BGM);
 
     // Init SFX
     rd->sfxPlayer = globalMidiPlayerGet(MIDI_SFX);

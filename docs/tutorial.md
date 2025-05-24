@@ -2000,6 +2000,8 @@ midiNoteOn(rd->sfxPlayer, 9, HIGH_BONGO, 0x7F);
 
 Because this is the percussion instrument channel 10 (number 9, second argument) we can just play and it'll stop byu itself. Individual notes are more complicated.
 
+***NOTE:*** Midi system is undergoing upgrades to make it more user-friendly. This tutorial will be updated when that happens.
+
 ## Animations
 
 - Microsecond based vs frame based
