@@ -67,9 +67,9 @@ typedef struct
     const char* verb;
 
     /**
-     * @brief How long the player has until they fail the microgame, in seconds.
+     * @brief How long the player has until they fail the microgame, in microseconds.
      */
-    uint8_t timeoutSeconds;
+    uint64_t timeoutUs;
 
     /**
      * @brief This function is called when this microgame is about to be started. It should initialize variables and
