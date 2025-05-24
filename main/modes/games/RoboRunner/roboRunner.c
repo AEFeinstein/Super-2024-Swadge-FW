@@ -65,6 +65,10 @@ static const cnfsFileIdx_t robotImages[] = {
     ROBO_DEAD_WSG,
 };
 
+static const char* const strings[] = {
+    "ROBO", "RUNNER", "Game over! Press A to play again.",
+};
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -464,8 +468,8 @@ static void drawSplash(int64_t elapsedUs)
     {
         drawWsgSimple(&rd->obstacleImgs[2], 120, BARREL_GROUND_OFFSET);
     }
-    drawText(&rd->titleFont, c550, "ROBO", 32, 55);
-    drawText(&rd->titleFont, c550, "RUNNER", 32, 80);
+    drawText(&rd->titleFont, c550, strings[0], 32, 55);
+    drawText(&rd->titleFont, c550, strings[1], 32, 80);
     if (rd->attractToggle > 1000000)
     {
         rd->attractToggle = 0;
@@ -599,4 +603,9 @@ static void draw(int64_t elapsedUs)
     drawText(getSysFont(), c555, buffer, 32, 4);
     snprintf(buffer, sizeof(buffer) - 1, "High score: %" PRIu32, rd->prevScore);
     drawText(getSysFont(), c555, buffer, 32, 20);
+
+    if (rd->robot.dead)
+    {
+        drawText(getSysFont(), c555, strings[2], 16, (TFT_HEIGHT - (getSysFont()->height + 60)) >> 1);
+    }
 }
