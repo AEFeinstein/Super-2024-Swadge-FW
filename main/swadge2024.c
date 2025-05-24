@@ -103,6 +103,7 @@
  *     - fs_json.h: Load JSON
  *     - fs_txt.h: Load plaintext
  *     - midiFileParser.h: Load MIDI files
+ * - assets_preprocessor.h: Learn how to define a new asset file type processor for CNFS
  * - settingsManager.h: Set and get persistent settings for things like screen brightness
  *
  * \subsection gr_api Graphics APIs

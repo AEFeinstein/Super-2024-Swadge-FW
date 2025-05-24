@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,47 +10,51 @@
 #include "fileUtils.h"
 #include "heatshrink_util.h"
 
-#define JSON_COMPRESSION
+bool process_json(processorInput_t* arg);
 
-void process_json(const char* infile, const char* outdir)
+const assetProcessor_t jsonProcessor = {
+    .name     = "json",
+    .type     = FUNCTION,
+    .function = process_json,
+    .inFmt    = FMT_TEXT,
+    .outFmt   = FMT_FILE_BIN,
+};
+
+bool process_json(processorInput_t* arg)
 {
-    /* Determine if the output file already exists */
-    char outFilePath[128] = {0};
-    strcat(outFilePath, outdir);
-    strcat(outFilePath, "/");
-    strcat(outFilePath, get_filename(infile));
+    // Parse the JSON to make sure it's valid
+    cJSON* json = cJSON_Parse(arg->in.text);
+    if (!json)
+    {
+        fprintf(stderr, "[ERR] Invalid JSON in %s\n", arg->inFilename);
+        return false;
+    }
 
-#ifdef JSON_COMPRESSION
+    // cJSON says to allocate 5 more bytes than we actually need, so...
+    char textBuf[arg->in.textSize + 10];
+    char* jsonText = textBuf;
+    if (!cJSON_PrintPreallocated(json, textBuf, sizeof(textBuf), false))
+    {
+        fprintf(stderr, "[WRN] Unable to print JSON text; using original text\n");
+        jsonText = arg->in.text;
+    }
+
+    // Cool, it's valid, don't need it anymore!
+    cJSON_Delete(json);
+
+    // TODO should we have a way to change the output extension in general?
     /* Change the file extension */
-    char* dotptr = strrchr(outFilePath, '.');
-    snprintf(&dotptr[1], strlen(dotptr), "hjs");
-#endif
+    // char* dotptr = strrchr(outFilePath, '.');
+    // snprintf(&dotptr[1], strlen(dotptr), "hjs");
 
-    if (!isSourceFileNewer(infile, outFilePath))
+    bool compress = getBoolOption(arg->options, "json.compress", true);
+
+    if (compress)
     {
-        return;
+        return writeHeatshrinkFileHandle((uint8_t*)jsonText, strlen(jsonText), arg->out.file);
     }
-    else if (doesFileExist(outFilePath))
+    else
     {
-        printf("[assets-preprocessor] %s modified! Regenerating %s\n", infile, get_filename(outFilePath));
+        return 0 != fwrite(arg->in.text, arg->in.textSize - 1, 1, arg->out.file);
     }
-
-    /* Read input file */
-    FILE* fp = fopen(infile, "rb");
-    fseek(fp, 0L, SEEK_END);
-    long sz = ftell(fp);
-    fseek(fp, 0L, SEEK_SET);
-    char jsonInStr[sz + 1];
-    fread(jsonInStr, sz, 1, fp);
-    jsonInStr[sz] = 0;
-    fclose(fp);
-
-#ifndef JSON_COMPRESSION
-    /* Write input directly to output */
-    FILE* outFile = fopen(outFilePath, "wb");
-    fwrite(jsonInStr, sz, 1, outFile);
-    fclose(outFile);
-#else
-    writeHeatshrinkFile((uint8_t*)jsonInStr, sz, outFilePath);
-#endif
 }
