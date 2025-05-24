@@ -258,14 +258,13 @@ static void runnerMainLoop(int64_t elapsedUs)
             }
         }
         trySpawnObstacle();
-    }
-
-    // Update score
-    rd->remainingTime += elapsedUs;
-    while (rd->remainingTime > SCORE_MOD)
-    {
-        rd->remainingTime -= SCORE_MOD;
-        rd->score++;
+        // Update score
+        rd->remainingTime += elapsedUs;
+        while (rd->remainingTime > SCORE_MOD)
+        {
+            rd->remainingTime -= SCORE_MOD;
+            rd->score++;
+        }
     }
 
     // Adjust spawn rate
