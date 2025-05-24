@@ -1,4 +1,4 @@
-# How to Make a Swadge Mode
+# How to Make a Swadge Mode {#tutorial}
 
 So, you've decided you want to make a swadge mode. Maybe you went to the swadge developer panel, maybe you talked to a dev, or maybe you just picked one up and wanted to know how you actually make a game for a bespoke game console.
 

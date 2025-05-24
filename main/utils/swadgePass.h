@@ -125,7 +125,7 @@ typedef struct __attribute__((packed)) swadgePassPacket
         int8_t reactHs;
         int8_t memHs;
     } swadgeIt;
-    struct 
+    struct
     {
         uint16_t highScore;
     } roboRunner;
