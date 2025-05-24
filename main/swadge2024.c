@@ -37,6 +37,7 @@
  * -# Next, read about the basics of a Swadge Mode at swadge2024.h.
  * -# Once you understand the basics of a Swadge Mode, check out the \ref swadge_mode_example to see a simple mode in
  * action.
+ * -# Go over the \ref tutorial to see how a mode is constructed in depth
  * -# After you grasp the example, you can go deeper and read the full \ref apis to understand the full capability of
  * the Swadge firmware.
  * -# If you have any crashes on real hardware, read and use \ref serial_out to help debug the issue.
