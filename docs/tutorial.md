@@ -53,8 +53,9 @@ For those unfamiliar, the "Chrome Dino Game" is an endless runner that is built 
 
 Below, there are two images of the game:
 
-<img src="./TutorialImages/DinoPlaying.png">
-<img src="./TutorialImages/DinoDead.png">
+![Dino Playing](./TutorialImages/DinoPlaying.png)
+
+![Dino Dead](./TutorialImages/DinoDead.png)
 
 The Dino automatically runs to the side once the spacebar is pressed, and obstacles start appearing from the right of the screen. The player must press the spacebar to jump over the cacti obstacles which vary in size and avoid jumping into the pterodactyls that swoop in. As the Dino runs, it accumulates a score until it collides with an object, at which point the high score is saved and the player is prompted to try again.
 
@@ -106,13 +107,13 @@ If you've found the correct folder, the files should be shown in the side pane.
 
 ### Files
 
-<img src="./TutorialImages/files.png">
+![Files](./TutorialImages/files.png)
 
 This button will show the file system of the project. Here you can see the status of the files, open or create new files, and navigate around the project.
 
 ### Extensions
 
-<img src="./TutorialImages/extensions.png">
+![Extensions](./TutorialImages/extensions.png)
 
 Extensions provide extra functionality to VS Code. Some common ones are provide the code needed to compile the C code we're writing, spell checkers, syntax highlighters (how we get that colorful text automatically), and even tracking what we still need to get done!
 
@@ -122,13 +123,13 @@ The recommended extensions are per-project, so if you haven't loaded the correct
 
 ### Debugging
 
-<img src="./TutorialImages/debug.png">
+![Debug](./TutorialImages/debug.png)
 
 This button leads to the debug screen. When you run your code, sometimes you'll want to stop the program mid-execution to see exactly what it's doing. When you press F5, this tab automatically opens.
 
 ### Terminal
 
-<img src="./TutorialImages/TerminalScreenshot.png">
+![Terminal](./TutorialImages/TerminalScreenshot.png)
 
 The terminal is where you're going to interact with some of the core functions of the library. Don't worry, it's just typing. The terminal will also show you what errors you have, and can be used to provide information on how your mode is operation if you need.
 
@@ -183,7 +184,7 @@ We'll go over more commands as they become relevant, but below is an overview of
 
 ### Git GUI
 
-<img src="./TutorialImages/githubGUI.png">
+![Github GUI](./TutorialImages/githubGUI.png)
 
 If you'd rather use the GUI, you can press the above button in the VS Code editor and all the same functions and more are provided. You'll have to do a little exploring, but there's a lot of cool data in there! It's also helpful when resolving merge conflicts.
 
@@ -401,17 +402,17 @@ Now, we're going to have to modify a few other files. Fortunately, only two more
 
 First up, we need to tell the other modes about our mode. Open `main/modeIncludeList.h` and add our header file to the list of includes. 
 
-<img src="./TutorialImages/includeList.png">
+![Include List](./TutorialImages/includeList.png)
 
 Next, open `main/modeIncludeList.c` and add the following:
 - Inside the `allSwadgeModes[]` list, add `&roboRunnerMode,` at the end of the list before the end curly brace.
 - Add `addSingleItemToMenu(menu, roboRunnerMode.modeName);` inside one of the submenus. Whichever submenu you put this in is where it'll be in the main menu. It's best to put games in the games folder, obviously.
 
-<img src="./TutorialImages/includeList2.png">
+![Modes List](./TutorialImages/includeList2.png)
 
 Now, we can recompile and load the emulator with F5 and we'll be able to navigate to the mode and load into it!
 
-<img src="./TutorialImages/emptyScreen.png">
+![Empty Screen](./TutorialImages/emptyScreen.png)
 
 Congrats! The mode is running. It's just not doing anything, since we didn't actually provide any code for it to execute. We didn't even give it any way to handle input, so we can't even get out of it, we just need to close it down. But, it works!
 
@@ -430,8 +431,9 @@ It should fail. Why? The idf doesn't know about these new files we made. See, th
 
 Inside `main/CMakeLists.txt` you'll see two big lists: SRCS and INCLUDE_DIRS. In SRCS, add any .c files you have. In INCLUDE_DIRS, include all directories you've made. This tells CMake to look inside this folder for files and sub folders, so if you forget to add them you're not going to be able to build the program.
 
-<img src="./TutorialImages/SRCS.png">
-<img src="./TutorialImages/INCLUDE_DIRS.png">
+![SRCS](./TutorialImages/SRCS.png)
+
+![INCLUDE_DIRS](./TutorialImages/INCLUDE_DIRS.png)
 
 Save the file, and let's try again. You should see a prompt telling you how to flash a swadge now.
 
@@ -492,7 +494,7 @@ In this section, we're going to draw something to the screen.
 
 First, we need to make an image to display. I'm going to make the little robot that's gonna do the running. I prefer to use Aseprite to make images, and here's the result!
 
-<img src="./TutorialImages/roboExample.png">
+![Robo Example](./TutorialImages/roboExample.png)
 
 Did I mention I don't do art? I don't do art. Still, it's better to have this guy than nothing. 
 
@@ -619,7 +621,7 @@ We pass in three arguments:
 
 The Swadge draws images assuming the top left corner is the start. For our example, the top left corner will be located at 32 pixels across, 32 pixels down resulting in the following once we press F5 and load up the new mode:
 
-<img src="./TutorialImages/drawingFirstImage.png">
+![Drawing First Image](./TutorialImages/drawingFirstImage.png)
 
 Some things you'll note if you start to play with the numbers is that the corners of the screen are obscured. This is because the real screen we're using has rounded corners. The shrouded portions are roughly equivalent to the real screen. Another thing to note is that the last time the pixel is updated is what's going to be drawn. So if you want to draw text over a textbox, the box needs to be drawn first or the box will overwrite the text.
 
@@ -773,7 +775,7 @@ Lastly, let's add something into the input loop. Add `rd->ySpeed = -12;`. It's n
 
 Let's hit F5!
 
-<img src="./TutorialImages/RoboRainbow.png">
+![Robo Rainbow](./TutorialImages/RoboRainbow.png)
 
 Well, that's not right.
 
@@ -1063,7 +1065,7 @@ We've added a lot of code and nothing has changed behavior-wise. That's what ref
 
 Now we can start spawning some obstacles. I've drawn the obstacles with my expert artistic skills.
 
-<img src="./TutorialImages/Obstacles.png">
+![Obstacles](./TutorialImages/Obstacles.png)
 
 As before, art is essential to get a general feel for a game so it's not all just code, but it doesn't need to be perfect, especially at this stage. If you want to go overboard with the art, that's fine too. I lean toward the former, obviously.
 
@@ -1232,7 +1234,7 @@ for (int idx = 0; idx < MAX_OBSTACLES; idx++)
 }
 ```
 
-<img src="./TutorialImages/slowObstacles.gif">
+![Slow Obstacles](./TutorialImages/slowObstacles.gif)
 
 That turns out to be too slow. A snails pace. The actual speed will depend on the hardware, which is actually worse but we'll fix that in a bit.
 
@@ -1350,11 +1352,11 @@ for (int idx = 0; idx < MAX_OBSTACLES; idx++)
 
 And make sure to put them at the end of the draw function or the rectangles will be drawn over.
 
-<img src="./TutorialImages/badHitboxes.png">
+![Bad Hitboxes](./TutorialImages/badHitboxes.png)
 
 Alright, the two main obstacles look okay, but something's up with the robot. What did we do? The size looks about right... ah, we never set the robot's rect.pos.x. Again, we never needed to, so why bother? `rd->robot.rect.pos.x = PLAYER_X;` can be added after defining the box and we can try again.
 
-<img src="./TutorialImages/tooLargeHitbox.png">
+![Too Large Hitbox](./TutorialImages/tooLargeHitbox.png)
 
 Well, that's better, but probably going to feel very unfair. The hitbox is really big compared to the robot.
 
@@ -1385,7 +1387,7 @@ rd->robot.rect.pos.x = PLAYER_X;
 drawWsgSimple(&rd->robot.img, PLAYER_X - PLAYER_X_IMG_OFFSET, rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET);
 ```
 
-<img src="./TutorialImages/fixedHitbox.png">
+![Fixed Hitbox](./TutorialImages/fixedHitbox.png)
 
 Much better. Now, let's handle the collision instead of letting the obstacles just phase through the robot, shall we?
 
