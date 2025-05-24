@@ -18,7 +18,7 @@
  *
  * You must provide a decoder and decode space for this function
  *
- * @param fname   The name of the file to load
+ * @param fIdx    The CNFS index of the file to load
  * @param outsize A pointer to a size_t to return how much data was read
  * @param decompressedBuf Memory to store decoded data. This must be as large as the decoded data
  * @param hsd A heatshrink decoder
@@ -89,7 +89,7 @@ uint8_t* readHeatshrinkFileInplace(cnfsFileIdx_t fIdx, uint32_t* outsize, uint8_
  * Files that are in the assets_image folder before compilation and flashing
  * will automatically be included in the firmware.
  *
- * @param fname   The name of the file to load
+ * @param fIdx    The CNFS index of the file to load
  * @param outsize A pointer to a size_t to return how much data was read
  * @param readToSpiRam true to use SPI RAM, false to use normal RAM
  * @return A pointer to the read data if successful, or NULL if there is a failure
