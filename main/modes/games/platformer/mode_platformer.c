@@ -160,23 +160,23 @@ swadgeMode_t modePlatformer = {.modeName                 = platformerName,
 
 #define NUM_LEVELS 16
 
-static const plLeveldef_t leveldef[17] = {{.filename = "level1-1.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "dac01.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "level1-3.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "level1-4.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "level2-1.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "dac03.bin", .timeLimit = 220, .checkpointTimeLimit = 90},
-                                          {.filename = "level2-3.bin", .timeLimit = 200, .checkpointTimeLimit = 90},
-                                          {.filename = "level2-4.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "level3-1.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "dac02.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "level3-3.bin", .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = "level3-4.bin", .timeLimit = 220, .checkpointTimeLimit = 110},
-                                          {.filename = "level4-1.bin", .timeLimit = 270, .checkpointTimeLimit = 90},
-                                          {.filename = "level4-2.bin", .timeLimit = 240, .checkpointTimeLimit = 90},
-                                          {.filename = "level4-3.bin", .timeLimit = 240, .checkpointTimeLimit = 90},
-                                          {.filename = "level4-4.bin", .timeLimit = 240, .checkpointTimeLimit = 90},
-                                          {.filename = "debug.bin", .timeLimit = 180, .checkpointTimeLimit = 90}};
+static const plLeveldef_t leveldef[17] = {{.filename = LEVEL_1_1_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
+                                          {.filename = DAC_01_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
+                                          {.filename = LEVEL_1_3_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
+                                          {.filename = LEVEL_1_4_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
+                                          {.filename = LEVEL_2_1_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
+                                          {.filename = DAC_03_BIN, .timeLimit = 220, .checkpointTimeLimit = 90},
+                                          {.filename = LEVEL_2_3_BIN, .timeLimit = 200, .checkpointTimeLimit = 90},
+                                          {.filename = LEVEL_2_4_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
+                                          {.filename = LEVEL_3_1_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
+                                          {.filename = DAC_02_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
+                                          {.filename = LEVEL_3_3_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
+                                          {.filename = LEVEL_3_4_BIN, .timeLimit = 220, .checkpointTimeLimit = 110},
+                                          {.filename = LEVEL_4_1_BIN, .timeLimit = 270, .checkpointTimeLimit = 90},
+                                          {.filename = LEVEL_4_2_BIN, .timeLimit = 240, .checkpointTimeLimit = 90},
+                                          {.filename = LEVEL_4_3_BIN, .timeLimit = 240, .checkpointTimeLimit = 90},
+                                          {.filename = LEVEL_4_4_BIN, .timeLimit = 240, .checkpointTimeLimit = 90},
+                                          {.filename = DEBUG_BIN, .timeLimit = 180, .checkpointTimeLimit = 90}};
 
 led_t platLeds[CONFIG_NUM_LEDS];
 
@@ -221,7 +221,7 @@ void platformerEnterMode(void)
         platformer->easterEgg = true;
     }
 
-    loadFont("radiostars.font", &platformer->radiostars, false);
+    loadFont(RADIOSTARS_FONT, &platformer->radiostars, false);
     pl_initializeWsgManager(&(platformer->wsgManager));
 
     pl_initializeTileMap(&(platformer->tilemap), &(platformer->wsgManager));
