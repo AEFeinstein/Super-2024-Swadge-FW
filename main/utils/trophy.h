@@ -249,9 +249,8 @@ all.
 // Defines
 //==============================================================================
 
-#define TROPHY_MAX_TITLE_LEN 48                    ///< The longest possible name for a trophy
-#define TROPHY_MAX_DESC_LEN  128                   ///< The longest possible description for a trophy
-#define MAX_NVS_KEY_LEN      NVS_KEY_NAME_MAX_SIZE ///< The longest possible NVS key for a trophy
+#define TROPHY_MAX_TITLE_LEN 48  ///< The longest possible name for a trophy
+#define TROPHY_MAX_DESC_LEN  128 ///< The longest possible description for a trophy
 
 #define DRAW_SLIDE_US  262144 ///< Recommended slide time, a power of 2 about a quarter second
 #define DRAW_STATIC_US 524288 ///< Recommended static time, a power of 2 about a half second
@@ -313,10 +312,10 @@ typedef struct
 /// @brief Settings for the trophy system
 typedef struct
 {
-    bool drawFromBottom;                ///< If banner should be drawn from the bottom of the screen
-    int32_t staticDurationUs;           ///< How long the banner will be drawn fully extended
-    int32_t slideDurationUs;            ///< How long the banner will take to slide in and out
-    char namespaceKey[MAX_NVS_KEY_LEN]; ///< key used for trophy namespace
+    bool drawFromBottom;                      ///< If banner should be drawn from the bottom of the screen
+    int32_t staticDurationUs;                 ///< How long the banner will be drawn fully extended
+    int32_t slideDurationUs;                  ///< How long the banner will take to slide in and out
+    char namespaceKey[NVS_KEY_NAME_MAX_SIZE]; ///< key used for trophy namespace
 } trophySettings_t;
 
 /// @brief The data object dev hands to the trophy showcase that contains all the const data.

@@ -52,7 +52,7 @@ def insert_position(position, sourceList, insertionList):
 # root.withdraw()
 
 def convertTMX(file_path):
-    print("convert "+file_path)
+    #print("convert "+file_path)
     document = parse(file_path)
     entities = {}
     mapHeaderWidth = int(document.getElementsByTagName("map")[0].attributes.getNamedItem("width").nodeValue)

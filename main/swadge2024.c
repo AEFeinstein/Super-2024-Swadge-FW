@@ -104,6 +104,7 @@
  *     - fs_json.h: Load JSON
  *     - fs_txt.h: Load plaintext
  *     - midiFileParser.h: Load MIDI files
+ * - assets_preprocessor.h: Learn how to define a new asset file type processor for CNFS
  * - settingsManager.h: Set and get persistent settings for things like screen brightness
  *
  * \subsection gr_api Graphics APIs
@@ -256,8 +257,6 @@ static int64_t timeExitPressed = 0;
 
 /// @brief System font
 static font_t sysFont;
-/// @brief System notification sound
-static midiFile_t sysSound;
 
 /// @brief Infinite impulse response filter for mic samples
 static uint32_t samp_iir = 0;
@@ -412,7 +411,6 @@ void app_main(void)
 
     // Initialize system font and trophy-get sound
     loadFont(IBM_VGA_8_FONT, &sysFont, true);
-    loadMidiFile(BLOCK_1_MID, &sysSound, true); // FIXME: Need new sound. Temp sound picked
 
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)
@@ -650,7 +648,6 @@ void deinitSystem(void)
 {
     // Deinit font and sfx
     freeFont(&sysFont);
-    unloadMidiFile(&sysSound);
 
     // Deinit the swadge mode
     if (NULL != cSwadgeMode->fnExitMode)
@@ -994,13 +991,4 @@ void powerUpPeripherals(void)
 font_t* getSysFont(void)
 {
     return &sysFont;
-}
-
-/**
- * @brief Returns the system sound to be used
- *
- */
-midiFile_t* getSysSound(void)
-{
-    return &sysSound;
 }
