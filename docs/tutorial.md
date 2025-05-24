@@ -1953,8 +1953,52 @@ And that's it!
 
 ## Sounds
 
-- Making sounds
-  - MIDI tracks
+So far, this mode has been entirely silent. Making sounds is outside the score of this tutorial, but we have excellent help and we're encouraged to borrow sounds from other modes. There's an "attic" folder with old code and assets, and if you move the files from the attic into the assets folder proper, you can use them too.
+
+There's two methods of making noise:
+- Individual notes
+- Play a midi track
+
+We'll do both. First, we'll find a good racing soundtrack for the BGM.
+
+`CHOWA_RACE_MID` sounds pretty fire, so let's use that.
+
+The BGM should play as soon as the game starts, so we'll put it in the entry mode.
+
+```C
+// In runner data
+midiFile_t bgm;
+midiPlayer_t* sfxPlayer;
+
+// In enter mode
+loadMidiFile(CHOWA_RACE_MID, &rd->bgm, true);
+// Init BGM player
+midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+player->loop         = true;
+midiGmOn(player);
+globalMidiPlayerPlaySong(&rd->bgm, MIDI_BGM);
+// Init SFX
+rd->sfxPlayer = globalMidiPlayerGet(MIDI_SFX);
+midiGmOn(rd->sfxPlayer);
+midiPause(rd->sfxPlayer, false);
+
+// In exit mode
+globalMidiPlayerStop(MIDI_BGM);
+unloadMidiFile(&rd->bgm);
+```
+
+This should feel kind of familiar at this point. We've loaded a few things before, and we've torn them down too.
+
+However, there's a few extra functions in there. The global midi player has to be set to use the default instruments (`midiGmOn()`) and has to be set to loop. We temporarily grab the global player to do both of those.
+
+Next, we're gonna make simple collision noises. We'll do this when the robot collides with an obstacle.
+
+```C
+// Once collision is detected
+midiNoteOn(rd->sfxPlayer, 9, HIGH_BONGO, 0x7F);
+```
+
+Because this is the percussion instrument channel 10 (number 9, second argument) we can just play and it'll stop byu itself. Individual notes are more complicated.
 
 ## Animations
 

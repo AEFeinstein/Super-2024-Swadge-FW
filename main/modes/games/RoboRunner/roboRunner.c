@@ -82,6 +82,10 @@ typedef struct
     int64_t speedDivisorTimer; // Timer until we increase speed
     int currentMaxObstacles;   // 2-5
     int64_t maxObstacleTimer;  // Timer until we increase max obstacles
+
+    // Audio
+    midiFile_t bgm;          // BGM
+    midiPlayer_t* sfxPlayer; // Player for SFX
 } runnerData_t;
 
 static void runnerEnterMode(void);
@@ -125,6 +129,18 @@ static void runnerEnterMode()
         loadWsg(obstacleImages[idx], &rd->obstacleImgs[idx], true);
     }
 
+    // Load BGM
+    loadMidiFile(CHOWA_RACE_MID, &rd->bgm, true);
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    player->loop         = true;
+    midiGmOn(player);
+    //globalMidiPlayerPlaySong(&rd->bgm, MIDI_BGM);
+
+    // Init SFX
+    rd->sfxPlayer = globalMidiPlayerGet(MIDI_SFX);
+    midiGmOn(rd->sfxPlayer);
+    midiPause(rd->sfxPlayer, false);
+
     // Initialize the obstacles so we don't accidentally call unloaded data.
     for (int idx = 0; idx < MAX_OBSTACLES; idx++)
     {
@@ -147,6 +163,9 @@ static void runnerEnterMode()
 
 static void runnerExitMode()
 {
+    globalMidiPlayerStop(MIDI_BGM);
+    unloadMidiFile(&rd->bgm);
+
     // Remember to de-allocate whatever you use!
     for (int idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
     {
@@ -187,6 +206,7 @@ static void runnerMainLoop(int64_t elapsedUs)
         vec_t colVec;
         if (rd->obstacles[idx].active && rectRectIntersection(rd->robot.rect, rd->obstacles[idx].rect, &colVec))
         {
+            midiNoteOn(rd->sfxPlayer, 9, HIGH_TOM, 0x7F);
             resetGame();
         }
     }
