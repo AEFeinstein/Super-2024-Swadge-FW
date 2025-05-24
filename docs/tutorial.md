@@ -377,7 +377,7 @@ Assuming it works, you can look around a bunch. Of course, you might be surprise
 
 #### Include errors
 
-Sometimes there's an error where VS Code doesn't recognize all of the #includes, known as an include error. If this happens, try restarting your VS Code after saving all the files. Don't worry, VS Code will load the repo and all your tabs right back open. This doesn't stop it from compiling, but the red may hide more serious errors, so it's best to get rid of them.
+Sometimes there's an error where VS Code doesn't recognize all of the `#includes`, known as an include error. If this happens, try restarting your VS Code after saving all the files. Don't worry, VS Code will load the repo and all your tabs right back open. This doesn't stop it from compiling, but the red may hide more serious errors, so it's best to get rid of them.
 
 if this doesn't help, another potential solution appears to be compiling with the idf, so follow the instructions for building the program for the swadge (idf.py) below and it should get fixed.
 
