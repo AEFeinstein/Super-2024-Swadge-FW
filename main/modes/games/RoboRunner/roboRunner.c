@@ -1,5 +1,13 @@
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include "roboRunner.h"
 #include "geometry.h"
+
+//==============================================================================
+// Defines
+//==============================================================================
 
 // Level
 #define GROUND_HEIGHT  184
@@ -36,6 +44,10 @@
 #define WINDOW_HEIGHT 120
 #define WINDOW_COUNT  4
 
+//==============================================================================
+// Consts
+//==============================================================================
+
 const char runnerModeName[]   = "Robo Runner";
 const char roboRunnerNVSKey[] = "roboRunner";
 
@@ -53,12 +65,20 @@ static const cnfsFileIdx_t robotImages[] = {
     ROBO_DEAD_WSG,
 };
 
+//==============================================================================
+// Enums
+//==============================================================================
+
 typedef enum
 {
     BARREL,
     LAMP,
     NUM_OBSTACLE_TYPES
 } ObstacleType_t;
+
+//==============================================================================
+// Structs
+//==============================================================================
 
 typedef struct
 {
@@ -111,6 +131,10 @@ typedef struct
     int windowXCoords[WINDOW_COUNT]; // The window x coordinates
 } runnerData_t;
 
+//==============================================================================
+// Functions declarations
+//==============================================================================
+
 static void runnerEnterMode(void);
 static void runnerExitMode(void);
 static void runnerMainLoop(int64_t elapsedUs);
@@ -125,6 +149,10 @@ static void drawWindow(int xCoord);
 static void drawObstacles(int64_t elapsedUs);
 static void drawPlayer(int64_t elapsedUs);
 static void draw(int64_t elapsedUs);
+
+//==============================================================================
+// Variables
+//==============================================================================
 
 swadgeMode_t roboRunnerMode = {
     .modeName                 = runnerModeName,
@@ -144,6 +172,10 @@ swadgeMode_t roboRunnerMode = {
 };
 
 runnerData_t* rd;
+
+//==============================================================================
+// Functions
+//==============================================================================
 
 static void runnerEnterMode()
 {
