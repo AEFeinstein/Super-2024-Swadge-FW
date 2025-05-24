@@ -74,7 +74,7 @@ void pl_initializeTileMap(plTilemap_t* tilemap, plWsgManager_t* wsgManager);
 void pl_drawTileMap(plTilemap_t* tilemap);
 void pl_scrollTileMap(plTilemap_t* tilemap, int16_t x, int16_t y);
 void pl_drawTile(plTilemap_t* tilemap, uint8_t tileId, int16_t x, int16_t y);
-bool pl_loadMapFromFile(plTilemap_t* tilemap, const char* name);
+bool pl_loadMapFromFile(plTilemap_t* tilemap, cnfsFileIdx_t name);
 void pl_tileSpawnEntity(plTilemap_t* tilemap, uint8_t objectIndex, uint8_t tx, uint8_t ty);
 uint8_t pl_getTile(plTilemap_t* tilemap, uint8_t tx, uint8_t ty);
 void pl_setTile(plTilemap_t* tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId);

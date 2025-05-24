@@ -11,7 +11,7 @@
 //==============================================================================
 typedef struct
 {
-    char filename[16];
+    cnfsFileIdx_t filename;
     uint16_t timeLimit;
     uint16_t checkpointTimeLimit;
 } plLeveldef_t;

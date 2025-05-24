@@ -13,33 +13,33 @@
 void pl_initializeSoundManager(plSoundManager_t* self)
 {
     self->currentBgmIndex = PL_BGM_NULL;
-    loadMidiFile("bgmIntro.mid", &self->bgmIntro, true);
-    loadMidiFile("snd1up.mid", &self->snd1up, true);
-    loadMidiFile("sndBreak.mid", &self->sndBreak, true);
-    loadMidiFile("sndCheckpoint.mid", &self->sndCheckpoint, true);
-    loadMidiFile("sndCoin.mid", &self->sndCoin, true);
-    loadMidiFile("sndDie.mid", &self->sndDie, true);
-    loadMidiFile("bgmGameOver.mid", &self->bgmGameOver, true);
-    loadMidiFile("sndHit.mid", &self->sndHit, true);
-    loadMidiFile("sndHurt.mid", &self->sndHurt, true);
-    loadMidiFile("sndJump1.mid", &self->sndJump1, true);
-    loadMidiFile("sndJump2.mid", &self->sndJump2, true);
-    loadMidiFile("sndJump3.mid", &self->sndJump3, true);
-    loadMidiFile("sndLevelClearA.mid", &self->sndLevelClearA, true);
-    loadMidiFile("sndLevelClearB.mid", &self->sndLevelClearB, true);
-    loadMidiFile("sndLevelClearC.mid", &self->sndLevelClearC, true);
-    loadMidiFile("sndLevelClearD.mid", &self->sndLevelClearD, true);
-    loadMidiFile("sndLevelClearS.mid", &self->sndLevelClearS, true);
-    loadMidiFile("sndMenuConfirm.mid", &self->sndMenuConfirm, true);
-    loadMidiFile("sndMenuDeny.mid", &self->sndMenuDeny, true);
-    loadMidiFile("sndMenuSelect.mid", &self->sndMenuSelect, true);
-    loadMidiFile("sndOutOfTime.mid", &self->sndOuttaTime, true);
-    loadMidiFile("sndPause.mid", &self->sndPause, true);
-    loadMidiFile("sndPowerUp.mid", &self->sndPowerUp, true);
-    loadMidiFile("sndSquish.mid", &self->sndSquish, true);
-    loadMidiFile("sndTally.mid", &self->sndTally, true);
-    loadMidiFile("sndWarp.mid", &self->sndWarp, true);
-    loadMidiFile("sndWaveBall.mid", &self->sndWaveBall, true);
+    loadMidiFile(BGM_INTRO_MID, &self->bgmIntro, true);
+    loadMidiFile(SND_1UP_MID, &self->snd1up, true);
+    loadMidiFile(SND_BREAK_MID, &self->sndBreak, true);
+    loadMidiFile(SND_CHECKPOINT_MID, &self->sndCheckpoint, true);
+    loadMidiFile(SND_COIN_MID, &self->sndCoin, true);
+    loadMidiFile(SND_DIE_MID, &self->sndDie, true);
+    loadMidiFile(BGM_GAME_OVER_MID, &self->bgmGameOver, true);
+    loadMidiFile(SND_HIT_MID, &self->sndHit, true);
+    loadMidiFile(SND_HURT_MID, &self->sndHurt, true);
+    loadMidiFile(SND_JUMP_1_MID, &self->sndJump1, true);
+    loadMidiFile(SND_JUMP_2_MID, &self->sndJump2, true);
+    loadMidiFile(SND_JUMP_3_MID, &self->sndJump3, true);
+    loadMidiFile(SND_LEVEL_CLEAR_A_MID, &self->sndLevelClearA, true);
+    loadMidiFile(SND_LEVEL_CLEAR_B_MID, &self->sndLevelClearB, true);
+    loadMidiFile(SND_LEVEL_CLEAR_C_MID, &self->sndLevelClearC, true);
+    loadMidiFile(SND_LEVEL_CLEAR_D_MID, &self->sndLevelClearD, true);
+    loadMidiFile(SND_LEVEL_CLEAR_S_MID, &self->sndLevelClearS, true);
+    loadMidiFile(SND_MENU_CONFIRM_MID, &self->sndMenuConfirm, true);
+    loadMidiFile(SND_MENU_DENY_MID, &self->sndMenuDeny, true);
+    loadMidiFile(SND_MENU_SELECT_MID, &self->sndMenuSelect, true);
+    loadMidiFile(SND_OUT_OF_TIME_MID, &self->sndOuttaTime, true);
+    loadMidiFile(SND_PAUSE_MID, &self->sndPause, true);
+    loadMidiFile(SND_POWER_UP_MID, &self->sndPowerUp, true);
+    loadMidiFile(SND_SQUISH_MID, &self->sndSquish, true);
+    loadMidiFile(SND_TALLY_MID, &self->sndTally, true);
+    loadMidiFile(SND_WARP_MID, &self->sndWarp, true);
+    loadMidiFile(SND_WAVE_BALL_MID, &self->sndWaveBall, true);
 }
 
 void pl_freeSoundManager(plSoundManager_t* self)
@@ -78,12 +78,12 @@ void pl_freeSoundManager(plSoundManager_t* self)
 }
 
 /*
-    Loads the indexed BGM into memory.
-    Returns true if the BGM was actually changed, otherwise false
+    Loads the indexed BGM_ into memory.
+    Returns true if the BGM_ was actually changed, otherwise false
 */
 bool pl_setBgm(plSoundManager_t* self, uint16_t newBgmIndex)
 {
-    // All BGM's are intended to loop!
+    // All BGM_'s are intended to loop!
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     player->loop         = true;
     if (self->currentBgmIndex == newBgmIndex)
