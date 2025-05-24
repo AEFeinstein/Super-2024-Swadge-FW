@@ -18,22 +18,22 @@
  *
  * You must provide a decoder and decode space for this function
  *
- * @param fname   The name of the file to load
+ * @param fIdx    The CNFS index of the file to load
  * @param outsize A pointer to a size_t to return how much data was read
  * @param decompressedBuf Memory to store decoded data. This must be as large as the decoded data
  * @param hsd A heatshrink decoder
  * @return A pointer to the read data if successful, or NULL if there is a failure
  *         This data must be freed when done
  */
-uint8_t* readHeatshrinkFileInplace(const char* fname, uint32_t* outsize, uint8_t* decompressedBuf,
+uint8_t* readHeatshrinkFileInplace(cnfsFileIdx_t fIdx, uint32_t* outsize, uint8_t* decompressedBuf,
                                    heatshrink_decoder* hsd)
 {
     // Read WSG from file
     size_t sz;
-    const uint8_t* buf = cnfsGetFile(fname, &sz);
+    const uint8_t* buf = cnfsGetFile(fIdx, &sz);
     if (NULL == buf)
     {
-        ESP_LOGE("WSG", "Failed to read %s", fname);
+        ESP_LOGE("WSG", "Failed to read %d", fIdx);
         (*outsize) = 0;
         return NULL;
     }
@@ -58,7 +58,7 @@ uint8_t* readHeatshrinkFileInplace(const char* fname, uint32_t* outsize, uint8_t
 
         if (copied == 0)
         {
-            ESP_LOGE("WSG", "Failed to read %s fault on decode", fname);
+            ESP_LOGE("WSG", "Failed to read %d fault on decode", fIdx);
             heatshrink_decoder_finish(hsd);
             return 0;
         }
@@ -89,20 +89,20 @@ uint8_t* readHeatshrinkFileInplace(const char* fname, uint32_t* outsize, uint8_t
  * Files that are in the assets_image folder before compilation and flashing
  * will automatically be included in the firmware.
  *
- * @param fname   The name of the file to load
+ * @param fIdx    The CNFS index of the file to load
  * @param outsize A pointer to a size_t to return how much data was read
  * @param readToSpiRam true to use SPI RAM, false to use normal RAM
  * @return A pointer to the read data if successful, or NULL if there is a failure
  *         This data must be freed when done
  */
-uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpiRam)
+uint8_t* readHeatshrinkFile(cnfsFileIdx_t fIdx, uint32_t* outsize, bool readToSpiRam)
 {
     // Read WSG from file
     size_t sz;
-    const uint8_t* buf = cnfsGetFile(fname, &sz);
+    const uint8_t* buf = cnfsGetFile(fIdx, &sz);
     if (NULL == buf)
     {
-        ESP_LOGE("WSG", "Failed to read %s", fname);
+        ESP_LOGE("WSG", "Failed to read %d", fIdx);
         (*outsize) = 0;
         return NULL;
     }
@@ -123,7 +123,7 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
     heatshrink_decoder* hsd = heatshrink_decoder_alloc(256, 8, 4);
 
     // Decode the file
-    uint8_t* data = readHeatshrinkFileInplace(fname, outsize, decompressedBuf, hsd);
+    uint8_t* data = readHeatshrinkFileInplace(fIdx, outsize, decompressedBuf, hsd);
 
     // Free the decoder
     heatshrink_decoder_free(hsd);

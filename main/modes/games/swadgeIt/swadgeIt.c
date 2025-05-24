@@ -20,10 +20,6 @@
 #define MIC_ENERGY_THRESHOLD  100000
 #define MIC_ENERGY_HYSTERESIS 20
 
-// Limits for detecting shakes
-#define SHAKE_THRESHOLD  300
-#define SHAKE_HYSTERESIS 10
-
 // Limits for the Reaction timers
 #define INIT_EVENT_INPUT_US    3000000
 #define MIN_EVENT_INPUT_US     600000
@@ -63,13 +59,6 @@ typedef enum
 
 typedef struct
 {
-    int16_t x;
-    int16_t y;
-    int16_t z;
-} vec3d_t;
-
-typedef struct
-{
     uint8_t* samples;
     uint32_t len;
 } rawSample_t;
@@ -77,7 +66,7 @@ typedef struct
 typedef struct
 {
     const char* label;
-    const char* sfx_fname;
+    cnfsFileIdx_t sfx_fidx;
     const paletteColor_t bgColor;
     const paletteColor_t txColor;
     const led_t ledColor;
@@ -134,6 +123,8 @@ typedef struct
     // High scores from NVS
     int32_t memoryHighScore;
     int32_t reactionHighScore;
+    int32_t memoryHighScoreSP;
+    int32_t reactionHighScoreSP;
 } swadgeIt_t;
 
 //==============================================================================
@@ -146,6 +137,7 @@ static void swadgeItMainLoop(int64_t elapsedUs);
 static void swadgeItBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void swadgeItDacCallback(uint8_t* samples, int16_t len);
 static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt);
+static void swadgeItAddToSwadgePassPacket(swadgePassPacket_t* packet);
 
 static void swadgeItMenuCb(const char* label, bool selected, uint32_t value);
 
@@ -174,63 +166,65 @@ static const char swadgeItStrMemory[]     = "Memory";
 static const char swadgeItStrHighScores[] = "High Scores";
 static const char swadgeItStrExit[]       = "Exit";
 
-static const char SI_REACTION_HS_KEY[] = "si_r_hs";
-static const char SI_MEMORY_HS_KEY[]   = "si_m_hs";
+static const char SI_REACTION_HS_KEY[]    = "si_r_hs";
+static const char SI_MEMORY_HS_KEY[]      = "si_m_hs";
+static const char SI_REACTION_HS_SP_KEY[] = "si_r_hs_sp";
+static const char SI_MEMORY_HS_SP_KEY[]   = "si_m_hs_sp";
 
 /** Must match order of swadgeItEvt_t */
 const swadgeItEvtData_t siEvtData[] = {
     {
-        .sfx_fname = "press_it.raw",
-        .label     = "Press it!",
-        .bgColor   = c531,
-        .txColor   = c555,
-        .ledColor  = {.r = 0xFF, .g = 0x99, .b = 0x33},
+        .sfx_fidx = PRESS_IT_RAW,
+        .label    = "Press it!",
+        .bgColor  = c531,
+        .txColor  = c555,
+        .ledColor = {.r = 0xFF, .g = 0x99, .b = 0x33},
     },
     {
-        .sfx_fname = "shake_it.raw",
-        .label     = "Shake it!",
-        .bgColor   = c325,
-        .txColor   = c555,
-        .ledColor  = {.r = 0x99, .g = 0x66, .b = 0xFF},
+        .sfx_fidx = SHAKE_IT_RAW,
+        .label    = "Shake it!",
+        .bgColor  = c325,
+        .txColor  = c555,
+        .ledColor = {.r = 0x99, .g = 0x66, .b = 0xFF},
     },
     {
-        .sfx_fname = "shout_it.raw",
-        .label     = "Shout it!",
-        .bgColor   = c222,
-        .txColor   = c555,
-        .ledColor  = {.r = 0x66, .g = 0x66, .b = 0x66},
+        .sfx_fidx = SHOUT_IT_RAW,
+        .label    = "Shout it!",
+        .bgColor  = c222,
+        .txColor  = c555,
+        .ledColor = {.r = 0x66, .g = 0x66, .b = 0x66},
     },
     {
-        .sfx_fname = "swirl_it.raw",
-        .label     = "Swirl it!",
-        .bgColor   = c412,
-        .txColor   = c555,
-        .ledColor  = {.r = 0xCC, .g = 0x33, .b = 0x66},
+        .sfx_fidx = SWIRL_IT_RAW,
+        .label    = "Swirl it!",
+        .bgColor  = c412,
+        .txColor  = c555,
+        .ledColor = {.r = 0xCC, .g = 0x33, .b = 0x66},
     },
 };
 
 const swadgeItEvtData_t siGoodData = {
-    .sfx_fname = NULL,
-    .label     = "Good!",
-    .bgColor   = c453,
-    .txColor   = c000,
-    .ledColor  = {.r = 0xCC, .g = 0xFF, .b = 0x99},
+    .sfx_fidx = -1,
+    .label    = "Good!",
+    .bgColor  = c453,
+    .txColor  = c000,
+    .ledColor = {.r = 0xCC, .g = 0xFF, .b = 0x99},
 };
 
 const swadgeItEvtData_t siWaitData = {
-    .sfx_fname = NULL,
-    .label     = "Wait",
-    .bgColor   = c000,
-    .txColor   = c555,
-    .ledColor  = {.r = 0x00, .g = 0x00, .b = 0x00},
+    .sfx_fidx = -1,
+    .label    = "Wait",
+    .bgColor  = c000,
+    .txColor  = c555,
+    .ledColor = {.r = 0x00, .g = 0x00, .b = 0x00},
 };
 
 const swadgeItEvtData_t siGoData = {
-    .sfx_fname = NULL,
-    .label     = "Go!",
-    .bgColor   = c555,
-    .txColor   = c000,
-    .ledColor  = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
+    .sfx_fidx = -1,
+    .label    = "Go!",
+    .bgColor  = c555,
+    .txColor  = c000,
+    .ledColor = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
 };
 
 //==============================================================================
@@ -253,6 +247,7 @@ swadgeMode_t swadgeItMode = {
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
     .fnDacCb                  = swadgeItDacCallback,
+    .fnAddToSwadgePassPacket  = swadgeItAddToSwadgePassPacket,
 };
 
 static swadgeIt_t* si;
@@ -283,23 +278,64 @@ static void swadgeItEnterMode(void)
     // Load all SFX samples
     for (int8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
     {
-        si->sfx[i].samples = readHeatshrinkFile(siEvtData[i].sfx_fname, &si->sfx[i].len, true);
+        si->sfx[i].samples = readHeatshrinkFile(siEvtData[i].sfx_fidx, &si->sfx[i].len, true);
     }
 
     // For yell detection
     InitColorChord(&si->end, &si->dd);
 
-    // Read high scores from NVS
-    if (!readNvs32(SI_REACTION_HS_KEY, &si->reactionHighScore))
+    // Read high scores from NVS to mode memory
+    const struct
     {
-        writeNvs32(SI_REACTION_HS_KEY, 0);
-        si->reactionHighScore = 0;
-    }
-    if (!readNvs32(SI_MEMORY_HS_KEY, &si->memoryHighScore))
+        const char* key;
+        int32_t* dest;
+    } hs[] = {
+        {.key = SI_REACTION_HS_KEY, .dest = &si->reactionHighScore},
+        {.key = SI_MEMORY_HS_KEY, .dest = &si->memoryHighScore},
+        {.key = SI_REACTION_HS_SP_KEY, .dest = &si->reactionHighScoreSP},
+        {.key = SI_MEMORY_HS_SP_KEY, .dest = &si->memoryHighScoreSP},
+    };
+    for (int32_t idx = 0; idx < ARRAY_SIZE(hs); idx++)
     {
-        writeNvs32(SI_MEMORY_HS_KEY, 0);
-        si->memoryHighScore = 0;
+        // Read high scores from NVS
+        if (!readNvs32(hs[idx].key, hs[idx].dest))
+        {
+            writeNvs32(hs[idx].key, 0);
+            *hs[idx].dest = 0;
+        }
     }
+
+    // Get unused SwadgePasses for this mode
+    list_t swadgePasses = {0};
+    getSwadgePasses(&swadgePasses, &swadgeItMode, false);
+
+    // Iterate through the SwadgePass data
+    node_t* passNode = swadgePasses.first;
+    while (passNode)
+    {
+        // Convenience pointer
+        swadgePassData_t* spd = (swadgePassData_t*)passNode->val;
+
+        // Check if high scores are higher, write to NVS if they are
+        if (spd->data.packet.swadgeIt.memHs > si->memoryHighScoreSP)
+        {
+            si->memoryHighScoreSP = spd->data.packet.swadgeIt.memHs;
+            writeNvs32(SI_MEMORY_HS_SP_KEY, si->memoryHighScoreSP);
+        }
+
+        if (spd->data.packet.swadgeIt.reactHs > si->reactionHighScoreSP)
+        {
+            si->reactionHighScoreSP = spd->data.packet.swadgeIt.reactHs;
+            writeNvs32(SI_REACTION_HS_SP_KEY, si->reactionHighScoreSP);
+        }
+
+        // Mark this packet as used by this mode
+        setPacketUsedByMode(spd, &swadgeItMode, true);
+
+        // Iterate
+        passNode = passNode->next;
+    }
+    freeSwadgePasses(&swadgePasses);
 }
 
 /**
@@ -720,7 +756,7 @@ static void swadgeItHighScoreRender(void)
     char hsString[64];
 
     // Center text vertically
-    int numLines = 2;
+    int numLines = 4;
     int16_t yOff = (TFT_HEIGHT - (numLines * font->height + (numLines - 1) * TEXT_Y_SPACING)) / 2;
 
     // Draw reaction string
@@ -729,8 +765,18 @@ static void swadgeItHighScoreRender(void)
     drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
     yOff += font->height + TEXT_Y_SPACING;
 
+    snprintf(hsString, sizeof(hsString) - 1, "SP %s: %" PRId32, swadgeItStrReaction, si->reactionHighScoreSP);
+    tWidth = textWidth(font, hsString);
+    drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
+    yOff += font->height + TEXT_Y_SPACING;
+
     // Draw memory string
     snprintf(hsString, sizeof(hsString) - 1, "%s: %" PRId32, swadgeItStrMemory, si->memoryHighScore);
+    tWidth = textWidth(font, hsString);
+    drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
+    yOff += font->height + TEXT_Y_SPACING;
+
+    snprintf(hsString, sizeof(hsString) - 1, "SP %s: %" PRId32, swadgeItStrMemory, si->memoryHighScoreSP);
     tWidth = textWidth(font, hsString);
     drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
     yOff += font->height + TEXT_Y_SPACING;
@@ -906,54 +952,16 @@ static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt)
  */
 static void swadgeItCheckForShake(void)
 {
-    // Get the raw IMU value
-    if (ESP_OK == accelIntegrate())
+    // Check if there is a shake state change
+    if (checkForShake(&si->lastOrientation, &si->shakeHistory, &si->isShook))
     {
-        vec3d_t orientation;
-        if (ESP_OK == accelGetAccelVecRaw(&orientation.x, &orientation.y, &orientation.z))
+        // There was a change, check if it's shaking
+        if (si->isShook)
         {
-            // Get the difference between the last frame and now
-            vec3d_t delta = {
-                .x = ABS(si->lastOrientation.x - orientation.x),
-                .y = ABS(si->lastOrientation.y - orientation.y),
-                .z = ABS(si->lastOrientation.z - orientation.z),
-            };
-            si->lastOrientation = orientation;
-
-            // Sum the deltas
-            int32_t tDelta = delta.x + delta.y + delta.z;
-
-            // Add the value to the history list
-            push(&si->shakeHistory, (void*)((intptr_t)tDelta));
-            if (si->shakeHistory.length > SHAKE_HYSTERESIS)
+            // It is shaking, check if inputs are accepted
+            if (!swadgeItInput(EVT_SHAKE_IT))
             {
-                shift(&si->shakeHistory);
-            }
-
-            // If it's not shaking and over the threshold
-            if (!si->isShook && tDelta > SHAKE_THRESHOLD)
-            {
-                if (swadgeItInput(EVT_SHAKE_IT))
-                {
-                    // Mark it as shaking
-                    si->isShook = true;
-                }
-            }
-            else if (si->isShook)
-            {
-                // If it's shaking, check for stability
-                node_t* shakeNode = si->shakeHistory.first;
-                while (shakeNode)
-                {
-                    if ((intptr_t)shakeNode->val > SHAKE_THRESHOLD)
-                    {
-                        // Shake in the history, return
-                        return;
-                    }
-                    shakeNode = shakeNode->next;
-                }
-
-                // No shake in the history, mark it as not shaking
+                // Input not accepted, mark as not shaking
                 si->isShook = false;
             }
         }
@@ -1102,4 +1110,29 @@ static void swadgeItSwitchToScreen(swadgeItScreen_t newScreen)
 
     // Set the new screen
     si->screen = newScreen;
+}
+
+/**
+ * @brief Add this Swadge's high score to the SwadgePass packet.asm
+ *
+ * This function MUST NOT reference static swadgeIt_t* si;
+ *
+ * @param packet The packet to add the score to
+ */
+static void swadgeItAddToSwadgePassPacket(swadgePassPacket_t* packet)
+{
+    packet->swadgeIt.reactHs = 0;
+    packet->swadgeIt.memHs   = 0;
+
+    int32_t reactionHighScore;
+    if (readNvs32(SI_REACTION_HS_KEY, &reactionHighScore))
+    {
+        packet->swadgeIt.reactHs = reactionHighScore;
+    }
+
+    int32_t memoryHighScore;
+    if (readNvs32(SI_MEMORY_HS_KEY, &memoryHighScore))
+    {
+        packet->swadgeIt.memHs = memoryHighScore;
+    }
 }

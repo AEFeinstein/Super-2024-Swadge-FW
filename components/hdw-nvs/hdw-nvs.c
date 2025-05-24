@@ -6,6 +6,8 @@
 #include <esp_log.h>
 #include <nvs_flash.h>
 #include <nvs.h>
+#include <string.h>
+#include <esp_heap_caps.h>
 
 #include "hdw-nvs.h"
 #if defined(CONFIG_SOUND_OUTPUT_BUZZER)
@@ -640,6 +642,52 @@ bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nv
     }
     // Only return true if the error code was the expected one
     return res == ESP_ERR_NVS_NOT_FOUND;
+}
+
+/**
+ * @brief Fill a given ::list_t with all the NVS string keys for the given namespace.
+ *
+ * The ::list_t should be empty before passing into this function.
+ *
+ * List elements must be heap_caps_free()
+ *
+ * @param namespace The namespace to get keys from
+ * @param list A list to fill with keys.
+ */
+void getNvsKeys(const char* namespace, list_t* list)
+{
+    // Get an iterator
+    nvs_iterator_t it = NULL;
+    ESP_ERROR_CHECK(nvs_entry_find(NVS_DEFAULT_PART_NAME, namespace, NVS_TYPE_ANY, &it));
+
+    esp_err_t res = ESP_OK;
+    while (res == ESP_OK)
+    {
+        nvs_entry_info_t info;
+        if (ESP_OK != nvs_entry_info(it, &info))
+        {
+            // No info, finish
+            break;
+        }
+        else
+        {
+            // Info was read, check the namespace
+            if (!strcmp(info.namespace_name, namespace))
+            {
+                // Make a copy of the key and push it into the list
+                size_t keyLen = strlen(info.key) + 1;
+                char* keyCopy = heap_caps_calloc(sizeof(char), keyLen, MALLOC_CAP_SPIRAM);
+                memcpy(keyCopy, info.key, keyLen);
+                push(list, keyCopy);
+            }
+
+            // Iterate
+            res = nvs_entry_next(&it);
+        }
+    }
+
+    // Release the iterator
+    nvs_release_iterator(it);
 }
 
 /**

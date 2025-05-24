@@ -102,7 +102,7 @@ void colorchordEnterMode(void)
     colorchord->sampleHistHead = 0;
 
     // Load a font
-    loadFont("ibm_vga8.font", &colorchord->ibm_vga8, false);
+    loadFont(IBM_VGA_8_FONT, &colorchord->ibm_vga8, false);
 
     // Init CC
     InitColorChord(&colorchord->end, &colorchord->dd);

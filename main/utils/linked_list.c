@@ -437,6 +437,40 @@ void clear(list_t* list)
     VALIDATE_LIST(__func__, __LINE__, false, list, NULL);
 }
 
+/**
+ * @brief Get the next node, wrapping around to the first at the end of the list
+ *
+ * @param list The list of nodes
+ * @param node The current node to get the node after
+ * @return The next node, potentially wrapping around to the start of the list
+ */
+node_t* getNextWraparound(list_t* list, node_t* node)
+{
+    // Make sure node is valid
+    if (node)
+    {
+        // If there is a next node
+        if (node->next)
+        {
+            // Return it
+            return node->next;
+        }
+        else
+        {
+            // Otherwise wrap around and return the first
+            return list->first;
+        }
+    }
+    else if (list)
+    {
+        // If no node is given, start at the beginning of the list
+        return list->first;
+    }
+
+    // Node and list are invalid, so there is no next
+    return NULL;
+}
+
 #ifdef TEST_LIST
 
 /**

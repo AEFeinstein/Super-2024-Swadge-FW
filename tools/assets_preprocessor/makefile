@@ -33,7 +33,7 @@ SOURCES_TO_FORMAT = $(shell $(FIND) ./src -iname "*.[c|h]")
 ################################################################################
 
 # These are flags for the compiler, all files
-CFLAGS = -g -std=c99
+CFLAGS = -g -std=gnu17
 
 # These are warning flags that the IDF uses
 CFLAGS_WARNINGS = \

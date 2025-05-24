@@ -31,6 +31,7 @@
 
 #include "accelTest.h"
 #include "colorchord.h"
+#include "cosCrunch.h"
 #include "dance.h"
 #include "factoryTest.h"
 #include "gamepad.h"
@@ -39,13 +40,18 @@
 #include "keebTest.h"
 #include "mainMenu.h"
 #include "mode_credits.h"
+#include "mode_diceroller.h"
 #include "mode_synth.h"
 #include "sequencerMode.h"
 #include "swadgeIt.h"
+#include "swadgePassTest.h"
 #include "touchTest.h"
+#include "trophyCase.h"
+#include "trophyTest.h"
 #include "tunernome.h"
 
 #include "mode_platformer.h"
+#include "nameTest.h"
 
 //==============================================================================
 // Function Prototypes
@@ -59,11 +65,19 @@
 int modeListGetCount(void);
 
 /**
- * @brief Iniitalizes a menu with all the current swadge modes
+ * @brief Initializes a menu with all the current swadge modes
  *
  * @param menu Menu to set
  */
 void modeListSetMenu(menu_t* menu);
+
+/**
+ * @brief Get the unique index of a mode
+ *
+ * @param mode The mode to get an index for
+ * @return The index of the mode
+ */
+int32_t getModeIdx(const swadgeMode_t* mode);
 
 //==============================================================================
 // Externs
