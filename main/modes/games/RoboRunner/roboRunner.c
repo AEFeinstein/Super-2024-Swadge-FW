@@ -62,6 +62,7 @@ typedef struct
     int64_t walkTimer; // time until we change animations
     bool onGround;     // If the player is touching the ground
     int ySpeed;        // The vertical speed. negative numbers are up.
+    bool dead;         // If the player is dead
 } player_t;
 
 typedef struct
@@ -210,7 +211,11 @@ static void runnerMainLoop(int64_t elapsedUs)
     {
         if (evt.down)
         {
-            if ((evt.button & PB_A || evt.button & PB_UP) && rd->robot.onGround)
+            if (rd->robot.dead)
+            {
+                resetGame();
+            }
+            else if ((evt.button & PB_A || evt.button & PB_UP) && rd->robot.onGround)
             {
                 rd->robot.ySpeed   = JUMP_HEIGHT;
                 rd->robot.onGround = false;
@@ -222,20 +227,24 @@ static void runnerMainLoop(int64_t elapsedUs)
     runnerLogic(elapsedUs);
 
     // Update obstacles
-    for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+    if (!rd->robot.dead)
     {
-        // Update the obstacle
-        updateObstacle(&rd->obstacles[idx], elapsedUs);
-
-        // Check for a collision
-        vec_t colVec;
-        if (rd->obstacles[idx].active && rectRectIntersection(rd->robot.rect, rd->obstacles[idx].rect, &colVec))
+        for (int idx = 0; idx < MAX_OBSTACLES; idx++)
         {
-            midiNoteOn(rd->sfxPlayer, 9, HIGH_TOM, 0x7F);
-            resetGame();
+            // Update the obstacle
+            updateObstacle(&rd->obstacles[idx], elapsedUs);
+
+            // Check for a collision
+            vec_t colVec;
+            if (rd->obstacles[idx].active && rectRectIntersection(rd->robot.rect, rd->obstacles[idx].rect, &colVec))
+            {
+                midiNoteOn(rd->sfxPlayer, 9, HIGH_TOM, 0x7F);
+                rd->robot.dead    = true;
+                rd->robot.animIdx = 0;
+            }
         }
+        trySpawnObstacle();
     }
-    trySpawnObstacle();
 
     // Update score
     rd->remainingTime += elapsedUs;
@@ -282,7 +291,7 @@ static void runnerMainLoop(int64_t elapsedUs)
 
     // Player animations
     rd->robot.walkTimer += elapsedUs;
-    if (rd->robot.walkTimer > 50 * SPEED_NUMERATOR / rd->speedDivisor)
+    if (!rd->robot.dead && rd->robot.walkTimer > 50 * SPEED_NUMERATOR / rd->speedDivisor)
     {
         rd->robot.walkTimer = 0;
         rd->robot.animIdx++;
@@ -290,6 +299,11 @@ static void runnerMainLoop(int64_t elapsedUs)
         {
             rd->robot.animIdx = 0;
         }
+    }
+    else if (rd->robot.dead && rd->robot.walkTimer > 50000 && rd->robot.animIdx < 10)
+    {
+        rd->robot.animIdx++;
+        rd->robot.walkTimer = 0;
     }
 
     // Draw screen
@@ -317,6 +331,8 @@ static void resetGame()
     rd->speedDivisorTimer   = 0;
     rd->currentMaxObstacles = START_OBSTACLES;
     rd->maxObstacleTimer    = 0;
+    rd->robot.animIdx       = 0;
+    rd->robot.dead          = false;
 }
 
 static void runnerLogic(int64_t elapsedUS)
@@ -446,7 +462,13 @@ static void draw()
     }
 
     // Draw the player
-    if (!rd->robot.onGround)
+    if (rd->robot.dead)
+    {
+        drawWsg(&rd->robot.imgs[3], PLAYER_X - PLAYER_X_IMG_OFFSET,
+                rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET + 5 * rd->robot.animIdx, false, false,
+                360 - rd->robot.animIdx * 9);
+    }
+    else if (!rd->robot.onGround)
     {
         drawWsgSimple(&rd->robot.imgs[0], PLAYER_X - PLAYER_X_IMG_OFFSET, rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET);
     }

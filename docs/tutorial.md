@@ -2093,6 +2093,7 @@ static const cnfsFileIdx_t robotImages[] = {
 // Edit player_t struct to take an array
 wsg_t* imgs; // Was wsg_t img;
 int animIdx;
+int64_t walkTimer;
 
 // Update the wsg loading...
 rd->robot.imgs = heap_caps_calloc(ARRAY_SIZE(robotImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
@@ -2132,6 +2133,90 @@ else
 {
     drawWsgSimple(&rd->robot.imgs[rd->robot.animIdx + 1], PLAYER_X - PLAYER_X_IMG_OFFSET,
                     rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET);
+}
+```
+
+Next, lets add the death animation. This one will be more involved since we need to not immediately reset.
+
+```C
+// Add dead boolean to player_t
+bool dead; 
+
+// Move obstacle update code into if() so it stops when the robot is dead
+if (!rd->robot.dead)
+{
+    for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+    {
+        // Update the obstacle
+        updateObstacle(&rd->obstacles[idx], elapsedUs);
+
+        // Check for a collision
+        vec_t colVec; // Ignore
+        if (rd->obstacles[idx].active && rectRectIntersection(rd->robot.rect, rd->obstacles[idx].rect, &colVec))
+        {
+            midiNoteOn(rd->sfxPlayer, 9, HIGH_TOM, 0x7F);
+            rd->robot.dead    = true; // We remove the resetGame() call and replace with these two lines
+            rd->robot.animIdx = 0;
+        }
+    }
+    trySpawnObstacle();
+}
+
+// Update the player animator to have different behavior once dead
+rd->robot.walkTimer += elapsedUs;
+if (!rd->robot.dead && rd->robot.walkTimer > 50 * SPEED_NUMERATOR / rd->speedDivisor)
+{
+    rd->robot.walkTimer = 0;
+    rd->robot.animIdx++;
+    if (rd->robot.animIdx > 1)
+    {
+        rd->robot.animIdx = 0;
+    }
+}
+else if (rd->robot.dead && rd->robot.walkTimer > 50000 && rd->robot.animIdx < 10)
+{
+    rd->robot.animIdx++;
+    rd->robot.walkTimer = 0;
+    if (rd->robot.animIdx > 10)
+    {
+        resetGame();
+    }
+}
+
+// Update the resetGame() function
+rd->robot.animIdx = 0;
+rd->robot.dead    = false;
+
+// Update the draw routine
+if (rd->robot.dead)
+{
+    drawWsg(&rd->robot.imgs[3], PLAYER_X - PLAYER_X_IMG_OFFSET,
+            rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET + 5 * rd->robot.animIdx, false, false,
+            360 - rd->robot.animIdx * 9);
+}
+else if (!rd->robot.onGround)
+{
+    // Previous code
+}
+```
+
+This will have the robot get knocked over. We'll also update the controls so if the robot is dead it waits for a button press to continue.
+
+```C
+while (checkButtonQueueWrapper(&evt))
+{
+    if (evt.down)
+    {
+        if (rd->robot.dead)
+        {
+            resetGame();
+        }
+        else if ((evt.button & PB_A || evt.button & PB_UP) && rd->robot.onGround)
+        {
+            rd->robot.ySpeed   = JUMP_HEIGHT;
+            rd->robot.onGround = false;
+        }
+    }
 }
 ```
 
