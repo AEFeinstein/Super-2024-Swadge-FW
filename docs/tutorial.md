@@ -2830,17 +2830,48 @@ static void draw()
 
 ## Polish
 
-- Finishing up the game
-  - Commenting your code
-  - Better controls (Variable jump heights)
-  - Splash screen
-  - Death screen
-  - SFX
-  - Avoid spawning object immediately
-- Link to finished code (.c and .h)
-- Other functions, like LEDs. Encourage exploration.
-  - Trophies
-  - Swadgepass
-  - LEDs
-  - Powerups?
-- Look at the pong mode for a complete, simple mode.
+So let's take the checklist we started with and see how we did.
+
+- [x] Images
+  - [x] The Robo has four images - One with either leg up, one standing still and a surprised one for when it's collided with an object
+  - [x] We'll need obstacles, like the cacti and the pterodactyl for the Dino.
+  - [x] The ground and background images need to be created
+- [x] Sounds
+  - [x] There's no background music provided, but there are sounds for when you jump. Having a little beep helps the feel of the game
+    - We actually added a BGM. Crazy.
+- Code systems
+  - [ ] Title/splash screen - It's rude to dump a player into game without warning
+    - Whoops. Didn't get this done.
+  - [x] The ability to show images to the screen
+  - [x] The ability to play sounds
+  - [x] A font to write the score
+  - [x] A way to track the score
+  - [x] A way to register input for a jump
+  - [x] A way to track collisions
+  - [x] A way to spawn obstacles, and get rid of them when we're done. We also want these to not spawn too often
+  - [x] A lose screen
+    - Well, kinda. We have a lose state and we get to watch the robot dead on the ground
+  - [x] A way to move the ground and background to give the illusion of movement, speeding up as time goes on.
+  - [x] A way to save the final score, even between swadge power-offs
+
+So looks like we did a pretty good job. 
+
+So, what's next? Well, we can either claim this one it done and move on to the next project, or we can continue to polish this one up. Here's the list of some more things that could be added to make the game more fun:
+- Add better controls: Maybe make it so you queue up the jump button so you don't have to be landed before you can press the button, but don't jump until the robot touches the ground. Or, how long you press down the button affects how hight he robot jumps?
+- Add the splash screen: It would be nice to get a moment to absorb what's going on before going into a game.
+- Add death text: Provide some text to tell the player to press any button to start over.
+- Add Trophies: as of 2025, we have trophies we can add to a mode. See (this document)[../main/utils/trophy.h] for info on how to do that.
+- Add high score to SwadgePass: SwadgePass is a system to send data to other swadges in the area.
+- LEDs: There's LEDs around the Swadge. Make them light up in response to what's going on in the game
+- Accelerometer: Shake to jump?
+- Add Power-ups: Invincibility? Super jump? Bonus score? See what you can make!
+
+Some other things:
+- Comment all your code! Commenting code helps other people figure out what the heck you were doing, and helps you know what you were doing three months ago last time you were working on the
+- Look at other modes. This will show you how other people tackle challenges handle weird edge cases, and generally provide some insight on what you can do with your mode.
+- Checkout the [Pong Mode](https://github.com/AEFeinstein/Super-2024-Swadge-FW/blob/fdce1624625a5888a1866c84c56ac994a58ae1cb/main/modes/pong/pong.c). 
+- Check out the current build of [RoboRunner](../main/modes/games/RoboRunner/) with a bunch of the above considerations considered.
+
+I hope this tutorial has been useful in getting you started. Feel free to pi9ng me on discord or talk to me on slack if you happen to need assistance. I'm JohnnyWycliffe on both.
+
+Good luck with your future swadge modes!
