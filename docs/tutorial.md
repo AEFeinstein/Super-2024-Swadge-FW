@@ -1,4 +1,4 @@
-# How to make a Swadge mode
+# How to Make a Swadge Mode
 
 So, you've decided you want to make a swadge mode. Maybe you went to the swadge developer panel, maybe you talked to a dev, or maybe you just picked one up and wanted to know how you actually make a game for a bespoke game console.
 
@@ -20,7 +20,7 @@ If you're ever lost, feel free to message us on slack or discord. We'd love to h
 - A USB-C cable with data - Some cheap USB-C cables are power only. If there's no data lines, you'll have to find a different cord.
 - An image editor - Presumably, you're going to want some images. MS Paint will work, but I recommend [Aseprite](https://www.aseprite.org/). You can pick up a custom palette of colors so you use the Swadge colors specifically
 
-## Getting started
+## Getting Started
 
 While it might be tempting to dive in and start typing, there's a step that is usually helpful in making sure you can actually finish a project.
 
@@ -36,11 +36,13 @@ I know, that stuff seems boring. But when you're writing the documentation there
 If you really don't want to write documentation, you don't have to. A lot of Devs just wing it very successfully. There's a lot of truth to the "Test Early" methodology, which encourages devs to at least make a basic prototype without the bells and whistles to make sure the game is fun before writing a book's worth of documentation. It works different for different people, but if you're using this guide it's likely your first game so maybe at least jot down a few goals or concept art. It can't hurt.
 
 Another consideration is that your grand RPG idea sucks as a first game. It's probably a really cool game, don't get me wrong, but if you spend lots of hours of coding and can't actually run or test anything because the scope is too big, it's easy to lose interest. Consider some of these games as simple starting points:
+
 - Flappy bird
 - Tic-Tac-Toe
 - Chrome's Dino Jumper
 - Snake
 - Minesweeper
+
 These projects don't have too much to them, but are all fun to play, right? If you start with one of these, you can get some experience with the swadge so you're not trying to figure out the swadge and an entirely new set of mechanics at the same time.
 
 I'll be building a mode to help illustrate how everything is made, and I will in fact be remaking Chrome's dino runner!
@@ -85,19 +87,19 @@ Even a simple game has a lot of systems that it requires to work. Some of the ab
 
 Also, did you notice the new requirement I made while writing it all out? I didn't initially indicate that the ground got faster as time went on. If I hadn't written that out, I might have forgotten to add it in. Or, we could consider it extra since it wasn't part of my initial description, so maybe it's more than I want. For now, let's keep it.
 
-### Next steps
+### Next Steps
 
 If you haven't already, set up your development environment, and we can move onto the next step. [Click here](./SETUP.md) to load the 'Configuring a development environment' page.
 
 I encourage you to make this game along with me, so I will tell you what you'd need to do to follow along and describing what I'm doing.
 
-## The Dev environment
+## The Dev Environment
 
 If this is your first time using VS Code, you might be a little lost. There's a lot of cool features, but you don't need to know too much to be able to program successfully.
 
 If you've used VS Code before, you can skip this section.
 
-### Loading the swadge repository
+### Loading the Swadge Repository
 
 If you've followed the configuration tutorial, you'll have the files you need on your computer. 
 
@@ -139,7 +141,7 @@ There's some features of the terminal that can be done with a graphic user inter
 
 If you're in the project directory, why not try running `make all`? See what comes out.
 
-### Useful tips
+### Useful Tips
 
 - You can drag the file tabs around to view more than one at once. You can even open the same tab multiple times 
 
@@ -169,7 +171,7 @@ Once inside the branch, I can now make my edits without worrying about wrecking 
 
 We'll go over more commands as they become relevant, but below is an overview of a bunch of the relevant commands.
 
-### Useful git commands
+### Useful git Commands
 
 - `git status`: Shows the current status (changed files, files to be added next commit, deleted files etc.)
 - `git pull`: Pulls the latest code from github. This command is good to run whenever the `main` branch updates so you can see the latest changes. Just make sure all of your changes are committed!
@@ -188,7 +190,7 @@ We'll go over more commands as they become relevant, but below is an overview of
 
 If you'd rather use the GUI, you can press the above button in the VS Code editor and all the same functions and more are provided. You'll have to do a little exploring, but there's a lot of cool data in there! It's also helpful when resolving merge conflicts.
 
-## Can we code now? -  The bare minimum to compile
+## Can We Code Now? -  The Bare Minimum to Compile
 
 It's time to start writing code. Finally.
 
@@ -198,7 +200,7 @@ First, decide what kind of mode you want to make. I'm making a game so I make a 
 
 These two files will be where my game sits. Let's start with the .h file.
 
-### The header file - roboRunner.h
+### The Header File - roboRunner.h
 
 The header file, denoted by the file extension ".h", provides the overview of the program. When looking into a new program, it helps to look at the header file first to see what the dev wants you to know about the file.
 
@@ -237,7 +239,7 @@ The C file, denoted by the .c file extension, is the implementation of the mode.
 
 First of all, we need to include our header file. Easy, it's just `#include roboRunner.h`. We don't need pragma, since the header file handles it.
 
-#### Mode name
+#### Mode Name
 
 Next, we're going to make the string that is used to display the game's name in the menu. 
 
@@ -253,7 +255,7 @@ Let's break it down real quick:
 
 Setting this to const saves this into the program memory, which is a lot larger than RAM. We'll get into memory management very briefly later. For now, know that it's usually better to put text strings in this format than to leave them directly in the code.
 
-#### Function declarations
+#### Function Declarations
 
 Now we need to add the three main function declarations. Functions and function declarations are different; The declaration provides the pattern and the function provides the implementation.
 
@@ -325,7 +327,7 @@ The names need to be identical, and the `elapsedUs` needs to be the same, or els
 
 If we decided not to forward declare these, then the `swadgeMode_t` struct wouldn't know what a `runnerEnterMode` was and would throw an error.
 
-#### The full .c file
+#### The Full .c File
 
 ```C
 #include "roboRunner.h"
@@ -376,7 +378,7 @@ First, let's hit F5. If the emulator pops up, great! No errors are preventing it
 
 Assuming it works, you can look around a bunch. Of course, you might be surprised to find your mode isn't in the menu. We still haven't properly added that, so let's do that now.
 
-#### Include errors
+#### Include Errors
 
 Sometimes there's an error where VS Code doesn't recognize all of the `#includes`, known as an include error. If this happens, try restarting your VS Code after saving all the files. Don't worry, VS Code will load the repo and all your tabs right back open. This doesn't stop it from compiling, but the red may hide more serious errors, so it's best to get rid of them.
 
@@ -396,7 +398,7 @@ Pay attention to what the computer tells you in error messages. It will usually 
 
 If all else fails, try searching the error message on the internet, or contact the rest of the swadge team on discord or slack.
 
-#### Adding the mode to the menu
+#### Adding the Mode to the Menu
 
 Now, we're going to have to modify a few other files. Fortunately, only two more for now.
 
@@ -439,7 +441,7 @@ Save the file, and let's try again. You should see a prompt telling you how to f
 
 Congrats! you now have a working mode.
 
-### Initial commit and pushing
+### Initial Commit and Pushing
 
 Now that we have something working, lets save it so if we break it in the future we can come back here and not have to rebuild everything.
 
@@ -488,7 +490,7 @@ If successful, your code is now saved to the cloud and can be pulled to a differ
 
 We've done a lot of work and all we've got to show for it is a blank black screen, so in the next section let's give ourselves something to look at, hmm?
 
-## Loading resources
+## Loading Resources
 
 In this section, we're going to draw something to the screen. 
 
@@ -571,7 +573,7 @@ static void runnerExitMode()
 
 This will de-allocate the memory.
 
-### Images, finally
+### Images, Finally
 
 Now we're going to allocate memory for the WSG. All assets (images, fonts and sounds) need to be allocated and de-allocated just like individual blobs of memory.
 
@@ -641,7 +643,7 @@ If you place the draw line function after the `drawWsg()` you'll notice the line
 
 Right now, we're drawing the robot standing in the same place every frame, which is boring. Let's get some actual movement on screen!
 
-### Final code for this section
+### Final Code for This Section
 
 ```C
 #include "roboRunner.h"
@@ -701,7 +703,7 @@ Let's get the jumping ability coded. Since the obstacles come to us, we just nee
 
 An improvement to game feel might be to vary the height of the jump based on the length of the button press, but that's more than we described above. Maybe we'll fit it in later.
 
-### Basic input
+### Basic Input
 
 We're going to start to accept inputs now. Update the main loop to look like the following:
 
@@ -736,7 +738,7 @@ Here's a breakdown of the parts of the input:
 
 You'll note that when checking if the button is A we used a single ampersand and for checking the up button we used "==". Both work, it's a matter of preference. I prefer the ampersand.
 
-### Jumping robots
+### Jumping Robots
 
 Now we know if the player has pressed buttons, but we need to define what it means to jump. Obviously, we're going to want to see the robot jump, and that involves moving on the Y-axis (up and down), so we're going to need to track the Y position. We're also going to need to know what speed the robot is going, and whether it's up or down. Lastly, we're going to need to know if the robot is on the floor.
 
@@ -786,7 +788,7 @@ If you restart the program and spam the jump key, you'll see that the robot can 
 
 We'll tackle the visuals first.
 
-#### Sidebar - Get rid of overdraw
+#### Sidebar - Get Rid of Overdraw
 
 The Swadge doesn't automatically refresh the screen, as it turns out. Any pixels not updated from the last frame will remain the same. This could be used to optimize things if the mode is very, *very* constrained, but in general we can just redraw everything each frame. 
 
@@ -794,7 +796,7 @@ In our case, we're already drawing everything we want each frame, so all we need
 
 Add a simple `fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);` before the line and wsg draw lines. If you want to, you can change the color to see which you like best. This function draws from the top left corner (0, 0) to the bottom right corner, (TFT_WIDTH, TFT_HEIGHT) in the color chosen. Since it'll write over every pixel, the only things we'll see on the next frame are whats drawn that frame.
 
-#### Back to fixing
+#### Back to Fixing
 
 Really, we should have seen it coming. We didn't use onGround, so obviously it's not going to work!
 
@@ -859,7 +861,7 @@ Note that you shouldn't be replacing every value. 0, for instance, isn't the sam
 
 In addition, obvious numbers don't need to be included. We don't want dashed lines, but since the function requires it, we're just going to put a 0 in there. We don't care what it is, it works and we're never going to adjust it.
 
-### Completed section code
+### Completed Section Code
 
 Now that we've put in the Macros, the code should look similar to this:
 ```C
@@ -1061,7 +1063,7 @@ static void draw()
 
 We've added a lot of code and nothing has changed behavior-wise. That's what refactoring is like, but now we have our code split a bit more and can follow where everything goes easier.
 
-### Spawning obstacles
+### Spawning Obstacles
 
 Now we can start spawning some obstacles. I've drawn the obstacles with my expert artistic skills.
 
@@ -1134,7 +1136,7 @@ do
 ```
 In this case, even if y is already less than 0 it will execute once anyway. 
 
-### Back to obstacles
+### Back to Obstacles
 
 Next, let's discuss how we want to handle the objects. First, we need to give them an initial spawning position and give it a sprite to draw. Next, we need to get them to move based on how long the game's been running. Third, we need to spawn them randomly.
 
@@ -1203,13 +1205,13 @@ spawnObstacle(BARREL, 0);
 spawnObstacle(LAMP, 1);
 ```
 
-#### Unset variables
+#### Unset Variables
 
 Something to remember about C is that the variables don't have a default state when initialized. `int abc;` could hold literally any value that `int` can hold. Thus, we need to set it first. Things that only need to be set once can be set to const or during the mode entry function, whereas other items may need to be set more often, like our obstacles. Each time a new one is made, it has to be moved to the far side of the screen, set to either a lamp or a barrel, and then assigned the appropriate height and image. All common variables can be set regardless, which makes the code shorter and easier to read.
 
 We have to have to set both obstacles to false before any code could try to call them, find a random `true` in the .active slot and then try to load who knows what data.
 
-#### Fixing up the lamps
+#### Fixing up the Lamps
 
 Now we check how it looks, and... well, the lamps are really hard to see on the black background, and they're too high. it would be impossible for the robot to hit them evan at max jump height.
 
@@ -1221,7 +1223,7 @@ Lastly, change the lamp to start at `CEILING_HEIGHT` instead of 0.
 
 This leaves a lot of space over top of the play area, but we can use that fro displaying the high score or current score later.
 
-### Moving the obstacles
+### Moving the Obstacles
 
 We don't want the obstacles to just sit there and taunt us, we need them to charge us. Well, we want it to look more like our robot is charging the obstacles, but functionally we'll just have the obstacles come to us.
 
@@ -1298,7 +1300,7 @@ First off, know that division sucks for computers. While addition, subtraction a
 
 When a computer divides integers (whole numbers, 1, 2, 54389820, but not 0.3453 or 438290.5) and it's an uneven division, it calculates with a remainder. For example, 10 / 3 is equal to 3 remainder 1, not 3.333. Of course, the remainder isn't tracked in a division operation. Instead, we can used the modulo operator (%) to get the remainder. So, 10 / 3 = 3, and 10 % 3 = 1.
 
-#### Back to randomness
+#### Back to Randomness
 
 Why is this useful? Well, let's say we want to pick between two obstacles. If we take the random number we generated (0 to 4 million-ish) and modulo by 2, the result will either be 0 or 1, and those are the values corresponding to a barrel and a lamp! 
 
@@ -1308,7 +1310,7 @@ We also used `esp_random()` to make a spawn chance. Every loop, there's a 1 in 8
 
 Now delete the two `spawnObstacles()` in the mode enter function, and try the game out.
 
-#### Only two obstacles
+#### Only Two Obstacles
 
 Well, should've seen this coming. We only have two slots for the obstacles, but we never let anything else use them after we set them to active.
 
@@ -1426,7 +1428,7 @@ We can replace the obstacle initialization in the enter mode function with `rese
 
 And... well, it's functional. There's a lot to be desired in terms of functionality, but it's technically a game. It's really hard to tell when we reset and also how far we get, so let's add a score system next!
 
-### Code so far
+### Code So Far
 
 ```C
 #include "roboRunner.h"
@@ -1788,7 +1790,7 @@ That's easy to understand, right? No? Alright, let's go through it:
 
 Great. Now we have a score drawing on the screen that resets when the player collides with an obstacle. Too bad it resets immediately.
 
-### Previous score
+### Previous Score
 
 Easy enough to do. 
 
@@ -1809,7 +1811,7 @@ snprintf(buffer, sizeof(buffer) - 1, "High score: %" PRIu32, rd->prevScore);
 drawText(getSysFont(), c555, buffer, 32, 20);
 ```
 
-### Saving the data
+### Saving the Data
 
 Something you'll quickly note if you try this a few times is that when you close the emulator or change modes the score isn't saved. That's because we're working in RAM, which dies every time memory is freed. What we need to do is write to the ESP's onboard Non-Volatile Storage (NVS). The NVS isn't that big, but we can store plenty of info for what we're attempting. We're only saving one number!
 
@@ -1838,7 +1840,7 @@ if(!readNvs32(roboRunnerNVSKey, &rd->prevScore))
 
 And that's it. More complex objects can be saved, just refer to the NVS file in the docs for hints on that.
 
-### Bonus points: Successfully dodged objects
+### Bonus Points: Successfully Dodged Objects
 
 Why not add bonus score when the player's cleared an obstacle? Basically, if it's off screen behind the player, we can add points.
 
@@ -1863,7 +1865,7 @@ if(!obs->active)
 
 There we go!
 
-## Difficulty (Speed up)
+## Difficulty (Speed Up)
 
 We really should increase the difficulty with time.
 
@@ -2287,7 +2289,7 @@ for (int idx = 0; idx < WINDOW_COUNT; idx++)
 
 And with that, we're fully done!
 
-### Final code
+### Final Code
 
 Here's the final code as described in this tutorial:
 ```C
