@@ -119,8 +119,12 @@ static void runnerLogic(int64_t elapsedUS);
 static void spawnObstacle(ObstacleType_t type, int idx);
 static void updateObstacle(obstacle_t* obs, int64_t elapsedUs);
 static void trySpawnObstacle(void);
+
+// Drawing functions
 static void drawWindow(int xCoord);
-static void draw(void);
+static void drawObstacles(int64_t elapsedUs);
+static void drawPlayer(int64_t elapsedUs);
+static void draw(int64_t elapsedUs);
 
 swadgeMode_t roboRunnerMode = {
     .modeName                 = runnerModeName,
@@ -291,54 +295,8 @@ static void runnerMainLoop(int64_t elapsedUs)
         rd->maxObstacleTimer = 0;
     }
 
-    // Barrel animations
-    rd->barrelAnimTimer += elapsedUs;
-    if (rd->barrelAnimTimer > 300000)
-    {
-        rd->barrelAnimIdx++;
-        if (rd->barrelAnimIdx > 2)
-        {
-            rd->barrelAnimIdx = 0;
-        }
-    }
-
-    // Player animations
-    rd->robot.walkTimer += elapsedUs;
-    if (!rd->robot.dead && rd->robot.walkTimer > 50 * SPEED_NUMERATOR / rd->speedDivisor)
-    {
-        rd->robot.walkTimer = 0;
-        rd->robot.animIdx++;
-        if (rd->robot.animIdx > 1)
-        {
-            rd->robot.animIdx = 0;
-        }
-    }
-    else if (rd->robot.dead && rd->robot.walkTimer > 50000 && rd->robot.animIdx < 10)
-    {
-        rd->robot.animIdx++;
-        rd->robot.walkTimer = 0;
-    }
-
-    // Windows
-    if (!rd->robot.dead)
-    {
-        int64_t windowTimer = elapsedUs;
-        while (windowTimer > SPEED_NUMERATOR / rd->speedDivisor)
-        {
-            windowTimer -= SPEED_NUMERATOR / rd->speedDivisor;
-            for (int idx = 0; idx < WINDOW_COUNT; idx++)
-            {
-                rd->windowXCoords[idx] -= 1;
-                if (rd->windowXCoords[idx] < -(4 * WINDOW_PANE + WINDOW_BORDER))
-                {
-                    rd->windowXCoords[idx] = TFT_WIDTH;
-                }
-            }
-        }
-    }
-
     // Draw screen
-    draw();
+    draw(elapsedUs);
 }
 
 static void resetGame()
@@ -459,6 +417,7 @@ static void trySpawnObstacle()
     }
 }
 
+// Draw functions
 static void drawWindow(int xCoord)
 {
     fillDisplayArea(xCoord, WINDOW_HEIGHT, xCoord + WINDOW_PANE, WINDOW_HEIGHT + WINDOW_PANE, c035);
@@ -470,19 +429,18 @@ static void drawWindow(int xCoord)
                     xCoord + 2 * WINDOW_PANE + WINDOW_BORDER, WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c035);
 }
 
-static void draw()
+static void drawObstacles(int64_t elapsedUs)
 {
-    // Draw the level
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c112);
-    drawLine(0, GROUND_HEIGHT, TFT_WIDTH, GROUND_HEIGHT, c555, 0);
-    drawLine(0, CEILING_HEIGHT, TFT_WIDTH, CEILING_HEIGHT, c555, 0);
-
-    for (int idx = 0; idx < WINDOW_COUNT; idx++)
-    {
-        drawWindow(rd->windowXCoords[idx]);
-    }
-
     // Draw the obstacles
+    rd->barrelAnimTimer += elapsedUs;
+    if (rd->barrelAnimTimer > 300000)
+    {
+        rd->barrelAnimIdx++;
+        if (rd->barrelAnimIdx > 2)
+        {
+            rd->barrelAnimIdx = 0;
+        }
+    }
     for (int idx = 0; idx < MAX_OBSTACLES; idx++)
     {
         if (rd->obstacles[idx].active)
@@ -507,7 +465,26 @@ static void draw()
             }
         }
     }
+}
 
+static void drawPlayer(int64_t elapsedUs)
+{
+    // Player animation frames
+    rd->robot.walkTimer += elapsedUs;
+    if (!rd->robot.dead && rd->robot.walkTimer > 50 * SPEED_NUMERATOR / rd->speedDivisor)
+    {
+        rd->robot.walkTimer = 0;
+        rd->robot.animIdx++;
+        if (rd->robot.animIdx > 1)
+        {
+            rd->robot.animIdx = 0;
+        }
+    }
+    else if (rd->robot.dead && rd->robot.walkTimer > 50000 && rd->robot.animIdx < 10)
+    {
+        rd->robot.animIdx++;
+        rd->robot.walkTimer = 0;
+    }
     // Draw the player
     if (rd->robot.dead)
     {
@@ -524,6 +501,39 @@ static void draw()
         drawWsgSimple(&rd->robot.imgs[rd->robot.animIdx + 1], PLAYER_X - PLAYER_X_IMG_OFFSET,
                       rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET);
     }
+}
+
+static void draw(int64_t elapsedUs)
+{
+    // Draw the level
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c112);
+    drawLine(0, GROUND_HEIGHT, TFT_WIDTH, GROUND_HEIGHT, c555, 0);
+    drawLine(0, CEILING_HEIGHT, TFT_WIDTH, CEILING_HEIGHT, c555, 0);
+    // Windows
+    if (!rd->robot.dead)
+    {
+        int64_t windowTimer = elapsedUs;
+        while (windowTimer > SPEED_NUMERATOR / rd->speedDivisor)
+        {
+            windowTimer -= SPEED_NUMERATOR / rd->speedDivisor;
+            for (int idx = 0; idx < WINDOW_COUNT; idx++)
+            {
+                rd->windowXCoords[idx] -= 1;
+                if (rd->windowXCoords[idx] < -(4 * WINDOW_PANE + WINDOW_BORDER))
+                {
+                    rd->windowXCoords[idx] = TFT_WIDTH;
+                }
+            }
+        }
+    }
+    for (int idx = 0; idx < WINDOW_COUNT; idx++)
+    {
+        drawWindow(rd->windowXCoords[idx]);
+    }
+
+    drawObstacles(elapsedUs);
+
+    drawPlayer(elapsedUs);
 
     // Draw the score
     char buffer[32];
@@ -531,14 +541,4 @@ static void draw()
     drawText(getSysFont(), c555, buffer, 32, 4);
     snprintf(buffer, sizeof(buffer) - 1, "High score: %" PRIu32, rd->prevScore);
     drawText(getSysFont(), c555, buffer, 32, 20);
-
-    // Uncomment these to draw the hitboxes
-    /* drawRect(rd->robot.rect.pos.x, rd->robot.rect.pos.y, rd->robot.rect.pos.x + rd->robot.rect.width,
-             rd->robot.rect.pos.y + rd->robot.rect.height, c500);
-    for (int idx = 0; idx < MAX_OBSTACLES; idx++)
-    {
-        drawRect(rd->obstacles[idx].rect.pos.x, rd->obstacles[idx].rect.pos.y,
-                 rd->obstacles[idx].rect.pos.x + rd->obstacles[idx].rect.width,
-                 rd->obstacles[idx].rect.pos.y + rd->obstacles[idx].rect.height, c500);
-    } */
 }
