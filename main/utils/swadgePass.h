@@ -86,7 +86,7 @@
  *     swadgePassData_t* spd = (swadgePassData_t*)spNode->val;
  *
  *     // If the data hasn't been used yet
- *     if (isPacketUsedByMode(spd, &myMode))
+ *     if (!isPacketUsedByMode(spd, &myMode))
  *     {
  *         // Print some packet data
  *         ESP_LOGI("SP", "Receive from %s. Preamble is %d", spd->key, spd->data.packet.preamble);
@@ -96,7 +96,7 @@
  *     }
  *
  *     // Iterate to the next data
- *     passNode = passNode->next;
+ *     spd = spd->next;
  * }
  * \endcode
  */
