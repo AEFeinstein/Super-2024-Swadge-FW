@@ -372,7 +372,9 @@ static void runnerMainLoop(int64_t elapsedUs)
                         rd->robot.ySpeed   = JUMP_HEIGHT;
                         rd->robot.onGround = false;
                     }
-                } else if ((evt.button & PB_A || evt.button & PB_UP) && rd->robot.ySpeed < JUMP_HEIGHT / 2) {
+                }
+                else if ((evt.button & PB_A || evt.button & PB_UP) && rd->robot.ySpeed < JUMP_HEIGHT / 2)
+                {
                     rd->robot.ySpeed = JUMP_HEIGHT / 2;
                 }
             }
@@ -578,7 +580,7 @@ static void drawSplash(int64_t elapsedUs)
     if (true)
     {
         char buffer[64];
-        snprintf(buffer, sizeof(buffer) - 1, "High Score: %" PRId16, rd->otherHS);
+        snprintf(buffer, sizeof(buffer) - 1, "High Score: %" PRId32, rd->otherHS);
         drawText(getSysFont(), c555, buffer, 32, TFT_HEIGHT - 32);
         // FIXME: Display name once that's passed through swadgepass
         snprintf(buffer, sizeof(buffer) - 1, "By: %s", rd->remotePlayer.nameBuffer);

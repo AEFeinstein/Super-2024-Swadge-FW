@@ -13,8 +13,8 @@ If you're ever lost, feel free to message us on slack or discord. We'd love to h
 ## Prerequisites
 
 - Some coding knowledge - This document will not teach you C. It will teach you *why* certain things are done though, and if your familiar with another language you should be able to follow along.
-  - Bare minimum knowledge is what types are (bool, int, etc.) and 
-  - If you want to learn how to program, [follow this link](https://www.geeksforgeeks.org/how-to-start-coding/). Coding isn't easy, but it's not very hard once you wrap your head around a few key concepts. 
+  - Bare minimum knowledge is what types are (bool, int, etc.) and
+  - If you want to learn how to program, [follow this link](https://www.geeksforgeeks.org/how-to-start-coding/). Coding isn't easy, but it's not very hard once you wrap your head around a few key concepts.
 - A dev environment - There's a great tutorial to set it up for Windows, Linux or MacOS [here](./SETUP.md)
 - A swadge - Not strictly necessary, but sometimes things that work on the emulator don't work on the real hardware. It's best to be able to test on real hardware at the end of the day.
 - A USB-C cable with data - Some cheap USB-C cables are power only. If there's no data lines, you'll have to find a different cord.
@@ -27,6 +27,7 @@ While it might be tempting to dive in and start typing, there's a step that is u
 Documentation!
 
 I know, that stuff seems boring. But when you're writing the documentation there's a bunch of great benefits:
+
 - Fleshing out the project: If you have a seed of an idea, Great! Maybe you want to make a block pusher, or flappy bird, or a Sonic 2 and Knuckles clone. But, what does that entail? If you're making flappy bird, you need a lot less resources than if you want to remakes even a single level of Sonic. You also need to consider each mechanic. Does your game need physics? Motion controls? Precisely timed inputs? If you write it out, you have a chance to think these things through before starting.
 - Scope: Once you have the documentation, you know what you're making. It helps to know you don't need to make a food/stamina system for your block puzzler, so maybe don't add that. It also keeps the scope from becoming unmanageable due to scope creep, where the size of the project becomes impossible to comprehend. For larger projects, it also helps compartmentalize each task into an easier part to code.
 - Remembering the project later: Sometimes, life gets in the way. If you spend a month away, having a document that tells you what you are expecting to accomplish can help.
@@ -49,7 +50,7 @@ I'll be building a mode to help illustrate how everything is made, and I will in
 
 Since I don't just want to use the Dino, I'm going to change the character to robot, and have him jumping flaming barrels and dodging swinging lamps.
 
-### Robo Runner 
+### Robo Runner
 
 For those unfamiliar, the "Chrome Dino Game" is an endless runner that is built into Chrome browser. If you don't have internet, it automatically loads. If you don't want to turn off your internet, you can navigate to chrome::/dino instead. Go ahead and play a few rounds, just remember to come back.
 
@@ -63,7 +64,8 @@ The Dino automatically runs to the side once the spacebar is pressed, and obstac
 
 And, well, that's going to be my game description. It's not long, but let's break it down, shall we?
 
-Here's some components we're going to need to make this game
+Here's some components we're going to need to make this game:
+
 - Images
   - The Robo has four images - One with either leg up, one standing still and a surprised one for when it's collided with an object
   - We'll need obstacles, like the cacti and the pterodactyl for the Dino.
@@ -101,7 +103,7 @@ If you've used VS Code before, you can skip this section.
 
 ### Loading the Swadge Repository
 
-If you've followed the configuration tutorial, you'll have the files you need on your computer. 
+If you've followed the configuration tutorial, you'll have the files you need on your computer.
 
 Click "File" in the top bar of VS Code, press "open folder" and navigate to the folder. By default it's under your username/esp/Super-2024-Swadge-FW/
 
@@ -143,7 +145,7 @@ If you're in the project directory, why not try running `make all`? See what com
 
 ### Useful Tips
 
-- You can drag the file tabs around to view more than one at once. You can even open the same tab multiple times 
+- You can drag the file tabs around to view more than one at once. You can even open the same tab multiple times
 
 ### Useful Keybinds
 
@@ -159,7 +161,7 @@ Alright, you can see the files. Can you start coding now?
 
 Almost! First we need to learn a little bit about git. Git is a versioning software that allows multiple people to work on the same codebase without causing problems. Each individual branch can have any number of changes from the main.
 
-Right now, we need to set up a git branch. Since this codebase is worked on by a lot of people at once, everyone creates their own branch to keep their code separate from everyone else's while it's being worked on. You start on the `main` branch, which is where the core codebase is. All projects should be created off of the main files, since that's the core everyone should be using. 
+Right now, we need to set up a git branch. Since this codebase is worked on by a lot of people at once, everyone creates their own branch to keep their code separate from everyone else's while it's being worked on. You start on the `main` branch, which is where the core codebase is. All projects should be created off of the main files, since that's the core everyone should be using.
 
 Everyone can use each branch, so you can theoretically load up someone else's branch and start working in it, but that's inadvisable if you don't know what they're doing! Similarly, others can go into your branch and look at/modify your code. It's rude to do it without permission, but it can happen. When you `git pull` from github, you'll download all changes that have been uploaded.
 
@@ -182,7 +184,12 @@ We'll go over more commands as they become relevant, but below is an overview of
 - `git merge <branchName>`: If you want to merge two branches together. Be careful, only merge other branches into yours.
 - `git stash` and `git stash pop`: Stores any changes you've made. You can retrieve them by adding pop to the end as shown. Keep in mind, you may want to clear the stash with `git stash clear` occasionally, but make sure there's nothing you want inside of it first!
 - `git push`: Once you have a commit, you can push the commit to the github repository if oyu have permission. You'll have to get this from the repository owner.
-- `git submodule update`: The swadge repo uses some other repositories, so it's a good idea to run this command to keep them up to date on occasion. If you get errors related to CNFS it could be the submodules are out of date
+- `git submodule update --init --recursive`: The swadge repo uses some other repositories, so it's a good idea to run this command to keep them up to date on occasion. If you get errors related to CNFS it could be the submodules are out of date
+- `git rebase -i --rebase-merges origin/main`: This is useful before merging your changes back to `main`. Rebasing can be a tricky concept, but think of it like stashing all of your changes, updating to the latest `main`, and then applying your changes again. This way your branch is up-to-date with `main` and has all of your changes as the latest changes! There might be conflicts between changes in your code and changes in `main`, and if there are you need to resolve them during the rebase. The conflicts will be shown in the code during the rebase, and you can search for `<<<<<<<` and `>>>>>>>` to find them. There are a few more commands useful during the rebase process:
+    - `git add <file>`: Hey, this looks familiar! After your conflicts are resolved, use this to add the resolved files.
+    - `git rebase --continue`: Once all conflicts are resolved and files are added, this continues the rebase.
+    - `git push -f`: This pushes your rebased changes to the server. Note the `-f` flag, which means "force." This is necessary because rebasing rewrites the git history.
+    - `git rebase --abort`: Some thing's gone horribly wrong and you want to start over. That's fine!
 
 ### Git GUI
 
@@ -213,11 +220,11 @@ Very few files are going to be looking at this game, since it's not a library. M
 extern swadgeMode_t roboRunnerMode;
 ```
 
-Very simple! 
+Very simple!
 
 #### \#Pragma once
 
-`#pragma once` Tells the compiler to only make this file once. Sometimes files are used by lots of others, and if it's already been compiled, there's no reason to compile it again. All .h files should have this.
+`#pragma once` Tells the compiler to only include this file once when compiling. Sometimes files are used by lots of others, and if it's already been compiled, there's no reason to compile it again. All .h files should have this.
 
 Note that some .h files have a `#ifndef _ROBORUNNER_H_` instead of `#pragma once`. It's not exactly the same, but it does the same job. We'll use pragma since it looks nicer.
 
@@ -241,11 +248,12 @@ First of all, we need to include our header file. Easy, it's just `#include robo
 
 #### Mode Name
 
-Next, we're going to make the string that is used to display the game's name in the menu. 
+Next, we're going to make the string that is used to display the game's name in the menu.
 
 `const char runnerModeName[] = "Robo Runner";`
 
 Let's break it down real quick:
+
 - const: This can't be changed
 - char: This is a character, not an integer or something else
 - runnerModeName: This is how we'll find this string later in the codebase.
@@ -262,11 +270,13 @@ Now we need to add the three main function declarations. Functions and function 
 If we had functions other parts of the program would be using, the declarations would go in the .h file, since users of the file would need to see them. Functions internal to the .c file can be declared in the same file as the declaration.
 
 Here's the three functions we're going to declare:
+
 - `static void runnerEnterMode(void);`: This function is called when the mode is entered.
-- `static void runnerExitMode(void);`: THis is called when the mode is exited, used to clean up the mode.
+- `static void runnerExitMode(void);`: This is called when the mode is exited, used to clean up the mode.
 - `static void runnerMainLoop(int64_t elapsedUs);`: This is the code that gets called in a loop. All of the actual gameplay code needs to be in here.
 
 Some notes:
+
 - `static` means that this item is only available inside this file. This is good practice, we don't want other people to accidentally use your variables or functions.
 - `void`: This is the value the function returns. In this case, it's nothing, or void, for all three.
 - `runnerEnterMode()`: This is a function name and declaration. When we want to use this function later, this is what we need to type.
@@ -278,14 +288,14 @@ Something to note: These aren't strictly necessary. C is read from the top of th
 
 Remember we made that `extern swadgeMode_t` in the .h file? Time to actually define it. We promised the compiler we would.
 
-The `swadgeMode_t` struct allows us to define the behavior of the mode. This is where we set what peripherals we want to use and tell the rest of the program to use our enter, exit and loop functions. 
+The `swadgeMode_t` struct allows us to define the behavior of the mode. This is where we set what peripherals we want to use and tell the rest of the program to use our enter, exit and loop functions.
 
 We'll look at the structure and what each option means.
 
 ```C
 swadgeMode_t roboRunnerMode = {
     .modeName                 = runnerModeName,  // Assign the name we created here
-    .wifiMode                 = NO_WIFI,         // If we want WiFi 
+    .wifiMode                 = NO_WIFI,         // If we want WiFi
     .overrideUsb              = false,           // Overrides the default USB behavior.
     .usesAccelerometer        = false,           // If we're using motion controls
     .usesThermometer          = false,           // If we're using the internal thermometer
@@ -321,7 +331,7 @@ static void runnerMainLoop(int64_t elapsedUs)
 }
 ```
 
-Seems pretty similar to the declarations, right? Instead of the semicolon we have curly braces, and we don't need to include the `void` inside the parens. 
+Seems pretty similar to the declarations, right? Instead of the semicolon we have curly braces, and we don't need to include the `void` inside the parens.
 
 The names need to be identical, and the `elapsedUs` needs to be the same, or else the compiler won't realize that these are the same functions and bind them.
 
@@ -388,9 +398,9 @@ if this doesn't help, another potential solution appears to be compiling with th
 
 So, something is broken. You can tell because when you try to run the emulator it flashes before disappearing, or it just never compiles.
 
-Fear not, the computer is trying to help you figure this out, believe it or not. 
+Fear not, the computer is trying to help you figure this out, believe it or not.
 
-First, check the problems tab above the terminal. It should have a list of compile time errors, or errors that the compiler can catch before you even build the program. Make sure you solve all of these before trying to compile. 
+First, check the problems tab above the terminal. It should have a list of compile time errors, or errors that the compiler can catch before you even build the program. Make sure you solve all of these before trying to compile.
 
 Once those are gone, if you compile and still get an error, you should be able to see some error messages in the terminal.
 
@@ -402,11 +412,12 @@ If all else fails, try searching the error message on the internet, or contact t
 
 Now, we're going to have to modify a few other files. Fortunately, only two more for now.
 
-First up, we need to tell the other modes about our mode. Open `main/modeIncludeList.h` and add our header file to the list of includes. 
+First up, we need to tell the other modes about our mode. Open `main/modeIncludeList.h` and add our header file to the list of includes.
 
 ![Include List](./TutorialImages/includeList.png)
 
 Next, open `main/modeIncludeList.c` and add the following:
+
 - Inside the `allSwadgeModes[]` list, add `&roboRunnerMode,` at the end of the list before the end curly brace.
 - Add `addSingleItemToMenu(menu, roboRunnerMode.modeName);` inside one of the submenus. Whichever submenu you put this in is where it'll be in the main menu. It's best to put games in the games folder, obviously.
 
@@ -425,7 +436,7 @@ Now that the emulator works, let's make sure we can compile it to load onto a ph
 We can use the following commands to build the program for the swadge.
 
 - Windows: `.\..\esp-idf\export.ps1`
-- Linux/MacOS: `source ./../esp-idf.sh`
+- Linux/MacOS: `source ./../esp-idf/export.sh`
 
 After that command completes, run `idf.py build`.
 
@@ -480,44 +491,45 @@ If you add "*" you will include all the files inside that folder. If the status 
 
 Now you can run `git status` again and verify all the files you want are added, and the ones you don't want aren't included. You can start over with `git reset` if you accidentally added the wrong files.
 
-Once you're satisfied with the file list, run the following command: `git commit -m "Initial Commit"` This will add the message to the commit so you don't have to memorize a hash to come back. THe message should be as descriptive as required, such as "misc bug fixes" or "Added blowing on microphone to jump". If you're writing paragraphs, you probably need to commit more.
+Once you're satisfied with the file list, run the following command: `git commit -m "Initial Commit"` This will add the message to the commit so you don't have to memorize a hash to come back. The message should be as descriptive as required, such as "misc bug fixes" or "Added blowing on microphone to jump". If you're writing paragraphs, you probably need to commit more.
 
 The last step can only be done if we have write access to the github repository. If you have access, you can push to the external repo, saving your code outside you computer so other devs can work on it and if your computer dies you'll be able to pull the files back down.
 
 Run `git push --set-upstream origin RoboRunner` to create the branch on the github server and send the files to it. You will have to log in.
 
-If successful, your code is now saved to the cloud and can be pulled to a different computer! 
+If successful, your code is now saved to the cloud and can be pulled to a different computer!
 
 We've done a lot of work and all we've got to show for it is a blank black screen, so in the next section let's give ourselves something to look at, hmm?
 
 ## Loading Resources
 
-In this section, we're going to draw something to the screen. 
+In this section, we're going to draw something to the screen.
 
 First, we need to make an image to display. I'm going to make the little robot that's gonna do the running. I prefer to use Aseprite to make images, and here's the result!
 
 ![Robo Example](./TutorialImages/roboExample.png)
 
-Did I mention I don't do art? I don't do art. Still, it's better to have this guy than nothing. 
+Did I mention I don't do art? I don't do art. Still, it's better to have this guy than nothing.
 
 If you're following along feel free to use any other small PNGs or make your own. They don't need to be perfect, just something to see what's going on. Don't worry about quality, making programmer art is a time honored tradition among game developers. Remember, if you make something fun and want better art, we have artists who love to help work on the games we make. You can ask for their help, or help from other people in your circle who like to make art. Swadge games are collaborative, so don't be shy!
 
 Some notes:
+
 - The swadge color palette can be found [here](./SwadgePalette.gpl). The swadge will crunch down other colors to closest match, but for better control, you can use this subset of colors to ensure it looks the same as originally designed if using Aseprite
 - The Swadge's screen was 280 wide x 240 tall for at least '23 through '25. This isn't that large, so a super detailed 1000 pixel square character isn't going to fit.
 - The Swadge's screen is pretty small in reality. The emulator's screen will make them a lot larger which is good for debugging but can fool your brain into thinking that's the end size.
-- images that are too large will not load. It has to do with memory size, not just pixel size, so there's no specific limit. Just keep the files a reasonable size and it'll be alright.
+- Images that are too large will not load. It has to do with memory size, not just pixel size, so there's no specific limit. Just keep the files a reasonable size and it'll be alright.
 
 All art and sounds go into the `assets/` folder in the repository. Make a new folder and copy all the assets into it. During compilation, they will be converted automatically to a format the swadge can use.
 
-### Memory 
+### Memory
 
-Now that I have some basic art, we can see about getting it into the Swadge. The Swadge has limited RAM, so each mode has to allocate and de-allocate RAM whenever the mode is entered or exited. We can't afford to have everything loaded all the time. If you recall use making the mode name up above, this is the reason we made it `const` so the bytes aren't taking up space in RAM.
+Now that I have some basic art, we can see about getting it into the Swadge. The Swadge has limited RAM, so each mode has to allocate and free RAM whenever the mode is entered or exited. We can't afford to have everything loaded all the time. If you recall use making the mode name up above, this is the reason we made it `const` so the bytes aren't taking up space in RAM.
 
-The easiest way to make sure the RAM is properly managed is to put all the variables into a "mode struct", or a simple data structure that will contain all the data as we can load and de-load it easily.
+The easiest way to make sure the RAM is properly managed is to put all the variables into a "mode struct", or a simple data structure that will contain all the data as we can load and unload it easily.
 
 ```C
-typedef struct 
+typedef struct
 {
     wsg_t character;
 } runnerData_t;
@@ -527,7 +539,7 @@ The above code creates a struct called runnerData_t with one member, that of a w
 
 Of course, we don't know what that is, so let's look that up, shall we? One of the most important skills in game development is being able to read the technical documentation. Right now, we have no idea what this wsg thing is but it's certainly valid code.
 
-If you navigate to [The documentation](https://adam.feinste.in/Super-2024-Swadge-FW/index.html) you'll find a lot of useful information. It's all generated directly from the code, so we can be sure it's up to date with the `main` branch. Here, we can go find the wsg.h file and figure out what it's used for.
+If you navigate to [the documentation's main page](https://adam.feinste.in/Super-2024-Swadge-FW/index.html) you'll find a lot of useful information. It's all generated directly from the code, so we can be sure it's up to date with the `main` branch. Here, we can go find the wsg.h file and figure out what it's used for.
 
 Turns out, it's our image handler. Pretty easy to get from context, but anytime there's something you want to know about, look it up in the documentation. In fact, maybe set aside some time to look through random bits of the library. See how other modes were built, look at the functions. This will help you figure out what the other devs have worked and how everything is organized. It's a good idea to bookmark it for easy browsing later.
 
@@ -547,17 +559,18 @@ static void runnerEnterMode()
 ```
 
 That's a lot, but here's the breakdown:
+
 - heap_caps_calloc() allocates memory. This tells the swadge or emulator to make space for the data we're going to save.
 - The arguments:
   - 1: The number blocks of memory to initialize. We only need one copy of runnerData_t, so 1.
   - sizeof(runnerData_t): This automatically gets the size of runnerData_t. If we add thirty more "wsg_t"s, this will automatically ensure the memory picked up is the right size.
-  - MALLOC_CAP_8BIT: This is a mode thing. Unless it breaks, just use this.
+  - MALLOC_CAP_8BIT: This is an ESP thing. The ESP has different types of RAM, including a smaller amount of faster MALLOC_CAP_8BIT and a larger amount of slower MALLOC_CAP_SPIRAM. Until you run out of RAM, use MALLOC_CAP_8BIT.
 - (runnerData_t*): The memory that heap_caps_calloc() assigned to us isn't typed, it's just a bunch of holes to fill numbers into. This snippit of code tells the compiler that memory we just allocated fits into rd
 - rd: A pointer to the memory we've just allocated.
 
 So, pointers. It's not complicated, but when you're unfamiliar it does seem overwhelming. A pointer is an address to a value. Think of it like a mailbox. The mailbox contains the value, whether it's a single true/false or an entire swadgeMode_t struct. The pointer is the number on the side of the mailbox. Sometimes it's a lot easier to say "grab whatever's in mailbox 20" instead of describing each part of the data inside the mailbox.
 
-In our case we're doing this because we don't actually know which mailbox out runnerData_t is assigned to. What we do know is that whatever that mailbox ends up being we've stored the number inside `rd`. 
+In our case we're doing this because we don't actually know which mailbox out runnerData_t is assigned to. What we do know is that whatever that mailbox ends up being we've stored the number inside `rd`.
 
 So, `rd` contains an address. We don't really care where, just that it exists. Great.
 
@@ -571,11 +584,11 @@ static void runnerExitMode()
 }
 ```
 
-This will de-allocate the memory.
+This will free the memory.
 
 ### Images, Finally
 
-Now we're going to allocate memory for the WSG. All assets (images, fonts and sounds) need to be allocated and de-allocated just like individual blobs of memory.
+Now we're going to allocate memory for the WSG. All assets (images, fonts and sounds) need to be allocated and freed just like individual blobs of memory.
 
 Remember, the order of allocating memory matters! If item X contains item Y, and we free item X before Y, the program doesn't know how to access Y anymore and we cause memory leaks. Also, we can't allocate for Y if X isn't already allocated.
 
@@ -596,7 +609,7 @@ Lastly, that last `true` at the end of the load function tells the swadge which 
 
 We want to store the image into rd, which means we can replace `storedImage` with `rd->character` and `image` with `ROBO_STANDING_WSG` and then put them in our existing functions. The arrow notation between rd and character indicated that rd points to the character data.
 
-Given we know that rd needs to be allocated, we need to put the `loadWsg()` function after the `heap_caps_calloc()` and the `freeWsg()` before the `heap_caps_free(rd)` functions. 
+Given we know that rd needs to be allocated, we need to put the `loadWsg()` function after the `heap_caps_calloc()` and the `freeWsg()` before the `heap_caps_free(rd)` functions.
 
 ```C
 static void runnerEnterMode()
@@ -617,6 +630,7 @@ Now, the wsg is loaded and we can actually start to use it!
 In the main loop function, add `drawWsgSimple(&rd->character, 32, 184);`
 
 We pass in three arguments:
+
 - &rd->character: The address of the wsg inside rd->character
 - x Offset: How many pixels across the screen from left to right the image is drawn at
 - y Offset: How many pixels from top to bottom the image is offset by
@@ -630,7 +644,8 @@ Some things you'll note if you start to play with the numbers is that the corner
 Next, we'll add some ground to stand on.
 
 Before the function drawing the sprite, add the following line: `drawLine(0, 184, TFT_WIDTH, 184, c555, 0);`
-- `drawline()`: Draws a line as defines by the first four numbers
+
+- `drawLine()`: Draws a line as defines by the first four numbers
 - `TFT_WIDTH`: This is a Macro. Macros will be explained later, but this one is just eh value 280, which is the width of the swadge screen in pixels.
 - `c555`: The swadge color palette uses this notation. c555 is white, c000 is black.
 - The last zero is dash width. We don't want our ground line to be dashed, so zero.
@@ -639,7 +654,7 @@ If you look into the documentation for drawLine() (shapes.h) you can see that if
 
 Play with the colors (try c500, c050, c005, and c123) and the x and y positions on either end and watch how the line moves. Make sure to save the file before reloading the emulator!
 
-If you place the draw line function after the `drawWsg()` you'll notice the line draws on top of the robot, which definitely looks wrong. Remember, draw order matters. 
+If you place the draw line function after the `drawWsg()` you'll notice the line draws on top of the robot, which definitely looks wrong. Remember, draw order matters.
 
 Right now, we're drawing the robot standing in the same place every frame, which is boring. Let's get some actual movement on screen!
 
@@ -650,7 +665,7 @@ Right now, we're drawing the robot standing in the same place every frame, which
 
 const char runnerModeName[] = "Robo Runner";
 
-typedef struct 
+typedef struct
 {
     wsg_t character;
 } runnerData_t;
@@ -699,7 +714,7 @@ static void runnerMainLoop(int64_t elapsedUs)
 
 ## Input
 
-Let's get the jumping ability coded. Since the obstacles come to us, we just need to jump up and then fall down. The robot can only jump when on the ground. We'll allow the player to press either the A button or the up button to jump, and we want the robot to have a graceful arc. 
+Let's get the jumping ability coded. Since the obstacles come to us, we just need to jump up and then fall down. The robot can only jump when on the ground. We'll allow the player to press either the A button or the up button to jump, and we want the robot to have a graceful arc.
 
 An improvement to game feel might be to vary the height of the jump based on the length of the button press, but that's more than we described above. Maybe we'll fit it in later.
 
@@ -726,17 +741,18 @@ static void runnerMainLoop(int64_t elapsedUs)
 ```
 
 Here's a breakdown of the parts of the input:
+
 - `buttonEvt_t evt;`: Creates a event struct. this contains a single button state at a time
 - `checkButtonQueueWrapper()`: The swadge has an internal buffer for buttons. This takes the next button and sets the event (passed as an argument) to the state the button is at.
 - `while(){}`: The while loop continues to execute until `checkButtonQueueWrapper()` returns false because there's no more buttons pressed.
 - `if(){}`: If the contained statement is true, execute the code inside the curly braces.
 - `evt.button & PB_A || evt.button == PB_UP`: This is an expression that evaluates to true or false.
-  - `evt.button & PB_A`: If the A button is pressed, value is set to true
-  - `evt.button == PB_UP`: If the up button is pressed, value is set to true
+  - `evt.button & PB_A`: If the A button is pressed, value is set to true. `&` is the bitwise AND operator.
+  - `evt.button == PB_UP`: If the up button is pressed, value is set to true `==` is the "equal to" operator.
   - `||`: Logical OR. Basically, if the left hand side is true OR the right hand side is true, the whole thing is true.
 - `rd->jumped`: This is the most important part, this is where we tell the rest of the mode that we just jumped in the air.
 
-You'll note that when checking if the button is A we used a single ampersand and for checking the up button we used "==". Both work, it's a matter of preference. I prefer the ampersand.
+You'll note that when checking if the button is A we used `&` and for checking the up button we used `==`. Both do the same thing here. `&` could be used to check for multiple button presses at the same time in buttonEvt_t.state while `==` will only ever check for one specific value.
 
 ### Jumping Robots
 
@@ -782,6 +798,7 @@ Let's hit F5!
 Well, that's not right.
 
 If you restart the program and spam the jump key, you'll see that the robot can actually stay in frame if you jump fast enough. Congratulations, we've just made flappy robot. Seeing as that's not the goal, let's take an inventory of the issues:
+
 - The robot never stops falling
 - The robot can jump in the air
 - The swadge just draws over the previous frame, resulting in a series of images instead of what you'd expect.
@@ -790,11 +807,11 @@ We'll tackle the visuals first.
 
 #### Sidebar - Get Rid of Overdraw
 
-The Swadge doesn't automatically refresh the screen, as it turns out. Any pixels not updated from the last frame will remain the same. This could be used to optimize things if the mode is very, *very* constrained, but in general we can just redraw everything each frame. 
+The Swadge doesn't automatically refresh the screen, as it turns out. Any pixels not updated from the last frame will remain the same. This could be used to optimize things if the mode is very, *very* constrained, but in general we can just redraw everything each frame.
 
 In our case, we're already drawing everything we want each frame, so all we need to do is clear the screen.
 
-Add a simple `fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);` before the line and wsg draw lines. If you want to, you can change the color to see which you like best. This function draws from the top left corner (0, 0) to the bottom right corner, (TFT_WIDTH, TFT_HEIGHT) in the color chosen. Since it'll write over every pixel, the only things we'll see on the next frame are whats drawn that frame.
+Add a simple `fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);` before the line and wsg draw lines. If you want to, you can change the color to see which you like best. This function draws from the top left corner (0, 0) to the bottom right corner, (TFT_WIDTH, TFT_HEIGHT) in the color chosen. Since it'll write over every pixel, the only things we'll see on the next frame are whats drawn that frame. `clearPxTft()` works too, if you want to clear to black.
 
 #### Back to Fixing
 
@@ -830,11 +847,12 @@ Now the robot should jump as expected!
 
 ### Macros and Magic Numbers
 
-I promised to tell you about macros, and here's where I'm doing that. 
+I promised to tell you about macros, and here's where I'm doing that.
 
 Macros are a "preprocessor" step, which means the compiler moving things around before actually compiling your code. Sounds scary, and if used incorrectly it causes all sorts of problems. So then, why tempt fate and use them?
 
 Because they can be very useful in getting rid of magic numbers, that's why. Right now, we have plenty of magic numbers, or numbers that we just put in without saying how we got them.
+
 - Jump height: -12
 - ySpeed increase each frame: 1
 - height on screen before onGround is set to true: 128
@@ -953,9 +971,9 @@ static void runnerMainLoop(int64_t elapsedUs)
     drawWsgSimple(&rd->character, PLAYER_X, rd->yPos);
 }
 ```
-If you want, try playing with the macro values to find something you like. 
+If you want, try playing with the macro values to find something you like.
 
-Now that we've started to get a handle on things, this tutorial will move a little faster. 
+Now that we've started to get a handle on things, this tutorial will move a little faster.
 
 ## Obstacles
 
@@ -985,7 +1003,7 @@ Next, let's refactor the player to allow for collisions. Refactoring is converti
 The struct section should look a lot like this now.
 
 ```C
-typedef struct 
+typedef struct
 {
     rectangle_t rect; // Contains the x, y, width and height
     wsg_t img;        // The image
@@ -1013,9 +1031,11 @@ typedef struct
 In the runnerData_t, we're now storing one copy of the robot and two copies of the obstacle. This is another magic number we can change to a Macro. I'll leave that as an exercise for the reader.
 
 Now that we've refactored, there's a lot of red. Let's start converting them.
+
 - `&rd->character` becomes `&rd->robot.img`
 - `rd->onGround` becomes `rd->robot.onGround`
 - The most complicated on is yPos, which goes from `rd->yPos` to `rd->robot.rect.pos.y`
+
 The rest should be evident. Once you're done, hit F5 to make sure that the code still runs as expected.
 
 While we're refactoring, let's also break out some of the code into more functions. Keeping the draw calls in the same place will come in handy later, as well as handling the logic updates separately.
@@ -1098,7 +1118,7 @@ for (int idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
     loadWsg(obstacleImages[idx], &rd->obstacleImgs[idx], true);
 }
 
-// Remember to de-allocate whatever you use inside the exit function!
+// Remember to free whatever you use inside the exit function!
 for (int idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
 {
     freeWsg(&rd->obstacleImgs[idx]);
@@ -1107,34 +1127,30 @@ heap_caps_free(rd->obstacleImgs);
 ```
 
 Here's a breakdown of the process:
+
 - First, we make a list of the image indexes.
 - We create an enum of types for later
 - We add a place to put a pointer for reference later into the data struct
 - We initialize the memory space with heap_caps_calloc() to the same size as the const array from before to automatically get the correct size
 - We loop through each item and assign them in order
-- Lastly, we de-allocate each image and then the containing memory in the exit function
+- Lastly, we free each image and then the containing memory in the exit function
 
 #### Loops
 
 An important part of programming is loops. There's three primarily used in C:
+
 - For: Set the number of times the loop executes ahead of time
 - While: Loop until a condition is met
 - Do while: Execute a loop once, then if a condition isn't met yet, continue doing it.
 
-For loops are extremely common, and they have their own loop counting variables built in. in this case, `idx`. YOu can see that first we set it's initial state to 0, tell it to continue until it matches the array size of `obstacleImages` and finally tell it to increment by one each loop (idx++). Note that if we want to, we can change idx inside the loop, but doing that thoughtlessly could get the computer stuck in the loop. The condition to exit the loop is that `idx` needs to be larger than the array, or 2. If we set `idx` to 0 at the end of each loop, the end of the loop will change the value to 1 and it will get stuck doing this infinitely.
+For loops are extremely common, and they have their own loop counting variables built in. in this case, `idx`. You can see that first we set it's initial state to 0, tell it to continue until it matches the array size of `obstacleImages` and finally tell it to increment by one each loop (idx++). Note that if we want to, we can change idx inside the loop, but doing that thoughtlessly could get the computer stuck in the loop. The condition to exit the loop is that `idx` needs to be larger than the array, or 2. If we set `idx` to 0 at the end of each loop, the end of the loop will change the value to 1 and it will get stuck doing this infinitely.
 
 The "++" notation can be used on any variable. It's just faster to write `idx++;` than writing either `idx += 1;` or `idx = idx + 1;` and can sometimes be used in tricky ways to speed up the program, but that's far outside the scope of what someone new to developing needs to worry about. "--" works in the same way to subtract one.
 
 While loops check that a condition is true and loop if it's not. `while(y > 0) {}` will execute everything inside the curly braces until y is less than or equal to 0. It's important to update y inside the loop or the program will get stuck.
 
 Do While loops are just while loops, but will run the content of the curly braces once before checking the condition.
-```C
-do
-{
-
-} while (y > 0);
-```
-In this case, even if y is already less than 0 it will execute once anyway. 
+`do { } while (y > 0);` will execute everything inside the curly braces at least once, even if y is already less than 0.
 
 ### Back to Obstacles
 
@@ -1209,7 +1225,7 @@ spawnObstacle(LAMP, 1);
 
 Something to remember about C is that the variables don't have a default state when initialized. `int abc;` could hold literally any value that `int` can hold. Thus, we need to set it first. Things that only need to be set once can be set to const or during the mode entry function, whereas other items may need to be set more often, like our obstacles. Each time a new one is made, it has to be moved to the far side of the screen, set to either a lamp or a barrel, and then assigned the appropriate height and image. All common variables can be set regardless, which makes the code shorter and easier to read.
 
-We have to have to set both obstacles to false before any code could try to call them, find a random `true` in the .active slot and then try to load who knows what data.
+We have to have to set both obstacles to false before any code could try to call them, find a random `true` in the `.active` slot and then try to load who knows what data.
 
 #### Fixing up the Lamps
 
@@ -1221,13 +1237,13 @@ Next, let's create a ceiling to lower the lamp without having it suspend in spac
 
 Lastly, change the lamp to start at `CEILING_HEIGHT` instead of 0.
 
-This leaves a lot of space over top of the play area, but we can use that fro displaying the high score or current score later.
+This leaves a lot of space over top of the play area, but we can use that for displaying the high score or current score later.
 
 ### Moving the Obstacles
 
 We don't want the obstacles to just sit there and taunt us, we need them to charge us. Well, we want it to look more like our robot is charging the obstacles, but functionally we'll just have the obstacles come to us.
 
-As a first, "let's just get it to work" type start, let's subtract one from it's x position every loop of the game. 
+As a first, "let's just get it to work" type start, let's subtract one from it's x position every loop of the game.
 
 ```C
 for (int idx = 0; idx < MAX_OBSTACLES; idx++)
@@ -1296,15 +1312,15 @@ static void trySpawnObstacle()
 
 I swear this isn't scary. If math is scary to you, I promise that this won't hurt and I'll make it easy.
 
-First off, know that division sucks for computers. While addition, subtraction and multiplication are very easy, division doesn't calculate as easily. There's tricks to get around it, but that's not the point of this exercise. 
+First off, know that division sucks for computers. While addition, subtraction and multiplication are very easy, division doesn't calculate as easily. There's tricks to get around it, but that's not the point of this exercise.
 
 When a computer divides integers (whole numbers, 1, 2, 54389820, but not 0.3453 or 438290.5) and it's an uneven division, it calculates with a remainder. For example, 10 / 3 is equal to 3 remainder 1, not 3.333. Of course, the remainder isn't tracked in a division operation. Instead, we can used the modulo operator (%) to get the remainder. So, 10 / 3 = 3, and 10 % 3 = 1.
 
 #### Back to Randomness
 
-Why is this useful? Well, let's say we want to pick between two obstacles. If we take the random number we generated (0 to 4 million-ish) and modulo by 2, the result will either be 0 or 1, and those are the values corresponding to a barrel and a lamp! 
+Why is this useful? Well, let's say we want to pick between two obstacles. If we take the random number we generated (0 to 4 billion-ish) and modulo by 2, the result will either be 0 or 1, and those are the values corresponding to a barrel and a lamp!
 
-Note that modulo never gets the value it is. If modulo is 2, it can only generate 0 and 1. If it's eight, it will generate 0 through 7. 
+Note that modulo never gets the value it is. If modulo is 2, it can only generate 0 and 1. If it's eight, it will generate 0 through 7.
 
 We also used `esp_random()` to make a spawn chance. Every loop, there's a 1 in 80 chance to spawn a new obstacle if there's a slot free. We calculate this chance by doing modulo 80 which provides a value between 0 and 79, roughly at all the same chance of occurring. Then, we ask if it happened to land on 0. If so, yay! We can spawn an obstacle. If not, then we'll try again in the future.
 
@@ -1314,7 +1330,7 @@ Now delete the two `spawnObstacles()` in the mode enter function, and try the ga
 
 Well, should've seen this coming. We only have two slots for the obstacles, but we never let anything else use them after we set them to active.
 
-All we need to do is make sure they're off screen before setting .active to false. Add the following to `updateObstacle()`:
+All we need to do is make sure they're off screen before setting `.active` to false. Add the following to `updateObstacle()`:
 
 ```C
 if (obs->rect.pos.x < -40)
@@ -1327,7 +1343,7 @@ Now we're almost done with the core gameplay. We can jump and try to avoid colli
 
 ### Collisions
 
-If we go way back, we added the `geometry.h` library and used `rect` for the position, height and width of the obstacles. We also changes the robot's position data to be based on a `rect`. Fortunately for us, there's already a performant collision checking algorithm built into `geometry.h` so we don't have to think too hard about axis-aligned bounding boxes if we don't want to.
+If we go way back, we added the `geometry.h` library and used `rectangle_t` for the position, height and width of the obstacles. We also changes the robot's position data to be based on a `rectangle_t`. Fortunately for us, there's already a performant collision checking algorithm built into `geometry.h` so we don't have to think too hard about axis-aligned bounding boxes if we don't want to.
 
 Of course, the first thing we need to do is set the robot's rect's size. We never did that, since it wasn't important until now! Add these into the enter mode function:
 
@@ -1381,7 +1397,7 @@ Since the rect's position needs to be adjusted, we're going to have to move the 
 #define BARREL_GROUND_OFFSET (GROUND_HEIGHT - 18)
 
 // Enter mode function
-rd->robot.rect.height = rd->robot.img.h - HBOX_HEIGHT;  
+rd->robot.rect.height = rd->robot.img.h - HBOX_HEIGHT;
 rd->robot.rect.width  = rd->robot.img.w - HBOX_WIDTH;
 rd->robot.rect.pos.x = PLAYER_X;
 
@@ -1393,7 +1409,7 @@ drawWsgSimple(&rd->robot.img, PLAYER_X - PLAYER_X_IMG_OFFSET, rd->robot.rect.pos
 
 Much better. Now, let's handle the collision instead of letting the obstacles just phase through the robot, shall we?
 
-It's actually really easy: 
+It's actually really easy:
 ```C
 for (int idx = 0; idx < MAX_OBSTACLES; idx++)
 {
@@ -1551,7 +1567,7 @@ static void runnerEnterMode()
 
 static void runnerExitMode()
 {
-    // Remember to de-allocate whatever you use!
+    // Remember to free whatever you use!
     for (int idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
     {
         freeWsg(&rd->obstacleImgs[idx]);
@@ -1721,7 +1737,7 @@ static void draw()
 
     // Draw the player
     drawWsgSimple(&rd->robot.img, PLAYER_X - PLAYER_X_IMG_OFFSET, rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET);
-    
+
     // Uncomment these to draw the hitboxes
     /* drawRect(rd->robot.rect.pos.x, rd->robot.rect.pos.y, rd->robot.rect.pos.x + rd->robot.rect.width,
              rd->robot.rect.pos.y + rd->robot.rect.height, c500);
@@ -1770,16 +1786,17 @@ drawText(getSysFont(), c555, buffer, 32, 4);
 ```
 
 That's easy to understand, right? No? Alright, let's go through it:
+
 - `char buffer[32]`: This will contain a set number of characters. I've picked 32 arbitrarily. If you want to draw text, you will need to make a char array to hold it is some form or another
-- `snprintf()`: This function copies a string (char*/char a[] are both strings) into another.
-  - `buffer`: The char array/string to copy the text into
-  - `sizeof(buffer) - 1`: The size of the array, so we don't run out of space. We set it to -1 the full length because the last character of a string needs to be empty to signal the end of the string. This is done automatically as long as we've set this up properly.
+- `snprintf()`: This function writes a string to memory (`char*` and `char a[]` are both memory destinations) while substituting variables.
+  - `buffer`: The char array/string to write the text into
+  - `sizeof(buffer) - 1`: The size of the array, so we don't write out of bounds. We set it to -1 the full length because the last character of a string needs to be empty to signal the end of the string. This is done automatically as long as we've set this up properly.
   - `"Score: %" PRIu32`: This is the string to copy into the buffer, but with a few twists:
-    - The "%" means that we're loading a variable into the string. 
-    - The PRIu32 is the format of the variable being loaded. It *has* to match the variable or the program will not compile.
-      - %s can be used for strings without an extra format specifier
-      - %d can be used for `int` without a format specifier, but might behave differently on a swadge versus the emulator (`int` doesn't have a specific length)
-      - Formats can be looked at [here](https://cplusplus.com/reference/cinttypes/). If lost, just ask for help from a friendly swadge dev, this one is complicated.
+    - The "%" means that we're loading a variable into the string.
+    - The `PRIu32` is the format of the variable being loaded. It *has* to match the variable or the program will not compile.
+      - `%%s` can be used for strings without an extra format specifier
+      - `%%d` can be used for `int` without a format specifier, but might behave differently on a swadge versus the emulator (`int` doesn't have a specific length)
+      - Formats can be looked at [here](https://en.cppreference.com/w/c/types/integer). If lost, just ask for help from a friendly swadge dev, this one is complicated.
   - `rd->score`: The variable to load into the % sign of the string. If we had multiple variables, we'd add more separated by commas.
 - `drawText()`: Draws text to the screen
   - `getSysFont()`: This one is a bit misleading. There are several fonts on a swadge, but one of them is always loaded by default. This pulls that font for use. Fonts can generally be used just like WSGs except they go into `font_t` structs and only fit into `drawText()` and not `drawWsg()`.
@@ -1792,7 +1809,7 @@ Great. Now we have a score drawing on the screen that resets when the player col
 
 ### Previous Score
 
-Easy enough to do. 
+Easy enough to do.
 
 ```C
 // Runner data
@@ -1813,9 +1830,9 @@ drawText(getSysFont(), c555, buffer, 32, 20);
 
 ### Saving the Data
 
-Something you'll quickly note if you try this a few times is that when you close the emulator or change modes the score isn't saved. That's because we're working in RAM, which dies every time memory is freed. What we need to do is write to the ESP's onboard Non-Volatile Storage (NVS). The NVS isn't that big, but we can store plenty of info for what we're attempting. We're only saving one number!
+Something you'll quickly note if you try this a few times is that when you close the emulator or change modes the score isn't saved. That's because we're working in RAM, which dies every time memory is freed or the swadge turns off. What we need to do is write to the ESP's onboard Non-Volatile Storage (NVS). The NVS isn't that big, but we can store plenty of info for what we're attempting. We're only saving one number!
 
-There are a few things you do need to watch out for though. NVS has a limit to the amount of times it can be written to. This isn't something that's likely to come up in normal usage, but if you're saving data ***Constantly*** you will burn out the NVS sooner rather than later. Reading incurs no penalty. There's a lot of hardware trickery going on in the background to ensure the data is saved properly, so it's best not to worry about it too much.
+There are a few things you do need to watch out for though. NVS has a limit to the amount of times it can be written to. This isn't something that's likely to come up in normal usage, but if you're saving data ***Constantly*** you will burn out the NVS sooner rather than later. Saving a high score at the end of a game is good. Saving a new score every time it increments is bad. Reading incurs no penalty. There's a lot of hardware trickery going on in the background to ensure the data is saved properly, so it's best not to worry about it too much.
 
 To save the final score, let's add a function to save the high score when it's set:
 ```C
@@ -1867,10 +1884,9 @@ There we go!
 
 ## Difficulty (Speed Up)
 
-We really should increase the difficulty with time.
+We really should increase the difficulty with time. We have three ways of tweaking that:
 
-We have three ways of tweaking that: 
-- The frequency that obstacles spawn 
+- The frequency that obstacles spawn
 - How fast they scroll across the screen
 - How many can appear on the screen at once
 
@@ -1897,7 +1913,7 @@ if (rd->spawnRateTimer > SPAWN_RATE_TIMER && rd->spawnRate > 1)
 }
 
 // In trySpawnObstacle() replace 80 with rd->spawnRate
-bool spawn = (esp_random() % rd->spawnRate) == 0; 
+bool spawn = (esp_random() % rd->spawnRate) == 0;
 ```
 
 Now the objects will spawn slightly more frequently. We can do something pretty similar for the speed across the screen.
@@ -1920,7 +1936,7 @@ if (rd->speedDivisorTimer > SPEED_TIMER && rd->speedDivisor < 10000)
 }
 
 // Update Obstacle
-int moveSpeed = 1000000 / rd->speedDivisor; 
+int moveSpeed = 1000000 / rd->speedDivisor;
 
 ```
 
@@ -1936,11 +1952,11 @@ Last little bit of difficulty we'll add is increasing the number of obstacles we
 
 // Runner data
 int currentMaxObstacles;
-int64_t maxObstacleTimer; 
+int64_t maxObstacleTimer;
 
 // Reset
 rd->currentMaxObstacles = START_OBSTACLES;
-rd->maxObstacleTImer    = 0;
+rd->maxObstacleTimer    = 0;
 
 // Main loop
 rd->maxObstacleTimer += elapsedUs;
@@ -1961,6 +1977,7 @@ And that's it!
 So far, this mode has been entirely silent. Making sounds is outside the score of this tutorial, but we have excellent help and we're encouraged to borrow sounds from other modes. There's an "attic" folder with old code and assets, and if you move the files from the attic into the assets folder proper, you can use them too.
 
 There's two methods of making noise:
+
 - Individual notes
 - Play a midi track
 
@@ -2003,7 +2020,7 @@ Next, we're gonna make simple collision noises. We'll do this when the robot col
 midiNoteOn(rd->sfxPlayer, 9, HIGH_BONGO, 0x7F);
 ```
 
-Because this is the percussion instrument channel 10 (number 9, second argument) we can just play and it'll stop byu itself. Individual notes are more complicated.
+Because this is the percussion instrument channel 10 (number 9, second argument) we can just play and it'll stop by itself. Individual notes are more complicated.
 
 The BGM is kinda loud too, so lets also set the volumes of the BGM channel:
 ```C
@@ -2015,6 +2032,7 @@ globalMidiPlayerSetVolume(MIDI_BGM, 12);
 ## Animations
 
 Alright, we're getting to the end of this tutorial. The last thing we're gonna implement is some nice and simple animations:
+
 - Walk animation: Alternate legs being shorter. We're going to tie this animation to the speed objects are moving
 - Death animation: Once a collision happens, we'll pause everything and watch the robot fall over before resetting.
 - Jump animation: Just going to be the standing animation in the air, but we need to stop the feet moving.
@@ -2041,8 +2059,8 @@ typedef struct
 } obstacle_t;
 
 // Add the type to the obstacle struct
-int64_t barrelAnimTimer; 
-int barrelAnimIdx; 
+int64_t barrelAnimTimer;
+int barrelAnimIdx;
 
 // Main loop
 rd->barrelAnimTimer += elapsedUs;
@@ -2056,9 +2074,9 @@ if (rd->barrelAnimTimer > 300000)
 }
 
 // Add to spawn obstacle in the after the box size. Also delete the "set image" lines
-rd->obstacles[idx].t = type; 
+rd->obstacles[idx].t = type;
 
-// Draw 
+// Draw
 // Replace drawWsgSimple with the following:
 switch(rd->obstacles[idx].t)
 {
@@ -2145,7 +2163,7 @@ Next, lets add the death animation. This one will be more involved since we need
 
 ```C
 // Add dead boolean to player_t
-bool dead; 
+bool dead;
 
 // Move obstacle update code into if() so it stops when the robot is dead
 if (!rd->robot.dead)
@@ -2498,7 +2516,7 @@ static void runnerExitMode()
     globalMidiPlayerStop(MIDI_BGM);
     unloadMidiFile(&rd->bgm);
 
-    // Remember to de-allocate whatever you use!
+    // Remember to free whatever you use!
     for (int idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
     {
         freeWsg(&rd->obstacleImgs[idx]);
@@ -2865,25 +2883,27 @@ So let's take the checklist we started with and see how we did.
   - [x] A way to move the ground and background to give the illusion of movement, speeding up as time goes on.
   - [x] A way to save the final score, even between swadge power-offs
 
-So looks like we did a pretty good job. 
+So looks like we did a pretty good job.
 
 So, what's next? Well, we can either claim this one it done and move on to the next project, or we can continue to polish this one up. Here's the list of some more things that could be added to make the game more fun:
+
 - Add better controls: Maybe make it so you queue up the jump button so you don't have to be landed before you can press the button, but don't jump until the robot touches the ground. Or, how long you press down the button affects how hight he robot jumps?
 - Add the splash screen: It would be nice to get a moment to absorb what's going on before going into a game.
 - Add death text: Provide some text to tell the player to press any button to start over.
-- Add Trophies: as of 2025, we have trophies we can add to a mode. See (this document)[../main/utils/trophy.h] for info on how to do that.
-- Add high score to SwadgePass: SwadgePass is a system to send data to other swadges in the area.
-- LEDs: There's LEDs around the Swadge. Make them light up in response to what's going on in the game
-- Accelerometer: Shake to jump?
+- Add Trophies: as of 2025, we have trophies we can add to a mode. See trophy.h for info on how to do that.
+- Add high score to SwadgePass: SwadgePass is a system to send data to other swadges in the area. See swadgePass.h for info on how to do that.
+- LEDs: There's LEDs around the Swadge. Make them light up in response to what's going on in the game. See hdw-led.h for info on how to do that.
+- Accelerometer: Shake to jump? See hdw-imu.h for info on how to do that.
 - Add Power-ups: Invincibility? Super jump? Bonus score? See what you can make!
 - Fiddle with the code: Code is a form of art as much as drawings or music is. Adjust the cde we've already made to see what can change!
 
 Some other things:
+
 - Comment all your code! Commenting code helps other people figure out what the heck you were doing, and helps you know what you were doing three months ago last time you were working on the
 - Look at other modes. This will show you how other people tackle challenges handle weird edge cases, and generally provide some insight on what you can do with your mode.
-- Checkout the [Pong Mode](https://github.com/AEFeinstein/Super-2024-Swadge-FW/blob/fdce1624625a5888a1866c84c56ac994a58ae1cb/main/modes/pong/pong.c). 
-- Check out the current build of [RoboRunner](../main/modes/games/RoboRunner/) with a bunch of the above considerations considered.
+- Checkout the [Pong Mode](https://github.com/AEFeinstein/Super-2024-Swadge-FW/blob/fdce1624625a5888a1866c84c56ac994a58ae1cb/main/modes/pong/pong.c).
+- Check out the current build of [RoboRunner](https://github.com/AEFeinstein/Super-2024-Swadge-FW/tree/main/main/modes/games/RoboRunner/) with a bunch of the above considerations considered.
 
-I hope this tutorial has been useful in getting you started. Feel free to pi9ng me on discord or talk to me on slack if you happen to need assistance. I'm JohnnyWycliffe on both.
+I hope this tutorial has been useful in getting you started. Feel free to ping me on discord or talk to me on slack if you happen to need assistance. I'm JohnnyWycliffe on both.
 
 Good luck with your future swadge modes!
