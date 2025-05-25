@@ -1,11 +1,11 @@
 #ifndef _MODE_PICROSSLEVELSELECT_H_
 #define _MODE_PICROSSLEVELSELECT_H_
 
-#include "swadgeMode.h"
-#include "aabb_utils.h"
+#include "swadge2024.h"
 #include "picross_consts.h"
 
-typedef struct {
+typedef struct
+{
     int8_t index;
     wsg_t levelWSG;
     wsg_t completedWSG;
@@ -15,7 +15,6 @@ typedef struct {
 
 typedef struct
 {
-    display_t* disp;
     font_t* game_font;
     font_t smallFont;
     picrossLevelDef_t* chosenLevel;
@@ -30,13 +29,13 @@ typedef struct
     uint8_t paddingTop;
     uint8_t paddingLeft;
     uint8_t gap;
-    int32_t currentIndex;//s32bit because its stored i an nvs
+    int32_t currentIndex; // s32bit because its stored i an nvs
     wsg_t unknownPuzzle;
     bool allLevelsComplete;
-    picrossLevelDef_t levels[PICROSS_LEVEL_COUNT];   
+    picrossLevelDef_t levels[PICROSS_LEVEL_COUNT];
 } picrossLevelSelect_t;
 
-void picrossStartLevelSelect(display_t* disp, font_t* mmFont, picrossLevelDef_t levels[]);
+void picrossStartLevelSelect(font_t* mmFont, picrossLevelDef_t levels[]);
 void picrossLevelSelectLoop(int64_t elapsedUs);
 void picrossLevelSelectButtonCb(buttonEvt_t* evt);
 void picrossExitLevelSelect(void);
