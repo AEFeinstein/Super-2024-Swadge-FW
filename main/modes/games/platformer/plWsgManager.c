@@ -29,12 +29,23 @@ void pl_freeWsgManager(plWsgManager_t* self)
 
 void pl_loadWsgs(plWsgManager_t* self)
 {
-    loadWsg(SPRITE_000_WSG, &self->wsgs[PL_WSG_PLAYER_IDLE], false);
-    loadWsg(SPRITE_001_WSG, &self->wsgs[PL_WSG_PLAYER_WALK1], false);
-    loadWsg(SPRITE_002_WSG, &self->wsgs[PL_WSG_PLAYER_WALK2], false);
-    loadWsg(SPRITE_003_WSG, &self->wsgs[PL_WSG_PLAYER_WALK3], false);
-    loadWsg(SPRITE_004_WSG, &self->wsgs[PL_WSG_PLAYER_JUMP], false);
-    loadWsg(SPRITE_005_WSG, &self->wsgs[PL_WSG_PLAYER_SLIDE], false);
+    loadWsg(PULSE_036_WSG, &self->wsgs[PL_WSG_PLAYER_IDLE], false);
+    loadWsg(PULSE_000_WSG, &self->wsgs[PL_WSG_PLAYER_WALK1], false);
+    loadWsg(PULSE_001_WSG, &self->wsgs[PL_WSG_PLAYER_WALK2], false);
+    loadWsg(PULSE_002_WSG, &self->wsgs[PL_WSG_PLAYER_WALK3], false);
+    loadWsg(PULSE_003_WSG, &self->wsgs[PL_WSG_PLAYER_WALK4], false);
+    loadWsg(PULSE_004_WSG, &self->wsgs[PL_WSG_PLAYER_WALK5], false);
+    loadWsg(PULSE_005_WSG, &self->wsgs[PL_WSG_PLAYER_WALK6], false);
+    loadWsg(PULSE_006_WSG, &self->wsgs[PL_WSG_PLAYER_WALK7], false);
+    loadWsg(PULSE_007_WSG, &self->wsgs[PL_WSG_PLAYER_WALK8], false);
+    loadWsg(PULSE_008_WSG, &self->wsgs[PL_WSG_PLAYER_WALK9], false);
+    loadWsg(PULSE_009_WSG, &self->wsgs[PL_WSG_PLAYER_WALK10], false);
+    loadWsg(PULSE_037_WSG, &self->wsgs[PL_WSG_PLAYER_JUMP], false);
+    loadWsg(PULSE_038_WSG, &self->wsgs[PL_WSG_PLAYER_JUMP1], false);
+    loadWsg(PULSE_041_WSG, &self->wsgs[PL_WSG_PLAYER_JUMP2], false);
+    loadWsg(PULSE_043_WSG, &self->wsgs[PL_WSG_PLAYER_JUMP3], false);
+    loadWsg(PULSE_046_WSG, &self->wsgs[PL_WSG_PLAYER_JUMP4], false);
+    loadWsg(PULSE_005_WSG, &self->wsgs[PL_WSG_PLAYER_SLIDE], false);
     loadWsg(SPRITE_006_WSG, &self->wsgs[PL_WSG_PLAYER_HURT], false);
     loadWsg(SPRITE_007_WSG, &self->wsgs[PL_WSG_PLAYER_CLIMB], false);
     loadWsg(SPRITE_008_WSG, &self->wsgs[PL_WSG_PLAYER_WIN], false);
@@ -131,28 +142,28 @@ void pl_loadWsgs(plWsgManager_t* self)
 void pl_initializeSprites(plWsgManager_t* self)
 {
     self->sprites[PL_SP_PLAYER_IDLE].wsg     = &self->wsgs[PL_WSG_PLAYER_IDLE];
-    self->sprites[PL_SP_PLAYER_IDLE].originX = 8;
-    self->sprites[PL_SP_PLAYER_IDLE].originY = 8;
+    self->sprites[PL_SP_PLAYER_IDLE].originX = 15;
+    self->sprites[PL_SP_PLAYER_IDLE].originY = 15;
 
     self->sprites[PL_SP_PLAYER_WALK1].wsg     = &self->wsgs[PL_WSG_PLAYER_WALK1];
-    self->sprites[PL_SP_PLAYER_WALK1].originX = 8;
-    self->sprites[PL_SP_PLAYER_WALK1].originY = 8;
+    self->sprites[PL_SP_PLAYER_WALK1].originX = 15;
+    self->sprites[PL_SP_PLAYER_WALK1].originY = 15;
 
     self->sprites[PL_SP_PLAYER_WALK2].wsg     = &self->wsgs[PL_WSG_PLAYER_WALK2];
-    self->sprites[PL_SP_PLAYER_WALK2].originX = 8;
-    self->sprites[PL_SP_PLAYER_WALK2].originY = 8;
+    self->sprites[PL_SP_PLAYER_WALK2].originX = 15;
+    self->sprites[PL_SP_PLAYER_WALK2].originY = 15;
 
     self->sprites[PL_SP_PLAYER_WALK3].wsg     = &self->wsgs[PL_WSG_PLAYER_WALK3];
-    self->sprites[PL_SP_PLAYER_WALK3].originX = 8;
-    self->sprites[PL_SP_PLAYER_WALK3].originY = 8;
+    self->sprites[PL_SP_PLAYER_WALK3].originX = 15;
+    self->sprites[PL_SP_PLAYER_WALK3].originY = 15;
 
     self->sprites[PL_SP_PLAYER_JUMP].wsg     = &self->wsgs[PL_WSG_PLAYER_JUMP];
-    self->sprites[PL_SP_PLAYER_JUMP].originX = 8;
-    self->sprites[PL_SP_PLAYER_JUMP].originY = 8;
+    self->sprites[PL_SP_PLAYER_JUMP].originX = 15;
+    self->sprites[PL_SP_PLAYER_JUMP].originY = 15;
 
     self->sprites[PL_SP_PLAYER_SLIDE].wsg     = &self->wsgs[PL_WSG_PLAYER_SLIDE];
-    self->sprites[PL_SP_PLAYER_SLIDE].originX = 8;
-    self->sprites[PL_SP_PLAYER_SLIDE].originY = 8;
+    self->sprites[PL_SP_PLAYER_SLIDE].originX = 15;
+    self->sprites[PL_SP_PLAYER_SLIDE].originY = 15;
 
     self->sprites[PL_SP_PLAYER_HURT].wsg     = &self->wsgs[PL_WSG_PLAYER_HURT];
     self->sprites[PL_SP_PLAYER_HURT].originX = 8;
