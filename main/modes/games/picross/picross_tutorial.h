@@ -1,12 +1,10 @@
 #ifndef _MODE_PICROSSTUTORIAL_H_
 #define _MODE_PICROSSTUTORIAL_H_
 
-#include "swadgeMode.h"
-#include "aabb_utils.h"
+#include "swadge2024.h"
 
 typedef struct
 {
-    display_t* d;
     font_t titleFont;
     font_t smallFont;
     wsg_t qrlink;
@@ -16,9 +14,7 @@ typedef struct
     uint16_t prevBtn;
 } picrossTutorial_t;
 
-
-
-void picrossStartTutorial(display_t* disp, font_t* font);
+void picrossStartTutorial(font_t* font);
 void picrossTutorialLoop(int64_t elapsedUs);
 void picrossTutorialButtonCb(buttonEvt_t* evt);
 void picrossExitTutorial(void);

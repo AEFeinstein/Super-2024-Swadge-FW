@@ -4,7 +4,7 @@
 #include "mode_picross.h"
 #include "picross_select.h"
 
-extern swadgeMode modePicross;
+extern swadgeMode_t modePicross;
 extern const char picrossCurrentPuzzleIndexKey[];
 extern const char picrossSavedOptionsKey[];
 extern const char picrossCompletedLevelData[];
