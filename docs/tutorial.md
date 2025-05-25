@@ -1044,7 +1044,7 @@ Make new function declarations near the top like this:
 
 ```C
 static void runnerLogic(int64_t elapsedUS);
-static void draw(void);
+static void drawRunner(void);
 ```
 
 We're not using the `elapsedUS` right this moment, but we're probably going to need to soon. Cut the drawing functions and add them to the draw function, then add the draw function to the end of the loop. Do the same with the player logic as well.
@@ -1058,7 +1058,7 @@ static void runnerMainLoop(int64_t elapsedUs)
     runnerLogic(elapsedUs);
 
     // Draw screen
-    draw();
+    drawRunner();
 }
 
 static void runnerLogic(int64_t elapsedUS)
@@ -1073,7 +1073,7 @@ static void runnerLogic(int64_t elapsedUS)
     }
 }
 
-static void draw()
+static void drawRunner()
 {
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
     drawLine(0, GROUND_HEIGHT, TFT_WIDTH, GROUND_HEIGHT, c555, 0);
@@ -1518,7 +1518,7 @@ static void runnerLogic(int64_t elapsedUS);
 static void spawnObstacle(ObstacleType_t type, int idx);
 static void updateObstacle(obstacle_t* obs, int64_t elapsedUs);
 static void trySpawnObstacle(void);
-static void draw(void);
+static void drawRunner(void);
 
 swadgeMode_t roboRunnerMode = {
     .modeName                 = runnerModeName,
@@ -1613,7 +1613,7 @@ static void runnerMainLoop(int64_t elapsedUs)
     trySpawnObstacle();
 
     // Draw screen
-    draw();
+    drawRunner();
 }
 
 static void resetGame()
@@ -1718,7 +1718,7 @@ static void trySpawnObstacle()
     }
 }
 
-static void draw()
+static void drawRunner()
 {
     // Draw the level
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c112);
@@ -2298,7 +2298,7 @@ static void drawWindow(int xCoord)
                     xCoord + 2 * WINDOW_PANE + WINDOW_BORDER, WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c035);
 }
 
-// draw()
+// drawRunner()
 for (int idx = 0; idx < WINDOW_COUNT; idx++)
 {
     drawWindow(rd->windowXCoords[idx]);
@@ -2433,7 +2433,7 @@ static void spawnObstacle(ObstacleType_t type, int idx);
 static void updateObstacle(obstacle_t* obs, int64_t elapsedUs);
 static void trySpawnObstacle(void);
 static void drawWindow(int xCoord);
-static void draw(void);
+static void drawRunner(void);
 
 swadgeMode_t roboRunnerMode = {
     .modeName                 = runnerModeName,
@@ -2651,7 +2651,7 @@ static void runnerMainLoop(int64_t elapsedUs)
     }
 
     // Draw screen
-    draw();
+    drawRunner();
 }
 
 static void resetGame()
@@ -2783,7 +2783,7 @@ static void drawWindow(int xCoord)
                     xCoord + 2 * WINDOW_PANE + WINDOW_BORDER, WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c035);
 }
 
-static void draw()
+static void drawRunner()
 {
     // Draw the level
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c112);

@@ -217,7 +217,7 @@ static void drawSplash(int64_t elapsedUs);
 static void drawWindow(int xCoord);
 static void drawObstacles(int64_t elapsedUs);
 static void drawPlayer(int64_t elapsedUs);
-static void draw(int64_t elapsedUs);
+static void drawRunner(int64_t elapsedUs);
 
 // SwadgePass
 static void roboRunnerPacket(swadgePassPacket_t* packet);
@@ -379,7 +379,7 @@ static void runnerMainLoop(int64_t elapsedUs)
                 }
             }
             runnerLogic(elapsedUs);
-            draw(elapsedUs);
+            drawRunner(elapsedUs);
             break;
         }
     }
@@ -673,7 +673,7 @@ static void drawPlayer(int64_t elapsedUs)
     }
 }
 
-static void draw(int64_t elapsedUs)
+static void drawRunner(int64_t elapsedUs)
 {
     // Draw the level
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c112);
