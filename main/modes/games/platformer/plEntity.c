@@ -535,8 +535,8 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
             tempTx = PL_TO_TILECOORDS(tempX);
             tempTy = PL_TO_TILECOORDS(tempY);
 
-            drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
-            drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
+            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
+            //drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
 
             tempT = pl_getTile(self->tilemap, tempTx, tempTy);
             
@@ -554,8 +554,8 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
             tempTx = PL_TO_TILECOORDS(tempX);
             tempTy = PL_TO_TILECOORDS(tempY);
 
-            drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
-            drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
+            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
+            //drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
 
             tempT = pl_getTile(self->tilemap, tempTx, tempTy);
             
@@ -575,8 +575,8 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
             tempTx = PL_TO_TILECOORDS(tempX);
             tempTy = PL_TO_TILECOORDS(tempY);
 
-            drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
-            drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
+            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
+            //drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
 
             tempT = pl_getTile(self->tilemap, tempTx, tempTy);
             
@@ -594,8 +594,8 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
             tempTx = PL_TO_TILECOORDS(tempX);
             tempTy = PL_TO_TILECOORDS(tempY);
 
-            drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
-            drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
+            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
+            //drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
 
             tempT = pl_getTile(self->tilemap, tempTx, tempTy);
             
@@ -628,9 +628,9 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
     self->x = newX ? TO_SUBPIXEL_COORDS(newX) : self->x+self->xspeed;
     self->y = newY ? TO_SUBPIXEL_COORDS(newY) : self->y+self->yspeed;
 
-    if(newY) {
+   /*if(newY) {
         self->yspeed = 0;
-    }
+    }*/
 }
 
 void defaultFallOffTileHandler(plEntity_t* self)
