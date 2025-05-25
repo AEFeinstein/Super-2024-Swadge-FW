@@ -96,7 +96,7 @@
  *     }
  *
  *     // Iterate to the next data
- *     spd = spd->next;
+ *     spNode = spNode->next;
  * }
  * \endcode
  */
