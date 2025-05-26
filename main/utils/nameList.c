@@ -67,6 +67,8 @@ static const char* const nounList[] = {
     "woodwind", "drummer",  "rocker",   "wolf",    "snake",    "driver",  "seahorse", "artist", "foxbat",  "eagle",
 };
 
+static const char nvsKeys[] = "username";
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -135,6 +137,7 @@ static void _drawFadingWords(nameData_t* nd);
 static uint8_t baseMac[6];
 static int listLen[3];
 static uint8_t mutatorSeeds[3];
+nameData_t swadgeUsername;
 
 //==============================================================================
 // Functions
@@ -146,6 +149,23 @@ void initUsernameSystem()
     listLen[1] = ARRAY_SIZE(adjList2);
     listLen[2] = ARRAY_SIZE(nounList);
     _getMacAddress();
+
+    // Initialize
+    swadgeUsername.user = true;
+    int32_t packed      = 0;
+    if (!readNvs32(nvsKeys, &packed))
+    {
+        // Generate and save default name if not already set
+        generateMACUsername(&swadgeUsername);
+        setSystemUsername(&swadgeUsername);
+    }
+    else
+    {
+        // Unpack currently stored data
+        setUsernameFrom32(&swadgeUsername, packed);
+    }
+    setUsernameFromND(&swadgeUsername);
+    // ESP_LOGI("USRN", "Current name code: %d, which is %d, %d, %d, %d", GET_PACKED_USERNAME(swadgeUsername), swadgeUsername.idxs[0], swadgeUsername.idxs[1], swadgeUsername.idxs[2], swadgeUsername.randCode);
 }
 
 void generateMACUsername(nameData_t* nd)
@@ -354,6 +374,25 @@ void drawUsernamePicker(nameData_t* nd)
     // Draw currently set name
     drawText(getSysFont(), c444, "Current:", 32, TFT_HEIGHT - 32);
     drawText(getSysFont(), c555, nd->nameBuffer, 32, TFT_HEIGHT - 16);
+}
+
+nameData_t* getSystemUsername(void)
+{
+    return &swadgeUsername;
+}
+
+void setSystemUsername(nameData_t* nd)
+{
+    nameData_t data = *nd;
+    writeNvs32(nvsKeys, GET_PACKED_USERNAME(data));
+}
+
+void setUsernameFrom32(nameData_t* nd, int32_t packed)
+{
+    nd->idxs[0]  = (packed >> 24) & 0xFF;
+    nd->idxs[1]  = (packed >> 16) & 0xFF;
+    nd->idxs[2]  = (packed >> 8) & 0xFF;
+    nd->randCode = packed & 0xFF;
 }
 
 //==============================================================================
