@@ -110,6 +110,13 @@ void drawUsernamePicker(nameData_t* nd);
 nameData_t* getSystemUsername(void);
 
 /**
+ * @brief Saves the username to NVS
+ * 
+ * @param nd username to save
+ */
+void setSystemUsername(nameData_t* nd);
+
+/**
  * @brief Set the Username from a int32
  * 
  * @param nd nameData_t to initialize

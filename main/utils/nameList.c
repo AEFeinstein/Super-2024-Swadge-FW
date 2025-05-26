@@ -157,8 +157,7 @@ void initUsernameSystem()
     {
         // Generate and save default name if not already set
         generateMACUsername(&swadgeUsername);
-        packed = GET_PACKED_USERNAME(swadgeUsername);
-        writeNvs32(nvsKeys, packed);
+        setSystemUsername(&swadgeUsername);
     }
     else
     {
@@ -377,6 +376,17 @@ void drawUsernamePicker(nameData_t* nd)
     drawText(getSysFont(), c555, nd->nameBuffer, 32, TFT_HEIGHT - 16);
 }
 
+nameData_t* getSystemUsername(void)
+{
+    return &swadgeUsername;
+}
+
+void setSystemUsername(nameData_t* nd)
+{
+    nameData_t data = *nd;
+    writeNvs32(nvsKeys, GET_PACKED_USERNAME(data));
+}
+
 void setUsernameFrom32(nameData_t* nd, int32_t packed)
 {
     nd->idxs[0]  = (packed >> 24) & 0xFF;
@@ -512,9 +522,4 @@ static void _drawFadingWords(nameData_t* nd)
             }
         }
     }
-}
-
-nameData_t* getSystemUsername(void)
-{
-    return &swadgeUsername;
 }
