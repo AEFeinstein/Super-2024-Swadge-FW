@@ -12,7 +12,9 @@
 //==============================================================================
 
 // UI
-#define BUBBLE_SHOOTER_FPS 30
+#define BUBBLE_SHOOTER_FPS  30
+#define TFT_WIDTH           280
+#define TFT_HEIGHT          240
 
 
 //==============================================================================
@@ -102,9 +104,6 @@ static void bubbleShooterEnterMode(void)
     addSingleItemToMenu(bbs->menu, bubbleShooterStrExit);
     bbs->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
-    //Gotta learn to use this properly
-    //loadWsg("kid0.wsg", &bbs->sample, true);
-    //loadWsg("sample.wsg", &bbs->sample, true);
 }
 
 static void bubbleShooterMainLoop(int64_t elapsedUs)
@@ -135,6 +134,12 @@ static void bubbleShooterMainLoop(int64_t elapsedUs)
             drawMenuMania(bbs->menu, bbs->menuRenderer, elapsedUs);
             break;
         }
+
+        case BBS_GAME:
+        {
+            //bubbleShooterMainGameLoop(elapsedUs);
+            break;
+        }
     }
 }
 
@@ -144,8 +149,7 @@ static void bubbleShooterBackgroundDrawCallback(int16_t x, int16_t y, int16_t w,
     {
         case BBS_GAME:
         {
-            
-            drawWsgSimple(&bbs->sample, 0, 0);
+            bubbleShooterGameDraw();
             break;
         }
         default:
@@ -153,8 +157,9 @@ static void bubbleShooterBackgroundDrawCallback(int16_t x, int16_t y, int16_t w,
             break;
         }
     }
+            
 }
-
+        
 static void bubbleShooterMenuCallback(const char* label, bool selected, uint32_t value)
 {
     if (selected)
@@ -163,6 +168,8 @@ static void bubbleShooterMenuCallback(const char* label, bool selected, uint32_t
         {
             ESP_LOGI(BUB_TAG,"Bubble Bubble!");
             bbs->screen = BBS_GAME;
+            
+            bubbleShooterInitGame();
         }
         else if ((bubbleShooterStrExit == label))
         {            

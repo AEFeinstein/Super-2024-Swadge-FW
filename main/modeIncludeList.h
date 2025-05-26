@@ -44,6 +44,7 @@
 #include "mode_synth.h"
 #include "sequencerMode.h"
 #include "swadgeIt.h"
+#include "bubbleShooter.h"
 #include "swadgePassTest.h"
 #include "touchTest.h"
 #include "trophyCase.h"
