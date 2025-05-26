@@ -24,6 +24,7 @@
     #pragma GCC diagnostic pop
 #endif
 
+#include "assets_preprocessor.h"
 #include "image_processor.h"
 
 #include "heatshrink_encoder.h"
@@ -48,12 +49,16 @@ typedef struct
 void shuffleArray(uint32_t* ar, uint32_t len);
 int isNeighborNotDrawn(pixel_t** img, int x, int y, int w, int h);
 void spreadError(pixel_t** img, int x, int y, int w, int h, int teR, int teG, int teB, float diagScalar);
+bool process_image(processorInput_t* arg);
+
+const assetProcessor_t imageProcessor
+    = {.name = "wsg", .type = FUNCTION, .function = process_image, .inFmt = FMT_FILE_BIN, .outFmt = FMT_FILE_BIN};
 
 /**
- * @brief TODO
+ * @brief Randomizes the order of the given array of ints
  *
- * @param ar
- * @param len
+ * @param ar The array to randomize
+ * @param len The number of items in the array
  */
 void shuffleArray(uint32_t* ar, uint32_t len)
 {
@@ -67,16 +72,6 @@ void shuffleArray(uint32_t* ar, uint32_t len)
     }
 }
 
-/**
- * @brief TODO
- *
- * @param img
- * @param x
- * @param y
- * @param w
- * @param h
- * @return int
- */
 int isNeighborNotDrawn(pixel_t** img, int x, int y, int w, int h)
 {
     if (0 <= x && x < w)
@@ -89,19 +84,6 @@ int isNeighborNotDrawn(pixel_t** img, int x, int y, int w, int h)
     return 0;
 }
 
-/**
- * @brief TODO
- *
- * @param image8b
- * @param x
- * @param y
- * @param w
- * @param h
- * @param teR
- * @param teG
- * @param teB
- * @param diagScalar
- */
 void spreadError(pixel_t** img, int x, int y, int w, int h, int teR, int teG, int teB, float diagScalar)
 {
     if (0 <= x && x < w)
@@ -118,36 +100,13 @@ void spreadError(pixel_t** img, int x, int y, int w, int h, int teR, int teG, in
     }
 }
 
-/**
- * @brief TODO
- *
- * @param infile
- * @param outdir
- */
-void process_image(const char* infile, const char* outdir)
+bool process_image(processorInput_t* arg)
 {
-    /* Determine if the output file already exists */
-    char outFilePath[128] = {0};
-    strcat(outFilePath, outdir);
-    strcat(outFilePath, "/");
-    strcat(outFilePath, get_filename(infile));
-
-    /* Change the file extension */
-    char* dotptr = strrchr(outFilePath, '.');
-    snprintf(&dotptr[1], strlen(dotptr), "wsg");
-
-    if (!isSourceFileNewer(infile, outFilePath))
-    {
-        return;
-    }
-    else if (doesFileExist(outFilePath))
-    {
-        printf("[assets-preprocessor] %s modified! Regenerating %s\n", infile, get_filename(outFilePath));
-    }
-
     /* Load the source PNG */
     int w, h, n;
-    unsigned char* data = stbi_load(infile, &w, &h, &n, 4);
+    unsigned char* data = stbi_load_from_file(arg->in.file, &w, &h, &n, 4);
+
+    bool dither = getBoolOption(arg->options, "wsg.dither", false);
 
     if (NULL != data)
     {
@@ -186,41 +145,42 @@ void process_image(const char* infile, const char* outdir)
             image8b[y][x].b = CLAMP((127 + ((sourceB + image8b[y][x].eB) * 5)) / 255, 0, 5);
             image8b[y][x].a = (sourceA >= 128) ? 0xFF : 0x00;
 
-// Don't dither small sprites, it just doesn't look good
-#if defined(DITHER)
-            /* Find the total error, 8 bits per channel */
-            int teR = sourceR - ((image8b[y][x].r * 255) / 5);
-            int teG = sourceG - ((image8b[y][x].g * 255) / 5);
-            int teB = sourceB - ((image8b[y][x].b * 255) / 5);
+            // Don't dither small sprites, it just doesn't look good
+            if (dither)
+            {
+                /* Find the total error, 8 bits per channel */
+                int teR = sourceR - ((image8b[y][x].r * 255) / 5);
+                int teG = sourceG - ((image8b[y][x].g * 255) / 5);
+                int teB = sourceB - ((image8b[y][x].b * 255) / 5);
 
-            /* Count all the neighbors that haven't been drawn yet */
-            int adjNeighbors = 0;
-            adjNeighbors += isNeighborNotDrawn(image8b, x + 0, y + 1, w, h);
-            adjNeighbors += isNeighborNotDrawn(image8b, x + 0, y - 1, w, h);
-            adjNeighbors += isNeighborNotDrawn(image8b, x + 1, y + 0, w, h);
-            adjNeighbors += isNeighborNotDrawn(image8b, x - 1, y + 0, w, h);
-            int diagNeighbors = 0;
-            diagNeighbors += isNeighborNotDrawn(image8b, x - 1, y - 1, w, h);
-            diagNeighbors += isNeighborNotDrawn(image8b, x + 1, y - 1, w, h);
-            diagNeighbors += isNeighborNotDrawn(image8b, x - 1, y + 1, w, h);
-            diagNeighbors += isNeighborNotDrawn(image8b, x + 1, y + 1, w, h);
+                /* Count all the neighbors that haven't been drawn yet */
+                int adjNeighbors = 0;
+                adjNeighbors += isNeighborNotDrawn(image8b, x + 0, y + 1, w, h);
+                adjNeighbors += isNeighborNotDrawn(image8b, x + 0, y - 1, w, h);
+                adjNeighbors += isNeighborNotDrawn(image8b, x + 1, y + 0, w, h);
+                adjNeighbors += isNeighborNotDrawn(image8b, x - 1, y + 0, w, h);
+                int diagNeighbors = 0;
+                diagNeighbors += isNeighborNotDrawn(image8b, x - 1, y - 1, w, h);
+                diagNeighbors += isNeighborNotDrawn(image8b, x + 1, y - 1, w, h);
+                diagNeighbors += isNeighborNotDrawn(image8b, x - 1, y + 1, w, h);
+                diagNeighbors += isNeighborNotDrawn(image8b, x + 1, y + 1, w, h);
 
-            /* Spread the error to all neighboring unquantized pixels, with
-             * twice as much error to the adjacent pixels as the diagonal ones
-             */
-            float diagScalar = 1 / (float)((2 * adjNeighbors) + diagNeighbors);
-            float adjScalar  = 2 * diagScalar;
+                /* Spread the error to all neighboring unquantized pixels, with
+                 * twice as much error to the adjacent pixels as the diagonal ones
+                 */
+                float diagScalar = 1 / (float)((2 * adjNeighbors) + diagNeighbors);
+                float adjScalar  = 2 * diagScalar;
 
-            /* Write the error */
-            spreadError(image8b, x - 1, y - 1, w, h, teR, teG, teB, diagScalar);
-            spreadError(image8b, x - 1, y + 1, w, h, teR, teG, teB, diagScalar);
-            spreadError(image8b, x + 1, y - 1, w, h, teR, teG, teB, diagScalar);
-            spreadError(image8b, x + 1, y + 1, w, h, teR, teG, teB, diagScalar);
-            spreadError(image8b, x - 1, y + 0, w, h, teR, teG, teB, adjScalar);
-            spreadError(image8b, x + 1, y + 0, w, h, teR, teG, teB, adjScalar);
-            spreadError(image8b, x + 0, y - 1, w, h, teR, teG, teB, adjScalar);
-            spreadError(image8b, x + 0, y + 1, w, h, teR, teG, teB, adjScalar);
-#endif
+                /* Write the error */
+                spreadError(image8b, x - 1, y - 1, w, h, teR, teG, teB, diagScalar);
+                spreadError(image8b, x - 1, y + 1, w, h, teR, teG, teB, diagScalar);
+                spreadError(image8b, x + 1, y - 1, w, h, teR, teG, teB, diagScalar);
+                spreadError(image8b, x + 1, y + 1, w, h, teR, teG, teB, diagScalar);
+                spreadError(image8b, x - 1, y + 0, w, h, teR, teG, teB, adjScalar);
+                spreadError(image8b, x + 1, y + 0, w, h, teR, teG, teB, adjScalar);
+                spreadError(image8b, x + 0, y - 1, w, h, teR, teG, teB, adjScalar);
+                spreadError(image8b, x + 0, y + 1, w, h, teR, teG, teB, adjScalar);
+            }
 
             /* Mark the random pixel as drawn */
             image8b[y][x].isDrawn = true;
@@ -294,9 +254,14 @@ void process_image(const char* infile, const char* outdir)
         hdrAndImg[3]         = LO_BYTE(h);
         memcpy(&hdrAndImg[4], paletteBuf, paletteBufSize);
         /* Write the compressed file */
-        writeHeatshrinkFile(hdrAndImg, hdrAndImgSz, outFilePath);
+
+        bool result = writeHeatshrinkFileHandle(hdrAndImg, hdrAndImgSz, arg->out.file);
         /* Cleanup */
         free(hdrAndImg);
         free(paletteBuf);
+
+        return result;
     }
+
+    return false;
 }

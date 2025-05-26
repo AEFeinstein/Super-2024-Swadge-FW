@@ -247,7 +247,7 @@ void bb_updateRocketLanding(bb_entity_t* self)
     {
         // apply doppler effect to Garbotnik's home
         midiPitchWheel(player, channel, 0x2000 - rData->yVel * 16);
-        // ESP_LOGD(BB_TAG,"pos.y %d\n",self->pos.y);
+        //ESP_LOGD(BB_TAG,"pos.y %d\n",self->pos.y);
         if (self->pos.y > -63360)
         {
             // get the release

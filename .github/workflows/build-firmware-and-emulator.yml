@@ -29,6 +29,8 @@ jobs:
               - version.txt
             # TODO: What variable can we use to not hardcode this???
             idf_install: C:\Users\runneradmin\.espressif
+            shell: 'msys2 {0}'
+            env: x86_64
           - os: osx-arm
             runner: macos-latest
             family: osx
@@ -80,8 +82,9 @@ jobs:
     - name: Install homebrew packages
       if: matrix.family == 'osx'
       run: |
-        # Not installing graphviz here because we don't actually build the docs and brew has trouble with its dependnencies
-        brew install xquartz libxinerama clang-format cppcheck wget doxygen cmake dylibbundler
+        # Not installing graphviz here because we don't actually build the docs and brew has trouble with its dependencies
+        # Not installing cmake either because it seems to be already installed from another source and brew can't handle that
+        brew install xquartz libxinerama clang-format cppcheck wget doxygen dylibbundler
 
     - name: Install apt packages
       if: matrix.family == 'linux'

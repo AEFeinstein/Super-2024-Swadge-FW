@@ -12,9 +12,11 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                             "display/font.c"
                             "display/shapes.c"
                             "display/wsg.c"
+                            "display/wsgCanvas.c"
                             "display/wsgPalette.c"
                             "menu/menu.c"
                             "menu/menuManiaRenderer.c"
+                            "menu/menuMegaRenderer.c"
                             "menu/menu_utils.c"
                             "midi/bakedDrums.c"
                             "midi/drums.c"
@@ -25,9 +27,29 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                             "midi/midiUtil.c"
                             "midi/waveTables.c"
                             "modeIncludeList.c"
+                            "modes/games/cosCrunch/ccmgBreakTime.c"
+                            "modes/games/cosCrunch/ccmgDelivery.c"
+                            "modes/games/cosCrunch/ccmgSpray.c"
+                            "modes/games/cosCrunch/ccmgThread.c"
                             "modes/games/cosCrunch/cosCrunch.c"
-                            "modes/games/cosCrunch/microgameA.c"
-                            "modes/games/cosCrunch/microgameB.c"
+                            "modes/games/cosCrunch/cosCrunchUtil.c"
+                            "modes/games/danceNetwork/danceNetwork.c"
+                            "modes/games/danceNetwork/dn_entity.c"
+                            "modes/games/danceNetwork/dn_entityManager.c"
+                            "modes/games/danceNetwork/dn_howTo.c"
+                            "modes/games/danceNetwork/dn_p2p.c"
+                            "modes/games/danceNetwork/dn_random.c"
+                            "modes/games/danceNetwork/dn_result.c"
+                            "modes/games/danceNetwork/dn_utility.c"
+                            "modes/games/picross/mode_picross.c"
+                            "modes/games/picross/picross_menu.c"
+                            "modes/games/picross/picross_select.c"
+                            "modes/games/picross/picross_tutorial.c"
+                            "modes/games/RoboRunner/roboRunner.c"
+                            "modes/games/swadgedoku/sudoku_data.c"
+                            "modes/games/swadgedoku/sudoku_game.c"
+                            "modes/games/swadgedoku/sudoku_ui.c"
+                            "modes/games/swadgedoku/swadgedoku.c"
                             "modes/games/swadgeIt/swadgeIt.c"
                             "modes/music/colorchord/colorchord.c"
                             "modes/music/jukebox/jukebox.c"
@@ -46,12 +68,15 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                             "modes/system/trophyCase/trophyCase.c"
                             "modes/test/accelTest/accelTest.c"
                             "modes/test/accelTest/bunny.c"
+                            "modes/test/canvasTest/canvas.c"
                             "modes/test/factoryTest/factoryTest.c"
                             "modes/test/keebTest/keebTest.c"
+                            "modes/test/nameTest/nameTest.c"
                             "modes/test/swadgePassTest/swadgePassTest.c"
                             "modes/test/touchTest/touchTest.c"
-                            "modes/test/nameTest/nameTest.c"
                             "modes/test/trophyTest/trophyTest.c"
+                            "modes/utilities/bouncy/bouncy.c"
+                            "modes/utilities/ch32v003test/mode_ch32v003test.c"
                             "modes/utilities/dance/dance.c"
                             "modes/utilities/dance/portableDance.c"
                             "modes/utilities/dice/mode_diceroller.c"
@@ -67,24 +92,26 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                             "utils/fp_math.c"
                             "utils/geometry.c"
                             "utils/hashMap.c"
+                            "utils/highScores.c"
                             "utils/imu_utils.c"
                             "utils/linked_list.c"
                             "utils/nameList.c"
                             "utils/p2pConnection.c"
                             "utils/settingsManager.c"
                             "utils/swadgesona.c"
-                            "utils/swSynth.c"
                             "utils/swadgePass.c"
+                            "utils/swSynth.c"
                             "utils/textEntry.c"
                             "utils/touchTextEntry.c"
                             "utils/touchUtils.c"
-                            "utils/trophy.c"
                             "utils/trigonometry.c"
+                            "utils/trophy.c"
                             "utils/vector2d.c"
                             "utils/wheel_menu.c"
                     PRIV_REQUIRES hdw-imu
                                   hdw-battmon
                                   hdw-btn
+                                  hdw-ch32v003
                                   hdw-dac
                                   hdw-esp-now
                                   hdw-led
@@ -104,7 +131,12 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                                 "./menu"
                                 "./midi"
                                 "./modes"
+                                "./modes/games"
                                 "./modes/games/cosCrunch"
+                                "./modes/games/danceNetwork"
+                                "./modes/games/picross"
+                                "./modes/games/RoboRunner"
+                                "./modes/games/swadgedoku"
                                 "./modes/games/swadgeIt"
                                 "./modes/music"
                                 "./modes/music/colorchord"
@@ -120,14 +152,17 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                                 "./modes/system/trophyCase"
                                 "./modes/test"
                                 "./modes/test/accelTest"
+                                "./modes/test/canvasTest"
                                 "./modes/test/factoryTest"
                                 "./modes/test/keebTest"
-                                "./modes/test/touchTest"
-                                "./modes/test/swadgePassTest"
                                 "./modes/test/nameTest"
+                                "./modes/test/swadgePassTest"
+                                "./modes/test/touchTest"
                                 "./modes/test/trophyTest"
                                 "./modes/utilities"
+                                "./modes/utilities/bouncy"
                                 "./modes/utilities/dance"
+                                "./modes/utilities/ch32v003test"
                                 "./modes/utilities/dice"
                                 "./modes/utilities/gamepad"
                                 "./modes/utilities/swadgesona"
@@ -140,15 +175,20 @@ add_custom_target(dummy_target ALL
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c
 )
 
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/../.assets_ts
+    COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/assets_preprocessor -c ${CMAKE_CURRENT_SOURCE_DIR}/../assets.conf -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/ -t ${CMAKE_CURRENT_SOURCE_DIR}/../.assets_ts
+    DEPENDS always_rebuild
+)
+
 # custom_output will always be rebuilt because it depends on always_rebuild
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.h
-    COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/assets_preprocessor -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/
     COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs/cnfs_gen ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/ ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.h
-    DEPENDS always_rebuild
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../.assets_ts
 )
 
 # Dummy output which is never actually produced. Anything that depends on

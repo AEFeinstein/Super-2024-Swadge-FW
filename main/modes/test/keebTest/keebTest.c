@@ -159,7 +159,7 @@ static void keebEnterMode(void)
 
     // Get resources
     loadWsg(EXAMPLE_BG_WSG, &kbTest->bg, false);
-    loadFont(IBM_VGA_8_FONT, &kbTest->fnt[0], false);
+    kbTest->fnt[0] = *getSysFont();
     loadFont(RADIOSTARS_FONT, &kbTest->fnt[1], false);
     loadFont(RODIN_EB_FONT, &kbTest->fnt[2], false);
     loadFont(RIGHTEOUS_150_FONT, &kbTest->fnt[3], false);
@@ -199,7 +199,7 @@ static void keebEnterMode(void)
     addSingleItemToMenu(kbTest->menu, teMenuResetHard);
 
     // Init renderer
-    kbTest->renderer = initMenuManiaRenderer(&kbTest->fnt[3], NULL, &kbTest->fnt[2]);
+    kbTest->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
 
     // Set MENU as the starting state
     kbTest->currState = MENU;
@@ -214,10 +214,9 @@ static void keebExitMode(void)
     deinitMenu(kbTest->menu);
 
     // Deinit renderer
-    deinitMenuManiaRenderer(kbTest->renderer);
+    deinitMenuMegaRenderer(kbTest->renderer);
 
     // Deinit fonts
-    freeFont(&kbTest->fnt[0]);
     freeFont(&kbTest->fnt[1]);
     freeFont(&kbTest->fnt[2]);
     freeFont(&kbTest->fnt[3]);
@@ -240,7 +239,7 @@ static void keebMainLoop(int64_t elapsedUs)
             {
                 kbTest->menu = menuButton(kbTest->menu, evt);
             }
-            drawMenuMania(kbTest->menu, kbTest->renderer, elapsedUs);
+            drawMenuMega(kbTest->menu, kbTest->renderer, elapsedUs);
             break;
         case TYPING:
             while (checkButtonQueueWrapper(&evt))

@@ -309,7 +309,7 @@ typedef struct
     list_t customFiles;
 
     menu_t* menu;
-    menuManiaRenderer_t* renderer;
+    menuMegaRenderer_t* renderer;
     wheelMenuRenderer_t* wheelMenu;
     rectangle_t wheelTextArea;
     bool updateMenu;
@@ -1103,6 +1103,7 @@ static const char* const menuItemNoYesOptions[] = {
 static const char* const menuItemBankOptions[] = {
     "General MIDI",
     "MAGFest",
+    "MMX",
 };
 
 static const char* const menuItemHeadroomOptions[] = {
@@ -1161,6 +1162,7 @@ static const int32_t menuItemAutoplayValues[] = {
 static const int32_t menuItemBankValues[] = {
     0,
     1,
+    2,
 };
 
 static const int32_t menuItemControlSwitchValues[] = {
@@ -1276,7 +1278,7 @@ static settingParam_t menuItemPercussionBounds = {
 static settingParam_t menuItemBankBounds = {
     .def = 0,
     .min = 0,
-    .max = 1,
+    .max = 2,
     .key = NULL,
 };
 
@@ -1569,7 +1571,7 @@ static void synthEnterMode(void)
     sd->wheelTextArea.height = sd->betterFont.height + 2;
 
     // Use smol font for menu items, there might be a lot
-    sd->renderer          = initMenuManiaRenderer(NULL, NULL, &sd->font);
+    sd->renderer          = initMenuMegaRenderer(NULL, NULL, NULL);
     sd->wheelMenu         = initWheelMenu(&sd->betterFont, 90, &sd->wheelTextArea);
     sd->wheelMenu->unselR = 16;
 
@@ -1676,7 +1678,7 @@ static void synthExitMode(void)
     }
 
     deinitWheelMenu(sd->wheelMenu);
-    deinitMenuManiaRenderer(sd->renderer);
+    deinitMenuMegaRenderer(sd->renderer);
     deinitMenu(sd->menu);
 
     // Clean up dynamic strings allocated for the controllers
@@ -1820,7 +1822,7 @@ static void synthMainLoop(int64_t elapsedUs)
 
     if (sd->screen == SS_MENU)
     {
-        drawMenuMania(sd->menu, sd->renderer, elapsedUs);
+        drawMenuMega(sd->menu, sd->renderer, elapsedUs);
     }
     else if (sd->screen == SS_FILE_SELECT)
     {
@@ -2172,6 +2174,22 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
         hashPut(&sd->menuMap, itemInfo->label, itemInfo);
     }
 
+    for (int mmxIdx = 0; mmxIdx < mmxTimbreCount; mmxIdx++)
+    {
+        midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
+        int mmxProg                  = mmxTimbreMap[mmxIdx];
+        itemInfo->type               = SMT_PROGRAM;
+        itemInfo->bank               = 2;
+        itemInfo->program            = mmxProg;
+        itemInfo->label              = mmxTimbres[mmxIdx]->name;
+        writeShortName(itemInfo->shortLabel, sizeof(itemInfo->shortLabel), itemInfo->label);
+        wheelMenuSetItemInfo(sd->wheelMenu, itemInfo->label, NULL, mmxIdx, NO_SCROLL);
+        wheelMenuSetItemTextIcon(sd->wheelMenu, itemInfo->label, itemInfo->shortLabel);
+        wheelMenuSetItemSize(sd->wheelMenu, itemInfo->label, -1, -1, WM_SHAPE_ROUNDED_RECT);
+
+        hashPut(&sd->menuMap, itemInfo->label, itemInfo);
+    }
+
     // Controllers are pretty complicated so just do those the first time with the rest of their logic
     int totalControls = 0;
 
@@ -2232,6 +2250,10 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
     // "MAGFest" bank option
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemBankOptions[1], &sd->magfestBankImage, 1, NO_SCROLL);
     wheelMenuSetItemSize(sd->wheelMenu, menuItemBankOptions[1], -1, -1, WM_SHAPE_DEFAULT);
+    // "MMX" bank option
+    // TODO change icon
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemBankOptions[2], &sd->magfestBankImage, 2, NO_SCROLL);
+    wheelMenuSetItemSize(sd->wheelMenu, menuItemBankOptions[2], -1, -1, WM_SHAPE_DEFAULT);
 
     if (0 == (config->percChannelMask & (1 << chIdx)))
     {
@@ -2262,7 +2284,7 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
             // End instruments submenu
             menu = endSubMenu(menu);
         }
-        else
+        else if (config->banks[chIdx] == 1)
         {
             uint8_t program = config->programs[chIdx];
             if (program >= magfestTimbreCount)
@@ -2279,6 +2301,40 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
             for (int instrument = 0; instrument < magfestTimbreCount; instrument++)
             {
                 addSingleItemToMenu(menu, magfestTimbres[instrument]->name);
+            }
+            menu = endSubMenu(menu);
+        }
+        else if (config->banks[chIdx] == 2)
+        {
+            uint8_t program  = config->programs[chIdx];
+            int mmxTimbreIdx = -1;
+            for (int i = 0; i < mmxTimbreCount; i++)
+            {
+                if (program == mmxTimbreMap[i])
+                {
+                    mmxTimbreIdx = i;
+                    break;
+                }
+            }
+
+            // TODO: change icon
+            chanInstrumentIcon = &sd->magfestBankImage;
+
+            if (mmxTimbreIdx >= 0)
+            {
+                snprintf(nameBuffer, 64, "%s%s", menuItemInstrument, mmxTimbres[mmxTimbreIdx]->name);
+            }
+            else
+            {
+                snprintf(nameBuffer, 64, "%s#%" PRIu8, menuItemInstrument, program);
+                mmxTimbreIdx = 0;
+            }
+
+            menu = startSubMenu(menu, nameBuffer);
+
+            for (int i = 0; i < mmxTimbreCount; i++)
+            {
+                addSingleItemToMenu(menu, mmxTimbres[i]->name);
             }
             menu = endSubMenu(menu);
         }

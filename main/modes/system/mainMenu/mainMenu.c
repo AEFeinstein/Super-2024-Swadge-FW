@@ -17,7 +17,7 @@
 typedef struct
 {
     menu_t* menu;
-    menuManiaRenderer_t* renderer;
+    menuMegaRenderer_t* renderer;
     font_t font_rodin;
     midiFile_t fanfare;
 #ifdef SW_VOL_CONTROL
@@ -80,6 +80,15 @@ const trophyData_t mainMenuTrophies[] = {
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
         .identifier  = &swadgeItMode,
+    },
+    {
+        .title       = "Runnin' and runnin'",
+        .description = "Played Robo Runner for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &roboRunnerMode,
     },
     {
         .title       = "Daft Punk would be proud",
@@ -266,6 +275,8 @@ static void mainMenuEnterMode(void)
     // Allocate the menu
     mainMenu->menu = initMenu(mainMenuTitle, mainMenuCb);
 
+    /*int ch32v003LoadReply = */ ch32v003RunBinaryAsset(MATRIX_DROPS_CFUN_BIN);
+
 #ifdef CONFIG_FACTORY_TEST_NORMAL
     // Initialize all the modes in modeList
     modeListSetMenu(mainMenu->menu);
@@ -304,7 +315,7 @@ static void mainMenuEnterMode(void)
     setShowBattery(mainMenu->menu, true);
 
     // Initialize menu renderer
-    mainMenu->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    mainMenu->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
 }
 
 /**
@@ -316,7 +327,7 @@ static void mainMenuExitMode(void)
     deinitMenu(mainMenu->menu);
 
     // Deinit renderer
-    deinitMenuManiaRenderer(mainMenu->renderer);
+    deinitMenuMegaRenderer(mainMenu->renderer);
 
     // Free the font
     freeFont(&mainMenu->font_rodin);
@@ -400,7 +411,7 @@ static void mainMenuMainLoop(int64_t elapsedUs)
     }
 
     // Draw the menu
-    drawMenuMania(mainMenu->menu, mainMenu->renderer, elapsedUs);
+    drawMenuMega(mainMenu->menu, mainMenu->renderer, elapsedUs);
 
     // If a trophy was showing, but the animation is done
     if (mainMenu->modeEnterTrophyShowing && !isTrophyDrawing())
@@ -556,6 +567,7 @@ void addSecretsMenu(void)
     addSingleItemToMenu(mainMenu->menu, swadgePassTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, trophyTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, nameTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, canvasTestMode.modeName);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, factoryResetName);
     addSingleItemToMenu(mainMenu->menu, confirmResetName);

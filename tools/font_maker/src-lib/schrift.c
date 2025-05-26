@@ -1,6 +1,6 @@
 /* This file is part of libschrift.
  *
- * © 2019-2022 Thomas Oltmann and contributors
+ * (c) 2019-2022 Thomas Oltmann and contributors
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above

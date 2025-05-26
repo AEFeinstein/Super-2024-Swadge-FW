@@ -40,6 +40,9 @@
 *.x86_64
 *.hex
 
+# cfun intermediates
+*.cfun.lst
+
 # Debug files
 *.dSYM/
 *.su
@@ -64,6 +67,7 @@ docs/*.pu
 .vscode/settings.json
 .idea
 
+.assets_ts
 assets_image
 managed_components
 nvs.json
@@ -95,3 +99,5 @@ tools/cnfs/cnfs_gen
 
 _old/*
 bigbug-mem.csv
+
+args_*.txt

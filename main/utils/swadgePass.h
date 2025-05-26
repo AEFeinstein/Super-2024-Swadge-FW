@@ -86,7 +86,7 @@
  *     swadgePassData_t* spd = (swadgePassData_t*)spNode->val;
  *
  *     // If the data hasn't been used yet
- *     if (isPacketUsedByMode(spd, &myMode))
+ *     if (!isPacketUsedByMode(spd, &myMode))
  *     {
  *         // Print some packet data
  *         ESP_LOGI("SP", "Receive from %s. Preamble is %d", spd->key, spd->data.packet.preamble);
@@ -96,7 +96,7 @@
  *     }
  *
  *     // Iterate to the next data
- *     passNode = passNode->next;
+ *     spNode = spNode->next;
  * }
  * \endcode
  */
@@ -120,11 +120,20 @@ typedef struct __attribute__((packed)) swadgePassPacket
 {
     uint16_t preamble; ///< Two bytes that specifically begin a SwadgePass packet
     uint8_t version;   ///< A version byte to differentiate packets per-year
+    int32_t username;  ///< The username of the swadge owner
+    struct
+    {
+        uint16_t highScore;
+    } cosCrunch;
     struct
     {
         int8_t reactHs;
         int8_t memHs;
     } swadgeIt;
+    struct
+    {
+        uint16_t highScore;
+    } roboRunner;
 } swadgePassPacket_t;
 
 /**
