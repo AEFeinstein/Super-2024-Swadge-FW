@@ -31,12 +31,12 @@
  *
  * If you're just starting Swadge development, you're already at the right place to start!
  *
- * > [!TIP] If you're new to developing code and want a guided experience, try the new \ref tutorial tutorial! It will walk you through
- * > creating a whole game with explanations on why certain options are picked. If you're more used to C and reading
- * > technical documentation, why not browse the rest of the repository?
+ * \note If you're new to developing code and want a guided experience, try the \ref tutorial tutorial! It
+ * \note will walk you through creating a whole game with explanations on why certain options are picked. If you're more
+ * \note used to C and reading technical documentation, why not browse the rest of the repository?
  *
  * Here's a quick recommended order to exploring the repository:
- * 
+ *
  * -# First, follow the guide to \ref setup. This will walk you through setting up the toolchain and compiling the
  * firmware and emulator.
  * -# Next, read about the basics of a Swadge Mode at swadge2024.h.
