@@ -333,7 +333,7 @@ static void runnerMainLoop(int64_t elapsedUs)
 
 Seems pretty similar to the declarations, right? Instead of the semicolon we have curly braces, and we don't need to include the `void` inside the parens.
 
-The names need to be identical, and the `elapsedUs` needs to be the same, or else the compiler won't realize that these are the same functions and bind them.
+The names need to be identical, and the type of the variable `elapsedUs` (`int64_t`) needs to be the same, or else the compiler won't realize that these are the same functions and bind them. The actual name of the variable doesn't have to match or even be present in the forward declaration, but it's helpful for documentation reasons.
 
 If we decided not to forward declare these, then the `swadgeMode_t` struct wouldn't know what a `runnerEnterMode` was and would throw an error.
 

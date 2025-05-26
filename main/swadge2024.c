@@ -29,15 +29,19 @@
  * If you want to learn about creating MIDI song files for the Swadge, see the \ref MIDI guide. See also the
  * \ref emulator which you can use to listen to MIDI files.
  *
- * If you're just starting Swadge development, you're already at the right place to start! Here's a good sequence of
- * pages to read from here.
+ * If you're just starting Swadge development, you're already at the right place to start!
  *
+ * > [!TIP] If you're new to developing code and want a guided experience, try the new \ref tutorial tutorial! It will walk you through
+ * > creating a whole game with explanations on why certain options are picked. If you're more used to C and reading
+ * > technical documentation, why not browse the rest of the repository?
+ *
+ * Here's a quick recommended order to exploring the repository:
+ * 
  * -# First, follow the guide to \ref setup. This will walk you through setting up the toolchain and compiling the
  * firmware and emulator.
  * -# Next, read about the basics of a Swadge Mode at swadge2024.h.
  * -# Once you understand the basics of a Swadge Mode, check out the \ref swadge_mode_example to see a simple mode in
  * action.
- * -# Go over \ref tutorial to see how a mode is constructed in depth
  * -# After you grasp the example, you can go deeper and read the full \ref apis to understand the full capability of
  * the Swadge firmware.
  * -# If you have any crashes on real hardware, read and use \ref serial_out to help debug the issue.
