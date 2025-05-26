@@ -120,10 +120,7 @@ typedef struct __attribute__((packed)) swadgePassPacket
 {
     uint16_t preamble; ///< Two bytes that specifically begin a SwadgePass packet
     uint8_t version;   ///< A version byte to differentiate packets per-year
-    struct
-    {
-        uint8_t nameIdxs[4];
-    } username;
+    int32_t username;  ///< The username of the swadge owner
     struct
     {
         int8_t reactHs;

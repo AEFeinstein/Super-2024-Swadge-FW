@@ -152,13 +152,21 @@ void initUsernameSystem()
 
     // Initialize
     swadgeUsername.user = true;
-    size_t blobLen      = 3 * sizeof(int8_t);
-    if (!readNvsBlob(nvsKeys, &swadgeUsername.idxs, &blobLen))
+    int32_t packed      = 0;
+    if (!readNvs32(nvsKeys, &packed))
     {
+        // Generate and save default name if not already set
         generateMACUsername(&swadgeUsername);
-        writeNvsBlob(nvsKeys, swadgeUsername.idxs, 3 * sizeof(int8_t));
+        packed = GET_PACKED_USERNAME(swadgeUsername);
+        writeNvs32(nvsKeys, packed);
+    }
+    else
+    {
+        // Unpack currently stored data
+        setUsernameFrom32(&swadgeUsername, packed);
     }
     setUsernameFromND(&swadgeUsername);
+    // ESP_LOGI("USRN", "Current name code: %d, which is %d, %d, %d, %d", GET_PACKED_USERNAME(swadgeUsername), swadgeUsername.idxs[0], swadgeUsername.idxs[1], swadgeUsername.idxs[2], swadgeUsername.randCode);
 }
 
 void generateMACUsername(nameData_t* nd)
@@ -367,6 +375,14 @@ void drawUsernamePicker(nameData_t* nd)
     // Draw currently set name
     drawText(getSysFont(), c444, "Current:", 32, TFT_HEIGHT - 32);
     drawText(getSysFont(), c555, nd->nameBuffer, 32, TFT_HEIGHT - 16);
+}
+
+void setUsernameFrom32(nameData_t* nd, int32_t packed)
+{
+    nd->idxs[0]  = (packed >> 24) & 0xFF;
+    nd->idxs[1]  = (packed >> 16) & 0xFF;
+    nd->idxs[2]  = (packed >> 8) & 0xFF;
+    nd->randCode = packed & 0xFF;
 }
 
 //==============================================================================
