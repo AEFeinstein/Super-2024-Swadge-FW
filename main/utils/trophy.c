@@ -171,8 +171,21 @@ static int _loadPoints(bool total, const char* modeName);
 
 // Trophy handling
 
+/**
+ * @brief Checks if the final trophy should be triggering
+ *
+ * @return true Final trophy should be drawn
+ * @return false Not the final trophy's turn
+ */
 static bool _isFinalTrophy(void);
 
+/**
+ * @brief Called when a trophy is won
+ *
+ * @param tw Trophy data to work with
+ * @return true If the final trophy has been won
+ * @return false If the final trophy has not been won
+ */
 static bool _trophyIsWon(trophyDataWrapper_t* tw);
 
 // Checklist Helpers
@@ -228,6 +241,12 @@ static int _getListItemHeight(trophyData_t t, font_t* fnt);
  */
 static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t* fnt, wsg_t* image);
 
+/**
+ * @brief Loads the default image to the wsg_t slot provided based on difficulty
+ *
+ * @param td Difficulty to get trophy for
+ * @param image Place to store image
+ */
 static void _loadDefaultTrophyImage(trophyDifficulty_t td, wsg_t* image);
 
 // Points
@@ -263,8 +282,8 @@ void trophySystemInit(trophyDataList_t* data, const char* modeName)
     // If no namespace is provided, auto generate
     if (strcmp(data->settings->namespaceKey, "") == 0)
     {
-        char buffer[MAX_NVS_KEY_LEN];
-        _truncateStr(buffer, modeName, MAX_NVS_KEY_LEN);
+        char buffer[NVS_KEY_NAME_MAX_SIZE];
+        _truncateStr(buffer, modeName, NVS_KEY_NAME_MAX_SIZE);
         strcpy(trophySystem.data->settings->namespaceKey, buffer);
     }
 
@@ -454,8 +473,8 @@ bool trophyUpdateMilestone(trophyData_t t, int newVal, int threshold)
 int32_t trophyGetSavedValue(trophyData_t t)
 {
     int32_t val;
-    char buffer[MAX_NVS_KEY_LEN];
-    _truncateStr(buffer, t.title, MAX_NVS_KEY_LEN);
+    char buffer[NVS_KEY_NAME_MAX_SIZE];
+    _truncateStr(buffer, t.title, NVS_KEY_NAME_MAX_SIZE);
     if (readNamespaceNvs32(trophySystem.data->settings->namespaceKey, buffer, &val))
     {
         return val;
@@ -556,7 +575,7 @@ trophyData_t trophyGetLatest()
 void trophySetSystemData(trophyDataList_t* dl, const char* modeName)
 {
     trophySystem.data = dl;
-    _truncateStr(trophySystem.data->settings->namespaceKey, modeName, MAX_NVS_KEY_LEN);
+    _truncateStr(trophySystem.data->settings->namespaceKey, modeName, NVS_KEY_NAME_MAX_SIZE);
     _genPlat(modeName);
     _loadPalette();
 }
@@ -805,8 +824,8 @@ static void _truncateStr(char* to, const char* from, int len)
 
 static void _save(trophyDataWrapper_t* t, int newVal)
 {
-    char buffer[MAX_NVS_KEY_LEN];
-    _truncateStr(buffer, t->trophyData.title, MAX_NVS_KEY_LEN);
+    char buffer[NVS_KEY_NAME_MAX_SIZE];
+    _truncateStr(buffer, t->trophyData.title, NVS_KEY_NAME_MAX_SIZE);
     writeNamespaceNvs32(trophySystem.data->settings->namespaceKey, buffer, newVal);
 }
 
@@ -824,8 +843,8 @@ static void _load(trophyDataWrapper_t* tw, trophyData_t t)
 
     // Pull Current Val from disk
     int32_t val;
-    char buffer[MAX_NVS_KEY_LEN];
-    _truncateStr(buffer, t.title, MAX_NVS_KEY_LEN);
+    char buffer[NVS_KEY_NAME_MAX_SIZE];
+    _truncateStr(buffer, t.title, NVS_KEY_NAME_MAX_SIZE);
     if (readNamespaceNvs32(trophySystem.data->settings->namespaceKey, buffer, &val))
     {
         tw->currentVal = val;
@@ -845,7 +864,7 @@ static void _saveLatestWin(trophyDataWrapper_t* tw)
         {
             writeNamespaceNvs32(NVSstrings[0], NVSstrings[2], idx);
             writeNamespaceNvsBlob(NVSstrings[0], NVSstrings[3], trophySystem.data->settings->namespaceKey,
-                                  MAX_NVS_KEY_LEN);
+                                  NVS_KEY_NAME_MAX_SIZE);
             return;
         }
     }
@@ -895,8 +914,8 @@ static int _loadPoints(bool total, const char* modeName)
         }
         else
         {
-            char buffer[MAX_NVS_KEY_LEN];
-            _truncateStr(buffer, modeName, MAX_NVS_KEY_LEN);
+            char buffer[NVS_KEY_NAME_MAX_SIZE];
+            _truncateStr(buffer, modeName, NVS_KEY_NAME_MAX_SIZE);
             if (!readNamespaceNvs32(buffer, NVSstrings[1], &val))
             {
                 val = 0;

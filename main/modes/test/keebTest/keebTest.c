@@ -159,7 +159,7 @@ static void keebEnterMode(void)
 
     // Get resources
     loadWsg(EXAMPLE_BG_WSG, &kbTest->bg, false);
-    loadFont(IBM_VGA_8_FONT, &kbTest->fnt[0], false);
+    kbTest->fnt[0] = *getSysFont();
     loadFont(RADIOSTARS_FONT, &kbTest->fnt[1], false);
     loadFont(RODIN_EB_FONT, &kbTest->fnt[2], false);
     loadFont(RIGHTEOUS_150_FONT, &kbTest->fnt[3], false);
@@ -217,7 +217,6 @@ static void keebExitMode(void)
     deinitMenuManiaRenderer(kbTest->renderer);
 
     // Deinit fonts
-    freeFont(&kbTest->fnt[0]);
     freeFont(&kbTest->fnt[1]);
     freeFont(&kbTest->fnt[2]);
     freeFont(&kbTest->fnt[3]);

@@ -6,6 +6,7 @@
 #include <hdw-nvs.h>
 #include "swadgePass.h"
 #include "modeIncludeList.h"
+#include "nameList.h"
 
 //==============================================================================
 // Defines
@@ -46,6 +47,10 @@ void fillSwadgePassPacket(swadgePassPacket_t* packet)
     // Set the preamble
     packet->preamble = SWADGE_PASS_PREAMBLE;
     packet->version  = SWADGE_PASS_VERSION;
+
+    // Automatically fill in username
+    nameData_t copied = *getSystemUsername(); // Would inline, but macro says no
+    packet->username = GET_PACKED_USERNAME(copied);
 
     // Ask each mode to fill in the rest
     int modeCount = modeListGetCount();
