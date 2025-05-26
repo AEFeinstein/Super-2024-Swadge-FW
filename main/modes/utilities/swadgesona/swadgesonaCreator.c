@@ -19,6 +19,7 @@ typedef struct
     bool isDisplaying;
     int8_t index; // number for position in menu
     swadgesona_t swadgesona;
+    swadgesonaData_t ssd;
 } swadgesonaCreatorMode_t;
 
 swadgeMode_t swadgesonaCreatorMode = {
@@ -44,10 +45,12 @@ static void enterMode(void)
 {
     sc = (swadgesonaCreatorMode_t*)heap_caps_calloc(1, sizeof(swadgesonaCreatorMode_t), MALLOC_CAP_8BIT);
     loadWsg(MIDI_WSG, &sc->test, true);
+    initSwadgesonaDraw(&sc->ssd);
 }
 
 static void exitMode(void)
 {
+    freeSwadgesonaDraw(&sc->ssd);
     freeWsg(&sc->test);
     heap_caps_free(sc);
 }
@@ -100,8 +103,6 @@ static void draw()
     {
         drawWsgSimple(&sc->test, 120, 120);
     }
-    
-    drawSwadgesona(sc->swadgesona,32,32);
-
+    drawSwadgesona(&sc->ssd, &sc->swadgesona, (TFT_WIDTH - (64 * 4)) >> 1, 32, 4);
 }
     
