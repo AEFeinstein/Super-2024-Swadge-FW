@@ -743,7 +743,7 @@ static int32_t getLatestRemoteScore()
         setPacketUsedByMode(spd, &roboRunnerMode, true);
         if (val < spd->data.packet.roboRunner.highScore)
         {
-            // FIXME: Load username here
+            setUsernameFrom32(&rd->remotePlayer, spd->data.packet.username);
             val = spd->data.packet.roboRunner.highScore;
         }
         spNode = spNode->next;
