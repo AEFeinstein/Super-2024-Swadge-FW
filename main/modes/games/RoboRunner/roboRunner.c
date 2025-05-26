@@ -304,8 +304,6 @@ static void runnerEnterMode()
     }
     // SwadgePass
     rd->otherHS           = getLatestRemoteScore();
-    rd->remotePlayer.user = false;
-    generateRandUsername(&rd->remotePlayer);
     // Trophy
     rd->feetTraveledTotal = trophyGetSavedValue(roboRunnerTrophies[1]);
     rd->deaths            = trophyGetSavedValue(roboRunnerTrophies[2]);
@@ -577,13 +575,17 @@ static void drawSplash(int64_t elapsedUs)
     {
         drawText(getSysFont(), c555, "Press any button to continue", 32, TFT_HEIGHT - 48);
     }
-    if (true)
+    if (rd->otherHS > 0 || rd->prevScore > 0) 
     {
         char buffer[64];
-        snprintf(buffer, sizeof(buffer) - 1, "High Score: %" PRId32, rd->otherHS);
+        snprintf(buffer, sizeof(buffer) - 1, "High Score: %" PRId32, (rd->otherHS > rd->prevScore) ? rd->otherHS : rd->prevScore);
         drawText(getSysFont(), c555, buffer, 32, TFT_HEIGHT - 32);
-        // FIXME: Display name once that's passed through swadgepass
-        snprintf(buffer, sizeof(buffer) - 1, "By: %s", rd->remotePlayer.nameBuffer);
+        if (rd->otherHS <= rd->prevScore)
+        {
+            snprintf(buffer, sizeof(buffer) - 1, "By: You!");
+        } else {
+            snprintf(buffer, sizeof(buffer) - 1, "By: %s", rd->remotePlayer.nameBuffer);
+        }
         drawText(getSysFont(), c555, buffer, 32, TFT_HEIGHT - 16);
     }
 }
@@ -731,19 +733,17 @@ static void roboRunnerPacket(swadgePassPacket_t* packet)
 
 static int32_t getLatestRemoteScore()
 {
-    // Get all SwadgePasses, including used ones
     list_t spList = {0};
     getSwadgePasses(&spList, &roboRunnerMode, false);
-    // Iterate through the list
     node_t* spNode = spList.first;
     int32_t val    = 0;
     while (spNode)
     {
         swadgePassData_t* spd = (swadgePassData_t*)spNode->val;
-        ESP_LOGI("SP", "Receive from %s. Preamble is %d", spd->key, spd->data.packet.preamble);
         setPacketUsedByMode(spd, &roboRunnerMode, true);
         if (val < spd->data.packet.roboRunner.highScore)
         {
+            // FIXME: Load username here
             val = spd->data.packet.roboRunner.highScore;
         }
         spNode = spNode->next;
@@ -754,10 +754,10 @@ static int32_t getLatestRemoteScore()
 // LEDs
 static void updateLEDs(int idx)
 {
-    for (int idx = 0; idx < CONFIG_NUM_LEDS; idx++)
+    for (int i = 0; i < CONFIG_NUM_LEDS; i++)
     {
         led_t led     = {0};
-        rd->leds[idx] = led;
+        rd->leds[i] = led;
     }
     switch (idx)
     {
