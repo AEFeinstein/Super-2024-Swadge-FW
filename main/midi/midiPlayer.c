@@ -463,6 +463,8 @@ static const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, ui
     {
         switch (bank)
         {
+            case 2:
+                return &mmxDrumkitTimbre;
             case 1:
                 return &donutDrumkitTimbre;
 
@@ -475,6 +477,22 @@ static const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, ui
     {
         switch (bank)
         {
+            case 2:
+            {
+                for (size_t n = 0; n < mmxTimbreCount; n++)
+                {
+                    if (program == mmxTimbreMap[n])
+                    {
+                        return mmxTimbres[n];
+                    }
+                    else if (program < mmxTimbreMap[n])
+                    {
+                        return &acousticGrandPianoTimbre;
+                    }
+                }
+
+                return &acousticGrandPianoTimbre;
+            }
             case 1:
             {
                 if (program < magfestTimbreCount)
