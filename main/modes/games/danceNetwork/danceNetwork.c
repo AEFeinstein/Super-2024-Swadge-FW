@@ -29,6 +29,8 @@ swadgeMode_t danceNetworkMode = {
 
 typedef struct{
     wsg_t groundTile;
+    wsg_t alphaDown; //face down
+    wsg_t alphaUp; //face up
 } sprites_t;
 
 typedef struct{
@@ -40,6 +42,7 @@ typedef struct {
     sprites_t sprites;
     tileData_t tiles[BOARD_SIZE][BOARD_SIZE];
     uint8_t selection[2];//x and y indices of the selected tile
+    uint8_t alphaFaceDir; //0 = down, 1 = left, 2 = up, 3 = right
 } gameData_t;
 
 gameData_t* gameData;
@@ -58,6 +61,8 @@ static void dn_EnterMode(void)
     gameData->selection[1] = 2;
     gameData->tiles[gameData->selection[0]][gameData->selection[1]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
     loadWsg(DN_GROUND_TILE_WSG, &gameData->sprites.groundTile, true);
+    loadWsg(DN_ALPHA_DOWN_WSG, &gameData->sprites.alphaDown, true);
+    loadWsg(DN_ALPHA_UP_WSG, &gameData->sprites.alphaUp, true);
 }
 
 static void dn_ExitMode(void)
@@ -78,24 +83,28 @@ static void dn_MainLoop(int64_t elapsedUs)
                 gameData->selection[1]--;
                 gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
                 gameData->tiles[gameData->selection[1]][gameData->selection[0]].yVel = -700;
+                gameData->alphaFaceDir = 2; //face up
             }
             else if(evt.button == PB_DOWN && gameData->selection[1] < BOARD_SIZE - 1)
             {
                 gameData->selection[1]++;
                 gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
                 gameData->tiles[gameData->selection[1]][gameData->selection[0]].yVel = -700;
+                gameData->alphaFaceDir = 0; //face down
             }
             else if(evt.button == PB_LEFT && gameData->selection[0] > 0)
             {
                 gameData->selection[0]--;
                 gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
                 gameData->tiles[gameData->selection[1]][gameData->selection[0]].yVel = -700;
+                gameData->alphaFaceDir = 1; //face left
             }
             else if(evt.button == PB_RIGHT && gameData->selection[0] < BOARD_SIZE - 1)
             {
                 gameData->selection[0]++;
                 gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
                 gameData->tiles[gameData->selection[1]][gameData->selection[0]].yVel = -700;
+                gameData->alphaFaceDir = 3; //face right
             }
         }
     }
@@ -171,10 +180,34 @@ static void dn_drawTiles(void)
     {
         for (int x = 0; x < BOARD_SIZE; x++)
         {
-            int drawX = (TFT_WIDTH >> 1) - (41 >> 1) + (x - y) * (46 >> 1);
-            int drawY = (TFT_HEIGHT >> 1) + (TFT_HEIGHT >> 2) - 15 - (gameData->tiles[y][x].yOffset >> DECIMAL_BITS) + (x + y) * (25 >> 1);
+            int drawX = (TFT_WIDTH >> 1) - (41 >> 1) + (x - y) * (51 >> 1);
+            int drawY = (TFT_HEIGHT >> 1) + (TFT_HEIGHT >> 2) - 15 - (gameData->tiles[y][x].yOffset >> DECIMAL_BITS) + (x + y) * (26 >> 1);
             drawWsgSimple(&gameData->sprites.groundTile, drawX, drawY);
         }
+    }
+    int drawX = (TFT_WIDTH >> 1) - (41 >> 1) + (gameData->selection[0] - gameData->selection[1]) * (51 >> 1);
+    int drawY = (TFT_HEIGHT >> 1) + (TFT_HEIGHT >> 2) - 15 - (gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset >> DECIMAL_BITS) + (gameData->selection[0] + gameData->selection[1]) * (26 >> 1);
+    //Subtract half the width of the image to center it
+    drawX += gameData->sprites.alphaDown.w >> 1;
+    drawY -= 41;
+    switch (gameData->alphaFaceDir)
+    {
+        case(0)://face down
+            drawWsgSimple(&gameData->sprites.alphaDown, drawX, drawY);
+            /* code */
+            break;
+        case(1)://face left
+            drawWsg(&gameData->sprites.alphaUp, drawX, drawY, true, false, 0);
+            break;
+        case(2)://face up
+            drawWsgSimple(&gameData->sprites.alphaUp, drawX, drawY);
+            /* code */
+            break;
+        case(3)://face right
+            drawWsg(&gameData->sprites.alphaDown, drawX, drawY, true, false, 0);
+            break;
+        default:
+            break;
     }
 }
 
