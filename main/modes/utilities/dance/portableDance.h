@@ -6,7 +6,7 @@
 
 typedef struct
 {
-    const ledDanceArg* dance;
+    const ledDance_t* dance;
     bool enable;
 } ledDanceOpt_t;
 

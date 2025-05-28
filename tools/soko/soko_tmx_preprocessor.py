@@ -5,29 +5,10 @@ count = 0
 total = 0
 raw_total = 0
 comp_total = 0
+
+
 def main():
-    #print("Starting soko tmx conversion")
-
     convertAndSave(sys.argv[1], sys.argv[2])
-
-    return
-
-    inputdir = sys.argv[1]
-    # check if output is real directory and create it if it does not exist.
-    outputdir = sys.argv[2]
-    if not os.path.exists(outputdir):
-        os.makedirs(outputdir)
-
-    if not os.path.exists(outputdir):
-        print("oh no! input directory for soko tmx preprocessor doesn't exist!")
-        return
-
-
-    # todo: automatically check and move SK_LEVEL_LIST.txt, it doesn't update automatically.
-
-    # todo: ensure output ends in a trailing slash.
-    convertDir(inputdir,outputdir)
-    print("Completed soko tmx converstion. "+str(count)+ "/"+str(total)+" tmx files converted. "+str(comp_total)+"/"+str(raw_total)+" - "+str(raw_total-comp_total)+" (of converted) bytes saved with compression.")
 
 
 def convertDir(dir,output):

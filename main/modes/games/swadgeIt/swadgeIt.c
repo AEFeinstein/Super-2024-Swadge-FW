@@ -123,6 +123,8 @@ typedef struct
     // High scores from NVS
     int32_t memoryHighScore;
     int32_t reactionHighScore;
+    int32_t memoryHighScoreSP;
+    int32_t reactionHighScoreSP;
 } swadgeIt_t;
 
 //==============================================================================
@@ -135,6 +137,7 @@ static void swadgeItMainLoop(int64_t elapsedUs);
 static void swadgeItBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void swadgeItDacCallback(uint8_t* samples, int16_t len);
 static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt);
+static void swadgeItAddToSwadgePassPacket(swadgePassPacket_t* packet);
 
 static void swadgeItMenuCb(const char* label, bool selected, uint32_t value);
 
@@ -163,8 +166,10 @@ static const char swadgeItStrMemory[]     = "Memory";
 static const char swadgeItStrHighScores[] = "High Scores";
 static const char swadgeItStrExit[]       = "Exit";
 
-static const char SI_REACTION_HS_KEY[] = "si_r_hs";
-static const char SI_MEMORY_HS_KEY[]   = "si_m_hs";
+static const char SI_REACTION_HS_KEY[]    = "si_r_hs";
+static const char SI_MEMORY_HS_KEY[]      = "si_m_hs";
+static const char SI_REACTION_HS_SP_KEY[] = "si_r_hs_sp";
+static const char SI_MEMORY_HS_SP_KEY[]   = "si_m_hs_sp";
 
 /** Must match order of swadgeItEvt_t */
 const swadgeItEvtData_t siEvtData[] = {
@@ -242,6 +247,7 @@ swadgeMode_t swadgeItMode = {
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
     .fnDacCb                  = swadgeItDacCallback,
+    .fnAddToSwadgePassPacket  = swadgeItAddToSwadgePassPacket,
 };
 
 static swadgeIt_t* si;
@@ -278,17 +284,58 @@ static void swadgeItEnterMode(void)
     // For yell detection
     InitColorChord(&si->end, &si->dd);
 
-    // Read high scores from NVS
-    if (!readNvs32(SI_REACTION_HS_KEY, &si->reactionHighScore))
+    // Read high scores from NVS to mode memory
+    const struct
     {
-        writeNvs32(SI_REACTION_HS_KEY, 0);
-        si->reactionHighScore = 0;
-    }
-    if (!readNvs32(SI_MEMORY_HS_KEY, &si->memoryHighScore))
+        const char* key;
+        int32_t* dest;
+    } hs[] = {
+        {.key = SI_REACTION_HS_KEY, .dest = &si->reactionHighScore},
+        {.key = SI_MEMORY_HS_KEY, .dest = &si->memoryHighScore},
+        {.key = SI_REACTION_HS_SP_KEY, .dest = &si->reactionHighScoreSP},
+        {.key = SI_MEMORY_HS_SP_KEY, .dest = &si->memoryHighScoreSP},
+    };
+    for (int32_t idx = 0; idx < ARRAY_SIZE(hs); idx++)
     {
-        writeNvs32(SI_MEMORY_HS_KEY, 0);
-        si->memoryHighScore = 0;
+        // Read high scores from NVS
+        if (!readNvs32(hs[idx].key, hs[idx].dest))
+        {
+            writeNvs32(hs[idx].key, 0);
+            *hs[idx].dest = 0;
+        }
     }
+
+    // Get unused SwadgePasses for this mode
+    list_t swadgePasses = {0};
+    getSwadgePasses(&swadgePasses, &swadgeItMode, false);
+
+    // Iterate through the SwadgePass data
+    node_t* passNode = swadgePasses.first;
+    while (passNode)
+    {
+        // Convenience pointer
+        swadgePassData_t* spd = (swadgePassData_t*)passNode->val;
+
+        // Check if high scores are higher, write to NVS if they are
+        if (spd->data.packet.swadgeIt.memHs > si->memoryHighScoreSP)
+        {
+            si->memoryHighScoreSP = spd->data.packet.swadgeIt.memHs;
+            writeNvs32(SI_MEMORY_HS_SP_KEY, si->memoryHighScoreSP);
+        }
+
+        if (spd->data.packet.swadgeIt.reactHs > si->reactionHighScoreSP)
+        {
+            si->reactionHighScoreSP = spd->data.packet.swadgeIt.reactHs;
+            writeNvs32(SI_REACTION_HS_SP_KEY, si->reactionHighScoreSP);
+        }
+
+        // Mark this packet as used by this mode
+        setPacketUsedByMode(spd, &swadgeItMode, true);
+
+        // Iterate
+        passNode = passNode->next;
+    }
+    freeSwadgePasses(&swadgePasses);
 }
 
 /**
@@ -709,7 +756,7 @@ static void swadgeItHighScoreRender(void)
     char hsString[64];
 
     // Center text vertically
-    int numLines = 2;
+    int numLines = 4;
     int16_t yOff = (TFT_HEIGHT - (numLines * font->height + (numLines - 1) * TEXT_Y_SPACING)) / 2;
 
     // Draw reaction string
@@ -718,8 +765,18 @@ static void swadgeItHighScoreRender(void)
     drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
     yOff += font->height + TEXT_Y_SPACING;
 
+    snprintf(hsString, sizeof(hsString) - 1, "SP %s: %" PRId32, swadgeItStrReaction, si->reactionHighScoreSP);
+    tWidth = textWidth(font, hsString);
+    drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
+    yOff += font->height + TEXT_Y_SPACING;
+
     // Draw memory string
     snprintf(hsString, sizeof(hsString) - 1, "%s: %" PRId32, swadgeItStrMemory, si->memoryHighScore);
+    tWidth = textWidth(font, hsString);
+    drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
+    yOff += font->height + TEXT_Y_SPACING;
+
+    snprintf(hsString, sizeof(hsString) - 1, "SP %s: %" PRId32, swadgeItStrMemory, si->memoryHighScoreSP);
     tWidth = textWidth(font, hsString);
     drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
     yOff += font->height + TEXT_Y_SPACING;
@@ -1053,4 +1110,29 @@ static void swadgeItSwitchToScreen(swadgeItScreen_t newScreen)
 
     // Set the new screen
     si->screen = newScreen;
+}
+
+/**
+ * @brief Add this Swadge's high score to the SwadgePass packet.asm
+ *
+ * This function MUST NOT reference static swadgeIt_t* si;
+ *
+ * @param packet The packet to add the score to
+ */
+static void swadgeItAddToSwadgePassPacket(swadgePassPacket_t* packet)
+{
+    packet->swadgeIt.reactHs = 0;
+    packet->swadgeIt.memHs   = 0;
+
+    int32_t reactionHighScore;
+    if (readNvs32(SI_REACTION_HS_KEY, &reactionHighScore))
+    {
+        packet->swadgeIt.reactHs = reactionHighScore;
+    }
+
+    int32_t memoryHighScore;
+    if (readNvs32(SI_MEMORY_HS_KEY, &memoryHighScore))
+    {
+        packet->swadgeIt.memHs = memoryHighScore;
+    }
 }

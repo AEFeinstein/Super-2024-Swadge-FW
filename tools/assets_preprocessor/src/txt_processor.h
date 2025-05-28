@@ -4,8 +4,9 @@
 #include "assets_preprocessor.h"
 
 /**
- * @brief The text processor strips out any carriage returns (`\r`) or non-ASCII characters from the input file and saves it uncompressed
- * 
+ * @brief The text processor strips out any carriage returns (`\r`) or non-ASCII characters from the input file and
+ * saves it uncompressed
+ *
  */
 extern const assetProcessor_t textProcessor;
 

@@ -1,15 +1,3 @@
-/*
-    const char* inExt: The extension of the file to be transformed, e.g. png
-    const char* outExt: The extension of the file that will be created, e.g. .wsg
-    enum processType_t type: The type of processing the file gets. Right now would just be FUNCTION, but maybe we'd have
-   another for EXEC (to use for external tools) bool (*processFn)(const char* inFile, const char* outFile): If type is
-   FUNCTION, this would be a pointer to the function called to process the file. The in and out file paths are already
-   set up, so no filename parsing is needed inside the handler. (if EXEC is implemented) const char* execCmd: The
-   command to run for processing this file. If it exits abnormally the file is considered failed. The in and out file
-   arguments would be populated in string arguments, so "cp %1$s %2$s" would be a valid one. This might be a good
-   uniform way to handle things like the sokoban python script.
-*/
-
 #ifndef _ASSETS_PREPROCESSOR_H_
 #define _ASSETS_PREPROCESSOR_H_
 
@@ -37,7 +25,7 @@
  * same extension if needed. Asset processors follow a similar pattern to mode
  * structs, where each asset processor struct is defined in its own file and made
  * available to other files via an `extern` variable in its header file. Then, in
- * asset_preprocessor.c, all asset processors are included and then mapped onto file
+ * assets_preprocessor.c, all asset processors are included and then mapped onto file
  * extensions in one place.
  *
  * In order to reduce the need for repetitive path manipulation, file opening, and
@@ -48,10 +36,239 @@
  *
  * Individual asset files and entire directory trees can also be configured with options
  * to be used by file processors. This is done with `.opts` files, which you can read more
- * about using in the \link md_tools_2assets__preprocessor_2README README \endlink. Options
+ * about in the \link assetProc_options Options Files \endlink section. Options
  * are provided as part of the argument struct to the preprocessor function and can be
  * treated as a key-value store of strings, integers, or booleans. The usage of options
- * files by an asset preprocessor function is described in more detail below.
+ * files by an asset preprocessor function is described in more detail in the
+ * \link assetProc_structOptions Function Preprocessors \endlink section.
+ *
+ * \section assetProc_configUsage Configuration and Usage
+ * This section covers the usage and configuration of the assets preprocessor. Existing
+ * preprocessor functions cover most common use cases, so unless you want to parse a
+ * new, specific file format into a different swadge-specific format using C, this section
+ * will cover everything you need to know.
+ *
+ * \subsection assetProc_usage Basic Usage
+ *
+ * The asset processor is automatically started by the build process for both the emulator
+ * and the firmware, but you can also build and execute it manually from the repository
+ * root directory with:
+ *
+ * ```bash
+ * make -C ./tools/assets_preprocessor
+ * ./tools/assets_preprocessor/asssets_preprocessor -i ./assets -o ./assets_image -c ./assets.conf
+ * ```
+ *
+ * If you are trying to debug an issue with an asset processor, adding `-v` to the command
+ * will enable verbose logging which could be helpful.
+ *
+ * \subsection assetProc_config Config File
+ *
+ * The config file is what maps a file extension, such as `.png`, onto a specific asset
+ * processor function, such as `wsg`, and an output extension. such as `.wsg`.
+ * The asset preprocessor uses an <a href="https://en.wikipedia.org/wiki/INI_file">INI-style</a>
+ * config file, and the path is specified by the command-line argument `-c`.
+ *
+ * Each section in the config file matches a single file extension. If you use the input
+ * file extension as the name of the section, e.g. `[png]` or `[.png]`, then the section
+ * name will also be used as the input file extension. Otherwise, you must specify the
+ * input file extension with the `inExt` option, like `inExt = .png`. The output file
+ * extension must always be set, using the `outExt` option, like `outExt = .wsg`. And
+ * each section must also specify an asset processor, which can either be one of the
+ * functions listed by passing the `-h` option (see \link assetProc_args Arguments \endlink
+ * below), or a shell command. To use a shell command, use the `exec` option, like
+ * `exec = python3 ./tools/custom_asset_proc.py %i %o`. To use a function, use the
+ * `func` option, like `func = wsg` or `func = heatshrink`.
+ *
+ * Example config section
+ * ```ini
+ * ; Lines starting with a ; are ignored
+ *
+ * ; This section defines a function asset processor
+ * [.png]
+ * outExt = .wsg
+ * ; This is the function name listed by -h, not the extension!
+ * func = wsg
+ *
+ * ; This section defines a shell asset processor
+ * [my-game-level]
+ * inExt = glvl
+ * outExt = glb
+ * ; %i will be replaced with the input .glvl file
+ * ; %o will be replaced with the output .glb file
+ * exec = python3 ./tools/my_game_asset_proc.py "%i" "%o"
+ * ```
+ *
+ * \subsection assetProc_options Asset Options Files
+ *
+ * In addition to the main config file, there is another type of file that can be used
+ * to configure how a single asset file or a directory of asset files is processed.
+ * Different asset processor functions may have different options or no options at all,
+ * and the specific options supported by each one are listed in the next section.
+ *
+ * To apply options to a specific file, e.g. `myImage.png`, create another file in the
+ * same directory, but with the extension `.opts` instead, e.g. `myImage.opts`. To apply
+ * options to an entire directory and all its subdirectories, create a file called `.opts`
+ * inside that directory.
+ *
+ * Only a single options file will be used when processing any particular file; options
+ * files are never merged. When an input file is being processed, the assets preprocessor
+ * first searches for the `<filename>.opts` file, and loads its options if it exists. If
+ * that options file does not exist, then the preprocessor will search for the `.opts` file
+ * in the same directory as the input file. If that does not exist, it will search the
+ * directory containing the input file, and so on until the top-level input directory has
+ * been searched. The first of these `.opts` file that exists will be used and no other
+ * assets files will be searched.
+ *
+ * An options file is an INI-style file similar to the config file, but instead of each
+ * section defining a file extension mapping, in an options file each section contains
+ * a list of options for a specific asset processor. The section name, e.g. `[wsg]` or
+ * `[heatshrink]` should match the name of the asset processor function being used.
+ * Multiple sections may be included in a single options file, though this only makes
+ * sense for `.opts` files in a directory containing multiple input file types.
+ *
+ * \subsubsection assetProc_optionsExample Options File Example
+ *
+ * ```ini
+ * ; In an Options file, the section name should match the function name
+ * [wsg]
+ * dither = true
+ * ```
+ *
+ * \subsubsection assetProc_funcs Function Asset Preprocessors
+ *
+ * For all available asset processing functions, run the asset processor with the
+ * `-h` option. Here is a list of the currently available processors and a brief
+ * description of them, along with any options they support.
+ *
+ * \paragraph assetProc_bin bin
+ * Copies the input file directly to the output file with no changes.
+ *
+ * \paragraph assetProc_chart chart
+ * Processes the input file as a Clone Hero chart, which can be created by
+ * <a href="https://efhiii.github.io/midi-ch/">this tool</a>. See also the
+ * <a
+ * href="https://github.com/TheNathannator/GuitarGame_ChartFormats/blob/main/doc/FileFormats/.chart/Core%20Infrastructure.md">
+ * .chart file spec</a>.
+ *
+ * \paragraph assetProc_font font
+ * Processes special font PNG files, which can be created by the
+ * <a href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/blob/main/tools/font_maker/README.md">
+ * font_maker</a> tool. The output file can be loaded with \ref loadFont().
+ *
+ * \paragraph assetProc_heatshrink heatshrink
+ * Compresses the input file using <a href="https://github.com/atomicobject/heatshrink">
+ * heatshrink</a> compression. Can be loaded with \ref readHeatshrinkFile().
+ *
+ * \paragraph assetProc_json json
+ * Validates the input JSON file and compresses it with heatshrink, by default.
+ * The file can be loaded with \ref loadJson().
+ *
+ * Supports the option `compress`, which is true by default. If set to false,
+ * the file will not be compressed, and can be loaded with \ref cnfsReadFile()
+ * instead.
+ *
+ * \paragraph assetProc_text text
+ * Removes any non-ASCII and unsupported characters in the input
+ * file and writes it to the output.
+ *
+ * \paragraph assetProc_wsg wsg
+ * Processes image files and converts them to the WSG (web-safe graphic) format.
+ * These image files can be loaded with \ref loadWsg(). Any colors in the image
+ * will be reduced to fit the web-safe color palette, along with one fully
+ * transparent color, \ref paletteColor_t::cTransparent.
+ *
+ * Supports the option `dither`, which is false by default. If set to true,
+ * images will be dithered when reducing their colors to the web-safe palette,
+ * which may improve the appearance of larger images.
+ *
+ * \subsubsection assetProc_execs Exec Asset Preprocessors
+ *
+ * Unlike the function based asset preprocessors, exec asset preprocessors do not need any
+ * C code and instead run a separate program to process each asset. This means that you
+ * could, for example, write a Python script that parses a text file and uses the
+ * <a href="https://docs.python.org/3/library/struct.html">struct</a> module to output a
+ * more compact, Swadge-friendly format, and run that script with an `exec` processor. An
+ * example
+ *
+ * Here's an example of a simple python program that reads separate lines of text, parses
+ * and validates them, and writes them into a 21-byte struct representation. This program,
+ * if saved at `tools/simple_processor.py`, could be used to process assets with
+ * `exec = python ./tools/simple_processor.py "%i" "%o"`.
+ *
+ * ```python
+ * #!/usr/bin/env python3
+ * """
+ * Parse a file of the format:
+ *
+ * name Name here
+ * id 12345
+ * color c235
+ *
+ * to a struct with char name[16], uint32_t id, and paletteColor_t color
+ * """
+ * import sys
+ * import struct
+ *
+ * if __name__ == "__main__":
+ *     with open(sys.argv[1], "r") as in_file:
+ *         with open(sys.argv[2], "wb") as out_file:
+ *             name = None
+ *             id = None
+ *             color = 0
+ *             for line in in_file.readlines():
+ *                 k, v = line.split()
+ *                 if k == "name":
+ *                     name = v
+ *                 elif k == "id":
+ *                     id = int(v)
+ *                 elif k == "color":
+ *                     r, g, b = v[1], v[2], v[3]
+ *                     color = r * 36 + g * 6 + b
+ *
+ *             if id is None or id < 0 or not name or len(name) > 15 or color < 0 or color > 216:
+ *                 print("Invalid input file")
+ *                 sys.exit(1)
+ *
+ *             out_file.write(struct.pack(">16s I B", name, id, color))
+ * ```
+ *
+ * Several placeholders are available to be used in the command string in order to
+ * fill in file path information, and are listed in a table below.
+ *
+ * \subsubsection assetProc_placeholders Command String Placeholders
+ * | Placeholder | Replacement                                |
+ * |-------------|--------------------------------------------|
+ * | \%i         | Full path to the input file                |
+ * | \%f         | Filename portion of the input file path    |
+ * | \%o         | Full path to the output file               |
+ * | \%a         | Input file extension, without leading `.`  |
+ * | \%b         | Output file extension, without leading `.` |
+ * | \%\%        | Literal `%` character                      |
+ *
+ *
+ *
+ * \subsection assetProc_args Command-line Arguments
+ *
+ */
+
+// clang-format off
+
+/*! \file assets_preprocessor.h
+ *
+ * | Flag | Description                                                              |
+ * |------|--------------------------------------------------------------------------|
+ * | `-i` | Input directory which contains assets to process. Always required.       |
+ * | `-o` | Output directory where processed assets are written. Always required.    |
+ * | `-c` | Configuration file. Optional, but it won't do much without it.           |
+ * | `-t` | Timestamp file. File will be updated any time an asset changes. Optional |
+ * | `-v` | Verbose mode. Outputs a lot more information during processing.          |
+ * | `-h` | Display usage information, and list available processor function names.  |
+ */
+
+// clang-format on
+
+/*! \file assets_preprocessor.h
  *
  * \section assetProc_structure Structure
  *
@@ -98,7 +315,7 @@
  * or ::FMT_TEXT, this data may also be freely modified in-place and can be assigned directly
  * into processorInput_t::out.
  *
- * To use FMT_LINES when outputting data, the asset processor must allocate two buffers;
+ * To use ::FMT_LINES when outputting data, the asset processor must allocate two buffers;
  * one `char**` for the list of string pointers (`lines`), and one `char*` for the entire
  * string data. Additionally, the first entry in `lines` _must_ be a pointer to the very
  * beginning of the text buffer in order to ensure that it can be properly freed. The
@@ -108,45 +325,45 @@
  * end of the file.
  *
  * Here is a summary of the various input and output options available and how to use them
- * for input and output. `arg` refers to the processorInput_t* passed as the argument to a
- * processFn_t.
- *
- * | Format       | In Data        | In Length           | In Mode | Out Data         | Out Length           | Out Mode |
- * |--------------|----------------|---------------------|---------|------------------|----------------------|----------|
- * | FMT_DATA     | `arg->in.data` | `arg->in.length`    | `rb`    | `arg->out.data`  | `arg->out.length`    | `wb`     |
- * | FMT_TEXT     | `arg->in.text` | `arg->in.textSize`  | `r`     | `arg->out.text`  | `arg->out.textSize`  | `w`      |
- * | FMT_FILE_BIN | `arg->in.file` |                     | `rb`    | `arg->out.file`  |                      | `wb`     |
- * | FMT_FILE     | `arg->in.file` |                     | `r`     | `arg->out.file`  |                      | `w`      |
- * | FMT_LINES    | `arg->in.lines`| `arg->in.lineCount` | `r`     | `arg->out.lines` | `arg->out.lineCount` | `w`      |
- *
- *
+ * for input and output. `arg` refers to the processorInput_t * passed as the argument to a
+ * \ref processFn_t.
+ */
+
+// clang-format off
+
+ /*! \file assets_preprocessor.h
+ * | Format         | In Data        | In Length           | In Mode | Out Data         | Out Length           | Out Mode |
+ * |----------------|----------------|---------------------|---------|------------------|----------------------|----------|
+ * | ::FMT_DATA     | `arg->in.data` | `arg->in.length`    | `rb`    | `arg->out.data`  | `arg->out.length`    | `wb`     |
+ * | ::FMT_TEXT     | `arg->in.text` | `arg->in.textSize`  | `r`     | `arg->out.text`  | `arg->out.textSize`  | `w`      |
+ * | ::FMT_FILE_BIN | `arg->in.file` |                     | `rb`    | `arg->out.file`  |                      | `wb`     |
+ * | ::FMT_FILE     | `arg->in.file` |                     | `r`     | `arg->out.file`  |                      | `w`      |
+ * | ::FMT_LINES    | `arg->in.lines`| `arg->in.lineCount` | `r`     | `arg->out.lines` | `arg->out.lineCount` | `w`      |
+ */
+
+// clang-format on
+
+/*! \file assets_preprocessor.h
  * \subsubsection assetProc_structOptions Options
- * For information on configuring asset processor options for asset files and directories,
- * see the \link md_tools_2assets__preprocessor_2README README \endlink.
+ * Options specified for the processed file will be available in
+ * \ref processorInput_t::options, and the value of a particular option can
+ * be retrieved using the functions \ref getStrOption(), \ref getIntOption(), and
+ * \ref getBoolOption(). Note that \ref processorInput_t::options may be `NULL`, but
+ * these functions will perform correctly when given a `NULL` \ref processorOptions_t
+ * pointer. The function \ref hasOption() may also be used to check whether an option
+ * was present.
  *
+ * When retrieving an option the full name, including section, must be specified, with
+ * a `.` separating the section and key name. The section name should always match the
+ * name in \ref assetProcessor_t::name to reduce confusion. For example, a processor
+ * function named `myfunc` which uses an option called `compact` should call
+ * `getBoolOption(arg->options, "myfunc.compact", true)`, which would correspond to
+ * a `.opts` file which contains this section:
  *
- * \subsection assetProc_structExecs Exec Preprocessors
- *
- * In addition to the function-based implementation used by most processors, they may also
- * be defined as an processorType_t::EXEC processor, which executes some other program (e.g.
- * a Python script) in order to process an asset. It's very important to keep in mind that
- * this program must be available on all platforms in order for assets to process properly.
- * If an executable that will be called by an exec processor must be compiled, it must be
- * added to the makefile in order to ensure it is built before the asset processor runs.
- *
- * An EXEC processor is defined by a command string in its assetProcessor_t::exec field.
- * For example, `.exec = "cp %i %o"` would copy the input file directly to its output.
- * Several placeholders are available to be used in this string in order to fill in file
- * path information, and are listed in a table below.
- *
- * | Placeholder | Replacement                                |
- * |-------------|--------------------------------------------|
- * | \%i         | Full path to the input file                |
- * | \%f         | Filename portion of the input file path    |
- * | \%o         | Full path to the output file               |
- * | \%a         | Input file extension, without leading '.'  |
- * | \%b         | Output file extension, without leading '.' |
- * | \%\%        | Literal '%' character                      |
+ * ```ini
+ * [myfunc]
+ * compact = false
+ * ```
  *
  * \subsection assetProc_examples Function Processor Examples
  *
@@ -159,7 +376,7 @@
  *
  * #include "assets_preprocessor.h"
  *
- * // Export the asset processors so they can be included from asset_processor.c
+ * // Export the asset processors so they can be included from assets_processor.c
  * extern const assetProcessor_t fileInFileOutProcessor;
  * extern const assetProcessor_t dataInDataOutProcessor;
  * extern const assetProcessor_t textInDataOutProcessor;
@@ -364,15 +581,21 @@
  *
  *
  * \section assetProc_adding Adding a New Processor
+ * If you only want to associate a new file type to an existing preprocessor, you can
+ * do so by editing the config file, which is covered in the \link assetProc_configUsage Config
+ * section \endlink.
+ *
  * To create a new asset processor function, follow these steps.
  *
- * 1. Create new `<type>_processor.h` and `.c` files in `/tools/assets_preprocessor/src/` -- see [above](#assetProc_examples) for an example.
- * 2. Include the newly-added `.h` file in asset_preprocessor.c
- * 3. Add an entry to fileProcessorMap in assets_preprocessor.c for each file extension the processor should handle
- * 4. Update \link md_tools_2assets__preprocessor_2README#config-file `assets.conf` \endlink to configure the file extensions to be handled by the new processor.
- * 5. Document the new processor in the \link md_tools_2assets__preprocessor_2README README \endlink, especially if it might be used by other modes in the future.
- * 6. Run `make clean all`
- * 
+ * 1. Create new `<type>_processor.h` and `.c` files in `/tools/assets_preprocessor/src/` -- see
+ * [above](#assetProc_examples) for an example.
+ * 2. Include the newly-added `.h` file in assets_preprocessor.c
+ * 3. Update \link assetProc_config `assets.conf` \endlink to configure the file
+ * extensions to be handled by the new processor.
+ * 4. Document the new processor \link assetProc_funcs here \endlink, especially if it
+ * might be used by other modes in the future.
+ * 5. Run `make clean all`
+ *
  */
 
 /**
@@ -411,15 +634,16 @@ typedef enum
 typedef union
 {
     /**
-     * @brief Holds file handle for FMT_FILE or FMT_FILE_BIN formats
+     * @brief Holds file handle for ::FMT_FILE or ::FMT_FILE_BIN formats
      *
      */
     FILE* file;
 
     /**
-     * @brief Holds data for FMT_DATA format
+     * @brief Holds data for ::FMT_DATA format
      */
-    struct {
+    struct
+    {
         /// @brief Buffer holding binary data
         uint8_t* data;
         /// @brief Length of binary data
@@ -427,10 +651,11 @@ typedef union
     };
 
     /**
-     * @brief Holds data for FMT_LINES format
+     * @brief Holds data for ::FMT_LINES format
      *
      */
-    struct {
+    struct
+    {
         /// @brief Array of string pointers for each line
         char** lines;
         /// @brief The number of string pointers in the array
@@ -438,10 +663,11 @@ typedef union
     };
 
     /**
-     * @brief Holds data for FMT_TEXT format
+     * @brief Holds data for ::FMT_TEXT format
      *
      */
-    struct {
+    struct
+    {
         /// @brief Buffer holding text data
         char* text;
         /// @brief The size of the text data, including NUL terminator
@@ -461,7 +687,7 @@ typedef struct
     char* section;
 
     /**
-     * @brief The key name, as "<section-name>.<key>"
+     * @brief The key name
      */
     char* name;
 
@@ -553,10 +779,15 @@ typedef struct
 {
     /// @brief The input file extension to match
     const char* inExt;
+
     /// @brief The output file extension to write
     const char* outExt;
+
     /// @brief A pointer to the processor used to transform the files
     const assetProcessor_t* processor;
+
+    /// @brief Extra options passed to the processor for these files
+    const processorOptions_t* options;
 } fileProcessorMap_t;
 
 #endif

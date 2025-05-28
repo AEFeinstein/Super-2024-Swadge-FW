@@ -4,20 +4,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #include "chart_processor.h"
 #include "assets_preprocessor.h"
 #include "fileUtils.h"
 
 bool process_chart(processorInput_t* arg);
 
-const assetProcessor_t chartProcessor = {
-    .name = "chart",
-    .type = FUNCTION,
-    .function = process_chart,
-    .inFmt = FMT_FILE_BIN,
-    .outFmt = FMT_FILE_BIN
-};
+const assetProcessor_t chartProcessor
+    = {.name = "chart", .type = FUNCTION, .function = process_chart, .inFmt = FMT_FILE_BIN, .outFmt = FMT_FILE_BIN};
 
 typedef enum
 {
@@ -33,10 +27,10 @@ bool process_chart(processorInput_t* arg)
     bool inSection        = false;
 
     /* Read input file */
-    FILE* fp = arg->in.file;
+    FILE* fp      = arg->in.file;
     FILE* outFile = arg->out.file;
 
-    bool ok = false;
+    bool ok            = false;
     uint8_t* tmpSpace  = malloc(1024 * 1024);
     uint32_t tmpIdx    = 0;
     uint32_t noteCount = 0;
@@ -83,7 +77,7 @@ bool process_chart(processorInput_t* arg)
             inSection = false;
         }
         else if (inSection && (CS_NOTES == section) && //
-                    sscanf(line, "%d = N %d %d", &tick, &note, &length))
+                 sscanf(line, "%d = N %d %d", &tick, &note, &length))
         {
             if (lastTick == tick && lastNote == note)
             {

@@ -9,7 +9,7 @@ static void microgameAMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosC
 static const char microgameAVerb[] = "Just Press \"A\"!";
 cosCrunchMicrogame_t ccMicrogameA  = {
      .verb               = microgameAVerb,
-     .timeoutSeconds     = 3,
+     .timeoutUs          = 5000000,
      .fnInitMicrogame    = microgameAInitMicrogame,
      .fnDestroyMicrogame = microgameADestroyMicrogame,
      .fnMainLoop         = microgameAMainLoop,

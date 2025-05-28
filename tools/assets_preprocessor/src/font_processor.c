@@ -11,11 +11,11 @@
 bool process_font(processorInput_t* arg);
 
 const assetProcessor_t fontProcessor = {
-    .name = "font",
-    .type = FUNCTION,
+    .name     = "font",
+    .type     = FUNCTION,
     .function = process_font,
-    .inFmt = FMT_FILE_BIN,
-    .outFmt = FMT_FILE_BIN,
+    .inFmt    = FMT_FILE_BIN,
+    .outFmt   = FMT_FILE_BIN,
 };
 
 uint32_t getPx(unsigned char* data, int w, int x, int y);

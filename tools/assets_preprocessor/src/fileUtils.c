@@ -14,11 +14,11 @@
 
 #if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) || defined(WIN32) || defined(WIN64) \
     || defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(_MSC_VER)
-#include <windows.h>
-#include <winbase.h>
+    #include <windows.h>
+    #include <winbase.h>
 #endif
 
-static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t* textLength,  char** text);
+static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t* textLength, char** text);
 
 /**
  * @brief Return the total size of the given file by opening it and seeking to the end
@@ -116,11 +116,11 @@ bool deleteFile(const char* path)
 {
 #if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) || defined(WIN32) || defined(WIN64) \
     || defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(_MSC_VER)
-        return DeleteFile(path);
+    return DeleteFile(path);
 #elif defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__CYGWIN__) \
     || defined(__APPLE__)
 
-    errno = 0;
+    errno      = 0;
     int result = unlink(path);
     if (0 != result)
     {
@@ -131,18 +131,17 @@ bool deleteFile(const char* path)
 #else
     return false;
 #endif
-
 }
 
 // Uncomment this to heavily debug the INI file parsing
-//#define INI_DEBUG
+// #define INI_DEBUG
 
 #ifdef INI_DEBUG
-#define iniPrintf(fmt, ...) printf("[ini] " fmt "\n", __VA_ARGS__)
-#define iniPuts(str) puts("[ini] " str)
+    #define iniPrintf(fmt, ...) printf("[ini] " fmt "\n", __VA_ARGS__)
+    #define iniPuts(str)        puts("[ini] " str)
 #else
-#define iniPrintf(fmt, ...)
-#define iniPuts(str)
+    #define iniPrintf(fmt, ...)
+    #define iniPuts(str)
 #endif
 
 /**
@@ -155,12 +154,13 @@ bool deleteFile(const char* path)
  * @param file
  * @param[in,out] count A pointer that will be set to the number of options found in the file
  * @param[out] opts A pointer to the options that will be filled with the contents of the INI file
- * @param[in,out] textLength A pointer to be set to the size of the buffer required to store the keys and values in this file
+ * @param[in,out] textLength A pointer to be set to the size of the buffer required to store the keys and values in this
+ * file
  * @param[out] text A pointer to a string to be set to the text buffer allocated for keys and values
  * @return true If the INI file was parsed successfully
  * @return false If the INI file is invalid or another error occurred
  */
-static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t* textLength,  char** text)
+static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t* textLength, char** text)
 {
     if (!file)
     {
@@ -174,7 +174,7 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
     // so we don't write the same one twice
     char* lastSectionOut = NULL;
 
-    char* textOut = NULL;
+    char* textOut      = NULL;
     optPair_t* optsOut = NULL;
 
     const char* textOutEnd = NULL;
@@ -229,10 +229,10 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
 #define STATE_SECTION  6
 
     size_t textChars = 0;
-    size_t pairs = 0;
+    size_t pairs     = 0;
 
     char prevSectionName[128] = {0};
-    char sectionName[128] = {0};
+    char sectionName[128]     = {0};
 
     char key[128] = {0};
     char val[256] = {0};
@@ -273,8 +273,9 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
                         // Add to the key
                         key[0] = ch;
                         key[1] = '\0';
-                        state = STATE_KEY;
-                    } else
+                        state  = STATE_KEY;
+                    }
+                    else
                     {
                         key[0] = '\0';
                     }
@@ -283,7 +284,7 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
                 else if (ch == '[')
                 {
                     sectionName[0] = '\0';
-                    state = STATE_SECTION;
+                    state          = STATE_SECTION;
                 }
                 else if (ch == ';' || ch == '#')
                 {
@@ -320,8 +321,8 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
                     {
                         // just don't actually _include_ the newline if it's escaped
                         char* out = key + strlen(key);
-                        *out++ = ch;
-                        *out++ = '\0';
+                        *out++    = ch;
+                        *out++    = '\0';
 
                         iniPrintf("Key now %s", key);
                     }
@@ -383,10 +384,10 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
                 if (escaping || (ch != '\n' && ch != ';' && ch != '#' && !isblank(ch)))
                 {
                     char* out = &val[strlen(val)];
-                    *out++ = ch;
-                    *out = '\0';
-                    escaping = false;
-                    state = STATE_VAL;
+                    *out++    = ch;
+                    *out      = '\0';
+                    escaping  = false;
+                    state     = STATE_VAL;
                 }
                 else if (ch == '\n')
                 {
@@ -402,9 +403,9 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
                 if (escaping || (ch != '\n' && ch != ';' && ch != '#'))
                 {
                     char* out = &val[strlen(val)];
-                    *out++ = ch;
-                    *out = '\0';
-                    escaping = false;
+                    *out++    = ch;
+                    *out      = '\0';
+                    escaping  = false;
                 }
                 else
                 {
@@ -449,7 +450,8 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
                         if (textOutCur + sectionLen + strlen(key) + 2 + strlen(val) + 2 > textOutEnd)
                         {
                             // uhh we're out of text room!!!
-                            fprintf(stderr, "[ERR] Not enough buffer allocated for text while parsing INI. Exiting early\n");
+                            fprintf(stderr,
+                                    "[ERR] Not enough buffer allocated for text while parsing INI. Exiting early\n");
                             free(textOut);
                             free(optsOut);
                             return false;
@@ -458,9 +460,9 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
                         if (sectionLen > 0)
                         {
                             optsOut[pairs].section = textOutCur;
-                            lastSectionOut = textOutCur;
+                            lastSectionOut         = textOutCur;
 
-                            textOutCur = strcpy(textOutCur, sectionName) + strlen(sectionName);
+                            textOutCur    = strcpy(textOutCur, sectionName) + strlen(sectionName);
                             *textOutCur++ = '\0';
                         }
                         else
@@ -476,8 +478,8 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
                         *textOutCur++ = '\0';
 
                         optsOut[pairs].value = textOutCur;
-                        textOutCur = strcpy(textOutCur, val) + strlen(val);
-                        *textOutCur++ = '\0';
+                        textOutCur           = strcpy(textOutCur, val) + strlen(val);
+                        *textOutCur++        = '\0';
 
                         iniPrintf("PAIR: key=\"%s\", val=\"%s\"", optsOut[pairs].name, optsOut[pairs].value);
 
@@ -508,8 +510,8 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
                 if (escaping || ch != ']')
                 {
                     char* out = &sectionName[strlen(sectionName)];
-                    *out++ = ch;
-                    *out = '\0';
+                    *out++    = ch;
+                    *out      = '\0';
 
                     escaping = false;
                 }
@@ -528,7 +530,8 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
 
     if (measuring)
     {
-        iniPrintf("Counted %" PRIu32 " pairs and %" PRIu32 " chars of text buffer", (uint32_t)pairs, (uint32_t)textChars);
+        iniPrintf("Counted %" PRIu32 " pairs and %" PRIu32 " chars of text buffer", (uint32_t)pairs,
+                  (uint32_t)textChars);
         if (count)
         {
             *count = pairs;
@@ -542,8 +545,8 @@ static bool parseIni(FILE* file, size_t* count, processorOptions_t* opts, size_t
     else
     {
         opts->optionCount = pairs;
-        opts->pairs = optsOut;
-        *text = textOut;
+        opts->pairs       = optsOut;
+        *text             = textOut;
     }
 
     fseek(file, 0, SEEK_SET);
@@ -629,14 +632,14 @@ void deleteOptions(processorOptions_t* options)
 {
     if (options->pairs && options->optionCount > 0)
     {
-        char* text = options->pairs[0].section;
+        char* text       = options->pairs[0].section;
         optPair_t* pairs = options->pairs;
 
         free(text);
         free(pairs);
     }
 
-    options->pairs = NULL;
+    options->pairs       = NULL;
     options->optionCount = 0;
 }
 
@@ -689,7 +692,7 @@ int getIntOption(const processorOptions_t* options, const char* name, int defaul
     {
         if (!strcmp(name, getFullOptionKey(fullKey, sizeof(fullKey), pair)))
         {
-            char* end = NULL;
+            char* end  = NULL;
             int result = strtol(pair->value, &end, 0);
 
             if (!result && end == pair->value)
@@ -725,20 +728,10 @@ int getIntOption(const processorOptions_t* options, const char* name, int defaul
 bool getBoolOption(const processorOptions_t* options, const char* name, bool defaultVal)
 {
     static const char* trueStrs[] = {
-        "yes",
-        "true",
-        "1",
-        "y",
-        "t",
-        "on",
+        "yes", "true", "1", "y", "t", "on",
     };
     static const char* falseStrs[] = {
-        "no",
-        "false",
-        "0",
-        "n",
-        "f",
-        "off",
+        "no", "false", "0", "n", "f", "off",
     };
 
     if (!options || !options->pairs)

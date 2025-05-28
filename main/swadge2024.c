@@ -29,12 +29,17 @@
  * If you want to learn about creating MIDI song files for the Swadge, see the \ref MIDI guide. See also the
  * \ref emulator which you can use to listen to MIDI files.
  *
- * If you're just starting Swadge development, you're already at the right place to start! Here's a good sequence of
- * pages to read from here.
+ * If you're just starting Swadge development, you're already at the right place to start!
+ *
+ * \note If you're new to developing code and want a guided experience, try the \ref tutorial tutorial! It
+ * \note will walk you through creating a whole game with explanations on why certain options are picked. If you're more
+ * \note used to C and reading technical documentation, why not browse the rest of the repository?
+ *
+ * Here's a quick recommended order to exploring the repository:
  *
  * -# First, follow the guide to \ref setup. This will walk you through setting up the toolchain and compiling the
  * firmware and emulator.
- * -# Next, read about the basics of a Swadge Mode at \ref swadge2024.h.
+ * -# Next, read about the basics of a Swadge Mode at swadge2024.h.
  * -# Once you understand the basics of a Swadge Mode, check out the \ref swadge_mode_example to see a simple mode in
  * action.
  * -# After you grasp the example, you can go deeper and read the full \ref apis to understand the full capability of
@@ -76,6 +81,7 @@
  * \subsection swadge_mode_api Swadge Mode APIs
  *
  * - swadge2024.h: Write a mode. This is a good starting place
+ * - trophy.h: Add trophies to the swadge mode.
  *
  * \subsection input_api Input APIs
  *
@@ -90,6 +96,8 @@
  *
  * - hdw-esp-now.h: Broadcast and receive messages. This is fast and unreliable.
  * - p2pConnection.h: Connect to another Swadge and exchange messages. This is slower and more reliable.
+ * - swadgePass.h: Send and receive small amounts of data like avatars or high scores while the Swadge is idle.
+ * - nameList.h: A method of generating nice strings for swadgepass data that are small.
  *
  * \subsection pm_api Persistent Memory APIs
  *
@@ -186,6 +194,7 @@
 #include "quickSettings.h"
 #include "midiPlayer.h"
 #include "introMode.h"
+#include "nameList.h"
 
 //==============================================================================
 // Defines
@@ -249,6 +258,9 @@ static uint32_t frameRateUs = DEFAULT_FRAME_RATE_US;
 
 /// @brief Timer to return to the main menu
 static int64_t timeExitPressed = 0;
+
+/// @brief System font
+static font_t sysFont;
 
 /// @brief Infinite impulse response filter for mic samples
 static uint32_t samp_iir = 0;
@@ -401,11 +413,21 @@ void app_main(void)
     static int64_t tLastLoopUs = 0;
     tLastLoopUs                = esp_timer_get_time();
 
+    // Initialize system font and trophy-get sound
+    loadFont(IBM_VGA_8_FONT, &sysFont, true);
+
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)
     {
+        if (NULL != cSwadgeMode->trophyData)
+        {
+            trophySystemInit(cSwadgeMode->trophyData, cSwadgeMode->modeName);
+        }
         cSwadgeMode->fnEnterMode();
     }
+
+    // Initialize username settings
+    initUsernameSystem();
 
     // Run the main loop, forever
     while (true)
@@ -463,6 +485,9 @@ void app_main(void)
             // Decrement the accumulation
             tAccumDraw -= frameRateUs;
 
+            // Amount fo time between main loop calls
+            uint64_t mainLoopCallDelay = 0;
+
             // Call the mode's main loop
             if (NULL != cSwadgeMode->fnMainLoop)
             {
@@ -472,8 +497,9 @@ void app_main(void)
                 {
                     tLastMainLoopCall = tNowUs;
                 }
+                mainLoopCallDelay = tNowUs - tLastMainLoopCall;
 
-                cSwadgeMode->fnMainLoop(tNowUs - tLastMainLoopCall);
+                cSwadgeMode->fnMainLoop(mainLoopCallDelay);
                 tLastMainLoopCall = tNowUs;
             }
 
@@ -518,6 +544,12 @@ void app_main(void)
                 quickSettingsMode.fnExitMode();
                 // Restore the mode
                 cSwadgeMode = modeBehindQuickSettings;
+            }
+
+            // If trophies are not null, draw
+            if (NULL != cSwadgeMode->trophyData)
+            {
+                trophyDraw(&sysFont, mainLoopCallDelay);
             }
 
             // Draw to the TFT
@@ -618,6 +650,9 @@ static void initOptionalPeripherals(void)
  */
 void deinitSystem(void)
 {
+    // Deinit font and sfx
+    freeFont(&sysFont);
+
     // Deinit the swadge mode
     if (NULL != cSwadgeMode->fnExitMode)
     {
@@ -699,6 +734,10 @@ static void setSwadgeMode(void* swadgeMode)
     cSwadgeMode = swadgeMode;
     if (cSwadgeMode->fnEnterMode)
     {
+        if (NULL != cSwadgeMode->trophyData)
+        {
+            trophySystemInit(cSwadgeMode->trophyData, cSwadgeMode->modeName);
+        }
         cSwadgeMode->fnEnterMode();
     }
 }
@@ -742,6 +781,10 @@ void softSwitchToPendingSwadge(void)
         // Enter the next mode
         if (NULL != cSwadgeMode->fnEnterMode)
         {
+            if (NULL != cSwadgeMode->trophyData)
+            {
+                trophySystemInit(cSwadgeMode->trophyData, cSwadgeMode->modeName);
+            }
             cSwadgeMode->fnEnterMode();
         }
 
@@ -943,4 +986,13 @@ void powerUpPeripherals(void)
     {
         powerUpTemperatureSensor();
     }
+}
+
+/**
+ * @brief Get the Sys Ibm Font. Font is pre-loaded fto ensure a font is always available for devs to use.
+ *
+ */
+font_t* getSysFont(void)
+{
+    return &sysFont;
 }

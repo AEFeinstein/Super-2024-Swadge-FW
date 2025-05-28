@@ -31,6 +31,9 @@ typedef struct
     bool fanfarePlaying;
 #endif
     int32_t autoLightDanceTimer;
+
+    bool modeEnterTrophyShowing;
+    const swadgeMode_t* pendingMode;
 } mainMenu_t;
 
 //==============================================================================
@@ -43,10 +46,126 @@ static void mainMenuMainLoop(int64_t elapsedUs);
 static void mainMenuCb(const char* label, bool selected, uint32_t settingVal);
 void addSecretsMenu(void);
 static void fanfareFinishedCb(void);
+static bool _winTrophy(swadgeMode_t* sm);
 
 //==============================================================================
 // Variables
 //==============================================================================
+
+const trophyData_t mainMenuTrophies[] = {
+    {
+        .title       = "Wait, this is a thing?!",
+        .description = "Unlocked the secret menu",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+        .hidden      = true,
+        .identifier  = NULL,
+    },
+    {
+        .title       = "Day -1",
+        .description = "Played Cosplay Crunch for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &cosCrunchMode,
+    },
+    {
+        .title       = "Get it!",
+        .description = "Played Swadge It! for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &swadgeItMode,
+    },
+    {
+        .title       = "Daft Punk would be proud",
+        .description = "Opened Colorchord for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &colorchordMode,
+    },
+    {
+        .title       = "A jukebox hero",
+        .description = "Opened Jukebox for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &jukeboxMode,
+    },
+    {
+        .title       = "Make some tunes",
+        .description = "Opened the Sequencer for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &sequencerMode,
+    },
+    {
+        .title       = "Who needs a tuning fork?",
+        .description = "Opened Tunernome for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &tunernomeMode,
+    },
+    {
+        .title       = "The smallest player",
+        .description = "Opened MIDI Player for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &synthMode,
+    },
+    {
+        .title       = "Blinded by the lights",
+        .description = "Opened Light dances on purpose for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &danceMode,
+    },
+    {
+        .title       = "I still like physical dice",
+        .description = "Opened Dice Roller for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &modeDiceRoller,
+    },
+    {
+        .title       = "Switch Amateur Controller",
+        .description = "Opened Gamepad for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &gamepadMode,
+    },
+};
+
+trophySettings_t menuTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 2,
+    .slideDurationUs  = DRAW_SLIDE_US,
+};
+
+trophyDataList_t menuTrophyData = {
+    .settings = &menuTrophySettings,
+    .list     = mainMenuTrophies,
+    .length   = ARRAY_SIZE(mainMenuTrophies),
+};
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
 const char mainMenuName[]                       = "Main Menu";
@@ -70,6 +189,7 @@ swadgeMode_t mainMenuMode = {
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
+    .trophyData               = &menuTrophyData,
 };
 
 mainMenu_t* mainMenu;
@@ -147,7 +267,7 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = initMenu(mainMenuTitle, mainMenuCb);
 
 #ifdef CONFIG_FACTORY_TEST_NORMAL
-    // Iniitalize all the modes in modeList
+    // Initialize all the modes in modeList
     modeListSetMenu(mainMenu->menu);
 
     // Start a submenu for settings
@@ -271,11 +391,23 @@ static void mainMenuMainLoop(int64_t elapsedUs)
                 mainMenu->cheatCodeIdx = 0;
             }
         }
-        mainMenu->menu = menuButton(mainMenu->menu, evt);
+
+        // Only accept button input if a trophy isn't showing
+        if (false == mainMenu->modeEnterTrophyShowing)
+        {
+            mainMenu->menu = menuButton(mainMenu->menu, evt);
+        }
     }
 
     // Draw the menu
     drawMenuMania(mainMenu->menu, mainMenu->renderer, elapsedUs);
+
+    // If a trophy was showing, but the animation is done
+    if (mainMenu->modeEnterTrophyShowing && !isTrophyDrawing())
+    {
+        // Finally switch to the pending mode
+        switchToSwadgeMode(mainMenu->pendingMode);
+    }
 
 #ifdef CONFIG_FACTORY_TEST_WARNING
     const char warning[] = "Take me to VR Zone to get flashed please!";
@@ -321,8 +453,23 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
             swadgeMode_t* current = allSwadgeModes[i];
             if (label == current->modeName)
             {
-                switchToSwadgeMode(current);
+                // If entering this mode won a trophy
+                if (_winTrophy(current))
+                {
+                    // Wait for the trophy to be shown before switching modes
+                    mainMenu->modeEnterTrophyShowing = true;
+                    mainMenu->pendingMode            = current;
+                }
+                else
+                {
+                    // Otherwise immediately enter the mode
+                    switchToSwadgeMode(current);
+                }
             }
+        }
+        if (label == tCaseMode.modeName)
+        {
+            switchToSwadgeMode(&tCaseMode);
         }
         if (label == confirmResetName)
         {
@@ -406,6 +553,9 @@ void addSecretsMenu(void)
     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, swadgePassTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, trophyTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, nameTestMode.modeName);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, factoryResetName);
     addSingleItemToMenu(mainMenu->menu, confirmResetName);
@@ -414,4 +564,19 @@ void addSecretsMenu(void)
 
     // End the secrets menu
     mainMenu->menu = endSubMenu(mainMenu->menu);
+
+    // Get a trophy
+    _winTrophy(NULL);
+}
+
+static bool _winTrophy(swadgeMode_t* sm)
+{
+    for (int32_t idx = 0; idx < ARRAY_SIZE(mainMenuTrophies); idx++)
+    {
+        if (mainMenuTrophies[idx].identifier == sm)
+        {
+            return trophyUpdate(mainMenuTrophies[idx], 1, true);
+        }
+    }
+    return false;
 }

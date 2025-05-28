@@ -11,13 +11,12 @@
 long remove_chars(char* str, long len, char c);
 bool process_txt(processorInput_t* arg);
 
-const assetProcessor_t textProcessor =
-{
-    .name = "text",
-    .type = FUNCTION,
+const assetProcessor_t textProcessor = {
+    .name     = "text",
+    .type     = FUNCTION,
     .function = process_txt,
-    .inFmt = FMT_TEXT,
-    .outFmt = FMT_TEXT,
+    .inFmt    = FMT_TEXT,
+    .outFmt   = FMT_TEXT,
 };
 
 /**
@@ -52,8 +51,8 @@ long remove_chars(char* str, long len, char c)
 bool process_txt(processorInput_t* arg)
 {
     /* Read input file */
-    long newSz = remove_chars(arg->in.text, arg->in.textSize, '\r');
-    arg->out.text = arg->in.text;
+    long newSz        = remove_chars(arg->in.text, arg->in.textSize, '\r');
+    arg->out.text     = arg->in.text;
     arg->out.textSize = newSz;
 
     return true;

@@ -5,7 +5,7 @@
 
 /**
  * @brief The JSON processor validates JSON files and compresses them with heatshrink
- * 
+ *
  */
 extern const assetProcessor_t jsonProcessor;
 
