@@ -42,9 +42,12 @@
 
 /**
  * @brief Computes a subposition value for the given x and y, in 13ths-of-a-square
- * 
+ *
  */
-#define SUBPOS_XY(x, y) (((y) * 13) + (x))
+#define SUBPOS_XY(x, y) (((y) * BOX_SIZE_SUBPOS) + (x))
+
+#define ONE_HOUR_IN_US (1000000 * 60 * 60)
+#define ONE_MINUTE_IN_US (1000000 * 60)
 
 
 //==============================================================================
@@ -55,6 +58,7 @@ typedef enum
 {
     SWADGEDOKU_MAIN_MENU = 0,
     SWADGEDOKU_GAME      = 1,
+    SWADGEDOKU_WIN       = 2,
 } sudokuScreen_t;
 
 typedef enum
@@ -292,6 +296,9 @@ typedef struct
     menu_t* menu;
     menuManiaRenderer_t* menuRenderer;
 
+    menu_t* emptyMenu;
+    char emptyMenuTitle[32];
+
     menuItem_t* customModeMenuItem;
     menuItem_t* customSizeMenuItem;
     menuItem_t* customDifficultyMenuItem;
@@ -352,6 +359,7 @@ static const char menuItemCustomMode[]  = "Mode: ";
 static const char menuItemCustomSize[]  = "Size: ";
 static const char menuItemDifficulty[]  = "Rating: ";
 static const char menuItemSettings[]    = "Settings";
+static const char strYouWin[] = "You Win!";
 
 static const int32_t menuOptValsCustomSize[] = {
     2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
@@ -456,6 +464,7 @@ static void swadgedokuEnterMode(void)
     }
 
     sd->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    sd->emptyMenu = initMenu(sd->emptyMenuTitle, NULL);
 
     swadgedokuSetupMenu();
 }
@@ -475,6 +484,7 @@ static void swadgedokuExitMode(void)
 
     deinitMenuManiaRenderer(sd->menuRenderer);
     deinitMenu(sd->menu);
+    deinitMenu(sd->emptyMenu);
     free(sd);
     sd = NULL;
 }
@@ -503,6 +513,8 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
                 swadgedokuGameButton(evt);
             }
 
+            sd->playTimer += elapsedUs;
+
             swadgedokuDrawGame(&sd->game, sd->game.notes, &sd->player.overlay, &lightTheme);
 
             if (sd->player.selectedDigit)
@@ -513,6 +525,39 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
 
                 drawText(&sd->gridFont, lightTheme.uiTextColor, curDigitStr, TFT_WIDTH - 5 - textW,
                          (TFT_HEIGHT - sd->gridFont.height) / 2);
+            }
+            break;
+        }
+
+        case SWADGEDOKU_WIN:
+        {
+            strncpy(sd->emptyMenuTitle, strYouWin, sizeof(sd->emptyMenuTitle));
+            drawMenuMania(sd->emptyMenu, sd->menuRenderer, elapsedUs);
+
+            char playTime[64];
+
+            int hours = (int)(sd->playTimer / ONE_HOUR_IN_US);
+            int mins = (int)((sd->playTimer % ONE_HOUR_IN_US) / ONE_MINUTE_IN_US);
+            int secs = (int)((sd->playTimer % ONE_MINUTE_IN_US) / 1000000);
+            if (hours > 0)
+            {
+                snprintf(playTime, sizeof(playTime), "%d:%02d:%02d", hours, mins, secs);
+            }
+            else
+            {
+                snprintf(playTime, sizeof(playTime), "%02d:%02d", mins, secs);
+            }
+
+            const char* strCompletionTime = "Completed in";
+            drawText(&sd->uiFont, c000, strCompletionTime, (TFT_WIDTH - textWidth(&sd->uiFont, strCompletionTime)) / 2, TFT_HEIGHT / 2 - sd->uiFont.height - 1);
+            drawText(&sd->uiFont, c000, playTime, (TFT_WIDTH - textWidth(&sd->uiFont, playTime)) / 2, TFT_HEIGHT / 2);
+
+            buttonEvt_t evt = {0};
+            if (checkButtonQueueWrapper(&evt) && evt.down)
+            {
+                // Reset the menu, return to main menu
+                swadgedokuSetupMenu();
+                sd->screen = SWADGEDOKU_MAIN_MENU;
             }
             break;
         }
@@ -583,6 +628,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                 {
                     if (loadSudokuData(buffer, progLength, &sd->game))
                     {
+                        sd->playTimer = 0;
                         setupSudokuPlayer(&sd->player, &sd->game);
                         sudokuGetNotes(sd->game.notes, &sd->game, 0);
                         sd->screen = SWADGEDOKU_GAME;
@@ -614,6 +660,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                 ESP_LOGE("Swadgedoku", "Couldn't load game file");
             }
 
+            sd->playTimer = 0;
             setupSudokuPlayer(&sd->player, &sd->game);
             // sd->game.grid[0] = 9;
             // sd->game.flags[0] = SF_LOCKED;
@@ -635,6 +682,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                 return;
             }
 
+            sd->playTimer = 0;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
             sd->screen = SWADGEDOKU_GAME;
@@ -646,6 +694,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                 return;
             }
 
+            sd->playTimer = 0;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
             sd->screen = SWADGEDOKU_GAME;
