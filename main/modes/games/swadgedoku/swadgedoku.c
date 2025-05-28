@@ -1959,7 +1959,7 @@ void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, i
         uint16_t box                = game->boxMap[r * game->size + col];
         uint16_t boxNote            = (box < game->base) ? boxNotes[box] : allNotes;
         notes[r * game->size + col] = (rowNotes[r] & colNotes[col] & boxNote);
-        if (!notes[r * game->size + col])
+        if (!game->grid[r * game->size + col] && !notes[r * game->size + col])
         {
             ESP_LOGW("Swadgedoku", "Cell r=%d, c=%d has no valid entries!", r, col);
         }
@@ -1977,7 +1977,7 @@ void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, i
         uint16_t box                = game->boxMap[row * game->size + c];
         uint16_t boxNote            = (box < game->base) ? boxNotes[box] : allNotes;
         notes[row * game->size + c] = (rowNotes[row] & colNotes[c] & boxNote);
-        if (!notes[row * game->size + c])
+        if (!game->grid[row * game->size + c] && !notes[row * game->size + c])
         {
             ESP_LOGW("Swadgedoku", "Cell r=%d, c=%d has no valid entries!", row, c);
         }
@@ -1994,7 +1994,7 @@ void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, i
 
             ESP_LOGI("Swadgedoku", "Box[r=%d][c=%d] == sourceBox (%" PRIu16 ")", r, c, sourceBox);
             notes[r * game->size + c] = (rowNotes[r] & colNotes[c] & sourceBoxNote);
-            if (!notes[r * game->size + c])
+            if (!game->grid[r * game->size + c] && !notes[r * game->size + c])
             {
                 ESP_LOGW("Swadgedoku", "Cell r=%d, c=%d has no valid entries!", r, c);
             }
@@ -2428,13 +2428,14 @@ void swadgedokuGameButton(buttonEvt_t evt)
                                 case -1:
                                     ESP_LOGE("Swadgedoku", "Invalid sudoku board!");
                                     break;
-                                
+
                                 case 0:
                                     ESP_LOGE("Swadgedoku", "Sudoku OK but incomplete");
                                     break;
 
                                 case 1:
                                     ESP_LOGE("Swadgedoku", "Win!!!");
+                                    sd->screen = SWADGEDOKU_WIN;
                                     break;
                             }
                         }
