@@ -22,23 +22,23 @@
 
 // SUBPOS_X defines used for positioning overlays within the sudoku board
 #define BOX_SIZE_SUBPOS 13
-#define SUBPOS_CENTER (6 * 13 + 6)
-#define SUBPOS_NW (0)
-#define SUBPOS_NNW (3)
-#define SUBPOS_N (6)
-#define SUBPOS_NNE (9)
-#define SUBPOS_NE (12)
-#define SUBPOS_WNW (3 * 16)
-#define SUBPOS_W (6 * 16)
-#define SUBPOS_WSW (9 * 16)
-#define SUBPOS_SW (12 * 13)
-#define SUBPOS_SSW (12 * 13 + 3)
-#define SUBPOS_S (12 * 13 + 6)
-#define SUBPOS_SSE (12 * 13 + 9)
-#define SUBPOS_SE (12 * 13 + 12)
-#define SUBPOS_ENE (3 * 13 * 12)
-#define SUBPOS_E (6 * 13 + 12)
-#define SUBPOS_ESE (9 * 13 + 12)
+#define SUBPOS_CENTER   (6 * 13 + 6)
+#define SUBPOS_NW       (0)
+#define SUBPOS_NNW      (3)
+#define SUBPOS_N        (6)
+#define SUBPOS_NNE      (9)
+#define SUBPOS_NE       (12)
+#define SUBPOS_WNW      (3 * 16)
+#define SUBPOS_W        (6 * 16)
+#define SUBPOS_WSW      (9 * 16)
+#define SUBPOS_SW       (12 * 13)
+#define SUBPOS_SSW      (12 * 13 + 3)
+#define SUBPOS_S        (12 * 13 + 6)
+#define SUBPOS_SSE      (12 * 13 + 9)
+#define SUBPOS_SE       (12 * 13 + 12)
+#define SUBPOS_ENE      (3 * 13 * 12)
+#define SUBPOS_E        (6 * 13 + 12)
+#define SUBPOS_ESE      (9 * 13 + 12)
 
 /**
  * @brief Computes a subposition value for the given x and y, in 13ths-of-a-square
@@ -46,9 +46,8 @@
  */
 #define SUBPOS_XY(x, y) (((y) * BOX_SIZE_SUBPOS) + (x))
 
-#define ONE_HOUR_IN_US (1000000 * 60 * 60)
+#define ONE_HOUR_IN_US   (1000000 * 60 * 60)
 #define ONE_MINUTE_IN_US (1000000 * 60)
-
 
 //==============================================================================
 // Enums
@@ -226,7 +225,8 @@ typedef struct
         line_t line;
         arrow_t arrow;
 
-        struct {
+        struct
+        {
             vec_t pos;
             const char* val;
             bool center;
@@ -332,7 +332,8 @@ void setupSudokuPlayer(sudokuPlayer_t* player, const sudokuGrid_t* game);
 void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, int col, int flags);
 void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags);
 void getOverlayPos(int32_t* x, int32_t* y, int r, int c, int subpos);
-void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, bool drawH, bool drawV, sudokuShapeTag_t tag);
+void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, bool drawH, bool drawV,
+                         sudokuShapeTag_t tag);
 void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, const sudokuGrid_t* game);
 int swadgedokuCheckWin(const sudokuGrid_t* game);
 void swadgedokuGameButton(buttonEvt_t evt);
@@ -359,7 +360,7 @@ static const char menuItemCustomMode[]  = "Mode: ";
 static const char menuItemCustomSize[]  = "Size: ";
 static const char menuItemDifficulty[]  = "Rating: ";
 static const char menuItemSettings[]    = "Settings";
-static const char strYouWin[] = "You Win!";
+static const char strYouWin[]           = "You Win!";
 
 static const int32_t menuOptValsCustomSize[] = {
     2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
@@ -464,7 +465,7 @@ static void swadgedokuEnterMode(void)
     }
 
     sd->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
-    sd->emptyMenu = initMenu(sd->emptyMenuTitle, NULL);
+    sd->emptyMenu    = initMenu(sd->emptyMenuTitle, NULL);
 
     swadgedokuSetupMenu();
 }
@@ -537,8 +538,8 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
             char playTime[64];
 
             int hours = (int)(sd->playTimer / ONE_HOUR_IN_US);
-            int mins = (int)((sd->playTimer % ONE_HOUR_IN_US) / ONE_MINUTE_IN_US);
-            int secs = (int)((sd->playTimer % ONE_MINUTE_IN_US) / 1000000);
+            int mins  = (int)((sd->playTimer % ONE_HOUR_IN_US) / ONE_MINUTE_IN_US);
+            int secs  = (int)((sd->playTimer % ONE_MINUTE_IN_US) / 1000000);
             if (hours > 0)
             {
                 snprintf(playTime, sizeof(playTime), "%d:%02d:%02d", hours, mins, secs);
@@ -549,7 +550,8 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
             }
 
             const char* strCompletionTime = "Completed in";
-            drawText(&sd->uiFont, c000, strCompletionTime, (TFT_WIDTH - textWidth(&sd->uiFont, strCompletionTime)) / 2, TFT_HEIGHT / 2 - sd->uiFont.height - 1);
+            drawText(&sd->uiFont, c000, strCompletionTime, (TFT_WIDTH - textWidth(&sd->uiFont, strCompletionTime)) / 2,
+                     TFT_HEIGHT / 2 - sd->uiFont.height - 1);
             drawText(&sd->uiFont, c000, playTime, (TFT_WIDTH - textWidth(&sd->uiFont, playTime)) / 2, TFT_HEIGHT / 2);
 
             buttonEvt_t evt = {0};
@@ -1869,7 +1871,7 @@ void setupSudokuPlayer(sudokuPlayer_t* player, const sudokuGrid_t* game)
     player->notes            = calloc(game->size * game->size, sizeof(uint16_t));
     player->overlay.gridOpts = calloc(game->size * game->size, sizeof(sudokuOverlayOpt_t));
 
-    player->cursorShape        = calloc(1, sizeof(sudokuOverlayShape_t));
+    player->cursorShape = calloc(1, sizeof(sudokuOverlayShape_t));
 
     if (player->cursorShape)
     {
@@ -1879,11 +1881,9 @@ void setupSudokuPlayer(sudokuPlayer_t* player, const sudokuGrid_t* game)
         player->cursorShape->circle.pos.x  = player->curX;
         player->cursorShape->circle.pos.y  = player->curY;
         player->cursorShape->circle.radius = 1;*/
-        player->cursorShape->type             = OVERLAY_RECT;
-        getOverlayPos(&player->cursorShape->rectangle.pos.x,
-                    &player->cursorShape->rectangle.pos.y,
-                    player->curY, player->curX,
-                    SUBPOS_NW);
+        player->cursorShape->type = OVERLAY_RECT;
+        getOverlayPos(&player->cursorShape->rectangle.pos.x, &player->cursorShape->rectangle.pos.y, player->curY,
+                      player->curX, SUBPOS_NW);
         player->cursorShape->rectangle.width  = BOX_SIZE_SUBPOS;
         player->cursorShape->rectangle.height = BOX_SIZE_SUBPOS;
         push(&player->overlay.shapes, player->cursorShape);
@@ -2067,8 +2067,8 @@ void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
     }
 }
 
-
-// overlays are subdivided into 12 squares (13) so we can position stuff more clearly but still not deal with fixed positioning
+// overlays are subdivided into 12 squares (13) so we can position stuff more clearly but still not deal with fixed
+// positioning
 /**
  * @brief Converts from row, column, and subposition to
  *
@@ -2085,7 +2085,8 @@ void getOverlayPos(int32_t* x, int32_t* y, int r, int c, int subpos)
 }
 
 /**
- * @brief Calculates the absolute position **in pixels** given a position within the grid **in sub-position coordinates**
+ * @brief Calculates the absolute position **in pixels** given a position within the grid **in sub-position
+ * coordinates**
  *
  * @param x A pointer where the computed x value will be written
  * @param y A pointer where the computed y value will be written
@@ -2102,15 +2103,16 @@ void getRealOverlayPos(int16_t* x, int16_t* y, int gridX, int gridY, int squareS
     *y = gridY + (ySubPos * squareSize) / BOX_SIZE_SUBPOS;
 }
 
-void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, bool drawH, bool drawV, sudokuShapeTag_t tag)
+void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, bool drawH, bool drawV,
+                         sudokuShapeTag_t tag)
 {
     // add a circle
     sudokuOverlayShape_t* circle = malloc(sizeof(sudokuOverlayShape_t));
     if (circle)
     {
-        circle->type = OVERLAY_CIRCLE;
+        circle->type  = OVERLAY_CIRCLE;
         circle->color = c005;
-        circle->tag = tag;
+        circle->tag   = tag;
         getOverlayPos(&circle->circle.pos.x, &circle->circle.pos.y, r, c, SUBPOS_CENTER);
         circle->circle.radius = BOX_SIZE_SUBPOS * 3 / 5;
 
@@ -2124,9 +2126,9 @@ void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, b
 
         if (leftLine)
         {
-            leftLine->type = OVERLAY_LINE;
+            leftLine->type  = OVERLAY_LINE;
             leftLine->color = c005;
-            leftLine->tag = tag;
+            leftLine->tag   = tag;
             getOverlayPos(&leftLine->line.p1.x, &leftLine->line.p1.y, r, 0, SUBPOS_W);
             getOverlayPos(&leftLine->line.p2.x, &leftLine->line.p2.y, r, c, SUBPOS_E);
 
@@ -2141,9 +2143,9 @@ void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, b
 
         if (rightLine)
         {
-            rightLine->type = OVERLAY_LINE;
+            rightLine->type  = OVERLAY_LINE;
             rightLine->color = c005;
-            rightLine->tag = tag;
+            rightLine->tag   = tag;
             getOverlayPos(&rightLine->line.p1.x, &rightLine->line.p1.y, r, c + 1, SUBPOS_E - 3);
             getOverlayPos(&rightLine->line.p2.x, &rightLine->line.p2.y, r, gridSize - 1, SUBPOS_E - 3);
 
@@ -2158,9 +2160,9 @@ void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, b
 
         if (topLine)
         {
-            topLine->type = OVERLAY_LINE;
+            topLine->type  = OVERLAY_LINE;
             topLine->color = c005;
-            topLine->tag = tag;
+            topLine->tag   = tag;
             getOverlayPos(&topLine->line.p1.x, &topLine->line.p1.y, 0, c, SUBPOS_N + 3);
             getOverlayPos(&topLine->line.p2.x, &topLine->line.p2.y, r - 1, c, SUBPOS_N + 3);
 
@@ -2175,16 +2177,15 @@ void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, b
 
         if (bottomLine)
         {
-            bottomLine->type = OVERLAY_LINE;
+            bottomLine->type  = OVERLAY_LINE;
             bottomLine->color = c005;
-            bottomLine->tag = tag;
+            bottomLine->tag   = tag;
             getOverlayPos(&bottomLine->line.p1.x, &bottomLine->line.p1.y, r + 1, c, SUBPOS_S - 3);
             getOverlayPos(&bottomLine->line.p2.x, &bottomLine->line.p2.y, gridSize - 1, c, SUBPOS_S - 3);
 
             push(&overlay->shapes, bottomLine);
         }
     }
-
 }
 
 /**
@@ -2216,9 +2217,9 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
         }
     }
 
-    const int curRow = player->curY;
-    const int curCol = player->curX;
-    const int curBox = game->boxMap[curRow * game->size + curCol];
+    const int curRow      = player->curY;
+    const int curCol      = player->curX;
+    const int curBox      = game->boxMap[curRow * game->size + curCol];
     const int cursorDigit = game->grid[curRow * game->size + curCol];
 
     // This might need to be configurable... so let's make a big bunch of bools
@@ -2252,10 +2253,10 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
 
         if (!(game->flags[n] & SF_VOID))
         {
-            const int r = n / game->size;
-            const int c = n % game->size;
+            const int r   = n / game->size;
+            const int c   = n % game->size;
             const int box = game->boxMap[n];
-            int digit = game->grid[n];
+            int digit     = game->grid[n];
 
             if (r == curRow)
             {
@@ -2295,7 +2296,7 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
                 overlay->gridOpts[n] |= OVERLAY_HIGHLIGHT_B;
             }
 
-            uint16_t selBits = player->selectedDigit ? (1 << (player->selectedDigit - 1)) : 0;
+            uint16_t selBits    = player->selectedDigit ? (1 << (player->selectedDigit - 1)) : 0;
             uint16_t cursorBits = cursorDigit ? (1 << (cursorDigit - 1)) : 0;
 
             if (!digit && highlightCursorDigitLocations && cursorDigit && (game->notes[n] & cursorBits))
@@ -2312,7 +2313,8 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
             {
                 if (hLineThroughCursorDigits || vLineThroughCursorDigits)
                 {
-                    addCrosshairOverlay(overlay, r, c, game->size, hLineThroughCursorDigits, vLineThroughCursorDigits, ST_ANNOTATE);
+                    addCrosshairOverlay(overlay, r, c, game->size, hLineThroughCursorDigits, vLineThroughCursorDigits,
+                                        ST_ANNOTATE);
                 }
             }
 
@@ -2320,7 +2322,8 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
             {
                 if (hLineThroughSelectedDigits || vLineThroughSelectedDigits)
                 {
-                    addCrosshairOverlay(overlay, r, c, game->size, hLineThroughSelectedDigits, vLineThroughSelectedDigits, ST_ANNOTATE);
+                    addCrosshairOverlay(overlay, r, c, game->size, hLineThroughSelectedDigits,
+                                        vLineThroughSelectedDigits, ST_ANNOTATE);
                 }
             }
         }
@@ -2352,13 +2355,12 @@ int swadgedokuCheckWin(const sudokuGrid_t* game)
         {
             if (game->grid[n])
             {
-                uint16_t valBits = (1 << (game->grid[n] - 1));
+                uint16_t valBits  = (1 << (game->grid[n] - 1));
                 const uint8_t box = game->boxMap[n];
-                const int r = n / game->size;
-                const int c= n % game->size;
+                const int r       = n / game->size;
+                const int c       = n % game->size;
 
-                if ((rowMasks[r] & valBits)
-                    || (colMasks[c] & valBits)
+                if ((rowMasks[r] & valBits) || (colMasks[c] & valBits)
                     || (box != BOX_NONE && (boxMasks[box] & valBits)))
                 {
                     // Duplicate!
@@ -2384,9 +2386,7 @@ int swadgedokuCheckWin(const sudokuGrid_t* game)
     const uint16_t allBits = (1 << game->base) - 1;
     for (int i = 0; i < game->size; i++)
     {
-        if (rowMasks[i] != allBits
-            || colMasks[i] != allBits
-            || (i < game->base && boxMasks[i] != allBits))
+        if (rowMasks[i] != allBits || colMasks[i] != allBits || (i < game->base && boxMasks[i] != allBits))
         {
             // Game is incomplete
             return 0;
@@ -2401,7 +2401,7 @@ void swadgedokuGameButton(buttonEvt_t evt)
 {
     if (evt.down)
     {
-        bool moved = false;
+        bool moved      = false;
         bool reAnnotate = false;
         switch (evt.button)
         {
@@ -2447,7 +2447,7 @@ void swadgedokuGameButton(buttonEvt_t evt)
             case PB_B:
             {
                 sd->player.selectedDigit = (sd->player.selectedDigit) % (sd->game.base) + 1;
-                reAnnotate = true;
+                reAnnotate               = true;
                 break;
             }
 
@@ -2536,21 +2536,15 @@ void swadgedokuGameButton(buttonEvt_t evt)
             {
                 case OVERLAY_RECT:
                 {
-                    getOverlayPos(&sd->player.cursorShape->rectangle.pos.x,
-                                  &sd->player.cursorShape->rectangle.pos.y,
-                                  sd->player.curY,
-                                  sd->player.curX,
-                                  SUBPOS_NW);
+                    getOverlayPos(&sd->player.cursorShape->rectangle.pos.x, &sd->player.cursorShape->rectangle.pos.y,
+                                  sd->player.curY, sd->player.curX, SUBPOS_NW);
                     break;
                 }
 
                 case OVERLAY_CIRCLE:
                 {
-                    getOverlayPos(&sd->player.cursorShape->circle.pos.x,
-                                  &sd->player.cursorShape->circle.pos.y,
-                                  sd->player.curY,
-                                  sd->player.curX,
-                                  SUBPOS_CENTER);
+                    getOverlayPos(&sd->player.cursorShape->circle.pos.x, &sd->player.cursorShape->circle.pos.y,
+                                  sd->player.curY, sd->player.curX, SUBPOS_CENTER);
                     break;
                 }
             }
@@ -2826,7 +2820,7 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
             // Check the overlay again, for more info
             if (overlay)
             {
-                const char* overlayText = NULL;
+                const char* overlayText   = NULL;
                 paletteColor_t overlayCol = c000;
 
                 if (opts & OVERLAY_NOTES)
@@ -2837,12 +2831,12 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                 {
                     // TODO: Draw a checkmark
                     overlayText = "+";
-                    overlayCol = c041;
+                    overlayCol  = c041;
                 }
                 if (opts & OVERLAY_QUESTION)
                 {
                     overlayText = "?";
-                    overlayCol = c224;
+                    overlayCol  = c224;
                 }
                 if (opts & OVERLAY_CROSS_OUT)
                 {
@@ -2875,8 +2869,11 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                 case OVERLAY_RECT:
                 {
                     int16_t x0, y0, x1, y1;
-                    getRealOverlayPos(&x0, &y0, gridX, gridY, maxSquareSize, shape->rectangle.pos.x, shape->rectangle.pos.y);
-                    getRealOverlayPos(&x1, &y1, gridX, gridY, maxSquareSize, shape->rectangle.pos.x + shape->rectangle.width, shape->rectangle.pos.y + shape->rectangle.height);
+                    getRealOverlayPos(&x0, &y0, gridX, gridY, maxSquareSize, shape->rectangle.pos.x,
+                                      shape->rectangle.pos.y);
+                    getRealOverlayPos(&x1, &y1, gridX, gridY, maxSquareSize,
+                                      shape->rectangle.pos.x + shape->rectangle.width,
+                                      shape->rectangle.pos.y + shape->rectangle.height);
                     drawRect(x0, y0, x1, y1, shape->color);
                     // make it thicker
                     drawRect(x0 + 1, y0 + 1, x1 - 1, y1 - 1, shape->color);
@@ -2910,10 +2907,12 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
 
                     drawLineFast(x0, y0, x1, y1, shape->color);
 
-                    getRealOverlayPos(&x1, &y1, gridX, gridY, maxSquareSize, shape->arrow.wing1.x, shape->arrow.wing1.y);
+                    getRealOverlayPos(&x1, &y1, gridX, gridY, maxSquareSize, shape->arrow.wing1.x,
+                                      shape->arrow.wing1.y);
                     drawLineFast(x0, y0, x1, y1, shape->color);
 
-                    getRealOverlayPos(&x1, &y1, gridX, gridY, maxSquareSize, shape->arrow.wing2.x, shape->arrow.wing2.y);
+                    getRealOverlayPos(&x1, &y1, gridX, gridY, maxSquareSize, shape->arrow.wing2.x,
+                                      shape->arrow.wing2.y);
                     drawLineFast(x0, y0, x1, y1, shape->color);
                     break;
                 }
@@ -2930,7 +2929,7 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                         x -= w / 2;
                     }
 
-                    drawText(&sd->uiFont,shape->color, shape->text.val, x, y);
+                    drawText(&sd->uiFont, shape->color, shape->text.val, x, y);
                     break;
                 }
             }
