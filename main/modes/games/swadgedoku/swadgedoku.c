@@ -2070,13 +2070,13 @@ void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
 
 // overlays are subdivided into 12 squares (13) so we can position stuff more clearly but still not deal with fixed positioning
 /**
- * @brief Converts from row, column, and subposition to 
- * 
- * @param x 
- * @param y 
- * @param r 
- * @param c 
- * @param subpos 
+ * @brief Converts from row, column, and subposition to
+ *
+ * @param x
+ * @param y
+ * @param r
+ * @param c
+ * @param subpos
  */
 void getOverlayPos(int32_t* x, int32_t* y, int r, int c, int subpos)
 {
@@ -2086,7 +2086,7 @@ void getOverlayPos(int32_t* x, int32_t* y, int r, int c, int subpos)
 
 /**
  * @brief Calculates the absolute position **in pixels** given a position within the grid **in sub-position coordinates**
- * 
+ *
  * @param x A pointer where the computed x value will be written
  * @param y A pointer where the computed y value will be written
  * @param gridSize The grid size, in pixels
@@ -2098,8 +2098,8 @@ void getOverlayPos(int32_t* x, int32_t* y, int r, int c, int subpos)
  */
 void getRealOverlayPos(int16_t* x, int16_t* y, int gridX, int gridY, int squareSize, int xSubPos, int ySubPos)
 {
-    *x = gridX + (xSubPos * squareSize) / 13;
-    *y = gridY + (ySubPos * squareSize) / 13;
+    *x = gridX + (xSubPos * squareSize) / BOX_SIZE_SUBPOS;
+    *y = gridY + (ySubPos * squareSize) / BOX_SIZE_SUBPOS;
 }
 
 void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, bool drawH, bool drawV, sudokuShapeTag_t tag)
@@ -2111,10 +2111,9 @@ void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, b
         circle->type = OVERLAY_CIRCLE;
         circle->color = c005;
         circle->tag = tag;
-        circle->circle.pos.x = c;
-        circle->circle.pos.y = r;
+        getOverlayPos(&circle->circle.pos.x, &circle->circle.pos.y, r, c, SUBPOS_CENTER);
         circle->circle.radius = BOX_SIZE_SUBPOS * 3 / 5;
-        
+
         push(&overlay->shapes, circle);
     }
 
@@ -2128,9 +2127,9 @@ void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, b
             leftLine->type = OVERLAY_LINE;
             leftLine->color = c005;
             leftLine->tag = tag;
-            getOverlayPos(&leftLine->line.p1.x, &leftLine->line.p1.y, r, 0, SUBPOS_W + 3);
-            getOverlayPos(&leftLine->line.p2.x, &leftLine->line.p2.y, r, c, SUBPOS_W + 3);
-            
+            getOverlayPos(&leftLine->line.p1.x, &leftLine->line.p1.y, r, 0, SUBPOS_W);
+            getOverlayPos(&leftLine->line.p2.x, &leftLine->line.p2.y, r, c, SUBPOS_E);
+
             push(&overlay->shapes, leftLine);
         }
     }
@@ -2190,12 +2189,12 @@ void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, b
 
 /**
  * @brief Uses the game grid and notes to place annotations on the board.
- * 
+ *
  * This is responsible for deciding where to draw lines, how to highlight
  * cells, and any other automatically added things.
- * 
+ *
  * Assumes that game->notes is up-to-date!
- * 
+ *
  * @param overlay The overlay to update
  * @param player The player to use for preferences and selected digit or cursor position
  * @param game The game to read digits and notes from
@@ -2227,19 +2226,19 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
     bool highlightCurRow = false;
     bool highlightCurCol = false;
     bool highlightCurBox = false;
-    
+
     // Highlight the digit underneath the cursor, if any
     bool highlightCursorDigit = true;
     // Highlight the digit to be entered by the player with A
     bool highlightSelectedDigit = false;
-    
+
     // Highlight the first-order possibilities for the digit under the cursor
     bool highlightCursorDigitLocations = true;
     // Highlight the first-order possibilities for the digit to be entered
     bool highlightSelectedDigitLocations = false;
 
-    bool hLineThroughCursorDigits = true;
-    bool vLineThroughCursorDigits = true;
+    bool hLineThroughCursorDigits = false;
+    bool vLineThroughCursorDigits = false;
 
     bool hLineThroughSelectedDigits = false;
     bool vLineThroughSelectedDigits = false;
@@ -2331,7 +2330,7 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
 /**
  * @brief Checks whether the puzzle is valid, in error, or complete. Returns 0 if valid
  * but incomplete, 1 if complete, and -1 if incorrect
- * 
+ *
  * @param game The game to check
  * @return int -1 for an invalid game, 1 for win, and 0 if valid but incomplete
  */
@@ -2342,7 +2341,7 @@ int swadgedokuCheckWin(const sudokuGrid_t* game)
     uint16_t rowMasks[game->size];
     uint16_t colMasks[game->size];
     uint16_t boxMasks[game->base];
-    
+
     memset(rowMasks, 0, sizeof(rowMasks));
     memset(colMasks, 0, sizeof(colMasks));
     memset(boxMasks, 0, sizeof(boxMasks));
@@ -2357,7 +2356,7 @@ int swadgedokuCheckWin(const sudokuGrid_t* game)
                 const uint8_t box = game->boxMap[n];
                 const int r = n / game->size;
                 const int c= n % game->size;
-                
+
                 if ((rowMasks[r] & valBits)
                     || (colMasks[c] & valBits)
                     || (box != BOX_NONE && (boxMasks[box] & valBits)))
@@ -2365,7 +2364,7 @@ int swadgedokuCheckWin(const sudokuGrid_t* game)
                     // Duplicate!
                     return -1;
                 }
-                
+
                 rowMasks[r] |= valBits;
                 colMasks[c] |= valBits;
                 if (box != BOX_NONE)
