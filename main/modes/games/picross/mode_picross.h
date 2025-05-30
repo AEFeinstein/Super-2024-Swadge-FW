@@ -138,9 +138,10 @@ typedef struct
 void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool cont);
 void picrossGameLoop(int64_t elapsedUs);
 void picrossGameButtonCb(buttonEvt_t* evt);
-void picrossGameTouchCb(touch_event_t* evt);
+void picrossGameTouchCb(bool touched);
 void picrossExitGame(void);
 void loadPicrossProgress(void);
 void savePicrossProgress(void);
+void drawBox(box_t box, paletteColor_t color, bool isFilled, int32_t scalingFactor);
 
 #endif
