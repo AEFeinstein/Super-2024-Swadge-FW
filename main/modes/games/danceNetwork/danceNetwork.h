@@ -18,6 +18,15 @@ typedef enum __attribute__((packed))
     UI_RESULT,
 } dn_Ui_t;
 
+typedef enum __attribute((packed))
+{
+    DN_RESULT_WIN,
+    DN_RESULT_LOSE,
+    DN_RESULT_DRAW,
+    DN_RESULT_DISCONNECT,
+    DN_RESULT_RECORDS,
+} dn_Result_t;
+
 typedef enum __attribute__((packed))
 {
     TDIFF_EASY,
@@ -57,9 +66,13 @@ typedef struct {
     menuManiaRenderer_t* menuRenderer;
     font_t font_righteous;
     font_t font_rodin;
+    // Connection
+    const char** conStrs;
+    int16_t numConStrs;
     bool singleSystem;
     bool passAndPlay;
     dn_CpuData_t cpu;
+    dn_Result_t lastResult;
     dn_sprites_t sprites;
     dn_tileData_t tiles[BOARD_SIZE][BOARD_SIZE];
     uint8_t selection[2];//x and y indices of the selected tile
