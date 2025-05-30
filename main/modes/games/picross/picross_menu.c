@@ -13,6 +13,9 @@
 #include "picross_tutorial.h"
 #include "picross_consts.h"
 #include "picross_music.h"
+
+#include "mainMenu.h"
+
 //==============================================================================
 // Enums & Structs
 //==============================================================================
@@ -21,7 +24,6 @@ typedef enum
 {
     PICROSS_MENU,
     PICROSS_LEVELSELECT,
-    PICROSS_OPTIONS,
     PICROSS_GAME,
     PICROSS_TUTORIAL
 } picrossScreen_t;
@@ -29,25 +31,25 @@ typedef enum
 typedef struct
 {
     font_t mmFont;
-    meleeMenu_t* menu;
+    menu_t* menu;
+    menuManiaRenderer_t* renderer;
     picrossLevelDef_t levels[PICROSS_LEVEL_COUNT];
     picrossScreen_t screen;
     int32_t savedIndex;
-    uint16_t mainMenuPos;
-    uint16_t settingsPos;
     int32_t options; // bit 0: hints
 } picrossMenu_t;
+
 //==============================================================================
 // Function Prototypes
 //==============================================================================
 
-void picrossEnterMode();
+void picrossEnterMode(void);
 void picrossExitMode(void);
 void picrossMainLoop(int64_t elapsedUs);
 void picrossButtonCb(buttonEvt_t* evt);
-void picrossTouchCb(touch_event_t* evt);
+void picrossTouchCb(bool touched);
 void loadLevels(void);
-void picrossMainMenuCb(const char* opt);
+void picrossMainMenuCb(const char* label, bool selected, uint32_t value);
 void picrossMenuOptionsCb(const char* opt);
 
 //==============================================================================
@@ -62,7 +64,7 @@ const char picrossProgressData[]          = "pic_prog";  // todo: rename to key 
 const char picrossMarksData[]             = "pic_marks";
 
 // Main menu strings
-static char str_picrossTitle[]      = "\x7f-cross"; // \x7f is interpreted as the pi char
+static char str_picrossTitle[]      = "Pi-cross"; // \x7f is interpreted as the pi char
 static const char str_continue[]    = "Continue";
 static const char str_levelSelect[] = "Puzzle Select";
 static const char str_howtoplay[]   = "How To Play";
@@ -71,31 +73,44 @@ static const char str_exit[]        = "Exit";
 // Options Menu
 static const char str_options[] = "Options";
 
-static const char str_back[]          = "Back";
-static const char str_HintsOn[]       = "Mistake Alert: On";
-static const char str_HintsOff[]      = "Mistake Alert: Off";
-static const char str_GuidesOn[]      = "Guides: On";
-static const char str_GuidesOff[]     = "Guides: Off";
-static const char str_MarkX[]         = "Empty Marks: X";
-static const char str_MarkSolid[]     = "Empty Marks: Solid";
-static const char str_AnimateBGOn[]   = "BG Animate: On";
-static const char str_AnimateBGOff[]  = "BG Animate: Off";
+static const char str_On[]       = "On";
+static const char str_Off[]      = "Off";
+static const char* strs_on_off[] = {str_Off, str_On};
+
+static const char str_X[]         = "X";
+static const char str_Solid[]     = "Solid";
+static const char* strs_x_solid[] = {str_X, str_Solid};
+
+static const char str_Hints[]     = "Mistake Alert: ";
+static const char str_Guides[]    = "Guides: ";
+static const char str_Mark[]      = "Empty Marks: ";
+static const char str_AnimateBG[] = "BG Animate: ";
+
+static const int32_t trueFalseVals[] = {
+    false,
+    true,
+};
+
 static const char str_eraseProgress[] = "Reset Current";
 
 swadgeMode_t modePicross = {
-    .modeName                = str_picrossTitle,
-    .fnEnterMode             = picrossEnterMode,
-    .fnExitMode              = picrossExitMode,
-    .fnMainLoop              = picrossMainLoop,
-    .fnButtonCallback        = picrossButtonCb,
-    .fnTouchCallback         = picrossTouchCb,
-    .wifiMode                = NO_WIFI,
-    .fnEspNowRecvCb          = NULL,
-    .fnEspNowSendCb          = NULL,
-    .fnAccelerometerCallback = NULL,
-    .fnAudioCallback         = NULL,
-    .fnTemperatureCallback   = NULL,
-    .overrideUsb             = false,
+    .modeName                 = str_picrossTitle,
+    .wifiMode                 = NO_WIFI,
+    .overrideUsb              = false,
+    .usesAccelerometer        = false,
+    .usesThermometer          = false,
+    .overrideSelectBtn        = false,
+    .fnEnterMode              = picrossEnterMode,
+    .fnExitMode               = picrossExitMode,
+    .fnMainLoop               = picrossMainLoop,
+    .fnAudioCallback          = NULL,
+    .fnBackgroundDrawCallback = NULL,
+    .fnEspNowRecvCb           = NULL,
+    .fnEspNowSendCb           = NULL,
+    .fnAdvancedUSB            = NULL,
+    .fnDacCb                  = NULL,
+    .fnAddToSwadgePassPacket  = NULL,
+    .trophyData               = NULL,
 };
 
 picrossMenu_t* pm;
@@ -109,27 +124,41 @@ picrossMenu_t* pm;
  * @param disp The display to draw to
  *
  */
-void picrossEnterMode()
+void picrossEnterMode(void)
 {
     // Allocate and zero memory
     pm = calloc(1, sizeof(picrossMenu_t));
 
-    loadFont("mm.font", &(pm->mmFont));
+    loadFont(MM_FONT, &(pm->mmFont), false);
 
-    pm->menu = initMeleeMenu(str_picrossTitle, &(pm->mmFont), picrossMainMenuCb);
+    pm->menu     = initMenu(str_picrossTitle, picrossMainMenuCb);
+    pm->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
     pm->screen = PICROSS_MENU;
 
-    setPicrossMainMenu(true);
+    addSingleItemToMenu(pm->menu, str_levelSelect);
+    addSingleItemToMenu(pm->menu, str_howtoplay);
+
+    pm->menu = startSubMenu(pm->menu, str_options);
+
+    settingParam_t sp_tf = {
+        .min = trueFalseVals[0],
+        .max = trueFalseVals[ARRAY_SIZE(trueFalseVals) - 1],
+        .def = trueFalseVals[0],
+    };
+    addSettingsOptionsItemToMenu(pm->menu, str_Guides, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
+                                 picrossGetSaveFlag(PO_SHOW_GUIDES));
+    addSettingsOptionsItemToMenu(pm->menu, str_AnimateBG, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
+                                 picrossGetLoadedSaveFlag(PO_ANIMATE_BG));
+    addSettingsOptionsItemToMenu(pm->menu, str_Mark, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_x_solid), &sp_tf,
+                                 picrossGetLoadedSaveFlag(PO_MARK_X));
+    addSettingsOptionsItemToMenu(pm->menu, str_Hints, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
+                                 picrossGetLoadedSaveFlag(PO_SHOW_HINTS));
+    pm->menu = endSubMenu(pm->menu);
+
+    addSingleItemToMenu(pm->menu, str_exit);
 
     loadLevels();
-
-    // set default options
-    if (false == readNvs32(picrossSavedOptionsKey, &pm->options))
-    {
-        writeNvs32(picrossSavedOptionsKey,
-                   14); // 1110 = x's on, bg on, guide on, hintwarning off. On the fence on guides on or off.
-    }
 }
 
 void picrossExitMode(void)
@@ -137,7 +166,6 @@ void picrossExitMode(void)
     switch (pm->screen)
     {
         case PICROSS_MENU:
-        case PICROSS_OPTIONS:
         {
             // Nothing extra
             break;
@@ -167,7 +195,8 @@ void picrossExitMode(void)
     }
     picrossExitLevelSelect(); // this doesnt actually get called as we go in and out of levelselect (because it breaks
                               // everything), so lets call it now
-    deinitMeleeMenu(pm->menu);
+    deinitMenu(pm->menu);
+    deinitMenuManiaRenderer(pm->renderer);
     // p2pDeinit(&jm->p2p);
     freeFont(&(pm->mmFont));
     free(pm);
@@ -223,7 +252,7 @@ void loadLevels()
     loadWsg(SNARE_DRUM_PZL_WSG, &pm->levels[6].levelWSG, false); // 10x10
     loadWsg(SNARE_DRUM_SLV_WSG, &pm->levels[6].completedWSG, false);
 
-    pm->levels[7].title = "Sus";                       //"Sus" or just "Among Us"
+    pm->levels[7].title = "Sus";                            //"Sus" or just "Among Us"
     loadWsg(AMONG_PZL_WSG, &pm->levels[7].levelWSG, false); // 5x5
     loadWsg(AMONG_SLV_WSG, &pm->levels[7].completedWSG, false);
 
@@ -239,7 +268,7 @@ void loadLevels()
     loadWsg(CAT_PZL_WSG, &pm->levels[10].levelWSG, false); // 10x10
     loadWsg(CAT_SLV_WSG, &pm->levels[10].completedWSG, false);
 
-    pm->levels[11].title = "Pear";                     // todo: move this lower, it can be tricky ish.
+    pm->levels[11].title = "Pear";                          // todo: move this lower, it can be tricky ish.
     loadWsg(PEAR_PZL_WSG, &pm->levels[11].levelWSG, false); // 10x10
     loadWsg(PEAR_SLV_WSG, &pm->levels[11].completedWSG, false);
 
@@ -308,11 +337,12 @@ void loadLevels()
     loadWsg(_N64_PZL_WSG, &pm->levels[27].completedWSG, false);
 
     pm->levels[28].title = "Rocket League";
-    loadWsg(ROCKET_LEAGUE_PZL_WSG, &pm->levels[28].levelWSG, false); // 15x15 - This one is on the harder side of things.
+    loadWsg(ROCKET_LEAGUE_PZL_WSG, &pm->levels[28].levelWSG,
+            false); // 15x15 - This one is on the harder side of things.
     loadWsg(ROCKET_LEAGUE_SLV_WSG, &pm->levels[28].completedWSG, false);
 
     // this has to be the last puzzle.
-    pm->levels[29].title = "Never Gonna";            // give you up, but title too long for single line.
+    pm->levels[29].title = "Never Gonna";                 // give you up, but title too long for single line.
     loadWsg(RR_PZL_WSG, &pm->levels[29].levelWSG, false); // 15/15
     loadWsg(RR_SLV_WSG, &pm->levels[29].completedWSG, false);
 
@@ -333,12 +363,23 @@ void loadLevels()
  */
 void picrossMainLoop(int64_t elapsedUs)
 {
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        picrossButtonCb(&evt);
+    }
+
+    // Check for touchpad touches
+    int32_t phi       = 0;
+    int32_t r         = 0;
+    int32_t intensity = 0;
+    picrossTouchCb(getTouchJoystick(&phi, &r, &intensity));
+
     switch (pm->screen)
     {
-        case PICROSS_OPTIONS:
         case PICROSS_MENU:
         {
-            drawMeleeMenu(pm->menu);
+            drawMenuMania(pm->menu, pm->renderer, elapsedUs);
             break;
         }
         case PICROSS_LEVELSELECT:
@@ -368,50 +409,9 @@ void picrossButtonCb(buttonEvt_t* evt)
 {
     switch (pm->screen)
     {
-        case PICROSS_OPTIONS:
         case PICROSS_MENU:
         {
-            // Pass button events from the Swadge mode to the menu
-            if (evt->down)
-            {
-                if (pm->screen == PICROSS_OPTIONS && evt->button == PB_B)
-                {
-                    // Simulate selecting "Back" on B press
-                    picrossMainMenuCb(str_back);
-                }
-                else
-                {
-                    switch (evt->button)
-                    {
-                        case PB_UP:
-                        case PB_DOWN:
-                        case PB_A:
-                        case PB_B:
-                        case PB_START:
-                        case PB_SELECT:
-                        {
-                            meleeMenuButton(pm->menu, evt->button);
-                            break;
-                        }
-                        case PB_LEFT:
-                        case PB_RIGHT:
-                        {
-                            if ((str_HintsOn == pm->menu->rows[pm->menu->selectedRow])
-                                || (str_HintsOff == pm->menu->rows[pm->menu->selectedRow])
-                                || (str_GuidesOn == pm->menu->rows[pm->menu->selectedRow])
-                                || (str_GuidesOff == pm->menu->rows[pm->menu->selectedRow])
-                                || (str_MarkX == pm->menu->rows[pm->menu->selectedRow])
-                                || (str_MarkSolid == pm->menu->rows[pm->menu->selectedRow])
-                                || (str_AnimateBGOn == pm->menu->rows[pm->menu->selectedRow])
-                                || (str_AnimateBGOff == pm->menu->rows[pm->menu->selectedRow]))
-                            {
-                                picrossMainMenuCb(pm->menu->rows[pm->menu->selectedRow]);
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
+            pm->menu = menuButton(pm->menu, *evt);
             break;
         }
         case PICROSS_LEVELSELECT:
@@ -429,114 +429,18 @@ void picrossButtonCb(buttonEvt_t* evt)
             picrossTutorialButtonCb(evt);
             break;
         }
-            // No wifi mode stuff
     }
 }
 
-void picrossTouchCb(touch_event_t* evt)
+void picrossTouchCb(bool touched)
 {
     if (pm->screen == PICROSS_GAME)
     {
-        picrossGameTouchCb(evt);
+        picrossGameTouchCb(touched);
     }
 }
 
 /////////////////////////
-
-/**
- * @brief Sets up the top level menu for Picross
- */
-void setPicrossMainMenu(bool resetPos)
-{
-    // override the main menu with the options menu instead.
-
-    if (pm->screen == PICROSS_OPTIONS)
-    {
-        // Draw the options menu
-        resetMeleeMenu(pm->menu, str_options, picrossMainMenuCb);
-
-        if (picrossGetSaveFlag(
-                1)) // are guides on? (getHints loaded from perma, we can skip doing that again and just read local)
-        {
-            addRowToMeleeMenu(pm->menu, str_GuidesOn);
-        }
-        else
-        {
-            addRowToMeleeMenu(pm->menu, str_GuidesOff);
-        }
-
-        if (picrossGetLoadedSaveFlag(2)) // Bg animate on?
-        {
-            addRowToMeleeMenu(pm->menu, str_AnimateBGOn);
-        }
-        else
-        {
-            addRowToMeleeMenu(pm->menu, str_AnimateBGOff);
-        }
-
-        if (picrossGetLoadedSaveFlag(3)) // Choose X
-        {
-            addRowToMeleeMenu(pm->menu, str_MarkX);
-        }
-        else
-        {
-            addRowToMeleeMenu(pm->menu, str_MarkSolid);
-        }
-
-        if (picrossGetLoadedSaveFlag(0)) // are hints on?
-        {
-            addRowToMeleeMenu(pm->menu, str_HintsOn);
-        }
-        else
-        {
-            addRowToMeleeMenu(pm->menu, str_HintsOff);
-        }
-
-        addRowToMeleeMenu(pm->menu, str_eraseProgress);
-        addRowToMeleeMenu(pm->menu, str_back);
-
-        // Set the position
-        if (resetPos)
-        {
-            pm->settingsPos = 0;
-        }
-        pm->menu->selectedRow = pm->settingsPos;
-    }
-    else
-    {
-        // otherwise, if we are in ANY game state, this should default (and set) to picross_menu
-        resetMeleeMenu(pm->menu, str_picrossTitle, picrossMainMenuCb);
-
-        // only display continue button if we have a game in progress.
-
-        // attempt to read the saved index. If it doesnt exist, set it to -1.
-        if ((false == readNvs32(picrossCurrentPuzzleIndexKey, &pm->savedIndex)))
-        {
-            writeNvs32(picrossCurrentPuzzleIndexKey,
-                       -1); // if we enter this screen and instantly exist, also set it to -1 and we can just load that.
-            pm->savedIndex = -1; // there is no current index.
-        }
-
-        // only show continue button if we have saved data.
-        if (pm->savedIndex >= 0)
-        {
-            addRowToMeleeMenu(pm->menu, str_continue);
-        }
-
-        addRowToMeleeMenu(pm->menu, str_levelSelect);
-        addRowToMeleeMenu(pm->menu, str_howtoplay);
-        addRowToMeleeMenu(pm->menu, str_options);
-        addRowToMeleeMenu(pm->menu, str_exit);
-        pm->screen = PICROSS_MENU;
-
-        // Set the position
-        if (resetPos)
-        {
-            pm->mainMenuPos = 0;
-        }
-        pm->menu->selectedRow = pm->mainMenuPos;
-    }
-}
 
 /**
  * @brief Frees level select menu and returns to the picross menu. Should not be called by not-the-level-select-menu.
@@ -545,7 +449,7 @@ void setPicrossMainMenu(bool resetPos)
 void returnToPicrossMenu(void)
 {
     picrossExitLevelSelect(); // free data
-    setPicrossMainMenu(false);
+    pm->screen = PICROSS_MENU;
 }
 /**
  * @brief Frees level select menu and returns to the picross menu, except skipping past the level select menu.
@@ -553,7 +457,7 @@ void returnToPicrossMenu(void)
  */
 void returnToPicrossMenuFromGame(void)
 {
-    setPicrossMainMenu(false);
+    pm->screen = PICROSS_MENU;
 }
 
 /**
@@ -563,7 +467,6 @@ void returnToPicrossMenuFromGame(void)
 void exitTutorial(void)
 {
     pm->screen = PICROSS_MENU;
-    setPicrossMainMenu(false);
 }
 
 void continueGame()
@@ -579,132 +482,88 @@ void continueGame()
 }
 
 // menu button & options menu callbacks. Set the screen and call the appropriate start functions
-void picrossMainMenuCb(const char* opt)
+void picrossMainMenuCb(const char* label, bool selected, uint32_t value)
 {
-    if (str_picrossTitle == pm->menu->title)
+    if (selected)
     {
-        pm->mainMenuPos = pm->menu->selectedRow;
-    }
-    else if (str_options == pm->menu->title)
-    {
-        pm->settingsPos = pm->menu->selectedRow;
-    }
+        if (label == str_continue)
+        {
+            continueGame();
 
-    if (opt == str_continue)
-    {
-        continueGame();
+            // Turn off LEDs
+            led_t leds[CONFIG_NUM_LEDS] = {0};
+            setLeds(leds, CONFIG_NUM_LEDS);
 
-        // Turn off LEDs
-        led_t leds[CONFIG_NUM_LEDS] = {0};
-        setLeds(leds, CONFIG_NUM_LEDS);
+            return;
+        }
+        if (label == str_howtoplay)
+        {
+            pm->screen = PICROSS_TUTORIAL;
+            picrossStartTutorial(&pm->mmFont);
 
-        return;
-    }
-    if (opt == str_howtoplay)
-    {
-        pm->screen = PICROSS_TUTORIAL;
-        picrossStartTutorial(&pm->mmFont);
+            // Turn off LEDs
+            led_t leds[CONFIG_NUM_LEDS] = {0};
+            setLeds(leds, CONFIG_NUM_LEDS);
 
-        // Turn off LEDs
-        led_t leds[CONFIG_NUM_LEDS] = {0};
-        setLeds(leds, CONFIG_NUM_LEDS);
+            return;
+        }
+        if (label == str_levelSelect)
+        {
+            pm->screen = PICROSS_LEVELSELECT;
+            picrossStartLevelSelect(&pm->mmFont, pm->levels);
 
-        return;
-    }
-    if (opt == str_levelSelect)
-    {
-        pm->screen = PICROSS_LEVELSELECT;
-        picrossStartLevelSelect(&pm->mmFont, pm->levels);
+            // Turn off LEDs
+            led_t leds[CONFIG_NUM_LEDS] = {0};
+            setLeds(leds, CONFIG_NUM_LEDS);
 
-        // Turn off LEDs
-        led_t leds[CONFIG_NUM_LEDS] = {0};
-        setLeds(leds, CONFIG_NUM_LEDS);
+            return;
+        }
+        if (label == str_exit)
+        {
+            // Exit to main menu
+            switchToSwadgeMode(&mainMenuMode);
+            return;
+        }
+        else if (label == str_eraseProgress)
+        {
+            // todo: still need to do a confirmation on these, probably just by changing the text.
+            // Commented out
+            //  //Next time we load a puzzle it will re-save and zero-out the data, we just have to tell the mennu not
+            //  to show the 'continue' option.
+            writeNvs32(picrossCurrentPuzzleIndexKey, -1);
 
-        return;
-    }
-    if (opt == str_exit)
-    {
-        // Exit to main menu
-        switchToSwadgeMode(&modeMainMenu);
-        return;
-    }
-    else if (opt == str_back)
-    {
-        pm->screen = PICROSS_MENU;
-        setPicrossMainMenu(false);
-    }
-    else if (opt == str_options)
-    {
-        pm->screen = PICROSS_OPTIONS;
-        setPicrossMainMenu(true);
-    }
-    else if (opt == str_HintsOff)
-    {
-        // turn hints back on
-        picrossSetSaveFlag(0, true);
-        setPicrossMainMenu(false); // re-setup menu with new text, but dont change cursor position
-    }
-    else if (opt == str_HintsOn)
-    {
-        // turn hints off
-        picrossSetSaveFlag(0, false);
-        setPicrossMainMenu(false);
-    }
-    else if (opt == str_GuidesOff)
-    {
-        // turn guides back on
-        picrossSetSaveFlag(1, true);
-        setPicrossMainMenu(false); // re-setup menu with new text, but dont change cursor position
-    }
-    else if (opt == str_GuidesOn)
-    {
-        // turn guides off
-        picrossSetSaveFlag(1, false);
-        setPicrossMainMenu(false);
-    }
-    else if (opt == str_AnimateBGOff)
-    {
-        // turn bgAnimate back on
-        picrossSetSaveFlag(2, true);
-        setPicrossMainMenu(false); // re-setup menu with new text, but dont change cursor position
-    }
-    else if (opt == str_AnimateBGOn)
-    {
-        // turn bgAnimate off
-        picrossSetSaveFlag(2, false);
-        setPicrossMainMenu(false);
-    }
-    else if (opt == str_MarkX)
-    {
-        // turn choose X back off
-        picrossSetSaveFlag(3, false);
-        setPicrossMainMenu(false); // re-setup menu with new text, but dont change cursor position
-    }
-    else if (opt == str_MarkSolid)
-    {
-        // turn chooseX on
-        picrossSetSaveFlag(3, true);
-        setPicrossMainMenu(false);
-    }
-    else if (opt == str_eraseProgress)
-    {
-        // todo: still need to do a confirmation on these, probably just by changing the text.
-        // Commented out
-        //  //Next time we load a puzzle it will re-save and zero-out the data, we just have to tell the mennu not to
-        //  show the 'continue' option.
-        writeNvs32(picrossCurrentPuzzleIndexKey, -1);
+            // see comment above as to why this isn't needed.
+            //  size_t size = sizeof(picrossProgressData_t);
+            //  picrossProgressData_t* progData = calloc(1,size);//zero out = reset.
+            //  writeNvsBlob(picrossProgressData,progData,size);
+            //  free(progData);
 
-        // see comment above as to why this isn't needed.
-        //  size_t size = sizeof(picrossProgressData_t);
-        //  picrossProgressData_t* progData = calloc(1,size);//zero out = reset.
-        //  writeNvsBlob(picrossProgressData,progData,size);
-        //  free(progData);
-
-        // the code to erase ALL (victory) progress. Still want to put this... somewhere
-        //  size_t size = sizeof(picrossVictoryData_t);
-        //  picrossVictoryData_t* victData = calloc(1,size);//zero out = reset.
-        //  writeNvsBlob(picrossCompletedLevelData,victData,size);
-        //  free(victData);
+            // the code to erase ALL (victory) progress. Still want to put this... somewhere
+            //  size_t size = sizeof(picrossVictoryData_t);
+            //  picrossVictoryData_t* victData = calloc(1,size);//zero out = reset.
+            //  writeNvsBlob(picrossCompletedLevelData,victData,size);
+            //  free(victData);
+        }
+    }
+    else
+    {
+        // Not selected
+        if (str_Guides == label)
+        {
+            picrossSetSaveFlag(PO_SHOW_GUIDES, value);
+        }
+        else if (str_AnimateBG == label)
+        {
+            picrossSetSaveFlag(PO_ANIMATE_BG, value);
+        }
+        else if (str_Hints == label)
+        {
+            picrossSetSaveFlag(PO_SHOW_HINTS, value);
+        }
+        else if (str_Mark == label)
+        {
+            picrossSetSaveFlag(PO_MARK_X, value);
+        }
     }
 }
 
@@ -739,11 +598,15 @@ void selectPicrossLevel(picrossLevelDef_t* selectedLevel)
  * @return true
  * @return false
  */
-bool picrossGetSaveFlag(int pos)
+bool picrossGetSaveFlag(picrossOption_t pos)
 {
     if (false == readNvs32(picrossSavedOptionsKey, &pm->options))
     {
-        writeNvs32(picrossSavedOptionsKey, 0);
+        // set default options
+        // x's on, bg on, guide on, hintwarning off. On the fence on guides on or off.
+        int32_t defaults = (1 << PO_ANIMATE_BG) | (1 << PO_SHOW_GUIDES) | (1 << PO_MARK_X);
+        writeNvs32(picrossSavedOptionsKey, defaults);
+        pm->options = defaults;
     }
 
     return picrossGetLoadedSaveFlag(pos);
@@ -758,7 +621,7 @@ bool picrossGetSaveFlag(int pos)
  * @return true
  * @return false
  */
-bool picrossGetLoadedSaveFlag(int pos)
+bool picrossGetLoadedSaveFlag(picrossOption_t pos)
 {
     int val = (pm->options & (1 << pos)) >> pos;
     return val == 1;
@@ -772,7 +635,7 @@ bool picrossGetLoadedSaveFlag(int pos)
  * @param pos index to get. 0<pos<32.
  * @param on save vale.
  */
-void picrossSetSaveFlag(int pos, bool on)
+void picrossSetSaveFlag(picrossOption_t pos, bool on)
 {
     if (on)
     {

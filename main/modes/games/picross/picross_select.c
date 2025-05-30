@@ -35,7 +35,7 @@ void picrossStartLevelSelect(font_t* bigFont, picrossLevelDef_t levels[])
     ls            = calloc(1, sizeof(picrossLevelSelect_t));
     ls->game_font = bigFont;
     // ls->smallFont = smallFont;
-    loadFont("early_gameboy.font", &(ls->smallFont));
+    loadFont(EARLY_GAMEBOY_FONT, &(ls->smallFont), false);
     loadWsg(UNKNOWN_PUZZLE_WSG, &ls->unknownPuzzle, false);
 
     size_t size = sizeof(picrossVictoryData_t);
@@ -340,10 +340,10 @@ void drawPicrossLevelWSG(wsg_t* wsg, int16_t xOff, int16_t yOff, bool highlight)
         uint16_t w = pixelPerPixel * wsg->w + 2;
         uint16_t h = pixelPerPixel * wsg->h + 2;
 
-        plotLine(xOff, yOff, xOff + w, yOff, c550, 3);         // top
-        plotLine(xOff, yOff + h, xOff + w, yOff + h, c550, 3); // bottom
-        plotLine(xOff, yOff, xOff, yOff + h, c550, 3);         // left
-        plotLine(xOff + w, yOff, xOff + w, yOff + h, c550, 3); // right
+        drawLine(xOff, yOff, xOff + w, yOff, c550, 3);         // top
+        drawLine(xOff, yOff + h, xOff + w, yOff + h, c550, 3); // bottom
+        drawLine(xOff, yOff, xOff, yOff + h, c550, 3);         // left
+        drawLine(xOff + w, yOff, xOff + w, yOff + h, c550, 3); // right
     }
 }
 

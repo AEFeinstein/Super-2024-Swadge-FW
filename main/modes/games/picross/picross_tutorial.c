@@ -89,13 +89,13 @@ void drawNavigation()
     char textBuffer1[12];
     sprintf(textBuffer1, "How To Play");
     int16_t t = textWidth(&tut->titleFont, textBuffer1);
-    t         = ((TFT_WIDTH) - t) / 2;
+    t         = ((TFT_WIDTH)-t) / 2;
     drawText(&tut->titleFont, c555, textBuffer1, t, 16);
 
     char textBuffer2[20];
     sprintf(textBuffer2, "swadge.com/picross/");
     int16_t x = textWidth(&tut->smallFont, textBuffer2);
-    x         = ((TFT_WIDTH) - x) / 2;
+    x         = ((TFT_WIDTH)-x) / 2;
     drawText(&tut->smallFont, c555, textBuffer2, x, TFT_HEIGHT - 20);
 }
 
