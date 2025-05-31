@@ -58,6 +58,7 @@ static void screenMainLoop(int64_t elapsedUs);
 static void updateObjects(void);
 static void lightLEDs(LEDDirections_t dir);
 static void fadeLEDs(void);
+static void colorExplosion(void);
 static void drawScreenSaver(void);
 
 //==============================================================================
@@ -77,6 +78,8 @@ typedef struct
 {
     bouncingObject_t objs[ARRAY_SIZE(items)];
     led_t leds[CONFIG_NUM_LEDS];
+    bool explosion;
+    int64_t explosionTimer;
 } screenSaverData_t;
 
 //==============================================================================
@@ -150,10 +153,27 @@ static void screenMainLoop(int64_t elapsedUs)
     while (checkButtonQueueWrapper(&evt))
     {
         // Allow user to back out of mode
+        if(evt.down)
+        {
+            ssd->explosion = true;
+            ssd->explosionTimer = 0;
+        }
     }
 
     // Update objects
     updateObjects();
+
+    // Color explosion
+    if(ssd->explosion)
+    {
+        colorExplosion();
+        ssd->explosionTimer += elapsedUs;
+        if(ssd->explosionTimer > 5000000)
+        {
+            ssd->explosion = false;
+        }
+    }
+
     fadeLEDs();
 
     // Draw
@@ -164,6 +184,8 @@ static void updateObjects()
 {
     for (int idx = 0; idx < ARRAY_SIZE(items); idx++)
     {
+        bool hitX = false;
+        bool hitY = false;
         bouncingObject_t* bo = &ssd->objs[idx];
         if (!bo->isActive)
         {
@@ -195,12 +217,14 @@ static void updateObjects()
             bo->pos.x = 0;
             bo->velocity.x *= -1;
             lightLEDs(LED_WEST);
+            hitX = true;
         }
         if (bo->pos.x > TFT_WIDTH - bo->image.w * 2)
         {
             bo->pos.x = TFT_WIDTH - bo->image.w * 2;
             bo->velocity.x *= -1;
             lightLEDs(LED_EAST);
+            hitX = true;
         }
 
         // Y
@@ -227,12 +251,19 @@ static void updateObjects()
             bo->pos.y = 0;
             bo->velocity.y *= -1;
             lightLEDs(LED_NORTH);
+            hitY = true;
         }
         if (bo->pos.y > TFT_HEIGHT - bo->image.h * 2)
         {
             bo->pos.y = TFT_HEIGHT - bo->image.h * 2;
             bo->velocity.y *= -1;
             lightLEDs(LED_SOUTH);
+            hitY = true;
+        }
+        if(hitX & hitY)
+        {
+            ssd->explosion = true;
+            ssd->explosionTimer = 0;
         }
     }
 }
@@ -300,6 +331,16 @@ static void fadeLEDs()
         }
     }
     setLeds(ssd->leds, CONFIG_NUM_LEDS);
+}
+
+static void colorExplosion()
+{
+    for(int idx = 0; idx < CONFIG_NUM_LEDS; idx++)
+    {
+        ssd->leds[idx].r = esp_random() % 256;
+        ssd->leds[idx].g = esp_random() % 256;
+        ssd->leds[idx].b = esp_random() % 256;
+    }
 }
 
 static void drawScreenSaver()
