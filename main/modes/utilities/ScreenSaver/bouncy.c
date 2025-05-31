@@ -28,7 +28,7 @@
 // Consts
 //==============================================================================
 
-const char modeName[] = "bouncy";
+const char modeName[] = "Bouncy Items";
 
 /// @brief Contains a sprite for each major mode
 static const cnfsFileIdx_t items[] = {
