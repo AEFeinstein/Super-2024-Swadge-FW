@@ -1,7 +1,7 @@
 /**
- * @file screensaver.c
+ * @file bouncy.c
  * @author Jeremy Stintzcum
- * @brief Some swadge screensavers. Ruin your battery life
+ * @brief Toss items around the screen like a DVD screensaver, but not because this isn't a screen saver. Ruin your battery life
  * @date 2025-05-30
  *
  * @copyright Copyright (c) 2025
@@ -12,7 +12,7 @@
 // Includes
 //==============================================================================
 
-#include "screensaver.h"
+#include "bouncy.h"
 #include "esp_random.h"
 #include "modeIncludeList.h"
 #include "dance_SmoothRainbow.h"
@@ -28,7 +28,7 @@
 // Consts
 //==============================================================================
 
-const char modeName[] = "Screensaver";
+const char modeName[] = "bouncy";
 
 /// @brief Contains a sprite for each major mode
 static const cnfsFileIdx_t items[] = {
@@ -65,8 +65,7 @@ static void screenMainLoop(int64_t elapsedUs);
 static void updateObjects(void);
 static void lightLEDs(LEDDirections_t dir);
 static void fadeLEDs(void);
-static void colorExplosion(void);
-static void drawScreenSaver(void);
+static void drawBouncy(void);
 static void drawWarning(void);
 
 //==============================================================================
@@ -90,13 +89,13 @@ typedef struct
     int64_t explosionTimer;
     bool displayWarning;
     wsg_t batteryImage;
-} screenSaverData_t;
+} bouncyData_t;
 
 //==============================================================================
 // Variables
 //==============================================================================
 
-swadgeMode_t screenSaverMode = {
+swadgeMode_t bouncyMode = {
     .modeName          = modeName,
     .wifiMode          = NO_WIFI,
     .overrideUsb       = false,
@@ -107,7 +106,7 @@ swadgeMode_t screenSaverMode = {
     .fnMainLoop        = screenMainLoop,
 };
 
-screenSaverData_t* ssd;
+bouncyData_t* ssd;
 
 //==============================================================================
 // Functions
@@ -118,7 +117,7 @@ static void screenEnterMode(void)
     // Set display Hz
     setFrameRateUs(33333); // ~30Hz
 
-    ssd = (screenSaverData_t*)heap_caps_calloc(1, sizeof(screenSaverData_t), MALLOC_CAP_8BIT);
+    ssd = (bouncyData_t*)heap_caps_calloc(1, sizeof(bouncyData_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(items); idx++)
     {
         loadWsg(items[idx], &ssd->objs[idx].image, true);
@@ -202,7 +201,7 @@ static void screenMainLoop(int64_t elapsedUs)
     // Draw
     if (!ssd->displayWarning)
     {
-        drawScreenSaver();
+        drawBouncy();
     }
     else
     {
@@ -363,7 +362,7 @@ static void fadeLEDs()
     setLeds(ssd->leds, CONFIG_NUM_LEDS);
 }
 
-static void drawScreenSaver()
+static void drawBouncy()
 {
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
     for (int idx = 0; idx < ARRAY_SIZE(items); idx++)

@@ -30,6 +30,7 @@
 */
 
 #include "accelTest.h"
+#include "bouncy.h"
 #include "colorchord.h"
 #include "cosCrunch.h"
 #include "dance.h"
@@ -43,7 +44,6 @@
 #include "mode_diceroller.h"
 #include "mode_synth.h"
 #include "roboRunner.h"
-#include "screensaver.h"
 #include "sequencerMode.h"
 #include "swadgeIt.h"
 #include "swadgePassTest.h"
