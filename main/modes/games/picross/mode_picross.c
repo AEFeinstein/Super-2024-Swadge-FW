@@ -11,9 +11,6 @@
 #include "picross_menu.h"
 #include "picross_select.h"
 
-#include "picross_music.h"
-// #include "picross_consts.h"
-
 //==============================================================================
 // Function Prototypes
 //==============================================================================
