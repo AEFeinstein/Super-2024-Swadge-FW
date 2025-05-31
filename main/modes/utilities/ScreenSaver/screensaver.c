@@ -299,7 +299,7 @@ static void fadeLEDs()
             ssd->leds[idx].b -= 5;
         }
     }
-    setLeds(&ssd->leds, CONFIG_NUM_LEDS);
+    setLeds(ssd->leds, CONFIG_NUM_LEDS);
 }
 
 static void drawScreenSaver()
