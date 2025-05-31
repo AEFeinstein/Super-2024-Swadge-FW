@@ -365,7 +365,7 @@ static void fadeLEDs()
 
 static void drawBouncy()
 {
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    clearPxTft();
     for (int idx = 0; idx < ARRAY_SIZE(items); idx++)
     {
         if (ssd->objs[idx].isActive)
@@ -377,6 +377,7 @@ static void drawBouncy()
 
 static void drawWarning()
 {
+    clearPxTft();
     drawText(getSysFont(), c500, warningLabels[0], (TFT_WIDTH - textWidth(getSysFont(), warningLabels[0])) >> 1, 60);
     int16_t xCoord = 8;
     int16_t yCoord = 120;
