@@ -36,6 +36,12 @@ static const cnfsFileIdx_t items[] = {
     MMX_TROPHY_WSG,
 };
 
+static const char* const warningLabels[] = {
+    "WARNING!",
+    "This mode draws a lot of power! If you'd like to leave the swadge on, consider going into LED dance, which has "
+    "been optimized for long term swadge use.",
+};
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -60,6 +66,7 @@ static void lightLEDs(LEDDirections_t dir);
 static void fadeLEDs(void);
 static void colorExplosion(void);
 static void drawScreenSaver(void);
+static void drawWarning(void);
 
 //==============================================================================
 // Structs
@@ -80,6 +87,7 @@ typedef struct
     led_t leds[CONFIG_NUM_LEDS];
     bool explosion;
     int64_t explosionTimer;
+    bool displayWarning;
 } screenSaverData_t;
 
 //==============================================================================
@@ -105,6 +113,9 @@ screenSaverData_t* ssd;
 
 static void screenEnterMode(void)
 {
+    // Set display Hz
+    setFrameRateUs(33333); // ~30Hz
+
     ssd = (screenSaverData_t*)heap_caps_calloc(1, sizeof(screenSaverData_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(items); idx++)
     {
@@ -125,6 +136,9 @@ static void screenEnterMode(void)
         ssd->leds[idx] = l;
     }
 
+    // Turn off DAC so no buzzing
+    setDacShutdown(true);
+
     // Set active images
     ssd->objs[0].isActive = true; // Always active
     if (trophyGetPoints(false, roboRunnerMode.modeName) == 1000)
@@ -135,6 +149,8 @@ static void screenEnterMode(void)
     {
         ssd->objs[2].isActive = true;
     }
+
+    ssd->displayWarning = true;
 }
 
 static void screenExitMode(void)
@@ -152,11 +168,11 @@ static void screenMainLoop(int64_t elapsedUs)
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
-        // Allow user to back out of mode
-        if(evt.down)
+        // Allow user to back out of mode via holding down "menu"
+        // and move past the warning screen
+        if (evt.down)
         {
-            ssd->explosion = true;
-            ssd->explosionTimer = 0;
+            ssd->displayWarning = false;
         }
     }
 
@@ -164,11 +180,11 @@ static void screenMainLoop(int64_t elapsedUs)
     updateObjects();
 
     // Color explosion
-    if(ssd->explosion)
+    if (ssd->explosion)
     {
         colorExplosion();
         ssd->explosionTimer += elapsedUs;
-        if(ssd->explosionTimer > 5000000)
+        if (ssd->explosionTimer > 5000000)
         {
             ssd->explosion = false;
         }
@@ -177,15 +193,22 @@ static void screenMainLoop(int64_t elapsedUs)
     fadeLEDs();
 
     // Draw
-    drawScreenSaver();
+    if (!ssd->displayWarning)
+    {
+        drawScreenSaver();
+    }
+    else
+    {
+        drawWarning();
+    }
 }
 
 static void updateObjects()
 {
     for (int idx = 0; idx < ARRAY_SIZE(items); idx++)
     {
-        bool hitX = false;
-        bool hitY = false;
+        bool hitX            = false;
+        bool hitY            = false;
         bouncingObject_t* bo = &ssd->objs[idx];
         if (!bo->isActive)
         {
@@ -260,9 +283,9 @@ static void updateObjects()
             lightLEDs(LED_SOUTH);
             hitY = true;
         }
-        if(hitX & hitY)
+        if (hitX & hitY)
         {
-            ssd->explosion = true;
+            ssd->explosion      = true;
             ssd->explosionTimer = 0;
         }
     }
@@ -335,7 +358,7 @@ static void fadeLEDs()
 
 static void colorExplosion()
 {
-    for(int idx = 0; idx < CONFIG_NUM_LEDS; idx++)
+    for (int idx = 0; idx < CONFIG_NUM_LEDS; idx++)
     {
         ssd->leds[idx].r = esp_random() % 256;
         ssd->leds[idx].g = esp_random() % 256;
@@ -353,4 +376,12 @@ static void drawScreenSaver()
             drawWsgSimpleScaled(&ssd->objs[idx].image, ssd->objs[idx].pos.x, ssd->objs[idx].pos.y, 2, 2);
         }
     }
+}
+
+static void drawWarning()
+{
+    drawText(getSysFont(), c500, warningLabels[0], (TFT_WIDTH - textWidth(getSysFont(), warningLabels[0])) >> 1, 60);
+    int16_t xCoord = 8;
+    int16_t yCoord = 120;
+    drawTextWordWrap(getSysFont(), c555, warningLabels[1], &xCoord, &yCoord, TFT_WIDTH - 8, TFT_HEIGHT);
 }
