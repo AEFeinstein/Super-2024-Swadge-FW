@@ -12,7 +12,6 @@
 #include "picross_select.h"
 #include "picross_tutorial.h"
 #include "picross_consts.h"
-#include "picross_music.h"
 
 #include "mainMenu.h"
 
