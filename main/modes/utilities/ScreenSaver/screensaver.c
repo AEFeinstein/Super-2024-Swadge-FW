@@ -37,6 +37,18 @@ static const cnfsFileIdx_t items[] = {
 };
 
 //==============================================================================
+// Enums
+//==============================================================================
+
+typedef enum
+{
+    LED_NORTH,
+    LED_WEST,
+    LED_SOUTH,
+    LED_EAST,
+} LEDDirections_t;
+
+//==============================================================================
 // Function declarations
 //==============================================================================
 
@@ -44,6 +56,8 @@ static void screenEnterMode(void);
 static void screenExitMode(void);
 static void screenMainLoop(int64_t elapsedUs);
 static void updateObjects(void);
+static void lightLEDs(LEDDirections_t dir);
+static void fadeLEDs(void);
 static void drawScreenSaver(void);
 
 //==============================================================================
@@ -62,6 +76,7 @@ typedef struct
 typedef struct
 {
     bouncingObject_t objs[ARRAY_SIZE(items)];
+    led_t leds[CONFIG_NUM_LEDS];
 } screenSaverData_t;
 
 //==============================================================================
@@ -99,6 +114,14 @@ static void screenEnterMode(void)
         ssd->objs[idx].velocity.x = (esp_random() % MAX_VELOCITY) - (MAX_VELOCITY >> 1);
         ssd->objs[idx].velocity.y = (esp_random() % MAX_VELOCITY) - (MAX_VELOCITY >> 1);
     }
+
+    // Setup LEDs
+    for (int idx = 0; idx < CONFIG_NUM_LEDS; idx++)
+    {
+        led_t l        = {0};
+        ssd->leds[idx] = l;
+    }
+
     // Set active images
     ssd->objs[0].isActive = true; // Always active
     if (trophyGetPoints(false, roboRunnerMode.modeName) == 1000)
@@ -131,6 +154,7 @@ static void screenMainLoop(int64_t elapsedUs)
 
     // Update objects
     updateObjects();
+    fadeLEDs();
 
     // Draw
     drawScreenSaver();
@@ -170,11 +194,13 @@ static void updateObjects()
         {
             bo->pos.x = 0;
             bo->velocity.x *= -1;
+            lightLEDs(LED_WEST);
         }
         if (bo->pos.x > TFT_WIDTH - bo->image.w * 2)
         {
             bo->pos.x = TFT_WIDTH - bo->image.w * 2;
             bo->velocity.x *= -1;
+            lightLEDs(LED_EAST);
         }
 
         // Y
@@ -200,13 +226,80 @@ static void updateObjects()
         {
             bo->pos.y = 0;
             bo->velocity.y *= -1;
+            lightLEDs(LED_NORTH);
         }
         if (bo->pos.y > TFT_HEIGHT - bo->image.h * 2)
         {
             bo->pos.y = TFT_HEIGHT - bo->image.h * 2;
             bo->velocity.y *= -1;
+            lightLEDs(LED_SOUTH);
         }
     }
+}
+
+static void lightLEDs(LEDDirections_t dir)
+{
+    led_t randColors = {
+        .r = esp_random() % 256,
+        .g = esp_random() % 256,
+        .b = esp_random() % 256,
+    };
+    switch (dir)
+    {
+        case LED_NORTH:
+        {
+            ssd->leds[1] = randColors;
+            ssd->leds[2] = randColors;
+            ssd->leds[3] = randColors;
+            break;
+        }
+        case LED_SOUTH:
+        {
+            ssd->leds[0] = randColors;
+            ssd->leds[4] = randColors;
+            ssd->leds[6] = randColors;
+            ssd->leds[7] = randColors;
+            break;
+        }
+        case LED_EAST:
+        {
+            ssd->leds[0] = randColors;
+            ssd->leds[1] = randColors;
+            ssd->leds[8] = randColors;
+            break;
+        }
+        case LED_WEST:
+        {
+            ssd->leds[3] = randColors;
+            ssd->leds[5] = randColors;
+            ssd->leds[6] = randColors;
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+}
+
+static void fadeLEDs()
+{
+    for (int idx = 0; idx < CONFIG_NUM_LEDS; idx++)
+    {
+        if (ssd->leds[idx].r > 5)
+        {
+            ssd->leds[idx].r -= 5;
+        }
+        if (ssd->leds[idx].g > 5)
+        {
+            ssd->leds[idx].g -= 5;
+        }
+        if (ssd->leds[idx].b > 5)
+        {
+            ssd->leds[idx].b -= 5;
+        }
+    }
+    setLeds(&ssd->leds, CONFIG_NUM_LEDS);
 }
 
 static void drawScreenSaver()

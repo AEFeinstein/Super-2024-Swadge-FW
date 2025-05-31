@@ -50,7 +50,7 @@ void fillSwadgePassPacket(swadgePassPacket_t* packet)
 
     // Automatically fill in username
     nameData_t copied = *getSystemUsername(); // Would inline, but macro says no
-    packet->username = GET_PACKED_USERNAME(copied);
+    packet->username  = GET_PACKED_USERNAME(copied);
 
     // Ask each mode to fill in the rest
     int modeCount = modeListGetCount();

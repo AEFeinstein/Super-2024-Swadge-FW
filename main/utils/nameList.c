@@ -165,7 +165,8 @@ void initUsernameSystem()
         setUsernameFrom32(&swadgeUsername, packed);
     }
     setUsernameFromND(&swadgeUsername);
-    // ESP_LOGI("USRN", "Current name code: %d, which is %d, %d, %d, %d", GET_PACKED_USERNAME(swadgeUsername), swadgeUsername.idxs[0], swadgeUsername.idxs[1], swadgeUsername.idxs[2], swadgeUsername.randCode);
+    // ESP_LOGI("USRN", "Current name code: %d, which is %d, %d, %d, %d", GET_PACKED_USERNAME(swadgeUsername),
+    // swadgeUsername.idxs[0], swadgeUsername.idxs[1], swadgeUsername.idxs[2], swadgeUsername.randCode);
 }
 
 void generateMACUsername(nameData_t* nd)
