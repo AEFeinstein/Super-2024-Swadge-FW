@@ -15,6 +15,7 @@
 #include "screensaver.h"
 #include "esp_random.h"
 #include "modeIncludeList.h"
+#include "dance_SmoothRainbow.h"
 
 //==============================================================================
 // Defines
@@ -182,15 +183,18 @@ static void screenMainLoop(int64_t elapsedUs)
     // Color explosion
     if (ssd->explosion)
     {
-        colorExplosion();
         ssd->explosionTimer += elapsedUs;
         if (ssd->explosionTimer > 5000000)
         {
-            ssd->explosion = false;
+            ssd->explosion      = false;
+            ssd->explosionTimer = 0;
         }
+        danceSmoothRainbow(elapsedUs, 4000, false);
     }
-
-    fadeLEDs();
+    else
+    {
+        fadeLEDs();
+    }
 
     // Draw
     if (!ssd->displayWarning)
@@ -354,16 +358,6 @@ static void fadeLEDs()
         }
     }
     setLeds(ssd->leds, CONFIG_NUM_LEDS);
-}
-
-static void colorExplosion()
-{
-    for (int idx = 0; idx < CONFIG_NUM_LEDS; idx++)
-    {
-        ssd->leds[idx].r = esp_random() % 256;
-        ssd->leds[idx].g = esp_random() % 256;
-        ssd->leds[idx].b = esp_random() % 256;
-    }
 }
 
 static void drawScreenSaver()
