@@ -14,6 +14,7 @@
 
 #include "screensaver.h"
 #include "esp_random.h"
+#include "modeIncludeList.h"
 
 //==============================================================================
 // Defines
@@ -31,6 +32,8 @@ const char modeName[] = "Screensaver";
 /// @brief Contains a sprite for each major mode
 static const cnfsFileIdx_t items[] = {
     MAG_FEST_BOUNCER_WSG,
+    BARREL_1_WSG,
+    MMX_TROPHY_WSG,
 };
 
 //==============================================================================
@@ -53,6 +56,7 @@ typedef struct
     vec_t velocity;    // current velocity
     vec_t accumulator; // Velocity added
     wsg_t image;       // Loaded WSG
+    bool isActive;     // Should draw
 } bouncingObject_t;
 
 typedef struct
@@ -95,6 +99,16 @@ static void screenEnterMode(void)
         ssd->objs[idx].velocity.x = (esp_random() % MAX_VELOCITY) - (MAX_VELOCITY >> 1);
         ssd->objs[idx].velocity.y = (esp_random() % MAX_VELOCITY) - (MAX_VELOCITY >> 1);
     }
+    // Set active images
+    ssd->objs[0].isActive = true; // Always active
+    if (trophyGetPoints(false, roboRunnerMode.modeName) == 1000)
+    {
+        ssd->objs[1].isActive = true;
+    }
+    if (trophyGetPoints(false, mainMenuMode.modeName) == 1000)
+    {
+        ssd->objs[2].isActive = true;
+    }
 }
 
 static void screenExitMode(void)
@@ -127,7 +141,12 @@ static void updateObjects()
     for (int idx = 0; idx < ARRAY_SIZE(items); idx++)
     {
         bouncingObject_t* bo = &ssd->objs[idx];
-        bo->accumulator      = addVec2d(bo->accumulator, bo->velocity);
+        if (!bo->isActive)
+        {
+            continue;
+        }
+        // Update position
+        bo->accumulator = addVec2d(bo->accumulator, bo->velocity);
         // X
         if (bo->velocity.x < 0)
         {
@@ -147,12 +166,12 @@ static void updateObjects()
                 bo->pos.x += 1;
             }
         }
-        if(bo->pos.x < 0)
+        if (bo->pos.x < 0)
         {
             bo->pos.x = 0;
             bo->velocity.x *= -1;
         }
-        if(bo->pos.x > TFT_WIDTH - bo->image.w * 2)
+        if (bo->pos.x > TFT_WIDTH - bo->image.w * 2)
         {
             bo->pos.x = TFT_WIDTH - bo->image.w * 2;
             bo->velocity.x *= -1;
@@ -177,12 +196,12 @@ static void updateObjects()
                 bo->pos.y += 1;
             }
         }
-        if(bo->pos.y < 0)
+        if (bo->pos.y < 0)
         {
             bo->pos.y = 0;
             bo->velocity.y *= -1;
         }
-        if(bo->pos.y > TFT_HEIGHT - bo->image.h * 2)
+        if (bo->pos.y > TFT_HEIGHT - bo->image.h * 2)
         {
             bo->pos.y = TFT_HEIGHT - bo->image.h * 2;
             bo->velocity.y *= -1;
@@ -195,6 +214,9 @@ static void drawScreenSaver()
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
     for (int idx = 0; idx < ARRAY_SIZE(items); idx++)
     {
-        drawWsgSimpleScaled(&ssd->objs[idx].image, ssd->objs[idx].pos.x, ssd->objs[idx].pos.y, 2, 2);
+        if (ssd->objs[idx].isActive)
+        {
+            drawWsgSimpleScaled(&ssd->objs[idx].image, ssd->objs[idx].pos.x, ssd->objs[idx].pos.y, 2, 2);
+        }
     }
 }
