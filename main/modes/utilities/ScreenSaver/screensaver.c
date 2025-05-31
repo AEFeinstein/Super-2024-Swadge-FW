@@ -89,6 +89,7 @@ typedef struct
     bool explosion;
     int64_t explosionTimer;
     bool displayWarning;
+    wsg_t batteryImage;
 } screenSaverData_t;
 
 //==============================================================================
@@ -129,6 +130,7 @@ static void screenEnterMode(void)
         ssd->objs[idx].velocity.x = (esp_random() % MAX_VELOCITY) - (MAX_VELOCITY >> 1);
         ssd->objs[idx].velocity.y = (esp_random() % MAX_VELOCITY) - (MAX_VELOCITY >> 1);
     }
+    loadWsg(BATT_1_WSG, &ssd->batteryImage, true);
 
     // Setup LEDs
     for (int idx = 0; idx < CONFIG_NUM_LEDS; idx++)
@@ -156,6 +158,7 @@ static void screenEnterMode(void)
 
 static void screenExitMode(void)
 {
+    freeWsg(&ssd->batteryImage);
     for (int idx = 0; idx < ARRAY_SIZE(items); idx++)
     {
         freeWsg(&ssd->objs[idx].image);
@@ -378,4 +381,5 @@ static void drawWarning()
     int16_t xCoord = 8;
     int16_t yCoord = 120;
     drawTextWordWrap(getSysFont(), c555, warningLabels[1], &xCoord, &yCoord, TFT_WIDTH - 8, TFT_HEIGHT);
+    drawWsgSimple(&ssd->batteryImage, (TFT_WIDTH - ssd->batteryImage.w) >> 1, 200);
 }
