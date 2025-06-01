@@ -157,6 +157,34 @@ void pl_initializeSprites(plWsgManager_t* self)
     self->sprites[PL_SP_PLAYER_WALK3].originX = 15;
     self->sprites[PL_SP_PLAYER_WALK3].originY = 15;
 
+    self->sprites[PL_SP_PLAYER_WALK4].wsg     = &self->wsgs[PL_WSG_PLAYER_WALK4];
+    self->sprites[PL_SP_PLAYER_WALK4].originX = 15;
+    self->sprites[PL_SP_PLAYER_WALK4].originY = 15;
+    
+    self->sprites[PL_SP_PLAYER_WALK5].wsg     = &self->wsgs[PL_WSG_PLAYER_WALK5];
+    self->sprites[PL_SP_PLAYER_WALK5].originX = 15;
+    self->sprites[PL_SP_PLAYER_WALK5].originY = 15;
+    
+    self->sprites[PL_SP_PLAYER_WALK6].wsg     = &self->wsgs[PL_WSG_PLAYER_WALK6];
+    self->sprites[PL_SP_PLAYER_WALK6].originX = 15;
+    self->sprites[PL_SP_PLAYER_WALK6].originY = 15;
+    
+    self->sprites[PL_SP_PLAYER_WALK7].wsg     = &self->wsgs[PL_WSG_PLAYER_WALK7];
+    self->sprites[PL_SP_PLAYER_WALK7].originX = 15;
+    self->sprites[PL_SP_PLAYER_WALK7].originY = 15;
+
+    self->sprites[PL_SP_PLAYER_WALK8].wsg     = &self->wsgs[PL_WSG_PLAYER_WALK8];
+    self->sprites[PL_SP_PLAYER_WALK8].originX = 15;
+    self->sprites[PL_SP_PLAYER_WALK8].originY = 15;
+
+    self->sprites[PL_SP_PLAYER_WALK9].wsg     = &self->wsgs[PL_WSG_PLAYER_WALK9];
+    self->sprites[PL_SP_PLAYER_WALK9].originX = 15;
+    self->sprites[PL_SP_PLAYER_WALK9].originY = 15;
+
+    self->sprites[PL_SP_PLAYER_WALK10].wsg     = &self->wsgs[PL_WSG_PLAYER_WALK10];
+    self->sprites[PL_SP_PLAYER_WALK10].originX = 15;
+    self->sprites[PL_SP_PLAYER_WALK10].originY = 15;
+
     self->sprites[PL_SP_PLAYER_JUMP].wsg     = &self->wsgs[PL_WSG_PLAYER_JUMP];
     self->sprites[PL_SP_PLAYER_JUMP].originX = 15;
     self->sprites[PL_SP_PLAYER_JUMP].originY = 15;

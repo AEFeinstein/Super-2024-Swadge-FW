@@ -772,9 +772,17 @@ void animatePlayer(plEntity_t* self)
             // Running
             self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
 
-            if (self->gameData->frameCount % (10 - (abs(self->xspeed) >> 3)) == 0)
+            if(self->spriteIndex < PL_SP_PLAYER_WALK1 || self->spriteIndex > PL_SP_PLAYER_WALK10)
             {
-                self->spriteIndex = 1 + ((self->spriteIndex + 1) % 3);
+                self->spriteIndex = PL_SP_PLAYER_WALK1;
+            }
+            else if (self->gameData->frameCount % (10 - (abs(self->xspeed) >> 3)) == 0)
+            {
+                self->spriteIndex++;
+                if(self->spriteIndex > PL_SP_PLAYER_WALK10)
+                {
+                    self->spriteIndex = PL_SP_PLAYER_WALK1;
+                }
             }
         }
         else
