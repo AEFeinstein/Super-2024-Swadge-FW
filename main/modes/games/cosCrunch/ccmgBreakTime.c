@@ -22,17 +22,20 @@ cosCrunchMicrogame_t ccmgBreakTime          = {
              .fnMicrogameTimeout = ccmgBreakTimeTimeout,
 };
 
-#define MUG_WIDTH     65
-#define MUG_LIP_WIDTH 2
-#define STEAM_WIDTH   (MUG_WIDTH - MUG_LIP_WIDTH * 2)
-#define STEAM_HEIGHT  68
+#define MUG_WIDTH        65
+#define MUG_LIP_WIDTH    4
+#define STEAM_WSG_WIDTH  MUG_WIDTH
+#define STEAM_WSG_HEIGHT 67
+#define STEAM_MAX_WIDTH  15
 
 typedef struct
 {
     bool buttonPressed;
 
+    /// Center of the steam line coming out of the mug
     int16_t steamX;
     int16_t steamWidth;
+    bool steamDitherEvenPixels;
 
     struct
     {
@@ -43,7 +46,7 @@ typedef struct
         wsg_t spill;
         wsg_t steam;
     } wsg;
-    paletteColor_t steamPixels[STEAM_WIDTH * STEAM_HEIGHT];
+    paletteColor_t steamPixels[STEAM_WSG_WIDTH * STEAM_WSG_HEIGHT];
 
     tintColor_t liquidTintColor;
     wsgPalette_t liquidTintPalette;
@@ -54,8 +57,9 @@ static void ccmgBreakTimeInitMicrogame(void)
 {
     ccmgbt = heap_caps_calloc(1, sizeof(ccmgBreakTime_t), MALLOC_CAP_8BIT);
 
-    ccmgbt->steamX     = STEAM_WIDTH / 2;
-    ccmgbt->steamWidth = 1;
+    ccmgbt->steamX                = STEAM_WSG_WIDTH / 2;
+    ccmgbt->steamWidth            = 1;
+    ccmgbt->steamDitherEvenPixels = false;
 
     loadWsg(CC_MUG_WSG, &ccmgbt->wsg.mug, false);
     loadWsg(CC_MUG_LIQUID_WSG, &ccmgbt->wsg.mugLiquid, false);
@@ -63,8 +67,8 @@ static void ccmgBreakTimeInitMicrogame(void)
     loadWsg(CC_MUG_SPILLED_LIQUID_WSG, &ccmgbt->wsg.mugSpilledLiquid, false);
     loadWsg(CC_SPILL_WSG, &ccmgbt->wsg.spill, false);
 
-    ccmgbt->wsg.steam.w  = STEAM_WIDTH;
-    ccmgbt->wsg.steam.h  = STEAM_HEIGHT;
+    ccmgbt->wsg.steam.w  = STEAM_WSG_WIDTH;
+    ccmgbt->wsg.steam.h  = STEAM_WSG_HEIGHT;
     ccmgbt->wsg.steam.px = ccmgbt->steamPixels;
     for (uint32_t i = 0; i < ccmgbt->wsg.steam.w * ccmgbt->wsg.steam.h; i++)
     {
@@ -122,17 +126,17 @@ static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, c
 
     // Steam rises. This is 1 px per frame, so its speed is dependent on the frame rate.
     // As long as the frame time is somewhat consistent it looks fine.
-    for (uint16_t y = 0; y < STEAM_HEIGHT; y++)
+    for (uint16_t y = 0; y < STEAM_WSG_HEIGHT; y++)
     {
-        for (uint16_t x = 0; x < STEAM_WIDTH; x++)
+        for (uint16_t x = 0; x < STEAM_WSG_WIDTH; x++)
         {
-            if (y == STEAM_HEIGHT - 1)
+            if (y == STEAM_WSG_HEIGHT - 1)
             {
-                ccmgbt->wsg.steam.px[y * STEAM_WIDTH + x] = cTransparent;
+                ccmgbt->wsg.steam.px[y * STEAM_WSG_WIDTH + x] = cTransparent;
             }
             else
             {
-                ccmgbt->wsg.steam.px[y * STEAM_WIDTH + x] = ccmgbt->wsg.steam.px[(y + 1) * STEAM_WIDTH + x];
+                ccmgbt->wsg.steam.px[y * STEAM_WSG_WIDTH + x] = ccmgbt->wsg.steam.px[(y + 1) * STEAM_WSG_WIDTH + x];
             }
         }
     }
@@ -143,14 +147,15 @@ static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, c
         case CC_MG_PLAYING:
         case CC_MG_CELEBRATING:
             ccmgbt->steamWidth += esp_random() % 3 - 1;
-            ccmgbt->steamWidth = CLAMP(ccmgbt->steamWidth, 1, 15);
+            ccmgbt->steamWidth = CLAMP(ccmgbt->steamWidth, 1, STEAM_MAX_WIDTH);
 
             drawWsgSimple(&ccmgbt->wsg.mug, 100, 50);
             drawWsgPaletteSimple(&ccmgbt->wsg.mugLiquid, 100 + 3, 50 + 10, &ccmgbt->liquidTintPalette);
             break;
         case CC_MG_DESPAIRING:
+            // Taper steam since the cup is gone
             ccmgbt->steamWidth -= esp_random() % 2;
-            ccmgbt->steamWidth = CLAMP(ccmgbt->steamWidth, 0, ccmgbt->steamWidth);
+            ccmgbt->steamWidth = MAX(ccmgbt->steamWidth, 0);
 
             drawWsgSimple(&ccmgbt->wsg.mugSpilled, 100, 50);
             drawWsgPaletteSimple(&ccmgbt->wsg.mugSpilledLiquid, 100 + 5, 50 + 88, &ccmgbt->liquidTintPalette);
@@ -158,10 +163,29 @@ static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, c
     }
 
     ccmgbt->steamX += esp_random() % 3 - 1;
-    ccmgbt->steamX = CLAMP(ccmgbt->steamX, 2, STEAM_WIDTH - 3);
-    for (int8_t x = -ccmgbt->steamWidth / 2; x < ccmgbt->steamWidth / 2; x += 2)
+    ccmgbt->steamX = CLAMP(ccmgbt->steamX, ccmgbt->steamWidth / 2 + MUG_LIP_WIDTH,
+                           STEAM_WSG_WIDTH - MUG_LIP_WIDTH - ccmgbt->steamWidth / 2);
+
+    ccmgbt->steamDitherEvenPixels = !ccmgbt->steamDitherEvenPixels;
+    int8_t x                      = -ccmgbt->steamWidth / 2;
+    if ((ccmgbt->steamX + x) % 2 == 0)
     {
-        ccmgbt->wsg.steam.px[(STEAM_HEIGHT - 1) * STEAM_WIDTH + ccmgbt->steamX + x] = c555;
+        if (!ccmgbt->steamDitherEvenPixels)
+        {
+            x++;
+        }
+    }
+    else
+    {
+        if (ccmgbt->steamDitherEvenPixels)
+        {
+            x++;
+        }
+    }
+    // Color every other pixel for dithering effect
+    for (; x < ccmgbt->steamWidth / 2; x += 2)
+    {
+        ccmgbt->wsg.steam.px[(STEAM_WSG_HEIGHT - 1) * STEAM_WSG_WIDTH + ccmgbt->steamX + x] = c555;
     }
     drawWsgSimple(&ccmgbt->wsg.steam, 100, 0);
 }
