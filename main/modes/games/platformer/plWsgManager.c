@@ -189,6 +189,22 @@ void pl_initializeSprites(plWsgManager_t* self)
     self->sprites[PL_SP_PLAYER_JUMP].originX = 15;
     self->sprites[PL_SP_PLAYER_JUMP].originY = 15;
 
+    self->sprites[PL_SP_PLAYER_JUMP1].wsg     = &self->wsgs[PL_WSG_PLAYER_JUMP1];
+    self->sprites[PL_SP_PLAYER_JUMP1].originX = 15;
+    self->sprites[PL_SP_PLAYER_JUMP1].originY = 15;
+
+    self->sprites[PL_SP_PLAYER_JUMP2].wsg     = &self->wsgs[PL_WSG_PLAYER_JUMP2];
+    self->sprites[PL_SP_PLAYER_JUMP2].originX = 15;
+    self->sprites[PL_SP_PLAYER_JUMP2].originY = 15;
+
+    self->sprites[PL_SP_PLAYER_JUMP3].wsg     = &self->wsgs[PL_WSG_PLAYER_JUMP3];
+    self->sprites[PL_SP_PLAYER_JUMP3].originX = 15;
+    self->sprites[PL_SP_PLAYER_JUMP3].originY = 15;
+
+    self->sprites[PL_SP_PLAYER_JUMP4].wsg     = &self->wsgs[PL_WSG_PLAYER_JUMP4];
+    self->sprites[PL_SP_PLAYER_JUMP4].originX = 15;
+    self->sprites[PL_SP_PLAYER_JUMP4].originY = 15;
+
     self->sprites[PL_SP_PLAYER_SLIDE].wsg     = &self->wsgs[PL_WSG_PLAYER_SLIDE];
     self->sprites[PL_SP_PLAYER_SLIDE].originX = 15;
     self->sprites[PL_SP_PLAYER_SLIDE].originY = 15;
