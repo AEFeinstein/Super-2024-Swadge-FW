@@ -30,6 +30,7 @@
 */
 
 #include "accelTest.h"
+#include "artillery.h"
 #include "bouncy.h"
 #include "colorchord.h"
 #include "cosCrunch.h"
