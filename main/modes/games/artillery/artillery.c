@@ -1,5 +1,11 @@
 #include "artillery.h"
 
+typedef struct
+{
+    list_t groundLines;
+    list_t projectiles;
+} artilleryData_t;
+
 void artilleryEnterMode(void);
 void artilleryExitMode(void);
 void artilleryMainLoop(int64_t elapsedUs);
@@ -27,11 +33,45 @@ swadgeMode_t artilleryMode = {
     .trophyData               = NULL,
 };
 
+artilleryData_t* ad;
+
 /**
  * @brief This function is called when this mode is started. It should initialize variables and start the mode.
  */
 void artilleryEnterMode(void)
 {
+    ad = heap_caps_calloc(1, sizeof(artilleryData_t), MALLOC_CAP_8BIT);
+
+    vecFl_t groundPoints[] = {
+        {.x = 0, .y = (3 * TFT_HEIGHT) / 4},
+        {.x = TFT_WIDTH / 2, .y = (TFT_HEIGHT) / 4},
+        {.x = TFT_WIDTH, .y = (3 * TFT_HEIGHT) / 4},
+    };
+
+    for (int idx = 0; idx < ARRAY_SIZE(groundPoints) - 1; idx++)
+    {
+        lineFl_t* newLine = heap_caps_calloc(1, sizeof(lineFl_t), MALLOC_CAP_8BIT);
+        newLine->p1.x     = groundPoints[idx].x;
+        newLine->p1.y     = groundPoints[idx].y;
+        newLine->p2.x     = groundPoints[idx + 1].x;
+        newLine->p2.y     = groundPoints[idx + 1].y;
+        push(&ad->groundLines, newLine);
+    }
+
+    vecFl_t projectiles[] = {
+        {.x = TFT_WIDTH / 4, .y = 0},
+        {.x = (2 * TFT_WIDTH) / 4, .y = 0},
+        {.x = (3 * TFT_WIDTH) / 4, .y = 0},
+    };
+
+    for (int idx = 0; idx < ARRAY_SIZE(projectiles); idx++)
+    {
+        circleFl_t* projectile = heap_caps_calloc(1, sizeof(circleFl_t), MALLOC_CAP_8BIT);
+        projectile->pos.x      = projectiles[idx].x;
+        projectile->pos.y      = projectiles[idx].y;
+        projectile->radius     = 5;
+        push(&ad->projectiles, projectile);
+    }
 }
 
 /**
@@ -39,6 +79,15 @@ void artilleryEnterMode(void)
  */
 void artilleryExitMode(void)
 {
+    while (ad->groundLines.first)
+    {
+        heap_caps_free(pop(&ad->groundLines));
+    }
+    while (ad->projectiles.first)
+    {
+        heap_caps_free(pop(&ad->projectiles));
+    }
+    heap_caps_free(ad);
 }
 
 /**
@@ -49,6 +98,29 @@ void artilleryExitMode(void)
  */
 void artilleryMainLoop(int64_t elapsedUs)
 {
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        ; // TODO button presses
+    }
+
+    clearPxTft();
+
+    node_t* groundNode = ad->groundLines.first;
+    while (groundNode)
+    {
+        lineFl_t* gLine = (lineFl_t*)groundNode->val;
+        drawLine(gLine->p1.x, gLine->p1.y, gLine->p2.x, gLine->p2.y, c555, 0);
+        groundNode = groundNode->next;
+    }
+
+    node_t* projectileNode = ad->projectiles.first;
+    while (projectileNode)
+    {
+        circleFl_t* projectile = (circleFl_t*)projectileNode->val;
+        drawCircle(projectile->pos.x, projectile->pos.y, projectile->radius, c555);
+        projectileNode = projectileNode->next;
+    }
 }
 
 /**
