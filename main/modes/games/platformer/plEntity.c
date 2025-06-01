@@ -756,12 +756,20 @@ void animatePlayer(plEntity_t* self)
         if (self->yspeed < 0)
         {
             // Jumping
-            self->spriteIndex = PL_SP_PLAYER_JUMP;
+            if(self->jumpPower > 32) {
+                self->spriteIndex = PL_SP_PLAYER_JUMP;
+            } else {
+                self->spriteIndex = PL_SP_PLAYER_JUMP1;
+            }
         }
         else
         {
             // Falling
-            self->spriteIndex = PL_SP_PLAYER_WALK1;
+            if(self->yspeed != self->yMaxSpeed){
+                self->spriteIndex = PL_SP_PLAYER_JUMP2;
+            } else {
+                self->spriteIndex = PL_SP_PLAYER_JUMP4;
+            }
         }
     }
     else if (self->xspeed != 0)
