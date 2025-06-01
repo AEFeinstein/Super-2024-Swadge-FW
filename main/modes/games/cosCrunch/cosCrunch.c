@@ -284,6 +284,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
 
                 case CC_MG_CELEBRATING:
                 case CC_MG_DESPAIRING:
+                {
                     const char* msg = NULL;
                     if (cc->activeMicrogame.state == CC_MG_CELEBRATING)
                     {
@@ -312,6 +313,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                         }
                     }
                     break;
+                }
             }
 
             if (cc->activeMicrogame.state == CC_MG_GET_READY)
