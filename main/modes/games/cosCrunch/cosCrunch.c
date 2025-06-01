@@ -1,5 +1,6 @@
 #include "cosCrunch.h"
 
+#include "ccmgBreakTime.h"
 #include "ccmgSpray.h"
 #include "cosCrunchUtil.h"
 #include "mainMenu.h"
@@ -38,6 +39,7 @@ typedef struct
         uint64_t stateElapsedUs;
     } activeMicrogame;
 
+    tintColor_t timerTintColor;
     /// Used to tint grayscale images (c111, c222, c333, c444). See PALETTE_* defines
     wsgPalette_t tintPalette;
 
@@ -91,6 +93,7 @@ swadgeMode_t cosCrunchMode = {
 };
 
 cosCrunchMicrogame_t* const microgames[] = {
+    &ccmgBreakTime,
     &ccmgSpray,
 };
 
@@ -207,6 +210,22 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         else if (cc->state == CC_GAME_OVER && (evt.button == PB_A || evt.button == PB_START) && evt.down)
         {
             cc->state = CC_MENU;
+        }
+    }
+
+    if (cc->activeMicrogame.game != NULL)
+    {
+        if (cc->activeMicrogame.gameTimeRemainingUs <= cc->activeMicrogame.game->timeoutUs / 4)
+        {
+            cc->timerTintColor = redTimerTintColor;
+        }
+        else if (cc->activeMicrogame.gameTimeRemainingUs <= cc->activeMicrogame.game->timeoutUs / 2)
+        {
+            cc->timerTintColor = yellowTimerTintColor;
+        }
+        else
+        {
+            cc->timerTintColor = blueTimerTintColor;
         }
     }
 
@@ -350,30 +369,17 @@ static void cosCrunchDisplayMessage(const char* msg)
 {
     int16_t xOffset = MESSAGE_X_OFFSET;
     int16_t yOffset = MESSAGE_Y_OFFSET;
-    drawTextWordWrapCentered(&cc->bigFont, c555, msg, &xOffset, &yOffset,
-                             TFT_WIDTH - MESSAGE_X_OFFSET, TFT_HEIGHT - MESSAGE_Y_OFFSET);
+    drawTextWordWrapCentered(&cc->bigFont, c555, msg, &xOffset, &yOffset, TFT_WIDTH - MESSAGE_X_OFFSET,
+                             TFT_HEIGHT - MESSAGE_Y_OFFSET);
     xOffset = MESSAGE_X_OFFSET;
     yOffset = MESSAGE_Y_OFFSET;
-    drawTextWordWrapCentered(&cc->bigFontOutline, c000, msg, &xOffset, &yOffset,
-                             TFT_WIDTH - MESSAGE_X_OFFSET, TFT_HEIGHT - MESSAGE_Y_OFFSET);
+    drawTextWordWrapCentered(&cc->bigFontOutline, c000, msg, &xOffset, &yOffset, TFT_WIDTH - MESSAGE_X_OFFSET,
+                             TFT_HEIGHT - MESSAGE_Y_OFFSET);
 }
 
 static void cosCrunchDrawTimer()
 {
-    tintColor_t tintColor;
-    if (cc->activeMicrogame.gameTimeRemainingUs <= 1000000)
-    {
-        tintColor = redTimerTintColor;
-    }
-    else if (cc->activeMicrogame.gameTimeRemainingUs <= cc->activeMicrogame.game->timeoutUs / 2)
-    {
-        tintColor = yellowTimerTintColor;
-    }
-    else
-    {
-        tintColor = blueTimerTintColor;
-    }
-    tintPalette(&cc->tintPalette, &tintColor);
+    tintPalette(&cc->tintPalette, &cc->timerTintColor);
 
     if (cc->activeMicrogame.gameTimeRemainingUs > 0)
     {
@@ -398,11 +404,11 @@ static void cosCrunchDrawTimer()
         // Long straight paint line
         int16_t timerX = 61 + offsetX + cc->wsg.timerLeft.w;
         int16_t timerY = TFT_HEIGHT - 17 + offsetY;
-        fillDisplayArea(timerX, timerY, timerX + timer_width, timerY + 4, tintColor.base);
+        fillDisplayArea(timerX, timerY, timerX + timer_width, timerY + 4, cc->timerTintColor.base);
 
         // Paint line highlight, lowlight, shadow
-        drawLineFast(timerX, timerY + 1, timerX + timer_width, timerY + 1, tintColor.highlight);
-        drawLineFast(timerX, timerY + 4, timerX + timer_width, timerY + 4, tintColor.lowlight);
+        drawLineFast(timerX, timerY + 1, timerX + timer_width, timerY + 1, cc->timerTintColor.highlight);
+        drawLineFast(timerX, timerY + 4, timerX + timer_width, timerY + 4, cc->timerTintColor.lowlight);
         drawLineFast(timerX, timerY + 5, timerX + timer_width, timerY + 5, c210);
 
         // Round end cap

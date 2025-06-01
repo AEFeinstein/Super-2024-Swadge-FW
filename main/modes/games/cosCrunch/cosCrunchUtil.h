@@ -43,7 +43,8 @@ void tintPalette(wsgPalette_t* palette, const tintColor_t* tintColor);
 void drawToCanvas(wsg_t canvas, wsg_t wsg, uint16_t x, uint16_t y);
 
 /**
- * @brief Draws a wsg image drawn in greyscale onto another wsg image, tinting the grayscale pixels.
+ * @brief Draws a wsg image drawn in greyscale onto another wsg image, tinting the grayscale pixels. This function can
+ * be used to tint a greyscale image in place.
  *
  * @param canvas A wsg to draw onto
  * @param wsg The image to draw to the canvas
