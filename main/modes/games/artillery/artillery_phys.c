@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 
+#include <float.h>
 #include "esp_heap_caps.h"
 #include "shapes.h"
 #include "palette.h"
@@ -13,6 +14,8 @@
 
 void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl);
 void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc);
+void physMoveObjects(physSim_t* phys, int32_t elapsedUs);
+void physCheckCollisions(physSim_t* phys);
 
 //==============================================================================
 // Functions
@@ -111,7 +114,6 @@ void physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2, bool i
     pl->l.p1.y     = y1;
     pl->l.p2.x     = x2;
     pl->l.p2.y     = y2;
-    pl->fixed      = isFixed;
     physSetZoneMaskLine(phys, pl);
     push(&phys->lines, pl);
 }
@@ -180,24 +182,50 @@ void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc)
  */
 void physStep(physSim_t* phys, int32_t elapsedUs)
 {
-    // For each line
-    node_t* lNode = phys->lines.first;
-    while (lNode)
+    physMoveObjects(phys, elapsedUs);
+    physCheckCollisions(phys);
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param phys
+ * @param elapsedUs
+ */
+void physMoveObjects(physSim_t* phys, int32_t elapsedUs)
+{
+    // For each circle
+    node_t* cNode = phys->circles.first;
+    while (cNode)
     {
-        physLine_t* pl = (physLine_t*)lNode->val;
+        physCirc_t* pc = (physCirc_t*)cNode->val;
         // If it's not fixed in space
-        if (!pl->fixed)
+        if (!pc->fixed)
         {
+            // Set starting point
+            pc->travelLine.p1 = pc->c.pos;
+
             // Calculate new velocity
-            pl->vel = addVecFl2d(pl->vel, mulVecFl2d(addVecFl2d(pl->acc, phys->g), elapsedUs));
+            pc->vel = addVecFl2d(pc->vel, mulVecFl2d(addVecFl2d(pc->acc, phys->g), elapsedUs));
             // Calculate new position
-            vecFl_t dp = mulVecFl2d(pl->vel, elapsedUs);
-            pl->l.p1   = addVecFl2d(pl->l.p1, dp);
-            pl->l.p2   = addVecFl2d(pl->l.p2, dp);
+            vecFl_t dp = mulVecFl2d(pc->vel, elapsedUs);
+            pc->c.pos  = addVecFl2d(pc->c.pos, dp);
+
+            // Set ending point
+            pc->travelLine.p2 = pc->c.pos;
+
+            // Recompute zones
+            physSetZoneMaskCirc(phys, pc);
         }
+
         // Iterate
-        lNode = lNode->next;
+        cNode = cNode->next;
     }
+}
+
+void physCheckCollisions(physSim_t* phys)
+{
+    // TODO Check for moving lines?
 
     // For each circle
     node_t* cNode = phys->circles.first;
@@ -207,11 +235,37 @@ void physStep(physSim_t* phys, int32_t elapsedUs)
         // If it's not fixed in space
         if (!pc->fixed)
         {
-            // Calculate new velocity
-            pc->vel = addVecFl2d(pc->vel, mulVecFl2d(addVecFl2d(pc->acc, phys->g), elapsedUs));
-            // Calculate new position
-            vecFl_t dp = mulVecFl2d(pc->vel, elapsedUs);
-            pc->c.pos  = addVecFl2d(pc->c.pos, dp);
+            /* Pseudocode!
+             * 1. Make two parallel projections of the line, each one radius away from the line
+             * 2. Intersect travelLine to the two projections, save distance to closest collision if there is one
+             * 3. Intersect travelLine to two circles around the endpoints of the line, save distance to closest
+             * collision if there is one BONUS: skip identical endpoints?
+             * 4. If there was a collision, move back from the closest one along travelLine, plus EPSILON
+             * 5. Update velocity for the bounce (reflect around normal vector?)
+             */
+
+            // vecFl_t minCDist = {
+            //     .x = FLT_MAX,
+            //     .y = FLT_MAX,
+            // };
+
+            // Check for collisions
+            node_t* oln = phys->lines.first;
+            while (oln)
+            {
+                physLine_t* opl = (physLine_t*)oln->val;
+
+                // Quick check to see if objects are in the same zone
+                if (pc->zonemask & opl->zonemask)
+                {
+                    if (circleLineFlIntersection(pc->c, opl->l, true, NULL, NULL))
+                    {
+                        pc->fixed = true;
+                    }
+                }
+
+                oln = oln->next;
+            }
         }
         // Iterate
         cNode = cNode->next;
