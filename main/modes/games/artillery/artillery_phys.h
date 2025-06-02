@@ -28,16 +28,13 @@ typedef struct
     vecFl_t g;
     vecFl_t vel;
     vecFl_t acc;
+    lineFl_t travelLine;
     circleFl_t c;
 } physCirc_t;
 
 typedef struct
 {
     int32_t zonemask;
-    bool fixed;
-    vecFl_t g;
-    vecFl_t vel;
-    vecFl_t acc;
     lineFl_t l;
 } physLine_t;
 
