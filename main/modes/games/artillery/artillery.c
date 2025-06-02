@@ -1,7 +1,36 @@
 #include "artillery.h"
 
+// There are 32 zones split into an 8x4 grid
+#define NUM_ZONES_BIG 8
+#define NUM_ZONES_LIL 4
+#define NUM_ZONES     (NUM_ZONES_BIG * NUM_ZONES_LIL)
+
 typedef struct
 {
+    vecFl_t g;
+    vecFl_t bounds;
+    rectangleFl_t zones[NUM_ZONES];
+} physSim_t;
+
+typedef struct
+{
+    int32_t zonemask;
+    bool fixed;
+    vecFl_t g;
+    circleFl_t c;
+} physCirc_t;
+
+typedef struct
+{
+    int32_t zonemask;
+    bool fixed;
+    vecFl_t g;
+    lineFl_t l;
+} physLine_t;
+
+typedef struct
+{
+    physSim_t phys;
     list_t groundLines;
     list_t projectiles;
 } artilleryData_t;
@@ -12,6 +41,9 @@ void artilleryMainLoop(int64_t elapsedUs);
 void artilleryBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 void artilleryEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 void artilleryEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
+
+void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl);
+void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc);
 
 swadgeMode_t artilleryMode = {
     .modeName                 = "Artillery",
@@ -42,6 +74,42 @@ void artilleryEnterMode(void)
 {
     ad = heap_caps_calloc(1, sizeof(artilleryData_t), MALLOC_CAP_8BIT);
 
+    // Set bounds for the physics sim
+    ad->phys.bounds.x = TFT_WIDTH;
+    ad->phys.bounds.y = TFT_HEIGHT;
+
+    // Figure out zones
+    vec_t zoneCnt;
+    if (ad->phys.bounds.x > ad->phys.bounds.y)
+    {
+        zoneCnt.x = NUM_ZONES_BIG;
+        zoneCnt.y = NUM_ZONES_LIL;
+    }
+    else
+    {
+        zoneCnt.x = NUM_ZONES_LIL;
+        zoneCnt.y = NUM_ZONES_BIG;
+    }
+
+    // Calculate the zone size
+    vecFl_t zoneSize = {
+        .x = ad->phys.bounds.x / zoneCnt.x,
+        .y = ad->phys.bounds.y / zoneCnt.y,
+    };
+
+    // Create the zones
+    for (int32_t y = 0; y < zoneCnt.y; y++)
+    {
+        for (int32_t x = 0; x < zoneCnt.x; x++)
+        {
+            rectangleFl_t* zone = &ad->phys.zones[(y * zoneCnt.x) + x];
+            zone->pos.x         = x * zoneSize.x;
+            zone->pos.y         = y * zoneSize.y;
+            zone->width         = zoneSize.x;
+            zone->height        = zoneSize.y;
+        }
+    }
+
     vecFl_t groundPoints[] = {
         {.x = 0, .y = (3 * TFT_HEIGHT) / 4},
         {.x = TFT_WIDTH / 2, .y = (TFT_HEIGHT) / 4},
@@ -50,12 +118,14 @@ void artilleryEnterMode(void)
 
     for (int idx = 0; idx < ARRAY_SIZE(groundPoints) - 1; idx++)
     {
-        lineFl_t* newLine = heap_caps_calloc(1, sizeof(lineFl_t), MALLOC_CAP_8BIT);
-        newLine->p1.x     = groundPoints[idx].x;
-        newLine->p1.y     = groundPoints[idx].y;
-        newLine->p2.x     = groundPoints[idx + 1].x;
-        newLine->p2.y     = groundPoints[idx + 1].y;
-        push(&ad->groundLines, newLine);
+        physLine_t* pl = heap_caps_calloc(1, sizeof(physLine_t), MALLOC_CAP_8BIT);
+        pl->fixed      = true;
+        pl->l.p1.x     = groundPoints[idx].x;
+        pl->l.p1.y     = groundPoints[idx].y;
+        pl->l.p2.x     = groundPoints[idx + 1].x;
+        pl->l.p2.y     = groundPoints[idx + 1].y;
+        physSetZoneMaskLine(&ad->phys, pl);
+        push(&ad->groundLines, pl);
     }
 
     vecFl_t projectiles[] = {
@@ -66,11 +136,12 @@ void artilleryEnterMode(void)
 
     for (int idx = 0; idx < ARRAY_SIZE(projectiles); idx++)
     {
-        circleFl_t* projectile = heap_caps_calloc(1, sizeof(circleFl_t), MALLOC_CAP_8BIT);
-        projectile->pos.x      = projectiles[idx].x;
-        projectile->pos.y      = projectiles[idx].y;
-        projectile->radius     = 5;
-        push(&ad->projectiles, projectile);
+        physCirc_t* pc = heap_caps_calloc(1, sizeof(physCirc_t), MALLOC_CAP_8BIT);
+        pc->c.pos.x    = projectiles[idx].x;
+        pc->c.pos.y    = projectiles[idx].y;
+        pc->c.radius   = 5;
+        physSetZoneMaskCirc(&ad->phys, pc);
+        push(&ad->projectiles, pc);
     }
 }
 
@@ -109,16 +180,16 @@ void artilleryMainLoop(int64_t elapsedUs)
     node_t* groundNode = ad->groundLines.first;
     while (groundNode)
     {
-        lineFl_t* gLine = (lineFl_t*)groundNode->val;
-        drawLine(gLine->p1.x, gLine->p1.y, gLine->p2.x, gLine->p2.y, c555, 0);
+        physLine_t* gLine = (physLine_t*)groundNode->val;
+        drawLine(gLine->l.p1.x, gLine->l.p1.y, gLine->l.p2.x, gLine->l.p2.y, c555, 0);
         groundNode = groundNode->next;
     }
 
     node_t* projectileNode = ad->projectiles.first;
     while (projectileNode)
     {
-        circleFl_t* projectile = (circleFl_t*)projectileNode->val;
-        drawCircle(projectile->pos.x, projectile->pos.y, projectile->radius, c555);
+        physCirc_t* projectile = (physCirc_t*)projectileNode->val;
+        drawCircle(projectile->c.pos.x, projectile->c.pos.y, projectile->c.radius, c555);
         projectileNode = projectileNode->next;
     }
 }
@@ -158,4 +229,40 @@ void artilleryEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_
  */
 void artilleryEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
+}
+
+/**
+ * @brief TODO
+ *
+ * @param phys
+ * @param line
+ */
+void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl)
+{
+    pl->zonemask = 0;
+    for (int32_t zIdx = 0; zIdx < NUM_ZONES; zIdx++)
+    {
+        if (rectLineFlIntersection(phys->zones[zIdx], pl->l, NULL))
+        {
+            pl->zonemask |= (1 << zIdx);
+        }
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param phys
+ * @param pc
+ */
+void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc)
+{
+    pc->zonemask = 0;
+    for (int32_t zIdx = 0; zIdx < NUM_ZONES; zIdx++)
+    {
+        if (circleRectFlIntersection(pc->c, phys->zones[zIdx], NULL))
+        {
+            pc->zonemask |= (1 << zIdx);
+        }
+    }
 }
