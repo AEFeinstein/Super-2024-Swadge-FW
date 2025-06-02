@@ -22,11 +22,23 @@ cosCrunchMicrogame_t ccmgBreakTime          = {
              .fnMicrogameTimeout = ccmgBreakTimeTimeout,
 };
 
-#define MUG_WIDTH        65
-#define MUG_LIP_WIDTH    4
+#define MUG_WIDTH     65
+#define MUG_LIP_WIDTH 4
+#define MUG_DRAW_X    100
+#define MUG_DRAW_Y    52
+
 #define STEAM_WSG_WIDTH  MUG_WIDTH
-#define STEAM_WSG_HEIGHT 67
+#define STEAM_WSG_HEIGHT (MUG_DRAW_Y + 17)
 #define STEAM_MAX_WIDTH  15
+
+tintColor_t const liquidTintColors[] = {
+    // Coffee
+    {c110, c210, c310},
+    // Black tea
+    {c210, c320, c431},
+    // Green tea
+    {c221, c331, c441}};
+#define NUM_TINT_COLORS (sizeof(liquidTintColors) / sizeof(tintColor_t))
 
 typedef struct
 {
@@ -48,7 +60,7 @@ typedef struct
     } wsg;
     paletteColor_t steamPixels[STEAM_WSG_WIDTH * STEAM_WSG_HEIGHT];
 
-    tintColor_t liquidTintColor;
+    const tintColor_t* liquidTintColor;
     wsgPalette_t liquidTintPalette;
 } ccmgBreakTime_t;
 ccmgBreakTime_t* ccmgbt = NULL;
@@ -75,28 +87,9 @@ static void ccmgBreakTimeInitMicrogame(void)
         ccmgbt->steamPixels[i] = cTransparent;
     }
 
-    int8_t drinkType = esp_random() % 3;
-    if (drinkType == 0)
-    {
-        // Coffee
-        ccmgbt->liquidTintColor.base      = c210;
-        ccmgbt->liquidTintColor.highlight = c310;
-    }
-    else if (drinkType == 1)
-    {
-        // Black tea
-        ccmgbt->liquidTintColor.base      = c320;
-        ccmgbt->liquidTintColor.highlight = c431;
-    }
-    else
-    {
-        // Green tea
-        ccmgbt->liquidTintColor.base      = c331;
-        ccmgbt->liquidTintColor.highlight = c441;
-    }
-
+    ccmgbt->liquidTintColor = &liquidTintColors[esp_random() % NUM_TINT_COLORS];
     wsgPaletteReset(&ccmgbt->liquidTintPalette);
-    tintPalette(&ccmgbt->liquidTintPalette, &ccmgbt->liquidTintColor);
+    tintPalette(&ccmgbt->liquidTintPalette, ccmgbt->liquidTintColor);
 }
 
 static void ccmgBreakTimeDestroyMicrogame(void)
@@ -118,8 +111,8 @@ static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, c
                 ccmgbt->buttonPressed = true;
                 cosCrunchMicrogameResult(false);
 
-                drawToCanvasTint(ccmgbt->wsg.spill, ccmgbt->wsg.spill, 0, 0, 0, &ccmgbt->liquidTintColor);
-                cosCrunchMicrogamePersistSplatter(ccmgbt->wsg.spill, 100 - 42, 134);
+                drawToCanvasTint(ccmgbt->wsg.spill, ccmgbt->wsg.spill, 0, 0, 0, ccmgbt->liquidTintColor);
+                cosCrunchMicrogamePersistSplatter(ccmgbt->wsg.spill, MUG_DRAW_X - 42, MUG_DRAW_Y + 84);
             }
         }
     }
@@ -149,16 +142,17 @@ static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, c
             ccmgbt->steamWidth += esp_random() % 3 - 1;
             ccmgbt->steamWidth = CLAMP(ccmgbt->steamWidth, 1, STEAM_MAX_WIDTH);
 
-            drawWsgSimple(&ccmgbt->wsg.mug, 100, 50);
-            drawWsgPaletteSimple(&ccmgbt->wsg.mugLiquid, 100 + 3, 50 + 10, &ccmgbt->liquidTintPalette);
+            drawWsgSimple(&ccmgbt->wsg.mug, MUG_DRAW_X, MUG_DRAW_Y);
+            drawWsgPaletteSimple(&ccmgbt->wsg.mugLiquid, MUG_DRAW_X + 3, MUG_DRAW_Y + 10, &ccmgbt->liquidTintPalette);
             break;
         case CC_MG_DESPAIRING:
             // Taper steam since the cup is gone
             ccmgbt->steamWidth -= esp_random() % 2;
             ccmgbt->steamWidth = MAX(ccmgbt->steamWidth, 0);
 
-            drawWsgSimple(&ccmgbt->wsg.mugSpilled, 100, 50);
-            drawWsgPaletteSimple(&ccmgbt->wsg.mugSpilledLiquid, 100 + 5, 50 + 88, &ccmgbt->liquidTintPalette);
+            drawWsgSimple(&ccmgbt->wsg.mugSpilled, MUG_DRAW_X, MUG_DRAW_Y);
+            drawWsgPaletteSimple(&ccmgbt->wsg.mugSpilledLiquid, MUG_DRAW_X + 5, MUG_DRAW_Y + 88,
+                                 &ccmgbt->liquidTintPalette);
             break;
     }
 
@@ -187,7 +181,7 @@ static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, c
     {
         ccmgbt->wsg.steam.px[(STEAM_WSG_HEIGHT - 1) * STEAM_WSG_WIDTH + ccmgbt->steamX + x] = c555;
     }
-    drawWsgSimple(&ccmgbt->wsg.steam, 100, 0);
+    drawWsgSimple(&ccmgbt->wsg.steam, MUG_DRAW_X, 0);
 }
 
 static bool ccmgBreakTimeTimeout(void)
