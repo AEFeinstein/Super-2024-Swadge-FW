@@ -21,10 +21,10 @@ void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc);
 /**
  * @brief TODO doc
  *
- * @param w
- * @param h
- * @param gx
- * @param gy
+ * @param w Physics space width, unit is px
+ * @param h Physics space height, unit is px
+ * @param gx Gravity in the X direction, unit is px/uS^2
+ * @param gy Gravity in the Y direction, unit is px/uS^2
  * @return physSim_t*
  */
 physSim_t* initPhys(float w, float h, float gx, float gy)
@@ -173,6 +173,52 @@ void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc)
 }
 
 /**
+ * @brief TODO
+ *
+ * @param phys
+ * @param elapsedUs
+ */
+void physStep(physSim_t* phys, int32_t elapsedUs)
+{
+    // For each line
+    node_t* lNode = phys->lines.first;
+    while (lNode)
+    {
+        physLine_t* pl = (physLine_t*)lNode->val;
+        // If it's not fixed in space
+        if (!pl->fixed)
+        {
+            // Calculate new velocity
+            pl->vel = addVecFl2d(pl->vel, mulVecFl2d(addVecFl2d(pl->acc, phys->g), elapsedUs));
+            // Calculate new position
+            vecFl_t dp = mulVecFl2d(pl->vel, elapsedUs);
+            pl->l.p1   = addVecFl2d(pl->l.p1, dp);
+            pl->l.p2   = addVecFl2d(pl->l.p2, dp);
+        }
+        // Iterate
+        lNode = lNode->next;
+    }
+
+    // For each circle
+    node_t* cNode = phys->circles.first;
+    while (cNode)
+    {
+        physCirc_t* pc = (physCirc_t*)cNode->val;
+        // If it's not fixed in space
+        if (!pc->fixed)
+        {
+            // Calculate new velocity
+            pc->vel = addVecFl2d(pc->vel, mulVecFl2d(addVecFl2d(pc->acc, phys->g), elapsedUs));
+            // Calculate new position
+            vecFl_t dp = mulVecFl2d(pc->vel, elapsedUs);
+            pc->c.pos  = addVecFl2d(pc->c.pos, dp);
+        }
+        // Iterate
+        cNode = cNode->next;
+    }
+}
+
+/**
  * @brief TODO doc
  *
  * @param phys
@@ -187,11 +233,11 @@ void drawPhysOutline(physSim_t* phys)
         lNode = lNode->next;
     }
 
-    node_t* pNode = phys->circles.first;
-    while (pNode)
+    node_t* cNode = phys->circles.first;
+    while (cNode)
     {
-        physCirc_t* pc = (physCirc_t*)pNode->val;
+        physCirc_t* pc = (physCirc_t*)cNode->val;
         drawCircle(pc->c.pos.x, pc->c.pos.y, pc->c.radius, c555);
-        pNode = pNode->next;
+        cNode = cNode->next;
     }
 }
