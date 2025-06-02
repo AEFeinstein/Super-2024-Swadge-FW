@@ -62,7 +62,7 @@ void artilleryEnterMode(void)
 {
     ad = heap_caps_calloc(1, sizeof(artilleryData_t), MALLOC_CAP_8BIT);
 
-    ad->phys = initPhys(TFT_WIDTH, TFT_HEIGHT, 0, 0);
+    ad->phys = initPhys(TFT_WIDTH, TFT_HEIGHT, 0, 1 / (1000000.0f * 1000000.0f));
 
     vecFl_t groundPoints[] = {
         {.x = 0, .y = (3 * TFT_HEIGHT) / 4},
@@ -109,6 +109,7 @@ void artilleryMainLoop(int64_t elapsedUs)
         ; // TODO button presses
     }
 
+    physStep(ad->phys, elapsedUs);
     drawPhysOutline(ad->phys);
 }
 
