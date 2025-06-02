@@ -95,7 +95,11 @@ static void ccmgBreakTimeInitMicrogame(void)
 static void ccmgBreakTimeDestroyMicrogame(void)
 {
     freeWsg(&ccmgbt->wsg.mug);
+    freeWsg(&ccmgbt->wsg.mugLiquid);
+    freeWsg(&ccmgbt->wsg.mugSpilled);
+    freeWsg(&ccmgbt->wsg.mugSpilledLiquid);
     freeWsg(&ccmgbt->wsg.spill);
+
     heap_caps_free(ccmgbt);
 }
 
