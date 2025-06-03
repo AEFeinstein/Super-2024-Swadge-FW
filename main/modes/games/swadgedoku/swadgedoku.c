@@ -307,7 +307,18 @@ typedef struct
     sudokuMode_t prevMode;
     bool squareForced;
     int prevSize;
+
+    // Difficulty of the current game, or -1 if N/A
+    int currentDifficulty;
+    int currentMode;
 } swadgedoku_t;
+
+typedef struct
+{
+    int timeLimit;
+    int difficulty;
+    int mode;
+} swadgedokuTrophyTrigger_t;
 
 //==============================================================================
 // Function Declarations
@@ -336,6 +347,7 @@ void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, b
                          sudokuShapeTag_t tag);
 void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, const sudokuGrid_t* game);
 int swadgedokuCheckWin(const sudokuGrid_t* game);
+void swadgedokuCheckTrophyTriggers(void);
 void swadgedokuGameButton(buttonEvt_t evt);
 void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay,
                         const sudokuTheme_t* theme);
@@ -417,6 +429,76 @@ static const sudokuTheme_t lightTheme = {.bgColor        = c333,
                                          .cursorShape    = OVERLAY_CIRCLE};
 
 //==============================================================================
+// Trophy Data
+//==============================================================================
+const swadgedokuTrophyTrigger_t anyPuzzleTrigger = {
+    .difficulty = -1,
+    .timeLimit = -1,
+    .mode = -1,
+};
+
+const swadgedokuTrophyTrigger_t tenMinsTrigger = {
+    .difficulty = -1,
+    .timeLimit = 600,
+    .mode = -1,
+};
+
+const swadgedokuTrophyTrigger_t fiveMinsTrigger = {
+    .difficulty = -1,
+    .timeLimit = 300,
+    .mode = -1,
+};
+
+const trophyData_t swadgedokuTrophies[] = {
+    {
+        .title       = "It's a numbers game",
+        .description = "Solve any Sudoku puzzle",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &anyPuzzleTrigger,
+    },
+    {
+        .title       = "Fast fingers",
+        .description = "Solve a Sudoku in under 10 minutes",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+        .identifier  = &tenMinsTrigger,
+    },
+    {
+        .title       = "Even faster fingers",
+        .description = "Solve a Sudoku in under 5 minutes",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1,
+        .identifier  = &fiveMinsTrigger,
+    },
+};
+
+// Individual mode settings
+trophySettings_t swadgedokuTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 2,
+    .slideDurationUs  = DRAW_SLIDE_US,
+};
+
+// This is passed to the swadgeMode_t
+trophyDataList_t swadgedokuTrophyData = {
+    .settings = &swadgedokuTrophySettings,
+    .list = swadgedokuTrophies,
+    .length = ARRAY_SIZE(swadgedokuTrophies)
+};
+
+// Aliases for trophies
+const trophyData_t* trophySolveAny = &swadgedokuTrophies[0];
+const trophyData_t* trophyTenMins = &swadgedokuTrophies[1];
+const trophyData_t* trophyFiveMins = &swadgedokuTrophies[2];
+
+//==============================================================================
 // Variables
 //==============================================================================
 
@@ -436,6 +518,7 @@ swadgeMode_t swadgedokuMode = {
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
     .fnDacCb                  = NULL,
+    .trophyData               = &swadgedokuTrophyData,
 };
 
 static swadgedoku_t* sd = NULL;
@@ -536,10 +619,11 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
             drawMenuMania(sd->emptyMenu, sd->menuRenderer, elapsedUs);
 
             char playTime[64];
+            int totalTime = sd->playTimer / 1000000;
 
-            int hours = (int)(sd->playTimer / ONE_HOUR_IN_US);
-            int mins  = (int)((sd->playTimer % ONE_HOUR_IN_US) / ONE_MINUTE_IN_US);
-            int secs  = (int)((sd->playTimer % ONE_MINUTE_IN_US) / 1000000);
+            int hours = totalTime / 3600;
+            int mins  = (totalTime % 3600) / 60;
+            int secs  = totalTime % 60;
             if (hours > 0)
             {
                 snprintf(playTime, sizeof(playTime), "%d:%02d:%02d", hours, mins, secs);
@@ -683,6 +767,9 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                 ESP_LOGE("Swadgedoku", "Couldn't setup custom game???");
                 return;
             }
+
+            sd->currentMode = sd->customModeMenuItem->currentSetting;
+            sd->currentDifficulty = sd->customDifficultyMenuItem->currentSetting;
 
             sd->playTimer = 0;
             setupSudokuPlayer(&sd->player, &sd->game);
@@ -2397,6 +2484,38 @@ int swadgedokuCheckWin(const sudokuGrid_t* game)
     return 1;
 }
 
+void swadgedokuCheckTrophyTriggers(void)
+{
+    for (trophyData_t* trophy = swadgedokuTrophyData.list; trophy < swadgedokuTrophyData.list + swadgedokuTrophyData.length; trophy++)
+    {
+        if (NULL != trophy->identifier)
+        {
+            const swadgedokuTrophyTrigger_t* trigger = (const swadgedokuTrophyTrigger_t*) trophy->identifier;
+
+            if (trigger->timeLimit != -1 && (sd->playTimer / 1000000) > trigger->timeLimit)
+            {
+                // Over time limit for trigger, skip to next
+                continue;
+            }
+
+            if (trigger->difficulty != -1 && sd->currentDifficulty < trigger->difficulty)
+            {
+                // Difficulty doesn't match trigger, skip to next
+                continue;
+            }
+
+            if (trigger->mode != -1 && sd->currentMode != trigger->mode)
+            {
+                // Mode doesn't match trigger, skip to next
+                continue;
+            }
+
+            // All the trigger conditions must have passed, trigger the trophy!
+            trophyUpdate(*trophy, 1, true);
+        }
+    }
+}
+
 void swadgedokuGameButton(buttonEvt_t evt)
 {
     if (evt.down)
@@ -2425,15 +2544,15 @@ void swadgedokuGameButton(buttonEvt_t evt)
                             switch (swadgedokuCheckWin(&sd->game))
                             {
                                 case -1:
-                                    ESP_LOGE("Swadgedoku", "Invalid sudoku board!");
+                                    ESP_LOGD("Swadgedoku", "Invalid sudoku board!");
                                     break;
 
                                 case 0:
-                                    ESP_LOGE("Swadgedoku", "Sudoku OK but incomplete");
+                                    ESP_LOGD("Swadgedoku", "Sudoku OK but incomplete");
                                     break;
 
                                 case 1:
-                                    ESP_LOGE("Swadgedoku", "Win!!!");
+                                    swadgedokuCheckTrophyTriggers();
                                     sd->screen = SWADGEDOKU_WIN;
                                     break;
                             }
