@@ -175,9 +175,13 @@ void pl_updatePlayer(plEntity_t* self)
     if (self->animationTimer > 0)
     {
         self->animationTimer--;
+
+        if(self->animationTimer == 0){
+            pl_remapPlayerNotShootWsg(self->tilemap->wsgManager);
+        }
     }
 
-    if (self->hp > 2 && self->gameData->btnState & PB_B && !(self->gameData->prevBtnState & PB_B)
+    if (/*self->hp > 2 &&*/ self->gameData->btnState & PB_B && !(self->gameData->prevBtnState & PB_B)
         && self->animationTimer == 0)
     {
         plEntity_t* createdEntity = pl_createEntity(self->entityManager, ENTITY_WAVE_BALL,
@@ -189,6 +193,7 @@ void pl_updatePlayer(plEntity_t* self)
             createdEntity->homeTileX = 0;
             createdEntity->homeTileY = 0;
             soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+            pl_remapPlayerShootWsg(self->tilemap->wsgManager);
         }
         self->animationTimer = 30;
     }
@@ -2119,7 +2124,7 @@ void updateWaveBall(plEntity_t* self)
         self->spriteIndex = (PL_SP_WAVEBALL_1 + ((self->spriteIndex + 1) % 3));
     }
 
-    if (self->gameData->frameCount % 4 == 0)
+    /*if (self->gameData->frameCount % 4 == 0)
     {
         self->xDamping++;
 
@@ -2149,7 +2154,7 @@ void updateWaveBall(plEntity_t* self)
             default:
                 break;
         }
-    }
+    }*/
 
     // self->yDamping++;
 
