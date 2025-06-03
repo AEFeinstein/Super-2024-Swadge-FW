@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 
+#include <math.h>
 #include <float.h>
 #include "esp_heap_caps.h"
 #include "shapes.h"
@@ -109,12 +110,26 @@ void deinitPhys(physSim_t* phys)
  */
 void physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2, bool isFixed)
 {
+    // Make space for the line
     physLine_t* pl = heap_caps_calloc(1, sizeof(physLine_t), MALLOC_CAP_8BIT);
-    pl->l.p1.x     = x1;
-    pl->l.p1.y     = y1;
-    pl->l.p2.x     = x2;
-    pl->l.p2.y     = y2;
+
+    // Save the points of the line
+    pl->l.p1.x = x1;
+    pl->l.p1.y = y1;
+    pl->l.p2.x = x2;
+    pl->l.p2.y = y2;
+
+    // Calculate unit normal vector (rotated 90 deg)
+    float unx        = y1 - y2;
+    float uny        = x2 - x1;
+    float magnitude  = sqrtf((unx * unx) + (uny * uny));
+    pl->unitNormal.x = unx / magnitude;
+    pl->unitNormal.y = uny / magnitude;
+
+    // Store what zones this line is in
     physSetZoneMaskLine(phys, pl);
+
+    // Push line into list
     push(&phys->lines, pl);
 }
 
@@ -214,6 +229,9 @@ void physMoveObjects(physSim_t* phys, int32_t elapsedUs)
             // Set ending point
             pc->travelLine.p2 = pc->c.pos;
 
+            // Set bounding box of travel line, for later checks
+            pc->travelLineBB = getLineBoundingBox(pc->travelLine);
+
             // Recompute zones
             physSetZoneMaskCirc(phys, pc);
         }
@@ -236,10 +254,10 @@ void physCheckCollisions(physSim_t* phys)
         if (!pc->fixed)
         {
             /* Pseudocode!
-             * 1. Make two parallel projections of the line, each one radius away from the line
-             * 2. Intersect travelLine to the two projections, save distance to closest collision if there is one
-             * 3. Intersect travelLine to two circles around the endpoints of the line, save distance to closest
-             * collision if there is one BONUS: skip identical endpoints?
+             * 1. [DONE] Make two parallel projections of the line, each one radius away from the line
+             * 2. [DONE] Intersect travelLine to the two projections, save distance to closest collision if there is one
+             * 3. [DONE] Intersect travelLine to two circles around the endpoints of the line, save distance to closest
+             *           collision if there is one BONUS: skip identical endpoints?
              * 4. If there was a collision, move back from the closest one along travelLine, plus EPSILON
              * 5. Update velocity for the bounce (reflect around normal vector?)
              */
@@ -258,7 +276,42 @@ void physCheckCollisions(physSim_t* phys)
                 // Quick check to see if objects are in the same zone
                 if (pc->zonemask & opl->zonemask)
                 {
-                    if (circleLineFlIntersection(pc->c, opl->l, true, NULL, NULL))
+                    // Check one bounds line
+                    lineFl_t boundsA;
+                    boundsA.p1 = addVecFl2d(opl->l.p1, mulVecFl2d(opl->unitNormal, pc->c.radius));
+                    boundsA.p2 = addVecFl2d(opl->l.p2, mulVecFl2d(opl->unitNormal, pc->c.radius));
+                    if (lineLineFlIntersection(boundsA, pc->travelLine))
+                    {
+                        pc->fixed = true;
+                    }
+
+                    // Check the other bounds line
+                    lineFl_t boundsB;
+                    boundsB.p1 = addVecFl2d(opl->l.p1, mulVecFl2d(opl->unitNormal, -pc->c.radius));
+                    boundsB.p2 = addVecFl2d(opl->l.p2, mulVecFl2d(opl->unitNormal, -pc->c.radius));
+                    if (lineLineFlIntersection(boundsB, pc->travelLine))
+                    {
+                        pc->fixed = true;
+                    }
+
+                    // TODO why does circleLineFlIntersection() not work here?
+
+                    // Check one bounds arc
+                    circleFl_t capA = {
+                        .pos    = opl->l.p1,
+                        .radius = pc->c.radius,
+                    };
+                    if (circleLineSegFlIntersection(capA, pc->travelLine, pc->travelLineBB))
+                    {
+                        pc->fixed = true;
+                    }
+
+                    // Check the other bounds arc
+                    circleFl_t capB = {
+                        .pos    = opl->l.p2,
+                        .radius = pc->c.radius,
+                    };
+                    if (circleLineSegFlIntersection(capB, pc->travelLine, pc->travelLineBB))
                     {
                         pc->fixed = true;
                     }

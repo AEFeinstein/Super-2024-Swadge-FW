@@ -29,6 +29,7 @@ typedef struct
     vecFl_t vel;
     vecFl_t acc;
     lineFl_t travelLine;
+    lineFl_t travelLineBB;
     circleFl_t c;
 } physCirc_t;
 
@@ -36,6 +37,7 @@ typedef struct
 {
     int32_t zonemask;
     lineFl_t l;
+    vecFl_t unitNormal;
 } physLine_t;
 
 typedef struct
