@@ -13,7 +13,7 @@
 //==============================================================================
 // Constants
 //==============================================================================
-#define PL_WSGS_SIZE      105
+#define PL_WSGS_SIZE      121
 #define PL_SPRITESET_SIZE 62
 #define PL_TILE_SET_SIZE  72
 
@@ -49,6 +49,10 @@ void pl_remapWsgToSprite(plWsgManager_t* self, uint16_t spriteIndex, uint16_t ws
 void pl_remapWsgToTile(plWsgManager_t* self, uint16_t tileIndex, uint16_t wsgIndex);
 
 void pl_remapPlayerCharacter(plWsgManager_t* self, uint16_t newBaseIndex);
+
+void pl_remapPlayerShootWsg(plWsgManager_t* self);
+void pl_remapPlayerNotShootWsg(plWsgManager_t* self);
+
 void pl_animateTiles(plWsgManager_t* self);
 void pl_remapBlockTile(plWsgManager_t* self, uint16_t newBlockWsgIndex);
 

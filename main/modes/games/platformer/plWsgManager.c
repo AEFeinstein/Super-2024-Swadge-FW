@@ -45,6 +45,22 @@ void pl_loadWsgs(plWsgManager_t* self)
     loadWsg(PULSE_041_WSG, &self->wsgs[PL_WSG_PLAYER_JUMP2], false);
     loadWsg(PULSE_043_WSG, &self->wsgs[PL_WSG_PLAYER_JUMP3], false);
     loadWsg(PULSE_046_WSG, &self->wsgs[PL_WSG_PLAYER_JUMP4], false);
+    loadWsg(PULSE_024_WSG, &self->wsgs[PL_WSG_PLAYER_SHOOT_IDLE], false);
+    loadWsg(PULSE_012_WSG, &self->wsgs[PL_WSG_PLAYER_SHOOT_WALK1], false);
+    loadWsg(PULSE_013_WSG, &self->wsgs[PL_WSG_PLAYER_SHOOT_WALK2], false);
+    loadWsg(PULSE_014_WSG, &self->wsgs[PL_WSG_PLAYER_SHOOT_WALK3], false);
+    loadWsg(PULSE_015_WSG, &self->wsgs[PL_WSG_PLAYER_SHOOT_WALK4], false);
+    loadWsg(PULSE_016_WSG, &self->wsgs[PL_WSG_PLAYER_SHOOT_WALK5], false);
+    loadWsg(PULSE_017_WSG, &self->wsgs[PL_WSG_PLAYER_SHOOT_WALK6], false);
+    loadWsg(PULSE_018_WSG, &self->wsgs[PL_WSG_PLAYER_SHOOT_WALK7], false);
+    loadWsg(PULSE_019_WSG, &self->wsgs[PL_WSG_PLAYER_SHOOT_WALK8], false);
+    loadWsg(PULSE_020_WSG, &self->wsgs[PL_WSG_PLAYER_SHOOT_WALK9], false);
+    loadWsg(PULSE_021_WSG, &self->wsgs[PL_WSG_PLAYER_SHOOT_WALK10], false);
+    loadWsg(PULSE_018_WSG, &self->wsgs[PL_WSG_PLAYER_SHOOT_JUMP], false);
+    loadWsg(PULSE_019_WSG, &self->wsgs[PL_WSG_PLAYER_SHOOT_JUMP1], false);
+    loadWsg(PULSE_020_WSG, &self->wsgs[PL_WSG_PLAYER_SHOOT_JUMP2], false);
+    loadWsg(PULSE_021_WSG, &self->wsgs[PL_WSG_PLAYER_SHOOT_JUMP3], false);
+    loadWsg(PULSE_021_WSG, &self->wsgs[PL_WSG_PLAYER_SHOOT_JUMP4], false);
     loadWsg(PULSE_005_WSG, &self->wsgs[PL_WSG_PLAYER_SLIDE], false);
     loadWsg(SPRITE_006_WSG, &self->wsgs[PL_WSG_PLAYER_HURT], false);
     loadWsg(SPRITE_007_WSG, &self->wsgs[PL_WSG_PLAYER_CLIMB], false);
@@ -507,4 +523,18 @@ void pl_remapBlockTile(plWsgManager_t* self, uint16_t newBlockWsgIndex)
 {
     pl_remapWsgToTile(self, 8, newBlockWsgIndex);
     //pl_remapWsgToSprite(self, PA_SP_BLOCK, newBlockWsgIndex);
+}
+
+void pl_remapPlayerShootWsg(plWsgManager_t* self) {
+    for (uint16_t i = PL_SP_PLAYER_IDLE; i < (PL_SP_PLAYER_JUMP4 + 1); i++)
+    {
+        pl_remapWsgToSprite(self, i, PL_WSG_PLAYER_SHOOT_IDLE + i);
+    }
+}
+
+void pl_remapPlayerNotShootWsg(plWsgManager_t* self) {
+    for (uint16_t i = PL_SP_PLAYER_IDLE; i < (PL_SP_PLAYER_JUMP4 + 1); i++)
+    {
+        pl_remapWsgToSprite(self, i, PL_WSG_PLAYER_IDLE + i);
+    }
 }
