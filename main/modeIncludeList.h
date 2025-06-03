@@ -37,6 +37,7 @@
 #include "factoryTest.h"
 #include "gamepad.h"
 #include "introMode.h"
+#include "jerkChicken.h"
 #include "jukebox.h"
 #include "keebTest.h"
 #include "mainMenu.h"
