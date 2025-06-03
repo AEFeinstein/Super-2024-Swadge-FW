@@ -228,30 +228,7 @@ bool circleLineFlIntersection(circleFl_t circle, lineFl_t line, bool checkEnds, 
 
     // To validate a collision, the closest point must be in the bounding box of the line (i.e. on the line)
     // Create a bounding box for the line
-    lineFl_t bb;
-    // Assign x points
-    if (line.p1.x < line.p2.x)
-    {
-        bb.p1.x = line.p1.x;
-        bb.p2.x = line.p2.x;
-    }
-    else
-    {
-        bb.p1.x = line.p2.x;
-        bb.p2.x = line.p1.x;
-    }
-
-    // Assign the y points
-    if (line.p1.y < line.p2.y)
-    {
-        bb.p1.y = line.p1.y;
-        bb.p2.y = line.p2.y;
-    }
-    else
-    {
-        bb.p1.y = line.p2.y;
-        bb.p2.y = line.p1.y;
-    }
+    lineFl_t bb = getLineBoundingBox(line);
 
     // If the closest point is outside the bounding box
     if (closestPoint.x < bb.p1.x || closestPoint.x > bb.p2.x || closestPoint.y < bb.p1.y || closestPoint.y > bb.p2.y)
@@ -293,8 +270,8 @@ bool circleLineFlIntersection(circleFl_t circle, lineFl_t line, bool checkEnds, 
  * @param intersection_2 [OUT] If it exists, the second intersection will be written to this pointer
  * @return The number of intersections, between 0 and 2. \p intersection_1 is filled before \p intersection_2.
  */
-int16_t circleLineFlIntersectionPoints(circleFl_t circle, lineFl_t line, vecFl_t* intersection_1,
-                                       vecFl_t* intersection_2)
+int16_t circleInfLineFlIntersectionPoints(circleFl_t circle, lineFl_t line, vecFl_t* intersection_1,
+                                          vecFl_t* intersection_2)
 {
     // Translate the line so that the circle is at the origin
     lineFl_t tLine = {
@@ -341,7 +318,7 @@ int16_t circleLineFlIntersectionPoints(circleFl_t circle, lineFl_t line, vecFl_t
     }
     else
     {
-        float a = (tLine.p2.y - tLine.p1.y) / denom; // TODO div by 0
+        float a = (tLine.p2.y - tLine.p1.y) / denom;
         float b = -1.0f;
         float c = tLine.p2.y - (tLine.p2.x * a);
 
@@ -387,6 +364,40 @@ int16_t circleLineFlIntersectionPoints(circleFl_t circle, lineFl_t line, vecFl_t
             return 2;
         }
     }
+}
+
+/**
+ * @brief Check if a line segment intersects with a circle. This uses circleInfLineFlIntersectionPoints().
+ *
+ * @param circle [IN] The circle to check for intersection
+ * @param line [IN] The line to check for intersection
+ * @param boundingBox [IN] The bounding box of the line, found with getLineBoundingBox()
+ * @return true If the line intersects the circle, false if it doesn't
+ */
+bool circleLineSegFlIntersection(circleFl_t circle, lineFl_t line, lineFl_t boundingBox)
+{
+    vecFl_t i1, i2;
+    int16_t iPoints = circleInfLineFlIntersectionPoints(circle, line, &i1, &i2);
+    if (iPoints > 0)
+    {
+        // check i1
+        if ((boundingBox.p1.x <= i1.x && i1.x <= boundingBox.p2.x) && //
+            (boundingBox.p1.y <= i1.y && i1.y <= boundingBox.p2.y))
+        {
+            return true;
+        }
+
+        if (iPoints > 1)
+        {
+            // check i2
+            if ((boundingBox.p1.x <= i2.x && i2.x <= boundingBox.p2.x) && //
+                (boundingBox.p1.y <= i2.y && i2.y <= boundingBox.p2.y))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 /**
@@ -557,4 +568,39 @@ bool rectLineFlIntersection(rectangleFl_t rect, lineFl_t line, vecFl_t* collisio
 
     // No intersections
     return false;
+}
+
+/**
+ * @brief Get a bounding box around a line where p1.x < p2.x and p1.y < p2.y
+ *
+ * @param line The line to get a bounding box for
+ * @return The bounding box
+ */
+lineFl_t getLineBoundingBox(lineFl_t line)
+{
+    lineFl_t bb;
+    // Assign x points
+    if (line.p1.x < line.p2.x)
+    {
+        bb.p1.x = line.p1.x;
+        bb.p2.x = line.p2.x;
+    }
+    else
+    {
+        bb.p1.x = line.p2.x;
+        bb.p2.x = line.p1.x;
+    }
+
+    // Assign the y points
+    if (line.p1.y < line.p2.y)
+    {
+        bb.p1.y = line.p1.y;
+        bb.p2.y = line.p2.y;
+    }
+    else
+    {
+        bb.p1.y = line.p2.y;
+        bb.p2.y = line.p1.y;
+    }
+    return bb;
 }
