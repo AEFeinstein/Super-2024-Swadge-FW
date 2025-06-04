@@ -11,15 +11,15 @@ static bool ccmgSprayMicrogameTimeout(void);
 static const char ccmgSprayVerb[]       = "Spray";
 static const char ccmgSpraySuccessMsg[] = "Nice job!";
 static const char ccmgSprayFailureMsg[] = "Poor coverage";
-cosCrunchMicrogame_t ccmgSpray          = {
-             .verb               = ccmgSprayVerb,
-             .successMsg         = ccmgSpraySuccessMsg,
-             .failureMsg         = ccmgSprayFailureMsg,
-             .timeoutUs          = 5000000,
-             .fnInitMicrogame    = ccmgSprayInitMicrogame,
-             .fnDestroyMicrogame = ccmgSprayDestroyMicrogame,
-             .fnMainLoop         = ccmgSprayMainLoop,
-             .fnMicrogameTimeout = ccmgSprayMicrogameTimeout,
+const cosCrunchMicrogame_t ccmgSpray    = {
+       .verb               = ccmgSprayVerb,
+       .successMsg         = ccmgSpraySuccessMsg,
+       .failureMsg         = ccmgSprayFailureMsg,
+       .timeoutUs          = 5000000,
+       .fnInitMicrogame    = ccmgSprayInitMicrogame,
+       .fnDestroyMicrogame = ccmgSprayDestroyMicrogame,
+       .fnMainLoop         = ccmgSprayMainLoop,
+       .fnMicrogameTimeout = ccmgSprayMicrogameTimeout,
 };
 
 typedef struct

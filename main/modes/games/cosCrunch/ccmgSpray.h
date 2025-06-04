@@ -2,4 +2,4 @@
 
 #include "cosCrunch.h"
 
-extern cosCrunchMicrogame_t ccmgSpray;
+extern const cosCrunchMicrogame_t ccmgSpray;

@@ -33,7 +33,7 @@ typedef struct
 
     struct
     {
-        cosCrunchMicrogame_t* game;
+        const cosCrunchMicrogame_t* game;
         int64_t gameTimeRemainingUs;
         cosCrunchMicrogameState state;
         uint64_t stateElapsedUs;
@@ -92,7 +92,7 @@ swadgeMode_t cosCrunchMode = {
     .fnDacCb                  = NULL,
 };
 
-cosCrunchMicrogame_t* const microgames[] = {
+const cosCrunchMicrogame_t* const microgames[] = {
     &ccmgBreakTime,
     &ccmgSpray,
 };
@@ -241,7 +241,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                 cc->activeMicrogame.game->fnDestroyMicrogame();
             }
 
-            cc->activeMicrogame.game = microgames[esp_random() % (sizeof(microgames) / sizeof(cosCrunchMicrogame_t*))];
+            cc->activeMicrogame.game = microgames[esp_random() % ARRAY_SIZE(microgames)];
             cc->activeMicrogame.game->fnInitMicrogame();
 
             cc->activeMicrogame.gameTimeRemainingUs = cc->activeMicrogame.game->timeoutUs;
@@ -428,7 +428,7 @@ const tintColor_t* cosCrunchMicrogameGetTintColor()
     int16_t tintColorIndex;
     do
     {
-        tintColorIndex = esp_random() % (sizeof(tintColors) / sizeof(tintColor_t));
+        tintColorIndex = esp_random() % ARRAY_SIZE(tintColors);
     } while (tintColorIndex == cc->mgTintColorIndex);
     cc->mgTintColorIndex = tintColorIndex;
 

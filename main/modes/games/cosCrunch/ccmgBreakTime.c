@@ -1,8 +1,6 @@
 #include "ccmgBreakTime.h"
 #include "cosCrunch.h"
 
-#include <stddef.h>
-
 static void ccmgBreakTimeInitMicrogame(void);
 static void ccmgBreakTimeDestroyMicrogame(void);
 static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
@@ -11,23 +9,23 @@ static bool ccmgBreakTimeTimeout(void);
 
 static const char ccmgBreakTimeVerb[]       = "Break Time";
 static const char ccmgBreakTimeSuccessMsg[] = "Calm enhanced";
-cosCrunchMicrogame_t ccmgBreakTime          = {
-             .verb               = ccmgBreakTimeVerb,
-             .successMsg         = ccmgBreakTimeSuccessMsg,
-             .failureMsg         = NULL,
-             .timeoutUs          = 3000000,
-             .fnInitMicrogame    = ccmgBreakTimeInitMicrogame,
-             .fnDestroyMicrogame = ccmgBreakTimeDestroyMicrogame,
-             .fnMainLoop         = ccmgBreakTimeMainLoop,
-             .fnMicrogameTimeout = ccmgBreakTimeTimeout,
+const cosCrunchMicrogame_t ccmgBreakTime    = {
+       .verb               = ccmgBreakTimeVerb,
+       .successMsg         = ccmgBreakTimeSuccessMsg,
+       .failureMsg         = NULL,
+       .timeoutUs          = 3000000,
+       .fnInitMicrogame    = ccmgBreakTimeInitMicrogame,
+       .fnDestroyMicrogame = ccmgBreakTimeDestroyMicrogame,
+       .fnMainLoop         = ccmgBreakTimeMainLoop,
+       .fnMicrogameTimeout = ccmgBreakTimeTimeout,
 };
 
-#define MUG_WIDTH     65
-#define MUG_LIP_WIDTH 4
-#define MUG_DRAW_X    100
-#define MUG_DRAW_Y    52
+#define MUG_WIDTH_SANS_HANDLE 65
+#define MUG_LIP_WIDTH         4
+#define MUG_DRAW_X            100
+#define MUG_DRAW_Y            52
 
-#define STEAM_WSG_WIDTH  MUG_WIDTH
+#define STEAM_WSG_WIDTH  MUG_WIDTH_SANS_HANDLE
 #define STEAM_WSG_HEIGHT (MUG_DRAW_Y + 17)
 #define STEAM_MAX_WIDTH  15
 
@@ -38,7 +36,6 @@ tintColor_t const liquidTintColors[] = {
     {c210, c320, c431},
     // Green tea
     {c221, c331, c441}};
-#define NUM_TINT_COLORS (sizeof(liquidTintColors) / sizeof(tintColor_t))
 
 typedef struct
 {
@@ -87,7 +84,7 @@ static void ccmgBreakTimeInitMicrogame(void)
         ccmgbt->steamPixels[i] = cTransparent;
     }
 
-    ccmgbt->liquidTintColor = &liquidTintColors[esp_random() % NUM_TINT_COLORS];
+    ccmgbt->liquidTintColor = &liquidTintColors[esp_random() % ARRAY_SIZE(liquidTintColors)];
     wsgPaletteReset(&ccmgbt->liquidTintPalette);
     tintPalette(&ccmgbt->liquidTintPalette, ccmgbt->liquidTintColor);
 }
@@ -110,7 +107,10 @@ static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, c
     {
         for (uint8_t i = 0; i < buttonEvtCount; i++)
         {
-            if (buttonEvts[i].down)
+            if (buttonEvts[i].down
+                && (buttonEvts[i].button == PB_A || buttonEvts[i].button == PB_B || buttonEvts[i].button == PB_UP
+                    || buttonEvts[i].button == PB_DOWN || buttonEvts[i].button == PB_LEFT
+                    || buttonEvts[i].button == PB_RIGHT))
             {
                 ccmgbt->buttonPressed = true;
                 cosCrunchMicrogameResult(false);

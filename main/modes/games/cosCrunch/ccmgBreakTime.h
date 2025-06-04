@@ -2,4 +2,4 @@
 
 #include "cosCrunch.h"
 
-extern cosCrunchMicrogame_t ccmgBreakTime;
+extern const cosCrunchMicrogame_t ccmgBreakTime;
