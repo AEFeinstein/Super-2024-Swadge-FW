@@ -4,6 +4,7 @@
 
 #include <math.h>
 #include <float.h>
+#include <stdio.h>
 #include "esp_heap_caps.h"
 #include "shapes.h"
 #include "palette.h"
@@ -82,7 +83,7 @@ physSim_t* initPhys(float w, float h, float gx, float gy)
 /**
  * @brief TODO doc
  *
- * @param phys
+ * @param phys The physics simulation
  */
 void deinitPhys(physSim_t* phys)
 {
@@ -102,14 +103,13 @@ void deinitPhys(physSim_t* phys)
 /**
  * @brief TODO doc
  *
- * @param phys
+ * @param phys The physics simulation
  * @param x1
  * @param y1
  * @param x2
  * @param y2
- * @param isFixed
  */
-void physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2, bool isFixed)
+void physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2)
 {
     // Make space for the line
     physLine_t* pl = heap_caps_calloc(1, sizeof(physLine_t), MALLOC_CAP_8BIT);
@@ -137,7 +137,7 @@ void physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2, bool i
 /**
  * @brief TODO doc
  *
- * @param phys
+ * @param phys The physics simulation
  * @param x1
  * @param y1
  * @param r
@@ -157,7 +157,7 @@ void physAddCircle(physSim_t* phys, float x1, float y1, float r, bool isFixed)
 /**
  * @brief TODO doc
  *
- * @param phys
+ * @param phys The physics simulation
  * @param line
  */
 void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl)
@@ -175,7 +175,7 @@ void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl)
 /**
  * @brief TODO doc
  *
- * @param phys
+ * @param phys The physics simulation
  * @param pc
  */
 void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc)
@@ -191,9 +191,9 @@ void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
- * @param phys
+ * @param phys The physics simulation
  * @param elapsedUs
  */
 void physStep(physSim_t* phys, int32_t elapsedUs)
@@ -205,7 +205,7 @@ void physStep(physSim_t* phys, int32_t elapsedUs)
 /**
  * @brief TODO doc
  *
- * @param phys
+ * @param phys The physics simulation
  * @param elapsedUs
  */
 void physMoveObjects(physSim_t* phys, int32_t elapsedUs)
@@ -242,40 +242,40 @@ void physMoveObjects(physSim_t* phys, int32_t elapsedUs)
     }
 }
 
+/**
+ * @brief Check for physics collisions, move objects to not clip into each other, update velocity vectors based on
+ * collisions
+ *
+ * @param phys The physics simulation
+ */
 void physCheckCollisions(physSim_t* phys)
 {
-    // TODO Check for moving lines?
-
     // For each circle
     node_t* cNode = phys->circles.first;
     while (cNode)
     {
+        // Get a convenience pointer
         physCirc_t* pc = (physCirc_t*)cNode->val;
+
         // If it's not fixed in space
         if (!pc->fixed)
         {
-            /* Pseudocode!
-             * 1. [DONE] Make two parallel projections of the line, each one radius away from the line
-             * 2. [DONE] Intersect travelLine to the two projections, save distance to closest collision if there is one
-             * 3. [DONE] Intersect travelLine to two circles around the endpoints of the line, save distance to closest
-             *           collision if there is one BONUS: skip identical endpoints?
-             * 4. If there was a collision, move back from the closest one along travelLine, plus EPSILON
-             * 5. Update velocity for the bounce (reflect around normal vector?)
-             */
+            // Keep track of the collision closest to the starting point of the circle
+            float colDist    = FLT_MAX;
+            vecFl_t colPoint = {0};
+            vecFl_t reflVec  = {0};
 
-            float colDist = FLT_MAX;
-            vecFl_t colPoint;
-
-            // Check for collisions
+            // Check for collisions with lines
             node_t* oln = phys->lines.first;
             while (oln)
             {
+                // Get a convenience pointer
                 physLine_t* opl = (physLine_t*)oln->val;
 
                 // Quick check to see if objects are in the same zone
                 if (pc->zonemask & opl->zonemask)
                 {
-                    // Construct the bounding lines around this line
+                    // Construct the bounding lines around this line (parallel lines, one radius away)
                     lineFl_t bounds[] = {
                         {
                             .p1 = addVecFl2d(opl->l.p1, mulVecFl2d(opl->unitNormal, pc->c.radius)),
@@ -287,22 +287,36 @@ void physCheckCollisions(physSim_t* phys)
                         },
                     };
 
-                    // Check for intersections between travel line and bounds lines
+                    // Check for intersections between circle's travel line and bounds lines
                     for (int32_t idx = 0; idx < ARRAY_SIZE(bounds); idx++)
                     {
-                        vecFl_t intersection;
+                        vecFl_t intersection = {0};
                         if (lineLineFlIntersection(bounds[idx], pc->travelLine, &intersection))
                         {
+                            // There was an intersection, find the distance from the starting point to the intersection
                             float dist = sqMagVecFl2d(subVecFl2d(intersection, pc->travelLine.p1));
+
+                            // If this is the closest point
                             if (dist < colDist)
                             {
+                                // Save the distance and point
                                 colDist  = dist;
                                 colPoint = intersection;
+
+                                // Save the reflection vector for this line
+                                reflVec = opl->unitNormal;
+                                if (1 == idx)
+                                {
+                                    // Flip depending on which side of the line collided
+                                    reflVec.x = -reflVec.x;
+                                    reflVec.y = -reflVec.y;
+                                }
                             }
                         }
                     }
 
                     // Construct bounds around the line endcaps
+                    // TODO for polylines and polygons, we could skip every other endcap
                     circleFl_t caps[] = {
                         {
                             .pos    = opl->l.p1,
@@ -317,38 +331,52 @@ void physCheckCollisions(physSim_t* phys)
                     // Check bounding endcaps
                     for (int32_t cIdx = 0; cIdx < ARRAY_SIZE(caps); cIdx++)
                     {
-                        // TODO why does circleLineFlIntersection() not work here?
+                        // A line intersecting with a circle may intersect up to two places
                         vecFl_t intersections[2];
-                        int16_t iCnt
-                            = circleLineSegFlIntersection(caps[cIdx], pc->travelLine, pc->travelLineBB, intersections);
+                        int16_t iCnt = circleLineSegFlIntersection( //
+                            caps[cIdx], pc->travelLine, pc->travelLineBB, intersections);
+
+                        // For each intersection
                         for (int16_t iIdx = 0; iIdx < iCnt; iIdx++)
                         {
+                            // find the distance from the starting point to the intersection
                             float dist = sqMagVecFl2d(subVecFl2d(intersections[iIdx], pc->travelLine.p1));
+
+                            // If this is the closest point
                             if (dist < colDist)
                             {
+                                // Save the distance and the point
                                 colDist  = dist;
                                 colPoint = intersections[iIdx];
+
+                                // Save the reflection vector for this line
+                                reflVec = normVecFl2d(subVecFl2d(pc->c.pos, caps[cIdx].pos));
                             }
                         }
                     }
-
-                    // Check if there was an intersection
-                    if (FLT_MAX != colDist)
-                    {
-                        // TODO bounce instead of halt
-                        pc->fixed = true;
-                        // Move back EPSILON from the collision point
-                        // TODO is moving to the collision point acceptable?
-                        vecFl_t travelNorm = normVecFl2d(subVecFl2d(pc->travelLine.p1, pc->travelLine.p2));
-                        pc->c.pos          = addVecFl2d(colPoint, mulVecFl2d(travelNorm, EPSILON));
-                    }
                 }
 
-                // Iterate
+                // Iterate to next line
                 oln = oln->next;
             }
+
+            // After checking all lines, if there was an intersection
+            // (there will only be one, closest to the starting point)
+            if (FLT_MAX != colDist)
+            {
+                // Move back EPSILON from the collision point
+                vecFl_t travelNorm = normVecFl2d(subVecFl2d(pc->travelLine.p1, pc->travelLine.p2));
+                pc->c.pos          = addVecFl2d(colPoint, mulVecFl2d(travelNorm, EPSILON));
+
+                // Bounce it by reflecting across the collision normal
+                pc->vel = subVecFl2d(pc->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(pc->vel, reflVec))));
+
+                // Dampen after bounce
+                pc->vel = mulVecFl2d(pc->vel, 0.9f);
+            }
         }
-        // Iterate
+
+        // Iterate to next circle
         cNode = cNode->next;
     }
 }
@@ -356,7 +384,7 @@ void physCheckCollisions(physSim_t* phys)
 /**
  * @brief TODO doc
  *
- * @param phys
+ * @param phys The physics simulation
  */
 void drawPhysOutline(physSim_t* phys)
 {
