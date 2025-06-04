@@ -58,5 +58,5 @@ void deinitPhys(physSim_t* phys);
 void drawPhysOutline(physSim_t* phys);
 void physStep(physSim_t* phys, int32_t elapsedUs);
 
-void physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2, bool isFixed);
+void physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2);
 void physAddCircle(physSim_t* phys, float x1, float y1, float r, bool isFixed);
