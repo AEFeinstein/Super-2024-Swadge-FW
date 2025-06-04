@@ -64,17 +64,19 @@ void artilleryEnterMode(void)
 
     ad = heap_caps_calloc(1, sizeof(artilleryData_t), MALLOC_CAP_8BIT);
 
-    ad->phys = initPhys(TFT_WIDTH, TFT_HEIGHT, 0, 10 / (1000000.0f * 1000000.0f));
+    ad->phys = initPhys(TFT_WIDTH, TFT_HEIGHT, 0, 100 / (1000000.0f * 1000000.0f));
 
     vecFl_t groundPoints[] = {
-        {.x = 0, .y = (3 * TFT_HEIGHT) / 4},
+        {.x = 0, .y = 0},
+        {.x = 20, .y = TFT_HEIGHT - 10},
         {.x = TFT_WIDTH / 2, .y = (TFT_HEIGHT) / 4},
-        {.x = TFT_WIDTH, .y = (3 * TFT_HEIGHT) / 4},
+        {.x = TFT_WIDTH - 20, .y = TFT_HEIGHT - 10},
+        {.x = TFT_WIDTH, .y = 0},
     };
     for (int idx = 0; idx < ARRAY_SIZE(groundPoints) - 1; idx++)
     {
         physAddLine(ad->phys, groundPoints[idx].x, groundPoints[idx].y, groundPoints[idx + 1].x,
-                    groundPoints[idx + 1].y, true);
+                    groundPoints[idx + 1].y);
     }
 
     vecFl_t projectiles[] = {
