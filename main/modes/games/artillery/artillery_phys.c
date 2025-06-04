@@ -8,6 +8,7 @@
 #include "shapes.h"
 #include "palette.h"
 #include "artillery_phys.h"
+#include "macros.h"
 
 //==============================================================================
 // Function Declarations
@@ -262,10 +263,8 @@ void physCheckCollisions(physSim_t* phys)
              * 5. Update velocity for the bounce (reflect around normal vector?)
              */
 
-            // vecFl_t minCDist = {
-            //     .x = FLT_MAX,
-            //     .y = FLT_MAX,
-            // };
+            float colDist = FLT_MAX;
+            vecFl_t colPoint;
 
             // Check for collisions
             node_t* oln = phys->lines.first;
@@ -276,47 +275,76 @@ void physCheckCollisions(physSim_t* phys)
                 // Quick check to see if objects are in the same zone
                 if (pc->zonemask & opl->zonemask)
                 {
-                    // Check one bounds line
-                    lineFl_t boundsA;
-                    boundsA.p1 = addVecFl2d(opl->l.p1, mulVecFl2d(opl->unitNormal, pc->c.radius));
-                    boundsA.p2 = addVecFl2d(opl->l.p2, mulVecFl2d(opl->unitNormal, pc->c.radius));
-                    if (lineLineFlIntersection(boundsA, pc->travelLine))
-                    {
-                        pc->fixed = true;
-                    }
-
-                    // Check the other bounds line
-                    lineFl_t boundsB;
-                    boundsB.p1 = addVecFl2d(opl->l.p1, mulVecFl2d(opl->unitNormal, -pc->c.radius));
-                    boundsB.p2 = addVecFl2d(opl->l.p2, mulVecFl2d(opl->unitNormal, -pc->c.radius));
-                    if (lineLineFlIntersection(boundsB, pc->travelLine))
-                    {
-                        pc->fixed = true;
-                    }
-
-                    // TODO why does circleLineFlIntersection() not work here?
-
-                    // Check one bounds arc
-                    circleFl_t capA = {
-                        .pos    = opl->l.p1,
-                        .radius = pc->c.radius,
+                    // Construct the bounding lines around this line
+                    lineFl_t bounds[] = {
+                        {
+                            .p1 = addVecFl2d(opl->l.p1, mulVecFl2d(opl->unitNormal, pc->c.radius)),
+                            .p2 = addVecFl2d(opl->l.p2, mulVecFl2d(opl->unitNormal, pc->c.radius)),
+                        },
+                        {
+                            .p1 = addVecFl2d(opl->l.p1, mulVecFl2d(opl->unitNormal, -pc->c.radius)),
+                            .p2 = addVecFl2d(opl->l.p2, mulVecFl2d(opl->unitNormal, -pc->c.radius)),
+                        },
                     };
-                    if (circleLineSegFlIntersection(capA, pc->travelLine, pc->travelLineBB))
+
+                    // Check for intersections between travel line and bounds lines
+                    for (int32_t idx = 0; idx < ARRAY_SIZE(bounds); idx++)
                     {
-                        pc->fixed = true;
+                        vecFl_t intersection;
+                        if (lineLineFlIntersection(bounds[idx], pc->travelLine, &intersection))
+                        {
+                            float dist = sqMagVecFl2d(subVecFl2d(intersection, pc->travelLine.p1));
+                            if (dist < colDist)
+                            {
+                                colDist  = dist;
+                                colPoint = intersection;
+                            }
+                        }
                     }
 
-                    // Check the other bounds arc
-                    circleFl_t capB = {
-                        .pos    = opl->l.p2,
-                        .radius = pc->c.radius,
+                    // Construct bounds around the line endcaps
+                    circleFl_t caps[] = {
+                        {
+                            .pos    = opl->l.p1,
+                            .radius = pc->c.radius,
+                        },
+                        {
+                            .pos    = opl->l.p2,
+                            .radius = pc->c.radius,
+                        },
                     };
-                    if (circleLineSegFlIntersection(capB, pc->travelLine, pc->travelLineBB))
+
+                    // Check bounding endcaps
+                    for (int32_t cIdx = 0; cIdx < ARRAY_SIZE(caps); cIdx++)
                     {
+                        // TODO why does circleLineFlIntersection() not work here?
+                        vecFl_t intersections[2];
+                        int16_t iCnt
+                            = circleLineSegFlIntersection(caps[cIdx], pc->travelLine, pc->travelLineBB, intersections);
+                        for (int16_t iIdx = 0; iIdx < iCnt; iIdx++)
+                        {
+                            float dist = sqMagVecFl2d(subVecFl2d(intersections[iIdx], pc->travelLine.p1));
+                            if (dist < colDist)
+                            {
+                                colDist  = dist;
+                                colPoint = intersections[iIdx];
+                            }
+                        }
+                    }
+
+                    // Check if there was an intersection
+                    if (FLT_MAX != colDist)
+                    {
+                        // TODO bounce instead of halt
                         pc->fixed = true;
+                        // Move back EPSILON from the collision point
+                        // TODO is moving to the collision point acceptable?
+                        vecFl_t travelNorm = normVecFl2d(subVecFl2d(pc->travelLine.p1, pc->travelLine.p2));
+                        pc->c.pos          = addVecFl2d(colPoint, mulVecFl2d(travelNorm, EPSILON));
                     }
                 }
 
+                // Iterate
                 oln = oln->next;
             }
         }

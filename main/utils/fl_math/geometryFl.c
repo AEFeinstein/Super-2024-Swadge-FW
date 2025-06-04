@@ -372,11 +372,13 @@ int16_t circleInfLineFlIntersectionPoints(circleFl_t circle, lineFl_t line, vecF
  * @param circle [IN] The circle to check for intersection
  * @param line [IN] The line to check for intersection
  * @param boundingBox [IN] The bounding box of the line, found with getLineBoundingBox()
- * @return true If the line intersects the circle, false if it doesn't
+ * @param intersections [OUT] Array of two vecFl_t. If it exists, the intersections will be written to this pointer
+ * @return The number of intersections between this line segment and the circle
  */
-bool circleLineSegFlIntersection(circleFl_t circle, lineFl_t line, lineFl_t boundingBox)
+int16_t circleLineSegFlIntersection(circleFl_t circle, lineFl_t line, lineFl_t boundingBox, vecFl_t* intersections)
 {
     vecFl_t i1, i2;
+    int16_t iCount  = 0;
     int16_t iPoints = circleInfLineFlIntersectionPoints(circle, line, &i1, &i2);
     if (iPoints > 0)
     {
@@ -384,7 +386,11 @@ bool circleLineSegFlIntersection(circleFl_t circle, lineFl_t line, lineFl_t boun
         if ((boundingBox.p1.x <= i1.x && i1.x <= boundingBox.p2.x) && //
             (boundingBox.p1.y <= i1.y && i1.y <= boundingBox.p2.y))
         {
-            return true;
+            if (intersections)
+            {
+                intersections[iCount] = i1;
+            }
+            iCount++;
         }
 
         if (iPoints > 1)
@@ -393,11 +399,15 @@ bool circleLineSegFlIntersection(circleFl_t circle, lineFl_t line, lineFl_t boun
             if ((boundingBox.p1.x <= i2.x && i2.x <= boundingBox.p2.x) && //
                 (boundingBox.p1.y <= i2.y && i2.y <= boundingBox.p2.y))
             {
-                return true;
+                if (intersections)
+                {
+                    intersections[iCount] = i2;
+                }
+                iCount++;
             }
         }
     }
-    return false;
+    return iCount;
 }
 
 /**
@@ -407,9 +417,10 @@ bool circleLineSegFlIntersection(circleFl_t circle, lineFl_t line, lineFl_t boun
  *
  * @param a [IN] One line to check for intersection
  * @param b [IN] Another line to check for intersection
+ * @param intersection [OUT] The point at which the two lines intersect. May be NULL
  * @return true if the lines intersect, false if they do not
  */
-bool lineLineFlIntersection(lineFl_t a, lineFl_t b)
+bool lineLineFlIntersection(lineFl_t a, lineFl_t b, vecFl_t* intersection)
 {
     float uA = ((b.p2.x - b.p1.x) * (a.p1.y - b.p1.y) - (b.p2.y - b.p1.y) * (a.p1.x - b.p1.x)) / //
                ((b.p2.y - b.p1.y) * (a.p2.x - a.p1.x) - (b.p2.x - b.p1.x) * (a.p2.y - a.p1.y));
@@ -418,6 +429,11 @@ bool lineLineFlIntersection(lineFl_t a, lineFl_t b)
 
     if (uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1)
     {
+        if (intersection)
+        {
+            *intersection = addVecFl2d(a.p1, mulVecFl2d(subVecFl2d(a.p2, a.p1), uA));
+        }
+
         return true;
     }
     return false;
@@ -521,7 +537,7 @@ bool rectLineFlIntersection(rectangleFl_t rect, lineFl_t line, vecFl_t* collisio
     tmpLine.p1.y = rect.pos.y;
     tmpLine.p2.x = rect.pos.x + rect.width;
     tmpLine.p2.y = rect.pos.y;
-    if (lineLineFlIntersection(tmpLine, line))
+    if (lineLineFlIntersection(tmpLine, line, NULL))
     {
         if (NULL != collisionVec)
         {
@@ -533,7 +549,7 @@ bool rectLineFlIntersection(rectangleFl_t rect, lineFl_t line, vecFl_t* collisio
     // Check right
     tmpLine.p1.x = rect.pos.x + rect.width;
     tmpLine.p1.y = rect.pos.y + rect.height;
-    if (lineLineFlIntersection(tmpLine, line))
+    if (lineLineFlIntersection(tmpLine, line, NULL))
     {
         if (NULL != collisionVec)
         {
@@ -545,7 +561,7 @@ bool rectLineFlIntersection(rectangleFl_t rect, lineFl_t line, vecFl_t* collisio
     // Check bottom
     tmpLine.p2.x = rect.pos.x;
     tmpLine.p2.y = rect.pos.y + rect.height;
-    if (lineLineFlIntersection(tmpLine, line))
+    if (lineLineFlIntersection(tmpLine, line, NULL))
     {
         if (NULL != collisionVec)
         {
@@ -557,7 +573,7 @@ bool rectLineFlIntersection(rectangleFl_t rect, lineFl_t line, vecFl_t* collisio
     // Check left
     tmpLine.p1.x = rect.pos.x;
     tmpLine.p1.y = rect.pos.y;
-    if (lineLineFlIntersection(tmpLine, line))
+    if (lineLineFlIntersection(tmpLine, line, NULL))
     {
         if (NULL != collisionVec)
         {
