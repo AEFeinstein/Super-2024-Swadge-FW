@@ -60,6 +60,8 @@ artilleryData_t* ad;
  */
 void artilleryEnterMode(void)
 {
+    setFrameRateUs(1000000 / 60);
+
     ad = heap_caps_calloc(1, sizeof(artilleryData_t), MALLOC_CAP_8BIT);
 
     ad->phys = initPhys(TFT_WIDTH, TFT_HEIGHT, 0, 10 / (1000000.0f * 1000000.0f));
@@ -111,6 +113,9 @@ void artilleryMainLoop(int64_t elapsedUs)
 
     physStep(ad->phys, elapsedUs);
     drawPhysOutline(ad->phys);
+
+    font_t* f = getSysFont();
+    DRAW_FPS_COUNTER((*f));
 }
 
 /**
