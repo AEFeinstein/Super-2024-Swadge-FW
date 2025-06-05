@@ -89,6 +89,7 @@ bool process_sudoku(processorInput_t* arg)
                     // no comment handling th
                 }
                 startOfLine = false;
+                break;
             }
 
             case '#':
