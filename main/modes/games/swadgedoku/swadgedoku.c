@@ -21,34 +21,16 @@
 #define SUDOKU_PUZ_MIN SUDOKU_PUZ_000_BSP
 #define SUDOKU_PUZ_MAX SUDOKU_PUZ_000_BSP
 
-// SUBPOS_X defines used for positioning overlays within the sudoku board
+// SUBPOS_* defines used for positioning overlays within the sudoku board
 #define BOX_SIZE_SUBPOS 13
-#define SUBPOS_CENTER   (6 * 13 + 6)
-#define SUBPOS_NW       (0)
-#define SUBPOS_NNW      (3)
-#define SUBPOS_N        (6)
-#define SUBPOS_NNE      (9)
-#define SUBPOS_NE       (12)
-#define SUBPOS_WNW      (3 * 16)
-#define SUBPOS_W        (6 * 16)
-#define SUBPOS_WSW      (9 * 16)
-#define SUBPOS_SW       (12 * 13)
-#define SUBPOS_SSW      (12 * 13 + 3)
-#define SUBPOS_S        (12 * 13 + 6)
-#define SUBPOS_SSE      (12 * 13 + 9)
-#define SUBPOS_SE       (12 * 13 + 12)
-#define SUBPOS_ENE      (3 * 13 * 12)
-#define SUBPOS_E        (6 * 13 + 12)
-#define SUBPOS_ESE      (9 * 13 + 12)
 
-/**
+/*
  * @brief Computes a subposition value for the given x and y, in 13ths-of-a-square
  *
  */
-#define SUBPOS_XY(x, y) (((y) * BOX_SIZE_SUBPOS) + (x))
+// #define SUBPOS_XY(x, y) (((y) * BOX_SIZE_SUBPOS) + (x))
 
-#define ONE_HOUR_IN_US   (1000000 * 60 * 60)
-#define ONE_MINUTE_IN_US (1000000 * 60)
+#define ONE_SECOND_IN_US (1000000)
 
 //==============================================================================
 // Enums
@@ -138,6 +120,27 @@ typedef enum
     OVERLAY_ARROW,
     OVERLAY_TEXT,
 } sudokuOverlayShapeType_t;
+
+typedef enum
+{
+    SUBPOS_CENTER = (6 * 13 + 6),
+    SUBPOS_NW     = (0),
+    SUBPOS_NNW    = (3),
+    SUBPOS_N      = (6),
+    SUBPOS_NNE    = (9),
+    SUBPOS_NE     = (12),
+    SUBPOS_WNW    = (3 * 16),
+    SUBPOS_W      = (6 * 16),
+    SUBPOS_WSW    = (9 * 16),
+    SUBPOS_SW     = (12 * 13),
+    SUBPOS_SSW    = (12 * 13 + 3),
+    SUBPOS_S      = (12 * 13 + 6),
+    SUBPOS_SSE    = (12 * 13 + 9),
+    SUBPOS_SE     = (12 * 13 + 12),
+    SUBPOS_ENE    = (3 * 13 * 12),
+    SUBPOS_E      = (6 * 13 + 12),
+    SUBPOS_ESE    = (9 * 13 + 12),
+} sudokuSubpos_t;
 
 //==============================================================================
 // Structs
@@ -354,7 +357,8 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size);
 void setupSudokuPlayer(sudokuPlayer_t* player, const sudokuGrid_t* game);
 void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, int col, int flags);
 void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags);
-void getOverlayPos(int32_t* x, int32_t* y, int r, int c, int subpos);
+void getOverlayPos(int32_t* x, int32_t* y, int r, int c, sudokuSubpos_t subpos);
+void getRealOverlayPos(int16_t* x, int16_t* y, int gridX, int gridY, int squareSize, int xSubPos, int ySubPos);
 void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, bool drawH, bool drawV,
                          sudokuShapeTag_t tag);
 void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, const sudokuGrid_t* game);
@@ -365,6 +369,9 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                         const sudokuTheme_t* theme);
 
 int swadgedokuRand(int* seed);
+int boxGetAdjacentSquares(uint16_t* indices, const sudokuGrid_t* game, uint8_t* aXs, uint8_t* aYs, uint8_t* bXs,
+                          uint8_t* bYs);
+bool squaresTouch(uint8_t ax, uint8_t ay, uint8_t bx, uint8_t by);
 
 bool setDigit(sudokuGrid_t* game, uint8_t number, uint8_t x, uint8_t y);
 void clearOverlayOpts(sudokuOverlay_t* overlay, const sudokuGrid_t* game, sudokuOverlayOpt_t optMask);
@@ -451,7 +458,8 @@ static const settingParam_t settingLevelSelectBounds
 static const char settingKeyProgress[] = "sdku_progress";
 
 // static const char settingKeyCustomSettings[] = "sdku_custom";
-static const settingParam_t settingCustomSizeBounds = {.min = 2, .max = 16, .def = 9, .key = ""};
+static const settingParam_t settingCustomSizeBounds
+    = {.min = SUDOKU_MIN_BASE, .max = SUDOKU_MAX_BASE, .def = 9, .key = ""};
 
 static const settingParam_t settingCustomModeBounds = {.min = 0, .max = 2, .def = 0, .key = ""};
 static const settingParam_t settingDifficultyBounds = {.min = SD_BEGINNER, .max = SD_HARDEST, .def = 0, .key = ""};
@@ -473,20 +481,20 @@ static const sudokuTheme_t lightTheme = {.bgColor        = c333,
 //==============================================================================
 const swadgedokuTrophyTrigger_t anyPuzzleTrigger = {
     .difficulty = -1,
-    .timeLimit = -1,
-    .mode = -1,
+    .timeLimit  = -1,
+    .mode       = -1,
 };
 
 const swadgedokuTrophyTrigger_t tenMinsTrigger = {
     .difficulty = -1,
-    .timeLimit = 600,
-    .mode = -1,
+    .timeLimit  = 600,
+    .mode       = -1,
 };
 
 const swadgedokuTrophyTrigger_t fiveMinsTrigger = {
     .difficulty = -1,
-    .timeLimit = 300,
-    .mode = -1,
+    .timeLimit  = 300,
+    .mode       = -1,
 };
 
 const trophyData_t swadgedokuTrophies[] = {
@@ -527,15 +535,12 @@ trophySettings_t swadgedokuTrophySettings = {
 };
 
 // This is passed to the swadgeMode_t
-trophyDataList_t swadgedokuTrophyData = {
-    .settings = &swadgedokuTrophySettings,
-    .list = swadgedokuTrophies,
-    .length = ARRAY_SIZE(swadgedokuTrophies)
-};
+trophyDataList_t swadgedokuTrophyData
+    = {.settings = &swadgedokuTrophySettings, .list = swadgedokuTrophies, .length = ARRAY_SIZE(swadgedokuTrophies)};
 
 // Aliases for trophies
 const trophyData_t* trophySolveAny = &swadgedokuTrophies[0];
-const trophyData_t* trophyTenMins = &swadgedokuTrophies[1];
+const trophyData_t* trophyTenMins  = &swadgedokuTrophies[1];
 const trophyData_t* trophyFiveMins = &swadgedokuTrophies[2];
 
 //==============================================================================
@@ -705,7 +710,7 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
             drawMenuMania(sd->emptyMenu, sd->menuRenderer, elapsedUs);
 
             char playTime[64];
-            int totalTime = sd->playTimer / 1000000;
+            int totalTime = sd->playTimer / ONE_SECOND_IN_US;
 
             int hours = totalTime / 3600;
             int mins  = (totalTime % 3600) / 60;
@@ -913,7 +918,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                 return;
             }
 
-            sd->currentMode = sd->customModeMenuItem->currentSetting;
+            sd->currentMode       = sd->customModeMenuItem->currentSetting;
             sd->currentDifficulty = sd->customDifficultyMenuItem->currentSetting;
 
             sd->playTimer = 0;
@@ -1287,9 +1292,8 @@ bool loadSudokuData(const uint8_t* data, size_t length, sudokuGrid_t* game)
             // Mapped
             // It's 3 bytes per square here!!!
             // 1 byte for the location and 2 for the actual notes
-            uint8_t mapLength         = *cur++;
-            const uint8_t* notesStart = cur;
-            const uint8_t* notesEnd   = cur + 3 * mapLength;
+            uint8_t mapLength       = *cur++;
+            const uint8_t* notesEnd = cur + 3 * mapLength;
 
             while (cur < notesEnd)
             {
@@ -1325,9 +1329,8 @@ bool loadSudokuData(const uint8_t* data, size_t length, sudokuGrid_t* game)
         {
             // Mapped
             // It's 2 bytes per square so we can have up to 8 flags
-            uint8_t mapLength       = *cur++;
-            const uint8_t* mapStart = cur;
-            const uint8_t* mapEnd   = cur + 2 * mapLength;
+            uint8_t mapLength     = *cur++;
+            const uint8_t* mapEnd = cur + 2 * mapLength;
 
             while (cur < mapEnd)
             {
@@ -1359,7 +1362,7 @@ bool loadSudokuData(const uint8_t* data, size_t length, sudokuGrid_t* game)
 size_t writeSudokuData(uint8_t* data, const sudokuGrid_t* game)
 {
     int boxFmt, gridFmt, noteFmt, flagFmt;
-    size_t totalSize = getSudokuSaveSize(game, &boxFmt, &gridFmt, &noteFmt, &flagFmt);
+    getSudokuSaveSize(game, &boxFmt, &gridFmt, &noteFmt, &flagFmt);
 
     uint8_t* out = data;
 
@@ -1770,64 +1773,6 @@ void deinitSudokuGame(sudokuGrid_t* game)
     game->size = 0;
 }
 
-bool squaresTouch(uint8_t ax, uint8_t ay, uint8_t bx, uint8_t by)
-{
-    return ((ay == by) && ((ax + 1 == bx) || (bx + 1 == ax))) || ((ax == bx) && ((ay + 1 == by) || (by + 1 == ay)));
-}
-
-/**
- * @brief Gets the list and count of adjacent squares in two boxes
- *
- * The 'indices' value will be constructed as follows:
- * - Each item corresponds to the square in box A at the same index
- * - The value represents a bitmask of which squares in box B touch the box A square at that index
- * - So, if square 0 of box A touches square 2 of box B, then 0 != (indices[0] & (1 << 2))
- * - And an index value of 0 means that square of box A does not touch any squares of box B
- *
- * @param[out] indices A list where the adjacent squares are designated
- * @param game
- * @param aXs
- * @param aYs
- * @param bXs
- * @param bYs
- * @return int The number of adjacent squares
- */
-int boxGetAdjacentSquares(uint16_t* indices, const sudokuGrid_t* game, uint8_t* aXs, uint8_t* aYs, uint8_t* bXs,
-                          uint8_t* bYs)
-{
-    int count = 0;
-
-    for (int aIdx = 0; aIdx < game->base; aIdx++)
-    {
-        int touches   = 0;
-        indices[aIdx] = 0;
-
-        for (int bIdx = 0; bIdx < game->base; bIdx++)
-        {
-            uint8_t* ax = &aXs[aIdx];
-            uint8_t* ay = &aYs[aIdx];
-            uint8_t* bx = &bXs[bIdx];
-            uint8_t* by = &bYs[bIdx];
-
-            if (squaresTouch(*ax, *ay, *bx, *by))
-            {
-                touches++;
-                indices[aIdx] |= (1 << bIdx);
-            }
-        }
-
-        // We're only counting the number of **box A** squares that touch any box B square
-        // NOT the number of times those squares touch box B squares
-        // We don't care if one square touches multiple other squares here, just count each once
-        if (touches)
-        {
-            count++;
-        }
-    }
-
-    return count;
-}
-
 bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
 {
     switch (mode)
@@ -2066,10 +2011,8 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
 
                     int adjacentCount = 0;
 
-                    int aIdxSel  = -1;
-                    int aIdxSelB = -1;
-                    int bIdxSel  = -1;
-                    int bIdxSelA = -1;
+                    int aIdxSel = -1;
+                    int bIdxSel = -1;
                     do
                     {
                         boxB = esp_random() % (game->base - 1);
@@ -2093,11 +2036,11 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
 
                     if (aIdxSel >= 0 && bIdxSel >= 0)
                     {
-                        bool whichSwap = !(esp_random() % 2);
-                        uint8_t* ax    = &boxXs[boxA][aIdxSel];
-                        uint8_t* ay    = &boxYs[boxA][aIdxSel];
-                        uint8_t* bx    = &boxXs[boxB][bIdxSel];
-                        uint8_t* by    = &boxYs[boxB][bIdxSel];
+                        // bool whichSwap = !(esp_random() % 2);
+                        uint8_t* ax = &boxXs[boxA][aIdxSel];
+                        uint8_t* ay = &boxYs[boxA][aIdxSel];
+                        uint8_t* bx = &boxXs[boxB][bIdxSel];
+                        uint8_t* by = &boxYs[boxB][bIdxSel];
                         // They touch!?
                         // Swap the actual box assignments
                         game->boxMap[game->size * *ay + *ax] = boxB;
@@ -2378,10 +2321,10 @@ void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
  * @param c
  * @param subpos
  */
-void getOverlayPos(int32_t* x, int32_t* y, int r, int c, int subpos)
+void getOverlayPos(int32_t* x, int32_t* y, int r, int c, sudokuSubpos_t subpos)
 {
-    *x = c * BOX_SIZE_SUBPOS + (subpos % BOX_SIZE_SUBPOS);
-    *y = r * BOX_SIZE_SUBPOS + (subpos / BOX_SIZE_SUBPOS);
+    *x = c * BOX_SIZE_SUBPOS + ((int)subpos % BOX_SIZE_SUBPOS);
+    *y = r * BOX_SIZE_SUBPOS + ((int)subpos / BOX_SIZE_SUBPOS);
 }
 
 /**
@@ -2694,18 +2637,19 @@ int swadgedokuCheckWin(const sudokuGrid_t* game)
     }
 
     // No errors detected!
-    return 1;
+    return complete ? 1 : 0;
 }
 
 void swadgedokuCheckTrophyTriggers(void)
 {
-    for (trophyData_t* trophy = swadgedokuTrophyData.list; trophy < swadgedokuTrophyData.list + swadgedokuTrophyData.length; trophy++)
+    for (const trophyData_t* trophy = swadgedokuTrophyData.list;
+         trophy < swadgedokuTrophyData.list + swadgedokuTrophyData.length; trophy++)
     {
         if (NULL != trophy->identifier)
         {
-            const swadgedokuTrophyTrigger_t* trigger = (const swadgedokuTrophyTrigger_t*) trophy->identifier;
+            const swadgedokuTrophyTrigger_t* trigger = (const swadgedokuTrophyTrigger_t*)trophy->identifier;
 
-            if (trigger->timeLimit != -1 && (sd->playTimer / 1000000) > trigger->timeLimit)
+            if (trigger->timeLimit != -1 && (sd->playTimer / ONE_SECOND_IN_US) > trigger->timeLimit)
             {
                 // Over time limit for trigger, skip to next
                 continue;
@@ -2897,9 +2841,6 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
     // Total size of the grid (add 1px for border)
     int gridSize = game->size * maxSquareSize;
 
-    // Take off 1px for border and 2px for 1px of padding on each side
-    int squareInterior = maxSquareSize - 3;
-
     // Center the grid vertically
     int gridY = (TFT_HEIGHT - gridSize) / 2;
 
@@ -2993,38 +2934,38 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                 }
                 else
                 {
-                    int r = 0;
-                    int g = 0;
-                    int b = 0;
+                    int red = 0;
+                    int grn = 0;
+                    int blu = 0;
 
                     if (opts & OVERLAY_HIGHLIGHT_ROW)
                     {
                         // Cyan
-                        g += 2;
-                        b += 2;
+                        grn += 2;
+                        blu += 2;
                     }
 
                     if (opts & OVERLAY_HIGHLIGHT_COL)
                     {
                         // Blue
-                        b += 3;
+                        blu += 3;
                     }
 
                     if (opts & OVERLAY_HIGHLIGHT_BOX)
                     {
                         // Yellow
-                        r += 3;
-                        g += 3;
+                        red += 3;
+                        grn += 3;
                     }
 
                     if (opts & OVERLAY_ERROR)
                     {
-                        r += 2;
+                        red += 2;
                     }
 
-                    if (r || g || b)
+                    if (red || grn || blu)
                     {
-                        fillColor = r * 36 + g * 6 + b;
+                        fillColor = red * 36 + grn * 6 + blu;
                     }
                 }
             }
@@ -3211,9 +3152,8 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
 
                 case OVERLAY_CIRCLE:
                 {
-                    int16_t x, y, radius;
+                    int16_t x, y;
                     getRealOverlayPos(&x, &y, gridX, gridY, maxSquareSize, shape->circle.pos.x, shape->circle.pos.y);
-
                     drawCircle(x, y, shape->circle.radius * maxSquareSize / BOX_SIZE_SUBPOS, shape->color);
                     break;
                 }
@@ -3274,6 +3214,64 @@ int swadgedokuRand(int* seed)
     val += 0x269EC3;
     *seed = val;
     return (val >> 0x10) & 0x7FFF;
+}
+
+bool squaresTouch(uint8_t ax, uint8_t ay, uint8_t bx, uint8_t by)
+{
+    return ((ay == by) && ((ax + 1 == bx) || (bx + 1 == ax))) || ((ax == bx) && ((ay + 1 == by) || (by + 1 == ay)));
+}
+
+/**
+ * @brief Gets the list and count of adjacent squares in two boxes
+ *
+ * The 'indices' value will be constructed as follows:
+ * - Each item corresponds to the square in box A at the same index
+ * - The value represents a bitmask of which squares in box B touch the box A square at that index
+ * - So, if square 0 of box A touches square 2 of box B, then 0 != (indices[0] & (1 << 2))
+ * - And an index value of 0 means that square of box A does not touch any squares of box B
+ *
+ * @param[out] indices A list where the adjacent squares are designated
+ * @param game
+ * @param aXs
+ * @param aYs
+ * @param bXs
+ * @param bYs
+ * @return int The number of adjacent squares
+ */
+int boxGetAdjacentSquares(uint16_t* indices, const sudokuGrid_t* game, uint8_t* aXs, uint8_t* aYs, uint8_t* bXs,
+                          uint8_t* bYs)
+{
+    int count = 0;
+
+    for (int aIdx = 0; aIdx < game->base; aIdx++)
+    {
+        int touches   = 0;
+        indices[aIdx] = 0;
+
+        for (int bIdx = 0; bIdx < game->base; bIdx++)
+        {
+            uint8_t* ax = &aXs[aIdx];
+            uint8_t* ay = &aYs[aIdx];
+            uint8_t* bx = &bXs[bIdx];
+            uint8_t* by = &bYs[bIdx];
+
+            if (squaresTouch(*ax, *ay, *bx, *by))
+            {
+                touches++;
+                indices[aIdx] |= (1 << bIdx);
+            }
+        }
+
+        // We're only counting the number of **box A** squares that touch any box B square
+        // NOT the number of times those squares touch box B squares
+        // We don't care if one square touches multiple other squares here, just count each once
+        if (touches)
+        {
+            count++;
+        }
+    }
+
+    return count;
 }
 
 bool setDigit(sudokuGrid_t* game, uint8_t number, uint8_t x, uint8_t y)

@@ -303,7 +303,7 @@ static void runnerEnterMode()
         rd->prevScore = 0;
     }
     // SwadgePass
-    rd->otherHS           = getLatestRemoteScore();
+    rd->otherHS = getLatestRemoteScore();
     // Trophy
     rd->feetTraveledTotal = trophyGetSavedValue(roboRunnerTrophies[1]);
     rd->deaths            = trophyGetSavedValue(roboRunnerTrophies[2]);
@@ -575,15 +575,18 @@ static void drawSplash(int64_t elapsedUs)
     {
         drawText(getSysFont(), c555, "Press any button to continue", 32, TFT_HEIGHT - 48);
     }
-    if (rd->otherHS > 0 || rd->prevScore > 0) 
+    if (rd->otherHS > 0 || rd->prevScore > 0)
     {
         char buffer[64];
-        snprintf(buffer, sizeof(buffer) - 1, "High Score: %" PRId32, (rd->otherHS > rd->prevScore) ? rd->otherHS : rd->prevScore);
+        snprintf(buffer, sizeof(buffer) - 1, "High Score: %" PRId32,
+                 (rd->otherHS > rd->prevScore) ? rd->otherHS : rd->prevScore);
         drawText(getSysFont(), c555, buffer, 32, TFT_HEIGHT - 32);
         if (rd->otherHS <= rd->prevScore)
         {
             snprintf(buffer, sizeof(buffer) - 1, "By: You!");
-        } else {
+        }
+        else
+        {
             snprintf(buffer, sizeof(buffer) - 1, "By: %s", rd->remotePlayer.nameBuffer);
         }
         drawText(getSysFont(), c555, buffer, 32, TFT_HEIGHT - 16);
@@ -756,7 +759,7 @@ static void updateLEDs(int idx)
 {
     for (int i = 0; i < CONFIG_NUM_LEDS; i++)
     {
-        led_t led     = {0};
+        led_t led   = {0};
         rd->leds[i] = led;
     }
     switch (idx)

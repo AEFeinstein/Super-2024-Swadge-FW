@@ -25,7 +25,7 @@
 
 /**
  * @brief Gets the packed 32 bit representation of a username
- * 
+ *
  * @param nd nameData_t pointer to pack
  */
 #define GET_PACKED_USERNAME(nd) ((nd.idxs[0] << 24) | (nd.idxs[1] << 16) | (nd.idxs[2] << 8) | nd.randCode)
@@ -111,14 +111,14 @@ nameData_t* getSystemUsername(void);
 
 /**
  * @brief Saves the username to NVS
- * 
+ *
  * @param nd username to save
  */
 void setSystemUsername(nameData_t* nd);
 
 /**
  * @brief Set the Username from a int32
- * 
+ *
  * @param nd nameData_t to initialize
  * @param packed int32_t to load name from
  */
