@@ -19,7 +19,7 @@
 #define BOX_NONE UINT8_MAX
 
 #define SUDOKU_PUZ_MIN SUDOKU_PUZ_000_BSP
-#define SUDOKU_PUZ_MAX SUDOKU_PUZ_000_BSP
+#define SUDOKU_PUZ_MAX SUDOKU_PUZ_002_BSP
 
 // SUBPOS_* defines used for positioning overlays within the sudoku board
 #define BOX_SIZE_SUBPOS 13
