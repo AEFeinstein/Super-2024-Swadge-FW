@@ -110,6 +110,7 @@
  *     - midiFileParser.h: Load MIDI files
  * - assets_preprocessor.h: Learn how to define a new asset file type processor for CNFS
  * - settingsManager.h: Set and get persistent settings for things like screen brightness
+ * - highScores.h: System to simplify keeping a high score table with SwadgePass support
  *
  * \subsection gr_api Graphics APIs
  *
@@ -253,7 +254,7 @@ static bool shouldHideQuickSettings = false;
 /// @brief A pointer to the Swadge mode under the quick settings
 static const swadgeMode_t* modeBehindQuickSettings = NULL;
 
-/// 25 FPS by default
+/// 40 FPS by default
 static uint32_t frameRateUs = DEFAULT_FRAME_RATE_US;
 
 /// @brief Timer to return to the main menu

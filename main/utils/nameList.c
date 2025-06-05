@@ -394,6 +394,7 @@ void setUsernameFrom32(nameData_t* nd, int32_t packed)
     nd->idxs[1]  = (packed >> 16) & 0xFF;
     nd->idxs[2]  = (packed >> 8) & 0xFF;
     nd->randCode = packed & 0xFF;
+    setUsernameFromND(nd);
 }
 
 //==============================================================================

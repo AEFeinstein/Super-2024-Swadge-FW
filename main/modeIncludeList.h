@@ -30,9 +30,11 @@
 */
 
 #include "accelTest.h"
+#include "bouncy.h"
 #include "colorchord.h"
 #include "cosCrunch.h"
 #include "dance.h"
+#include "danceNetwork.h"
 #include "factoryTest.h"
 #include "gamepad.h"
 #include "introMode.h"
@@ -42,17 +44,17 @@
 #include "mode_credits.h"
 #include "mode_diceroller.h"
 #include "mode_synth.h"
+#include "nameTest.h"
+#include "picross_menu.h"
 #include "roboRunner.h"
 #include "sequencerMode.h"
+#include "swadgedoku.h"
 #include "swadgeIt.h"
 #include "swadgePassTest.h"
-#include "swadgedoku.h"
 #include "touchTest.h"
 #include "trophyCase.h"
 #include "trophyTest.h"
 #include "tunernome.h"
-
-#include "nameTest.h"
 
 //==============================================================================
 // Function Prototypes
