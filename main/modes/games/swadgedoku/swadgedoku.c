@@ -5,6 +5,7 @@
 #include "swadgedoku.h"
 
 #include "menu.h"
+#include "wheel_menu.h"
 
 //==============================================================================
 // Defines
@@ -58,6 +59,7 @@ typedef enum
     SWADGEDOKU_MAIN_MENU = 0,
     SWADGEDOKU_GAME      = 1,
     SWADGEDOKU_WIN       = 2,
+    SWADGEDOKU_PAUSE     = 3,
 } sudokuScreen_t;
 
 typedef enum
@@ -311,6 +313,13 @@ typedef struct
     // Difficulty of the current game, or -1 if N/A
     int currentDifficulty;
     int currentMode;
+
+    menu_t* numberWheel;
+    wheelMenuRenderer_t* numberWheelRenderer;
+    rectangle_t wheelMenuTextBox;
+    bool touchState;
+
+    menu_t* pauseMenu;
 } swadgedoku_t;
 
 typedef struct
@@ -331,6 +340,9 @@ static void swadgedokuBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, in
 
 static void swadgedokuSetupMenu(void);
 static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t value);
+static void swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t value);
+static void swadgedokuSetupNumberWheel(int base, uint16_t disableMask);
+static void numberWheelCb(const char* label, bool selected, uint32_t value);
 
 bool loadSudokuData(const uint8_t* data, size_t length, sudokuGrid_t* game);
 size_t writeSudokuData(uint8_t* data, const sudokuGrid_t* game);
@@ -361,9 +373,10 @@ void clearOverlayOpts(sudokuOverlay_t* overlay, const sudokuGrid_t* game, sudoku
 // Const data
 //==============================================================================
 
-static const char swadgedokuModeName[]  = "Swadgedoku";
+static const char swadgedokuModeName[] = "Swadgedoku";
+// Main menu
 static const char menuItemContinue[]    = "Continue";
-static const char menuItemLevelSelect[] = "Play Puzzle: ";
+static const char menuItemLevelSelect[] = "Select Puzzle";
 static const char menuItemPlaySudoku[]  = "Classic";
 static const char menuItemPlayJigsaw[]  = "Jigsaw";
 static const char menuItemPlayCustom[]  = "Infinite";
@@ -372,7 +385,15 @@ static const char menuItemCustomMode[]  = "Mode: ";
 static const char menuItemCustomSize[]  = "Size: ";
 static const char menuItemDifficulty[]  = "Rating: ";
 static const char menuItemSettings[]    = "Settings";
-static const char strYouWin[]           = "You Win!";
+// Pause menu
+static const char strPaused[]             = "Paused";
+static const char menuItemResume[]        = "Resume";
+static const char menuItemExitPuzzle[]    = "Save and Exit";
+static const char menuItemResetPuzzle[]   = "Reset Puzzle";
+static const char menuItemAbandonPuzzle[] = "Abandon Puzzle";
+// Number wheel title
+static const char strSelectDigit[] = "Select Digit";
+static const char strYouWin[]      = "You Win!";
 
 static const int32_t menuOptValsCustomSize[] = {
     2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
@@ -401,6 +422,25 @@ static const int32_t menuOptValsDifficulty[] = {
 
 static const char* const menuOptLabelsDifficulty[] = {
     "Beginner", "Easy", "Medium", "Hard", "Expert", "Pain",
+};
+
+static const char* digitLabels[] = {
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "A",
+    "B",
+    "C",
+    "D",
+    "E"
+    "F",
+    "0",
 };
 
 static const char settingKeyLastLevel[] = "sdku_lastlevel";
@@ -550,6 +590,13 @@ static void swadgedokuEnterMode(void)
     sd->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
     sd->emptyMenu    = initMenu(sd->emptyMenuTitle, NULL);
 
+    sd->pauseMenu = initMenu(strPaused, swadgedokuPauseMenuCb);
+
+    addSingleItemToMenu(sd->pauseMenu, menuItemResume);
+    addSingleItemToMenu(sd->pauseMenu, menuItemResetPuzzle);
+    addSingleItemToMenu(sd->pauseMenu, menuItemAbandonPuzzle);
+    addSingleItemToMenu(sd->pauseMenu, menuItemExitPuzzle);
+
     swadgedokuSetupMenu();
 }
 
@@ -566,9 +613,13 @@ static void swadgedokuExitMode(void)
     free(sd->player.notes);
     free(sd->player.overlay.gridOpts);
 
+    deinitWheelMenu(sd->numberWheelRenderer);
+    deinitMenu(sd->numberWheel);
+
     deinitMenuManiaRenderer(sd->menuRenderer);
     deinitMenu(sd->menu);
     deinitMenu(sd->emptyMenu);
+    deinitMenu(sd->pauseMenu);
     free(sd);
     sd = NULL;
 }
@@ -591,13 +642,39 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
 
         case SWADGEDOKU_GAME:
         {
+            int32_t phi, r, intensity;
+            if (getTouchJoystick(&phi, &r, &intensity))
+            {
+                wheelMenuTouch(sd->numberWheel, sd->numberWheelRenderer, phi, r);
+                sd->touchState = true;
+            }
+            else if (sd->touchState)
+            {
+                wheelMenuTouchRelease(sd->numberWheel, sd->numberWheelRenderer);
+                sd->touchState = false;
+            }
+
+            // Now that touches have been handled, check if the wheel is active
+            bool inWheelMenu = wheelMenuActive(sd->numberWheel, sd->numberWheelRenderer);
+
+            if (!inWheelMenu)
+            {
+                sd->playTimer += elapsedUs;
+            }
+            // TODO I started to put an else here but I forgot what was supposed to go in it
+
             buttonEvt_t evt = {0};
             while (checkButtonQueueWrapper(&evt))
             {
-                swadgedokuGameButton(evt);
+                if (inWheelMenu)
+                {
+                    wheelMenuButton(sd->numberWheel, sd->numberWheelRenderer, &evt);
+                }
+                else
+                {
+                    swadgedokuGameButton(evt);
+                }
             }
-
-            sd->playTimer += elapsedUs;
 
             swadgedokuDrawGame(&sd->game, sd->game.notes, &sd->player.overlay, &lightTheme);
 
@@ -609,6 +686,15 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
 
                 drawText(&sd->gridFont, lightTheme.uiTextColor, curDigitStr, TFT_WIDTH - 5 - textW,
                          (TFT_HEIGHT - sd->gridFont.height) / 2);
+            }
+
+            if (inWheelMenu)
+            {
+                shadeDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, 2, c111);
+                drawRoundedRect(sd->wheelMenuTextBox.pos.x - 2, sd->wheelMenuTextBox.pos.y - 2,
+                                sd->wheelMenuTextBox.pos.x + sd->wheelMenuTextBox.width + 2,
+                                sd->wheelMenuTextBox.pos.y + sd->wheelMenuTextBox.height + 2, 5, c555, c000);
+                drawWheelMenu(sd->numberWheel, sd->numberWheelRenderer, elapsedUs);
             }
             break;
         }
@@ -647,6 +733,24 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
             }
             break;
         }
+
+        case SWADGEDOKU_PAUSE:
+        {
+            buttonEvt_t evt = {0};
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down && (evt.button == PB_B || evt.button == PB_START))
+                {
+                    sd->screen = SWADGEDOKU_GAME;
+                    break;
+                }
+
+                sd->pauseMenu = menuButton(sd->pauseMenu, evt);
+            }
+
+            drawMenuMania(sd->pauseMenu, sd->menuRenderer, elapsedUs);
+            break;
+        }
     }
 }
 
@@ -656,6 +760,7 @@ static void swadgedokuBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, in
 
 static void swadgedokuSetupMenu(void)
 {
+    //// Main Menu
     bool hasProgress  = false;
     size_t progLength = 0;
     if (readNvsBlob(settingKeyProgress, NULL, &progLength))
@@ -700,6 +805,43 @@ static void swadgedokuSetupMenu(void)
     sd->menu = endSubMenu(sd->menu);
 }
 
+static void swadgedokuSetupNumberWheel(int base, uint16_t disableMask)
+{
+    //// Number Wheel
+    if (sd->numberWheelRenderer != NULL)
+    {
+        deinitWheelMenu(sd->numberWheelRenderer);
+        sd->numberWheelRenderer = NULL;
+    }
+
+    if (sd->numberWheel != NULL)
+    {
+        deinitMenu(sd->numberWheel);
+        sd->numberWheel = NULL;
+    }
+
+    sd->wheelMenuTextBox.pos.x  = 24;
+    sd->wheelMenuTextBox.pos.y  = TFT_HEIGHT - sd->uiFont.height - 3;
+    sd->wheelMenuTextBox.width  = TFT_WIDTH - 48;
+    sd->wheelMenuTextBox.height = sd->uiFont.height;
+
+    sd->numberWheelRenderer = initWheelMenu(&sd->uiFont, 90, &sd->wheelMenuTextBox);
+    sd->numberWheel         = initMenu(strSelectDigit, numberWheelCb);
+
+    for (int i = 0; i < base && i < ARRAY_SIZE(digitLabels); i++)
+    {
+        uint8_t pos = (base - i) % base;
+        addSingleItemToMenu(sd->numberWheel, digitLabels[i]);
+        wheelMenuSetItemInfo(sd->numberWheelRenderer, digitLabels[i], NULL, pos, NO_SCROLL);
+        wheelMenuSetItemTextIcon(sd->numberWheelRenderer, digitLabels[i], digitLabels[i]);
+
+        if (disableMask & (1 << i))
+        {
+            wheelMenuSetItemColor(sd->numberWheelRenderer, digitLabels[i], c333, c444);
+        }
+    }
+}
+
 static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
@@ -717,6 +859,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                         sd->playTimer = 0;
                         setupSudokuPlayer(&sd->player, &sd->game);
                         sudokuGetNotes(sd->game.notes, &sd->game, 0);
+                        swadgedokuSetupNumberWheel(sd->game.base, 0);
                         sd->screen = SWADGEDOKU_GAME;
                     }
                     else
@@ -753,6 +896,8 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
 
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
 
+            swadgedokuSetupNumberWheel(sd->game.base, 0);
+
             // sd->player.notes[1] = 127;
             // sd->game.flags[8] = SF_VOID;
             // sd->game.grid[2] = 8;
@@ -774,6 +919,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             sd->playTimer = 0;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
+            swadgedokuSetupNumberWheel(sd->game.base, 0);
             sd->screen = SWADGEDOKU_GAME;
         }
         else if (menuItemPlayJigsaw == label)
@@ -786,6 +932,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             sd->playTimer = 0;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
+            swadgedokuSetupNumberWheel(sd->game.base, 0);
             sd->screen = SWADGEDOKU_GAME;
         }
     }
@@ -856,6 +1003,72 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                 sd->customSizeMenuItem->currentSetting = sd->prevSize;
                 sd->customSizeMenuItem->currentOpt     = sd->prevSize - 2;
                 sd->squareForced                       = false;
+            }
+        }
+    }
+}
+
+static void swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t value)
+{
+    if (selected)
+    {
+        ESP_LOGE("Swadgedoku", "Pause menu %s selected", label);
+        if (menuItemResume == label)
+        {
+            sd->screen = SWADGEDOKU_GAME;
+        }
+        else if (menuItemResetPuzzle == label)
+        {
+            for (int n = 0; n < sd->game.size * sd->game.size; n++)
+            {
+                // Just clear all non-player-set digits
+                if (!(sd->game.flags[n] & (SF_LOCKED | SF_VOID)))
+                {
+                    sd->game.grid[n] = 0;
+                }
+            }
+            sd->playTimer = 0;
+            sudokuGetNotes(sd->game.notes, &sd->game, 0);
+        }
+        else if (menuItemAbandonPuzzle == label)
+        {
+            swadgedokuSetupMenu();
+            sd->screen = SWADGEDOKU_MAIN_MENU;
+        }
+        else if (menuItemExitPuzzle == label)
+        {
+            size_t size = getSudokuSaveSize(&sd->game, NULL, NULL, NULL, NULL);
+            ESP_LOGE("Swadgedoku", "Writing %d bytes of swadgedoku save to NVS", (int)size);
+            uint8_t data[size];
+            // Write the data to the buffer
+            writeSudokuData(data, &sd->game);
+
+            // Write the buffer to NVS
+            if (writeNvsBlob(settingKeyProgress, data, size))
+            {
+                ESP_LOGI("Swadgedoku", "Saved progress to NVS!");
+                swadgedokuSetupMenu();
+                sd->screen = SWADGEDOKU_MAIN_MENU;
+            }
+            else
+            {
+                ESP_LOGE("Swadgedoku", "Could not save progress to NVS!!!");
+            }
+        }
+    }
+}
+
+static void numberWheelCb(const char* label, bool selected, uint32_t value)
+{
+    ESP_LOGE("Swadgedoku", "Number '%s' %s", label, selected ? "Selected" : "Scrolled");
+
+    if (selected)
+    {
+        for (int i = 0; i < ARRAY_SIZE(digitLabels); i++)
+        {
+            if (label == digitLabels[i])
+            {
+                sd->player.selectedDigit = i + 1;
             }
         }
     }
@@ -2525,13 +2738,15 @@ void swadgedokuGameButton(buttonEvt_t evt)
         switch (evt.button)
         {
             case PB_A:
+            case PB_B:
             {
-                if (sd->player.selectedDigit
-                    && !((SF_LOCKED | SF_VOID) & sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]))
+                // B unsets, A sets
+                int digit = (evt.button == PB_A) ? sd->player.selectedDigit : 0;
+
+                if (!((SF_LOCKED | SF_VOID) & sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]))
                 {
                     // Not locked or void, proceed setting the digit
-                    // sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX] = sd->player.selectedDigit;
-                    if (sd->player.selectedDigit == sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX])
+                    if (!digit || digit == sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX])
                     {
                         // Unset number
                         setDigit(&sd->game, 0, sd->player.curX, sd->player.curY);
@@ -2539,7 +2754,7 @@ void swadgedokuGameButton(buttonEvt_t evt)
                     else
                     {
                         // Set number
-                        if (setDigit(&sd->game, sd->player.selectedDigit, sd->player.curX, sd->player.curY))
+                        if (setDigit(&sd->game, digit, sd->player.curX, sd->player.curY))
                         {
                             switch (swadgedokuCheckWin(&sd->game))
                             {
@@ -2558,15 +2773,9 @@ void swadgedokuGameButton(buttonEvt_t evt)
                             }
                         }
                     }
-                }
-                reAnnotate = true;
-                break;
-            }
 
-            case PB_B:
-            {
-                sd->player.selectedDigit = (sd->player.selectedDigit) % (sd->game.base) + 1;
-                reAnnotate               = true;
+                    reAnnotate = true;
+                }
                 break;
             }
 
@@ -2577,6 +2786,7 @@ void swadgedokuGameButton(buttonEvt_t evt)
 
             case PB_START:
             {
+                sd->screen = SWADGEDOKU_PAUSE;
                 break;
             }
 
