@@ -253,7 +253,7 @@ static bool shouldHideQuickSettings = false;
 /// @brief A pointer to the Swadge mode under the quick settings
 static const swadgeMode_t* modeBehindQuickSettings = NULL;
 
-/// 25 FPS by default
+/// 40 FPS by default
 static uint32_t frameRateUs = DEFAULT_FRAME_RATE_US;
 
 /// @brief Timer to return to the main menu
