@@ -333,6 +333,7 @@ void addSettingsItemToMenu(menu_t* menu, const char* label, const settingParam_t
     newItem->minSetting     = bounds->min;
     newItem->maxSetting     = bounds->max;
     newItem->currentSetting = val;
+    newItem->numOptions     = bounds->max - bounds->min + 1;
     push(menu->items, newItem);
 
     // If this is the first item, set it as the current
