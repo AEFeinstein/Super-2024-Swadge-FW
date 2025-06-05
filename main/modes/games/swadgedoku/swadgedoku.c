@@ -2820,6 +2820,11 @@ void swadgedokuGameButton(buttonEvt_t evt)
                                   sd->player.curY, sd->player.curX, SUBPOS_CENTER);
                     break;
                 }
+
+                default:
+                {
+                    break;
+                }
             }
         }
 
