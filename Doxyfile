@@ -951,6 +951,7 @@ WARN_LOGFILE           = doxy_warnings.txt
 
 INPUT                  = ./main \
                          ./main/modes/games/cosCrunch/cosCrunch.h \
+                         ./main/modes/games/cosCrunch/cosCrunchUtil.h \
                          ./main/asset_loaders/heatshrink_helper.h \
                          ./main/asset_loaders/heatshrink_helper.c \
                          ./tools/assets_preprocessor/src \

@@ -325,17 +325,36 @@ MACOS_PLIST   = emulator/resources/Info.plist
 ################################################################################
 
 # This list of targets do not build files which match their name
-.PHONY: all assets firmware bundle \
+.PHONY: all preprocess-assets firmware bundle \
 	clean clean-firmware clean-docs clean-assets clean-git clean-utils fullclean \
 	docs format gen-coverage update-dependencies cppcheck \
 	usbflash monitor installudev \
 	print-%
-	
+
 # Build the executable
 all: $(EXECUTABLE)
 
+# Force clean of assets
+preprocess-assets: clean-assets assets
+
+# Asset processing prereqs
+./tools/assets_preprocessor/assets_preprocessor:
+	$(MAKE) -C ./tools/assets_preprocessor
+
+./tools/cnfs/cnfs_gen:
+	$(MAKE) -C ./tools/cnfs
+
+# The "assets" target is dependent on all the asset files
+assets ./.assets_ts &: ./assets.conf $(ASSET_FILES)
+	$(MAKE) -C ./tools/assets_preprocessor/
+	./tools/assets_preprocessor/assets_preprocessor -c ./assets.conf -i ./assets/ -o ./assets_image/ -t ./.assets_ts
+
+# To create CNFS_FILE, first the assets must be processed
+$(CNFS_FILE) $(CNFS_FILE_H) &: ./.assets_ts | ./tools/cnfs/cnfs_gen assets
+	./tools/cnfs/cnfs_gen assets_image/ $(CNFS_FILE) $(CNFS_FILE_H)
+
 # To build the main file, you have to compile the objects
-$(EXECUTABLE): $(OBJECTS)
+$(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
 	$(CC) $(OBJECTS) $(LIBRARY_FLAGS) -o $@
 
 # This compiles each c file into an o file
@@ -344,16 +363,6 @@ $(EXECUTABLE): $(OBJECTS)
 ./$(OBJ_DIR)/%.o: ./%.c $(CNFS_FILE)
 	@mkdir -p $(@D) # This creates a directory before building an object in it.
 	$(CC) $(CFLAGS) $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) $(DEFINES) $(INC) $< -o $@
-
-# To create CNFS_FILE, first the assets must be processed
-$(CNFS_FILE): assets
-	$(MAKE) -C ./tools/cnfs/
-	./tools/cnfs/cnfs_gen assets_image/ $(CNFS_FILE) $(CNFS_FILE_H)
-
-# The "assets" target is dependent on all the asset files
-assets: ./assets.conf $(ASSET_FILES)
-	$(MAKE) -C ./tools/assets_preprocessor/
-	./tools/assets_preprocessor/assets_preprocessor -c ./assets.conf -i ./assets/ -o ./assets_image/
 
 # Build the firmware. Cmake will take care of generating the CNFS files
 firmware:
