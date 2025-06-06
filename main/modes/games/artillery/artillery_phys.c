@@ -77,6 +77,12 @@ physSim_t* initPhys(float w, float h, float gx, float gy)
         }
     }
 
+    // Add lines for the world bounds
+    physAddLine(phys, 0, 0, w, 0);
+    physAddLine(phys, w, 0, w, h);
+    physAddLine(phys, w, h, 0, h);
+    physAddLine(phys, 0, h, 0, 0);
+
     return phys;
 }
 
@@ -108,8 +114,9 @@ void deinitPhys(physSim_t* phys)
  * @param y1
  * @param x2
  * @param y2
+ * @return
  */
-void physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2)
+physLine_t* physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2)
 {
     // Make space for the line
     physLine_t* pl = heap_caps_calloc(1, sizeof(physLine_t), MALLOC_CAP_8BIT);
@@ -132,6 +139,7 @@ void physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2)
 
     // Push line into list
     push(&phys->lines, pl);
+    return pl;
 }
 
 /**
@@ -141,17 +149,40 @@ void physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2)
  * @param x1
  * @param y1
  * @param r
- * @param isFixed
+ * @param type
+ * @return
  */
-void physAddCircle(physSim_t* phys, float x1, float y1, float r, bool isFixed)
+physCirc_t* physAddCircle(physSim_t* phys, float x1, float y1, float r, circType_t type)
 {
     physCirc_t* pc = heap_caps_calloc(1, sizeof(physCirc_t), MALLOC_CAP_8BIT);
     pc->c.pos.x    = x1;
     pc->c.pos.y    = y1;
     pc->c.radius   = r;
-    pc->fixed      = isFixed;
+    pc->type       = type;
+    switch (type)
+    {
+        case CT_TANK:
+        {
+            setBarrelAngle(pc, 0);
+            setShotPower(pc, 0.0001f);
+            pc->fixed = false;
+            break;
+        }
+        case CT_SHELL:
+        {
+            pc->fixed = false;
+            break;
+        }
+        default:
+        case CT_OBSTACLE:
+        {
+            pc->fixed = true;
+            break;
+        }
+    }
     physSetZoneMaskCirc(phys, pc);
     push(&phys->circles, pc);
+    return pc;
 }
 
 /**
@@ -251,7 +282,8 @@ void physMoveObjects(physSim_t* phys, int32_t elapsedUs)
 void physCheckCollisions(physSim_t* phys)
 {
     // For each circle
-    node_t* cNode = phys->circles.first;
+    bool shouldRemoveNode = false;
+    node_t* cNode         = phys->circles.first;
     while (cNode)
     {
         // Get a convenience pointer
@@ -360,6 +392,29 @@ void physCheckCollisions(physSim_t* phys)
                 oln = oln->next;
             }
 
+            // Check for collisions with circles
+            node_t* ocn = phys->circles.first;
+            while (ocn)
+            {
+                physCirc_t* opc = ocn->val;
+
+                // Don't collide a circle with itself
+                if (opc != pc)
+                {
+                    vecFl_t cPoint;
+                    vecFl_t cVec;
+                    if (circleCircleFlIntersection(pc->c, opc->c, &cPoint, &cVec))
+                    {
+                        if (CT_SHELL == pc->type && CT_TANK == opc->type)
+                        {
+                            // Shells explode
+                            shouldRemoveNode = true;
+                        }
+                    }
+                }
+                ocn = ocn->next;
+            }
+
             // After checking all lines, if there was an intersection
             // (there will only be one, closest to the starting point)
             if (FLT_MAX != colDist)
@@ -376,8 +431,13 @@ void physCheckCollisions(physSim_t* phys)
             }
         }
 
-        // Iterate to next circle
-        cNode = cNode->next;
+        node_t* nextNode = cNode->next;
+        if (shouldRemoveNode)
+        {
+            removeEntry(&phys->circles, cNode);
+        }
+        cNode            = nextNode;
+        shouldRemoveNode = false;
     }
 }
 
@@ -401,6 +461,53 @@ void drawPhysOutline(physSim_t* phys)
     {
         physCirc_t* pc = (physCirc_t*)cNode->val;
         drawCircle(pc->c.pos.x, pc->c.pos.y, pc->c.radius, c555);
+        if (CT_TANK == pc->type)
+        {
+            drawLineFast(pc->c.pos.x, pc->c.pos.y, pc->barrelTip.x, pc->barrelTip.y, c555);
+        }
         cNode = cNode->next;
     }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param circ
+ * @param angle
+ */
+void setBarrelAngle(physCirc_t* circ, float angle)
+{
+    circ->barrelAngle = angle;
+
+    circ->barrelTip.x = sinf(angle) * 16;
+    circ->barrelTip.y = -cosf(angle) * 16;
+    circ->barrelTip   = addVecFl2d(circ->c.pos, circ->barrelTip);
+}
+
+/**
+ * @brief TODO
+ *
+ * @param circ
+ * @param power
+ */
+void setShotPower(physCirc_t* circ, float power)
+{
+    circ->shotPower = power;
+}
+
+/**
+ * @brief TODO
+ *
+ * @param phys
+ * @param circ
+ * @return physCirc_t*
+ */
+physCirc_t* fireShot(physSim_t* phys, physCirc_t* circ)
+{
+    physCirc_t* shell = physAddCircle(phys, circ->barrelTip.x, circ->barrelTip.y, 4, CT_SHELL);
+
+    shell->vel.x = sinf(circ->barrelAngle) * circ->shotPower;
+    shell->vel.y = -cosf(circ->barrelAngle) * circ->shotPower;
+
+    return shell;
 }
