@@ -6,12 +6,19 @@
 #include "artillery_phys.h"
 
 //==============================================================================
+// Defines
+//==============================================================================
+
+#define NUM_PLAYERS 2
+
+//==============================================================================
 // Structs
 //==============================================================================
 
 typedef struct
 {
     physSim_t* phys;
+    physCirc_t* players[NUM_PLAYERS];
 } artilleryData_t;
 
 //==============================================================================
@@ -66,12 +73,12 @@ void artilleryEnterMode(void)
 
     ad->phys = initPhys(TFT_WIDTH, TFT_HEIGHT, 0, 100 / (1000000.0f * 1000000.0f));
 
+#define GROUND_LEVEL 200
+
     vecFl_t groundPoints[] = {
-        {.x = 0, .y = 0},
-        {.x = 20, .y = TFT_HEIGHT - 10},
-        {.x = TFT_WIDTH / 2, .y = (TFT_HEIGHT) / 4},
-        {.x = TFT_WIDTH - 20, .y = TFT_HEIGHT - 10},
-        {.x = TFT_WIDTH, .y = 0},
+        {.x = 0, .y = GROUND_LEVEL},         {.x = TFT_WIDTH / 4, .y = GROUND_LEVEL},
+        {.x = TFT_WIDTH / 2, .y = 100},      {.x = 3 * TFT_WIDTH / 4, .y = GROUND_LEVEL},
+        {.x = TFT_WIDTH, .y = GROUND_LEVEL},
     };
     for (int idx = 0; idx < ARRAY_SIZE(groundPoints) - 1; idx++)
     {
@@ -79,15 +86,20 @@ void artilleryEnterMode(void)
                     groundPoints[idx + 1].y);
     }
 
-    vecFl_t projectiles[] = {
-        {.x = TFT_WIDTH / 4, .y = 0},
-        {.x = (2 * TFT_WIDTH) / 4, .y = 0},
-        {.x = (3 * TFT_WIDTH) / 4, .y = 0},
-    };
-    for (int idx = 0; idx < ARRAY_SIZE(projectiles); idx++)
-    {
-        physAddCircle(ad->phys, projectiles[idx].x, projectiles[idx].y, 5, false);
-    }
+    // vecFl_t projectiles[] = {
+    //     {.x = TFT_WIDTH / 4, .y = 6},
+    //     {.x = (2 * TFT_WIDTH) / 4, .y = 6},
+    //     {.x = (3 * TFT_WIDTH) / 4, .y = 6},
+    // };
+    // for (int idx = 0; idx < ARRAY_SIZE(projectiles); idx++)
+    // {
+    //     physAddCircle(ad->phys, projectiles[idx].x, projectiles[idx].y, 5, CT_SHELL);
+    // }
+
+#define PLAYER_RADIUS 8
+    ad->players[0] = physAddCircle(ad->phys, TFT_WIDTH / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
+    ad->players[1]
+        = physAddCircle(ad->phys, (7 * TFT_WIDTH) / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
 }
 
 /**
@@ -110,14 +122,49 @@ void artilleryMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        ; // TODO button presses
+        if (evt.down)
+        {
+            switch (evt.button)
+            {
+                case PB_A:
+                {
+                    fireShot(ad->phys, ad->players[0]);
+                    break;
+                }
+                case PB_LEFT:
+                case PB_RIGHT:
+                {
+                    float bDiff = 4 * ((PB_LEFT == evt.button) ? -(M_PI / 180.0f) : (M_PI / 180.0f));
+                    setBarrelAngle(ad->players[0], ad->players[0]->barrelAngle + bDiff);
+                    break;
+                }
+                case PB_UP:
+                case PB_DOWN:
+                {
+                    float pDiff = (PB_UP == evt.button) ? 0.00001f : -0.00001f;
+                    setShotPower(ad->players[0], ad->players[0]->shotPower + pDiff);
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+        }
     }
+
+    // setBarrelAngle(ad->players[0], ad->players[0]->barrelAngle + M_PI /180.0f);
 
     physStep(ad->phys, elapsedUs);
     drawPhysOutline(ad->phys);
 
     font_t* f = getSysFont();
     DRAW_FPS_COUNTER((*f));
+
+    char fireParams[64];
+    snprintf(fireParams, sizeof(fireParams) - 1, "Angle %0.3f, Power %.3f", ad->players[0]->barrelAngle,
+             ad->players[0]->shotPower * 100);
+    drawText(f, c555, fireParams, 40, TFT_HEIGHT - f->height - 2);
 }
 
 /**
