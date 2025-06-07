@@ -142,6 +142,14 @@ typedef enum
     SUBPOS_ESE    = (9 * 13 + 12),
 } sudokuSubpos_t;
 
+typedef enum
+{
+    SSB_WRITE_ON_SELECT = 1,
+    SSB_AUTO_ANNOTATE = 2,
+    SSB_HIGHLIGHT_POSSIBILITIES = 4,
+    SSB_HIGHLIGHT_ONLY_OPTIONS = 8,
+} sudokuSettingBit_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -327,8 +335,14 @@ typedef struct
     menu_t* pauseMenu;
 
     // Settings cache!
+    // Write the selected digit to the cursor position as soon as it is picked
     bool writeOnSelect;
-
+    // Automatically fill out all annotations for the player on the grid
+    bool autoAnnotate;
+    // Highlights all places where the selected digit can go
+    bool highlightPossibilities;
+    // Highlights places where the selected digit is the only possibility
+    bool highlightOnlyOptions;
 } swadgedoku_t;
 
 typedef struct
@@ -383,6 +397,9 @@ bool squaresTouch(uint8_t ax, uint8_t ay, uint8_t bx, uint8_t by);
 bool setDigit(sudokuGrid_t* game, uint8_t number, uint8_t x, uint8_t y);
 void clearOverlayOpts(sudokuOverlay_t* overlay, const sudokuGrid_t* game, sudokuOverlayOpt_t optMask);
 
+void swadgedokuLoadSettings(void);
+void swadgedokuSaveSettings(void);
+
 //==============================================================================
 // Const data
 //==============================================================================
@@ -400,7 +417,10 @@ static const char menuItemCustomSize[]  = "Size: ";
 static const char menuItemDifficulty[]  = "Rating: ";
 // Settings menu
 static const char menuItemSettings[]    = "Settings";
-static const char menuItemWriteOnSelect[] = "Write Number on Selection";
+static const char menuItemWriteOnSelect[] = "Write Number on Selection: ";
+static const char menuItemAutoAnnotate[] = "Auto-Annotate: ";
+static const char menuItemHighlightPossibilities[] = "Highlight Possibilities: ";
+static const char menuItemHighlightOnlyOptions[] = "Highlight Only-Possible: ";
 // Pause menu
 static const char strPaused[]             = "Paused";
 static const char menuItemResume[]        = "Resume";
@@ -474,9 +494,12 @@ static const settingParam_t settingCustomSizeBounds
 static const settingParam_t settingCustomModeBounds = {.min = 0, .max = 2, .def = 0, .key = ""};
 static const settingParam_t settingDifficultyBounds = {.min = SD_BEGINNER, .max = SD_HARDEST, .def = 0, .key = ""};
 
-static const char settingKeyWriteOnSelect[] = "sdku_writeonsel";
-static const settingParam_t settingWriteOnSelectBounds = {
-    .min = 0, .max = 1, .def = 1, .key = settingKeyWriteOnSelect,
+static const char settingKeyOptionBits[] = "sdku_settings";
+static const settingParam_t settingBoolDefaultOnBounds = {
+    .min = 0, .max = 1, .def = 1, .key = NULL,
+};
+static const settingParam_t settingBoolDefaultOffBounds = {
+    .min = 0, .max = 1, .def = 0, .key = NULL,
 };
 static const char* noYesOptions[] = {
     "No",
@@ -487,6 +510,9 @@ static int32_t noYesValues[] = {
     0,
     1,
 };
+
+static const sudokuSettingBit_t defaultSettings =
+    SSB_WRITE_ON_SELECT | SSB_HIGHLIGHT_POSSIBILITIES;
 
 static const sudokuTheme_t lightTheme = {.bgColor        = c333,
                                          .fillColor      = c555,
@@ -634,12 +660,7 @@ static void swadgedokuEnterMode(void)
         sd->lastLevel = sd->maxLevel;
     }
 
-    int32_t nvsVal;
-    if (!readNvs32(settingKeyWriteOnSelect, &nvsVal))
-    {
-        nvsVal = 1;
-    }
-    sd->writeOnSelect = nvsVal ? true : false;
+    swadgedokuLoadSettings();
 
     sd->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
     sd->emptyMenu    = initMenu(sd->emptyMenuTitle, NULL);
@@ -730,7 +751,12 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
                 }
             }
 
-            swadgedokuDrawGame(&sd->game, sd->game.notes, &sd->player.overlay, &lightTheme);
+            uint16_t* notes = sd->player.notes;
+            if (sd->autoAnnotate)
+            {
+                notes = sd->game.notes;
+            }
+            swadgedokuDrawGame(&sd->game, notes, &sd->player.overlay, &lightTheme);
 
             if (sd->player.selectedDigit)
             {
@@ -864,7 +890,10 @@ static void swadgedokuSetupMenu(void)
     sd->menu = endSubMenu(sd->menu);
 
     sd->menu = startSubMenu(sd->menu, menuItemSettings);
-    addSettingsOptionsItemToMenu(sd->menu, menuItemWriteOnSelect, noYesOptions, noYesValues, sizeof(noYesOptions), &settingWriteOnSelectBounds, sd->writeOnSelect);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemWriteOnSelect, noYesOptions, noYesValues, ARRAY_SIZE(noYesOptions), &settingBoolDefaultOnBounds, sd->writeOnSelect ? 1 : 0);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemAutoAnnotate, noYesOptions, noYesValues, ARRAY_SIZE(noYesOptions), &settingBoolDefaultOffBounds, sd->autoAnnotate ? 1 : 0);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemHighlightPossibilities, noYesOptions, noYesValues, ARRAY_SIZE(noYesOptions), &settingBoolDefaultOnBounds, sd->highlightOnlyOptions ? 1 : 0);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemHighlightOnlyOptions, noYesOptions, noYesValues, ARRAY_SIZE(noYesOptions), &settingBoolDefaultOffBounds, sd->highlightPossibilities ? 1 : 0);
     sd->menu = endSubMenu(sd->menu);
 }
 
@@ -1095,8 +1124,35 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             bool newVal = value ? true : false;
             if (newVal != sd->writeOnSelect)
             {
-                writeNvs32(settingKeyWriteOnSelect, newVal);
                 sd->writeOnSelect = newVal;
+                swadgedokuSaveSettings();
+            }
+        }
+        else if (menuItemAutoAnnotate == label)
+        {
+            bool newVal = value ? true : false;
+            if (newVal != sd->autoAnnotate)
+            {
+                sd->autoAnnotate = newVal;
+                swadgedokuSaveSettings();
+            }
+        }
+        else if (menuItemHighlightPossibilities == label)
+        {
+            bool newVal = value ? true : false;
+            if (newVal != sd->highlightPossibilities)
+            {
+                sd->highlightPossibilities = newVal;
+                swadgedokuSaveSettings();
+            }
+        }
+        else if (menuItemHighlightOnlyOptions == label)
+        {
+            bool newVal = value ? true : false;
+            if (newVal != sd->highlightOnlyOptions)
+            {
+                sd->highlightOnlyOptions = newVal;
+                swadgedokuSaveSettings();
             }
         }
     }
@@ -2571,7 +2627,7 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
     bool highlightSelectedDigit = false;
 
     // Highlight the first-order possibilities for the digit under the cursor
-    bool highlightCursorDigitLocations = true;
+    bool highlightCursorDigitLocations = sd->highlightPossibilities;
     // Highlight the first-order possibilities for the digit to be entered
     bool highlightSelectedDigitLocations = false;
 
@@ -2684,12 +2740,26 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
 
             if (!digit && highlightCursorDigitLocations && cursorDigit && (game->notes[n] & cursorBits))
             {
-                overlay->gridOpts[n] |= (game->notes[n] == cursorBits) ? OVERLAY_CHECK : OVERLAY_QUESTION;
+                if (game->notes[n] == cursorBits && sd->highlightOnlyOptions)
+                {
+                    overlay->gridOpts[n] |= OVERLAY_CHECK;
+                }
+                else
+                {
+                    overlay->gridOpts[n] |= OVERLAY_QUESTION;
+                }
             }
             else if (!digit && highlightSelectedDigitLocations && player->selectedDigit && (game->notes[n] & selBits))
             {
                 // Use a ? if this is the only possibility
-                overlay->gridOpts[n] |= (game->notes[n] == selBits) ? OVERLAY_CHECK : OVERLAY_QUESTION;
+                if (game->notes[n] == selBits && sd->highlightOnlyOptions)
+                {
+                    overlay->gridOpts[n] |= OVERLAY_CHECK;
+                }
+                else
+                {
+                    overlay->gridOpts[n] |= OVERLAY_QUESTION;
+                }
             }
 
             if (cursorDigit && cursorDigit == digit)
@@ -3519,5 +3589,33 @@ void clearOverlayOpts(sudokuOverlay_t* overlay, const sudokuGrid_t* game, sudoku
     for (int n = 0; n < game->size * game->size; n++)
     {
         overlay->gridOpts[n] &= ~optMask;
+    }
+}
+
+void swadgedokuLoadSettings(void)
+{
+    int32_t allSettings = 0;
+    if (!readNvs32(settingKeyOptionBits, &allSettings))
+    {
+        allSettings = (int32_t)defaultSettings;
+    }
+
+    sd->writeOnSelect = (allSettings & SSB_WRITE_ON_SELECT) ? true : false;
+    sd->autoAnnotate = (allSettings & SSB_AUTO_ANNOTATE) ? true : false;
+    sd->highlightPossibilities = (allSettings & SSB_HIGHLIGHT_POSSIBILITIES) ? true : false;
+    sd->highlightOnlyOptions = (allSettings & SSB_HIGHLIGHT_ONLY_OPTIONS) ? true : false;
+}
+
+void swadgedokuSaveSettings(void)
+{
+    int32_t allSettings = 0;
+    allSettings |= sd->writeOnSelect ? SSB_WRITE_ON_SELECT : 0;
+    allSettings |= sd->autoAnnotate ? SSB_AUTO_ANNOTATE : 0;
+    allSettings |= sd->highlightPossibilities ? SSB_HIGHLIGHT_POSSIBILITIES : 0;
+    allSettings |= sd->highlightOnlyOptions ? SSB_HIGHLIGHT_ONLY_OPTIONS : 0;
+
+    if (!writeNvs32(settingKeyOptionBits, allSettings))
+    {
+        ESP_LOGE("Swadgedoku", "Could not save swadgedoku settings!");
     }
 }
