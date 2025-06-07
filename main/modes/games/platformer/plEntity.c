@@ -545,7 +545,7 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
 
             tempT = pl_getTile(self->tilemap, tempTx, tempTy);
             
-            if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, (self->xspeed > 0))){
+            if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 1)){
                 newX = ((tempTx) << PL_TILESIZE_IN_POWERS_OF_2) - offX;
             }
         }
@@ -564,7 +564,7 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
 
             tempT = pl_getTile(self->tilemap, tempTx, tempTy);
             
-            if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, (self->xspeed > 0))){
+            if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 0)){
                 newX = ((tempTx+1) << PL_TILESIZE_IN_POWERS_OF_2) - offX;
             }
         }
@@ -585,8 +585,9 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
 
             tempT = pl_getTile(self->tilemap, tempTx, tempTy);
             
-            if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 2 << (self->yspeed > 0))){
+            if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 4)){
                 newY = ((tempTy) << PL_TILESIZE_IN_POWERS_OF_2) - offY;
+                self->falling = false;
             }
         }
     } else if(self->yspeed < 0){
@@ -604,7 +605,7 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
 
             tempT = pl_getTile(self->tilemap, tempTx, tempTy);
             
-            if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 2 << (self->yspeed > 0))){
+            if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 2)){
                 newY = ((tempTy+1) << PL_TILESIZE_IN_POWERS_OF_2) - offY;
             }
         }
@@ -622,7 +623,7 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
 
              tempT = pl_getTile(self->tilemap, tempTx, tempTy);
             
-            if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 2 << (1))){
+            if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 4)){
                 onGround = true;
             }
         }
