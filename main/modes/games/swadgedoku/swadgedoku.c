@@ -317,6 +317,7 @@ typedef struct
     int currentDifficulty;
     int currentMode;
     bool playingContinuation;
+    int currentLevelNumber;
 
     menu_t* numberWheel;
     wheelMenuRenderer_t* numberWheelRenderer;
@@ -464,6 +465,7 @@ static const settingParam_t settingLevelSelectBounds
     = {.min = 1, .max = (SUDOKU_PUZ_MAX - SUDOKU_PUZ_MIN) + 1, .def = 1, .key = settingKeyLastLevel};
 
 static const char settingKeyProgress[] = "sdku_progress";
+static const char settingKeyProgressId[] = "sdku_progid";
 
 // static const char settingKeyCustomSettings[] = "sdku_custom";
 static const settingParam_t settingCustomSizeBounds
@@ -815,8 +817,16 @@ static void swadgedokuSetupMenu(void)
         addSingleItemToMenu(sd->menu, menuItemContinue);
     }
     ESP_LOGE("Swadgedoku", "Last level is %d", sd->lastLevel);
+
+    // Kinda clunky...
+    settingParam_t constrainedLevelSelectBounds = {
+        .def = sd->lastLevel,
+        .min = 1,
+        .max = sd->maxLevel,
+    };
+
     sd->menu = startSubMenu(sd->menu, menuItemPlaySudoku);
-    addSettingsItemToMenu(sd->menu, menuItemLevelSelect, &settingLevelSelectBounds, sd->lastLevel);
+    addSettingsItemToMenu(sd->menu, menuItemLevelSelect, &constrainedLevelSelectBounds, sd->lastLevel);
     sd->menu = endSubMenu(sd->menu);
 
     addSingleItemToMenu(sd->menu, menuItemPlayJigsaw);
@@ -891,6 +901,16 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                 {
                     if (loadSudokuData(buffer, progLength, &sd->game))
                     {
+                        // Check if the progress is a "campaign" level
+                        int32_t curLevel;
+                        if (readNvs32(settingKeyProgressId, &curLevel))
+                        {
+                            sd->currentLevelNumber = curLevel;
+                        }
+                        else
+                        {
+                            sd->currentLevelNumber = -1;
+                        }
                         sd->playTimer = 0;
                         sd->playingContinuation = true;
                         setupSudokuPlayer(&sd->player, &sd->game);
@@ -912,10 +932,10 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                 ESP_LOGE("Swadgedoku", "Couldn't setup game???");
                 return;
             }*/
-            cnfsFileIdx_t file = value - 1 + SUDOKU_PUZ_000_BSP;
-            if (file > SUDOKU_PUZ_MAX)
+            cnfsFileIdx_t file = value - 1 + SUDOKU_PUZ_MIN;
+            if (file < SUDOKU_PUZ_MIN || file > SUDOKU_PUZ_MAX)
             {
-                ESP_LOGE("Swadgedoku", "Tried to load illegal game file ");
+                ESP_LOGE("Swadgedoku", "Tried to load illegal game file %" PRIu32, value);
                 return;
             }
             size_t fileLen;
@@ -923,10 +943,12 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             if (!loadSudokuData(sudokuData, fileLen, &sd->game))
             {
                 ESP_LOGE("Swadgedoku", "Couldn't load game file");
+                return;
             }
 
             sd->playTimer = 0;
             sd->playingContinuation = false;
+            sd->currentLevelNumber = value;
             setupSudokuPlayer(&sd->player, &sd->game);
             // sd->game.grid[0] = 9;
             // sd->game.flags[0] = SF_LOCKED;
@@ -955,6 +977,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
 
             sd->playTimer = 0;
             sd->playingContinuation = false;
+            sd->currentLevelNumber = -1;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
             swadgedokuSetupNumberWheel(sd->game.base, 0);
@@ -969,6 +992,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
 
             sd->playTimer = 0;
             sd->playingContinuation = false;
+            sd->currentLevelNumber = -1;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
             swadgedokuSetupNumberWheel(sd->game.base, 0);
@@ -2802,6 +2826,35 @@ void swadgedokuPlayerSetDigit(uint8_t digit)
                     if (!eraseNvsKey(settingKeyProgress))
                     {
                         ESP_LOGE("Swadgedoku", "Couldn't erase game progress from NVS!");
+                    }
+
+                    if (!eraseNvsKey(settingKeyProgressId))
+                    {
+                        ESP_LOGE("Swadgedoku", "Couldn't erase progress level ID value");
+                    }
+                }
+
+                if (sd->currentLevelNumber != -1)
+                {
+                    // Update the max level if needed
+                    if (sd->currentLevelNumber >= sd->maxLevel && sd->maxLevel < settingLevelSelectBounds.max)
+                    {
+                        ESP_LOGI("Swadgedoku", "Updating max completed level from %d to %d", sd->maxLevel, sd->currentLevelNumber + 1);
+                        sd->maxLevel = sd->currentLevelNumber + 1;
+                        if (!writeNvs32(settingKeyMaxLevel, sd->maxLevel))
+                        {
+                            ESP_LOGE("Swadgedoku", "Couldn't write updated max level to NVS");
+                        }
+                    }
+
+                    if (sd->lastLevel < sd->maxLevel)
+                    {
+                        ESP_LOGI("Swadgedoku", "Updating last completed level from %d to %d", sd->lastLevel, sd->currentLevelNumber + 1);
+                        sd->lastLevel = sd->currentLevelNumber + 1;
+                        if (!writeNvs32(settingKeyLastLevel, sd->lastLevel))
+                        {
+                            ESP_LOGE("Swadgedoku", "Couldn't write updated last level to NVS");
+                        }
                     }
                 }
                 sd->screen = SWADGEDOKU_WIN;
