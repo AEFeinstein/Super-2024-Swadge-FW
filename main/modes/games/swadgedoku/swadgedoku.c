@@ -910,7 +910,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                 ESP_LOGE("Swadgedoku", "Couldn't setup game???");
                 return;
             }*/
-            cnfsFileIdx_t file = value + SUDOKU_PUZ_000_BSP;
+            cnfsFileIdx_t file = value - 1 + SUDOKU_PUZ_000_BSP;
             if (file > SUDOKU_PUZ_MAX)
             {
                 ESP_LOGE("Swadgedoku", "Tried to load illegal game file ");
