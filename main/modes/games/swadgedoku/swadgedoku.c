@@ -549,6 +549,24 @@ const trophyData_t swadgedokuTrophies[] = {
         .maxVal      = 1,
         .identifier  = &fiveMinsTrigger,
     },
+    {
+        .title       = "Number cruncher",
+        .description = "Solve all sudoku difficulties",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = (int)SD_HARDEST + 1,
+        .identifier  = &anyPuzzleTrigger,
+    },
+    {
+        .title       = "Revised rules",
+        .description = "Play each Sudoku variant",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_CHECKLIST,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = (1 << ((int)SM_X_GRID + 1)) - 1,
+        .identifier  = &anyPuzzleTrigger,
+    }
 };
 
 // Individual mode settings
@@ -2798,7 +2816,26 @@ void swadgedokuCheckTrophyTriggers(void)
             }
 
             // All the trigger conditions must have passed, trigger the trophy!
-            trophyUpdate(*trophy, 1, true);
+            switch (trophy->type)
+            {
+                case TROPHY_TYPE_TRIGGER:
+                    trophyUpdate(*trophy, 1, true);
+                break;
+
+                case TROPHY_TYPE_PROGRESS:
+                    trophyUpdate(*trophy, sd->currentDifficulty + 1, true);
+                break;
+
+                case TROPHY_TYPE_ADDITIVE:
+                    // TODO: This would probably be the overall 'score'
+                    // So come up with a way to calculate a score
+                break;
+
+                case TROPHY_TYPE_CHECKLIST:
+                    // Checklist will probably be for the mode
+                    trophySetChecklistTask(*trophy, 1 << sd->currentMode, false, true);
+                break;
+            }
         }
     }
 }
