@@ -2637,8 +2637,9 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
     bool hLineThroughSelectedDigits = false;
     bool vLineThroughSelectedDigits = false;
 
-    const sudokuOverlayOpt_t keepOverlay = OVERLAY_ERROR;
+    const sudokuOverlayOpt_t keepOverlay = 0;
 
+    // Just make this oversized sometimes, I don't wanna do 6 memsets
     uint16_t rowMasks[SUDOKU_MAX_BASE] = {0};
     uint16_t colMasks[SUDOKU_MAX_BASE] = {0};
     uint16_t boxMasks[SUDOKU_MAX_BASE] = {0};
@@ -3202,7 +3203,11 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
             {
                 opts = overlay->gridOpts[r * game->size + c];
 
-                if (opts & OVERLAY_HIGHLIGHT_A)
+                if (opts & OVERLAY_ERROR)
+                {
+                    fillColor = c544;
+                }
+                else if (opts & OVERLAY_HIGHLIGHT_A)
                 {
                     // Cyan
                     fillColor = c044;
@@ -3221,10 +3226,6 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                 {
                     // Purpley
                     fillColor = c503;
-                }
-                else if (opts & OVERLAY_ERROR)
-                {
-                    fillColor = c544;
                 }
                 else
                 {
