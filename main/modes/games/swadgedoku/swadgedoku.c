@@ -6,6 +6,7 @@
 
 #include "menu.h"
 #include "wheel_menu.h"
+#include "mainMenu.h"
 
 //==============================================================================
 // Defines
@@ -147,10 +148,10 @@ typedef enum
 
 typedef enum
 {
-    SSB_WRITE_ON_SELECT = 1,
-    SSB_AUTO_ANNOTATE = 2,
+    SSB_WRITE_ON_SELECT         = 1,
+    SSB_AUTO_ANNOTATE           = 2,
     SSB_HIGHLIGHT_POSSIBILITIES = 4,
-    SSB_HIGHLIGHT_ONLY_OPTIONS = 8,
+    SSB_HIGHLIGHT_ONLY_OPTIONS  = 8,
 } sudokuSettingBit_t;
 
 //==============================================================================
@@ -405,6 +406,7 @@ void clearOverlayOpts(sudokuOverlay_t* overlay, const sudokuGrid_t* game, sudoku
 
 void swadgedokuLoadSettings(void);
 void swadgedokuSaveSettings(void);
+sudokuDifficulty_t getLevelDifficulty(int level);
 
 //==============================================================================
 // Const data
@@ -422,11 +424,11 @@ static const char menuItemCustomMode[]  = "Mode: ";
 static const char menuItemCustomSize[]  = "Size: ";
 static const char menuItemDifficulty[]  = "Rating: ";
 // Settings menu
-static const char menuItemSettings[]    = "Settings";
-static const char menuItemWriteOnSelect[] = "Write Number on Selection: ";
-static const char menuItemAutoAnnotate[] = "Auto-Annotate: ";
+static const char menuItemSettings[]               = "Settings";
+static const char menuItemWriteOnSelect[]          = "Write Number on Selection: ";
+static const char menuItemAutoAnnotate[]           = "Auto-Annotate: ";
 static const char menuItemHighlightPossibilities[] = "Highlight Possibilities: ";
-static const char menuItemHighlightOnlyOptions[] = "Highlight Only-Possible: ";
+static const char menuItemHighlightOnlyOptions[]   = "Highlight Only-Possible: ";
 // Pause menu
 static const char strPaused[]             = "Paused";
 static const char menuItemResume[]        = "Resume";
@@ -490,7 +492,7 @@ static const char settingKeyMaxLevel[]  = "sdku_maxlevel";
 static const settingParam_t settingLevelSelectBounds
     = {.min = 1, .max = (SUDOKU_PUZ_MAX - SUDOKU_PUZ_MIN) + 1, .def = 1, .key = settingKeyLastLevel};
 
-static const char settingKeyProgress[] = "sdku_progress";
+static const char settingKeyProgress[]   = "sdku_progress";
 static const char settingKeyProgressId[] = "sdku_progid";
 
 // static const char settingKeyCustomSettings[] = "sdku_custom";
@@ -500,12 +502,18 @@ static const settingParam_t settingCustomSizeBounds
 static const settingParam_t settingCustomModeBounds = {.min = 0, .max = 2, .def = 0, .key = ""};
 static const settingParam_t settingDifficultyBounds = {.min = SD_BEGINNER, .max = SD_HARDEST, .def = 0, .key = ""};
 
-static const char settingKeyOptionBits[] = "sdku_settings";
+static const char settingKeyOptionBits[]               = "sdku_settings";
 static const settingParam_t settingBoolDefaultOnBounds = {
-    .min = 0, .max = 1, .def = 1, .key = NULL,
+    .min = 0,
+    .max = 1,
+    .def = 1,
+    .key = NULL,
 };
 static const settingParam_t settingBoolDefaultOffBounds = {
-    .min = 0, .max = 1, .def = 0, .key = NULL,
+    .min = 0,
+    .max = 1,
+    .def = 0,
+    .key = NULL,
 };
 static const char* noYesOptions[] = {
     "No",
@@ -517,8 +525,7 @@ static int32_t noYesValues[] = {
     1,
 };
 
-static const sudokuSettingBit_t defaultSettings =
-    SSB_WRITE_ON_SELECT | SSB_HIGHLIGHT_POSSIBILITIES;
+static const sudokuSettingBit_t defaultSettings = SSB_WRITE_ON_SELECT | SSB_HIGHLIGHT_POSSIBILITIES;
 
 static const sudokuTheme_t lightTheme = {.bgColor        = c333,
                                          .fillColor      = c555,
@@ -553,53 +560,51 @@ const swadgedokuTrophyTrigger_t fiveMinsTrigger = {
     .mode       = -1,
 };
 
-const trophyData_t swadgedokuTrophies[] = {
-    {
-        .title       = "It's a numbers game",
-        .description = "Solve any Sudoku puzzle",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-        .identifier  = &anyPuzzleTrigger,
-    },
-    {
-        .title       = "Fast fingers",
-        .description = "Solve a Sudoku in under 10 minutes",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-        .identifier  = &tenMinsTrigger,
-    },
-    {
-        .title       = "Even faster fingers",
-        .description = "Solve a Sudoku in under 5 minutes",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1,
-        .identifier  = &fiveMinsTrigger,
-    },
-    {
-        .title       = "Number cruncher",
-        .description = "Solve all sudoku difficulties",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_PROGRESS,
-        .difficulty  = TROPHY_DIFF_EXTREME,
-        .maxVal      = (int)SD_HARDEST + 1,
-        .identifier  = &anyPuzzleTrigger,
-    },
-    {
-        .title       = "Revised rules",
-        .description = "Play each Sudoku variant",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_CHECKLIST,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = (1 << ((int)SM_X_GRID + 1)) - 1,
-        .identifier  = &anyPuzzleTrigger,
-    }
-};
+const trophyData_t swadgedokuTrophies[] = {{
+                                               .title       = "It's a numbers game",
+                                               .description = "Solve any Sudoku puzzle",
+                                               .image       = NO_IMAGE_SET,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_EASY,
+                                               .maxVal      = 1,
+                                               .identifier  = &anyPuzzleTrigger,
+                                           },
+                                           {
+                                               .title       = "Fast fingers",
+                                               .description = "Solve a Sudoku in under 10 minutes",
+                                               .image       = NO_IMAGE_SET,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_MEDIUM,
+                                               .maxVal      = 1,
+                                               .identifier  = &tenMinsTrigger,
+                                           },
+                                           {
+                                               .title       = "Even faster fingers",
+                                               .description = "Solve a Sudoku in under 5 minutes",
+                                               .image       = NO_IMAGE_SET,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_HARD,
+                                               .maxVal      = 1,
+                                               .identifier  = &fiveMinsTrigger,
+                                           },
+                                           {
+                                               .title       = "Number cruncher",
+                                               .description = "Solve all sudoku difficulties",
+                                               .image       = NO_IMAGE_SET,
+                                               .type        = TROPHY_TYPE_PROGRESS,
+                                               .difficulty  = TROPHY_DIFF_EXTREME,
+                                               .maxVal      = (int)SD_HARDEST + 1,
+                                               .identifier  = &anyPuzzleTrigger,
+                                           },
+                                           {
+                                               .title       = "Revised rules",
+                                               .description = "Play each Sudoku variant",
+                                               .image       = NO_IMAGE_SET,
+                                               .type        = TROPHY_TYPE_CHECKLIST,
+                                               .difficulty  = TROPHY_DIFF_HARD,
+                                               .maxVal      = (1 << ((int)SM_X_GRID + 1)) - 1,
+                                               .identifier  = &anyPuzzleTrigger,
+                                           }};
 
 // Individual mode settings
 trophySettings_t swadgedokuTrophySettings = {
@@ -649,6 +654,12 @@ static swadgedoku_t* sd = NULL;
 static void swadgedokuEnterMode(void)
 {
     sd = calloc(1, sizeof(swadgedoku_t));
+    if (!sd)
+    {
+        // make cppcheck happy
+        switchToSwadgeMode(&mainMenuMode);
+        return;
+    }
 
     sd->screen = SWADGEDOKU_MAIN_MENU;
 
@@ -658,15 +669,18 @@ static void swadgedokuEnterMode(void)
 
     loadWsg(SUDOKU_NOTES_WSG, &sd->noteTakingIcon, true);
 
-    if (!readNvs32(settingKeyMaxLevel, &sd->maxLevel))
+    int32_t nvsVal;
+    if (!readNvs32(settingKeyMaxLevel, &nvsVal))
     {
-        sd->maxLevel = 1;
+        nvsVal = 1;
     }
+    sd->maxLevel = nvsVal;
 
-    if (!readNvs32(settingKeyLastLevel, &sd->lastLevel))
+    if (!readNvs32(settingKeyLastLevel, &nvsVal))
     {
-        sd->lastLevel = sd->maxLevel;
+        nvsVal = sd->maxLevel;
     }
+    sd->lastLevel = nvsVal;
 
     swadgedokuLoadSettings();
 
@@ -775,7 +789,8 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
             if (sd->player.noteTaking)
             {
                 // draw like, a pencil
-                drawWsgSimple(&sd->noteTakingIcon, TFT_WIDTH - 5 - sd->noteTakingIcon.w, (TFT_HEIGHT - sd->gridFont.height) / 2 - 5 - sd->noteTakingIcon.h);
+                drawWsgSimple(&sd->noteTakingIcon, TFT_WIDTH - 5 - sd->noteTakingIcon.w,
+                              (TFT_HEIGHT - sd->gridFont.height) / 2 - 5 - sd->noteTakingIcon.h);
             }
 
             if (sd->player.selectedDigit)
@@ -904,22 +919,28 @@ static void swadgedokuSetupMenu(void)
         addSingleItemToMenu(sd->menu, menuItemStartCustom);
         sd->customModeMenuItem
             = addSettingsOptionsItemToMenu(sd->menu, menuItemCustomMode, menuOptLabelsCustomMode, menuOptValsCustomMode,
-                                        ARRAY_SIZE(menuOptValsCustomMode), &settingCustomModeBounds, 0);
+                                           ARRAY_SIZE(menuOptValsCustomMode), &settingCustomModeBounds, 0);
         sd->customSizeMenuItem
             = addSettingsOptionsItemToMenu(sd->menu, menuItemCustomSize, menuOptLabelsCustomSize, menuOptValsCustomSize,
-                                        ARRAY_SIZE(menuOptValsCustomSize), &settingCustomSizeBounds, 9);
+                                           ARRAY_SIZE(menuOptValsCustomSize), &settingCustomSizeBounds, 9);
         sd->customDifficultyMenuItem
             = addSettingsOptionsItemToMenu(sd->menu, menuItemDifficulty, menuOptLabelsDifficulty, menuOptValsDifficulty,
-                                        ARRAY_SIZE(menuOptValsDifficulty), &settingDifficultyBounds, 0);
+                                           ARRAY_SIZE(menuOptValsDifficulty), &settingDifficultyBounds, 0);
     }
 
     sd->menu = endSubMenu(sd->menu);
 
     sd->menu = startSubMenu(sd->menu, menuItemSettings);
-    addSettingsOptionsItemToMenu(sd->menu, menuItemWriteOnSelect, noYesOptions, noYesValues, ARRAY_SIZE(noYesOptions), &settingBoolDefaultOnBounds, sd->writeOnSelect ? 1 : 0);
-    addSettingsOptionsItemToMenu(sd->menu, menuItemAutoAnnotate, noYesOptions, noYesValues, ARRAY_SIZE(noYesOptions), &settingBoolDefaultOffBounds, sd->autoAnnotate ? 1 : 0);
-    addSettingsOptionsItemToMenu(sd->menu, menuItemHighlightPossibilities, noYesOptions, noYesValues, ARRAY_SIZE(noYesOptions), &settingBoolDefaultOnBounds, sd->highlightOnlyOptions ? 1 : 0);
-    addSettingsOptionsItemToMenu(sd->menu, menuItemHighlightOnlyOptions, noYesOptions, noYesValues, ARRAY_SIZE(noYesOptions), &settingBoolDefaultOffBounds, sd->highlightPossibilities ? 1 : 0);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemWriteOnSelect, noYesOptions, noYesValues, ARRAY_SIZE(noYesOptions),
+                                 &settingBoolDefaultOnBounds, sd->writeOnSelect ? 1 : 0);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemAutoAnnotate, noYesOptions, noYesValues, ARRAY_SIZE(noYesOptions),
+                                 &settingBoolDefaultOffBounds, sd->autoAnnotate ? 1 : 0);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemHighlightPossibilities, noYesOptions, noYesValues,
+                                 ARRAY_SIZE(noYesOptions), &settingBoolDefaultOnBounds,
+                                 sd->highlightOnlyOptions ? 1 : 0);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemHighlightOnlyOptions, noYesOptions, noYesValues,
+                                 ARRAY_SIZE(noYesOptions), &settingBoolDefaultOffBounds,
+                                 sd->highlightPossibilities ? 1 : 0);
     sd->menu = endSubMenu(sd->menu);
 }
 
@@ -979,12 +1000,13 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                         if (readNvs32(settingKeyProgressId, &curLevel))
                         {
                             sd->currentLevelNumber = curLevel;
+                            sd->currentDifficulty = getLevelDifficulty(curLevel);
                         }
                         else
                         {
                             sd->currentLevelNumber = -1;
                         }
-                        sd->playTimer = 0;
+                        sd->playTimer           = 0;
                         sd->playingContinuation = true;
                         setupSudokuPlayer(&sd->player, &sd->game);
                         sudokuGetNotes(sd->game.notes, &sd->game, 0);
@@ -1020,9 +1042,11 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                 return;
             }
 
-            sd->playTimer = 0;
+            sd->playTimer           = 0;
             sd->playingContinuation = false;
-            sd->currentLevelNumber = value;
+            sd->currentLevelNumber  = value;
+            sd->currentDifficulty = getLevelDifficulty(value);
+
             setupSudokuPlayer(&sd->player, &sd->game);
             // sd->game.grid[0] = 9;
             // sd->game.flags[0] = SF_LOCKED;
@@ -1050,9 +1074,9 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             sd->currentMode       = sd->customModeMenuItem->currentSetting;
             sd->currentDifficulty = sd->customDifficultyMenuItem->currentSetting;
 
-            sd->playTimer = 0;
+            sd->playTimer           = 0;
             sd->playingContinuation = false;
-            sd->currentLevelNumber = -1;
+            sd->currentLevelNumber  = -1;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
             sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game);
@@ -1066,9 +1090,9 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                 return;
             }
 
-            sd->playTimer = 0;
+            sd->playTimer           = 0;
             sd->playingContinuation = false;
-            sd->currentLevelNumber = -1;
+            sd->currentLevelNumber  = -1;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
             sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game);
@@ -2679,12 +2703,12 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
     {
         if (!(game->flags[n] & SF_VOID))
         {
-            const int digit     = game->grid[n];
+            const int digit = game->grid[n];
             if (digit != 0)
             {
-                const int r   = n / game->size;
-                const int c   = n % game->size;
-                const int box = game->boxMap[n];
+                const int r         = n / game->size;
+                const int c         = n % game->size;
+                const int box       = game->boxMap[n];
                 const uint16_t bits = (1 << (digit - 1));
 
                 if (rowMasks[r] & bits)
@@ -2709,7 +2733,6 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
                 }
             }
         }
-
     }
 
     // Do all the annotations now
@@ -2921,21 +2944,21 @@ void swadgedokuCheckTrophyTriggers(void)
             {
                 case TROPHY_TYPE_TRIGGER:
                     trophyUpdate(*trophy, 1, true);
-                break;
+                    break;
 
                 case TROPHY_TYPE_PROGRESS:
                     trophyUpdate(*trophy, sd->currentDifficulty + 1, true);
-                break;
+                    break;
 
                 case TROPHY_TYPE_ADDITIVE:
                     // TODO: This would probably be the overall 'score'
                     // So come up with a way to calculate a score
-                break;
+                    break;
 
                 case TROPHY_TYPE_CHECKLIST:
                     // Checklist will probably be for the mode
                     trophySetChecklistTask(*trophy, 1 << sd->currentMode, false, true);
-                break;
+                    break;
             }
         }
     }
@@ -2947,7 +2970,7 @@ void swadgedokuPlayerSetDigit(uint8_t digit)
     {
         if (!(sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX] & (SF_LOCKED | SF_VOID)))
         {
-            uint16_t bit = 1 << (digit - 1);
+            uint16_t bit   = 1 << (digit - 1);
             uint16_t* note = &sd->player.notes[sd->player.curY * sd->game.size + sd->player.curX];
 
             if (*note & bit)
@@ -2996,7 +3019,8 @@ void swadgedokuPlayerSetDigit(uint8_t digit)
                         // Update the max level if needed
                         if (sd->currentLevelNumber >= sd->maxLevel && sd->maxLevel < settingLevelSelectBounds.max)
                         {
-                            ESP_LOGI("Swadgedoku", "Updating max completed level from %d to %d", sd->maxLevel, sd->currentLevelNumber + 1);
+                            ESP_LOGI("Swadgedoku", "Updating max completed level from %d to %d", sd->maxLevel,
+                                     sd->currentLevelNumber + 1);
                             sd->maxLevel = sd->currentLevelNumber + 1;
                             if (!writeNvs32(settingKeyMaxLevel, sd->maxLevel))
                             {
@@ -3006,7 +3030,8 @@ void swadgedokuPlayerSetDigit(uint8_t digit)
 
                         if (sd->lastLevel < sd->maxLevel)
                         {
-                            ESP_LOGI("Swadgedoku", "Updating last completed level from %d to %d", sd->lastLevel, sd->currentLevelNumber + 1);
+                            ESP_LOGI("Swadgedoku", "Updating last completed level from %d to %d", sd->lastLevel,
+                                     sd->currentLevelNumber + 1);
                             sd->lastLevel = sd->currentLevelNumber + 1;
                             if (!writeNvs32(settingKeyLastLevel, sd->lastLevel))
                             {
@@ -3653,10 +3678,10 @@ void swadgedokuLoadSettings(void)
         allSettings = (int32_t)defaultSettings;
     }
 
-    sd->writeOnSelect = (allSettings & SSB_WRITE_ON_SELECT) ? true : false;
-    sd->autoAnnotate = (allSettings & SSB_AUTO_ANNOTATE) ? true : false;
+    sd->writeOnSelect          = (allSettings & SSB_WRITE_ON_SELECT) ? true : false;
+    sd->autoAnnotate           = (allSettings & SSB_AUTO_ANNOTATE) ? true : false;
     sd->highlightPossibilities = (allSettings & SSB_HIGHLIGHT_POSSIBILITIES) ? true : false;
-    sd->highlightOnlyOptions = (allSettings & SSB_HIGHLIGHT_ONLY_OPTIONS) ? true : false;
+    sd->highlightOnlyOptions   = (allSettings & SSB_HIGHLIGHT_ONLY_OPTIONS) ? true : false;
 }
 
 void swadgedokuSaveSettings(void)
@@ -3670,5 +3695,26 @@ void swadgedokuSaveSettings(void)
     if (!writeNvs32(settingKeyOptionBits, allSettings))
     {
         ESP_LOGE("Swadgedoku", "Could not save swadgedoku settings!");
+    }
+}
+
+sudokuDifficulty_t getLevelDifficulty(int level)
+{
+    // TODO: Maybe just include the difficulty in the sudoku data?
+    if (level < 10)
+    {
+        return SD_BEGINNER;
+    }
+    else if (level < 25)
+    {
+        return SD_EASY;
+    }
+    else if (level < 40)
+    {
+        return SD_MEDIUM;
+    }
+    else
+    {
+        return SD_HARD;
     }
 }
