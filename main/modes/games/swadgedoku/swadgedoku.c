@@ -2532,6 +2532,52 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
 
     const sudokuOverlayOpt_t keepOverlay = OVERLAY_ERROR;
 
+    uint16_t rowMasks[SUDOKU_MAX_BASE] = {0};
+    uint16_t colMasks[SUDOKU_MAX_BASE] = {0};
+    uint16_t boxMasks[SUDOKU_MAX_BASE] = {0};
+
+    uint16_t rowErrs[SUDOKU_MAX_BASE] = {0};
+    uint16_t colErrs[SUDOKU_MAX_BASE] = {0};
+    uint16_t boxErrs[SUDOKU_MAX_BASE] = {0};
+
+    // Get all row/col/box masks to check duplicates
+    for (int n = 0; n < game->size * game->size; n++)
+    {
+        if (!(game->flags[n] & SF_VOID))
+        {
+            const int digit     = game->grid[n];
+            if (digit != 0)
+            {
+                const int r   = n / game->size;
+                const int c   = n % game->size;
+                const int box = game->boxMap[n];
+                const uint16_t bits = (1 << (digit - 1));
+
+                if (rowMasks[r] & bits)
+                {
+                    rowErrs[r] |= bits;
+                }
+
+                if (colMasks[c] & bits)
+                {
+                    colErrs[c] |= bits;
+                }
+
+                rowMasks[r] |= bits;
+                colMasks[c] |= bits;
+                if (box < SUDOKU_MAX_BASE)
+                {
+                    if (boxMasks[box] & bits)
+                    {
+                        boxErrs[box] |= bits;
+                    }
+                    boxMasks[box] |= bits;
+                }
+            }
+        }
+
+    }
+
     // Do all the annotations now
     for (int n = 0; n < game->size * game->size; n++)
     {
@@ -2610,6 +2656,18 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
                 {
                     addCrosshairOverlay(overlay, r, c, game->size, hLineThroughSelectedDigits,
                                         vLineThroughSelectedDigits, ST_ANNOTATE);
+                }
+            }
+
+            // Error checking
+            if (digit != 0)
+            {
+                // So we know which digits have errors (duplicates) in any given
+                // row, column, or box. Now we just highlight _all_ those cells!
+                uint16_t bits = (1 << (digit - 1));
+                if ((rowErrs[r] & bits) || (colErrs[c] & bits) || (box < SUDOKU_MAX_BASE && (boxErrs[box] & bits)))
+                {
+                    overlay->gridOpts[n] |= OVERLAY_ERROR;
                 }
             }
         }
@@ -2995,6 +3053,10 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                     // Purpley
                     fillColor = c503;
                 }
+                else if (opts & OVERLAY_ERROR)
+                {
+                    fillColor = c544;
+                }
                 else
                 {
                     int red = 0;
@@ -3174,11 +3236,6 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                 if (opts & OVERLAY_CROSS_OUT)
                 {
                     overlayText = "X";
-                }
-                if (opts & OVERLAY_ERROR)
-                {
-                    // Really this should just make the number red?
-                    overlayText = "!";
                 }
 
                 if (overlayText)
