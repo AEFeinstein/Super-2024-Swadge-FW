@@ -24,6 +24,9 @@
 // SUBPOS_* defines used for positioning overlays within the sudoku board
 #define BOX_SIZE_SUBPOS 13
 
+#define ENABLE_CUSTOM false
+#define ENABLE_JIGSAW false
+
 /*
  * @brief Computes a subposition value for the given x and y, in 13ths-of-a-square
  *
@@ -890,19 +893,25 @@ static void swadgedokuSetupMenu(void)
     addSettingsItemToMenu(sd->menu, menuItemLevelSelect, &constrainedLevelSelectBounds, sd->lastLevel);
     sd->menu = endSubMenu(sd->menu);
 
-    addSingleItemToMenu(sd->menu, menuItemPlayJigsaw);
+    if (ENABLE_JIGSAW)
+    {
+        addSingleItemToMenu(sd->menu, menuItemPlayJigsaw);
+    }
 
-    sd->menu = startSubMenu(sd->menu, menuItemPlayCustom);
-    addSingleItemToMenu(sd->menu, menuItemStartCustom);
-    sd->customModeMenuItem
-        = addSettingsOptionsItemToMenu(sd->menu, menuItemCustomMode, menuOptLabelsCustomMode, menuOptValsCustomMode,
-                                       ARRAY_SIZE(menuOptValsCustomMode), &settingCustomModeBounds, 0);
-    sd->customSizeMenuItem
-        = addSettingsOptionsItemToMenu(sd->menu, menuItemCustomSize, menuOptLabelsCustomSize, menuOptValsCustomSize,
-                                       ARRAY_SIZE(menuOptValsCustomSize), &settingCustomSizeBounds, 9);
-    sd->customDifficultyMenuItem
-        = addSettingsOptionsItemToMenu(sd->menu, menuItemDifficulty, menuOptLabelsDifficulty, menuOptValsDifficulty,
-                                       ARRAY_SIZE(menuOptValsDifficulty), &settingDifficultyBounds, 0);
+    if (ENABLE_CUSTOM)
+    {
+        sd->menu = startSubMenu(sd->menu, menuItemPlayCustom);
+        addSingleItemToMenu(sd->menu, menuItemStartCustom);
+        sd->customModeMenuItem
+            = addSettingsOptionsItemToMenu(sd->menu, menuItemCustomMode, menuOptLabelsCustomMode, menuOptValsCustomMode,
+                                        ARRAY_SIZE(menuOptValsCustomMode), &settingCustomModeBounds, 0);
+        sd->customSizeMenuItem
+            = addSettingsOptionsItemToMenu(sd->menu, menuItemCustomSize, menuOptLabelsCustomSize, menuOptValsCustomSize,
+                                        ARRAY_SIZE(menuOptValsCustomSize), &settingCustomSizeBounds, 9);
+        sd->customDifficultyMenuItem
+            = addSettingsOptionsItemToMenu(sd->menu, menuItemDifficulty, menuOptLabelsDifficulty, menuOptValsDifficulty,
+                                        ARRAY_SIZE(menuOptValsDifficulty), &settingDifficultyBounds, 0);
+    }
 
     sd->menu = endSubMenu(sd->menu);
 
