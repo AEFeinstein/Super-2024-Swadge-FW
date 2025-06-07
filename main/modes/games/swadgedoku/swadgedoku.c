@@ -3369,8 +3369,9 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                 paletteColor_t color = (flags & SF_LOCKED) ? theme->inkColor : theme->pencilColor;
                 if (overlay)
                 {
-                    if (opts & OVERLAY_ERROR)
+                    if (opts & OVERLAY_ERROR && !(game->flags[r * game->size + c] & SF_LOCKED))
                     {
+                        // Color the text red in error (but not if it's a given value)
                         color = c500;
                     }
                     else if (opts & OVERLAY_CHECK)
