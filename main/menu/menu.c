@@ -720,7 +720,7 @@ menu_t* menuSelectCurrentItem(menu_t* menu)
     {
         menu->cbFunc(item->label, true, item->settingVals[item->currentOpt]);
     }
-    else if (item->minSetting != item->maxSetting)
+    else if (item->minSetting != item->maxSetting || (item->numOptions != 0 && !item->options))
     {
         // Call the callback, not selected
         menu->cbFunc(item->label, true, item->currentSetting);
