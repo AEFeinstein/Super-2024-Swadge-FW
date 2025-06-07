@@ -316,6 +316,7 @@ typedef struct
     // Difficulty of the current game, or -1 if N/A
     int currentDifficulty;
     int currentMode;
+    bool playingContinuation;
 
     menu_t* numberWheel;
     wheelMenuRenderer_t* numberWheelRenderer;
@@ -891,6 +892,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                     if (loadSudokuData(buffer, progLength, &sd->game))
                     {
                         sd->playTimer = 0;
+                        sd->playingContinuation = true;
                         setupSudokuPlayer(&sd->player, &sd->game);
                         sudokuGetNotes(sd->game.notes, &sd->game, 0);
                         swadgedokuSetupNumberWheel(sd->game.base, 0);
@@ -924,6 +926,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             }
 
             sd->playTimer = 0;
+            sd->playingContinuation = false;
             setupSudokuPlayer(&sd->player, &sd->game);
             // sd->game.grid[0] = 9;
             // sd->game.flags[0] = SF_LOCKED;
@@ -951,6 +954,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             sd->currentDifficulty = sd->customDifficultyMenuItem->currentSetting;
 
             sd->playTimer = 0;
+            sd->playingContinuation = false;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
             swadgedokuSetupNumberWheel(sd->game.base, 0);
@@ -964,6 +968,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             }
 
             sd->playTimer = 0;
+            sd->playingContinuation = false;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
             swadgedokuSetupNumberWheel(sd->game.base, 0);
