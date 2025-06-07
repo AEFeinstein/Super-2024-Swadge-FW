@@ -292,6 +292,9 @@ typedef struct
     /// @brief Font for UI text
     font_t uiFont;
 
+    /// @brief Icon used for showing input is in note taking mode
+    wsg_t noteTakingIcon;
+
     sudokuScreen_t screen;
     sudokuGrid_t game;
     int64_t playTimer;
@@ -650,6 +653,8 @@ static void swadgedokuEnterMode(void)
     loadFont(TINY_NUMBERS_FONT, &sd->noteFont, true);
     loadFont(SONIC_FONT, &sd->uiFont, true);
 
+    loadWsg(SUDOKU_NOTES_WSG, &sd->noteTakingIcon, true);
+
     if (!readNvs32(settingKeyMaxLevel, &sd->maxLevel))
     {
         sd->maxLevel = 1;
@@ -684,6 +689,12 @@ static void swadgedokuExitMode(void)
     {
         free(val);
     }
+
+    freeFont(&sd->gridFont);
+    freeFont(&sd->noteFont);
+    freeFont(&sd->uiFont);
+
+    freeWsg(&sd->noteTakingIcon);
 
     free(sd->player.notes);
     free(sd->player.overlay.gridOpts);
@@ -757,6 +768,12 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
                 notes = sd->game.notes;
             }
             swadgedokuDrawGame(&sd->game, notes, &sd->player.overlay, &lightTheme);
+
+            if (sd->player.noteTaking)
+            {
+                // draw like, a pencil
+                drawWsgSimple(&sd->noteTakingIcon, TFT_WIDTH - 5 - sd->noteTakingIcon.w, (TFT_HEIGHT - sd->gridFont.height) / 2 - 5 - sd->noteTakingIcon.h);
+            }
 
             if (sd->player.selectedDigit)
             {
@@ -2639,7 +2656,7 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
 
     const sudokuOverlayOpt_t keepOverlay = 0;
 
-    // Just make this oversized sometimes, I don't wanna do 6 memsets
+    // Just make this oversized sometimes so it can be initialized, I don't wanna do 6 memsets
     uint16_t rowMasks[SUDOKU_MAX_BASE] = {0};
     uint16_t colMasks[SUDOKU_MAX_BASE] = {0};
     uint16_t boxMasks[SUDOKU_MAX_BASE] = {0};
@@ -2917,60 +2934,80 @@ void swadgedokuCheckTrophyTriggers(void)
 
 void swadgedokuPlayerSetDigit(uint8_t digit)
 {
-    if (setDigit(&sd->game, digit, sd->player.curX, sd->player.curY))
+    if (sd->player.noteTaking)
     {
-        switch (swadgedokuCheckWin(&sd->game))
+        if (!(sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX] & (SF_LOCKED | SF_VOID)))
         {
-            case -1:
-                ESP_LOGD("Swadgedoku", "Invalid sudoku board!");
-                break;
+            uint16_t bit = 1 << (digit - 1);
+            uint16_t* note = &sd->player.notes[sd->player.curY * sd->game.size + sd->player.curX];
 
-            case 0:
-                ESP_LOGD("Swadgedoku", "Sudoku OK but incomplete");
-                break;
-
-            case 1:
+            if (*note & bit)
             {
-                swadgedokuCheckTrophyTriggers();
-                if (sd->playingContinuation)
-                {
-                    // Clear saved game since we just finished it
-                    if (!eraseNvsKey(settingKeyProgress))
-                    {
-                        ESP_LOGE("Swadgedoku", "Couldn't erase game progress from NVS!");
-                    }
+                *note &= (~bit);
+            }
+            else
+            {
+                *note |= bit;
+            }
+        }
+    }
+    else
+    {
+        if (setDigit(&sd->game, digit, sd->player.curX, sd->player.curY))
+        {
+            switch (swadgedokuCheckWin(&sd->game))
+            {
+                case -1:
+                    ESP_LOGD("Swadgedoku", "Invalid sudoku board!");
+                    break;
 
-                    if (!eraseNvsKey(settingKeyProgressId))
-                    {
-                        ESP_LOGE("Swadgedoku", "Couldn't erase progress level ID value");
-                    }
-                }
+                case 0:
+                    ESP_LOGD("Swadgedoku", "Sudoku OK but incomplete");
+                    break;
 
-                if (sd->currentLevelNumber != -1)
+                case 1:
                 {
-                    // Update the max level if needed
-                    if (sd->currentLevelNumber >= sd->maxLevel && sd->maxLevel < settingLevelSelectBounds.max)
+                    swadgedokuCheckTrophyTriggers();
+                    if (sd->playingContinuation)
                     {
-                        ESP_LOGI("Swadgedoku", "Updating max completed level from %d to %d", sd->maxLevel, sd->currentLevelNumber + 1);
-                        sd->maxLevel = sd->currentLevelNumber + 1;
-                        if (!writeNvs32(settingKeyMaxLevel, sd->maxLevel))
+                        // Clear saved game since we just finished it
+                        if (!eraseNvsKey(settingKeyProgress))
                         {
-                            ESP_LOGE("Swadgedoku", "Couldn't write updated max level to NVS");
+                            ESP_LOGE("Swadgedoku", "Couldn't erase game progress from NVS!");
+                        }
+
+                        if (!eraseNvsKey(settingKeyProgressId))
+                        {
+                            ESP_LOGE("Swadgedoku", "Couldn't erase progress level ID value");
                         }
                     }
 
-                    if (sd->lastLevel < sd->maxLevel)
+                    if (sd->currentLevelNumber != -1)
                     {
-                        ESP_LOGI("Swadgedoku", "Updating last completed level from %d to %d", sd->lastLevel, sd->currentLevelNumber + 1);
-                        sd->lastLevel = sd->currentLevelNumber + 1;
-                        if (!writeNvs32(settingKeyLastLevel, sd->lastLevel))
+                        // Update the max level if needed
+                        if (sd->currentLevelNumber >= sd->maxLevel && sd->maxLevel < settingLevelSelectBounds.max)
                         {
-                            ESP_LOGE("Swadgedoku", "Couldn't write updated last level to NVS");
+                            ESP_LOGI("Swadgedoku", "Updating max completed level from %d to %d", sd->maxLevel, sd->currentLevelNumber + 1);
+                            sd->maxLevel = sd->currentLevelNumber + 1;
+                            if (!writeNvs32(settingKeyMaxLevel, sd->maxLevel))
+                            {
+                                ESP_LOGE("Swadgedoku", "Couldn't write updated max level to NVS");
+                            }
+                        }
+
+                        if (sd->lastLevel < sd->maxLevel)
+                        {
+                            ESP_LOGI("Swadgedoku", "Updating last completed level from %d to %d", sd->lastLevel, sd->currentLevelNumber + 1);
+                            sd->lastLevel = sd->currentLevelNumber + 1;
+                            if (!writeNvs32(settingKeyLastLevel, sd->lastLevel))
+                            {
+                                ESP_LOGE("Swadgedoku", "Couldn't write updated last level to NVS");
+                            }
                         }
                     }
+                    sd->screen = SWADGEDOKU_WIN;
+                    break;
                 }
-                sd->screen = SWADGEDOKU_WIN;
-                break;
             }
         }
     }
@@ -2985,9 +3022,8 @@ void swadgedokuGameButton(buttonEvt_t evt)
         switch (evt.button)
         {
             case PB_A:
-            case PB_B:
             {
-                // B unsets, A sets
+                // A sets
                 int digit = (evt.button == PB_A) ? sd->player.selectedDigit : 0;
 
                 if (!((SF_LOCKED | SF_VOID) & sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]))
@@ -3006,6 +3042,12 @@ void swadgedokuGameButton(buttonEvt_t evt)
 
                     reAnnotate = true;
                 }
+                break;
+            }
+
+            case PB_B:
+            {
+                sd->player.noteTaking = !sd->player.noteTaking;
                 break;
             }
 
