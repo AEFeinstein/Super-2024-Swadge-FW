@@ -933,6 +933,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                         sd->playingContinuation = true;
                         setupSudokuPlayer(&sd->player, &sd->game);
                         sudokuGetNotes(sd->game.notes, &sd->game, 0);
+                        sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game);
                         swadgedokuSetupNumberWheel(sd->game.base, 0);
                         sd->screen = SWADGEDOKU_GAME;
                     }
@@ -972,6 +973,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             // sd->game.flags[0] = SF_LOCKED;
 
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
+            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game);
 
             swadgedokuSetupNumberWheel(sd->game.base, 0);
 
@@ -998,6 +1000,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             sd->currentLevelNumber = -1;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
+            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game);
             swadgedokuSetupNumberWheel(sd->game.base, 0);
             sd->screen = SWADGEDOKU_GAME;
         }
@@ -1013,6 +1016,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             sd->currentLevelNumber = -1;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
+            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game);
             swadgedokuSetupNumberWheel(sd->game.base, 0);
             sd->screen = SWADGEDOKU_GAME;
         }
