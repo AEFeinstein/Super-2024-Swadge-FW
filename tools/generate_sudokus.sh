@@ -16,7 +16,7 @@ if [ "$?" -ne "0" ]; then
 fi
 
 
-I=3
+I=0
 while [ "${I}" -lt "${PUZZLE_COUNT}" ]; do
 	if [ "${I}" -eq "${EASY_THRESH}" ]; then
 		DIFF="easy"
