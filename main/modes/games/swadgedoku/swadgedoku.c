@@ -323,6 +323,10 @@ typedef struct
     bool touchState;
 
     menu_t* pauseMenu;
+
+    // Settings cache!
+    bool writeOnSelect;
+
 } swadgedoku_t;
 
 typedef struct
@@ -364,6 +368,7 @@ void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, b
 void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, const sudokuGrid_t* game);
 int swadgedokuCheckWin(const sudokuGrid_t* game);
 void swadgedokuCheckTrophyTriggers(void);
+void swadgedokuPlayerSetDigit(uint8_t digit);
 void swadgedokuGameButton(buttonEvt_t evt);
 void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay,
                         const sudokuTheme_t* theme);
@@ -391,7 +396,9 @@ static const char menuItemStartCustom[] = "Start";
 static const char menuItemCustomMode[]  = "Mode: ";
 static const char menuItemCustomSize[]  = "Size: ";
 static const char menuItemDifficulty[]  = "Rating: ";
+// Settings menu
 static const char menuItemSettings[]    = "Settings";
+static const char menuItemWriteOnSelect[] = "Write Number on Selection";
 // Pause menu
 static const char strPaused[]             = "Paused";
 static const char menuItemResume[]        = "Resume";
@@ -463,6 +470,20 @@ static const settingParam_t settingCustomSizeBounds
 
 static const settingParam_t settingCustomModeBounds = {.min = 0, .max = 2, .def = 0, .key = ""};
 static const settingParam_t settingDifficultyBounds = {.min = SD_BEGINNER, .max = SD_HARDEST, .def = 0, .key = ""};
+
+static const char settingKeyWriteOnSelect[] = "sdku_writeonsel";
+static const settingParam_t settingWriteOnSelectBounds = {
+    .min = 0, .max = 1, .def = 1, .key = settingKeyWriteOnSelect,
+};
+static const char* noYesOptions[] = {
+    "No",
+    "Yes",
+};
+
+static int32_t noYesValues[] = {
+    0,
+    1,
+};
 
 static const sudokuTheme_t lightTheme = {.bgColor        = c333,
                                          .fillColor      = c555,
@@ -591,6 +612,13 @@ static void swadgedokuEnterMode(void)
     {
         sd->lastLevel = sd->maxLevel;
     }
+
+    int32_t nvsVal;
+    if (!readNvs32(settingKeyWriteOnSelect, &nvsVal))
+    {
+        nvsVal = 1;
+    }
+    sd->writeOnSelect = nvsVal ? true : false;
 
     sd->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
     sd->emptyMenu    = initMenu(sd->emptyMenuTitle, NULL);
@@ -807,6 +835,7 @@ static void swadgedokuSetupMenu(void)
     sd->menu = endSubMenu(sd->menu);
 
     sd->menu = startSubMenu(sd->menu, menuItemSettings);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemWriteOnSelect, noYesOptions, noYesValues, sizeof(noYesOptions), &settingWriteOnSelectBounds, sd->writeOnSelect);
     sd->menu = endSubMenu(sd->menu);
 }
 
@@ -1010,6 +1039,15 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                 sd->squareForced                       = false;
             }
         }
+        else if (menuItemWriteOnSelect == label)
+        {
+            bool newVal = value ? true : false;
+            if (newVal != sd->writeOnSelect)
+            {
+                writeNvs32(settingKeyWriteOnSelect, newVal);
+                sd->writeOnSelect = newVal;
+            }
+        }
     }
 }
 
@@ -1074,6 +1112,11 @@ static void numberWheelCb(const char* label, bool selected, uint32_t value)
             if (label == digitLabels[i])
             {
                 sd->player.selectedDigit = i + 1;
+                if (sd->writeOnSelect)
+                {
+                    swadgedokuPlayerSetDigit(sd->player.selectedDigit);
+                    sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game);
+                }
             }
         }
     }
@@ -2673,6 +2716,38 @@ void swadgedokuCheckTrophyTriggers(void)
     }
 }
 
+void swadgedokuPlayerSetDigit(uint8_t digit)
+{
+    if (setDigit(&sd->game, digit, sd->player.curX, sd->player.curY))
+    {
+        switch (swadgedokuCheckWin(&sd->game))
+        {
+            case -1:
+                ESP_LOGD("Swadgedoku", "Invalid sudoku board!");
+                break;
+
+            case 0:
+                ESP_LOGD("Swadgedoku", "Sudoku OK but incomplete");
+                break;
+
+            case 1:
+            {
+                swadgedokuCheckTrophyTriggers();
+                if (sd->playingContinuation)
+                {
+                    // Clear saved game since we just finished it
+                    if (!eraseNvsKey(settingKeyProgress))
+                    {
+                        ESP_LOGE("Swadgedoku", "Couldn't erase game progress from NVS!");
+                    }
+                }
+                sd->screen = SWADGEDOKU_WIN;
+                break;
+            }
+        }
+    }
+}
+
 void swadgedokuGameButton(buttonEvt_t evt)
 {
     if (evt.down)
@@ -2698,24 +2773,7 @@ void swadgedokuGameButton(buttonEvt_t evt)
                     else
                     {
                         // Set number
-                        if (setDigit(&sd->game, digit, sd->player.curX, sd->player.curY))
-                        {
-                            switch (swadgedokuCheckWin(&sd->game))
-                            {
-                                case -1:
-                                    ESP_LOGD("Swadgedoku", "Invalid sudoku board!");
-                                    break;
-
-                                case 0:
-                                    ESP_LOGD("Swadgedoku", "Sudoku OK but incomplete");
-                                    break;
-
-                                case 1:
-                                    swadgedokuCheckTrophyTriggers();
-                                    sd->screen = SWADGEDOKU_WIN;
-                                    break;
-                            }
-                        }
+                        swadgedokuPlayerSetDigit(sd->player.selectedDigit);
                     }
 
                     reAnnotate = true;
