@@ -3,24 +3,7 @@
 //==============================================================================
 
 #include "artillery.h"
-#include "artillery_phys.h"
-
-//==============================================================================
-// Defines
-//==============================================================================
-
-#define NUM_PLAYERS 2
-
-//==============================================================================
-// Structs
-//==============================================================================
-
-typedef struct
-{
-    physSim_t* phys;
-    physCirc_t* players[NUM_PLAYERS];
-    int32_t autofire;
-} artilleryData_t;
+#include "artillery_game.h"
 
 //==============================================================================
 // Function Declarations
@@ -96,6 +79,10 @@ void artilleryEnterMode(void)
     ad->players[0] = physAddCircle(ad->phys, TFT_WIDTH / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
     ad->players[1]
         = physAddCircle(ad->phys, (7 * TFT_WIDTH) / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
+
+    ad->mState = AMS_GAME;
+
+    ad->gState = AGS_MENU;
 }
 
 /**
@@ -118,50 +105,37 @@ void artilleryMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        if (evt.down)
+        switch (ad->mState)
         {
-            switch (evt.button)
+            default:
+            case AMS_MENU:
             {
-                case PB_A:
-                {
-                    fireShot(ad->phys, ad->players[0]);
-                    break;
-                }
-                case PB_LEFT:
-                case PB_RIGHT:
-                {
-                    float bDiff = 4 * ((PB_LEFT == evt.button) ? -(M_PI / 180.0f) : (M_PI / 180.0f));
-                    setBarrelAngle(ad->players[0], ad->players[0]->barrelAngle + bDiff);
-                    break;
-                }
-                case PB_UP:
-                case PB_DOWN:
-                {
-                    float pDiff = (PB_UP == evt.button) ? 0.00001f : -0.00001f;
-                    setShotPower(ad->players[0], ad->players[0]->shotPower + pDiff);
-                    break;
-                }
-                default:
-                {
-                    break;
-                }
+                // TODO top level menu
+                break;
+            }
+            case AMS_GAME:
+            {
+                artilleryGameInput(ad, evt);
+                break;
             }
         }
     }
 
-    // Uncomment for autofire
-    // RUN_TIMER_EVERY(ad->autofire, 100000, elapsedUs, { fireShot(ad->phys, ad->players[0]); });
-
-    physStep(ad->phys, elapsedUs);
-    drawPhysOutline(ad->phys);
-
-    font_t* f = getSysFont();
-    DRAW_FPS_COUNTER((*f));
-
-    char fireParams[64];
-    snprintf(fireParams, sizeof(fireParams) - 1, "Angle %0.3f, Power %.3f", ad->players[0]->barrelAngle,
-             ad->players[0]->shotPower * 100);
-    drawText(f, c555, fireParams, 40, TFT_HEIGHT - f->height - 2);
+    switch (ad->mState)
+    {
+        default:
+        case AMS_MENU:
+        {
+            // TODO top level menu
+            break;
+        }
+        case AMS_GAME:
+        {
+            // TODO simulate and draw game
+            artilleryGameLoop(ad, elapsedUs);
+            break;
+        }
+    }
 }
 
 /**
