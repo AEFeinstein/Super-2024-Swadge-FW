@@ -21,7 +21,6 @@
 // Constants
 //==============================================================================
 
-
 //==============================================================================
 // Functions
 //==============================================================================
@@ -40,6 +39,7 @@ void pl_initializeEntity(plEntity_t* self, plEntityManager_t* entityManager, plT
     self->fallOffTileHandler   = &defaultFallOffTileHandler;
     self->spriteFlipHorizontal = false;
     self->spriteFlipVertical   = false;
+    self->tileCollider         = NULL;
 
     // Fields not explicitly initialized
     // self->type = 0;
@@ -524,6 +524,7 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
     uint16_t y = TO_PIXEL_COORDS(self->y);
     int16_t xspeed = TO_PIXEL_COORDS(self->xspeed);
     int16_t yspeed = TO_PIXEL_COORDS(self->yspeed);
+    pl_EntityTileCollider_t* tileCollider = self->tileCollider;
 
     int16_t offX, offY, tempX, tempY, tempTx, tempTy, tempT, newX, newY, onGround;
 
@@ -531,9 +532,10 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
     newY = 0;
 
     if(self->xspeed > 0){
-        for(int i=0; i<3; i++){
-            offX = PL_TILE_COLLISION_OFFSETS_1x2_RIGHT_EDGE[(i*2) + 0];
-            offY = PL_TILE_COLLISION_OFFSETS_1x2_RIGHT_EDGE[(i*2) + 1];
+        pl_EntityTileCollisionPointList_t* rightEdge = tileCollider->rightEdge;
+        for(int i=0; i<rightEdge->size; i++){
+            offX = rightEdge->collisionPoints[i].x;
+            offY = rightEdge->collisionPoints[i].y;
             tempX = x + offX + xspeed;
             tempY = y + offY;
 
@@ -550,9 +552,10 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
             }
         }
     } else if(self->xspeed < 0){
-        for(int i=0; i<3; i++){
-            offX = PL_TILE_COLLISION_OFFSETS_1x2_LEFT_EDGE[(i*2) + 0];
-            offY = PL_TILE_COLLISION_OFFSETS_1x2_LEFT_EDGE[(i*2) + 1];
+        pl_EntityTileCollisionPointList_t* leftEdge = tileCollider->leftEdge;
+        for(int i=0; i<leftEdge->size; i++){
+            offX = leftEdge->collisionPoints[i].x;
+            offY = leftEdge->collisionPoints[i].y;
             tempX = x + offX + xspeed;
             tempY = y + offY;
 
@@ -571,9 +574,10 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
     }
 
     if(self->yspeed > 0){
+        pl_EntityTileCollisionPointList_t* bottomEdge = tileCollider->bottomEdge;
         for(int i=0; i<3; i++){
-            offX = PL_TILE_COLLISION_OFFSETS_1x2_BOTTOM_EDGE[(i*2) + 0];
-            offY = PL_TILE_COLLISION_OFFSETS_1x2_BOTTOM_EDGE[(i*2) + 1];
+            offX = bottomEdge->collisionPoints[i].x;
+            offY = bottomEdge->collisionPoints[i].y;
             tempX = x + offX;
             tempY = y + offY + yspeed;
 
@@ -591,9 +595,10 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
             }
         }
     } else if(self->yspeed < 0){
-        for(int i=0; i<3; i++){
-            offX = PL_TILE_COLLISION_OFFSETS_1x2_TOP_EDGE[(i*2) + 0];
-            offY = PL_TILE_COLLISION_OFFSETS_1x2_TOP_EDGE[(i*2) + 1];
+        pl_EntityTileCollisionPointList_t* topEdge = tileCollider->topEdge;
+        for(int i=0; i<topEdge->size; i++){
+            offX = topEdge->collisionPoints[i].x;
+            offY = topEdge->collisionPoints[i].y;
             tempX = x + offX;
             tempY = y + offY + yspeed;
 
@@ -611,10 +616,11 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
         }
     } else if (!self->falling) {
         onGround = false;
+        pl_EntityTileCollisionPointList_t* bottomEdge = tileCollider->bottomEdge;
 
-        for(int i=0; i<3; i++){
-            offX = PL_TILE_COLLISION_OFFSETS_1x2_BOTTOM_EDGE[(i*2) + 0];
-            offY = PL_TILE_COLLISION_OFFSETS_1x2_BOTTOM_EDGE[(i*2) + 1];
+        for(int i=0; i<bottomEdge->size; i++){
+            offX = bottomEdge->collisionPoints[i].x;
+            offY = bottomEdge->collisionPoints[i].y;
             tempX = x + offX;
             tempY = y + offY + 1;
 

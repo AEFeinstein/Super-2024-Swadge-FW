@@ -304,6 +304,7 @@ plEntity_t* pl_createPlayer(plEntityManager_t* entityManager, uint16_t x, uint16
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &pl_playerOverlapTileHandler;
     entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->tileCollider         = &entityTileCollider_1x2;
     return entity;
 }
 

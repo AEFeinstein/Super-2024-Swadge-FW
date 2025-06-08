@@ -11,6 +11,7 @@
 #include "plTilemap.h"
 #include "plGameData.h"
 #include "plSoundManager.h"
+#include "vector2d.h"
 
 //==============================================================================
 // Enums
@@ -120,6 +121,8 @@ struct plEntity_t
     pl_fallOffTileHandler_t fallOffTileHandler;
     pl_overlapTileHandler_t overlapTileHandler;
     pl_drawHandler_t drawHandler;
+
+    pl_EntityTileCollider_t* tileCollider;
 };
 
 //==============================================================================
