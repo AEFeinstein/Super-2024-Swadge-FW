@@ -128,6 +128,12 @@ void pl_updatePlayer(plEntity_t* self)
             self->yspeed    = -self->jumpPower;
             self->falling   = true;
             soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
+        } else if (pl_canWallJump(self) && !(self->gameData->prevBtnState & PB_A)) {
+                self->jumpPower = 64 + ((abs(self->xspeed) + 16) >> 3);
+                self->xspeed = (self->spriteFlipHorizontal) ? 32 : -32;
+                self->yspeed    = -self->jumpPower;
+                self->falling   = true;
+                soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
         }
         else if (self->jumpPower > 0 && self->yspeed < 0)
         {
@@ -457,7 +463,7 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
     newY = 0;
 
     if(self->xspeed > 0){
-        pl_EntityTileCollisionPointList_t* rightEdge = tileCollider->rightEdge;
+        const pl_EntityTileCollisionPointList_t* rightEdge = tileCollider->rightEdge;
         for(int i=0; i<rightEdge->size; i++){
             offX = rightEdge->collisionPoints[i].x;
             offY = rightEdge->collisionPoints[i].y;
@@ -477,7 +483,7 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
             }
         }
     } else if(self->xspeed < 0){
-        pl_EntityTileCollisionPointList_t* leftEdge = tileCollider->leftEdge;
+        const pl_EntityTileCollisionPointList_t* leftEdge = tileCollider->leftEdge;
         for(int i=0; i<leftEdge->size; i++){
             offX = leftEdge->collisionPoints[i].x;
             offY = leftEdge->collisionPoints[i].y;
@@ -499,8 +505,8 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
     }
 
     if(self->yspeed > 0){
-        pl_EntityTileCollisionPointList_t* bottomEdge = tileCollider->bottomEdge;
-        for(int i=0; i<3; i++){
+        const pl_EntityTileCollisionPointList_t* bottomEdge = tileCollider->bottomEdge;
+        for(int i=0; i<bottomEdge->size; i++){
             offX = bottomEdge->collisionPoints[i].x;
             offY = bottomEdge->collisionPoints[i].y;
             tempX = x + offX;
@@ -520,7 +526,7 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
             }
         }
     } else if(self->yspeed < 0){
-        pl_EntityTileCollisionPointList_t* topEdge = tileCollider->topEdge;
+        const pl_EntityTileCollisionPointList_t* topEdge = tileCollider->topEdge;
         for(int i=0; i<topEdge->size; i++){
             offX = topEdge->collisionPoints[i].x;
             offY = topEdge->collisionPoints[i].y;
@@ -541,7 +547,7 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
         }
     } else if (!self->falling) {
         onGround = false;
-        pl_EntityTileCollisionPointList_t* bottomEdge = tileCollider->bottomEdge;
+        const pl_EntityTileCollisionPointList_t* bottomEdge = tileCollider->bottomEdge;
 
         for(int i=0; i<bottomEdge->size; i++){
             offX = bottomEdge->collisionPoints[i].x;
@@ -564,10 +570,62 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
 
     self->x = newX ? TO_SUBPIXEL_COORDS(newX) : self->x+self->xspeed;
     self->y = newY ? TO_SUBPIXEL_COORDS(newY) : self->y+self->yspeed;
+}
 
-   /*if(newY) {
-        self->yspeed = 0;
-    }*/
+bool pl_canWallJump(plEntity_t* self){
+    if(!self->falling) {
+        return false;
+    }
+
+    uint16_t x = TO_PIXEL_COORDS(self->x);
+    uint16_t y = TO_PIXEL_COORDS(self->y);
+    pl_EntityTileCollider_t* tileCollider = self->tileCollider;
+
+    int16_t offX, offY, tempX, tempY, tempTx, tempTy, tempT;
+
+    if(self->xspeed > 0 && !self->spriteFlipHorizontal){
+        const pl_EntityTileCollisionPointList_t* rightEdge = tileCollider->rightEdge;
+        for(int i=0; i<rightEdge->size; i++){
+            offX = rightEdge->collisionPoints[i].x;
+            offY = rightEdge->collisionPoints[i].y;
+            tempX = x + offX + 1;
+            tempY = y + offY;
+
+            tempTx = PL_TO_TILECOORDS(tempX);
+            tempTy = PL_TO_TILECOORDS(tempY);
+
+            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
+            //drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
+
+            tempT = pl_getTile(self->tilemap, tempTx, tempTy);
+            
+            if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 1)){
+                return true;
+            }
+        }
+    } else if(self->xspeed < 0 && self->spriteFlipHorizontal){
+        const pl_EntityTileCollisionPointList_t* leftEdge = tileCollider->leftEdge;
+        for(int i=0; i<leftEdge->size; i++){
+            offX = leftEdge->collisionPoints[i].x;
+            offY = leftEdge->collisionPoints[i].y;
+            tempX = x + offX - 1;
+            tempY = y + offY;
+
+            tempTx = PL_TO_TILECOORDS(tempX);
+            tempTy = PL_TO_TILECOORDS(tempY);
+
+            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
+            //drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
+
+            tempT = pl_getTile(self->tilemap, tempTx, tempTy);
+            
+            if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 0)){
+                return true;
+            }
+        }
+    }
+    
+    return false;
 }
 
 void defaultFallOffTileHandler(plEntity_t* self)

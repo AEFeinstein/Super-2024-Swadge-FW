@@ -136,6 +136,7 @@ void updateHitBlock(plEntity_t* self);
 
 void pl_moveEntityWithTileCollisions(plEntity_t* self);
 void pl_moveEntityWithTileCollisions3(plEntity_t* self);
+bool pl_canWallJump(plEntity_t* self);
 void defaultFallOffTileHandler(plEntity_t* self);
 
 void despawnWhenOffscreen(plEntity_t* self);
