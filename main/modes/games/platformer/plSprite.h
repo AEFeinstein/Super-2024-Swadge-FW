@@ -7,33 +7,34 @@
 #include <stdint.h>
 #include "wsg.h"
 #include "aabb_utils.h"
+#include "vector2d.h"
 
 //==============================================================================
 // Structs
 //==============================================================================
-typedef struct
+/*typedef struct
 {
     int16_t x;
     int16_t y;
-} plSpriteOrigin_t;
+} plSpriteOrigin_t;*/
 
 typedef struct
 {
     wsg_t* wsg;
-    const plSpriteOrigin_t* origin;
+    const vec_t* origin;
     const box_t* hitBox;
 } plSprite_t;
 
 ///==============================================================================
 // Constants
 //==============================================================================
-static const plSpriteOrigin_t origin_8_8 =
+static const vec_t origin_8_8 =
 {
     .x = 8,
     .y = 8
 };
 
-static const plSpriteOrigin_t origin_15_15 =
+static const vec_t origin_15_15 =
 {
     .x = 15,
     .y = 15
