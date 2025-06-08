@@ -20,6 +20,9 @@ void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc);
 void physMoveObjects(physSim_t* phys, int32_t elapsedUs);
 void physCheckCollisions(physSim_t* phys);
 
+bool physCircCircIntersection(physCirc_t* cMoving, circleFl_t* cOther, float* colDist, vecFl_t* colPoint,
+                              vecFl_t* reflVec);
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -352,39 +355,18 @@ void physCheckCollisions(physSim_t* phys)
                     circleFl_t caps[] = {
                         {
                             .pos    = opl->l.p1,
-                            .radius = pc->c.radius,
+                            .radius = 0,
                         },
                         {
                             .pos    = opl->l.p2,
-                            .radius = pc->c.radius,
+                            .radius = 0,
                         },
                     };
 
                     // Check bounding endcaps
                     for (int32_t cIdx = 0; cIdx < ARRAY_SIZE(caps); cIdx++)
                     {
-                        // A line intersecting with a circle may intersect up to two places
-                        vecFl_t intersections[2];
-                        int16_t iCnt = circleLineSegFlIntersection( //
-                            caps[cIdx], pc->travelLine, pc->travelLineBB, intersections);
-
-                        // For each intersection
-                        for (int16_t iIdx = 0; iIdx < iCnt; iIdx++)
-                        {
-                            // find the distance from the starting point to the intersection
-                            float dist = sqMagVecFl2d(subVecFl2d(intersections[iIdx], pc->travelLine.p1));
-
-                            // If this is the closest point
-                            if (dist < colDist)
-                            {
-                                // Save the distance and the point
-                                colDist  = dist;
-                                colPoint = intersections[iIdx];
-
-                                // Save the reflection vector for this line
-                                reflVec = normVecFl2d(subVecFl2d(pc->c.pos, caps[cIdx].pos));
-                            }
-                        }
+                        physCircCircIntersection(pc, &caps[cIdx], &colDist, &colPoint, &reflVec);
                     }
                 }
 
@@ -398,18 +380,16 @@ void physCheckCollisions(physSim_t* phys)
             {
                 physCirc_t* opc = ocn->val;
 
-                // Don't collide a circle with itself
-                if (opc != pc)
+                if ((opc != pc) &&                    // Don't collide a circle with itself
+                    (opc->zonemask & pc->zonemask) && // make sure they're in the same zone
+                    (pc->type != opc->type) &&        // Types should differ (shells don't hit shells, etc.)
+                    physCircCircIntersection(pc, &opc->c, &colDist, &colPoint, &reflVec))
                 {
-                    vecFl_t cPoint;
-                    vecFl_t cVec;
-                    if (circleCircleFlIntersection(pc->c, opc->c, &cPoint, &cVec))
+                    // TODO do I care if the other circle isn't fixed in space?
+                    if (CT_SHELL == pc->type && CT_TANK == opc->type)
                     {
-                        if (CT_SHELL == pc->type && CT_TANK == opc->type)
-                        {
-                            // Shells explode
-                            shouldRemoveNode = true;
-                        }
+                        // Shells explode
+                        shouldRemoveNode = true;
                     }
                 }
                 ocn = ocn->next;
@@ -434,11 +414,60 @@ void physCheckCollisions(physSim_t* phys)
         node_t* nextNode = cNode->next;
         if (shouldRemoveNode)
         {
-            removeEntry(&phys->circles, cNode);
+            heap_caps_free(removeEntry(&phys->circles, cNode));
         }
         cNode            = nextNode;
         shouldRemoveNode = false;
     }
+}
+
+/**
+ * @brief TODO Check for intersections between a moving circle, represented by a line segment, and a fixed circle. The
+ * fixed circle may have radius 0, which indicates a point
+ *
+ * @param cMoving
+ * @param cOther
+ * @param colDist
+ * @param colPoint
+ * @param reflVec
+ * @return true
+ * @return false
+ */
+bool physCircCircIntersection(physCirc_t* cMoving, circleFl_t* cOther, float* colDist, vecFl_t* colPoint,
+                              vecFl_t* reflVec)
+{
+    // A line intersecting with a circle may intersect up to two places
+    vecFl_t intersections[2];
+    // This circle is where collisions may occur
+    circleFl_t boundaryCircle = {
+        .pos    = cOther->pos,
+        .radius = cOther->radius + cMoving->c.radius,
+    };
+
+    // Check for intersections between the boundary circle and travel line
+    int16_t iCnt
+        = circleLineSegFlIntersection(boundaryCircle, cMoving->travelLine, cMoving->travelLineBB, intersections);
+
+    // For each intersection
+    for (int16_t iIdx = 0; iIdx < iCnt; iIdx++)
+    {
+        // find the distance from the starting point to the intersection
+        float dist = sqMagVecFl2d(subVecFl2d(intersections[iIdx], cMoving->travelLine.p1));
+
+        // If this is the closest point
+        if (dist < *colDist)
+        {
+            // Save the distance and the point
+            *colDist  = dist;
+            *colPoint = intersections[iIdx];
+
+            // Save the reflection vector for this line
+            *reflVec = normVecFl2d(subVecFl2d(cMoving->c.pos, cOther->pos));
+
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -452,18 +481,27 @@ void drawPhysOutline(physSim_t* phys)
     while (lNode)
     {
         physLine_t* pl = (physLine_t*)lNode->val;
-        drawLine(pl->l.p1.x, pl->l.p1.y, pl->l.p2.x, pl->l.p2.y, c555, 0);
+        drawLine(pl->l.p1.x, pl->l.p1.y, pl->l.p2.x, pl->l.p2.y, c522, 0);
         lNode = lNode->next;
     }
 
     node_t* cNode = phys->circles.first;
     while (cNode)
     {
-        physCirc_t* pc = (physCirc_t*)cNode->val;
-        drawCircle(pc->c.pos.x, pc->c.pos.y, pc->c.radius, c555);
+        physCirc_t* pc      = (physCirc_t*)cNode->val;
+        paletteColor_t cCol = c522;
         if (CT_TANK == pc->type)
         {
-            drawLineFast(pc->c.pos.x, pc->c.pos.y, pc->barrelTip.x, pc->barrelTip.y, c555);
+            cCol = c335;
+        }
+        else if (CT_SHELL == pc->type)
+        {
+            cCol = c550;
+        }
+        drawCircle(pc->c.pos.x, pc->c.pos.y, pc->c.radius, cCol);
+        if (CT_TANK == pc->type)
+        {
+            drawLineFast(pc->c.pos.x, pc->c.pos.y, pc->barrelTip.x, pc->barrelTip.y, c335);
         }
         cNode = cNode->next;
     }
@@ -479,8 +517,8 @@ void setBarrelAngle(physCirc_t* circ, float angle)
 {
     circ->barrelAngle = angle;
 
-    circ->barrelTip.x = sinf(angle) * 16;
-    circ->barrelTip.y = -cosf(angle) * 16;
+    circ->barrelTip.x = sinf(angle) * circ->c.radius * 2;
+    circ->barrelTip.y = -cosf(angle) * circ->c.radius * 2;
     circ->barrelTip   = addVecFl2d(circ->c.pos, circ->barrelTip);
 }
 
