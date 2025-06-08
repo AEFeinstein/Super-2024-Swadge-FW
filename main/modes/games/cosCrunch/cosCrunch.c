@@ -1,6 +1,7 @@
 #include "cosCrunch.h"
 
 #include "ccmgBreakTime.h"
+#include "ccmgDelivery.h"
 #include "ccmgSpray.h"
 #include "cosCrunchUtil.h"
 #include "mainMenu.h"
@@ -16,9 +17,15 @@ static const char cosCrunchGameOverMessage[] = "Press A to retry";
 
 typedef enum
 {
+    /// Main menu
     CC_MENU,
+    /// A microgame is currently loading: don't blank the display or draw anything
     CC_MICROGAME_PENDING,
+    /// A microgame is in progress
     CC_MICROGAME_RUNNING,
+    /// The player has lost, but we still need to unload the last microgame played
+    CC_GAME_OVER_PENDING,
+    /// Game over screen
     CC_GAME_OVER,
 } cosCrunchState;
 
@@ -49,7 +56,8 @@ typedef struct
 
     struct
     {
-        wsg_t background;
+        wsg_t backgroundMat;
+        wsg_t backgroundDesk;
         /// Copy of the background that accumulates overdraw
         wsg_t backgroundSplatter;
         wsg_t calendar;
@@ -94,6 +102,7 @@ swadgeMode_t cosCrunchMode = {
 
 const cosCrunchMicrogame_t* const microgames[] = {
     &ccmgBreakTime,
+    &ccmgDelivery,
     &ccmgSpray,
 };
 
@@ -103,7 +112,7 @@ const cosCrunchMicrogame_t* const microgames[] = {
 #define TIMER_PIXELS_PER_SECOND          10
 
 #define MESSAGE_X_OFFSET 25
-#define MESSAGE_Y_OFFSET 55
+#define MESSAGE_Y_OFFSET 45
 
 tintColor_t const blueTimerTintColor   = {c013, c125, c235};
 tintColor_t const yellowTimerTintColor = {c430, c540, c554};
@@ -138,7 +147,8 @@ static void cosCrunchEnterMode(void)
     wsgPaletteReset(&cc->mgTintPalette);
     cc->mgTintColorIndex = -1; // Will be initialized when a microgame requests a tint color
 
-    loadWsg(CC_BACKGROUND_WSG, &cc->wsg.background, true);
+    loadWsg(CC_BACKGROUND_MAT_WSG, &cc->wsg.backgroundMat, true);
+    loadWsg(CC_BACKGROUND_DESK_WSG, &cc->wsg.backgroundDesk, false);
     loadWsg(CC_CALENDAR_WSG, &cc->wsg.calendar, false);
     loadWsg(CC_PAINT_LABEL_WSG, &cc->wsg.paintLabel, false);
     loadWsg(CC_PAINT_TUBE_WSG, &cc->wsg.paintTube, false);
@@ -164,7 +174,8 @@ static void cosCrunchExitMode(void)
     deinitMenuManiaRenderer(cc->menuRenderer);
     deinitMenu(cc->menu);
 
-    freeWsg(&cc->wsg.background);
+    freeWsg(&cc->wsg.backgroundMat);
+    freeWsg(&cc->wsg.backgroundDesk);
     freeWsg(&cc->wsg.calendar);
     freeWsg(&cc->wsg.paintLabel);
     freeWsg(&cc->wsg.paintTube);
@@ -186,7 +197,8 @@ static void cosCrunchMenu(const char* label, bool selected, uint32_t value)
             cc->lives = NUM_LIVES;
             cc->state = CC_MICROGAME_PENDING;
             // Reset the background splatter for the first/next game
-            drawToCanvasTile(cc->wsg.backgroundSplatter, cc->wsg.background, 0, 0);
+            drawToCanvas(cc->wsg.backgroundSplatter, cc->wsg.backgroundDesk, 0, TFT_HEIGHT - cc->wsg.backgroundDesk.h);
+            drawToCanvas(cc->wsg.backgroundSplatter, cc->wsg.backgroundMat, 0, 0);
         }
         else if (label == cosCrunchExitLbl)
         {
@@ -303,9 +315,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                     {
                         if (cc->lives == 0)
                         {
-                            cc->state = CC_GAME_OVER;
-                            cc->activeMicrogame.game->fnDestroyMicrogame();
-                            cc->activeMicrogame.game = NULL;
+                            cc->state = CC_GAME_OVER_PENDING;
                         }
                         else
                         {
@@ -321,6 +331,11 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                 cosCrunchDisplayMessage(cc->activeMicrogame.game->verb);
             }
 
+            if (cc->activeMicrogame.game->fnBackgroundDrawCallback != NULL)
+            {
+                drawWsgTile(&cc->wsg.backgroundDesk, 0, TFT_HEIGHT - cc->wsg.backgroundDesk.h);
+            }
+
             cosCrunchDrawTimer();
 
             drawWsgSimple(&cc->wsg.calendar, TFT_WIDTH - cc->wsg.calendar.w - 7, TFT_HEIGHT - cc->wsg.calendar.h - 1);
@@ -331,6 +346,12 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
 
             break;
         }
+
+        case CC_GAME_OVER_PENDING:
+            cc->state = CC_GAME_OVER;
+            cc->activeMicrogame.game->fnDestroyMicrogame();
+            cc->activeMicrogame.game = NULL;
+            break;
 
         case CC_GAME_OVER:
         {
@@ -352,17 +373,29 @@ static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
         case CC_MICROGAME_RUNNING:
         case CC_GAME_OVER:
         {
-            paletteColor_t* tftFb = getPxTftFramebuffer();
-            for (int16_t row = y; row < y + h; row++)
+            if (cc->activeMicrogame.game != NULL && cc->activeMicrogame.game->fnBackgroundDrawCallback != NULL)
             {
-                memcpy(&tftFb[row * TFT_WIDTH + x], &cc->wsg.backgroundSplatter.px[row * TFT_WIDTH + x],
-                       w * sizeof(paletteColor_t));
+                if (y <= TFT_HEIGHT - cc->wsg.backgroundDesk.h)
+                {
+                    cc->activeMicrogame.game->fnBackgroundDrawCallback(
+                        x, y, w, MIN(h, TFT_HEIGHT - y - cc->wsg.backgroundDesk.h), up, upNum);
+                }
+            }
+            else
+            {
+                paletteColor_t* tftFb = getPxTftFramebuffer();
+                for (int16_t row = y; row < y + h; row++)
+                {
+                    memcpy(&tftFb[row * TFT_WIDTH + x], &cc->wsg.backgroundSplatter.px[row * TFT_WIDTH + x],
+                           w * sizeof(paletteColor_t));
+                }
             }
             break;
         }
 
         case CC_MENU:
-        case CC_MICROGAME_PENDING: // Nothing is drawn while loading a microgame, so don't blank the screen then
+        case CC_MICROGAME_PENDING: // Nothing is drawn while loading a microgame, so do nothing to prevent flicker
+        case CC_GAME_OVER_PENDING: // Same goes for unloading
             break;
     }
 }
