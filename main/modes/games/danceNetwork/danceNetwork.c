@@ -23,10 +23,7 @@ static void dn_MsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 static void dn_EnterMode(void);
 static void dn_ExitMode(void);
 static void dn_MainLoop(int64_t elapsedUs);
-static void dn_MainLoop2(int64_t elapsedUs);
 static void dn_MenuCb(const char* label, bool selected, uint32_t value);
-static void dn_drawScene(void);
-static void dn_drawTiles(void);
 static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 //==============================================================================
@@ -42,7 +39,7 @@ swadgeMode_t danceNetworkMode = {
     .overrideSelectBtn        = false,          // The select/Menu button has a default behavior. If you want to override it, you can set this to true but you'll need to re-implement the behavior.
     .fnEnterMode              = dn_EnterMode, // The enter mode function
     .fnExitMode               = dn_ExitMode,  // The exit mode function
-    .fnMainLoop               = dn_MainLoop2,  // The loop function
+    .fnMainLoop               = dn_MainLoop,  // The loop function
     .fnAudioCallback          = NULL,           // If the mode uses the microphone
     .fnBackgroundDrawCallback = dn_BackgroundDrawCallback,           // Draws a section of the display
     .fnEspNowRecvCb           = dn_EspNowRecvCb,           // If using Wifi, add the receive function here
@@ -52,7 +49,8 @@ swadgeMode_t danceNetworkMode = {
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
 const char dn_Name[]                  = "Dance Network";
-static const char dn_MultiStr[]       = "Wireless Play";
+static const char dn_MultiStr[]       = "Multiplayer";
+static const char dn_WirelessStr[]    = "Wireless Play";
 static const char dn_PassAndPlayStr[] = "Pass and Play";
 static const char dn_MultiShortStr[]  = "Connect";
 static const char dn_SingleStr[]      = "Single Player";
@@ -110,8 +108,10 @@ static void dn_EnterMode(void)
 
     // Initialize the main menu
     gameData->menu = initMenu(dn_Name, dn_MenuCb);
-    addSingleItemToMenu(gameData->menu, dn_MultiStr);
+    gameData->menu = startSubMenu(gameData->menu, dn_MultiStr);
+    addSingleItemToMenu(gameData->menu, dn_WirelessStr);
     addSingleItemToMenu(gameData->menu, dn_PassAndPlayStr);
+    gameData->menu = endSubMenu(gameData->menu);
 
     gameData->menu = startSubMenu(gameData->menu, dn_SingleStr);
     addSingleItemToMenu(gameData->menu, dn_DiffEasyStr);
@@ -134,109 +134,12 @@ static void dn_ExitMode(void)
     free(gameData);
 }
 
-static void dn_MainLoop(int64_t elapsedUs)
-{
-    buttonEvt_t evt;
-    while(checkButtonQueueWrapper(&evt))
-    {
-        if(evt.down)
-        {
-            if(evt.button == PB_UP && gameData->selection[1] > 0)
-            {
-                gameData->selection[1]--;
-                gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
-                gameData->tiles[gameData->selection[1]][gameData->selection[0]].yVel = -700;
-                gameData->alphaFaceDir = 2; //face up
-            }
-            else if(evt.button == PB_DOWN && gameData->selection[1] < BOARD_SIZE - 1)
-            {
-                gameData->selection[1]++;
-                gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
-                gameData->tiles[gameData->selection[1]][gameData->selection[0]].yVel = -700;
-                gameData->alphaFaceDir = 0; //face down
-            }
-            else if(evt.button == PB_LEFT && gameData->selection[0] > 0)
-            {
-                gameData->selection[0]--;
-                gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
-                gameData->tiles[gameData->selection[1]][gameData->selection[0]].yVel = -700;
-                gameData->alphaFaceDir = 1; //face left
-            }
-            else if(evt.button == PB_RIGHT && gameData->selection[0] < BOARD_SIZE - 1)
-            {
-                gameData->selection[0]++;
-                gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
-                gameData->tiles[gameData->selection[1]][gameData->selection[0]].yVel = -700;
-                gameData->alphaFaceDir = 3; //face right
-            }
-        }
-    }
-
-    //perform hooke's law on neighboring tiles
-    for (int y = 0; y < BOARD_SIZE; y++)
-    {
-        for (int x = 0; x < BOARD_SIZE; x++)
-        {
-            // Get the current tile
-            dn_tileData_t* tile = &gameData->tiles[y][x];
-            int8_t dampen = 3;
-            if(x == gameData->selection[0] && y == gameData->selection[1])
-            {
-                //the selected tile approaches a particular offset
-                tile->yVel += (((int16_t)(((TFT_HEIGHT >> 2) << DECIMAL_BITS) - tile->yOffset)) / 3);
-            }
-            else
-            {
-                //all unselected tiles approach neighboring tiles
-                if (y > gameData->selection[1])
-                {
-                    tile->yVel += (((int16_t)(gameData->tiles[y - 1][x].yOffset - tile->yOffset)) / 1);
-                    dampen += y - gameData->selection[1];
-                }
-                if (y < gameData->selection[1])
-                {
-                    tile->yVel += (((int16_t)(gameData->tiles[y + 1][x].yOffset - tile->yOffset)) / 1);
-                    dampen += gameData->selection[1] - y;
-                }
-                if (x > gameData->selection[0])
-                {
-                    tile->yVel += (((int16_t)(gameData->tiles[y][x - 1].yOffset - tile->yOffset)) / 1);
-                    dampen += x - gameData->selection[0];
-                }
-                if (x < gameData->selection[0])
-                {
-                    tile->yVel += (((int16_t)(gameData->tiles[y][x + 1].yOffset - tile->yOffset)) / 1);
-                    dampen += gameData->selection[0] - x;
-                }
-            }
-
-            tile->yVel /= dampen;
-
-            // Update position with smaller time step
-            uint16_t newYOffset = tile->yOffset + tile->yVel * (elapsedUs >> 14);
-            // If the the yOffset would wrap around
-            if(((tile->yOffset & 0x8000) && !(newYOffset & 0x8000) && tile->yVel > 0) ||
-                (!(tile->yOffset & 0x8000) && (newYOffset & 0x8000) && tile->yVel < 0))
-            {
-                //print a message
-                ESP_LOGI("Dance Network", "Tile %d,%d yOffset hit the limit", x, y);
-                // Set yVel to 0
-                tile->yVel = 0;
-            }
-            else{
-                tile->yOffset  = newYOffset;
-            }
-        }
-    }
-    dn_drawScene();
-}
-
 /**
  * @brief The main loop for Dance Network, responsible for input handling, game logic, and rendering
  *
  * @param elapsedUs The time elapsed since this was last called
  */
-static void dn_MainLoop2(int64_t elapsedUs)
+static void dn_MainLoop(int64_t elapsedUs)
 {
     // Handle inputs
     buttonEvt_t evt = {0};
@@ -277,6 +180,12 @@ static void dn_MainLoop2(int64_t elapsedUs)
         }
     }
 
+    // Update the game
+    if(gameData->ui == UI_GAME)
+    {
+        dn_UpdateGame(gameData, elapsedUs);
+    }
+
     // Draw to the TFT
     switch (gameData->ui)
     {
@@ -293,7 +202,7 @@ static void dn_MainLoop2(int64_t elapsedUs)
         }
         case UI_GAME:
         {
-            dn_DrawGame(gameData, elapsedUs);
+            dn_DrawGame(gameData);
             break;
         }
         case UI_CHARACTER_SELECT:
@@ -311,49 +220,6 @@ static void dn_MainLoop2(int64_t elapsedUs)
             dn_DrawResult(gameData, elapsedUs);
             break;
         }
-    }
-}
-
-static void dn_drawScene(void)
-{
-    dn_drawTiles();
-}
-
-static void dn_drawTiles(void)
-{
-    // Draw the tiles
-    for (int y = 0; y < BOARD_SIZE; y++)
-    {
-        for (int x = 0; x < BOARD_SIZE; x++)
-        {
-            int drawX = (TFT_WIDTH >> 1) - (41 >> 1) + (x - y) * (51 >> 1);
-            int drawY = (TFT_HEIGHT >> 1) + (TFT_HEIGHT >> 2) - 15 - (gameData->tiles[y][x].yOffset >> DECIMAL_BITS) + (x + y) * (26 >> 1);
-            drawWsgSimple(&gameData->sprites.groundTile, drawX, drawY);
-        }
-    }
-    int drawX = (TFT_WIDTH >> 1) - (41 >> 1) + (gameData->selection[0] - gameData->selection[1]) * (51 >> 1);
-    int drawY = (TFT_HEIGHT >> 1) + (TFT_HEIGHT >> 2) - 15 - (gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset >> DECIMAL_BITS) + (gameData->selection[0] + gameData->selection[1]) * (26 >> 1);
-    //Subtract half the width of the image to center it
-    drawX += gameData->sprites.alphaDown.w >> 1;
-    drawY -= 41;
-    switch (gameData->alphaFaceDir)
-    {
-        case(0)://face down
-            drawWsgSimple(&gameData->sprites.alphaDown, drawX, drawY);
-            /* code */
-            break;
-        case(1)://face left
-            drawWsg(&gameData->sprites.alphaUp, drawX, drawY, true, false, 0);
-            break;
-        case(2)://face up
-            drawWsgSimple(&gameData->sprites.alphaUp, drawX, drawY);
-            /* code */
-            break;
-        case(3)://face right
-            drawWsg(&gameData->sprites.alphaDown, drawX, drawY, true, false, 0);
-            break;
-        default:
-            break;
     }
 }
 
@@ -375,7 +241,7 @@ static void dn_MenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
-        if (dn_MultiStr == label)
+        if (dn_WirelessStr == label)
         {
             // Initialize p2p
             p2pInitialize(&gameData->p2p, 0x26, dn_ConCb, dn_MsgRxCb, -70);
