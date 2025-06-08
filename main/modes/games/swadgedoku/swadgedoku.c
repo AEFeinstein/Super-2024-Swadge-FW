@@ -100,14 +100,7 @@ typedef struct
     menu_t* pauseMenu;
 
     // Settings cache!
-    // Write the selected digit to the cursor position as soon as it is picked
-    bool writeOnSelect;
-    // Automatically fill out all annotations for the player on the grid
-    bool autoAnnotate;
-    // Highlights all places where the selected digit can go
-    bool highlightPossibilities;
-    // Highlights places where the selected digit is the only possibility
-    bool highlightOnlyOptions;
+    sudokuSettings_t settings;
 } swadgedoku_t;
 
 typedef struct
@@ -136,8 +129,6 @@ static void swadgedokuCheckTrophyTriggers(void);
 static void swadgedokuPlayerSetDigit(uint8_t digit);
 static void swadgedokuGameButton(buttonEvt_t evt);
 
-static void swadgedokuLoadSettings(void);
-static void swadgedokuSaveSettings(void);
 static sudokuDifficulty_t getLevelDifficulty(int level);
 
 //==============================================================================
@@ -227,51 +218,62 @@ static const char* digitLabels[] = {
 // Settings Data
 /// @brief The NVS key to store the most-recently-completed level ID in
 static const char settingKeyLastLevel[] = "sdku_lastlevel";
-/// @brief The NVS key to store the maximum unlocked level ID
-static const char settingKeyMaxLevel[]  = "sdku_maxlevel";
 
-static const settingParam_t settingLevelSelectBounds
-    = {.min = 1, .max = (SUDOKU_PUZ_MAX - SUDOKU_PUZ_MIN) + 1, .def = 1, .key = settingKeyLastLevel};
+/// @brief The NVS key to store the maximum unlocked level ID
+static const char settingKeyMaxLevel[] = "sdku_maxlevel";
 
 /// @brief The NVS key to store the saved puzzle blob in
-static const char settingKeyProgress[]     = "sdku_progress";
+static const char settingKeyProgress[] = "sdku_progress";
+
 /// @brief The NVS key to store the level number of the saved puzzle in
-static const char settingKeyProgressId[]   = "sdku_progid";
+static const char settingKeyProgressId[] = "sdku_progid";
+
 /// @brief The NVS key to store the elapsed time of the saved puzzle in
 static const char settingKeyProgressTime[] = "sdku_progtime";
 
+/// @brief Bounds for the full level select range (not the unlocked levels)
+static const settingParam_t settingLevelSelectBounds
+    = {.min = 1, .max = (SUDOKU_PUZ_MAX - SUDOKU_PUZ_MIN) + 1, .def = 1, .key = settingKeyLastLevel};
+
+/// @brief Bounds for the custom 'grid size' setting
 static const settingParam_t settingCustomSizeBounds
     = {.min = SUDOKU_MIN_BASE, .max = SUDOKU_MAX_BASE, .def = 9, .key = NULL};
 
+/// @brief Bounds for the custom 'mode' setting
 static const settingParam_t settingCustomModeBounds = {.min = 0, .max = 2, .def = 0, .key = NULL};
+
+/// @brief Bounds for the difficulty setting
 static const settingParam_t settingDifficultyBounds = {.min = SD_BEGINNER, .max = SD_HARDEST, .def = 0, .key = NULL};
 
-/// @brief The NVS key to store a bitmap of boolean settings
-static const char settingKeyOptionBits[]               = "sdku_settings";
+/// @brief Generic bounds for true/false values, with a default of true
 static const settingParam_t settingBoolDefaultOnBounds = {
     .min = 0,
     .max = 1,
     .def = 1,
     .key = NULL,
 };
+
+/// @brief Generic bounds for true/false values, with a default of false
 static const settingParam_t settingBoolDefaultOffBounds = {
     .min = 0,
     .max = 1,
     .def = 0,
     .key = NULL,
 };
+
+/// @brief Strings for showing a boolean menu item as No/Yes
 static const char* noYesOptions[] = {
     "No",
     "Yes",
 };
 
+/// @brief Boolean menu item values
 static int32_t noYesValues[] = {
     0,
     1,
 };
 
-static const sudokuSettingBit_t defaultSettings = SSB_WRITE_ON_SELECT | SSB_HIGHLIGHT_POSSIBILITIES;
-
+/// @brief A default light-mode display theme
 static const sudokuTheme_t lightTheme = {.bgColor        = c333,
                                          .fillColor      = c555,
                                          .voidColor      = c333,
@@ -287,18 +289,22 @@ static const sudokuTheme_t lightTheme = {.bgColor        = c333,
 //==============================================================================
 // Trophy Data
 //==============================================================================
+
+/// @brief Matches any puzzle, regardless of mode, difficulty, or solve time
 const swadgedokuTrophyTrigger_t anyPuzzleTrigger = {
     .difficulty = -1,
     .timeLimit  = -1,
     .mode       = -1,
 };
 
+/// @brief Matches a puzzle that was solved in under ten minutes
 const swadgedokuTrophyTrigger_t tenMinsTrigger = {
     .difficulty = -1,
     .timeLimit  = 600,
     .mode       = -1,
 };
 
+/// @brief Matches a puzzle that was solved in under five minutes
 const swadgedokuTrophyTrigger_t fiveMinsTrigger = {
     .difficulty = -1,
     .timeLimit  = 300,
@@ -427,7 +433,7 @@ static void swadgedokuEnterMode(void)
     }
     sd->lastLevel = nvsVal;
 
-    swadgedokuLoadSettings();
+    swadgedokuLoadSettings(&sd->settings);
 
     sd->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
     sd->emptyMenu    = initMenu(sd->emptyMenuTitle, NULL);
@@ -525,7 +531,7 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
             }
 
             uint16_t* notes = sd->player.notes;
-            if (sd->autoAnnotate)
+            if (sd->settings.autoAnnotate)
             {
                 notes = sd->game.notes;
             }
@@ -580,7 +586,7 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
             }
 
             const char* strCompletionTime = "Completed in";
-            drawText(&sd->drawCtx.drawCtx.uiFont, c000, strCompletionTime,
+            drawText(&sd->drawCtx.uiFont, c000, strCompletionTime,
                      (TFT_WIDTH - textWidth(&sd->drawCtx.uiFont, strCompletionTime)) / 2,
                      TFT_HEIGHT / 2 - sd->drawCtx.uiFont.height - 1);
             drawText(&sd->drawCtx.uiFont, c000, playTime, (TFT_WIDTH - textWidth(&sd->drawCtx.uiFont, playTime)) / 2,
@@ -679,15 +685,15 @@ static void swadgedokuSetupMenu(void)
 
     sd->menu = startSubMenu(sd->menu, menuItemSettings);
     addSettingsOptionsItemToMenu(sd->menu, menuItemWriteOnSelect, noYesOptions, noYesValues, ARRAY_SIZE(noYesOptions),
-                                 &settingBoolDefaultOnBounds, sd->writeOnSelect ? 1 : 0);
+                                 &settingBoolDefaultOnBounds, sd->settings.writeOnSelect ? 1 : 0);
     addSettingsOptionsItemToMenu(sd->menu, menuItemAutoAnnotate, noYesOptions, noYesValues, ARRAY_SIZE(noYesOptions),
-                                 &settingBoolDefaultOffBounds, sd->autoAnnotate ? 1 : 0);
+                                 &settingBoolDefaultOffBounds, sd->settings.autoAnnotate ? 1 : 0);
     addSettingsOptionsItemToMenu(sd->menu, menuItemHighlightPossibilities, noYesOptions, noYesValues,
                                  ARRAY_SIZE(noYesOptions), &settingBoolDefaultOnBounds,
-                                 sd->highlightOnlyOptions ? 1 : 0);
+                                 sd->settings.highlightOnlyOptions ? 1 : 0);
     addSettingsOptionsItemToMenu(sd->menu, menuItemHighlightOnlyOptions, noYesOptions, noYesValues,
                                  ARRAY_SIZE(noYesOptions), &settingBoolDefaultOffBounds,
-                                 sd->highlightPossibilities ? 1 : 0);
+                                 sd->settings.highlightPossibilities ? 1 : 0);
     sd->menu = endSubMenu(sd->menu);
 }
 
@@ -769,7 +775,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                         sd->playingContinuation = true;
                         setupSudokuPlayer(&sd->player, &sd->game);
                         sudokuGetNotes(sd->game.notes, &sd->game, 0);
-                        sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game);
+                        sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
                         swadgedokuSetupNumberWheel(sd->game.base, 0);
                         sd->screen = SWADGEDOKU_GAME;
                     }
@@ -811,7 +817,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             // sd->game.flags[0] = SF_LOCKED;
 
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
-            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game);
+            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
 
             swadgedokuSetupNumberWheel(sd->game.base, 0);
 
@@ -838,7 +844,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             sd->currentLevelNumber  = -1;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
-            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game);
+            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
             swadgedokuSetupNumberWheel(sd->game.base, 0);
             sd->screen = SWADGEDOKU_GAME;
         }
@@ -854,7 +860,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             sd->currentLevelNumber  = -1;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
-            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game);
+            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
             swadgedokuSetupNumberWheel(sd->game.base, 0);
             sd->screen = SWADGEDOKU_GAME;
         }
@@ -931,37 +937,37 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
         else if (menuItemWriteOnSelect == label)
         {
             bool newVal = value ? true : false;
-            if (newVal != sd->writeOnSelect)
+            if (newVal != sd->settings.writeOnSelect)
             {
-                sd->writeOnSelect = newVal;
-                swadgedokuSaveSettings();
+                sd->settings.writeOnSelect = newVal;
+                swadgedokuSaveSettings(&sd->settings);
             }
         }
         else if (menuItemAutoAnnotate == label)
         {
             bool newVal = value ? true : false;
-            if (newVal != sd->autoAnnotate)
+            if (newVal != sd->settings.autoAnnotate)
             {
-                sd->autoAnnotate = newVal;
-                swadgedokuSaveSettings();
+                sd->settings.autoAnnotate = newVal;
+                swadgedokuSaveSettings(&sd->settings);
             }
         }
         else if (menuItemHighlightPossibilities == label)
         {
             bool newVal = value ? true : false;
-            if (newVal != sd->highlightPossibilities)
+            if (newVal != sd->settings.highlightPossibilities)
             {
-                sd->highlightPossibilities = newVal;
-                swadgedokuSaveSettings();
+                sd->settings.highlightPossibilities = newVal;
+                swadgedokuSaveSettings(&sd->settings);
             }
         }
         else if (menuItemHighlightOnlyOptions == label)
         {
             bool newVal = value ? true : false;
-            if (newVal != sd->highlightOnlyOptions)
+            if (newVal != sd->settings.highlightOnlyOptions)
             {
-                sd->highlightOnlyOptions = newVal;
-                swadgedokuSaveSettings();
+                sd->settings.highlightOnlyOptions = newVal;
+                swadgedokuSaveSettings(&sd->settings);
             }
         }
     }
@@ -1041,10 +1047,10 @@ static void numberWheelCb(const char* label, bool selected, uint32_t value)
             if (label == digitLabels[i])
             {
                 sd->player.selectedDigit = i + 1;
-                if (sd->writeOnSelect)
+                if (sd->settings.writeOnSelect)
                 {
                     swadgedokuPlayerSetDigit(sd->player.selectedDigit);
-                    sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game);
+                    sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
                 }
             }
         }
@@ -1337,36 +1343,8 @@ static void swadgedokuGameButton(buttonEvt_t evt)
 
         if (moved || reAnnotate)
         {
-            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game);
+            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
         }
-    }
-}
-
-static void swadgedokuLoadSettings(void)
-{
-    int32_t allSettings = 0;
-    if (!readNvs32(settingKeyOptionBits, &allSettings))
-    {
-        allSettings = (int32_t)defaultSettings;
-    }
-
-    sd->writeOnSelect          = (allSettings & SSB_WRITE_ON_SELECT) ? true : false;
-    sd->autoAnnotate           = (allSettings & SSB_AUTO_ANNOTATE) ? true : false;
-    sd->highlightPossibilities = (allSettings & SSB_HIGHLIGHT_POSSIBILITIES) ? true : false;
-    sd->highlightOnlyOptions   = (allSettings & SSB_HIGHLIGHT_ONLY_OPTIONS) ? true : false;
-}
-
-static void swadgedokuSaveSettings(void)
-{
-    int32_t allSettings = 0;
-    allSettings |= sd->writeOnSelect ? SSB_WRITE_ON_SELECT : 0;
-    allSettings |= sd->autoAnnotate ? SSB_AUTO_ANNOTATE : 0;
-    allSettings |= sd->highlightPossibilities ? SSB_HIGHLIGHT_POSSIBILITIES : 0;
-    allSettings |= sd->highlightOnlyOptions ? SSB_HIGHLIGHT_ONLY_OPTIONS : 0;
-
-    if (!writeNvs32(settingKeyOptionBits, allSettings))
-    {
-        ESP_LOGE("Swadgedoku", "Could not save swadgedoku settings!");
     }
 }
 
