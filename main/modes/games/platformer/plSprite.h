@@ -6,6 +6,7 @@
 //==============================================================================
 #include <stdint.h>
 #include "wsg.h"
+#include "aabb_utils.h"
 
 //==============================================================================
 // Structs
@@ -20,6 +21,7 @@ typedef struct
 {
     wsg_t* wsg;
     const plSpriteOrigin_t* origin;
+    const box_t* hitBox;
 } plSprite_t;
 
 ///==============================================================================
@@ -37,5 +39,20 @@ static const plSpriteOrigin_t origin_15_15 =
     .y = 15
 };
 
+static const box_t box_16_16 = 
+{
+    .x0 = 0,
+    .x1 = 15,
+    .y0 = 0,
+    .y1 = 15
+};
+
+static const box_t box_16_32 = 
+{
+    .x0 = 0,
+    .x1 = 15,
+    .y0 = 0,
+    .y1 = 31
+};
 
 #endif
