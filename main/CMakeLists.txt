@@ -144,15 +144,20 @@ add_custom_target(dummy_target ALL
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c
 )
 
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/../.assets_ts
+    COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/assets_preprocessor -c ${CMAKE_CURRENT_SOURCE_DIR}/../assets.conf -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/ -t ${CMAKE_CURRENT_SOURCE_DIR}/../.assets_ts
+    DEPENDS always_rebuild
+)
+
 # custom_output will always be rebuilt because it depends on always_rebuild
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.h
-    COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/assets_preprocessor/assets_preprocessor -c ${CMAKE_CURRENT_SOURCE_DIR}/../assets.conf -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/
     COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs/cnfs_gen ${CMAKE_CURRENT_SOURCE_DIR}/../assets_image/ ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.c ${CMAKE_CURRENT_SOURCE_DIR}/utils/cnfs_image.h
-    DEPENDS always_rebuild
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../.assets_ts
 )
 
 # Dummy output which is never actually produced. Anything that depends on
