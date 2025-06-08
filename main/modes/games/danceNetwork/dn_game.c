@@ -99,20 +99,6 @@ void dn_UpdateGame(dn_gameData_t* gameData, uint32_t elapsedUs)
 void dn_DrawGame(dn_gameData_t* gameData)
 {
     dn_DrawTiles(gameData);
-}
-
-void dn_DrawTiles(dn_gameData_t* gameData)
-{
-    // Draw the tiles
-    for (int y = 0; y < BOARD_SIZE; y++)
-    {
-        for (int x = 0; x < BOARD_SIZE; x++)
-        {
-            int drawX = (TFT_WIDTH >> 1) - (41 >> 1) + (x - y) * (51 >> 1);
-            int drawY = (TFT_HEIGHT >> 1) + (TFT_HEIGHT >> 2) - 15 - (gameData->tiles[y][x].yOffset >> DECIMAL_BITS) + (x + y) * (26 >> 1);
-            drawWsgSimple(&gameData->sprites.groundTile, drawX, drawY);
-        }
-    }
     int drawX = (TFT_WIDTH >> 1) - (41 >> 1) + (gameData->selection[0] - gameData->selection[1]) * (51 >> 1);
     int drawY = (TFT_HEIGHT >> 1) + (TFT_HEIGHT >> 2) - 15 - (gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset >> DECIMAL_BITS) + (gameData->selection[0] + gameData->selection[1]) * (26 >> 1);
     //Subtract half the width of the image to center it
@@ -136,5 +122,19 @@ void dn_DrawTiles(dn_gameData_t* gameData)
             break;
         default:
             break;
+    }
+}
+
+void dn_DrawTiles(dn_gameData_t* gameData)
+{
+    // Draw the tiles
+    for (int y = 0; y < BOARD_SIZE; y++)
+    {
+        for (int x = 0; x < BOARD_SIZE; x++)
+        {
+            int drawX = (TFT_WIDTH >> 1) - (41 >> 1) + (x - y) * (51 >> 1);
+            int drawY = (TFT_HEIGHT >> 1) + (TFT_HEIGHT >> 2) - 15 - (gameData->tiles[y][x].yOffset >> DECIMAL_BITS) + (x + y) * (26 >> 1);
+            drawWsgSimple(&gameData->sprites.groundTile, drawX, drawY);
+        }
     }
 }
