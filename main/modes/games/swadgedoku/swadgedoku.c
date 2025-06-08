@@ -492,8 +492,9 @@ static const char settingKeyMaxLevel[]  = "sdku_maxlevel";
 static const settingParam_t settingLevelSelectBounds
     = {.min = 1, .max = (SUDOKU_PUZ_MAX - SUDOKU_PUZ_MIN) + 1, .def = 1, .key = settingKeyLastLevel};
 
-static const char settingKeyProgress[]   = "sdku_progress";
-static const char settingKeyProgressId[] = "sdku_progid";
+static const char settingKeyProgress[]     = "sdku_progress";
+static const char settingKeyProgressId[]   = "sdku_progid";
+static const char settingKeyProgressTime[] = "sdku_progtime";
 
 // static const char settingKeyCustomSettings[] = "sdku_custom";
 static const settingParam_t settingCustomSizeBounds
@@ -1000,13 +1001,25 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                         if (readNvs32(settingKeyProgressId, &curLevel))
                         {
                             sd->currentLevelNumber = curLevel;
-                            sd->currentDifficulty = getLevelDifficulty(curLevel);
+                            sd->currentDifficulty  = getLevelDifficulty(curLevel);
                         }
                         else
                         {
                             sd->currentLevelNumber = -1;
                         }
-                        sd->playTimer           = 0;
+
+                        int32_t progressTime = 0;
+                        if (readNvs32(settingKeyProgressTime, &progressTime))
+                        {
+                            // we save in millis but the timer is in micros
+                            sd->playTimer = progressTime;
+                            sd->playTimer *= 1000;
+                        }
+                        else
+                        {
+                            sd->playTimer = 0;
+                        }
+
                         sd->playingContinuation = true;
                         setupSudokuPlayer(&sd->player, &sd->game);
                         sudokuGetNotes(sd->game.notes, &sd->game, 0);
@@ -1045,7 +1058,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             sd->playTimer           = 0;
             sd->playingContinuation = false;
             sd->currentLevelNumber  = value;
-            sd->currentDifficulty = getLevelDifficulty(value);
+            sd->currentDifficulty   = getLevelDifficulty(value);
 
             setupSudokuPlayer(&sd->player, &sd->game);
             // sd->game.grid[0] = 9;
@@ -1247,6 +1260,19 @@ static void swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t val
             if (writeNvsBlob(settingKeyProgress, data, size))
             {
                 ESP_LOGI("Swadgedoku", "Saved progress to NVS!");
+                if (sd->currentLevelNumber != -1)
+                {
+                    if (!writeNvs32(settingKeyProgressId, sd->currentLevelNumber))
+                    {
+                        ESP_LOGE("Swadgedoku", "Failed to save progress level ID");
+                    }
+
+                    int32_t millis = sd->playTimer / 1000;
+                    if (!writeNvs32(settingKeyProgressTime, millis))
+                    {
+                        ESP_LOGE("Swadgedoku", "Failed to save progress timer");
+                    }
+                }
                 swadgedokuSetupMenu();
                 sd->screen = SWADGEDOKU_MAIN_MENU;
             }
@@ -3012,6 +3038,11 @@ void swadgedokuPlayerSetDigit(uint8_t digit)
                         {
                             ESP_LOGE("Swadgedoku", "Couldn't erase progress level ID value");
                         }
+
+                        if (!eraseNvsKey(settingKeyProgressTime))
+                        {
+                            ESP_LOGE("Swadgedoku", "Couldn't erase progress timer value");
+                        }
                     }
 
                     if (sd->currentLevelNumber != -1)
@@ -3038,6 +3069,7 @@ void swadgedokuPlayerSetDigit(uint8_t digit)
                                 ESP_LOGE("Swadgedoku", "Couldn't write updated last level to NVS");
                             }
                         }
+                        sd->currentLevelNumber = -1;
                     }
                     sd->screen = SWADGEDOKU_WIN;
                     break;
