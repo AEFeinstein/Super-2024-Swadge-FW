@@ -6,6 +6,16 @@
 #include "sudoku_game.h"
 
 //==============================================================================
+// Const data
+//==============================================================================
+
+/// @brief The NVS key to store a bitmap of boolean settings
+static const char settingKeyOptionBits[] = "sdku_settings";
+
+/// @brief The default settings bitmap
+static const sudokuSettingBit_t defaultSettings = SSB_WRITE_ON_SELECT | SSB_HIGHLIGHT_POSSIBILITIES;
+
+//==============================================================================
 // Functions
 //==============================================================================
 
@@ -616,4 +626,32 @@ size_t getSudokuSaveSize(const sudokuGrid_t* game, int* boxFmt, int* gridFmt, in
     size_t totalLen = 8 + boxLen + gridLen + noteLen + flagLen;
 
     return totalLen;
+}
+
+void swadgedokuLoadSettings(sudokuSettings_t* settings)
+{
+    int32_t allSettings = 0;
+    if (!readNvs32(settingKeyOptionBits, &allSettings))
+    {
+        allSettings = (int32_t)defaultSettings;
+    }
+
+    settings->writeOnSelect          = (allSettings & SSB_WRITE_ON_SELECT) ? true : false;
+    settings->autoAnnotate           = (allSettings & SSB_AUTO_ANNOTATE) ? true : false;
+    settings->highlightPossibilities = (allSettings & SSB_HIGHLIGHT_POSSIBILITIES) ? true : false;
+    settings->highlightOnlyOptions   = (allSettings & SSB_HIGHLIGHT_ONLY_OPTIONS) ? true : false;
+}
+
+void swadgedokuSaveSettings(const sudokuSettings_t* settings)
+{
+    int32_t allSettings = 0;
+    allSettings |= settings->writeOnSelect ? SSB_WRITE_ON_SELECT : 0;
+    allSettings |= settings->autoAnnotate ? SSB_AUTO_ANNOTATE : 0;
+    allSettings |= settings->highlightPossibilities ? SSB_HIGHLIGHT_POSSIBILITIES : 0;
+    allSettings |= settings->highlightOnlyOptions ? SSB_HIGHLIGHT_ONLY_OPTIONS : 0;
+
+    if (!writeNvs32(settingKeyOptionBits, allSettings))
+    {
+        ESP_LOGE("Swadgedoku", "Could not save swadgedoku settings!");
+    }
 }
