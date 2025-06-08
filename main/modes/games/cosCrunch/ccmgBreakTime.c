@@ -10,14 +10,15 @@ static bool ccmgBreakTimeTimeout(void);
 static const char ccmgBreakTimeVerb[]       = "Break Time";
 static const char ccmgBreakTimeSuccessMsg[] = "Calm enhanced";
 const cosCrunchMicrogame_t ccmgBreakTime    = {
-       .verb               = ccmgBreakTimeVerb,
-       .successMsg         = ccmgBreakTimeSuccessMsg,
-       .failureMsg         = NULL,
-       .timeoutUs          = 3000000,
-       .fnInitMicrogame    = ccmgBreakTimeInitMicrogame,
-       .fnDestroyMicrogame = ccmgBreakTimeDestroyMicrogame,
-       .fnMainLoop         = ccmgBreakTimeMainLoop,
-       .fnMicrogameTimeout = ccmgBreakTimeTimeout,
+       .verb                     = ccmgBreakTimeVerb,
+       .successMsg               = ccmgBreakTimeSuccessMsg,
+       .failureMsg               = NULL,
+       .timeoutUs                = 3000000,
+       .fnInitMicrogame          = ccmgBreakTimeInitMicrogame,
+       .fnDestroyMicrogame       = ccmgBreakTimeDestroyMicrogame,
+       .fnMainLoop               = ccmgBreakTimeMainLoop,
+       .fnBackgroundDrawCallback = NULL,
+       .fnMicrogameTimeout       = ccmgBreakTimeTimeout,
 };
 
 #define MUG_WIDTH_SANS_HANDLE 65

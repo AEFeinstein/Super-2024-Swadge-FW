@@ -31,6 +31,10 @@
 
 extern swadgeMode_t cosCrunchMode;
 
+/// The height in pixels of the area that microgames can draw on without invading the UI space. Note that UI elements
+/// (timer and calendar, and desk if fnBackgroundDrawCallback is implemented) will still draw on top of microgames.
+#define CC_DRAWABLE_HEIGHT (TFT_HEIGHT - 38)
+
 typedef enum
 {
     /**
@@ -111,6 +115,23 @@ typedef struct
      */
     void (*fnMainLoop)(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
                        buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
+
+    /**
+     * @brief This function is called when the display driver wishes to update a section of the display. Implementing
+     * this function in your microgame is optional and will cause the Cosplay Crunch UI to render over it in the
+     * foreground. If you do not implement this function, your game will render on top of the cutting mat background.
+     *
+     * Note that your microgame will not receive this callback for the entire screen: any pixels at the bottom of the
+     * display that are covered up by the Cosplay Crunch UI will be skipped.
+     *
+     * @param x The x coordinate that should be updated
+     * @param y The y coordinate that should be updated
+     * @param w The width of the rectangle to be updated
+     * @param h The height of the rectangle to be updated
+     * @param up Update number
+     * @param upNum Update number denominator
+     */
+    void (*fnBackgroundDrawCallback)(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
     /**
      * @brief This function is called when the microgame timer expires. It is optional and intended for microgames that
