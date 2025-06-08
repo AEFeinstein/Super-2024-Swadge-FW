@@ -2677,7 +2677,7 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
     bool highlightSelectedDigit = false;
 
     // Highlight the first-order possibilities for the digit under the cursor
-    bool highlightCursorDigitLocations = sd->highlightPossibilities;
+    bool highlightCursorDigitLocations = true;
     // Highlight the first-order possibilities for the digit to be entered
     bool highlightSelectedDigitLocations = false;
 
