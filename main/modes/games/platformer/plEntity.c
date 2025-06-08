@@ -443,81 +443,6 @@ void pl_moveEntityWithTileCollisions(plEntity_t* self)
     self->y = newY + self->yspeed;
 }
 
-void pl_moveEntityWithTileCollisions2(plEntity_t* self)
-{
-    uint16_t x = TO_PIXEL_COORDS(self->x);
-    uint16_t y = TO_PIXEL_COORDS(self->y);
-    int16_t xspeed = self->xspeed;
-    int16_t yspeed = self->yspeed;
-
-    int16_t offX, offY, tempX, tempY, tempE, tempTx, tempTy, tempNtx, tempNty, tempT, newX, newY;
-
-    newX = 0;
-    newY = 0;
-
-    for(int i=0; i<2; i++){
-        offX = PL_1x2_TILE_COLLISION_OFFSETS_IN_PIXELS[(i*3) + 0];
-        offY = PL_1x2_TILE_COLLISION_OFFSETS_IN_PIXELS[(i*3) + 1];
-        tempX = x + offX;
-        tempY = y + offY;
-        tempE = PL_1x2_TILE_COLLISION_OFFSETS_IN_PIXELS[(i*3) + 2];
-
-        tempTx = PL_TO_TILECOORDS(tempX);
-        tempTy = PL_TO_TILECOORDS(tempY);
-
-        tempNty = PL_TO_TILECOORDS(tempY - (yspeed < 0) + (SIGNOF(yspeed) * PL_HALF_TILESIZE));
-        tempNtx = (tempTy == tempNty) ? PL_TO_TILECOORDS(tempX - (xspeed < 0) + (SIGNOF(xspeed) * PL_HALF_TILESIZE)) : PL_TO_TILECOORDS(tempX);
-        
-
-        drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
-        drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
-        drawRect((tempNtx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempNty << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempNtx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempNty << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c050);
-
-
-        tempT = pl_getTile(self->tilemap, tempNtx, tempNty);
-
-        if(pl_isSolid(tempT)){
-            if((tempTx > tempNtx) && (tempE & PL_EDGE_LEFT) ) {
-               newX = (((tempNtx + 1)) << PL_TILESIZE_IN_POWERS_OF_2) + PL_HALF_TILESIZE - offX;
-               tempNtx = PL_TO_TILECOORDS(tempX - (xspeed < 0) + (SIGNOF(xspeed) * PL_HALF_TILESIZE));
-               xspeed = 0;
-            } else if((tempTx < tempNtx) && (tempE & PL_EDGE_RIGHT) ) {
-               newX = (((tempNtx)) << PL_TILESIZE_IN_POWERS_OF_2) - PL_HALF_TILESIZE - offX;
-               tempNtx = PL_TO_TILECOORDS(tempX - (xspeed < 0) + (SIGNOF(xspeed) * PL_HALF_TILESIZE));
-               xspeed = 0;
-            }
-        }
-        
-        tempT = pl_getTile(self->tilemap, tempNtx, tempNty);
-        if(pl_isSolid(tempT)){
-            if((tempTy > tempNty) && (tempE & PL_EDGE_TOP) ) {
-               newY = (((tempNty + 1)) << PL_TILESIZE_IN_POWERS_OF_2) + PL_HALF_TILESIZE - offY;
-               tempNty = PL_TO_TILECOORDS(tempY - (yspeed < 0) + (SIGNOF(yspeed) * PL_HALF_TILESIZE));
-               yspeed = 0;
-            } else if((tempTy < tempNty) && (tempE & PL_EDGE_BOTTOM) ) {
-               newY = (((tempNty )) << PL_TILESIZE_IN_POWERS_OF_2) - PL_HALF_TILESIZE - offY;
-               tempNty = PL_TO_TILECOORDS(tempY - (yspeed < 0) + (SIGNOF(yspeed) * PL_HALF_TILESIZE));
-               yspeed = 0;
-            }
-
-
-            //continue;
-        }
-    }
-
-    self->x = newX ? TO_SUBPIXEL_COORDS(newX) : self->x+self->xspeed;
-    self->y = newY ? TO_SUBPIXEL_COORDS(newY) : self->y+self->yspeed;
-
-    if(newX) {
-        self->xspeed = 0;
-    }
-
-    if(newY) {
-        self->yspeed = 0;
-    }
-}
-
-
 void pl_moveEntityWithTileCollisions3(plEntity_t* self)
 {
     uint16_t x = TO_PIXEL_COORDS(self->x);
@@ -834,7 +759,7 @@ void pl_detectEntityCollisions(plEntity_t* self)
     }*/
 
     plSprite_t* selfSprite = &(self->tilemap->wsgManager->sprites[self->spriteIndex]);
-    box_t* selfSpriteBox = selfSprite->hitBox;
+    const box_t* selfSpriteBox = selfSprite->hitBox;
 
     box_t selfBox;
     selfBox.x0 = (self->x >> SUBPIXEL_RESOLUTION) - selfSprite->origin->x + selfSpriteBox->x0;
@@ -844,7 +769,7 @@ void pl_detectEntityCollisions(plEntity_t* self)
 
     plEntity_t* checkEntity;
     plSprite_t* checkEntitySprite;
-    box_t* checkEntitySpriteBox;
+    const box_t* checkEntitySpriteBox;
     box_t checkEntityBox;
 
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
@@ -856,13 +781,13 @@ void pl_detectEntityCollisions(plEntity_t* self)
             checkEntitySpriteBox = checkEntitySprite->hitBox;
 
             checkEntityBox.x0
-                = (checkEntity->x >> SUBPIXEL_RESOLUTION) - checkEntitySprite->origin->x + checkEntitySpriteBox->x0;
+                = TO_PIXEL_COORDS(checkEntity->x) - checkEntitySprite->origin->x + checkEntitySpriteBox->x0;
             checkEntityBox.y0
-                = (checkEntity->y >> SUBPIXEL_RESOLUTION) - checkEntitySprite->origin->y + checkEntitySpriteBox->y0;
+                = TO_PIXEL_COORDS(checkEntity->y) - checkEntitySprite->origin->y + checkEntitySpriteBox->y0;
             checkEntityBox.x1
-                = (checkEntity->x >> SUBPIXEL_RESOLUTION) - checkEntitySprite->origin->x + checkEntitySpriteBox->x1;
+                = TO_PIXEL_COORDS(checkEntity->x) - checkEntitySprite->origin->x + checkEntitySpriteBox->x1;
             checkEntityBox.y1
-                = (checkEntity->y >> SUBPIXEL_RESOLUTION) - checkEntitySprite->origin->y + checkEntitySpriteBox->y1;
+                = TO_PIXEL_COORDS(checkEntity->y) - checkEntitySprite->origin->y + checkEntitySpriteBox->y1;
 
             if (boxesCollide(selfBox, checkEntityBox, 0))
             {

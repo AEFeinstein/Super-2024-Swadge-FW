@@ -11,7 +11,6 @@
 #include "plTilemap.h"
 #include "plGameData.h"
 #include "plSoundManager.h"
-#include "vector2d.h"
 
 //==============================================================================
 // Enums
@@ -136,7 +135,6 @@ void updateTestObject(plEntity_t* self);
 void updateHitBlock(plEntity_t* self);
 
 void pl_moveEntityWithTileCollisions(plEntity_t* self);
-void pl_moveEntityWithTileCollisions2(plEntity_t* self);
 void pl_moveEntityWithTileCollisions3(plEntity_t* self);
 void defaultFallOffTileHandler(plEntity_t* self);
 
