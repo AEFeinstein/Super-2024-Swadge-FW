@@ -2820,7 +2820,7 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
                 {
                     overlay->gridOpts[n] |= OVERLAY_CHECK;
                 }
-                else
+                else if (sd->highlightPossibilities)
                 {
                     overlay->gridOpts[n] |= OVERLAY_QUESTION;
                 }
@@ -2832,7 +2832,7 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
                 {
                     overlay->gridOpts[n] |= OVERLAY_CHECK;
                 }
-                else
+                else if (sd->highlightPossibilities)
                 {
                     overlay->gridOpts[n] |= OVERLAY_QUESTION;
                 }
