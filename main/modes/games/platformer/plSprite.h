@@ -12,9 +12,30 @@
 //==============================================================================
 typedef struct
 {
+    int16_t x;
+    int16_t y;
+} plSpriteOrigin_t;
+
+typedef struct
+{
     wsg_t* wsg;
-    int16_t originX;
-    int16_t originY;
+    const plSpriteOrigin_t* origin;
 } plSprite_t;
+
+///==============================================================================
+// Constants
+//==============================================================================
+static const plSpriteOrigin_t origin_8_8 =
+{
+    .x = 8,
+    .y = 8
+};
+
+static const plSpriteOrigin_t origin_15_15 =
+{
+    .x = 15,
+    .y = 15
+};
+
 
 #endif
