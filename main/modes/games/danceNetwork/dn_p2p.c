@@ -20,6 +20,11 @@ static const char* conRxStartMsg[] = {
 // Functions
 //==============================================================================
 
+void dn_DrawConnecting(dn_gameData_t* gameData, int64_t elapsedUs)
+{
+    
+}
+
 /**
  * @brief Handle input when showing the connection UI
  *

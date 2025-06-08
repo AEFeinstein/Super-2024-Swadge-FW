@@ -1,4 +1,8 @@
 #include "danceNetwork.h"
+#include "dn_game.h"
+#include "dn_characterSelect.h"
+#include "dn_howTo.h"
+#include "dn_result.h"
 #include "dn_typedef.h"
 #include "dn_p2p.h"
 #include "mainMenu.h"
@@ -19,6 +23,7 @@ static void dn_MsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 static void dn_EnterMode(void);
 static void dn_ExitMode(void);
 static void dn_MainLoop(int64_t elapsedUs);
+static void dn_MainLoop2(int64_t elapsedUs);
 static void dn_MenuCb(const char* label, bool selected, uint32_t value);
 static void dn_drawScene(void);
 static void dn_drawTiles(void);
@@ -37,7 +42,7 @@ swadgeMode_t danceNetworkMode = {
     .overrideSelectBtn        = false,          // The select/Menu button has a default behavior. If you want to override it, you can set this to true but you'll need to re-implement the behavior.
     .fnEnterMode              = dn_EnterMode, // The enter mode function
     .fnExitMode               = dn_ExitMode,  // The exit mode function
-    .fnMainLoop               = dn_MainLoop,  // The loop function
+    .fnMainLoop               = dn_MainLoop2,  // The loop function
     .fnAudioCallback          = NULL,           // If the mode uses the microphone
     .fnBackgroundDrawCallback = dn_BackgroundDrawCallback,           // Draws a section of the display
     .fnEspNowRecvCb           = dn_EspNowRecvCb,           // If using Wifi, add the receive function here
@@ -84,9 +89,13 @@ static void dn_EnterMode(void)
     loadWsg(DN_GROUND_TILE_WSG, &gameData->sprites.groundTile, true);
     loadWsg(DN_ALPHA_DOWN_WSG, &gameData->sprites.alphaDown, true);
     loadWsg(DN_ALPHA_UP_WSG, &gameData->sprites.alphaUp, true);
+    
+    // Load some fonts
+    // loadFont("rodin_eb.font", &gameData->font_rodin, false);
+    // loadFont("righteous_150.font", &gameData->font_righteous, false);
 
     // Initialize a menu renderer
-    gameData->menuRenderer = initMenuManiaRenderer(&gameData->font_righteous, NULL, &gameData->font_rodin);
+    gameData->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
     // Color the menu my way
     static const paletteColor_t shadowColors[] = {
         c500, c050, c005, c550, c505, c055, c200, c020, c002, c220,
@@ -220,6 +229,89 @@ static void dn_MainLoop(int64_t elapsedUs)
         }
     }
     dn_drawScene();
+}
+
+/**
+ * @brief The main loop for Dance Network, responsible for input handling, game logic, and rendering
+ *
+ * @param elapsedUs The time elapsed since this was last called
+ */
+static void dn_MainLoop2(int64_t elapsedUs)
+{
+    // Handle inputs
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        switch (gameData->ui)
+        {
+            case UI_MENU:
+            {
+                gameData->menu = menuButton(gameData->menu, evt);
+                break;
+            }
+            case UI_CONNECTING:
+            {
+                dn_HandleConnectingInput(gameData, &evt);
+                break;
+            }
+            case UI_GAME:
+            {
+                dn_HandleGameInput(gameData, &evt);
+                break;
+            }
+            case UI_CHARACTER_SELECT:
+            {
+                dn_InputCharacterSelect(gameData, &evt);
+                break;
+            }
+            case UI_HOW_TO:
+            {
+                dn_InputHowTo(gameData, &evt);
+                break;
+            }
+            case UI_RESULT:
+            {
+                dn_InputResult(gameData, &evt);
+                break;
+            }
+        }
+    }
+
+    // Draw to the TFT
+    switch (gameData->ui)
+    {
+        case UI_MENU:
+        {
+            // Draw menu
+            drawMenuMania(gameData->menu, gameData->menuRenderer, elapsedUs);
+            break;
+        }
+        case UI_CONNECTING:
+        {
+            dn_DrawConnecting(gameData, elapsedUs);
+            break;
+        }
+        case UI_GAME:
+        {
+            dn_DrawGame(gameData, elapsedUs);
+            break;
+        }
+        case UI_CHARACTER_SELECT:
+        {
+            dn_DrawCharacterSelect(gameData, elapsedUs);
+            break;
+        }
+        case UI_HOW_TO:
+        {
+            dn_DrawHowTo(gameData, elapsedUs);
+            break;
+        }
+        case UI_RESULT:
+        {
+            dn_DrawResult(gameData, elapsedUs);
+            break;
+        }
+    }
 }
 
 static void dn_drawScene(void)
