@@ -4,6 +4,7 @@
 
 #include "sudoku_game.h"
 #include "sudoku_data.h"
+#include "sudoku_ui.h"
 
 //==============================================================================
 // Functions
@@ -642,8 +643,10 @@ void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
  * @param overlay The overlay to update
  * @param player The player to use for preferences and selected digit or cursor position
  * @param game The game to read digits and notes from
+ * @param settings Global sudoku settings to control which annotations are set and how
  */
-void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, const sudokuGrid_t* game)
+void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, const sudokuGrid_t* game,
+                    const sudokuSettings_t* settings)
 {
     // 1. Remove all the existing annotations placed by us
     node_t* next = NULL;
@@ -790,11 +793,11 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
 
             if (!digit && highlightCursorDigitLocations && cursorDigit && (game->notes[n] & cursorBits))
             {
-                if (game->notes[n] == cursorBits && sd->highlightOnlyOptions)
+                if (game->notes[n] == cursorBits && settings->highlightOnlyOptions)
                 {
                     overlay->gridOpts[n] |= OVERLAY_CHECK;
                 }
-                else if (sd->highlightPossibilities)
+                else if (settings->highlightPossibilities)
                 {
                     overlay->gridOpts[n] |= OVERLAY_QUESTION;
                 }
@@ -802,11 +805,11 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
             else if (!digit && highlightSelectedDigitLocations && player->selectedDigit && (game->notes[n] & selBits))
             {
                 // Use a ? if this is the only possibility
-                if (game->notes[n] == selBits && sd->highlightOnlyOptions)
+                if (game->notes[n] == selBits && settings->highlightOnlyOptions)
                 {
                     overlay->gridOpts[n] |= OVERLAY_CHECK;
                 }
-                else if (sd->highlightPossibilities)
+                else if (settings->highlightPossibilities)
                 {
                     overlay->gridOpts[n] |= OVERLAY_QUESTION;
                 }

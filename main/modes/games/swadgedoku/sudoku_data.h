@@ -188,6 +188,21 @@ typedef struct
     sudokuFlag_t* flags;
 } sudokuGrid_t;
 
+typedef struct
+{
+    /// @brief Write the selected digit to the cursor position as soon as it is picked
+    bool writeOnSelect;
+
+    /// @brief Automatically fill out all annotations for the player on the grid
+    bool autoAnnotate;
+
+    /// @brief Highlights all places where the selected digit can go
+    bool highlightPossibilities;
+
+    /// @brief Highlights places where the selected digit is the only possibility
+    bool highlightOnlyOptions;
+} sudokuSettings_t;
+
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -195,3 +210,6 @@ typedef struct
 bool loadSudokuData(const uint8_t* data, size_t length, sudokuGrid_t* game);
 size_t writeSudokuData(uint8_t* data, const sudokuGrid_t* game);
 size_t getSudokuSaveSize(const sudokuGrid_t* game, int* boxFmt, int* gridFmt, int* noteFmt, int* flagFmt);
+
+void swadgedokuLoadSettings(sudokuSettings_t* settings);
+void swadgedokuSaveSettings(const sudokuSettings_t* settings);
