@@ -10,7 +10,7 @@
 #include "soundFuncs.h"
 #include "hdw-btn.h"
 #include "esp_random.h"
-//#include "aabb_utils.h"
+#include "aabb_utils.h"
 #include "trigonometry.h"
 #include <esp_log.h>
 #include "soundFuncs.h"
@@ -813,7 +813,7 @@ void animatePlayer(plEntity_t* self)
 
 void pl_detectEntityCollisions(plEntity_t* self)
 {
-    for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+    /*for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
         plEntity_t* checkEntity = &(self->entityManager->entities[i]);
         if (checkEntity->active && checkEntity != self)
@@ -821,6 +821,44 @@ void pl_detectEntityCollisions(plEntity_t* self)
             uint32_t dist = abs(self->x - checkEntity->x) + abs(self->y - checkEntity->y);
 
             if (dist < 200)
+            {
+                self->collisionHandler(self, checkEntity);
+            }
+        }
+    }*/
+
+    plSprite_t* selfSprite = &(self->tilemap->wsgManager->sprites[self->spriteIndex]);
+    box_t* selfSpriteBox = selfSprite->hitBox;
+
+    box_t selfBox;
+    selfBox.x0 = (self->x >> SUBPIXEL_RESOLUTION) - selfSprite->origin->x + selfSpriteBox->x0;
+    selfBox.y0 = (self->y >> SUBPIXEL_RESOLUTION) - selfSprite->origin->y + selfSpriteBox->y0;
+    selfBox.x1 = (self->x >> SUBPIXEL_RESOLUTION) - selfSprite->origin->x + selfSpriteBox->x1;
+    selfBox.y1 = (self->y >> SUBPIXEL_RESOLUTION) - selfSprite->origin->y + selfSpriteBox->y1;
+
+    plEntity_t* checkEntity;
+    plSprite_t* checkEntitySprite;
+    box_t* checkEntitySpriteBox;
+    box_t checkEntityBox;
+
+    for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+    {
+        checkEntity = &(self->entityManager->entities[i]);
+        if (checkEntity->active && checkEntity != self)
+        {
+            checkEntitySprite    = &(self->tilemap->wsgManager->sprites[checkEntity->spriteIndex]);
+            checkEntitySpriteBox = checkEntitySprite->hitBox;
+
+            checkEntityBox.x0
+                = (checkEntity->x >> SUBPIXEL_RESOLUTION) - checkEntitySprite->origin->x + checkEntitySpriteBox->x0;
+            checkEntityBox.y0
+                = (checkEntity->y >> SUBPIXEL_RESOLUTION) - checkEntitySprite->origin->y + checkEntitySpriteBox->y0;
+            checkEntityBox.x1
+                = (checkEntity->x >> SUBPIXEL_RESOLUTION) - checkEntitySprite->origin->x + checkEntitySpriteBox->x1;
+            checkEntityBox.y1
+                = (checkEntity->y >> SUBPIXEL_RESOLUTION) - checkEntitySprite->origin->y + checkEntitySpriteBox->y1;
+
+            if (boxesCollide(selfBox, checkEntityBox, 0))
             {
                 self->collisionHandler(self, checkEntity);
             }
