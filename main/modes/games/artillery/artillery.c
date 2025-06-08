@@ -19,6 +19,7 @@ typedef struct
 {
     physSim_t* phys;
     physCirc_t* players[NUM_PLAYERS];
+    int32_t autofire;
 } artilleryData_t;
 
 //==============================================================================
@@ -75,6 +76,7 @@ void artilleryEnterMode(void)
 
 #define GROUND_LEVEL 200
 
+    // Add some ground
     vecFl_t groundPoints[] = {
         {.x = 0, .y = GROUND_LEVEL},         {.x = TFT_WIDTH / 4, .y = GROUND_LEVEL},
         {.x = TFT_WIDTH / 2, .y = 100},      {.x = 3 * TFT_WIDTH / 4, .y = GROUND_LEVEL},
@@ -86,16 +88,10 @@ void artilleryEnterMode(void)
                     groundPoints[idx + 1].y);
     }
 
-    // vecFl_t projectiles[] = {
-    //     {.x = TFT_WIDTH / 4, .y = 6},
-    //     {.x = (2 * TFT_WIDTH) / 4, .y = 6},
-    //     {.x = (3 * TFT_WIDTH) / 4, .y = 6},
-    // };
-    // for (int idx = 0; idx < ARRAY_SIZE(projectiles); idx++)
-    // {
-    //     physAddCircle(ad->phys, projectiles[idx].x, projectiles[idx].y, 5, CT_SHELL);
-    // }
+    // Add an obstacle
+    physAddCircle(ad->phys, TFT_WIDTH / 2, 30, 10, CT_OBSTACLE);
 
+    // Add some players
 #define PLAYER_RADIUS 8
     ad->players[0] = physAddCircle(ad->phys, TFT_WIDTH / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
     ad->players[1]
@@ -153,7 +149,8 @@ void artilleryMainLoop(int64_t elapsedUs)
         }
     }
 
-    // setBarrelAngle(ad->players[0], ad->players[0]->barrelAngle + M_PI /180.0f);
+    // Uncomment for autofire
+    // RUN_TIMER_EVERY(ad->autofire, 100000, elapsedUs, { fireShot(ad->phys, ad->players[0]); });
 
     physStep(ad->phys, elapsedUs);
     drawPhysOutline(ad->phys);
