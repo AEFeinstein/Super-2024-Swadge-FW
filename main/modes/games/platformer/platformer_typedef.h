@@ -384,7 +384,7 @@ static const int PL_1x2_TILE_COLLISION_OFFSETS_IN_PIXELS[]
     = {0, 8, PL_EDGE_BLR, 0, -8, PL_EDGE_TLR};
 
 static const int PL_TILE_COLLISION_OFFSETS_1x2_BOTTOM_EDGE[]
-    = {-7, 15, 0, 15, 7, 15};
+    = {-7, 15, 0, 15, 6, 15};
 
 static const int PL_TILE_COLLISION_OFFSETS_1x2_TOP_EDGE[]
     = {-7, -15, 0, -15, 7, -15};
@@ -393,6 +393,6 @@ static const int PL_TILE_COLLISION_OFFSETS_1x2_RIGHT_EDGE[]
     = {8, 14, 8, 0, 8, -14};
 
 static const int PL_TILE_COLLISION_OFFSETS_1x2_LEFT_EDGE[]
-    = {-8, 14, -8, 0, -8, -15};
+    = {-7, 14, -7, 0, -7, -14};
 
 #endif
