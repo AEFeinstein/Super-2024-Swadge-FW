@@ -2,6 +2,7 @@
 #define PLATFORMER_COMMON_TYPEDEF_INCLUDED
 
 #include "cnfs.h"
+#include "vector2d.h"
 
 //==============================================================================
 // Constants
@@ -29,6 +30,18 @@ typedef struct platformer_t platformer_t;
 typedef struct plEntityManager_t plEntityManager_t;
 typedef struct plTilemap_t plTilemap_t;
 typedef struct plEntity_t plEntity_t;
+
+typedef struct {
+    int32_t size;
+    vec_t collisionPoints[];
+} pl_EntityTileCollisionPointList_t;
+
+typedef struct {
+   const pl_EntityTileCollisionPointList_t* bottomEdge;
+   const pl_EntityTileCollisionPointList_t* topEdge;
+   const pl_EntityTileCollisionPointList_t* rightEdge;
+   const pl_EntityTileCollisionPointList_t* leftEdge;
+} pl_EntityTileCollider_t;
 
 typedef enum
 {
@@ -379,7 +392,7 @@ typedef enum
     PL_EDGE_TBLR
 } plEdge_t;
 
-
+/*
 static const int PL_1x2_TILE_COLLISION_OFFSETS_IN_PIXELS[]
     = {0, 8, PL_EDGE_BLR, 0, -8, PL_EDGE_TLR};
 
@@ -394,5 +407,81 @@ static const int PL_TILE_COLLISION_OFFSETS_1x2_RIGHT_EDGE[]
 
 static const int PL_TILE_COLLISION_OFFSETS_1x2_LEFT_EDGE[]
     = {-7, 14, -7, 0, -7, -14};
+*/
+
+static const pl_EntityTileCollisionPointList_t plTileCollisionOffsets_1x2_bottomEdge = 
+{
+    .collisionPoints = {{
+        .x = -7,
+        .y = 15
+    },
+    {
+        .x = 0,
+        .y = 15
+    },
+    {
+        .x = 6,
+        .y = 15
+    }},
+    .size = 3
+};
+
+static const pl_EntityTileCollisionPointList_t plTileCollisionOffsets_1x2_topEdge = 
+{
+    .collisionPoints = {{
+        .x = -7,
+        .y = -15
+    },
+    {
+        .x = 0,
+        .y = -15
+    },
+    {
+        .x = 7,
+        .y = -15
+    }},
+    .size = 3
+};
+
+static const pl_EntityTileCollisionPointList_t plTileCollisionOffsets_1x2_rightEdge = 
+{
+    .collisionPoints = {{
+        .x = 8,
+        .y = 14
+    },
+    {
+        .x = 8,
+        .y = 0
+    },
+    {
+        .x = 8,
+        .y = -14
+    }},
+    .size = 3
+};
+
+static const pl_EntityTileCollisionPointList_t plTileCollisionOffsets_1x2_leftEdge = 
+{
+    .collisionPoints = {{
+        .x = -7,
+        .y = 14
+    },
+    {
+        .x = -7,
+        .y = 0
+    },
+    {
+        .x = -7,
+        .y = -14
+    }},
+    .size = 3
+};
+
+static const pl_EntityTileCollider_t entityTileCollider_1x2 = {
+    .bottomEdge = &plTileCollisionOffsets_1x2_bottomEdge,
+    .topEdge = &plTileCollisionOffsets_1x2_topEdge,
+    .rightEdge = &plTileCollisionOffsets_1x2_rightEdge,
+    .leftEdge = &plTileCollisionOffsets_1x2_leftEdge
+};
 
 #endif
