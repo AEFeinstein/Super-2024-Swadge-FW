@@ -401,6 +401,7 @@ void removeSettingsItemFromMenu(menu_t* menu, const char* label)
  * @param bounds The bounds for this setting
  * @param currentValue The current value of the setting. Must be one of the values
  *                     in \c optionValues.
+ * @return menuItem_t* A pointer to the newly added menu item
  */
 menuItem_t* addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const char* const* optionLabels,
                                          const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
