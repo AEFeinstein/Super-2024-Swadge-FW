@@ -489,7 +489,7 @@ const midiTimbre_t mmx119ReverseCymbal = {
     .flags = TF_NONE,
     .sample = {
         .config = {
-            .fIdx = SF_MMX_119_REVERSE_CYMBAL_BIN,
+            .fIdx = CRASHCYMBAL_BIN,
         },
         .loop = 0,
         .rate = 16384,
