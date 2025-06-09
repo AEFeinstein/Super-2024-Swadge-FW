@@ -47,6 +47,7 @@
 #include "sequencerMode.h"
 #include "swadgeIt.h"
 #include "swadgePassTest.h"
+#include "swadgedoku.h"
 #include "touchTest.h"
 #include "trophyCase.h"
 #include "trophyTest.h"
