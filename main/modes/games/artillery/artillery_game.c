@@ -118,7 +118,10 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     case PB_LEFT:
                     case PB_RIGHT:
                     {
-                        // TODO movement
+                        // Left and right buttons set acceleration
+                        // TODO only accelerate on ground?
+                        // TODO max X velocity to make tanks feel slow?
+                        ad->players[0]->acc.x = (PB_LEFT == evt.button) ? -0.0000000001f : 0.0000000001f;
                         break;
                     }
                     case PB_A:
@@ -132,6 +135,11 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                         break;
                     }
                 }
+            }
+            else
+            {
+                // Releasing a button clears acceleration
+                ad->players[0]->acc.x = 0;
             }
             break;
         }
