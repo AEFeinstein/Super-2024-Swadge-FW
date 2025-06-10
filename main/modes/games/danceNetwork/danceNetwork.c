@@ -89,7 +89,7 @@ static void dn_EnterMode(void)
     loadWsg(DN_ALPHA_UP_WSG, &gameData->sprites.alphaUp, true);
     
     // Load some fonts
-    // loadFont("rodin_eb.font", &gameData->font_rodin, false);
+    loadFont(RODIN_EB_FONT, &gameData->font_rodin, false);
     // loadFont("righteous_150.font", &gameData->font_righteous, false);
 
     // Initialize a menu renderer
@@ -132,6 +132,8 @@ static void dn_ExitMode(void)
 {
     freeWsg(&gameData->sprites.groundTile);
     free(gameData);
+    // Free the fonts
+    freeFont(&gameData->font_rodin);
 }
 
 /**

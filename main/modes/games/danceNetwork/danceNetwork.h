@@ -64,8 +64,8 @@ typedef struct {
     menu_t* menu;
     menu_t* bgMenu;
     menuManiaRenderer_t* menuRenderer;
-    //font_t font_righteous;
-    //font_t font_rodin;
+    font_t font_rodin;
+    // font_t font_righteous;
     // Connection
     const char** conStrs;
     int16_t numConStrs;
