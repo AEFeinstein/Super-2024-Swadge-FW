@@ -45,11 +45,12 @@ typedef struct
     vecFl_t acc;
     lineFl_t travelLine;
     lineFl_t travelLineBB;
+    list_t touchList;
 
     // Game data
     circType_t type;
     float barrelAngle;
-    vecFl_t barrelTip;
+    vecFl_t relBarrelTip;
     float shotPower;
 } physCirc_t;
 
@@ -63,6 +64,7 @@ typedef struct
 typedef struct
 {
     vecFl_t g;
+    float gMag;
     vecFl_t bounds;
     rectangleFl_t zones[NUM_ZONES];
     list_t lines;
