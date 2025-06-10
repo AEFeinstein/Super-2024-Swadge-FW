@@ -5,7 +5,10 @@
 #include <math.h>
 #include <float.h>
 #include <stdio.h>
-#include "esp_heap_caps.h"
+
+#include <esp_heap_caps.h>
+#include <esp_log.h>
+
 #include "shapes.h"
 #include "palette.h"
 #include "artillery_phys.h"
@@ -20,8 +23,8 @@ void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc);
 void physMoveObjects(physSim_t* phys, int32_t elapsedUs);
 void physCheckCollisions(physSim_t* phys);
 
-bool physCircCircIntersection(physCirc_t* cMoving, circleFl_t* cOther, float* colDist, vecFl_t* colPoint,
-                              vecFl_t* reflVec);
+bool physCircCircIntersection(physSim_t* phys, physCirc_t* cMoving, circleFl_t* cOther, float* colDist,
+                              vecFl_t* colPoint, vecFl_t* reflVec);
 
 //==============================================================================
 // Functions
@@ -41,8 +44,9 @@ physSim_t* initPhys(float w, float h, float gx, float gy)
     physSim_t* phys = heap_caps_calloc(1, sizeof(physSim_t), MALLOC_CAP_8BIT);
 
     // Set gravity
-    phys->g.x = gx;
-    phys->g.y = gy;
+    phys->g.x  = gx;
+    phys->g.y  = gy;
+    phys->gMag = magVecFl2d(phys->g);
 
     // Set bounds for the physics sim
     phys->bounds.x = w;
@@ -103,7 +107,12 @@ void deinitPhys(physSim_t* phys)
 
     while (phys->circles.first)
     {
-        heap_caps_free(pop(&phys->circles));
+        physCirc_t* circ = pop(&phys->circles);
+        while (circ->touchList.first)
+        {
+            heap_caps_free(pop(&circ->touchList));
+        }
+        heap_caps_free(circ);
     }
 
     heap_caps_free(phys);
@@ -130,12 +139,18 @@ physLine_t* physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2)
     pl->l.p2.x = x2;
     pl->l.p2.y = y2;
 
-    // Calculate unit normal vector (rotated 90 deg)
+    // Calculate unit normal vector (perpendicular, pointing up)
     float unx        = y1 - y2;
     float uny        = x2 - x1;
     float magnitude  = sqrtf((unx * unx) + (uny * uny));
     pl->unitNormal.x = unx / magnitude;
     pl->unitNormal.y = uny / magnitude;
+
+    if (pl->unitNormal.y > 0)
+    {
+        pl->unitNormal.y = -pl->unitNormal.y;
+        pl->unitNormal.x = -pl->unitNormal.x;
+    }
 
     // Store what zones this line is in
     physSetZoneMaskLine(phys, pl);
@@ -255,8 +270,17 @@ void physMoveObjects(physSim_t* phys, int32_t elapsedUs)
             // Set starting point
             pc->travelLine.p1 = pc->c.pos;
 
+            // Sum all forces acting on this circle
+            vecFl_t totalForce = phys->g;
+            node_t* fNode      = pc->touchList.first;
+            while (fNode)
+            {
+                totalForce = addVecFl2d(totalForce, *((vecFl_t*)fNode->val));
+                fNode      = fNode->next;
+            }
+
             // Calculate new velocity
-            pc->vel = addVecFl2d(pc->vel, mulVecFl2d(addVecFl2d(pc->acc, phys->g), elapsedUs));
+            pc->vel = addVecFl2d(pc->vel, mulVecFl2d(addVecFl2d(pc->acc, totalForce), elapsedUs));
             // Calculate new position
             vecFl_t dp = mulVecFl2d(pc->vel, elapsedUs);
             pc->c.pos  = addVecFl2d(pc->c.pos, dp);
@@ -300,6 +324,12 @@ void physCheckCollisions(physSim_t* phys)
             vecFl_t colPoint = {0};
             vecFl_t reflVec  = {0};
 
+            // Free touch list before checking for collisions
+            while (pc->touchList.length)
+            {
+                heap_caps_free(pop(&pc->touchList));
+            }
+
             // Check for collisions with lines
             node_t* oln = phys->lines.first;
             while (oln)
@@ -328,6 +358,17 @@ void physCheckCollisions(physSim_t* phys)
                         vecFl_t intersection = {0};
                         if (lineLineFlIntersection(bounds[idx], pc->travelLine, &intersection))
                         {
+                            // If the point of collision is above the circle's position
+                            // i.e. the circle moved downward, then collided, so the intersection point moves the circle
+                            // back upward
+                            if (intersection.y < pc->c.pos.y)
+                            {
+                                // Save the normal force this line exerts on the circle
+                                vecFl_t* normalForce = heap_caps_calloc(1, sizeof(normalForce), MALLOC_CAP_8BIT);
+                                *normalForce         = mulVecFl2d(opl->unitNormal, phys->gMag);
+                                push(&pc->touchList, normalForce);
+                            }
+
                             // There was an intersection, find the distance from the starting point to the intersection
                             float dist = sqMagVecFl2d(subVecFl2d(intersection, pc->travelLine.p1));
 
@@ -366,7 +407,7 @@ void physCheckCollisions(physSim_t* phys)
                     // Check bounding endcaps
                     for (int32_t cIdx = 0; cIdx < ARRAY_SIZE(caps); cIdx++)
                     {
-                        physCircCircIntersection(pc, &caps[cIdx], &colDist, &colPoint, &reflVec);
+                        physCircCircIntersection(phys, pc, &caps[cIdx], &colDist, &colPoint, &reflVec);
                     }
                 }
 
@@ -383,7 +424,7 @@ void physCheckCollisions(physSim_t* phys)
                 if ((opc != pc) &&                    // Don't collide a circle with itself
                     (opc->zonemask & pc->zonemask) && // make sure they're in the same zone
                     (pc->type != opc->type) &&        // Types should differ (shells don't hit shells, etc.)
-                    physCircCircIntersection(pc, &opc->c, &colDist, &colPoint, &reflVec))
+                    physCircCircIntersection(phys, pc, &opc->c, &colDist, &colPoint, &reflVec))
                 {
                     // TODO do I care if the other circle isn't fixed in space?
                     if (CT_SHELL == pc->type && CT_TANK == opc->type)
@@ -407,7 +448,7 @@ void physCheckCollisions(physSim_t* phys)
                 pc->vel = subVecFl2d(pc->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(pc->vel, reflVec))));
 
                 // Dampen after bounce
-                pc->vel = mulVecFl2d(pc->vel, 0.9f);
+                pc->vel = mulVecFl2d(pc->vel, 0.75f);
             }
         }
 
@@ -433,8 +474,8 @@ void physCheckCollisions(physSim_t* phys)
  * @return true
  * @return false
  */
-bool physCircCircIntersection(physCirc_t* cMoving, circleFl_t* cOther, float* colDist, vecFl_t* colPoint,
-                              vecFl_t* reflVec)
+bool physCircCircIntersection(physSim_t* phys, physCirc_t* cMoving, circleFl_t* cOther, float* colDist,
+                              vecFl_t* colPoint, vecFl_t* reflVec)
 {
     // A line intersecting with a circle may intersect up to two places
     vecFl_t intersections[2];
@@ -451,6 +492,18 @@ bool physCircCircIntersection(physCirc_t* cMoving, circleFl_t* cOther, float* co
     // For each intersection
     for (int16_t iIdx = 0; iIdx < iCnt; iIdx++)
     {
+        // If the point of collision is above the circle's position
+        // i.e. the circle moved downward, then collided, so the intersection point moves the circle
+        // back upward
+        if (intersections[iIdx].y < cMoving->c.pos.y)
+        {
+            // Save the normal force this line exerts on the circle
+            vecFl_t* normalForce = heap_caps_calloc(1, sizeof(normalForce), MALLOC_CAP_8BIT);
+            vecFl_t unitNormal   = normVecFl2d(subVecFl2d(cMoving->c.pos, cOther->pos));
+            *normalForce         = mulVecFl2d(unitNormal, phys->gMag);
+            push(&cMoving->touchList, normalForce);
+        }
+
         // find the distance from the starting point to the intersection
         float dist = sqMagVecFl2d(subVecFl2d(intersections[iIdx], cMoving->travelLine.p1));
 
@@ -501,7 +554,8 @@ void drawPhysOutline(physSim_t* phys)
         drawCircle(pc->c.pos.x, pc->c.pos.y, pc->c.radius, cCol);
         if (CT_TANK == pc->type)
         {
-            drawLineFast(pc->c.pos.x, pc->c.pos.y, pc->barrelTip.x, pc->barrelTip.y, c335);
+            vecFl_t absBarrelTip = addVecFl2d(pc->c.pos, pc->relBarrelTip);
+            drawLineFast(pc->c.pos.x, pc->c.pos.y, absBarrelTip.x, absBarrelTip.y, c335);
         }
         cNode = cNode->next;
     }
@@ -517,9 +571,8 @@ void setBarrelAngle(physCirc_t* circ, float angle)
 {
     circ->barrelAngle = angle;
 
-    circ->barrelTip.x = sinf(angle) * circ->c.radius * 2;
-    circ->barrelTip.y = -cosf(angle) * circ->c.radius * 2;
-    circ->barrelTip   = addVecFl2d(circ->c.pos, circ->barrelTip);
+    circ->relBarrelTip.x = sinf(angle) * circ->c.radius * 2;
+    circ->relBarrelTip.y = -cosf(angle) * circ->c.radius * 2;
 }
 
 /**
@@ -542,7 +595,8 @@ void setShotPower(physCirc_t* circ, float power)
  */
 physCirc_t* fireShot(physSim_t* phys, physCirc_t* circ)
 {
-    physCirc_t* shell = physAddCircle(phys, circ->barrelTip.x, circ->barrelTip.y, 4, CT_SHELL);
+    vecFl_t absBarrelTip = addVecFl2d(circ->c.pos, circ->relBarrelTip);
+    physCirc_t* shell    = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, 4, CT_SHELL);
 
     shell->vel.x = sinf(circ->barrelAngle) * circ->shotPower;
     shell->vel.y = -cosf(circ->barrelAngle) * circ->shotPower;
