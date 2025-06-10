@@ -15,6 +15,19 @@
 #include "macros.h"
 
 //==============================================================================
+// Defines
+//==============================================================================
+
+#define PRINT_P1_VEC(label, vec)                                          \
+    do                                                                    \
+    {                                                                     \
+        if (cNode == phys->circles.first->next)                           \
+        {                                                                 \
+            ESP_LOGI("VEC", "%s: %.15f, %.15f", label, (vec).x, (vec.y)); \
+        }                                                                 \
+    } while (0)
+
+//==============================================================================
 // Function Declarations
 //==============================================================================
 
@@ -270,13 +283,23 @@ void physMoveObjects(physSim_t* phys, int32_t elapsedUs)
             // Set starting point
             pc->travelLine.p1 = pc->c.pos;
 
-            // Sum all forces acting on this circle
+            // Gravity is always acting on this object
             vecFl_t totalForce = phys->g;
-            node_t* fNode      = pc->touchList.first;
-            while (fNode)
+
+            // If the object is touching other things
+            if (pc->touchList.length)
             {
-                totalForce = addVecFl2d(totalForce, *((vecFl_t*)fNode->val));
-                fNode      = fNode->next;
+                // Sum all normal forces acting on this circle
+                vecFl_t normalForces = {0};
+                node_t* fNode        = pc->touchList.first;
+                while (fNode)
+                {
+                    normalForces = addVecFl2d(normalForces, *((vecFl_t*)fNode->val));
+                    fNode        = fNode->next;
+                }
+
+                // Scale the sum of the normal forces to equal the gravity magnitude
+                totalForce = addVecFl2d(totalForce, mulVecFl2d(normVecFl2d(normalForces), phys->gMag));
             }
 
             // Calculate new velocity
@@ -365,7 +388,7 @@ void physCheckCollisions(physSim_t* phys)
                             {
                                 // Save the normal force this line exerts on the circle
                                 vecFl_t* normalForce = heap_caps_calloc(1, sizeof(normalForce), MALLOC_CAP_8BIT);
-                                *normalForce         = mulVecFl2d(opl->unitNormal, phys->gMag);
+                                *normalForce         = opl->unitNormal;
                                 push(&pc->touchList, normalForce);
                             }
 
@@ -378,16 +401,11 @@ void physCheckCollisions(physSim_t* phys)
                                 // Save the distance and point
                                 colDist  = dist;
                                 colPoint = intersection;
-
-                                // Save the reflection vector for this line
-                                reflVec = opl->unitNormal;
-                                if (1 == idx)
-                                {
-                                    // Flip depending on which side of the line collided
-                                    reflVec.x = -reflVec.x;
-                                    reflVec.y = -reflVec.y;
-                                }
                             }
+
+                            // Sum the reflection vector for this line, flipping depending on which side collided
+                            // TODO is the normalForce list and reflVec basically the same now?!
+                            reflVec = addVecFl2d(reflVec, mulVecFl2d(opl->unitNormal, (1 == idx) ? -1 : 1));
                         }
                     }
 
@@ -445,7 +463,13 @@ void physCheckCollisions(physSim_t* phys)
                 pc->c.pos          = addVecFl2d(colPoint, mulVecFl2d(travelNorm, EPSILON));
 
                 // Bounce it by reflecting across the collision normal
+                // This may be the sum of multiple collisions, so normalize it
+                reflVec = normVecFl2d(reflVec);
+
+                // PRINT_P1_VEC("R ", reflVec);
+                // PRINT_P1_VEC("V1", pc->vel);
                 pc->vel = subVecFl2d(pc->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(pc->vel, reflVec))));
+                // PRINT_P1_VEC("V2", pc->vel);
 
                 // Dampen after bounce
                 pc->vel = mulVecFl2d(pc->vel, 0.75f);
@@ -498,9 +522,9 @@ bool physCircCircIntersection(physSim_t* phys, physCirc_t* cMoving, circleFl_t* 
         if (intersections[iIdx].y < cMoving->c.pos.y)
         {
             // Save the normal force this line exerts on the circle
+            // TODO double check this at some point
             vecFl_t* normalForce = heap_caps_calloc(1, sizeof(normalForce), MALLOC_CAP_8BIT);
-            vecFl_t unitNormal   = normVecFl2d(subVecFl2d(cMoving->c.pos, cOther->pos));
-            *normalForce         = mulVecFl2d(unitNormal, phys->gMag);
+            *normalForce         = normVecFl2d(subVecFl2d(cMoving->c.pos, cOther->pos));
             push(&cMoving->touchList, normalForce);
         }
 
@@ -514,8 +538,8 @@ bool physCircCircIntersection(physSim_t* phys, physCirc_t* cMoving, circleFl_t* 
             *colDist  = dist;
             *colPoint = intersections[iIdx];
 
-            // Save the reflection vector for this line
-            *reflVec = normVecFl2d(subVecFl2d(cMoving->c.pos, cOther->pos));
+            // Sum the reflection vector for this line
+            *reflVec = addVecFl2d(*reflVec, normVecFl2d(subVecFl2d(cMoving->c.pos, cOther->pos)));
 
             return true;
         }
