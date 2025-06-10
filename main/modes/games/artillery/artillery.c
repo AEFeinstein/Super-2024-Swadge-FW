@@ -61,8 +61,11 @@ void artilleryEnterMode(void)
 
     // Add some ground
     vecFl_t groundPoints[] = {
-        {.x = 0, .y = GROUND_LEVEL},         {.x = TFT_WIDTH / 4, .y = GROUND_LEVEL},
-        {.x = TFT_WIDTH / 2, .y = 100},      {.x = 3 * TFT_WIDTH / 4, .y = GROUND_LEVEL},
+        {.x = 0, .y = 0},
+        {.x = TFT_WIDTH / 8, .y = TFT_HEIGHT - 1},
+        {.x = TFT_WIDTH / 4, .y = 40},
+        {.x = TFT_WIDTH / 2, .y = 100},
+        {.x = 3 * TFT_WIDTH / 4, .y = GROUND_LEVEL},
         {.x = TFT_WIDTH, .y = GROUND_LEVEL},
     };
     for (int idx = 0; idx < ARRAY_SIZE(groundPoints) - 1; idx++)
@@ -76,13 +79,14 @@ void artilleryEnterMode(void)
 
     // Add some players
 #define PLAYER_RADIUS 8
-    ad->players[0] = physAddCircle(ad->phys, TFT_WIDTH / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
+    ad->players[0] = physAddCircle(ad->phys, TFT_WIDTH / 8, PLAYER_RADIUS + 1, PLAYER_RADIUS, CT_TANK);
     ad->players[1]
         = physAddCircle(ad->phys, (7 * TFT_WIDTH) / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
 
     ad->mState = AMS_GAME;
 
-    ad->gState = AGS_MENU;
+    ad->gState = AGS_MOVE;
+    // ad->gState = AGS_MENU;
 }
 
 /**
