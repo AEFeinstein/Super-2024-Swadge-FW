@@ -363,6 +363,13 @@ void physCheckCollisions(physSim_t* phys)
                 // Quick check to see if objects are in the same zone
                 if (pc->zonemask & opl->zonemask)
                 {
+                    // Used to determine which component of the line collided
+                    float minLineDist      = FLT_MAX;
+                    vecFl_t lineColPoint   = {0}; // The position of the circle when the collision with the line occurs
+                    vecFl_t lineUnitNormal = {0}; // Points outward from the line
+
+                    ////////////////////////////////////////////////////////////
+
                     // Construct the bounding lines around this line (parallel lines, one radius away)
                     lineFl_t bounds[] = {
                         {
@@ -381,33 +388,19 @@ void physCheckCollisions(physSim_t* phys)
                         vecFl_t intersection = {0};
                         if (lineLineFlIntersection(bounds[idx], pc->travelLine, &intersection))
                         {
-                            // If the point of collision is above the circle's position
-                            // i.e. the circle moved downward, then collided, so the intersection point moves the circle
-                            // back upward
-                            if (intersection.y < pc->c.pos.y)
-                            {
-                                // Save the normal force this line exerts on the circle
-                                vecFl_t* normalForce = heap_caps_calloc(1, sizeof(normalForce), MALLOC_CAP_8BIT);
-                                *normalForce         = opl->unitNormal;
-                                push(&pc->touchList, normalForce);
-                            }
-
                             // There was an intersection, find the distance from the starting point to the intersection
                             float dist = sqMagVecFl2d(subVecFl2d(intersection, pc->travelLine.p1));
 
-                            // If this is the closest point
-                            if (dist < colDist)
+                            if (dist < minLineDist)
                             {
-                                // Save the distance and point
-                                colDist  = dist;
-                                colPoint = intersection;
+                                minLineDist    = dist;
+                                lineColPoint   = intersection;
+                                lineUnitNormal = mulVecFl2d(opl->unitNormal, (1 == idx) ? -1 : 1);
                             }
-
-                            // Sum the reflection vector for this line, flipping depending on which side collided
-                            // TODO is the normalForce list and reflVec basically the same now?!
-                            reflVec = addVecFl2d(reflVec, mulVecFl2d(opl->unitNormal, (1 == idx) ? -1 : 1));
                         }
                     }
+
+                    ////////////////////////////////////////////////////////////
 
                     // Construct bounds around the line endcaps
                     // TODO for polylines and polygons, we could skip every other endcap
@@ -425,7 +418,29 @@ void physCheckCollisions(physSim_t* phys)
                     // Check bounding endcaps
                     for (int32_t cIdx = 0; cIdx < ARRAY_SIZE(caps); cIdx++)
                     {
-                        physCircCircIntersection(phys, pc, &caps[cIdx], &colDist, &colPoint, &reflVec);
+                        // If this intersection is closer than a line segment intersection
+                        physCircCircIntersection(phys, pc, &caps[cIdx], &minLineDist, &lineColPoint, &lineUnitNormal);
+                    }
+
+                    ////////////////////////////////////////////////////////////
+
+                    // Now that all the segments are checked, apply the closet one
+                    if (minLineDist < colDist)
+                    {
+                        colDist  = minLineDist;
+                        colPoint = lineColPoint;
+                        reflVec  = addVecFl2d(reflVec, lineUnitNormal);
+
+                        // If the point of collision is above the circle's position
+                        // i.e. the circle moved downward, then collided, so the intersection point moves the circle
+                        // back upward
+                        if (lineColPoint.y < pc->c.pos.y)
+                        {
+                            // Save the normal force
+                            vecFl_t* normalForce = heap_caps_calloc(1, sizeof(vecFl_t), MALLOC_CAP_8BIT);
+                            *normalForce         = lineUnitNormal;
+                            push(&pc->touchList, normalForce);
+                        }
                     }
                 }
 
@@ -439,16 +454,41 @@ void physCheckCollisions(physSim_t* phys)
             {
                 physCirc_t* opc = ocn->val;
 
+                float circColDist      = FLT_MAX;
+                vecFl_t circColPoint   = {0};
+                vecFl_t circUnitNormal = {0};
+
                 if ((opc != pc) &&                    // Don't collide a circle with itself
                     (opc->zonemask & pc->zonemask) && // make sure they're in the same zone
                     (pc->type != opc->type) &&        // Types should differ (shells don't hit shells, etc.)
-                    physCircCircIntersection(phys, pc, &opc->c, &colDist, &colPoint, &reflVec))
+                    physCircCircIntersection(phys, pc, &opc->c, &circColDist, &circColPoint, &circUnitNormal))
                 {
                     // TODO do I care if the other circle isn't fixed in space?
                     if (CT_SHELL == pc->type && CT_TANK == opc->type)
                     {
                         // Shells explode
                         shouldRemoveNode = true;
+                    }
+                    else
+                    {
+                        // Now that all the segments are checked, apply the closet one
+                        if (circColDist < colDist)
+                        {
+                            colDist  = circColDist;
+                            colPoint = circColPoint;
+                            reflVec  = addVecFl2d(reflVec, circUnitNormal);
+
+                            // If the point of collision is above the circle's position
+                            // i.e. the circle moved downward, then collided, so the intersection point moves the circle
+                            // back upward
+                            if (circColPoint.y < pc->c.pos.y)
+                            {
+                                // Save the normal force
+                                vecFl_t* normalForce = heap_caps_calloc(1, sizeof(vecFl_t), MALLOC_CAP_8BIT);
+                                *normalForce         = circUnitNormal;
+                                push(&pc->touchList, normalForce);
+                            }
+                        }
                     }
                 }
                 ocn = ocn->next;
@@ -487,16 +527,15 @@ void physCheckCollisions(physSim_t* phys)
 }
 
 /**
- * @brief TODO Check for intersections between a moving circle, represented by a line segment, and a fixed circle. The
+ * @brief Check for intersections between a moving circle, represented by a line segment, and a fixed circle. The
  * fixed circle may have radius 0, which indicates a point
  *
- * @param cMoving
- * @param cOther
- * @param colDist
- * @param colPoint
- * @param reflVec
- * @return true
- * @return false
+ * @param cMoving [IN] The moving circle
+ * @param cOther [IN] The fixed circle
+ * @param colDist [IN/OUT] The distance between the moving circle's position and the collision point
+ * @param colPoint [IN/OUT] The position of the moving circle when the circles collide
+ * @param reflVec [OUT] The vector to reflect the moving circle's velocity across if the two collided
+ * @return true if there was a collision, false if there was not
  */
 bool physCircCircIntersection(physSim_t* phys, physCirc_t* cMoving, circleFl_t* cOther, float* colDist,
                               vecFl_t* colPoint, vecFl_t* reflVec)
@@ -516,18 +555,6 @@ bool physCircCircIntersection(physSim_t* phys, physCirc_t* cMoving, circleFl_t* 
     // For each intersection
     for (int16_t iIdx = 0; iIdx < iCnt; iIdx++)
     {
-        // If the point of collision is above the circle's position
-        // i.e. the circle moved downward, then collided, so the intersection point moves the circle
-        // back upward
-        if (intersections[iIdx].y < cMoving->c.pos.y)
-        {
-            // Save the normal force this line exerts on the circle
-            // TODO double check this at some point
-            vecFl_t* normalForce = heap_caps_calloc(1, sizeof(normalForce), MALLOC_CAP_8BIT);
-            *normalForce         = normVecFl2d(subVecFl2d(cMoving->c.pos, cOther->pos));
-            push(&cMoving->touchList, normalForce);
-        }
-
         // find the distance from the starting point to the intersection
         float dist = sqMagVecFl2d(subVecFl2d(intersections[iIdx], cMoving->travelLine.p1));
 
@@ -539,7 +566,7 @@ bool physCircCircIntersection(physSim_t* phys, physCirc_t* cMoving, circleFl_t* 
             *colPoint = intersections[iIdx];
 
             // Sum the reflection vector for this line
-            *reflVec = addVecFl2d(*reflVec, normVecFl2d(subVecFl2d(cMoving->c.pos, cOther->pos)));
+            *reflVec = normVecFl2d(subVecFl2d(cMoving->c.pos, cOther->pos));
 
             return true;
         }

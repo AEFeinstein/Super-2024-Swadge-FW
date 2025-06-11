@@ -64,7 +64,8 @@ void artilleryEnterMode(void)
         {.x = 0, .y = 0},
         {.x = TFT_WIDTH / 8, .y = TFT_HEIGHT - 1},
         {.x = TFT_WIDTH / 4, .y = 40},
-        {.x = TFT_WIDTH / 2, .y = 100},
+        {.x = TFT_WIDTH / 4, .y = GROUND_LEVEL},
+        {.x = TFT_WIDTH / 2, .y = TFT_HEIGHT / 2},
         {.x = 3 * TFT_WIDTH / 4, .y = GROUND_LEVEL},
         {.x = TFT_WIDTH, .y = GROUND_LEVEL},
     };
@@ -74,8 +75,15 @@ void artilleryEnterMode(void)
                     groundPoints[idx + 1].y);
     }
 
-    // Add an obstacle
-    physAddCircle(ad->phys, TFT_WIDTH / 2, 30, 10, CT_OBSTACLE);
+    // Test circle-line collisions
+    physAddCircle(ad->phys, TFT_WIDTH / 2 + 16, 30, 8, CT_SHELL);
+    physAddCircle(ad->phys, TFT_WIDTH / 2 - 16, 30, 8, CT_SHELL);
+    physAddCircle(ad->phys, TFT_WIDTH / 2, 30, 8, CT_SHELL);
+
+    // Test circle-circle collisions
+    physAddCircle(ad->phys, (3 * TFT_WIDTH) / 4 + 4, 20, 8, CT_SHELL);
+    physAddCircle(ad->phys, (3 * TFT_WIDTH) / 4 - 4, 50, 8, CT_SHELL);
+    physAddCircle(ad->phys, (3 * TFT_WIDTH) / 4, 80, 8, CT_OBSTACLE);
 
     // Add some players
 #define PLAYER_RADIUS 8
