@@ -120,12 +120,7 @@ void deinitPhys(physSim_t* phys)
 
     while (phys->circles.first)
     {
-        physCirc_t* circ = pop(&phys->circles);
-        while (circ->touchList.first)
-        {
-            heap_caps_free(pop(&circ->touchList));
-        }
-        heap_caps_free(circ);
+        heap_caps_free(pop(&phys->circles));
     }
 
     heap_caps_free(phys);
@@ -283,30 +278,14 @@ void physMoveObjects(physSim_t* phys, int32_t elapsedUs)
             // Set starting point
             pc->travelLine.p1 = pc->c.pos;
 
-            // Gravity is always acting on this object
-            vecFl_t totalForce = phys->g;
-
-            // If the object is touching other things
-            if (pc->touchList.length)
-            {
-                // Sum all normal forces acting on this circle
-                vecFl_t normalForces = {0};
-                node_t* fNode        = pc->touchList.first;
-                while (fNode)
-                {
-                    normalForces = addVecFl2d(normalForces, *((vecFl_t*)fNode->val));
-                    fNode        = fNode->next;
-                }
-
-                // Scale the sum of the normal forces to equal the gravity magnitude
-                totalForce = addVecFl2d(totalForce, mulVecFl2d(normVecFl2d(normalForces), phys->gMag));
-            }
+            // The total force on this moving circle is world gravity, circle gravity, normal forces, and applied
+            // acceleration
+            vecFl_t totalForce = addVecFl2d(addVecFl2d(phys->g, pc->g), addVecFl2d(pc->acc, pc->normalForces));
 
             // Calculate new velocity
-            pc->vel = addVecFl2d(pc->vel, mulVecFl2d(addVecFl2d(pc->acc, totalForce), elapsedUs));
+            pc->vel = addVecFl2d(pc->vel, mulVecFl2d(totalForce, elapsedUs));
             // Calculate new position
-            vecFl_t dp = mulVecFl2d(pc->vel, elapsedUs);
-            pc->c.pos  = addVecFl2d(pc->c.pos, dp);
+            pc->c.pos = addVecFl2d(pc->c.pos, mulVecFl2d(pc->vel, elapsedUs));
 
             // Set ending point
             pc->travelLine.p2 = pc->c.pos;
@@ -347,11 +326,9 @@ void physCheckCollisions(physSim_t* phys)
             vecFl_t colPoint = {0};
             vecFl_t reflVec  = {0};
 
-            // Free touch list before checking for collisions
-            while (pc->touchList.length)
-            {
-                heap_caps_free(pop(&pc->touchList));
-            }
+            // Zero the normal forces before checking for collisions
+            pc->normalForces.x = 0;
+            pc->normalForces.y = 0;
 
             // Check for collisions with lines
             node_t* oln = phys->lines.first;
@@ -436,10 +413,8 @@ void physCheckCollisions(physSim_t* phys)
                         // back upward
                         if (lineColPoint.y < pc->c.pos.y)
                         {
-                            // Save the normal force
-                            vecFl_t* normalForce = heap_caps_calloc(1, sizeof(vecFl_t), MALLOC_CAP_8BIT);
-                            *normalForce         = lineUnitNormal;
-                            push(&pc->touchList, normalForce);
+                            // Sum the normal force
+                            pc->normalForces = addVecFl2d(pc->normalForces, lineUnitNormal);
                         }
                     }
                 }
@@ -483,10 +458,8 @@ void physCheckCollisions(physSim_t* phys)
                             // back upward
                             if (circColPoint.y < pc->c.pos.y)
                             {
-                                // Save the normal force
-                                vecFl_t* normalForce = heap_caps_calloc(1, sizeof(vecFl_t), MALLOC_CAP_8BIT);
-                                *normalForce         = circUnitNormal;
-                                push(&pc->touchList, normalForce);
+                                // Sum the normal force
+                                pc->normalForces = addVecFl2d(pc->normalForces, circUnitNormal);
                             }
                         }
                     }
@@ -505,6 +478,12 @@ void physCheckCollisions(physSim_t* phys)
                 // Bounce it by reflecting across the collision normal
                 // This may be the sum of multiple collisions, so normalize it
                 reflVec = normVecFl2d(reflVec);
+
+                // If there is a nonzero normal force, normalize it to gravity
+                if (0 != pc->normalForces.x || 0 != pc->normalForces.y)
+                {
+                    pc->normalForces = mulVecFl2d(normVecFl2d(pc->normalForces), phys->gMag);
+                }
 
                 // PRINT_P1_VEC("R ", reflVec);
                 // PRINT_P1_VEC("V1", pc->vel);

@@ -40,12 +40,12 @@ typedef struct
     bool fixed;
 
     // Kinematics
-    vecFl_t g;
-    vecFl_t vel;
-    vecFl_t acc;
-    lineFl_t travelLine;
-    lineFl_t travelLineBB;
-    list_t touchList;
+    vecFl_t g;             ///< Per-object gravity, shouldn't change
+    vecFl_t normalForces;  ///< Normal forces exerted on this object by other objects, computed frame-by-frame
+    vecFl_t acc;           ///< Acceleration force, may be set by user input
+    vecFl_t vel;           ///< Velocity of the object, computed frame-by-frame
+    lineFl_t travelLine;   ///< A line from the object's start to end point for this frame
+    lineFl_t travelLineBB; ///< The bounding box for travelLine
 
     // Game data
     circType_t type;
