@@ -476,13 +476,8 @@ void dn_InitializeCharacterSelect()
     loadWsgInplace(DN_BUCKET_HAT_DOWN_WSG, &gameData->characterAssets[0].pawnDown, true, dn_decodeSpace, dn_hsd);
     loadWsgInplace(DN_BUCKET_HAT_UP_WSG,   &gameData->characterAssets[0].pawnUp,   true, dn_decodeSpace, dn_hsd);
 
-    loadWsgInplace(DN_WHITE_KING_WSG,      &gameData->characterAssets[1].kingDown, true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_BLACK_KING_WSG,      &gameData->characterAssets[1].kingDown, true, dn_decodeSpace, dn_hsd);
     loadWsgInplace(DN_WHITE_KING_WSG,      &gameData->characterAssets[1].kingUp,   true, dn_decodeSpace, dn_hsd);
-    loadWsgInplace(DN_WHITE_PAWN_WSG,      &gameData->characterAssets[1].pawnDown, true, dn_decodeSpace, dn_hsd);
-    loadWsgInplace(DN_WHITE_PAWN_WSG,      &gameData->characterAssets[1].pawnUp,   true, dn_decodeSpace, dn_hsd);
-
-    loadWsgInplace(DN_BLACK_KING_WSG,      &gameData->characterAssets[2].kingDown, true, dn_decodeSpace, dn_hsd);
-    loadWsgInplace(DN_BLACK_KING_WSG,      &gameData->characterAssets[2].kingUp,   true, dn_decodeSpace, dn_hsd);
-    loadWsgInplace(DN_BLACK_PAWN_WSG,      &gameData->characterAssets[2].pawnDown, true, dn_decodeSpace, dn_hsd);
-    loadWsgInplace(DN_BLACK_PAWN_WSG,      &gameData->characterAssets[2].pawnUp,   true, dn_decodeSpace, dn_hsd);    
+    loadWsgInplace(DN_BLACK_PAWN_WSG,      &gameData->characterAssets[1].pawnDown, true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_WHITE_PAWN_WSG,      &gameData->characterAssets[1].pawnUp,   true, dn_decodeSpace, dn_hsd);  
 }
