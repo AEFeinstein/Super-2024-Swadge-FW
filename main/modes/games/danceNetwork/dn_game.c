@@ -106,18 +106,18 @@ void dn_DrawGame(dn_gameData_t* gameData)
     switch (gameData->alphaFaceDir)
     {
         case(0)://face down
-            drawWsgSimple(&gameData->sprites.alphaDown, drawX, drawY);
+            drawWsgSimple(&gameData->characterAssets[0].kingDown, drawX, drawY);
             /* code */
             break;
         case(1)://face left
-            drawWsg(&gameData->sprites.alphaUp, drawX, drawY, true, false, 0);
+            drawWsg(&gameData->characterAssets[0].kingUp, drawX, drawY, true, false, 0);
             break;
         case(2)://face up
-            drawWsgSimple(&gameData->sprites.alphaUp, drawX, drawY);
+            drawWsgSimple(&gameData->characterAssets[0].kingUp, drawX, drawY);
             /* code */
             break;
         case(3)://face right
-            drawWsg(&gameData->sprites.alphaDown, drawX, drawY, true, false, 0);
+            drawWsg(&gameData->characterAssets[0].kingDown, drawX, drawY, true, false, 0);
             break;
         default:
             break;

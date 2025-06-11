@@ -2,7 +2,11 @@
 #include "swadge2024.h"
 #include "dn_typedef.h"
 
-extern swadgeMode_t danceNetworkMode;
+//==============================================================================
+// Defines
+//==============================================================================
+
+#define NUM_CHARACTERS 3
 
 //==============================================================================
 // Enums
@@ -39,10 +43,16 @@ typedef enum __attribute__((packed))
 // Structs
 //==============================================================================
 
+typedef struct
+{
+    wsg_t kingUp;
+    wsg_t kingDown;
+    wsg_t pawnUp;
+    wsg_t pawnDown;
+} dn_CharacterAssets_t;
+
 typedef struct{
     wsg_t groundTile;
-    wsg_t alphaDown; //face down
-    wsg_t alphaUp; //face up
 } dn_sprites_t;
 
 typedef struct{
@@ -71,6 +81,14 @@ typedef struct {
     int16_t numConStrs;
     bool singleSystem;
     bool passAndPlay;
+    // Assets
+    dn_CharacterAssets_t characterAssets[NUM_CHARACTERS];
+    uint8_t generalTimer;
+    // For marker selection UI
+    int32_t xSelectScrollTimer;
+    int16_t xSelectScrollOffset;
+    int8_t selectMarkerIdx;
+    int32_t activeMarkerIdx;
     dn_CpuData_t cpu;
     dn_Result_t lastResult;
     dn_sprites_t sprites;
@@ -85,3 +103,19 @@ typedef struct {
 
 void dn_MsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 void dn_ShowUi(dn_Ui_t ui);
+void dn_InitializeCharacterSelect();
+
+
+//==============================================================================
+// Externs
+//==============================================================================
+
+// extern const char tttName[];
+// extern const char tttWinKey[];
+// extern const char tttLossKey[];
+// extern const char tttDrawKey[];
+extern const char dnCharacterKey[];
+// extern const char tttTutorialKey[];
+// extern const char tttUnlockKey[];
+extern swadgeMode_t danceNetworkMode;
+// extern const int16_t markersUnlockedAtWins[NUM_UNLOCKABLE_MARKERS];

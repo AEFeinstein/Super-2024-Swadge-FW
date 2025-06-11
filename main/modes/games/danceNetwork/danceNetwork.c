@@ -63,13 +63,28 @@ static const char dn_HowToStr[]       = "How To Play";
 static const char dn_RecordsStr[]     = "Records";
 static const char dn_Exit[]           = "Exit";
 
-static const led_t utttLedMenuColor = {
+// NVS keys
+const char dnWinKey[]      = "dn_win";
+const char dnLossKey[]     = "dn_loss";
+const char dnDrawKey[]     = "dn_draw";
+const char dnCharacterKey[]= "dn_character";
+const char dnTutorialKey[] = "dn_tutor";
+const char dnUnlockKey[]   = "dn_unlock";
+
+static const led_t dn_LedMenuColor = {
     .r = 0x66,
     .g = 0x00,
     .b = 0x66,
 };
 
 dn_gameData_t* gameData;
+
+/// @brief A heatshrink decoder to use for all WSG loads rather than allocate a new one for each WSG
+/// This helps to prevent memory fragmentation in SPIRAM.
+/// Note, this is outside the bb_t struct for easy access to loading fuctions without bb_t references
+heatshrink_decoder* dn_hsd;
+/// @brief A temporary decode space to use for all WSG loads
+uint8_t* dn_decodeSpace;
 
 static void dn_EnterMode(void)
 {
@@ -84,9 +99,15 @@ static void dn_EnterMode(void)
     gameData->selection[0] = 2;
     gameData->selection[1] = 2;
     gameData->tiles[gameData->selection[0]][gameData->selection[1]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
-    loadWsg(DN_GROUND_TILE_WSG, &gameData->sprites.groundTile, true);
-    loadWsg(DN_ALPHA_DOWN_WSG, &gameData->sprites.alphaDown, true);
-    loadWsg(DN_ALPHA_UP_WSG, &gameData->sprites.alphaUp, true);
+
+    // Allocate WSG loading helpers
+    dn_hsd = heatshrink_decoder_alloc(256, 8, 4);
+    // The largest image is bb_menu2.png, decodes to 99124 bytes
+    // 99328 is 1024 * 97
+    dn_decodeSpace = heap_caps_malloc_tag(99328, MALLOC_CAP_SPIRAM, "decodeSpace");//TODO change the size to the largest sprite
+
+    
+    loadWsgInplace(DN_GROUND_TILE_WSG, &gameData->sprites.groundTile, true, dn_decodeSpace, dn_hsd);
     
     // Load some fonts
     loadFont(RODIN_EB_FONT, &gameData->font_rodin, false);
@@ -104,7 +125,7 @@ static void dn_EnterMode(void)
                              c315,              // bgColor
                              c213, c035,        // outerRingColor, innerRingColor
                              c000, c555,        // rowColor, rowTextColor
-                             shadowColors, ARRAY_SIZE(shadowColors), utttLedMenuColor);
+                             shadowColors, ARRAY_SIZE(shadowColors), dn_LedMenuColor);
 
     // Initialize the main menu
     gameData->menu = initMenu(dn_Name, dn_MenuCb);
@@ -386,7 +407,7 @@ void dn_ShowUi(dn_Ui_t ui)
 
     // Assume menu LEDs should be on
     setManiaLedsOn(gameData->menuRenderer, true);
-    gameData->menuRenderer->baseLedColor = utttLedMenuColor;
+    gameData->menuRenderer->baseLedColor = dn_LedMenuColor;
     setManiaDrawRings(gameData->menuRenderer, true);
 
     // Initialize the new UI
@@ -408,6 +429,7 @@ void dn_ShowUi(dn_Ui_t ui)
         }
         case UI_CHARACTER_SELECT:
         {
+            dn_InitializeCharacterSelect();
             gameData->bgMenu->title       = dn_CharacterSelStr;
             // gameData->selectMarkerIdx     = ttt->activeMarkerIdx;
             // gameData->xSelectScrollTimer  = 0;
@@ -440,4 +462,27 @@ void dn_ShowUi(dn_Ui_t ui)
             break;
         }
     }
+}
+
+/**
+ * @brief Load sprites needed in this UI
+ *
+ * @param
+ */
+void dn_InitializeCharacterSelect()
+{
+    loadWsgInplace(DN_ALPHA_DOWN_WSG,      &gameData->characterAssets[0].kingDown, true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_ALPHA_UP_WSG,        &gameData->characterAssets[0].kingUp,   true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_BUCKET_HAT_DOWN_WSG, &gameData->characterAssets[0].pawnDown, true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_BUCKET_HAT_UP_WSG,   &gameData->characterAssets[0].pawnUp,   true, dn_decodeSpace, dn_hsd);
+
+    loadWsgInplace(DN_WHITE_KING_WSG,      &gameData->characterAssets[1].kingDown, true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_WHITE_KING_WSG,      &gameData->characterAssets[1].kingUp,   true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_WHITE_PAWN_WSG,      &gameData->characterAssets[1].pawnDown, true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_WHITE_PAWN_WSG,      &gameData->characterAssets[1].pawnUp,   true, dn_decodeSpace, dn_hsd);
+
+    loadWsgInplace(DN_BLACK_KING_WSG,      &gameData->characterAssets[2].kingDown, true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_BLACK_KING_WSG,      &gameData->characterAssets[2].kingUp,   true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_BLACK_PAWN_WSG,      &gameData->characterAssets[2].pawnDown, true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_BLACK_PAWN_WSG,      &gameData->characterAssets[2].pawnUp,   true, dn_decodeSpace, dn_hsd);    
 }

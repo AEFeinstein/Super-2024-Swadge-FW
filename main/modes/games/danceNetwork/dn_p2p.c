@@ -89,6 +89,7 @@ void dn_HandleCon(dn_gameData_t* gameData, connectionEvt_t evt)
         case CON_ESTABLISHED:
         {
             //tttBeginGame(ttt);
+            dn_ShowUi(UI_GAME);
             break;
         }
         case CON_LOST:
