@@ -133,6 +133,7 @@ void pl_updatePlayer(plEntity_t* self)
                 self->xspeed = (self->spriteFlipHorizontal) ? 32 : -32;
                 self->yspeed    = -self->jumpPower;
                 self->falling   = true;
+                self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
                 soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
         }
         else if (self->jumpPower > 0 && self->yspeed < 0)
@@ -194,14 +195,14 @@ void pl_updatePlayer(plEntity_t* self)
                                                     TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         if (createdEntity != NULL)
         {
-            createdEntity->xspeed    = (self->spriteFlipHorizontal) ? -(128 + abs(self->xspeed) + abs(self->yspeed))
-                                                                    : 128 + abs(self->xspeed) + abs(self->yspeed);
+            createdEntity->xspeed    = (self->spriteFlipHorizontal) ? -(96 + abs(self->xspeed) + abs(self->yspeed))
+                                                                    : 96 + abs(self->xspeed) + abs(self->yspeed);
             createdEntity->homeTileX = 0;
             createdEntity->homeTileY = 0;
             soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
             pl_remapPlayerShootWsg(self->tilemap->wsgManager);
         }
-        self->animationTimer = 30;
+        self->animationTimer = 10;
     }
 
     if (((self->gameData->btnState & PB_START) && !(self->gameData->prevBtnState & PB_START)))
@@ -765,6 +766,12 @@ void animatePlayer(plEntity_t* self)
             } else {
                 self->spriteIndex = PL_SP_PLAYER_JUMP4;
             }
+        }
+
+        if (((self->gameData->btnState & PB_LEFT) && self->xspeed < 0)
+            || ((self->gameData->btnState & PB_RIGHT) && self->xspeed > 0))
+        {
+            self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
         }
     }
     else if (self->xspeed != 0)
