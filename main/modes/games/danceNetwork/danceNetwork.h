@@ -38,6 +38,12 @@ typedef enum __attribute__((packed))
     TDIFF_HARD,
 } dn_CpuDifficulty_t;
 
+typedef enum __attribute__((packed))
+{
+    DN_ALPHA,
+    DN_CHESS
+} dn_Characters;
+
 
 //==============================================================================
 // Structs
@@ -45,10 +51,18 @@ typedef enum __attribute__((packed))
 
 typedef struct
 {
-    wsg_t kingUp;
-    wsg_t kingDown;
-    wsg_t pawnUp;
-    wsg_t pawnDown;
+    wsg_t sprite;
+    int8_t xOff; //an offset from the top left of the tile graphic to the top left of this sprite.
+    int8_t yOff;
+} dn_CharacterAsset_t;
+
+
+typedef struct
+{
+    dn_CharacterAsset_t kingUp;
+    dn_CharacterAsset_t kingDown;
+    dn_CharacterAsset_t pawnUp;
+    dn_CharacterAsset_t pawnDown;
 } dn_CharacterAssets_t;
 
 typedef struct{

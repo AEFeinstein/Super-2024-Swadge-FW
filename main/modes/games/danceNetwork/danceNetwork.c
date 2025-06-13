@@ -100,6 +100,24 @@ static void dn_EnterMode(void)
     gameData->selection[1] = 2;
     gameData->tiles[gameData->selection[0]][gameData->selection[1]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
 
+    gameData->characterAssets[DN_ALPHA].kingDown.xOff = 10;
+    gameData->characterAssets[DN_ALPHA].kingDown.yOff = -40;
+    gameData->characterAssets[DN_ALPHA].kingUp.xOff   = 13;
+    gameData->characterAssets[DN_ALPHA].kingUp.yOff   = -40;
+    gameData->characterAssets[DN_ALPHA].pawnDown.xOff = 15;
+    gameData->characterAssets[DN_ALPHA].pawnDown.yOff = -20;
+    gameData->characterAssets[DN_ALPHA].pawnUp.xOff   = 8;
+    gameData->characterAssets[DN_ALPHA].pawnUp.yOff   = -17;
+
+    gameData->characterAssets[DN_CHESS].kingDown.xOff = 15;
+    gameData->characterAssets[DN_CHESS].kingDown.yOff = -41;
+    gameData->characterAssets[DN_CHESS].kingUp.xOff   = 15;
+    gameData->characterAssets[DN_CHESS].kingUp.yOff   = -41;
+    gameData->characterAssets[DN_CHESS].pawnDown.xOff = 14;
+    gameData->characterAssets[DN_CHESS].pawnDown.yOff = -30;
+    gameData->characterAssets[DN_CHESS].pawnUp.xOff   = 14;
+    gameData->characterAssets[DN_CHESS].pawnUp.yOff   = -30;
+
     // Allocate WSG loading helpers
     dn_hsd = heatshrink_decoder_alloc(256, 8, 4);
     // The largest image is bb_menu2.png, decodes to 99124 bytes
@@ -471,13 +489,13 @@ void dn_ShowUi(dn_Ui_t ui)
  */
 void dn_InitializeCharacterSelect()
 {
-    loadWsgInplace(DN_ALPHA_DOWN_WSG,      &gameData->characterAssets[0].kingDown, true, dn_decodeSpace, dn_hsd);
-    loadWsgInplace(DN_ALPHA_UP_WSG,        &gameData->characterAssets[0].kingUp,   true, dn_decodeSpace, dn_hsd);
-    loadWsgInplace(DN_BUCKET_HAT_DOWN_WSG, &gameData->characterAssets[0].pawnDown, true, dn_decodeSpace, dn_hsd);
-    loadWsgInplace(DN_BUCKET_HAT_UP_WSG,   &gameData->characterAssets[0].pawnUp,   true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_ALPHA_DOWN_WSG,      &gameData->characterAssets[0].kingDown.sprite, true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_ALPHA_UP_WSG,        &gameData->characterAssets[0].kingUp.sprite,   true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_BUCKET_HAT_DOWN_WSG, &gameData->characterAssets[0].pawnDown.sprite, true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_BUCKET_HAT_UP_WSG,   &gameData->characterAssets[0].pawnUp.sprite,   true, dn_decodeSpace, dn_hsd);
 
-    loadWsgInplace(DN_BLACK_KING_WSG,      &gameData->characterAssets[1].kingDown, true, dn_decodeSpace, dn_hsd);
-    loadWsgInplace(DN_WHITE_KING_WSG,      &gameData->characterAssets[1].kingUp,   true, dn_decodeSpace, dn_hsd);
-    loadWsgInplace(DN_BLACK_PAWN_WSG,      &gameData->characterAssets[1].pawnDown, true, dn_decodeSpace, dn_hsd);
-    loadWsgInplace(DN_WHITE_PAWN_WSG,      &gameData->characterAssets[1].pawnUp,   true, dn_decodeSpace, dn_hsd);  
+    loadWsgInplace(DN_BLACK_KING_WSG,      &gameData->characterAssets[1].kingDown.sprite, true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_WHITE_KING_WSG,      &gameData->characterAssets[1].kingUp.sprite,   true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_BLACK_PAWN_WSG,      &gameData->characterAssets[1].pawnDown.sprite, true, dn_decodeSpace, dn_hsd);
+    loadWsgInplace(DN_WHITE_PAWN_WSG,      &gameData->characterAssets[1].pawnUp.sprite,   true, dn_decodeSpace, dn_hsd);  
 }

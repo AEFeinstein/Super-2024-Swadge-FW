@@ -118,11 +118,11 @@ void dn_DrawCharacterSelect(dn_gameData_t* gameData, int64_t elapsedUs)
     drawMenuMania(gameData->bgMenu, gameData->menuRenderer, elapsedUs);
 
     // Set up variables for drawing
-    int16_t yOff   = MANIA_TITLE_HEIGHT + (MANIA_BODY_HEIGHT >> 2 );
+    int16_t yOff   = MANIA_TITLE_HEIGHT + 20;
     int16_t xOff   = ((TFT_WIDTH - gameData->sprites.groundTile.w) >> 1) + gameData->xSelectScrollOffset;
     int8_t pIdx   = gameData->selectMarkerIdx;
 
-    // 'Rewind' markers until they're off screen
+    // 'Rewind' characters until they're off screen
     while (xOff > 0)
     {
         xOff -= gameData->sprites.groundTile.w * 5;
@@ -135,21 +135,36 @@ void dn_DrawCharacterSelect(dn_gameData_t* gameData, int64_t elapsedUs)
         pIdx += NUM_CHARACTERS;
     }
 
-    // Draw markers until you're off screen (sort of)
+    //Draw floor tiles
+    for(int16_t y = 0; y < 9; y++)
+    {
+        for(int16_t x = 0; x < 15; x++)
+        {
+            int16_t drawX = xOff + x * gameData->sprites.groundTile.w + ((gameData->sprites.groundTile.w >> 1) * (y % 2));
+            int16_t drawY = yOff + y * (gameData->sprites.groundTile.h >> 1);
+            if(drawX >= -gameData->sprites.groundTile.w &&
+                drawX <= TFT_WIDTH)
+            {
+                drawWsgSimple(&gameData->sprites.groundTile, drawX, drawY);
+            }
+        }
+    }
+
+    // Draw characters until you're off screen (sort of)
     while (xOff < TFT_WIDTH + ((gameData->sprites.groundTile.w * 5)>>1))
     {
         // Draw down on top, up on bottom
-        drawWsgSimple(&gameData->characterAssets[pIdx].pawnDown, xOff, yOff - 50);
-        drawWsgSimple(&gameData->characterAssets[pIdx].pawnDown, xOff + (gameData->sprites.groundTile.w >> 1) * 1, yOff - 50 + (gameData->sprites.groundTile.h >> 1) * 1);
-        drawWsgSimple(&gameData->characterAssets[pIdx].kingDown, xOff + (gameData->sprites.groundTile.w >> 1) * 2, yOff - 50 + (gameData->sprites.groundTile.h >> 1) * 2);
-        drawWsgSimple(&gameData->characterAssets[pIdx].pawnDown, xOff + (gameData->sprites.groundTile.w >> 1) * 3, yOff - 50 + (gameData->sprites.groundTile.h >> 1) * 3);
-        drawWsgSimple(&gameData->characterAssets[pIdx].pawnDown, xOff + (gameData->sprites.groundTile.w >> 1) * 4, yOff - 50 + (gameData->sprites.groundTile.h >> 1) * 4);
+        drawWsgSimple(&gameData->characterAssets[pIdx].pawnDown.sprite, xOff + gameData->characterAssets[pIdx].pawnDown.xOff, yOff + gameData->characterAssets[pIdx].pawnDown.yOff);
+        drawWsgSimple(&gameData->characterAssets[pIdx].pawnDown.sprite, xOff + (gameData->sprites.groundTile.w >> 1) * 1 + gameData->characterAssets[pIdx].pawnDown.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 1 + gameData->characterAssets[pIdx].pawnDown.yOff);
+        drawWsgSimple(&gameData->characterAssets[pIdx].kingDown.sprite, xOff + (gameData->sprites.groundTile.w >> 1) * 2 + gameData->characterAssets[pIdx].kingDown.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 2 + gameData->characterAssets[pIdx].kingDown.yOff);
+        drawWsgSimple(&gameData->characterAssets[pIdx].pawnDown.sprite, xOff + (gameData->sprites.groundTile.w >> 1) * 3 + gameData->characterAssets[pIdx].pawnDown.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 3 + gameData->characterAssets[pIdx].pawnDown.yOff);
+        drawWsgSimple(&gameData->characterAssets[pIdx].pawnDown.sprite, xOff + (gameData->sprites.groundTile.w >> 1) * 4 + gameData->characterAssets[pIdx].pawnDown.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 4 + gameData->characterAssets[pIdx].pawnDown.yOff);
         
-        drawWsgSimple(&gameData->characterAssets[pIdx].pawnUp, xOff - (gameData->sprites.groundTile.w >> 1) * 4, yOff - 50 + (gameData->sprites.groundTile.h >> 1) * 4);
-        drawWsgSimple(&gameData->characterAssets[pIdx].pawnUp, xOff - (gameData->sprites.groundTile.w >> 1) * 3, yOff - 50 + (gameData->sprites.groundTile.h >> 1) * 5);
-        drawWsgSimple(&gameData->characterAssets[pIdx].kingUp, xOff - (gameData->sprites.groundTile.w >> 1) * 2, yOff - 50 + (gameData->sprites.groundTile.h >> 1) * 6);
-        drawWsgSimple(&gameData->characterAssets[pIdx].pawnUp, xOff - (gameData->sprites.groundTile.w >> 1) * 1, yOff - 50 + (gameData->sprites.groundTile.h >> 1) * 7);
-        drawWsgSimple(&gameData->characterAssets[pIdx].pawnUp, xOff, yOff - 50 + (gameData->sprites.groundTile.h >> 1) * 8);
+        drawWsgSimple(&gameData->characterAssets[pIdx].pawnUp.sprite, xOff - (gameData->sprites.groundTile.w >> 1) * 4 + gameData->characterAssets[pIdx].pawnUp.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 4 + gameData->characterAssets[pIdx].pawnUp.yOff);
+        drawWsgSimple(&gameData->characterAssets[pIdx].pawnUp.sprite, xOff - (gameData->sprites.groundTile.w >> 1) * 3 + gameData->characterAssets[pIdx].pawnUp.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 5 + gameData->characterAssets[pIdx].pawnUp.yOff);
+        drawWsgSimple(&gameData->characterAssets[pIdx].kingUp.sprite, xOff - (gameData->sprites.groundTile.w >> 1) * 2 + gameData->characterAssets[pIdx].kingUp.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 6 + gameData->characterAssets[pIdx].kingUp.yOff);
+        drawWsgSimple(&gameData->characterAssets[pIdx].pawnUp.sprite, xOff - (gameData->sprites.groundTile.w >> 1) * 1 + gameData->characterAssets[pIdx].pawnUp.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 7 + gameData->characterAssets[pIdx].pawnUp.yOff);
+        drawWsgSimple(&gameData->characterAssets[pIdx].pawnUp.sprite, xOff + gameData->characterAssets[pIdx].pawnUp.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 8 + gameData->characterAssets[pIdx].pawnUp.yOff);
         // If this is the active maker, draw a box around it
         //TBD
 
@@ -165,10 +180,8 @@ void dn_DrawCharacterSelect(dn_gameData_t* gameData, int64_t elapsedUs)
 
     if (gameData->generalTimer > 127)
     {
-        int16_t arrowY = (TFT_HEIGHT >> 1) - (gameData->font_rodin.height >> 1);
-
         // Draw arrows to indicate this can be scrolled
-        drawText(&gameData->font_rodin, c000, "<", 3, arrowY);
-        drawText(&gameData->font_rodin, c000, ">", TFT_WIDTH - 3 - textWidth(&gameData->font_rodin, ">"), arrowY);
+        drawText(&gameData->font_rodin, c000, "<", 3, 53);
+        drawText(&gameData->font_rodin, c000, ">", TFT_WIDTH - 3 - textWidth(&gameData->font_rodin, ">"), 53);
     }
 }
