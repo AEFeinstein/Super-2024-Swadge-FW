@@ -5,6 +5,7 @@
 //==============================================================================
 
 #include <stdint.h>
+#include "hdw-btn.h"
 #include "linked_list.h"
 #include "geometryFl.h"
 
@@ -34,18 +35,27 @@ typedef enum
 
 typedef struct
 {
-    // The Placement
+    // Position
     int32_t zonemask;
     circleFl_t c;
     bool fixed;
 
-    // Kinematics
-    vecFl_t g;             ///< Per-object gravity, shouldn't change
-    vecFl_t normalForces;  ///< Normal forces exerted on this object by other objects, computed frame-by-frame
-    vecFl_t acc;           ///< Acceleration force, may be set by user input
+    // Velocity
     vecFl_t vel;           ///< Velocity of the object, computed frame-by-frame
     lineFl_t travelLine;   ///< A line from the object's start to end point for this frame
     lineFl_t travelLineBB; ///< The bounding box for travelLine
+
+    // Acceleration
+    vecFl_t g; ///< Per-object gravity, shouldn't change
+    /**
+     * Static force exerted on this object by other objects, computed frame-by-frame.
+     * This should be used instead of world gravity if physCirc_t.inContact is set.
+     */
+    vecFl_t staticForce;
+    bool inContact; ///< true of staticForce is computed, false if it isn't
+
+    // Button input
+    buttonBit_t moving; ///< Either the left, right, or no button held
 
     // Game data
     circType_t type;
@@ -59,6 +69,7 @@ typedef struct
     int32_t zonemask;
     lineFl_t l;
     vecFl_t unitNormal;
+    vecFl_t unitSlope;
 } physLine_t;
 
 typedef struct
