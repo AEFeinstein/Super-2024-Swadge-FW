@@ -118,6 +118,9 @@ static void dn_EnterMode(void)
     gameData->characterAssets[DN_CHESS].pawnUp.xOff   = 14;
     gameData->characterAssets[DN_CHESS].pawnUp.yOff   = -30;
 
+    wsgPaletteReset(&gameData->redFloor1);
+    wsgPaletteSet(&gameData->redFloor1, c334, c533);
+
     // Allocate WSG loading helpers
     dn_hsd = heatshrink_decoder_alloc(256, 8, 4);
     // The largest image is bb_menu2.png, decodes to 99124 bytes

@@ -109,6 +109,7 @@ typedef struct {
     dn_tileData_t tiles[BOARD_SIZE][BOARD_SIZE];
     uint8_t selection[2];//x and y indices of the selected tile
     uint8_t alphaFaceDir; //0 = down, 1 = left, 2 = up, 3 = right
+    wsgPalette_t redFloor1;
 } dn_gameData_t;
 
 //==============================================================================

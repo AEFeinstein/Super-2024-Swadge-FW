@@ -13,6 +13,22 @@
 //#define RECT_STROKE     4
 //#define CHECKER_MARGIN  (SPACING_Y / 2)
 
+
+//==============================================================================
+// Variables
+//==============================================================================
+const bool selectDiamondShape[] = {
+    false, false, true, false, false,
+    false, true, true, false, false,
+    false, true, true, true, false,
+    true, true, true, true, false,
+    true, true, true, true, true,
+    true, true, true, true, false,
+    false, true, true, true, false,
+    false, true, true, false, false,
+    false, false, true, false, false,
+};
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -138,35 +154,75 @@ void dn_DrawCharacterSelect(dn_gameData_t* gameData, int64_t elapsedUs)
     //Draw floor tiles
     for(int16_t y = 0; y < 9; y++)
     {
-        for(int16_t x = 0; x < 15; x++)
+        // Draw tiles until you're off screen
+        while (xOff < TFT_WIDTH + ((gameData->sprites.groundTile.w * 5)>>1))
         {
-            int16_t drawX = xOff + x * gameData->sprites.groundTile.w + ((gameData->sprites.groundTile.w >> 1) * (y % 2));
-            int16_t drawY = yOff + y * (gameData->sprites.groundTile.h >> 1);
-            if(drawX >= -gameData->sprites.groundTile.w &&
-                drawX <= TFT_WIDTH)
+            for(int16_t x = -2; x < 3; x++)
             {
-                drawWsgSimple(&gameData->sprites.groundTile, drawX, drawY);
+                int16_t drawX = xOff + x * gameData->sprites.groundTile.w + ((gameData->sprites.groundTile.w >> 1) * (y % 2));
+                int16_t drawY = yOff + y * (gameData->sprites.groundTile.h >> 1);
+                if(drawX >= -gameData->sprites.groundTile.w &&
+                    drawX <= TFT_WIDTH)
+                {
+                    // If this is the active maker, draw swapped pallete
+                    if (pIdx == gameData->activeMarkerIdx && selectDiamondShape[y * 5 + x+2])
+                    {
+                        drawWsgPaletteSimple(&gameData->sprites.groundTile, drawX, drawY, &gameData->redFloor1);
+                    }
+                    else
+                    {
+                        drawWsgSimple(&gameData->sprites.groundTile, drawX, drawY);
+                    }
+                    
+                }
             }
+            // Increment X offset
+            xOff += gameData->sprites.groundTile.w * 5;
+            // Increment marker index
+            pIdx = (pIdx + 1) % NUM_CHARACTERS;
+        }
+        //reset values
+        xOff   = ((TFT_WIDTH - gameData->sprites.groundTile.w) >> 1) + gameData->xSelectScrollOffset;
+        pIdx   = gameData->selectMarkerIdx;
+
+        // 'Rewind' characters until they're off screen
+        while (xOff > 0)
+        {
+            xOff -= gameData->sprites.groundTile.w * 5;
+            pIdx--;
+        }
+        // Don't use a negative index!
+        while (pIdx < 0)
+        {
+            pIdx += NUM_CHARACTERS;
         }
     }
+
 
     // Draw characters until you're off screen (sort of)
     while (xOff < TFT_WIDTH + ((gameData->sprites.groundTile.w * 5)>>1))
     {
-        // Draw down on top, up on bottom
-        drawWsgSimple(&gameData->characterAssets[pIdx].pawnDown.sprite, xOff + gameData->characterAssets[pIdx].pawnDown.xOff, yOff + gameData->characterAssets[pIdx].pawnDown.yOff);
-        drawWsgSimple(&gameData->characterAssets[pIdx].pawnDown.sprite, xOff + (gameData->sprites.groundTile.w >> 1) * 1 + gameData->characterAssets[pIdx].pawnDown.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 1 + gameData->characterAssets[pIdx].pawnDown.yOff);
-        drawWsgSimple(&gameData->characterAssets[pIdx].kingDown.sprite, xOff + (gameData->sprites.groundTile.w >> 1) * 2 + gameData->characterAssets[pIdx].kingDown.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 2 + gameData->characterAssets[pIdx].kingDown.yOff);
-        drawWsgSimple(&gameData->characterAssets[pIdx].pawnDown.sprite, xOff + (gameData->sprites.groundTile.w >> 1) * 3 + gameData->characterAssets[pIdx].pawnDown.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 3 + gameData->characterAssets[pIdx].pawnDown.yOff);
-        drawWsgSimple(&gameData->characterAssets[pIdx].pawnDown.sprite, xOff + (gameData->sprites.groundTile.w >> 1) * 4 + gameData->characterAssets[pIdx].pawnDown.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 4 + gameData->characterAssets[pIdx].pawnDown.yOff);
-        
-        drawWsgSimple(&gameData->characterAssets[pIdx].pawnUp.sprite, xOff - (gameData->sprites.groundTile.w >> 1) * 4 + gameData->characterAssets[pIdx].pawnUp.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 4 + gameData->characterAssets[pIdx].pawnUp.yOff);
-        drawWsgSimple(&gameData->characterAssets[pIdx].pawnUp.sprite, xOff - (gameData->sprites.groundTile.w >> 1) * 3 + gameData->characterAssets[pIdx].pawnUp.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 5 + gameData->characterAssets[pIdx].pawnUp.yOff);
-        drawWsgSimple(&gameData->characterAssets[pIdx].kingUp.sprite, xOff - (gameData->sprites.groundTile.w >> 1) * 2 + gameData->characterAssets[pIdx].kingUp.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 6 + gameData->characterAssets[pIdx].kingUp.yOff);
-        drawWsgSimple(&gameData->characterAssets[pIdx].pawnUp.sprite, xOff - (gameData->sprites.groundTile.w >> 1) * 1 + gameData->characterAssets[pIdx].pawnUp.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 7 + gameData->characterAssets[pIdx].pawnUp.yOff);
-        drawWsgSimple(&gameData->characterAssets[pIdx].pawnUp.sprite, xOff + gameData->characterAssets[pIdx].pawnUp.xOff, yOff + (gameData->sprites.groundTile.h >> 1) * 8 + gameData->characterAssets[pIdx].pawnUp.yOff);
-        // If this is the active maker, draw a box around it
-        //TBD
+        for(int8_t i = 0; i < 5; i++)
+        {
+            if(i == 2)//king is the middle piece
+            {
+                drawWsgSimple(&gameData->characterAssets[pIdx].kingDown.sprite,
+                    xOff + (gameData->sprites.groundTile.w >> 1) * i + gameData->characterAssets[pIdx].kingDown.xOff, 
+                    yOff + (gameData->sprites.groundTile.h >> 1) * i + gameData->characterAssets[pIdx].kingDown.yOff);
+                drawWsgSimple(&gameData->characterAssets[pIdx].kingUp.sprite,
+                    xOff - (gameData->sprites.groundTile.w >> 1) * (4-i)  + gameData->characterAssets[pIdx].kingUp.xOff,
+                    yOff + (gameData->sprites.groundTile.h >> 1) * (4+i)  + gameData->characterAssets[pIdx].kingUp.yOff);
+            }
+            else
+            {
+                drawWsgSimple(&gameData->characterAssets[pIdx].pawnDown.sprite,
+                    xOff + (gameData->sprites.groundTile.w >> 1) * i + gameData->characterAssets[pIdx].pawnDown.xOff,
+                    yOff + (gameData->sprites.groundTile.h >> 1) * i + gameData->characterAssets[pIdx].pawnDown.yOff);
+                drawWsgSimple(&gameData->characterAssets[pIdx].pawnUp.sprite,
+                    xOff - (gameData->sprites.groundTile.w >> 1) * (4-i) + gameData->characterAssets[pIdx].pawnUp.xOff,
+                    yOff + (gameData->sprites.groundTile.h >> 1) * (4+i)  + gameData->characterAssets[pIdx].pawnUp.yOff);
+            }
+        }
 
         // Increment X offset
         xOff += gameData->sprites.groundTile.w * 5;
