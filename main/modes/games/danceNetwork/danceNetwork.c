@@ -446,6 +446,7 @@ void dn_ShowUi(dn_Ui_t ui)
         case UI_GAME:
         {
             // Initialization done in tttBeginGame()
+            dn_InitializeCharacterSelect();
             break;
         }
         case UI_CHARACTER_SELECT:
@@ -492,13 +493,38 @@ void dn_ShowUi(dn_Ui_t ui)
  */
 void dn_InitializeCharacterSelect()
 {
-    loadWsgInplace(DN_ALPHA_DOWN_WSG,      &gameData->characterAssets[0].kingDown.sprite, true, dn_decodeSpace, dn_hsd);
-    loadWsgInplace(DN_ALPHA_UP_WSG,        &gameData->characterAssets[0].kingUp.sprite,   true, dn_decodeSpace, dn_hsd);
-    loadWsgInplace(DN_BUCKET_HAT_DOWN_WSG, &gameData->characterAssets[0].pawnDown.sprite, true, dn_decodeSpace, dn_hsd);
-    loadWsgInplace(DN_BUCKET_HAT_UP_WSG,   &gameData->characterAssets[0].pawnUp.sprite,   true, dn_decodeSpace, dn_hsd);
+    if(!gameData->characterAssets[0].kingDown.sprite.w && !gameData->characterAssets[0].kingDown.sprite.h)
+    {
+        loadWsgInplace(DN_ALPHA_DOWN_WSG,     &gameData->characterAssets[0].kingDown.sprite, true, dn_decodeSpace, dn_hsd);
+    }
+    if(!gameData->characterAssets[0].kingUp.sprite.w && !gameData->characterAssets[0].kingUp.sprite.h)
+    {
+        loadWsgInplace(DN_ALPHA_UP_WSG,       &gameData->characterAssets[0].kingUp.sprite,   true, dn_decodeSpace, dn_hsd);
+    }
+    if(!gameData->characterAssets[0].pawnDown.sprite.w && !gameData->characterAssets[0].pawnDown.sprite.h)
+    {
+        loadWsgInplace(DN_BUCKET_HAT_DOWN_WSG,&gameData->characterAssets[0].pawnDown.sprite, true, dn_decodeSpace, dn_hsd);
+    }
+    if(!gameData->characterAssets[0].pawnUp.sprite.w && !gameData->characterAssets[0].pawnUp.sprite.h)
+    {
+        loadWsgInplace(DN_BUCKET_HAT_UP_WSG, &gameData->characterAssets[0].pawnUp.sprite,   true, dn_decodeSpace, dn_hsd);
+    }
 
-    loadWsgInplace(DN_BLACK_KING_WSG,      &gameData->characterAssets[1].kingDown.sprite, true, dn_decodeSpace, dn_hsd);
-    loadWsgInplace(DN_WHITE_KING_WSG,      &gameData->characterAssets[1].kingUp.sprite,   true, dn_decodeSpace, dn_hsd);
-    loadWsgInplace(DN_BLACK_PAWN_WSG,      &gameData->characterAssets[1].pawnDown.sprite, true, dn_decodeSpace, dn_hsd);
-    loadWsgInplace(DN_WHITE_PAWN_WSG,      &gameData->characterAssets[1].pawnUp.sprite,   true, dn_decodeSpace, dn_hsd);  
+
+    if(!gameData->characterAssets[1].kingDown.sprite.w && !gameData->characterAssets[1].kingDown.sprite.h)
+    {
+        loadWsgInplace(DN_BLACK_KING_WSG, &gameData->characterAssets[1].kingDown.sprite, true, dn_decodeSpace, dn_hsd);
+    }
+    if(!gameData->characterAssets[1].kingUp.sprite.w && !gameData->characterAssets[1].kingUp.sprite.h)
+    {
+        loadWsgInplace(DN_WHITE_KING_WSG, &gameData->characterAssets[1].kingUp.sprite,   true, dn_decodeSpace, dn_hsd);
+    }
+    if(!gameData->characterAssets[1].pawnDown.sprite.w && !gameData->characterAssets[1].pawnDown.sprite.h)
+    {
+        loadWsgInplace(DN_BLACK_PAWN_WSG, &gameData->characterAssets[1].pawnDown.sprite, true, dn_decodeSpace, dn_hsd);
+    }
+    if(!gameData->characterAssets[1].pawnUp.sprite.w && !gameData->characterAssets[1].pawnUp.sprite.h)
+    {
+        loadWsgInplace(DN_WHITE_PAWN_WSG, &gameData->characterAssets[1].pawnUp.sprite,   true, dn_decodeSpace, dn_hsd);  
+    }
 }
