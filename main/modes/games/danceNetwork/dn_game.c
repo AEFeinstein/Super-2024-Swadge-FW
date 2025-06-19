@@ -112,6 +112,9 @@ void dn_DrawGame(dn_gameData_t* gameData)
         }
     }
 
+
+    drawShinyText(&gameData->font_rodin, c145, c345, c555, "Dance Network", (TFT_WIDTH >> 1) - (textWidth(&gameData->font_rodin,"Dance Network")>>1), 10);
+
     // int drawX = (TFT_WIDTH >> 1) + (gameData->selection[0] - gameData->selection[1] - 1) * (gameData->sprites.groundTile.w >> 1);
     // int drawY = 155 + (gameData->selection[0] + gameData->selection[1]) * 13 - (gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset >> DECIMAL_BITS);
     // drawX += 10;

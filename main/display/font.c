@@ -151,6 +151,147 @@ void drawCharBounds(paletteColor_t color, int h, const font_ch_t* ch, int16_t xO
 }
 
 /**
+ * @brief Draw a single character with a horizontal gradient through the center from a font to a display
+ *
+ * @param outerColor The color of the upper quarter and lower eighth of the character
+ * @param middleColor The color of the third, sixth, and seventh eighths of the character
+ * @param innerColor The color of the center quarter of the character
+ * @param h     The height of the character to draw
+ * @param ch    The character bitmap to draw (includes the width of the char)
+ * @param xOff  The x offset to draw the char at
+ * @param yOff  The y offset to draw the char at
+ * @param xMin  The left edge of the text bounds
+ * @param yMin  The top edge of the text bounds
+ * @param xMax  The right edge of the text bounds
+ * @param yMax  The bottom edge of the text bounds
+ */
+void drawShinyCharBounds(paletteColor_t outerColor, paletteColor_t middleColor, paletteColor_t innerColor, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff, int16_t xMin,
+                    int16_t yMin, int16_t xMax, int16_t yMax)
+{
+    // Do not draw transparent chars
+    if (cTransparent == outerColor && cTransparent == middleColor && cTransparent == innerColor)
+    {
+        return;
+    }
+
+    int bitIdx            = 0;
+    const uint8_t* bitmap = ch->bitmap;
+    int wch               = ch->width;
+
+    // Get a pointer to the end of the bitmap
+    const uint8_t* endOfBitmap = &bitmap[((wch * h) + 7) >> 3] - 1;
+
+    // Don't draw off the bottom of the screen.
+    if (yOff + h > yMax)
+    {
+        h = yMax - yOff;
+    }
+
+    // Check Y bounds
+    if (yOff < yMin)
+    {
+        // This line not micro-optimized, but hopefully it's ok
+        bitIdx += yMin * wch;
+        // Above the display, do wacky math with -yOff
+        bitIdx -= yOff * wch;
+        bitmap += bitIdx >> 3;
+        bitIdx &= 7;
+        h += yOff;
+        yOff = 0;
+    }
+
+    paletteColor_t* pxOutput = getPxTftFramebuffer() + (yOff * TFT_WIDTH);
+
+    for (int y = 0; y < h; y++)
+    {
+        // Figure out where to draw
+        int truncate = 0;
+
+        int startX = xOff;
+        if (xOff < xMin)
+        {
+            // Track how many groups of pixels we are skipping over
+            // that weren't displayed on the left of the screen.
+            startX = xMin;
+            bitIdx += xMin;
+            bitIdx += -xOff;
+            bitmap += bitIdx >> 3;
+            bitIdx &= 7;
+        }
+        int endX = xOff + wch;
+        if (endX > xMax)
+        {
+            // Track how many groups of pixels we are skipping over,
+            // if the letter falls off the end of the screen.
+            truncate = endX - xMax;
+            endX     = xMax;
+        }
+
+        if (bitmap > endOfBitmap)
+        {
+            return;
+        }
+        uint8_t thisByte = *bitmap;
+        for (int drawX = startX; drawX < endX; drawX++)
+        {
+            // Figure out where to draw
+            // Check X bounds
+            if (thisByte & (1 << bitIdx))
+            {
+                // Determine the color to draw based on the Y position
+                if(y < (h >> 2))
+                {
+                    // Draw the pixel
+                    pxOutput[drawX] = outerColor;
+                }
+                else if(y < (h >> 3) * 4)
+                {
+                    // Draw the pixel
+                    pxOutput[drawX] = middleColor;
+                }
+                else if(y < (h >> 3) * 5)
+                {
+                    // Draw the pixel
+                    pxOutput[drawX] = innerColor;
+                }
+                else if(y < (h >> 3) * 7)
+                {
+                    // Draw the pixel
+                    pxOutput[drawX] = middleColor;
+                }
+                else
+                {
+                    // Draw the pixel
+                    pxOutput[drawX] = outerColor;
+                }
+            }
+
+            // Iterate over the bit data
+            if (8 == ++bitIdx)
+            {
+                bitIdx = 0;
+                // Make sure not to read past the bitmap
+                if (bitmap < endOfBitmap)
+                {
+                    thisByte = *(++bitmap);
+                }
+                else
+                {
+                    // No more bitmap, so return
+                    return;
+                }
+            }
+        }
+
+        // Handle any remaining bits if we have ended off the end of the display.
+        bitIdx += truncate;
+        bitmap += bitIdx >> 3;
+        bitIdx &= 7;
+        pxOutput += TFT_WIDTH;
+    }
+}
+
+/**
  * @brief Draw a single character from a font to a display
  *
  * @param color The color of the character to draw
@@ -207,6 +348,47 @@ int16_t drawTextBounds(const font_t* font, paletteColor_t color, const char* tex
  * @brief Draw text to a display with the given color and font
  *
  * @param font  The font to use for the text
+ * @param outerColor The color of the upper quarter and lower eighth of the character
+ * @param middleColor The color of the third, sixth, and seventh eighths of the character
+ * @param innerColor The color of the center quarter of the character
+ * @param text  The text to draw to the display
+ * @param xOff  The x offset to draw the text at
+ * @param yOff  The y offset to draw the text at
+ * @param xMin  The left edge of the text bounds
+ * @param yMin  The top edge of the text bounds
+ * @param xMax  The right edge of the text bounds
+ * @param yMax  The bottom edge of the text bounds
+ * @return The x offset at the end of the drawn string
+ */
+int16_t drawShinyTextBounds(const font_t* font, paletteColor_t outerColor, paletteColor_t middleColor, paletteColor_t innerColor, const char* text, int16_t xOff, int16_t yOff,
+                       int16_t xMin, int16_t yMin, int16_t xMax, int16_t yMax)
+{
+    while (*text >= ' ')
+    {
+        // Only draw if the char is on the screen
+        if ((xOff + font->chars[(*text) - ' '].width >= xMin) && (xOff < xMax))
+        {
+            // Draw char
+            drawShinyCharBounds(outerColor, middleColor, innerColor, font->height, &font->chars[(*text) - ' '], xOff, yOff, xMin, yMin, xMax, yMax);
+        }
+
+        // Move to the next char
+        xOff += (font->chars[(*text) - ' '].width + 1);
+        text++;
+
+        // If this char is offscreen, finish drawing
+        if (xOff >= xMax)
+        {
+            return xOff;
+        }
+    }
+    return xOff;
+}
+
+/**
+ * @brief Draw text to a display with the given color and font
+ *
+ * @param font  The font to use for the text
  * @param color The color of the character to draw
  * @param text  The text to draw to the display
  * @param xOff  The x offset to draw the text at
@@ -217,6 +399,24 @@ int16_t drawText(const font_t* font, paletteColor_t color, const char* text, int
 {
     return drawTextBounds(font, color, text, xOff, yOff, 0, 0, TFT_WIDTH, TFT_HEIGHT);
 }
+
+/**
+ * @brief Draw text to a display with the given color and font
+ *
+ * @param font  The font to use for the text
+ * @param outerColor The color of the upper quarter and lower eighth of the character
+ * @param middleColor The color of the third, sixth, and seventh eighths of the character
+ * @param innerColor The color of the center quarter of the character
+ * @param text  The text to draw to the display
+ * @param xOff  The x offset to draw the text at
+ * @param yOff  The y offset to draw the text at
+ * @return The x offset at the end of the drawn string
+ */
+int16_t drawShinyText(const font_t* font, paletteColor_t outerColor, paletteColor_t middleColor, paletteColor_t innerColor, const char* text, int16_t xOff, int16_t yOff)
+{
+    return drawShinyTextBounds(font, outerColor, middleColor, innerColor, text, xOff, yOff, 0, 0, TFT_WIDTH, TFT_HEIGHT);
+}
+
 
 /**
  * @brief Return the pixel width of some text in a given font
