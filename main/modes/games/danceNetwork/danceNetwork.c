@@ -6,6 +6,7 @@
 #include "dn_typedef.h"
 #include "dn_p2p.h"
 #include "mainMenu.h"
+#include "dn_random.h"
 
 const char danceNetworkName[] = "Alpha Pulse: Dance Network";
 
@@ -100,23 +101,23 @@ static void dn_EnterMode(void)
     gameData->selection[1] = 2;
     gameData->tiles[gameData->selection[0]][gameData->selection[1]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
 
-    gameData->characterAssets[DN_ALPHA].kingDown.xOff = 10;
-    gameData->characterAssets[DN_ALPHA].kingDown.yOff = -40;
-    gameData->characterAssets[DN_ALPHA].kingUp.xOff   = 13;
-    gameData->characterAssets[DN_ALPHA].kingUp.yOff   = -40;
-    gameData->characterAssets[DN_ALPHA].pawnDown.xOff = 15;
-    gameData->characterAssets[DN_ALPHA].pawnDown.yOff = -20;
-    gameData->characterAssets[DN_ALPHA].pawnUp.xOff   = 8;
-    gameData->characterAssets[DN_ALPHA].pawnUp.yOff   = -17;
+    gameData->characterAssets[DN_ALPHA][DN_KING][DN_DOWN].xOff = 10;
+    gameData->characterAssets[DN_ALPHA][DN_KING][DN_DOWN].yOff = -40;
+    gameData->characterAssets[DN_ALPHA][DN_KING][DN_UP].xOff   = 13;
+    gameData->characterAssets[DN_ALPHA][DN_KING][DN_UP].yOff   = -40;
+    gameData->characterAssets[DN_ALPHA][DN_PAWN][DN_DOWN].xOff = 15;
+    gameData->characterAssets[DN_ALPHA][DN_PAWN][DN_DOWN].yOff = -20;
+    gameData->characterAssets[DN_ALPHA][DN_PAWN][DN_UP].xOff   = 8;
+    gameData->characterAssets[DN_ALPHA][DN_PAWN][DN_UP].yOff   = -17;
 
-    gameData->characterAssets[DN_CHESS].kingDown.xOff = 15;
-    gameData->characterAssets[DN_CHESS].kingDown.yOff = -41;
-    gameData->characterAssets[DN_CHESS].kingUp.xOff   = 15;
-    gameData->characterAssets[DN_CHESS].kingUp.yOff   = -41;
-    gameData->characterAssets[DN_CHESS].pawnDown.xOff = 14;
-    gameData->characterAssets[DN_CHESS].pawnDown.yOff = -30;
-    gameData->characterAssets[DN_CHESS].pawnUp.xOff   = 14;
-    gameData->characterAssets[DN_CHESS].pawnUp.yOff   = -30;
+    gameData->characterAssets[DN_CHESS][DN_KING][DN_DOWN].xOff = 15;
+    gameData->characterAssets[DN_CHESS][DN_KING][DN_DOWN].yOff = -41;
+    gameData->characterAssets[DN_CHESS][DN_KING][DN_UP].xOff   = 15;
+    gameData->characterAssets[DN_CHESS][DN_KING][DN_UP].yOff   = -41;
+    gameData->characterAssets[DN_CHESS][DN_PAWN][DN_DOWN].xOff = 14;
+    gameData->characterAssets[DN_CHESS][DN_PAWN][DN_DOWN].yOff = -30;
+    gameData->characterAssets[DN_CHESS][DN_PAWN][DN_UP].xOff   = 14;
+    gameData->characterAssets[DN_CHESS][DN_PAWN][DN_UP].yOff   = -30;
 
     wsgPaletteReset(&gameData->redFloor1);
     wsgPaletteSet(&gameData->redFloor1, c334, c533);
@@ -446,7 +447,7 @@ void dn_ShowUi(dn_Ui_t ui)
         case UI_GAME:
         {
             // Initialization done in tttBeginGame()
-            dn_InitializeCharacterSelect();
+            dn_InitializeGame();
             break;
         }
         case UI_CHARACTER_SELECT:
@@ -486,6 +487,36 @@ void dn_ShowUi(dn_Ui_t ui)
     }
 }
 
+void dn_InitializeGame()
+{
+    //will change later to specifically load sprites for this match.
+    dn_InitializeCharacterSelect();
+
+    for(int8_t player = 0; player < 2; player++)
+    {
+        for(int8_t unit = 0; unit < 5; unit++)
+        {
+            gameData->UnitPositions[player][unit].x = unit;
+            gameData->UnitPositions[player][unit].y = !player * 4;
+        }
+    }
+
+    //player vs CPU
+    if(gameData->singleSystem && !gameData->passAndPlay)
+    {
+        //The player may randomly be p1 or p2.
+        gameData->isPlayer1 = dn_randomInt(0,1);
+        if(!gameData->isPlayer1)
+        {
+            //copy player 1's character over to player 2 position.
+            gameData->characterIndices[1] = gameData->characterIndices[0];
+        }
+        //[gameData->isPlayer1] actually gets the opponent.
+        //give the CPU a random character.
+        gameData->characterIndices[gameData->isPlayer1] = dn_randomInt(0,1);
+    }
+}
+
 /**
  * @brief Load sprites needed in this UI
  *
@@ -493,38 +524,38 @@ void dn_ShowUi(dn_Ui_t ui)
  */
 void dn_InitializeCharacterSelect()
 {
-    if(!gameData->characterAssets[0].kingDown.sprite.w && !gameData->characterAssets[0].kingDown.sprite.h)
+    if(!gameData->characterAssets[DN_ALPHA][DN_KING][DN_DOWN].sprite.w && !gameData->characterAssets[DN_ALPHA][DN_KING][DN_DOWN].sprite.h)
     {
-        loadWsgInplace(DN_ALPHA_DOWN_WSG,     &gameData->characterAssets[0].kingDown.sprite, true, dn_decodeSpace, dn_hsd);
+        loadWsgInplace(DN_ALPHA_DOWN_WSG,     &gameData->characterAssets[DN_ALPHA][DN_KING][DN_DOWN].sprite, true, dn_decodeSpace, dn_hsd);
     }
-    if(!gameData->characterAssets[0].kingUp.sprite.w && !gameData->characterAssets[0].kingUp.sprite.h)
+    if(!gameData->characterAssets[DN_ALPHA][DN_KING][DN_UP].sprite.w && !gameData->characterAssets[DN_ALPHA][DN_KING][DN_UP].sprite.h)
     {
-        loadWsgInplace(DN_ALPHA_UP_WSG,       &gameData->characterAssets[0].kingUp.sprite,   true, dn_decodeSpace, dn_hsd);
+        loadWsgInplace(DN_ALPHA_UP_WSG,        &gameData->characterAssets[DN_ALPHA][DN_KING][DN_UP].sprite,   true, dn_decodeSpace, dn_hsd);
     }
-    if(!gameData->characterAssets[0].pawnDown.sprite.w && !gameData->characterAssets[0].pawnDown.sprite.h)
+    if(!gameData->characterAssets[DN_ALPHA][DN_PAWN][DN_DOWN].sprite.w && !gameData->characterAssets[DN_ALPHA][DN_PAWN][DN_DOWN].sprite.h)
     {
-        loadWsgInplace(DN_BUCKET_HAT_DOWN_WSG,&gameData->characterAssets[0].pawnDown.sprite, true, dn_decodeSpace, dn_hsd);
+        loadWsgInplace(DN_BUCKET_HAT_DOWN_WSG, &gameData->characterAssets[DN_ALPHA][DN_PAWN][DN_DOWN].sprite, true, dn_decodeSpace, dn_hsd);
     }
-    if(!gameData->characterAssets[0].pawnUp.sprite.w && !gameData->characterAssets[0].pawnUp.sprite.h)
+    if(!gameData->characterAssets[DN_ALPHA][DN_PAWN][DN_UP].sprite.w && !gameData->characterAssets[DN_ALPHA][DN_PAWN][DN_UP].sprite.h)
     {
-        loadWsgInplace(DN_BUCKET_HAT_UP_WSG, &gameData->characterAssets[0].pawnUp.sprite,   true, dn_decodeSpace, dn_hsd);
+        loadWsgInplace(DN_BUCKET_HAT_UP_WSG,   &gameData->characterAssets[DN_ALPHA][DN_PAWN][DN_UP].sprite,   true, dn_decodeSpace, dn_hsd);
     }
 
 
-    if(!gameData->characterAssets[1].kingDown.sprite.w && !gameData->characterAssets[1].kingDown.sprite.h)
+    if(!gameData->characterAssets[DN_CHESS][DN_KING][DN_DOWN].sprite.w && !gameData->characterAssets[DN_CHESS][DN_KING][DN_DOWN].sprite.h)
     {
-        loadWsgInplace(DN_BLACK_KING_WSG, &gameData->characterAssets[1].kingDown.sprite, true, dn_decodeSpace, dn_hsd);
+        loadWsgInplace(DN_BLACK_KING_WSG, &gameData->characterAssets[DN_CHESS][DN_KING][DN_DOWN].sprite, true, dn_decodeSpace, dn_hsd);
     }
-    if(!gameData->characterAssets[1].kingUp.sprite.w && !gameData->characterAssets[1].kingUp.sprite.h)
+    if(!gameData->characterAssets[DN_CHESS][DN_KING][DN_UP].sprite.w && !gameData->characterAssets[DN_CHESS][DN_KING][DN_UP].sprite.h)
     {
-        loadWsgInplace(DN_WHITE_KING_WSG, &gameData->characterAssets[1].kingUp.sprite,   true, dn_decodeSpace, dn_hsd);
+        loadWsgInplace(DN_WHITE_KING_WSG, &gameData->characterAssets[DN_CHESS][DN_KING][DN_UP].sprite,   true, dn_decodeSpace, dn_hsd);
     }
-    if(!gameData->characterAssets[1].pawnDown.sprite.w && !gameData->characterAssets[1].pawnDown.sprite.h)
+    if(!gameData->characterAssets[DN_CHESS][DN_PAWN][DN_DOWN].sprite.w && !gameData->characterAssets[DN_CHESS][DN_PAWN][DN_DOWN].sprite.h)
     {
-        loadWsgInplace(DN_BLACK_PAWN_WSG, &gameData->characterAssets[1].pawnDown.sprite, true, dn_decodeSpace, dn_hsd);
+        loadWsgInplace(DN_BLACK_PAWN_WSG, &gameData->characterAssets[DN_CHESS][DN_PAWN][DN_DOWN].sprite, true, dn_decodeSpace, dn_hsd);
     }
-    if(!gameData->characterAssets[1].pawnUp.sprite.w && !gameData->characterAssets[1].pawnUp.sprite.h)
+    if(!gameData->characterAssets[DN_CHESS][DN_PAWN][DN_UP].sprite.w && !gameData->characterAssets[DN_CHESS][DN_PAWN][DN_UP].sprite.h)
     {
-        loadWsgInplace(DN_WHITE_PAWN_WSG, &gameData->characterAssets[1].pawnUp.sprite,   true, dn_decodeSpace, dn_hsd);  
+        loadWsgInplace(DN_WHITE_PAWN_WSG, &gameData->characterAssets[DN_CHESS][DN_PAWN][DN_UP].sprite,   true, dn_decodeSpace, dn_hsd);
     }
 }

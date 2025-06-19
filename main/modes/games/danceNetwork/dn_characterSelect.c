@@ -48,16 +48,16 @@ void dn_InputCharacterSelect(dn_gameData_t* gameData, buttonEvt_t* evt)
         {
             case PB_A:
             {
-                bool exitAfterSelect = (-1 == gameData->activeMarkerIdx);
+                bool exitAfterSelect = (-1 == gameData->characterIndices[0]);
                 // If the index hasn't changed assume it's 0
-                if (-1 == gameData->selectMarkerIdx)
+                if (-1 == gameData->selectCharacterIdx)
                 {
-                    gameData->selectMarkerIdx = 0;
+                    gameData->selectCharacterIdx = 0;
                 }
                 // Select marker
-                gameData->activeMarkerIdx = gameData->selectMarkerIdx;
+                gameData->characterIndices[0] = gameData->selectCharacterIdx;
                 // Save to NVS
-                writeNvs32(dnCharacterKey, gameData->activeMarkerIdx);
+                writeNvs32(dnCharacterKey, gameData->characterIndices[0]);
                 if (exitAfterSelect)
                 {
                     // Go to the main menu if a marker was selected for the first time
@@ -67,7 +67,7 @@ void dn_InputCharacterSelect(dn_gameData_t* gameData, buttonEvt_t* evt)
             }
             case PB_B:
             {
-                if (-1 != gameData->activeMarkerIdx)
+                if (-1 != gameData->characterIndices[0])
                 {
                     // Go back to the main menu if a marker was selected
                     dn_ShowUi(UI_MENU);
@@ -77,13 +77,13 @@ void dn_InputCharacterSelect(dn_gameData_t* gameData, buttonEvt_t* evt)
             case PB_LEFT:
             {
                 // Scroll to the left
-                if (0 == gameData->selectMarkerIdx)
+                if (0 == gameData->selectCharacterIdx)
                 {
-                    gameData->selectMarkerIdx = NUM_CHARACTERS - 1;
+                    gameData->selectCharacterIdx = NUM_CHARACTERS - 1;
                 }
                 else
                 {
-                    gameData->selectMarkerIdx--;
+                    gameData->selectCharacterIdx--;
                 }
 
                 // Decrement the offset to scroll smoothly
@@ -93,7 +93,7 @@ void dn_InputCharacterSelect(dn_gameData_t* gameData, buttonEvt_t* evt)
             case PB_RIGHT:
             {
                 // Scroll to the right
-                gameData->selectMarkerIdx = (gameData->selectMarkerIdx + 1) % NUM_CHARACTERS;
+                gameData->selectCharacterIdx = (gameData->selectCharacterIdx + 1) % NUM_CHARACTERS;
                 // Increment the offset to scroll smoothly
                 gameData->xSelectScrollOffset += gameData->sprites.groundTile.w * 5;
                 break;
@@ -136,7 +136,7 @@ void dn_DrawCharacterSelect(dn_gameData_t* gameData, int64_t elapsedUs)
     // Set up variables for drawing
     int16_t yOff   = MANIA_TITLE_HEIGHT + 20;
     int16_t xOff   = ((TFT_WIDTH - gameData->sprites.groundTile.w) >> 1) + gameData->xSelectScrollOffset;
-    int8_t pIdx   = gameData->selectMarkerIdx;
+    int8_t pIdx   = gameData->selectCharacterIdx;
 
     // 'Rewind' characters until they're off screen
     while (xOff > 0)
@@ -165,7 +165,7 @@ void dn_DrawCharacterSelect(dn_gameData_t* gameData, int64_t elapsedUs)
                     drawX <= TFT_WIDTH)
                 {
                     // If this is the active maker, draw swapped pallete
-                    if (pIdx == gameData->activeMarkerIdx && selectDiamondShape[y * 5 + x+2])
+                    if (pIdx == gameData->characterIndices[0] && selectDiamondShape[y * 5 + x+2])
                     {
                         drawWsgPaletteSimple(&gameData->sprites.groundTile, drawX, drawY, &gameData->redFloor1);
                     }
@@ -183,7 +183,7 @@ void dn_DrawCharacterSelect(dn_gameData_t* gameData, int64_t elapsedUs)
         }
         //reset values
         xOff   = ((TFT_WIDTH - gameData->sprites.groundTile.w) >> 1) + gameData->xSelectScrollOffset;
-        pIdx   = gameData->selectMarkerIdx;
+        pIdx   = gameData->selectCharacterIdx;
 
         // 'Rewind' characters until they're off screen
         while (xOff > 0)
@@ -206,21 +206,21 @@ void dn_DrawCharacterSelect(dn_gameData_t* gameData, int64_t elapsedUs)
         {
             if(i == 2)//king is the middle piece
             {
-                drawWsgSimple(&gameData->characterAssets[pIdx].kingDown.sprite,
-                    xOff + (gameData->sprites.groundTile.w >> 1) * i + gameData->characterAssets[pIdx].kingDown.xOff, 
-                    yOff + (gameData->sprites.groundTile.h >> 1) * i + gameData->characterAssets[pIdx].kingDown.yOff);
-                drawWsgSimple(&gameData->characterAssets[pIdx].kingUp.sprite,
-                    xOff - (gameData->sprites.groundTile.w >> 1) * (4-i)  + gameData->characterAssets[pIdx].kingUp.xOff,
-                    yOff + (gameData->sprites.groundTile.h >> 1) * (4+i)  + gameData->characterAssets[pIdx].kingUp.yOff);
+                drawWsgSimple(&gameData->characterAssets[pIdx][DN_KING][DN_DOWN].sprite,
+                    xOff + (gameData->sprites.groundTile.w >> 1) * i + gameData->characterAssets[pIdx][DN_KING][DN_DOWN].xOff, 
+                    yOff + (gameData->sprites.groundTile.h >> 1) * i + gameData->characterAssets[pIdx][DN_KING][DN_DOWN].yOff);
+                drawWsgSimple(&gameData->characterAssets[pIdx][DN_KING][DN_UP].sprite,
+                    xOff - (gameData->sprites.groundTile.w >> 1) * (4-i)  + gameData->characterAssets[pIdx][DN_KING][DN_UP].xOff,
+                    yOff + (gameData->sprites.groundTile.h >> 1) * (4+i)  + gameData->characterAssets[pIdx][DN_KING][DN_UP].yOff);
             }
             else
             {
-                drawWsgSimple(&gameData->characterAssets[pIdx].pawnDown.sprite,
-                    xOff + (gameData->sprites.groundTile.w >> 1) * i + gameData->characterAssets[pIdx].pawnDown.xOff,
-                    yOff + (gameData->sprites.groundTile.h >> 1) * i + gameData->characterAssets[pIdx].pawnDown.yOff);
-                drawWsgSimple(&gameData->characterAssets[pIdx].pawnUp.sprite,
-                    xOff - (gameData->sprites.groundTile.w >> 1) * (4-i) + gameData->characterAssets[pIdx].pawnUp.xOff,
-                    yOff + (gameData->sprites.groundTile.h >> 1) * (4+i)  + gameData->characterAssets[pIdx].pawnUp.yOff);
+                drawWsgSimple(&gameData->characterAssets[pIdx][DN_PAWN][DN_DOWN].sprite,
+                    xOff + (gameData->sprites.groundTile.w >> 1) * i + gameData->characterAssets[pIdx][DN_PAWN][DN_DOWN].xOff,
+                    yOff + (gameData->sprites.groundTile.h >> 1) * i + gameData->characterAssets[pIdx][DN_PAWN][DN_DOWN].yOff);
+                drawWsgSimple(&gameData->characterAssets[pIdx][DN_PAWN][DN_UP].sprite,
+                    xOff - (gameData->sprites.groundTile.w >> 1) * (4-i) + gameData->characterAssets[pIdx][DN_PAWN][DN_UP].xOff,
+                    yOff + (gameData->sprites.groundTile.h >> 1) * (4+i)  + gameData->characterAssets[pIdx][DN_PAWN][DN_UP].yOff);
             }
         }
 

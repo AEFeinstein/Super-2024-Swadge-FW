@@ -99,29 +99,42 @@ void dn_UpdateGame(dn_gameData_t* gameData, uint32_t elapsedUs)
 void dn_DrawGame(dn_gameData_t* gameData)
 {
     dn_DrawTiles(gameData);
-    int drawX = (TFT_WIDTH >> 1) + (gameData->selection[0] - gameData->selection[1] - 1) * (gameData->sprites.groundTile.w >> 1);
-    int drawY = 155 + (gameData->selection[0] + gameData->selection[1]) * 13 - (gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset >> DECIMAL_BITS);
-    drawX += 10;
-    drawY -= 41;
-    switch (gameData->alphaFaceDir)
+
+    for(int8_t player = 0; player < 2; player++)
     {
-        case(0)://face down
-            drawWsgSimple(&gameData->characterAssets[DN_ALPHA].kingDown.sprite, drawX, drawY);
-            /* code */
-            break;
-        case(1)://face left
-            drawWsg(&gameData->characterAssets[DN_ALPHA].kingUp.sprite, drawX, drawY, true, false, 0);
-            break;
-        case(2)://face up
-            drawWsgSimple(&gameData->characterAssets[DN_ALPHA].kingUp.sprite, drawX, drawY);
-            /* code */
-            break;
-        case(3)://face right
-            drawWsg(&gameData->characterAssets[DN_ALPHA].kingDown.sprite, drawX, drawY, true, false, 0);
-            break;
-        default:
-            break;
+        for(int8_t unit = 0; unit < 5; unit++)
+        {
+            int drawX = (TFT_WIDTH >> 1) + (gameData->UnitPositions[player][unit].x - gameData->UnitPositions[player][unit].y - 1) * (gameData->sprites.groundTile.w >> 1);
+            int drawY = 155 + (gameData->UnitPositions[player][unit].x + gameData->UnitPositions[player][unit].y) * 13 - (gameData->tiles[gameData->UnitPositions[player][unit].y][gameData->UnitPositions[player][unit].x].yOffset >> DECIMAL_BITS);
+            drawX += gameData->characterAssets[gameData->characterIndices[player]][unit == 2][player].xOff;
+            drawY += gameData->characterAssets[gameData->characterIndices[player]][unit == 2][player].yOff;
+            drawWsgSimple(&gameData->characterAssets[gameData->characterIndices[player]][unit == 2][player].sprite, drawX, drawY);
+        }
     }
+
+    // int drawX = (TFT_WIDTH >> 1) + (gameData->selection[0] - gameData->selection[1] - 1) * (gameData->sprites.groundTile.w >> 1);
+    // int drawY = 155 + (gameData->selection[0] + gameData->selection[1]) * 13 - (gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset >> DECIMAL_BITS);
+    // drawX += 10;
+    // drawY -= 41;
+    // switch (gameData->alphaFaceDir)
+    // {
+    //     case(0)://face down
+    //         drawWsgSimple(&gameData->characterAssets[DN_ALPHA].kingDown.sprite, drawX, drawY);
+    //         /* code */
+    //         break;
+    //     case(1)://face left
+    //         drawWsg(&gameData->characterAssets[DN_ALPHA].kingUp.sprite, drawX, drawY, true, false, 0);
+    //         break;
+    //     case(2)://face up
+    //         drawWsgSimple(&gameData->characterAssets[DN_ALPHA].kingUp.sprite, drawX, drawY);
+    //         /* code */
+    //         break;
+    //     case(3)://face right
+    //         drawWsg(&gameData->characterAssets[DN_ALPHA].kingDown.sprite, drawX, drawY, true, false, 0);
+    //         break;
+    //     default:
+    //         break;
+    // }
 }
 
 void dn_DrawTiles(dn_gameData_t* gameData)

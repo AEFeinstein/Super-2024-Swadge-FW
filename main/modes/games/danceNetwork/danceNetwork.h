@@ -44,6 +44,18 @@ typedef enum __attribute__((packed))
     DN_CHESS
 } dn_Characters;
 
+typedef enum __attribute__((packed))
+{
+    DN_UP,
+    DN_DOWN
+} dn_facingDirs;
+
+typedef enum __attribute__((packed))
+{
+    DN_PAWN,
+    DN_KING
+} dn_unitRank;
+
 
 //==============================================================================
 // Structs
@@ -55,15 +67,6 @@ typedef struct
     int8_t xOff; //an offset from the top left of the tile graphic to the top left of this sprite.
     int8_t yOff;
 } dn_CharacterAsset_t;
-
-
-typedef struct
-{
-    dn_CharacterAsset_t kingUp;
-    dn_CharacterAsset_t kingDown;
-    dn_CharacterAsset_t pawnUp;
-    dn_CharacterAsset_t pawnDown;
-} dn_CharacterAssets_t;
 
 typedef struct{
     wsg_t groundTile;
@@ -79,6 +82,11 @@ typedef struct
     dn_CpuDifficulty_t difficulty;
     int64_t delayTime;
 } dn_CpuData_t;
+
+typedef struct{
+    int8_t x;
+    int8_t y;
+} dn_boardPos;
 
 typedef struct {
     p2pInfo p2p;
@@ -96,13 +104,13 @@ typedef struct {
     bool singleSystem;
     bool passAndPlay;
     // Assets
-    dn_CharacterAssets_t characterAssets[NUM_CHARACTERS];
+    dn_CharacterAsset_t characterAssets[NUM_CHARACTERS][2][2];//character idx, pawn/king, up/down
     uint8_t generalTimer;
     // For marker selection UI
     int32_t xSelectScrollTimer;
     int16_t xSelectScrollOffset;
-    int8_t selectMarkerIdx;
-    int32_t activeMarkerIdx;
+    int8_t selectCharacterIdx;
+    int8_t characterIndices[2];//character indices of p1 and p2. p1 is [0].
     dn_CpuData_t cpu;
     dn_Result_t lastResult;
     dn_sprites_t sprites;
@@ -110,6 +118,8 @@ typedef struct {
     uint8_t selection[2];//x and y indices of the selected tile
     uint8_t alphaFaceDir; //0 = down, 1 = left, 2 = up, 3 = right
     wsgPalette_t redFloor1;
+    bool isPlayer1;//True if the player on this device is P1. False if P2
+    dn_boardPos UnitPositions[2][5];//two players each with 5 units. Unit at [][2] is king.
 } dn_gameData_t;
 
 //==============================================================================
@@ -118,6 +128,7 @@ typedef struct {
 
 void dn_MsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 void dn_ShowUi(dn_Ui_t ui);
+void dn_InitializeGame();
 void dn_InitializeCharacterSelect();
 
 
