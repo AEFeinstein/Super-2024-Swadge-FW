@@ -1,4 +1,3 @@
-#include "danceNetwork.h"
 #include "dn_game.h"
 
 void dn_HandleGameInput(dn_gameData_t* gameData, buttonEvt_t* evt)
@@ -113,7 +112,7 @@ void dn_DrawGame(dn_gameData_t* gameData)
     }
 
 
-    drawShinyText(&gameData->font_rodin, c145, c345, c555, "Dance Network", (TFT_WIDTH >> 1) - (textWidth(&gameData->font_rodin,"Dance Network")>>1), 10);
+    drawShinyText(&gameData->font_rodin, c124, c245, c555, "Dance Network", (TFT_WIDTH >> 1) - (textWidth(&gameData->font_rodin,"Dance Network")>>1), 10);
 
     // int drawX = (TFT_WIDTH >> 1) + (gameData->selection[0] - gameData->selection[1] - 1) * (gameData->sprites.groundTile.w >> 1);
     // int drawY = 155 + (gameData->selection[0] + gameData->selection[1]) * 13 - (gameData->tiles[gameData->selection[1]][gameData->selection[0]].yOffset >> DECIMAL_BITS);

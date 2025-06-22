@@ -72,10 +72,7 @@ typedef struct{
     wsg_t groundTile;
 } dn_sprites_t;
 
-typedef struct{
-    uint16_t yOffset;
-    int16_t yVel;
-} dn_tileData_t;
+
 
 typedef struct
 {
@@ -114,7 +111,7 @@ typedef struct {
     dn_CpuData_t cpu;
     dn_Result_t lastResult;
     dn_sprites_t sprites;
-    dn_tileData_t tiles[BOARD_SIZE][BOARD_SIZE];
+    
     uint8_t selection[2];//x and y indices of the selected tile
     uint8_t alphaFaceDir; //0 = down, 1 = left, 2 = up, 3 = right
     wsgPalette_t redFloor1;

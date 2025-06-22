@@ -132,7 +132,7 @@ static void dn_EnterMode(void)
     loadWsgInplace(DN_GROUND_TILE_WSG, &gameData->sprites.groundTile, true, dn_decodeSpace, dn_hsd);
     
     // Load some fonts
-    loadFont(RODIN_EB_FONT, &gameData->font_rodin, false);
+    loadFont(IBM_VGA_8_FONT, &gameData->font_rodin, false);
     // loadFont("righteous_150.font", &gameData->font_righteous, false);
 
     // Initialize a menu renderer
@@ -272,7 +272,7 @@ static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 {
     // Fill the flat background color
     paletteColor_t* frameBuf = getPxTftFramebuffer();
-    memset(&frameBuf[(y * TFT_WIDTH) + x], c000, sizeof(paletteColor_t) * w * h);
+    memset(&frameBuf[(y * TFT_WIDTH) + x], c100, sizeof(paletteColor_t) * w * h);
 }
 
 /**
