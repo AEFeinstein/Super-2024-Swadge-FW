@@ -17,7 +17,7 @@
 
 #define ITEM_START 55
 
-#define ROW_MARGIN 4
+#define ROW_MARGIN 1
 
 //==============================================================================
 // Function Prototypes
@@ -194,27 +194,25 @@ static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t
     // Draw the left arrow, if applicable
     if (leftArrow)
     {
+        const wsg_t* arrow = &renderer->prev;
         if (doubleArrows)
         {
-            drawWsgSimple(&renderer->back, x, y);
+            arrow = &renderer->back;
         }
-        else
-        {
-            drawWsgSimple(&renderer->prev, x, y);
-        }
+        int16_t drawY = y + (renderer->item.h - arrow->h) / 2 + 1;
+        drawWsgSimple(arrow, x - 10, drawY);
     }
 
     // Draw the right arrow, if applicable
     if (rightArrow)
     {
+        const wsg_t* arrow = &renderer->next;
         if (doubleArrows)
         {
-            drawWsgSimple(&renderer->submenu, x + renderer->item.w - renderer->next.w, y);
+            arrow = &renderer->submenu;
         }
-        else
-        {
-            drawWsgSimple(&renderer->next, x + renderer->item.w - renderer->next.w, y);
-        }
+        int16_t drawY = y + (renderer->item.h - arrow->h) / 2 + 1;
+        drawWsgSimple(arrow, x + renderer->item.w - arrow->w - 15, drawY);
     }
 }
 
@@ -299,18 +297,11 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
 
     drawWsgSimple(&renderer->body, 0, 0);
 
-    // if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > 500000)
-    // {
-    //     // Draw UP page indicator
-    //     y -= (UP_ARROW_HEIGHT);
-    //     for (int t = 0; t < UP_ARROW_HEIGHT - UP_ARROW_MARGIN; t++)
-    //     {
-    //         drawLineFast(PARALLELOGRAM_X_OFFSET + PARALLELOGRAM_HEIGHT - t + (UP_ARROW_HEIGHT * 2 - 1) / 2, y + t,
-    //                      PARALLELOGRAM_X_OFFSET + PARALLELOGRAM_HEIGHT + t + (UP_ARROW_HEIGHT * 2 - 1) / 2, y + t,
-    //                      renderer->rowColor);
-    //     }
-    //     y += (UP_ARROW_HEIGHT);
-    // }
+    if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > 500000)
+    {
+        // Draw UP page indicator
+        drawWsgSimple(&renderer->up, 222, 38);
+    }
 
     // Draw a page-worth of items
     for (uint8_t itemIdx = 0; itemIdx < ITEMS_PER_PAGE; itemIdx++)
@@ -350,7 +341,7 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
             bool rightArrow   = menuItemHasNext(item) || menuItemHasSubMenu(item);
             bool doubleArrows = menuItemIsBack(item) || menuItemHasSubMenu(item);
 
-            drawMenuText(renderer, label, 25, y, isSelected, leftArrow, rightArrow, doubleArrows);
+            drawMenuText(renderer, label, 22, y, isSelected, leftArrow, rightArrow, doubleArrows);
 
             // Move to the next item
             pageStart = pageStart->next;
@@ -360,17 +351,11 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
         y += renderer->item.h + ROW_MARGIN;
     }
 
-    // if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > 500000)
-    // {
-    //     y += UP_ARROW_MARGIN;
-    //     // Draw DOWN page indicator
-    //     for (int16_t t = UP_ARROW_HEIGHT - UP_ARROW_MARGIN; t >= 0; t--)
-    //     {
-    //         drawLineFast(PARALLELOGRAM_X_OFFSET + PARALLELOGRAM_WIDTH - t - (UP_ARROW_HEIGHT * 2) / 2, y - t,
-    //                      PARALLELOGRAM_X_OFFSET + PARALLELOGRAM_WIDTH + t - (UP_ARROW_HEIGHT * 2) / 2, y - t,
-    //                      renderer->rowColor);
-    //     }
-    // }
+    if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > 500000)
+    {
+        // Draw DOWN page indicator
+        drawWsgSimple(&renderer->down, 222, 221);
+    }
 
     // Only draw the battery if requested
     if (menu->showBattery)
