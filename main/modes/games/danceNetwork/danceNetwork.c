@@ -7,6 +7,9 @@
 #include "dn_p2p.h"
 #include "mainMenu.h"
 #include "dn_random.h"
+#include "dn_entity.h"
+#include "dn_entityManager.h"
+#include "dn_utility.h"
 
 const char danceNetworkName[] = "Alpha Pulse: Dance Network";
 
@@ -90,16 +93,8 @@ uint8_t* dn_decodeSpace;
 static void dn_EnterMode(void)
 {
     gameData = (dn_gameData_t*)heap_caps_calloc(1, sizeof(dn_gameData_t), MALLOC_CAP_8BIT);
-    for (int y = 0; y < BOARD_SIZE; y++)
-    {
-        for (int x = 0; x < BOARD_SIZE; x++)
-        {
-            gameData->tiles[y][x].yOffset = ((TFT_HEIGHT >> 2)-15) << DECIMAL_BITS;
-        }
-    }
-    gameData->selection[0] = 2;
-    gameData->selection[1] = 2;
-    gameData->tiles[gameData->selection[0]][gameData->selection[1]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
+
+    dn_initializeEntityManager(&gameData->entityManager, gameData);
 
     gameData->characterAssets[DN_ALPHA][DN_KING][DN_DOWN].xOff = 10;
     gameData->characterAssets[DN_ALPHA][DN_KING][DN_DOWN].yOff = -40;
@@ -492,14 +487,88 @@ void dn_InitializeGame()
     //will change later to specifically load sprites for this match.
     dn_InitializeCharacterSelect();
 
-    for(int8_t player = 0; player < 2; player++)
+    //Load assets
+    //FINISH ME!!!
+
+    //////////////////
+    //Make the board//
+    //////////////////
+    dn_entity_t* board = dn_createEntitySimple(&gameData->entityManager, DN_GROUND_TILE_WSG, 1, (vec_t){0xFFFF, 0xFFFF});
+    dn_boardData_t* boardData = (dn_boardData_t*)board->data;
+
+    //////////////////
+    //Make the units//
+    //////////////////
+    //p1 king setup
+    dn_boardPos_t boardPos = {2, 4};
+    dn_assetIdx_t assetIdx;
+    switch(gameData->characterIndices[0])
     {
-        for(int8_t unit = 0; unit < 5; unit++)
-        {
-            gameData->UnitPositions[player][unit].x = unit;
-            gameData->UnitPositions[player][unit].y = !player * 4;
-        }
+        case DN_ALPHA_SET:
+            assetIdx = DN_ALPHA_UP_ASSET;
+            break;
+        case DN_CHESS_SET:
+            assetIdx = DN_KING_ASSET;
+            break;
     }
+    //p1 king
+    boardData->p1Units[0] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    //p1 pawns setup
+    switch(gameData->characterIndices[0])
+    {
+        case DN_ALPHA:
+            assetIdx = DN_BUCKET_HAT_UP_ASSET;
+            break;
+        case DN_CHESS:
+            assetIdx = DN_PAWN_ASSET;
+            break;
+    }
+    //p1 pawns
+    boardPos = (dn_boardPos_t){0, 4};
+    boardData->p1Units[1] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    boardPos = (dn_boardPos_t){1, 4};
+    boardData->p1Units[2] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    boardPos = (dn_boardPos_t){3, 4};
+    boardData->p1Units[3] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    boardPos = (dn_boardPos_t){4, 4};
+    boardData->p1Units[4] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+
+    //p2 king setup
+    boardPos = (dn_boardPos_t){2, 0};
+    switch(gameData->characterIndices[1])
+    {
+        case DN_ALPHA_SET:
+            assetIdx = DN_ALPHA_DOWN_ASSET;
+            break;
+        case DN_CHESS_SET:
+            assetIdx = DN_KING_ASSET;
+            break;
+    }
+    //p2 king
+    boardData->p2Units[0] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    //p2 pawns setup
+    switch(gameData->characterIndices[1])
+    {
+        case DN_ALPHA_SET:
+            assetIdx = DN_BUCKET_HAT_DOWN_ASSET;
+            break;
+        case DN_CHESS_SET:
+            assetIdx = DN_PAWN_ASSET;
+            break;
+    }
+    //p2 pawns
+    boardPos = (dn_boardPos_t){0, 0};
+    boardData->p2Units[1] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    boardPos = (dn_boardPos_t){1, 0};
+    boardData->p2Units[2] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    boardPos = (dn_boardPos_t){3, 0};
+    boardData->p2Units[3] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    boardPos = (dn_boardPos_t){4, 0};
+    boardData->p2Units[4] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+
+    gameData->selection[0] = 2;
+    gameData->selection[1] = 2;
+    boardData->tiles[gameData->selection[0]][gameData->selection[1]].yOffset = (TFT_HEIGHT >> 2) << DECIMAL_BITS;
 
     //player vs CPU
     if(gameData->singleSystem && !gameData->passAndPlay)

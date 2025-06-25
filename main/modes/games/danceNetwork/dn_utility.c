@@ -1,22 +1,15 @@
-#pragma once
-
 //==============================================================================
 // Includes
 //==============================================================================
-
-#include <stdint.h>
-#include <stdbool.h>
-#include "wsg.h"
+#include "dn_utility.h"
 
 //==============================================================================
-// Structs
+// Functions
 //==============================================================================
-typedef struct
+vec_t dn_boardToWorldPos(dn_boardPos_t boardPos)
 {
-    int16_t originX;
-    int16_t originY;
-    uint8_t numFrames;
-    uint8_t brightnessLevels;
-    wsg_t* frames; // Can hold 1 or more pointers to wsg's
-    bool allocated;
-} dn_sprite_t;
+    vec_t worldPos;
+    worldPos.x = 0xFFFF + ((((boardPos.x - boardPos.y - 1) * (DN_TILE_WIDTH >> 1))<<DN_DECIMAL_BITS));
+    worldPos.y = 0xFFFF + ((((boardPos.x + boardPos.y) * DN_TILE_HEIGHT))<<DN_DECIMAL_BITS);
+    return worldPos;
+}

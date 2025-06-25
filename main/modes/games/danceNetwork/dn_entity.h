@@ -5,7 +5,6 @@
 
 #include "danceNetwork.h"
 #include "dn_entityManager.h"
-#include "dn_sprite.h"
 #include "dn_typedef.h"
 
 //==============================================================================
@@ -30,13 +29,17 @@ typedef void (*dn_drawFunction_t)(dn_entityManager_t* entityManager, rectangle_t
 //==============================================================================
 struct dn_entity_t
 {
-    bool active;                              // If true, the entity updates and draws
     void* data;
     dn_dataType_t dataType;
     dn_updateFunction_t updateFunction;       // Only set for entities that need update logic
     dn_updateFarFunction_t updateFarFunction; // Only set for execution when the entity is far from the camera center
     dn_drawFunction_t drawFunction;           // Only set for entities such as Garbotnik that need custom drawing logic
     vec_t pos;
+    dn_animationType_t type;
+    bool paused;
+    dn_spriteDef_t spriteIndex;
+    uint8_t gameFramesPerAnimationFrame;
+    dn_gameData_t* gameData;
 };
 
 typedef struct{
@@ -46,5 +49,17 @@ typedef struct{
 
 typedef struct
 {
-    dn_tileData_t tiles[BOARD_SIZE][BOARD_SIZE];
+    dn_tileData_t tiles[DN_BOARD_SIZE][DN_BOARD_SIZE];
+    dn_entity_t* p1Units[5];//Pointers to player 1's units. The first unit is king, the other 4 are pawns. NULL pointers for captured units.
+    dn_entity_t* p2Units[5];//Pointers to player 2's units. The first unit is king, the other 4 are pawns. NULL pointers for captured units.
+    dn_boardPos_t impactPos;//x and y indices of an impact effect.
 } dn_boardData_t;
+
+//==============================================================================
+// Prototypes
+//==============================================================================
+void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType);
+
+void dn_updateBoard(dn_entity_t* self);
+
+void dn_drawBoard(dn_entity_t* self);

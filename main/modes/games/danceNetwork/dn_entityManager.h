@@ -5,33 +5,38 @@
 //==============================================================================
 
 #include "danceNetwork.h"
+#include "dn_typedef.h"
+#include "dn_asset.h"
 
 //==============================================================================
 // Constants
 //==============================================================================
-#define NUM_SPRITES        0 // The number of dn_sprite_t
+#define NUM_ASSETS        1 // The number of dn_asset_t (last accounted for DN_GROUND_TILE_ASSET)
+#define NUM_PALETTES      1 // The number of wsgPalette_t (last accounted for DN_WHITE_CHESS_PALETTE)
 
 //==============================================================================
 // Structs
 //==============================================================================
 
-typedef struct
+typedef struct dn_entityManager_t
 {
+    dn_asset_t assets[NUM_ASSETS];//holds loaded single frame sprites or entire animations of wsgs.
+    wsgPalette_t palettes[NUM_PALETTES];//holds the palettes for swapping
     list_t* entities;
-
-    dn_entity_t* p1Team;
-    dn_entity_t* p2Team;
 } dn_entityManager_t;
 
 //==============================================================================
 // Prototypes
 //==============================================================================
 void dn_initializeEntityManager(dn_entityManager_t* entityManager, dn_gameData_t* gameData);
+dn_sprite_t* dn_loadSprite(cnfsFileIdx_t spriteCnfsIdx, uint8_t num_frames, dn_sprite_t* sprite);
+void dn_freeSprite(dn_sprite_t* sprite);
 void dn_updateEntities(dn_entityManager_t* entityManager);
 void dn_drawEntity(dn_entity_t* entity, dn_entityManager_t* entityManager, rectangle_t* camera);
 void dn_drawEntities(dn_entityManager_t* entityManager, rectangle_t* camera);
 void dn_freeData(dn_entity_t* entity);
 void dn_destroyAllEntities(dn_entityManager_t* entityManager);
-dn_entity_t* dn_createEntity(dn_entityManager_t* entityManager, dn_animationType_t type, bool paused,
-                             dn_spriteDef_t spriteIndex, uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y);
+dn_entity_t* dn_createEntitySpecial(dn_entityManager_t* entityManager, cnfsFileIdx_t spriteCnfsIdx, uint8_t numFrames, dn_animationType_t type, bool paused,
+                             dn_AssetIdx_t AssetIndex, uint8_t gameFramesPerAnimationFrame, vec_t pos);
+dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_AssetIdx_t AssetIndex, vec_t pos)
 void dn_freeEntityManager(dn_entityManager_t* entityManager);
