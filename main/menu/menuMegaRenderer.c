@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include "hdw-battmon.h"
+#include "hdw-tft.h"
 #include "menu_utils.h"
 #include "menuMegaRenderer.h"
 
@@ -285,7 +286,9 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
     }
 
     // Clear the background
-    drawWsgTile(&renderer->bg, 0, 0);
+    paletteColor_t* fb = getPxTftFramebuffer();
+    memset(fb, c001, sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
+    drawWsgSimple(&renderer->bg, 0, 0);
 
     // Find the start of the 'page'
     node_t* pageStart = menu->items->first;
