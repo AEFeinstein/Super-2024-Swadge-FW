@@ -100,5 +100,6 @@ bool drawTextEllipsize(const font_t* font, paletteColor_t color, const char* tex
 
 int16_t drawTextMulticolored(const font_t* font, const char* text, int16_t xOff, int16_t yOff,
                              const paletteColor_t* colors, uint32_t colorCount, uint32_t segmentCount);
+void setGlobalCharSpacing(int32_t spacing);
 
 #endif

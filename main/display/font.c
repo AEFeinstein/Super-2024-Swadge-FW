@@ -34,6 +34,12 @@ static void drawCharBoundsPrivate(paletteColor_t color, paletteColor_t middleCol
                                   int16_t xMax, int16_t yMax);
 
 //==============================================================================
+// Variables
+//==============================================================================
+
+int32_t gCharSpacing = 1;
+
+//==============================================================================
 // Functions
 //==============================================================================
 
@@ -163,7 +169,7 @@ int16_t drawShinyTextBounds(const font_t* font, paletteColor_t outerColor, palet
         }
 
         // Move to the next char
-        xOff += (font->chars[(*text) - ' '].width + 1);
+        xOff += (font->chars[(*text) - ' '].width + gCharSpacing);
         text++;
 
         // If this char is offscreen, finish drawing
@@ -223,7 +229,7 @@ uint16_t textWidth(const font_t* font, const char* text)
     {
         if ((*text) >= ' ')
         {
-            width += (font->chars[(*text) - ' '].width + 1);
+            width += (font->chars[(*text) - ' '].width + gCharSpacing);
         }
         text++;
     }
@@ -264,7 +270,7 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
         if (*textPtr == '\n')
         {
             textX = xStart;
-            textY += font->height + 1;
+            textY += font->height + gCharSpacing;
             textPtr++;
             continue;
         }
@@ -324,9 +330,9 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
         }
         else
         {
-            // drawText returns the next text position, which is 1px past the last char
-            // textWidth returns, well, the text width, so add 1 to account for the last pixel
-            textX = textWidth(font, buf) + 1;
+            // drawText returns the next text position, which is gCharSpacing px past the last char
+            // textWidth returns, well, the text width, so add gCharSpacing to account for the last pixel
+            textX = textWidth(font, buf) + gCharSpacing;
         }
 
         // Reset for the next line
@@ -337,7 +343,7 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
         {
             // Reset these
             textX = xStart;
-            textY += font->height + 1;
+            textY += font->height + gCharSpacing;
         }
     }
 
@@ -553,7 +559,7 @@ uint16_t textWordWrapHeight(const font_t* font, const char* text, int16_t width,
     int16_t xEnd = 0;
     int16_t yEnd = 0;
     drawTextWordWrapFlags(font, cTransparent, text, 0, 0, &xEnd, &yEnd, width, maxHeight, TEXT_MEASURE);
-    return yEnd + font->height + 1;
+    return yEnd + font->height + gCharSpacing;
 }
 
 /**
@@ -733,12 +739,12 @@ bool drawTextEllipsize(const font_t* font, paletteColor_t color, const char* tex
             const char* cur = text + strlen(text) - 1;
             while (cur >= text && trimW + ellipsisW > maxW)
             {
-                trimW -= font->chars[*(cur--) - ' '].width + 1;
+                trimW -= font->chars[*(cur--) - ' '].width + gCharSpacing;
             }
         }
 
         drawTextBounds(font, color, text, xOff, yOff, 0, 0, xOff + trimW, TFT_HEIGHT);
-        drawText(font, color, "...", xOff + trimW + 1, yOff);
+        drawText(font, color, "...", xOff + trimW + gCharSpacing, yOff);
 
         return true;
     }
@@ -775,4 +781,14 @@ int16_t drawTextMulticolored(const font_t* font, const char* text, int16_t xOff,
     }
 
     return result;
+}
+
+/**
+ * @brief Adjust the spacing between characters when drawing words
+ *
+ * @param spacing The spacing to be used for all text drawing, in pixels
+ */
+void setGlobalCharSpacing(int32_t spacing)
+{
+    gCharSpacing = spacing;
 }
