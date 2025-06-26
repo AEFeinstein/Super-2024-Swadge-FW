@@ -13,11 +13,16 @@
 
 #define ITEMS_PER_PAGE 5
 
-#define Y_SECTION_MARGIN 16
+#define Y_SECTION_MARGIN 15
 
 #define ITEM_START 55
 
 #define ROW_MARGIN 1
+
+#define TEXT_R_MARGIN 25
+
+#define MAX_ITEM_TEXT_WIDTH 191
+#define ITEM_TEXT_OFFSET    30
 
 //==============================================================================
 // Function Prototypes
@@ -61,7 +66,7 @@ menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOut
     if (NULL == titleFont)
     {
         renderer->titleFont = heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_SPIRAM);
-        loadFont(RIGHTEOUS_150_FONT, renderer->titleFont, true);
+        loadFont(OXANIUM_FONT, renderer->titleFont, true);
         renderer->titleFontAllocated = true;
     }
     else
@@ -87,7 +92,7 @@ menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOut
     if (NULL == menuFont)
     {
         renderer->menuFont = heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_SPIRAM);
-        loadFont(RODIN_EB_FONT, renderer->menuFont, true);
+        loadFont(PULSE_AUX_FONT, renderer->menuFont, true);
         renderer->menuFontAllocated = true;
     }
     else
@@ -180,39 +185,53 @@ static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t
         drawWsgSimple(&renderer->item, x, y);
     }
 
+    int16_t textX = x + 13;
+    int16_t textY = y + (renderer->item.h - renderer->menuFont->height) / 2;
+
     // Draw the text
-    if (isSelected && textWidth(renderer->menuFont, text) > renderer->item_sel.w)
+    if (isSelected && textWidth(renderer->menuFont, text) > MAX_ITEM_TEXT_WIDTH)
     {
-        drawTextMarquee(renderer->menuFont, c555, text, x, y, x + renderer->item_sel.w,
+        // Drop shadow
+        drawTextMarquee(renderer->menuFont, c000, text, textX + 1, textY + 1, MAX_ITEM_TEXT_WIDTH + ITEM_TEXT_OFFSET,
+                        &renderer->selectedMarqueeTimer);
+        // Text
+        drawTextMarquee(renderer->menuFont, c555, text, textX, textY, MAX_ITEM_TEXT_WIDTH + ITEM_TEXT_OFFSET,
                         &renderer->selectedMarqueeTimer);
     }
     else
     {
-        drawTextEllipsize(renderer->menuFont, c555, text, x, y, renderer->item.w, false);
+        // Drop shadow
+        drawTextEllipsize(renderer->menuFont, c000, text, textX + 1, textY + 1, MAX_ITEM_TEXT_WIDTH, false);
+        // Text
+        drawTextEllipsize(renderer->menuFont, c555, text, textX, textY, MAX_ITEM_TEXT_WIDTH, false);
     }
 
     // Draw the left arrow, if applicable
     if (leftArrow)
     {
         const wsg_t* arrow = &renderer->prev;
+        int16_t drawX      = x + 1;
         if (doubleArrows)
         {
             arrow = &renderer->back;
+            drawX = x - 10;
         }
         int16_t drawY = y + (renderer->item.h - arrow->h) / 2 + 1;
-        drawWsgSimple(arrow, x - 10, drawY);
+        drawWsgSimple(arrow, drawX, drawY);
     }
 
     // Draw the right arrow, if applicable
     if (rightArrow)
     {
         const wsg_t* arrow = &renderer->next;
+        int16_t drawX      = x + renderer->item.w - arrow->w - 18;
         if (doubleArrows)
         {
             arrow = &renderer->submenu;
+            drawX = x + renderer->item.w - arrow->w - 14;
         }
         int16_t drawY = y + (renderer->item.h - arrow->h) / 2 + 1;
-        drawWsgSimple(arrow, x + renderer->item.w - arrow->w - 15, drawY);
+        drawWsgSimple(arrow, drawX, drawY);
     }
 }
 
@@ -225,6 +244,8 @@ static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t
  */
 void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
 {
+    setGlobalCharSpacing(2);
+
     // Only poll the battery if requested
     if (menu->showBattery)
     {
@@ -253,7 +274,15 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
         setLeds(renderer->leds, CONFIG_NUM_LEDS);
     }
 
-    renderer->selectedMarqueeTimer += elapsedUs;
+    if (menu->currentItem != renderer->currentItem)
+    {
+        renderer->currentItem          = menu->currentItem;
+        renderer->selectedMarqueeTimer = 0;
+    }
+    else
+    {
+        renderer->selectedMarqueeTimer += elapsedUs;
+    }
 
     // Clear the background
     drawWsgTile(&renderer->bg, 0, 0);
@@ -382,6 +411,7 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
 
         drawWsg(toDraw, 224, 11, false, false, 0);
     }
+    setGlobalCharSpacing(1);
 }
 
 /**

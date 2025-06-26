@@ -37,17 +37,17 @@
  */
 typedef struct
 {
-    wsg_t back;
-    wsg_t bg;
-    wsg_t body;
-    wsg_t down;
-    wsg_t item;
-    wsg_t item_sel;
-    wsg_t next;
-    wsg_t prev;
-    wsg_t submenu;
-    wsg_t up;
-    wsg_t batt[4]; ///< Images for the battery levels
+    wsg_t back;     ///< TODO doc
+    wsg_t bg;       ///< TODO doc
+    wsg_t body;     ///< TODO doc
+    wsg_t down;     ///< TODO doc
+    wsg_t item;     ///< TODO doc
+    wsg_t item_sel; ///< TODO doc
+    wsg_t next;     ///< TODO doc
+    wsg_t prev;     ///< TODO doc
+    wsg_t submenu;  ///< TODO doc
+    wsg_t up;       ///< TODO doc
+    wsg_t batt[4];  ///< Images for the battery levels
 
     font_t* titleFont;              ///< The font to render the title with
     font_t* titleFontOutline;       ///< The font to render the title outline with
@@ -63,8 +63,9 @@ typedef struct
     int32_t pageArrowTimer;       ///< The timer for blinking page up/down arrows
 
     led_t leds[CONFIG_NUM_LEDS]; ///< An array with the RGB LED state to be output
-    bool ledsOn;
+    bool ledsOn;                 ///< TODO doc
 
+    node_t* currentItem; ///< TODO doc
 } menuMegaRenderer_t;
 
 menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);
