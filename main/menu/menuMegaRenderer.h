@@ -62,6 +62,9 @@ typedef struct
     int32_t selectedMarqueeTimer; ///< The timer for marquee-ing the selected item text, if too long to fit
     int32_t pageArrowTimer;       ///< The timer for blinking page up/down arrows
 
+    int32_t bgColorTimer; ///< TODO doc
+    int32_t bgColorIdx;   ///< TODO doc
+
     led_t leds[CONFIG_NUM_LEDS]; ///< An array with the RGB LED state to be output
     bool ledsOn;                 ///< TODO doc
 
