@@ -5,6 +5,7 @@
 #include <string.h>
 #include "hdw-battmon.h"
 #include "hdw-tft.h"
+#include "macros.h"
 #include "menu_utils.h"
 #include "menuMegaRenderer.h"
 
@@ -12,18 +13,19 @@
 // Defines
 //==============================================================================
 
-#define ITEMS_PER_PAGE 5
+#define ITEMS_PER_PAGE      5   // The number of items show per menu page
+#define ITEM_MARGIN         1   // Vertical spacing between items
+#define Y_SECTION_MARGIN    15  // Where to start drawing the header
+#define Y_ITEM_START        55  // Where to start drawing items
+#define MAX_ITEM_TEXT_WIDTH 191 // Maximum width of item text
 
-#define Y_SECTION_MARGIN 15
+#define ARROW_PERIOD_US 1000000
 
-#define ITEM_START 55
+//==============================================================================
+// Variables
+//==============================================================================
 
-#define ROW_MARGIN 1
-
-#define TEXT_R_MARGIN 25
-
-#define MAX_ITEM_TEXT_WIDTH 191
-#define ITEM_TEXT_OFFSET    30
+static const paletteColor_t bgColors[] = {c000, c001, c002, c003, c004, c005, c004, c003, c002, c001};
 
 //==============================================================================
 // Function Prototypes
@@ -193,10 +195,10 @@ static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t
     if (isSelected && textWidth(renderer->menuFont, text) > MAX_ITEM_TEXT_WIDTH)
     {
         // Drop shadow
-        drawTextMarquee(renderer->menuFont, c000, text, textX + 1, textY + 1, MAX_ITEM_TEXT_WIDTH + ITEM_TEXT_OFFSET,
+        drawTextMarquee(renderer->menuFont, c000, text, textX + 1, textY + 1, textX + MAX_ITEM_TEXT_WIDTH - 5,
                         &renderer->selectedMarqueeTimer);
         // Text
-        drawTextMarquee(renderer->menuFont, c555, text, textX, textY, MAX_ITEM_TEXT_WIDTH + ITEM_TEXT_OFFSET,
+        drawTextMarquee(renderer->menuFont, c555, text, textX, textY, textX + MAX_ITEM_TEXT_WIDTH - 5,
                         &renderer->selectedMarqueeTimer);
     }
     else
@@ -245,38 +247,34 @@ static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t
  */
 void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
 {
-    setGlobalCharSpacing(2);
-
-    // Only poll the battery if requested
-    if (menu->showBattery)
-    {
-        // Read battery every 10s
-        menu->batteryReadTimer -= elapsedUs;
-        if (0 >= menu->batteryReadTimer)
-        {
-            menu->batteryReadTimer += 10000000;
-            menu->batteryLevel = readBattmon();
-        }
-    }
-
-    // Run a timer to blink up and down page arrows
-    if (renderer->pageArrowTimer <= 0)
-    {
-        renderer->pageArrowTimer += 1000000;
-    }
-    else
-    {
-        renderer->pageArrowTimer -= elapsedUs;
-    }
-
+    // Set LEDs
     if (renderer->ledsOn)
     {
         // Set LEDs
         setLeds(renderer->leds, CONFIG_NUM_LEDS);
     }
 
+    // Set text spacing to two pixels
+    setGlobalCharSpacing(2);
+
+    // Only poll the battery if requested
+    if (menu->showBattery)
+    {
+        // Read battery every 10s
+        RUN_TIMER_EVERY(menu->batteryReadTimer, 10000000, elapsedUs, { menu->batteryLevel = readBattmon(); });
+    }
+
+    // Run a timer to blink up and down page arrows
+    RUN_TIMER_EVERY(renderer->pageArrowTimer, ARROW_PERIOD_US, elapsedUs, {});
+
+    // Run a timer to adjust background color
+    RUN_TIMER_EVERY(renderer->bgColorTimer, 100000, elapsedUs,
+                    { renderer->bgColorIdx = (renderer->bgColorIdx + 1) % ARRAY_SIZE(bgColors); });
+
+    // Run a timer to scroll text
     if (menu->currentItem != renderer->currentItem)
     {
+        // Reset the timer when the item changes
         renderer->currentItem          = menu->currentItem;
         renderer->selectedMarqueeTimer = 0;
     }
@@ -287,7 +285,7 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
 
     // Clear the background
     paletteColor_t* fb = getPxTftFramebuffer();
-    memset(fb, c001, sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
+    memset(fb, bgColors[renderer->bgColorIdx], sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
     drawWsgSimple(&renderer->bg, 0, 0);
 
     // Find the start of the 'page'
@@ -324,12 +322,11 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
     drawText(renderer->titleFontOutline, c000, menu->title, 20, y);
 
     // Move to drawing the rows
-    // y += renderer->titleFont->height + Y_SECTION_MARGIN;
-    y = ITEM_START;
+    y = Y_ITEM_START;
 
     drawWsgSimple(&renderer->body, 0, 0);
 
-    if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > 500000)
+    if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > ARROW_PERIOD_US / 2)
     {
         // Draw UP page indicator
         drawWsgSimple(&renderer->up, 222, 38);
@@ -380,10 +377,10 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
         }
 
         // Move to the next row
-        y += renderer->item.h + ROW_MARGIN;
+        y += renderer->item.h + ITEM_MARGIN;
     }
 
-    if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > 500000)
+    if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > ARROW_PERIOD_US / 2)
     {
         // Draw DOWN page indicator
         drawWsgSimple(&renderer->down, 222, 221);
