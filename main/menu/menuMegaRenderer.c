@@ -6,6 +6,7 @@
 #include "hdw-battmon.h"
 #include "hdw-tft.h"
 #include "macros.h"
+#include "trigonometry.h"
 #include "menu_utils.h"
 #include "menuMegaRenderer.h"
 
@@ -15,7 +16,7 @@
 
 #define ITEMS_PER_PAGE      5   // The number of items show per menu page
 #define ITEM_MARGIN         1   // Vertical spacing between items
-#define Y_SECTION_MARGIN    15  // Where to start drawing the header
+#define Y_SECTION_MARGIN    13  // Where to start drawing the header
 #define Y_ITEM_START        55  // Where to start drawing items
 #define MAX_ITEM_TEXT_WIDTH 191 // Maximum width of item text
 
@@ -25,7 +26,9 @@
 // Variables
 //==============================================================================
 
-static const paletteColor_t bgColors[] = {c000, c001, c002, c003, c004, c005, c004, c003, c002, c001};
+static const paletteColor_t bgColors[] = {
+    c500, c410, c320, c230, c140, c050, c041, c032, c023, c014, c005,
+};
 
 //==============================================================================
 // Function Prototypes
@@ -268,8 +271,15 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
     RUN_TIMER_EVERY(renderer->pageArrowTimer, ARROW_PERIOD_US, elapsedUs, {});
 
     // Run a timer to adjust background color
-    RUN_TIMER_EVERY(renderer->bgColorTimer, 100000, elapsedUs,
-                    { renderer->bgColorIdx = (renderer->bgColorIdx + 1) % ARRAY_SIZE(bgColors); });
+    // A cycle completes in 180 degrees, or three seconds
+    RUN_TIMER_EVERY(renderer->bgColorTimer, 3000000 / 180, elapsedUs, {
+        renderer->bgColorDeg++;
+        if (180 == renderer->bgColorDeg)
+        {
+            renderer->bgColorDeg = 0;
+        }
+        renderer->bgColorIdx = ((getSin1024(renderer->bgColorDeg) * (ARRAY_SIZE(bgColors) - 1)) + 512) / 1024;
+    });
 
     // Run a timer to scroll text
     if (menu->currentItem != renderer->currentItem)

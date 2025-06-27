@@ -63,6 +63,7 @@ typedef struct
     int32_t pageArrowTimer;       ///< The timer for blinking page up/down arrows
 
     int32_t bgColorTimer; ///< TODO doc
+    int32_t bgColorDeg;   ///< TODO doc
     int32_t bgColorIdx;   ///< TODO doc
 
     led_t leds[CONFIG_NUM_LEDS]; ///< An array with the RGB LED state to be output
