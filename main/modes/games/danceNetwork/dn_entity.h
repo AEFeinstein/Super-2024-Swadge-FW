@@ -22,7 +22,7 @@ typedef enum
 //==============================================================================
 typedef void (*dn_updateFunction_t)(dn_entity_t* self);
 typedef void (*dn_updateFarFunction_t)(dn_entity_t* self);
-typedef void (*dn_drawFunction_t)(dn_entityManager_t* entityManager, rectangle_t* camera, dn_entity_t* self);
+typedef void (*dn_drawFunction_t)(dn_entity_t* self);
 
 //==============================================================================
 // Structs
@@ -37,7 +37,7 @@ struct dn_entity_t
     vec_t pos;
     dn_animationType_t type;
     bool paused;
-    dn_spriteDef_t spriteIndex;
+    dn_assetIdx_t assetIndex;
     uint8_t gameFramesPerAnimationFrame;
     dn_gameData_t* gameData;
 };

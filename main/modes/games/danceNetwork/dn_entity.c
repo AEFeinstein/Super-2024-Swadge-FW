@@ -21,7 +21,7 @@ void dn_updateBoard(dn_entity_t* self)
         for (int x = 0; x < DN_BOARD_SIZE; x++)
         {
             // Get the current tile
-            dn_tileData_t* tileData = (dn_tileData_t*)boardData->tiles[y][x];
+            dn_tileData_t* tileData = &boardData->tiles[y][x];
             int8_t dampen = 3;
             if(x == boardData->impactPos.x && y == boardData->impactPos.y)
             {
@@ -56,7 +56,7 @@ void dn_updateBoard(dn_entity_t* self)
             tileData->yVel /= dampen;
 
             // Update position with smaller time step
-            uint16_t newYOffset = tileData->yOffset + tileData->yVel * (elapsedUs >> 14);
+            uint16_t newYOffset = tileData->yOffset + tileData->yVel * (self->gameData->elapsedUs >> 14);
             // If the the yOffset would wrap around
             if(((tileData->yOffset & 0x8000) && !(newYOffset & 0x8000) && tileData->yVel > 0) ||
                 (!(tileData->yOffset & 0x8000) && (newYOffset & 0x8000) && tileData->yVel < 0))
@@ -75,14 +75,15 @@ void dn_updateBoard(dn_entity_t* self)
 
 void dn_drawBoard(dn_entity_t* self)
 {
+    dn_boardData_t* boardData = (dn_boardData_t*)self->data;
     // Draw the tiles
     for (int y = 0; y < DN_BOARD_SIZE; y++)
     {
         for (int x = 0; x < DN_BOARD_SIZE; x++)
         {
-            int drawX = (TFT_WIDTH >> 1) + (x - y - 1) * (gameData->sprites.groundTile.w >> 1);
-            int drawY = 155 + (x + y) * 13 - (gameData->tiles[y][x].yOffset >> DECIMAL_BITS);
-            drawWsgSimple(&gameData->sprites.groundTile, drawX, drawY);
+            int drawX = (TFT_WIDTH >> 1) + (x - y - 1) * (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1);
+            int drawY = 155 + (x + y) * 13 - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
+            drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0], drawX, drawY);
         }
     }
 }

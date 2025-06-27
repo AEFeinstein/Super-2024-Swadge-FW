@@ -39,24 +39,6 @@ typedef enum __attribute__((packed))
     TDIFF_HARD,
 } dn_CpuDifficulty_t;
 
-typedef enum __attribute__((packed))
-{
-    DN_ALPHA,
-    DN_CHESS
-} dn_Characters;
-
-typedef enum __attribute__((packed))
-{
-    DN_UP,
-    DN_DOWN
-} dn_facingDirs;
-
-typedef enum __attribute__((packed))
-{
-    DN_PAWN,
-    DN_KING
-} dn_unitRank;
-
 
 //==============================================================================
 // Structs
@@ -76,24 +58,28 @@ typedef struct dn_gameData_t{
     menu_t* bgMenu;
     menuManiaRenderer_t* menuRenderer;
     font_t font_rodin;
+    // All buttons states
+    uint16_t btnState; 
+    // Momentary downpresses on each button
+    uint16_t btnDownState;
+    rectangle_t camera;
     // font_t font_righteous;
     // Connection
     const char** conStrs;
     int16_t numConStrs;
     bool singleSystem;
     bool passAndPlay;
+    int32_t elapsedUs; // Time elapsed since the last frame in microseconds
     dn_entityManager_t entityManager;
-    // Assets
-    dn_CharacterAsset_t characterAssets[NUM_CHARACTERS][2][2];//character idx, pawn/king, up/down
     uint8_t generalTimer;
     // For marker selection UI
     int32_t xSelectScrollTimer;
     int16_t xSelectScrollOffset;
     int8_t selectCharacterIdx;
-    int8_t characterIndices[2];//character indices of p1 and p2. p1 is [0].
+    dn_characterSet_t characterSets[2];//character sets of p1 and p2.
     dn_CpuData_t cpu;
     dn_Result_t lastResult;
-    dn_sprites_t sprites;
+    dn_asset_t assets[NUM_ASSETS];
 
     uint8_t alphaFaceDir; //0 = down, 1 = left, 2 = up, 3 = right
     wsgPalette_t redFloor1;
@@ -106,8 +92,9 @@ typedef struct dn_gameData_t{
 
 void dn_MsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 void dn_ShowUi(dn_Ui_t ui);
-void dn_InitializeGame();
-void dn_InitializeCharacterSelect();
+void dn_initializeGame();
+void dn_initializeCharacterSelect();
+void dn_freeAssets();
 
 
 //==============================================================================
@@ -122,4 +109,6 @@ extern const char dnCharacterKey[];
 // extern const char tttTutorialKey[];
 // extern const char tttUnlockKey[];
 extern swadgeMode_t danceNetworkMode;
+extern heatshrink_decoder* dn_hsd;
+extern uint8_t* dn_decodeSpace;
 // extern const int16_t markersUnlockedAtWins[NUM_UNLOCKABLE_MARKERS];

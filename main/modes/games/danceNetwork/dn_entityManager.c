@@ -36,15 +36,12 @@ void dn_loadAsset(cnfsFileIdx_t spriteCnfsIdx, uint8_t num_frames, dn_asset_t* a
         asset->allocated = true;
     }
 
-    for (uint8_t i = 0; i < num_frames; i++)
+    for (uint8_t frameIdx = 0; frameIdx < num_frames; frameIdx++)
     {
-        asset->frames[i] = cnfs_loadWsg(spriteCnfsIdx + i);
-        if (asset->frames[i] == NULL)
+        wsg_t* wsg = &asset->frames[frameIdx];
+        if (0 == wsg->h && 0 == wsg->w)
         {
-            //print an error message
-            printf("Failed to load WSG for cnfsFileIdx: %d, frame: %d\n", spriteCnfsIdx, i);
-            dn_freeAsset(asset);
-            return;
+            loadWsgInplace(spriteCnfsIdx + frameIdx, wsg, true, dn_decodeSpace, dn_hsd);
         }
     }
 }
@@ -79,19 +76,19 @@ void dn_updateEntities(dn_entityManager_t* entityManager)
     }
 }
 
-void dn_drawEntity(dn_entity_t* entity, dn_entityManager_t* entityManager, rectangle_t* camera)
+void dn_drawEntity(dn_entity_t* entity)
 {
     if(entity->drawFunction == NULL) return;
-    entity->drawFunction(entityManager, camera, entity);
+    entity->drawFunction(entity);
 }
 
-void dn_drawEntities(dn_entityManager_t* entityManager, rectangle_t* camera)
+void dn_drawEntities(dn_entityManager_t* entityManager)
 {
     node_t* curNode = entityManager->entities->first;
     while (curNode != NULL)
     {
         dn_entity_t* entity = (dn_entity_t*)curNode->val;
-        dn_drawEntity(entity, entityManager, camera);
+        dn_drawEntity(entity);
         curNode = curNode->next;
     }
 }
@@ -132,7 +129,7 @@ void dn_destroyAllEntities(dn_entityManager_t* entityManager)
  * @return A pointer to the created entity, or NULL on failure
  */
 dn_entity_t* dn_createEntitySpecial(dn_entityManager_t* entityManager, cnfsFileIdx_t spriteCnfsIdx, uint8_t numFrames, dn_animationType_t type, bool paused,
-                             dn_AssetIdx_t AssetIndex, uint8_t gameFramesPerAnimationFrame, uint32_t x, uint32_t y)
+                             dn_assetIdx_t assetIndex, uint8_t gameFramesPerAnimationFrame, vec_t pos)
 {
     dn_entity_t* entity = heap_caps_calloc(1, sizeof(dn_entity_t), MALLOC_CAP_SPIRAM);
     if (entity == NULL)
@@ -140,29 +137,40 @@ dn_entity_t* dn_createEntitySpecial(dn_entityManager_t* entityManager, cnfsFileI
         return NULL;
     }
 
-    entity->type                       = type;
-    entity->paused                     = paused;
-    entity->spriteIndex                = spriteIndex;
+    entity->type                        = type;
+    entity->paused                      = paused;
+    entity->assetIndex                  = assetIndex;
     entity->gameFramesPerAnimationFrame = gameFramesPerAnimationFrame;
-    entity->pos.x                      = x;
-    entity->pos.y                      = y;
+    entity->pos                         = pos;
 
     push(entityManager->entities, (void*)entity);
     return entity;
 }
 
-dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_AssetIdx_t AssetIndex, uint32_t x, uint32_t y)
+dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetIdx_t assetIndex, vec_t pos)
 {
-    switch(AssetIndex)
+    switch(assetIndex)
     {
+        case DN_ALPHA_DOWN_ASSET:
+            return dn_createEntitySpecial(entityManager, DN_ALPHA_DOWN_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos);
+        case DN_ALPHA_ORTHO_ASSET:
+            return dn_createEntitySpecial(entityManager, DN_ALPHA_ORTHO_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos);
+        case DN_ALPHA_UP_ASSET:
+            return dn_createEntitySpecial(entityManager, DN_ALPHA_UP_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos);
+        case DN_KING_ASSET:
+            return dn_createEntitySpecial(entityManager, DN_KING_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos);
+        case DN_KING_SMALL_ASSET:
+            return dn_createEntitySpecial(entityManager, DN_KING_SMALL_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos);
+        case DN_PAWN_ASSET:
+            return dn_createEntitySpecial(entityManager, DN_PAWN_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos);
+        case DN_PAWN_SMALL_ASSET:
+            return dn_createEntitySpecial(entityManager, DN_PAWN_SMALL_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos);
+        case DN_BUCKET_HAT_DOWN_ASSET:
+            return dn_createEntitySpecial(entityManager, DN_BUCKET_HAT_DOWN_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos);
+        case DN_BUCKET_HAT_UP_ASSET:
+            return dn_createEntitySpecial(entityManager, DN_BUCKET_HAT_UP_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos);
         case DN_GROUND_TILE_ASSET:
-            return dn_createEntitySpecial(entityManager, DN_GROUND_TILE_WSG, 1, NO_ANIMATION, true, spriteIndex, 1, x, y);
-        case ALPHA_ORTHO:
-            return dn_createEntitySpecial(entityManager, DN_ALPHA_ORTHO_WSG, 1, NO_ANIMATION, true, spriteIndex, 1, x, y);
-        case WHITE_CHESS_ORTHO:
-            return dn_createEntitySpecial(entityManager, DN_WHITE_KING_WSG, 1, NO_ANIMATION, true, spriteIndex, 1, x, y);
-        case BLACK_CHESS_ORTHO:
-            return dn_createEntitySpecial(entityManager, DN_BLACK_KING_WSG, 1, NO_ANIMATION, true, spriteIndex, 1, x, y);
+            return dn_createEntitySpecial(entityManager, DN_GROUND_TILE_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos);
         default:
             return NULL;
     }
