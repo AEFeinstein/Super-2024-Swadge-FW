@@ -30,6 +30,7 @@
 */
 
 #include "accelTest.h"
+#include "bouncy.h"
 #include "colorchord.h"
 #include "cosCrunch.h"
 #include "dance.h"
@@ -42,6 +43,9 @@
 #include "mode_credits.h"
 #include "mode_diceroller.h"
 #include "mode_synth.h"
+#include "nameTest.h"
+#include "picross_menu.h"
+#include "roboRunner.h"
 #include "sequencerMode.h"
 #include "swadgeIt.h"
 #include "swadgePassTest.h"
@@ -49,7 +53,6 @@
 #include "trophyCase.h"
 #include "trophyTest.h"
 #include "tunernome.h"
-
 #include "mode_platformer.h"
 #include "nameTest.h"
 

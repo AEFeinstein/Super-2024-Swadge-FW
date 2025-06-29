@@ -1790,6 +1790,16 @@ CONFIG_TINYUSB_DESC_SERIAL_STRING="123456"
 # Massive Storage Class (MSC)
 #
 # CONFIG_TINYUSB_MSC_ENABLED is not set
+
+#
+# TinyUSB FAT Format Options
+#
+CONFIG_TINYUSB_FAT_FORMAT_ANY=y
+# CONFIG_TINYUSB_FAT_FORMAT_FAT is not set
+# CONFIG_TINYUSB_FAT_FORMAT_FAT32 is not set
+# CONFIG_TINYUSB_FAT_FORMAT_EXFAT is not set
+# CONFIG_TINYUSB_FAT_FORMAT_SFD is not set
+# end of TinyUSB FAT Format Options
 # end of Massive Storage Class (MSC)
 
 #

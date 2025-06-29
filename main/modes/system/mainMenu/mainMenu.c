@@ -82,6 +82,15 @@ const trophyData_t mainMenuTrophies[] = {
         .identifier  = &swadgeItMode,
     },
     {
+        .title       = "Runnin' and runnin'",
+        .description = "Played Robo Runner for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &roboRunnerMode,
+    },
+    {
         .title       = "Daft Punk would be proud",
         .description = "Opened Colorchord for the first time",
         .image       = NO_IMAGE_SET,

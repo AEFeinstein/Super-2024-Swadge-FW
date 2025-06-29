@@ -29,8 +29,13 @@
  * If you want to learn about creating MIDI song files for the Swadge, see the \ref MIDI guide. See also the
  * \ref emulator which you can use to listen to MIDI files.
  *
- * If you're just starting Swadge development, you're already at the right place to start! Here's a good sequence of
- * pages to read from here.
+ * If you're just starting Swadge development, you're already at the right place to start!
+ *
+ * \note If you're new to developing code and want a guided experience, try the \ref tutorial tutorial! It
+ * \note will walk you through creating a whole game with explanations on why certain options are picked. If you're more
+ * \note used to C and reading technical documentation, why not browse the rest of the repository?
+ *
+ * Here's a quick recommended order to exploring the repository:
  *
  * -# First, follow the guide to \ref setup. This will walk you through setting up the toolchain and compiling the
  * firmware and emulator.
@@ -248,7 +253,7 @@ static bool shouldHideQuickSettings = false;
 /// @brief A pointer to the Swadge mode under the quick settings
 static const swadgeMode_t* modeBehindQuickSettings = NULL;
 
-/// 25 FPS by default
+/// 40 FPS by default
 static uint32_t frameRateUs = DEFAULT_FRAME_RATE_US;
 
 /// @brief Timer to return to the main menu
