@@ -33,8 +33,10 @@
 
 void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl);
 void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc);
-void physMoveObjects(physSim_t* phys, int32_t elapsedUs);
+void physUpdateTimestep(physSim_t* phys, int32_t elapsedUs);
 void physCheckCollisions(physSim_t* phys);
+void physBinaryMoveObjects(physSim_t* phys);
+bool physAnyCollision(physSim_t* phys, physCirc_t* c);
 
 bool physCircCircIntersection(physSim_t* phys, physCirc_t* cMoving, circleFl_t* cOther, float* colDist,
                               vecFl_t* colPoint, vecFl_t* reflVec);
@@ -267,8 +269,9 @@ void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc)
  */
 void physStep(physSim_t* phys, int32_t elapsedUs)
 {
-    physMoveObjects(phys, elapsedUs);
+    physUpdateTimestep(phys, elapsedUs);
     physCheckCollisions(phys);
+    physBinaryMoveObjects(phys);
 }
 
 /**
@@ -277,7 +280,7 @@ void physStep(physSim_t* phys, int32_t elapsedUs)
  * @param phys The physics simulation
  * @param elapsedUs
  */
-void physMoveObjects(physSim_t* phys, int32_t elapsedUs)
+void physUpdateTimestep(physSim_t* phys, int32_t elapsedUs)
 {
     // For each circle
     node_t* cNode = phys->circles.first;
@@ -290,6 +293,7 @@ void physMoveObjects(physSim_t* phys, int32_t elapsedUs)
             // Set starting point
             pc->travelLine.p1 = pc->c.pos;
 
+#ifdef MOVE_INPUT
             // If the object is moving
             vecFl_t movingAcc = {0};
             if (pc->moving)
@@ -320,15 +324,17 @@ void physMoveObjects(physSim_t* phys, int32_t elapsedUs)
                 // Not touching anything, so world gravity
                 totalForce = addVecFl2d(pc->g, phys->g);
             }
+#else
+            vecFl_t totalForce = addVecFl2d(pc->g, phys->g);
+#endif
 
             // Calculate new velocity
             pc->vel = addVecFl2d(pc->vel, mulVecFl2d(totalForce, elapsedUs));
 
-            // Calculate new position
-            pc->c.pos = addVecFl2d(pc->c.pos, mulVecFl2d(pc->vel, elapsedUs));
-
             // Set ending point
-            pc->travelLine.p2 = pc->c.pos;
+            pc->travelLine.p2 = addVecFl2d(pc->c.pos, mulVecFl2d(pc->vel, elapsedUs));
+
+            // TODO update pc->c.pos
 
             // Set bounding box of travel line, for later checks
             pc->travelLineBB = getLineBoundingBox(pc->travelLine);
@@ -552,9 +558,10 @@ void physCheckCollisions(physSim_t* phys)
             // (there will only be one, closest to the starting point)
             if (FLT_MAX != colDist)
             {
+                // TODO this shouldn't be necessary with binary movement
                 // Move back EPSILON from the collision point
-                vecFl_t travelNorm = normVecFl2d(subVecFl2d(pc->travelLine.p1, pc->travelLine.p2));
-                pc->c.pos          = addVecFl2d(colPoint, mulVecFl2d(travelNorm, EPSILON));
+                // vecFl_t travelNorm = normVecFl2d(subVecFl2d(pc->travelLine.p1, pc->travelLine.p2));
+                // pc->c.pos          = addVecFl2d(colPoint, mulVecFl2d(travelNorm, EPSILON));
 
                 // Bounce it by reflecting across this vector
                 // This may be the sum of multiple collisions, so normalize it
@@ -580,6 +587,87 @@ void physCheckCollisions(physSim_t* phys)
         cNode            = nextNode;
         shouldRemoveNode = false;
     }
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param phys
+ */
+void physBinaryMoveObjects(physSim_t* phys)
+{
+    // For each circle
+    node_t* cNode = phys->circles.first;
+    while (cNode)
+    {
+        physCirc_t* pc = (physCirc_t*)cNode->val;
+        // If it's not fixed in space
+        if (!pc->fixed)
+        {
+            bool collision  = false;
+            int32_t numIter = 4;
+            while (numIter > 0 || collision)
+            {
+                numIter--;
+                // Set circle to the midpoint of the travel line
+                pc->c.pos = divVecFl2d(addVecFl2d(pc->travelLine.p1, pc->travelLine.p2), 2);
+                physSetZoneMaskCirc(phys, pc);
+
+                collision = physAnyCollision(phys, pc);
+                if (collision)
+                {
+                    // Move towards the start of the travel line
+                    pc->travelLine.p2 = pc->c.pos;
+                }
+                else
+                {
+                    // Move towards the end of the travel line
+                    pc->travelLine.p1 = pc->c.pos;
+                }
+            }
+        }
+        cNode = cNode->next;
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param phys
+ * @param c
+ * @return true
+ * @return false
+ */
+bool physAnyCollision(physSim_t* phys, physCirc_t* c)
+{
+    node_t* cNode = phys->circles.first;
+    while (cNode)
+    {
+        physCirc_t* cOther = (physCirc_t*)cNode->val;
+        if (cOther != c && cOther->type != c->type && cOther->zonemask & c->zonemask)
+        {
+            if (circleCircleFlIntersection(c->c, cOther->c, NULL, NULL))
+            {
+                return true;
+            }
+        }
+        cNode = cNode->next;
+    }
+
+    node_t* lNode = phys->lines.first;
+    while (lNode)
+    {
+        physLine_t* lOther = (physLine_t*)lNode->val;
+        if (lOther->zonemask & c->zonemask)
+        {
+            if (circleLineFlIntersection(c->c, lOther->l, false, NULL, NULL))
+            {
+                return true;
+            }
+        }
+        lNode = lNode->next;
+    }
+    return false;
 }
 
 /**
