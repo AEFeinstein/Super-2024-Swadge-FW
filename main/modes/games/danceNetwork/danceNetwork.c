@@ -28,6 +28,10 @@ static void dn_MainLoop(int64_t elapsedUs);
 static void dn_MenuCb(const char* label, bool selected, uint32_t value);
 static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
+static void dn_initializeGame(void);
+static void dn_initializeCharacterSelect(void);
+static void dn_freeAssets(void);
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -64,6 +68,14 @@ static const char dn_HowToStr[]       = "How To Play";
 //static const char dn_ResultStr[]      = "Result";
 static const char dn_RecordsStr[]     = "Records";
 static const char dn_Exit[]           = "Exit";
+
+/// @brief A heatshrink decoder to use for all WSG loads rather than allocate a new one for each WSG
+/// This helps to prevent memory fragmentation in SPIRAM.
+/// Note, this is outside the dn_t struct for easy access to loading fuctions without dn_t references
+heatshrink_decoder* dn_hsd;
+/// @brief A temporary decode space to use for all WSG loads
+uint8_t* dn_decodeSpace;
+
 //This is in order such that index is the assetIdx.
 static const cnfsFileIdx_t dn_assetToWsgLookup[] = {DN_ALPHA_DOWN_WSG,
                                 DN_ALPHA_ORTHO_WSG,
@@ -479,7 +491,7 @@ void dn_ShowUi(dn_Ui_t ui)
     }
 }
 
-void dn_initializeGame()
+static void dn_initializeGame(void)
 {
     //if player vs CPU
     if(gameData->singleSystem && !gameData->passAndPlay)
@@ -576,12 +588,12 @@ void dn_initializeGame()
  *
  * @param
  */
-void dn_initializeCharacterSelect()
+static void dn_initializeCharacterSelect(void)
 {
 
 }
 
-void dn_freeAssets()
+static void dn_freeAssets(void)
 {
     for(int i = 0; i < NUM_ASSETS; i++)
     {

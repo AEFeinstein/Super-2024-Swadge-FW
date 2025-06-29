@@ -92,9 +92,6 @@ typedef struct dn_gameData_t{
 
 void dn_MsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 void dn_ShowUi(dn_Ui_t ui);
-void dn_initializeGame();
-void dn_initializeCharacterSelect();
-void dn_freeAssets();
 
 
 //==============================================================================

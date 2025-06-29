@@ -4,7 +4,7 @@
 // Includes
 //==============================================================================
 
-#include "danceNetwork.h"
+#include "swadge2024.h"
 #include "dn_typedef.h"
 
 //==============================================================================
@@ -26,8 +26,8 @@ typedef struct
 // Prototypes
 //==============================================================================
 void dn_initializeEntityManager(dn_entityManager_t* entityManager, dn_gameData_t* gameData);
-dn_asset_t* dn_loadSprite(cnfsFileIdx_t spriteCnfsIdx, uint8_t num_frames, dn_asset_t* sprite);
-void dn_freeSprite(dn_asset_t* sprite);
+void dn_loadAsset(cnfsFileIdx_t spriteCnfsIdx, uint8_t num_frames, dn_asset_t* sprite);
+void dn_freeAsset(dn_asset_t* sprite);
 void dn_updateEntities(dn_entityManager_t* entityManager);
 void dn_drawEntity(dn_entity_t* entity);
 void dn_drawEntities(dn_entityManager_t* entityManager);
