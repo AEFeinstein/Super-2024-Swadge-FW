@@ -3,6 +3,7 @@
 #include "ccmgBreakTime.h"
 #include "ccmgDelivery.h"
 #include "ccmgSpray.h"
+#include "ccmgThread.h"
 #include "cosCrunchUtil.h"
 #include "mainMenu.h"
 #include "swadge2024.h"
@@ -104,6 +105,7 @@ const cosCrunchMicrogame_t* const microgames[] = {
     &ccmgBreakTime,
     &ccmgDelivery,
     &ccmgSpray,
+    &ccmgThread,
 };
 
 #define NUM_LIVES                        4
@@ -114,21 +116,21 @@ const cosCrunchMicrogame_t* const microgames[] = {
 #define MESSAGE_X_OFFSET 25
 #define MESSAGE_Y_OFFSET 45
 
-tintColor_t const blueTimerTintColor   = {c013, c125, c235};
-tintColor_t const yellowTimerTintColor = {c430, c540, c554};
-tintColor_t const redTimerTintColor    = {c300, c500, c533};
+tintColor_t const blueTimerTintColor   = {c013, c125, c235, 0};
+tintColor_t const yellowTimerTintColor = {c430, c540, c554, 0};
+tintColor_t const redTimerTintColor    = {c300, c500, c533, 0};
 
 /// Colors randomly given to games that request a color
 tintColor_t tintColors[] = {
-    {c010, c232, c343}, // Green
-    {c100, c210, c310}, // Brown
-    {c134, c245, c355}, // Sky blue
-    {c012, c023, c134}, // Aqua
-    {c102, c213, c324}, // Violet
-    {c304, c415, c525}, // Magenta
-    {c440, c551, c554}, // Yellow
-    {c420, c530, c541}, // Orange
-    {c412, c523, c534}, // Pink
+    {c010, c232, c343, 0}, // Green
+    {c100, c210, c310, 0}, // Brown
+    {c134, c245, c355, 0}, // Sky blue
+    {c012, c023, c134, 0}, // Aqua
+    {c102, c213, c324, 0}, // Violet
+    {c304, c415, c525, 0}, // Magenta
+    {c440, c551, c554, 0}, // Yellow
+    {c420, c530, c541, 0}, // Orange
+    {c412, c523, c534, 0}, // Pink
 };
 
 static void cosCrunchEnterMode(void)
