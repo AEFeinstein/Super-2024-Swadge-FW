@@ -11,10 +11,12 @@
 
 static const char cosCrunchName[]             = "Cosplay Crunch";
 static const char cosCrunchStartCraftingLbl[] = "Start Crafting";
+static const char cosCrunchHighScoresLbl[]    = "High Scores";
 static const char cosCrunchExitLbl[]          = "Exit";
 
-static const char cosCrunchGameOverTitle[]   = "Womp, Womp";
-static const char cosCrunchGameOverMessage[] = "Press A to retry";
+static const char cosCrunchGameOverTitle[]   = "Your costumes aren't done!";
+static const char cosCrunchYourScoreMsg[]    = "Your score: %" PRIi32;
+static const char cosCrunchNewHighScoreMsg[] = "New personal best!";
 
 typedef enum
 {
@@ -28,12 +30,21 @@ typedef enum
     CC_GAME_OVER_PENDING,
     /// Game over screen
     CC_GAME_OVER,
+    /// High scores screen
+    CC_HIGH_SCORES,
 } cosCrunchState;
 
 typedef struct
 {
+    int32_t score;
+    char name[10];
+} cosCrunchScore_t;
+
+typedef struct
+{
     uint8_t lives;
-    uint64_t score;
+    int32_t score;
+    bool personalBestAchieved;
     cosCrunchState state;
 
     menu_t* menu;
@@ -72,6 +83,9 @@ typedef struct
     font_t font;
     font_t bigFont;
     font_t bigFontOutline;
+
+    int32_t userHighScore;
+    cosCrunchScore_t highScores[10];
 } cosCrunch_t;
 cosCrunch_t* cc = NULL;
 
@@ -80,8 +94,10 @@ static void cosCrunchExitMode(void);
 static void cosCrunchMenu(const char* label, bool selected, uint32_t value);
 static void cosCrunchMainLoop(int64_t elapsedUs);
 static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+static void cosCrunchResetBackground(void);
 static void cosCrunchDisplayMessage(const char* msg);
 static void cosCrunchDrawTimer(void);
+static void cosCrunchUpdateHighScores(cosCrunchScore_t newScores[], uint8_t numNewScores);
 
 swadgeMode_t cosCrunchMode = {
     .modeName                 = cosCrunchName,
@@ -112,6 +128,10 @@ const cosCrunchMicrogame_t* const microgames[] = {
     &ccmgThread,
 };
 
+#define CC_NVS_NAMESPACE           "cc"
+#define CC_NVS_USER_HIGH_SCORE_KEY "user_high_score"
+#define CC_NVS_HIGH_SCORES_KEY     "high_scores"
+
 #define NUM_LIVES                        4
 #define MICROGAME_GET_READY_TIME_US      1000000
 #define MICROGAME_RESULT_DISPLAY_TIME_US 1800000
@@ -119,6 +139,7 @@ const cosCrunchMicrogame_t* const microgames[] = {
 
 #define MESSAGE_X_OFFSET 25
 #define MESSAGE_Y_OFFSET 45
+#define TEXT_Y_SPACING   5
 
 tintColor_t const blueTimerTintColor   = {c013, c125, c235, 0};
 tintColor_t const yellowTimerTintColor = {c430, c540, c554, 0};
@@ -146,6 +167,7 @@ static void cosCrunchEnterMode(void)
 
     cc->menu = initMenu(cosCrunchName, cosCrunchMenu);
     addSingleItemToMenu(cc->menu, cosCrunchStartCraftingLbl);
+    addSingleItemToMenu(cc->menu, cosCrunchHighScoresLbl);
     addSingleItemToMenu(cc->menu, cosCrunchExitLbl);
     cc->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
@@ -164,10 +186,15 @@ static void cosCrunchEnterMode(void)
     cc->wsg.backgroundSplatter.w  = TFT_WIDTH;
     cc->wsg.backgroundSplatter.h  = TFT_HEIGHT;
     cc->wsg.backgroundSplatter.px = cc->backgroundSplatterPixels;
+    cosCrunchResetBackground();
 
     cc->font = *getSysFont();
     loadFont(RIGHTEOUS_150_FONT, &cc->bigFont, false);
     makeOutlineFont(&cc->bigFont, &cc->bigFontOutline, false);
+
+    readNamespaceNvs32(CC_NVS_NAMESPACE, CC_NVS_USER_HIGH_SCORE_KEY, &cc->userHighScore);
+    size_t nvsLength = sizeof(cc->highScores);
+    readNamespaceNvsBlob(CC_NVS_NAMESPACE, CC_NVS_HIGH_SCORES_KEY, cc->highScores, &nvsLength);
 }
 
 static void cosCrunchExitMode(void)
@@ -202,9 +229,12 @@ static void cosCrunchMenu(const char* label, bool selected, uint32_t value)
         {
             cc->lives = NUM_LIVES;
             cc->state = CC_MICROGAME_PENDING;
-            // Reset the background splatter for the first/next game
-            drawToCanvas(cc->wsg.backgroundSplatter, cc->wsg.backgroundDesk, 0, TFT_HEIGHT - cc->wsg.backgroundDesk.h);
-            drawToCanvas(cc->wsg.backgroundSplatter, cc->wsg.backgroundMat, 0, 0);
+            // Reset the background splatter for the next game
+            cosCrunchResetBackground();
+        }
+        else if (label == cosCrunchHighScoresLbl)
+        {
+            cc->state = CC_HIGH_SCORES;
         }
         else if (label == cosCrunchExitLbl)
         {
@@ -225,7 +255,8 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         {
             cc->menu = menuButton(cc->menu, evt);
         }
-        else if (cc->state == CC_GAME_OVER && (evt.button == PB_A || evt.button == PB_START) && evt.down)
+        else if ((cc->state == CC_GAME_OVER || cc->state == CC_HIGH_SCORES)
+                 && (evt.button == PB_A || evt.button == PB_START) && evt.down)
         {
             cc->state = CC_MENU;
         }
@@ -363,17 +394,64 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         }
 
         case CC_GAME_OVER_PENDING:
+        {
             cc->state = CC_GAME_OVER;
             cc->activeMicrogame.game->fnDestroyMicrogame();
             cc->activeMicrogame.game = NULL;
+
+            cc->personalBestAchieved = cc->score > cc->userHighScore;
+            if (cc->personalBestAchieved)
+            {
+                cc->userHighScore = cc->score;
+                writeNamespaceNvs32(CC_NVS_NAMESPACE, CC_NVS_USER_HIGH_SCORE_KEY, cc->score);
+            }
+
+            cosCrunchScore_t scores[] = {{cc->score, "You"}};
+            cosCrunchUpdateHighScores(scores, ARRAY_SIZE(scores));
             break;
+        }
 
         case CC_GAME_OVER:
         {
             cosCrunchDisplayMessage(cosCrunchGameOverTitle);
 
-            uint16_t tw = textWidth(&cc->font, cosCrunchGameOverMessage);
-            drawText(&cc->font, c555, cosCrunchGameOverMessage, (TFT_WIDTH - tw) / 2, 150);
+            int16_t yOff = 165;
+            char buf[32];
+            snprintf(buf, sizeof(buf), cosCrunchYourScoreMsg, cc->score);
+            uint16_t tw = textWidth(&cc->font, buf);
+            drawText(&cc->font, c555, buf, (TFT_WIDTH - tw) / 2, yOff);
+            yOff += cc->font.height + TEXT_Y_SPACING;
+
+            if (cc->personalBestAchieved)
+            {
+                tw = textWidth(&cc->font, cosCrunchNewHighScoreMsg);
+                drawText(&cc->font, c555, cosCrunchNewHighScoreMsg, (TFT_WIDTH - tw) / 2, yOff);
+            }
+
+            break;
+        }
+
+        case CC_HIGH_SCORES:
+        {
+            uint16_t tw = textWidth(&cc->bigFont, cosCrunchHighScoresLbl);
+            drawText(&cc->bigFont, c555, cosCrunchHighScoresLbl, (TFT_WIDTH - tw) / 2, 15);
+            drawText(&cc->bigFontOutline, c000, cosCrunchHighScoresLbl, (TFT_WIDTH - tw) / 2, 15);
+
+            int16_t yOff = 75;
+            for (int i = 0; i < ARRAY_SIZE(cc->highScores); i++)
+            {
+                if (cc->highScores[i].score > 0)
+                {
+                    drawText(&cc->font, c555, cc->highScores[i].name, 40, yOff);
+
+                    char buf[16];
+                    snprintf(buf, sizeof(buf), "%" PRIi32, cc->highScores[i].score);
+                    tw = textWidth(&cc->font, buf);
+                    drawText(&cc->font, c555, buf, TFT_WIDTH - tw - 40, yOff);
+                    yOff += cc->font.height + TEXT_Y_SPACING;
+                }
+            }
+
             break;
         }
     }
@@ -389,6 +467,7 @@ static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
     {
         case CC_MICROGAME_RUNNING:
         case CC_GAME_OVER:
+        case CC_HIGH_SCORES:
         {
             if (cc->activeMicrogame.game != NULL && cc->activeMicrogame.game->fnBackgroundDrawCallback != NULL)
             {
@@ -415,6 +494,12 @@ static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
         case CC_GAME_OVER_PENDING: // Same goes for unloading
             break;
     }
+}
+
+static void cosCrunchResetBackground()
+{
+    drawToCanvas(cc->wsg.backgroundSplatter, cc->wsg.backgroundDesk, 0, TFT_HEIGHT - cc->wsg.backgroundDesk.h);
+    drawToCanvas(cc->wsg.backgroundSplatter, cc->wsg.backgroundMat, 0, 0);
 }
 
 static void cosCrunchDisplayMessage(const char* msg)
@@ -470,6 +555,33 @@ static void cosCrunchDrawTimer()
 
     drawWsgSimple(&cc->wsg.paintTube, 8, TFT_HEIGHT - cc->wsg.paintTube.h - 4);
     drawWsgPaletteSimple(&cc->wsg.paintLabel, 37, TFT_HEIGHT - cc->wsg.paintLabel.h - 8, &cc->tintPalette);
+}
+
+void cosCrunchUpdateHighScores(cosCrunchScore_t newScores[], uint8_t numNewScores)
+{
+    bool changed = false;
+    for (int i = 0; i < numNewScores; i++)
+    {
+        int pos = ARRAY_SIZE(cc->highScores);
+        while (pos > 0 && newScores[i].score > cc->highScores[pos - 1].score)
+        {
+            if (pos < ARRAY_SIZE(cc->highScores))
+            {
+                cc->highScores[pos] = cc->highScores[pos - 1];
+            }
+            changed = true;
+            pos--;
+        }
+        if (pos < ARRAY_SIZE(cc->highScores))
+        {
+            cc->highScores[pos] = newScores[i];
+        }
+    }
+
+    if (changed)
+    {
+        writeNamespaceNvsBlob(CC_NVS_NAMESPACE, CC_NVS_HIGH_SCORES_KEY, cc->highScores, sizeof(cc->highScores));
+    }
 }
 
 const tintColor_t* cosCrunchMicrogameGetTintColor()
