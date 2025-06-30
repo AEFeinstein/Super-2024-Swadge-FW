@@ -272,6 +272,23 @@ void physStep(physSim_t* phys, int32_t elapsedUs)
     physUpdateTimestep(phys, elapsedUs);
     physCheckCollisions(phys);
     physBinaryMoveObjects(phys);
+
+    // For each circle
+    // node_t* cNode = phys->circles.first;
+    // while (cNode)
+    // {
+    //     physCirc_t* pc = (physCirc_t*)cNode->val;
+    //     // If it's not fixed in space
+    //     if (!pc->fixed)
+    //     {
+    //         if (physAnyCollision(phys, pc))
+    //         {
+    //             fprintf(stderr, "INVALID STATE\n");
+    //             exit(0);
+    //         }
+    //     }
+    //     cNode = cNode->next;
+    // }
 }
 
 /**
@@ -604,25 +621,42 @@ void physBinaryMoveObjects(physSim_t* phys)
         // If it's not fixed in space
         if (!pc->fixed)
         {
-            bool collision  = false;
-            int32_t numIter = 4;
-            while (numIter > 0 || collision)
+            // Test at the final destination
+            pc->c.pos = pc->travelLine.p2;
+            physSetZoneMaskCirc(phys, pc);
+            if (physAnyCollision(phys, pc))
             {
-                numIter--;
-                // Set circle to the midpoint of the travel line
-                pc->c.pos = divVecFl2d(addVecFl2d(pc->travelLine.p1, pc->travelLine.p2), 2);
-                physSetZoneMaskCirc(phys, pc);
+                // If the final destination isn't valid, binary search
+                bool collision  = true;
+                int32_t numIter = 5;
+                while (numIter)
+                {
+                    numIter--;
 
-                collision = physAnyCollision(phys, pc);
+                    // Set circle to the midpoint of the travel line
+                    pc->c.pos = divVecFl2d(addVecFl2d(pc->travelLine.p1, pc->travelLine.p2), 2);
+                    physSetZoneMaskCirc(phys, pc);
+
+                    // Test for collision
+                    collision = physAnyCollision(phys, pc);
+                    if (collision)
+                    {
+                        // Move towards the start of the travel line
+                        pc->travelLine.p2 = pc->c.pos;
+                    }
+                    else
+                    {
+                        // Move towards the end of the travel line
+                        pc->travelLine.p1 = pc->c.pos;
+                    }
+                }
+
+                // If there's still a collision after binary search
                 if (collision)
                 {
-                    // Move towards the start of the travel line
-                    pc->travelLine.p2 = pc->c.pos;
-                }
-                else
-                {
-                    // Move towards the end of the travel line
-                    pc->travelLine.p1 = pc->c.pos;
+                    // Return to the starting point
+                    pc->c.pos = pc->travelLine.p1;
+                    physSetZoneMaskCirc(phys, pc);
                 }
             }
         }
@@ -660,7 +694,7 @@ bool physAnyCollision(physSim_t* phys, physCirc_t* c)
         physLine_t* lOther = (physLine_t*)lNode->val;
         if (lOther->zonemask & c->zonemask)
         {
-            if (circleLineFlIntersection(c->c, lOther->l, false, NULL, NULL))
+            if (circleLineFlIntersection(c->c, lOther->l, true, NULL, NULL))
             {
                 return true;
             }
