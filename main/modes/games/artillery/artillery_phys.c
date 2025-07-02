@@ -39,23 +39,25 @@ void physBinaryMoveObjects(physSim_t* phys);
 bool physAnyCollision(physSim_t* phys, physCirc_t* c);
 
 bool physCircCircIntersection(physSim_t* phys, physCirc_t* cMoving, circleFl_t* cOther, float* colDist,
-                              vecFl_t* colPoint, vecFl_t* reflVec);
+                              vecFl_t* reflVec);
 
 //==============================================================================
 // Functions
 //==============================================================================
 
 /**
- * @brief TODO doc
+ * @brief Initialize a physics simulation with world bounds and gravity.
+ * The world is segmented into 32 zones for more efficient object collision detection
  *
  * @param w Physics space width, unit is px
  * @param h Physics space height, unit is px
  * @param gx Gravity in the X direction, unit is px/uS^2
  * @param gy Gravity in the Y direction, unit is px/uS^2
- * @return physSim_t*
+ * @return The initialized simulation
  */
 physSim_t* initPhys(float w, float h, float gx, float gy)
 {
+    // Allocate a simulation
     physSim_t* phys = heap_caps_calloc(1, sizeof(physSim_t), MALLOC_CAP_8BIT);
 
     // Set gravity
@@ -67,31 +69,40 @@ physSim_t* initPhys(float w, float h, float gx, float gy)
     phys->bounds.x = w;
     phys->bounds.y = h;
 
-    // Figure out zones
-    int32_t zonesX, zonesY;
-    if (phys->bounds.x > phys->bounds.y)
-    {
-        zonesX = NUM_ZONES_BIG;
-        zonesY = NUM_ZONES_LIL;
-    }
-    else
-    {
-        zonesX = NUM_ZONES_LIL;
-        zonesY = NUM_ZONES_BIG;
-    }
+    // Figure out number of zones in each dimension
+    vecFl_t nZones = {
+        .x = 1,
+        .y = 1,
+    };
 
     // Calculate the zone size
     vecFl_t zoneSize = {
-        .x = phys->bounds.x / (float)zonesX,
-        .y = phys->bounds.y / (float)zonesY,
+        .x = w,
+        .y = h,
     };
 
-    // Create the zones
-    for (int32_t y = 0; y < zonesY; y++)
+    // Keep dividing along the longer axis
+    int32_t divs = NUM_ZONES;
+    while (divs /= 2)
     {
-        for (int32_t x = 0; x < zonesX; x++)
+        if (zoneSize.x > zoneSize.y)
         {
-            rectangleFl_t* zone = &phys->zones[(y * zonesX) + x];
+            zoneSize.x /= 2;
+            nZones.x *= 2;
+        }
+        else
+        {
+            zoneSize.y /= 2;
+            nZones.y *= 2;
+        }
+    }
+
+    // Create the zones
+    for (int32_t y = 0; y < nZones.y; y++)
+    {
+        for (int32_t x = 0; x < nZones.x; x++)
+        {
+            rectangleFl_t* zone = &phys->zones[(int)(y * nZones.x) + x];
             zone->pos.x         = x * zoneSize.x;
             zone->pos.y         = y * zoneSize.y;
             zone->width         = zoneSize.x;
@@ -105,42 +116,47 @@ physSim_t* initPhys(float w, float h, float gx, float gy)
     physAddLine(phys, w, h, 0, h);
     physAddLine(phys, 0, h, 0, 0);
 
+    // Return the simulation
     return phys;
 }
 
 /**
- * @brief TODO doc
+ * @brief Deinitialize and free a physics simulation
  *
  * @param phys The physics simulation
  */
 void deinitPhys(physSim_t* phys)
 {
+    // Free all lines
     while (phys->lines.first)
     {
         heap_caps_free(pop(&phys->lines));
     }
 
+    // Free all circles
     while (phys->circles.first)
     {
         heap_caps_free(pop(&phys->circles));
     }
 
+    // Free the simulation
     heap_caps_free(phys);
 }
 
 /**
- * @brief TODO doc
+ * @brief Add an immobile line to the physics simulation. This calculates and saves properties like slope and unit
+ * normal.
  *
  * @param phys The physics simulation
- * @param x1
- * @param y1
- * @param x2
- * @param y2
- * @return
+ * @param x1 The starting X point of the line
+ * @param y1 The starting Y point of the line
+ * @param x2 The ending X point of the line
+ * @param y2 The ending Y point of the line
+ * @return The line, also saved in the argument phys
  */
 physLine_t* physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2)
 {
-    // Make space for the line
+    // Allocate the line
     physLine_t* pl = heap_caps_calloc(1, sizeof(physLine_t), MALLOC_CAP_8BIT);
 
     // Save the points of the line
@@ -149,56 +165,58 @@ physLine_t* physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2)
     pl->l.p2.x = x2;
     pl->l.p2.y = y2;
 
-    // Calculate unit normal vector (perpendicular to slope)
-    float unx        = y1 - y2;
-    float uny        = x2 - x1;
-    float magnitude  = sqrtf((unx * unx) + (uny * uny));
-    pl->unitNormal.x = unx / magnitude;
-    pl->unitNormal.y = uny / magnitude;
-
-    // Make sure it points up
-    if (pl->unitNormal.y > 0)
-    {
-        pl->unitNormal.y = -pl->unitNormal.y;
-        pl->unitNormal.x = -pl->unitNormal.x;
-    }
-
-    // Get the unit slope by rotating the normal vector
-    pl->unitSlope.x = pl->unitNormal.y;
-    pl->unitSlope.y = -pl->unitNormal.x;
-
-    // Make sure the unit slope points downward
+    // Find the unit slope
+    pl->unitSlope = normVecFl2d(subVecFl2d(pl->l.p2, pl->l.p1));
+    // Make sure the slope points downward
     if (pl->unitSlope.y < 0)
     {
-        pl->unitSlope.x = -pl->unitSlope.x;
-        pl->unitSlope.y = -pl->unitSlope.y;
+        // Rotate 180 degrees
+        pl->unitSlope = mulVecFl2d(pl->unitSlope, -1);
+    }
+
+    // Find the unit normal, rotated 90 deg from the unit normal
+    pl->unitNormal.x = -pl->unitSlope.y;
+    pl->unitNormal.y = pl->unitSlope.x;
+
+    // Make sure the unit normal points upwards
+    if (pl->unitNormal.y > 0)
+    {
+        // Rotate 180 degrees
+        pl->unitNormal = mulVecFl2d(pl->unitNormal, -1);
     }
 
     // Store what zones this line is in
     physSetZoneMaskLine(phys, pl);
 
-    // Push line into list
+    // Push line into list in the simulation
     push(&phys->lines, pl);
+
+    // Return the line
     return pl;
 }
 
 /**
- * @brief TODO doc
+ * @brief Add a circle to the physics simulation. It may be mobile or fixed/
  *
  * @param phys The physics simulation
- * @param x1
- * @param y1
- * @param r
- * @param type
- * @return
+ * @param x1 The X point of the center of the circle
+ * @param y1 The Y point of the center of the circle
+ * @param r The radius of the circle
+ * @param type The type of circle. CT_OBSTACLE is immobile, others are mobile.
+ * @return The circle, also saved in the argument phys
  */
 physCirc_t* physAddCircle(physSim_t* phys, float x1, float y1, float r, circType_t type)
 {
+    // Allocate the circle
     physCirc_t* pc = heap_caps_calloc(1, sizeof(physCirc_t), MALLOC_CAP_8BIT);
-    pc->c.pos.x    = x1;
-    pc->c.pos.y    = y1;
-    pc->c.radius   = r;
-    pc->type       = type;
+
+    // Save the parameters
+    pc->c.pos.x  = x1;
+    pc->c.pos.y  = y1;
+    pc->c.radius = r;
+    pc->type     = type;
+
+    // Additional initialization based on type
     switch (type)
     {
         case CT_TANK:
@@ -220,20 +238,29 @@ physCirc_t* physAddCircle(physSim_t* phys, float x1, float y1, float r, circType
             break;
         }
     }
+
+    // Store what zones the circle is in
     physSetZoneMaskCirc(phys, pc);
+
+    // Push the circle into a list in the simulation
     push(&phys->circles, pc);
+
+    // Return the circle
     return pc;
 }
 
 /**
- * @brief TODO doc
+ * @brief Calculate what zones a line is in and save it for that line
  *
  * @param phys The physics simulation
- * @param line
+ * @param pl The line to calculate zones for
  */
 void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl)
 {
+    // Clear the zone mask
     pl->zonemask = 0;
+
+    // Check each zone and set the bit if the line is in the zone
     for (int32_t zIdx = 0; zIdx < NUM_ZONES; zIdx++)
     {
         if (rectLineFlIntersection(phys->zones[zIdx], pl->l, NULL))
@@ -244,14 +271,17 @@ void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl)
 }
 
 /**
- * @brief TODO doc
+ * @brief Calculate what zones a circle is in and save it for that circle
  *
  * @param phys The physics simulation
- * @param pc
+ * @param pc The circle to calculate zones for
  */
 void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc)
 {
+    // Clear the zone mask
     pc->zonemask = 0;
+
+    // Check each zone and set the bit if the circle is in the zone
     for (int32_t zIdx = 0; zIdx < NUM_ZONES; zIdx++)
     {
         if (circleRectFlIntersection(pc->c, phys->zones[zIdx], NULL))
@@ -262,40 +292,25 @@ void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc)
 }
 
 /**
- * @brief TODO doc
+ * @brief Update the entire physics simulation by updating object position, velocity, and acceleration. This checks for
+ * object collisions and doesn't allow object to clip into each other.
  *
  * @param phys The physics simulation
- * @param elapsedUs
+ * @param elapsedUs The time elapsed since this was last called
  */
 void physStep(physSim_t* phys, int32_t elapsedUs)
 {
     physUpdateTimestep(phys, elapsedUs);
     physCheckCollisions(phys);
     physBinaryMoveObjects(phys);
-
-    // For each circle
-    // node_t* cNode = phys->circles.first;
-    // while (cNode)
-    // {
-    //     physCirc_t* pc = (physCirc_t*)cNode->val;
-    //     // If it's not fixed in space
-    //     if (!pc->fixed)
-    //     {
-    //         if (physAnyCollision(phys, pc))
-    //         {
-    //             fprintf(stderr, "INVALID STATE\n");
-    //             exit(0);
-    //         }
-    //     }
-    //     cNode = cNode->next;
-    // }
 }
 
 /**
- * @brief TODO doc
+ * @brief Update each object's acceleration, velocity, and desired next position based on elapsedUs. This doesn't move
+ * objects yet so objects will not clip into each other.
  *
  * @param phys The physics simulation
- * @param elapsedUs
+ * @param elapsedUs The time elapsed since this was last called
  */
 void physUpdateTimestep(physSim_t* phys, int32_t elapsedUs)
 {
@@ -351,8 +366,6 @@ void physUpdateTimestep(physSim_t* phys, int32_t elapsedUs)
             // Set ending point
             pc->travelLine.p2 = addVecFl2d(pc->c.pos, mulVecFl2d(pc->vel, elapsedUs));
 
-            // TODO update pc->c.pos
-
             // Set bounding box of travel line, for later checks
             pc->travelLineBB = getLineBoundingBox(pc->travelLine);
 
@@ -366,8 +379,8 @@ void physUpdateTimestep(physSim_t* phys, int32_t elapsedUs)
 }
 
 /**
- * @brief Check for physics collisions, move objects to not clip into each other, update velocity vectors based on
- * collisions
+ * @brief Check for collisions between moving objects (circles with current and desired positions) and fixed objects
+ * (circles or lines). This may update the velocity of an object after a collision but will not update the position.
  *
  * @param phys The physics simulation
  */
@@ -385,9 +398,9 @@ void physCheckCollisions(physSim_t* phys)
         if (!pc->fixed)
         {
             // Keep track of the collision closest to the starting point of the circle
-            float colDist    = FLT_MAX;
-            vecFl_t colPoint = {0};
-            vecFl_t reflVec  = {0};
+            float colDist = FLT_MAX;
+            // Keep track of the reflection vector in case of collision
+            vecFl_t reflVec = {0};
 
             // Zero the normal forces before checking for collisions
             pc->staticForce.x = 0;
@@ -406,8 +419,7 @@ void physCheckCollisions(physSim_t* phys)
                 {
                     // Used to determine which component of the line collided
                     float minLineDist      = FLT_MAX;
-                    vecFl_t lineColPoint   = {0}; // The position of the circle when the collision with the line occurs
-                    vecFl_t lineUnitNormal = {0}; // Points outward from the line
+                    vecFl_t lineUnitNormal = {0}; // Points upward from the line
                     vecFl_t lineUnitSlope  = {0}; // Points downward along the slope of the line
 
                     ////////////////////////////////////////////////////////////
@@ -436,7 +448,6 @@ void physCheckCollisions(physSim_t* phys)
                             if (dist < minLineDist)
                             {
                                 minLineDist    = dist;
-                                lineColPoint   = intersection;
                                 lineUnitNormal = mulVecFl2d(opl->unitNormal, (1 == idx) ? -1 : 1);
                                 lineUnitSlope  = opl->unitSlope;
                             }
@@ -462,9 +473,9 @@ void physCheckCollisions(physSim_t* phys)
                     for (int32_t cIdx = 0; cIdx < ARRAY_SIZE(caps); cIdx++)
                     {
                         // If this intersection is closer than a line segment intersection
-                        if (physCircCircIntersection(phys, pc, &caps[cIdx], &minLineDist, &lineColPoint,
-                                                     &lineUnitNormal))
+                        if (physCircCircIntersection(phys, pc, &caps[cIdx], &minLineDist, &lineUnitNormal))
                         {
+                            // Calculate a unit slope for this point of the circle by rotating the unit normal
                             if (lineUnitNormal.x < 0)
                             {
                                 lineUnitSlope.x = lineUnitNormal.y;
@@ -480,13 +491,13 @@ void physCheckCollisions(physSim_t* phys)
 
                     ////////////////////////////////////////////////////////////
 
-                    // Now that all the segments are checked, apply the closest one
+                    // Now that all the line components are checked, apply the closest one
                     if (minLineDist < colDist)
                     {
-                        colDist  = minLineDist;
-                        colPoint = lineColPoint;
-                        reflVec  = addVecFl2d(reflVec, lineUnitNormal);
+                        colDist = minLineDist;
+                        reflVec = lineUnitNormal;
 
+#ifdef MOVE_INPUT
                         // If the point of collision is above the circle's position
                         // i.e. the circle moved downward, then collided, so the intersection point moves the circle
                         // back upward
@@ -501,6 +512,7 @@ void physCheckCollisions(physSim_t* phys)
                             pc->staticForce = addVecFl2d(pc->staticForce, projected);
                             pc->inContact   = true;
                         }
+#endif
                     }
                 }
 
@@ -512,16 +524,16 @@ void physCheckCollisions(physSim_t* phys)
             node_t* ocn = phys->circles.first;
             while (ocn)
             {
+                // Convenience pointer
                 physCirc_t* opc = ocn->val;
 
                 float circColDist      = FLT_MAX;
-                vecFl_t circColPoint   = {0};
                 vecFl_t circUnitNormal = {0};
 
                 if ((opc != pc) &&                    // Don't collide a circle with itself
                     (opc->zonemask & pc->zonemask) && // make sure they're in the same zone
                     (pc->type != opc->type) &&        // Types should differ (shells don't hit shells, etc.)
-                    physCircCircIntersection(phys, pc, &opc->c, &circColDist, &circColPoint, &circUnitNormal))
+                    physCircCircIntersection(phys, pc, &opc->c, &circColDist, &circUnitNormal))
                 {
                     // TODO do I care if the other circle isn't fixed in space?
                     if (CT_SHELL == pc->type && CT_TANK == opc->type)
@@ -531,13 +543,14 @@ void physCheckCollisions(physSim_t* phys)
                     }
                     else
                     {
-                        // Now that all the segments are checked, apply the closet one
+                        // If this is a closer collision than others
                         if (circColDist < colDist)
                         {
-                            colDist  = circColDist;
-                            colPoint = circColPoint;
-                            reflVec  = addVecFl2d(reflVec, circUnitNormal);
+                            // Save it
+                            colDist = circColDist;
+                            reflVec = circUnitNormal;
 
+#ifdef MOVE_INPUT
                             // If the point of collision is above the circle's position
                             // i.e. the circle moved downward, then collided, so the intersection point moves the circle
                             // back upward
@@ -565,24 +578,20 @@ void physCheckCollisions(physSim_t* phys)
                                 pc->staticForce = addVecFl2d(pc->staticForce, projected);
                                 pc->inContact   = true;
                             }
+#endif
                         }
                     }
                 }
+
+                // Iterate to the next circle
                 ocn = ocn->next;
             }
 
-            // After checking all lines, if there was an intersection
+            // After checking all lines and circles, if there was an intersection
             // (there will only be one, closest to the starting point)
             if (FLT_MAX != colDist)
             {
-                // TODO this shouldn't be necessary with binary movement
-                // Move back EPSILON from the collision point
-                // vecFl_t travelNorm = normVecFl2d(subVecFl2d(pc->travelLine.p1, pc->travelLine.p2));
-                // pc->c.pos          = addVecFl2d(colPoint, mulVecFl2d(travelNorm, EPSILON));
-
                 // Bounce it by reflecting across this vector
-                // This may be the sum of multiple collisions, so normalize it
-                reflVec = normVecFl2d(reflVec);
                 pc->vel = subVecFl2d(pc->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(pc->vel, reflVec))));
 
                 // Dampen after bounce
@@ -596,7 +605,10 @@ void physCheckCollisions(physSim_t* phys)
             }
         }
 
+        // Iterate to next moving circle
         node_t* nextNode = cNode->next;
+
+        // Optionally remove this entry (if a shell exploded)
         if (shouldRemoveNode)
         {
             heap_caps_free(removeEntry(&phys->circles, cNode));
@@ -607,9 +619,11 @@ void physCheckCollisions(physSim_t* phys)
 }
 
 /**
- * @brief TODO doc
+ * @brief Update the position of all moving objects in the simulation. This will move objects from their current to
+ * their desired positions as best as possible, without clipping objects. Binary search is used to find the best final
+ * destination.
  *
- * @param phys
+ * @param phys The physics simulation
  */
 void physBinaryMoveObjects(physSim_t* phys)
 {
@@ -617,17 +631,23 @@ void physBinaryMoveObjects(physSim_t* phys)
     node_t* cNode = phys->circles.first;
     while (cNode)
     {
+        // Convenience pointer
         physCirc_t* pc = (physCirc_t*)cNode->val;
+
         // If it's not fixed in space
         if (!pc->fixed)
         {
             // Test at the final destination
             pc->c.pos = pc->travelLine.p2;
             physSetZoneMaskCirc(phys, pc);
+
+            // If there is a collision, binary search. Otherwise move on.
             if (physAnyCollision(phys, pc))
             {
                 // If the final destination isn't valid, binary search
-                bool collision  = true;
+                bool collision = true;
+
+                // TODO pick a better number?
                 int32_t numIter = 5;
                 while (numIter)
                 {
@@ -660,30 +680,33 @@ void physBinaryMoveObjects(physSim_t* phys)
                 }
             }
         }
+
+        // Iterate
         cNode = cNode->next;
     }
 }
 
 /**
- * @brief TODO
+ * @brief Test if a given circle is colliding with any object
  *
- * @param phys
- * @param c
- * @return true
- * @return false
+ * @param phys The physics simulation
+ * @param c The circle to check collisions for
+ * @return true if the circle is colliding with anything, false otherwise
  */
 bool physAnyCollision(physSim_t* phys, physCirc_t* c)
 {
+    // Check against all other circles
     node_t* cNode = phys->circles.first;
     while (cNode)
     {
         physCirc_t* cOther = (physCirc_t*)cNode->val;
-        if (cOther != c && cOther->type != c->type && cOther->zonemask & c->zonemask)
+
+        if (cOther != c &&                                           // Don't collide with itself
+            cOther->type != c->type &&                               // Don't collide if the type matches
+            cOther->zonemask & c->zonemask &&                        // Don't collide if not in the same zone
+            circleCircleFlIntersection(c->c, cOther->c, NULL, NULL)) // Collision check
         {
-            if (circleCircleFlIntersection(c->c, cOther->c, NULL, NULL))
-            {
-                return true;
-            }
+            return true;
         }
         cNode = cNode->next;
     }
@@ -692,12 +715,10 @@ bool physAnyCollision(physSim_t* phys, physCirc_t* c)
     while (lNode)
     {
         physLine_t* lOther = (physLine_t*)lNode->val;
-        if (lOther->zonemask & c->zonemask)
+        if (lOther->zonemask & c->zonemask &&                            // Don't collide if not in the same zone
+            circleLineFlIntersection(c->c, lOther->l, true, NULL, NULL)) // Collision check
         {
-            if (circleLineFlIntersection(c->c, lOther->l, true, NULL, NULL))
-            {
-                return true;
-            }
+            return true;
         }
         lNode = lNode->next;
     }
@@ -711,15 +732,15 @@ bool physAnyCollision(physSim_t* phys, physCirc_t* c)
  * @param cMoving [IN] The moving circle
  * @param cOther [IN] The fixed circle
  * @param colDist [IN/OUT] The distance between the moving circle's position and the collision point
- * @param colPoint [IN/OUT] The position of the moving circle when the circles collide
  * @param reflVec [OUT] The vector to reflect the moving circle's velocity across if the two collided
  * @return true if there was a collision, false if there was not
  */
 bool physCircCircIntersection(physSim_t* phys, physCirc_t* cMoving, circleFl_t* cOther, float* colDist,
-                              vecFl_t* colPoint, vecFl_t* reflVec)
+                              vecFl_t* reflVec)
 {
     // A line intersecting with a circle may intersect up to two places
     vecFl_t intersections[2];
+
     // This circle is where collisions may occur
     circleFl_t boundaryCircle = {
         .pos    = cOther->pos,
@@ -740,37 +761,45 @@ bool physCircCircIntersection(physSim_t* phys, physCirc_t* cMoving, circleFl_t* 
         if (dist < *colDist)
         {
             // Save the distance and the point
-            *colDist  = dist;
-            *colPoint = intersections[iIdx];
+            *colDist = dist;
 
-            // Sum the reflection vector for this line
+            // Set the reflection vector for this line
             *reflVec = normVecFl2d(subVecFl2d(cMoving->c.pos, cOther->pos));
 
+            // Better collision detected
             return true;
         }
     }
+
+    // No collision
     return false;
 }
 
 /**
- * @brief TODO doc
+ * @brief Draw the outlines of physics simulation objects
  *
  * @param phys The physics simulation
  */
 void drawPhysOutline(physSim_t* phys)
 {
+    // Draw all lines
     node_t* lNode = phys->lines.first;
     while (lNode)
     {
         physLine_t* pl = (physLine_t*)lNode->val;
         drawLine(pl->l.p1.x, pl->l.p1.y, pl->l.p2.x, pl->l.p2.y, c522, 0);
+
+        // Iterate
         lNode = lNode->next;
     }
 
+    // Draw all circles
     node_t* cNode = phys->circles.first;
     while (cNode)
     {
-        physCirc_t* pc      = (physCirc_t*)cNode->val;
+        physCirc_t* pc = (physCirc_t*)cNode->val;
+
+        // Pick color based on type
         paletteColor_t cCol = c522;
         if (CT_TANK == pc->type)
         {
@@ -781,20 +810,24 @@ void drawPhysOutline(physSim_t* phys)
             cCol = c550;
         }
         drawCircle(pc->c.pos.x, pc->c.pos.y, pc->c.radius, cCol);
+
+        // Draw a gun barrel for tanks
         if (CT_TANK == pc->type)
         {
             vecFl_t absBarrelTip = addVecFl2d(pc->c.pos, pc->relBarrelTip);
             drawLineFast(pc->c.pos.x, pc->c.pos.y, absBarrelTip.x, absBarrelTip.y, c335);
         }
+
+        // Iterate
         cNode = cNode->next;
     }
 }
 
 /**
- * @brief TODO
+ * @brief Set the barrel angle for a tank
  *
- * @param circ
- * @param angle
+ * @param circ A circle of type CT_TANK
+ * @param angle The angle to set the barrel at, in radians
  */
 void setBarrelAngle(physCirc_t* circ, float angle)
 {
@@ -805,10 +838,10 @@ void setBarrelAngle(physCirc_t* circ, float angle)
 }
 
 /**
- * @brief TODO
+ * @brief Set the shot power for a tank
  *
- * @param circ
- * @param power
+ * @param circ A circle of type CT_TANK
+ * @param power The power to set the shot
  */
 void setShotPower(physCirc_t* circ, float power)
 {
@@ -816,11 +849,12 @@ void setShotPower(physCirc_t* circ, float power)
 }
 
 /**
- * @brief TODO
+ * @brief Fire a shot from a tank. This creates a circle o type CT_SHELL at the barrel tip with the tank's barrel angle
+ * and shot power
  *
- * @param phys
- * @param circ
- * @return physCirc_t*
+ * @param phys The physics simulation
+ * @param circ A circle of type CT_TANK
+ * @return The newly fired shell
  */
 physCirc_t* fireShot(physSim_t* phys, physCirc_t* circ)
 {
