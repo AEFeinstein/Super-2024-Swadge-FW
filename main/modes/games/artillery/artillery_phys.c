@@ -166,23 +166,18 @@ physLine_t* physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2)
     pl->l.p2.y = y2;
 
     // Find the unit slope
-    pl->unitSlope = normVecFl2d(subVecFl2d(pl->l.p2, pl->l.p1));
-    // Make sure the slope points downward
-    if (pl->unitSlope.y < 0)
+    vecFl_t unitSlope = normVecFl2d(subVecFl2d(pl->l.p2, pl->l.p1));
+
+    // Rotate the unit slope to get the unit normal, making sure it points upwards
+    if (unitSlope.x < 0)
     {
-        // Rotate 180 degrees
-        pl->unitSlope = mulVecFl2d(pl->unitSlope, -1);
+        pl->unitNormal.x = -unitSlope.y;
+        pl->unitNormal.y = unitSlope.x;
     }
-
-    // Find the unit normal, rotated 90 deg from the unit normal
-    pl->unitNormal.x = -pl->unitSlope.y;
-    pl->unitNormal.y = pl->unitSlope.x;
-
-    // Make sure the unit normal points upwards
-    if (pl->unitNormal.y > 0)
+    else
     {
-        // Rotate 180 degrees
-        pl->unitNormal = mulVecFl2d(pl->unitNormal, -1);
+        pl->unitNormal.x = unitSlope.y;
+        pl->unitNormal.y = -unitSlope.x;
     }
 
     // Store what zones this line is in
@@ -300,9 +295,18 @@ void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc)
  */
 void physStep(physSim_t* phys, int32_t elapsedUs)
 {
+    node_t* cNode     = phys->circles.first;
+    bool wasInContact = ((physCirc_t*)cNode->val)->inContact;
+
     physUpdateTimestep(phys, elapsedUs);
     physCheckCollisions(phys);
     physBinaryMoveObjects(phys);
+
+    bool isInContact = ((physCirc_t*)cNode->val)->inContact;
+    if (wasInContact != isInContact)
+    {
+        ESP_LOGI("PHS", "Contact: %s", isInContact ? "true" : "false");
+    }
 }
 
 /**
@@ -325,46 +329,42 @@ void physUpdateTimestep(physSim_t* phys, int32_t elapsedUs)
             // Set starting point
             pc->travelLine.p1 = pc->c.pos;
 
-#ifdef MOVE_INPUT
-            // If the object is moving
-            vecFl_t movingAcc = {0};
-            if (pc->moving)
-            {
-                if (PB_LEFT == pc->moving)
-                {
-                    // TODO move left along static force vector, or just closest one?
-                    movingAcc.x = -0.000000001f;
-                }
-                else if (PB_RIGHT == pc->moving)
-                {
-                    // TODO move right along static force vector, or just closest one?
-                    movingAcc.x = 0.000000001f;
-                }
-            }
-
-            // Pick which forces are acting on the object
-            vecFl_t totalForce;
+            vecFl_t totalForce = {0};
+            vecFl_t moveVel    = {0};
             if (pc->inContact)
             {
-                // Touching something, so static forces
-                totalForce = addVecFl2d(pc->g, pc->staticForce);
-                // Only apply movement when in contact with something else
-                totalForce = addVecFl2d(totalForce, movingAcc);
+                // Move in the direction of the surface the object is on
+                totalForce = pc->staticForce;
+                // Pull down a little to maintain contact
+                // TODO actually dont
+                // totalForce.y += 1e-10f;
+
+                // If the object is moving
+                if (pc->moving)
+                {
+                    // Add something to the velocity (not acceleration)
+                    if ((PB_LEFT == pc->moving && pc->slopeVec.x < 0) || //
+                        (PB_RIGHT == pc->moving && pc->slopeVec.x > 0))
+                    {
+                        moveVel = mulVecFl2d(pc->slopeVec, 0.0001f);
+                    }
+                    else
+                    {
+                        moveVel = mulVecFl2d(pc->slopeVec, -0.0001f);
+                    }
+                }
             }
             else
             {
-                // Not touching anything, so world gravity
+                // If not in contact, force is world and object gravity
                 totalForce = addVecFl2d(pc->g, phys->g);
             }
-#else
-            vecFl_t totalForce = addVecFl2d(pc->g, phys->g);
-#endif
 
             // Calculate new velocity
             pc->vel = addVecFl2d(pc->vel, mulVecFl2d(totalForce, elapsedUs));
 
             // Set ending point
-            pc->travelLine.p2 = addVecFl2d(pc->c.pos, mulVecFl2d(pc->vel, elapsedUs));
+            pc->travelLine.p2 = addVecFl2d(pc->c.pos, mulVecFl2d(addVecFl2d(pc->vel, moveVel), elapsedUs));
 
             // Set bounding box of travel line, for later checks
             pc->travelLineBB = getLineBoundingBox(pc->travelLine);
@@ -403,9 +403,10 @@ void physCheckCollisions(physSim_t* phys)
             vecFl_t reflVec = {0};
 
             // Zero the normal forces before checking for collisions
-            pc->staticForce.x = 0;
-            pc->staticForce.y = 0;
-            pc->inContact     = false;
+            // TODO necessary?
+            // pc->staticForce.x = 0;
+            // pc->staticForce.y = 0;
+            // pc->inContact     = false;
 
             // Check for collisions with lines
             node_t* oln = phys->lines.first;
@@ -420,7 +421,6 @@ void physCheckCollisions(physSim_t* phys)
                     // Used to determine which component of the line collided
                     float minLineDist      = FLT_MAX;
                     vecFl_t lineUnitNormal = {0}; // Points upward from the line
-                    vecFl_t lineUnitSlope  = {0}; // Points downward along the slope of the line
 
                     ////////////////////////////////////////////////////////////
 
@@ -449,7 +449,6 @@ void physCheckCollisions(physSim_t* phys)
                             {
                                 minLineDist    = dist;
                                 lineUnitNormal = mulVecFl2d(opl->unitNormal, (1 == idx) ? -1 : 1);
-                                lineUnitSlope  = opl->unitSlope;
                             }
                         }
                     }
@@ -472,21 +471,8 @@ void physCheckCollisions(physSim_t* phys)
                     // Check bounding endcaps
                     for (int32_t cIdx = 0; cIdx < ARRAY_SIZE(caps); cIdx++)
                     {
-                        // If this intersection is closer than a line segment intersection
-                        if (physCircCircIntersection(phys, pc, &caps[cIdx], &minLineDist, &lineUnitNormal))
-                        {
-                            // Calculate a unit slope for this point of the circle by rotating the unit normal
-                            if (lineUnitNormal.x < 0)
-                            {
-                                lineUnitSlope.x = lineUnitNormal.y;
-                                lineUnitSlope.y = -lineUnitNormal.x;
-                            }
-                            else
-                            {
-                                lineUnitSlope.x = -lineUnitNormal.y;
-                                lineUnitSlope.y = lineUnitNormal.x;
-                            }
-                        }
+                        // Check if this intersection is closer than a line segment intersection
+                        physCircCircIntersection(phys, pc, &caps[cIdx], &minLineDist, &lineUnitNormal);
                     }
 
                     ////////////////////////////////////////////////////////////
@@ -496,23 +482,6 @@ void physCheckCollisions(physSim_t* phys)
                     {
                         colDist = minLineDist;
                         reflVec = lineUnitNormal;
-
-#ifdef MOVE_INPUT
-                        // If the point of collision is above the circle's position
-                        // i.e. the circle moved downward, then collided, so the intersection point moves the circle
-                        // back upward
-                        if (lineColPoint.y < pc->c.pos.y)
-                        {
-                            // Project the gravity vector onto the unit slope to find the static force moving this
-                            // object proj(a onto b) == (b) * ((a dot b) / (b dot b)) But b is a unit vector, so (b dot
-                            // b) is just 2
-                            vecFl_t projected = mulVecFl2d(lineUnitSlope, dotVecFl2d(phys->g, lineUnitSlope) / 2.0f);
-
-                            // Sum the static force
-                            pc->staticForce = addVecFl2d(pc->staticForce, projected);
-                            pc->inContact   = true;
-                        }
-#endif
                     }
                 }
 
@@ -549,36 +518,6 @@ void physCheckCollisions(physSim_t* phys)
                             // Save it
                             colDist = circColDist;
                             reflVec = circUnitNormal;
-
-#ifdef MOVE_INPUT
-                            // If the point of collision is above the circle's position
-                            // i.e. the circle moved downward, then collided, so the intersection point moves the circle
-                            // back upward
-                            if (circColPoint.y < pc->c.pos.y)
-                            {
-                                vecFl_t circUnitSlope;
-                                if (circUnitNormal.x < 0)
-                                {
-                                    circUnitSlope.x = circUnitNormal.y;
-                                    circUnitSlope.y = -circUnitNormal.x;
-                                }
-                                else
-                                {
-                                    circUnitSlope.x = -circUnitNormal.y;
-                                    circUnitSlope.y = circUnitNormal.x;
-                                }
-
-                                // Project the gravity vector onto the unit slope to find the static force moving this
-                                // object proj(a onto b) == (b) * ((a dot b) / (b dot b)) But b is a unit vector, so (b
-                                // dot b) is just 2
-                                vecFl_t projected
-                                    = mulVecFl2d(circUnitSlope, dotVecFl2d(phys->g, circUnitSlope) / 2.0f);
-
-                                // Sum the static force
-                                pc->staticForce = addVecFl2d(pc->staticForce, projected);
-                                pc->inContact   = true;
-                            }
-#endif
                         }
                     }
                 }
@@ -597,11 +536,47 @@ void physCheckCollisions(physSim_t* phys)
                 // Dampen after bounce
                 pc->vel = mulVecFl2d(pc->vel, 0.75f);
 
-                // Just in case, don't float upwards
-                if (pc->staticForce.y < 0)
+                // If the circle is on top of an object (i.e. reflection vector points upward)
+                if (reflVec.y < 0)
                 {
-                    pc->staticForce.y = 0;
+                    pc->inContact = true;
+
+                    // Unit slope is the unit normal rotated 90 degrees, pointed downward
+                    if (reflVec.x < 0)
+                    {
+                        pc->slopeVec.x = reflVec.y;
+                        pc->slopeVec.y = -reflVec.x;
+                    }
+                    else
+                    {
+                        pc->slopeVec.x = -reflVec.y;
+                        pc->slopeVec.y = reflVec.x;
+                    }
+
+                    // Project the gravity vector onto the unit slope to find the static force moving this
+                    // object proj(a onto b) == (b) * ((a dot b) / (b dot b)) But b is a unit vector, so (b dot
+                    // b) is just 2
+                    pc->staticForce = mulVecFl2d(pc->slopeVec, dotVecFl2d(phys->g, pc->slopeVec) / 2.0f);
+
+                    // Just in case, don't float upwards
+                    if (pc->staticForce.y < 0)
+                    {
+                        pc->staticForce.y = 0;
+                    }
                 }
+            }
+            // No collision but the object is still in contact with something
+            else if (pc->inContact)
+            {
+                // TODO why the heck is this so bouncy?
+
+                // Shift it downward just to see if it's still in contact
+                // This is because the circle will never clip into an object,
+                // and we don't apply a constant downward force to keep contact.
+                // A constant downward force messes with lateral movement inputs
+                pc->c.pos.y += 0.5f;
+                pc->inContact = physAnyCollision(phys, pc);
+                pc->c.pos.y -= 0.5f;
             }
         }
 
