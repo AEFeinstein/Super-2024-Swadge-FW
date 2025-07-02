@@ -13,10 +13,8 @@
 // Defines
 //==============================================================================
 
-// There are 32 zones split into an 8x4 grid
-#define NUM_ZONES_BIG 8
-#define NUM_ZONES_LIL 4
-#define NUM_ZONES     (NUM_ZONES_BIG * NUM_ZONES_LIL)
+// There are 32 zones, one for each bit in a int32_t
+#define NUM_ZONES 32
 
 //==============================================================================
 // Enums
