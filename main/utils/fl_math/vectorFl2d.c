@@ -128,7 +128,7 @@ float magVecFl2d(vecFl_t vector)
  */
 vecFl_t normVecFl2d(vecFl_t in)
 {
-    float len    = sqrt(sqMagVecFl2d(in));
+    float len    = sqrtf(sqMagVecFl2d(in));
     vecFl_t norm = {
         .x = in.x / len,
         .y = in.y / len,
