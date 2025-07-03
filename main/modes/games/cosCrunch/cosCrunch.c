@@ -101,6 +101,10 @@ swadgeMode_t cosCrunchMode = {
     .fnDacCb                  = NULL,
 };
 
+/// Uncomment this to play the specified game repeatedly instead of randomizing.
+/// Also enables the FPS counter.
+// #define DEV_MODE_MICROGAME &ccmgWhatever
+
 const cosCrunchMicrogame_t* const microgames[] = {
     &ccmgBreakTime,
     &ccmgDelivery,
@@ -255,12 +259,16 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                 cc->activeMicrogame.game->fnDestroyMicrogame();
             }
 
+#ifdef DEV_MODE_MICROGAME
+            cc->activeMicrogame.game = DEV_MODE_MICROGAME;
+#else
             const cosCrunchMicrogame_t* newMicrogame;
             do
             {
                 newMicrogame = microgames[esp_random() % ARRAY_SIZE(microgames)];
             } while (cc->activeMicrogame.game != NULL && cc->activeMicrogame.game == newMicrogame);
             cc->activeMicrogame.game = newMicrogame;
+#endif
             cc->activeMicrogame.game->fnInitMicrogame();
 
             cc->activeMicrogame.gameTimeRemainingUs = cc->activeMicrogame.game->timeoutUs;
@@ -370,7 +378,9 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         }
     }
 
+#ifdef DEV_MODE_MICROGAME
     DRAW_FPS_COUNTER(cc->font);
+#endif
 }
 
 static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
