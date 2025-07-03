@@ -110,7 +110,17 @@ void dn_drawBoard(dn_entity_t* self)
 void dn_updateCurtain(dn_entity_t* self)
 {
     dn_curtainData_t* curtainData = (dn_curtainData_t*)self->data;
-    curtainData->separation += (self->gameData->elapsedUs >> 14);
+    curtainData->separation += (self->gameData->elapsedUs >> 13);
+    
+    dn_entity_t* board = (dn_entity_t*)self->gameData->entityManager.entities->first->val;
+    if(curtainData->separation > 100 && !board->updateFunction)
+    {
+        board->updateFunction = dn_updateBoard;
+    }
+    if(curtainData->separation > (TFT_WIDTH >> 1))
+    {
+        self->destroyFlag = true;
+    }
 }
 void dn_drawCurtain(dn_entity_t* self)
 {
@@ -126,7 +136,7 @@ void dn_drawCurtain(dn_entity_t* self)
     }
 
     // Draw the intro text
-    if(curtainData->separation > -200 && curtainData->separation < -50)
+    if(curtainData->separation > -700 && curtainData->separation < -50)
     {
         char text[32] = "Player 1";
         //get the text width
@@ -148,14 +158,14 @@ void dn_drawCurtain(dn_entity_t* self)
                 break;
         }
     }
-    if(curtainData->separation > -150 && curtainData->separation < -50)
+    if(curtainData->separation > -600 && curtainData->separation < -50)
     {
         char text[4] = "VS";
         int tWidth = textWidth(&self->gameData->font_righteous, text);
 
         drawShinyText(&self->gameData->font_righteous, c520, c541, c552, text, (TFT_WIDTH >> 1) - (tWidth >> 1), 60);
     }
-    if(curtainData->separation > -100 && curtainData->separation < -50)
+    if(curtainData->separation > -500 && curtainData->separation < -50)
     {
         char text[32] = "Player 2";
         int tWidth = textWidth(&self->gameData->font_ibm, text);

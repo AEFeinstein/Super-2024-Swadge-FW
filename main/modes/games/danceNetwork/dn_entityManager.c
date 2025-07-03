@@ -88,11 +88,22 @@ void dn_drawEntity(dn_entity_t* entity)
 void dn_drawEntities(dn_entityManager_t* entityManager)
 {
     node_t* curNode = entityManager->entities->first;
+    uint16_t idx = 0;
     while (curNode != NULL)
     {
+        
         dn_entity_t* entity = (dn_entity_t*)curNode->val;
-        dn_drawEntity(entity);
-        curNode = curNode->next;
+        if(entity->destroyFlag)
+        {
+            curNode = curNode->next;
+            removeIdx(entityManager->entities, idx);
+        }
+        else
+        {
+            dn_drawEntity(entity);
+            curNode = curNode->next;
+            idx++;
+        }
     }
 }
 
@@ -188,7 +199,6 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
             entity->data = heap_caps_calloc(1, sizeof(dn_boardData_t), MALLOC_CAP_SPIRAM);
             entity->dataType = DN_BOARD_DATA;
             entity->drawFunction = dn_drawBoard;
-            entity->updateFunction = dn_updateBoard;
             break;
         case DN_CURTAIN_ASSET:
             if(gameData->characterSets[0] == DN_ALPHA_SET || gameData->characterSets[1] == DN_ALPHA_SET)
@@ -202,7 +212,7 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
 
             entity = dn_createEntitySpecial(entityManager, DN_CURTAIN_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
             entity->data = heap_caps_calloc(1, sizeof(dn_curtainData_t), MALLOC_CAP_SPIRAM);
-            ((dn_curtainData_t*)entity->data)->separation = -255; // Negative numbers serve as a timer counting up. Separation occurs above zero.
+            ((dn_curtainData_t*)entity->data)->separation = -900; // Negative numbers serve as a timer counting up. Separation occurs above zero.
             entity->dataType = DN_CURTAIN_DATA;
             entity->drawFunction = dn_drawCurtain;
             entity->updateFunction = dn_updateCurtain;
