@@ -63,7 +63,6 @@ physSim_t* initPhys(float w, float h, float gx, float gy)
     // Set gravity
     phys->g.x  = gx;
     phys->g.y  = gy;
-    phys->gMag = magVecFl2d(phys->g);
 
     // Set bounds for the physics sim
     phys->bounds.x = w;

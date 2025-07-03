@@ -73,7 +73,6 @@ typedef struct
 typedef struct
 {
     vecFl_t g;
-    float gMag;
     vecFl_t bounds;
     rectangleFl_t zones[NUM_ZONES];
     list_t lines;
