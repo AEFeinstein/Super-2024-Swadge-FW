@@ -82,7 +82,6 @@ typedef struct dn_gameData_t{
     dn_asset_t assets[NUM_ASSETS];
 
     uint8_t alphaFaceDir; //0 = down, 1 = left, 2 = up, 3 = right
-    wsgPalette_t redFloor1;
     bool isPlayer1;//True if the player on this device is P1. False if P2
 } dn_gameData_t;
 

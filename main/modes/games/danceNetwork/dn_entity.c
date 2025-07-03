@@ -88,9 +88,19 @@ void dn_drawBoard(dn_entity_t* self)
             {
                 // Draw the unit on the tile
                 dn_entity_t* unit = boardData->tiles[y][x].unit;
-                drawWsgSimple(&self->gameData->assets[unit->assetIndex].frames[0],
+                if((unit->assetIndex == DN_KING_ASSET || unit->assetIndex == DN_PAWN_ASSET) && (unit == boardData->p1Units[0] || unit == boardData->p1Units[1] || unit == boardData->p1Units[2] || unit == boardData->p1Units[3] || unit == boardData->p1Units[4]))
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[unit->assetIndex].frames[0],
+                            drawX - self->gameData->assets[unit->assetIndex].originX,
+                            drawY - self->gameData->assets[unit->assetIndex].originY,
+                            &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                }
+                else
+                {
+                    drawWsgSimple(&self->gameData->assets[unit->assetIndex].frames[0],
                             drawX - self->gameData->assets[unit->assetIndex].originX,
                             drawY - self->gameData->assets[unit->assetIndex].originY);
+                }
             }
         }
     }

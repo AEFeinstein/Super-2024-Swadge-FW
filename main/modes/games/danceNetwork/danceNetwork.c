@@ -153,10 +153,6 @@ static void dn_EnterMode(void)
     gameData->assets[DN_GROUND_TILE_ASSET].originY = 13;
     gameData->assets[DN_GROUND_TILE_ASSET].numFrames = 1;
 
-
-    wsgPaletteReset(&gameData->redFloor1);
-    wsgPaletteSet(&gameData->redFloor1, c334, c533);
-
     // Allocate WSG loading helpers
     dn_hsd = heatshrink_decoder_alloc(256, 8, 4);
     // The largest image is bb_menu2.png, decodes to 99124 bytes
