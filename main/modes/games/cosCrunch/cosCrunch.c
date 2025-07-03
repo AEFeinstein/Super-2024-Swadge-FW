@@ -255,7 +255,12 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                 cc->activeMicrogame.game->fnDestroyMicrogame();
             }
 
-            cc->activeMicrogame.game = microgames[esp_random() % ARRAY_SIZE(microgames)];
+            const cosCrunchMicrogame_t* newMicrogame;
+            do
+            {
+                newMicrogame = microgames[esp_random() % ARRAY_SIZE(microgames)];
+            } while (cc->activeMicrogame.game != NULL && cc->activeMicrogame.game == newMicrogame);
+            cc->activeMicrogame.game = newMicrogame;
             cc->activeMicrogame.game->fnInitMicrogame();
 
             cc->activeMicrogame.gameTimeRemainingUs = cc->activeMicrogame.game->timeoutUs;
