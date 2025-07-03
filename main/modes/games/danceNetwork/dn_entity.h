@@ -13,8 +13,8 @@
 
 typedef enum
 {
-    NULL_DATA,
-    BOARD_DATA,
+    DN_NULL_DATA,
+    DN_BOARD_DATA,
 } dn_dataType_t;
 
 //==============================================================================
@@ -45,6 +45,7 @@ struct dn_entity_t
 typedef struct{
     uint16_t yOffset;
     int16_t yVel;
+    dn_entity_t* unit; //Pointer to the unit on this tile. NULL if no unit is present.
 } dn_tileData_t;
 
 typedef struct

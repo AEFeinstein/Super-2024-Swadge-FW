@@ -108,6 +108,8 @@ static void dn_EnterMode(void)
 {
     gameData = (dn_gameData_t*)heap_caps_calloc(1, sizeof(dn_gameData_t), MALLOC_CAP_8BIT);
 
+    //set the camera to the center of positive ints
+    gameData->camera.pos = (vec_t){0xFFFF - (TFT_WIDTH << (DN_DECIMAL_BITS - 1)), 0xFFFF - (TFT_HEIGHT << (DN_DECIMAL_BITS - 1))};
     dn_initializeEntityManager(&gameData->entityManager, gameData);
 
     gameData->assets[DN_ALPHA_DOWN_ASSET].originX = 10;
@@ -247,6 +249,7 @@ static void dn_MainLoop(int64_t elapsedUs)
     {
         // store the whole button state for this frame
         gameData->btnState = evt.state;
+        gameData->elapsedUs = elapsedUs;
         // update the whole engine via entity management
         dn_updateEntities(&gameData->entityManager);
     }
@@ -505,7 +508,7 @@ static void dn_initializeGame(void)
         }
         //[gameData->isPlayer1] actually gets the opponent.
         //give the CPU a random character.
-        gameData->characterSets[gameData->isPlayer1] = dn_randomInt(0,1);
+        gameData->characterSets[gameData->isPlayer1] = (dn_characterSet_t)dn_randomInt(0,1);
     }
 
     ///////////////////
@@ -543,7 +546,7 @@ static void dn_initializeGame(void)
     //////////////////
     //Make the board//
     //////////////////
-    dn_entity_t* board = dn_createEntitySimple(&gameData->entityManager, DN_GROUND_TILE_ASSET, (vec_t){0xFFFF, 0xFFFF});
+    dn_entity_t* board = dn_createEntitySimple(&gameData->entityManager, DN_GROUND_TILE_ASSET, (vec_t){0xFFFF, 0xFFFF}, gameData);
     dn_boardData_t* boardData = (dn_boardData_t*)board->data;
 
     //////////////////
@@ -552,35 +555,45 @@ static void dn_initializeGame(void)
     //p1 king
     dn_assetIdx_t assetIdx = dn_getAssetIdx(gameData->characterSets[0], DN_KING, DN_UP);
     dn_boardPos_t boardPos = {2, 4};
-    boardData->p1Units[0] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    boardData->p1Units[0] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[0]; // Set the unit on the tile
     //p1 pawns
     assetIdx = dn_getAssetIdx(gameData->characterSets[0], DN_PAWN, DN_UP);
     boardPos = (dn_boardPos_t){0, 4};
-    boardData->p1Units[1] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    boardData->p1Units[1] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[1]; // Set the unit on the tile
     boardPos = (dn_boardPos_t){1, 4};
-    boardData->p1Units[2] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    boardData->p1Units[2] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[2]; // Set the unit on the tile
     boardPos = (dn_boardPos_t){3, 4};
-    boardData->p1Units[3] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    boardData->p1Units[3] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[3]; // Set the unit on the tile
     boardPos = (dn_boardPos_t){4, 4};
-    boardData->p1Units[4] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    boardData->p1Units[4] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[4]; // Set the unit on the tile
 
     //p2 king
     assetIdx = dn_getAssetIdx(gameData->characterSets[1], DN_KING, DN_UP);
     boardPos = (dn_boardPos_t){2, 0};
-    boardData->p2Units[0] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    boardData->p2Units[0] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[0]; // Set the unit on the tile
     //p2 pawns
     assetIdx = dn_getAssetIdx(gameData->characterSets[1], DN_PAWN, DN_UP);
     boardPos = (dn_boardPos_t){0, 0};
-    boardData->p2Units[1] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    boardData->p2Units[1] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[1]; // Set the unit on the tile
     boardPos = (dn_boardPos_t){1, 0};
-    boardData->p2Units[2] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    boardData->p2Units[2] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[2]; // Set the unit on the tile
     boardPos = (dn_boardPos_t){3, 0};
-    boardData->p2Units[3] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    boardData->p2Units[3] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[3]; // Set the unit on the tile
     boardPos = (dn_boardPos_t){4, 0};
-    boardData->p2Units[4] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos));
+    boardData->p2Units[4] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[4]; // Set the unit on the tile
 
     boardData->impactPos = (dn_boardPos_t){2,2};
-    boardData->tiles[boardData->impactPos.x][boardData->impactPos.y].yOffset = (TFT_HEIGHT >> 2) << DN_DECIMAL_BITS;
+    boardData->tiles[boardData->impactPos.y][boardData->impactPos.x].yOffset = (TFT_HEIGHT >> 2) << DN_DECIMAL_BITS;
 }
 
 /**

@@ -81,9 +81,17 @@ void dn_drawBoard(dn_entity_t* self)
     {
         for (int x = 0; x < DN_BOARD_SIZE; x++)
         {
-            int drawX = (TFT_WIDTH >> 1) + (x - y - 1) * (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1);
-            int drawY = 155 + (x + y) * 13 - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
+            int drawX =  ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) + (x - y - 1) * (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1);
+            int drawY = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + (x + y) * 13 - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
             drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0], drawX, drawY);
+            if(boardData->tiles[y][x].unit != NULL)
+            {
+                // Draw the unit on the tile
+                dn_entity_t* unit = boardData->tiles[y][x].unit;
+                drawWsgSimple(&self->gameData->assets[unit->assetIndex].frames[0],
+                            drawX - self->gameData->assets[unit->assetIndex].originX,
+                            drawY - self->gameData->assets[unit->assetIndex].originY);
+            }
         }
     }
 }
