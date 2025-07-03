@@ -295,18 +295,9 @@ void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc)
  */
 void physStep(physSim_t* phys, int32_t elapsedUs)
 {
-    node_t* cNode     = phys->circles.first;
-    bool wasInContact = ((physCirc_t*)cNode->val)->inContact;
-
     physUpdateTimestep(phys, elapsedUs);
     physCheckCollisions(phys);
     physBinaryMoveObjects(phys);
-
-    bool isInContact = ((physCirc_t*)cNode->val)->inContact;
-    if (wasInContact != isInContact)
-    {
-        ESP_LOGI("PHS", "Contact: %s", isInContact ? "true" : "false");
-    }
 }
 
 /**
@@ -333,11 +324,8 @@ void physUpdateTimestep(physSim_t* phys, int32_t elapsedUs)
             vecFl_t moveVel    = {0};
             if (pc->inContact)
             {
-                // Move in the direction of the surface the object is on
-                totalForce = pc->staticForce;
-                // Pull down a little to maintain contact
-                // TODO actually dont
-                // totalForce.y += 1e-10f;
+                // Accelerate in the direction of the surface the object is on
+                totalForce = addVecFl2d(pc->staticForce, pc->g);
 
                 // If the object is moving
                 if (pc->moving)
@@ -401,12 +389,6 @@ void physCheckCollisions(physSim_t* phys)
             float colDist = FLT_MAX;
             // Keep track of the reflection vector in case of collision
             vecFl_t reflVec = {0};
-
-            // Zero the normal forces before checking for collisions
-            // TODO necessary?
-            // pc->staticForce.x = 0;
-            // pc->staticForce.y = 0;
-            // pc->inContact     = false;
 
             // Check for collisions with lines
             node_t* oln = phys->lines.first;
@@ -536,6 +518,13 @@ void physCheckCollisions(physSim_t* phys)
                 // Dampen after bounce
                 pc->vel = mulVecFl2d(pc->vel, 0.75f);
 
+                // Deadband the velocity if it's small enough
+                if (sqMagVecFl2d(pc->vel) < 1e-9f)
+                {
+                    pc->vel.x = 0;
+                    pc->vel.y = 0;
+                }
+
                 // If the circle is on top of an object (i.e. reflection vector points upward)
                 if (reflVec.y < 0)
                 {
@@ -568,9 +557,7 @@ void physCheckCollisions(physSim_t* phys)
             // No collision but the object is still in contact with something
             else if (pc->inContact)
             {
-                // TODO why the heck is this so bouncy?
-
-                // Shift it downward just to see if it's still in contact
+                // Shift it downward a half pixel just to see if it's still in contact
                 // This is because the circle will never clip into an object,
                 // and we don't apply a constant downward force to keep contact.
                 // A constant downward force messes with lateral movement inputs
