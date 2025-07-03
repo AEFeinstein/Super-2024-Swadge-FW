@@ -110,22 +110,23 @@ static void dn_EnterMode(void)
 
     //set the camera to the center of positive ints
     gameData->camera.pos = (vec_t){0xFFFF - (TFT_WIDTH << (DN_DECIMAL_BITS - 1)), 0xFFFF - (TFT_HEIGHT << (DN_DECIMAL_BITS - 1))};
+    gameData->camera.pos.y -= (9 << DN_DECIMAL_BITS); // Move the camera a bit so the board is centered.
     dn_initializeEntityManager(&gameData->entityManager, gameData);
 
-    gameData->assets[DN_ALPHA_DOWN_ASSET].originX = 10;
-    gameData->assets[DN_ALPHA_DOWN_ASSET].originY = 10;
+    gameData->assets[DN_ALPHA_DOWN_ASSET].originX = 9;
+    gameData->assets[DN_ALPHA_DOWN_ASSET].originY = 54;
     gameData->assets[DN_ALPHA_DOWN_ASSET].numFrames = 1;
 
     gameData->assets[DN_ALPHA_ORTHO_ASSET].originX = 10;
     gameData->assets[DN_ALPHA_ORTHO_ASSET].originY = 10;
     gameData->assets[DN_ALPHA_ORTHO_ASSET].numFrames = 1;
 
-    gameData->assets[DN_ALPHA_UP_ASSET].originX = 10;
-    gameData->assets[DN_ALPHA_UP_ASSET].originY = 10;
+    gameData->assets[DN_ALPHA_UP_ASSET].originX = 14;
+    gameData->assets[DN_ALPHA_UP_ASSET].originY = 53;
     gameData->assets[DN_ALPHA_UP_ASSET].numFrames = 1;
 
     gameData->assets[DN_KING_ASSET].originX = 10;
-    gameData->assets[DN_KING_ASSET].originY = 10;
+    gameData->assets[DN_KING_ASSET].originY = 54;
     gameData->assets[DN_KING_ASSET].numFrames = 1;
 
     gameData->assets[DN_KING_SMALL_ASSET].originX = 10;
@@ -133,7 +134,7 @@ static void dn_EnterMode(void)
     gameData->assets[DN_KING_SMALL_ASSET].numFrames = 1;
 
     gameData->assets[DN_PAWN_ASSET].originX = 10;
-    gameData->assets[DN_PAWN_ASSET].originY = 10;
+    gameData->assets[DN_PAWN_ASSET].originY = 44;
     gameData->assets[DN_PAWN_ASSET].numFrames = 1;
 
     gameData->assets[DN_PAWN_SMALL_ASSET].originX = 10;
@@ -141,15 +142,15 @@ static void dn_EnterMode(void)
     gameData->assets[DN_PAWN_SMALL_ASSET].numFrames = 1;
 
     gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originX = 10;
-    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originY = 10;
+    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originY = 33;
     gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].numFrames = 1;
 
-    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originX = 10;
-    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originY = 10;
+    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originX = 14;
+    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originY = 30;
     gameData->assets[DN_BUCKET_HAT_UP_ASSET].numFrames = 1;
 
-    gameData->assets[DN_GROUND_TILE_ASSET].originX = 10;
-    gameData->assets[DN_GROUND_TILE_ASSET].originY = 10;
+    gameData->assets[DN_GROUND_TILE_ASSET].originX = 25;
+    gameData->assets[DN_GROUND_TILE_ASSET].originY = 13;
     gameData->assets[DN_GROUND_TILE_ASSET].numFrames = 1;
 
 
@@ -573,12 +574,12 @@ static void dn_initializeGame(void)
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[4]; // Set the unit on the tile
 
     //p2 king
-    assetIdx = dn_getAssetIdx(gameData->characterSets[1], DN_KING, DN_UP);
+    assetIdx = dn_getAssetIdx(gameData->characterSets[1], DN_KING, DN_DOWN);
     boardPos = (dn_boardPos_t){2, 0};
     boardData->p2Units[0] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[0]; // Set the unit on the tile
     //p2 pawns
-    assetIdx = dn_getAssetIdx(gameData->characterSets[1], DN_PAWN, DN_UP);
+    assetIdx = dn_getAssetIdx(gameData->characterSets[1], DN_PAWN, DN_DOWN);
     boardPos = (dn_boardPos_t){0, 0};
     boardData->p2Units[1] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[1]; // Set the unit on the tile
