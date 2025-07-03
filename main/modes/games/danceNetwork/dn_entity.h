@@ -15,6 +15,7 @@ typedef enum
 {
     DN_NULL_DATA,
     DN_BOARD_DATA,
+    DN_CURTAIN_DATA,
 } dn_dataType_t;
 
 //==============================================================================
@@ -56,11 +57,26 @@ typedef struct
     dn_boardPos_t impactPos;//x and y indices of an impact effect.
 } dn_boardData_t;
 
+typedef struct
+{
+    //char array of instruction text
+    char instructions[120];
+} dn_instructionData_t;
+
+typedef struct
+{
+    int16_t separation; // The distance between the curtain and the center of the screen
+} dn_curtainData_t;
+
+
+
 //==============================================================================
 // Prototypes
 //==============================================================================
 void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType);
 
 void dn_updateBoard(dn_entity_t* self);
-
 void dn_drawBoard(dn_entity_t* self);
+
+void dn_updateCurtain(dn_entity_t* self);
+void dn_drawCurtain(dn_entity_t* self);

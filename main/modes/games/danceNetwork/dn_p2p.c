@@ -29,15 +29,15 @@ void dn_DrawConnecting(dn_gameData_t* gameData, int64_t elapsedUs)
     int16_t ySpacing = 8;
 
     // Center text vertically under the title
-    int16_t tHeight = (gameData->numConStrs * gameData->font_rodin.height) + ((gameData->numConStrs - 1) * ySpacing);
+    int16_t tHeight = (gameData->numConStrs * gameData->font_ibm.height) + ((gameData->numConStrs - 1) * ySpacing);
     int16_t yOff    = MANIA_TITLE_HEIGHT + (MANIA_BODY_HEIGHT - tHeight) / 2;
 
     // Draw the connection strings, centered
     for (int16_t tIdx = 0; tIdx < gameData->numConStrs; tIdx++)
     {
-        int16_t tWidth = textWidth(&gameData->font_rodin, gameData->conStrs[tIdx]);
-        drawText(&gameData->font_rodin, c000, gameData->conStrs[tIdx], (TFT_WIDTH - tWidth) / 2, yOff);
-        yOff += (gameData->font_rodin.height + ySpacing);
+        int16_t tWidth = textWidth(&gameData->font_ibm, gameData->conStrs[tIdx]);
+        drawText(&gameData->font_ibm, c000, gameData->conStrs[tIdx], (TFT_WIDTH - tWidth) / 2, yOff);
+        yOff += (gameData->font_ibm.height + ySpacing);
     }
 }
 

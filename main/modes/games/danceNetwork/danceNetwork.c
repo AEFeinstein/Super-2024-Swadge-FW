@@ -153,6 +153,8 @@ static void dn_EnterMode(void)
     gameData->assets[DN_GROUND_TILE_ASSET].originY = 13;
     gameData->assets[DN_GROUND_TILE_ASSET].numFrames = 1;
 
+    gameData->assets[DN_CURTAIN_ASSET].numFrames = 1;
+
     // Allocate WSG loading helpers
     dn_hsd = heatshrink_decoder_alloc(256, 8, 4);
     // The largest image is bb_menu2.png, decodes to 99124 bytes
@@ -160,8 +162,8 @@ static void dn_EnterMode(void)
     dn_decodeSpace = heap_caps_malloc_tag(99328, MALLOC_CAP_SPIRAM, "decodeSpace");//TODO change the size to the largest sprite
     
     // Load some fonts
-    loadFont(IBM_VGA_8_FONT, &gameData->font_rodin, false);
-    // loadFont("righteous_150.font", &gameData->font_righteous, false);
+    loadFont(IBM_VGA_8_FONT, &gameData->font_ibm, false);
+    loadFont(RIGHTEOUS_150_FONT, &gameData->font_righteous, false);
 
     // Initialize a menu renderer
     gameData->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
@@ -204,7 +206,8 @@ static void dn_ExitMode(void)
     dn_freeAssets();
     free(gameData);
     // Free the fonts
-    freeFont(&gameData->font_rodin);
+    freeFont(&gameData->font_ibm);
+    freeFont(&gameData->font_righteous);
 }
 
 /**
@@ -511,6 +514,14 @@ static void dn_initializeGame(void)
     ///////////////////
     //load the assets//
     ///////////////////
+    if(!gameData->assets[DN_CURTAIN_ASSET].allocated)
+    {
+        // Load the curtain asset
+        gameData->assets[DN_CURTAIN_ASSET].frames = heap_caps_calloc(gameData->assets[DN_CURTAIN_ASSET].numFrames, sizeof(wsg_t), MALLOC_CAP_8BIT);
+        gameData->assets[DN_CURTAIN_ASSET].allocated = true;
+        loadWsgInplace(DN_CURTAIN_WSG, &gameData->assets[DN_CURTAIN_ASSET].frames[0], true, dn_decodeSpace, dn_hsd);
+    }
+
     for(int player = 0; player < 2; player++)
     {
         for(int rank = 0; rank < 2; rank++)
@@ -591,6 +602,11 @@ static void dn_initializeGame(void)
 
     boardData->impactPos = (dn_boardPos_t){2,2};
     boardData->tiles[boardData->impactPos.y][boardData->impactPos.x].yOffset = (TFT_HEIGHT >> 2) << DN_DECIMAL_BITS;
+
+    ////////////////////
+    //Make the curtain//
+    ////////////////////
+    dn_createEntitySimple(&gameData->entityManager, DN_CURTAIN_ASSET, (vec_t){0xFFFF, 0xFFFF}, gameData);
 }
 
 /**

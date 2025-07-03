@@ -190,6 +190,23 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
             entity->drawFunction = dn_drawBoard;
             entity->updateFunction = dn_updateBoard;
             break;
+        case DN_CURTAIN_ASSET:
+            if(gameData->characterSets[0] == DN_ALPHA_SET || gameData->characterSets[1] == DN_ALPHA_SET)
+            {
+                dn_loadAsset(DN_ALPHA_ORTHO_WSG, 1, &gameData->assets[DN_ALPHA_ORTHO_ASSET]);
+            }
+            if(gameData->characterSets[0] == DN_CHESS_SET || gameData->characterSets[1] == DN_CHESS_SET)
+            {
+                dn_loadAsset(DN_CHESS_ORTHO_WSG, 1, &gameData->assets[DN_CHESS_ORTHO_ASSET]);
+            }
+
+            entity = dn_createEntitySpecial(entityManager, DN_CURTAIN_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity->data = heap_caps_calloc(1, sizeof(dn_curtainData_t), MALLOC_CAP_SPIRAM);
+            ((dn_curtainData_t*)entity->data)->separation = -255; // Negative numbers serve as a timer counting up. Separation occurs above zero.
+            entity->dataType = DN_CURTAIN_DATA;
+            entity->drawFunction = dn_drawCurtain;
+            entity->updateFunction = dn_updateCurtain;
+            break;
         default:
             return NULL;
     }

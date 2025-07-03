@@ -57,7 +57,8 @@ typedef struct dn_gameData_t{
     menu_t* menu;
     menu_t* bgMenu;
     menuManiaRenderer_t* menuRenderer;
-    font_t font_rodin;
+    font_t font_ibm; // IBM VGA 8 font
+    font_t font_righteous;
     // All buttons states
     uint16_t btnState; 
     // Momentary downpresses on each button
@@ -72,6 +73,7 @@ typedef struct dn_gameData_t{
     int32_t elapsedUs; // Time elapsed since the last frame in microseconds
     dn_entityManager_t entityManager;
     uint8_t generalTimer;
+    dn_phase_t phase; // The current phase of the game
     // For marker selection UI
     int32_t xSelectScrollTimer;
     int16_t xSelectScrollOffset;
