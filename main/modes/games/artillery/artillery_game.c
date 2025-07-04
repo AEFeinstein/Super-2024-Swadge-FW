@@ -20,7 +20,11 @@ const struct
     artilleryGameState_t nextState;
 } menuEntries[] = {
     {
-        .text      = "Move Around",
+        .text      = "Look Around",
+        .nextState = AGS_LOOK,
+    },
+    {
+        .text      = "Drive",
         .nextState = AGS_MOVE,
     },
     {
@@ -86,6 +90,31 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     }
                 }
             }
+            break;
+        }
+        case AGS_LOOK:
+        {
+            // Check if the menu should be exited
+            if (evt.down)
+            {
+                switch (evt.button)
+                {
+                    case PB_A:
+                    case PB_B:
+                    {
+                        // Return to the menu
+                        ad->gState = AGS_MENU;
+                        return;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+            }
+
+            // Set button to pan camera
+            physSetCameraButton(ad->phys, evt.state);
             break;
         }
         case AGS_LOAD:
@@ -220,6 +249,12 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
             ad->gState = AGS_MENU;
             break;
         }
+        case AGS_LOOK:
+        {
+            // Run timer to pan camera based on button state
+            physAdjustCamera(ad->phys, elapsedUs);
+            break;
+        }
         case AGS_WAIT:
         case AGS_LOAD:
         case AGS_MOVE:
@@ -241,23 +276,24 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
 void artilleryDrawMenu(artilleryData_t* ad)
 {
 #define MENU_MARGIN 16
-#define MENU_HEIGHT 96
 #define FONT_MARGIN 8
-
-    fillDisplayArea(MENU_MARGIN,                            //
-                    TFT_HEIGHT - MENU_HEIGHT - MENU_MARGIN, //
-                    TFT_WIDTH - MENU_MARGIN,                //
-                    TFT_HEIGHT - MENU_MARGIN,               //
-                    c111);
-    drawRect(MENU_MARGIN,                            //
-             TFT_HEIGHT - MENU_HEIGHT - MENU_MARGIN, //
-             TFT_WIDTH - MENU_MARGIN,                //
-             TFT_HEIGHT - MENU_MARGIN,               //
-             c005);
 
     font_t* f = getSysFont();
 
-    int16_t yOff = TFT_HEIGHT - MENU_HEIGHT;
+    int32_t menuHeight = (ARRAY_SIZE(menuEntries) * (f->height + FONT_MARGIN)) + FONT_MARGIN;
+
+    fillDisplayArea(MENU_MARGIN,                           //
+                    TFT_HEIGHT - menuHeight - MENU_MARGIN, //
+                    TFT_WIDTH - MENU_MARGIN,               //
+                    TFT_HEIGHT - MENU_MARGIN,              //
+                    c111);
+    drawRect(MENU_MARGIN,                           //
+             TFT_HEIGHT - menuHeight - MENU_MARGIN, //
+             TFT_WIDTH - MENU_MARGIN,               //
+             TFT_HEIGHT - MENU_MARGIN,              //
+             c005);
+
+    int16_t yOff = TFT_HEIGHT - menuHeight - FONT_MARGIN;
 
     for (uint32_t i = 0; i < ARRAY_SIZE(menuEntries); i++)
     {
@@ -266,6 +302,6 @@ void artilleryDrawMenu(artilleryData_t* ad)
         {
             drawText(f, c555, ">", 2 * MENU_MARGIN - 10, yOff);
         }
-        yOff += f->height + FONT_MARGIN;
+        yOff += (f->height + FONT_MARGIN);
     }
 }
