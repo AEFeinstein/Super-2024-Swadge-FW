@@ -8,6 +8,7 @@
 
 #include <esp_heap_caps.h>
 #include <esp_log.h>
+#include <hdw-tft.h>
 
 #include "shapes.h"
 #include "palette.h"
@@ -61,8 +62,8 @@ physSim_t* initPhys(float w, float h, float gx, float gy)
     physSim_t* phys = heap_caps_calloc(1, sizeof(physSim_t), MALLOC_CAP_8BIT);
 
     // Set gravity
-    phys->g.x  = gx;
-    phys->g.y  = gy;
+    phys->g.x = gx;
+    phys->g.y = gy;
 
     // Set bounds for the physics sim
     phys->bounds.x = w;
@@ -748,7 +749,11 @@ void drawPhysOutline(physSim_t* phys)
     while (lNode)
     {
         physLine_t* pl = (physLine_t*)lNode->val;
-        drawLine(pl->l.p1.x, pl->l.p1.y, pl->l.p2.x, pl->l.p2.y, c522, 0);
+        drawLineFast(pl->l.p1.x - phys->camera.x, //
+                     pl->l.p1.y - phys->camera.y, //
+                     pl->l.p2.x - phys->camera.x, //
+                     pl->l.p2.y - phys->camera.y, //
+                     c522);
 
         // Iterate
         lNode = lNode->next;
@@ -770,13 +775,19 @@ void drawPhysOutline(physSim_t* phys)
         {
             cCol = c550;
         }
-        drawCircle(pc->c.pos.x, pc->c.pos.y, pc->c.radius, cCol);
+        drawCircle(pc->c.pos.x - phys->camera.x, //
+                   pc->c.pos.y - phys->camera.y, //
+                   pc->c.radius, cCol);
 
         // Draw a gun barrel for tanks
         if (CT_TANK == pc->type)
         {
             vecFl_t absBarrelTip = addVecFl2d(pc->c.pos, pc->relBarrelTip);
-            drawLineFast(pc->c.pos.x, pc->c.pos.y, absBarrelTip.x, absBarrelTip.y, c335);
+            drawLineFast(pc->c.pos.x - phys->camera.x,    //
+                         pc->c.pos.y - phys->camera.y,    //
+                         absBarrelTip.x - phys->camera.x, //
+                         absBarrelTip.y - phys->camera.y, //
+                         c335);
         }
 
         // Iterate
@@ -826,4 +837,56 @@ physCirc_t* fireShot(physSim_t* phys, physCirc_t* circ)
     shell->vel.y = -cosf(circ->barrelAngle) * circ->shotPower;
 
     return shell;
+}
+
+/**
+ * @brief Save the button state in order to pan the camera
+ *
+ * @param phys The physics simulation to pan
+ * @param btn The current button state
+ */
+void physSetCameraButton(physSim_t* phys, buttonBit_t btn)
+{
+    phys->cameraBtn = btn;
+}
+
+/**
+ * @brief Pan the camera one pixel per frame as long as input buttons are held
+ *
+ * @param phys The physics simulation to pan
+ * @param elapsedUs The elapsed time
+ */
+void physAdjustCamera(physSim_t* phys, uint32_t elapsedUs)
+{
+    RUN_TIMER_EVERY(phys->cameraTimer, 1000000 / 60, elapsedUs, {
+        if (PB_UP & phys->cameraBtn)
+        {
+            if (phys->camera.y > 0)
+            {
+                phys->camera.y--;
+            }
+        }
+        else if (PB_DOWN & phys->cameraBtn)
+        {
+            if (phys->camera.y <= phys->bounds.y - TFT_HEIGHT)
+            {
+                phys->camera.y++;
+            }
+        }
+
+        if (PB_LEFT & phys->cameraBtn)
+        {
+            if (phys->camera.x > 0)
+            {
+                phys->camera.x--;
+            }
+        }
+        else if (PB_RIGHT & phys->cameraBtn)
+        {
+            if (phys->camera.x <= phys->bounds.x - TFT_WIDTH)
+            {
+                phys->camera.x++;
+            }
+        }
+    });
 }

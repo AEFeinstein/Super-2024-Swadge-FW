@@ -27,6 +27,7 @@ typedef enum
     AGS_MOVE,
     AGS_ADJUST,
     AGS_FIRE,
+    AGS_LOOK,
 } artilleryGameState_t;
 
 //==============================================================================

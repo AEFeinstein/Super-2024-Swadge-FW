@@ -1116,6 +1116,12 @@ void drawEllipse(int xm, int ym, int a, int b, paletteColor_t col)
  */
 static void drawCircleInner(int xm, int ym, int r, paletteColor_t col, int xOrigin, int yOrigin, int xScale, int yScale)
 {
+    // Don't draw off if off screen
+    if (((xm + r) < 0 || (xm - r) > TFT_WIDTH) || ((ym + r) < 0 || (ym - r) > TFT_HEIGHT))
+    {
+        return;
+    }
+
     SETUP_FOR_TURBO();
 
     int x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
