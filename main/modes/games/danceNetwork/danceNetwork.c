@@ -601,7 +601,6 @@ static void dn_initializeGame(void)
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[4]; // Set the unit on the tile
 
     boardData->impactPos = (dn_boardPos_t){2,2};
-    boardData->tiles[boardData->impactPos.y][boardData->impactPos.x].yOffset = (TFT_HEIGHT >> 2) << DN_DECIMAL_BITS;
 
     ////////////////////
     //Make the curtain//

@@ -115,6 +115,8 @@ void dn_updateCurtain(dn_entity_t* self)
     dn_entity_t* board = (dn_entity_t*)self->gameData->entityManager.entities->first->val;
     if(curtainData->separation > 100 && !board->updateFunction)
     {
+        dn_boardData_t* boardData = (dn_boardData_t*)board->data;
+        boardData->tiles[boardData->impactPos.y][boardData->impactPos.x].yOffset = (TFT_HEIGHT >> 2) << DN_DECIMAL_BITS;
         board->updateFunction = dn_updateBoard;
     }
     if(curtainData->separation > (TFT_WIDTH >> 1))
