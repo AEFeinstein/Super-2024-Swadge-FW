@@ -20,8 +20,12 @@
 //==============================================================================
 
 // Settings
-#define JERK_VALUE 1024
-#define STEP_SIZE  32
+#define JERK_VALUE   1024
+#define STEP_SIZE    32
+#define SCROLL_SPEED 3
+
+// Timers
+#define ANIM_TIMER_PERIOD 16667
 
 // Pixel offsets
 #define PLAYER_X_POS     32
@@ -41,6 +45,7 @@ const char chickenModeName[] = "Jerk Chicken";
 
 typedef enum
 {
+    CHICKEN_THINKING,      // Chicken is ready to change behavior
     CHICKEN_STATIC,        // Chicken standing still
     CHICKEN_WALK_FORWARD,  // Chicken walking toward player
     CHICKEN_WALK_BACKWARD, // Chicken walking away from player
@@ -57,7 +62,6 @@ typedef struct
 {
     int16_t xComp, yComp; // Tilt components
     bool jerked;          // If jerk was caused
-    bool playerAnimating; // If player is already taking an action
 } player_t;
 
 typedef struct
@@ -75,8 +79,9 @@ typedef struct
     chicken_t chicken;
 
     // Level
-    int32_t position;        // X position of the world
-    //int32_t targetPosition;  // Target X position
+    int32_t position;       // X position of the world
+    int32_t targetPosition; // Target X position
+    int64_t animTimer;      // How many US since last update
 } chickenData_t;
 
 //==============================================================================
@@ -90,6 +95,9 @@ static void chickenLoop(int64_t elapsedUs);
 
 // Game logic
 static void initGame(void);
+static void jerkRod(void);
+static void chickenHandleInputs(void);
+static void chickenLogic(int64_t elapsedUs);
 
 // Draw routines
 static void drawChicken(int64_t elapsedUs);
@@ -113,14 +121,14 @@ chickenData_t* cd;
 // Functions
 //==============================================================================
 
-static void enterChicken(void)
+static void enterChicken()
 {
     cd = (chickenData_t*)heap_caps_calloc(1, sizeof(chickenData_t), MALLOC_CAP_8BIT);
 
     initGame();
 }
 
-static void exitChicken(void)
+static void exitChicken()
 {
     heap_caps_free(cd);
 }
@@ -128,50 +136,91 @@ static void exitChicken(void)
 static void chickenLoop(int64_t elapsedUs)
 {
     // Input
-    accelIntegrate();
-    buttonEvt_t evt;
-    while (checkButtonQueueWrapper(&evt))
-    {
-        if (evt.down && !cd->player.playerAnimating)
-        {
-            if (evt.button & PB_LEFT)
-            {
-                // Step backward
-                cd->position += STEP_SIZE;
-            }
-            else if (evt.button & PB_RIGHT)
-            {
-                // Step forward
-                cd->position -= STEP_SIZE;
-            }
-            else if (evt.button & PB_UP)
-            {
-                // Jerk rod
-                cd->player.jerked = true;
-                cd->position += STEP_SIZE * 2;
-            }
-        }
-    }
-    int16_t prevX = cd->player.xComp;
-    if (ESP_OK == accelGetSteeringAngleDegrees(&cd->player.xComp, &cd->player.yComp))
-    {
-        if (prevX > cd->player.xComp + JERK_VALUE)
-        {
-            cd->player.jerked = true;
-            cd->position += STEP_SIZE * 2;
-        }
-    }
+    chickenHandleInputs();
 
     // Logic
-    cd->chicken.position++;
+    chickenLogic(elapsedUs);
 
     // Draw
     drawChicken(elapsedUs);
 }
 
-static void initGame(void)
+static void initGame()
 {
     cd->position = 0;
+}
+
+static void jerkRod()
+{
+    cd->player.jerked = true;
+    cd->targetPosition += STEP_SIZE * 2;
+}
+
+static void chickenHandleInputs()
+{
+    accelIntegrate();
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down && cd->position == cd->targetPosition) // Only eval if the player has come to a erst
+        {
+            if (evt.button & PB_LEFT)
+            {
+                // Step backward
+                cd->targetPosition += STEP_SIZE;
+            }
+            else if (evt.button & PB_RIGHT)
+            {
+                // Step forward
+                cd->targetPosition -= STEP_SIZE;
+            }
+            else if (evt.button & PB_UP)
+            {
+                // Jerk rod
+                jerkRod();
+            }
+        }
+    }
+    int16_t prevX = cd->player.xComp;
+    if (ESP_OK == accelGetSteeringAngleDegrees(&cd->player.xComp, &cd->player.yComp)
+        && cd->position == cd->targetPosition)
+    {
+        if (prevX > cd->player.xComp + JERK_VALUE && !cd->player.jerked)
+        {
+            jerkRod();
+        }
+    }
+}
+
+static void scrollScreen()
+{
+    if (cd->position < cd->targetPosition)
+    {
+        cd->position += SCROLL_SPEED;
+        if (cd->position > cd->targetPosition)
+        {
+            cd->position = cd->targetPosition;
+        }
+    }
+    else if (cd->position > cd->targetPosition)
+    {
+        cd->position -= SCROLL_SPEED;
+        if (cd->position < cd->targetPosition)
+        {
+            cd->position = cd->targetPosition;
+        }
+    }
+}
+
+static void chickenLogic(int64_t elapsedUs)
+{
+    // TODO: Handle chicken brain
+
+    // Move camera
+    // Timer
+    RUN_TIMER_EVERY(cd->animTimer, ANIM_TIMER_PERIOD, elapsedUs, scrollScreen(););
+
+    // TODO: evaluate lose conditions
 }
 
 static void drawChicken(int64_t elapsedUs)
@@ -180,22 +229,22 @@ static void drawChicken(int64_t elapsedUs)
 
     // Level
     // Tickmarks
-    int16_t startPos = TFT_WIDTH + cd->position;
+    int32_t startPos = TFT_WIDTH + cd->position;
     for (int i = cd->position; i < startPos; i++)
     {
-        int linePos = cd->position + i;
         int screenSpaceX = startPos - i;
-        if (linePos % 100 == 0)
+        if (i % 100 == 0)
         {
             drawLineFast(screenSpaceX, TFT_HEIGHT, screenSpaceX, TFT_HEIGHT - 32, c555);
             char buffer[8];
-            snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, linePos);
+            snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, i / 100);
             drawText(getSysFont(), c555, buffer, screenSpaceX - (2 + textWidth(getSysFont(), buffer)), TFT_HEIGHT - 32);
         }
-        else if (linePos % 10 == 0)
+        else if (i % 10 == 0)
         {
             drawLineFast(screenSpaceX, TFT_HEIGHT, screenSpaceX, TFT_HEIGHT - 16, c555);
         }
+        int g = 0;
     }
 
     // Player
@@ -204,4 +253,9 @@ static void drawChicken(int64_t elapsedUs)
     // Chicken
     int16_t chickenXOffset = -cd->chicken.position + CHICKEN_X_OFFSET + cd->position;
     drawRect(chickenXOffset, CHICKEN_Y_POS, chickenXOffset + 32, CHICKEN_Y_POS + 32, c500);
+
+    // Test
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer) - 1, "Curr pos: %" PRId32, cd->position);
+    drawText(getSysFont(), c550, buffer, 32, 32);
 }
