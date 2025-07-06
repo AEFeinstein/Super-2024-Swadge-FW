@@ -26,6 +26,7 @@
 #define CHICKEN_SPEED        2
 #define BOX_MAX_DISTANCE     40
 #define CHICKEN_ATTACK_RANGE 80
+#define CHICKEN_OFFSCREEN    150
 // Timers
 #define ANIM_TIMER_PERIOD   16667  // Assumes 60Hz
 #define CHICKEN_STATIC_BASE 500000 // 1/2 sec
@@ -43,9 +44,29 @@
 
 const char chickenModeName[] = "Jerk Chicken";
 
+static const char* const strings[] = {
+    "Press any button to play!",
+};
+
 //==============================================================================
 // Enums
 //==============================================================================
+
+typedef enum
+{
+    CHICKEN_SPLASH,
+    CHICKEN_PREP,
+    CHICKEN_GAME,
+    CHICKEN_LOSE,
+    CHICKEN_SCORE,
+} gameState_t;
+
+typedef enum
+{
+    CHK_EASY,
+    CHK_MED,
+    CHK_HARD,
+} chickenDifficulty_t;
 
 typedef enum
 {
@@ -112,8 +133,14 @@ typedef struct
     baitBox_t box;
 
     // Mode
-    int score; // Score
-    // state; // Splash/Game/End
+    int score;                // Score
+    gameState_t state;        // Splash/Game/End
+    chickenDifficulty_t diff; // Selected difficulty
+    bool accessible;          // If button Jerk is enabled or not
+
+    // Splash
+    int64_t animTimer;
+    bool textToggle;
 
     // Debug
     bool debug; // Displays debug info
@@ -129,7 +156,7 @@ static void exitChicken(void);
 static void chickenLoop(int64_t elapsedUs);
 
 // Game logic
-static void initGame(void);
+static void initGame(chickenDifficulty_t diff);
 static void jerkRod(void);
 static void chickenHandleInputs(void);
 static bool movePos(int32_t* position, int32_t* target, int8_t speed);
@@ -137,7 +164,11 @@ static void increaseDifficulty(void);
 static void chickenLogic(int64_t elapsedUs);
 
 // Draw routines
+static void drawChickenSplash(int64_t elapsedUs);
+static void drawChickenPrep(void);
 static void drawChicken(int64_t elapsedUs);
+static void drawChickenLose(int64_t elapsedUs);
+static void drawChickenScore(void);
 
 //==============================================================================
 // Variables
@@ -162,9 +193,10 @@ static void enterChicken()
 {
     cd = (chickenData_t*)heap_caps_calloc(1, sizeof(chickenData_t), MALLOC_CAP_8BIT);
 
-    cd->debug = true;
+    cd->state = CHICKEN_SPLASH;
 
-    initGame();
+    // Test code
+    cd->debug = true;
 }
 
 static void exitChicken()
@@ -174,23 +206,115 @@ static void exitChicken()
 
 static void chickenLoop(int64_t elapsedUs)
 {
-    // Input
-    chickenHandleInputs();
-
-    // Logic
-    chickenLogic(elapsedUs);
-
-    // Draw
-    drawChicken(elapsedUs);
+    buttonEvt_t evt;
+    switch (cd->state)
+    {
+        case CHICKEN_SPLASH:
+        {
+            // Accept any input to change state
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down)
+                {
+                    cd->state = CHICKEN_PREP;
+                }
+            }
+            // Draw splash screen
+            drawChickenSplash(elapsedUs);
+            break;
+        }
+        case CHICKEN_PREP:
+        {
+            // Handle menu for preparing for game
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down)
+                {
+                    // TODO: Provide player with options
+                    // - Bait image (unlocked by trophy)
+                    // - Difficulty
+                    //  - Easy: Chicken waits longer, Score is slower, Difficulty mod starts higher
+                    //  - Medium: Default
+                    //  - Hard: Chicken stops being patient, Score increments faster, Difficulty mod goes away faster
+                    // - Accessibility mode: Up key jerks the rod
+                    cd->state = CHICKEN_GAME;
+                    initGame(cd->diff);
+                }
+            }
+            // Draw menu
+            drawChickenPrep();
+            break;
+        }
+        case CHICKEN_GAME:
+        default:
+        {
+            // Input
+            chickenHandleInputs();
+            // Logic
+            chickenLogic(elapsedUs);
+            // Draw
+            drawChicken(elapsedUs);
+            break;
+        }
+        case CHICKEN_LOSE:
+        {
+            // Accept any input to change state
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down)
+                {
+                    cd->state = CHICKEN_SCORE;
+                }
+            }
+            // Draw losing state
+            drawChickenLose(elapsedUs);
+            break;
+        }
+        case CHICKEN_SCORE:
+        {
+            // Accept any input to change state
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down)
+                {
+                    cd->state = CHICKEN_PREP;
+                }
+            }
+            // Draw High scores
+            drawChickenScore();
+            break;
+        }
+    }
 }
 
-static void initGame()
+static void initGame(chickenDifficulty_t diff)
 {
     cd->player.position  = 0;
     cd->chicken.position = 0;
-    cd->chicken.diffMod  = 50;
     cd->box.position     = 0;
-    cd->box.HP           = 3;
+    cd->score            = 0;
+
+    switch (diff)
+    {
+        case CHK_EASY:
+        {
+            cd->box.HP          = 5;
+            cd->chicken.diffMod = 100;
+            break;
+        }
+        case CHK_MED:
+        {
+            cd->box.HP          = 3;
+            cd->chicken.diffMod = 50;
+            break;
+        }
+        case CHK_HARD:
+        {
+            cd->box.HP          = 1;
+            cd->chicken.diffMod = 25;
+            break;
+        }
+    }
 }
 
 static void jerkRod()
@@ -290,11 +414,11 @@ static void chickenLogic(int64_t elapsedUs)
         case CHICKEN_WALKING:
         case CHICKEN_LUNGE:
         {
-            RUN_TIMER_EVERY(cd->chicken.animTimer, ANIM_TIMER_PERIOD, elapsedUs,
-                            if(movePos(&cd->chicken.position, &cd->chicken.targetPos, cd->chicken.moveSpeed))
-                            {
-                                cd->chicken.state = CHICKEN_IDLE;
-                            });
+            RUN_TIMER_EVERY(
+                cd->chicken.animTimer, ANIM_TIMER_PERIOD, elapsedUs,
+                if (movePos(&cd->chicken.position, &cd->chicken.targetPos, cd->chicken.moveSpeed)) {
+                    cd->chicken.state = CHICKEN_IDLE;
+                });
             if (cd->chicken.state == CHICKEN_IDLE)
             {
                 cd->chicken.animTimer = CHICKEN_STATIC_BASE;
@@ -403,9 +527,29 @@ static void chickenLogic(int64_t elapsedUs)
         cd->score = cd->chicken.position;
     }
 
-    // TODO: evaluate lose conditions
-    // If Chicken is too far off screen
-    // If box has 0 HP
+    // Check if game is lost
+    if (cd->box.HP <= 0 || cd->player.position - cd->chicken.position <= -CHICKEN_OFFSCREEN)
+    {
+        cd->state = CHICKEN_LOSE;
+    }
+}
+
+// Draw
+
+static void drawChickenSplash(int64_t elapsedUs)
+{
+    clearPxTft();
+    // TODO: Draw a background
+    // Draw text
+    RUN_TIMER_EVERY(cd->animTimer, 500000, elapsedUs, cd->textToggle = !cd->textToggle;);
+    if (cd->textToggle)
+    {
+        drawText(getSysFont(), c555, strings[0], (TFT_WIDTH - textWidth(getSysFont(), strings[0])) >> 1, 200);
+    }
+}
+
+static void drawChickenPrep()
+{
 }
 
 static void drawChicken(int64_t elapsedUs)
@@ -468,4 +612,19 @@ static void drawChicken(int64_t elapsedUs)
         snprintf(buffer, sizeof(buffer) - 1, "Difficulty Mod: %" PRId8, cd->chicken.diffMod);
         drawText(getSysFont(), c550, buffer, 32, 48);
     }
+}
+
+static void drawChickenLose(int64_t elapsedUs)
+{
+    // Draw chicken wandering around and pecking, player sitting down, defeated
+    drawText(getSysFont(), c555, "Game over", 100, 100);
+}
+
+static void drawChickenScore()
+{
+    clearPxTft();
+    // Draw scoreboard
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer) - 1, "Score: %" PRId8, cd->score);
+    drawText(getSysFont(), c550, buffer, 32, 16);
 }
