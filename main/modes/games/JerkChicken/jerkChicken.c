@@ -291,11 +291,14 @@ static void chickenLogic(int64_t elapsedUs)
         case CHICKEN_LUNGE:
         {
             RUN_TIMER_EVERY(cd->chicken.animTimer, ANIM_TIMER_PERIOD, elapsedUs,
-                            cd->chicken.state
-                            = movePos(&cd->chicken.position, &cd->chicken.targetPos, cd->chicken.moveSpeed)
-                                  ? CHICKEN_IDLE
-                                  : CHICKEN_WALKING;);
-            cd->chicken.animTimer = CHICKEN_STATIC_BASE;
+                            if(movePos(&cd->chicken.position, &cd->chicken.targetPos, cd->chicken.moveSpeed))
+                            {
+                                cd->chicken.state = CHICKEN_IDLE;
+                            });
+            if (cd->chicken.state == CHICKEN_IDLE)
+            {
+                cd->chicken.animTimer = CHICKEN_STATIC_BASE;
+            }
             break;
         }
         case CHICKEN_IDLE:
@@ -411,20 +414,23 @@ static void drawChicken(int64_t elapsedUs)
 
     // Level
     // Tickmarks
+    fillDisplayArea(0, TFT_HEIGHT - 32, TFT_WIDTH, TFT_HEIGHT, c550);
+    drawLineFast(0, TFT_HEIGHT - 1, TFT_WIDTH, TFT_HEIGHT - 1, c330);
+    drawLineFast(0, TFT_HEIGHT - 32, TFT_WIDTH, TFT_HEIGHT - 32, c555);
     int32_t startPos = TFT_WIDTH + cd->player.position;
     for (int i = cd->player.position; i < startPos; i++)
     {
         int screenSpaceX = startPos - i;
         if (i % 100 == 0)
         {
-            drawLineFast(screenSpaceX, TFT_HEIGHT, screenSpaceX, TFT_HEIGHT - 32, c555);
+            drawLineFast(screenSpaceX, TFT_HEIGHT, screenSpaceX, TFT_HEIGHT - 32, c000);
             char buffer[8];
             snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, i / 100);
-            drawText(getSysFont(), c555, buffer, screenSpaceX - (2 + textWidth(getSysFont(), buffer)), TFT_HEIGHT - 32);
+            drawText(getSysFont(), c000, buffer, screenSpaceX - (2 + textWidth(getSysFont(), buffer)), TFT_HEIGHT - 30);
         }
         else if (i % 10 == 0)
         {
-            drawLineFast(screenSpaceX, TFT_HEIGHT, screenSpaceX, TFT_HEIGHT - 16, c555);
+            drawLineFast(screenSpaceX, TFT_HEIGHT, screenSpaceX, TFT_HEIGHT - 16, c000);
         }
     }
 
