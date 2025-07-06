@@ -1,10 +1,13 @@
 #include "highScores.h"
 
 #include "hdw-nvs.h"
-#include "macros.h"
+#include "swadgePass.h"
 
 #include <stdbool.h>
 #include <stdint.h>
+
+#define NVS_KEY_USER_HIGH_SCORE "user_high_score"
+#define NVS_KEY_HIGH_SCORES     "high_scores"
 
 #define HIGH_SCORE_COUNT(hs) \
     (hs->highScoreCount == 0 ? MAX_HIGH_SCORE_COUNT : MIN(hs->highScoreCount, MAX_HIGH_SCORE_COUNT))
@@ -94,4 +97,32 @@ bool updateHighScores(highScores_t* hs, const char* nvsNamespace, score_t newSco
     }
 
     return changed;
+}
+
+void saveHighScoresFromSwadgePass(highScores_t* hs, const char* nvsNamespace, list_t swadgePasses,
+                                  int32_t (*fnGetSwadgePassHighScore)(const swadgePassPacket_t* packet))
+{
+    if (swadgePasses.length > 0)
+    {
+        score_t spScores[swadgePasses.length];
+        int i        = 0;
+        node_t* node = swadgePasses.first;
+        while (node)
+        {
+            swadgePassData_t* spd          = node->val;
+            spScores[i].score              = fnGetSwadgePassHighScore(&spd->data.packet);
+            spScores[i].swadgePassUsername = spd->data.packet.username;
+            i++;
+            node = node->next;
+        }
+        updateHighScores(hs, nvsNamespace, spScores, ARRAY_SIZE(spScores));
+    }
+}
+
+void addHighScoreToSwadgePassPacket(const char* nvsNamespace, swadgePassPacket_t* packet,
+                                    void (*fnSetSwadgePassHighScore)(swadgePassPacket_t* packet, int32_t highScore))
+{
+    int32_t highScore = 0;
+    readNamespaceNvs32(nvsNamespace, NVS_KEY_USER_HIGH_SCORE, &highScore);
+    fnSetSwadgePassHighScore(packet, highScore);
 }

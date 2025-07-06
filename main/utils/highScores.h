@@ -14,8 +14,9 @@
  * The steps to add high scores to your mode are:
  * -# Instantiate a ::highScores_t struct and set ::highScores_t.highScoreCount
  * -# Call initHighScores()
- * -# Retrieve SwadgePasses and pass them to SAVE_HIGH_SCORES_FROM_SWADGE_PASS(), ideally once on mode start
- * -# In your mode's `fnAddToSwadgePassPacket`, call WRITE_HIGH_SCORE_TO_SWADGE_PASS_PACKET()
+ * -# Implement get and set callback functions in your mode for your ::swadgePassPacket_t high score field
+ * -# Retrieve SwadgePasses and pass them to saveHighScoresFromSwadgePass(), ideally once on mode start
+ * -# In your mode's ::swadgeMode.fnAddToSwadgePassPacket, call addHighScoreToSwadgePassPacket()
  * -# When the player has finished a game, submit their score(s) via updateHighScores()
  * -# The high score array in ::highScores_t.highScores will always be up-to-date, so it can be used to display high
  * scores without any other considerations. See nameList.h for how to get display names from
@@ -23,12 +24,14 @@
  */
 
 #pragma once
+
+#include "linked_list.h"
+#include "swadgePass.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
-#define MAX_HIGH_SCORE_COUNT    20
-#define NVS_KEY_USER_HIGH_SCORE "user_high_score"
-#define NVS_KEY_HIGH_SCORES     "high_scores"
+#define MAX_HIGH_SCORE_COUNT 20
 
 typedef struct
 {
@@ -71,45 +74,24 @@ void initHighScores(highScores_t* hs, const char* nvsNamespace);
 bool updateHighScores(highScores_t* hs, const char* nvsNamespace, score_t newScores[], uint8_t numNewScores);
 
 /**
- * @brief Convenience macro to save high score data received from SwadgePass. This should be called from your mode's
- * `fnEnterMode` function after calling initHighScores().
+ * @brief Extract high score data received from SwadgePass and save to the high score table. This should be called from
+ * your mode's `fnEnterMode` function after calling initHighScores().
  *
  * @param hs The ::highScores_t struct that contains the high scores
  * @param nvsNamespace The NVS namespace to write data to
  * @param swadgePasses A ::list_t of SwadgePasses from getSwadgePasses()
- * @param highScoreVar The field in the SwadgePass packet that holds the high score
+ * @param fnGetSwadgePassHighScore Pointer to a function that returns your mode's high score from a SwadgePass packet
  */
-#define SAVE_HIGH_SCORES_FROM_SWADGE_PASS(hs, nvsNamespace, swadgePasses, highScoreVar) \
-    do                                                                                  \
-    {                                                                                   \
-        if (swadgePasses.length > 0)                                                    \
-        {                                                                               \
-            score_t spScores[swadgePasses.length];                                      \
-            int i        = 0;                                                           \
-            node_t* node = swadgePasses.first;                                          \
-            while (node)                                                                \
-            {                                                                           \
-                swadgePassData_t* spd          = node->val;                             \
-                spScores[i].score              = spd->data.packet.highScoreVar;         \
-                spScores[i].swadgePassUsername = spd->data.packet.username;             \
-                i++;                                                                    \
-                node = node->next;                                                      \
-            }                                                                           \
-            updateHighScores(hs, nvsNamespace, spScores, ARRAY_SIZE(spScores));         \
-        }                                                                               \
-    } while (0)
+void saveHighScoresFromSwadgePass(highScores_t* hs, const char* nvsNamespace, list_t swadgePasses,
+                                  int32_t (*fnGetSwadgePassHighScore)(const swadgePassPacket_t* packet));
 
 /**
- * @brief Convenience macro to write high score data to SwadgePass packet for sending to other swadges. This should be
- * called from your mode's `fnAddToSwadgePassPacket` function.
+ * @brief Write high score data to SwadgePass packet for sending to other swadges. This should be called from your
+ * mode's `fnAddToSwadgePassPacket` function.
  *
  * @param nvsNamespace The NVS namespace to read data from
- * @param highScoreVar A field in your mode's struct defined in ::swadgePassPacket_t
+ * @param packet The SwadgePass packet to modify
+ * @param fnSetSwadgePassHighScore Pointer to a function that sets your mode's high score field in a SwadgePass packet
  */
-#define WRITE_HIGH_SCORE_TO_SWADGE_PASS_PACKET(nvsNamespace, highScoreVar)     \
-    do                                                                         \
-    {                                                                          \
-        int32_t highScore = 0;                                                 \
-        readNamespaceNvs32(nvsNamespace, NVS_KEY_USER_HIGH_SCORE, &highScore); \
-        highScoreVar = highScore;                                              \
-    } while (0)
+void addHighScoreToSwadgePassPacket(const char* nvsNamespace, swadgePassPacket_t* packet,
+                                    void (*fnSetSwadgePassHighScore)(swadgePassPacket_t* packet, int32_t highScore));

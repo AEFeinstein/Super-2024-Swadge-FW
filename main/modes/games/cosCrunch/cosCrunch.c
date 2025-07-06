@@ -92,7 +92,9 @@ static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
 static void cosCrunchResetBackground(void);
 static void cosCrunchDisplayMessage(const char* msg);
 static void cosCrunchDrawTimer(void);
-static void cosCrunchAddToSwadgePassPacket(struct swadgePassPacket* packet);
+static void cosCrunchAddToSwadgePassPacket(swadgePassPacket_t* packet);
+static int32_t cosCrunchGetSwadgePassHighScore(const swadgePassPacket_t* packet);
+static void cosCrunchSetSwadgePassHighScore(swadgePassPacket_t* packet, int32_t highScore);
 
 swadgeMode_t cosCrunchMode = {
     .modeName                 = cosCrunchName,
@@ -191,7 +193,7 @@ static void cosCrunchEnterMode(void)
 
     list_t swadgePasses = {0};
     getSwadgePasses(&swadgePasses, &cosCrunchMode, true);
-    SAVE_HIGH_SCORES_FROM_SWADGE_PASS(&cc->highScores, CC_NVS_NAMESPACE, swadgePasses, cosCrunch.highScore);
+    saveHighScoresFromSwadgePass(&cc->highScores, CC_NVS_NAMESPACE, swadgePasses, cosCrunchGetSwadgePassHighScore);
     freeSwadgePasses(&swadgePasses);
 }
 
@@ -445,12 +447,12 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                     {
                         setUsernameFrom32(&username, cc->highScores.highScores[i].swadgePassUsername);
                     }
-                    drawText(&cc->font, c555, username.nameBuffer, 25, yOff);
+                    drawText(&cc->font, c555, username.nameBuffer, 20, yOff);
 
                     char buf[16];
                     snprintf(buf, sizeof(buf), "%" PRIi32, cc->highScores.highScores[i].score);
                     tw = textWidth(&cc->font, buf);
-                    drawText(&cc->font, c555, buf, TFT_WIDTH - tw - 25, yOff);
+                    drawText(&cc->font, c555, buf, TFT_WIDTH - tw - 20, yOff);
                     yOff += cc->font.height + TEXT_Y_SPACING;
                 }
             }
@@ -560,9 +562,19 @@ static void cosCrunchDrawTimer()
     drawWsgPaletteSimple(&cc->wsg.paintLabel, 37, TFT_HEIGHT - cc->wsg.paintLabel.h - 8, &cc->tintPalette);
 }
 
-static void cosCrunchAddToSwadgePassPacket(struct swadgePassPacket* packet)
+static void cosCrunchAddToSwadgePassPacket(swadgePassPacket_t* packet)
 {
-    WRITE_HIGH_SCORE_TO_SWADGE_PASS_PACKET(CC_NVS_NAMESPACE, packet->cosCrunch.highScore);
+    addHighScoreToSwadgePassPacket(CC_NVS_NAMESPACE, packet, cosCrunchSetSwadgePassHighScore);
+}
+
+static int32_t cosCrunchGetSwadgePassHighScore(const swadgePassPacket_t* packet)
+{
+    return packet->cosCrunch.highScore;
+}
+
+static void cosCrunchSetSwadgePassHighScore(swadgePassPacket_t* packet, int32_t highScore)
+{
+    packet->cosCrunch.highScore = highScore;
 }
 
 const tintColor_t* cosCrunchMicrogameGetTintColor()
