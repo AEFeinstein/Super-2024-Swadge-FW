@@ -8,7 +8,7 @@
 #define DN_BOARD_SIZE 5
 #define DN_TILE_WIDTH 51
 #define DN_TILE_HEIGHT 13
-#define NUM_ASSETS     12 // The number of dn_asset_t (last accounted for DN_CHESS_ORTHO_ASSET)
+#define NUM_ASSETS     13 // The number of dn_asset_t (last accounted for DN_ALBUM_ASSET)
 #define NUM_PALETTES   2 // The number of wsgPalette_t (last accounted for DN_RED_FLOOR_PALETTE)
 
 typedef struct dn_entity_t dn_entity_t;
@@ -28,6 +28,7 @@ typedef enum __attribute__((packed))
     DN_GROUND_TILE_ASSET,
     DN_CURTAIN_ASSET,
     DN_CHESS_ORTHO_ASSET,
+    DN_ALBUM_ASSET,
 } dn_assetIdx_t;
 
 typedef enum __attribute__((packed))
@@ -87,3 +88,10 @@ typedef enum __attribute__((packed))
     DN_P2_UPGRADE_PHASE,
     DN_P2_SWAP_PHASE,
 } dn_phase_t;
+
+typedef enum __attribute__((packed))
+{
+    DN_NONE_TRACK,
+    DN_RED_TRACK,
+    DN_BLUE_TRACK,
+} dn_track_t;

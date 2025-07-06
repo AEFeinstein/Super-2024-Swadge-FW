@@ -217,6 +217,24 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
             entity->drawFunction = dn_drawCurtain;
             entity->updateFunction = dn_updateCurtain;
             break;
+        case DN_ALBUM_ASSET:
+            dn_loadAsset(DN_ALBUM_WSG, 1, &gameData->assets[assetIndex]);
+            entity = dn_createEntitySpecial(entityManager, DN_ALBUM_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity->data = heap_caps_calloc(1, sizeof(dn_albumData_t), MALLOC_CAP_SPIRAM);
+            wsgPaletteReset(&((dn_albumData_t*)entity->data)->tracksPalette);
+            //Set the color of each track to c344 (no action).
+            for(int i = 0; i < 16; i++)
+            {
+                wsgPaletteSet(&((dn_albumData_t*)entity->data)->tracksPalette, c255 + i, c344);
+                //Color the upper and left edges shadowed by the cartridge bevel.
+                if(i < 4 || i == 8)
+                {
+                    wsgPaletteSet(&((dn_albumData_t*)entity->data)->tracksPalette, c255 - 36 + i, c122);
+                }
+            }
+            entity->dataType = DN_ALBUM_DATA;
+            entity->drawFunction = dn_drawAlbum;
+            break;
         default:
             return NULL;
     }

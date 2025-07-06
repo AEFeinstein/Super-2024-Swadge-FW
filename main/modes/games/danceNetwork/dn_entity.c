@@ -104,7 +104,8 @@ void dn_drawBoard(dn_entity_t* self)
             }
         }
     }
-    drawCircleFilled(TFT_WIDTH >> 1, TFT_HEIGHT >> 1, 2, c000);
+    //Uncomment to visualize center of screen.
+    //drawCircleFilled(TFT_WIDTH >> 1, TFT_HEIGHT >> 1, 2, c000);
 }
 
 void dn_updateCurtain(dn_entity_t* self)
@@ -112,7 +113,7 @@ void dn_updateCurtain(dn_entity_t* self)
     dn_curtainData_t* curtainData = (dn_curtainData_t*)self->data;
     curtainData->separation += (self->gameData->elapsedUs >> 13);
     
-    dn_entity_t* board = (dn_entity_t*)self->gameData->entityManager.entities->first->val;
+    dn_entity_t* board = (dn_entity_t*)self->gameData->entityManager.board;
     if(curtainData->separation > 100 && !board->updateFunction)
     {
         dn_boardData_t* boardData = (dn_boardData_t*)board->data;
@@ -186,4 +187,13 @@ void dn_drawCurtain(dn_entity_t* self)
                 break;
         }
     }
+}
+
+void dn_drawAlbum(dn_entity_t* self)
+{
+    dn_albumData_t* aData = (dn_albumData_t*)self->data;
+    drawWsgPaletteSimple(&self->gameData->assets[DN_ALBUM_ASSET].frames[0],
+        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - self->gameData->assets[DN_ALBUM_ASSET].originX,
+        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) - self->gameData->assets[DN_ALBUM_ASSET].originY,
+        &aData->tracksPalette);
 }

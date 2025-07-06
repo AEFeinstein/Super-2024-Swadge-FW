@@ -110,7 +110,7 @@ static void dn_EnterMode(void)
 
     //set the camera to the center of positive ints
     gameData->camera.pos = (vec_t){0xFFFF - (TFT_WIDTH << (DN_DECIMAL_BITS - 1)), 0xFFFF - (TFT_HEIGHT << (DN_DECIMAL_BITS - 1))};
-    gameData->camera.pos.y -= (9 << DN_DECIMAL_BITS); // Move the camera a bit so the board is centered.
+    gameData->camera.pos.y -= (50 << DN_DECIMAL_BITS); // Move the camera a bit.
     dn_initializeEntityManager(&gameData->entityManager, gameData);
 
     gameData->assets[DN_ALPHA_DOWN_ASSET].originX = 9;
@@ -154,6 +154,9 @@ static void dn_EnterMode(void)
     gameData->assets[DN_GROUND_TILE_ASSET].numFrames = 1;
 
     gameData->assets[DN_CURTAIN_ASSET].numFrames = 1;
+
+    gameData->assets[DN_ALBUM_ASSET].originX = 31;
+    gameData->assets[DN_ALBUM_ASSET].originY = 34;
 
     // Allocate WSG loading helpers
     dn_hsd = heatshrink_decoder_alloc(256, 8, 4);
@@ -541,6 +544,7 @@ static void dn_initializeGame(void)
         }
     }
 
+    //REVISIT ME!!!
     if(!gameData->assets[DN_GROUND_TILE_ASSET].allocated)
     {
         gameData->assets[DN_GROUND_TILE_ASSET].frames = heap_caps_calloc(gameData->assets[DN_GROUND_TILE_ASSET].numFrames, sizeof(wsg_t), MALLOC_CAP_8BIT);
@@ -550,12 +554,25 @@ static void dn_initializeGame(void)
             loadWsgInplace(DN_GROUND_TILE_WSG, &gameData->assets[DN_GROUND_TILE_ASSET].frames[frameIdx], true, dn_decodeSpace, dn_hsd);
         }
     }
+
+    dn_loadAsset(DN_ALBUM_WSG, 1, &gameData->assets[DN_GROUND_TILE_ASSET]);
     
+    ///////////////////
+    //Make the albums//
+    ///////////////////
+    //p1 album
+    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF - 1280, 0xFFFF - (130 << DN_DECIMAL_BITS)}, gameData);
+    //creative commons album
+    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF, 0xFFFF - (130 << DN_DECIMAL_BITS)}, gameData);
+    //p2 album
+    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF + 1280, 0xFFFF - (130 << DN_DECIMAL_BITS)}, gameData);
+
     //////////////////
     //Make the board//
     //////////////////
     dn_entity_t* board = dn_createEntitySimple(&gameData->entityManager, DN_GROUND_TILE_ASSET, (vec_t){0xFFFF, 0xFFFF}, gameData);
     dn_boardData_t* boardData = (dn_boardData_t*)board->data;
+    gameData->entityManager.board = board;
 
     //////////////////
     //Make the units//
