@@ -517,43 +517,18 @@ static void dn_initializeGame(void)
     ///////////////////
     //load the assets//
     ///////////////////
-    if(!gameData->assets[DN_CURTAIN_ASSET].allocated)
-    {
-        // Load the curtain asset
-        gameData->assets[DN_CURTAIN_ASSET].frames = heap_caps_calloc(gameData->assets[DN_CURTAIN_ASSET].numFrames, sizeof(wsg_t), MALLOC_CAP_8BIT);
-        gameData->assets[DN_CURTAIN_ASSET].allocated = true;
-        loadWsgInplace(DN_CURTAIN_WSG, &gameData->assets[DN_CURTAIN_ASSET].frames[0], true, dn_decodeSpace, dn_hsd);
-    }
+    dn_loadAsset(DN_CURTAIN_WSG, 1, &gameData->assets[DN_CURTAIN_ASSET]);
 
     for(int player = 0; player < 2; player++)
     {
         for(int rank = 0; rank < 2; rank++)
         {
             dn_assetIdx_t curAssetIdx = dn_getAssetIdx(gameData->characterSets[player], rank, player);
-            if(gameData->assets[curAssetIdx].allocated)
-            {
-                // If the asset is already allocated, skip it
-                continue;
-            }
-            gameData->assets[curAssetIdx].frames = heap_caps_calloc(gameData->assets[curAssetIdx].numFrames, sizeof(wsg_t), MALLOC_CAP_8BIT);
-            gameData->assets[curAssetIdx].allocated = true;
-            for(int frameIdx = 0; frameIdx < gameData->assets[curAssetIdx].numFrames; frameIdx++)
-            {
-                loadWsgInplace(dn_assetToWsgLookup[curAssetIdx], &gameData->assets[curAssetIdx].frames[frameIdx],   true, dn_decodeSpace, dn_hsd);
-            }
+            dn_loadAsset(dn_assetToWsgLookup[curAssetIdx], gameData->assets[curAssetIdx].numFrames, &gameData->assets[curAssetIdx]);
         }
     }
 
-    //REVISIT ME!!!
-    if(!gameData->assets[DN_GROUND_TILE_ASSET].allocated)
-    {
-        gameData->assets[DN_GROUND_TILE_ASSET].frames = heap_caps_calloc(gameData->assets[DN_GROUND_TILE_ASSET].numFrames, sizeof(wsg_t), MALLOC_CAP_8BIT);
-        gameData->assets[DN_GROUND_TILE_ASSET].allocated = true;
-        for(int frameIdx = 0; frameIdx < gameData->assets[DN_GROUND_TILE_ASSET].numFrames; frameIdx++)
-        {
-            loadWsgInplace(DN_GROUND_TILE_WSG, &gameData->assets[DN_GROUND_TILE_ASSET].frames[frameIdx], true, dn_decodeSpace, dn_hsd);
-        }
-    }
+    dn_loadAsset(DN_GROUND_TILE_WSG, 1, &gameData->assets[DN_GROUND_TILE_ASSET]);
 
     dn_loadAsset(DN_ALBUM_WSG, 1, &gameData->assets[DN_GROUND_TILE_ASSET]);
     

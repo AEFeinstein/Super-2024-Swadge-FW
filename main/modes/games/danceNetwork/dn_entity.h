@@ -75,6 +75,7 @@ typedef struct
 {
     wsgPalette_t tracksPalette; // replaces album tile colors with the final track colors. The first index color is C255. No action is C344.
     dn_track_t tracks[16]; // Array of action tracks in this album in raster order.
+    uint16_t rot; // Rotation degrees from 0-359 for drawing.
 } dn_albumData_t;
 
 

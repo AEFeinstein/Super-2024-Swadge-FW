@@ -192,8 +192,9 @@ void dn_drawCurtain(dn_entity_t* self)
 void dn_drawAlbum(dn_entity_t* self)
 {
     dn_albumData_t* aData = (dn_albumData_t*)self->data;
-    drawWsgPaletteSimple(&self->gameData->assets[DN_ALBUM_ASSET].frames[0],
+    drawWsgPalette(&self->gameData->assets[DN_ALBUM_ASSET].frames[0],
         ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - self->gameData->assets[DN_ALBUM_ASSET].originX,
         ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) - self->gameData->assets[DN_ALBUM_ASSET].originY,
-        &aData->tracksPalette);
+        &aData->tracksPalette,
+        false, false, aData->rot);
 }
