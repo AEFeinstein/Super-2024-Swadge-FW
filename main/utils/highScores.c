@@ -1,8 +1,7 @@
 #include "highScores.h"
 
-#include "esp_log.h"
+#include "hdw-nvs.h"
 #include "macros.h"
-#include "../../components/hdw-nvs/include/hdw-nvs.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -41,20 +40,21 @@ bool updateHighScores(highScores_t* hs, const char* nvsNamespace, score_t newSco
         // Only include a single high score from any given SwadgePass user
         if (newScores[i].swadgePassUsername != 0)
         {
-            for (int j = 0; j < HIGH_SCORE_COUNT(hs); j++)
+            for (int highScorePos = 0; highScorePos < HIGH_SCORE_COUNT(hs); highScorePos++)
             {
-                if (newScores[i].swadgePassUsername == hs->highScores[j].swadgePassUsername)
+                if (newScores[i].swadgePassUsername == hs->highScores[highScorePos].swadgePassUsername)
                 {
-                    pos = j;
-                    if (newScores[i].score > hs->highScores[j].score)
+                    pos = highScorePos;
+                    if (newScores[i].score > hs->highScores[highScorePos].score)
                     {
-                        hs->highScores[j] = newScores[i];
-                        changed           = true;
+                        hs->highScores[highScorePos] = newScores[i];
+                        changed                      = true;
                     }
                 }
             }
         }
 
+        // Insert new score at the correct position in high score array
         while (pos > 0 && newScores[i].score > hs->highScores[pos - 1].score)
         {
             if (pos < HIGH_SCORE_COUNT(hs))

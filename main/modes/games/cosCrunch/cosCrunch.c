@@ -190,8 +190,9 @@ static void cosCrunchEnterMode(void)
     initHighScores(&cc->highScores, CC_NVS_NAMESPACE);
 
     list_t swadgePasses = {0};
-    getSwadgePasses(&swadgePasses, &cosCrunchMode, false);
+    getSwadgePasses(&swadgePasses, &cosCrunchMode, true);
     SAVE_HIGH_SCORES_FROM_SWADGE_PASS(&cc->highScores, CC_NVS_NAMESPACE, swadgePasses, cosCrunch.highScore);
+    freeSwadgePasses(&swadgePasses);
 }
 
 static void cosCrunchExitMode(void)

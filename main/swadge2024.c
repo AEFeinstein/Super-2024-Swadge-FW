@@ -110,6 +110,7 @@
  *     - midiFileParser.h: Load MIDI files
  * - assets_preprocessor.h: Learn how to define a new asset file type processor for CNFS
  * - settingsManager.h: Set and get persistent settings for things like screen brightness
+ * - highScores.h: System to simplify keeping a high score table with SwadgePass support
  *
  * \subsection gr_api Graphics APIs
  *
