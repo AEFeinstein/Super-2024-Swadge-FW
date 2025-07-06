@@ -433,7 +433,8 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             drawText(&cc->bigFont, c555, cosCrunchHighScoresLbl, (TFT_WIDTH - tw) / 2, 15);
             drawText(&cc->bigFontOutline, c000, cosCrunchHighScoresLbl, (TFT_WIDTH - tw) / 2, 15);
 
-            int16_t yOff = 75;
+            int16_t yOff        = 75;
+            uint16_t scoreWidth = textWidth(&cc->font, "0000");
             for (int i = 0; i < ARRAY_SIZE(cc->highScores.highScores); i++)
             {
                 if (cc->highScores.highScores[i].score > 0)
@@ -447,7 +448,8 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                     {
                         setUsernameFrom32(&username, cc->highScores.highScores[i].swadgePassUsername);
                     }
-                    drawText(&cc->font, c555, username.nameBuffer, 20, yOff);
+                    drawTextEllipsize(&cc->font, c555, username.nameBuffer, 20, yOff,
+                                      TFT_WIDTH - 20 * 2 - scoreWidth - 5, false);
 
                     char buf[16];
                     snprintf(buf, sizeof(buf), "%" PRIi32, cc->highScores.highScores[i].score);
