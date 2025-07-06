@@ -225,6 +225,7 @@ static void cosCrunchMenu(const char* label, bool selected, uint32_t value)
         if (label == cosCrunchStartCraftingLbl)
         {
             cc->lives = NUM_LIVES;
+            cc->score = 0;
             cc->state = CC_MICROGAME_PENDING;
             // Reset the background splatter for the next game
             cosCrunchResetBackground();
@@ -253,7 +254,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             cc->menu = menuButton(cc->menu, evt);
         }
         else if ((cc->state == CC_GAME_OVER || cc->state == CC_HIGH_SCORES)
-                 && (evt.button == PB_A || evt.button == PB_START) && evt.down)
+                 && (evt.button == PB_A || evt.button == PB_B || evt.button == PB_START) && evt.down)
         {
             cc->state = CC_MENU;
         }
