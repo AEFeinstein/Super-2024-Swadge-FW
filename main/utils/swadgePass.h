@@ -123,6 +123,10 @@ typedef struct __attribute__((packed)) swadgePassPacket
     int32_t username;  ///< The username of the swadge owner
     struct
     {
+        uint16_t highScore;
+    } cosCrunch;
+    struct
+    {
         int8_t reactHs;
         int8_t memHs;
     } swadgeIt;

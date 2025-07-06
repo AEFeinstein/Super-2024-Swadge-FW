@@ -5,7 +5,9 @@
 #include "ccmgSpray.h"
 #include "ccmgThread.h"
 #include "cosCrunchUtil.h"
+#include "highScores.h"
 #include "mainMenu.h"
+#include "nameList.h"
 #include "swadge2024.h"
 #include "wsgPalette.h"
 
@@ -33,12 +35,6 @@ typedef enum
     /// High scores screen
     CC_HIGH_SCORES,
 } cosCrunchState;
-
-typedef struct
-{
-    int32_t score;
-    char name[10];
-} cosCrunchScore_t;
 
 typedef struct
 {
@@ -84,8 +80,7 @@ typedef struct
     font_t bigFont;
     font_t bigFontOutline;
 
-    int32_t userHighScore;
-    cosCrunchScore_t highScores[10];
+    highScores_t highScores;
 } cosCrunch_t;
 cosCrunch_t* cc = NULL;
 
@@ -97,7 +92,7 @@ static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
 static void cosCrunchResetBackground(void);
 static void cosCrunchDisplayMessage(const char* msg);
 static void cosCrunchDrawTimer(void);
-static void cosCrunchUpdateHighScores(cosCrunchScore_t newScores[], uint8_t numNewScores);
+static void cosCrunchAddToSwadgePassPacket(struct swadgePassPacket* packet);
 
 swadgeMode_t cosCrunchMode = {
     .modeName                 = cosCrunchName,
@@ -115,6 +110,7 @@ swadgeMode_t cosCrunchMode = {
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
     .fnDacCb                  = NULL,
+    .fnAddToSwadgePassPacket  = cosCrunchAddToSwadgePassPacket,
 };
 
 /// Uncomment this to play the specified game repeatedly instead of randomizing.
@@ -128,9 +124,7 @@ const cosCrunchMicrogame_t* const microgames[] = {
     &ccmgThread,
 };
 
-#define CC_NVS_NAMESPACE           "cc"
-#define CC_NVS_USER_HIGH_SCORE_KEY "user_high_score"
-#define CC_NVS_HIGH_SCORES_KEY     "high_scores"
+#define CC_NVS_NAMESPACE "cc"
 
 #define NUM_LIVES                        4
 #define MICROGAME_GET_READY_TIME_US      1000000
@@ -192,9 +186,12 @@ static void cosCrunchEnterMode(void)
     loadFont(RIGHTEOUS_150_FONT, &cc->bigFont, false);
     makeOutlineFont(&cc->bigFont, &cc->bigFontOutline, false);
 
-    readNamespaceNvs32(CC_NVS_NAMESPACE, CC_NVS_USER_HIGH_SCORE_KEY, &cc->userHighScore);
-    size_t nvsLength = sizeof(cc->highScores);
-    readNamespaceNvsBlob(CC_NVS_NAMESPACE, CC_NVS_HIGH_SCORES_KEY, cc->highScores, &nvsLength);
+    cc->highScores.highScoreCount = 10;
+    initHighScores(&cc->highScores, CC_NVS_NAMESPACE);
+
+    list_t swadgePasses = {0};
+    getSwadgePasses(&swadgePasses, &cosCrunchMode, false);
+    SAVE_HIGH_SCORES_FROM_SWADGE_PASS(&cc->highScores, CC_NVS_NAMESPACE, swadgePasses, cosCrunch.highScore);
 }
 
 static void cosCrunchExitMode(void)
@@ -399,15 +396,10 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             cc->activeMicrogame.game->fnDestroyMicrogame();
             cc->activeMicrogame.game = NULL;
 
-            cc->personalBestAchieved = cc->score > cc->userHighScore;
-            if (cc->personalBestAchieved)
-            {
-                cc->userHighScore = cc->score;
-                writeNamespaceNvs32(CC_NVS_NAMESPACE, CC_NVS_USER_HIGH_SCORE_KEY, cc->score);
-            }
+            cc->personalBestAchieved = cc->score > cc->highScores.userHighScore;
 
-            cosCrunchScore_t scores[] = {{cc->score, "You"}};
-            cosCrunchUpdateHighScores(scores, ARRAY_SIZE(scores));
+            score_t scores[] = {{.score = cc->score, .swadgePassUsername = 0}};
+            updateHighScores(&cc->highScores, CC_NVS_NAMESPACE, scores, ARRAY_SIZE(scores));
             break;
         }
 
@@ -438,16 +430,25 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             drawText(&cc->bigFontOutline, c000, cosCrunchHighScoresLbl, (TFT_WIDTH - tw) / 2, 15);
 
             int16_t yOff = 75;
-            for (int i = 0; i < ARRAY_SIZE(cc->highScores); i++)
+            for (int i = 0; i < ARRAY_SIZE(cc->highScores.highScores); i++)
             {
-                if (cc->highScores[i].score > 0)
+                if (cc->highScores.highScores[i].score > 0)
                 {
-                    drawText(&cc->font, c555, cc->highScores[i].name, 40, yOff);
+                    nameData_t username = {0};
+                    if (cc->highScores.highScores[i].swadgePassUsername == 0)
+                    {
+                        username = *getSystemUsername();
+                    }
+                    else
+                    {
+                        setUsernameFrom32(&username, cc->highScores.highScores[i].swadgePassUsername);
+                    }
+                    drawText(&cc->font, c555, username.nameBuffer, 25, yOff);
 
                     char buf[16];
-                    snprintf(buf, sizeof(buf), "%" PRIi32, cc->highScores[i].score);
+                    snprintf(buf, sizeof(buf), "%" PRIi32, cc->highScores.highScores[i].score);
                     tw = textWidth(&cc->font, buf);
-                    drawText(&cc->font, c555, buf, TFT_WIDTH - tw - 40, yOff);
+                    drawText(&cc->font, c555, buf, TFT_WIDTH - tw - 25, yOff);
                     yOff += cc->font.height + TEXT_Y_SPACING;
                 }
             }
@@ -557,31 +558,9 @@ static void cosCrunchDrawTimer()
     drawWsgPaletteSimple(&cc->wsg.paintLabel, 37, TFT_HEIGHT - cc->wsg.paintLabel.h - 8, &cc->tintPalette);
 }
 
-void cosCrunchUpdateHighScores(cosCrunchScore_t newScores[], uint8_t numNewScores)
+static void cosCrunchAddToSwadgePassPacket(struct swadgePassPacket* packet)
 {
-    bool changed = false;
-    for (int i = 0; i < numNewScores; i++)
-    {
-        int pos = ARRAY_SIZE(cc->highScores);
-        while (pos > 0 && newScores[i].score > cc->highScores[pos - 1].score)
-        {
-            if (pos < ARRAY_SIZE(cc->highScores))
-            {
-                cc->highScores[pos] = cc->highScores[pos - 1];
-            }
-            changed = true;
-            pos--;
-        }
-        if (pos < ARRAY_SIZE(cc->highScores))
-        {
-            cc->highScores[pos] = newScores[i];
-        }
-    }
-
-    if (changed)
-    {
-        writeNamespaceNvsBlob(CC_NVS_NAMESPACE, CC_NVS_HIGH_SCORES_KEY, cc->highScores, sizeof(cc->highScores));
-    }
+    WRITE_HIGH_SCORE_TO_SWADGE_PASS_PACKET(CC_NVS_NAMESPACE, packet->cosCrunch.highScore);
 }
 
 const tintColor_t* cosCrunchMicrogameGetTintColor()
