@@ -110,7 +110,7 @@ static void dn_EnterMode(void)
 
     //set the camera to the center of positive ints
     gameData->camera.pos = (vec_t){0xFFFF - (TFT_WIDTH << (DN_DECIMAL_BITS - 1)), 0xFFFF - (TFT_HEIGHT << (DN_DECIMAL_BITS - 1))};
-    gameData->camera.pos.y -= (50 << DN_DECIMAL_BITS); // Move the camera a bit.
+    gameData->camera.pos.y -= (57 << DN_DECIMAL_BITS); // Move the camera a bit.
     dn_initializeEntityManager(&gameData->entityManager, gameData);
 
     gameData->assets[DN_ALPHA_DOWN_ASSET].originX = 9;
@@ -535,12 +535,17 @@ static void dn_initializeGame(void)
     ///////////////////
     //Make the albums//
     ///////////////////
+    dn_entity_t* albums = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_ALBUM_ASSET, 0, (vec_t){0xFFFF, 0xFFFF - (107 << DN_DECIMAL_BITS)}, gameData);
+    albums->data = heap_caps_calloc(1, sizeof(dn_albumData_t), MALLOC_CAP_SPIRAM);
+    albums->dataType = DN_ALBUMS_DATA;
+    albums->drawFunction = dn_drawAlbums;
+
     //p1 album
-    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF - 1280, 0xFFFF - (130 << DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF - 1280, 0xFFFF - (142 << DN_DECIMAL_BITS)}, gameData);
     //creative commons album
-    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF, 0xFFFF - (130 << DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF, 0xFFFF - (142 << DN_DECIMAL_BITS)}, gameData);
     //p2 album
-    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF + 1280, 0xFFFF - (130 << DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF + 1280, 0xFFFF - (142 << DN_DECIMAL_BITS)}, gameData);
 
     //////////////////
     //Make the board//

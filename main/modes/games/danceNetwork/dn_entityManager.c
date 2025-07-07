@@ -142,7 +142,7 @@ void dn_destroyAllEntities(dn_entityManager_t* entityManager)
  * @param y The initial y position of the entity
  * @return A pointer to the created entity, or NULL on failure
  */
-dn_entity_t* dn_createEntitySpecial(dn_entityManager_t* entityManager, cnfsFileIdx_t spriteCnfsIdx, uint8_t numFrames, dn_animationType_t type, bool paused,
+dn_entity_t* dn_createEntitySpecial(dn_entityManager_t* entityManager, uint8_t numFrames, dn_animationType_t type, bool paused,
                              dn_assetIdx_t assetIndex, uint8_t gameFramesPerAnimationFrame, vec_t pos, dn_gameData_t* gameData)
 {
     dn_entity_t* entity = heap_caps_calloc(1, sizeof(dn_entity_t), MALLOC_CAP_SPIRAM);
@@ -168,34 +168,34 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
     switch(assetIndex)
     {
         case DN_ALPHA_DOWN_ASSET:
-            entity = dn_createEntitySpecial(entityManager, DN_ALPHA_DOWN_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
             break;
         case DN_ALPHA_ORTHO_ASSET:
-            entity = dn_createEntitySpecial(entityManager, DN_ALPHA_ORTHO_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
             break;
         case DN_ALPHA_UP_ASSET:
-            entity = dn_createEntitySpecial(entityManager, DN_ALPHA_UP_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
             break;
         case DN_KING_ASSET:
-            entity = dn_createEntitySpecial(entityManager, DN_KING_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
             break;
         case DN_KING_SMALL_ASSET:
-            entity = dn_createEntitySpecial(entityManager, DN_KING_SMALL_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
             break;
         case DN_PAWN_ASSET:
-            entity = dn_createEntitySpecial(entityManager, DN_PAWN_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
             break;
         case DN_PAWN_SMALL_ASSET:
-            entity = dn_createEntitySpecial(entityManager, DN_PAWN_SMALL_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
             break;
         case DN_BUCKET_HAT_DOWN_ASSET:
-            entity = dn_createEntitySpecial(entityManager, DN_BUCKET_HAT_DOWN_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
             break;
         case DN_BUCKET_HAT_UP_ASSET:
-            entity = dn_createEntitySpecial(entityManager, DN_BUCKET_HAT_UP_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
             break;
         case DN_GROUND_TILE_ASSET:
-            entity = dn_createEntitySpecial(entityManager, DN_GROUND_TILE_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
             entity->data = heap_caps_calloc(1, sizeof(dn_boardData_t), MALLOC_CAP_SPIRAM);
             entity->dataType = DN_BOARD_DATA;
             entity->drawFunction = dn_drawBoard;
@@ -210,7 +210,7 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
                 dn_loadAsset(DN_CHESS_ORTHO_WSG, 1, &gameData->assets[DN_CHESS_ORTHO_ASSET]);
             }
 
-            entity = dn_createEntitySpecial(entityManager, DN_CURTAIN_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
             entity->data = heap_caps_calloc(1, sizeof(dn_curtainData_t), MALLOC_CAP_SPIRAM);
             ((dn_curtainData_t*)entity->data)->separation = -900; // Negative numbers serve as a timer counting up. Separation occurs above zero.
             entity->dataType = DN_CURTAIN_DATA;
@@ -219,7 +219,7 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
             break;
         case DN_ALBUM_ASSET:
             dn_loadAsset(DN_ALBUM_WSG, 1, &gameData->assets[assetIndex]);
-            entity = dn_createEntitySpecial(entityManager, DN_ALBUM_WSG, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
             entity->data = heap_caps_calloc(1, sizeof(dn_albumData_t), MALLOC_CAP_SPIRAM);
             wsgPaletteReset(&((dn_albumData_t*)entity->data)->tracksPalette);
             //Set the color of each track to c344 (no action).

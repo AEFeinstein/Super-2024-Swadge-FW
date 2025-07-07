@@ -137,16 +137,30 @@ void dn_drawCurtain(dn_entity_t* self)
             drawWsgSimple(&self->gameData->assets[DN_CURTAIN_ASSET].frames[0], (TFT_WIDTH >> 1) + ((curtainData->separation > 0) * curtainData->separation) + x * self->gameData->assets[DN_CURTAIN_ASSET].frames[0].w, y * self->gameData->assets[DN_CURTAIN_ASSET].frames[0].h);
         }
     }
-
+    char text[9] = "Player 1";
+    //get the text width
+    uint16_t tWidth = textWidth(&self->gameData->font_ibm, text);
+    int16_t x = (TFT_WIDTH >> 2) - (tWidth >> 1);
+    int16_t y = 29;
     // Draw the intro text
     if(curtainData->separation > -700 && curtainData->separation < -50)
     {
-        char text[32] = "Player 1";
-        //get the text width
-        int tWidth = textWidth(&self->gameData->font_ibm, text);
-        drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 29);
-        drawText(&self->gameData->font_ibm, c101, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 31);
-        drawText(&self->gameData->font_ibm, c525, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 30);
+        drawText(&self->gameData->font_ibm, c001, text, x, y);
+        y++;
+        x++;
+        drawText(&self->gameData->font_ibm, c001, text, x, y);
+        y++;
+        x--;
+        drawText(&self->gameData->font_ibm, c001, text, x, y);
+        y--;
+        x--;
+        drawText(&self->gameData->font_ibm, c001, text, x, y);
+        x++;
+        drawShinyText(&self->gameData->font_ibm, c245, c355, c555, text, x, y);
+        // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 30);
+        // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 29);
+        // drawText(&self->gameData->font_ibm, c101, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 31);
+        // drawText(&self->gameData->font_ibm, c525, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 30);
         switch(self->gameData->characterSets[0])
         {
             case DN_ALPHA_SET:
@@ -164,17 +178,33 @@ void dn_drawCurtain(dn_entity_t* self)
     if(curtainData->separation > -600 && curtainData->separation < -50)
     {
         char text[4] = "VS";
-        int tWidth = textWidth(&self->gameData->font_righteous, text);
+        uint16_t tWidth = textWidth(&self->gameData->font_righteous, text);
 
-        drawShinyText(&self->gameData->font_righteous, c520, c541, c552, text, (TFT_WIDTH >> 1) - (tWidth >> 1), 60);
+        drawShinyText(&self->gameData->font_righteous, c430, c540, c552, text, (TFT_WIDTH >> 1) - (tWidth >> 1), 60);
     }
     if(curtainData->separation > -500 && curtainData->separation < -50)
     {
-        char text[32] = "Player 2";
-        int tWidth = textWidth(&self->gameData->font_ibm, text);
-        drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 29);
-        drawText(&self->gameData->font_ibm, c101, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 31);
-        drawText(&self->gameData->font_ibm, c525, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 30);
+        strcpy(text, "Player 2");
+        tWidth = textWidth(&self->gameData->font_ibm, text);
+        x = (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1);
+        y = 29;
+        
+        drawText(&self->gameData->font_ibm, c001, text, x, y);
+        y++;
+        x++;
+        drawText(&self->gameData->font_ibm, c001, text, x, y);
+        y++;
+        x--;
+        drawText(&self->gameData->font_ibm, c001, text, x, y);
+        y--;
+        x--;
+        drawText(&self->gameData->font_ibm, c001, text, x, y);
+        x++;
+        drawShinyText(&self->gameData->font_ibm, c245, c355, c555, text, x, y);
+        // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 30);
+        // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 29);
+        // drawText(&self->gameData->font_ibm, c101, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 31);
+        // drawText(&self->gameData->font_ibm, c525, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 30);
         switch(self->gameData->characterSets[1])
         {
             case DN_ALPHA_SET:
@@ -187,6 +217,32 @@ void dn_drawCurtain(dn_entity_t* self)
                 break;
         }
     }
+}
+
+void dn_drawAlbums(dn_entity_t* self)
+{
+    char text[10] = "Player 1";
+    uint16_t tWidth = textWidth(&self->gameData->font_ibm, text);
+    drawShinyText(&self->gameData->font_ibm, c245, c355, c555, text,
+        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)- (tWidth >> 1) - 80,
+        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS));
+
+    // strcpy(text, "Creative");
+    // tWidth = textWidth(&self->gameData->font_ibm, text);
+    // drawShinyText(&self->gameData->font_ibm, c425, c535, c555, text,
+    //     ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1),
+    //     ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) - 6);
+    // strcpy(text, "Commons");
+    // tWidth = textWidth(&self->gameData->font_ibm, text);
+    // drawShinyText(&self->gameData->font_ibm, c425, c535, c555, text,
+    //     ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1),
+    //     ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 5);
+
+    strcpy(text, "Player 2");
+    tWidth = textWidth(&self->gameData->font_ibm, text);
+    drawShinyText(&self->gameData->font_ibm, c245, c355, c555, text,
+        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1) + 80,
+        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS));
 }
 
 void dn_drawAlbum(dn_entity_t* self)

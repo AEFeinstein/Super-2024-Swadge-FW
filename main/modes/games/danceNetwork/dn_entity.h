@@ -17,6 +17,7 @@ typedef enum
     DN_BOARD_DATA,
     DN_INSTRUCTION_DATA,
     DN_CURTAIN_DATA,
+    DN_ALBUMS_DATA,
     DN_ALBUM_DATA,
 } dn_dataType_t;
 
@@ -73,13 +74,17 @@ typedef struct
 
 typedef struct
 {
+    dn_entity_t* p1Album;
+    dn_entity_t* creativeCommonsAlbum;
+    dn_entity_t* p2Album;
+} dn_albumsData_t;
+
+typedef struct
+{
     wsgPalette_t tracksPalette; // replaces album tile colors with the final track colors. The first index color is C255. No action is C344.
     dn_track_t tracks[16]; // Array of action tracks in this album in raster order.
     uint16_t rot; // Rotation degrees from 0-359 for drawing.
 } dn_albumData_t;
-
-
-
 
 //==============================================================================
 // Prototypes
@@ -91,5 +96,7 @@ void dn_drawBoard(dn_entity_t* self);
 
 void dn_updateCurtain(dn_entity_t* self);
 void dn_drawCurtain(dn_entity_t* self);
+
+void dn_drawAlbums(dn_entity_t* self);
 
 void dn_drawAlbum(dn_entity_t* self);

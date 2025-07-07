@@ -29,6 +29,7 @@ typedef enum __attribute__((packed))
     DN_CURTAIN_ASSET,
     DN_CHESS_ORTHO_ASSET,
     DN_ALBUM_ASSET,
+    DN_NO_ASSET,//Keep this one at the end of the enum. Used for entities with no wsgs.
 } dn_assetIdx_t;
 
 typedef enum __attribute__((packed))
