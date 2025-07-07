@@ -3,17 +3,22 @@
 #include "ccmgBreakTime.h"
 #include "ccmgDelivery.h"
 #include "ccmgSpray.h"
+#include "ccmgThread.h"
 #include "cosCrunchUtil.h"
+#include "highScores.h"
 #include "mainMenu.h"
+#include "nameList.h"
 #include "swadge2024.h"
 #include "wsgPalette.h"
 
 static const char cosCrunchName[]             = "Cosplay Crunch";
 static const char cosCrunchStartCraftingLbl[] = "Start Crafting";
+static const char cosCrunchHighScoresLbl[]    = "High Scores";
 static const char cosCrunchExitLbl[]          = "Exit";
 
-static const char cosCrunchGameOverTitle[]   = "Womp, Womp";
-static const char cosCrunchGameOverMessage[] = "Press A to retry";
+static const char cosCrunchGameOverTitle[]   = "Your costumes aren't done!";
+static const char cosCrunchYourScoreMsg[]    = "Your score: %" PRIi32;
+static const char cosCrunchNewHighScoreMsg[] = "New personal best!";
 
 typedef enum
 {
@@ -27,12 +32,15 @@ typedef enum
     CC_GAME_OVER_PENDING,
     /// Game over screen
     CC_GAME_OVER,
+    /// High scores screen
+    CC_HIGH_SCORES,
 } cosCrunchState;
 
 typedef struct
 {
     uint8_t lives;
-    uint64_t score;
+    int32_t score;
+    bool personalBestAchieved;
     cosCrunchState state;
 
     menu_t* menu;
@@ -71,6 +79,8 @@ typedef struct
     font_t font;
     font_t bigFont;
     font_t bigFontOutline;
+
+    highScores_t highScores;
 } cosCrunch_t;
 cosCrunch_t* cc = NULL;
 
@@ -79,8 +89,12 @@ static void cosCrunchExitMode(void);
 static void cosCrunchMenu(const char* label, bool selected, uint32_t value);
 static void cosCrunchMainLoop(int64_t elapsedUs);
 static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+static void cosCrunchResetBackground(void);
 static void cosCrunchDisplayMessage(const char* msg);
 static void cosCrunchDrawTimer(void);
+static void cosCrunchAddToSwadgePassPacket(swadgePassPacket_t* packet);
+static int32_t cosCrunchGetSwadgePassHighScore(const swadgePassPacket_t* packet);
+static void cosCrunchSetSwadgePassHighScore(swadgePassPacket_t* packet, int32_t highScore);
 
 swadgeMode_t cosCrunchMode = {
     .modeName                 = cosCrunchName,
@@ -98,13 +112,21 @@ swadgeMode_t cosCrunchMode = {
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
     .fnDacCb                  = NULL,
+    .fnAddToSwadgePassPacket  = cosCrunchAddToSwadgePassPacket,
 };
+
+/// Uncomment this to play the specified game repeatedly instead of randomizing.
+/// Also enables the FPS counter.
+// #define DEV_MODE_MICROGAME &ccmgWhatever
 
 const cosCrunchMicrogame_t* const microgames[] = {
     &ccmgBreakTime,
     &ccmgDelivery,
     &ccmgSpray,
+    &ccmgThread,
 };
+
+#define CC_NVS_NAMESPACE "cc"
 
 #define NUM_LIVES                        4
 #define MICROGAME_GET_READY_TIME_US      1000000
@@ -113,22 +135,23 @@ const cosCrunchMicrogame_t* const microgames[] = {
 
 #define MESSAGE_X_OFFSET 25
 #define MESSAGE_Y_OFFSET 45
+#define TEXT_Y_SPACING   5
 
-tintColor_t const blueTimerTintColor   = {c013, c125, c235};
-tintColor_t const yellowTimerTintColor = {c430, c540, c554};
-tintColor_t const redTimerTintColor    = {c300, c500, c533};
+tintColor_t const blueTimerTintColor   = {c013, c125, c235, 0};
+tintColor_t const yellowTimerTintColor = {c430, c540, c554, 0};
+tintColor_t const redTimerTintColor    = {c300, c500, c533, 0};
 
 /// Colors randomly given to games that request a color
 tintColor_t tintColors[] = {
-    {c010, c232, c343}, // Green
-    {c100, c210, c310}, // Brown
-    {c134, c245, c355}, // Sky blue
-    {c012, c023, c134}, // Aqua
-    {c102, c213, c324}, // Violet
-    {c304, c415, c525}, // Magenta
-    {c440, c551, c554}, // Yellow
-    {c420, c530, c541}, // Orange
-    {c412, c523, c534}, // Pink
+    {c010, c232, c343, 0}, // Green
+    {c100, c210, c310, 0}, // Brown
+    {c134, c245, c355, 0}, // Sky blue
+    {c012, c023, c134, 0}, // Aqua
+    {c102, c213, c324, 0}, // Violet
+    {c304, c415, c525, 0}, // Magenta
+    {c440, c551, c554, 0}, // Yellow
+    {c420, c530, c541, 0}, // Orange
+    {c412, c523, c534, 0}, // Pink
 };
 
 static void cosCrunchEnterMode(void)
@@ -140,6 +163,7 @@ static void cosCrunchEnterMode(void)
 
     cc->menu = initMenu(cosCrunchName, cosCrunchMenu);
     addSingleItemToMenu(cc->menu, cosCrunchStartCraftingLbl);
+    addSingleItemToMenu(cc->menu, cosCrunchHighScoresLbl);
     addSingleItemToMenu(cc->menu, cosCrunchExitLbl);
     cc->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
@@ -158,10 +182,19 @@ static void cosCrunchEnterMode(void)
     cc->wsg.backgroundSplatter.w  = TFT_WIDTH;
     cc->wsg.backgroundSplatter.h  = TFT_HEIGHT;
     cc->wsg.backgroundSplatter.px = cc->backgroundSplatterPixels;
+    cosCrunchResetBackground();
 
     cc->font = *getSysFont();
     loadFont(RIGHTEOUS_150_FONT, &cc->bigFont, false);
     makeOutlineFont(&cc->bigFont, &cc->bigFontOutline, false);
+
+    cc->highScores.highScoreCount = 10;
+    initHighScores(&cc->highScores, CC_NVS_NAMESPACE);
+
+    list_t swadgePasses = {0};
+    getSwadgePasses(&swadgePasses, &cosCrunchMode, true);
+    saveHighScoresFromSwadgePass(&cc->highScores, CC_NVS_NAMESPACE, swadgePasses, cosCrunchGetSwadgePassHighScore);
+    freeSwadgePasses(&swadgePasses);
 }
 
 static void cosCrunchExitMode(void)
@@ -195,10 +228,14 @@ static void cosCrunchMenu(const char* label, bool selected, uint32_t value)
         if (label == cosCrunchStartCraftingLbl)
         {
             cc->lives = NUM_LIVES;
+            cc->score = 0;
             cc->state = CC_MICROGAME_PENDING;
-            // Reset the background splatter for the first/next game
-            drawToCanvas(cc->wsg.backgroundSplatter, cc->wsg.backgroundDesk, 0, TFT_HEIGHT - cc->wsg.backgroundDesk.h);
-            drawToCanvas(cc->wsg.backgroundSplatter, cc->wsg.backgroundMat, 0, 0);
+            // Reset the background splatter for the next game
+            cosCrunchResetBackground();
+        }
+        else if (label == cosCrunchHighScoresLbl)
+        {
+            cc->state = CC_HIGH_SCORES;
         }
         else if (label == cosCrunchExitLbl)
         {
@@ -219,7 +256,8 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         {
             cc->menu = menuButton(cc->menu, evt);
         }
-        else if (cc->state == CC_GAME_OVER && (evt.button == PB_A || evt.button == PB_START) && evt.down)
+        else if ((cc->state == CC_GAME_OVER || cc->state == CC_HIGH_SCORES)
+                 && (evt.button == PB_A || evt.button == PB_B || evt.button == PB_START) && evt.down)
         {
             cc->state = CC_MENU;
         }
@@ -253,7 +291,16 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                 cc->activeMicrogame.game->fnDestroyMicrogame();
             }
 
-            cc->activeMicrogame.game = microgames[esp_random() % ARRAY_SIZE(microgames)];
+#ifdef DEV_MODE_MICROGAME
+            cc->activeMicrogame.game = DEV_MODE_MICROGAME;
+#else
+            const cosCrunchMicrogame_t* newMicrogame;
+            do
+            {
+                newMicrogame = microgames[esp_random() % ARRAY_SIZE(microgames)];
+            } while (cc->activeMicrogame.game != NULL && cc->activeMicrogame.game == newMicrogame);
+            cc->activeMicrogame.game = newMicrogame;
+#endif
             cc->activeMicrogame.game->fnInitMicrogame();
 
             cc->activeMicrogame.gameTimeRemainingUs = cc->activeMicrogame.game->timeoutUs;
@@ -348,22 +395,77 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         }
 
         case CC_GAME_OVER_PENDING:
+        {
             cc->state = CC_GAME_OVER;
             cc->activeMicrogame.game->fnDestroyMicrogame();
             cc->activeMicrogame.game = NULL;
+
+            cc->personalBestAchieved = cc->score > cc->highScores.userHighScore;
+
+            score_t scores[] = {{.score = cc->score, .swadgePassUsername = 0}};
+            updateHighScores(&cc->highScores, CC_NVS_NAMESPACE, scores, ARRAY_SIZE(scores));
             break;
+        }
 
         case CC_GAME_OVER:
         {
             cosCrunchDisplayMessage(cosCrunchGameOverTitle);
 
-            uint16_t tw = textWidth(&cc->font, cosCrunchGameOverMessage);
-            drawText(&cc->font, c555, cosCrunchGameOverMessage, (TFT_WIDTH - tw) / 2, 150);
+            int16_t yOff = 165;
+            char buf[32];
+            snprintf(buf, sizeof(buf), cosCrunchYourScoreMsg, cc->score);
+            uint16_t tw = textWidth(&cc->font, buf);
+            drawText(&cc->font, c555, buf, (TFT_WIDTH - tw) / 2, yOff);
+            yOff += cc->font.height + TEXT_Y_SPACING;
+
+            if (cc->personalBestAchieved)
+            {
+                tw = textWidth(&cc->font, cosCrunchNewHighScoreMsg);
+                drawText(&cc->font, c555, cosCrunchNewHighScoreMsg, (TFT_WIDTH - tw) / 2, yOff);
+            }
+
+            break;
+        }
+
+        case CC_HIGH_SCORES:
+        {
+            uint16_t tw = textWidth(&cc->bigFont, cosCrunchHighScoresLbl);
+            drawText(&cc->bigFont, c555, cosCrunchHighScoresLbl, (TFT_WIDTH - tw) / 2, 15);
+            drawText(&cc->bigFontOutline, c000, cosCrunchHighScoresLbl, (TFT_WIDTH - tw) / 2, 15);
+
+            int16_t yOff        = 75;
+            uint16_t scoreWidth = textWidth(&cc->font, "0000");
+            for (int i = 0; i < ARRAY_SIZE(cc->highScores.highScores); i++)
+            {
+                if (cc->highScores.highScores[i].score > 0)
+                {
+                    nameData_t username = {0};
+                    if (cc->highScores.highScores[i].swadgePassUsername == 0)
+                    {
+                        username = *getSystemUsername();
+                    }
+                    else
+                    {
+                        setUsernameFrom32(&username, cc->highScores.highScores[i].swadgePassUsername);
+                    }
+                    drawTextEllipsize(&cc->font, c555, username.nameBuffer, 20, yOff,
+                                      TFT_WIDTH - 20 * 2 - scoreWidth - 5, false);
+
+                    char buf[16];
+                    snprintf(buf, sizeof(buf), "%" PRIi32, cc->highScores.highScores[i].score);
+                    tw = textWidth(&cc->font, buf);
+                    drawText(&cc->font, c555, buf, TFT_WIDTH - tw - 20, yOff);
+                    yOff += cc->font.height + TEXT_Y_SPACING;
+                }
+            }
+
             break;
         }
     }
 
+#ifdef DEV_MODE_MICROGAME
     DRAW_FPS_COUNTER(cc->font);
+#endif
 }
 
 static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
@@ -372,6 +474,7 @@ static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
     {
         case CC_MICROGAME_RUNNING:
         case CC_GAME_OVER:
+        case CC_HIGH_SCORES:
         {
             if (cc->activeMicrogame.game != NULL && cc->activeMicrogame.game->fnBackgroundDrawCallback != NULL)
             {
@@ -398,6 +501,12 @@ static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
         case CC_GAME_OVER_PENDING: // Same goes for unloading
             break;
     }
+}
+
+static void cosCrunchResetBackground()
+{
+    drawToCanvas(cc->wsg.backgroundSplatter, cc->wsg.backgroundDesk, 0, TFT_HEIGHT - cc->wsg.backgroundDesk.h);
+    drawToCanvas(cc->wsg.backgroundSplatter, cc->wsg.backgroundMat, 0, 0);
 }
 
 static void cosCrunchDisplayMessage(const char* msg)
@@ -453,6 +562,21 @@ static void cosCrunchDrawTimer()
 
     drawWsgSimple(&cc->wsg.paintTube, 8, TFT_HEIGHT - cc->wsg.paintTube.h - 4);
     drawWsgPaletteSimple(&cc->wsg.paintLabel, 37, TFT_HEIGHT - cc->wsg.paintLabel.h - 8, &cc->tintPalette);
+}
+
+static void cosCrunchAddToSwadgePassPacket(swadgePassPacket_t* packet)
+{
+    addHighScoreToSwadgePassPacket(CC_NVS_NAMESPACE, packet, cosCrunchSetSwadgePassHighScore);
+}
+
+static int32_t cosCrunchGetSwadgePassHighScore(const swadgePassPacket_t* packet)
+{
+    return packet->cosCrunch.highScore;
+}
+
+static void cosCrunchSetSwadgePassHighScore(swadgePassPacket_t* packet, int32_t highScore)
+{
+    packet->cosCrunch.highScore = highScore;
 }
 
 const tintColor_t* cosCrunchMicrogameGetTintColor()

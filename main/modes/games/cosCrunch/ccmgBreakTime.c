@@ -32,11 +32,11 @@ const cosCrunchMicrogame_t ccmgBreakTime    = {
 
 tintColor_t const liquidTintColors[] = {
     // Coffee
-    {c110, c210, c310},
+    {c110, c210, c310, 0},
     // Black tea
-    {c210, c320, c431},
+    {c210, c320, c431, 0},
     // Green tea
-    {c221, c331, c441}};
+    {c221, c331, c441, 0}};
 
 typedef struct
 {
