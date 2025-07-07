@@ -314,7 +314,7 @@ static void dn_MenuCb(const char* label, bool selected, uint32_t value)
         {
             gameData->singleSystem = true;
             gameData->passAndPlay  = true;
-            //tttBeginGame(ttt);
+            dn_initializeGame();
             dn_ShowUi(UI_GAME);
         }
         else if (dn_DiffEasyStr == label)
@@ -322,7 +322,7 @@ static void dn_MenuCb(const char* label, bool selected, uint32_t value)
             gameData->singleSystem   = true;
             gameData->passAndPlay    = false;
             gameData->cpu.difficulty = TDIFF_EASY;
-            //tttBeginGame(ttt);
+            dn_initializeGame();
             dn_ShowUi(UI_GAME);
         }
         else if (dn_DiffMediumStr == label)
@@ -330,7 +330,7 @@ static void dn_MenuCb(const char* label, bool selected, uint32_t value)
             gameData->singleSystem   = true;
             gameData->passAndPlay    = false;
             gameData->cpu.difficulty = TDIFF_MEDIUM;
-            //tttBeginGame(ttt);
+            dn_initializeGame();
             dn_ShowUi(UI_GAME);
         }
         else if (dn_DiffHardStr == label)
@@ -338,13 +338,15 @@ static void dn_MenuCb(const char* label, bool selected, uint32_t value)
             gameData->singleSystem   = true;
             gameData->passAndPlay    = false;
             gameData->cpu.difficulty = TDIFF_HARD;
-            //tttBeginGame(ttt);
+            dn_initializeGame();
             dn_ShowUi(UI_GAME);
         }
         else if (dn_CharacterSelStr == label)
         {
-            // Show character selection UI
-            dn_ShowUi(UI_CHARACTER_SELECT);
+            
+            dn_initializeCharacterSelect();
+            gameData->bgMenu->title = dn_CharacterSelStr;
+            dn_ShowUi(UI_GAME);
         }
         else if (dn_HowToStr == label)
         {
@@ -455,15 +457,11 @@ void dn_ShowUi(dn_Ui_t ui)
             break;
         }
         case UI_GAME:
-        {
-            // Initialization done in tttBeginGame()
-            dn_initializeGame();
+        {   
             break;
         }
         case UI_CHARACTER_SELECT:
         {
-            dn_initializeCharacterSelect();
-            gameData->bgMenu->title       = dn_CharacterSelStr;
             // gameData->selectMarkerIdx     = ttt->activeMarkerIdx;
             // gameData->xSelectScrollTimer  = 0;
             // gameData->xSelectScrollOffset = 0;
@@ -612,7 +610,33 @@ static void dn_initializeGame(void)
  */
 static void dn_initializeCharacterSelect(void)
 {
-
+    dn_loadAsset(DN_ALPHA_DOWN_WSG, 1, &gameData->assets[DN_ALPHA_DOWN_ASSET]);
+    dn_loadAsset(DN_ALPHA_UP_WSG, 1, &gameData->assets[DN_ALPHA_UP_ASSET]);
+    dn_loadAsset(DN_BUCKET_HAT_DOWN_WSG, 1, &gameData->assets[DN_BUCKET_HAT_DOWN_ASSET]);
+    dn_loadAsset(DN_BUCKET_HAT_UP_WSG, 1, &gameData->assets[DN_BUCKET_HAT_UP_ASSET]);
+    dn_loadAsset(DN_KING_WSG, 1, &gameData->assets[DN_KING_ASSET]);
+    dn_loadAsset(DN_PAWN_WSG, 1, &gameData->assets[DN_PAWN_ASSET]);
+    dn_loadAsset(DN_GROUND_TILE_WSG, 1, &gameData->assets[DN_GROUND_TILE_ASSET]);
+    /////////////////////////////
+    //Make the character select//
+    /////////////////////////////
+    dn_entity_t* characterSelect = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xFFFF, 0xFFFF}, gameData);
+    characterSelect->data = heap_caps_calloc(1, sizeof(dn_characterSelectData_t), MALLOC_CAP_SPIRAM);
+    dn_characterSelectData_t* cData = (dn_characterSelectData_t*)characterSelect->data;
+    bool selectDiamondShapeInit[9 * 5] = {
+            false, false, true, false, false,
+            false, true,  true, false, false,
+            false, true,  true, true,  false,
+            true,  true,  true, true,  false,
+            true,  true,  true, true,  true,
+            true,  true,  true, true,  false,
+            false, true,  true, true,  false,
+            false, true,  true, false, false,
+            false, false, true, false, false,
+        };
+    memcpy(cData->selectDiamondShape, selectDiamondShapeInit, sizeof(selectDiamondShapeInit));
+    characterSelect->updateFunction = dn_updateCharacterSelect;
+    characterSelect->drawFunction = dn_drawCharacterSelect;
 }
 
 static void dn_freeAssets(void)

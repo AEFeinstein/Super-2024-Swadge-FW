@@ -86,10 +86,21 @@ typedef struct
     uint16_t rot; // Rotation degrees from 0-359 for drawing.
 } dn_albumData_t;
 
+typedef struct
+{
+    bool selectDiamondShape[45];
+    int8_t selectCharacterIdx;
+    int32_t xSelectScrollTimer;
+    int16_t xSelectScrollOffset;
+} dn_characterSelectData_t;
+
+
 //==============================================================================
 // Prototypes
 //==============================================================================
 void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType);
+
+//main game entities
 
 void dn_updateBoard(dn_entity_t* self);
 void dn_drawBoard(dn_entity_t* self);
@@ -100,3 +111,7 @@ void dn_drawCurtain(dn_entity_t* self);
 void dn_drawAlbums(dn_entity_t* self);
 
 void dn_drawAlbum(dn_entity_t* self);
+
+//characterSelect entities
+void dn_updateCharacterSelect(dn_entity_t* self);
+void dn_drawCharacterSelect(dn_entity_t* self);

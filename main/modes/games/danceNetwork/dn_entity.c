@@ -1,4 +1,5 @@
 #include "dn_entity.h"
+#include "dn_utility.h"
 
 void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType)
 {
@@ -177,9 +178,21 @@ void dn_drawCurtain(dn_entity_t* self)
     }
     if(curtainData->separation > -600 && curtainData->separation < -50)
     {
-        char text[4] = "VS";
-        uint16_t tWidth = textWidth(&self->gameData->font_righteous, text);
-
+        strcpy(text, "VS");
+        tWidth = textWidth(&self->gameData->font_righteous, text);
+        x = (TFT_WIDTH >> 1) - (tWidth >> 1);
+        y = 59;
+        drawText(&self->gameData->font_righteous, c550, text, x, y);
+        y++;
+        x++;
+        drawText(&self->gameData->font_righteous, c550, text, x, y);
+        y++;
+        x--;
+        drawText(&self->gameData->font_righteous, c550, text, x, y);
+        y--;
+        x--;
+        drawText(&self->gameData->font_righteous, c550, text, x, y);
+        x++;
         drawShinyText(&self->gameData->font_righteous, c430, c540, c552, text, (TFT_WIDTH >> 1) - (tWidth >> 1), 60);
     }
     if(curtainData->separation > -500 && curtainData->separation < -50)
@@ -253,4 +266,166 @@ void dn_drawAlbum(dn_entity_t* self)
         ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) - self->gameData->assets[DN_ALBUM_ASSET].originY,
         &aData->tracksPalette,
         false, false, aData->rot);
+}
+
+void dn_updateCharacterSelect(dn_entity_t* self)
+{
+    dn_characterSelectData_t* cData = (dn_characterSelectData_t*)self->data;
+    if(self->gameData->btnDownState & PB_A)
+    {
+        self->gameData->characterSets[0] = cData->selectCharacterIdx;
+    }
+    if(self->gameData->btnDownState & PB_B)
+    {
+        //free assets
+        dn_freeAsset(&self->gameData->assets[DN_ALPHA_DOWN_ASSET]);
+        dn_freeAsset(&self->gameData->assets[DN_ALPHA_UP_ASSET]);
+        dn_freeAsset(&self->gameData->assets[DN_BUCKET_HAT_DOWN_ASSET]);
+        dn_freeAsset(&self->gameData->assets[DN_BUCKET_HAT_UP_ASSET]);
+        dn_freeAsset(&self->gameData->assets[DN_KING_ASSET]);
+        dn_freeAsset(&self->gameData->assets[DN_PAWN_ASSET]);
+        dn_freeAsset(&self->gameData->assets[DN_GROUND_TILE_ASSET]);
+        self->destroyFlag = true;
+        dn_ShowUi(UI_MENU);
+        return;
+    }
+    else if(self->gameData->btnDownState & PB_LEFT)
+    {
+        cData->selectCharacterIdx = dn_wrap(cData->selectCharacterIdx - 1, DN_NUM_CHARACTERS - 1);
+        cData->xSelectScrollOffset -= self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
+    }
+    else if(self->gameData->btnDownState & PB_RIGHT)
+    {
+        cData->selectCharacterIdx = dn_wrap(cData->selectCharacterIdx + 1, DN_NUM_CHARACTERS - 1);
+        cData->xSelectScrollOffset += self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
+    }
+
+    cData->xSelectScrollTimer += self->gameData->elapsedUs;
+    while(cData->xSelectScrollTimer >= 3000)
+    {
+        cData->xSelectScrollTimer -= 3000;
+        if(cData->xSelectScrollOffset > 0)
+        {
+            cData->xSelectScrollOffset--;
+        }
+        else if(cData->xSelectScrollOffset < 0)
+        {
+            cData->xSelectScrollOffset++;
+        }
+    }
+}
+void dn_drawCharacterSelect(dn_entity_t* self)
+{
+    dn_characterSelectData_t* cData = (dn_characterSelectData_t*)self->data;
+
+    // Draw the background, a blank menu
+    drawMenuMania(self->gameData->bgMenu, self->gameData->menuRenderer, self->gameData->elapsedUs);
+
+    // Set up variables for drawing
+    int16_t yOff   = MANIA_TITLE_HEIGHT + 20;
+    int16_t xOff   = ((TFT_WIDTH - self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w) >> 1) + cData->xSelectScrollOffset;
+    int8_t pIdx   = cData->selectCharacterIdx;
+
+    // 'Rewind' characters until they're off screen
+    while (xOff > 0)
+    {
+        xOff -= self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
+        pIdx--;
+    }
+
+    // Don't use a negative index!
+    while (pIdx < 0)
+    {
+        pIdx += DN_NUM_CHARACTERS;
+    }
+
+    //Draw floor tiles
+    for(int16_t y = 0; y < 9; y++)
+    {
+        // Draw tiles until you're off screen
+        while (xOff < TFT_WIDTH + ((self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5)>>1))
+        {
+            for(int16_t x = -2; x < 3; x++)
+            {
+                int16_t drawX = xOff + x * self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w + ((self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (y % 2));
+                int16_t drawY = yOff + y * (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1);
+                if(drawX >= -self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w &&
+                    drawX <= TFT_WIDTH)
+                {
+                    // If this is the active maker, draw swapped pallete
+                    if (pIdx == self->gameData->characterSets[0] && cData->selectDiamondShape[y * 5 + x+2])
+                    {
+                        drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0], drawX, drawY, &self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE]);
+                    }
+                    else
+                    {
+                        drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0], drawX, drawY);
+                    }
+                    
+                }
+            }
+            // Increment X offset
+            xOff += self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
+            // Increment marker index
+            pIdx = (pIdx + 1) % DN_NUM_CHARACTERS;
+        }
+        //reset values
+        xOff   = ((TFT_WIDTH - self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w) >> 1) + cData->xSelectScrollOffset;
+        pIdx   = cData->selectCharacterIdx;
+
+        // 'Rewind' characters until they're off screen
+        while (xOff > 0)
+        {
+            xOff -= self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
+            pIdx--;
+        }
+        // Don't use a negative index!
+        while (pIdx < 0)
+        {
+            pIdx += DN_NUM_CHARACTERS;
+        }
+    }
+
+
+    // Draw characters until you're off screen (sort of)
+    while (xOff < TFT_WIDTH + ((self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5)>>1))
+    {
+        for(int8_t i = 0; i < 5; i++)
+        {
+            if(i == 2)//king is the middle piece
+            {
+                drawWsgSimple(&self->gameData->assets[DN_KING_ASSET].frames[0],
+                    xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i + self->gameData->assets[DN_KING_ASSET].originX, 
+                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i + self->gameData->assets[DN_KING_ASSET].originY);
+                drawWsgSimple(&self->gameData->assets[DN_KING_ASSET].frames[0],
+                    xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4-i)  + self->gameData->assets[DN_KING_ASSET].originX,
+                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4+i)  + self->gameData->assets[DN_KING_ASSET].originY);
+            }
+            else
+            {
+                drawWsgSimple(&self->gameData->assets[DN_PAWN_ASSET].frames[0],
+                    xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i + self->gameData->assets[DN_KING_ASSET].originX, 
+                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i + self->gameData->assets[DN_KING_ASSET].originY);
+                drawWsgSimple(&self->gameData->assets[DN_PAWN_ASSET].frames[0],
+                    xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4-i)  + self->gameData->assets[DN_KING_ASSET].originX,
+                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4+i)  + self->gameData->assets[DN_KING_ASSET].originY);
+            }
+        }
+
+        // Increment X offset
+        xOff += self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
+        // Increment marker index
+        pIdx = (pIdx + 1) % DN_NUM_CHARACTERS;
+    }
+
+    // Draw arrows to indicate this can be scrolled
+    // Blink the arrows
+    self->gameData->generalTimer += self->gameData->elapsedUs >> 12;
+
+    if (self->gameData->generalTimer > 127)
+    {
+        // Draw arrows to indicate this can be scrolled
+        drawText(&self->gameData->font_ibm, c000, "<", 3, 53);
+        drawText(&self->gameData->font_ibm, c000, ">", TFT_WIDTH - 3 - textWidth(&self->gameData->font_ibm, ">"), 53);
+    }
 }

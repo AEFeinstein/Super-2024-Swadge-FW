@@ -7,7 +7,7 @@
 // Defines
 //==============================================================================
 
-#define NUM_CHARACTERS 2
+#define DN_NUM_CHARACTERS 2
 
 //==============================================================================
 // Enums
@@ -74,10 +74,6 @@ typedef struct dn_gameData_t{
     dn_entityManager_t entityManager;
     uint8_t generalTimer;
     dn_phase_t phase; // The current phase of the game
-    // For marker selection UI
-    int32_t xSelectScrollTimer;
-    int16_t xSelectScrollOffset;
-    int8_t selectCharacterIdx;
     dn_characterSet_t characterSets[2];//character sets of p1 and p2.
     dn_CpuData_t cpu;
     dn_Result_t lastResult;
