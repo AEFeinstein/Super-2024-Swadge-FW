@@ -87,7 +87,7 @@ static void runTCase(int64_t elapsedUs);
  * @param selected
  * @param settingVal
  */
-static void tCaseMenuCb(const char* label, bool selected, uint32_t settingVal);
+static bool tCaseMenuCb(const char* label, bool selected, uint32_t settingVal);
 
 static void tCaseDrawStats(font_t* fnt, int yOffset);
 
@@ -206,7 +206,7 @@ static void runTCase(int64_t elapsedUs)
     }
 }
 
-static void tCaseMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool tCaseMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     if (selected)
     {
@@ -230,6 +230,8 @@ static void tCaseMenuCb(const char* label, bool selected, uint32_t settingVal)
     {
         tc->dm = settingVal;
     }
+
+    return false;
 }
 
 static void tCaseDrawStats(font_t* fnt, int yOffset)
