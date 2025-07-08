@@ -2,6 +2,7 @@
 
 #include "swadge2024.h"
 #include "artillery_phys.h"
+#include "menuSimpleRenderer.h"
 
 //==============================================================================
 // Defines
@@ -42,6 +43,8 @@ typedef struct
     artilleryModeState_t mState;
     artilleryGameState_t gState;
     uint8_t gMenuSel;
+    menu_t* gameMenu;
+    menuSimpleRenderer_t* smRenderer;
 } artilleryData_t;
 
 extern swadgeMode_t artilleryMode;

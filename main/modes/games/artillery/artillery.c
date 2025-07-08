@@ -15,6 +15,7 @@ void artilleryMainLoop(int64_t elapsedUs);
 void artilleryBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 void artilleryEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 void artilleryEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
+void artilleryGameMenuCb(const char* label, bool selected, uint32_t value);
 
 //==============================================================================
 // Variables
@@ -41,6 +42,37 @@ swadgeMode_t artilleryMode = {
 };
 
 artilleryData_t* ad;
+
+//==============================================================================
+// Const Variables
+//==============================================================================
+
+const struct
+{
+    const char* text;
+    artilleryGameState_t nextState;
+} menuEntries[] = {
+    {
+        .text      = "Look Around",
+        .nextState = AGS_LOOK,
+    },
+    {
+        .text      = "Drive",
+        .nextState = AGS_MOVE,
+    },
+    {
+        .text      = "Load Ammo",
+        .nextState = AGS_LOAD,
+    },
+    {
+        .text      = "Adjust Shot",
+        .nextState = AGS_ADJUST,
+    },
+    {
+        .text      = "Fire!",
+        .nextState = AGS_FIRE,
+    },
+};
 
 //==============================================================================
 // Functions
@@ -93,10 +125,15 @@ void artilleryEnterMode(void)
     physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4 - 4, 50, 8, CT_SHELL);
     physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4, 80, 8, CT_OBSTACLE);
 
-    ad->mState = AMS_GAME;
+    // Initialize in-game menu and renderer
+    ad->gameMenu = initMenu(NULL, artilleryGameMenuCb);
+    for (int mIdx = 0; mIdx < ARRAY_SIZE(menuEntries); mIdx++)
+    {
+        addSingleItemToMenu(ad->gameMenu, menuEntries[mIdx].text);
+    }
 
-    // ad->gState = AGS_MOVE;
-    ad->gState = AGS_MENU;
+    ad->smRenderer = initMenuSimpleRenderer(NULL, c005, c000, c555, 5);
+    ad->gState     = AGS_MENU;
 }
 
 /**
@@ -105,6 +142,7 @@ void artilleryEnterMode(void)
 void artilleryExitMode(void)
 {
     deinitPhys(ad->phys);
+    deinitMenuSimpleRenderer(ad->smRenderer);
     heap_caps_free(ad);
 }
 
@@ -188,4 +226,25 @@ void artilleryEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_
  */
 void artilleryEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
+}
+
+/**
+ * @brief Handle callbacks from the in-game menu
+ *
+ * @param label The label selected or scrolled to
+ * @param selected true if the label was selected, false otherwise
+ * @param value Unused
+ */
+void artilleryGameMenuCb(const char* label, bool selected, uint32_t value)
+{
+    if (selected)
+    {
+        for (int mIdx = 0; mIdx < ARRAY_SIZE(menuEntries); mIdx++)
+        {
+            if (label == menuEntries[mIdx].text)
+            {
+                ad->gState = menuEntries[mIdx].nextState;
+            }
+        }
+    }
 }
