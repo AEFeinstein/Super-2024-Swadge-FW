@@ -15,7 +15,7 @@ void artilleryMainLoop(int64_t elapsedUs);
 void artilleryBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 void artilleryEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 void artilleryEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
-void artilleryGameMenuCb(const char* label, bool selected, uint32_t value);
+bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value);
 
 //==============================================================================
 // Variables
@@ -47,6 +47,8 @@ artilleryData_t* ad;
 // Const Variables
 //==============================================================================
 
+const char load_ammo[] = "Load Ammo";
+
 const struct
 {
     const char* text;
@@ -61,8 +63,8 @@ const struct
         .nextState = AGS_MOVE,
     },
     {
-        .text      = "Load Ammo",
-        .nextState = AGS_LOAD,
+        .text      = load_ammo,
+        .nextState = AGS_MENU,
     },
     {
         .text      = "Adjust Shot",
@@ -71,6 +73,53 @@ const struct
     {
         .text      = "Fire!",
         .nextState = AGS_FIRE,
+    },
+};
+
+const struct
+{
+    const char* text;
+    artilleryAmmoType_t ammo;
+} ammoEntries[] = {
+    {
+        .text = "Normal Shot",
+        .ammo = AMMO_NORMAL,
+    },
+    {
+        .text = "Big Explosion",
+        .ammo = AMMO_BIG_EXPLODE,
+    },
+    {
+        .text = "Three Shot",
+        .ammo = AMMO_THREE,
+    },
+    {
+        .text = "Five Shot",
+        .ammo = AMMO_FIVE,
+    },
+    {
+        .text = "Sniper",
+        .ammo = AMMO_SNIPER,
+    },
+    {
+        .text = "Machine Gun",
+        .ammo = AMMO_MACHINE_GUN,
+    },
+    {
+        .text = "Bouncy Shot",
+        .ammo = AMMO_BOUNCY,
+    },
+    {
+        .text = "Jackhammer",
+        .ammo = AMMO_JACKHAMMER,
+    },
+    {
+        .text = "Hill Maker",
+        .ammo = AMMO_HILL_MAKER,
+    },
+    {
+        .text = "Jump Jets",
+        .ammo = AMMO_JUMP,
     },
 };
 
@@ -129,7 +178,19 @@ void artilleryEnterMode(void)
     ad->gameMenu = initMenu(NULL, artilleryGameMenuCb);
     for (int mIdx = 0; mIdx < ARRAY_SIZE(menuEntries); mIdx++)
     {
-        addSingleItemToMenu(ad->gameMenu, menuEntries[mIdx].text);
+        if (load_ammo == menuEntries[mIdx].text)
+        {
+            ad->gameMenu = startSubMenu(ad->gameMenu, load_ammo);
+            for (int aIdx = 0; aIdx < ARRAY_SIZE(ammoEntries); aIdx++)
+            {
+                addSingleItemToMenu(ad->gameMenu, ammoEntries[aIdx].text);
+            }
+            ad->gameMenu = endSubMenu(ad->gameMenu);
+        }
+        else
+        {
+            addSingleItemToMenu(ad->gameMenu, menuEntries[mIdx].text);
+        }
     }
     ad->smRenderer = initMenuSimpleRenderer(NULL, c005, c000, c555, 5);
 
@@ -236,7 +297,7 @@ void artilleryEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status
  * @param selected true if the label was selected, false otherwise
  * @param value Unused
  */
-void artilleryGameMenuCb(const char* label, bool selected, uint32_t value)
+bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
@@ -245,7 +306,20 @@ void artilleryGameMenuCb(const char* label, bool selected, uint32_t value)
             if (label == menuEntries[mIdx].text)
             {
                 ad->gState = menuEntries[mIdx].nextState;
+                return false;
+            }
+        }
+
+        for (int aIdx = 0; aIdx < ARRAY_SIZE(ammoEntries); aIdx++)
+        {
+            if (label == ammoEntries[aIdx].text)
+            {
+                ESP_LOGI("ART", "Set ammo to %s", ammoEntries[aIdx].text);
+                ad->players[0]->ammo = ammoEntries[aIdx].ammo;
+                return true;
             }
         }
     }
+
+    return false;
 }
