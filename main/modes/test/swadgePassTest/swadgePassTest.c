@@ -24,7 +24,7 @@ typedef struct
 static void swadgePassTestMainLoop(int64_t elapsedUs);
 static void swadgePassTestEnterMode(void);
 static void swadgePassTestExitMode(void);
-void swadgePassTestMenuCb(const char* label, bool selected, uint32_t value);
+bool swadgePassTestMenuCb(const char* label, bool selected, uint32_t value);
 
 //==============================================================================
 // Strings
@@ -182,8 +182,9 @@ static void swadgePassTestMainLoop(int64_t elapsedUs)
  * @param label A pointer to the label which was selected or scrolled to
  * @param selected true if the item was selected with the A button, false if it was scrolled to
  * @param value If a settings item was selected or scrolled, this is the new value for the setting
+ * @return true to go up a menu level, false to remain here
  */
-void swadgePassTestMenuCb(const char* label, bool selected, uint32_t value)
+bool swadgePassTestMenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
@@ -196,7 +197,7 @@ void swadgePassTestMenuCb(const char* label, bool selected, uint32_t value)
             if (!strcmp(label, spd->key))
             {
                 spt->currSpd = spd;
-                return;
+                return false;
             }
             else
             {
@@ -205,4 +206,5 @@ void swadgePassTestMenuCb(const char* label, bool selected, uint32_t value)
             }
         }
     }
+    return false;
 }
