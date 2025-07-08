@@ -387,6 +387,8 @@ void dn_drawCharacterSelect(dn_entity_t* self)
         }
     }
 
+    xOff += self->gameData->assets[DN_GROUND_TILE_ASSET].originX;
+    yOff += self->gameData->assets[DN_GROUND_TILE_ASSET].originY;
 
     // Draw characters until you're off screen (sort of)
     while (xOff < TFT_WIDTH + ((self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5)>>1))
@@ -396,20 +398,20 @@ void dn_drawCharacterSelect(dn_entity_t* self)
             if(i == 2)//king is the middle piece
             {
                 drawWsgSimple(&self->gameData->assets[DN_KING_ASSET].frames[0],
-                    xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i + self->gameData->assets[DN_KING_ASSET].originX, 
-                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i + self->gameData->assets[DN_KING_ASSET].originY);
+                    xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i - self->gameData->assets[DN_KING_ASSET].originX, 
+                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i - self->gameData->assets[DN_KING_ASSET].originY);
                 drawWsgSimple(&self->gameData->assets[DN_KING_ASSET].frames[0],
-                    xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4-i)  + self->gameData->assets[DN_KING_ASSET].originX,
-                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4+i)  + self->gameData->assets[DN_KING_ASSET].originY);
+                    xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4-i) - self->gameData->assets[DN_KING_ASSET].originX,
+                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4+i) - self->gameData->assets[DN_KING_ASSET].originY);
             }
             else
             {
                 drawWsgSimple(&self->gameData->assets[DN_PAWN_ASSET].frames[0],
-                    xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i + self->gameData->assets[DN_KING_ASSET].originX, 
-                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i + self->gameData->assets[DN_KING_ASSET].originY);
+                    xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i - self->gameData->assets[DN_PAWN_ASSET].originX, 
+                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i - self->gameData->assets[DN_PAWN_ASSET].originY);
                 drawWsgSimple(&self->gameData->assets[DN_PAWN_ASSET].frames[0],
-                    xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4-i)  + self->gameData->assets[DN_KING_ASSET].originX,
-                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4+i)  + self->gameData->assets[DN_KING_ASSET].originY);
+                    xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4-i) - self->gameData->assets[DN_PAWN_ASSET].originX,
+                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4+i) - self->gameData->assets[DN_PAWN_ASSET].originY);
             }
         }
 
