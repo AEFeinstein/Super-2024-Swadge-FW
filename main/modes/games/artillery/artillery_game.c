@@ -8,38 +8,9 @@
 // Function Declarations
 //==============================================================================
 
-void artilleryDrawMenu(artilleryData_t* ad);
-
 //==============================================================================
 // Const Variables
 //==============================================================================
-
-const struct
-{
-    const char* text;
-    artilleryGameState_t nextState;
-} menuEntries[] = {
-    {
-        .text      = "Look Around",
-        .nextState = AGS_LOOK,
-    },
-    {
-        .text      = "Drive",
-        .nextState = AGS_MOVE,
-    },
-    {
-        .text      = "Load Ammo",
-        .nextState = AGS_LOAD,
-    },
-    {
-        .text      = "Adjust Shot",
-        .nextState = AGS_ADJUST,
-    },
-    {
-        .text      = "Fire!",
-        .nextState = AGS_FIRE,
-    },
-};
 
 //==============================================================================
 // Functions
@@ -65,31 +36,8 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
         }
         case AGS_MENU:
         {
-            // TODO menu navigation
-            if (evt.down)
-            {
-                switch (evt.button)
-                {
-                    case PB_DOWN:
-                    {
-                        ad->gMenuSel = (ad->gMenuSel + 1) % ARRAY_SIZE(menuEntries);
-                        break;
-                    }
-                    case PB_UP:
-                    {
-                        ad->gMenuSel = (ad->gMenuSel - 1) % ARRAY_SIZE(menuEntries);
-                        break;
-                    }
-                    case PB_A:
-                    {
-                        ad->gState = menuEntries[ad->gMenuSel].nextState;
-                    }
-                    default:
-                    {
-                        break;
-                    }
-                }
-            }
+            // Menu navigation
+            ad->gameMenu = menuButton(ad->gameMenu, evt);
             break;
         }
         case AGS_LOOK:
@@ -232,7 +180,8 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
     {
         case AGS_MENU:
         {
-            artilleryDrawMenu(ad);
+            // Menu renderer
+            drawMenuSimple(ad->gameMenu, ad->smRenderer);
             break;
         }
         case AGS_ADJUST:
@@ -264,44 +213,4 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
     }
 
     DRAW_FPS_COUNTER((*f));
-}
-
-/**
- * @brief TODO doc
- *
- * TODO cleanup
- *
- * @param ad
- */
-void artilleryDrawMenu(artilleryData_t* ad)
-{
-#define MENU_MARGIN 16
-#define FONT_MARGIN 8
-
-    font_t* f = getSysFont();
-
-    int32_t menuHeight = (ARRAY_SIZE(menuEntries) * (f->height + FONT_MARGIN)) + FONT_MARGIN;
-
-    fillDisplayArea(MENU_MARGIN,                           //
-                    TFT_HEIGHT - menuHeight - MENU_MARGIN, //
-                    TFT_WIDTH - MENU_MARGIN,               //
-                    TFT_HEIGHT - MENU_MARGIN,              //
-                    c111);
-    drawRect(MENU_MARGIN,                           //
-             TFT_HEIGHT - menuHeight - MENU_MARGIN, //
-             TFT_WIDTH - MENU_MARGIN,               //
-             TFT_HEIGHT - MENU_MARGIN,              //
-             c005);
-
-    int16_t yOff = TFT_HEIGHT - menuHeight - FONT_MARGIN;
-
-    for (uint32_t i = 0; i < ARRAY_SIZE(menuEntries); i++)
-    {
-        drawText(f, c555, menuEntries[i].text, 2 * MENU_MARGIN, yOff);
-        if (ad->gMenuSel == i)
-        {
-            drawText(f, c555, ">", 2 * MENU_MARGIN - 10, yOff);
-        }
-        yOff += (f->height + FONT_MARGIN);
-    }
 }
