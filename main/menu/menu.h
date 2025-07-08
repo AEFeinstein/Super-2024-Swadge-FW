@@ -115,9 +115,10 @@
  *
  * Receive menu callbacks:
  * \code{.c}
- * static void demoMenuCb(const char* label, bool selected, uint32_t settingVal)
+ * static bool demoMenuCb(const char* label, bool selected, uint32_t settingVal)
  * {
  *     printf("%s %s, setting=%d\n", label, selected ? "selected" : "scrolled to", settingVal);
+ *     return false;
  * }
  * \endcode
  *
@@ -145,8 +146,9 @@
  * @param label A pointer to the label which was selected or scrolled to
  * @param selected true if the item was selected with the A button, false if it was scrolled to
  * @param value If a settings item was selected or scrolled, this is the new value for the setting
+ * @return true if the submenu should be exited, false to stay on it
  */
-typedef void (*menuCb)(const char* label, bool selected, uint32_t value);
+typedef bool (*menuCb)(const char* label, bool selected, uint32_t value);
 
 typedef struct _menu_t menu_t;
 
