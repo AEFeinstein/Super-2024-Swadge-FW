@@ -59,8 +59,6 @@
             "includePath": [
                 "${config:idf.espIdfPath}/components/**",
                 "${config:idf.espIdfPathWin}/components/**",
-                "${config:idf.espAdfPath}/components/**",
-                "${config:idf.espAdfPathWin}/components/**",
                 "${workspaceFolder}/main/**",
                 "${workspaceFolder}/components/**"
             ],
@@ -68,8 +66,6 @@
                 "path": [
                     "${config:idf.espIdfPath}/components",
                     "${config:idf.espIdfPathWin}/components",
-                    "${config:idf.espAdfPath}/components/**",
-                    "${config:idf.espAdfPathWin}/components/**",
                     "${workspaceFolder}/main/**",
                     "${workspaceFolder}/components/**"
                 ],
