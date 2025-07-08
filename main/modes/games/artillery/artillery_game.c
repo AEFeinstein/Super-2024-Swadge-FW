@@ -65,27 +65,6 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
             physSetCameraButton(ad->phys, evt.state);
             break;
         }
-        case AGS_LOAD:
-        {
-            if (evt.down)
-            {
-                switch (evt.button)
-                {
-                    case PB_A:
-                    case PB_B:
-                    {
-                        // TODO shot selection
-                        ad->gState = AGS_MENU;
-                        break;
-                    }
-                    default:
-                    {
-                        break;
-                    }
-                }
-            }
-            break;
-        }
         case AGS_MOVE:
         {
             if (evt.down)
@@ -205,7 +184,6 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
             break;
         }
         case AGS_WAIT:
-        case AGS_LOAD:
         case AGS_MOVE:
         {
             break;
