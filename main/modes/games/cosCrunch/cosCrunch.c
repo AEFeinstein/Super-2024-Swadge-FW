@@ -86,7 +86,7 @@ cosCrunch_t* cc = NULL;
 
 static void cosCrunchEnterMode(void);
 static void cosCrunchExitMode(void);
-static void cosCrunchMenu(const char* label, bool selected, uint32_t value);
+static bool cosCrunchMenu(const char* label, bool selected, uint32_t value);
 static void cosCrunchMainLoop(int64_t elapsedUs);
 static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void cosCrunchResetBackground(void);
@@ -221,7 +221,7 @@ static void cosCrunchExitMode(void)
     heap_caps_free(cc);
 }
 
-static void cosCrunchMenu(const char* label, bool selected, uint32_t value)
+static bool cosCrunchMenu(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
@@ -242,6 +242,7 @@ static void cosCrunchMenu(const char* label, bool selected, uint32_t value)
             switchToSwadgeMode(&mainMenuMode);
         }
     }
+    return false;
 }
 
 static void cosCrunchMainLoop(int64_t elapsedUs)
