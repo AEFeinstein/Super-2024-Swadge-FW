@@ -300,6 +300,7 @@ void dn_updateCharacterSelect(dn_entity_t* self)
         cData->xSelectScrollOffset += self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
     }
 
+    // Scroll the offset if it's not centered yet
     cData->xSelectScrollTimer += self->gameData->elapsedUs;
     while(cData->xSelectScrollTimer >= 3000)
     {

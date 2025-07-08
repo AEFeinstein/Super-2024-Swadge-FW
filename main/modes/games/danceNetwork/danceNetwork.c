@@ -221,6 +221,7 @@ static void dn_ExitMode(void)
 static void dn_MainLoop(int64_t elapsedUs)
 {
     // Handle inputs
+    gameData->btnDownState = 0;
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
