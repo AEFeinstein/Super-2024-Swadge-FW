@@ -24,7 +24,6 @@ typedef enum
 {
     AGS_WAIT,
     AGS_MENU,
-    AGS_LOAD,
     AGS_MOVE,
     AGS_ADJUST,
     AGS_FIRE,

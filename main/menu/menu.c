@@ -728,17 +728,14 @@ menu_t* menuSelectCurrentItem(menu_t* menu)
     }
     else if (item->label)
     {
-        if (item->label == mnuBackStr && menu->parentMenu)
+        // Call the callback for single items
+        // If a back was requested, or if this is the back option, and a parent exists
+        if ((menu->cbFunc(item->label, true, 0) || item->label == mnuBackStr) || menu->parentMenu)
         {
-            // If this is the back string, return the parent menu
+            // Return the parent menu
             // Reset the current item when leaving a submenu
             menu->currentItem = menu->items->first;
             return menu->parentMenu;
-        }
-        else
-        {
-            // If this is a single item, call the callback
-            menu->cbFunc(item->label, true, 0);
         }
     }
     else if (item->options)

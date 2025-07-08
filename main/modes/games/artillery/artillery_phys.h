@@ -28,6 +28,20 @@ typedef enum
     CT_OBSTACLE,
 } circType_t;
 
+typedef enum
+{
+    AMMO_NORMAL,
+    AMMO_BIG_EXPLODE,
+    AMMO_THREE,
+    AMMO_FIVE,
+    AMMO_SNIPER,
+    AMMO_MACHINE_GUN,
+    AMMO_BOUNCY,
+    AMMO_JACKHAMMER,
+    AMMO_HILL_MAKER,
+    AMMO_JUMP,
+} artilleryAmmoType_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -62,6 +76,7 @@ typedef struct
     float barrelAngle;
     vecFl_t relBarrelTip;
     float shotPower;
+    artilleryAmmoType_t ammo;
 } physCirc_t;
 
 typedef struct
