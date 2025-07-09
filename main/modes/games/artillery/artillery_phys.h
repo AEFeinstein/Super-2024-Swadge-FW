@@ -102,6 +102,7 @@ typedef struct
     uint32_t cameraTimer;
     buttonBit_t cameraBtn;
     vec_t camera;
+    physCirc_t* cameraTarget;
 } physSim_t;
 
 //==============================================================================

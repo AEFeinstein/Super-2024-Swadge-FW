@@ -195,7 +195,7 @@ void artilleryEnterMode(void)
     ad->smRenderer = initMenuSimpleRenderer(NULL, c005, c111, c555, 5);
 
     ad->mState = AMS_GAME;
-    ad->gState = AGS_MENU;
+    artillerySwitchToState(ad, AGS_MENU);
 }
 
 /**
@@ -305,7 +305,7 @@ bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value)
         {
             if (label == menuEntries[mIdx].text)
             {
-                ad->gState = menuEntries[mIdx].nextState;
+                artillerySwitchToState(ad, menuEntries[mIdx].nextState);
                 return false;
             }
         }
