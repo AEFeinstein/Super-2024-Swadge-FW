@@ -512,6 +512,16 @@ void physCheckCollisions(physSim_t* phys)
             // (there will only be one, closest to the starting point)
             if (FLT_MAX != colDist)
             {
+                // Shells have a limited number of bounces
+                if (CT_SHELL == pc->type)
+                {
+                    pc->bounces--;
+                    if (0 == pc->bounces)
+                    {
+                        shouldRemoveNode = true;
+                    }
+                }
+
                 // Bounce it by reflecting across this vector
                 pc->vel = subVecFl2d(pc->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(pc->vel, reflVec))));
 
@@ -826,17 +836,83 @@ void setShotPower(physCirc_t* circ, float power)
  *
  * @param phys The physics simulation
  * @param circ A circle of type CT_TANK
- * @return The newly fired shell
  */
-physCirc_t* fireShot(physSim_t* phys, physCirc_t* circ)
+void fireShot(physSim_t* phys, physCirc_t* circ)
 {
+    int32_t radius    = 4;
+    int32_t numShells = 1;
+    int32_t bounces   = 1;
+
+    switch (circ->ammo)
+    {
+        case AMMO_NORMAL:
+        {
+            /* todo */
+            break;
+        }
+        case AMMO_BIG_EXPLODE:
+        {
+            /* todo */
+            break;
+        }
+        case AMMO_THREE:
+        {
+            /* todo */
+            numShells = 3;
+            break;
+        }
+        case AMMO_FIVE:
+        {
+            /* todo */
+            numShells = 5;
+            break;
+        }
+        case AMMO_SNIPER:
+        {
+            /* todo */
+            break;
+        }
+        case AMMO_MACHINE_GUN:
+        {
+            /* todo */
+            break;
+        }
+        case AMMO_BOUNCY:
+        {
+            /* todo */
+            bounces = 5;
+            break;
+        }
+        case AMMO_JACKHAMMER:
+        {
+            /* todo */
+            break;
+        }
+        case AMMO_HILL_MAKER:
+        {
+            /* todo */
+            break;
+        }
+        case AMMO_JUMP:
+        {
+            /* todo */
+            break;
+        }
+    }
+
+    const float spread = ((5 * M_PI) / 180.0f); // five degrees in radians
+    float angStart     = circ->barrelAngle - (numShells / 2) * spread;
+    float angEnd       = circ->barrelAngle + (numShells / 2) * spread;
+
     vecFl_t absBarrelTip = addVecFl2d(circ->c.pos, circ->relBarrelTip);
-    physCirc_t* shell    = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, 4, CT_SHELL);
 
-    shell->vel.x = sinf(circ->barrelAngle) * circ->shotPower;
-    shell->vel.y = -cosf(circ->barrelAngle) * circ->shotPower;
-
-    return shell;
+    for (float angle = angStart; angle <= angEnd; angle += spread)
+    {
+        physCirc_t* shell = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, 4, CT_SHELL);
+        shell->vel.x      = sinf(angle) * circ->shotPower;
+        shell->vel.y      = -cosf(angle) * circ->shotPower;
+        shell->bounces    = bounces;
+    }
 }
 
 /**
