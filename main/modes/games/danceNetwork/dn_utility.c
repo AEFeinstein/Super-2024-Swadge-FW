@@ -46,5 +46,5 @@ dn_assetIdx_t dn_getAssetIdx(dn_characterSet_t characterSet, dn_unitRank rank, d
 void dn_setFloorPalette(wsgPalette_t* palette, paletteColor_t color)
 {
     wsgPaletteSet(palette, c112, color);
-    wsgPaletteSet(palette, c334, color);
+    wsgPaletteSet(palette, c223, color);
 }
