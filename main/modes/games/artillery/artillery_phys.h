@@ -73,10 +73,15 @@ typedef struct
 
     // Game data
     circType_t type;
+
+    // Player data
     float barrelAngle;
     vecFl_t relBarrelTip;
     float shotPower;
     artilleryAmmoType_t ammo;
+
+    // Shell data
+    int32_t bounces;
 } physCirc_t;
 
 typedef struct
@@ -114,4 +119,4 @@ physLine_t* physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2)
 physCirc_t* physAddCircle(physSim_t* phys, float x1, float y1, float r, circType_t type);
 void setBarrelAngle(physCirc_t* circ, float angle);
 void setShotPower(physCirc_t* circ, float power);
-physCirc_t* fireShot(physSim_t* phys, physCirc_t* circ);
+void fireShot(physSim_t* phys, physCirc_t* circ);
