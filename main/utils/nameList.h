@@ -23,6 +23,13 @@
 // +3 for number, +1 for end, +3 for '-' = +7
 #define USERNAME_MAX_LEN (MAX_ADJ1_LEN + MAX_ADJ2_LEN + MAX_NOUN_LEN + 7)
 
+/**
+ * @brief Gets the packed 32 bit representation of a username
+ *
+ * @param nd nameData_t pointer to pack
+ */
+#define GET_PACKED_USERNAME(nd) ((nd.idxs[0] << 24) | (nd.idxs[1] << 16) | (nd.idxs[2] << 8) | nd.randCode)
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -94,3 +101,25 @@ bool handleUsernamePickerInput(buttonEvt_t* evt, nameData_t* nd);
  * @param nd The data
  */
 void drawUsernamePicker(nameData_t* nd);
+
+/**
+ * @brief Get the System Username object
+ *
+ * @return nameData_t* The username for the system at large
+ */
+nameData_t* getSystemUsername(void);
+
+/**
+ * @brief Saves the username to NVS
+ *
+ * @param nd username to save
+ */
+void setSystemUsername(nameData_t* nd);
+
+/**
+ * @brief Set the Username from a int32
+ *
+ * @param nd nameData_t to initialize
+ * @param packed int32_t to load name from
+ */
+void setUsernameFrom32(nameData_t* nd, int32_t packed);

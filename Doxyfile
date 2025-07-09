@@ -951,6 +951,10 @@ WARN_LOGFILE           = doxy_warnings.txt
 
 INPUT                  = ./main \
                          ./main/modes/games/cosCrunch/cosCrunch.h \
+                         ./main/modes/games/cosCrunch/cosCrunchUtil.h \
+                         ./main/asset_loaders/heatshrink_helper.h \
+                         ./main/asset_loaders/heatshrink_helper.c \
+                         ./tools/assets_preprocessor/src \
                          ./components \
                          ./docs/CODE_OF_CONDUCT.md \
                          ./docs/CONTRIBUTING.md \
@@ -959,7 +963,8 @@ INPUT                  = ./main \
                          ./docs/MIDI.md \
                          ./docs/PORTING.md \
                          ./docs/SERIAL_DEBUG.md \
-                         ./docs/SETUP.md
+                         ./docs/SETUP.md \
+                         ./docs/tutorial.md
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses

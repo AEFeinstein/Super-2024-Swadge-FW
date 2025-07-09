@@ -29,8 +29,13 @@
  * If you want to learn about creating MIDI song files for the Swadge, see the \ref MIDI guide. See also the
  * \ref emulator which you can use to listen to MIDI files.
  *
- * If you're just starting Swadge development, you're already at the right place to start! Here's a good sequence of
- * pages to read from here.
+ * If you're just starting Swadge development, you're already at the right place to start!
+ *
+ * \note If you're new to developing code and want a guided experience, try the \ref tutorial tutorial! It
+ * \note will walk you through creating a whole game with explanations on why certain options are picked. If you're more
+ * \note used to C and reading technical documentation, why not browse the rest of the repository?
+ *
+ * Here's a quick recommended order to exploring the repository:
  *
  * -# First, follow the guide to \ref setup. This will walk you through setting up the toolchain and compiling the
  * firmware and emulator.
@@ -103,7 +108,9 @@
  *     - fs_json.h: Load JSON
  *     - fs_txt.h: Load plaintext
  *     - midiFileParser.h: Load MIDI files
+ * - assets_preprocessor.h: Learn how to define a new asset file type processor for CNFS
  * - settingsManager.h: Set and get persistent settings for things like screen brightness
+ * - highScores.h: System to simplify keeping a high score table with SwadgePass support
  *
  * \subsection gr_api Graphics APIs
  *
@@ -247,7 +254,7 @@ static bool shouldHideQuickSettings = false;
 /// @brief A pointer to the Swadge mode under the quick settings
 static const swadgeMode_t* modeBehindQuickSettings = NULL;
 
-/// 25 FPS by default
+/// 40 FPS by default
 static uint32_t frameRateUs = DEFAULT_FRAME_RATE_US;
 
 /// @brief Timer to return to the main menu
@@ -255,8 +262,6 @@ static int64_t timeExitPressed = 0;
 
 /// @brief System font
 static font_t sysFont;
-/// @brief System notification sound
-static midiFile_t sysSound;
 
 /// @brief Infinite impulse response filter for mic samples
 static uint32_t samp_iir = 0;
@@ -411,7 +416,6 @@ void app_main(void)
 
     // Initialize system font and trophy-get sound
     loadFont(IBM_VGA_8_FONT, &sysFont, true);
-    loadMidiFile(BLOCK_1_MID, &sysSound, true); // FIXME: Need new sound. Temp sound picked
 
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)
@@ -649,7 +653,6 @@ void deinitSystem(void)
 {
     // Deinit font and sfx
     freeFont(&sysFont);
-    unloadMidiFile(&sysSound);
 
     // Deinit the swadge mode
     if (NULL != cSwadgeMode->fnExitMode)
@@ -993,13 +996,4 @@ void powerUpPeripherals(void)
 font_t* getSysFont(void)
 {
     return &sysFont;
-}
-
-/**
- * @brief Returns the system sound to be used
- *
- */
-midiFile_t* getSysSound(void)
-{
-    return &sysSound;
 }

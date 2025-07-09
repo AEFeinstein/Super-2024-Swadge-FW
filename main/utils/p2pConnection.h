@@ -75,7 +75,7 @@
  * p2pDeinit() should be called when the Swadge mode is done to clean up.
  *
  * The connection won't actually start until p2pStartConnection() is called.
- * Connection statues will be delivered to the Swadge mode through the
+ * Connection statues will be delivered to the Swadge mode through the \ref p2pConCbFn callback.
  *
  * p2pGetPlayOrder() can be called after connection to figure out of this Swadge is player one or two.
  *

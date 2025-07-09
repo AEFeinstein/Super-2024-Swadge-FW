@@ -16,10 +16,11 @@
 
 /// @brief Add swadgeMode_t pointers to this struct to include them in emulator and main menu
 swadgeMode_t* const allSwadgeModes[] = {
-    &accelTestMode, &colorchordMode, &cosCrunchMode,    &danceMode,     &factoryTestMode, &gamepadMode,
-    &introMode,     &jukeboxMode,    &keebTestMode,     &mainMenuMode,  &modeCredits,     &modeDiceRoller,
-    &sequencerMode, &swadgeItMode,   &synthMode,        &touchTestMode, &tunernomeMode,   &trophyTestMode,
-    &tCaseMode,     &nameTestMode,   &danceNetworkMode,
+    &accelTestMode,   &bouncyMode,         &colorchordMode, &cosCrunchMode, &danceMode,      &danceNetworkMode,
+    &factoryTestMode, &gamepadMode,        &introMode,      &jukeboxMode,   &keebTestMode,   &mainMenuMode,
+    &modeCredits,     &modeDiceRoller,     &modePicross,    &nameTestMode,  &roboRunnerMode, &sequencerMode,
+    &swadgeItMode,    &swadgePassTestMode, &synthMode,      &tCaseMode,     &touchTestMode,  &trophyTestMode,
+    &tunernomeMode,
 };
 
 //==============================================================================
@@ -38,6 +39,8 @@ void modeListSetMenu(menu_t* menu)
     addSingleItemToMenu(menu, cosCrunchMode.modeName);
     addSingleItemToMenu(menu, swadgeItMode.modeName);
     addSingleItemToMenu(menu, danceNetworkMode.modeName);
+    addSingleItemToMenu(menu, roboRunnerMode.modeName);
+    addSingleItemToMenu(menu, modePicross.modeName);
     menu = endSubMenu(menu);
 
     // Music sub menu
@@ -55,6 +58,7 @@ void modeListSetMenu(menu_t* menu)
     addSingleItemToMenu(menu, danceMode.modeName);
     addSingleItemToMenu(menu, introMode.modeName);
     addSingleItemToMenu(menu, modeDiceRoller.modeName);
+    addSingleItemToMenu(menu, bouncyMode.modeName);
     menu = endSubMenu(menu);
 
     // Trophy Case
