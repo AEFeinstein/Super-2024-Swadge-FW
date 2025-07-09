@@ -444,10 +444,10 @@ void dn_drawCharacterSelect(dn_entity_t* self)
     // Draw characters until you're off screen (sort of)
     while (xOff < TFT_WIDTH + ((self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5) >> 1))
     {
-        dn_assetIdx_t kingDown;
-        dn_assetIdx_t kingUp;
-        dn_assetIdx_t pawnDown;
-        dn_assetIdx_t pawnUp;
+        dn_assetIdx_t kingDown = 0;
+        dn_assetIdx_t kingUp = 0;
+        dn_assetIdx_t pawnDown = 0;
+        dn_assetIdx_t pawnUp = 0;
 
         switch (pIdx)
         {
