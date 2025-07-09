@@ -32,6 +32,7 @@ void dn_loadAsset(cnfsFileIdx_t spriteCnfsIdx, uint8_t num_frames, dn_asset_t* a
 void dn_freeAsset(dn_asset_t* asset);
 void dn_updateEntities(dn_entityManager_t* entityManager);
 void dn_getScreenPos(dn_entity_t* entity);
+void dn_setCharacterSetPalette(dn_entityManager_t* entityManager, dn_characterSet_t characterSet);
 void dn_drawEntity(dn_entity_t* entity);
 void dn_drawEntities(dn_entityManager_t* entityManager);
 void dn_freeData(dn_entity_t* entity);

@@ -300,51 +300,7 @@ void dn_updateCharacterSelect(dn_entity_t* self)
         // save to NVS
         writeNvs32(dnCharacterKey, self->gameData->characterSets[0]);
 
-        switch (self->gameData->characterSets[0])
-        {
-            case DN_ALPHA_SET:
-            {
-                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE]);
-                dn_setFloorPalette(&self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE], c253);
-
-                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_ORANGE_FLOOR_PALETTE]);
-                dn_setFloorPalette(&self->gameData->entityManager.palettes[DN_ORANGE_FLOOR_PALETTE], c354);
-
-                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_YELLOW_FLOOR_PALETTE]);
-                dn_setFloorPalette(&self->gameData->entityManager.palettes[DN_YELLOW_FLOOR_PALETTE], c455);
-
-                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_GREEN_FLOOR_PALETTE]);
-                dn_setFloorPalette(&self->gameData->entityManager.palettes[DN_GREEN_FLOOR_PALETTE], c555);
-
-                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_BLUE_FLOOR_PALETTE]);
-                dn_setFloorPalette(&self->gameData->entityManager.palettes[DN_BLUE_FLOOR_PALETTE], c454);
-
-                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_PURPLE_FLOOR_PALETTE]);
-                dn_setFloorPalette(&self->gameData->entityManager.palettes[DN_PURPLE_FLOOR_PALETTE], c352);
-                break;
-            }
-            default:
-            {
-                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE]);
-                dn_setFloorPalette(&self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE], c533);
-
-                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_ORANGE_FLOOR_PALETTE]);
-                dn_setFloorPalette(&self->gameData->entityManager.palettes[DN_ORANGE_FLOOR_PALETTE], c543);
-
-                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_YELLOW_FLOOR_PALETTE]);
-                dn_setFloorPalette(&self->gameData->entityManager.palettes[DN_YELLOW_FLOOR_PALETTE], c553);
-
-                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_GREEN_FLOOR_PALETTE]);
-                dn_setFloorPalette(&self->gameData->entityManager.palettes[DN_GREEN_FLOOR_PALETTE], c353);
-
-                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_BLUE_FLOOR_PALETTE]);
-                dn_setFloorPalette(&self->gameData->entityManager.palettes[DN_BLUE_FLOOR_PALETTE], c335);
-
-                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_PURPLE_FLOOR_PALETTE]);
-                dn_setFloorPalette(&self->gameData->entityManager.palettes[DN_PURPLE_FLOOR_PALETTE], c435);
-                break;
-            }
-        }
+        dn_setCharacterSetPalette(&self->gameData->entityManager, self->gameData->characterSets[0]);
     }
     if (self->gameData->btnDownState & PB_B)
     {

@@ -100,6 +100,10 @@ static void dn_EnterMode(void)
 {
     gameData = (dn_gameData_t*)heap_caps_calloc(1, sizeof(dn_gameData_t), MALLOC_CAP_8BIT);
 
+    int32_t outVal;
+    readNvs32(dnCharacterKey, &outVal);
+    gameData->characterSets[0] = outVal;
+
     // set the camera to the center of positive ints
     gameData->camera.pos
         = (vec_t){0xFFFF - (TFT_WIDTH << (DN_DECIMAL_BITS - 1)), 0xFFFF - (TFT_HEIGHT << (DN_DECIMAL_BITS - 1))};
@@ -201,10 +205,10 @@ static void dn_EnterMode(void)
 static void dn_ExitMode(void)
 {
     dn_freeAssets();
-    free(gameData);
     // Free the fonts
     freeFont(&gameData->font_ibm);
     freeFont(&gameData->font_righteous);
+    free(gameData);
 }
 
 /**

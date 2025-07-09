@@ -24,23 +24,7 @@ void dn_initializeEntityManager(dn_entityManager_t* entityManager, dn_gameData_t
     wsgPaletteSet(&entityManager->palettes[DN_WHITE_CHESS_PALETTE], c123, c554);
     wsgPaletteSet(&entityManager->palettes[DN_WHITE_CHESS_PALETTE], c145, c555);
 
-    wsgPaletteReset(&entityManager->palettes[DN_RED_FLOOR_PALETTE]);
-    dn_setFloorPalette(&entityManager->palettes[DN_RED_FLOOR_PALETTE], c253);
-
-    wsgPaletteReset(&entityManager->palettes[DN_ORANGE_FLOOR_PALETTE]);
-    dn_setFloorPalette(&entityManager->palettes[DN_ORANGE_FLOOR_PALETTE], c354); // c543
-
-    wsgPaletteReset(&entityManager->palettes[DN_YELLOW_FLOOR_PALETTE]);
-    dn_setFloorPalette(&entityManager->palettes[DN_YELLOW_FLOOR_PALETTE], c455); // c553
-
-    wsgPaletteReset(&entityManager->palettes[DN_GREEN_FLOOR_PALETTE]);
-    dn_setFloorPalette(&entityManager->palettes[DN_GREEN_FLOOR_PALETTE], c555); // c353
-
-    wsgPaletteReset(&entityManager->palettes[DN_BLUE_FLOOR_PALETTE]);
-    dn_setFloorPalette(&entityManager->palettes[DN_BLUE_FLOOR_PALETTE], c454); // c335
-
-    wsgPaletteReset(&entityManager->palettes[DN_PURPLE_FLOOR_PALETTE]);
-    dn_setFloorPalette(&entityManager->palettes[DN_PURPLE_FLOOR_PALETTE], c352); // c435
+    dn_setCharacterSetPalette(&gameData->entityManager, gameData->characterSets[0]);
 }
 
 void dn_loadAsset(cnfsFileIdx_t spriteCnfsIdx, uint8_t num_frames, dn_asset_t* asset)
@@ -91,6 +75,55 @@ void dn_updateEntities(dn_entityManager_t* entityManager)
             entity->updateFunction(entity);
         }
         curNode = curNode->next;
+    }
+}
+
+void dn_setCharacterSetPalette(dn_entityManager_t* entityManager, dn_characterSet_t characterSet)
+{
+    switch (characterSet)
+    {
+        case DN_ALPHA_SET:
+        {
+            wsgPaletteReset(&entityManager->palettes[DN_RED_FLOOR_PALETTE]);
+            dn_setFloorPalette(&entityManager->palettes[DN_RED_FLOOR_PALETTE], c253);
+
+            wsgPaletteReset(&entityManager->palettes[DN_ORANGE_FLOOR_PALETTE]);
+            dn_setFloorPalette(&entityManager->palettes[DN_ORANGE_FLOOR_PALETTE], c354);
+
+            wsgPaletteReset(&entityManager->palettes[DN_YELLOW_FLOOR_PALETTE]);
+            dn_setFloorPalette(&entityManager->palettes[DN_YELLOW_FLOOR_PALETTE], c455);
+
+            wsgPaletteReset(&entityManager->palettes[DN_GREEN_FLOOR_PALETTE]);
+            dn_setFloorPalette(&entityManager->palettes[DN_GREEN_FLOOR_PALETTE], c555);
+
+            wsgPaletteReset(&entityManager->palettes[DN_BLUE_FLOOR_PALETTE]);
+            dn_setFloorPalette(&entityManager->palettes[DN_BLUE_FLOOR_PALETTE], c454);
+
+            wsgPaletteReset(&entityManager->palettes[DN_PURPLE_FLOOR_PALETTE]);
+            dn_setFloorPalette(&entityManager->palettes[DN_PURPLE_FLOOR_PALETTE], c352);
+            break;
+        }
+        default:
+        {
+            wsgPaletteReset(&entityManager->palettes[DN_RED_FLOOR_PALETTE]);
+            dn_setFloorPalette(&entityManager->palettes[DN_RED_FLOOR_PALETTE], c533);
+
+            wsgPaletteReset(&entityManager->palettes[DN_ORANGE_FLOOR_PALETTE]);
+            dn_setFloorPalette(&entityManager->palettes[DN_ORANGE_FLOOR_PALETTE], c543);
+
+            wsgPaletteReset(&entityManager->palettes[DN_YELLOW_FLOOR_PALETTE]);
+            dn_setFloorPalette(&entityManager->palettes[DN_YELLOW_FLOOR_PALETTE], c553);
+
+            wsgPaletteReset(&entityManager->palettes[DN_GREEN_FLOOR_PALETTE]);
+            dn_setFloorPalette(&entityManager->palettes[DN_GREEN_FLOOR_PALETTE], c353);
+
+            wsgPaletteReset(&entityManager->palettes[DN_BLUE_FLOOR_PALETTE]);
+            dn_setFloorPalette(&entityManager->palettes[DN_BLUE_FLOOR_PALETTE], c335);
+
+            wsgPaletteReset(&entityManager->palettes[DN_PURPLE_FLOOR_PALETTE]);
+            dn_setFloorPalette(&entityManager->palettes[DN_PURPLE_FLOOR_PALETTE], c435);
+            break;
+        }
     }
 }
 
