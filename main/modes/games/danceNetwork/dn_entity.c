@@ -277,6 +277,52 @@ void dn_updateCharacterSelect(dn_entity_t* self)
         self->gameData->characterSets[0] = cData->selectCharacterIdx;
         //save to NVS
         writeNvs32(dnCharacterKey, self->gameData->characterSets[0]);
+
+        switch(self->gameData->characterSets[0])
+        {
+            case DN_ALPHA_SET:
+            {
+                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE]);
+                wsgPaletteSet(&self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE], c334, c253);
+
+                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_ORANGE_FLOOR_PALETTE]);
+                wsgPaletteSet(&self->gameData->entityManager.palettes[DN_ORANGE_FLOOR_PALETTE], c334, c354);
+
+                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_YELLOW_FLOOR_PALETTE]);
+                wsgPaletteSet(&self->gameData->entityManager.palettes[DN_YELLOW_FLOOR_PALETTE], c334, c455);
+
+                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_GREEN_FLOOR_PALETTE]);
+                wsgPaletteSet(&self->gameData->entityManager.palettes[DN_GREEN_FLOOR_PALETTE], c334, c555);
+
+                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_BLUE_FLOOR_PALETTE]);
+                wsgPaletteSet(&self->gameData->entityManager.palettes[DN_BLUE_FLOOR_PALETTE], c334, c454);
+
+                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_PURPLE_FLOOR_PALETTE]);
+                wsgPaletteSet(&self->gameData->entityManager.palettes[DN_PURPLE_FLOOR_PALETTE], c334, c352);
+                break;
+            }
+            default:
+            {
+                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE]);
+                wsgPaletteSet(&self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE], c334, c533);
+
+                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_ORANGE_FLOOR_PALETTE]);
+                wsgPaletteSet(&self->gameData->entityManager.palettes[DN_ORANGE_FLOOR_PALETTE], c334, c543);
+
+                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_YELLOW_FLOOR_PALETTE]);
+                wsgPaletteSet(&self->gameData->entityManager.palettes[DN_YELLOW_FLOOR_PALETTE], c334, c553);
+
+                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_GREEN_FLOOR_PALETTE]);
+                wsgPaletteSet(&self->gameData->entityManager.palettes[DN_GREEN_FLOOR_PALETTE], c334, c353);
+
+                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_BLUE_FLOOR_PALETTE]);
+                wsgPaletteSet(&self->gameData->entityManager.palettes[DN_BLUE_FLOOR_PALETTE], c334, c335);
+
+                wsgPaletteReset(&self->gameData->entityManager.palettes[DN_PURPLE_FLOOR_PALETTE]);
+                wsgPaletteSet(&self->gameData->entityManager.palettes[DN_PURPLE_FLOOR_PALETTE], c334, c435);
+                break;
+            }
+        }
     }
     if(self->gameData->btnDownState & PB_B)
     {
@@ -487,10 +533,13 @@ void dn_drawCharacterSelect(dn_entity_t* self)
     // Blink the arrows
     self->gameData->generalTimer += self->gameData->elapsedUs >> 12;
 
-    if (self->gameData->generalTimer > 127)
+    if ((self->gameData->generalTimer % 256) > 128)
     {
         // Draw arrows to indicate this can be scrolled
-        drawText(&self->gameData->font_ibm, c000, "<", 3, 53);
-        drawText(&self->gameData->font_ibm, c000, ">", TFT_WIDTH - 3 - textWidth(&self->gameData->font_ibm, ">"), 53);
+        drawText(&self->gameData->font_righteous, c000, "<", 3, 41);
+        drawText(&self->gameData->font_righteous, c550, "<", 3, 38);
+        
+        drawText(&self->gameData->font_righteous, c000, ">", TFT_WIDTH - 20, 41);
+        drawText(&self->gameData->font_righteous, c550, ">", TFT_WIDTH - 20, 38);
     }
 }
