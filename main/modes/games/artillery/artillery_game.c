@@ -19,6 +19,40 @@
 /**
  * @brief TODO doc
  *
+ * @param ad
+ * @param newState
+ */
+void artillerySwitchToState(artilleryData_t* ad, artilleryGameState_t newState)
+{
+    // Set the new state
+    ad->gState = newState;
+
+    // Reset camera to focus on player
+    ad->phys->cameraTarget = ad->players[0];
+
+    // Additional state-specific setup
+    switch (ad->gState)
+    {
+        default:
+        case AGS_WAIT:
+        case AGS_MENU:
+        case AGS_MOVE:
+        case AGS_ADJUST:
+        case AGS_FIRE:
+        {
+            break;
+        }
+        case AGS_LOOK:
+        {
+            ad->phys->cameraTarget = NULL;
+            break;
+        }
+    }
+}
+
+/**
+ * @brief TODO doc
+ *
  * TODO cleanup
  *
  * @param ad
@@ -37,7 +71,15 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
         case AGS_MENU:
         {
             // Menu navigation
-            ad->gameMenu = menuButton(ad->gameMenu, evt);
+            menu_t* oldMenu = ad->gameMenu;
+            ad->gameMenu    = menuButton(ad->gameMenu, evt);
+
+            // If the ammo menu was entered, scroll to current ammo
+            if (oldMenu != ad->gameMenu && load_ammo == ad->gameMenu->title)
+            {
+                printf("TODO: navigate to ammo\n");
+                // menuNavigateToItem(ad->gameMenu, ammoEntries[3].text);
+            }
             break;
         }
         case AGS_LOOK:
@@ -51,7 +93,7 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     case PB_B:
                     {
                         // Return to the menu
-                        ad->gState = AGS_MENU;
+                        artillerySwitchToState(ad, AGS_MENU);
                         return;
                     }
                     default:
@@ -84,7 +126,7 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     case PB_A:
                     case PB_B:
                     {
-                        ad->gState = AGS_MENU;
+                        artillerySwitchToState(ad, AGS_MENU);
                         break;
                     }
                     default:
@@ -123,7 +165,7 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     case PB_A:
                     case PB_B:
                     {
-                        ad->gState = AGS_MENU;
+                        artillerySwitchToState(ad, AGS_MENU);
                         break;
                     }
                     default:
@@ -150,6 +192,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
     // Uncomment for autofire
     // RUN_TIMER_EVERY(ad->autofire, 100000, elapsedUs, { fireShot(ad->phys, ad->players[0]); });
 
+    physAdjustCamera(ad->phys, elapsedUs);
     physStep(ad->phys, elapsedUs);
     drawPhysOutline(ad->phys);
 
@@ -173,16 +216,18 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
         }
         case AGS_FIRE:
         {
-            fireShot(ad->phys, ad->players[0]);
-            ad->gState = AGS_MENU;
+            if (ad->phys->cameraTarget && (CT_TANK == ad->phys->cameraTarget->type))
+            {
+                fireShot(ad->phys, ad->players[0]);
+            }
+            else if (NULL == ad->phys->cameraTarget)
+            {
+                // TODO don't switch back to menu until shell is gone
+                artillerySwitchToState(ad, AGS_MENU);
+            }
             break;
         }
         case AGS_LOOK:
-        {
-            // Run timer to pan camera based on button state
-            physAdjustCamera(ad->phys, elapsedUs);
-            break;
-        }
         case AGS_WAIT:
         case AGS_MOVE:
         {

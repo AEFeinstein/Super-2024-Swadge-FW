@@ -583,6 +583,11 @@ void physCheckCollisions(physSim_t* phys)
         // Optionally remove this entry (if a shell exploded)
         if (shouldRemoveNode)
         {
+            // Unset the camera target if it was tracking this shell
+            if (cNode->val == phys->cameraTarget)
+            {
+                phys->cameraTarget = NULL;
+            }
             heap_caps_free(removeEntry(&phys->circles, cNode));
         }
         cNode            = nextNode;
@@ -853,6 +858,7 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
         case AMMO_BIG_EXPLODE:
         {
             /* todo */
+            radius = 8;
             break;
         }
         case AMMO_THREE:
@@ -906,12 +912,20 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
 
     vecFl_t absBarrelTip = addVecFl2d(circ->c.pos, circ->relBarrelTip);
 
+    int32_t shellCount = 0;
     for (float angle = angStart; angle <= angEnd; angle += spread)
     {
         physCirc_t* shell = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, 4, CT_SHELL);
         shell->vel.x      = sinf(angle) * circ->shotPower;
         shell->vel.y      = -cosf(angle) * circ->shotPower;
         shell->bounces    = bounces;
+
+        // Track the middle shell
+        if (shellCount == numShells / 2)
+        {
+            phys->cameraTarget = shell;
+        }
+        shellCount++;
     }
 }
 
@@ -928,6 +942,8 @@ void physSetCameraButton(physSim_t* phys, buttonBit_t btn)
 
 /**
  * @brief Pan the camera one pixel per frame as long as input buttons are held
+ * 
+ * TODO make sure the target is never off screen, within 16 px margin or whatever
  *
  * @param phys The physics simulation to pan
  * @param elapsedUs The elapsed time
@@ -935,34 +951,72 @@ void physSetCameraButton(physSim_t* phys, buttonBit_t btn)
 void physAdjustCamera(physSim_t* phys, uint32_t elapsedUs)
 {
     RUN_TIMER_EVERY(phys->cameraTimer, 1000000 / 60, elapsedUs, {
-        if (PB_UP & phys->cameraBtn)
+        if (NULL == phys->cameraTarget)
         {
-            if (phys->camera.y > 0)
+            // If there's no camera target, move according to button input
+            if (PB_UP & phys->cameraBtn)
             {
                 phys->camera.y--;
             }
+            else if (PB_DOWN & phys->cameraBtn)
+            {
+                phys->camera.y++;
+            }
+
+            if (PB_LEFT & phys->cameraBtn)
+            {
+                phys->camera.x--;
+            }
+            else if (PB_RIGHT & phys->cameraBtn)
+            {
+                phys->camera.x++;
+            }
         }
-        else if (PB_DOWN & phys->cameraBtn)
+        else
         {
-            if (phys->camera.y <= phys->bounds.y - TFT_HEIGHT)
+            vec_t target;
+            target.x = phys->cameraTarget->c.pos.x - (TFT_WIDTH / 2);
+            target.y = phys->cameraTarget->c.pos.y - (TFT_HEIGHT / 2);
+
+            // Otherwise adjust to camera to match the target
+            // X axis
+            if (target.x < phys->camera.x)
+            {
+                phys->camera.x--;
+            }
+            else if (target.x > phys->camera.x)
+            {
+                phys->camera.x++;
+            }
+
+            // Y axis
+            if (target.y < phys->camera.y)
+            {
+                phys->camera.y--;
+            }
+            else if (target.y > phys->camera.y)
             {
                 phys->camera.y++;
             }
         }
 
-        if (PB_LEFT & phys->cameraBtn)
+        // Bound the camera
+        if (phys->camera.x < 0)
         {
-            if (phys->camera.x > 0)
-            {
-                phys->camera.x--;
-            }
+            phys->camera.x = 0;
         }
-        else if (PB_RIGHT & phys->cameraBtn)
+        else if (phys->camera.x > phys->bounds.x - TFT_WIDTH)
         {
-            if (phys->camera.x <= phys->bounds.x - TFT_WIDTH)
-            {
-                phys->camera.x++;
-            }
+            phys->camera.x = phys->bounds.x - TFT_WIDTH;
+        }
+
+        if (phys->camera.y < 0)
+        {
+            phys->camera.y = 0;
+        }
+        else if (phys->camera.y > phys->bounds.y - TFT_HEIGHT)
+        {
+            phys->camera.y = phys->bounds.y - TFT_HEIGHT;
         }
     });
 }
