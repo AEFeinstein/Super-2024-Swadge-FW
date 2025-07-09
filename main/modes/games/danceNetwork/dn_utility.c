@@ -9,18 +9,18 @@
 vec_t dn_boardToWorldPos(dn_boardPos_t boardPos)
 {
     vec_t worldPos;
-    worldPos.x = 0xFFFF + ((((boardPos.x - boardPos.y - 1) * (DN_TILE_WIDTH >> 1))<<DN_DECIMAL_BITS));
-    worldPos.y = 0xFFFF + ((((boardPos.x + boardPos.y) * DN_TILE_HEIGHT))<<DN_DECIMAL_BITS);
+    worldPos.x = 0xFFFF + ((((boardPos.x - boardPos.y - 1) * (DN_TILE_WIDTH >> 1)) << DN_DECIMAL_BITS));
+    worldPos.y = 0xFFFF + ((((boardPos.x + boardPos.y) * DN_TILE_HEIGHT)) << DN_DECIMAL_BITS);
     return worldPos;
 }
 
 dn_assetIdx_t dn_getAssetIdx(dn_characterSet_t characterSet, dn_unitRank rank, dn_facingDir facingDir)
 {
-    switch(characterSet)
+    switch (characterSet)
     {
         case DN_ALPHA_SET:
         {
-            switch(rank)
+            switch (rank)
             {
                 case DN_PAWN:
                     return facingDir ? DN_BUCKET_HAT_DOWN_ASSET : DN_BUCKET_HAT_UP_ASSET;
@@ -31,7 +31,7 @@ dn_assetIdx_t dn_getAssetIdx(dn_characterSet_t characterSet, dn_unitRank rank, d
         }
         case DN_CHESS_SET:
         {
-            switch(rank)
+            switch (rank)
             {
                 case DN_PAWN:
                     return DN_PAWN_ASSET;

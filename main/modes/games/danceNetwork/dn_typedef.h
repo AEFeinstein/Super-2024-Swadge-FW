@@ -5,11 +5,11 @@
 #include <wsg.h>
 
 #define DN_DECIMAL_BITS 4
-#define DN_BOARD_SIZE 5
-#define DN_TILE_WIDTH 51
-#define DN_TILE_HEIGHT 13
-#define NUM_ASSETS     13 // The number of dn_asset_t (last accounted for DN_ALBUM_ASSET)
-#define NUM_PALETTES   7 // The number of wsgPalette_t (last accounted for DN_PURPLE_FLOOR_PALETTE)
+#define DN_BOARD_SIZE   5
+#define DN_TILE_WIDTH   51
+#define DN_TILE_HEIGHT  13
+#define NUM_ASSETS      13 // The number of dn_asset_t (last accounted for DN_ALBUM_ASSET)
+#define NUM_PALETTES    7  // The number of wsgPalette_t (last accounted for DN_PURPLE_FLOOR_PALETTE)
 
 typedef struct dn_entity_t dn_entity_t;
 typedef struct dn_gameData_t dn_gameData_t;
@@ -29,7 +29,7 @@ typedef enum __attribute__((packed))
     DN_CURTAIN_ASSET,
     DN_CHESS_ORTHO_ASSET,
     DN_ALBUM_ASSET,
-    DN_NO_ASSET,//Keep this one at the end of the enum. Used for entities with no wsgs.
+    DN_NO_ASSET, // Keep this one at the end of the enum. Used for entities with no wsgs.
 } dn_assetIdx_t;
 
 typedef enum __attribute__((packed))
@@ -58,14 +58,14 @@ typedef enum __attribute__((packed))
 
 typedef struct __attribute__((packed))
 {
-    uint8_t originX; //A point inside the sprite measured in pixels from the top left of the sprite
-    uint8_t originY; //A point inside the sprite measured in pixels from the top left of the sprite
-    uint8_t numFrames; //Just use 1 for no animation
-    wsg_t* frames; // Can hold 1 or more pointers to wsg's
-    bool allocated; //Whether the frames are allocated.
+    uint8_t originX;   // A point inside the sprite measured in pixels from the top left of the sprite
+    uint8_t originY;   // A point inside the sprite measured in pixels from the top left of the sprite
+    uint8_t numFrames; // Just use 1 for no animation
+    wsg_t* frames;     // Can hold 1 or more pointers to wsg's
+    bool allocated;    // Whether the frames are allocated.
 } dn_asset_t;
 
-typedef struct  __attribute__((packed))
+typedef struct __attribute__((packed))
 {
     int8_t x;
     int8_t y;

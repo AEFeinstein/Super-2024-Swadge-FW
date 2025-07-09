@@ -39,7 +39,6 @@ typedef enum __attribute__((packed))
     TDIFF_HARD,
 } dn_CpuDifficulty_t;
 
-
 //==============================================================================
 // Structs
 //==============================================================================
@@ -49,7 +48,8 @@ typedef struct
     int64_t delayTime;
 } dn_CpuData_t;
 
-typedef struct dn_gameData_t{
+typedef struct dn_gameData_t
+{
     p2pInfo p2p;
     // Current UI being shown
     dn_Ui_t ui;
@@ -60,7 +60,7 @@ typedef struct dn_gameData_t{
     font_t font_ibm; // IBM VGA 8 font
     font_t font_righteous;
     // All buttons states
-    uint16_t btnState; 
+    uint16_t btnState;
     // Momentary downpresses on each button
     uint16_t btnDownState;
     rectangle_t camera;
@@ -73,14 +73,14 @@ typedef struct dn_gameData_t{
     int32_t elapsedUs; // Time elapsed since the last frame in microseconds
     dn_entityManager_t entityManager;
     uint16_t generalTimer;
-    dn_phase_t phase; // The current phase of the game
-    dn_characterSet_t characterSets[2];//character sets of p1 and p2.
+    dn_phase_t phase;                   // The current phase of the game
+    dn_characterSet_t characterSets[2]; // character sets of p1 and p2.
     dn_CpuData_t cpu;
     dn_Result_t lastResult;
     dn_asset_t assets[NUM_ASSETS];
 
-    uint8_t alphaFaceDir; //0 = down, 1 = left, 2 = up, 3 = right
-    bool isPlayer1;//True if the player on this device is P1. False if P2
+    uint8_t alphaFaceDir; // 0 = down, 1 = left, 2 = up, 3 = right
+    bool isPlayer1;       // True if the player on this device is P1. False if P2
 } dn_gameData_t;
 
 //==============================================================================
@@ -89,7 +89,6 @@ typedef struct dn_gameData_t{
 
 void dn_MsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 void dn_ShowUi(dn_Ui_t ui);
-
 
 //==============================================================================
 // Externs

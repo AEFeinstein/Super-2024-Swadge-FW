@@ -11,8 +11,6 @@
 
 const char danceNetworkName[] = "Alpha Pulse: Dance Network";
 
-
-
 //==============================================================================
 // Function Prototypes
 //==============================================================================
@@ -37,37 +35,38 @@ static void dn_freeAssets(void);
 //==============================================================================
 
 swadgeMode_t danceNetworkMode = {
-    .modeName                 = danceNetworkName, // Assign the name we created here
-    .wifiMode                 = ESP_NOW,        // If we want WiFi 
-    .overrideUsb              = false,          // Overrides the default USB behavior.
-    .usesAccelerometer        = false,          // If we're using motion controls
-    .usesThermometer          = false,          // If we're using the internal thermometer
-    .overrideSelectBtn        = false,          // The select/Menu button has a default behavior. If you want to override it, you can set this to true but you'll need to re-implement the behavior.
-    .fnEnterMode              = dn_EnterMode, // The enter mode function
-    .fnExitMode               = dn_ExitMode,  // The exit mode function
-    .fnMainLoop               = dn_MainLoop,  // The loop function
-    .fnAudioCallback          = NULL,           // If the mode uses the microphone
-    .fnBackgroundDrawCallback = dn_BackgroundDrawCallback,           // Draws a section of the display
+    .modeName          = danceNetworkName, // Assign the name we created here
+    .wifiMode          = ESP_NOW,          // If we want WiFi
+    .overrideUsb       = false,            // Overrides the default USB behavior.
+    .usesAccelerometer = false,            // If we're using motion controls
+    .usesThermometer   = false,            // If we're using the internal thermometer
+    .overrideSelectBtn = false, // The select/Menu button has a default behavior. If you want to override it, you can
+                                // set this to true but you'll need to re-implement the behavior.
+    .fnEnterMode              = dn_EnterMode,              // The enter mode function
+    .fnExitMode               = dn_ExitMode,               // The exit mode function
+    .fnMainLoop               = dn_MainLoop,               // The loop function
+    .fnAudioCallback          = NULL,                      // If the mode uses the microphone
+    .fnBackgroundDrawCallback = dn_BackgroundDrawCallback, // Draws a section of the display
     .fnEspNowRecvCb           = dn_EspNowRecvCb,           // If using Wifi, add the receive function here
     .fnEspNowSendCb           = dn_EspNowSendCb,           // If using Wifi, add the send function here
-    .fnAdvancedUSB            = NULL, // If using advanced USB things.
+    .fnAdvancedUSB            = NULL,                      // If using advanced USB things.
 };
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-const char dn_Name[]                  = "Dance Network";
-static const char dn_MultiStr[]       = "Multiplayer";
-static const char dn_WirelessStr[]    = "Wireless Play";
-static const char dn_PassAndPlayStr[] = "Pass and Play";
-static const char dn_MultiShortStr[]  = "Connect";
-static const char dn_SingleStr[]      = "Single Player";
-static const char dn_DiffEasyStr[]    = "Easy";
-static const char dn_DiffMediumStr[]  = "Medium";
-static const char dn_DiffHardStr[]    = "Hard";
-static const char dn_CharacterSelStr[]= "Select Pieces";
-static const char dn_HowToStr[]       = "How To Play";
-//static const char dn_ResultStr[]      = "Result";
-static const char dn_RecordsStr[]     = "Records";
-static const char dn_Exit[]           = "Exit";
+const char dn_Name[]                   = "Dance Network";
+static const char dn_MultiStr[]        = "Multiplayer";
+static const char dn_WirelessStr[]     = "Wireless Play";
+static const char dn_PassAndPlayStr[]  = "Pass and Play";
+static const char dn_MultiShortStr[]   = "Connect";
+static const char dn_SingleStr[]       = "Single Player";
+static const char dn_DiffEasyStr[]     = "Easy";
+static const char dn_DiffMediumStr[]   = "Medium";
+static const char dn_DiffHardStr[]     = "Hard";
+static const char dn_CharacterSelStr[] = "Select Pieces";
+static const char dn_HowToStr[]        = "How To Play";
+// static const char dn_ResultStr[]      = "Result";
+static const char dn_RecordsStr[] = "Records";
+static const char dn_Exit[]       = "Exit";
 
 /// @brief A heatshrink decoder to use for all WSG loads rather than allocate a new one for each WSG
 /// This helps to prevent memory fragmentation in SPIRAM.
@@ -76,25 +75,18 @@ heatshrink_decoder* dn_hsd;
 /// @brief A temporary decode space to use for all WSG loads
 uint8_t* dn_decodeSpace;
 
-//This is in order such that index is the assetIdx.
-static const cnfsFileIdx_t dn_assetToWsgLookup[] = {DN_ALPHA_DOWN_WSG,
-                                DN_ALPHA_ORTHO_WSG,
-                                DN_ALPHA_UP_WSG,
-                                DN_KING_WSG,
-                                DN_KING_SMALL_WSG,
-                                DN_PAWN_WSG,
-                                DN_PAWN_SMALL_WSG,
-                                DN_BUCKET_HAT_DOWN_WSG,
-                                DN_BUCKET_HAT_UP_WSG,
-                                DN_GROUND_TILE_WSG};
+// This is in order such that index is the assetIdx.
+static const cnfsFileIdx_t dn_assetToWsgLookup[]
+    = {DN_ALPHA_DOWN_WSG, DN_ALPHA_ORTHO_WSG, DN_ALPHA_UP_WSG,        DN_KING_WSG,          DN_KING_SMALL_WSG,
+       DN_PAWN_WSG,       DN_PAWN_SMALL_WSG,  DN_BUCKET_HAT_DOWN_WSG, DN_BUCKET_HAT_UP_WSG, DN_GROUND_TILE_WSG};
 
 // NVS keys
-const char dnWinKey[]      = "dn_win";
-const char dnLossKey[]     = "dn_loss";
-const char dnDrawKey[]     = "dn_draw";
-const char dnCharacterKey[]= "dn_character";
-const char dnTutorialKey[] = "dn_tutor";
-const char dnUnlockKey[]   = "dn_unlock";
+const char dnWinKey[]       = "dn_win";
+const char dnLossKey[]      = "dn_loss";
+const char dnDrawKey[]      = "dn_draw";
+const char dnCharacterKey[] = "dn_character";
+const char dnTutorialKey[]  = "dn_tutor";
+const char dnUnlockKey[]    = "dn_unlock";
 
 static const led_t dn_LedMenuColor = {
     .r = 0x66,
@@ -108,49 +100,50 @@ static void dn_EnterMode(void)
 {
     gameData = (dn_gameData_t*)heap_caps_calloc(1, sizeof(dn_gameData_t), MALLOC_CAP_8BIT);
 
-    //set the camera to the center of positive ints
-    gameData->camera.pos = (vec_t){0xFFFF - (TFT_WIDTH << (DN_DECIMAL_BITS - 1)), 0xFFFF - (TFT_HEIGHT << (DN_DECIMAL_BITS - 1))};
+    // set the camera to the center of positive ints
+    gameData->camera.pos
+        = (vec_t){0xFFFF - (TFT_WIDTH << (DN_DECIMAL_BITS - 1)), 0xFFFF - (TFT_HEIGHT << (DN_DECIMAL_BITS - 1))};
     gameData->camera.pos.y -= (57 << DN_DECIMAL_BITS); // Move the camera a bit.
     dn_initializeEntityManager(&gameData->entityManager, gameData);
 
-    gameData->assets[DN_ALPHA_DOWN_ASSET].originX = 9;
-    gameData->assets[DN_ALPHA_DOWN_ASSET].originY = 54;
+    gameData->assets[DN_ALPHA_DOWN_ASSET].originX   = 9;
+    gameData->assets[DN_ALPHA_DOWN_ASSET].originY   = 54;
     gameData->assets[DN_ALPHA_DOWN_ASSET].numFrames = 1;
 
-    gameData->assets[DN_ALPHA_ORTHO_ASSET].originX = 10;
-    gameData->assets[DN_ALPHA_ORTHO_ASSET].originY = 10;
+    gameData->assets[DN_ALPHA_ORTHO_ASSET].originX   = 10;
+    gameData->assets[DN_ALPHA_ORTHO_ASSET].originY   = 10;
     gameData->assets[DN_ALPHA_ORTHO_ASSET].numFrames = 1;
 
-    gameData->assets[DN_ALPHA_UP_ASSET].originX = 14;
-    gameData->assets[DN_ALPHA_UP_ASSET].originY = 53;
+    gameData->assets[DN_ALPHA_UP_ASSET].originX   = 14;
+    gameData->assets[DN_ALPHA_UP_ASSET].originY   = 53;
     gameData->assets[DN_ALPHA_UP_ASSET].numFrames = 1;
 
-    gameData->assets[DN_KING_ASSET].originX = 10;
-    gameData->assets[DN_KING_ASSET].originY = 54;
+    gameData->assets[DN_KING_ASSET].originX   = 10;
+    gameData->assets[DN_KING_ASSET].originY   = 54;
     gameData->assets[DN_KING_ASSET].numFrames = 1;
 
-    gameData->assets[DN_KING_SMALL_ASSET].originX = 10;
-    gameData->assets[DN_KING_SMALL_ASSET].originY = 10;
+    gameData->assets[DN_KING_SMALL_ASSET].originX   = 10;
+    gameData->assets[DN_KING_SMALL_ASSET].originY   = 10;
     gameData->assets[DN_KING_SMALL_ASSET].numFrames = 1;
 
-    gameData->assets[DN_PAWN_ASSET].originX = 10;
-    gameData->assets[DN_PAWN_ASSET].originY = 44;
+    gameData->assets[DN_PAWN_ASSET].originX   = 10;
+    gameData->assets[DN_PAWN_ASSET].originY   = 44;
     gameData->assets[DN_PAWN_ASSET].numFrames = 1;
 
-    gameData->assets[DN_PAWN_SMALL_ASSET].originX = 10;
-    gameData->assets[DN_PAWN_SMALL_ASSET].originY = 10;
+    gameData->assets[DN_PAWN_SMALL_ASSET].originX   = 10;
+    gameData->assets[DN_PAWN_SMALL_ASSET].originY   = 10;
     gameData->assets[DN_PAWN_SMALL_ASSET].numFrames = 1;
 
-    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originX = 10;
-    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originY = 33;
+    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originX   = 10;
+    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originY   = 33;
     gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].numFrames = 1;
 
-    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originX = 14;
-    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originY = 30;
+    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originX   = 14;
+    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originY   = 30;
     gameData->assets[DN_BUCKET_HAT_UP_ASSET].numFrames = 1;
 
-    gameData->assets[DN_GROUND_TILE_ASSET].originX = 25;
-    gameData->assets[DN_GROUND_TILE_ASSET].originY = 13;
+    gameData->assets[DN_GROUND_TILE_ASSET].originX   = 25;
+    gameData->assets[DN_GROUND_TILE_ASSET].originY   = 13;
     gameData->assets[DN_GROUND_TILE_ASSET].numFrames = 1;
 
     gameData->assets[DN_CURTAIN_ASSET].numFrames = 1;
@@ -162,8 +155,9 @@ static void dn_EnterMode(void)
     dn_hsd = heatshrink_decoder_alloc(256, 8, 4);
     // The largest image is bb_menu2.png, decodes to 99124 bytes
     // 99328 is 1024 * 97
-    dn_decodeSpace = heap_caps_malloc_tag(99328, MALLOC_CAP_SPIRAM, "decodeSpace");//TODO change the size to the largest sprite
-    
+    dn_decodeSpace
+        = heap_caps_malloc_tag(99328, MALLOC_CAP_SPIRAM, "decodeSpace"); // TODO change the size to the largest sprite
+
     // Load some fonts
     loadFont(IBM_VGA_8_FONT, &gameData->font_ibm, false);
     loadFont(RIGHTEOUS_150_FONT, &gameData->font_righteous, false);
@@ -176,10 +170,10 @@ static void dn_EnterMode(void)
     };
 
     recolorMenuManiaRenderer(gameData->menuRenderer, //
-                             c202, c540, c000,  // titleBgColor, titleTextColor, textOutlineColor
-                             c315,              // bgColor
-                             c213, c035,        // outerRingColor, innerRingColor
-                             c000, c555,        // rowColor, rowTextColor
+                             c202, c540, c000,       // titleBgColor, titleTextColor, textOutlineColor
+                             c315,                   // bgColor
+                             c213, c035,             // outerRingColor, innerRingColor
+                             c000, c555,             // rowColor, rowTextColor
                              shadowColors, ARRAY_SIZE(shadowColors), dn_LedMenuColor);
 
     // Initialize the main menu
@@ -222,7 +216,7 @@ static void dn_MainLoop(int64_t elapsedUs)
 {
     // Handle inputs
     gameData->btnDownState = 0;
-    buttonEvt_t evt = {0};
+    buttonEvt_t evt        = {0};
     while (checkButtonQueueWrapper(&evt))
     {
         switch (gameData->ui)
@@ -239,7 +233,7 @@ static void dn_MainLoop(int64_t elapsedUs)
             }
             case UI_GAME:
             {
-                if(evt.down)
+                if (evt.down)
                 {
                     // store the down presses for this frame
                     gameData->btnDownState += evt.button;
@@ -249,10 +243,10 @@ static void dn_MainLoop(int64_t elapsedUs)
         }
     }
 
-    if(gameData->ui == UI_GAME)
+    if (gameData->ui == UI_GAME)
     {
         // store the whole button state for this frame
-        gameData->btnState = evt.state;
+        gameData->btnState  = evt.state;
         gameData->elapsedUs = elapsedUs;
         // update the whole engine via entity management
         dn_updateEntities(&gameData->entityManager);
@@ -344,7 +338,6 @@ static void dn_MenuCb(const char* label, bool selected, uint32_t value)
         }
         else if (dn_CharacterSelStr == label)
         {
-            
             dn_initializeCharacterSelect();
             gameData->bgMenu->title = dn_CharacterSelStr;
             dn_ShowUi(UI_GAME);
@@ -356,7 +349,7 @@ static void dn_MenuCb(const char* label, bool selected, uint32_t value)
         }
         else if (dn_RecordsStr == label)
         {
-            //ttt->lastResult = TTR_RECORDS;
+            // ttt->lastResult = TTR_RECORDS;
             dn_ShowUi(UI_RESULT);
         }
         else if (dn_Exit == label)
@@ -429,7 +422,6 @@ void dn_MsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uin
     dn_HandleMsgTx(gameData, status, data, len);
 }
 
-
 /**
  * @brief Switch to showing a different UI
  *
@@ -458,7 +450,7 @@ void dn_ShowUi(dn_Ui_t ui)
             break;
         }
         case UI_GAME:
-        {   
+        {
             break;
         }
         case UI_CHARACTER_SELECT:
@@ -473,7 +465,7 @@ void dn_ShowUi(dn_Ui_t ui)
             // Turn LEDs off for reading
             setManiaLedsOn(gameData->menuRenderer, false);
             setManiaDrawRings(gameData->menuRenderer, false);
-            gameData->bgMenu->title   = dn_HowToStr;
+            gameData->bgMenu->title = dn_HowToStr;
             // gameData->pageIdx         = 0;
             // gameData->arrowBlinkTimer = 0;
             break;
@@ -498,108 +490,124 @@ void dn_ShowUi(dn_Ui_t ui)
 
 static void dn_initializeGame(void)
 {
-    //if player vs CPU
-    if(gameData->singleSystem && !gameData->passAndPlay)
+    // if player vs CPU
+    if (gameData->singleSystem && !gameData->passAndPlay)
     {
-        //The player may randomly be p1 or p2.
-        gameData->isPlayer1 = dn_randomInt(0,1);
-        if(!gameData->isPlayer1)
+        // The player may randomly be p1 or p2.
+        gameData->isPlayer1 = dn_randomInt(0, 1);
+        if (!gameData->isPlayer1)
         {
-            //copy player 1's character over to player 2 position.
+            // copy player 1's character over to player 2 position.
             gameData->characterSets[1] = gameData->characterSets[0];
         }
         //[gameData->isPlayer1] actually gets the opponent.
-        //give the CPU a random character.
-        gameData->characterSets[gameData->isPlayer1] = (dn_characterSet_t)dn_randomInt(0,1);
+        // give the CPU a random character.
+        gameData->characterSets[gameData->isPlayer1] = (dn_characterSet_t)dn_randomInt(0, 1);
     }
 
     ///////////////////
-    //load the assets//
+    // load the assets//
     ///////////////////
     dn_loadAsset(DN_CURTAIN_WSG, 1, &gameData->assets[DN_CURTAIN_ASSET]);
 
-    for(int player = 0; player < 2; player++)
+    for (int player = 0; player < 2; player++)
     {
-        for(int rank = 0; rank < 2; rank++)
+        for (int rank = 0; rank < 2; rank++)
         {
             dn_assetIdx_t curAssetIdx = dn_getAssetIdx(gameData->characterSets[player], rank, player);
-            dn_loadAsset(dn_assetToWsgLookup[curAssetIdx], gameData->assets[curAssetIdx].numFrames, &gameData->assets[curAssetIdx]);
+            dn_loadAsset(dn_assetToWsgLookup[curAssetIdx], gameData->assets[curAssetIdx].numFrames,
+                         &gameData->assets[curAssetIdx]);
         }
     }
 
     dn_loadAsset(DN_GROUND_TILE_WSG, 1, &gameData->assets[DN_GROUND_TILE_ASSET]);
 
     dn_loadAsset(DN_ALBUM_WSG, 1, &gameData->assets[DN_GROUND_TILE_ASSET]);
-    
+
     ///////////////////
-    //Make the albums//
+    // Make the albums//
     ///////////////////
-    dn_entity_t* albums = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_ALBUM_ASSET, 0, (vec_t){0xFFFF, 0xFFFF - (107 << DN_DECIMAL_BITS)}, gameData);
-    albums->data = heap_caps_calloc(1, sizeof(dn_albumData_t), MALLOC_CAP_SPIRAM);
-    albums->dataType = DN_ALBUMS_DATA;
+    dn_entity_t* albums  = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_ALBUM_ASSET, 0,
+                                                  (vec_t){0xFFFF, 0xFFFF - (107 << DN_DECIMAL_BITS)}, gameData);
+    albums->data         = heap_caps_calloc(1, sizeof(dn_albumData_t), MALLOC_CAP_SPIRAM);
+    albums->dataType     = DN_ALBUMS_DATA;
     albums->drawFunction = dn_drawAlbums;
 
-    //p1 album
-    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF - 1280, 0xFFFF - (142 << DN_DECIMAL_BITS)}, gameData);
-    //creative commons album
-    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF, 0xFFFF - (142 << DN_DECIMAL_BITS)}, gameData);
-    //p2 album
-    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF + 1280, 0xFFFF - (142 << DN_DECIMAL_BITS)}, gameData);
+    // p1 album
+    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
+                          (vec_t){0xFFFF - 1280, 0xFFFF - (142 << DN_DECIMAL_BITS)}, gameData);
+    // creative commons album
+    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF, 0xFFFF - (142 << DN_DECIMAL_BITS)},
+                          gameData);
+    // p2 album
+    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
+                          (vec_t){0xFFFF + 1280, 0xFFFF - (142 << DN_DECIMAL_BITS)}, gameData);
 
     //////////////////
-    //Make the board//
+    // Make the board//
     //////////////////
-    dn_entity_t* board = dn_createEntitySimple(&gameData->entityManager, DN_GROUND_TILE_ASSET, (vec_t){0xFFFF, 0xFFFF}, gameData);
-    dn_boardData_t* boardData = (dn_boardData_t*)board->data;
+    dn_entity_t* board
+        = dn_createEntitySimple(&gameData->entityManager, DN_GROUND_TILE_ASSET, (vec_t){0xFFFF, 0xFFFF}, gameData);
+    dn_boardData_t* boardData     = (dn_boardData_t*)board->data;
     gameData->entityManager.board = board;
 
     //////////////////
-    //Make the units//
+    // Make the units//
     //////////////////
-    //p1 king
+    // p1 king
     dn_assetIdx_t assetIdx = dn_getAssetIdx(gameData->characterSets[0], DN_KING, DN_UP);
     dn_boardPos_t boardPos = {2, 4};
-    boardData->p1Units[0] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p1Units[0]
+        = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[0]; // Set the unit on the tile
-    //p1 pawns
+    // p1 pawns
     assetIdx = dn_getAssetIdx(gameData->characterSets[0], DN_PAWN, DN_UP);
     boardPos = (dn_boardPos_t){0, 4};
-    boardData->p1Units[1] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p1Units[1]
+        = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[1]; // Set the unit on the tile
-    boardPos = (dn_boardPos_t){1, 4};
-    boardData->p1Units[2] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardPos                                      = (dn_boardPos_t){1, 4};
+    boardData->p1Units[2]
+        = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[2]; // Set the unit on the tile
-    boardPos = (dn_boardPos_t){3, 4};
-    boardData->p1Units[3] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardPos                                      = (dn_boardPos_t){3, 4};
+    boardData->p1Units[3]
+        = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[3]; // Set the unit on the tile
-    boardPos = (dn_boardPos_t){4, 4};
-    boardData->p1Units[4] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardPos                                      = (dn_boardPos_t){4, 4};
+    boardData->p1Units[4]
+        = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[4]; // Set the unit on the tile
 
-    //p2 king
+    // p2 king
     assetIdx = dn_getAssetIdx(gameData->characterSets[1], DN_KING, DN_DOWN);
     boardPos = (dn_boardPos_t){2, 0};
-    boardData->p2Units[0] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p2Units[0]
+        = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[0]; // Set the unit on the tile
-    //p2 pawns
+    // p2 pawns
     assetIdx = dn_getAssetIdx(gameData->characterSets[1], DN_PAWN, DN_DOWN);
     boardPos = (dn_boardPos_t){0, 0};
-    boardData->p2Units[1] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p2Units[1]
+        = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[1]; // Set the unit on the tile
-    boardPos = (dn_boardPos_t){1, 0};
-    boardData->p2Units[2] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardPos                                      = (dn_boardPos_t){1, 0};
+    boardData->p2Units[2]
+        = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[2]; // Set the unit on the tile
-    boardPos = (dn_boardPos_t){3, 0};
-    boardData->p2Units[3] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardPos                                      = (dn_boardPos_t){3, 0};
+    boardData->p2Units[3]
+        = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[3]; // Set the unit on the tile
-    boardPos = (dn_boardPos_t){4, 0};
-    boardData->p2Units[4] = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardPos                                      = (dn_boardPos_t){4, 0};
+    boardData->p2Units[4]
+        = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[4]; // Set the unit on the tile
 
-    boardData->impactPos = (dn_boardPos_t){2,2};
+    boardData->impactPos = (dn_boardPos_t){2, 2};
 
     ////////////////////
-    //Make the curtain//
+    // Make the curtain//
     ////////////////////
     dn_createEntitySimple(&gameData->entityManager, DN_CURTAIN_ASSET, (vec_t){0xFFFF, 0xFFFF}, gameData);
 }
@@ -619,34 +627,29 @@ static void dn_initializeCharacterSelect(void)
     dn_loadAsset(DN_PAWN_WSG, 1, &gameData->assets[DN_PAWN_ASSET]);
     dn_loadAsset(DN_GROUND_TILE_WSG, 1, &gameData->assets[DN_GROUND_TILE_ASSET]);
     /////////////////////////////
-    //Make the character select//
+    // Make the character select//
     /////////////////////////////
-    dn_entity_t* characterSelect = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xFFFF, 0xFFFF}, gameData);
-    characterSelect->data = heap_caps_calloc(1, sizeof(dn_characterSelectData_t), MALLOC_CAP_SPIRAM);
-    dn_characterSelectData_t* cData = (dn_characterSelectData_t*)characterSelect->data;
+    dn_entity_t* characterSelect       = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true,
+                                                                DN_NO_ASSET, 0, (vec_t){0xFFFF, 0xFFFF}, gameData);
+    characterSelect->data              = heap_caps_calloc(1, sizeof(dn_characterSelectData_t), MALLOC_CAP_SPIRAM);
+    dn_characterSelectData_t* cData    = (dn_characterSelectData_t*)characterSelect->data;
     bool selectDiamondShapeInit[9 * 5] = {
-            false, false, true, false, false,
-            false, true,  true, false, false,
-            false, true,  true, true,  false,
-            true,  true,  true, true,  false,
-            true,  true,  true, true,  true,
-            true,  true,  true, true,  false,
-            false, true,  true, true,  false,
-            false, true,  true, false, false,
-            false, false, true, false, false,
-        };
+        false, false, true, false, false, false, true, true, false, false, false, true,  true, true,  false,
+        true,  true,  true, true,  false, true,  true, true, true,  true,  true,  true,  true, true,  false,
+        false, true,  true, true,  false, false, true, true, false, false, false, false, true, false, false,
+    };
     memcpy(cData->selectDiamondShape, selectDiamondShapeInit, sizeof(selectDiamondShapeInit));
     characterSelect->updateFunction = dn_updateCharacterSelect;
-    characterSelect->drawFunction = dn_drawCharacterSelect;
+    characterSelect->drawFunction   = dn_drawCharacterSelect;
 }
 
 static void dn_freeAssets(void)
 {
-    for(int i = 0; i < NUM_ASSETS; i++)
+    for (int i = 0; i < NUM_ASSETS; i++)
     {
-        if(gameData->assets[i].allocated)
+        if (gameData->assets[i].allocated)
         {
-            for(int frameIdx = 0; frameIdx < gameData->assets[i].numFrames; frameIdx++)
+            for (int frameIdx = 0; frameIdx < gameData->assets[i].numFrames; frameIdx++)
             {
                 freeWsg(&gameData->assets[i].frames[frameIdx]);
             }

@@ -165,8 +165,9 @@ void drawCharBounds(paletteColor_t color, int h, const font_ch_t* ch, int16_t xO
  * @param xMax  The right edge of the text bounds
  * @param yMax  The bottom edge of the text bounds
  */
-void drawShinyCharBounds(paletteColor_t outerColor, paletteColor_t middleColor, paletteColor_t innerColor, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff, int16_t xMin,
-                    int16_t yMin, int16_t xMax, int16_t yMax)
+void drawShinyCharBounds(paletteColor_t outerColor, paletteColor_t middleColor, paletteColor_t innerColor, int h,
+                         const font_ch_t* ch, int16_t xOff, int16_t yOff, int16_t xMin, int16_t yMin, int16_t xMax,
+                         int16_t yMax)
 {
     // Do not draw transparent chars
     if (cTransparent == outerColor && cTransparent == middleColor && cTransparent == innerColor)
@@ -239,22 +240,22 @@ void drawShinyCharBounds(paletteColor_t outerColor, paletteColor_t middleColor, 
             if (thisByte & (1 << bitIdx))
             {
                 // Determine the color to draw based on the Y position
-                if(y < (h >> 2))
+                if (y < (h >> 2))
                 {
                     // Draw the pixel
                     pxOutput[drawX] = outerColor;
                 }
-                else if(y < (h >> 3) * 4)
+                else if (y < (h >> 3) * 4)
                 {
                     // Draw the pixel
                     pxOutput[drawX] = middleColor;
                 }
-                else if(y < (h >> 3) * 5)
+                else if (y < (h >> 3) * 5)
                 {
                     // Draw the pixel
                     pxOutput[drawX] = innerColor;
                 }
-                else if(y < (h >> 3) * 7)
+                else if (y < (h >> 3) * 7)
                 {
                     // Draw the pixel
                     pxOutput[drawX] = middleColor;
@@ -360,8 +361,9 @@ int16_t drawTextBounds(const font_t* font, paletteColor_t color, const char* tex
  * @param yMax  The bottom edge of the text bounds
  * @return The x offset at the end of the drawn string
  */
-int16_t drawShinyTextBounds(const font_t* font, paletteColor_t outerColor, paletteColor_t middleColor, paletteColor_t innerColor, const char* text, int16_t xOff, int16_t yOff,
-                       int16_t xMin, int16_t yMin, int16_t xMax, int16_t yMax)
+int16_t drawShinyTextBounds(const font_t* font, paletteColor_t outerColor, paletteColor_t middleColor,
+                            paletteColor_t innerColor, const char* text, int16_t xOff, int16_t yOff, int16_t xMin,
+                            int16_t yMin, int16_t xMax, int16_t yMax)
 {
     while (*text >= ' ')
     {
@@ -369,7 +371,8 @@ int16_t drawShinyTextBounds(const font_t* font, paletteColor_t outerColor, palet
         if ((xOff + font->chars[(*text) - ' '].width >= xMin) && (xOff < xMax))
         {
             // Draw char
-            drawShinyCharBounds(outerColor, middleColor, innerColor, font->height, &font->chars[(*text) - ' '], xOff, yOff, xMin, yMin, xMax, yMax);
+            drawShinyCharBounds(outerColor, middleColor, innerColor, font->height, &font->chars[(*text) - ' '], xOff,
+                                yOff, xMin, yMin, xMax, yMax);
         }
 
         // Move to the next char
@@ -412,11 +415,12 @@ int16_t drawText(const font_t* font, paletteColor_t color, const char* text, int
  * @param yOff  The y offset to draw the text at
  * @return The x offset at the end of the drawn string
  */
-int16_t drawShinyText(const font_t* font, paletteColor_t outerColor, paletteColor_t middleColor, paletteColor_t innerColor, const char* text, int16_t xOff, int16_t yOff)
+int16_t drawShinyText(const font_t* font, paletteColor_t outerColor, paletteColor_t middleColor,
+                      paletteColor_t innerColor, const char* text, int16_t xOff, int16_t yOff)
 {
-    return drawShinyTextBounds(font, outerColor, middleColor, innerColor, text, xOff, yOff, 0, 0, TFT_WIDTH, TFT_HEIGHT);
+    return drawShinyTextBounds(font, outerColor, middleColor, innerColor, text, xOff, yOff, 0, 0, TFT_WIDTH,
+                               TFT_HEIGHT);
 }
-
 
 /**
  * @brief Return the pixel width of some text in a given font

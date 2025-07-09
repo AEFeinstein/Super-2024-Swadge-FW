@@ -88,7 +88,7 @@ void dn_HandleCon(dn_gameData_t* gameData, connectionEvt_t evt)
         }
         case CON_ESTABLISHED:
         {
-            //tttBeginGame(ttt);
+            // tttBeginGame(ttt);
             dn_ShowUi(UI_GAME);
             break;
         }
@@ -101,7 +101,6 @@ void dn_HandleCon(dn_gameData_t* gameData, connectionEvt_t evt)
         }
     }
 }
-
 
 /**
  * @brief Handle a received P2P message

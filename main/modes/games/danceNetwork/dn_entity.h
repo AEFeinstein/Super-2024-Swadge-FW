@@ -38,7 +38,7 @@ struct dn_entity_t
     dn_updateFunction_t updateFunction;       // Only set for entities that need update logic
     dn_updateFarFunction_t updateFarFunction; // Only set for execution when the entity is far from the camera center
     dn_drawFunction_t drawFunction;           // Only set for entities such as Garbotnik that need custom drawing logic
-    bool destroyFlag;                         // Entity will be cleanly destroyed after engine updating and before engine drawing.
+    bool destroyFlag; // Entity will be cleanly destroyed after engine updating and before engine drawing.
     vec_t pos;
     dn_animationType_t type;
     bool paused;
@@ -47,23 +47,26 @@ struct dn_entity_t
     dn_gameData_t* gameData;
 };
 
-typedef struct{
+typedef struct
+{
     uint16_t yOffset;
     int16_t yVel;
-    dn_entity_t* unit; //Pointer to the unit on this tile. NULL if no unit is present.
+    dn_entity_t* unit; // Pointer to the unit on this tile. NULL if no unit is present.
 } dn_tileData_t;
 
 typedef struct
 {
     dn_tileData_t tiles[DN_BOARD_SIZE][DN_BOARD_SIZE];
-    dn_entity_t* p1Units[5];//Pointers to player 1's units. The first unit is king, the other 4 are pawns. NULL pointers for captured units.
-    dn_entity_t* p2Units[5];//Pointers to player 2's units. The first unit is king, the other 4 are pawns. NULL pointers for captured units.
-    dn_boardPos_t impactPos;//x and y indices of an impact effect.
+    dn_entity_t* p1Units[5]; // Pointers to player 1's units. The first unit is king, the other 4 are pawns. NULL
+                             // pointers for captured units.
+    dn_entity_t* p2Units[5]; // Pointers to player 2's units. The first unit is king, the other 4 are pawns. NULL
+                             // pointers for captured units.
+    dn_boardPos_t impactPos; // x and y indices of an impact effect.
 } dn_boardData_t;
 
 typedef struct
 {
-    //char array of instruction text
+    // char array of instruction text
     char instructions[120];
 } dn_instructionData_t;
 
@@ -81,9 +84,10 @@ typedef struct
 
 typedef struct
 {
-    wsgPalette_t tracksPalette; // replaces album tile colors with the final track colors. The first index color is C255. No action is C344.
-    dn_track_t tracks[16]; // Array of action tracks in this album in raster order.
-    uint16_t rot; // Rotation degrees from 0-359 for drawing.
+    wsgPalette_t tracksPalette; // replaces album tile colors with the final track colors. The first index color is
+                                // C255. No action is C344.
+    dn_track_t tracks[16];      // Array of action tracks in this album in raster order.
+    uint16_t rot;               // Rotation degrees from 0-359 for drawing.
 } dn_albumData_t;
 
 typedef struct
@@ -94,13 +98,12 @@ typedef struct
     int16_t xSelectScrollOffset;
 } dn_characterSelectData_t;
 
-
 //==============================================================================
 // Prototypes
 //==============================================================================
 void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType);
 
-//main game entities
+// main game entities
 
 void dn_updateBoard(dn_entity_t* self);
 void dn_drawBoard(dn_entity_t* self);
@@ -112,6 +115,6 @@ void dn_drawAlbums(dn_entity_t* self);
 
 void dn_drawAlbum(dn_entity_t* self);
 
-//characterSelect entities
+// characterSelect entities
 void dn_updateCharacterSelect(dn_entity_t* self);
 void dn_drawCharacterSelect(dn_entity_t* self);

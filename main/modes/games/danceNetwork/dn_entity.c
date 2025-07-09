@@ -16,22 +16,22 @@ void dn_updateBoard(dn_entity_t* self)
 {
     dn_boardData_t* boardData = (dn_boardData_t*)self->data;
 
-    //perform hooke's law on neighboring tiles
+    // perform hooke's law on neighboring tiles
     for (int y = 0; y < DN_BOARD_SIZE; y++)
     {
         for (int x = 0; x < DN_BOARD_SIZE; x++)
         {
             // Get the current tile
             dn_tileData_t* tileData = &boardData->tiles[y][x];
-            int8_t dampen = 3;
-            if(x == boardData->impactPos.x && y == boardData->impactPos.y)
+            int8_t dampen           = 3;
+            if (x == boardData->impactPos.x && y == boardData->impactPos.y)
             {
-                //the selected tile approaches a particular offset
+                // the selected tile approaches a particular offset
                 tileData->yVel += (((int16_t)(((TFT_HEIGHT >> 2) << DN_DECIMAL_BITS) - tileData->yOffset)) / 3);
             }
             else
             {
-                //all unselected tiles approach neighboring tiles
+                // all unselected tiles approach neighboring tiles
                 if (y > boardData->impactPos.y)
                 {
                     tileData->yVel += (((int16_t)(boardData->tiles[y - 1][x].yOffset - tileData->yOffset)) / 1);
@@ -59,16 +59,17 @@ void dn_updateBoard(dn_entity_t* self)
             // Update position with smaller time step
             uint16_t newYOffset = tileData->yOffset + tileData->yVel * (self->gameData->elapsedUs >> 14);
             // If the the yOffset would wrap around
-            if(((tileData->yOffset & 0x8000) && !(newYOffset & 0x8000) && tileData->yVel > 0) ||
-                (!(tileData->yOffset & 0x8000) && (newYOffset & 0x8000) && tileData->yVel < 0))
+            if (((tileData->yOffset & 0x8000) && !(newYOffset & 0x8000) && tileData->yVel > 0)
+                || (!(tileData->yOffset & 0x8000) && (newYOffset & 0x8000) && tileData->yVel < 0))
             {
-                //print a message
+                // print a message
                 ESP_LOGI("Dance Network", "Tile %d,%d yOffset hit the limit", x, y);
                 // Set yVel to 0
                 tileData->yVel = 0;
             }
-            else{
-                tileData->yOffset  = newYOffset;
+            else
+            {
+                tileData->yOffset = newYOffset;
             }
         }
     }
@@ -82,46 +83,53 @@ void dn_drawBoard(dn_entity_t* self)
     {
         for (int x = 0; x < DN_BOARD_SIZE; x++)
         {
-            int drawX =  ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) + (x - y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originX;
-            int drawY = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + (x + y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originY - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
-            drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0], drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX, drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
-            if(boardData->tiles[y][x].unit != NULL)
+            int drawX = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
+                        + (x - y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originX;
+            int drawY = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
+                        + (x + y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originY
+                        - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
+            drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
+                          drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                          drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
+            if (boardData->tiles[y][x].unit != NULL)
             {
                 // Draw the unit on the tile
                 dn_entity_t* unit = boardData->tiles[y][x].unit;
-                if((unit->assetIndex == DN_KING_ASSET || unit->assetIndex == DN_PAWN_ASSET) && (unit == boardData->p1Units[0] || unit == boardData->p1Units[1] || unit == boardData->p1Units[2] || unit == boardData->p1Units[3] || unit == boardData->p1Units[4]))
+                if ((unit->assetIndex == DN_KING_ASSET || unit->assetIndex == DN_PAWN_ASSET)
+                    && (unit == boardData->p1Units[0] || unit == boardData->p1Units[1] || unit == boardData->p1Units[2]
+                        || unit == boardData->p1Units[3] || unit == boardData->p1Units[4]))
                 {
                     drawWsgPaletteSimple(&self->gameData->assets[unit->assetIndex].frames[0],
-                            drawX - self->gameData->assets[unit->assetIndex].originX,
-                            drawY - self->gameData->assets[unit->assetIndex].originY,
-                            &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                                         drawX - self->gameData->assets[unit->assetIndex].originX,
+                                         drawY - self->gameData->assets[unit->assetIndex].originY,
+                                         &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                 }
                 else
                 {
                     drawWsgSimple(&self->gameData->assets[unit->assetIndex].frames[0],
-                            drawX - self->gameData->assets[unit->assetIndex].originX,
-                            drawY - self->gameData->assets[unit->assetIndex].originY);
+                                  drawX - self->gameData->assets[unit->assetIndex].originX,
+                                  drawY - self->gameData->assets[unit->assetIndex].originY);
                 }
             }
         }
     }
-    //Uncomment to visualize center of screen.
-    //drawCircleFilled(TFT_WIDTH >> 1, TFT_HEIGHT >> 1, 2, c000);
+    // Uncomment to visualize center of screen.
+    // drawCircleFilled(TFT_WIDTH >> 1, TFT_HEIGHT >> 1, 2, c000);
 }
 
 void dn_updateCurtain(dn_entity_t* self)
 {
     dn_curtainData_t* curtainData = (dn_curtainData_t*)self->data;
     curtainData->separation += (self->gameData->elapsedUs >> 13);
-    
+
     dn_entity_t* board = (dn_entity_t*)self->gameData->entityManager.board;
-    if(curtainData->separation > 100 && !board->updateFunction)
+    if (curtainData->separation > 100 && !board->updateFunction)
     {
-        dn_boardData_t* boardData = (dn_boardData_t*)board->data;
+        dn_boardData_t* boardData                                                = (dn_boardData_t*)board->data;
         boardData->tiles[boardData->impactPos.y][boardData->impactPos.x].yOffset = (TFT_HEIGHT >> 2) << DN_DECIMAL_BITS;
-        board->updateFunction = dn_updateBoard;
+        board->updateFunction                                                    = dn_updateBoard;
     }
-    if(curtainData->separation > (TFT_WIDTH >> 1))
+    if (curtainData->separation > (TFT_WIDTH >> 1))
     {
         self->destroyFlag = true;
     }
@@ -130,21 +138,27 @@ void dn_drawCurtain(dn_entity_t* self)
 {
     dn_curtainData_t* curtainData = (dn_curtainData_t*)self->data;
     // Draw the curtain asset
-    for(int x = 0; x < 4; x++)
+    for (int x = 0; x < 4; x++)
     {
-        for(int y = 0; y < 12; y++)
+        for (int y = 0; y < 12; y++)
         {
-            drawWsgSimple(&self->gameData->assets[DN_CURTAIN_ASSET].frames[0], ((curtainData->separation > 0) * -curtainData->separation) + x * self->gameData->assets[DN_CURTAIN_ASSET].frames[0].w, y * self->gameData->assets[DN_CURTAIN_ASSET].frames[0].h);
-            drawWsgSimple(&self->gameData->assets[DN_CURTAIN_ASSET].frames[0], (TFT_WIDTH >> 1) + ((curtainData->separation > 0) * curtainData->separation) + x * self->gameData->assets[DN_CURTAIN_ASSET].frames[0].w, y * self->gameData->assets[DN_CURTAIN_ASSET].frames[0].h);
+            drawWsgSimple(&self->gameData->assets[DN_CURTAIN_ASSET].frames[0],
+                          ((curtainData->separation > 0) * -curtainData->separation)
+                              + x * self->gameData->assets[DN_CURTAIN_ASSET].frames[0].w,
+                          y * self->gameData->assets[DN_CURTAIN_ASSET].frames[0].h);
+            drawWsgSimple(&self->gameData->assets[DN_CURTAIN_ASSET].frames[0],
+                          (TFT_WIDTH >> 1) + ((curtainData->separation > 0) * curtainData->separation)
+                              + x * self->gameData->assets[DN_CURTAIN_ASSET].frames[0].w,
+                          y * self->gameData->assets[DN_CURTAIN_ASSET].frames[0].h);
         }
     }
     char text[9] = "Player 1";
-    //get the text width
+    // get the text width
     uint16_t tWidth = textWidth(&self->gameData->font_ibm, text);
-    int16_t x = (TFT_WIDTH >> 2) - (tWidth >> 1);
-    int16_t y = 29;
+    int16_t x       = (TFT_WIDTH >> 2) - (tWidth >> 1);
+    int16_t y       = 29;
     // Draw the intro text
-    if(curtainData->separation > -700 && curtainData->separation < -50)
+    if (curtainData->separation > -700 && curtainData->separation < -50)
     {
         drawText(&self->gameData->font_ibm, c001, text, x, y);
         y++;
@@ -162,26 +176,27 @@ void dn_drawCurtain(dn_entity_t* self)
         // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 29);
         // drawText(&self->gameData->font_ibm, c101, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 31);
         // drawText(&self->gameData->font_ibm, c525, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 30);
-        switch(self->gameData->characterSets[0])
+        switch (self->gameData->characterSets[0])
         {
             case DN_ALPHA_SET:
-                drawWsgSimple(&self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0], (TFT_WIDTH >> 2) - (self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0].w >> 1), 50);
+                drawWsgSimple(&self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0],
+                              (TFT_WIDTH >> 2) - (self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0].w >> 1), 50);
                 break;
             case DN_CHESS_SET:
                 drawWsgPaletteSimple(&self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0],
-                        (TFT_WIDTH >> 2) - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1),
-                        50, &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                                     (TFT_WIDTH >> 2) - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1),
+                                     50, &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                 break;
             default:
                 break;
         }
     }
-    if(curtainData->separation > -600 && curtainData->separation < -50)
+    if (curtainData->separation > -600 && curtainData->separation < -50)
     {
         strcpy(text, "VS");
         tWidth = textWidth(&self->gameData->font_righteous, text);
-        x = (TFT_WIDTH >> 1) - (tWidth >> 1);
-        y = 59;
+        x      = (TFT_WIDTH >> 1) - (tWidth >> 1);
+        y      = 59;
         drawText(&self->gameData->font_righteous, c550, text, x, y);
         y++;
         x++;
@@ -195,13 +210,13 @@ void dn_drawCurtain(dn_entity_t* self)
         x++;
         drawShinyText(&self->gameData->font_righteous, c430, c540, c552, text, (TFT_WIDTH >> 1) - (tWidth >> 1), 60);
     }
-    if(curtainData->separation > -500 && curtainData->separation < -50)
+    if (curtainData->separation > -500 && curtainData->separation < -50)
     {
         strcpy(text, "Player 2");
         tWidth = textWidth(&self->gameData->font_ibm, text);
-        x = (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1);
-        y = 29;
-        
+        x      = (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1);
+        y      = 29;
+
         drawText(&self->gameData->font_ibm, c001, text, x, y);
         y++;
         x++;
@@ -218,13 +233,19 @@ void dn_drawCurtain(dn_entity_t* self)
         // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 29);
         // drawText(&self->gameData->font_ibm, c101, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 31);
         // drawText(&self->gameData->font_ibm, c525, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 30);
-        switch(self->gameData->characterSets[1])
+        switch (self->gameData->characterSets[1])
         {
             case DN_ALPHA_SET:
-                drawWsgSimple(&self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0], (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0].w >> 1), 50);
+                drawWsgSimple(&self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0],
+                              (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2)
+                                  - (self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0].w >> 1),
+                              50);
                 break;
             case DN_CHESS_SET:
-                drawWsgSimple(&self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0], (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1), 50);
+                drawWsgSimple(&self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0],
+                              (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2)
+                                  - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1),
+                              50);
                 break;
             default:
                 break;
@@ -234,11 +255,11 @@ void dn_drawCurtain(dn_entity_t* self)
 
 void dn_drawAlbums(dn_entity_t* self)
 {
-    char text[10] = "Player 1";
+    char text[10]   = "Player 1";
     uint16_t tWidth = textWidth(&self->gameData->font_ibm, text);
     drawShinyText(&self->gameData->font_ibm, c245, c355, c555, text,
-        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)- (tWidth >> 1) - 80,
-        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS));
+                  ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1) - 80,
+                  ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS));
 
     // strcpy(text, "Creative");
     // tWidth = textWidth(&self->gameData->font_ibm, text);
@@ -254,31 +275,32 @@ void dn_drawAlbums(dn_entity_t* self)
     strcpy(text, "Player 2");
     tWidth = textWidth(&self->gameData->font_ibm, text);
     drawShinyText(&self->gameData->font_ibm, c245, c355, c555, text,
-        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1) + 80,
-        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS));
+                  ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1) + 80,
+                  ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS));
 }
 
 void dn_drawAlbum(dn_entity_t* self)
 {
     dn_albumData_t* aData = (dn_albumData_t*)self->data;
     drawWsgPalette(&self->gameData->assets[DN_ALBUM_ASSET].frames[0],
-        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - self->gameData->assets[DN_ALBUM_ASSET].originX,
-        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) - self->gameData->assets[DN_ALBUM_ASSET].originY,
-        &aData->tracksPalette,
-        false, false, aData->rot);
+                   ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
+                       - self->gameData->assets[DN_ALBUM_ASSET].originX,
+                   ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
+                       - self->gameData->assets[DN_ALBUM_ASSET].originY,
+                   &aData->tracksPalette, false, false, aData->rot);
 }
 
 void dn_updateCharacterSelect(dn_entity_t* self)
 {
     dn_characterSelectData_t* cData = (dn_characterSelectData_t*)self->data;
-    if(self->gameData->btnDownState & PB_A)
+    if (self->gameData->btnDownState & PB_A)
     {
-        //select marker
+        // select marker
         self->gameData->characterSets[0] = cData->selectCharacterIdx;
-        //save to NVS
+        // save to NVS
         writeNvs32(dnCharacterKey, self->gameData->characterSets[0]);
 
-        switch(self->gameData->characterSets[0])
+        switch (self->gameData->characterSets[0])
         {
             case DN_ALPHA_SET:
             {
@@ -324,9 +346,9 @@ void dn_updateCharacterSelect(dn_entity_t* self)
             }
         }
     }
-    if(self->gameData->btnDownState & PB_B)
+    if (self->gameData->btnDownState & PB_B)
     {
-        //free assets
+        // free assets
         dn_freeAsset(&self->gameData->assets[DN_ALPHA_DOWN_ASSET]);
         dn_freeAsset(&self->gameData->assets[DN_ALPHA_UP_ASSET]);
         dn_freeAsset(&self->gameData->assets[DN_BUCKET_HAT_DOWN_ASSET]);
@@ -338,37 +360,37 @@ void dn_updateCharacterSelect(dn_entity_t* self)
         dn_ShowUi(UI_MENU);
         return;
     }
-    else if(self->gameData->btnDownState & PB_LEFT)
+    else if (self->gameData->btnDownState & PB_LEFT)
     {
-        //scroll left
-        if(cData->selectCharacterIdx == 0)
+        // scroll left
+        if (cData->selectCharacterIdx == 0)
         {
             cData->selectCharacterIdx = DN_NUM_CHARACTERS - 1;
         }
         else
         {
-           cData->selectCharacterIdx--;
+            cData->selectCharacterIdx--;
         }
         cData->xSelectScrollOffset -= self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
     }
-    else if(self->gameData->btnDownState & PB_RIGHT)
+    else if (self->gameData->btnDownState & PB_RIGHT)
     {
-        //scroll right
+        // scroll right
         cData->selectCharacterIdx = (cData->selectCharacterIdx + 1) % DN_NUM_CHARACTERS;
-        //increment the offset to scroll
+        // increment the offset to scroll
         cData->xSelectScrollOffset += self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
     }
 
     // Scroll the offset if it's not centered yet
     cData->xSelectScrollTimer += self->gameData->elapsedUs;
-    while(cData->xSelectScrollTimer >= 3000)
+    while (cData->xSelectScrollTimer >= 3000)
     {
         cData->xSelectScrollTimer -= 3000;
-        if(cData->xSelectScrollOffset > 0)
+        if (cData->xSelectScrollOffset > 0)
         {
             cData->xSelectScrollOffset--;
         }
-        else if(cData->xSelectScrollOffset < 0)
+        else if (cData->xSelectScrollOffset < 0)
         {
             cData->xSelectScrollOffset++;
         }
@@ -382,9 +404,10 @@ void dn_drawCharacterSelect(dn_entity_t* self)
     drawMenuMania(self->gameData->bgMenu, self->gameData->menuRenderer, self->gameData->elapsedUs);
 
     // Set up variables for drawing
-    int16_t yOff   = MANIA_TITLE_HEIGHT + 20;
-    int16_t xOff   = ((TFT_WIDTH - self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w) >> 1) + cData->xSelectScrollOffset;
-    int8_t pIdx   = cData->selectCharacterIdx;
+    int16_t yOff = MANIA_TITLE_HEIGHT + 20;
+    int16_t xOff
+        = ((TFT_WIDTH - self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w) >> 1) + cData->xSelectScrollOffset;
+    int8_t pIdx = cData->selectCharacterIdx;
 
     // 'Rewind' characters until they're off screen
     while (xOff > 0)
@@ -394,29 +417,35 @@ void dn_drawCharacterSelect(dn_entity_t* self)
     }
 
     // Don't use a negative index!
-    if(pIdx < 0)
+    if (pIdx < 0)
     {
         pIdx = DN_NUM_CHARACTERS - 1;
     }
-    //pIdx = dn_wrap(pIdx, DN_NUM_CHARACTERS - 1);
+    // pIdx = dn_wrap(pIdx, DN_NUM_CHARACTERS - 1);
 
-    //Draw floor tiles
-    for(int16_t y = 0; y < 9; y++)
+    // Draw floor tiles
+    for (int16_t y = 0; y < 9; y++)
     {
         // Draw tiles until you're off screen
-        while (xOff < TFT_WIDTH + ((self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5)>>1))
+        while (xOff < TFT_WIDTH + ((self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5) >> 1))
         {
-            for(int16_t x = -2; x < 3; x++)
+            for (int16_t x = -2; x < 3; x++)
             {
-                int16_t drawX = xOff + x * self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w + ((self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (y % 2));
+                int16_t drawX = xOff + x * self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w
+                                + ((self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (y % 2));
                 int16_t drawY = yOff + y * (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1);
-                if(drawX >= -self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w &&
-                    drawX <= TFT_WIDTH)
+                if (drawX >= -self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w && drawX <= TFT_WIDTH)
                 {
                     // If this is the active maker, draw swapped pallete
-                    if (pIdx == self->gameData->characterSets[0] && cData->selectDiamondShape[y * 5 + x+2])
+                    if (pIdx == self->gameData->characterSets[0] && cData->selectDiamondShape[y * 5 + x + 2])
                     {
-                        drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0], drawX, drawY, &self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE + (((y * ((self->gameData->generalTimer>>10)%10) + x + 2)+(self->gameData->generalTimer>>6))%6)]);
+                        drawWsgPaletteSimple(
+                            &self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0], drawX, drawY,
+                            &self->gameData->entityManager
+                                 .palettes[DN_RED_FLOOR_PALETTE
+                                           + (((y * ((self->gameData->generalTimer >> 10) % 10) + x + 2)
+                                               + (self->gameData->generalTimer >> 6))
+                                              % 6)]);
                     }
                     else
                     {
@@ -429,9 +458,10 @@ void dn_drawCharacterSelect(dn_entity_t* self)
             // Increment marker index
             pIdx = (pIdx + 1) % DN_NUM_CHARACTERS;
         }
-        //reset values
-        xOff   = ((TFT_WIDTH - self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w) >> 1) + cData->xSelectScrollOffset;
-        pIdx   = cData->selectCharacterIdx;
+        // reset values
+        xOff = ((TFT_WIDTH - self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w) >> 1)
+               + cData->xSelectScrollOffset;
+        pIdx = cData->selectCharacterIdx;
 
         // 'Rewind' characters until they're off screen
         while (xOff > 0)
@@ -450,29 +480,29 @@ void dn_drawCharacterSelect(dn_entity_t* self)
     yOff += self->gameData->assets[DN_GROUND_TILE_ASSET].originY;
 
     // Draw characters until you're off screen (sort of)
-    while (xOff < TFT_WIDTH + ((self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5)>>1))
+    while (xOff < TFT_WIDTH + ((self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5) >> 1))
     {
         dn_assetIdx_t kingDown;
         dn_assetIdx_t kingUp;
         dn_assetIdx_t pawnDown;
         dn_assetIdx_t pawnUp;
 
-        switch(pIdx)
+        switch (pIdx)
         {
             case DN_ALPHA_SET:
             {
                 kingDown = DN_ALPHA_DOWN_ASSET;
-                kingUp = DN_ALPHA_UP_ASSET;
+                kingUp   = DN_ALPHA_UP_ASSET;
                 pawnDown = DN_BUCKET_HAT_DOWN_ASSET;
-                pawnUp = DN_BUCKET_HAT_UP_ASSET;
+                pawnUp   = DN_BUCKET_HAT_UP_ASSET;
                 break;
             }
             case DN_CHESS_SET:
             {
                 kingDown = DN_KING_ASSET;
-                kingUp = DN_KING_ASSET;
+                kingUp   = DN_KING_ASSET;
                 pawnDown = DN_PAWN_ASSET;
-                pawnUp = DN_PAWN_ASSET;
+                pawnUp   = DN_PAWN_ASSET;
                 break;
             }
             default:
@@ -480,45 +510,58 @@ void dn_drawCharacterSelect(dn_entity_t* self)
                 break;
             }
         }
-        for(int8_t i = 0; i < 5; i++)
+        for (int8_t i = 0; i < 5; i++)
         {
-            if(i == 2)//king is the middle piece
+            if (i == 2) // king is the middle piece
             {
                 drawWsgSimple(&self->gameData->assets[kingDown].frames[0],
-                        xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i - self->gameData->assets[kingDown].originX, 
-                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i - self->gameData->assets[kingDown].originY);
-                if(kingUp == DN_KING_ASSET)
+                              xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i
+                                  - self->gameData->assets[kingDown].originX,
+                              yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
+                                  - self->gameData->assets[kingDown].originY);
+                if (kingUp == DN_KING_ASSET)
                 {
-                    drawWsgPaletteSimple(&self->gameData->assets[kingUp].frames[0],
-                        xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4-i) - self->gameData->assets[kingUp].originX,
-                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4+i) - self->gameData->assets[kingUp].originY,
+                    drawWsgPaletteSimple(
+                        &self->gameData->assets[kingUp].frames[0],
+                        xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4 - i)
+                            - self->gameData->assets[kingUp].originX,
+                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4 + i)
+                            - self->gameData->assets[kingUp].originY,
                         &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                 }
                 else
                 {
                     drawWsgSimple(&self->gameData->assets[kingUp].frames[0],
-                        xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4-i) - self->gameData->assets[kingUp].originX,
-                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4+i) - self->gameData->assets[kingUp].originY);
+                                  xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4 - i)
+                                      - self->gameData->assets[kingUp].originX,
+                                  yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4 + i)
+                                      - self->gameData->assets[kingUp].originY);
                 }
             }
             else
             {
-            
                 drawWsgSimple(&self->gameData->assets[pawnDown].frames[0],
-                    xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i - self->gameData->assets[pawnDown].originX, 
-                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i - self->gameData->assets[pawnDown].originY);
-                if(pawnUp == DN_PAWN_ASSET)
+                              xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i
+                                  - self->gameData->assets[pawnDown].originX,
+                              yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
+                                  - self->gameData->assets[pawnDown].originY);
+                if (pawnUp == DN_PAWN_ASSET)
                 {
-                    drawWsgPaletteSimple(&self->gameData->assets[pawnUp].frames[0],
-                        xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4-i) - self->gameData->assets[pawnUp].originX,
-                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4+i) - self->gameData->assets[pawnUp].originY,
+                    drawWsgPaletteSimple(
+                        &self->gameData->assets[pawnUp].frames[0],
+                        xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4 - i)
+                            - self->gameData->assets[pawnUp].originX,
+                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4 + i)
+                            - self->gameData->assets[pawnUp].originY,
                         &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                 }
                 else
                 {
                     drawWsgSimple(&self->gameData->assets[pawnUp].frames[0],
-                        xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4-i) - self->gameData->assets[pawnUp].originX,
-                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4+i) - self->gameData->assets[pawnUp].originY);
+                                  xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4 - i)
+                                      - self->gameData->assets[pawnUp].originX,
+                                  yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4 + i)
+                                      - self->gameData->assets[pawnUp].originY);
                 }
             }
         }
@@ -538,7 +581,7 @@ void dn_drawCharacterSelect(dn_entity_t* self)
         // Draw arrows to indicate this can be scrolled
         drawText(&self->gameData->font_righteous, c000, "<", 3, 41);
         drawText(&self->gameData->font_righteous, c550, "<", 3, 38);
-        
+
         drawText(&self->gameData->font_righteous, c000, ">", TFT_WIDTH - 20, 41);
         drawText(&self->gameData->font_righteous, c550, ">", TFT_WIDTH - 20, 38);
     }

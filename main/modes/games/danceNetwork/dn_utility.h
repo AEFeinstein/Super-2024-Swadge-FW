@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <vector2d.h>

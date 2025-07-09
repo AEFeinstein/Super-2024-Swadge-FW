@@ -74,13 +74,14 @@ int16_t drawShinyText(const font_t* font, paletteColor_t outerColor, paletteColo
                       paletteColor_t innerColor, const char* text, int16_t xOff, int16_t yOff);
 void drawCharBounds(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff, int16_t xMin,
                     int16_t yMin, int16_t xMax, int16_t yMax);
-void drawShinyCharBounds(paletteColor_t outerColor, paletteColor_t middleColor, paletteColor_t innerColor, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff, int16_t xMin,
-                    int16_t yMin, int16_t xMax, int16_t yMax);
+void drawShinyCharBounds(paletteColor_t outerColor, paletteColor_t middleColor, paletteColor_t innerColor, int h,
+                         const font_ch_t* ch, int16_t xOff, int16_t yOff, int16_t xMin, int16_t yMin, int16_t xMax,
+                         int16_t yMax);
 int16_t drawTextBounds(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff,
                        int16_t xMin, int16_t yMin, int16_t xMax, int16_t yMax);
 int16_t drawShinyTextBounds(const font_t* font, paletteColor_t outerColor, paletteColor_t middleColor,
-                                  paletteColor_t innerColor, const char* text, int16_t xOff, int16_t yOff,
-                                  int16_t xMin, int16_t yMin, int16_t xMax, int16_t yMax);
+                            paletteColor_t innerColor, const char* text, int16_t xOff, int16_t yOff, int16_t xMin,
+                            int16_t yMin, int16_t xMax, int16_t yMax);
 
 const char* drawTextWordWrap(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff, int16_t* yOff,
                              int16_t xMax, int16_t yMax);
