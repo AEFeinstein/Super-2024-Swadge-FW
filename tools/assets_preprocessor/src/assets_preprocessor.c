@@ -31,6 +31,7 @@
 #include "image_processor.h"
 #include "json_processor.h"
 #include "raw_processor.h"
+#include "sudoku_processor.h"
 #include "txt_processor.h"
 //==============================================================================
 // END Asset Processor Includes
@@ -43,7 +44,7 @@
 //==============================================================================
 static const assetProcessor_t* allAssetProcessors[] = {
     &binProcessor,   &chartProcessor, &fontProcessor, &heatshrinkProcessor,
-    &imageProcessor, &jsonProcessor,  &textProcessor,
+    &imageProcessor, &jsonProcessor,  &sudokuProcessor, &textProcessor,
 };
 //==============================================================================
 // END Asset Processor List
