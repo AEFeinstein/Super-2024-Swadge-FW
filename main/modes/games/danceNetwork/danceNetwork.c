@@ -245,6 +245,10 @@ static void dn_MainLoop(int64_t elapsedUs)
                 }
                 break;
             }
+            default:
+            {
+                break;
+            }
         }
     }
 
@@ -280,7 +284,7 @@ static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 {
     // Fill the flat background color
     paletteColor_t* frameBuf = getPxTftFramebuffer();
-    memset(&frameBuf[(y * TFT_WIDTH) + x], c100, sizeof(paletteColor_t) * w * h);
+    memset(&frameBuf[(y * TFT_WIDTH) + x], c201, sizeof(paletteColor_t) * w * h);
 }
 
 /**
@@ -538,13 +542,13 @@ static void dn_initializeGame(void)
 
     // p1 album
     dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
-                          (vec_t){0xFFFF - 1280, 0xFFFF - (142 << DN_DECIMAL_BITS)}, gameData);
+                          (vec_t){0xFFFF - 1280, 0xFFFF - (139 << DN_DECIMAL_BITS)}, gameData);
     // creative commons album
-    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF, 0xFFFF - (142 << DN_DECIMAL_BITS)},
+    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF, 0xFFFF - (139 << DN_DECIMAL_BITS)},
                           gameData);
     // p2 album
     dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
-                          (vec_t){0xFFFF + 1280, 0xFFFF - (142 << DN_DECIMAL_BITS)}, gameData);
+                          (vec_t){0xFFFF + 1280, 0xFFFF - (139 << DN_DECIMAL_BITS)}, gameData);
 
     //////////////////
     // Make the board//
