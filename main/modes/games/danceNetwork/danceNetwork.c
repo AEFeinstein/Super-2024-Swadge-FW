@@ -277,6 +277,10 @@ static void dn_MainLoop(int64_t elapsedUs)
             dn_drawEntities(&gameData->entityManager);
             break;
         }
+        default:
+        {
+            break;
+        }
     }
 }
 
