@@ -220,7 +220,7 @@ static void dn_MainLoop(int64_t elapsedUs)
 {
     // Handle inputs
     gameData->btnDownState = 0;
-    buttonEvt_t evt = {0};
+    buttonEvt_t evt        = {0};
     while (checkButtonQueueWrapper(&evt))
     {
         gameData->btnState = evt.state;

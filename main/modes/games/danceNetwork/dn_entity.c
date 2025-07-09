@@ -318,7 +318,7 @@ void dn_updateCharacterSelect(dn_entity_t* self)
     }
     else if (self->gameData->btnState & PB_LEFT)
     {
-        if(cData->xSelectScrollOffset == 0)
+        if (cData->xSelectScrollOffset == 0)
         {
             // scroll left
             if (cData->selectCharacterIdx == 0)
@@ -334,7 +334,7 @@ void dn_updateCharacterSelect(dn_entity_t* self)
     }
     else if (self->gameData->btnState & PB_RIGHT)
     {
-        if(cData->xSelectScrollOffset == 0)
+        if (cData->xSelectScrollOffset == 0)
         {
             // scroll right
             cData->selectCharacterIdx = (cData->selectCharacterIdx + 1) % DN_NUM_CHARACTERS;
