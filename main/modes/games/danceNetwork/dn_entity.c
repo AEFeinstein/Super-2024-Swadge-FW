@@ -273,7 +273,10 @@ void dn_updateCharacterSelect(dn_entity_t* self)
     dn_characterSelectData_t* cData = (dn_characterSelectData_t*)self->data;
     if(self->gameData->btnDownState & PB_A)
     {
+        //select marker
         self->gameData->characterSets[0] = cData->selectCharacterIdx;
+        //save to NVS
+        writeNvs32(dnCharacterKey, self->gameData->characterSets[0]);
     }
     if(self->gameData->btnDownState & PB_B)
     {
@@ -291,12 +294,22 @@ void dn_updateCharacterSelect(dn_entity_t* self)
     }
     else if(self->gameData->btnDownState & PB_LEFT)
     {
-        cData->selectCharacterIdx = dn_wrap(cData->selectCharacterIdx - 1, DN_NUM_CHARACTERS - 1);
+        //scroll left
+        if(cData->selectCharacterIdx == 0)
+        {
+            cData->selectCharacterIdx = DN_NUM_CHARACTERS - 1;
+        }
+        else
+        {
+           cData->selectCharacterIdx--;
+        }
         cData->xSelectScrollOffset -= self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
     }
     else if(self->gameData->btnDownState & PB_RIGHT)
     {
-        cData->selectCharacterIdx = dn_wrap(cData->selectCharacterIdx + 1, DN_NUM_CHARACTERS - 1);
+        //scroll right
+        cData->selectCharacterIdx = (cData->selectCharacterIdx + 1) % DN_NUM_CHARACTERS;
+        //increment the offset to scroll
         cData->xSelectScrollOffset += self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
     }
 
@@ -335,10 +348,11 @@ void dn_drawCharacterSelect(dn_entity_t* self)
     }
 
     // Don't use a negative index!
-    while (pIdx < 0)
+    if(pIdx < 0)
     {
-        pIdx += DN_NUM_CHARACTERS;
+        pIdx = DN_NUM_CHARACTERS - 1;
     }
+    //pIdx = dn_wrap(pIdx, DN_NUM_CHARACTERS - 1);
 
     //Draw floor tiles
     for(int16_t y = 0; y < 9; y++)
@@ -356,13 +370,12 @@ void dn_drawCharacterSelect(dn_entity_t* self)
                     // If this is the active maker, draw swapped pallete
                     if (pIdx == self->gameData->characterSets[0] && cData->selectDiamondShape[y * 5 + x+2])
                     {
-                        drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0], drawX, drawY, &self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE]);
+                        drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0], drawX, drawY, &self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE + (((y * 2 + x)+(self->gameData->generalTimer>>6))%6)]);
                     }
                     else
                     {
                         drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0], drawX, drawY);
                     }
-                    
                 }
             }
             // Increment X offset
@@ -393,25 +406,74 @@ void dn_drawCharacterSelect(dn_entity_t* self)
     // Draw characters until you're off screen (sort of)
     while (xOff < TFT_WIDTH + ((self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5)>>1))
     {
+        dn_assetIdx_t kingDown;
+        dn_assetIdx_t kingUp;
+        dn_assetIdx_t pawnDown;
+        dn_assetIdx_t pawnUp;
+
+        switch(pIdx)
+        {
+            case DN_ALPHA_SET:
+            {
+                kingDown = DN_ALPHA_DOWN_ASSET;
+                kingUp = DN_ALPHA_UP_ASSET;
+                pawnDown = DN_BUCKET_HAT_DOWN_ASSET;
+                pawnUp = DN_BUCKET_HAT_UP_ASSET;
+                break;
+            }
+            case DN_CHESS_SET:
+            {
+                kingDown = DN_KING_ASSET;
+                kingUp = DN_KING_ASSET;
+                pawnDown = DN_PAWN_ASSET;
+                pawnUp = DN_PAWN_ASSET;
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
         for(int8_t i = 0; i < 5; i++)
         {
             if(i == 2)//king is the middle piece
             {
-                drawWsgSimple(&self->gameData->assets[DN_KING_ASSET].frames[0],
-                    xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i - self->gameData->assets[DN_KING_ASSET].originX, 
-                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i - self->gameData->assets[DN_KING_ASSET].originY);
-                drawWsgSimple(&self->gameData->assets[DN_KING_ASSET].frames[0],
-                    xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4-i) - self->gameData->assets[DN_KING_ASSET].originX,
-                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4+i) - self->gameData->assets[DN_KING_ASSET].originY);
+                drawWsgSimple(&self->gameData->assets[kingDown].frames[0],
+                        xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i - self->gameData->assets[kingDown].originX, 
+                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i - self->gameData->assets[kingDown].originY);
+                if(kingUp == DN_KING_ASSET)
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[kingUp].frames[0],
+                        xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4-i) - self->gameData->assets[kingUp].originX,
+                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4+i) - self->gameData->assets[kingUp].originY,
+                        &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                }
+                else
+                {
+                    drawWsgSimple(&self->gameData->assets[kingUp].frames[0],
+                        xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4-i) - self->gameData->assets[kingUp].originX,
+                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4+i) - self->gameData->assets[kingUp].originY);
+                }
             }
             else
             {
-                drawWsgSimple(&self->gameData->assets[DN_PAWN_ASSET].frames[0],
-                    xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i - self->gameData->assets[DN_PAWN_ASSET].originX, 
-                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i - self->gameData->assets[DN_PAWN_ASSET].originY);
-                drawWsgSimple(&self->gameData->assets[DN_PAWN_ASSET].frames[0],
-                    xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4-i) - self->gameData->assets[DN_PAWN_ASSET].originX,
-                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4+i) - self->gameData->assets[DN_PAWN_ASSET].originY);
+            
+                drawWsgSimple(&self->gameData->assets[pawnDown].frames[0],
+                    xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i - self->gameData->assets[pawnDown].originX, 
+                    yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i - self->gameData->assets[pawnDown].originY);
+                if(pawnUp == DN_PAWN_ASSET)
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[pawnUp].frames[0],
+                        xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4-i) - self->gameData->assets[pawnUp].originX,
+                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4+i) - self->gameData->assets[pawnUp].originY,
+                        &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                }
+                else
+                {
+                    drawWsgSimple(&self->gameData->assets[pawnUp].frames[0],
+                        xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4-i) - self->gameData->assets[pawnUp].originX,
+                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4+i) - self->gameData->assets[pawnUp].originY);
+                }
             }
         }
 

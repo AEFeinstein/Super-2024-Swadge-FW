@@ -25,6 +25,21 @@ void dn_initializeEntityManager(dn_entityManager_t* entityManager, dn_gameData_t
 
     wsgPaletteReset(&entityManager->palettes[DN_RED_FLOOR_PALETTE]);
     wsgPaletteSet(&entityManager->palettes[DN_RED_FLOOR_PALETTE], c334, c533);
+
+    wsgPaletteReset(&entityManager->palettes[DN_ORANGE_FLOOR_PALETTE]);
+    wsgPaletteSet(&entityManager->palettes[DN_ORANGE_FLOOR_PALETTE], c334, c543);
+
+    wsgPaletteReset(&entityManager->palettes[DN_YELLOW_FLOOR_PALETTE]);
+    wsgPaletteSet(&entityManager->palettes[DN_YELLOW_FLOOR_PALETTE], c334, c553);
+
+    wsgPaletteReset(&entityManager->palettes[DN_GREEN_FLOOR_PALETTE]);
+    wsgPaletteSet(&entityManager->palettes[DN_GREEN_FLOOR_PALETTE], c334, c353);
+
+    wsgPaletteReset(&entityManager->palettes[DN_BLUE_FLOOR_PALETTE]);
+    wsgPaletteSet(&entityManager->palettes[DN_BLUE_FLOOR_PALETTE], c334, c335);
+
+    wsgPaletteReset(&entityManager->palettes[DN_PURPLE_FLOOR_PALETTE]);
+    wsgPaletteSet(&entityManager->palettes[DN_PURPLE_FLOOR_PALETTE], c334, c435);
 }
 
 void dn_loadAsset(cnfsFileIdx_t spriteCnfsIdx, uint8_t num_frames, dn_asset_t* asset)

@@ -9,7 +9,7 @@
 #define DN_TILE_WIDTH 51
 #define DN_TILE_HEIGHT 13
 #define NUM_ASSETS     13 // The number of dn_asset_t (last accounted for DN_ALBUM_ASSET)
-#define NUM_PALETTES   2 // The number of wsgPalette_t (last accounted for DN_RED_FLOOR_PALETTE)
+#define NUM_PALETTES   7 // The number of wsgPalette_t (last accounted for DN_PURPLE_FLOOR_PALETTE)
 
 typedef struct dn_entity_t dn_entity_t;
 typedef struct dn_gameData_t dn_gameData_t;
@@ -49,6 +49,11 @@ typedef enum __attribute__((packed))
 {
     DN_WHITE_CHESS_PALETTE,
     DN_RED_FLOOR_PALETTE,
+    DN_ORANGE_FLOOR_PALETTE,
+    DN_YELLOW_FLOOR_PALETTE,
+    DN_GREEN_FLOOR_PALETTE,
+    DN_BLUE_FLOOR_PALETTE,
+    DN_PURPLE_FLOOR_PALETTE,
 } dn_paletteIdx_t;
 
 typedef struct __attribute__((packed))

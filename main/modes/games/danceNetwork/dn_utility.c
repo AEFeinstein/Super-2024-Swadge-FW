@@ -42,8 +42,3 @@ dn_assetIdx_t dn_getAssetIdx(dn_characterSet_t characterSet, dn_unitRank rank, d
     }
     return -1; // Invalid asset index
 }
-
-int dn_wrap(int value, int max)
-{
-    return ((value % max) + max) % max;
-}
