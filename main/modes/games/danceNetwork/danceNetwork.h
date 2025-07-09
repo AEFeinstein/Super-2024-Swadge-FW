@@ -72,7 +72,7 @@ typedef struct dn_gameData_t{
     bool passAndPlay;
     int32_t elapsedUs; // Time elapsed since the last frame in microseconds
     dn_entityManager_t entityManager;
-    uint8_t generalTimer;
+    uint16_t generalTimer;
     dn_phase_t phase; // The current phase of the game
     dn_characterSet_t characterSets[2];//character sets of p1 and p2.
     dn_CpuData_t cpu;

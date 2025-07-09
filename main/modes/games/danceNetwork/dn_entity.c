@@ -370,7 +370,7 @@ void dn_drawCharacterSelect(dn_entity_t* self)
                     // If this is the active maker, draw swapped pallete
                     if (pIdx == self->gameData->characterSets[0] && cData->selectDiamondShape[y * 5 + x+2])
                     {
-                        drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0], drawX, drawY, &self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE + (((y * 2 + x)+(self->gameData->generalTimer>>6))%6)]);
+                        drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0], drawX, drawY, &self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE + (((y * ((self->gameData->generalTimer>>10)%10) + x + 2)+(self->gameData->generalTimer>>6))%6)]);
                     }
                     else
                     {
