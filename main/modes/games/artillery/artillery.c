@@ -192,7 +192,7 @@ void artilleryEnterMode(void)
             addSingleItemToMenu(ad->gameMenu, menuEntries[mIdx].text);
         }
     }
-    ad->smRenderer = initMenuSimpleRenderer(NULL, c005, c000, c555, 5);
+    ad->smRenderer = initMenuSimpleRenderer(NULL, c005, c111, c555, 5);
 
     ad->mState = AMS_GAME;
     ad->gState = AGS_MENU;
