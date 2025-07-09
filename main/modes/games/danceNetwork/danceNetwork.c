@@ -220,9 +220,10 @@ static void dn_MainLoop(int64_t elapsedUs)
 {
     // Handle inputs
     gameData->btnDownState = 0;
-    buttonEvt_t evt        = {0};
+    buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
+        gameData->btnState = evt.state;
         switch (gameData->ui)
         {
             case UI_MENU:
@@ -249,8 +250,6 @@ static void dn_MainLoop(int64_t elapsedUs)
 
     if (gameData->ui == UI_GAME)
     {
-        // store the whole button state for this frame
-        gameData->btnState  = evt.state;
         gameData->elapsedUs = elapsedUs;
         // update the whole engine via entity management
         dn_updateEntities(&gameData->entityManager);

@@ -316,25 +316,31 @@ void dn_updateCharacterSelect(dn_entity_t* self)
         dn_ShowUi(UI_MENU);
         return;
     }
-    else if (self->gameData->btnDownState & PB_LEFT)
+    else if (self->gameData->btnState & PB_LEFT)
     {
-        // scroll left
-        if (cData->selectCharacterIdx == 0)
+        if(cData->xSelectScrollOffset == 0)
         {
-            cData->selectCharacterIdx = DN_NUM_CHARACTERS - 1;
+            // scroll left
+            if (cData->selectCharacterIdx == 0)
+            {
+                cData->selectCharacterIdx = DN_NUM_CHARACTERS - 1;
+            }
+            else
+            {
+                cData->selectCharacterIdx--;
+            }
+            cData->xSelectScrollOffset -= self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
         }
-        else
-        {
-            cData->selectCharacterIdx--;
-        }
-        cData->xSelectScrollOffset -= self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
     }
-    else if (self->gameData->btnDownState & PB_RIGHT)
+    else if (self->gameData->btnState & PB_RIGHT)
     {
-        // scroll right
-        cData->selectCharacterIdx = (cData->selectCharacterIdx + 1) % DN_NUM_CHARACTERS;
-        // increment the offset to scroll
-        cData->xSelectScrollOffset += self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
+        if(cData->xSelectScrollOffset == 0)
+        {
+            // scroll right
+            cData->selectCharacterIdx = (cData->selectCharacterIdx + 1) % DN_NUM_CHARACTERS;
+            // increment the offset to scroll
+            cData->xSelectScrollOffset += self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
+        }
     }
 
     // Scroll the offset if it's not centered yet
