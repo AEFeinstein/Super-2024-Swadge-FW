@@ -46,4 +46,5 @@ typedef struct
     menuSimpleRenderer_t* smRenderer;
 } artilleryData_t;
 
+extern const char load_ammo[];
 extern swadgeMode_t artilleryMode;
