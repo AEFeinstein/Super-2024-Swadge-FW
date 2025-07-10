@@ -498,6 +498,19 @@ static void menuCallCallbackForItem(menu_t* menu, menuItem_t* item, bool selecte
 }
 
 /**
+ * @brief Navigate to the first item in a menu, just as though it were scrolled to.
+ *
+ * @param menu The menu to change the selected item of
+ * @return A pointer to the menu to use for future function calls.
+ */
+menu_t* menuNavigateToTopItem(menu_t* menu)
+{
+    menu->currentItem = menu->items->first;
+    menuCallCallbackForItem(menu, (menuItem_t*)menu->currentItem->val, false);
+    return menu;
+}
+
+/**
  * @brief Changes the selected item to the one with the given label, just as though it were scrolled to.
  *
  * @param menu The menu to change the selected item of

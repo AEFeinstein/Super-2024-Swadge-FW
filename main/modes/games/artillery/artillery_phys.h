@@ -79,6 +79,7 @@ typedef struct
     vecFl_t relBarrelTip;
     float shotPower;
     artilleryAmmoType_t ammo;
+    char* ammoLabel;
 
     // Shell data
     int32_t bounces;

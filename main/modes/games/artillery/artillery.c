@@ -314,8 +314,8 @@ bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value)
         {
             if (label == ammoEntries[aIdx].text)
             {
-                ESP_LOGI("ART", "Set ammo to %s", ammoEntries[aIdx].text);
-                ad->players[ad->plIdx]->ammo = ammoEntries[aIdx].ammo;
+                ad->players[ad->plIdx]->ammo      = ammoEntries[aIdx].ammo;
+                ad->players[ad->plIdx]->ammoLabel = label;
                 return true;
             }
         }
