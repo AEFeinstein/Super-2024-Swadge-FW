@@ -201,6 +201,7 @@ menuItem_t* addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel,
                                          int32_t currentValue);
 void removeSettingsOptionsItemFromMenu(menu_t* menu, const char* const* optionLabels);
 
+menu_t* menuNavigateToTopItem(menu_t* menu);
 menu_t* menuNavigateToItem(menu_t* menu, const char* label);
 menu_t* menuNavigateToPrevItem(menu_t* menu);
 menu_t* menuNavigateToNextItem(menu_t* menu);
