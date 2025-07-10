@@ -77,8 +77,7 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
             // If the ammo menu was entered, scroll to current ammo
             if (oldMenu != ad->gameMenu && load_ammo == ad->gameMenu->title)
             {
-                printf("TODO: navigate to ammo\n");
-                // menuNavigateToItem(ad->gameMenu, ammoEntries[3].text);
+                menuNavigateToItem(ad->gameMenu, ad->players[ad->plIdx]->ammoLabel);
             }
             break;
         }
@@ -226,6 +225,9 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
                 // Switch to the next player
                 ad->plIdx = (ad->plIdx + 1) % NUM_PLAYERS;
                 artillerySwitchToState(ad, AGS_MENU);
+
+                // Reset menu to top item
+                ad->gameMenu = menuNavigateToTopItem(ad->gameMenu);
             }
             break;
         }
