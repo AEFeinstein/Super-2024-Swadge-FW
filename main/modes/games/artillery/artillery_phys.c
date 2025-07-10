@@ -20,7 +20,7 @@
 //==============================================================================
 
 #define CAMERA_BTN_MOVE_INTERVAL 2
-#define CAMERA_MARGIN            36
+#define CAMERA_MARGIN            64
 
 #if 0
     #define PRINT_P1_VEC(label, vec)                                          \
