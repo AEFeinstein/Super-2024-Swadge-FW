@@ -19,14 +19,19 @@
 // Defines
 //==============================================================================
 
-#define PRINT_P1_VEC(label, vec)                                          \
-    do                                                                    \
-    {                                                                     \
-        if (cNode == phys->circles.first)                                 \
-        {                                                                 \
-            ESP_LOGI("VEC", "%s: %.15f, %.15f", label, (vec).x, (vec.y)); \
-        }                                                                 \
-    } while (0)
+#define CAMERA_BTN_MOVE_INTERVAL 2
+#define CAMERA_MARGIN            36
+
+#if 0
+    #define PRINT_P1_VEC(label, vec)                                          \
+        do                                                                    \
+        {                                                                     \
+            if (cNode == phys->circles.first)                                 \
+            {                                                                 \
+                ESP_LOGI("VEC", "%s: %.15f, %.15f", label, (vec).x, (vec.y)); \
+            }                                                                 \
+        } while (0)
+#endif
 
 //==============================================================================
 // Function Declarations
@@ -41,6 +46,7 @@ bool physAnyCollision(physSim_t* phys, physCirc_t* c);
 
 bool physCircCircIntersection(physSim_t* phys, physCirc_t* cMoving, circleFl_t* cOther, float* colDist,
                               vecFl_t* reflVec);
+void physAdjustCameraTimer(physSim_t* phys);
 
 //==============================================================================
 // Functions
@@ -915,7 +921,7 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
     int32_t shellCount = 0;
     for (float angle = angStart; angle <= angEnd; angle += spread)
     {
-        physCirc_t* shell = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, 4, CT_SHELL);
+        physCirc_t* shell = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, radius, CT_SHELL);
         shell->vel.x      = sinf(angle) * circ->shotPower;
         shell->vel.y      = -cosf(angle) * circ->shotPower;
         shell->bounces    = bounces;
@@ -941,82 +947,82 @@ void physSetCameraButton(physSim_t* phys, buttonBit_t btn)
 }
 
 /**
- * @brief Pan the camera one pixel per frame as long as input buttons are held
- * 
- * TODO make sure the target is never off screen, within 16 px margin or whatever
+ * @brief Move the camera according to input buttons or object tracking
+ *
+ * @param phys The physics simulation to pan
+ */
+void physAdjustCameraTimer(physSim_t* phys)
+{
+    if (NULL == phys->cameraTarget)
+    {
+        // If there's no camera target, move according to button input, vertically
+        if (PB_UP & phys->cameraBtn)
+        {
+            phys->camera.y -= CAMERA_BTN_MOVE_INTERVAL;
+        }
+        else if (PB_DOWN & phys->cameraBtn)
+        {
+            phys->camera.y += CAMERA_BTN_MOVE_INTERVAL;
+        }
+
+        // Horizontally
+        if (PB_LEFT & phys->cameraBtn)
+        {
+            phys->camera.x -= CAMERA_BTN_MOVE_INTERVAL;
+        }
+        else if (PB_RIGHT & phys->cameraBtn)
+        {
+            phys->camera.x += CAMERA_BTN_MOVE_INTERVAL;
+        }
+    }
+    else
+    {
+        // Move the camera to track a target
+        // This is where the target would be displayed
+        vec_t targetDispAt = {
+            .x = phys->cameraTarget->c.pos.x - phys->camera.x,
+            .y = phys->cameraTarget->c.pos.y - phys->camera.y,
+        };
+
+        // This is where we want the camera to be, may be adjusted
+        vec_t desiredCamera = phys->camera;
+
+        // Make sure the target is in the viewbox horizontally
+        if (targetDispAt.x < CAMERA_MARGIN)
+        {
+            desiredCamera.x = phys->cameraTarget->c.pos.x - CAMERA_MARGIN;
+        }
+        else if (targetDispAt.x > TFT_WIDTH - CAMERA_MARGIN)
+        {
+            desiredCamera.x = (phys->cameraTarget->c.pos.x) - (TFT_WIDTH - CAMERA_MARGIN);
+        }
+
+        // Make sure the target is in the viewbox vertically
+        if (targetDispAt.y < CAMERA_MARGIN)
+        {
+            desiredCamera.y = phys->cameraTarget->c.pos.y - CAMERA_MARGIN;
+        }
+        else if (targetDispAt.y > TFT_HEIGHT - CAMERA_MARGIN)
+        {
+            desiredCamera.y = (phys->cameraTarget->c.pos.y) - (TFT_HEIGHT - CAMERA_MARGIN);
+        }
+
+        // Move camera a third of the way to desired camera
+        phys->camera = addVec2d(phys->camera, divVec2d(subVec2d(desiredCamera, phys->camera), 3));
+    }
+
+    // Bound the camera to the world
+    // phys->camera.x = CLAMP(phys->camera.x, 0, (phys->bounds.x - TFT_WIDTH));
+    // phys->camera.y = CLAMP(phys->camera.y, 0, (phys->bounds.y - TFT_HEIGHT));
+}
+
+/**
+ * @brief Run a timer to adjust the camera, either tracking an object or reacting to button presses
  *
  * @param phys The physics simulation to pan
  * @param elapsedUs The elapsed time
  */
 void physAdjustCamera(physSim_t* phys, uint32_t elapsedUs)
 {
-    RUN_TIMER_EVERY(phys->cameraTimer, 1000000 / 60, elapsedUs, {
-        if (NULL == phys->cameraTarget)
-        {
-            // If there's no camera target, move according to button input
-            if (PB_UP & phys->cameraBtn)
-            {
-                phys->camera.y--;
-            }
-            else if (PB_DOWN & phys->cameraBtn)
-            {
-                phys->camera.y++;
-            }
-
-            if (PB_LEFT & phys->cameraBtn)
-            {
-                phys->camera.x--;
-            }
-            else if (PB_RIGHT & phys->cameraBtn)
-            {
-                phys->camera.x++;
-            }
-        }
-        else
-        {
-            vec_t target;
-            target.x = phys->cameraTarget->c.pos.x - (TFT_WIDTH / 2);
-            target.y = phys->cameraTarget->c.pos.y - (TFT_HEIGHT / 2);
-
-            // Otherwise adjust to camera to match the target
-            // X axis
-            if (target.x < phys->camera.x)
-            {
-                phys->camera.x--;
-            }
-            else if (target.x > phys->camera.x)
-            {
-                phys->camera.x++;
-            }
-
-            // Y axis
-            if (target.y < phys->camera.y)
-            {
-                phys->camera.y--;
-            }
-            else if (target.y > phys->camera.y)
-            {
-                phys->camera.y++;
-            }
-        }
-
-        // Bound the camera
-        if (phys->camera.x < 0)
-        {
-            phys->camera.x = 0;
-        }
-        else if (phys->camera.x > phys->bounds.x - TFT_WIDTH)
-        {
-            phys->camera.x = phys->bounds.x - TFT_WIDTH;
-        }
-
-        if (phys->camera.y < 0)
-        {
-            phys->camera.y = 0;
-        }
-        else if (phys->camera.y > phys->bounds.y - TFT_HEIGHT)
-        {
-            phys->camera.y = phys->bounds.y - TFT_HEIGHT;
-        }
-    });
+    RUN_TIMER_EVERY(phys->cameraTimer, 1000000 / 60, elapsedUs, physAdjustCameraTimer(phys););
 }
