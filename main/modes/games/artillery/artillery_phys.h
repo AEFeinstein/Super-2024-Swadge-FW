@@ -103,6 +103,9 @@ typedef struct
     buttonBit_t cameraBtn;
     vec_t camera;
     physCirc_t* cameraTarget;
+
+    bool shotFired;
+    bool shotDone;
 } physSim_t;
 
 //==============================================================================
