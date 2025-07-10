@@ -36,14 +36,23 @@ typedef enum
 
 typedef struct
 {
+    // The physics simulation
     physSim_t* phys;
+
+    // The players, pointers to objects in the simulation
     physCirc_t* players[NUM_PLAYERS];
-    int32_t autofire;
+    int32_t plIdx;
+
+    // The mode state (i.e. main menu, connecting, game)
     artilleryModeState_t mState;
+
+    // The game state (i.e. moving, adjusting shot, etc.)
     artilleryGameState_t gState;
-    uint8_t gMenuSel;
+
+    // In-game menu and renderer
     menu_t* gameMenu;
     menuSimpleRenderer_t* smRenderer;
+
 } artilleryData_t;
 
 extern const char load_ammo[];
