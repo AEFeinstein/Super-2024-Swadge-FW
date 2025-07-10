@@ -216,13 +216,15 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
         }
         case AGS_FIRE:
         {
-            if (ad->phys->cameraTarget && (CT_TANK == ad->phys->cameraTarget->type))
+            if (false == ad->phys->shotFired)
             {
+                ad->phys->shotFired = true;
                 fireShot(ad->phys, ad->players[0]);
             }
-            else if (NULL == ad->phys->cameraTarget)
+            else if (ad->phys->shotDone)
             {
-                // TODO don't switch back to menu until shell is gone
+                ad->phys->shotFired = false;
+                ad->phys->shotDone  = false;
                 artillerySwitchToState(ad, AGS_MENU);
             }
             break;
