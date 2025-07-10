@@ -47,6 +47,7 @@ bool physAnyCollision(physSim_t* phys, physCirc_t* c);
 bool physCircCircIntersection(physSim_t* phys, physCirc_t* cMoving, circleFl_t* cOther, float* colDist,
                               vecFl_t* reflVec);
 void physAdjustCameraTimer(physSim_t* phys);
+bool checkShotDone(physSim_t* phys);
 
 //==============================================================================
 // Functions
@@ -595,10 +596,49 @@ void physCheckCollisions(physSim_t* phys)
                 phys->cameraTarget = NULL;
             }
             heap_caps_free(removeEntry(&phys->circles, cNode));
+
+            checkShotDone(phys);
         }
         cNode            = nextNode;
         shouldRemoveNode = false;
     }
+}
+
+/**
+ * @brief Check if a shot is done (i.e. all shells have been removed)
+ *
+ * @param phys The physics simulation
+ * @return true if a shot was fired and there are no CT_SHELL in the simulation, false otherwise
+ */
+bool checkShotDone(physSim_t* phys)
+{
+    // Shot can't be done if it was never fired!
+    if (phys->shotFired)
+    {
+        // Iterate through all circles, looking for CT_SHELL
+        node_t* shNode = phys->circles.first;
+        while (shNode)
+        {
+            // Get a convenience pointer
+            physCirc_t* shell = (physCirc_t*)shNode->val;
+
+            // If a shell was found, the shot is still in progress
+            if (CT_SHELL == shell->type)
+            {
+                return false;
+            }
+
+            // Iterate
+            shNode = shNode->next;
+        }
+
+        // Haven't found a shell, so shot must be done
+        phys->shotDone = true;
+        return true;
+    }
+
+    // Shot not in progress
+    return false;
 }
 
 /**
@@ -842,7 +882,7 @@ void setShotPower(physCirc_t* circ, float power)
 }
 
 /**
- * @brief Fire a shot from a tank. This creates a circle o type CT_SHELL at the barrel tip with the tank's barrel angle
+ * @brief Fire a shot from a tank. This creates a circle of type CT_SHELL at the barrel tip with the tank's barrel angle
  * and shot power
  *
  * @param phys The physics simulation
@@ -912,26 +952,32 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
         }
     }
 
-    const float spread = ((5 * M_PI) / 180.0f); // five degrees in radians
+    // For multiple shells, calculate angle spread and starting angle
+    const float spread = ((2 * M_PI) / 180.0f);
     float angStart     = circ->barrelAngle - (numShells / 2) * spread;
-    float angEnd       = circ->barrelAngle + (numShells / 2) * spread;
 
+    // This is where shells get spawned
     vecFl_t absBarrelTip = addVecFl2d(circ->c.pos, circ->relBarrelTip);
 
-    int32_t shellCount = 0;
-    for (float angle = angStart; angle <= angEnd; angle += spread)
+    // Create each shell
+    for (int32_t shellCount = 0; shellCount < numShells; shellCount++)
     {
+        // Create the shell at the tip of the barrel
         physCirc_t* shell = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, radius, CT_SHELL);
-        shell->vel.x      = sinf(angle) * circ->shotPower;
-        shell->vel.y      = -cosf(angle) * circ->shotPower;
-        shell->bounces    = bounces;
 
-        // Track the middle shell
+        // Give it some initial velocity
+        shell->vel.x = sinf(angStart) * circ->shotPower;
+        shell->vel.y = -cosf(angStart) * circ->shotPower;
+        angStart += spread;
+
+        // Some shells are bouncy, some aren't
+        shell->bounces = bounces;
+
+        // Camera track the middle shell
         if (shellCount == numShells / 2)
         {
             phys->cameraTarget = shell;
         }
-        shellCount++;
     }
 }
 
@@ -948,6 +994,8 @@ void physSetCameraButton(physSim_t* phys, buttonBit_t btn)
 
 /**
  * @brief Move the camera according to input buttons or object tracking
+ *
+ * TODO make this not suck when firing multiple shells
  *
  * @param phys The physics simulation to pan
  */

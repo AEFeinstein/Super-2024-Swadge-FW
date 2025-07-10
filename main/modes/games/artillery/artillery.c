@@ -165,13 +165,13 @@ void artilleryEnterMode(void)
     }
 
     // Test circle-line collisions
-    physAddCircle(ad->phys, WORLD_WIDTH / 2 + 16, 30, 8, CT_SHELL);
-    physAddCircle(ad->phys, WORLD_WIDTH / 2 - 16, 30, 8, CT_SHELL);
-    physAddCircle(ad->phys, WORLD_WIDTH / 2, 30, 8, CT_SHELL);
+    // physAddCircle(ad->phys, WORLD_WIDTH / 2 + 16, 30, 8, CT_SHELL);
+    // physAddCircle(ad->phys, WORLD_WIDTH / 2 - 16, 30, 8, CT_SHELL);
+    // physAddCircle(ad->phys, WORLD_WIDTH / 2, 30, 8, CT_SHELL);
 
     // Test circle-circle collisions
-    physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4 + 4, 20, 8, CT_SHELL);
-    physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4 - 4, 50, 8, CT_SHELL);
+    // physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4 + 4, 20, 8, CT_SHELL);
+    // physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4 - 4, 50, 8, CT_SHELL);
     physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4, 80, 8, CT_OBSTACLE);
 
     // Initialize in-game menu and renderer
