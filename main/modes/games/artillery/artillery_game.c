@@ -28,7 +28,7 @@ void artillerySwitchToState(artilleryData_t* ad, artilleryGameState_t newState)
     ad->gState = newState;
 
     // Reset camera to focus on player
-    ad->phys->cameraTarget = ad->players[0];
+    ad->phys->cameraTarget = ad->players[ad->plIdx];
 
     // Additional state-specific setup
     switch (ad->gState)
@@ -117,10 +117,10 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     case PB_RIGHT:
                     {
                         // Left and right buttons set acceleration
-                        ad->players[0]->moving = evt.button;
+                        ad->players[ad->plIdx]->moving = evt.button;
                         // TODO only accelerate on ground?
                         // TODO max X velocity to make tanks feel slow?
-                        // ad->players[0]->acc.x = (PB_LEFT == evt.button) ? -0.0000000001f : 0.0000000001f;
+                        // ad->players[ad->plIdx]->acc.x = (PB_LEFT == evt.button) ? -0.0000000001f : 0.0000000001f;
                         break;
                     }
                     case PB_A:
@@ -138,7 +138,7 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
             else
             {
                 // Releasing a button clears acceleration
-                ad->players[0]->moving = 0;
+                ad->players[ad->plIdx]->moving = 0;
             }
             break;
         }
@@ -152,14 +152,14 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     case PB_RIGHT:
                     {
                         float bDiff = 4 * ((PB_LEFT == evt.button) ? -(M_PI / 180.0f) : (M_PI / 180.0f));
-                        setBarrelAngle(ad->players[0], ad->players[0]->barrelAngle + bDiff);
+                        setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle + bDiff);
                         break;
                     }
                     case PB_UP:
                     case PB_DOWN:
                     {
                         float pDiff = (PB_UP == evt.button) ? 0.00001f : -0.00001f;
-                        setShotPower(ad->players[0], ad->players[0]->shotPower + pDiff);
+                        setShotPower(ad->players[ad->plIdx], ad->players[ad->plIdx]->shotPower + pDiff);
                         break;
                     }
                     case PB_A:
@@ -189,9 +189,6 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
  */
 void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
 {
-    // Uncomment for autofire
-    // RUN_TIMER_EVERY(ad->autofire, 100000, elapsedUs, { fireShot(ad->phys, ad->players[0]); });
-
     physAdjustCamera(ad->phys, elapsedUs);
     physStep(ad->phys, elapsedUs);
     drawPhysOutline(ad->phys);
@@ -209,8 +206,8 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
         case AGS_ADJUST:
         {
             char fireParams[64];
-            snprintf(fireParams, sizeof(fireParams) - 1, "Angle %0.3f, Power %.3f", ad->players[0]->barrelAngle,
-                     ad->players[0]->shotPower * 100);
+            snprintf(fireParams, sizeof(fireParams) - 1, "Angle %0.3f, Power %.3f", ad->players[ad->plIdx]->barrelAngle,
+                     ad->players[ad->plIdx]->shotPower * 100);
             drawText(f, c555, fireParams, 40, TFT_HEIGHT - f->height - 2);
             break;
         }
@@ -219,12 +216,15 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
             if (false == ad->phys->shotFired)
             {
                 ad->phys->shotFired = true;
-                fireShot(ad->phys, ad->players[0]);
+                fireShot(ad->phys, ad->players[ad->plIdx]);
             }
             else if (ad->phys->shotDone)
             {
                 ad->phys->shotFired = false;
                 ad->phys->shotDone  = false;
+
+                // Switch to the next player
+                ad->plIdx = (ad->plIdx + 1) % NUM_PLAYERS;
                 artillerySwitchToState(ad, AGS_MENU);
             }
             break;
