@@ -10,7 +10,7 @@ typedef struct
     wsg_t levelWSG;
     wsg_t completedWSG;
     bool completed;
-    char* title;
+    const char* title;
 } picrossLevelDef_t;
 
 typedef struct

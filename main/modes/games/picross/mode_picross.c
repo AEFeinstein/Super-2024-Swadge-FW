@@ -450,14 +450,7 @@ void picrossGameLoop(int64_t elapsedUs)
     {
         // TODO MIDI music
         // buzzer_stop();
-        // if (p->selectedLevel.index == 29)
-        // {
-        //     buzzer_play_bgm(&picross_music_rick);
-        // }
-        // else
-        // {
-        //     buzzer_play_bgm(&picross_music_win);
-        // }
+        // buzzer_play_bgm(&picross_music_win);
 
         // Unsave progress. Hides "current" in the main menu. we dont need to zero-out the actual data that will just
         // happen when we load a new level.
