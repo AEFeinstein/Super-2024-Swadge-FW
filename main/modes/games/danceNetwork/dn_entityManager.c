@@ -283,8 +283,8 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
                     wsgPaletteSet(&((dn_albumData_t*)entity->data)->screenOnPalette, c255 - 36 + i, c233);
                 }
             }
-            entity->dataType     = DN_ALBUM_DATA;
-            entity->drawFunction = dn_drawAlbum;
+            entity->dataType       = DN_ALBUM_DATA;
+            entity->drawFunction   = dn_drawAlbum;
             entity->updateFunction = dn_updateAlbum;
 
             break;

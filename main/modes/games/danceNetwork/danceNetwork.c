@@ -549,53 +549,57 @@ static void dn_initializeGame(void)
 
     // p1 album
     dn_entity_t* album1 = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
-                          (vec_t){0xFFFF - 1280, 0xFFFF - (139 << DN_DECIMAL_BITS)}, gameData);
+                                                (vec_t){0xFFFF - 1280, 0xFFFF - (139 << DN_DECIMAL_BITS)}, gameData);
     // creative commons album
-    dn_entity_t* ccAlbum = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF, 0xFFFF - (139 << DN_DECIMAL_BITS)},
-                          gameData);
+    dn_entity_t* ccAlbum = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
+                                                 (vec_t){0xFFFF, 0xFFFF - (139 << DN_DECIMAL_BITS)}, gameData);
     // p2 album
     dn_entity_t* album2 = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
-                          (vec_t){0xFFFF + 1280, 0xFFFF - (139 << DN_DECIMAL_BITS)}, gameData);
+                                                (vec_t){0xFFFF + 1280, 0xFFFF - (139 << DN_DECIMAL_BITS)}, gameData);
 
-    dn_addTrackToAlbum(album1, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120)), (dn_track_t)dn_randomInt(1,2));
-    dn_addTrackToAlbum(ccAlbum, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120)), (dn_track_t)dn_randomInt(1,2));
-    dn_addTrackToAlbum(album2, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120)), (dn_track_t)dn_randomInt(1,2));
+    dn_addTrackToAlbum(album1, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120)),
+                       (dn_track_t)dn_randomInt(1, 2));
+    dn_addTrackToAlbum(ccAlbum, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120)),
+                       (dn_track_t)dn_randomInt(1, 2));
+    dn_addTrackToAlbum(album2, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120)),
+                       (dn_track_t)dn_randomInt(1, 2));
 
-    ((dn_albumData_t*)album1->data)->timer = 10 << 20;
+    ((dn_albumData_t*)album1->data)->timer  = 10 << 20;
     ((dn_albumData_t*)ccAlbum->data)->timer = 11 << 20;
-    ((dn_albumData_t*)album2->data)->timer = 12 << 20;
+    ((dn_albumData_t*)album2->data)->timer  = 12 << 20;
 
-    //p2's album is upside down
-    ((dn_albumData_t*)album2->data)->rot = 180;
+    // p2's album is upside down
+    ((dn_albumData_t*)album2->data)->rot     = 180;
     ((dn_albumData_t*)album2->data)->destRot = 180;
 
     ///////////////////////////
     // Make the tile selector//
     ///////////////////////////
-    dn_entity_t* tileSelector = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, gameData->camera.pos, gameData);
-    tileSelector->data = heap_caps_calloc(1, sizeof(dn_tileSelectorData_t), MALLOC_CAP_SPIRAM);
-    tileSelector->dataType = DN_TILE_SELECTOR_DATA;
+    dn_entity_t* tileSelector = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
+                                                       0, gameData->camera.pos, gameData);
+    tileSelector->data        = heap_caps_calloc(1, sizeof(dn_tileSelectorData_t), MALLOC_CAP_SPIRAM);
+    tileSelector->dataType    = DN_TILE_SELECTOR_DATA;
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)tileSelector->data;
-    for(int i = 0; i < NUM_SELECTOR_LINES; i++)
+    for (int i = 0; i < NUM_SELECTOR_LINES; i++)
     {
-        tData->lineYs[i] = (255 * i)/NUM_SELECTOR_LINES;
+        tData->lineYs[i] = (255 * i) / NUM_SELECTOR_LINES;
     }
-    tData->pos = (dn_boardPos_t){2,2};
-    //fancy line colors
-    tData->colors[0] = c125;
-    tData->colors[1] = c345;
-    tData->colors[2] = c555;
+    tData->pos = (dn_boardPos_t){2, 2};
+    // fancy line colors
+    tData->colors[0]             = c125;
+    tData->colors[1]             = c345;
+    tData->colors[2]             = c555;
     tileSelector->updateFunction = dn_updateTileSelector;
-    //Don't set the draw function, because it needs to happen in two parts behind and in front of units.
+    // Don't set the draw function, because it needs to happen in two parts behind and in front of units.
 
     ///////////////////
     // Make the board//
     ///////////////////
     dn_entity_t* board
         = dn_createEntitySimple(&gameData->entityManager, DN_GROUND_TILE_ASSET, (vec_t){0xFFFF, 0xFFFF}, gameData);
-    dn_boardData_t* boardData     = (dn_boardData_t*)board->data;
+    dn_boardData_t* boardData       = (dn_boardData_t*)board->data;
     boardData->tiles[2][2].selector = tileSelector;
-    gameData->entityManager.board = board;
+    gameData->entityManager.board   = board;
 
     ///////////////////
     // Make the units//
@@ -652,8 +656,6 @@ static void dn_initializeGame(void)
 
     boardData->impactPos = (dn_boardPos_t){2, 2};
 
-
-
     /////////////////////
     // Make the curtain//
     /////////////////////
@@ -680,7 +682,7 @@ static void dn_initializeCharacterSelect(void)
     dn_entity_t* characterSelect       = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true,
                                                                 DN_NO_ASSET, 0, (vec_t){0xFFFF, 0xFFFF}, gameData);
     characterSelect->data              = heap_caps_calloc(1, sizeof(dn_characterSelectData_t), MALLOC_CAP_SPIRAM);
-    characterSelect->dataType = DN_CHARACTER_SELECT_DATA;
+    characterSelect->dataType          = DN_CHARACTER_SELECT_DATA;
     dn_characterSelectData_t* cData    = (dn_characterSelectData_t*)characterSelect->data;
     bool selectDiamondShapeInit[9 * 5] = {
         false, false, true, false, false, false, true, true, false, false, false, true,  true, true,  false,

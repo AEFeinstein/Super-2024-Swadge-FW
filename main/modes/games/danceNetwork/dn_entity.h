@@ -53,7 +53,7 @@ typedef struct
 {
     uint16_t yOffset;
     int16_t yVel;
-    dn_entity_t* unit; // Pointer to the unit on this tile. NULL if no unit is present.
+    dn_entity_t* unit;     // Pointer to the unit on this tile. NULL if no unit is present.
     dn_entity_t* selector; // Pointer to the tile selector. NULL if no selector is present.
 } dn_tileData_t;
 
@@ -87,12 +87,12 @@ typedef struct
 
 typedef struct
 {
-    wsgPalette_t screenOffPalette;      // replaces album tile colors with the final track colors. The first index color is
-                                  // C255. No action is C344.
-    wsgPalette_t screenOnPalette;       // Screen is on. Just a more vibrant variation of screenOff.
-    dn_track_t tracks[16];        // Array of action tracks in this album in raster order.
-    uint16_t rot;                 // Rotation degrees from 0-359 for drawing.
-    uint16_t destRot;             // Destination rotation degrees from 0-359 for drawing.
+    wsgPalette_t screenOffPalette; // replaces album tile colors with the final track colors. The first index color is
+                                   // C255. No action is C344.
+    wsgPalette_t screenOnPalette;  // Screen is on. Just a more vibrant variation of screenOff.
+    dn_track_t tracks[16];         // Array of action tracks in this album in raster order.
+    uint16_t rot;                  // Rotation degrees from 0-359 for drawing.
+    uint16_t destRot;              // Destination rotation degrees from 0-359 for drawing.
     bool cornerLightBlinking;
     bool cornerLightOn;
     bool screenIsOn;
@@ -109,11 +109,11 @@ typedef struct
 
 typedef struct
 {
-    //A bunch of y positions for lines going up.
+    // A bunch of y positions for lines going up.
     uint8_t lineYs[NUM_SELECTOR_LINES];
-    //colors that get used for drawing the lines.
+    // colors that get used for drawing the lines.
     paletteColor_t colors[3];
-    //which chess tile the selector is on
+    // which chess tile the selector is on
     dn_boardPos_t pos;
 } dn_tileSelectorData_t;
 

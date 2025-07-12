@@ -92,7 +92,7 @@ void dn_drawBoard(dn_entity_t* self)
             drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
                           drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
                           drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
-            if(boardData->tiles[y][x].selector != NULL)
+            if (boardData->tiles[y][x].selector != NULL)
             {
                 // Draw the back part of the selector
                 dn_drawTileSelectorBackHalf(boardData->tiles[y][x].selector, drawX, drawY);
@@ -117,7 +117,7 @@ void dn_drawBoard(dn_entity_t* self)
                                   drawY - self->gameData->assets[unit->assetIndex].originY);
                 }
             }
-            if(boardData->tiles[y][x].selector != NULL)
+            if (boardData->tiles[y][x].selector != NULL)
             {
                 // Draw the front part of the selector
                 dn_drawTileSelectorFrontHalf(boardData->tiles[y][x].selector, drawX, drawY);
@@ -280,104 +280,103 @@ void dn_drawAlbums(dn_entity_t* self)
 
 vec_t dn_colorToTrackCoords(paletteColor_t color)
 {
-    switch(color)
+    switch (color)
     {
         case c255:
         case c155:
         {
-            return (vec_t){-1,2};
+            return (vec_t){-1, 2};
         }
         case c300:
         case c200:
         {
-            return (vec_t){0,2};
+            return (vec_t){0, 2};
         }
         case c301:
         case c201:
         {
-            return (vec_t){1,2};
+            return (vec_t){1, 2};
         }
         case c302:
         case c202:
         {
-            return (vec_t){-2,1};
+            return (vec_t){-2, 1};
         }
         case c303:
         {
-            return (vec_t){-1,1};
+            return (vec_t){-1, 1};
         }
         case c304:
         {
-            return (vec_t){0,1};
+            return (vec_t){0, 1};
         }
         case c305:
         {
-            return (vec_t){1,1};
+            return (vec_t){1, 1};
         }
         case c310:
         {
-            return (vec_t){2,1};
+            return (vec_t){2, 1};
         }
         case c311:
         case c111:
         {
-            return (vec_t){-2,0};
+            return (vec_t){-2, 0};
         }
         case c312:
         {
-            return (vec_t){-1,0};
+            return (vec_t){-1, 0};
         }
         case c313:
         {
-            return (vec_t){1,0};
+            return (vec_t){1, 0};
         }
         case c314:
         {
-            return (vec_t){2,0};
+            return (vec_t){2, 0};
         }
         case c315:
         {
-            return (vec_t){-1,-1};
+            return (vec_t){-1, -1};
         }
         case c320:
         {
-            return (vec_t){0,-1};
+            return (vec_t){0, -1};
         }
         case c321:
         {
-            return (vec_t){1,-1};
+            return (vec_t){1, -1};
         }
         case c322:
         {
-            return (vec_t){0,-2};
+            return (vec_t){0, -2};
         }
         default:
         {
-            return (vec_t){0,0};
+            return (vec_t){0, 0};
         }
     }
 }
 
-
 dn_twoColors_t dn_trackCoordsToColor(vec_t trackCoords)
 {
-    switch(trackCoords.y)
+    switch (trackCoords.y)
     {
-        case 2://forward 2
+        case 2: // forward 2
         {
-            switch(trackCoords.x)
+            switch (trackCoords.x)
             {
-                case -1://left 1
+                case -1: // left 1
                 {
-                    return (dn_twoColors_t){(paletteColor_t){c255},(paletteColor_t){c155}};
+                    return (dn_twoColors_t){(paletteColor_t){c255}, (paletteColor_t){c155}};
                 }
-                case 0://left 0
+                case 0: // left 0
                 {
-                    return (dn_twoColors_t){(paletteColor_t){c300},(paletteColor_t){c200}};
+                    return (dn_twoColors_t){(paletteColor_t){c300}, (paletteColor_t){c200}};
                 }
-                case 1://right 1
+                case 1: // right 1
                 {
-                    return (dn_twoColors_t){(paletteColor_t){c301},(paletteColor_t){c201}};
+                    return (dn_twoColors_t){(paletteColor_t){c301}, (paletteColor_t){c201}};
                 }
                 default:
                 {
@@ -386,29 +385,29 @@ dn_twoColors_t dn_trackCoordsToColor(vec_t trackCoords)
             }
             break;
         }
-        case 1://forward 1
+        case 1: // forward 1
         {
-            switch(trackCoords.x)
+            switch (trackCoords.x)
             {
-                case -2://left 2
+                case -2: // left 2
                 {
-                    return (dn_twoColors_t){(paletteColor_t){c302},(paletteColor_t){c202}};
+                    return (dn_twoColors_t){(paletteColor_t){c302}, (paletteColor_t){c202}};
                 }
-                case -1://left 1
+                case -1: // left 1
                 {
-                    return (dn_twoColors_t){(paletteColor_t){c303},(paletteColor_t){c303}};
+                    return (dn_twoColors_t){(paletteColor_t){c303}, (paletteColor_t){c303}};
                 }
-                case 0://left 0
+                case 0: // left 0
                 {
-                    return (dn_twoColors_t){(paletteColor_t){c304},(paletteColor_t){c304}};
+                    return (dn_twoColors_t){(paletteColor_t){c304}, (paletteColor_t){c304}};
                 }
-                case 1://right 1
+                case 1: // right 1
                 {
-                    return (dn_twoColors_t){(paletteColor_t){c305},(paletteColor_t){c305}};
+                    return (dn_twoColors_t){(paletteColor_t){c305}, (paletteColor_t){c305}};
                 }
-                case 2://right 2
+                case 2: // right 2
                 {
-                    return (dn_twoColors_t){(paletteColor_t){c310},(paletteColor_t){c310}};
+                    return (dn_twoColors_t){(paletteColor_t){c310}, (paletteColor_t){c310}};
                 }
                 default:
                 {
@@ -417,25 +416,25 @@ dn_twoColors_t dn_trackCoordsToColor(vec_t trackCoords)
             }
             break;
         }
-        case 0://forward 0
+        case 0: // forward 0
         {
-            switch(trackCoords.x)
+            switch (trackCoords.x)
             {
-                case -2://left 2
+                case -2: // left 2
                 {
-                    return (dn_twoColors_t){(paletteColor_t){c311},(paletteColor_t){c111}};
+                    return (dn_twoColors_t){(paletteColor_t){c311}, (paletteColor_t){c111}};
                 }
-                case -1://left 1
+                case -1: // left 1
                 {
-                    return (dn_twoColors_t){(paletteColor_t){c312},(paletteColor_t){c312}};
+                    return (dn_twoColors_t){(paletteColor_t){c312}, (paletteColor_t){c312}};
                 }
-                case 1://right 1
+                case 1: // right 1
                 {
-                    return (dn_twoColors_t){(paletteColor_t){c313},(paletteColor_t){c313}};
+                    return (dn_twoColors_t){(paletteColor_t){c313}, (paletteColor_t){c313}};
                 }
-                case 2://right 2
+                case 2: // right 2
                 {
-                    return (dn_twoColors_t){(paletteColor_t){c314},(paletteColor_t){c314}};
+                    return (dn_twoColors_t){(paletteColor_t){c314}, (paletteColor_t){c314}};
                 }
                 default:
                 {
@@ -444,21 +443,21 @@ dn_twoColors_t dn_trackCoordsToColor(vec_t trackCoords)
             }
             break;
         }
-        case -1://backward 1
+        case -1: // backward 1
         {
-            switch(trackCoords.x)
+            switch (trackCoords.x)
             {
-                case -1://left 1
+                case -1: // left 1
                 {
-                    return (dn_twoColors_t){(paletteColor_t){c315},(paletteColor_t){c315}};
+                    return (dn_twoColors_t){(paletteColor_t){c315}, (paletteColor_t){c315}};
                 }
-                case 0://left 0
+                case 0: // left 0
                 {
-                    return (dn_twoColors_t){(paletteColor_t){c320},(paletteColor_t){c320}};
+                    return (dn_twoColors_t){(paletteColor_t){c320}, (paletteColor_t){c320}};
                 }
-                case 1://right 1
+                case 1: // right 1
                 {
-                    return (dn_twoColors_t){(paletteColor_t){c321},(paletteColor_t){c321}};
+                    return (dn_twoColors_t){(paletteColor_t){c321}, (paletteColor_t){c321}};
                 }
                 default:
                 {
@@ -467,13 +466,13 @@ dn_twoColors_t dn_trackCoordsToColor(vec_t trackCoords)
             }
             break;
         }
-        case -2://backward 1
+        case -2: // backward 1
         {
-            switch(trackCoords.x)
+            switch (trackCoords.x)
             {
-                case 0://left 0
+                case 0: // left 0
                 {
-                    return (dn_twoColors_t){(paletteColor_t){c322},(paletteColor_t){c322}};
+                    return (dn_twoColors_t){(paletteColor_t){c322}, (paletteColor_t){c322}};
                 }
                 default:
                 {
@@ -487,21 +486,21 @@ dn_twoColors_t dn_trackCoordsToColor(vec_t trackCoords)
             break;
         }
     }
-    //out of range
-    return (dn_twoColors_t){(paletteColor_t){c000},(paletteColor_t){c000}};
+    // out of range
+    return (dn_twoColors_t){(paletteColor_t){c000}, (paletteColor_t){c000}};
 }
 
 void dn_addTrackToAlbum(dn_entity_t* album, vec_t trackCoords, dn_track_t track)
 {
-    dn_albumData_t* aData = (dn_albumData_t*)album->data;
-    dn_twoColors_t colors = dn_trackCoordsToColor(trackCoords);
-    paletteColor_t onColor = c510;
+    dn_albumData_t* aData   = (dn_albumData_t*)album->data;
+    dn_twoColors_t colors   = dn_trackCoordsToColor(trackCoords);
+    paletteColor_t onColor  = c510;
     paletteColor_t offColor = c200;
-    switch(track)
+    switch (track)
     {
         case DN_BLUE_TRACK:
         {
-            onColor = c105;
+            onColor  = c105;
             offColor = c103;
             break;
         }
@@ -517,13 +516,13 @@ void dn_addTrackToAlbum(dn_entity_t* album, vec_t trackCoords, dn_track_t track)
 void dn_updateAlbum(dn_entity_t* self)
 {
     dn_albumData_t* aData = (dn_albumData_t*)self->data;
-    if(!aData->screenIsOn)
+    if (!aData->screenIsOn)
     {
         aData->timer -= self->gameData->elapsedUs;
-        if(aData->timer <= 0)
+        if (aData->timer <= 0)
         {
             aData->screenIsOn = true;
-            aData->timer = 0;
+            aData->timer      = 0;
         }
     }
 }
@@ -531,15 +530,15 @@ void dn_updateAlbum(dn_entity_t* self)
 void dn_drawAlbum(dn_entity_t* self)
 {
     dn_albumData_t* aData = (dn_albumData_t*)self->data;
-    int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
-                   - self->gameData->assets[DN_ALBUM_ASSET].originX;
+    int32_t x             = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
+                - self->gameData->assets[DN_ALBUM_ASSET].originX;
     int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
-                   - self->gameData->assets[DN_ALBUM_ASSET].originY;
+                - self->gameData->assets[DN_ALBUM_ASSET].originY;
     drawWsgPalette(&self->gameData->assets[DN_ALBUM_ASSET].frames[0], x, y,
                    aData->screenIsOn ? &aData->screenOnPalette : &aData->screenOffPalette, false, false, aData->rot);
-    if(aData->cornerLightOn || (aData->cornerLightBlinking && (self->gameData->generalTimer & 0b111111) > 15))
+    if (aData->cornerLightOn || (aData->cornerLightBlinking && (self->gameData->generalTimer & 0b111111) > 15))
     {
-        if(aData->rot == 180)
+        if (aData->rot == 180)
         {
             x += 5;
             y += 54;
@@ -814,22 +813,22 @@ void dn_drawCharacterSelect(dn_entity_t* self)
 void dn_updateTileSelector(dn_entity_t* self)
 {
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
-    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
-    //move with WASD
+    dn_boardData_t* bData        = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    // move with WASD
     bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
-    if(self->gameData->btnDownState & PB_LEFT)
+    if (self->gameData->btnDownState & PB_LEFT)
     {
         tData->pos.x--;
     }
-    if(self->gameData->btnDownState & PB_UP)
+    if (self->gameData->btnDownState & PB_UP)
     {
         tData->pos.y--;
     }
-    if(self->gameData->btnDownState & PB_RIGHT)
+    if (self->gameData->btnDownState & PB_RIGHT)
     {
         tData->pos.x++;
     }
-    if(self->gameData->btnDownState & PB_DOWN)
+    if (self->gameData->btnDownState & PB_DOWN)
     {
         tData->pos.y++;
     }
@@ -839,9 +838,8 @@ void dn_updateTileSelector(dn_entity_t* self)
 
     bData->tiles[tData->pos.y][tData->pos.x].selector = self;
 
-
-    //lines move up at varying rates
-    for(int line = 0; line < NUM_SELECTOR_LINES; line++)
+    // lines move up at varying rates
+    for (int line = 0; line < NUM_SELECTOR_LINES; line++)
     {
         tData->lineYs[line] += line % 7;
     }
@@ -850,29 +848,33 @@ void dn_updateTileSelector(dn_entity_t* self)
 void dn_drawTileSelectorBackHalf(dn_entity_t* self, int16_t x, int16_t y)
 {
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
-    for(int line = 0; line < NUM_SELECTOR_LINES; line++)
+    for (int line = 0; line < NUM_SELECTOR_LINES; line++)
     {
-        int r = dn_randomInt(0,255);
-        if(r < tData->lineYs[line])
+        int r = dn_randomInt(0, 255);
+        if (r < tData->lineYs[line])
         {
             continue;
         }
-        drawLineFast(x - 23,y-(tData->lineYs[line]>>3),x,y - 11-(tData->lineYs[line]>>3),tData->colors[line%3]);
-        drawLineFast(x,y - 11-(tData->lineYs[line]>>3),x + 23,y-(tData->lineYs[line]>>3),tData->colors[line%3]);
+        drawLineFast(x - 23, y - (tData->lineYs[line] >> 3), x, y - 11 - (tData->lineYs[line] >> 3),
+                     tData->colors[line % 3]);
+        drawLineFast(x, y - 11 - (tData->lineYs[line] >> 3), x + 23, y - (tData->lineYs[line] >> 3),
+                     tData->colors[line % 3]);
     }
 }
 
 void dn_drawTileSelectorFrontHalf(dn_entity_t* self, int16_t x, int16_t y)
 {
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
-    for(int line = 0; line < NUM_SELECTOR_LINES; line++)
+    for (int line = 0; line < NUM_SELECTOR_LINES; line++)
     {
-        int r = dn_randomInt(0,255);
-        if(r < tData->lineYs[line])
+        int r = dn_randomInt(0, 255);
+        if (r < tData->lineYs[line])
         {
             continue;
         }
-        drawLineFast(x - 23,y-(tData->lineYs[line]>>3),x,y + 11-(tData->lineYs[line]>>3),tData->colors[line%3]);
-        drawLineFast(x,y + 11-(tData->lineYs[line]>>3),x + 23,y-(tData->lineYs[line]>>3),tData->colors[line%3]);
+        drawLineFast(x - 23, y - (tData->lineYs[line] >> 3), x, y + 11 - (tData->lineYs[line] >> 3),
+                     tData->colors[line % 3]);
+        drawLineFast(x, y + 11 - (tData->lineYs[line] >> 3), x + 23, y - (tData->lineYs[line] >> 3),
+                     tData->colors[line % 3]);
     }
 }
