@@ -1,5 +1,6 @@
 #include "dn_entity.h"
 #include "dn_utility.h"
+#include "dn_random.h"
 
 void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType)
 {
@@ -91,6 +92,11 @@ void dn_drawBoard(dn_entity_t* self)
             drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
                           drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
                           drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
+            if(boardData->tiles[y][x].selector != NULL)
+            {
+                // Draw the back part of the selector
+                dn_drawTileSelectorBackHalf(boardData->tiles[y][x].selector, drawX, drawY);
+            }
             if (boardData->tiles[y][x].unit != NULL)
             {
                 // Draw the unit on the tile
@@ -110,6 +116,11 @@ void dn_drawBoard(dn_entity_t* self)
                                   drawX - self->gameData->assets[unit->assetIndex].originX,
                                   drawY - self->gameData->assets[unit->assetIndex].originY);
                 }
+            }
+            if(boardData->tiles[y][x].selector != NULL)
+            {
+                // Draw the front part of the selector
+                dn_drawTileSelectorFrontHalf(boardData->tiles[y][x].selector, drawX, drawY);
             }
         }
     }
@@ -797,5 +808,71 @@ void dn_drawCharacterSelect(dn_entity_t* self)
 
         drawText(&self->gameData->font_righteous, c000, ">", TFT_WIDTH - 20, 41);
         drawText(&self->gameData->font_righteous, c550, ">", TFT_WIDTH - 20, 38);
+    }
+}
+
+void dn_updateTileSelector(dn_entity_t* self)
+{
+    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
+    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    //move with WASD
+    bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
+    if(self->gameData->btnDownState & PB_LEFT)
+    {
+        tData->pos.x--;
+    }
+    if(self->gameData->btnDownState & PB_UP)
+    {
+        tData->pos.y--;
+    }
+    if(self->gameData->btnDownState & PB_RIGHT)
+    {
+        tData->pos.x++;
+    }
+    if(self->gameData->btnDownState & PB_DOWN)
+    {
+        tData->pos.y++;
+    }
+
+    tData->pos.x = CLAMP(tData->pos.x, 0, 4);
+    tData->pos.y = CLAMP(tData->pos.y, 0, 4);
+
+    bData->tiles[tData->pos.y][tData->pos.x].selector = self;
+
+
+    //lines move up at varying rates
+    for(int line = 0; line < NUM_SELECTOR_LINES; line++)
+    {
+        tData->lineYs[line] += line % 7;
+    }
+}
+
+void dn_drawTileSelectorBackHalf(dn_entity_t* self, int16_t x, int16_t y)
+{
+    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
+    for(int line = 0; line < NUM_SELECTOR_LINES; line++)
+    {
+        int r = dn_randomInt(0,255);
+        if(r < tData->lineYs[line])
+        {
+            continue;
+        }
+        drawLineFast(x - 23,y-(tData->lineYs[line]>>3),x,y - 11-(tData->lineYs[line]>>3),tData->colors[line%3]);
+        drawLineFast(x,y - 11-(tData->lineYs[line]>>3),x + 23,y-(tData->lineYs[line]>>3),tData->colors[line%3]);
+    }
+}
+
+void dn_drawTileSelectorFrontHalf(dn_entity_t* self, int16_t x, int16_t y)
+{
+    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
+    for(int line = 0; line < NUM_SELECTOR_LINES; line++)
+    {
+        int r = dn_randomInt(0,255);
+        if(r < tData->lineYs[line])
+        {
+            continue;
+        }
+        drawLineFast(x - 23,y-(tData->lineYs[line]>>3),x,y + 11-(tData->lineYs[line]>>3),tData->colors[line%3]);
+        drawLineFast(x,y + 11-(tData->lineYs[line]>>3),x + 23,y-(tData->lineYs[line]>>3),tData->colors[line%3]);
     }
 }

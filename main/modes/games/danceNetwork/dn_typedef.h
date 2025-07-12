@@ -10,6 +10,7 @@
 #define DN_TILE_HEIGHT  13
 #define NUM_ASSETS      14 // The number of dn_asset_t (last accounted for DN_ALBUM_ASSET)
 #define NUM_PALETTES    7  // The number of wsgPalette_t (last accounted for DN_PURPLE_FLOOR_PALETTE)
+#define NUM_SELECTOR_LINES 32 // Creates more chaotic lines in the selector graphic
 
 typedef struct dn_entity_t dn_entity_t;
 typedef struct dn_gameData_t dn_gameData_t;

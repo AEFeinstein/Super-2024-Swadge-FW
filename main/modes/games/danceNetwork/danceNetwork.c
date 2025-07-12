@@ -519,9 +519,9 @@ static void dn_initializeGame(void)
         gameData->characterSets[gameData->isPlayer1] = (dn_characterSet_t)dn_randomInt(0, 1);
     }
 
-    ///////////////////
+    ////////////////////
     // load the assets//
-    ///////////////////
+    ////////////////////
     dn_loadAsset(DN_CURTAIN_WSG, 1, &gameData->assets[DN_CURTAIN_ASSET]);
 
     for (int player = 0; player < 2; player++)
@@ -569,17 +569,37 @@ static void dn_initializeGame(void)
     ((dn_albumData_t*)album2->data)->rot = 180;
     ((dn_albumData_t*)album2->data)->destRot = 180;
 
-    //////////////////
+    ///////////////////////////
+    // Make the tile selector//
+    ///////////////////////////
+    dn_entity_t* tileSelector = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, gameData->camera.pos, gameData);
+    tileSelector->data = heap_caps_calloc(1, sizeof(dn_tileSelectorData_t), MALLOC_CAP_SPIRAM);
+    tileSelector->dataType = DN_TILE_SELECTOR_DATA;
+    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)tileSelector->data;
+    for(int i = 0; i < NUM_SELECTOR_LINES; i++)
+    {
+        tData->lineYs[i] = (255 * i)/NUM_SELECTOR_LINES;
+    }
+    tData->pos = (dn_boardPos_t){2,2};
+    //fancy line colors
+    tData->colors[0] = c125;
+    tData->colors[1] = c345;
+    tData->colors[2] = c555;
+    tileSelector->updateFunction = dn_updateTileSelector;
+    //Don't set the draw function, because it needs to happen in two parts behind and in front of units.
+
+    ///////////////////
     // Make the board//
-    //////////////////
+    ///////////////////
     dn_entity_t* board
         = dn_createEntitySimple(&gameData->entityManager, DN_GROUND_TILE_ASSET, (vec_t){0xFFFF, 0xFFFF}, gameData);
     dn_boardData_t* boardData     = (dn_boardData_t*)board->data;
+    boardData->tiles[2][2].selector = tileSelector;
     gameData->entityManager.board = board;
 
-    //////////////////
+    ///////////////////
     // Make the units//
-    //////////////////
+    ///////////////////
     // p1 king
     dn_assetIdx_t assetIdx = dn_getAssetIdx(gameData->characterSets[0], DN_KING, DN_UP);
     dn_boardPos_t boardPos = {2, 4};
@@ -632,9 +652,11 @@ static void dn_initializeGame(void)
 
     boardData->impactPos = (dn_boardPos_t){2, 2};
 
-    ////////////////////
+
+
+    /////////////////////
     // Make the curtain//
-    ////////////////////
+    /////////////////////
     dn_createEntitySimple(&gameData->entityManager, DN_CURTAIN_ASSET, (vec_t){0xFFFF, 0xFFFF}, gameData);
 }
 
@@ -658,6 +680,7 @@ static void dn_initializeCharacterSelect(void)
     dn_entity_t* characterSelect       = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true,
                                                                 DN_NO_ASSET, 0, (vec_t){0xFFFF, 0xFFFF}, gameData);
     characterSelect->data              = heap_caps_calloc(1, sizeof(dn_characterSelectData_t), MALLOC_CAP_SPIRAM);
+    characterSelect->dataType = DN_CHARACTER_SELECT_DATA;
     dn_characterSelectData_t* cData    = (dn_characterSelectData_t*)characterSelect->data;
     bool selectDiamondShapeInit[9 * 5] = {
         false, false, true, false, false, false, true, true, false, false, false, true,  true, true,  false,

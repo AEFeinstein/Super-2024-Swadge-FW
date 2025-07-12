@@ -19,6 +19,8 @@ typedef enum
     DN_CURTAIN_DATA,
     DN_ALBUMS_DATA,
     DN_ALBUM_DATA,
+    DN_CHARACTER_SELECT_DATA,
+    DN_TILE_SELECTOR_DATA,
 } dn_dataType_t;
 
 //==============================================================================
@@ -52,6 +54,7 @@ typedef struct
     uint16_t yOffset;
     int16_t yVel;
     dn_entity_t* unit; // Pointer to the unit on this tile. NULL if no unit is present.
+    dn_entity_t* selector; // Pointer to the tile selector. NULL if no selector is present.
 } dn_tileData_t;
 
 typedef struct
@@ -104,6 +107,16 @@ typedef struct
     int16_t xSelectScrollOffset;
 } dn_characterSelectData_t;
 
+typedef struct
+{
+    //A bunch of y positions for lines going up.
+    uint8_t lineYs[NUM_SELECTOR_LINES];
+    //colors that get used for drawing the lines.
+    paletteColor_t colors[3];
+    //which chess tile the selector is on
+    dn_boardPos_t pos;
+} dn_tileSelectorData_t;
+
 //==============================================================================
 // Prototypes
 //==============================================================================
@@ -128,3 +141,7 @@ void dn_drawAlbum(dn_entity_t* self);
 // characterSelect entities
 void dn_updateCharacterSelect(dn_entity_t* self);
 void dn_drawCharacterSelect(dn_entity_t* self);
+
+void dn_updateTileSelector(dn_entity_t* self);
+void dn_drawTileSelectorBackHalf(dn_entity_t* self, int16_t x, int16_t y);
+void dn_drawTileSelectorFrontHalf(dn_entity_t* self, int16_t x, int16_t y);
