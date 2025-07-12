@@ -97,7 +97,7 @@ struct
     const char* name;
     cnfsFileIdx_t pzl;
     cnfsFileIdx_t slv;
-} picrossPuzzles[] = {
+} picrossPuzzles[PICROSS_LEVEL_COUNT] = {
     {.name = "arrow", .pzl = _55_ARROW_PZL_WSG, .slv = _55_ARROW_SLV_WSG},
     {.name = "check", .pzl = _55_CHECK_PZL_WSG, .slv = _55_CHECK_SLV_WSG},
     {.name = "crown", .pzl = _55_CROWN_PZL_WSG, .slv = _55_CROWN_SLV_WSG},
