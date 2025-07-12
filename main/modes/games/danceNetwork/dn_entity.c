@@ -195,20 +195,8 @@ void dn_drawCurtain(dn_entity_t* self)
     {
         strcpy(text, "VS");
         tWidth = textWidth(&self->gameData->font_righteous, text);
-        x      = (TFT_WIDTH >> 1) - (tWidth >> 1);
-        y      = 59;
-        drawText(&self->gameData->font_righteous, c550, text, x, y);
-        y++;
-        x++;
-        drawText(&self->gameData->font_righteous, c550, text, x, y);
-        y++;
-        x--;
-        drawText(&self->gameData->font_righteous, c550, text, x, y);
-        y--;
-        x--;
-        drawText(&self->gameData->font_righteous, c550, text, x, y);
-        x++;
-        drawShinyText(&self->gameData->font_righteous, c430, c540, c552, text, (TFT_WIDTH >> 1) - (tWidth >> 1), 60);
+        drawText(&self->gameData->font_righteous, c530, text, (TFT_WIDTH >> 1) - (tWidth >> 1), 60);
+        drawText(&self->gameData->outline_righteous, c550, text, (TFT_WIDTH >> 1) - (tWidth >> 1), 60);
     }
     if (curtainData->separation > -500 && curtainData->separation < -50)
     {
@@ -496,12 +484,14 @@ void dn_addTrackToAlbum(dn_entity_t* album, vec_t trackCoords, dn_track_t track)
 {
     dn_albumData_t* aData = (dn_albumData_t*)album->data;
     dn_twoColors_t colors = dn_trackCoordsToColor(trackCoords);
-    paletteColor_t onColor = c551;
+    paletteColor_t onColor = c510;
+    paletteColor_t offColor = c200;
     switch(track)
     {
         case DN_BLUE_TRACK:
         {
-            onColor = c155;
+            onColor = c105;
+            offColor = c103;
             break;
         }
         default:
@@ -509,26 +499,46 @@ void dn_addTrackToAlbum(dn_entity_t* album, vec_t trackCoords, dn_track_t track)
             break;
         }
     }
-    wsgPaletteSet(&aData->screenOnPalette, colors.unlit, onColor);
+    wsgPaletteSet(&aData->screenOnPalette, colors.unlit, offColor);
     wsgPaletteSet(&aData->screenOnPalette, colors.lit, onColor);
+}
+
+void dn_updateAlbum(dn_entity_t* self)
+{
+    dn_albumData_t* aData = (dn_albumData_t*)self->data;
+    if(!aData->screenIsOn)
+    {
+        aData->timer -= self->gameData->elapsedUs;
+        if(aData->timer <= 0)
+        {
+            aData->screenIsOn = true;
+            aData->timer = 0;
+        }
+    }
 }
 
 void dn_drawAlbum(dn_entity_t* self)
 {
     dn_albumData_t* aData = (dn_albumData_t*)self->data;
-    drawWsgPalette(&self->gameData->assets[DN_ALBUM_ASSET].frames[0],
-                   ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
-                       - self->gameData->assets[DN_ALBUM_ASSET].originX,
-                   ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
-                       - self->gameData->assets[DN_ALBUM_ASSET].originY,
+    int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
+                   - self->gameData->assets[DN_ALBUM_ASSET].originX;
+    int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
+                   - self->gameData->assets[DN_ALBUM_ASSET].originY;
+    drawWsgPalette(&self->gameData->assets[DN_ALBUM_ASSET].frames[0], x, y,
                    aData->screenIsOn ? &aData->screenOnPalette : &aData->screenOffPalette, false, false, aData->rot);
     if(aData->cornerLightOn || (aData->cornerLightBlinking && (self->gameData->generalTimer & 0b111111) > 15))
     {
-        drawWsgSimple(&self->gameData->assets[DN_STATUS_LIGHT_ASSET].frames[0],
-                ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
-                       + 22,
-                   ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
-                       - 30);
+        if(aData->rot == 180)
+        {
+            x += 5;
+            y += 54;
+        }
+        else
+        {
+            x += 53;
+            y += 4;
+        }
+        drawWsgSimple(&self->gameData->assets[DN_STATUS_LIGHT_ASSET].frames[0], x, y);
     }
 }
 

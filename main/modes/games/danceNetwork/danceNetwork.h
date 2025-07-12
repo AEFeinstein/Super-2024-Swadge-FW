@@ -59,6 +59,7 @@ typedef struct dn_gameData_t
     menuManiaRenderer_t* menuRenderer;
     font_t font_ibm; // IBM VGA 8 font
     font_t font_righteous;
+    font_t outline_righteous;
     // All buttons states
     uint16_t btnState;
     // Momentary downpresses on each button

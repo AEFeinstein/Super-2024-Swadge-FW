@@ -89,9 +89,11 @@ typedef struct
     wsgPalette_t screenOnPalette;       // Screen is on. Just a more vibrant variation of screenOff.
     dn_track_t tracks[16];        // Array of action tracks in this album in raster order.
     uint16_t rot;                 // Rotation degrees from 0-359 for drawing.
+    uint16_t destRot;             // Destination rotation degrees from 0-359 for drawing.
     bool cornerLightBlinking;
     bool cornerLightOn;
     bool screenIsOn;
+    int32_t timer;
 } dn_albumData_t;
 
 typedef struct
@@ -120,6 +122,7 @@ void dn_drawAlbums(dn_entity_t* self);
 vec_t dn_colorToTrackCoords(paletteColor_t color);
 dn_twoColors_t dn_trackCoordsToColor(vec_t trackCoords);
 void dn_addTrackToAlbum(dn_entity_t* album, vec_t trackCoords, dn_track_t track);
+void dn_updateAlbum(dn_entity_t* self);
 void dn_drawAlbum(dn_entity_t* self);
 
 // characterSelect entities

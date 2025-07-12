@@ -163,8 +163,9 @@ static void dn_EnterMode(void)
         = heap_caps_malloc_tag(99328, MALLOC_CAP_SPIRAM, "decodeSpace"); // TODO change the size to the largest sprite
 
     // Load some fonts
-    loadFont(IBM_VGA_8_FONT, &gameData->font_ibm, false);
-    loadFont(RIGHTEOUS_150_FONT, &gameData->font_righteous, false);
+    loadFont(IBM_VGA_8_FONT, &gameData->font_ibm, true);
+    loadFont(RIGHTEOUS_150_FONT, &gameData->font_righteous, true);
+    makeOutlineFont(&gameData->font_righteous, &gameData->outline_righteous, true);
 
     // Initialize a menu renderer
     gameData->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
@@ -208,6 +209,7 @@ static void dn_ExitMode(void)
     // Free the fonts
     freeFont(&gameData->font_ibm);
     freeFont(&gameData->font_righteous);
+    freeFont(&gameData->outline_righteous);
     free(gameData);
 }
 
@@ -559,13 +561,13 @@ static void dn_initializeGame(void)
     dn_addTrackToAlbum(ccAlbum, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120)), (dn_track_t)dn_randomInt(1,2));
     dn_addTrackToAlbum(album2, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120)), (dn_track_t)dn_randomInt(1,2));
 
-    ((dn_albumData_t*)album1->data)->screenIsOn = true;
-    ((dn_albumData_t*)ccAlbum->data)->screenIsOn = true;
-    ((dn_albumData_t*)album2->data)->screenIsOn = true;
+    ((dn_albumData_t*)album1->data)->timer = 10 << 20;
+    ((dn_albumData_t*)ccAlbum->data)->timer = 11 << 20;
+    ((dn_albumData_t*)album2->data)->timer = 12 << 20;
 
-    ((dn_albumData_t*)album1->data)->cornerLightBlinking = true;
-    ((dn_albumData_t*)ccAlbum->data)->cornerLightBlinking = true;
-    ((dn_albumData_t*)album2->data)->cornerLightBlinking = true;
+    //p2's album is upside down
+    ((dn_albumData_t*)album2->data)->rot = 180;
+    ((dn_albumData_t*)album2->data)->destRot = 180;
 
     //////////////////
     // Make the board//

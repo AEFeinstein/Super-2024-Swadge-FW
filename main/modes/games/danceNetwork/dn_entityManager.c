@@ -285,6 +285,8 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
             }
             entity->dataType     = DN_ALBUM_DATA;
             entity->drawFunction = dn_drawAlbum;
+            entity->updateFunction = dn_updateAlbum;
+
             break;
         }
         default:
