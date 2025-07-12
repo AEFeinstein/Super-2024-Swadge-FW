@@ -205,10 +205,8 @@ void levelSelectInput()
         xBound = ls->cols;
     }
 
-    printf("%d >= %d\n", ls->hoverX, xBound);
     if (ls->hoverX >= xBound)
     {
-        printf("BOUND\n");
         ls->hoverX = xBound - 1;
     }
 
