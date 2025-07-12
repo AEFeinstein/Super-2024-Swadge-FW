@@ -115,7 +115,8 @@ int16_t drawTextBounds(const font_t* font, paletteColor_t color, const char* tex
         if ((xOff + font->chars[(*text) - ' '].width >= xMin) && (xOff < xMax))
         {
             // Draw char
-            drawCharBoundsPrivate(color, color, color, font->height, &font->chars[(*text) - ' '], xOff, yOff, xMin, yMin, xMax, yMax);
+            drawCharBoundsPrivate(color, color, color, font->height, &font->chars[(*text) - ' '], xOff, yOff, xMin,
+                                  yMin, xMax, yMax);
         }
 
         // Move to the next char
