@@ -279,6 +279,240 @@ void dn_drawAlbums(dn_entity_t* self)
                   ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS));
 }
 
+vec_t dn_colorToTrackCoords(paletteColor_t color)
+{
+    switch(color)
+    {
+        case c255:
+        case c155:
+        {
+            return (vec_t){-1,2};
+        }
+        case c300:
+        case c200:
+        {
+            return (vec_t){0,2};
+        }
+        case c301:
+        case c201:
+        {
+            return (vec_t){1,2};
+        }
+        case c302:
+        case c202:
+        {
+            return (vec_t){-2,1};
+        }
+        case c303:
+        {
+            return (vec_t){-1,1};
+        }
+        case c304:
+        {
+            return (vec_t){0,1};
+        }
+        case c305:
+        {
+            return (vec_t){1,1};
+        }
+        case c310:
+        {
+            return (vec_t){2,1};
+        }
+        case c311:
+        case c111:
+        {
+            return (vec_t){-2,0};
+        }
+        case c312:
+        {
+            return (vec_t){-1,0};
+        }
+        case c313:
+        {
+            return (vec_t){1,0};
+        }
+        case c314:
+        {
+            return (vec_t){2,0};
+        }
+        case c315:
+        {
+            return (vec_t){-1,-1};
+        }
+        case c320:
+        {
+            return (vec_t){0,-1};
+        }
+        case c321:
+        {
+            return (vec_t){1,-1};
+        }
+        case c322:
+        {
+            return (vec_t){0,-2};
+        }
+        default:
+        {
+            return (vec_t){0,0};
+        }
+    }
+}
+
+
+dn_twoColors_t dn_trackCoordsToColor(vec_t trackCoords)
+{
+    switch(trackCoords.y)
+    {
+        case 2://forward 2
+        {
+            switch(trackCoords.x)
+            {
+                case -1://left 1
+                {
+                    return (dn_twoColors_t){(paletteColor_t){c255},(paletteColor_t){c155}};
+                }
+                case 0://left 0
+                {
+                    return (dn_twoColors_t){(paletteColor_t){c300},(paletteColor_t){c200}};
+                }
+                case 1://right 1
+                {
+                    return (dn_twoColors_t){(paletteColor_t){c301},(paletteColor_t){c201}};
+                }
+                default:
+                {
+                    break;
+                }
+            }
+            break;
+        }
+        case 1://forward 1
+        {
+            switch(trackCoords.x)
+            {
+                case -2://left 2
+                {
+                    return (dn_twoColors_t){(paletteColor_t){c302},(paletteColor_t){c202}};
+                }
+                case -1://left 1
+                {
+                    return (dn_twoColors_t){(paletteColor_t){c303},(paletteColor_t){c303}};
+                }
+                case 0://left 0
+                {
+                    return (dn_twoColors_t){(paletteColor_t){c304},(paletteColor_t){c304}};
+                }
+                case 1://right 1
+                {
+                    return (dn_twoColors_t){(paletteColor_t){c305},(paletteColor_t){c305}};
+                }
+                case 2://right 2
+                {
+                    return (dn_twoColors_t){(paletteColor_t){c310},(paletteColor_t){c310}};
+                }
+                default:
+                {
+                    break;
+                }
+            }
+            break;
+        }
+        case 0://forward 0
+        {
+            switch(trackCoords.x)
+            {
+                case -2://left 2
+                {
+                    return (dn_twoColors_t){(paletteColor_t){c311},(paletteColor_t){c111}};
+                }
+                case -1://left 1
+                {
+                    return (dn_twoColors_t){(paletteColor_t){c312},(paletteColor_t){c312}};
+                }
+                case 1://right 1
+                {
+                    return (dn_twoColors_t){(paletteColor_t){c313},(paletteColor_t){c313}};
+                }
+                case 2://right 2
+                {
+                    return (dn_twoColors_t){(paletteColor_t){c314},(paletteColor_t){c314}};
+                }
+                default:
+                {
+                    break;
+                }
+            }
+            break;
+        }
+        case -1://backward 1
+        {
+            switch(trackCoords.x)
+            {
+                case -1://left 1
+                {
+                    return (dn_twoColors_t){(paletteColor_t){c315},(paletteColor_t){c315}};
+                }
+                case 0://left 0
+                {
+                    return (dn_twoColors_t){(paletteColor_t){c320},(paletteColor_t){c320}};
+                }
+                case 1://right 1
+                {
+                    return (dn_twoColors_t){(paletteColor_t){c321},(paletteColor_t){c321}};
+                }
+                default:
+                {
+                    break;
+                }
+            }
+            break;
+        }
+        case -2://backward 1
+        {
+            switch(trackCoords.x)
+            {
+                case 0://left 0
+                {
+                    return (dn_twoColors_t){(paletteColor_t){c322},(paletteColor_t){c322}};
+                }
+                default:
+                {
+                    break;
+                }
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+    //out of range
+    return (dn_twoColors_t){(paletteColor_t){c000},(paletteColor_t){c000}};
+}
+
+void dn_addTrackToAlbum(dn_entity_t* album, vec_t trackCoords, dn_track_t track)
+{
+    dn_albumData_t* aData = (dn_albumData_t*)album->data;
+    dn_twoColors_t colors = dn_trackCoordsToColor(trackCoords);
+    paletteColor_t onColor = c551;
+    switch(track)
+    {
+        case DN_BLUE_TRACK:
+        {
+            onColor = c155;
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+    wsgPaletteSet(&aData->screenOnPalette, colors.unlit, onColor);
+    wsgPaletteSet(&aData->screenOnPalette, colors.lit, onColor);
+}
+
 void dn_drawAlbum(dn_entity_t* self)
 {
     dn_albumData_t* aData = (dn_albumData_t*)self->data;
@@ -287,7 +521,15 @@ void dn_drawAlbum(dn_entity_t* self)
                        - self->gameData->assets[DN_ALBUM_ASSET].originX,
                    ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                        - self->gameData->assets[DN_ALBUM_ASSET].originY,
-                   &aData->tracksPalette, false, false, aData->rot);
+                   aData->screenIsOn ? &aData->screenOnPalette : &aData->screenOffPalette, false, false, aData->rot);
+    if(aData->cornerLightOn || (aData->cornerLightBlinking && (self->gameData->generalTimer & 0b111111) > 15))
+    {
+        drawWsgSimple(&self->gameData->assets[DN_STATUS_LIGHT_ASSET].frames[0],
+                ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
+                       + 22,
+                   ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
+                       - 30);
+    }
 }
 
 void dn_updateCharacterSelect(dn_entity_t* self)
@@ -445,9 +687,9 @@ void dn_drawCharacterSelect(dn_entity_t* self)
     while (xOff < TFT_WIDTH + ((self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5) >> 1))
     {
         dn_assetIdx_t kingDown = 0;
-        dn_assetIdx_t kingUp = 0;
+        dn_assetIdx_t kingUp   = 0;
         dn_assetIdx_t pawnDown = 0;
-        dn_assetIdx_t pawnUp = 0;
+        dn_assetIdx_t pawnUp   = 0;
 
         switch (pIdx)
         {
@@ -536,7 +778,6 @@ void dn_drawCharacterSelect(dn_entity_t* self)
 
     // Draw arrows to indicate this can be scrolled
     // Blink the arrows
-    self->gameData->generalTimer += self->gameData->elapsedUs >> 12;
 
     if ((self->gameData->generalTimer % 256) > 128)
     {

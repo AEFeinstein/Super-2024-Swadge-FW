@@ -8,7 +8,7 @@
 #define DN_BOARD_SIZE   5
 #define DN_TILE_WIDTH   51
 #define DN_TILE_HEIGHT  13
-#define NUM_ASSETS      13 // The number of dn_asset_t (last accounted for DN_ALBUM_ASSET)
+#define NUM_ASSETS      14 // The number of dn_asset_t (last accounted for DN_ALBUM_ASSET)
 #define NUM_PALETTES    7  // The number of wsgPalette_t (last accounted for DN_PURPLE_FLOOR_PALETTE)
 
 typedef struct dn_entity_t dn_entity_t;
@@ -29,6 +29,7 @@ typedef enum __attribute__((packed))
     DN_CURTAIN_ASSET,
     DN_CHESS_ORTHO_ASSET,
     DN_ALBUM_ASSET,
+    DN_STATUS_LIGHT_ASSET,
     DN_NO_ASSET, // Keep this one at the end of the enum. Used for entities with no wsgs.
 } dn_assetIdx_t;
 
@@ -70,6 +71,12 @@ typedef struct __attribute__((packed))
     int8_t x;
     int8_t y;
 } dn_boardPos_t;
+
+typedef struct __attribute__((packed))
+{
+    paletteColor_t lit;
+    paletteColor_t unlit;
+} dn_twoColors_t;
 
 typedef enum __attribute__((packed))
 {

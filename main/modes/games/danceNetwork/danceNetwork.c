@@ -255,6 +255,7 @@ static void dn_MainLoop(int64_t elapsedUs)
     if (gameData->ui == UI_GAME)
     {
         gameData->elapsedUs = elapsedUs;
+        gameData->generalTimer += gameData->elapsedUs >> 12;
         // update the whole engine via entity management
         dn_updateEntities(&gameData->entityManager);
     }
@@ -535,9 +536,9 @@ static void dn_initializeGame(void)
 
     dn_loadAsset(DN_ALBUM_WSG, 1, &gameData->assets[DN_GROUND_TILE_ASSET]);
 
-    ///////////////////
+    ////////////////////
     // Make the albums//
-    ///////////////////
+    ////////////////////
     dn_entity_t* albums  = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_ALBUM_ASSET, 0,
                                                   (vec_t){0xFFFF, 0xFFFF - (107 << DN_DECIMAL_BITS)}, gameData);
     albums->data         = heap_caps_calloc(1, sizeof(dn_albumData_t), MALLOC_CAP_SPIRAM);
@@ -545,14 +546,26 @@ static void dn_initializeGame(void)
     albums->drawFunction = dn_drawAlbums;
 
     // p1 album
-    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
+    dn_entity_t* album1 = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
                           (vec_t){0xFFFF - 1280, 0xFFFF - (139 << DN_DECIMAL_BITS)}, gameData);
     // creative commons album
-    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF, 0xFFFF - (139 << DN_DECIMAL_BITS)},
+    dn_entity_t* ccAlbum = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF, 0xFFFF - (139 << DN_DECIMAL_BITS)},
                           gameData);
     // p2 album
-    dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
+    dn_entity_t* album2 = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
                           (vec_t){0xFFFF + 1280, 0xFFFF - (139 << DN_DECIMAL_BITS)}, gameData);
+
+    dn_addTrackToAlbum(album1, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120)), (dn_track_t)dn_randomInt(1,2));
+    dn_addTrackToAlbum(ccAlbum, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120)), (dn_track_t)dn_randomInt(1,2));
+    dn_addTrackToAlbum(album2, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120)), (dn_track_t)dn_randomInt(1,2));
+
+    ((dn_albumData_t*)album1->data)->screenIsOn = true;
+    ((dn_albumData_t*)ccAlbum->data)->screenIsOn = true;
+    ((dn_albumData_t*)album2->data)->screenIsOn = true;
+
+    ((dn_albumData_t*)album1->data)->cornerLightBlinking = true;
+    ((dn_albumData_t*)ccAlbum->data)->cornerLightBlinking = true;
+    ((dn_albumData_t*)album2->data)->cornerLightBlinking = true;
 
     //////////////////
     // Make the board//

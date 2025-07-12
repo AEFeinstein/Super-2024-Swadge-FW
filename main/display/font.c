@@ -29,6 +29,10 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
                                          int16_t yStart, int16_t* xOff, int16_t* yOff, int16_t xMax, int16_t yMax,
                                          uint16_t flags);
 
+static void drawCharBoundsPrivate(paletteColor_t color, paletteColor_t middleColor, paletteColor_t outerColor, int h,
+                                  const font_ch_t* ch, int16_t xOff, int16_t yOff, int16_t xMin, int16_t yMin,
+                                  int16_t xMax, int16_t yMax);
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -49,105 +53,7 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
 void drawCharBounds(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff, int16_t xMin,
                     int16_t yMin, int16_t xMax, int16_t yMax)
 {
-    // Do not draw transparent chars
-    if (cTransparent == color)
-    {
-        return;
-    }
-
-    //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
-    //  esp-2021r2-patch3)
-    int bitIdx            = 0;
-    const uint8_t* bitmap = ch->bitmap;
-    int wch               = ch->width;
-
-    // Get a pointer to the end of the bitmap
-    const uint8_t* endOfBitmap = &bitmap[((wch * h) + 7) >> 3] - 1;
-
-    // Don't draw off the bottom of the screen.
-    if (yOff + h > yMax)
-    {
-        h = yMax - yOff;
-    }
-
-    // Check Y bounds
-    if (yOff < yMin)
-    {
-        // This line not micro-optimized, but hopefully it's ok
-        bitIdx += yMin * wch;
-        // Above the display, do wacky math with -yOff
-        bitIdx -= yOff * wch;
-        bitmap += bitIdx >> 3;
-        bitIdx &= 7;
-        h += yOff;
-        yOff = 0;
-    }
-
-    paletteColor_t* pxOutput = getPxTftFramebuffer() + (yOff * TFT_WIDTH);
-
-    for (int y = 0; y < h; y++)
-    {
-        // Figure out where to draw
-        int truncate = 0;
-
-        int startX = xOff;
-        if (xOff < xMin)
-        {
-            // Track how many groups of pixels we are skipping over
-            // that weren't displayed on the left of the screen.
-            startX = xMin;
-            bitIdx += xMin;
-            bitIdx += -xOff;
-            bitmap += bitIdx >> 3;
-            bitIdx &= 7;
-        }
-        int endX = xOff + wch;
-        if (endX > xMax)
-        {
-            // Track how many groups of pixels we are skipping over,
-            // if the letter falls off the end of the screen.
-            truncate = endX - xMax;
-            endX     = xMax;
-        }
-
-        if (bitmap > endOfBitmap)
-        {
-            return;
-        }
-        uint8_t thisByte = *bitmap;
-        for (int drawX = startX; drawX < endX; drawX++)
-        {
-            // Figure out where to draw
-            // Check X bounds
-            if (thisByte & (1 << bitIdx))
-            {
-                // Draw the pixel
-                pxOutput[drawX] = color;
-            }
-
-            // Iterate over the bit data
-            if (8 == ++bitIdx)
-            {
-                bitIdx = 0;
-                // Make sure not to read past the bitmap
-                if (bitmap < endOfBitmap)
-                {
-                    thisByte = *(++bitmap);
-                }
-                else
-                {
-                    // No more bitmap, so return
-                    return;
-                }
-            }
-        }
-
-        // Handle any remaining bits if we have ended off the end of the display.
-        bitIdx += truncate;
-        bitmap += bitIdx >> 3;
-        bitIdx &= 7;
-        pxOutput += TFT_WIDTH;
-    }
+    drawCharBoundsPrivate(color, color, color, h, ch, xOff, yOff, xMin, yMin, xMax, yMax);
 }
 
 /**
@@ -169,127 +75,7 @@ void drawShinyCharBounds(paletteColor_t outerColor, paletteColor_t middleColor, 
                          const font_ch_t* ch, int16_t xOff, int16_t yOff, int16_t xMin, int16_t yMin, int16_t xMax,
                          int16_t yMax)
 {
-    // Do not draw transparent chars
-    if (cTransparent == outerColor && cTransparent == middleColor && cTransparent == innerColor)
-    {
-        return;
-    }
-
-    int bitIdx            = 0;
-    const uint8_t* bitmap = ch->bitmap;
-    int wch               = ch->width;
-
-    // Get a pointer to the end of the bitmap
-    const uint8_t* endOfBitmap = &bitmap[((wch * h) + 7) >> 3] - 1;
-
-    // Don't draw off the bottom of the screen.
-    if (yOff + h > yMax)
-    {
-        h = yMax - yOff;
-    }
-
-    // Check Y bounds
-    if (yOff < yMin)
-    {
-        // This line not micro-optimized, but hopefully it's ok
-        bitIdx += yMin * wch;
-        // Above the display, do wacky math with -yOff
-        bitIdx -= yOff * wch;
-        bitmap += bitIdx >> 3;
-        bitIdx &= 7;
-        h += yOff;
-        yOff = 0;
-    }
-
-    paletteColor_t* pxOutput = getPxTftFramebuffer() + (yOff * TFT_WIDTH);
-
-    for (int y = 0; y < h; y++)
-    {
-        // Figure out where to draw
-        int truncate = 0;
-
-        int startX = xOff;
-        if (xOff < xMin)
-        {
-            // Track how many groups of pixels we are skipping over
-            // that weren't displayed on the left of the screen.
-            startX = xMin;
-            bitIdx += xMin;
-            bitIdx += -xOff;
-            bitmap += bitIdx >> 3;
-            bitIdx &= 7;
-        }
-        int endX = xOff + wch;
-        if (endX > xMax)
-        {
-            // Track how many groups of pixels we are skipping over,
-            // if the letter falls off the end of the screen.
-            truncate = endX - xMax;
-            endX     = xMax;
-        }
-
-        if (bitmap > endOfBitmap)
-        {
-            return;
-        }
-        uint8_t thisByte = *bitmap;
-        for (int drawX = startX; drawX < endX; drawX++)
-        {
-            // Figure out where to draw
-            // Check X bounds
-            if (thisByte & (1 << bitIdx))
-            {
-                // Determine the color to draw based on the Y position
-                if (y < (h >> 2))
-                {
-                    // Draw the pixel
-                    pxOutput[drawX] = outerColor;
-                }
-                else if (y < (h >> 3) * 4)
-                {
-                    // Draw the pixel
-                    pxOutput[drawX] = middleColor;
-                }
-                else if (y < (h >> 3) * 5)
-                {
-                    // Draw the pixel
-                    pxOutput[drawX] = innerColor;
-                }
-                else if (y < (h >> 3) * 7)
-                {
-                    // Draw the pixel
-                    pxOutput[drawX] = middleColor;
-                }
-                else
-                {
-                    // Draw the pixel
-                    pxOutput[drawX] = outerColor;
-                }
-            }
-
-            // Iterate over the bit data
-            if (8 == ++bitIdx)
-            {
-                bitIdx = 0;
-                // Make sure not to read past the bitmap
-                if (bitmap < endOfBitmap)
-                {
-                    thisByte = *(++bitmap);
-                }
-                else
-                {
-                    // No more bitmap, so return
-                    return;
-                }
-            }
-        }
-
-        // Handle any remaining bits if we have ended off the end of the display.
-        bitIdx += truncate;
-        bitmap += bitIdx >> 3;
-        bitIdx &= 7;
-        pxOutput += TFT_WIDTH;
-    }
+    drawCharBoundsPrivate(innerColor, middleColor, outerColor, h, ch, xOff, yOff, xMin, yMin, xMax, yMax);
 }
 
 /**
@@ -303,7 +89,7 @@ void drawShinyCharBounds(paletteColor_t outerColor, paletteColor_t middleColor, 
  */
 void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff)
 {
-    drawCharBounds(color, h, ch, xOff, yOff, 0, 0, TFT_WIDTH, TFT_HEIGHT);
+    drawCharBoundsPrivate(color, color, color, h, ch, xOff, yOff, 0, 0, TFT_WIDTH, TFT_HEIGHT);
 }
 
 /**
@@ -329,7 +115,7 @@ int16_t drawTextBounds(const font_t* font, paletteColor_t color, const char* tex
         if ((xOff + font->chars[(*text) - ' '].width >= xMin) && (xOff < xMax))
         {
             // Draw char
-            drawCharBounds(color, font->height, &font->chars[(*text) - ' '], xOff, yOff, xMin, yMin, xMax, yMax);
+            drawCharBoundsPrivate(color, color, color, font->height, &font->chars[(*text) - ' '], xOff, yOff, xMin, yMin, xMax, yMax);
         }
 
         // Move to the next char
@@ -558,6 +344,143 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
     // Otherwise, return the remaining text
     *xOff = textX;
     return *textPtr ? textPtr : NULL;
+}
+
+static void drawCharBoundsPrivate(paletteColor_t color, paletteColor_t middleColor, paletteColor_t outerColor, int h,
+                                  const font_ch_t* ch, int16_t xOff, int16_t yOff, int16_t xMin, int16_t yMin,
+                                  int16_t xMax, int16_t yMax)
+{
+    // Do not draw transparent chars
+    if (cTransparent == color)
+    {
+        return;
+    }
+
+    //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
+    //  esp-2021r2-patch3)
+    int bitIdx            = 0;
+    const uint8_t* bitmap = ch->bitmap;
+    int wch               = ch->width;
+
+    // Get a pointer to the end of the bitmap
+    const uint8_t* endOfBitmap = &bitmap[((wch * h) + 7) >> 3] - 1;
+
+    // Don't draw off the bottom of the screen.
+    if (yOff + h > yMax)
+    {
+        h = yMax - yOff;
+    }
+
+    // Check Y bounds
+    if (yOff < yMin)
+    {
+        // This line not micro-optimized, but hopefully it's ok
+        bitIdx += yMin * wch;
+        // Above the display, do wacky math with -yOff
+        bitIdx -= yOff * wch;
+        bitmap += bitIdx >> 3;
+        bitIdx &= 7;
+        h += yOff;
+        yOff = 0;
+    }
+
+    paletteColor_t* pxOutput = getPxTftFramebuffer() + (yOff * TFT_WIDTH);
+
+    for (int y = 0; y < h; y++)
+    {
+        // Figure out where to draw
+        int truncate = 0;
+
+        int startX = xOff;
+        if (xOff < xMin)
+        {
+            // Track how many groups of pixels we are skipping over
+            // that weren't displayed on the left of the screen.
+            startX = xMin;
+            bitIdx += xMin;
+            bitIdx += -xOff;
+            bitmap += bitIdx >> 3;
+            bitIdx &= 7;
+        }
+        int endX = xOff + wch;
+        if (endX > xMax)
+        {
+            // Track how many groups of pixels we are skipping over,
+            // if the letter falls off the end of the screen.
+            truncate = endX - xMax;
+            endX     = xMax;
+        }
+
+        if (bitmap > endOfBitmap)
+        {
+            return;
+        }
+        uint8_t thisByte = *bitmap;
+        for (int drawX = startX; drawX < endX; drawX++)
+        {
+            // Figure out where to draw
+            // Check X bounds
+            if (thisByte & (1 << bitIdx))
+            {
+                if (color != middleColor || color != outerColor)
+                {
+                    // Determine the color to draw based on the Y position
+                    if (y < h / 4)
+                    {
+                        // Draw the pixel
+                        pxOutput[drawX] = outerColor;
+                    }
+                    else if (y < h / 2)
+                    {
+                        // Draw the pixel
+                        pxOutput[drawX] = middleColor;
+                    }
+                    else if (y < (h * 5) / 8)
+                    {
+                        // Draw the pixel
+                        pxOutput[drawX] = color;
+                    }
+                    else if (y < (h * 7) / 8)
+                    {
+                        // Draw the pixel
+                        pxOutput[drawX] = middleColor;
+                    }
+                    else
+                    {
+                        // Draw the pixel
+                        pxOutput[drawX] = outerColor;
+                    }
+                }
+                else
+                {
+                    // Draw the pixel
+                    pxOutput[drawX] = color;
+                }
+            }
+
+            // Iterate over the bit data
+            if (8 == ++bitIdx)
+            {
+                bitIdx = 0;
+                // Make sure not to read past the bitmap
+                if (bitmap < endOfBitmap)
+                {
+                    thisByte = *(++bitmap);
+                }
+                else
+                {
+                    // No more bitmap, so return
+                    return;
+                }
+            }
+        }
+
+        // Handle any remaining bits if we have ended off the end of the display.
+        bitIdx += truncate;
+        bitmap += bitIdx >> 3;
+        bitIdx &= 7;
+        pxOutput += TFT_WIDTH;
+    }
 }
 
 /**

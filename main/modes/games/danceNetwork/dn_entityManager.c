@@ -143,6 +143,7 @@ void dn_drawEntities(dn_entityManager_t* entityManager)
         dn_entity_t* entity = (dn_entity_t*)curNode->val;
         if (entity->destroyFlag)
         {
+            dn_freeData(entity);
             curNode = curNode->next;
             removeIdx(entityManager->entities, idx);
         }
@@ -221,39 +222,28 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
     switch (assetIndex)
     {
         case DN_ALPHA_DOWN_ASSET:
-            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
-            break;
         case DN_ALPHA_ORTHO_ASSET:
-            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
-            break;
         case DN_ALPHA_UP_ASSET:
-            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
-            break;
         case DN_KING_ASSET:
-            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
-            break;
         case DN_KING_SMALL_ASSET:
-            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
-            break;
         case DN_PAWN_ASSET:
-            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
-            break;
         case DN_PAWN_SMALL_ASSET:
-            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
-            break;
         case DN_BUCKET_HAT_DOWN_ASSET:
-            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
-            break;
         case DN_BUCKET_HAT_UP_ASSET:
+        {
             entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
             break;
+        }
         case DN_GROUND_TILE_ASSET:
+        {
             entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
             entity->data         = heap_caps_calloc(1, sizeof(dn_boardData_t), MALLOC_CAP_SPIRAM);
             entity->dataType     = DN_BOARD_DATA;
             entity->drawFunction = dn_drawBoard;
             break;
+        }
         case DN_CURTAIN_ASSET:
+        {
             if (gameData->characterSets[0] == DN_ALPHA_SET || gameData->characterSets[1] == DN_ALPHA_SET)
             {
                 dn_loadAsset(DN_ALPHA_ORTHO_WSG, 1, &gameData->assets[DN_ALPHA_ORTHO_ASSET]);
@@ -271,26 +261,36 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
             entity->drawFunction   = dn_drawCurtain;
             entity->updateFunction = dn_updateCurtain;
             break;
+        }
         case DN_ALBUM_ASSET:
+        {
             dn_loadAsset(DN_ALBUM_WSG, 1, &gameData->assets[assetIndex]);
+            dn_loadAsset(DN_STATUS_LIGHT_WSG, 1, &gameData->assets[DN_STATUS_LIGHT_ASSET]);
             entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
             entity->data = heap_caps_calloc(1, sizeof(dn_albumData_t), MALLOC_CAP_SPIRAM);
-            wsgPaletteReset(&((dn_albumData_t*)entity->data)->tracksPalette);
+            wsgPaletteReset(&((dn_albumData_t*)entity->data)->screenOffPalette);
+            wsgPaletteReset(&((dn_albumData_t*)entity->data)->screenOnPalette);
+            wsgPaletteSet(&((dn_albumData_t*)entity->data)->screenOnPalette, c122, c233);
             // Set the color of each track to c344 (no action).
             for (int i = 0; i < 16; i++)
             {
-                wsgPaletteSet(&((dn_albumData_t*)entity->data)->tracksPalette, c255 + i, c344);
+                wsgPaletteSet(&((dn_albumData_t*)entity->data)->screenOffPalette, c255 + i, c344);
+                wsgPaletteSet(&((dn_albumData_t*)entity->data)->screenOnPalette, c255 + i, c555);
                 // Color the upper and left edges shadowed by the cartridge bevel.
                 if (i < 4 || i == 8)
                 {
-                    wsgPaletteSet(&((dn_albumData_t*)entity->data)->tracksPalette, c255 - 36 + i, c122);
+                    wsgPaletteSet(&((dn_albumData_t*)entity->data)->screenOffPalette, c255 - 36 + i, c122);
+                    wsgPaletteSet(&((dn_albumData_t*)entity->data)->screenOnPalette, c255 - 36 + i, c233);
                 }
             }
             entity->dataType     = DN_ALBUM_DATA;
             entity->drawFunction = dn_drawAlbum;
             break;
+        }
         default:
+        {
             return NULL;
+        }
     }
     return entity;
 }
