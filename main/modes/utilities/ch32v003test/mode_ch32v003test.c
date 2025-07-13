@@ -72,9 +72,9 @@ void ch32v003testEnterMode(void)
     ch32v003test->tElapsedUs = 0;
 
     size_t sz;
-    const uint8_t* buf = cnfsGetFile( LEDARRAY_CFUN_BIN, &sz );
-	ch32v003WriteFlash( buf, sz );
-	ch32v003Resume();
+    const uint8_t* buf = cnfsGetFile(LEDARRAY_CFUN_BIN, &sz);
+    ch32v003WriteFlash(buf, sz);
+    ch32v003Resume();
 
     // Turn off LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
@@ -106,7 +106,6 @@ void ch32v003testMainLoop(int64_t elapsedUs)
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
-
         if (evt.down)
         {
             switch (evt.button)
@@ -131,6 +130,5 @@ void ch32v003testMainLoop(int64_t elapsedUs)
 
     ch32v003test->tElapsedUs += elapsedUs;
 
-	ch32v003CheckTerminal();
+    ch32v003CheckTerminal();
 }
-
