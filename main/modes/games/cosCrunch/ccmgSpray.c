@@ -76,8 +76,12 @@ static void ccmgSprayInitMicrogame(void)
 {
     ccmgs = heap_caps_calloc(1, sizeof(ccmgSpray_t), MALLOC_CAP_8BIT);
 
-    ccmgs->targetArea.width     = TARGET_AREA_WIDTH + esp_random() % TARGET_AREA_WH_JITTER;
-    ccmgs->targetArea.height    = TARGET_AREA_HEIGHT + esp_random() % TARGET_AREA_WH_JITTER;
+    ccmgs->targetArea.width  = TARGET_AREA_WIDTH + esp_random() % TARGET_AREA_WH_JITTER;
+    ccmgs->targetArea.height = TARGET_AREA_HEIGHT + esp_random() % TARGET_AREA_WH_JITTER;
+    // Width and height both need to be odd so the dithered shadow doesn't look weird
+    ccmgs->targetArea.width += ccmgs->targetArea.width % 2 - 1;
+    ccmgs->targetArea.height += ccmgs->targetArea.height % 2 - 1;
+
     ccmgs->targetArea.pos.x     = TARGET_AREA_CENTER_X - ccmgs->targetArea.width / 2;
     ccmgs->targetArea.pos.y     = TARGET_AREA_CENTER_Y - ccmgs->targetArea.height / 2;
     ccmgs->paintTimeRemainingUs = ccmgs->targetArea.width * ccmgs->targetArea.height * PAINT_US_PER_TARGET_PX;
@@ -160,12 +164,25 @@ static void ccmgSprayMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCr
         nozzleY += NOZZLE_TRAVEL_PX;
     }
 
-    // White rectangle, its shadow, and the paint already sprayed
-    drawRectFilled(ccmgs->targetArea.pos.x + 1, ccmgs->targetArea.pos.y + 1,
-                   ccmgs->targetArea.pos.x + ccmgs->targetArea.width + 2,
-                   ccmgs->targetArea.pos.y + ccmgs->targetArea.height + 2, c222); // c231
+    // White rectangle
     drawRectFilled(ccmgs->targetArea.pos.x, ccmgs->targetArea.pos.y, ccmgs->targetArea.pos.x + ccmgs->targetArea.width,
                    ccmgs->targetArea.pos.y + ccmgs->targetArea.height, c555);
+
+    // Dotted lines to make a dithered shadow
+    drawLine(ccmgs->targetArea.pos.x + 1, ccmgs->targetArea.pos.y + ccmgs->targetArea.height,
+             ccmgs->targetArea.pos.x + 1 + ccmgs->targetArea.width, ccmgs->targetArea.pos.y + ccmgs->targetArea.height,
+             c111, 1);
+    drawLine(ccmgs->targetArea.pos.x + 2, ccmgs->targetArea.pos.y + ccmgs->targetArea.height + 1,
+             ccmgs->targetArea.pos.x + 2 + ccmgs->targetArea.width,
+             ccmgs->targetArea.pos.y + ccmgs->targetArea.height + 1, c111, 1);
+    drawLine(ccmgs->targetArea.pos.x + ccmgs->targetArea.width, ccmgs->targetArea.pos.y + 1,
+             ccmgs->targetArea.pos.x + ccmgs->targetArea.width, ccmgs->targetArea.pos.y + 1 + ccmgs->targetArea.height,
+             c111, 1);
+    drawLine(ccmgs->targetArea.pos.x + ccmgs->targetArea.width + 1, ccmgs->targetArea.pos.y + 2,
+             ccmgs->targetArea.pos.x + ccmgs->targetArea.width + 1,
+             ccmgs->targetArea.pos.y + 2 + ccmgs->targetArea.height, c111, 1);
+
+    // Paint that's already been sprayed
     drawWsgSimple(&ccmgs->wsg.canvas, 0, 0);
 
     if (state == CC_MG_PLAYING)
