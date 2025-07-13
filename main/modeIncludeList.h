@@ -34,6 +34,7 @@
 #include "colorchord.h"
 #include "cosCrunch.h"
 #include "dance.h"
+#include "danceNetwork.h"
 #include "factoryTest.h"
 #include "gamepad.h"
 #include "introMode.h"
