@@ -325,7 +325,7 @@ MACOS_PLIST   = emulator/resources/Info.plist
 ################################################################################
 
 # This list of targets do not build files which match their name
-.PHONY: all preprocess-assets firmware bundle \
+.PHONY: all preprocess-assets assets firmware bundle \
 	clean clean-firmware clean-docs clean-assets clean-git clean-utils fullclean \
 	docs format gen-coverage update-dependencies cppcheck \
 	usbflash monitor installudev \

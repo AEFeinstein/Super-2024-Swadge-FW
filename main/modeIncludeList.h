@@ -41,6 +41,7 @@
 #include "keebTest.h"
 #include "mainMenu.h"
 #include "mode_credits.h"
+#include "mode_ch32v003test.h"
 #include "mode_diceroller.h"
 #include "mode_synth.h"
 #include "nameTest.h"
