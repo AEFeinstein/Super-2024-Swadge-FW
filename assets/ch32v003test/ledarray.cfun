@@ -254,5 +254,6 @@ int main()
 		}
 */
 		frameno++;
+		*DMDATA1 = frameno;
 	}
 }
