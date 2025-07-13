@@ -19,7 +19,7 @@ void picrossCheckLevel(void);
 void picrossSetupPuzzle(bool cont);
 void picrossCalculateHoverHint(void);
 void setCompleteLevelFromWSG(wsg_t* puzz);
-void drawSinglePixelFromWSG(int x, int y, wsg_t* image);
+void drawSinglePixelFromWSG(int x, int y, wsg_t* image, int offsetX, int offsetY);
 // bool hintsMatch(picrossHint_t a, picrossHint_t b);
 bool hintIsFilledIn(picrossHint_t* hint);
 box_t boxFromCoord(int8_t x, int8_t y);
@@ -1251,11 +1251,23 @@ void drawPicrossScene(void)
     } // end if phase is solving
     else if (p->currentPhase == PICROSS_YOUAREWIN)
     {
+        p->lerpAmount += p->elapsedUs >> 9;
+        if (p->lerpAmount > PICROSS_LERP_AMOUNT)
+        {
+            p->lerpAmount = PICROSS_LERP_AMOUNT; // cap lerp amount
+        }
+        int ox = lerp(0, p->offsetX, p->lerpAmount);
+        int oy = lerp(0, p->offsetY, p->lerpAmount);
+
         for (int i = 0; i < w; i++)
         {
             for (int j = 0; j < h; j++)
             {
-                drawSinglePixelFromWSG(i, j, &p->selectedLevel.completedWSG);
+                if(p->lerpAmount >= PICROSS_LERP_AMOUNT){
+                    drawSinglePixelFromWSG(i, j, &p->selectedLevel.completedWSG, ox, oy);
+                }else{
+                    drawSinglePixelFromWSG(i, j, &p->selectedLevel.levelWSG, ox, oy);
+                }
             }
         }
 
@@ -1265,7 +1277,7 @@ void drawPicrossScene(void)
         drawText(&p->UIFont, c555, p->selectedLevel.title, t, 14);
 
         // Draw the marquee fact.
-        if (p->lerpAmount == 60000)
+        if (p->lerpAmount == PICROSS_LERP_AMOUNT)
         {
             if (p->loopingTimer > 0)
             {
@@ -1279,18 +1291,13 @@ void drawPicrossScene(void)
     }
 }
 
-void drawSinglePixelFromWSG(int x, int y, wsg_t* image)
+void drawSinglePixelFromWSG(int x, int y, wsg_t* image, int offsetX, int offsetY)
 {
     box_t box = boxFromCoord(x, y);
-    p->lerpAmount += p->elapsedUs >> 9;
-    if (p->lerpAmount > 60000)
-    {
-        p->lerpAmount = 60000; // cap lerp amount
-    }
-    box.x0 += lerp(0, p->offsetX, p->lerpAmount);
-    box.x1 += lerp(0, p->offsetX, p->lerpAmount);
-    box.y0 += lerp(0, p->offsetY, p->lerpAmount);
-    box.y1 += lerp(0, p->offsetY, p->lerpAmount);
+    box.x0 += offsetX;
+    box.y0 += offsetY;
+    box.x1 += offsetX;
+    box.y1 += offsetY;
     paletteColor_t v = image->px[(y * p->puzzle->width) + x];
     drawBox(box, v, true, 0);
 }
@@ -1891,5 +1898,5 @@ void drawBox(box_t box, paletteColor_t color, bool isFilled, int32_t scalingFact
  */
 int8_t lerp(int8_t a, int8_t b, uint16_t amount)
 {
-    return a + ((b - a) * amount) / 60000;
+    return a + ((b - a) * amount) / PICROSS_LERP_AMOUNT;
 }
