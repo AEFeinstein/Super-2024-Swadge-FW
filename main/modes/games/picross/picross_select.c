@@ -302,9 +302,8 @@ void drawLevelSelectScreen(font_t* font)
     {
         // Draw the current level difficulty at the bottom left.
         //(debug)
-        snprintf(textBuffer, sizeof(textBuffer) - 1, "%" PRIu16 "x%" PRIu16 " (%" PRIu8 ")",
-                 (int)ls->levels[ls->hoverLevelIndex].levelWSG.w, (int)ls->levels[ls->hoverLevelIndex].levelWSG.h,
-                 (int)ls->topVisibleRow);
+        snprintf(textBuffer, sizeof(textBuffer) - 1, "%" PRIu16 "x%" PRIu16,
+                 (int)ls->levels[ls->hoverLevelIndex].levelWSG.w, (int)ls->levels[ls->hoverLevelIndex].levelWSG.h);
         t = textWidth(&ls->smallFont, textBuffer) / 2;
         drawText(&ls->smallFont, c555, textBuffer, TFT_WIDTH - 54 - t, TFT_HEIGHT - 28);
     }
