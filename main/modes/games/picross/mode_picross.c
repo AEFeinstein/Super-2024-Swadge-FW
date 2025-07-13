@@ -1263,9 +1263,12 @@ void drawPicrossScene(void)
         {
             for (int j = 0; j < h; j++)
             {
-                if(p->lerpAmount >= PICROSS_LERP_AMOUNT){
+                if (p->lerpAmount >= PICROSS_LERP_AMOUNT)
+                {
                     drawSinglePixelFromWSG(i, j, &p->selectedLevel.completedWSG, ox, oy);
-                }else{
+                }
+                else
+                {
                     drawSinglePixelFromWSG(i, j, &p->selectedLevel.levelWSG, ox, oy);
                 }
             }
@@ -1286,7 +1289,8 @@ void drawPicrossScene(void)
             }
             // Slow auto scroll.
             p->marqueeScrollX += p->elapsedUs * 3;
-            drawTextMarquee(&p->UIFont, c555, p->selectedLevel.marqueeFact, 27, 200, TFT_WIDTH-30, &p->marqueeScrollX);
+            drawTextMarquee(&p->UIFont, c555, p->selectedLevel.marqueeFact, 27, 200, TFT_WIDTH - 30,
+                            &p->marqueeScrollX);
         }
     }
 }

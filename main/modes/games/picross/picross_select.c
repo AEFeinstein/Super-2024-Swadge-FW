@@ -42,7 +42,7 @@ void picrossStartLevelSelect(font_t* bigFont, picrossLevelDef_t levels[])
     picrossVictoryData_t* victData
         = calloc(1, size); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
     readNvsBlob(picrossCompletedLevelData, victData, &size);
-    ls->currentIndex = -1;//set to impossible index so we don't continue level 0 when we haven't started level 0
+    ls->currentIndex = -1; // set to impossible index so we don't continue level 0 when we haven't started level 0
     readNvs32(picrossCurrentPuzzleIndexKey, &ls->currentIndex);
     ls->allLevelsComplete = true;
     for (int i = 0; i < PICROSS_LEVEL_COUNT; i++)
@@ -212,13 +212,15 @@ void levelSelectInput()
     }
 
     ls->hoverLevelIndex = ls->hoverY * ls->cols + (ls->topVisibleRow * ls->cols) + ls->hoverX;
-    
-    //hack for when levels aren't a multiple of 5, to not selet into empty space. Run the input again recursively until selection wraps back over into a valid index.
-    if(ls->hoverLevelIndex >= PICROSS_LEVEL_COUNT){
+
+    // hack for when levels aren't a multiple of 5, to not selet into empty space. Run the input again recursively until
+    // selection wraps back over into a valid index.
+    if (ls->hoverLevelIndex >= PICROSS_LEVEL_COUNT)
+    {
         levelSelectInput();
     }
-    
-    ls->prevBtnState    = ls->btnState;
+
+    ls->prevBtnState = ls->btnState;
 }
 
 void drawLevelSelectScreen(font_t* font)
