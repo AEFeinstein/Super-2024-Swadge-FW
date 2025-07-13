@@ -150,6 +150,12 @@ typedef struct
 
 typedef struct
 {
+    stripTypes_t newStrip;
+    int32_t startPos;
+} bgStripOrder_t;
+
+typedef struct
+{
     // Player
     player_t player;
 
@@ -178,6 +184,15 @@ typedef struct
     // Debug
     bool debug; // Displays debug info
 } chickenData_t;
+
+//==============================================================================
+// Map Order
+//==============================================================================
+
+static const bgStripOrder_t order[] = {
+    {.newStrip = FOREST, .startPos = 0},
+    {.newStrip = MOUNTAIN, .startPos = 300},
+};
 
 //==============================================================================
 // Function Declarations
@@ -593,7 +608,6 @@ static void chickenLogic(int64_t elapsedUs)
 }
 
 // Draw
-
 // Main routines
 static void drawChickenSplash(int64_t elapsedUs)
 {
@@ -682,11 +696,36 @@ static void drawBG()
         // Reposition loops
         if (cd->strips[i].position - cd->player.position < -40)
         {
+            int newPos = cd->strips[i].position + STRIP_WIDTH * STRIP_COUNT;
+            for (int idx = 0; idx < ARRAY_SIZE(order); idx++)
+            {
+                if (newPos < order[idx].startPos)
+                {
+                    break;
+                }
+                else if (newPos >= order[idx].startPos && cd->strips[i].position < order[idx].startPos)
+                {
+                    if (cd->strips[i].strip != order[idx].newStrip)
+                    {
+                        // TODO: Assign a transition
+                    }
+                }
+                else
+                {
+                    // Assign the main strip
+                    // FIXME: Assigns over and over again.
+                    cd->strips[i].strip = order[idx].newStrip;
+                }
+            }
+
             cd->strips[i].position += STRIP_WIDTH * STRIP_COUNT;
+
+            // TODO: Set the stripindex
         }
         else if (cd->strips[i].position > startPos)
         {
             cd->strips[i].position -= STRIP_WIDTH * STRIP_COUNT;
+            // TODO: Set the stripindex
         }
 
         setStripIdxs(&cd->strips[i]);
