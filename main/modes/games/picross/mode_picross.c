@@ -725,7 +725,7 @@ void picrossUserInput(int64_t elapsedUs)
     if (p->controlsEnabled == false || p->currentPhase == PICROSS_YOUAREWIN)
     {
         //&& !(p->input->prevBtnState & PB_B)
-        if (p->input->btnState & PB_B)
+        if (p->input->btnState & PB_B && !(p->input->prevBtnState & PB_B))
         {
             // return to level select instead of main menu?
             p->exitThisFrame = true;
