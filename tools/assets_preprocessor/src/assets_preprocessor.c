@@ -27,6 +27,7 @@
 //==============================================================================
 #include "bin_processor.h"
 #include "chart_processor.h"
+#include "cfun_processor.h"
 #include "font_processor.h"
 #include "image_processor.h"
 #include "json_processor.h"
@@ -43,7 +44,7 @@
 //==============================================================================
 static const assetProcessor_t* allAssetProcessors[] = {
     &binProcessor,   &chartProcessor, &fontProcessor, &heatshrinkProcessor,
-    &imageProcessor, &jsonProcessor,  &textProcessor,
+    &imageProcessor, &jsonProcessor,  &textProcessor, &cfunProcessor,
 };
 //==============================================================================
 // END Asset Processor List
@@ -240,6 +241,7 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                     FILE* inHandle             = NULL;
                     FILE* outHandle            = NULL;
                     processorFileData_t inData = {0};
+                    processorFileData_t outData = {0};
 
                     switch (processor->inFmt)
                     {
@@ -253,6 +255,7 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
 
                         case FMT_FILE_BIN:
                         case FMT_DATA:
+                        case FMT_FILENAME:
                         {
                             inHandle = fopen(inFile, "rb");
                             break;
@@ -265,6 +268,8 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                         break;
                     }
 
+                    const char * outFileName = NULL;
+
                     switch (processor->outFmt)
                     {
                         case FMT_FILE:
@@ -272,6 +277,14 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                         case FMT_LINES:
                         {
                             outHandle = fopen(outFile, "w");
+                            outData = (processorFileData_t){ .file = outHandle };
+                            break;
+                        }
+
+                        case FMT_FILENAME:
+                        {
+                            outFileName = outFile;
+                            outData = (processorFileData_t){ .fileName = outFileName };
                             break;
                         }
 
@@ -279,11 +292,12 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                         case FMT_DATA:
                         {
                             outHandle = fopen(outFile, "wb");
+                            outData = (processorFileData_t){ .file = outHandle };
                             break;
                         }
                     }
 
-                    if (!outHandle)
+                    if (!outHandle && !outFileName)
                     {
                         fprintf(stderr, "[%s] FAILED! Cannot open output file '%s'\n", extMap->inExt, outFile);
                         break;
@@ -297,6 +311,12 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                         case FMT_FILE_BIN:
                         {
                             inData.file = inHandle;
+                            break;
+                        }
+
+                        case FMT_FILENAME:
+                        {
+                            inData.fileName = inFile;
                             break;
                         }
 
@@ -452,7 +472,7 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                     }
 
                     processorInput_t arg = {.in         = inData,
-                                            .out        = {.file = outHandle},
+                                            .out        = outData,
                                             .inFilename = get_filename(inFile),
                                             .options    = hasOptions ? &options : NULL};
 
@@ -475,6 +495,7 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                     switch (processor->outFmt)
                     {
                         case FMT_FILE:
+                        case FMT_FILENAME:
                         case FMT_FILE_BIN:
                             // Nothing else necessary
                             break;
@@ -520,13 +541,17 @@ static int processFile(const char* inFile, const struct stat* st __attribute__((
                         }
                     }
 
-                    fclose(outHandle);
+                    if (outHandle)
+                    {
+                        fclose(outHandle);
+                    }
 
                     // And clean up the input file however necessary
                     switch (processor->inFmt)
                     {
                         case FMT_FILE:
                         case FMT_FILE_BIN:
+                        case FMT_FILENAME:
                         {
                             break;
                         }

@@ -324,6 +324,10 @@
  * each line separated by a newline character, `\n`, and with one trailing newline at the very
  * end of the file.
  *
+ * If you need actual filenames, and cannot use FILE objects, then you can use FMT_FILENAME
+ * which uses the .fileName parameter with the filename, instead of the contents of the file
+ * data.
+ *
  * Here is a summary of the various input and output options available and how to use them
  * for input and output. `arg` refers to the processorInput_t * passed as the argument to a
  * \ref processFn_t.
@@ -338,6 +342,7 @@
  * | ::FMT_TEXT     | `arg->in.text` | `arg->in.textSize`  | `r`     | `arg->out.text`  | `arg->out.textSize`  | `w`      |
  * | ::FMT_FILE_BIN | `arg->in.file` |                     | `rb`    | `arg->out.file`  |                      | `wb`     |
  * | ::FMT_FILE     | `arg->in.file` |                     | `r`     | `arg->out.file`  |                      | `w`      |
+ * | ::FMT_FILENAME | `arg->in.fileName` |                 |         | `arg->out.fileName`  |                  |          |
  * | ::FMT_LINES    | `arg->in.lines`| `arg->in.lineCount` | `r`     | `arg->out.lines` | `arg->out.lineCount` | `w`      |
  */
 
@@ -625,6 +630,8 @@ typedef enum
     FMT_TEXT,
     /// @brief A text file's data is passed as an array of one string per line
     FMT_LINES,
+    /// @brief Only provide/use filenames, instead of opening/use them as a file.
+    FMT_FILENAME,
 } processorFormat_t;
 
 /**
@@ -673,6 +680,8 @@ typedef union
         /// @brief The size of the text data, including NUL terminator
         size_t textSize;
     };
+
+	const char * fileName;
 } processorFileData_t;
 
 /**
