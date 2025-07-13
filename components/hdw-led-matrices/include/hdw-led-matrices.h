@@ -6,6 +6,8 @@
  * - Some default expressions 
  */
 
+#include <stdint.h>
+
 #define MATRIX_UART_PIN 42
 #define MATRIX_LED_COUNT 72
 
@@ -13,8 +15,18 @@ typedef enum
 {
     LEDM_BLANK,
     LEDM_SPINNY,
-    LEDM_CLOSED,
+    LEDM_CLOSED_DOWN,
+    LEDM_CLOSED_UP,
+    LEDM_PINCHED,
+    LEDM_CRYING,
+    LEDM_ANGRY,
     LEDM_OPEN,
+    LEDM_LOOK_LEFT,
+    LEDM_LOOK_RIGHT,
+    LEDM_HEARTS,
+    LEDM_STARS,
+    LEDM_CROSSED,
+    LEDM_WINK,
 } defaultExpressions_t;
 
 typedef struct 

@@ -18,7 +18,7 @@ void matrixLEDSetExpression(defaultExpressions_t expr)
     // Sets a default expression
 }
 
-void matrixLEDSetBrightness(int8_t brightness)
+void matrixLEDSetBrightness(uint8_t brightness)
 {
     // Sets the max brightness that the eyes can be set to. 0 is off, 7 is max
 }
