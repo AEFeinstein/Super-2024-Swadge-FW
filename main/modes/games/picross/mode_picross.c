@@ -706,7 +706,7 @@ void picrossUserInput(int64_t elapsedUs)
 
     // check for "exit" button before we escape when not in solving mode.
     // todo: how should exit work? A button when game is solved?
-    if (input->btnState & PB_SELECT && !(input->prevBtnState & PB_SELECT)
+    if (input->btnState & PB_START && !(input->prevBtnState & PB_START)
         && !(input->btnState
              & PB_A)) // if we are holding a down when we leave, we instantly select a level on the select screen.
     {
@@ -735,12 +735,6 @@ void picrossUserInput(int64_t elapsedUs)
         return;
     }
     // Input checks
-
-    // Reset the counter by pressing start. It should auto-reset, but it can be wonky.
-    if (input->btnState & PB_START && !(input->prevBtnState & PB_START))
-    {
-        p->count = 1;
-    }
 
     // DAS
     // todo: we can cache the != checks, so we do 1 butmask instead of 3 (x4)

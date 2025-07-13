@@ -95,14 +95,14 @@ void levelSelectInput()
 {
     // todo: quit with both start+select
 
-    if (ls->btnState & (PB_SELECT | PB_B) && !(ls->prevBtnState & PB_SELECT) && !(ls->btnState & PB_A))
+    if (ls->btnState & (PB_START | PB_B) && !(ls->prevBtnState & PB_START) && !(ls->btnState & PB_A))
     {
         // exit to main menu
         returnToPicrossMenu(); // from level select.
         return;
     }
     // Choosing a Level
-    if (ls->btnState & PB_A && !(ls->prevBtnState & PB_A) && !(ls->btnState & PB_SELECT))
+    if (ls->btnState & PB_A && !(ls->prevBtnState & PB_A) && !(ls->btnState & PB_START))
     {
         if (ls->hoverLevelIndex == ls->currentIndex)
         {
