@@ -799,4 +799,10 @@ typedef struct
     const processorOptions_t* options;
 } fileProcessorMap_t;
 
+/// @brief The path that is provided for input assets on the command line.
+extern const char* inDirName;
+
+/// @brief The path that is provided for output assets on the command line.
+extern const char* outDirName;
+
 #endif

@@ -22,13 +22,16 @@ bool process_cfun(processorInput_t* arg)
 
     if( !idf || *idf == 0 )
     {
-        fprintf( stderr, "Error: Need IDF_PATH please export your ESP-IDF.\n" );
+        fprintf( stderr, "Error: Need IDF_PATH, otherwise we won't be able to get the RISC-V compiler.  Please export your ESP-IDF.\n" );
         return false;
     }
 
-    const char * ch32v003comp = "tools/ch32v003comp";
+    printf( "::%s\n", outDirName );
 
-    char compile_line[4096];
+    char ch32v003comp[3096];
+	sprintf( ch32v003comp, "%s/../tools/ch32v003comp", outDirName );
+
+    char compile_line[16384];
     snprintf( compile_line, sizeof(compile_line),
         "riscv32-esp-elf-gcc -o %s.elf %s/ch32fun.c %s/fakelibgcc.S -x c %s -g -Os -flto -ffunction-sections \
          -fdata-sections -fmessage-length=0 -msmall-data-limit=8 -march=rv32ec -mabi=ilp32e -DCH32V003 \

@@ -8,6 +8,7 @@
 #include "swadge2024.h"
 #include "mode_ch32v003test.h"
 #include "mainMenu.h"
+#include "hdw-ch32v003.h"
 
 //==============================================================================
 // Functions Prototypes
@@ -16,6 +17,7 @@
 void ch32v003testEnterMode(void);
 void ch32v003testExitMode(void);
 void ch32v003testMainLoop(int64_t elapsedUs);
+int uprintf(const char* fmt, ...);
 
 //==============================================================================
 // Variables
@@ -69,6 +71,11 @@ void ch32v003testEnterMode(void)
 
     ch32v003test->tElapsedUs = 0;
 
+    size_t sz;
+    const uint8_t* buf = cnfsGetFile( LEDARRAY_CFUN_BIN, &sz );
+	ch32v003WriteFlash( buf, sz );
+	ch32v003Resume();
+
     // Turn off LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
     setLeds(leds, CONFIG_NUM_LEDS);
@@ -93,34 +100,37 @@ void ch32v003testExitMode(void)
  */
 void ch32v003testMainLoop(int64_t elapsedUs)
 {
+    // Clear first
+    clearPxTft();
+
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
 
-		if (evt.down)
-		{
-		    switch (evt.button)
-		    {
-		        case PB_A:
-		        case PB_B:
-		        {
-		            // Exit
+        if (evt.down)
+        {
+            switch (evt.button)
+            {
+                case PB_A:
+                case PB_B:
+                {
+                    // Exit
                     switchToSwadgeMode(&mainMenuMode);
-		        }
-			}
-		}
+                    break;
+                }
+                case PB_UP:
+                case PB_DOWN:
+                case PB_LEFT:
+                case PB_RIGHT:
+                case PB_START:
+                case PB_SELECT:
+                    break;
+            }
+        }
     }
 
     ch32v003test->tElapsedUs += elapsedUs;
 
-    // Clear first
-    clearPxTft();
-
-	size_t sz;
-    const uint8_t* buf = cnfsGetFile( LEDARRAY_CFUN_BIN, &sz );
-
-	char buffer[128];
-	sprintf( buffer, "%ld %p", sz, buf );
-    drawText(ch32v003test->font, 215, buffer, 0, 50);
+	ch32v003CheckTerminal();
 }
 

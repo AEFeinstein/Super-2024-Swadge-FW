@@ -94,6 +94,7 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                     PRIV_REQUIRES hdw-imu
                                   hdw-battmon
                                   hdw-btn
+                                  hdw-ch32v003
                                   hdw-dac
                                   hdw-esp-now
                                   hdw-led
@@ -140,6 +141,7 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                                 "./modes/test/trophyTest"
                                 "./modes/utilities"
                                 "./modes/utilities/dance"
+                                "./modes/utilities/ch32v003test"
                                 "./modes/utilities/dice"
                                 "./modes/utilities/gamepad"
                                 "./modes/utilities/bouncy"
