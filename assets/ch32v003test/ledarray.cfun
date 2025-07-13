@@ -76,7 +76,6 @@ int apsqrt( int i )
 int main()
 {
 	SystemInit();
-
 	// Enable DMA
 	RCC->AHBPCENR = RCC_AHBPeriph_SRAM | RCC_AHBPeriph_DMA1;
 
@@ -186,7 +185,7 @@ int main()
 		// Raindrops runs at about 400 FPS
 		// LED Shifting runs at about 500 FPS
 
-#if 0 // Raindrops animation
+#if 1 // Raindrops animation
 		for( d = 0; d < CONCURRENT_DROPS; d++ )
 		{
 			i = -1;
