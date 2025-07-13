@@ -1286,7 +1286,7 @@ void drawPicrossScene(void)
             }
             // Slow auto scroll.
             p->marqueeScrollX += p->elapsedUs * 3;
-            drawTextMarquee(&p->UIFont, c555, p->selectedLevel.marqueeFact, 0, 220, TFT_WIDTH, &p->marqueeScrollX);
+            drawTextMarquee(&p->UIFont, c555, p->selectedLevel.marqueeFact, 27, 200, TFT_WIDTH-30, &p->marqueeScrollX);
         }
     }
 }
