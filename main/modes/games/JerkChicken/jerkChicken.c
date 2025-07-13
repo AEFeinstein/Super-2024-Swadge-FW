@@ -37,6 +37,11 @@
 #define CHICKEN_Y_POS     160
 #define BAIT_BOX_X_OFFSET 108
 #define BAIT_BOX_Y_POS    168
+// Strip data
+#define STRIP_COUNT  8
+#define STRIP_VCOUNT 12
+#define STRIP_WIDTH  40
+#define STRIP_HEIGHT 16
 
 //==============================================================================
 // Consts
@@ -46,6 +51,13 @@ const char chickenModeName[] = "Jerk Chicken";
 
 static const char* const strings[] = {
     "Press any button to play!",
+};
+
+static const cnfsFileIdx_t tiles[] = {
+    LEAVES_WSG,
+    TREE_TOP_WSG,
+    TREE_TRUNK_WSG,
+    TREE_BOTTOM_WSG,
 };
 
 //==============================================================================
@@ -78,6 +90,14 @@ typedef enum
     CHICKEN_PECK,          // Chicken pecking at the ground
     CHICKEN_NUM_STATES     // Number of states the chicken may exist in. No quantum super-positioning.
 } chickenStates_t;
+
+typedef enum
+{
+    FOREST,
+    CITY,
+    FARM,
+    MOUNTAIN,
+} stripTypes_t;
 
 //==============================================================================
 // Structs
@@ -123,11 +143,19 @@ typedef struct
 
 typedef struct
 {
+    int8_t imgIdxs[STRIP_VCOUNT];
+    int16_t position;
+    stripTypes_t strip;
+} bgStrip_t;
+
+typedef struct
+{
     // Player
     player_t player;
 
     // Chicken
     chicken_t chicken;
+    wsg_t chck;
 
     // Bait Box
     baitBox_t box;
@@ -137,6 +165,11 @@ typedef struct
     gameState_t state;        // Splash/Game/End
     chickenDifficulty_t diff; // Selected difficulty
     bool accessible;          // If button Jerk is enabled or not
+
+    // Background scroll
+    bgStrip_t strips[STRIP_COUNT];
+    wsg_t block;
+    wsg_t* bgTiles;
 
     // Splash
     int64_t animTimer;
@@ -163,12 +196,17 @@ static bool movePos(int32_t* position, int32_t* target, int8_t speed);
 static void increaseDifficulty(void);
 static void chickenLogic(int64_t elapsedUs);
 
-// Draw routines
+// Draw
+// Main
 static void drawChickenSplash(int64_t elapsedUs);
 static void drawChickenPrep(void);
 static void drawChicken(int64_t elapsedUs);
 static void drawChickenLose(int64_t elapsedUs);
 static void drawChickenScore(void);
+// Sub
+static void drawBG(void);
+static void setStripIdxs(bgStrip_t* strip);
+static void drawTape(int xPos);
 
 //==============================================================================
 // Variables
@@ -196,11 +234,25 @@ static void enterChicken()
     cd->state = CHICKEN_SPLASH;
 
     // Test code
+    loadWsg(CHK_RUN_1_WSG, &cd->chck, true);
+    cd->bgTiles = heap_caps_calloc(ARRAY_SIZE(tiles), sizeof(wsg_t), MALLOC_CAP_8BIT);
+    for (int i = 0; i < ARRAY_SIZE(tiles); i++)
+    {
+        loadWsg(tiles[i], &cd->bgTiles[i], true);
+    }
+    loadWsg(BLOCK_WSG, &cd->block, true);
     cd->debug = true;
 }
 
 static void exitChicken()
 {
+    freeWsg(&cd->block);
+    for (int i = 0; i < ARRAY_SIZE(tiles); i++)
+    {
+        freeWsg(&cd->bgTiles[i]);
+    }
+    free(cd->bgTiles);
+    freeWsg(&cd->chck);
     heap_caps_free(cd);
 }
 
@@ -314,6 +366,12 @@ static void initGame(chickenDifficulty_t diff)
             cd->chicken.diffMod = 25;
             break;
         }
+    }
+
+    for (int idx = 0; idx < STRIP_COUNT; idx++)
+    {
+        cd->strips[idx].position = idx * STRIP_WIDTH;
+        cd->strips[idx].strip    = FOREST;
     }
 }
 
@@ -528,7 +586,7 @@ static void chickenLogic(int64_t elapsedUs)
     }
 
     // Check if game is lost
-    if (cd->box.HP <= 0 || cd->player.position - cd->chicken.position <= -CHICKEN_OFFSCREEN)
+    if (cd->box.HP <= 0 || cd->chicken.position - cd->player.position <= -CHICKEN_OFFSCREEN)
     {
         cd->state = CHICKEN_LOSE;
     }
@@ -536,6 +594,7 @@ static void chickenLogic(int64_t elapsedUs)
 
 // Draw
 
+// Main routines
 static void drawChickenSplash(int64_t elapsedUs)
 {
     clearPxTft();
@@ -557,26 +616,9 @@ static void drawChicken(int64_t elapsedUs)
     clearPxTft();
 
     // Level
+    drawBG();
     // Tickmarks
-    fillDisplayArea(0, TFT_HEIGHT - 32, TFT_WIDTH, TFT_HEIGHT, c550);
-    drawLineFast(0, TFT_HEIGHT - 1, TFT_WIDTH, TFT_HEIGHT - 1, c330);
-    drawLineFast(0, TFT_HEIGHT - 32, TFT_WIDTH, TFT_HEIGHT - 32, c555);
-    int32_t startPos = TFT_WIDTH + cd->player.position;
-    for (int i = cd->player.position; i < startPos; i++)
-    {
-        int screenSpaceX = startPos - i;
-        if (i % 100 == 0)
-        {
-            drawLineFast(screenSpaceX, TFT_HEIGHT, screenSpaceX, TFT_HEIGHT - 32, c000);
-            char buffer[8];
-            snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, i / 100);
-            drawText(getSysFont(), c000, buffer, screenSpaceX - (2 + textWidth(getSysFont(), buffer)), TFT_HEIGHT - 30);
-        }
-        else if (i % 10 == 0)
-        {
-            drawLineFast(screenSpaceX, TFT_HEIGHT, screenSpaceX, TFT_HEIGHT - 16, c000);
-        }
-    }
+    drawTape(cd->player.position);
 
     // Player
 
@@ -599,6 +641,7 @@ static void drawChicken(int64_t elapsedUs)
         // Chicken
         int16_t chickenXOffset = -cd->chicken.position + CHICKEN_X_OFFSET + cd->player.position;
         drawRect(chickenXOffset, CHICKEN_Y_POS, chickenXOffset + 32, CHICKEN_Y_POS + 32, c500);
+        drawWsg(&cd->chck, chickenXOffset, CHICKEN_Y_POS, false, false, 0);
 
         char buffer[32];
         snprintf(buffer, sizeof(buffer) - 1, "State: %" PRId16, cd->chicken.state);
@@ -627,4 +670,93 @@ static void drawChickenScore()
     char buffer[32];
     snprintf(buffer, sizeof(buffer) - 1, "Score: %" PRId8, cd->score);
     drawText(getSysFont(), c550, buffer, 32, 16);
+}
+
+// Subroutines
+static void drawBG()
+{
+    int startPos = cd->player.position + TFT_WIDTH;
+    //  Draw
+    for (int i = 0; i < STRIP_COUNT; i++)
+    {
+        // Reposition loops
+        if (cd->strips[i].position - cd->player.position < -40)
+        {
+            cd->strips[i].position += STRIP_WIDTH * STRIP_COUNT;
+        }
+        else if (cd->strips[i].position > startPos)
+        {
+            cd->strips[i].position -= STRIP_WIDTH * STRIP_COUNT;
+        }
+
+        setStripIdxs(&cd->strips[i]);
+
+        // Draw
+
+        for (int j = 0; j < STRIP_VCOUNT; j++)
+        {
+            if (cd->strips[i].strip == FOREST)
+            {
+                drawWsgSimple(&cd->bgTiles[cd->strips[i].imgIdxs[j]],
+                              cd->player.position + (TFT_WIDTH - STRIP_WIDTH) - cd->strips[i].position,
+                              j * STRIP_HEIGHT);
+            }
+            else
+            {
+                // FIXME: Only here until all tile sets are in.
+                drawWsgSimple(&cd->block, cd->player.position + (TFT_WIDTH - STRIP_WIDTH) - cd->strips[i].position,
+                              j * STRIP_HEIGHT);
+            }
+        }
+    }
+}
+
+static void setStripIdxs(bgStrip_t* strip)
+{
+    switch (strip->strip)
+    {
+        case FOREST:
+        {
+            strip->imgIdxs[0]  = 0;
+            strip->imgIdxs[1]  = 0;
+            strip->imgIdxs[2]  = 0;
+            strip->imgIdxs[3]  = 0;
+            strip->imgIdxs[4]  = 0;
+            strip->imgIdxs[5]  = 0;
+            strip->imgIdxs[6]  = 1;
+            strip->imgIdxs[7]  = 2;
+            strip->imgIdxs[8]  = 2;
+            strip->imgIdxs[9]  = 2;
+            strip->imgIdxs[10] = 2;
+            strip->imgIdxs[11] = 3;
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+}
+
+static void drawTape(int xPos)
+{
+    fillDisplayArea(0, TFT_HEIGHT - 32, TFT_WIDTH, TFT_HEIGHT, c550);
+    drawLineFast(0, TFT_HEIGHT - 1, TFT_WIDTH, TFT_HEIGHT - 1, c330);
+    drawLineFast(0, TFT_HEIGHT - 32, TFT_WIDTH, TFT_HEIGHT - 32, c555);
+    int32_t startPos = TFT_WIDTH + xPos;
+    for (int i = xPos; i < startPos; i++)
+    {
+        int screenSpaceX = startPos - i;
+        if (i % 100 == 0)
+        {
+            drawLineFast(screenSpaceX, TFT_HEIGHT, screenSpaceX, TFT_HEIGHT - 32, c000);
+            char buffer[8];
+            snprintf(buffer, sizeof(buffer) - 1, "%" PRId16, i / 100);
+            drawText(getSysFont(), c000, buffer, screenSpaceX - (2 + textWidth(getSysFont(), buffer)), TFT_HEIGHT - 30);
+        }
+        else if (i % 10 == 0)
+        {
+            drawLineFast(screenSpaceX, TFT_HEIGHT, screenSpaceX, TFT_HEIGHT - 16, c000);
+        }
+    }
 }
