@@ -122,6 +122,7 @@
  * - shapes.h: Learn how to draw shapes and curves on the screen
  * - wsg.h: Learn how to draw sprites on the screen
  * - font.h: Learn how to draw text on the screen
+ * - hdw-ch32v003.h: The matrix array driver on the 2026 Swadge
  *
  * \subsection gui_api Graphical UI APIs
  *
@@ -406,6 +407,8 @@ void app_main(void)
 #endif
 
     initLeds(GPIO_NUM_39, ledMirrorGpio, getLedBrightnessSetting());
+
+	initCh32v003( GPIO_NUM_18 );
 
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();

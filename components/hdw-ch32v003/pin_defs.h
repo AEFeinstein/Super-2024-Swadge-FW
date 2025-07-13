@@ -1,3 +1,4 @@
+#if 0
 #ifndef _PINDEFS_H
 #define _PINDEFS_H
 
@@ -68,6 +69,9 @@
 
 #endif
 
+#define SWIO_PIN  18
+#define SWCLK_PIN 17
+
 #if SWIO_PIN < 32
     #define GPIO_VAR_W1TC        GPIO.out_w1tc
     #define GPIO_VAR_W1TS        GPIO.out_w1ts
@@ -89,3 +93,4 @@
 #define XGPIO_NUM(x) GPIO_NUM_##x
 
 #endif // _PINDEFS_H
+#endif

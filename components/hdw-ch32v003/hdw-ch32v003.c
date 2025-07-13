@@ -32,7 +32,29 @@
     } while (0)
 int uprintf(const char* fmt, ...);
 // #define uprintf(x...) ESP_LOGE( "ch32v003programmer", x)
-#include "pin_defs.h"
+
+#define GPIO_VAR_W1TC (*GPIO_VAR_W1TC_R)
+#define GPIO_VAR_W1TS (*GPIO_VAR_W1TS_R)
+#define GPIO_VAR_ENABLE_W1TC (*GPIO_VAR_ENABLE_W1TC_R)
+#define GPIO_VAR_ENABLE_W1TS (*GPIO_VAR_ENABLE_W1TS_R)
+#define GPIO_VAR_IN (*GPIO_VAR_IN_R)
+
+static uint32_t SWIO_PIN = 18;
+static uint32_t SWCLK_PIN = 17;
+
+static volatile uint32_t * GPIO_VAR_W1TC_R = &GPIO.out_w1tc;
+static volatile uint32_t * GPIO_VAR_W1TS_R = &GPIO.out_w1ts;
+static volatile uint32_t * GPIO_VAR_ENABLE_W1TC_R = &GPIO.enable_w1tc;
+static volatile uint32_t * GPIO_VAR_ENABLE_W1TS_R = &GPIO.enable_w1ts;
+static volatile uint32_t * GPIO_VAR_IN_R = &GPIO.in;
+
+#define IO_MUX_REG(x)  XIO_MUX_REG(x)
+#define XIO_MUX_REG(x) (IO_MUX_GPIO0_REG+x)
+
+#define GPIO_NUM(x)  XGPIO_NUM(x)
+#define XGPIO_NUM(x) GPIO_NUM_0 + x
+
+
 #include "hdw-ch32v003.h"
 #include "ch32v003_swio.h"
 
@@ -64,6 +86,41 @@ static int ch32v003Check();
 //==============================================================================
 // Functions
 //==============================================================================
+
+int initCh32v003( int swdio_pin )
+{
+#if 0
+
+    SWIO_PIN = swdio_pin;
+    SWCLK_PIN = 17; // Unused.
+#if 0
+    if( SWIO_PIN < 32 )
+    {
+        GPIO_VAR_W1TC_R        = &GPIO.out_w1tc;
+        GPIO_VAR_W1TS_R        = &GPIO.out_w1ts;
+        GPIO_VAR_ENABLE_W1TC_R = &GPIO.enable_w1tc;
+        GPIO_VAR_ENABLE_W1TS_R = &GPIO.enable_w1ts;
+        GPIO_VAR_IN_R          = &GPIO.in;
+    }
+    else
+    {
+        GPIO_VAR_W1TC_R        = &GPIO.out1_w1tc.val;
+        GPIO_VAR_W1TS_R        = &GPIO.out1_w1ts.val;
+        GPIO_VAR_ENABLE_W1TC_R = &GPIO.enable1_w1tc.val;
+        GPIO_VAR_ENABLE_W1TS_R = &GPIO.enable1_w1ts.val;
+        GPIO_VAR_IN_R          = &GPIO.in1.val;
+    }
+#endif
+
+uprintf( "%d\n", SWIO_PIN );
+ //   if (ch32v003Check())
+ //   {
+ //       return -1;
+ //   }
+
+#endif
+    return 0;
+}
 
 /**
  * @brief Write to memory on the ch32v003
@@ -174,7 +231,7 @@ int ch32v003WriteFlash(const uint8_t* buf, int sz)
     for (j = 0; j < sz / 4; j++)
     {
         unsigned addy = 0x08000000 + j * 4;
-        uint32_t by;
+        uint32_t by = 0;
         int ra = ch32v003ReadMemory((uint8_t*)&by, 4, addy);
         if (ra)
         {
