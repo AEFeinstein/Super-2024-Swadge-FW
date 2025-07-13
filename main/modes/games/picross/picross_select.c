@@ -63,16 +63,15 @@ void picrossStartLevelSelect(font_t* bigFont, picrossLevelDef_t levels[])
     ls->hoverX          = 0;
     ls->hoverY          = 0;
     ls->hoverLevelIndex = 0;
+    ls->topVisibleRow   = 0; // todo: move to hold.
     ls->prevBtnState    = PB_SELECT | PB_START | PB_A | PB_B | PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT;
 
     ls->btnState = 0;
 
     // visual settings
-    ls->cols = 5;
-    // rows*cols should = picrossLevelCount. If it doesn't, the UI will break lol. I can add a check for it, but i dont
-    // want to unless we need it. The goal is just to make the correct amount of puzzles, and replace this line with a
-    // concretely set rows. Or replace rows/cols with a #DEFINE.
-    ls->rows        = (PICROSS_LEVEL_COUNT + (ls->cols - 1)) / ls->cols;
+    ls->cols        = 5;
+    ls->rows        = 6;
+    ls->totalRows   = (PICROSS_LEVEL_COUNT + (ls->cols - 1)) / ls->cols;
     ls->paddingLeft = 10;
     ls->paddingTop  = 20;
     ls->gap         = 5;
@@ -128,11 +127,22 @@ void levelSelectInput()
         }
         return;
     }
+
+    int xBound = ls->cols * (ls->hoverY + ls->topVisibleRow + 1);
+    if (xBound > PICROSS_LEVEL_COUNT)
+    {
+        xBound = PICROSS_LEVEL_COUNT % ls->cols;
+    }
+    else
+    {
+        xBound = ls->cols;
+    }
+
     // Input Movement checks
     if (ls->btnState & PB_RIGHT && !(ls->prevBtnState & PB_RIGHT))
     {
         ls->hoverX++;
-        if (ls->hoverX >= ls->cols)
+        if (ls->hoverX >= xBound)
         {
             ls->hoverX = 0;
         }
@@ -142,15 +152,26 @@ void levelSelectInput()
         ls->hoverX--;
         if (ls->hoverX < 0)
         {
-            ls->hoverX = ls->cols - 1;
+            ls->hoverX = xBound - 1;
         }
     }
     else if (ls->btnState & PB_DOWN && !(ls->prevBtnState & PB_DOWN))
     {
         ls->hoverY++;
-        if (ls->hoverY >= ls->rows) // todo: rows?
+        if (ls->hoverY >= ls->rows)
         {
-            ls->hoverY = 0;
+            if (ls->topVisibleRow > ls->totalRows - ls->rows - 1)
+            {
+                // cycle to top
+                ls->hoverY        = 0;
+                ls->topVisibleRow = 0;
+            }
+            else
+            {
+                // scroll down
+                ls->topVisibleRow++;
+                ls->hoverY--; // instead of moving cursor down.
+            }
         }
     }
     else if (ls->btnState & PB_UP && !(ls->prevBtnState & PB_UP))
@@ -158,11 +179,38 @@ void levelSelectInput()
         ls->hoverY--;
         if (ls->hoverY < 0)
         {
-            ls->hoverY = ls->rows - 1;
+            if (ls->topVisibleRow == 0)
+            {
+                // at the complete top. cycle all the way to the bottom.
+                ls->hoverY        = ls->rows - 1;
+                ls->topVisibleRow = ls->totalRows - ls->rows;
+            }
+            else
+            {
+                // scroll up instead of moving curser up.
+                ls->topVisibleRow--;
+                ls->hoverY++;
+            }
         }
     }
 
-    ls->hoverLevelIndex = ls->hoverY * ls->cols + ls->hoverX;
+    // Recalc xBound after potentially changing rows
+    xBound = ls->cols * (ls->hoverY + ls->topVisibleRow + 1);
+    if (xBound > PICROSS_LEVEL_COUNT)
+    {
+        xBound = PICROSS_LEVEL_COUNT % ls->cols;
+    }
+    else
+    {
+        xBound = ls->cols;
+    }
+
+    if (ls->hoverX >= xBound)
+    {
+        ls->hoverX = xBound - 1;
+    }
+
+    ls->hoverLevelIndex = ls->hoverY * ls->cols + (ls->topVisibleRow * ls->cols) + ls->hoverX;
     ls->prevBtnState    = ls->btnState;
 }
 
@@ -172,13 +220,56 @@ void drawLevelSelectScreen(font_t* font)
     uint8_t s = ls->gridScale; // scale
     uint8_t x;
     uint8_t y;
+    char textBuffer[64];
 
     // todo: Draw Choose Level Text.
     drawText(font, c555, "Puzzle", 190, 30);
     drawText(font, c555, "Select", 190, 60);
+    snprintf(textBuffer, sizeof(textBuffer) - 1, "%d/%d", (int)ls->hoverLevelIndex + 1, (int)PICROSS_LEVEL_COUNT);
+    int16_t t = textWidth(&ls->smallFont, textBuffer) / 2;
+    drawText(&ls->smallFont, c555, textBuffer, TFT_WIDTH - 54 - t, 90);
 
-    for (int i = 0; i < PICROSS_LEVEL_COUNT; i++)
+    int start = ls->topVisibleRow * ls->cols;
+    int end   = ls->cols * ls->rows;
+    // max against total level count.
+    // end = end > PICROSS_LEVEL_COUNT ? end : PICROSS_LEVEL_COUNT - (PICROSS_LEVEL_COUNT%ls->cols);
+    if (ls->topVisibleRow + ls->rows < ls->totalRows)
     {
+        // draw ... at the bottom of the screen to indicate more puzzles.
+        end += ls->cols;
+    }
+
+    // draw the top to indicate more puzzles.
+    if (ls->topVisibleRow > 0)
+    {
+        for (int i = 0; i < ls->cols; i++)
+        {
+            x = 0;
+            if (i != 0)
+            {
+                x = (i % ls->cols);
+            }
+            x      = x * s + ls->paddingLeft + ls->gap * x;
+            int ty = -s + ls->paddingTop - ls->gap;
+            if (ls->levels[start - ls->cols + i].completed)
+            {
+                drawPicrossLevelWSG(&ls->levels[start - ls->cols + i].completedWSG, x, ty, false);
+            }
+            else
+            {
+                // Draw ? sprite
+                drawPicrossLevelWSG(&ls->unknownPuzzle, x, ty, ((start - ls->cols + i) == ls->currentIndex));
+            }
+        }
+    }
+
+    for (int i = 0; i < end; i++)
+    {
+        if (start + i >= PICROSS_LEVEL_COUNT)
+        {
+            break;
+        }
+
         y = i / ls->cols;
         x = 0;
         if (i != 0)
@@ -187,24 +278,25 @@ void drawLevelSelectScreen(font_t* font)
         }
         x = x * s + ls->paddingLeft + ls->gap * x;
         y = y * s + ls->paddingTop + ls->gap * y;
-        if (ls->levels[i].completed)
+        if (ls->levels[start + i].completed)
         {
-            drawPicrossLevelWSG(&ls->levels[i].completedWSG, x, y, false);
+            drawPicrossLevelWSG(&ls->levels[start + i].completedWSG, x, y, false);
         }
         else
         {
             // Draw ? sprite
-            drawPicrossLevelWSG(&ls->unknownPuzzle, x, y, (i == ls->currentIndex));
+            drawPicrossLevelWSG(&ls->unknownPuzzle, x, y, ((start + i) == ls->currentIndex));
         }
     }
 
     if (ls->hoverLevelIndex < PICROSS_LEVEL_COUNT)
     {
         // Draw the current level difficulty at the bottom left.
-        char textBuffer[13];
-        snprintf(textBuffer, sizeof(textBuffer) - 1, "%dx%d", (int)ls->levels[ls->hoverLevelIndex].levelWSG.w,
-                 (int)ls->levels[ls->hoverLevelIndex].levelWSG.h);
-        int16_t t = textWidth(&ls->smallFont, textBuffer) / 2;
+        //(debug)
+        snprintf(textBuffer, sizeof(textBuffer) - 1, "%" PRIu16 "x%" PRIu16 " (%" PRIu8 ")",
+                 (int)ls->levels[ls->hoverLevelIndex].levelWSG.w, (int)ls->levels[ls->hoverLevelIndex].levelWSG.h,
+                 (int)ls->topVisibleRow);
+        t = textWidth(&ls->smallFont, textBuffer) / 2;
         drawText(&ls->smallFont, c555, textBuffer, TFT_WIDTH - 54 - t, TFT_HEIGHT - 28);
     }
 

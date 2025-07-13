@@ -92,6 +92,70 @@ static const int32_t trueFalseVals[] = {
 
 static const char str_eraseProgress[] = "Reset Current";
 
+struct
+{
+    const char* name;
+    cnfsFileIdx_t pzl;
+    cnfsFileIdx_t slv;
+} picrossPuzzles[PICROSS_LEVEL_COUNT] = {
+    {.name = "arrow", .pzl = _55_ARROW_PZL_WSG, .slv = _55_ARROW_SLV_WSG},
+    {.name = "check", .pzl = _55_CHECK_PZL_WSG, .slv = _55_CHECK_SLV_WSG},
+    {.name = "crown", .pzl = _55_CROWN_PZL_WSG, .slv = _55_CROWN_SLV_WSG},
+    {.name = "flower", .pzl = _55_FLOWER_PZL_WSG, .slv = _55_FLOWER_SLV_WSG},
+    {.name = "ghost", .pzl = _55_GHOST_PZL_WSG, .slv = _55_GHOST_SLV_WSG},
+    {.name = "heart", .pzl = _55_HEART_PZL_WSG, .slv = _55_HEART_SLV_WSG},
+    {.name = "kitty", .pzl = _55_KITTY_PZL_WSG, .slv = _55_KITTY_SLV_WSG},
+    {.name = "pacman", .pzl = _55_PACMAN_PZL_WSG, .slv = _55_PACMAN_SLV_WSG},
+    {.name = "rainbow", .pzl = _55_RAINBOW_PZL_WSG, .slv = _55_RAINBOW_SLV_WSG},
+    {.name = "triangle", .pzl = _55_TRIANGLE_PZL_WSG, .slv = _55_TRIANGLE_SLV_WSG},
+    {.name = "mag1", .pzl = _6F_MAG_1_PZL_WSG, .slv = _6F_MAG_1_SLV_WSG},
+    {.name = "mag2", .pzl = _6F_MAG_2_PZL_WSG, .slv = _6F_MAG_2_SLV_WSG},
+    {.name = "mag3", .pzl = _6F_MAG_3_PZL_WSG, .slv = _6F_MAG_3_SLV_WSG},
+    {.name = "maglogo", .pzl = _6F_MAGLOGO_PZL_WSG, .slv = _6F_MAGLOGO_SLV_WSG},
+    {.name = "music", .pzl = _6F_MUSIC_PZL_WSG, .slv = _6F_MUSIC_SLV_WSG},
+    {.name = "flyindonut", .pzl = _8F_FLYINDONUT_PZL_WSG, .slv = _8F_FLYINDONUT_SLV_WSG},
+    {.name = "mtype", .pzl = _8F_MTYPE_PZL_WSG, .slv = _8F_MTYPE_SLV_WSG},
+    {.name = "personaldemon", .pzl = _8F_PERSONALDEMON_PZL_WSG, .slv = _8F_PERSONALDEMON_SLV_WSG},
+    {.name = "shredder", .pzl = _8F_SHREDDER_PZL_WSG, .slv = _8F_SHREDDER_SLV_WSG},
+    {.name = "stomp", .pzl = _8F_STOMP_PZL_WSG, .slv = _8F_STOMP_SLV_WSG},
+    {.name = "apple", .pzl = AA_APPLE_PZL_WSG, .slv = AA_APPLE_SLV_WSG},
+    {.name = "baba", .pzl = AA_BABA_PZL_WSG, .slv = AA_BABA_SLV_WSG},
+    {.name = "dragonball", .pzl = AA_DRAGONBALL_PZL_WSG, .slv = AA_DRAGONBALL_SLV_WSG},
+    {.name = "heartpiece", .pzl = AA_HEARTPIECE_PZL_WSG, .slv = AA_HEARTPIECE_SLV_WSG},
+    {.name = "metroid", .pzl = AA_METROID_PZL_WSG, .slv = AA_METROID_SLV_WSG},
+    {.name = "moonstick", .pzl = AA_MOONSTICK_PZL_WSG, .slv = AA_MOONSTICK_SLV_WSG},
+    {.name = "peach", .pzl = AA_PEACH_PZL_WSG, .slv = AA_PEACH_SLV_WSG},
+    {.name = "pokeball", .pzl = AA_POKEBALL_PZL_WSG, .slv = AA_POKEBALL_SLV_WSG},
+    {.name = "sword", .pzl = AA_SWORD_PZL_WSG, .slv = AA_SWORD_SLV_WSG},
+    {.name = "toadstool", .pzl = AA_TOADSTOOL_PZL_WSG, .slv = AA_TOADSTOOL_SLV_WSG},
+    {.name = "donutjump", .pzl = AF_DONUTJUMP_PZL_WSG, .slv = AF_DONUTJUMP_SLV_WSG},
+    {.name = "picross", .pzl = AF_PICROSS_PZL_WSG, .slv = AF_PICROSS_SLV_WSG},
+    {.name = "superswadgeland", .pzl = AF_SUPERSWADGELAND_PZL_WSG, .slv = AF_SUPERSWADGELAND_SLV_WSG},
+    {.name = "swadgebros", .pzl = AF_SWADGEBROS_PZL_WSG, .slv = AF_SWADGEBROS_SLV_WSG},
+    {.name = "tiltrads", .pzl = AF_TILTRADS_PZL_WSG, .slv = AF_TILTRADS_SLV_WSG},
+    {.name = "galacticbrickdown", .pzl = CF_GALACTICBRICKDOWN_PZL_WSG, .slv = CF_GALACTICBRICKDOWN_SLV_WSG},
+    {.name = "lumberjacks", .pzl = CF_LUMBERJACKS_PZL_WSG, .slv = CF_LUMBERJACKS_SLV_WSG},
+    {.name = "magtroidpocket", .pzl = CF_MAGTROIDPOCKET_PZL_WSG, .slv = CF_MAGTROIDPOCKET_SLV_WSG},
+    {.name = "pushykawaiigo", .pzl = CF_PUSHYKAWAIIGO_PZL_WSG, .slv = CF_PUSHYKAWAIIGO_SLV_WSG},
+    {.name = "bigbug", .pzl = EF_BIGBUG_PZL_WSG, .slv = EF_BIGBUG_SLV_WSG},
+    {.name = "pango", .pzl = EF_PANGO_PZL_WSG, .slv = EF_PANGO_SLV_WSG},
+    {.name = "2048", .pzl = EF_2048_PZL_WSG, .slv = EF_2048_SLV_WSG},
+    {.name = "chowagrove", .pzl = EF_CHOWAGROVE_PZL_WSG, .slv = EF_CHOWAGROVE_SLV_WSG},
+    {.name = "hunterspuzzles", .pzl = EF_HUNTERSPUZZLES_PZL_WSG, .slv = EF_HUNTERSPUZZLES_SLV_WSG},
+    {.name = "swadgehero", .pzl = EF_SWADGEHERO_PZL_WSG, .slv = EF_SWADGEHERO_SLV_WSG},
+    {.name = "ultimatettt", .pzl = EF_ULTIMATETTT_PZL_WSG, .slv = EF_ULTIMATETTT_SLV_WSG},
+    {.name = "acleaf", .pzl = FF_ACLEAF_PZL_WSG, .slv = FF_ACLEAF_SLV_WSG},
+    {.name = "doublebass", .pzl = FF_DOUBLEBASS_PZL_WSG, .slv = FF_DOUBLEBASS_SLV_WSG},
+    {.name = "drum", .pzl = FF_DRUM_PZL_WSG, .slv = FF_DRUM_SLV_WSG},
+    {.name = "meteor", .pzl = FF_METEOR_PZL_WSG, .slv = FF_METEOR_SLV_WSG},
+    {.name = "pslogo", .pzl = FF_PSLOGO_PZL_WSG, .slv = FF_PSLOGO_SLV_WSG},
+    {.name = "sax", .pzl = FF_SAX_PZL_WSG, .slv = FF_SAX_SLV_WSG},
+    {.name = "sfclogo", .pzl = FF_SFCLOGO_PZL_WSG, .slv = FF_SFCLOGO_SLV_WSG},
+    {.name = "tank", .pzl = FF_TANK_PZL_WSG, .slv = FF_TANK_SLV_WSG},
+    {.name = "trumpet", .pzl = FF_TRUMPET_PZL_WSG, .slv = FF_TRUMPET_SLV_WSG},
+    {.name = "wing", .pzl = FF_WING_PZL_WSG, .slv = FF_WING_SLV_WSG},
+};
+
 swadgeMode_t modePicross = {
     .modeName                 = str_picrossTitle,
     .wifiMode                 = NO_WIFI,
@@ -217,133 +281,12 @@ void loadLevels()
     // Todo: we can cut our memory use down by about 2/3 if we use a naming convention and the titles to pull the wsg
     // names. snprint into loadWsg, i think. Make sure it all works with, say, apostophes and spaces.
 
-    // pm->levels[0].title = "Test";
-    // loadWsg("TEMP.wsg", &pm->levels[0].levelWSG, false);
-    // loadWsg("TEMP.wsg", &pm->levels[0].completedWSG, false);
-
-    // any entry with lowercase names is testing data. CamelCase names are good to go. This is not convention, just
-    // nature of dac sending me files vs. my testing ones.
-    pm->levels[0].title = "Pi";
-    loadWsg(PI_PZL_WSG, &pm->levels[0].levelWSG, false); // 5x5
-    loadWsg(PI_SLV_WSG, &pm->levels[0].completedWSG, false);
-
-    pm->levels[1].title = "Penguin";
-    loadWsg(PENGUIN_PZL_WSG, &pm->levels[1].levelWSG, false); // 5x5
-    loadWsg(PENGUIN_SLV_WSG, &pm->levels[1].completedWSG, false);
-
-    pm->levels[2].title = "Twenty Years";
-    loadWsg(TWENTY_PZL_WSG, &pm->levels[2].levelWSG, false); // 5x7
-    loadWsg(TWENTY_SLV_WSG, &pm->levels[2].completedWSG, false);
-
-    pm->levels[3].title = "A Lie";
-    loadWsg(CAKE_PZL_WSG, &pm->levels[3].levelWSG, false); // 5x10
-    loadWsg(CAKE_SLV_WSG, &pm->levels[3].completedWSG, false);
-
-    pm->levels[4].title = "XP Bliss";
-    loadWsg(BLISS_WSG, &pm->levels[4].levelWSG, false); // 5x10
-    loadWsg(BLISS_C_WSG, &pm->levels[4].completedWSG, false);
-
-    pm->levels[5].title = "Discord Notification";
-    loadWsg(DISCORD_PZL_WSG, &pm->levels[5].levelWSG, false); // 10x10
-    loadWsg(DISCORD_SLV_WSG, &pm->levels[5].completedWSG, false);
-
-    pm->levels[6].title = "Snare Drum";
-    loadWsg(SNARE_DRUM_PZL_WSG, &pm->levels[6].levelWSG, false); // 10x10
-    loadWsg(SNARE_DRUM_SLV_WSG, &pm->levels[6].completedWSG, false);
-
-    pm->levels[7].title = "Sus";                            //"Sus" or just "Among Us"
-    loadWsg(AMONG_PZL_WSG, &pm->levels[7].levelWSG, false); // 5x5
-    loadWsg(AMONG_SLV_WSG, &pm->levels[7].completedWSG, false);
-
-    pm->levels[8].title = "Danny";
-    loadWsg(DANNY_PZL_WSG, &pm->levels[8].levelWSG, false); // 10x10
-    loadWsg(DANNY_SLV_WSG, &pm->levels[8].completedWSG, false);
-
-    pm->levels[9].title = "Controller";
-    loadWsg(CONTROLLER_PZL_WSG, &pm->levels[9].levelWSG, false); // 10x10
-    loadWsg(CONTROLLER_SLV_WSG, &pm->levels[9].completedWSG, false);
-
-    pm->levels[10].title = "Cat";
-    loadWsg(CAT_PZL_WSG, &pm->levels[10].levelWSG, false); // 10x10
-    loadWsg(CAT_SLV_WSG, &pm->levels[10].completedWSG, false);
-
-    pm->levels[11].title = "Pear";                          // todo: move this lower, it can be tricky ish.
-    loadWsg(PEAR_PZL_WSG, &pm->levels[11].levelWSG, false); // 10x10
-    loadWsg(PEAR_SLV_WSG, &pm->levels[11].completedWSG, false);
-
-    pm->levels[12].title = "Cherry";
-    loadWsg(CHERRY_PZL_WSG, &pm->levels[12].levelWSG, false); // 10x10
-    loadWsg(CHERRY_SLV_WSG, &pm->levels[12].completedWSG, false);
-
-    pm->levels[13].title = "Magnet";
-    loadWsg(MAGNET_PZL_WSG, &pm->levels[13].levelWSG, false); // 10x10
-    loadWsg(MAGNET_SLV_WSG, &pm->levels[13].completedWSG, false);
-
-    pm->levels[14].title = "Strawberry";
-    loadWsg(STRAWBERRY_PZL_WSG, &pm->levels[14].levelWSG, false); // 10x10
-    loadWsg(STRAWBERRY_SLV_WSG, &pm->levels[14].completedWSG, false);
-
-    pm->levels[15].title = "Frog";
-    loadWsg(FROG_PZL_WSG, &pm->levels[15].levelWSG, false);
-    loadWsg(FROG_SLV_WSG, &pm->levels[15].completedWSG, false);
-
-    pm->levels[16].title = "Galaga Bug";
-    loadWsg(GALAGA_PZL_WSG, &pm->levels[16].levelWSG, false); // 10x10
-    loadWsg(GALAGA_SLV_WSG, &pm->levels[16].completedWSG, false);
-
-    pm->levels[17].title = "Green Shell";
-    loadWsg(GREEN_SHELL_PZL_WSG, &pm->levels[17].levelWSG, false); // 10x10
-    loadWsg(GREEN_SHELL_SLV_WSG, &pm->levels[17].completedWSG, false);
-
-    pm->levels[18].title = "Zelda";
-    loadWsg(LINK_PZL_WSG, &pm->levels[18].levelWSG, false); // 10x10
-    loadWsg(LINK_SLV_WSG, &pm->levels[18].completedWSG, false);
-
-    pm->levels[19].title = "Lil' B";
-    loadWsg(LIL_B_PZL_WSG, &pm->levels[19].levelWSG, false); // 15x15
-    loadWsg(LIL_B_SLV_WSG, &pm->levels[19].completedWSG, false);
-
-    pm->levels[20].title = "Goomba";
-    loadWsg(GOOMBA_PZL_WSG, &pm->levels[20].levelWSG, false); // 15x15
-    loadWsg(GOOMBA_SLV_WSG, &pm->levels[20].completedWSG, false);
-
-    pm->levels[21].title = "Mouse";
-    loadWsg(MOUSE_PZL_WSG, &pm->levels[21].levelWSG, false); // 15x15
-    loadWsg(MOUSE_SLV_WSG, &pm->levels[21].completedWSG, false);
-
-    pm->levels[22].title = "Note";
-    loadWsg(NOTE_PZL_WSG, &pm->levels[22].levelWSG, false); // 15x15
-    loadWsg(NOTE_SLV_WSG, &pm->levels[22].completedWSG, false);
-
-    pm->levels[23].title = "Big Mouth Billy";
-    loadWsg(BASS_PZL_WSG, &pm->levels[23].levelWSG, false); // 15x15
-    loadWsg(BASS_SLV_WSG, &pm->levels[23].completedWSG, false);
-
-    pm->levels[24].title = "Fountain Pen";
-    loadWsg(FOUNTAIN_PEN_PZL_WSG, &pm->levels[24].levelWSG, false); // 15x15
-    loadWsg(FOUNTAIN_PEN_SLV_WSG, &pm->levels[24].completedWSG, false);
-
-    pm->levels[25].title = "Power Plug";
-    loadWsg(PLUG_PZL_WSG, &pm->levels[25].levelWSG, false); // 15x15 - This one is on the harder side of things.
-    loadWsg(PLUG_SLV_WSG, &pm->levels[25].completedWSG, false);
-
-    pm->levels[26].title = "Blender";
-    loadWsg(BLENDER_PZL_WSG, &pm->levels[26].levelWSG, false); // 15x15
-    loadWsg(BLENDER_SLV_WSG, &pm->levels[26].completedWSG, false);
-
-    pm->levels[27].title = "Nintendo 64";
-    loadWsg(_N64_PZL_WSG, &pm->levels[27].levelWSG, false); // 15x15
-    loadWsg(_N64_PZL_WSG, &pm->levels[27].completedWSG, false);
-
-    pm->levels[28].title = "Rocket League";
-    loadWsg(ROCKET_LEAGUE_PZL_WSG, &pm->levels[28].levelWSG,
-            false); // 15x15 - This one is on the harder side of things.
-    loadWsg(ROCKET_LEAGUE_SLV_WSG, &pm->levels[28].completedWSG, false);
-
-    // this has to be the last puzzle.
-    pm->levels[29].title = "Never Gonna";                 // give you up, but title too long for single line.
-    loadWsg(RR_PZL_WSG, &pm->levels[29].levelWSG, false); // 15/15
-    loadWsg(RR_SLV_WSG, &pm->levels[29].completedWSG, false);
+    for (int32_t i = 0; i < MIN(PICROSS_LEVEL_COUNT, ARRAY_SIZE(picrossPuzzles)); i++)
+    {
+        pm->levels[i].title = picrossPuzzles[i].name;
+        loadWsg(picrossPuzzles[i].pzl, &pm->levels[i].levelWSG, false);
+        loadWsg(picrossPuzzles[i].slv, &pm->levels[i].completedWSG, false);
+    }
 
     // dont forget to update PICROSS_LEVEL_COUNT (in #define in picross_consts.h) when adding levels.
 
