@@ -5,6 +5,7 @@ static void ccmgDeliveryDestroyMicrogame(void);
 static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
                                  buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 static void ccmgDeliveryBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+static void ccmgDeliveryDrawStar(int16_t x, int16_t y);
 
 #define MINIMUM_WAIT_US        500000
 #define MAXIMUM_WAIT_US        3000000
@@ -12,10 +13,13 @@ static void ccmgDeliveryBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, 
 #define KNOCK_DURATION_US      400000
 #define KNOCK_DELAY_US         200000
 
-#define OUTLINE_COLOR  c222
-#define FLOOR_COLOR    c431
-#define DOOR_COLOR     c432
-#define DOORKNOB_COLOR c444
+#define DAYTIME_BG_COLOR   c355
+#define NIGHTTIME_BG_COLOR c013
+#define STAR_COLOR         c554
+#define OUTLINE_COLOR      c222
+#define FLOOR_COLOR        c431
+#define DOOR_COLOR         c432
+#define DOORKNOB_COLOR     c444
 
 #define FLOOR_TOP_Y       157
 #define FLOOR_BOTTOM_Y    CC_DRAWABLE_HEIGHT
@@ -56,10 +60,8 @@ const cosCrunchMicrogame_t ccmgDelivery    = {
 };
 
 paletteColor_t const timeOfDayColors[] = {
-    // Daytime
-    c355,
-    // Nighttime
-    c013,
+    DAYTIME_BG_COLOR,
+    NIGHTTIME_BG_COLOR,
 };
 
 paletteColor_t const wallColors[] = {
@@ -126,6 +128,9 @@ static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, co
                                  buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
 {
     // The tumbleweed needs to draw over this but behind the walls, so draw it first
+    ccmgDeliveryDrawStar(122, 76);
+    ccmgDeliveryDrawStar(161, 90);
+    ccmgDeliveryDrawStar(139, 111);
     drawWsgTile(&ccmgd->wsg.grass, DOOR_X, FLOOR_TOP_Y - ccmgd->wsg.grass.h);
 
     switch (state)
@@ -196,6 +201,7 @@ static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, co
                  WINDOW_TOP_Y + WINDOW_WIDTH - 1, OUTLINE_COLOR);
     drawLineFast(WINDOW_OFFSET_X, WINDOW_TOP_Y + WINDOW_WIDTH / 2, WINDOW_OFFSET_X + WINDOW_WIDTH - 1,
                  WINDOW_TOP_Y + WINDOW_WIDTH / 2, OUTLINE_COLOR);
+    ccmgDeliveryDrawStar(47, 59);
 
     // Right window
     drawRectFilled(TFT_WIDTH - (WINDOW_WIDTH + WINDOW_OFFSET_X), WINDOW_TOP_Y, TFT_WIDTH - WINDOW_OFFSET_X,
@@ -206,6 +212,8 @@ static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, co
                  TFT_WIDTH - (WINDOW_OFFSET_X + WINDOW_WIDTH / 2) - 1, WINDOW_TOP_Y + WINDOW_WIDTH - 1, OUTLINE_COLOR);
     drawLineFast(TFT_WIDTH - (WINDOW_OFFSET_X + WINDOW_WIDTH), WINDOW_TOP_Y + WINDOW_WIDTH / 2,
                  TFT_WIDTH - WINDOW_OFFSET_X - 1, WINDOW_TOP_Y + WINDOW_WIDTH / 2, OUTLINE_COLOR);
+    ccmgDeliveryDrawStar(234, 56);
+    ccmgDeliveryDrawStar(218, 73);
 
     switch (state)
     {
@@ -252,4 +260,13 @@ static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, co
 static void ccmgDeliveryBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
     fillDisplayArea(x, y, x + w, y + h, ccmgd->timeOfDayColor);
+}
+
+static void ccmgDeliveryDrawStar(int16_t x, int16_t y)
+{
+    if (ccmgd->timeOfDayColor == NIGHTTIME_BG_COLOR)
+    {
+        drawLineFast(x - 1, y, x + 1, y, STAR_COLOR);
+        drawLineFast(x, y - 2, x, y + 2, STAR_COLOR);
+    }
 }
