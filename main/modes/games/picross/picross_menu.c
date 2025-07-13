@@ -210,7 +210,7 @@ struct
      .pzl         = CF_PUSHYKAWAIIGO_PZL_WSG,
      .slv         = CF_PUSHYKAWAIIGO_SLV_WSG,
      .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"},
-    {.name = "bigbug", .pzl = EF_BIGBUG_PZL_WSG, .slv = EF_BIGBUG_SLV_WSG, .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"},
+    {.name = "bigbug", .pzl = EF_BIGBUG_PZL_WSG, .slv = EF_BIGBUG_SLV_WSG, .marqueeFact = "Dr. Ovo Garbotnik fought bugs in a landfill. \"--Incoming transmission from mr. dev\" What in the heck? \"James was trying to solve the design issues that Dave the Diver ran into. But he sort of just ran into the same problems."},
     {.name = "pango", .pzl = EF_PANGO_PZL_WSG, .slv = EF_PANGO_SLV_WSG, .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"},
     {.name        = "2048",
      .pzl         = EF_2048_PZL_WSG,
