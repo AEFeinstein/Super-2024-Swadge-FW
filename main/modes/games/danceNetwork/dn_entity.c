@@ -939,9 +939,9 @@ void dn_drawPlayerTurn(dn_entity_t* self)
     drawCircleQuadrants(TFT_WIDTH-42,TFT_HEIGHT-42,41,true,false,false,false,col);
     drawRect(0,0,TFT_WIDTH-0,TFT_HEIGHT-0,col);
 
-    drawCircleQuadrants(42,42,41,false,false,true,false,col);
-    drawCircleQuadrants(TFT_WIDTH-43,42,41,false,false,false,true,col);
-    drawCircleQuadrants(41,TFT_HEIGHT-43,41,false,true,false,false,col);
-    drawCircleQuadrants(TFT_WIDTH-43,TFT_HEIGHT-43,41,true,false,false,false,col);
+    drawCircleQuadrants(41,41,40,false,false,true,false,col);
+    drawCircleQuadrants(TFT_WIDTH-42,41,40,false,false,false,true,col);
+    drawCircleQuadrants(41,TFT_HEIGHT-42,40,false,true,false,false,col);
+    drawCircleQuadrants(TFT_WIDTH-42,TFT_HEIGHT-42,40,true,false,false,false,col);
     drawRect(1,1,TFT_WIDTH-1,TFT_HEIGHT-1,col);
 }
