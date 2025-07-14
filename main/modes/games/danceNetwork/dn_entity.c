@@ -842,6 +842,10 @@ void dn_updateTileSelector(dn_entity_t* self)
     for (int line = 0; line < NUM_SELECTOR_LINES; line++)
     {
         tData->lineYs[line] += line % 7;
+        if (dn_randomInt(0, 600) < tData->lineYs[line])
+        {
+            tData->lineYs[line] = 0;
+        }
     }
 }
 
@@ -850,11 +854,6 @@ void dn_drawTileSelectorBackHalf(dn_entity_t* self, int16_t x, int16_t y)
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
     for (int line = 0; line < NUM_SELECTOR_LINES; line++)
     {
-        int r = dn_randomInt(0, 255);
-        if (r < tData->lineYs[line])
-        {
-            continue;
-        }
         drawLineFast(x - 23, y - (tData->lineYs[line] >> 3), x, y - 11 - (tData->lineYs[line] >> 3),
                      tData->colors[line % 3]);
         drawLineFast(x, y - 11 - (tData->lineYs[line] >> 3), x + 23, y - (tData->lineYs[line] >> 3),
@@ -867,11 +866,6 @@ void dn_drawTileSelectorFrontHalf(dn_entity_t* self, int16_t x, int16_t y)
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
     for (int line = 0; line < NUM_SELECTOR_LINES; line++)
     {
-        int r = dn_randomInt(0, 255);
-        if (r < tData->lineYs[line])
-        {
-            continue;
-        }
         drawLineFast(x - 23, y - (tData->lineYs[line] >> 3), x, y + 11 - (tData->lineYs[line] >> 3),
                      tData->colors[line % 3]);
         drawLineFast(x, y + 11 - (tData->lineYs[line] >> 3), x + 23, y - (tData->lineYs[line] >> 3),
