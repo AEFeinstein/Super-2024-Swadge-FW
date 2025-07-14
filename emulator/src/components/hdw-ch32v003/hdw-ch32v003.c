@@ -3,7 +3,7 @@
 
 int initCh32v003(int swdio_pin)
 {
-	return -1;
+    return -1;
 }
 
 int ch32v003WriteMemory(const uint8_t* binary, uint32_t length, uint32_t address)
@@ -33,3 +33,14 @@ void ch32v003CheckTerminal()
 void ch32v003Teardown()
 {
 }
+
+int ch32v003Resume()
+{
+    return -1;
+}
+
+int ch32v003WriteFlash(const uint8_t* buf, int sz)
+{
+    return -1;
+}
+
