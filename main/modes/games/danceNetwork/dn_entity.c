@@ -1,6 +1,7 @@
 #include "dn_entity.h"
 #include "dn_utility.h"
 #include "dn_random.h"
+#include "shapes.h"
 
 void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType)
 {
@@ -76,6 +77,32 @@ void dn_updateBoard(dn_entity_t* self)
     }
 }
 
+bool dn_isTileSelectabe(dn_entity_t* board, dn_boardPos_t pos)
+{
+    dn_boardData_t* bData = (dn_boardData_t*)board->data;
+    switch(board->gameData->phase)
+    {
+        case DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE:
+        case DN_P1_MOVE_PHASE:
+        {
+            if(bData->tiles[pos.y][pos.x].unit)
+            {
+                dn_entity_t* unit = bData->tiles[pos.y][pos.x].unit;
+                if(unit == bData->p1Units[0] || unit == bData->p1Units[1] || unit == bData->p1Units[2]
+                        || unit == bData->p1Units[3] || unit == bData->p1Units[4])
+                {
+                    return true;
+                }
+            }
+        }
+        default:
+        {
+            break;
+        }
+    }
+    return false;
+}
+
 void dn_drawBoard(dn_entity_t* self)
 {
     dn_boardData_t* boardData = (dn_boardData_t*)self->data;
@@ -89,9 +116,24 @@ void dn_drawBoard(dn_entity_t* self)
             int drawY = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                         + (x + y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originY
                         - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
-            drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
+          
+            if(dn_isTileSelectabe(self,(dn_boardPos_t){.x = x, .y = y}))
+            {
+                drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
+                          drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                          drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                        &self->gameData->entityManager
+                                 .palettes[DN_RED_FLOOR_PALETTE
+                                           + (((y * ((self->gameData->generalTimer >> 10) % 10) + x + 2)
+                                               + (self->gameData->generalTimer >> 6))
+                                              % 6)]);
+            }
+            else
+            {
+                drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
                           drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
                           drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
+            }
             if (boardData->tiles[y][x].selector != NULL)
             {
                 // Draw the back part of the selector
@@ -842,6 +884,10 @@ void dn_updateTileSelector(dn_entity_t* self)
     for (int line = 0; line < NUM_SELECTOR_LINES; line++)
     {
         tData->lineYs[line] += line % 7;
+        if (dn_randomInt(0, 600) < tData->lineYs[line])
+        {
+            tData->lineYs[line] = 0;
+        }
     }
 }
 
@@ -850,11 +896,6 @@ void dn_drawTileSelectorBackHalf(dn_entity_t* self, int16_t x, int16_t y)
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
     for (int line = 0; line < NUM_SELECTOR_LINES; line++)
     {
-        int r = dn_randomInt(0, 255);
-        if (r < tData->lineYs[line])
-        {
-            continue;
-        }
         drawLineFast(x - 23, y - (tData->lineYs[line] >> 3), x, y - 11 - (tData->lineYs[line] >> 3),
                      tData->colors[line % 3]);
         drawLineFast(x, y - 11 - (tData->lineYs[line] >> 3), x + 23, y - (tData->lineYs[line] >> 3),
@@ -867,14 +908,40 @@ void dn_drawTileSelectorFrontHalf(dn_entity_t* self, int16_t x, int16_t y)
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
     for (int line = 0; line < NUM_SELECTOR_LINES; line++)
     {
-        int r = dn_randomInt(0, 255);
-        if (r < tData->lineYs[line])
-        {
-            continue;
-        }
         drawLineFast(x - 23, y - (tData->lineYs[line] >> 3), x, y + 11 - (tData->lineYs[line] >> 3),
                      tData->colors[line % 3]);
         drawLineFast(x, y + 11 - (tData->lineYs[line] >> 3), x + 23, y - (tData->lineYs[line] >> 3),
                      tData->colors[line % 3]);
     }
+}
+
+void dn_drawPlayerTurn(dn_entity_t* self)
+{
+    paletteColor_t col = c055;
+    switch(self->gameData->phase)
+    {
+        case DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE:
+        case DN_P2_MOVE_PHASE:
+        case DN_P2_UPGRADE_PHASE:
+        case DN_P2_SWAP_PHASE:
+        {
+            col = c550;
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+    drawCircleQuadrants(41,41,41,false,false,true,false,col);
+    drawCircleQuadrants(TFT_WIDTH-42,41,41,false,false,false,true,col);
+    drawCircleQuadrants(41,TFT_HEIGHT-42,41,false,true,false,false,col);
+    drawCircleQuadrants(TFT_WIDTH-42,TFT_HEIGHT-42,41,true,false,false,false,col);
+    drawRect(0,0,TFT_WIDTH-0,TFT_HEIGHT-0,col);
+
+    drawCircleQuadrants(42,42,41,false,false,true,false,col);
+    drawCircleQuadrants(TFT_WIDTH-43,42,41,false,false,false,true,col);
+    drawCircleQuadrants(41,TFT_HEIGHT-43,41,false,true,false,false,col);
+    drawCircleQuadrants(TFT_WIDTH-43,TFT_HEIGHT-43,41,true,false,false,false,col);
+    drawRect(1,1,TFT_WIDTH-1,TFT_HEIGHT-1,col);
 }
