@@ -33,27 +33,26 @@
 int uprintf(const char* fmt, ...);
 // #define uprintf(x...) ESP_LOGE( "ch32v003programmer", x)
 
-#define GPIO_VAR_W1TC (*GPIO_VAR_W1TC_R)
-#define GPIO_VAR_W1TS (*GPIO_VAR_W1TS_R)
+#define GPIO_VAR_W1TC        (*GPIO_VAR_W1TC_R)
+#define GPIO_VAR_W1TS        (*GPIO_VAR_W1TS_R)
 #define GPIO_VAR_ENABLE_W1TC (*GPIO_VAR_ENABLE_W1TC_R)
 #define GPIO_VAR_ENABLE_W1TS (*GPIO_VAR_ENABLE_W1TS_R)
-#define GPIO_VAR_IN (*GPIO_VAR_IN_R)
+#define GPIO_VAR_IN          (*GPIO_VAR_IN_R)
 
-static uint32_t SWIO_PIN = 18;
-static uint32_t SWCLK_PIN = 17;
+static uint32_t SWIO_PIN;
+static uint32_t SWCLK_PIN = 64;
 
-static volatile uint32_t * GPIO_VAR_W1TC_R = &GPIO.out_w1tc;
-static volatile uint32_t * GPIO_VAR_W1TS_R = &GPIO.out_w1ts;
-static volatile uint32_t * GPIO_VAR_ENABLE_W1TC_R = &GPIO.enable_w1tc;
-static volatile uint32_t * GPIO_VAR_ENABLE_W1TS_R = &GPIO.enable_w1ts;
-static volatile uint32_t * GPIO_VAR_IN_R = &GPIO.in;
+static volatile uint32_t* GPIO_VAR_W1TC_R        = &GPIO.out_w1tc;
+static volatile uint32_t* GPIO_VAR_W1TS_R        = &GPIO.out_w1ts;
+static volatile uint32_t* GPIO_VAR_ENABLE_W1TC_R = &GPIO.enable_w1tc;
+static volatile uint32_t* GPIO_VAR_ENABLE_W1TS_R = &GPIO.enable_w1ts;
+static volatile uint32_t* GPIO_VAR_IN_R          = &GPIO.in;
 
 #define IO_MUX_REG(x)  XIO_MUX_REG(x)
-#define XIO_MUX_REG(x) (IO_MUX_GPIO0_REG+x)
+#define XIO_MUX_REG(x) (IO_MUX_GPIO0_REG + (x * 4))
 
 #define GPIO_NUM(x)  XGPIO_NUM(x)
-#define XGPIO_NUM(x) GPIO_NUM_0 + x
-
+#define XGPIO_NUM(x) (GPIO_NUM_0 + (x * 4))
 
 #include "hdw-ch32v003.h"
 #include "ch32v003_swio.h"
@@ -87,14 +86,12 @@ static int ch32v003Check();
 // Functions
 //==============================================================================
 
-int initCh32v003( int swdio_pin )
+int initCh32v003(int swdio_pin)
 {
-#if 0
+    SWIO_PIN  = swdio_pin;
+    SWCLK_PIN = 64; // Unused.
 
-    SWIO_PIN = swdio_pin;
-    SWCLK_PIN = 17; // Unused.
-#if 0
-    if( SWIO_PIN < 32 )
+    if (SWIO_PIN < 32)
     {
         GPIO_VAR_W1TC_R        = &GPIO.out_w1tc;
         GPIO_VAR_W1TS_R        = &GPIO.out_w1ts;
@@ -110,15 +107,6 @@ int initCh32v003( int swdio_pin )
         GPIO_VAR_ENABLE_W1TS_R = &GPIO.enable1_w1ts.val;
         GPIO_VAR_IN_R          = &GPIO.in1.val;
     }
-#endif
-
-uprintf( "%d\n", SWIO_PIN );
- //   if (ch32v003Check())
- //   {
- //       return -1;
- //   }
-
-#endif
     return 0;
 }
 
@@ -231,8 +219,8 @@ int ch32v003WriteFlash(const uint8_t* buf, int sz)
     for (j = 0; j < sz / 4; j++)
     {
         unsigned addy = 0x08000000 + j * 4;
-        uint32_t by = 0;
-        int ra = ch32v003ReadMemory((uint8_t*)&by, 4, addy);
+        uint32_t by   = 0;
+        int ra        = ch32v003ReadMemory((uint8_t*)&by, 4, addy);
         if (ra)
         {
             uprintf("Failed to read %08x\n", addy);
@@ -322,23 +310,16 @@ void ch32v003CheckTerminal()
 void ch32v003Teardown()
 {
     // Power-Down
-#if SWIO_PIN < 32
-    GPIO_VAR_W1TC = 1 << SWIO_PIN;
-    GPIO_VAR_W1TS = 1 << SWIO_PIN;
-#else
-    GPIO_VAR_W1TC = 1 << (SWIO_PIN - 32);
-    GPIO_VAR_W1TS = 1 << (SWIO_PIN - 32);
-#endif
-
-#ifdef VDD3V3_EN_PIN
-    GPIO.out_w1tc = 1 << VDD3V3_EN_PIN;
-#endif
-#ifdef VDD5V_EN_PIN
-    GPIO.out_w1tc = 1 << VDD5V_EN_PIN;
-#endif
-#ifdef SWIO_PU_PIN
-    GPIO.out_w1tc = 1 << SWIO_PU_PIN;
-#endif
+    if (SWIO_PIN < 32)
+    {
+        GPIO_VAR_W1TC = 1 << SWIO_PIN;
+        GPIO_VAR_W1TS = 1 << SWIO_PIN;
+    }
+    else
+    {
+        GPIO_VAR_W1TC = 1 << (SWIO_PIN - 32);
+        GPIO_VAR_W1TS = 1 << (SWIO_PIN - 32);
+    }
 
     memset(&swioContext, 0, sizeof(swioContext));
 }
@@ -348,7 +329,6 @@ static int ch32v003Check()
     if (!swioContext.t1coeff)
     {
         // https://github.com/cnlohr/Super-2024-Swadge-FW/blob/ch32v003programmer/tools/sandbox_test/test_programmer/sandbox.c
-
         REG_WRITE(IO_MUX_REG(SWIO_PIN),
                   1 << FUN_IE_S | 1 << FUN_PU_S | 1 << FUN_DRV_S); // Additional pull-up, 10mA drive.  Optional: 10k
                                                                    // pull-up resistor. This is the actual SWIO.
@@ -358,22 +338,24 @@ static int ch32v003Check()
         // I have no idea why this is needed.
         gpio_config_t reset_gpios = {
             .mode         = GPIO_MODE_INPUT,
-            .pin_bit_mask = (1ULL << SWIO_PIN) | (1ULL << SWCLK_PIN),
+            .pin_bit_mask = (1ULL << SWIO_PIN), // | (1ULL << SWCLK_PIN),
             .pull_up_en   = GPIO_PULLUP_ENABLE,
             .pull_down_en = GPIO_PULLDOWN_DISABLE,
             .intr_type    = GPIO_INTR_DISABLE,
         };
         gpio_config(&reset_gpios);
-
-        REG_WRITE(GPIO_FUNC18_OUT_SEL_CFG_REG, SIG_GPIO_OUT_IDX);
+        REG_WRITE(/*GPIO_FUNC18_OUT_SEL_CFG_REG*/ GPIO_FUNC0_OUT_SEL_CFG_REG + SWIO_PIN * 4, SIG_GPIO_OUT_IDX);
         // REG_WRITE( GPIO_FUNC40_OUT_SEL_CFG_REG, SIG_GPIO_OUT_IDX );
 
         memset(&swioContext, 0, sizeof(swioContext));
-#if SWIO_PIN > 31
-        swioContext.pinmaskD = 1 << (SWIO_PIN - 32);
-#else
-        swioContext.pinmaskD = 1 << SWIO_PIN;
-#endif
+        if (SWIO_PIN > 31)
+        {
+            swioContext.pinmaskD = 1 << (SWIO_PIN - 32);
+        }
+        else
+        {
+            swioContext.pinmaskD = 1 << SWIO_PIN;
+        }
 
         GPIO_VAR_W1TS        = swioContext.pinmaskD;
         GPIO_VAR_ENABLE_W1TS = swioContext.pinmaskD;
@@ -405,4 +387,3 @@ static int ch32v003Check()
     }
     return 0;
 }
-

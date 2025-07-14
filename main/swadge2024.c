@@ -408,7 +408,7 @@ void app_main(void)
 
     initLeds(GPIO_NUM_39, ledMirrorGpio, getLedBrightnessSetting());
 
-	initCh32v003( GPIO_NUM_18 );
+    initCh32v003(GPIO_NUM_18);
 
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();

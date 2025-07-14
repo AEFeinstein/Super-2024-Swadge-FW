@@ -130,15 +130,15 @@ void ch32v003testMainLoop(int64_t elapsedUs)
 
     ch32v003test->tElapsedUs += elapsedUs;
 
-	char buffer[64];
+    char buffer[64];
 
-	uint32_t dmdata0 = 0, dmdata1 = 0;
-	ch32v003GetReg( 4, &dmdata0 );
-	ch32v003GetReg( 5, &dmdata1 );
-	sprintf( buffer, "%08x", (unsigned)dmdata0 );
-	drawText(ch32v003test->font, 215, buffer, 2, 50);
-	sprintf( buffer, "%08x", (unsigned)dmdata1 );
-	drawText(ch32v003test->font, 215, buffer, 2, 70);
+    uint32_t dmdata0 = 0, dmdata1 = 0;
+    ch32v003GetReg(4, &dmdata0);
+    ch32v003GetReg(5, &dmdata1);
+    sprintf(buffer, "%08x", (unsigned)dmdata0);
+    drawText(ch32v003test->font, 215, buffer, 2, 50);
+    sprintf(buffer, "%08x", (unsigned)dmdata1);
+    drawText(ch32v003test->font, 215, buffer, 2, 70);
 
     ch32v003CheckTerminal();
 }

@@ -185,7 +185,7 @@ int main()
         // Raindrops runs at about 400 FPS
         // LED Shifting runs at about 500 FPS
 
-#if 1 // Raindrops animation
+#if 0 // Raindrops animation
         for( d = 0; d < CONCURRENT_DROPS; d++ )
         {
             i = -1;
@@ -232,27 +232,16 @@ int main()
 
         i = 0;
         for( y = 0; y < 6; y++ )
-        for( x = 0; x < 12; x++ )
-        {
-            SetPixel( x, y, x+y*12 ); 
-            //(x+y*31)&0xff );
-        }
-        Delay_Ms(5);
+		{
+	        for( x = 0; x < 12; x++ )
+    	    {
+    	        SetPixel( x, y, x+y*12 ); 
+    	        //(x+y*31)&0xff );
+    	    }
+		}
+	    Delay_Ms(5);
 
 #endif
-
-/*
-        int y, x;
-        for( y = 0; y < 9; y++ )
-        for( x = 0; x < 8; x++ )
-        {
-            funDigitalWrite( PC0 + x, 1 );
-            funDigitalWrite( As[y], 0 );
-            Delay_Us(10);
-            funDigitalWrite( As[y], 1 );
-            funDigitalWrite( PC0 + x, 0 );
-        }
-*/
         frameno++;
         *DMDATA1 = frameno;
     }
