@@ -1881,6 +1881,10 @@ void picrossVictoryLEDs(uint32_t tElapsedUs, uint32_t arg, bool reset)
  */
 void drawBox(box_t box, paletteColor_t color, bool isFilled, int32_t scalingFactor)
 {
+    if(color == cTransparent)
+    {
+        return;
+    }
     if (isFilled)
     {
         fillDisplayArea(box.x0 >> scalingFactor, box.y0 >> scalingFactor, box.x1 >> scalingFactor,
