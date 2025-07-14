@@ -126,6 +126,7 @@ void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType);
 
 void dn_updateBoard(dn_entity_t* self);
 void dn_drawBoard(dn_entity_t* self);
+bool dn_isTileSelectabe(dn_entity_t* board, dn_boardPos_t pos);
 
 void dn_updateCurtain(dn_entity_t* self);
 void dn_drawCurtain(dn_entity_t* self);
@@ -145,3 +146,5 @@ void dn_drawCharacterSelect(dn_entity_t* self);
 void dn_updateTileSelector(dn_entity_t* self);
 void dn_drawTileSelectorBackHalf(dn_entity_t* self, int16_t x, int16_t y);
 void dn_drawTileSelectorFrontHalf(dn_entity_t* self, int16_t x, int16_t y);
+
+void dn_drawPlayerTurn(dn_entity_t* self);
