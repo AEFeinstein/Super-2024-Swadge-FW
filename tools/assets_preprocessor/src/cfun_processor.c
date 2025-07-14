@@ -12,6 +12,7 @@
 #include "fileUtils.h"
 
 #if defined( WIN32 ) || defined (WINDOWS) || defined( _WIN32)
+#include <windows.h>
 static double OGGetFileTime( const char * file )
 {
 	FILETIME ft;
