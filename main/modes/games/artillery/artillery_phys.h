@@ -79,10 +79,11 @@ typedef struct
     vecFl_t relBarrelTip;
     float shotPower;
     artilleryAmmoType_t ammo;
-    char* ammoLabel;
+    const char* ammoLabel;
 
     // Shell data
     int32_t bounces;
+    int32_t explosionRadius;
 } physCirc_t;
 
 typedef struct
@@ -90,6 +91,8 @@ typedef struct
     int32_t zonemask;
     lineFl_t l;
     vecFl_t unitNormal;
+    bool isTerrain;
+    lineFl_t destination;
 } physLine_t;
 
 typedef struct
@@ -106,7 +109,8 @@ typedef struct
     physCirc_t* cameraTarget;
 
     bool shotFired;
-    bool shotDone;
+    bool turnOver;
+    bool terrainMoving;
 } physSim_t;
 
 //==============================================================================
@@ -120,7 +124,7 @@ void physStep(physSim_t* phys, int32_t elapsedUs);
 void physSetCameraButton(physSim_t* phys, buttonBit_t btn);
 void physAdjustCamera(physSim_t* phys, uint32_t elapsedUs);
 
-physLine_t* physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2);
+physLine_t* physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2, bool isTerrain);
 physCirc_t* physAddCircle(physSim_t* phys, float x1, float y1, float r, circType_t type);
 void setBarrelAngle(physCirc_t* circ, float angle);
 void setShotPower(physCirc_t* circ, float power);
