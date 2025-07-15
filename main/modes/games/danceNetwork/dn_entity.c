@@ -983,13 +983,15 @@ void dn_updatePromptToSkip(dn_entity_t* self)
     {
         if(self->gameData->btnState & PB_UP)
         {
+            pData->playerHasSlidThis = true;
             pData->yOffset -= self->gameData->elapsedUs >> 13;
         }
         if(self->gameData->btnState & PB_DOWN)
         {
+            pData->playerHasSlidThis = true;
             pData->yOffset += self->gameData->elapsedUs >> 13;
         }
-        pData->yOffset = CLAMP(pData->yOffset, -40, 220);
+        pData->yOffset = CLAMP(pData->yOffset, -44, 220);
         if(self->gameData->btnDownState & PB_LEFT && pData->selectionIdx > 0)
         {
             pData->selectionIdx--;
@@ -1047,4 +1049,12 @@ void dn_drawPromptToSkip(dn_entity_t* self)
     drawTextWordWrapCentered(&self->gameData->font_ibm, pData->selectionIdx == 0 ? c555 : c222, "NO", &xOff, &yOff, TFT_WIDTH / 4 + 25, pData->yOffset + 56);
     xOff = TFT_WIDTH * 3 / 4 - 25;
     drawTextWordWrapCentered(&self->gameData->font_ibm, pData->selectionIdx == 1 ? c555 : c222, "YES", &xOff, &yOff, TFT_WIDTH * 3 / 4 + 25, pData->yOffset + 56);
+
+    if(pData->yOffset == 70 && !pData->playerHasSlidThis && (self->gameData->generalTimer % 256) > 128)
+    {
+        drawTriangleOutlined(TFT_WIDTH/2 - 6, pData->yOffset - 3, TFT_WIDTH/2, pData->yOffset - 13, TFT_WIDTH/2 + 6, pData->yOffset - 3, c000, c345);
+        drawTriangleOutlined(TFT_WIDTH/2 - 6, pData->yOffset + 61, TFT_WIDTH/2, pData->yOffset + 71, TFT_WIDTH/2 + 6, pData->yOffset + 61, c000, c345);
+        // Draw this because triangle function is bugged.
+        drawLine(TFT_WIDTH/2 - 6, pData->yOffset + 61, TFT_WIDTH/2 + 6, pData->yOffset + 61, c345, 0);
+    }   
 }

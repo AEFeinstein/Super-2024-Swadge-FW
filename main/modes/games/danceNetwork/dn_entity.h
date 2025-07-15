@@ -124,6 +124,7 @@ typedef struct
     int16_t yOffset;
     uint8_t selectionIdx;
     int16_t selectionAmounts[2];
+    bool playerHasSlidThis;
 } dn_promptToSkipData_t;
 
 
