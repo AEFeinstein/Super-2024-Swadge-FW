@@ -1028,6 +1028,28 @@ void dn_updatePromptToSkip(dn_entity_t* self)
 
                 ((dn_boardData_t*)self->gameData->entityManager.board->data)->tiles[2][2].selector = tileSelector;
                 
+                // sort this out later.
+                self->gameData->phase = DN_P1_MOVE_PHASE;
+
+                // album light blinks
+                switch(self->gameData->phase)
+                {
+                    case DN_P1_MOVE_PHASE:
+                    {
+                        ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album->data)->cornerLightBlinking = true;
+                        break;
+                    }    
+                    case DN_P2_MOVE_PHASE:
+                    {
+                        ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album->data)->cornerLightBlinking = true;
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+
                 self->destroyFlag = true;
             }
         }
