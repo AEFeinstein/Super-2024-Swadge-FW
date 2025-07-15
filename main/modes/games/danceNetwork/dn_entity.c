@@ -563,6 +563,19 @@ void dn_updateAlbum(dn_entity_t* self)
         aData->timer -= self->gameData->elapsedUs;
         if (aData->timer <= 0)
         {
+            if(self == ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album)
+            {
+                /////////////////////////////
+                // Make the prompt to skip //
+                /////////////////////////////
+                dn_entity_t* promptToSkip = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+                promptToSkip->data         = heap_caps_calloc(1, sizeof(dn_promptToSkipData_t), MALLOC_CAP_SPIRAM);
+                ((dn_promptToSkipData_t*)promptToSkip->data)->animatingIntroSlide = true;
+                ((dn_promptToSkipData_t*)promptToSkip->data)->yOffset = 320;//way off screen to allow more time to look at albums.
+                promptToSkip->dataType     = DN_PROMPT_TO_SKIP_DATA;
+                promptToSkip->updateFunction = dn_updatePromptToSkip;
+                promptToSkip->drawFunction = dn_drawPromptToSkip;
+            }
             aData->screenIsOn = true;
             aData->timer      = 0;
         }
@@ -944,4 +957,79 @@ void dn_drawPlayerTurn(dn_entity_t* self)
     drawCircleQuadrants(41,TFT_HEIGHT-42,40,false,true,false,false,col);
     drawCircleQuadrants(TFT_WIDTH-42,TFT_HEIGHT-42,40,true,false,false,false,col);
     drawRect(1,1,TFT_WIDTH-1,TFT_HEIGHT-1,col);
+}
+
+void dn_updatePromptToSkip(dn_entity_t* self)
+{
+    dn_promptToSkipData_t* pData = (dn_promptToSkipData_t*)self->data;
+    if(pData->animatingIntroSlide)
+    {
+        pData->yOffset -= self->gameData->elapsedUs >> 13;
+        if(pData->yOffset < 70)
+        {
+            pData->yOffset = 70;
+            pData->animatingIntroSlide = false;
+        }
+    }
+    else
+    {
+        if(self->gameData->btnState & PB_UP)
+        {
+            pData->yOffset -= self->gameData->elapsedUs >> 13;
+        }
+        if(self->gameData->btnState & PB_DOWN)
+        {
+            pData->yOffset += self->gameData->elapsedUs >> 13;
+        }
+        pData->yOffset = CLAMP(pData->yOffset, -40, 220);
+        if(self->gameData->btnDownState & PB_LEFT && pData->selectionIdx > 0)
+        {
+            pData->selectionIdx--;
+        }
+        if(self->gameData->btnDownState & PB_RIGHT && pData->selectionIdx < 1)
+        {
+            pData->selectionIdx++;
+        }
+        if(self->gameData->btnDownState & PB_A)
+        {
+            ///////////////////////////
+            // Make the tile selector//
+            ///////////////////////////
+            dn_entity_t* tileSelector = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
+                                                            0, self->gameData->camera.pos, self->gameData);
+            tileSelector->data        = heap_caps_calloc(1, sizeof(dn_tileSelectorData_t), MALLOC_CAP_SPIRAM);
+            tileSelector->dataType    = DN_TILE_SELECTOR_DATA;
+            dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)tileSelector->data;
+            for (int i = 0; i < NUM_SELECTOR_LINES; i++)
+            {
+                tData->lineYs[i] = (255 * i) / NUM_SELECTOR_LINES;
+            }
+            tData->pos = (dn_boardPos_t){2, 2};
+            // fancy line colors
+            tData->colors[0]             = c125;
+            tData->colors[1]             = c345;
+            tData->colors[2]             = c555;
+            tileSelector->updateFunction = dn_updateTileSelector;
+            // Don't set the draw function, because it needs to happen in two parts behind and in front of units.
+
+            ((dn_boardData_t*)self->gameData->entityManager.board->data)->tiles[2][2].selector = tileSelector;
+            
+            self->destroyFlag = true;
+        }
+    }
+}
+void dn_drawPromptToSkip(dn_entity_t* self)
+{
+    dn_promptToSkipData_t* pData = (dn_promptToSkipData_t*)self->data;
+    drawRectFilled(0,pData->yOffset, TFT_WIDTH, pData->yOffset + 60, c000);
+    int16_t xOff = 7;
+    int16_t yOff = pData->yOffset + 11;
+    drawTextWordWrapCentered(&self->gameData->font_ibm, c345, "Skip action to gain a reroll?", &xOff, &yOff, TFT_WIDTH - 7, pData->yOffset + 30);
+    drawRect(TFT_WIDTH / 4 - 25, pData->yOffset + 34, TFT_WIDTH / 4 + 25, pData->yOffset + 56, pData->selectionIdx == 0 ? c345 : c222);
+    drawRect(TFT_WIDTH * 3 / 4 - 25, pData->yOffset + 34, TFT_WIDTH * 3 / 4 + 25, pData->yOffset + 56, pData->selectionIdx == 1 ? c345 : c222);
+    xOff = TFT_WIDTH / 4 - 25;
+    yOff = pData->yOffset + 39;
+    drawTextWordWrapCentered(&self->gameData->font_ibm, pData->selectionIdx == 0 ? c055 : c222, "NO", &xOff, &yOff, TFT_WIDTH / 4 + 25, pData->yOffset + 56);
+    xOff = TFT_WIDTH * 3 / 4 - 25;
+    drawTextWordWrapCentered(&self->gameData->font_ibm, pData->selectionIdx == 1 ? c055 : c222, "YES", &xOff, &yOff, TFT_WIDTH * 3 / 4 + 25, pData->yOffset + 56);
 }

@@ -21,6 +21,7 @@ typedef enum
     DN_ALBUM_DATA,
     DN_CHARACTER_SELECT_DATA,
     DN_TILE_SELECTOR_DATA,
+    DN_PROMPT_TO_SKIP_DATA,
 } dn_dataType_t;
 
 //==============================================================================
@@ -117,6 +118,14 @@ typedef struct
     dn_boardPos_t pos;
 } dn_tileSelectorData_t;
 
+typedef struct
+{
+    bool animatingIntroSlide;
+    int16_t yOffset;
+    uint8_t selectionIdx;
+} dn_promptToSkipData_t;
+
+
 //==============================================================================
 // Prototypes
 //==============================================================================
@@ -137,6 +146,7 @@ vec_t dn_colorToTrackCoords(paletteColor_t color);
 dn_twoColors_t dn_trackCoordsToColor(vec_t trackCoords);
 void dn_addTrackToAlbum(dn_entity_t* album, vec_t trackCoords, dn_track_t track);
 void dn_updateAlbum(dn_entity_t* self);
+void dn_updateAlbumThenSpawnPromptToSkip(dn_entity_t* self);
 void dn_drawAlbum(dn_entity_t* self);
 
 // characterSelect entities
@@ -148,3 +158,6 @@ void dn_drawTileSelectorBackHalf(dn_entity_t* self, int16_t x, int16_t y);
 void dn_drawTileSelectorFrontHalf(dn_entity_t* self, int16_t x, int16_t y);
 
 void dn_drawPlayerTurn(dn_entity_t* self);
+
+void dn_updatePromptToSkip(dn_entity_t* self);
+void dn_drawPromptToSkip(dn_entity_t* self);
