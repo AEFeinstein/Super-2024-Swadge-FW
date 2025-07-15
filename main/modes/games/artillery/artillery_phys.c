@@ -47,7 +47,10 @@ bool physAnyCollision(physSim_t* phys, physCirc_t* c);
 bool physCircCircIntersection(physSim_t* phys, physCirc_t* cMoving, circleFl_t* cOther, float* colDist,
                               vecFl_t* reflVec);
 void physAdjustCameraTimer(physSim_t* phys);
-bool checkShotDone(physSim_t* phys);
+void checkTurnOver(physSim_t* phys);
+void explodeShell(physSim_t* phys, node_t* shellNode);
+float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float expMin, float expMax);
+bool moveTerrainPoints(physSim_t* phys, int32_t elapsedUs);
 
 //==============================================================================
 // Functions
@@ -118,10 +121,10 @@ physSim_t* initPhys(float w, float h, float gx, float gy)
     }
 
     // Add lines for the world bounds
-    physAddLine(phys, 0, 0, w, 0);
-    physAddLine(phys, w, 0, w, h);
-    physAddLine(phys, w, h, 0, h);
-    physAddLine(phys, 0, h, 0, 0);
+    physAddLine(phys, 0, 0, w, 0, false);
+    physAddLine(phys, w, 0, w, h, false);
+    physAddLine(phys, w, h, 0, h, false);
+    physAddLine(phys, 0, h, 0, 0, false);
 
     // Return the simulation
     return phys;
@@ -159,9 +162,10 @@ void deinitPhys(physSim_t* phys)
  * @param y1 The starting Y point of the line
  * @param x2 The ending X point of the line
  * @param y2 The ending Y point of the line
+ * @param isTerrain true if this is terrain, false otherwise
  * @return The line, also saved in the argument phys
  */
-physLine_t* physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2)
+physLine_t* physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2, bool isTerrain)
 {
     // Allocate the line
     physLine_t* pl = heap_caps_calloc(1, sizeof(physLine_t), MALLOC_CAP_8BIT);
@@ -189,6 +193,10 @@ physLine_t* physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2)
 
     // Store what zones this line is in
     physSetZoneMaskLine(phys, pl);
+
+    // Saver terrain info
+    pl->isTerrain   = isTerrain;
+    pl->destination = pl->l;
 
     // Push line into list in the simulation
     push(&phys->lines, pl);
@@ -230,7 +238,8 @@ physCirc_t* physAddCircle(physSim_t* phys, float x1, float y1, float r, circType
         }
         case CT_SHELL:
         {
-            pc->fixed = false;
+            pc->fixed           = false;
+            pc->explosionRadius = r * 5;
             break;
         }
         default:
@@ -305,6 +314,7 @@ void physStep(physSim_t* phys, int32_t elapsedUs)
     physUpdateTimestep(phys, elapsedUs);
     physCheckCollisions(phys);
     physBinaryMoveObjects(phys);
+    checkTurnOver(phys);
 }
 
 /**
@@ -371,6 +381,8 @@ void physUpdateTimestep(physSim_t* phys, int32_t elapsedUs)
         // Iterate
         cNode = cNode->next;
     }
+
+    phys->terrainMoving = moveTerrainPoints(phys, elapsedUs);
 }
 
 /**
@@ -590,31 +602,156 @@ void physCheckCollisions(physSim_t* phys)
         // Optionally remove this entry (if a shell exploded)
         if (shouldRemoveNode)
         {
-            // Unset the camera target if it was tracking this shell
-            if (cNode->val == phys->cameraTarget)
-            {
-                phys->cameraTarget = NULL;
-            }
-            heap_caps_free(removeEntry(&phys->circles, cNode));
-
-            checkShotDone(phys);
+            explodeShell(phys, cNode);
+            shouldRemoveNode = false;
         }
-        cNode            = nextNode;
-        shouldRemoveNode = false;
+        cNode = nextNode;
     }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param phys
+ * @param shell
+ */
+void explodeShell(physSim_t* phys, node_t* shellNode)
+{
+    physCirc_t* shell = shellNode->val;
+
+    // Calculate the X bounds of the explosion and the squared radius
+    float expMin = shell->c.pos.x - shell->explosionRadius;
+    float expMax = shell->c.pos.x + shell->explosionRadius;
+    float rSq    = (shell->explosionRadius * shell->explosionRadius);
+
+    // Iterate through all lines
+    node_t* lNode = phys->lines.first;
+    while (lNode)
+    {
+        physLine_t* line = lNode->val;
+        // If this is terrain
+        if (line->isTerrain)
+        {
+            // Attempt to deform points
+            line->destination.p1.y = deformTerrainPoint(&line->l.p1, &shell->c.pos, rSq, expMin, expMax);
+            line->destination.p2.y = deformTerrainPoint(&line->l.p2, &shell->c.pos, rSq, expMin, expMax);
+        }
+        // Iterate
+        lNode = lNode->next;
+    }
+
+    // Unset the camera target if it was tracking this shell
+    if (shell == phys->cameraTarget)
+    {
+        phys->cameraTarget = NULL;
+    }
+
+    heap_caps_free(removeEntry(&phys->circles, shellNode));
+    phys->terrainMoving = true;
+}
+
+/**
+ * @brief TODO
+ *
+ * @param p
+ * @param expPnt
+ * @param rSq
+ * @param expMin
+ * @param expMax
+ * @return float
+ */
+float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float expMin, float expMax)
+{
+    if (expMin <= p->x && p->x < expMax)
+    {
+        // X distance from shell to point to adjust
+        float xDist = expPnt->x - p->x;
+        // Explosion Y size at the point to adjust
+        float ySz = sqrtf(rSq - (xDist * xDist));
+        // Top and bottom points of the explosion
+        float expTop    = expPnt->y - ySz;
+        float expBottom = expPnt->y + ySz;
+
+        if (p->y < expTop)
+        {
+            // Explosion entirely underground, add full explosion size
+            return p->y + (2 * ySz);
+        }
+        else if (p->y <= expBottom)
+        {
+            // Point somewhere in explosion, adjust terrain to point
+            return expBottom;
+        }
+    }
+    // Explosion doesn't affect point
+    return p->y;
+}
+
+/**
+ * @brief TODO
+ * 
+ * @param phys 
+ * @param elapsedUs TODO use elapsedUs
+ * @return true 
+ * @return false 
+ */
+bool moveTerrainPoints(physSim_t* phys, int32_t elapsedUs)
+{
+    bool moving   = false;
+    node_t* lNode = phys->lines.first;
+    while (lNode)
+    {
+        physLine_t* line = lNode->val;
+        if (line->isTerrain)
+        {
+            if (ABS(line->destination.p1.y - line->l.p1.y) < 1)
+            {
+                line->l.p1.y = line->destination.p1.y;
+            }
+            else if (line->destination.p1.y > line->l.p1.y)
+            {
+                line->l.p1.y++;
+                moving = true;
+            }
+            else if (line->destination.p1.y < line->l.p1.y)
+            {
+                line->l.p1.y--;
+                moving = true;
+            }
+
+            if (ABS(line->destination.p2.y - line->l.p2.y) < 1)
+            {
+                line->l.p2.y = line->destination.p2.y;
+            }
+            else if (line->destination.p2.y > line->l.p2.y)
+            {
+                line->l.p2.y++;
+                moving = true;
+            }
+            else if (line->destination.p2.y < line->l.p2.y)
+            {
+                line->l.p2.y--;
+                moving = true;
+            }
+        }
+        lNode = lNode->next;
+    }
+    return moving;
 }
 
 /**
  * @brief Check if a shot is done (i.e. all shells have been removed)
  *
  * @param phys The physics simulation
- * @return true if a shot was fired and there are no CT_SHELL in the simulation, false otherwise
  */
-bool checkShotDone(physSim_t* phys)
+void checkTurnOver(physSim_t* phys)
 {
-    // Shot can't be done if it was never fired!
-    if (phys->shotFired)
+    // If there is a shot in progress and the turn isn't over yet
+    if (phys->shotFired && !phys->turnOver)
     {
+        // Check for any shells
+        bool anyShells = false;
+
         // Iterate through all circles, looking for CT_SHELL
         node_t* shNode = phys->circles.first;
         while (shNode)
@@ -625,20 +762,20 @@ bool checkShotDone(physSim_t* phys)
             // If a shell was found, the shot is still in progress
             if (CT_SHELL == shell->type)
             {
-                return false;
+                // Shell found
+                anyShells = true;
+                break;
             }
 
             // Iterate
             shNode = shNode->next;
         }
 
-        // Haven't found a shell, so shot must be done
-        phys->shotDone = true;
-        return true;
-    }
+        // Turn is over if there are no shells and no moving terrain
+        phys->turnOver = (false == anyShells && false == phys->terrainMoving);
 
-    // Shot not in progress
-    return false;
+        // TODO set timer to switch turn
+    }
 }
 
 /**
