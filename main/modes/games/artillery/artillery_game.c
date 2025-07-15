@@ -217,10 +217,10 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
                 ad->phys->shotFired = true;
                 fireShot(ad->phys, ad->players[ad->plIdx]);
             }
-            else if (ad->phys->shotDone)
+            else if (ad->phys->turnOver)
             {
                 ad->phys->shotFired = false;
-                ad->phys->shotDone  = false;
+                ad->phys->turnOver  = false;
 
                 // Switch to the next player
                 ad->plIdx = (ad->plIdx + 1) % NUM_PLAYERS;
