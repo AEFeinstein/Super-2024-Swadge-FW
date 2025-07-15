@@ -1052,9 +1052,9 @@ void dn_drawPromptToSkip(dn_entity_t* self)
 
     if(pData->yOffset == 70 && !pData->playerHasSlidThis && (self->gameData->generalTimer % 256) > 128)
     {
-        drawTriangleOutlined(TFT_WIDTH/2 - 6, pData->yOffset - 3, TFT_WIDTH/2, pData->yOffset - 13, TFT_WIDTH/2 + 6, pData->yOffset - 3, c000, c345);
-        drawTriangleOutlined(TFT_WIDTH/2 - 6, pData->yOffset + 61, TFT_WIDTH/2, pData->yOffset + 71, TFT_WIDTH/2 + 6, pData->yOffset + 61, c000, c345);
+        drawTriangleOutlined(TFT_WIDTH/2 - 6, pData->yOffset - 3, TFT_WIDTH/2, pData->yOffset - 13, TFT_WIDTH/2 + 6, pData->yOffset - 3, c345, c000);
+        drawTriangleOutlined(TFT_WIDTH/2 - 6, pData->yOffset + 61, TFT_WIDTH/2, pData->yOffset + 71, TFT_WIDTH/2 + 6, pData->yOffset + 61, c345, c000);
         // Draw this because triangle function is bugged.
-        drawLine(TFT_WIDTH/2 - 6, pData->yOffset + 61, TFT_WIDTH/2 + 6, pData->yOffset + 61, c345, 0);
+        drawLine(TFT_WIDTH/2 - 6, pData->yOffset + 61, TFT_WIDTH/2 + 6, pData->yOffset + 61, c000, 0);
     }   
 }
