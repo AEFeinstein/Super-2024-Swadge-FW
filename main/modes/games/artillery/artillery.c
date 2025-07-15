@@ -140,14 +140,8 @@ void artilleryEnterMode(void)
 #define WORLD_HEIGHT (TFT_HEIGHT * 2)
     ad->phys = initPhys(WORLD_WIDTH, WORLD_HEIGHT, 0, 1e-10);
 
-    // Add some players
-#define PLAYER_RADIUS 8
-#define GROUND_LEVEL  (WORLD_HEIGHT - 40)
-
-    ad->players[0] = physAddCircle(ad->phys, WORLD_WIDTH / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
-    ad->players[1]
-        = physAddCircle(ad->phys, (7 * WORLD_WIDTH) / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
-
+#ifdef MOUNTAIN
+    #define GROUND_LEVEL (WORLD_HEIGHT - 40)
     // Add some ground
     vecFl_t groundPoints[] = {
         {.x = 0, .y = GROUND_LEVEL},
@@ -161,8 +155,23 @@ void artilleryEnterMode(void)
     for (int idx = 0; idx < ARRAY_SIZE(groundPoints) - 1; idx++)
     {
         physAddLine(ad->phys, groundPoints[idx].x, groundPoints[idx].y, groundPoints[idx + 1].x,
-                    groundPoints[idx + 1].y);
+                    groundPoints[idx + 1].y, true);
     }
+#else
+    #define SEG_WIDTH    4
+    #define GROUND_LEVEL (WORLD_HEIGHT / 2)
+    for (int32_t i = 0; i < WORLD_WIDTH; i += SEG_WIDTH)
+    {
+        physAddLine(ad->phys, i, GROUND_LEVEL, i + SEG_WIDTH, GROUND_LEVEL, true);
+    }
+#endif
+
+    // Add some players
+#define PLAYER_RADIUS 8
+
+    ad->players[0] = physAddCircle(ad->phys, WORLD_WIDTH / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
+    ad->players[1]
+        = physAddCircle(ad->phys, (7 * WORLD_WIDTH) / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
 
     // Test circle-line collisions
     // physAddCircle(ad->phys, WORLD_WIDTH / 2 + 16, 30, 8, CT_SHELL);
