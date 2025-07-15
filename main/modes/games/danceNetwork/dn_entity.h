@@ -123,6 +123,7 @@ typedef struct
     bool animatingIntroSlide;
     int16_t yOffset;
     uint8_t selectionIdx;
+    int16_t selectionAmounts[2];
 } dn_promptToSkipData_t;
 
 
