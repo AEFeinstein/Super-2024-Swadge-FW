@@ -51,6 +51,7 @@ void checkTurnOver(physSim_t* phys);
 void explodeShell(physSim_t* phys, node_t* shellNode);
 float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float expMin, float expMax);
 bool moveTerrainPoints(physSim_t* phys, int32_t elapsedUs);
+void updateLineProperties(physSim_t* phys, physLine_t* pl);
 
 //==============================================================================
 // Functions
@@ -176,6 +177,29 @@ physLine_t* physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2,
     pl->l.p2.x = x2;
     pl->l.p2.y = y2;
 
+    // Set physical properties based on the points
+    updateLineProperties(phys, pl);
+
+    // Save terrain info
+    pl->isTerrain   = isTerrain;
+    pl->destination = pl->l;
+
+    // Push line into list in the simulation
+    push(&phys->lines, pl);
+
+    // Return the line
+    return pl;
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param phys
+ * @param pl
+ */
+void updateLineProperties(physSim_t* phys, physLine_t* pl)
+{
+    ESP_LOGI("PHS", "update");
     // Find the unit slope
     vecFl_t unitSlope = normVecFl2d(subVecFl2d(pl->l.p2, pl->l.p1));
 
@@ -193,16 +217,6 @@ physLine_t* physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2,
 
     // Store what zones this line is in
     physSetZoneMaskLine(phys, pl);
-
-    // Saver terrain info
-    pl->isTerrain   = isTerrain;
-    pl->destination = pl->l;
-
-    // Push line into list in the simulation
-    push(&phys->lines, pl);
-
-    // Return the line
-    return pl;
 }
 
 /**
@@ -689,54 +703,92 @@ float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float expMin, f
 
 /**
  * @brief TODO
- * 
- * @param phys 
+ *
+ * @param phys
  * @param elapsedUs TODO use elapsedUs
- * @return true 
- * @return false 
+ * @return true
+ * @return false
  */
 bool moveTerrainPoints(physSim_t* phys, int32_t elapsedUs)
 {
-    bool moving   = false;
+    // Keep track if any terrain is moving anywhere
+    bool terrainMoving = false;
+
+    // Iterate through all lines
     node_t* lNode = phys->lines.first;
     while (lNode)
     {
         physLine_t* line = lNode->val;
+        // If the line is terrain
         if (line->isTerrain)
         {
-            if (ABS(line->destination.p1.y - line->l.p1.y) < 1)
+            // Track if this line is moving or needs a properties update
+            bool lineIsMoving = false;
+            bool updateLine   = false;
+
+            if (line->destination.p1.y == line->l.p1.y)
             {
+                // Do nothing
+            }
+            else if (ABS(line->destination.p1.y - line->l.p1.y) < 1)
+            {
+                // Less than one pixel off, clamp it
                 line->l.p1.y = line->destination.p1.y;
+                updateLine   = true;
             }
             else if (line->destination.p1.y > line->l.p1.y)
             {
+                // Move p1 towards destination
                 line->l.p1.y++;
-                moving = true;
+                terrainMoving = true;
+                lineIsMoving  = true;
             }
             else if (line->destination.p1.y < line->l.p1.y)
             {
+                // Move p1 towards destination
                 line->l.p1.y--;
-                moving = true;
+                terrainMoving = true;
+                lineIsMoving  = true;
             }
 
-            if (ABS(line->destination.p2.y - line->l.p2.y) < 1)
+            if (line->destination.p2.y == line->l.p2.y)
             {
+                // Do nothing
+            }
+            else if (ABS(line->destination.p2.y - line->l.p2.y) < 1)
+            {
+                // Less than one pixel off, clamp it
                 line->l.p2.y = line->destination.p2.y;
+                updateLine   = true;
             }
             else if (line->destination.p2.y > line->l.p2.y)
             {
+                // Move p2 towards destination
                 line->l.p2.y++;
-                moving = true;
+                terrainMoving = true;
+                lineIsMoving  = true;
             }
             else if (line->destination.p2.y < line->l.p2.y)
             {
+                // Move p1 towards destination
                 line->l.p2.y--;
-                moving = true;
+                terrainMoving = true;
+                lineIsMoving  = true;
+            }
+
+            // If the line needs a properties update and has finished moving both points
+            if (updateLine && !lineIsMoving)
+            {
+                // Update slope and normals and such
+                updateLineProperties(phys, line);
             }
         }
+        // Iterate
         lNode = lNode->next;
     }
-    return moving;
+
+    // Return if any terrain anywhere is moving
+    return terrainMoving;
 }
 
 /**
