@@ -199,7 +199,6 @@ physLine_t* physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2,
  */
 void updateLineProperties(physSim_t* phys, physLine_t* pl)
 {
-    ESP_LOGI("PHS", "update");
     // Find the unit slope
     vecFl_t unitSlope = normVecFl2d(subVecFl2d(pl->l.p2, pl->l.p1));
 
@@ -422,6 +421,8 @@ void physCheckCollisions(physSim_t* phys)
             float colDist = FLT_MAX;
             // Keep track of the reflection vector in case of collision
             vecFl_t reflVec = {0};
+            // Keep track if the object should bounce or not
+            bool countBounce = true;
 
             // Check for collisions with lines
             node_t* oln = phys->lines.first;
@@ -495,8 +496,9 @@ void physCheckCollisions(physSim_t* phys)
                     // Now that all the line components are checked, apply the closest one
                     if (minLineDist < colDist)
                     {
-                        colDist = minLineDist;
-                        reflVec = lineUnitNormal;
+                        colDist     = minLineDist;
+                        reflVec     = lineUnitNormal;
+                        countBounce = true;
                     }
                 }
 
@@ -531,8 +533,9 @@ void physCheckCollisions(physSim_t* phys)
                         if (circColDist < colDist)
                         {
                             // Save it
-                            colDist = circColDist;
-                            reflVec = circUnitNormal;
+                            colDist     = circColDist;
+                            reflVec     = circUnitNormal;
+                            countBounce = (CT_OBSTACLE != opc->type);
                         }
                     }
                 }
@@ -546,7 +549,7 @@ void physCheckCollisions(physSim_t* phys)
             if (FLT_MAX != colDist)
             {
                 // Shells have a limited number of bounces
-                if (CT_SHELL == pc->type)
+                if (countBounce && CT_SHELL == pc->type)
                 {
                     pc->bounces--;
                     if (0 == pc->bounces)
