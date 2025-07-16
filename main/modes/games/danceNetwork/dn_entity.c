@@ -205,26 +205,25 @@ void dn_drawCurtain(dn_entity_t* self)
                           y * self->gameData->assets[DN_CURTAIN_ASSET].frames[0].h);
         }
     }
-    char text[9] = "Player 1";
     // get the text width
-    uint16_t tWidth = textWidth(&self->gameData->font_ibm, text);
+    uint16_t tWidth = textWidth(&self->gameData->font_ibm, self->gameData->playerNames[0]);
     int16_t x       = (TFT_WIDTH >> 2) - (tWidth >> 1);
-    int16_t y       = 29;
+    int16_t y       = 209;
     // Draw the intro text
     if (curtainData->separation > -700 && curtainData->separation < -50)
     {
-        drawText(&self->gameData->font_ibm, c001, text, x, y);
+        drawText(&self->gameData->font_ibm, c001, self->gameData->playerNames[0], x, y);
         y++;
         x++;
-        drawText(&self->gameData->font_ibm, c001, text, x, y);
+        drawText(&self->gameData->font_ibm, c001, self->gameData->playerNames[0], x, y);
         y++;
         x--;
-        drawText(&self->gameData->font_ibm, c001, text, x, y);
+        drawText(&self->gameData->font_ibm, c001, self->gameData->playerNames[0], x, y);
         y--;
         x--;
-        drawText(&self->gameData->font_ibm, c001, text, x, y);
+        drawText(&self->gameData->font_ibm, c001, self->gameData->playerNames[0], x, y);
         x++;
-        drawShinyText(&self->gameData->font_ibm, c245, c355, c555, text, x, y);
+        drawShinyText(&self->gameData->font_ibm, c245, c355, c555, self->gameData->playerNames[0], x, y);
         // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 30);
         // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 29);
         // drawText(&self->gameData->font_ibm, c101, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 31);
@@ -233,12 +232,12 @@ void dn_drawCurtain(dn_entity_t* self)
         {
             case DN_ALPHA_SET:
                 drawWsgSimple(&self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0],
-                              (TFT_WIDTH >> 2) - (self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0].w >> 1), 50);
+                              (TFT_WIDTH >> 2) - (self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0].w >> 1), 95);
                 break;
             case DN_CHESS_SET:
                 drawWsgPaletteSimple(&self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0],
                                      (TFT_WIDTH >> 2) - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1),
-                                     50, &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                                     95, &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                 break;
             default:
                 break;
@@ -246,30 +245,28 @@ void dn_drawCurtain(dn_entity_t* self)
     }
     if (curtainData->separation > -600 && curtainData->separation < -50)
     {
-        strcpy(text, "VS");
-        tWidth = textWidth(&self->gameData->font_righteous, text);
-        drawText(&self->gameData->font_righteous, c530, text, (TFT_WIDTH >> 1) - (tWidth >> 1), 60);
-        drawText(&self->gameData->outline_righteous, c550, text, (TFT_WIDTH >> 1) - (tWidth >> 1), 60);
+        tWidth = textWidth(&self->gameData->font_righteous, "VS");
+        drawText(&self->gameData->font_righteous, c530, "VS", (TFT_WIDTH >> 1) - (tWidth >> 1), 90);
+        drawText(&self->gameData->outline_righteous, c550, "VS", (TFT_WIDTH >> 1) - (tWidth >> 1), 90);
     }
     if (curtainData->separation > -500 && curtainData->separation < -50)
     {
-        strcpy(text, "Player 2");
-        tWidth = textWidth(&self->gameData->font_ibm, text);
+        tWidth = textWidth(&self->gameData->font_ibm, self->gameData->playerNames[1]);
         x      = (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1);
         y      = 29;
 
-        drawText(&self->gameData->font_ibm, c001, text, x, y);
+        drawText(&self->gameData->font_ibm, c001, self->gameData->playerNames[1], x, y);
         y++;
         x++;
-        drawText(&self->gameData->font_ibm, c001, text, x, y);
+        drawText(&self->gameData->font_ibm, c001, self->gameData->playerNames[1], x, y);
         y++;
         x--;
-        drawText(&self->gameData->font_ibm, c001, text, x, y);
+        drawText(&self->gameData->font_ibm, c001, self->gameData->playerNames[1], x, y);
         y--;
         x--;
-        drawText(&self->gameData->font_ibm, c001, text, x, y);
+        drawText(&self->gameData->font_ibm, c001, self->gameData->playerNames[1], x, y);
         x++;
-        drawShinyText(&self->gameData->font_ibm, c245, c355, c555, text, x, y);
+        drawShinyText(&self->gameData->font_ibm, c245, c355, c555, self->gameData->playerNames[1], x, y);
         // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 30);
         // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 29);
         // drawText(&self->gameData->font_ibm, c101, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 31);
@@ -577,6 +574,7 @@ void dn_updateAlbum(dn_entity_t* self)
                 promptToSkip->drawFunction = dn_drawPromptToSkip;
             }
             aData->screenIsOn = true;
+            aData->cornerLightOn = true;
             aData->timer      = 0;
         }
     }
@@ -591,7 +589,7 @@ void dn_drawAlbum(dn_entity_t* self)
                 - self->gameData->assets[DN_ALBUM_ASSET].originY;
     drawWsgPalette(&self->gameData->assets[DN_ALBUM_ASSET].frames[0], x, y,
                    aData->screenIsOn ? &aData->screenOnPalette : &aData->screenOffPalette, false, false, aData->rot);
-    if (aData->cornerLightOn || (aData->cornerLightBlinking && (self->gameData->generalTimer & 0b111111) > 15))
+    if ((aData->cornerLightOn && !aData->cornerLightBlinking) || (aData->cornerLightBlinking && (self->gameData->generalTimer & 0b111111) > 15))
     {
         if (aData->rot == 180)
         {
@@ -964,7 +962,7 @@ void dn_updatePromptToSkip(dn_entity_t* self)
     dn_promptToSkipData_t* pData = (dn_promptToSkipData_t*)self->data;
     for(uint8_t i = 0; i < 2; i++)
     {
-        pData->selectionAmounts[i] -= self->gameData->elapsedUs >> 6;
+        pData->selectionAmounts[i] -= self->gameData->elapsedUs >> 5;
         if(pData->selectionAmounts[i] < 0)
         {
             pData->selectionAmounts[i] = 0;
@@ -1078,5 +1076,5 @@ void dn_drawPromptToSkip(dn_entity_t* self)
         drawTriangleOutlined(TFT_WIDTH/2 - 6, pData->yOffset + 61, TFT_WIDTH/2, pData->yOffset + 71, TFT_WIDTH/2 + 6, pData->yOffset + 61, c345, c000);
         // Draw this because triangle function is bugged.
         drawLine(TFT_WIDTH/2 - 6, pData->yOffset + 61, TFT_WIDTH/2 + 6, pData->yOffset + 61, c000, 0);
-    }   
+    }
 }

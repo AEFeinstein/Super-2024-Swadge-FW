@@ -104,6 +104,9 @@ static void dn_EnterMode(void)
     readNvs32(dnCharacterKey, &outVal);
     gameData->characterSets[0] = outVal;
 
+    strcpy(gameData->playerNames[0], "Player 1");
+    strcpy(gameData->playerNames[1], "Player 2");
+
     // set the camera to the center of positive ints
     gameData->camera.pos
         = (vec_t){0xFFFF - (TFT_WIDTH << (DN_DECIMAL_BITS - 1)), 0xFFFF - (TFT_HEIGHT << (DN_DECIMAL_BITS - 1))};
