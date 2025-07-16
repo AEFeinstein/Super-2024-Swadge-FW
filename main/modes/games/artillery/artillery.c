@@ -158,7 +158,7 @@ void artilleryEnterMode(void)
                     groundPoints[idx + 1].y, true);
     }
 #else
-    #define SEG_WIDTH    4
+    #define SEG_WIDTH    8
     #define GROUND_LEVEL (WORLD_HEIGHT / 2)
     for (int32_t i = 0; i < WORLD_WIDTH; i += SEG_WIDTH)
     {
