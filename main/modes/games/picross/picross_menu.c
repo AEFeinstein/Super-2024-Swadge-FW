@@ -247,7 +247,7 @@ struct
         .name        = "metroid",
         .pzl         = AA_METROID_PZL_WSG,
         .slv         = AA_METROID_SLV_WSG,
-        .marqueeFact = "jellyfish is helping yes.      Y can't metroid crawl?",
+        .marqueeFact = "jellyfish is helping yes. Y can't metroid crawl?",
     },
     {
         .name        = "moonstick",
@@ -351,7 +351,7 @@ struct
         .name        = "2048",
         .pzl         = EF_2048_PZL_WSG,
         .slv         = EF_2048_SLV_WSG,
-        .marqueeFact = "Did you know? 2048 is so named because that’s The highest value, the dev was able to get to "
+        .marqueeFact = "Did you know? 2048 is so named because that's The highest value, the dev was able to get to "
                        "before he started to cry !",
     },
     {
