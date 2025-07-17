@@ -34,26 +34,32 @@ volatile int ch32v003quitMode;
 struct MiniRV32IMAState ch32v003state;
 
 
+static int CHPLoad( uint32_t address, uint32_t * regret, int size );
+static int CHPStore( uint32_t address, uint32_t regret, int size );
+
+
 #define MINI_RV32_RAM_SIZE (0x20000000+RAM_SIZE)
 #define MINIRV32_RAM_IMAGE_OFFSET 0x00000000
 #define MINIRV32WARN(x...) fprintf( stderr, x )
-#define MINIRV32_MMIO_RANGE(n)  (0x40000000 <= (n) && (n) < 0x50000000)
+#define MINIRV32_MMIO_RANGE(n)  ((0x40000000 <= (n) && (n) < 0x50000000)) || ( 0xe0000000 <= (n) && (n) < 0xe0004000 )
 
-#define MINIRV32_HANDLE_MEM_STORE_CONTROL( addy, val ) printf( "MMIO TODO STORE %08x\n", addy );
+// These should not be accessable.
+#define MINIRV32_HANDLE_MEM_STORE_CONTROL( addy, val ) CHPStore( addy, val, 4 );
+#define MINIRV32_HANDLE_MEM_LOAD_CONTROL( addy, val ) CHPLoad( addy, &val, 4 );
 
-#define MINIRV32_HANDLE_MEM_LOAD_CONTROL( addy, val ) printf( "MMIO TODO LOAD %08x\n", addy );
 
+#define RAMOFS 0x20000000
 
 #define MINIRV32_CUSTOM_MEMORY_BUS
 
-#define MINIRV32_STORE4( ofs, val ) printf("LOAD4:%08x\n", ofs ); if( ofs < FLASH_SIZE - 3 ) { *(uint32_t*)(ch32v003flash + ofs) = val; }               else if( ofs >= 0x20000000 && ofs < 0x20000000 + RAM_SIZE - 3 ) { *(uint32_t*)(ch32v003ram + ofs) = val; } else { trap = (7+1); rval = ofs; }
-#define MINIRV32_STORE2( ofs, val )  if( ofs < FLASH_SIZE - 1 ) { *(uint16_t*)(ch32v003flash + ofs) = val; }               else if( ofs >= 0x20000000 && ofs < 0x20000000 + RAM_SIZE - 1 ) { *(uint16_t*)(ch32v003ram + ofs) = val; } else { trap = (7+1); rval = ofs; }
-#define MINIRV32_STORE1( ofs, val )  if( ofs < FLASH_SIZE - 0 ) { *(uint8_t* )(ch32v003flash + ofs) = val; }               else if( ofs >= 0x20000000 && ofs < 0x20000000 + RAM_SIZE - 0 ) { *(uint8_t* )(ch32v003ram + ofs) = val; } else { trap = (7+1); rval = ofs; }
-static inline uint32_t MINIRV32_LOAD4s( uint32_t ofs, uint32_t * rval, uint32_t * trap )       {uint32_t tmp; if( ofs < FLASH_SIZE - 3 ) { tmp = *(uint32_t*)(ch32v003flash + ofs); } else if( ofs >= 0x20000000 && ofs < 0x20000000 + RAM_SIZE - 3 ) { tmp = *(uint32_t*)(ch32v003ram + ofs); } else { *trap = (7+1); *rval = ofs; } return tmp;}
-static inline uint16_t MINIRV32_LOAD2s( uint32_t ofs, uint32_t * rval, uint32_t * trap )       {uint16_t tmp; if( ofs < FLASH_SIZE - 1 ) { tmp = *(uint16_t*)(ch32v003flash + ofs); } else if( ofs >= 0x20000000 && ofs < 0x20000000 + RAM_SIZE - 1 ) { tmp = *(uint16_t*)(ch32v003ram + ofs); } else { *trap = (7+1); *rval = ofs; } return tmp;}
-static inline uint8_t MINIRV32_LOAD1s( uint32_t ofs, uint32_t * rval, uint32_t * trap )        {uint8_t tmp;  if( ofs < FLASH_SIZE - 0 ) { tmp = *(uint8_t* )(ch32v003flash + ofs); } else if( ofs >= 0x20000000 && ofs < 0x20000000 + RAM_SIZE - 0 ) { tmp = *(uint8_t* )(ch32v003ram + ofs); } else { *trap = (7+1); *rval = ofs; } return tmp;}
-static inline int16_t MINIRV32_LOAD2_SIGNEDs( uint32_t ofs, uint32_t * rval, uint32_t * trap ) {int16_t tmp;  if( ofs < FLASH_SIZE - 1 ) { tmp = *(int16_t* )(ch32v003flash + ofs); } else if( ofs >= 0x20000000 && ofs < 0x20000000 + RAM_SIZE - 1 ) { tmp = *(int16_t* )(ch32v003ram + ofs); } else { *trap = (7+1); *rval = ofs; } return tmp;}
-static inline int8_t MINIRV32_LOAD1_SIGNEDs( uint32_t ofs, uint32_t * rval, uint32_t * trap )  {int8_t tmp;   if( ofs < FLASH_SIZE - 0 ) { tmp = *(int8_t*  )(ch32v003flash + ofs); } else if( ofs >= 0x20000000 && ofs < 0x20000000 + RAM_SIZE - 0 ) { tmp = *(int8_t*  )(ch32v003ram + ofs); } else { *trap = (7+1); *rval = ofs; } return tmp;}
+#define MINIRV32_STORE4( ofs, val ) printf( "STORE4 %08x=%08x\n", ofs, val );  if( ofs < FLASH_SIZE - 3 ) { *(uint32_t*)(ch32v003flash + ofs) = val; }               else if( ofs >= RAMOFS && ofs < RAMOFS + RAM_SIZE - 3 ) { *(uint32_t*)(ch32v003ram + ofs - RAMOFS) = val; } else { if( CHPStore( ofs, val, 4 ) ) { trap = (7+1); rval = ofs; } }
+#define MINIRV32_STORE2( ofs, val )  if( ofs < FLASH_SIZE - 1 ) { *(uint16_t*)(ch32v003flash + ofs) = val; }               else if( ofs >= RAMOFS && ofs < RAMOFS + RAM_SIZE - 1 ) { *(uint16_t*)(ch32v003ram + ofs - RAMOFS) = val; } else { if( CHPStore( ofs, val, 2 ) ) { trap = (7+1); rval = ofs; } }
+#define MINIRV32_STORE1( ofs, val )  if( ofs < FLASH_SIZE - 0 ) { *(uint8_t* )(ch32v003flash + ofs) = val; }               else if( ofs >= RAMOFS && ofs < RAMOFS + RAM_SIZE - 0 ) { *(uint8_t* )(ch32v003ram + ofs - RAMOFS) = val; } else { if( CHPStore( ofs, val, 1 ) ) { trap = (7+1); rval = ofs; } }
+static inline uint32_t MINIRV32_LOAD4s( uint32_t ofs, uint32_t * rval, uint32_t * trap )       {uint32_t tmp; if( ofs < FLASH_SIZE - 3 ) { tmp = *(uint32_t*)(ch32v003flash + ofs); } else if( ofs >= RAMOFS && ofs < RAMOFS + RAM_SIZE - 3 ) { tmp = *(uint32_t*)(ch32v003ram + ofs - RAMOFS); } else { if( CHPLoad( ofs, &tmp, 4 ) ) { *trap = (7+1); *rval = ofs; } } return tmp;}
+static inline uint16_t MINIRV32_LOAD2s( uint32_t ofs, uint32_t * rval, uint32_t * trap )       {uint16_t tmp; if( ofs < FLASH_SIZE - 1 ) { tmp = *(uint16_t*)(ch32v003flash + ofs); } else if( ofs >= RAMOFS && ofs < RAMOFS + RAM_SIZE - 1 ) { tmp = *(uint16_t*)(ch32v003ram + ofs - RAMOFS); } else { if( CHPLoad( ofs, (uint32_t*)&tmp, 2 ) ) { *trap = (7+1); *rval = ofs; } } return tmp;}
+static inline uint8_t MINIRV32_LOAD1s( uint32_t ofs, uint32_t * rval, uint32_t * trap )        {uint8_t tmp;  if( ofs < FLASH_SIZE - 0 ) { tmp = *(uint8_t* )(ch32v003flash + ofs); } else if( ofs >= RAMOFS && ofs < RAMOFS + RAM_SIZE - 0 ) { tmp = *(uint8_t* )(ch32v003ram + ofs - RAMOFS); } else { if( CHPLoad( ofs, (uint32_t*)&tmp, 1 ) ) { *trap = (7+1); *rval = ofs; } } return tmp;}
+static inline int16_t MINIRV32_LOAD2_SIGNEDs( uint32_t ofs, uint32_t * rval, uint32_t * trap ) {int16_t tmp;  if( ofs < FLASH_SIZE - 1 ) { tmp = *(int16_t* )(ch32v003flash + ofs); } else if( ofs >= RAMOFS && ofs < RAMOFS + RAM_SIZE - 1 ) { tmp = *(int16_t* )(ch32v003ram + ofs - RAMOFS); } else { if( CHPLoad( ofs, (uint32_t*)&tmp,-2 ) ) { *trap = (7+1); *rval = ofs; } } return tmp;}
+static inline int8_t MINIRV32_LOAD1_SIGNEDs( uint32_t ofs, uint32_t * rval, uint32_t * trap )  {int8_t tmp;   if( ofs < FLASH_SIZE - 0 ) { tmp = *(int8_t*  )(ch32v003flash + ofs); } else if( ofs >= RAMOFS && ofs < RAMOFS + RAM_SIZE - 0 ) { tmp = *(int8_t*  )(ch32v003ram + ofs - RAMOFS); } else { if( CHPLoad( ofs, (uint32_t*)&tmp,-1 ) ) { *trap = (7+1); *rval = ofs; } } return tmp;}
 
 #define MINIRV32_LOAD4(ofs) MINIRV32_LOAD4s( ofs, &rval, &trap )
 #define MINIRV32_LOAD2(ofs) MINIRV32_LOAD2s( ofs, &rval, &trap )
@@ -61,10 +67,266 @@ static inline int8_t MINIRV32_LOAD1_SIGNEDs( uint32_t ofs, uint32_t * rval, uint
 #define MINIRV32_LOAD2_SIGNED(ofs) MINIRV32_LOAD2_SIGNEDs( ofs, &rval, &trap )
 #define MINIRV32_LOAD1_SIGNED(ofs) MINIRV32_LOAD1_SIGNEDs( ofs, &rval, &trap )
 
+
+#define MINIRV32_HANDLE_TRAP_PC  \
+	switch( CSR( mtvec ) & 3 ) \
+	{ \
+		case 2: case 0: pc = (CSR( mtvec ) - 4); break; \
+		case 1: pc = (((CSR( mtvec )&~3)+4*CSR(mcause)) - 4); break; \
+		case 3: pc = ((MINIRV32_LOAD4((CSR( mtvec )&~3)+4*3)) - 4); break; \
+	}
+
+
+#define MINIRV32_ALIGNMENT 1
+
 #define MINIRV32_IMPLEMENTATION
+
+//https://riscv.github.io/riscv-isa-manual/snapshot/unprivileged/#_compressed_instruction_formats about 1/3 the way down.
+//https://www.cs.sfu.ca/~ashriram/Courses/CS295/assets/notebooks/RISCV/RISCV_CARD.pdf
+
+#define MINIRV32_HANDLE_OTHER_OPCODE default: \
+{ \
+	int cimm = ((((ir>>2)&0x1f)) | (((ir>>12)&1)<<5)); \
+	uint32_t cimmext = (cimm & 0x20)?(cimm|0xffffffc0) : cimm; \
+	switch( ir & 3 ) { \
+		case 0b00: \
+		{ \
+			ir &= 0xffff; pc-=2; \
+			uint32_t uimm = (((ir>>5)&1)<<6) | (((ir>>6)&1)<<2) | (((ir>>10)&7)<<3); \
+			switch( ir>>13 ) { \
+				/*case 0b000: break; */ /*c.addi4spn ADD Imm * 4 + SP TODO*/ \
+				case 0b010: /*c.lw*/ \
+					rval = MINIRV32_LOAD4( REG(((ir>>7)&7)+8) + uimm ); \
+					rdid = ((ir>>2)&7)+8; \
+					break; \
+				case 0b110: /*c.sw*/ \
+					MINIRV32_STORE4( REG(((ir>>7)&7)+8) + uimm, REG(((ir>>2)&7)+8) ); \
+					rdid = 0; \
+					break; \
+				default: trap = (2+1); break; \
+			} \
+			break; \
+		} \
+		case 0b01: \
+			ir &= 0xffff;  pc-=2; \
+			switch( ir>>13 ) { \
+				case 0b000: /*c.addi*/ \
+					rval = REG(rdid) + cimmext; break; \
+				case 0b010: /*c.li*/ \
+					rval = cimmext; \
+					break; \
+				case 0b011: /*c.lui / ADDI16SP*/ \
+					switch( ( ( ir >> 7 ) & 0x1f )  ) { \
+					case 0: break; \
+					case 2: /*c.addi16sp TODO: Check me.*/ \
+						rval = cimm * REG(2) + (((cimm >> 4) & 1) | ((cimm<<1)&2) | ((cimm>>1)&4) | ((cimm<<2)&0x18) | (cimm&0x20)) * 4; \
+						break; \
+					default: /*c.lui*/ \
+						rval = cimm << 12; \
+						break; \
+					}; \
+					break; \
+				case 0b100: /* MISC-ALU */ \
+					rdid = (rdid & 7) + 8; \
+					switch( ( ir >> 10 ) & 3 ) { \
+					case 0: /*c.srli*/ rval = REG(rdid) >> cimm; break; \
+					case 1: /*c.srai*/ rval = ((int32_t)REG(rdid)) >> cimm; break; \
+					case 2: /*c.andi*/ rval = REG(rdid) & cimm; break; \
+					case 3: /*c.other*/ \
+						uint32_t rs2 = REG((cimm&7)+8); \
+						switch( cimm>>3 ) \
+						{ \
+						case 0: /* c.sub */ rval = REG(rdid) - (rs2); break; \
+						case 1: /* c.xor */ rval = REG(rdid) ^ (rs2); break; \
+						case 2: /* c.or  */ rval = REG(rdid) | (rs2); break; \
+						case 3: /* c.and */ rval = REG(rdid) & (rs2); break; \
+						default:/* res   */ trap = (2+1); break; \
+						} \
+					} \
+					break; \
+				case 0b001: /*c.jal + NOTE: Is c.addiw on RV64*/ \
+				case 0b101: /*c.j*/ \
+				{ \
+					uint32_t limm = (((ir>>2) & 0x1)<<5) | (((ir>>3) & 0x7)<<1) | (((ir>>6)&0x1)<<7) | \
+						(((ir>>7)&0x1)<<6) | (((ir>>8)&0x1)<<10) | (((ir>>9)&0x3)<<8) | \
+						(((ir>>11)&0x1)<<4) | (((ir>>12)&1)<<11); \
+					if( limm & 0x800 ) limm |= 0xfffff000; \
+					if( (ir>>13) == 0b001 ) { \
+						rdid = 1; \
+						rval = pc + 2; \
+					} \
+					else rdid = 0; \
+					pc = pc + limm - 2; \
+				} \
+					break; \
+				case 0b110: /*c.beqz*/ \
+				case 0b111: /*c.bnez*/ \
+				{ \
+					rdid = 0; \
+					uint32_t limm = (((ir>>2) & 0x1)<<5) | (((ir>>3) & 0x3)<<1) | (((ir>>10)&0x3)<<3) | \
+						(((ir>>5)&0x3)<<6) | (((ir>>12)&0x1)<<8); \
+					if( limm & 0x100 ) limm |= 0xffffff00; \
+					if( ( ir>>13 ) == 0b110 ) \
+					{ \
+						if( REG(((ir>>7)&0x7)+8) == 0 ) \
+						{ \
+							pc = pc + limm - 2; \
+						} \
+					} \
+					else \
+					{ \
+						if( REG(((ir>>7)&0x7)+8) != 0 ) \
+						{ \
+							pc = pc + limm - 2; \
+						} \
+					} \
+					break; \
+				} \
+				default: trap = (2+1); break; \
+			} \
+			break; \
+		case 0b10: \
+			ir &= 0xffff; pc-=2; \
+			switch( ir>>13 ) { \
+				case 0b000: /*c.slli*/ \
+					rval = REG(rdid) << cimm; \
+					break; \
+				case 0b100: /*c.mv / c.add / c.jr / c.jalr */ \
+					if( (ir>>12) & 1 ) \
+					{ \
+						if( (((ir>>2)&0x1f) != 0) && rdid != 0 ) \
+						{ \
+							rval = REG( (ir>>2)&0x1f ) + REG(rdid); \
+						} \
+						else if( rdid != 0 ) \
+						{ \
+							pc = REG(rdid) - 2; \
+							rdid = 1; /* c.jalr */ \
+							rval = pc + 2; \
+						} \
+						else \
+						{ \
+							trap = (3+1); break; /* EBREAK 3 = "Breakpoint" */ \
+						} \
+					} \
+					else \
+					{ \
+						if( (((ir>>2)&0x1f) != 0) && rdid != 0 ) \
+						{ \
+							rval = REG( (ir>>2)&0x1f ); \
+						} \
+						else if( rdid != 0 ) \
+						{ \
+							printf( "JR: %d %08x\n", rdid, REG(rdid) ); \
+							pc = REG(rdid) - 2; \
+							rdid = 0; /* c.jr */ \
+						} \
+						else \
+						{ \
+							/* illegal opcode */ \
+							trap = (2+1); break; \
+						} \
+					} \
+					break; \
+				case 0b110: /*c.swsp / c.sw(SP)*/ \
+					rdid = 0; \
+					/*printf( "C.SWSP gp=%08x -> REG(2)=%08x + %08x <<< %08x\n", REG(3), REG(2), (((ir>>7)&3)<<6) + (((ir>>9)&0xf)<<2), REG(((ir>>2)&0x1f)) );*/ \
+					MINIRV32_STORE4( REG(2) + (((ir>>7)&3)<<6) + (((ir>>9)&0xf)<<2), REG(((ir>>2)&0x1f)) ); \
+					break; \
+				default: trap = (2+1); break; \
+			} \
+			break; \
+		default: trap = (2+1); break; \
+	} \
+}
 
 #include "mini-rv32ima.h"
 
+static uint32_t STK_CTLR;
+static uint32_t STK_ZERO;
+static uint32_t DMDATA[2];
+
+uint32_t GetSTK() {
+	double dt = OGGetAbsoluteTime();
+	if( STK_CTLR & 2 )
+		dt *= 48000000;
+	else
+		dt *= 6000000;
+	return ((uint32_t)dt) - STK_ZERO;
+}
+
+static int CHPLoad( uint32_t address, uint32_t * regret, int size )
+{
+	if( size != 4 ) { printf( "Misaligned system load %08x\n", address ); return -1; }
+
+	if( address == 0xe000f000 )       *regret = STK_CTLR;
+	else if( address == 0xe00000f4 ||
+			 address == 0xe00000f8 )  *regret = 0; // Tell DMDATA0/1 that we are free to printf.
+	else if( address == 0xe000f008 )  *regret = GetSTK();
+	else if( address == 0x40022000 ) { *regret = 0; } // FLASH->ACTLR
+	else if( address == 0x40021000 ) { *regret = 3 | (1<<25); } // R32_RCC, lie say clocks are fine.
+	else if( address == 0x40021004 ) { *regret = 0x8; } // R32_RCC, lie and say PLL.
+	else if( address == 0x40021008 ) { *regret = 0; } // R32_RCC
+	else if( address == 0x4002100c ) { *regret = 0; } // R32_RCC
+	else if( address == 0x40021010 ) { *regret = 0; } // R32_RCC
+	else if( address == 0x40021014 ) { *regret = 0; } // R32_RCC
+	else if( address == 0x40021018 ) { *regret = 0; } // R32_RCC
+	else if( address == 0x4002101C ) { *regret = 0; } // R32_RCC
+	else if( address >= 0x40000000 && address < 0x50000000 ) { printf( "Unknown hardware read %08x\n", address ); *regret = 0; } 
+	else
+	{
+		printf( "Load fail at %08x\n", address );
+		return -1;
+	}
+	return 0;
+}
+
+static int CHPStore( uint32_t address, uint32_t regset, int size )
+{
+	if( size != 4 ) { printf( "Misaligned system store %08x\n", address ); return -1; }
+	if( address == 0xe000f000 )         STK_CTLR = regset;
+	else if( address == 0xe00000f4 ||
+			 address == 0xe00000f8 )
+	{
+		if( address == 0xe00000f4 )
+			DMDATA[0] = regset;
+		else
+			DMDATA[1] = regset;
+
+		if( DMDATA[0] & 0x80 )
+		{
+			int chars = (DMDATA[0] & 0xf) - 4;
+			int i;
+			printf( "PRINTF FROM CH32V003: [%08x %08x]\n",  DMDATA[0], DMDATA[1] );
+			for( i = 0; i < chars; i++ )
+			{
+				printf( "%c", ((uint8_t*)DMDATA)[i+1] );
+			}
+		}
+	}
+	else if( address == 0x40022000 ) { } // FLASH->ACTLR
+	else if( address == 0x40021000 ) { } // R32_RCC
+	else if( address == 0x40021004 ) { } // R32_RCC
+	else if( address == 0x40021008 ) { } // R32_RCC
+	else if( address == 0x4002100c ) { } // R32_RCC
+	else if( address == 0x40021010 ) { } // R32_RCC
+	else if( address == 0x40021014 ) { } // R32_RCC
+	else if( address == 0x40021018 ) { } // R32_RCC
+	else if( address == 0x4002101C ) { } // R32_RCC
+	else if( address >= 0x40000000 && address < 0x50000000 ) { printf( "Unknown hardware write %08x = %08x\n", address, regset ); }
+	else
+	{
+		printf( "Store fail at %08x\n", address );
+		return -1;
+	}
+	return 0;
+}
+
+static void ResetPeripherals()
+{
+	STK_ZERO += GetSTK();
+	STK_CTLR = 0;
+}
 
 og_thread_t ch32v003thread;
 
@@ -80,12 +342,12 @@ static void * ch32v003threadFn( void*v )
 		uint32_t tus = (dNow - dLast)*1000000;
 		if( ch32v003runMode )
 		{
-			printf( "%d %d\n", tus, 24*tus );
-			MiniRV32IMAStep( &ch32v003state, 0, 0, tus, 24*tus );
+			int r = MiniRV32IMAStep( &ch32v003state, 0, 0, tus, 24*tus );
+			printf( "STEP: %d\n", r );
 		}
 		OGUSleep(1);
 
-		printf( "%08x %d\n", ch32v003state.pc, ch32v003runMode );
+		printf( "%08x %08x %d\n", ch32v003state.pc, ch32v003state.mtvec, ch32v003runMode );
 
 		dLast = dNow;
 	}
@@ -147,6 +409,7 @@ void ch32v003Teardown()
 
 int ch32v003Resume()
 {
+	ResetPeripherals();
 	ch32v003runMode = 1;
     return 0;
 }

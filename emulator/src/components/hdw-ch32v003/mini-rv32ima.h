@@ -57,6 +57,20 @@
 	#define MINIRV32_OTHERCSR_READ(...);
 #endif
 
+#ifndef MINIRV32_HANDLE_OTHER_OPCODE
+	// Fault: Invalid opcode.
+	#define MINIRV32_HANDLE_OTHER_OPCODE default: trap = (2+1);
+#endif
+
+#ifndef MINIRV32_ALIGNMENT
+	#define MINIRV32_ALIGNMENT 3
+#endif
+
+// Override for vectored operation, etc.
+#ifndef MINIRV32_HANDLE_TRAP_PC
+	#define MINIRV32_HANDLE_TRAP_PC  pc = (CSR( mtvec ) - 4);
+#endif
+
 #ifndef MINIRV32_CUSTOM_MEMORY_BUS
 	#define MINIRV32_STORE4( ofs, val ) *(uint32_t*)(image + ofs) = val
 	#define MINIRV32_STORE2( ofs, val ) *(uint16_t*)(image + ofs) = val
@@ -156,13 +170,13 @@ MINIRV32_STEPPROTO
 		rval = 0;
 		cycle++;
 		uint32_t ofs_pc = pc - MINIRV32_RAM_IMAGE_OFFSET;
-printf( "PCOFS: %08x\n", ofs_pc );
+
 		if( ofs_pc >= MINI_RV32_RAM_SIZE )
 		{
 			trap = 1 + 1;  // Handle access violation on instruction read.
 			break;
 		}
-		else if( ofs_pc & 3 )
+		else if( ofs_pc & MINIRV32_ALIGNMENT )
 		{
 			trap = 1 + 0;  //Handle PC-misaligned access
 			break;
@@ -170,6 +184,8 @@ printf( "PCOFS: %08x\n", ofs_pc );
 		else
 		{
 			ir = MINIRV32_LOAD4( ofs_pc );
+			printf( "PC: %08x IR: %08x\n", ofs_pc, ir );
+
 			uint32_t rdid = (ir >> 7) & 0x1f;
 
 			switch( ir & 0x7f )
@@ -261,7 +277,6 @@ printf( "PCOFS: %08x\n", ofs_pc );
 					if( addy & 0x800 ) addy |= 0xfffff000;
 					addy += rs1 - MINIRV32_RAM_IMAGE_OFFSET;
 					rdid = 0;
-
 					if( addy >= MINI_RV32_RAM_SIZE-3 )
 					{
 						addy += MINIRV32_RAM_IMAGE_OFFSET;
@@ -481,7 +496,7 @@ printf( "PCOFS: %08x\n", ofs_pc );
 					}
 					break;
 				}
-				default: trap = (2+1); // Fault: Invalid opcode.
+				MINIRV32_HANDLE_OTHER_OPCODE
 			}
 
 			// If there was a trap, do NOT allow register writeback.
@@ -520,7 +535,8 @@ printf( "PCOFS: %08x\n", ofs_pc );
 		//CSR( mstatus ) & 8 = MIE, & 0x80 = MPIE
 		// On an interrupt, the system moves current MIE into MPIE
 		SETCSR( mstatus, (( CSR( mstatus ) & 0x08) << 4) | (( CSR( extraflags ) & 3 ) << 11) );
-		pc = (CSR( mtvec ) - 4);
+
+		MINIRV32_HANDLE_TRAP_PC
 
 		// If trapping, always enter machine mode.
 		CSR( extraflags ) |= 3;
