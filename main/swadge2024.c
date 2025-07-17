@@ -166,10 +166,10 @@
  * is useful:
  * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-reference/index.html">ESP-IDF API
  * Reference</a>
- * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-­S2 Series
+ * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-S2 Series
  * Datasheet</a>
  * - <a
- * href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf">ESP32­-S2
+ * href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf">ESP32-S2
  * Technical Reference Manual</a>
  */
 

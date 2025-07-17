@@ -1,6 +1,6 @@
 # Swadge Design Principles {#design_principles}
 
-The principles here should guide the development of a Swadge’s hardware and firmware. Most of the principles here are guidelines, not hard requirements. When in doubt, talk out ideas in our Slack channel, \#super-circuitboards.
+The principles here should guide the development of a Swadge's hardware and firmware. Most of the principles here are guidelines, not hard requirements. When in doubt, talk out ideas in our Slack channel, \#super-circuitboards.
 
 ## General Design Principles
 - Swadges should not largely rely on at-event infrastructure and should be fully usable after Magfest.
@@ -15,7 +15,7 @@ The principles here should guide the development of a Swadge’s hardware and fi
 - Modes should try to fit the current theme of the event by:
   - Using themed sprites
   - Using a themed font
-  - Using the theme’s colors
+  - Using the theme's colors
 - Modes should use as much available hardware as possible, including, but not limited to:
   - LED effects
   - Sound effects
@@ -35,7 +35,7 @@ The principles here should guide the development of a Swadge’s hardware and fi
   - Unlockable assets (pictures, songs)
   - Unlockable gameplay (new characters, new levels)
   - A story that progresses
-  - Getting a high score (this is kind of boring alone, make sure there’s flair🎊)
+  - Getting a high score (this is kind of boring alone, make sure there's flair🎊)
 
 ## Hardware Design Principles
 - The Swadge shape must be designed to the fit the theme of the event
@@ -48,7 +48,7 @@ The principles here should guide the development of a Swadge’s hardware and fi
 - The Swadge should be physically durable. Use cases include:
   - Dangling on a lanyard when dancing at a concert
   - Being shoved in a tight bag during transit
-- If the Swadge uses new or delicate parts, destructively test them until we’re confident the failure rate is near zero.
+- If the Swadge uses new or delicate parts, destructively test them until we're confident the failure rate is near zero.
 - The Swadge should only include hardware if it is used by modes.
   - For example, do not include an accelerometer if it is used by very few modes.
 - If applicable, have a way to calibrate analog inputs.
@@ -63,7 +63,7 @@ The principles here should guide the development of a Swadge’s hardware and fi
   - If not being sold, print files can be made available as early as desired.
 
 ## Manual Design Principles
-- The manual should fit on an 8.5x11” sheet of paper, double sided
+- The manual should fit on an 8.5x11" sheet of paper, double sided
   - The sheet of paper may be folded
   - A high-polish manual is hard to make and even harder to sell
 - The manual should be posted to https://swadge.com/ in HTML form
@@ -72,6 +72,6 @@ The principles here should guide the development of a Swadge’s hardware and fi
 
 ## Firmware Development Principles
 - Before development begins, an outline and feature milestones of the mode should be written down and shared with the team.
-- Some milestones should be designated as the ‘finished mode.’ It’s OK to have milestones after this point, like stretch goals.
+- Some milestones should be designated as the 'finished mode.' It's OK to have milestones after this point, like stretch goals.
 - At each milestone, the mode should be shown off to the team, to receive feedback and guide development
 - Work on optional milestones only after essential milestones are completed
