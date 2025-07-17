@@ -80,16 +80,16 @@ void dn_updateBoard(dn_entity_t* self)
 bool dn_isTileSelectabe(dn_entity_t* board, dn_boardPos_t pos)
 {
     dn_boardData_t* bData = (dn_boardData_t*)board->data;
-    switch(board->gameData->phase)
+    switch (board->gameData->phase)
     {
         case DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE:
         case DN_P1_MOVE_PHASE:
         {
-            if(bData->tiles[pos.y][pos.x].unit)
+            if (bData->tiles[pos.y][pos.x].unit)
             {
                 dn_entity_t* unit = bData->tiles[pos.y][pos.x].unit;
-                if(unit == bData->p1Units[0] || unit == bData->p1Units[1] || unit == bData->p1Units[2]
-                        || unit == bData->p1Units[3] || unit == bData->p1Units[4])
+                if (unit == bData->p1Units[0] || unit == bData->p1Units[1] || unit == bData->p1Units[2]
+                    || unit == bData->p1Units[3] || unit == bData->p1Units[4])
                 {
                     return true;
                 }
@@ -116,23 +116,23 @@ void dn_drawBoard(dn_entity_t* self)
             int drawY = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                         + (x + y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originY
                         - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
-            
-            if(dn_isTileSelectabe(self,(dn_boardPos_t){.x = x, .y = y}))
+
+            if (dn_isTileSelectabe(self, (dn_boardPos_t){.x = x, .y = y}))
             {
                 drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
-                          drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
-                          drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
-                        &self->gameData->entityManager
-                                 .palettes[DN_RED_FLOOR_PALETTE
-                                           + (((y * ((self->gameData->generalTimer >> 10) % 10) + x + 2)
-                                               + (self->gameData->generalTimer >> 6))
-                                              % 6)]);
+                                     drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                     drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                     &self->gameData->entityManager
+                                          .palettes[DN_RED_FLOOR_PALETTE
+                                                    + (((y * ((self->gameData->generalTimer >> 10) % 10) + x + 2)
+                                                        + (self->gameData->generalTimer >> 6))
+                                                       % 6)]);
             }
             else
             {
                 drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
-                          drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
-                          drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
+                              drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                              drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
             }
             if (boardData->tiles[y][x].selector != NULL)
             {
@@ -918,7 +918,7 @@ void dn_drawTileSelectorFrontHalf(dn_entity_t* self, int16_t x, int16_t y)
 void dn_drawPlayerTurn(dn_entity_t* self)
 {
     paletteColor_t col = c055;
-    switch(self->gameData->phase)
+    switch (self->gameData->phase)
     {
         case DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE:
         case DN_P2_MOVE_PHASE:
@@ -933,15 +933,15 @@ void dn_drawPlayerTurn(dn_entity_t* self)
             break;
         }
     }
-    drawCircleQuadrants(41,41,41,false,false,true,false,col);
-    drawCircleQuadrants(TFT_WIDTH-42,41,41,false,false,false,true,col);
-    drawCircleQuadrants(41,TFT_HEIGHT-42,41,false,true,false,false,col);
-    drawCircleQuadrants(TFT_WIDTH-42,TFT_HEIGHT-42,41,true,false,false,false,col);
-    drawRect(0,0,TFT_WIDTH-0,TFT_HEIGHT-0,col);
+    drawCircleQuadrants(41, 41, 41, false, false, true, false, col);
+    drawCircleQuadrants(TFT_WIDTH - 42, 41, 41, false, false, false, true, col);
+    drawCircleQuadrants(41, TFT_HEIGHT - 42, 41, false, true, false, false, col);
+    drawCircleQuadrants(TFT_WIDTH - 42, TFT_HEIGHT - 42, 41, true, false, false, false, col);
+    drawRect(0, 0, TFT_WIDTH - 0, TFT_HEIGHT - 0, col);
 
-    drawCircleQuadrants(42,42,41,false,false,true,false,col);
-    drawCircleQuadrants(TFT_WIDTH-43,42,41,false,false,false,true,col);
-    drawCircleQuadrants(41,TFT_HEIGHT-43,41,false,true,false,false,col);
-    drawCircleQuadrants(TFT_WIDTH-43,TFT_HEIGHT-43,41,true,false,false,false,col);
-    drawRect(1,1,TFT_WIDTH-1,TFT_HEIGHT-1,col);
+    drawCircleQuadrants(42, 42, 41, false, false, true, false, col);
+    drawCircleQuadrants(TFT_WIDTH - 43, 42, 41, false, false, false, true, col);
+    drawCircleQuadrants(41, TFT_HEIGHT - 43, 41, false, true, false, false, col);
+    drawCircleQuadrants(TFT_WIDTH - 43, TFT_HEIGHT - 43, 41, true, false, false, false, col);
+    drawRect(1, 1, TFT_WIDTH - 1, TFT_HEIGHT - 1, col);
 }

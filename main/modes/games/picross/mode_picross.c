@@ -1881,7 +1881,7 @@ void picrossVictoryLEDs(uint32_t tElapsedUs, uint32_t arg, bool reset)
  */
 void drawBox(box_t box, paletteColor_t color, bool isFilled, int32_t scalingFactor)
 {
-    if(color == cTransparent)
+    if (color == cTransparent)
     {
         return;
     }
@@ -1898,11 +1898,13 @@ void drawBox(box_t box, paletteColor_t color, bool isFilled, int32_t scalingFact
 }
 
 /**
- * @brief Lerp between a and b by amount
+ * @brief Linear interpolate between two integers a and b by amount
  *
- * @param a One of two inputs
- * @param b One of two inputs
- * @param amount Lerp amount from 0 to 60000. 0 returns a, 60000 returns b.
+ * @param a The starting integer
+ * @param b The ending integer
+ * @param amount Lerp amount from 0 to PICROSS_LERP_AMOUNT.
+ *               0 returns a.
+ *               PICROSS_LERP_AMOUNT returns b.
  */
 int8_t lerp(int8_t a, int8_t b, uint16_t amount)
 {
