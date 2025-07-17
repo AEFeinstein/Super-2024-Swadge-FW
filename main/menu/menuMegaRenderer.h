@@ -53,11 +53,11 @@ typedef struct
     font_t* titleFontOutline;       ///< The font to render the title outline with
     font_t* menuFont;               ///< The font to render the menu with
     bool titleFontAllocated;        ///< true if this font was allocated by the renderer and should be freed by
-                                    ///< deinitMenuManiaRenderer()
+                                    ///< deinitMenuMegaRenderer()
     bool titleFontOutlineAllocated; ///< true if this font was allocated by the renderer and should be freed by
-                                    ///< deinitMenuManiaRenderer()
+                                    ///< deinitMenuMegaRenderer()
     bool menuFontAllocated;         ///< true if this font was allocated by the renderer and should be freed by
-                                    ///< deinitMenuManiaRenderer()
+                                    ///< deinitMenuMegaRenderer()
 
     int32_t selectedMarqueeTimer; ///< The timer for marquee-ing the selected item text, if too long to fit
     int32_t pageArrowTimer;       ///< The timer for blinking page up/down arrows
@@ -68,6 +68,7 @@ typedef struct
 
     led_t leds[CONFIG_NUM_LEDS]; ///< An array with the RGB LED state to be output
     bool ledsOn;                 ///< TODO doc
+    led_t baseLedColor;          ///< TODO doc
 
     node_t* currentItem; ///< TODO doc
 } menuMegaRenderer_t;

@@ -148,7 +148,7 @@ static void sequencerEnterMode(void)
     }
 
     // Set up menu renderer
-    sv->menuRenderer = initMenuManiaRenderer(&sv->font_righteous, &sv->font_righteous_outline, &sv->font_rodin);
+    sv->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
 
     // Set default parameters
     setDefaultParameters();
@@ -158,18 +158,18 @@ static void sequencerEnterMode(void)
     buildMainMenu();
 
     // Color the menu like Pixil
-    led_t menuColor = {
-        .r = 0x80,
-        .g = 0x00,
-        .b = 0x80,
-    };
-    static const paletteColor_t shadowColors[] = {c535, c524, c424, c314, c313, c302, c202, c203, c313, c413, c424};
-    recolorMenuManiaRenderer(sv->menuRenderer, //
-                             c202, c444, c000, // titleBgColor, titleTextColor, textOutlineColor
-                             c333,             // bgColor
-                             c521, c522,       // outerRingColor, innerRingColor
-                             c000, c555,       // rowColor, rowTextColor
-                             shadowColors, ARRAY_SIZE(shadowColors), menuColor);
+    // led_t menuColor = {
+    //     .r = 0x80,
+    //     .g = 0x00,
+    //     .b = 0x80,
+    // };
+    // static const paletteColor_t shadowColors[] = {c535, c524, c424, c314, c313, c302, c202, c203, c313, c413, c424};
+    // recolorMenuManiaRenderer(sv->menuRenderer, //
+    //                          c202, c444, c000, // titleBgColor, titleTextColor, textOutlineColor
+    //                          c333,             // bgColor
+    //                          c521, c522,       // outerRingColor, innerRingColor
+    //                          c000, c555,       // rowColor, rowTextColor
+    //                          shadowColors, ARRAY_SIZE(shadowColors), menuColor);
 
     // Show the menu by default
     setSequencerScreen(SEQUENCER_MENU);
@@ -412,7 +412,7 @@ static void sequencerExitMode(void)
     freeFont(&sv->font_righteous_outline);
     freeFont(&sv->font_rodin);
     freeFont(&sv->font_rodin_outline);
-    deinitMenuManiaRenderer(sv->menuRenderer);
+    deinitMenuMegaRenderer(sv->menuRenderer);
     deinitMenu(sv->songMenu);
     deinitMenu(sv->bgMenu);
 
@@ -495,7 +495,7 @@ static void sequencerMainLoop(int64_t elapsedUs)
     {
         case SEQUENCER_MENU:
         {
-            drawMenuMania(sv->songMenu, sv->menuRenderer, elapsedUs);
+            drawMenuMega(sv->songMenu, sv->menuRenderer, elapsedUs);
             break;
         }
         case SEQUENCER_SEQ:
@@ -852,15 +852,13 @@ void setSequencerScreen(sequencerScreen_t screen)
     if (SEQUENCER_HELP == screen)
     {
         // Turn off LEDs for help
-        setManiaLedsOn(sv->menuRenderer, false);
-        setManiaDrawRings(sv->menuRenderer, false);
+        setMegaLedsOn(sv->menuRenderer, false);
         led_t leds[CONFIG_NUM_LEDS] = {0};
         setLeds(leds, CONFIG_NUM_LEDS);
     }
     else
     {
         // Turn on LEDs for other screens
-        setManiaLedsOn(sv->menuRenderer, true);
-        setManiaDrawRings(sv->menuRenderer, true);
+        setMegaLedsOn(sv->menuRenderer, true);
     }
 }
