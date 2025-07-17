@@ -657,11 +657,8 @@ void explodeShell(physSim_t* phys, node_t* shellNode)
         lNode = lNode->next;
     }
 
-    // Unset the camera target if it was tracking this shell
-    if (shell == phys->cameraTarget)
-    {
-        phys->cameraTarget = NULL;
-    }
+    // Remove this shell from camera tracking
+    removeVal(&phys->cameraTargets, shell);
 
     heap_caps_free(removeEntry(&phys->circles, shellNode));
     phys->terrainMoving = true;
@@ -1151,6 +1148,9 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
     // This is where shells get spawned
     vecFl_t absBarrelTip = addVecFl2d(circ->c.pos, circ->relBarrelTip);
 
+    // Track shells, not players
+    clear(&phys->cameraTargets);
+
     // Create each shell
     for (int32_t shellCount = 0; shellCount < numShells; shellCount++)
     {
@@ -1165,11 +1165,8 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
         // Some shells are bouncy, some aren't
         shell->bounces = bounces;
 
-        // Camera track the middle shell
-        if (shellCount == numShells / 2)
-        {
-            phys->cameraTarget = shell;
-        }
+        // Camera tracks all shells
+        push(&phys->cameraTargets, shell);
     }
 }
 
@@ -1193,9 +1190,10 @@ void physSetCameraButton(physSim_t* phys, buttonBit_t btn)
  */
 void physAdjustCameraTimer(physSim_t* phys)
 {
-    if (NULL == phys->cameraTarget)
+    // If there's no camera target
+    if (0 == phys->cameraTargets.length)
     {
-        // If there's no camera target, move according to button input, vertically
+        // move according to button input, vertically
         if (PB_UP & phys->cameraBtn)
         {
             phys->camera.y -= CAMERA_BTN_MOVE_INTERVAL;
@@ -1217,34 +1215,73 @@ void physAdjustCameraTimer(physSim_t* phys)
     }
     else
     {
-        // Move the camera to track a target
-        // This is where the target would be displayed
-        vec_t targetDispAt = {
-            .x = phys->cameraTarget->c.pos.x - phys->camera.x,
-            .y = phys->cameraTarget->c.pos.y - phys->camera.y,
+        // view bounds
+        vec_t vbStart = {
+            .x = INT32_MAX,
+            .y = INT32_MAX,
+        };
+        vec_t vbEnd = {
+            .x = INT32_MIN,
+            .y = INT32_MIN,
         };
 
-        // This is where we want the camera to be, may be adjusted
+        // Make a box containing all objects that should be on screen
+        node_t* ctNode = phys->cameraTargets.first;
+        while (ctNode)
+        {
+            vecFl_t ct = ((physCirc_t*)ctNode->val)->c.pos;
+
+            // Find box mins
+            if (ct.x < vbStart.x)
+            {
+                vbStart.x = ct.x;
+            }
+            if (ct.y < vbStart.y)
+            {
+                vbStart.y = ct.y;
+            }
+
+            // Find box maxs
+            if (ct.x > vbEnd.x)
+            {
+                vbEnd.x = ct.x;
+            }
+            if (ct.y > vbEnd.y)
+            {
+                vbEnd.y = ct.y;
+            }
+
+            // Iterate
+            ctNode = ctNode->next;
+        }
+
+        // Adjust viewbox to be inside the camera margin
+        vbStart.x -= CAMERA_MARGIN;
+        vbStart.y -= CAMERA_MARGIN;
+        vbEnd.x -= (TFT_WIDTH - CAMERA_MARGIN);
+        vbEnd.y -= (TFT_HEIGHT - CAMERA_MARGIN);
+
+        // Desired camera starts as the current camera
         vec_t desiredCamera = phys->camera;
 
-        // Make sure the target is in the viewbox horizontally
-        if (targetDispAt.x < CAMERA_MARGIN)
+        // Adjust the desired camera so that it contains the viewbox (X)
+        if (desiredCamera.x > vbStart.x)
         {
-            desiredCamera.x = phys->cameraTarget->c.pos.x - CAMERA_MARGIN;
+            desiredCamera.x = vbStart.x;
         }
-        else if (targetDispAt.x > TFT_WIDTH - CAMERA_MARGIN)
+        else if (desiredCamera.x < vbEnd.x)
         {
-            desiredCamera.x = (phys->cameraTarget->c.pos.x) - (TFT_WIDTH - CAMERA_MARGIN);
+            desiredCamera.x = vbEnd.x;
         }
 
-        // Make sure the target is in the viewbox vertically
-        if (targetDispAt.y < CAMERA_MARGIN)
+        // Adjust the desired camera so that it contains the viewbox (Y)
+        if (desiredCamera.y > vbStart.y)
         {
-            desiredCamera.y = phys->cameraTarget->c.pos.y - CAMERA_MARGIN;
+            desiredCamera.y = vbStart.y;
         }
-        else if (targetDispAt.y > TFT_HEIGHT - CAMERA_MARGIN)
+        else if (desiredCamera.y < vbEnd.y)
         {
-            desiredCamera.y = (phys->cameraTarget->c.pos.y) - (TFT_HEIGHT - CAMERA_MARGIN);
+            desiredCamera.y = vbEnd.y;
         }
 
         // Move camera a third of the way to desired camera

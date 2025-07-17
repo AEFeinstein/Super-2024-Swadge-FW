@@ -423,6 +423,28 @@ void* removeEntry(list_t* list, node_t* entry)
 }
 
 /**
+ * Remove a specific entry from the linked list by value and relink neighbors.
+ * If the given value was not part of the given ::list_t, nothing will happen.
+ *
+ * @param list The list to remove an entry from
+ * @param val The value to remove from the list
+ * @return The removed value from the entry, may be NULL if the value wasn't in the list
+ */
+void* removeVal(list_t* list, void* val)
+{
+    node_t* node = list->first;
+    while (node)
+    {
+        if (val == node->val)
+        {
+            return removeEntry(list, node);
+        }
+        node = node->next;
+    }
+    return NULL;
+}
+
+/**
  * @brief Remove all items from the list
  *
  * @param list The list to clear

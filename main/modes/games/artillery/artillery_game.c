@@ -27,8 +27,8 @@ void artillerySwitchToState(artilleryData_t* ad, artilleryGameState_t newState)
     // Set the new state
     ad->gState = newState;
 
-    // Reset camera to focus on player
-    ad->phys->cameraTarget = ad->players[ad->plIdx];
+    // Clear all camera targets
+    clear(&ad->phys->cameraTargets);
 
     // Additional state-specific setup
     switch (ad->gState)
@@ -40,11 +40,13 @@ void artillerySwitchToState(artilleryData_t* ad, artilleryGameState_t newState)
         case AGS_ADJUST:
         case AGS_FIRE:
         {
+            // Focus on player
+            push(&ad->phys->cameraTargets, ad->players[ad->plIdx]);
             break;
         }
         case AGS_LOOK:
         {
-            ad->phys->cameraTarget = NULL;
+            // Leave cameraTargets empty
             break;
         }
     }
