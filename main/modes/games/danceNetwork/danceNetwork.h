@@ -56,7 +56,7 @@ typedef struct dn_gameData_t
     // Main Menu
     menu_t* menu;
     menu_t* bgMenu;
-    menuManiaRenderer_t* menuRenderer;
+    menuMegaRenderer_t* menuRenderer;
     font_t font_ibm; // IBM VGA 8 font
     font_t font_righteous;
     font_t outline_righteous;

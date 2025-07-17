@@ -144,7 +144,7 @@ void drawSequencerHelp(sequencerVars_t* sv, int32_t elapsedUs)
     sv->bgMenu->title = helpPages[sv->helpIdx].title;
 
     // Draw background, without animation
-    drawMenuMania(sv->bgMenu, sv->menuRenderer, 0);
+    drawMenuMega(sv->bgMenu, sv->menuRenderer, 0);
 
     // Draw text
     paletteColor_t textColor    = c000;

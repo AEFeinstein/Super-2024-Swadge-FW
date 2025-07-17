@@ -135,7 +135,7 @@ typedef struct
     // Menu
     trophyTestStateEnum_t state;
     menu_t* menu;
-    menuManiaRenderer_t* rndr;
+    menuMegaRenderer_t* rndr;
 } trophyTest_t;
 
 //==============================================================================
@@ -215,7 +215,7 @@ static void enterTrophy()
 
     // Menu
     tt->menu = initMenu(textBlobs[5], trophyMenuCb);
-    tt->rndr = initMenuManiaRenderer(NULL, NULL, NULL);
+    tt->rndr = initMenuMegaRenderer(NULL, NULL, NULL);
     addSingleItemToMenu(tt->menu, textBlobs[6]);
     addSingleItemToMenu(tt->menu, textBlobs[7]);
     addSettingsOptionsItemToMenu(tt->menu, textBlobs[8], caseOptions, caseSettings, ARRAY_SIZE(caseOptions),
@@ -227,7 +227,7 @@ static void enterTrophy()
 
 static void exitTrophy()
 {
-    deinitMenuManiaRenderer(tt->rndr);
+    deinitMenuMegaRenderer(tt->rndr);
     deinitMenu(tt->menu);
     heap_caps_free(tt);
 }
@@ -243,7 +243,7 @@ static void runTrophy(int64_t elapsedUs)
             {
                 tt->menu = menuButton(tt->menu, evt);
             }
-            drawMenuMania(tt->menu, tt->rndr, elapsedUs);
+            drawMenuMega(tt->menu, tt->rndr, elapsedUs);
             break;
         }
         case TROPHY_TEST_DISPLAYING:

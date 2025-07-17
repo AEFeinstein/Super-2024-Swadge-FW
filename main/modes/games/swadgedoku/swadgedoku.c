@@ -72,7 +72,7 @@ typedef struct
     sudokuPlayer_t player;
 
     menu_t* menu;
-    menuManiaRenderer_t* menuRenderer;
+    menuMegaRenderer_t* menuRenderer;
 
     menu_t* emptyMenu;
     char emptyMenuTitle[32];
@@ -435,7 +435,7 @@ static void swadgedokuEnterMode(void)
 
     swadgedokuLoadSettings(&sd->settings);
 
-    sd->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    sd->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
     sd->emptyMenu    = initMenu(sd->emptyMenuTitle, NULL);
 
     sd->pauseMenu = initMenu(strPaused, swadgedokuPauseMenuCb);
@@ -470,7 +470,7 @@ static void swadgedokuExitMode(void)
     deinitWheelMenu(sd->numberWheelRenderer);
     deinitMenu(sd->numberWheel);
 
-    deinitMenuManiaRenderer(sd->menuRenderer);
+    deinitMenuMegaRenderer(sd->menuRenderer);
     deinitMenu(sd->menu);
     deinitMenu(sd->emptyMenu);
     deinitMenu(sd->pauseMenu);
@@ -490,7 +490,7 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
                 sd->menu = menuButton(sd->menu, evt);
             }
 
-            drawMenuMania(sd->menu, sd->menuRenderer, elapsedUs);
+            drawMenuMega(sd->menu, sd->menuRenderer, elapsedUs);
             break;
         }
 
@@ -568,7 +568,7 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
         case SWADGEDOKU_WIN:
         {
             strncpy(sd->emptyMenuTitle, strYouWin, sizeof(sd->emptyMenuTitle));
-            drawMenuMania(sd->emptyMenu, sd->menuRenderer, elapsedUs);
+            drawMenuMega(sd->emptyMenu, sd->menuRenderer, elapsedUs);
 
             char playTime[64];
             int totalTime = sd->playTimer / ONE_SECOND_IN_US;
@@ -616,7 +616,7 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
                 sd->pauseMenu = menuButton(sd->pauseMenu, evt);
             }
 
-            drawMenuMania(sd->pauseMenu, sd->menuRenderer, elapsedUs);
+            drawMenuMega(sd->pauseMenu, sd->menuRenderer, elapsedUs);
             break;
         }
     }

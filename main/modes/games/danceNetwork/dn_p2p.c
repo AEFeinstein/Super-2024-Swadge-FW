@@ -23,7 +23,7 @@ static const char* conRxStartMsg[] = {
 void dn_DrawConnecting(dn_gameData_t* gameData, int64_t elapsedUs)
 {
     // Draw the background
-    drawMenuMania(gameData->bgMenu, gameData->menuRenderer, elapsedUs);
+    drawMenuMega(gameData->bgMenu, gameData->menuRenderer, elapsedUs);
 
     // Spacing between lines
     int16_t ySpacing = 8;

@@ -12,7 +12,7 @@
 typedef struct
 {
     menu_t* menu;
-    menuManiaRenderer_t* renderer;
+    menuMegaRenderer_t* renderer;
     list_t swadgePasses;
     swadgePassData_t* currSpd;
 } swadgePassTest_t;
@@ -85,7 +85,7 @@ static void swadgePassTestEnterMode(void)
     }
 
     // Initialize renderer
-    spt->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    spt->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
 }
 
 /**
@@ -95,7 +95,7 @@ static void swadgePassTestExitMode(void)
 {
     // Free the menu
     deinitMenu(spt->menu);
-    deinitMenuManiaRenderer(spt->renderer);
+    deinitMenuMegaRenderer(spt->renderer);
 
     // Free the swadgePasses
     freeSwadgePasses(&spt->swadgePasses);
@@ -143,7 +143,7 @@ static void swadgePassTestMainLoop(int64_t elapsedUs)
     if (NULL == spt->currSpd)
     {
         // Draw menu
-        drawMenuMania(spt->menu, spt->renderer, elapsedUs);
+        drawMenuMega(spt->menu, spt->renderer, elapsedUs);
     }
     else
     {
