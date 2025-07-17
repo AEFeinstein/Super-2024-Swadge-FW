@@ -16,11 +16,11 @@
 
 /// @brief Add swadgeMode_t pointers to this struct to include them in emulator and main menu
 swadgeMode_t* const allSwadgeModes[] = {
-    &accelTestMode,    &bouncyMode,      &colorchordMode, &cosCrunchMode,  &danceMode,
-    &danceNetworkMode, &factoryTestMode, &gamepadMode,    &introMode,      &jukeboxMode,
-    &keebTestMode,     &mainMenuMode,    &modeCredits,    &modeDiceRoller, &modePicross,
-    &nameTestMode,     &roboRunnerMode,  &sequencerMode,  &swadgeItMode,   &swadgePassTestMode,
-    &synthMode,        &tCaseMode,       &touchTestMode,  &trophyTestMode, &tunernomeMode,
+    &accelTestMode,   &bouncyMode,     &colorchordMode,     &cosCrunchMode, &danceMode,      &danceNetworkMode,
+    &factoryTestMode, &gamepadMode,    &introMode,          &jukeboxMode,   &keebTestMode,   &mainMenuMode,
+    &modeCredits,     &modeDiceRoller, &modePicross,        &nameTestMode,  &roboRunnerMode, &sequencerMode,
+    &swadgedokuMode,  &swadgeItMode,   &swadgePassTestMode, &synthMode,     &tCaseMode,      &touchTestMode,
+    &trophyTestMode,  &tunernomeMode,
 };
 
 //==============================================================================
@@ -38,6 +38,7 @@ void modeListSetMenu(menu_t* menu)
     menu = startSubMenu(menu, "Games");
     addSingleItemToMenu(menu, cosCrunchMode.modeName);
     addSingleItemToMenu(menu, swadgeItMode.modeName);
+    addSingleItemToMenu(menu, swadgedokuMode.modeName);
     addSingleItemToMenu(menu, danceNetworkMode.modeName);
     addSingleItemToMenu(menu, roboRunnerMode.modeName);
     addSingleItemToMenu(menu, modePicross.modeName);
