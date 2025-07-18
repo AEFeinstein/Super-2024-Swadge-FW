@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #define RANDOM_STRENGTH 2
+#define TARGET_FPS 60
 
 #include "lib_rand.h"
 
@@ -173,6 +174,8 @@ int main()
         droplife[i] = rand() % 100;
     }
 
+	uint32_t nf = SysTick->CNT;
+
     while(1)
     {
         //static uint16_t t1cmp;
@@ -181,6 +184,10 @@ int main()
         int y, x, i;
         int d;
         uint8_t framebuffer[12*6];
+
+		while( (int)(nf - SysTick->CNT) > 0 );
+
+		nf = SysTick->CNT + 6000000/TARGET_FPS;
 
         // Raindrops runs at about 400 FPS
         // LED Shifting runs at about 500 FPS
@@ -195,7 +202,7 @@ int main()
                 int usex = (x < 6)?x:(x+SEPARATION);
                 int dx = usex - dropx[d];
                 int dy = y - dropy[d];
-                int apd = ((apsqrt( dx*dx*MAX_INTENSITY*64+dy*dy*MAX_INTENSITY*64 ) - droptime[d]*(MAX_INTENSITY/64)) ) + MAX_INTENSITY;
+                int apd = ((apsqrt( dx*dx*MAX_INTENSITY*64+dy*dy*MAX_INTENSITY*64 ) - droptime[d]*(MAX_INTENSITY/16)) ) + MAX_INTENSITY;
                 if( apd < 0 ) apd = -apd;
                 int inten = (MAX_INTENSITY - apd - 1);
                 if( inten < 0 ) continue;
@@ -203,21 +210,18 @@ int main()
                 if( inten >= MAX_INTENSITY ) inten = MAX_INTENSITY-1;
                 framebuffer[i] = inten;
                 //SetPixel( x, y, ((x*2142*y*2472+fxo)>>8)&(MAX_INTENSITY-1));
-PrintHex(x);
                 
             }
-PrintHex(d);
             droptime[d]++;
             droplife[d]--;
-PrintHex(0x22222222);
+
             if( droplife[d] < 0 )
             {
                 droptime[d] = 0;
-                droplife[d] = (rand() % 220)+700;
+                droplife[d] = (rand() % 50)+100;
                 dropx[d] = rand() % (12+SEPARATION);
                 dropy[d] = rand() % 6;
             }
-PrintHex(0xffffffff);
         }
 
         i = 0;

@@ -184,7 +184,7 @@ MINIRV32_STEPPROTO
 		else
 		{
 			ir = MINIRV32_LOAD4( ofs_pc );
-			printf( "PC: %08x IR: %08x  %08x\n", ofs_pc, ir, REG(2) );
+			//printf( "PC: %08x IR: %08x  %08x / s0:%x s1:%x a0:%x/%x/%x/%x/%x/%x\n", ofs_pc, ir, REG(2), REG(8), REG(9), REG(10), REG(11), REG(12), REG(13), REG(14), REG(15) );
 
 			uint32_t rdid = (ir >> 7) & 0x1f;
 

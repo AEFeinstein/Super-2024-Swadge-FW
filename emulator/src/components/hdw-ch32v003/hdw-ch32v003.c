@@ -90,7 +90,6 @@ static inline int8_t MINIRV32_LOAD1_SIGNEDs( uint32_t ofs, uint32_t * rval, uint
 { \
 	int cimm = ((((ir>>2)&0x1f)) | (((ir>>12)&1)<<5)); \
 	uint32_t cimmext = (cimm & 0x20)?(cimm|0xffffffc0) : cimm; \
-	if( pc == 0x50e ) printf("::::: %08x %08x\n", REG( 14 ), REG(15) ); \
 	switch( ir & 3 ) { \
 		case 0b00: \
 		{ \
@@ -101,7 +100,7 @@ static inline int8_t MINIRV32_LOAD1_SIGNEDs( uint32_t ofs, uint32_t * rval, uint
 					cimm = (((ir >> 5) & 1)<<3) | (((ir>>6)&1)<<2) | (((ir>>7)&0xf)<<6) | (((ir>>11)&3)<<4); \
 					cimmext = (cimm & 0x200)?(cimm|0xfffffc00) : cimm; \
 					rdid = ((ir>>2)&7)+8; \
-					printf( "c.addi4spn %08x %d / %d\n", REG( 2 ), cimmext, rdid ); \
+					/*printf( "c.addi4spn %08x %d / %d\n", REG( 2 ), cimmext, rdid );*/ \
 					rval = REG( 2 ) + cimmext; \
 					break; \
 				case 0b010: /*c.lw*/ \
@@ -167,8 +166,8 @@ static inline int8_t MINIRV32_LOAD1_SIGNEDs( uint32_t ofs, uint32_t * rval, uint
 					if( limm & 0x800 ) limm |= 0xfffff000; \
 					if( (ir>>13) == 0b001 ) { \
 						rdid = 1; \
-						rval = pc + 2; \
-						printf( "jal r1 = %08x\n", rval ); \
+						rval = pc + 4; \
+						/*printf( "jal r1 = %08x\n", rval );*/ \
 					} \
 					else rdid = 0; \
 					pc = pc + limm - 2; \
@@ -216,10 +215,10 @@ static inline int8_t MINIRV32_LOAD1_SIGNEDs( uint32_t ofs, uint32_t * rval, uint
 						} \
 						else if( rdid != 0 ) \
 						{ \
-							pc = REG(rdid) - 4; /*c.jr*/ \
 							rdid = 1; /* c.jalr, maybe */ \
-							rval = pc + 2; \
+							rval = pc + 4; \
 							if( !(ir>>12)&1 ) rdid = 0; \
+							pc = REG(rdid) - 4; /*c.jr*/ \
 						} \
 						else \
 						{ \
@@ -234,7 +233,7 @@ static inline int8_t MINIRV32_LOAD1_SIGNEDs( uint32_t ofs, uint32_t * rval, uint
 						} \
 						else if( rdid != 0 ) \
 						{ \
-							pc = REG(rdid) - 2; \
+							pc = REG(rdid) - 4; \
 							rdid = 0; /* c.jr */ \
 						} \
 						else \
@@ -246,12 +245,12 @@ static inline int8_t MINIRV32_LOAD1_SIGNEDs( uint32_t ofs, uint32_t * rval, uint
 					break; \
 				case 0b110: /*c.swsp / c.sw(SP)*/ \
 					rdid = 0; \
-					/*printf( "C.SWSP gp=%08x -> REG(2)=%08x + %08x <<< %08x\n", REG(3), REG(2), (((ir>>7)&3)<<6) + (((ir>>9)&0xf)<<2), REG(((ir>>2)&0x1f)) );*/ \
+					/*printf( "C.SWSP gp=%08x -> REG(2)=%08x + %08x <<< %08x\n", REG(3), REG(2), (((ir>>7)&3)<<6) + (((ir>>9)&0xf)<<2), REG(((ir>>2)&0x1f)) ); */ \
 					MINIRV32_STORE4( REG(2) + (((ir>>7)&3)<<6) + (((ir>>9)&0xf)<<2), REG(((ir>>2)&0x1f)) ); \
 					break; \
 				case 0b010: /*c.lwsp / c.lw(SP)*/ \
-					/*printf( "C.LWSP gp=%08x -> REG(2)=%08x + %08x <<< %08x\n", REG(3), REG(2), (((ir>>2)&3)<<6) + (((ir>>4)&0x7)<<2), REG(((ir>>2)&0x1f)) );*/ \
-					rval = MINIRV32_LOAD4( REG(2) + (((ir>>2)&3)<<6) + (((ir>>4)&0x7)<<2) ); \
+					/*printf( "C.LWSP gp=%08x -> REG(2)=%08x + %08x <<< %08x\n", REG(3), REG(2), (((ir>>2)&3)<<6) + (((ir>>4)&0x7)<<2) + (((ir>>12)&1)<<5), REG(((ir>>2)&0x1f)) );*/ \
+					rval = MINIRV32_LOAD4( REG(2) + (((ir>>2)&3)<<6) + (((ir>>4)&0x7)<<2) + (((ir>>12)&1)<<5) ); \
 					rdid = ((ir>>7)&0x1f); \
 					break; \
 				default: trap = (2+1); break; \
@@ -293,7 +292,10 @@ static int CHPLoad( uint32_t address, uint32_t * regret, int size )
 	else if( address == 0x40021014 ) { *regret = 0; } // R32_RCC
 	else if( address == 0x40021018 ) { *regret = 0; } // R32_RCC
 	else if( address == 0x4002101C ) { *regret = 0; } // R32_RCC
-	else if( address >= 0x40000000 && address < 0x50000000 ) { printf( "Unknown hardware read %08x\n", address ); *regret = 0; } 
+	else if( address >= 0x40000000 && address < 0x50000000 )
+	{
+		//printf( "Unknown hardware read %08x\n", address ); *regret = 0;
+	} 
 	else
 	{
 		printf( "Load fail at %08x\n", address );
@@ -323,6 +325,7 @@ static int CHPStore( uint32_t address, uint32_t regset, int size )
 			{
 				printf( "%c", ((uint8_t*)DMDATA)[i+1] );
 			}
+			DMDATA[0] = 0;
 		}
 	}
 	else if( address == 0x40022000 ) { } // FLASH->ACTLR
@@ -335,7 +338,10 @@ static int CHPStore( uint32_t address, uint32_t regset, int size )
 	else if( address == 0x40021018 ) { } // R32_RCC
 	else if( address == 0x4002101C ) { } // R32_RCC
 	else if( address == 0x40020064 ) { ch32v003InternalLEDSets = regset; }
-	else if( address >= 0x40000000 && address < 0x50000000 ) { printf( "Unknown hardware write %08x = %08x\n", address, regset ); }
+	else if( address >= 0x40000000 && address < 0x50000000 )
+	{
+		//printf( "Unknown hardware write %08x = %08x\n", address, regset );
+	}
 	else
 	{
 		printf( "Store fail at %08x\n", address );
@@ -406,7 +412,8 @@ int ch32v003ReadMemory(uint8_t* binary, uint32_t length, uint32_t address)
 
 int ch32v003GetReg(int regno, uint32_t* value)
 {
-	// TODO
+	if( regno == 4 ) *value = DMDATA[0];
+	if( regno == 5 ) *value = DMDATA[1];
     return 0;
 }
 
