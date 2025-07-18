@@ -22,4 +22,7 @@ int ch32v003Resume();
 void ch32v003CheckTerminal();
 void ch32v003Teardown();
 
+// Only available on the emulator
+void ch32v003EmuDraw(int window_w, int window_h);
+
 #endif
