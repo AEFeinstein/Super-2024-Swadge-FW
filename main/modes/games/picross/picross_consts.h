@@ -8,7 +8,7 @@
 #define PICROSS_EXTRA_PADDING 10 // actually double the padding we want around.
 #define PICROSS_BORDER_COLOR  c333
 #define PICROSS_MOD5_COLOR    c541 // c441 is yellow. c541 is dark orange.
-
+#define PICROSS_LERP_AMOUNT   6000
 // If you add files, but haven't changed level select or this file, it might not recompile.
 // go to terminal and run: make -f emu.mk clean all
 // which will force everything to refresh

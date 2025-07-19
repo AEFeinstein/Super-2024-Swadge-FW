@@ -11,6 +11,7 @@ typedef struct
     wsg_t completedWSG;
     bool completed;
     const char* title;
+    const char* marqueeFact;
 } picrossLevelDef_t;
 
 typedef struct

@@ -42,6 +42,7 @@ void picrossStartLevelSelect(font_t* bigFont, picrossLevelDef_t levels[])
     picrossVictoryData_t* victData
         = calloc(1, size); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
     readNvsBlob(picrossCompletedLevelData, victData, &size);
+    ls->currentIndex = -1; // set to impossible index so we don't continue level 0 when we haven't started level 0
     readNvs32(picrossCurrentPuzzleIndexKey, &ls->currentIndex);
     ls->allLevelsComplete = true;
     for (int i = 0; i < PICROSS_LEVEL_COUNT; i++)
@@ -211,7 +212,15 @@ void levelSelectInput()
     }
 
     ls->hoverLevelIndex = ls->hoverY * ls->cols + (ls->topVisibleRow * ls->cols) + ls->hoverX;
-    ls->prevBtnState    = ls->btnState;
+
+    // hack for when levels aren't a multiple of 5, to not selet into empty space. Run the input again recursively until
+    // selection wraps back over into a valid index.
+    if (ls->hoverLevelIndex >= PICROSS_LEVEL_COUNT)
+    {
+        levelSelectInput();
+    }
+
+    ls->prevBtnState = ls->btnState;
 }
 
 void drawLevelSelectScreen(font_t* font)
@@ -293,9 +302,8 @@ void drawLevelSelectScreen(font_t* font)
     {
         // Draw the current level difficulty at the bottom left.
         //(debug)
-        snprintf(textBuffer, sizeof(textBuffer) - 1, "%" PRIu16 "x%" PRIu16 " (%" PRIu8 ")",
-                 (int)ls->levels[ls->hoverLevelIndex].levelWSG.w, (int)ls->levels[ls->hoverLevelIndex].levelWSG.h,
-                 (int)ls->topVisibleRow);
+        snprintf(textBuffer, sizeof(textBuffer) - 1, "%" PRIu16 "x%" PRIu16,
+                 (int)ls->levels[ls->hoverLevelIndex].levelWSG.w, (int)ls->levels[ls->hoverLevelIndex].levelWSG.h);
         t = textWidth(&ls->smallFont, textBuffer) / 2;
         drawText(&ls->smallFont, c555, textBuffer, TFT_WIDTH - 54 - t, TFT_HEIGHT - 28);
     }
