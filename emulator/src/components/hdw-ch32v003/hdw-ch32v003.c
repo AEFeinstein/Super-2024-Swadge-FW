@@ -433,10 +433,8 @@ static inline int8_t MINIRV32_LOAD1_SIGNEDs(uint32_t ofs, uint32_t* rval, uint32
                             }                                                                                          \
                             else if (rdid != 0)                                                                        \
                             {                                                                                          \
-                                rdid = 1; /* c.jalr, maybe */                                                          \
+                                rdid = 1; /* c.jalr */                                                                 \
                                 rval = pc + 4;                                                                         \
-                                if (!(ir >> 12) & 1)                                                                   \
-                                    rdid = 0;                                                                          \
                                 pc = REG(rdid) - 4; /*c.jr*/                                                           \
                             }                                                                                          \
                             else                                                                                       \
