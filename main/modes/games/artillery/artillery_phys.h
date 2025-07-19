@@ -97,6 +97,8 @@ typedef struct
 
 typedef struct
 {
+    int32_t frameTimer;
+
     vecFl_t g;
     vecFl_t bounds;
     rectangleFl_t zones[NUM_ZONES];
