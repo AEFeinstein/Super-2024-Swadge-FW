@@ -123,11 +123,7 @@ physSim_t* initPhys(float w, float h, float gx, float gy);
 void deinitPhys(physSim_t* phys);
 void drawPhysOutline(physSim_t* phys);
 void physStep(physSim_t* phys, int32_t elapsedUs);
-void physSetCameraButton(physSim_t* phys, buttonBit_t btn);
-void physAdjustCamera(physSim_t* phys, uint32_t elapsedUs);
 
-physLine_t* physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2, bool isTerrain);
-physCirc_t* physAddCircle(physSim_t* phys, float x1, float y1, float r, circType_t type);
 void setBarrelAngle(physCirc_t* circ, float angle);
 void setShotPower(physCirc_t* circ, float power);
 void fireShot(physSim_t* phys, physCirc_t* circ);
