@@ -19,6 +19,8 @@
 // Defines
 //==============================================================================
 
+#define PHYS_TIME_STEP (1000000 / 60)
+
 #define CAMERA_BTN_MOVE_INTERVAL 2
 #define CAMERA_MARGIN            64
 
@@ -39,11 +41,12 @@
 
 void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl);
 void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc);
-void physUpdateTimestep(physSim_t* phys, int32_t elapsedUs);
+void physFindObjDests(physSim_t* phys, int32_t elapsedUs);
 void physCheckCollisions(physSim_t* phys);
 void physBinaryMoveObjects(physSim_t* phys);
 bool physAnyCollision(physSim_t* phys, physCirc_t* c);
 
+bool physCircLineIntersection(physSim_t* phys, physCirc_t* pc, physLine_t* opl, float* colDist, vecFl_t* reflVec);
 bool physCircCircIntersection(physSim_t* phys, physCirc_t* cMoving, circleFl_t* cOther, float* colDist,
                               vecFl_t* reflVec);
 void physAdjustCameraTimer(physSim_t* phys);
@@ -192,10 +195,10 @@ physLine_t* physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2,
 }
 
 /**
- * @brief TODO doc
+ * @brief Update a line's properties like unit slope, unit normal, and zone mask
  *
- * @param phys
- * @param pl
+ * @param phys The physics simulation
+ * @param pl The line to update
  */
 void updateLineProperties(physSim_t* phys, physLine_t* pl)
 {
@@ -219,7 +222,7 @@ void updateLineProperties(physSim_t* phys, physLine_t* pl)
 }
 
 /**
- * @brief Add a circle to the physics simulation. It may be mobile or fixed/
+ * @brief Add a circle to the physics simulation. It may be mobile or fixed.
  *
  * @param phys The physics simulation
  * @param x1 The X point of the center of the circle
@@ -324,20 +327,24 @@ void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc)
  */
 void physStep(physSim_t* phys, int32_t elapsedUs)
 {
-    physUpdateTimestep(phys, elapsedUs);
-    physCheckCollisions(phys);
-    physBinaryMoveObjects(phys);
-    checkTurnOver(phys);
+    // Calculate physics frames at a very regular PHYS_TIME_STEP
+    RUN_TIMER_EVERY(phys->frameTimer, PHYS_TIME_STEP, elapsedUs, {
+        physFindObjDests(phys, PHYS_TIME_STEP);
+        phys->terrainMoving = moveTerrainPoints(phys, PHYS_TIME_STEP);
+        physCheckCollisions(phys);
+        physBinaryMoveObjects(phys);
+        checkTurnOver(phys);
+    });
 }
 
 /**
- * @brief Update each object's acceleration, velocity, and desired next position based on elapsedUs. This doesn't move
- * objects yet so objects will not clip into each other.
+ * @brief Update each object's acceleration, velocity, and desired next position.
+ * This doesn't move objects yet so objects will not clip into each other.
  *
  * @param phys The physics simulation
  * @param elapsedUs The time elapsed since this was last called
  */
-void physUpdateTimestep(physSim_t* phys, int32_t elapsedUs)
+void physFindObjDests(physSim_t* phys, int32_t elapsedUs)
 {
     // For each circle
     node_t* cNode = phys->circles.first;
@@ -394,8 +401,90 @@ void physUpdateTimestep(physSim_t* phys, int32_t elapsedUs)
         // Iterate
         cNode = cNode->next;
     }
+}
 
-    phys->terrainMoving = moveTerrainPoints(phys, elapsedUs);
+/**
+ * @brief Move terrain points a bit towards where they should be after shell explosion
+ *
+ * @param phys The physics simulation
+ * @param elapsedUs The time elapsed since this was last called
+ * @return true if terrain is actively moving, false otherwise
+ */
+bool moveTerrainPoints(physSim_t* phys, int32_t elapsedUs)
+{
+    // Keep track if any terrain is moving anywhere
+    bool anyTerrainMoving = false;
+
+    // Iterate through all lines
+    node_t* lNode = phys->lines.first;
+    while (lNode)
+    {
+        physLine_t* line = lNode->val;
+        // If the line is terrain
+        if (line->isTerrain)
+        {
+            // Track if this line is moving or needs a properties update
+            bool updateLine = false;
+
+            if (line->destination.p1.y == line->l.p1.y)
+            {
+                // Not moving
+            }
+            else if (ABS(line->destination.p1.y - line->l.p1.y) < 1)
+            {
+                // Less than one pixel off, clamp it
+                line->l.p1.y = line->destination.p1.y;
+                updateLine   = true;
+            }
+            else if (line->destination.p1.y > line->l.p1.y)
+            {
+                // Move p1 towards destination
+                line->l.p1.y++;
+                anyTerrainMoving = true;
+            }
+            else if (line->destination.p1.y < line->l.p1.y)
+            {
+                // Move p1 towards destination
+                line->l.p1.y--;
+                anyTerrainMoving = true;
+            }
+
+            if (line->destination.p2.y == line->l.p2.y)
+            {
+                // Do nothing
+            }
+            else if (ABS(line->destination.p2.y - line->l.p2.y) < 1)
+            {
+                // Less than one pixel off, clamp it
+                line->l.p2.y = line->destination.p2.y;
+                updateLine   = true;
+            }
+            else if (line->destination.p2.y > line->l.p2.y)
+            {
+                // Move p2 towards destination
+                line->l.p2.y++;
+                anyTerrainMoving = true;
+            }
+            else if (line->destination.p2.y < line->l.p2.y)
+            {
+                // Move p1 towards destination
+                line->l.p2.y--;
+                anyTerrainMoving = true;
+            }
+
+            // If the line needs a properties update
+            if (updateLine)
+            {
+                // Update slope and normals and such
+                updateLineProperties(phys, line);
+            }
+        }
+        // Iterate
+        lNode = lNode->next;
+    }
+
+    // Return if any terrain anywhere is moving
+    return anyTerrainMoving;
 }
 
 /**
@@ -428,79 +517,8 @@ void physCheckCollisions(physSim_t* phys)
             node_t* oln = phys->lines.first;
             while (oln)
             {
-                // Get a convenience pointer
-                physLine_t* opl = (physLine_t*)oln->val;
-
-                // Quick check to see if objects are in the same zone
-                if (pc->zonemask & opl->zonemask)
-                {
-                    // Used to determine which component of the line collided
-                    float minLineDist      = FLT_MAX;
-                    vecFl_t lineUnitNormal = {0}; // Points upward from the line
-
-                    ////////////////////////////////////////////////////////////
-
-                    // Construct the bounding lines around this line (parallel lines, one radius away)
-                    lineFl_t bounds[] = {
-                        {
-                            .p1 = addVecFl2d(opl->l.p1, mulVecFl2d(opl->unitNormal, pc->c.radius)),
-                            .p2 = addVecFl2d(opl->l.p2, mulVecFl2d(opl->unitNormal, pc->c.radius)),
-                        },
-                        {
-                            .p1 = addVecFl2d(opl->l.p1, mulVecFl2d(opl->unitNormal, -pc->c.radius)),
-                            .p2 = addVecFl2d(opl->l.p2, mulVecFl2d(opl->unitNormal, -pc->c.radius)),
-                        },
-                    };
-
-                    // Check for intersections between circle's travel line and bounds lines
-                    for (int32_t idx = 0; idx < ARRAY_SIZE(bounds); idx++)
-                    {
-                        vecFl_t intersection = {0};
-                        if (lineLineFlIntersection(bounds[idx], pc->travelLine, &intersection))
-                        {
-                            // There was an intersection, find the distance from the starting point to the intersection
-                            float dist = sqMagVecFl2d(subVecFl2d(intersection, pc->travelLine.p1));
-
-                            if (dist < minLineDist)
-                            {
-                                minLineDist    = dist;
-                                lineUnitNormal = mulVecFl2d(opl->unitNormal, (1 == idx) ? -1 : 1);
-                            }
-                        }
-                    }
-
-                    ////////////////////////////////////////////////////////////
-
-                    // Construct bounds around the line endcaps
-                    // TODO for polylines and polygons, we could skip every other endcap
-                    circleFl_t caps[] = {
-                        {
-                            .pos    = opl->l.p1,
-                            .radius = 0,
-                        },
-                        {
-                            .pos    = opl->l.p2,
-                            .radius = 0,
-                        },
-                    };
-
-                    // Check bounding endcaps
-                    for (int32_t cIdx = 0; cIdx < ARRAY_SIZE(caps); cIdx++)
-                    {
-                        // Check if this intersection is closer than a line segment intersection
-                        physCircCircIntersection(phys, pc, &caps[cIdx], &minLineDist, &lineUnitNormal);
-                    }
-
-                    ////////////////////////////////////////////////////////////
-
-                    // Now that all the line components are checked, apply the closest one
-                    if (minLineDist < colDist)
-                    {
-                        colDist     = minLineDist;
-                        reflVec     = lineUnitNormal;
-                        countBounce = true;
-                    }
-                }
+                // Check for collision
+                physCircLineIntersection(phys, pc, (physLine_t*)oln->val, &colDist, &reflVec);
 
                 // Iterate to next line
                 oln = oln->next;
@@ -513,30 +531,23 @@ void physCheckCollisions(physSim_t* phys)
                 // Convenience pointer
                 physCirc_t* opc = ocn->val;
 
-                float circColDist      = FLT_MAX;
-                vecFl_t circUnitNormal = {0};
-
                 if ((opc != pc) &&                    // Don't collide a circle with itself
                     (opc->zonemask & pc->zonemask) && // make sure they're in the same zone
                     (pc->type != opc->type) &&        // Types should differ (shells don't hit shells, etc.)
-                    physCircCircIntersection(phys, pc, &opc->c, &circColDist, &circUnitNormal))
+                    physCircCircIntersection(phys, pc, &opc->c, &colDist, &reflVec))
                 {
-                    // TODO do I care if the other circle isn't fixed in space?
-                    if (CT_SHELL == pc->type && CT_TANK == opc->type)
+                    // If a shell
+                    if (CT_SHELL == pc->type)
                     {
-                        // Shells explode
-                        shouldRemoveNode = true;
-                    }
-                    else
-                    {
-                        // If this is a closer collision than others
-                        if (circColDist < colDist)
+                        // hits a tank
+                        if (CT_TANK == opc->type)
                         {
-                            // Save it
-                            colDist     = circColDist;
-                            reflVec     = circUnitNormal;
-                            countBounce = (CT_OBSTACLE != opc->type);
+                            // it explodes
+                            shouldRemoveNode = true;
                         }
+
+                        // Shells always bounce off obstacles
+                        countBounce = (CT_OBSTACLE != opc->type);
                     }
                 }
 
@@ -554,49 +565,54 @@ void physCheckCollisions(physSim_t* phys)
                     pc->bounces--;
                     if (0 == pc->bounces)
                     {
+                        // Ran out of bounces, so it explodes
                         shouldRemoveNode = true;
                     }
                 }
 
-                // Bounce it by reflecting across this vector
-                pc->vel = subVecFl2d(pc->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(pc->vel, reflVec))));
-
-                // Dampen after bounce
-                pc->vel = mulVecFl2d(pc->vel, 0.75f);
-
-                // Deadband the velocity if it's small enough
-                if (sqMagVecFl2d(pc->vel) < 1e-9f)
+                // If object isn't marked for removal
+                if (!shouldRemoveNode)
                 {
-                    pc->vel.x = 0;
-                    pc->vel.y = 0;
-                }
+                    // Bounce it by reflecting across this vector
+                    pc->vel = subVecFl2d(pc->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(pc->vel, reflVec))));
 
-                // If the circle is on top of an object (i.e. reflection vector points upward)
-                if (reflVec.y < 0)
-                {
-                    pc->inContact = true;
+                    // Dampen after bounce
+                    pc->vel = mulVecFl2d(pc->vel, 0.75f);
 
-                    // Unit slope is the unit normal rotated 90 degrees, pointed downward
-                    if (reflVec.x < 0)
+                    // Deadband the velocity if it's small enough
+                    if (sqMagVecFl2d(pc->vel) < 1e-9f)
                     {
-                        pc->slopeVec.x = reflVec.y;
-                        pc->slopeVec.y = -reflVec.x;
-                    }
-                    else
-                    {
-                        pc->slopeVec.x = -reflVec.y;
-                        pc->slopeVec.y = reflVec.x;
+                        pc->vel.x = 0;
+                        pc->vel.y = 0;
                     }
 
-                    // Project the gravity vector onto the unit slope to find the static force moving this
-                    // object proj(a onto b) == (b) * ((a dot b) / (b dot b)) But b is a unit vector, so (b dot
-                    // b) is just 2
-                    pc->staticForce = mulVecFl2d(pc->slopeVec, dotVecFl2d(phys->g, pc->slopeVec) / 2.0f);
-
-                    // Just in case, don't float upwards
-                    if (pc->staticForce.y < 0)
+                    // If the circle is on top of an object (i.e. reflection vector points upward)
+                    if (reflVec.y < 0)
                     {
-                        pc->staticForce.y = 0;
+                        pc->inContact = true;
+
+                        // Unit slope is the unit normal rotated 90 degrees, pointed downward
+                        if (reflVec.x < 0)
+                        {
+                            pc->slopeVec.x = reflVec.y;
+                            pc->slopeVec.y = -reflVec.x;
+                        }
+                        else
+                        {
+                            pc->slopeVec.x = -reflVec.y;
+                            pc->slopeVec.y = reflVec.x;
+                        }
+
+                        // Project the gravity vector onto the unit slope to find the static force moving this
+                        // object proj(a onto b) == (b) * ((a dot b) / (b dot b)) But b is a unit vector, so (b dot
+                        // b) is just 2
+                        pc->staticForce = mulVecFl2d(pc->slopeVec, dotVecFl2d(phys->g, pc->slopeVec) / 2.0f);
+
+                        // Just in case, don't float upwards
+                        if (pc->staticForce.y < 0)
+                        {
+                            pc->staticForce.y = 0;
+                        }
                     }
                 }
             }
@@ -616,10 +632,17 @@ void physCheckCollisions(physSim_t* phys)
         // Iterate to next moving circle
         node_t* nextNode = cNode->next;
 
-        // Optionally remove this entry (if a shell exploded)
+        // Optionally remove this entry
         if (shouldRemoveNode)
         {
-            explodeShell(phys, cNode);
+            // Shells explode
+            if (pc->type == CT_SHELL)
+            {
+                explodeShell(phys, cNode);
+            }
+
+            // Remove the node
+            heap_caps_free(removeEntry(&phys->circles, cNode));
             shouldRemoveNode = false;
         }
         cNode = nextNode;
@@ -627,10 +650,10 @@ void physCheckCollisions(physSim_t* phys)
 }
 
 /**
- * @brief TODO
+ * @brief Explode a shell and deform terrain
  *
- * @param phys
- * @param shell
+ * @param phys The physics simulation
+ * @param shell The shell which exploded
  */
 void explodeShell(physSim_t* phys, node_t* shellNode)
 {
@@ -660,19 +683,18 @@ void explodeShell(physSim_t* phys, node_t* shellNode)
     // Remove this shell from camera tracking
     removeVal(&phys->cameraTargets, shell);
 
-    heap_caps_free(removeEntry(&phys->circles, shellNode));
     phys->terrainMoving = true;
 }
 
 /**
- * @brief TODO
+ * @brief Check if a single point should be deformed by an explosion
  *
- * @param p
- * @param expPnt
- * @param rSq
- * @param expMin
- * @param expMax
- * @return float
+ * @param p A point to check for deformation
+ * @param expPnt The point of explosion
+ * @param rSq The squared radius of explosion
+ * @param expMin The minimum X position which is affected
+ * @param expMax The maximum X position which is affected
+ * @return The new Y position of the deformed point
  */
 float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float expMin, float expMax)
 {
@@ -699,96 +721,6 @@ float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float expMin, f
     }
     // Explosion doesn't affect point
     return p->y;
-}
-
-/**
- * @brief TODO
- *
- * @param phys
- * @param elapsedUs TODO use elapsedUs
- * @return true
- * @return false
- */
-bool moveTerrainPoints(physSim_t* phys, int32_t elapsedUs)
-{
-    // Keep track if any terrain is moving anywhere
-    bool terrainMoving = false;
-
-    // Iterate through all lines
-    node_t* lNode = phys->lines.first;
-    while (lNode)
-    {
-        physLine_t* line = lNode->val;
-        // If the line is terrain
-        if (line->isTerrain)
-        {
-            // Track if this line is moving or needs a properties update
-            bool lineIsMoving = false;
-            bool updateLine   = false;
-
-            if (line->destination.p1.y == line->l.p1.y)
-            {
-                // Do nothing
-            }
-            else if (ABS(line->destination.p1.y - line->l.p1.y) < 1)
-            {
-                // Less than one pixel off, clamp it
-                line->l.p1.y = line->destination.p1.y;
-                updateLine   = true;
-            }
-            else if (line->destination.p1.y > line->l.p1.y)
-            {
-                // Move p1 towards destination
-                line->l.p1.y++;
-                terrainMoving = true;
-                lineIsMoving  = true;
-            }
-            else if (line->destination.p1.y < line->l.p1.y)
-            {
-                // Move p1 towards destination
-                line->l.p1.y--;
-                terrainMoving = true;
-                lineIsMoving  = true;
-            }
-
-            if (line->destination.p2.y == line->l.p2.y)
-            {
-                // Do nothing
-            }
-            else if (ABS(line->destination.p2.y - line->l.p2.y) < 1)
-            {
-                // Less than one pixel off, clamp it
-                line->l.p2.y = line->destination.p2.y;
-                updateLine   = true;
-            }
-            else if (line->destination.p2.y > line->l.p2.y)
-            {
-                // Move p2 towards destination
-                line->l.p2.y++;
-                terrainMoving = true;
-                lineIsMoving  = true;
-            }
-            else if (line->destination.p2.y < line->l.p2.y)
-            {
-                // Move p1 towards destination
-                line->l.p2.y--;
-                terrainMoving = true;
-                lineIsMoving  = true;
-            }
-
-            // If the line needs a properties update and has finished moving both points
-            if (updateLine && !lineIsMoving)
-            {
-                // Update slope and normals and such
-                updateLineProperties(phys, line);
-            }
-        }
-        // Iterate
-        lNode = lNode->next;
-    }
-
-    // Return if any terrain anywhere is moving
-    return terrainMoving;
 }
 
 /**
@@ -938,9 +870,80 @@ bool physAnyCollision(physSim_t* phys, physCirc_t* c)
 }
 
 /**
+ * @param phys The physics simulation
+ *
+ * @param phys The physics simulation
+ * @param pc [IN] the moving circle
+ * @param opl [IN] the fixed line
+ * @param colDist [IN/OUT] The distance between the moving circle's position and the collision point
+ * @param reflVec [OUT] The vector to reflect the moving circle's velocity across if the two collided
+ * @return true if there was a collision, false if there was not
+ */
+bool physCircLineIntersection(physSim_t* phys, physCirc_t* pc, physLine_t* opl, float* colDist, vecFl_t* reflVec)
+{
+    bool collision = false;
+
+    // Quick check to see if objects are in the same zone
+    if (pc->zonemask & opl->zonemask)
+    {
+        // Construct the bounding lines around this line (parallel lines, one radius away)
+        lineFl_t bounds[] = {
+            {
+                .p1 = addVecFl2d(opl->l.p1, mulVecFl2d(opl->unitNormal, pc->c.radius)),
+                .p2 = addVecFl2d(opl->l.p2, mulVecFl2d(opl->unitNormal, pc->c.radius)),
+            },
+            {
+                .p1 = addVecFl2d(opl->l.p1, mulVecFl2d(opl->unitNormal, -pc->c.radius)),
+                .p2 = addVecFl2d(opl->l.p2, mulVecFl2d(opl->unitNormal, -pc->c.radius)),
+            },
+        };
+
+        // Check for intersections between circle's travel line and bounds lines
+        for (int32_t idx = 0; idx < ARRAY_SIZE(bounds); idx++)
+        {
+            vecFl_t intersection = {0};
+            if (lineLineFlIntersection(bounds[idx], pc->travelLine, &intersection))
+            {
+                // There was an intersection, find the distance from the starting point to the intersection
+                float dist = sqMagVecFl2d(subVecFl2d(intersection, pc->travelLine.p1));
+
+                if (dist < *colDist)
+                {
+                    *colDist  = dist;
+                    *reflVec  = mulVecFl2d(opl->unitNormal, (1 == idx) ? -1 : 1);
+                    collision = true;
+                }
+            }
+        }
+
+        // Construct bounds around the line endcaps
+        circleFl_t caps[] = {
+            {
+                .pos    = opl->l.p1,
+                .radius = 0,
+            },
+            {
+                .pos    = opl->l.p2,
+                .radius = 0,
+            },
+        };
+
+        // Check bounding endcaps
+        for (int32_t cIdx = 0; cIdx < ARRAY_SIZE(caps); cIdx++)
+        {
+            // Check if this intersection is closer than a line segment intersection
+            collision |= physCircCircIntersection(phys, pc, &caps[cIdx], colDist, reflVec);
+        }
+    }
+
+    return collision;
+}
+
+/**
  * @brief Check for intersections between a moving circle, represented by a line segment, and a fixed circle. The
  * fixed circle may have radius 0, which indicates a point
  *
+ * @param phys The physics simulation
  * @param cMoving [IN] The moving circle
  * @param cOther [IN] The fixed circle
  * @param colDist [IN/OUT] The distance between the moving circle's position and the collision point
@@ -1183,8 +1186,6 @@ void physSetCameraButton(physSim_t* phys, buttonBit_t btn)
 
 /**
  * @brief Move the camera according to input buttons or object tracking
- *
- * TODO make this not suck when firing multiple shells
  *
  * @param phys The physics simulation to pan
  */
