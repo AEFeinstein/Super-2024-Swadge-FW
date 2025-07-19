@@ -342,6 +342,7 @@ static inline int8_t MINIRV32_LOAD1_SIGNEDs(uint32_t ofs, uint32_t* rval, uint32
                                 rval = REG(rdid) & cimm;                                                               \
                                 break;                                                                                 \
                             case 3: /*c.other*/                                                                        \
+                            {                                                                                          \
                                 uint32_t rs2 = REG((cimm & 7) + 8);                                                    \
                                 switch (cimm >> 3)                                                                     \
                                 {                                                                                      \
@@ -361,6 +362,7 @@ static inline int8_t MINIRV32_LOAD1_SIGNEDs(uint32_t ofs, uint32_t* rval, uint32
                                         trap = (2 + 1);                                                                \
                                         break;                                                                         \
                                 }                                                                                      \
+                            }                                                                                          \
                         }                                                                                              \
                         break;                                                                                         \
                     case 0b001: /*c.jal + NOTE: Is c.addiw on RV64*/                                                   \
@@ -664,8 +666,7 @@ static void* ch32v003threadFn(void* v)
         uint32_t tus = (dNow - dLast) * 1000000;
         if (ch32v003runMode)
         {
-            int r = MiniRV32IMAStep(&ch32v003state, 0, 0, tus, 24 * tus);
-            r     = r;
+            /*int r = */MiniRV32IMAStep(&ch32v003state, 0, 0, tus, 24 * tus);
             // printf( "STEP: %d\n", r );
         }
         OGUSleep(100);
