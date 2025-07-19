@@ -194,6 +194,13 @@ RMD files are maps for the [raycast FPS mode](../../attic/modes/ray/mode_ray.h) 
 the [ray map editor](../rayMapEditor/). They are processed with [Heatshrink][heatshrink]
 compression only.
 
+### `.cfun`
+
+CH32V003 firmware file, assumed to only be the main file, it includes a mini version of
+[ch32fun](https://github.com/cnlohr/ch32fun) that gets loaded into [the tools folder](../../tools/ch32v003comp).
+
+It then invokes GCC + binutils to output the binary file as an asset that can be loaded on the 003.
+
 ### `.chart`
 
 Generate Clone Hero charts [using this tool](https://efhiii.github.io/midi-ch/), see https://github.com/EFHIII/midi-ch.

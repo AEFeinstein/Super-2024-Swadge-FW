@@ -1,0 +1,33 @@
+// Create a gradient on the matrix displaying brightnesses from 0..71 out of a maximum brightness of 255.
+
+#include "swadge_matrix.h"
+
+int main()
+{
+	MatrixSetup();
+
+    int frameno = 0;
+
+	uint32_t nf = SysTick->CNT;
+
+    while(1)
+    {
+        int y, x, i;
+
+		while( (int)(nf - SysTick->CNT) > 0 );
+
+		nf = SysTick->CNT + 6000000/TARGET_FPS;
+
+        i = 0;
+        for( y = 0; y < 6; y++ )
+		{
+	        for( x = 0; x < 12; x++ )
+    	    {
+    	        SetPixel( x, y, x+y*12 ); 
+    	    }
+		}
+
+        frameno++;
+        *DMDATA1 = frameno;
+    }
+}
