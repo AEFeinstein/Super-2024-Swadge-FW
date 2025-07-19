@@ -275,6 +275,9 @@ static void mainMenuEnterMode(void)
     // Allocate the menu
     mainMenu->menu = initMenu(mainMenuTitle, mainMenuCb);
 
+    int ch32v003LoadReply = ch32v003RunBinaryAsset(MATRIX_DROPS_CFUN_BIN);
+    ch32v003LoadReply     = ch32v003LoadReply;
+
 #ifdef CONFIG_FACTORY_TEST_NORMAL
     // Initialize all the modes in modeList
     modeListSetMenu(mainMenu->menu);

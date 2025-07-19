@@ -50,6 +50,8 @@ swadgeMode_t modeCh32v003test = {
     .fnAdvancedUSB            = NULL,
 };
 
+static int initial_success;
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -71,10 +73,7 @@ void ch32v003testEnterMode(void)
 
     ch32v003test->tElapsedUs = 0;
 
-    size_t sz;
-    const uint8_t* buf = cnfsGetFile(LEDARRAY_CFUN_BIN, &sz);
-    ch32v003WriteFlash(buf, sz);
-    ch32v003Resume();
+    initial_success = ch32v003RunBinaryAsset(MATRIX_GRADIENT_CFUN_BIN);
 
     // Turn off LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
@@ -139,6 +138,8 @@ void ch32v003testMainLoop(int64_t elapsedUs)
     drawText(ch32v003test->font, 215, buffer, 2, 50);
     sprintf(buffer, "%08x", (unsigned)dmdata1);
     drawText(ch32v003test->font, 215, buffer, 2, 70);
+    sprintf(buffer, "%s", initial_success ? "FAIL" : "OK");
+    drawText(ch32v003test->font, 215, buffer, 2, 90);
 
     ch32v003CheckTerminal();
 }

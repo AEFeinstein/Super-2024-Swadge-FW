@@ -183,6 +183,13 @@ int ch32v003WriteMemory(const uint8_t* binary, uint32_t length, uint32_t offset)
     return 0;
 }
 
+/**
+ * @brief Write data into the ch32v003's flash.
+ *
+ * @param buf A pointer to a binary image in the master processor
+ * @param sz The size of the binary image to be written
+ * @return 0 if OK, nonzero in error condition.
+ */
 int ch32v003WriteFlash(const uint8_t* buf, int sz)
 {
     if (ch32v003Check())
@@ -236,6 +243,11 @@ int ch32v003WriteFlash(const uint8_t* buf, int sz)
     return !flashok;
 }
 
+/**
+ * @brief Cause the 003 to reboot and execute the program loaded into it.
+ *
+ * @return 0 if OK, nonzero in error condition.
+ */
 int ch32v003Resume()
 {
     if (ch32v003Check())
@@ -252,6 +264,14 @@ int ch32v003Resume()
     return 0;
 }
 
+/**
+ * @brief Read data from the ch32v003's memory space into host processor memory space
+ *
+ * @param binary A pointer to a buffer in the host processor
+ * @param length The number of bytes to read
+ * @param offset The location of memory to read in the ch32v003
+ * @return 0 if OK, nonzero if error.
+ */
 int ch32v003ReadMemory(uint8_t* binary, uint32_t length, uint32_t offset)
 {
     if (ch32v003Check())
@@ -277,6 +297,13 @@ int ch32v003ReadMemory(uint8_t* binary, uint32_t length, uint32_t offset)
     return 0;
 }
 
+/**
+ * @brief Read ch32v003 debug module registers
+ *
+ * @param regno The debug module register number.
+ * @param value A pointer to the uint32_t to receive that register's value.
+ * @return 0 if OK, nonzero if error.
+ */
 int ch32v003GetReg(int regno, uint32_t* value)
 {
     if (ch32v003Check())
@@ -285,6 +312,13 @@ int ch32v003GetReg(int regno, uint32_t* value)
     return MCFReadReg32(&swioContext, regno, value);
 }
 
+/**
+ * @brief Write ch32v003 debug module registers
+ *
+ * @param regno The debug module register number.
+ * @param regValue The value to write into that debug module regsiter
+ * @return 0 if OK, nonzero if error.
+ */
 int ch32v003SetReg(int regno, uint32_t regValue)
 {
     if (ch32v003Check())
@@ -295,6 +329,10 @@ int ch32v003SetReg(int regno, uint32_t regValue)
     return 0;
 }
 
+/**
+ * @brief See if the ch32v003 has any pending printf to print on host processor.
+ *
+ */
 void ch32v003CheckTerminal()
 {
     char buffer[257];
@@ -307,6 +345,10 @@ void ch32v003CheckTerminal()
     }
 }
 
+/**
+ * @brief Disables ch32v003 communications
+ *
+ */
 void ch32v003Teardown()
 {
     // Power-Down
