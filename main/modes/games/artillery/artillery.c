@@ -4,6 +4,7 @@
 
 #include "artillery.h"
 #include "artillery_game.h"
+#include "artillery_phys_objs.h"
 
 //==============================================================================
 // Function Declarations
