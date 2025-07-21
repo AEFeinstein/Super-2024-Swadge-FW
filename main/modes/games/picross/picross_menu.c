@@ -48,7 +48,7 @@ void picrossMainLoop(int64_t elapsedUs);
 void picrossButtonCb(buttonEvt_t* evt);
 void picrossTouchCb(bool touched);
 void loadLevels(void);
-void picrossMainMenuCb(const char* label, bool selected, uint32_t value);
+bool picrossMainMenuCb(const char* label, bool selected, uint32_t value);
 void picrossMenuOptionsCb(const char* opt);
 
 //==============================================================================
@@ -710,7 +710,7 @@ void continueGame()
 }
 
 // menu button & options menu callbacks. Set the screen and call the appropriate start functions
-void picrossMainMenuCb(const char* label, bool selected, uint32_t value)
+bool picrossMainMenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
@@ -721,10 +721,8 @@ void picrossMainMenuCb(const char* label, bool selected, uint32_t value)
             // Turn off LEDs
             led_t leds[CONFIG_NUM_LEDS] = {0};
             setLeds(leds, CONFIG_NUM_LEDS);
-
-            return;
         }
-        if (label == str_howtoplay)
+        else if (label == str_howtoplay)
         {
             pm->screen = PICROSS_TUTORIAL;
             picrossStartTutorial(&pm->mmFont);
@@ -732,10 +730,8 @@ void picrossMainMenuCb(const char* label, bool selected, uint32_t value)
             // Turn off LEDs
             led_t leds[CONFIG_NUM_LEDS] = {0};
             setLeds(leds, CONFIG_NUM_LEDS);
-
-            return;
         }
-        if (label == str_levelSelect)
+        else if (label == str_levelSelect)
         {
             pm->screen = PICROSS_LEVELSELECT;
             picrossStartLevelSelect(&pm->mmFont, pm->levels);
@@ -743,14 +739,11 @@ void picrossMainMenuCb(const char* label, bool selected, uint32_t value)
             // Turn off LEDs
             led_t leds[CONFIG_NUM_LEDS] = {0};
             setLeds(leds, CONFIG_NUM_LEDS);
-
-            return;
         }
-        if (label == str_exit)
+        else if (label == str_exit)
         {
             // Exit to main menu
             switchToSwadgeMode(&mainMenuMode);
-            return;
         }
         else if (label == str_eraseProgress)
         {
@@ -793,6 +786,7 @@ void picrossMainMenuCb(const char* label, bool selected, uint32_t value)
             picrossSetSaveFlag(PO_MARK_X, value);
         }
     }
+    return false;
 }
 
 /**
