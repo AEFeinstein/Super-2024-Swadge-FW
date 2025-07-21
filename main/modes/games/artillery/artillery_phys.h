@@ -111,8 +111,8 @@ typedef struct
     list_t cameraTargets;
 
     bool shotFired;
-    bool turnOver;
     bool terrainMoving;
+    int32_t playerSwapTimerUs;
 } physSim_t;
 
 //==============================================================================

@@ -307,7 +307,7 @@ static void physBinaryMoveObjects(physSim_t* phys)
 static void checkTurnOver(physSim_t* phys)
 {
     // If there is a shot in progress and the turn isn't over yet
-    if (phys->shotFired && !phys->turnOver)
+    if (phys->shotFired && !phys->playerSwapTimerUs)
     {
         // Check for any shells
         bool anyShells = false;
@@ -332,9 +332,10 @@ static void checkTurnOver(physSim_t* phys)
         }
 
         // Turn is over if there are no shells and no moving terrain
-        phys->turnOver = (false == anyShells && false == phys->terrainMoving);
-
-        // TODO set timer to switch turn
+        if (false == anyShells && false == phys->terrainMoving)
+        {
+            phys->playerSwapTimerUs = 3000000;
+        }
     }
 }
 
