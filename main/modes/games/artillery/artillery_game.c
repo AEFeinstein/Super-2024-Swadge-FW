@@ -212,17 +212,21 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
                 ad->phys->shotFired = true;
                 fireShot(ad->phys, ad->players[ad->plIdx]);
             }
-            else if (ad->phys->turnOver)
+            else if (ad->phys->playerSwapTimerUs)
             {
-                ad->phys->shotFired = false;
-                ad->phys->turnOver  = false;
+                ad->phys->playerSwapTimerUs -= elapsedUs;
+                if (ad->phys->playerSwapTimerUs <= 0)
+                {
+                    ad->phys->playerSwapTimerUs = 0;
+                    ad->phys->shotFired         = false;
 
-                // Switch to the next player
-                ad->plIdx = (ad->plIdx + 1) % NUM_PLAYERS;
-                artillerySwitchToState(ad, AGS_MENU);
+                    // Switch to the next player
+                    ad->plIdx = (ad->plIdx + 1) % NUM_PLAYERS;
+                    artillerySwitchToState(ad, AGS_MENU);
 
-                // Reset menu to top item
-                ad->gameMenu = menuNavigateToTopItem(ad->gameMenu);
+                    // Reset menu to top item
+                    ad->gameMenu = menuNavigateToTopItem(ad->gameMenu);
+                }
             }
             break;
         }
