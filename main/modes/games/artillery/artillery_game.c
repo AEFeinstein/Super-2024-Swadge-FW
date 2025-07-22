@@ -190,7 +190,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
 {
     physAdjustCamera(ad->phys, elapsedUs);
     physStep(ad->phys, elapsedUs);
-    drawPhysOutline(ad->phys);
+    drawPhysOutline(ad->phys, ad->moveTimerUs);
 
     font_t* f = getSysFont();
 
