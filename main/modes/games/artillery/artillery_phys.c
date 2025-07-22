@@ -12,8 +12,10 @@
 
 #include "shapes.h"
 #include "palette.h"
+#include "artillery.h"
 #include "artillery_phys.h"
 #include "macros.h"
+#include "fill.h"
 
 #include "artillery_phys_objs.h"
 #include "artillery_phys_camera.h"
@@ -343,9 +345,13 @@ static void checkTurnOver(physSim_t* phys)
  * @brief Draw the outlines of physics simulation objects
  *
  * @param phys The physics simulation
+ * @param moveTimeLeftUs TODO
  */
-void drawPhysOutline(physSim_t* phys)
+void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs)
 {
+    // Draw gas gauge
+    fillDisplayArea(0, 0, (TFT_WIDTH * moveTimeLeftUs) / TANK_MOVE_TIME_US, 16, c313);
+
     // Draw all lines
     node_t* lNode = phys->lines.first;
     while (lNode)
