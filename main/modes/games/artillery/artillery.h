@@ -10,6 +10,8 @@
 
 #define NUM_PLAYERS 2
 
+#define TANK_MOVE_TIME_US 3000000
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -53,7 +55,11 @@ typedef struct
     menu_t* gameMenu;
     menuSimpleRenderer_t* smRenderer;
 
+    // Timer to only allow a little bit of movement
+    int32_t moveTimerUs;
 } artilleryData_t;
 
 extern const char load_ammo[];
 extern swadgeMode_t artilleryMode;
+
+void setDriveInMenu(bool visible);
