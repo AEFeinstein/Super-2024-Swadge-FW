@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 
+#include "artillery.h"
 #include "artillery_game.h"
 #include "artillery_phys_camera.h"
 
@@ -26,9 +27,13 @@ void artillerySwitchToState(artilleryData_t* ad, artilleryGameState_t newState)
     // Additional state-specific setup
     switch (ad->gState)
     {
+        case AGS_MENU:
+        {
+            setDriveInMenu(ad->moveTimerUs);
+        }
+        // fall through
         default:
         case AGS_WAIT:
-        case AGS_MENU:
         case AGS_MOVE:
         case AGS_ADJUST:
         case AGS_FIRE:
@@ -222,6 +227,11 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
 
                     // Switch to the next player
                     ad->plIdx = (ad->plIdx + 1) % NUM_PLAYERS;
+
+                    // Reset move timer
+                    ad->moveTimerUs = TANK_MOVE_TIME_US;
+
+                    // Return to the menu
                     artillerySwitchToState(ad, AGS_MENU);
 
                     // Reset menu to top item
@@ -230,9 +240,26 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
             }
             break;
         }
+        case AGS_MOVE:
+        {
+            // If there is time left to move and the player is moving
+            if (ad->moveTimerUs && ad->players[ad->plIdx]->moving)
+            {
+                // Decrement the timer
+                ad->moveTimerUs -= elapsedUs;
+                // If the timer expired
+                if (ad->moveTimerUs <= 0)
+                {
+                    // Clear timer and button inputs and return to the menu
+                    ad->moveTimerUs                = 0;
+                    ad->players[ad->plIdx]->moving = 0;
+                    artillerySwitchToState(ad, AGS_MENU);
+                }
+            }
+            break;
+        }
         case AGS_LOOK:
         case AGS_WAIT:
-        case AGS_MOVE:
         {
             break;
         }

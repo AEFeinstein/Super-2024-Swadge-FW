@@ -48,7 +48,9 @@ artilleryData_t* ad;
 // Const Variables
 //==============================================================================
 
-const char load_ammo[] = "Load Ammo";
+const char load_ammo[]   = "Load Ammo";
+const char drive[]       = "Drive";
+const char look_around[] = "Look Around";
 
 const struct
 {
@@ -56,11 +58,11 @@ const struct
     artilleryGameState_t nextState;
 } menuEntries[] = {
     {
-        .text      = "Look Around",
+        .text      = look_around,
         .nextState = AGS_LOOK,
     },
     {
-        .text      = "Drive",
+        .text      = drive,
         .nextState = AGS_MOVE,
     },
     {
@@ -173,6 +175,9 @@ void artilleryEnterMode(void)
     ad->players[0] = physAddCircle(ad->phys, WORLD_WIDTH / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
     ad->players[1]
         = physAddCircle(ad->phys, (7 * WORLD_WIDTH) / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
+
+    // Start with a full movement timer
+    ad->moveTimerUs = TANK_MOVE_TIME_US;
 
     // Test circle-line collisions
     // physAddCircle(ad->phys, WORLD_WIDTH / 2 + 16, 30, 8, CT_SHELL);
@@ -332,4 +337,45 @@ bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value)
     }
 
     return false;
+}
+
+/**
+ * @brief Set if the drive option is visible in the game menu
+ *
+ * @param visible true to show "Drive," false to hide it
+ */
+void setDriveInMenu(bool visible)
+{
+    // Return to the top level menu, just in case
+    menu_t* menu = ad->gameMenu;
+    while (menu->parentMenu)
+    {
+        menu = menu->parentMenu;
+    }
+
+    // Check if drive is already in the menu
+    bool driveInMenu = false;
+    node_t* mNode    = menu->items->first;
+    while (mNode)
+    {
+        menuItem_t* item = mNode->val;
+        if (drive == item->label)
+        {
+            driveInMenu = true;
+            break;
+        }
+        mNode = mNode->next;
+    }
+
+    // Adjust menu as necessary
+    if (visible && !driveInMenu)
+    {
+        insertSingleItemToMenuAfter(ad->gameMenu, drive, look_around);
+        ad->smRenderer->numRows++;
+    }
+    else if (!visible && driveInMenu)
+    {
+        removeSingleItemFromMenu(ad->gameMenu, drive);
+        ad->smRenderer->numRows--;
+    }
 }

@@ -365,7 +365,8 @@ void* removeIdx(list_t* list, uint16_t index)
 }
 
 /**
- * Remove a specific entry from the linked list by ::node_t.
+ * @brief Remove a specific entry from the linked list by ::node_t.
+ *
  * This relinks the entry's neighbors, but does not validate that it was part of the given ::list_t.
  * If the given ::node_t was not part of the given ::list_t, the list length will desync.
  *
@@ -423,7 +424,8 @@ void* removeEntry(list_t* list, node_t* entry)
 }
 
 /**
- * Remove a specific entry from the linked list by value and relink neighbors.
+ * @brief Remove a specific entry from the linked list by value and relink neighbors.
+ *
  * If the given value was not part of the given ::list_t, nothing will happen.
  *
  * @param list The list to remove an entry from
