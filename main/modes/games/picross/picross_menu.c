@@ -31,7 +31,7 @@ typedef struct
 {
     font_t mmFont;
     menu_t* menu;
-    menuManiaRenderer_t* renderer;
+    menuMegaRenderer_t* renderer;
     picrossLevelDef_t levels[PICROSS_LEVEL_COUNT];
     picrossScreen_t screen;
     int32_t savedIndex;
@@ -479,7 +479,7 @@ void picrossEnterMode(void)
     loadFont(MM_FONT, &(pm->mmFont), false);
 
     pm->menu     = initMenu(str_picrossTitle, picrossMainMenuCb);
-    pm->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    pm->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
 
     pm->screen = PICROSS_MENU;
 
@@ -543,7 +543,7 @@ void picrossExitMode(void)
     picrossExitLevelSelect(); // this doesnt actually get called as we go in and out of levelselect (because it breaks
                               // everything), so lets call it now
     deinitMenu(pm->menu);
-    deinitMenuManiaRenderer(pm->renderer);
+    deinitMenuMegaRenderer(pm->renderer);
     // p2pDeinit(&jm->p2p);
     freeFont(&(pm->mmFont));
     free(pm);
@@ -606,7 +606,7 @@ void picrossMainLoop(int64_t elapsedUs)
     {
         case PICROSS_MENU:
         {
-            drawMenuMania(pm->menu, pm->renderer, elapsedUs);
+            drawMenuMega(pm->menu, pm->renderer, elapsedUs);
             break;
         }
         case PICROSS_LEVELSELECT:

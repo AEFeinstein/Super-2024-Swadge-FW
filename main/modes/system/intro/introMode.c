@@ -366,7 +366,7 @@ typedef struct
 #endif
 
     menu_t* bgMenu;
-    menuManiaRenderer_t* renderer;
+    menuMegaRenderer_t* renderer;
     introDrawMode_t drawMode;
 
     // Microphone test
@@ -411,7 +411,7 @@ static void introEnterMode(void)
     loadWsg(INTRO_SWADGE_WSG, &iv->icon.swadge, true);
 
     iv->bgMenu   = initMenu(startTitle, NULL);
-    iv->renderer = initMenuManiaRenderer(&iv->bigFont, NULL, &iv->smallFont);
+    iv->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
 
     // up
     iv->buttonIcons[0].icon    = &iv->icon.button.up;
@@ -490,7 +490,7 @@ static void introExitMode(void)
 {
     clear(&iv->touchHist);
 
-    deinitMenuManiaRenderer(iv->renderer);
+    deinitMenuMegaRenderer(iv->renderer);
     deinitMenu(iv->bgMenu);
 
     freeFont(&iv->smallFont);
@@ -696,7 +696,7 @@ static void introMainLoop(int64_t elapsedUs)
 
     int16_t titleY    = 20;
     iv->bgMenu->title = title;
-    drawMenuMania(iv->bgMenu, iv->renderer, elapsedUs);
+    drawMenuMega(iv->bgMenu, iv->renderer, elapsedUs);
 
     int16_t detailYmin = titleY + iv->bigFont.height + 1 + 10;
     int16_t detailYmax = TFT_HEIGHT - 20;
