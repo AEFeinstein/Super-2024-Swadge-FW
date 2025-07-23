@@ -8,6 +8,7 @@
 #include "macros.h"
 #include "trigonometry.h"
 #include "menu_utils.h"
+#include "color_utils.h"
 #include "menuMegaRenderer.h"
 
 //==============================================================================
@@ -26,7 +27,7 @@
 // Variables
 //==============================================================================
 
-static const paletteColor_t bgColors[] = {
+static const paletteColor_t defaultBgColors[] = {
     c500, c410, c320, c230, c140, c050, c041, c032, c023, c014, c005,
 };
 
@@ -36,6 +37,7 @@ static const paletteColor_t bgColors[] = {
 
 static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t x, int16_t y, bool isSelected,
                          bool leftArrow, bool rightArrow, bool doubleArrows);
+static void setLedsFromBg(menuMegaRenderer_t* renderer);
 
 //==============================================================================
 // Functions
@@ -56,6 +58,14 @@ static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t
 menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont)
 {
     menuMegaRenderer_t* renderer = heap_caps_calloc(1, sizeof(menuMegaRenderer_t), MALLOC_CAP_SPIRAM);
+
+    // Set text color
+    renderer->textFillColor    = c555;
+    renderer->textOutlineColor = c000;
+
+    // Set the background
+    renderer->bgColors    = defaultBgColors;
+    renderer->numBgColors = ARRAY_SIZE(defaultBgColors);
 
     loadWsg(MMM_BACK_WSG, &renderer->back, true);
     loadWsg(MMM_BG_WSG, &renderer->bg, true);
@@ -114,10 +124,14 @@ menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOut
     loadWsg(BATT_4_WSG, &renderer->batt[3], true);
 
     // Initialize LEDs
+    setLedsFromBg(renderer);
     setLeds(renderer->leds, CONFIG_NUM_LEDS);
 
     // LEDs on by default
     renderer->ledsOn = true;
+
+    // Reset the palette
+    wsgPaletteReset(&renderer->palette);
 
     return renderer;
 }
@@ -167,6 +181,47 @@ void deinitMenuMegaRenderer(menuMegaRenderer_t* renderer)
 }
 
 /**
+ * @brief TODO doc
+ *
+ * @param renderer
+ * @param textFill
+ * @param textOutline
+ * @param c1
+ * @param c2
+ * @param c3
+ * @param c4
+ * @param c5
+ * @param c6
+ * @param c7
+ * @param c8
+ * @param bgColors
+ * @param numBgColors
+ */
+void recolorMenuMegaRenderer(menuMegaRenderer_t* renderer, paletteColor_t textFill, paletteColor_t textOutline,
+                             paletteColor_t c1, paletteColor_t c2, paletteColor_t c3, paletteColor_t c4,
+                             paletteColor_t c5, paletteColor_t c6, paletteColor_t c7, paletteColor_t c8,
+                             const paletteColor_t* bgColors, int32_t numBgColors)
+{
+    renderer->textFillColor    = textFill;
+    renderer->textOutlineColor = textOutline;
+
+    wsgPaletteSet(&renderer->palette, c001, c1); // Darkest blue
+    wsgPaletteSet(&renderer->palette, c012, c2); // Very dark blue
+    wsgPaletteSet(&renderer->palette, c023, c3); // Dark blue
+    wsgPaletteSet(&renderer->palette, c113, c4); // Dark moderate blue
+    wsgPaletteSet(&renderer->palette, c124, c5); // Dark strong blue
+    wsgPaletteSet(&renderer->palette, c034, c6); // Light strong blue
+    wsgPaletteSet(&renderer->palette, c045, c7); // Pure cyan
+    wsgPaletteSet(&renderer->palette, c455, c8); // Very pale cyan
+
+    if (bgColors)
+    {
+        renderer->bgColors    = bgColors;
+        renderer->numBgColors = numBgColors;
+    }
+}
+
+/**
  * @brief Draw a single line of themed menu text
  *
  * @param renderer The renderer to draw with
@@ -184,11 +239,11 @@ static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t
     // Draw background for the menu item
     if (isSelected)
     {
-        drawWsgSimple(&renderer->item_sel, x, y);
+        drawWsgPaletteSimple(&renderer->item_sel, x, y, &renderer->palette);
     }
     else
     {
-        drawWsgSimple(&renderer->item, x, y);
+        drawWsgPaletteSimple(&renderer->item, x, y, &renderer->palette);
     }
 
     int16_t textX = x + 13;
@@ -198,18 +253,19 @@ static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t
     if (isSelected && textWidth(renderer->menuFont, text) > MAX_ITEM_TEXT_WIDTH)
     {
         // Drop shadow
-        drawTextMarquee(renderer->menuFont, c000, text, textX + 1, textY + 1, textX + MAX_ITEM_TEXT_WIDTH - 5,
-                        &renderer->selectedMarqueeTimer);
+        drawTextMarquee(renderer->menuFont, renderer->textOutlineColor, text, textX + 1, textY + 1,
+                        textX + MAX_ITEM_TEXT_WIDTH - 5, &renderer->selectedMarqueeTimer);
         // Text
-        drawTextMarquee(renderer->menuFont, c555, text, textX, textY, textX + MAX_ITEM_TEXT_WIDTH - 5,
-                        &renderer->selectedMarqueeTimer);
+        drawTextMarquee(renderer->menuFont, renderer->textFillColor, text, textX, textY,
+                        textX + MAX_ITEM_TEXT_WIDTH - 5, &renderer->selectedMarqueeTimer);
     }
     else
     {
         // Drop shadow
-        drawTextEllipsize(renderer->menuFont, c000, text, textX + 1, textY + 1, MAX_ITEM_TEXT_WIDTH, false);
+        drawTextEllipsize(renderer->menuFont, renderer->textOutlineColor, text, textX + 1, textY + 1,
+                          MAX_ITEM_TEXT_WIDTH, false);
         // Text
-        drawTextEllipsize(renderer->menuFont, c555, text, textX, textY, MAX_ITEM_TEXT_WIDTH, false);
+        drawTextEllipsize(renderer->menuFont, renderer->textFillColor, text, textX, textY, MAX_ITEM_TEXT_WIDTH, false);
     }
 
     // Draw the left arrow, if applicable
@@ -223,7 +279,7 @@ static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t
             drawX = x - 10;
         }
         int16_t drawY = y + (renderer->item.h - arrow->h) / 2 + 1;
-        drawWsgSimple(arrow, drawX, drawY);
+        drawWsgPaletteSimple(arrow, drawX, drawY, &renderer->palette);
     }
 
     // Draw the right arrow, if applicable
@@ -237,7 +293,7 @@ static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t
             drawX = x + renderer->item.w - arrow->w - 14;
         }
         int16_t drawY = y + (renderer->item.h - arrow->h) / 2 + 1;
-        drawWsgSimple(arrow, drawX, drawY);
+        drawWsgPaletteSimple(arrow, drawX, drawY, &renderer->palette);
     }
 }
 
@@ -254,6 +310,7 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
     if (renderer->ledsOn)
     {
         // Set LEDs
+        setLedsFromBg(renderer);
         setLeds(renderer->leds, CONFIG_NUM_LEDS);
     }
 
@@ -278,7 +335,7 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
         {
             renderer->bgColorDeg = 0;
         }
-        renderer->bgColorIdx = ((getSin1024(renderer->bgColorDeg) * (ARRAY_SIZE(bgColors) - 1)) + 512) / 1024;
+        renderer->bgColorIdx = ((getSin1024(renderer->bgColorDeg) * (renderer->numBgColors - 1)) + 512) / 1024;
     });
 
     // Run a timer to scroll text
@@ -295,8 +352,8 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
 
     // Clear the background
     paletteColor_t* fb = getPxTftFramebuffer();
-    memset(fb, bgColors[renderer->bgColorIdx], sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
-    drawWsgSimple(&renderer->bg, 0, 0);
+    memset(fb, renderer->bgColors[renderer->bgColorIdx], sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
+    drawWsgPaletteSimple(&renderer->bg, 0, 0, &renderer->palette);
 
     // Find the start of the 'page'
     node_t* pageStart = menu->items->first;
@@ -334,12 +391,12 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
     // Move to drawing the rows
     y = Y_ITEM_START;
 
-    drawWsgSimple(&renderer->body, 0, 0);
+    drawWsgPaletteSimple(&renderer->body, 0, 0, &renderer->palette);
 
     if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > ARROW_PERIOD_US / 2)
     {
         // Draw UP page indicator
-        drawWsgSimple(&renderer->up, 222, 38);
+        drawWsgPaletteSimple(&renderer->up, 222, 38, &renderer->palette);
     }
 
     // Draw a page-worth of items
@@ -393,7 +450,7 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
     if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > ARROW_PERIOD_US / 2)
     {
         // Draw DOWN page indicator
-        drawWsgSimple(&renderer->down, 222, 221);
+        drawWsgPaletteSimple(&renderer->down, 222, 221, &renderer->palette);
     }
 
     // Only draw the battery if requested
@@ -435,7 +492,29 @@ void setMegaLedsOn(menuMegaRenderer_t* renderer, bool ledsOn)
     renderer->ledsOn = ledsOn;
     if (false == ledsOn)
     {
-        memset(renderer->leds, 0, sizeof(renderer->leds));
+        setLedsFromBg(renderer);
         setLeds(renderer->leds, CONFIG_NUM_LEDS);
+    }
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param renderer
+ */
+static void setLedsFromBg(menuMegaRenderer_t* renderer)
+{
+    // Extract LED color from bg color
+    int32_t rgb = paletteToRGB(renderer->bgColors[renderer->bgColorIdx]);
+    led_t led   = {
+          .r = (rgb >> 16) & 0xFF,
+          .g = (rgb >> 8) & 0xFF,
+          .b = (rgb >> 0) & 0xFF,
+    };
+
+    // Set all LEDs
+    for (int32_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
+    {
+        renderer->leds[idx] = led;
     }
 }

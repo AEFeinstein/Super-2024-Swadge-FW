@@ -157,19 +157,8 @@ static void sequencerEnterMode(void)
     sv->bgMenu = initMenu(sequencerName, NULL);
     buildMainMenu();
 
-    // Color the menu like Pixil
-    // led_t menuColor = {
-    //     .r = 0x80,
-    //     .g = 0x00,
-    //     .b = 0x80,
-    // };
-    // static const paletteColor_t shadowColors[] = {c535, c524, c424, c314, c313, c302, c202, c203, c313, c413, c424};
-    // recolorMenuManiaRenderer(sv->menuRenderer, //
-    //                          c202, c444, c000, // titleBgColor, titleTextColor, textOutlineColor
-    //                          c333,             // bgColor
-    //                          c521, c522,       // outerRingColor, innerRingColor
-    //                          c000, c555,       // rowColor, rowTextColor
-    //                          shadowColors, ARRAY_SIZE(shadowColors), menuColor);
+    // Color the menu
+    recolorMenuMegaRenderer(sv->menuRenderer, c555, c000, c100, c210, c320, c311, c421, c430, c540, c554, NULL, 0);
 
     // Show the menu by default
     setSequencerScreen(SEQUENCER_MENU);

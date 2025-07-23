@@ -88,12 +88,6 @@ const char dnCharacterKey[] = "dn_character";
 const char dnTutorialKey[]  = "dn_tutor";
 const char dnUnlockKey[]    = "dn_unlock";
 
-static const led_t dn_LedMenuColor = {
-    .r = 0x66,
-    .g = 0x00,
-    .b = 0x66,
-};
-
 dn_gameData_t* gameData;
 
 static void dn_EnterMode(void)
@@ -448,7 +442,6 @@ void dn_ShowUi(dn_Ui_t ui)
 
     // Assume menu LEDs should be on
     setMegaLedsOn(gameData->menuRenderer, true);
-    gameData->menuRenderer->baseLedColor = dn_LedMenuColor;
 
     // Initialize the new UI
     switch (gameData->ui)
