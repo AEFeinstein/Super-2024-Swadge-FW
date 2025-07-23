@@ -181,21 +181,21 @@ void deinitMenuMegaRenderer(menuMegaRenderer_t* renderer)
 }
 
 /**
- * @brief TODO doc
+ * @brief Recolor the Mega menu renderer. Arguments c1 through c8 should get progressively lighter
  *
- * @param renderer
- * @param textFill
- * @param textOutline
- * @param c1
- * @param c2
- * @param c3
- * @param c4
- * @param c5
- * @param c6
- * @param c7
- * @param c8
- * @param bgColors
- * @param numBgColors
+ * @param renderer The renderer to recolor
+ * @param textFill The color of the text fill, originally white
+ * @param textOutline The color of the text outline, originally black
+ * @param c1 Replacement for Darkest blue
+ * @param c2 Replacement for Very dark blue
+ * @param c3 Replacement for Dark blue
+ * @param c4 Replacement for Dark moderate blue
+ * @param c5 Replacement for Dark strong blue
+ * @param c6 Replacement for Light strong blue
+ * @param c7 Replacement for Pure cyan
+ * @param c8 Replacement for Very pale cyan
+ * @param bgColors A list of colors to cycle through in the hexagonal background. May be NULL for no change.
+ * @param numBgColors The length of bgColors
  */
 void recolorMenuMegaRenderer(menuMegaRenderer_t* renderer, paletteColor_t textFill, paletteColor_t textOutline,
                              paletteColor_t c1, paletteColor_t c2, paletteColor_t c3, paletteColor_t c4,
@@ -498,9 +498,9 @@ void setMegaLedsOn(menuMegaRenderer_t* renderer, bool ledsOn)
 }
 
 /**
- * @brief TODO doc
+ * @brief Set the LEDs to be the same as the current background color
  *
- * @param renderer
+ * @param renderer The renderer to set LEDs in
  */
 static void setLedsFromBg(menuMegaRenderer_t* renderer)
 {

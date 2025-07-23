@@ -24,8 +24,7 @@
  * See menu.h for examples on how to use menuMegaRenderer
  */
 
-#ifndef _MENU_MEGA_RENDERER_H_
-#define _MENU_MEGA_RENDERER_H_
+#pragma once
 
 #include "hdw-led.h"
 #include "menu.h"
@@ -38,19 +37,21 @@
  */
 typedef struct
 {
-    wsg_t back;           ///< TODO doc
-    wsg_t bg;             ///< TODO doc
-    wsg_t body;           ///< TODO doc
-    wsg_t down;           ///< TODO doc
-    wsg_t item;           ///< TODO doc
-    wsg_t item_sel;       ///< TODO doc
-    wsg_t next;           ///< TODO doc
-    wsg_t prev;           ///< TODO doc
-    wsg_t submenu;        ///< TODO doc
-    wsg_t up;             ///< TODO doc
+    wsg_t bg;             ///< The screen's background image with cutout hexagons
+    wsg_t body;           ///< The menu's solid background image
+    wsg_t item;           ///< Background image for non-selected items
+    wsg_t item_sel;       ///< Background image for the selected item
+    wsg_t up;             ///< A single up arrow (previous page)
+    wsg_t down;           ///< A single down arrow (next page)
+    wsg_t next;           ///< A single right arrow (next option)
+    wsg_t prev;           ///< A single left arrow (previous option)
+    wsg_t submenu;        ///< A double right arrow (enter submenu)
+    wsg_t back;           ///< A double left arrow (exit submenu)
     wsg_t batt[4];        ///< Images for the battery levels
-    wsgPalette_t palette; ///< TODO doc
+    wsgPalette_t palette; ///< A palette to recolor menu images with
 
+    paletteColor_t textFillColor;    ///< The color to fill text with
+    paletteColor_t textOutlineColor; ///< The color to outline text with
     font_t* titleFont;               ///< The font to render the title with
     font_t* titleFontOutline;        ///< The font to render the title outline with
     font_t* menuFont;                ///< The font to render the menu with
@@ -60,21 +61,20 @@ typedef struct
                                      ///< deinitMenuMegaRenderer()
     bool menuFontAllocated;          ///< true if this font was allocated by the renderer and should be freed by
                                      ///< deinitMenuMegaRenderer()
-    paletteColor_t textFillColor;    ///< TODO doc
-    paletteColor_t textOutlineColor; ///< TODO doc
 
     int32_t selectedMarqueeTimer; ///< The timer for marquee-ing the selected item text, if too long to fit
     int32_t pageArrowTimer;       ///< The timer for blinking page up/down arrows
-    node_t* currentItem;          ///< TODO doc
+    node_t* currentItem;          ///< The currently selected menu item, resets ::selectedMarqueeTimer when changed
 
-    const paletteColor_t* bgColors; ///< TODO doc
-    int32_t numBgColors;            ///< TODO doc
-    int32_t bgColorTimer;           ///< TODO doc
-    int32_t bgColorDeg;             ///< TODO doc
-    int32_t bgColorIdx;             ///< TODO doc
+    const paletteColor_t* bgColors; ///< A list of colors to cycle through for the background hexagons
+    int32_t numBgColors;            ///< The number of colors in ::bgColors
+    int32_t bgColorTimer;           ///< A timer to increment ::bgColorDeg in order to cycle through ::bgColors
+    int32_t bgColorDeg; ///< When cycling through ::bgColors, a sine wave is followed. This counts the degrees into the
+                        ///< sine wave, 0 to 180
+    int32_t bgColorIdx; ///< The current index into ::bgColors
 
     led_t leds[CONFIG_NUM_LEDS]; ///< An array with the RGB LED state to be output
-    bool ledsOn;                 ///< TODO doc
+    bool ledsOn;                 ///< true if LEDs should be set by this renderer, false to leave LEDs alone
 } menuMegaRenderer_t;
 
 menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);
@@ -85,5 +85,3 @@ void recolorMenuMegaRenderer(menuMegaRenderer_t* renderer, paletteColor_t textFi
                              paletteColor_t c1, paletteColor_t c2, paletteColor_t c3, paletteColor_t c4,
                              paletteColor_t c5, paletteColor_t c6, paletteColor_t c7, paletteColor_t c8,
                              const paletteColor_t* bgColors, int32_t numBgColors);
-
-#endif
