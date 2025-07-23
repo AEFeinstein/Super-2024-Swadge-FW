@@ -48,6 +48,10 @@ typedef struct
     // The mode state (i.e. main menu, connecting, game)
     artilleryModeState_t mState;
 
+    // In-game menu and renderer
+    menu_t* modeMenu;
+    menuManiaRenderer_t* mRenderer;
+
     // The game state (i.e. moving, adjusting shot, etc.)
     artilleryGameState_t gState;
 

@@ -16,33 +16,11 @@ void artilleryMainLoop(int64_t elapsedUs);
 void artilleryBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 void artilleryEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 void artilleryEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
+
+bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value);
 bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value);
 
-//==============================================================================
-// Variables
-//==============================================================================
-
-swadgeMode_t artilleryMode = {
-    .modeName                 = "Artillery",
-    .wifiMode                 = ESP_NOW,
-    .overrideUsb              = false,
-    .usesAccelerometer        = false,
-    .usesThermometer          = false,
-    .overrideSelectBtn        = false,
-    .fnEnterMode              = artilleryEnterMode,
-    .fnExitMode               = artilleryExitMode,
-    .fnMainLoop               = artilleryMainLoop,
-    .fnAudioCallback          = NULL,
-    .fnBackgroundDrawCallback = artilleryBackgroundDrawCallback,
-    .fnEspNowRecvCb           = artilleryEspNowRecvCb,
-    .fnEspNowSendCb           = artilleryEspNowSendCb,
-    .fnAdvancedUSB            = NULL,
-    .fnDacCb                  = NULL,
-    .fnAddToSwadgePassPacket  = NULL,
-    .trophyData               = NULL,
-};
-
-artilleryData_t* ad;
+void artilleryInitGame(void);
 
 //==============================================================================
 // Const Variables
@@ -126,6 +104,38 @@ const struct
     },
 };
 
+static const char str_passAndPlay[]     = "Pass and Play";
+static const char str_wirelessConnect[] = "Wireless Connect";
+static const char str_cpuPractice[]     = "CPU Practice";
+static const char str_help[]            = "Help!";
+
+static const char modeName[] = "Vector Tanks";
+
+//==============================================================================
+// Variables
+//==============================================================================
+
+swadgeMode_t artilleryMode = {
+    .modeName                 = modeName,
+    .wifiMode                 = ESP_NOW,
+    .overrideUsb              = false,
+    .usesAccelerometer        = false,
+    .usesThermometer          = false,
+    .overrideSelectBtn        = false,
+    .fnEnterMode              = artilleryEnterMode,
+    .fnExitMode               = artilleryExitMode,
+    .fnMainLoop               = artilleryMainLoop,
+    .fnAudioCallback          = NULL,
+    .fnBackgroundDrawCallback = artilleryBackgroundDrawCallback,
+    .fnEspNowRecvCb           = artilleryEspNowRecvCb,
+    .fnEspNowSendCb           = artilleryEspNowSendCb,
+    .fnAdvancedUSB            = NULL,
+    .fnDacCb                  = NULL,
+    .fnAddToSwadgePassPacket  = NULL,
+    .trophyData               = NULL,
+};
+
+artilleryData_t* ad;
 //==============================================================================
 // Functions
 //==============================================================================
@@ -139,78 +149,15 @@ void artilleryEnterMode(void)
 
     ad = heap_caps_calloc(1, sizeof(artilleryData_t), MALLOC_CAP_8BIT);
 
-#define WORLD_WIDTH  (TFT_WIDTH * 2)
-#define WORLD_HEIGHT (TFT_HEIGHT * 2)
-    ad->phys = initPhys(WORLD_WIDTH, WORLD_HEIGHT, 0, 1e-10);
+    ad->modeMenu  = initMenu(modeName, artilleryModeMenuCb);
+    ad->mRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
-#ifdef MOUNTAIN
-    #define GROUND_LEVEL (WORLD_HEIGHT - 40)
-    // Add some ground
-    vecFl_t groundPoints[] = {
-        {.x = 0, .y = GROUND_LEVEL},
-        // {.x = WORLD_WIDTH / 8, .y = WORLD_HEIGHT - 1},
-        // {.x = WORLD_WIDTH / 4, .y = 40},
-        {.x = WORLD_WIDTH / 4, .y = GROUND_LEVEL},
-        {.x = WORLD_WIDTH / 2, .y = WORLD_HEIGHT / 2},
-        {.x = 3 * WORLD_WIDTH / 4, .y = GROUND_LEVEL + 20},
-        {.x = WORLD_WIDTH, .y = GROUND_LEVEL},
-    };
-    for (int idx = 0; idx < ARRAY_SIZE(groundPoints) - 1; idx++)
-    {
-        physAddLine(ad->phys, groundPoints[idx].x, groundPoints[idx].y, groundPoints[idx + 1].x,
-                    groundPoints[idx + 1].y, true);
-    }
-#else
-    #define SEG_WIDTH    8
-    #define GROUND_LEVEL (WORLD_HEIGHT / 2)
-    for (int32_t i = 0; i < WORLD_WIDTH; i += SEG_WIDTH)
-    {
-        physAddLine(ad->phys, i, GROUND_LEVEL, i + SEG_WIDTH, GROUND_LEVEL, true);
-    }
-#endif
+    addSingleItemToMenu(ad->modeMenu, str_passAndPlay);
+    addSingleItemToMenu(ad->modeMenu, str_wirelessConnect);
+    addSingleItemToMenu(ad->modeMenu, str_cpuPractice);
+    addSingleItemToMenu(ad->modeMenu, str_help);
 
-    // Add some players
-#define PLAYER_RADIUS 8
-
-    ad->players[0] = physAddCircle(ad->phys, WORLD_WIDTH / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
-    ad->players[1]
-        = physAddCircle(ad->phys, (7 * WORLD_WIDTH) / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
-
-    // Start with a full movement timer
-    ad->moveTimerUs = TANK_MOVE_TIME_US;
-
-    // Test circle-line collisions
-    // physAddCircle(ad->phys, WORLD_WIDTH / 2 + 16, 30, 8, CT_SHELL);
-    // physAddCircle(ad->phys, WORLD_WIDTH / 2 - 16, 30, 8, CT_SHELL);
-    // physAddCircle(ad->phys, WORLD_WIDTH / 2, 30, 8, CT_SHELL);
-
-    // Test circle-circle collisions
-    // physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4 + 4, 20, 8, CT_SHELL);
-    // physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4 - 4, 50, 8, CT_SHELL);
-    physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4, 80, 8, CT_OBSTACLE);
-
-    // Initialize in-game menu and renderer
-    ad->gameMenu = initMenu(NULL, artilleryGameMenuCb);
-    for (int mIdx = 0; mIdx < ARRAY_SIZE(menuEntries); mIdx++)
-    {
-        if (load_ammo == menuEntries[mIdx].text)
-        {
-            ad->gameMenu = startSubMenu(ad->gameMenu, load_ammo);
-            for (int aIdx = 0; aIdx < ARRAY_SIZE(ammoEntries); aIdx++)
-            {
-                addSingleItemToMenu(ad->gameMenu, ammoEntries[aIdx].text);
-            }
-            ad->gameMenu = endSubMenu(ad->gameMenu);
-        }
-        else
-        {
-            addSingleItemToMenu(ad->gameMenu, menuEntries[mIdx].text);
-        }
-    }
-    ad->smRenderer = initMenuSimpleRenderer(NULL, c005, c111, c555, 5);
-
-    ad->mState = AMS_GAME;
-    artillerySwitchToState(ad, AGS_MENU);
+    ad->mState = AMS_MENU;
 }
 
 /**
@@ -239,7 +186,7 @@ void artilleryMainLoop(int64_t elapsedUs)
             default:
             case AMS_MENU:
             {
-                // TODO top level menu
+                ad->modeMenu = menuButton(ad->modeMenu, evt);
                 break;
             }
             case AMS_GAME:
@@ -255,12 +202,11 @@ void artilleryMainLoop(int64_t elapsedUs)
         default:
         case AMS_MENU:
         {
-            // TODO top level menu
+            drawMenuMania(ad->modeMenu, ad->mRenderer, elapsedUs);
             break;
         }
         case AMS_GAME:
         {
-            // TODO simulate and draw game
             artilleryGameLoop(ad, elapsedUs);
             break;
         }
@@ -303,6 +249,39 @@ void artilleryEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_
  */
 void artilleryEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
+}
+
+/**
+ * @brief TODO
+ *
+ * @param label
+ * @param selected
+ * @param value
+ * @return true
+ * @return false
+ */
+bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
+{
+    if (selected)
+    {
+        if (str_passAndPlay == label)
+        {
+            artilleryInitGame();
+        }
+        else if (str_wirelessConnect == label)
+        {
+            // TODO
+        }
+        else if (str_cpuPractice == label)
+        {
+            // TODO
+        }
+        else if (str_help == label)
+        {
+            // TODO
+        }
+    }
+    return false;
 }
 
 /**
@@ -378,4 +357,84 @@ void setDriveInMenu(bool visible)
         removeSingleItemFromMenu(ad->gameMenu, drive);
         ad->smRenderer->numRows--;
     }
+}
+
+/**
+ * @brief TODO
+ *
+ */
+void artilleryInitGame(void)
+{
+#define WORLD_WIDTH  (TFT_WIDTH * 2)
+#define WORLD_HEIGHT (TFT_HEIGHT * 2)
+    ad->phys = initPhys(WORLD_WIDTH, WORLD_HEIGHT, 0, 1e-10);
+
+#ifdef MOUNTAIN
+    #define GROUND_LEVEL (WORLD_HEIGHT - 40)
+    // Add some ground
+    vecFl_t groundPoints[] = {
+        {.x = 0, .y = GROUND_LEVEL},
+        // {.x = WORLD_WIDTH / 8, .y = WORLD_HEIGHT - 1},
+        // {.x = WORLD_WIDTH / 4, .y = 40},
+        {.x = WORLD_WIDTH / 4, .y = GROUND_LEVEL},
+        {.x = WORLD_WIDTH / 2, .y = WORLD_HEIGHT / 2},
+        {.x = 3 * WORLD_WIDTH / 4, .y = GROUND_LEVEL + 20},
+        {.x = WORLD_WIDTH, .y = GROUND_LEVEL},
+    };
+    for (int idx = 0; idx < ARRAY_SIZE(groundPoints) - 1; idx++)
+    {
+        physAddLine(ad->phys, groundPoints[idx].x, groundPoints[idx].y, groundPoints[idx + 1].x,
+                    groundPoints[idx + 1].y, true);
+    }
+#else
+    #define SEG_WIDTH    8
+    #define GROUND_LEVEL (WORLD_HEIGHT / 2)
+    for (int32_t i = 0; i < WORLD_WIDTH; i += SEG_WIDTH)
+    {
+        physAddLine(ad->phys, i, GROUND_LEVEL, i + SEG_WIDTH, GROUND_LEVEL, true);
+    }
+#endif
+
+    // Add some players
+#define PLAYER_RADIUS 8
+
+    ad->players[0] = physAddCircle(ad->phys, WORLD_WIDTH / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
+    ad->players[1]
+        = physAddCircle(ad->phys, (7 * WORLD_WIDTH) / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
+
+    // Start with a full movement timer
+    ad->moveTimerUs = TANK_MOVE_TIME_US;
+
+    // Test circle-line collisions
+    // physAddCircle(ad->phys, WORLD_WIDTH / 2 + 16, 30, 8, CT_SHELL);
+    // physAddCircle(ad->phys, WORLD_WIDTH / 2 - 16, 30, 8, CT_SHELL);
+    // physAddCircle(ad->phys, WORLD_WIDTH / 2, 30, 8, CT_SHELL);
+
+    // Test circle-circle collisions
+    // physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4 + 4, 20, 8, CT_SHELL);
+    // physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4 - 4, 50, 8, CT_SHELL);
+    physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4, 80, 8, CT_OBSTACLE);
+
+    // Initialize in-game menu and renderer
+    ad->gameMenu = initMenu(NULL, artilleryGameMenuCb);
+    for (int mIdx = 0; mIdx < ARRAY_SIZE(menuEntries); mIdx++)
+    {
+        if (load_ammo == menuEntries[mIdx].text)
+        {
+            ad->gameMenu = startSubMenu(ad->gameMenu, load_ammo);
+            for (int aIdx = 0; aIdx < ARRAY_SIZE(ammoEntries); aIdx++)
+            {
+                addSingleItemToMenu(ad->gameMenu, ammoEntries[aIdx].text);
+            }
+            ad->gameMenu = endSubMenu(ad->gameMenu);
+        }
+        else
+        {
+            addSingleItemToMenu(ad->gameMenu, menuEntries[mIdx].text);
+        }
+    }
+    ad->smRenderer = initMenuSimpleRenderer(NULL, c005, c111, c555, 5);
+
+    ad->mState = AMS_GAME;
+    artillerySwitchToState(ad, AGS_MENU);
 }
