@@ -392,6 +392,7 @@ typedef struct
 
 void p2pInitialize(p2pInfo* p2p, uint8_t modeId, p2pConCbFn conCbFn, p2pMsgRxCbFn msgRxCbFn, int8_t connectionRssi);
 void p2pSetAsymmetric(p2pInfo* p2p, uint8_t incomingModeId);
+void p2pRestart(p2pInfo* p2p);
 void p2pDeinit(p2pInfo* p2p);
 
 void p2pStartConnection(p2pInfo* p2p);

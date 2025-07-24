@@ -22,9 +22,15 @@ bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value);
 
 void artilleryInitGame(void);
 
+void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt);
+void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
+void artillery_p2pMsgTxCb(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
+
 //==============================================================================
 // Const Variables
 //==============================================================================
+
+const char ART_TAG[] = "ART";
 
 const char load_ammo[]   = "Load Ammo";
 const char drive[]       = "Drive";
@@ -111,6 +117,12 @@ static const char str_help[]            = "Help!";
 
 static const char modeName[] = "Vector Tanks";
 
+const char str_conStarted[]     = "Connection Started";
+const char str_conRxAck[]       = "Rx Game Start Ack";
+const char str_conRxMsg[]       = "Rx Game Start Msg";
+const char str_conEstablished[] = "Connection Established";
+const char str_conLost[]        = "Connection Lost";
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -136,6 +148,7 @@ swadgeMode_t artilleryMode = {
 };
 
 artilleryData_t* ad;
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -149,14 +162,42 @@ void artilleryEnterMode(void)
 
     ad = heap_caps_calloc(1, sizeof(artilleryData_t), MALLOC_CAP_8BIT);
 
-    ad->modeMenu  = initMenu(modeName, artilleryModeMenuCb);
-    ad->mRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
-
+    // Initialize mode menu
+    ad->modeMenu = initMenu(modeName, artilleryModeMenuCb);
     addSingleItemToMenu(ad->modeMenu, str_passAndPlay);
     addSingleItemToMenu(ad->modeMenu, str_wirelessConnect);
     addSingleItemToMenu(ad->modeMenu, str_cpuPractice);
     addSingleItemToMenu(ad->modeMenu, str_help);
 
+    // Initialize mode menu renderer
+    ad->mRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
+
+    // Initialize in-game menu
+    ad->gameMenu = initMenu(NULL, artilleryGameMenuCb);
+    for (int mIdx = 0; mIdx < ARRAY_SIZE(menuEntries); mIdx++)
+    {
+        if (load_ammo == menuEntries[mIdx].text)
+        {
+            ad->gameMenu = startSubMenu(ad->gameMenu, load_ammo);
+            for (int aIdx = 0; aIdx < ARRAY_SIZE(ammoEntries); aIdx++)
+            {
+                addSingleItemToMenu(ad->gameMenu, ammoEntries[aIdx].text);
+            }
+            ad->gameMenu = endSubMenu(ad->gameMenu);
+        }
+        else
+        {
+            addSingleItemToMenu(ad->gameMenu, menuEntries[mIdx].text);
+        }
+    }
+
+    // Initialize in-game menu renderer
+    ad->smRenderer = initMenuSimpleRenderer(NULL, c005, c111, c555, 5);
+
+    // Initialize p2p
+    p2pInitialize(&ad->p2p, 0x76, artillery_p2pConCb, artillery_p2pMsgRxCb, -70);
+
+    // Start on the mode menu
     ad->mState = AMS_MENU;
 }
 
@@ -167,6 +208,7 @@ void artilleryExitMode(void)
 {
     deinitPhys(ad->phys);
     deinitMenuSimpleRenderer(ad->smRenderer);
+    p2pDeinit(&ad->p2p);
     heap_caps_free(ad);
 }
 
@@ -189,9 +231,23 @@ void artilleryMainLoop(int64_t elapsedUs)
                 ad->modeMenu = menuButton(ad->modeMenu, evt);
                 break;
             }
+            case AMS_CONNECTING:
+            {
+                if (evt.down && PB_B == evt.button)
+                {
+                    // Cancel the connection
+                    p2pRestart(&ad->p2p);
+                }
+                break;
+            }
             case AMS_GAME:
             {
                 artilleryGameInput(ad, evt);
+                break;
+            }
+            case AMS_HELP:
+            {
+                // TODO handle help buttons
                 break;
             }
         }
@@ -202,12 +258,26 @@ void artilleryMainLoop(int64_t elapsedUs)
         default:
         case AMS_MENU:
         {
-            drawMenuMania(ad->modeMenu, ad->mRenderer, elapsedUs);
+            drawMenuMega(ad->modeMenu, ad->mRenderer, elapsedUs);
+            break;
+        }
+        case AMS_CONNECTING:
+        {
+            // Draw connection text
+            font_t* f      = ad->mRenderer->titleFont;
+            int16_t tWidth = textWidth(f, ad->conStr);
+            drawText(ad->mRenderer->titleFont, c555, ad->conStr, (TFT_WIDTH - tWidth) / 2,
+                     (TFT_HEIGHT - f->height) / 2);
             break;
         }
         case AMS_GAME:
         {
             artilleryGameLoop(ad, elapsedUs);
+            break;
+        }
+        case AMS_HELP:
+        {
+            // TODO render help
             break;
         }
     }
@@ -238,6 +308,7 @@ void artilleryBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h,
  */
 void artilleryEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
 {
+    p2pRecvCb(&ad->p2p, esp_now_info->src_addr, data, len, rssi);
 }
 
 /**
@@ -249,6 +320,7 @@ void artilleryEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_
  */
 void artilleryEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
+    p2pSendCb(&ad->p2p, mac_addr, status);
 }
 
 /**
@@ -270,15 +342,16 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
         }
         else if (str_wirelessConnect == label)
         {
-            // TODO
+            p2pStartConnection(&ad->p2p);
+            ad->mState = AMS_CONNECTING;
         }
         else if (str_cpuPractice == label)
         {
-            // TODO
+            ESP_LOGI(ART_TAG, "TODO Start CPU practice!");
         }
         else if (str_help == label)
         {
-            // TODO
+            ESP_LOGI(ART_TAG, "TODO Start help!");
         }
     }
     return false;
@@ -295,6 +368,7 @@ bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
+        // Iterate to see if a menuEntry was selected
         for (int mIdx = 0; mIdx < ARRAY_SIZE(menuEntries); mIdx++)
         {
             if (label == menuEntries[mIdx].text)
@@ -304,12 +378,14 @@ bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value)
             }
         }
 
+        // If not, iterate to see if an ammo was selected
         for (int aIdx = 0; aIdx < ARRAY_SIZE(ammoEntries); aIdx++)
         {
             if (label == ammoEntries[aIdx].text)
             {
                 ad->players[ad->plIdx]->ammo      = ammoEntries[aIdx].ammo;
                 ad->players[ad->plIdx]->ammoLabel = label;
+                // Return true to pop back to the parent menu
                 return true;
             }
         }
@@ -413,28 +489,75 @@ void artilleryInitGame(void)
     // Test circle-circle collisions
     // physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4 + 4, 20, 8, CT_SHELL);
     // physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4 - 4, 50, 8, CT_SHELL);
-    physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4, 80, 8, CT_OBSTACLE);
+    // physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4, 80, 8, CT_OBSTACLE);
 
-    // Initialize in-game menu and renderer
-    ad->gameMenu = initMenu(NULL, artilleryGameMenuCb);
-    for (int mIdx = 0; mIdx < ARRAY_SIZE(menuEntries); mIdx++)
+    // Switch to showing the game
+    ad->mState = AMS_GAME;
+
+    // Start the game on the game menu
+    artillerySwitchToState(ad, AGS_MENU);
+}
+
+/**
+ * @brief This typedef is for the function callback which delivers connection statuses to the Swadge mode
+ *
+ * @param p2p The p2pInfo
+ * @param evt The connection event
+ */
+void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
+{
+    // TODO select connection text
+    switch (evt)
     {
-        if (load_ammo == menuEntries[mIdx].text)
+        case CON_STARTED:
         {
-            ad->gameMenu = startSubMenu(ad->gameMenu, load_ammo);
-            for (int aIdx = 0; aIdx < ARRAY_SIZE(ammoEntries); aIdx++)
-            {
-                addSingleItemToMenu(ad->gameMenu, ammoEntries[aIdx].text);
-            }
-            ad->gameMenu = endSubMenu(ad->gameMenu);
+            ad->conStr = str_conStarted;
+            break;
         }
-        else
+        case RX_GAME_START_ACK:
         {
-            addSingleItemToMenu(ad->gameMenu, menuEntries[mIdx].text);
+            ad->conStr = str_conRxAck;
+            break;
+        }
+        case RX_GAME_START_MSG:
+        {
+            ad->conStr = str_conRxMsg;
+            break;
+        }
+        case CON_ESTABLISHED:
+        {
+            ad->conStr = str_conEstablished;
+            break;
+        }
+        case CON_LOST:
+        default:
+        {
+            ad->conStr = str_conLost;
+            break;
         }
     }
-    ad->smRenderer = initMenuSimpleRenderer(NULL, c005, c111, c555, 5);
+}
 
-    ad->mState = AMS_GAME;
-    artillerySwitchToState(ad, AGS_MENU);
+/**
+ * @brief This typedef is for the function callback which delivers received p2p packets to the Swadge mode
+ *
+ * @param p2p The p2pInfo
+ * @param payload The data that was received
+ * @param len The length of the data that was received
+ */
+void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
+{
+}
+
+/**
+ * @brief This typedef is for the function callback which delivers acknowledge status for transmitted messages to the
+ * Swadge mode
+ *
+ * @param p2p The p2pInfo
+ * @param status The status of the transmission
+ * @param data The data that was transmitted
+ * @param len The length of the data that was transmitted
+ */
+void artillery_p2pMsgTxCb(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
+{
 }
