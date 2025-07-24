@@ -19,7 +19,9 @@
 typedef enum
 {
     AMS_MENU,
+    AMS_CONNECTING,
     AMS_GAME,
+    AMS_HELP,
 } artilleryModeState_t;
 
 typedef enum
@@ -50,7 +52,7 @@ typedef struct
 
     // In-game menu and renderer
     menu_t* modeMenu;
-    menuManiaRenderer_t* mRenderer;
+    menuMegaRenderer_t* mRenderer;
 
     // The game state (i.e. moving, adjusting shot, etc.)
     artilleryGameState_t gState;
@@ -61,6 +63,10 @@ typedef struct
 
     // Timer to only allow a little bit of movement
     int32_t moveTimerUs;
+
+    // Everything required for wireless communication
+    p2pInfo p2p;
+    const char* conStr;
 } artilleryData_t;
 
 extern const char load_ammo[];
