@@ -41,7 +41,6 @@ static const char* P2P_TAG = "P2P";
 static void p2pConnectionTimeout(void* arg);
 static void p2pTxAllRetriesTimeout(void* arg);
 static void p2pTxRetryTimeout(void* arg);
-static void p2pRestart(p2pInfo* p2p);
 static void p2pRestartTmrCb(void* arg);
 static void p2pStartRestartTimer(void* arg);
 static void p2pProcConnectionEvt(p2pInfo* p2p, connectionEvt_t event);
@@ -794,7 +793,7 @@ static void p2pRestartTmrCb(void* arg)
  *
  * @param p2p The p2pInfo struct with all the state information
  */
-static void p2pRestart(p2pInfo* p2p)
+void p2pRestart(p2pInfo* p2p)
 {
     P2P_LOG("%s", __func__);
 
