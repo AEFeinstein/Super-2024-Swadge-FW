@@ -57,11 +57,12 @@ static void checkTurnOver(physSim_t* phys);
  *
  * @param w Physics space width, unit is px
  * @param h Physics space height, unit is px
+ * @param groundLevel The base height of the ground. May be randomized higher or lower
  * @param gx Gravity in the X direction, unit is px/uS^2
  * @param gy Gravity in the Y direction, unit is px/uS^2
  * @return The initialized simulation
  */
-physSim_t* initPhys(float w, float h, float gx, float gy)
+physSim_t* initPhys(float w, float h, int32_t groundLevel, float gx, float gy)
 {
     // Allocate a simulation
     physSim_t* phys = heap_caps_calloc(1, sizeof(physSim_t), MALLOC_CAP_8BIT);
@@ -71,8 +72,9 @@ physSim_t* initPhys(float w, float h, float gx, float gy)
     phys->g.y = gy;
 
     // Set bounds for the physics sim
-    phys->bounds.x = w;
-    phys->bounds.y = h;
+    phys->bounds.x    = w;
+    phys->bounds.y    = h;
+    phys->groundLevel = groundLevel;
 
     // Figure out number of zones in each dimension
     vecFl_t nZones = {
@@ -120,6 +122,9 @@ physSim_t* initPhys(float w, float h, float gx, float gy)
     physAddLine(phys, w, 0, w, h, false);
     physAddLine(phys, w, h, 0, h, false);
     physAddLine(phys, 0, h, 0, 0, false);
+
+    // Generate terrain
+    physGenerateTerrain(phys);
 
     // Return the simulation
     return phys;
@@ -525,5 +530,46 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
 
         // Camera tracks all shells
         push(&phys->cameraTargets, shell);
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param phys
+ * @param players
+ * @param numPlayers
+ */
+void physSpawnPlayers(physSim_t* phys, physCirc_t* players[], int32_t numPlayers)
+{
+#define PLAYER_RADIUS 8
+
+    float margin  = phys->bounds.x / 8;
+    float spacing = (phys->bounds.x - (2 * margin)) / (numPlayers - 1);
+
+    float x = margin;
+    for (int32_t p = 0; p < numPlayers; p++)
+    {
+        // Create a new player
+        players[p] = physAddCircle(phys, x, 1 + PLAYER_RADIUS, PLAYER_RADIUS, CT_TANK);
+
+        // Adjust X for the net player
+        x += spacing;
+    }
+
+    for (int32_t p = 0; p < numPlayers; p++)
+    {
+        flattenTerrainUnderPlayer(phys, players[p]);
+    }
+
+    for (int32_t p = 0; p < numPlayers; p++)
+    {
+        // Move downward until you almost hit the ground
+        while (!physAnyCollision(phys, players[p]))
+        {
+            players[p]->c.pos.y += PLAYER_RADIUS;
+            physSetZoneMaskCirc(phys, players[p]);
+        }
+        players[p]->c.pos.y -= PLAYER_RADIUS;
     }
 }
