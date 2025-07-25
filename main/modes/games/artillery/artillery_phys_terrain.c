@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include <math.h>
+#include <esp_random.h>
 #include "macros.h"
 #include "artillery_phys_terrain.h"
 #include "artillery_phys_objs.h"
@@ -16,6 +17,208 @@ static float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float ex
 //==============================================================================
 // Functions
 //==============================================================================
+
+/**
+ * @brief TODO
+ *
+ * @param phys
+ */
+void physGenerateTerrain(physSim_t* phys)
+{
+    // First remove all terrain
+    node_t* lNode = phys->lines.first;
+    while (lNode)
+    {
+        physLine_t* line = (physLine_t*)lNode->val;
+        node_t* next     = lNode->next;
+        if (line->isTerrain)
+        {
+            removeEntry(&phys->lines, lNode);
+        }
+        lNode = next;
+    }
+
+    // Build a list of heights
+    list_t heights = {0};
+
+    // Start with two points, start and end
+    push(&heights, (void*)((intptr_t)phys->groundLevel));
+    push(&heights, (void*)((intptr_t)phys->groundLevel));
+
+    // For some number of iterations, divide each terrain segment into two and add randomness to the midpoint
+    int32_t numIterations = 7;
+    int32_t randBound     = (1 << (numIterations + 1));
+    while (numIterations--)
+    {
+        // Start at the beginning of the list
+        node_t* prev = heights.first;
+        node_t* next = prev->next;
+        while (next)
+        {
+            // The current height is the average of previous and next heights
+            intptr_t prevH = (intptr_t)prev->val;
+            intptr_t nextH = (intptr_t)next->val;
+            intptr_t h     = (prevH + nextH) / 2;
+            // Add randomness to the new height
+            h -= (esp_random() % randBound);
+            h = CLAMP(h, 0, phys->bounds.y);
+            // Insert the new height into the list
+            addAfter(&heights, (void*)h, prev);
+
+            // Iterate past the inserted midpoint
+            prev = next;
+            next = prev->next;
+        }
+        randBound /= 2;
+    }
+
+    // Figure out width of segments
+    float x     = 0;
+    float xStep = phys->bounds.x / (float)(heights.length - 1);
+
+    // Iterate through heights, adding lines to the simulation
+    node_t* prev = heights.first;
+    node_t* next = prev->next;
+    while (next)
+    {
+        // Add the line
+        physAddLine(phys, x, (intptr_t)prev->val, x + xStep, (intptr_t)next->val, true);
+
+        // Iterate to the next segment
+        x += xStep;
+        prev = next;
+        next = prev->next;
+    }
+
+    // Clear out the list
+    while (heights.first)
+    {
+        pop(&heights);
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param phys
+ * @param player
+ */
+void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player)
+{
+    float y1           = FLT_MAX;
+    float y2           = FLT_MAX;
+    bool isUnderPlayer = false;
+
+    // First find all points under the player, keeping track of the start and end height
+    node_t* lNode = phys->lines.first;
+    while (lNode)
+    {
+        physLine_t* line = lNode->val;
+
+        float cX1  = player->c.pos.x - player->c.radius;
+        float cX2  = player->c.pos.x + player->c.radius;
+        vecFl_t p1 = line->l.p1;
+        vecFl_t p2 = line->l.p2;
+
+        // First line point
+        if (cX1 <= p1.x && p1.x <= cX2)
+        {
+            if (!isUnderPlayer)
+            {
+                isUnderPlayer = true;
+                y1            = p1.y;
+            }
+        }
+        else if (isUnderPlayer)
+        {
+            // Point is no longer under player
+            y2            = p1.y;
+            isUnderPlayer = false;
+            break;
+        }
+
+        // Second line point
+        if (cX1 <= p2.x && p2.x <= cX2)
+        {
+            if (!isUnderPlayer)
+            {
+                isUnderPlayer = true;
+                y1            = p2.y;
+            }
+        }
+        else if (isUnderPlayer)
+        {
+            // Point is no longer under player
+            y2            = p2.y;
+            isUnderPlayer = false;
+            break;
+        }
+
+        // Iterate lines
+        lNode = lNode->next;
+    }
+
+    // The flat height is the average of the start and end
+    float flatHeight = (y1 + y2) / 2;
+
+    // Flatten nodes
+    isUnderPlayer = false;
+    lNode         = phys->lines.first;
+    while (lNode)
+    {
+        physLine_t* line = lNode->val;
+
+        float cX1       = player->c.pos.x - (2 * player->c.radius);
+        float cX2       = player->c.pos.x + (2 * player->c.radius);
+        vecFl_t p1      = line->l.p1;
+        vecFl_t p2      = line->l.p2;
+        bool updateLine = false;
+        bool allDone    = false;
+
+        // First line point
+        if (cX1 <= p1.x && p1.x <= cX2)
+        {
+            isUnderPlayer          = true;
+            line->l.p1.y           = flatHeight;
+            line->destination.p1.y = flatHeight;
+            updateLine             = true;
+        }
+        else if (isUnderPlayer)
+        {
+            // No longer under player
+            allDone = true;
+        }
+
+        // Second line point
+        if (cX1 <= p2.x && p2.x <= cX2)
+        {
+            isUnderPlayer          = true;
+            line->l.p2.y           = flatHeight;
+            line->destination.p2.y = flatHeight;
+            updateLine             = true;
+        }
+        else if (isUnderPlayer)
+        {
+            // No longer under player
+            allDone = true;
+        }
+
+        // If the line needs a properties update
+        if (updateLine)
+        {
+            // Update slope and normals and such
+            updateLineProperties(phys, line);
+        }
+
+        if (allDone)
+        {
+            break;
+        }
+
+        // Iterate lines
+        lNode = lNode->next;
+    }
+}
 
 /**
  * @brief Explode a shell and deform terrain

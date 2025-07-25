@@ -443,53 +443,16 @@ void artilleryInitGame(void)
 {
 #define WORLD_WIDTH  (TFT_WIDTH * 2)
 #define WORLD_HEIGHT (TFT_HEIGHT * 2)
-    ad->phys = initPhys(WORLD_WIDTH, WORLD_HEIGHT, 0, 1e-10);
+#define GROUND_LEVEL (WORLD_HEIGHT - 60)
 
-#ifdef MOUNTAIN
-    #define GROUND_LEVEL (WORLD_HEIGHT - 40)
-    // Add some ground
-    vecFl_t groundPoints[] = {
-        {.x = 0, .y = GROUND_LEVEL},
-        // {.x = WORLD_WIDTH / 8, .y = WORLD_HEIGHT - 1},
-        // {.x = WORLD_WIDTH / 4, .y = 40},
-        {.x = WORLD_WIDTH / 4, .y = GROUND_LEVEL},
-        {.x = WORLD_WIDTH / 2, .y = WORLD_HEIGHT / 2},
-        {.x = 3 * WORLD_WIDTH / 4, .y = GROUND_LEVEL + 20},
-        {.x = WORLD_WIDTH, .y = GROUND_LEVEL},
-    };
-    for (int idx = 0; idx < ARRAY_SIZE(groundPoints) - 1; idx++)
-    {
-        physAddLine(ad->phys, groundPoints[idx].x, groundPoints[idx].y, groundPoints[idx + 1].x,
-                    groundPoints[idx + 1].y, true);
-    }
-#else
-    #define SEG_WIDTH    8
-    #define GROUND_LEVEL (WORLD_HEIGHT / 2)
-    for (int32_t i = 0; i < WORLD_WIDTH; i += SEG_WIDTH)
-    {
-        physAddLine(ad->phys, i, GROUND_LEVEL, i + SEG_WIDTH, GROUND_LEVEL, true);
-    }
-#endif
+    // Initialize physics, including terrain
+    ad->phys = initPhys(WORLD_WIDTH, WORLD_HEIGHT, GROUND_LEVEL, 0, 1e-10);
 
-    // Add some players
-#define PLAYER_RADIUS 8
-
-    ad->players[0] = physAddCircle(ad->phys, WORLD_WIDTH / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
-    ad->players[1]
-        = physAddCircle(ad->phys, (7 * WORLD_WIDTH) / 8, GROUND_LEVEL - PLAYER_RADIUS - 1, PLAYER_RADIUS, CT_TANK);
+    // Initialize players, including flattening terrain under them
+    physSpawnPlayers(ad->phys, ad->players, NUM_PLAYERS);
 
     // Start with a full movement timer
     ad->moveTimerUs = TANK_MOVE_TIME_US;
-
-    // Test circle-line collisions
-    // physAddCircle(ad->phys, WORLD_WIDTH / 2 + 16, 30, 8, CT_SHELL);
-    // physAddCircle(ad->phys, WORLD_WIDTH / 2 - 16, 30, 8, CT_SHELL);
-    // physAddCircle(ad->phys, WORLD_WIDTH / 2, 30, 8, CT_SHELL);
-
-    // Test circle-circle collisions
-    // physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4 + 4, 20, 8, CT_SHELL);
-    // physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4 - 4, 50, 8, CT_SHELL);
-    // physAddCircle(ad->phys, (3 * WORLD_WIDTH) / 4, 80, 8, CT_OBSTACLE);
 
     // Switch to showing the game
     ad->mState = AMS_GAME;

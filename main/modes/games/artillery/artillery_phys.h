@@ -101,6 +101,7 @@ typedef struct
 
     vecFl_t g;
     vecFl_t bounds;
+    int32_t groundLevel;
     rectangleFl_t zones[NUM_ZONES];
     list_t lines;
     list_t circles;
@@ -119,10 +120,12 @@ typedef struct
 // Function Declarations
 //==============================================================================
 
-physSim_t* initPhys(float w, float h, float gx, float gy);
+physSim_t* initPhys(float w, float h, int32_t groundLevel, float gx, float gy);
 void deinitPhys(physSim_t* phys);
 void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs);
 void physStep(physSim_t* phys, int32_t elapsedUs);
+
+void physSpawnPlayers(physSim_t* phys, physCirc_t* players[], int32_t numPlayers);
 
 void setBarrelAngle(physCirc_t* circ, float angle);
 void setShotPower(physCirc_t* circ, float power);
