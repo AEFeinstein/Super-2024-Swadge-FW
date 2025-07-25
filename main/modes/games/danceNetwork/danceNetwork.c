@@ -158,6 +158,12 @@ static void dn_EnterMode(void)
     gameData->assets[DN_ALBUM_ASSET].originX = 31;
     gameData->assets[DN_ALBUM_ASSET].originY = 34;
 
+    gameData->assets[DN_SPEAKER_ASSET].originX = 12;
+    gameData->assets[DN_SPEAKER_ASSET].originY = 44;
+
+    gameData->assets[DN_SPEAKER_STAND_ASSET].originX = 6;
+    gameData->assets[DN_SPEAKER_STAND_ASSET].originY = 8;
+
     // Allocate WSG loading helpers
     dn_hsd = heatshrink_decoder_alloc(256, 8, 4);
     // The largest image is bb_menu2.png, decodes to 99124 bytes
@@ -541,6 +547,10 @@ static void dn_initializeGame(void)
 
     dn_loadAsset(DN_ALBUM_WSG, 1, &gameData->assets[DN_GROUND_TILE_ASSET]);
 
+    dn_loadAsset(DN_SPEAKER_0_WSG, 6, &gameData->assets[DN_SPEAKER_ASSET]);
+
+    dn_loadAsset(DN_SPEAKER_STAND_WSG, 1, &gameData->assets[DN_SPEAKER_STAND_ASSET]);
+
     ////////////////////
     // Make the albums//
     ////////////////////
@@ -580,12 +590,20 @@ static void dn_initializeGame(void)
     ((dn_albumsData_t*)gameData->entityManager.albums->data)->creativeCommonsAlbum = ccAlbum;
     ((dn_albumsData_t*)gameData->entityManager.albums->data)->p2Album = album2;
 
+    //////////////////////////
+    // Make the top speaker //
+    //////////////////////////
+    dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_SPEAKER_STAND_ASSET, 0, (vec_t){0xFFFF + (123<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySpecial(&gameData->entityManager, 6, DN_NO_ANIMATION, false, DN_SPEAKER_ASSET, 3, (vec_t){0xFFFF + (123<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
+
+
     ///////////////////
     // Make the board//
     ///////////////////
     dn_entity_t* board
         = dn_createEntitySimple(&gameData->entityManager, DN_GROUND_TILE_ASSET, (vec_t){0xFFFF, 0xFFFF}, gameData);
     dn_boardData_t* boardData       = (dn_boardData_t*)board->data;
+    boardData->impactPos = (dn_boardPos_t){2, 2};
     gameData->entityManager.board   = board;
 
     ///////////////////
@@ -641,7 +659,11 @@ static void dn_initializeGame(void)
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[4]; // Set the unit on the tile
 
-    boardData->impactPos = (dn_boardPos_t){2, 2};
+    /////////////////////////////
+    // Make the bottom speaker //
+    /////////////////////////////
+    dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_SPEAKER_STAND_ASSET, 0, (vec_t){0xFFFF - (31<<DN_DECIMAL_BITS), 0xFFFF + (59<<DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySpecial(&gameData->entityManager, 6, DN_NO_ANIMATION, false, DN_SPEAKER_ASSET, 3, (vec_t){0xFFFF - (31<<DN_DECIMAL_BITS), 0xFFFF + (59<<DN_DECIMAL_BITS)}, gameData);
 
     /////////////////////////
     // Make the playerTurn //

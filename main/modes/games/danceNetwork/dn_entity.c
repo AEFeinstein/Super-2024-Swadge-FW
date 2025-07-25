@@ -14,6 +14,31 @@ void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType)
     self->dataType = dataType;
 }
 
+void dn_drawAsset(dn_entity_t* self)
+{
+
+    if(!self->paused)
+    {
+        self->animationTimer++;
+        if(self->animationTimer >= self->gameFramesPerAnimationFrame)
+        {
+            self->animationTimer = 0;
+            self->currentAnimationFrame++;
+            if (self->currentAnimationFrame >= self->gameData->assets[self->assetIndex].numFrames)
+                self->currentAnimationFrame = 0;
+        }
+    }
+    int32_t x             = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
+                - self->gameData->assets[self->assetIndex].originX;
+    int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
+                - self->gameData->assets[self->assetIndex].originY;
+    drawWsgSimple(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y);
+}
+
+void dn_drawNothing(dn_entity_t* self)
+{
+}
+
 void dn_updateBoard(dn_entity_t* self)
 {
     dn_boardData_t* boardData = (dn_boardData_t*)self->data;
@@ -962,7 +987,7 @@ void dn_updatePromptToSkip(dn_entity_t* self)
     dn_promptToSkipData_t* pData = (dn_promptToSkipData_t*)self->data;
     for(uint8_t i = 0; i < 2; i++)
     {
-        pData->selectionAmounts[i] -= self->gameData->elapsedUs >> 5;
+        pData->selectionAmounts[i] -= self->gameData->elapsedUs >> 6;
         if(pData->selectionAmounts[i] < 0)
         {
             pData->selectionAmounts[i] = 0;
@@ -970,7 +995,7 @@ void dn_updatePromptToSkip(dn_entity_t* self)
     }
     if(pData->animatingIntroSlide)
     {
-        pData->yOffset -= self->gameData->elapsedUs >> 13;
+        pData->yOffset -= self->gameData->elapsedUs >> 12;
         if(pData->yOffset < 70)
         {
             pData->yOffset = 70;
@@ -1011,6 +1036,7 @@ void dn_updatePromptToSkip(dn_entity_t* self)
                                                                 0, self->gameData->camera.pos, self->gameData);
                 tileSelector->data        = heap_caps_calloc(1, sizeof(dn_tileSelectorData_t), MALLOC_CAP_SPIRAM);
                 tileSelector->dataType    = DN_TILE_SELECTOR_DATA;
+                tileSelector->drawFunction = dn_drawNothing;
                 dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)tileSelector->data;
                 for (int i = 0; i < NUM_SELECTOR_LINES; i++)
                 {
@@ -1060,9 +1086,9 @@ void dn_drawPromptToSkip(dn_entity_t* self)
     int16_t xOff = 7;
     int16_t yOff = pData->yOffset + 11;
     drawTextWordWrapCentered(&self->gameData->font_ibm, c345, "Skip action to gain a reroll?", &xOff, &yOff, TFT_WIDTH - 7, pData->yOffset + 30);
-    drawRectFilled(TFT_WIDTH / 4 - 25, pData->yOffset + 34, dn_lerp(TFT_WIDTH / 4 - 25, TFT_WIDTH / 4 + 25, dn_logRemap(pData->selectionAmounts[0])), pData->yOffset + 56, c154);
+    drawRectFilled(TFT_WIDTH / 4 - 25, pData->yOffset + 34, dn_lerp(TFT_WIDTH / 4 - 25, TFT_WIDTH / 4 + 25, dn_logRemap(pData->selectionAmounts[0])), pData->yOffset + 56, c022);
     drawRect(TFT_WIDTH / 4 - 25, pData->yOffset + 34, TFT_WIDTH / 4 + 25, pData->yOffset + 56, pData->selectionIdx == 0 ? c345 : c222);
-    drawRectFilled(TFT_WIDTH * 3 / 4 - 25, pData->yOffset + 34, dn_lerp(TFT_WIDTH * 3 / 4 - 25, TFT_WIDTH * 3 / 4 + 25, dn_logRemap(pData->selectionAmounts[1])), pData->yOffset + 56, c143);
+    drawRectFilled(TFT_WIDTH * 3 / 4 - 25, pData->yOffset + 34, dn_lerp(TFT_WIDTH * 3 / 4 - 25, TFT_WIDTH * 3 / 4 + 25, dn_logRemap(pData->selectionAmounts[1])), pData->yOffset + 56, c022);
     drawRect(TFT_WIDTH * 3 / 4 - 25, pData->yOffset + 34, TFT_WIDTH * 3 / 4 + 25, pData->yOffset + 56, pData->selectionIdx == 1 ? c345 : c222);
     xOff = TFT_WIDTH / 4 - 25;
     yOff = pData->yOffset + 39;

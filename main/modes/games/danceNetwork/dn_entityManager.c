@@ -130,7 +130,7 @@ void dn_setCharacterSetPalette(dn_entityManager_t* entityManager, dn_characterSe
 void dn_drawEntity(dn_entity_t* entity)
 {
     if (entity->drawFunction == NULL)
-        return;
+            return;
     entity->drawFunction(entity);
 }
 
@@ -210,6 +210,7 @@ dn_entity_t* dn_createEntitySpecial(dn_entityManager_t* entityManager, uint8_t n
     entity->gameFramesPerAnimationFrame = gameFramesPerAnimationFrame;
     entity->pos                         = pos;
     entity->gameData                    = gameData;
+    entity->drawFunction = dn_drawAsset;
 
     push(entityManager->entities, (void*)entity);
     return entity;
@@ -232,6 +233,7 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
         case DN_BUCKET_HAT_UP_ASSET:
         {
             entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity->drawFunction = dn_drawNothing; // Drawing of unitys is handled by dn_drawBoard
             break;
         }
         case DN_GROUND_TILE_ASSET:

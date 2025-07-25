@@ -46,7 +46,10 @@ struct dn_entity_t
     dn_animationType_t type;
     bool paused;
     dn_assetIdx_t assetIndex;
+
+    uint16_t animationTimer;
     uint8_t gameFramesPerAnimationFrame;
+    uint8_t currentAnimationFrame;
     dn_gameData_t* gameData;
 };
 
@@ -134,6 +137,8 @@ typedef struct
 void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType);
 
 // main game entities
+void dn_drawAsset(dn_entity_t* self);
+void dn_drawNothing(dn_entity_t* self);
 
 void dn_updateBoard(dn_entity_t* self);
 void dn_drawBoard(dn_entity_t* self);
