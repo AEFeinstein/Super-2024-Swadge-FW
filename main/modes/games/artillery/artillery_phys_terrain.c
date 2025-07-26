@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include <math.h>
+#include <esp_heap_caps.h>
 #include <esp_random.h>
 #include "macros.h"
 #include "artillery_phys_terrain.h"
@@ -229,6 +230,15 @@ void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player)
 void explodeShell(physSim_t* phys, node_t* shellNode)
 {
     physCirc_t* shell = shellNode->val;
+
+    // Create an explosion animation
+    explosionAnim_t* ea = heap_caps_calloc(1, sizeof(explosionAnim_t), MALLOC_CAP_8BIT);
+    ea->circ            = shell->c;
+    ea->circ.radius     = shell->explosionRadius;
+    ea->color           = c500;
+    ea->ttlUs           = 500000;
+    ea->expTimeUs       = ea->ttlUs;
+    push(&phys->explosions, ea);
 
     // Calculate the X bounds of the explosion and the squared radius
     float expMin = shell->c.pos.x - shell->explosionRadius;
