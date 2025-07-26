@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 #include "hdw-btn.h"
+#include "palette.h"
 #include "linked_list.h"
 #include "vector2d.h"
 #include "geometryFl.h"
@@ -97,6 +98,14 @@ typedef struct
 
 typedef struct
 {
+    circleFl_t circ;
+    paletteColor_t color;
+    int32_t expTimeUs;
+    int32_t ttlUs;
+} explosionAnim_t;
+
+typedef struct
+{
     int32_t frameTimer;
 
     vecFl_t g;
@@ -105,6 +114,7 @@ typedef struct
     rectangleFl_t zones[NUM_ZONES];
     list_t lines;
     list_t circles;
+    list_t explosions;
 
     uint32_t cameraTimer;
     buttonBit_t cameraBtn;

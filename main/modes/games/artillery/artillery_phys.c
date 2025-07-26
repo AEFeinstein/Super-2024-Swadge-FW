@@ -11,7 +11,6 @@
 #include <hdw-tft.h>
 
 #include "shapes.h"
-#include "palette.h"
 #include "artillery.h"
 #include "artillery_phys.h"
 #include "macros.h"
@@ -46,6 +45,7 @@
 static void physFindObjDests(physSim_t* phys, int32_t elapsedUs);
 static void physBinaryMoveObjects(physSim_t* phys);
 static void checkTurnOver(physSim_t* phys);
+static void physAnimateExplosions(physSim_t* phys, int32_t elapsedUs);
 
 //==============================================================================
 // Functions
@@ -149,6 +149,12 @@ void deinitPhys(physSim_t* phys)
         heap_caps_free(pop(&phys->circles));
     }
 
+    // Free all explosions
+    while (phys->explosions.first)
+    {
+        heap_caps_free(pop(&phys->explosions));
+    }
+
     // Free the simulation
     heap_caps_free(phys);
 }
@@ -168,6 +174,7 @@ void physStep(physSim_t* phys, int32_t elapsedUs)
         phys->terrainMoving = moveTerrainPoints(phys, PHYS_TIME_STEP);
         physCheckCollisions(phys);
         physBinaryMoveObjects(phys);
+        physAnimateExplosions(phys, PHYS_TIME_STEP);
         checkTurnOver(phys);
     });
 }
@@ -406,6 +413,20 @@ void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs)
         // Iterate
         cNode = cNode->next;
     }
+
+    // Draw explosions
+    node_t* eNode = phys->explosions.first;
+    while (eNode)
+    {
+        explosionAnim_t* exp = eNode->val;
+        float radius         = (exp->circ.radius * exp->ttlUs) / exp->expTimeUs;
+        drawCircleFilled(                     //
+            exp->circ.pos.x - phys->camera.x, //
+            exp->circ.pos.y - phys->camera.y, //
+            radius,                           //
+            exp->color);
+        eNode = eNode->next;
+    }
 }
 
 /**
@@ -571,5 +592,29 @@ void physSpawnPlayers(physSim_t* phys, physCirc_t* players[], int32_t numPlayers
             physSetZoneMaskCirc(phys, players[p]);
         }
         players[p]->c.pos.y -= PLAYER_RADIUS;
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param phys
+ * @param elapsedUs
+ */
+static void physAnimateExplosions(physSim_t* phys, int32_t elapsedUs)
+{
+    node_t* eNode = phys->explosions.first;
+    while (eNode)
+    {
+        explosionAnim_t* exp = eNode->val;
+        node_t* eNodeNext    = eNode->next;
+
+        exp->ttlUs -= elapsedUs;
+        if (exp->ttlUs <= 0)
+        {
+            heap_caps_free(removeEntry(&phys->explosions, eNode));
+        }
+
+        eNode = eNodeNext;
     }
 }
