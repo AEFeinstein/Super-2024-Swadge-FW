@@ -20,6 +20,7 @@
 #include "artillery_phys_camera.h"
 #include "artillery_phys_collisions.h"
 #include "artillery_phys_terrain.h"
+#include "artillery_phys_bsp.h"
 
 //==============================================================================
 // Defines
@@ -76,47 +77,6 @@ physSim_t* initPhys(float w, float h, int32_t groundLevel, float gx, float gy)
     phys->bounds.y    = h;
     phys->groundLevel = groundLevel;
 
-    // Figure out number of zones in each dimension
-    vecFl_t nZones = {
-        .x = 1,
-        .y = 1,
-    };
-
-    // Calculate the zone size
-    vecFl_t zoneSize = {
-        .x = w,
-        .y = h,
-    };
-
-    // Keep dividing along the longer axis
-    int32_t divs = NUM_ZONES;
-    while (divs /= 2)
-    {
-        if (zoneSize.x > zoneSize.y)
-        {
-            zoneSize.x /= 2;
-            nZones.x *= 2;
-        }
-        else
-        {
-            zoneSize.y /= 2;
-            nZones.y *= 2;
-        }
-    }
-
-    // Create the zones
-    for (int32_t y = 0; y < nZones.y; y++)
-    {
-        for (int32_t x = 0; x < nZones.x; x++)
-        {
-            rectangleFl_t* zone = &phys->zones[(int)(y * nZones.x) + x];
-            zone->pos.x         = x * zoneSize.x;
-            zone->pos.y         = y * zoneSize.y;
-            zone->width         = zoneSize.x;
-            zone->height        = zoneSize.y;
-        }
-    }
-
     // Add lines for the world bounds
     physAddLine(phys, 0, 0, w, 0, false);
     physAddLine(phys, w, 0, w, h, false);
@@ -125,6 +85,9 @@ physSim_t* initPhys(float w, float h, int32_t groundLevel, float gx, float gy)
 
     // Generate terrain
     physGenerateTerrain(phys);
+
+    // Create BSP zones
+    createBspZones(phys);
 
     // Return the simulation
     return phys;
@@ -237,7 +200,7 @@ static void physFindObjDests(physSim_t* phys, int32_t elapsedUs)
             pc->travelLineBB = getLineBoundingBox(pc->travelLine);
 
             // Recompute zones
-            physSetZoneMaskCirc(phys, pc);
+            updateCircleProperties(phys, pc);
         }
 
         // Iterate
@@ -266,7 +229,7 @@ static void physBinaryMoveObjects(physSim_t* phys)
         {
             // Test at the final destination
             pc->c.pos = pc->travelLine.p2;
-            physSetZoneMaskCirc(phys, pc);
+            updateCircleProperties(phys, pc);
 
             // If there is a collision, binary search. Otherwise move on.
             if (physAnyCollision(phys, pc))
@@ -282,7 +245,7 @@ static void physBinaryMoveObjects(physSim_t* phys)
 
                     // Set circle to the midpoint of the travel line
                     pc->c.pos = divVecFl2d(addVecFl2d(pc->travelLine.p1, pc->travelLine.p2), 2);
-                    physSetZoneMaskCirc(phys, pc);
+                    updateCircleProperties(phys, pc);
 
                     // Test for collision
                     collision = physAnyCollision(phys, pc);
@@ -303,7 +266,7 @@ static void physBinaryMoveObjects(physSim_t* phys)
                 {
                     // Return to the starting point
                     pc->c.pos = pc->travelLine.p1;
-                    physSetZoneMaskCirc(phys, pc);
+                    updateCircleProperties(phys, pc);
                 }
             }
         }
@@ -427,6 +390,17 @@ void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs)
             exp->color);
         eNode = eNode->next;
     }
+
+    // Draw zones
+    // for (int32_t z = 0; z < NUM_ZONES; z++)
+    // {
+    //     drawRect(                                                          //
+    //         phys->zones[z].pos.x - phys->camera.x,                         //
+    //         phys->zones[z].pos.y - phys->camera.y,                         //
+    //         phys->zones[z].pos.x + phys->zones[z].width - phys->camera.x,  //
+    //         phys->zones[z].pos.y + phys->zones[z].height - phys->camera.y, //
+    //         c333);
+    // }
 }
 
 /**
@@ -589,7 +563,7 @@ void physSpawnPlayers(physSim_t* phys, physCirc_t* players[], int32_t numPlayers
         while (!physAnyCollision(phys, players[p]))
         {
             players[p]->c.pos.y += PLAYER_RADIUS;
-            physSetZoneMaskCirc(phys, players[p]);
+            updateCircleProperties(phys, players[p]);
         }
         players[p]->c.pos.y -= PLAYER_RADIUS;
     }

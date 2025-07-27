@@ -3,8 +3,12 @@
 //==============================================================================
 
 #include <stddef.h>
+#include "macros.h"
 #include "esp_heap_caps.h"
 #include "artillery_phys_objs.h"
+
+static void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl);
+static void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc);
 
 //==============================================================================
 // Functions
@@ -70,6 +74,12 @@ void updateLineProperties(physSim_t* phys, physLine_t* pl)
         pl->unitNormal.y = -unitSlope.x;
     }
 
+    // Set axis aligned bounding box
+    pl->aabb.x0 = MIN(pl->l.p1.x, pl->l.p2.x);
+    pl->aabb.x1 = MAX(pl->l.p1.x, pl->l.p2.x);
+    pl->aabb.y0 = MIN(pl->l.p1.y, pl->l.p2.y);
+    pl->aabb.y1 = MAX(pl->l.p1.y, pl->l.p2.y);
+
     // Store what zones this line is in
     physSetZoneMaskLine(phys, pl);
 }
@@ -119,8 +129,7 @@ physCirc_t* physAddCircle(physSim_t* phys, float x1, float y1, float r, circType
         }
     }
 
-    // Store what zones the circle is in
-    physSetZoneMaskCirc(phys, pc);
+    updateCircleProperties(phys, pc);
 
     // Push the circle into a list in the simulation
     push(&phys->circles, pc);
@@ -130,12 +139,30 @@ physCirc_t* physAddCircle(physSim_t* phys, float x1, float y1, float r, circType
 }
 
 /**
+ * @brief TODO doc
+ *
+ * @param phys
+ * @param pc
+ */
+void updateCircleProperties(physSim_t* phys, physCirc_t* pc)
+{
+    // Set axis aligned bounding box
+    pc->aabb.x0 = pc->c.pos.x - pc->c.radius;
+    pc->aabb.x1 = pc->c.pos.x + pc->c.radius;
+    pc->aabb.y0 = pc->c.pos.y - pc->c.radius;
+    pc->aabb.y1 = pc->c.pos.y + pc->c.radius;
+
+    // Store what zones the circle is in
+    physSetZoneMaskCirc(phys, pc);
+}
+
+/**
  * @brief Calculate what zones a line is in and save it for that line
  *
  * @param phys The physics simulation
  * @param pl The line to calculate zones for
  */
-void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl)
+static void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl)
 {
     // Clear the zone mask
     pl->zonemask = 0;
@@ -156,7 +183,7 @@ void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl)
  * @param phys The physics simulation
  * @param pc The circle to calculate zones for
  */
-void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc)
+static void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc)
 {
     // Clear the zone mask
     pc->zonemask = 0;
