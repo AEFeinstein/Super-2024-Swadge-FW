@@ -49,10 +49,19 @@ typedef enum
 
 typedef struct
 {
+    float x0;
+    float y0;
+    float x1;
+    float y1;
+} aabb_t;
+
+typedef struct
+{
     // Position
     int32_t zonemask;
     circleFl_t c;
     bool fixed;
+    aabb_t aabb;
 
     // Velocity
     vecFl_t vel;           ///< Velocity of the object, computed frame-by-frame
@@ -94,6 +103,7 @@ typedef struct
     vecFl_t unitNormal;
     bool isTerrain;
     lineFl_t destination;
+    aabb_t aabb;
 } physLine_t;
 
 typedef struct
