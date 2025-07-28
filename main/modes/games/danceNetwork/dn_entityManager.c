@@ -23,6 +23,8 @@ void dn_initializeEntityManager(dn_entityManager_t* entityManager, dn_gameData_t
     wsgPaletteSet(&entityManager->palettes[DN_WHITE_CHESS_PALETTE], c012, c543);
     wsgPaletteSet(&entityManager->palettes[DN_WHITE_CHESS_PALETTE], c123, c554);
     wsgPaletteSet(&entityManager->palettes[DN_WHITE_CHESS_PALETTE], c145, c555);
+    wsgPaletteReset(&entityManager->palettes[DN_PIT_WALL_PALETTE]);
+    wsgPaletteSet(&entityManager->palettes[DN_PIT_WALL_PALETTE], c212, c100);
 
     dn_setCharacterSetPalette(&gameData->entityManager, gameData->characterSets[0]);
 }

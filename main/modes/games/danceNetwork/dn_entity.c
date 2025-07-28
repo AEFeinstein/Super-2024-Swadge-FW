@@ -16,7 +16,6 @@ void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType)
 
 void dn_drawAsset(dn_entity_t* self)
 {
-
     if(!self->paused)
     {
         self->animationTimer++;
@@ -137,7 +136,7 @@ void dn_drawBoard(dn_entity_t* self)
         for (int x = 0; x < DN_BOARD_SIZE; x++)
         {
             int drawX = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
-                        + (x - y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originX;
+                        + (x - y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originX - 1;
             int drawY = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                         + (x + y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originY
                         - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
@@ -1103,4 +1102,47 @@ void dn_drawPromptToSkip(dn_entity_t* self)
         // Draw this because triangle function is bugged.
         drawLine(TFT_WIDTH/2 - 6, pData->yOffset + 61, TFT_WIDTH/2 + 6, pData->yOffset + 61, c000, 0);
     }
+}
+
+void dn_drawPit(dn_entity_t* self)
+{
+    int32_t x             = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
+                - self->gameData->assets[self->assetIndex].originX;
+    int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS);
+    drawWsgSimple(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y);
+
+    x = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
+        - 1;
+    drawWsgPalette(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, &self->gameData->entityManager.palettes[DN_PIT_WALL_PALETTE], true, false, 0);
+    drawRectFilled(x - 138, y - 16, x + 139, y, c323);
+    drawRectFilled(x - 138, y, x - 125, y + 152, c323);
+    drawRectFilled(x + 126, y, x + 139, y + 152, c323);
+}
+
+void dn_drawPitForeground(dn_entity_t* self)
+{
+    drawTriangleOutlined(
+        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - 126,
+        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 51,
+        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - 126,
+        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 116,
+        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - 1,
+        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 116,
+        c323, c323);
+
+    drawTriangleOutlined(
+        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) + 124,
+        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 51,
+        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) + 124,
+        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 116,
+        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS),
+        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 116,
+        c323, c323);
+
+    drawLineFast(
+        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - 126,
+        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 117,
+        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) + 124,
+        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 117,
+        c323);
 }

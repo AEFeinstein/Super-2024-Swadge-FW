@@ -164,6 +164,9 @@ static void dn_EnterMode(void)
     gameData->assets[DN_SPEAKER_STAND_ASSET].originX = 6;
     gameData->assets[DN_SPEAKER_STAND_ASSET].originY = 8;
 
+    gameData->assets[DN_PIT_ASSET].originX = 126;
+    gameData->assets[DN_PIT_ASSET].originY = 0;
+
     // Allocate WSG loading helpers
     dn_hsd = heatshrink_decoder_alloc(256, 8, 4);
     // The largest image is bb_menu2.png, decodes to 99124 bytes
@@ -551,6 +554,21 @@ static void dn_initializeGame(void)
 
     dn_loadAsset(DN_SPEAKER_STAND_WSG, 1, &gameData->assets[DN_SPEAKER_STAND_ASSET]);
 
+    dn_loadAsset(DN_PIT_WSG, 1, &gameData->assets[DN_PIT_ASSET]);
+
+
+    //////////////////
+    // Make the pit //
+    //////////////////
+    dn_entity_t* pit = dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_PIT_ASSET, 0, (vec_t){0xFFFF, 0xFFFF - (72 << DN_DECIMAL_BITS)}, gameData);
+    pit->drawFunction = dn_drawPit;
+
+    //////////////////////////
+    // Make the top speaker //
+    //////////////////////////
+    dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_SPEAKER_STAND_ASSET, 0, (vec_t){0xFFFF + (123<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySpecial(&gameData->entityManager, 6, DN_NO_ANIMATION, false, DN_SPEAKER_ASSET, 4, (vec_t){0xFFFF + (123<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
+
     ////////////////////
     // Make the albums//
     ////////////////////
@@ -589,13 +607,6 @@ static void dn_initializeGame(void)
     ((dn_albumsData_t*)gameData->entityManager.albums->data)->p1Album = album1;
     ((dn_albumsData_t*)gameData->entityManager.albums->data)->creativeCommonsAlbum = ccAlbum;
     ((dn_albumsData_t*)gameData->entityManager.albums->data)->p2Album = album2;
-
-    //////////////////////////
-    // Make the top speaker //
-    //////////////////////////
-    dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_SPEAKER_STAND_ASSET, 0, (vec_t){0xFFFF + (123<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
-    dn_createEntitySpecial(&gameData->entityManager, 6, DN_NO_ANIMATION, false, DN_SPEAKER_ASSET, 3, (vec_t){0xFFFF + (123<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
-
 
     ///////////////////
     // Make the board//
@@ -658,6 +669,12 @@ static void dn_initializeGame(void)
     boardData->p2Units[4]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[4]; // Set the unit on the tile
+
+    /////////////////////////////
+    // Make the pit foreground //
+    /////////////////////////////
+    dn_entity_t* pitForeground = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff - (57 << DN_DECIMAL_BITS)}, gameData);
+    pitForeground->drawFunction = dn_drawPitForeground;
 
     /////////////////////////////
     // Make the bottom speaker //

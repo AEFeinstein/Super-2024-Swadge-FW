@@ -168,3 +168,6 @@ void dn_drawPlayerTurn(dn_entity_t* self);
 
 void dn_updatePromptToSkip(dn_entity_t* self);
 void dn_drawPromptToSkip(dn_entity_t* self);
+
+void dn_drawPit(dn_entity_t* self);
+void dn_drawPitForeground(dn_entity_t* self);
