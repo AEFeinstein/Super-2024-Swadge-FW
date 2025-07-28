@@ -2,9 +2,12 @@
 
 #include "swadge_matrix.h"
 
+#define RANDOM_STRENGTH 2
+#include "lib_rand.h"
+
 int main()
 {
-	MatrixSetup();
+    MatrixSetup();
 
     int frameno = 0;
     #define CONCURRENT_DROPS 3
@@ -25,7 +28,7 @@ int main()
         droplife[i] = rand() % 100;
     }
 
-	uint32_t nf = SysTick->CNT;
+    uint32_t nf = SysTick->CNT;
 
     while(1)
     {
@@ -36,9 +39,9 @@ int main()
         int d;
         uint8_t framebuffer[12*6];
 
-		while( (int)(nf - SysTick->CNT) > 0 );
+        while( (int)(nf - SysTick->CNT) > 0 );
 
-		nf = SysTick->CNT + 6000000/TARGET_FPS;
+        nf = SysTick->CNT + 6000000/TARGET_FPS;
 
         // Raindrops runs at about 400 FPS
         // LED Shifting runs at about 500 FPS

@@ -14,10 +14,10 @@
 int initCh32v003(int swdio_pin);
 
 /**
- * @brief Load and run a binary image from the assets folder on the ch32v003. Included as a #define because we can't
+ * @brief Load and run a binary image from the assets folder on the ch32v003. Included as a `#define` because we can't
  * include main functionality in a module.
  *
- * @param cnfsFileIdx_t A binary image to be loaded into a location in the ch32v003.  This must be of type cnfsFileIdx_t
+ * @param asset, cnfsFileIdx_t of a binary image to be loaded into a location in the ch32v003.  This must be of type cnfsFileIdx_t
  * @return 0 if OK, nonzero in error condition.
  */
 #define ch32v003RunBinaryAsset(asset)                     \

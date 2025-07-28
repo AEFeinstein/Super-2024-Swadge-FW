@@ -32,10 +32,14 @@ int ch32v003WriteMemory(const uint8_t* binary, uint32_t length, uint32_t address
 int ch32v003ReadMemory(uint8_t* binary, uint32_t length, uint32_t address);
 int ch32v003GetReg(int regno, uint32_t* value);
 int ch32v003SetReg(int regno, uint32_t regValue);
-void ch32v003CheckTerminal();
-void ch32v003Teardown();
-int ch32v003Resume();
+void ch32v003CheckTerminal(void);
+void ch32v003Teardown(void);
+int ch32v003Resume(void);
 int ch32v003WriteFlash(const uint8_t* buf, int sz);
+
+// For functions in this code.
+uint32_t GetSTK(void);
+void ch32v003EmuDraw(int window_w, int window_h);
 
 //==============================================================================
 // mini-rv32ima augmentations.
@@ -435,7 +439,7 @@ static inline int8_t MINIRV32_LOAD1_SIGNEDs(uint32_t ofs, uint32_t* rval, uint32
                             {                                                                                          \
                                 rdid = 1; /* c.jalr */                                                                 \
                                 rval = pc + 4;                                                                         \
-                                pc = REG(rdid) - 4; /*c.jr*/                                                           \
+                                pc   = REG(rdid) - 4; /*c.jr*/                                                         \
                             }                                                                                          \
                             else                                                                                       \
                             {                                                                                          \
@@ -664,7 +668,7 @@ static void* ch32v003threadFn(void* v)
         uint32_t tus = (dNow - dLast) * 1000000;
         if (ch32v003runMode)
         {
-            /*int r = */MiniRV32IMAStep(&ch32v003state, 0, 0, tus, 24 * tus);
+            /*int r = */ MiniRV32IMAStep(&ch32v003state, 0, 0, tus, 24 * tus);
             // printf( "STEP: %d\n", r );
         }
         OGUSleep(100);
