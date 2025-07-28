@@ -1,3 +1,5 @@
+// Generic header file for all Swadge ch32v003 code for outputting to a matrix.
+
 #ifndef _SWADGE_MATRIX_H
 #define _SWADGE_MATRIX_H
 

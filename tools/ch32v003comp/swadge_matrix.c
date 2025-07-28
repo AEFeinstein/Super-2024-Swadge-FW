@@ -1,4 +1,15 @@
+// This code is only compiled for the ch32v003. It is for running
+// on the swadge coprocessor.
+
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include "swadge_matrix.h"
+
+//==============================================================================
+// Variables
+//==============================================================================
 
 uint8_t LEDSets[9*8];
 const uint16_t Coordmap[8*16] = {
@@ -16,6 +27,19 @@ const uint16_t Coordmap[8*16] = {
     0x0103, 0x0303, 0x0503, 0x0703, 0x0606, 0x0706, 0xffff, 0xffff,
 };
 
+//==============================================================================
+// Functions
+//==============================================================================
+
+/**
+ * @brief Draw a pixel on the matrix at x,y with appropriate intensity.
+ *
+ * This handles writing the correct values into RAM for the DMA engine to display.
+ *
+ * @param x the X coordinate on the matrix to overwrite.
+ * @param y the Y coordinate on the matrix to overwrite.
+ * @param intensity the brightness of the LED to draw.
+ */
 void SetPixel( int x, int y, int intensity )
 {
     int i;
@@ -53,6 +77,15 @@ void SetPixel( int x, int y, int intensity )
 #endif
 }
 
+
+/**
+ * @brief Fast approximate integer square root.
+ *
+ * This is optimized for systems that have Zbb extension, but is still pretty fast on others.
+ *
+ * @param i the number to take the square root of
+ * @return the square root of i
+ */
 int apsqrt( int i )
 {
     if( i == 0 ) return 0;
@@ -62,6 +95,15 @@ int apsqrt( int i )
     return x;
 }
 
+
+/**
+ * @brief Configure ch32v003 hardware
+ *
+ * This sets up the ch32v003, and configures the DMA engine for outputting to
+ * the hardware DMA matrix, as well as giving the swadge emulator the sentinel
+ * for the display matrix output.
+ *
+ */
 void MatrixSetup()
 {
     SystemInit();
