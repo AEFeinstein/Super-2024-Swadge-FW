@@ -5,6 +5,7 @@
 #include <string.h>
 #include <esp_log.h>
 #include <esp_heap_caps.h>
+#include <esp_timer.h>
 #include "linked_list.h"
 #include "artillery_phys_bsp.h"
 #include "artillery_phys_objs.h"
@@ -13,25 +14,25 @@
 // Structs
 //==============================================================================
 
+/**
+ * @brief A zone defined by an axis aligned bounding box, consisting of circles and lines
+ */
 typedef struct
 {
-    aabb_t aabb;
-    list_t circles;
-    list_t lines;
+    aabb_t aabb;    ///< An axis aligned bounding box for this zone
+    list_t circles; ///< A list of all circles in this zone
+    list_t lines;   ///< A list of all lines in this zone
 } zone_t;
 
 //==============================================================================
 // Function Prototypes
 //==============================================================================
 
-static inline bool aabbIntersectX(aabb_t* zone, aabb_t* obj);
-static inline bool aabbIntersectY(aabb_t* zone, aabb_t* obj);
 static bool aabbIntersect(aabb_t* zone, aabb_t* obj);
-
-static zone_t* createFirstZone(physSim_t* phys);
 static int cmpFloat(const void* a, const void* b);
+static zone_t* createFirstZone(physSim_t* phys);
 static vecFl_t findZoneMedian(zone_t* zone);
-static void countObjectSplits(zone_t* zone, vecFl_t median, int32_t* hCount, int32_t* vCount);
+static void countMedianIntersections(zone_t* zone, vecFl_t median, int32_t* hCount, int32_t* vCount);
 static void assignObjectsToZone(zone_t* src, zone_t* dst);
 static void insertZoneSorted(list_t* zList, zone_t* zone);
 static void setPhysObjsZones(physSim_t* phys);
@@ -40,28 +41,26 @@ static void setPhysObjsZones(physSim_t* phys);
 // Functions
 //==============================================================================
 
+/**
+ * @brief Check if two axis aligned bounding boxes intersect
+ *
+ * @param zone An axis aligned bounding box
+ * @param obj Another axis aligned bounding box
+ * @return true if they intersect, false if they do not
+ */
 static bool aabbIntersect(aabb_t* zone, aabb_t* obj)
 {
-    return aabbIntersectX(zone, obj) && aabbIntersectY(zone, obj);
-}
-
-static inline bool aabbIntersectX(aabb_t* zone, aabb_t* obj)
-{
     return (zone->x0) <= (obj->x1) && //
-           (zone->x1) >= (obj->x0);
-}
-
-static inline bool aabbIntersectY(aabb_t* zone, aabb_t* obj)
-{
-    return (zone->y0) <= (obj->y1) && //
+           (zone->x1) >= (obj->x0) && //
+           (zone->y0) <= (obj->y1) && //
            (zone->y1) >= (obj->y0);
 }
 
 /**
- * @brief TODO
+ * @brief Create the first zone which covers the entire space and contains all objects
  *
- * @param phys
- * @return zone_t*
+ * @param phys The physics simulation
+ * @return The created zone. This must be heap_caps_free()'d later
  */
 static zone_t* createFirstZone(physSim_t* phys)
 {
@@ -92,42 +91,26 @@ static zone_t* createFirstZone(physSim_t* phys)
 }
 
 /**
- * @brief TODO
+ * @brief qsort comparator for two floating point numbers
  *
- * @param a
- * @param b
- * @return int
+ * @param a A pointer to a floating point number
+ * @param b Another pointer to a floating point number
+ * @return Greater than 0 if a > b, less than zero if a < b, or zero if a == b
  */
 static int cmpFloat(const void* a, const void* b)
 {
-    // Extract floats
-    float fA = *((const float*)a);
-    float fB = *((const float*)b);
-
-    // Compare floats
-    if (fA < fB)
-    {
-        return -1;
-    }
-    if (fA > fB)
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
+    return *((const float*)a) - *((const float*)b);
 }
 
 /**
- * @brief TODO
+ * @brief Find the median point for all objects in a zone
  *
- * @param zone
- * @return vecFl_t
+ * @param zone The zone to find the median point in
+ * @return The median point for all objects in the zone
  */
 static vecFl_t findZoneMedian(zone_t* zone)
 {
-    // Make lists of all X an dY points
+    // Make lists of all X and Y points
     int32_t vIdx    = 0;
     int32_t nPoints = zone->circles.length + zone->lines.length;
     float xVals[nPoints];
@@ -151,8 +134,9 @@ static vecFl_t findZoneMedian(zone_t* zone)
     while (lNode)
     {
         physLine_t* line = (physLine_t*)lNode->val;
-        xVals[vIdx]      = ((line->aabb.x0 + line->aabb.x1) / 2.0f);
-        yVals[vIdx]      = ((line->aabb.y0 + line->aabb.y1) / 2.0f);
+        // Midpoint of a line is the average of the start and end points
+        xVals[vIdx] = ((line->aabb.x0 + line->aabb.x1) / 2.0f);
+        yVals[vIdx] = ((line->aabb.y0 + line->aabb.y1) / 2.0f);
         vIdx++;
 
         // Iterate
@@ -164,6 +148,7 @@ static vecFl_t findZoneMedian(zone_t* zone)
     qsort(yVals, nPoints, sizeof(float), cmpFloat);
 
     // Return the median
+    // Note, this picks a lower median rather than averaging two points if nPoints is even
     return (vecFl_t){
         .x = xVals[nPoints / 2],
         .y = yVals[nPoints / 2],
@@ -171,36 +156,36 @@ static vecFl_t findZoneMedian(zone_t* zone)
 }
 
 /**
- * @brief TODO
+ * @brief Count the number of objects that intersect with the horizontal and vertical medians
  *
- * Something seems broken here. What's the best way to determine split? objects not on the median line? nah. Balance
- * of objects to left and right? probably
+ * A better split zone will have fewer objects intersecting the median
  *
- * @param zone
- * @param median
- * @param hCount
- * @param vCount
+ * @param zone The zone to count objects in
+ * @param median The median point in the zone
+ * @param hCount [OUT] The number of objects that intersect with median.x
+ * @param vCount [OUT] The number of objects that intersect with median.y
  */
-static void countObjectSplits(zone_t* zone, vecFl_t median, int32_t* hCount, int32_t* vCount)
+static void countMedianIntersections(zone_t* zone, vecFl_t median, int32_t* hCount, int32_t* vCount)
 {
+    // Set counts to zero
     (*hCount) = 0;
     (*vCount) = 0;
 
-    // Sum medians of all circles
+    // Check intersections for all circles
     node_t* cNode = zone->circles.first;
     while (cNode)
     {
         physCirc_t* circ = cNode->val;
 
-        if (!(circ->aabb.x0 <= median.x && median.x <= circ->aabb.x1))
+        if (circ->aabb.x0 <= median.x && median.x <= circ->aabb.x1)
         {
-            // Midpoint does not split the objects box
+            // median.x intersects the object's AABB
             (*hCount)++;
         }
 
-        if (!(circ->aabb.y0 <= median.y && median.y <= circ->aabb.y1))
+        if (circ->aabb.y0 <= median.y && median.y <= circ->aabb.y1)
         {
-            // Midpoint does not split the objects box
+            // median.y intersects the object's AABB
             (*vCount)++;
         }
 
@@ -208,21 +193,21 @@ static void countObjectSplits(zone_t* zone, vecFl_t median, int32_t* hCount, int
         cNode = cNode->next;
     }
 
-    // Sum medians of all lines
+    // Check intersections for all lines
     node_t* lNode = zone->lines.first;
     while (lNode)
     {
         physLine_t* line = (physLine_t*)lNode->val;
 
-        if (!(line->aabb.x0 <= median.x && median.x <= line->aabb.x1))
+        if (line->aabb.x0 <= median.x && median.x <= line->aabb.x1)
         {
-            // Midpoint does not split the objects box
+            // median.x intersects the object's AABB
             (*hCount)++;
         }
 
-        if (!(line->aabb.y0 <= median.y && median.y <= line->aabb.y1))
+        if (line->aabb.y0 <= median.y && median.y <= line->aabb.y1)
         {
-            // Midpoint does not split the objects box
+            // median.y intersects the object's AABB
             (*vCount)++;
         }
 
@@ -232,13 +217,14 @@ static void countObjectSplits(zone_t* zone, vecFl_t median, int32_t* hCount, int
 }
 
 /**
- * @brief TODO
+ * @brief Assign all objects from a source zone to a destination zone if they intersect with the destination zone's AABB
  *
- * @param src
- * @param dst
+ * @param src The source zone of objects to check
+ * @param dst The destination zone to add intersecting objects to
  */
 static void assignObjectsToZone(zone_t* src, zone_t* dst)
 {
+    // Check all source circles
     node_t* cNode = src->circles.first;
     while (cNode)
     {
@@ -253,7 +239,7 @@ static void assignObjectsToZone(zone_t* src, zone_t* dst)
         cNode = cNode->next;
     }
 
-    // Sum medians of all lines
+    // Check all source lines
     node_t* lNode = src->lines.first;
     while (lNode)
     {
@@ -270,13 +256,14 @@ static void assignObjectsToZone(zone_t* src, zone_t* dst)
 }
 
 /**
- * @brief TODO
+ * @brief Insert a zone into a list of zones, sorting by number of objects, greatest to least
  *
- * @param zList
- * @param zone
+ * @param zList A list of zones to insert into
+ * @param zone A zone to insert into the list
  */
 static void insertZoneSorted(list_t* zList, zone_t* zone)
 {
+    // Iterate through the list of zones
     node_t* zNode = zList->first;
     while (zNode)
     {
@@ -285,7 +272,7 @@ static void insertZoneSorted(list_t* zList, zone_t* zone)
         // If the zone in the list has fewer objects than the zone being inserted
         if ((listZone->circles.length + listZone->lines.length) < (zone->circles.length + zone->lines.length))
         {
-            // Add the new zone before the existing zone
+            // Add the new zone before the existing zone and return
             addBefore(zList, zone, zNode);
             return;
         }
@@ -299,12 +286,13 @@ static void insertZoneSorted(list_t* zList, zone_t* zone)
 }
 
 /**
- * @brief TODO doc
+ * @brief Set the zone bitmasks for all objects in the simulation
  *
- * @param phys
+ * @param phys The physics simulation
  */
 static void setPhysObjsZones(physSim_t* phys)
 {
+    // For each circle
     node_t* cNode = phys->circles.first;
     while (cNode)
     {
@@ -315,7 +303,7 @@ static void setPhysObjsZones(physSim_t* phys)
         cNode = cNode->next;
     }
 
-    // Add all lines to the first zone
+    // For each line
     node_t* lNode = phys->lines.first;
     while (lNode)
     {
@@ -328,14 +316,13 @@ static void setPhysObjsZones(physSim_t* phys)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
- * @param phys
+ * @param phys The physics simulation
  */
 void createBspZones(physSim_t* phys)
 {
-    // Clear out zones
-    memset(&phys->zones, 0, sizeof(phys->zones));
+    int32_t tStart = esp_timer_get_time();
 
     // Make a list of zones
     list_t zList = {0};
@@ -343,29 +330,27 @@ void createBspZones(physSim_t* phys)
     // Add the first zone to the zone list
     push(&zList, createFirstZone(phys));
 
-    // Iterate until there are 32 zones
-    while (zList.length < 32)
+    // Iterate until there are NUM_ZONES zones
+    while (zList.length < NUM_ZONES)
     {
-        // Split the largest (i.e. first) zone
+        // Always split the largest (i.e. first) zone
         zone_t* zone = shift(&zList);
 
         // Find the median of objects in the zone
         vecFl_t median = findZoneMedian(zone);
-        // ESP_LOGI("BSP", "Mid: (%f, %f))", median.x, median.y);
 
         // Count up objects divided by the median, both horizontally and vertically
         int32_t hCount = 0;
         int32_t vCount = 0;
-        countObjectSplits(zone, median, &hCount, &vCount);
-        // ESP_LOGI("BSP", "H: %d, V: %d", hCount, vCount);
+        countMedianIntersections(zone, median, &hCount, &vCount);
 
-        // Decide how to split the zone
+        // Decide how to split the zone. You want the fewest objects intersecting the median
         bool splitHorz;
-        if (hCount > vCount)
+        if (hCount < vCount)
         {
             splitHorz = true;
         }
-        else if (vCount > hCount)
+        else if (vCount < hCount)
         {
             // More items are divided along Y axis, split horizontally
             splitHorz = false;
@@ -415,18 +400,6 @@ void createBspZones(physSim_t* phys)
 
         // Free the zone that was just split
         heap_caps_free(zone);
-
-        // char dbg[512] = {0};
-        // node_t* zNode = zList.first;
-        // while (zNode)
-        // {
-        //     char tmp[32]    = {0};
-        //     zone_t* dbgZone = zNode->val;
-        //     sprintf(tmp, "%d, ", dbgZone->circles.length + dbgZone->lines.length);
-        //     strcat(dbg, tmp);
-        //     zNode = zNode->next;
-        // }
-        // ESP_LOGI("BSP", "Zone sizes: %s", dbg);
     }
 
     // Convert list of zones to saved array
@@ -434,7 +407,6 @@ void createBspZones(physSim_t* phys)
     while (zList.first)
     {
         zone_t* zone = zList.first->val;
-        // ESP_LOGI("BSP", "Zone size: %d", zone->circles.length + zone->lines.length);
 
         phys->zones[zIdx].pos.x  = zone->aabb.x0;
         phys->zones[zIdx].pos.y  = zone->aabb.y0;
@@ -447,4 +419,7 @@ void createBspZones(physSim_t* phys)
 
     // Reassign objects to zones
     setPhysObjsZones(phys);
+
+    uint32_t tElapsed = esp_timer_get_time() - tStart;
+    ESP_LOGI("PHS", "%" PRIu32 "us to BSP", tElapsed);
 }

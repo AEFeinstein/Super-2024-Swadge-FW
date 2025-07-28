@@ -327,6 +327,17 @@ void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs)
     // Draw gas gauge
     fillDisplayArea(0, 0, (TFT_WIDTH * moveTimeLeftUs) / TANK_MOVE_TIME_US, 16, c313);
 
+    // Draw zones
+    // for (int32_t z = 0; z < NUM_ZONES; z++)
+    // {
+    //     drawRect(                                                          //
+    //         phys->zones[z].pos.x - phys->camera.x,                         //
+    //         phys->zones[z].pos.y - phys->camera.y,                         //
+    //         phys->zones[z].pos.x + phys->zones[z].width - phys->camera.x,  //
+    //         phys->zones[z].pos.y + phys->zones[z].height - phys->camera.y, //
+    //         c112);
+    // }
+
     // Draw all lines
     node_t* lNode = phys->lines.first;
     while (lNode)
@@ -390,17 +401,6 @@ void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs)
             exp->color);
         eNode = eNode->next;
     }
-
-    // Draw zones
-    // for (int32_t z = 0; z < NUM_ZONES; z++)
-    // {
-    //     drawRect(                                                          //
-    //         phys->zones[z].pos.x - phys->camera.x,                         //
-    //         phys->zones[z].pos.y - phys->camera.y,                         //
-    //         phys->zones[z].pos.x + phys->zones[z].width - phys->camera.x,  //
-    //         phys->zones[z].pos.y + phys->zones[z].height - phys->camera.y, //
-    //         c333);
-    // }
 }
 
 /**
