@@ -44,7 +44,7 @@ typedef struct
     cosCrunchState state;
 
     menu_t* menu;
-    menuManiaRenderer_t* menuRenderer;
+    menuMegaRenderer_t* menuRenderer;
 
     struct
     {
@@ -165,7 +165,7 @@ static void cosCrunchEnterMode(void)
     addSingleItemToMenu(cc->menu, cosCrunchStartCraftingLbl);
     addSingleItemToMenu(cc->menu, cosCrunchHighScoresLbl);
     addSingleItemToMenu(cc->menu, cosCrunchExitLbl);
-    cc->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    cc->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
 
     wsgPaletteReset(&cc->tintPalette);
     wsgPaletteReset(&cc->mgTintPalette);
@@ -204,7 +204,7 @@ static void cosCrunchExitMode(void)
         cc->activeMicrogame.game->fnDestroyMicrogame();
     }
 
-    deinitMenuManiaRenderer(cc->menuRenderer);
+    deinitMenuMegaRenderer(cc->menuRenderer);
     deinitMenu(cc->menu);
 
     freeWsg(&cc->wsg.backgroundMat);
@@ -282,7 +282,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
     switch (cc->state)
     {
         case CC_MENU:
-            drawMenuMania(cc->menu, cc->menuRenderer, elapsedUs);
+            drawMenuMega(cc->menu, cc->menuRenderer, elapsedUs);
             break;
 
         case CC_MICROGAME_PENDING:

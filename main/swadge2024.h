@@ -199,6 +199,7 @@
 #include "fill.h"
 #include "menu.h"
 #include "menuManiaRenderer.h"
+#include "menuMegaRenderer.h"
 
 // Asset loaders
 #include "cnfs.h"

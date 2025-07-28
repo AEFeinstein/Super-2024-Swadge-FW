@@ -199,7 +199,7 @@ static void keebEnterMode(void)
     addSingleItemToMenu(kbTest->menu, teMenuResetHard);
 
     // Init renderer
-    kbTest->renderer = initMenuManiaRenderer(&kbTest->fnt[3], NULL, &kbTest->fnt[2]);
+    kbTest->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
 
     // Set MENU as the starting state
     kbTest->currState = MENU;
@@ -214,7 +214,7 @@ static void keebExitMode(void)
     deinitMenu(kbTest->menu);
 
     // Deinit renderer
-    deinitMenuManiaRenderer(kbTest->renderer);
+    deinitMenuMegaRenderer(kbTest->renderer);
 
     // Deinit fonts
     freeFont(&kbTest->fnt[1]);
@@ -239,7 +239,7 @@ static void keebMainLoop(int64_t elapsedUs)
             {
                 kbTest->menu = menuButton(kbTest->menu, evt);
             }
-            drawMenuMania(kbTest->menu, kbTest->renderer, elapsedUs);
+            drawMenuMega(kbTest->menu, kbTest->renderer, elapsedUs);
             break;
         case TYPING:
             while (checkButtonQueueWrapper(&evt))
