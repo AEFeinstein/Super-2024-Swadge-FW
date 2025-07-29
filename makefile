@@ -245,7 +245,6 @@ DEFINES = $(patsubst %, -D%, $(DEFINES_LIST))
 # Files to write compiler arguments to (workaround for Windows line limits)
 ################################################################################
 
-ARGS_INCLUDE_PATHS_FILE = args_include_paths.txt
 ARGS_DEFINES_FILE       = args_defines.txt
 ARGS_WARNINGS_FILE      = args_warnings.txt
 ARGS_C_FLAGS            = args_c_flags.txt
@@ -334,7 +333,7 @@ MACOS_PLIST   = emulator/resources/Info.plist
 ################################################################################
 
 # This list of targets do not build files which match their name
-.PHONY: all preprocess-assets firmware bundle write-gcc-args \
+.PHONY: all assets preprocess-assets firmware bundle \
 	clean clean-firmware clean-docs clean-assets clean-git clean-utils fullclean \
 	docs format gen-coverage update-dependencies cppcheck \
 	usbflash monitor installudev \
@@ -343,17 +342,16 @@ MACOS_PLIST   = emulator/resources/Info.plist
 # Build the executable
 all: $(EXECUTABLE)
 
-# Write all compiler arguments to files to be read later
-$(ARGS_INCLUDE_PATHS_FILE):
-	@echo $(INC) > $(ARGS_INCLUDE_PATHS_FILE)
-$(ARGS_DEFINES_FILE):
+# Recipes to save gcc arguments to files, dependent on the makefile itself
+# This is a workaround for Windows, which has an 8192 char limit for commands
+$(ARGS_DEFINES_FILE): makefile
 	@echo $(DEFINES) > $(ARGS_DEFINES_FILE)
-$(ARGS_WARNINGS_FILE):
-	@echo $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) > $(ARGS_WARNINGS_FILE)
-$(ARGS_C_FLAGS):
-	@echo $(CFLAGS) > $(ARGS_C_FLAGS)
 
-write-gcc-args: $(ARGS_INCLUDE_PATHS_FILE) $(ARGS_DEFINES_FILE) $(ARGS_WARNINGS_FILE) $(ARGS_C_FLAGS)
+$(ARGS_WARNINGS_FILE): makefile
+	@echo $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) > $(ARGS_WARNINGS_FILE)
+
+$(ARGS_C_FLAGS):makefile
+	@echo $(CFLAGS) > $(ARGS_C_FLAGS)
 
 # Force clean of assets
 preprocess-assets: clean-assets assets
@@ -381,9 +379,9 @@ $(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
 # This compiles each c file into an o file
 # $(CNFS_FILE) is a dependency of all objects because some C files include "cnfs_image.h"
 # $(CNFS_FILE) is not a phony target, so it should only be called if the file doesn't exist
-./$(OBJ_DIR)/%.o: ./%.c $(CNFS_FILE) write-gcc-args
+./$(OBJ_DIR)/%.o: ./%.c $(CNFS_FILE) $(ARGS_DEFINES_FILE) $(ARGS_WARNINGS_FILE) $(ARGS_C_FLAGS)
 	@mkdir -p $(@D) # This creates a directory before building an object in it.
-	$(CC) @$(ARGS_C_FLAGS) @$(ARGS_WARNINGS_FILE) @$(ARGS_DEFINES_FILE) @$(ARGS_INCLUDE_PATHS_FILE) $< -o $@
+	$(CC) @$(ARGS_C_FLAGS) @$(ARGS_WARNINGS_FILE) @$(ARGS_DEFINES_FILE) $(INC) $< -o $@
 
 # Build the firmware. Cmake will take care of generating the CNFS files
 firmware:
@@ -426,7 +424,7 @@ $(MACOS_ICON): emulator/resources/icon.png
 # Clean emulator files, depends on cleaning assets too
 clean: clean-assets
 	-@rm -f $(OBJECTS) $(EXECUTABLE)
-	-@rm -f $(ARGS_INCLUDE_PATHS_FILE) $(ARGS_DEFINES_FILE) $(ARGS_WARNINGS_FILE) $(ARGS_C_FLAGS)
+	-@rm -f $(ARGS_DEFINES_FILE) $(ARGS_WARNINGS_FILE) $(ARGS_C_FLAGS)
 
 # Clean firmware files, depends on cleaning assets too
 clean-firmware: clean-assets
