@@ -21,7 +21,7 @@ typedef enum
     DN_ALBUM_DATA,
     DN_CHARACTER_SELECT_DATA,
     DN_TILE_SELECTOR_DATA,
-    DN_PROMPT_TO_SKIP_DATA,
+    DN_PROMPT_DATA,
 } dn_dataType_t;
 
 //==============================================================================
@@ -73,12 +73,6 @@ typedef struct
 
 typedef struct
 {
-    // char array of instruction text
-    char instructions[120];
-} dn_instructionData_t;
-
-typedef struct
-{
     int16_t separation; // The distance between the curtain and the center of the screen
 } dn_curtainData_t;
 
@@ -123,12 +117,20 @@ typedef struct
 
 typedef struct
 {
+    char text[5];
+    dn_callbackFunction_t callback;
+} dn_promptOption_t;
+
+typedef struct
+{
     bool animatingIntroSlide;
     int16_t yOffset;
     uint8_t selectionIdx;
     int16_t selectionAmounts[2];
     bool playerHasSlidThis;
-} dn_promptToSkipData_t;
+    char text[40];
+    list_t* options;
+} dn_promptData_t;
 
 
 //==============================================================================
@@ -141,8 +143,10 @@ void dn_drawAsset(dn_entity_t* self);
 void dn_drawNothing(dn_entity_t* self);
 
 void dn_updateBoard(dn_entity_t* self);
+bool dn_belongsToP1(dn_entity_t* unit);
+bool dn_isTileSelectable(dn_entity_t* board, dn_boardPos_t pos);
 void dn_drawBoard(dn_entity_t* self);
-bool dn_isTileSelectabe(dn_entity_t* board, dn_boardPos_t pos);
+bool dn_availableMoves(dn_entity_t* unit, list_t* movesList);
 
 void dn_updateCurtain(dn_entity_t* self);
 void dn_drawCurtain(dn_entity_t* self);
@@ -166,8 +170,12 @@ void dn_drawTileSelectorFrontHalf(dn_entity_t* self, int16_t x, int16_t y);
 
 void dn_drawPlayerTurn(dn_entity_t* self);
 
-void dn_updatePromptToSkip(dn_entity_t* self);
-void dn_drawPromptToSkip(dn_entity_t* self);
+void dn_updatePrompt(dn_entity_t* self);
+void dn_drawPrompt(dn_entity_t* self);
+void dn_gainReroll(dn_entity_t* self);
+void dn_dismissReroll(dn_entity_t* self);
 
 void dn_drawPit(dn_entity_t* self);
 void dn_drawPitForeground(dn_entity_t* self);
+
+dn_boardPos_t dn_getUnitBoardPos(dn_entity_t* unit);

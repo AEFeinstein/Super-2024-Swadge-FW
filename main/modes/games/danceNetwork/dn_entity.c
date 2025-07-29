@@ -2,6 +2,7 @@
 #include "dn_utility.h"
 #include "dn_random.h"
 #include "shapes.h"
+#include <linked_list.h>
 
 void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType)
 {
@@ -101,7 +102,15 @@ void dn_updateBoard(dn_entity_t* self)
     }
 }
 
-bool dn_isTileSelectabe(dn_entity_t* board, dn_boardPos_t pos)
+
+bool dn_belongsToP1(dn_entity_t* unit)
+{
+    dn_boardData_t* bData = (dn_boardData_t*)unit->gameData->entityManager.board->data;
+    return (unit == bData->p1Units[0] || unit == bData->p1Units[1] || unit == bData->p1Units[2]
+                        || unit == bData->p1Units[3] || unit == bData->p1Units[4]);
+}
+
+bool dn_isTileSelectable(dn_entity_t* board, dn_boardPos_t pos)
 {
     dn_boardData_t* bData = (dn_boardData_t*)board->data;
     switch(board->gameData->phase)
@@ -112,12 +121,9 @@ bool dn_isTileSelectabe(dn_entity_t* board, dn_boardPos_t pos)
             if(bData->tiles[pos.y][pos.x].unit)
             {
                 dn_entity_t* unit = bData->tiles[pos.y][pos.x].unit;
-                if(unit == bData->p1Units[0] || unit == bData->p1Units[1] || unit == bData->p1Units[2]
-                        || unit == bData->p1Units[3] || unit == bData->p1Units[4])
-                {
-                    return true;
-                }
+                return dn_belongsToP1(unit);
             }
+            break;
         }
         default:
         {
@@ -141,7 +147,7 @@ void dn_drawBoard(dn_entity_t* self)
                         + (x + y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originY
                         - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
           
-            if(dn_isTileSelectabe(self,(dn_boardPos_t){.x = x, .y = y}))
+            if(dn_isTileSelectable(self,(dn_boardPos_t){.x = x, .y = y}))
             {
                 drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
                           drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
@@ -192,6 +198,39 @@ void dn_drawBoard(dn_entity_t* self)
     }
     // Uncomment to visualize center of screen.
     // drawCircleFilled(TFT_WIDTH >> 1, TFT_HEIGHT >> 1, 2, c000);
+}
+
+bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
+{
+    dn_entity_t* album = &unit->gameData->entityManager.albums[0];
+    if(!dn_belongsToP1(unit))
+    {
+        album = &unit->gameData->entityManager.albums[1];
+    }
+
+    dn_albumData_t* albumData = (dn_albumData_t*)album->data;
+    
+    for(paletteColor_t check = 255; check <= c322; check += 1)
+    {
+        if(albumData->screenOnPalette.newColors[check] != check)
+        {
+            //This is a track
+            vec_t* track = heap_caps_malloc(sizeof(vec_t), MALLOC_CAP_8BIT);
+            *track = dn_colorToTrackCoords(albumData->screenOnPalette.newColors[check]);
+            dn_boardPos_t unitPos = dn_getUnitBoardPos(unit);
+            if(unitPos.x + track->x >=0 && unitPos.x + track->x <= 4 && unitPos.y + track->y >= 0 && unitPos.y + track->y <= 4)
+            {
+                //It is in bounds
+                push(tracks, (void*)track);
+            }
+            else
+            {
+                //free track
+                free(track);
+            }
+        }
+    }
+    return tracks->first != NULL;
 }
 
 void dn_updateCurtain(dn_entity_t* self)
@@ -586,16 +625,72 @@ void dn_updateAlbum(dn_entity_t* self)
         {
             if(self == ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album)
             {
-                /////////////////////////////
-                // Make the prompt to skip //
-                /////////////////////////////
-                dn_entity_t* promptToSkip = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
-                promptToSkip->data         = heap_caps_calloc(1, sizeof(dn_promptToSkipData_t), MALLOC_CAP_SPIRAM);
-                ((dn_promptToSkipData_t*)promptToSkip->data)->animatingIntroSlide = true;
-                ((dn_promptToSkipData_t*)promptToSkip->data)->yOffset = 320;//way off screen to allow more time to look at albums.
-                promptToSkip->dataType     = DN_PROMPT_TO_SKIP_DATA;
-                promptToSkip->updateFunction = dn_updatePromptToSkip;
-                promptToSkip->drawFunction = dn_drawPromptToSkip;
+                //third album finished has finished the bootup animation
+                bool p1HasMoves = false;
+                for(int i = 0; i < 5; i++)
+                {
+                    list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+                    if(dn_availableMoves(((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[i], myList))
+                    {
+                        p1HasMoves = true;
+                        clear(myList);
+                        free(myList);
+                        break;
+                    }
+                    clear(myList);
+                    free(myList);
+                }
+                
+                if(p1HasMoves)
+                {
+                    /////////////////////////////
+                    // Make the prompt to skip //
+                    /////////////////////////////
+                    dn_entity_t* promptToSkip = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+                    promptToSkip->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+                    dn_promptData_t* promptData = (dn_promptData_t*)promptToSkip->data;
+                    promptData->animatingIntroSlide = true;
+                    promptData->yOffset = 320;//way off screen to allow more time to look at albums.
+                    strcpy(promptData->text, "Skip action to gain a reroll?");
+                    
+                    promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+                    
+                    dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+                    strcpy(option1->text, "yes");
+                    option1->callback = dn_gainReroll;
+                    push(promptData->options, (void*)option1);
+
+                    dn_promptOption_t* option2 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+                    strcpy(option2->text, "no");
+                    option2->callback = dn_dismissReroll;
+                    push(promptData->options, (void*)option2);
+                    
+                    promptToSkip->dataType     = DN_PROMPT_DATA;
+                    promptToSkip->updateFunction = dn_updatePrompt;
+                    promptToSkip->drawFunction = dn_drawPrompt;
+                }
+                else
+                {
+                    //////////////////////////////////
+                    // Make the prompt for no moves //
+                    //////////////////////////////////
+                    dn_entity_t* promptNoMoves = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+                    promptNoMoves->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+                    dn_promptData_t* promptData = (dn_promptData_t*)promptNoMoves->data;
+                    promptData->animatingIntroSlide = true;
+                    promptData->yOffset = 320;//way off screen to allow more time to look at albums.
+                    strcpy(promptData->text, "No useable tracks. Gain 1 reroll.");
+                    promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+                    
+                    dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+                    strcpy(option1->text, "OK");
+                    option1->callback = dn_dismissReroll;
+                    push(promptData->options, (void*)option1);
+                    
+                    promptNoMoves->dataType     = DN_PROMPT_DATA;
+                    promptNoMoves->updateFunction = dn_updatePrompt;
+                    promptNoMoves->drawFunction = dn_drawPrompt;
+                }
             }
             aData->screenIsOn = true;
             aData->cornerLightOn = true;
@@ -981,9 +1076,9 @@ void dn_drawPlayerTurn(dn_entity_t* self)
     drawRect(1,1,TFT_WIDTH-1,TFT_HEIGHT-1,col);
 }
 
-void dn_updatePromptToSkip(dn_entity_t* self)
+void dn_updatePrompt(dn_entity_t* self)
 {
-    dn_promptToSkipData_t* pData = (dn_promptToSkipData_t*)self->data;
+    dn_promptData_t* pData = (dn_promptData_t*)self->data;
     for(uint8_t i = 0; i < 2; i++)
     {
         pData->selectionAmounts[i] -= self->gameData->elapsedUs >> 6;
@@ -1028,79 +1123,149 @@ void dn_updatePromptToSkip(dn_entity_t* self)
             if(pData->selectionAmounts[pData->selectionIdx] >= 30000)
             {
                 pData->selectionAmounts[pData->selectionIdx] = 30000;
-                ///////////////////////////
-                // Make the tile selector//
-                ///////////////////////////
-                dn_entity_t* tileSelector = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
-                                                                0, self->gameData->camera.pos, self->gameData);
-                tileSelector->data        = heap_caps_calloc(1, sizeof(dn_tileSelectorData_t), MALLOC_CAP_SPIRAM);
-                tileSelector->dataType    = DN_TILE_SELECTOR_DATA;
-                tileSelector->drawFunction = dn_drawNothing;
-                dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)tileSelector->data;
-                for (int i = 0; i < NUM_SELECTOR_LINES; i++)
-                {
-                    tData->lineYs[i] = (255 * i) / NUM_SELECTOR_LINES;
-                }
-                tData->pos = (dn_boardPos_t){2, 2};
-                // fancy line colors
-                tData->colors[0]             = c125;
-                tData->colors[1]             = c345;
-                tData->colors[2]             = c555;
-                tileSelector->updateFunction = dn_updateTileSelector;
-                // Don't set the draw function, because it needs to happen in two parts behind and in front of units.
 
-                ((dn_boardData_t*)self->gameData->entityManager.board->data)->tiles[2][2].selector = tileSelector;
-                
-                // sort this out later.
-                self->gameData->phase = DN_P1_MOVE_PHASE;
-
-                // album light blinks
-                switch(self->gameData->phase)
+                node_t* node = pData->options->first;
+                for(int i = 0; i <= pData->selectionIdx; i++)
                 {
-                    case DN_P1_MOVE_PHASE:
-                    {
-                        ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album->data)->cornerLightBlinking = true;
-                        break;
-                    }    
-                    case DN_P2_MOVE_PHASE:
-                    {
-                        ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album->data)->cornerLightBlinking = true;
-                        break;
-                    }
-                    default:
-                    {
-                        break;
-                    }
+                    node = node->next;
                 }
+                ((dn_promptOption_t*)node->val)->callback(self);
 
                 self->destroyFlag = true;
             }
         }
     }
 }
-void dn_drawPromptToSkip(dn_entity_t* self)
+void dn_drawPrompt(dn_entity_t* self)
 {
-    dn_promptToSkipData_t* pData = (dn_promptToSkipData_t*)self->data;
+    dn_promptData_t* pData = (dn_promptData_t*)self->data;
+    //black banner
     drawRectFilled(0,pData->yOffset, TFT_WIDTH, pData->yOffset + 60, c000);
     int16_t xOff = 7;
     int16_t yOff = pData->yOffset + 11;
-    drawTextWordWrapCentered(&self->gameData->font_ibm, c345, "Skip action to gain a reroll?", &xOff, &yOff, TFT_WIDTH - 7, pData->yOffset + 30);
-    drawRectFilled(TFT_WIDTH / 4 - 25, pData->yOffset + 34, dn_lerp(TFT_WIDTH / 4 - 25, TFT_WIDTH / 4 + 25, dn_logRemap(pData->selectionAmounts[0])), pData->yOffset + 56, c022);
-    drawRect(TFT_WIDTH / 4 - 25, pData->yOffset + 34, TFT_WIDTH / 4 + 25, pData->yOffset + 56, pData->selectionIdx == 0 ? c345 : c222);
-    drawRectFilled(TFT_WIDTH * 3 / 4 - 25, pData->yOffset + 34, dn_lerp(TFT_WIDTH * 3 / 4 - 25, TFT_WIDTH * 3 / 4 + 25, dn_logRemap(pData->selectionAmounts[1])), pData->yOffset + 56, c022);
-    drawRect(TFT_WIDTH * 3 / 4 - 25, pData->yOffset + 34, TFT_WIDTH * 3 / 4 + 25, pData->yOffset + 56, pData->selectionIdx == 1 ? c345 : c222);
-    xOff = TFT_WIDTH / 4 - 25;
-    yOff = pData->yOffset + 39;
-    drawTextWordWrapCentered(&self->gameData->font_ibm, pData->selectionIdx == 0 ? c555 : c222, "NO", &xOff, &yOff, TFT_WIDTH / 4 + 25, pData->yOffset + 56);
-    xOff = TFT_WIDTH * 3 / 4 - 25;
-    drawTextWordWrapCentered(&self->gameData->font_ibm, pData->selectionIdx == 1 ? c555 : c222, "YES", &xOff, &yOff, TFT_WIDTH * 3 / 4 + 25, pData->yOffset + 56);
+    //prompt text
+    drawTextWordWrapCentered(&self->gameData->font_ibm, c345, pData->text, &xOff, &yOff, TFT_WIDTH - 7, pData->yOffset + 30);
+    
+    node_t* option = pData->options->first;
+    int xPos = (TFT_WIDTH / 2) / pData->options->length;
+    int separation = xPos * 2;
+    for(int i = 0; i < pData->options->length; i++)
+    {
+        xPos += separation * i;
+        //fill effect
+        drawRectFilled(xPos - 25, pData->yOffset + 34, dn_lerp(xPos - 25, xPos + 25, dn_logRemap(pData->selectionAmounts[0])), pData->yOffset + 56, c022);
+        //outline
+        drawRect(xPos - 25, pData->yOffset + 34, xPos + 25, pData->yOffset + 56, pData->selectionIdx == 0 ? c345 : c222);
+        xOff = xPos - 25;
+        yOff = pData->yOffset + 39;
+        //option text
+        drawTextWordWrapCentered(&self->gameData->font_ibm, pData->selectionIdx == 0 ? c555 : c222, ((dn_promptOption_t*)option->val)->text, &xOff, &yOff, xPos + 25, pData->yOffset + 56);
+        option = option->next;
+    }
 
+    //flashy arrows up and down
     if(pData->yOffset == 70 && !pData->playerHasSlidThis && (self->gameData->generalTimer % 256) > 128)
     {
         drawTriangleOutlined(TFT_WIDTH/2 - 6, pData->yOffset - 3, TFT_WIDTH/2, pData->yOffset - 13, TFT_WIDTH/2 + 6, pData->yOffset - 3, c345, c000);
         drawTriangleOutlined(TFT_WIDTH/2 - 6, pData->yOffset + 61, TFT_WIDTH/2, pData->yOffset + 71, TFT_WIDTH/2 + 6, pData->yOffset + 61, c345, c000);
         // Draw this because triangle function is bugged.
         drawLine(TFT_WIDTH/2 - 6, pData->yOffset + 61, TFT_WIDTH/2 + 6, pData->yOffset + 61, c000, 0);
+    }
+}
+
+void dn_gainReroll(dn_entity_t* self)
+{
+    ///////////////////////////
+    // Make the tile selector//
+    ///////////////////////////
+    dn_entity_t* tileSelector = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
+                                                    0, self->gameData->camera.pos, self->gameData);
+    tileSelector->data        = heap_caps_calloc(1, sizeof(dn_tileSelectorData_t), MALLOC_CAP_SPIRAM);
+    tileSelector->dataType    = DN_TILE_SELECTOR_DATA;
+    tileSelector->drawFunction = dn_drawNothing;
+    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)tileSelector->data;
+    for (int i = 0; i < NUM_SELECTOR_LINES; i++)
+    {
+        tData->lineYs[i] = (255 * i) / NUM_SELECTOR_LINES;
+    }
+    tData->pos = (dn_boardPos_t){2, 2};
+    // fancy line colors
+    tData->colors[0]             = c125;
+    tData->colors[1]             = c345;
+    tData->colors[2]             = c555;
+    tileSelector->updateFunction = dn_updateTileSelector;
+    // Don't set the draw function, because it needs to happen in two parts behind and in front of units.
+
+    ((dn_boardData_t*)self->gameData->entityManager.board->data)->tiles[2][2].selector = tileSelector;
+    
+    // sort this out later.
+    self->gameData->phase = DN_P1_MOVE_PHASE;
+
+    // album light blinks
+    switch(self->gameData->phase)
+    {
+        case DN_P1_MOVE_PHASE:
+        {
+            ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album->data)->cornerLightBlinking = true;
+            break;
+        }    
+        case DN_P2_MOVE_PHASE:
+        {
+            ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album->data)->cornerLightBlinking = true;
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+}
+
+void dn_dismissReroll(dn_entity_t* self)
+{
+    ///////////////////////////
+    // Make the tile selector//
+    ///////////////////////////
+    dn_entity_t* tileSelector = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
+                                                    0, self->gameData->camera.pos, self->gameData);
+    tileSelector->data        = heap_caps_calloc(1, sizeof(dn_tileSelectorData_t), MALLOC_CAP_SPIRAM);
+    tileSelector->dataType    = DN_TILE_SELECTOR_DATA;
+    tileSelector->drawFunction = dn_drawNothing;
+    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)tileSelector->data;
+    for (int i = 0; i < NUM_SELECTOR_LINES; i++)
+    {
+        tData->lineYs[i] = (255 * i) / NUM_SELECTOR_LINES;
+    }
+    tData->pos = (dn_boardPos_t){2, 2};
+    // fancy line colors
+    tData->colors[0]             = c125;
+    tData->colors[1]             = c345;
+    tData->colors[2]             = c555;
+    tileSelector->updateFunction = dn_updateTileSelector;
+    // Don't set the draw function, because it needs to happen in two parts behind and in front of units.
+
+    ((dn_boardData_t*)self->gameData->entityManager.board->data)->tiles[2][2].selector = tileSelector;
+    
+    // sort this out later.
+    self->gameData->phase = DN_P1_MOVE_PHASE;
+
+    // album light blinks
+    switch(self->gameData->phase)
+    {
+        case DN_P1_MOVE_PHASE:
+        {
+            ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album->data)->cornerLightBlinking = true;
+            break;
+        }    
+        case DN_P2_MOVE_PHASE:
+        {
+            ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album->data)->cornerLightBlinking = true;
+            break;
+        }
+        default:
+        {
+            break;
+        }
     }
 }
 
@@ -1145,4 +1310,25 @@ void dn_drawPitForeground(dn_entity_t* self)
         ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) + 124,
         ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 117,
         c323);
+}
+
+// Helper function to get the board position of a unit
+// Returns {-1, -1} if not found or invalid input
+dn_boardPos_t dn_getUnitBoardPos(dn_entity_t* unit)
+{
+    dn_boardPos_t foundPos = { -1, -1 };
+    dn_boardData_t* boardData = (dn_boardData_t*)unit->gameData->entityManager.board->data;
+    for (int y = 0; y < DN_BOARD_SIZE; y++)
+    {
+        for (int x = 0; x < DN_BOARD_SIZE; x++)
+        {
+            if (boardData->tiles[y][x].unit == unit)
+            {
+                foundPos.x = x;
+                foundPos.y = y;
+                return foundPos;
+            }
+        }
+    }
+    return foundPos;
 }

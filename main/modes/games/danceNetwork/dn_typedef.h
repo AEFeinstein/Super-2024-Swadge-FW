@@ -15,6 +15,8 @@
 typedef struct dn_entity_t dn_entity_t;
 typedef struct dn_gameData_t dn_gameData_t;
 
+typedef void (*dn_callbackFunction_t)(dn_entity_t* self);
+
 typedef enum __attribute__((packed))
 {
     DN_ALPHA_DOWN_ASSET,
