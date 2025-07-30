@@ -96,3 +96,5 @@ tools/cnfs/cnfs_gen
 
 _old/*
 bigbug-mem.csv
+
+args_*.txt
