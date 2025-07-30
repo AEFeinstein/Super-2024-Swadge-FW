@@ -119,6 +119,7 @@ typedef struct
 {
     char text[5];
     dn_callbackFunction_t callback;
+    int16_t selectionAmount;
 } dn_promptOption_t;
 
 typedef struct
@@ -126,7 +127,6 @@ typedef struct
     bool animatingIntroSlide;
     int16_t yOffset;
     uint8_t selectionIdx;
-    int16_t selectionAmounts[2];
     bool playerHasSlidThis;
     char text[40];
     list_t* options;

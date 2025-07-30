@@ -210,7 +210,7 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
 
     dn_albumData_t* albumData = (dn_albumData_t*)album->data;
     
-    for(paletteColor_t check = 255; check <= c322; check += 1)
+    for(paletteColor_t check = c255; check <= c322; check += 1)
     {
         if(albumData->screenOnPalette.newColors[check] != check)
         {
@@ -1079,13 +1079,16 @@ void dn_drawPlayerTurn(dn_entity_t* self)
 void dn_updatePrompt(dn_entity_t* self)
 {
     dn_promptData_t* pData = (dn_promptData_t*)self->data;
-    for(uint8_t i = 0; i < 2; i++)
+    node_t* cur = pData->options->first;
+    while(cur != NULL)
     {
-        pData->selectionAmounts[i] -= self->gameData->elapsedUs >> 6;
-        if(pData->selectionAmounts[i] < 0)
+        dn_promptOption_t* option = (dn_promptOption_t*)cur->val;
+        option->selectionAmount -= self->gameData->elapsedUs >> 6;
+        if(option->selectionAmount < 0)
         {
-            pData->selectionAmounts[i] = 0;
+            option->selectionAmount = 0;
         }
+        cur = cur->next;
     }
     if(pData->animatingIntroSlide)
     {
@@ -1119,17 +1122,20 @@ void dn_updatePrompt(dn_entity_t* self)
         }
         if(self->gameData->btnState & PB_A)
         {
-            pData->selectionAmounts[pData->selectionIdx] += self->gameData->elapsedUs >> 5;
-            if(pData->selectionAmounts[pData->selectionIdx] >= 30000)
+            cur = pData->options->first;
+            for(int i = 1; i <= pData->selectionIdx; i++)
             {
-                pData->selectionAmounts[pData->selectionIdx] = 30000;
+                cur = cur->next;
+            }
+            dn_promptOption_t* option = (dn_promptOption_t*)cur->val;
+            option->selectionAmount += self->gameData->elapsedUs >> 5;
+            if(option->selectionAmount >= 30000)
+            {
+                option->selectionAmount = 30000;
+                option->callback(self);
 
-                node_t* node = pData->options->first;
-                for(int i = 0; i <= pData->selectionIdx; i++)
-                {
-                    node = node->next;
-                }
-                ((dn_promptOption_t*)node->val)->callback(self);
+                clear(pData->options);
+                free(pData->options);
 
                 self->destroyFlag = true;
             }
@@ -1151,15 +1157,16 @@ void dn_drawPrompt(dn_entity_t* self)
     int separation = xPos * 2;
     for(int i = 0; i < pData->options->length; i++)
     {
+        dn_promptOption_t* optionVal = (dn_promptOption_t*)option->val;
         xPos += separation * i;
         //fill effect
-        drawRectFilled(xPos - 25, pData->yOffset + 34, dn_lerp(xPos - 25, xPos + 25, dn_logRemap(pData->selectionAmounts[0])), pData->yOffset + 56, c022);
+        drawRectFilled(xPos - 25, pData->yOffset + 34, dn_lerp(xPos - 25, xPos + 25, dn_logRemap(optionVal->selectionAmount)), pData->yOffset + 56, c022);
         //outline
-        drawRect(xPos - 25, pData->yOffset + 34, xPos + 25, pData->yOffset + 56, pData->selectionIdx == 0 ? c345 : c222);
+        drawRect(xPos - 25, pData->yOffset + 34, xPos + 25, pData->yOffset + 56, pData->selectionIdx == i ? c345 : c222);
         xOff = xPos - 25;
         yOff = pData->yOffset + 39;
         //option text
-        drawTextWordWrapCentered(&self->gameData->font_ibm, pData->selectionIdx == 0 ? c555 : c222, ((dn_promptOption_t*)option->val)->text, &xOff, &yOff, xPos + 25, pData->yOffset + 56);
+        drawTextWordWrapCentered(&self->gameData->font_ibm, pData->selectionIdx == i ? c555 : c222, optionVal->text, &xOff, &yOff, xPos + 25, pData->yOffset + 56);
         option = option->next;
     }
 
