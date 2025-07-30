@@ -59,7 +59,9 @@ typedef struct
     int16_t yVel;
     dn_entity_t* unit;     // Pointer to the unit on this tile. NULL if no unit is present.
     dn_entity_t* selector; // Pointer to the tile selector. NULL if no selector is present.
+    bool isSelectable;
 } dn_tileData_t;
+
 
 typedef struct
 {
@@ -144,9 +146,9 @@ void dn_drawNothing(dn_entity_t* self);
 
 void dn_updateBoard(dn_entity_t* self);
 bool dn_belongsToP1(dn_entity_t* unit);
-bool dn_isTileSelectable(dn_entity_t* board, dn_boardPos_t pos);
 void dn_drawBoard(dn_entity_t* self);
 bool dn_availableMoves(dn_entity_t* unit, list_t* movesList);
+bool dn_calculateMoveableUnits(dn_entity_t* board);
 
 void dn_updateCurtain(dn_entity_t* self);
 void dn_drawCurtain(dn_entity_t* self);

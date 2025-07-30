@@ -110,29 +110,6 @@ bool dn_belongsToP1(dn_entity_t* unit)
                         || unit == bData->p1Units[3] || unit == bData->p1Units[4]);
 }
 
-bool dn_isTileSelectable(dn_entity_t* board, dn_boardPos_t pos)
-{
-    dn_boardData_t* bData = (dn_boardData_t*)board->data;
-    switch(board->gameData->phase)
-    {
-        case DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE:
-        case DN_P1_MOVE_PHASE:
-        {
-            if(bData->tiles[pos.y][pos.x].unit)
-            {
-                dn_entity_t* unit = bData->tiles[pos.y][pos.x].unit;
-                return dn_belongsToP1(unit);
-            }
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }
-    return false;
-}
-
 void dn_drawBoard(dn_entity_t* self)
 {
     dn_boardData_t* boardData = (dn_boardData_t*)self->data;
@@ -146,8 +123,8 @@ void dn_drawBoard(dn_entity_t* self)
             int drawY = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                         + (x + y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originY
                         - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
-          
-            if(dn_isTileSelectable(self,(dn_boardPos_t){.x = x, .y = y}))
+
+            if(boardData->tiles[y][x].isSelectable)
             {
                 drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
                           drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
@@ -221,10 +198,36 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
             vec_t* track = heap_caps_malloc(sizeof(vec_t), MALLOC_CAP_8BIT);
             *track = dn_colorToTrackCoords(check);
             dn_boardPos_t unitPos = dn_getUnitBoardPos(unit);
-            if(unitPos.x + (1 - 2 * isP1) * track->x >=0 && unitPos.x + (1 - 2 * isP1) * track->x <= 4 && unitPos.y + (1 - 2 * isP1) * track->y >= 0 && unitPos.y + (1 - 2 * isP1) * track->y <= 4)
+            dn_boardPos_t trackPos = (dn_boardPos_t){.x = unitPos.x + (1 - 2 * !isP1) * track->x, unitPos.y + (1 - 2 * isP1) * track->y};
+            if(trackPos.x >=0 && trackPos.x <= 4 && trackPos.y >= 0 && trackPos.y <= 4)
             {
                 //It is in bounds
-                push(tracks, (void*)track);
+                dn_entity_t* unitAtTrack = ((dn_boardData_t*)unit->gameData->entityManager.board->data)->tiles[trackPos.y][trackPos.x].unit;
+                switch(albumData->screenOnPalette.newColors[check])
+                {
+                    case c510: //ranged attack
+                    {
+                        //You can shoot an empty tile OR an enemy unit.
+                        if(unitAtTrack == NULL || (isP1 && !dn_belongsToP1(unitAtTrack)) || (!isP1 && dn_belongsToP1(unitAtTrack)))
+                        {
+                            push(tracks, (void*)track);
+                        }
+                        break;
+                    }
+                    case c105: //movement
+                    {
+                        //You can move to an empty tile
+                        if(unitAtTrack == NULL)
+                        {
+                            push(tracks, (void*)track);
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
             }
             else
             {
@@ -234,6 +237,40 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
         }
     }
     return tracks->first != NULL;
+}
+
+bool dn_calculateMoveableUnits(dn_entity_t* board)
+{
+    dn_boardData_t* boardData = (dn_boardData_t*)board->data;
+    dn_entity_t** playerUnits = NULL;
+    switch(board->gameData->phase)
+    {
+        case DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE:
+            playerUnits = boardData->p1Units;
+            break;
+        case DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE:
+            playerUnits = boardData->p2Units;
+            break;
+        default:
+            return false; // Not in a phase where units can be moved
+    }
+
+    bool playerHasMoves = false;
+
+    for(int i = 0; i < 5; i++)
+    {
+        list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+        if(dn_availableMoves(playerUnits[i], myList))
+        {
+            playerHasMoves = true;
+            dn_boardPos_t pos = dn_getUnitBoardPos(playerUnits[i]);
+            boardData->tiles[pos.y][pos.x].isSelectable = true;
+        }
+        clear(myList);
+        free(myList);
+    }
+
+    return playerHasMoves;
 }
 
 void dn_updateCurtain(dn_entity_t* self)
@@ -644,7 +681,11 @@ void dn_updateAlbum(dn_entity_t* self)
                     free(myList);
                 }
                 
-                if(p1HasMoves)
+                self->gameData->phase = DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE;
+                // album light blinks
+                ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album->data)->cornerLightBlinking = true;
+
+                if(dn_calculateMoveableUnits(self->gameData->entityManager.board))
                 {
                     /////////////////////////////
                     // Make the prompt to skip //
@@ -1210,25 +1251,6 @@ void dn_gainReroll(dn_entity_t* self)
     
     // sort this out later.
     self->gameData->phase = DN_P1_MOVE_PHASE;
-
-    // album light blinks
-    switch(self->gameData->phase)
-    {
-        case DN_P1_MOVE_PHASE:
-        {
-            ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album->data)->cornerLightBlinking = true;
-            break;
-        }    
-        case DN_P2_MOVE_PHASE:
-        {
-            ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album->data)->cornerLightBlinking = true;
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }
 }
 
 void dn_dismissReroll(dn_entity_t* self)
