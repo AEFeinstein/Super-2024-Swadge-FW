@@ -5,6 +5,7 @@
 #include "artillery.h"
 #include "artillery_game.h"
 #include "artillery_phys_objs.h"
+#include "artillery_p2p.h"
 
 //==============================================================================
 // Function Declarations
@@ -19,12 +20,6 @@ void artilleryEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status
 
 bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value);
 bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value);
-
-void artilleryInitGame(void);
-
-void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt);
-void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
-void artillery_p2pMsgTxCb(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 
 //==============================================================================
 // Const Variables
@@ -117,12 +112,6 @@ static const char str_help[]            = "Help!";
 
 static const char modeName[] = "Vector Tanks";
 
-const char str_conStarted[]     = "Connection Started";
-const char str_conRxAck[]       = "Rx Game Start Ack";
-const char str_conRxMsg[]       = "Rx Game Start Msg";
-const char str_conEstablished[] = "Connection Established";
-const char str_conLost[]        = "Connection Lost";
-
 //==============================================================================
 // Variables
 //==============================================================================
@@ -209,6 +198,10 @@ void artilleryExitMode(void)
     deinitPhys(ad->phys);
     deinitMenuSimpleRenderer(ad->smRenderer);
     p2pDeinit(&ad->p2p);
+    while (ad->p2pQueue.first)
+    {
+        heap_caps_free(pop(&ad->p2pQueue));
+    }
     heap_caps_free(ad);
 }
 
@@ -273,6 +266,7 @@ void artilleryMainLoop(int64_t elapsedUs)
         case AMS_GAME:
         {
             artilleryGameLoop(ad, elapsedUs);
+            artilleryCheckTxQueue(ad);
             break;
         }
         case AMS_HELP:
@@ -462,65 +456,11 @@ void artilleryInitGame(void)
 }
 
 /**
- * @brief This typedef is for the function callback which delivers connection statuses to the Swadge mode
+ * @brief TODO doc
  *
- * @param p2p The p2pInfo
- * @param evt The connection event
+ * @return artilleryData_t*
  */
-void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
+artilleryData_t* getArtilleryData(void)
 {
-    // TODO select connection text
-    switch (evt)
-    {
-        case CON_STARTED:
-        {
-            ad->conStr = str_conStarted;
-            break;
-        }
-        case RX_GAME_START_ACK:
-        {
-            ad->conStr = str_conRxAck;
-            break;
-        }
-        case RX_GAME_START_MSG:
-        {
-            ad->conStr = str_conRxMsg;
-            break;
-        }
-        case CON_ESTABLISHED:
-        {
-            ad->conStr = str_conEstablished;
-            break;
-        }
-        case CON_LOST:
-        default:
-        {
-            ad->conStr = str_conLost;
-            break;
-        }
-    }
-}
-
-/**
- * @brief This typedef is for the function callback which delivers received p2p packets to the Swadge mode
- *
- * @param p2p The p2pInfo
- * @param payload The data that was received
- * @param len The length of the data that was received
- */
-void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
-{
-}
-
-/**
- * @brief This typedef is for the function callback which delivers acknowledge status for transmitted messages to the
- * Swadge mode
- *
- * @param p2p The p2pInfo
- * @param status The status of the transmission
- * @param data The data that was transmitted
- * @param len The length of the data that was transmitted
- */
-void artillery_p2pMsgTxCb(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
-{
+    return ad;
 }

@@ -67,9 +67,12 @@ typedef struct
     // Everything required for wireless communication
     p2pInfo p2p;
     const char* conStr;
+    list_t p2pQueue;
 } artilleryData_t;
 
 extern const char load_ammo[];
 extern swadgeMode_t artilleryMode;
 
 void setDriveInMenu(bool visible);
+artilleryData_t* getArtilleryData(void);
+void artilleryInitGame(void);

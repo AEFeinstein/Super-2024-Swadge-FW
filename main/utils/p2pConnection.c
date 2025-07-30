@@ -903,3 +903,15 @@ void p2pSetPlayOrder(p2pInfo* p2p, playOrder_t order)
 {
     p2p->cnc.playOrder = order;
 }
+
+/**
+ * @brief Return if a transmission is idle, or in progress
+ *
+ * @param p2p The p2pInfo struct with all the state information
+ * @return true if a transmission is idle and ready to send a new packet.
+ *         false if transmission is in progress or not connected at all.
+ */
+bool p2pIsTxIdle(p2pInfo* p2p)
+{
+    return p2p->cnc.isConnected && !p2p->ack.isWaitingForAck;
+}
