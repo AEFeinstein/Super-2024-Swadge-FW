@@ -589,7 +589,7 @@ static void dn_initializeGame(void)
     dn_entity_t* album2 = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
                                                 (vec_t){0xFFFF + 1280, 0xFFFF - (139 << DN_DECIMAL_BITS)}, gameData);
 
-    dn_addTrackToAlbum(album1, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120)),
+    dn_addTrackToAlbum(album1, dn_colorToTrackCoords(c315),//(paletteColor_t)dn_randomInt(107, 120)),
                        (dn_track_t)dn_randomInt(1, 2));
     dn_addTrackToAlbum(ccAlbum, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120)),
                        (dn_track_t)dn_randomInt(1, 2));
@@ -603,7 +603,7 @@ static void dn_initializeGame(void)
     // p2's album is upside down
     ((dn_albumData_t*)album2->data)->rot     = 180;
     ((dn_albumData_t*)album2->data)->destRot = 180;
-
+    
     ((dn_albumsData_t*)gameData->entityManager.albums->data)->p1Album = album1;
     ((dn_albumsData_t*)gameData->entityManager.albums->data)->creativeCommonsAlbum = ccAlbum;
     ((dn_albumsData_t*)gameData->entityManager.albums->data)->p2Album = album2;

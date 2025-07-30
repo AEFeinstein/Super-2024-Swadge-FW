@@ -202,23 +202,26 @@ void dn_drawBoard(dn_entity_t* self)
 
 bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
 {
-    dn_entity_t* album = &unit->gameData->entityManager.albums[0];
-    if(!dn_belongsToP1(unit))
+    dn_entity_t* album = (dn_entity_t*)((dn_albumsData_t*)unit->gameData->entityManager.albums->data)->p1Album;
+
+    bool isP1 = dn_belongsToP1(unit);
+
+    if(!isP1)
     {
-        album = &unit->gameData->entityManager.albums[1];
+        album = (dn_entity_t*)((dn_albumsData_t*)unit->gameData->entityManager.albums->data)->p2Album;
     }
 
     dn_albumData_t* albumData = (dn_albumData_t*)album->data;
     
     for(paletteColor_t check = c255; check <= c322; check += 1)
     {
-        if(albumData->screenOnPalette.newColors[check] != check)
+        if(albumData->screenOnPalette.newColors[check] != c555)//c555 is no action
         {
             //This is a track
             vec_t* track = heap_caps_malloc(sizeof(vec_t), MALLOC_CAP_8BIT);
-            *track = dn_colorToTrackCoords(albumData->screenOnPalette.newColors[check]);
+            *track = dn_colorToTrackCoords(check);
             dn_boardPos_t unitPos = dn_getUnitBoardPos(unit);
-            if(unitPos.x + track->x >=0 && unitPos.x + track->x <= 4 && unitPos.y + track->y >= 0 && unitPos.y + track->y <= 4)
+            if(unitPos.x + (1 - 2 * isP1) * track->x >=0 && unitPos.x + (1 - 2 * isP1) * track->x <= 4 && unitPos.y + (1 - 2 * isP1) * track->y >= 0 && unitPos.y + (1 - 2 * isP1) * track->y <= 4)
             {
                 //It is in bounds
                 push(tracks, (void*)track);
