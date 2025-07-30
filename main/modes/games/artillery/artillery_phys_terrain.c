@@ -160,7 +160,7 @@ void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player)
     }
 
     // The flat height is the average of the start and end
-    float flatHeight = (y1 + y2) / 2;
+    float flatHeight = (int32_t)(((y1 + y2) / 2) + 0.5f);
 
     // Flatten nodes
     isUnderPlayer = false;
@@ -292,12 +292,12 @@ static float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float ex
         if (p->y < expTop)
         {
             // Explosion entirely underground, add full explosion size
-            return p->y + (2 * ySz);
+            return (int32_t)(p->y + (2 * ySz) + 0.5f);
         }
         else if (p->y <= expBottom)
         {
             // Point somewhere in explosion, adjust terrain to point
-            return expBottom;
+            return (int32_t)(expBottom + 0.5f);
         }
     }
     // Explosion doesn't affect point
