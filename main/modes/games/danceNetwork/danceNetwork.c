@@ -167,6 +167,9 @@ static void dn_EnterMode(void)
     gameData->assets[DN_PIT_ASSET].originX = 126;
     gameData->assets[DN_PIT_ASSET].originY = 0;
 
+    gameData->assets[DN_MINI_TILE_ASSET].originX = 10;
+    gameData->assets[DN_MINI_TILE_ASSET].originY = 7;
+
     // Allocate WSG loading helpers
     dn_hsd = heatshrink_decoder_alloc(256, 8, 4);
     // The largest image is bb_menu2.png, decodes to 99124 bytes
@@ -555,6 +558,8 @@ static void dn_initializeGame(void)
     dn_loadAsset(DN_SPEAKER_STAND_WSG, 1, &gameData->assets[DN_SPEAKER_STAND_ASSET]);
 
     dn_loadAsset(DN_PIT_WSG, 1, &gameData->assets[DN_PIT_ASSET]);
+
+    dn_loadAsset(DN_MINI_TILE_WSG, 1, &gameData->assets[DN_MINI_TILE_ASSET]);
 
 
     //////////////////

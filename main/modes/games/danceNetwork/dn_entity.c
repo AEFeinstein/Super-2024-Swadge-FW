@@ -141,6 +141,10 @@ void dn_drawBoard(dn_entity_t* self)
                           drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
                           drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
             }
+            // Draw the mini board
+            drawWsgSimple(&self->gameData->assets[DN_MINI_TILE_ASSET].frames[0],
+                          drawX - self->gameData->assets[DN_MINI_TILE_ASSET].originX,
+                          drawY - self->gameData->assets[DN_MINI_TILE_ASSET].originY);
             if (boardData->tiles[y][x].selector != NULL)
             {
                 // Draw the back part of the selector
@@ -666,20 +670,6 @@ void dn_updateAlbum(dn_entity_t* self)
             if(self == ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album)
             {
                 //third album finished has finished the bootup animation
-                bool p1HasMoves = false;
-                for(int i = 0; i < 5; i++)
-                {
-                    list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-                    if(dn_availableMoves(((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[i], myList))
-                    {
-                        p1HasMoves = true;
-                        clear(myList);
-                        free(myList);
-                        break;
-                    }
-                    clear(myList);
-                    free(myList);
-                }
                 
                 self->gameData->phase = DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE;
                 // album light blinks
