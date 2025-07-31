@@ -40,6 +40,9 @@
 *.x86_64
 *.hex
 
+# cfun intermediates
+*.cfun.lst
+
 # Debug files
 *.dSYM/
 *.su

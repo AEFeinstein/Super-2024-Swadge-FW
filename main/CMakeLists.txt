@@ -74,6 +74,7 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                             "modes/test/touchTest/touchTest.c"
                             "modes/test/trophyTest/trophyTest.c"
                             "modes/utilities/bouncy/bouncy.c"
+                            "modes/utilities/ch32v003test/mode_ch32v003test.c"
                             "modes/utilities/dance/dance.c"
                             "modes/utilities/dance/portableDance.c"
                             "modes/utilities/dice/mode_diceroller.c"
@@ -106,6 +107,7 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                     PRIV_REQUIRES hdw-imu
                                   hdw-battmon
                                   hdw-btn
+                                  hdw-ch32v003
                                   hdw-dac
                                   hdw-esp-now
                                   hdw-led
@@ -155,6 +157,7 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                                 "./modes/utilities"
                                 "./modes/utilities/bouncy"
                                 "./modes/utilities/dance"
+                                "./modes/utilities/ch32v003test"
                                 "./modes/utilities/dice"
                                 "./modes/utilities/gamepad"
                                 "./utils"

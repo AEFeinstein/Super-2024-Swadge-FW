@@ -72,7 +72,7 @@ SOURCES   = $(sort $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC
 SOURCES   := $(filter-out main/utils/cnfs.c, $(SOURCES))
 
 # The emulator doesn't build components, but there is a target for formatting them
-ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]")
+ALL_FILES = $(shell $(FIND) components assets $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]" -or -iname "*.cfun")
 
 SUBMODULES = $(shell git config --file .gitmodules --name-only --get-regexp path | sed -nr 's/submodule.(.*).path/\1/p')
 
@@ -158,7 +158,6 @@ CFLAGS_WARNINGS_EXTRA = \
 	-Wunused-local-typedefs \
 	-Wuninitialized \
 	-Wshadow \
-	-Wredundant-decls \
 	-Wswitch \
 	-Wcast-align \
 	-Wformat-nonliteral \
@@ -174,6 +173,7 @@ CFLAGS_WARNINGS_EXTRA = \
 #	-Wpedantic \
 #	-Wconversion \
 #	-Wsign-conversion \
+#	-Wredundant-decls \
 #	-Wdouble-promotion
 
 ifneq ($(HOST_OS),Darwin)
