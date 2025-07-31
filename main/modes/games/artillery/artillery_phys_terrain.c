@@ -47,7 +47,7 @@ void physGenerateTerrain(physSim_t* phys)
     push(&heights, (void*)((intptr_t)phys->groundLevel));
 
     // For some number of iterations, divide each terrain segment into two and add randomness to the midpoint
-    int32_t numIterations = 7;
+    int32_t numIterations = TERRAIN_ITERATIONS;
     int32_t randBound     = (1 << (numIterations + 1));
     while (numIterations--)
     {
