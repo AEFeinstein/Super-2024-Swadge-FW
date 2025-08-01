@@ -126,7 +126,7 @@ void dn_drawBoard(dn_entity_t* self)
             int miniDrawX = -85
                         + ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
                         + (x - y) * self->gameData->assets[DN_MINI_TILE_ASSET].originX - 1;
-            int miniDrawY = -230
+            int miniDrawY = -233
                         + ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                         + (x + y) * self->gameData->assets[DN_MINI_TILE_ASSET].originY
                         - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
@@ -1421,7 +1421,7 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
         }
     }
 
-    if(self->gameData->camera.pos.y > (self->pos.y - (34 << DN_DECIMAL_BITS)))
+    if(self->gameData->camera.pos.y > (self->pos.y - (26 << DN_DECIMAL_BITS)))
     {
         self->gameData->camera.pos.y -= self->gameData->elapsedUs >> 8;
     }
@@ -1457,7 +1457,7 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
         //option 1
         drawRect(x + 2, y + 3 + 31*option, x + 144, y + 32 + 31*option, c434);
         drawRect(x + 143, y + 3 + 31*option, x + 164, y + 32 + 31*option, c434);
-        drawRectFilled(x + 144, y + 31 + 31 * option - dn_lerp(0,27,dn_logRemap(umData->options[option].selectionAmount)), x + 163, y + 31 + 31 * option, c430);
+        drawRectFilled(x + 144, y + 31 + 31 * option - dn_lerp(0,27,dn_logRemap(umData->options[option].selectionAmount)), x + 163, y + 31 + 31 * option, c554);
         if(umData->selectionIdx == option)
         {
             drawWsgPaletteSimple(&self->gameData->assets[DN_REROLL_ASSET].frames[0], x + 144, y + 4 + 31 * option,

@@ -26,7 +26,12 @@ void dn_initializeEntityManager(dn_entityManager_t* entityManager, dn_gameData_t
     wsgPaletteReset(&entityManager->palettes[DN_PIT_WALL_PALETTE]);
     wsgPaletteSet(&entityManager->palettes[DN_PIT_WALL_PALETTE], c212, c100);
     wsgPaletteReset(&entityManager->palettes[DN_REROLL_PALETTE]);
-    wsgPaletteSet(&entityManager->palettes[DN_REROLL_PALETTE], c123, c345);
+    wsgPaletteSet(&entityManager->palettes[DN_REROLL_PALETTE], c123, c345);//reroll arrow
+    wsgPaletteSet(&entityManager->palettes[DN_REROLL_PALETTE], c444, c555);//top face
+    wsgPaletteSet(&entityManager->palettes[DN_REROLL_PALETTE], c222, c333);//side face
+    wsgPaletteSet(&entityManager->palettes[DN_REROLL_PALETTE], c100, c200);//reds
+    wsgPaletteSet(&entityManager->palettes[DN_REROLL_PALETTE], c200, c300);
+    wsgPaletteSet(&entityManager->palettes[DN_REROLL_PALETTE], c300, c500);
 
     dn_setCharacterSetPalette(&gameData->entityManager, gameData->characterSets[0]);
 }
