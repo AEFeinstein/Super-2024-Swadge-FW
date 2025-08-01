@@ -123,10 +123,10 @@ void dn_drawBoard(dn_entity_t* self)
             int drawY = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                         + (x + y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originY
                         - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
-            int miniDrawX = -70
+            int miniDrawX = -85
                         + ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
                         + (x - y) * self->gameData->assets[DN_MINI_TILE_ASSET].originX - 1;
-            int miniDrawY = -290
+            int miniDrawY = -230
                         + ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                         + (x + y) * self->gameData->assets[DN_MINI_TILE_ASSET].originY
                         - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
@@ -1256,7 +1256,7 @@ void dn_acceptRerollAndSkip(dn_entity_t* self)
     // Make the upgrade menu//
     //////////////////////////
     dn_entity_t* upgradeMenu = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
-                                                    0, addVec2d(self->gameData->camera.pos, (vec_t){(100 << DN_DECIMAL_BITS), -(200 << DN_DECIMAL_BITS)}), self->gameData);
+                                                    0, addVec2d(self->gameData->camera.pos, (vec_t){(107 << DN_DECIMAL_BITS), -(140 << DN_DECIMAL_BITS)}), self->gameData);
     upgradeMenu->data        = heap_caps_calloc(1, sizeof(dn_upgradeMenuData_t), MALLOC_CAP_SPIRAM);
     upgradeMenu->dataType    = DN_UPGRADE_MENU_DATA;
     upgradeMenu->updateFunction = dn_updateUpgradeMenu;
@@ -1389,6 +1389,15 @@ dn_boardPos_t dn_getUnitBoardPos(dn_entity_t* unit)
 void dn_updateUpgradeMenu(dn_entity_t* self)
 {
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
+    for(uint8_t option = 0; option < 3; option++)
+    {
+        umData->options[option].selectionAmount -= self->gameData->elapsedUs >> 6;
+        if(umData->options[option].selectionAmount < 0)
+        {
+            umData->options[option].selectionAmount = 0;
+        }
+    }
+    
     if (self->gameData->btnDownState & PB_UP)
     {
         umData->selectionIdx--;
@@ -1399,7 +1408,20 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
     }
     umData->selectionIdx = CLAMP(umData->selectionIdx, 0, 2);
 
-    if(self->gameData->camera.pos.y > (self->pos.y - (30 << DN_DECIMAL_BITS)))
+    if(self->gameData->btnState & PB_A)
+    {
+        umData->options[umData->selectionIdx].selectionAmount += self->gameData->elapsedUs >> 5;
+        if(umData->options[umData->selectionIdx].selectionAmount >= 30000)
+        {
+            umData->options[umData->selectionIdx].selectionAmount = 30000;
+            if(umData->options[umData->selectionIdx].callback)
+            {
+                umData->options[umData->selectionIdx].callback(self);
+            }
+        }
+    }
+
+    if(self->gameData->camera.pos.y > (self->pos.y - (34 << DN_DECIMAL_BITS)))
     {
         self->gameData->camera.pos.y -= self->gameData->elapsedUs >> 8;
     }
@@ -1414,26 +1436,51 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
     
     //corner brackets
     //top left
-    drawLineFast(x, y, x + 5, y, c145);
-    drawLineFast(x, y, x, y + 5, c145);
+    drawLineFast(x, y, x + 5, y, c555);
+    drawLineFast(x, y, x, y + 5, c555);
     //top right
-    drawLineFast(x + 90, y, x + 95, y, c145);
-    drawLineFast(x + 95, y, x + 95, y + 5, c145);
+    drawLineFast(x + 160, y, x + 165, y, c555);
+    drawLineFast(x + 165, y, x + 165, y + 5, c555);
     //bottom left
-    drawLineFast(x, y + 60, x + 5, y + 60, c145);
-    drawLineFast(x, y + 55, x, y + 60, c145);
+    drawLineFast(x, y + 97, x + 5, y + 97, c555);
+    drawLineFast(x, y + 92, x, y + 97, c555);
     //bottom right
-    drawLineFast(x + 90, y + 60, x + 95, y + 60, c145);
-    drawLineFast(x + 95, y + 55, x + 95, y + 60, c145);
+    drawLineFast(x + 160, y + 97, x + 165, y + 97, c555);
+    drawLineFast(x + 165, y + 92, x + 165, y + 97, c555);
     //vertical left line
-    drawLineFast(x, y + 9, x, y + 51, c123);
+    drawLineFast(x, y + 9, x, y + 88, c555);
     //vertical right line
-    drawLineFast(x + 95, y + 9, x + 95, y + 51, c123);
-    
-    //option 1
-    drawRect(x + 2, y + 2, x + 93, y + 17, c123);
-    //option 2
-    drawRect(x + 2, y + 19, x + 93, y + 34, c123);
-    //option 3
-    drawRect(x + 2, y + 36, x + 93, y + 51, c123);
+    drawLineFast(x + 165, y + 9, x + 165, y + 88, c555);
+
+    for(uint8_t option = 0; option < 3; option++)
+    {
+        //option 1
+        drawRect(x + 2, y + 3 + 31*option, x + 144, y + 32 + 31*option, c434);
+        drawRect(x + 143, y + 3 + 31*option, x + 164, y + 32 + 31*option, c434);
+        drawRectFilled(x + 144, y + 31 + 31 * option - dn_lerp(0,27,dn_logRemap(umData->options[option].selectionAmount)), x + 163, y + 31 + 31 * option, c430);
+        if(umData->selectionIdx == option)
+        {
+            drawWsgPaletteSimple(&self->gameData->assets[DN_REROLL_ASSET].frames[0], x + 144, y + 4 + 31 * option,
+                &self->gameData->entityManager.palettes[DN_REROLL_PALETTE]);
+        }
+        else
+        {
+            drawWsgSimple(&self->gameData->assets[DN_REROLL_ASSET].frames[0], x + 144, y + 4 + 31 * option);
+        }
+        char text[20] = "";
+        switch(option)
+        {
+            case 0:
+                strcpy(text, "Add a blue track,");
+                break;
+            case 1:
+                strcpy(text, "forward 1, right 2,");
+                break;
+            case 2:
+                strcpy(text, "on the CC album.");
+                break;
+        }
+        uint16_t tWidth = textWidth(&self->gameData->font_ibm, text);
+        drawText(&self->gameData->font_ibm, c555, text, x + 73 - (tWidth >> 1), y + 11 + 31 * option);
+    }
 }

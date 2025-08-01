@@ -9,7 +9,7 @@
 #define DN_TILE_WIDTH      51
 #define DN_TILE_HEIGHT     13
 #define NUM_ASSETS         19 // The number of dn_asset_t (last accounted for DN_REROLL_ASSET)
-#define NUM_PALETTES       8  // The number of wsgPalette_t (last accounted for DN_PIT_WALL_PALETTE)
+#define NUM_PALETTES       9  // The number of wsgPalette_t (last accounted for DN_REROLL_PALETTE)
 #define NUM_SELECTOR_LINES 15 // Creates more chaotic lines in the selector graphic
 
 typedef struct dn_entity_t dn_entity_t;
@@ -64,6 +64,7 @@ typedef enum __attribute__((packed))
     DN_BLUE_FLOOR_PALETTE,
     DN_PURPLE_FLOOR_PALETTE,
     DN_PIT_WALL_PALETTE,
+    DN_REROLL_PALETTE,
 } dn_paletteIdx_t;
 
 typedef struct __attribute__((packed))

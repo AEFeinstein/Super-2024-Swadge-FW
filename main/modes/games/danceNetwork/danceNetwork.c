@@ -306,7 +306,7 @@ static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 {
     // Fill the flat background color
     paletteColor_t* frameBuf = getPxTftFramebuffer();
-    memset(&frameBuf[(y * TFT_WIDTH) + x], c201, sizeof(paletteColor_t) * w * h);
+    memset(&frameBuf[(y * TFT_WIDTH) + x], c212, sizeof(paletteColor_t) * w * h);
 }
 
 /**
