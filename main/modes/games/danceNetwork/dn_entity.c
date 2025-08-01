@@ -1256,7 +1256,7 @@ void dn_acceptRerollAndSkip(dn_entity_t* self)
     // Make the upgrade menu//
     //////////////////////////
     dn_entity_t* upgradeMenu = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
-                                                    0, addVec2d(self->gameData->camera.pos, (vec_t){0, -(200 << DN_DECIMAL_BITS)}), self->gameData);
+                                                    0, addVec2d(self->gameData->camera.pos, (vec_t){(100 << DN_DECIMAL_BITS), -(200 << DN_DECIMAL_BITS)}), self->gameData);
     upgradeMenu->data        = heap_caps_calloc(1, sizeof(dn_upgradeMenuData_t), MALLOC_CAP_SPIRAM);
     upgradeMenu->dataType    = DN_UPGRADE_MENU_DATA;
     upgradeMenu->updateFunction = dn_updateUpgradeMenu;
@@ -1399,7 +1399,7 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
     }
     umData->selectionIdx = CLAMP(umData->selectionIdx, 0, 2);
 
-    if(self->gameData->camera.pos.y > (self->pos.y + (40 << DN_DECIMAL_BITS)))
+    if(self->gameData->camera.pos.y > (self->pos.y - (30 << DN_DECIMAL_BITS)))
     {
         self->gameData->camera.pos.y -= self->gameData->elapsedUs >> 8;
     }
