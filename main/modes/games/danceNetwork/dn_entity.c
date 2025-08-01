@@ -123,10 +123,10 @@ void dn_drawBoard(dn_entity_t* self)
             int drawY = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                         + (x + y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originY
                         - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
-            int miniDrawX = -50
+            int miniDrawX = -70
                         + ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
                         + (x - y) * self->gameData->assets[DN_MINI_TILE_ASSET].originX - 1;
-            int miniDrawY = -52
+            int miniDrawY = -290
                         + ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                         + (x + y) * self->gameData->assets[DN_MINI_TILE_ASSET].originY
                         - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
