@@ -123,6 +123,13 @@ void dn_drawBoard(dn_entity_t* self)
             int drawY = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                         + (x + y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originY
                         - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
+            int miniDrawX = -50
+                        + ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
+                        + (x - y) * self->gameData->assets[DN_MINI_TILE_ASSET].originX - 1;
+            int miniDrawY = -52
+                        + ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
+                        + (x + y) * self->gameData->assets[DN_MINI_TILE_ASSET].originY
+                        - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
 
             if(boardData->tiles[y][x].isSelectable)
             {
@@ -143,8 +150,8 @@ void dn_drawBoard(dn_entity_t* self)
             }
             // Draw the mini board
             drawWsgSimple(&self->gameData->assets[DN_MINI_TILE_ASSET].frames[0],
-                          drawX - self->gameData->assets[DN_MINI_TILE_ASSET].originX,
-                          drawY - self->gameData->assets[DN_MINI_TILE_ASSET].originY);
+                          miniDrawX - self->gameData->assets[DN_MINI_TILE_ASSET].originX,
+                          miniDrawY - self->gameData->assets[DN_MINI_TILE_ASSET].originY);
             if (boardData->tiles[y][x].selector != NULL)
             {
                 // Draw the back part of the selector
@@ -154,20 +161,38 @@ void dn_drawBoard(dn_entity_t* self)
             {
                 // Draw the unit on the tile
                 dn_entity_t* unit = boardData->tiles[y][x].unit;
-                if ((unit->assetIndex == DN_KING_ASSET || unit->assetIndex == DN_PAWN_ASSET)
-                    && (unit == boardData->p1Units[0] || unit == boardData->p1Units[1] || unit == boardData->p1Units[2]
-                        || unit == boardData->p1Units[3] || unit == boardData->p1Units[4]))
+                bool drawn = false;
+                dn_assetIdx_t miniAssetIndex = dn_isKing(unit) ? DN_KING_SMALL_ASSET : DN_PAWN_SMALL_ASSET;
+                if(dn_belongsToP1(unit))
                 {
-                    drawWsgPaletteSimple(&self->gameData->assets[unit->assetIndex].frames[0],
-                                         drawX - self->gameData->assets[unit->assetIndex].originX,
-                                         drawY - self->gameData->assets[unit->assetIndex].originY,
-                                         &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                    if(unit->assetIndex == DN_KING_ASSET || unit->assetIndex == DN_PAWN_ASSET)
+                    {
+                        //draw unit
+                        drawWsgPaletteSimple(&self->gameData->assets[unit->assetIndex].frames[0],
+                                            drawX - self->gameData->assets[unit->assetIndex].originX,
+                                            drawY - self->gameData->assets[unit->assetIndex].originY,
+                                            &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                        drawn = true;
+                    }
+                    
+                    //draw mini chess unit
+
+                    drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[0],
+                                        miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                        miniDrawY - self->gameData->assets[miniAssetIndex].originY,
+                                        &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                 }
-                else
+                if (!drawn)
                 {
+                    //draw unit
                     drawWsgSimple(&self->gameData->assets[unit->assetIndex].frames[0],
                                   drawX - self->gameData->assets[unit->assetIndex].originX,
                                   drawY - self->gameData->assets[unit->assetIndex].originY);
+
+                    //draw mini chess unit
+                    drawWsgSimple(&self->gameData->assets[miniAssetIndex].frames[0],
+                                  miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                  miniDrawY - self->gameData->assets[miniAssetIndex].originY);
                 }
             }
             if (boardData->tiles[y][x].selector != NULL)
@@ -275,6 +300,12 @@ bool dn_calculateMoveableUnits(dn_entity_t* board)
     }
 
     return playerHasMoves;
+}
+
+bool dn_isKing(dn_entity_t* unit)
+{
+    dn_boardData_t* boardData = (dn_boardData_t*)unit->gameData->entityManager.board->data;
+    return (unit == boardData->p1Units[0] || unit == boardData->p2Units[0]);
 }
 
 void dn_updateCurtain(dn_entity_t* self)

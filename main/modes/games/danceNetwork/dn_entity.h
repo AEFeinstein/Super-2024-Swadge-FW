@@ -149,6 +149,7 @@ bool dn_belongsToP1(dn_entity_t* unit);
 void dn_drawBoard(dn_entity_t* self);
 bool dn_availableMoves(dn_entity_t* unit, list_t* movesList);
 bool dn_calculateMoveableUnits(dn_entity_t* board);
+bool dn_isKing(dn_entity_t* unit);
 
 void dn_updateCurtain(dn_entity_t* self);
 void dn_drawCurtain(dn_entity_t* self);

@@ -129,16 +129,16 @@ static void dn_EnterMode(void)
     gameData->assets[DN_KING_ASSET].originY   = 54;
     gameData->assets[DN_KING_ASSET].numFrames = 1;
 
-    gameData->assets[DN_KING_SMALL_ASSET].originX   = 10;
-    gameData->assets[DN_KING_SMALL_ASSET].originY   = 10;
+    gameData->assets[DN_KING_SMALL_ASSET].originX   = 4;
+    gameData->assets[DN_KING_SMALL_ASSET].originY   = 19;
     gameData->assets[DN_KING_SMALL_ASSET].numFrames = 1;
 
     gameData->assets[DN_PAWN_ASSET].originX   = 10;
     gameData->assets[DN_PAWN_ASSET].originY   = 44;
     gameData->assets[DN_PAWN_ASSET].numFrames = 1;
 
-    gameData->assets[DN_PAWN_SMALL_ASSET].originX   = 10;
-    gameData->assets[DN_PAWN_SMALL_ASSET].originY   = 10;
+    gameData->assets[DN_PAWN_SMALL_ASSET].originX   = 4;
+    gameData->assets[DN_PAWN_SMALL_ASSET].originY   = 14;
     gameData->assets[DN_PAWN_SMALL_ASSET].numFrames = 1;
 
     gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originX   = 10;
@@ -168,7 +168,7 @@ static void dn_EnterMode(void)
     gameData->assets[DN_PIT_ASSET].originY = 0;
 
     gameData->assets[DN_MINI_TILE_ASSET].originX = 10;
-    gameData->assets[DN_MINI_TILE_ASSET].originY = 7;
+    gameData->assets[DN_MINI_TILE_ASSET].originY = 5;
 
     // Allocate WSG loading helpers
     dn_hsd = heatshrink_decoder_alloc(256, 8, 4);
@@ -561,6 +561,10 @@ static void dn_initializeGame(void)
 
     dn_loadAsset(DN_MINI_TILE_WSG, 1, &gameData->assets[DN_MINI_TILE_ASSET]);
 
+    dn_loadAsset(DN_KING_SMALL_WSG, 1, &gameData->assets[DN_KING_SMALL_ASSET]);
+    
+    dn_loadAsset(DN_PAWN_SMALL_WSG, 1, &gameData->assets[DN_PAWN_SMALL_ASSET]);
+
 
     //////////////////
     // Make the pit //
@@ -713,9 +717,9 @@ static void dn_initializeCharacterSelect(void)
     dn_loadAsset(DN_KING_WSG, 1, &gameData->assets[DN_KING_ASSET]);
     dn_loadAsset(DN_PAWN_WSG, 1, &gameData->assets[DN_PAWN_ASSET]);
     dn_loadAsset(DN_GROUND_TILE_WSG, 1, &gameData->assets[DN_GROUND_TILE_ASSET]);
-    /////////////////////////////
-    // Make the character select//
-    /////////////////////////////
+    ///////////////////////////////
+    // Make the character select //
+    ///////////////////////////////
     dn_entity_t* characterSelect       = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true,
                                                                 DN_NO_ASSET, 0, (vec_t){0xFFFF, 0xFFFF}, gameData);
     characterSelect->data              = heap_caps_calloc(1, sizeof(dn_characterSelectData_t), MALLOC_CAP_SPIRAM);
