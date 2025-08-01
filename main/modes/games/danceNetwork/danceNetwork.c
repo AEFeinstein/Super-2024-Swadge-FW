@@ -565,6 +565,7 @@ static void dn_initializeGame(void)
     
     dn_loadAsset(DN_PAWN_SMALL_WSG, 1, &gameData->assets[DN_PAWN_SMALL_ASSET]);
 
+    dn_loadAsset(DN_REROLL_WSG, 1, &gameData->assets[DN_REROLL_ASSET]);
 
     //////////////////
     // Make the pit //

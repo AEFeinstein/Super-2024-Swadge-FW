@@ -721,13 +721,13 @@ void dn_updateAlbum(dn_entity_t* self)
                     promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
                     
                     dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
-                    strcpy(option1->text, "yes");
-                    option1->callback = dn_gainReroll;
+                    strcpy(option1->text, "no");
+                    option1->callback = dn_refuseReroll;
                     push(promptData->options, (void*)option1);
 
                     dn_promptOption_t* option2 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
-                    strcpy(option2->text, "no");
-                    option2->callback = dn_dismissReroll;
+                    strcpy(option2->text, "yes");
+                    option2->callback = dn_acceptRerollAndSkip;
                     push(promptData->options, (void*)option2);
                     
                     promptToSkip->dataType     = DN_PROMPT_DATA;
@@ -749,7 +749,7 @@ void dn_updateAlbum(dn_entity_t* self)
                     
                     dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
                     strcpy(option1->text, "OK");
-                    option1->callback = dn_dismissReroll;
+                    option1->callback = dn_acceptRerollAndSkip;
                     push(promptData->options, (void*)option1);
                     
                     promptNoMoves->dataType     = DN_PROMPT_DATA;
@@ -1118,7 +1118,8 @@ void dn_drawPlayerTurn(dn_entity_t* self)
         case DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE:
         case DN_P2_MOVE_PHASE:
         case DN_P2_UPGRADE_PHASE:
-        case DN_P2_SWAP_PHASE:
+        case DN_P2_SWAP_CC_PHASE:
+        case DN_P2_SWAP_P1_PHASE:
         {
             col = c550;
             break;
@@ -1245,37 +1246,27 @@ void dn_drawPrompt(dn_entity_t* self)
     }
 }
 
-void dn_gainReroll(dn_entity_t* self)
+void dn_acceptRerollAndSkip(dn_entity_t* self)
 {
-    ///////////////////////////
-    // Make the tile selector//
-    ///////////////////////////
-    dn_entity_t* tileSelector = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
-                                                    0, self->gameData->camera.pos, self->gameData);
-    tileSelector->data        = heap_caps_calloc(1, sizeof(dn_tileSelectorData_t), MALLOC_CAP_SPIRAM);
-    tileSelector->dataType    = DN_TILE_SELECTOR_DATA;
-    tileSelector->drawFunction = dn_drawNothing;
-    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)tileSelector->data;
-    for (int i = 0; i < NUM_SELECTOR_LINES; i++)
-    {
-        tData->lineYs[i] = (255 * i) / NUM_SELECTOR_LINES;
-    }
-    tData->pos = (dn_boardPos_t){2, 2};
-    // fancy line colors
-    tData->colors[0]             = c125;
-    tData->colors[1]             = c345;
-    tData->colors[2]             = c555;
-    tileSelector->updateFunction = dn_updateTileSelector;
-    // Don't set the draw function, because it needs to happen in two parts behind and in front of units.
+    //dn_gainReroll(self);
+    dn_incrementPhase(self);//would be move phase
+    dn_incrementPhase(self);//it is now upgrade phase
 
-    ((dn_boardData_t*)self->gameData->entityManager.board->data)->tiles[2][2].selector = tileSelector;
-    
-    // sort this out later.
-    self->gameData->phase = DN_P1_MOVE_PHASE;
+    //////////////////////////
+    // Make the upgrade menu//
+    //////////////////////////
+    dn_entity_t* upgradeMenu = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
+                                                    0, addVec2d(self->gameData->camera.pos, (vec_t){0, -(200 << DN_DECIMAL_BITS)}), self->gameData);
+    upgradeMenu->data        = heap_caps_calloc(1, sizeof(dn_upgradeMenuData_t), MALLOC_CAP_SPIRAM);
+    upgradeMenu->dataType    = DN_UPGRADE_MENU_DATA;
+    upgradeMenu->updateFunction = dn_updateUpgradeMenu;
+    upgradeMenu->drawFunction = dn_drawUpgradeMenu;
 }
 
-void dn_dismissReroll(dn_entity_t* self)
+void dn_refuseReroll(dn_entity_t* self)
 {
+    dn_incrementPhase(self);//it is now move phase
+
     ///////////////////////////
     // Make the tile selector//
     ///////////////////////////
@@ -1319,6 +1310,15 @@ void dn_dismissReroll(dn_entity_t* self)
         {
             break;
         }
+    }
+}
+
+void dn_incrementPhase(dn_entity_t* self)
+{
+    self->gameData->phase++;
+    if(self->gameData->phase > DN_P2_SWAP_P1_PHASE)
+    {
+        self->gameData->phase = DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE;
     }
 }
 
@@ -1384,4 +1384,56 @@ dn_boardPos_t dn_getUnitBoardPos(dn_entity_t* unit)
         }
     }
     return foundPos;
+}
+
+void dn_updateUpgradeMenu(dn_entity_t* self)
+{
+    dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
+    if (self->gameData->btnDownState & PB_UP)
+    {
+        umData->selectionIdx--;
+    }
+    if (self->gameData->btnDownState & PB_DOWN)
+    {
+        umData->selectionIdx++;
+    }
+    umData->selectionIdx = CLAMP(umData->selectionIdx, 0, 2);
+
+    if(self->gameData->camera.pos.y > (self->pos.y + (40 << DN_DECIMAL_BITS)))
+    {
+        self->gameData->camera.pos.y -= self->gameData->elapsedUs >> 8;
+    }
+}
+
+void dn_drawUpgradeMenu(dn_entity_t* self)
+{
+    dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
+    
+    int32_t x = (self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS;
+    int32_t y = (self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS;
+    
+    //corner brackets
+    //top left
+    drawLineFast(x, y, x + 5, y, c145);
+    drawLineFast(x, y, x, y + 5, c145);
+    //top right
+    drawLineFast(x + 90, y, x + 95, y, c145);
+    drawLineFast(x + 95, y, x + 95, y + 5, c145);
+    //bottom left
+    drawLineFast(x, y + 60, x + 5, y + 60, c145);
+    drawLineFast(x, y + 55, x, y + 60, c145);
+    //bottom right
+    drawLineFast(x + 90, y + 60, x + 95, y + 60, c145);
+    drawLineFast(x + 95, y + 55, x + 95, y + 60, c145);
+    //vertical left line
+    drawLineFast(x, y + 9, x, y + 51, c123);
+    //vertical right line
+    drawLineFast(x + 95, y + 9, x + 95, y + 51, c123);
+    
+    //option 1
+    drawRect(x + 2, y + 2, x + 93, y + 17, c123);
+    //option 2
+    drawRect(x + 2, y + 19, x + 93, y + 34, c123);
+    //option 3
+    drawRect(x + 2, y + 36, x + 93, y + 51, c123);
 }

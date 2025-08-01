@@ -8,7 +8,7 @@
 #define DN_BOARD_SIZE      5
 #define DN_TILE_WIDTH      51
 #define DN_TILE_HEIGHT     13
-#define NUM_ASSETS         18 // The number of dn_asset_t (last accounted for DN_MINI_TILE)
+#define NUM_ASSETS         19 // The number of dn_asset_t (last accounted for DN_REROLL_ASSET)
 #define NUM_PALETTES       8  // The number of wsgPalette_t (last accounted for DN_PIT_WALL_PALETTE)
 #define NUM_SELECTOR_LINES 15 // Creates more chaotic lines in the selector graphic
 
@@ -37,6 +37,7 @@ typedef enum __attribute__((packed))
     DN_SPEAKER_ASSET,
     DN_PIT_ASSET,
     DN_MINI_TILE_ASSET,
+    DN_REROLL_ASSET,
     DN_NO_ASSET, // Keep this one at the end of the enum. Used for entities with no wsgs.
 } dn_assetIdx_t;
 
@@ -103,11 +104,13 @@ typedef enum __attribute__((packed))
     DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE,
     DN_P1_MOVE_PHASE,
     DN_P1_UPGRADE_PHASE,
-    DN_P1_SWAP_PHASE,
+    DN_P1_SWAP_CC_PHASE,
+    DN_P1_SWAP_P2_PHASE,
     DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE,
     DN_P2_MOVE_PHASE,
     DN_P2_UPGRADE_PHASE,
-    DN_P2_SWAP_PHASE,
+    DN_P2_SWAP_CC_PHASE,
+    DN_P2_SWAP_P1_PHASE
 } dn_phase_t;
 
 typedef enum __attribute__((packed))
@@ -115,4 +118,5 @@ typedef enum __attribute__((packed))
     DN_NONE_TRACK,
     DN_RED_TRACK,
     DN_BLUE_TRACK,
+    DN_GREEN_TRACK,
 } dn_track_t;

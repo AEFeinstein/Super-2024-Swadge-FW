@@ -22,6 +22,7 @@ typedef enum
     DN_CHARACTER_SELECT_DATA,
     DN_TILE_SELECTOR_DATA,
     DN_PROMPT_DATA,
+    DN_UPGRADE_MENU_DATA,
 } dn_dataType_t;
 
 //==============================================================================
@@ -119,7 +120,7 @@ typedef struct
 
 typedef struct
 {
-    char text[5];
+    char text[8];
     dn_callbackFunction_t callback;
     int16_t selectionAmount;
 } dn_promptOption_t;
@@ -133,6 +134,16 @@ typedef struct
     char text[40];
     list_t* options;
 } dn_promptData_t;
+
+typedef struct
+{
+    int8_t selectionIdx; // The selected menu item.
+    dn_track_t trackColor;
+    vec_t track;
+    uint8_t album;//0 for p1's album, 1 for creative commons album, 2 for p2's album.
+    dn_promptOption_t options[3];// reroll 1, reroll 2, reroll 3, and confirm.
+} dn_upgradeMenuData_t;
+
 
 
 //==============================================================================
@@ -175,10 +186,14 @@ void dn_drawPlayerTurn(dn_entity_t* self);
 
 void dn_updatePrompt(dn_entity_t* self);
 void dn_drawPrompt(dn_entity_t* self);
-void dn_gainReroll(dn_entity_t* self);
-void dn_dismissReroll(dn_entity_t* self);
+void dn_acceptRerollAndSkip(dn_entity_t* self);
+void dn_refuseReroll(dn_entity_t* self);
+void dn_incrementPhase(dn_entity_t* self);
 
 void dn_drawPit(dn_entity_t* self);
 void dn_drawPitForeground(dn_entity_t* self);
 
 dn_boardPos_t dn_getUnitBoardPos(dn_entity_t* unit);
+
+void dn_updateUpgradeMenu(dn_entity_t* self);
+void dn_drawUpgradeMenu(dn_entity_t* self);
