@@ -39,7 +39,10 @@ void artillerySwitchToState(artilleryData_t* ad, artilleryGameState_t newState)
         case AGS_FIRE:
         {
             // Focus on player
-            push(&ad->phys->cameraTargets, ad->players[ad->plIdx]);
+            if (ad->players[ad->plIdx])
+            {
+                push(&ad->phys->cameraTargets, ad->players[ad->plIdx]);
+            }
             break;
         }
         case AGS_LOOK:

@@ -24,7 +24,7 @@ static float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float ex
  *
  * @param phys
  */
-void physGenerateTerrain(physSim_t* phys)
+void physGenerateTerrain(physSim_t* phys, int32_t groundLevel)
 {
     // First remove all terrain
     node_t* lNode = phys->lines.first;
@@ -43,8 +43,8 @@ void physGenerateTerrain(physSim_t* phys)
     list_t heights = {0};
 
     // Start with two points, start and end
-    push(&heights, (void*)((intptr_t)phys->groundLevel));
-    push(&heights, (void*)((intptr_t)phys->groundLevel));
+    push(&heights, (void*)((intptr_t)groundLevel));
+    push(&heights, (void*)((intptr_t)groundLevel));
 
     // For some number of iterations, divide each terrain segment into two and add randomness to the midpoint
     int32_t numIterations = TERRAIN_ITERATIONS;
@@ -386,4 +386,34 @@ bool moveTerrainPoints(physSim_t* phys, int32_t elapsedUs)
 
     // Return if any terrain anywhere is moving
     return anyTerrainMoving;
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param phys
+ * @param tIdx
+ * @param terrainPoints
+ * @param numTerrainPoints
+ */
+void physAddTerrainPoints(physSim_t* phys, uint16_t tIdx, const uint16_t* terrainPoints, uint16_t numTerrainPoints)
+{
+    // Calculate the X step and starting X location
+    float xStep = phys->bounds.x / (float)(NUM_TERRAIN_POINTS - 1);
+    float x     = xStep * tIdx;
+
+    // Pick the starting Y location
+    int16_t prevY = terrainPoints[0];
+    if (0 != tIdx)
+    {
+        prevY = ((physLine_t*)phys->lines.last->val)->l.p2.y;
+    }
+
+    // Create each line
+    for (int32_t pIdx = 1; pIdx < numTerrainPoints; pIdx++)
+    {
+        physAddLine(phys, x, prevY, x + xStep, terrainPoints[pIdx], true);
+        x += xStep;
+        prevY = terrainPoints[pIdx];
+    }
 }

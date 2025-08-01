@@ -1,6 +1,19 @@
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include "artillery.h"
 #include "artillery_p2p.h"
 #include "artillery_phys_terrain.h"
+#include "artillery_phys_bsp.h"
+#include "artillery_game.h"
+
+#define NUM_TERRAIN_POINTS_A (64 + 18)
+#define NUM_TERRAIN_POINTS_B (NUM_TERRAIN_POINTS - NUM_TERRAIN_POINTS_A)
+
+//==============================================================================
+// Enums
+//==============================================================================
 
 typedef enum __attribute__((packed))
 {
@@ -9,6 +22,10 @@ typedef enum __attribute__((packed))
     P2P_SET_PLAYERS,
     P2P_FIRE_SHOT,
 } artilleryP2pPacketType_t;
+
+//==============================================================================
+// Structs
+//==============================================================================
 
 typedef struct __attribute__((packed))
 {
@@ -21,14 +38,41 @@ typedef struct __attribute__((packed))
         float barrelAngle;
     } players[NUM_PLAYERS];
 
-    uint16_t terrainPoints[NUM_TERRAIN_POINTS / 2];
-} artilleryWorldStatePacket_t;
+    uint16_t terrainPoints[NUM_TERRAIN_POINTS_A];
+} artPktWorld_t;
 
 typedef struct __attribute__((packed))
 {
     uint8_t type;
-    uint16_t terrainPoints[(NUM_TERRAIN_POINTS / 2) + 1];
-} artilleryAddTerrainPacket_t;
+    uint16_t terrainPoints[NUM_TERRAIN_POINTS_B];
+    uint8_t numObstacles;
+    struct
+    {
+        uint16_t x;
+        uint16_t y;
+        uint8_t r;
+    } obstacles[MAX_NUM_OBSTACLES];
+
+} artPktTerrain_t;
+
+typedef struct __attribute__((packed))
+{
+    uint8_t type;
+    struct
+    {
+        vecFl_t pos;
+        float barrelAngle;
+    } players[NUM_PLAYERS];
+} artPktPlayers_t;
+
+typedef struct __attribute__((packed))
+{
+    uint8_t type;
+} artPktShot_t;
+
+//==============================================================================
+// Const Variables
+//==============================================================================
 
 const char str_conStarted[]     = "Connection Started";
 const char str_conRxAck[]       = "Rx Game Start Ack";
@@ -36,7 +80,15 @@ const char str_conRxMsg[]       = "Rx Game Start Msg";
 const char str_conEstablished[] = "Connection Established";
 const char str_conLost[]        = "Connection Lost";
 
+//==============================================================================
+// Function Declarations
+//==============================================================================
+
 static uint8_t getSizeFromType(artilleryP2pPacketType_t type);
+
+//==============================================================================
+// Functions
+//==============================================================================
 
 /**
  * @brief This typedef is for the function callback which delivers connection statuses to the Swadge mode
@@ -69,10 +121,11 @@ void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
         {
             ad->conStr = str_conEstablished;
 
-            artilleryInitGame();
+            // If going first, generate and transmit the world
             if (GOING_FIRST == p2pGetPlayOrder(p2p))
             {
-                artilleryTxState(ad);
+                artilleryInitGame(AG_WIRELESS, true);
+                artilleryTxWorld(ad);
             }
             break;
         }
@@ -95,6 +148,65 @@ void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
 void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 {
     ESP_LOGI("VT", "RX type %d, len %d", payload[0], len);
+
+    artilleryData_t* ad = getArtilleryData();
+
+    switch (payload[0])
+    {
+        case P2P_SET_WORLD:
+        {
+            const artPktWorld_t* pkt = (const artPktWorld_t*)payload;
+
+            // Deinit physics if it happens to be initialized
+            if (ad->phys)
+            {
+                deinitPhys(ad->phys);
+            }
+
+            // If the game hasn't started yet, start it
+            if (AMS_GAME != ad->mState)
+            {
+                artilleryInitGame(AG_WIRELESS, false);
+            }
+
+            // Add lines from packet
+            physAddTerrainPoints(ad->phys, 0, pkt->terrainPoints, ARRAY_SIZE(pkt->terrainPoints));
+
+            // Add players from packet
+            for (int32_t pIdx = 0; pIdx < ARRAY_SIZE(pkt->players); pIdx++)
+            {
+                ad->players[pIdx] = physAddPlayer(ad->phys, pkt->players[pIdx].pos, pkt->players[pIdx].barrelAngle);
+            }
+            return;
+        }
+        case P2P_ADD_TERRAIN:
+        {
+            const artPktTerrain_t* pkt = (const artPktTerrain_t*)payload;
+
+            // Add more lines from packet
+            physAddTerrainPoints(ad->phys, NUM_TERRAIN_POINTS_A, pkt->terrainPoints, ARRAY_SIZE(pkt->terrainPoints));
+
+            // Now that terrain is received, create BSP zones
+            createBspZones(ad->phys);
+
+            // Mark simulation as ready
+            ad->phys->isReady = true;
+
+            // Show the menu
+            artillerySwitchToState(ad, AGS_MENU);
+            return;
+        }
+        case P2P_SET_PLAYERS:
+        {
+            const artPktPlayers_t* pkt = (const artPktPlayers_t*)payload;
+            return;
+        }
+        case P2P_FIRE_SHOT:
+        {
+            const artPktShot_t* pkt = (const artPktShot_t*)payload;
+            return;
+        }
+    }
 }
 
 /**
@@ -115,19 +227,19 @@ void artillery_p2pMsgTxCb(p2pInfo* p2p, messageStatus_t status, const uint8_t* d
  *
  * @param ad
  */
-void artilleryTxState(artilleryData_t* ad)
+void artilleryTxWorld(artilleryData_t* ad)
 {
-    artilleryWorldStatePacket_t* pkt1 = heap_caps_calloc(1, sizeof(artilleryWorldStatePacket_t), MALLOC_CAP_SPIRAM);
-    pkt1->type                        = P2P_SET_WORLD;
-    pkt1->width                       = ad->phys->bounds.x;
-    pkt1->height                      = ad->phys->bounds.y;
-    pkt1->players[0].pos              = ad->players[0]->c.pos;
-    pkt1->players[0].barrelAngle      = ad->players[0]->barrelAngle;
-    pkt1->players[1].pos              = ad->players[1]->c.pos;
-    pkt1->players[1].barrelAngle      = ad->players[1]->barrelAngle;
+    artPktWorld_t* pkt1          = heap_caps_calloc(1, sizeof(artPktWorld_t), MALLOC_CAP_SPIRAM);
+    pkt1->type                   = P2P_SET_WORLD;
+    pkt1->width                  = ad->phys->bounds.x;
+    pkt1->height                 = ad->phys->bounds.y;
+    pkt1->players[0].pos         = ad->players[0]->c.pos;
+    pkt1->players[0].barrelAngle = ad->players[0]->barrelAngle;
+    pkt1->players[1].pos         = ad->players[1]->c.pos;
+    pkt1->players[1].barrelAngle = ad->players[1]->barrelAngle;
 
-    artilleryAddTerrainPacket_t* pkt2 = heap_caps_calloc(1, sizeof(artilleryAddTerrainPacket_t), MALLOC_CAP_SPIRAM);
-    pkt2->type                        = P2P_ADD_TERRAIN;
+    artPktTerrain_t* pkt2 = heap_caps_calloc(1, sizeof(artPktTerrain_t), MALLOC_CAP_SPIRAM);
+    pkt2->type            = P2P_ADD_TERRAIN;
 
     // Build a list of Y values
     // Iterate through lines and assume that they're already sorted left to right
@@ -191,17 +303,19 @@ static uint8_t getSizeFromType(artilleryP2pPacketType_t type)
     {
         case P2P_SET_WORLD:
         {
-            return sizeof(artilleryWorldStatePacket_t);
+            return sizeof(artPktWorld_t);
         }
         case P2P_ADD_TERRAIN:
         {
-            return sizeof(artilleryAddTerrainPacket_t);
+            return sizeof(artPktTerrain_t);
         }
         case P2P_SET_PLAYERS:
+        {
+            return sizeof(artPktPlayers_t);
+        }
         case P2P_FIRE_SHOT:
         {
-            // TODO
-            return 0;
+            return sizeof(artPktShot_t);
         }
     }
     return 0;

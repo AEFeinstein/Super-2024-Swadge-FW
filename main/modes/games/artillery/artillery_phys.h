@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 #include "hdw-btn.h"
+#include "hdw-tft.h"
 #include "palette.h"
 #include "linked_list.h"
 #include "vector2d.h"
@@ -17,6 +18,13 @@
 
 // There are 32 zones, one for each bit in a int32_t
 #define NUM_ZONES 32
+
+#define WORLD_WIDTH  (TFT_WIDTH * 2)
+#define WORLD_HEIGHT (TFT_HEIGHT * 2)
+#define GROUND_LEVEL (WORLD_HEIGHT - 60)
+
+#define DEFAULT_GRAV_X 0
+#define DEFAULT_GRAV_Y 1e-10
 
 //==============================================================================
 // Enums
@@ -116,11 +124,12 @@ typedef struct
 
 typedef struct
 {
+    bool isReady;
+
     int32_t frameTimer;
 
     vecFl_t g;
     vecFl_t bounds;
-    int32_t groundLevel;
     rectangleFl_t zones[NUM_ZONES];
     list_t lines;
     list_t circles;
@@ -140,12 +149,13 @@ typedef struct
 // Function Declarations
 //==============================================================================
 
-physSim_t* initPhys(float w, float h, int32_t groundLevel, float gx, float gy);
+physSim_t* initPhys(float w, float h, int32_t groundLevel, float gx, float gy, bool generateTerrain);
 void deinitPhys(physSim_t* phys);
 void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs);
 void physStep(physSim_t* phys, int32_t elapsedUs);
 
 void physSpawnPlayers(physSim_t* phys, physCirc_t* players[], int32_t numPlayers);
+physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, float barrelAngle);
 
 void setBarrelAngle(physCirc_t* circ, float angle);
 void setShotPower(physCirc_t* circ, float power);

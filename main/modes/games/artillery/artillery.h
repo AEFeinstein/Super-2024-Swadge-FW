@@ -34,12 +34,21 @@ typedef enum
     AGS_LOOK,
 } artilleryGameState_t;
 
+typedef enum
+{
+    AG_PASS_AND_PLAY,
+    AG_WIRELESS,
+    AG_CPU_PRACTICE,
+} artilleryGameType_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
 
 typedef struct
 {
+    artilleryGameType_t gameType;
+
     // The physics simulation
     physSim_t* phys;
 
@@ -75,4 +84,4 @@ extern swadgeMode_t artilleryMode;
 
 void setDriveInMenu(bool visible);
 artilleryData_t* getArtilleryData(void);
-void artilleryInitGame(void);
+void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain);

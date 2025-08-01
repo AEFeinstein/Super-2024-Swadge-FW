@@ -39,6 +39,8 @@
         } while (0)
 #endif
 
+#define PLAYER_RADIUS 8
+
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -63,7 +65,7 @@ static void physAnimateExplosions(physSim_t* phys, int32_t elapsedUs);
  * @param gy Gravity in the Y direction, unit is px/uS^2
  * @return The initialized simulation
  */
-physSim_t* initPhys(float w, float h, int32_t groundLevel, float gx, float gy)
+physSim_t* initPhys(float w, float h, int32_t groundLevel, float gx, float gy, bool generateTerrain)
 {
     // Allocate a simulation
     physSim_t* phys = heap_caps_calloc(1, sizeof(physSim_t), MALLOC_CAP_8BIT);
@@ -73,9 +75,8 @@ physSim_t* initPhys(float w, float h, int32_t groundLevel, float gx, float gy)
     phys->g.y = gy;
 
     // Set bounds for the physics sim
-    phys->bounds.x    = w;
-    phys->bounds.y    = h;
-    phys->groundLevel = groundLevel;
+    phys->bounds.x = w;
+    phys->bounds.y = h;
 
     // Add lines for the world bounds
     physAddLine(phys, 0, 0, w, 0, false);
@@ -83,11 +84,20 @@ physSim_t* initPhys(float w, float h, int32_t groundLevel, float gx, float gy)
     physAddLine(phys, w, h, 0, h, false);
     physAddLine(phys, 0, h, 0, 0, false);
 
-    // Generate terrain
-    physGenerateTerrain(phys);
+    if (generateTerrain)
+    {
+        // Generate terrain
+        physGenerateTerrain(phys, groundLevel);
 
-    // Create BSP zones
-    createBspZones(phys);
+        // Create BSP zones
+        createBspZones(phys);
+
+        phys->isReady = true;
+    }
+    else
+    {
+        phys->isReady = false;
+    }
 
     // Return the simulation
     return phys;
@@ -131,15 +141,18 @@ void deinitPhys(physSim_t* phys)
  */
 void physStep(physSim_t* phys, int32_t elapsedUs)
 {
-    // Calculate physics frames at a very regular PHYS_TIME_STEP
-    RUN_TIMER_EVERY(phys->frameTimer, PHYS_TIME_STEP, elapsedUs, {
-        physFindObjDests(phys, PHYS_TIME_STEP);
-        phys->terrainMoving = moveTerrainPoints(phys, PHYS_TIME_STEP);
-        physCheckCollisions(phys);
-        physBinaryMoveObjects(phys);
-        physAnimateExplosions(phys, PHYS_TIME_STEP);
-        checkTurnOver(phys);
-    });
+    if (phys->isReady)
+    {
+        // Calculate physics frames at a very regular PHYS_TIME_STEP
+        RUN_TIMER_EVERY(phys->frameTimer, PHYS_TIME_STEP, elapsedUs, {
+            physFindObjDests(phys, PHYS_TIME_STEP);
+            phys->terrainMoving = moveTerrainPoints(phys, PHYS_TIME_STEP);
+            physCheckCollisions(phys);
+            physBinaryMoveObjects(phys);
+            physAnimateExplosions(phys, PHYS_TIME_STEP);
+            checkTurnOver(phys);
+        });
+    }
 }
 
 /**
@@ -537,8 +550,6 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
  */
 void physSpawnPlayers(physSim_t* phys, physCirc_t* players[], int32_t numPlayers)
 {
-#define PLAYER_RADIUS 8
-
     float margin  = phys->bounds.x / 8;
     float spacing = (phys->bounds.x - (2 * margin)) / (numPlayers - 1);
 
@@ -562,11 +573,26 @@ void physSpawnPlayers(physSim_t* phys, physCirc_t* players[], int32_t numPlayers
         // Move downward until you almost hit the ground
         while (!physAnyCollision(phys, players[p]))
         {
-            players[p]->c.pos.y += PLAYER_RADIUS;
+            players[p]->c.pos.y += (PLAYER_RADIUS / 2);
             updateCircleProperties(phys, players[p]);
         }
         players[p]->c.pos.y -= PLAYER_RADIUS;
     }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param phys
+ * @param pos
+ * @param barrelAngle
+ * @return physCirc_t*
+ */
+physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, float barrelAngle)
+{
+    physCirc_t* pc = physAddCircle(phys, pos.x, pos.y, PLAYER_RADIUS, CT_TANK);
+    setBarrelAngle(pc, barrelAngle);
+    return pc;
 }
 
 /**

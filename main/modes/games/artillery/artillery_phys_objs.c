@@ -26,7 +26,7 @@ static void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc);
  * @param isTerrain true if this is terrain, false otherwise
  * @return The line, also saved in the argument phys
  */
-physLine_t* physAddLine(physSim_t* phys, float x1, float y1, float x2, float y2, bool isTerrain)
+physLine_t* physAddLine(physSim_t* phys, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, bool isTerrain)
 {
     // Allocate the line
     physLine_t* pl = heap_caps_calloc(1, sizeof(physLine_t), MALLOC_CAP_8BIT);
@@ -94,7 +94,7 @@ void updateLineProperties(physSim_t* phys, physLine_t* pl)
  * @param type The type of circle. CT_OBSTACLE is immobile, others are mobile.
  * @return The circle, also saved in the argument phys
  */
-physCirc_t* physAddCircle(physSim_t* phys, float x1, float y1, float r, circType_t type)
+physCirc_t* physAddCircle(physSim_t* phys, uint16_t x1, uint16_t y1, uint16_t r, circType_t type)
 {
     // Allocate the circle
     physCirc_t* pc = heap_caps_calloc(1, sizeof(physCirc_t), MALLOC_CAP_8BIT);

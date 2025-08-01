@@ -332,7 +332,7 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
     {
         if (str_passAndPlay == label)
         {
-            artilleryInitGame();
+            artilleryInitGame(AG_PASS_AND_PLAY, true);
         }
         else if (str_wirelessConnect == label)
         {
@@ -341,7 +341,8 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
         }
         else if (str_cpuPractice == label)
         {
-            ESP_LOGI(ART_TAG, "TODO Start CPU practice!");
+            // TODO implement CPU
+            artilleryInitGame(AG_CPU_PRACTICE, true);
         }
         else if (str_help == label)
         {
@@ -433,17 +434,18 @@ void setDriveInMenu(bool visible)
  * @brief TODO
  *
  */
-void artilleryInitGame(void)
+void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
 {
-#define WORLD_WIDTH  (TFT_WIDTH * 2)
-#define WORLD_HEIGHT (TFT_HEIGHT * 2)
-#define GROUND_LEVEL (WORLD_HEIGHT - 60)
+    ad->gameType = gameType;
 
     // Initialize physics, including terrain
-    ad->phys = initPhys(WORLD_WIDTH, WORLD_HEIGHT, GROUND_LEVEL, 0, 1e-10);
+    ad->phys = initPhys(WORLD_WIDTH, WORLD_HEIGHT, GROUND_LEVEL, DEFAULT_GRAV_X, DEFAULT_GRAV_Y, generateTerrain);
 
-    // Initialize players, including flattening terrain under them
-    physSpawnPlayers(ad->phys, ad->players, NUM_PLAYERS);
+    if (generateTerrain)
+    {
+        // Initialize players, including flattening terrain under them
+        physSpawnPlayers(ad->phys, ad->players, NUM_PLAYERS);
+    }
 
     // Start with a full movement timer
     ad->moveTimerUs = TANK_MOVE_TIME_US;
