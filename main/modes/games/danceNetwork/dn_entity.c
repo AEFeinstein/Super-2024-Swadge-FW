@@ -1217,10 +1217,19 @@ void dn_drawPrompt(dn_entity_t* self)
     dn_promptData_t* pData = (dn_promptData_t*)self->data;
     //black banner
     drawRectFilled(0,pData->yOffset, TFT_WIDTH, pData->yOffset + 60, c000);
-    int16_t xOff = 7;
+    int16_t xOff = TFT_WIDTH>>1;
     int16_t yOff = pData->yOffset + 11;
     //prompt text
-    drawTextWordWrapCentered(&self->gameData->font_ibm, c345, pData->text, &xOff, &yOff, TFT_WIDTH - 7, pData->yOffset + 30);
+    paletteColor_t outer = c245;
+    paletteColor_t middle = c355;
+    paletteColor_t inner = c555;
+    if(self->gameData->phase >= DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE)
+    {
+        outer = c442;
+        middle = c553;
+    }
+    uint16_t tWidth = textWidth(&self->gameData->font_ibm, pData->text);
+    drawShinyText(&self->gameData->font_ibm, outer, middle, inner, pData->text, xOff - (tWidth>>1), yOff);
     
     node_t* option = pData->options->first;
     int xPos = (TFT_WIDTH / 2) / pData->options->length;
@@ -1393,7 +1402,7 @@ dn_boardPos_t dn_getUnitBoardPos(dn_entity_t* unit)
 void dn_updateUpgradeMenu(dn_entity_t* self)
 {
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
-    for(uint8_t option = 0; option < 3; option++)
+    for(uint8_t option = 0; option < 4; option++)
     {
         umData->options[option].selectionAmount -= self->gameData->elapsedUs >> 6;
         if(umData->options[option].selectionAmount < 0)
@@ -1434,13 +1443,13 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
         aData->creativeCommonsAlbum->pos.y -= self->gameData->elapsedUs / 1900;
         aData->p2Album->pos.y -= self->gameData->elapsedUs / 1900;
     }
-    else if(self->gameData->entityManager.albums->pos.y != 63443)
+    else if(self->gameData->entityManager.albums->pos.y != 63427)
     {
-        self->gameData->entityManager.albums->pos.y = 63443;
+        self->gameData->entityManager.albums->pos.y = 63427;
         dn_albumsData_t* aData = (dn_albumsData_t*) self->gameData->entityManager.albums->data;
-        aData->p1Album->pos.y = 62928;
-        aData->creativeCommonsAlbum->pos.y = 62928;
-        aData->p2Album->pos.y = 62928;
+        aData->p1Album->pos.y = 62912;
+        aData->creativeCommonsAlbum->pos.y = 62912;
+        aData->p2Album->pos.y = 62912;
     }
 }
 
@@ -1476,7 +1485,7 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
         //option 1
         drawRect(x + 2, y + 3 + 31*option, x + 144, y + 32 + 31*option, c434);
         drawRect(x + 143, y + 3 + 31*option, x + 164, y + 32 + 31*option, umData->selectionIdx == option ? c555 : c434);
-        drawRectFilled(x + 144, y + 31 + 31 * option - dn_lerp(0,27,dn_logRemap(umData->options[option].selectionAmount)), x + 163, y + 31 + 31 * option, c554);
+        drawRectFilled(x + 144, y + 31 + 31 * option - dn_lerp(0,27,dn_logRemap(umData->options[option].selectionAmount)), x + 163, y + 31 + 31 * option, c523);
         if(umData->selectionIdx == option)
         {
             drawWsgPaletteSimple(&self->gameData->assets[DN_REROLL_ASSET].frames[0], x + 144, y + 4 + 31 * option,
@@ -1500,11 +1509,11 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
                 break;
         }
         tWidth = textWidth(&self->gameData->font_ibm, text);
-        drawText(&self->gameData->font_ibm, c434, text, x + 73 - (tWidth >> 1), y + 11 + 31 * option);
+        drawText(&self->gameData->font_ibm, c545, text, x + 73 - (tWidth >> 1), y + 11 + 31 * option);
     }
 
-    drawRectFilled(x + 40, y + 98, x + dn_lerp(40,125,dn_logRemap(umData->options[2].selectionAmount)), y + 116, c302);
+    drawRectFilled(x + 40, y + 98, x + dn_lerp(40,125,dn_logRemap(umData->options[3].selectionAmount)), y + 116, c523);
     drawRect(x + 40, y + 98, x + 125, y + 116, umData->selectionIdx == 3 ? c555 : c434);
     tWidth = textWidth(&self->gameData->font_ibm, "CONFIRM");
-    drawText(&self->gameData->font_ibm, umData->selectionIdx == 3 ? c555 : c434, "CONFIRM", x + 82 - (tWidth >> 1), y + 102);
+    drawText(&self->gameData->font_ibm, umData->selectionIdx == 3 ? c555 : c545, "CONFIRM", x + 82 - (tWidth >> 1), y + 102);
 }
