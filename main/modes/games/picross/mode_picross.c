@@ -19,7 +19,7 @@ void picrossCheckLevel(void);
 void picrossSetupPuzzle(bool cont);
 void picrossCalculateHoverHint(void);
 void setCompleteLevelFromWSG(wsg_t* puzz);
-void drawSinglePixelFromWSG(int x, int y, wsg_t* image);
+void drawSinglePixelFromWSG(int x, int y, wsg_t* image, int offsetX, int offsetY);
 // bool hintsMatch(picrossHint_t a, picrossHint_t b);
 bool hintIsFilledIn(picrossHint_t* hint);
 box_t boxFromCoord(int8_t x, int8_t y);
@@ -39,6 +39,7 @@ void enterSpace(uint8_t x, uint8_t y, picrossSpaceType_t newSpace);
 bool toggleTentativeMark(uint8_t x, uint8_t y);
 bool setTentativeMark(uint8_t x, uint8_t y, bool mark);
 void picrossVictoryLEDs(uint32_t tElapsedUs, uint32_t arg, bool reset);
+int8_t lerp(int8_t a, int8_t b, uint16_t amount);
 //==============================================================================
 // Variables
 //==============================================================================
@@ -148,6 +149,10 @@ void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool con
             p->errorBLEDBlinkLEDS[i].b = 0x00;
         }
     }
+    p->elapsedUs      = 0;
+    p->loopingTimer   = 0;
+    p->lerpAmount     = 0;
+    p->marqueeScrollX = -10000000;
 
     // BG music
     // TODO MIDI music
@@ -156,6 +161,10 @@ void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool con
 
     // Setup level
     picrossSetupPuzzle(cont);
+
+    // set the winning positional offset.
+    p->offsetX = (TFT_WIDTH / 2) - ((p->puzzle->width * p->drawScale) / 2) - p->drawScale - p->leftPad;
+    p->offsetY = 38 - p->drawScale - p->topPad;
 }
 
 void picrossSetupPuzzle(bool cont)
@@ -414,6 +423,8 @@ picrossHint_t newHintFromPuzzle(uint8_t index, bool isRow,
 
 void picrossGameLoop(int64_t elapsedUs)
 {
+    p->elapsedUs = elapsedUs;
+    p->loopingTimer += elapsedUs >> 12;
     p->bgScrollTimer += elapsedUs;
 
     // We do this at the top of the loop for 2 reasons. THe first is so that changedLevelThisFrame doesn't get reset, so
@@ -450,14 +461,7 @@ void picrossGameLoop(int64_t elapsedUs)
     {
         // TODO MIDI music
         // buzzer_stop();
-        // if (p->selectedLevel.index == 29)
-        // {
-        //     buzzer_play_bgm(&picross_music_rick);
-        // }
-        // else
-        // {
-        //     buzzer_play_bgm(&picross_music_win);
-        // }
+        // buzzer_play_bgm(&picross_music_win);
 
         // Unsave progress. Hides "current" in the main menu. we dont need to zero-out the actual data that will just
         // happen when we load a new level.
@@ -713,7 +717,7 @@ void picrossUserInput(int64_t elapsedUs)
 
     // check for "exit" button before we escape when not in solving mode.
     // todo: how should exit work? A button when game is solved?
-    if (input->btnState & PB_SELECT && !(input->prevBtnState & PB_SELECT)
+    if (input->btnState & PB_START && !(input->prevBtnState & PB_START)
         && !(input->btnState
              & PB_A)) // if we are holding a down when we leave, we instantly select a level on the select screen.
     {
@@ -732,22 +736,24 @@ void picrossUserInput(int64_t elapsedUs)
     if (p->controlsEnabled == false || p->currentPhase == PICROSS_YOUAREWIN)
     {
         //&& !(p->input->prevBtnState & PB_B)
-        if (p->input->btnState & PB_B)
+        if (p->input->btnState & PB_B && !(p->input->prevBtnState & PB_B))
         {
             // return to level select instead of main menu?
             p->exitThisFrame = true;
+        }
+        if (p->input->btnState & PB_LEFT)
+        {
+            p->marqueeScrollX -= elapsedUs * 8;
+        }
+        if (p->input->btnState & PB_RIGHT)
+        {
+            p->marqueeScrollX += elapsedUs * 3;
         }
 
         p->input->prevBtnState = p->input->btnState;
         return;
     }
     // Input checks
-
-    // Reset the counter by pressing start. It should auto-reset, but it can be wonky.
-    if (input->btnState & PB_START && !(input->prevBtnState & PB_START))
-    {
-        p->count = 1;
-    }
 
     // DAS
     // todo: we can cache the != checks, so we do 1 butmask instead of 3 (x4)
@@ -1245,11 +1251,26 @@ void drawPicrossScene(void)
     } // end if phase is solving
     else if (p->currentPhase == PICROSS_YOUAREWIN)
     {
+        p->lerpAmount += p->elapsedUs >> 9;
+        if (p->lerpAmount > PICROSS_LERP_AMOUNT)
+        {
+            p->lerpAmount = PICROSS_LERP_AMOUNT; // cap lerp amount
+        }
+        int ox = lerp(0, p->offsetX, p->lerpAmount);
+        int oy = lerp(0, p->offsetY, p->lerpAmount);
+
         for (int i = 0; i < w; i++)
         {
             for (int j = 0; j < h; j++)
             {
-                drawSinglePixelFromWSG(i, j, &p->selectedLevel.completedWSG);
+                if (p->lerpAmount >= PICROSS_LERP_AMOUNT)
+                {
+                    drawSinglePixelFromWSG(i, j, &p->selectedLevel.completedWSG, ox, oy);
+                }
+                else
+                {
+                    drawSinglePixelFromWSG(i, j, &p->selectedLevel.levelWSG, ox, oy);
+                }
             }
         }
 
@@ -1257,12 +1278,30 @@ void drawPicrossScene(void)
         int16_t t = textWidth(&p->UIFont, p->selectedLevel.title);
         t         = ((TFT_WIDTH)-t) / 2; // from text width into padding.
         drawText(&p->UIFont, c555, p->selectedLevel.title, t, 14);
+
+        // Draw the marquee fact.
+        if (p->lerpAmount == PICROSS_LERP_AMOUNT)
+        {
+            if (p->loopingTimer > 0)
+            {
+                drawText(&p->UIFont, c555, "<", 12, 200);
+                drawText(&p->UIFont, c555, ">", 258, 200);
+            }
+            // Slow auto scroll.
+            p->marqueeScrollX += p->elapsedUs * 3;
+            drawTextMarquee(&p->UIFont, c555, p->selectedLevel.marqueeFact, 27, 200, TFT_WIDTH - 30,
+                            &p->marqueeScrollX);
+        }
     }
 }
 
-void drawSinglePixelFromWSG(int x, int y, wsg_t* image)
+void drawSinglePixelFromWSG(int x, int y, wsg_t* image, int offsetX, int offsetY)
 {
-    box_t box        = boxFromCoord(x, y);
+    box_t box = boxFromCoord(x, y);
+    box.x0 += offsetX;
+    box.y0 += offsetY;
+    box.x1 += offsetX;
+    box.y1 += offsetY;
     paletteColor_t v = image->px[(y * p->puzzle->width) + x];
     drawBox(box, v, true, 0);
 }
@@ -1842,6 +1881,10 @@ void picrossVictoryLEDs(uint32_t tElapsedUs, uint32_t arg, bool reset)
  */
 void drawBox(box_t box, paletteColor_t color, bool isFilled, int32_t scalingFactor)
 {
+    if (color == cTransparent)
+    {
+        return;
+    }
     if (isFilled)
     {
         fillDisplayArea(box.x0 >> scalingFactor, box.y0 >> scalingFactor, box.x1 >> scalingFactor,
@@ -1852,4 +1895,18 @@ void drawBox(box_t box, paletteColor_t color, bool isFilled, int32_t scalingFact
         drawRect(box.x0 >> scalingFactor, box.y0 >> scalingFactor, box.x1 >> scalingFactor, box.y1 >> scalingFactor,
                  color);
     }
+}
+
+/**
+ * @brief Linear interpolate between two integers a and b by amount
+ *
+ * @param a The starting integer
+ * @param b The ending integer
+ * @param amount Lerp amount from 0 to PICROSS_LERP_AMOUNT.
+ *               0 returns a.
+ *               PICROSS_LERP_AMOUNT returns b.
+ */
+int8_t lerp(int8_t a, int8_t b, uint16_t amount)
+{
+    return a + ((b - a) * amount) / PICROSS_LERP_AMOUNT;
 }

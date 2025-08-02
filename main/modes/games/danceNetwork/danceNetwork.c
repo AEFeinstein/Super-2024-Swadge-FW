@@ -88,12 +88,6 @@ const char dnCharacterKey[] = "dn_character";
 const char dnTutorialKey[]  = "dn_tutor";
 const char dnUnlockKey[]    = "dn_unlock";
 
-static const led_t dn_LedMenuColor = {
-    .r = 0x66,
-    .g = 0x00,
-    .b = 0x66,
-};
-
 dn_gameData_t* gameData;
 
 static void dn_EnterMode(void)
@@ -183,18 +177,18 @@ static void dn_EnterMode(void)
     makeOutlineFont(&gameData->font_righteous, &gameData->outline_righteous, true);
 
     // Initialize a menu renderer
-    gameData->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    gameData->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
     // Color the menu my way
-    static const paletteColor_t shadowColors[] = {
-        c500, c050, c005, c550, c505, c055, c200, c020, c002, c220,
-    };
+    // static const paletteColor_t shadowColors[] = {
+    //     c500, c050, c005, c550, c505, c055, c200, c020, c002, c220,
+    // };
 
-    recolorMenuManiaRenderer(gameData->menuRenderer, //
-                             c202, c540, c000,       // titleBgColor, titleTextColor, textOutlineColor
-                             c315,                   // bgColor
-                             c213, c035,             // outerRingColor, innerRingColor
-                             c000, c555,             // rowColor, rowTextColor
-                             shadowColors, ARRAY_SIZE(shadowColors), dn_LedMenuColor);
+    // recolorMenuManiaRenderer(gameData->menuRenderer, //
+    //                          c202, c540, c000,       // titleBgColor, titleTextColor, textOutlineColor
+    //                          c315,                   // bgColor
+    //                          c213, c035,             // outerRingColor, innerRingColor
+    //                          c000, c555,             // rowColor, rowTextColor
+    //                          shadowColors, ARRAY_SIZE(shadowColors), dn_LedMenuColor);
 
     // Initialize the main menu
     gameData->menu = initMenu(dn_Name, dn_MenuCb);
@@ -282,7 +276,7 @@ static void dn_MainLoop(int64_t elapsedUs)
     {
         case UI_MENU:
         {
-            drawMenuMania(gameData->menu, gameData->menuRenderer, elapsedUs);
+            drawMenuMega(gameData->menu, gameData->menuRenderer, elapsedUs);
             break;
         }
         case UI_CONNECTING:
@@ -462,9 +456,7 @@ void dn_ShowUi(dn_Ui_t ui)
     gameData->ui = ui;
 
     // Assume menu LEDs should be on
-    setManiaLedsOn(gameData->menuRenderer, true);
-    gameData->menuRenderer->baseLedColor = dn_LedMenuColor;
-    setManiaDrawRings(gameData->menuRenderer, true);
+    setMegaLedsOn(gameData->menuRenderer, true);
 
     // Initialize the new UI
     switch (gameData->ui)
@@ -492,8 +484,7 @@ void dn_ShowUi(dn_Ui_t ui)
         case UI_HOW_TO:
         {
             // Turn LEDs off for reading
-            setManiaLedsOn(gameData->menuRenderer, false);
-            setManiaDrawRings(gameData->menuRenderer, false);
+            setMegaLedsOn(gameData->menuRenderer, false);
             gameData->bgMenu->title = dn_HowToStr;
             // gameData->pageIdx         = 0;
             // gameData->arrowBlinkTimer = 0;
@@ -696,6 +687,13 @@ static void dn_initializeGame(void)
     // Make the playerTurn //
     /////////////////////////
     dn_entity_t* playerTurn = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, gameData);
+    playerTurn->drawFunction = dn_drawPlayerTurn;
+
+    /////////////////////////
+    // Make the playerTurn //
+    /////////////////////////
+    dn_entity_t* playerTurn = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0,
+                                                     (vec_t){0xffff, 0xffff}, gameData);
     playerTurn->drawFunction = dn_drawPlayerTurn;
 
     /////////////////////

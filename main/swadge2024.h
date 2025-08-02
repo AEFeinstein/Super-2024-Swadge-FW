@@ -180,6 +180,7 @@
 #include "hdw-imu.h"
 #include "hdw-battmon.h"
 #include "hdw-btn.h"
+#include "hdw-ch32v003.h"
 #include "hdw-dac.h"
 #include "hdw-esp-now.h"
 #include "hdw-led.h"
@@ -198,6 +199,7 @@
 #include "fill.h"
 #include "menu.h"
 #include "menuManiaRenderer.h"
+#include "menuMegaRenderer.h"
 
 // Asset loaders
 #include "cnfs.h"

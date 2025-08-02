@@ -122,10 +122,11 @@
  * - shapes.h: Learn how to draw shapes and curves on the screen
  * - wsg.h: Learn how to draw sprites on the screen
  * - font.h: Learn how to draw text on the screen
+ * - hdw-ch32v003.h: The matrix array driver on the 2026 Swadge
  *
  * \subsection gui_api Graphical UI APIs
  *
- * - menu.h and menuManiaRenderer.h: Make and render a menu within a mode
+ * - menu.h and menuMegaRenderer.h: Make and render a menu within a mode
  * - dialogBox.h: Show messages and prompt users for a response
  * - touchTextEntry.h: Edit an arbitrary single line of text by selecting each letter at a time with up & down keys
  * - textEntry.h: Edit an arbitrary single line of text with a virtual QWERTY keyboard
@@ -166,10 +167,10 @@
  * is useful:
  * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-reference/index.html">ESP-IDF API
  * Reference</a>
- * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-­S2 Series
+ * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-S2 Series
  * Datasheet</a>
  * - <a
- * href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf">ESP32­-S2
+ * href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf">ESP32-S2
  * Technical Reference Manual</a>
  */
 
@@ -406,6 +407,8 @@ void app_main(void)
 #endif
 
     initLeds(GPIO_NUM_39, ledMirrorGpio, getLedBrightnessSetting());
+
+    initCh32v003(GPIO_SAO_2);
 
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();

@@ -20,7 +20,7 @@
  */
 const char* getMenuItemLabelText(char* buffer, int buflen, const menuItem_t* item)
 {
-    if (item->minSetting != item->maxSetting)
+    if (item->numOptions != 0)
     {
         // Handle concatenating the values
         if (item->options)

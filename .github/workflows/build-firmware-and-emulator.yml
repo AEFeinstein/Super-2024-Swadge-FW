@@ -29,6 +29,8 @@ jobs:
               - version.txt
             # TODO: What variable can we use to not hardcode this???
             idf_install: C:\Users\runneradmin\.espressif
+            shell: 'msys2 {0}'
+            env: x86_64
           - os: osx-arm
             runner: macos-latest
             family: osx

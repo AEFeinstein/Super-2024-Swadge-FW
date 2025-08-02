@@ -10,7 +10,8 @@ typedef struct
     wsg_t levelWSG;
     wsg_t completedWSG;
     bool completed;
-    char* title;
+    const char* title;
+    const char* marqueeFact;
 } picrossLevelDef_t;
 
 typedef struct
@@ -20,9 +21,11 @@ typedef struct
     picrossLevelDef_t* chosenLevel;
     uint8_t gridScale;
     int8_t hoverLevelIndex;
+    uint8_t topVisibleRow;
     int8_t hoverX;
     int8_t hoverY;
     uint8_t rows;
+    uint8_t totalRows;
     uint8_t cols;
     uint16_t prevBtnState;
     uint16_t btnState;

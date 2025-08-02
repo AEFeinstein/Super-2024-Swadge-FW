@@ -11,7 +11,7 @@ Espressif's installation guide notes limitations for the ESP-IDF's path:
 >
 > The installation path of Python or ESP-IDF must not contain white spaces or parentheses.
 >
-> The installation path of Python or ESP-IDF should not contain special characters (non-ASCII) unless the operating system is configured with “Unicode UTF-8” support.
+> The installation path of Python or ESP-IDF should not contain special characters (non-ASCII) unless the operating system is configured with "Unicode UTF-8" support.
 
 If the path to your home directory has spaces in it, then installation paths should be changed to something without a space, like `c:\esp\`. Also note that `ccache` uses a temporary directory in your home directory, and spaces in that path cause issues. `ccache` is enabled by default when running `export.ps1`, but it can be disabled by removing the following from `esp-idf/tools/tools.json`:
 ```

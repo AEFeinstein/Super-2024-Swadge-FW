@@ -53,7 +53,7 @@ typedef struct
 
     // Menu
     menu_t* menu;
-    menuManiaRenderer_t* renderer;
+    menuMegaRenderer_t* renderer;
 
     // Menu vars
     int8_t fontSel;

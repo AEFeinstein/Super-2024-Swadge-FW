@@ -133,6 +133,12 @@ typedef struct
     uint8_t ledAnimCount;      // victory dance
     uint32_t animtAccumulated; // victory dance
     bool tentativeMarks[PICROSS_MAX_LEVELSIZE][PICROSS_MAX_LEVELSIZE];
+    int64_t elapsedUs;      // for sliding to center after winning.
+    int8_t loopingTimer;    // for flashing arrows after winning.
+    int8_t offsetX;         // for sliding to center after winning.
+    int8_t offsetY;         // for sliding to center after winning.
+    uint16_t lerpAmount;    // for sliding to center after winning.
+    int32_t marqueeScrollX; // for the marquee text
 } picrossGame_t;
 
 void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool cont);

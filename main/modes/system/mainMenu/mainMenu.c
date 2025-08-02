@@ -17,7 +17,7 @@
 typedef struct
 {
     menu_t* menu;
-    menuManiaRenderer_t* renderer;
+    menuMegaRenderer_t* renderer;
     font_t font_rodin;
     midiFile_t fanfare;
 #ifdef SW_VOL_CONTROL
@@ -275,6 +275,8 @@ static void mainMenuEnterMode(void)
     // Allocate the menu
     mainMenu->menu = initMenu(mainMenuTitle, mainMenuCb);
 
+    /*int ch32v003LoadReply = */ ch32v003RunBinaryAsset(MATRIX_DROPS_CFUN_BIN);
+
 #ifdef CONFIG_FACTORY_TEST_NORMAL
     // Initialize all the modes in modeList
     modeListSetMenu(mainMenu->menu);
@@ -313,7 +315,7 @@ static void mainMenuEnterMode(void)
     setShowBattery(mainMenu->menu, true);
 
     // Initialize menu renderer
-    mainMenu->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    mainMenu->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
 }
 
 /**
@@ -325,7 +327,7 @@ static void mainMenuExitMode(void)
     deinitMenu(mainMenu->menu);
 
     // Deinit renderer
-    deinitMenuManiaRenderer(mainMenu->renderer);
+    deinitMenuMegaRenderer(mainMenu->renderer);
 
     // Free the font
     freeFont(&mainMenu->font_rodin);
@@ -409,7 +411,7 @@ static void mainMenuMainLoop(int64_t elapsedUs)
     }
 
     // Draw the menu
-    drawMenuMania(mainMenu->menu, mainMenu->renderer, elapsedUs);
+    drawMenuMega(mainMenu->menu, mainMenu->renderer, elapsedUs);
 
     // If a trophy was showing, but the animation is done
     if (mainMenu->modeEnterTrophyShowing && !isTrophyDrawing())

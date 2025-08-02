@@ -866,7 +866,7 @@ void dn_drawCharacterSelect(dn_entity_t* self)
     dn_characterSelectData_t* cData = (dn_characterSelectData_t*)self->data;
 
     // Draw the background, a blank menu
-    drawMenuMania(self->gameData->bgMenu, self->gameData->menuRenderer, self->gameData->elapsedUs);
+    drawMenuMega(self->gameData->bgMenu, self->gameData->menuRenderer, self->gameData->elapsedUs);
 
     // Set up variables for drawing
     int16_t yOff = MANIA_TITLE_HEIGHT + 20;
