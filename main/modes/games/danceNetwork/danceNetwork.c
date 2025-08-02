@@ -689,13 +689,6 @@ static void dn_initializeGame(void)
     dn_entity_t* playerTurn = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, gameData);
     playerTurn->drawFunction = dn_drawPlayerTurn;
 
-    /////////////////////////
-    // Make the playerTurn //
-    /////////////////////////
-    dn_entity_t* playerTurn = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0,
-                                                     (vec_t){0xffff, 0xffff}, gameData);
-    playerTurn->drawFunction = dn_drawPlayerTurn;
-
     /////////////////////
     // Make the curtain//
     /////////////////////
