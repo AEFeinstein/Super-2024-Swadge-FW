@@ -141,7 +141,7 @@ typedef struct
     dn_track_t trackColor;
     vec_t track;
     uint8_t album;//0 for p1's album, 1 for creative commons album, 2 for p2's album.
-    dn_promptOption_t options[3];// reroll 1, reroll 2, reroll 3, and confirm.
+    dn_promptOption_t options[4];// reroll 1, reroll 2, reroll 3, and confirm.
 } dn_upgradeMenuData_t;
 
 

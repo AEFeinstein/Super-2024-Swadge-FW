@@ -384,8 +384,8 @@ void dn_drawCurtain(dn_entity_t* self)
     if (curtainData->separation > -600 && curtainData->separation < -50)
     {
         tWidth = textWidth(&self->gameData->font_righteous, "VS");
-        drawText(&self->gameData->font_righteous, c530, "VS", (TFT_WIDTH >> 1) - (tWidth >> 1), 90);
-        drawText(&self->gameData->outline_righteous, c550, "VS", (TFT_WIDTH >> 1) - (tWidth >> 1), 90);
+        drawText(&self->gameData->font_righteous,  c535, "VS", (TFT_WIDTH >> 1) - (tWidth >> 1), 90);
+        drawText(&self->gameData->outline_righteous, c314, "VS", (TFT_WIDTH >> 1) - (tWidth >> 1), 90);
     }
     if (curtainData->separation > -500 && curtainData->separation < -50)
     {
@@ -393,18 +393,18 @@ void dn_drawCurtain(dn_entity_t* self)
         x      = (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1);
         y      = 29;
 
-        drawText(&self->gameData->font_ibm, c001, self->gameData->playerNames[1], x, y);
+        drawText(&self->gameData->font_ibm, c110, self->gameData->playerNames[1], x, y);
         y++;
         x++;
-        drawText(&self->gameData->font_ibm, c001, self->gameData->playerNames[1], x, y);
+        drawText(&self->gameData->font_ibm, c110, self->gameData->playerNames[1], x, y);
         y++;
         x--;
-        drawText(&self->gameData->font_ibm, c001, self->gameData->playerNames[1], x, y);
+        drawText(&self->gameData->font_ibm, c110, self->gameData->playerNames[1], x, y);
         y--;
         x--;
-        drawText(&self->gameData->font_ibm, c001, self->gameData->playerNames[1], x, y);
+        drawText(&self->gameData->font_ibm, c110, self->gameData->playerNames[1], x, y);
         x++;
-        drawShinyText(&self->gameData->font_ibm, c245, c355, c555, self->gameData->playerNames[1], x, y);
+        drawShinyText(&self->gameData->font_ibm, c442, c553, c555, self->gameData->playerNames[1], x, y);
         // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 30);
         // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 29);
         // drawText(&self->gameData->font_ibm, c101, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 31);
@@ -437,20 +437,24 @@ void dn_drawAlbums(dn_entity_t* self)
                   ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1) - 80,
                   ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS));
 
-    // strcpy(text, "Creative");
-    // tWidth = textWidth(&self->gameData->font_ibm, text);
-    // drawShinyText(&self->gameData->font_ibm, c425, c535, c555, text,
-    //     ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1),
-    //     ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) - 6);
-    // strcpy(text, "Commons");
-    // tWidth = textWidth(&self->gameData->font_ibm, text);
-    // drawShinyText(&self->gameData->font_ibm, c425, c535, c555, text,
-    //     ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1),
-    //     ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 5);
+    if(self->pos.y < 63550)
+    {
+        strcpy(text, "Creative");
+        tWidth = textWidth(&self->gameData->font_ibm, text);
+        drawShinyText(&self->gameData->font_ibm, c425, c535, c555, text,
+            ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1),
+            ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) - 1);
+        strcpy(text, "Commons");
+        tWidth = textWidth(&self->gameData->font_ibm, text);
+        drawShinyText(&self->gameData->font_ibm, c425, c535, c555, text,
+            ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1),
+            ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 10);
+    }
+
 
     strcpy(text, "Player 2");
     tWidth = textWidth(&self->gameData->font_ibm, text);
-    drawShinyText(&self->gameData->font_ibm, c245, c355, c555, text,
+    drawShinyText(&self->gameData->font_ibm, c442, c553, c555, text,
                   ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1) + 80,
                   ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS));
 }
@@ -1406,7 +1410,7 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
     {
         umData->selectionIdx++;
     }
-    umData->selectionIdx = CLAMP(umData->selectionIdx, 0, 2);
+    umData->selectionIdx = CLAMP(umData->selectionIdx, 0, 3);
 
     if(self->gameData->btnState & PB_A)
     {
@@ -1424,6 +1428,19 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
     if(self->gameData->camera.pos.y > (self->pos.y - (26 << DN_DECIMAL_BITS)))
     {
         self->gameData->camera.pos.y -= self->gameData->elapsedUs >> 8;
+        self->gameData->entityManager.albums->pos.y -= self->gameData->elapsedUs / 1900;
+        dn_albumsData_t* aData = (dn_albumsData_t*) self->gameData->entityManager.albums->data;
+        aData->p1Album->pos.y -= self->gameData->elapsedUs / 1900;
+        aData->creativeCommonsAlbum->pos.y -= self->gameData->elapsedUs / 1900;
+        aData->p2Album->pos.y -= self->gameData->elapsedUs / 1900;
+    }
+    else if(self->gameData->entityManager.albums->pos.y != 63443)
+    {
+        self->gameData->entityManager.albums->pos.y = 63443;
+        dn_albumsData_t* aData = (dn_albumsData_t*) self->gameData->entityManager.albums->data;
+        aData->p1Album->pos.y = 62928;
+        aData->creativeCommonsAlbum->pos.y = 62928;
+        aData->p2Album->pos.y = 62928;
     }
 }
 
@@ -1452,11 +1469,13 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
     //vertical right line
     drawLineFast(x + 165, y + 9, x + 165, y + 88, c555);
 
+    uint16_t tWidth = 0;
+
     for(uint8_t option = 0; option < 3; option++)
     {
         //option 1
         drawRect(x + 2, y + 3 + 31*option, x + 144, y + 32 + 31*option, c434);
-        drawRect(x + 143, y + 3 + 31*option, x + 164, y + 32 + 31*option, c434);
+        drawRect(x + 143, y + 3 + 31*option, x + 164, y + 32 + 31*option, umData->selectionIdx == option ? c555 : c434);
         drawRectFilled(x + 144, y + 31 + 31 * option - dn_lerp(0,27,dn_logRemap(umData->options[option].selectionAmount)), x + 163, y + 31 + 31 * option, c554);
         if(umData->selectionIdx == option)
         {
@@ -1480,7 +1499,12 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
                 strcpy(text, "on the CC album.");
                 break;
         }
-        uint16_t tWidth = textWidth(&self->gameData->font_ibm, text);
-        drawText(&self->gameData->font_ibm, c555, text, x + 73 - (tWidth >> 1), y + 11 + 31 * option);
+        tWidth = textWidth(&self->gameData->font_ibm, text);
+        drawText(&self->gameData->font_ibm, c434, text, x + 73 - (tWidth >> 1), y + 11 + 31 * option);
     }
+
+    drawRectFilled(x + 40, y + 98, x + dn_lerp(40,125,dn_logRemap(umData->options[2].selectionAmount)), y + 116, c302);
+    drawRect(x + 40, y + 98, x + 125, y + 116, umData->selectionIdx == 3 ? c555 : c434);
+    tWidth = textWidth(&self->gameData->font_ibm, "CONFIRM");
+    drawText(&self->gameData->font_ibm, umData->selectionIdx == 3 ? c555 : c434, "CONFIRM", x + 82 - (tWidth >> 1), y + 102);
 }
