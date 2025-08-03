@@ -1483,7 +1483,12 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
     for(uint8_t option = 0; option < 3; option++)
     {
         //option 1
-        drawRect(x + 2, y + 3 + 31*option, x + 144, y + 32 + 31*option, c434);
+        //THIS IS THE LEFT BOX
+        drawRect(x + 2, y + 3 + 31*option, x + 144, y + 32 + 31*option,  umData->selectionIdx == option ? c555 : c434);
+        if(umData->selectionIdx == option)
+        {
+            drawRectFilled(x + 2, y + 3 + 31*option, x + 144, y + 32 + 31*option,  c323);
+        }
         drawRect(x + 143, y + 3 + 31*option, x + 164, y + 32 + 31*option, umData->selectionIdx == option ? c555 : c434);
         drawRectFilled(x + 144, y + 31 + 31 * option - dn_lerp(0,27,dn_logRemap(umData->options[option].selectionAmount)), x + 163, y + 31 + 31 * option, c523);
         if(umData->selectionIdx == option)
@@ -1509,7 +1514,7 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
                 break;
         }
         tWidth = textWidth(&self->gameData->font_ibm, text);
-        drawText(&self->gameData->font_ibm, c545, text, x + 73 - (tWidth >> 1), y + 11 + 31 * option);
+        drawText(&self->gameData->font_ibm, umData->selectionIdx == option ? c555 : c545, text, x + 73 - (tWidth >> 1), y + 11 + 31 * option);
     }
 
     drawRectFilled(x + 40, y + 98, x + dn_lerp(40,125,dn_logRemap(umData->options[3].selectionAmount)), y + 116, c523);
