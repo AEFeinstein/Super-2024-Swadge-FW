@@ -1246,9 +1246,6 @@ void dn_gainReroll(dn_entity_t* self)
 
 void dn_gainRerollAndStep(dn_entity_t* self)
 {
-    dn_gainReroll(self);
-    dn_incrementPhase(self);
-
     if(dn_calculateMoveableUnits(self->gameData->entityManager.board))
     {
         /////////////////////////////
@@ -1299,10 +1296,16 @@ void dn_gainRerollAndStep(dn_entity_t* self)
         promptNoMoves->updateFunction = dn_updatePrompt;
         promptNoMoves->drawFunction = dn_drawPrompt;
     }
+    dn_gainReroll(self);
+    dn_incrementPhase(self);
 }
 
 void dn_acceptRerollAndSkip(dn_entity_t* self)
 {
+    dn_albumsData_t* aData = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
+    ((dn_albumData_t*)aData->p1Album->data)->cornerLightBlinking = false;
+    ((dn_albumData_t*)aData->p2Album->data)->cornerLightBlinking = false;
+
     dn_gainReroll(self);
     dn_incrementPhase(self);//would be move phase
     dn_incrementPhase(self);//it is now upgrade phase
@@ -1542,21 +1545,68 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
         {
             drawWsgSimple(&self->gameData->assets[DN_REROLL_ASSET].frames[0], x + 144, y + 4 + 31 * option);
         }
-        char text[20] = "";
+        char text[31] = "";
         switch(option)
         {
             case 0:
-                strcpy(text, "Add a blue track,");
+            {
+                switch(umData->trackColor)
+                {
+                    case DN_RED_TRACK:
+                    {
+                        snprintf(text, sizeof(text), "Add a red track,");
+                        break;
+                    }
+                    case DN_BLUE_TRACK:
+                    {
+                        snprintf(text, sizeof(text), "Add a blue track,");
+                        break;
+                    }
+                    case DN_REMIX_TRACK:
+                    {
+                        snprintf(text, sizeof(text), "Remix a track,");
+                        break;
+                    }
+                }
                 break;
-            case 1:
-                strcpy(text, "forward 1, right 2,");
+            }
+                case 1:
+            {
+                snprintf(text, sizeof(text), "%s %d, %s %d,", umData->track.y ? "forward" : "back", (uint8_t)ABS(umData->track.y), 
+                                              umData->track.x ? "left" : "right", (uint8_t)ABS(umData->track.x));
                 break;
+            }
             case 2:
-                strcpy(text, "on the CC album.");
+            {
+                switch(umData->album)
+                {
+                    case 0:
+                    case 1:
+                    {
+                        snprintf(text, sizeof(text), "on %s's album.", self->gameData->shortPlayerNames[0]);
+                        break;
+                    }
+                    case 2:
+                    {
+                        snprintf(text, sizeof(text), "on the Creative Commons album.");
+                        break;
+                    }
+                }
                 break;
+            }
         }
-        tWidth = textWidth(&self->gameData->font_ibm, text);
-        drawText(&self->gameData->font_ibm, umData->selectionIdx == option ? c555 : c545, text, x + 73 - (tWidth >> 1), y + 11 + 31 * option);
+        if(option < 2)
+        {
+            tWidth = textWidth(&self->gameData->font_ibm, text);
+            drawText(&self->gameData->font_ibm, umData->selectionIdx == option ? c555 : c545, text, x + 73 - (tWidth >> 1), y + 11 + 31 * option);
+        }
+        else
+        {
+            int16_t xValue = x + 6;
+            int16_t yValue = y + 7 + 31*option;
+            drawTextWordWrapCentered(&self->gameData->font_ibm, umData->selectionIdx == option ? c555 : c545, text, &xValue, &yValue, x + 141, y + 30 + 31*option);
+        }
+        
     }
 
     drawRectFilled(x + 40, y + 98, x + dn_lerp(40,125,dn_logRemap(umData->options[3].selectionAmount)), y + 116, c523);

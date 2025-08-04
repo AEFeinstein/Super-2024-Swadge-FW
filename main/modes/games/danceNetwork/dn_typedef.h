@@ -121,5 +121,5 @@ typedef enum __attribute__((packed))
     DN_NONE_TRACK,
     DN_RED_TRACK,
     DN_BLUE_TRACK,
-    DN_GREEN_TRACK,
+    DN_REMIX_TRACK,
 } dn_track_t;
