@@ -102,16 +102,18 @@ typedef enum __attribute__((packed))
 
 typedef enum __attribute__((packed))
 {
+    DN_P1_TURN_START_PHASE,
+    DN_P1_SWAP_CC_PHASE,
     DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE,
     DN_P1_MOVE_PHASE,
-    DN_P1_UPGRADE_PHASE,
-    DN_P1_SWAP_CC_PHASE,
     DN_P1_SWAP_P2_PHASE,
+    DN_P1_UPGRADE_PHASE,
+    DN_P2_TURN_START_PHASE,
+    DN_P2_SWAP_CC_PHASE,
     DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE,
     DN_P2_MOVE_PHASE,
+    DN_P2_SWAP_P1_PHASE,
     DN_P2_UPGRADE_PHASE,
-    DN_P2_SWAP_CC_PHASE,
-    DN_P2_SWAP_P1_PHASE
 } dn_phase_t;
 
 typedef enum __attribute__((packed))

@@ -186,6 +186,8 @@ void dn_drawPlayerTurn(dn_entity_t* self);
 
 void dn_updatePrompt(dn_entity_t* self);
 void dn_drawPrompt(dn_entity_t* self);
+void dn_gainReroll(dn_entity_t* self);
+void dn_gainRerollAndStep(dn_entity_t* self);
 void dn_acceptRerollAndSkip(dn_entity_t* self);
 void dn_refuseReroll(dn_entity_t* self);
 void dn_incrementPhase(dn_entity_t* self);

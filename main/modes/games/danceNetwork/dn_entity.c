@@ -705,62 +705,40 @@ void dn_updateAlbum(dn_entity_t* self)
             if(self == ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album)
             {
                 //third album finished has finished the bootup animation
-                
-                self->gameData->phase = DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE;
+                self->gameData->phase = DN_P1_TURN_START_PHASE;
+
                 // album light blinks
                 ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album->data)->cornerLightBlinking = true;
 
-                if(dn_calculateMoveableUnits(self->gameData->entityManager.board))
+                ////////////////////////////////
+                // Make the turn start prompt //
+                ////////////////////////////////
+                dn_entity_t* promptToStart = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+                promptToStart->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+                dn_promptData_t* promptData = (dn_promptData_t*)promptToStart->data;
+                promptData->animatingIntroSlide = true;
+                promptData->yOffset = 320;//way off screen to allow more time to look at albums.
+                
+                if(self->gameData->rerolls[self->gameData->phase >= DN_P2_TURN_START_PHASE] != 9)
                 {
-                    /////////////////////////////
-                    // Make the prompt to skip //
-                    /////////////////////////////
-                    dn_entity_t* promptToSkip = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
-                    promptToSkip->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
-                    dn_promptData_t* promptData = (dn_promptData_t*)promptToSkip->data;
-                    promptData->animatingIntroSlide = true;
-                    promptData->yOffset = 320;//way off screen to allow more time to look at albums.
-                    strcpy(promptData->text, "Skip action to gain a reroll?");
-                    
-                    promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-                    
-                    dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
-                    strcpy(option1->text, "no");
-                    option1->callback = dn_refuseReroll;
-                    push(promptData->options, (void*)option1);
-
-                    dn_promptOption_t* option2 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
-                    strcpy(option2->text, "yes");
-                    option2->callback = dn_acceptRerollAndSkip;
-                    push(promptData->options, (void*)option2);
-                    
-                    promptToSkip->dataType     = DN_PROMPT_DATA;
-                    promptToSkip->updateFunction = dn_updatePrompt;
-                    promptToSkip->drawFunction = dn_drawPrompt;
+                    snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! Gain one reroll.", self->gameData->shortPlayerNames[self->gameData->phase>=DN_P2_TURN_START_PHASE]);
                 }
                 else
                 {
-                    //////////////////////////////////
-                    // Make the prompt for no moves //
-                    //////////////////////////////////
-                    dn_entity_t* promptNoMoves = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
-                    promptNoMoves->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
-                    dn_promptData_t* promptData = (dn_promptData_t*)promptNoMoves->data;
-                    promptData->animatingIntroSlide = true;
-                    promptData->yOffset = 320;//way off screen to allow more time to look at albums.
-                    strcpy(promptData->text, "No useable tracks. Gain 1 reroll.");
-                    promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-                    
-                    dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
-                    strcpy(option1->text, "OK");
-                    option1->callback = dn_acceptRerollAndSkip;
-                    push(promptData->options, (void*)option1);
-                    
-                    promptNoMoves->dataType     = DN_PROMPT_DATA;
-                    promptNoMoves->updateFunction = dn_updatePrompt;
-                    promptNoMoves->drawFunction = dn_drawPrompt;
+                    snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! 9 rerolls reached.", self->gameData->shortPlayerNames[self->gameData->phase>=DN_P2_TURN_START_PHASE]);
                 }
-            }
+                
+                promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+                
+                dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+                strcpy(option1->text, "OK");
+                option1->callback = dn_gainRerollAndStep;
+                push(promptData->options, (void*)option1);
+                    
+                promptToStart->dataType     = DN_PROMPT_DATA;
+                promptToStart->updateFunction = dn_updatePrompt;
+                promptToStart->drawFunction = dn_drawPrompt;
+            }          
             aData->screenIsOn = true;
             aData->cornerLightOn = true;
             aData->timer      = 0;
@@ -1119,11 +1097,12 @@ void dn_drawPlayerTurn(dn_entity_t* self)
     paletteColor_t col = c055;
     switch(self->gameData->phase)
     {
+        case DN_P2_TURN_START_PHASE:
+        case DN_P2_SWAP_CC_PHASE:
         case DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE:
         case DN_P2_MOVE_PHASE:
-        case DN_P2_UPGRADE_PHASE:
-        case DN_P2_SWAP_CC_PHASE:
         case DN_P2_SWAP_P1_PHASE:
+        case DN_P2_UPGRADE_PHASE:
         {
             col = c550;
             break;
@@ -1223,7 +1202,7 @@ void dn_drawPrompt(dn_entity_t* self)
     paletteColor_t outer = c245;
     paletteColor_t middle = c355;
     paletteColor_t inner = c555;
-    if(self->gameData->phase >= DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE)
+    if(self->gameData->phase >= DN_P2_TURN_START_PHASE)
     {
         outer = c442;
         middle = c553;
@@ -1259,9 +1238,72 @@ void dn_drawPrompt(dn_entity_t* self)
     }
 }
 
+void dn_gainReroll(dn_entity_t* self)
+{
+    self->gameData->rerolls[self->gameData->phase>=DN_P2_TURN_START_PHASE]++;
+    self->gameData->rerolls[self->gameData->phase>=DN_P2_TURN_START_PHASE] = CLAMP(self->gameData->rerolls[self->gameData->phase>=DN_P2_TURN_START_PHASE], 0, 9);
+}
+
+void dn_gainRerollAndStep(dn_entity_t* self)
+{
+    dn_gainReroll(self);
+    dn_incrementPhase(self);
+
+    if(dn_calculateMoveableUnits(self->gameData->entityManager.board))
+    {
+        /////////////////////////////
+        // Make the prompt to skip //
+        /////////////////////////////
+        dn_entity_t* promptToSkip = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+        promptToSkip->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+        dn_promptData_t* promptData = (dn_promptData_t*)promptToSkip->data;
+        promptData->animatingIntroSlide = true;
+        promptData->yOffset = 320;//way off screen to allow more time to look at albums.
+        strcpy(promptData->text, "Skip action to gain a reroll?");
+        
+        promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+        
+        dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+        strcpy(option1->text, "no");
+        option1->callback = dn_refuseReroll;
+        push(promptData->options, (void*)option1);
+
+        dn_promptOption_t* option2 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+        strcpy(option2->text, "yes");
+        option2->callback = dn_acceptRerollAndSkip;
+        push(promptData->options, (void*)option2);
+        
+        promptToSkip->dataType     = DN_PROMPT_DATA;
+        promptToSkip->updateFunction = dn_updatePrompt;
+        promptToSkip->drawFunction = dn_drawPrompt;
+    }
+    else
+    {
+        //////////////////////////////////
+        // Make the prompt for no moves //
+        //////////////////////////////////
+        dn_entity_t* promptNoMoves = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+        promptNoMoves->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+        dn_promptData_t* promptData = (dn_promptData_t*)promptNoMoves->data;
+        promptData->animatingIntroSlide = true;
+        promptData->yOffset = 320;//way off screen to allow more time to look at albums.
+        strcpy(promptData->text, "No useable tracks. Gain 1 reroll.");
+        promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+        
+        dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+        strcpy(option1->text, "OK");
+        option1->callback = dn_acceptRerollAndSkip;
+        push(promptData->options, (void*)option1);
+        
+        promptNoMoves->dataType     = DN_PROMPT_DATA;
+        promptNoMoves->updateFunction = dn_updatePrompt;
+        promptNoMoves->drawFunction = dn_drawPrompt;
+    }
+}
+
 void dn_acceptRerollAndSkip(dn_entity_t* self)
 {
-    //dn_gainReroll(self);
+    dn_gainReroll(self);
     dn_incrementPhase(self);//would be move phase
     dn_incrementPhase(self);//it is now upgrade phase
 
@@ -1329,9 +1371,9 @@ void dn_refuseReroll(dn_entity_t* self)
 void dn_incrementPhase(dn_entity_t* self)
 {
     self->gameData->phase++;
-    if(self->gameData->phase > DN_P2_SWAP_P1_PHASE)
+    if(self->gameData->phase > DN_P2_UPGRADE_PHASE)
     {
-        self->gameData->phase = DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE;
+        self->gameData->phase = DN_P1_TURN_START_PHASE;
     }
 }
 

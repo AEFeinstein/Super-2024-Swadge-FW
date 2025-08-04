@@ -101,6 +101,9 @@ static void dn_EnterMode(void)
     strcpy(gameData->playerNames[0], "Player 1");
     strcpy(gameData->playerNames[1], "Player 2");
 
+    strcpy(gameData->shortPlayerNames[0], "Player 1");
+    strcpy(gameData->shortPlayerNames[1], "Player 2");
+
     // set the camera to the center of positive ints
     gameData->camera.pos
         = (vec_t){0xFFFF - (TFT_WIDTH << (DN_DECIMAL_BITS - 1)), 0xFFFF - (TFT_HEIGHT << (DN_DECIMAL_BITS - 1))};

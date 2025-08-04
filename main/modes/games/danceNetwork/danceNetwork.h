@@ -83,6 +83,8 @@ typedef struct dn_gameData_t
     uint8_t alphaFaceDir; // 0 = down, 1 = left, 2 = up, 3 = right
     bool isPlayer1;       // True if the player on this device is P1. False if P2
     char playerNames[2][32];
+    char shortPlayerNames[2][9];
+    int8_t rerolls[2];// The amount of rerolls for p1 and p2.
 } dn_gameData_t;
 
 //==============================================================================
