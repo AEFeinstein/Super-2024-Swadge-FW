@@ -199,3 +199,6 @@ dn_boardPos_t dn_getUnitBoardPos(dn_entity_t* unit);
 
 void dn_updateUpgradeMenu(dn_entity_t* self);
 void dn_drawUpgradeMenu(dn_entity_t* self);
+void dn_rerollSecondUpgradeOption(dn_entity_t* self);
+void dn_rerollThirdUpgradeOption(dn_entity_t* self);
+void dn_rerollFirstUpgradeOption(dn_entity_t* self);

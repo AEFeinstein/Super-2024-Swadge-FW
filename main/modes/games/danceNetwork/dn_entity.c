@@ -272,16 +272,13 @@ bool dn_calculateMoveableUnits(dn_entity_t* board)
 {
     dn_boardData_t* boardData = (dn_boardData_t*)board->data;
     dn_entity_t** playerUnits = NULL;
-    switch(board->gameData->phase)
+    if(board->gameData->phase < DN_P2_TURN_START_PHASE)
     {
-        case DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE:
-            playerUnits = boardData->p1Units;
-            break;
-        case DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE:
-            playerUnits = boardData->p2Units;
-            break;
-        default:
-            return false; // Not in a phase where units can be moved
+        playerUnits = boardData->p1Units;
+    }
+    else
+    {
+        playerUnits = boardData->p2Units;
     }
 
     bool playerHasMoves = false;
@@ -1246,6 +1243,8 @@ void dn_gainReroll(dn_entity_t* self)
 
 void dn_gainRerollAndStep(dn_entity_t* self)
 {
+    dn_gainReroll(self);
+    dn_incrementPhase(self);
     if(dn_calculateMoveableUnits(self->gameData->entityManager.board))
     {
         /////////////////////////////
@@ -1296,8 +1295,6 @@ void dn_gainRerollAndStep(dn_entity_t* self)
         promptNoMoves->updateFunction = dn_updatePrompt;
         promptNoMoves->drawFunction = dn_drawPrompt;
     }
-    dn_gainReroll(self);
-    dn_incrementPhase(self);
 }
 
 void dn_acceptRerollAndSkip(dn_entity_t* self)
@@ -1319,6 +1316,10 @@ void dn_acceptRerollAndSkip(dn_entity_t* self)
     upgradeMenu->dataType    = DN_UPGRADE_MENU_DATA;
     upgradeMenu->updateFunction = dn_updateUpgradeMenu;
     upgradeMenu->drawFunction = dn_drawUpgradeMenu;
+    
+    dn_rerollSecondUpgradeOption(upgradeMenu);
+    dn_rerollThirdUpgradeOption(upgradeMenu);
+    dn_rerollFirstUpgradeOption(upgradeMenu);
 }
 
 void dn_refuseReroll(dn_entity_t* self)
@@ -1572,7 +1573,7 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
             }
                 case 1:
             {
-                snprintf(text, sizeof(text), "%s %d, %s %d,", umData->track.y ? "forward" : "back", (uint8_t)ABS(umData->track.y), 
+                snprintf(text, sizeof(text), "%s %d, %s %d,", umData->track.y >= 0 ? "forward" : "back", (uint8_t)ABS(umData->track.y), 
                                               umData->track.x ? "left" : "right", (uint8_t)ABS(umData->track.x));
                 break;
             }
@@ -1613,4 +1614,20 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
     drawRect(x + 40, y + 98, x + 125, y + 116, umData->selectionIdx == 3 ? c555 : c434);
     tWidth = textWidth(&self->gameData->font_ibm, "CONFIRM");
     drawText(&self->gameData->font_ibm, umData->selectionIdx == 3 ? c555 : c545, "CONFIRM", x + 82 - (tWidth >> 1), y + 102);
+}
+
+void dn_rerollSecondUpgradeOption(dn_entity_t* self)
+{
+    dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
+    umData->track = dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120));
+}
+void dn_rerollThirdUpgradeOption(dn_entity_t* self)
+{
+    dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
+    umData->album = dn_randomInt(0,2);
+}
+void dn_rerollFirstUpgradeOption(dn_entity_t* self)
+{
+    dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
+    umData->trackColor = (dn_track_t)dn_randomInt(1,3);
 }
