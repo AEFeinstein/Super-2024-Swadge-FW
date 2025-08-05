@@ -333,6 +333,7 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
         if (str_passAndPlay == label)
         {
             artilleryInitGame(AG_PASS_AND_PLAY, true);
+            artillerySwitchToState(ad, AGS_MENU);
         }
         else if (str_wirelessConnect == label)
         {
@@ -343,6 +344,7 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
         {
             // TODO implement CPU
             artilleryInitGame(AG_CPU_PRACTICE, true);
+            artillerySwitchToState(ad, AGS_MENU);
         }
         else if (str_help == label)
         {
@@ -454,7 +456,7 @@ void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
     ad->mState = AMS_GAME;
 
     // Start the game on the game menu
-    artillerySwitchToState(ad, AGS_MENU);
+    artillerySwitchToState(ad, AGS_WAIT);
 }
 
 /**
