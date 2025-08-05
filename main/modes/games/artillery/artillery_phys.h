@@ -151,6 +151,10 @@ typedef struct
 
 physSim_t* initPhys(float w, float h, int32_t groundLevel, float gx, float gy, bool generateTerrain);
 void deinitPhys(physSim_t* phys);
+
+void physAddWorldBounds(physSim_t* phys);
+void physRemoveAllObjects(physSim_t* phys);
+
 void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs);
 void physStep(physSim_t* phys, int32_t elapsedUs);
 

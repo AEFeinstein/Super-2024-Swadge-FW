@@ -403,14 +403,18 @@ void physAddTerrainPoints(physSim_t* phys, uint16_t tIdx, const uint16_t* terrai
     float x     = xStep * tIdx;
 
     // Pick the starting Y location
-    int16_t prevY = terrainPoints[0];
+    int16_t prevY    = terrainPoints[0];
+    int32_t startIdx = 1;
+
+    // Some terrain already added, so start where we left off
     if (0 != tIdx)
     {
-        prevY = ((physLine_t*)phys->lines.last->val)->l.p2.y;
+        prevY    = ((physLine_t*)phys->lines.last->val)->l.p2.y;
+        startIdx = 0;
     }
 
     // Create each line
-    for (int32_t pIdx = 1; pIdx < numTerrainPoints; pIdx++)
+    for (int32_t pIdx = startIdx; pIdx < numTerrainPoints; pIdx++)
     {
         physAddLine(phys, x, prevY, x + xStep, terrainPoints[pIdx], true);
         x += xStep;
