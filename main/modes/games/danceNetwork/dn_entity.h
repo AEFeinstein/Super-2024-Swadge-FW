@@ -138,9 +138,11 @@ typedef struct
 typedef struct
 {
     int8_t selectionIdx; // The selected menu item.
+
     dn_track_t trackColor;
-    vec_t track;
-    uint8_t album;//0 for p1's album, 1 for creative commons album, 2 for p2's album.
+    dn_boardPos_t track[17];//relative vector from a unit. 16 plus a null separator
+    uint8_t album[4];//0 for p1's album, 1 for creative commons album, 2 for p2's album. 3 plus a 3 separator
+
     dn_promptOption_t options[4];// reroll 1, reroll 2, reroll 3, and confirm.
 } dn_upgradeMenuData_t;
 
@@ -159,6 +161,8 @@ void dn_updateBoard(dn_entity_t* self);
 bool dn_belongsToP1(dn_entity_t* unit);
 void dn_drawBoard(dn_entity_t* self);
 bool dn_availableMoves(dn_entity_t* unit, list_t* movesList);
+dn_track_t dn_trackTypeAtColor(dn_entity_t* album, paletteColor_t trackCoords);
+dn_track_t dn_trackTypeAtCoords(dn_entity_t* album, dn_boardPos_t trackCoords);
 bool dn_calculateMoveableUnits(dn_entity_t* board);
 bool dn_isKing(dn_entity_t* unit);
 
@@ -167,9 +171,9 @@ void dn_drawCurtain(dn_entity_t* self);
 
 void dn_drawAlbums(dn_entity_t* self);
 
-vec_t dn_colorToTrackCoords(paletteColor_t color);
-dn_twoColors_t dn_trackCoordsToColor(vec_t trackCoords);
-void dn_addTrackToAlbum(dn_entity_t* album, vec_t trackCoords, dn_track_t track);
+dn_boardPos_t dn_colorToTrackCoords(paletteColor_t color);
+dn_twoColors_t dn_trackCoordsToColor(dn_boardPos_t trackCoords);
+void dn_addTrackToAlbum(dn_entity_t* album, dn_boardPos_t trackCoords, dn_track_t track);
 void dn_updateAlbum(dn_entity_t* self);
 void dn_updateAlbumThenSpawnPromptToSkip(dn_entity_t* self);
 void dn_drawAlbum(dn_entity_t* self);
@@ -199,6 +203,9 @@ dn_boardPos_t dn_getUnitBoardPos(dn_entity_t* unit);
 
 void dn_updateUpgradeMenu(dn_entity_t* self);
 void dn_drawUpgradeMenu(dn_entity_t* self);
+void dn_initializeSecondUpgradeOption(dn_entity_t* self);
+void dn_initializeThirdUpgradeOption(dn_entity_t* self);
+void dn_initializeFirstUpgradeOption(dn_entity_t* self);
 void dn_rerollSecondUpgradeOption(dn_entity_t* self);
 void dn_rerollThirdUpgradeOption(dn_entity_t* self);
 void dn_rerollFirstUpgradeOption(dn_entity_t* self);

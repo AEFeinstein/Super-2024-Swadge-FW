@@ -593,11 +593,11 @@ static void dn_initializeGame(void)
     dn_entity_t* album2 = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
                                                 (vec_t){0xFFFF + 1280, 0xFFFF - (139 << DN_DECIMAL_BITS)}, gameData);
 
-    dn_addTrackToAlbum(album1, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120)),
+    dn_addTrackToAlbum(album1, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 122)),
                        (dn_track_t)dn_randomInt(1, 2));
-    dn_addTrackToAlbum(ccAlbum, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120)),
+    dn_addTrackToAlbum(ccAlbum, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 122)),
                        (dn_track_t)dn_randomInt(1, 2));
-    dn_addTrackToAlbum(album2, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120)),
+    dn_addTrackToAlbum(album2, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 122)),
                        (dn_track_t)dn_randomInt(1, 2));
 
     ((dn_albumData_t*)album1->data)->timer  = 10 << 20;

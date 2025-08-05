@@ -3,6 +3,7 @@
 #include "dn_random.h"
 #include "shapes.h"
 #include <linked_list.h>
+#include <limits.h>
 
 void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType)
 {
@@ -224,10 +225,10 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
         if(albumData->screenOnPalette.newColors[check] != c555)//c555 is no action
         {
             //This is a track
-            vec_t* track = heap_caps_malloc(sizeof(vec_t), MALLOC_CAP_8BIT);
+            dn_boardPos_t* track = heap_caps_malloc(sizeof(dn_boardPos_t), MALLOC_CAP_8BIT);
             *track = dn_colorToTrackCoords(check);
             dn_boardPos_t unitPos = dn_getUnitBoardPos(unit);
-            dn_boardPos_t trackPos = (dn_boardPos_t){.x = unitPos.x + (1 - 2 * !isP1) * track->x, unitPos.y + (1 - 2 * isP1) * track->y};
+            dn_boardPos_t trackPos = (dn_boardPos_t){.x = unitPos.x + (1 - 2 * !isP1) * track->x, .y = unitPos.y + (1 - 2 * isP1) * track->y};
             if(trackPos.x >=0 && trackPos.x <= 4 && trackPos.y >= 0 && trackPos.y <= 4)
             {
                 //It is in bounds
@@ -266,6 +267,23 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
         }
     }
     return tracks->first != NULL;
+}
+
+dn_track_t dn_trackTypeAtColor(dn_entity_t* album, paletteColor_t trackCoords)
+{
+    dn_albumData_t* aData = (dn_albumData_t*)album->data;
+    switch(aData->screenOnPalette.newColors[trackCoords])
+    {
+        case c510: return DN_RED_TRACK;
+        case c105: return DN_BLUE_TRACK;
+        case c050: return DN_REMIX_TRACK;
+        default: return DN_NONE_TRACK;
+    }
+}
+
+dn_track_t dn_trackTypeAtCoords(dn_entity_t* album, dn_boardPos_t trackCoords)
+{
+    return dn_trackTypeAtColor(album, dn_trackCoordsToColor(trackCoords).lit);
 }
 
 bool dn_calculateMoveableUnits(dn_entity_t* board)
@@ -456,87 +474,87 @@ void dn_drawAlbums(dn_entity_t* self)
                   ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS));
 }
 
-vec_t dn_colorToTrackCoords(paletteColor_t color)
+dn_boardPos_t dn_colorToTrackCoords(paletteColor_t color)
 {
     switch (color)
     {
         case c255:
         case c155:
         {
-            return (vec_t){-1, 2};
+            return (dn_boardPos_t){-1, 2};
         }
         case c300:
         case c200:
         {
-            return (vec_t){0, 2};
+            return (dn_boardPos_t){0, 2};
         }
         case c301:
         case c201:
         {
-            return (vec_t){1, 2};
+            return (dn_boardPos_t){1, 2};
         }
         case c302:
         case c202:
         {
-            return (vec_t){-2, 1};
+            return (dn_boardPos_t){-2, 1};
         }
         case c303:
         {
-            return (vec_t){-1, 1};
+            return (dn_boardPos_t){-1, 1};
         }
         case c304:
         {
-            return (vec_t){0, 1};
+            return (dn_boardPos_t){0, 1};
         }
         case c305:
         {
-            return (vec_t){1, 1};
+            return (dn_boardPos_t){1, 1};
         }
         case c310:
         {
-            return (vec_t){2, 1};
+            return (dn_boardPos_t){2, 1};
         }
         case c311:
         case c111:
         {
-            return (vec_t){-2, 0};
+            return (dn_boardPos_t){-2, 0};
         }
         case c312:
         {
-            return (vec_t){-1, 0};
+            return (dn_boardPos_t){-1, 0};
         }
         case c313:
         {
-            return (vec_t){1, 0};
+            return (dn_boardPos_t){1, 0};
         }
         case c314:
         {
-            return (vec_t){2, 0};
+            return (dn_boardPos_t){2, 0};
         }
         case c315:
         {
-            return (vec_t){-1, -1};
+            return (dn_boardPos_t){-1, -1};
         }
         case c320:
         {
-            return (vec_t){0, -1};
+            return (dn_boardPos_t){0, -1};
         }
         case c321:
         {
-            return (vec_t){1, -1};
+            return (dn_boardPos_t){1, -1};
         }
         case c322:
         {
-            return (vec_t){0, -2};
+            return (dn_boardPos_t){0, -2};
         }
         default:
         {
-            return (vec_t){0, 0};
+            return (dn_boardPos_t){0, 0};
         }
     }
 }
 
-dn_twoColors_t dn_trackCoordsToColor(vec_t trackCoords)
+dn_twoColors_t dn_trackCoordsToColor(dn_boardPos_t trackCoords)
 {
     switch (trackCoords.y)
     {
@@ -668,7 +686,7 @@ dn_twoColors_t dn_trackCoordsToColor(vec_t trackCoords)
     return (dn_twoColors_t){(paletteColor_t){c000}, (paletteColor_t){c000}};
 }
 
-void dn_addTrackToAlbum(dn_entity_t* album, vec_t trackCoords, dn_track_t track)
+void dn_addTrackToAlbum(dn_entity_t* album, dn_boardPos_t trackCoords, dn_track_t track)
 {
     dn_albumData_t* aData   = (dn_albumData_t*)album->data;
     dn_twoColors_t colors   = dn_trackCoordsToColor(trackCoords);
@@ -718,7 +736,7 @@ void dn_updateAlbum(dn_entity_t* self)
                 
                 if(self->gameData->rerolls[self->gameData->phase >= DN_P2_TURN_START_PHASE] != 9)
                 {
-                    snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! Gain one reroll.", self->gameData->shortPlayerNames[self->gameData->phase>=DN_P2_TURN_START_PHASE]);
+                    snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! Gain 1 reroll.", self->gameData->shortPlayerNames[self->gameData->phase>=DN_P2_TURN_START_PHASE]);
                 }
                 else
                 {
@@ -1255,7 +1273,7 @@ void dn_gainRerollAndStep(dn_entity_t* self)
         dn_promptData_t* promptData = (dn_promptData_t*)promptToSkip->data;
         promptData->animatingIntroSlide = true;
         promptData->yOffset = 320;//way off screen to allow more time to look at albums.
-        strcpy(promptData->text, "Skip action to gain a reroll?");
+        strcpy(promptData->text, "Skip action to gain another reroll?");
         
         promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         
@@ -1317,9 +1335,9 @@ void dn_acceptRerollAndSkip(dn_entity_t* self)
     upgradeMenu->updateFunction = dn_updateUpgradeMenu;
     upgradeMenu->drawFunction = dn_drawUpgradeMenu;
     
-    dn_rerollSecondUpgradeOption(upgradeMenu);
-    dn_rerollThirdUpgradeOption(upgradeMenu);
-    dn_rerollFirstUpgradeOption(upgradeMenu);
+    dn_initializeSecondUpgradeOption(upgradeMenu);
+    dn_initializeThirdUpgradeOption(upgradeMenu);
+    dn_initializeFirstUpgradeOption(upgradeMenu);
 }
 
 void dn_refuseReroll(dn_entity_t* self)
@@ -1571,20 +1589,31 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
                 }
                 break;
             }
-                case 1:
+            case 1:
             {
-                snprintf(text, sizeof(text), "%s %d, %s %d,", umData->track.y >= 0 ? "forward" : "back", (uint8_t)ABS(umData->track.y), 
-                                              umData->track.x ? "left" : "right", (uint8_t)ABS(umData->track.x));
+                if(umData->track[0].x != 0 && umData->track[0].y != 0)
+                {
+                    snprintf(text, sizeof(text), "%s %d, %s %d,", umData->track[0].y < 0 ? "back" : "forward", (uint8_t)ABS(umData->track[0].y), 
+                                              umData->track[0].x < 0 ? "left" : "right", (uint8_t)ABS(umData->track[0].x));
+                }
+                else if(umData->track[0].x == 0 && umData->track[0].y != 0)
+                {
+                    snprintf(text, sizeof(text), "%s %d,", umData->track[0].y < 0 ? "back" : "forward", (uint8_t)ABS(umData->track[0].y));
+                }
+                else if(umData->track[0].x != 0 && umData->track[0].y == 0)
+                {
+                    snprintf(text, sizeof(text), "%s %d,", umData->track[0].x < 0 ? "left" : "right", (uint8_t)ABS(umData->track[0].x));
+                }
                 break;
             }
             case 2:
             {
-                switch(umData->album)
+                switch(umData->album[0])
                 {
                     case 0:
                     case 1:
                     {
-                        snprintf(text, sizeof(text), "on %s's album.", self->gameData->shortPlayerNames[0]);
+                        snprintf(text, sizeof(text), "on %s's album.", self->gameData->shortPlayerNames[umData->album[0]]);
                         break;
                     }
                     case 2:
@@ -1616,18 +1645,171 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
     drawText(&self->gameData->font_ibm, umData->selectionIdx == 3 ? c555 : c545, "CONFIRM", x + 82 - (tWidth >> 1), y + 102);
 }
 
+void dn_initializeSecondUpgradeOption(dn_entity_t* self)
+{
+    dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
+    for(int track = 107; track <= 122; track++)
+    {
+        umData->track[track-107] = dn_colorToTrackCoords((paletteColor_t)track);
+    }
+    umData->track[16] = (dn_boardPos_t){0,0};//null separator
+
+    //shuffle
+    for (int8_t i = sizeof(umData->track) / sizeof(umData->track[0]) - 2; i > 0; i--)
+    {
+        int8_t j = (int8_t)(dn_randomInt(0, INT_MAX) % (i + 1));
+        dn_boardPos_t temp = umData->track[i];
+        umData->track[i] = umData->track[j];
+        umData->track[j] = temp;
+    }
+
+    umData->options[1].callback = dn_rerollSecondUpgradeOption;
+}
+void dn_initializeThirdUpgradeOption(dn_entity_t* self)
+{
+    dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
+    for(int album = 0; album <= 2; album++)
+    {
+        umData->album[album] = album;
+    }
+    umData->album[3] = 3;//3 separator
+
+    //shuffle
+    for (int8_t i = sizeof(umData->album) / sizeof(umData->album[0]) - 2; i > 0; i--)
+    {
+        int8_t j = (int8_t)(dn_randomInt(0, INT_MAX) % (i + 1));
+        uint8_t temp = umData->album[i];
+        umData->album[i] = umData->album[j];
+        umData->album[j] = temp;
+    }
+    
+    umData->options[2].callback = dn_rerollThirdUpgradeOption;
+}
+void dn_initializeFirstUpgradeOption(dn_entity_t* self)
+{
+    dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
+    dn_entity_t* album = NULL;
+    switch(umData->album[0])
+    {
+        case 0:
+        {
+            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album;
+            break;
+        }
+        case 1:
+        {
+            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album;
+            break;
+        }
+        case 2:
+        {
+            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum;
+            break;
+        }
+    }
+    
+    dn_track_t cur = dn_trackTypeAtCoords(album, umData->track[0]);
+    if(cur != DN_NONE_TRACK)
+    {
+        umData->trackColor = DN_REMIX_TRACK;
+    }
+    else
+    {
+        umData->trackColor = dn_randomInt(0,1) ? DN_BLUE_TRACK : DN_RED_TRACK;
+    }
+
+    umData->options[0].callback = dn_rerollFirstUpgradeOption;
+}
+
 void dn_rerollSecondUpgradeOption(dn_entity_t* self)
 {
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
-    umData->track = dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 120));
+    uint8_t separatorIdx = 0;
+    for(int i = 0; i < sizeof(umData->track) / sizeof(umData->track[0]); i++)
+    {
+        if(umData->track[i].x == 0 && umData->track[i].y == 0)
+        {
+            separatorIdx = i;
+            break;
+        }
+    }
+
+    umData->track[separatorIdx] = umData->track[0];
+    umData->track[0] = umData->track[separatorIdx - 1];
+    umData->track[separatorIdx - 1] = (dn_boardPos_t){0,0};
+
+    if(umData->track[0].x == 0 && umData->track[0].y == 0)
+    {
+        dn_initializeSecondUpgradeOption(self);
+    }
+
+    umData->options[1].selectionAmount = 0;
 }
 void dn_rerollThirdUpgradeOption(dn_entity_t* self)
 {
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
-    umData->album = dn_randomInt(0,2);
+    uint8_t separatorIdx = 0;
+    for(int i = 0; i < sizeof(umData->album) / sizeof(umData->album[0]); i++)
+    {
+        if(umData->album[i] == 3)
+        {
+            separatorIdx = i;
+            break;
+        }
+    }
+
+    umData->album[separatorIdx] = umData->album[0];
+    umData->album[0] = umData->album[separatorIdx - 1];
+    umData->album[separatorIdx - 1] = 3;
+
+    if(umData->album[0] == 3)
+    {
+        dn_initializeThirdUpgradeOption(self);
+    }
+
+    umData->options[2].selectionAmount = 0;
 }
 void dn_rerollFirstUpgradeOption(dn_entity_t* self)
 {
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
-    umData->trackColor = (dn_track_t)dn_randomInt(1,3);
+    
+    dn_entity_t* album = NULL;
+    switch(umData->album[0])
+    {
+        case 0:
+        {
+            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album;
+            break;
+        }
+        case 1:
+        {
+            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album;
+            break;
+        }
+        case 2:
+        {
+            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum;
+            break;
+        }
+    }
+    
+    dn_track_t cur = dn_trackTypeAtCoords(album, umData->track[0]);
+
+    if(cur == DN_NONE_TRACK)
+    {
+        if(umData->trackColor == DN_REMIX_TRACK)
+        {
+            umData->trackColor = dn_randomInt(0,1) ? DN_BLUE_TRACK : DN_RED_TRACK;
+        }
+        else
+        {
+            umData->trackColor = umData->trackColor == DN_RED_TRACK ? DN_BLUE_TRACK : DN_RED_TRACK;
+        }
+        
+    }
+    else
+    {
+        umData->trackColor = umData->trackColor == DN_REMIX_TRACK ? (cur == DN_BLUE_TRACK ? DN_RED_TRACK : DN_BLUE_TRACK) : DN_REMIX_TRACK;
+    }
+    umData->options[0].selectionAmount = 0;
 }
