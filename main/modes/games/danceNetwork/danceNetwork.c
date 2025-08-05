@@ -8,6 +8,7 @@
 #include "dn_entity.h"
 #include "dn_entityManager.h"
 #include "dn_utility.h"
+#include "hdw-ch32v003.h"
 
 const char danceNetworkName[] = "Alpha Pulse: Dance Network";
 
@@ -560,6 +561,14 @@ static void dn_initializeGame(void)
     dn_loadAsset(DN_PAWN_SMALL_WSG, 1, &gameData->assets[DN_PAWN_SMALL_ASSET]);
 
     dn_loadAsset(DN_REROLL_WSG, 1, &gameData->assets[DN_REROLL_ASSET]);
+
+    dn_loadAsset(DN_NUMBER_0_WSG, 1, &gameData->assets[DN_NUMBER_ASSET]);
+
+    // LED MATRIX TEST
+    //ch32v003WriteFlash(&gameData->assets[DN_NUMBER_ASSET].frames[0], sizeof(gameData->assets[DN_NUMBER_ASSET].frames[0]));
+    ch32v003WriteMemory(&gameData->assets[DN_NUMBER_ASSET].frames[0], sizeof(gameData->assets[DN_NUMBER_ASSET].frames[0]), 0);
+    ch32v003Resume();
+
 
     //////////////////
     // Make the pit //

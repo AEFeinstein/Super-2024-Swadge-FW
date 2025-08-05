@@ -9,7 +9,7 @@
 #define DN_TILE_WIDTH      51
 #define DN_TILE_HEIGHT     13
 #define NUM_ASSETS         19 // The number of dn_asset_t (last accounted for DN_REROLL_ASSET)
-#define NUM_PALETTES       9  // The number of wsgPalette_t (last accounted for DN_REROLL_PALETTE)
+#define NUM_PALETTES       20 // The number of wsgPalette_t (last accounted for DN_NUMBER_ASSET)
 #define NUM_SELECTOR_LINES 15 // Creates more chaotic lines in the selector graphic
 
 typedef struct dn_entity_t dn_entity_t;
@@ -38,6 +38,7 @@ typedef enum __attribute__((packed))
     DN_PIT_ASSET,
     DN_MINI_TILE_ASSET,
     DN_REROLL_ASSET,
+    DN_NUMBER_ASSET,
     DN_NO_ASSET, // Keep this one at the end of the enum. Used for entities with no wsgs.
 } dn_assetIdx_t;
 
