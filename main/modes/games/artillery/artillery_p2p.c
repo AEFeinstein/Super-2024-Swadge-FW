@@ -99,7 +99,6 @@ static uint8_t getSizeFromType(artilleryP2pPacketType_t type);
 void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
 {
     artilleryData_t* ad = getArtilleryData();
-    // TODO select connection text
     switch (evt)
     {
         case CON_STARTED:
@@ -126,6 +125,11 @@ void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
             {
                 artilleryInitGame(AG_WIRELESS, true);
                 artilleryTxWorld(ad);
+            }
+            else
+            {
+                artilleryInitGame(AG_WIRELESS, false);
+                // Prepare to receive terrain
             }
             break;
         }
@@ -157,26 +161,23 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
         {
             const artPktWorld_t* pkt = (const artPktWorld_t*)payload;
 
-            // Deinit physics if it happens to be initialized
-            if (ad->phys)
-            {
-                deinitPhys(ad->phys);
-            }
-
-            // If the game hasn't started yet, start it
-            if (AMS_GAME != ad->mState)
-            {
-                artilleryInitGame(AG_WIRELESS, false);
-            }
+            // Remove everything before receiving
+            physRemoveAllObjects(ad->phys);
+            // Immediately add world bounds, not in the transmitted packet
+            physAddWorldBounds(ad->phys);
 
             // Add lines from packet
-            physAddTerrainPoints(ad->phys, 0, pkt->terrainPoints, ARRAY_SIZE(pkt->terrainPoints));
+            physAddTerrainPoints(ad->phys, 0, pkt->terrainPoints, NUM_TERRAIN_POINTS_A);
 
             // Add players from packet
             for (int32_t pIdx = 0; pIdx < ARRAY_SIZE(pkt->players); pIdx++)
             {
                 ad->players[pIdx] = physAddPlayer(ad->phys, pkt->players[pIdx].pos, pkt->players[pIdx].barrelAngle);
             }
+
+            // Mark as not ready until the other packet is received
+            ad->phys->isReady = false;
+
             return;
         }
         case P2P_ADD_TERRAIN:
@@ -184,7 +185,7 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
             const artPktTerrain_t* pkt = (const artPktTerrain_t*)payload;
 
             // Add more lines from packet
-            physAddTerrainPoints(ad->phys, NUM_TERRAIN_POINTS_A, pkt->terrainPoints, ARRAY_SIZE(pkt->terrainPoints));
+            physAddTerrainPoints(ad->phys, NUM_TERRAIN_POINTS_A - 1, pkt->terrainPoints, NUM_TERRAIN_POINTS_B);
 
             // Now that terrain is received, create BSP zones
             createBspZones(ad->phys);
@@ -192,18 +193,30 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
             // Mark simulation as ready
             ad->phys->isReady = true;
 
-            // Show the menu
+            // After receiving terrain, open the menu
             artillerySwitchToState(ad, AGS_MENU);
             return;
         }
         case P2P_SET_PLAYERS:
         {
             const artPktPlayers_t* pkt = (const artPktPlayers_t*)payload;
+
+            // Update player location and barrel angle
+            for (int32_t pIdx = 0; pIdx < ARRAY_SIZE(pkt->players); pIdx++)
+            {
+                ad->players[pIdx]->c.pos       = pkt->players[pIdx].pos;
+                ad->players[pIdx]->barrelAngle = pkt->players[pIdx].barrelAngle;
+            }
+
+            // TODO how does ad->phys->cameraTargets work for the inactive player?
+
             return;
         }
         case P2P_FIRE_SHOT:
         {
             const artPktShot_t* pkt = (const artPktShot_t*)payload;
+
+            // TODO the whole thing
             return;
         }
     }

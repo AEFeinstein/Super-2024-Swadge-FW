@@ -79,10 +79,7 @@ physSim_t* initPhys(float w, float h, int32_t groundLevel, float gx, float gy, b
     phys->bounds.y = h;
 
     // Add lines for the world bounds
-    physAddLine(phys, 0, 0, w, 0, false);
-    physAddLine(phys, w, 0, w, h, false);
-    physAddLine(phys, w, h, 0, h, false);
-    physAddLine(phys, 0, h, 0, 0, false);
+    physAddWorldBounds(phys);
 
     if (generateTerrain)
     {
@@ -104,11 +101,24 @@ physSim_t* initPhys(float w, float h, int32_t groundLevel, float gx, float gy, b
 }
 
 /**
- * @brief Deinitialize and free a physics simulation
+ * @brief TODO doc
  *
- * @param phys The physics simulation
+ * @param phys
  */
-void deinitPhys(physSim_t* phys)
+void physAddWorldBounds(physSim_t* phys)
+{
+    physAddLine(phys, 0, 0, phys->bounds.x, 0, false);
+    physAddLine(phys, phys->bounds.x, 0, phys->bounds.x, phys->bounds.y, false);
+    physAddLine(phys, phys->bounds.x, phys->bounds.y, 0, phys->bounds.y, false);
+    physAddLine(phys, 0, phys->bounds.y, 0, 0, false);
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param phys
+ */
+void physRemoveAllObjects(physSim_t* phys)
 {
     // Free all lines
     while (phys->lines.first)
@@ -127,6 +137,22 @@ void deinitPhys(physSim_t* phys)
     {
         heap_caps_free(pop(&phys->explosions));
     }
+
+    // Free camera targets, don't need to free elements
+    while (phys->cameraTargets.first)
+    {
+        pop(&phys->cameraTargets);
+    }
+}
+
+/**
+ * @brief Deinitialize and free a physics simulation
+ *
+ * @param phys The physics simulation
+ */
+void deinitPhys(physSim_t* phys)
+{
+    physRemoveAllObjects(phys);
 
     // Free the simulation
     heap_caps_free(phys);
