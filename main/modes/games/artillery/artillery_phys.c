@@ -46,7 +46,7 @@
 //==============================================================================
 
 static void physFindObjDests(physSim_t* phys, int32_t elapsedUs);
-static void physBinaryMoveObjects(physSim_t* phys);
+static bool physBinaryMoveObjects(physSim_t* phys);
 static void checkTurnOver(physSim_t* phys);
 static void physAnimateExplosions(physSim_t* phys, int32_t elapsedUs);
 
@@ -165,8 +165,9 @@ void deinitPhys(physSim_t* phys)
  * @param phys The physics simulation
  * @param elapsedUs The time elapsed since this was last called
  */
-void physStep(physSim_t* phys, int32_t elapsedUs)
+bool physStep(physSim_t* phys, int32_t elapsedUs)
 {
+    bool change = false;
     if (phys->isReady)
     {
         // Calculate physics frames at a very regular PHYS_TIME_STEP
@@ -174,11 +175,12 @@ void physStep(physSim_t* phys, int32_t elapsedUs)
             physFindObjDests(phys, PHYS_TIME_STEP);
             phys->terrainMoving = moveTerrainPoints(phys, PHYS_TIME_STEP);
             physCheckCollisions(phys);
-            physBinaryMoveObjects(phys);
+            change |= physBinaryMoveObjects(phys);
             physAnimateExplosions(phys, PHYS_TIME_STEP);
             checkTurnOver(phys);
         });
     }
+    return change;
 }
 
 /**
@@ -254,8 +256,10 @@ static void physFindObjDests(physSim_t* phys, int32_t elapsedUs)
  *
  * @param phys The physics simulation
  */
-static void physBinaryMoveObjects(physSim_t* phys)
+static bool physBinaryMoveObjects(physSim_t* phys)
 {
+    bool playerMoved = false;
+
     // For each circle
     node_t* cNode = phys->circles.first;
     while (cNode)
@@ -266,6 +270,9 @@ static void physBinaryMoveObjects(physSim_t* phys)
         // If it's not fixed in space
         if (!pc->fixed)
         {
+            // Save old position
+            vecFl_t oldPos = pc->c.pos;
+
             // Test at the final destination
             pc->c.pos = pc->travelLine.p2;
             updateCircleProperties(phys, pc);
@@ -308,11 +315,19 @@ static void physBinaryMoveObjects(physSim_t* phys)
                     updateCircleProperties(phys, pc);
                 }
             }
+
+            // Mark if a player moved an integer amount
+            if (CT_TANK == pc->type && ((int)pc->c.pos.x != (int)oldPos.x || (int)pc->c.pos.y != (int)oldPos.y))
+            {
+                playerMoved = true;
+            }
         }
 
         // Iterate
         cNode = cNode->next;
     }
+
+    return playerMoved;
 }
 
 /**

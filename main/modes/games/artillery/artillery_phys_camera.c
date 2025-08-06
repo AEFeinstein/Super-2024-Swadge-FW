@@ -17,7 +17,7 @@
 // Function Declarations
 //==============================================================================
 
-static void physAdjustCameraTimer(physSim_t* phys);
+static bool physAdjustCameraTimer(physSim_t* phys);
 
 //==============================================================================
 // Functions
@@ -40,9 +40,11 @@ void physSetCameraButton(physSim_t* phys, buttonBit_t btn)
  * @param phys The physics simulation to pan
  * @param elapsedUs The elapsed time
  */
-void physAdjustCamera(physSim_t* phys, uint32_t elapsedUs)
+bool physAdjustCamera(physSim_t* phys, uint32_t elapsedUs)
 {
-    RUN_TIMER_EVERY(phys->cameraTimer, 1000000 / 60, elapsedUs, physAdjustCameraTimer(phys););
+    bool change = false;
+    RUN_TIMER_EVERY(phys->cameraTimer, 1000000 / 60, elapsedUs, change = physAdjustCameraTimer(phys););
+    return change;
 }
 
 /**
@@ -50,8 +52,11 @@ void physAdjustCamera(physSim_t* phys, uint32_t elapsedUs)
  *
  * @param phys The physics simulation to pan
  */
-static void physAdjustCameraTimer(physSim_t* phys)
+static bool physAdjustCameraTimer(physSim_t* phys)
 {
+    // Where the camera was
+    vec_t oldCamera = phys->camera;
+
     // If there's no camera target
     if (0 == phys->cameraTargets.length)
     {
@@ -150,7 +155,5 @@ static void physAdjustCameraTimer(physSim_t* phys)
         phys->camera = addVec2d(phys->camera, divVec2d(subVec2d(desiredCamera, phys->camera), 3));
     }
 
-    // Bound the camera to the world
-    // phys->camera.x = CLAMP(phys->camera.x, 0, (phys->bounds.x - TFT_WIDTH));
-    // phys->camera.y = CLAMP(phys->camera.y, 0, (phys->bounds.y - TFT_HEIGHT));
+    return (oldCamera.x != phys->camera.x) || (oldCamera.y != phys->camera.y);
 }
