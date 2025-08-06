@@ -1337,7 +1337,9 @@ void dn_startMovePhase(dn_entity_t* self)
         dn_promptData_t* promptData = (dn_promptData_t*)promptToSkip->data;
         promptData->animatingIntroSlide = true;
         promptData->yOffset = 320;//way off screen to allow more time to look at albums.
-        strcpy(promptData->text, "Skip action to gain another reroll?");
+        promptData->usesTwoLinesOfText = true;
+        strcpy(promptData->text, "Skip dance action");
+        strcpy(promptData->text2, "to gain another reroll?");
         
         promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         
