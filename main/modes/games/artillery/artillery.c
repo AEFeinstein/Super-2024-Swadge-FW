@@ -213,7 +213,8 @@ void artilleryExitMode(void)
  */
 void artilleryMainLoop(int64_t elapsedUs)
 {
-    buttonEvt_t evt = {0};
+    bool barrelChanged = false;
+    buttonEvt_t evt    = {0};
     while (checkButtonQueueWrapper(&evt))
     {
         switch (ad->mState)
@@ -235,7 +236,7 @@ void artilleryMainLoop(int64_t elapsedUs)
             }
             case AMS_GAME:
             {
-                artilleryGameInput(ad, evt);
+                barrelChanged = artilleryGameInput(ad, evt);
                 break;
             }
             case AMS_HELP:
@@ -265,7 +266,7 @@ void artilleryMainLoop(int64_t elapsedUs)
         }
         case AMS_GAME:
         {
-            artilleryGameLoop(ad, elapsedUs);
+            artilleryGameLoop(ad, elapsedUs, barrelChanged);
             artilleryCheckTxQueue(ad);
             break;
         }
@@ -439,6 +440,7 @@ void setDriveInMenu(bool visible)
 void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
 {
     ad->gameType = gameType;
+    ad->myTurn   = (AG_WIRELESS != gameType);
 
     // Initialize physics, including terrain
     ad->phys = initPhys(WORLD_WIDTH, WORLD_HEIGHT, GROUND_LEVEL, DEFAULT_GRAV_X, DEFAULT_GRAV_Y, generateTerrain);
