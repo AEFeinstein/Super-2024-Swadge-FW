@@ -48,6 +48,7 @@ typedef enum
 typedef struct
 {
     artilleryGameType_t gameType;
+    bool myTurn;
 
     // The physics simulation
     physSim_t* phys;

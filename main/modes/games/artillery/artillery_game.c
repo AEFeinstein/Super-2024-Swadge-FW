@@ -5,6 +5,7 @@
 #include "artillery.h"
 #include "artillery_game.h"
 #include "artillery_phys_camera.h"
+#include "artillery_p2p.h"
 
 //==============================================================================
 // Functions
@@ -61,7 +62,7 @@ void artillerySwitchToState(artilleryData_t* ad, artilleryGameState_t newState)
  * @param ad
  * @param evt
  */
-void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
+bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
 {
     switch (ad->gState)
     {
@@ -96,7 +97,7 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     {
                         // Return to the menu
                         artillerySwitchToState(ad, AGS_MENU);
-                        return;
+                        return false;
                     }
                     default:
                     {
@@ -155,6 +156,7 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     {
                         float bDiff = 4 * ((PB_LEFT == evt.button) ? -(M_PI / 180.0f) : (M_PI / 180.0f));
                         setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle + bDiff);
+                        return true;
                         break;
                     }
                     case PB_UP:
@@ -179,6 +181,7 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
             break;
         }
     }
+    return false;
 }
 
 /**
@@ -189,11 +192,25 @@ void artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
  * @param ad
  * @param elapsedUs
  */
-void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs)
+void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChanged)
 {
-    physAdjustCamera(ad->phys, elapsedUs);
-    physStep(ad->phys, elapsedUs);
+    bool change = barrelChanged;
+
+    // Run camera and physics for non-wireless modes, or if it's our turn
+    if (AG_WIRELESS != ad->gameType || ad->myTurn)
+    {
+        change |= physAdjustCamera(ad->phys, elapsedUs);
+        change |= physStep(ad->phys, elapsedUs);
+    }
+    // Always draw
     drawPhysOutline(ad->phys, ad->moveTimerUs);
+
+    // If this is a wireless game and there is some change and it's our turn
+    if (AG_WIRELESS == ad->gameType && change && ad->myTurn)
+    {
+        // Transmit the change to the other Swadge
+        artilleryTxPlayers(ad);
+    }
 
     font_t* f = getSysFont();
 
