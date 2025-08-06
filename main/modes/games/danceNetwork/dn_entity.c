@@ -1509,6 +1509,7 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
     }
     else if(self->gameData->entityManager.albums->pos.y != 63427)
     {
+        self->gameData->camera.pos.y = self->pos.y - (26 << DN_DECIMAL_BITS);
         self->gameData->entityManager.albums->pos.y = 63427;
         dn_albumsData_t* aData = (dn_albumsData_t*) self->gameData->entityManager.albums->data;
         aData->p1Album->pos.y = 62912;
@@ -1643,6 +1644,28 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
     drawRect(x + 40, y + 98, x + 125, y + 116, umData->selectionIdx == 3 ? c555 : c434);
     tWidth = textWidth(&self->gameData->font_ibm, "CONFIRM");
     drawText(&self->gameData->font_ibm, umData->selectionIdx == 3 ? c555 : c545, "CONFIRM", x + 82 - (tWidth >> 1), y + 102);
+
+    if(self->gameData->camera.pos.y == (self->pos.y - (26 << DN_DECIMAL_BITS)))
+    {
+        uint16_t indicatorX = 56;
+        uint16_t indicatorY = 175;
+
+        if(umData->album[0] == 1)
+        {
+            indicatorX += 161;
+            indicatorY -= 5;
+        }
+        else if(umData->album[0] == 2)
+        {
+            indicatorX += 80;
+        }
+
+        indicatorX += umData->track[0].x * 8 * (umData->album[0] == 1 ? -1 : 1);
+        indicatorY -= umData->track[0].y * 8 * (umData->album[0] == 1 ? -1 : 1);
+
+        drawRect(indicatorX, indicatorY, indicatorX + 9, indicatorY + 9, (paletteColor_t)dn_randomInt(0,216));
+        drawRect(indicatorX+1, indicatorY+1, indicatorX + 8, indicatorY + 8, (paletteColor_t)dn_randomInt(0,216));
+    }
 }
 
 void dn_initializeSecondUpgradeOption(dn_entity_t* self)
