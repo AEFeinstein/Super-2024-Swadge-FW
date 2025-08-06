@@ -1223,7 +1223,17 @@ void dn_drawPrompt(dn_entity_t* self)
         middle = c553;
     }
     uint16_t tWidth = textWidth(&self->gameData->font_ibm, pData->text);
+    if(pData->usesTwoLinesOfText)
+    {
+        yOff -= 6;
+    }
     drawShinyText(&self->gameData->font_ibm, outer, middle, inner, pData->text, xOff - (tWidth>>1), yOff);
+    if(pData->usesTwoLinesOfText)
+    {
+        yOff += 12;
+        tWidth = textWidth(&self->gameData->font_ibm, pData->text2);
+        drawShinyText(&self->gameData->font_ibm, outer, middle, inner, pData->text2, xOff - (tWidth>>1), yOff);
+    }
     
     node_t* option = pData->options->first;
     int xPos = (TFT_WIDTH / 2) / pData->options->length;
@@ -1263,6 +1273,60 @@ void dn_gainRerollAndStep(dn_entity_t* self)
 {
     dn_gainReroll(self);
     dn_incrementPhase(self);
+    switch(self->gameData->phase)
+    {
+        case DN_P1_SWAP_CC_PHASE:
+        case DN_P2_SWAP_CC_PHASE:
+        {
+            dn_startSwapCCPhase(self);
+            break;
+        }
+        case DN_P1_MOVE_PHASE:
+        case DN_P2_MOVE_PHASE:
+        {
+            dn_startMovePhase(self);
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+}
+
+void dn_startSwapCCPhase(dn_entity_t* self)
+{
+    ///////////////////////////////////////////////////////
+    // Make the prompt to swap with the Creative Commons //
+    ///////////////////////////////////////////////////////
+    dn_entity_t* promptToSwapCC = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+    promptToSwapCC->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+    dn_promptData_t* promptData = (dn_promptData_t*)promptToSwapCC->data;
+    promptData->animatingIntroSlide = true;
+    promptData->yOffset = 320;//way off screen to allow more time to look at albums.
+    promptData->usesTwoLinesOfText = true;
+    strcpy(promptData->text, "Spend 3 rerolls to trade your");
+    strcpy(promptData->text2, "album with the creative commons?");
+    
+    promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+    
+    dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+    strcpy(option1->text, "NO");
+    option1->callback = dn_refuseSwapCC;
+    push(promptData->options, (void*)option1);
+
+    dn_promptOption_t* option2 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+    strcpy(option2->text, "YES");
+    option2->callback = dn_acceptSwapCC;
+    push(promptData->options, (void*)option2);
+    
+    promptToSwapCC->dataType     = DN_PROMPT_DATA;
+    promptToSwapCC->updateFunction = dn_updatePrompt;
+    promptToSwapCC->drawFunction = dn_drawPrompt;
+}
+
+void dn_startMovePhase(dn_entity_t* self)
+{
     if(dn_calculateMoveableUnits(self->gameData->entityManager.board))
     {
         /////////////////////////////
@@ -1338,6 +1402,7 @@ void dn_acceptRerollAndSkip(dn_entity_t* self)
     dn_initializeSecondUpgradeOption(upgradeMenu);
     dn_initializeThirdUpgradeOption(upgradeMenu);
     dn_initializeFirstUpgradeOption(upgradeMenu);
+    dn_initializeUpgradeConfirmOption(upgradeMenu);
 }
 
 void dn_refuseReroll(dn_entity_t* self)
@@ -1388,6 +1453,39 @@ void dn_refuseReroll(dn_entity_t* self)
             break;
         }
     }
+}
+
+void dn_acceptSwapCC(dn_entity_t* self)
+{
+    ///////////////////
+    // Make the swap //
+    ///////////////////
+    dn_entity_t* swap = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
+                                                    0, addVec2d(self->gameData->camera.pos, (vec_t){(107 << DN_DECIMAL_BITS), -(68 << DN_DECIMAL_BITS)}), self->gameData);
+    swap->data        = heap_caps_calloc(1, sizeof(dn_swapAlbumsData_t), MALLOC_CAP_SPIRAM);
+    dn_swapAlbumsData_t* swapData = (dn_swapAlbumsData_t*)swap->data;
+    if(self->gameData->phase < DN_P2_TURN_START_PHASE)
+    {
+        swapData->firstAlbum = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album;
+        swapData->firstAlbumIdx = 0;
+    }
+    else
+    {
+        swapData->firstAlbum = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album;
+        swapData->firstAlbumIdx = 2;
+    }
+    ((dn_albumData_t*)swapData->firstAlbum->data)->cornerLightBlinking = false;
+    swapData->secondAlbum = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum;
+    swapData->secondAlbumIdx = 1;
+    swap->dataType    = DN_SWAP_DATA;
+    swap->updateFunction = dn_updateSwapAlbums;
+    swap->drawFunction = NULL;
+}
+
+void dn_refuseSwapCC(dn_entity_t* self)
+{
+    dn_incrementPhase(self);
+    dn_startMovePhase(self);
 }
 
 void dn_incrementPhase(dn_entity_t* self)
@@ -1744,6 +1842,12 @@ void dn_initializeFirstUpgradeOption(dn_entity_t* self)
     umData->options[0].callback = dn_rerollFirstUpgradeOption;
 }
 
+void dn_initializeUpgradeConfirmOption(dn_entity_t* self)
+{
+    dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
+    umData->options[3].callback = dn_confirmUpgrade;
+}
+
 void dn_rerollSecondUpgradeOption(dn_entity_t* self)
 {
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
@@ -1835,4 +1939,124 @@ void dn_rerollFirstUpgradeOption(dn_entity_t* self)
         umData->trackColor = umData->trackColor == DN_REMIX_TRACK ? (cur == DN_BLUE_TRACK ? DN_RED_TRACK : DN_BLUE_TRACK) : DN_REMIX_TRACK;
     }
     umData->options[0].selectionAmount = 0;
+}
+
+void dn_confirmUpgrade(dn_entity_t* self)
+{
+    dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
+    umData->options[3].selectionAmount = 0;
+    dn_entity_t* album = NULL;
+    switch(umData->album[0])
+    {
+        case 0:
+        {
+            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album;
+            break;
+        }
+        case 1:
+        {
+            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album;
+            break;
+        }
+        case 2:
+        {
+            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum;
+            break;
+        }
+    }
+    dn_addTrackToAlbum(album, umData->track[0], umData->trackColor);
+}
+
+void dn_updateSwapAlbums(dn_entity_t* self)
+{
+    dn_albumsData_t* aData = (dn_albumsData_t*) self->gameData->entityManager.albums->data;
+    dn_swapAlbumsData_t* sData = (dn_swapAlbumsData_t*)self->data;
+    if(self->gameData->camera.pos.y > self->pos.y)
+    {
+        self->gameData->camera.pos.y -= self->gameData->elapsedUs >> 9;
+        aData->p1Album->pos.y -= self->gameData->elapsedUs / 1900;
+        aData->creativeCommonsAlbum->pos.y -= self->gameData->elapsedUs / 1900;
+        aData->p2Album->pos.y -= self->gameData->elapsedUs / 1900;
+    }
+    else if(self->gameData->camera.pos.y != self->pos.y)
+    {
+        self->gameData->camera.pos.y = self->pos.y;
+        aData->p1Album->pos.y = 63021;
+        aData->creativeCommonsAlbum->pos.y = 63021;
+        aData->p2Album->pos.y = 63021;
+
+        sData->center = (vec_t){(sData->firstAlbum->pos.x + sData->secondAlbum->pos.x)/2,
+            (sData->firstAlbum->pos.y + sData->secondAlbum->pos.y)/2};
+        sData->offset = subVec2d(sData->firstAlbum->pos, sData->center);
+    }
+    else
+    {
+        sData->lerpAmount += self->gameData->elapsedUs >> 6;
+        if(sData->lerpAmount >= 30000)
+        {
+            sData->lerpAmount = 30000;
+            switch(sData->firstAlbumIdx)
+            {
+                case 0:
+                {
+                    aData->p1Album = sData->secondAlbum;
+                    break;
+                }
+                case 1:
+                {
+                    aData->creativeCommonsAlbum = sData->secondAlbum;
+                    break;
+                }
+                case 2:
+                {
+                    aData->p2Album = sData->secondAlbum;
+                    break;
+                }
+            }
+            switch(sData->secondAlbumIdx)
+            {
+                case 0:
+                {
+                    aData->p1Album = sData->firstAlbum;
+                    break;
+                }
+                case 1:
+                {
+                    aData->creativeCommonsAlbum = sData->firstAlbum;
+                    break;
+                }
+                case 2:
+                {
+                    aData->p2Album = sData->firstAlbum;
+                    break;
+                }
+            }
+            self->updateFunction = dn_updateAfterSwap;
+        }
+
+        vec_t offset = rotateVec2d(sData->offset, dn_lerp(0, 180, sData->lerpAmount));
+        sData->firstAlbum->pos = addVec2d(sData->center, offset);
+        offset = mulVec2d(offset, -1);
+        sData->secondAlbum->pos = addVec2d(sData->center, offset);
+    }
+}
+
+void dn_updateAfterSwap(dn_entity_t* self)
+{
+    self->gameData->camera.pos.y += self->gameData->elapsedUs >> 9;
+    dn_albumsData_t* aData = (dn_albumsData_t*) self->gameData->entityManager.albums->data;
+    aData->p1Album->pos.y += self->gameData->elapsedUs / 1900;
+    aData->creativeCommonsAlbum->pos.y += self->gameData->elapsedUs / 1900;
+    aData->p2Album->pos.y += self->gameData->elapsedUs / 1900;
+
+    if(self->gameData->camera.pos.y > 62703)
+    {
+        self->gameData->camera.pos.y = 62703;
+        aData->p1Album->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
+        aData->creativeCommonsAlbum->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
+        aData->p2Album->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
+        dn_incrementPhase(self);
+        dn_startMovePhase(self);
+        self->destroyFlag = true;
+    }
 }

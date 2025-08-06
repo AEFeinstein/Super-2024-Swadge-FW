@@ -23,6 +23,7 @@ typedef enum
     DN_TILE_SELECTOR_DATA,
     DN_PROMPT_DATA,
     DN_UPGRADE_MENU_DATA,
+    DN_SWAP_DATA,
 } dn_dataType_t;
 
 //==============================================================================
@@ -131,7 +132,9 @@ typedef struct
     int16_t yOffset;
     uint8_t selectionIdx;
     bool playerHasSlidThis;
+    bool usesTwoLinesOfText;
     char text[40];
+    char text2[40];
     list_t* options;
 } dn_promptData_t;
 
@@ -145,6 +148,18 @@ typedef struct
 
     dn_promptOption_t options[4];// reroll 1, reroll 2, reroll 3, and confirm.
 } dn_upgradeMenuData_t;
+
+typedef struct
+{
+    dn_entity_t* firstAlbum;
+    dn_entity_t* secondAlbum;
+    uint8_t firstAlbumIdx;
+    uint8_t secondAlbumIdx;
+    int16_t lerpAmount;
+    vec_t center;
+    vec_t offset;
+} dn_swapAlbumsData_t;
+
 
 
 
@@ -175,7 +190,6 @@ dn_boardPos_t dn_colorToTrackCoords(paletteColor_t color);
 dn_twoColors_t dn_trackCoordsToColor(dn_boardPos_t trackCoords);
 void dn_addTrackToAlbum(dn_entity_t* album, dn_boardPos_t trackCoords, dn_track_t track);
 void dn_updateAlbum(dn_entity_t* self);
-void dn_updateAlbumThenSpawnPromptToSkip(dn_entity_t* self);
 void dn_drawAlbum(dn_entity_t* self);
 
 // characterSelect entities
@@ -192,8 +206,12 @@ void dn_updatePrompt(dn_entity_t* self);
 void dn_drawPrompt(dn_entity_t* self);
 void dn_gainReroll(dn_entity_t* self);
 void dn_gainRerollAndStep(dn_entity_t* self);
+void dn_startSwapCCPhase(dn_entity_t* self);
+void dn_startMovePhase(dn_entity_t* self);
 void dn_acceptRerollAndSkip(dn_entity_t* self);
 void dn_refuseReroll(dn_entity_t* self);
+void dn_acceptSwapCC(dn_entity_t* self);
+void dn_refuseSwapCC(dn_entity_t* self);
 void dn_incrementPhase(dn_entity_t* self);
 
 void dn_drawPit(dn_entity_t* self);
@@ -206,6 +224,10 @@ void dn_drawUpgradeMenu(dn_entity_t* self);
 void dn_initializeSecondUpgradeOption(dn_entity_t* self);
 void dn_initializeThirdUpgradeOption(dn_entity_t* self);
 void dn_initializeFirstUpgradeOption(dn_entity_t* self);
+void dn_initializeUpgradeConfirmOption(dn_entity_t* self);
 void dn_rerollSecondUpgradeOption(dn_entity_t* self);
 void dn_rerollThirdUpgradeOption(dn_entity_t* self);
 void dn_rerollFirstUpgradeOption(dn_entity_t* self);
+void dn_confirmUpgrade(dn_entity_t* self);
+void dn_updateSwapAlbums(dn_entity_t* self);
+void dn_updateAfterSwap(dn_entity_t* self);
