@@ -63,6 +63,7 @@ typedef struct __attribute__((packed))
         vecFl_t pos;
         float barrelAngle;
     } players[NUM_PLAYERS];
+    vec_t camera;
 } artPktPlayers_t;
 
 typedef struct __attribute__((packed))
@@ -192,6 +193,7 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 
             // Mark simulation as ready
             ad->phys->isReady = true;
+            ad->myTurn        = true;
 
             // After receiving terrain, open the menu
             artillerySwitchToState(ad, AGS_MENU);
@@ -204,12 +206,12 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
             // Update player location and barrel angle
             for (int32_t pIdx = 0; pIdx < ARRAY_SIZE(pkt->players); pIdx++)
             {
-                ad->players[pIdx]->c.pos       = pkt->players[pIdx].pos;
-                ad->players[pIdx]->barrelAngle = pkt->players[pIdx].barrelAngle;
+                ad->players[pIdx]->c.pos = pkt->players[pIdx].pos;
+                setBarrelAngle(ad->players[pIdx], pkt->players[pIdx].barrelAngle);
             }
 
-            // TODO how does ad->phys->cameraTargets work for the inactive player?
-
+            // Update camera
+            ad->phys->camera = pkt->camera;
             return;
         }
         case P2P_FIRE_SHOT:
@@ -284,6 +286,45 @@ void artilleryTxWorld(artilleryData_t* ad)
     // TODO Enqueue the sizes, somehow
     push(&ad->p2pQueue, pkt1);
     push(&ad->p2pQueue, pkt2);
+}
+
+/**
+ * @brief TODO doc
+ *
+ */
+void artilleryTxPlayers(artilleryData_t* ad)
+{
+    // Remove any other enqueued packet of this type first
+    node_t* pktNode = ad->p2pQueue.first;
+    while (pktNode)
+    {
+        node_t* pktNodeNext           = pktNode->next;
+        artilleryP2pPacketType_t type = *((uint8_t*)pktNode->val);
+        if (P2P_SET_PLAYERS == type)
+        {
+            heap_caps_free(removeEntry(&ad->p2pQueue, pktNode));
+        }
+        pktNode = pktNodeNext;
+    }
+
+    // Allocate a packet
+    artPktPlayers_t* pkt = heap_caps_calloc(1, sizeof(artPktPlayers_t), MALLOC_CAP_SPIRAM);
+
+    // Write the type
+    pkt->type = P2P_SET_PLAYERS;
+
+    // Write player location and barrel angle
+    for (int32_t pIdx = 0; pIdx < ARRAY_SIZE(pkt->players); pIdx++)
+    {
+        pkt->players[pIdx].pos         = ad->players[pIdx]->c.pos;
+        pkt->players[pIdx].barrelAngle = ad->players[pIdx]->barrelAngle;
+    }
+
+    // Update camera
+    pkt->camera = ad->phys->camera;
+
+    // Push into the queue
+    push(&ad->p2pQueue, pkt);
 }
 
 /**

@@ -156,7 +156,7 @@ void physAddWorldBounds(physSim_t* phys);
 void physRemoveAllObjects(physSim_t* phys);
 
 void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs);
-void physStep(physSim_t* phys, int32_t elapsedUs);
+bool physStep(physSim_t* phys, int32_t elapsedUs);
 
 void physSpawnPlayers(physSim_t* phys, physCirc_t* players[], int32_t numPlayers);
 physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, float barrelAngle);
