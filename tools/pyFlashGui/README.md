@@ -31,7 +31,7 @@ Flashing an ESP32-S2 over USB on Windows requires a specific driver to be instal
 
 > `dfu-util` uses _libusb_ to access the device. You have to register on Windows the device with the WinUSB driver. Please see the [libusb wiki](https://github.com/libusb/libusb/wiki/Windows#How_to_use_libusb_on_Windows) for more details.
 >
-> The drivers can be installed by the [Zadig tool](https://zadig.akeo.ie/). Please make sure that the device is in download mode before running the tool and that it detects the ESP32-S2 device before installing the drivers. The Zadig tool might detect several USB interfaces of ESP32-S2. Please install the WinUSB driver for only that interface for which there is no driver installed (probably it is Interface 2) and don’t re-install the driver for the other interface.
+> The drivers can be installed by the [Zadig tool](https://zadig.akeo.ie/). Please make sure that the device is in download mode before running the tool and that it detects the ESP32-S2 device before installing the drivers. The Zadig tool might detect several USB interfaces of ESP32-S2. Please install the WinUSB driver for only that interface for which there is no driver installed (probably it is Interface 2) and don't re-install the driver for the other interface.
 >
 > **Warning**
 > The manual installation of the driver in Device Manager of Windows is not recommended because the flashing might not work properly.

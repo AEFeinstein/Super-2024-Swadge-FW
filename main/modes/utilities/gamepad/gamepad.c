@@ -70,7 +70,7 @@ typedef struct
     font_t logbookFont;
 
     menu_t* menu;
-    menuManiaRenderer_t* renderer;
+    menuMegaRenderer_t* renderer;
     gamepadScreen_t screen;
 
     hid_gamepad_report_t gpState;
@@ -294,7 +294,7 @@ void gamepadEnterMode(void)
     addSingleItemToMenu(gamepad->menu, str_exit);
 
     // Initialize menu renderer
-    gamepad->renderer         = initMenuManiaRenderer(NULL, NULL, NULL);
+    gamepad->renderer         = initMenuMegaRenderer(NULL, NULL, NULL);
     gamepad->renderer->ledsOn = false;
 
     // Set up the IMU
@@ -307,7 +307,7 @@ void gamepadEnterMode(void)
 void gamepadExitMode(void)
 {
     deinitMenu(gamepad->menu);
-    deinitMenuManiaRenderer(gamepad->renderer);
+    deinitMenuMegaRenderer(gamepad->renderer);
     freeFont(&(gamepad->logbookFont));
     freeFont(&(gamepad->ibmFont));
 
@@ -398,7 +398,7 @@ void gamepadMenuLoop(int64_t elapsedUs)
             {
                 gamepad->menu = menuButton(gamepad->menu, evt);
             }
-            drawMenuMania(gamepad->menu, gamepad->renderer, elapsedUs);
+            drawMenuMega(gamepad->menu, gamepad->renderer, elapsedUs);
             break;
         }
         case GAMEPAD_MAIN:

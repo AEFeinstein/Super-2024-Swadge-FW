@@ -54,7 +54,7 @@ typedef struct
 
     // Menu items
     menu_t* menu;
-    menuManiaRenderer_t* rnd;
+    menuMegaRenderer_t* rnd;
 } tCase_t;
 
 //==============================================================================
@@ -117,7 +117,7 @@ static void enterTCase(void)
 {
     tc       = heap_caps_calloc(sizeof(tCase_t), 1, MALLOC_CAP_8BIT);
     tc->menu = initMenu(tCaseModeName, tCaseMenuCb);
-    tc->rnd  = initMenuManiaRenderer(NULL, NULL, NULL);
+    tc->rnd  = initMenuMegaRenderer(NULL, NULL, NULL);
     addSingleItemToMenu(tc->menu, menuItems[0]);
     addSettingsOptionsItemToMenu(tc->menu, menuItems[1], caseOptions, caseSettings, ARRAY_SIZE(caseOptions),
                                  getScreensaverTimeSettingBounds(), 0);
@@ -135,7 +135,7 @@ static void enterTCase(void)
 
 static void exitTCase(void)
 {
-    deinitMenuManiaRenderer(tc->rnd);
+    deinitMenuMegaRenderer(tc->rnd);
     deinitMenu(tc->menu);
     heap_caps_free(tc);
 }
@@ -200,7 +200,7 @@ static void runTCase(int64_t elapsedUs)
             {
                 tc->menu = menuButton(tc->menu, evt);
             }
-            drawMenuMania(tc->menu, tc->rnd, elapsedUs);
+            drawMenuMega(tc->menu, tc->rnd, elapsedUs);
             break;
         }
     }

@@ -38,7 +38,7 @@ char* filenameToEnumName(const char* filename)
     int chIdx = 0;
     while (enumName[chIdx])
     {
-        if ((0 == chIdx) && ('0' <= enumName[chIdx + 1] && enumName[chIdx + 1] <= '9'))
+        if ((0 == chIdx) && ('0' <= enumName[chIdx] && enumName[chIdx] <= '9'))
         {
             // Can't start with a number, Insert an underscore
             memmove(&enumName[chIdx + 1], &enumName[chIdx], strlen(enumName) - chIdx);

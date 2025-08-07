@@ -1,0 +1,93 @@
+// Create a pretty raindrop animation on the LED matrix on the swadge.
+
+#include "swadge_matrix.h"
+
+#define RANDOM_STRENGTH 2
+#include "lib_rand.h"
+
+int main()
+{
+    MatrixSetup();
+
+    int frameno = 0;
+    #define CONCURRENT_DROPS 3
+    #define DROPLIFE 1200
+    #define SEPARATION 2
+
+    int droptime[CONCURRENT_DROPS];
+    int droplife[CONCURRENT_DROPS];
+    int dropx[CONCURRENT_DROPS];
+    int dropy[CONCURRENT_DROPS];
+
+    int i;
+    for( i = 0; i < CONCURRENT_DROPS; i++ )
+    {
+        droptime[i] = DROPLIFE * i / CONCURRENT_DROPS;
+        dropx[i] = rand() % 12;
+        dropy[i] = rand() % 6;
+        droplife[i] = rand() % 100;
+    }
+
+    uint32_t nf = SysTick->CNT;
+
+    while(1)
+    {
+        //static uint16_t t1cmp;
+        //for( ; t1cmp != TIM1->CNT; t1cmp++ ) if( ( t1cmp & 7 ) == 0 ) printf( "." );
+        //printf( "." );
+        int y, x, i;
+        int d;
+        uint8_t framebuffer[12*6];
+
+        while( (int)(nf - SysTick->CNT) > 0 );
+
+        nf = SysTick->CNT + 6000000/TARGET_FPS;
+
+        // Raindrops runs at about 400 FPS
+        // LED Shifting runs at about 500 FPS
+
+        for( d = 0; d < CONCURRENT_DROPS; d++ )
+        {
+            i = -1;
+            for( y = 0; y < 6; y++ )
+            for( x = 0; x < 12; x++ )
+            {
+                i++;
+                int usex = (x < 6)?x:(x+SEPARATION);
+                int dx = usex - dropx[d];
+                int dy = y - dropy[d];
+                int apd = ((apsqrt( dx*dx*MAX_INTENSITY*64+dy*dy*MAX_INTENSITY*64 ) - droptime[d]*(MAX_INTENSITY/16)) ) + MAX_INTENSITY;
+                if( apd < 0 ) apd = -apd;
+                int inten = (MAX_INTENSITY - apd - 1);
+                if( inten < 0 ) continue;
+                inten += framebuffer[i];
+                if( inten >= MAX_INTENSITY ) inten = MAX_INTENSITY-1;
+                framebuffer[i] = inten;
+                //SetPixel( x, y, ((x*2142*y*2472+fxo)>>8)&(MAX_INTENSITY-1));
+                
+            }
+            droptime[d]++;
+            droplife[d]--;
+
+            if( droplife[d] < 0 )
+            {
+                droptime[d] = 0;
+                droplife[d] = (rand() % 50)+100;
+                dropx[d] = rand() % (12+SEPARATION);
+                dropy[d] = rand() % 6;
+            }
+        }
+
+        i = 0;
+        for( y = 0; y < 6; y++ )
+        for( x = 0; x < 12; x++ )
+        {
+            SetPixel( x, y, framebuffer[i] );
+            framebuffer[i] = 0;
+            i++;
+        }
+
+        frameno++;
+        *DMDATA1 = frameno;
+    }
+}

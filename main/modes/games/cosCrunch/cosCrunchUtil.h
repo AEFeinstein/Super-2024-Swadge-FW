@@ -12,7 +12,9 @@
 #define PALETTE_LOWLIGHT c111
 /// Palette base color to be tinted in grayscale images. See tintPalette()
 #define PALETTE_BASE c222
-/// Palette hightlight color to be tinted in grayscale images. See tintPalette()
+/// Palette alt base color to be tinted in grayscale images that need an extra color. See tintPalette()
+#define PALETTE_BASE_ALT c333
+/// Palette highlight color to be tinted in grayscale images. See tintPalette()
 #define PALETTE_HIGHLIGHT c444
 
 /// A set of colors used to tint a greyscale image
@@ -21,6 +23,7 @@ typedef struct
     paletteColor_t lowlight;
     paletteColor_t base;
     paletteColor_t highlight;
+    paletteColor_t baseAlt;
 } tintColor_t;
 
 /**

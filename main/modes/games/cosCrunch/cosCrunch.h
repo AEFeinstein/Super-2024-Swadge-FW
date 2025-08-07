@@ -62,8 +62,8 @@ typedef enum
 
 /**
  * @brief The definition for a Cosplay Crunch microgame. Once your microgame is built, add this struct to the
- * `microgames[]` array in `cosCrunch.c` to include it in the randomized rotation. While testing a microgame, you can
- * comment out the other microgames in the array to play only yours on repeat.
+ * `microgames[]` array in `cosCrunch.c` to include it in the randomized rotation. While developing a microgame, you can
+ * set the `DEV_MODE_MICROGAME` define to your microgame to play only yours on repeat.
  */
 typedef struct
 {

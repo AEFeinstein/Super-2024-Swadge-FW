@@ -4,6 +4,7 @@
 #include "wsg.h"
 #include "wsgPalette.h"
 
+#include <inttypes.h>
 #include <string.h>
 
 void tintPalette(wsgPalette_t* palette, const tintColor_t* tintColor)
@@ -11,6 +12,10 @@ void tintPalette(wsgPalette_t* palette, const tintColor_t* tintColor)
     palette->newColors[PALETTE_LOWLIGHT]  = tintColor->lowlight;
     palette->newColors[PALETTE_BASE]      = tintColor->base;
     palette->newColors[PALETTE_HIGHLIGHT] = tintColor->highlight;
+    if (tintColor->baseAlt != 0)
+    {
+        palette->newColors[PALETTE_BASE_ALT] = tintColor->baseAlt;
+    }
 }
 
 void drawToCanvas(wsg_t canvas, wsg_t wsg, uint16_t x, uint16_t y)

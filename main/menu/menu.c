@@ -333,6 +333,7 @@ void addSettingsItemToMenu(menu_t* menu, const char* label, const settingParam_t
     newItem->minSetting     = bounds->min;
     newItem->maxSetting     = bounds->max;
     newItem->currentSetting = val;
+    newItem->numOptions     = bounds->max - bounds->min + 1;
     push(menu->items, newItem);
 
     // If this is the first item, set it as the current
@@ -400,10 +401,11 @@ void removeSettingsItemFromMenu(menu_t* menu, const char* label)
  * @param bounds The bounds for this setting
  * @param currentValue The current value of the setting. Must be one of the values
  *                     in \c optionValues.
+ * @return menuItem_t* A pointer to the newly added menu item
  */
-void addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const char* const* optionLabels,
-                                  const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
-                                  int32_t currentValue)
+menuItem_t* addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const char* const* optionLabels,
+                                         const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
+                                         int32_t currentValue)
 {
     menuItem_t* newItem     = heap_caps_calloc(1, sizeof(menuItem_t), MALLOC_CAP_SPIRAM);
     newItem->label          = settingLabel;
@@ -438,6 +440,8 @@ void addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const 
     {
         menu->currentItem = menu->items->first;
     }
+
+    return newItem;
 }
 
 /**
@@ -717,7 +721,7 @@ menu_t* menuSelectCurrentItem(menu_t* menu)
     {
         menu->cbFunc(item->label, true, item->settingVals[item->currentOpt]);
     }
-    else if (item->minSetting != item->maxSetting)
+    else if (item->minSetting != item->maxSetting || (item->numOptions != 0 && !item->options))
     {
         // Call the callback, not selected
         menu->cbFunc(item->label, true, item->currentSetting);
