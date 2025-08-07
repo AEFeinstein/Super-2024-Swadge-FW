@@ -284,9 +284,9 @@ plEntity_t* pl_createPlayer(plEntityManager_t* entityManager, uint16_t x, uint16
 
     entity->xspeed             = 0;
     entity->yspeed             = 0;
-    entity->xMaxSpeed          = 40; // 72; Walking
-    entity->yMaxSpeed          = 64; // 72;
-    entity->xDamping           = 1;
+    entity->xMaxSpeed          = 30; // 72; Walking
+    entity->yMaxSpeed          = 72; // 72;
+    entity->xDamping           = 1; // 1;
     entity->yDamping           = 4;
     entity->gravityEnabled     = true;
     entity->gravity            = 4;

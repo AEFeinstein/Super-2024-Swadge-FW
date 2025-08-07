@@ -67,6 +67,7 @@ void pl_initializeEntity(plEntity_t* self, plEntityManager_t* entityManager, plT
 
 void pl_updatePlayer(plEntity_t* self)
 {
+    /*
     if (self->gameData->btnState & PB_B)
     {
         self->xMaxSpeed = 52;
@@ -75,10 +76,12 @@ void pl_updatePlayer(plEntity_t* self)
     {
         self->xMaxSpeed = 30;
     }
+    */
 
     if (self->gameData->btnState & PB_LEFT)
     {
-        self->xspeed -= (self->falling && self->xspeed < 0) ? (self->xspeed < -24) ? 0 : 2 : 3;
+        //self->xspeed -= (self->falling && self->xspeed < 0) ? (self->xspeed < -24) ? 0 : 2 : 3;
+        self->xspeed -= (self->falling && self->xspeed < 0) ? (self->xspeed < -24) ? 0 : 8 : 8;
 
         if (self->xspeed < -self->xMaxSpeed)
         {
@@ -87,13 +90,24 @@ void pl_updatePlayer(plEntity_t* self)
     }
     else if (self->gameData->btnState & PB_RIGHT)
     {
-        self->xspeed += (self->falling && self->xspeed > 0) ? (self->xspeed > 24) ? 0 : 2 : 3;
+        //self->xspeed += (self->falling && self->xspeed > 0) ? (self->xspeed > 24) ? 0 : 2 : 3;
+        self->xspeed += (self->falling && self->xspeed > 0) ? (self->xspeed > 24) ? 0 : 8 : 8;
 
         if (self->xspeed > self->xMaxSpeed)
         {
             self->xspeed = self->xMaxSpeed;
         }
     }
+
+    /*
+    if (self->gameData->btnState & PB_LEFT)
+    {
+        self->xspeed = -26;
+    }
+    else if (self->gameData->btnState & PB_RIGHT)
+    {
+        self->xspeed = 26;
+    }*/
 
     if (!self->gravityEnabled)
     {
@@ -124,12 +138,12 @@ void pl_updatePlayer(plEntity_t* self)
         if (!self->falling && !(self->gameData->prevBtnState & PB_A))
         {
             // initiate jump
-            self->jumpPower = 64 + ((abs(self->xspeed) + 16) >> 3);
+            self->jumpPower = 60; //+ ((abs(self->xspeed) + 16) >> 3);
             self->yspeed    = -self->jumpPower;
             self->falling   = true;
             soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
         } else if (pl_canWallJump(self) && !(self->gameData->prevBtnState & PB_A)) {
-                self->jumpPower = 64 + ((abs(self->xspeed) + 16) >> 3);
+                self->jumpPower = 60; //+ ((abs(self->xspeed) + 16) >> 3);
                 self->xspeed = (self->spriteFlipHorizontal) ? 32 : -32;
                 self->yspeed    = -self->jumpPower;
                 self->falling   = true;
@@ -636,11 +650,11 @@ void defaultFallOffTileHandler(plEntity_t* self)
 
 void applyDamping(plEntity_t* self)
 {
-    if (!self->falling || !self->gravityEnabled)
+    //if (!self->gravityEnabled)
     {
         if (self->xspeed > 0)
         {
-            self->xspeed -= self->xDamping;
+            self->xspeed -= (self->falling) ? 2 : 4;
 
             if (self->xspeed < 0)
             {
@@ -649,7 +663,7 @@ void applyDamping(plEntity_t* self)
         }
         else if (self->xspeed < 0)
         {
-            self->xspeed += self->xDamping;
+            self->xspeed += (self->falling) ? 2 : 4;
 
             if (self->xspeed > 0)
             {
@@ -786,7 +800,7 @@ void animatePlayer(plEntity_t* self)
             {
                 self->spriteIndex = PL_SP_PLAYER_WALK1;
             }
-            else if (self->gameData->frameCount % (10 - (abs(self->xspeed) >> 3)) == 0)
+            else if (self->gameData->frameCount % (10 - (abs(self->xspeed) >> 1)) == 0)
             {
                 self->spriteIndex++;
                 if(self->spriteIndex > PL_SP_PLAYER_WALK10)
