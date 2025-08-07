@@ -79,7 +79,7 @@ typedef struct
 
     // Menu and UI
     menu_t* menu;
-    menuManiaRenderer_t* menuRenderer;
+    menuMegaRenderer_t* menuRenderer;
 
     // Game over UI variables
     int32_t gameOverTimer;
@@ -273,7 +273,7 @@ static void swadgeItEnterMode(void)
     addSingleItemToMenu(si->menu, swadgeItStrMemory);
     addSingleItemToMenu(si->menu, swadgeItStrHighScores);
     addSingleItemToMenu(si->menu, swadgeItStrExit);
-    si->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    si->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
 
     // Load all SFX samples
     for (int8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
@@ -344,7 +344,7 @@ static void swadgeItEnterMode(void)
 static void swadgeItExitMode(void)
 {
     // Free menu
-    deinitMenuManiaRenderer(si->menuRenderer);
+    deinitMenuMegaRenderer(si->menuRenderer);
     deinitMenu(si->menu);
 
     // Free SFX
@@ -425,7 +425,7 @@ static void swadgeItMainLoop(int64_t elapsedUs)
         default:
         case SI_MENU:
         {
-            drawMenuMania(si->menu, si->menuRenderer, elapsedUs);
+            drawMenuMega(si->menu, si->menuRenderer, elapsedUs);
             break;
         }
         case SI_REACTION:

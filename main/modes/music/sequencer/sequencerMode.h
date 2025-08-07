@@ -48,7 +48,7 @@ typedef struct
     // Menu
     menu_t* songMenu;
     menu_t* bgMenu;
-    menuManiaRenderer_t* menuRenderer;
+    menuMegaRenderer_t* menuRenderer;
     menu_t* noteMenu;
     wheelMenuRenderer_t* wheelRenderer;
     bool rebuildMenu;

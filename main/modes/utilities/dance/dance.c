@@ -59,7 +59,7 @@ typedef struct
     uint32_t buttonPressedTimer;
 
     menu_t* menu;
-    menuManiaRenderer_t* menuRenderer;
+    menuMegaRenderer_t* menuRenderer;
 
     const char** danceNames;
     int32_t* danceVals;
@@ -190,18 +190,18 @@ void danceEnterMode(void)
     espNowPreLightSleep();
 
     danceState->menu         = initMenu(danceName, danceMenuCb);
-    danceState->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
-    setManiaLedsOn(danceState->menuRenderer, false);
-    static const paletteColor_t shadowColors[] = {
-        c430, c431, c442, c543, c554, c555, c554, c543, c442, c431,
-    };
-    led_t offLed = {0};
-    recolorMenuManiaRenderer(danceState->menuRenderer, // Pango palette!
-                             c320, c542, c111,         // titleBgColor, titleTextColor, textOutlineColor
-                             c045,                     // bgColor
-                             c542, c541,               // outerRingColor, innerRingColor
-                             c111, c455,               // rowColor, rowTextColor
-                             shadowColors, ARRAY_SIZE(shadowColors), offLed);
+    danceState->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    setMegaLedsOn(danceState->menuRenderer, false);
+    // static const paletteColor_t shadowColors[] = {
+    //     c430, c431, c442, c543, c554, c555, c554, c543, c442, c431,
+    // };
+    // led_t offLed = {0};
+    // recolorMenuManiaRenderer(danceState->menuRenderer, // Pango palette!
+    //                          c320, c542, c111,         // titleBgColor, titleTextColor, textOutlineColor
+    //                          c045,                     // bgColor
+    //                          c542, c541,               // outerRingColor, innerRingColor
+    //                          c111, c455,               // rowColor, rowTextColor
+    //                          shadowColors, ARRAY_SIZE(shadowColors), offLed);
 
     // Add dances to the menu
     danceState->danceNames = heap_caps_calloc(ARRAY_SIZE(ledDances), sizeof(char*), MALLOC_CAP_SPIRAM);
@@ -249,7 +249,7 @@ void danceExitMode(void)
         enableTFTBacklight();
         setTFTBacklightBrightness(getTftBrightnessSetting());
     }
-    deinitMenuManiaRenderer(danceState->menuRenderer);
+    deinitMenuMegaRenderer(danceState->menuRenderer);
     deinitMenu(danceState->menu);
 
     deinitSwadgePassReceiver();
@@ -299,7 +299,7 @@ void danceMainLoop(int64_t elapsedUs)
             setTFTBacklightBrightness(getTftBrightnessSetting());
             danceState->blankScreen = false;
             // Draw to it
-            drawMenuMania(danceState->menu, danceState->menuRenderer, elapsedUs);
+            drawMenuMega(danceState->menu, danceState->menuRenderer, elapsedUs);
         }
     }
     else
@@ -314,7 +314,7 @@ void danceMainLoop(int64_t elapsedUs)
         else
         {
             // Screen is not blank, draw to it
-            drawMenuMania(danceState->menu, danceState->menuRenderer, elapsedUs);
+            drawMenuMega(danceState->menu, danceState->menuRenderer, elapsedUs);
 
             // Uncomment to draw a count of SwadgePasses received this session
             // font_t* f = danceState->menuRenderer->menuFont;

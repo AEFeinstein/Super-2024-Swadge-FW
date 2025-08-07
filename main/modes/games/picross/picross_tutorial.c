@@ -16,7 +16,7 @@ picrossTutorial_t* tut;
 
 void picrossStartTutorial(font_t* font)
 {
-    tut = calloc(1, sizeof(picrossTutorial_t));
+    tut = heap_caps_calloc(1, sizeof(picrossTutorial_t), MALLOC_CAP_8BIT);
 
     tut->titleFont = *font;
     loadWsg(TUT_WSG, &tut->qrlink, false);
@@ -31,7 +31,7 @@ void picrossTutorialLoop(int64_t elapsedUs)
 {
     // user input
     // exit on hitting select
-    if ((tut->btn & (PB_SELECT | PB_B)) && !(tut->prevBtn & PB_SELECT))
+    if ((tut->btn & (PB_START | PB_B)) && !(tut->prevBtn & PB_START))
     {
         // by convention of the rest of the code base, freeing memory and going back to menu in different functions
         //(maybe that shouldnt be how it is *cough*)
@@ -110,8 +110,8 @@ void picrossExitTutorial(void)
     freeWsg(&(tut->qrlink));
     freeFont(&(tut->smallFont));
     // freeFont(&(tut->titleFont));
-    // free(&(tut->d));
-    free(tut);
+    // heap_caps_free(&(tut->d));
+    heap_caps_free(tut);
 }
 
 void drawPicrossQRCode()
