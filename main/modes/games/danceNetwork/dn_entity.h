@@ -123,6 +123,7 @@ typedef struct
 {
     char text[8];
     dn_callbackFunction_t callback;
+    bool downPressDetected;
     int16_t selectionAmount;
 } dn_promptOption_t;
 
@@ -135,6 +136,7 @@ typedef struct
     bool usesTwoLinesOfText;
     char text[40];
     char text2[40];
+    uint8_t numOptions;
     list_t* options;
 } dn_promptData_t;
 

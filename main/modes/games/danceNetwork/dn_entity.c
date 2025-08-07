@@ -749,7 +749,7 @@ void dn_updateAlbum(dn_entity_t* self)
                 strcpy(option1->text, "OK");
                 option1->callback = dn_gainRerollAndStep;
                 push(promptData->options, (void*)option1);
-                    
+                promptData->numOptions = 1;    
                 promptToStart->dataType     = DN_PROMPT_DATA;
                 promptToStart->updateFunction = dn_updatePrompt;
                 promptToStart->drawFunction = dn_drawPrompt;
@@ -1156,7 +1156,7 @@ void dn_updatePrompt(dn_entity_t* self)
     }
     if(pData->animatingIntroSlide)
     {
-        pData->yOffset -= self->gameData->elapsedUs >> 12;
+        pData->yOffset -= self->gameData->elapsedUs >> 11;
         if(pData->yOffset < 70)
         {
             pData->yOffset = 70;
@@ -1165,6 +1165,16 @@ void dn_updatePrompt(dn_entity_t* self)
     }
     else
     {
+        if(self->gameData->btnDownState & PB_A)
+        {
+            cur = pData->options->first;
+            for(int i = 1; i <= pData->selectionIdx; i++)
+            {
+                cur = cur->next;
+            }
+            dn_promptOption_t* option = (dn_promptOption_t*)cur->val;
+            option->downPressDetected = true;
+        }
         if(self->gameData->btnState & PB_UP)
         {
             pData->playerHasSlidThis = true;
@@ -1178,10 +1188,24 @@ void dn_updatePrompt(dn_entity_t* self)
         pData->yOffset = CLAMP(pData->yOffset, -44, 220);
         if(self->gameData->btnDownState & PB_LEFT && pData->selectionIdx > 0)
         {
+            cur = pData->options->first;
+            for(int i = 1; i <= pData->selectionIdx; i++)
+            {
+                cur = cur->next;
+            }
+            dn_promptOption_t* option = (dn_promptOption_t*)cur->val;
+            option->downPressDetected = false;
             pData->selectionIdx--;
         }
-        if(self->gameData->btnDownState & PB_RIGHT && pData->selectionIdx < 1)
+        if(self->gameData->btnDownState & PB_RIGHT && pData->selectionIdx < pData->numOptions - 1)
         {
+            cur = pData->options->first;
+            for(int i = 1; i <= pData->selectionIdx; i++)
+            {
+                cur = cur->next;
+            }
+            dn_promptOption_t* option = (dn_promptOption_t*)cur->val;
+            option->downPressDetected = false;
             pData->selectionIdx++;
         }
         if(self->gameData->btnState & PB_A)
@@ -1192,16 +1216,19 @@ void dn_updatePrompt(dn_entity_t* self)
                 cur = cur->next;
             }
             dn_promptOption_t* option = (dn_promptOption_t*)cur->val;
-            option->selectionAmount += self->gameData->elapsedUs >> 5;
-            if(option->selectionAmount >= 30000)
+            if(option->downPressDetected)
             {
-                option->selectionAmount = 30000;
-                option->callback(self);
+                option->selectionAmount += self->gameData->elapsedUs >> 5;
+                if(option->selectionAmount >= 30000)
+                {
+                    option->selectionAmount = 30000;
+                    option->callback(self);
 
-                clear(pData->options);
-                free(pData->options);
+                    clear(pData->options);
+                    free(pData->options);
 
-                self->destroyFlag = true;
+                    self->destroyFlag = true;
+                }
             }
         }
     }
@@ -1319,6 +1346,7 @@ void dn_startSwapCCPhase(dn_entity_t* self)
     strcpy(option2->text, "YES");
     option2->callback = dn_acceptSwapCC;
     push(promptData->options, (void*)option2);
+    promptData->numOptions = 2;
     
     promptToSwapCC->dataType     = DN_PROMPT_DATA;
     promptToSwapCC->updateFunction = dn_updatePrompt;
@@ -1344,14 +1372,15 @@ void dn_startMovePhase(dn_entity_t* self)
         promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         
         dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
-        strcpy(option1->text, "no");
+        strcpy(option1->text, "NO");
         option1->callback = dn_refuseReroll;
         push(promptData->options, (void*)option1);
 
         dn_promptOption_t* option2 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
-        strcpy(option2->text, "yes");
+        strcpy(option2->text, "YES");
         option2->callback = dn_acceptRerollAndSkip;
         push(promptData->options, (void*)option2);
+        promptData->numOptions = 2;
         
         promptToSkip->dataType     = DN_PROMPT_DATA;
         promptToSkip->updateFunction = dn_updatePrompt;
@@ -1374,6 +1403,7 @@ void dn_startMovePhase(dn_entity_t* self)
         strcpy(option1->text, "OK");
         option1->callback = dn_acceptRerollAndSkip;
         push(promptData->options, (void*)option1);
+        promptData->numOptions = 1;
         
         promptNoMoves->dataType     = DN_PROMPT_DATA;
         promptNoMoves->updateFunction = dn_updatePrompt;
@@ -1575,25 +1605,34 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
         }
     }
     
+    if(self->gameData->btnDownState & PB_A)
+    {
+        umData->options[umData->selectionIdx].downPressDetected = true;
+    }
     if (self->gameData->btnDownState & PB_UP)
     {
+        umData->options[umData->selectionIdx].downPressDetected = false;
         umData->selectionIdx--;
     }
     if (self->gameData->btnDownState & PB_DOWN)
     {
+        umData->options[umData->selectionIdx].downPressDetected = false;
         umData->selectionIdx++;
     }
     umData->selectionIdx = CLAMP(umData->selectionIdx, 0, 3);
 
     if(self->gameData->btnState & PB_A)
     {
-        umData->options[umData->selectionIdx].selectionAmount += self->gameData->elapsedUs >> 5;
-        if(umData->options[umData->selectionIdx].selectionAmount >= 30000)
+        if(umData->options[umData->selectionIdx].downPressDetected)
         {
-            umData->options[umData->selectionIdx].selectionAmount = 30000;
-            if(umData->options[umData->selectionIdx].callback)
+            umData->options[umData->selectionIdx].selectionAmount += self->gameData->elapsedUs >> 5;
+            if(umData->options[umData->selectionIdx].selectionAmount >= 30000)
             {
-                umData->options[umData->selectionIdx].callback(self);
+                umData->options[umData->selectionIdx].selectionAmount = 30000;
+                if(umData->options[umData->selectionIdx].callback)
+                {
+                    umData->options[umData->selectionIdx].callback(self);
+                }
             }
         }
     }
