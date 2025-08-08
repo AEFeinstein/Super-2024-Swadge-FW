@@ -723,9 +723,10 @@ void dn_updateAlbum(dn_entity_t* self)
                 self->gameData->phase = DN_P1_TURN_START_PHASE;
                 dn_startTurn(self);
             }          
-            aData->screenIsOn = true;
             aData->cornerLightOn = true;
+            aData->screenIsOn = true;
             aData->timer      = 0;
+            self->updateFunction = NULL;
         }
     }
 }
@@ -739,7 +740,7 @@ void dn_drawAlbum(dn_entity_t* self)
                 - self->gameData->assets[DN_ALBUM_ASSET].originY;
     drawWsgPalette(&self->gameData->assets[DN_ALBUM_ASSET].frames[0], x, y,
                    aData->screenIsOn ? &aData->screenOnPalette : &aData->screenOffPalette, false, false, aData->rot);
-    if ((aData->cornerLightOn && !aData->cornerLightBlinking) || (aData->cornerLightBlinking && (self->gameData->generalTimer & 0b111111) > 15))
+    if ((aData->cornerLightOn && !aData->cornerLightBlinking) || (aData->cornerLightOn && aData->cornerLightBlinking && (self->gameData->generalTimer & 0b111111) > 15))
     {
         if (aData->rot == 180)
         {
@@ -1423,8 +1424,6 @@ void dn_startMovePhase(dn_entity_t* self)
 
 void dn_acceptRerollAndSkip(dn_entity_t* self)
 {
-    dn_albumsData_t* aData = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
-
     dn_gainReroll(self);
     dn_incrementPhase(self);//would be move phase
     dn_incrementPhase(self);//would be the swap with opponent phase
@@ -1472,8 +1471,6 @@ void dn_refuseReroll(dn_entity_t* self)
     // Don't set the draw function, because it needs to happen in two parts behind and in front of units.
 
     ((dn_boardData_t*)self->gameData->entityManager.board->data)->tiles[2][2].selector = tileSelector;
-    
-    dn_incrementPhase(self);
 }
 
 void dn_acceptSwapCC(dn_entity_t* self)
@@ -1485,17 +1482,21 @@ void dn_acceptSwapCC(dn_entity_t* self)
                                                     0, addVec2d(self->gameData->camera.pos, (vec_t){(107 << DN_DECIMAL_BITS), -(68 << DN_DECIMAL_BITS)}), self->gameData);
     swap->data        = heap_caps_calloc(1, sizeof(dn_swapAlbumsData_t), MALLOC_CAP_SPIRAM);
     dn_swapAlbumsData_t* swapData = (dn_swapAlbumsData_t*)swap->data;
+    dn_albumsData_t* aData = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
+    ((dn_albumData_t*)aData->p1Album->data)->cornerLightOn = false;
+    ((dn_albumData_t*)aData->creativeCommonsAlbum->data)->cornerLightOn = false;
+    ((dn_albumData_t*)aData->p2Album->data)->cornerLightOn = false;
     if(self->gameData->phase < DN_P2_TURN_START_PHASE)
     {
-        swapData->firstAlbum = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album;
+        swapData->firstAlbum = aData->p1Album;
         swapData->firstAlbumIdx = 0;
     }
     else
     {
-        swapData->firstAlbum = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album;
+        swapData->firstAlbum = aData->p2Album;
         swapData->firstAlbumIdx = 2;
     }
-    swapData->secondAlbum = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum;
+    swapData->secondAlbum = aData->creativeCommonsAlbum;
     swapData->secondAlbumIdx = 1;
     swap->dataType    = DN_SWAP_DATA;
     swap->updateFunction = dn_updateSwapAlbums;
@@ -2056,6 +2057,20 @@ void dn_updateSwapAlbums(dn_entity_t* self)
         if(sData->lerpAmount >= 30000)
         {
             sData->lerpAmount = 30000;
+            vec_t offset = rotateVec2d(sData->offset, 180);
+            sData->firstAlbum->pos = addVec2d(sData->center, offset);
+            offset = mulVec2d(offset, -1);
+            sData->secondAlbum->pos = addVec2d(sData->center, offset);
+            if(sData->firstAlbum == aData->p2Album)
+            {
+                ((dn_albumData_t*)sData->firstAlbum->data)->rot = 0;
+                ((dn_albumData_t*)sData->secondAlbum->data)->rot = 180;
+            }
+            else if(sData->secondAlbum == aData->p2Album)
+            {
+                ((dn_albumData_t*)sData->firstAlbum->data)->rot = 180;
+                ((dn_albumData_t*)sData->secondAlbum->data)->rot = 0;
+            }
             switch(sData->firstAlbumIdx)
             {
                 case 0:
@@ -2094,11 +2109,25 @@ void dn_updateSwapAlbums(dn_entity_t* self)
             }
             self->updateFunction = dn_updateAfterSwap;
         }
-
-        vec_t offset = rotateVec2d(sData->offset, dn_lerp(0, 180, sData->lerpAmount));
-        sData->firstAlbum->pos = addVec2d(sData->center, offset);
-        offset = mulVec2d(offset, -1);
-        sData->secondAlbum->pos = addVec2d(sData->center, offset);
+        else
+        {
+            int16_t angle = dn_lerp(0, 180, sData->lerpAmount);
+            vec_t offset = rotateVec2d(sData->offset, angle);
+            sData->firstAlbum->pos = addVec2d(sData->center, offset);
+            offset = mulVec2d(offset, -1);
+            sData->secondAlbum->pos = addVec2d(sData->center, offset);
+            if(sData->firstAlbum == aData->p2Album)
+            {
+                ((dn_albumData_t*)sData->firstAlbum->data)->rot = 180+angle;
+                ((dn_albumData_t*)sData->secondAlbum->data)->rot = angle;
+            }
+            else if(sData->secondAlbum == aData->p2Album)
+            {
+                ((dn_albumData_t*)sData->firstAlbum->data)->rot = angle;
+                ((dn_albumData_t*)sData->secondAlbum->data)->rot = 180+angle;
+            }
+        }
+        
     }
 }
 
@@ -2124,7 +2153,13 @@ void dn_updateAfterSwap(dn_entity_t* self)
 
 void dn_setBlinkingLights(dn_entity_t* self)
 {
-    ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album->data)->cornerLightBlinking = self->gameData->phase <= DN_P1_MOVE_PHASE || self->gameData->phase > DN_P2_MOVE_PHASE;
-    ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum->data)->cornerLightBlinking = false;
-    ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album->data)->cornerLightBlinking = self->gameData->phase <= DN_P2_MOVE_PHASE && self->gameData->phase > DN_P1_MOVE_PHASE;
+    dn_albumsData_t* aData = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
+
+    ((dn_albumData_t*)aData->p1Album->data)->cornerLightOn = true;
+    ((dn_albumData_t*)aData->creativeCommonsAlbum->data)->cornerLightOn = true;
+    ((dn_albumData_t*)aData->p2Album->data)->cornerLightOn = true;
+
+    ((dn_albumData_t*)aData->p1Album->data)->cornerLightBlinking = self->gameData->phase <= DN_P1_MOVE_PHASE || self->gameData->phase > DN_P2_MOVE_PHASE;
+    ((dn_albumData_t*)aData->creativeCommonsAlbum->data)->cornerLightBlinking = self->gameData->phase % 6 <= DN_P1_SWAP_CC_PHASE || self->gameData->phase % 6 == DN_P1_UPGRADE_PHASE;
+    ((dn_albumData_t*)aData->p2Album->data)->cornerLightBlinking = self->gameData->phase <= DN_P2_MOVE_PHASE && self->gameData->phase > DN_P1_MOVE_PHASE;
 }

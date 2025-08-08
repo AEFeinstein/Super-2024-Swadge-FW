@@ -94,7 +94,6 @@ typedef struct
     wsgPalette_t screenOnPalette;  // Screen is on. Just a more vibrant variation of screenOff.
     dn_track_t tracks[16];         // Array of action tracks in this album in raster order.
     uint16_t rot;                  // Rotation degrees from 0-359 for drawing.
-    uint16_t destRot;              // Destination rotation degrees from 0-359 for drawing.
     bool cornerLightBlinking;
     bool cornerLightOn;
     bool screenIsOn;

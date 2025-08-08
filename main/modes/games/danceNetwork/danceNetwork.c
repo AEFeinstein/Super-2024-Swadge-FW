@@ -615,7 +615,6 @@ static void dn_initializeGame(void)
 
     // p2's album is upside down
     ((dn_albumData_t*)album2->data)->rot     = 180;
-    ((dn_albumData_t*)album2->data)->destRot = 180;
     
     ((dn_albumsData_t*)gameData->entityManager.albums->data)->p1Album = album1;
     ((dn_albumsData_t*)gameData->entityManager.albums->data)->creativeCommonsAlbum = ccAlbum;
