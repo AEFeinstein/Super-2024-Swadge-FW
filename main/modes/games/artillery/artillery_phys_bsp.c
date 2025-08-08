@@ -316,14 +316,12 @@ static void setPhysObjsZones(physSim_t* phys)
 }
 
 /**
- * @brief TODO doc
+ * @brief Partition the space into zones with equal numbers of objects
  *
  * @param phys The physics simulation
  */
 void createBspZones(physSim_t* phys)
 {
-    int32_t tStart = esp_timer_get_time();
-
     // Make a list of zones
     list_t zList = {0};
 
@@ -419,7 +417,4 @@ void createBspZones(physSim_t* phys)
 
     // Reassign objects to zones
     setPhysObjsZones(phys);
-
-    uint32_t tElapsed = esp_timer_get_time() - tStart;
-    ESP_LOGI("PHS", "%" PRIu32 "us to BSP", tElapsed);
 }

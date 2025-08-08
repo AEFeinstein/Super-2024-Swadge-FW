@@ -241,7 +241,7 @@ void artilleryMainLoop(int64_t elapsedUs)
             }
             case AMS_HELP:
             {
-                // TODO handle help buttons
+                // TODO show help screen
                 break;
             }
         }
@@ -319,13 +319,12 @@ void artilleryEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status
 }
 
 /**
- * @brief TODO
+ * @brief Handle callbacks from the mode menu
  *
- * @param label
- * @param selected
- * @param value
- * @return true
- * @return false
+ * @param label The label selected or scrolled to
+ * @param selected true if the label was selected, false otherwise
+ * @param value Unused
+ * @return true to go up one level after selecting, false to remain on this level
  */
 bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
 {
@@ -334,7 +333,7 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
         if (str_passAndPlay == label)
         {
             artilleryInitGame(AG_PASS_AND_PLAY, true);
-            artillerySwitchToState(ad, AGS_MENU);
+            artillerySwitchToGameState(ad, AGS_MENU);
         }
         else if (str_wirelessConnect == label)
         {
@@ -345,7 +344,7 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
         {
             // TODO implement CPU
             artilleryInitGame(AG_CPU_PRACTICE, true);
-            artillerySwitchToState(ad, AGS_MENU);
+            artillerySwitchToGameState(ad, AGS_MENU);
         }
         else if (str_help == label)
         {
@@ -361,6 +360,7 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
  * @param label The label selected or scrolled to
  * @param selected true if the label was selected, false otherwise
  * @param value Unused
+ * @return true to go up one level after selecting, false to remain on this level
  */
 bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value)
 {
@@ -371,7 +371,7 @@ bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value)
         {
             if (label == menuEntries[mIdx].text)
             {
-                artillerySwitchToState(ad, menuEntries[mIdx].nextState);
+                artillerySwitchToGameState(ad, menuEntries[mIdx].nextState);
                 return false;
             }
         }
@@ -434,8 +434,10 @@ void setDriveInMenu(bool visible)
 }
 
 /**
- * @brief TODO
+ * @brief Initialize the game, including physics and timers
  *
+ * @param gameType The type of game to initialize
+ * @param generateTerrain true to generate terrain, false to receive it from a packet later
  */
 void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
 {
@@ -458,13 +460,11 @@ void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
     ad->mState = AMS_GAME;
 
     // Start the game on the game menu
-    artillerySwitchToState(ad, AGS_WAIT);
+    artillerySwitchToGameState(ad, AGS_WAIT);
 }
 
 /**
- * @brief TODO doc
- *
- * @return artilleryData_t*
+ * @return A pointer to all the mode data
  */
 artilleryData_t* getArtilleryData(void)
 {
