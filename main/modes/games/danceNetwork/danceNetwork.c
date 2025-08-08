@@ -586,7 +586,7 @@ static void dn_initializeGame(void)
     // Make the albums//
     ////////////////////
     dn_entity_t* albums  = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_ALBUM_ASSET, 0,
-                                                  (vec_t){0xFFFF, 0xFFFF - (107 << DN_DECIMAL_BITS)}, gameData);
+                                                  (vec_t){0xFFFF, 63823}, gameData);//Y is 0xFFFF - (107 << DN_DECIMAL_BITS)
     albums->data         = heap_caps_calloc(1, sizeof(dn_albumData_t), MALLOC_CAP_SPIRAM);
     albums->dataType     = DN_ALBUMS_DATA;
     albums->drawFunction = dn_drawAlbums;
@@ -594,13 +594,13 @@ static void dn_initializeGame(void)
 
     // p1 album
     dn_entity_t* album1 = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
-                                                (vec_t){0xFFFF - 1280, 0xFFFF - (139 << DN_DECIMAL_BITS)}, gameData);
+                                                (vec_t){0xFFFF - 1280, 63311}, gameData);//Y is 0xFFFF - (139 << DN_DECIMAL_BITS)
     // creative commons album
     dn_entity_t* ccAlbum = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
-                                                 (vec_t){0xFFFF, 0xFFFF - (139 << DN_DECIMAL_BITS)}, gameData);
+                                                 (vec_t){0xFFFF, 63311}, gameData);
     // p2 album
     dn_entity_t* album2 = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
-                                                (vec_t){0xFFFF + 1280, 0xFFFF - (139 << DN_DECIMAL_BITS)}, gameData);
+                                                (vec_t){0xFFFF + 1280, 63311}, gameData);
 
     dn_addTrackToAlbum(album1, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 122)),
                        (dn_track_t)dn_randomInt(1, 2));

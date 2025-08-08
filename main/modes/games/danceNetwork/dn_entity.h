@@ -222,6 +222,7 @@ void dn_drawPitForeground(dn_entity_t* self);
 dn_boardPos_t dn_getUnitBoardPos(dn_entity_t* unit);
 
 void dn_updateUpgradeMenu(dn_entity_t* self);
+void dn_updateUpgradeMenu2(dn_entity_t* self);
 void dn_drawUpgradeMenu(dn_entity_t* self);
 void dn_initializeSecondUpgradeOption(dn_entity_t* self);
 void dn_initializeThirdUpgradeOption(dn_entity_t* self);

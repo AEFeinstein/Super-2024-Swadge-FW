@@ -748,6 +748,7 @@ void dn_updateAlbum(dn_entity_t* self)
                 dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
                 strcpy(option1->text, "OK");
                 option1->callback = dn_gainRerollAndStep;
+                option1->downPressDetected = false;
                 push(promptData->options, (void*)option1);
                 promptData->numOptions = 1;    
                 promptToStart->dataType     = DN_PROMPT_DATA;
@@ -1339,11 +1340,14 @@ void dn_startSwapCCPhase(dn_entity_t* self)
     
     dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
     strcpy(option1->text, "NO");
+    option1->downPressDetected = false;
     option1->callback = dn_refuseSwapCC;
+    option1->downPressDetected = false;
     push(promptData->options, (void*)option1);
 
     dn_promptOption_t* option2 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
     strcpy(option2->text, "YES");
+    option2->downPressDetected = false;
     option2->callback = dn_acceptSwapCC;
     push(promptData->options, (void*)option2);
     promptData->numOptions = 2;
@@ -1374,11 +1378,13 @@ void dn_startMovePhase(dn_entity_t* self)
         dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
         strcpy(option1->text, "NO");
         option1->callback = dn_refuseReroll;
+        option1->downPressDetected = false;
         push(promptData->options, (void*)option1);
 
         dn_promptOption_t* option2 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
         strcpy(option2->text, "YES");
         option2->callback = dn_acceptRerollAndSkip;
+        option2->downPressDetected = false;
         push(promptData->options, (void*)option2);
         promptData->numOptions = 2;
         
@@ -1402,6 +1408,7 @@ void dn_startMovePhase(dn_entity_t* self)
         dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
         strcpy(option1->text, "OK");
         option1->callback = dn_acceptRerollAndSkip;
+        option1->downPressDetected = false;
         push(promptData->options, (void*)option1);
         promptData->numOptions = 1;
         
@@ -1657,6 +1664,48 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
     }
 }
 
+void dn_updateUpgradeMenu2(dn_entity_t* self)
+{
+    self->gameData->camera.pos.y += self->gameData->elapsedUs >> 9;
+    dn_albumsData_t* aData = (dn_albumsData_t*) self->gameData->entityManager.albums->data;
+    aData->p1Album->pos.y += self->gameData->elapsedUs / 1900;
+    aData->creativeCommonsAlbum->pos.y += self->gameData->elapsedUs / 1900;
+    aData->p2Album->pos.y += self->gameData->elapsedUs / 1900;
+
+    if(self->gameData->camera.pos.y > 62703)
+    {
+        self->gameData->camera.pos.y = 62703;
+        aData->p1Album->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
+        aData->creativeCommonsAlbum->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
+        aData->p2Album->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
+        dn_incrementPhase(self);
+        dn_startMovePhase(self);
+        self->destroyFlag = true;
+    }
+
+    //function moves the camera back down after upgrade was chosen.
+    if(self->gameData->camera.pos.y < 63663)
+    {
+        self->gameData->camera.pos.y += self->gameData->elapsedUs >> 8;
+        self->gameData->entityManager.albums->pos.y += self->gameData->elapsedUs / 1900;
+        dn_albumsData_t* aData = (dn_albumsData_t*) self->gameData->entityManager.albums->data;
+        aData->p1Album->pos.y += self->gameData->elapsedUs / 1900;
+        aData->creativeCommonsAlbum->pos.y += self->gameData->elapsedUs / 1900;
+        aData->p2Album->pos.y += self->gameData->elapsedUs / 1900;
+    }
+    else
+    {
+        self->gameData->camera.pos.y = 63663;
+        self->gameData->entityManager.albums->pos.y = 63823;
+        dn_albumsData_t* aData = (dn_albumsData_t*) self->gameData->entityManager.albums->data;
+        aData->p1Album->pos.y = 63311;
+        aData->creativeCommonsAlbum->pos.y = 63311;
+        aData->p2Album->pos.y = 63311;
+        self->destroyFlag = true;
+        
+    }
+}
+
 void dn_drawUpgradeMenu(dn_entity_t* self)
 {
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
@@ -1694,7 +1743,7 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
             drawRectFilled(x + 2, y + 3 + 31*option, x + 144, y + 32 + 31*option,  c323);
         }
         drawRect(x + 143, y + 3 + 31*option, x + 164, y + 32 + 31*option, umData->selectionIdx == option ? c555 : c434);
-        drawRectFilled(x + 144, y + 31 + 31 * option - dn_lerp(0,27,dn_logRemap(umData->options[option].selectionAmount)), x + 163, y + 31 + 31 * option, c523);
+        drawRectFilled(x + 144, y + 31 + 31 * option - dn_lerp(0,27,dn_logRemap(umData->options[option].selectionAmount)), x + 163, y + 31 + 31 * option, c521);
         if(umData->selectionIdx == option)
         {
             drawWsgPaletteSimple(&self->gameData->assets[DN_REROLL_ASSET].frames[0], x + 144, y + 4 + 31 * option,
@@ -1779,7 +1828,7 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
         
     }
 
-    drawRectFilled(x + 40, y + 98, x + dn_lerp(40,125,dn_logRemap(umData->options[3].selectionAmount)), y + 116, c523);
+    drawRectFilled(x + 40, y + 98, x + dn_lerp(40,125,dn_logRemap(umData->options[3].selectionAmount)), y + 116, c521);
     drawRect(x + 40, y + 98, x + 125, y + 116, umData->selectionIdx == 3 ? c555 : c434);
     tWidth = textWidth(&self->gameData->font_ibm, "CONFIRM");
     drawText(&self->gameData->font_ibm, umData->selectionIdx == 3 ? c555 : c545, "CONFIRM", x + 82 - (tWidth >> 1), y + 102);
@@ -2006,6 +2055,7 @@ void dn_confirmUpgrade(dn_entity_t* self)
         }
     }
     dn_addTrackToAlbum(album, umData->track[0], umData->trackColor);
+    self->updateFunction = dn_updateUpgradeMenu2;
 }
 
 void dn_updateSwapAlbums(dn_entity_t* self)
