@@ -63,6 +63,7 @@ static void physAnimateExplosions(physSim_t* phys, int32_t elapsedUs);
  * @param groundLevel The base height of the ground. May be randomized higher or lower
  * @param gx Gravity in the X direction, unit is px/uS^2
  * @param gy Gravity in the Y direction, unit is px/uS^2
+ * @param generateTerrain true to generate terrain, false to receive it from a packet later
  * @return The initialized simulation
  */
 physSim_t* initPhys(float w, float h, int32_t groundLevel, float gx, float gy, bool generateTerrain)
@@ -101,9 +102,9 @@ physSim_t* initPhys(float w, float h, int32_t groundLevel, float gx, float gy, b
 }
 
 /**
- * @brief TODO doc
+ * @brief Add world bounds lines to the simulation
  *
- * @param phys
+ * @param phys The physics simulation
  */
 void physAddWorldBounds(physSim_t* phys)
 {
@@ -114,9 +115,9 @@ void physAddWorldBounds(physSim_t* phys)
 }
 
 /**
- * @brief TODO doc
+ * @brief Remove all lines and circles from the physics simulation
  *
- * @param phys
+ * @param phys The physics simulation
  */
 void physRemoveAllObjects(physSim_t* phys)
 {
@@ -176,6 +177,7 @@ bool physStep(physSim_t* phys, int32_t elapsedUs)
             phys->terrainMoving = moveTerrainPoints(phys, PHYS_TIME_STEP);
             physCheckCollisions(phys);
             change |= physBinaryMoveObjects(phys);
+            change |= physAdjustCamera(phys, PHYS_TIME_STEP);
             physAnimateExplosions(phys, PHYS_TIME_STEP);
             checkTurnOver(phys);
         });

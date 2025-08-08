@@ -20,9 +20,10 @@ static float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float ex
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief Generate random terrain using midpoint displacement
  *
- * @param phys
+ * @param phys The physics simulation to generate terrain in
+ * @param groundLevel The initial ground level, to be raised (Y value)
  */
 void physGenerateTerrain(physSim_t* phys, int32_t groundLevel)
 {
@@ -99,15 +100,17 @@ void physGenerateTerrain(physSim_t* phys, int32_t groundLevel)
 }
 
 /**
- * @brief TODO
+ * @brief Flatten the terrain under the player, making a starting platform
  *
- * @param phys
- * @param player
+ * @param phys The physics simulation
+ * @param player The player, represented by a circle
  */
 void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player)
 {
-    float y1           = FLT_MAX;
-    float y2           = FLT_MAX;
+    // The heights of the first and last points under the player
+    float y1 = FLT_MAX;
+    float y2 = FLT_MAX;
+    // Keep track of if points are under the player while iterating
     bool isUnderPlayer = false;
 
     // First find all points under the player, keeping track of the start and end height
@@ -126,6 +129,7 @@ void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player)
         {
             if (!isUnderPlayer)
             {
+                // Points are now under the player
                 isUnderPlayer = true;
                 y1            = p1.y;
             }
@@ -133,8 +137,8 @@ void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player)
         else if (isUnderPlayer)
         {
             // Point is no longer under player
-            y2            = p1.y;
             isUnderPlayer = false;
+            y2            = p1.y;
             break;
         }
 
@@ -143,6 +147,7 @@ void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player)
         {
             if (!isUnderPlayer)
             {
+                // Points are now under the player
                 isUnderPlayer = true;
                 y1            = p2.y;
             }
@@ -150,8 +155,8 @@ void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player)
         else if (isUnderPlayer)
         {
             // Point is no longer under player
-            y2            = p2.y;
             isUnderPlayer = false;
+            y2            = p2.y;
             break;
         }
 
@@ -162,23 +167,27 @@ void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player)
     // The flat height is the average of the start and end
     float flatHeight = (int32_t)(((y1 + y2) / 2) + 0.5f);
 
+    // The start and end X points for the flattened platform
+    float cX1 = player->c.pos.x - (2 * player->c.radius);
+    float cX2 = player->c.pos.x + (2 * player->c.radius);
+
     // Flatten nodes
     isUnderPlayer = false;
     lNode         = phys->lines.first;
     while (lNode)
     {
+        // The line and some convenience variables
         physLine_t* line = lNode->val;
+        vecFl_t p1       = line->l.p1;
+        vecFl_t p2       = line->l.p2;
 
-        float cX1       = player->c.pos.x - (2 * player->c.radius);
-        float cX2       = player->c.pos.x + (2 * player->c.radius);
-        vecFl_t p1      = line->l.p1;
-        vecFl_t p2      = line->l.p2;
         bool updateLine = false;
         bool allDone    = false;
 
         // First line point
         if (cX1 <= p1.x && p1.x <= cX2)
         {
+            // Flatten the point
             isUnderPlayer          = true;
             line->l.p1.y           = flatHeight;
             line->destination.p1.y = flatHeight;
@@ -193,6 +202,7 @@ void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player)
         // Second line point
         if (cX1 <= p2.x && p2.x <= cX2)
         {
+            // Flatten the point
             isUnderPlayer          = true;
             line->l.p2.y           = flatHeight;
             line->destination.p2.y = flatHeight;
@@ -211,13 +221,15 @@ void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player)
             updateLineProperties(phys, line);
         }
 
+        // No need to iterate anymore
         if (allDone)
         {
             break;
         }
-
-        // Iterate lines
-        lNode = lNode->next;
+        else
+        { // Iterate lines
+            lNode = lNode->next;
+        }
     }
 }
 
@@ -389,12 +401,12 @@ bool moveTerrainPoints(physSim_t* phys, int32_t elapsedUs)
 }
 
 /**
- * @brief TODO doc
+ * @brief Add terrain points from a received packet
  *
- * @param phys
- * @param tIdx
- * @param terrainPoints
- * @param numTerrainPoints
+ * @param phys The physics simulation to add terrain to
+ * @param tIdx The index of the terrain to start at
+ * @param terrainPoints The Y values of the terrain points
+ * @param numTerrainPoints The number of received terrain points
  */
 void physAddTerrainPoints(physSim_t* phys, uint16_t tIdx, const uint16_t* terrainPoints, uint16_t numTerrainPoints)
 {

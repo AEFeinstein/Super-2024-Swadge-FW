@@ -12,12 +12,12 @@
 //==============================================================================
 
 /**
- * @brief TODO doc
+ * @brief Switch to a new game state (menu, adjusting shot, etc.)
  *
- * @param ad
- * @param newState
+ * @param ad All the artillery mode data
+ * @param newState The state to switch to
  */
-void artillerySwitchToState(artilleryData_t* ad, artilleryGameState_t newState)
+void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newState)
 {
     // Set the new state
     ad->gState = newState;
@@ -55,12 +55,11 @@ void artillerySwitchToState(artilleryData_t* ad, artilleryGameState_t newState)
 }
 
 /**
- * @brief TODO doc
+ * @brief Process button events for the artillery game
  *
- * TODO cleanup
- *
- * @param ad
- * @param evt
+ * @param ad All the artillery mode data
+ * @param evt The button event
+ * @return true if the barrel angle changed (need to TX a packet), false otherwise
  */
 bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
 {
@@ -96,7 +95,7 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     case PB_B:
                     {
                         // Return to the menu
-                        artillerySwitchToState(ad, AGS_MENU);
+                        artillerySwitchToGameState(ad, AGS_MENU);
                         return false;
                     }
                     default:
@@ -121,15 +120,12 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     {
                         // Left and right buttons set acceleration
                         ad->players[ad->plIdx]->moving = evt.button;
-                        // TODO only accelerate on ground?
-                        // TODO max X velocity to make tanks feel slow?
-                        // ad->players[ad->plIdx]->acc.x = (PB_LEFT == evt.button) ? -0.0000000001f : 0.0000000001f;
                         break;
                     }
                     case PB_A:
                     case PB_B:
                     {
-                        artillerySwitchToState(ad, AGS_MENU);
+                        artillerySwitchToGameState(ad, AGS_MENU);
                         break;
                     }
                     default:
@@ -169,7 +165,7 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     case PB_A:
                     case PB_B:
                     {
-                        artillerySwitchToState(ad, AGS_MENU);
+                        artillerySwitchToGameState(ad, AGS_MENU);
                         break;
                     }
                     default:
@@ -185,12 +181,12 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
 }
 
 /**
- * @brief TODO doc
+ * @brief Run the main loop for the artillery game.
+ * This includes running physics and drawing to the TFT.
  *
- * TODO cleanup
- *
- * @param ad
- * @param elapsedUs
+ * @param ad All the artillery mode data
+ * @param elapsedUs The time elapsed since this was last called.
+ * @param barrelChanged
  */
 void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChanged)
 {
@@ -199,7 +195,6 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
     // Run camera and physics for non-wireless modes, or if it's our turn
     if (AG_WIRELESS != ad->gameType || ad->myTurn)
     {
-        change |= physAdjustCamera(ad->phys, elapsedUs);
         change |= physStep(ad->phys, elapsedUs);
     }
     // Always draw
@@ -212,6 +207,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
         artilleryTxPlayers(ad);
     }
 
+    // Get the system font to draw text
     font_t* f = getSysFont();
 
     switch (ad->gState)
@@ -224,6 +220,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
         }
         case AGS_ADJUST:
         {
+            // Draw the shot parameters
             char fireParams[64];
             snprintf(fireParams, sizeof(fireParams) - 1, "Angle %0.3f, Power %.3f", ad->players[ad->plIdx]->barrelAngle,
                      ad->players[ad->plIdx]->shotPower * 100);
@@ -232,11 +229,13 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
         }
         case AGS_FIRE:
         {
+            // If the shot hasn't fired yet, fire away!
             if (false == ad->phys->shotFired)
             {
                 ad->phys->shotFired = true;
                 fireShot(ad->phys, ad->players[ad->plIdx]);
             }
+            // Run a timer to wait between switching players, otherwise it's too rushed
             else if (ad->phys->playerSwapTimerUs)
             {
                 ad->phys->playerSwapTimerUs -= elapsedUs;
@@ -252,10 +251,12 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                     ad->moveTimerUs = TANK_MOVE_TIME_US;
 
                     // Return to the menu
-                    artillerySwitchToState(ad, AGS_MENU);
+                    artillerySwitchToGameState(ad, AGS_MENU);
 
                     // Reset menu to top item
                     ad->gameMenu = menuNavigateToTopItem(ad->gameMenu);
+
+                    // TODO TX packet to the other swadge
                 }
             }
             break;
@@ -273,9 +274,10 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                     // Clear timer and button inputs and return to the menu
                     ad->moveTimerUs                = 0;
                     ad->players[ad->plIdx]->moving = 0;
-                    artillerySwitchToState(ad, AGS_MENU);
+                    artillerySwitchToGameState(ad, AGS_MENU);
                 }
             }
+            // TODO TX gas gauge too!
             break;
         }
         case AGS_LOOK:
@@ -285,5 +287,6 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
         }
     }
 
+    // TODO remove from production
     DRAW_FPS_COUNTER((*f));
 }

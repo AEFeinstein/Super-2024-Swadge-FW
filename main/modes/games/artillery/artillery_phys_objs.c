@@ -139,10 +139,10 @@ physCirc_t* physAddCircle(physSim_t* phys, uint16_t x1, uint16_t y1, uint16_t r,
 }
 
 /**
- * @brief TODO doc
+ * @brief Update a circle's properties like aabb and zone
  *
- * @param phys
- * @param pc
+ * @param phys The physics simulation
+ * @param pc The circle to update
  */
 void updateCircleProperties(physSim_t* phys, physCirc_t* pc)
 {
