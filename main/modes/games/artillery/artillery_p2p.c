@@ -93,6 +93,7 @@ static uint8_t getSizeFromType(artilleryP2pPacketType_t type);
 
 /**
  * @brief This typedef is for the function callback which delivers connection statuses to the Swadge mode
+ * TODO doc
  *
  * @param p2p The p2pInfo
  * @param evt The connection event
@@ -145,6 +146,7 @@ void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
 
 /**
  * @brief This typedef is for the function callback which delivers received p2p packets to the Swadge mode
+ * TODO doc
  *
  * @param p2p The p2pInfo
  * @param payload The data that was received
@@ -196,7 +198,7 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
             ad->myTurn        = true;
 
             // After receiving terrain, open the menu
-            artillerySwitchToState(ad, AGS_MENU);
+            artillerySwitchToGameState(ad, AGS_MENU);
             return;
         }
         case P2P_SET_PLAYERS:
@@ -227,6 +229,7 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 /**
  * @brief This typedef is for the function callback which delivers acknowledge status for transmitted messages to the
  * Swadge mode
+ * TODO doc
  *
  * @param p2p The p2pInfo
  * @param status The status of the transmission
@@ -240,7 +243,7 @@ void artillery_p2pMsgTxCb(p2pInfo* p2p, messageStatus_t status, const uint8_t* d
 /**
  * @brief TODO doc
  *
- * @param ad
+ * @param ad All the artillery mode data
  */
 void artilleryTxWorld(artilleryData_t* ad)
 {
@@ -291,6 +294,7 @@ void artilleryTxWorld(artilleryData_t* ad)
 /**
  * @brief TODO doc
  *
+ * @param ad All the artillery mode data
  */
 void artilleryTxPlayers(artilleryData_t* ad)
 {
@@ -330,7 +334,7 @@ void artilleryTxPlayers(artilleryData_t* ad)
 /**
  * @brief TODO doc
  *
- * @param ad
+ * @param ad All the artillery mode data
  */
 void artilleryCheckTxQueue(artilleryData_t* ad)
 {
