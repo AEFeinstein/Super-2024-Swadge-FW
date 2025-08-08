@@ -719,41 +719,9 @@ void dn_updateAlbum(dn_entity_t* self)
         {
             if(self == ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album)
             {
-                //third album finished has finished the bootup animation
+                //third album has finished the bootup animation
                 self->gameData->phase = DN_P1_TURN_START_PHASE;
-
-                // album light blinks
-                ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album->data)->cornerLightBlinking = true;
-
-                ////////////////////////////////
-                // Make the turn start prompt //
-                ////////////////////////////////
-                dn_entity_t* promptToStart = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
-                promptToStart->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
-                dn_promptData_t* promptData = (dn_promptData_t*)promptToStart->data;
-                promptData->animatingIntroSlide = true;
-                promptData->yOffset = 320;//way off screen to allow more time to look at albums.
-                
-                if(self->gameData->rerolls[self->gameData->phase >= DN_P2_TURN_START_PHASE] != 9)
-                {
-                    snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! Gain 1 reroll.", self->gameData->shortPlayerNames[self->gameData->phase>=DN_P2_TURN_START_PHASE]);
-                }
-                else
-                {
-                    snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! 9 rerolls reached.", self->gameData->shortPlayerNames[self->gameData->phase>=DN_P2_TURN_START_PHASE]);
-                }
-                
-                promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-                
-                dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
-                strcpy(option1->text, "OK");
-                option1->callback = dn_gainRerollAndStep;
-                option1->downPressDetected = false;
-                push(promptData->options, (void*)option1);
-                promptData->numOptions = 1;    
-                promptToStart->dataType     = DN_PROMPT_DATA;
-                promptToStart->updateFunction = dn_updatePrompt;
-                promptToStart->drawFunction = dn_drawPrompt;
+                dn_startTurn(self);
             }          
             aData->screenIsOn = true;
             aData->cornerLightOn = true;
@@ -1291,6 +1259,41 @@ void dn_drawPrompt(dn_entity_t* self)
     }
 }
 
+void dn_startTurn(dn_entity_t* self)
+{
+    dn_setBlinkingLights(self);
+
+    ////////////////////////////////
+    // Make the turn start prompt //
+    ////////////////////////////////
+    dn_entity_t* promptToStart = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+    promptToStart->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+    dn_promptData_t* promptData = (dn_promptData_t*)promptToStart->data;
+    promptData->animatingIntroSlide = true;
+    promptData->yOffset = 320;//way off screen to allow more time to look at albums.
+    
+    if(self->gameData->rerolls[self->gameData->phase >= DN_P2_TURN_START_PHASE] != 9)
+    {
+        snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! Gain 1 reroll.", self->gameData->shortPlayerNames[self->gameData->phase>=DN_P2_TURN_START_PHASE]);
+    }
+    else
+    {
+        snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! 9 rerolls reached.", self->gameData->shortPlayerNames[self->gameData->phase>=DN_P2_TURN_START_PHASE]);
+    }
+    
+    promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+    
+    dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+    strcpy(option1->text, "OK");
+    option1->callback = dn_gainRerollAndStep;
+    option1->downPressDetected = false;
+    push(promptData->options, (void*)option1);
+    promptData->numOptions = 1;    
+    promptToStart->dataType     = DN_PROMPT_DATA;
+    promptToStart->updateFunction = dn_updatePrompt;
+    promptToStart->drawFunction = dn_drawPrompt;
+}
+
 void dn_gainReroll(dn_entity_t* self)
 {
     self->gameData->rerolls[self->gameData->phase>=DN_P2_TURN_START_PHASE]++;
@@ -1421,11 +1424,10 @@ void dn_startMovePhase(dn_entity_t* self)
 void dn_acceptRerollAndSkip(dn_entity_t* self)
 {
     dn_albumsData_t* aData = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
-    ((dn_albumData_t*)aData->p1Album->data)->cornerLightBlinking = false;
-    ((dn_albumData_t*)aData->p2Album->data)->cornerLightBlinking = false;
 
     dn_gainReroll(self);
     dn_incrementPhase(self);//would be move phase
+    dn_incrementPhase(self);//would be the swap with opponent phase
     dn_incrementPhase(self);//it is now upgrade phase
 
     //////////////////////////
@@ -1471,27 +1473,7 @@ void dn_refuseReroll(dn_entity_t* self)
 
     ((dn_boardData_t*)self->gameData->entityManager.board->data)->tiles[2][2].selector = tileSelector;
     
-    // sort this out later.
-    self->gameData->phase = DN_P1_MOVE_PHASE;
-
-    // album light blinks
-    switch(self->gameData->phase)
-    {
-        case DN_P1_MOVE_PHASE:
-        {
-            ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album->data)->cornerLightBlinking = true;
-            break;
-        }    
-        case DN_P2_MOVE_PHASE:
-        {
-            ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album->data)->cornerLightBlinking = true;
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }
+    dn_incrementPhase(self);
 }
 
 void dn_acceptSwapCC(dn_entity_t* self)
@@ -1513,7 +1495,6 @@ void dn_acceptSwapCC(dn_entity_t* self)
         swapData->firstAlbum = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album;
         swapData->firstAlbumIdx = 2;
     }
-    ((dn_albumData_t*)swapData->firstAlbum->data)->cornerLightBlinking = false;
     swapData->secondAlbum = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum;
     swapData->secondAlbumIdx = 1;
     swap->dataType    = DN_SWAP_DATA;
@@ -1534,6 +1515,7 @@ void dn_incrementPhase(dn_entity_t* self)
     {
         self->gameData->phase = DN_P1_TURN_START_PHASE;
     }
+    dn_setBlinkingLights(self);
 }
 
 void dn_drawPit(dn_entity_t* self)
@@ -1664,7 +1646,7 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
     }
 }
 
-void dn_updateUpgradeMenu2(dn_entity_t* self)
+void dn_updateAfterUpgradeMenu(dn_entity_t* self)
 {
     self->gameData->camera.pos.y += self->gameData->elapsedUs >> 9;
     dn_albumsData_t* aData = (dn_albumsData_t*) self->gameData->entityManager.albums->data;
@@ -1672,37 +1654,25 @@ void dn_updateUpgradeMenu2(dn_entity_t* self)
     aData->creativeCommonsAlbum->pos.y += self->gameData->elapsedUs / 1900;
     aData->p2Album->pos.y += self->gameData->elapsedUs / 1900;
 
-    if(self->gameData->camera.pos.y > 62703)
-    {
-        self->gameData->camera.pos.y = 62703;
-        aData->p1Album->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
-        aData->creativeCommonsAlbum->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
-        aData->p2Album->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
-        dn_incrementPhase(self);
-        dn_startMovePhase(self);
-        self->destroyFlag = true;
-    }
-
     //function moves the camera back down after upgrade was chosen.
-    if(self->gameData->camera.pos.y < 63663)
+    if(self->gameData->camera.pos.y < 62703)
     {
         self->gameData->camera.pos.y += self->gameData->elapsedUs >> 8;
         self->gameData->entityManager.albums->pos.y += self->gameData->elapsedUs / 1900;
-        dn_albumsData_t* aData = (dn_albumsData_t*) self->gameData->entityManager.albums->data;
         aData->p1Album->pos.y += self->gameData->elapsedUs / 1900;
         aData->creativeCommonsAlbum->pos.y += self->gameData->elapsedUs / 1900;
         aData->p2Album->pos.y += self->gameData->elapsedUs / 1900;
     }
     else
     {
-        self->gameData->camera.pos.y = 63663;
+        dn_incrementPhase(self);
+        dn_startTurn(self);
+        self->gameData->camera.pos.y = 62703;
         self->gameData->entityManager.albums->pos.y = 63823;
-        dn_albumsData_t* aData = (dn_albumsData_t*) self->gameData->entityManager.albums->data;
-        aData->p1Album->pos.y = 63311;
-        aData->creativeCommonsAlbum->pos.y = 63311;
-        aData->p2Album->pos.y = 63311;
+        aData->p1Album->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
+        aData->creativeCommonsAlbum->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
+        aData->p2Album->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
         self->destroyFlag = true;
-        
     }
 }
 
@@ -2055,7 +2025,7 @@ void dn_confirmUpgrade(dn_entity_t* self)
         }
     }
     dn_addTrackToAlbum(album, umData->track[0], umData->trackColor);
-    self->updateFunction = dn_updateUpgradeMenu2;
+    self->updateFunction = dn_updateAfterUpgradeMenu;
 }
 
 void dn_updateSwapAlbums(dn_entity_t* self)
@@ -2150,4 +2120,11 @@ void dn_updateAfterSwap(dn_entity_t* self)
         dn_startMovePhase(self);
         self->destroyFlag = true;
     }
+}
+
+void dn_setBlinkingLights(dn_entity_t* self)
+{
+    ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album->data)->cornerLightBlinking = self->gameData->phase <= DN_P1_MOVE_PHASE || self->gameData->phase > DN_P2_MOVE_PHASE;
+    ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum->data)->cornerLightBlinking = false;
+    ((dn_albumData_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album->data)->cornerLightBlinking = self->gameData->phase <= DN_P2_MOVE_PHASE && self->gameData->phase > DN_P1_MOVE_PHASE;
 }

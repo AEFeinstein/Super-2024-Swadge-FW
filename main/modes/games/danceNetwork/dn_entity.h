@@ -206,6 +206,7 @@ void dn_drawPlayerTurn(dn_entity_t* self);
 
 void dn_updatePrompt(dn_entity_t* self);
 void dn_drawPrompt(dn_entity_t* self);
+void dn_startTurn(dn_entity_t* self);
 void dn_gainReroll(dn_entity_t* self);
 void dn_gainRerollAndStep(dn_entity_t* self);
 void dn_startSwapCCPhase(dn_entity_t* self);
@@ -222,7 +223,7 @@ void dn_drawPitForeground(dn_entity_t* self);
 dn_boardPos_t dn_getUnitBoardPos(dn_entity_t* unit);
 
 void dn_updateUpgradeMenu(dn_entity_t* self);
-void dn_updateUpgradeMenu2(dn_entity_t* self);
+void dn_updateAfterUpgradeMenu(dn_entity_t* self);
 void dn_drawUpgradeMenu(dn_entity_t* self);
 void dn_initializeSecondUpgradeOption(dn_entity_t* self);
 void dn_initializeThirdUpgradeOption(dn_entity_t* self);
@@ -234,3 +235,4 @@ void dn_rerollFirstUpgradeOption(dn_entity_t* self);
 void dn_confirmUpgrade(dn_entity_t* self);
 void dn_updateSwapAlbums(dn_entity_t* self);
 void dn_updateAfterSwap(dn_entity_t* self);
+void dn_setBlinkingLights(dn_entity_t* self);
