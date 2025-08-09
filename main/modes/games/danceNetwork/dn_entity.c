@@ -1650,6 +1650,8 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
                 if(umData->options[umData->selectionIdx].callback)
                 {
                     umData->options[umData->selectionIdx].callback(self);
+                    umData->options[umData->selectionIdx].selectionAmount = 0;
+                    umData->options[umData->selectionIdx].downPressDetected = false;
                 }
             }
         }
@@ -1950,8 +1952,6 @@ void dn_rerollSecondUpgradeOption(dn_entity_t* self)
     {
         dn_initializeSecondUpgradeOption(self);
     }
-
-    umData->options[1].selectionAmount = 0;
 }
 void dn_rerollThirdUpgradeOption(dn_entity_t* self)
 {
@@ -1974,8 +1974,6 @@ void dn_rerollThirdUpgradeOption(dn_entity_t* self)
     {
         dn_initializeThirdUpgradeOption(self);
     }
-
-    umData->options[2].selectionAmount = 0;
 }
 void dn_rerollFirstUpgradeOption(dn_entity_t* self)
 {
@@ -2019,7 +2017,6 @@ void dn_rerollFirstUpgradeOption(dn_entity_t* self)
     {
         umData->trackColor = umData->trackColor == DN_REMIX_TRACK ? (cur == DN_BLUE_TRACK ? DN_RED_TRACK : DN_BLUE_TRACK) : DN_REMIX_TRACK;
     }
-    umData->options[0].selectionAmount = 0;
 }
 
 void dn_confirmUpgrade(dn_entity_t* self)
