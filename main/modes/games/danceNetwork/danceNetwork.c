@@ -168,6 +168,9 @@ static void dn_EnterMode(void)
     gameData->assets[DN_MINI_TILE_ASSET].originX = 10;
     gameData->assets[DN_MINI_TILE_ASSET].originY = 5;
 
+    gameData->assets[DN_MMM_UP_ASSET].originX = 17/2;
+    gameData->assets[DN_MMM_UP_ASSET].originY = 12/2;
+
     // Allocate WSG loading helpers
     dn_hsd = heatshrink_decoder_alloc(256, 8, 4);
     // The largest image is bb_menu2.png, decodes to 99124 bytes
@@ -565,6 +568,8 @@ static void dn_initializeGame(void)
     dn_loadAsset(DN_NUMBER_0_WSG, 1, &gameData->assets[DN_NUMBER_ASSET]);
 
     dn_loadAsset(DN_ALBUM_EXPLOSION_0_WSG, 6, &gameData->assets[DN_ALBUM_EXPLOSION_ASSET]);
+
+    dn_loadAsset(MMM_UP_WSG, 1, &gameData->assets[DN_MMM_UP_ASSET]);
 
     // LED MATRIX TEST
     //ch32v003WriteFlash(&gameData->assets[DN_NUMBER_ASSET].frames[0], sizeof(gameData->assets[DN_NUMBER_ASSET].frames[0]));

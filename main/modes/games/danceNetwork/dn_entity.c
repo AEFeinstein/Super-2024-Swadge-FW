@@ -175,13 +175,18 @@ void dn_drawBoard(dn_entity_t* self)
                                             &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                         drawn = true;
                     }
-                    
                     //draw mini chess unit
-
                     drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[0],
-                                        miniDrawX - self->gameData->assets[miniAssetIndex].originX,
-                                        miniDrawY - self->gameData->assets[miniAssetIndex].originY,
-                                        &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                                    miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                    miniDrawY - self->gameData->assets[miniAssetIndex].originY,
+                                    &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                }
+                else
+                {
+                    //draw mini chess unit
+                    drawWsgSimple(&self->gameData->assets[miniAssetIndex].frames[0],
+                                    miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                    miniDrawY - self->gameData->assets[miniAssetIndex].originY);
                 }
                 if (!drawn)
                 {
@@ -189,11 +194,6 @@ void dn_drawBoard(dn_entity_t* self)
                     drawWsgSimple(&self->gameData->assets[unit->assetIndex].frames[0],
                                   drawX - self->gameData->assets[unit->assetIndex].originX,
                                   drawY - self->gameData->assets[unit->assetIndex].originY);
-
-                    //draw mini chess unit
-                    drawWsgSimple(&self->gameData->assets[miniAssetIndex].frames[0],
-                                  miniDrawX - self->gameData->assets[miniAssetIndex].originX,
-                                  miniDrawY - self->gameData->assets[miniAssetIndex].originY);
                 }
             }
             if (boardData->tiles[y][x].selector != NULL)
@@ -235,18 +235,18 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
                 dn_entity_t* unitAtTrack = ((dn_boardData_t*)unit->gameData->entityManager.board->data)->tiles[trackPos.y][trackPos.x].unit;
                 switch(albumData->screenOnPalette.newColors[check])
                 {
+                    case c015: //remixed attack
                     case c510: //ranged attack
                     {
-                        //You can shoot an empty tile OR an enemy unit.
-                        if(unitAtTrack == NULL || (isP1 && !dn_belongsToP1(unitAtTrack)) || (!isP1 && dn_belongsToP1(unitAtTrack)))
-                        {
-                            push(tracks, (void*)track);
-                        }
+                        //You can shoot any tile that isn't knocked out.
+                        //FINISH ME!!!
+                        push(tracks, (void*)track);
                         break;
                     }
                     case c105: //movement
                     {
-                        //You can move to an empty tile
+                        //You can move to an empty tile that isn't knocked out.
+                        //FINISH ME!!!
                         if(unitAtTrack == NULL)
                         {
                             push(tracks, (void*)track);
@@ -1255,7 +1255,7 @@ void dn_drawPrompt(dn_entity_t* self)
         //fill effect
         drawRectFilled(xPos - 25, pData->yOffset + 34, dn_lerp(xPos - 25, xPos + 25, dn_logRemap(optionVal->selectionAmount)), pData->yOffset + 56, c022);
         //outline
-        drawRect(xPos - 25, pData->yOffset + 34, xPos + 25, pData->yOffset + 56, pData->selectionIdx == i ? c345 : c222);
+        drawRect(xPos - 25, pData->yOffset + 34, xPos + 25, pData->yOffset + 56, pData->selectionIdx == i ? middle : c222);
         xOff = xPos - 25;
         yOff = pData->yOffset + 39;
         //option text
@@ -1266,10 +1266,8 @@ void dn_drawPrompt(dn_entity_t* self)
     //flashy arrows up and down
     if(pData->yOffset == 70 && !pData->playerHasSlidThis && (self->gameData->generalTimer % 256) > 128)
     {
-        drawTriangleOutlined(TFT_WIDTH/2 - 6, pData->yOffset - 3, TFT_WIDTH/2, pData->yOffset - 13, TFT_WIDTH/2 + 6, pData->yOffset - 3, c345, c000);
-        drawTriangleOutlined(TFT_WIDTH/2 - 6, pData->yOffset + 61, TFT_WIDTH/2, pData->yOffset + 71, TFT_WIDTH/2 + 6, pData->yOffset + 61, c345, c000);
-        // Draw this because triangle function is bugged.
-        drawLine(TFT_WIDTH/2 - 6, pData->yOffset + 61, TFT_WIDTH/2 + 6, pData->yOffset + 61, c000, 0);
+        drawWsgPaletteSimple(&self->gameData->assets[DN_MMM_UP_ASSET].frames[0], (TFT_WIDTH>>1) - self->gameData->assets[DN_MMM_UP_ASSET].originX, pData->yOffset - 4 - self->gameData->assets[DN_MMM_UP_ASSET].originY, &self->gameData->entityManager.palettes[self->gameData->phase >= DN_P2_TURN_START_PHASE ? DN_P2_ARROW_PALETTE : DN_PURPLE_FLOOR_PALETTE]);
+        drawWsgPalette(&self->gameData->assets[DN_MMM_UP_ASSET].frames[0], (TFT_WIDTH>>1) - self->gameData->assets[DN_MMM_UP_ASSET].originX, pData->yOffset +64 - self->gameData->assets[DN_MMM_UP_ASSET].originY, &self->gameData->entityManager.palettes[self->gameData->phase >= DN_P2_TURN_START_PHASE ? DN_P2_ARROW_PALETTE : DN_PURPLE_FLOOR_PALETTE], false, true, 0);
     }
 }
 
@@ -1489,7 +1487,7 @@ void dn_refuseReroll(dn_entity_t* self)
     tData->pos = (dn_boardPos_t){2, 2};
     // fancy line colors for player one
     tData->colors[0]             = c125;
-    tData->colors[1]             = c550;
+    tData->colors[1]             = c345;
     tData->colors[2]             = c555;
     if(self->gameData->phase >= DN_P2_MOVE_PHASE)
     {
@@ -1808,25 +1806,17 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
                     }
                     case 2:
                     {
-                        snprintf(text, sizeof(text), "to the Creative Commons album.");
+                        snprintf(text, sizeof(text), "on the Creative Commons album.");
                         break;
                     }
                 }
                 break;
             }
         }
-        if(option < 2)
-        {
-            tWidth = textWidth(&self->gameData->font_ibm, text);
-            drawText(&self->gameData->font_ibm, umData->selectionIdx == option ? c555 : c545, text, x + 73 - (tWidth >> 1), y + 11 + 31 * option);
-        }
-        else
-        {
-            int16_t xValue = x + 6;
-            int16_t yValue = y + 7 + 31*option;
-            drawTextWordWrapCentered(&self->gameData->font_ibm, umData->selectionIdx == option ? c555 : c545, text, &xValue, &yValue, x + 141, y + 30 + 31*option);
-        }
-        
+        int16_t xValue = x + 6;
+        int16_t yValue = y + 7 + 31*option;
+        uint8_t length = *(&text + 1) - text - 1;
+        drawTextWordWrapCentered(&self->gameData->font_ibm, umData->selectionIdx == option ? c555 : c545, text, &xValue, &yValue, x + 141 + (length<19 ? 8 : 0), y + 30 + 31*option);
     }
 
     drawRectFilled(x + 40, y + 98, x + dn_lerp(40,125,dn_logRemap(umData->options[3].selectionAmount)), y + 116, c521);

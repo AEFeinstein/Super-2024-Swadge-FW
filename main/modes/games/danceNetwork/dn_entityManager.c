@@ -32,6 +32,9 @@ void dn_initializeEntityManager(dn_entityManager_t* entityManager, dn_gameData_t
     wsgPaletteSet(&entityManager->palettes[DN_REROLL_PALETTE], c100, c200);//reds
     wsgPaletteSet(&entityManager->palettes[DN_REROLL_PALETTE], c200, c300);
     wsgPaletteSet(&entityManager->palettes[DN_REROLL_PALETTE], c300, c500);
+    wsgPaletteReset(&entityManager->palettes[DN_P2_ARROW_PALETTE]);//flashy prompt arrow
+    wsgPaletteSet(&entityManager->palettes[DN_P2_ARROW_PALETTE], c245, c550);
+    wsgPaletteSet(&entityManager->palettes[DN_P2_ARROW_PALETTE], c001, c420);
 
     dn_setCharacterSetPalette(&gameData->entityManager, gameData->characterSets[0]);
 }

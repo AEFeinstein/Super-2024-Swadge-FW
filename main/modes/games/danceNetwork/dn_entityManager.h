@@ -17,7 +17,6 @@
 
 typedef struct
 {
-    dn_asset_t assets[NUM_ASSETS];       // holds loaded single frame sprites or entire animations of wsgs.
     wsgPalette_t palettes[NUM_PALETTES]; // holds the palettes for swapping
     list_t* entities;
     dn_entity_t* board;  // a pointer to the game board.
