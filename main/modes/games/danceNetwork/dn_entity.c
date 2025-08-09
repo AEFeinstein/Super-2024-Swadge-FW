@@ -222,7 +222,7 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
     
     for(paletteColor_t check = c255; check <= c322; check += 1)
     {
-        if(albumData->screenOnPalette.newColors[check] != c555)//c555 is no action
+        if(albumData->screenOnPalette.newColors[check] != c555 || albumData->screenAttackPalette.newColors[check] != cTransparent)//c555 is no action
         {
             //This is a track
             dn_boardPos_t* track = heap_caps_malloc(sizeof(dn_boardPos_t), MALLOC_CAP_8BIT);
@@ -233,19 +233,19 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
             {
                 //It is in bounds
                 dn_entity_t* unitAtTrack = ((dn_boardData_t*)unit->gameData->entityManager.board->data)->tiles[trackPos.y][trackPos.x].unit;
-                switch(albumData->screenOnPalette.newColors[check])
+                switch(dn_trackTypeAtCoords(album, *track))
                 {
-                    case c015: //remixed attack
-                    case c510: //ranged attack
+                    case DN_REMIX_TRACK: //remixed attack
+                    case DN_RED_TRACK: //ranged attack
                     {
                         //You can shoot any tile that isn't knocked out.
                         //FINISH ME!!!
                         push(tracks, (void*)track);
                         break;
                     }
-                    case c105: //movement
+                    case DN_BLUE_TRACK: //movement
                     {
-                        //You can move to an empty tile that isn't knocked out.
+                        //You can move to an unoccupied tile that isn't knocked out.
                         //FINISH ME!!!
                         if(unitAtTrack == NULL)
                         {
