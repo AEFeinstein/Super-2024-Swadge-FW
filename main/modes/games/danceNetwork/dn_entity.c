@@ -1752,12 +1752,12 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
                 {
                     case DN_RED_TRACK:
                     {
-                        snprintf(text, sizeof(text), "Add a red track,");
+                        snprintf(text, sizeof(text), "Add a fire track,");
                         break;
                     }
                     case DN_BLUE_TRACK:
                     {
-                        snprintf(text, sizeof(text), "Add a blue track,");
+                        snprintf(text, sizeof(text), "Add a moving track,");
                         break;
                     }
                     case DN_REMIX_TRACK:
@@ -1792,12 +1792,12 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
                     case 0:
                     case 1:
                     {
-                        snprintf(text, sizeof(text), "on %s's album.", self->gameData->shortPlayerNames[umData->album[0]]);
+                        snprintf(text, sizeof(text), "to %s's album.", self->gameData->shortPlayerNames[umData->album[0]]);
                         break;
                     }
                     case 2:
                     {
-                        snprintf(text, sizeof(text), "on the Creative Commons album.");
+                        snprintf(text, sizeof(text), "to the Creative Commons album.");
                         break;
                     }
                 }
