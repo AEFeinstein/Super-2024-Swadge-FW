@@ -272,13 +272,19 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
 dn_track_t dn_trackTypeAtColor(dn_entity_t* album, paletteColor_t trackCoords)
 {
     dn_albumData_t* aData = (dn_albumData_t*)album->data;
-    switch(aData->screenOnPalette.newColors[trackCoords])
+    if(aData->screenOnPalette.newColors[trackCoords] == c105)
     {
-        case c510: return DN_RED_TRACK;
-        case c105: return DN_BLUE_TRACK;
-        case c050: return DN_REMIX_TRACK;
-        default: return DN_NONE_TRACK;
+        if(aData->screenAttackPalette.newColors[trackCoords] == c510)
+        {
+            return DN_REMIX_TRACK;
+        }
+        return DN_BLUE_TRACK;
     }
+    else if(aData->screenAttackPalette.newColors[trackCoords] == c510)
+    {
+        return DN_RED_TRACK;
+    }
+    return DN_NONE_TRACK;
 }
 
 dn_track_t dn_trackTypeAtCoords(dn_entity_t* album, dn_boardPos_t trackCoords)
@@ -690,23 +696,18 @@ void dn_addTrackToAlbum(dn_entity_t* album, dn_boardPos_t trackCoords, dn_track_
 {
     dn_albumData_t* aData   = (dn_albumData_t*)album->data;
     dn_twoColors_t colors   = dn_trackCoordsToColor(trackCoords);
-    paletteColor_t onColor  = c510;
-    paletteColor_t offColor = c200;
-    switch (track)
+    wsgPaletteSet(&aData->screenOnPalette, colors.unlit, c344);
+    wsgPaletteSet(&aData->screenOnPalette, colors.lit, c555);
+    wsgPaletteSet(&aData->screenAttackPalette, colors.lit, cTransparent);
+    if(track == DN_REMIX_TRACK || track == DN_BLUE_TRACK)
     {
-        case DN_BLUE_TRACK:
-        {
-            onColor  = c105;
-            offColor = c103;
-            break;
-        }
-        default:
-        {
-            break;
-        }
+        wsgPaletteSet(&aData->screenOnPalette, colors.unlit, c103);
+        wsgPaletteSet(&aData->screenOnPalette, colors.lit, c105);
     }
-    wsgPaletteSet(&aData->screenOnPalette, colors.unlit, offColor);
-    wsgPaletteSet(&aData->screenOnPalette, colors.lit, onColor);
+    if(track == DN_REMIX_TRACK || track == DN_RED_TRACK)
+    {
+        wsgPaletteSet(&aData->screenAttackPalette, colors.lit, c510);
+    }
 }
 
 void dn_updateAlbum(dn_entity_t* self)
@@ -740,6 +741,8 @@ void dn_drawAlbum(dn_entity_t* self)
                 - self->gameData->assets[DN_ALBUM_ASSET].originY;
     drawWsgPalette(&self->gameData->assets[DN_ALBUM_ASSET].frames[0], x, y,
                    aData->screenIsOn ? &aData->screenOnPalette : &aData->screenOffPalette, false, false, aData->rot);
+    drawWsgPalette(&self->gameData->assets[DN_ALBUM_EXPLOSION_ASSET].frames[self->currentAnimationFrame], x, y,
+            &aData->screenAttackPalette, false, false, aData->rot);
     if ((aData->cornerLightOn && !aData->cornerLightBlinking) || (aData->cornerLightOn && aData->cornerLightBlinking && (self->gameData->generalTimer & 0b111111) > 15))
     {
         if (aData->rot == 180)
@@ -753,6 +756,16 @@ void dn_drawAlbum(dn_entity_t* self)
             y += 4;
         }
         drawWsgSimple(&self->gameData->assets[DN_STATUS_LIGHT_ASSET].frames[0], x, y);
+    }
+    self->animationTimer++;
+    if(self->animationTimer >= self->gameFramesPerAnimationFrame)
+    {
+        self->animationTimer = 0;
+        self->currentAnimationFrame++;
+        if(self->currentAnimationFrame >= self->gameData->assets[DN_ALBUM_EXPLOSION_ASSET].numFrames)
+        {
+            self->currentAnimationFrame = 0;
+        }
     }
 }
 
@@ -1463,10 +1476,16 @@ void dn_refuseReroll(dn_entity_t* self)
         tData->lineYs[i] = (255 * i) / NUM_SELECTOR_LINES;
     }
     tData->pos = (dn_boardPos_t){2, 2};
-    // fancy line colors
+    // fancy line colors for player one
     tData->colors[0]             = c125;
-    tData->colors[1]             = c345;
+    tData->colors[1]             = c550;
     tData->colors[2]             = c555;
+    if(self->gameData->phase >= DN_P2_MOVE_PHASE)
+    {
+        tData->colors[0]         = c442;
+        tData->colors[1]         = c543;
+        tData->colors[2]         = c555;
+    }
     tileSelector->updateFunction = dn_updateTileSelector;
     // Don't set the draw function, because it needs to happen in two parts behind and in front of units.
 

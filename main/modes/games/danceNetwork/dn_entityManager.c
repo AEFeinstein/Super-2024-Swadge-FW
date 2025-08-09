@@ -278,15 +278,18 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
             dn_loadAsset(DN_ALBUM_WSG, 1, &gameData->assets[assetIndex]);
             dn_loadAsset(DN_STATUS_LIGHT_WSG, 1, &gameData->assets[DN_STATUS_LIGHT_ASSET]);
             entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity->gameFramesPerAnimationFrame = 4;
             entity->data = heap_caps_calloc(1, sizeof(dn_albumData_t), MALLOC_CAP_SPIRAM);
             wsgPaletteReset(&((dn_albumData_t*)entity->data)->screenOffPalette);
             wsgPaletteReset(&((dn_albumData_t*)entity->data)->screenOnPalette);
+            wsgPaletteReset(&((dn_albumData_t*)entity->data)->screenAttackPalette);
             wsgPaletteSet(&((dn_albumData_t*)entity->data)->screenOnPalette, c122, c233);
             // Set the color of each track to c344 (no action).
             for (int i = 0; i < 16; i++)
             {
                 wsgPaletteSet(&((dn_albumData_t*)entity->data)->screenOffPalette, c255 + i, c344);
                 wsgPaletteSet(&((dn_albumData_t*)entity->data)->screenOnPalette, c255 + i, c555);
+                wsgPaletteSet(&((dn_albumData_t*)entity->data)->screenAttackPalette, c255 + i, cTransparent);
                 // Color the upper and left edges shadowed by the cartridge bevel.
                 if (i < 4 || i == 8)
                 {
@@ -294,6 +297,7 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
                     wsgPaletteSet(&((dn_albumData_t*)entity->data)->screenOnPalette, c255 - 36 + i, c233);
                 }
             }
+            
             entity->dataType       = DN_ALBUM_DATA;
             entity->drawFunction   = dn_drawAlbum;
             entity->updateFunction = dn_updateAlbum;
