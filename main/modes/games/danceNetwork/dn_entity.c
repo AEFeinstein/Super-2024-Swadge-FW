@@ -1275,6 +1275,17 @@ void dn_drawPrompt(dn_entity_t* self)
 
 void dn_startTurn(dn_entity_t* self)
 {
+    // Create an array for all LEDs
+    led_t leds[CONFIG_NUM_LEDS];
+    for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+    {
+        leds[i].r = self->gameData->phase == DN_P1_TURN_START_PHASE ? 0 : 255;
+        leds[i].g = 255;
+        leds[i].b = self->gameData->phase == DN_P1_TURN_START_PHASE ? 255 : 0;
+    }
+    // Set the LED output
+    setLeds(leds, CONFIG_NUM_LEDS);
+
     dn_setBlinkingLights(self);
 
     ////////////////////////////////
