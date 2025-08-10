@@ -117,6 +117,11 @@ typedef struct
     paletteColor_t colors[3];
     // which chess tile the selector is on
     dn_boardPos_t pos;
+    // callback when A is pressed.
+    dn_callbackFunction_t a_callback;
+    // callback when B is pressed.
+    dn_callbackFunction_t b_callback;
+    dn_entity_t* selectedUnit;
 } dn_tileSelectorData_t;
 
 typedef struct
@@ -201,6 +206,10 @@ void dn_drawCharacterSelect(dn_entity_t* self);
 void dn_updateTileSelector(dn_entity_t* self);
 void dn_drawTileSelectorBackHalf(dn_entity_t* self, int16_t x, int16_t y);
 void dn_drawTileSelectorFrontHalf(dn_entity_t* self, int16_t x, int16_t y);
+void dn_trySelectUnit(dn_entity_t* self);
+void dn_cancelSelectUnit(dn_entity_t* self);
+void dn_trySelectTrack(dn_entity_t* self);
+void dn_cancelSelectTrack(dn_entity_t* self);
 
 void dn_drawPlayerTurn(dn_entity_t* self);
 
@@ -213,6 +222,7 @@ void dn_startSwapCCPhase(dn_entity_t* self);
 void dn_startMovePhase(dn_entity_t* self);
 void dn_acceptRerollAndSkip(dn_entity_t* self);
 void dn_refuseReroll(dn_entity_t* self);
+void dn_startUpgradeMenu(dn_entity_t* self);
 void dn_acceptSwapCC(dn_entity_t* self);
 void dn_refuseSwapCC(dn_entity_t* self);
 void dn_incrementPhase(dn_entity_t* self);

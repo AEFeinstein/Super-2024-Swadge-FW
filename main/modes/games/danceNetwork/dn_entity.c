@@ -225,22 +225,22 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
         if(albumData->screenOnPalette.newColors[check] != c555 || albumData->screenAttackPalette.newColors[check] != cTransparent)//c555 is no action
         {
             //This is a track
-            dn_boardPos_t* track = heap_caps_malloc(sizeof(dn_boardPos_t), MALLOC_CAP_8BIT);
-            *track = dn_colorToTrackCoords(check);
+            dn_boardPos_t track = dn_colorToTrackCoords(check);
             dn_boardPos_t unitPos = dn_getUnitBoardPos(unit);
-            dn_boardPos_t trackPos = (dn_boardPos_t){.x = unitPos.x + (1 - 2 * !isP1) * track->x, .y = unitPos.y + (1 - 2 * isP1) * track->y};
-            if(trackPos.x >=0 && trackPos.x <= 4 && trackPos.y >= 0 && trackPos.y <= 4)
+            dn_boardPos_t* trackPos = heap_caps_malloc(sizeof(dn_boardPos_t), MALLOC_CAP_8BIT);
+            *trackPos = (dn_boardPos_t){.x = unitPos.x + (1 - 2 * !isP1) * track.x, .y = unitPos.y + (1 - 2 * isP1) * track.y};
+            if(trackPos->x >=0 && trackPos->x <= 4 && trackPos->y >= 0 && trackPos->y <= 4)
             {
                 //It is in bounds
-                dn_entity_t* unitAtTrack = ((dn_boardData_t*)unit->gameData->entityManager.board->data)->tiles[trackPos.y][trackPos.x].unit;
-                switch(dn_trackTypeAtCoords(album, *track))
+                dn_entity_t* unitAtTrack = ((dn_boardData_t*)unit->gameData->entityManager.board->data)->tiles[trackPos->y][trackPos->x].unit;
+                switch(dn_trackTypeAtCoords(album, track))
                 {
                     case DN_REMIX_TRACK: //remixed attack
                     case DN_RED_TRACK: //ranged attack
                     {
                         //You can shoot any tile that isn't knocked out.
                         //FINISH ME!!!
-                        push(tracks, (void*)track);
+                        push(tracks, (void*)trackPos);
                         break;
                     }
                     case DN_BLUE_TRACK: //movement
@@ -249,7 +249,7 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
                         //FINISH ME!!!
                         if(unitAtTrack == NULL)
                         {
-                            push(tracks, (void*)track);
+                            push(tracks, (void*)trackPos);
                         }
                         break;
                     }
@@ -262,7 +262,7 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
             else
             {
                 //free track
-                free(track);
+                free(trackPos);
             }
         }
     }
@@ -296,24 +296,29 @@ bool dn_calculateMoveableUnits(dn_entity_t* board)
 {
     dn_boardData_t* boardData = (dn_boardData_t*)board->data;
     dn_entity_t** playerUnits = NULL;
+    dn_entity_t** opponentUnits = NULL;
     if(board->gameData->phase < DN_P2_TURN_START_PHASE)
     {
         playerUnits = boardData->p1Units;
+        opponentUnits = boardData->p2Units;
     }
     else
     {
         playerUnits = boardData->p2Units;
+        opponentUnits = boardData->p1Units;
     }
 
     bool playerHasMoves = false;
 
     for(int i = 0; i < 5; i++)
     {
+        dn_boardPos_t pos = dn_getUnitBoardPos(opponentUnits[i]);
+        boardData->tiles[pos.y][pos.x].isSelectable = false;
         list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         if(dn_availableMoves(playerUnits[i], myList))
         {
             playerHasMoves = true;
-            dn_boardPos_t pos = dn_getUnitBoardPos(playerUnits[i]);
+            pos = dn_getUnitBoardPos(playerUnits[i]);
             boardData->tiles[pos.y][pos.x].isSelectable = true;
         }
         clear(myList);
@@ -1055,6 +1060,15 @@ void dn_updateTileSelector(dn_entity_t* self)
 
     bData->tiles[tData->pos.y][tData->pos.x].selector = self;
 
+    if (self->gameData->btnDownState & PB_B)
+    {
+        tData->b_callback(self);
+    }
+    else if(self->gameData->btnDownState & PB_A)
+    {
+        tData->a_callback(self);
+    }
+
     // lines move up at varying rates
     for (int line = 0; line < NUM_SELECTOR_LINES; line++)
     {
@@ -1088,6 +1102,109 @@ void dn_drawTileSelectorFrontHalf(dn_entity_t* self, int16_t x, int16_t y)
         drawLineFast(x, y + 11 - (tData->lineYs[line] >> 3), x + 23, y - (tData->lineYs[line] >> 3),
                      tData->colors[line % 3]);
     }
+}
+
+void dn_trySelectUnit(dn_entity_t* self)
+{
+    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
+    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    if(bData->tiles[tData->pos.y][tData->pos.x].unit != NULL && bData->tiles[tData->pos.y][tData->pos.x].isSelectable)
+    {
+        tData->selectedUnit = bData->tiles[tData->pos.y][tData->pos.x].unit;
+        //set selectable tiles off
+        dn_entity_t** units = bData->p1Units;
+        if(self->gameData->phase >= DN_P2_TURN_START_PHASE)
+        {
+            units = bData->p2Units;
+        }
+        for(int i = 0; i < 5; i++)
+        {
+            dn_boardPos_t pos = dn_getUnitBoardPos(units[i]);
+            bData->tiles[pos.y][pos.x].isSelectable = false;
+        }
+
+        //recalculate selectable tiles
+        list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+        if(dn_availableMoves(tData->selectedUnit, myList))
+        {
+            node_t* cur = myList->first;
+            while(cur != NULL)
+            {
+                dn_boardPos_t* track = ((dn_boardPos_t*)cur->val);
+                bData->tiles[track->y][track->x].isSelectable = true;
+                cur = cur->next;
+            }
+        }
+        clear(myList);
+        free(myList);
+
+        //would make it do the selection idle here later
+        tData->selectedUnit = bData->tiles[tData->pos.y][tData->pos.x].unit;
+        tData->a_callback = dn_trySelectTrack;
+        tData->b_callback = dn_cancelSelectTrack;
+    }
+}
+void dn_cancelSelectUnit(dn_entity_t* self)
+{
+    self->destroyFlag = true;
+    dn_startMovePhase(self);
+}
+void dn_trySelectTrack(dn_entity_t* self)
+{
+    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
+    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    if(bData->tiles[tData->pos.y][tData->pos.x].isSelectable)
+    {
+        //determine the vector FROM the unit TO the track
+        dn_boardPos_t from = dn_getUnitBoardPos(tData->selectedUnit);
+        //tData->pos is "to"
+        dn_boardPos_t relativeTrack = (dn_boardPos_t){tData->pos.x - from.x, tData->pos.y - from.y};
+        
+        dn_entity_t* album = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album;
+        //Make it relative to the player's facing direction
+        if(self->gameData->phase < DN_P2_TURN_START_PHASE)
+        {
+            relativeTrack.y *= -1;
+        }
+        else
+        {
+            relativeTrack.x *= -1;
+            album = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album; 
+        }
+        switch(dn_trackTypeAtCoords(album, relativeTrack))
+        {
+            case DN_BLUE_TRACK:
+            {
+                bData->tiles[from.y][from.x].unit = NULL;
+                bData->tiles[tData->pos.y][tData->pos.x].unit = tData->selectedUnit;
+                bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
+                self->destroyFlag = true;
+                dn_incrementPhase(self);//would be the swap with opponent phase
+                dn_incrementPhase(self);//it is now upgrade phase
+
+                dn_startUpgradeMenu(self);
+
+                break;
+            }
+            case DN_RED_TRACK:
+            {
+                break;
+            }
+            case DN_REMIX_TRACK:
+            {
+                break;
+            }
+        }
+
+
+    }
+}
+void dn_cancelSelectTrack(dn_entity_t* self)
+{
+    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
+    tData->selectedUnit = NULL;
+    tData->a_callback = dn_trySelectUnit;
+    tData->b_callback = dn_cancelSelectUnit;
 }
 
 void dn_drawPlayerTurn(dn_entity_t* self)
@@ -1451,20 +1568,7 @@ void dn_acceptRerollAndSkip(dn_entity_t* self)
     dn_incrementPhase(self);//would be the swap with opponent phase
     dn_incrementPhase(self);//it is now upgrade phase
 
-    //////////////////////////
-    // Make the upgrade menu//
-    //////////////////////////
-    dn_entity_t* upgradeMenu = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
-                                                    0, addVec2d(self->gameData->camera.pos, (vec_t){(107 << DN_DECIMAL_BITS), -(140 << DN_DECIMAL_BITS)}), self->gameData);
-    upgradeMenu->data        = heap_caps_calloc(1, sizeof(dn_upgradeMenuData_t), MALLOC_CAP_SPIRAM);
-    upgradeMenu->dataType    = DN_UPGRADE_MENU_DATA;
-    upgradeMenu->updateFunction = dn_updateUpgradeMenu;
-    upgradeMenu->drawFunction = dn_drawUpgradeMenu;
-    
-    dn_initializeSecondUpgradeOption(upgradeMenu);
-    dn_initializeThirdUpgradeOption(upgradeMenu);
-    dn_initializeFirstUpgradeOption(upgradeMenu);
-    dn_initializeUpgradeConfirmOption(upgradeMenu);
+    dn_startUpgradeMenu(self);
 }
 
 void dn_refuseReroll(dn_entity_t* self)
@@ -1477,6 +1581,8 @@ void dn_refuseReroll(dn_entity_t* self)
     dn_entity_t* tileSelector = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
                                                     0, self->gameData->camera.pos, self->gameData);
     tileSelector->data        = heap_caps_calloc(1, sizeof(dn_tileSelectorData_t), MALLOC_CAP_SPIRAM);
+    ((dn_tileSelectorData_t*)tileSelector->data)->a_callback = dn_trySelectUnit;
+    ((dn_tileSelectorData_t*)tileSelector->data)->b_callback = dn_cancelSelectUnit;
     tileSelector->dataType    = DN_TILE_SELECTOR_DATA;
     tileSelector->drawFunction = dn_drawNothing;
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)tileSelector->data;
@@ -1499,6 +1605,34 @@ void dn_refuseReroll(dn_entity_t* self)
     // Don't set the draw function, because it needs to happen in two parts behind and in front of units.
 
     ((dn_boardData_t*)self->gameData->entityManager.board->data)->tiles[2][2].selector = tileSelector;
+}
+
+void dn_startUpgradeMenu(dn_entity_t* self)
+{
+    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    //set selectable tiles off
+    for(int i = 0; i < 5; i++)
+    {
+        for(int j = 0; j< 5; j++)
+        {
+            bData->tiles[i][j].isSelectable = false;
+        }
+    }
+    
+    //////////////////////////
+    // Make the upgrade menu//
+    //////////////////////////
+    dn_entity_t* upgradeMenu = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
+                                                    0, addVec2d(self->gameData->camera.pos, (vec_t){(107 << DN_DECIMAL_BITS), -(140 << DN_DECIMAL_BITS)}), self->gameData);
+    upgradeMenu->data        = heap_caps_calloc(1, sizeof(dn_upgradeMenuData_t), MALLOC_CAP_SPIRAM);
+    upgradeMenu->dataType    = DN_UPGRADE_MENU_DATA;
+    upgradeMenu->updateFunction = dn_updateUpgradeMenu;
+    upgradeMenu->drawFunction = dn_drawUpgradeMenu;
+    
+    dn_initializeSecondUpgradeOption(upgradeMenu);
+    dn_initializeThirdUpgradeOption(upgradeMenu);
+    dn_initializeFirstUpgradeOption(upgradeMenu);
+    dn_initializeUpgradeConfirmOption(upgradeMenu);
 }
 
 void dn_acceptSwapCC(dn_entity_t* self)
