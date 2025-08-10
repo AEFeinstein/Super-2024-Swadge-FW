@@ -147,6 +147,8 @@ typedef struct
 
 typedef struct
 {
+    int32_t timer;
+
     int8_t selectionIdx; // The selected menu item.
 
     dn_track_t trackColor;
@@ -222,7 +224,8 @@ void dn_startSwapCCPhase(dn_entity_t* self);
 void dn_startMovePhase(dn_entity_t* self);
 void dn_acceptRerollAndSkip(dn_entity_t* self);
 void dn_refuseReroll(dn_entity_t* self);
-void dn_startUpgradeMenu(dn_entity_t* self);
+void dn_clearSelectableTiles(dn_entity_t* self);
+void dn_startUpgradeMenu(dn_entity_t* self, int32_t countOff);
 void dn_acceptSwapCC(dn_entity_t* self);
 void dn_refuseSwapCC(dn_entity_t* self);
 void dn_incrementPhase(dn_entity_t* self);

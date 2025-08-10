@@ -1123,6 +1123,8 @@ void dn_trySelectUnit(dn_entity_t* self)
             bData->tiles[pos.y][pos.x].isSelectable = false;
         }
 
+        dn_clearSelectableTiles(self);
+
         //recalculate selectable tiles
         list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         if(dn_availableMoves(tData->selectedUnit, myList))
@@ -1155,6 +1157,8 @@ void dn_trySelectTrack(dn_entity_t* self)
     dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
     if(bData->tiles[tData->pos.y][tData->pos.x].isSelectable)
     {
+        dn_clearSelectableTiles(self);
+
         //determine the vector FROM the unit TO the track
         dn_boardPos_t from = dn_getUnitBoardPos(tData->selectedUnit);
         //tData->pos is "to"
@@ -1178,11 +1182,15 @@ void dn_trySelectTrack(dn_entity_t* self)
                 bData->tiles[from.y][from.x].unit = NULL;
                 bData->tiles[tData->pos.y][tData->pos.x].unit = tData->selectedUnit;
                 bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
+
+                bData->impactPos = tData->pos;
+                bData->tiles[bData->impactPos.y][bData->impactPos.x].yVel = -700;
+
                 self->destroyFlag = true;
                 dn_incrementPhase(self);//would be the swap with opponent phase
                 dn_incrementPhase(self);//it is now upgrade phase
 
-                dn_startUpgradeMenu(self);
+                dn_startUpgradeMenu(self, 2 << 20);
 
                 break;
             }
@@ -1568,7 +1576,7 @@ void dn_acceptRerollAndSkip(dn_entity_t* self)
     dn_incrementPhase(self);//would be the swap with opponent phase
     dn_incrementPhase(self);//it is now upgrade phase
 
-    dn_startUpgradeMenu(self);
+    dn_startUpgradeMenu(self, 0);
 }
 
 void dn_refuseReroll(dn_entity_t* self)
@@ -1607,7 +1615,7 @@ void dn_refuseReroll(dn_entity_t* self)
     ((dn_boardData_t*)self->gameData->entityManager.board->data)->tiles[2][2].selector = tileSelector;
 }
 
-void dn_startUpgradeMenu(dn_entity_t* self)
+void dn_clearSelectableTiles(dn_entity_t* self)
 {
     dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
     //set selectable tiles off
@@ -1618,13 +1626,17 @@ void dn_startUpgradeMenu(dn_entity_t* self)
             bData->tiles[i][j].isSelectable = false;
         }
     }
-    
+}
+
+void dn_startUpgradeMenu(dn_entity_t* self, int32_t countOff)
+{
     //////////////////////////
     // Make the upgrade menu//
     //////////////////////////
     dn_entity_t* upgradeMenu = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
                                                     0, addVec2d(self->gameData->camera.pos, (vec_t){(107 << DN_DECIMAL_BITS), -(140 << DN_DECIMAL_BITS)}), self->gameData);
     upgradeMenu->data        = heap_caps_calloc(1, sizeof(dn_upgradeMenuData_t), MALLOC_CAP_SPIRAM);
+    ((dn_upgradeMenuData_t*)upgradeMenu->data)->timer = countOff;
     upgradeMenu->dataType    = DN_UPGRADE_MENU_DATA;
     upgradeMenu->updateFunction = dn_updateUpgradeMenu;
     upgradeMenu->drawFunction = dn_drawUpgradeMenu;
@@ -1748,6 +1760,16 @@ dn_boardPos_t dn_getUnitBoardPos(dn_entity_t* unit)
 void dn_updateUpgradeMenu(dn_entity_t* self)
 {
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
+
+    if(umData->timer > 0)
+    {
+        umData->timer -= self->gameData->elapsedUs;
+        if(umData->timer > 0)
+        {
+            return;
+        }
+    }
+
     for(uint8_t option = 0; option < 4; option++)
     {
         umData->options[option].selectionAmount -= self->gameData->elapsedUs >> 6;
