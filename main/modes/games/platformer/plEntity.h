@@ -57,6 +57,12 @@ typedef enum
     ENTITY_BGM_CHANGE_5
 } plEntityIndex_t;
 
+typedef enum
+{
+    MG_PL_ST_NORMAL,
+    MG_PL_ST_DASHING
+} mgPlayerState_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -104,6 +110,9 @@ struct plEntity_t
 
     uint8_t homeTileX;
     uint8_t homeTileY;
+
+    uint16_t state;
+    int16_t stateTimer;
 
     int16_t jumpPower;
 
