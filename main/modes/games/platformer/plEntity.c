@@ -144,7 +144,6 @@ void pl_updatePlayer(plEntity_t* self)
             break;
         case MG_PL_ST_DASHING:
             self->xspeed = (self->spriteFlipHorizontal) ? -64 : 64;
-            self->yspeed = 0;
             
             self->stateTimer--;
             if(self->stateTimer <= 0){
