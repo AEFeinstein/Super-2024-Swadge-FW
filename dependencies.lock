@@ -14,7 +14,7 @@ dependencies:
       type: service
     version: 1.7.6~1
   espressif/tinyusb:
-    component_hash: 10703da2c3cd39a944711ee3d320c6dda54debabf13b4b933a7c90daf102372b
+    component_hash: aa65639878f27a44d349044afd9c3fc134a92bd560874fdac1d836019b5c07ca
     dependencies:
     - name: idf
       require: private
@@ -26,7 +26,7 @@ dependencies:
     - esp32s2
     - esp32s3
     - esp32p4
-    version: 0.18.0~2
+    version: 0.18.0~4
   idf:
     source:
       type: idf
