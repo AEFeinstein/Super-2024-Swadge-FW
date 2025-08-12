@@ -298,6 +298,7 @@ plEntity_t* pl_createPlayer(plEntityManager_t* entityManager, uint16_t x, uint16
 
     entity->type                 = ENTITY_PLAYER;
     entity->spriteIndex          = PL_SP_PLAYER_IDLE;
+    entity->state                = MG_PL_ST_NORMAL;
     entity->updateFunction       = &pl_updatePlayer;
     entity->collisionHandler     = &pl_playerCollisionHandler;
     entity->tileCollisionHandler = &pl_playerTileCollisionHandler;
