@@ -67,38 +67,93 @@ void pl_initializeEntity(plEntity_t* self, plEntityManager_t* entityManager, plT
 
 void pl_updatePlayer(plEntity_t* self)
 {
-    /*
-    if (self->gameData->btnState & PB_B)
-    {
-        self->xMaxSpeed = 52;
-    }
-    else
-    {
-        self->xMaxSpeed = 30;
-    }
-    */
+    switch(self->state){
+        case MG_PL_ST_NORMAL:
+        default:
+            if (self->gameData->doubleTapBtnTimer > 0){
+                self->gameData->doubleTapBtnTimer --;
 
-    if (self->gameData->btnState & PB_LEFT)
-    {
-        //self->xspeed -= (self->falling && self->xspeed < 0) ? (self->xspeed < -24) ? 0 : 2 : 3;
-        self->xspeed -= (self->falling && self->xspeed < 0) ? (self->xspeed < -24) ? 0 : 8 : 8;
+                if(self->gameData->doubleTapBtnTimer <= 0){
+                    self->gameData->doubleTapBtnState = 0;
+                }
+            }
+            
+            /*
+            if (self->gameData->btnState & PB_B)
+            {
+                self->xMaxSpeed = 52;
+            }
+            else
+            {
+                self->xMaxSpeed = 30;
+            }
+            */
 
-        if (self->xspeed < -self->xMaxSpeed)
-        {
-            self->xspeed = -self->xMaxSpeed;
-        }
+            if (self->gameData->btnState & PB_LEFT)
+            {
+                //self->xspeed -= (self->falling && self->xspeed < 0) ? (self->xspeed < -24) ? 0 : 2 : 3;
+                self->xspeed -= (self->falling && self->xspeed < 0) ? (self->xspeed < -24) ? 0 : 8 : 8;
+
+                if (self->xspeed < -self->xMaxSpeed)
+                {
+                    self->xspeed = -self->xMaxSpeed;
+                }
+
+                if(!(self->gameData->prevBtnState & PB_LEFT)) {
+                    
+                    if(!(self->gameData->doubleTapBtnState & PB_LEFT) ) {
+                        self->gameData->doubleTapBtnState = PB_LEFT;
+                        self->gameData->doubleTapBtnTimer = MG_DOUBLE_TAP_TIMER_FRAMES;
+                    } else {
+                        //Initiate dash
+                        self->state = MG_PL_ST_DASHING;
+                        self->stateTimer = 20;
+                        self->gameData->doubleTapBtnState = 0;
+                        self->gameData->doubleTapBtnTimer = -1;
+                        self->gravity = 0;
+                    }
+                        
+                }
+            }
+            else if (self->gameData->btnState & PB_RIGHT)
+            {
+                //self->xspeed += (self->falling && self->xspeed > 0) ? (self->xspeed > 24) ? 0 : 2 : 3;
+                self->xspeed += (self->falling && self->xspeed > 0) ? (self->xspeed > 24) ? 0 : 8 : 8;
+
+                if (self->xspeed > self->xMaxSpeed)
+                {
+                    self->xspeed = self->xMaxSpeed;
+                }
+
+                if(!(self->gameData->prevBtnState & PB_RIGHT)) {
+                    
+                    if(!(self->gameData->doubleTapBtnState & PB_RIGHT) ) {
+                        self->gameData->doubleTapBtnState = PB_RIGHT;
+                        self->gameData->doubleTapBtnTimer = MG_DOUBLE_TAP_TIMER_FRAMES;
+                    } else {
+                        //Initiate dash
+                        self->state = MG_PL_ST_DASHING;
+                        self->stateTimer = 20;
+                        self->gameData->doubleTapBtnState = 0;
+                        self->gameData->doubleTapBtnTimer = -1;
+                        self->gravity = 0;
+                    }
+                        
+                }
+            }
+            break;
+        case MG_PL_ST_DASHING:
+            self->xspeed = (self->spriteFlipHorizontal) ? -64 : 64;
+            self->yspeed = 0;
+            
+            self->stateTimer--;
+            if(self->stateTimer <= 0){
+                self->state = MG_PL_ST_NORMAL;
+                self->gravity = 4;
+            }
+            break;
     }
-    else if (self->gameData->btnState & PB_RIGHT)
-    {
-        //self->xspeed += (self->falling && self->xspeed > 0) ? (self->xspeed > 24) ? 0 : 2 : 3;
-        self->xspeed += (self->falling && self->xspeed > 0) ? (self->xspeed > 24) ? 0 : 8 : 8;
-
-        if (self->xspeed > self->xMaxSpeed)
-        {
-            self->xspeed = self->xMaxSpeed;
-        }
-    }
-
+    
     /*
     if (self->gameData->btnState & PB_LEFT)
     {
