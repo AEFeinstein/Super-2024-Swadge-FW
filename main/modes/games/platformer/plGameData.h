@@ -15,15 +15,7 @@
 //==============================================================================
 // Constants
 //==============================================================================
-/*static const song_t snd1up =
-{
-    .notes =
-    {
-        {G_7, 40},{D_6, 40},{B_5, 80}
-    },
-    .numNotes = 3,
-    .shouldLoop = false
-};*/
+#define MG_DOUBLE_TAP_TIMER_FRAMES 20
 
 //==============================================================================
 // Structs
@@ -33,6 +25,10 @@ typedef struct
 {
     int16_t btnState;
     int16_t prevBtnState;
+    
+    int16_t doubleTapBtnTimer;
+    int16_t doubleTapBtnState;
+
     uint8_t gameState;
     uint8_t changeState;
 
