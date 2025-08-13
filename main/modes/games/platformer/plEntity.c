@@ -104,10 +104,19 @@ void pl_updatePlayer(plEntity_t* self)
                     if(!(self->gameData->doubleTapBtnState & PB_LEFT) ) {
                         self->gameData->doubleTapBtnState = PB_LEFT;
                         self->gameData->doubleTapBtnTimer = MG_DOUBLE_TAP_TIMER_FRAMES;
-                    } else {
+                    } else if (self->canDash) {
                         //Initiate dash
                         self->state = MG_PL_ST_DASHING;
-                        self->stateTimer = 20;
+
+                        if(self->falling){
+                            self->stateTimer = 20;
+                            self->jumpPower = 0;
+                            self->yspeed = 0;
+                            self->canDash = false;
+                        } else {
+                            self->stateTimer = 32;
+                        }
+
                         self->gameData->doubleTapBtnState = 0;
                         self->gameData->doubleTapBtnTimer = -1;
                         self->gravity = 0;
@@ -130,10 +139,19 @@ void pl_updatePlayer(plEntity_t* self)
                     if(!(self->gameData->doubleTapBtnState & PB_RIGHT) ) {
                         self->gameData->doubleTapBtnState = PB_RIGHT;
                         self->gameData->doubleTapBtnTimer = MG_DOUBLE_TAP_TIMER_FRAMES;
-                    } else {
+                    } else if (self->canDash) {
                         //Initiate dash
                         self->state = MG_PL_ST_DASHING;
-                        self->stateTimer = 20;
+
+                        if(self->falling){
+                            self->stateTimer = 20;
+                            self->jumpPower = 0;
+                            self->yspeed = 0;
+                            self->canDash = false;
+                        } else {
+                            self->stateTimer = 32;
+                        }
+
                         self->gameData->doubleTapBtnState = 0;
                         self->gameData->doubleTapBtnTimer = -1;
                         self->gravity = 0;
@@ -143,7 +161,24 @@ void pl_updatePlayer(plEntity_t* self)
             }
             break;
         case MG_PL_ST_DASHING:
-            self->xspeed = (self->spriteFlipHorizontal) ? -64 : 64;
+
+            if(self->spriteFlipHorizontal) {
+                self->xspeed = -64;
+
+                if(!self->falling && !(self->gameData->btnState & PB_LEFT)){
+                    self->stateTimer = 0;
+                } else if (self->gameData->btnState & PB_RIGHT) {
+                    self->spriteFlipHorizontal = false;
+                }
+            } else {
+                self->xspeed = 64;
+
+                if(!self->falling && !(self->gameData->btnState & PB_RIGHT)){
+                    self->stateTimer = 0;
+                } else if (self->gameData->btnState & PB_LEFT) {
+                    self->spriteFlipHorizontal = true;
+                }
+            }
             
             self->stateTimer--;
             if(self->stateTimer <= 0){
@@ -195,12 +230,24 @@ void pl_updatePlayer(plEntity_t* self)
             self->jumpPower = 60; //+ ((abs(self->xspeed) + 16) >> 3);
             self->yspeed    = -self->jumpPower;
             self->falling   = true;
+
+            if(self->state == MG_PL_ST_DASHING){
+                self->canDash = false;
+            }
+
             soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
         } else if (pl_canWallJump(self) && !(self->gameData->prevBtnState & PB_A)) {
                 self->jumpPower = 60; //+ ((abs(self->xspeed) + 16) >> 3);
                 self->xspeed = (self->spriteFlipHorizontal) ? 32 : -32;
                 self->yspeed    = -self->jumpPower;
                 self->falling   = true;
+                
+                if(self->state == MG_PL_ST_DASHING){
+                    self->state = MG_PL_ST_NORMAL;
+                    self->stateTimer = -1;
+                    self->gravity = 4;
+                }
+                
                 self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
                 soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
         }
@@ -1271,6 +1318,7 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
             case 4: // DOWN
                 // Landed on platform
                 self->falling = false;
+                self->canDash = true;
                 self->yspeed  = 0;
                 break;
             default: // Should never hit

@@ -292,6 +292,7 @@ plEntity_t* pl_createPlayer(plEntityManager_t* entityManager, uint16_t x, uint16
     entity->gravity            = 4;
     entity->falling            = true;
     entity->jumpPower          = 0;
+    entity->canDash            = true;
     entity->spriteFlipVertical = false;
     entity->hp                 = 1;
     entity->animationTimer     = 0; // Used as a cooldown for shooting square wave balls
