@@ -115,6 +115,7 @@ struct plEntity_t
     int16_t stateTimer;
 
     int16_t jumpPower;
+    bool canDash;
 
     bool visible;
     uint8_t hp;
