@@ -21,6 +21,7 @@ typedef enum __attribute__((packed))
     P2P_ADD_TERRAIN,
     P2P_SET_PLAYERS,
     P2P_FIRE_SHOT,
+    P2P_PASS_TURN,
 } artilleryP2pPacketType_t;
 
 //==============================================================================
@@ -69,7 +70,15 @@ typedef struct __attribute__((packed))
 typedef struct __attribute__((packed))
 {
     uint8_t type;
+    artilleryAmmoType_t ammo;
+    float barrelAngle;
+    float shotPower;
 } artPktShot_t;
+
+typedef struct __attribute__((packed))
+{
+    uint8_t type;
+} artPktPassTurn_t;
 
 //==============================================================================
 // Const Variables
@@ -195,7 +204,6 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 
             // Mark simulation as ready
             ad->phys->isReady = true;
-            ad->myTurn        = true;
 
             // After receiving terrain, open the menu
             artillerySwitchToGameState(ad, AGS_MENU);
@@ -220,7 +228,17 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
         {
             const artPktShot_t* pkt = (const artPktShot_t*)payload;
 
-            // TODO the whole thing
+            ad->players[ad->plIdx]->barrelAngle = pkt->barrelAngle;
+            ad->players[ad->plIdx]->ammo        = pkt->ammo;
+            ad->players[ad->plIdx]->shotPower   = pkt->shotPower;
+
+            fireShot(ad->phys, ad->players[ad->plIdx]);
+            return;
+        }
+        case P2P_PASS_TURN:
+        {
+            // const artPktPassTurn_t* pkt = (const artPktPassTurn_t*)payload;
+            artilleryPassTurn(ad);
             return;
         }
     }
@@ -334,6 +352,46 @@ void artilleryTxPlayers(artilleryData_t* ad)
 /**
  * @brief TODO doc
  *
+ * @param ad
+ * @param player
+ */
+void artilleryTxShot(artilleryData_t* ad, physCirc_t* player)
+{
+    // Allocate a packet
+    artPktShot_t* pkt = heap_caps_calloc(1, sizeof(artPktShot_t), MALLOC_CAP_SPIRAM);
+
+    // Write the type
+    pkt->type = P2P_FIRE_SHOT;
+
+    // Write the data
+    pkt->ammo        = player->ammo;
+    pkt->barrelAngle = player->barrelAngle;
+    pkt->shotPower   = player->shotPower;
+
+    // Push into the queue
+    push(&ad->p2pQueue, pkt);
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param ad
+ */
+void artilleryTxPassTurn(artilleryData_t* ad)
+{
+    // Allocate a packet
+    artPktPassTurn_t* pkt = heap_caps_calloc(1, sizeof(artPktPassTurn_t), MALLOC_CAP_SPIRAM);
+
+    // Write the type
+    pkt->type = P2P_PASS_TURN;
+
+    // Push into the queue
+    push(&ad->p2pQueue, pkt);
+}
+
+/**
+ * @brief TODO doc
+ *
  * @param ad All the artillery mode data
  */
 void artilleryCheckTxQueue(artilleryData_t* ad)
@@ -374,6 +432,10 @@ static uint8_t getSizeFromType(artilleryP2pPacketType_t type)
         case P2P_FIRE_SHOT:
         {
             return sizeof(artPktShot_t);
+        }
+        case P2P_PASS_TURN:
+        {
+            return sizeof(artPktPassTurn_t);
         }
     }
     return 0;
