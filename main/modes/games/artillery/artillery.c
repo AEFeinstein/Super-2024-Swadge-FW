@@ -442,7 +442,6 @@ void setDriveInMenu(bool visible)
 void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
 {
     ad->gameType = gameType;
-    ad->myTurn   = (AG_WIRELESS != gameType);
 
     // Initialize physics, including terrain
     ad->phys = initPhys(WORLD_WIDTH, WORLD_HEIGHT, GROUND_LEVEL, DEFAULT_GRAV_X, DEFAULT_GRAV_Y, generateTerrain);

@@ -190,18 +190,14 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
  */
 void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChanged)
 {
-    bool change = barrelChanged;
+    // Step the physics
+    bool physChange = physStep(ad->phys, elapsedUs);
 
-    // Run camera and physics for non-wireless modes, or if it's our turn
-    if (AG_WIRELESS != ad->gameType || ad->myTurn)
-    {
-        change |= physStep(ad->phys, elapsedUs);
-    }
-    // Always draw
+    // Draw the scene
     drawPhysOutline(ad->phys, ad->moveTimerUs);
 
     // If this is a wireless game and there is some change and it's our turn
-    if (AG_WIRELESS == ad->gameType && change && ad->myTurn)
+    if (AG_WIRELESS == ad->gameType && (barrelChanged || physChange) && artilleryIsMyTurn(ad))
     {
         // Transmit the change to the other Swadge
         artilleryTxPlayers(ad);
@@ -210,6 +206,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
     // Get the system font to draw text
     font_t* f = getSysFont();
 
+    // Draw depending on the game state
     switch (ad->gState)
     {
         case AGS_MENU:
@@ -234,6 +231,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
             {
                 ad->phys->shotFired = true;
                 fireShot(ad->phys, ad->players[ad->plIdx]);
+                artilleryTxShot(ad, ad->players[ad->plIdx]);
             }
             // Run a timer to wait between switching players, otherwise it's too rushed
             else if (ad->phys->playerSwapTimerUs)
@@ -241,22 +239,8 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                 ad->phys->playerSwapTimerUs -= elapsedUs;
                 if (ad->phys->playerSwapTimerUs <= 0)
                 {
-                    ad->phys->playerSwapTimerUs = 0;
-                    ad->phys->shotFired         = false;
-
-                    // Switch to the next player
-                    ad->plIdx = (ad->plIdx + 1) % NUM_PLAYERS;
-
-                    // Reset move timer
-                    ad->moveTimerUs = TANK_MOVE_TIME_US;
-
-                    // Return to the menu
-                    artillerySwitchToGameState(ad, AGS_MENU);
-
-                    // Reset menu to top item
-                    ad->gameMenu = menuNavigateToTopItem(ad->gameMenu);
-
-                    // TODO TX packet to the other swadge
+                    artilleryPassTurn(ad);
+                    artilleryTxPassTurn(ad);
                 }
             }
             break;
@@ -289,4 +273,70 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
 
     // TODO remove from production
     DRAW_FPS_COUNTER((*f));
+}
+
+/**
+ * @brief TODO doc
+ *
+ */
+void artilleryPassTurn(artilleryData_t* ad)
+{
+    ad->phys->playerSwapTimerUs = 0;
+    ad->phys->shotFired         = false;
+
+    // Switch to the next player
+    ad->plIdx = (ad->plIdx + 1) % NUM_PLAYERS;
+
+    // Reset move timer
+    ad->moveTimerUs = TANK_MOVE_TIME_US;
+
+    // Switch to the right state depending on game type
+    switch (ad->gameType)
+    {
+        default:
+        case AG_PASS_AND_PLAY:
+        {
+            // Return to the menu
+            artillerySwitchToGameState(ad, AGS_MENU);
+            break;
+        }
+        case AG_CPU_PRACTICE:
+        {
+            break;
+        }
+        case AG_WIRELESS:
+        {
+            artillerySwitchToGameState(ad, artilleryIsMyTurn(ad) ? AGS_MENU : AGS_WAIT);
+            break;
+        }
+    }
+
+    // Reset menu to top item
+    ad->gameMenu = menuNavigateToTopItem(ad->gameMenu);
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param ad
+ * @return true if it is this player's turn, false otherwise
+ */
+bool artilleryIsMyTurn(artilleryData_t* ad)
+{
+    switch (ad->gameType)
+    {
+        default:
+        case AG_PASS_AND_PLAY:
+        {
+            return true;
+        }
+        case AG_CPU_PRACTICE:
+        {
+            return true;
+        }
+        case AG_WIRELESS:
+        {
+            return (GOING_FIRST == p2pGetPlayOrder(&ad->p2p)) != (0 == ad->plIdx);
+        }
+    }
 }
