@@ -36,6 +36,19 @@ void dn_initializeEntityManager(dn_entityManager_t* entityManager, dn_gameData_t
     wsgPaletteSet(&entityManager->palettes[DN_P2_ARROW_PALETTE], c245, c550);
     wsgPaletteSet(&entityManager->palettes[DN_P2_ARROW_PALETTE], c001, c420);
 
+    wsgPaletteReset(&entityManager->palettes[DN_ATTACK1_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_ATTACK1_FLOOR_PALETTE], c500);
+    wsgPaletteReset(&entityManager->palettes[DN_ATTACK2_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_ATTACK2_FLOOR_PALETTE], c511);
+    wsgPaletteReset(&entityManager->palettes[DN_ATTACK3_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_ATTACK3_FLOOR_PALETTE], c522);
+    wsgPaletteReset(&entityManager->palettes[DN_MOVE1_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_MOVE1_FLOOR_PALETTE], c005);
+    wsgPaletteReset(&entityManager->palettes[DN_MOVE2_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_MOVE2_FLOOR_PALETTE], c115);
+    wsgPaletteReset(&entityManager->palettes[DN_MOVE3_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_MOVE3_FLOOR_PALETTE], c225);
+
     dn_setCharacterSetPalette(&gameData->entityManager, gameData->characterSets[0]);
 }
 

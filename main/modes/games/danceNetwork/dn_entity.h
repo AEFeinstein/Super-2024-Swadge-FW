@@ -61,7 +61,7 @@ typedef struct
     int16_t yVel;
     dn_entity_t* unit;     // Pointer to the unit on this tile. NULL if no unit is present.
     dn_entity_t* selector; // Pointer to the tile selector. NULL if no selector is present.
-    bool isSelectable;
+    dn_selection_t selectionType;
 } dn_tileData_t;
 
 

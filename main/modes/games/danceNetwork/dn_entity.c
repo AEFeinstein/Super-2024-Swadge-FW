@@ -132,7 +132,7 @@ void dn_drawBoard(dn_entity_t* self)
                         + (x + y) * self->gameData->assets[DN_MINI_TILE_ASSET].originY
                         - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
 
-            if(boardData->tiles[y][x].isSelectable)
+            if(boardData->tiles[y][x].selectionType)
             {
                 drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
                           drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
@@ -313,13 +313,13 @@ bool dn_calculateMoveableUnits(dn_entity_t* board)
     for(int i = 0; i < 5; i++)
     {
         dn_boardPos_t pos = dn_getUnitBoardPos(opponentUnits[i]);
-        boardData->tiles[pos.y][pos.x].isSelectable = false;
+        boardData->tiles[pos.y][pos.x].selectionType = DN_NO_SELECTION;
         list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         if(dn_availableMoves(playerUnits[i], myList))
         {
             playerHasMoves = true;
             pos = dn_getUnitBoardPos(playerUnits[i]);
-            boardData->tiles[pos.y][pos.x].isSelectable = true;
+            boardData->tiles[pos.y][pos.x].selectionType = DN_UNIT_SELECTION;
         }
         clear(myList);
         free(myList);
@@ -1108,7 +1108,7 @@ void dn_trySelectUnit(dn_entity_t* self)
 {
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
     dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
-    if(bData->tiles[tData->pos.y][tData->pos.x].unit != NULL && bData->tiles[tData->pos.y][tData->pos.x].isSelectable)
+    if(bData->tiles[tData->pos.y][tData->pos.x].unit != NULL && bData->tiles[tData->pos.y][tData->pos.x].selectionType)
     {
         tData->selectedUnit = bData->tiles[tData->pos.y][tData->pos.x].unit;
         //set selectable tiles off
@@ -1120,7 +1120,7 @@ void dn_trySelectUnit(dn_entity_t* self)
         for(int i = 0; i < 5; i++)
         {
             dn_boardPos_t pos = dn_getUnitBoardPos(units[i]);
-            bData->tiles[pos.y][pos.x].isSelectable = false;
+            bData->tiles[pos.y][pos.x].selectionType = DN_NO_SELECTION;
         }
 
         dn_clearSelectableTiles(self);
@@ -1133,7 +1133,7 @@ void dn_trySelectUnit(dn_entity_t* self)
             while(cur != NULL)
             {
                 dn_boardPos_t* track = ((dn_boardPos_t*)cur->val);
-                bData->tiles[track->y][track->x].isSelectable = true;
+                bData->tiles[track->y][track->x].selectionType = DN_MOVE_SELECTION;
                 cur = cur->next;
             }
         }
@@ -1155,7 +1155,7 @@ void dn_trySelectTrack(dn_entity_t* self)
 {
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
     dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
-    if(bData->tiles[tData->pos.y][tData->pos.x].isSelectable)
+    if(bData->tiles[tData->pos.y][tData->pos.x].selectionType)
     {
         dn_clearSelectableTiles(self);
 
@@ -1623,7 +1623,7 @@ void dn_clearSelectableTiles(dn_entity_t* self)
     {
         for(int j = 0; j< 5; j++)
         {
-            bData->tiles[i][j].isSelectable = false;
+            bData->tiles[i][j].selectionType = DN_NO_SELECTION;
         }
     }
 }

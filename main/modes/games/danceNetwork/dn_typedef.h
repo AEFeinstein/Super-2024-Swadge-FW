@@ -9,7 +9,7 @@
 #define DN_TILE_WIDTH      51
 #define DN_TILE_HEIGHT     13
 #define NUM_ASSETS         22 // The number of dn_asset_t (last accounted for DN_MMM_UP_ASSET)
-#define NUM_PALETTES       10 // The number of wsgPalette_t (last accounted for DN_P2_ARROW_PALETTE)
+#define NUM_PALETTES       17 // The number of wsgPalette_t (last accounted for DN_MOVE3_FLOOR_PALETTE)
 #define NUM_SELECTOR_LINES 15 // Creates more chaotic lines in the selector graphic
 
 typedef struct dn_entity_t dn_entity_t;
@@ -68,7 +68,14 @@ typedef enum __attribute__((packed))
     DN_PURPLE_FLOOR_PALETTE,
     DN_PIT_WALL_PALETTE,
     DN_REROLL_PALETTE,
-    DN_P2_ARROW_PALETTE,
+    DN_P2_ARROW_PALETTE,//up and down arrows for the player 2 prompt
+    DN_RED_ATTACK_FLOOR_PALETTE,
+    DN_ATTACK1_FLOOR_PALETTE,
+    DN_ATTACK2_FLOOR_PALETTE,
+    DN_ATTACK3_FLOOR_PALETTE,
+    DN_MOVE1_FLOOR_PALETTE,
+    DN_MOVE2_FLOOR_PALETTE,
+    DN_MOVE3_FLOOR_PALETTE,
 } dn_paletteIdx_t;
 
 typedef struct __attribute__((packed))
@@ -127,3 +134,12 @@ typedef enum __attribute__((packed))
     DN_BLUE_TRACK,
     DN_REMIX_TRACK,
 } dn_track_t;
+
+typedef enum __attribute__((packed))
+{
+    DN_NO_SELECTION,
+    DN_UNIT_SELECTION,
+    DN_MOVE_SELECTION,
+    DN_ATTACK_SELECTION,
+    DN_REMIX_SELECTION,
+} dn_selection_t;
