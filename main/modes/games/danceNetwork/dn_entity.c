@@ -132,7 +132,7 @@ void dn_drawBoard(dn_entity_t* self)
                         + (x + y) * self->gameData->assets[DN_MINI_TILE_ASSET].originY
                         - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
 
-            if(boardData->tiles[y][x].selectionType)
+            if(boardData->tiles[y][x].selectionType == DN_UNIT_SELECTION)
             {
                 drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
                           drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
@@ -142,6 +142,39 @@ void dn_drawBoard(dn_entity_t* self)
                                            + (((y * ((self->gameData->generalTimer >> 10) % 10) + x + 2)
                                                + (self->gameData->generalTimer >> 6))
                                               % 6)]);
+            }
+            else if(boardData->tiles[y][x].selectionType == DN_MOVE_SELECTION)
+            {
+                drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
+                          drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                          drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                        &self->gameData->entityManager
+                                 .palettes[DN_MOVE1_FLOOR_PALETTE
+                                           + 2 - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
+                                               + (self->gameData->generalTimer >> 6))
+                                              % 4) - 2)]);
+            }
+            else if(boardData->tiles[y][x].selectionType == DN_ATTACK_SELECTION)
+            {
+                drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
+                          drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                          drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                        &self->gameData->entityManager
+                                 .palettes[DN_ATTACK1_FLOOR_PALETTE
+                                           + 2 - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
+                                               + (self->gameData->generalTimer >> 6))
+                                              % 4) - 2)]);
+            }
+            else if(boardData->tiles[y][x].selectionType == DN_REMIX_SELECTION)
+            {
+                drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
+                          drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                          drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                        &self->gameData->entityManager
+                                 .palettes[DN_MOVE1_FLOOR_PALETTE
+                                           + 5 - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
+                                               + (self->gameData->generalTimer >> 6))
+                                              % 10) - 5)]);
             }
             else
             {
