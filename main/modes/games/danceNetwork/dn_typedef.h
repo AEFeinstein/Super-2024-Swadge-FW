@@ -135,11 +135,17 @@ typedef enum __attribute__((packed))
     DN_REMIX_TRACK,
 } dn_track_t;
 
+typedef struct __attribute__((packed))
+{
+    dn_boardPos_t pos;
+    dn_track_t action;
+} dn_action_t;
+
 typedef enum __attribute__((packed))
 {
     DN_NO_SELECTION,
-    DN_UNIT_SELECTION,
-    DN_MOVE_SELECTION,
     DN_ATTACK_SELECTION,
+    DN_MOVE_SELECTION,
     DN_REMIX_SELECTION,
+    DN_UNIT_SELECTION,
 } dn_selection_t;

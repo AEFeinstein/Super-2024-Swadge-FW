@@ -171,7 +171,7 @@ void dn_drawBoard(dn_entity_t* self)
                           drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
                           drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
                         &self->gameData->entityManager
-                                 .palettes[DN_MOVE1_FLOOR_PALETTE
+                                 .palettes[DN_ATTACK1_FLOOR_PALETTE
                                            + 5 - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
                                                + (self->gameData->generalTimer >> 6))
                                               % 10) - 5)]);
@@ -260,42 +260,41 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
             //This is a track
             dn_boardPos_t track = dn_colorToTrackCoords(check);
             dn_boardPos_t unitPos = dn_getUnitBoardPos(unit);
-            dn_boardPos_t* trackPos = heap_caps_malloc(sizeof(dn_boardPos_t), MALLOC_CAP_8BIT);
-            *trackPos = (dn_boardPos_t){.x = unitPos.x + (1 - 2 * !isP1) * track.x, .y = unitPos.y + (1 - 2 * isP1) * track.y};
-            if(trackPos->x >=0 && trackPos->x <= 4 && trackPos->y >= 0 && trackPos->y <= 4)
+            dn_action_t* unitAction = heap_caps_malloc(sizeof(dn_action_t), MALLOC_CAP_8BIT);
+            (*unitAction).pos = (dn_boardPos_t){.x = unitPos.x + (1 - 2 * !isP1) * track.x, .y = unitPos.y + (1 - 2 * isP1) * track.y};
+            if(unitAction->pos.x >=0 && unitAction->pos.x <= 4 && unitAction->pos.y >= 0 && unitAction->pos.y <= 4)
             {
                 //It is in bounds
-                dn_entity_t* unitAtTrack = ((dn_boardData_t*)unit->gameData->entityManager.board->data)->tiles[trackPos->y][trackPos->x].unit;
-                switch(dn_trackTypeAtCoords(album, track))
+                dn_entity_t* unitAtTrack = ((dn_boardData_t*)unit->gameData->entityManager.board->data)->tiles[unitAction->pos.y][unitAction->pos.x].unit;
+                unitAction->action = dn_trackTypeAtCoords(album, track);
+                switch(unitAction->action)
                 {
-                    case DN_REMIX_TRACK: //remixed attack
-                    case DN_RED_TRACK: //ranged attack
+                    case DN_REMIX_TRACK:
+                    case DN_RED_TRACK: //ranged attack and remixed track
                     {
-                        //You can shoot any tile that isn't knocked out.
-                        //FINISH ME!!!
-                        push(tracks, (void*)trackPos);
+                        //You can shoot ANY tile. (muahahaha)
+                        push(tracks, (void*)unitAction);
                         break;
                     }
                     case DN_BLUE_TRACK: //movement
                     {
-                        //You can move to an unoccupied tile that isn't knocked out.
-                        //FINISH ME!!!
+                        //You can move to any unoccupied tile. Even knocked out ones. HAHAHAAHAAAA
                         if(unitAtTrack == NULL)
                         {
-                            push(tracks, (void*)trackPos);
+                            push(tracks, (void*)unitAction);
                         }
                         break;
                     }
                     default:
-                    {
+                    {                
+                        free(unitAction);
                         break;
                     }
                 }
             }
             else
             {
-                //free track
-                free(trackPos);
+                free(unitAction);
             }
         }
     }
@@ -1144,17 +1143,6 @@ void dn_trySelectUnit(dn_entity_t* self)
     if(bData->tiles[tData->pos.y][tData->pos.x].unit != NULL && bData->tiles[tData->pos.y][tData->pos.x].selectionType)
     {
         tData->selectedUnit = bData->tiles[tData->pos.y][tData->pos.x].unit;
-        //set selectable tiles off
-        dn_entity_t** units = bData->p1Units;
-        if(self->gameData->phase >= DN_P2_TURN_START_PHASE)
-        {
-            units = bData->p2Units;
-        }
-        for(int i = 0; i < 5; i++)
-        {
-            dn_boardPos_t pos = dn_getUnitBoardPos(units[i]);
-            bData->tiles[pos.y][pos.x].selectionType = DN_NO_SELECTION;
-        }
 
         dn_clearSelectableTiles(self);
 
@@ -1165,8 +1153,8 @@ void dn_trySelectUnit(dn_entity_t* self)
             node_t* cur = myList->first;
             while(cur != NULL)
             {
-                dn_boardPos_t* track = ((dn_boardPos_t*)cur->val);
-                bData->tiles[track->y][track->x].selectionType = DN_MOVE_SELECTION;
+                dn_action_t* action = ((dn_action_t*)cur->val);
+                bData->tiles[action->pos.y][action->pos.x].selectionType = action->action;
                 cur = cur->next;
             }
         }
@@ -1723,6 +1711,17 @@ void dn_incrementPhase(dn_entity_t* self)
     {
         self->gameData->phase = DN_P1_TURN_START_PHASE;
     }
+
+    //update the unit selection colors
+    if(self->gameData->phase == DN_P1_TURN_START_PHASE)
+    {
+        dn_setCharacterSetPalette(&self->gameData->entityManager, self->gameData->characterSets[0]);
+    }
+    else if(self->gameData->phase == DN_P2_TURN_START_PHASE)
+    {
+        dn_setCharacterSetPalette(&self->gameData->entityManager, self->gameData->characterSets[1]);
+    }
+
     dn_setBlinkingLights(self);
 }
 
