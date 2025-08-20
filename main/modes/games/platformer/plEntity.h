@@ -116,11 +116,15 @@ struct plEntity_t
 
     int16_t jumpPower;
     bool canDash;
+    int8_t shotsFired;
+    int8_t shotLimit;
 
     bool visible;
     uint8_t hp;
     int8_t invincibilityFrames;
     uint16_t scoreValue;
+
+    plEntity_t* linkedEntity;
 
     // plEntity_t *entities;
     plEntityManager_t* entityManager;
@@ -219,5 +223,7 @@ void waveBallOverlapTileHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, ui
 void powerUpCollisionHandler(plEntity_t* self, plEntity_t* other);
 void killPlayer(plEntity_t* self);
 void pl_defaultEntityDrawHandler(plEntity_t* self);
+
+void pl_destroyShot(plEntity_t* self);
 
 #endif

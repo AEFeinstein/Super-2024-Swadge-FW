@@ -40,6 +40,7 @@ void pl_initializeEntity(plEntity_t* self, plEntityManager_t* entityManager, plT
     self->spriteFlipHorizontal = false;
     self->spriteFlipVertical   = false;
     self->tileCollider         = NULL;
+    self->linkedEntity         = NULL;
 
     // Fields not explicitly initialized
     // self->type = 0;
@@ -304,16 +305,18 @@ void pl_updatePlayer(plEntity_t* self)
     }
 
     if (/*self->hp > 2 &&*/ self->gameData->btnState & PB_B && !(self->gameData->prevBtnState & PB_B)
-        && self->animationTimer == 0)
+        && self->shotsFired < self->shotLimit)
     {
         plEntity_t* createdEntity = pl_createEntity(self->entityManager, ENTITY_WAVE_BALL,
                                                     TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         if (createdEntity != NULL)
         {
-            createdEntity->xspeed    = (self->spriteFlipHorizontal) ? -(96 + abs(self->xspeed) + abs(self->yspeed))
-                                                                    : 96 + abs(self->xspeed) + abs(self->yspeed);
+            createdEntity->xspeed    = (self->spriteFlipHorizontal) ? -(96 + abs(self->xspeed) /*+ abs(self->yspeed)*/)
+                                                                    : 96 + abs(self->xspeed) /*+ abs(self->yspeed)*/;
             createdEntity->homeTileX = 0;
             createdEntity->homeTileY = 0;
+            createdEntity->linkedEntity = self;
+            self->shotsFired++;
             soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
             pl_remapPlayerShootWsg(self->tilemap->wsgManager);
         }
@@ -1126,7 +1129,7 @@ void pl_enemyCollisionHandler(plEntity_t* self, plEntity_t* other)
             pl_scorePoints(self->gameData, self->scoreValue);
             soundPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
             killEnemy(self);
-            pl_destroyEntity(other, false);
+            pl_destroyShot(other);
             break;
         default:
         {
@@ -2309,8 +2312,30 @@ void updateWaveBall(plEntity_t* self)
 
     // self->yDamping++;
 
-    pl_moveEntityWithTileCollisions(self);
-    despawnWhenOffscreen(self);
+    //pl_moveEntityWithTileCollisions(self);
+    //despawnWhenOffscreen(self);
+
+    self->x += self->xspeed;
+    self->y += self->yspeed;
+
+    if (TO_PIXEL_COORDS(self->x) < (self->tilemap->mapOffsetX - DESPAWN_THRESHOLD)
+        || TO_PIXEL_COORDS(self->x)
+               > (self->tilemap->mapOffsetX + PL_TILEMAP_DISPLAY_WIDTH_PIXELS + DESPAWN_THRESHOLD))
+    {
+        pl_destroyShot(self);
+    }
+
+    if (self->y > 63616)
+    {
+        return;
+    }
+
+    if (TO_PIXEL_COORDS(self->y) < (self->tilemap->mapOffsetY - (DESPAWN_THRESHOLD << 2))
+        || TO_PIXEL_COORDS(self->y)
+               > (self->tilemap->mapOffsetY + PL_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD))
+    {
+        pl_destroyShot(self);
+    }
 }
 
 // bool waveBallTileCollisionHandler(plEntity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction){
@@ -2324,7 +2349,7 @@ void waveBallOverlapTileHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, ui
 {
     if (pl_isSolid(tileId) || tileId == PL_TILE_BOUNCE_BLOCK)
     {
-        pl_destroyEntity(self, false);
+        pl_destroyShot(self);
         soundPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
     }
 }
@@ -2382,4 +2407,12 @@ void pl_defaultEntityDrawHandler(plEntity_t* self)
             (self->y >> SUBPIXEL_RESOLUTION) - self->entityManager->tilemap->mapOffsetY
                 - self->entityManager->wsgManager->sprites[self->spriteIndex].origin->y,
             self->spriteFlipHorizontal, self->spriteFlipVertical, 0);
+}
+
+void pl_destroyShot(plEntity_t* self){
+    if(self->linkedEntity != NULL && self->linkedEntity->active){
+        self->linkedEntity->shotsFired--;
+    }
+
+    pl_destroyEntity(self, false);
 }
