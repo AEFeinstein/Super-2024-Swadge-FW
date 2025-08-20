@@ -1196,18 +1196,19 @@ void dn_trySelectTrack(dn_entity_t* self)
             relativeTrack.x *= -1;
             album = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album; 
         }
+        bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
+        self->destroyFlag = true;
         switch(dn_trackTypeAtCoords(album, relativeTrack))
         {
             case DN_BLUE_TRACK:
             {
                 bData->tiles[from.y][from.x].unit = NULL;
                 bData->tiles[tData->pos.y][tData->pos.x].unit = tData->selectedUnit;
-                bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
+                
 
                 bData->impactPos = tData->pos;
                 bData->tiles[bData->impactPos.y][bData->impactPos.x].yVel = -700;
 
-                self->destroyFlag = true;
                 dn_incrementPhase(self);//would be the swap with opponent phase
                 dn_incrementPhase(self);//it is now upgrade phase
 
@@ -1217,6 +1218,26 @@ void dn_trySelectTrack(dn_entity_t* self)
             }
             case DN_RED_TRACK:
             {
+                /////////////////////
+                // Make the bullet //
+                /////////////////////
+
+                vec_t start = (vec_t){
+                            self->gameData->entityManager.board->pos.x + (from.x - from.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS) - (1 << DN_DECIMAL_BITS),
+                            self->gameData->entityManager.board->pos.y + (from.x + from.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS) - (bData->tiles[from.y][from.x].yOffset)
+                            };
+
+                dn_entity_t* bullet = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, start, self->gameData);
+                bullet->updateFunction = dn_updateBullet;
+                bullet->drawFunction = dn_drawBullet;
+                bullet->data         = heap_caps_calloc(1, sizeof(dn_bulletData_t), MALLOC_CAP_SPIRAM);
+                bullet->dataType     = DN_BULLET_DATA;
+                ((dn_bulletData_t*)bullet->data)->start = bullet->pos;
+                ((dn_bulletData_t*)bullet->data)->end = (vec_t){
+                            self->gameData->entityManager.board->pos.x + (tData->pos.x - tData->pos.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS) - (1 << DN_DECIMAL_BITS),
+                            self->gameData->entityManager.board->pos.y + (tData->pos.x + tData->pos.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS) - (bData->tiles[tData->pos.y][tData->pos.x].yOffset)
+                            };
+
                 break;
             }
             case DN_REMIX_TRACK:
@@ -2367,4 +2388,32 @@ void dn_setBlinkingLights(dn_entity_t* self)
     ((dn_albumData_t*)aData->p1Album->data)->cornerLightBlinking = self->gameData->phase <= DN_P1_MOVE_PHASE || self->gameData->phase > DN_P2_MOVE_PHASE;
     ((dn_albumData_t*)aData->creativeCommonsAlbum->data)->cornerLightBlinking = self->gameData->phase % 6 <= DN_P1_SWAP_CC_PHASE || self->gameData->phase % 6 == DN_P1_UPGRADE_PHASE;
     ((dn_albumData_t*)aData->p2Album->data)->cornerLightBlinking = self->gameData->phase <= DN_P2_MOVE_PHASE && self->gameData->phase > DN_P1_MOVE_PHASE;
+}
+
+void dn_updateBullet(dn_entity_t* self)
+{
+    //increment the lerpAmount
+    dn_bulletData_t* buData = (dn_bulletData_t*)self->data;
+    buData->lerpAmount += self->gameData->elapsedUs >> 7;
+    if(buData->lerpAmount > 30000)
+    {
+        buData->lerpAmount = 30000;
+        self->destroyFlag = true;
+    }
+    self->pos.x = dn_lerp(buData->start.x, buData->end.x, buData->lerpAmount);
+    self->pos.y = dn_lerp(buData->start.y, buData->end.y, buData->lerpAmount);
+
+    //sine wave that peaks at 75 pixels to fake a parabola.
+    buData->yOffset = (int8_t)(sin(buData->lerpAmount * 0.00010471975511965977461542144610931676280657) * 75);
+}
+
+void dn_drawBullet(dn_entity_t* self)
+{
+    dn_bulletData_t* buData = (dn_bulletData_t*)self->data;
+    int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS);
+    int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) - buData->yOffset;
+    
+    drawCircleFilled(x, y, 8, c555);
+    //The bullet outline flashes with random colors from the current player's tile colors.
+    drawCircleOutline(x, y, dn_randomInt(5, 11), dn_randomInt(1, 4), self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE + dn_randomInt(0,5)].newColors[c223]);
 }

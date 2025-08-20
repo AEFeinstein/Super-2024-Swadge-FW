@@ -24,6 +24,7 @@ typedef enum
     DN_PROMPT_DATA,
     DN_UPGRADE_MENU_DATA,
     DN_SWAP_DATA,
+    DN_BULLET_DATA,
 } dn_dataType_t;
 
 //==============================================================================
@@ -63,7 +64,6 @@ typedef struct
     dn_entity_t* selector; // Pointer to the tile selector. NULL if no selector is present.
     dn_selection_t selectionType;
 } dn_tileData_t;
-
 
 typedef struct
 {
@@ -169,6 +169,15 @@ typedef struct
     vec_t offset;
 } dn_swapAlbumsData_t;
 
+typedef struct
+{
+    vec_t start;
+    vec_t end;
+    int8_t yOffset;
+    int16_t lerpAmount;
+} dn_bulletData_t;
+
+
 
 
 
@@ -249,3 +258,6 @@ void dn_confirmUpgrade(dn_entity_t* self);
 void dn_updateSwapAlbums(dn_entity_t* self);
 void dn_updateAfterSwap(dn_entity_t* self);
 void dn_setBlinkingLights(dn_entity_t* self);
+
+void dn_updateBullet(dn_entity_t* self);
+void dn_drawBullet(dn_entity_t* self);
