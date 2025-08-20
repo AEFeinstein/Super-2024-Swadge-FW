@@ -296,6 +296,8 @@ plEntity_t* pl_createPlayer(plEntityManager_t* entityManager, uint16_t x, uint16
     entity->spriteFlipVertical = false;
     entity->hp                 = 1;
     entity->animationTimer     = 0; // Used as a cooldown for shooting square wave balls
+    entity->shotsFired         = 0;
+    entity->shotLimit          = 3;
 
     entity->type                 = ENTITY_PLAYER;
     entity->spriteIndex          = PL_SP_PLAYER_IDLE;
@@ -1176,7 +1178,7 @@ plEntity_t* createWaveBall(plEntityManager_t* entityManager, uint16_t x, uint16_
     entity->collisionHandler     = &pl_dummyCollisionHandler;
     entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
-    entity->overlapTileHandler   = &waveBallOverlapTileHandler;
+    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
 
     entity->drawHandler          = &pl_defaultEntityDrawHandler;
     return entity;
