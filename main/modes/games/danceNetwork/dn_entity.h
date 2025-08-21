@@ -25,6 +25,7 @@ typedef enum
     DN_UPGRADE_MENU_DATA,
     DN_SWAP_DATA,
     DN_BULLET_DATA,
+    DN_UNIT_DATA,
 } dn_dataType_t;
 
 //==============================================================================
@@ -66,6 +67,12 @@ typedef struct
     uint8_t timeout; // Becomes two if shot out. Decrements every turn start. In play at zero.
     uint8_t timeoutOffset; // further offsets the yOffset when in timeout.
 } dn_tileData_t;
+
+typedef struct
+{
+    dn_boardPos_t moveTo; //Coordinates the unit is moving to.
+} dn_unitData_t;
+
 
 typedef struct
 {
@@ -178,11 +185,8 @@ typedef struct
     int8_t yOffset;
     int16_t lerpAmount;
     dn_boardPos_t targetTile;
+    dn_boardPos_t ownerToMove; // Position of the attacker if they are remixing and need to move after the attack.
 } dn_bulletData_t;
-
-
-
-
 
 //==============================================================================
 // Prototypes
@@ -266,3 +270,5 @@ void dn_setBlinkingLights(dn_entity_t* self);
 
 void dn_updateBullet(dn_entity_t* self);
 void dn_drawBullet(dn_entity_t* self);
+
+void dn_moveUnit(dn_entity_t* self);

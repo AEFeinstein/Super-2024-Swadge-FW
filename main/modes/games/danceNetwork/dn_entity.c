@@ -104,9 +104,28 @@ void dn_updateBoard(dn_entity_t* self)
             if(tileData->timeout)
             {
                 tileData->timeoutOffset++;
-                if(tileData->timeoutOffset > 30)
+                if(tileData->timeoutOffset > 35)
                 {
-                    tileData->timeoutOffset = 30;
+                    tileData->timeoutOffset = 35;
+                    if(tileData->unit)
+                    {
+                        //A unit dies
+                        tileData->unit->destroyFlag = true;
+                        for(uint8_t i = 0; i < 5; i++)
+                        {
+                            if(boardData->p1Units[i] == tileData->unit)
+                            {
+                                boardData->p1Units[i] = NULL;
+                                break;
+                            }
+                            if(boardData->p2Units[i] == tileData->unit)
+                            {
+                                boardData->p2Units[i] = NULL;
+                                break;
+                            }
+                        }
+                        tileData->unit = NULL;
+                    }
                 }
             }
             else if(tileData->timeoutOffset > 0)
@@ -1230,24 +1249,20 @@ void dn_trySelectTrack(dn_entity_t* self)
         }
         bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
         self->destroyFlag = true;
-        switch(dn_trackTypeAtCoords(album, relativeTrack))
+        dn_track_t type = dn_trackTypeAtCoords(album, relativeTrack);
+        switch(type)
         {
             case DN_BLUE_TRACK:
             {
-                bData->tiles[from.y][from.x].unit = NULL;
-                bData->tiles[tData->pos.y][tData->pos.x].unit = tData->selectedUnit;
-                
-                bData->impactPos = tData->pos;
-                bData->tiles[bData->impactPos.y][bData->impactPos.x].yVel = -700;
+                ((dn_unitData_t*)tData->selectedUnit->data)->moveTo = tData->pos;
+                tData->selectedUnit->updateFunction = dn_moveUnit;
 
                 dn_incrementPhase(self);//would be the swap with opponent phase
-                dn_incrementPhase(self);//it is now upgrade phase
-
-                dn_startUpgradeMenu(self, 2 << 20);
 
                 break;
             }
             case DN_RED_TRACK:
+            case DN_REMIX_TRACK:
             {
                 /////////////////////
                 // Make the bullet //
@@ -1269,11 +1284,11 @@ void dn_trySelectTrack(dn_entity_t* self)
                             self->gameData->entityManager.board->pos.x + (tData->pos.x - tData->pos.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS) - (1 << DN_DECIMAL_BITS),
                             self->gameData->entityManager.board->pos.y + (tData->pos.x + tData->pos.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS) - (bData->tiles[tData->pos.y][tData->pos.x].yOffset)
                             };
-
-                break;
-            }
-            case DN_REMIX_TRACK:
-            {
+                if(type == DN_REMIX_TRACK)
+                {
+                    ((dn_bulletData_t*)bullet->data)->ownerToMove = from;
+                    self->gameData->resolvingRemix = true;
+                }
                 break;
             }
         }
@@ -1712,8 +1727,12 @@ void dn_acceptThreeRerolls(dn_entity_t* self)
     dn_gainReroll(self);
     dn_gainReroll(self);
     dn_gainReroll(self);
-    dn_incrementPhase(self);
-    dn_startUpgradeMenu(self, 2 << 20);
+    if(!self->gameData->resolvingRemix)
+    {
+        dn_incrementPhase(self);
+        dn_startUpgradeMenu(self, 2 << 20);
+    }
+    self->gameData->resolvingRemix = false;
 }
 
 void dn_refuseReroll(dn_entity_t* self)
@@ -1767,6 +1786,7 @@ void dn_clearSelectableTiles(dn_entity_t* self)
 
 void dn_startUpgradeMenu(dn_entity_t* self, int32_t countOff)
 {
+    self->gameData->resolvingRemix = false;
     //////////////////////////
     // Make the upgrade menu//
     //////////////////////////
@@ -2471,11 +2491,11 @@ void dn_updateAfterSwap(dn_entity_t* self)
         {
             dn_startMovePhase(self);
         }
-        else
+        else if(!self->gameData->resolvingRemix)
         {
             dn_startUpgradeMenu(self, 2 << 20);
         }
-            
+        self->gameData->resolvingRemix = false;
         self->destroyFlag = true;
     }
 }
@@ -2566,7 +2586,21 @@ void dn_updateBullet(dn_entity_t* self)
                 promptCaptured->updateFunction = dn_updatePrompt;
                 promptCaptured->drawFunction = dn_drawPrompt;
             }
+            //A unit dies
             targetTile->unit->destroyFlag = true;
+            for(uint8_t i = 0; i < 5; i++)
+            {
+                if(bData->p1Units[i] == targetTile->unit)
+                {
+                    bData->p1Units[i] = NULL;
+                    break;
+                }
+                if(bData->p2Units[i] == targetTile->unit)
+                {
+                    bData->p2Units[i] = NULL;
+                    break;
+                }
+            }
             targetTile->unit = NULL;
         }
         else
@@ -2575,8 +2609,23 @@ void dn_updateBullet(dn_entity_t* self)
             {
                 targetTile->timeout = 2;
             }
-            dn_incrementPhase(self);//now the upgrade phase
-            dn_startUpgradeMenu(self, 2 << 20);
+            if(!self->gameData->resolvingRemix)
+            {
+                dn_incrementPhase(self);//now the upgrade phase
+                dn_startUpgradeMenu(self, 2 << 20);
+            }
+            else //remix falls in a hole, because no unit was also at the target.
+            {
+                dn_entity_t* owner = bData->tiles[buData->ownerToMove.y][buData->ownerToMove.x].unit;
+                ((dn_unitData_t*)owner->data)->moveTo = buData->targetTile;
+                owner->updateFunction = dn_moveUnit;
+            }
+        }
+        if(self->gameData->resolvingRemix)
+        {
+            dn_entity_t* owner = bData->tiles[buData->ownerToMove.y][buData->ownerToMove.x].unit;
+            ((dn_unitData_t*)owner->data)->moveTo = buData->targetTile;
+            owner->updateFunction = dn_moveUnit;
         }
         self->destroyFlag = true;
     }
@@ -2596,4 +2645,34 @@ void dn_drawBullet(dn_entity_t* self)
     drawCircleFilled(x, y, 8, c555);
     //The bullet outline flashes with random colors from the current player's tile colors.
     drawCircleOutline(x, y, dn_randomInt(5, 11), dn_randomInt(1, 4), self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE + dn_randomInt(0,5)].newColors[c223]);
+}
+
+void dn_moveUnit(dn_entity_t* self)
+{
+    if(!self->gameData->resolvingRemix)
+    {
+        dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
+        dn_unitData_t* uData = (dn_unitData_t*)self->data;
+
+        for (int y = 0; y < DN_BOARD_SIZE; y++)
+        {
+            for (int x = 0; x < DN_BOARD_SIZE; x++)
+            {
+                if(bData->tiles[y][x].unit == self)
+                {
+                    bData->tiles[y][x].unit = NULL;
+                    break;
+                }
+            }
+        }
+        bData->tiles[uData->moveTo.y][uData->moveTo.x].unit = self;
+        
+        bData->impactPos = uData->moveTo;
+        bData->tiles[bData->impactPos.y][bData->impactPos.x].yVel = -700;
+
+        dn_incrementPhase(self);//now the upgrade phase
+        dn_startUpgradeMenu(self, 2 << 20);
+
+        self->updateFunction = NULL;
+    }
 }

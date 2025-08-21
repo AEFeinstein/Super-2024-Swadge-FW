@@ -258,6 +258,8 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
         case DN_BUCKET_HAT_UP_ASSET:
         {
             entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity->data = heap_caps_calloc(1, sizeof(dn_unitData_t), MALLOC_CAP_SPIRAM);
+            entity->dataType     = DN_UNIT_DATA;
             entity->drawFunction = dn_drawNothing; // Drawing of units is handled by dn_drawBoard
             break;
         }
