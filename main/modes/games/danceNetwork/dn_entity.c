@@ -99,6 +99,20 @@ void dn_updateBoard(dn_entity_t* self)
             {
                 tileData->yOffset = newYOffset;
             }
+
+            //other stuff
+            if(tileData->timeout)
+            {
+                tileData->timeoutOffset++;
+                if(tileData->timeoutOffset > 60)
+                {
+                    tileData->timeoutOffset = 60;
+                }
+            }
+            else if(tileData->timeoutOffset > 0)
+            {
+                tileData->timeoutOffset--;
+            }
         }
     }
 }
@@ -123,14 +137,16 @@ void dn_drawBoard(dn_entity_t* self)
                         + (x - y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originX - 1;
             int drawY = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                         + (x + y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originY
-                        - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
+                        - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS)
+                        + boardData->tiles[y][x].timeoutOffset;
             int miniDrawX = -85
                         + ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
                         + (x - y) * self->gameData->assets[DN_MINI_TILE_ASSET].originX - 1;
             int miniDrawY = -233
                         + ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                         + (x + y) * self->gameData->assets[DN_MINI_TILE_ASSET].originY
-                        - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS);
+                        - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS)
+                        + boardData->tiles[y][x].timeoutOffset;
 
             if(boardData->tiles[y][x].selectionType == DN_UNIT_SELECTION)
             {
@@ -345,6 +361,11 @@ bool dn_calculateMoveableUnits(dn_entity_t* board)
     for(int i = 0; i < 5; i++)
     {
         dn_boardPos_t pos = dn_getUnitBoardPos(opponentUnits[i]);
+        if(pos.x == -1 || pos.y == -1)
+        {
+            //That unit has died
+            continue;
+        }
         boardData->tiles[pos.y][pos.x].selectionType = DN_NO_SELECTION;
         list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         if(dn_availableMoves(playerUnits[i], myList))
@@ -1453,6 +1474,20 @@ void dn_startTurn(dn_entity_t* self)
 
     dn_setBlinkingLights(self);
 
+    //decrement tile timeouts
+    dn_boardData_t* boardData = (dn_boardData_t*)self->gameData->entityManager.board->data;
+
+    for (int y = 0; y < DN_BOARD_SIZE; y++)
+    {
+        for (int x = 0; x < DN_BOARD_SIZE; x++)
+        {
+            if(boardData->tiles[y][x].timeout)
+            {
+                boardData->tiles[y][x].timeout--;
+            }
+        }
+    }
+
     ////////////////////////////////
     // Make the turn start prompt //
     ////////////////////////////////
@@ -2418,7 +2453,15 @@ void dn_updateAfterSwap(dn_entity_t* self)
         aData->creativeCommonsAlbum->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
         aData->p2Album->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
         dn_incrementPhase(self);
-        dn_startMovePhase(self);
+        if(self->gameData->phase == DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE || self->gameData->phase == DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE)
+        {
+            dn_startMovePhase(self);
+        }
+        else
+        {
+            dn_startUpgradeMenu(self, 2 << 20);
+        }
+            
         self->destroyFlag = true;
     }
 }
@@ -2511,6 +2554,7 @@ void dn_updateBullet(dn_entity_t* self)
         }
         else
         {
+            targetTile->timeout = 2;
             dn_incrementPhase(self);//now the upgrade phase
             dn_startUpgradeMenu(self, 2 << 20);
         }

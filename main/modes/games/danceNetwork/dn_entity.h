@@ -63,6 +63,8 @@ typedef struct
     dn_entity_t* unit;     // Pointer to the unit on this tile. NULL if no unit is present.
     dn_entity_t* selector; // Pointer to the tile selector. NULL if no selector is present.
     dn_selection_t selectionType;
+    uint8_t timeout; // Becomes two if shot out. Decrements every turn start. In play at zero.
+    uint8_t timeoutOffset; // further offsets the yOffset when in timeout.
 } dn_tileData_t;
 
 typedef struct
