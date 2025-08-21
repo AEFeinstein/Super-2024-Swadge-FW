@@ -1205,7 +1205,6 @@ void dn_trySelectTrack(dn_entity_t* self)
                 bData->tiles[from.y][from.x].unit = NULL;
                 bData->tiles[tData->pos.y][tData->pos.x].unit = tData->selectedUnit;
                 
-
                 bData->impactPos = tData->pos;
                 bData->tiles[bData->impactPos.y][bData->impactPos.x].yVel = -700;
 
@@ -1232,6 +1231,7 @@ void dn_trySelectTrack(dn_entity_t* self)
                 bullet->drawFunction = dn_drawBullet;
                 bullet->data         = heap_caps_calloc(1, sizeof(dn_bulletData_t), MALLOC_CAP_SPIRAM);
                 bullet->dataType     = DN_BULLET_DATA;
+                ((dn_bulletData_t*)bullet->data)->targetTile = tData->pos;
                 ((dn_bulletData_t*)bullet->data)->start = bullet->pos;
                 ((dn_bulletData_t*)bullet->data)->end = (vec_t){
                             self->gameData->entityManager.board->pos.x + (tData->pos.x - tData->pos.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS) - (1 << DN_DECIMAL_BITS),
@@ -1614,11 +1614,57 @@ void dn_startMovePhase(dn_entity_t* self)
 void dn_acceptRerollAndSkip(dn_entity_t* self)
 {
     dn_gainReroll(self);
+    dn_clearSelectableTiles(self);
     dn_incrementPhase(self);//would be move phase
     dn_incrementPhase(self);//would be the swap with opponent phase
     dn_incrementPhase(self);//it is now upgrade phase
 
     dn_startUpgradeMenu(self, 0);
+}
+
+void dn_acceptRerollAndSwap(dn_entity_t* self)
+{
+    dn_gainReroll(self);
+
+    ///////////////////
+    // Make the swap //
+    ///////////////////
+    dn_entity_t* swap = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
+                                                    0, addVec2d(self->gameData->camera.pos, (vec_t){(107 << DN_DECIMAL_BITS), -(68 << DN_DECIMAL_BITS)}), self->gameData);
+    swap->data        = heap_caps_calloc(1, sizeof(dn_swapAlbumsData_t), MALLOC_CAP_SPIRAM);
+    dn_swapAlbumsData_t* swapData = (dn_swapAlbumsData_t*)swap->data;
+    dn_albumsData_t* aData = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
+    ((dn_albumData_t*)aData->p1Album->data)->cornerLightOn = false;
+    ((dn_albumData_t*)aData->creativeCommonsAlbum->data)->cornerLightOn = false;
+    ((dn_albumData_t*)aData->p2Album->data)->cornerLightOn = false;
+    if(self->gameData->phase < DN_P2_TURN_START_PHASE)
+    {
+        swapData->firstAlbum = aData->p1Album;
+        swapData->firstAlbumIdx = 0;
+        
+        swapData->secondAlbum = aData->p2Album;
+        swapData->secondAlbumIdx = 2;
+    }
+    else
+    {
+        swapData->firstAlbum = aData->p2Album;
+        swapData->firstAlbumIdx = 2;
+        
+        swapData->secondAlbum = aData->p1Album;
+        swapData->secondAlbumIdx = 0;
+    }
+    swap->dataType    = DN_SWAP_DATA;
+    swap->updateFunction = dn_updateSwapAlbums;
+    swap->drawFunction = NULL;
+}
+
+void dn_acceptThreeRerolls(dn_entity_t* self)
+{
+    dn_gainReroll(self);
+    dn_gainReroll(self);
+    dn_gainReroll(self);
+    dn_incrementPhase(self);
+    dn_startUpgradeMenu(self, 2 << 20);
 }
 
 void dn_refuseReroll(dn_entity_t* self)
@@ -2398,6 +2444,78 @@ void dn_updateBullet(dn_entity_t* self)
     if(buData->lerpAmount > 30000)
     {
         buData->lerpAmount = 30000;
+        dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
+
+        bData->impactPos = buData->targetTile;
+        dn_tileData_t* targetTile = &bData->tiles[bData->impactPos.y][bData->impactPos.x];
+        targetTile->yVel = -700;
+
+        dn_incrementPhase(self);//now the swap with opponent phase
+        if(targetTile->unit)
+        {
+            if((dn_belongsToP1(targetTile->unit) && self->gameData->phase >= DN_P2_TURN_START_PHASE) ||
+               (!dn_belongsToP1(targetTile->unit) && self->gameData->phase < DN_P2_TURN_START_PHASE))
+            {
+                ///////////////////////////////////
+                // Make the prompt enemy captured//
+                ///////////////////////////////////
+                dn_entity_t* promptCaptured = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+                promptCaptured->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+                dn_promptData_t* promptData = (dn_promptData_t*)promptCaptured->data;
+                promptData->animatingIntroSlide = true;
+                promptData->yOffset = 320;//way off screen to allow more time to look at albums.
+                promptData->usesTwoLinesOfText = true;
+                strcpy(promptData->text, "Enemy unit captured.");
+                strcpy(promptData->text2, "Gain 1 reroll and swap albums.");
+                promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+                
+                dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+                strcpy(option1->text, "OK");
+                option1->callback = dn_acceptRerollAndSwap;
+                option1->downPressDetected = false;
+                push(promptData->options, (void*)option1);
+                promptData->numOptions = 1;
+
+                promptCaptured->dataType     = DN_PROMPT_DATA;
+                promptCaptured->updateFunction = dn_updatePrompt;
+                promptCaptured->drawFunction = dn_drawPrompt;
+            }
+            else//friendly fire!
+            {
+                //////////////////////////////////////
+                // Make the prompt for friendly fire//
+                //////////////////////////////////////
+                dn_entity_t* promptCaptured = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+                promptCaptured->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+                dn_promptData_t* promptData = (dn_promptData_t*)promptCaptured->data;
+                promptData->animatingIntroSlide = true;
+                promptData->yOffset = 320;//way off screen to allow more time to look at albums.
+                promptData->usesTwoLinesOfText = true;
+                strcpy(promptData->text, "Friendly fire!!!");
+                strcpy(promptData->text2, "Receive 3 rerolls from the afterlife.");
+                promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+                
+                dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+                strcpy(option1->text, "OK");
+                option1->callback = dn_acceptThreeRerolls;
+                option1->downPressDetected = false;
+                push(promptData->options, (void*)option1);
+                promptData->numOptions = 1;
+
+                promptCaptured->dataType     = DN_PROMPT_DATA;
+                promptCaptured->updateFunction = dn_updatePrompt;
+                promptCaptured->drawFunction = dn_drawPrompt;
+            }
+            targetTile->unit->destroyFlag = true;
+            targetTile->unit = NULL;
+        }
+        else
+        {
+            dn_incrementPhase(self);//now the upgrade phase
+            dn_startUpgradeMenu(self, 2 << 20);
+        }
+
+
         self->destroyFlag = true;
     }
     self->pos.x = dn_lerp(buData->start.x, buData->end.x, buData->lerpAmount);

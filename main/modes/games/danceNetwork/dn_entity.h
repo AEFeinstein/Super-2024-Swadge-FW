@@ -175,6 +175,7 @@ typedef struct
     vec_t end;
     int8_t yOffset;
     int16_t lerpAmount;
+    dn_boardPos_t targetTile;
 } dn_bulletData_t;
 
 
@@ -232,6 +233,8 @@ void dn_gainRerollAndStep(dn_entity_t* self);
 void dn_startSwapCCPhase(dn_entity_t* self);
 void dn_startMovePhase(dn_entity_t* self);
 void dn_acceptRerollAndSkip(dn_entity_t* self);
+void dn_acceptRerollAndSwap(dn_entity_t* self);
+void dn_acceptThreeRerolls(dn_entity_t* self);
 void dn_refuseReroll(dn_entity_t* self);
 void dn_clearSelectableTiles(dn_entity_t* self);
 void dn_startUpgradeMenu(dn_entity_t* self, int32_t countOff);
