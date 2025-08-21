@@ -2505,7 +2505,10 @@ void dn_updateBullet(dn_entity_t* self)
 
         bData->impactPos = buData->targetTile;
         dn_tileData_t* targetTile = &bData->tiles[bData->impactPos.y][bData->impactPos.x];
-        targetTile->yVel = -700;
+        if(!targetTile->timeout)
+        {
+            targetTile->yVel = -700;
+        }
 
         dn_incrementPhase(self);//now the swap with opponent phase
         if(targetTile->unit)
@@ -2568,12 +2571,13 @@ void dn_updateBullet(dn_entity_t* self)
         }
         else
         {
-            targetTile->timeout = 2;
+            if(!targetTile->timeout)
+            {
+                targetTile->timeout = 2;
+            }
             dn_incrementPhase(self);//now the upgrade phase
             dn_startUpgradeMenu(self, 2 << 20);
         }
-
-
         self->destroyFlag = true;
     }
     self->pos.x = dn_lerp(buData->start.x, buData->end.x, buData->lerpAmount);
