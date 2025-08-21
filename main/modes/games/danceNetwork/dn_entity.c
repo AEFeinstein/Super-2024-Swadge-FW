@@ -104,9 +104,9 @@ void dn_updateBoard(dn_entity_t* self)
             if(tileData->timeout)
             {
                 tileData->timeoutOffset++;
-                if(tileData->timeoutOffset > 60)
+                if(tileData->timeoutOffset > 30)
                 {
-                    tileData->timeoutOffset = 60;
+                    tileData->timeoutOffset = 30;
                 }
             }
             else if(tileData->timeoutOffset > 0)
@@ -1190,7 +1190,18 @@ void dn_trySelectUnit(dn_entity_t* self)
 }
 void dn_cancelSelectUnit(dn_entity_t* self)
 {
-    self->destroyFlag = true;
+    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    for (int y = 0; y < DN_BOARD_SIZE; y++)
+    {
+        for (int x = 0; x < DN_BOARD_SIZE; x++)
+        {
+            if(bData->tiles[y][x].selector)
+            {
+                bData->tiles[y][x].selector->destroyFlag = true;
+                bData->tiles[y][x].selector = NULL;
+            }
+        }
+    }
     dn_startMovePhase(self);
 }
 void dn_trySelectTrack(dn_entity_t* self)
@@ -1272,8 +1283,11 @@ void dn_trySelectTrack(dn_entity_t* self)
 }
 void dn_cancelSelectTrack(dn_entity_t* self)
 {
+    dn_clearSelectableTiles(self);
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
     tData->selectedUnit = NULL;
+    dn_calculateMoveableUnits(self->gameData->entityManager.board);
+
     tData->a_callback = dn_trySelectUnit;
     tData->b_callback = dn_cancelSelectUnit;
 }
