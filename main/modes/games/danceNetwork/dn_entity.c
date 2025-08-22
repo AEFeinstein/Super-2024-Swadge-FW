@@ -110,6 +110,35 @@ void dn_updateBoard(dn_entity_t* self)
                     if(tileData->unit)
                     {
                         //A unit dies
+                        if(tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] || tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[1])//king is captured
+                        {
+                            ///////////////////////////////
+                            // Make the prompt Game Over //
+                            ///////////////////////////////
+                            dn_entity_t* promptGameOver = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+                            promptGameOver->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+                            dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
+                            promptData->animatingIntroSlide = true;
+                            promptData->yOffset = 320;//way off screen to allow more time to look at albums.
+                            promptData->usesTwoLinesOfText = true;
+                            char text[40] = self->gameData->playerNames[tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]];
+                            strcat(text, " wins!");
+                            strcpy(promptData->text, text);
+                            promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+                            
+                            dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+                            strcpy(option1->text, "OK");
+                            option1->callback = NULL;
+                            option1->downPressDetected = false;
+                            push(promptData->options, (void*)option1);
+                            promptData->numOptions = 1;
+
+                            promptGameOver->dataType     = DN_PROMPT_DATA;
+                            promptGameOver->updateFunction = dn_updatePrompt;
+                            promptGameOver->drawFunction = dn_drawPrompt;
+                        }
+
+
                         tileData->unit->destroyFlag = true;
                         for(uint8_t i = 0; i < 5; i++)
                         {
@@ -2596,7 +2625,34 @@ void dn_updateBullet(dn_entity_t* self)
         dn_incrementPhase(self);//now the swap with opponent phase
         if(targetTile->unit)
         {
-            if((dn_belongsToP1(targetTile->unit) && self->gameData->phase >= DN_P2_TURN_START_PHASE) ||
+            if(targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] || targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[1])//king is captured
+            {
+                ///////////////////////////////
+                // Make the prompt Game Over //
+                ///////////////////////////////
+                dn_entity_t* promptGameOver = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+                promptGameOver->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+                dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
+                promptData->animatingIntroSlide = true;
+                promptData->yOffset = 320;//way off screen to allow more time to look at albums.
+                promptData->usesTwoLinesOfText = true;
+                char text[40] = self->gameData->playerNames[targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]];
+                strcat(text, " wins!");
+                strcpy(promptData->text, text);
+                promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+                
+                dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+                strcpy(option1->text, "OK");
+                option1->callback = NULL;
+                option1->downPressDetected = false;
+                push(promptData->options, (void*)option1);
+                promptData->numOptions = 1;
+
+                promptGameOver->dataType     = DN_PROMPT_DATA;
+                promptGameOver->updateFunction = dn_updatePrompt;
+                promptGameOver->drawFunction = dn_drawPrompt;
+            }
+            else if((dn_belongsToP1(targetTile->unit) && self->gameData->phase >= DN_P2_TURN_START_PHASE) ||
                (!dn_belongsToP1(targetTile->unit) && self->gameData->phase < DN_P2_TURN_START_PHASE))
             {
                 ///////////////////////////////////
