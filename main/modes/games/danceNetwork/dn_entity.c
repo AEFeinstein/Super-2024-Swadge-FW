@@ -1959,7 +1959,7 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
 
     if(self->gameData->btnState & PB_A)
     {
-        if(umData->options[umData->selectionIdx].downPressDetected && self->gameData->rerolls[self->gameData->phase >= DN_P2_TURN_START_PHASE])
+        if(umData->options[umData->selectionIdx].downPressDetected && (self->gameData->rerolls[self->gameData->phase >= DN_P2_TURN_START_PHASE] || umData->selectionIdx == 3))
         {
             umData->options[umData->selectionIdx].selectionAmount += self->gameData->elapsedUs >> 5;
             if(umData->options[umData->selectionIdx].selectionAmount >= 30000)
@@ -2251,6 +2251,7 @@ void dn_initializeUpgradeConfirmOption(dn_entity_t* self)
 
 void dn_rerollSecondUpgradeOption(dn_entity_t* self)
 {
+    self->gameData->rerolls[self->gameData->phase>=DN_P2_TURN_START_PHASE]--;
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
     uint8_t separatorIdx = 0;
     for(int i = 0; i < sizeof(umData->track) / sizeof(umData->track[0]); i++)
@@ -2273,6 +2274,7 @@ void dn_rerollSecondUpgradeOption(dn_entity_t* self)
 }
 void dn_rerollThirdUpgradeOption(dn_entity_t* self)
 {
+    self->gameData->rerolls[self->gameData->phase>=DN_P2_TURN_START_PHASE]--;
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
     uint8_t separatorIdx = 0;
     for(int i = 0; i < sizeof(umData->album) / sizeof(umData->album[0]); i++)
@@ -2295,6 +2297,7 @@ void dn_rerollThirdUpgradeOption(dn_entity_t* self)
 }
 void dn_rerollFirstUpgradeOption(dn_entity_t* self)
 {
+    self->gameData->rerolls[self->gameData->phase>=DN_P2_TURN_START_PHASE]--;
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
     
     dn_entity_t* album = NULL;
