@@ -2802,7 +2802,7 @@ void dn_moveUnit(dn_entity_t* self)
 
 
         if((self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] && bData->impactPos.y == 0 && bData->impactPos.x == 2)|| 
-           (self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[1] && bData->impactPos.y == 4 && bData->impactPos.x == 2))//king moved to the opponent's throne
+           (self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0] && bData->impactPos.y == 4 && bData->impactPos.x == 2))//king moved to the opponent's throne
         {
             self->gameData->gameOver = true;
             ///////////////////////////////
