@@ -565,7 +565,7 @@ static void dn_initializeGame(void)
 
     dn_loadAsset(DN_REROLL_WSG, 1, &gameData->assets[DN_REROLL_ASSET]);
 
-    dn_loadAsset(DN_NUMBER_0_WSG, 1, &gameData->assets[DN_NUMBER_ASSET]);
+    dn_loadAsset(DN_NUMBER_0_WSG, 10, &gameData->assets[DN_NUMBER_ASSET]);
 
     dn_loadAsset(DN_ALBUM_EXPLOSION_0_WSG, 6, &gameData->assets[DN_ALBUM_EXPLOSION_ASSET]);
 

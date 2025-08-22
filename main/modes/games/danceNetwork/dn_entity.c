@@ -1291,6 +1291,10 @@ void dn_cancelSelectTrack(dn_entity_t* self)
 
 void dn_drawPlayerTurn(dn_entity_t* self)
 {
+    //Temporary solution to showing rerolls until LED Matrix works
+    drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[0]], 5, 200, 3, 3);
+    drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[1]], 257, 200, 3, 3);
+
     paletteColor_t col = c055;
     switch(self->gameData->phase)
     {
@@ -1319,7 +1323,7 @@ void dn_drawPlayerTurn(dn_entity_t* self)
     drawCircleQuadrants(TFT_WIDTH-42,41,40,false,false,false,true,col);
     drawCircleQuadrants(41,TFT_HEIGHT-42,40,false,true,false,false,col);
     drawCircleQuadrants(TFT_WIDTH-42,TFT_HEIGHT-42,40,true,false,false,false,col);
-    drawRect(1,1,TFT_WIDTH-1,TFT_HEIGHT-1,col);
+    drawRect(1,1,TFT_WIDTH-1,TFT_HEIGHT-1,col);    
 }
 
 void dn_updatePrompt(dn_entity_t* self)
@@ -1563,37 +1567,44 @@ void dn_gainRerollAndStep(dn_entity_t* self)
 
 void dn_startSwapCCPhase(dn_entity_t* self)
 {
-    ///////////////////////////////////////////////////////
-    // Make the prompt to swap with the Creative Commons //
-    ///////////////////////////////////////////////////////
-    dn_entity_t* promptToSwapCC = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
-    promptToSwapCC->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
-    dn_promptData_t* promptData = (dn_promptData_t*)promptToSwapCC->data;
-    promptData->animatingIntroSlide = true;
-    promptData->yOffset = 320;//way off screen to allow more time to look at albums.
-    promptData->usesTwoLinesOfText = true;
-    strcpy(promptData->text, "Spend 3 rerolls to trade your");
-    strcpy(promptData->text2, "album with the creative commons?");
-    
-    promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-    
-    dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
-    strcpy(option1->text, "NO");
-    option1->downPressDetected = false;
-    option1->callback = dn_refuseSwapCC;
-    option1->downPressDetected = false;
-    push(promptData->options, (void*)option1);
+    if(self->gameData->rerolls[self->gameData->phase >= DN_P2_TURN_START_PHASE] >= 3)
+    {
+        ///////////////////////////////////////////////////////
+        // Make the prompt to swap with the Creative Commons //
+        ///////////////////////////////////////////////////////
+        dn_entity_t* promptToSwapCC = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+        promptToSwapCC->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+        dn_promptData_t* promptData = (dn_promptData_t*)promptToSwapCC->data;
+        promptData->animatingIntroSlide = true;
+        promptData->yOffset = 320;//way off screen to allow more time to look at albums.
+        promptData->usesTwoLinesOfText = true;
+        strcpy(promptData->text, "Spend 3 rerolls to trade your");
+        strcpy(promptData->text2, "album with the creative commons?");
+        
+        promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+        
+        dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+        strcpy(option1->text, "NO");
+        option1->downPressDetected = false;
+        option1->callback = dn_refuseSwapCC;
+        option1->downPressDetected = false;
+        push(promptData->options, (void*)option1);
 
-    dn_promptOption_t* option2 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
-    strcpy(option2->text, "YES");
-    option2->downPressDetected = false;
-    option2->callback = dn_acceptSwapCC;
-    push(promptData->options, (void*)option2);
-    promptData->numOptions = 2;
-    
-    promptToSwapCC->dataType     = DN_PROMPT_DATA;
-    promptToSwapCC->updateFunction = dn_updatePrompt;
-    promptToSwapCC->drawFunction = dn_drawPrompt;
+        dn_promptOption_t* option2 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+        strcpy(option2->text, "YES");
+        option2->downPressDetected = false;
+        option2->callback = dn_acceptSwapCC;
+        push(promptData->options, (void*)option2);
+        promptData->numOptions = 2;
+        
+        promptToSwapCC->dataType     = DN_PROMPT_DATA;
+        promptToSwapCC->updateFunction = dn_updatePrompt;
+        promptToSwapCC->drawFunction = dn_drawPrompt;
+    }
+    else
+    {
+        dn_refuseSwapCC(self);
+    }
 }
 
 void dn_startMovePhase(dn_entity_t* self)
@@ -1788,6 +1799,7 @@ void dn_startUpgradeMenu(dn_entity_t* self, int32_t countOff)
 
 void dn_acceptSwapCC(dn_entity_t* self)
 {
+    self->gameData->rerolls[self->gameData->phase >= DN_P2_TURN_START_PHASE]-=3;
     ///////////////////
     // Make the swap //
     ///////////////////
@@ -1947,7 +1959,7 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
 
     if(self->gameData->btnState & PB_A)
     {
-        if(umData->options[umData->selectionIdx].downPressDetected)
+        if(umData->options[umData->selectionIdx].downPressDetected && self->gameData->rerolls[self->gameData->phase >= DN_P2_TURN_START_PHASE])
         {
             umData->options[umData->selectionIdx].selectionAmount += self->gameData->elapsedUs >> 5;
             if(umData->options[umData->selectionIdx].selectionAmount >= 30000)
