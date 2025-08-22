@@ -332,6 +332,8 @@ const midiTimbre_t mmx017Organ = {
         .loop = 0,
         .loopStart = SAMPLE_NUM_CONV(1839, 14336, 16384),
         .loopEnd = SAMPLE_NUM_CONV(1903, 14336, 16384),
+        // original rate: 14336
+        .rate = 16384,
         // pitch keycenter=70, tune=65
         // TODO tune
         .baseNote = FREQ_A_SHARP_4,
