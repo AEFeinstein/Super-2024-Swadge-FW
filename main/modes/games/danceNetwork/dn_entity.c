@@ -1470,7 +1470,7 @@ void dn_drawPrompt(dn_entity_t* self)
     else if(!pData->isPurple && self->gameData->phase < DN_P2_TURN_START_PHASE)
     {
         outer = c245;
-        inner = c555;
+        middle = c355;
     }
     uint16_t tWidth = textWidth(&self->gameData->font_ibm, pData->text);
     if(pData->usesTwoLinesOfText)
