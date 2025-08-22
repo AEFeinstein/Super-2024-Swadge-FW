@@ -274,3 +274,5 @@ void dn_updateBullet(dn_entity_t* self);
 void dn_drawBullet(dn_entity_t* self);
 
 void dn_moveUnit(dn_entity_t* self);
+
+void dn_afterPlunge(dn_entity_t* self);
