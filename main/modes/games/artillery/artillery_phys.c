@@ -438,6 +438,41 @@ void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs)
                          absBarrelTip.x - phys->camera.x, //
                          absBarrelTip.y - phys->camera.y, //
                          c335);
+
+            // and some wheels too
+            float wheelR = pc->c.radius / 3.0f;
+            float wheelY = pc->c.radius - wheelR;
+
+            // Find the upward orthogonal vector to the slope
+            vecFl_t slopeNorm;
+            if (0 == pc->slopeVec.x && 0 == pc->slopeVec.y)
+            {
+                slopeNorm.x = 1;
+                slopeNorm.y = 0;
+            }
+            else if (pc->slopeVec.x > 0)
+            {
+                slopeNorm.x = -pc->slopeVec.y;
+                slopeNorm.y = pc->slopeVec.x;
+            }
+            else
+            {
+                slopeNorm.x = pc->slopeVec.y;
+                slopeNorm.y = -pc->slopeVec.x;
+            }
+            // Scale it so the bottom of the wheels are level with the bottom of the tank
+            slopeNorm = mulVecFl2d(slopeNorm, wheelY);
+
+            // Scale it so the centers of the wheels are level with the front and back of the tank
+            vecFl_t slopeVec = mulVecFl2d(pc->slopeVec, pc->c.radius);
+
+            // Draw first wheel
+            vecFl_t w1 = addVecFl2d(pc->c.pos, addVecFl2d(slopeNorm, slopeVec));
+            drawCircle(w1.x - phys->camera.x, w1.y - phys->camera.y, wheelR, c225);
+
+            // Draw second wheel
+            vecFl_t w2 = addVecFl2d(pc->c.pos, subVecFl2d(slopeNorm, slopeVec));
+            drawCircle(w2.x - phys->camera.x, w2.y - phys->camera.y, wheelR, c225);
         }
 
         // Iterate
