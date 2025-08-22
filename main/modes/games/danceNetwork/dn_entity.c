@@ -2657,7 +2657,7 @@ void dn_updateBullet(dn_entity_t* self)
         dn_incrementPhase(self);//now the swap with opponent phase
         if(targetTile->unit)
         {
-            if(targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] || targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[1])//king is captured
+            if(targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] || targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0])//king is captured
             {
                 ///////////////////////////////
                 // Make the prompt Game Over //
