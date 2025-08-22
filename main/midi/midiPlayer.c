@@ -696,7 +696,8 @@ static int32_t midiSumSamples(midiPlayer_t* player)
                 voices[voiceIdx].sampleError += sampleRateRatio;
                 // And account for the sample we just played
 
-                if (voices[voiceIdx].sampleTick == voices[voiceIdx].timbre->sample.count)
+                if (voices[voiceIdx].sampleTick == voices[voiceIdx].timbre->sample.count
+                    || voices[voiceIdx].sampleTick == voices[voiceIdx].timbre->sample.loopEnd)
                 {
                     if (voices[voiceIdx].sampleLoops > 0)
                     {
@@ -709,12 +710,12 @@ static int32_t midiSumSamples(midiPlayer_t* player)
                         }
                         else
                         {
-                            voices[voiceIdx].sampleTick = 0;
+                            voices[voiceIdx].sampleTick = voices[voiceIdx].timbre->sample.loopStart;
                         }
                     }
                     else
                     {
-                        voices[voiceIdx].sampleTick = 0;
+                        voices[voiceIdx].sampleTick = voices[voiceIdx].timbre->sample.loopStart;
                     }
                 }
             } while (voices[voiceIdx].sampleError < 0x100);
