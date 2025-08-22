@@ -44,6 +44,7 @@ struct dn_entity_t
     dn_dataType_t dataType;
     dn_updateFunction_t updateFunction;       // Only set for entities that need update logic
     dn_updateFarFunction_t updateFarFunction; // Only set for execution when the entity is far from the camera center
+    bool flipped; //draw flipped
     dn_drawFunction_t drawFunction;           // Only set for entities such as Garbotnik that need custom drawing logic
     bool destroyFlag; // Entity will be cleanly destroyed after engine updating and before engine drawing.
     vec_t pos;

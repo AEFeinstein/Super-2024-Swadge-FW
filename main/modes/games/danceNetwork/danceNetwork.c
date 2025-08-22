@@ -583,11 +583,17 @@ static void dn_initializeGame(void)
     dn_entity_t* pit = dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_PIT_ASSET, 0, (vec_t){0xFFFF, 0xFFFF - (72 << DN_DECIMAL_BITS)}, gameData);
     pit->drawFunction = dn_drawPit;
 
-    //////////////////////////
-    // Make the top speaker //
-    //////////////////////////
-    dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_SPEAKER_STAND_ASSET, 0, (vec_t){0xFFFF + (123<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
-    dn_createEntitySpecial(&gameData->entityManager, 6, DN_NO_ANIMATION, false, DN_SPEAKER_ASSET, 4, (vec_t){0xFFFF + (123<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
+    ///////////////////////////
+    // Make the left speaker //
+    ///////////////////////////
+    dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, true, DN_SPEAKER_STAND_ASSET, 0, (vec_t){0xFFFF - (123<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 3, (vec_t){0xFFFF - (123<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
+
+    ////////////////////////////
+    // Make the right speaker //
+    ////////////////////////////
+    dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, true, DN_SPEAKER_STAND_ASSET, 0, (vec_t){0xFFFF + (123<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 4, (vec_t){0xFFFF + (124<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData)->flipped = true;
 
     ////////////////////
     // Make the albums//
@@ -694,12 +700,6 @@ static void dn_initializeGame(void)
     /////////////////////////////
     dn_entity_t* pitForeground = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff - (57 << DN_DECIMAL_BITS)}, gameData);
     pitForeground->drawFunction = dn_drawPitForeground;
-
-    /////////////////////////////
-    // Make the bottom speaker //
-    /////////////////////////////
-    dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_SPEAKER_STAND_ASSET, 0, (vec_t){0xFFFF - (31<<DN_DECIMAL_BITS), 0xFFFF + (59<<DN_DECIMAL_BITS)}, gameData);
-    dn_createEntitySpecial(&gameData->entityManager, 6, DN_NO_ANIMATION, false, DN_SPEAKER_ASSET, 3, (vec_t){0xFFFF - (31<<DN_DECIMAL_BITS), 0xFFFF + (59<<DN_DECIMAL_BITS)}, gameData);
 
     /////////////////////////
     // Make the playerTurn //

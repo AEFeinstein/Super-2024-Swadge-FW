@@ -33,7 +33,7 @@ void dn_drawAsset(dn_entity_t* self)
                 - self->gameData->assets[self->assetIndex].originX;
     int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originY;
-    drawWsgSimple(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y);
+    drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped, false, 0);
 }
 
 void dn_drawNothing(dn_entity_t* self)
@@ -2670,7 +2670,10 @@ void dn_moveUnit(dn_entity_t* self)
         bData->impactPos = uData->moveTo;
         bData->tiles[bData->impactPos.y][bData->impactPos.x].yVel = -700;
 
-        dn_incrementPhase(self);//now the upgrade phase
+        if(self->gameData->phase != DN_P1_UPGRADE_PHASE && self->gameData->phase != DN_P2_UPGRADE_PHASE)
+        {
+            dn_incrementPhase(self);//now the upgrade phase
+        }
         dn_startUpgradeMenu(self, 2 << 20);
 
         self->updateFunction = NULL;
