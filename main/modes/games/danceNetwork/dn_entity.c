@@ -448,6 +448,8 @@ void dn_drawCurtain(dn_entity_t* self)
     // Draw the intro text
     if (curtainData->separation > -700 && curtainData->separation < -50)
     {
+        drawCircleFilled((TFT_WIDTH>>2)+8, y - 38, 80, c055);
+        drawCircleFilled(TFT_WIDTH>>2, y - 30, 80, c000);
         drawText(&self->gameData->font_ibm, c001, self->gameData->playerNames[0], x, y);
         y++;
         x++;
@@ -491,6 +493,8 @@ void dn_drawCurtain(dn_entity_t* self)
         x      = (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1);
         y      = 29;
 
+        drawCircleFilled(((TFT_WIDTH >> 1) + (TFT_WIDTH >> 2))-8, y - 22, 80, c550);
+        drawCircleFilled((TFT_WIDTH >> 1) + (TFT_WIDTH >> 2), y - 30, 80, c000);
         drawText(&self->gameData->font_ibm, c110, self->gameData->playerNames[1], x, y);
         y++;
         x++;
