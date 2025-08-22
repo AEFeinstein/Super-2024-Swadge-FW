@@ -380,7 +380,7 @@ bool dn_calculateMoveableUnits(dn_entity_t* board)
     for(int i = 0; i < 5; i++)
     {
         dn_boardPos_t pos = dn_getUnitBoardPos(opponentUnits[i]);
-        if(pos.x == -1 || pos.y == -1)
+        if(opponentUnits[i] == NULL)
         {
             //That unit has died
             continue;
@@ -1853,6 +1853,72 @@ void dn_incrementPhase(dn_entity_t* self)
     }
 
     dn_setBlinkingLights(self);
+
+
+    //debug stuff
+    switch(self->gameData->phase)
+    {
+        case DN_P1_TURN_START_PHASE:
+        {
+            printf("DN_P1_TURN_START_PHASE\n");
+            break;
+        }
+        case DN_P1_SWAP_CC_PHASE:
+        {
+            printf("DN_P1_SWAP_CC_PHASE\n");
+            break;
+        }
+        case DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE:
+        {
+            printf("DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE\n");
+            break;
+        }
+        case DN_P1_MOVE_PHASE:
+        {
+            printf("DN_P1_MOVE_PHASE\n");
+            break;
+        }
+        case DN_P1_SWAP_P2_PHASE:
+        {
+            printf("DN_P1_SWAP_P2_PHASE\n");
+            break;
+        }
+        case DN_P1_UPGRADE_PHASE:
+        {
+            printf("DN_P1_UPGRADE_PHASE\n");
+            break;
+        }
+        case DN_P2_TURN_START_PHASE:
+        {
+            printf("DN_P2_TURN_START_PHASE\n");
+            break;
+        }
+        case DN_P2_SWAP_CC_PHASE:
+        {
+            printf("DN_P2_SWAP_CC_PHASE\n");
+            break;
+        }
+        case DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE:
+        {
+            printf("DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE\n");
+            break;
+        }
+        case DN_P2_MOVE_PHASE:
+        {
+            printf("DN_P2_MOVE_PHASE\n");
+            break;
+        }
+        case DN_P2_SWAP_P1_PHASE:
+        {
+            printf("DN_P2_SWAP_P1_PHASE\n");
+            break;
+        }
+        case DN_P2_UPGRADE_PHASE:
+        {
+            printf("DN_P2_UPGRADE_PHASE\n");
+            break;
+        }
+    }
 }
 
 void dn_drawPit(dn_entity_t* self)
