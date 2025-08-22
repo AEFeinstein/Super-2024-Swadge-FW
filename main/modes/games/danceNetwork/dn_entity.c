@@ -125,6 +125,7 @@ void dn_updateBoard(dn_entity_t* self)
                             char text[40];
                             strcpy(text, self->gameData->playerNames[tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]]);
                             strcat(text, " wins!");
+                            promptData->isPurple = true;
                             strcpy(promptData->text, text);
                             promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
                             
@@ -1458,13 +1459,18 @@ void dn_drawPrompt(dn_entity_t* self)
     int16_t xOff = TFT_WIDTH>>1;
     int16_t yOff = pData->yOffset + 11;
     //prompt text
-    paletteColor_t outer = c245;
-    paletteColor_t middle = c355;
+    paletteColor_t outer = c425;
+    paletteColor_t middle = c535;
     paletteColor_t inner = c555;
-    if(self->gameData->phase >= DN_P2_TURN_START_PHASE)
+    if(!pData->isPurple && self->gameData->phase >= DN_P2_TURN_START_PHASE)
     {
         outer = c442;
         middle = c553;
+    }
+    else if(!pData->isPurple && self->gameData->phase < DN_P2_TURN_START_PHASE)
+    {
+        outer = c245;
+        inner = c555;
     }
     uint16_t tWidth = textWidth(&self->gameData->font_ibm, pData->text);
     if(pData->usesTwoLinesOfText)
@@ -2642,6 +2648,7 @@ void dn_updateBullet(dn_entity_t* self)
                 strcpy(text, self->gameData->playerNames[targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]]);
                 strcat(text, " wins!");
                 strcpy(promptData->text, text);
+                promptData->isPurple = true;
                 promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
                 
                 dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
@@ -2810,6 +2817,7 @@ void dn_moveUnit(dn_entity_t* self)
             char text[40];
             strcpy(text, self->gameData->playerNames[bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout ? self != ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] : self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]]);
             strcat(text, " wins!");
+            promptData->isPurple = true;
             strcpy(promptData->text, text);
             promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
             

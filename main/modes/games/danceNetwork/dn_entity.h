@@ -153,6 +153,7 @@ typedef struct
     char text2[40];
     uint8_t numOptions;
     list_t* options;
+    bool isPurple;
 } dn_promptData_t;
 
 typedef struct
