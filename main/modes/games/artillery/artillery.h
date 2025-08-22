@@ -32,6 +32,8 @@ typedef enum
     AGS_ADJUST,
     AGS_FIRE,
     AGS_LOOK,
+    AGS_CPU_MOVE,
+    AGS_CPU_ADJUST,
 } artilleryGameState_t;
 
 typedef enum
@@ -55,6 +57,7 @@ typedef struct
     // The players, pointers to objects in the simulation
     physCirc_t* players[NUM_PLAYERS];
     int32_t plIdx;
+    int32_t cpuWaitTimer;
 
     // The mode state (i.e. main menu, connecting, game)
     artilleryModeState_t mState;

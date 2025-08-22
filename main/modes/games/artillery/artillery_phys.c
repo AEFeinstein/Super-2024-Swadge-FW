@@ -469,6 +469,16 @@ void setBarrelAngle(physCirc_t* circ, float angle)
 {
     circ->barrelAngle = angle;
 
+    // Make sure it's in the range of 0 to 2*pi
+    while (circ->barrelAngle < 0)
+    {
+        circ->barrelAngle += (2 * M_PIf);
+    }
+    while (circ->barrelAngle >= (2 * M_PIf))
+    {
+        circ->barrelAngle -= (2 * M_PIf);
+    }
+
     circ->relBarrelTip.x = sinf(angle) * circ->c.radius * 2;
     circ->relBarrelTip.y = -cosf(angle) * circ->c.radius * 2;
 }
@@ -482,6 +492,66 @@ void setBarrelAngle(physCirc_t* circ, float angle)
 void setShotPower(physCirc_t* circ, float power)
 {
     circ->shotPower = power;
+}
+
+/**
+ * @brief Calculate a 'perfect' shot for the CPU to hit the target
+ *
+ * @param phys The physics simulation
+ * @param cpu The CPU firing a shot
+ * @param target The target
+ */
+void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
+{
+    // Arc the shot between the terrain peak and ceiling
+    // First find the terrain peak
+    float minY    = phys->bounds.y;
+    node_t* lNode = phys->lines.first;
+    while (lNode)
+    {
+        physLine_t* line = lNode->val;
+        if (line->isTerrain)
+        {
+            if (line->l.p1.y < minY)
+            {
+                minY = line->l.p1.y;
+            }
+            if (line->l.p2.y < minY)
+            {
+                minY = line->l.p2.y;
+            }
+        }
+        lNode = lNode->next;
+    }
+    // Scale it closer towards the ceiling
+    minY /= 4.0f;
+
+    // Starting position
+    vecFl_t absBarrelTip = addVecFl2d(cpu->c.pos, cpu->relBarrelTip);
+
+    // We want to shoot the shell to minY height, so give it that initial velocity
+    vecFl_t v0 = {
+        .x = 0,
+        .y = -sqrtf(2 * phys->g.y * (absBarrelTip.y - minY)),
+    };
+
+    // Calculate the shell's total flight time, up and down to the target
+    float tUp    = -v0.y / phys->g.y;
+    float tDown  = sqrtf(2 * (target->c.pos.y - minY) / phys->g.y);
+    float tTotal = tUp + tDown;
+
+    // Calculate the horizontal distance to travel
+    float deltaX = target->c.pos.x - absBarrelTip.x;
+    // Find the horizontal velocity with distance and time
+    v0.x = deltaX / tTotal;
+
+    // Use the initial velocity to find the barrel angle and magnitude
+    cpu->targetBarrelAngle = atan2f(v0.x, -v0.y);
+    while (cpu->targetBarrelAngle < 0)
+    {
+        cpu->targetBarrelAngle += (2 * M_PIf);
+    }
+    setShotPower(cpu, magVecFl2d(v0));
 }
 
 /**
@@ -556,7 +626,7 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
     }
 
     // For multiple shells, calculate angle spread and starting angle
-    const float spread = ((2 * M_PI) / 180.0f);
+    const float spread = ((2 * M_PIf) / 180.0f);
     float angStart     = circ->barrelAngle - (numShells / 2) * spread;
 
     // This is where shells get spawned

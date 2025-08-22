@@ -94,6 +94,7 @@ typedef struct
 
     // Player data
     float barrelAngle;
+    float targetBarrelAngle;
     vecFl_t relBarrelTip;
     float shotPower;
     artilleryAmmoType_t ammo;
@@ -164,3 +165,5 @@ physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, float barrelAngle);
 void setBarrelAngle(physCirc_t* circ, float angle);
 void setShotPower(physCirc_t* circ, float power);
 void fireShot(physSim_t* phys, physCirc_t* circ);
+
+void adjustCpuShot(physSim_t* ad, physCirc_t* cpu, physCirc_t* target);

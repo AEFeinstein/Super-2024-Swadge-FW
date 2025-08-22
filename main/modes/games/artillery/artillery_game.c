@@ -8,6 +8,13 @@
 #include "artillery_p2p.h"
 
 //==============================================================================
+// Defines
+//==============================================================================
+
+#define BARREL_INTERVAL (M_PIf / 180.0f)
+#define POWER_INTERVAL  0.000001f
+
+//==============================================================================
 // Functions
 //==============================================================================
 
@@ -31,25 +38,32 @@ void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newSta
         case AGS_MENU:
         {
             setDriveInMenu(ad->moveTimerUs);
+            break;
         }
-        // fall through
+        case AGS_CPU_ADJUST:
+        {
+            ad->players[ad->plIdx]->targetBarrelAngle = -1;
+            ad->cpuWaitTimer                          = 2000000;
+            break;
+        }
         default:
         case AGS_WAIT:
         case AGS_MOVE:
         case AGS_ADJUST:
         case AGS_FIRE:
-        {
-            // Focus on player
-            if (ad->players[ad->plIdx])
-            {
-                push(&ad->phys->cameraTargets, ad->players[ad->plIdx]);
-            }
-            break;
-        }
+        case AGS_CPU_MOVE:
         case AGS_LOOK:
         {
-            // Leave cameraTargets empty
             break;
+        }
+    }
+
+    // Focus on player if not looking around
+    if (AGS_LOOK != ad->gState)
+    {
+        if (ad->players[ad->plIdx])
+        {
+            push(&ad->phys->cameraTargets, ad->players[ad->plIdx]);
         }
     }
 }
@@ -150,7 +164,7 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     case PB_LEFT:
                     case PB_RIGHT:
                     {
-                        float bDiff = 4 * ((PB_LEFT == evt.button) ? -(M_PI / 180.0f) : (M_PI / 180.0f));
+                        float bDiff = (PB_LEFT == evt.button) ? -(BARREL_INTERVAL) : (BARREL_INTERVAL);
                         setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle + bDiff);
                         return true;
                         break;
@@ -158,7 +172,7 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     case PB_UP:
                     case PB_DOWN:
                     {
-                        float pDiff = (PB_UP == evt.button) ? 0.00001f : -0.00001f;
+                        float pDiff = (PB_UP == evt.button) ? POWER_INTERVAL : -POWER_INTERVAL;
                         setShotPower(ad->players[ad->plIdx], ad->players[ad->plIdx]->shotPower + pDiff);
                         break;
                     }
@@ -174,6 +188,12 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     }
                 }
             }
+            break;
+        }
+        case AGS_CPU_MOVE:
+        case AGS_CPU_ADJUST:
+        {
+            // No input while it's the CPU turn
             break;
         }
     }
@@ -246,7 +266,14 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
             break;
         }
         case AGS_MOVE:
+        case AGS_CPU_MOVE:
         {
+            // Pick a random direction for the CPU to move
+            if ((AGS_CPU_MOVE == ad->gState) && (0 == ad->players[ad->plIdx]->moving))
+            {
+                ad->players[ad->plIdx]->moving = (esp_random() & 0x01) ? PB_LEFT : PB_RIGHT;
+            }
+
             // If there is time left to move and the player is moving
             if (ad->moveTimerUs && ad->players[ad->plIdx]->moving)
             {
@@ -258,7 +285,8 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                     // Clear timer and button inputs and return to the menu
                     ad->moveTimerUs                = 0;
                     ad->players[ad->plIdx]->moving = 0;
-                    artillerySwitchToGameState(ad, AGS_MENU);
+                    // Humans go back to the menu, CPUs adjust shot
+                    artillerySwitchToGameState(ad, (ad->gState == AGS_MOVE) ? AGS_MENU : AGS_CPU_ADJUST);
                 }
             }
             // TODO TX gas gauge too!
@@ -267,6 +295,78 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
         case AGS_LOOK:
         case AGS_WAIT:
         {
+            break;
+        }
+        case AGS_CPU_ADJUST:
+        {
+            physCirc_t* cpu = ad->players[ad->plIdx];
+
+            // Keep track of if the barrel is positioned correctly
+            bool readyToFire = false;
+            if (-1 != cpu->targetBarrelAngle)
+            {
+                // Find the clockwise and counterclockwise distances to move the barrel to the target
+                float deltaCw = cpu->barrelAngle - cpu->targetBarrelAngle;
+                if (deltaCw < 0)
+                {
+                    deltaCw += (2 * M_PIf);
+                }
+                float deltaCCw = cpu->targetBarrelAngle - cpu->barrelAngle;
+                if (deltaCCw < 0)
+                {
+                    deltaCCw += (2 * M_PIf);
+                }
+
+                // If the barrel isn't at the target, move barrel towards target
+                if (fabsf(deltaCw) > BARREL_INTERVAL)
+                {
+                    if (deltaCw < deltaCCw)
+                    {
+                        setBarrelAngle(cpu, cpu->barrelAngle - BARREL_INTERVAL);
+                    }
+                    else
+                    {
+                        setBarrelAngle(cpu, cpu->barrelAngle + BARREL_INTERVAL);
+                    }
+                }
+                else // Barrel is at the target
+                {
+                    readyToFire = true;
+                }
+            }
+
+            // Wait some time after moving or to adjust the barrel
+            if (ad->cpuWaitTimer > 0)
+            {
+                ad->cpuWaitTimer -= elapsedUs;
+
+                if (ad->cpuWaitTimer <= 0)
+                {
+                    // If the target hasn't acquired yet
+                    if (cpu->targetBarrelAngle < 0)
+                    {
+                        // Calculate the shot
+                        adjustCpuShot(ad->phys, cpu, ad->players[(ad->plIdx + 1) % NUM_PLAYERS]);
+
+                        // Round the power to be fair
+                        cpu->shotPower
+                            = POWER_INTERVAL * (int)((cpu->shotPower / POWER_INTERVAL) + (POWER_INTERVAL / 2));
+
+                        // Give time to move the barrel
+                        ad->cpuWaitTimer = 2000000;
+                    }
+                    else if (readyToFire)
+                    {
+                        // Fire!
+                        artillerySwitchToGameState(ad, AGS_FIRE);
+                    }
+                    else
+                    {
+                        // Timer elapsed, but barrel isn't ready yet, extend by a little
+                        ad->cpuWaitTimer = 1;
+                    }
+                }
+            }
             break;
         }
     }
@@ -302,6 +402,7 @@ void artilleryPassTurn(artilleryData_t* ad)
         }
         case AG_CPU_PRACTICE:
         {
+            artillerySwitchToGameState(ad, artilleryIsMyTurn(ad) ? AGS_MENU : AGS_CPU_MOVE);
             break;
         }
         case AG_WIRELESS:
@@ -332,7 +433,7 @@ bool artilleryIsMyTurn(artilleryData_t* ad)
         }
         case AG_CPU_PRACTICE:
         {
-            return true;
+            return (0 == ad->plIdx);
         }
         case AG_WIRELESS:
         {
