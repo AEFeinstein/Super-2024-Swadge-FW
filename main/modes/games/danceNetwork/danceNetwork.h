@@ -87,6 +87,7 @@ typedef struct dn_gameData_t
     int8_t rerolls[2];// The amount of rerolls for p1 and p2.
     bool resolvingRemix;// True if a unit is still needing to do a second action.
     bool gameOver;
+    bool pawnPlunging;
 } dn_gameData_t;
 
 //==============================================================================

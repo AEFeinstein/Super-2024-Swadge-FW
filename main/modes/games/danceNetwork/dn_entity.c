@@ -137,7 +137,7 @@ void dn_updateBoard(dn_entity_t* self)
                             promptGameOver->updateFunction = dn_updatePrompt;
                             promptGameOver->drawFunction = dn_drawPrompt;
                         }
-                        else
+                        else// a pawn has plunged
                         {
                             ////////////////////////////
                             // Make the prompt Sudoku //
@@ -154,7 +154,7 @@ void dn_updateBoard(dn_entity_t* self)
                             
                             dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
                             strcpy(option1->text, "OK");
-                            option1->callback = NULL;
+                            option1->callback = dn_afterPlunge;
                             option1->downPressDetected = false;
                             push(promptData->options, (void*)option1);
                             promptData->numOptions = 1;
@@ -2828,7 +2828,6 @@ void dn_moveUnit(dn_entity_t* self)
         if((self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] && bData->impactPos.y == 0 && bData->impactPos.x == 2)|| 
            (self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0] && bData->impactPos.y == 4 && bData->impactPos.x == 2))//king moved to the opponent's throne
         {
-            //totally abusing this to avoid moving the game forward until the player selects OK.
             self->gameData->gameOver = true;
             ///////////////////////////////
             // Make the prompt Game Over //
@@ -2856,6 +2855,11 @@ void dn_moveUnit(dn_entity_t* self)
             promptGameOver->dataType     = DN_PROMPT_DATA;
             promptGameOver->updateFunction = dn_updatePrompt;
             promptGameOver->drawFunction = dn_drawPrompt;
+        }
+        if(bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout)
+        {
+            //totally abusing this bool to stall the game until the player finishes a plunge prompt.
+            self->gameData->gameOver = true;
         }
 
         if(self->gameData->phase != DN_P1_UPGRADE_PHASE && self->gameData->phase != DN_P2_UPGRADE_PHASE)
