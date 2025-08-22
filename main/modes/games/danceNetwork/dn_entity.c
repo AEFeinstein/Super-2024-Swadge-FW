@@ -444,23 +444,12 @@ void dn_drawCurtain(dn_entity_t* self)
     // get the text width
     uint16_t tWidth = textWidth(&self->gameData->font_ibm, self->gameData->playerNames[0]);
     int16_t x       = (TFT_WIDTH >> 2) - (tWidth >> 1);
-    int16_t y       = 209;
+    int16_t y       = 210;
     // Draw the intro text
     if (curtainData->separation > -700 && curtainData->separation < -50)
     {
         drawCircleFilled((TFT_WIDTH>>2)+8, y - 38, 80, c055);
         drawCircleFilled(TFT_WIDTH>>2, y - 30, 80, c000);
-        drawText(&self->gameData->font_ibm, c001, self->gameData->playerNames[0], x, y);
-        y++;
-        x++;
-        drawText(&self->gameData->font_ibm, c001, self->gameData->playerNames[0], x, y);
-        y++;
-        x--;
-        drawText(&self->gameData->font_ibm, c001, self->gameData->playerNames[0], x, y);
-        y--;
-        x--;
-        drawText(&self->gameData->font_ibm, c001, self->gameData->playerNames[0], x, y);
-        x++;
         drawShinyText(&self->gameData->font_ibm, c245, c355, c555, self->gameData->playerNames[0], x, y);
         // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 30);
         // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 29);
@@ -491,21 +480,10 @@ void dn_drawCurtain(dn_entity_t* self)
     {
         tWidth = textWidth(&self->gameData->font_ibm, self->gameData->playerNames[1]);
         x      = (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1);
-        y      = 29;
+        y      = 30;
 
         drawCircleFilled(((TFT_WIDTH >> 1) + (TFT_WIDTH >> 2))-8, y - 22, 80, c550);
         drawCircleFilled((TFT_WIDTH >> 1) + (TFT_WIDTH >> 2), y - 30, 80, c000);
-        drawText(&self->gameData->font_ibm, c110, self->gameData->playerNames[1], x, y);
-        y++;
-        x++;
-        drawText(&self->gameData->font_ibm, c110, self->gameData->playerNames[1], x, y);
-        y++;
-        x--;
-        drawText(&self->gameData->font_ibm, c110, self->gameData->playerNames[1], x, y);
-        y--;
-        x--;
-        drawText(&self->gameData->font_ibm, c110, self->gameData->playerNames[1], x, y);
-        x++;
         drawShinyText(&self->gameData->font_ibm, c442, c553, c555, self->gameData->playerNames[1], x, y);
         // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 30);
         // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 29);
