@@ -110,7 +110,7 @@ void dn_updateBoard(dn_entity_t* self)
                     if(tileData->unit)
                     {
                         //A unit dies
-                        if(tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] || tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[1])//king is captured
+                        if(tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] || tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0])//king is captured
                         {
                             self->gameData->gameOver = true;
                             ///////////////////////////////
@@ -122,7 +122,8 @@ void dn_updateBoard(dn_entity_t* self)
                             promptData->animatingIntroSlide = true;
                             promptData->yOffset = 320;//way off screen to allow more time to look at albums.
                             promptData->usesTwoLinesOfText = true;
-                            char text[40] = self->gameData->playerNames[tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]];
+                            char text[40];
+                            strcpy(text, self->gameData->playerNames[tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]]);
                             strcat(text, " wins!");
                             strcpy(promptData->text, text);
                             promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
@@ -2637,7 +2638,8 @@ void dn_updateBullet(dn_entity_t* self)
                 promptData->animatingIntroSlide = true;
                 promptData->yOffset = 320;//way off screen to allow more time to look at albums.
                 promptData->usesTwoLinesOfText = true;
-                char text[40] = self->gameData->playerNames[targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]];
+                char text[40];
+                strcpy(text, self->gameData->playerNames[targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]]);
                 strcat(text, " wins!");
                 strcpy(promptData->text, text);
                 promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
@@ -2805,7 +2807,8 @@ void dn_moveUnit(dn_entity_t* self)
             promptData->animatingIntroSlide = true;
             promptData->yOffset = 320;//way off screen to allow more time to look at albums.
             promptData->usesTwoLinesOfText = true;
-            char text[40] = self->gameData->playerNames[bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout ? self != ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] : self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]];
+            char text[40];
+            strcpy(text, self->gameData->playerNames[bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout ? self != ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] : self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]]);
             strcat(text, " wins!");
             strcpy(promptData->text, text);
             promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
