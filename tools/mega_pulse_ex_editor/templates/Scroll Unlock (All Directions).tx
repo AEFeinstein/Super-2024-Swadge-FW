@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+ <tileset firstgid="0" source="../mg-entity-tileset.tsx"/>
+ <object name="Scroll Unlock (All Directions)" type="SwadgeLandEntity" gid="5" width="16" height="16">
+  <properties>
+   <property name="type" type="int" propertytype="Swadge Land Entity Index" value="6"/>
+  </properties>
+ </object>
+</template>
