@@ -2177,11 +2177,11 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
     for (int mmxIdx = 0; mmxIdx < mmxTimbreCount; mmxIdx++)
     {
         midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
-        int mmxProg = mmxTimbreMap[mmxIdx];
-        itemInfo->type    = SMT_PROGRAM;
-        itemInfo->bank    = 2;
-        itemInfo->program = mmxProg;
-        itemInfo->label   = mmxTimbres[mmxIdx]->name;
+        int mmxProg                  = mmxTimbreMap[mmxIdx];
+        itemInfo->type               = SMT_PROGRAM;
+        itemInfo->bank               = 2;
+        itemInfo->program            = mmxProg;
+        itemInfo->label              = mmxTimbres[mmxIdx]->name;
         writeShortName(itemInfo->shortLabel, sizeof(itemInfo->shortLabel), itemInfo->label);
         wheelMenuSetItemInfo(sd->wheelMenu, itemInfo->label, NULL, mmxIdx, NO_SCROLL);
         wheelMenuSetItemTextIcon(sd->wheelMenu, itemInfo->label, itemInfo->shortLabel);
@@ -2255,7 +2255,6 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemBankOptions[2], &sd->magfestBankImage, 2, NO_SCROLL);
     wheelMenuSetItemSize(sd->wheelMenu, menuItemBankOptions[2], -1, -1, WM_SHAPE_DEFAULT);
 
-
     if (0 == (config->percChannelMask & (1 << chIdx)))
     {
         // Instrument select submenu
@@ -2307,7 +2306,7 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
         }
         else if (config->banks[chIdx] == 2)
         {
-            uint8_t program = config->programs[chIdx];
+            uint8_t program  = config->programs[chIdx];
             int mmxTimbreIdx = -1;
             for (int i = 0; i < mmxTimbreCount; i++)
             {
