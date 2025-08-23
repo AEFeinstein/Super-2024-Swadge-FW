@@ -112,7 +112,7 @@ void dn_updateBoard(dn_entity_t* self)
                         //A unit dies
                         if(tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] || tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0])//king is captured
                         {
-                            self->gameData->gameOver = true;
+                            self->gameData->gameStalled = true;
                             ///////////////////////////////
                             // Make the prompt Game Over //
                             ///////////////////////////////
@@ -1734,6 +1734,7 @@ void dn_acceptRerollAndSkip(dn_entity_t* self)
 
 void dn_acceptRerollAndSwap(dn_entity_t* self)
 {
+    self->gameData->gameStalled = false;
     dn_gainReroll(self);
 
     ///////////////////
@@ -2681,7 +2682,7 @@ void dn_updateBullet(dn_entity_t* self)
             else if((dn_belongsToP1(targetTile->unit) && self->gameData->phase >= DN_P2_TURN_START_PHASE) ||
                (!dn_belongsToP1(targetTile->unit) && self->gameData->phase < DN_P2_TURN_START_PHASE))
             {
-                self->gameData->gameOver = true;
+                self->gameData->gameStalled = true;
                 ///////////////////////////////////
                 // Make the prompt enemy captured//
                 ///////////////////////////////////
@@ -2819,7 +2820,7 @@ void dn_moveUnit(dn_entity_t* self)
     if((self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] && bData->impactPos.y == 0 && bData->impactPos.x == 2)|| 
         (self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0] && bData->impactPos.y == 4 && bData->impactPos.x == 2))//king moved to the opponent's throne
     {
-        self->gameData->gameOver = true;
+        self->gameData->gameStalled = true;
         ///////////////////////////////
         // Make the prompt Game Over //
         ///////////////////////////////
@@ -2849,15 +2850,14 @@ void dn_moveUnit(dn_entity_t* self)
     }
     if(bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout)
     {
-        //totally abusing this bool to stall the game until the player finishes a plunge prompt.
-        self->gameData->gameOver = true;
+        self->gameData->gameStalled = true;
     }
 
     if(self->gameData->phase != DN_P1_UPGRADE_PHASE && self->gameData->phase != DN_P2_UPGRADE_PHASE)
     {
         dn_incrementPhase(self);//now the upgrade phase
     }
-    if(!self->gameData->gameOver)
+    if(!self->gameData->gameStalled)
     {
         dn_startUpgradeMenu(self, 2 << 20);
     }
@@ -2867,6 +2867,6 @@ void dn_moveUnit(dn_entity_t* self)
 
 void dn_afterPlunge(dn_entity_t* self)
 {
-    self->gameData->gameOver = false;
+    self->gameData->gameStalled = false;
     dn_startUpgradeMenu(self, 0);
 }
