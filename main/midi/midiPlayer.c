@@ -696,8 +696,9 @@ static int32_t midiSumSamples(midiPlayer_t* player)
                 voices[voiceIdx].sampleError += sampleRateRatio;
                 // And account for the sample we just played
 
+                // loop if we reach the end of the sample or if the loop endpoint is set and we reach that
                 if (voices[voiceIdx].sampleTick == voices[voiceIdx].timbre->sample.count
-                    || voices[voiceIdx].sampleTick == voices[voiceIdx].timbre->sample.loopEnd)
+                    || voices[voiceIdx].sampleTick >= voices[voiceIdx].timbre->sample.loopEnd)
                 {
                     if (voices[voiceIdx].sampleLoops > 0)
                     {
