@@ -1,0 +1,80 @@
+{
+    "automappingRulesFile": "",
+    "commands": [
+    ],
+    "compatibilityVersion": 1100,
+    "extensionsPath": "extensions",
+    "folders": [
+        "."
+    ],
+    "properties": [
+    ],
+    "propertyTypes": [
+        {
+            "id": 1,
+            "name": "Swadge Land Entity Index",
+            "storageType": "int",
+            "type": "enum",
+            "values": [
+                "ENTITY_PLAYER",
+                "ENTITY_SHRUBBLE",
+                "ENTITY_SCROLL_LOCK_LEFT",
+                "ENTITY_SCROLL_LOCK_RIGHT",
+                "ENTITY_SCROLL_LOCK_UP",
+                "ENTITY_SCROLL_LOCK_DOWN",
+                "ENTITY_SCROLL_UNLOCK",
+                "ENTITY_HIT_BLOCK",
+                "ENTITY_DEAD",
+                "ENTITY_POWERUP",
+                "ENTITY_WARP",
+                "ENTITY_DUST_BUNNY",
+                "ENTITY_WASP",
+                "ENTITY_SHRUBBLE_2",
+                "ENTITY_SHRUBBLE_3",
+                "ENTITY_DUST_BUNNY_2",
+                "ENTITY_DUST_BUNNY_3",
+                "ENTITY_WASP_2",
+                "ENTITY_WASP_3",
+                "ENTITY_BGCOL_BLUE",
+                "ENTITY_BGCOL_YELLOW",
+                "ENTITY_BGCOL_ORANGE",
+                "ENTITY_BGCOL_PURPLE",
+                "ENTITY_BGCOL_DARK_PURPLE",
+                "ENTITY_BGCOL_BLACK",
+                "ENTITY_BGCOL_NEUTRAL_GREEN",
+                "ENTITY_BGCOL_DARK_RED",
+                "ENTITY_BGCOL_DARK_GREEN",
+                "ENTITY_1UP",
+                "ENTITY_WAVE_BALL",
+                "ENTITY_CHECKPOINT",
+                "ENTITY_BGM_STOP",
+                "ENTITY_BGM_CHANGE_1",
+                "ENTITY_BGM_CHANGE_2",
+                "ENTITY_BGM_CHANGE_3",
+                "ENTITY_BGM_CHANGE_4",
+                "ENTIRY_BGM_CHANGE_5"
+            ],
+            "valuesAsFlags": false
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": false,
+            "id": 2,
+            "members": [
+                {
+                    "name": "type",
+                    "propertyType": "Swadge Land Entity Index",
+                    "type": "int",
+                    "value": 0
+                }
+            ],
+            "name": "SwadgeLandEntity",
+            "type": "class",
+            "useAs": [
+                "property",
+                "object",
+                "project"
+            ]
+        }
+    ]
+}
