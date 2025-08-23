@@ -18,22 +18,22 @@
  * @param isFilled true to draw a filled box, false to draw an outline
  * @param scalingFactor The scaling factor to apply before drawing the box
  */
-void drawBox(box_t box, paletteColor_t color, bool isFilled, int32_t scalingFactor)
-{
-    if (isFilled)
-    {
-        fillDisplayArea(box.x0 >> scalingFactor, box.y0 >> scalingFactor, box.x1 >> scalingFactor,
-                        box.y1 >> scalingFactor, color);
-    }
-    else
-    {
-        /*plotRect(box.x0 >> scalingFactor,
-                 box.y0 >> scalingFactor,
-                 box.x1 >> scalingFactor,
-                 box.y1 >> scalingFactor,
-                 color);*/
-    }
-}
+// void drawBox(box_t box, paletteColor_t color, bool isFilled, int32_t scalingFactor)
+// {
+//     if (isFilled)
+//     {
+//         fillDisplayArea(box.x0 >> scalingFactor, box.y0 >> scalingFactor, box.x1 >> scalingFactor,
+//                         box.y1 >> scalingFactor, color);
+//     }
+//     else
+//     {
+//         /*plotRect(box.x0 >> scalingFactor,
+//                  box.y0 >> scalingFactor,
+//                  box.x1 >> scalingFactor,
+//                  box.y1 >> scalingFactor,
+//                  color);*/
+//     }
+// }
 
 /**
  * @brief

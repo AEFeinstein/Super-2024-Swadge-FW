@@ -8,8 +8,8 @@
 #include <esp_heap_caps.h>
 
 #include "fs_wsg.h"
-#include "plTilemap.h"
-#include "plLeveldef.h"
+#include "mgTilemap.h"
+#include "mgLeveldef.h"
 #include "esp_random.h"
 
 #include "cnfs.h"
@@ -24,7 +24,7 @@
 // Functions
 //==============================================================================
 
-void pl_initializeTileMap(plTilemap_t* tilemap, plWsgManager_t* wsgManager)
+void mg_initializeTileMap(mgTilemap_t* tilemap, mgWsgManager_t* wsgManager)
 {
     tilemap->mapOffsetX = 0;
     tilemap->mapOffsetY = 0;
@@ -39,7 +39,7 @@ void pl_initializeTileMap(plTilemap_t* tilemap, plWsgManager_t* wsgManager)
     tilemap->wsgManager = wsgManager;
 }
 
-void pl_drawTileMap(plTilemap_t* tilemap)
+void mg_drawTileMap(mgTilemap_t* tilemap)
 {
     tilemap->animationTimer--;
     if (tilemap->animationTimer < 0)
@@ -48,16 +48,16 @@ void pl_drawTileMap(plTilemap_t* tilemap)
         tilemap->animationTimer = 23;
     }
 
-    for (uint16_t y = (tilemap->mapOffsetY >> PL_TILESIZE_IN_POWERS_OF_2);
-         y < (tilemap->mapOffsetY >> PL_TILESIZE_IN_POWERS_OF_2) + PL_TILEMAP_DISPLAY_HEIGHT_TILES; y++)
+    for (uint16_t y = (tilemap->mapOffsetY >> MG_TILESIZE_IN_POWERS_OF_2);
+         y < (tilemap->mapOffsetY >> MG_TILESIZE_IN_POWERS_OF_2) + MG_TILEMAP_DISPLAY_HEIGHT_TILES; y++)
     {
         if (y >= tilemap->mapHeight)
         {
             break;
         }
 
-        for (uint16_t x = (tilemap->mapOffsetX >> PL_TILESIZE_IN_POWERS_OF_2);
-             x < (tilemap->mapOffsetX >> PL_TILESIZE_IN_POWERS_OF_2) + PL_TILEMAP_DISPLAY_WIDTH_TILES; x++)
+        for (uint16_t x = (tilemap->mapOffsetX >> MG_TILESIZE_IN_POWERS_OF_2);
+             x < (tilemap->mapOffsetX >> MG_TILESIZE_IN_POWERS_OF_2) + MG_TILEMAP_DISPLAY_WIDTH_TILES; x++)
         {
             if (x >= tilemap->mapWidth)
             {
@@ -66,7 +66,7 @@ void pl_drawTileMap(plTilemap_t* tilemap)
 
             uint8_t tile = tilemap->map[(y * tilemap->mapWidth) + x];
 
-            if (tile < PL_TILE_GRASS)
+            if (tile < MG_TILE_GRASS)
             {
                 continue;
             }
@@ -80,24 +80,24 @@ void pl_drawTileMap(plTilemap_t* tilemap)
             // Draw only non-garbage tiles
             if (tile > 31 && tile < 104)
             {
-                if (pl_needsTransparency(tile))
+                if (mg_needsTransparency(tile))
                 {
-                    // drawWsgSimpleFast(&tilemap->tiles[tile - 32], x * PL_TILESIZE - tilemap->mapOffsetX, y *
-                    // PL_TILESIZE - tilemap->mapOffsetY);
-                    drawWsgSimple(tilemap->wsgManager->tiles[tile - 32], x * PL_TILESIZE - tilemap->mapOffsetX,
-                                  y * PL_TILESIZE - tilemap->mapOffsetY);
+                    // drawWsgSimpleFast(&tilemap->tiles[tile - 32], x * MG_TILESIZE - tilemap->mapOffsetX, y *
+                    // MG_TILESIZE - tilemap->mapOffsetY);
+                    drawWsgSimple(tilemap->wsgManager->tiles[tile - 32], x * MG_TILESIZE - tilemap->mapOffsetX,
+                                  y * MG_TILESIZE - tilemap->mapOffsetY);
                 }
                 else
                 {
-                    drawWsgTile(tilemap->wsgManager->tiles[tile - 32], x * PL_TILESIZE - tilemap->mapOffsetX,
-                                y * PL_TILESIZE - tilemap->mapOffsetY);
+                    drawWsgTile(tilemap->wsgManager->tiles[tile - 32], x * MG_TILESIZE - tilemap->mapOffsetX,
+                                y * MG_TILESIZE - tilemap->mapOffsetY);
                 }
             }
             else if (tile > 127 && tilemap->tileSpawnEnabled
                      && (tilemap->executeTileSpawnColumn == x || tilemap->executeTileSpawnRow == y
                          || tilemap->executeTileSpawnAll))
             {
-                pl_tileSpawnEntity(tilemap, tile - 128, x, y);
+                mg_tileSpawnEntity(tilemap, tile - 128, x, y);
             }
         }
     }
@@ -105,17 +105,17 @@ void pl_drawTileMap(plTilemap_t* tilemap)
     tilemap->executeTileSpawnAll = 0;
 }
 
-void pl_scrollTileMap(plTilemap_t* tilemap, int16_t x, int16_t y)
+void mg_scrollTileMap(mgTilemap_t* tilemap, int16_t x, int16_t y)
 {
     if (x != 0)
     {
-        uint8_t oldTx       = tilemap->mapOffsetX >> PL_TILESIZE_IN_POWERS_OF_2;
+        uint8_t oldTx       = tilemap->mapOffsetX >> MG_TILESIZE_IN_POWERS_OF_2;
         tilemap->mapOffsetX = CLAMP(tilemap->mapOffsetX + x, tilemap->minMapOffsetX, tilemap->maxMapOffsetX);
-        uint8_t newTx       = tilemap->mapOffsetX >> PL_TILESIZE_IN_POWERS_OF_2;
+        uint8_t newTx       = tilemap->mapOffsetX >> MG_TILESIZE_IN_POWERS_OF_2;
 
         if (newTx > oldTx)
         {
-            tilemap->executeTileSpawnColumn = oldTx + PL_TILEMAP_DISPLAY_WIDTH_TILES;
+            tilemap->executeTileSpawnColumn = oldTx + MG_TILEMAP_DISPLAY_WIDTH_TILES;
         }
         else if (newTx < oldTx)
         {
@@ -129,13 +129,13 @@ void pl_scrollTileMap(plTilemap_t* tilemap, int16_t x, int16_t y)
 
     if (y != 0)
     {
-        uint8_t oldTy       = tilemap->mapOffsetY >> PL_TILESIZE_IN_POWERS_OF_2;
+        uint8_t oldTy       = tilemap->mapOffsetY >> MG_TILESIZE_IN_POWERS_OF_2;
         tilemap->mapOffsetY = CLAMP(tilemap->mapOffsetY + y, tilemap->minMapOffsetY, tilemap->maxMapOffsetY);
-        uint8_t newTy       = tilemap->mapOffsetY >> PL_TILESIZE_IN_POWERS_OF_2;
+        uint8_t newTy       = tilemap->mapOffsetY >> MG_TILESIZE_IN_POWERS_OF_2;
 
         if (newTy > oldTy)
         {
-            tilemap->executeTileSpawnRow = oldTy + PL_TILEMAP_DISPLAY_HEIGHT_TILES;
+            tilemap->executeTileSpawnRow = oldTy + MG_TILEMAP_DISPLAY_HEIGHT_TILES;
         }
         else if (newTy < oldTy)
         {
@@ -148,7 +148,7 @@ void pl_scrollTileMap(plTilemap_t* tilemap, int16_t x, int16_t y)
     }
 }
 
-bool pl_loadMapFromFile(plTilemap_t* tilemap, cnfsFileIdx_t name)
+bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
 {
     if (tilemap->map != NULL)
     {
@@ -174,10 +174,10 @@ bool pl_loadMapFromFile(plTilemap_t* tilemap, cnfsFileIdx_t name)
     tilemap->mapHeight = height;
 
     tilemap->minMapOffsetX = 0;
-    tilemap->maxMapOffsetX = width * PL_TILESIZE - PL_TILEMAP_DISPLAY_WIDTH_PIXELS;
+    tilemap->maxMapOffsetX = width * MG_TILESIZE - MG_TILEMAP_DISPLAY_WIDTH_PIXELS;
 
     tilemap->minMapOffsetY = 0;
-    tilemap->maxMapOffsetY = height * PL_TILESIZE - PL_TILEMAP_DISPLAY_HEIGHT_PIXELS;
+    tilemap->maxMapOffsetY = height * MG_TILESIZE - MG_TILEMAP_DISPLAY_HEIGHT_PIXELS;
 
     for (uint16_t i = 0; i < 16; i++)
     {
@@ -190,11 +190,11 @@ bool pl_loadMapFromFile(plTilemap_t* tilemap, cnfsFileIdx_t name)
     return true;
 }
 
-void pl_tileSpawnEntity(plTilemap_t* tilemap, uint8_t objectIndex, uint8_t tx, uint8_t ty)
+void mg_tileSpawnEntity(mgTilemap_t* tilemap, uint8_t objectIndex, uint8_t tx, uint8_t ty)
 {
-    plEntity_t* entityCreated
-        = pl_createEntity(tilemap->entityManager, objectIndex, (tx << PL_TILESIZE_IN_POWERS_OF_2) + 8,
-                          (ty << PL_TILESIZE_IN_POWERS_OF_2) + 8);
+    mgEntity_t* entityCreated
+        = mg_createEntity(tilemap->entityManager, objectIndex, (tx << MG_TILESIZE_IN_POWERS_OF_2) + 8,
+                          (ty << MG_TILESIZE_IN_POWERS_OF_2) + 8);
 
     if (entityCreated != NULL)
     {
@@ -204,7 +204,7 @@ void pl_tileSpawnEntity(plTilemap_t* tilemap, uint8_t objectIndex, uint8_t tx, u
     }
 }
 
-uint8_t pl_getTile(plTilemap_t* tilemap, uint8_t tx, uint8_t ty)
+uint8_t mg_getTile(mgTilemap_t* tilemap, uint8_t tx, uint8_t ty)
 {
     // ty = CLAMP(ty, 0, tilemap->mapHeight - 1);
 
@@ -222,7 +222,7 @@ uint8_t pl_getTile(plTilemap_t* tilemap, uint8_t tx, uint8_t ty)
     return tilemap->map[ty * tilemap->mapWidth + tx];
 }
 
-void pl_setTile(plTilemap_t* tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId)
+void mg_setTile(mgTilemap_t* tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId)
 {
     // ty = CLAMP(ty, 0, tilemap->mapHeight - 1);
 
@@ -234,20 +234,20 @@ void pl_setTile(plTilemap_t* tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId)
     tilemap->map[ty * tilemap->mapWidth + tx] = newTileId;
 }
 
-bool pl_isSolid(uint8_t tileId)
+bool mg_isSolid(uint8_t tileId)
 {
     switch (tileId)
     {
-        case PL_TILE_EMPTY ... PL_TILE_UNUSED_29:
+        case MG_TILE_EMPTY ... MG_TILE_UNUSED_29:
             return false;
             break;
-        case PL_TILE_INVISIBLE_BLOCK ... PL_TILE_METAL_PIPE_V:
+        case MG_TILE_INVISIBLE_BLOCK ... MG_TILE_METAL_PIPE_V:
             return true;
             break;
-        case PL_TILE_BOUNCE_BLOCK:
+        case MG_TILE_BOUNCE_BLOCK:
             return false;
             break;
-        case PL_TILE_DIRT_PATH ... PL_TILE_CONTAINER_3:
+        case MG_TILE_DIRT_PATH ... MG_TILE_CONTAINER_3:
             return true;
             break;
         default:
@@ -257,45 +257,45 @@ bool pl_isSolid(uint8_t tileId)
 
 // bool isInteractive(uint8_t tileId)
 // {
-//     return tileId > PL_TILEINVISIBLE_BLOCK && tileId < PL_TILEBG_GOAL_ZONE;
+//     return tileId > MG_TILEINVISIBLE_BLOCK && tileId < MG_TILEBG_GOAL_ZONE;
 // }
 
-void pl_unlockScrolling(plTilemap_t* tilemap)
+void mg_unlockScrolling(mgTilemap_t* tilemap)
 {
     tilemap->minMapOffsetX = 0;
-    tilemap->maxMapOffsetX = tilemap->mapWidth * PL_TILESIZE - PL_TILEMAP_DISPLAY_WIDTH_PIXELS;
+    tilemap->maxMapOffsetX = tilemap->mapWidth * MG_TILESIZE - MG_TILEMAP_DISPLAY_WIDTH_PIXELS;
 
     tilemap->minMapOffsetY = 0;
-    tilemap->maxMapOffsetY = tilemap->mapHeight * PL_TILESIZE - PL_TILEMAP_DISPLAY_HEIGHT_PIXELS;
+    tilemap->maxMapOffsetY = tilemap->mapHeight * MG_TILESIZE - MG_TILEMAP_DISPLAY_HEIGHT_PIXELS;
 }
 
-bool pl_needsTransparency(uint8_t tileId)
+bool mg_needsTransparency(uint8_t tileId)
 {
     switch (tileId)
     {
-        case PL_TILE_BOUNCE_BLOCK:
-        case PL_TILEGIRDER:
-        case PL_TILE_CONTAINER_1 ... PL_TILE_CONTAINER_3:
-        case PL_TILE_COIN_1 ... PL_TILE_COIN_3:
-        case PL_TILE_LADDER:
-        case PL_TILE_BG_GOAL_ZONE ... PL_TILE_BG_CLOUD_D:
+        case MG_TILE_BOUNCE_BLOCK:
+        case MG_TILEGIRDER:
+        case MG_TILE_CONTAINER_1 ... MG_TILE_CONTAINER_3:
+        case MG_TILE_COIN_1 ... MG_TILE_COIN_3:
+        case MG_TILE_LADDER:
+        case MG_TILE_BG_GOAL_ZONE ... MG_TILE_BG_CLOUD_D:
             return true;
-        case PL_TILE_BG_CLOUD:
+        case MG_TILE_BG_CLOUD:
             return false;
-        case PL_TILE_BG_TALL_GRASS ... PL_TILE_BG_MOUNTAIN_R:
+        case MG_TILE_BG_TALL_GRASS ... MG_TILE_BG_MOUNTAIN_R:
             return true;
-        case PL_TILE_BG_MOUNTAIN ... PL_TILE_BG_METAL:
+        case MG_TILE_BG_MOUNTAIN ... MG_TILE_BG_METAL:
             return false;
-        case PL_TILE_BG_CHAINS:
+        case MG_TILE_BG_CHAINS:
             return true;
-        case PL_TILE_BG_WALL:
+        case MG_TILE_BG_WALL:
             return false;
         default:
             return false;
     }
 }
 
-void pl_freeTilemap(plTilemap_t* tilemap)
+void mg_freeTilemap(mgTilemap_t* tilemap)
 {
     heap_caps_free(tilemap->map);
 }
