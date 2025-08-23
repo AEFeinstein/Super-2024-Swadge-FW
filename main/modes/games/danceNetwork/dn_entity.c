@@ -421,36 +421,22 @@ dn_track_t dn_trackTypeAtCoords(dn_entity_t* album, dn_boardPos_t trackCoords)
 bool dn_calculateMoveableUnits(dn_entity_t* board)
 {
     dn_boardData_t* boardData = (dn_boardData_t*)board->data;
-    dn_entity_t** playerUnits = NULL;
-    dn_entity_t** opponentUnits = NULL;
-    if(board->gameData->phase < DN_P2_TURN_START_PHASE)
-    {
-        playerUnits = boardData->p1Units;
-        opponentUnits = boardData->p2Units;
-    }
-    else
-    {
-        playerUnits = boardData->p2Units;
-        opponentUnits = boardData->p1Units;
-    }
+    dn_entity_t** playerUnits = board->gameData->phase < DN_P2_TURN_START_PHASE ? boardData->p1Units : boardData->p2Units;
 
     bool playerHasMoves = false;
 
     for(int i = 0; i < 5; i++)
     {
-        if(playerUnits[i] == NULL || opponentUnits[i] == NULL)
+        if(playerUnits[i] == NULL)
         {
             //That unit has died
             continue;
         }
-        dn_boardPos_t pos = dn_getUnitBoardPos(opponentUnits[i]);
-        
-        boardData->tiles[pos.y][pos.x].selectionType = DN_NO_SELECTION;
         list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         if(dn_availableMoves(playerUnits[i], myList))
         {
             playerHasMoves = true;
-            pos = dn_getUnitBoardPos(playerUnits[i]);
+            dn_boardPos_t pos = dn_getUnitBoardPos(playerUnits[i]);
             boardData->tiles[pos.y][pos.x].selectionType = DN_UNIT_SELECTION;
         }
         clear(myList);
@@ -1675,6 +1661,7 @@ void dn_startSwapCCPhase(dn_entity_t* self)
 
 void dn_startMovePhase(dn_entity_t* self)
 {
+    dn_clearSelectableTiles(self);
     if(dn_calculateMoveableUnits(self->gameData->entityManager.board))
     {
         /////////////////////////////
