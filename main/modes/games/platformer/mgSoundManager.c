@@ -3,16 +3,16 @@
 //==============================================================================
 
 #include <stdlib.h>
-#include "plSoundManager.h"
+#include "mgSoundManager.h"
 #include "soundFuncs.h"
-#include "platformer_typedef.h"
+#include "mega_pulse_ex_typedef.h"
 
 //==============================================================================
 // Functions
 //==============================================================================
-void pl_initializeSoundManager(plSoundManager_t* self)
+void mg_initializeSoundManager(mgSoundManager_t* self)
 {
-    self->currentBgmIndex = PL_BGM_NULL;
+    self->currentBgmIndex = MG_BGM_NULL;
     loadMidiFile(BGM_INTRO_MID, &self->bgmIntro, true);
     loadMidiFile(SND_1UP_MID, &self->snd1up, true);
     loadMidiFile(SND_BREAK_MID, &self->sndBreak, true);
@@ -42,9 +42,9 @@ void pl_initializeSoundManager(plSoundManager_t* self)
     loadMidiFile(SND_WAVE_BALL_MID, &self->sndWaveBall, true);
 }
 
-void pl_freeSoundManager(plSoundManager_t* self)
+void mg_freeSoundManager(mgSoundManager_t* self)
 {
-    if (self->currentBgmIndex != PL_BGM_NULL)
+    if (self->currentBgmIndex != MG_BGM_NULL)
     {
         unloadMidiFile(&self->currentBgm);
     }
@@ -81,7 +81,7 @@ void pl_freeSoundManager(plSoundManager_t* self)
     Loads the indexed BGM_ into memory.
     Returns true if the BGM_ was actually changed, otherwise false
 */
-bool pl_setBgm(plSoundManager_t* self, uint16_t newBgmIndex)
+bool mg_setBgm(mgSoundManager_t* self, uint16_t newBgmIndex)
 {
     // All BGM_'s are intended to loop!
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
@@ -91,15 +91,15 @@ bool pl_setBgm(plSoundManager_t* self, uint16_t newBgmIndex)
         return false;
     }
 
-    if (self->currentBgmIndex != PL_BGM_NULL)
+    if (self->currentBgmIndex != MG_BGM_NULL)
     {
         player->paused = true;
         unloadMidiFile(&self->currentBgm);
     }
 
-    if (newBgmIndex != PL_BGM_NULL)
+    if (newBgmIndex != MG_BGM_NULL)
     {
-        loadMidiFile(PL_BGMS[newBgmIndex - 1], &self->currentBgm, true);
+        loadMidiFile(MG_BGMS[newBgmIndex - 1], &self->currentBgm, true);
     }
 
     self->currentBgmIndex = newBgmIndex;

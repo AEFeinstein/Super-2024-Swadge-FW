@@ -14,6 +14,6 @@ typedef struct
     cnfsFileIdx_t filename;
     uint16_t timeLimit;
     uint16_t checkpointTimeLimit;
-} plLeveldef_t;
+} mgLeveldef_t;
 
 #endif

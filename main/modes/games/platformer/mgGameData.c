@@ -3,8 +3,8 @@
 //==============================================================================
 
 #include <stdlib.h>
-#include "plGameData.h"
-#include "plEntityManager.h"
+#include "mgGameData.h"
+#include "mgEntityManager.h"
 #include "esp_random.h"
 #include "hdw-btn.h"
 #include "soundFuncs.h"
@@ -12,7 +12,7 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void pl_initializeGameData(plGameData_t* gameData, plSoundManager_t* soundManager)
+void mg_initializeGameData(mgGameData_t* gameData, mgSoundManager_t* soundManager)
 {
     gameData->gameState          = 0;
     gameData->btnState           = 0;
@@ -40,7 +40,7 @@ void pl_initializeGameData(plGameData_t* gameData, plSoundManager_t* soundManage
     gameData->soundManager       = soundManager;
 }
 
-void pl_initializeGameDataFromTitleScreen(plGameData_t* gameData)
+void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
 {
     gameData->gameState          = 0;
     gameData->btnState           = 0;
@@ -56,15 +56,15 @@ void pl_initializeGameDataFromTitleScreen(plGameData_t* gameData)
     gameData->checkpoint         = 0;
     gameData->levelDeaths        = 0;
     gameData->currentBgm         = 0;
-    gameData->changeBgm          = PL_BGM_NO_CHANGE;
+    gameData->changeBgm          = MG_BGM_NO_CHANGE;
     gameData->initialHp          = 1;
     gameData->continuesUsed      = (gameData->world == 1 && gameData->level == 1) ? false : true;
     gameData->inGameTimer        = 0;
 
-    pl_resetGameDataLeds(gameData);
+    mg_resetGameDataLeds(gameData);
 }
 
-void pl_updateLedsHpMeter(plEntityManager_t* entityManager, plGameData_t* gameData)
+void mg_updateLedsHpMeter(mgEntityManager_t* entityManager, mgGameData_t* gameData)
 {
     if (entityManager->playerEntity == NULL)
     {
@@ -100,7 +100,7 @@ void pl_updateLedsHpMeter(plEntityManager_t* entityManager, plGameData_t* gameDa
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
 }
 
-void pl_scorePoints(plGameData_t* gameData, uint16_t points)
+void mg_scorePoints(mgGameData_t* gameData, uint16_t points)
 {
     gameData->combo++;
 
@@ -112,7 +112,7 @@ void pl_scorePoints(plGameData_t* gameData, uint16_t points)
     gameData->comboTimer = (gameData->levelDeaths < 3) ? 240 : 1;
 }
 
-void addCoins(plGameData_t* gameData, uint8_t coins)
+void addCoins(mgGameData_t* gameData, uint8_t coins)
 {
     gameData->coins += coins;
     if (gameData->coins > 99)
@@ -127,7 +127,7 @@ void addCoins(plGameData_t* gameData, uint8_t coins)
     }
 }
 
-void updateComboTimer(plGameData_t* gameData)
+void updateComboTimer(mgGameData_t* gameData)
 {
     gameData->comboTimer--;
 
@@ -138,7 +138,7 @@ void updateComboTimer(plGameData_t* gameData)
     }
 }
 
-void pl_resetGameDataLeds(plGameData_t* gameData)
+void mg_resetGameDataLeds(mgGameData_t* gameData)
 {
     for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
     {
@@ -150,7 +150,7 @@ void pl_resetGameDataLeds(plGameData_t* gameData)
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
 }
 
-void pl_updateLedsShowHighScores(plGameData_t* gameData)
+void mg_updateLedsShowHighScores(mgGameData_t* gameData)
 {
     if (((gameData->frameCount) % 10) == 0)
     {
@@ -182,7 +182,7 @@ void pl_updateLedsShowHighScores(plGameData_t* gameData)
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
 }
 
-void pl_updateLedsGameOver(plGameData_t* gameData)
+void mg_updateLedsGameOver(mgGameData_t* gameData)
 {
     if (((gameData->frameCount) % 10) == 0)
     {
@@ -203,7 +203,7 @@ void pl_updateLedsGameOver(plGameData_t* gameData)
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
 }
 
-void pl_updateLedsLevelClear(plGameData_t* gameData)
+void mg_updateLedsLevelClear(mgGameData_t* gameData)
 {
     if (((gameData->frameCount) % 10) == 0)
     {
@@ -234,7 +234,7 @@ void pl_updateLedsLevelClear(plGameData_t* gameData)
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
 }
 
-void pl_updateLedsGameClear(plGameData_t* gameData)
+void mg_updateLedsGameClear(mgGameData_t* gameData)
 {
     if (((gameData->frameCount) % 10) == 0)
     {

@@ -1,5 +1,5 @@
-#ifndef _PL_SPRITE_H_
-#define _PL_SPRITE_H_
+#ifndef _MG_SPRITE_H_
+#define _MG_SPRITE_H_
 
 //==============================================================================
 // Includes
@@ -16,14 +16,14 @@
 {
     int16_t x;
     int16_t y;
-} plSpriteOrigin_t;*/
+} mgSpriteOrigin_t;*/
 
 typedef struct
 {
     wsg_t* wsg;
     const vec_t* origin;
     const box_t* hitBox;
-} plSprite_t;
+} mgSprite_t;
 
 ///==============================================================================
 // Constants
