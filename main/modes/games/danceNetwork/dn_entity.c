@@ -332,6 +332,10 @@ void dn_drawBoard(dn_entity_t* self)
 
 bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
 {
+    if(unit == NULL)
+    {
+        return false;
+    }
     dn_entity_t* album = (dn_entity_t*)((dn_albumsData_t*)unit->gameData->entityManager.albums->data)->p1Album;
 
     bool isP1 = dn_belongsToP1(unit);
@@ -434,12 +438,13 @@ bool dn_calculateMoveableUnits(dn_entity_t* board)
 
     for(int i = 0; i < 5; i++)
     {
-        dn_boardPos_t pos = dn_getUnitBoardPos(opponentUnits[i]);
         if(playerUnits[i] == NULL)
         {
             //That unit has died
             continue;
         }
+        dn_boardPos_t pos = dn_getUnitBoardPos(opponentUnits[i]);
+        
         boardData->tiles[pos.y][pos.x].selectionType = DN_NO_SELECTION;
         list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         if(dn_availableMoves(playerUnits[i], myList))
@@ -2803,76 +2808,74 @@ void dn_drawBullet(dn_entity_t* self)
 
 void dn_moveUnit(dn_entity_t* self)
 {
-    if(!self->gameData->resolvingRemix)
-    {
-        dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
-        dn_unitData_t* uData = (dn_unitData_t*)self->data;
+    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    dn_unitData_t* uData = (dn_unitData_t*)self->data;
 
-        for (int y = 0; y < DN_BOARD_SIZE; y++)
+    for (int y = 0; y < DN_BOARD_SIZE; y++)
+    {
+        for (int x = 0; x < DN_BOARD_SIZE; x++)
         {
-            for (int x = 0; x < DN_BOARD_SIZE; x++)
+            if(bData->tiles[y][x].unit == self)
             {
-                if(bData->tiles[y][x].unit == self)
-                {
-                    bData->tiles[y][x].unit = NULL;
-                    break;
-                }
+                bData->tiles[y][x].unit = NULL;
+                break;
             }
         }
-        bData->tiles[uData->moveTo.y][uData->moveTo.x].unit = self;
-        
-        bData->impactPos = uData->moveTo;
-        bData->tiles[bData->impactPos.y][bData->impactPos.x].yVel = -700;
-
-
-        if((self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] && bData->impactPos.y == 0 && bData->impactPos.x == 2)|| 
-           (self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0] && bData->impactPos.y == 4 && bData->impactPos.x == 2))//king moved to the opponent's throne
-        {
-            self->gameData->gameOver = true;
-            ///////////////////////////////
-            // Make the prompt Game Over //
-            ///////////////////////////////
-            dn_entity_t* promptGameOver = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
-            promptGameOver->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
-            dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
-            promptData->animatingIntroSlide = true;
-            promptData->yOffset = 320;//way off screen to allow more time to look at albums.
-            promptData->usesTwoLinesOfText = true;
-            char text[40];
-            strcpy(text, self->gameData->playerNames[bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout ? self != ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] : self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]]);
-            strcat(text, " wins!");
-            promptData->isPurple = true;
-            strcpy(promptData->text, text);
-            promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-            
-            dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
-            strcpy(option1->text, "OK");
-            option1->callback = dn_afterPlunge;
-            option1->downPressDetected = false;
-            push(promptData->options, (void*)option1);
-            promptData->numOptions = 1;
-
-            promptGameOver->dataType     = DN_PROMPT_DATA;
-            promptGameOver->updateFunction = dn_updatePrompt;
-            promptGameOver->drawFunction = dn_drawPrompt;
-        }
-        if(bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout)
-        {
-            //totally abusing this bool to stall the game until the player finishes a plunge prompt.
-            self->gameData->gameOver = true;
-        }
-
-        if(self->gameData->phase != DN_P1_UPGRADE_PHASE && self->gameData->phase != DN_P2_UPGRADE_PHASE)
-        {
-            dn_incrementPhase(self);//now the upgrade phase
-        }
-        if(!self->gameData->gameOver)
-        {
-            dn_startUpgradeMenu(self, 2 << 20);
-        }
-        
-        self->updateFunction = NULL;
     }
+    bData->tiles[uData->moveTo.y][uData->moveTo.x].unit = self;
+    self->gameData->resolvingRemix = false;
+    
+    bData->impactPos = uData->moveTo;
+    bData->tiles[bData->impactPos.y][bData->impactPos.x].yVel = -700;
+
+
+    if((self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] && bData->impactPos.y == 0 && bData->impactPos.x == 2)|| 
+        (self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0] && bData->impactPos.y == 4 && bData->impactPos.x == 2))//king moved to the opponent's throne
+    {
+        self->gameData->gameOver = true;
+        ///////////////////////////////
+        // Make the prompt Game Over //
+        ///////////////////////////////
+        dn_entity_t* promptGameOver = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+        promptGameOver->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+        dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
+        promptData->animatingIntroSlide = true;
+        promptData->yOffset = 320;//way off screen to allow more time to look at albums.
+        promptData->usesTwoLinesOfText = true;
+        char text[40];
+        strcpy(text, self->gameData->playerNames[bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout ? self != ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] : self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0]]);
+        strcat(text, " wins!");
+        promptData->isPurple = true;
+        strcpy(promptData->text, text);
+        promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+        
+        dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+        strcpy(option1->text, "OK");
+        option1->callback = dn_afterPlunge;
+        option1->downPressDetected = false;
+        push(promptData->options, (void*)option1);
+        promptData->numOptions = 1;
+
+        promptGameOver->dataType     = DN_PROMPT_DATA;
+        promptGameOver->updateFunction = dn_updatePrompt;
+        promptGameOver->drawFunction = dn_drawPrompt;
+    }
+    if(bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout)
+    {
+        //totally abusing this bool to stall the game until the player finishes a plunge prompt.
+        self->gameData->gameOver = true;
+    }
+
+    if(self->gameData->phase != DN_P1_UPGRADE_PHASE && self->gameData->phase != DN_P2_UPGRADE_PHASE)
+    {
+        dn_incrementPhase(self);//now the upgrade phase
+    }
+    if(!self->gameData->gameOver)
+    {
+        dn_startUpgradeMenu(self, 2 << 20);
+    }
+    
+    self->updateFunction = NULL;
 }
 
 void dn_afterPlunge(dn_entity_t* self)
