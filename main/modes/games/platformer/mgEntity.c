@@ -3,10 +3,10 @@
 //==============================================================================
 
 #include <stdlib.h>
-#include "plEntity.h"
-#include "plEntityManager.h"
-#include "plTilemap.h"
-#include "plGameData.h"
+#include "mgEntity.h"
+#include "mgEntityManager.h"
+#include "mgTilemap.h"
+#include "mgGameData.h"
 #include "soundFuncs.h"
 #include "hdw-btn.h"
 #include "esp_random.h"
@@ -14,7 +14,7 @@
 #include "trigonometry.h"
 #include <esp_log.h>
 #include "soundFuncs.h"
-#include "platformer_typedef.h"
+#include "mega_pulse_ex_typedef.h"
 #include "shapes.h"
 
 //==============================================================================
@@ -24,8 +24,8 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void pl_initializeEntity(plEntity_t* self, plEntityManager_t* entityManager, plTilemap_t* tilemap,
-                         plGameData_t* gameData, plSoundManager_t* soundManager)
+void mg_initializeEntity(mgEntity_t* self, mgEntityManager_t* entityManager, mgTilemap_t* tilemap,
+                         mgGameData_t* gameData, mgSoundManager_t* soundManager)
 {
     self->active               = false;
     self->tilemap              = tilemap;
@@ -66,10 +66,10 @@ void pl_initializeEntity(plEntity_t* self, plEntityManager_t* entityManager, plT
     // self->overlapTileHandler = NULL;
 }
 
-void pl_updatePlayer(plEntity_t* self)
+void mg_updatePlayer(mgEntity_t* self)
 {
     switch(self->state){
-        case MG_PL_ST_NORMAL:
+        case MG_MG_ST_NORMAL:
         default:
             if (self->gameData->doubleTapBtnTimer > 0){
                 self->gameData->doubleTapBtnTimer --;
@@ -107,7 +107,7 @@ void pl_updatePlayer(plEntity_t* self)
                         self->gameData->doubleTapBtnTimer = MG_DOUBLE_TAP_TIMER_FRAMES;
                     } else if (self->canDash) {
                         //Initiate dash
-                        self->state = MG_PL_ST_DASHING;
+                        self->state = MG_MG_ST_DASHING;
 
                         if(self->falling){
                             self->stateTimer = 20;
@@ -142,7 +142,7 @@ void pl_updatePlayer(plEntity_t* self)
                         self->gameData->doubleTapBtnTimer = MG_DOUBLE_TAP_TIMER_FRAMES;
                     } else if (self->canDash) {
                         //Initiate dash
-                        self->state = MG_PL_ST_DASHING;
+                        self->state = MG_MG_ST_DASHING;
 
                         if(self->falling){
                             self->stateTimer = 20;
@@ -161,7 +161,7 @@ void pl_updatePlayer(plEntity_t* self)
                 }
             }
             break;
-        case MG_PL_ST_DASHING:
+        case MG_MG_ST_DASHING:
 
             if(self->spriteFlipHorizontal) {
                 self->xspeed = -64;
@@ -183,7 +183,7 @@ void pl_updatePlayer(plEntity_t* self)
             
             self->stateTimer--;
             if(self->stateTimer <= 0){
-                self->state = MG_PL_ST_NORMAL;
+                self->state = MG_MG_ST_NORMAL;
                 self->gravity = 4;
             }
             break;
@@ -232,19 +232,19 @@ void pl_updatePlayer(plEntity_t* self)
             self->yspeed    = -self->jumpPower;
             self->falling   = true;
 
-            if(self->state == MG_PL_ST_DASHING){
+            if(self->state == MG_MG_ST_DASHING){
                 self->canDash = false;
             }
 
             soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
-        } else if (pl_canWallJump(self) && !(self->gameData->prevBtnState & PB_A)) {
+        } else if (mg_canWallJump(self) && !(self->gameData->prevBtnState & PB_A)) {
                 self->jumpPower = 60; //+ ((abs(self->xspeed) + 16) >> 3);
                 self->xspeed = (self->spriteFlipHorizontal) ? 32 : -32;
                 self->yspeed    = -self->jumpPower;
                 self->falling   = true;
                 
-                if(self->state == MG_PL_ST_DASHING){
-                    self->state = MG_PL_ST_NORMAL;
+                if(self->state == MG_MG_ST_DASHING){
+                    self->state = MG_MG_ST_NORMAL;
                     self->stateTimer = -1;
                     self->gravity = 4;
                 }
@@ -300,14 +300,14 @@ void pl_updatePlayer(plEntity_t* self)
         self->animationTimer--;
 
         if(self->animationTimer == 0){
-            pl_remapPlayerNotShootWsg(self->tilemap->wsgManager);
+            mg_remapPlayerNotShootWsg(self->tilemap->wsgManager);
         }
     }
 
     if (/*self->hp > 2 &&*/ self->gameData->btnState & PB_B && !(self->gameData->prevBtnState & PB_B)
         && self->shotsFired < self->shotLimit)
     {
-        plEntity_t* createdEntity = pl_createEntity(self->entityManager, ENTITY_WAVE_BALL,
+        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
                                                     TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         if (createdEntity != NULL)
         {
@@ -318,25 +318,25 @@ void pl_updatePlayer(plEntity_t* self)
             createdEntity->linkedEntity = self;
             self->shotsFired++;
             soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
-            pl_remapPlayerShootWsg(self->tilemap->wsgManager);
+            mg_remapPlayerShootWsg(self->tilemap->wsgManager);
         }
         self->animationTimer = 10;
     }
 
     if (((self->gameData->btnState & PB_START) && !(self->gameData->prevBtnState & PB_START)))
     {
-        self->gameData->changeState = PL_ST_PAUSE;
+        self->gameData->changeState = MG_ST_PAUSE;
     }
 
-    pl_moveEntityWithTileCollisions3(self);
+    mg_moveEntityWithTileCollisions3(self);
     dieWhenFallingOffScreen(self);
     applyGravity(self);
     applyDamping(self);
-    pl_detectEntityCollisions(self);
+    mg_detectEntityCollisions(self);
     animatePlayer(self);
 }
 
-void updateTestObject(plEntity_t* self)
+void updateTestObject(mgEntity_t* self)
 {
     if (self->gameData->frameCount % 10 == 0)
     {
@@ -344,16 +344,16 @@ void updateTestObject(plEntity_t* self)
     }
 
     despawnWhenOffscreen(self);
-    pl_moveEntityWithTileCollisions(self);
+    mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
-    pl_detectEntityCollisions(self);
+    mg_detectEntityCollisions(self);
 }
 
-void updateHitBlock(plEntity_t* self)
+void updateHitBlock(mgEntity_t* self)
 {
     if (self->homeTileY > self->tilemap->mapHeight)
     {
-        pl_destroyEntity(self, false);
+        mg_destroyEntity(self, false);
         return;
     }
 
@@ -374,70 +374,70 @@ void updateHitBlock(plEntity_t* self)
         uint8_t belowTile         = (self->homeTileY == (self->tilemap->mapHeight - 1))
                                         ? 0
                                         : self->tilemap->map[(self->homeTileY + 1) * self->tilemap->mapWidth + self->homeTileX];
-        plEntity_t* createdEntity = NULL;
+        mgEntity_t* createdEntity = NULL;
 
         switch (aboveTile)
         {
-            case PL_TILE_CTNR_COIN:
-            case PL_TILE_CTNR_10COIN:
+            case MG_TILE_CTNR_COIN:
+            case MG_TILE_CTNR_10COIN:
             {
                 addCoins(self->gameData, 1);
-                pl_scorePoints(self->gameData, 10);
-                self->jumpPower = PL_TILE_CONTAINER_2;
+                mg_scorePoints(self->gameData, 10);
+                self->jumpPower = MG_TILE_CONTAINER_2;
                 break;
             }
-            case PL_TILE_CTNR_POW1:
+            case MG_TILE_CTNR_POW1:
             {
-                createdEntity = pl_createEntity(
-                    self->entityManager, ENTITY_POWERUP, (self->homeTileX * PL_TILESIZE) + PL_HALF_TILESIZE,
+                createdEntity = mg_createEntity(
+                    self->entityManager, ENTITY_POWERUP, (self->homeTileX * MG_TILESIZE) + MG_HALF_TILESIZE,
                     ((self->homeTileY
-                      + ((self->yspeed < 0 && (!pl_isSolid(belowTile) && belowTile != PL_TILE_BOUNCE_BLOCK)) ? 1 : -1))
-                     * PL_TILESIZE)
-                        + PL_HALF_TILESIZE);
+                      + ((self->yspeed < 0 && (!mg_isSolid(belowTile) && belowTile != MG_TILE_BOUNCE_BLOCK)) ? 1 : -1))
+                     * MG_TILESIZE)
+                        + MG_HALF_TILESIZE);
                 createdEntity->homeTileX = 0;
                 createdEntity->homeTileY = 0;
 
-                self->jumpPower = PL_TILE_CONTAINER_2;
+                self->jumpPower = MG_TILE_CONTAINER_2;
                 break;
             }
-            case PL_TILE_WARP_0 ... PL_TILE_WARP_F:
+            case MG_TILE_WARP_0 ... MG_TILE_WARP_F:
             {
-                createdEntity = pl_createEntity(
-                    self->entityManager, ENTITY_WARP, (self->homeTileX * PL_TILESIZE) + PL_HALF_TILESIZE,
+                createdEntity = mg_createEntity(
+                    self->entityManager, ENTITY_WARP, (self->homeTileX * MG_TILESIZE) + MG_HALF_TILESIZE,
                     ((self->homeTileY
-                      + ((self->yspeed < 0 && (!pl_isSolid(belowTile) && belowTile != PL_TILE_BOUNCE_BLOCK)) ? 1 : -1))
-                     * PL_TILESIZE)
-                        + PL_HALF_TILESIZE);
+                      + ((self->yspeed < 0 && (!mg_isSolid(belowTile) && belowTile != MG_TILE_BOUNCE_BLOCK)) ? 1 : -1))
+                     * MG_TILESIZE)
+                        + MG_HALF_TILESIZE);
 
                 createdEntity->homeTileX = self->homeTileX;
                 createdEntity->homeTileY = self->homeTileY;
 
-                createdEntity->jumpPower = aboveTile - PL_TILE_WARP_0;
-                self->jumpPower          = PL_TILE_CONTAINER_2;
+                createdEntity->jumpPower = aboveTile - MG_TILE_WARP_0;
+                self->jumpPower          = MG_TILE_CONTAINER_2;
                 break;
             }
-            case PL_TILE_CTNR_1UP:
+            case MG_TILE_CTNR_1UP:
             {
                 if (self->gameData->extraLifeCollected)
                 {
                     addCoins(self->gameData, 1);
-                    pl_scorePoints(self->gameData, 10);
+                    mg_scorePoints(self->gameData, 10);
                 }
                 else
                 {
-                    createdEntity = pl_createEntity(
-                        self->entityManager, ENTITY_1UP, (self->homeTileX * PL_TILESIZE) + PL_HALF_TILESIZE,
+                    createdEntity = mg_createEntity(
+                        self->entityManager, ENTITY_1UP, (self->homeTileX * MG_TILESIZE) + MG_HALF_TILESIZE,
                         ((self->homeTileY
-                          + ((self->yspeed < 0 && (!pl_isSolid(belowTile) && belowTile != PL_TILE_BOUNCE_BLOCK)) ? 1
+                          + ((self->yspeed < 0 && (!mg_isSolid(belowTile) && belowTile != MG_TILE_BOUNCE_BLOCK)) ? 1
                                                                                                                 : -1))
-                         * PL_TILESIZE)
-                            + PL_HALF_TILESIZE);
+                         * MG_TILESIZE)
+                            + MG_HALF_TILESIZE);
                     createdEntity->homeTileX           = 0;
                     createdEntity->homeTileY           = 0;
                     self->gameData->extraLifeCollected = true;
                 }
 
-                self->jumpPower = PL_TILE_CONTAINER_2;
+                self->jumpPower = MG_TILE_CONTAINER_2;
                 break;
             }
             default:
@@ -446,32 +446,32 @@ void updateHitBlock(plEntity_t* self)
             }
         }
 
-        if (self->jumpPower == PL_TILE_BRICK_BLOCK && (self->yspeed > 0 || self->yDamping == 1) && createdEntity == NULL)
+        if (self->jumpPower == MG_TILE_BRICK_BLOCK && (self->yspeed > 0 || self->yDamping == 1) && createdEntity == NULL)
         {
-            self->jumpPower = PL_TILE_EMPTY;
-            pl_scorePoints(self->gameData, 10);
+            self->jumpPower = MG_TILE_EMPTY;
+            mg_scorePoints(self->gameData, 10);
             soundPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
         }
 
         self->tilemap->map[self->homeTileY * self->tilemap->mapWidth + self->homeTileX] = self->jumpPower;
 
-        pl_destroyEntity(self, false);
+        mg_destroyEntity(self, false);
     }
 }
 
-void pl_moveEntityWithTileCollisions(plEntity_t* self)
+void mg_moveEntityWithTileCollisions(mgEntity_t* self)
 {
     uint16_t newX = self->x;
     uint16_t newY = self->y;
-    uint8_t tx    = PL_TO_TILECOORDS(TO_PIXEL_COORDS(self->x));
-    uint8_t ty    = PL_TO_TILECOORDS(TO_PIXEL_COORDS(self->y));
+    uint8_t tx    = MG_TO_TILECOORDS(TO_PIXEL_COORDS(self->x));
+    uint8_t ty    = MG_TO_TILECOORDS(TO_PIXEL_COORDS(self->y));
     // bool collision = false;
 
     // Are we inside a block? Push self out of block
-    uint8_t t = pl_getTile(self->tilemap, tx, ty);
+    uint8_t t = mg_getTile(self->tilemap, tx, ty);
     self->overlapTileHandler(self, t, tx, ty);
 
-    if (pl_isSolid(t))
+    if (mg_isSolid(t))
     {
         if (self->xspeed == 0 && self->yspeed == 0)
         {
@@ -493,29 +493,29 @@ void pl_moveEntityWithTileCollisions(plEntity_t* self)
     {
         if (self->yspeed != 0)
         {
-            int16_t hcof = (((TO_PIXEL_COORDS(self->x)) % PL_TILESIZE) - PL_HALF_TILESIZE);
+            int16_t hcof = (((TO_PIXEL_COORDS(self->x)) % MG_TILESIZE) - MG_HALF_TILESIZE);
 
             // Handle halfway though tile
-            uint8_t at = pl_getTile(self->tilemap, tx + SIGNOF(hcof), ty);
+            uint8_t at = mg_getTile(self->tilemap, tx + SIGNOF(hcof), ty);
 
-            if (pl_isSolid(at))
+            if (mg_isSolid(at))
             {
                 // collision = true;
-                newX = TO_SUBPIXEL_COORDS((tx + 1) * PL_TILESIZE - PL_HALF_TILESIZE);
+                newX = TO_SUBPIXEL_COORDS((tx + 1) * MG_TILESIZE - MG_HALF_TILESIZE);
             }
 
-            uint8_t newTy = PL_TO_TILECOORDS( TO_PIXEL_COORDS((self->y + self->yspeed))
-                                             + SIGNOF(self->yspeed) * PL_HALF_TILESIZE);
+            uint8_t newTy = MG_TO_TILECOORDS( TO_PIXEL_COORDS((self->y + self->yspeed))
+                                             + SIGNOF(self->yspeed) * MG_HALF_TILESIZE);
 
             if (newTy != ty)
             {
-                uint8_t newVerticalTile = pl_getTile(self->tilemap, tx, newTy);
+                uint8_t newVerticalTile = mg_getTile(self->tilemap, tx, newTy);
 
-                if (newVerticalTile > PL_TILE_UNUSED_29 && newVerticalTile < PL_TILE_BG_GOAL_ZONE)
+                if (newVerticalTile > MG_TILE_UNUSED_29 && newVerticalTile < MG_TILE_BG_GOAL_ZONE)
                 {
                     if (self->tileCollisionHandler(self, newVerticalTile, tx, newTy, 2 << (self->yspeed > 0)))
                     {
-                        newY = TO_SUBPIXEL_COORDS((newTy + ((ty < newTy) ? -1 : 1)) * PL_TILESIZE + PL_HALF_TILESIZE);
+                        newY = TO_SUBPIXEL_COORDS((newTy + ((ty < newTy) ? -1 : 1)) * MG_TILESIZE + MG_HALF_TILESIZE);
                     }
                 }
             }
@@ -523,39 +523,39 @@ void pl_moveEntityWithTileCollisions(plEntity_t* self)
 
         if (self->xspeed != 0)
         {
-            int16_t vcof = ((TO_PIXEL_COORDS(self->y) % PL_TILESIZE) - PL_HALF_TILESIZE);
+            int16_t vcof = ((TO_PIXEL_COORDS(self->y) % MG_TILESIZE) - MG_HALF_TILESIZE);
 
             // Handle halfway though tile
-            uint8_t att = pl_getTile(self->tilemap, tx, ty + SIGNOF(vcof));
+            uint8_t att = mg_getTile(self->tilemap, tx, ty + SIGNOF(vcof));
 
-            if (pl_isSolid(att))
+            if (mg_isSolid(att))
             {
                 // collision = true;
-                newY = TO_SUBPIXEL_COORDS((ty + 1) * PL_TILESIZE - PL_HALF_TILESIZE);
+                newY = TO_SUBPIXEL_COORDS((ty + 1) * MG_TILESIZE - MG_HALF_TILESIZE);
             }
 
             // Handle outside of tile
-            uint8_t newTx = PL_TO_TILECOORDS(TO_PIXEL_COORDS((self->x + self->xspeed))
-                                             + SIGNOF(self->xspeed) * PL_HALF_TILESIZE);
+            uint8_t newTx = MG_TO_TILECOORDS(TO_PIXEL_COORDS((self->x + self->xspeed))
+                                             + SIGNOF(self->xspeed) * MG_HALF_TILESIZE);
 
             if (newTx != tx)
             {
-                uint8_t newHorizontalTile = pl_getTile(self->tilemap, newTx, ty);
+                uint8_t newHorizontalTile = mg_getTile(self->tilemap, newTx, ty);
 
-                if (newHorizontalTile > PL_TILE_UNUSED_29 && newHorizontalTile < PL_TILE_BG_GOAL_ZONE)
+                if (newHorizontalTile > MG_TILE_UNUSED_29 && newHorizontalTile < MG_TILE_BG_GOAL_ZONE)
                 {
                     if (self->tileCollisionHandler(self, newHorizontalTile, newTx, ty, (self->xspeed > 0)))
                     {
-                        newX = TO_SUBPIXEL_COORDS((newTx + ((tx < newTx) ? -1 : 1)) * PL_TILESIZE + PL_HALF_TILESIZE);
+                        newX = TO_SUBPIXEL_COORDS((newTx + ((tx < newTx) ? -1 : 1)) * MG_TILESIZE + MG_HALF_TILESIZE);
                     }
                 }
 
                 if (!self->falling)
                 {
-                    uint8_t newBelowTile = pl_getTile(self->tilemap, tx, ty + 1);
+                    uint8_t newBelowTile = mg_getTile(self->tilemap, tx, ty + 1);
 
                     if ((self->gravityEnabled
-                         && !pl_isSolid(newBelowTile)) /*(|| (!self->gravityEnabled && newBelowTile != PL_TILELADDER)*/)
+                         && !mg_isSolid(newBelowTile)) /*(|| (!self->gravityEnabled && newBelowTile != MG_TILELADDER)*/)
                     {
                         self->fallOffTileHandler(self);
                     }
@@ -568,13 +568,13 @@ void pl_moveEntityWithTileCollisions(plEntity_t* self)
     self->y = newY + self->yspeed;
 }
 
-void pl_moveEntityWithTileCollisions3(plEntity_t* self)
+void mg_moveEntityWithTileCollisions3(mgEntity_t* self)
 {
     uint16_t x = TO_PIXEL_COORDS(self->x);
     uint16_t y = TO_PIXEL_COORDS(self->y);
     int16_t xspeed = TO_PIXEL_COORDS(self->xspeed);
     int16_t yspeed = TO_PIXEL_COORDS(self->yspeed);
-    pl_EntityTileCollider_t* tileCollider = self->tileCollider;
+    mg_EntityTileCollider_t* tileCollider = self->tileCollider;
 
     int16_t offX, offY, tempX, tempY, tempTx, tempTy, tempT, newX, newY, onGround;
 
@@ -582,91 +582,91 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
     newY = 0;
 
     if(self->xspeed > 0){
-        const pl_EntityTileCollisionPointList_t* rightEdge = tileCollider->rightEdge;
+        const mg_EntityTileCollisionPointList_t* rightEdge = tileCollider->rightEdge;
         for(int i=0; i<rightEdge->size; i++){
             offX = rightEdge->collisionPoints[i].x;
             offY = rightEdge->collisionPoints[i].y;
             tempX = x + offX + xspeed;
             tempY = y + offY;
 
-            tempTx = PL_TO_TILECOORDS(tempX);
-            tempTy = PL_TO_TILECOORDS(tempY);
+            tempTx = MG_TO_TILECOORDS(tempX);
+            tempTy = MG_TO_TILECOORDS(tempY);
 
-            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
-            //drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
+            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * MG_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * MG_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
+            //drawRect((tempTx << MG_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << MG_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetX, (tempTy << MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetY, c500);
 
-            tempT = pl_getTile(self->tilemap, tempTx, tempTy);
+            tempT = mg_getTile(self->tilemap, tempTx, tempTy);
             
             if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 1)){
-                newX = ((tempTx) << PL_TILESIZE_IN_POWERS_OF_2) - offX;
+                newX = ((tempTx) << MG_TILESIZE_IN_POWERS_OF_2) - offX;
             }
         }
     } else if(self->xspeed < 0){
-        const pl_EntityTileCollisionPointList_t* leftEdge = tileCollider->leftEdge;
+        const mg_EntityTileCollisionPointList_t* leftEdge = tileCollider->leftEdge;
         for(int i=0; i<leftEdge->size; i++){
             offX = leftEdge->collisionPoints[i].x;
             offY = leftEdge->collisionPoints[i].y;
             tempX = x + offX + xspeed;
             tempY = y + offY;
 
-            tempTx = PL_TO_TILECOORDS(tempX);
-            tempTy = PL_TO_TILECOORDS(tempY);
+            tempTx = MG_TO_TILECOORDS(tempX);
+            tempTy = MG_TO_TILECOORDS(tempY);
 
-            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
-            //drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
+            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * MG_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * MG_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
+            //drawRect((tempTx << MG_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << MG_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetX, (tempTy << MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetY, c500);
 
-            tempT = pl_getTile(self->tilemap, tempTx, tempTy);
+            tempT = mg_getTile(self->tilemap, tempTx, tempTy);
             
             if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 0)){
-                newX = ((tempTx+1) << PL_TILESIZE_IN_POWERS_OF_2) - offX;
+                newX = ((tempTx+1) << MG_TILESIZE_IN_POWERS_OF_2) - offX;
             }
         }
     }
 
     if(self->yspeed > 0){
-        const pl_EntityTileCollisionPointList_t* bottomEdge = tileCollider->bottomEdge;
+        const mg_EntityTileCollisionPointList_t* bottomEdge = tileCollider->bottomEdge;
         for(int i=0; i<bottomEdge->size; i++){
             offX = bottomEdge->collisionPoints[i].x;
             offY = bottomEdge->collisionPoints[i].y;
             tempX = x + offX;
             tempY = y + offY + yspeed;
 
-            tempTx = PL_TO_TILECOORDS(tempX);
-            tempTy = PL_TO_TILECOORDS(tempY);
+            tempTx = MG_TO_TILECOORDS(tempX);
+            tempTy = MG_TO_TILECOORDS(tempY);
 
-            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
-            //drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
+            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * MG_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * MG_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
+            //drawRect((tempTx << MG_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << MG_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetX, (tempTy << MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetY, c500);
 
-            tempT = pl_getTile(self->tilemap, tempTx, tempTy);
+            tempT = mg_getTile(self->tilemap, tempTx, tempTy);
             
             if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 4)){
-                newY = ((tempTy) << PL_TILESIZE_IN_POWERS_OF_2) - offY;
+                newY = ((tempTy) << MG_TILESIZE_IN_POWERS_OF_2) - offY;
                 self->falling = false;
             }
         }
     } else if(self->yspeed < 0){
-        const pl_EntityTileCollisionPointList_t* topEdge = tileCollider->topEdge;
+        const mg_EntityTileCollisionPointList_t* topEdge = tileCollider->topEdge;
         for(int i=0; i<topEdge->size; i++){
             offX = topEdge->collisionPoints[i].x;
             offY = topEdge->collisionPoints[i].y;
             tempX = x + offX;
             tempY = y + offY + yspeed;
 
-            tempTx = PL_TO_TILECOORDS(tempX);
-            tempTy = PL_TO_TILECOORDS(tempY);
+            tempTx = MG_TO_TILECOORDS(tempX);
+            tempTy = MG_TO_TILECOORDS(tempY);
 
-            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
-            //drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
+            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * MG_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * MG_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
+            //drawRect((tempTx << MG_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << MG_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetX, (tempTy << MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetY, c500);
 
-            tempT = pl_getTile(self->tilemap, tempTx, tempTy);
+            tempT = mg_getTile(self->tilemap, tempTx, tempTy);
             
             if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 2)){
-                newY = ((tempTy+1) << PL_TILESIZE_IN_POWERS_OF_2) - offY;
+                newY = ((tempTy+1) << MG_TILESIZE_IN_POWERS_OF_2) - offY;
             }
         }
     } else if (!self->falling) {
         onGround = false;
-        const pl_EntityTileCollisionPointList_t* bottomEdge = tileCollider->bottomEdge;
+        const mg_EntityTileCollisionPointList_t* bottomEdge = tileCollider->bottomEdge;
 
         for(int i=0; i<bottomEdge->size; i++){
             offX = bottomEdge->collisionPoints[i].x;
@@ -674,10 +674,10 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
             tempX = x + offX;
             tempY = y + offY + 1;
 
-            tempTx = PL_TO_TILECOORDS(tempX);
-            tempTy = PL_TO_TILECOORDS(tempY);
+            tempTx = MG_TO_TILECOORDS(tempX);
+            tempTy = MG_TO_TILECOORDS(tempY);
 
-             tempT = pl_getTile(self->tilemap, tempTx, tempTy);
+             tempT = mg_getTile(self->tilemap, tempTx, tempTy);
             
             if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 4)){
                 onGround = true;
@@ -691,52 +691,52 @@ void pl_moveEntityWithTileCollisions3(plEntity_t* self)
     self->y = newY ? TO_SUBPIXEL_COORDS(newY) : self->y+self->yspeed;
 }
 
-bool pl_canWallJump(plEntity_t* self){
+bool mg_canWallJump(mgEntity_t* self){
     if(!self->falling) {
         return false;
     }
 
     uint16_t x = TO_PIXEL_COORDS(self->x);
     uint16_t y = TO_PIXEL_COORDS(self->y);
-    pl_EntityTileCollider_t* tileCollider = self->tileCollider;
+    mg_EntityTileCollider_t* tileCollider = self->tileCollider;
 
     int16_t offX, offY, tempX, tempY, tempTx, tempTy, tempT;
 
     if(self->xspeed > 0 && !self->spriteFlipHorizontal){
-        const pl_EntityTileCollisionPointList_t* rightEdge = tileCollider->rightEdge;
+        const mg_EntityTileCollisionPointList_t* rightEdge = tileCollider->rightEdge;
         for(int i=0; i<rightEdge->size; i++){
             offX = rightEdge->collisionPoints[i].x;
             offY = rightEdge->collisionPoints[i].y;
             tempX = x + offX + 1;
             tempY = y + offY;
 
-            tempTx = PL_TO_TILECOORDS(tempX);
-            tempTy = PL_TO_TILECOORDS(tempY);
+            tempTx = MG_TO_TILECOORDS(tempX);
+            tempTy = MG_TO_TILECOORDS(tempY);
 
-            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
-            //drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
+            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * MG_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * MG_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
+            //drawRect((tempTx << MG_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << MG_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetX, (tempTy << MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetY, c500);
 
-            tempT = pl_getTile(self->tilemap, tempTx, tempTy);
+            tempT = mg_getTile(self->tilemap, tempTx, tempTy);
             
             if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 1)){
                 return true;
             }
         }
     } else if(self->xspeed < 0 && self->spriteFlipHorizontal){
-        const pl_EntityTileCollisionPointList_t* leftEdge = tileCollider->leftEdge;
+        const mg_EntityTileCollisionPointList_t* leftEdge = tileCollider->leftEdge;
         for(int i=0; i<leftEdge->size; i++){
             offX = leftEdge->collisionPoints[i].x;
             offY = leftEdge->collisionPoints[i].y;
             tempX = x + offX - 1;
             tempY = y + offY;
 
-            tempTx = PL_TO_TILECOORDS(tempX);
-            tempTy = PL_TO_TILECOORDS(tempY);
+            tempTx = MG_TO_TILECOORDS(tempX);
+            tempTy = MG_TO_TILECOORDS(tempY);
 
-            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * PL_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
-            //drawRect((tempTx << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetX, (tempTy << PL_TILESIZE_IN_POWERS_OF_2) + PL_TILESIZE - self->tilemap->mapOffsetY, c500);
+            //drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + xspeed + (SIGNOF(xspeed) * MG_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + yspeed + (SIGNOF(yspeed) * MG_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0);
+            //drawRect((tempTx << MG_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, (tempTy << MG_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx << MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetX, (tempTy << MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetY, c500);
 
-            tempT = pl_getTile(self->tilemap, tempTx, tempTy);
+            tempT = mg_getTile(self->tilemap, tempTx, tempTy);
             
             if(self->tileCollisionHandler(self, tempT, tempTx, tempTy, 0)){
                 return true;
@@ -747,12 +747,12 @@ bool pl_canWallJump(plEntity_t* self){
     return false;
 }
 
-void defaultFallOffTileHandler(plEntity_t* self)
+void defaultFallOffTileHandler(mgEntity_t* self)
 {
     self->falling = true;
 }
 
-void applyDamping(plEntity_t* self)
+void applyDamping(mgEntity_t* self)
 {
     //if (!self->gravityEnabled)
     {
@@ -801,7 +801,7 @@ void applyDamping(plEntity_t* self)
     }
 }
 
-void applyGravity(plEntity_t* self)
+void applyGravity(mgEntity_t* self)
 {
     if (!self->gravityEnabled || !self->falling)
     {
@@ -816,13 +816,13 @@ void applyGravity(plEntity_t* self)
     }
 }
 
-void despawnWhenOffscreen(plEntity_t* self)
+void despawnWhenOffscreen(mgEntity_t* self)
 {
     if (TO_PIXEL_COORDS(self->x) < (self->tilemap->mapOffsetX - DESPAWN_THRESHOLD)
         || TO_PIXEL_COORDS(self->x)
-               > (self->tilemap->mapOffsetX + PL_TILEMAP_DISPLAY_WIDTH_PIXELS + DESPAWN_THRESHOLD))
+               > (self->tilemap->mapOffsetX + MG_TILEMAP_DISPLAY_WIDTH_PIXELS + DESPAWN_THRESHOLD))
     {
-        pl_destroyEntity(self, true);
+        mg_destroyEntity(self, true);
     }
 
     if (self->y > 63616)
@@ -832,13 +832,13 @@ void despawnWhenOffscreen(plEntity_t* self)
 
     if (TO_PIXEL_COORDS(self->y) < (self->tilemap->mapOffsetY - (DESPAWN_THRESHOLD << 2))
         || TO_PIXEL_COORDS(self->y)
-               > (self->tilemap->mapOffsetY + PL_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD))
+               > (self->tilemap->mapOffsetY + MG_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD))
     {
-        pl_destroyEntity(self, true);
+        mg_destroyEntity(self, true);
     }
 }
 
-void pl_destroyEntity(plEntity_t* self, bool respawn)
+void mg_destroyEntity(mgEntity_t* self, bool respawn)
 {
     if (respawn && !(self->homeTileX == 0 && self->homeTileY == 0))
     {
@@ -849,9 +849,9 @@ void pl_destroyEntity(plEntity_t* self, bool respawn)
     self->active = false;
 }
 
-void animatePlayer(plEntity_t* self)
+void animatePlayer(mgEntity_t* self)
 {
-    if (self->spriteIndex == PL_SP_PLAYER_WIN || self->spriteIndex == PL_SP_PLAYER_HURT)
+    if (self->spriteIndex == MG_SP_PLAYER_WIN || self->spriteIndex == MG_SP_PLAYER_HURT)
     {
         // Win pose has been set; don't change it!
         return;
@@ -859,7 +859,7 @@ void animatePlayer(plEntity_t* self)
 
     if (!self->gravityEnabled)
     {
-        self->spriteIndex = PL_SP_PLAYER_CLIMB;
+        self->spriteIndex = MG_SP_PLAYER_CLIMB;
         if (self->yspeed < 0 && self->gameData->frameCount % 10 == 0)
         {
             self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
@@ -871,18 +871,18 @@ void animatePlayer(plEntity_t* self)
         {
             // Jumping
             if(self->jumpPower > 32) {
-                self->spriteIndex = PL_SP_PLAYER_JUMP;
+                self->spriteIndex = MG_SP_PLAYER_JUMP;
             } else {
-                self->spriteIndex = PL_SP_PLAYER_JUMP1;
+                self->spriteIndex = MG_SP_PLAYER_JUMP1;
             }
         }
         else
         {
             // Falling
             if(self->yspeed != self->yMaxSpeed){
-                self->spriteIndex = PL_SP_PLAYER_JUMP2;
+                self->spriteIndex = MG_SP_PLAYER_JUMP2;
             } else {
-                self->spriteIndex = PL_SP_PLAYER_JUMP4;
+                self->spriteIndex = MG_SP_PLAYER_JUMP4;
             }
         }
 
@@ -900,36 +900,36 @@ void animatePlayer(plEntity_t* self)
             // Running
             self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
 
-            if(self->spriteIndex < PL_SP_PLAYER_WALK1 || self->spriteIndex > PL_SP_PLAYER_WALK10)
+            if(self->spriteIndex < MG_SP_PLAYER_WALK1 || self->spriteIndex > MG_SP_PLAYER_WALK10)
             {
-                self->spriteIndex = PL_SP_PLAYER_WALK1;
+                self->spriteIndex = MG_SP_PLAYER_WALK1;
             }
             else if (self->gameData->frameCount % (10 - (abs(self->xspeed) >> 1)) == 0)
             {
                 self->spriteIndex++;
-                if(self->spriteIndex > PL_SP_PLAYER_WALK10)
+                if(self->spriteIndex > MG_SP_PLAYER_WALK10)
                 {
-                    self->spriteIndex = PL_SP_PLAYER_WALK1;
+                    self->spriteIndex = MG_SP_PLAYER_WALK1;
                 }
             }
         }
         else
         {
-            self->spriteIndex = PL_SP_PLAYER_SLIDE;
+            self->spriteIndex = MG_SP_PLAYER_SLIDE;
         }
     }
     else
     {
         // Standing
-        self->spriteIndex = PL_SP_PLAYER_IDLE;
+        self->spriteIndex = MG_SP_PLAYER_IDLE;
     }
 }
 
-void pl_detectEntityCollisions(plEntity_t* self)
+void mg_detectEntityCollisions(mgEntity_t* self)
 {
     /*for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
-        plEntity_t* checkEntity = &(self->entityManager->entities[i]);
+        mgEntity_t* checkEntity = &(self->entityManager->entities[i]);
         if (checkEntity->active && checkEntity != self)
         {
             uint32_t dist = abs(self->x - checkEntity->x) + abs(self->y - checkEntity->y);
@@ -941,7 +941,7 @@ void pl_detectEntityCollisions(plEntity_t* self)
         }
     }*/
 
-    plSprite_t* selfSprite = &(self->tilemap->wsgManager->sprites[self->spriteIndex]);
+    mgSprite_t* selfSprite = &(self->tilemap->wsgManager->sprites[self->spriteIndex]);
     const box_t* selfSpriteBox = selfSprite->hitBox;
 
     box_t selfBox;
@@ -950,8 +950,8 @@ void pl_detectEntityCollisions(plEntity_t* self)
     selfBox.x1 = (self->x >> SUBPIXEL_RESOLUTION) - selfSprite->origin->x + selfSpriteBox->x1;
     selfBox.y1 = (self->y >> SUBPIXEL_RESOLUTION) - selfSprite->origin->y + selfSpriteBox->y1;
 
-    plEntity_t* checkEntity;
-    plSprite_t* checkEntitySprite;
+    mgEntity_t* checkEntity;
+    mgSprite_t* checkEntitySprite;
     const box_t* checkEntitySpriteBox;
     box_t checkEntityBox;
 
@@ -980,11 +980,11 @@ void pl_detectEntityCollisions(plEntity_t* self)
     }
 }
 
-void pl_playerCollisionHandler(plEntity_t* self, plEntity_t* other)
+void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
 {
     switch (other->type)
     {
-        case plEntity_tEST:
+        case mgEntity_tEST:
         case ENTITY_DUST_BUNNY:
         case ENTITY_WASP:
         case ENTITY_BUSH_2:
@@ -998,7 +998,7 @@ void pl_playerCollisionHandler(plEntity_t* self, plEntity_t* other)
 
             if (self->y < other->y || self->yspeed > 0)
             {
-                pl_scorePoints(self->gameData, other->scoreValue);
+                mg_scorePoints(self->gameData, other->scoreValue);
 
                 killEnemy(other);
                 soundPlaySfx(&(self->soundManager->sndSquish), BZR_LEFT);
@@ -1010,7 +1010,7 @@ void pl_playerCollisionHandler(plEntity_t* self, plEntity_t* other)
             else if (self->invincibilityFrames <= 0)
             {
                 self->hp--;
-                pl_updateLedsHpMeter(self->entityManager, self->gameData);
+                mg_updateLedsHpMeter(self->entityManager, self->gameData);
                 self->gameData->comboTimer = 0;
 
                 if (!self->gameData->debugMode && self->hp == 0)
@@ -1019,8 +1019,8 @@ void pl_playerCollisionHandler(plEntity_t* self, plEntity_t* other)
                     self->type                  = ENTITY_DEAD;
                     self->xspeed                = 0;
                     self->yspeed                = -60;
-                    self->spriteIndex           = PL_SP_PLAYER_HURT;
-                    self->gameData->changeState = PL_ST_DEAD;
+                    self->spriteIndex           = MG_SP_PLAYER_HURT;
+                    self->gameData->changeState = MG_ST_DEAD;
                     self->gravityEnabled        = true;
                     self->falling               = true;
                 }
@@ -1039,13 +1039,13 @@ void pl_playerCollisionHandler(plEntity_t* self, plEntity_t* other)
         case ENTITY_WARP:
         {
             // Execute warp
-            self->x = TO_SUBPIXEL_COORDS(self->tilemap->warps[other->jumpPower].x * PL_TILESIZE + PL_HALF_TILESIZE);
-            self->y = TO_SUBPIXEL_COORDS(self->tilemap->warps[other->jumpPower].y * PL_TILESIZE + PL_HALF_TILESIZE);
+            self->x = TO_SUBPIXEL_COORDS(self->tilemap->warps[other->jumpPower].x * MG_TILESIZE + MG_HALF_TILESIZE);
+            self->y = TO_SUBPIXEL_COORDS(self->tilemap->warps[other->jumpPower].y * MG_TILESIZE + MG_HALF_TILESIZE);
             self->falling = true;
-            pl_viewFollowEntity(self->tilemap, self->entityManager->playerEntity);
+            mg_viewFollowEntity(self->tilemap, self->entityManager->playerEntity);
 
-            pl_unlockScrolling(self->tilemap);
-            pl_deactivateAllEntities(self->entityManager, true);
+            mg_unlockScrolling(self->tilemap);
+            mg_deactivateAllEntities(self->entityManager, true);
             self->tilemap->executeTileSpawnAll = true;
             soundPlaySfx(&(self->soundManager->sndWarp), BZR_LEFT);
             break;
@@ -1057,18 +1057,18 @@ void pl_playerCollisionHandler(plEntity_t* self, plEntity_t* other)
             {
                 self->hp = 3;
             }
-            pl_scorePoints(self->gameData, 1000);
+            mg_scorePoints(self->gameData, 1000);
             soundPlaySfx(&(self->soundManager->sndPowerUp), BZR_LEFT);
-            pl_updateLedsHpMeter(self->entityManager, self->gameData);
-            pl_destroyEntity(other, false);
+            mg_updateLedsHpMeter(self->entityManager, self->gameData);
+            mg_destroyEntity(other, false);
             break;
         }
         case ENTITY_1UP:
         {
             self->gameData->lives++;
-            pl_scorePoints(self->gameData, 0);
+            mg_scorePoints(self->gameData, 0);
             soundPlaySfx(&(self->soundManager->snd1up), BZR_LEFT);
-            pl_destroyEntity(other, false);
+            mg_destroyEntity(other, false);
             break;
         }
         case ENTITY_CHECKPOINT:
@@ -1079,9 +1079,9 @@ void pl_playerCollisionHandler(plEntity_t* self, plEntity_t* other)
                 uint8_t aboveTile
                     = self->tilemap->map[(other->homeTileY - 1) * self->tilemap->mapWidth + other->homeTileX];
 
-                if (aboveTile >= PL_TILE_WARP_0 && aboveTile <= PL_TILE_WARP_F)
+                if (aboveTile >= MG_TILE_WARP_0 && aboveTile <= MG_TILE_WARP_F)
                 {
-                    self->gameData->checkpoint = aboveTile - PL_TILE_WARP_0;
+                    self->gameData->checkpoint = aboveTile - MG_TILE_WARP_0;
                     other->xDamping            = 1;
                     soundPlaySfx(&(self->soundManager->sndCheckpoint), BZR_LEFT);
                 }
@@ -1095,11 +1095,11 @@ void pl_playerCollisionHandler(plEntity_t* self, plEntity_t* other)
     }
 }
 
-void pl_enemyCollisionHandler(plEntity_t* self, plEntity_t* other)
+void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
 {
     switch (other->type)
     {
-        case plEntity_tEST:
+        case mgEntity_tEST:
         case ENTITY_DUST_BUNNY:
         case ENTITY_WASP:
         case ENTITY_BUSH_2:
@@ -1119,17 +1119,17 @@ void pl_enemyCollisionHandler(plEntity_t* self, plEntity_t* other)
         case ENTITY_HIT_BLOCK:
             self->xspeed = other->xspeed * 2;
             self->yspeed = other->yspeed * 2;
-            pl_scorePoints(self->gameData, self->scoreValue);
+            mg_scorePoints(self->gameData, self->scoreValue);
             soundPlaySfx(&(self->soundManager->sndSquish), BZR_LEFT);
             killEnemy(self);
             break;
         case ENTITY_WAVE_BALL:
             self->xspeed = other->xspeed >> 1;
             self->yspeed = -abs(other->xspeed >> 1);
-            pl_scorePoints(self->gameData, self->scoreValue);
+            mg_scorePoints(self->gameData, self->scoreValue);
             soundPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
             killEnemy(self);
-            pl_destroyShot(other);
+            mg_destroyShot(other);
             break;
         default:
         {
@@ -1138,70 +1138,70 @@ void pl_enemyCollisionHandler(plEntity_t* self, plEntity_t* other)
     }
 }
 
-void pl_dummyCollisionHandler(plEntity_t* self, plEntity_t* other)
+void mg_dummyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
 {
     return;
 }
 
-bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
+bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
     switch (tileId)
     {
-        case PL_TILE_CONTAINER_1:
-        case PL_TILE_BRICK_BLOCK:
-        case PL_TILE_INVISIBLE_CONTAINER:
-        case PL_TILE_BOUNCE_BLOCK:
+        case MG_TILE_CONTAINER_1:
+        case MG_TILE_BRICK_BLOCK:
+        case MG_TILE_INVISIBLE_CONTAINER:
+        case MG_TILE_BOUNCE_BLOCK:
         {
-            plEntity_t* hitBlock
-                = pl_createEntity(self->entityManager, ENTITY_HIT_BLOCK, (tx * PL_TILESIZE) + PL_HALF_TILESIZE,
-                                  (ty * PL_TILESIZE) + PL_HALF_TILESIZE);
+            mgEntity_t* hitBlock
+                = mg_createEntity(self->entityManager, ENTITY_HIT_BLOCK, (tx * MG_TILESIZE) + MG_HALF_TILESIZE,
+                                  (ty * MG_TILESIZE) + MG_HALF_TILESIZE);
 
             if (hitBlock != NULL)
             {
-                pl_setTile(self->tilemap, tx, ty, PL_TILE_INVISIBLE_BLOCK);
+                mg_setTile(self->tilemap, tx, ty, MG_TILE_INVISIBLE_BLOCK);
                 hitBlock->homeTileX = tx;
                 hitBlock->homeTileY = ty;
                 hitBlock->jumpPower = tileId;
-                if (tileId == PL_TILE_BRICK_BLOCK)
+                if (tileId == MG_TILE_BRICK_BLOCK)
                 {
-                    hitBlock->spriteIndex = PL_SP_HITBLOCK_BRICKS;
+                    hitBlock->spriteIndex = MG_SP_HITBLOCK_BRICKS;
                     if (abs(self->xspeed) > 51 && self->yspeed <= 0)
                     {
                         hitBlock->yDamping = 1;
                     }
                 }
 
-                if (tileId == PL_TILE_BOUNCE_BLOCK)
+                if (tileId == MG_TILE_BOUNCE_BLOCK)
                 {
-                    hitBlock->spriteIndex = PL_SP_BOUNCE_BLOCK;
+                    hitBlock->spriteIndex = MG_SP_BOUNCE_BLOCK;
                 }
 
                 switch (direction)
                 {
                     case 0:
                         hitBlock->xspeed = -24;
-                        if (tileId == PL_TILE_BOUNCE_BLOCK)
+                        if (tileId == MG_TILE_BOUNCE_BLOCK)
                         {
                             self->xspeed = 48;
                         }
                         break;
                     case 1:
                         hitBlock->xspeed = 24;
-                        if (tileId == PL_TILE_BOUNCE_BLOCK)
+                        if (tileId == MG_TILE_BOUNCE_BLOCK)
                         {
                             self->xspeed = -48;
                         }
                         break;
                     case 2:
                         hitBlock->yspeed = -48;
-                        if (tileId == PL_TILE_BOUNCE_BLOCK)
+                        if (tileId == MG_TILE_BOUNCE_BLOCK)
                         {
                             self->yspeed = 48;
                         }
                         break;
                     case 4:
-                        hitBlock->yspeed = (tileId == PL_TILE_BRICK_BLOCK) ? 16 : 24;
-                        if (tileId == PL_TILE_BOUNCE_BLOCK)
+                        hitBlock->yspeed = (tileId == MG_TILE_BRICK_BLOCK) ? 16 : 24;
+                        if (tileId == MG_TILE_BOUNCE_BLOCK)
                         {
                             self->yspeed = -64;
                             if (self->gameData->btnState & PB_A)
@@ -1218,79 +1218,79 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
             }
             break;
         }
-        case PL_TILE_GOAL_100PTS:
+        case MG_TILE_GOAL_100PTS:
         {
             if (direction == 4)
             {
-                pl_scorePoints(self->gameData, 100);
+                mg_scorePoints(self->gameData, 100);
                 soundStop(true);
                 soundPlaySfx(&(self->soundManager->sndLevelClearD), BZR_LEFT);
-                self->spriteIndex           = PL_SP_PLAYER_WIN;
-                self->updateFunction        = &pl_updateDummy;
-                self->gameData->changeState = PL_ST_LEVEL_CLEAR;
+                self->spriteIndex           = MG_SP_PLAYER_WIN;
+                self->updateFunction        = &mg_updateDummy;
+                self->gameData->changeState = MG_ST_LEVEL_CLEAR;
             }
             break;
         }
-        case PL_TILE_GOAL_500PTS:
+        case MG_TILE_GOAL_500PTS:
         {
             if (direction == 4)
             {
-                pl_scorePoints(self->gameData, 500);
+                mg_scorePoints(self->gameData, 500);
                 soundStop(true);
                 soundPlaySfx(&(self->soundManager->sndLevelClearC), BZR_LEFT);
-                self->spriteIndex           = PL_SP_PLAYER_WIN;
-                self->updateFunction        = &pl_updateDummy;
-                self->gameData->changeState = PL_ST_LEVEL_CLEAR;
+                self->spriteIndex           = MG_SP_PLAYER_WIN;
+                self->updateFunction        = &mg_updateDummy;
+                self->gameData->changeState = MG_ST_LEVEL_CLEAR;
             }
             break;
         }
-        case PL_TILE_GOAL_1000PTS:
+        case MG_TILE_GOAL_1000PTS:
         {
             if (direction == 4)
             {
-                pl_scorePoints(self->gameData, 1000);
+                mg_scorePoints(self->gameData, 1000);
                 soundStop(true);
                 soundPlaySfx(&(self->soundManager->sndLevelClearB), BZR_LEFT);
-                self->spriteIndex           = PL_SP_PLAYER_WIN;
-                self->updateFunction        = &pl_updateDummy;
-                self->gameData->changeState = PL_ST_LEVEL_CLEAR;
+                self->spriteIndex           = MG_SP_PLAYER_WIN;
+                self->updateFunction        = &mg_updateDummy;
+                self->gameData->changeState = MG_ST_LEVEL_CLEAR;
             }
             break;
         }
-        case PL_TILE_GOAL_2000PTS:
+        case MG_TILE_GOAL_2000PTS:
         {
             if (direction == 4)
             {
-                pl_scorePoints(self->gameData, 2000);
+                mg_scorePoints(self->gameData, 2000);
                 soundStop(true);
                 soundPlaySfx(&(self->soundManager->sndLevelClearA), BZR_LEFT);
-                self->spriteIndex           = PL_SP_PLAYER_WIN;
-                self->updateFunction        = &pl_updateDummy;
-                self->gameData->changeState = PL_ST_LEVEL_CLEAR;
+                self->spriteIndex           = MG_SP_PLAYER_WIN;
+                self->updateFunction        = &mg_updateDummy;
+                self->gameData->changeState = MG_ST_LEVEL_CLEAR;
             }
             break;
         }
-        case PL_TILE_GOAL_5000PTS:
+        case MG_TILE_GOAL_5000PTS:
         {
             if (direction == 4)
             {
-                pl_scorePoints(self->gameData, 5000);
+                mg_scorePoints(self->gameData, 5000);
                 soundStop(true);
                 soundPlaySfx(&(self->soundManager->sndLevelClearS), BZR_LEFT);
-                self->spriteIndex           = PL_SP_PLAYER_WIN;
-                self->updateFunction        = &pl_updateDummy;
-                self->gameData->changeState = PL_ST_LEVEL_CLEAR;
+                self->spriteIndex           = MG_SP_PLAYER_WIN;
+                self->updateFunction        = &mg_updateDummy;
+                self->gameData->changeState = MG_ST_LEVEL_CLEAR;
             }
             break;
         }
-        case PL_TILE_COIN_1 ... PL_TILE_COIN_3:
+        case MG_TILE_COIN_1 ... MG_TILE_COIN_3:
         {
-            pl_setTile(self->tilemap, tx, ty, PL_TILE_EMPTY);
+            mg_setTile(self->tilemap, tx, ty, MG_TILE_EMPTY);
             addCoins(self->gameData, 1);
-            pl_scorePoints(self->gameData, 50);
+            mg_scorePoints(self->gameData, 50);
             break;
         }
-        case PL_TILE_LADDER:
+        case MG_TILE_LADDER:
         {
             if (self->gravityEnabled)
             {
@@ -1305,7 +1305,7 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
         }
     }
 
-    if (pl_isSolid(tileId))
+    if (mg_isSolid(tileId))
     {
         switch (direction)
         {
@@ -1334,38 +1334,38 @@ bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
     return false;
 }
 
-bool pl_enemyTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
+bool mg_enemyTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
     switch (tileId)
     {
-        case PL_TILE_BOUNCE_BLOCK:
+        case MG_TILE_BOUNCE_BLOCK:
         {
             switch (direction)
             {
                 case 0:
                     // hitBlock->xspeed = -64;
-                    if (tileId == PL_TILE_BOUNCE_BLOCK)
+                    if (tileId == MG_TILE_BOUNCE_BLOCK)
                     {
                         self->xspeed = 48;
                     }
                     break;
                 case 1:
                     // hitBlock->xspeed = 64;
-                    if (tileId == PL_TILE_BOUNCE_BLOCK)
+                    if (tileId == MG_TILE_BOUNCE_BLOCK)
                     {
                         self->xspeed = -48;
                     }
                     break;
                 case 2:
                     // hitBlock->yspeed = -128;
-                    if (tileId == PL_TILE_BOUNCE_BLOCK)
+                    if (tileId == MG_TILE_BOUNCE_BLOCK)
                     {
                         self->yspeed = 48;
                     }
                     break;
                 case 4:
-                    // hitBlock->yspeed = (tileId == PL_TILEBRICK_BLOCK) ? 32 : 64;
-                    if (tileId == PL_TILE_BOUNCE_BLOCK)
+                    // hitBlock->yspeed = (tileId == MG_TILEBRICK_BLOCK) ? 32 : 64;
+                    if (tileId == MG_TILE_BOUNCE_BLOCK)
                     {
                         self->yspeed = -48;
                     }
@@ -1381,7 +1381,7 @@ bool pl_enemyTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, 
         }
     }
 
-    if (pl_isSolid(tileId))
+    if (mg_isSolid(tileId))
     {
         switch (direction)
         {
@@ -1409,65 +1409,65 @@ bool pl_enemyTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, 
     return false;
 }
 
-bool pl_dummyTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
+bool mg_dummyTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
     return false;
 }
 
-void dieWhenFallingOffScreen(plEntity_t* self)
+void dieWhenFallingOffScreen(mgEntity_t* self)
 {
-    uint16_t deathBoundary = (self->tilemap->mapOffsetY + PL_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD);
+    uint16_t deathBoundary = (self->tilemap->mapOffsetY + MG_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD);
     if ((TO_PIXEL_COORDS(self->y) > deathBoundary)
         && (TO_PIXEL_COORDS(self->y) < deathBoundary + DESPAWN_THRESHOLD))
     {
         self->hp = 0;
-        pl_updateLedsHpMeter(self->entityManager, self->gameData);
-        self->gameData->changeState = PL_ST_DEAD;
-        pl_destroyEntity(self, true);
+        mg_updateLedsHpMeter(self->entityManager, self->gameData);
+        self->gameData->changeState = MG_ST_DEAD;
+        mg_destroyEntity(self, true);
     }
 }
 
-void pl_updateDummy(plEntity_t* self)
+void mg_updateDummy(mgEntity_t* self)
 {
     // Do nothing, because that's what dummies do!
 }
 
-void updateScrollLockLeft(plEntity_t* self)
+void updateScrollLockLeft(mgEntity_t* self)
 {
     self->tilemap->minMapOffsetX = TO_PIXEL_COORDS(self->x) - 8;
-    pl_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
-    pl_destroyEntity(self, true);
+    mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
+    mg_destroyEntity(self, true);
 }
 
-void updateScrollLockRight(plEntity_t* self)
+void updateScrollLockRight(mgEntity_t* self)
 {
-    self->tilemap->maxMapOffsetX = TO_PIXEL_COORDS(self->x) + 8 - PL_TILEMAP_DISPLAY_WIDTH_PIXELS;
-    pl_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
-    pl_destroyEntity(self, true);
+    self->tilemap->maxMapOffsetX = TO_PIXEL_COORDS(self->x) + 8 - MG_TILEMAP_DISPLAY_WIDTH_PIXELS;
+    mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
+    mg_destroyEntity(self, true);
 }
 
-void updateScrollLockUp(plEntity_t* self)
+void updateScrollLockUp(mgEntity_t* self)
 {
     self->tilemap->minMapOffsetY = TO_PIXEL_COORDS(self->y) - 8;
-    pl_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
-    pl_destroyEntity(self, true);
+    mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
+    mg_destroyEntity(self, true);
 }
 
-void updateScrollLockDown(plEntity_t* self)
+void updateScrollLockDown(mgEntity_t* self)
 {
-    self->tilemap->maxMapOffsetY = TO_PIXEL_COORDS(self->y) + 8 - PL_TILEMAP_DISPLAY_HEIGHT_PIXELS;
-    pl_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
-    pl_destroyEntity(self, true);
+    self->tilemap->maxMapOffsetY = TO_PIXEL_COORDS(self->y) + 8 - MG_TILEMAP_DISPLAY_HEIGHT_PIXELS;
+    mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
+    mg_destroyEntity(self, true);
 }
 
-void updateScrollUnlock(plEntity_t* self)
+void updateScrollUnlock(mgEntity_t* self)
 {
-    pl_unlockScrolling(self->tilemap);
-    pl_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
-    pl_destroyEntity(self, true);
+    mg_unlockScrolling(self->tilemap);
+    mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
+    mg_destroyEntity(self, true);
 }
 
-void updateEntityDead(plEntity_t* self)
+void updateEntityDead(mgEntity_t* self)
 {
     applyGravity(self);
     self->x += self->xspeed;
@@ -1476,54 +1476,54 @@ void updateEntityDead(plEntity_t* self)
     despawnWhenOffscreen(self);
 }
 
-void updatePowerUp(plEntity_t* self)
+void updatePowerUp(mgEntity_t* self)
 {
     if (self->gameData->frameCount % 10 == 0)
     {
         self->spriteIndex
-            = ((self->entityManager->playerEntity->hp < 2) ? PL_SP_GAMING_1 : PL_SP_MUSIC_1) + ((self->spriteIndex + 1) % 3);
+            = ((self->entityManager->playerEntity->hp < 2) ? MG_SP_GAMING_1 : MG_SP_MUSIC_1) + ((self->spriteIndex + 1) % 3);
     }
 
-    pl_moveEntityWithTileCollisions(self);
+    mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
     despawnWhenOffscreen(self);
 }
 
-void update1up(plEntity_t* self)
+void update1up(mgEntity_t* self)
 {
     if (self->gameData->frameCount % 10 == 0)
     {
-        self->spriteIndex = PL_SP_1UP_1 + ((self->spriteIndex + 1) % 3);
+        self->spriteIndex = MG_SP_1UP_1 + ((self->spriteIndex + 1) % 3);
     }
 
-    pl_moveEntityWithTileCollisions(self);
+    mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
     despawnWhenOffscreen(self);
 }
 
-void updateWarp(plEntity_t* self)
+void updateWarp(mgEntity_t* self)
 {
     if (self->gameData->frameCount % 10 == 0)
     {
-        self->spriteIndex = PL_SP_WARP_1 + ((self->spriteIndex + 1) % 3);
+        self->spriteIndex = MG_SP_WARP_1 + ((self->spriteIndex + 1) % 3);
     }
 
     // Destroy self and respawn warp container block when offscreen
     if (TO_PIXEL_COORDS(self->x) < (self->tilemap->mapOffsetX - DESPAWN_THRESHOLD)
         || TO_PIXEL_COORDS(self->x)
-               > (self->tilemap->mapOffsetX + PL_TILEMAP_DISPLAY_WIDTH_PIXELS + DESPAWN_THRESHOLD)
+               > (self->tilemap->mapOffsetX + MG_TILEMAP_DISPLAY_WIDTH_PIXELS + DESPAWN_THRESHOLD)
         || TO_PIXEL_COORDS(self->y) < (self->tilemap->mapOffsetY - DESPAWN_THRESHOLD)
         || TO_PIXEL_COORDS(self->y)
-               > (self->tilemap->mapOffsetY + PL_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD))
+               > (self->tilemap->mapOffsetY + MG_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD))
     {
-        // In pl_destroyEntity, this will overflow to the correct value.
-        self->type = 128 + PL_TILE_CONTAINER_1;
+        // In mg_destroyEntity, this will overflow to the correct value.
+        self->type = 128 + MG_TILE_CONTAINER_1;
 
-        pl_destroyEntity(self, true);
+        mg_destroyEntity(self, true);
     }
 }
 
-void updateDustBunny(plEntity_t* self)
+void updateDustBunny(mgEntity_t* self)
 {
     if (!self->falling)
     {
@@ -1540,7 +1540,7 @@ void updateDustBunny(plEntity_t* self)
                     self->falling              = true;
                     self->xDamping             = 1;
                     self->yDamping             = (1 + esp_random() % 3) * 9;
-                    self->spriteIndex          = PL_SP_DUSTBUNNY_JUMP;
+                    self->spriteIndex          = MG_SP_DUSTBUNNY_JUMP;
                     self->spriteFlipHorizontal = directionToPlayer;
                     break;
                 }
@@ -1548,7 +1548,7 @@ void updateDustBunny(plEntity_t* self)
                 {
                     self->xDamping             = 0;
                     self->yDamping             = 30;
-                    self->spriteIndex          = PL_SP_DUSTBUNNY_CHARGE;
+                    self->spriteIndex          = MG_SP_DUSTBUNNY_CHARGE;
                     self->spriteFlipHorizontal = directionToPlayer;
                     break;
                 }
@@ -1560,12 +1560,12 @@ void updateDustBunny(plEntity_t* self)
     }
 
     despawnWhenOffscreen(self);
-    pl_moveEntityWithTileCollisions(self);
+    mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
-    pl_detectEntityCollisions(self);
+    mg_detectEntityCollisions(self);
 }
 
-void updateDustBunnyL2(plEntity_t* self)
+void updateDustBunnyL2(mgEntity_t* self)
 {
     if (!self->falling)
     {
@@ -1580,14 +1580,14 @@ void updateDustBunnyL2(plEntity_t* self)
                     self->yspeed      = (int32_t)(1 + esp_random() % 4) * -24;
                     self->xDamping    = 1;
                     self->yDamping    = (esp_random() % 3) * 6;
-                    self->spriteIndex = PL_SP_DUSTBUNNY_L2_JUMP;
+                    self->spriteIndex = MG_SP_DUSTBUNNY_L2_JUMP;
                     break;
                 }
                 case 1:
                 {
                     self->xDamping    = 0;
                     self->yDamping    = 15;
-                    self->spriteIndex = PL_SP_DUSTBUNNY_L2_CHARGE;
+                    self->spriteIndex = MG_SP_DUSTBUNNY_L2_CHARGE;
                     break;
                 }
                 default:
@@ -1598,12 +1598,12 @@ void updateDustBunnyL2(plEntity_t* self)
     }
 
     despawnWhenOffscreen(self);
-    pl_moveEntityWithTileCollisions(self);
+    mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
-    pl_detectEntityCollisions(self);
+    mg_detectEntityCollisions(self);
 }
 
-void updateDustBunnyL3(plEntity_t* self)
+void updateDustBunnyL3(mgEntity_t* self)
 {
     if (!self->falling)
     {
@@ -1620,7 +1620,7 @@ void updateDustBunnyL3(plEntity_t* self)
                     self->yspeed               = (int32_t)(1 + esp_random() % 4) * -24;
                     self->xDamping             = 1;
                     self->yDamping             = (esp_random() % 3) * 30;
-                    self->spriteIndex          = PL_SP_DUSTBUNNY_L3_JUMP;
+                    self->spriteIndex          = MG_SP_DUSTBUNNY_L3_JUMP;
                     self->spriteFlipHorizontal = directionToPlayer;
                     break;
                 }
@@ -1628,7 +1628,7 @@ void updateDustBunnyL3(plEntity_t* self)
                 {
                     self->xDamping             = 0;
                     self->yDamping             = 30;
-                    self->spriteIndex          = PL_SP_DUSTBUNNY_L3_CHARGE;
+                    self->spriteIndex          = MG_SP_DUSTBUNNY_L3_CHARGE;
                     self->spriteFlipHorizontal = directionToPlayer;
                     break;
                 }
@@ -1640,43 +1640,43 @@ void updateDustBunnyL3(plEntity_t* self)
     }
 
     despawnWhenOffscreen(self);
-    pl_moveEntityWithTileCollisions(self);
+    mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
-    pl_detectEntityCollisions(self);
+    mg_detectEntityCollisions(self);
 }
 
-bool dustBunnyTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
+bool dustBunnyTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
     switch (tileId)
     {
-        case PL_TILE_BOUNCE_BLOCK:
+        case MG_TILE_BOUNCE_BLOCK:
         {
             switch (direction)
             {
                 case 0:
                     // hitBlock->xspeed = -64;
-                    if (tileId == PL_TILE_BOUNCE_BLOCK)
+                    if (tileId == MG_TILE_BOUNCE_BLOCK)
                     {
                         self->xspeed = 48;
                     }
                     break;
                 case 1:
                     // hitBlock->xspeed = 64;
-                    if (tileId == PL_TILE_BOUNCE_BLOCK)
+                    if (tileId == MG_TILE_BOUNCE_BLOCK)
                     {
                         self->xspeed = -48;
                     }
                     break;
                 case 2:
                     // hitBlock->yspeed = -128;
-                    if (tileId == PL_TILE_BOUNCE_BLOCK)
+                    if (tileId == MG_TILE_BOUNCE_BLOCK)
                     {
                         self->yspeed = 48;
                     }
                     break;
                 case 4:
-                    // hitBlock->yspeed = (tileId == PL_TILEBRICK_BLOCK) ? 32 : 64;
-                    if (tileId == PL_TILE_BOUNCE_BLOCK)
+                    // hitBlock->yspeed = (tileId == MG_TILEBRICK_BLOCK) ? 32 : 64;
+                    if (tileId == MG_TILE_BOUNCE_BLOCK)
                     {
                         self->xDamping = 0;
                         self->xspeed   = 0;
@@ -1696,7 +1696,7 @@ bool dustBunnyTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
         }
     }
 
-    if (pl_isSolid(tileId))
+    if (mg_isSolid(tileId))
     {
         switch (direction)
         {
@@ -1714,7 +1714,7 @@ bool dustBunnyTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
                 self->falling     = false;
                 self->yspeed      = 0;
                 self->xspeed      = 0;
-                self->spriteIndex = PL_SP_DUSTBUNNY_IDLE;
+                self->spriteIndex = MG_SP_DUSTBUNNY_IDLE;
                 break;
             default: // Should never hit
                 return false;
@@ -1726,38 +1726,38 @@ bool dustBunnyTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx,
     return false;
 }
 
-bool dustBunnyL2TileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
+bool dustBunnyL2TileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
     switch (tileId)
     {
-        case PL_TILE_BOUNCE_BLOCK:
+        case MG_TILE_BOUNCE_BLOCK:
         {
             switch (direction)
             {
                 case 0:
                     // hitBlock->xspeed = -64;
-                    if (tileId == PL_TILE_BOUNCE_BLOCK)
+                    if (tileId == MG_TILE_BOUNCE_BLOCK)
                     {
                         self->xspeed = 48;
                     }
                     break;
                 case 1:
                     // hitBlock->xspeed = 64;
-                    if (tileId == PL_TILE_BOUNCE_BLOCK)
+                    if (tileId == MG_TILE_BOUNCE_BLOCK)
                     {
                         self->xspeed = -48;
                     }
                     break;
                 case 2:
                     // hitBlock->yspeed = -128;
-                    if (tileId == PL_TILE_BOUNCE_BLOCK)
+                    if (tileId == MG_TILE_BOUNCE_BLOCK)
                     {
                         self->yspeed = 48;
                     }
                     break;
                 case 4:
-                    // hitBlock->yspeed = (tileId == PL_TILEBRICK_BLOCK) ? 32 : 64;
-                    if (tileId == PL_TILE_BOUNCE_BLOCK)
+                    // hitBlock->yspeed = (tileId == MG_TILEBRICK_BLOCK) ? 32 : 64;
+                    if (tileId == MG_TILE_BOUNCE_BLOCK)
                     {
                         self->xDamping = 0;
                         self->xspeed   = 0;
@@ -1777,7 +1777,7 @@ bool dustBunnyL2TileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t t
         }
     }
 
-    if (pl_isSolid(tileId))
+    if (mg_isSolid(tileId))
     {
         switch (direction)
         {
@@ -1797,7 +1797,7 @@ bool dustBunnyL2TileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t t
                 self->falling     = false;
                 self->yspeed      = 0;
                 self->xspeed      = 0;
-                self->spriteIndex = PL_SP_DUSTBUNNY_L2_IDLE;
+                self->spriteIndex = MG_SP_DUSTBUNNY_L2_IDLE;
                 break;
             default: // Should never hit
                 return false;
@@ -1809,38 +1809,38 @@ bool dustBunnyL2TileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t t
     return false;
 }
 
-bool dustBunnyL3TileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
+bool dustBunnyL3TileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
     switch (tileId)
     {
-        case PL_TILE_BOUNCE_BLOCK:
+        case MG_TILE_BOUNCE_BLOCK:
         {
             switch (direction)
             {
                 case 0:
                     // hitBlock->xspeed = -64;
-                    if (tileId == PL_TILE_BOUNCE_BLOCK)
+                    if (tileId == MG_TILE_BOUNCE_BLOCK)
                     {
                         self->xspeed = 48;
                     }
                     break;
                 case 1:
                     // hitBlock->xspeed = 64;
-                    if (tileId == PL_TILE_BOUNCE_BLOCK)
+                    if (tileId == MG_TILE_BOUNCE_BLOCK)
                     {
                         self->xspeed = -48;
                     }
                     break;
                 case 2:
                     // hitBlock->yspeed = -128;
-                    if (tileId == PL_TILE_BOUNCE_BLOCK)
+                    if (tileId == MG_TILE_BOUNCE_BLOCK)
                     {
                         self->yspeed = 48;
                     }
                     break;
                 case 4:
-                    // hitBlock->yspeed = (tileId == PL_TILEBRICK_BLOCK) ? 32 : 64;
-                    if (tileId == PL_TILE_BOUNCE_BLOCK)
+                    // hitBlock->yspeed = (tileId == MG_TILEBRICK_BLOCK) ? 32 : 64;
+                    if (tileId == MG_TILE_BOUNCE_BLOCK)
                     {
                         self->xDamping = 0;
                         self->xspeed   = 0;
@@ -1860,7 +1860,7 @@ bool dustBunnyL3TileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t t
         }
     }
 
-    if (pl_isSolid(tileId))
+    if (mg_isSolid(tileId))
     {
         switch (direction)
         {
@@ -1878,7 +1878,7 @@ bool dustBunnyL3TileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t t
                 self->falling     = false;
                 self->yspeed      = 0;
                 self->xspeed      = 0;
-                self->spriteIndex = PL_SP_DUSTBUNNY_L3_IDLE;
+                self->spriteIndex = MG_SP_DUSTBUNNY_L3_IDLE;
                 break;
             default: // Should never hit
                 return false;
@@ -1890,14 +1890,14 @@ bool dustBunnyL3TileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t t
     return false;
 }
 
-void updateWasp(plEntity_t* self)
+void updateWasp(mgEntity_t* self)
 {
     switch (self->xDamping)
     {
         case 0:
             if (self->gameData->frameCount % 5 == 0)
             {
-                self->spriteIndex = PL_SP_WASP_1 + ((self->spriteIndex + 1) % 2);
+                self->spriteIndex = MG_SP_WASP_1 + ((self->spriteIndex + 1) % 2);
             }
             self->yDamping--;
 
@@ -1907,7 +1907,7 @@ void updateWasp(plEntity_t* self)
                 self->xDamping       = 1;
                 self->gravityEnabled = true;
                 self->falling        = true;
-                self->spriteIndex    = PL_SP_WASP_DIVE;
+                self->spriteIndex    = MG_SP_WASP_DIVE;
                 self->xspeed         = 0;
                 self->yspeed         = 64;
             }
@@ -1929,11 +1929,11 @@ void updateWasp(plEntity_t* self)
         case 2:
             if (self->gameData->frameCount % 2 == 0)
             {
-                self->spriteIndex = PL_SP_WASP_1 + ((self->spriteIndex + 1) % 2);
+                self->spriteIndex = MG_SP_WASP_1 + ((self->spriteIndex + 1) % 2);
             }
 
             self->yDamping--;
-            if (self->yDamping < 0 || self->y <= (TO_SUBPIXEL_COORDS(self->homeTileY * PL_TILESIZE + 8)))
+            if (self->yDamping < 0 || self->y <= (TO_SUBPIXEL_COORDS(self->homeTileY * MG_TILESIZE + 8)))
             {
                 self->xDamping = 0;
                 self->xspeed   = (self->spriteFlipHorizontal) ? -16 : 16;
@@ -1945,19 +1945,19 @@ void updateWasp(plEntity_t* self)
     }
 
     despawnWhenOffscreen(self);
-    pl_moveEntityWithTileCollisions(self);
+    mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
-    pl_detectEntityCollisions(self);
+    mg_detectEntityCollisions(self);
 }
 
-void updateWaspL2(plEntity_t* self)
+void updateWaspL2(mgEntity_t* self)
 {
     switch (self->xDamping)
     {
         case 0:
             if (self->gameData->frameCount % 5 == 0)
             {
-                self->spriteIndex = PL_SP_WASP_L2_1 + ((self->spriteIndex) % 2);
+                self->spriteIndex = MG_SP_WASP_L2_1 + ((self->spriteIndex) % 2);
             }
 
             self->yDamping--;
@@ -1974,7 +1974,7 @@ void updateWaspL2(plEntity_t* self)
                 self->xDamping       = 1;
                 self->gravityEnabled = true;
                 self->falling        = true;
-                self->spriteIndex    = PL_SP_WASP_L2_DIVE;
+                self->spriteIndex    = MG_SP_WASP_L2_DIVE;
                 self->xspeed         = 0;
                 self->yspeed         = 96;
             }
@@ -1997,11 +1997,11 @@ void updateWaspL2(plEntity_t* self)
         case 2:
             if (self->gameData->frameCount % 2 == 0)
             {
-                self->spriteIndex = PL_SP_WASP_L2_1 + ((self->spriteIndex) % 2);
+                self->spriteIndex = MG_SP_WASP_L2_1 + ((self->spriteIndex) % 2);
             }
 
             self->yDamping--;
-            if (self->yDamping < 0 || self->y <= (TO_SUBPIXEL_COORDS(self->homeTileY * PL_TILESIZE + 8)))
+            if (self->yDamping < 0 || self->y <= (TO_SUBPIXEL_COORDS(self->homeTileY * MG_TILESIZE + 8)))
             {
                 self->xDamping = 0;
                 self->xspeed   = (self->spriteFlipHorizontal) ? -24 : 24;
@@ -2014,19 +2014,19 @@ void updateWaspL2(plEntity_t* self)
     }
 
     despawnWhenOffscreen(self);
-    pl_moveEntityWithTileCollisions(self);
+    mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
-    pl_detectEntityCollisions(self);
+    mg_detectEntityCollisions(self);
 }
 
-void updateWaspL3(plEntity_t* self)
+void updateWaspL3(mgEntity_t* self)
 {
     switch (self->xDamping)
     {
         case 0:
             if (self->gameData->frameCount % 5 == 0)
             {
-                self->spriteIndex = PL_SP_WASP_L3_1 + ((self->spriteIndex + 1) % 2);
+                self->spriteIndex = MG_SP_WASP_L3_1 + ((self->spriteIndex + 1) % 2);
             }
 
             self->yDamping--;
@@ -2043,7 +2043,7 @@ void updateWaspL3(plEntity_t* self)
                 self->xDamping       = 1;
                 self->gravityEnabled = true;
                 self->falling        = true;
-                self->spriteIndex    = PL_SP_WASP_L3_DIVE;
+                self->spriteIndex    = MG_SP_WASP_L3_DIVE;
                 self->xspeed         = 0;
                 self->yspeed         = 128;
             }
@@ -2066,11 +2066,11 @@ void updateWaspL3(plEntity_t* self)
         case 2:
             if (self->gameData->frameCount % 2 == 0)
             {
-                self->spriteIndex = PL_SP_WASP_L3_1 + ((self->spriteIndex + 1) % 2);
+                self->spriteIndex = MG_SP_WASP_L3_1 + ((self->spriteIndex + 1) % 2);
             }
 
             self->yDamping--;
-            if (self->yDamping < 0 || self->y <= (TO_SUBPIXEL_COORDS(self->homeTileY * PL_TILESIZE + 8)))
+            if (self->yDamping < 0 || self->y <= (TO_SUBPIXEL_COORDS(self->homeTileY * MG_TILESIZE + 8)))
             {
                 self->xDamping = 0;
                 self->xspeed   = (self->spriteFlipHorizontal) ? -32 : 32;
@@ -2083,16 +2083,16 @@ void updateWaspL3(plEntity_t* self)
     }
 
     despawnWhenOffscreen(self);
-    pl_moveEntityWithTileCollisions(self);
+    mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
-    pl_detectEntityCollisions(self);
+    mg_detectEntityCollisions(self);
 }
 
-bool waspTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
+bool waspTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
     switch (tileId)
     {
-        case PL_TILE_BOUNCE_BLOCK:
+        case MG_TILE_BOUNCE_BLOCK:
         {
             self->xDamping = 1;
             self->falling  = false;
@@ -2123,7 +2123,7 @@ bool waspTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint
         }
     }
 
-    if (pl_isSolid(tileId))
+    if (mg_isSolid(tileId))
     {
         switch (direction)
         {
@@ -2154,7 +2154,7 @@ bool waspTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint
     return false;
 }
 
-void killEnemy(plEntity_t* target)
+void killEnemy(mgEntity_t* target)
 {
     target->homeTileX          = 0;
     target->homeTileY          = 0;
@@ -2165,20 +2165,20 @@ void killEnemy(plEntity_t* target)
     target->updateFunction     = &updateEntityDead;
 }
 
-void updateBgCol(plEntity_t* self)
+void updateBgCol(mgEntity_t* self)
 {
     self->gameData->bgColor = self->xDamping;
-    pl_destroyEntity(self, true);
+    mg_destroyEntity(self, true);
 }
 
-void turnAroundAtEdgeOfTileHandler(plEntity_t* self)
+void turnAroundAtEdgeOfTileHandler(mgEntity_t* self)
 {
     self->falling = true;
     self->xspeed  = -self->xspeed;
     self->yspeed  = -self->gravity * 4;
 }
 
-void updateEnemyBushL3(plEntity_t* self)
+void updateEnemyBushL3(mgEntity_t* self)
 {
     if (self->gameData->frameCount % 10 == 0)
     {
@@ -2205,36 +2205,36 @@ void updateEnemyBushL3(plEntity_t* self)
     }
 
     despawnWhenOffscreen(self);
-    pl_moveEntityWithTileCollisions(self);
+    mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
-    pl_detectEntityCollisions(self);
+    mg_detectEntityCollisions(self);
 }
 
-void updateCheckpoint(plEntity_t* self)
+void updateCheckpoint(mgEntity_t* self)
 {
     if (self->xDamping)
     {
         if (self->gameData->frameCount % 15 == 0)
         {
-            self->spriteIndex = PL_SP_CHECKPOINT_ACTIVE_1 + ((self->spriteIndex + 1) % 2);
+            self->spriteIndex = MG_SP_CHECKPOINT_ACTIVE_1 + ((self->spriteIndex + 1) % 2);
         }
     }
 
     despawnWhenOffscreen(self);
 }
 
-void pl_playerOverlapTileHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty)
+void mg_playerOverlapTileHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty)
 {
     switch (tileId)
     {
-        case PL_TILE_COIN_1 ... PL_TILE_COIN_3:
+        case MG_TILE_COIN_1 ... MG_TILE_COIN_3:
         {
-            pl_setTile(self->tilemap, tx, ty, PL_TILE_EMPTY);
+            mg_setTile(self->tilemap, tx, ty, MG_TILE_EMPTY);
             addCoins(self->gameData, 1);
-            pl_scorePoints(self->gameData, 50);
+            mg_scorePoints(self->gameData, 50);
             break;
         }
-        case PL_TILE_LADDER:
+        case MG_TILE_LADDER:
         {
             if (self->gravityEnabled)
             {
@@ -2249,7 +2249,7 @@ void pl_playerOverlapTileHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, u
         }
     }
 
-    if (!self->gravityEnabled && tileId != PL_TILE_LADDER)
+    if (!self->gravityEnabled && tileId != MG_TILE_LADDER)
     {
         self->gravityEnabled = true;
         self->falling        = true;
@@ -2260,22 +2260,22 @@ void pl_playerOverlapTileHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, u
     }
 }
 
-void pl_defaultOverlapTileHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty)
+void mg_defaultOverlapTileHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty)
 {
     // Nothing to do.
 }
 
-void updateBgmChange(plEntity_t* self)
+void updateBgmChange(mgEntity_t* self)
 {
     self->gameData->changeBgm = self->xDamping;
-    pl_destroyEntity(self, true);
+    mg_destroyEntity(self, true);
 }
 
-void updateWaveBall(plEntity_t* self)
+void updateWaveBall(mgEntity_t* self)
 {
     if (self->gameData->frameCount % 4 == 0)
     {
-        self->spriteIndex = (PL_SP_WAVEBALL_1 + ((self->spriteIndex + 1) % 3));
+        self->spriteIndex = (MG_SP_WAVEBALL_1 + ((self->spriteIndex + 1) % 3));
     }
 
     /*if (self->gameData->frameCount % 4 == 0)
@@ -2312,7 +2312,7 @@ void updateWaveBall(plEntity_t* self)
 
     // self->yDamping++;
 
-    //pl_moveEntityWithTileCollisions(self);
+    //mg_moveEntityWithTileCollisions(self);
     //despawnWhenOffscreen(self);
 
     self->x += self->xspeed;
@@ -2320,9 +2320,9 @@ void updateWaveBall(plEntity_t* self)
 
     if (TO_PIXEL_COORDS(self->x) < (self->tilemap->mapOffsetX - DESPAWN_THRESHOLD)
         || TO_PIXEL_COORDS(self->x)
-               > (self->tilemap->mapOffsetX + PL_TILEMAP_DISPLAY_WIDTH_PIXELS + DESPAWN_THRESHOLD))
+               > (self->tilemap->mapOffsetX + MG_TILEMAP_DISPLAY_WIDTH_PIXELS + DESPAWN_THRESHOLD))
     {
-        pl_destroyShot(self);
+        mg_destroyShot(self);
     }
 
     if (self->y > 63616)
@@ -2332,33 +2332,33 @@ void updateWaveBall(plEntity_t* self)
 
     if (TO_PIXEL_COORDS(self->y) < (self->tilemap->mapOffsetY - (DESPAWN_THRESHOLD << 2))
         || TO_PIXEL_COORDS(self->y)
-               > (self->tilemap->mapOffsetY + PL_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD))
+               > (self->tilemap->mapOffsetY + MG_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD))
     {
-        pl_destroyShot(self);
+        mg_destroyShot(self);
     }
 }
 
-// bool waveBallTileCollisionHandler(plEntity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction){
+// bool waveBallTileCollisionHandler(mgEntity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction){
 //     if(self->yspeed == 0){
-//         pl_destroyEntity(self, false);
+//         mg_destroyEntity(self, false);
 //     }
 //     return false;
 // }
 
-void waveBallOverlapTileHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty)
+void waveBallOverlapTileHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty)
 {
-    if (pl_isSolid(tileId) || tileId == PL_TILE_BOUNCE_BLOCK)
+    if (mg_isSolid(tileId) || tileId == MG_TILE_BOUNCE_BLOCK)
     {
-        pl_destroyShot(self);
+        mg_destroyShot(self);
         soundPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
     }
 }
 
-void powerUpCollisionHandler(plEntity_t* self, plEntity_t* other)
+void powerUpCollisionHandler(mgEntity_t* self, mgEntity_t* other)
 {
     switch (other->type)
     {
-        case plEntity_tEST:
+        case mgEntity_tEST:
         case ENTITY_DUST_BUNNY:
         case ENTITY_WASP:
         case ENTITY_BUSH_2:
@@ -2385,21 +2385,21 @@ void powerUpCollisionHandler(plEntity_t* self, plEntity_t* other)
     }
 }
 
-void killPlayer(plEntity_t* self)
+void killPlayer(mgEntity_t* self)
 {
     self->hp = 0;
-    pl_updateLedsHpMeter(self->entityManager, self->gameData);
+    mg_updateLedsHpMeter(self->entityManager, self->gameData);
 
     self->updateFunction        = &updateEntityDead;
     self->type                  = ENTITY_DEAD;
     self->xspeed                = 0;
     self->yspeed                = -60;
-    self->spriteIndex           = PL_SP_PLAYER_HURT;
-    self->gameData->changeState = PL_ST_DEAD;
+    self->spriteIndex           = MG_SP_PLAYER_HURT;
+    self->gameData->changeState = MG_ST_DEAD;
     self->falling               = true;
 }
 
-void pl_defaultEntityDrawHandler(plEntity_t* self)
+void mg_defaultEntityDrawHandler(mgEntity_t* self)
 {
     drawWsg(self->entityManager->wsgManager->sprites[self->spriteIndex].wsg,
             (self->x >> SUBPIXEL_RESOLUTION) - self->entityManager->wsgManager->sprites[self->spriteIndex].origin->x
@@ -2409,10 +2409,10 @@ void pl_defaultEntityDrawHandler(plEntity_t* self)
             self->spriteFlipHorizontal, self->spriteFlipVertical, 0);
 }
 
-void pl_destroyShot(plEntity_t* self){
+void mg_destroyShot(mgEntity_t* self){
     if(self->linkedEntity != NULL && self->linkedEntity->active){
         self->linkedEntity->shotsFired--;
     }
 
-    pl_destroyEntity(self, false);
+    mg_destroyEntity(self, false);
 }

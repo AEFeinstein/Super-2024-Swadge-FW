@@ -1,5 +1,5 @@
-#ifndef _PL_SOUNDMANAGER_H_
-#define _PL_SOUNDMANAGER_H_
+#ifndef _MG_SOUNDMANAGER_H_
+#define _MG_SOUNDMANAGER_H_
 
 //==============================================================================
 // Includes
@@ -49,13 +49,13 @@ typedef struct
     midiFile_t sndTally;
     midiFile_t bgmGameOver;
     midiFile_t sndOuttaTime;
-} plSoundManager_t;
+} mgSoundManager_t;
 
 //==============================================================================
 // Functions
 //==============================================================================
-void pl_initializeSoundManager(plSoundManager_t* self);
-void pl_freeSoundManager(plSoundManager_t* self);
-bool pl_setBgm(plSoundManager_t* self, uint16_t newBgmIndex);
+void mg_initializeSoundManager(mgSoundManager_t* self);
+void mg_freeSoundManager(mgSoundManager_t* self);
+bool mg_setBgm(mgSoundManager_t* self, uint16_t newBgmIndex);
 
 #endif

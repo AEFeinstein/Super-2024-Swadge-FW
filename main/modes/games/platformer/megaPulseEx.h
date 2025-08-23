@@ -1,10 +1,10 @@
-#ifndef _MODE_PLATFORMER_H_
-#define _MODE_PLATFORMER_H_
+#ifndef _MEGA_PULSE_EX_H_
+#define _MEGA_PULSE_EX_H_
 //==============================================================================
 // Includes
 //==============================================================================
 
-#include "platformer_typedef.h"
+#include "mega_pulse_ex_typedef.h"
 #include "swadge2024.h"
 
 /*==============================================================================
