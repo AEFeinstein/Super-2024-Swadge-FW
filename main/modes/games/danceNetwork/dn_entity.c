@@ -1320,6 +1320,10 @@ void dn_trySelectTrack(dn_entity_t* self)
                 }
                 break;
             }
+            default:
+            {
+                break;
+            }
         }
 
 
@@ -2212,6 +2216,10 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
                     case DN_REMIX_TRACK:
                     {
                         snprintf(text, sizeof(text), "Remix a track,");
+                        break;
+                    }
+                    default:
+                    {
                         break;
                     }
                 }
