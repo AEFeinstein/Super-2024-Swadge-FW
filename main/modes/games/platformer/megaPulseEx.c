@@ -1,7 +1,7 @@
 /**
- * @file mode_platformer.c
+ * @file megaPulseEx.c
  * @author J.Vega (JVeg199X)
- * @brief Super Swadge Land (2025 Update)
+ * @brief Mega Pulse EX (JPV-MGSW-004-MG)
  * @date 2025-04-27
  *
  */
@@ -16,21 +16,21 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 
-#include "mode_platformer.h"
+#include "megaPulseEx.h"
 #include "esp_random.h"
 #include <esp_heap_caps.h>
 
-#include "platformer_typedef.h"
-#include "plWsgManager.h"
-#include "plTilemap.h"
-#include "plGameData.h"
-#include "plEntityManager.h"
-#include "plLeveldef.h"
+#include "mega_pulse_ex_typedef.h"
+#include "mgWsgManager.h"
+#include "mgTilemap.h"
+#include "mgGameData.h"
+#include "mgEntityManager.h"
+#include "mgLeveldef.h"
 
 #include "hdw-led.h"
 #include "palette.h"
 #include "hdw-nvs.h"
-#include "plSoundManager.h"
+#include "mgSoundManager.h"
 #include <inttypes.h>
 #include "mainMenu.h"
 #include "fill.h"
@@ -42,7 +42,7 @@
 #define BIGGER_SCORE 10000000UL
 #define FAST_TIME    1500 // 25 minutes
 
-const char platformerName[] = "Swadge Land";
+const char platformerName[] = "Mega Pulse EX";
 
 static const paletteColor_t highScoreNewEntryColors[4] = {c050, c055, c005, c055};
 
@@ -72,13 +72,13 @@ typedef void (*gameUpdateFuncton_t)(platformer_t* self);
 struct platformer_t
 {
     font_t radiostars;
-    plWsgManager_t wsgManager;
+    mgWsgManager_t wsgManager;
 
-    plTilemap_t tilemap;
-    plEntityManager_t entityManager;
-    plGameData_t gameData;
+    mgTilemap_t tilemap;
+    mgEntityManager_t entityManager;
+    mgGameData_t gameData;
 
-    plSoundManager_t soundManager;
+    mgSoundManager_t soundManager;
 
     uint8_t menuState;
     uint8_t menuSelection;
@@ -99,11 +99,11 @@ struct platformer_t
 //==============================================================================
 // Function Prototypes
 //==============================================================================
-void drawPlatformerHud(font_t* font, plGameData_t* gameData);
-void drawPlatformerTitleScreen(font_t* font, plGameData_t* gameData);
+void drawPlatformerHud(font_t* font, mgGameData_t* gameData);
+void drawPlatformerTitleScreen(font_t* font, mgGameData_t* gameData);
 void changeStateReadyScreen(platformer_t* self);
 void updateReadyScreen(platformer_t* self);
-void drawReadyScreen(font_t* font, plGameData_t* gameData);
+void drawReadyScreen(font_t* font, mgGameData_t* gameData);
 void changeStateGame(platformer_t* self);
 void detectGameStateChange(platformer_t* self);
 void detectBgmChange(platformer_t* self);
@@ -111,26 +111,26 @@ void changeStateDead(platformer_t* self);
 void updateDead(platformer_t* self);
 void changeStateGameOver(platformer_t* self);
 void updateGameOver(platformer_t* self);
-void drawGameOver(font_t* font, plGameData_t* gameData);
+void drawGameOver(font_t* font, mgGameData_t* gameData);
 void changeStateTitleScreen(platformer_t* self);
 void changeStateLevelClear(platformer_t* self);
 void updateLevelClear(platformer_t* self);
-void drawLevelClear(font_t* font, plGameData_t* gameData);
+void drawLevelClear(font_t* font, mgGameData_t* gameData);
 void changeStateGameClear(platformer_t* self);
 void updateGameClear(platformer_t* self);
-void drawGameClear(font_t* font, plGameData_t* gameData);
+void drawGameClear(font_t* font, mgGameData_t* gameData);
 void initializePlatformerHighScores(platformer_t* self);
 void loadPlatformerHighScores(platformer_t* self);
 void savePlatformerHighScores(platformer_t* self);
 void initializePlatformerUnlockables(platformer_t* self);
 void loadPlatformerUnlockables(platformer_t* self);
 void savePlatformerUnlockables(platformer_t* self);
-void drawPlatformerHighScores(font_t* font, platformerHighScores_t* highScores, plGameData_t* gameData);
+void drawPlatformerHighScores(font_t* font, platformerHighScores_t* highScores, mgGameData_t* gameData);
 uint8_t getHighScoreRank(platformerHighScores_t* highScores, uint32_t newScore);
 void insertScoreIntoHighScores(platformerHighScores_t* highScores, uint32_t newScore, char newInitials[], uint8_t rank);
 void changeStateNameEntry(platformer_t* self);
 void updateNameEntry(platformer_t* self);
-void drawNameEntry(font_t* font, plGameData_t* gameData, uint8_t currentInitial);
+void drawNameEntry(font_t* font, mgGameData_t* gameData, uint8_t currentInitial);
 void changeStateShowHighScores(platformer_t* self);
 void updateShowHighScores(platformer_t* self);
 void drawShowHighScores(font_t* font, uint8_t menuState);
@@ -160,7 +160,7 @@ swadgeMode_t modePlatformer = {.modeName                 = platformerName,
 
 #define NUM_LEVELS 16
 
-static const plLeveldef_t leveldef[17] = {{.filename = LEVEL_1_1_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
+static const mgLeveldef_t leveldef[17] = {{.filename = LEVEL_1_1_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
                                           {.filename = DAC_01_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
                                           {.filename = LEVEL_1_3_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
                                           {.filename = LEVEL_1_4_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
@@ -222,15 +222,15 @@ void platformerEnterMode(void)
     }
 
     loadFont(RADIOSTARS_FONT, &platformer->radiostars, false);
-    pl_initializeWsgManager(&(platformer->wsgManager));
+    mg_initializeWsgManager(&(platformer->wsgManager));
 
-    pl_initializeTileMap(&(platformer->tilemap), &(platformer->wsgManager));
-    pl_loadMapFromFile(&(platformer->tilemap), leveldef[0].filename);
+    mg_initializeTileMap(&(platformer->tilemap), &(platformer->wsgManager));
+    mg_loadMapFromFile(&(platformer->tilemap), leveldef[0].filename);
 
-    pl_initializeSoundManager(&(platformer->soundManager));
+    mg_initializeSoundManager(&(platformer->soundManager));
 
-    pl_initializeGameData(&(platformer->gameData), &(platformer->soundManager));
-    pl_initializeEntityManager(&(platformer->entityManager), &(platformer->wsgManager), &(platformer->tilemap), &(platformer->gameData),
+    mg_initializeGameData(&(platformer->gameData), &(platformer->soundManager));
+    mg_initializeEntityManager(&(platformer->entityManager), &(platformer->wsgManager), &(platformer->tilemap), &(platformer->gameData),
                                &(platformer->soundManager));
 
     platformer->tilemap.entityManager    = &(platformer->entityManager);
@@ -248,10 +248,10 @@ void platformerEnterMode(void)
 void platformerExitMode(void)
 {
     freeFont(&platformer->radiostars);
-    pl_freeWsgManager(&(platformer->wsgManager));
-    pl_freeTilemap(&(platformer->tilemap));
-    pl_freeSoundManager(&(platformer->soundManager));
-    pl_freeEntityManager(&(platformer->entityManager));
+    mg_freeWsgManager(&(platformer->wsgManager));
+    mg_freeTilemap(&(platformer->tilemap));
+    mg_freeSoundManager(&(platformer->soundManager));
+    mg_freeEntityManager(&(platformer->entityManager));
     heap_caps_free(platformer);
 }
 
@@ -292,10 +292,10 @@ void updateGame(platformer_t* self)
     // Clear the display
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
 
-    pl_updateEntities(&(self->entityManager));
+    mg_updateEntities(&(self->entityManager));
 
-    pl_drawTileMap(&(self->tilemap));
-    pl_drawEntities(&(self->entityManager));
+    mg_drawTileMap(&(self->tilemap));
+    mg_drawEntities(&(self->entityManager));
     detectGameStateChange(self);
     detectBgmChange(self);
     drawPlatformerHud(&(self->radiostars), &(self->gameData));
@@ -321,7 +321,7 @@ void updateGame(platformer_t* self)
     updateComboTimer(&(self->gameData));
 }
 
-void drawPlatformerHud(font_t* font, plGameData_t* gameData)
+void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
 {
     char coinStr[8];
     snprintf(coinStr, sizeof(coinStr) - 1, "C:%02d", gameData->coins);
@@ -373,7 +373,7 @@ void updateTitleScreen(platformer_t* self)
         {
             if (self->gameData.frameCount > 600)
             {
-                pl_resetGameDataLeds(&(self->gameData));
+                mg_resetGameDataLeds(&(self->gameData));
                 changeStateShowHighScores(self);
             }
 
@@ -436,7 +436,7 @@ void updateTitleScreen(platformer_t* self)
                             self->gameData.level = 1;
                         }*/
 
-                        pl_initializeGameDataFromTitleScreen(&(self->gameData));
+                        mg_initializeGameDataFromTitleScreen(&(self->gameData));
                         changeStateReadyScreen(self);
                         break;
                     }
@@ -607,7 +607,7 @@ void updateTitleScreen(platformer_t* self)
             break;
     }
 
-    pl_scrollTileMap(&(platformer->tilemap), 1, 0);
+    mg_scrollTileMap(&(platformer->tilemap), 1, 0);
     if (self->tilemap.mapOffsetX >= self->tilemap.maxMapOffsetX && self->gameData.frameCount > 58)
     {
         self->tilemap.mapOffsetX = 0;
@@ -629,11 +629,11 @@ void updateTitleScreen(platformer_t* self)
     setLeds(platLeds, CONFIG_NUM_LEDS);
 }
 
-void drawPlatformerTitleScreen(font_t* font, plGameData_t* gameData)
+void drawPlatformerTitleScreen(font_t* font, mgGameData_t* gameData)
 {
-    pl_drawTileMap(&(platformer->tilemap));
+    mg_drawTileMap(&(platformer->tilemap));
 
-    drawText(font, c555, "Super Swadge Land", 40, 32);
+    drawText(font, c555, "Mega Pulse EX", 40, 32);
 
     if (platformer->gameData.debugMode)
     {
@@ -730,7 +730,7 @@ void changeStateReadyScreen(platformer_t* self)
     globalMidiPlayerGet(MIDI_BGM)->loop = false;
     soundPlayBgm(&(self->soundManager.bgmIntro), BZR_STEREO);
 
-    pl_resetGameDataLeds(&(self->gameData));
+    mg_resetGameDataLeds(&(self->gameData));
 
     self->update = &updateReadyScreen;
 }
@@ -750,7 +750,7 @@ void updateReadyScreen(platformer_t* self)
     drawReadyScreen(&(self->radiostars), &(self->gameData));
 }
 
-void drawReadyScreen(font_t* font, plGameData_t* gameData)
+void drawReadyScreen(font_t* font, mgGameData_t* gameData)
 {
     drawPlatformerHud(font, gameData);
     int16_t xOff = (TFT_WIDTH - textWidth(font, str_get_ready)) / 2;
@@ -767,23 +767,23 @@ void changeStateGame(platformer_t* self)
 {
     self->gameData.frameCount = 0;
     self->gameData.currentBgm = 0;
-    pl_resetGameDataLeds(&(self->gameData));
+    mg_resetGameDataLeds(&(self->gameData));
 
-    pl_deactivateAllEntities(&(self->entityManager), false);
+    mg_deactivateAllEntities(&(self->entityManager), false);
 
     uint16_t levelIndex = getLevelIndex(self->gameData.world, self->gameData.level);
-    pl_loadMapFromFile(&(platformer->tilemap), leveldef[levelIndex].filename);
+    mg_loadMapFromFile(&(platformer->tilemap), leveldef[levelIndex].filename);
     self->gameData.countdown = leveldef[levelIndex].timeLimit;
 
-    plEntityManager_t* entityManager = &(self->entityManager);
+    mgEntityManager_t* entityManager = &(self->entityManager);
     entityManager->viewEntity
-        = pl_createPlayer(entityManager, entityManager->tilemap->warps[self->gameData.checkpoint].x * 16,
+        = mg_createPlayer(entityManager, entityManager->tilemap->warps[self->gameData.checkpoint].x * 16,
                           entityManager->tilemap->warps[self->gameData.checkpoint].y * 16);
     entityManager->playerEntity     = entityManager->viewEntity;
     entityManager->playerEntity->hp = self->gameData.initialHp;
-    pl_viewFollowEntity(&(self->tilemap), entityManager->playerEntity);
+    mg_viewFollowEntity(&(self->tilemap), entityManager->playerEntity);
 
-    pl_updateLedsHpMeter(&(self->entityManager), &(self->gameData));
+    mg_updateLedsHpMeter(&(self->entityManager), &(self->gameData));
 
     self->tilemap.executeTileSpawnAll = true;
 
@@ -801,19 +801,19 @@ void detectGameStateChange(platformer_t* self)
 
     switch (self->gameData.changeState)
     {
-        case PL_ST_DEAD:
+        case MG_ST_DEAD:
             changeStateDead(self);
             break;
 
-        case PL_ST_READY_SCREEN:
+        case MG_ST_READY_SCREEN:
             changeStateReadyScreen(self);
             break;
 
-        case PL_ST_LEVEL_CLEAR:
+        case MG_ST_LEVEL_CLEAR:
             changeStateLevelClear(self);
             break;
 
-        case PL_ST_PAUSE:
+        case MG_ST_PAUSE:
             changeStatePause(self);
             break;
 
@@ -826,17 +826,17 @@ void detectGameStateChange(platformer_t* self)
 
 void detectBgmChange(platformer_t* self)
 {
-    if (self->gameData.changeBgm == PL_BGM_NO_CHANGE)
+    if (self->gameData.changeBgm == MG_BGM_NO_CHANGE)
     {
         return;
     }
 
-    if(pl_setBgm(&(self->soundManager), self->gameData.changeBgm)){
+    if(mg_setBgm(&(self->soundManager), self->gameData.changeBgm)){
         soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
     }
 
     self->gameData.currentBgm = self->gameData.changeBgm;
-    self->gameData.changeBgm  = PL_BGM_NO_CHANGE;
+    self->gameData.changeBgm  = MG_BGM_NO_CHANGE;
 }
 
 void changeStateDead(platformer_t* self)
@@ -873,9 +873,9 @@ void updateDead(platformer_t* self)
         }
     }
 
-    pl_updateEntities(&(self->entityManager));
-    pl_drawTileMap(&(self->tilemap));
-    pl_drawEntities(&(self->entityManager));
+    mg_updateEntities(&(self->entityManager));
+    mg_drawTileMap(&(self->tilemap));
+    mg_drawEntities(&(self->entityManager));
     drawPlatformerHud(&(self->radiostars), &(self->gameData));
 
     if (self->gameData.countdown < 0)
@@ -914,19 +914,19 @@ void updateGameOver(platformer_t* self)
     }
 
     drawGameOver(&(self->radiostars), &(self->gameData));
-    pl_updateLedsGameOver(&(self->gameData));
+    mg_updateLedsGameOver(&(self->gameData));
 }
 
 void changeStateGameOver(platformer_t* self)
 {
     self->gameData.frameCount = 0;
-    pl_resetGameDataLeds(&(self->gameData));
+    mg_resetGameDataLeds(&(self->gameData));
     globalMidiPlayerGet(MIDI_BGM)->loop = false;
     soundPlayBgm(&(self->soundManager.bgmGameOver), BZR_STEREO);
     self->update = &updateGameOver;
 }
 
-void drawGameOver(font_t* font, plGameData_t* gameData)
+void drawGameOver(font_t* font, mgGameData_t* gameData)
 {
     drawPlatformerHud(font, gameData);
     drawText(font, c555, str_game_over, (TFT_WIDTH - textWidth(font, str_game_over)) / 2, 128);
@@ -945,7 +945,7 @@ void changeStateLevelClear(platformer_t* self)
     self->gameData.levelDeaths        = 0;
     self->gameData.initialHp          = self->entityManager.playerEntity->hp;
     self->gameData.extraLifeCollected = false;
-    pl_resetGameDataLeds(&(self->gameData));
+    mg_resetGameDataLeds(&(self->gameData));
     self->update = &updateLevelClear;
 }
 
@@ -1043,15 +1043,15 @@ void updateLevelClear(platformer_t* self)
         }
     }
 
-    pl_updateEntities(&(self->entityManager));
-    pl_drawTileMap(&(self->tilemap));
-    pl_drawEntities(&(self->entityManager));
+    mg_updateEntities(&(self->entityManager));
+    mg_drawTileMap(&(self->tilemap));
+    mg_drawEntities(&(self->entityManager));
     drawPlatformerHud(&(self->radiostars), &(self->gameData));
     drawLevelClear(&(self->radiostars), &(self->gameData));
-    pl_updateLedsLevelClear(&(self->gameData));
+    mg_updateLedsLevelClear(&(self->gameData));
 }
 
-void drawLevelClear(font_t* font, plGameData_t* gameData)
+void drawLevelClear(font_t* font, mgGameData_t* gameData)
 {
     drawPlatformerHud(font, gameData);
     drawText(font, c555, str_well_done, (TFT_WIDTH - textWidth(font, str_well_done)) / 2, 128);
@@ -1061,8 +1061,8 @@ void changeStateGameClear(platformer_t* self)
 {
     self->gameData.frameCount = 0;
     self->update              = &updateGameClear;
-    pl_resetGameDataLeds(&(self->gameData));
-    pl_setBgm(&(self->soundManager), PL_BGM_ATHLETIC);
+    mg_resetGameDataLeds(&(self->gameData));
+    mg_setBgm(&(self->soundManager), MG_BGM_ATHLETIC);
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
 }
 
@@ -1092,10 +1092,10 @@ void updateGameClear(platformer_t* self)
 
     drawPlatformerHud(&(self->radiostars), &(self->gameData));
     drawGameClear(&(self->radiostars), &(self->gameData));
-    pl_updateLedsGameClear(&(self->gameData));
+    mg_updateLedsGameClear(&(self->gameData));
 }
 
-void drawGameClear(font_t* font, plGameData_t* gameData)
+void drawGameClear(font_t* font, mgGameData_t* gameData)
 {
     drawPlatformerHud(font, gameData);
 
@@ -1197,7 +1197,7 @@ void savePlatformerUnlockables(platformer_t* self)
     writeNvsBlob(KEY_UNLOCKS, &(self->unlockables), size);
 }
 
-void drawPlatformerHighScores(font_t* font, platformerHighScores_t* highScores, plGameData_t* gameData)
+void drawPlatformerHighScores(font_t* font, platformerHighScores_t* highScores, mgGameData_t* gameData)
 {
     drawText(font, c555, "RANK  SCORE  NAME", 48, 96);
     for (uint8_t i = 0; i < NUM_PLATFORMER_HIGH_SCORES; i++)
@@ -1252,7 +1252,7 @@ void changeStateNameEntry(platformer_t* self)
     self->gameData.rank       = rank;
     self->menuState           = 0;
 
-    pl_resetGameDataLeds(&(self->gameData));
+    mg_resetGameDataLeds(&(self->gameData));
 
     if (rank >= NUM_PLATFORMER_HIGH_SCORES || self->gameData.debugMode)
     {
@@ -1262,7 +1262,7 @@ void changeStateNameEntry(platformer_t* self)
         return;
     }
 
-    pl_setBgm(&(self->soundManager), PL_BGM_NAME_ENTRY);
+    mg_setBgm(&(self->soundManager), MG_BGM_NAME_ENTRY);
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
     self->menuSelection = self->gameData.initials[0];
     self->update        = &updateNameEntry;
@@ -1331,10 +1331,10 @@ void updateNameEntry(platformer_t* self)
     }
 
     drawNameEntry(&(self->radiostars), &(self->gameData), self->menuState);
-    pl_updateLedsShowHighScores(&(self->gameData));
+    mg_updateLedsShowHighScores(&(self->gameData));
 }
 
-void drawNameEntry(font_t* font, plGameData_t* gameData, uint8_t currentInitial)
+void drawNameEntry(font_t* font, mgGameData_t* gameData, uint8_t currentInitial)
 {
     drawText(font, greenColors[(platformer->gameData.frameCount >> 3) % 4], str_initials,
              (TFT_WIDTH - textWidth(font, str_initials)) / 2, 64);
@@ -1376,7 +1376,7 @@ void updateShowHighScores(platformer_t* self)
     drawShowHighScores(&(self->radiostars), self->menuState);
     drawPlatformerHighScores(&(self->radiostars), &(self->highScores), &(self->gameData));
 
-    pl_updateLedsShowHighScores(&(self->gameData));
+    mg_updateLedsShowHighScores(&(self->gameData));
 }
 
 void drawShowHighScores(font_t* font, uint8_t menuState)
@@ -1408,13 +1408,13 @@ void updatePause(platformer_t* self)
 {
     if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START)))
     {
-        soundResume();
+        //soundResume();
         soundPlaySfx(&(self->soundManager.sndPause), BZR_STEREO);
         self->update              = &updateGame;
     }
 
-    pl_drawTileMap(&(self->tilemap));
-    pl_drawEntities(&(self->entityManager));
+    mg_drawTileMap(&(self->tilemap));
+    mg_drawEntities(&(self->entityManager));
     drawPlatformerHud(&(self->radiostars), &(self->gameData));
     drawPause(&(self->radiostars));
 }
