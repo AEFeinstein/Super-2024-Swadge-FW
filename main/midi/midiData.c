@@ -603,7 +603,7 @@ const midiTimbre_t mmx119ReverseCymbal = {
     },
     .name = "MMX Reverse Cymbal",
     .envelope = {
-        .attackTime = SECONDS_CONV(1, 380320),
+        .attackTime = 1 * 16384 + 38032 * 16384 / 100000,
     },
 };
 
