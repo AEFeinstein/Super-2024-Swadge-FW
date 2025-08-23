@@ -1,5 +1,5 @@
-#ifndef _PL_GAMEDATA_H_
-#define _PL_GAMEDATA_H_
+#ifndef _MG_GAMEDATA_H_
+#define _MG_GAMEDATA_H_
 
 //==============================================================================
 // Includes
@@ -7,10 +7,10 @@
 
 #include <stdint.h>
 #include "hdw-led.h"
-#include "platformer_typedef.h"
+#include "mega_pulse_ex_typedef.h"
 // #include "swadge2024.h"
 #include "palette.h"
-#include "plSoundManager.h"
+#include "mgSoundManager.h"
 
 //==============================================================================
 // Constants
@@ -64,22 +64,22 @@ typedef struct
     bool continuesUsed;
     uint32_t inGameTimer;
 
-    plSoundManager_t* soundManager;
-} plGameData_t;
+    mgSoundManager_t* soundManager;
+} mgGameData_t;
 
 //==============================================================================
 // Functions
 //==============================================================================
-void pl_initializeGameData(plGameData_t* gameData, plSoundManager_t* soundManager);
-void pl_initializeGameDataFromTitleScreen(plGameData_t* gameData);
-void pl_updateLedsHpMeter(plEntityManager_t* entityManager, plGameData_t* gameData);
-void pl_scorePoints(plGameData_t* gameData, uint16_t points);
-void addCoins(plGameData_t* gameData, uint8_t coins);
-void updateComboTimer(plGameData_t* gameData);
-void pl_resetGameDataLeds(plGameData_t* gameData);
-void pl_updateLedsShowHighScores(plGameData_t* gameData);
-void pl_updateLedsLevelClear(plGameData_t* gameData);
-void pl_updateLedsGameClear(plGameData_t* gameData);
-void pl_updateLedsGameOver(plGameData_t* gameData);
+void mg_initializeGameData(mgGameData_t* gameData, mgSoundManager_t* soundManager);
+void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData);
+void mg_updateLedsHpMeter(mgEntityManager_t* entityManager, mgGameData_t* gameData);
+void mg_scorePoints(mgGameData_t* gameData, uint16_t points);
+void addCoins(mgGameData_t* gameData, uint8_t coins);
+void updateComboTimer(mgGameData_t* gameData);
+void mg_resetGameDataLeds(mgGameData_t* gameData);
+void mg_updateLedsShowHighScores(mgGameData_t* gameData);
+void mg_updateLedsLevelClear(mgGameData_t* gameData);
+void mg_updateLedsGameClear(mgGameData_t* gameData);
+void mg_updateLedsGameOver(mgGameData_t* gameData);
 
 #endif

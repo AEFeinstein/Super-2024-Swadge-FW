@@ -8,13 +8,13 @@
 
 #include <esp_heap_caps.h>
 
-#include "plEntityManager.h"
+#include "mgEntityManager.h"
 #include "esp_random.h"
 #include "palette.h"
 
 #include "cnfs.h"
 #include "fs_wsg.h"
-#include "platformer_typedef.h"
+#include "mega_pulse_ex_typedef.h"
 
 //==============================================================================
 // Constants
@@ -23,26 +23,26 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void pl_initializeEntityManager(plEntityManager_t* entityManager, plWsgManager_t* wsgManager, plTilemap_t* tilemap, plGameData_t* gameData,
-                                plSoundManager_t* soundManager)
+void mg_initializeEntityManager(mgEntityManager_t* entityManager, mgWsgManager_t* wsgManager, mgTilemap_t* tilemap, mgGameData_t* gameData,
+                                mgSoundManager_t* soundManager)
 {
     entityManager->wsgManager = wsgManager;
-    entityManager->entities = heap_caps_calloc(MAX_ENTITIES, sizeof(plEntity_t), MALLOC_CAP_8BIT);
+    entityManager->entities = heap_caps_calloc(MAX_ENTITIES, sizeof(mgEntity_t), MALLOC_CAP_8BIT);
 
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
-        pl_initializeEntity(&(entityManager->entities[i]), entityManager, tilemap, gameData, soundManager);
+        mg_initializeEntity(&(entityManager->entities[i]), entityManager, tilemap, gameData, soundManager);
     }
 
     entityManager->activeEntities = 0;
     entityManager->tilemap        = tilemap;
 
-    // entityManager->viewEntity = pl_createPlayer(entityManager, entityManager->tilemap->warps[0].x * 16,
+    // entityManager->viewEntity = mg_createPlayer(entityManager, entityManager->tilemap->warps[0].x * 16,
     // entityManager->tilemap->warps[0].y * 16);
     entityManager->playerEntity = entityManager->viewEntity;
 }
 
-void pl_updateEntities(plEntityManager_t* entityManager)
+void mg_updateEntities(mgEntityManager_t* entityManager)
 {
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
@@ -52,25 +52,25 @@ void pl_updateEntities(plEntityManager_t* entityManager)
 
             if (&(entityManager->entities[i]) == entityManager->viewEntity)
             {
-                pl_viewFollowEntity(entityManager->tilemap, &(entityManager->entities[i]));
+                mg_viewFollowEntity(entityManager->tilemap, &(entityManager->entities[i]));
             }
         }
     }
 }
 
-void pl_deactivateAllEntities(plEntityManager_t* entityManager, bool excludePlayer)
+void mg_deactivateAllEntities(mgEntityManager_t* entityManager, bool excludePlayer)
 {
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
-        plEntity_t* currentEntity = &(entityManager->entities[i]);
+        mgEntity_t* currentEntity = &(entityManager->entities[i]);
 
         currentEntity->active = false;
 
         // TODO: respawn warp container blocks
         /*
             if(currentEntity->type == ENTITY_WARP){
-                //In pl_destroyEntity, this will overflow to the correct value.
-                currentEntity->type = 128 + PL_TILECONTAINER_1;
+                //In mg_destroyEntity, this will overflow to the correct value.
+                currentEntity->type = 128 + MG_TILECONTAINER_1;
             }
         */
 
@@ -81,11 +81,11 @@ void pl_deactivateAllEntities(plEntityManager_t* entityManager, bool excludePlay
     }
 }
 
-void pl_drawEntities(plEntityManager_t* entityManager)
+void mg_drawEntities(mgEntityManager_t* entityManager)
 {
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
-        plEntity_t currentEntity = entityManager->entities[i];
+        mgEntity_t currentEntity = entityManager->entities[i];
 
         if (currentEntity.active && currentEntity.visible)
         {
@@ -94,7 +94,7 @@ void pl_drawEntities(plEntityManager_t* entityManager)
     }
 }
 
-plEntity_t* pl_findInactiveEntity(plEntityManager_t* entityManager)
+mgEntity_t* mg_findInactiveEntity(mgEntityManager_t* entityManager)
 {
     if (entityManager->activeEntities == MAX_ENTITIES)
     {
@@ -117,7 +117,7 @@ plEntity_t* pl_findInactiveEntity(plEntityManager_t* entityManager)
     return &(entityManager->entities[entityIndex]);
 }
 
-void pl_viewFollowEntity(plTilemap_t* tilemap, plEntity_t* entity)
+void mg_viewFollowEntity(mgTilemap_t* tilemap, mgEntity_t* entity)
 {
     int16_t moveViewByX = TO_PIXEL_COORDS(entity->x);
     int16_t moveViewByY = (entity->y > 63616) ? 0 : TO_PIXEL_COORDS(entity->y);
@@ -134,24 +134,24 @@ void pl_viewFollowEntity(plTilemap_t* tilemap, plEntity_t* entity)
     //}
 
     // if(moveViewByX && moveViewByY){
-    pl_scrollTileMap(tilemap, moveViewByX, moveViewByY);
+    mg_scrollTileMap(tilemap, moveViewByX, moveViewByY);
     //}
 }
 
-plEntity_t* pl_createEntity(plEntityManager_t* entityManager, uint8_t objectIndex, uint16_t x, uint16_t y)
+mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectIndex, uint16_t x, uint16_t y)
 {
     // if(entityManager->activeEntities == MAX_ENTITIES){
     //     return NULL;
     // }
 
-    plEntity_t* createdEntity;
+    mgEntity_t* createdEntity;
 
     switch (objectIndex)
     {
         case ENTITY_PLAYER:
-            createdEntity = pl_createPlayer(entityManager, x, y);
+            createdEntity = mg_createPlayer(entityManager, x, y);
             break;
-        case plEntity_tEST:
+        case mgEntity_tEST:
             createdEntity = createTestObject(entityManager, x, y);
             break;
         case ENTITY_SCROLL_LOCK_LEFT:
@@ -268,9 +268,9 @@ plEntity_t* pl_createEntity(plEntityManager_t* entityManager, uint8_t objectInde
     return createdEntity;
 }
 
-plEntity_t* pl_createPlayer(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* mg_createPlayer(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -300,21 +300,21 @@ plEntity_t* pl_createPlayer(plEntityManager_t* entityManager, uint16_t x, uint16
     entity->shotLimit          = 3;
 
     entity->type                 = ENTITY_PLAYER;
-    entity->spriteIndex          = PL_SP_PLAYER_IDLE;
-    entity->state                = MG_PL_ST_NORMAL;
-    entity->updateFunction       = &pl_updatePlayer;
-    entity->collisionHandler     = &pl_playerCollisionHandler;
-    entity->tileCollisionHandler = &pl_playerTileCollisionHandler;
+    entity->spriteIndex          = MG_SP_PLAYER_IDLE;
+    entity->state                = MG_MG_ST_NORMAL;
+    entity->updateFunction       = &mg_updatePlayer;
+    entity->collisionHandler     = &mg_playerCollisionHandler;
+    entity->tileCollisionHandler = &mg_playerTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
-    entity->overlapTileHandler   = &pl_playerOverlapTileHandler;
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->overlapTileHandler   = &mg_playerOverlapTileHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     entity->tileCollider         = &entityTileCollider_1x2;
     return entity;
 }
 
-plEntity_t* createTestObject(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createTestObject(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -336,21 +336,21 @@ plEntity_t* createTestObject(plEntityManager_t* entityManager, uint16_t x, uint1
     entity->spriteFlipVertical   = false;
     entity->scoreValue           = 100;
 
-    entity->type                 = plEntity_tEST;
-    entity->spriteIndex          = PL_SP_ENEMY_BASIC;
+    entity->type                 = mgEntity_tEST;
+    entity->spriteIndex          = MG_SP_ENEMY_BASIC;
     entity->updateFunction       = &updateTestObject;
-    entity->collisionHandler     = &pl_enemyCollisionHandler;
-    entity->tileCollisionHandler = &pl_enemyTileCollisionHandler;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createScrollLockLeft(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createScrollLockLeft(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -364,17 +364,17 @@ plEntity_t* createScrollLockLeft(plEntityManager_t* entityManager, uint16_t x, u
 
     entity->type                 = ENTITY_SCROLL_LOCK_LEFT;
     entity->updateFunction       = &updateScrollLockLeft;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createScrollLockRight(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createScrollLockRight(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -388,17 +388,17 @@ plEntity_t* createScrollLockRight(plEntityManager_t* entityManager, uint16_t x, 
 
     entity->type                 = ENTITY_SCROLL_LOCK_RIGHT;
     entity->updateFunction       = &updateScrollLockRight;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createScrollLockUp(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createScrollLockUp(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -412,17 +412,17 @@ plEntity_t* createScrollLockUp(plEntityManager_t* entityManager, uint16_t x, uin
 
     entity->type                 = ENTITY_SCROLL_LOCK_UP;
     entity->updateFunction       = &updateScrollLockUp;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createScrollLockDown(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createScrollLockDown(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -436,17 +436,17 @@ plEntity_t* createScrollLockDown(plEntityManager_t* entityManager, uint16_t x, u
 
     entity->type                 = ENTITY_SCROLL_LOCK_DOWN;
     entity->updateFunction       = &updateScrollLockDown;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createScrollUnlock(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createScrollUnlock(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -460,17 +460,17 @@ plEntity_t* createScrollUnlock(plEntityManager_t* entityManager, uint16_t x, uin
 
     entity->type                 = ENTITY_SCROLL_UNLOCK;
     entity->updateFunction       = &updateScrollUnlock;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createHitBlock(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createHitBlock(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -494,20 +494,20 @@ plEntity_t* createHitBlock(plEntityManager_t* entityManager, uint16_t x, uint16_
     entity->spriteFlipVertical   = false;
 
     entity->type                 = ENTITY_HIT_BLOCK;
-    entity->spriteIndex          = PL_SP_HITBLOCK_CONTAINER;
+    entity->spriteIndex          = MG_SP_HITBLOCK_CONTAINER;
     entity->animationTimer       = 0;
     entity->updateFunction       = &updateHitBlock;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createPowerUp(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createPowerUp(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -529,21 +529,21 @@ plEntity_t* createPowerUp(plEntityManager_t* entityManager, uint16_t x, uint16_t
     entity->spriteFlipVertical   = false;
 
     entity->type                 = ENTITY_POWERUP;
-    entity->spriteIndex          = (entityManager->playerEntity->hp < 2) ? PL_SP_GAMING_1 : PL_SP_MUSIC_1;
+    entity->spriteIndex          = (entityManager->playerEntity->hp < 2) ? MG_SP_GAMING_1 : MG_SP_MUSIC_1;
     entity->animationTimer       = 0;
     entity->updateFunction       = &updatePowerUp;
     entity->collisionHandler     = &powerUpCollisionHandler;
-    entity->tileCollisionHandler = &pl_enemyTileCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createWarp(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createWarp(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -565,20 +565,20 @@ plEntity_t* createWarp(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
     entity->spriteFlipVertical = false;
 
     entity->type                 = ENTITY_WARP;
-    entity->spriteIndex          = PL_SP_WARP_1;
+    entity->spriteIndex          = MG_SP_WARP_1;
     entity->animationTimer       = 0;
     entity->updateFunction       = &updateWarp;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createDustBunny(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createDustBunny(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -604,20 +604,20 @@ plEntity_t* createDustBunny(plEntityManager_t* entityManager, uint16_t x, uint16
     entity->scoreValue = 150;
 
     entity->type                 = ENTITY_DUST_BUNNY;
-    entity->spriteIndex          = PL_SP_DUSTBUNNY_IDLE;
+    entity->spriteIndex          = MG_SP_DUSTBUNNY_IDLE;
     entity->updateFunction       = &updateDustBunny;
-    entity->collisionHandler     = &pl_enemyCollisionHandler;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
     entity->tileCollisionHandler = &dustBunnyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createWasp(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createWasp(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -643,20 +643,20 @@ plEntity_t* createWasp(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
     entity->xspeed = (entity->spriteFlipHorizontal) ? -16 : 16;
 
     entity->type                 = ENTITY_WASP;
-    entity->spriteIndex          = PL_SP_WASP_1;
+    entity->spriteIndex          = MG_SP_WASP_1;
     entity->updateFunction       = &updateWasp;
-    entity->collisionHandler     = &pl_enemyCollisionHandler;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
     entity->tileCollisionHandler = &waspTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createEnemyBushL2(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createEnemyBushL2(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -679,20 +679,20 @@ plEntity_t* createEnemyBushL2(plEntityManager_t* entityManager, uint16_t x, uint
     entity->scoreValue           = 150;
 
     entity->type                 = ENTITY_BUSH_2;
-    entity->spriteIndex          = PL_SP_ENEMY_BUSH_L2;
+    entity->spriteIndex          = MG_SP_ENEMY_BUSH_L2;
     entity->updateFunction       = &updateTestObject;
-    entity->collisionHandler     = &pl_enemyCollisionHandler;
-    entity->tileCollisionHandler = &pl_enemyTileCollisionHandler;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &turnAroundAtEdgeOfTileHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createEnemyBushL3(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createEnemyBushL3(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -717,20 +717,20 @@ plEntity_t* createEnemyBushL3(plEntityManager_t* entityManager, uint16_t x, uint
     entity->yDamping = 20; // This will be repurposed as a state timer
 
     entity->type                 = ENTITY_BUSH_3;
-    entity->spriteIndex          = PL_SP_ENEMY_BUSH_L3;
+    entity->spriteIndex          = MG_SP_ENEMY_BUSH_L3;
     entity->updateFunction       = &updateEnemyBushL3;
-    entity->collisionHandler     = &pl_enemyCollisionHandler;
-    entity->tileCollisionHandler = &pl_enemyTileCollisionHandler;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &turnAroundAtEdgeOfTileHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createDustBunnyL2(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createDustBunnyL2(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -755,20 +755,20 @@ plEntity_t* createDustBunnyL2(plEntityManager_t* entityManager, uint16_t x, uint
     entity->scoreValue           = 200;
 
     entity->type                 = ENTITY_DUST_BUNNY_2;
-    entity->spriteIndex          = PL_SP_DUSTBUNNY_L2_IDLE;
+    entity->spriteIndex          = MG_SP_DUSTBUNNY_L2_IDLE;
     entity->updateFunction       = &updateDustBunnyL2;
-    entity->collisionHandler     = &pl_enemyCollisionHandler;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
     entity->tileCollisionHandler = &dustBunnyL2TileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createDustBunnyL3(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createDustBunnyL3(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -793,20 +793,20 @@ plEntity_t* createDustBunnyL3(plEntityManager_t* entityManager, uint16_t x, uint
     entity->scoreValue           = 300;
 
     entity->type                 = ENTITY_DUST_BUNNY_3;
-    entity->spriteIndex          = PL_SP_DUSTBUNNY_L3_IDLE;
+    entity->spriteIndex          = MG_SP_DUSTBUNNY_L3_IDLE;
     entity->updateFunction       = &updateDustBunnyL3;
-    entity->collisionHandler     = &pl_enemyCollisionHandler;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
     entity->tileCollisionHandler = &dustBunnyL3TileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createWaspL2(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createWaspL2(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -834,20 +834,20 @@ plEntity_t* createWaspL2(plEntityManager_t* entityManager, uint16_t x, uint16_t 
     entity->xspeed = (entity->spriteFlipHorizontal) ? -24 : 24;
 
     entity->type                 = ENTITY_WASP_2;
-    entity->spriteIndex          = PL_SP_WASP_L2_1;
+    entity->spriteIndex          = MG_SP_WASP_L2_1;
     entity->updateFunction       = &updateWaspL2;
-    entity->collisionHandler     = &pl_enemyCollisionHandler;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
     entity->tileCollisionHandler = &waspTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createWaspL3(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createWaspL3(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -874,20 +874,20 @@ plEntity_t* createWaspL3(plEntityManager_t* entityManager, uint16_t x, uint16_t 
     entity->xspeed = (entity->spriteFlipHorizontal) ? -24 : 24;
 
     entity->type                 = ENTITY_WASP_3;
-    entity->spriteIndex          = PL_SP_WASP_L3_1;
+    entity->spriteIndex          = MG_SP_WASP_L3_1;
     entity->updateFunction       = &updateWaspL3;
-    entity->collisionHandler     = &pl_enemyCollisionHandler;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
     entity->tileCollisionHandler = &waspTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createBgColBlue(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createBgColBlue(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -902,17 +902,17 @@ plEntity_t* createBgColBlue(plEntityManager_t* entityManager, uint16_t x, uint16
 
     entity->type                 = ENTITY_BGCOL_BLUE;
     entity->updateFunction       = &updateBgCol;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createBgColYellow(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createBgColYellow(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -927,17 +927,17 @@ plEntity_t* createBgColYellow(plEntityManager_t* entityManager, uint16_t x, uint
 
     entity->type                 = ENTITY_BGCOL_YELLOW;
     entity->updateFunction       = &updateBgCol;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createBgColOrange(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createBgColOrange(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -952,17 +952,17 @@ plEntity_t* createBgColOrange(plEntityManager_t* entityManager, uint16_t x, uint
 
     entity->type                 = ENTITY_BGCOL_ORANGE;
     entity->updateFunction       = &updateBgCol;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createBgColPurple(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createBgColPurple(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -977,17 +977,17 @@ plEntity_t* createBgColPurple(plEntityManager_t* entityManager, uint16_t x, uint
 
     entity->type                 = ENTITY_BGCOL_PURPLE;
     entity->updateFunction       = &updateBgCol;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createBgColDarkPurple(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createBgColDarkPurple(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -1002,17 +1002,17 @@ plEntity_t* createBgColDarkPurple(plEntityManager_t* entityManager, uint16_t x, 
 
     entity->type                 = ENTITY_BGCOL_DARK_PURPLE;
     entity->updateFunction       = &updateBgCol;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createBgColBlack(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createBgColBlack(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -1027,17 +1027,17 @@ plEntity_t* createBgColBlack(plEntityManager_t* entityManager, uint16_t x, uint1
 
     entity->type                 = ENTITY_BGCOL_BLACK;
     entity->updateFunction       = &updateBgCol;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createBgColNeutralGreen(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createBgColNeutralGreen(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -1052,17 +1052,17 @@ plEntity_t* createBgColNeutralGreen(plEntityManager_t* entityManager, uint16_t x
 
     entity->type                 = ENTITY_BGCOL_NEUTRAL_GREEN;
     entity->updateFunction       = &updateBgCol;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createBgColNeutralDarkRed(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createBgColNeutralDarkRed(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -1077,17 +1077,17 @@ plEntity_t* createBgColNeutralDarkRed(plEntityManager_t* entityManager, uint16_t
 
     entity->type                 = ENTITY_BGCOL_DARK_RED;
     entity->updateFunction       = &updateBgCol;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createBgColNeutralDarkGreen(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createBgColNeutralDarkGreen(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -1102,17 +1102,17 @@ plEntity_t* createBgColNeutralDarkGreen(plEntityManager_t* entityManager, uint16
 
     entity->type                 = ENTITY_BGCOL_DARK_GREEN;
     entity->updateFunction       = &updateBgCol;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* create1up(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* create1up(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -1134,21 +1134,21 @@ plEntity_t* create1up(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
     entity->spriteFlipVertical   = false;
 
     entity->type                 = ENTITY_1UP;
-    entity->spriteIndex          = PL_SP_1UP_1;
+    entity->spriteIndex          = MG_SP_1UP_1;
     entity->animationTimer       = 0;
     entity->updateFunction       = &update1up;
     entity->collisionHandler     = &powerUpCollisionHandler;
-    entity->tileCollisionHandler = &pl_enemyTileCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createWaveBall(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createWaveBall(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -1172,21 +1172,21 @@ plEntity_t* createWaveBall(plEntityManager_t* entityManager, uint16_t x, uint16_
     entity->xDamping             = 0; // This will be repurposed as a state tracker
 
     entity->type                 = ENTITY_WAVE_BALL;
-    entity->spriteIndex          = PL_SP_WAVEBALL_1;
+    entity->spriteIndex          = MG_SP_WAVEBALL_1;
     entity->animationTimer       = 0;
     entity->updateFunction       = &updateWaveBall;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createCheckpoint(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createCheckpoint(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -1210,25 +1210,25 @@ plEntity_t* createCheckpoint(plEntityManager_t* entityManager, uint16_t x, uint1
     entity->xDamping = 0; // State of the checkpoint. 0 = inactive, 1 = active
 
     entity->type                 = ENTITY_CHECKPOINT;
-    entity->spriteIndex          = PL_SP_CHECKPOINT_INACTIVE;
+    entity->spriteIndex          = MG_SP_CHECKPOINT_INACTIVE;
     entity->animationTimer       = 0;
     entity->updateFunction       = &updateCheckpoint;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-void pl_freeEntityManager(plEntityManager_t* self)
+void mg_freeEntityManager(mgEntityManager_t* self)
 {
     heap_caps_free(self->entities);
 }
 
-plEntity_t* createBgmChange1(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createBgmChange1(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -1239,21 +1239,21 @@ plEntity_t* createBgmChange1(plEntityManager_t* entityManager, uint16_t x, uint1
     entity->visible  = false;
     entity->x        = TO_SUBPIXEL_COORDS(x);
     entity->y        = TO_SUBPIXEL_COORDS(y);
-    entity->xDamping = PL_BGM_MAIN;
+    entity->xDamping = MG_BGM_MAIN;
 
     entity->type                 = ENTITY_BGM_CHANGE_1;
     entity->updateFunction       = &updateBgmChange;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createBgmChange2(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createBgmChange2(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -1264,21 +1264,21 @@ plEntity_t* createBgmChange2(plEntityManager_t* entityManager, uint16_t x, uint1
     entity->visible  = false;
     entity->x        = TO_SUBPIXEL_COORDS(x);
     entity->y        = TO_SUBPIXEL_COORDS(y);
-    entity->xDamping = PL_BGM_ATHLETIC;
+    entity->xDamping = MG_BGM_ATHLETIC;
 
     entity->type                 = ENTITY_BGM_CHANGE_2;
     entity->updateFunction       = &updateBgmChange;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createBgmChange3(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createBgmChange3(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -1289,21 +1289,21 @@ plEntity_t* createBgmChange3(plEntityManager_t* entityManager, uint16_t x, uint1
     entity->visible  = false;
     entity->x        = TO_SUBPIXEL_COORDS(x);
     entity->y        = TO_SUBPIXEL_COORDS(y);
-    entity->xDamping = PL_BGM_UNDERGROUND;
+    entity->xDamping = MG_BGM_UNDERGROUND;
 
     entity->type                 = ENTITY_BGM_CHANGE_3;
     entity->updateFunction       = &updateBgmChange;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createBgmChange4(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createBgmChange4(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -1314,21 +1314,21 @@ plEntity_t* createBgmChange4(plEntityManager_t* entityManager, uint16_t x, uint1
     entity->visible  = false;
     entity->x        = TO_SUBPIXEL_COORDS(x);
     entity->y        = TO_SUBPIXEL_COORDS(y);
-    entity->xDamping = PL_BGM_FORTRESS;
+    entity->xDamping = MG_BGM_FORTRESS;
 
     entity->type                 = ENTITY_BGM_CHANGE_4;
     entity->updateFunction       = &updateBgmChange;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createBgmChange5(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createBgmChange5(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -1339,21 +1339,21 @@ plEntity_t* createBgmChange5(plEntityManager_t* entityManager, uint16_t x, uint1
     entity->visible  = false;
     entity->x        = TO_SUBPIXEL_COORDS(x);
     entity->y        = TO_SUBPIXEL_COORDS(y);
-    entity->xDamping = PL_BGM_NULL;
+    entity->xDamping = MG_BGM_NULL;
 
     entity->type                 = ENTITY_BGM_CHANGE_5;
     entity->updateFunction       = &updateBgmChange;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }
 
-plEntity_t* createBgmStop(plEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createBgmStop(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    plEntity_t* entity = pl_findInactiveEntity(entityManager);
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
     {
@@ -1364,14 +1364,14 @@ plEntity_t* createBgmStop(plEntityManager_t* entityManager, uint16_t x, uint16_t
     entity->visible  = false;
     entity->x        = TO_SUBPIXEL_COORDS(x);
     entity->y        = TO_SUBPIXEL_COORDS(y);
-    entity->xDamping = PL_BGM_NULL;
+    entity->xDamping = MG_BGM_NULL;
 
     entity->type                 = ENTITY_BGM_STOP;
     entity->updateFunction       = &updateBgmChange;
-    entity->collisionHandler     = &pl_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pl_dummyTileCollisionHandler;
-    entity->overlapTileHandler   = &pl_defaultOverlapTileHandler;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
-    entity->drawHandler          = &pl_defaultEntityDrawHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }

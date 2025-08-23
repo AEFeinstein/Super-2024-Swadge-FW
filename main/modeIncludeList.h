@@ -56,7 +56,7 @@
 #include "trophyCase.h"
 #include "trophyTest.h"
 #include "tunernome.h"
-#include "mode_platformer.h"
+#include "megaPulseEx.h"
 #include "nameTest.h"
 
 //==============================================================================
