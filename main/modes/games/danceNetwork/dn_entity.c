@@ -438,7 +438,7 @@ bool dn_calculateMoveableUnits(dn_entity_t* board)
 
     for(int i = 0; i < 5; i++)
     {
-        if(playerUnits[i] == NULL)
+        if(playerUnits[i] == NULL || opponentUnits[i] == NULL)
         {
             //That unit has died
             continue;
