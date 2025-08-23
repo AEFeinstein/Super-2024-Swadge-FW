@@ -2652,6 +2652,7 @@ void dn_updateBullet(dn_entity_t* self)
         {
             if(targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] || targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0])//king is captured
             {
+                self->gameData->gameStalled = true;
                 ///////////////////////////////
                 // Make the prompt Game Over //
                 ///////////////////////////////
