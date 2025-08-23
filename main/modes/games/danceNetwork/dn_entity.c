@@ -2811,7 +2811,6 @@ void dn_moveUnit(dn_entity_t* self)
         }
     }
     bData->tiles[uData->moveTo.y][uData->moveTo.x].unit = self;
-    self->gameData->resolvingRemix = false;
     
     bData->impactPos = uData->moveTo;
     bData->tiles[bData->impactPos.y][bData->impactPos.x].yVel = -700;
@@ -2853,7 +2852,7 @@ void dn_moveUnit(dn_entity_t* self)
         self->gameData->gameStalled = true;
     }
 
-    if(self->gameData->phase != DN_P1_UPGRADE_PHASE && self->gameData->phase != DN_P2_UPGRADE_PHASE)
+    if(self->gameData->phase != DN_P1_UPGRADE_PHASE && self->gameData->phase != DN_P2_UPGRADE_PHASE && !self->gameData->resolvingRemix)
     {
         dn_incrementPhase(self);//now the upgrade phase
     }
@@ -2861,7 +2860,8 @@ void dn_moveUnit(dn_entity_t* self)
     {
         dn_startUpgradeMenu(self, 2 << 20);
     }
-    
+
+    self->gameData->resolvingRemix = false;
     self->updateFunction = NULL;
 }
 
