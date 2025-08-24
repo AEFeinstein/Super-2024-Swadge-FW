@@ -11,6 +11,9 @@
 #include "mgTilemap.h"
 #include "mgLeveldef.h"
 #include "esp_random.h"
+#include "hashMap.h"
+#include "mgEntitySpawnData.h"
+#include "mega_pulse_ex_typedef.h"
 
 #include "cnfs.h"
 
@@ -37,6 +40,8 @@ void mg_initializeTileMap(mgTilemap_t* tilemap, mgWsgManager_t* wsgManager)
     tilemap->animationTimer = 23;
 
     tilemap->wsgManager = wsgManager;
+    tilemap->entitySpawns = NULL;
+
 }
 
 void mg_drawTileMap(mgTilemap_t* tilemap)
@@ -66,6 +71,20 @@ void mg_drawTileMap(mgTilemap_t* tilemap)
 
             uint8_t tile = tilemap->map[(y * tilemap->mapWidth) + x];
 
+            if (tilemap->tileSpawnEnabled
+                     && (tilemap->executeTileSpawnColumn == x || tilemap->executeTileSpawnRow == y
+                         || tilemap->executeTileSpawnAll))
+            {
+
+                uint16_t key = ((y << 8) + (x));
+                mgEntitySpawnData_t* entitySpawn = hashGetBin(&(tilemap->entitySpawnMap), (const void*) key);
+            
+                if(entitySpawn != NULL){
+                    ESP_LOGE("MAP", "Spawned entity at tile position %i, %i", x, y);
+                    mg_hashSpawnEntity(tilemap->entityManager, entitySpawn);
+                }
+            }
+
             if (tile < MG_TILE_GRASS)
             {
                 continue;
@@ -93,13 +112,8 @@ void mg_drawTileMap(mgTilemap_t* tilemap)
                                 y * MG_TILESIZE - tilemap->mapOffsetY);
                 }
             }
-            else if (tile > 127 && tilemap->tileSpawnEnabled
-                     && (tilemap->executeTileSpawnColumn == x || tilemap->executeTileSpawnRow == y
-                         || tilemap->executeTileSpawnAll))
-            {
-                mg_tileSpawnEntity(tilemap, tile - 128, x, y);
-            }
-        }
+            /*else*/ 
+        aa}
     }
 
     tilemap->executeTileSpawnAll = 0;
@@ -150,6 +164,12 @@ void mg_scrollTileMap(mgTilemap_t* tilemap, int16_t x, int16_t y)
 
 bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
 {
+    if(tilemap->entitySpawns != NULL){
+        heap_caps_free(tilemap->entitySpawns);
+    }
+    
+     hashDeinit(&(tilemap->entitySpawnMap));
+    
     if (tilemap->map != NULL)
     {
         heap_caps_free(tilemap->map);
@@ -179,10 +199,47 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
     tilemap->minMapOffsetY = 0;
     tilemap->maxMapOffsetY = height * MG_TILESIZE - MG_TILEMAP_DISPLAY_HEIGHT_PIXELS;
 
-    for (uint16_t i = 0; i < 16; i++)
+    /*for (uint16_t i = 0; i < 16; i++)
     {
         tilemap->warps[i].x = buf[2 + width * height + i * 2];
         tilemap->warps[i].y = buf[2 + width * height + i * 2 + 1];
+    }*/
+
+    uint32_t iterator = 2 + (width * height);
+    uint16_t numEntitySpawns = (buf[iterator+1] << 8) + buf[iterator];
+    iterator += 2;
+
+    if(numEntitySpawns > 0){
+        tilemap->entitySpawns = (mgEntitySpawnData_t*)heap_caps_calloc(numEntitySpawns, sizeof(mgEntitySpawnData_t), MALLOC_CAP_SPIRAM);
+
+        hashInitBin(&(tilemap->entitySpawnMap), numEntitySpawns + (numEntitySpawns >> 1), hashInt, intsEq);
+        uint16_t subiterator = 0;
+
+        for(uint32_t i = iterator; i < iterator + (numEntitySpawns * 16); i += 16){
+            
+            mgEntitySpawnData_t* entitySpawn = &(tilemap->entitySpawns[subiterator]);
+            entitySpawn->spawnable = true;
+            entitySpawn->type = buf[i];
+            entitySpawn->tx = buf[i+1];
+            entitySpawn->ty = buf[i+2];
+            entitySpawn->xOffsetInPixels = buf[i+3];
+            entitySpawn->yOffsetInPixels = buf[i+4];
+            entitySpawn->flags = buf[i+5];
+            entitySpawn->special0 = buf[i+6];
+            entitySpawn->special1 = buf[i+7];
+            entitySpawn->special2 = buf[i+8];
+            entitySpawn->special3 = buf[i+9];
+            entitySpawn->special4 = buf[i+10];
+            entitySpawn->special5 = buf[i+11];
+            entitySpawn->special6 = buf[i+12];
+            entitySpawn->special7 = buf[i+13];
+            entitySpawn->linkedEntitySpawn = &(tilemap->entitySpawns[(buf[i+14] << 8) + buf[i+15]]);
+
+            uint16_t key = (entitySpawn->ty << 8) + (entitySpawn->tx);
+            hashPutBin(&(tilemap->entitySpawnMap), (const void*) key, (const void *) entitySpawn);
+
+            subiterator++;
+        }
     }
 
     heap_caps_free(buf);
@@ -201,6 +258,25 @@ void mg_tileSpawnEntity(mgTilemap_t* tilemap, uint8_t objectIndex, uint8_t tx, u
         entityCreated->homeTileX                  = tx;
         entityCreated->homeTileY                  = ty;
         tilemap->map[ty * tilemap->mapWidth + tx] = 0;
+    }
+}
+
+void mg_hashSpawnEntity(mgEntityManager_t* entityManager, mgEntitySpawnData_t* entitySpawnData)
+{
+    mgEntity_t* entityCreated
+        = mg_createEntity(entityManager, entitySpawnData->type, (entitySpawnData->tx << MG_TILESIZE_IN_POWERS_OF_2) + entitySpawnData->xOffsetInPixels,
+                          (entitySpawnData->ty << MG_TILESIZE_IN_POWERS_OF_2) + entitySpawnData->yOffsetInPixels);
+
+    if (entityCreated != NULL)
+    {
+        entityCreated->spriteFlipHorizontal = entitySpawnData->flags & 0b1;
+        entityCreated->spriteFlipHorizontal = entitySpawnData->flags & 0b10;
+        
+        entityCreated->spawnData = entitySpawnData;
+        entityCreated->linkedEntity = entitySpawnData->linkedEntitySpawn->spawnedEntity;
+        entitySpawnData->spawnedEntity = entityCreated;
+
+        entitySpawnData->spawnable = false;
     }
 }
 

@@ -160,7 +160,7 @@ swadgeMode_t modePlatformer = {.modeName                 = platformerName,
 
 #define NUM_LEVELS 16
 
-static const mgLeveldef_t leveldef[17] = {{.filename = LEVEL_1_1_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
+static const mgLeveldef_t leveldef[17] = {{.filename = KINETIC_DONUT_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
                                           {.filename = DAC_01_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
                                           {.filename = LEVEL_1_3_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
                                           {.filename = LEVEL_1_4_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
