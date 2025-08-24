@@ -1454,7 +1454,7 @@ void dn_updatePrompt(dn_entity_t* self)
             dn_promptOption_t* option = (dn_promptOption_t*)cur->val;
             if(option->downPressDetected)
             {
-                option->selectionAmount += self->gameData->elapsedUs >> 5;
+                option->selectionAmount += self->gameData->elapsedUs >> 3;
                 if(option->selectionAmount >= 30000)
                 {
                     option->selectionAmount = 30000;
@@ -2084,7 +2084,7 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
     {
         if(umData->options[umData->selectionIdx].downPressDetected && (self->gameData->rerolls[self->gameData->phase >= DN_P2_TURN_START_PHASE] || umData->selectionIdx == 3))
         {
-            umData->options[umData->selectionIdx].selectionAmount += self->gameData->elapsedUs >> 5;
+            umData->options[umData->selectionIdx].selectionAmount += self->gameData->elapsedUs >> (3 + (umData->selectionIdx == 3)*2);//confirm takes longer to press
             if(umData->options[umData->selectionIdx].selectionAmount >= 30000)
             {
                 umData->options[umData->selectionIdx].selectionAmount = 30000;
