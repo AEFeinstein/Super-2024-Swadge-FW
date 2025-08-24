@@ -112,7 +112,6 @@ void dn_updateBoard(dn_entity_t* self)
                         //A unit dies
                         if(tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] || tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0])//king is captured
                         {
-                            self->gameData->gameStalled = true;
                             ///////////////////////////////
                             // Make the prompt Game Over //
                             ///////////////////////////////
@@ -2249,7 +2248,7 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
                     case 0:
                     case 1:
                     {
-                        snprintf(text, sizeof(text), "to %s's album.", self->gameData->shortPlayerNames[umData->album[0]]);
+                        snprintf(text, sizeof(text), "on %s's album.", self->gameData->shortPlayerNames[umData->album[0]]);
                         break;
                     }
                     case 2:
@@ -2805,6 +2804,7 @@ void dn_drawBullet(dn_entity_t* self)
 
 void dn_moveUnit(dn_entity_t* self)
 {
+    self->gameData->resolvingRemix = false;
     dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
     dn_unitData_t* uData = (dn_unitData_t*)self->data;
 
@@ -2861,21 +2861,27 @@ void dn_moveUnit(dn_entity_t* self)
         self->gameData->gameStalled = true;
     }
 
-    if(self->gameData->phase != DN_P1_UPGRADE_PHASE && self->gameData->phase != DN_P2_UPGRADE_PHASE && !self->gameData->resolvingRemix)
-    {
-        dn_incrementPhase(self);//now the upgrade phase
-    }
     if(!self->gameData->gameStalled)
     {
+        while(self->gameData->phase != DN_P1_UPGRADE_PHASE && self->gameData->phase != DN_P2_UPGRADE_PHASE)
+        {
+            dn_incrementPhase(self);//now the upgrade phase
+        }
         dn_startUpgradeMenu(self, 2 << 20);
     }
 
-    self->gameData->resolvingRemix = false;
     self->updateFunction = NULL;
 }
 
 void dn_afterPlunge(dn_entity_t* self)
 {
+    dn_gainReroll(self);
+    dn_gainReroll(self);
+    dn_gainReroll(self);
     self->gameData->gameStalled = false;
+    while(self->gameData->phase != DN_P1_UPGRADE_PHASE && self->gameData->phase != DN_P2_UPGRADE_PHASE)
+    {
+        dn_incrementPhase(self);//now the upgrade phase
+    }
     dn_startUpgradeMenu(self, 0);
 }
