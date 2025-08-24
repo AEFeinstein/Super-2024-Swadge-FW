@@ -840,9 +840,15 @@ void despawnWhenOffscreen(mgEntity_t* self)
 
 void mg_destroyEntity(mgEntity_t* self, bool respawn)
 {
-    if (respawn && !(self->homeTileX == 0 && self->homeTileY == 0))
+    /*if (respawn && !(self->homeTileX == 0 && self->homeTileY == 0))
     {
         self->tilemap->map[self->homeTileY * self->tilemap->mapWidth + self->homeTileX] = self->type + 128;
+    }*/
+
+    if (respawn && self->spawnData != NULL)
+    {
+        self->spawnData->spawnedEntity = NULL;
+        self->spawnData->spawnable = true;
     }
 
     // self->entityManager->activeEntities--;

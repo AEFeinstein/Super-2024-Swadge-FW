@@ -30,6 +30,7 @@ typedef struct platformer_t platformer_t;
 typedef struct mgEntityManager_t mgEntityManager_t;
 typedef struct mgTilemap_t mgTilemap_t;
 typedef struct mgEntity_t mgEntity_t;
+typedef struct mgEntitySpawnData_t mgEntitySpawnData_t;
 
 typedef struct {
     int32_t size;
