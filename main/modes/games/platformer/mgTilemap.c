@@ -113,7 +113,7 @@ void mg_drawTileMap(mgTilemap_t* tilemap)
                 }
             }
             /*else*/ 
-        aa}
+        }
     }
 
     tilemap->executeTileSpawnAll = 0;
