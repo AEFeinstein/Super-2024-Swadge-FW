@@ -11,6 +11,7 @@
 #include "mgTilemap.h"
 #include "mgGameData.h"
 #include "mgSoundManager.h"
+#include "mgEntitySpawnData.h"
 
 //==============================================================================
 // Enums
@@ -124,6 +125,7 @@ struct mgEntity_t
     int8_t invincibilityFrames;
     uint16_t scoreValue;
 
+    mgEntitySpawnData_t* spawnData;
     mgEntity_t* linkedEntity;
 
     // mgEntity_t *entities;
