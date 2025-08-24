@@ -12,6 +12,7 @@
 #include "mega_pulse_ex_typedef.h"
 #include "mgWsgManager.h"
 #include "mgEntityManager.h"
+#include "hashMap.h"
 
 //==============================================================================
 // Constants
@@ -65,6 +66,9 @@ struct mgTilemap_t
 
     uint8_t animationFrame;
     int16_t animationTimer;
+
+    mgEntitySpawnData_t* entitySpawns;
+    hashMap_t entitySpawnMap;
 };
 
 //==============================================================================
@@ -76,6 +80,7 @@ void mg_scrollTileMap(mgTilemap_t* tilemap, int16_t x, int16_t y);
 void mg_drawTile(mgTilemap_t* tilemap, uint8_t tileId, int16_t x, int16_t y);
 bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name);
 void mg_tileSpawnEntity(mgTilemap_t* tilemap, uint8_t objectIndex, uint8_t tx, uint8_t ty);
+void mg_hashSpawnEntity(mgEntityManager_t* entityManager, mgEntitySpawnData_t* entitySpawnData);
 uint8_t mg_getTile(mgTilemap_t* tilemap, uint8_t tx, uint8_t ty);
 void mg_setTile(mgTilemap_t* tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId);
 bool mg_isSolid(uint8_t tileId);
