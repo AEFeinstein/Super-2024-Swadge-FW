@@ -69,6 +69,26 @@ static const char dn_HowToStr[]        = "How To Play";
 static const char dn_RecordsStr[] = "Records";
 static const char dn_Exit[]       = "Exit";
 
+
+static const paletteColor_t starterAlbums[16][4] = {
+    {c300, c320, cTransparent, cTransparent},
+    {c302, c310, c315, c321},
+    {c311, c303, c321, cTransparent},
+    {c315, c305, c314, cTransparent},
+    {c311, c304, c314, cTransparent},
+    {c303, c312, c313, c305},
+    {c303, c312, c313, c321},
+    {c315, c312, c313, c305},
+    {c303, c305, c315, c321},
+    {c303, c305, c320, cTransparent},
+    {c312, c304, c320, cTransparent},
+    {c313, c304, c320, cTransparent},
+    {c304, c315, c321, cTransparent},
+    {c312, c304, c313, cTransparent},
+    {c303, c313, c315, cTransparent},
+    {c303, c312, c315, cTransparent},
+    };
+
 /// @brief A heatshrink decoder to use for all WSG loads rather than allocate a new one for each WSG
 /// This helps to prevent memory fragmentation in SPIRAM.
 /// Note, this is outside the dn_t struct for easy access to loading fuctions without dn_t references
@@ -619,12 +639,24 @@ static void dn_initializeGame(void)
     dn_entity_t* album2 = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
                                                 (vec_t){0xFFFF + 1280, 63311}, gameData);
 
-    dn_addTrackToAlbum(album1, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 122)),
-                       (dn_track_t)dn_randomInt(1, 2));
-    dn_addTrackToAlbum(ccAlbum, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 122)),
-                       (dn_track_t)dn_randomInt(1, 2));
-    dn_addTrackToAlbum(album2, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 122)),
-                       (dn_track_t)dn_randomInt(1, 2));
+    uint8_t roll1 = dn_randomInt(0,16);
+    uint8_t roll2 = dn_randomInt(0,16);
+    while (roll2 == roll1)
+    {
+        roll2 = dn_randomInt(0,16);
+    }
+
+    for(uint8_t blueTrack = 0; blueTrack < 4; blueTrack++)
+    {
+        if(starterAlbums[roll1][blueTrack] != cTransparent)
+        {
+            dn_addTrackToAlbum(album1, dn_colorToTrackCoords(starterAlbums[roll1][blueTrack]), DN_BLUE_TRACK);
+        }
+        if(starterAlbums[roll2][blueTrack] != cTransparent)
+        {
+            dn_addTrackToAlbum(album2, dn_colorToTrackCoords(starterAlbums[roll2][blueTrack]), DN_BLUE_TRACK);
+        }
+    }
 
     ((dn_albumData_t*)album1->data)->timer  = 10 << 20;
     ((dn_albumData_t*)ccAlbum->data)->timer = 11 << 20;

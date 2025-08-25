@@ -881,6 +881,15 @@ void dn_updateAlbum(dn_entity_t* self)
         aData->timer -= self->gameData->elapsedUs;
         if (aData->timer <= 0)
         {
+            while(true && self != ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum)
+            {
+                dn_boardPos_t pos = (dn_boardPos_t){dn_randomInt(-2,2), 1};
+                if(dn_trackTypeAtCoords(self, pos) == DN_NONE_TRACK)
+                {
+                    dn_addTrackToAlbum(self, pos, DN_RED_TRACK);
+                    break;
+                }
+            }
             if(self == ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album)
             {
                 //third album has finished the bootup animation
@@ -1786,6 +1795,11 @@ void dn_clearSelectableTiles(dn_entity_t* self)
 void dn_startUpgradeMenu(dn_entity_t* self, int32_t countOff)
 {
     self->gameData->resolvingRemix = false;
+
+    //add a random track to creative commons
+    dn_addTrackToAlbum(((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 122)),
+                       (dn_track_t)dn_randomInt(1, 2));
+
     //////////////////////////
     // Make the upgrade menu//
     //////////////////////////
@@ -2696,7 +2710,6 @@ void dn_drawBullet(dn_entity_t* self)
 
 void dn_moveUnit(dn_entity_t* self)
 {
-    self->gameData->resolvingRemix = false;
     self->paused = false;
     dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
     dn_unitData_t* uData = (dn_unitData_t*)self->data;
@@ -2721,12 +2734,12 @@ void dn_moveUnit(dn_entity_t* self)
     self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE] = CLAMP(self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE], 0, 9);
     bData->tiles[bData->impactPos.y][bData->impactPos.x].rewards = 0;
 
-    if(!bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout)
+    if(!bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout & !self->gameData->resolvingRemix)
     {
         dn_incrementPhase(self);//now the upgrade phase
         dn_startUpgradeMenu(self, 2 << 20);
     }
-
+    self->gameData->resolvingRemix = false;
     self->updateFunction = NULL;
 }
 
