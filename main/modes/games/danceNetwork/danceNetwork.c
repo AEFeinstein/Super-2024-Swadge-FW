@@ -78,8 +78,8 @@ uint8_t* dn_decodeSpace;
 
 // This is in order such that index is the assetIdx.
 static const cnfsFileIdx_t dn_assetToWsgLookup[]
-    = {DN_ALPHA_DOWN_WSG, DN_ALPHA_ORTHO_WSG, DN_ALPHA_UP_WSG,        DN_KING_WSG,          DN_KING_SMALL_WSG,
-       DN_PAWN_WSG,       DN_PAWN_SMALL_WSG,  DN_BUCKET_HAT_DOWN_WSG, DN_BUCKET_HAT_UP_WSG, DN_GROUND_TILE_WSG};
+    = {DN_ALPHA_DOWN_WSG, DN_ALPHA_ORTHO_WSG, DN_ALPHA_UP_WSG,        DN_KING_WSG,          DN_KING_SMALL_0_WSG,
+       DN_PAWN_WSG,       DN_PAWN_SMALL_0_WSG,  DN_BUCKET_HAT_DOWN_WSG, DN_BUCKET_HAT_UP_WSG, DN_GROUND_TILE_WSG};
 
 // NVS keys
 const char dnWinKey[]       = "dn_win";
@@ -559,9 +559,9 @@ static void dn_initializeGame(void)
 
     dn_loadAsset(DN_MINI_TILE_WSG, 1, &gameData->assets[DN_MINI_TILE_ASSET]);
 
-    dn_loadAsset(DN_KING_SMALL_WSG, 1, &gameData->assets[DN_KING_SMALL_ASSET]);
+    dn_loadAsset(DN_KING_SMALL_0_WSG, 2, &gameData->assets[DN_KING_SMALL_ASSET]);
     
-    dn_loadAsset(DN_PAWN_SMALL_WSG, 1, &gameData->assets[DN_PAWN_SMALL_ASSET]);
+    dn_loadAsset(DN_PAWN_SMALL_0_WSG, 2, &gameData->assets[DN_PAWN_SMALL_ASSET]);
 
     dn_loadAsset(DN_REROLL_WSG, 1, &gameData->assets[DN_REROLL_ASSET]);
 
@@ -661,6 +661,7 @@ static void dn_initializeGame(void)
     boardData->p1Units[0]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[0]; // Set the unit on the tile
+    boardData->p1Units[0]->paused = false;
     // p1 pawns
     assetIdx = dn_getAssetIdx(gameData->characterSets[0], DN_PAWN, DN_UP);
     boardPos = (dn_boardPos_t){0, 4};
@@ -686,6 +687,7 @@ static void dn_initializeGame(void)
     boardData->p2Units[0]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[0]; // Set the unit on the tile
+    boardData->p2Units[0]->paused = false;
     // p2 pawns
     assetIdx = dn_getAssetIdx(gameData->characterSets[1], DN_PAWN, DN_DOWN);
     boardPos = (dn_boardPos_t){0, 0};

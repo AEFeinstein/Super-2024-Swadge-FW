@@ -48,6 +48,12 @@ void dn_initializeEntityManager(dn_entityManager_t* entityManager, dn_gameData_t
     dn_setFloorPalette(&entityManager->palettes[DN_MOVE2_FLOOR_PALETTE], c125);
     wsgPaletteReset(&entityManager->palettes[DN_MOVE3_FLOOR_PALETTE]);
     dn_setFloorPalette(&entityManager->palettes[DN_MOVE3_FLOOR_PALETTE], c245);
+    wsgPaletteReset(&entityManager->palettes[DN_REMIX1_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_REMIX1_FLOOR_PALETTE], c304);
+    wsgPaletteReset(&entityManager->palettes[DN_REMIX2_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_REMIX2_FLOOR_PALETTE], c405);
+    wsgPaletteReset(&entityManager->palettes[DN_REMIX3_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_REMIX3_FLOOR_PALETTE], c415);
 
     wsgPaletteReset(&entityManager->palettes[DN_DICE_NO_ARROW_PALETTE]);
     wsgPaletteSet(&entityManager->palettes[DN_DICE_NO_ARROW_PALETTE], c123, cTransparent);
@@ -64,7 +70,8 @@ void dn_initializeEntityManager(dn_entityManager_t* entityManager, dn_gameData_t
         rgb = (rgb >> 16) & 0xFF; // Extract red channel
         rgb += (rgb >> 8) & 0xFF;  // Extract green channel
         rgb += rgb & 0xFF;         // Extract blue channel
-        rgb /= 3;
+        rgb /= 2;
+        rgb = CLAMP(rgb, 0,255);
 
         wsgPaletteSet(&entityManager->palettes[DN_GRAYSCALE_PALETTE], cur, (rgb/51) * 43);
     }
@@ -277,11 +284,12 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
         case DN_PAWN_SMALL_ASSET:
         case DN_BUCKET_HAT_DOWN_ASSET:
         case DN_BUCKET_HAT_UP_ASSET:
-        {
+        {//pawns
             entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
             entity->data = heap_caps_calloc(1, sizeof(dn_unitData_t), MALLOC_CAP_SPIRAM);
             entity->dataType     = DN_UNIT_DATA;
             entity->drawFunction = dn_drawNothing; // Drawing of units is handled by dn_drawBoard
+            entity->paused = true;
             break;
         }
         case DN_GROUND_TILE_ASSET:

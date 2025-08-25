@@ -267,10 +267,10 @@ void dn_drawBoard(dn_entity_t* self)
                           drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
                           drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
                         &self->gameData->entityManager
-                                 .palettes[DN_ATTACK1_FLOOR_PALETTE
-                                           + 5 - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
+                                 .palettes[DN_REMIX1_FLOOR_PALETTE
+                                           + 2 - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
                                                + (self->gameData->generalTimer >> 6))
-                                              % 10) - 5)]);
+                                              % 4) - 2)]);
             }
             else
             {
@@ -323,11 +323,15 @@ void dn_drawBoard(dn_entity_t* self)
                         drawWsgPaletteSimple(&self->gameData->assets[unit->assetIndex].frames[0],
                                             drawX - self->gameData->assets[unit->assetIndex].originX,
                                             drawY - self->gameData->assets[unit->assetIndex].originY,
-                                            &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                                            &self->gameData->entityManager.palettes[unit->paused ? DN_GRAYSCALE_PALETTE : DN_WHITE_CHESS_PALETTE]);
                         drawn = true;
                     }
                     //draw mini chess unit
                     drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[0],
+                                    miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                    miniDrawY - self->gameData->assets[miniAssetIndex].originY,
+                                    &self->gameData->entityManager.palettes[unit->paused ? DN_GRAYSCALE_PALETTE : DN_WHITE_CHESS_PALETTE]);
+                    drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[1],
                                     miniDrawX - self->gameData->assets[miniAssetIndex].originX,
                                     miniDrawY - self->gameData->assets[miniAssetIndex].originY,
                                     &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
@@ -335,16 +339,39 @@ void dn_drawBoard(dn_entity_t* self)
                 else
                 {
                     //draw mini chess unit
-                    drawWsgSimple(&self->gameData->assets[miniAssetIndex].frames[0],
+                    if(unit->paused)
+                    {
+                        drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[0],
+                                        miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                        miniDrawY - self->gameData->assets[miniAssetIndex].originY,
+                                        &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE]);
+                    }
+                    else
+                    {
+                        drawWsgSimple(&self->gameData->assets[miniAssetIndex].frames[0],
+                                    miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                    miniDrawY - self->gameData->assets[miniAssetIndex].originY);
+                    }
+                    drawWsgSimple(&self->gameData->assets[miniAssetIndex].frames[1],
                                     miniDrawX - self->gameData->assets[miniAssetIndex].originX,
                                     miniDrawY - self->gameData->assets[miniAssetIndex].originY);
                 }
                 if (!drawn)
                 {
                     //draw unit
-                    drawWsgSimple(&self->gameData->assets[unit->assetIndex].frames[0],
+                    if(unit->paused)
+                    {
+                        drawWsgPaletteSimple(&self->gameData->assets[unit->assetIndex].frames[0],
+                                  drawX - self->gameData->assets[unit->assetIndex].originX,
+                                  drawY - self->gameData->assets[unit->assetIndex].originY,
+                                  &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE]);
+                    }
+                    else
+                    {
+                        drawWsgSimple(&self->gameData->assets[unit->assetIndex].frames[0],
                                   drawX - self->gameData->assets[unit->assetIndex].originX,
                                   drawY - self->gameData->assets[unit->assetIndex].originY);
+                    }
                 }
             }
             if (boardData->tiles[y][x].selector != NULL)
@@ -395,7 +422,10 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
                     case DN_RED_TRACK: //ranged attack and remixed track
                     {
                         //You can shoot ANY tile. (muahahaha)
-                        push(tracks, (void*)unitAction);
+                        if(!unit->paused || unitAction->action == DN_REMIX_TRACK)
+                        {
+                            push(tracks, (void*)unitAction);
+                        }
                         break;
                     }
                     case DN_BLUE_TRACK: //movement
@@ -1330,6 +1360,11 @@ void dn_trySelectTrack(dn_entity_t* self)
         bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
         self->destroyFlag = true;
         dn_track_t type = dn_trackTypeAtCoords(album, relativeTrack);
+        if(type == DN_REMIX_TRACK && tData->selectedUnit->paused)
+        {
+            //just treat it like movement, because the unit can't shoot.
+            type = DN_BLUE_TRACK;
+        }
         switch(type)
         {
             case DN_BLUE_TRACK:
@@ -1341,6 +1376,7 @@ void dn_trySelectTrack(dn_entity_t* self)
             case DN_RED_TRACK:
             case DN_REMIX_TRACK:
             {
+                bData->tiles[from.y][from.x].unit->paused = true;
                 /////////////////////
                 // Make the bullet //
                 /////////////////////
@@ -2661,6 +2697,7 @@ void dn_drawBullet(dn_entity_t* self)
 void dn_moveUnit(dn_entity_t* self)
 {
     self->gameData->resolvingRemix = false;
+    self->paused = false;
     dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
     dn_unitData_t* uData = (dn_unitData_t*)self->data;
 
