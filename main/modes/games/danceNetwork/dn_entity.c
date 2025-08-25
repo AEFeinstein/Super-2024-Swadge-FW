@@ -1342,8 +1342,8 @@ void dn_cancelSelectTrack(dn_entity_t* self)
 void dn_drawPlayerTurn(dn_entity_t* self)
 {
     //Temporary solution to showing rerolls until LED Matrix works
-    drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[0]], 5, 200, 3, 3);
-    drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[1]], 257, 200, 3, 3);
+    drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[0]], 5, 30 + 100 * (self->gameData->camera.pos.y < 60060), 3, 3);
+    drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[1]], 257, 30 + 100 * (self->gameData->camera.pos.y < 60060), 3, 3);
 
     paletteColor_t col = c055;
     switch(self->gameData->phase)
