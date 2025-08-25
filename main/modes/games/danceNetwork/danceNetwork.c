@@ -639,11 +639,11 @@ static void dn_initializeGame(void)
     dn_entity_t* album2 = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
                                                 (vec_t){0xFFFF + 1280, 63311}, gameData);
 
-    uint8_t roll1 = dn_randomInt(0,16);
-    uint8_t roll2 = dn_randomInt(0,16);
+    uint8_t roll1 = dn_randomInt(0,15);
+    uint8_t roll2 = dn_randomInt(0,15);
     while (roll2 == roll1)
     {
-        roll2 = dn_randomInt(0,16);
+        roll2 = dn_randomInt(0,15);
     }
 
     for(uint8_t blueTrack = 0; blueTrack < 4; blueTrack++)
