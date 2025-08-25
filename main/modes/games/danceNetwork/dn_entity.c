@@ -123,8 +123,8 @@ void dn_updateBoard(dn_entity_t* self)
                             // Make the prompt Game Over //
                             ///////////////////////////////
                             dn_entity_t* promptGameOver = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
-                            promptGameOver->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
                             dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
+
                             strcpy(promptData->text, self->gameData->playerNames[tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]]);
                             strcat(promptData->text, " wins!");
                             promptData->isPurple = true;
@@ -143,8 +143,8 @@ void dn_updateBoard(dn_entity_t* self)
                             // Make the prompt Sudoku //
                             ////////////////////////////
                             dn_entity_t* promptSudoku = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
-                            promptSudoku->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
                             dn_promptData_t* promptData = (dn_promptData_t*)promptSudoku->data;
+
                             promptData->usesTwoLinesOfText = true;
                             strcpy(promptData->text, "Your unit has taken the plunge.");
                             strcpy(promptData->text2, "3 rerolls rise from the pit.");
@@ -1814,8 +1814,8 @@ void dn_acceptSwapCC(dn_entity_t* self)
         //make the prompt not enough rerolls//
         //////////////////////////////////////
         dn_entity_t* promptNotEnough = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
-        promptNotEnough->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
         dn_promptData_t* promptData = (dn_promptData_t*)promptNotEnough->data;
+
         strcpy(promptData->text, "Not enough rerolls.");
         promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         
@@ -2555,8 +2555,8 @@ void dn_updateBullet(dn_entity_t* self)
                 // Make the prompt Game Over //
                 ///////////////////////////////
                 dn_entity_t* promptGameOver = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
-                promptGameOver->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
                 dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
+
                 promptData->usesTwoLinesOfText = false;
                 char text[40];
                 strcpy(text, self->gameData->playerNames[targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]]);
@@ -2579,8 +2579,8 @@ void dn_updateBullet(dn_entity_t* self)
                 // Make the prompt enemy captured//
                 ///////////////////////////////////
                 dn_entity_t* promptCaptured = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
-                promptCaptured->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
                 dn_promptData_t* promptData = (dn_promptData_t*)promptCaptured->data;
+
                 promptData->usesTwoLinesOfText = true;
                 strcpy(promptData->text, "Enemy unit captured.");
                 strcpy(promptData->text2, "Gain 1 reroll and swap albums.");
@@ -2713,7 +2713,7 @@ void dn_moveUnit(dn_entity_t* self)
         ///////////////////////////////
         dn_entity_t* promptGameOver = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
         dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
-
+        
         promptData->usesTwoLinesOfText = true;
         char text[40];
         strcpy(text, self->gameData->playerNames[bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout ? self != ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] : self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0]]);
