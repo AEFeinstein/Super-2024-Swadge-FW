@@ -2268,14 +2268,13 @@ void dn_initializeThirdUpgradeOption(dn_entity_t* self)
         umData->album[album] = album;
     }
     umData->album[3] = 3;//3 separator
-
-    //shuffle
-    for (int8_t i = sizeof(umData->album) / sizeof(umData->album[0]) - 2; i > 0; i--)
+    umData->album[0] = self->gameData->phase >= DN_P2_DANCE_PHASE;
+    umData->album[1] = self->gameData->phase < DN_P2_DANCE_PHASE;
+    umData->album[2] = 2;
+    if(dn_randomInt(0,1))
     {
-        int8_t j = (int8_t)(dn_randomInt(0, INT_MAX) % (i + 1));
-        uint8_t temp = umData->album[i];
-        umData->album[i] = umData->album[j];
-        umData->album[j] = temp;
+        umData->album[1] = 2;
+        umData->album[2] = self->gameData->phase < DN_P2_DANCE_PHASE;
     }
     
     umData->options[2].callback = dn_rerollThirdUpgradeOption;
@@ -2354,6 +2353,7 @@ void dn_rerollThirdUpgradeOption(dn_entity_t* self)
 }
 void dn_rerollFirstUpgradeOption(dn_entity_t* self)
 {
+    self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE]--;
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
     dn_track_t previous = umData->trackColor;
     while(umData->trackColor == previous)
