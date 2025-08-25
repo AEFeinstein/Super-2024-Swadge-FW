@@ -463,6 +463,8 @@ static const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, ui
     {
         switch (bank)
         {
+            case 2:
+                return &mmxDrumkitTimbre;
             case 1:
                 return &donutDrumkitTimbre;
 
@@ -475,6 +477,22 @@ static const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, ui
     {
         switch (bank)
         {
+            case 2:
+            {
+                for (size_t n = 0; n < mmxTimbreCount; n++)
+                {
+                    if (program == mmxTimbreMap[n])
+                    {
+                        return mmxTimbres[n];
+                    }
+                    else if (program < mmxTimbreMap[n])
+                    {
+                        return &acousticGrandPianoTimbre;
+                    }
+                }
+
+                return &acousticGrandPianoTimbre;
+            }
             case 1:
             {
                 if (program < magfestTimbreCount)
@@ -678,7 +696,9 @@ static int32_t midiSumSamples(midiPlayer_t* player)
                 voices[voiceIdx].sampleError += sampleRateRatio;
                 // And account for the sample we just played
 
-                if (voices[voiceIdx].sampleTick == voices[voiceIdx].timbre->sample.count)
+                // loop if we reach the end of the sample or if the loop endpoint is set and we reach that
+                if (voices[voiceIdx].sampleTick == voices[voiceIdx].timbre->sample.count
+                    || voices[voiceIdx].sampleTick >= voices[voiceIdx].timbre->sample.loopEnd)
                 {
                     if (voices[voiceIdx].sampleLoops > 0)
                     {
@@ -691,12 +711,12 @@ static int32_t midiSumSamples(midiPlayer_t* player)
                         }
                         else
                         {
-                            voices[voiceIdx].sampleTick = 0;
+                            voices[voiceIdx].sampleTick = voices[voiceIdx].timbre->sample.loopStart;
                         }
                     }
                     else
                     {
-                        voices[voiceIdx].sampleTick = 0;
+                        voices[voiceIdx].sampleTick = voices[voiceIdx].timbre->sample.loopStart;
                     }
                 }
             } while (voices[voiceIdx].sampleError < 0x100);

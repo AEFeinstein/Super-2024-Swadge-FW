@@ -197,9 +197,9 @@ static inline int8_t finishAt(uint32_t finishTime, uint32_t idx, bool* done)
 
 // noiseVol=48, sineVol=256, len=8192, freq=G1
 
-    #define TOM(idx, len, noiseVol, sineVol, freq, done)                                               \
-        adrLerp(idx, (len) / 2, (len) / 2, noiseVol, 0) * swSynthSampleWave(NOISE, idx & 0xFF) / 256   \
-            + adrLerp(idx, 128, ((len) - 128), sineVol, 0) * sampleWaveAt(idx, SHAPE_SINE, freq) / 256 \
+    #define TOM(idx, len, noiseVol, sineVol, freq, done)                                             \
+        adrLerp(idx, (len) / 2, (len) / 2, noiseVol, 0) * swSynthSampleWave(NOISE, idx & 0xFF) / 256 \
+            + adrLerp(idx, 128, ((len)-128), sineVol, 0) * sampleWaveAt(idx, SHAPE_SINE, freq) / 256 \
             + finishAt(len, idx, done)
 
     /* defaultDrumkitFunc() defines values in terms of samples at 32768hz
@@ -877,3 +877,282 @@ void bakeDrums(void)
 }
 
 #endif
+
+int8_t mmxDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_t scratch[4], void* data)
+{
+    switch ((int)drum)
+    {
+        case ELECTRIC_BASS_DRUM_OR_HIGH_BASS_DRUM:
+        {
+            // Kick
+            static bool kickLoaded           = false;
+            static const uint8_t* kickSample = NULL;
+            static size_t kickLen            = 0;
+            if (!kickLoaded)
+            {
+                kickSample = cnfsGetFile(KICK_BIN, &kickLen);
+                kickLoaded = true;
+            }
+
+            if (idx >= kickLen - 1)
+            {
+                *done = true;
+            }
+
+            return kickSample[idx];
+        }
+
+        case SIDE_STICK:
+        {
+            // High-Q
+            static bool highqLoaded           = false;
+            static const uint8_t* highqSample = NULL;
+            static size_t highqLen            = 0;
+            if (!highqLoaded)
+            {
+                highqSample = cnfsGetFile(HIGHQ_BIN, &highqLen);
+                highqLoaded = true;
+            }
+
+            if (idx >= highqLen - 1)
+            {
+                // TODO loop
+                *done = true;
+            }
+
+            return highqSample[idx];
+        }
+
+        case ACOUSTIC_SNARE:
+        case HAND_CLAP:
+        case ELECTRIC_SNARE_OR_RIMSHOT:
+        {
+            // Snare
+            static bool snareLoaded           = false;
+            static const uint8_t* snareSample = NULL;
+            static size_t snareLen            = 0;
+            if (!snareLoaded)
+            {
+                snareSample = cnfsGetFile(SNARE_BIN, &snareLen);
+                snareLoaded = true;
+            }
+
+            if (idx >= snareLen - 1)
+            {
+                // TODO loop
+                *done = true;
+            }
+
+            return snareSample[idx];
+        }
+
+        case LOW_FLOOR_TOM:
+        {
+            // PowerSnare
+            // Loop!
+            // loop_start=2095
+            // loop_end=5087
+            // end=5087
+            // 2095 * 16384 / 37760 = ??? idk that's why we have computer
+            static bool powerSnareLoaded           = false;
+            static const uint8_t* powerSnareSample = NULL;
+            static size_t powerSnareLen            = 0;
+            const size_t loopStart                 = 2095 * 16384 / 37760;
+            const size_t loopEnd                   = 5087 * 16384 / 37760;
+            const size_t hold                      = 0 * 16384 + (8401 * 16384 / 100000);
+            const size_t decay                     = 0 * 16384 + (77111 * 16384 / 100000);
+            if (!powerSnareLoaded)
+            {
+                powerSnareSample = cnfsGetFile(POWERSNARE_BIN, &powerSnareLen);
+                powerSnareLoaded = true;
+            }
+
+            int level = 256;
+            if (idx > powerSnareLen)
+            {
+                if (idx > hold)
+                {
+                    level *= (decay);
+                    level /= (idx - hold);
+
+                    if (idx > hold + decay)
+                    {
+                        *done = true;
+                    }
+                }
+
+                idx = (idx - powerSnareLen) % (loopEnd - loopStart) + loopStart;
+                //*done = true;
+            }
+
+            return (powerSnareSample[idx] * level) >> 8;
+        }
+
+        case OPEN_HI_HAT:
+        case LOW_MID_TOM:
+        case HIGH_MID_TOM:
+        case CRASH_CYMBAL_1:
+        case HIGH_TOM:
+        case RIDE_CYMBAL_1:
+        case CHINESE_CYMBAL:
+        case RIDE_BELL:
+        case TAMBOURINE:
+        case SPLASH_CYMBAL:
+        {
+            // openHiHat
+            static bool openHiHatLoaded           = false;
+            static const uint8_t* openHiHatSample = NULL;
+            static size_t openHiHatLen            = 0;
+            const size_t loopStart                = 47 * 16384 / 37760;
+            const size_t loopEnd                  = 2543 * 16384 / 37760;
+            const size_t decay                    = 2 * 16384 + (6456 * 16384 / 100000);
+
+            if (!openHiHatLoaded)
+            {
+                openHiHatSample = cnfsGetFile(OPENHIHAT_BIN, &openHiHatLen);
+                openHiHatLoaded = true;
+            }
+
+            int level = 256;
+            if (idx > openHiHatLen)
+            {
+                level *= decay;
+                level /= idx;
+                if (idx >= decay)
+                {
+                    *done = true;
+                }
+                idx = (idx - openHiHatLen) % (loopEnd - loopStart) + loopStart;
+                //*done = true;
+            }
+
+            return (openHiHatSample[idx] * level) >> 8;
+        }
+
+        case COWBELL:
+        case CRASH_CYMBAL_2:
+        case VIBRASLAP:
+        case RIDE_CYMBAL_2:
+        case HIGH_BONGO:
+        case LOW_BONGO:
+        case MUTE_HIGH_CONGA:
+        case OPEN_HIGH_CONGA:
+        case LOW_CONGA:
+        case HIGH_TIMBALE:
+        case LOW_TIMBALE:
+        case HIGH_AGOGO:
+        case LOW_AGOGO:
+        case CABASA:
+        case MARACAS:
+        case SHORT_WHISTLE:
+        case LONG_WHISTLE:
+        {
+            // crashCymbal
+            static bool crashCymbalLoaded           = false;
+            static const uint8_t* crashCymbalSample = NULL;
+            static size_t crashCymbalLen            = 0;
+            const size_t loopStart                  = 2095;
+            const size_t loopEnd                    = 4575;
+            const size_t hold                       = 0 * 16384 + (2090 * 16384 / 100000);
+            const size_t decay                      = 3 * 16384 + (4482 * 16384 / 100000);
+            if (!crashCymbalLoaded)
+            {
+                crashCymbalSample = cnfsGetFile(CRASHCYMBAL_BIN, &crashCymbalLen);
+                crashCymbalLoaded = true;
+            }
+
+            int level = 256;
+            if (idx > crashCymbalLen)
+            {
+                if (idx > hold)
+                {
+                    level *= (decay);
+                    level /= (idx - hold);
+
+                    if (idx > hold + decay)
+                    {
+                        *done = true;
+                    }
+                }
+                idx = (idx - crashCymbalLen) % (loopEnd - loopStart) + loopStart;
+                //*done = true;
+            }
+
+            return (crashCymbalSample[idx] * level) >> 8;
+        }
+
+        case SHORT_GUIRO: // 73
+        case LONG_GUIRO:
+        case CLAVES:
+        case HIGH_WOODBLOCK:
+        case LOW_WOODBLOCK:
+        case MUTE_CUICA:
+        case OPEN_CUICA:
+        case MUTE_TRIANGLE:
+        case OPEN_TRIANGLE:
+        case 82:
+        case 83:
+        case 84:
+        case 85:
+        {
+            // synthTom
+            static bool synthTomLoaded           = false;
+            static const uint8_t* synthTomSample = NULL;
+            static size_t synthTomLen            = 0;
+            if (!synthTomLoaded)
+            {
+                synthTomSample = cnfsGetFile(SYNTHTOM_BIN, &synthTomLen);
+                synthTomLoaded = true;
+            }
+
+            if (idx >= synthTomLen - 1)
+            {
+                *done = true;
+            }
+
+            return synthTomSample[idx];
+        }
+
+        case 86:
+        case 87:
+        case 88:
+        case 89:
+        case 90:
+        case 91:
+        case 92:
+        case 93:
+        case 94:
+        case 95:
+        case 96:
+        case 97:
+        case 98:
+        case 99:
+        case 100:
+        case 101:
+        case 102:
+        {
+            // tom
+            static bool tomLoaded           = false;
+            static const uint8_t* tomSample = NULL;
+            static size_t tomLen            = 0;
+            if (!tomLoaded)
+            {
+                tomSample = cnfsGetFile(TOM_BIN, &tomLen);
+                tomLoaded = true;
+            }
+
+            if (idx >= tomLen - 1)
+            {
+                *done = true;
+            }
+
+            return tomSample[idx];
+        }
+
+        default:
+        {
+            *done = true;
+            return 0;
+        }
+    }
+}
