@@ -114,6 +114,7 @@ dn_gameData_t* gameData;
 static void dn_EnterMode(void)
 {
     gameData = (dn_gameData_t*)heap_caps_calloc(1, sizeof(dn_gameData_t), MALLOC_CAP_8BIT);
+    memset(gameData, 0, sizeof(dn_gameData_t));
 
     int32_t outVal;
     readNvs32(dnCharacterKey, &outVal);
@@ -625,6 +626,7 @@ static void dn_initializeGame(void)
     dn_entity_t* albums  = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_ALBUM_ASSET, 0,
                                                   (vec_t){0xFFFF, 63823}, gameData);//Y is 0xFFFF - (107 << DN_DECIMAL_BITS)
     albums->data         = heap_caps_calloc(1, sizeof(dn_albumData_t), MALLOC_CAP_SPIRAM);
+    memset(albums->data, 0, sizeof(dn_albumData_t));
     albums->dataType     = DN_ALBUMS_DATA;
     albums->drawFunction = dn_drawAlbums;
     gameData->entityManager.albums = albums;
@@ -791,6 +793,7 @@ static void dn_initializeCharacterSelect(void)
     dn_entity_t* characterSelect       = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true,
                                                                 DN_NO_ASSET, 0, (vec_t){0xFFFF, 0xFFFF}, gameData);
     characterSelect->data              = heap_caps_calloc(1, sizeof(dn_characterSelectData_t), MALLOC_CAP_SPIRAM);
+    memset(characterSelect->data, 0, sizeof(dn_characterSelectData_t));
     characterSelect->dataType          = DN_CHARACTER_SELECT_DATA;
     dn_characterSelectData_t* cData    = (dn_characterSelectData_t*)characterSelect->data;
     bool selectDiamondShapeInit[9 * 5] = {

@@ -129,8 +129,10 @@ void dn_updateBoard(dn_entity_t* self)
                             strcat(promptData->text, " wins!");
                             promptData->isPurple = true;
                             promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-                            
+                            memset(promptData->options, 0, sizeof(list_t));
+
                             dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+                            memset(option1, 0, sizeof(dn_promptOption_t));
                             strcpy(option1->text, "OK");
                             option1->callback = NULL;
                             option1->downPressDetected = false;
@@ -149,8 +151,10 @@ void dn_updateBoard(dn_entity_t* self)
                             strcpy(promptData->text, "Your unit has taken the plunge.");
                             strcpy(promptData->text2, "3 rerolls rise from the pit.");
                             promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-                            
+                            memset(promptData->options, 0, sizeof(list_t));
+
                             dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+                            memset(option1, 0, sizeof(dn_promptOption_t));
                             strcpy(option1->text, "OK");
                             option1->callback = dn_afterPlunge;
                             option1->downPressDetected = false;
@@ -398,6 +402,7 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
             dn_boardPos_t track = dn_colorToTrackCoords(check);
             dn_boardPos_t unitPos = dn_getUnitBoardPos(unit);
             dn_action_t* unitAction = heap_caps_malloc(sizeof(dn_action_t), MALLOC_CAP_8BIT);
+            memset(unitAction, 0, sizeof(dn_action_t));
             (*unitAction).pos = (dn_boardPos_t){.x = unitPos.x + (1 - 2 * !isP1) * track.x, .y = unitPos.y + (1 - 2 * isP1) * track.y};
             if(unitAction->pos.x >=0 && unitAction->pos.x <= 4 && unitAction->pos.y >= 0 && unitAction->pos.y <= 4)
             {
@@ -479,6 +484,7 @@ bool dn_calculateMoveableUnits(dn_entity_t* board)
             continue;
         }
         list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+        memset(myList, 0, sizeof(list_t));
         if(dn_availableMoves(playerUnits[i], myList))
         {
             playerHasMoves = true;
@@ -1294,6 +1300,7 @@ void dn_trySelectUnit(dn_entity_t* self)
 
         //recalculate selectable tiles
         list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+        memset(myList, 0, sizeof(list_t));
         if(dn_availableMoves(tData->selectedUnit, myList))
         {
             node_t* cur = myList->first;
@@ -1387,6 +1394,7 @@ void dn_trySelectTrack(dn_entity_t* self)
                 bullet->updateFunction = dn_updateBullet;
                 bullet->drawFunction = dn_drawBullet;
                 bullet->data         = heap_caps_calloc(1, sizeof(dn_bulletData_t), MALLOC_CAP_SPIRAM);
+                memset(bullet->data, 0, sizeof(dn_bulletData_t));
                 bullet->dataType     = DN_BULLET_DATA;
                 ((dn_bulletData_t*)bullet->data)->targetTile = tData->pos;
                 ((dn_bulletData_t*)bullet->data)->start = bullet->pos;
@@ -1623,6 +1631,8 @@ void dn_startTurn(dn_entity_t* self)
     ////////////////////////////////
     dn_entity_t* promptToStart = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
     promptToStart->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+    memset(promptToStart->data, 0, sizeof(dn_promptData_t));
+
     dn_promptData_t* promptData = (dn_promptData_t*)promptToStart->data;
     promptData->animatingIntroSlide = true;
     promptData->yOffset = 320;//way off screen to allow more time to look at albums.
@@ -1637,8 +1647,10 @@ void dn_startTurn(dn_entity_t* self)
     }
     
     promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+    memset(promptData->options, 0, sizeof(list_t));
     
     dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+    memset(option1, 0, sizeof(dn_promptOption_t));
     strcpy(option1->text, "OK");
     option1->callback = dn_gainRerollAndSetupDancePhase;
     option1->downPressDetected = false;
@@ -1673,6 +1685,7 @@ void dn_setupDancePhase(dn_entity_t* self)//used to be dn_startMovePhase
     dn_entity_t* tileSelector = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
                                                     0, self->gameData->camera.pos, self->gameData);
     tileSelector->data        = heap_caps_calloc(1, sizeof(dn_tileSelectorData_t), MALLOC_CAP_SPIRAM);
+    memset(tileSelector->data, 0, sizeof(dn_tileSelectorData_t));
     ((dn_tileSelectorData_t*)tileSelector->data)->a_callback = dn_trySelectUnit;
     ((dn_tileSelectorData_t*)tileSelector->data)->b_callback = NULL;
     tileSelector->dataType    = DN_TILE_SELECTOR_DATA;
@@ -1717,6 +1730,8 @@ void dn_acceptRerollAndSwapHelper(dn_entity_t* self, bool progressPhase)
     dn_entity_t* swap = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
                                                     0, addVec2d(self->gameData->camera.pos, (vec_t){(107 << DN_DECIMAL_BITS), -(68 << DN_DECIMAL_BITS)}), self->gameData);
     swap->data        = heap_caps_calloc(1, sizeof(dn_swapAlbumsData_t), MALLOC_CAP_SPIRAM);
+    memset(swap->data, 0, sizeof(dn_swapAlbumsData_t));
+
     dn_swapAlbumsData_t* swapData = (dn_swapAlbumsData_t*)swap->data;
     swapData->progressPhase = progressPhase;
     dn_albumsData_t* aData = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
@@ -1794,6 +1809,7 @@ void dn_startUpgradeMenu(dn_entity_t* self, int32_t countOff)
     dn_entity_t* upgradeMenu = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
                                                     0, addVec2d(self->gameData->camera.pos, (vec_t){(107 << DN_DECIMAL_BITS), -(140 << DN_DECIMAL_BITS)}), self->gameData);
     upgradeMenu->data        = heap_caps_calloc(1, sizeof(dn_upgradeMenuData_t), MALLOC_CAP_SPIRAM);
+    memset(upgradeMenu->data, 0, sizeof(dn_upgradeMenuData_t));
     ((dn_upgradeMenuData_t*)upgradeMenu->data)->timer = countOff;
     upgradeMenu->dataType    = DN_UPGRADE_MENU_DATA;
     upgradeMenu->updateFunction = dn_updateUpgradeMenu;
@@ -1818,8 +1834,10 @@ void dn_acceptSwapCC(dn_entity_t* self)
 
         strcpy(promptData->text, "Not enough rerolls.");
         promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-        
+        memset(promptData->options, 0, sizeof(list_t));
+
         dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+        memset(option1, 0, sizeof(dn_promptOption_t));
         strcpy(option1->text, "OK");
         option1->callback = dn_unpauseSwapButton;
         option1->downPressDetected = false;
@@ -1836,6 +1854,7 @@ void dn_acceptSwapCC(dn_entity_t* self)
     dn_entity_t* swap = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
                                                     0, addVec2d(self->gameData->camera.pos, (vec_t){(107 << DN_DECIMAL_BITS), -(68 << DN_DECIMAL_BITS)}), self->gameData);
     swap->data        = heap_caps_calloc(1, sizeof(dn_swapAlbumsData_t), MALLOC_CAP_SPIRAM);
+    memset(swap->data, 0, sizeof(dn_swapAlbumsData_t));
     dn_swapAlbumsData_t* swapData = (dn_swapAlbumsData_t*)swap->data;
     dn_albumsData_t* aData = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
     ((dn_albumData_t*)aData->p1Album->data)->cornerLightOn = false;
@@ -2564,8 +2583,10 @@ void dn_updateBullet(dn_entity_t* self)
                 strcpy(promptData->text, text);
                 promptData->isPurple = true;
                 promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-                
+                memset(promptData->options, 0, sizeof(list_t));
+
                 dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+                memset(option1, 0, sizeof(dn_promptOption_t));
                 strcpy(option1->text, "OK");
                 option1->callback = NULL;
                 option1->downPressDetected = false;
@@ -2585,8 +2606,10 @@ void dn_updateBullet(dn_entity_t* self)
                 strcpy(promptData->text, "Enemy unit captured.");
                 strcpy(promptData->text2, "Gain 1 reroll and swap albums.");
                 promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-                
+                memset(promptData->options, 0, sizeof(list_t));
+
                 dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+                memset(option1, 0, sizeof(dn_promptOption_t));
                 strcpy(option1->text, "OK");
                 option1->callback = dn_acceptRerollAndSwapAndProgress;
                 option1->downPressDetected = false;
@@ -2605,8 +2628,10 @@ void dn_updateBullet(dn_entity_t* self)
                 strcpy(promptData->text, "Friendly fire!!!");
                 strcpy(promptData->text2, "Receive 3 rerolls from the afterlife.");
                 promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-                
+                memset(promptData->options, 0, sizeof(list_t));
+
                 dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+                memset(option1, 0, sizeof(dn_promptOption_t));
                 strcpy(option1->text, "OK");
                 option1->callback = dn_acceptThreeRerolls;
                 option1->downPressDetected = false;
@@ -2697,12 +2722,12 @@ void dn_moveUnit(dn_entity_t* self)
         }
     }
     bData->tiles[uData->moveTo.y][uData->moveTo.x].unit = self;
+    bData->impactPos = uData->moveTo;
 
     self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE] += bData->tiles[bData->impactPos.y][bData->impactPos.x].rewards;
     self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE] = CLAMP(self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE], 0, 9);
     bData->tiles[bData->impactPos.y][bData->impactPos.x].rewards = 0;
     
-    bData->impactPos = uData->moveTo;
     bData->tiles[bData->impactPos.y][bData->impactPos.x].yVel = -700;
 
     if((self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] && bData->impactPos.y == 0 && bData->impactPos.x == 2)|| 
@@ -2713,7 +2738,7 @@ void dn_moveUnit(dn_entity_t* self)
         ///////////////////////////////
         dn_entity_t* promptGameOver = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
         dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
-        
+
         promptData->usesTwoLinesOfText = true;
         char text[40];
         strcpy(text, self->gameData->playerNames[bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout ? self != ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] : self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0]]);
@@ -2721,8 +2746,10 @@ void dn_moveUnit(dn_entity_t* self)
         promptData->isPurple = true;
         strcpy(promptData->text, text);
         promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-        
+        memset(promptData->options, 0, sizeof(list_t));
+
         dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+        memset(option1, 0, sizeof(dn_promptOption_t));
         strcpy(option1->text, "OK");
         option1->callback = dn_afterPlunge;
         option1->downPressDetected = false;

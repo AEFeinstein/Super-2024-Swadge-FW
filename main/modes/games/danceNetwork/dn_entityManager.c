@@ -361,7 +361,7 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
 
 dn_entity_t* dn_createPrompt(dn_entityManager_t* entityManager, vec_t pos, dn_gameData_t* gameData)
 {
-    dn_entity_t* prompt = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+    dn_entity_t* prompt = dn_createEntitySpecial(entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, gameData);
     prompt->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
     memset(prompt->data, 0, sizeof(dn_promptData_t));
     dn_promptData_t* promptData = (dn_promptData_t*)prompt->data;
@@ -370,6 +370,7 @@ dn_entity_t* dn_createPrompt(dn_entityManager_t* entityManager, vec_t pos, dn_ga
     prompt->dataType     = DN_PROMPT_DATA;
     prompt->updateFunction = dn_updatePrompt;
     prompt->drawFunction = dn_drawPrompt;
+    return prompt;
 }
 
 void dn_freeEntityManager(dn_entityManager_t* entityManager)
