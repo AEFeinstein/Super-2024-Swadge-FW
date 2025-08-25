@@ -647,9 +647,9 @@ static void dn_initializeGame(void)
     gameData->entityManager.board   = board;
     for(uint8_t i = 0; i < DN_BOARD_SIZE; i++)
     {
-        boardData->tiles[1][i].rewards = 1;
-        boardData->tiles[2][i].rewards = 2;
-        boardData->tiles[3][i].rewards = 1;
+        //boardData->tiles[1][i].rewards = 1;
+        boardData->tiles[2][i].rewards = 1;
+        //boardData->tiles[3][i].rewards = 1;
     }
 
     ///////////////////

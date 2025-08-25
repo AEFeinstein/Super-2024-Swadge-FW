@@ -2097,17 +2097,17 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
                 {
                     case DN_RED_TRACK:
                     {
-                        snprintf(text, sizeof(text), "Add a fire track,");
+                        snprintf(text, sizeof(text), "Write a fire track,");
                         break;
                     }
                     case DN_BLUE_TRACK:
                     {
-                        snprintf(text, sizeof(text), "Add a moving track,");
+                        snprintf(text, sizeof(text), "Write a moving track,");
                         break;
                     }
                     case DN_REMIX_TRACK:
                     {
-                        snprintf(text, sizeof(text), "Remix a track,");
+                        snprintf(text, sizeof(text), "Write a remix,");
                         break;
                     }
                     default:
@@ -2230,34 +2230,18 @@ void dn_initializeThirdUpgradeOption(dn_entity_t* self)
 void dn_initializeFirstUpgradeOption(dn_entity_t* self)
 {
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
-    dn_entity_t* album = NULL;
-    switch(umData->album[0])
+    uint8_t roll = dn_randomInt(0,100);
+    if(roll < 50)
     {
-        case 0:
-        {
-            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album;
-            break;
-        }
-        case 1:
-        {
-            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album;
-            break;
-        }
-        case 2:
-        {
-            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum;
-            break;
-        }
+        umData->trackColor = DN_BLUE_TRACK;
     }
-    
-    dn_track_t cur = dn_trackTypeAtCoords(album, umData->track[0]);
-    if(cur != DN_NONE_TRACK)
+    else if(roll < 80)
     {
-        umData->trackColor = DN_REMIX_TRACK;
+        umData->trackColor = DN_RED_TRACK;
     }
     else
     {
-        umData->trackColor = dn_randomInt(0,1) ? DN_BLUE_TRACK : DN_RED_TRACK;
+        umData->trackColor = DN_REMIX_TRACK;
     }
 
     umData->options[0].callback = dn_rerollFirstUpgradeOption;
@@ -2317,46 +2301,23 @@ void dn_rerollThirdUpgradeOption(dn_entity_t* self)
 }
 void dn_rerollFirstUpgradeOption(dn_entity_t* self)
 {
-    self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE]--;
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
-    
-    dn_entity_t* album = NULL;
-    switch(umData->album[0])
+    dn_track_t previous = umData->trackColor;
+    while(umData->trackColor == previous)
     {
-        case 0:
+        uint8_t roll = dn_randomInt(0,100);
+        if(roll < 50)
         {
-            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album;
-            break;
+            umData->trackColor = DN_BLUE_TRACK;
         }
-        case 1:
+        else if(roll < 80)
         {
-            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album;
-            break;
-        }
-        case 2:
-        {
-            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum;
-            break;
-        }
-    }
-    
-    dn_track_t cur = dn_trackTypeAtCoords(album, umData->track[0]);
-
-    if(cur == DN_NONE_TRACK)
-    {
-        if(umData->trackColor == DN_REMIX_TRACK)
-        {
-            umData->trackColor = dn_randomInt(0,1) ? DN_BLUE_TRACK : DN_RED_TRACK;
+            umData->trackColor = DN_RED_TRACK;
         }
         else
         {
-            umData->trackColor = umData->trackColor == DN_RED_TRACK ? DN_BLUE_TRACK : DN_RED_TRACK;
+            umData->trackColor = DN_REMIX_TRACK;
         }
-        
-    }
-    else
-    {
-        umData->trackColor = umData->trackColor == DN_REMIX_TRACK ? (cur == DN_BLUE_TRACK ? DN_RED_TRACK : DN_BLUE_TRACK) : DN_REMIX_TRACK;
     }
 }
 
