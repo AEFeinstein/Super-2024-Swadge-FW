@@ -620,6 +620,21 @@ static void dn_initializeGame(void)
     dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0, (vec_t){0xFFFF + (122<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
     dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 4, (vec_t){0xFFFF + (124<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData)->flipped = true;
 
+    ///////////////////
+    // Make the board//
+    ///////////////////
+    dn_entity_t* board
+        = dn_createEntitySimple(&gameData->entityManager, DN_GROUND_TILE_ASSET, (vec_t){0xFFFF, 0xFFFF}, gameData);
+    dn_boardData_t* boardData       = (dn_boardData_t*)board->data;
+    boardData->impactPos = (dn_boardPos_t){2, 2};
+    gameData->entityManager.board   = board;
+    for(uint8_t i = 0; i < DN_BOARD_SIZE; i++)
+    {
+        //boardData->tiles[1][i].rewards = 1;
+        boardData->tiles[2][i].rewards = 1;
+        //boardData->tiles[3][i].rewards = 1;
+    }
+
     ////////////////////
     // Make the albums//
     ////////////////////
@@ -670,21 +685,6 @@ static void dn_initializeGame(void)
     ((dn_albumsData_t*)gameData->entityManager.albums->data)->p1Album = album1;
     ((dn_albumsData_t*)gameData->entityManager.albums->data)->creativeCommonsAlbum = ccAlbum;
     ((dn_albumsData_t*)gameData->entityManager.albums->data)->p2Album = album2;
-
-    ///////////////////
-    // Make the board//
-    ///////////////////
-    dn_entity_t* board
-        = dn_createEntitySimple(&gameData->entityManager, DN_GROUND_TILE_ASSET, (vec_t){0xFFFF, 0xFFFF}, gameData);
-    dn_boardData_t* boardData       = (dn_boardData_t*)board->data;
-    boardData->impactPos = (dn_boardPos_t){2, 2};
-    gameData->entityManager.board   = board;
-    for(uint8_t i = 0; i < DN_BOARD_SIZE; i++)
-    {
-        //boardData->tiles[1][i].rewards = 1;
-        boardData->tiles[2][i].rewards = 1;
-        //boardData->tiles[3][i].rewards = 1;
-    }
 
     ///////////////////
     // Make the units//
