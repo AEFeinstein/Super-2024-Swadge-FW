@@ -278,14 +278,36 @@ void dn_drawBoard(dn_entity_t* self)
                           drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
                           drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
             }
-            // Draw the mini board
-            drawWsgSimple(&self->gameData->assets[DN_MINI_TILE_ASSET].frames[0],
-                          miniDrawX - self->gameData->assets[DN_MINI_TILE_ASSET].originX,
-                          miniDrawY - self->gameData->assets[DN_MINI_TILE_ASSET].originY);
+            if(boardData->tiles[y][x].rewards)
+            {
+                char reward[6];
+                snprintf(reward, sizeof(reward), "+%d", boardData->tiles[y][x].rewards);
+                drawShinyText(&self->gameData->font_ibm, c153, c254, c555, reward, drawX-8, drawY-5);
+
+                drawLineFast(drawX, drawY-self->gameData->assets[DN_GROUND_TILE_ASSET].originY + 1, drawX + self->gameData->assets[DN_GROUND_TILE_ASSET].originX - 1, drawY, c050);
+                drawLineFast(drawX + self->gameData->assets[DN_GROUND_TILE_ASSET].originX - 1, drawY, drawX, drawY+self->gameData->assets[DN_GROUND_TILE_ASSET].originY - 1, c050);
+                drawLineFast(drawX, drawY-self->gameData->assets[DN_GROUND_TILE_ASSET].originY + 1, drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX + 1, drawY, c050);
+                drawLineFast(drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX + 2, drawY, drawX, drawY+self->gameData->assets[DN_GROUND_TILE_ASSET].originY - 2, c050);
+            }
             if (boardData->tiles[y][x].selector != NULL)
             {
                 // Draw the back part of the selector
                 dn_drawTileSelectorBackHalf(boardData->tiles[y][x].selector, drawX, drawY);
+            }
+
+            // Draw the mini board
+            drawWsgSimple(&self->gameData->assets[DN_MINI_TILE_ASSET].frames[0],
+                          miniDrawX - self->gameData->assets[DN_MINI_TILE_ASSET].originX,
+                          miniDrawY - self->gameData->assets[DN_MINI_TILE_ASSET].originY);
+            if(boardData->tiles[y][x].rewards)
+            {
+                // char reward[6];
+                // snprintf(reward, sizeof(reward), "+%d", boardData->tiles[y][x].rewards);
+                // drawShinyText(&self->gameData->font_ibm, c031, c254, c555, reward, miniDrawX, miniDrawY);
+                drawLineFast(miniDrawX, miniDrawY - self->gameData->assets[DN_MINI_TILE_ASSET].originY + 1, miniDrawX + self->gameData->assets[DN_MINI_TILE_ASSET].originX - 1, miniDrawY, c050);
+                drawLineFast(miniDrawX + self->gameData->assets[DN_MINI_TILE_ASSET].originX - 1, miniDrawY, miniDrawX, miniDrawY + self->gameData->assets[DN_MINI_TILE_ASSET].originY - 1, c050);
+                drawLineFast(miniDrawX, miniDrawY - self->gameData->assets[DN_MINI_TILE_ASSET].originY + 1, miniDrawX - self->gameData->assets[DN_MINI_TILE_ASSET].originX + 1, miniDrawY, c050);
+                drawLineFast(miniDrawX - self->gameData->assets[DN_MINI_TILE_ASSET].originX + 1, miniDrawY, miniDrawX, miniDrawY + self->gameData->assets[DN_MINI_TILE_ASSET].originY - 1, c050);
             }
             if (boardData->tiles[y][x].unit != NULL)
             {
@@ -1314,9 +1336,6 @@ void dn_trySelectTrack(dn_entity_t* self)
             {
                 ((dn_unitData_t*)tData->selectedUnit->data)->moveTo = tData->pos;
                 tData->selectedUnit->updateFunction = dn_moveUnit;
-
-                dn_incrementPhase(self);//would be the swap with opponent phase
-
                 break;
             }
             case DN_RED_TRACK:
@@ -2699,6 +2718,10 @@ void dn_moveUnit(dn_entity_t* self)
     
     bData->impactPos = uData->moveTo;
     bData->tiles[bData->impactPos.y][bData->impactPos.x].yVel = -700;
+
+    self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE] += bData->tiles[bData->impactPos.y][bData->impactPos.x].rewards;
+    self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE] = CLAMP(self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE], 0, 9);
+    bData->tiles[bData->impactPos.y][bData->impactPos.x].rewards = 0;
 
     if(!bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout)
     {

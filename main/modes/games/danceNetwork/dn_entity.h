@@ -66,6 +66,7 @@ typedef struct
     dn_selection_t selectionType;
     uint8_t timeout; // Becomes two if shot out. Decrements every turn start. In play at zero.
     uint8_t timeoutOffset; // further offsets the yOffset when in timeout.
+    uint8_t rewards;//some number of rerolls given to the first visitor here.
 } dn_tileData_t;
 
 typedef struct
