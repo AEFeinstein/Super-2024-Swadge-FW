@@ -49,6 +49,27 @@ void dn_initializeEntityManager(dn_entityManager_t* entityManager, dn_gameData_t
     wsgPaletteReset(&entityManager->palettes[DN_MOVE3_FLOOR_PALETTE]);
     dn_setFloorPalette(&entityManager->palettes[DN_MOVE3_FLOOR_PALETTE], c245);
 
+    wsgPaletteReset(&entityManager->palettes[DN_DICE_NO_ARROW_PALETTE]);
+    wsgPaletteSet(&entityManager->palettes[DN_DICE_NO_ARROW_PALETTE], c123, cTransparent);
+    wsgPaletteSet(&entityManager->palettes[DN_DICE_NO_ARROW_PALETTE], c444, c555);//top face
+    wsgPaletteSet(&entityManager->palettes[DN_DICE_NO_ARROW_PALETTE], c222, c333);//side face
+    wsgPaletteSet(&entityManager->palettes[DN_DICE_NO_ARROW_PALETTE], c100, c200);//reds
+    wsgPaletteSet(&entityManager->palettes[DN_DICE_NO_ARROW_PALETTE], c200, c300);
+    wsgPaletteSet(&entityManager->palettes[DN_DICE_NO_ARROW_PALETTE], c300, c500);
+
+    wsgPaletteReset(&entityManager->palettes[DN_GRAYSCALE_PALETTE]);
+    for(paletteColor_t cur = c000; cur <= c555; cur++)
+    {
+        uint32_t rgb = paletteToRGB(cur);
+        rgb = (rgb >> 16) & 0xFF; // Extract red channel
+        rgb += (rgb >> 8) & 0xFF;  // Extract green channel
+        rgb += rgb & 0xFF;         // Extract blue channel
+        rgb /= 3;
+
+        wsgPaletteSet(&entityManager->palettes[DN_GRAYSCALE_PALETTE], cur, (rgb/51) * 43);
+    }
+
+
     dn_setCharacterSetPalette(&gameData->entityManager, gameData->characterSets[0]);
 }
 

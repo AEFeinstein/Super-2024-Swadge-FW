@@ -43,7 +43,6 @@ struct dn_entity_t
     void* data;
     dn_dataType_t dataType;
     dn_updateFunction_t updateFunction;       // Only set for entities that need update logic
-    dn_updateFarFunction_t updateFarFunction; // Only set for execution when the entity is far from the camera center
     bool flipped; //draw flipped
     dn_drawFunction_t drawFunction;           // Only set for entities such as Garbotnik that need custom drawing logic
     bool destroyFlag; // Entity will be cleanly destroyed after engine updating and before engine drawing.
@@ -178,6 +177,7 @@ typedef struct
     int16_t lerpAmount;
     vec_t center;
     vec_t offset;
+    bool progressPhase;
 } dn_swapAlbumsData_t;
 
 typedef struct
@@ -189,6 +189,8 @@ typedef struct
     dn_boardPos_t targetTile;
     dn_boardPos_t ownerToMove; // Position of the attacker if they are remixing and need to move after the attack.
 } dn_bulletData_t;
+
+
 
 //==============================================================================
 // Prototypes
@@ -237,17 +239,16 @@ void dn_updatePrompt(dn_entity_t* self);
 void dn_drawPrompt(dn_entity_t* self);
 void dn_startTurn(dn_entity_t* self);
 void dn_gainReroll(dn_entity_t* self);
-void dn_gainRerollAndStep(dn_entity_t* self);
-void dn_startSwapCCPhase(dn_entity_t* self);
-void dn_startMovePhase(dn_entity_t* self);
+void dn_gainRerollAndSetupDancePhase(dn_entity_t* self);
+void dn_setupDancePhase(dn_entity_t* self);
 void dn_acceptRerollAndSkip(dn_entity_t* self);
+void dn_acceptRerollAndSwapHelper(dn_entity_t* self, bool progressPhase);
 void dn_acceptRerollAndSwap(dn_entity_t* self);
+void dn_acceptRerollAndSwapAndProgress(dn_entity_t* self);
 void dn_acceptThreeRerolls(dn_entity_t* self);
-void dn_refuseReroll(dn_entity_t* self);
 void dn_clearSelectableTiles(dn_entity_t* self);
 void dn_startUpgradeMenu(dn_entity_t* self, int32_t countOff);
 void dn_acceptSwapCC(dn_entity_t* self);
-void dn_refuseSwapCC(dn_entity_t* self);
 void dn_incrementPhase(dn_entity_t* self);
 
 void dn_drawPit(dn_entity_t* self);
@@ -276,3 +277,13 @@ void dn_drawBullet(dn_entity_t* self);
 void dn_moveUnit(dn_entity_t* self);
 
 void dn_afterPlunge(dn_entity_t* self);
+
+void dn_sharedButtonLogic(dn_entity_t* self);
+
+void dn_updateSwapButton(dn_entity_t* self);
+void dn_drawSwapButton(dn_entity_t* self);
+void dn_unpauseSwapButton(dn_entity_t* self);
+
+void dn_updateSkipButton(dn_entity_t* self);
+void dn_drawSkipButton(dn_entity_t* self);
+void dn_unpauseSkipButton(dn_entity_t* self);

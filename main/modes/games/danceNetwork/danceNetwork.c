@@ -571,6 +571,10 @@ static void dn_initializeGame(void)
 
     dn_loadAsset(MMM_UP_WSG, 1, &gameData->assets[DN_MMM_UP_ASSET]);
 
+    dn_loadAsset(DN_SWAP_0_WSG, 16, &gameData->assets[DN_SWAP_ASSET]);
+
+    dn_loadAsset(DN_SKIP_0_WSG, 9, &gameData->assets[DN_SKIP_ASSET]);
+
     // LED MATRIX TEST
     //ch32v003WriteFlash(&gameData->assets[DN_NUMBER_ASSET].frames[0], sizeof(gameData->assets[DN_NUMBER_ASSET].frames[0]));
     // ch32v003WriteMemory(&gameData->assets[DN_NUMBER_ASSET].frames[0], sizeof(gameData->assets[DN_NUMBER_ASSET].frames[0]), 0);
@@ -586,13 +590,13 @@ static void dn_initializeGame(void)
     ///////////////////////////
     // Make the left speaker //
     ///////////////////////////
-    dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, true, DN_SPEAKER_STAND_ASSET, 0, (vec_t){0xFFFF - (123<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0, (vec_t){0xFFFF - (123<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
     dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 3, (vec_t){0xFFFF - (123<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
 
     ////////////////////////////
     // Make the right speaker //
     ////////////////////////////
-    dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, true, DN_SPEAKER_STAND_ASSET, 0, (vec_t){0xFFFF + (123<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0, (vec_t){0xFFFF + (122<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
     dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 4, (vec_t){0xFFFF + (124<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData)->flipped = true;
 
     ////////////////////
@@ -700,6 +704,20 @@ static void dn_initializeGame(void)
     /////////////////////////////
     dn_entity_t* pitForeground = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff - (57 << DN_DECIMAL_BITS)}, gameData);
     pitForeground->drawFunction = dn_drawPitForeground;
+
+    //////////////////////////
+    // Make the swap button //
+    //////////////////////////
+    dn_entity_t* swapButton = dn_createEntitySpecial(&gameData->entityManager, 0, DN_LOOPING_ANIMATION, true, DN_SWAP_ASSET, 3, (vec_t){0xFFFF - (103<<DN_DECIMAL_BITS), 0xFFFF + (25<<DN_DECIMAL_BITS)}, gameData);
+    swapButton->updateFunction = dn_updateSwapButton;
+    swapButton->drawFunction = dn_drawSwapButton;
+
+    //////////////////////////
+    // Make the skip button //
+    //////////////////////////
+    dn_entity_t* skipButton = dn_createEntitySpecial(&gameData->entityManager, 0, DN_LOOPING_ANIMATION, true, DN_SKIP_ASSET, 3, (vec_t){0xFFFF + (74<<DN_DECIMAL_BITS), 0xFFFF + (25<<DN_DECIMAL_BITS)}, gameData);
+    skipButton->updateFunction = dn_updateSkipButton;
+    skipButton->drawFunction = dn_drawSkipButton;
 
     /////////////////////////
     // Make the playerTurn //

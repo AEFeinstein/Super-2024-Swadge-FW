@@ -18,7 +18,7 @@ void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType)
 
 void dn_drawAsset(dn_entity_t* self)
 {
-    if(!self->paused)
+    if(!self->paused && (self->type == DN_LOOPING_ANIMATION || self->type == DN_ONESHOT_ANIMATION))
     {
         self->animationTimer++;
         if(self->animationTimer >= self->gameFramesPerAnimationFrame)
@@ -33,7 +33,14 @@ void dn_drawAsset(dn_entity_t* self)
                 - self->gameData->assets[self->assetIndex].originX;
     int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originY;
-    drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped, false, 0);
+    if(self->paused)
+    {
+        drawWsgPalette(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE], self->flipped, false, 0);
+    }
+    else
+    {
+        drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped, false, 0);
+    }
 }
 
 void dn_drawNothing(dn_entity_t* self)
@@ -420,7 +427,7 @@ dn_track_t dn_trackTypeAtCoords(dn_entity_t* album, dn_boardPos_t trackCoords)
 bool dn_calculateMoveableUnits(dn_entity_t* board)
 {
     dn_boardData_t* boardData = (dn_boardData_t*)board->data;
-    dn_entity_t** playerUnits = board->gameData->phase < DN_P2_TURN_START_PHASE ? boardData->p1Units : boardData->p2Units;
+    dn_entity_t** playerUnits = board->gameData->phase < DN_P2_DANCE_PHASE ? boardData->p1Units : boardData->p2Units;
 
     bool playerHasMoves = false;
 
@@ -825,7 +832,7 @@ void dn_updateAlbum(dn_entity_t* self)
             if(self == ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album)
             {
                 //third album has finished the bootup animation
-                self->gameData->phase = DN_P1_TURN_START_PHASE;
+                self->gameData->phase = DN_P1_DANCE_PHASE;
                 dn_startTurn(self);
             }          
             aData->cornerLightOn = true;
@@ -1154,12 +1161,35 @@ void dn_updateTileSelector(dn_entity_t* self)
         tData->pos.y++;
     }
 
-    tData->pos.x = CLAMP(tData->pos.x, 0, 4);
-    tData->pos.y = CLAMP(tData->pos.y, 0, 4);
+    tData->pos.x = CLAMP(tData->pos.x, 0, 5);
+    tData->pos.y = CLAMP(tData->pos.y, 0, 5);
+
+    if(tData->pos.y == 5)
+    {
+        node_t* swapButtonNode = self->gameData->entityManager.entities->last;
+        while(((dn_entity_t*)swapButtonNode->val)->assetIndex != DN_SWAP_ASSET)
+        {
+            swapButtonNode = swapButtonNode->prev;
+        }
+        ((dn_entity_t*)swapButtonNode->val)->paused = false;
+        self->destroyFlag = true;
+        return;
+    }
+    if(tData->pos.x == 5)
+    {
+        node_t* skipButtonNode = self->gameData->entityManager.entities->last;
+        while(((dn_entity_t*)skipButtonNode->val)->assetIndex != DN_SKIP_ASSET)
+        {
+            skipButtonNode = skipButtonNode->prev;
+        }
+        ((dn_entity_t*)skipButtonNode->val)->paused = false;
+        self->destroyFlag = true;
+        return;
+    }
 
     bData->tiles[tData->pos.y][tData->pos.x].selector = self;
 
-    if (self->gameData->btnDownState & PB_B)
+    if (tData->b_callback && self->gameData->btnDownState & PB_B)
     {
         tData->b_callback(self);
     }
@@ -1249,7 +1279,7 @@ void dn_cancelSelectUnit(dn_entity_t* self)
             }
         }
     }
-    dn_startMovePhase(self);
+    dn_setupDancePhase(self);
 }
 void dn_trySelectTrack(dn_entity_t* self)
 {
@@ -1266,7 +1296,7 @@ void dn_trySelectTrack(dn_entity_t* self)
         
         dn_entity_t* album = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album;
         //Make it relative to the player's facing direction
-        if(self->gameData->phase < DN_P2_TURN_START_PHASE)
+        if(self->gameData->phase < DN_P2_DANCE_PHASE)
         {
             relativeTrack.y *= -1;
         }
@@ -1336,7 +1366,7 @@ void dn_cancelSelectTrack(dn_entity_t* self)
     dn_calculateMoveableUnits(self->gameData->entityManager.board);
 
     tData->a_callback = dn_trySelectUnit;
-    tData->b_callback = dn_cancelSelectUnit;
+    tData->b_callback = NULL;
 }
 
 void dn_drawPlayerTurn(dn_entity_t* self)
@@ -1345,24 +1375,7 @@ void dn_drawPlayerTurn(dn_entity_t* self)
     drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[0]], 5, 30 + 100 * (self->gameData->camera.pos.y < 60060), 3, 3);
     drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[1]], 257, 30 + 100 * (self->gameData->camera.pos.y < 60060), 3, 3);
 
-    paletteColor_t col = c055;
-    switch(self->gameData->phase)
-    {
-        case DN_P2_TURN_START_PHASE:
-        case DN_P2_SWAP_CC_PHASE:
-        case DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE:
-        case DN_P2_MOVE_PHASE:
-        case DN_P2_SWAP_P1_PHASE:
-        case DN_P2_UPGRADE_PHASE:
-        {
-            col = c550;
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }
+    paletteColor_t col = self->gameData->phase < DN_P2_DANCE_PHASE ? c055 : c550;
     drawCircleQuadrants(41,41,41,false,false,true,false,col);
     drawCircleQuadrants(TFT_WIDTH-42,41,41,false,false,false,true,col);
     drawCircleQuadrants(41,TFT_HEIGHT-42,41,false,true,false,false,col);
@@ -1480,15 +1493,10 @@ void dn_drawPrompt(dn_entity_t* self)
     paletteColor_t outer = c425;
     paletteColor_t middle = c535;
     paletteColor_t inner = c555;
-    if(!pData->isPurple && self->gameData->phase >= DN_P2_TURN_START_PHASE)
+    if(!pData->isPurple)
     {
-        outer = c442;
-        middle = c553;
-    }
-    else if(!pData->isPurple && self->gameData->phase < DN_P2_TURN_START_PHASE)
-    {
-        outer = c245;
-        middle = c355;
+        outer = self->gameData->phase < DN_P2_DANCE_PHASE ? c245 : c442;
+        middle = self->gameData->phase < DN_P2_DANCE_PHASE ? c355 : c553;
     }
     uint16_t tWidth = textWidth(&self->gameData->font_ibm, pData->text);
     if(pData->usesTwoLinesOfText)
@@ -1524,8 +1532,8 @@ void dn_drawPrompt(dn_entity_t* self)
     //flashy arrows up and down
     if(pData->yOffset == 70 && !pData->playerHasSlidThis && (self->gameData->generalTimer % 256) > 128)
     {
-        drawWsgPaletteSimple(&self->gameData->assets[DN_MMM_UP_ASSET].frames[0], (TFT_WIDTH>>1) - self->gameData->assets[DN_MMM_UP_ASSET].originX, pData->yOffset - 4 - self->gameData->assets[DN_MMM_UP_ASSET].originY, &self->gameData->entityManager.palettes[self->gameData->phase >= DN_P2_TURN_START_PHASE ? DN_P2_ARROW_PALETTE : DN_PURPLE_FLOOR_PALETTE]);
-        drawWsgPalette(&self->gameData->assets[DN_MMM_UP_ASSET].frames[0], (TFT_WIDTH>>1) - self->gameData->assets[DN_MMM_UP_ASSET].originX, pData->yOffset +64 - self->gameData->assets[DN_MMM_UP_ASSET].originY, &self->gameData->entityManager.palettes[self->gameData->phase >= DN_P2_TURN_START_PHASE ? DN_P2_ARROW_PALETTE : DN_PURPLE_FLOOR_PALETTE], false, true, 0);
+        drawWsgPaletteSimple(&self->gameData->assets[DN_MMM_UP_ASSET].frames[0], (TFT_WIDTH>>1) - self->gameData->assets[DN_MMM_UP_ASSET].originX, pData->yOffset - 4 - self->gameData->assets[DN_MMM_UP_ASSET].originY, &self->gameData->entityManager.palettes[self->gameData->phase >= DN_P2_DANCE_PHASE ? DN_P2_ARROW_PALETTE : DN_PURPLE_FLOOR_PALETTE]);
+        drawWsgPalette(&self->gameData->assets[DN_MMM_UP_ASSET].frames[0], (TFT_WIDTH>>1) - self->gameData->assets[DN_MMM_UP_ASSET].originX, pData->yOffset +64 - self->gameData->assets[DN_MMM_UP_ASSET].originY, &self->gameData->entityManager.palettes[self->gameData->phase >= DN_P2_DANCE_PHASE ? DN_P2_ARROW_PALETTE : DN_PURPLE_FLOOR_PALETTE], false, true, 0);
     }
 }
 
@@ -1535,9 +1543,9 @@ void dn_startTurn(dn_entity_t* self)
     led_t leds[CONFIG_NUM_LEDS];
     for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
     {
-        leds[i].r = self->gameData->phase == DN_P1_TURN_START_PHASE ? 0 : 255;
+        leds[i].r = self->gameData->phase == DN_P1_DANCE_PHASE ? 0 : 255;
         leds[i].g = 255;
-        leds[i].b = self->gameData->phase == DN_P1_TURN_START_PHASE ? 255 : 0;
+        leds[i].b = self->gameData->phase == DN_P1_DANCE_PHASE ? 255 : 0;
     }
     // Set the LED output
     setLeds(leds, CONFIG_NUM_LEDS);
@@ -1567,20 +1575,20 @@ void dn_startTurn(dn_entity_t* self)
     promptData->animatingIntroSlide = true;
     promptData->yOffset = 320;//way off screen to allow more time to look at albums.
     
-    if(self->gameData->rerolls[self->gameData->phase >= DN_P2_TURN_START_PHASE] != 9)
+    if(self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] != 9)
     {
-        snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! Gain 1 reroll.", self->gameData->shortPlayerNames[self->gameData->phase>=DN_P2_TURN_START_PHASE]);
+        snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! Gain 1 reroll.", self->gameData->shortPlayerNames[self->gameData->phase>=DN_P2_DANCE_PHASE]);
     }
     else
     {
-        snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! 9 rerolls reached.", self->gameData->shortPlayerNames[self->gameData->phase>=DN_P2_TURN_START_PHASE]);
+        snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! 9 rerolls reached.", self->gameData->shortPlayerNames[self->gameData->phase>=DN_P2_DANCE_PHASE]);
     }
     
     promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
     
     dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
     strcpy(option1->text, "OK");
-    option1->callback = dn_gainRerollAndStep;
+    option1->callback = dn_gainRerollAndSetupDancePhase;
     option1->downPressDetected = false;
     push(promptData->options, (void*)option1);
     promptData->numOptions = 1;    
@@ -1591,155 +1599,66 @@ void dn_startTurn(dn_entity_t* self)
 
 void dn_gainReroll(dn_entity_t* self)
 {
-    self->gameData->rerolls[self->gameData->phase>=DN_P2_TURN_START_PHASE]++;
-    self->gameData->rerolls[self->gameData->phase>=DN_P2_TURN_START_PHASE] = CLAMP(self->gameData->rerolls[self->gameData->phase>=DN_P2_TURN_START_PHASE], 0, 9);
+    self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE]++;
+    self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE] = CLAMP(self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE], 0, 9);
 }
 
-void dn_gainRerollAndStep(dn_entity_t* self)
+void dn_gainRerollAndSetupDancePhase(dn_entity_t* self)
 {
     dn_gainReroll(self);
-    dn_incrementPhase(self);
-    switch(self->gameData->phase)
-    {
-        case DN_P1_SWAP_CC_PHASE:
-        case DN_P2_SWAP_CC_PHASE:
-        {
-            dn_startSwapCCPhase(self);
-            break;
-        }
-        case DN_P1_MOVE_PHASE:
-        case DN_P2_MOVE_PHASE:
-        {
-            dn_startMovePhase(self);
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }
+
+    dn_setupDancePhase(self);
 }
 
-void dn_startSwapCCPhase(dn_entity_t* self)
-{
-    if(self->gameData->rerolls[self->gameData->phase >= DN_P2_TURN_START_PHASE] >= 3)
-    {
-        ///////////////////////////////////////////////////////
-        // Make the prompt to swap with the Creative Commons //
-        ///////////////////////////////////////////////////////
-        dn_entity_t* promptToSwapCC = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
-        promptToSwapCC->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
-        dn_promptData_t* promptData = (dn_promptData_t*)promptToSwapCC->data;
-        promptData->animatingIntroSlide = true;
-        promptData->yOffset = 320;//way off screen to allow more time to look at albums.
-        promptData->usesTwoLinesOfText = true;
-        strcpy(promptData->text, "Spend 3 rerolls to trade your");
-        strcpy(promptData->text2, "album with the creative commons?");
-        
-        promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-        
-        dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
-        strcpy(option1->text, "NO");
-        option1->downPressDetected = false;
-        option1->callback = dn_refuseSwapCC;
-        option1->downPressDetected = false;
-        push(promptData->options, (void*)option1);
-
-        dn_promptOption_t* option2 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
-        strcpy(option2->text, "YES");
-        option2->downPressDetected = false;
-        option2->callback = dn_acceptSwapCC;
-        push(promptData->options, (void*)option2);
-        promptData->numOptions = 2;
-        
-        promptToSwapCC->dataType     = DN_PROMPT_DATA;
-        promptToSwapCC->updateFunction = dn_updatePrompt;
-        promptToSwapCC->drawFunction = dn_drawPrompt;
-    }
-    else
-    {
-        dn_refuseSwapCC(self);
-    }
-}
-
-void dn_startMovePhase(dn_entity_t* self)
+void dn_setupDancePhase(dn_entity_t* self)//used to be dn_startMovePhase
 {
     dn_clearSelectableTiles(self);
-    if(dn_calculateMoveableUnits(self->gameData->entityManager.board))
-    {
-        /////////////////////////////
-        // Make the prompt to skip //
-        /////////////////////////////
-        dn_entity_t* promptToSkip = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
-        promptToSkip->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
-        dn_promptData_t* promptData = (dn_promptData_t*)promptToSkip->data;
-        promptData->animatingIntroSlide = true;
-        promptData->yOffset = 320;//way off screen to allow more time to look at albums.
-        promptData->usesTwoLinesOfText = true;
-        strcpy(promptData->text, "Skip dance action");
-        strcpy(promptData->text2, "to gain another reroll?");
-        
-        promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-        
-        dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
-        strcpy(option1->text, "NO");
-        option1->callback = dn_refuseReroll;
-        option1->downPressDetected = false;
-        push(promptData->options, (void*)option1);
+    dn_calculateMoveableUnits(self->gameData->entityManager.board);
 
-        dn_promptOption_t* option2 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
-        strcpy(option2->text, "YES");
-        option2->callback = dn_acceptRerollAndSkip;
-        option2->downPressDetected = false;
-        push(promptData->options, (void*)option2);
-        promptData->numOptions = 2;
-        
-        promptToSkip->dataType     = DN_PROMPT_DATA;
-        promptToSkip->updateFunction = dn_updatePrompt;
-        promptToSkip->drawFunction = dn_drawPrompt;
-    }
-    else
+    ///////////////////////////
+    // Make the tile selector//
+    ///////////////////////////
+    dn_entity_t* tileSelector = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
+                                                    0, self->gameData->camera.pos, self->gameData);
+    tileSelector->data        = heap_caps_calloc(1, sizeof(dn_tileSelectorData_t), MALLOC_CAP_SPIRAM);
+    ((dn_tileSelectorData_t*)tileSelector->data)->a_callback = dn_trySelectUnit;
+    ((dn_tileSelectorData_t*)tileSelector->data)->b_callback = NULL;
+    tileSelector->dataType    = DN_TILE_SELECTOR_DATA;
+    tileSelector->drawFunction = dn_drawNothing;
+    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)tileSelector->data;
+    for (int i = 0; i < NUM_SELECTOR_LINES; i++)
     {
-        //////////////////////////////////
-        // Make the prompt for no moves //
-        //////////////////////////////////
-        dn_entity_t* promptNoMoves = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
-        promptNoMoves->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
-        dn_promptData_t* promptData = (dn_promptData_t*)promptNoMoves->data;
-        promptData->animatingIntroSlide = true;
-        promptData->yOffset = 320;//way off screen to allow more time to look at albums.
-        strcpy(promptData->text, "No useable tracks. Gain 1 reroll.");
-        promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-        
-        dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
-        strcpy(option1->text, "OK");
-        option1->callback = dn_acceptRerollAndSkip;
-        option1->downPressDetected = false;
-        push(promptData->options, (void*)option1);
-        promptData->numOptions = 1;
-        
-        promptNoMoves->dataType     = DN_PROMPT_DATA;
-        promptNoMoves->updateFunction = dn_updatePrompt;
-        promptNoMoves->drawFunction = dn_drawPrompt;
+        tData->lineYs[i] = (255 * i) / NUM_SELECTOR_LINES;
     }
+    tData->pos = (dn_boardPos_t){2, 2};
+    // fancy line colors for player one
+    tData->colors[0]             = c125;
+    tData->colors[1]             = c345;
+    tData->colors[2]             = c555;
+    if(self->gameData->phase >= DN_P2_DANCE_PHASE)
+    {
+        tData->colors[0]         = c442;
+        tData->colors[1]         = c543;
+        tData->colors[2]         = c555;
+    }
+    tileSelector->updateFunction = dn_updateTileSelector;
+    // Don't set the draw function, because it needs to happen in two parts behind and in front of units.
+
+    ((dn_boardData_t*)self->gameData->entityManager.board->data)->tiles[2][2].selector = tileSelector;
 }
 
 void dn_acceptRerollAndSkip(dn_entity_t* self)
 {
     dn_gainReroll(self);
     dn_clearSelectableTiles(self);
-    dn_incrementPhase(self);//would be move phase
-    dn_incrementPhase(self);//would be the swap with opponent phase
-    dn_incrementPhase(self);//it is now upgrade phase
+    dn_incrementPhase(self);//It is the upgrade phase
 
     dn_startUpgradeMenu(self, 0);
 }
 
-void dn_acceptRerollAndSwap(dn_entity_t* self)
+void dn_acceptRerollAndSwapHelper(dn_entity_t* self, bool progressPhase)
 {
-    self->gameData->gameStalled = false;
     dn_gainReroll(self);
-
     ///////////////////
     // Make the swap //
     ///////////////////
@@ -1747,11 +1666,12 @@ void dn_acceptRerollAndSwap(dn_entity_t* self)
                                                     0, addVec2d(self->gameData->camera.pos, (vec_t){(107 << DN_DECIMAL_BITS), -(68 << DN_DECIMAL_BITS)}), self->gameData);
     swap->data        = heap_caps_calloc(1, sizeof(dn_swapAlbumsData_t), MALLOC_CAP_SPIRAM);
     dn_swapAlbumsData_t* swapData = (dn_swapAlbumsData_t*)swap->data;
+    swapData->progressPhase = progressPhase;
     dn_albumsData_t* aData = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
     ((dn_albumData_t*)aData->p1Album->data)->cornerLightOn = false;
     ((dn_albumData_t*)aData->creativeCommonsAlbum->data)->cornerLightOn = false;
     ((dn_albumData_t*)aData->p2Album->data)->cornerLightOn = false;
-    if(self->gameData->phase < DN_P2_TURN_START_PHASE)
+    if(self->gameData->phase < DN_P2_DANCE_PHASE)
     {
         swapData->firstAlbum = aData->p1Album;
         swapData->firstAlbumIdx = 0;
@@ -1772,6 +1692,16 @@ void dn_acceptRerollAndSwap(dn_entity_t* self)
     swap->drawFunction = NULL;
 }
 
+void dn_acceptRerollAndSwap(dn_entity_t* self)
+{
+    dn_acceptRerollAndSwapHelper(self, false);
+}
+
+void dn_acceptRerollAndSwapAndProgress(dn_entity_t* self)
+{
+    dn_acceptRerollAndSwapHelper(self, true);
+}
+
 void dn_acceptThreeRerolls(dn_entity_t* self)
 {
     dn_gainReroll(self);
@@ -1783,42 +1713,6 @@ void dn_acceptThreeRerolls(dn_entity_t* self)
         dn_startUpgradeMenu(self, 2 << 20);
     }
     self->gameData->resolvingRemix = false;
-}
-
-void dn_refuseReroll(dn_entity_t* self)
-{
-    dn_incrementPhase(self);//it is now move phase
-
-    ///////////////////////////
-    // Make the tile selector//
-    ///////////////////////////
-    dn_entity_t* tileSelector = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
-                                                    0, self->gameData->camera.pos, self->gameData);
-    tileSelector->data        = heap_caps_calloc(1, sizeof(dn_tileSelectorData_t), MALLOC_CAP_SPIRAM);
-    ((dn_tileSelectorData_t*)tileSelector->data)->a_callback = dn_trySelectUnit;
-    ((dn_tileSelectorData_t*)tileSelector->data)->b_callback = dn_cancelSelectUnit;
-    tileSelector->dataType    = DN_TILE_SELECTOR_DATA;
-    tileSelector->drawFunction = dn_drawNothing;
-    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)tileSelector->data;
-    for (int i = 0; i < NUM_SELECTOR_LINES; i++)
-    {
-        tData->lineYs[i] = (255 * i) / NUM_SELECTOR_LINES;
-    }
-    tData->pos = (dn_boardPos_t){2, 2};
-    // fancy line colors for player one
-    tData->colors[0]             = c125;
-    tData->colors[1]             = c345;
-    tData->colors[2]             = c555;
-    if(self->gameData->phase >= DN_P2_MOVE_PHASE)
-    {
-        tData->colors[0]         = c442;
-        tData->colors[1]         = c543;
-        tData->colors[2]         = c555;
-    }
-    tileSelector->updateFunction = dn_updateTileSelector;
-    // Don't set the draw function, because it needs to happen in two parts behind and in front of units.
-
-    ((dn_boardData_t*)self->gameData->entityManager.board->data)->tiles[2][2].selector = tileSelector;
 }
 
 void dn_clearSelectableTiles(dn_entity_t* self)
@@ -1856,7 +1750,33 @@ void dn_startUpgradeMenu(dn_entity_t* self, int32_t countOff)
 
 void dn_acceptSwapCC(dn_entity_t* self)
 {
-    self->gameData->rerolls[self->gameData->phase >= DN_P2_TURN_START_PHASE]-=3;
+    self->paused = true;
+    if(self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] < 3)
+    {
+        //make a prompt not enough rerolls
+        dn_entity_t* promptNotEnough = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+        promptNotEnough->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+        dn_promptData_t* promptData = (dn_promptData_t*)promptNotEnough->data;
+        promptData->animatingIntroSlide = true;
+        promptData->yOffset = 320;//way off screen to allow more time to look at albums.
+        strcpy(promptData->text, "Not enough rerolls.");
+        promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+        
+        dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+        strcpy(option1->text, "OK");
+        option1->callback = dn_unpauseSwapButton;
+        option1->downPressDetected = false;
+        push(promptData->options, (void*)option1);
+        promptData->numOptions = 1;
+
+        promptNotEnough->dataType     = DN_PROMPT_DATA;
+        promptNotEnough->updateFunction = dn_updatePrompt;
+        promptNotEnough->drawFunction = dn_drawPrompt;
+
+        return;
+    }
+
+    self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]-=3;
     ///////////////////
     // Make the swap //
     ///////////////////
@@ -1868,7 +1788,7 @@ void dn_acceptSwapCC(dn_entity_t* self)
     ((dn_albumData_t*)aData->p1Album->data)->cornerLightOn = false;
     ((dn_albumData_t*)aData->creativeCommonsAlbum->data)->cornerLightOn = false;
     ((dn_albumData_t*)aData->p2Album->data)->cornerLightOn = false;
-    if(self->gameData->phase < DN_P2_TURN_START_PHASE)
+    if(self->gameData->phase < DN_P2_DANCE_PHASE)
     {
         swapData->firstAlbum = aData->p1Album;
         swapData->firstAlbumIdx = 0;
@@ -1885,26 +1805,20 @@ void dn_acceptSwapCC(dn_entity_t* self)
     swap->drawFunction = NULL;
 }
 
-void dn_refuseSwapCC(dn_entity_t* self)
-{
-    dn_incrementPhase(self);
-    dn_startMovePhase(self);
-}
-
 void dn_incrementPhase(dn_entity_t* self)
 {
     self->gameData->phase++;
     if(self->gameData->phase > DN_P2_UPGRADE_PHASE)
     {
-        self->gameData->phase = DN_P1_TURN_START_PHASE;
+        self->gameData->phase = DN_P1_DANCE_PHASE;
     }
 
     //update the unit selection colors
-    if(self->gameData->phase == DN_P1_TURN_START_PHASE)
+    if(self->gameData->phase == DN_P1_DANCE_PHASE)
     {
         dn_setCharacterSetPalette(&self->gameData->entityManager, self->gameData->characterSets[0]);
     }
-    else if(self->gameData->phase == DN_P2_TURN_START_PHASE)
+    else if(self->gameData->phase == DN_P2_DANCE_PHASE)
     {
         dn_setCharacterSetPalette(&self->gameData->entityManager, self->gameData->characterSets[1]);
     }
@@ -1915,29 +1829,9 @@ void dn_incrementPhase(dn_entity_t* self)
     //debug stuff
     switch(self->gameData->phase)
     {
-        case DN_P1_TURN_START_PHASE:
+        case DN_P1_DANCE_PHASE:
         {
-            printf("DN_P1_TURN_START_PHASE\n");
-            break;
-        }
-        case DN_P1_SWAP_CC_PHASE:
-        {
-            printf("DN_P1_SWAP_CC_PHASE\n");
-            break;
-        }
-        case DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE:
-        {
-            printf("DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE\n");
-            break;
-        }
-        case DN_P1_MOVE_PHASE:
-        {
-            printf("DN_P1_MOVE_PHASE\n");
-            break;
-        }
-        case DN_P1_SWAP_P2_PHASE:
-        {
-            printf("DN_P1_SWAP_P2_PHASE\n");
+            printf("DN_P1_DANCE_PHASE\n");
             break;
         }
         case DN_P1_UPGRADE_PHASE:
@@ -1945,29 +1839,9 @@ void dn_incrementPhase(dn_entity_t* self)
             printf("DN_P1_UPGRADE_PHASE\n");
             break;
         }
-        case DN_P2_TURN_START_PHASE:
+        case DN_P2_DANCE_PHASE:
         {
-            printf("DN_P2_TURN_START_PHASE\n");
-            break;
-        }
-        case DN_P2_SWAP_CC_PHASE:
-        {
-            printf("DN_P2_SWAP_CC_PHASE\n");
-            break;
-        }
-        case DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE:
-        {
-            printf("DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE\n");
-            break;
-        }
-        case DN_P2_MOVE_PHASE:
-        {
-            printf("DN_P2_MOVE_PHASE\n");
-            break;
-        }
-        case DN_P2_SWAP_P1_PHASE:
-        {
-            printf("DN_P2_SWAP_P1_PHASE\n");
+            printf("DN_P2_DANCE_PHASE\n");
             break;
         }
         case DN_P2_UPGRADE_PHASE:
@@ -2082,7 +1956,7 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
 
     if(self->gameData->btnState & PB_A)
     {
-        if(umData->options[umData->selectionIdx].downPressDetected && (self->gameData->rerolls[self->gameData->phase >= DN_P2_TURN_START_PHASE] || umData->selectionIdx == 3))
+        if(umData->options[umData->selectionIdx].downPressDetected && (self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] || umData->selectionIdx == 3))
         {
             umData->options[umData->selectionIdx].selectionAmount += self->gameData->elapsedUs >> (3 + (umData->selectionIdx == 3)*2);//confirm takes longer to press
             if(umData->options[umData->selectionIdx].selectionAmount >= 30000)
@@ -2378,7 +2252,7 @@ void dn_initializeUpgradeConfirmOption(dn_entity_t* self)
 
 void dn_rerollSecondUpgradeOption(dn_entity_t* self)
 {
-    self->gameData->rerolls[self->gameData->phase>=DN_P2_TURN_START_PHASE]--;
+    self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE]--;
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
     uint8_t separatorIdx = 0;
     for(int i = 0; i < sizeof(umData->track) / sizeof(umData->track[0]); i++)
@@ -2401,7 +2275,7 @@ void dn_rerollSecondUpgradeOption(dn_entity_t* self)
 }
 void dn_rerollThirdUpgradeOption(dn_entity_t* self)
 {
-    self->gameData->rerolls[self->gameData->phase>=DN_P2_TURN_START_PHASE]--;
+    self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE]--;
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
     uint8_t separatorIdx = 0;
     for(int i = 0; i < sizeof(umData->album) / sizeof(umData->album[0]); i++)
@@ -2424,7 +2298,7 @@ void dn_rerollThirdUpgradeOption(dn_entity_t* self)
 }
 void dn_rerollFirstUpgradeOption(dn_entity_t* self)
 {
-    self->gameData->rerolls[self->gameData->phase>=DN_P2_TURN_START_PHASE]--;
+    self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE]--;
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
     
     dn_entity_t* album = NULL;
@@ -2610,16 +2484,21 @@ void dn_updateAfterSwap(dn_entity_t* self)
         aData->p1Album->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
         aData->creativeCommonsAlbum->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
         aData->p2Album->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
-        dn_incrementPhase(self);
-        if(self->gameData->phase == DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE || self->gameData->phase == DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE)
+        dn_swapAlbumsData_t* sData = (dn_swapAlbumsData_t*)self->data;
+        
+        if(sData->progressPhase)
         {
-            dn_startMovePhase(self);
+            dn_incrementPhase(self);
+            if(!self->gameData->resolvingRemix)
+            {
+                dn_startUpgradeMenu(self, 2 << 20);
+            }
+            self->gameData->resolvingRemix = false;
         }
-        else if(!self->gameData->resolvingRemix)
+        else
         {
-            dn_startUpgradeMenu(self, 2 << 20);
+            dn_unpauseSwapButton(self);
         }
-        self->gameData->resolvingRemix = false;
         self->destroyFlag = true;
     }
 }
@@ -2632,9 +2511,9 @@ void dn_setBlinkingLights(dn_entity_t* self)
     ((dn_albumData_t*)aData->creativeCommonsAlbum->data)->cornerLightOn = true;
     ((dn_albumData_t*)aData->p2Album->data)->cornerLightOn = true;
 
-    ((dn_albumData_t*)aData->p1Album->data)->cornerLightBlinking = self->gameData->phase <= DN_P1_MOVE_PHASE || self->gameData->phase > DN_P2_MOVE_PHASE;
-    ((dn_albumData_t*)aData->creativeCommonsAlbum->data)->cornerLightBlinking = self->gameData->phase % 6 <= DN_P1_SWAP_CC_PHASE || self->gameData->phase % 6 == DN_P1_UPGRADE_PHASE;
-    ((dn_albumData_t*)aData->p2Album->data)->cornerLightBlinking = self->gameData->phase <= DN_P2_MOVE_PHASE && self->gameData->phase > DN_P1_MOVE_PHASE;
+    ((dn_albumData_t*)aData->p1Album->data)->cornerLightBlinking = self->gameData->phase <= DN_P1_DANCE_PHASE || self->gameData->phase > DN_P2_DANCE_PHASE;
+    ((dn_albumData_t*)aData->creativeCommonsAlbum->data)->cornerLightBlinking = false;
+    ((dn_albumData_t*)aData->p2Album->data)->cornerLightBlinking = self->gameData->phase <= DN_P2_DANCE_PHASE && self->gameData->phase > DN_P1_DANCE_PHASE;
 }
 
 void dn_updateBullet(dn_entity_t* self)
@@ -2654,12 +2533,10 @@ void dn_updateBullet(dn_entity_t* self)
             targetTile->yVel = -700;
         }
 
-        dn_incrementPhase(self);//now the swap with opponent phase
         if(targetTile->unit)
         {
             if(targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] || targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0])//king is captured
             {
-                self->gameData->gameStalled = true;
                 ///////////////////////////////
                 // Make the prompt Game Over //
                 ///////////////////////////////
@@ -2687,10 +2564,9 @@ void dn_updateBullet(dn_entity_t* self)
                 promptGameOver->updateFunction = dn_updatePrompt;
                 promptGameOver->drawFunction = dn_drawPrompt;
             }
-            else if((dn_belongsToP1(targetTile->unit) && self->gameData->phase >= DN_P2_TURN_START_PHASE) ||
-               (!dn_belongsToP1(targetTile->unit) && self->gameData->phase < DN_P2_TURN_START_PHASE))
+            else if((dn_belongsToP1(targetTile->unit) && self->gameData->phase >= DN_P2_DANCE_PHASE) ||
+               (!dn_belongsToP1(targetTile->unit) && self->gameData->phase < DN_P2_DANCE_PHASE))
             {
-                self->gameData->gameStalled = true;
                 ///////////////////////////////////
                 // Make the prompt enemy captured//
                 ///////////////////////////////////
@@ -2706,7 +2582,7 @@ void dn_updateBullet(dn_entity_t* self)
                 
                 dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
                 strcpy(option1->text, "OK");
-                option1->callback = dn_acceptRerollAndSwap;
+                option1->callback = dn_acceptRerollAndSwapAndProgress;
                 option1->downPressDetected = false;
                 push(promptData->options, (void*)option1);
                 promptData->numOptions = 1;
@@ -2824,49 +2700,9 @@ void dn_moveUnit(dn_entity_t* self)
     bData->impactPos = uData->moveTo;
     bData->tiles[bData->impactPos.y][bData->impactPos.x].yVel = -700;
 
-
-    if((self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] && bData->impactPos.y == 0 && bData->impactPos.x == 2)|| 
-        (self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0] && bData->impactPos.y == 4 && bData->impactPos.x == 2))//king moved to the opponent's throne
+    if(!bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout)
     {
-        self->gameData->gameStalled = true;
-        ///////////////////////////////
-        // Make the prompt Game Over //
-        ///////////////////////////////
-        dn_entity_t* promptGameOver = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
-        promptGameOver->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
-        dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
-        promptData->animatingIntroSlide = true;
-        promptData->yOffset = 320;//way off screen to allow more time to look at albums.
-        promptData->usesTwoLinesOfText = true;
-        char text[40];
-        strcpy(text, self->gameData->playerNames[bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout ? self != ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] : self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0]]);
-        strcat(text, " wins!");
-        promptData->isPurple = true;
-        strcpy(promptData->text, text);
-        promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-        
-        dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
-        strcpy(option1->text, "OK");
-        option1->callback = dn_afterPlunge;
-        option1->downPressDetected = false;
-        push(promptData->options, (void*)option1);
-        promptData->numOptions = 1;
-
-        promptGameOver->dataType     = DN_PROMPT_DATA;
-        promptGameOver->updateFunction = dn_updatePrompt;
-        promptGameOver->drawFunction = dn_drawPrompt;
-    }
-    if(bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout)
-    {
-        self->gameData->gameStalled = true;
-    }
-
-    if(!self->gameData->gameStalled)
-    {
-        while(self->gameData->phase != DN_P1_UPGRADE_PHASE && self->gameData->phase != DN_P2_UPGRADE_PHASE)
-        {
-            dn_incrementPhase(self);//now the upgrade phase
-        }
+        dn_incrementPhase(self);//now the upgrade phase
         dn_startUpgradeMenu(self, 2 << 20);
     }
 
@@ -2878,10 +2714,121 @@ void dn_afterPlunge(dn_entity_t* self)
     dn_gainReroll(self);
     dn_gainReroll(self);
     dn_gainReroll(self);
-    self->gameData->gameStalled = false;
-    while(self->gameData->phase != DN_P1_UPGRADE_PHASE && self->gameData->phase != DN_P2_UPGRADE_PHASE)
-    {
-        dn_incrementPhase(self);//now the upgrade phase
-    }
+    dn_incrementPhase(self);//now the upgrade phase
     dn_startUpgradeMenu(self, 0);
 }
+
+void dn_sharedButtonLogic(dn_entity_t* self)
+{
+    if(self->gameData->btnDownState & PB_UP)
+    {
+        self->paused = true;
+        dn_setupDancePhase(self);
+        node_t* selectorNode = self->gameData->entityManager.entities->last;
+        while(((dn_entity_t*)selectorNode->val)->dataType != DN_TILE_SELECTOR_DATA)
+        {
+            selectorNode = selectorNode->prev;
+        }
+        self->gameData->btnDownState = 0;
+    }
+}
+
+void dn_updateSwapButton(dn_entity_t* self)
+{
+    if(self->paused)
+    {
+        return;
+    }
+
+    dn_sharedButtonLogic(self);
+
+    if(self->gameData->btnDownState & PB_RIGHT)
+    {
+        self->paused = true;
+        dn_unpauseSkipButton(self);
+    }
+    else if(self->gameData->btnDownState & PB_A)
+    {
+        self->paused = true;
+        dn_acceptSwapCC(self);
+    }
+}
+
+void dn_drawSwapButton(dn_entity_t* self)
+{
+    dn_drawAsset(self);
+    if(self->paused)
+    {
+        return;
+    }
+    int16_t x =  ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)+11;
+    int16_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)+23;
+    drawShinyText(&self->gameData->font_ibm, self->gameData->phase < DN_P2_DANCE_PHASE ? c245 : c442, self->gameData->phase < DN_P2_DANCE_PHASE ? c355 : c553, c555, "-3",x, y);
+
+    drawWsgPaletteSimple(&self->gameData->assets[DN_REROLL_ASSET].frames[0], x + 17,y-14,
+                &self->gameData->entityManager.palettes[DN_DICE_NO_ARROW_PALETTE]);
+
+    x -= 27;
+    y -= 26;
+    
+    drawShinyText(&self->gameData->font_ibm, self->gameData->phase < DN_P2_DANCE_PHASE ? c245 : c442, self->gameData->phase < DN_P2_DANCE_PHASE ? c355 : c553, c555, "SWAP",x, y);
+}
+
+void dn_unpauseSwapButton(dn_entity_t* self)
+{
+    node_t* swapButtonNode = self->gameData->entityManager.entities->last;
+    while(((dn_entity_t*)swapButtonNode->val)->assetIndex != DN_SWAP_ASSET)
+    {
+        swapButtonNode = swapButtonNode->prev;
+    }
+    ((dn_entity_t*)swapButtonNode->val)->paused = false;
+}
+
+void dn_updateSkipButton(dn_entity_t* self)
+{
+    if(self->paused)
+    {
+        return;
+    }
+
+    dn_sharedButtonLogic(self);
+
+    if(self->gameData->btnDownState & PB_LEFT)
+    {
+        self->paused = true;
+        dn_unpauseSwapButton(self);
+    }
+    else if(self->gameData->btnDownState & PB_A)
+    {
+        self->paused = true;
+        self->gameData->btnDownState = 0;
+        dn_acceptRerollAndSkip(self);
+    }
+}
+
+void dn_drawSkipButton(dn_entity_t* self)
+{
+    dn_drawAsset(self);
+    if(self->paused)
+    {
+        return;
+    }
+    int16_t x =  ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)+3;
+    int16_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)-6;
+    drawShinyText(&self->gameData->font_ibm, self->gameData->phase < DN_P2_DANCE_PHASE ? c245 : c442, self->gameData->phase < DN_P2_DANCE_PHASE ? c355 : c553, c555, "SKIP",x, y);
+    y += 27;
+    x -= 7;
+    drawShinyText(&self->gameData->font_ibm, self->gameData->phase < DN_P2_DANCE_PHASE ? c245 : c442, self->gameData->phase < DN_P2_DANCE_PHASE ? c355 : c553, c555, "+1",x, y);
+
+    drawWsgPaletteSimple(&self->gameData->assets[DN_REROLL_ASSET].frames[0], x + 16,y-11,
+                &self->gameData->entityManager.palettes[DN_DICE_NO_ARROW_PALETTE]);
+}
+
+void dn_unpauseSkipButton(dn_entity_t* self){
+        node_t* skipButtonNode = self->gameData->entityManager.entities->last;
+        while(((dn_entity_t*)skipButtonNode->val)->assetIndex != DN_SKIP_ASSET)
+        {
+            skipButtonNode = skipButtonNode->prev;
+        }
+        ((dn_entity_t*)skipButtonNode->val)->paused = false;
+    }
