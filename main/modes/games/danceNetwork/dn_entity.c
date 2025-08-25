@@ -2721,6 +2721,11 @@ void dn_moveUnit(dn_entity_t* self)
             if(bData->tiles[y][x].unit == self)
             {
                 bData->tiles[y][x].unit = NULL;
+                if(y != 0 && y != 4 && ((self->gameData->phase<DN_P2_DANCE_PHASE && uData->moveTo.y == 0) || (self->gameData->phase>=DN_P2_DANCE_PHASE && uData->moveTo.y == 4)))
+                {
+                    //units get a reroll for moving into the farthest rank.
+                    dn_gainReroll(self);
+                }
                 break;
             }
         }
@@ -2729,6 +2734,8 @@ void dn_moveUnit(dn_entity_t* self)
     
     bData->impactPos = uData->moveTo;
     bData->tiles[bData->impactPos.y][bData->impactPos.x].yVel = -700;
+
+
 
     self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE] += bData->tiles[bData->impactPos.y][bData->impactPos.x].rewards;
     self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE] = CLAMP(self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE], 0, 9);
