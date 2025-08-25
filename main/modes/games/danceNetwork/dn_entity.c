@@ -122,11 +122,9 @@ void dn_updateBoard(dn_entity_t* self)
                             ///////////////////////////////
                             // Make the prompt Game Over //
                             ///////////////////////////////
-                            dn_entity_t* promptGameOver = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+                            dn_entity_t* promptGameOver = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
                             promptGameOver->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
                             dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
-                            promptData->animatingIntroSlide = true;
-                            promptData->yOffset = 320;//way off screen to allow more time to look at albums.
                             strcpy(promptData->text, self->gameData->playerNames[tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]]);
                             strcat(promptData->text, " wins!");
                             promptData->isPurple = true;
@@ -138,21 +136,15 @@ void dn_updateBoard(dn_entity_t* self)
                             option1->downPressDetected = false;
                             push(promptData->options, (void*)option1);
                             promptData->numOptions = 1;
-
-                            promptGameOver->dataType     = DN_PROMPT_DATA;
-                            promptGameOver->updateFunction = dn_updatePrompt;
-                            promptGameOver->drawFunction = dn_drawPrompt;
                         }
                         else// a pawn has plunged
                         {
                             ////////////////////////////
                             // Make the prompt Sudoku //
                             ////////////////////////////
-                            dn_entity_t* promptGameOver = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
-                            promptGameOver->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
-                            dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
-                            promptData->animatingIntroSlide = true;
-                            promptData->yOffset = 320;//way off screen to allow more time to look at albums.
+                            dn_entity_t* promptSudoku = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
+                            promptSudoku->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+                            dn_promptData_t* promptData = (dn_promptData_t*)promptSudoku->data;
                             promptData->usesTwoLinesOfText = true;
                             strcpy(promptData->text, "Your unit has taken the plunge.");
                             strcpy(promptData->text2, "3 rerolls rise from the pit.");
@@ -164,10 +156,6 @@ void dn_updateBoard(dn_entity_t* self)
                             option1->downPressDetected = false;
                             push(promptData->options, (void*)option1);
                             promptData->numOptions = 1;
-
-                            promptGameOver->dataType     = DN_PROMPT_DATA;
-                            promptGameOver->updateFunction = dn_updatePrompt;
-                            promptGameOver->drawFunction = dn_drawPrompt;
                         }
 
 
@@ -1822,12 +1810,12 @@ void dn_acceptSwapCC(dn_entity_t* self)
     self->paused = true;
     if(self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] < 3)
     {
-        //make a prompt not enough rerolls
-        dn_entity_t* promptNotEnough = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+        //////////////////////////////////////
+        //make the prompt not enough rerolls//
+        //////////////////////////////////////
+        dn_entity_t* promptNotEnough = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
         promptNotEnough->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
         dn_promptData_t* promptData = (dn_promptData_t*)promptNotEnough->data;
-        promptData->animatingIntroSlide = true;
-        promptData->yOffset = 320;//way off screen to allow more time to look at albums.
         strcpy(promptData->text, "Not enough rerolls.");
         promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         
@@ -1837,10 +1825,6 @@ void dn_acceptSwapCC(dn_entity_t* self)
         option1->downPressDetected = false;
         push(promptData->options, (void*)option1);
         promptData->numOptions = 1;
-
-        promptNotEnough->dataType     = DN_PROMPT_DATA;
-        promptNotEnough->updateFunction = dn_updatePrompt;
-        promptNotEnough->drawFunction = dn_drawPrompt;
 
         return;
     }
@@ -2570,11 +2554,9 @@ void dn_updateBullet(dn_entity_t* self)
                 ///////////////////////////////
                 // Make the prompt Game Over //
                 ///////////////////////////////
-                dn_entity_t* promptGameOver = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+                dn_entity_t* promptGameOver = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
                 promptGameOver->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
                 dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
-                promptData->animatingIntroSlide = true;
-                promptData->yOffset = 320;//way off screen to allow more time to look at albums.
                 promptData->usesTwoLinesOfText = false;
                 char text[40];
                 strcpy(text, self->gameData->playerNames[targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]]);
@@ -2589,10 +2571,6 @@ void dn_updateBullet(dn_entity_t* self)
                 option1->downPressDetected = false;
                 push(promptData->options, (void*)option1);
                 promptData->numOptions = 1;
-
-                promptGameOver->dataType     = DN_PROMPT_DATA;
-                promptGameOver->updateFunction = dn_updatePrompt;
-                promptGameOver->drawFunction = dn_drawPrompt;
             }
             else if((dn_belongsToP1(targetTile->unit) && self->gameData->phase >= DN_P2_DANCE_PHASE) ||
                (!dn_belongsToP1(targetTile->unit) && self->gameData->phase < DN_P2_DANCE_PHASE))
@@ -2600,11 +2578,9 @@ void dn_updateBullet(dn_entity_t* self)
                 ///////////////////////////////////
                 // Make the prompt enemy captured//
                 ///////////////////////////////////
-                dn_entity_t* promptCaptured = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
+                dn_entity_t* promptCaptured = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
                 promptCaptured->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
                 dn_promptData_t* promptData = (dn_promptData_t*)promptCaptured->data;
-                promptData->animatingIntroSlide = true;
-                promptData->yOffset = 320;//way off screen to allow more time to look at albums.
                 promptData->usesTwoLinesOfText = true;
                 strcpy(promptData->text, "Enemy unit captured.");
                 strcpy(promptData->text2, "Gain 1 reroll and swap albums.");
@@ -2616,21 +2592,15 @@ void dn_updateBullet(dn_entity_t* self)
                 option1->downPressDetected = false;
                 push(promptData->options, (void*)option1);
                 promptData->numOptions = 1;
-
-                promptCaptured->dataType     = DN_PROMPT_DATA;
-                promptCaptured->updateFunction = dn_updatePrompt;
-                promptCaptured->drawFunction = dn_drawPrompt;
             }
             else//friendly fire!
             {
                 //////////////////////////////////////
                 // Make the prompt for friendly fire//
                 //////////////////////////////////////
-                dn_entity_t* promptCaptured = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
-                promptCaptured->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+                dn_entity_t* promptCaptured = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
                 dn_promptData_t* promptData = (dn_promptData_t*)promptCaptured->data;
-                promptData->animatingIntroSlide = true;
-                promptData->yOffset = 320;//way off screen to allow more time to look at albums.
+
                 promptData->usesTwoLinesOfText = true;
                 strcpy(promptData->text, "Friendly fire!!!");
                 strcpy(promptData->text2, "Receive 3 rerolls from the afterlife.");
@@ -2642,10 +2612,6 @@ void dn_updateBullet(dn_entity_t* self)
                 option1->downPressDetected = false;
                 push(promptData->options, (void*)option1);
                 promptData->numOptions = 1;
-
-                promptCaptured->dataType     = DN_PROMPT_DATA;
-                promptCaptured->updateFunction = dn_updatePrompt;
-                promptCaptured->drawFunction = dn_drawPrompt;
             }
             //A unit dies
             targetTile->unit->destroyFlag = true;
@@ -2745,11 +2711,9 @@ void dn_moveUnit(dn_entity_t* self)
         ///////////////////////////////
         // Make the prompt Game Over //
         ///////////////////////////////
-        dn_entity_t* promptGameOver = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
-        promptGameOver->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+        dn_entity_t* promptGameOver = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
         dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
-        promptData->animatingIntroSlide = true;
-        promptData->yOffset = 320;//way off screen to allow more time to look at albums.
+
         promptData->usesTwoLinesOfText = true;
         char text[40];
         strcpy(text, self->gameData->playerNames[bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout ? self != ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] : self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0]]);
@@ -2764,10 +2728,6 @@ void dn_moveUnit(dn_entity_t* self)
         option1->downPressDetected = false;
         push(promptData->options, (void*)option1);
         promptData->numOptions = 1;
-
-        promptGameOver->dataType     = DN_PROMPT_DATA;
-        promptGameOver->updateFunction = dn_updatePrompt;
-        promptGameOver->drawFunction = dn_drawPrompt;
     }
     else if(!bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout & !self->gameData->resolvingRemix)
     {

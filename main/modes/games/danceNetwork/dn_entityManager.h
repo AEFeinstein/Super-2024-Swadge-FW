@@ -41,4 +41,5 @@ dn_entity_t* dn_createEntitySpecial(dn_entityManager_t* entityManager, uint8_t n
                                     vec_t pos, dn_gameData_t* gameData);
 dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetIdx_t AssetIndex, vec_t pos,
                                    dn_gameData_t* gameData);
+dn_entity_t* dn_createPrompt(dn_entityManager_t* entityManager, vec_t pos, dn_gameData_t* gameData);
 void dn_freeEntityManager(dn_entityManager_t* entityManager);
