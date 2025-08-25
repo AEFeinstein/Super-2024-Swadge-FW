@@ -284,7 +284,7 @@ void dn_drawBoard(dn_entity_t* self)
             if (boardData->tiles[y][x].selector != NULL)
             {
                 // Draw the back part of the selector
-                dn_drawTileSelectorBackHalf(boardData->tiles[y][x].selector, drawX, drawY);
+                dn_drawTileSelectorBackHalf(boardData->tiles[y][x].selector, drawX, drawY - boardData->tiles[y][x].timeoutOffset);
             }
 
             // Draw the mini board
@@ -369,7 +369,7 @@ void dn_drawBoard(dn_entity_t* self)
             if (boardData->tiles[y][x].selector != NULL)
             {
                 // Draw the front part of the selector
-                dn_drawTileSelectorFrontHalf(boardData->tiles[y][x].selector, drawX, drawY);
+                dn_drawTileSelectorFrontHalf(boardData->tiles[y][x].selector, drawX, drawY - boardData->tiles[y][x].timeoutOffset);
             }
         }
     }
@@ -2727,7 +2727,7 @@ void dn_moveUnit(dn_entity_t* self)
     self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE] += bData->tiles[bData->impactPos.y][bData->impactPos.x].rewards;
     self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE] = CLAMP(self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE], 0, 9);
     bData->tiles[bData->impactPos.y][bData->impactPos.x].rewards = 0;
-    
+
     bData->tiles[bData->impactPos.y][bData->impactPos.x].yVel = -700;
 
     if((self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] && bData->impactPos.y == 0 && bData->impactPos.x == 2)|| 
