@@ -13,7 +13,7 @@
 //==============================================================================
 // Constants
 //==============================================================================
-#define MG_WSGS_SIZE      121
+#define MG_WSGS_SIZE      154
 #define MG_SPRITESET_SIZE 62
 #define MG_TILE_SET_SIZE  72
 
@@ -32,6 +32,8 @@ typedef struct
 
     uint8_t globalTileAnimationFrame;
     int16_t globalTileAnimationTimer;
+
+    int8_t wsgSetIndex;
 } mgWsgManager_t;
 
 //==============================================================================
@@ -55,5 +57,6 @@ void mg_remapPlayerNotShootWsg(mgWsgManager_t* self);
 
 void mg_animateTiles(mgWsgManager_t* self);
 void mg_remapBlockTile(mgWsgManager_t* self, uint16_t newBlockWsgIndex);
+void mg_loadWsgSet(mgWsgManager_t* self, mgWsgSetIndex_t index);
 
 #endif
