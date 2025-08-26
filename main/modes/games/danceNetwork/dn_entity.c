@@ -525,20 +525,10 @@ void dn_drawCurtain(dn_entity_t* self)
 {
     dn_curtainData_t* curtainData = (dn_curtainData_t*)self->data;
     // Draw the curtain asset
-    for (int x = 0; x < 4; x++)
-    {
-        for (int y = 0; y < 12; y++)
-        {
-            drawWsgSimple(&self->gameData->assets[DN_CURTAIN_ASSET].frames[0],
-                          ((curtainData->separation > 0) * -curtainData->separation)
-                              + x * self->gameData->assets[DN_CURTAIN_ASSET].frames[0].w,
-                          y * self->gameData->assets[DN_CURTAIN_ASSET].frames[0].h);
-            drawWsgSimple(&self->gameData->assets[DN_CURTAIN_ASSET].frames[0],
-                          (TFT_WIDTH >> 1) + ((curtainData->separation > 0) * curtainData->separation)
-                              + x * self->gameData->assets[DN_CURTAIN_ASSET].frames[0].w,
-                          y * self->gameData->assets[DN_CURTAIN_ASSET].frames[0].h);
-        }
-    }
+    drawWsgSimple(&self->gameData->assets[DN_CURTAIN_ASSET].frames[0],
+                    ((curtainData->separation > 0) * -curtainData->separation), 0);
+    drawWsg(&self->gameData->assets[DN_CURTAIN_ASSET].frames[0],
+                    (TFT_WIDTH >> 1) + ((curtainData->separation > 0) * curtainData->separation), 0, true, false, 0);
     // get the text width
     uint16_t tWidth = textWidth(&self->gameData->font_ibm, self->gameData->playerNames[0]);
     int16_t x       = (TFT_WIDTH >> 2) - (tWidth >> 1);
