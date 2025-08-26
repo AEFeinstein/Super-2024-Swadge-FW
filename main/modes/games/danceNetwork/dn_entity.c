@@ -1647,20 +1647,6 @@ void dn_startTurn(dn_entity_t* self)
 
     dn_setBlinkingLights(self);
 
-    // decrement tile timeouts
-    dn_boardData_t* boardData = (dn_boardData_t*)self->gameData->entityManager.board->data;
-
-    for (int y = 0; y < DN_BOARD_SIZE; y++)
-    {
-        for (int x = 0; x < DN_BOARD_SIZE; x++)
-        {
-            if (boardData->tiles[y][x].timeout)
-            {
-                boardData->tiles[y][x].timeout--;
-            }
-        }
-    }
-
     ////////////////////////////////
     // Make the turn start prompt //
     ////////////////////////////////
@@ -2718,10 +2704,18 @@ void dn_updateBullet(dn_entity_t* self)
         }
         else
         {
-            if (!targetTile->timeout)
+            // Patch any other holes currently
+            for (int y = 0; y < DN_BOARD_SIZE; y++)
             {
-                targetTile->timeout = 2;
+                for (int x = 0; x < DN_BOARD_SIZE; x++)
+                {
+                    bData->tiles[y][x].timeout = false;
+                }
             }
+
+            //knock this tile out
+            targetTile->timeout = true;
+
             if (!self->gameData->resolvingRemix)
             {
                 dn_incrementPhase(self); // now the upgrade phase
