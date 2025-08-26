@@ -160,24 +160,6 @@ swadgeMode_t modePlatformer = {.modeName                 = platformerName,
 
 #define NUM_LEVELS 16
 
-static const mgLeveldef_t leveldef[17] = {{.filename = KINETIC_DONUT_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = DAC_01_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = LEVEL_1_3_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = LEVEL_1_4_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = LEVEL_2_1_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = DAC_03_BIN, .timeLimit = 220, .checkpointTimeLimit = 90},
-                                          {.filename = LEVEL_2_3_BIN, .timeLimit = 200, .checkpointTimeLimit = 90},
-                                          {.filename = LEVEL_2_4_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = LEVEL_3_1_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = DAC_02_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = LEVEL_3_3_BIN, .timeLimit = 180, .checkpointTimeLimit = 90},
-                                          {.filename = LEVEL_3_4_BIN, .timeLimit = 220, .checkpointTimeLimit = 110},
-                                          {.filename = LEVEL_4_1_BIN, .timeLimit = 270, .checkpointTimeLimit = 90},
-                                          {.filename = LEVEL_4_2_BIN, .timeLimit = 240, .checkpointTimeLimit = 90},
-                                          {.filename = LEVEL_4_3_BIN, .timeLimit = 240, .checkpointTimeLimit = 90},
-                                          {.filename = LEVEL_4_4_BIN, .timeLimit = 240, .checkpointTimeLimit = 90},
-                                          {.filename = DEBUG_BIN, .timeLimit = 180, .checkpointTimeLimit = 90}};
-
 led_t platLeds[CONFIG_NUM_LEDS];
 
 static const char str_get_ready[]    = "Get Ready!";

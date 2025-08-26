@@ -6,7 +6,9 @@
 #include <stdbool.h>
 #include "fs_wsg.h"
 #include "mgWsgManager.h"
+#include "mgWsgSet.h"
 #include "mega_pulse_ex_typedef.h"
+#include <esp_log.h>
 
 //==============================================================================
 // Functions
@@ -14,9 +16,13 @@
 
 void mg_initializeWsgManager(mgWsgManager_t* self)
 {
+    self->wsgSetIndex = MG_WSGSET_DEFAULT;
+
     mg_loadWsgs(self);
     mg_initializeSprites(self);
     mg_initializeTiles(self);
+
+    mg_loadWsgSet(self, MG_WSGSET_KINETIC_DONUT);
 }
 
 void mg_freeWsgManager(mgWsgManager_t* self)
@@ -29,6 +35,12 @@ void mg_freeWsgManager(mgWsgManager_t* self)
 
 void mg_loadWsgs(mgWsgManager_t* self)
 {
+    for (uint16_t i = 0; i < MG_WSGS_SIZE; i++)
+    {
+        self->wsgs[i].w = 0;
+        self->wsgs[i].h = 0;
+    }
+
     loadWsg(PULSE_036_WSG, &self->wsgs[MG_WSG_PLAYER_IDLE], false);
     loadWsg(PULSE_000_WSG, &self->wsgs[MG_WSG_PLAYER_WALK1], false);
     loadWsg(PULSE_001_WSG, &self->wsgs[MG_WSG_PLAYER_WALK2], false);
@@ -419,23 +431,23 @@ void mg_initializeTiles(mgWsgManager_t* self)
     self->tiles[8] = &self->wsgs[MG_WSG_DIRT_PATH];
     self->tiles[9] = &self->wsgs[MG_WSG_GIRDER];
 
-    self->tiles[10] = &self->wsgs[0];
-    self->tiles[11] = &self->wsgs[0];
-    self->tiles[12] = &self->wsgs[0];
-    self->tiles[13] = &self->wsgs[0];
-    self->tiles[14] = &self->wsgs[0];
-    self->tiles[15] = &self->wsgs[0];
-    self->tiles[16] = &self->wsgs[0];
-    self->tiles[17] = &self->wsgs[0];
-    self->tiles[18] = &self->wsgs[0];
-    self->tiles[19] = &self->wsgs[0];
-    self->tiles[20] = &self->wsgs[0];
-    self->tiles[21] = &self->wsgs[0];
-    self->tiles[22] = &self->wsgs[0];
-    self->tiles[23] = &self->wsgs[0];
-    self->tiles[24] = &self->wsgs[0];
-    self->tiles[25] = &self->wsgs[0];
-    self->tiles[26] = &self->wsgs[0];
+    self->tiles[10] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[11] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[12] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[13] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[14] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[15] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[16] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[17] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[18] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[19] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[20] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[21] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[22] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[23] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[24] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[25] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[26] = &self->wsgs[MG_WSG_GRASS];
 
     self->tiles[27] = &self->wsgs[MG_WSG_GOAL_100PTS];
     self->tiles[28] = &self->wsgs[MG_WSG_GOAL_500PTS];
@@ -450,15 +462,15 @@ void mg_initializeTiles(mgWsgManager_t* self)
     self->tiles[37] = &self->wsgs[MG_WSG_COIN_3];
     self->tiles[38] = &self->wsgs[MG_WSG_LADDER];
 
-    self->tiles[39] = &self->wsgs[0];
-    self->tiles[40] = &self->wsgs[0];
-    self->tiles[41] = &self->wsgs[0];
-    self->tiles[42] = &self->wsgs[0];
-    self->tiles[43] = &self->wsgs[0];
-    self->tiles[44] = &self->wsgs[0];
-    self->tiles[45] = &self->wsgs[0];
-    self->tiles[46] = &self->wsgs[0];
-    self->tiles[47] = &self->wsgs[0];
+    self->tiles[39] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[40] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[41] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[42] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[43] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[44] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[45] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[46] = &self->wsgs[MG_WSG_GRASS];
+    self->tiles[47] = &self->wsgs[MG_WSG_GRASS];
 
     self->tiles[48] = &self->wsgs[MG_WSG_BG_GOAL_ZONE];
     self->tiles[49] = &self->wsgs[MG_WSG_BG_ARROW_L];
@@ -536,5 +548,23 @@ void mg_remapPlayerNotShootWsg(mgWsgManager_t* self) {
     for (uint16_t i = MG_SP_PLAYER_IDLE; i < (MG_SP_PLAYER_JUMP4 + 1); i++)
     {
         mg_remapWsgToSprite(self, i, MG_WSG_PLAYER_IDLE + i);
+    }
+}
+
+void mg_loadWsgSet(mgWsgManager_t* self, mgWsgSetIndex_t index){
+    if(self->wsgSetIndex == index){
+        return;
+    }
+
+    mgWsgSet_t newWsgSet = kineticDonutWsgSet[index];
+    uint16_t subiterator = 0;
+
+    for(uint16_t i = newWsgSet.firstWsgIndex; i < newWsgSet.firstWsgIndex + newWsgSet.numWsgsToLoad; i++){
+        
+        freeWsg(&self->wsgs[i]);
+        loadWsg(newWsgSet.firstFilename+subiterator, &self->wsgs[newWsgSet.firstWsgIndex+subiterator], false);
+        self->tiles[subiterator] = &self->wsgs[newWsgSet.firstWsgIndex+subiterator];
+        ESP_LOGE("Hi", "Loaded file %d at into wsg %d", newWsgSet.firstFilename+subiterator, newWsgSet.firstWsgIndex+subiterator);
+        subiterator++;
     }
 }

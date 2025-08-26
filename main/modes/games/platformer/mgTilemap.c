@@ -40,8 +40,10 @@ void mg_initializeTileMap(mgTilemap_t* tilemap, mgWsgManager_t* wsgManager)
     tilemap->animationTimer = 23;
 
     tilemap->wsgManager = wsgManager;
+    tilemap->map = NULL;
     tilemap->entitySpawns = NULL;
     tilemap->defaultPlayerSpawn = NULL;
+    tilemap->entitySpawnMap.count = 0;
 }
 
 void mg_drawTileMap(mgTilemap_t* tilemap)
@@ -97,8 +99,12 @@ void mg_drawTileMap(mgTilemap_t* tilemap)
             }
 
             // Draw only non-garbage tiles
-            if (tile > 31 && tile < 104)
+            if (tile > 31 && tile < 111)
             {
+                if(tilemap->wsgManager->tiles[tile - 32] == NULL){
+                    continue;
+                }
+
                 if (mg_needsTransparency(tile))
                 {
                     // drawWsgSimpleFast(&tilemap->tiles[tile - 32], x * MG_TILESIZE - tilemap->mapOffsetX, y *
@@ -168,7 +174,9 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
         heap_caps_free(tilemap->entitySpawns);
     }
     
-     hashDeinit(&(tilemap->entitySpawnMap));
+    if(tilemap->entitySpawnMap.count > 0){
+        hashDeinit(&(tilemap->entitySpawnMap));
+    }
     
     if (tilemap->map != NULL)
     {
