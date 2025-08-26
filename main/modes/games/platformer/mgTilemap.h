@@ -69,6 +69,7 @@ struct mgTilemap_t
 
     mgEntitySpawnData_t* entitySpawns;
     hashMap_t entitySpawnMap;
+    mgEntitySpawnData_t* defaultPlayerSpawn;
 };
 
 //==============================================================================

@@ -776,12 +776,15 @@ void changeStateGame(platformer_t* self)
     self->gameData.countdown = leveldef[levelIndex].timeLimit;
 
     mgEntityManager_t* entityManager = &(self->entityManager);
-    entityManager->viewEntity
-        = mg_createPlayer(entityManager, entityManager->tilemap->warps[self->gameData.checkpoint].x * 16,
-                          entityManager->tilemap->warps[self->gameData.checkpoint].y * 16);
-    entityManager->playerEntity     = entityManager->viewEntity;
-    entityManager->playerEntity->hp = self->gameData.initialHp;
-    mg_viewFollowEntity(&(self->tilemap), entityManager->playerEntity);
+
+    if(platformer->tilemap.defaultPlayerSpawn != NULL){
+        entityManager->viewEntity
+            = mg_createPlayer(entityManager, entityManager->tilemap->defaultPlayerSpawn->tx * 16 + entityManager->tilemap->defaultPlayerSpawn->xOffsetInPixels,
+                            entityManager->tilemap->defaultPlayerSpawn->ty * 16 + entityManager->tilemap->defaultPlayerSpawn->yOffsetInPixels);
+        entityManager->playerEntity     = entityManager->viewEntity;
+        entityManager->playerEntity->hp = self->gameData.initialHp;
+        mg_viewFollowEntity(&(self->tilemap), entityManager->playerEntity);
+    }
 
     mg_updateLedsHpMeter(&(self->entityManager), &(self->gameData));
 

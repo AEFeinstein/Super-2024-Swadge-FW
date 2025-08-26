@@ -41,6 +41,7 @@ void mg_initializeEntity(mgEntity_t* self, mgEntityManager_t* entityManager, mgT
     self->spriteFlipVertical   = false;
     self->tileCollider         = NULL;
     self->linkedEntity         = NULL;
+    self->spawnData            = NULL;
 
     // Fields not explicitly initialized
     // self->type = 0;
@@ -2168,6 +2169,10 @@ void killEnemy(mgEntity_t* target)
     target->falling            = true;
     target->type               = ENTITY_DEAD;
     target->spriteFlipVertical = true;
+    if(target->spawnData != NULL){
+        target->spawnData->spawnedEntity = NULL;
+        target->spawnData = NULL;
+    }
     target->updateFunction     = &updateEntityDead;
 }
 
