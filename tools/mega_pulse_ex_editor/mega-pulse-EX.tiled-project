@@ -52,7 +52,11 @@
                 "ENTITY_BGM_CHANGE_2",
                 "ENTITY_BGM_CHANGE_3",
                 "ENTITY_BGM_CHANGE_4",
-                "ENTIRY_BGM_CHANGE_5"
+                "ENTITY_BGM_CHANGE_5",
+                "ENTITY_WARP_ENTRANCE_WALL",
+                "ENTITY_WARP_ENTRANCE_FLOOR",
+                "ENTITY_WARP_EXIT_WALL",
+                "ENTITY_WARP_EXIT_FLOOR"
             ],
             "valuesAsFlags": false
         },
@@ -61,6 +65,11 @@
             "drawFill": false,
             "id": 2,
             "members": [
+                {
+                    "name": "linkedEntitySpawn",
+                    "type": "object",
+                    "value": 0
+                },
                 {
                     "name": "type",
                     "propertyType": "Swadge Land Entity Index",
