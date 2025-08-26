@@ -243,6 +243,10 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
                     entitySpawn->spawnable = false;
                     tilemap->defaultPlayerSpawn = entitySpawn;
                     break;
+                case ENTITY_WARP_EXIT_FLOOR:
+                case ENTITY_WARP_EXIT_WALL:
+                    entitySpawn->spawnable = false;
+                    break;
                 default:
                     break;
             }
