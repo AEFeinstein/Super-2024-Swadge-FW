@@ -41,7 +41,7 @@ void mg_initializeTileMap(mgTilemap_t* tilemap, mgWsgManager_t* wsgManager)
 
     tilemap->wsgManager = wsgManager;
     tilemap->entitySpawns = NULL;
-
+    tilemap->defaultPlayerSpawn = NULL;
 }
 
 void mg_drawTileMap(mgTilemap_t* tilemap)
@@ -79,7 +79,7 @@ void mg_drawTileMap(mgTilemap_t* tilemap)
                 uint16_t key = ((y << 8) + (x));
                 mgEntitySpawnData_t* entitySpawn = hashGetBin(&(tilemap->entitySpawnMap), (const void*) key);
             
-                if(entitySpawn != NULL){
+                if(entitySpawn != NULL && entitySpawn->spawnable){
                     ESP_LOGE("MAP", "Spawned entity at tile position %i, %i", x, y);
                     mg_hashSpawnEntity(tilemap->entityManager, entitySpawn);
                 }
@@ -237,6 +237,15 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
 
             uint16_t key = (entitySpawn->ty << 8) + (entitySpawn->tx);
             hashPutBin(&(tilemap->entitySpawnMap), (const void*) key, (const void *) entitySpawn);
+
+            switch(entitySpawn->type) {
+                case ENTITY_PLAYER:
+                    entitySpawn->spawnable = false;
+                    tilemap->defaultPlayerSpawn = entitySpawn;
+                    break;
+                default:
+                    break;
+            }
 
             subiterator++;
         }
