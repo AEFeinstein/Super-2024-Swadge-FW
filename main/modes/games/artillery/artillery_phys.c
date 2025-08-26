@@ -174,7 +174,7 @@ bool physStep(physSim_t* phys, int32_t elapsedUs)
         // Calculate physics frames at a very regular PHYS_TIME_STEP
         RUN_TIMER_EVERY(phys->frameTimer, PHYS_TIME_STEP, elapsedUs, {
             physFindObjDests(phys, PHYS_TIME_STEP);
-            phys->terrainMoving = moveTerrainPoints(phys, PHYS_TIME_STEP);
+            phys->terrainMoving = moveTerrainLines(phys, PHYS_TIME_STEP);
             physCheckCollisions(phys);
             change |= physBinaryMoveObjects(phys);
             change |= physAdjustCamera(phys, PHYS_TIME_STEP);
@@ -507,11 +507,11 @@ void setBarrelAngle(physCirc_t* circ, float angle)
     // Make sure it's in the range of 0 to 2*pi
     while (circ->barrelAngle < 0)
     {
-        circ->barrelAngle += (2 * M_PIf);
+        circ->barrelAngle += (2 * M_PI);
     }
-    while (circ->barrelAngle >= (2 * M_PIf))
+    while (circ->barrelAngle >= (2 * M_PI))
     {
-        circ->barrelAngle -= (2 * M_PIf);
+        circ->barrelAngle -= (2 * M_PI);
     }
 
     circ->relBarrelTip.x = sinf(angle) * circ->c.radius * 2;
@@ -584,7 +584,7 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
     cpu->targetBarrelAngle = atan2f(v0.x, -v0.y);
     while (cpu->targetBarrelAngle < 0)
     {
-        cpu->targetBarrelAngle += (2 * M_PIf);
+        cpu->targetBarrelAngle += (2 * M_PI);
     }
     setShotPower(cpu, magVecFl2d(v0));
 }
@@ -661,7 +661,7 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
     }
 
     // For multiple shells, calculate angle spread and starting angle
-    const float spread = ((2 * M_PIf) / 180.0f);
+    const float spread = ((2 * M_PI) / 180.0f);
     float angStart     = circ->barrelAngle - (numShells / 2) * spread;
 
     // This is where shells get spawned

@@ -14,6 +14,7 @@
 //==============================================================================
 
 static float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float expMin, float expMax);
+static bool moveTerrainPoint(vecFl_t* src, vecFl_t* dst);
 
 //==============================================================================
 // Functions
@@ -317,13 +318,45 @@ static float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float ex
 }
 
 /**
- * @brief Move terrain points a bit towards where they should be after shell explosion
+ * @brief Move a single point towards a destination
+ *
+ * @param src The point's current position
+ * @param dst The point's desired position
+ * @return true if the point moved, false otherwise
+ */
+static bool moveTerrainPoint(vecFl_t* src, vecFl_t* dst)
+{
+    if (src->y == dst->y)
+    {
+        return false;
+    }
+    else if (ABS(dst->y - src->y) < 1)
+    {
+        // Less than one pixel off, clamp it
+        src->y = dst->y;
+    }
+    else if (dst->y > src->y)
+    {
+        // Move p1 towards destination
+        src->y++;
+    }
+    else if (dst->y < src->y)
+    {
+        // Move p1 towards destination
+        src->y--;
+    }
+
+    return true;
+}
+
+/**
+ * @brief Move terrain lines a bit towards where they should be after shell explosion
  *
  * @param phys The physics simulation
  * @param elapsedUs The time elapsed since this was last called
  * @return true if terrain is actively moving, false otherwise
  */
-bool moveTerrainPoints(physSim_t* phys, int32_t elapsedUs)
+bool moveTerrainLines(physSim_t* phys, int32_t elapsedUs)
 {
     // Keep track if any terrain is moving anywhere
     bool anyTerrainMoving = false;
@@ -337,57 +370,13 @@ bool moveTerrainPoints(physSim_t* phys, int32_t elapsedUs)
         if (line->isTerrain)
         {
             // Track if this line is moving or needs a properties update
-            bool updateLine = false;
-
-            if (line->destination.p1.y == line->l.p1.y)
-            {
-                // Not moving
-            }
-            else if (ABS(line->destination.p1.y - line->l.p1.y) < 1)
-            {
-                // Less than one pixel off, clamp it
-                line->l.p1.y = line->destination.p1.y;
-                updateLine   = true;
-            }
-            else if (line->destination.p1.y > line->l.p1.y)
-            {
-                // Move p1 towards destination
-                line->l.p1.y++;
-                anyTerrainMoving = true;
-            }
-            else if (line->destination.p1.y < line->l.p1.y)
-            {
-                // Move p1 towards destination
-                line->l.p1.y--;
-                anyTerrainMoving = true;
-            }
-
-            if (line->destination.p2.y == line->l.p2.y)
-            {
-                // Do nothing
-            }
-            else if (ABS(line->destination.p2.y - line->l.p2.y) < 1)
-            {
-                // Less than one pixel off, clamp it
-                line->l.p2.y = line->destination.p2.y;
-                updateLine   = true;
-            }
-            else if (line->destination.p2.y > line->l.p2.y)
-            {
-                // Move p2 towards destination
-                line->l.p2.y++;
-                anyTerrainMoving = true;
-            }
-            else if (line->destination.p2.y < line->l.p2.y)
-            {
-                // Move p1 towards destination
-                line->l.p2.y--;
-                anyTerrainMoving = true;
-            }
+            bool updateLine = moveTerrainPoint(&line->l.p1, &line->destination.p1)
+                              | moveTerrainPoint(&line->l.p2, &line->destination.p2);
 
             // If the line needs a properties update
             if (updateLine)
             {
+                anyTerrainMoving = true;
                 // Update slope and normals and such
                 updateLineProperties(phys, line);
             }

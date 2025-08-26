@@ -11,7 +11,7 @@
 // Defines
 //==============================================================================
 
-#define BARREL_INTERVAL (M_PIf / 180.0f)
+#define BARREL_INTERVAL (M_PI / 180.0f)
 #define POWER_INTERVAL  0.000001f
 
 //==============================================================================
@@ -309,12 +309,12 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                 float deltaCw = cpu->barrelAngle - cpu->targetBarrelAngle;
                 if (deltaCw < 0)
                 {
-                    deltaCw += (2 * M_PIf);
+                    deltaCw += (2 * M_PI);
                 }
                 float deltaCCw = cpu->targetBarrelAngle - cpu->barrelAngle;
                 if (deltaCCw < 0)
                 {
-                    deltaCCw += (2 * M_PIf);
+                    deltaCCw += (2 * M_PI);
                 }
 
                 // If the barrel isn't at the target, move barrel towards target
