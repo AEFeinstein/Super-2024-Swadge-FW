@@ -62,12 +62,13 @@ int dn_lerp(int a, int b, uint16_t amount)
     return a + ((b - a) * amount) / 30000;
 }
 
-//input 0, output 0
-//input 30000, output 30000
+// input 0, output 0
+// input 30000, output 30000
 int16_t dn_logRemap(int16_t x)
 {
-    if (x <= 0) return 0;
+    if (x <= 0)
+        return 0;
 
-    float factor = pow(x / 30000.0, 0.4);  // Exponent > 1 flattens early
+    float factor = pow(x / 30000.0, 0.4); // Exponent > 1 flattens early
     return (int16_t)(30000 * factor);
 }

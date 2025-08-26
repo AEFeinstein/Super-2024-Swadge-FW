@@ -70,7 +70,7 @@ typedef enum __attribute__((packed))
     DN_PURPLE_FLOOR_PALETTE,
     DN_PIT_WALL_PALETTE,
     DN_REROLL_PALETTE,
-    DN_P2_ARROW_PALETTE,//up and down arrows for the player 2 prompt
+    DN_P2_ARROW_PALETTE, // up and down arrows for the player 2 prompt
     DN_RED_ATTACK_FLOOR_PALETTE,
     DN_ATTACK1_FLOOR_PALETTE,
     DN_ATTACK2_FLOOR_PALETTE,

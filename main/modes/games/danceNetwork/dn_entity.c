@@ -18,10 +18,10 @@ void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType)
 
 void dn_drawAsset(dn_entity_t* self)
 {
-    if(!self->paused && (self->type == DN_LOOPING_ANIMATION || self->type == DN_ONESHOT_ANIMATION))
+    if (!self->paused && (self->type == DN_LOOPING_ANIMATION || self->type == DN_ONESHOT_ANIMATION))
     {
         self->animationTimer++;
-        if(self->animationTimer >= self->gameFramesPerAnimationFrame)
+        if (self->animationTimer >= self->gameFramesPerAnimationFrame)
         {
             self->animationTimer = 0;
             self->currentAnimationFrame++;
@@ -29,17 +29,19 @@ void dn_drawAsset(dn_entity_t* self)
                 self->currentAnimationFrame = 0;
         }
     }
-    int32_t x             = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
+    int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originX;
     int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originY;
-    if(self->paused)
+    if (self->paused)
     {
-        drawWsgPalette(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE], self->flipped, false, 0);
+        drawWsgPalette(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y,
+                       &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE], self->flipped, false, 0);
     }
     else
     {
-        drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped, false, 0);
+        drawWsg(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, self->flipped,
+                false, 0);
     }
 }
 
@@ -107,44 +109,52 @@ void dn_updateBoard(dn_entity_t* self)
                 tileData->yOffset = newYOffset;
             }
 
-            //other stuff
-            if(tileData->timeout)
+            // other stuff
+            if (tileData->timeout)
             {
                 tileData->timeoutOffset++;
-                if(tileData->timeoutOffset > 35)
+                if (tileData->timeoutOffset > 35)
                 {
                     tileData->timeoutOffset = 35;
-                    if(tileData->unit)
+                    if (tileData->unit)
                     {
-                        //A unit dies
-                        if(tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] || tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0])//king is captured
+                        // A unit dies
+                        if (tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]
+                            || tileData->unit
+                                   == ((dn_boardData_t*)self->gameData->entityManager.board->data)
+                                          ->p2Units[0]) // king is captured
                         {
                             ///////////////////////////////
                             // Make the prompt Game Over //
                             ///////////////////////////////
-                            dn_entity_t* promptGameOver = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
+                            dn_entity_t* promptGameOver = dn_createPrompt(&self->gameData->entityManager,
+                                                                          (vec_t){0xffff, 0xffff}, self->gameData);
                             dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
 
-                            strcpy(promptData->text, self->gameData->playerNames[tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]]);
+                            strcpy(promptData->text,
+                                   self->gameData->playerNames
+                                       [tileData->unit
+                                        == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]]);
                             strcat(promptData->text, " wins!");
                             promptData->isPurple = true;
-                            promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+                            promptData->options  = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
                             memset(promptData->options, 0, sizeof(list_t));
 
                             dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
                             memset(option1, 0, sizeof(dn_promptOption_t));
                             strcpy(option1->text, "OK");
-                            option1->callback = NULL;
+                            option1->callback          = NULL;
                             option1->downPressDetected = false;
                             push(promptData->options, (void*)option1);
                             promptData->numOptions = 1;
                         }
-                        else// a pawn has plunged
+                        else // a pawn has plunged
                         {
                             ////////////////////////////
                             // Make the prompt Sudoku //
                             ////////////////////////////
-                            dn_entity_t* promptSudoku = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
+                            dn_entity_t* promptSudoku   = dn_createPrompt(&self->gameData->entityManager,
+                                                                          (vec_t){0xffff, 0xffff}, self->gameData);
                             dn_promptData_t* promptData = (dn_promptData_t*)promptSudoku->data;
 
                             promptData->usesTwoLinesOfText = true;
@@ -156,22 +166,21 @@ void dn_updateBoard(dn_entity_t* self)
                             dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
                             memset(option1, 0, sizeof(dn_promptOption_t));
                             strcpy(option1->text, "OK");
-                            option1->callback = dn_afterPlunge;
+                            option1->callback          = dn_afterPlunge;
                             option1->downPressDetected = false;
                             push(promptData->options, (void*)option1);
                             promptData->numOptions = 1;
                         }
 
-
                         tileData->unit->destroyFlag = true;
-                        for(uint8_t i = 0; i < 5; i++)
+                        for (uint8_t i = 0; i < 5; i++)
                         {
-                            if(boardData->p1Units[i] == tileData->unit)
+                            if (boardData->p1Units[i] == tileData->unit)
                             {
                                 boardData->p1Units[i] = NULL;
                                 break;
                             }
-                            if(boardData->p2Units[i] == tileData->unit)
+                            if (boardData->p2Units[i] == tileData->unit)
                             {
                                 boardData->p2Units[i] = NULL;
                                 break;
@@ -181,7 +190,7 @@ void dn_updateBoard(dn_entity_t* self)
                     }
                 }
             }
-            else if(tileData->timeoutOffset > 0)
+            else if (tileData->timeoutOffset > 0)
             {
                 tileData->timeoutOffset--;
             }
@@ -189,12 +198,11 @@ void dn_updateBoard(dn_entity_t* self)
     }
 }
 
-
 bool dn_belongsToP1(dn_entity_t* unit)
 {
     dn_boardData_t* bData = (dn_boardData_t*)unit->gameData->entityManager.board->data;
     return (unit == bData->p1Units[0] || unit == bData->p1Units[1] || unit == bData->p1Units[2]
-                        || unit == bData->p1Units[3] || unit == bData->p1Units[4]);
+            || unit == bData->p1Units[3] || unit == bData->p1Units[4]);
 }
 
 void dn_drawBoard(dn_entity_t* self)
@@ -209,167 +217,180 @@ void dn_drawBoard(dn_entity_t* self)
                         + (x - y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originX - 1;
             int drawY = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                         + (x + y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originY
-                        - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS)
-                        + boardData->tiles[y][x].timeoutOffset;
-            int miniDrawX = -85
-                        + ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
-                        + (x - y) * self->gameData->assets[DN_MINI_TILE_ASSET].originX - 1;
-            int miniDrawY = -233
-                        + ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
-                        + (x + y) * self->gameData->assets[DN_MINI_TILE_ASSET].originY
-                        - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS)
-                        + boardData->tiles[y][x].timeoutOffset;
+                        - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS) + boardData->tiles[y][x].timeoutOffset;
+            int miniDrawX = -85 + ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
+                            + (x - y) * self->gameData->assets[DN_MINI_TILE_ASSET].originX - 1;
+            int miniDrawY = -233 + ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
+                            + (x + y) * self->gameData->assets[DN_MINI_TILE_ASSET].originY
+                            - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS)
+                            + boardData->tiles[y][x].timeoutOffset;
 
-            if(boardData->tiles[y][x].selectionType == DN_UNIT_SELECTION)
+            if (boardData->tiles[y][x].selectionType == DN_UNIT_SELECTION)
             {
                 drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
-                          drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
-                          drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
-                        &self->gameData->entityManager
-                                 .palettes[DN_RED_FLOOR_PALETTE
-                                           + (((y * ((self->gameData->generalTimer >> 10) % 10) + x + 2)
-                                               + (self->gameData->generalTimer >> 6))
-                                              % 6)]);
+                                     drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                     drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                     &self->gameData->entityManager
+                                          .palettes[DN_RED_FLOOR_PALETTE
+                                                    + (((y * ((self->gameData->generalTimer >> 10) % 10) + x + 2)
+                                                        + (self->gameData->generalTimer >> 6))
+                                                       % 6)]);
             }
-            else if(boardData->tiles[y][x].selectionType == DN_MOVE_SELECTION)
+            else if (boardData->tiles[y][x].selectionType == DN_MOVE_SELECTION)
             {
                 drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
-                          drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
-                          drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
-                        &self->gameData->entityManager
-                                 .palettes[DN_MOVE1_FLOOR_PALETTE
-                                           + 2 - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
-                                               + (self->gameData->generalTimer >> 6))
-                                              % 4) - 2)]);
+                                     drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                     drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                     &self->gameData->entityManager
+                                          .palettes[DN_MOVE1_FLOOR_PALETTE + 2
+                                                    - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
+                                                            + (self->gameData->generalTimer >> 6))
+                                                           % 4)
+                                                          - 2)]);
             }
-            else if(boardData->tiles[y][x].selectionType == DN_ATTACK_SELECTION)
+            else if (boardData->tiles[y][x].selectionType == DN_ATTACK_SELECTION)
             {
                 drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
-                          drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
-                          drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
-                        &self->gameData->entityManager
-                                 .palettes[DN_ATTACK1_FLOOR_PALETTE
-                                           + 2 - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
-                                               + (self->gameData->generalTimer >> 6))
-                                              % 4) - 2)]);
+                                     drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                     drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                     &self->gameData->entityManager
+                                          .palettes[DN_ATTACK1_FLOOR_PALETTE + 2
+                                                    - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
+                                                            + (self->gameData->generalTimer >> 6))
+                                                           % 4)
+                                                          - 2)]);
             }
-            else if(boardData->tiles[y][x].selectionType == DN_REMIX_SELECTION)
+            else if (boardData->tiles[y][x].selectionType == DN_REMIX_SELECTION)
             {
                 drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
-                          drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
-                          drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
-                        &self->gameData->entityManager
-                                 .palettes[DN_REMIX1_FLOOR_PALETTE
-                                           + 2 - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
-                                               + (self->gameData->generalTimer >> 6))
-                                              % 4) - 2)]);
+                                     drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                     drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                     &self->gameData->entityManager
+                                          .palettes[DN_REMIX1_FLOOR_PALETTE + 2
+                                                    - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
+                                                            + (self->gameData->generalTimer >> 6))
+                                                           % 4)
+                                                          - 2)]);
             }
             else
             {
                 drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
-                          drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
-                          drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
+                              drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                              drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
             }
-            if(boardData->tiles[y][x].rewards)
+            if (boardData->tiles[y][x].rewards)
             {
                 char reward[6];
                 snprintf(reward, sizeof(reward), "+%d", boardData->tiles[y][x].rewards);
-                drawShinyText(&self->gameData->font_ibm, c153, c254, c555, reward, drawX-8, drawY-5);
+                drawShinyText(&self->gameData->font_ibm, c153, c254, c555, reward, drawX - 8, drawY - 5);
 
-                drawLineFast(drawX, drawY-self->gameData->assets[DN_GROUND_TILE_ASSET].originY + 1, drawX + self->gameData->assets[DN_GROUND_TILE_ASSET].originX - 1, drawY, c050);
-                drawLineFast(drawX + self->gameData->assets[DN_GROUND_TILE_ASSET].originX - 1, drawY, drawX, drawY+self->gameData->assets[DN_GROUND_TILE_ASSET].originY - 1, c050);
-                drawLineFast(drawX, drawY-self->gameData->assets[DN_GROUND_TILE_ASSET].originY + 1, drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX + 1, drawY, c050);
-                drawLineFast(drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX + 2, drawY, drawX, drawY+self->gameData->assets[DN_GROUND_TILE_ASSET].originY - 2, c050);
+                drawLineFast(drawX, drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY + 1,
+                             drawX + self->gameData->assets[DN_GROUND_TILE_ASSET].originX - 1, drawY, c050);
+                drawLineFast(drawX + self->gameData->assets[DN_GROUND_TILE_ASSET].originX - 1, drawY, drawX,
+                             drawY + self->gameData->assets[DN_GROUND_TILE_ASSET].originY - 1, c050);
+                drawLineFast(drawX, drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY + 1,
+                             drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX + 1, drawY, c050);
+                drawLineFast(drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX + 2, drawY, drawX,
+                             drawY + self->gameData->assets[DN_GROUND_TILE_ASSET].originY - 2, c050);
             }
             if (boardData->tiles[y][x].selector != NULL)
             {
                 // Draw the back part of the selector
-                dn_drawTileSelectorBackHalf(boardData->tiles[y][x].selector, drawX, drawY - boardData->tiles[y][x].timeoutOffset);
+                dn_drawTileSelectorBackHalf(boardData->tiles[y][x].selector, drawX,
+                                            drawY - boardData->tiles[y][x].timeoutOffset);
             }
 
             // Draw the mini board
             drawWsgSimple(&self->gameData->assets[DN_MINI_TILE_ASSET].frames[0],
                           miniDrawX - self->gameData->assets[DN_MINI_TILE_ASSET].originX,
                           miniDrawY - self->gameData->assets[DN_MINI_TILE_ASSET].originY);
-            if(boardData->tiles[y][x].rewards)
+            if (boardData->tiles[y][x].rewards)
             {
                 // char reward[6];
                 // snprintf(reward, sizeof(reward), "+%d", boardData->tiles[y][x].rewards);
                 // drawShinyText(&self->gameData->font_ibm, c031, c254, c555, reward, miniDrawX, miniDrawY);
-                drawLineFast(miniDrawX, miniDrawY - self->gameData->assets[DN_MINI_TILE_ASSET].originY + 1, miniDrawX + self->gameData->assets[DN_MINI_TILE_ASSET].originX - 1, miniDrawY, c050);
-                drawLineFast(miniDrawX + self->gameData->assets[DN_MINI_TILE_ASSET].originX - 1, miniDrawY, miniDrawX, miniDrawY + self->gameData->assets[DN_MINI_TILE_ASSET].originY - 1, c050);
-                drawLineFast(miniDrawX, miniDrawY - self->gameData->assets[DN_MINI_TILE_ASSET].originY + 1, miniDrawX - self->gameData->assets[DN_MINI_TILE_ASSET].originX + 1, miniDrawY, c050);
-                drawLineFast(miniDrawX - self->gameData->assets[DN_MINI_TILE_ASSET].originX + 1, miniDrawY, miniDrawX, miniDrawY + self->gameData->assets[DN_MINI_TILE_ASSET].originY - 1, c050);
+                drawLineFast(miniDrawX, miniDrawY - self->gameData->assets[DN_MINI_TILE_ASSET].originY + 1,
+                             miniDrawX + self->gameData->assets[DN_MINI_TILE_ASSET].originX - 1, miniDrawY, c050);
+                drawLineFast(miniDrawX + self->gameData->assets[DN_MINI_TILE_ASSET].originX - 1, miniDrawY, miniDrawX,
+                             miniDrawY + self->gameData->assets[DN_MINI_TILE_ASSET].originY - 1, c050);
+                drawLineFast(miniDrawX, miniDrawY - self->gameData->assets[DN_MINI_TILE_ASSET].originY + 1,
+                             miniDrawX - self->gameData->assets[DN_MINI_TILE_ASSET].originX + 1, miniDrawY, c050);
+                drawLineFast(miniDrawX - self->gameData->assets[DN_MINI_TILE_ASSET].originX + 1, miniDrawY, miniDrawX,
+                             miniDrawY + self->gameData->assets[DN_MINI_TILE_ASSET].originY - 1, c050);
             }
             if (boardData->tiles[y][x].unit != NULL)
             {
                 // Draw the unit on the tile
-                dn_entity_t* unit = boardData->tiles[y][x].unit;
-                bool drawn = false;
+                dn_entity_t* unit            = boardData->tiles[y][x].unit;
+                bool drawn                   = false;
                 dn_assetIdx_t miniAssetIndex = dn_isKing(unit) ? DN_KING_SMALL_ASSET : DN_PAWN_SMALL_ASSET;
-                if(dn_belongsToP1(unit))
+                if (dn_belongsToP1(unit))
                 {
-                    if(unit->assetIndex == DN_KING_ASSET || unit->assetIndex == DN_PAWN_ASSET)
+                    if (unit->assetIndex == DN_KING_ASSET || unit->assetIndex == DN_PAWN_ASSET)
                     {
-                        //draw unit
-                        drawWsgPaletteSimple(&self->gameData->assets[unit->assetIndex].frames[0],
-                                            drawX - self->gameData->assets[unit->assetIndex].originX,
-                                            drawY - self->gameData->assets[unit->assetIndex].originY,
-                                            &self->gameData->entityManager.palettes[unit->paused ? DN_GRAYSCALE_PALETTE : DN_WHITE_CHESS_PALETTE]);
+                        // draw unit
+                        drawWsgPaletteSimple(
+                            &self->gameData->assets[unit->assetIndex].frames[0],
+                            drawX - self->gameData->assets[unit->assetIndex].originX,
+                            drawY - self->gameData->assets[unit->assetIndex].originY,
+                            &self->gameData->entityManager
+                                 .palettes[unit->paused ? DN_GRAYSCALE_PALETTE : DN_WHITE_CHESS_PALETTE]);
                         drawn = true;
                     }
-                    //draw mini chess unit
+                    // draw mini chess unit
                     drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[0],
-                                    miniDrawX - self->gameData->assets[miniAssetIndex].originX,
-                                    miniDrawY - self->gameData->assets[miniAssetIndex].originY,
-                                    &self->gameData->entityManager.palettes[unit->paused ? DN_GRAYSCALE_PALETTE : DN_WHITE_CHESS_PALETTE]);
+                                         miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                         miniDrawY - self->gameData->assets[miniAssetIndex].originY,
+                                         &self->gameData->entityManager
+                                              .palettes[unit->paused ? DN_GRAYSCALE_PALETTE : DN_WHITE_CHESS_PALETTE]);
                     drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[1],
-                                    miniDrawX - self->gameData->assets[miniAssetIndex].originX,
-                                    miniDrawY - self->gameData->assets[miniAssetIndex].originY,
-                                    &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                                         miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                         miniDrawY - self->gameData->assets[miniAssetIndex].originY,
+                                         &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                 }
                 else
                 {
-                    //draw mini chess unit
-                    if(unit->paused)
+                    // draw mini chess unit
+                    if (unit->paused)
                     {
                         drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[0],
-                                        miniDrawX - self->gameData->assets[miniAssetIndex].originX,
-                                        miniDrawY - self->gameData->assets[miniAssetIndex].originY,
-                                        &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE]);
+                                             miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                             miniDrawY - self->gameData->assets[miniAssetIndex].originY,
+                                             &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE]);
                     }
                     else
                     {
                         drawWsgSimple(&self->gameData->assets[miniAssetIndex].frames[0],
-                                    miniDrawX - self->gameData->assets[miniAssetIndex].originX,
-                                    miniDrawY - self->gameData->assets[miniAssetIndex].originY);
+                                      miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                      miniDrawY - self->gameData->assets[miniAssetIndex].originY);
                     }
                     drawWsgSimple(&self->gameData->assets[miniAssetIndex].frames[1],
-                                    miniDrawX - self->gameData->assets[miniAssetIndex].originX,
-                                    miniDrawY - self->gameData->assets[miniAssetIndex].originY);
+                                  miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                  miniDrawY - self->gameData->assets[miniAssetIndex].originY);
                 }
                 if (!drawn)
                 {
-                    //draw unit
-                    if(unit->paused)
+                    // draw unit
+                    if (unit->paused)
                     {
                         drawWsgPaletteSimple(&self->gameData->assets[unit->assetIndex].frames[0],
-                                  drawX - self->gameData->assets[unit->assetIndex].originX,
-                                  drawY - self->gameData->assets[unit->assetIndex].originY,
-                                  &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE]);
+                                             drawX - self->gameData->assets[unit->assetIndex].originX,
+                                             drawY - self->gameData->assets[unit->assetIndex].originY,
+                                             &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE]);
                     }
                     else
                     {
                         drawWsgSimple(&self->gameData->assets[unit->assetIndex].frames[0],
-                                  drawX - self->gameData->assets[unit->assetIndex].originX,
-                                  drawY - self->gameData->assets[unit->assetIndex].originY);
+                                      drawX - self->gameData->assets[unit->assetIndex].originX,
+                                      drawY - self->gameData->assets[unit->assetIndex].originY);
                     }
                 }
             }
             if (boardData->tiles[y][x].selector != NULL)
             {
                 // Draw the front part of the selector
-                dn_drawTileSelectorFrontHalf(boardData->tiles[y][x].selector, drawX, drawY - boardData->tiles[y][x].timeoutOffset);
+                dn_drawTileSelectorFrontHalf(boardData->tiles[y][x].selector, drawX,
+                                             drawY - boardData->tiles[y][x].timeoutOffset);
             }
         }
     }
@@ -379,7 +400,7 @@ void dn_drawBoard(dn_entity_t* self)
 
 bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
 {
-    if(unit == NULL)
+    if (unit == NULL)
     {
         return false;
     }
@@ -387,51 +408,55 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
 
     bool isP1 = dn_belongsToP1(unit);
 
-    if(!isP1)
+    if (!isP1)
     {
         album = (dn_entity_t*)((dn_albumsData_t*)unit->gameData->entityManager.albums->data)->p2Album;
     }
 
     dn_albumData_t* albumData = (dn_albumData_t*)album->data;
-    
-    for(paletteColor_t check = c255; check <= c322; check += 1)
+
+    for (paletteColor_t check = c255; check <= c322; check += 1)
     {
-        if(albumData->screenOnPalette.newColors[check] != c555 || albumData->screenAttackPalette.newColors[check] != cTransparent)//c555 is no action
+        if (albumData->screenOnPalette.newColors[check] != c555
+            || albumData->screenAttackPalette.newColors[check] != cTransparent) // c555 is no action
         {
-            //This is a track
-            dn_boardPos_t track = dn_colorToTrackCoords(check);
-            dn_boardPos_t unitPos = dn_getUnitBoardPos(unit);
+            // This is a track
+            dn_boardPos_t track     = dn_colorToTrackCoords(check);
+            dn_boardPos_t unitPos   = dn_getUnitBoardPos(unit);
             dn_action_t* unitAction = heap_caps_malloc(sizeof(dn_action_t), MALLOC_CAP_8BIT);
             memset(unitAction, 0, sizeof(dn_action_t));
-            (*unitAction).pos = (dn_boardPos_t){.x = unitPos.x + (1 - 2 * !isP1) * track.x, .y = unitPos.y + (1 - 2 * isP1) * track.y};
-            if(unitAction->pos.x >=0 && unitAction->pos.x <= 4 && unitAction->pos.y >= 0 && unitAction->pos.y <= 4)
+            (*unitAction).pos = (dn_boardPos_t){.x = unitPos.x + (1 - 2 * !isP1) * track.x,
+                                                .y = unitPos.y + (1 - 2 * isP1) * track.y};
+            if (unitAction->pos.x >= 0 && unitAction->pos.x <= 4 && unitAction->pos.y >= 0 && unitAction->pos.y <= 4)
             {
-                //It is in bounds
-                dn_entity_t* unitAtTrack = ((dn_boardData_t*)unit->gameData->entityManager.board->data)->tiles[unitAction->pos.y][unitAction->pos.x].unit;
+                // It is in bounds
+                dn_entity_t* unitAtTrack = ((dn_boardData_t*)unit->gameData->entityManager.board->data)
+                                               ->tiles[unitAction->pos.y][unitAction->pos.x]
+                                               .unit;
                 unitAction->action = dn_trackTypeAtCoords(album, track);
-                switch(unitAction->action)
+                switch (unitAction->action)
                 {
                     case DN_REMIX_TRACK:
-                    case DN_RED_TRACK: //ranged attack and remixed track
+                    case DN_RED_TRACK: // ranged attack and remixed track
                     {
-                        //You can shoot ANY tile. (muahahaha)
-                        if(!unit->paused || unitAction->action == DN_REMIX_TRACK)
+                        // You can shoot ANY tile. (muahahaha)
+                        if (!unit->paused || unitAction->action == DN_REMIX_TRACK)
                         {
                             push(tracks, (void*)unitAction);
                         }
                         break;
                     }
-                    case DN_BLUE_TRACK: //movement
+                    case DN_BLUE_TRACK: // movement
                     {
-                        //You can move to any unoccupied tile. Even knocked out ones. HAHAHAAHAAAA
-                        if(unitAtTrack == NULL)
+                        // You can move to any unoccupied tile. Even knocked out ones. HAHAHAAHAAAA
+                        if (unitAtTrack == NULL)
                         {
                             push(tracks, (void*)unitAction);
                         }
                         break;
                     }
                     default:
-                    {                
+                    {
                         free(unitAction);
                         break;
                     }
@@ -449,15 +474,15 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
 dn_track_t dn_trackTypeAtColor(dn_entity_t* album, paletteColor_t trackCoords)
 {
     dn_albumData_t* aData = (dn_albumData_t*)album->data;
-    if(aData->screenOnPalette.newColors[trackCoords] == c105)
+    if (aData->screenOnPalette.newColors[trackCoords] == c105)
     {
-        if(aData->screenAttackPalette.newColors[trackCoords] == c510)
+        if (aData->screenAttackPalette.newColors[trackCoords] == c510)
         {
             return DN_REMIX_TRACK;
         }
         return DN_BLUE_TRACK;
     }
-    else if(aData->screenAttackPalette.newColors[trackCoords] == c510)
+    else if (aData->screenAttackPalette.newColors[trackCoords] == c510)
     {
         return DN_RED_TRACK;
     }
@@ -476,19 +501,19 @@ bool dn_calculateMoveableUnits(dn_entity_t* board)
 
     bool playerHasMoves = false;
 
-    for(int i = 0; i < 5; i++)
+    for (int i = 0; i < 5; i++)
     {
-        if(playerUnits[i] == NULL)
+        if (playerUnits[i] == NULL)
         {
-            //That unit has died
+            // That unit has died
             continue;
         }
         list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         memset(myList, 0, sizeof(list_t));
-        if(dn_availableMoves(playerUnits[i], myList))
+        if (dn_availableMoves(playerUnits[i], myList))
         {
-            playerHasMoves = true;
-            dn_boardPos_t pos = dn_getUnitBoardPos(playerUnits[i]);
+            playerHasMoves                               = true;
+            dn_boardPos_t pos                            = dn_getUnitBoardPos(playerUnits[i]);
             boardData->tiles[pos.y][pos.x].selectionType = DN_UNIT_SELECTION;
         }
         clear(myList);
@@ -526,9 +551,9 @@ void dn_drawCurtain(dn_entity_t* self)
     dn_curtainData_t* curtainData = (dn_curtainData_t*)self->data;
     // Draw the curtain asset
     drawWsgSimple(&self->gameData->assets[DN_CURTAIN_ASSET].frames[0],
-                    ((curtainData->separation > 0) * -curtainData->separation), 0);
+                  ((curtainData->separation > 0) * -curtainData->separation), 0);
     drawWsg(&self->gameData->assets[DN_CURTAIN_ASSET].frames[0],
-                    (TFT_WIDTH >> 1) + ((curtainData->separation > 0) * curtainData->separation), 0, true, false, 0);
+            (TFT_WIDTH >> 1) + ((curtainData->separation > 0) * curtainData->separation), 0, true, false, 0);
     // get the text width
     uint16_t tWidth = textWidth(&self->gameData->font_ibm, self->gameData->playerNames[0]);
     int16_t x       = (TFT_WIDTH >> 2) - (tWidth >> 1);
@@ -536,13 +561,9 @@ void dn_drawCurtain(dn_entity_t* self)
     // Draw the intro text
     if (curtainData->separation > -700 && curtainData->separation < -50)
     {
-        drawCircleFilled((TFT_WIDTH>>2)+8, y - 38, 80, c055);
-        drawCircleFilled(TFT_WIDTH>>2, y - 30, 80, c000);
+        drawCircleFilled((TFT_WIDTH >> 2) + 8, y - 38, 80, c055);
+        drawCircleFilled(TFT_WIDTH >> 2, y - 30, 80, c000);
         drawShinyText(&self->gameData->font_ibm, c245, c355, c555, self->gameData->playerNames[0], x, y);
-        // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 30);
-        // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 29);
-        // drawText(&self->gameData->font_ibm, c101, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 31);
-        // drawText(&self->gameData->font_ibm, c525, text, (TFT_WIDTH >> 2) - (tWidth >> 1), 30);
         switch (self->gameData->characterSets[0])
         {
             case DN_ALPHA_SET:
@@ -561,7 +582,7 @@ void dn_drawCurtain(dn_entity_t* self)
     if (curtainData->separation > -600 && curtainData->separation < -50)
     {
         tWidth = textWidth(&self->gameData->font_righteous, "VS");
-        drawText(&self->gameData->font_righteous,  c535, "VS", (TFT_WIDTH >> 1) - (tWidth >> 1), 90);
+        drawText(&self->gameData->font_righteous, c535, "VS", (TFT_WIDTH >> 1) - (tWidth >> 1), 90);
         drawText(&self->gameData->outline_righteous, c314, "VS", (TFT_WIDTH >> 1) - (tWidth >> 1), 90);
     }
     if (curtainData->separation > -500 && curtainData->separation < -50)
@@ -570,7 +591,7 @@ void dn_drawCurtain(dn_entity_t* self)
         x      = (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1);
         y      = 30;
 
-        drawCircleFilled(((TFT_WIDTH >> 1) + (TFT_WIDTH >> 2))-8, y - 22, 80, c550);
+        drawCircleFilled(((TFT_WIDTH >> 1) + (TFT_WIDTH >> 2)) - 8, y - 22, 80, c550);
         drawCircleFilled((TFT_WIDTH >> 1) + (TFT_WIDTH >> 2), y - 30, 80, c000);
         drawShinyText(&self->gameData->font_ibm, c442, c553, c555, self->gameData->playerNames[1], x, y);
         // drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1), 30);
@@ -605,20 +626,19 @@ void dn_drawAlbums(dn_entity_t* self)
                   ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1) - 80,
                   ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS));
 
-    if(self->pos.y < 63550)
+    if (self->pos.y < 63550)
     {
         strcpy(text, "Creative");
         tWidth = textWidth(&self->gameData->font_ibm, text);
         drawShinyText(&self->gameData->font_ibm, c425, c535, c555, text,
-            ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1),
-            ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) - 1);
+                      ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1),
+                      ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) - 1);
         strcpy(text, "Commons");
         tWidth = textWidth(&self->gameData->font_ibm, text);
         drawShinyText(&self->gameData->font_ibm, c425, c535, c555, text,
-            ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1),
-            ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 10);
+                      ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1),
+                      ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 10);
     }
-
 
     strcpy(text, "Player 2");
     tWidth = textWidth(&self->gameData->font_ibm, text);
@@ -841,17 +861,17 @@ dn_twoColors_t dn_trackCoordsToColor(dn_boardPos_t trackCoords)
 
 void dn_addTrackToAlbum(dn_entity_t* album, dn_boardPos_t trackCoords, dn_track_t track)
 {
-    dn_albumData_t* aData   = (dn_albumData_t*)album->data;
-    dn_twoColors_t colors   = dn_trackCoordsToColor(trackCoords);
+    dn_albumData_t* aData = (dn_albumData_t*)album->data;
+    dn_twoColors_t colors = dn_trackCoordsToColor(trackCoords);
     wsgPaletteSet(&aData->screenOnPalette, colors.unlit, c344);
     wsgPaletteSet(&aData->screenOnPalette, colors.lit, c555);
     wsgPaletteSet(&aData->screenAttackPalette, colors.lit, cTransparent);
-    if(track == DN_REMIX_TRACK || track == DN_BLUE_TRACK)
+    if (track == DN_REMIX_TRACK || track == DN_BLUE_TRACK)
     {
         wsgPaletteSet(&aData->screenOnPalette, colors.unlit, c103);
         wsgPaletteSet(&aData->screenOnPalette, colors.lit, c105);
     }
-    if(track == DN_REMIX_TRACK || track == DN_RED_TRACK)
+    if (track == DN_REMIX_TRACK || track == DN_RED_TRACK)
     {
         wsgPaletteSet(&aData->screenAttackPalette, colors.lit, c510);
     }
@@ -865,24 +885,24 @@ void dn_updateAlbum(dn_entity_t* self)
         aData->timer -= self->gameData->elapsedUs;
         if (aData->timer <= 0)
         {
-            while(true && self != ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum)
+            while (true && self != ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum)
             {
-                dn_boardPos_t pos = (dn_boardPos_t){dn_randomInt(-2,2), 1};
-                if(dn_trackTypeAtCoords(self, pos) == DN_NONE_TRACK)
+                dn_boardPos_t pos = (dn_boardPos_t){dn_randomInt(-2, 2), 1};
+                if (dn_trackTypeAtCoords(self, pos) == DN_NONE_TRACK)
                 {
                     dn_addTrackToAlbum(self, pos, DN_RED_TRACK);
                     break;
                 }
             }
-            if(self == ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album)
+            if (self == ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album)
             {
-                //third album has finished the bootup animation
+                // third album has finished the bootup animation
                 self->gameData->phase = DN_P1_DANCE_PHASE;
                 dn_startTurn(self);
-            }          
+            }
             aData->cornerLightOn = true;
-            aData->screenIsOn = true;
-            aData->timer      = 0;
+            aData->screenIsOn    = true;
+            aData->timer         = 0;
             self->updateFunction = NULL;
         }
     }
@@ -898,8 +918,9 @@ void dn_drawAlbum(dn_entity_t* self)
     drawWsgPalette(&self->gameData->assets[DN_ALBUM_ASSET].frames[0], x, y,
                    aData->screenIsOn ? &aData->screenOnPalette : &aData->screenOffPalette, false, false, aData->rot);
     drawWsgPalette(&self->gameData->assets[DN_ALBUM_EXPLOSION_ASSET].frames[self->currentAnimationFrame], x, y,
-            &aData->screenAttackPalette, false, false, aData->rot);
-    if ((aData->cornerLightOn && !aData->cornerLightBlinking) || (aData->cornerLightOn && aData->cornerLightBlinking && (self->gameData->generalTimer & 0b111111) > 15))
+                   &aData->screenAttackPalette, false, false, aData->rot);
+    if ((aData->cornerLightOn && !aData->cornerLightBlinking)
+        || (aData->cornerLightOn && aData->cornerLightBlinking && (self->gameData->generalTimer & 0b111111) > 15))
     {
         if (aData->rot == 180)
         {
@@ -914,11 +935,11 @@ void dn_drawAlbum(dn_entity_t* self)
         drawWsgSimple(&self->gameData->assets[DN_STATUS_LIGHT_ASSET].frames[0], x, y);
     }
     self->animationTimer++;
-    if(self->animationTimer >= self->gameFramesPerAnimationFrame)
+    if (self->animationTimer >= self->gameFramesPerAnimationFrame)
     {
         self->animationTimer = 0;
         self->currentAnimationFrame++;
-        if(self->currentAnimationFrame >= self->gameData->assets[DN_ALBUM_EXPLOSION_ASSET].numFrames)
+        if (self->currentAnimationFrame >= self->gameData->assets[DN_ALBUM_EXPLOSION_ASSET].numFrames)
         {
             self->currentAnimationFrame = 0;
         }
@@ -1209,26 +1230,26 @@ void dn_updateTileSelector(dn_entity_t* self)
     tData->pos.x = CLAMP(tData->pos.x, 0, 5);
     tData->pos.y = CLAMP(tData->pos.y, 0, 5);
 
-    if(tData->pos.y == 5)
+    if (tData->pos.y == 5)
     {
         node_t* swapButtonNode = self->gameData->entityManager.entities->last;
-        while(((dn_entity_t*)swapButtonNode->val)->assetIndex != DN_SWAP_ASSET)
+        while (((dn_entity_t*)swapButtonNode->val)->assetIndex != DN_SWAP_ASSET)
         {
             swapButtonNode = swapButtonNode->prev;
         }
         ((dn_entity_t*)swapButtonNode->val)->paused = false;
-        self->destroyFlag = true;
+        self->destroyFlag                           = true;
         return;
     }
-    if(tData->pos.x == 5)
+    if (tData->pos.x == 5)
     {
         node_t* skipButtonNode = self->gameData->entityManager.entities->last;
-        while(((dn_entity_t*)skipButtonNode->val)->assetIndex != DN_SKIP_ASSET)
+        while (((dn_entity_t*)skipButtonNode->val)->assetIndex != DN_SKIP_ASSET)
         {
             skipButtonNode = skipButtonNode->prev;
         }
         ((dn_entity_t*)skipButtonNode->val)->paused = false;
-        self->destroyFlag = true;
+        self->destroyFlag                           = true;
         return;
     }
 
@@ -1238,7 +1259,7 @@ void dn_updateTileSelector(dn_entity_t* self)
     {
         tData->b_callback(self);
     }
-    else if(self->gameData->btnDownState & PB_A)
+    else if (self->gameData->btnDownState & PB_A)
     {
         tData->a_callback(self);
     }
@@ -1281,33 +1302,33 @@ void dn_drawTileSelectorFrontHalf(dn_entity_t* self, int16_t x, int16_t y)
 void dn_trySelectUnit(dn_entity_t* self)
 {
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
-    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
-    if(bData->tiles[tData->pos.y][tData->pos.x].unit != NULL && bData->tiles[tData->pos.y][tData->pos.x].selectionType)
+    dn_boardData_t* bData        = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    if (bData->tiles[tData->pos.y][tData->pos.x].unit != NULL && bData->tiles[tData->pos.y][tData->pos.x].selectionType)
     {
         tData->selectedUnit = bData->tiles[tData->pos.y][tData->pos.x].unit;
 
         dn_clearSelectableTiles(self);
 
-        //recalculate selectable tiles
+        // recalculate selectable tiles
         list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         memset(myList, 0, sizeof(list_t));
-        if(dn_availableMoves(tData->selectedUnit, myList))
+        if (dn_availableMoves(tData->selectedUnit, myList))
         {
             node_t* cur = myList->first;
-            while(cur != NULL)
+            while (cur != NULL)
             {
-                dn_action_t* action = ((dn_action_t*)cur->val);
+                dn_action_t* action                                      = ((dn_action_t*)cur->val);
                 bData->tiles[action->pos.y][action->pos.x].selectionType = action->action;
-                cur = cur->next;
+                cur                                                      = cur->next;
             }
         }
         clear(myList);
         free(myList);
 
-        //would make it do the selection idle here later
+        // would make it do the selection idle here later
         tData->selectedUnit = bData->tiles[tData->pos.y][tData->pos.x].unit;
-        tData->a_callback = dn_trySelectTrack;
-        tData->b_callback = dn_cancelSelectTrack;
+        tData->a_callback   = dn_trySelectTrack;
+        tData->b_callback   = dn_cancelSelectTrack;
     }
 }
 void dn_cancelSelectUnit(dn_entity_t* self)
@@ -1318,10 +1339,10 @@ void dn_cancelSelectUnit(dn_entity_t* self)
     {
         for (int x = 0; x < DN_BOARD_SIZE; x++)
         {
-            if(bData->tiles[y][x].selector)
+            if (bData->tiles[y][x].selector)
             {
                 bData->tiles[y][x].selector->destroyFlag = true;
-                bData->tiles[y][x].selector = NULL;
+                bData->tiles[y][x].selector              = NULL;
             }
         }
     }
@@ -1330,41 +1351,41 @@ void dn_cancelSelectUnit(dn_entity_t* self)
 void dn_trySelectTrack(dn_entity_t* self)
 {
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
-    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
-    if(bData->tiles[tData->pos.y][tData->pos.x].selectionType)
+    dn_boardData_t* bData        = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    if (bData->tiles[tData->pos.y][tData->pos.x].selectionType)
     {
         dn_clearSelectableTiles(self);
 
-        //determine the vector FROM the unit TO the track
+        // determine the vector FROM the unit TO the track
         dn_boardPos_t from = dn_getUnitBoardPos(tData->selectedUnit);
-        //tData->pos is "to"
+        // tData->pos is "to"
         dn_boardPos_t relativeTrack = (dn_boardPos_t){tData->pos.x - from.x, tData->pos.y - from.y};
-        
+
         dn_entity_t* album = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album;
-        //Make it relative to the player's facing direction
-        if(self->gameData->phase < DN_P2_DANCE_PHASE)
+        // Make it relative to the player's facing direction
+        if (self->gameData->phase < DN_P2_DANCE_PHASE)
         {
             relativeTrack.y *= -1;
         }
         else
         {
             relativeTrack.x *= -1;
-            album = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album; 
+            album = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album;
         }
         bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
-        self->destroyFlag = true;
-        dn_track_t type = dn_trackTypeAtCoords(album, relativeTrack);
-        if(type == DN_REMIX_TRACK && tData->selectedUnit->paused)
+        self->destroyFlag                                 = true;
+        dn_track_t type                                   = dn_trackTypeAtCoords(album, relativeTrack);
+        if (type == DN_REMIX_TRACK && tData->selectedUnit->paused)
         {
-            //just treat it like movement, because the unit can't shoot.
+            // just treat it like movement, because the unit can't shoot.
             type = DN_BLUE_TRACK;
         }
-        switch(type)
+        switch (type)
         {
             case DN_BLUE_TRACK:
             {
                 ((dn_unitData_t*)tData->selectedUnit->data)->moveTo = tData->pos;
-                tData->selectedUnit->updateFunction = dn_moveUnit;
+                tData->selectedUnit->updateFunction                 = dn_moveUnit;
                 break;
             }
             case DN_RED_TRACK:
@@ -1376,26 +1397,35 @@ void dn_trySelectTrack(dn_entity_t* self)
                 /////////////////////
 
                 vec_t start = (vec_t){
-                            self->gameData->entityManager.board->pos.x + (from.x - from.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS) - (1 << DN_DECIMAL_BITS),
-                            self->gameData->entityManager.board->pos.y + (from.x + from.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS) - (bData->tiles[from.y][from.x].yOffset)
-                            };
+                    self->gameData->entityManager.board->pos.x
+                        + (from.x - from.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS)
+                        - (1 << DN_DECIMAL_BITS),
+                    self->gameData->entityManager.board->pos.y
+                        + (from.x + from.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS)
+                        - (bData->tiles[from.y][from.x].yOffset)};
 
-                dn_entity_t* bullet = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, start, self->gameData);
+                dn_entity_t* bullet = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true,
+                                                             DN_NO_ASSET, 0, start, self->gameData);
                 bullet->updateFunction = dn_updateBullet;
-                bullet->drawFunction = dn_drawBullet;
-                bullet->data         = heap_caps_calloc(1, sizeof(dn_bulletData_t), MALLOC_CAP_SPIRAM);
+                bullet->drawFunction   = dn_drawBullet;
+                bullet->data           = heap_caps_calloc(1, sizeof(dn_bulletData_t), MALLOC_CAP_SPIRAM);
                 memset(bullet->data, 0, sizeof(dn_bulletData_t));
-                bullet->dataType     = DN_BULLET_DATA;
+                bullet->dataType                             = DN_BULLET_DATA;
                 ((dn_bulletData_t*)bullet->data)->targetTile = tData->pos;
-                ((dn_bulletData_t*)bullet->data)->start = bullet->pos;
-                ((dn_bulletData_t*)bullet->data)->end = (vec_t){
-                            self->gameData->entityManager.board->pos.x + (tData->pos.x - tData->pos.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS) - (1 << DN_DECIMAL_BITS),
-                            self->gameData->entityManager.board->pos.y + (tData->pos.x + tData->pos.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS) - (bData->tiles[tData->pos.y][tData->pos.x].yOffset)
-                            };
-                if(type == DN_REMIX_TRACK)
+                ((dn_bulletData_t*)bullet->data)->start      = bullet->pos;
+                ((dn_bulletData_t*)bullet->data)->end
+                    = (vec_t){self->gameData->entityManager.board->pos.x
+                                  + (tData->pos.x - tData->pos.y)
+                                        * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS)
+                                  - (1 << DN_DECIMAL_BITS),
+                              self->gameData->entityManager.board->pos.y
+                                  + (tData->pos.x + tData->pos.y)
+                                        * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS)
+                                  - (bData->tiles[tData->pos.y][tData->pos.x].yOffset)};
+                if (type == DN_REMIX_TRACK)
                 {
                     ((dn_bulletData_t*)bullet->data)->ownerToMove = from;
-                    self->gameData->resolvingRemix = true;
+                    self->gameData->resolvingRemix                = true;
                 }
                 break;
             }
@@ -1404,15 +1434,13 @@ void dn_trySelectTrack(dn_entity_t* self)
                 break;
             }
         }
-
-
     }
 }
 void dn_cancelSelectTrack(dn_entity_t* self)
 {
     dn_clearSelectableTiles(self);
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
-    tData->selectedUnit = NULL;
+    tData->selectedUnit          = NULL;
     dn_calculateMoveableUnits(self->gameData->entityManager.board);
 
     tData->a_callback = dn_trySelectUnit;
@@ -1421,74 +1449,76 @@ void dn_cancelSelectTrack(dn_entity_t* self)
 
 void dn_drawPlayerTurn(dn_entity_t* self)
 {
-    //Temporary solution to showing rerolls until LED Matrix works
-    drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[0]], 5, 30 + 100 * (self->gameData->camera.pos.y < 60060), 3, 3);
-    drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[1]], 257, 30 + 100 * (self->gameData->camera.pos.y < 60060), 3, 3);
+    // Temporary solution to showing rerolls until LED Matrix works
+    drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[0]], 5,
+                        30 + 100 * (self->gameData->camera.pos.y < 60060), 3, 3);
+    drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[1]], 257,
+                        30 + 100 * (self->gameData->camera.pos.y < 60060), 3, 3);
 
     paletteColor_t col = self->gameData->phase < DN_P2_DANCE_PHASE ? c055 : c550;
-    drawCircleQuadrants(41,41,41,false,false,true,false,col);
-    drawCircleQuadrants(TFT_WIDTH-42,41,41,false,false,false,true,col);
-    drawCircleQuadrants(41,TFT_HEIGHT-42,41,false,true,false,false,col);
-    drawCircleQuadrants(TFT_WIDTH-42,TFT_HEIGHT-42,41,true,false,false,false,col);
-    drawRect(0,0,TFT_WIDTH-0,TFT_HEIGHT-0,col);
+    drawCircleQuadrants(41, 41, 41, false, false, true, false, col);
+    drawCircleQuadrants(TFT_WIDTH - 42, 41, 41, false, false, false, true, col);
+    drawCircleQuadrants(41, TFT_HEIGHT - 42, 41, false, true, false, false, col);
+    drawCircleQuadrants(TFT_WIDTH - 42, TFT_HEIGHT - 42, 41, true, false, false, false, col);
+    drawRect(0, 0, TFT_WIDTH - 0, TFT_HEIGHT - 0, col);
 
-    drawCircleQuadrants(41,41,40,false,false,true,false,col);
-    drawCircleQuadrants(TFT_WIDTH-42,41,40,false,false,false,true,col);
-    drawCircleQuadrants(41,TFT_HEIGHT-42,40,false,true,false,false,col);
-    drawCircleQuadrants(TFT_WIDTH-42,TFT_HEIGHT-42,40,true,false,false,false,col);
-    drawRect(1,1,TFT_WIDTH-1,TFT_HEIGHT-1,col);    
+    drawCircleQuadrants(41, 41, 40, false, false, true, false, col);
+    drawCircleQuadrants(TFT_WIDTH - 42, 41, 40, false, false, false, true, col);
+    drawCircleQuadrants(41, TFT_HEIGHT - 42, 40, false, true, false, false, col);
+    drawCircleQuadrants(TFT_WIDTH - 42, TFT_HEIGHT - 42, 40, true, false, false, false, col);
+    drawRect(1, 1, TFT_WIDTH - 1, TFT_HEIGHT - 1, col);
 }
 
 void dn_updatePrompt(dn_entity_t* self)
 {
     dn_promptData_t* pData = (dn_promptData_t*)self->data;
-    node_t* cur = pData->options->first;
-    while(cur != NULL)
+    node_t* cur            = pData->options->first;
+    while (cur != NULL)
     {
         dn_promptOption_t* option = (dn_promptOption_t*)cur->val;
         option->selectionAmount -= self->gameData->elapsedUs >> 6;
-        if(option->selectionAmount < 0)
+        if (option->selectionAmount < 0)
         {
             option->selectionAmount = 0;
         }
         cur = cur->next;
     }
-    if(pData->animatingIntroSlide)
+    if (pData->animatingIntroSlide)
     {
         pData->yOffset -= self->gameData->elapsedUs >> 11;
-        if(pData->yOffset < 70)
+        if (pData->yOffset < 70)
         {
-            pData->yOffset = 70;
+            pData->yOffset             = 70;
             pData->animatingIntroSlide = false;
         }
     }
     else
     {
-        if(self->gameData->btnDownState & PB_A)
+        if (self->gameData->btnDownState & PB_A)
         {
             cur = pData->options->first;
-            for(int i = 1; i <= pData->selectionIdx; i++)
+            for (int i = 1; i <= pData->selectionIdx; i++)
             {
                 cur = cur->next;
             }
             dn_promptOption_t* option = (dn_promptOption_t*)cur->val;
             option->downPressDetected = true;
         }
-        if(self->gameData->btnState & PB_UP)
+        if (self->gameData->btnState & PB_UP)
         {
             pData->playerHasSlidThis = true;
             pData->yOffset -= self->gameData->elapsedUs >> 13;
         }
-        if(self->gameData->btnState & PB_DOWN)
+        if (self->gameData->btnState & PB_DOWN)
         {
             pData->playerHasSlidThis = true;
             pData->yOffset += self->gameData->elapsedUs >> 13;
         }
         pData->yOffset = CLAMP(pData->yOffset, -44, 220);
-        if(self->gameData->btnDownState & PB_LEFT && pData->selectionIdx > 0)
+        if (self->gameData->btnDownState & PB_LEFT && pData->selectionIdx > 0)
         {
             cur = pData->options->first;
-            for(int i = 1; i <= pData->selectionIdx; i++)
+            for (int i = 1; i <= pData->selectionIdx; i++)
             {
                 cur = cur->next;
             }
@@ -1496,10 +1526,10 @@ void dn_updatePrompt(dn_entity_t* self)
             option->downPressDetected = false;
             pData->selectionIdx--;
         }
-        if(self->gameData->btnDownState & PB_RIGHT && pData->selectionIdx < pData->numOptions - 1)
+        if (self->gameData->btnDownState & PB_RIGHT && pData->selectionIdx < pData->numOptions - 1)
         {
             cur = pData->options->first;
-            for(int i = 1; i <= pData->selectionIdx; i++)
+            for (int i = 1; i <= pData->selectionIdx; i++)
             {
                 cur = cur->next;
             }
@@ -1507,18 +1537,18 @@ void dn_updatePrompt(dn_entity_t* self)
             option->downPressDetected = false;
             pData->selectionIdx++;
         }
-        if(self->gameData->btnState & PB_A)
+        if (self->gameData->btnState & PB_A)
         {
             cur = pData->options->first;
-            for(int i = 1; i <= pData->selectionIdx; i++)
+            for (int i = 1; i <= pData->selectionIdx; i++)
             {
                 cur = cur->next;
             }
             dn_promptOption_t* option = (dn_promptOption_t*)cur->val;
-            if(option->downPressDetected)
+            if (option->downPressDetected)
             {
                 option->selectionAmount += self->gameData->elapsedUs >> 3;
-                if(option->selectionAmount >= 30000)
+                if (option->selectionAmount >= 30000)
                 {
                     option->selectionAmount = 30000;
                     option->callback(self);
@@ -1535,55 +1565,70 @@ void dn_updatePrompt(dn_entity_t* self)
 void dn_drawPrompt(dn_entity_t* self)
 {
     dn_promptData_t* pData = (dn_promptData_t*)self->data;
-    //black banner
-    drawRectFilled(0,pData->yOffset, TFT_WIDTH, pData->yOffset + 60, c000);
-    int16_t xOff = TFT_WIDTH>>1;
+    // black banner
+    drawRectFilled(0, pData->yOffset, TFT_WIDTH, pData->yOffset + 60, c000);
+    int16_t xOff = TFT_WIDTH >> 1;
     int16_t yOff = pData->yOffset + 11;
-    //prompt text
-    paletteColor_t outer = c425;
+    // prompt text
+    paletteColor_t outer  = c425;
     paletteColor_t middle = c535;
-    paletteColor_t inner = c555;
-    if(!pData->isPurple)
+    paletteColor_t inner  = c555;
+    if (!pData->isPurple)
     {
-        outer = self->gameData->phase < DN_P2_DANCE_PHASE ? c245 : c442;
+        outer  = self->gameData->phase < DN_P2_DANCE_PHASE ? c245 : c442;
         middle = self->gameData->phase < DN_P2_DANCE_PHASE ? c355 : c553;
     }
     uint16_t tWidth = textWidth(&self->gameData->font_ibm, pData->text);
-    if(pData->usesTwoLinesOfText)
+    if (pData->usesTwoLinesOfText)
     {
         yOff -= 6;
     }
-    drawShinyText(&self->gameData->font_ibm, outer, middle, inner, pData->text, xOff - (tWidth>>1), yOff);
-    if(pData->usesTwoLinesOfText)
+    drawShinyText(&self->gameData->font_ibm, outer, middle, inner, pData->text, xOff - (tWidth >> 1), yOff);
+    if (pData->usesTwoLinesOfText)
     {
         yOff += 12;
         tWidth = textWidth(&self->gameData->font_ibm, pData->text2);
-        drawShinyText(&self->gameData->font_ibm, outer, middle, inner, pData->text2, xOff - (tWidth>>1), yOff);
+        drawShinyText(&self->gameData->font_ibm, outer, middle, inner, pData->text2, xOff - (tWidth >> 1), yOff);
     }
-    
+
     node_t* option = pData->options->first;
-    int xPos = (TFT_WIDTH / 2) / pData->options->length;
+    int xPos       = (TFT_WIDTH / 2) / pData->options->length;
     int separation = xPos * 2;
-    for(int i = 0; i < pData->options->length; i++)
+    for (int i = 0; i < pData->options->length; i++)
     {
         dn_promptOption_t* optionVal = (dn_promptOption_t*)option->val;
         xPos += separation * i;
-        //fill effect
-        drawRectFilled(xPos - 25, pData->yOffset + 34, dn_lerp(xPos - 25, xPos + 25, dn_logRemap(optionVal->selectionAmount)), pData->yOffset + 56, c022);
-        //outline
-        drawRect(xPos - 25, pData->yOffset + 34, xPos + 25, pData->yOffset + 56, pData->selectionIdx == i ? middle : c222);
+        // fill effect
+        drawRectFilled(xPos - 25, pData->yOffset + 34,
+                       dn_lerp(xPos - 25, xPos + 25, dn_logRemap(optionVal->selectionAmount)), pData->yOffset + 56,
+                       c022);
+        // outline
+        drawRect(xPos - 25, pData->yOffset + 34, xPos + 25, pData->yOffset + 56,
+                 pData->selectionIdx == i ? middle : c222);
         xOff = xPos - 25;
         yOff = pData->yOffset + 39;
-        //option text
-        drawTextWordWrapCentered(&self->gameData->font_ibm, pData->selectionIdx == i ? c555 : c222, optionVal->text, &xOff, &yOff, xPos + 25, pData->yOffset + 56);
+        // option text
+        drawTextWordWrapCentered(&self->gameData->font_ibm, pData->selectionIdx == i ? c555 : c222, optionVal->text,
+                                 &xOff, &yOff, xPos + 25, pData->yOffset + 56);
         option = option->next;
     }
 
-    //flashy arrows up and down
-    if(pData->yOffset == 70 && !pData->playerHasSlidThis && (self->gameData->generalTimer % 256) > 128)
+    // flashy arrows up and down
+    if (pData->yOffset == 70 && !pData->playerHasSlidThis && (self->gameData->generalTimer % 256) > 128)
     {
-        drawWsgPaletteSimple(&self->gameData->assets[DN_MMM_UP_ASSET].frames[0], (TFT_WIDTH>>1) - self->gameData->assets[DN_MMM_UP_ASSET].originX, pData->yOffset - 4 - self->gameData->assets[DN_MMM_UP_ASSET].originY, &self->gameData->entityManager.palettes[self->gameData->phase >= DN_P2_DANCE_PHASE ? DN_P2_ARROW_PALETTE : DN_PURPLE_FLOOR_PALETTE]);
-        drawWsgPalette(&self->gameData->assets[DN_MMM_UP_ASSET].frames[0], (TFT_WIDTH>>1) - self->gameData->assets[DN_MMM_UP_ASSET].originX, pData->yOffset +64 - self->gameData->assets[DN_MMM_UP_ASSET].originY, &self->gameData->entityManager.palettes[self->gameData->phase >= DN_P2_DANCE_PHASE ? DN_P2_ARROW_PALETTE : DN_PURPLE_FLOOR_PALETTE], false, true, 0);
+        drawWsgPaletteSimple(
+            &self->gameData->assets[DN_MMM_UP_ASSET].frames[0],
+            (TFT_WIDTH >> 1) - self->gameData->assets[DN_MMM_UP_ASSET].originX,
+            pData->yOffset - 4 - self->gameData->assets[DN_MMM_UP_ASSET].originY,
+            &self->gameData->entityManager
+                 .palettes[self->gameData->phase >= DN_P2_DANCE_PHASE ? DN_P2_ARROW_PALETTE : DN_PURPLE_FLOOR_PALETTE]);
+        drawWsgPalette(
+            &self->gameData->assets[DN_MMM_UP_ASSET].frames[0],
+            (TFT_WIDTH >> 1) - self->gameData->assets[DN_MMM_UP_ASSET].originX,
+            pData->yOffset + 64 - self->gameData->assets[DN_MMM_UP_ASSET].originY,
+            &self->gameData->entityManager
+                 .palettes[self->gameData->phase >= DN_P2_DANCE_PHASE ? DN_P2_ARROW_PALETTE : DN_PURPLE_FLOOR_PALETTE],
+            false, true, 0);
     }
 }
 
@@ -1602,14 +1647,14 @@ void dn_startTurn(dn_entity_t* self)
 
     dn_setBlinkingLights(self);
 
-    //decrement tile timeouts
+    // decrement tile timeouts
     dn_boardData_t* boardData = (dn_boardData_t*)self->gameData->entityManager.board->data;
 
     for (int y = 0; y < DN_BOARD_SIZE; y++)
     {
         for (int x = 0; x < DN_BOARD_SIZE; x++)
         {
-            if(boardData->tiles[y][x].timeout)
+            if (boardData->tiles[y][x].timeout)
             {
                 boardData->tiles[y][x].timeout--;
             }
@@ -1619,42 +1664,46 @@ void dn_startTurn(dn_entity_t* self)
     ////////////////////////////////
     // Make the turn start prompt //
     ////////////////////////////////
-    dn_entity_t* promptToStart = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, self->gameData);
-    promptToStart->data         = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+    dn_entity_t* promptToStart = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true,
+                                                        DN_NO_ASSET, 0, (vec_t){0xffff, 0xffff}, self->gameData);
+    promptToStart->data        = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
     memset(promptToStart->data, 0, sizeof(dn_promptData_t));
 
-    dn_promptData_t* promptData = (dn_promptData_t*)promptToStart->data;
+    dn_promptData_t* promptData     = (dn_promptData_t*)promptToStart->data;
     promptData->animatingIntroSlide = true;
-    promptData->yOffset = 320;//way off screen to allow more time to look at albums.
-    
-    if(self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] != 9)
+    promptData->yOffset             = 320; // way off screen to allow more time to look at albums.
+
+    if (self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] != 9)
     {
-        snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! Gain 1 reroll.", self->gameData->shortPlayerNames[self->gameData->phase>=DN_P2_DANCE_PHASE]);
+        snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! Gain 1 reroll.",
+                 self->gameData->shortPlayerNames[self->gameData->phase >= DN_P2_DANCE_PHASE]);
     }
     else
     {
-        snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! 9 rerolls reached.", self->gameData->shortPlayerNames[self->gameData->phase>=DN_P2_DANCE_PHASE]);
+        snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! 9 rerolls reached.",
+                 self->gameData->shortPlayerNames[self->gameData->phase >= DN_P2_DANCE_PHASE]);
     }
-    
+
     promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
     memset(promptData->options, 0, sizeof(list_t));
-    
+
     dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
     memset(option1, 0, sizeof(dn_promptOption_t));
     strcpy(option1->text, "OK");
-    option1->callback = dn_gainRerollAndSetupDancePhase;
+    option1->callback          = dn_gainRerollAndSetupDancePhase;
     option1->downPressDetected = false;
     push(promptData->options, (void*)option1);
-    promptData->numOptions = 1;    
-    promptToStart->dataType     = DN_PROMPT_DATA;
+    promptData->numOptions        = 1;
+    promptToStart->dataType       = DN_PROMPT_DATA;
     promptToStart->updateFunction = dn_updatePrompt;
-    promptToStart->drawFunction = dn_drawPrompt;
+    promptToStart->drawFunction   = dn_drawPrompt;
 }
 
 void dn_gainReroll(dn_entity_t* self)
 {
-    self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE]++;
-    self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE] = CLAMP(self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE], 0, 9);
+    self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]++;
+    self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]
+        = CLAMP(self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE], 0, 9);
 }
 
 void dn_gainRerollAndSetupDancePhase(dn_entity_t* self)
@@ -1664,7 +1713,7 @@ void dn_gainRerollAndSetupDancePhase(dn_entity_t* self)
     dn_setupDancePhase(self);
 }
 
-void dn_setupDancePhase(dn_entity_t* self)//used to be dn_startMovePhase
+void dn_setupDancePhase(dn_entity_t* self) // used to be dn_startMovePhase
 {
     dn_clearSelectableTiles(self);
     dn_calculateMoveableUnits(self->gameData->entityManager.board);
@@ -1672,29 +1721,29 @@ void dn_setupDancePhase(dn_entity_t* self)//used to be dn_startMovePhase
     ///////////////////////////
     // Make the tile selector//
     ///////////////////////////
-    dn_entity_t* tileSelector = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
-                                                    0, self->gameData->camera.pos, self->gameData);
+    dn_entity_t* tileSelector = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true,
+                                                       DN_NO_ASSET, 0, self->gameData->camera.pos, self->gameData);
     tileSelector->data        = heap_caps_calloc(1, sizeof(dn_tileSelectorData_t), MALLOC_CAP_SPIRAM);
     memset(tileSelector->data, 0, sizeof(dn_tileSelectorData_t));
     ((dn_tileSelectorData_t*)tileSelector->data)->a_callback = dn_trySelectUnit;
     ((dn_tileSelectorData_t*)tileSelector->data)->b_callback = NULL;
-    tileSelector->dataType    = DN_TILE_SELECTOR_DATA;
-    tileSelector->drawFunction = dn_drawNothing;
-    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)tileSelector->data;
+    tileSelector->dataType                                   = DN_TILE_SELECTOR_DATA;
+    tileSelector->drawFunction                               = dn_drawNothing;
+    dn_tileSelectorData_t* tData                             = (dn_tileSelectorData_t*)tileSelector->data;
     for (int i = 0; i < NUM_SELECTOR_LINES; i++)
     {
         tData->lineYs[i] = (255 * i) / NUM_SELECTOR_LINES;
     }
     tData->pos = (dn_boardPos_t){2, 2};
     // fancy line colors for player one
-    tData->colors[0]             = c125;
-    tData->colors[1]             = c345;
-    tData->colors[2]             = c555;
-    if(self->gameData->phase >= DN_P2_DANCE_PHASE)
+    tData->colors[0] = c125;
+    tData->colors[1] = c345;
+    tData->colors[2] = c555;
+    if (self->gameData->phase >= DN_P2_DANCE_PHASE)
     {
-        tData->colors[0]         = c442;
-        tData->colors[1]         = c543;
-        tData->colors[2]         = c555;
+        tData->colors[0] = c442;
+        tData->colors[1] = c543;
+        tData->colors[2] = c555;
     }
     tileSelector->updateFunction = dn_updateTileSelector;
     // Don't set the draw function, because it needs to happen in two parts behind and in front of units.
@@ -1706,7 +1755,7 @@ void dn_acceptRerollAndSkip(dn_entity_t* self)
 {
     dn_gainReroll(self);
     dn_clearSelectableTiles(self);
-    dn_incrementPhase(self);//It is the upgrade phase
+    dn_incrementPhase(self); // It is the upgrade phase
 
     dn_startUpgradeMenu(self, 0);
 }
@@ -1717,36 +1766,38 @@ void dn_acceptRerollAndSwapHelper(dn_entity_t* self, bool progressPhase)
     ///////////////////
     // Make the swap //
     ///////////////////
-    dn_entity_t* swap = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
-                                                    0, addVec2d(self->gameData->camera.pos, (vec_t){(107 << DN_DECIMAL_BITS), -(68 << DN_DECIMAL_BITS)}), self->gameData);
-    swap->data        = heap_caps_calloc(1, sizeof(dn_swapAlbumsData_t), MALLOC_CAP_SPIRAM);
+    dn_entity_t* swap = dn_createEntitySpecial(
+        &self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0,
+        addVec2d(self->gameData->camera.pos, (vec_t){(107 << DN_DECIMAL_BITS), -(68 << DN_DECIMAL_BITS)}),
+        self->gameData);
+    swap->data = heap_caps_calloc(1, sizeof(dn_swapAlbumsData_t), MALLOC_CAP_SPIRAM);
     memset(swap->data, 0, sizeof(dn_swapAlbumsData_t));
 
     dn_swapAlbumsData_t* swapData = (dn_swapAlbumsData_t*)swap->data;
-    swapData->progressPhase = progressPhase;
-    dn_albumsData_t* aData = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
-    ((dn_albumData_t*)aData->p1Album->data)->cornerLightOn = false;
+    swapData->progressPhase       = progressPhase;
+    dn_albumsData_t* aData        = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
+    ((dn_albumData_t*)aData->p1Album->data)->cornerLightOn              = false;
     ((dn_albumData_t*)aData->creativeCommonsAlbum->data)->cornerLightOn = false;
-    ((dn_albumData_t*)aData->p2Album->data)->cornerLightOn = false;
-    if(self->gameData->phase < DN_P2_DANCE_PHASE)
+    ((dn_albumData_t*)aData->p2Album->data)->cornerLightOn              = false;
+    if (self->gameData->phase < DN_P2_DANCE_PHASE)
     {
-        swapData->firstAlbum = aData->p1Album;
+        swapData->firstAlbum    = aData->p1Album;
         swapData->firstAlbumIdx = 0;
-        
-        swapData->secondAlbum = aData->p2Album;
+
+        swapData->secondAlbum    = aData->p2Album;
         swapData->secondAlbumIdx = 2;
     }
     else
     {
-        swapData->firstAlbum = aData->p2Album;
+        swapData->firstAlbum    = aData->p2Album;
         swapData->firstAlbumIdx = 2;
-        
-        swapData->secondAlbum = aData->p1Album;
+
+        swapData->secondAlbum    = aData->p1Album;
         swapData->secondAlbumIdx = 0;
     }
-    swap->dataType    = DN_SWAP_DATA;
+    swap->dataType       = DN_SWAP_DATA;
     swap->updateFunction = dn_updateSwapAlbums;
-    swap->drawFunction = NULL;
+    swap->drawFunction   = NULL;
 }
 
 void dn_acceptRerollAndSwap(dn_entity_t* self)
@@ -1764,7 +1815,7 @@ void dn_acceptThreeRerolls(dn_entity_t* self)
     dn_gainReroll(self);
     dn_gainReroll(self);
     dn_gainReroll(self);
-    if(!self->gameData->resolvingRemix)
+    if (!self->gameData->resolvingRemix)
     {
         dn_incrementPhase(self);
         dn_startUpgradeMenu(self, 2 << 20);
@@ -1775,10 +1826,10 @@ void dn_acceptThreeRerolls(dn_entity_t* self)
 void dn_clearSelectableTiles(dn_entity_t* self)
 {
     dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
-    //set selectable tiles off
-    for(int i = 0; i < 5; i++)
+    // set selectable tiles off
+    for (int i = 0; i < 5; i++)
     {
-        for(int j = 0; j< 5; j++)
+        for (int j = 0; j < 5; j++)
         {
             bData->tiles[i][j].selectionType = DN_NO_SELECTION;
         }
@@ -1789,22 +1840,24 @@ void dn_startUpgradeMenu(dn_entity_t* self, int32_t countOff)
 {
     self->gameData->resolvingRemix = false;
 
-    //add a random track to creative commons
-    dn_addTrackToAlbum(((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum, dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 122)),
-                       (dn_track_t)dn_randomInt(1, 2));
+    // add a random track to creative commons
+    dn_addTrackToAlbum(((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum,
+                       dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 122)), (dn_track_t)dn_randomInt(1, 2));
 
     //////////////////////////
     // Make the upgrade menu//
     //////////////////////////
-    dn_entity_t* upgradeMenu = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
-                                                    0, addVec2d(self->gameData->camera.pos, (vec_t){(107 << DN_DECIMAL_BITS), -(140 << DN_DECIMAL_BITS)}), self->gameData);
-    upgradeMenu->data        = heap_caps_calloc(1, sizeof(dn_upgradeMenuData_t), MALLOC_CAP_SPIRAM);
+    dn_entity_t* upgradeMenu = dn_createEntitySpecial(
+        &self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0,
+        addVec2d(self->gameData->camera.pos, (vec_t){(107 << DN_DECIMAL_BITS), -(140 << DN_DECIMAL_BITS)}),
+        self->gameData);
+    upgradeMenu->data = heap_caps_calloc(1, sizeof(dn_upgradeMenuData_t), MALLOC_CAP_SPIRAM);
     memset(upgradeMenu->data, 0, sizeof(dn_upgradeMenuData_t));
     ((dn_upgradeMenuData_t*)upgradeMenu->data)->timer = countOff;
-    upgradeMenu->dataType    = DN_UPGRADE_MENU_DATA;
-    upgradeMenu->updateFunction = dn_updateUpgradeMenu;
-    upgradeMenu->drawFunction = dn_drawUpgradeMenu;
-    
+    upgradeMenu->dataType                             = DN_UPGRADE_MENU_DATA;
+    upgradeMenu->updateFunction                       = dn_updateUpgradeMenu;
+    upgradeMenu->drawFunction                         = dn_drawUpgradeMenu;
+
     dn_initializeSecondUpgradeOption(upgradeMenu);
     dn_initializeThirdUpgradeOption(upgradeMenu);
     dn_initializeFirstUpgradeOption(upgradeMenu);
@@ -1814,12 +1867,13 @@ void dn_startUpgradeMenu(dn_entity_t* self, int32_t countOff)
 void dn_acceptSwapCC(dn_entity_t* self)
 {
     self->paused = true;
-    if(self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] < 3)
+    if (self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] < 3)
     {
         //////////////////////////////////////
-        //make the prompt not enough rerolls//
+        // make the prompt not enough rerolls//
         //////////////////////////////////////
-        dn_entity_t* promptNotEnough = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
+        dn_entity_t* promptNotEnough
+            = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff, 0xffff}, self->gameData);
         dn_promptData_t* promptData = (dn_promptData_t*)promptNotEnough->data;
 
         strcpy(promptData->text, "Not enough rerolls.");
@@ -1829,7 +1883,7 @@ void dn_acceptSwapCC(dn_entity_t* self)
         dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
         memset(option1, 0, sizeof(dn_promptOption_t));
         strcpy(option1->text, "OK");
-        option1->callback = dn_unpauseSwapButton;
+        option1->callback          = dn_unpauseSwapButton;
         option1->downPressDetected = false;
         push(promptData->options, (void*)option1);
         promptData->numOptions = 1;
@@ -1837,59 +1891,60 @@ void dn_acceptSwapCC(dn_entity_t* self)
         return;
     }
 
-    self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]-=3;
+    self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] -= 3;
     ///////////////////
     // Make the swap //
     ///////////////////
-    dn_entity_t* swap = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
-                                                    0, addVec2d(self->gameData->camera.pos, (vec_t){(107 << DN_DECIMAL_BITS), -(68 << DN_DECIMAL_BITS)}), self->gameData);
-    swap->data        = heap_caps_calloc(1, sizeof(dn_swapAlbumsData_t), MALLOC_CAP_SPIRAM);
+    dn_entity_t* swap = dn_createEntitySpecial(
+        &self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0,
+        addVec2d(self->gameData->camera.pos, (vec_t){(107 << DN_DECIMAL_BITS), -(68 << DN_DECIMAL_BITS)}),
+        self->gameData);
+    swap->data = heap_caps_calloc(1, sizeof(dn_swapAlbumsData_t), MALLOC_CAP_SPIRAM);
     memset(swap->data, 0, sizeof(dn_swapAlbumsData_t));
     dn_swapAlbumsData_t* swapData = (dn_swapAlbumsData_t*)swap->data;
-    dn_albumsData_t* aData = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
-    ((dn_albumData_t*)aData->p1Album->data)->cornerLightOn = false;
+    dn_albumsData_t* aData        = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
+    ((dn_albumData_t*)aData->p1Album->data)->cornerLightOn              = false;
     ((dn_albumData_t*)aData->creativeCommonsAlbum->data)->cornerLightOn = false;
-    ((dn_albumData_t*)aData->p2Album->data)->cornerLightOn = false;
-    if(self->gameData->phase < DN_P2_DANCE_PHASE)
+    ((dn_albumData_t*)aData->p2Album->data)->cornerLightOn              = false;
+    if (self->gameData->phase < DN_P2_DANCE_PHASE)
     {
-        swapData->firstAlbum = aData->p1Album;
+        swapData->firstAlbum    = aData->p1Album;
         swapData->firstAlbumIdx = 0;
     }
     else
     {
-        swapData->firstAlbum = aData->p2Album;
+        swapData->firstAlbum    = aData->p2Album;
         swapData->firstAlbumIdx = 2;
     }
-    swapData->secondAlbum = aData->creativeCommonsAlbum;
+    swapData->secondAlbum    = aData->creativeCommonsAlbum;
     swapData->secondAlbumIdx = 1;
-    swap->dataType    = DN_SWAP_DATA;
-    swap->updateFunction = dn_updateSwapAlbums;
-    swap->drawFunction = NULL;
+    swap->dataType           = DN_SWAP_DATA;
+    swap->updateFunction     = dn_updateSwapAlbums;
+    swap->drawFunction       = NULL;
 }
 
 void dn_incrementPhase(dn_entity_t* self)
 {
     self->gameData->phase++;
-    if(self->gameData->phase > DN_P2_UPGRADE_PHASE)
+    if (self->gameData->phase > DN_P2_UPGRADE_PHASE)
     {
         self->gameData->phase = DN_P1_DANCE_PHASE;
     }
 
-    //update the unit selection colors
-    if(self->gameData->phase == DN_P1_DANCE_PHASE)
+    // update the unit selection colors
+    if (self->gameData->phase == DN_P1_DANCE_PHASE)
     {
         dn_setCharacterSetPalette(&self->gameData->entityManager, self->gameData->characterSets[0]);
     }
-    else if(self->gameData->phase == DN_P2_DANCE_PHASE)
+    else if (self->gameData->phase == DN_P2_DANCE_PHASE)
     {
         dn_setCharacterSetPalette(&self->gameData->entityManager, self->gameData->characterSets[1]);
     }
 
     dn_setBlinkingLights(self);
 
-
-    //debug stuff
-    switch(self->gameData->phase)
+    // debug stuff
+    switch (self->gameData->phase)
     {
         case DN_P1_DANCE_PHASE:
         {
@@ -1916,14 +1971,14 @@ void dn_incrementPhase(dn_entity_t* self)
 
 void dn_drawPit(dn_entity_t* self)
 {
-    int32_t x             = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
+    int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originX;
     int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS);
     drawWsgSimple(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y);
 
-    x = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
-        - 1;
-    drawWsgPalette(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y, &self->gameData->entityManager.palettes[DN_PIT_WALL_PALETTE], true, false, 0);
+    x = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - 1;
+    drawWsgPalette(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y,
+                   &self->gameData->entityManager.palettes[DN_PIT_WALL_PALETTE], true, false, 0);
     drawRectFilled(x - 138, y - 16, x + 139, y, c323);
     drawRectFilled(x - 138, y, x - 125, y + 152, c323);
     drawRectFilled(x + 126, y, x + 139, y + 152, c323);
@@ -1931,37 +1986,31 @@ void dn_drawPit(dn_entity_t* self)
 
 void dn_drawPitForeground(dn_entity_t* self)
 {
-    drawTriangleOutlined(
-        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - 126,
-        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 51,
-        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - 126,
-        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 116,
-        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - 1,
-        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 116,
-        c323, c323);
+    drawTriangleOutlined(((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - 126,
+                         ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 51,
+                         ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - 126,
+                         ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 116,
+                         ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - 1,
+                         ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 116, c323, c323);
 
-    drawTriangleOutlined(
-        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) + 124,
-        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 51,
-        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) + 124,
-        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 116,
-        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS),
-        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 116,
-        c323, c323);
+    drawTriangleOutlined(((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) + 124,
+                         ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 51,
+                         ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) + 124,
+                         ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 116,
+                         ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS),
+                         ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 116, c323, c323);
 
-    drawLineFast(
-        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - 126,
-        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 117,
-        ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) + 124,
-        ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 117,
-        c323);
+    drawLineFast(((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - 126,
+                 ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 117,
+                 ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) + 124,
+                 ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 117, c323);
 }
 
 // Helper function to get the board position of a unit
 // Returns {-1, -1} if not found or invalid input
 dn_boardPos_t dn_getUnitBoardPos(dn_entity_t* unit)
 {
-    dn_boardPos_t foundPos = { -1, -1 };
+    dn_boardPos_t foundPos    = {-1, -1};
     dn_boardData_t* boardData = (dn_boardData_t*)unit->gameData->entityManager.board->data;
     for (int y = 0; y < DN_BOARD_SIZE; y++)
     {
@@ -1982,25 +2031,25 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
 {
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
 
-    if(umData->timer > 0)
+    if (umData->timer > 0)
     {
         umData->timer -= self->gameData->elapsedUs;
-        if(umData->timer > 0)
+        if (umData->timer > 0)
         {
             return;
         }
     }
 
-    for(uint8_t option = 0; option < 4; option++)
+    for (uint8_t option = 0; option < 4; option++)
     {
         umData->options[option].selectionAmount -= self->gameData->elapsedUs >> 6;
-        if(umData->options[option].selectionAmount < 0)
+        if (umData->options[option].selectionAmount < 0)
         {
             umData->options[option].selectionAmount = 0;
         }
     }
-    
-    if(self->gameData->btnDownState & PB_A)
+
+    if (self->gameData->btnDownState & PB_A)
     {
         umData->options[umData->selectionIdx].downPressDetected = true;
     }
@@ -2016,54 +2065,56 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
     }
     umData->selectionIdx = CLAMP(umData->selectionIdx, 0, 3);
 
-    if(self->gameData->btnState & PB_A)
+    if (self->gameData->btnState & PB_A)
     {
-        if(umData->options[umData->selectionIdx].downPressDetected && (self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] || umData->selectionIdx == 3))
+        if (umData->options[umData->selectionIdx].downPressDetected
+            && (self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] || umData->selectionIdx == 3))
         {
-            umData->options[umData->selectionIdx].selectionAmount += self->gameData->elapsedUs >> (3 + (umData->selectionIdx == 3)*2);//confirm takes longer to press
-            if(umData->options[umData->selectionIdx].selectionAmount >= 30000)
+            umData->options[umData->selectionIdx].selectionAmount
+                += self->gameData->elapsedUs >> (3 + (umData->selectionIdx == 3) * 2); // confirm takes longer to press
+            if (umData->options[umData->selectionIdx].selectionAmount >= 30000)
             {
                 umData->options[umData->selectionIdx].selectionAmount = 30000;
-                if(umData->options[umData->selectionIdx].callback)
+                if (umData->options[umData->selectionIdx].callback)
                 {
                     umData->options[umData->selectionIdx].callback(self);
-                    umData->options[umData->selectionIdx].selectionAmount = 0;
+                    umData->options[umData->selectionIdx].selectionAmount   = 0;
                     umData->options[umData->selectionIdx].downPressDetected = false;
                 }
             }
         }
     }
 
-    if(self->gameData->camera.pos.y > (self->pos.y - (26 << DN_DECIMAL_BITS)))
+    if (self->gameData->camera.pos.y > (self->pos.y - (26 << DN_DECIMAL_BITS)))
     {
         self->gameData->camera.pos.y -= self->gameData->elapsedUs >> 8;
         self->gameData->entityManager.albums->pos.y -= self->gameData->elapsedUs / 1900;
-        dn_albumsData_t* aData = (dn_albumsData_t*) self->gameData->entityManager.albums->data;
+        dn_albumsData_t* aData = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
         aData->p1Album->pos.y -= self->gameData->elapsedUs / 1900;
         aData->creativeCommonsAlbum->pos.y -= self->gameData->elapsedUs / 1900;
         aData->p2Album->pos.y -= self->gameData->elapsedUs / 1900;
     }
-    else if(self->gameData->entityManager.albums->pos.y != 63427)
+    else if (self->gameData->entityManager.albums->pos.y != 63427)
     {
-        self->gameData->camera.pos.y = self->pos.y - (26 << DN_DECIMAL_BITS);
+        self->gameData->camera.pos.y                = self->pos.y - (26 << DN_DECIMAL_BITS);
         self->gameData->entityManager.albums->pos.y = 63427;
-        dn_albumsData_t* aData = (dn_albumsData_t*) self->gameData->entityManager.albums->data;
-        aData->p1Album->pos.y = 62912;
-        aData->creativeCommonsAlbum->pos.y = 62912;
-        aData->p2Album->pos.y = 62912;
+        dn_albumsData_t* aData                      = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
+        aData->p1Album->pos.y                       = 62912;
+        aData->creativeCommonsAlbum->pos.y          = 62912;
+        aData->p2Album->pos.y                       = 62912;
     }
 }
 
 void dn_updateAfterUpgradeMenu(dn_entity_t* self)
 {
     self->gameData->camera.pos.y += self->gameData->elapsedUs >> 9;
-    dn_albumsData_t* aData = (dn_albumsData_t*) self->gameData->entityManager.albums->data;
+    dn_albumsData_t* aData = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
     aData->p1Album->pos.y += self->gameData->elapsedUs / 1900;
     aData->creativeCommonsAlbum->pos.y += self->gameData->elapsedUs / 1900;
     aData->p2Album->pos.y += self->gameData->elapsedUs / 1900;
 
-    //function moves the camera back down after upgrade was chosen.
-    if(self->gameData->camera.pos.y < 62703)
+    // function moves the camera back down after upgrade was chosen.
+    if (self->gameData->camera.pos.y < 62703)
     {
         self->gameData->camera.pos.y += self->gameData->elapsedUs >> 8;
         self->gameData->entityManager.albums->pos.y += self->gameData->elapsedUs / 1900;
@@ -2075,68 +2126,72 @@ void dn_updateAfterUpgradeMenu(dn_entity_t* self)
     {
         dn_incrementPhase(self);
         dn_startTurn(self);
-        self->gameData->camera.pos.y = 62703;
+        self->gameData->camera.pos.y                = 62703;
         self->gameData->entityManager.albums->pos.y = 63823;
-        aData->p1Album->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
-        aData->creativeCommonsAlbum->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
-        aData->p2Album->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
-        self->destroyFlag = true;
+        aData->p1Album->pos.y                       = 0xFFFF - (139 << DN_DECIMAL_BITS);
+        aData->creativeCommonsAlbum->pos.y          = 0xFFFF - (139 << DN_DECIMAL_BITS);
+        aData->p2Album->pos.y                       = 0xFFFF - (139 << DN_DECIMAL_BITS);
+        self->destroyFlag                           = true;
     }
 }
 
 void dn_drawUpgradeMenu(dn_entity_t* self)
 {
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
-    
+
     int32_t x = (self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS;
     int32_t y = (self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS;
-    
-    //corner brackets
-    //top left
+
+    // corner brackets
+    // top left
     drawLineFast(x, y, x + 5, y, c555);
     drawLineFast(x, y, x, y + 5, c555);
-    //top right
+    // top right
     drawLineFast(x + 160, y, x + 165, y, c555);
     drawLineFast(x + 165, y, x + 165, y + 5, c555);
-    //bottom left
+    // bottom left
     drawLineFast(x, y + 97, x + 5, y + 97, c555);
     drawLineFast(x, y + 92, x, y + 97, c555);
-    //bottom right
+    // bottom right
     drawLineFast(x + 160, y + 97, x + 165, y + 97, c555);
     drawLineFast(x + 165, y + 92, x + 165, y + 97, c555);
-    //vertical left line
+    // vertical left line
     drawLineFast(x, y + 9, x, y + 88, c555);
-    //vertical right line
+    // vertical right line
     drawLineFast(x + 165, y + 9, x + 165, y + 88, c555);
 
     uint16_t tWidth = 0;
 
-    for(uint8_t option = 0; option < 3; option++)
+    for (uint8_t option = 0; option < 3; option++)
     {
-        //option 1
-        //THIS IS THE LEFT BOX
-        drawRect(x + 2, y + 3 + 31*option, x + 144, y + 32 + 31*option,  umData->selectionIdx == option ? c555 : c434);
-        if(umData->selectionIdx == option)
+        // option 1
+        // THIS IS THE LEFT BOX
+        drawRect(x + 2, y + 3 + 31 * option, x + 144, y + 32 + 31 * option,
+                 umData->selectionIdx == option ? c555 : c434);
+        if (umData->selectionIdx == option)
         {
-            drawRectFilled(x + 2, y + 3 + 31*option, x + 144, y + 32 + 31*option,  c323);
+            drawRectFilled(x + 2, y + 3 + 31 * option, x + 144, y + 32 + 31 * option, c323);
         }
-        drawRect(x + 143, y + 3 + 31*option, x + 164, y + 32 + 31*option, umData->selectionIdx == option ? c555 : c434);
-        drawRectFilled(x + 144, y + 31 + 31 * option - dn_lerp(0,27,dn_logRemap(umData->options[option].selectionAmount)), x + 163, y + 31 + 31 * option, c521);
-        if(umData->selectionIdx == option)
+        drawRect(x + 143, y + 3 + 31 * option, x + 164, y + 32 + 31 * option,
+                 umData->selectionIdx == option ? c555 : c434);
+        drawRectFilled(x + 144,
+                       y + 31 + 31 * option - dn_lerp(0, 27, dn_logRemap(umData->options[option].selectionAmount)),
+                       x + 163, y + 31 + 31 * option, c521);
+        if (umData->selectionIdx == option)
         {
             drawWsgPaletteSimple(&self->gameData->assets[DN_REROLL_ASSET].frames[0], x + 144, y + 4 + 31 * option,
-                &self->gameData->entityManager.palettes[DN_REROLL_PALETTE]);
+                                 &self->gameData->entityManager.palettes[DN_REROLL_PALETTE]);
         }
         else
         {
             drawWsgSimple(&self->gameData->assets[DN_REROLL_ASSET].frames[0], x + 144, y + 4 + 31 * option);
         }
         char text[31] = "";
-        switch(option)
+        switch (option)
         {
             case 0:
             {
-                switch(umData->trackColor)
+                switch (umData->trackColor)
                 {
                     case DN_RED_TRACK:
                     {
@@ -2162,29 +2217,33 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
             }
             case 1:
             {
-                if(umData->track[0].x != 0 && umData->track[0].y != 0)
+                if (umData->track[0].x != 0 && umData->track[0].y != 0)
                 {
-                    snprintf(text, sizeof(text), "%s %d, %s %d,", umData->track[0].y < 0 ? "back" : "forward", (uint8_t)ABS(umData->track[0].y), 
-                                              umData->track[0].x < 0 ? "left" : "right", (uint8_t)ABS(umData->track[0].x));
+                    snprintf(text, sizeof(text), "%s %d, %s %d,", umData->track[0].y < 0 ? "back" : "forward",
+                             (uint8_t)ABS(umData->track[0].y), umData->track[0].x < 0 ? "left" : "right",
+                             (uint8_t)ABS(umData->track[0].x));
                 }
-                else if(umData->track[0].x == 0 && umData->track[0].y != 0)
+                else if (umData->track[0].x == 0 && umData->track[0].y != 0)
                 {
-                    snprintf(text, sizeof(text), "%s %d,", umData->track[0].y < 0 ? "back" : "forward", (uint8_t)ABS(umData->track[0].y));
+                    snprintf(text, sizeof(text), "%s %d,", umData->track[0].y < 0 ? "back" : "forward",
+                             (uint8_t)ABS(umData->track[0].y));
                 }
-                else if(umData->track[0].x != 0 && umData->track[0].y == 0)
+                else if (umData->track[0].x != 0 && umData->track[0].y == 0)
                 {
-                    snprintf(text, sizeof(text), "%s %d,", umData->track[0].x < 0 ? "left" : "right", (uint8_t)ABS(umData->track[0].x));
+                    snprintf(text, sizeof(text), "%s %d,", umData->track[0].x < 0 ? "left" : "right",
+                             (uint8_t)ABS(umData->track[0].x));
                 }
                 break;
             }
             case 2:
             {
-                switch(umData->album[0])
+                switch (umData->album[0])
                 {
                     case 0:
                     case 1:
                     {
-                        snprintf(text, sizeof(text), "on %s's album.", self->gameData->shortPlayerNames[umData->album[0]]);
+                        snprintf(text, sizeof(text), "on %s's album.",
+                                 self->gameData->shortPlayerNames[umData->album[0]]);
                         break;
                     }
                     case 2:
@@ -2197,27 +2256,30 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
             }
         }
         int16_t xValue = x + 6;
-        int16_t yValue = y + 7 + 31*option;
+        int16_t yValue = y + 7 + 31 * option;
         uint8_t length = *(&text + 1) - text - 1;
-        drawTextWordWrapCentered(&self->gameData->font_ibm, umData->selectionIdx == option ? c555 : c545, text, &xValue, &yValue, x + 141 + (length<19 ? 8 : 0), y + 30 + 31*option);
+        drawTextWordWrapCentered(&self->gameData->font_ibm, umData->selectionIdx == option ? c555 : c545, text, &xValue,
+                                 &yValue, x + 141 + (length < 19 ? 8 : 0), y + 30 + 31 * option);
     }
 
-    drawRectFilled(x + 40, y + 98, x + dn_lerp(40,125,dn_logRemap(umData->options[3].selectionAmount)), y + 116, c521);
+    drawRectFilled(x + 40, y + 98, x + dn_lerp(40, 125, dn_logRemap(umData->options[3].selectionAmount)), y + 116,
+                   c521);
     drawRect(x + 40, y + 98, x + 125, y + 116, umData->selectionIdx == 3 ? c555 : c434);
     tWidth = textWidth(&self->gameData->font_ibm, "CONFIRM");
-    drawText(&self->gameData->font_ibm, umData->selectionIdx == 3 ? c555 : c545, "CONFIRM", x + 82 - (tWidth >> 1), y + 102);
+    drawText(&self->gameData->font_ibm, umData->selectionIdx == 3 ? c555 : c545, "CONFIRM", x + 82 - (tWidth >> 1),
+             y + 102);
 
-    if(self->gameData->camera.pos.y == (self->pos.y - (26 << DN_DECIMAL_BITS)))
+    if (self->gameData->camera.pos.y == (self->pos.y - (26 << DN_DECIMAL_BITS)))
     {
         uint16_t indicatorX = 56;
         uint16_t indicatorY = 175;
 
-        if(umData->album[0] == 1)
+        if (umData->album[0] == 1)
         {
             indicatorX += 161;
             indicatorY -= 5;
         }
-        else if(umData->album[0] == 2)
+        else if (umData->album[0] == 2)
         {
             indicatorX += 80;
         }
@@ -2225,27 +2287,27 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
         indicatorX += umData->track[0].x * 8 * (umData->album[0] == 1 ? -1 : 1);
         indicatorY -= umData->track[0].y * 8 * (umData->album[0] == 1 ? -1 : 1);
 
-        drawRect(indicatorX, indicatorY, indicatorX + 9, indicatorY + 9, (paletteColor_t)dn_randomInt(0,216));
-        drawRect(indicatorX+1, indicatorY+1, indicatorX + 8, indicatorY + 8, (paletteColor_t)dn_randomInt(0,216));
+        drawRect(indicatorX, indicatorY, indicatorX + 9, indicatorY + 9, (paletteColor_t)dn_randomInt(0, 216));
+        drawRect(indicatorX + 1, indicatorY + 1, indicatorX + 8, indicatorY + 8, (paletteColor_t)dn_randomInt(0, 216));
     }
 }
 
 void dn_initializeSecondUpgradeOption(dn_entity_t* self)
 {
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
-    for(int track = 107; track <= 122; track++)
+    for (int track = 107; track <= 122; track++)
     {
-        umData->track[track-107] = dn_colorToTrackCoords((paletteColor_t)track);
+        umData->track[track - 107] = dn_colorToTrackCoords((paletteColor_t)track);
     }
-    umData->track[16] = (dn_boardPos_t){0,0};//null separator
+    umData->track[16] = (dn_boardPos_t){0, 0}; // null separator
 
-    //shuffle
+    // shuffle
     for (int8_t i = sizeof(umData->track) / sizeof(umData->track[0]) - 2; i > 0; i--)
     {
-        int8_t j = (int8_t)(dn_randomInt(0, INT_MAX) % (i + 1));
+        int8_t j           = (int8_t)(dn_randomInt(0, INT_MAX) % (i + 1));
         dn_boardPos_t temp = umData->track[i];
-        umData->track[i] = umData->track[j];
-        umData->track[j] = temp;
+        umData->track[i]   = umData->track[j];
+        umData->track[j]   = temp;
     }
 
     umData->options[1].callback = dn_rerollSecondUpgradeOption;
@@ -2253,31 +2315,31 @@ void dn_initializeSecondUpgradeOption(dn_entity_t* self)
 void dn_initializeThirdUpgradeOption(dn_entity_t* self)
 {
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
-    for(int album = 0; album <= 2; album++)
+    for (int album = 0; album <= 2; album++)
     {
         umData->album[album] = album;
     }
-    umData->album[3] = 3;//3 separator
+    umData->album[3] = 3; // 3 separator
     umData->album[0] = self->gameData->phase >= DN_P2_DANCE_PHASE;
     umData->album[1] = self->gameData->phase < DN_P2_DANCE_PHASE;
     umData->album[2] = 2;
-    if(dn_randomInt(0,1))
+    if (dn_randomInt(0, 1))
     {
         umData->album[1] = 2;
         umData->album[2] = self->gameData->phase < DN_P2_DANCE_PHASE;
     }
-    
+
     umData->options[2].callback = dn_rerollThirdUpgradeOption;
 }
 void dn_initializeFirstUpgradeOption(dn_entity_t* self)
 {
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
-    uint8_t roll = dn_randomInt(0,100);
-    if(roll < 50)
+    uint8_t roll                 = dn_randomInt(0, 100);
+    if (roll < 50)
     {
         umData->trackColor = DN_BLUE_TRACK;
     }
-    else if(roll < 80)
+    else if (roll < 80)
     {
         umData->trackColor = DN_RED_TRACK;
     }
@@ -2292,68 +2354,68 @@ void dn_initializeFirstUpgradeOption(dn_entity_t* self)
 void dn_initializeUpgradeConfirmOption(dn_entity_t* self)
 {
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
-    umData->options[3].callback = dn_confirmUpgrade;
+    umData->options[3].callback  = dn_confirmUpgrade;
 }
 
 void dn_rerollSecondUpgradeOption(dn_entity_t* self)
 {
-    self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE]--;
+    self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]--;
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
-    uint8_t separatorIdx = 0;
-    for(int i = 0; i < sizeof(umData->track) / sizeof(umData->track[0]); i++)
+    uint8_t separatorIdx         = 0;
+    for (int i = 0; i < sizeof(umData->track) / sizeof(umData->track[0]); i++)
     {
-        if(umData->track[i].x == 0 && umData->track[i].y == 0)
+        if (umData->track[i].x == 0 && umData->track[i].y == 0)
         {
             separatorIdx = i;
             break;
         }
     }
 
-    umData->track[separatorIdx] = umData->track[0];
-    umData->track[0] = umData->track[separatorIdx - 1];
-    umData->track[separatorIdx - 1] = (dn_boardPos_t){0,0};
+    umData->track[separatorIdx]     = umData->track[0];
+    umData->track[0]                = umData->track[separatorIdx - 1];
+    umData->track[separatorIdx - 1] = (dn_boardPos_t){0, 0};
 
-    if(umData->track[0].x == 0 && umData->track[0].y == 0)
+    if (umData->track[0].x == 0 && umData->track[0].y == 0)
     {
         dn_initializeSecondUpgradeOption(self);
     }
 }
 void dn_rerollThirdUpgradeOption(dn_entity_t* self)
 {
-    self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE]--;
+    self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]--;
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
-    uint8_t separatorIdx = 0;
-    for(int i = 0; i < sizeof(umData->album) / sizeof(umData->album[0]); i++)
+    uint8_t separatorIdx         = 0;
+    for (int i = 0; i < sizeof(umData->album) / sizeof(umData->album[0]); i++)
     {
-        if(umData->album[i] == 3)
+        if (umData->album[i] == 3)
         {
             separatorIdx = i;
             break;
         }
     }
 
-    umData->album[separatorIdx] = umData->album[0];
-    umData->album[0] = umData->album[separatorIdx - 1];
+    umData->album[separatorIdx]     = umData->album[0];
+    umData->album[0]                = umData->album[separatorIdx - 1];
     umData->album[separatorIdx - 1] = 3;
 
-    if(umData->album[0] == 3)
+    if (umData->album[0] == 3)
     {
         dn_initializeThirdUpgradeOption(self);
     }
 }
 void dn_rerollFirstUpgradeOption(dn_entity_t* self)
 {
-    self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE]--;
+    self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]--;
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
-    dn_track_t previous = umData->trackColor;
-    while(umData->trackColor == previous)
+    dn_track_t previous          = umData->trackColor;
+    while (umData->trackColor == previous)
     {
-        uint8_t roll = dn_randomInt(0,100);
-        if(roll < 50)
+        uint8_t roll = dn_randomInt(0, 100);
+        if (roll < 50)
         {
             umData->trackColor = DN_BLUE_TRACK;
         }
-        else if(roll < 80)
+        else if (roll < 80)
         {
             umData->trackColor = DN_RED_TRACK;
         }
@@ -2366,10 +2428,10 @@ void dn_rerollFirstUpgradeOption(dn_entity_t* self)
 
 void dn_confirmUpgrade(dn_entity_t* self)
 {
-    dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
+    dn_upgradeMenuData_t* umData       = (dn_upgradeMenuData_t*)self->data;
     umData->options[3].selectionAmount = 0;
-    dn_entity_t* album = NULL;
-    switch(umData->album[0])
+    dn_entity_t* album                 = NULL;
+    switch (umData->album[0])
     {
         case 0:
         {
@@ -2393,47 +2455,47 @@ void dn_confirmUpgrade(dn_entity_t* self)
 
 void dn_updateSwapAlbums(dn_entity_t* self)
 {
-    dn_albumsData_t* aData = (dn_albumsData_t*) self->gameData->entityManager.albums->data;
+    dn_albumsData_t* aData     = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
     dn_swapAlbumsData_t* sData = (dn_swapAlbumsData_t*)self->data;
-    if(self->gameData->camera.pos.y > self->pos.y)
+    if (self->gameData->camera.pos.y > self->pos.y)
     {
         self->gameData->camera.pos.y -= self->gameData->elapsedUs >> 9;
         aData->p1Album->pos.y -= self->gameData->elapsedUs / 1900;
         aData->creativeCommonsAlbum->pos.y -= self->gameData->elapsedUs / 1900;
         aData->p2Album->pos.y -= self->gameData->elapsedUs / 1900;
     }
-    else if(self->gameData->camera.pos.y != self->pos.y)
+    else if (self->gameData->camera.pos.y != self->pos.y)
     {
-        self->gameData->camera.pos.y = self->pos.y;
-        aData->p1Album->pos.y = 63021;
+        self->gameData->camera.pos.y       = self->pos.y;
+        aData->p1Album->pos.y              = 63021;
         aData->creativeCommonsAlbum->pos.y = 63021;
-        aData->p2Album->pos.y = 63021;
+        aData->p2Album->pos.y              = 63021;
 
-        sData->center = (vec_t){(sData->firstAlbum->pos.x + sData->secondAlbum->pos.x)/2,
-            (sData->firstAlbum->pos.y + sData->secondAlbum->pos.y)/2};
+        sData->center = (vec_t){(sData->firstAlbum->pos.x + sData->secondAlbum->pos.x) / 2,
+                                (sData->firstAlbum->pos.y + sData->secondAlbum->pos.y) / 2};
         sData->offset = subVec2d(sData->firstAlbum->pos, sData->center);
     }
     else
     {
         sData->lerpAmount += self->gameData->elapsedUs >> 6;
-        if(sData->lerpAmount >= 30000)
+        if (sData->lerpAmount >= 30000)
         {
-            sData->lerpAmount = 30000;
-            vec_t offset = rotateVec2d(sData->offset, 180);
-            sData->firstAlbum->pos = addVec2d(sData->center, offset);
-            offset = mulVec2d(offset, -1);
+            sData->lerpAmount       = 30000;
+            vec_t offset            = rotateVec2d(sData->offset, 180);
+            sData->firstAlbum->pos  = addVec2d(sData->center, offset);
+            offset                  = mulVec2d(offset, -1);
             sData->secondAlbum->pos = addVec2d(sData->center, offset);
-            if(sData->firstAlbum == aData->p2Album)
+            if (sData->firstAlbum == aData->p2Album)
             {
-                ((dn_albumData_t*)sData->firstAlbum->data)->rot = 0;
+                ((dn_albumData_t*)sData->firstAlbum->data)->rot  = 0;
                 ((dn_albumData_t*)sData->secondAlbum->data)->rot = 180;
             }
-            else if(sData->secondAlbum == aData->p2Album)
+            else if (sData->secondAlbum == aData->p2Album)
             {
-                ((dn_albumData_t*)sData->firstAlbum->data)->rot = 180;
+                ((dn_albumData_t*)sData->firstAlbum->data)->rot  = 180;
                 ((dn_albumData_t*)sData->secondAlbum->data)->rot = 0;
             }
-            switch(sData->firstAlbumIdx)
+            switch (sData->firstAlbumIdx)
             {
                 case 0:
                 {
@@ -2451,7 +2513,7 @@ void dn_updateSwapAlbums(dn_entity_t* self)
                     break;
                 }
             }
-            switch(sData->secondAlbumIdx)
+            switch (sData->secondAlbumIdx)
             {
                 case 0:
                 {
@@ -2473,46 +2535,45 @@ void dn_updateSwapAlbums(dn_entity_t* self)
         }
         else
         {
-            int16_t angle = dn_lerp(0, 180, sData->lerpAmount);
-            vec_t offset = rotateVec2d(sData->offset, angle);
-            sData->firstAlbum->pos = addVec2d(sData->center, offset);
-            offset = mulVec2d(offset, -1);
+            int16_t angle           = dn_lerp(0, 180, sData->lerpAmount);
+            vec_t offset            = rotateVec2d(sData->offset, angle);
+            sData->firstAlbum->pos  = addVec2d(sData->center, offset);
+            offset                  = mulVec2d(offset, -1);
             sData->secondAlbum->pos = addVec2d(sData->center, offset);
-            if(sData->firstAlbum == aData->p2Album)
+            if (sData->firstAlbum == aData->p2Album)
             {
-                ((dn_albumData_t*)sData->firstAlbum->data)->rot = 180+angle;
+                ((dn_albumData_t*)sData->firstAlbum->data)->rot  = 180 + angle;
                 ((dn_albumData_t*)sData->secondAlbum->data)->rot = angle;
             }
-            else if(sData->secondAlbum == aData->p2Album)
+            else if (sData->secondAlbum == aData->p2Album)
             {
-                ((dn_albumData_t*)sData->firstAlbum->data)->rot = angle;
-                ((dn_albumData_t*)sData->secondAlbum->data)->rot = 180+angle;
+                ((dn_albumData_t*)sData->firstAlbum->data)->rot  = angle;
+                ((dn_albumData_t*)sData->secondAlbum->data)->rot = 180 + angle;
             }
         }
-        
     }
 }
 
 void dn_updateAfterSwap(dn_entity_t* self)
 {
     self->gameData->camera.pos.y += self->gameData->elapsedUs >> 9;
-    dn_albumsData_t* aData = (dn_albumsData_t*) self->gameData->entityManager.albums->data;
+    dn_albumsData_t* aData = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
     aData->p1Album->pos.y += self->gameData->elapsedUs / 1900;
     aData->creativeCommonsAlbum->pos.y += self->gameData->elapsedUs / 1900;
     aData->p2Album->pos.y += self->gameData->elapsedUs / 1900;
 
-    if(self->gameData->camera.pos.y > 62703)
+    if (self->gameData->camera.pos.y > 62703)
     {
-        self->gameData->camera.pos.y = 62703;
-        aData->p1Album->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
+        self->gameData->camera.pos.y       = 62703;
+        aData->p1Album->pos.y              = 0xFFFF - (139 << DN_DECIMAL_BITS);
         aData->creativeCommonsAlbum->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
-        aData->p2Album->pos.y = 0xFFFF - (139 << DN_DECIMAL_BITS);
-        dn_swapAlbumsData_t* sData = (dn_swapAlbumsData_t*)self->data;
-        
-        if(sData->progressPhase)
+        aData->p2Album->pos.y              = 0xFFFF - (139 << DN_DECIMAL_BITS);
+        dn_swapAlbumsData_t* sData         = (dn_swapAlbumsData_t*)self->data;
+
+        if (sData->progressPhase)
         {
             dn_incrementPhase(self);
-            if(!self->gameData->resolvingRemix)
+            if (!self->gameData->resolvingRemix)
             {
                 dn_startUpgradeMenu(self, 2 << 20);
             }
@@ -2530,66 +2591,75 @@ void dn_setBlinkingLights(dn_entity_t* self)
 {
     dn_albumsData_t* aData = (dn_albumsData_t*)self->gameData->entityManager.albums->data;
 
-    ((dn_albumData_t*)aData->p1Album->data)->cornerLightOn = true;
+    ((dn_albumData_t*)aData->p1Album->data)->cornerLightOn              = true;
     ((dn_albumData_t*)aData->creativeCommonsAlbum->data)->cornerLightOn = true;
-    ((dn_albumData_t*)aData->p2Album->data)->cornerLightOn = true;
+    ((dn_albumData_t*)aData->p2Album->data)->cornerLightOn              = true;
 
-    ((dn_albumData_t*)aData->p1Album->data)->cornerLightBlinking = self->gameData->phase <= DN_P1_DANCE_PHASE || self->gameData->phase > DN_P2_DANCE_PHASE;
+    ((dn_albumData_t*)aData->p1Album->data)->cornerLightBlinking
+        = self->gameData->phase <= DN_P1_DANCE_PHASE || self->gameData->phase > DN_P2_DANCE_PHASE;
     ((dn_albumData_t*)aData->creativeCommonsAlbum->data)->cornerLightBlinking = false;
-    ((dn_albumData_t*)aData->p2Album->data)->cornerLightBlinking = self->gameData->phase <= DN_P2_DANCE_PHASE && self->gameData->phase > DN_P1_DANCE_PHASE;
+    ((dn_albumData_t*)aData->p2Album->data)->cornerLightBlinking
+        = self->gameData->phase <= DN_P2_DANCE_PHASE && self->gameData->phase > DN_P1_DANCE_PHASE;
 }
 
 void dn_updateBullet(dn_entity_t* self)
 {
-    //increment the lerpAmount
+    // increment the lerpAmount
     dn_bulletData_t* buData = (dn_bulletData_t*)self->data;
     buData->lerpAmount += self->gameData->elapsedUs >> 7;
-    if(buData->lerpAmount > 30000)
+    if (buData->lerpAmount > 30000)
     {
-        buData->lerpAmount = 30000;
+        buData->lerpAmount    = 30000;
         dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
 
-        bData->impactPos = buData->targetTile;
+        bData->impactPos          = buData->targetTile;
         dn_tileData_t* targetTile = &bData->tiles[bData->impactPos.y][bData->impactPos.x];
-        if(!targetTile->timeout)
+        if (!targetTile->timeout)
         {
             targetTile->yVel = -700;
         }
 
-        if(targetTile->unit)
+        if (targetTile->unit)
         {
-            if(targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] || targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0])//king is captured
+            if (targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]
+                || targetTile->unit
+                       == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0]) // king is captured
             {
                 ///////////////////////////////
                 // Make the prompt Game Over //
                 ///////////////////////////////
-                dn_entity_t* promptGameOver = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
+                dn_entity_t* promptGameOver
+                    = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff, 0xffff}, self->gameData);
                 dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
 
                 promptData->usesTwoLinesOfText = false;
                 char text[40];
-                strcpy(text, self->gameData->playerNames[targetTile->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]]);
+                strcpy(text,
+                       self->gameData
+                           ->playerNames[targetTile->unit
+                                         == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]]);
                 strcat(text, " wins!");
                 strcpy(promptData->text, text);
                 promptData->isPurple = true;
-                promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+                promptData->options  = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
                 memset(promptData->options, 0, sizeof(list_t));
 
                 dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
                 memset(option1, 0, sizeof(dn_promptOption_t));
                 strcpy(option1->text, "OK");
-                option1->callback = NULL;
+                option1->callback          = NULL;
                 option1->downPressDetected = false;
                 push(promptData->options, (void*)option1);
                 promptData->numOptions = 1;
             }
-            else if((dn_belongsToP1(targetTile->unit) && self->gameData->phase >= DN_P2_DANCE_PHASE) ||
-               (!dn_belongsToP1(targetTile->unit) && self->gameData->phase < DN_P2_DANCE_PHASE))
+            else if ((dn_belongsToP1(targetTile->unit) && self->gameData->phase >= DN_P2_DANCE_PHASE)
+                     || (!dn_belongsToP1(targetTile->unit) && self->gameData->phase < DN_P2_DANCE_PHASE))
             {
                 ///////////////////////////////////
                 // Make the prompt enemy captured//
                 ///////////////////////////////////
-                dn_entity_t* promptCaptured = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
+                dn_entity_t* promptCaptured
+                    = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff, 0xffff}, self->gameData);
                 dn_promptData_t* promptData = (dn_promptData_t*)promptCaptured->data;
 
                 promptData->usesTwoLinesOfText = true;
@@ -2601,17 +2671,18 @@ void dn_updateBullet(dn_entity_t* self)
                 dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
                 memset(option1, 0, sizeof(dn_promptOption_t));
                 strcpy(option1->text, "OK");
-                option1->callback = dn_acceptRerollAndSwapAndProgress;
+                option1->callback          = dn_acceptRerollAndSwapAndProgress;
                 option1->downPressDetected = false;
                 push(promptData->options, (void*)option1);
                 promptData->numOptions = 1;
             }
-            else//friendly fire!
+            else // friendly fire!
             {
                 //////////////////////////////////////
                 // Make the prompt for friendly fire//
                 //////////////////////////////////////
-                dn_entity_t* promptCaptured = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
+                dn_entity_t* promptCaptured
+                    = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff, 0xffff}, self->gameData);
                 dn_promptData_t* promptData = (dn_promptData_t*)promptCaptured->data;
 
                 promptData->usesTwoLinesOfText = true;
@@ -2623,21 +2694,21 @@ void dn_updateBullet(dn_entity_t* self)
                 dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
                 memset(option1, 0, sizeof(dn_promptOption_t));
                 strcpy(option1->text, "OK");
-                option1->callback = dn_acceptThreeRerolls;
+                option1->callback          = dn_acceptThreeRerolls;
                 option1->downPressDetected = false;
                 push(promptData->options, (void*)option1);
                 promptData->numOptions = 1;
             }
-            //A unit dies
+            // A unit dies
             targetTile->unit->destroyFlag = true;
-            for(uint8_t i = 0; i < 5; i++)
+            for (uint8_t i = 0; i < 5; i++)
             {
-                if(bData->p1Units[i] == targetTile->unit)
+                if (bData->p1Units[i] == targetTile->unit)
                 {
                     bData->p1Units[i] = NULL;
                     break;
                 }
-                if(bData->p2Units[i] == targetTile->unit)
+                if (bData->p2Units[i] == targetTile->unit)
                 {
                     bData->p2Units[i] = NULL;
                     break;
@@ -2647,64 +2718,68 @@ void dn_updateBullet(dn_entity_t* self)
         }
         else
         {
-            if(!targetTile->timeout)
+            if (!targetTile->timeout)
             {
                 targetTile->timeout = 2;
             }
-            if(!self->gameData->resolvingRemix)
+            if (!self->gameData->resolvingRemix)
             {
-                dn_incrementPhase(self);//now the upgrade phase
+                dn_incrementPhase(self); // now the upgrade phase
                 dn_startUpgradeMenu(self, 2 << 20);
             }
-            else //remix falls in a hole, because no unit was also at the target.
+            else // remix falls in a hole, because no unit was also at the target.
             {
-                dn_entity_t* owner = bData->tiles[buData->ownerToMove.y][buData->ownerToMove.x].unit;
+                dn_entity_t* owner                    = bData->tiles[buData->ownerToMove.y][buData->ownerToMove.x].unit;
                 ((dn_unitData_t*)owner->data)->moveTo = buData->targetTile;
-                owner->updateFunction = dn_moveUnit;
+                owner->updateFunction                 = dn_moveUnit;
             }
         }
-        if(self->gameData->resolvingRemix)
+        if (self->gameData->resolvingRemix)
         {
-            dn_entity_t* owner = bData->tiles[buData->ownerToMove.y][buData->ownerToMove.x].unit;
+            dn_entity_t* owner                    = bData->tiles[buData->ownerToMove.y][buData->ownerToMove.x].unit;
             ((dn_unitData_t*)owner->data)->moveTo = buData->targetTile;
-            owner->updateFunction = dn_moveUnit;
+            owner->updateFunction                 = dn_moveUnit;
         }
         self->destroyFlag = true;
     }
     self->pos.x = dn_lerp(buData->start.x, buData->end.x, buData->lerpAmount);
     self->pos.y = dn_lerp(buData->start.y, buData->end.y, buData->lerpAmount);
 
-    //sine wave that peaks at 75 pixels to fake a parabola.
+    // sine wave that peaks at 75 pixels to fake a parabola.
     buData->yOffset = (int8_t)(sin(buData->lerpAmount * 0.00010471975511965977461542144610931676280657) * 75);
 }
 
 void dn_drawBullet(dn_entity_t* self)
 {
     dn_bulletData_t* buData = (dn_bulletData_t*)self->data;
-    int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS);
-    int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) - buData->yOffset;
-    
+    int32_t x               = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS);
+    int32_t y               = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) - buData->yOffset;
+
     drawCircleFilled(x, y, 8, c555);
-    //The bullet outline flashes with random colors from the current player's tile colors.
-    drawCircleOutline(x, y, dn_randomInt(5, 11), dn_randomInt(1, 4), self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE + dn_randomInt(0,5)].newColors[c223]);
+    // The bullet outline flashes with random colors from the current player's tile colors.
+    drawCircleOutline(
+        x, y, dn_randomInt(5, 11), dn_randomInt(1, 4),
+        self->gameData->entityManager.palettes[DN_RED_FLOOR_PALETTE + dn_randomInt(0, 5)].newColors[c223]);
 }
 
 void dn_moveUnit(dn_entity_t* self)
 {
-    self->paused = false;
+    self->paused          = false;
     dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
-    dn_unitData_t* uData = (dn_unitData_t*)self->data;
+    dn_unitData_t* uData  = (dn_unitData_t*)self->data;
 
     for (int y = 0; y < DN_BOARD_SIZE; y++)
     {
         for (int x = 0; x < DN_BOARD_SIZE; x++)
         {
-            if(bData->tiles[y][x].unit == self)
+            if (bData->tiles[y][x].unit == self)
             {
                 bData->tiles[y][x].unit = NULL;
-                if(y != 0 && y != 4 && ((self->gameData->phase<DN_P2_DANCE_PHASE && uData->moveTo.y == 0) || (self->gameData->phase>=DN_P2_DANCE_PHASE && uData->moveTo.y == 4)))
+                if (y != 0 && y != 4
+                    && ((self->gameData->phase < DN_P2_DANCE_PHASE && uData->moveTo.y == 0)
+                        || (self->gameData->phase >= DN_P2_DANCE_PHASE && uData->moveTo.y == 4)))
                 {
-                    //units get a reroll for moving into the farthest rank.
+                    // units get a reroll for moving into the farthest rank.
                     dn_gainReroll(self);
                 }
                 break;
@@ -2712,26 +2787,36 @@ void dn_moveUnit(dn_entity_t* self)
         }
     }
     bData->tiles[uData->moveTo.y][uData->moveTo.x].unit = self;
-    bData->impactPos = uData->moveTo;
+    bData->impactPos                                    = uData->moveTo;
 
-    self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE] += bData->tiles[bData->impactPos.y][bData->impactPos.x].rewards;
-    self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE] = CLAMP(self->gameData->rerolls[self->gameData->phase>=DN_P2_DANCE_PHASE], 0, 9);
+    self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]
+        += bData->tiles[bData->impactPos.y][bData->impactPos.x].rewards;
+    self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]
+        = CLAMP(self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE], 0, 9);
     bData->tiles[bData->impactPos.y][bData->impactPos.x].rewards = 0;
 
     bData->tiles[bData->impactPos.y][bData->impactPos.x].yVel = -700;
 
-    if((self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] && bData->impactPos.y == 0 && bData->impactPos.x == 2)|| 
-        (self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0] && bData->impactPos.y == 4 && bData->impactPos.x == 2))//king moved to the opponent's throne
+    if ((self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] && bData->impactPos.y == 0
+         && bData->impactPos.x == 2)
+        || (self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0] && bData->impactPos.y == 4
+            && bData->impactPos.x == 2)) // king moved to the opponent's throne
     {
         ///////////////////////////////
         // Make the prompt Game Over //
         ///////////////////////////////
-        dn_entity_t* promptGameOver = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff,0xffff}, self->gameData);
+        dn_entity_t* promptGameOver
+            = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff, 0xffff}, self->gameData);
         dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
 
         promptData->usesTwoLinesOfText = true;
         char text[40];
-        strcpy(text, self->gameData->playerNames[bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout ? self != ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0] : self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0]]);
+        strcpy(
+            text,
+            self->gameData
+                ->playerNames[bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout
+                                  ? self != ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]
+                                  : self == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p2Units[0]]);
         strcat(text, " wins!");
         promptData->isPurple = true;
         strcpy(promptData->text, text);
@@ -2741,18 +2826,18 @@ void dn_moveUnit(dn_entity_t* self)
         dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
         memset(option1, 0, sizeof(dn_promptOption_t));
         strcpy(option1->text, "OK");
-        option1->callback = dn_afterPlunge;
+        option1->callback          = dn_afterPlunge;
         option1->downPressDetected = false;
         push(promptData->options, (void*)option1);
         promptData->numOptions = 1;
     }
-    else if(!bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout & !self->gameData->resolvingRemix)
+    else if (!bData->tiles[bData->impactPos.y][bData->impactPos.x].timeout & !self->gameData->resolvingRemix)
     {
-        dn_incrementPhase(self);//now the upgrade phase
+        dn_incrementPhase(self); // now the upgrade phase
         dn_startUpgradeMenu(self, 2 << 20);
     }
     self->gameData->resolvingRemix = false;
-    self->updateFunction = NULL;
+    self->updateFunction           = NULL;
 }
 
 void dn_afterPlunge(dn_entity_t* self)
@@ -2760,18 +2845,18 @@ void dn_afterPlunge(dn_entity_t* self)
     dn_gainReroll(self);
     dn_gainReroll(self);
     dn_gainReroll(self);
-    dn_incrementPhase(self);//now the upgrade phase
+    dn_incrementPhase(self); // now the upgrade phase
     dn_startUpgradeMenu(self, 0);
 }
 
 void dn_sharedButtonLogic(dn_entity_t* self)
 {
-    if(self->gameData->btnDownState & PB_UP)
+    if (self->gameData->btnDownState & PB_UP)
     {
         self->paused = true;
         dn_setupDancePhase(self);
         node_t* selectorNode = self->gameData->entityManager.entities->last;
-        while(((dn_entity_t*)selectorNode->val)->dataType != DN_TILE_SELECTOR_DATA)
+        while (((dn_entity_t*)selectorNode->val)->dataType != DN_TILE_SELECTOR_DATA)
         {
             selectorNode = selectorNode->prev;
         }
@@ -2781,19 +2866,19 @@ void dn_sharedButtonLogic(dn_entity_t* self)
 
 void dn_updateSwapButton(dn_entity_t* self)
 {
-    if(self->paused)
+    if (self->paused)
     {
         return;
     }
 
     dn_sharedButtonLogic(self);
 
-    if(self->gameData->btnDownState & PB_RIGHT)
+    if (self->gameData->btnDownState & PB_RIGHT)
     {
         self->paused = true;
         dn_unpauseSkipButton(self);
     }
-    else if(self->gameData->btnDownState & PB_A)
+    else if (self->gameData->btnDownState & PB_A)
     {
         self->paused = true;
         dn_acceptSwapCC(self);
@@ -2803,27 +2888,29 @@ void dn_updateSwapButton(dn_entity_t* self)
 void dn_drawSwapButton(dn_entity_t* self)
 {
     dn_drawAsset(self);
-    if(self->paused)
+    if (self->paused)
     {
         return;
     }
-    int16_t x =  ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)+11;
-    int16_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)+23;
-    drawShinyText(&self->gameData->font_ibm, self->gameData->phase < DN_P2_DANCE_PHASE ? c245 : c442, self->gameData->phase < DN_P2_DANCE_PHASE ? c355 : c553, c555, "-3",x, y);
+    int16_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) + 11;
+    int16_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 23;
+    drawShinyText(&self->gameData->font_ibm, self->gameData->phase < DN_P2_DANCE_PHASE ? c245 : c442,
+                  self->gameData->phase < DN_P2_DANCE_PHASE ? c355 : c553, c555, "-3", x, y);
 
-    drawWsgPaletteSimple(&self->gameData->assets[DN_REROLL_ASSET].frames[0], x + 17,y-14,
-                &self->gameData->entityManager.palettes[DN_DICE_NO_ARROW_PALETTE]);
+    drawWsgPaletteSimple(&self->gameData->assets[DN_REROLL_ASSET].frames[0], x + 17, y - 14,
+                         &self->gameData->entityManager.palettes[DN_DICE_NO_ARROW_PALETTE]);
 
     x -= 27;
     y -= 26;
-    
-    drawShinyText(&self->gameData->font_ibm, self->gameData->phase < DN_P2_DANCE_PHASE ? c245 : c442, self->gameData->phase < DN_P2_DANCE_PHASE ? c355 : c553, c555, "SWAP",x, y);
+
+    drawShinyText(&self->gameData->font_ibm, self->gameData->phase < DN_P2_DANCE_PHASE ? c245 : c442,
+                  self->gameData->phase < DN_P2_DANCE_PHASE ? c355 : c553, c555, "SWAP", x, y);
 }
 
 void dn_unpauseSwapButton(dn_entity_t* self)
 {
     node_t* swapButtonNode = self->gameData->entityManager.entities->last;
-    while(((dn_entity_t*)swapButtonNode->val)->assetIndex != DN_SWAP_ASSET)
+    while (((dn_entity_t*)swapButtonNode->val)->assetIndex != DN_SWAP_ASSET)
     {
         swapButtonNode = swapButtonNode->prev;
     }
@@ -2832,21 +2919,21 @@ void dn_unpauseSwapButton(dn_entity_t* self)
 
 void dn_updateSkipButton(dn_entity_t* self)
 {
-    if(self->paused)
+    if (self->paused)
     {
         return;
     }
 
     dn_sharedButtonLogic(self);
 
-    if(self->gameData->btnDownState & PB_LEFT)
+    if (self->gameData->btnDownState & PB_LEFT)
     {
         self->paused = true;
         dn_unpauseSwapButton(self);
     }
-    else if(self->gameData->btnDownState & PB_A)
+    else if (self->gameData->btnDownState & PB_A)
     {
-        self->paused = true;
+        self->paused                 = true;
         self->gameData->btnDownState = 0;
         dn_acceptRerollAndSkip(self);
     }
@@ -2855,26 +2942,29 @@ void dn_updateSkipButton(dn_entity_t* self)
 void dn_drawSkipButton(dn_entity_t* self)
 {
     dn_drawAsset(self);
-    if(self->paused)
+    if (self->paused)
     {
         return;
     }
-    int16_t x =  ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)+3;
-    int16_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)-6;
-    drawShinyText(&self->gameData->font_ibm, self->gameData->phase < DN_P2_DANCE_PHASE ? c245 : c442, self->gameData->phase < DN_P2_DANCE_PHASE ? c355 : c553, c555, "SKIP",x, y);
+    int16_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) + 3;
+    int16_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) - 6;
+    drawShinyText(&self->gameData->font_ibm, self->gameData->phase < DN_P2_DANCE_PHASE ? c245 : c442,
+                  self->gameData->phase < DN_P2_DANCE_PHASE ? c355 : c553, c555, "SKIP", x, y);
     y += 27;
     x -= 7;
-    drawShinyText(&self->gameData->font_ibm, self->gameData->phase < DN_P2_DANCE_PHASE ? c245 : c442, self->gameData->phase < DN_P2_DANCE_PHASE ? c355 : c553, c555, "+1",x, y);
+    drawShinyText(&self->gameData->font_ibm, self->gameData->phase < DN_P2_DANCE_PHASE ? c245 : c442,
+                  self->gameData->phase < DN_P2_DANCE_PHASE ? c355 : c553, c555, "+1", x, y);
 
-    drawWsgPaletteSimple(&self->gameData->assets[DN_REROLL_ASSET].frames[0], x + 16,y-11,
-                &self->gameData->entityManager.palettes[DN_DICE_NO_ARROW_PALETTE]);
+    drawWsgPaletteSimple(&self->gameData->assets[DN_REROLL_ASSET].frames[0], x + 16, y - 11,
+                         &self->gameData->entityManager.palettes[DN_DICE_NO_ARROW_PALETTE]);
 }
 
-void dn_unpauseSkipButton(dn_entity_t* self){
-        node_t* skipButtonNode = self->gameData->entityManager.entities->last;
-        while(((dn_entity_t*)skipButtonNode->val)->assetIndex != DN_SKIP_ASSET)
-        {
-            skipButtonNode = skipButtonNode->prev;
-        }
-        ((dn_entity_t*)skipButtonNode->val)->paused = false;
+void dn_unpauseSkipButton(dn_entity_t* self)
+{
+    node_t* skipButtonNode = self->gameData->entityManager.entities->last;
+    while (((dn_entity_t*)skipButtonNode->val)->assetIndex != DN_SKIP_ASSET)
+    {
+        skipButtonNode = skipButtonNode->prev;
     }
+    ((dn_entity_t*)skipButtonNode->val)->paused = false;
+}

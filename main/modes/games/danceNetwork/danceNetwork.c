@@ -69,7 +69,6 @@ static const char dn_HowToStr[]        = "How To Play";
 static const char dn_RecordsStr[] = "Records";
 static const char dn_Exit[]       = "Exit";
 
-
 static const paletteColor_t starterAlbums[16][4] = {
     {c300, c320, cTransparent, cTransparent},
     {c302, c310, c315, c321},
@@ -87,7 +86,7 @@ static const paletteColor_t starterAlbums[16][4] = {
     {c312, c304, c313, cTransparent},
     {c303, c313, c315, cTransparent},
     {c303, c312, c315, cTransparent},
-    };
+};
 
 /// @brief A heatshrink decoder to use for all WSG loads rather than allocate a new one for each WSG
 /// This helps to prevent memory fragmentation in SPIRAM.
@@ -98,8 +97,8 @@ uint8_t* dn_decodeSpace;
 
 // This is in order such that index is the assetIdx.
 static const cnfsFileIdx_t dn_assetToWsgLookup[]
-    = {DN_ALPHA_DOWN_WSG, DN_ALPHA_ORTHO_WSG, DN_ALPHA_UP_WSG,        DN_KING_WSG,          DN_KING_SMALL_0_WSG,
-       DN_PAWN_WSG,       DN_PAWN_SMALL_0_WSG,  DN_BUCKET_HAT_DOWN_WSG, DN_BUCKET_HAT_UP_WSG, DN_GROUND_TILE_WSG};
+    = {DN_ALPHA_DOWN_WSG, DN_ALPHA_ORTHO_WSG,  DN_ALPHA_UP_WSG,        DN_KING_WSG,          DN_KING_SMALL_0_WSG,
+       DN_PAWN_WSG,       DN_PAWN_SMALL_0_WSG, DN_BUCKET_HAT_DOWN_WSG, DN_BUCKET_HAT_UP_WSG, DN_GROUND_TILE_WSG};
 
 // NVS keys
 const char dnWinKey[]       = "dn_win";
@@ -189,8 +188,8 @@ static void dn_EnterMode(void)
     gameData->assets[DN_MINI_TILE_ASSET].originX = 10;
     gameData->assets[DN_MINI_TILE_ASSET].originY = 5;
 
-    gameData->assets[DN_MMM_UP_ASSET].originX = 17/2;
-    gameData->assets[DN_MMM_UP_ASSET].originY = 12/2;
+    gameData->assets[DN_MMM_UP_ASSET].originX = 17 / 2;
+    gameData->assets[DN_MMM_UP_ASSET].originY = 12 / 2;
 
     // Allocate WSG loading helpers
     dn_hsd = heatshrink_decoder_alloc(256, 8, 4);
@@ -581,7 +580,7 @@ static void dn_initializeGame(void)
     dn_loadAsset(DN_MINI_TILE_WSG, 1, &gameData->assets[DN_MINI_TILE_ASSET]);
 
     dn_loadAsset(DN_KING_SMALL_0_WSG, 2, &gameData->assets[DN_KING_SMALL_ASSET]);
-    
+
     dn_loadAsset(DN_PAWN_SMALL_0_WSG, 2, &gameData->assets[DN_PAWN_SMALL_ASSET]);
 
     dn_loadAsset(DN_REROLL_WSG, 1, &gameData->assets[DN_REROLL_ASSET]);
@@ -597,79 +596,87 @@ static void dn_initializeGame(void)
     dn_loadAsset(DN_SKIP_0_WSG, 9, &gameData->assets[DN_SKIP_ASSET]);
 
     // LED MATRIX TEST
-    //ch32v003WriteFlash(&gameData->assets[DN_NUMBER_ASSET].frames[0], sizeof(gameData->assets[DN_NUMBER_ASSET].frames[0]));
-    // ch32v003WriteMemory(&gameData->assets[DN_NUMBER_ASSET].frames[0], sizeof(gameData->assets[DN_NUMBER_ASSET].frames[0]), 0);
-    // ch32v003Resume();
-
+    // ch32v003WriteFlash(&gameData->assets[DN_NUMBER_ASSET].frames[0],
+    // sizeof(gameData->assets[DN_NUMBER_ASSET].frames[0]));
+    // ch32v003WriteMemory(&gameData->assets[DN_NUMBER_ASSET].frames[0],
+    // sizeof(gameData->assets[DN_NUMBER_ASSET].frames[0]), 0); ch32v003Resume();
 
     //////////////////
     // Make the pit //
     //////////////////
-    dn_entity_t* pit = dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_PIT_ASSET, 0, (vec_t){0xFFFF, 0xFFFF - (72 << DN_DECIMAL_BITS)}, gameData);
+    dn_entity_t* pit  = dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_PIT_ASSET, 0,
+                                               (vec_t){0xFFFF, 0xFFFF - (72 << DN_DECIMAL_BITS)}, gameData);
     pit->drawFunction = dn_drawPit;
 
     ///////////////////////////
     // Make the left speaker //
     ///////////////////////////
-    dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0, (vec_t){0xFFFF - (123<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
-    dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 3, (vec_t){0xFFFF - (123<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0,
+                           (vec_t){0xFFFF - (123 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 3,
+                           (vec_t){0xFFFF - (123 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
 
     ////////////////////////////
     // Make the right speaker //
     ////////////////////////////
-    dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0, (vec_t){0xFFFF + (122<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData);
-    dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 4, (vec_t){0xFFFF + (124<<DN_DECIMAL_BITS), 0xFFFF - (20<<DN_DECIMAL_BITS)}, gameData)->flipped = true;
+    dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0,
+                           (vec_t){0xFFFF + (122 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 4,
+                           (vec_t){0xFFFF + (124 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData)
+        ->flipped
+        = true;
 
     ///////////////////
     // Make the board//
     ///////////////////
     dn_entity_t* board
         = dn_createEntitySimple(&gameData->entityManager, DN_GROUND_TILE_ASSET, (vec_t){0xFFFF, 0xFFFF}, gameData);
-    dn_boardData_t* boardData       = (dn_boardData_t*)board->data;
-    boardData->impactPos = (dn_boardPos_t){2, 2};
-    gameData->entityManager.board   = board;
-    for(uint8_t i = 0; i < DN_BOARD_SIZE; i++)
+    dn_boardData_t* boardData     = (dn_boardData_t*)board->data;
+    boardData->impactPos          = (dn_boardPos_t){2, 2};
+    gameData->entityManager.board = board;
+    for (uint8_t i = 0; i < DN_BOARD_SIZE; i++)
     {
-        //boardData->tiles[1][i].rewards = 1;
+        // boardData->tiles[1][i].rewards = 1;
         boardData->tiles[2][i].rewards = 1;
-        //boardData->tiles[3][i].rewards = 1;
+        // boardData->tiles[3][i].rewards = 1;
     }
 
     ////////////////////
     // Make the albums//
     ////////////////////
-    dn_entity_t* albums  = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_ALBUM_ASSET, 0,
-                                                  (vec_t){0xFFFF, 63823}, gameData);//Y is 0xFFFF - (107 << DN_DECIMAL_BITS)
-    albums->data         = heap_caps_calloc(1, sizeof(dn_albumData_t), MALLOC_CAP_SPIRAM);
+    dn_entity_t* albums
+        = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_ALBUM_ASSET, 0,
+                                 (vec_t){0xFFFF, 63823}, gameData); // Y is 0xFFFF - (107 << DN_DECIMAL_BITS)
+    albums->data = heap_caps_calloc(1, sizeof(dn_albumData_t), MALLOC_CAP_SPIRAM);
     memset(albums->data, 0, sizeof(dn_albumData_t));
-    albums->dataType     = DN_ALBUMS_DATA;
-    albums->drawFunction = dn_drawAlbums;
+    albums->dataType               = DN_ALBUMS_DATA;
+    albums->drawFunction           = dn_drawAlbums;
     gameData->entityManager.albums = albums;
 
     // p1 album
-    dn_entity_t* album1 = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
-                                                (vec_t){0xFFFF - 1280, 63311}, gameData);//Y is 0xFFFF - (139 << DN_DECIMAL_BITS)
+    dn_entity_t* album1 = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF - 1280, 63311},
+                                                gameData); // Y is 0xFFFF - (139 << DN_DECIMAL_BITS)
     // creative commons album
-    dn_entity_t* ccAlbum = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
-                                                 (vec_t){0xFFFF, 63311}, gameData);
+    dn_entity_t* ccAlbum
+        = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF, 63311}, gameData);
     // p2 album
-    dn_entity_t* album2 = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET,
-                                                (vec_t){0xFFFF + 1280, 63311}, gameData);
+    dn_entity_t* album2
+        = dn_createEntitySimple(&gameData->entityManager, DN_ALBUM_ASSET, (vec_t){0xFFFF + 1280, 63311}, gameData);
 
-    uint8_t roll1 = dn_randomInt(0,15);
-    uint8_t roll2 = dn_randomInt(0,15);
+    uint8_t roll1 = dn_randomInt(0, 15);
+    uint8_t roll2 = dn_randomInt(0, 15);
     while (roll2 == roll1)
     {
-        roll2 = dn_randomInt(0,15);
+        roll2 = dn_randomInt(0, 15);
     }
 
-    for(uint8_t blueTrack = 0; blueTrack < 4; blueTrack++)
+    for (uint8_t blueTrack = 0; blueTrack < 4; blueTrack++)
     {
-        if(starterAlbums[roll1][blueTrack] != cTransparent)
+        if (starterAlbums[roll1][blueTrack] != cTransparent)
         {
             dn_addTrackToAlbum(album1, dn_colorToTrackCoords(starterAlbums[roll1][blueTrack]), DN_BLUE_TRACK);
         }
-        if(starterAlbums[roll2][blueTrack] != cTransparent)
+        if (starterAlbums[roll2][blueTrack] != cTransparent)
         {
             dn_addTrackToAlbum(album2, dn_colorToTrackCoords(starterAlbums[roll2][blueTrack]), DN_BLUE_TRACK);
         }
@@ -680,11 +687,11 @@ static void dn_initializeGame(void)
     ((dn_albumData_t*)album2->data)->timer  = 12 << 20;
 
     // p2's album is upside down
-    ((dn_albumData_t*)album2->data)->rot     = 180;
-    
-    ((dn_albumsData_t*)gameData->entityManager.albums->data)->p1Album = album1;
+    ((dn_albumData_t*)album2->data)->rot = 180;
+
+    ((dn_albumsData_t*)gameData->entityManager.albums->data)->p1Album              = album1;
     ((dn_albumsData_t*)gameData->entityManager.albums->data)->creativeCommonsAlbum = ccAlbum;
-    ((dn_albumsData_t*)gameData->entityManager.albums->data)->p2Album = album2;
+    ((dn_albumsData_t*)gameData->entityManager.albums->data)->p2Album              = album2;
 
     ///////////////////
     // Make the units//
@@ -695,7 +702,7 @@ static void dn_initializeGame(void)
     boardData->p1Units[0]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[0]; // Set the unit on the tile
-    boardData->p1Units[0]->paused = false;
+    boardData->p1Units[0]->paused                 = false;
     // p1 pawns
     assetIdx = dn_getAssetIdx(gameData->characterSets[0], DN_PAWN, DN_UP);
     boardPos = (dn_boardPos_t){0, 4};
@@ -721,7 +728,7 @@ static void dn_initializeGame(void)
     boardData->p2Units[0]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[0]; // Set the unit on the tile
-    boardData->p2Units[0]->paused = false;
+    boardData->p2Units[0]->paused                 = false;
     // p2 pawns
     assetIdx = dn_getAssetIdx(gameData->characterSets[1], DN_PAWN, DN_DOWN);
     boardPos = (dn_boardPos_t){0, 0};
@@ -744,27 +751,33 @@ static void dn_initializeGame(void)
     /////////////////////////////
     // Make the pit foreground //
     /////////////////////////////
-    dn_entity_t* pitForeground = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff - (57 << DN_DECIMAL_BITS)}, gameData);
+    dn_entity_t* pitForeground = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET,
+                                                        0, (vec_t){0xffff, 0xffff - (57 << DN_DECIMAL_BITS)}, gameData);
     pitForeground->drawFunction = dn_drawPitForeground;
 
     //////////////////////////
     // Make the swap button //
     //////////////////////////
-    dn_entity_t* swapButton = dn_createEntitySpecial(&gameData->entityManager, 0, DN_LOOPING_ANIMATION, true, DN_SWAP_ASSET, 3, (vec_t){0xFFFF - (103<<DN_DECIMAL_BITS), 0xFFFF + (25<<DN_DECIMAL_BITS)}, gameData);
+    dn_entity_t* swapButton = dn_createEntitySpecial(
+        &gameData->entityManager, 0, DN_LOOPING_ANIMATION, true, DN_SWAP_ASSET, 3,
+        (vec_t){0xFFFF - (103 << DN_DECIMAL_BITS), 0xFFFF + (25 << DN_DECIMAL_BITS)}, gameData);
     swapButton->updateFunction = dn_updateSwapButton;
-    swapButton->drawFunction = dn_drawSwapButton;
+    swapButton->drawFunction   = dn_drawSwapButton;
 
     //////////////////////////
     // Make the skip button //
     //////////////////////////
-    dn_entity_t* skipButton = dn_createEntitySpecial(&gameData->entityManager, 0, DN_LOOPING_ANIMATION, true, DN_SKIP_ASSET, 3, (vec_t){0xFFFF + (74<<DN_DECIMAL_BITS), 0xFFFF + (25<<DN_DECIMAL_BITS)}, gameData);
+    dn_entity_t* skipButton
+        = dn_createEntitySpecial(&gameData->entityManager, 0, DN_LOOPING_ANIMATION, true, DN_SKIP_ASSET, 3,
+                                 (vec_t){0xFFFF + (74 << DN_DECIMAL_BITS), 0xFFFF + (25 << DN_DECIMAL_BITS)}, gameData);
     skipButton->updateFunction = dn_updateSkipButton;
-    skipButton->drawFunction = dn_drawSkipButton;
+    skipButton->drawFunction   = dn_drawSkipButton;
 
     /////////////////////////
     // Make the playerTurn //
     /////////////////////////
-    dn_entity_t* playerTurn = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0xffff,0xffff}, gameData);
+    dn_entity_t* playerTurn = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0,
+                                                     (vec_t){0xffff, 0xffff}, gameData);
     playerTurn->drawFunction = dn_drawPlayerTurn;
 
     /////////////////////
@@ -790,9 +803,9 @@ static void dn_initializeCharacterSelect(void)
     ///////////////////////////////
     // Make the character select //
     ///////////////////////////////
-    dn_entity_t* characterSelect       = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true,
-                                                                DN_NO_ASSET, 0, (vec_t){0xFFFF, 0xFFFF}, gameData);
-    characterSelect->data              = heap_caps_calloc(1, sizeof(dn_characterSelectData_t), MALLOC_CAP_SPIRAM);
+    dn_entity_t* characterSelect = dn_createEntitySpecial(&gameData->entityManager, 0, DN_NO_ANIMATION, true,
+                                                          DN_NO_ASSET, 0, (vec_t){0xFFFF, 0xFFFF}, gameData);
+    characterSelect->data        = heap_caps_calloc(1, sizeof(dn_characterSelectData_t), MALLOC_CAP_SPIRAM);
     memset(characterSelect->data, 0, sizeof(dn_characterSelectData_t));
     characterSelect->dataType          = DN_CHARACTER_SELECT_DATA;
     dn_characterSelectData_t* cData    = (dn_characterSelectData_t*)characterSelect->data;

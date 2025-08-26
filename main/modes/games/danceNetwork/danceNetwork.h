@@ -84,8 +84,8 @@ typedef struct dn_gameData_t
     bool isPlayer1;       // True if the player on this device is P1. False if P2
     char playerNames[2][32];
     char shortPlayerNames[2][9];
-    int8_t rerolls[2];// The amount of rerolls for p1 and p2.
-    bool resolvingRemix;// True if a unit is still needing to do a second action.
+    int8_t rerolls[2];   // The amount of rerolls for p1 and p2.
+    bool resolvingRemix; // True if a unit is still needing to do a second action.
     bool pawnPlunging;
 } dn_gameData_t;
 

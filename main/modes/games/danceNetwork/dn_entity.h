@@ -42,9 +42,9 @@ struct dn_entity_t
 {
     void* data;
     dn_dataType_t dataType;
-    dn_updateFunction_t updateFunction;       // Only set for entities that need update logic
-    bool flipped; //draw flipped
-    dn_drawFunction_t drawFunction;           // Only set for entities such as Garbotnik that need custom drawing logic
+    dn_updateFunction_t updateFunction; // Only set for entities that need update logic
+    bool flipped;                       // draw flipped
+    dn_drawFunction_t drawFunction;     // Only set for entities such as Garbotnik that need custom drawing logic
     bool destroyFlag; // Entity will be cleanly destroyed after engine updating and before engine drawing.
     vec_t pos;
     dn_animationType_t type;
@@ -64,16 +64,15 @@ typedef struct
     dn_entity_t* unit;     // Pointer to the unit on this tile. NULL if no unit is present.
     dn_entity_t* selector; // Pointer to the tile selector. NULL if no selector is present.
     dn_selection_t selectionType;
-    uint8_t timeout; // Becomes two if shot out. Decrements every turn start. In play at zero.
+    uint8_t timeout;       // Becomes two if shot out. Decrements every turn start. In play at zero.
     uint8_t timeoutOffset; // further offsets the yOffset when in timeout.
-    uint8_t rewards;//some number of rerolls given to the first visitor here.
+    uint8_t rewards;       // some number of rerolls given to the first visitor here.
 } dn_tileData_t;
 
 typedef struct
 {
-    dn_boardPos_t moveTo; //Coordinates the unit is moving to.
+    dn_boardPos_t moveTo; // Coordinates the unit is moving to.
 } dn_unitData_t;
-
 
 typedef struct
 {
@@ -102,9 +101,9 @@ typedef struct
     wsgPalette_t screenOffPalette; // replaces album tile colors with the final track colors. The first index color is
                                    // C255. No action is C344.
     wsgPalette_t screenOnPalette;  // Screen is on. Just a more vibrant variation of screenOff.
-    wsgPalette_t screenAttackPalette;// Makes some explosions appear at certain tracks.
-    dn_track_t tracks[16];         // Array of action tracks in this album in raster order.
-    uint16_t rot;                  // Rotation degrees from 0-359 for drawing.
+    wsgPalette_t screenAttackPalette; // Makes some explosions appear at certain tracks.
+    dn_track_t tracks[16];            // Array of action tracks in this album in raster order.
+    uint16_t rot;                     // Rotation degrees from 0-359 for drawing.
     bool cornerLightBlinking;
     bool cornerLightOn;
     bool screenIsOn;
@@ -163,10 +162,10 @@ typedef struct
     int8_t selectionIdx; // The selected menu item.
 
     dn_track_t trackColor;
-    dn_boardPos_t track[17];//relative vector from a unit. 16 plus a null separator
-    uint8_t album[4];//0 for p1's album, 1 for creative commons album, 2 for p2's album. 3 plus a 3 separator
+    dn_boardPos_t track[17]; // relative vector from a unit. 16 plus a null separator
+    uint8_t album[4];        // 0 for p1's album, 1 for creative commons album, 2 for p2's album. 3 plus a 3 separator
 
-    dn_promptOption_t options[4];// reroll 1, reroll 2, reroll 3, and confirm.
+    dn_promptOption_t options[4]; // reroll 1, reroll 2, reroll 3, and confirm.
 } dn_upgradeMenuData_t;
 
 typedef struct
@@ -190,8 +189,6 @@ typedef struct
     dn_boardPos_t targetTile;
     dn_boardPos_t ownerToMove; // Position of the attacker if they are remixing and need to move after the attack.
 } dn_bulletData_t;
-
-
 
 //==============================================================================
 // Prototypes
