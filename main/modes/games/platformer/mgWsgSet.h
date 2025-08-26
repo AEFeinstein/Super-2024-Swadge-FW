@@ -1,5 +1,5 @@
-#ifndef _LEVELDEF_H_
-#define _LEVELDEF_H_
+#ifndef _WSGSET_H_
+#define _WSGSET_H_
 
 //==============================================================================
 // Includes
@@ -11,9 +11,9 @@
 //==============================================================================
 typedef struct
 {
-    cnfsFileIdx_t filename;
-    uint16_t timeLimit;
-    uint16_t defaultWsgSetIndex;
-} mgLeveldef_t;
+    uint16_t firstWsgIndex;
+    cnfsFileIdx_t firstFilename;
+    uint16_t numWsgsToLoad;
+} mgWsgSet_t;
 
 #endif
