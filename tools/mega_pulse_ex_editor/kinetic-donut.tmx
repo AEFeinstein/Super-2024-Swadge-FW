@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="255" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="38">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="255" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="85">
  <editorsettings>
-  <export target="kinetic-donut.bin" format="Mega Pulse EX"/>
+  <export target="../../Development/Swadge/esp32/2026/Swadge-IDF-5.0/assets_image/kinetic-donut.bin" format="Mega Pulse EX"/>
  </editorsettings>
  <tileset firstgid="1" source="kinetic-donut-tileset.tsx"/>
- <tileset firstgid="148" source="../../Downloads/drive-download-20250816T220635Z-1-001/Test-Platforms.tsx"/>
- <tileset firstgid="148" source="mg-entity-tileset.tsx"/>
+ <tileset firstgid="129" source="mg-entity-tileset.tsx"/>
  <layer id="1" name="tiles" width="255" height="255">
   <data encoding="csv">
 37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,38,36,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,42,40,40,40,40,40,40,40,40,40,40,40,40,40,40,43,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,42,40,40,40,40,43,37,37,37,37,37,37,37,37,37,37,37,
@@ -30,8 +29,8 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,37,37,37,37,37,37,37,38,0,0,0,0,0,0,36,37,38,0,0,0,0,0,36,37,37,37,37,37,37,37,37,37,37,37,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,37,37,37,37,37,37,38,36,37,37,37,37,37,37,37,37,44,34,34,34,35,0,0,0,0,0,0,0,33,34,34,35,0,0,0,0,0,0,0,0,33,34,34,35,0,0,0,0,0,0,0,0,0,36,37,37,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,33,34,34,35,0,0,0,0,33,34,34,34,34,34,34,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,37,37,37,37,37,37,37,37,37,37,
 34,34,34,34,34,35,0,0,33,35,0,0,0,0,0,0,0,0,0,0,33,34,34,34,34,34,34,34,34,34,45,37,37,37,37,37,37,37,37,38,0,0,0,0,0,0,36,37,38,0,0,0,0,0,36,37,37,37,37,37,37,37,37,37,37,37,44,34,34,34,34,34,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,37,37,37,37,37,37,38,36,37,37,37,37,37,37,37,37,37,37,37,37,38,0,0,0,0,0,0,0,39,40,40,41,0,0,0,0,0,0,0,0,39,40,40,41,0,0,0,0,0,0,0,0,0,36,37,37,38,0,0,0,0,0,0,0,0,0,0,33,34,34,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,39,40,40,41,0,0,0,0,39,40,40,40,40,40,40,41,0,0,0,0,0,0,0,0,0,0,0,33,34,34,35,0,0,0,0,0,0,0,0,39,40,40,40,40,40,40,40,40,40,40,40,
 37,37,37,37,37,38,0,0,39,41,0,0,0,0,0,0,0,0,0,0,39,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,41,0,0,0,0,0,0,36,37,38,0,0,0,0,0,36,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,37,37,37,37,37,37,38,36,37,37,37,37,37,37,37,37,37,37,37,37,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,39,40,40,41,0,0,0,0,0,0,0,0,0,0,39,40,43,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,39,40,40,41,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-37,37,37,37,37,38,0,0,0,0,0,0,33,34,34,34,34,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,38,0,0,0,0,0,36,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,44,34,34,34,34,34,34,34,34,34,34,34,34,35,0,0,0,0,33,34,34,35,0,0,0,0,33,34,34,34,34,34,34,34,34,34,34,34,34,34,35,0,0,0,0,36,37,37,37,37,37,37,37,38,36,37,37,37,37,37,37,37,37,37,37,37,37,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,39,41,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-37,37,37,37,37,38,0,0,0,0,0,0,39,40,40,40,40,41,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,38,0,0,0,0,0,39,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,41,0,0,0,0,39,40,40,41,0,0,0,0,39,40,40,40,40,40,40,40,40,40,40,40,40,40,41,0,0,0,0,36,37,37,37,37,37,37,37,38,36,37,37,37,37,37,37,37,37,37,37,37,37,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+37,37,37,37,37,38,0,0,0,0,0,0,33,34,34,34,34,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,38,0,0,0,0,0,36,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,44,34,34,34,34,34,34,34,34,34,34,34,34,35,0,0,0,0,33,34,34,35,0,0,0,0,67,68,68,68,68,68,68,68,68,68,68,68,68,68,69,0,0,0,0,36,37,37,37,37,37,37,37,38,36,37,37,37,37,37,37,37,37,37,37,37,37,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,39,41,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+37,37,37,37,37,38,0,0,0,0,0,0,39,40,40,40,40,41,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,38,0,0,0,0,0,39,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,41,0,0,0,0,39,40,40,41,0,0,0,0,70,71,71,71,71,71,71,71,71,71,71,71,71,71,72,0,0,0,0,36,37,37,37,37,37,37,37,38,36,37,37,37,37,37,37,37,37,37,37,37,37,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 37,37,37,37,37,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,37,37,37,37,37,37,38,36,37,37,37,37,37,37,37,37,37,37,37,37,44,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,35,0,0,0,0,33,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,35,0,0,0,0,33,34,34,35,0,0,0,0,33,34,34,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 37,37,37,37,37,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,37,37,37,37,37,37,38,36,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,38,0,0,0,0,36,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,38,0,0,0,0,39,40,40,41,0,0,0,0,39,40,40,41,0,0,0,0,33,34,34,34,34,34,34,34,34,34,34,34,
 37,37,37,37,37,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,33,34,34,34,34,34,45,37,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,37,37,37,37,37,37,38,36,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,38,0,0,0,0,36,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,37,37,37,37,37,37,37,37,37,37,
@@ -267,15 +266,7 @@
  </layer>
  <objectgroup id="2" name="entities">
   <object id="8" template="templates/Shrubble.tx" type="SwadgeLandEntity" x="168" y="440" visible="1"/>
-  <object id="10" template="templates/Scroll Lock (Right).tx" type="SwadgeLandEntity" x="344" y="440"/>
-  <object id="11" template="templates/Scroll Lock (Up).tx" type="SwadgeLandEntity" x="424" y="440">
-   <properties>
-    <property name="linkedEntity" type="object" value="29"/>
-    <property name="type3" type="int" value="33"/>
-   </properties>
-  </object>
-  <object id="13" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="504" y="440"/>
-  <object id="14" template="templates/Scroll Unlock (All Directions).tx" type="SwadgeLandEntity" x="584" y="440"/>
+  <object id="13" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="248" y="520"/>
   <object id="17" template="templates/Dust Bunny.tx" type="SwadgeLandEntity" x="632" y="504"/>
   <object id="18" template="templates/Megaton Wasp.tx" type="SwadgeLandEntity" x="712" y="504"/>
   <object id="20" template="templates/Shrubble (Lvl. 2).tx" type="SwadgeLandEntity" x="792" y="504"/>
@@ -284,9 +275,60 @@
   <object id="27" template="templates/Dust Bunny (Lvl. 3).tx" type="SwadgeLandEntity" x="1064" y="504"/>
   <object id="28" template="templates/Megaton Wasp (Lvl. 2).tx" type="SwadgeLandEntity" x="1160" y="504"/>
   <object id="29" template="templates/Megaton Wasp (Lvl. 3).tx" type="SwadgeLandEntity" x="1272" y="504"/>
-  <object id="35" template="templates/Shrubble.tx" type="SwadgeLandEntity" x="176" y="288"/>
-  <object id="36" template="templates/Scroll Lock (Left).tx" x="264" y="440"/>
-  <object id="37" name="Player" type="SwadgeLandEntity" gid="292" x="40" y="304" width="30" height="30"/>
+  <object id="35" template="templates/Shrubble.tx" type="SwadgeLandEntity" x="232" y="440"/>
+  <object id="37" name="Player" type="SwadgeLandEntity" gid="273" x="40" y="304" width="30" height="30"/>
+  <object id="38" template="templates/Warp Entrance (Wall).tx" type="SwadgeLandEntity" x="3992" y="368">
+   <properties>
+    <property name="linkedEntitySpawn" type="object" value="39"/>
+   </properties>
+  </object>
+  <object id="39" template="templates/Warp Exit (Wall) .tx" type="SwadgeLandEntity" x="56" y="864"/>
+  <object id="40" template="templates/Warp Entrance (Floor).tx" type="SwadgeLandEntity" x="3008" y="408">
+   <properties>
+    <property name="linkedEntitySpawn" type="object" value="41"/>
+   </properties>
+  </object>
+  <object id="41" template="templates/Warp Exit (Floor).tx" type="SwadgeLandEntity" x="1648" y="808"/>
+  <object id="42" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="600" y="520"/>
+  <object id="45" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="872" y="520"/>
+  <object id="46" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="1352" y="520"/>
+  <object id="47" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="1512" y="520"/>
+  <object id="49" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="2264" y="392"/>
+  <object id="50" template="templates/Scroll Unlock (All Directions).tx" x="2020" y="112"/>
+  <object id="51" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="2600" y="392"/>
+  <object id="52" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="2744" y="392"/>
+  <object id="53" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="3008" y="392"/>
+  <object id="55" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="3608" y="520"/>
+  <object id="56" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="3864" y="520"/>
+  <object id="57" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="3736" y="520"/>
+  <object id="58" template="templates/Scroll Unlock (All Directions).tx" x="3560" y="312"/>
+  <object id="59" template="templates/Scroll Lock (Down).tx" x="292" y="1144"/>
+  <object id="60" template="templates/Scroll Lock (Down).tx" x="456" y="1144"/>
+  <object id="61" template="templates/Scroll Lock (Down).tx" x="664" y="1144"/>
+  <object id="62" template="templates/Scroll Unlock (All Directions).tx" x="888" y="1032"/>
+  <object id="64" template="templates/Scroll Lock (Down).tx" x="1016" y="1224"/>
+  <object id="65" template="templates/Scroll Lock (Down).tx" x="1224" y="1224"/>
+  <object id="66" template="templates/Scroll Lock (Up).tx" x="72" y="760"/>
+  <object id="67" template="templates/Scroll Lock (Up).tx" x="1016" y="808"/>
+  <object id="69" template="templates/Scroll Lock (Up).tx" x="1688" y="808"/>
+  <object id="70" template="templates/Scroll Lock (Down).tx" x="1640" y="1224"/>
+  <object id="71" template="templates/Scroll Unlock (All Directions).tx" x="1800" y="1064"/>
+  <object id="72" template="templates/Scroll Lock (Up).tx" x="1912" y="808"/>
+  <object id="73" template="templates/Scroll Lock (Down).tx" x="2024" y="1176"/>
+  <object id="74" template="templates/Scroll Lock (Up).tx" x="2456" y="728"/>
+  <object id="75" template="templates/Scroll Lock (Up).tx" x="2984" y="648"/>
+  <object id="76" template="templates/Scroll Unlock (All Directions).tx" x="2976" y="828"/>
+  <object id="77" template="templates/Scroll Lock (Down).tx" x="2784" y="1112"/>
+  <object id="78" template="templates/Scroll Lock (Down).tx" x="3064" y="1112"/>
+  <object id="79" template="templates/Scroll Lock (Up).tx" x="3660" y="648"/>
+  <object id="80" template="templates/Scroll Lock (Down).tx" x="3656" y="1112"/>
+  <object id="81" template="templates/Scroll Lock (Down).tx" x="3432" y="1112"/>
+  <object id="83" template="templates/Warp Entrance (Wall).tx" x="4008" y="768">
+   <properties>
+    <property name="linkedEntitySpawn" type="object" value="84"/>
+   </properties>
+  </object>
+  <object id="84" template="templates/Warp Exit (Wall) .tx" x="24" y="288"/>
  </objectgroup>
  <objectgroup id="3" name="Annotations">
   <object id="6" x="16" y="16" width="560" height="64">
@@ -296,5 +338,6 @@
    <text fontfamily="Andale Mono" pixelsize="12" wrap="1" color="#ffffff">Use the Annotations layer to write notes.
 They will not appear in the actual game!</text>
   </object>
+  <object id="43" x="288" y="368" width="296" height="256"/>
  </objectgroup>
 </map>
