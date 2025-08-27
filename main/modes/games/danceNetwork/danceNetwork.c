@@ -27,6 +27,7 @@ static void dn_MainLoop(int64_t elapsedUs);
 static void dn_MenuCb(const char* label, bool selected, uint32_t value);
 static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
+static void dn_initializeTutorial(void);
 static void dn_initializeGame(void);
 static void dn_initializeCharacterSelect(void);
 static void dn_freeAssets(void);
