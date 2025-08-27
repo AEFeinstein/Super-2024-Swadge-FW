@@ -343,10 +343,13 @@ void dn_drawBoard(dn_entity_t* self)
                                          miniDrawY - self->gameData->assets[miniAssetIndex].originY,
                                          &self->gameData->entityManager
                                               .palettes[unit->paused ? DN_GRAYSCALE_PALETTE : DN_WHITE_CHESS_PALETTE]);
-                    drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[1],
+                    if(unit->paused)
+                    {
+                        drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[1],
                                          miniDrawX - self->gameData->assets[miniAssetIndex].originX,
                                          miniDrawY - self->gameData->assets[miniAssetIndex].originY,
                                          &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                    }
                 }
                 else
                 {
@@ -364,9 +367,12 @@ void dn_drawBoard(dn_entity_t* self)
                                       miniDrawX - self->gameData->assets[miniAssetIndex].originX,
                                       miniDrawY - self->gameData->assets[miniAssetIndex].originY);
                     }
-                    drawWsgSimple(&self->gameData->assets[miniAssetIndex].frames[1],
+                    if(unit->paused)
+                    {
+                        drawWsgSimple(&self->gameData->assets[miniAssetIndex].frames[1],    
                                   miniDrawX - self->gameData->assets[miniAssetIndex].originX,
                                   miniDrawY - self->gameData->assets[miniAssetIndex].originY);
+                    }
                 }
                 if (!drawn)
                 {
