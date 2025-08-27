@@ -443,10 +443,17 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
                 switch (unitAction->action)
                 {
                     case DN_REMIX_TRACK:
+                    {
+                        if(unitAtTrack == NULL || !unit->paused)
+                        {
+                            push(tracks, (void*)unitAction);
+                        }
+                        break;
+                    }
                     case DN_RED_TRACK: // ranged attack and remixed track
                     {
                         // You can shoot ANY tile. (muahahaha)
-                        if (!unit->paused || unitAction->action == DN_REMIX_TRACK)
+                        if (!unit->paused)
                         {
                             push(tracks, (void*)unitAction);
                         }
@@ -2338,11 +2345,11 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
         }
     }
 
-    if (self->gameData->camera.pos.y == (self->pos.y - (26 << DN_DECIMAL_BITS)))
+    if (self->gameData->camera.pos.y == (self->pos.y - (26 << DN_DECIMAL_BITS)) && self->updateFunction == dn_updateUpgradeMenu)
     {
-        //confirm button
-        if(umData->numTracksToAdd == -1 && self->updateFunction == dn_updateUpgradeMenu)
+        if(umData->numTracksToAdd == -1)
         {
+            //confirm button
             drawRectFilled(x + 40, y + 98, x + dn_lerp(40, 125, dn_logRemap(umData->options[3].selectionAmount)), y + 116,
                         c521);
             drawRect(x + 40, y + 98, x + 125, y + 116, umData->selectionIdx == 3 ? c555 : c434);
@@ -2373,8 +2380,34 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
             bool drawAnimated = umData->numTracksToAdd == 7 || umData->numTracksToAdd == 1;
             drawRect(indicatorX - umData->flashyBoxSize * drawAnimated, indicatorY - umData->flashyBoxSize* drawAnimated, indicatorX + 9 + umData->flashyBoxSize* drawAnimated, indicatorY + 9 + umData->flashyBoxSize* drawAnimated, (paletteColor_t)dn_randomInt(0, 216));
             drawRect(indicatorX + 1 - umData->flashyBoxSize* drawAnimated, indicatorY + 1 - umData->flashyBoxSize* drawAnimated, indicatorX + 8 + umData->flashyBoxSize* drawAnimated, indicatorY + 8 + umData->flashyBoxSize* drawAnimated, (paletteColor_t)dn_randomInt(0, 216));
+
+            
+            //draw warning text if track already exists
+            dn_entity_t* album = NULL;
+            switch(umData->album[0])
+            {
+                case 0:
+                {
+                    album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album;
+                    break;
+                }
+                case 1:
+                {
+                    album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album;
+                    break;
+                }
+                case 2:
+                {
+                    album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum;
+                    break;
+                }
+            }
+            if(umData->trackColor == dn_trackTypeAtCoords(album, umData->track[0]))
+            {
+                tWidth = textWidth(&self->gameData->font_ibm, "WARNING! Track already exists!");
+                drawText(&self->gameData->font_ibm, c511, "WARNING! Track already exists!", (TFT_WIDTH>>1) - (tWidth >> 1), 10);
+            }
         }
-        
     }
 }
 
