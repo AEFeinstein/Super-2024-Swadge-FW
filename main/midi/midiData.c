@@ -307,7 +307,7 @@ const midiTimbre_t mmx011Vibraphone = {
         .loop = 0,
         // 28928 Hz original file
         .loopStart = SAMPLE_NUM_CONV(79, 28928, 16384),
-        .loopEnd = SAMPLE_NUM_CONV(79, 28928, 16384),
+        .loopEnd = SAMPLE_NUM_CONV(95, 28928, 16384),
         // But we convert it to avoid resampling
         .rate = 16384,
         // pitch keycenter=82, plus tune=50
