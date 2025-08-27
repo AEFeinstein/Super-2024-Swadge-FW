@@ -2419,7 +2419,7 @@ void dn_initializeThirdUpgradeOption(dn_entity_t* self)
 }
 void dn_initializeFirstUpgradeOption(dn_entity_t* self)
 {
-    dn_rerollFirstUpgradeOption(self, false);
+    dn_rerollFirstUpgradeOptionFree(self);
     ((dn_upgradeMenuData_t*)self->data)->options[0].callback = dn_rerollFirstUpgradeOption;
 }
 
@@ -2475,9 +2475,9 @@ void dn_rerollThirdUpgradeOption(dn_entity_t* self)
         dn_initializeThirdUpgradeOption(self);
     }
 }
-void dn_rerollFirstUpgradeOption(dn_entity_t* self, bool payReroll)
+
+void dn_rerollFirstUpgradeOptionFree(dn_entity_t* self)
 {
-    self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] -= payReroll;
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
     dn_track_t previous          = umData->trackColor;
     while (umData->trackColor == previous)
@@ -2496,6 +2496,12 @@ void dn_rerollFirstUpgradeOption(dn_entity_t* self, bool payReroll)
             umData->trackColor = DN_REMIX_TRACK;
         }
     }
+}
+
+void dn_rerollFirstUpgradeOption(dn_entity_t* self)
+{
+    self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]--;
+    dn_rerollFirstUpgradeOptionFree(self);
 }
 
 void dn_confirmUpgrade(dn_entity_t* self)
