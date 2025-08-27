@@ -2321,7 +2321,7 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
             {
                 for(uint8_t glitchY = 0; glitchY < 3; glitchY++)
                 {
-                    if(dn_randomInt(0,1))
+                    if(dn_randomInt(0,2))
                     {
                         // Use a deterministic pseudo-random value based on glitchX, glitchY, and flashyBoxSize
                         uint8_t arbitraryByteFromMemory = (uint8_t)(
