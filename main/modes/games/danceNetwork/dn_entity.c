@@ -1667,7 +1667,7 @@ void dn_startTurn(dn_entity_t* self)
 
     if (self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] != 9)
     {
-        snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! Gain 1 reroll.",
+        snprintf(promptData->text, sizeof(promptData->text), "%s's Turn! Gain 2 rerolls.",
                  self->gameData->shortPlayerNames[self->gameData->phase >= DN_P2_DANCE_PHASE]);
     }
     else
@@ -1700,6 +1700,7 @@ void dn_gainReroll(dn_entity_t* self)
 
 void dn_gainRerollAndSetupDancePhase(dn_entity_t* self)
 {
+    dn_gainReroll(self);
     dn_gainReroll(self);
 
     dn_setupDancePhase(self);
@@ -1856,7 +1857,7 @@ void dn_startUpgradeMenu(dn_entity_t* self, int32_t countOff)
 void dn_acceptSwapCC(dn_entity_t* self)
 {
     self->paused = true;
-    if (self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] < 3)
+    if (self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] < 5)
     {
         //////////////////////////////////////
         // make the prompt not enough rerolls//
@@ -1880,7 +1881,7 @@ void dn_acceptSwapCC(dn_entity_t* self)
         return;
     }
 
-    self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] -= 3;
+    self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] -= 5;
     ///////////////////
     // Make the swap //
     ///////////////////
@@ -2955,7 +2956,7 @@ void dn_drawSwapButton(dn_entity_t* self)
     int16_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) + 11;
     int16_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 23;
     drawShinyText(&self->gameData->font_ibm, self->gameData->phase < DN_P2_DANCE_PHASE ? c245 : c442,
-                  self->gameData->phase < DN_P2_DANCE_PHASE ? c355 : c553, c555, "-3", x, y);
+                  self->gameData->phase < DN_P2_DANCE_PHASE ? c355 : c553, c555, "-5", x, y);
 
     drawWsgPaletteSimple(&self->gameData->assets[DN_REROLL_ASSET].frames[0], x + 17, y - 14,
                          &self->gameData->entityManager.palettes[DN_DICE_NO_ARROW_PALETTE]);
