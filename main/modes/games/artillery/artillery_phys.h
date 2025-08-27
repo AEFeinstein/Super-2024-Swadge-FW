@@ -11,6 +11,7 @@
 #include "linked_list.h"
 #include "vector2d.h"
 #include "geometryFl.h"
+#include "quaternions.h"
 
 //==============================================================================
 // Defines
@@ -85,6 +86,8 @@ typedef struct
     vecFl_t staticForce;
     bool inContact; ///< true of staticForce is computed, false if it isn't
     vecFl_t slopeVec;
+    vecFl_t contactNorm;
+    vecFl_t lastContactNorm;
 
     // Button input
     buttonBit_t moving; ///< Either the left, right, or no button held
