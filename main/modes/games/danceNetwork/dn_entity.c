@@ -2326,11 +2326,11 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
                     {
                         // Use a deterministic pseudo-random value based on glitchX, glitchY, and flashyBoxSize
                         uint8_t arbitraryByteFromMemory = (uint8_t)(
-                            ((glitchX + glitchY + umData->flashyBoxSize / 20) ^ 0xA5) % 256
+                            ((option * 30 + glitchX + glitchY + umData->flashyBoxSize / 10) ^ 0xA5) % 256
                         );
                         if(arbitraryByteFromMemory > 100)
                         {
-                            drawWsgSimple(&self->gameData->assets[DN_GLITCH_ASSET].frames[arbitraryByteFromMemory % 6], x + 2 + glitchX * 4, y + 6 + 31 * option + glitchY * 8);
+                            drawWsgSimple(&self->gameData->assets[DN_GLITCH_ASSET].frames[arbitraryByteFromMemory % 6], x + 4 + glitchX * 4, y + 6 + 31 * option + glitchY * 8);
                         }
                     }
                 }
@@ -2341,7 +2341,7 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
     if (self->gameData->camera.pos.y == (self->pos.y - (26 << DN_DECIMAL_BITS)))
     {
         //confirm button
-        if(umData->numTracksToAdd == -1)
+        if(umData->numTracksToAdd == -1 && self->updateFunction == dn_updateUpgradeMenu)
         {
             drawRectFilled(x + 40, y + 98, x + dn_lerp(40, 125, dn_logRemap(umData->options[3].selectionAmount)), y + 116,
                         c521);
