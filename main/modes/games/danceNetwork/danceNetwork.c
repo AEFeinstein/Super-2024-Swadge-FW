@@ -595,6 +595,8 @@ static void dn_initializeGame(void)
 
     dn_loadAsset(DN_SKIP_0_WSG, 9, &gameData->assets[DN_SKIP_ASSET]);
 
+    dn_loadAsset(DN_GLITCH_0_WSG, 6, &gameData->assets[DN_GLITCH_ASSET]);
+
     // LED MATRIX TEST
     // ch32v003WriteFlash(&gameData->assets[DN_NUMBER_ASSET].frames[0],
     // sizeof(gameData->assets[DN_NUMBER_ASSET].frames[0]));

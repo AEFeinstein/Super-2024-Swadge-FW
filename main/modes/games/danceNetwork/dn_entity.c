@@ -1826,10 +1826,6 @@ void dn_startUpgradeMenu(dn_entity_t* self, int32_t countOff)
 {
     self->gameData->resolvingRemix = false;
 
-    // add a random track to creative commons
-    dn_addTrackToAlbum(((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum,
-                       dn_colorToTrackCoords((paletteColor_t)dn_randomInt(107, 122)), (dn_track_t)dn_randomInt(1, 2));
-
     //////////////////////////
     // Make the upgrade menu//
     //////////////////////////
@@ -1840,6 +1836,7 @@ void dn_startUpgradeMenu(dn_entity_t* self, int32_t countOff)
     upgradeMenu->data = heap_caps_calloc(1, sizeof(dn_upgradeMenuData_t), MALLOC_CAP_SPIRAM);
     memset(upgradeMenu->data, 0, sizeof(dn_upgradeMenuData_t));
     ((dn_upgradeMenuData_t*)upgradeMenu->data)->timer = countOff;
+    ((dn_upgradeMenuData_t*)upgradeMenu->data)->numTracksToAdd = -1;
     upgradeMenu->dataType                             = DN_UPGRADE_MENU_DATA;
     upgradeMenu->updateFunction                       = dn_updateUpgradeMenu;
     upgradeMenu->drawFunction                         = dn_drawUpgradeMenu;
@@ -2089,6 +2086,68 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
         aData->creativeCommonsAlbum->pos.y          = 62912;
         aData->p2Album->pos.y                       = 62912;
     }
+
+    if(umData->numTracksToAdd > -1)
+    {
+        umData->flashyBoxSize -= self->gameData->elapsedUs >> 13;
+        if (umData->flashyBoxSize < 0)
+        {
+            switch(umData->numTracksToAdd)
+            {
+                case 7:
+                case 1:
+                {
+                    dn_entity_t* album = NULL;
+                    switch (umData->album[0])
+                    {
+                        case 0:
+                        {
+                            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album;
+                            break;
+                        }
+                        case 1:
+                        {
+                            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album;
+                            break;
+                        }
+                        case 2:
+                        {
+                            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum;
+                            break;
+                        }
+                    }
+                    dn_addTrackToAlbum(album, umData->track[0], umData->trackColor);
+                    break;
+                }
+                case 5:// add a random track to creative commons in the upgrade menu
+                {
+                    dn_initializeFirstUpgradeOption(self);
+                    break;
+                }
+                case 4:// add a random track to creative commons in the upgrade menu
+                {
+                    dn_initializeSecondUpgradeOption(self);
+                    break;
+                }
+                case 3:// add a random track to creative commons in the upgrade menu
+                {
+                    umData->album[0] = 2;
+                    break;
+                }
+                case 0:
+                {
+                    self->updateFunction = dn_updateAfterUpgradeMenu;
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+            umData->flashyBoxSize = 127;
+            umData->numTracksToAdd--;
+        }
+    }
 }
 
 void dn_updateAfterUpgradeMenu(dn_entity_t* self)
@@ -2246,17 +2305,46 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
         uint8_t length = *(&text + 1) - text - 1;
         drawTextWordWrapCentered(&self->gameData->font_ibm, umData->selectionIdx == option ? c555 : c545, text, &xValue,
                                  &yValue, x + 141 + (length < 19 ? 8 : 0), y + 30 + 31 * option);
-    }
 
-    drawRectFilled(x + 40, y + 98, x + dn_lerp(40, 125, dn_logRemap(umData->options[3].selectionAmount)), y + 116,
-                   c521);
-    drawRect(x + 40, y + 98, x + 125, y + 116, umData->selectionIdx == 3 ? c555 : c434);
-    tWidth = textWidth(&self->gameData->font_ibm, "CONFIRM");
-    drawText(&self->gameData->font_ibm, umData->selectionIdx == 3 ? c555 : c545, "CONFIRM", x + 82 - (tWidth >> 1),
-             y + 102);
+        //Draw glitch art
+        if((umData->numTracksToAdd == 3 && option >= 2) ||
+             (umData->numTracksToAdd == 4 && option >= 1) ||
+             umData->numTracksToAdd == 5)
+        {
+            for(uint8_t glitchX = 0; glitchX < 35; glitchX++)
+            {
+                for(uint8_t glitchY = 0; glitchY < 3; glitchY++)
+                {
+                    if(dn_randomInt(0,1))
+                    {
+                        // Use a deterministic pseudo-random value based on glitchX, glitchY, and flashyBoxSize
+                        uint8_t arbitraryByteFromMemory = (uint8_t)(
+                            ((glitchX + glitchY + umData->flashyBoxSize / 20) ^ 0xA5) % 256
+                        );
+                        if(arbitraryByteFromMemory > 100)
+                        {
+                            drawWsgSimple(&self->gameData->assets[DN_GLITCH_ASSET].frames[arbitraryByteFromMemory % 6], x + 2 + glitchX * 4, y + 6 + 31 * option + glitchY * 8);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     if (self->gameData->camera.pos.y == (self->pos.y - (26 << DN_DECIMAL_BITS)))
     {
+        //confirm button
+        if(umData->numTracksToAdd == -1)
+        {
+            drawRectFilled(x + 40, y + 98, x + dn_lerp(40, 125, dn_logRemap(umData->options[3].selectionAmount)), y + 116,
+                        c521);
+            drawRect(x + 40, y + 98, x + 125, y + 116, umData->selectionIdx == 3 ? c555 : c434);
+            tWidth = textWidth(&self->gameData->font_ibm, "CONFIRM");
+            drawText(&self->gameData->font_ibm, umData->selectionIdx == 3 ? c555 : c545, "CONFIRM", x + 82 - (tWidth >> 1),
+                    y + 102);
+        }
+
+        //here's the flashy rainbow square
         uint16_t indicatorX = 56;
         uint16_t indicatorY = 175;
 
@@ -2273,8 +2361,13 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
         indicatorX += umData->track[0].x * 8 * (umData->album[0] == 1 ? -1 : 1);
         indicatorY -= umData->track[0].y * 8 * (umData->album[0] == 1 ? -1 : 1);
 
-        drawRect(indicatorX, indicatorY, indicatorX + 9, indicatorY + 9, (paletteColor_t)dn_randomInt(0, 216));
-        drawRect(indicatorX + 1, indicatorY + 1, indicatorX + 8, indicatorY + 8, (paletteColor_t)dn_randomInt(0, 216));
+        if(umData->numTracksToAdd == -1 || umData->numTracksToAdd == 7 || umData->numTracksToAdd == 1)
+        {
+            bool drawAnimated = umData->numTracksToAdd == 7 || umData->numTracksToAdd == 1;
+            drawRect(indicatorX - umData->flashyBoxSize * drawAnimated, indicatorY - umData->flashyBoxSize* drawAnimated, indicatorX + 9 + umData->flashyBoxSize* drawAnimated, indicatorY + 9 + umData->flashyBoxSize* drawAnimated, (paletteColor_t)dn_randomInt(0, 216));
+            drawRect(indicatorX + 1 - umData->flashyBoxSize* drawAnimated, indicatorY + 1 - umData->flashyBoxSize* drawAnimated, indicatorX + 8 + umData->flashyBoxSize* drawAnimated, indicatorY + 8 + umData->flashyBoxSize* drawAnimated, (paletteColor_t)dn_randomInt(0, 216));
+        }
+        
     }
 }
 
@@ -2319,22 +2412,8 @@ void dn_initializeThirdUpgradeOption(dn_entity_t* self)
 }
 void dn_initializeFirstUpgradeOption(dn_entity_t* self)
 {
-    dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
-    uint8_t roll                 = dn_randomInt(0, 100);
-    if (roll < 50)
-    {
-        umData->trackColor = DN_BLUE_TRACK;
-    }
-    else if (roll < 80)
-    {
-        umData->trackColor = DN_RED_TRACK;
-    }
-    else
-    {
-        umData->trackColor = DN_REMIX_TRACK;
-    }
-
-    umData->options[0].callback = dn_rerollFirstUpgradeOption;
+    dn_rerollFirstUpgradeOption(self, false);
+    ((dn_upgradeMenuData_t*)self->data)->options[0].callback = dn_rerollFirstUpgradeOption;
 }
 
 void dn_initializeUpgradeConfirmOption(dn_entity_t* self)
@@ -2389,9 +2468,9 @@ void dn_rerollThirdUpgradeOption(dn_entity_t* self)
         dn_initializeThirdUpgradeOption(self);
     }
 }
-void dn_rerollFirstUpgradeOption(dn_entity_t* self)
+void dn_rerollFirstUpgradeOption(dn_entity_t* self, bool payReroll)
 {
-    self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]--;
+    self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] -= payReroll;
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
     dn_track_t previous          = umData->trackColor;
     while (umData->trackColor == previous)
@@ -2416,27 +2495,8 @@ void dn_confirmUpgrade(dn_entity_t* self)
 {
     dn_upgradeMenuData_t* umData       = (dn_upgradeMenuData_t*)self->data;
     umData->options[3].selectionAmount = 0;
-    dn_entity_t* album                 = NULL;
-    switch (umData->album[0])
-    {
-        case 0:
-        {
-            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album;
-            break;
-        }
-        case 1:
-        {
-            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album;
-            break;
-        }
-        case 2:
-        {
-            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum;
-            break;
-        }
-    }
-    dn_addTrackToAlbum(album, umData->track[0], umData->trackColor);
-    self->updateFunction = dn_updateAfterUpgradeMenu;
+    umData->numTracksToAdd = 7; //It really adds 2 tracks. Different things happen happen at 7,6,5,4,3,2,1, and 0
+    umData->flashyBoxSize  = 127;
 }
 
 void dn_updateSwapAlbums(dn_entity_t* self)
@@ -2713,7 +2773,7 @@ void dn_updateBullet(dn_entity_t* self)
                 }
             }
 
-            //knock this tile out
+            // knock this tile out
             targetTile->timeout = true;
 
             if (!self->gameData->resolvingRemix)

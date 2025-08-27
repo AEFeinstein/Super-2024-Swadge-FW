@@ -64,7 +64,7 @@ typedef struct
     dn_entity_t* unit;     // Pointer to the unit on this tile. NULL if no unit is present.
     dn_entity_t* selector; // Pointer to the tile selector. NULL if no selector is present.
     dn_selection_t selectionType;
-    bool timeout;       // Becomes true if shot out. Becomes false when another tile is shot out.
+    bool timeout;          // Becomes true if shot out. Becomes false when another tile is shot out.
     uint8_t timeoutOffset; // further offsets the yOffset when in timeout.
     uint8_t rewards;       // some number of rerolls given to the first visitor here.
 } dn_tileData_t;
@@ -163,9 +163,12 @@ typedef struct
 
     dn_track_t trackColor;
     dn_boardPos_t track[17]; // relative vector from a unit. 16 plus a null separator
-    uint8_t album[4];        // 0 for p1's album, 1 for creative commons album, 2 for p2's album. 3 plus a 3 separator
+    uint8_t album[4];        // 0 for p1's album, 2 for creative commons album, 1 for p2's album. 3 plus a 3 separator
 
     dn_promptOption_t options[4]; // reroll 1, reroll 2, reroll 3, and confirm.
+
+    int8_t numTracksToAdd;
+    int8_t flashyBoxSize;
 } dn_upgradeMenuData_t;
 
 typedef struct
@@ -263,7 +266,7 @@ void dn_initializeFirstUpgradeOption(dn_entity_t* self);
 void dn_initializeUpgradeConfirmOption(dn_entity_t* self);
 void dn_rerollSecondUpgradeOption(dn_entity_t* self);
 void dn_rerollThirdUpgradeOption(dn_entity_t* self);
-void dn_rerollFirstUpgradeOption(dn_entity_t* self);
+void dn_rerollFirstUpgradeOption(dn_entity_t* self, bool payReroll);
 void dn_confirmUpgrade(dn_entity_t* self);
 void dn_updateSwapAlbums(dn_entity_t* self);
 void dn_updateAfterSwap(dn_entity_t* self);
