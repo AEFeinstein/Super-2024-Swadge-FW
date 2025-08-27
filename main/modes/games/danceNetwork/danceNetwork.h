@@ -18,8 +18,6 @@ typedef enum __attribute__((packed))
     UI_MENU,
     UI_CONNECTING,
     UI_GAME,
-    UI_CHARACTER_SELECT,
-    UI_HOW_TO,
     UI_RESULT,
 } dn_Ui_t;
 

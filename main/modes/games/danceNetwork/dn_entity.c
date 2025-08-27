@@ -278,20 +278,30 @@ void dn_drawBoard(dn_entity_t* self)
                               drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
                               drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
             }
+            bool drawOutline = false;
+            paletteColor_t color = c050;
             if (boardData->tiles[y][x].rewards)
             {
                 char reward[6];
                 snprintf(reward, sizeof(reward), "+%d", boardData->tiles[y][x].rewards);
                 drawShinyText(&self->gameData->font_ibm, c153, c254, c555, reward, drawX - 8, drawY - 5);
-
+                drawOutline = true;
+            }
+            if(x == 2 && (y == 0 || y == 4))
+            {
+                drawOutline = true;
+                color = y == 4 ? c055 : c550;
+            }
+            if(drawOutline)
+            {
                 drawLineFast(drawX, drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY + 1,
-                             drawX + self->gameData->assets[DN_GROUND_TILE_ASSET].originX - 1, drawY, c050);
+                             drawX + self->gameData->assets[DN_GROUND_TILE_ASSET].originX - 1, drawY, color);
                 drawLineFast(drawX + self->gameData->assets[DN_GROUND_TILE_ASSET].originX - 1, drawY, drawX,
-                             drawY + self->gameData->assets[DN_GROUND_TILE_ASSET].originY - 1, c050);
+                             drawY + self->gameData->assets[DN_GROUND_TILE_ASSET].originY - 1, color);
                 drawLineFast(drawX, drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY + 1,
-                             drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX + 1, drawY, c050);
+                             drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX + 1, drawY, color);
                 drawLineFast(drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX + 2, drawY, drawX,
-                             drawY + self->gameData->assets[DN_GROUND_TILE_ASSET].originY - 2, c050);
+                             drawY + self->gameData->assets[DN_GROUND_TILE_ASSET].originY - 2, color);
             }
             if (boardData->tiles[y][x].selector != NULL)
             {

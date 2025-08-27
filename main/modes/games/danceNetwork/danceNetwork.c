@@ -101,12 +101,7 @@ static const cnfsFileIdx_t dn_assetToWsgLookup[]
        DN_PAWN_WSG,       DN_PAWN_SMALL_0_WSG, DN_BUCKET_HAT_DOWN_WSG, DN_BUCKET_HAT_UP_WSG, DN_GROUND_TILE_WSG};
 
 // NVS keys
-const char dnWinKey[]       = "dn_win";
-const char dnLossKey[]      = "dn_loss";
-const char dnDrawKey[]      = "dn_draw";
 const char dnCharacterKey[] = "dn_character";
-const char dnTutorialKey[]  = "dn_tutor";
-const char dnUnlockKey[]    = "dn_unlock";
 
 dn_gameData_t* gameData;
 
@@ -395,7 +390,8 @@ static void dn_MenuCb(const char* label, bool selected, uint32_t value)
         else if (dn_HowToStr == label)
         {
             // Show how to play
-            dn_ShowUi(UI_HOW_TO);
+            dn_initializeTutorial();
+            dn_ShowUi(UI_GAME);
         }
         else if (dn_RecordsStr == label)
         {
@@ -501,22 +497,6 @@ void dn_ShowUi(dn_Ui_t ui)
         {
             break;
         }
-        case UI_CHARACTER_SELECT:
-        {
-            // gameData->selectMarkerIdx     = ttt->activeMarkerIdx;
-            // gameData->xSelectScrollTimer  = 0;
-            // gameData->xSelectScrollOffset = 0;
-            break;
-        }
-        case UI_HOW_TO:
-        {
-            // Turn LEDs off for reading
-            setMegaLedsOn(gameData->menuRenderer, false);
-            gameData->bgMenu->title = dn_HowToStr;
-            // gameData->pageIdx         = 0;
-            // gameData->arrowBlinkTimer = 0;
-            break;
-        }
         case UI_RESULT:
         {
             // Game over, deinitialize p2p just in case
@@ -535,8 +515,15 @@ void dn_ShowUi(dn_Ui_t ui)
     }
 }
 
+
+static void dn_initializeTutorial(void)
+{
+    setMegaLedsOn(gameData->menuRenderer, false);
+}
+
 static void dn_initializeGame(void)
 {
+    setMegaLedsOn(gameData->menuRenderer, false);
     // if player vs CPU
     if (gameData->singleSystem && !gameData->passAndPlay)
     {
