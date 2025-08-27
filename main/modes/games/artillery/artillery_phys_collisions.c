@@ -89,6 +89,9 @@ void physCheckCollisions(physSim_t* phys)
                 ocn = ocn->next;
             }
 
+            // Save last contact normal for wheel hysteresis
+            pc->lastContactNorm = pc->contactNorm;
+
             // After checking all lines and circles, if there was an intersection
             // (there will only be one, closest to the starting point)
             if (FLT_MAX != colDist)
@@ -124,6 +127,9 @@ void physCheckCollisions(physSim_t* phys)
                     if (reflVec.y < 0)
                     {
                         pc->inContact = true;
+
+                        // Save the contact normal
+                        pc->contactNorm = reflVec;
 
                         // Unit slope is the unit normal rotated 90 degrees, pointed downward
                         if (reflVec.x < 0)
