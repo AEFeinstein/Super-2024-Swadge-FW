@@ -212,6 +212,22 @@ static void physFindObjDests(physSim_t* phys, int32_t elapsedUs)
                 // Accelerate in the direction of the surface the object is on
                 totalForce = addVecFl2d(pc->staticForce, pc->g);
 
+                // Static friction opposes the static force
+                vecFl_t staticFriction = mulVecFl2d(pc->slopeVec, -phys->g.y / 4.0f);
+
+                // If the static friction overcomes the total force
+                if (sqMagVecFl2d(staticFriction) >= sqMagVecFl2d(totalForce))
+                {
+                    // don't move
+                    totalForce.x = 0;
+                    totalForce.y = 0;
+                }
+                else
+                {
+                    // Subtract the static friction from the total force
+                    totalForce = addVecFl2d(totalForce, staticFriction);
+                }
+
                 // If the object is moving
                 if (pc->moving)
                 {
