@@ -5,6 +5,39 @@
 #include <linked_list.h>
 #include <limits.h>
 
+//A double array of chars
+static const char tutorialText[29][2][154] = {
+    {"Dance 200", "Welcome to Dance class. Please, take a seat. We have some spots here in the front."},
+    {"Commander DancenoNighta", "I am Commander DancenoNighta, and I'll be bringing you up to speed on the dance scene in 2026."},
+    {"Bugs", "But first, a moment of silence for our fallen heros in the garbage pit."},
+    {"Bugs", "..."},
+    {"Dance Threat Calculus", "Thank you. We're going to go over some light refreshers."},
+    {"Win Conditions", "You can win by capturing the opponent king. The other way to win is by moving your own king onto the opponent's control point."},
+    {"Control Point", "The control points are simply the squares where the kings start."},
+    {"Dance Arena", "The floor consists of a 5x5 grid built above our home."},
+    {"Dance Arena", "Bigma promised to bring us into a post-garbage techno future. And he was right. We can just keep building on top of the past!"},
+    {"Turn Phases", "On your turn, you will gain two rerolls. More about rerolls later. Just know that the number of rerolls for each player are displayed in the led lights."},
+    {"Dancing", "Your available dances depend on what tracks are written on your album."},
+    {"Creative Commons", "Optionally, you may pay 5 five rerolls to trade your album with the album from the Creative Commons."},
+    {"Creative Commons", "Artists from around the world are adding tracks into the Creative Commons every single turn."},
+    {"Dance Action - Fire", "Red fire tracks allow you to do a ranged attack. You can even target friendly units or unoccupied tiles."},
+    {"Dance Action - Fire", "Friendly fire will harvest 3 rerolls. Sometimes sacrifices are necessary. And shooting an unoccupied tile will knock it out of the game."},
+    {"Dance Action - Move", "Blue movement tracks allow you to move any of your units to an unoccupied tile."},
+    {"Dance Action - Move", "You could technically move into a hole and fall into the garbage pit. At least this also results in gaining 3 rerolls."},
+    {"Dance Action - Move", "I lost a wing and a leg in the great garbage war of '25. But Bigma gave me a second chance."},
+    {"Dance Action - Remix", "Purple remix tracks allow you to fire and then move in one turn! There are a lot of situational factors to consider."},
+    {"Dance Action - Remix", "In certain cases, it can provide some extra helpful momentum in battle."},
+    {"Dance Action - Remix", "But if it targets an unoccupied tile, you would shoot the tile out and move right into the hole, gaining 3 rerolls."},
+    {"Bringing Units Online", "If a unit fires a ranged attack, that unit will become grayscale showing that it has gone offline and is unable to fire again."},
+    {"Bringing Units Online", "You need to move a unit to bring it online so it can fire later. Remember, if a unit is fully colored then it's a threat!"},
+    {"Bringing Units Online", "Remixes also get the job done because the offline unit would fail to fire a shot at a tile, but then it would successfully move there."},
+    {"Skipping a dance action", "You can skip a dance action, gaining another reroll. You might have to resort to it if no units have any valid dance tracks."},
+    {"Albums", "Each album can hold a variety of tracks. After your dance action, you'll write a new track."},
+    {"Albums", "In the writing phase, you'll be able to spend rerolls to influence the kind of track you write. Try to save up and turn the tides in your favor."},
+    {"Capturing", "When you capture an opponent's unit, you gain gain 1 reroll and trade albums with the opponent."},
+    {"Q&A", "That concludes the introductory tutorial. Thank you for dancing, and long live Bigma!"},
+};
+
 void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType)
 {
     if (self->data != NULL)
@@ -3077,4 +3110,63 @@ void dn_unpauseSkipButton(dn_entity_t* self)
         skipButtonNode = skipButtonNode->prev;
     }
     ((dn_entity_t*)skipButtonNode->val)->paused = false;
+}
+
+void dn_updateTutorial(dn_entity_t* self)
+{
+    dn_tutorialData_t* tData = (dn_tutorialData_t*)self->data;
+    if(self->gameData->btnDownState & PB_RIGHT && tData->page < sizeof(tutorialText) / sizeof(tutorialText[0]))
+    {
+        tData->page++;
+    }
+    else if(self->gameData->btnDownState & PB_LEFT && tData->page)
+    {
+        tData->page--;
+    }
+    if(tData->page == sizeof(tutorialText) / sizeof(tutorialText[0]))
+    {
+        // free assets
+        dn_freeAsset(&self->gameData->assets[DN_DANCENONYDA_ASSET]);
+        dn_freeAsset(&self->gameData->assets[DN_TFT_ASSET]);
+        dn_freeAsset(&self->gameData->assets[DN_TEXTBOX_ASSET]);
+        dn_freeAsset(&self->gameData->assets[DN_MMM_SUBMENU_ASSET]);
+        self->destroyFlag = true;
+        dn_ShowUi(UI_MENU);
+    }
+}
+
+void dn_drawTutorial(dn_entity_t* self)
+{
+    dn_tutorialData_t* tData = (dn_tutorialData_t*)self->data;
+
+    drawWsgSimple(&self->gameData->assets[DN_DANCENONYDA_ASSET].frames[0], 141, 20);
+    drawWsgSimple(&self->gameData->assets[DN_TEXTBOX_ASSET].frames[0], 7, 125);
+    drawWsgSimple(&self->gameData->assets[DN_TFT_ASSET].frames[0], 3, 3);
+
+    int16_t x = 7;
+    int16_t y = 45;
+    drawTextWordWrapCentered(&self->gameData->font_ibm, c445, tutorialText[tData->page][0], &x, &y, 136, 114);
+
+    x = 7;
+    y = 100;
+    char buffer[8];
+    snprintf(buffer, sizeof(buffer), "%d/%d", tData->page + 1, (uint8_t)(sizeof(tutorialText) / sizeof(tutorialText[0])));
+    drawTextWordWrapCentered(&self->gameData->font_ibm, c555, buffer, &x, &y, 136, 114);
+
+    x = 24;
+    y = 140;
+    drawTextWordWrap(&self->gameData->font_ibm, c555, tutorialText[tData->page][1], &x, &y, x+225, y+80);
+
+    if((self->gameData->generalTimer % 256) > 128)
+    {
+        if(tData->page)
+        {
+            drawWsg(&self->gameData->assets[DN_MMM_SUBMENU_ASSET].frames[0], 10, 205, true, false, 0);
+        }
+        if(tData->page < sizeof(tutorialText) / sizeof(tutorialText[0]))
+        {
+            drawWsgSimple(&self->gameData->assets[DN_MMM_SUBMENU_ASSET].frames[0], 242, 205);
+        }
+    }
+
 }

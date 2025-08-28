@@ -26,6 +26,7 @@ typedef enum
     DN_SWAP_DATA,
     DN_BULLET_DATA,
     DN_UNIT_DATA,
+    DN_TUTORIAL_DATA,
 } dn_dataType_t;
 
 //==============================================================================
@@ -193,6 +194,12 @@ typedef struct
     dn_boardPos_t ownerToMove; // Position of the attacker if they are remixing and need to move after the attack.
 } dn_bulletData_t;
 
+typedef struct
+{
+    uint8_t page;
+} dn_tutorialData_t;
+
+
 //==============================================================================
 // Prototypes
 //==============================================================================
@@ -289,3 +296,6 @@ void dn_unpauseSwapButton(dn_entity_t* self);
 void dn_updateSkipButton(dn_entity_t* self);
 void dn_drawSkipButton(dn_entity_t* self);
 void dn_unpauseSkipButton(dn_entity_t* self);
+
+void dn_updateTutorial(dn_entity_t* self);
+void dn_drawTutorial(dn_entity_t* self);

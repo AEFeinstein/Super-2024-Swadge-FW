@@ -520,6 +520,27 @@ void dn_ShowUi(dn_Ui_t ui)
 static void dn_initializeTutorial(void)
 {
     setMegaLedsOn(gameData->menuRenderer, false);
+    dn_loadAsset(DN_DANCENONYDA_WSG, 1, &gameData->assets[DN_DANCENONYDA_ASSET]);
+    dn_loadAsset(DN_TFT_WSG, 1, &gameData->assets[DN_TFT_ASSET]);
+    dn_loadAsset(DN_TEXT_BOX_WSG, 1, &gameData->assets[DN_TEXTBOX_ASSET]);
+    dn_loadAsset(MMM_SUBMENU_WSG, 1, &gameData->assets[DN_MMM_SUBMENU_ASSET]);
+
+    /////////////////////
+    //Make the tutorial//
+    /////////////////////
+    dn_entity_t* tutorial = dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0, 0}, gameData);
+    if (tutorial != NULL)
+    {
+        tutorial->data = heap_caps_calloc(1, sizeof(dn_tutorialData_t), MALLOC_CAP_SPIRAM);
+        if (tutorial->data != NULL)
+        {
+            memset(tutorial->data, 0, sizeof(dn_tutorialData_t));
+            tutorial->dataType      = DN_TUTORIAL_DATA;
+            tutorial->updateFunction = dn_updateTutorial;
+            tutorial->drawFunction  = dn_drawTutorial;
+        }
+    }
+
 }
 
 static void dn_initializeGame(void)
@@ -556,8 +577,6 @@ static void dn_initializeGame(void)
     }
 
     dn_loadAsset(DN_GROUND_TILE_WSG, 1, &gameData->assets[DN_GROUND_TILE_ASSET]);
-
-    dn_loadAsset(DN_ALBUM_WSG, 1, &gameData->assets[DN_GROUND_TILE_ASSET]);
 
     dn_loadAsset(DN_SPEAKER_0_WSG, 6, &gameData->assets[DN_SPEAKER_ASSET]);
 
