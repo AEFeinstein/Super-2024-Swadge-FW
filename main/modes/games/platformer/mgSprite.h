@@ -40,6 +40,18 @@ static const vec_t origin_15_15 =
     .y = 15
 };
 
+static const vec_t origin_7_31 =
+{
+    .x = 7,
+    .y = 31
+};
+
+static const vec_t origin_31_7 =
+{
+    .x = 31,
+    .y = 7
+};
+
 static const box_t box_16_16 = 
 {
     .x0 = 0,
@@ -54,6 +66,22 @@ static const box_t box_16_32 =
     .x1 = 15,
     .y0 = 0,
     .y1 = 31
+};
+
+static const box_t box_16_64 = 
+{
+    .x0 = 0,
+    .x1 = 15,
+    .y0 = 0,
+    .y1 = 63
+};
+
+static const box_t box_64_16 = 
+{
+    .x0 = 0,
+    .x1 = 63,
+    .y0 = 0,
+    .y1 = 15
 };
 
 #endif

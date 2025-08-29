@@ -135,7 +135,8 @@ tiled.registerMapFormat("Mega Pulse EX", {
                     
                     for (let i= 0; i < layer.objectCount; ++i) {
                         const entity = layer.objects[i];
-                        var linkedEntityIndex = (entity.resolvedProperty("linkedEntity") != null) ? (layer.objects.findIndex( ((item) => item.id == entity.resolvedProperty("linkedEntity").id))) : 65535;
+                        var linkedEntityIndex = (entity.resolvedProperty("linkedEntitySpawn") != null) ? (layer.objects.findIndex( ((item) => item.id == entity.resolvedProperty("linkedEntitySpawn").id))) : 65535;
+                        tiled.log(linkedEntityIndex);
 
                         entitiesBuffer.push(entity.resolvedProperty("type").value);
                         entitiesBuffer.push(Math.floor(entity.x) >> tileSizeInPowersOf2);
@@ -174,7 +175,7 @@ tiled.registerMapFormat("Mega Pulse EX", {
             }*/
 
             outputBuffer = tilemapBuffer/*.concat(warpBuffer)*/.concat(entitiesBuffer);
-            tiled.log(outputBuffer);
+            //tiled.log(outputBuffer);
             
             let file = new BinaryFile(fileName, BinaryFile.WriteOnly);
             let buffer = new ArrayBuffer(outputBuffer.length); //Buffer sized to max width of level

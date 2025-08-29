@@ -241,7 +241,19 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
             entitySpawn->special5 = buf[i+11];
             entitySpawn->special6 = buf[i+12];
             entitySpawn->special7 = buf[i+13];
-            entitySpawn->linkedEntitySpawn = &(tilemap->entitySpawns[(buf[i+14] << 8) + buf[i+15]]);
+
+            uint16_t linkedEntitySpawnIndex = (buf[i+15] << 8) + buf[i+14];
+
+            ESP_LOGE("TEST", "Entity #%i: type %i", subiterator, entitySpawn->type);
+
+            if(linkedEntitySpawnIndex == 0xffff){
+                entitySpawn->linkedEntitySpawn = NULL;
+                 ESP_LOGE("TEST", "Linked entity not found for %i, %i", subiterator, linkedEntitySpawnIndex);
+            } else {
+                entitySpawn->linkedEntitySpawn = &(tilemap->entitySpawns[linkedEntitySpawnIndex]);
+                ESP_LOGE("TEST", "Linked entity found for %i, %i", subiterator, linkedEntitySpawnIndex);
+            }
+            
 
             uint16_t key = (entitySpawn->ty << 8) + (entitySpawn->tx);
             hashPutBin(&(tilemap->entitySpawnMap), (const void*) key, (const void *) entitySpawn);
@@ -294,7 +306,11 @@ void mg_hashSpawnEntity(mgEntityManager_t* entityManager, mgEntitySpawnData_t* e
         entityCreated->spriteFlipHorizontal = entitySpawnData->flags & 0b10;
         
         entityCreated->spawnData = entitySpawnData;
-        entityCreated->linkedEntity = entitySpawnData->linkedEntitySpawn->spawnedEntity;
+
+        if(entitySpawnData->linkedEntitySpawn != NULL){
+            entityCreated->linkedEntity = entitySpawnData->linkedEntitySpawn->spawnedEntity;
+        }
+
         entitySpawnData->spawnedEntity = entityCreated;
 
         entitySpawnData->spawnable = false;
