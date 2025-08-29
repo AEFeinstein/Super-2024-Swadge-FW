@@ -256,7 +256,12 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
         case ENTITY_BGM_CHANGE_5:
             createdEntity = createBgmChange5(entityManager, x, y);
             break;
-
+        case ENTITY_WARP_ENTRANCE_WALL:
+            createdEntity = createWarpEntranceWall(entityManager, x, y);
+            break;
+        case ENTITY_WARP_ENTRANCE_FLOOR:
+            createdEntity = createWarpEntranceFloor(entityManager, x, y);
+            break;
         default:
             createdEntity = NULL;
     }
@@ -1373,5 +1378,51 @@ mgEntity_t* createBgmStop(mgEntityManager_t* entityManager, uint16_t x, uint16_t
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
     entity->drawHandler          = &mg_defaultEntityDrawHandler;
+    return entity;
+}
+
+mgEntity_t* createWarpEntranceWall(mgEntityManager_t* entityManager, uint16_t x, uint16_t y){
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active   = true;
+    entity->visible  = true;
+    entity->x        = TO_SUBPIXEL_COORDS(x);
+    entity->y        = TO_SUBPIXEL_COORDS(y);
+    entity->type     = ENTITY_WARP_ENTRANCE_WALL;
+    entity->updateFunction       = &mg_updateDummy;
+    entity->spriteIndex = MG_SP_INVISIBLE_WARP_FLOOR;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
+
+    return entity;
+}
+
+mgEntity_t* createWarpEntranceFloor(mgEntityManager_t* entityManager, uint16_t x, uint16_t y){
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active   = true;
+    entity->visible  = true;
+    entity->x        = TO_SUBPIXEL_COORDS(x);
+    entity->y        = TO_SUBPIXEL_COORDS(y);
+    entity->type     = ENTITY_WARP_ENTRANCE_FLOOR;
+    entity->updateFunction       = &mg_updateDummy;
+    entity->spriteIndex = MG_SP_INVISIBLE_WARP_FLOOR;
+    entity->collisionHandler     = &mg_dummyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
+
     return entity;
 }
