@@ -24,6 +24,7 @@
 
 struct mgEntitySpawnData_t {
     bool spawnable;
+    bool respawnable;
     uint8_t type;
 
     uint8_t tx;

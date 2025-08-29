@@ -66,13 +66,11 @@ void mg_deactivateAllEntities(mgEntityManager_t* entityManager, bool excludePlay
 
         currentEntity->active = false;
 
-        // TODO: respawn warp container blocks
-        /*
-            if(currentEntity->type == ENTITY_WARP){
-                //In mg_destroyEntity, this will overflow to the correct value.
-                currentEntity->type = 128 + MG_TILECONTAINER_1;
-            }
-        */
+        if (currentEntity->spawnData != NULL)
+        {
+            currentEntity->spawnData->spawnedEntity = NULL;
+            currentEntity->spawnData->spawnable = currentEntity->spawnData->respawnable;
+        }
 
         if (excludePlayer && currentEntity == entityManager->playerEntity)
         {
@@ -1390,7 +1388,7 @@ mgEntity_t* createWarpEntranceWall(mgEntityManager_t* entityManager, uint16_t x,
     }
 
     entity->active   = true;
-    entity->visible  = true;
+    entity->visible  = false;
     entity->x        = TO_SUBPIXEL_COORDS(x);
     entity->y        = TO_SUBPIXEL_COORDS(y);
     entity->type     = ENTITY_WARP_ENTRANCE_WALL;
@@ -1413,7 +1411,7 @@ mgEntity_t* createWarpEntranceFloor(mgEntityManager_t* entityManager, uint16_t x
     }
 
     entity->active   = true;
-    entity->visible  = true;
+    entity->visible  = false;
     entity->x        = TO_SUBPIXEL_COORDS(x);
     entity->y        = TO_SUBPIXEL_COORDS(y);
     entity->type     = ENTITY_WARP_ENTRANCE_FLOOR;
