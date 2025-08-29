@@ -1099,8 +1099,11 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_WARP_ENTRANCE_FLOOR:
         {   
             // Execute warp
-            self->x = TO_SUBPIXEL_COORDS( (other->spawnData->linkedEntitySpawn->tx << SUBPIXEL_RESOLUTION) + other->spawnData->linkedEntitySpawn->xOffsetInPixels );
-            self->y = TO_SUBPIXEL_COORDS( (other->spawnData->linkedEntitySpawn->ty << SUBPIXEL_RESOLUTION) + other->spawnData->linkedEntitySpawn->yOffsetInPixels );
+            int32_t warpXoffset = other->x - self->x;
+            int32_t warpYoffset = other->y - self->y;
+
+            self->x = TO_SUBPIXEL_COORDS( (other->spawnData->linkedEntitySpawn->tx << SUBPIXEL_RESOLUTION) + other->spawnData->linkedEntitySpawn->xOffsetInPixels ) - warpXoffset;
+            self->y = TO_SUBPIXEL_COORDS( (other->spawnData->linkedEntitySpawn->ty << SUBPIXEL_RESOLUTION) + other->spawnData->linkedEntitySpawn->yOffsetInPixels ) - warpYoffset;
             self->falling = true;
             mg_viewFollowEntity(self->tilemap, self->entityManager->playerEntity);
 
