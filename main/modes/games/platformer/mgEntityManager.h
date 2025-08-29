@@ -85,6 +85,8 @@ mgEntity_t* createBgmChange2(mgEntityManager_t* entityManager, uint16_t x, uint1
 mgEntity_t* createBgmChange3(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createBgmChange4(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createBgmStop(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createWarpEntranceWall(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createWarpEntranceFloor(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 void mg_freeEntityManager(mgEntityManager_t* entityManager);
 
 #endif
