@@ -45,6 +45,7 @@ typedef enum
 } atriumState;
 
 atriumState state = 0;
+int loader = 0;
 
 typedef enum
 {
@@ -69,6 +70,8 @@ typedef enum
 
 sonaSelect selection = 0;
 int ticker = 0;
+int PAGE = 0;
+int planter = 0;
 
 //wsgs, fonts, etc
 
@@ -77,9 +80,16 @@ int ticker = 0;
 typedef struct
 {
     wsg_t gazebo;
+    wsg_t plant1;
+    wsg_t plant2;
+    wsg_t arcade1;
+    wsg_t arcade2;
+    wsg_t concert1;
+    wsg_t concert2;
 } backgrounds_t;
 
 backgrounds_t* bgs;
+const wsg_t* bgsArray[sizeof(backgrounds_t)];
 
 //bodies 
 typedef struct 
@@ -123,10 +133,9 @@ cards_t* cards;
 const wsg_t* cardsArray[sizeof(cards_t)];
 
 int testercardselect = 0; //for testing card selection, 0-6
-
-int card_coords_x[] = {24, 99, 208};
-int card_coords_y[] = {24, 112};
-int cardpadding = 4; //padding for text written in card
+int card_coords_x[] = {24, 99, 208}; 
+int card_coords_y[] = {24+12, 112+12}; //needs testing, original location at 24,112 was too high on screen and clipping into radius
+int cardpadding = 4; //padding for text written in card, in px
 int textbox1width = 156;
 int textbox2width = 172;
 
@@ -134,8 +143,10 @@ int textbox2width = 172;
 //buttons
 typedef struct 
 {
-
+    wsg_t arrow;
 } butts_t; //haha
+
+butts_t* butts;
 
 
 //misc head sprites for testing
@@ -146,19 +157,30 @@ typedef struct
    wsg_t num1;
    wsg_t num2;
    wsg_t pomp;
-   wsg_t thurs;
+   wsg_t num3;
    wsg_t cow;
    wsg_t trophy;
-
-   midiFile_t bgm;          // BGM
 } misc_t;
 
 misc_t* misc;
+const wsg_t* miscArray[sizeof(misc_t)];
+
+//midis
+
+typedef struct 
+{
+   midiFile_t bgm;          
+ } amidi_t;
+
+
+
+amidi_t* amidi;
+const midiFile_t* midiArray[sizeof(amidi_t)];
 
 buttonEvt_t evt;
 
 //sona locations in plaza mode
-        int x_coords[] = {5, 74, 143, 212};
+        int x_coords[] = {5+6, 74+3, 143-3, 212-6};
         int y_coords[] = {120, 80}; 
         int headoffset = 48; 
 
@@ -170,7 +192,7 @@ list_t spList = {0};
     const trophyData_t atriumTrophies[] = {
         {
             .title       = "Welcome to the Atrium",
-            .description = "Visit the Gazebo",
+            .description = "We've got music and games",
             .image       = NO_IMAGE_SET,
             .type        = TROPHY_TYPE_TRIGGER,
             .difficulty  = TROPHY_DIFF_EASY,
@@ -199,17 +221,31 @@ static void atriumEnterMode()
     bods = (bodies_t*)heap_caps_calloc(1, sizeof(bodies_t), MALLOC_CAP_8BIT);
     misc = (misc_t*)heap_caps_calloc(1, sizeof(misc_t), MALLOC_CAP_8BIT);
     cards = (cards_t*)heap_caps_calloc(1, sizeof(cards_t), MALLOC_CAP_8BIT);
+    amidi = (amidi_t*)heap_caps_calloc(1, sizeof(amidi_t), MALLOC_CAP_8BIT);
+    butts = (butts_t*)heap_caps_calloc(1, sizeof(butts_t), MALLOC_CAP_8BIT);
+    //Dear emily, you need to do this for every struct. love, past you.    
     getSwadgePasses(&spList, &atriumMode, true);
+
     loadWsg(GAZEBO_WSG, &bgs->gazebo, true);
+    loadWsg(ATRIUMPLANT_1_WSG, &bgs->plant1, true);
+    loadWsg(ATRIUMPLANT_2_WSG, &bgs->plant2, true);
+    loadWsg(ARCADE_1_WSG, &bgs->arcade1, true);
+    loadWsg(ARCADE_2_WSG, &bgs->arcade2, true); 
+    loadWsg(CONCERT_1_WSG, &bgs->concert1, true);
+    loadWsg(CONCERT_2_WSG, &bgs->concert2, true);         
 
     //when its ready, I need to add sona data extraction from swadgepass packet, for now I am just hardcoding some sonas in to use:
     loadWsg(BALD_WSG, &misc->bald, true);
     loadWsg(MAINCHAR_WSG, &misc->mainc, true);
     loadWsg(NUM_1_WSG, &misc->num1, true);
     loadWsg(NUM_2_WSG, &misc->num2, true);
-    loadWsg(THURSDAY_WSG, &misc->thurs, true);
+    loadWsg(NUM_3_WSG, &misc->num3, true);
     loadWsg(POMP_WSG, &misc->pomp, true);
     loadWsg(COW_WSG, &misc->cow, true);
+
+    printf("loaded misc wsgs!\n");
+
+    //test animations for sonas - dance only for now
     loadWsg(DANCEBODY_1_WSG, &bods->d1, true);
     loadWsg(DANCEBODY_2_WSG, &bods->d2, true);
     loadWsg(DANCEBODY_3_WSG, &bods->d3, true);
@@ -220,15 +256,11 @@ static void atriumEnterMode()
     loadWsg(DANCEBODY_8_WSG, &bods->d8, true);
     loadWsg(DANCEBODY_9_WSG, &bods->d9, true);
     loadWsg(DANCEBODY_10_WSG, &bods->d10, true);
-    loadWsg(CARDBLOSS_WSG, &cards->card1, true);
-    loadWsg(CARDBUBB_WSG, &cards->card2, true);
-    loadWsg(CARDDINO_WSG, &cards->card3, true);
-    loadWsg(CARDGEN_WSG, &cards->card4, true); 
-    loadWsg(CARDMAGFEST_WSG, &cards->card5, true);
-    loadWsg(CARDMUSIC_WSG, &cards->card6, true);
-    loadWsg(CARDSPACE_WSG, &cards->card7, true);
-    loadWsg(WINGED_TROPHY_WSG, &misc->trophy, true);
+
+    loadWsg(ARROW_18_WSG, &butts->arrow, true);
+
     
+    printf("loaded profile wsgs!\n");
 
     bodsArray[0] = &bods->d1;
     bodsArray[1] = &bods->d2;
@@ -249,32 +281,42 @@ static void atriumEnterMode()
     cardsArray[5] = &cards->card6;  
     cardsArray[6] = &cards->card7;  
 
- 
+    miscArray[0] = &misc->bald;
+    miscArray[1] = &misc->mainc;
+    miscArray[2] = &misc->num1;
+    miscArray[3] = &misc->num2;
+    miscArray[4] = &misc->pomp;
+    miscArray[5] = &misc->num3;
+    miscArray[6] = &misc->cow;
+    miscArray[7] = &misc->trophy;
+
+    bgsArray[0] = &bgs->gazebo;
+    bgsArray[1] = &bgs->concert1;    
+    bgsArray[2] = &bgs->arcade1;
 
 
-    //bgm
-midiFile_t bgm;
 
-loadMidiFile(YALIKEJAZZ_MID, &misc->bgm, true);
+loadMidiFile(YALIKEJAZZ_MID, &amidi->bgm, true);
+    printf("loaded midi file!\n");
 
 midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
 player -> loop = true;
 midiGmOn(player);
-globalMidiPlayerPlaySong(&misc->bgm, MIDI_BGM);
+globalMidiPlayerPlaySong(&amidi->bgm, MIDI_BGM);
 globalMidiPlayerSetVolume(MIDI_BGM, 12);
     trophyUpdate(atriumTrophies[0], 1, 1); //trigger the trophy for entering the atrium
+    printf("Entered Atrium Mode!\n");
+     atriumTitle(); //draw the title screen
    };
 
 static void atriumExitMode()
 {
     freeWsg(&bgs->gazebo);
-        freeWsg(&misc->bald);
-        freeWsg(&misc->mainc);
-        freeWsg(&misc->num1);
-        freeWsg(&misc->cow);
+
 
         for (int i = 0; i < 10; i++) {
             freeWsg(bodsArray[i]);
+            //freeWsg(miscArray[i]);
         }
 
     heap_caps_free(bgs);
@@ -284,8 +326,8 @@ static void atriumExitMode()
     freeSwadgePasses(&spList);	
 
     globalMidiPlayerStop(MIDI_BGM);
-    unloadMidiFile(&misc->bgm);
-    atriumTitle(); //draw the title screen
+    unloadMidiFile(&amidi->bgm);
+   
 };
 
 static void atriumMainLoop(int64_t elapsedUs)
@@ -304,7 +346,7 @@ if(state == ATR_TITLE) {
             }
             else if ((evt.button & PB_B))
             {
-                state = ATR_PROFILE; //if B is pressed, go to profile view}
+                state = ATR_PROFILE; //if B is pressed, go to profile view
             }
             else 
             {
@@ -316,8 +358,7 @@ if(state == ATR_TITLE) {
 }
 if (state == ATR_ATR) //if the state is atrium
         {
-            sonaIdle(); //draw the sonas
-            drawText(getSysFont(), c000, "Page 1 of 1", 100, 200);
+            sonaIdle();
         }
 else if (state == ATR_PROFILE) //if the state is title screen
         {
@@ -330,8 +371,6 @@ else if (state == ATR_PROFILE) //if the state is title screen
 
 
 void sonaDraw() {
-
-drawWsgSimple(&bgs->gazebo, 0, 0);
 
 //tester to see if the sonas show up right. up to 4 sonas drawn on the screen at one time. eventually, random swadgesona lines shall be selected to draw. in this tester, random hardcoded sonas are drawn in the required positions.
 
@@ -369,13 +408,33 @@ drawWsgSimple(&bgs->gazebo, 0, 0);
 };
 
 void sonaIdle() {
+drawWsgSimple(bgsArray[PAGE], 0, 0); //draw the background based on page
+if (PAGE == 0 || PAGE == 1) {
+    drawWsg(&butts->arrow, 260, 40, false, false, 90); //draw right arrow
+}
+if (PAGE == 1 || PAGE == 2) {
+    drawWsg(&butts->arrow, 20, 40, true, false, 270); //draw left arrow
+}
+
 
 sonaDraw();
-    drawText(getSysFont(), c000, "Press B to return to menu", 48, 216); //draw the text for selecting a card
+
+if((PAGE == 0) & (planter <= 48)){ //if on page 0, draw the plants rising up
+    drawWsgSimple(&bgs->plant1, 0, 240-planter); //draw plant 1 rising into view
+    drawWsgSimple(&bgs->plant2, 168, 240-planter); //draw plant 2 rising into view
+    planter++;
+    }
+    else if( (PAGE == 0) & (planter >48) ){ //if on page 0, draw the plants normally
+    drawWsgSimple(&bgs->plant1, 0, 240-48); //draw plant 1
+    drawWsgSimple(&bgs->plant2, 168, 240-48); //draw plant 2
+    }
+
+
+drawText(getSysFont(), c000, "Press B to return to menu", 48, 216); //draw the text for selecting a card
 
 while (checkButtonQueueWrapper(&evt))
     {
-        if (evt.down) //if the button is pressed down on the title screen
+        if (evt.down) //if the button is pressed
 
         {
             if ((evt.button & PB_A))
@@ -386,8 +445,25 @@ while (checkButtonQueueWrapper(&evt))
             {
                 state = ATR_TITLE; //if B is pressed, go to profile view}
             }
-            else 
+            else if ((evt.button & PB_RIGHT))
             {
+                if (PAGE < 2){
+                PAGE++;//next page
+                if (PAGE == 0){
+                    planter = 0; //reset the planter so it can rise again
+                }
+                            }
+            }
+            else if ((evt.button & PB_LEFT))
+            {
+                if (PAGE > 0){
+                PAGE--;//previous page
+                if (PAGE == 0){
+                    planter = 0; //reset the planter so it can rise again
+                }
+                }
+            }
+            else {
 
             }
 
@@ -479,7 +555,21 @@ void atriumTitle() {
 
 void viewProfile() {
 
-    //draw the card info
+    if(loader == 0){
+    //WSG for profile mode only
+    loadWsg(CARDBLOSS_WSG, &cards->card1, true);
+    loadWsg(CARDBUBB_WSG, &cards->card2, true);
+    loadWsg(CARDDINO_WSG, &cards->card3, true);
+    loadWsg(CARDGEN_WSG, &cards->card4, true); 
+    loadWsg(CARDMAGFEST_WSG, &cards->card5, true);
+    loadWsg(CARDMUSIC_WSG, &cards->card6, true);
+    loadWsg(CARDSPACE_WSG, &cards->card7, true);
+    loadWsg(WINGED_TROPHY_WSG, &misc->trophy, true);
+
+    loader = 1;
+    }
+
+
         while (checkButtonQueueWrapper(&evt))
     {
         if (evt.down) //if the button is pressed down on the title screen
@@ -491,7 +581,12 @@ void viewProfile() {
             }
             else if ((evt.button & PB_B))
             {
-                state = ATR_TITLE; //if B is pressed, go to profile view}
+                state = ATR_TITLE; //if B is pressed, go back to title view
+                loader = 0; //reset the loader so the card wsgs are freed and reloaded next time
+                for(int i = 0; i <= 6; i++) {
+                    freeWsg(cardsArray[i]);
+                    printf("freed card wsg %d\n", i);
+                    }
             }
             else 
             {
@@ -500,13 +595,15 @@ void viewProfile() {
 
         }
     }
+
+//draw the card info
     drawWsgSimple(&bgs->gazebo, 0, 0);
-    drawWsgSimple(cardsArray[testercardselect], 0, 0); //draw the next card
-    drawWsgSimple(&misc->bald, card_coords_x[0], card_coords_y[0]); //draw the sona head
+    drawWsgSimple(cardsArray[testercardselect], 0, 0+12); //draw the next card
+    drawWsgSimple(miscArray[testercardselect], card_coords_x[0], card_coords_y[0]); //draw the sona head
     drawText(getSysFont(), c030, "Magfester69420", card_coords_x[1] + cardpadding, card_coords_y[0] + cardpadding); //draw the name
-    drawText(getSysFont(), c000, "Sandwich: Hot Dog", card_coords_x[1] + cardpadding, card_coords_y[0] + cardpadding+12); //draw the sandwich info
-    drawText(getSysFont(), c000, "I am a: Cosplayer", card_coords_x[1] + cardpadding, card_coords_y[0] + cardpadding+24); //draw the identity
-    drawText(getSysFont(), c000, "Class: Bard", card_coords_x[1] + cardpadding, card_coords_y[0] + cardpadding+36); //draw the identity info
+    drawText(getSysFont(), c000, "Sandwich: Hot Dog", card_coords_x[1] + cardpadding, card_coords_y[0] + cardpadding+12+4); //draw the sandwich info, needs extra padding to be balanced correctly
+    drawText(getSysFont(), c000, "I am a: Cosplayer", card_coords_x[1] + cardpadding, card_coords_y[0] + cardpadding+24+4); //draw the identity, needs extra padding to be balanced correctly
+    drawText(getSysFont(), c000, "Class: Bard", card_coords_x[1] + cardpadding, card_coords_y[0] + cardpadding+36+4); //draw the identity info
     drawText(getSysFont(), c000, "Hello World!", card_coords_x[0] + cardpadding, card_coords_y[1] + cardpadding); //draw the second text box info
     drawText(getSysFont(), c000, "This is 22 characters.", card_coords_x[0] + cardpadding, card_coords_y[1] + cardpadding+12); //draw the second text box info
     drawText(getSysFont(), c000, "Magfest is a: Donut", card_coords_x[0] + cardpadding, card_coords_y[1] + cardpadding+24); //draw the second text box info
