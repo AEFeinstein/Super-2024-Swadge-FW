@@ -29,6 +29,10 @@ void mg_freeWsgManager(mgWsgManager_t* self)
 {
     for (uint16_t i = 0; i < MG_WSGS_SIZE; i++)
     {
+        if(!(self->wsgs[i].w && self->wsgs[i].h)){
+            continue; 
+        }
+
         freeWsg(&self->wsgs[i]);
     }
 }
@@ -416,6 +420,15 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_BOUNCE_BLOCK].wsg     = &self->wsgs[MG_WSG_BOUNCE_BLOCK];
     self->sprites[MG_SP_BOUNCE_BLOCK].origin  = &origin_8_8;
     self->sprites[MG_SP_BOUNCE_BLOCK].hitBox  = &box_16_16;
+
+    self->sprites[MG_SP_INVISIBLE_WARP_WALL].wsg = &self->wsgs[0];
+    self->sprites[MG_SP_INVISIBLE_WARP_WALL].origin  = &origin_7_31;
+    self->sprites[MG_SP_INVISIBLE_WARP_WALL].hitBox  = &box_16_64;
+
+    self->sprites[MG_SP_INVISIBLE_WARP_FLOOR].wsg = &self->wsgs[0];
+    self->sprites[MG_SP_INVISIBLE_WARP_FLOOR].origin  = &origin_31_7;
+    self->sprites[MG_SP_INVISIBLE_WARP_FLOOR].hitBox  = &box_64_16;
+    
 }
 
 void mg_initializeTiles(mgWsgManager_t* self)

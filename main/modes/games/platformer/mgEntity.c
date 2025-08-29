@@ -1095,6 +1095,21 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             }
             break;
         }
+        case ENTITY_WARP_ENTRANCE_WALL:
+        case ENTITY_WARP_ENTRANCE_FLOOR:
+        {   
+            // Execute warp
+            self->x = TO_SUBPIXEL_COORDS( (other->spawnData->linkedEntitySpawn->tx << SUBPIXEL_RESOLUTION) + other->spawnData->linkedEntitySpawn->xOffsetInPixels );
+            self->y = TO_SUBPIXEL_COORDS( (other->spawnData->linkedEntitySpawn->ty << SUBPIXEL_RESOLUTION) + other->spawnData->linkedEntitySpawn->yOffsetInPixels );
+            self->falling = true;
+            mg_viewFollowEntity(self->tilemap, self->entityManager->playerEntity);
+
+            mg_unlockScrolling(self->tilemap);
+            mg_deactivateAllEntities(self->entityManager, true);
+            self->tilemap->executeTileSpawnAll = true;
+            soundPlaySfx(&(self->soundManager->sndWarp), BZR_LEFT);
+            break;
+        }
         default:
         {
             break;
