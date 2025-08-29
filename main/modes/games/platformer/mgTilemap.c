@@ -227,6 +227,7 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
             
             mgEntitySpawnData_t* entitySpawn = &(tilemap->entitySpawns[subiterator]);
             entitySpawn->spawnable = true;
+            entitySpawn->respawnable = true;
             entitySpawn->type = buf[i];
             entitySpawn->tx = buf[i+1];
             entitySpawn->ty = buf[i+2];
@@ -261,11 +262,13 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
             switch(entitySpawn->type) {
                 case ENTITY_PLAYER:
                     entitySpawn->spawnable = false;
+                    entitySpawn->respawnable = false;
                     tilemap->defaultPlayerSpawn = entitySpawn;
                     break;
                 case ENTITY_WARP_EXIT_FLOOR:
                 case ENTITY_WARP_EXIT_WALL:
                     entitySpawn->spawnable = false;
+                    entitySpawn->respawnable = false;
                     break;
                 default:
                     break;
