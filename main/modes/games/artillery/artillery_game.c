@@ -157,35 +157,55 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
         }
         case AGS_ADJUST:
         {
-            if (evt.down)
+            switch (evt.button)
             {
-                switch (evt.button)
+                case PB_LEFT:
+                case PB_RIGHT:
                 {
-                    case PB_LEFT:
-                    case PB_RIGHT:
+                    if (evt.down)
                     {
-                        float bDiff = (PB_LEFT == evt.button) ? -(BARREL_INTERVAL) : (BARREL_INTERVAL);
+                        ad->adjButtonHeld       = evt.button;
+                        ad->adjButtonStartTimer = 0;
+                        float bDiff             = (PB_LEFT == evt.button) ? -(BARREL_INTERVAL) : (BARREL_INTERVAL);
                         setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle + bDiff);
                         return true;
-                        break;
                     }
-                    case PB_UP:
-                    case PB_DOWN:
+                    else
                     {
-                        float pDiff = (PB_UP == evt.button) ? POWER_INTERVAL : -POWER_INTERVAL;
-                        setShotPower(ad->players[ad->plIdx], ad->players[ad->plIdx]->shotPower + pDiff);
-                        break;
+                        ad->adjButtonHeld       = 0;
+                        ad->adjButtonStartTimer = 0;
                     }
-                    case PB_A:
-                    case PB_B:
+                    break;
+                }
+                case PB_UP:
+                case PB_DOWN:
+                {
+                    if (evt.down)
+                    {
+                        ad->adjButtonHeld       = evt.button;
+                        ad->adjButtonStartTimer = 0;
+                        float pDiff             = (PB_UP == evt.button) ? POWER_INTERVAL : -POWER_INTERVAL;
+                        setShotPower(ad->players[ad->plIdx], ad->players[ad->plIdx]->shotPower + pDiff);
+                    }
+                    else
+                    {
+                        ad->adjButtonHeld       = 0;
+                        ad->adjButtonStartTimer = 0;
+                    }
+                    break;
+                }
+                case PB_A:
+                case PB_B:
+                {
+                    if (evt.down)
                     {
                         artillerySwitchToGameState(ad, AGS_MENU);
-                        break;
                     }
-                    default:
-                    {
-                        break;
-                    }
+                    break;
+                }
+                default:
+                {
+                    break;
                 }
             }
             break;
@@ -237,10 +257,51 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
         }
         case AGS_ADJUST:
         {
+            // If a button is held
+            if (ad->adjButtonHeld)
+            {
+                // Ignore it for the first quarter second
+                if (ad->adjButtonStartTimer < 250000)
+                {
+                    ad->adjButtonStartTimer += elapsedUs;
+                }
+                else
+                {
+                    // Left/Right moves faster than Up/Down
+                    int32_t timerInterval = (ad->adjButtonHeld & (PB_LEFT | PB_RIGHT)) ? 10000 : 75000;
+
+                    // Run a periodic timer to adjust inputs
+                    RUN_TIMER_EVERY(ad->adjButtonHeldTimer, timerInterval, elapsedUs, {
+                        switch (ad->adjButtonHeld)
+                        {
+                            case PB_LEFT:
+                            case PB_RIGHT:
+                            {
+                                float bDiff = (PB_LEFT == ad->adjButtonHeld) ? -(BARREL_INTERVAL) : (BARREL_INTERVAL);
+                                setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle + bDiff);
+                                break;
+                            }
+                            case PB_UP:
+                            case PB_DOWN:
+                            {
+                                float pDiff = (PB_UP == ad->adjButtonHeld) ? POWER_INTERVAL : -POWER_INTERVAL;
+                                setShotPower(ad->players[ad->plIdx], ad->players[ad->plIdx]->shotPower + pDiff);
+                                break;
+                            }
+                            default:
+                            {
+                                ad->adjButtonHeld = 0;
+                                break;
+                            }
+                        }
+                    });
+                }
+            }
+
             // Draw the shot parameters
             char fireParams[64];
-            snprintf(fireParams, sizeof(fireParams) - 1, "Angle %0.3f, Power %d", ad->players[ad->plIdx]->barrelAngle,
-                     (int)ad->players[ad->plIdx]->shotPower);
+            snprintf(fireParams, sizeof(fireParams) - 1, "Angle %d, Power %d",
+                     (int)((180 * ad->players[ad->plIdx]->barrelAngle) / M_PI), (int)ad->players[ad->plIdx]->shotPower);
             drawText(f, c555, fireParams, 40, TFT_HEIGHT - f->height - 2);
             break;
         }
