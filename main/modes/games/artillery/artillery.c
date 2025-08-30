@@ -199,6 +199,9 @@ void artilleryEnterMode(void)
 
     // Start on the mode menu
     ad->mState = AMS_MENU;
+
+    // Set the touchpad as untouched
+    ad->tpLastPhi = INT32_MIN;
 }
 
 /**

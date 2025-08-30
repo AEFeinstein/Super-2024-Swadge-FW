@@ -80,6 +80,8 @@ typedef struct
     buttonBit_t adjButtonHeld;
     uint32_t adjButtonStartTimer;
     uint32_t adjButtonHeldTimer;
+    int32_t tpLastPhi;
+    int32_t tpCumulativeDiff;
 
     // Everything required for wireless communication
     p2pInfo p2p;

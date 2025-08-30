@@ -11,8 +11,9 @@
 // Defines
 //==============================================================================
 
-#define BARREL_INTERVAL (M_PI / 180.0f)
-#define POWER_INTERVAL  1.0f
+#define BARREL_INTERVAL      (M_PI / 180.0f)
+#define POWER_INTERVAL       1.0f
+#define TOUCH_DEG_PER_BARREL 8
 
 //==============================================================================
 // Functions
@@ -257,6 +258,53 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
         }
         case AGS_ADJUST:
         {
+            // Check for touchpad input
+            int32_t phi       = 0;
+            int32_t r         = 0;
+            int32_t intensity = 0;
+            if (getTouchJoystick(&phi, &r, &intensity))
+            {
+                // If the touchpad was previously untouched, set the last angle as current
+                if (INT32_MIN == ad->tpLastPhi)
+                {
+                    ad->tpLastPhi = phi;
+                }
+
+                // Find the difference between the last angle and this one
+                int32_t diff = ad->tpLastPhi - phi;
+                if (diff > 180)
+                {
+                    diff -= 360;
+                }
+                else if (diff < -180)
+                {
+                    diff += 360;
+                }
+
+                // Keep track of the cumulative difference
+                ad->tpCumulativeDiff += diff;
+
+                // Adjust the barrel when enough touchpad degrees have accumulated
+                while (ad->tpCumulativeDiff >= TOUCH_DEG_PER_BARREL)
+                {
+                    ad->tpCumulativeDiff -= TOUCH_DEG_PER_BARREL;
+                    setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle + BARREL_INTERVAL);
+                }
+                while (ad->tpCumulativeDiff <= -TOUCH_DEG_PER_BARREL)
+                {
+                    ad->tpCumulativeDiff += TOUCH_DEG_PER_BARREL;
+                    setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle - BARREL_INTERVAL);
+                }
+
+                // Save the current touchpad angle
+                ad->tpLastPhi = phi;
+            }
+            else
+            {
+                ad->tpLastPhi        = INT32_MIN;
+                ad->tpCumulativeDiff = 0;
+            }
+
             // If a button is held
             if (ad->adjButtonHeld)
             {
