@@ -239,8 +239,8 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
         {
             // Draw the shot parameters
             char fireParams[64];
-            snprintf(fireParams, sizeof(fireParams) - 1, "Angle %0.3f, Power %.3f", ad->players[ad->plIdx]->barrelAngle,
-                     ad->players[ad->plIdx]->shotPower * 100);
+            snprintf(fireParams, sizeof(fireParams) - 1, "Angle %0.3f, Power %d", ad->players[ad->plIdx]->barrelAngle,
+                     (int)ad->players[ad->plIdx]->shotPower);
             drawText(f, c555, fireParams, 40, TFT_HEIGHT - f->height - 2);
             break;
         }
@@ -348,9 +348,12 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                         // Calculate the shot
                         adjustCpuShot(ad->phys, cpu, ad->players[(ad->plIdx + 1) % NUM_PLAYERS]);
 
-                        // Round the power to be fair
+                        // Round power and angle, to be fair
                         cpu->shotPower
                             = POWER_INTERVAL * (int)((cpu->shotPower / POWER_INTERVAL) + (POWER_INTERVAL / 2.0f));
+                        cpu->targetBarrelAngle
+                            = BARREL_INTERVAL
+                              * (int)((cpu->targetBarrelAngle / BARREL_INTERVAL) + (BARREL_INTERVAL / 2.0f));
 
                         // Give time to move the barrel
                         ad->cpuWaitTimer = 2000000;
