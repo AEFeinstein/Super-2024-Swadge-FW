@@ -274,6 +274,25 @@ void explodeShell(physSim_t* phys, node_t* shellNode)
         lNode = lNode->next;
     }
 
+    if (shell->explosionVel)
+    {
+        // Impart force on hit tanks
+        node_t* cNode = phys->circles.first;
+        while (cNode)
+        {
+            physCirc_t* circ = cNode->val;
+            if (cNode != shellNode && CT_TANK == circ->type)
+            {
+                if (circleCircleFlIntersection(ea->circ, circ->c, NULL, NULL))
+                {
+                    circ->vel = addVecFl2d(
+                        circ->vel, mulVecFl2d(normVecFl2d(subVecFl2d(circ->c.pos, shell->c.pos)), shell->explosionVel));
+                }
+            }
+            cNode = cNode->next;
+        }
+    }
+
     // Remove this shell from camera tracking
     removeVal(&phys->cameraTargets, shell);
 

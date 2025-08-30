@@ -82,13 +82,14 @@ typedef struct
     vecFl_t contactNorm;
     vecFl_t lastContactNorm;
 
-    // Button input
-    buttonBit_t moving; ///< Either the left, right, or no button held
+    // Common characteristics
+    float bounciness; ///< Bounciness, from 0 (no bounce) to 1 (no velocity lost on bounce)
 
     // Game data
     circType_t type;
 
     // Player data
+    buttonBit_t moving; ///< Either the left, right, or no button held
     float barrelAngle;
     float targetBarrelAngle;
     vecFl_t relBarrelTip;
@@ -99,6 +100,7 @@ typedef struct
     // Shell data
     int32_t bounces;
     int32_t explosionRadius;
+    float explosionVel;
 } physCirc_t;
 
 typedef struct
