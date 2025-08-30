@@ -443,9 +443,9 @@ void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs)
         {
             cCol = c550;
         }
-        drawCircle(pc->c.pos.x - phys->camera.x, //
-                   pc->c.pos.y - phys->camera.y, //
-                   pc->c.radius, cCol);
+        drawCircleFilled(pc->c.pos.x - phys->camera.x, //
+                         pc->c.pos.y - phys->camera.y, //
+                         pc->c.radius, cCol);
 
         // Draw a gun barrel for tanks
         if (CT_TANK == pc->type)
@@ -471,16 +471,29 @@ void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs)
             };
 
             // Scale vectors to place the wheels
-            wheelOffVert = mulVecFl2d(wheelOffVert, wheelY);
-            wheelOffHorz = mulVecFl2d(wheelOffHorz, pc->c.radius);
+            vecFl_t treadOff = mulVecFl2d(wheelOffVert, wheelR);
+            wheelOffVert     = mulVecFl2d(wheelOffVert, wheelY);
+            wheelOffHorz     = mulVecFl2d(wheelOffHorz, pc->c.radius);
 
             // Draw first wheel
             vecFl_t w1 = addVecFl2d(pc->c.pos, addVecFl2d(wheelOffVert, wheelOffHorz));
-            drawCircle(w1.x - phys->camera.x, w1.y - phys->camera.y, wheelR, c225);
+            drawCircleFilled(w1.x - phys->camera.x, w1.y - phys->camera.y, wheelR, c225);
 
             // Draw second wheel
             vecFl_t w2 = addVecFl2d(pc->c.pos, subVecFl2d(wheelOffVert, wheelOffHorz));
-            drawCircle(w2.x - phys->camera.x, w2.y - phys->camera.y, wheelR, c225);
+            drawCircleFilled(w2.x - phys->camera.x, w2.y - phys->camera.y, wheelR, c225);
+
+            // Draw top tread
+            drawLineFast(w1.x + treadOff.x - phys->camera.x, //
+                         w1.y + treadOff.y - phys->camera.y, //
+                         w2.x + treadOff.x - phys->camera.x, //
+                         w2.y + treadOff.y - phys->camera.y, //
+                         c225);
+            drawLineFast(w1.x - treadOff.x - phys->camera.x, //
+                         w1.y - treadOff.y - phys->camera.y, //
+                         w2.x - treadOff.x - phys->camera.x, //
+                         w2.y - treadOff.y - phys->camera.y, //
+                         c225);
         }
 
         // Iterate
