@@ -112,19 +112,23 @@ physCirc_t* physAddCircle(physSim_t* phys, uint16_t x1, uint16_t y1, uint16_t r,
         {
             setBarrelAngle(pc, 0);
             setShotPower(pc, 100.0f);
-            pc->fixed = false;
+            pc->fixed      = false;
+            pc->bounciness = 0.25f;
             break;
         }
         case CT_SHELL:
         {
             pc->fixed           = false;
             pc->explosionRadius = r * 5;
+            pc->explosionVel    = 100;
+            pc->bounciness      = 0.75f;
             break;
         }
         default:
         case CT_OBSTACLE:
         {
-            pc->fixed = true;
+            pc->fixed      = true;
+            pc->bounciness = 1.0f;
             break;
         }
     }

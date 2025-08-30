@@ -114,7 +114,7 @@ void physCheckCollisions(physSim_t* phys)
                     pc->vel = subVecFl2d(pc->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(pc->vel, reflVec))));
 
                     // Dampen after bounce
-                    pc->vel = mulVecFl2d(pc->vel, 0.75f);
+                    pc->vel = mulVecFl2d(pc->vel, pc->bounciness);
 
                     // Deadband the velocity if it's small enough
                     if (sqMagVecFl2d(pc->vel) < 300.0f)
