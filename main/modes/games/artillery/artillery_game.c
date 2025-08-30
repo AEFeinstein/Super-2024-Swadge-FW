@@ -12,7 +12,7 @@
 //==============================================================================
 
 #define BARREL_INTERVAL (M_PI / 180.0f)
-#define POWER_INTERVAL  0.000001f
+#define POWER_INTERVAL  1.0f
 
 //==============================================================================
 // Functions
@@ -350,7 +350,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
 
                         // Round the power to be fair
                         cpu->shotPower
-                            = POWER_INTERVAL * (int)((cpu->shotPower / POWER_INTERVAL) + (POWER_INTERVAL / 2));
+                            = POWER_INTERVAL * (int)((cpu->shotPower / POWER_INTERVAL) + (POWER_INTERVAL / 2.0f));
 
                         // Give time to move the barrel
                         ad->cpuWaitTimer = 2000000;

@@ -297,7 +297,7 @@ static float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float ex
         // X distance from shell to point to adjust
         float xDist = expPnt->x - p->x;
         // Explosion Y size at the point to adjust
-        float ySz = mathsqrtf(rSq - (xDist * xDist));
+        float ySz = sqrtf(rSq - (xDist * xDist));
         // Top and bottom points of the explosion
         float expTop    = expPnt->y - ySz;
         float expBottom = expPnt->y + ySz;
@@ -351,6 +351,8 @@ static bool moveTerrainPoint(vecFl_t* src, vecFl_t* dst)
 
 /**
  * @brief Move terrain lines a bit towards where they should be after shell explosion
+ *
+ * TODO use elapsedUs
  *
  * @param phys The physics simulation
  * @param elapsedUs The time elapsed since this was last called

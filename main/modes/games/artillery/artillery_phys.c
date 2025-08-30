@@ -26,7 +26,9 @@
 // Defines
 //==============================================================================
 
-#define PHYS_TIME_STEP (1000000 / 60)
+#define PHYS_FPS          60
+#define PHYS_TIME_STEP_US (1000000 / PHYS_FPS)
+#define PHYS_TIME_STEP_S  (1 / (float)PHYS_FPS)
 
 #if 0
     #define PRINT_P1_VEC(label, vec)                                          \
@@ -45,7 +47,7 @@
 // Function Declarations
 //==============================================================================
 
-static void physFindObjDests(physSim_t* phys, int32_t elapsedUs);
+static void physFindObjDests(physSim_t* phys, float elapsedS);
 static bool physBinaryMoveObjects(physSim_t* phys);
 static void checkTurnOver(physSim_t* phys);
 static void physAnimateExplosions(physSim_t* phys, int32_t elapsedUs);
@@ -172,13 +174,13 @@ bool physStep(physSim_t* phys, int32_t elapsedUs)
     if (phys->isReady)
     {
         // Calculate physics frames at a very regular PHYS_TIME_STEP
-        RUN_TIMER_EVERY(phys->frameTimer, PHYS_TIME_STEP, elapsedUs, {
-            physFindObjDests(phys, PHYS_TIME_STEP);
-            phys->terrainMoving = moveTerrainLines(phys, PHYS_TIME_STEP);
+        RUN_TIMER_EVERY(phys->frameTimer, PHYS_TIME_STEP_US, elapsedUs, {
+            physFindObjDests(phys, PHYS_TIME_STEP_S);
+            phys->terrainMoving = moveTerrainLines(phys, PHYS_TIME_STEP_US);
             physCheckCollisions(phys);
             change |= physBinaryMoveObjects(phys);
-            change |= physAdjustCamera(phys, PHYS_TIME_STEP);
-            physAnimateExplosions(phys, PHYS_TIME_STEP);
+            change |= physAdjustCameraTimer(phys);
+            physAnimateExplosions(phys, PHYS_TIME_STEP_US);
             checkTurnOver(phys);
         });
     }
@@ -190,9 +192,9 @@ bool physStep(physSim_t* phys, int32_t elapsedUs)
  * This doesn't move objects yet so objects will not clip into each other.
  *
  * @param phys The physics simulation
- * @param elapsedUs The time elapsed since this was last called
+ * @param elapsedS The time elapsed since this was last called
  */
-static void physFindObjDests(physSim_t* phys, int32_t elapsedUs)
+static void physFindObjDests(physSim_t* phys, float elapsedS)
 {
     // For each circle
     node_t* cNode = phys->circles.first;
@@ -235,11 +237,11 @@ static void physFindObjDests(physSim_t* phys, int32_t elapsedUs)
                     if ((PB_LEFT == pc->moving && pc->slopeVec.x < 0) || //
                         (PB_RIGHT == pc->moving && pc->slopeVec.x > 0))
                     {
-                        moveVel = mulVecFl2d(pc->slopeVec, 0.0001f);
+                        moveVel = mulVecFl2d(pc->slopeVec, 100.0f);
                     }
                     else
                     {
-                        moveVel = mulVecFl2d(pc->slopeVec, -0.0001f);
+                        moveVel = mulVecFl2d(pc->slopeVec, -100.0f);
                     }
                 }
             }
@@ -250,10 +252,10 @@ static void physFindObjDests(physSim_t* phys, int32_t elapsedUs)
             }
 
             // Calculate new velocity
-            pc->vel = addVecFl2d(pc->vel, mulVecFl2d(totalForce, elapsedUs));
+            pc->vel = addVecFl2d(pc->vel, mulVecFl2d(totalForce, elapsedS));
 
             // Set ending point
-            pc->travelLine.p2 = addVecFl2d(pc->c.pos, mulVecFl2d(addVecFl2d(pc->vel, moveVel), elapsedUs));
+            pc->travelLine.p2 = addVecFl2d(pc->c.pos, mulVecFl2d(addVecFl2d(pc->vel, moveVel), elapsedS));
 
             // Set bounding box of travel line, for later checks
             pc->travelLineBB = getLineBoundingBox(pc->travelLine);
@@ -573,12 +575,12 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
     // We want to shoot the shell to minY height, so give it that initial velocity
     vecFl_t v0 = {
         .x = 0,
-        .y = -mathsqrtf(2 * phys->g.y * (absBarrelTip.y - minY)),
+        .y = -sqrtf(2 * phys->g.y * (absBarrelTip.y - minY)),
     };
 
     // Calculate the shell's total flight time, up and down to the target
     float tUp    = -v0.y / phys->g.y;
-    float tDown  = mathsqrtf(2 * (target->c.pos.y - minY) / phys->g.y);
+    float tDown  = sqrtf(2 * (target->c.pos.y - minY) / phys->g.y);
     float tTotal = tUp + tDown;
 
     // Calculate the horizontal distance to travel
