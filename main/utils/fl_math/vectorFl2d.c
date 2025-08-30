@@ -118,7 +118,7 @@ float sqMagVecFl2d(vecFl_t vector)
  */
 float magVecFl2d(vecFl_t vector)
 {
-    return mathsqrtf((vector.x * vector.x) + (vector.y * vector.y));
+    return 1 / rsqrtf((vector.x * vector.x) + (vector.y * vector.y));
 }
 
 /**

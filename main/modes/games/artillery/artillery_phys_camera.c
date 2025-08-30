@@ -14,12 +14,6 @@
 #define CAMERA_MARGIN            64
 
 //==============================================================================
-// Function Declarations
-//==============================================================================
-
-static bool physAdjustCameraTimer(physSim_t* phys);
-
-//==============================================================================
 // Functions
 //==============================================================================
 
@@ -35,24 +29,11 @@ void physSetCameraButton(physSim_t* phys, buttonBit_t btn)
 }
 
 /**
- * @brief Run a timer to adjust the camera, either tracking an object or reacting to button presses
- *
- * @param phys The physics simulation to pan
- * @param elapsedUs The elapsed time
- */
-bool physAdjustCamera(physSim_t* phys, uint32_t elapsedUs)
-{
-    bool change = false;
-    RUN_TIMER_EVERY(phys->cameraTimer, 1000000 / 60, elapsedUs, change = physAdjustCameraTimer(phys););
-    return change;
-}
-
-/**
  * @brief Move the camera according to input buttons or object tracking
  *
  * @param phys The physics simulation to pan
  */
-static bool physAdjustCameraTimer(physSim_t* phys)
+bool physAdjustCameraTimer(physSim_t* phys)
 {
     // Where the camera was
     vec_t oldCamera = phys->camera;

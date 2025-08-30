@@ -111,7 +111,7 @@ physCirc_t* physAddCircle(physSim_t* phys, uint16_t x1, uint16_t y1, uint16_t r,
         case CT_TANK:
         {
             setBarrelAngle(pc, 0);
-            setShotPower(pc, 0.0001f);
+            setShotPower(pc, 100.0f);
             pc->fixed = false;
             break;
         }

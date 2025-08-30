@@ -117,7 +117,7 @@ void physCheckCollisions(physSim_t* phys)
                     pc->vel = mulVecFl2d(pc->vel, 0.75f);
 
                     // Deadband the velocity if it's small enough
-                    if (sqMagVecFl2d(pc->vel) < 1e-9f)
+                    if (sqMagVecFl2d(pc->vel) < 300.0f)
                     {
                         pc->vel.x = 0;
                         pc->vel.y = 0;

@@ -20,13 +20,6 @@
 // There are 32 zones, one for each bit in a int32_t
 #define NUM_ZONES 32
 
-#define WORLD_WIDTH  (TFT_WIDTH * 2)
-#define WORLD_HEIGHT (TFT_HEIGHT * 2)
-#define GROUND_LEVEL (WORLD_HEIGHT - 60)
-
-#define DEFAULT_GRAV_X 0
-#define DEFAULT_GRAV_Y 1e-10
-
 //==============================================================================
 // Enums
 //==============================================================================
