@@ -76,6 +76,11 @@ typedef struct
     // Timer to only allow a little bit of movement
     int32_t moveTimerUs;
 
+    // Variables to handle button input when adjusting shots
+    buttonBit_t adjButtonHeld;
+    uint32_t adjButtonStartTimer;
+    uint32_t adjButtonHeldTimer;
+
     // Everything required for wireless communication
     p2pInfo p2p;
     const char* conStr;
