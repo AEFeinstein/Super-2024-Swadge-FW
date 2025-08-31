@@ -237,13 +237,6 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
     // Draw the scene
     drawPhysOutline(ad->phys, ad->moveTimerUs);
 
-    // If this is a wireless game and there is some change and it's our turn
-    if (AG_WIRELESS == ad->gameType && (barrelChanged || physChange) && artilleryIsMyTurn(ad))
-    {
-        // Transmit the change to the other Swadge
-        artilleryTxPlayers(ad);
-    }
-
     // Get the system font to draw text
     font_t* f = getSysFont();
 
@@ -289,11 +282,13 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                 {
                     ad->tpCumulativeDiff -= TOUCH_DEG_PER_BARREL;
                     setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle + BARREL_INTERVAL);
+                    barrelChanged = true;
                 }
                 while (ad->tpCumulativeDiff <= -TOUCH_DEG_PER_BARREL)
                 {
                     ad->tpCumulativeDiff += TOUCH_DEG_PER_BARREL;
                     setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle - BARREL_INTERVAL);
+                    barrelChanged = true;
                 }
 
                 // Save the current touchpad angle
@@ -327,6 +322,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                             {
                                 float bDiff = (PB_LEFT == ad->adjButtonHeld) ? -(BARREL_INTERVAL) : (BARREL_INTERVAL);
                                 setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle + bDiff);
+                                barrelChanged = true;
                                 break;
                             }
                             case PB_UP:
@@ -334,6 +330,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                             {
                                 float pDiff = (PB_UP == ad->adjButtonHeld) ? POWER_INTERVAL : -POWER_INTERVAL;
                                 setShotPower(ad->players[ad->plIdx], ad->players[ad->plIdx]->shotPower + pDiff);
+                                barrelChanged = true;
                                 break;
                             }
                             default:
@@ -481,6 +478,13 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
             }
             break;
         }
+    }
+
+    // If this is a wireless game and there is some change and it's our turn
+    if (AG_WIRELESS == ad->gameType && (barrelChanged || physChange) && artilleryIsMyTurn(ad))
+    {
+        // Transmit the change to the other Swadge
+        artilleryTxPlayers(ad);
     }
 
     // TODO remove from production

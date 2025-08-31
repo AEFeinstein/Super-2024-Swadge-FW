@@ -220,8 +220,10 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
                 setBarrelAngle(ad->players[pIdx], pkt->players[pIdx].barrelAngle);
             }
 
-            // Update camera
+            // Update camera and don't track objects
             ad->phys->camera = pkt->camera;
+            clear(&ad->phys->cameraTargets);
+
             return;
         }
         case P2P_FIRE_SHOT:

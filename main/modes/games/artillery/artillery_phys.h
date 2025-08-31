@@ -142,6 +142,8 @@ typedef struct
     bool shotFired;
     bool terrainMoving;
     int32_t playerSwapTimerUs;
+
+    int16_t surfacePoints[TFT_WIDTH];
 } physSim_t;
 
 //==============================================================================
