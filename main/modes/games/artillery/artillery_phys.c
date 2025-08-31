@@ -51,6 +51,7 @@ static void physFindObjDests(physSim_t* phys, float elapsedS);
 static bool physBinaryMoveObjects(physSim_t* phys);
 static void checkTurnOver(physSim_t* phys);
 static void physAnimateExplosions(physSim_t* phys, int32_t elapsedUs);
+static void drawSurfaceLine(int x0, int y0, int x1, int y1, paletteColor_t color, int16_t* surfacePoints);
 
 //==============================================================================
 // Functions
@@ -397,9 +398,6 @@ static void checkTurnOver(physSim_t* phys)
  */
 void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs)
 {
-    // Draw gas gauge
-    fillDisplayArea(0, 0, (TFT_WIDTH * moveTimeLeftUs) / TANK_MOVE_TIME_US, 16, c313);
-
     // Draw zones
     // for (int32_t z = 0; z < NUM_ZONES; z++)
     // {
@@ -411,20 +409,60 @@ void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs)
     //         c112);
     // }
 
+    // Clear surface points
+    memset(phys->surfacePoints, 0xFF, sizeof(phys->surfacePoints));
+
     // Draw all lines
     node_t* lNode = phys->lines.first;
     while (lNode)
     {
         physLine_t* pl = (physLine_t*)lNode->val;
-        drawLineFast(pl->l.p1.x - phys->camera.x, //
-                     pl->l.p1.y - phys->camera.y, //
-                     pl->l.p2.x - phys->camera.x, //
-                     pl->l.p2.y - phys->camera.y, //
-                     c522);
-
+        if (pl->isTerrain)
+        {
+            // Draw surface lines differently to track the ground fill
+            drawSurfaceLine(pl->l.p1.x - phys->camera.x, //
+                            pl->l.p1.y - phys->camera.y, //
+                            pl->l.p2.x - phys->camera.x, //
+                            pl->l.p2.y - phys->camera.y, //
+                            c000, phys->surfacePoints);
+        }
+        else
+        {
+            drawLineFast(pl->l.p1.x - phys->camera.x, //
+                         pl->l.p1.y - phys->camera.y, //
+                         pl->l.p2.x - phys->camera.x, //
+                         pl->l.p2.y - phys->camera.y, //
+                         c252);
+        }
         // Iterate
         lNode = lNode->next;
     }
+
+    // Fill in ground pixels
+    // TODO this is pretty slow, but can't be done in the background draw b/c
+    // surfacePoints need to be calculated before the draw, not after
+    SETUP_FOR_TURBO();
+    int16_t startX = CLAMP(-phys->camera.x, 0, TFT_WIDTH - 1) + 1;
+    int16_t endX   = CLAMP(phys->bounds.x - phys->camera.x, 0, TFT_WIDTH);
+    for (int16_t x = startX; x < endX; x++)
+    {
+        int16_t startY = CLAMP(1 - phys->camera.y, 0, TFT_HEIGHT);
+        int16_t endY   = CLAMP(phys->surfacePoints[x], 0, TFT_HEIGHT);
+        for (int16_t y = startY; y < endY; y++)
+        {
+            TURBO_SET_PIXEL(x, y, c003);
+        }
+
+        startY = endY + 1;
+        endY   = CLAMP(phys->bounds.y - phys->camera.y, 0, TFT_HEIGHT);
+        for (int16_t y = startY; y < endY; y++)
+        {
+            TURBO_SET_PIXEL(x, y, c030);
+        }
+    }
+
+    // Draw gas gauge
+    fillDisplayArea(0, 0, (TFT_WIDTH * moveTimeLeftUs) / TANK_MOVE_TIME_US, 16, c222);
 
     // Draw all circles
     node_t* cNode = phys->circles.first;
@@ -511,6 +549,72 @@ void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs)
             radius,                           //
             exp->color);
         eNode = eNode->next;
+    }
+}
+
+/**
+ * @brief Bresenham's line algorithm which also tracks surface points
+ *
+ * @param x0 The X coordinate to start the line at
+ * @param y0 The Y coordinate to start the line at
+ * @param x1 The X coordinate to end the line at
+ * @param y1 The Y coordinate to end the line at
+ * @param color The color to draw the line
+ * @param surfacePoints [OUT] An array where the highest surface point is written to
+ */
+static void drawSurfaceLine(int x0, int y0, int x1, int y1, paletteColor_t color, int16_t* surfacePoints)
+{
+    // X is ordered and these lines would definitely be off-screen
+    if (x1 < 0 || x0 >= TFT_WIDTH)
+    {
+        return;
+    }
+
+    SETUP_FOR_TURBO();
+
+    int dx  = ABS(x1 - x0);
+    int sx  = x0 < x1 ? 1 : -1;
+    int dy  = -ABS(y1 - y0);
+    int sy  = y0 < y1 ? 1 : -1;
+    int err = dx + dy;
+    int e2; /* error value e_xy */
+
+    /* loop */
+    for (;;)
+    {
+        if (0 <= x0 && x0 < TFT_WIDTH)
+        {
+            if (y0 > surfacePoints[x0])
+            {
+                surfacePoints[x0] = y0;
+            }
+            if (0 <= y0 && y0 < TFT_HEIGHT)
+            {
+                TURBO_SET_PIXEL(x0, y0, color);
+            }
+        }
+
+        e2 = 2 * err;
+        if (e2 >= dy)
+        {
+            /* e_xy+e_x > 0 */
+            if (x0 == x1)
+            {
+                break;
+            }
+            err += dy;
+            x0 += sx;
+        }
+        if (e2 <= dx)
+        {
+            /* e_xy+e_y < 0 */
+            if (y0 == y1)
+            {
+                break;
+            }
+            err += dx;
+            y0 += sy;
+        }
     }
 }
 
