@@ -1468,8 +1468,7 @@ void dn_trySelectTrack(dn_entity_t* self)
                     option1->downPressDetected = false;
                     push(promptData->options, (void*)option1);
                     promptData->numOptions = 1;
-                    
-                    self->gameData->resolvingRemix                = true;
+                    self->gameData->resolvingRemix                = type == DN_REMIX_TRACK;
                 }
                 else
                 {
