@@ -208,7 +208,6 @@ static void physFindObjDests(physSim_t* phys, float elapsedS)
             pc->travelLine.p1 = pc->c.pos;
 
             vecFl_t totalForce = {0};
-            vecFl_t moveVel    = {0};
             if (pc->inContact)
             {
                 // Accelerate in the direction of the surface the object is on
@@ -237,11 +236,11 @@ static void physFindObjDests(physSim_t* phys, float elapsedS)
                     if ((PB_LEFT == pc->moving && pc->slopeVec.x < 0) || //
                         (PB_RIGHT == pc->moving && pc->slopeVec.x > 0))
                     {
-                        moveVel = mulVecFl2d(pc->slopeVec, 100.0f);
+                        totalForce = addVecFl2d(totalForce, mulVecFl2d(pc->slopeVec, 98));
                     }
                     else
                     {
-                        moveVel = mulVecFl2d(pc->slopeVec, -100.0f);
+                        totalForce = addVecFl2d(totalForce, mulVecFl2d(pc->slopeVec, -98));
                     }
                 }
             }
@@ -255,7 +254,7 @@ static void physFindObjDests(physSim_t* phys, float elapsedS)
             pc->vel = addVecFl2d(pc->vel, mulVecFl2d(totalForce, elapsedS));
 
             // Set ending point
-            pc->travelLine.p2 = addVecFl2d(pc->c.pos, mulVecFl2d(addVecFl2d(pc->vel, moveVel), elapsedS));
+            pc->travelLine.p2 = addVecFl2d(pc->c.pos, mulVecFl2d(pc->vel, elapsedS));
 
             // Set bounding box of travel line, for later checks
             pc->travelLineBB = getLineBoundingBox(pc->travelLine);
