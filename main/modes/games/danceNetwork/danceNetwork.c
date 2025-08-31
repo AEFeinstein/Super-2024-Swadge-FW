@@ -772,6 +772,7 @@ static void dn_initializeGame(void)
         (vec_t){0xFFFF - (103 << DN_DECIMAL_BITS), 0xFFFF + (25 << DN_DECIMAL_BITS)}, gameData);
     swapButton->updateFunction = dn_updateSwapButton;
     swapButton->drawFunction   = dn_drawSwapButton;
+    swapButton->dataType = DN_SWAPBUTTON_DATA;
 
     //////////////////////////
     // Make the skip button //
@@ -781,6 +782,7 @@ static void dn_initializeGame(void)
                                  (vec_t){0xFFFF + (74 << DN_DECIMAL_BITS), 0xFFFF + (25 << DN_DECIMAL_BITS)}, gameData);
     skipButton->updateFunction = dn_updateSkipButton;
     skipButton->drawFunction   = dn_drawSkipButton;
+    skipButton->dataType = DN_SKIPBUTTON_DATA;
 
     /////////////////////////
     // Make the playerTurn //

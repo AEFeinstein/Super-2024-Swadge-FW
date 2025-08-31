@@ -158,7 +158,12 @@ void dn_updateBoard(dn_entity_t* self)
                             || tileData->unit
                                    == ((dn_boardData_t*)self->gameData->entityManager.board->data)
                                           ->p2Units[0]) // king is captured
-                        {
+                        {//a king has plunged
+                            if(dn_findLastEntityOfType(self, DN_PROMPT_DATA))
+                            {
+                                break;
+                            }
+
                             ///////////////////////////////
                             // Make the prompt Game Over //
                             ///////////////////////////////
@@ -1290,23 +1295,13 @@ void dn_updateTileSelector(dn_entity_t* self)
 
     if (tData->pos.y == 5)
     {
-        node_t* swapButtonNode = self->gameData->entityManager.entities->last;
-        while (((dn_entity_t*)swapButtonNode->val)->assetIndex != DN_SWAP_ASSET)
-        {
-            swapButtonNode = swapButtonNode->prev;
-        }
-        ((dn_entity_t*)swapButtonNode->val)->paused = false;
+        dn_findLastEntityOfType(self, DN_SWAPBUTTON_DATA)->paused = false;
         self->destroyFlag                           = true;
         return;
     }
     if (tData->pos.x == 5)
     {
-        node_t* skipButtonNode = self->gameData->entityManager.entities->last;
-        while (((dn_entity_t*)skipButtonNode->val)->assetIndex != DN_SKIP_ASSET)
-        {
-            skipButtonNode = skipButtonNode->prev;
-        }
-        ((dn_entity_t*)skipButtonNode->val)->paused = false;
+        dn_findLastEntityOfType(self, DN_SKIPBUTTON_DATA)->paused = false;
         self->destroyFlag                           = true;
         return;
     }
@@ -1384,11 +1379,11 @@ void dn_trySelectUnit(dn_entity_t* self)
         free(myList);
 
         // would make it do the selection idle here later
-        tData->selectedUnit = bData->tiles[tData->pos.y][tData->pos.x].unit;
         tData->a_callback   = dn_trySelectTrack;
         tData->b_callback   = dn_cancelSelectTrack;
     }
 }
+
 void dn_cancelSelectUnit(dn_entity_t* self)
 {
     self->gameData->phase--;
@@ -1406,6 +1401,7 @@ void dn_cancelSelectUnit(dn_entity_t* self)
     }
     dn_setupDancePhase(self);
 }
+
 void dn_trySelectTrack(dn_entity_t* self)
 {
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
@@ -1430,8 +1426,6 @@ void dn_trySelectTrack(dn_entity_t* self)
             relativeTrack.x *= -1;
             album = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album;
         }
-        bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
-        self->destroyFlag                                 = true;
         dn_track_t type                                   = dn_trackTypeAtCoords(album, relativeTrack);
         if (type == DN_REMIX_TRACK && tData->selectedUnit->paused)
         {
@@ -1444,46 +1438,80 @@ void dn_trySelectTrack(dn_entity_t* self)
             {
                 ((dn_unitData_t*)tData->selectedUnit->data)->moveTo = tData->pos;
                 tData->selectedUnit->updateFunction                 = dn_moveUnit;
+                bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
+                self->destroyFlag                                 = true;
                 break;
             }
             case DN_RED_TRACK:
             case DN_REMIX_TRACK:
             {
-                bData->tiles[from.y][from.x].unit->paused = true;
-                /////////////////////
-                // Make the bullet //
-                /////////////////////
-
-                vec_t start = (vec_t){
-                    self->gameData->entityManager.board->pos.x
-                        + (from.x - from.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS)
-                        - (1 << DN_DECIMAL_BITS),
-                    self->gameData->entityManager.board->pos.y
-                        + (from.x + from.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS)
-                        - (bData->tiles[from.y][from.x].yOffset)};
-
-                dn_entity_t* bullet = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true,
-                                                             DN_NO_ASSET, 0, start, self->gameData);
-                bullet->updateFunction = dn_updateBullet;
-                bullet->drawFunction   = dn_drawBullet;
-                bullet->data           = heap_caps_calloc(1, sizeof(dn_bulletData_t), MALLOC_CAP_SPIRAM);
-                memset(bullet->data, 0, sizeof(dn_bulletData_t));
-                bullet->dataType                             = DN_BULLET_DATA;
-                ((dn_bulletData_t*)bullet->data)->targetTile = tData->pos;
-                ((dn_bulletData_t*)bullet->data)->start      = bullet->pos;
-                ((dn_bulletData_t*)bullet->data)->end
-                    = (vec_t){self->gameData->entityManager.board->pos.x
-                                  + (tData->pos.x - tData->pos.y)
-                                        * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS)
-                                  - (1 << DN_DECIMAL_BITS),
-                              self->gameData->entityManager.board->pos.y
-                                  + (tData->pos.x + tData->pos.y)
-                                        * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS)
-                                  - (bData->tiles[tData->pos.y][tData->pos.x].yOffset)};
-                if (type == DN_REMIX_TRACK)
+                if(!bData->tiles[tData->pos.y][tData->pos.x].unit && !bData->tiles[tData->pos.y][tData->pos.x].timeout)
                 {
-                    ((dn_bulletData_t*)bullet->data)->ownerToMove = from;
+                    tData->bounce = tData->pos;
+                    //////////////////////////////////
+                    // make the prompt bullet bounce//
+                    //////////////////////////////////
+                    dn_entity_t* promptBulletBounce
+                        = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff, 0xffff}, self->gameData);
+                    dn_promptData_t* promptData = (dn_promptData_t*)promptBulletBounce->data;
+
+                    promptData->usesTwoLinesOfText = true;
+                    strcpy(promptData->text, "Targeted an empty tile.");
+                    strcpy(promptData->text2, "Choose bounce destination.");
+                    promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+                    memset(promptData->options, 0, sizeof(list_t));
+
+                    dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+                    memset(option1, 0, sizeof(dn_promptOption_t));
+                    strcpy(option1->text, "OK");
+                    option1->callback          = dn_setupBounceOptions;
+                    option1->downPressDetected = false;
+                    push(promptData->options, (void*)option1);
+                    promptData->numOptions = 1;
+                    
                     self->gameData->resolvingRemix                = true;
+                }
+                else
+                {
+                    bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
+                    self->destroyFlag                                 = true;
+                    bData->tiles[from.y][from.x].unit->paused = true;
+                    /////////////////////
+                    // Make the bullet //
+                    /////////////////////
+
+                    vec_t start = (vec_t){
+                        self->gameData->entityManager.board->pos.x
+                            + (from.x - from.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS)
+                            - (1 << DN_DECIMAL_BITS),
+                        self->gameData->entityManager.board->pos.y
+                            + (from.x + from.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS)
+                            - (bData->tiles[from.y][from.x].yOffset)};
+
+                    dn_entity_t* bullet = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true,
+                                                                DN_NO_ASSET, 0, start, self->gameData);
+                    bullet->updateFunction = dn_updateBullet;
+                    bullet->drawFunction   = dn_drawBullet;
+                    bullet->data           = heap_caps_calloc(1, sizeof(dn_bulletData_t), MALLOC_CAP_SPIRAM);
+                    memset(bullet->data, 0, sizeof(dn_bulletData_t));
+                    bullet->dataType                             = DN_BULLET_DATA;
+                    ((dn_bulletData_t*)bullet->data)->firstTarget = tData->pos;
+                    ((dn_bulletData_t*)bullet->data)->secondTarget = (dn_boardPos_t){-1,-1};
+                    ((dn_bulletData_t*)bullet->data)->start      = bullet->pos;
+                    ((dn_bulletData_t*)bullet->data)->end
+                        = (vec_t){self->gameData->entityManager.board->pos.x
+                                    + (tData->pos.x - tData->pos.y)
+                                            * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS)
+                                    - (1 << DN_DECIMAL_BITS),
+                                self->gameData->entityManager.board->pos.y
+                                    + (tData->pos.x + tData->pos.y)
+                                            * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS)
+                                    - (bData->tiles[tData->pos.y][tData->pos.x].yOffset)};
+                    if (type == DN_REMIX_TRACK)
+                    {
+                        ((dn_bulletData_t*)bullet->data)->ownerToMove = from;
+                        self->gameData->resolvingRemix                = true;
+                    }
                 }
                 break;
             }
@@ -2447,10 +2475,10 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
                     break;
                 }
             }
-            if(umData->trackColor == dn_trackTypeAtCoords(album, umData->track[0]))
+            if(dn_trackTypeAtCoords(album, umData->track[0]))
             {
-                tWidth = textWidth(&self->gameData->font_ibm, "WARNING! Track already exists!");
-                drawText(&self->gameData->font_ibm, c511, "WARNING! Track already exists!", (TFT_WIDTH>>1) - (tWidth >> 1), 10);
+                tWidth = textWidth(&self->gameData->font_ibm, "WARNING! This would overwrite!");
+                drawText(&self->gameData->font_ibm, c511, "WARNING! This would overwrite!", (TFT_WIDTH>>1) - (tWidth >> 1), 10);
             }
         }
     }
@@ -2749,7 +2777,7 @@ void dn_updateBullet(dn_entity_t* self)
         buData->lerpAmount    = 30000;
         dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
 
-        bData->impactPos          = buData->targetTile;
+        bData->impactPos          = buData->firstTarget;
         dn_tileData_t* targetTile = &bData->tiles[bData->impactPos.y][bData->impactPos.x];
         if (!targetTile->timeout)
         {
@@ -2867,7 +2895,25 @@ void dn_updateBullet(dn_entity_t* self)
             // knock this tile out
             targetTile->timeout = true;
 
-            if (!self->gameData->resolvingRemix)
+            
+            if (buData->secondTarget.x != -1)
+            {
+                buData->firstTarget = buData->secondTarget;
+                buData->lerpAmount = 0;
+                buData->start = buData->end;
+                buData->end
+                        = (vec_t){self->gameData->entityManager.board->pos.x
+                            + (buData->secondTarget.x - buData->secondTarget.y)
+                                * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS)
+                            - (1 << DN_DECIMAL_BITS),
+                        self->gameData->entityManager.board->pos.y
+                            + (buData->secondTarget.x + buData->secondTarget.y)
+                                * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS)
+                            - (bData->tiles[buData->secondTarget.y][buData->secondTarget.x].yOffset)};
+                buData->secondTarget = (dn_boardPos_t){-1,-1};
+                return;
+            }
+            else if (!self->gameData->resolvingRemix)
             {
                 dn_incrementPhase(self); // now the upgrade phase
                 dn_startUpgradeMenu(self, 2 << 20);
@@ -2875,14 +2921,14 @@ void dn_updateBullet(dn_entity_t* self)
             else // remix falls in a hole, because no unit was also at the target.
             {
                 dn_entity_t* owner                    = bData->tiles[buData->ownerToMove.y][buData->ownerToMove.x].unit;
-                ((dn_unitData_t*)owner->data)->moveTo = buData->targetTile;
+                ((dn_unitData_t*)owner->data)->moveTo = buData->firstTarget;
                 owner->updateFunction                 = dn_moveUnit;
             }
         }
-        if (self->gameData->resolvingRemix)
+        if (self->gameData->resolvingRemix && buData->secondTarget.x == -1)
         {
             dn_entity_t* owner                    = bData->tiles[buData->ownerToMove.y][buData->ownerToMove.x].unit;
-            ((dn_unitData_t*)owner->data)->moveTo = buData->targetTile;
+            ((dn_unitData_t*)owner->data)->moveTo = buData->firstTarget;
             owner->updateFunction                 = dn_moveUnit;
         }
         self->destroyFlag = true;
@@ -3000,11 +3046,6 @@ void dn_sharedButtonLogic(dn_entity_t* self)
     {
         self->paused = true;
         dn_setupDancePhase(self);
-        node_t* selectorNode = self->gameData->entityManager.entities->last;
-        while (((dn_entity_t*)selectorNode->val)->dataType != DN_TILE_SELECTOR_DATA)
-        {
-            selectorNode = selectorNode->prev;
-        }
         self->gameData->btnDownState = 0;
     }
 }
@@ -3054,12 +3095,7 @@ void dn_drawSwapButton(dn_entity_t* self)
 
 void dn_unpauseSwapButton(dn_entity_t* self)
 {
-    node_t* swapButtonNode = self->gameData->entityManager.entities->last;
-    while (((dn_entity_t*)swapButtonNode->val)->assetIndex != DN_SWAP_ASSET)
-    {
-        swapButtonNode = swapButtonNode->prev;
-    }
-    ((dn_entity_t*)swapButtonNode->val)->paused = false;
+    dn_findLastEntityOfType(self, DN_SWAPBUTTON_DATA)->paused = false;
 }
 
 void dn_updateSkipButton(dn_entity_t* self)
@@ -3106,12 +3142,7 @@ void dn_drawSkipButton(dn_entity_t* self)
 
 void dn_unpauseSkipButton(dn_entity_t* self)
 {
-    node_t* skipButtonNode = self->gameData->entityManager.entities->last;
-    while (((dn_entity_t*)skipButtonNode->val)->assetIndex != DN_SKIP_ASSET)
-    {
-        skipButtonNode = skipButtonNode->prev;
-    }
-    ((dn_entity_t*)skipButtonNode->val)->paused = false;
+    dn_findLastEntityOfType(self, DN_SKIPBUTTON_DATA)->paused = false;
 }
 
 void dn_updateTutorial(dn_entity_t* self)
@@ -3170,5 +3201,119 @@ void dn_drawTutorial(dn_entity_t* self)
             drawWsgSimple(&self->gameData->assets[DN_MMM_SUBMENU_ASSET].frames[0], 242, 205);
         }
     }
+
+}
+
+dn_entity_t* dn_findLastEntityOfType(dn_entity_t* self, dn_dataType_t type)
+{
+    node_t* cur = self->gameData->entityManager.entities->last;
+    while (((dn_entity_t*)cur->val)->dataType != type)
+    {
+        cur = cur->prev;
+        if(!cur)
+        {
+            return NULL;
+        }
+    }
+    return (dn_entity_t*)cur->val;
+}
+
+void dn_setupBounceOptions(dn_entity_t* self)
+{
+    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)dn_findLastEntityOfType(self, DN_TILE_SELECTOR_DATA)->data;
+    dn_boardData_t* bData        = (dn_boardData_t*)self->gameData->entityManager.board->data;
+
+    dn_clearSelectableTiles(self);
+
+    // recalculate selectable tiles
+    list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+    memset(myList, 0, sizeof(list_t));
+    if (dn_availableMoves(tData->selectedUnit, myList))
+    {
+        node_t* cur = myList->first;
+        while (cur != NULL)
+        {
+            dn_action_t* action                                      = ((dn_action_t*)cur->val);
+            if(action->action == DN_RED_TRACK || action->action == DN_REMIX_TRACK)
+            {
+                bData->tiles[action->pos.y][action->pos.x].selectionType = self->gameData->resolvingRemix ? DN_REMIX_TRACK : DN_RED_TRACK;
+            }
+            cur                                                      = cur->next;
+        }
+    }
+    clear(myList);
+    free(myList);
+
+    tData->a_callback   = dn_trySelectBounceDest;
+    tData->b_callback   = dn_cancelSelectBounceDest;
+}
+
+void dn_trySelectBounceDest(dn_entity_t* self)
+{
+    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
+    dn_boardData_t* bData        = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    if (bData->tiles[tData->pos.y][tData->pos.x].selectionType)
+    {
+        dn_clearSelectableTiles(self);
+
+        // determine the vector FROM the unit TO the track
+        dn_boardPos_t from = dn_getUnitBoardPos(tData->selectedUnit);
+        // tData->pos is "to"
+        dn_boardPos_t relativeTrack = (dn_boardPos_t){tData->pos.x - from.x, tData->pos.y - from.y};
+
+        dn_entity_t* album = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album;
+        // Make it relative to the player's facing direction
+        if (self->gameData->phase < DN_P2_DANCE_PHASE)
+        {
+            relativeTrack.y *= -1;
+        }
+        else
+        {
+            relativeTrack.x *= -1;
+            album = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album;
+        }
+        bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
+        self->destroyFlag                                 = true;
+        dn_track_t type                                   = dn_trackTypeAtCoords(album, relativeTrack);
+        if (type == DN_REMIX_TRACK || type == DN_RED_TRACK)
+        {
+            bData->tiles[from.y][from.x].unit->paused = true;
+            /////////////////////
+            // Make the bullet //
+            /////////////////////
+            vec_t start = (vec_t){
+                self->gameData->entityManager.board->pos.x
+                    + (from.x - from.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS)
+                    - (1 << DN_DECIMAL_BITS),
+                self->gameData->entityManager.board->pos.y
+                    + (from.x + from.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS)
+                    - (bData->tiles[from.y][from.x].yOffset)};
+
+            dn_entity_t* bullet = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true,
+                                                            DN_NO_ASSET, 0, start, self->gameData);
+            bullet->updateFunction = dn_updateBullet;
+            bullet->drawFunction   = dn_drawBullet;
+            bullet->data           = heap_caps_calloc(1, sizeof(dn_bulletData_t), MALLOC_CAP_SPIRAM);
+            memset(bullet->data, 0, sizeof(dn_bulletData_t));
+            bullet->dataType                             = DN_BULLET_DATA;
+            ((dn_bulletData_t*)bullet->data)->ownerToMove = from;
+            ((dn_bulletData_t*)bullet->data)->firstTarget = tData->bounce;
+            ((dn_bulletData_t*)bullet->data)->secondTarget = tData->pos;
+            ((dn_bulletData_t*)bullet->data)->start      = bullet->pos;
+            ((dn_bulletData_t*)bullet->data)->end
+                = (vec_t){self->gameData->entityManager.board->pos.x
+                                + (tData->bounce.x - tData->bounce.y)
+                                    * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS)
+                                - (1 << DN_DECIMAL_BITS),
+                            self->gameData->entityManager.board->pos.y
+                                + (tData->bounce.x + tData->bounce.y)
+                                    * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS)
+                                - (bData->tiles[tData->bounce.y][tData->bounce.x].yOffset)};
+        }
+    }
+}
+
+void dn_cancelSelectBounceDest(dn_entity_t* self)
+{
 
 }

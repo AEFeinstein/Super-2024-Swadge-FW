@@ -27,6 +27,8 @@ typedef enum
     DN_BULLET_DATA,
     DN_UNIT_DATA,
     DN_TUTORIAL_DATA,
+    DN_SWAPBUTTON_DATA,
+    DN_SKIPBUTTON_DATA,
 } dn_dataType_t;
 
 //==============================================================================
@@ -132,6 +134,8 @@ typedef struct
     // callback when B is pressed.
     dn_callbackFunction_t b_callback;
     dn_entity_t* selectedUnit;
+    // Stores bounce location for certain attacks
+    dn_boardPos_t bounce;
 } dn_tileSelectorData_t;
 
 typedef struct
@@ -190,7 +194,8 @@ typedef struct
     vec_t end;
     int8_t yOffset;
     int16_t lerpAmount;
-    dn_boardPos_t targetTile;
+    dn_boardPos_t firstTarget;
+    dn_boardPos_t secondTarget;
     dn_boardPos_t ownerToMove; // Position of the attacker if they are remixing and need to move after the attack.
 } dn_bulletData_t;
 
@@ -299,3 +304,10 @@ void dn_unpauseSkipButton(dn_entity_t* self);
 
 void dn_updateTutorial(dn_entity_t* self);
 void dn_drawTutorial(dn_entity_t* self);
+
+dn_entity_t* dn_findLastEntityOfType(dn_entity_t* self, dn_dataType_t type);
+
+void dn_setupBounceOptions(dn_entity_t* self);
+
+void dn_trySelectBounceDest(dn_entity_t* self);
+void dn_cancelSelectBounceDest(dn_entity_t* self);
