@@ -158,7 +158,7 @@ artilleryData_t* ad;
  */
 void artilleryEnterMode(void)
 {
-    setFrameRateUs(1000000 / 60);
+    setFrameRateUs(PHYS_TIME_STEP_US);
 
     ad = heap_caps_calloc(1, sizeof(artilleryData_t), MALLOC_CAP_8BIT);
 
