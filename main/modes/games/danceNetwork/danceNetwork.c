@@ -28,6 +28,7 @@ static void dn_MenuCb(const char* label, bool selected, uint32_t value);
 static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 static void dn_initializeTutorial(bool advanced);
+static void dn_initializeVideoTutorial(void);
 static void dn_initializeGame(void);
 static void dn_initializeCharacterSelect(void);
 static void dn_freeAssets(void);
@@ -65,6 +66,7 @@ static const char dn_DiffEasyStr[]     = "Easy";
 static const char dn_DiffMediumStr[]   = "Medium";
 static const char dn_DiffHardStr[]     = "Hard";
 static const char dn_CharacterSelStr[] = "Select Pieces";
+static const char dn_videoTutorialStr[] = "Video Tutorial";
 static const char dn_HowToStr[]        = "Text Tutorial";
 static const char dn_AdvancedHowToStr[]= "Advanced Tips";
 // static const char dn_ResultStr[]      = "Result";
@@ -228,6 +230,7 @@ static void dn_EnterMode(void)
     gameData->menu = endSubMenu(gameData->menu);
 
     addSingleItemToMenu(gameData->menu, dn_CharacterSelStr);
+    addSingleItemToMenu(gameData->menu, dn_videoTutorialStr);
     addSingleItemToMenu(gameData->menu, dn_HowToStr);
     addSingleItemToMenu(gameData->menu, dn_AdvancedHowToStr);
     addSingleItemToMenu(gameData->menu, dn_RecordsStr);
@@ -390,6 +393,11 @@ static void dn_MenuCb(const char* label, bool selected, uint32_t value)
             gameData->bgMenu->title = dn_CharacterSelStr;
             dn_ShowUi(UI_GAME);
         }
+        else if(dn_videoTutorialStr == label)
+        {
+            dn_initializeVideoTutorial();
+            dn_ShowUi(UI_GAME);
+        }
         else if (dn_HowToStr == label)
         {
             // Show how to play
@@ -537,19 +545,27 @@ static void dn_initializeTutorial(bool advanced)
     //Make the tutorial//
     /////////////////////
     dn_entity_t* tutorial = dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0, 0}, gameData);
-    if (tutorial != NULL)
+    tutorial->data = heap_caps_calloc(1, sizeof(dn_tutorialData_t), MALLOC_CAP_SPIRAM);
+    if (tutorial->data != NULL)
     {
-        tutorial->data = heap_caps_calloc(1, sizeof(dn_tutorialData_t), MALLOC_CAP_SPIRAM);
-        if (tutorial->data != NULL)
-        {
-            memset(tutorial->data, 0, sizeof(dn_tutorialData_t));
-            ((dn_tutorialData_t*)tutorial->data)->advancedTips = advanced;
-            tutorial->dataType      = DN_TUTORIAL_DATA;
-            tutorial->updateFunction = dn_updateTutorial;
-            tutorial->drawFunction  = dn_drawTutorial;
-        }
+        memset(tutorial->data, 0, sizeof(dn_tutorialData_t));
+        ((dn_tutorialData_t*)tutorial->data)->advancedTips = advanced;
+        tutorial->dataType      = DN_TUTORIAL_DATA;
+        tutorial->updateFunction = dn_updateTutorial;
+        tutorial->drawFunction  = dn_drawTutorial;
     }
+}
 
+static void dn_initializeVideoTutorial(void)
+{
+    setMegaLedsOn(gameData->menuRenderer, false);
+    dn_loadAsset(DN_QR_0_WSG, 1, &gameData->assets[DN_QR_ASSET]);
+    ////////////////////
+    //Make the qr code//
+    ////////////////////
+    dn_entity_t* qr = dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0, 0}, gameData);
+    qr->updateFunction = dn_updateQr;
+    qr->drawFunction  = dn_drawQr;
 }
 
 static void dn_initializeGame(void)

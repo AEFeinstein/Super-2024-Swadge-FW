@@ -3327,3 +3327,18 @@ void dn_exitSubMode(dn_entity_t* self)
     dn_destroyAllEntities(&self->gameData->entityManager);
     dn_ShowUi(UI_MENU);
 }
+
+void dn_updateQr(dn_entity_t* self)
+{
+    if(self->gameData->btnDownState & PB_B)
+    {
+        dn_exitSubMode(self);
+    }
+}
+
+void dn_drawQr(dn_entity_t* self)
+{
+    drawWsgSimpleScaled(&self->gameData->assets[DN_QR_ASSET].frames[0], (TFT_WIDTH / 2) - 74, (TFT_HEIGHT / 2) - 74, 4, 4);
+    char text[16] = "Video Tutorial";
+    drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH / 2) - (textWidth(&self->gameData->font_ibm, text) / 2), 220);
+}

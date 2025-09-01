@@ -314,3 +314,6 @@ void dn_trySelectBounceDest(dn_entity_t* self);
 void dn_cancelSelectBounceDest(dn_entity_t* self);
 
 void dn_exitSubMode(dn_entity_t* self);
+
+void dn_updateQr(dn_entity_t* self);
+void dn_drawQr(dn_entity_t* self);
