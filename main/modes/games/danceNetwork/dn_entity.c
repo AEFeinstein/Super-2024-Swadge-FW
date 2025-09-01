@@ -118,7 +118,7 @@ void dn_updateBoard(dn_entity_t* self)
             if (x == boardData->impactPos.x && y == boardData->impactPos.y)
             {
                 // the selected tile approaches a particular offset
-                tileData->yVel += (((int16_t)(((TFT_HEIGHT >> 2) << DN_DECIMAL_BITS) - tileData->yOffset)) / 3);
+                tileData->yVel += (((int16_t)((60 << DN_DECIMAL_BITS) - tileData->yOffset)) / 3);
             }
             else
             {
@@ -257,6 +257,18 @@ void dn_updateBoard(dn_entity_t* self)
     }
 }
 
+void dn_zeroOutTileOffsets(dn_entity_t* board)
+{
+    dn_boardData_t* bData = (dn_boardData_t*)board->data;
+    for (int y = 0; y < DN_BOARD_SIZE; y++)
+    {
+        for (int x = 0; x < DN_BOARD_SIZE; x++)
+        {
+            bData->tiles[y][x].yOffset = 952;
+        }
+    }
+}
+
 bool dn_belongsToP1(dn_entity_t* unit)
 {
     dn_boardData_t* bData = (dn_boardData_t*)unit->gameData->entityManager.board->data;
@@ -337,30 +349,21 @@ void dn_drawBoard(dn_entity_t* self)
                               drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
                               drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
             }
-            bool drawOutline = false;
-            paletteColor_t color = c050;
+
             if (boardData->tiles[y][x].rewards)
             {
                 char reward[6];
                 snprintf(reward, sizeof(reward), "+%d", boardData->tiles[y][x].rewards);
                 drawShinyText(&self->gameData->font_ibm, c153, c254, c555, reward, drawX - 8, drawY - 5);
-                drawOutline = true;
+                drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[1],
+                              drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                              drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
             }
             if(x == 2 && (y == 0 || y == 4))
             {
-                drawOutline = true;
-                color = y == 4 ? c055 : c550;
-            }
-            if(drawOutline)
-            {
-                drawLineFast(drawX, drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY + 1,
-                             drawX + self->gameData->assets[DN_GROUND_TILE_ASSET].originX - 1, drawY, color);
-                drawLineFast(drawX + self->gameData->assets[DN_GROUND_TILE_ASSET].originX - 1, drawY, drawX,
-                             drawY + self->gameData->assets[DN_GROUND_TILE_ASSET].originY - 1, color);
-                drawLineFast(drawX, drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY + 1,
-                             drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX + 1, drawY, color);
-                drawLineFast(drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX + 2, drawY, drawX,
-                             drawY + self->gameData->assets[DN_GROUND_TILE_ASSET].originY - 2, color);
+                drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[1],
+                              drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                              drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY, &self->gameData->entityManager.palettes[DN_GREEN_TO_CYAN_PALETTE + (y == 0)]);
             }
             if (boardData->tiles[y][x].selector != NULL)
             {
@@ -1797,6 +1800,7 @@ void dn_gainRerollAndSetupDancePhase(dn_entity_t* self)
 
 void dn_setupDancePhase(dn_entity_t* self) // used to be dn_startMovePhase
 {
+    dn_zeroOutTileOffsets(self->gameData->entityManager.board);
     dn_clearSelectableTiles(self);
     dn_calculateMoveableUnits(self->gameData->entityManager.board);
 
@@ -2621,6 +2625,8 @@ void dn_rerollFirstUpgradeOption(dn_entity_t* self)
 
 void dn_confirmUpgrade(dn_entity_t* self)
 {
+    dn_zeroOutTileOffsets(self->gameData->entityManager.board);
+
     dn_upgradeMenuData_t* umData       = (dn_upgradeMenuData_t*)self->data;
     umData->options[3].selectionAmount = 0;
     umData->numTracksToAdd = 7; //It really adds 2 tracks. Different things happen happen at 7,6,5,4,3,2,1, and 0

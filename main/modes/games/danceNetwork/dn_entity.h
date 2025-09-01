@@ -216,6 +216,7 @@ void dn_drawAsset(dn_entity_t* self);
 void dn_drawNothing(dn_entity_t* self);
 
 void dn_updateBoard(dn_entity_t* self);
+void dn_zeroOutTileOffsets(dn_entity_t* board);
 bool dn_belongsToP1(dn_entity_t* unit);
 void dn_drawBoard(dn_entity_t* self);
 bool dn_availableMoves(dn_entity_t* unit, list_t* movesList);

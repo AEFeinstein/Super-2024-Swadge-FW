@@ -102,7 +102,7 @@ uint8_t* dn_decodeSpace;
 // This is in order such that index is the assetIdx.
 static const cnfsFileIdx_t dn_assetToWsgLookup[]
     = {DN_ALPHA_DOWN_WSG, DN_ALPHA_ORTHO_WSG,  DN_ALPHA_UP_WSG,        DN_KING_WSG,          DN_KING_SMALL_0_WSG,
-       DN_PAWN_WSG,       DN_PAWN_SMALL_0_WSG, DN_BUCKET_HAT_DOWN_WSG, DN_BUCKET_HAT_UP_WSG, DN_GROUND_TILE_WSG};
+       DN_PAWN_WSG,       DN_PAWN_SMALL_0_WSG, DN_BUCKET_HAT_DOWN_WSG, DN_BUCKET_HAT_UP_WSG};
 
 // NVS keys
 const char dnCharacterKey[] = "dn_character";
@@ -601,7 +601,7 @@ static void dn_initializeGame(void)
         }
     }
 
-    dn_loadAsset(DN_GROUND_TILE_WSG, 1, &gameData->assets[DN_GROUND_TILE_ASSET]);
+    dn_loadAsset(DN_GROUND_TILE_0_WSG, 3, &gameData->assets[DN_GROUND_TILE_ASSET]);
 
     dn_loadAsset(DN_SPEAKER_0_WSG, 6, &gameData->assets[DN_SPEAKER_ASSET]);
 
@@ -835,7 +835,7 @@ static void dn_initializeCharacterSelect(void)
     dn_loadAsset(DN_BUCKET_HAT_UP_WSG, 1, &gameData->assets[DN_BUCKET_HAT_UP_ASSET]);
     dn_loadAsset(DN_KING_WSG, 1, &gameData->assets[DN_KING_ASSET]);
     dn_loadAsset(DN_PAWN_WSG, 1, &gameData->assets[DN_PAWN_ASSET]);
-    dn_loadAsset(DN_GROUND_TILE_WSG, 1, &gameData->assets[DN_GROUND_TILE_ASSET]);
+    dn_loadAsset(DN_GROUND_TILE_0_WSG, 3, &gameData->assets[DN_GROUND_TILE_ASSET]);
     ///////////////////////////////
     // Make the character select //
     ///////////////////////////////

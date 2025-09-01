@@ -76,6 +76,11 @@ void dn_initializeEntityManager(dn_entityManager_t* entityManager, dn_gameData_t
         wsgPaletteSet(&entityManager->palettes[DN_GRAYSCALE_PALETTE], cur, (rgb / 51) * 43);
     }
 
+    wsgPaletteReset(&entityManager->palettes[DN_GREEN_TO_CYAN_PALETTE]);
+    wsgPaletteSet(&entityManager->palettes[DN_GREEN_TO_CYAN_PALETTE], c050, c055);
+    wsgPaletteReset(&entityManager->palettes[DN_GREEN_TO_YELLOW_PALETTE]);
+    wsgPaletteSet(&entityManager->palettes[DN_GREEN_TO_YELLOW_PALETTE], c050, c550);
+
     dn_setCharacterSetPalette(&gameData->entityManager, gameData->characterSets[0]);
 }
 
