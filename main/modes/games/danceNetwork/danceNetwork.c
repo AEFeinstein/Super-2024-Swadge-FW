@@ -27,7 +27,7 @@ static void dn_MainLoop(int64_t elapsedUs);
 static void dn_MenuCb(const char* label, bool selected, uint32_t value);
 static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
-static void dn_initializeTutorial(void);
+static void dn_initializeTutorial(bool advanced);
 static void dn_initializeGame(void);
 static void dn_initializeCharacterSelect(void);
 static void dn_freeAssets(void);
@@ -65,7 +65,8 @@ static const char dn_DiffEasyStr[]     = "Easy";
 static const char dn_DiffMediumStr[]   = "Medium";
 static const char dn_DiffHardStr[]     = "Hard";
 static const char dn_CharacterSelStr[] = "Select Pieces";
-static const char dn_HowToStr[]        = "How To Play";
+static const char dn_HowToStr[]        = "Text Tutorial";
+static const char dn_AdvancedHowToStr[]= "Advanced Tips";
 // static const char dn_ResultStr[]      = "Result";
 static const char dn_RecordsStr[] = "Records";
 static const char dn_Exit[]       = "Exit";
@@ -228,6 +229,7 @@ static void dn_EnterMode(void)
 
     addSingleItemToMenu(gameData->menu, dn_CharacterSelStr);
     addSingleItemToMenu(gameData->menu, dn_HowToStr);
+    addSingleItemToMenu(gameData->menu, dn_AdvancedHowToStr);
     addSingleItemToMenu(gameData->menu, dn_RecordsStr);
     addSingleItemToMenu(gameData->menu, dn_Exit);
 
@@ -391,7 +393,13 @@ static void dn_MenuCb(const char* label, bool selected, uint32_t value)
         else if (dn_HowToStr == label)
         {
             // Show how to play
-            dn_initializeTutorial();
+            dn_initializeTutorial(false);
+            dn_ShowUi(UI_GAME);
+        }
+        else if(dn_AdvancedHowToStr == label)
+        {
+            // Show advanced tutorial
+            dn_initializeTutorial(true);
             dn_ShowUi(UI_GAME);
         }
         else if (dn_RecordsStr == label)
@@ -517,7 +525,7 @@ void dn_ShowUi(dn_Ui_t ui)
 }
 
 
-static void dn_initializeTutorial(void)
+static void dn_initializeTutorial(bool advanced)
 {
     setMegaLedsOn(gameData->menuRenderer, false);
     dn_loadAsset(DN_DANCENONYDA_WSG, 1, &gameData->assets[DN_DANCENONYDA_ASSET]);
@@ -535,6 +543,7 @@ static void dn_initializeTutorial(void)
         if (tutorial->data != NULL)
         {
             memset(tutorial->data, 0, sizeof(dn_tutorialData_t));
+            ((dn_tutorialData_t*)tutorial->data)->advancedTips = advanced;
             tutorial->dataType      = DN_TUTORIAL_DATA;
             tutorial->updateFunction = dn_updateTutorial;
             tutorial->drawFunction  = dn_drawTutorial;

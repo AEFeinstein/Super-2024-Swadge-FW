@@ -116,6 +116,14 @@ void dn_freeAsset(dn_asset_t* asset)
     }
 }
 
+void dn_freeAllAssets(dn_gameData_t* gameData)
+{
+    for (uint8_t i = 0; i < NUM_ASSETS; i++)
+    {
+        dn_freeAsset(&gameData->assets[i]);
+    }
+}
+
 void dn_updateEntities(dn_entityManager_t* entityManager)
 {
     node_t* curNode = entityManager->entities->first;
@@ -125,6 +133,10 @@ void dn_updateEntities(dn_entityManager_t* entityManager)
         if (entity->updateFunction != NULL)
         {
             entity->updateFunction(entity);
+        }
+        if(entityManager->entities->first == NULL)//First may become NULL mid loop if all entities are destroyed.
+        {
+            return;
         }
         curNode = curNode->next;
     }

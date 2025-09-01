@@ -29,6 +29,7 @@ typedef struct
 void dn_initializeEntityManager(dn_entityManager_t* entityManager, dn_gameData_t* gameData);
 void dn_loadAsset(cnfsFileIdx_t spriteCnfsIdx, uint8_t num_frames, dn_asset_t* asset);
 void dn_freeAsset(dn_asset_t* asset);
+void dn_freeAllAssets(dn_gameData_t* gameData);
 void dn_updateEntities(dn_entityManager_t* entityManager);
 void dn_getScreenPos(dn_entity_t* entity);
 void dn_setCharacterSetPalette(dn_entityManager_t* entityManager, dn_characterSet_t characterSet);

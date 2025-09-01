@@ -202,6 +202,7 @@ typedef struct
 typedef struct
 {
     uint8_t page;
+    bool advancedTips;
 } dn_tutorialData_t;
 
 
@@ -311,3 +312,5 @@ void dn_setupBounceOptions(dn_entity_t* self);
 
 void dn_trySelectBounceDest(dn_entity_t* self);
 void dn_cancelSelectBounceDest(dn_entity_t* self);
+
+void dn_exitSubMode(dn_entity_t* self);
