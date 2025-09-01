@@ -47,7 +47,7 @@ static void physFindObjDests(physSim_t* phys, float elapsedS);
 static bool physBinaryMoveObjects(physSim_t* phys);
 static void checkTurnOver(physSim_t* phys);
 static void physAnimateExplosions(physSim_t* phys, int32_t elapsedUs);
-static void drawSurfaceLine(int x0, int y0, int x1, int y1, paletteColor_t color, int16_t* surfacePoints);
+static void findSurfacePoints(int x0, int y0, int x1, int y1, paletteColor_t color, int16_t* surfacePoints);
 
 //==============================================================================
 // Functions
@@ -416,49 +416,72 @@ void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs)
         if (pl->isTerrain)
         {
             // Draw surface lines differently to track the ground fill
-            drawSurfaceLine(pl->l.p1.x - phys->camera.x, //
-                            pl->l.p1.y - phys->camera.y, //
-                            pl->l.p2.x - phys->camera.x, //
-                            pl->l.p2.y - phys->camera.y, //
-                            c000, phys->surfacePoints);
+            findSurfacePoints(pl->l.p1.x - phys->camera.x, //
+                              pl->l.p1.y - phys->camera.y, //
+                              pl->l.p2.x - phys->camera.x, //
+                              pl->l.p2.y - phys->camera.y, //
+                              c555, phys->surfacePoints);
         }
-        else
-        {
-            drawLineFast(pl->l.p1.x - phys->camera.x, //
-                         pl->l.p1.y - phys->camera.y, //
-                         pl->l.p2.x - phys->camera.x, //
-                         pl->l.p2.y - phys->camera.y, //
-                         c252);
-        }
+
         // Iterate
         lNode = lNode->next;
     }
 
-    // Fill in ground pixels
-    // TODO this is pretty slow, but can't be done in the background draw b/c
-    // surfacePoints need to be calculated before the draw, not after
-    SETUP_FOR_TURBO();
-    int16_t startX = CLAMP(-phys->camera.x, 0, TFT_WIDTH - 1) + 1;
-    int16_t endX   = CLAMP(phys->bounds.x - phys->camera.x, 0, TFT_WIDTH);
-    for (int16_t x = startX; x < endX; x++)
+    // Find the minimum and maximum surface points
+    int16_t minSurf = INT16_MAX;
+    int16_t maxSurf = INT16_MIN;
+    for (int idx = 0; idx < TFT_WIDTH; idx++)
     {
-        int16_t startY = CLAMP(1 - phys->camera.y, 0, TFT_HEIGHT);
-        int16_t endY   = CLAMP(phys->surfacePoints[x], 0, TFT_HEIGHT);
-        for (int16_t y = startY; y < endY; y++)
+        if (phys->surfacePoints[idx] < minSurf && phys->surfacePoints[idx] >= 0)
         {
-            TURBO_SET_PIXEL(x, y, c003);
+            minSurf = phys->surfacePoints[idx];
         }
-
-        startY = endY + 1;
-        endY   = CLAMP(phys->bounds.y - phys->camera.y, 0, TFT_HEIGHT);
-        for (int16_t y = startY; y < endY; y++)
+        if (phys->surfacePoints[idx] > maxSurf)
         {
-            TURBO_SET_PIXEL(x, y, c030);
+            maxSurf = phys->surfacePoints[idx];
         }
     }
 
-    // Draw gas gauge
-    fillDisplayArea(0, 0, (TFT_WIDTH * moveTimeLeftUs) / TANK_MOVE_TIME_US, 16, c222);
+    // Check if a non-negative minimum surface point was found
+    if (INT16_MAX == minSurf)
+    {
+        minSurf = -1;
+    }
+
+    // Clamp to screen space for fills and draws
+    minSurf = CLAMP(minSurf, 0, TFT_WIDTH);
+    maxSurf = CLAMP(maxSurf, 0, TFT_HEIGHT);
+
+    // Fill sky and ground contiguous regions
+    fillDisplayArea(-phys->camera.x,                 //
+                    -phys->camera.y,                 //
+                    phys->bounds.x - phys->camera.x, //
+                    minSurf,                         //
+                    c002);
+    fillDisplayArea(-phys->camera.x,                 //
+                    maxSurf,                         //
+                    phys->bounds.x - phys->camera.x, //
+                    phys->bounds.y - phys->camera.y, //
+                    c020);
+
+    // Fill in boundary between sky and ground
+    SETUP_FOR_TURBO();
+    int16_t startX = CLAMP(-phys->camera.x, 0, TFT_WIDTH);
+    int16_t endX   = CLAMP(phys->bounds.x - phys->camera.x, 0, TFT_WIDTH);
+    for (int y = minSurf; y < maxSurf; y++)
+    {
+        for (int16_t x = startX; x < endX; x++)
+        {
+            if (y < phys->surfacePoints[x])
+            {
+                TURBO_SET_PIXEL(x, y, c002);
+            }
+            else
+            {
+                TURBO_SET_PIXEL(x, y, c020);
+            }
+        }
+    }
 
     // Draw all circles
     node_t* cNode = phys->circles.first;
@@ -546,6 +569,9 @@ void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs)
             exp->color);
         eNode = eNode->next;
     }
+
+    // Draw gas gauge
+    fillDisplayArea(0, 0, (TFT_WIDTH * moveTimeLeftUs) / TANK_MOVE_TIME_US, 16, c222);
 }
 
 /**
@@ -558,15 +584,13 @@ void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs)
  * @param color The color to draw the line
  * @param surfacePoints [OUT] An array where the highest surface point is written to
  */
-static void drawSurfaceLine(int x0, int y0, int x1, int y1, paletteColor_t color, int16_t* surfacePoints)
+static void findSurfacePoints(int x0, int y0, int x1, int y1, paletteColor_t color, int16_t* surfacePoints)
 {
     // X is ordered and these lines would definitely be off-screen
     if (x1 < 0 || x0 >= TFT_WIDTH)
     {
         return;
     }
-
-    SETUP_FOR_TURBO();
 
     int dx  = ABS(x1 - x0);
     int sx  = x0 < x1 ? 1 : -1;
@@ -583,10 +607,6 @@ static void drawSurfaceLine(int x0, int y0, int x1, int y1, paletteColor_t color
             if (y0 > surfacePoints[x0])
             {
                 surfacePoints[x0] = y0;
-            }
-            if (0 <= y0 && y0 < TFT_HEIGHT)
-            {
-                TURBO_SET_PIXEL(x0, y0, color);
             }
         }
 
