@@ -296,9 +296,11 @@ void dn_drawBoard(dn_entity_t* self)
                             - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS)
                             + boardData->tiles[y][x].timeoutOffset;
 
-            if (boardData->tiles[y][x].selectionType == DN_UNIT_SELECTION)
+            switch(boardData->tiles[y][x].selectionType)
             {
-                drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
+                case DN_UNIT_SELECTION:
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
                                      drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
                                      drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
                                      &self->gameData->entityManager
@@ -306,10 +308,11 @@ void dn_drawBoard(dn_entity_t* self)
                                                     + (((y * ((self->gameData->generalTimer >> 10) % 10) + x + 2)
                                                         + (self->gameData->generalTimer >> 6))
                                                        % 6)]);
-            }
-            else if (boardData->tiles[y][x].selectionType == DN_MOVE_SELECTION)
-            {
-                drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
+                    break;
+                }
+                case DN_MOVE_SELECTION:
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
                                      drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
                                      drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
                                      &self->gameData->entityManager
@@ -318,10 +321,11 @@ void dn_drawBoard(dn_entity_t* self)
                                                             + (self->gameData->generalTimer >> 6))
                                                            % 4)
                                                           - 2)]);
-            }
-            else if (boardData->tiles[y][x].selectionType == DN_ATTACK_SELECTION)
-            {
-                drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
+                    break;
+                }
+                case DN_ATTACK_SELECTION:
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
                                      drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
                                      drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
                                      &self->gameData->entityManager
@@ -330,10 +334,11 @@ void dn_drawBoard(dn_entity_t* self)
                                                             + (self->gameData->generalTimer >> 6))
                                                            % 4)
                                                           - 2)]);
-            }
-            else if (boardData->tiles[y][x].selectionType == DN_REMIX_SELECTION)
-            {
-                drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
+                    break;
+                }
+                case DN_REMIX_SELECTION:
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
                                      drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
                                      drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
                                      &self->gameData->entityManager
@@ -342,12 +347,47 @@ void dn_drawBoard(dn_entity_t* self)
                                                             + (self->gameData->generalTimer >> 6))
                                                            % 4)
                                                           - 2)]);
-            }
-            else
-            {
-                drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
+                    break;
+                }
+                default:
+                {
+                    drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
                               drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
                               drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
+                    break;
+                }
+            }
+
+            switch(boardData->tiles[y][x].selectionType)
+            {
+    
+                case DN_MOVE_SELECTION_INVALID:
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[2],
+                                     drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                     drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                     &self->gameData->entityManager
+                                          .palettes[DN_MOVE1_FLOOR_PALETTE]);
+                    break;
+                }
+                case DN_ATTACK_SELECTION_INVALID:
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[2],
+                                     drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                     drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                     &self->gameData->entityManager
+                                          .palettes[DN_ATTACK1_FLOOR_PALETTE]);
+                    break;
+                }
+                case DN_REMIX_SELECTION_INVALID:
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[2],
+                                     drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                     drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                     &self->gameData->entityManager
+                                          .palettes[DN_REMIX1_FLOOR_PALETTE]);
+                    break;
+                }
             }
 
             if (boardData->tiles[y][x].rewards)
@@ -476,7 +516,7 @@ void dn_drawBoard(dn_entity_t* self)
     // drawCircleFilled(TFT_WIDTH >> 1, TFT_HEIGHT >> 1, 2, c000);
 }
 
-bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
+bool dn_availableMoves(dn_entity_t* unit, list_t* tracks, list_t* invalidTracks)
 {
     if (unit == NULL)
     {
@@ -520,6 +560,10 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
                         {
                             push(tracks, (void*)unitAction);
                         }
+                        else
+                        {
+                            push(invalidTracks, (void*)unitAction);
+                        }
                         break;
                     }
                     case DN_RED_TRACK: // ranged attack and remixed track
@@ -529,6 +573,10 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
                         {
                             push(tracks, (void*)unitAction);
                         }
+                        else
+                        {
+                            push(invalidTracks, (void*)unitAction);
+                        }
                         break;
                     }
                     case DN_BLUE_TRACK: // movement
@@ -537,6 +585,10 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks)
                         if (unitAtTrack == NULL)
                         {
                             push(tracks, (void*)unitAction);
+                        }
+                        else
+                        {
+                            push(invalidTracks, (void*)unitAction);
                         }
                         break;
                     }
@@ -594,8 +646,10 @@ bool dn_calculateMoveableUnits(dn_entity_t* board)
             continue;
         }
         list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+        list_t* invalids = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         memset(myList, 0, sizeof(list_t));
-        if (dn_availableMoves(playerUnits[i], myList))
+        memset(invalids, 0, sizeof(list_t));
+        if (dn_availableMoves(playerUnits[i], myList, invalids))
         {
             playerHasMoves                               = true;
             dn_boardPos_t pos                            = dn_getUnitBoardPos(playerUnits[i]);
@@ -603,6 +657,8 @@ bool dn_calculateMoveableUnits(dn_entity_t* board)
         }
         clear(myList);
         free(myList);
+        clear(invalids);
+        free(invalids);
     }
 
     return playerHasMoves;
@@ -1377,8 +1433,10 @@ void dn_trySelectUnit(dn_entity_t* self)
 
         // recalculate selectable tiles
         list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+        list_t* invalids = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         memset(myList, 0, sizeof(list_t));
-        if (dn_availableMoves(tData->selectedUnit, myList))
+        memset(invalids, 0, sizeof(list_t));
+        if (dn_availableMoves(tData->selectedUnit, myList, invalids))
         {
             node_t* cur = myList->first;
             while (cur != NULL)
@@ -1387,13 +1445,46 @@ void dn_trySelectUnit(dn_entity_t* self)
                 bData->tiles[action->pos.y][action->pos.x].selectionType = action->action;
                 cur                                                      = cur->next;
             }
+            cur = invalids->first;
+            while (cur != NULL)
+            {
+                dn_action_t* action                                      = ((dn_action_t*)cur->val);
+                bData->tiles[action->pos.y][action->pos.x].selectionType = action->action + 3;
+                cur                                                      = cur->next;
+            }
         }
         clear(myList);
         free(myList);
+        clear(invalids);
+        free(invalids);
 
         // would make it do the selection idle here later
         tData->a_callback   = dn_trySelectTrack;
         tData->b_callback   = dn_cancelSelectTrack;
+    }
+    else if((dn_belongsToP1(bData->tiles[tData->pos.y][tData->pos.x].unit) && self->gameData->phase < DN_P2_DANCE_PHASE) ||
+            (!dn_belongsToP1(bData->tiles[tData->pos.y][tData->pos.x].unit) && self->gameData->phase >= DN_P2_DANCE_PHASE))
+    {
+        bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
+        self->destroyFlag                                 = true;
+        ////////////////////////////
+        // make the prompt invalid//
+        ////////////////////////////
+        dn_entity_t* prompt
+            = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff, 0xffff}, self->gameData);
+        dn_promptData_t* promptData = (dn_promptData_t*)prompt->data;
+
+        strcpy(promptData->text, "Unit has no valid actions.");
+        promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+        memset(promptData->options, 0, sizeof(list_t));
+
+        dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+        memset(option1, 0, sizeof(dn_promptOption_t));
+        strcpy(option1->text, "OK");
+        option1->callback          = dn_cancelSelectTrack;
+        option1->downPressDetected = false;
+        push(promptData->options, (void*)option1);
+        promptData->numOptions = 1;
     }
 }
 
@@ -1421,14 +1512,11 @@ void dn_trySelectTrack(dn_entity_t* self)
     dn_boardData_t* bData        = (dn_boardData_t*)self->gameData->entityManager.board->data;
     if (bData->tiles[tData->pos.y][tData->pos.x].selectionType)
     {
-        dn_clearSelectableTiles(self);
-
         // determine the vector FROM the unit TO the track
         dn_boardPos_t from = dn_getUnitBoardPos(tData->selectedUnit);
         // tData->pos is "to"
         dn_boardPos_t relativeTrack = (dn_boardPos_t){tData->pos.x - from.x, tData->pos.y - from.y};
 
-        dn_entity_t* album = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album;
         // Make it relative to the player's facing direction
         if (self->gameData->phase < DN_P2_DANCE_PHASE)
         {
@@ -1437,9 +1525,8 @@ void dn_trySelectTrack(dn_entity_t* self)
         else
         {
             relativeTrack.x *= -1;
-            album = ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album;
         }
-        dn_track_t type                                   = dn_trackTypeAtCoords(album, relativeTrack);
+        dn_track_t type                                   = bData->tiles[tData->pos.y][tData->pos.x].selectionType;
         if (type == DN_REMIX_TRACK && tData->selectedUnit->paused)
         {
             // just treat it like movement, because the unit can't shoot.
@@ -1527,22 +1614,91 @@ void dn_trySelectTrack(dn_entity_t* self)
                 }
                 break;
             }
+            case DN_BLUE_TRACK_INVALID:
+            {
+                bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
+                self->destroyFlag                                 = true;
+                ////////////////////////////
+                // make the prompt invalid//
+                ////////////////////////////
+                dn_entity_t* prompt
+                    = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff, 0xffff}, self->gameData);
+                dn_promptData_t* promptData = (dn_promptData_t*)prompt->data;
+
+                strcpy(promptData->text, "Destination must be unoccupied.");
+                promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+                memset(promptData->options, 0, sizeof(list_t));
+
+                dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+                memset(option1, 0, sizeof(dn_promptOption_t));
+                strcpy(option1->text, "OK");
+                option1->callback          = dn_cancelSelectTrack;
+                option1->downPressDetected = false;
+                push(promptData->options, (void*)option1);
+                promptData->numOptions = 1;
+                break;
+            }
+            case DN_RED_TRACK_INVALID:
+            {
+                bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
+                self->destroyFlag                                 = true;
+                ////////////////////////////
+                // make the prompt invalid//
+                ////////////////////////////
+                dn_entity_t* prompt
+                    = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff, 0xffff}, self->gameData);
+                dn_promptData_t* promptData = (dn_promptData_t*)prompt->data;
+
+                strcpy(promptData->text, "Unit cannot fire when offline.");
+                promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+                memset(promptData->options, 0, sizeof(list_t));
+
+                dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+                memset(option1, 0, sizeof(dn_promptOption_t));
+                strcpy(option1->text, "OK");
+                option1->callback          = dn_cancelSelectTrack;
+                option1->downPressDetected = false;
+                push(promptData->options, (void*)option1);
+                promptData->numOptions = 1;
+                break;
+            }
+            case DN_REMIX_TRACK_INVALID:
+            {
+                bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
+                self->destroyFlag                                 = true;
+                ////////////////////////////
+                // make the prompt invalid//
+                ////////////////////////////
+                dn_entity_t* prompt
+                    = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff, 0xffff}, self->gameData);
+                dn_promptData_t* promptData = (dn_promptData_t*)prompt->data;
+
+                promptData->usesTwoLinesOfText = true;
+                strcpy(promptData->text, "When a unit is offline,");
+                strcpy(promptData->text2, "remix destination must be unoccupied.");
+                promptData->options = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+                memset(promptData->options, 0, sizeof(list_t));
+
+                dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
+                memset(option1, 0, sizeof(dn_promptOption_t));
+                strcpy(option1->text, "OK");
+                option1->callback          = dn_cancelSelectTrack;
+                option1->downPressDetected = false;
+                push(promptData->options, (void*)option1);
+                promptData->numOptions = 1;
+                break;
+            }
             default:
             {
                 break;
             }
         }
+        dn_clearSelectableTiles(self);
     }
 }
 void dn_cancelSelectTrack(dn_entity_t* self)
 {
-    dn_clearSelectableTiles(self);
-    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
-    tData->selectedUnit          = NULL;
-    dn_calculateMoveableUnits(self->gameData->entityManager.board);
-
-    tData->a_callback = dn_trySelectUnit;
-    tData->b_callback = NULL;
+    dn_setupDancePhase(self);
 }
 
 void dn_drawPlayerTurn(dn_entity_t* self)
@@ -1800,6 +1956,13 @@ void dn_gainRerollAndSetupDancePhase(dn_entity_t* self)
 
 void dn_setupDancePhase(dn_entity_t* self) // used to be dn_startMovePhase
 {
+    dn_entity_t* existingSelector = dn_findLastEntityOfType(self, DN_TILE_SELECTOR_DATA);
+    if(existingSelector)
+    {
+        ((dn_boardData_t*)self->gameData->entityManager.board->data)->tiles[((dn_tileSelectorData_t*)existingSelector->data)->pos.y][((dn_tileSelectorData_t*)existingSelector->data)->pos.x].selector = NULL;
+        existingSelector->destroyFlag = true;
+    }
+
     dn_zeroOutTileOffsets(self->gameData->entityManager.board);
     dn_clearSelectableTiles(self);
     dn_calculateMoveableUnits(self->gameData->entityManager.board);
@@ -3236,8 +3399,10 @@ void dn_setupBounceOptions(dn_entity_t* self)
 
     // recalculate selectable tiles
     list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+    list_t* invalids = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
     memset(myList, 0, sizeof(list_t));
-    if (dn_availableMoves(tData->selectedUnit, myList))
+    memset(invalids, 0, sizeof(list_t));
+    if (dn_availableMoves(tData->selectedUnit, myList, invalids))
     {
         node_t* cur = myList->first;
         while (cur != NULL)
@@ -3249,9 +3414,21 @@ void dn_setupBounceOptions(dn_entity_t* self)
             }
             cur                                                      = cur->next;
         }
+        cur = invalids->first;
+        while(cur != NULL)
+        {
+            dn_action_t* action = ((dn_action_t*)cur->val);
+            if(action->action == DN_RED_TRACK || action->action == DN_REMIX_TRACK)
+            {
+                bData->tiles[action->pos.y][action->pos.x].selectionType = self->gameData->resolvingRemix ? DN_REMIX_TRACK_INVALID : DN_RED_TRACK_INVALID;
+            }
+            cur = cur->next;
+        }
     }
     clear(myList);
     free(myList);
+    clear(invalids);
+    free(invalids);
 
     tData->a_callback   = dn_trySelectBounceDest;
     tData->b_callback   = dn_cancelSelectBounceDest;

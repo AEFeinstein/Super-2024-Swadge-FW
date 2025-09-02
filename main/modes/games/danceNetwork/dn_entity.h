@@ -219,7 +219,7 @@ void dn_updateBoard(dn_entity_t* self);
 void dn_zeroOutTileOffsets(dn_entity_t* board);
 bool dn_belongsToP1(dn_entity_t* unit);
 void dn_drawBoard(dn_entity_t* self);
-bool dn_availableMoves(dn_entity_t* unit, list_t* movesList);
+bool dn_availableMoves(dn_entity_t* unit, list_t* tracks, list_t* invalidTracks);
 dn_track_t dn_trackTypeAtColor(dn_entity_t* album, paletteColor_t trackCoords);
 dn_track_t dn_trackTypeAtCoords(dn_entity_t* album, dn_boardPos_t trackCoords);
 bool dn_calculateMoveableUnits(dn_entity_t* board);
