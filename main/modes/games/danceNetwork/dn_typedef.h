@@ -144,6 +144,7 @@ typedef enum __attribute__((packed))
     DN_RED_TRACK_INVALID,
     DN_BLUE_TRACK_INVALID,
     DN_REMIX_TRACK_INVALID,
+    DN_UNIT_SELECTION,
 } dn_track_t;
 
 typedef struct __attribute__((packed))
@@ -152,14 +153,10 @@ typedef struct __attribute__((packed))
     dn_track_t action;
 } dn_action_t;
 
-typedef enum __attribute__((packed))
+//remove redundant struct later
+typedef struct __attribute__((packed))
 {
-    DN_NO_SELECTION,
-    DN_ATTACK_SELECTION,
-    DN_MOVE_SELECTION,
-    DN_REMIX_SELECTION,
-    DN_ATTACK_SELECTION_INVALID,
-    DN_MOVE_SELECTION_INVALID,
-    DN_REMIX_SELECTION_INVALID,
-    DN_UNIT_SELECTION,
-} dn_selection_t;
+    char title[31];
+    char body[160];
+} dn_tutorialPage_t;
+

@@ -5,8 +5,8 @@
 #include <linked_list.h>
 #include <limits.h>
 
-//A double array of chars
-static const char tutorialText[2][23][2][160] = {
+//A double array of dn_tutorialPage_t
+static const dn_tutorialPage_t tutorialText[2][23] = {
     {
         {"Dance 101", "Welcome to Dance class. Please, take a seat. We have some spots here in the front."},
         {"Commander DancenoNighta", "I am Commander DancenoNighta, and I'll be bringing you up to speed on the dance scene in 2026."},
@@ -310,7 +310,7 @@ void dn_drawBoard(dn_entity_t* self)
                                                        % 6)]);
                     break;
                 }
-                case DN_MOVE_SELECTION:
+                case DN_BLUE_TRACK:
                 {
                     drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
                                      drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
@@ -323,7 +323,7 @@ void dn_drawBoard(dn_entity_t* self)
                                                           - 2)]);
                     break;
                 }
-                case DN_ATTACK_SELECTION:
+                case DN_RED_TRACK:
                 {
                     drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
                                      drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
@@ -336,7 +336,7 @@ void dn_drawBoard(dn_entity_t* self)
                                                           - 2)]);
                     break;
                 }
-                case DN_REMIX_SELECTION:
+                case DN_REMIX_TRACK:
                 {
                     drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
                                      drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
@@ -361,7 +361,7 @@ void dn_drawBoard(dn_entity_t* self)
             switch(boardData->tiles[y][x].selectionType)
             {
     
-                case DN_MOVE_SELECTION_INVALID:
+                case DN_BLUE_TRACK_INVALID:
                 {
                     drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[2],
                                      drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
@@ -370,7 +370,7 @@ void dn_drawBoard(dn_entity_t* self)
                                           .palettes[DN_MOVE1_FLOOR_PALETTE]);
                     break;
                 }
-                case DN_ATTACK_SELECTION_INVALID:
+                case DN_RED_TRACK_INVALID:
                 {
                     drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[2],
                                      drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
@@ -379,7 +379,7 @@ void dn_drawBoard(dn_entity_t* self)
                                           .palettes[DN_ATTACK1_FLOOR_PALETTE]);
                     break;
                 }
-                case DN_REMIX_SELECTION_INVALID:
+                case DN_REMIX_TRACK_INVALID:
                 {
                     drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[2],
                                      drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
@@ -2058,7 +2058,7 @@ void dn_clearSelectableTiles(dn_entity_t* self)
     {
         for (int j = 0; j < 5; j++)
         {
-            bData->tiles[i][j].selectionType = DN_NO_SELECTION;
+            bData->tiles[i][j].selectionType = DN_NONE_TRACK;
         }
     }
 }
@@ -3328,7 +3328,7 @@ void dn_drawTutorial(dn_entity_t* self)
 
     int16_t x = 7;
     int16_t y = 45;
-    drawTextWordWrapCentered(&self->gameData->font_ibm, c445, tutorialText[tData->advancedTips][tData->page][0], &x, &y, 136, 114);
+    drawTextWordWrapCentered(&self->gameData->font_ibm, c445, tutorialText[tData->advancedTips][tData->page].title, &x, &y, 136, 114);
 
     x = 7;
     y = 100;
@@ -3338,7 +3338,7 @@ void dn_drawTutorial(dn_entity_t* self)
 
     x = 24;
     y = 140;
-    drawTextWordWrap(&self->gameData->font_ibm, c555, tutorialText[tData->advancedTips][tData->page][1], &x, &y, x+225, y+80);
+    drawTextWordWrap(&self->gameData->font_ibm, c555, tutorialText[tData->advancedTips][tData->page].body, &x, &y, x+225, y+80);
 
     if((self->gameData->generalTimer % 256) > 128)
     {

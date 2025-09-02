@@ -66,7 +66,7 @@ typedef struct
     int16_t yVel;
     dn_entity_t* unit;     // Pointer to the unit on this tile. NULL if no unit is present.
     dn_entity_t* selector; // Pointer to the tile selector. NULL if no selector is present.
-    dn_selection_t selectionType;
+    dn_track_t selectionType;
     bool timeout;          // Becomes true if shot out. Becomes false when another tile is shot out.
     uint8_t timeoutOffset; // further offsets the yOffset when in timeout.
     uint8_t rewards;       // some number of rerolls given to the first visitor here.
