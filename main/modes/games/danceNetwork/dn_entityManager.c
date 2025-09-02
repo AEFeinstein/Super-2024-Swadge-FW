@@ -322,7 +322,7 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
             {
                 dn_loadAsset(DN_ALPHA_ORTHO_WSG, 1, &gameData->assets[DN_ALPHA_ORTHO_ASSET]);
             }
-            if (gameData->characterSets[0] == DN_CHESS_SET || gameData->characterSets[1] == DN_CHESS_SET)
+            if (gameData->characterSets[0] == DN_WHITE_CHESS_SET || gameData->characterSets[1] == DN_WHITE_CHESS_SET || gameData->characterSets[0] == DN_BLACK_CHESS_SET || gameData->characterSets[1] == DN_BLACK_CHESS_SET)
             {
                 dn_loadAsset(DN_CHESS_ORTHO_WSG, 1, &gameData->assets[DN_CHESS_ORTHO_ASSET]);
             }

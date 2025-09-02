@@ -105,7 +105,8 @@ static const cnfsFileIdx_t dn_assetToWsgLookup[]
        DN_PAWN_WSG,       DN_PAWN_SMALL_0_WSG, DN_BUCKET_HAT_DOWN_WSG, DN_BUCKET_HAT_UP_WSG};
 
 // NVS keys
-const char dnCharacterKey[] = "dn_character";
+const char dnP1TroupeKey[] = "dn_P1_Troupe";
+const char dnP2TroupeKey[] = "dn_P2_Troupe";
 
 dn_gameData_t* gameData;
 
@@ -115,8 +116,11 @@ static void dn_EnterMode(void)
     memset(gameData, 0, sizeof(dn_gameData_t));
 
     int32_t outVal;
-    readNvs32(dnCharacterKey, &outVal);
+    readNvs32(dnP1TroupeKey, &outVal);
     gameData->characterSets[0] = outVal;
+    outVal = 0;//zero it out just in case
+    readNvs32(dnP2TroupeKey, &outVal);
+    gameData->characterSets[1] = outVal;
 
     strcpy(gameData->playerNames[0], "Player 1");
     strcpy(gameData->playerNames[1], "Player 2");

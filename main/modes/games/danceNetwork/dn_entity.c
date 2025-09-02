@@ -711,7 +711,13 @@ void dn_drawCurtain(dn_entity_t* self)
                 drawWsgSimple(&self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0],
                               (TFT_WIDTH >> 2) - (self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0].w >> 1), 95);
                 break;
-            case DN_CHESS_SET:
+            case DN_BLACK_CHESS_SET:
+            {
+                drawWsgSimple(&self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0],
+                              (TFT_WIDTH >> 2) - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1), 95);
+                break;
+            }
+            case DN_WHITE_CHESS_SET:
                 drawWsgPaletteSimple(&self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0],
                                      (TFT_WIDTH >> 2) - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1),
                                      95, &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
@@ -743,15 +749,18 @@ void dn_drawCurtain(dn_entity_t* self)
         {
             case DN_ALPHA_SET:
                 drawWsgSimple(&self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0],
-                              (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2)
-                                  - (self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0].w >> 1),
-                              50);
+                              (TFT_WIDTH >> 2) - (self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0].w >> 1), 95);
                 break;
-            case DN_CHESS_SET:
+            case DN_BLACK_CHESS_SET:
+            {
                 drawWsgSimple(&self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0],
-                              (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2)
-                                  - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1),
-                              50);
+                              (TFT_WIDTH >> 2) - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1), 95);
+                break;
+            }
+            case DN_WHITE_CHESS_SET:
+                drawWsgPaletteSimple(&self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0],
+                                     (TFT_WIDTH >> 2) - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1),
+                                     95, &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                 break;
             default:
                 break;
@@ -1093,9 +1102,55 @@ void dn_updateCharacterSelect(dn_entity_t* self)
     if (self->gameData->btnDownState & PB_A)
     {
         // select marker
-        self->gameData->characterSets[0] = cData->selectCharacterIdx;
+        switch(cData->selectCharacterIdx)
+        {
+            case 0:
+            {
+                self->gameData->characterSets[0] = DN_ALPHA_SET;
+                self->gameData->characterSets[1] = DN_ALPHA_SET;
+                break;
+            }
+            case 1:
+            {
+                self->gameData->characterSets[0] = DN_ALPHA_SET;
+                self->gameData->characterSets[1] = DN_WHITE_CHESS_SET;
+                break;
+            }
+            case 2:
+            {
+                self->gameData->characterSets[0] = DN_ALPHA_SET;
+                self->gameData->characterSets[1] = DN_BLACK_CHESS_SET;
+                break;
+            }
+            case 3:
+            {
+                self->gameData->characterSets[0] = DN_BLACK_CHESS_SET;
+                self->gameData->characterSets[1] = DN_WHITE_CHESS_SET;
+                break;
+            }
+            case 4:
+            {
+                self->gameData->characterSets[0] = DN_WHITE_CHESS_SET;
+                self->gameData->characterSets[1] = DN_BLACK_CHESS_SET;
+                break;
+            }
+            case 5:
+            {
+                self->gameData->characterSets[0] = DN_BLACK_CHESS_SET;
+                self->gameData->characterSets[1] = DN_ALPHA_SET;
+                break;
+            }
+            default: //case 6
+            {
+                self->gameData->characterSets[0] = DN_WHITE_CHESS_SET;
+                self->gameData->characterSets[1] = DN_ALPHA_SET;
+                break;
+            }
+
+        }
         // save to NVS
-        writeNvs32(dnCharacterKey, self->gameData->characterSets[0]);
+        writeNvs32(dnP1TroupeKey, self->gameData->characterSets[0]);
+        writeNvs32(dnP2TroupeKey, self->gameData->characterSets[1]);
 
         dn_setCharacterSetPalette(&self->gameData->entityManager, self->gameData->characterSets[0]);
     }
@@ -1111,7 +1166,7 @@ void dn_updateCharacterSelect(dn_entity_t* self)
             // scroll left
             if (cData->selectCharacterIdx == 0)
             {
-                cData->selectCharacterIdx = DN_NUM_CHARACTERS - 1;
+                cData->selectCharacterIdx = DN_NUM_TROUPE_PERMUTATIONS - 1;
             }
             else
             {
@@ -1125,7 +1180,7 @@ void dn_updateCharacterSelect(dn_entity_t* self)
         if (cData->xSelectScrollOffset == 0)
         {
             // scroll right
-            cData->selectCharacterIdx = (cData->selectCharacterIdx + 1) % DN_NUM_CHARACTERS;
+            cData->selectCharacterIdx = (cData->selectCharacterIdx + 1) % DN_NUM_TROUPE_PERMUTATIONS;
             // increment the offset to scroll
             cData->xSelectScrollOffset += self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
         }
@@ -1169,9 +1224,8 @@ void dn_drawCharacterSelect(dn_entity_t* self)
     // Don't use a negative index!
     if (pIdx < 0)
     {
-        pIdx = DN_NUM_CHARACTERS - 1;
+        pIdx = DN_NUM_TROUPE_PERMUTATIONS - 1;
     }
-    // pIdx = dn_wrap(pIdx, DN_NUM_CHARACTERS - 1);
 
     // Draw floor tiles
     for (int16_t y = 0; y < 9; y++)
@@ -1206,7 +1260,7 @@ void dn_drawCharacterSelect(dn_entity_t* self)
             // Increment X offset
             xOff += self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
             // Increment marker index
-            pIdx = (pIdx + 1) % DN_NUM_CHARACTERS;
+            pIdx = (pIdx + 1) % DN_NUM_TROUPE_PERMUTATIONS;
         }
         // reset values
         xOff = ((TFT_WIDTH - self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w) >> 1)
@@ -1222,7 +1276,7 @@ void dn_drawCharacterSelect(dn_entity_t* self)
         // Don't use a negative index!
         while (pIdx < 0)
         {
-            pIdx += DN_NUM_CHARACTERS;
+            pIdx += DN_NUM_TROUPE_PERMUTATIONS;
         }
     }
 
@@ -1239,7 +1293,7 @@ void dn_drawCharacterSelect(dn_entity_t* self)
 
         switch (pIdx)
         {
-            case DN_ALPHA_SET:
+            case 0:
             {
                 kingDown = DN_ALPHA_DOWN_ASSET;
                 kingUp   = DN_ALPHA_UP_ASSET;
@@ -1247,7 +1301,23 @@ void dn_drawCharacterSelect(dn_entity_t* self)
                 pawnUp   = DN_BUCKET_HAT_UP_ASSET;
                 break;
             }
-            case DN_CHESS_SET:
+            case 1:
+            {
+                kingDown = DN_ALPHA_DOWN_ASSET;
+                kingUp   = DN_KING_ASSET;
+                pawnDown = DN_BUCKET_HAT_DOWN_ASSET;
+                pawnUp   = DN_PAWN_ASSET;
+                break;
+            }
+            case 2:
+            {
+                kingDown = DN_ALPHA_DOWN_ASSET;
+                kingUp   = DN_KING_ASSET;
+                pawnDown = DN_BUCKET_HAT_DOWN_ASSET;
+                pawnUp   = DN_PAWN_ASSET;
+                break;
+            }
+            case 3:
             {
                 kingDown = DN_KING_ASSET;
                 kingUp   = DN_KING_ASSET;
@@ -1255,8 +1325,28 @@ void dn_drawCharacterSelect(dn_entity_t* self)
                 pawnUp   = DN_PAWN_ASSET;
                 break;
             }
-            default:
+            case 4:
             {
+                kingDown = DN_KING_ASSET;
+                kingUp   = DN_KING_ASSET;
+                pawnDown = DN_PAWN_ASSET;
+                pawnUp   = DN_PAWN_ASSET;
+                break;
+            }
+            case 5:
+            {
+                kingDown = DN_ALPHA_DOWN_ASSET;
+                kingUp   = DN_ALPHA_UP_ASSET;
+                pawnDown = DN_BUCKET_HAT_DOWN_ASSET;
+                pawnUp   = DN_BUCKET_HAT_UP_ASSET;
+                break;
+            }
+            default: //case 6
+            {
+                kingDown = DN_ALPHA_DOWN_ASSET;
+                kingUp   = DN_ALPHA_UP_ASSET;
+                pawnDown = DN_BUCKET_HAT_DOWN_ASSET;
+                pawnUp   = DN_BUCKET_HAT_UP_ASSET;
                 break;
             }
         }
@@ -1264,12 +1354,25 @@ void dn_drawCharacterSelect(dn_entity_t* self)
         {
             if (i == 2) // king is the middle piece
             {
-                drawWsgSimple(&self->gameData->assets[kingDown].frames[0],
-                              xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i
-                                  - self->gameData->assets[kingDown].originX,
-                              yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
-                                  - self->gameData->assets[kingDown].originY);
-                if (kingUp == DN_KING_ASSET)
+                if(kingDown == DN_KING_ASSET && (pIdx == 4 || pIdx == 6))
+                {
+                    drawWsgPaletteSimple(
+                        &self->gameData->assets[kingDown].frames[0],
+                        xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4 - i)
+                            - self->gameData->assets[kingDown].originX,
+                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4 + i)
+                            - self->gameData->assets[kingDown].originY,
+                        &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                }
+                else
+                {
+                    drawWsgSimple(&self->gameData->assets[kingDown].frames[0],
+                                  xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4 - i)
+                                      - self->gameData->assets[kingDown].originX,
+                                  yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4 + i)
+                                      - self->gameData->assets[kingDown].originY);
+                }
+                if (kingUp == DN_KING_ASSET && (pIdx == 1 || pIdx == 2))
                 {
                     drawWsgPaletteSimple(
                         &self->gameData->assets[kingUp].frames[0],
@@ -1290,12 +1393,25 @@ void dn_drawCharacterSelect(dn_entity_t* self)
             }
             else
             {
-                drawWsgSimple(&self->gameData->assets[pawnDown].frames[0],
+                if (pawnDown == DN_PAWN_ASSET && (pIdx == 4 || pIdx == 6))
+                {
+                    drawWsgPaletteSimple(
+                        &self->gameData->assets[pawnDown].frames[0],
+                        xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4 - i)
+                            - self->gameData->assets[pawnDown].originX,
+                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4 + i)
+                            - self->gameData->assets[pawnDown].originY,
+                        &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                }
+                else
+                {
+                    drawWsgSimple(&self->gameData->assets[pawnDown].frames[0],
                               xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i
                                   - self->gameData->assets[pawnDown].originX,
                               yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
                                   - self->gameData->assets[pawnDown].originY);
-                if (pawnUp == DN_PAWN_ASSET)
+                }
+                if (pawnUp == DN_PAWN_ASSET && (pIdx == 1 || pIdx == 2))
                 {
                     drawWsgPaletteSimple(
                         &self->gameData->assets[pawnUp].frames[0],
@@ -1319,7 +1435,7 @@ void dn_drawCharacterSelect(dn_entity_t* self)
         // Increment X offset
         xOff += self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
         // Increment marker index
-        pIdx = (pIdx + 1) % DN_NUM_CHARACTERS;
+        pIdx = (pIdx + 1) % DN_NUM_TROUPE_PERMUTATIONS;
     }
 
     // Draw arrows to indicate this can be scrolled

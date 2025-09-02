@@ -7,7 +7,7 @@
 // Defines
 //==============================================================================
 
-#define DN_NUM_CHARACTERS 2
+#define DN_NUM_TROUPE_PERMUTATIONS 7
 
 //==============================================================================
 // Enums
@@ -102,7 +102,8 @@ void dn_ShowUi(dn_Ui_t ui);
 // extern const char tttWinKey[];
 // extern const char tttLossKey[];
 // extern const char tttDrawKey[];
-extern const char dnCharacterKey[];
+extern const char dnP1TroupeKey[];
+extern const char dnP2TroupeKey[];
 // extern const char tttTutorialKey[];
 // extern const char tttUnlockKey[];
 extern swadgeMode_t danceNetworkMode;
