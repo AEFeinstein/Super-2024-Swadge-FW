@@ -244,9 +244,7 @@ void dn_updateTileSelector(dn_entity_t* self);
 void dn_drawTileSelectorBackHalf(dn_entity_t* self, int16_t x, int16_t y);
 void dn_drawTileSelectorFrontHalf(dn_entity_t* self, int16_t x, int16_t y);
 void dn_trySelectUnit(dn_entity_t* self);
-void dn_cancelSelectUnit(dn_entity_t* self);
 void dn_trySelectTrack(dn_entity_t* self);
-void dn_cancelSelectTrack(dn_entity_t* self);
 
 void dn_drawPlayerTurn(dn_entity_t* self);
 
@@ -312,7 +310,6 @@ dn_entity_t* dn_findLastEntityOfType(dn_entity_t* self, dn_dataType_t type);
 void dn_setupBounceOptions(dn_entity_t* self);
 
 void dn_trySelectBounceDest(dn_entity_t* self);
-void dn_cancelSelectBounceDest(dn_entity_t* self);
 
 void dn_exitSubMode(dn_entity_t* self);
 

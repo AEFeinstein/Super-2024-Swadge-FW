@@ -61,11 +61,11 @@ static const char dn_MultiStr[]        = "Multiplayer";
 static const char dn_WirelessStr[]     = "Wireless Play";
 static const char dn_PassAndPlayStr[]  = "Pass and Play";
 static const char dn_MultiShortStr[]   = "Connect";
-static const char dn_SingleStr[]       = "Single Player";
+//static const char dn_SingleStr[]       = "Single Player";
 static const char dn_DiffEasyStr[]     = "Easy";
 static const char dn_DiffMediumStr[]   = "Medium";
 static const char dn_DiffHardStr[]     = "Hard";
-static const char dn_CharacterSelStr[] = "Select Pieces";
+static const char dn_CharacterSelStr[] = "Select Troupe";
 static const char dn_videoTutorialStr[] = "Video Tutorial";
 static const char dn_HowToStr[]        = "Text Tutorial";
 static const char dn_AdvancedHowToStr[]= "Advanced Tips";
@@ -218,22 +218,26 @@ static void dn_EnterMode(void)
 
     // Initialize the main menu
     gameData->menu = initMenu(dn_Name, dn_MenuCb);
+    addSingleItemToMenu(gameData->menu, dn_CharacterSelStr);
     gameData->menu = startSubMenu(gameData->menu, dn_MultiStr);
-    addSingleItemToMenu(gameData->menu, dn_WirelessStr);
+    //unfinished submode
+    //addSingleItemToMenu(gameData->menu, dn_WirelessStr);
     addSingleItemToMenu(gameData->menu, dn_PassAndPlayStr);
     gameData->menu = endSubMenu(gameData->menu);
 
-    gameData->menu = startSubMenu(gameData->menu, dn_SingleStr);
-    addSingleItemToMenu(gameData->menu, dn_DiffEasyStr);
-    addSingleItemToMenu(gameData->menu, dn_DiffMediumStr);
-    addSingleItemToMenu(gameData->menu, dn_DiffHardStr);
-    gameData->menu = endSubMenu(gameData->menu);
+    //unfinished submodes
+    // gameData->menu = startSubMenu(gameData->menu, dn_SingleStr);
+    // addSingleItemToMenu(gameData->menu, dn_DiffEasyStr);
+    // addSingleItemToMenu(gameData->menu, dn_DiffMediumStr);
+    // addSingleItemToMenu(gameData->menu, dn_DiffHardStr);
+    // gameData->menu = endSubMenu(gameData->menu);
 
-    addSingleItemToMenu(gameData->menu, dn_CharacterSelStr);
+    
     addSingleItemToMenu(gameData->menu, dn_videoTutorialStr);
     addSingleItemToMenu(gameData->menu, dn_HowToStr);
     addSingleItemToMenu(gameData->menu, dn_AdvancedHowToStr);
-    addSingleItemToMenu(gameData->menu, dn_RecordsStr);
+    //unfinished submode
+    //addSingleItemToMenu(gameData->menu, dn_RecordsStr);
     addSingleItemToMenu(gameData->menu, dn_Exit);
 
     // Initialize a menu with no entries to be used as a background

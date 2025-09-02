@@ -1460,7 +1460,7 @@ void dn_trySelectUnit(dn_entity_t* self)
 
         // would make it do the selection idle here later
         tData->a_callback   = dn_trySelectTrack;
-        tData->b_callback   = dn_cancelSelectTrack;
+        tData->b_callback   = dn_setupDancePhase;
     }
     else if((dn_belongsToP1(bData->tiles[tData->pos.y][tData->pos.x].unit) && self->gameData->phase < DN_P2_DANCE_PHASE) ||
             (!dn_belongsToP1(bData->tiles[tData->pos.y][tData->pos.x].unit) && self->gameData->phase >= DN_P2_DANCE_PHASE))
@@ -1481,29 +1481,11 @@ void dn_trySelectUnit(dn_entity_t* self)
         dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
         memset(option1, 0, sizeof(dn_promptOption_t));
         strcpy(option1->text, "OK");
-        option1->callback          = dn_cancelSelectTrack;
+        option1->callback          = dn_setupDancePhase;
         option1->downPressDetected = false;
         push(promptData->options, (void*)option1);
         promptData->numOptions = 1;
     }
-}
-
-void dn_cancelSelectUnit(dn_entity_t* self)
-{
-    self->gameData->phase--;
-    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
-    for (int y = 0; y < DN_BOARD_SIZE; y++)
-    {
-        for (int x = 0; x < DN_BOARD_SIZE; x++)
-        {
-            if (bData->tiles[y][x].selector)
-            {
-                bData->tiles[y][x].selector->destroyFlag = true;
-                bData->tiles[y][x].selector              = NULL;
-            }
-        }
-    }
-    dn_setupDancePhase(self);
 }
 
 void dn_trySelectTrack(dn_entity_t* self)
@@ -1632,7 +1614,7 @@ void dn_trySelectTrack(dn_entity_t* self)
                 dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
                 memset(option1, 0, sizeof(dn_promptOption_t));
                 strcpy(option1->text, "OK");
-                option1->callback          = dn_cancelSelectTrack;
+                option1->callback          = dn_setupDancePhase;
                 option1->downPressDetected = false;
                 push(promptData->options, (void*)option1);
                 promptData->numOptions = 1;
@@ -1656,7 +1638,7 @@ void dn_trySelectTrack(dn_entity_t* self)
                 dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
                 memset(option1, 0, sizeof(dn_promptOption_t));
                 strcpy(option1->text, "OK");
-                option1->callback          = dn_cancelSelectTrack;
+                option1->callback          = dn_setupDancePhase;
                 option1->downPressDetected = false;
                 push(promptData->options, (void*)option1);
                 promptData->numOptions = 1;
@@ -1682,7 +1664,7 @@ void dn_trySelectTrack(dn_entity_t* self)
                 dn_promptOption_t* option1 = heap_caps_malloc(sizeof(dn_promptOption_t), MALLOC_CAP_8BIT);
                 memset(option1, 0, sizeof(dn_promptOption_t));
                 strcpy(option1->text, "OK");
-                option1->callback          = dn_cancelSelectTrack;
+                option1->callback          = dn_setupDancePhase;
                 option1->downPressDetected = false;
                 push(promptData->options, (void*)option1);
                 promptData->numOptions = 1;
@@ -1695,10 +1677,6 @@ void dn_trySelectTrack(dn_entity_t* self)
         }
         dn_clearSelectableTiles(self);
     }
-}
-void dn_cancelSelectTrack(dn_entity_t* self)
-{
-    dn_setupDancePhase(self);
 }
 
 void dn_drawPlayerTurn(dn_entity_t* self)
@@ -2088,6 +2066,8 @@ void dn_clearSelectableTiles(dn_entity_t* self)
 void dn_startUpgradeMenu(dn_entity_t* self, int32_t countOff)
 {
     self->gameData->resolvingRemix = false;
+    
+    dn_zeroOutTileOffsets(self->gameData->entityManager.board);
 
     //////////////////////////
     // Make the upgrade menu//
@@ -2788,8 +2768,6 @@ void dn_rerollFirstUpgradeOption(dn_entity_t* self)
 
 void dn_confirmUpgrade(dn_entity_t* self)
 {
-    dn_zeroOutTileOffsets(self->gameData->entityManager.board);
-
     dn_upgradeMenuData_t* umData       = (dn_upgradeMenuData_t*)self->data;
     umData->options[3].selectionAmount = 0;
     umData->numTracksToAdd = 7; //It really adds 2 tracks. Different things happen happen at 7,6,5,4,3,2,1, and 0
@@ -3431,7 +3409,7 @@ void dn_setupBounceOptions(dn_entity_t* self)
     free(invalids);
 
     tData->a_callback   = dn_trySelectBounceDest;
-    tData->b_callback   = dn_cancelSelectBounceDest;
+    tData->b_callback   = dn_setupDancePhase;
 }
 
 void dn_trySelectBounceDest(dn_entity_t* self)
@@ -3497,11 +3475,6 @@ void dn_trySelectBounceDest(dn_entity_t* self)
                                 - (bData->tiles[tData->bounce.y][tData->bounce.x].yOffset)};
         }
     }
-}
-
-void dn_cancelSelectBounceDest(dn_entity_t* self)
-{
-
 }
 
 void dn_exitSubMode(dn_entity_t* self)
