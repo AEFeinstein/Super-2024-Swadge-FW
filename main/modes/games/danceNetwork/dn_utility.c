@@ -30,7 +30,8 @@ dn_assetIdx_t dn_getAssetIdx(dn_characterSet_t characterSet, dn_unitRank rank, d
             }
             break;
         }
-        case DN_CHESS_SET:
+        case DN_BLACK_CHESS_SET:
+        case DN_WHITE_CHESS_SET:
         {
             switch (rank)
             {

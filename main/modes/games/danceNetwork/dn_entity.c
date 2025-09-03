@@ -59,6 +59,17 @@ static const dn_tutorialPage_t tutorialText[2][23] = {
     }
 };
 
+static const dn_characterSet_t troupePermutations[7][2] =
+{
+    {DN_ALPHA_SET, DN_ALPHA_SET},
+    {DN_WHITE_CHESS_SET, DN_ALPHA_SET},
+    {DN_BLACK_CHESS_SET, DN_ALPHA_SET},
+    {DN_WHITE_CHESS_SET, DN_BLACK_CHESS_SET},
+    {DN_BLACK_CHESS_SET, DN_WHITE_CHESS_SET},
+    {DN_ALPHA_SET, DN_BLACK_CHESS_SET},
+    {DN_ALPHA_SET, DN_WHITE_CHESS_SET}
+};
+
 void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType)
 {
     if (self->data != NULL)
@@ -434,73 +445,75 @@ void dn_drawBoard(dn_entity_t* self)
             {
                 // Draw the unit on the tile
                 dn_entity_t* unit            = boardData->tiles[y][x].unit;
-                bool drawn                   = false;
                 dn_assetIdx_t miniAssetIndex = dn_isKing(unit) ? DN_KING_SMALL_ASSET : DN_PAWN_SMALL_ASSET;
-                if (dn_belongsToP1(unit))
+                bool belongsToP1 = dn_belongsToP1(unit);
+                if ((unit->assetIndex == DN_KING_ASSET || unit->assetIndex == DN_PAWN_ASSET)&&((belongsToP1 && self->gameData->characterSets[0]==DN_WHITE_CHESS_SET)||(!belongsToP1 && self->gameData->characterSets[1]==DN_WHITE_CHESS_SET)))
+                    // draw unit
+                    drawWsgPaletteSimple(
+                        &self->gameData->assets[unit->assetIndex].frames[0],
+                        drawX - self->gameData->assets[unit->assetIndex].originX,
+                        drawY - self->gameData->assets[unit->assetIndex].originY,
+                        &self->gameData->entityManager
+                                .palettes[unit->paused ? DN_SUPERBRIGHT_GRAYSCALE_PALETTE : DN_WHITE_CHESS_PALETTE]);
+
+                else if(unit->paused)
                 {
-                    if (unit->assetIndex == DN_KING_ASSET || unit->assetIndex == DN_PAWN_ASSET)
-                    {
-                        // draw unit
-                        drawWsgPaletteSimple(
-                            &self->gameData->assets[unit->assetIndex].frames[0],
-                            drawX - self->gameData->assets[unit->assetIndex].originX,
-                            drawY - self->gameData->assets[unit->assetIndex].originY,
-                            &self->gameData->entityManager
-                                 .palettes[unit->paused ? DN_GRAYSCALE_PALETTE : DN_WHITE_CHESS_PALETTE]);
-                        drawn = true;
-                    }
-                    // draw mini chess unit
-                    drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[0],
-                                         miniDrawX - self->gameData->assets[miniAssetIndex].originX,
-                                         miniDrawY - self->gameData->assets[miniAssetIndex].originY,
-                                         &self->gameData->entityManager
-                                              .palettes[unit->paused ? DN_GRAYSCALE_PALETTE : DN_WHITE_CHESS_PALETTE]);
+                    drawWsgPaletteSimple(
+                        &self->gameData->assets[unit->assetIndex].frames[0],
+                        drawX - self->gameData->assets[unit->assetIndex].originX,
+                        drawY - self->gameData->assets[unit->assetIndex].originY,
+                        &self->gameData->entityManager
+                                .palettes[DN_GRAYSCALE_PALETTE]);
+                }
+                else
+                {
+                    drawWsgSimple(
+                        &self->gameData->assets[unit->assetIndex].frames[0],
+                        drawX - self->gameData->assets[unit->assetIndex].originX,
+                        drawY - self->gameData->assets[unit->assetIndex].originY);
+                }
+                // draw mini chess unit
+                if(belongsToP1)
+                {
                     if(unit->paused)
                     {
-                        drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[1],
-                                         miniDrawX - self->gameData->assets[miniAssetIndex].originX,
-                                         miniDrawY - self->gameData->assets[miniAssetIndex].originY,
-                                         &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                        drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[0],
+                                    miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                    miniDrawY - self->gameData->assets[miniAssetIndex].originY,
+                                    &self->gameData->entityManager
+                                        .palettes[DN_SUPERBRIGHT_GRAYSCALE_PALETTE]);
+                        // drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[1],
+                        //             miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                        //             miniDrawY - self->gameData->assets[miniAssetIndex].originY,
+                        //             &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                    }
+                    else
+                    {
+                        drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[0],
+                                    miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                    miniDrawY - self->gameData->assets[miniAssetIndex].originY,
+                                    &self->gameData->entityManager
+                                        .palettes[DN_WHITE_CHESS_PALETTE]);
                     }
                 }
                 else
                 {
-                    // draw mini chess unit
-                    if (unit->paused)
+                    if(unit->paused)
                     {
                         drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[0],
-                                             miniDrawX - self->gameData->assets[miniAssetIndex].originX,
-                                             miniDrawY - self->gameData->assets[miniAssetIndex].originY,
-                                             &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE]);
+                                    miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                    miniDrawY - self->gameData->assets[miniAssetIndex].originY,
+                                    &self->gameData->entityManager
+                                        .palettes[DN_GRAYSCALE_PALETTE]);
+                        // drawWsgSimple(&self->gameData->assets[miniAssetIndex].frames[1],
+                        //             miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                        //             miniDrawY - self->gameData->assets[miniAssetIndex].originY);
                     }
                     else
                     {
                         drawWsgSimple(&self->gameData->assets[miniAssetIndex].frames[0],
-                                      miniDrawX - self->gameData->assets[miniAssetIndex].originX,
-                                      miniDrawY - self->gameData->assets[miniAssetIndex].originY);
-                    }
-                    if(unit->paused)
-                    {
-                        drawWsgSimple(&self->gameData->assets[miniAssetIndex].frames[1],    
-                                  miniDrawX - self->gameData->assets[miniAssetIndex].originX,
-                                  miniDrawY - self->gameData->assets[miniAssetIndex].originY);
-                    }
-                }
-                if (!drawn)
-                {
-                    // draw unit
-                    if (unit->paused)
-                    {
-                        drawWsgPaletteSimple(&self->gameData->assets[unit->assetIndex].frames[0],
-                                             drawX - self->gameData->assets[unit->assetIndex].originX,
-                                             drawY - self->gameData->assets[unit->assetIndex].originY,
-                                             &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE]);
-                    }
-                    else
-                    {
-                        drawWsgSimple(&self->gameData->assets[unit->assetIndex].frames[0],
-                                      drawX - self->gameData->assets[unit->assetIndex].originX,
-                                      drawY - self->gameData->assets[unit->assetIndex].originY);
+                                    miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                    miniDrawY - self->gameData->assets[miniAssetIndex].originY);
                     }
                 }
             }
@@ -749,18 +762,23 @@ void dn_drawCurtain(dn_entity_t* self)
         {
             case DN_ALPHA_SET:
                 drawWsgSimple(&self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0],
-                              (TFT_WIDTH >> 2) - (self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0].w >> 1), 95);
+                              (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2)
+                                  - (self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0].w >> 1),
+                              50);
                 break;
             case DN_BLACK_CHESS_SET:
             {
                 drawWsgSimple(&self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0],
-                              (TFT_WIDTH >> 2) - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1), 95);
+                              (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2)
+                                  - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1),
+                              50);
                 break;
             }
             case DN_WHITE_CHESS_SET:
                 drawWsgPaletteSimple(&self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0],
-                                     (TFT_WIDTH >> 2) - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1),
-                                     95, &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                                     (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2)
+                                  - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1),
+                              50, &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                 break;
             default:
                 break;
@@ -1101,53 +1119,8 @@ void dn_updateCharacterSelect(dn_entity_t* self)
     dn_characterSelectData_t* cData = (dn_characterSelectData_t*)self->data;
     if (self->gameData->btnDownState & PB_A)
     {
-        // select marker
-        switch(cData->selectCharacterIdx)
-        {
-            case 0:
-            {
-                self->gameData->characterSets[0] = DN_ALPHA_SET;
-                self->gameData->characterSets[1] = DN_ALPHA_SET;
-                break;
-            }
-            case 1:
-            {
-                self->gameData->characterSets[0] = DN_ALPHA_SET;
-                self->gameData->characterSets[1] = DN_WHITE_CHESS_SET;
-                break;
-            }
-            case 2:
-            {
-                self->gameData->characterSets[0] = DN_ALPHA_SET;
-                self->gameData->characterSets[1] = DN_BLACK_CHESS_SET;
-                break;
-            }
-            case 3:
-            {
-                self->gameData->characterSets[0] = DN_BLACK_CHESS_SET;
-                self->gameData->characterSets[1] = DN_WHITE_CHESS_SET;
-                break;
-            }
-            case 4:
-            {
-                self->gameData->characterSets[0] = DN_WHITE_CHESS_SET;
-                self->gameData->characterSets[1] = DN_BLACK_CHESS_SET;
-                break;
-            }
-            case 5:
-            {
-                self->gameData->characterSets[0] = DN_BLACK_CHESS_SET;
-                self->gameData->characterSets[1] = DN_ALPHA_SET;
-                break;
-            }
-            default: //case 6
-            {
-                self->gameData->characterSets[0] = DN_WHITE_CHESS_SET;
-                self->gameData->characterSets[1] = DN_ALPHA_SET;
-                break;
-            }
-
-        }
+        self->gameData->characterSets[0] = troupePermutations[cData->selectCharacterIdx][0];
+        self->gameData->characterSets[1] = troupePermutations[cData->selectCharacterIdx][1];
         // save to NVS
         writeNvs32(dnP1TroupeKey, self->gameData->characterSets[0]);
         writeNvs32(dnP2TroupeKey, self->gameData->characterSets[1]);
@@ -1241,7 +1214,7 @@ void dn_drawCharacterSelect(dn_entity_t* self)
                 if (drawX >= -self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w && drawX <= TFT_WIDTH)
                 {
                     // If this is the active maker, draw swapped pallete
-                    if (pIdx == self->gameData->characterSets[0] && cData->selectDiamondShape[y * 5 + x + 2])
+                    if (troupePermutations[pIdx][0] == self->gameData->characterSets[0] && troupePermutations[pIdx][1] == self->gameData->characterSets[1] && cData->selectDiamondShape[y * 5 + x + 2])
                     {
                         drawWsgPaletteSimple(
                             &self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0], drawX, drawY,
@@ -1335,17 +1308,17 @@ void dn_drawCharacterSelect(dn_entity_t* self)
             }
             case 5:
             {
-                kingDown = DN_ALPHA_DOWN_ASSET;
+                kingDown = DN_KING_ASSET;
                 kingUp   = DN_ALPHA_UP_ASSET;
-                pawnDown = DN_BUCKET_HAT_DOWN_ASSET;
+                pawnDown = DN_PAWN_ASSET;
                 pawnUp   = DN_BUCKET_HAT_UP_ASSET;
                 break;
             }
             default: //case 6
             {
-                kingDown = DN_ALPHA_DOWN_ASSET;
+                kingDown = DN_KING_ASSET;
                 kingUp   = DN_ALPHA_UP_ASSET;
-                pawnDown = DN_BUCKET_HAT_DOWN_ASSET;
+                pawnDown = DN_PAWN_ASSET;
                 pawnUp   = DN_BUCKET_HAT_UP_ASSET;
                 break;
             }
@@ -1358,21 +1331,21 @@ void dn_drawCharacterSelect(dn_entity_t* self)
                 {
                     drawWsgPaletteSimple(
                         &self->gameData->assets[kingDown].frames[0],
-                        xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4 - i)
+                        xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i
                             - self->gameData->assets[kingDown].originX,
-                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4 + i)
+                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
                             - self->gameData->assets[kingDown].originY,
                         &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                 }
                 else
                 {
                     drawWsgSimple(&self->gameData->assets[kingDown].frames[0],
-                                  xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4 - i)
+                                  xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i
                                       - self->gameData->assets[kingDown].originX,
-                                  yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4 + i)
+                                  yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
                                       - self->gameData->assets[kingDown].originY);
                 }
-                if (kingUp == DN_KING_ASSET && (pIdx == 1 || pIdx == 2))
+                if (kingUp == DN_KING_ASSET && (pIdx == 1 || pIdx == 3))
                 {
                     drawWsgPaletteSimple(
                         &self->gameData->assets[kingUp].frames[0],
@@ -1397,9 +1370,9 @@ void dn_drawCharacterSelect(dn_entity_t* self)
                 {
                     drawWsgPaletteSimple(
                         &self->gameData->assets[pawnDown].frames[0],
-                        xOff - (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * (4 - i)
+                        xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i
                             - self->gameData->assets[pawnDown].originX,
-                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * (4 + i)
+                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
                             - self->gameData->assets[pawnDown].originY,
                         &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                 }
@@ -1411,7 +1384,7 @@ void dn_drawCharacterSelect(dn_entity_t* self)
                               yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
                                   - self->gameData->assets[pawnDown].originY);
                 }
-                if (pawnUp == DN_PAWN_ASSET && (pIdx == 1 || pIdx == 2))
+                if (pawnUp == DN_PAWN_ASSET && (pIdx == 1 || pIdx == 3))
                 {
                     drawWsgPaletteSimple(
                         &self->gameData->assets[pawnUp].frames[0],

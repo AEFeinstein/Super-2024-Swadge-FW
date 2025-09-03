@@ -579,20 +579,6 @@ static void dn_initializeVideoTutorial(void)
 static void dn_initializeGame(void)
 {
     setMegaLedsOn(gameData->menuRenderer, false);
-    // if player vs CPU
-    if (gameData->singleSystem && !gameData->passAndPlay)
-    {
-        // The player may randomly be p1 or p2.
-        gameData->isPlayer1 = dn_randomInt(0, 1);
-        if (!gameData->isPlayer1)
-        {
-            // copy player 1's character over to player 2 position.
-            gameData->characterSets[1] = gameData->characterSets[0];
-        }
-        //[gameData->isPlayer1] actually gets the opponent.
-        // give the CPU a random character.
-        gameData->characterSets[gameData->isPlayer1] = (dn_characterSet_t)dn_randomInt(0, 1);
-    }
 
     ////////////////////
     // load the assets//
@@ -619,9 +605,9 @@ static void dn_initializeGame(void)
 
     dn_loadAsset(DN_MINI_TILE_WSG, 1, &gameData->assets[DN_MINI_TILE_ASSET]);
 
-    dn_loadAsset(DN_KING_SMALL_0_WSG, 2, &gameData->assets[DN_KING_SMALL_ASSET]);
+    dn_loadAsset(DN_KING_SMALL_0_WSG, 1, &gameData->assets[DN_KING_SMALL_ASSET]);
 
-    dn_loadAsset(DN_PAWN_SMALL_0_WSG, 2, &gameData->assets[DN_PAWN_SMALL_ASSET]);
+    dn_loadAsset(DN_PAWN_SMALL_0_WSG, 1, &gameData->assets[DN_PAWN_SMALL_ASSET]);
 
     dn_loadAsset(DN_REROLL_WSG, 1, &gameData->assets[DN_REROLL_ASSET]);
 

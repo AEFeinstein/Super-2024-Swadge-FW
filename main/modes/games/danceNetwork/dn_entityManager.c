@@ -64,16 +64,20 @@ void dn_initializeEntityManager(dn_entityManager_t* entityManager, dn_gameData_t
     wsgPaletteSet(&entityManager->palettes[DN_DICE_NO_ARROW_PALETTE], c300, c500);
 
     wsgPaletteReset(&entityManager->palettes[DN_GRAYSCALE_PALETTE]);
+    wsgPaletteReset(&entityManager->palettes[DN_SUPERBRIGHT_GRAYSCALE_PALETTE]);
     for (paletteColor_t cur = c000; cur <= c555; cur++)
     {
         uint32_t rgb = paletteToRGB(cur);
-        rgb          = (rgb >> 16) & 0xFF; // Extract red channel
-        rgb += (rgb >> 8) & 0xFF;          // Extract green channel
-        rgb += rgb & 0xFF;                 // Extract blue channel
-        rgb /= 2;
-        rgb = CLAMP(rgb, 0, 255);
+        uint32_t r = (rgb >> 16) & 0xFF; // Extract red channel
+        uint32_t g = (rgb >> 8) & 0xFF;  // Extract green channel
+        uint32_t b = rgb & 0xFF;         // Extract blue channel
+        uint32_t sum = r + g + b;
+        uint32_t bright = CLAMP(sum * 4, 0, 765);
 
-        wsgPaletteSet(&entityManager->palettes[DN_GRAYSCALE_PALETTE], cur, (rgb / 51) * 43);
+        sum = CLAMP(sum, 0, 765);
+
+        wsgPaletteSet(&entityManager->palettes[DN_GRAYSCALE_PALETTE], cur, (sum/153) * 43);
+        wsgPaletteSet(&entityManager->palettes[DN_SUPERBRIGHT_GRAYSCALE_PALETTE], cur, (bright / 153) * 43);
     }
 
     wsgPaletteReset(&entityManager->palettes[DN_GREEN_TO_CYAN_PALETTE]);
