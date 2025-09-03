@@ -26,10 +26,13 @@
 
 void canvasBlankInit(wsg_t* canvas, int width, int height, paletteColor_t startColor, bool spiRam)
 {
-    canvas->h  = height;
-    canvas->w  = width;
-    canvas->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * canvas->w * canvas->h,
-                                                       spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, "wsg");
+    canvas->h = height;
+    canvas->w = width;
+    // FIXME: idf.py build can't find the "tag" variant. Not sure if that's important or not
+    /* canvas->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * canvas->w * canvas->h,
+                                                       spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, "wsg"); */
+    canvas->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * canvas->w * canvas->h,
+                                                       spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT);
     for (int idx = 0; idx < (height * width); idx++)
     {
         canvas->px[idx] = startColor;
@@ -92,8 +95,8 @@ void canvasDrawPal(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, b
             // Handle rotation
             if (rotateDeg != 0) // Only enter this block if rotation isn't zero to save processing time
             {
-                int tx = x;
-                int ty = y;
+                int32_t tx = x;
+                int32_t ty = y;
                 rotatePixel(&tx, &ty, rotateDeg, w, h);
                 xPos = tx + startX;
                 yPos = ty + startY;

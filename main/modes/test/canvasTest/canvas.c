@@ -83,17 +83,10 @@ static void stEnterMode(void)
     // Tertiary canvas
     canvasBlankInit(&st->donut2, 32, 32, cTransparent, true);
     canvasDraw(&st->donut2, KID_1_WSG, 0, 0, false, true, 235);
-
-    // Show memory after init
-    ESP_LOGI("CANV", "After initialization");
-    dumpAllocTable();
 }
 
 static void stExitMode(void)
 {
-    // Show memory before teardown
-    ESP_LOGI("CANV", "Prior to teardown");
-    dumpAllocTable();
     canvasFree(&st->canvas);
 }
 
