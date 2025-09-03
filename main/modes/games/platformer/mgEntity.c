@@ -309,7 +309,7 @@ void mg_updatePlayer(mgEntity_t* self)
         && self->shotsFired < self->shotLimit)
     {
         mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
-                                                    TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+                                                    TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y) - 2);
         if (createdEntity != NULL)
         {
             createdEntity->xspeed    = (self->spriteFlipHorizontal) ? -(96 + abs(self->xspeed) /*+ abs(self->yspeed)*/)
@@ -2302,9 +2302,10 @@ void updateBgmChange(mgEntity_t* self)
 
 void updateWaveBall(mgEntity_t* self)
 {
-    if (self->gameData->frameCount % 4 == 0)
+    if (self->gameData->frameCount % 2 == 0)
     {
-        self->spriteIndex = (MG_SP_WAVEBALL_1 + ((self->spriteIndex + 1) % 3));
+        self->spriteIndex = (self->spriteIndex >= MG_SP_WAVEBALL_3) ? MG_SP_WAVEBALL_1 : self->spriteIndex + 1;
+        //(MG_SP_WAVEBALL_1 + ((self->spriteIndex + 1) % 3));
     }
 
     /*if (self->gameData->frameCount % 4 == 0)
