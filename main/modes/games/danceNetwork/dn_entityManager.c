@@ -72,9 +72,11 @@ void dn_initializeEntityManager(dn_entityManager_t* entityManager, dn_gameData_t
         uint32_t g      = (rgb >> 8) & 0xFF;  // Extract green channel
         uint32_t b      = rgb & 0xFF;         // Extract blue channel
         uint32_t sum    = r + g + b;
-        uint32_t bright = CLAMP(sum * 4, 0, 765);
-
-        sum = CLAMP(sum, 0, 765);
+        uint32_t bright = sum * 4;
+        if (bright > 765)
+            bright = 765;
+        if (sum > 765)
+            sum = 765;
 
         wsgPaletteSet(&entityManager->palettes[DN_GRAYSCALE_PALETTE], cur, (sum / 153) * 43);
         wsgPaletteSet(&entityManager->palettes[DN_SUPERBRIGHT_GRAYSCALE_PALETTE], cur, (bright / 153) * 43);
