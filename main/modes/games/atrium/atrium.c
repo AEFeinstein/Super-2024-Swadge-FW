@@ -1,7 +1,6 @@
 #include "atrium.h"
 
 /// @brief 
-const char atriumModeName[] = "Atrium"; //idk working title
 
 static void atriumEnterMode(void);
 static void atriumExitMode(void);
@@ -10,11 +9,37 @@ static void sonaDraw(void);
 static void sonaIdle(void);
 static void atriumTitle(void);
 static void viewProfile(void);
+static void editProfile(int xselect, int yselect);
+static void atriumAddSP(struct swadgePassPacket* packet);
 
+//---------------------------------------------------------------------------------//
+//TROPHY CASE SPECIFIC INFORMATION
+const trophyData_t atriumTrophies[] = {
+        {
+            .title       = "Welcome to the Atrium",
+            .description = "We've got music and games",
+            .image       = NO_IMAGE_SET,
+            .type        = TROPHY_TYPE_TRIGGER,
+            .difficulty  = TROPHY_DIFF_EASY,
+            .maxVal      = 1,
+            .hidden      = true,
+            .identifier  = NULL,
+        },
+    };
 
-//static void createProfile(void);
-//static void viewProfile(void);
+    trophySettings_t atriumTrophySettings = {
+        .drawFromBottom   = true,
+        .staticDurationUs = DRAW_STATIC_US * 2,
+        .slideDurationUs  = DRAW_SLIDE_US,
+    };
 
+    trophyDataList_t atriumTrophyData = {
+    .settings = &atriumTrophySettings,
+    .list     = atriumTrophies,
+    .length   = ARRAY_SIZE(atriumTrophies),
+};
+
+const char atriumModeName[] = "Atrium"; //idk working title
 swadgeMode_t atriumMode = {
     .modeName                 = atriumModeName,  // Assign the name we created here
     .wifiMode                 = ESP_NOW,         // If we want WiFi 
@@ -30,22 +55,39 @@ swadgeMode_t atriumMode = {
     .fnEspNowRecvCb           = NULL,            // If using Wifi, add the receive function here
     .fnEspNowSendCb           = NULL,            // If using Wifi, add the send function here
     .fnAdvancedUSB            = NULL,            // If using advanced USB things.
+    .trophyData               = &atriumTrophyData,
+    .fnAddToSwadgePassPacket = atriumAddSP,     //function to add data to swadgepass packet
 };
 
+int testercardselect = 0; //for testing card selection, 0-6
+int card_coords_x[] = {24, 99, 208}; 
+int card_coords_y[] = {24+12, 112+12}; //needs testing, original location at 24,112 was too high on screen and clipping into radius
+int cardpadding = 4; //padding for text written in card, in px
+int textbox1width = 156;
+int textbox2width = 172;
+
+buttonEvt_t evt;
+
+//STATE MACHINE FOR ATRIUM MAIN LOOP
 typedef enum
 {
-    /// title
+    
     ATR_TITLE,
     /// TITLE SCREEN
     ATR_ATR,
-    /// GAZEBO
+    /// GAZEBO ETC
     ATR_PROFILE,
-    /// LOOKING AT SELF PROFILE
+    /// LOOKING AT A PROFILE
+    ATR_EDIT_PROFILE,
+    //  EDITING MY PROFILE
 
 } atriumState;
 
 atriumState state = 0;
 int loader = 0;
+
+//---------------------------------------------------------------------------------//
+//SONA ATRIUM SPECIFIC INFORMATION
 
 typedef enum
 {
@@ -73,19 +115,25 @@ int ticker = 0;
 int PAGE = 0;
 int planter = 0;
 
-//wsgs, fonts, etc
+//sona locations
+        int x_coords[] = {5, 74, 143, 212};
+        int y_coords[] = {120, 80}; 
+        int headoffset = 48; 
 
+
+//---------------------------------------------------------------------------------//
+//STRUCTURES FOR WSGS, MIDIS, ETC
 
 //Backgrounds 
 typedef struct
 {
     wsg_t gazebo;
+    wsg_t arcade1;
+    wsg_t concert1;
+    wsg_t arcade2;
+    wsg_t concert2;
     wsg_t plant1;
     wsg_t plant2;
-    wsg_t arcade1;
-    wsg_t arcade2;
-    wsg_t concert1;
-    wsg_t concert2;
 } backgrounds_t;
 
 backgrounds_t* bgs;
@@ -132,14 +180,6 @@ typedef struct
 cards_t* cards;
 const wsg_t* cardsArray[sizeof(cards_t)];
 
-int testercardselect = 0; //for testing card selection, 0-6
-int card_coords_x[] = {24, 99, 208}; 
-int card_coords_y[] = {24+12, 112+12}; //needs testing, original location at 24,112 was too high on screen and clipping into radius
-int cardpadding = 4; //padding for text written in card, in px
-int textbox1width = 156;
-int textbox2width = 172;
-
-
 //buttons
 typedef struct 
 {
@@ -172,47 +212,18 @@ typedef struct
    midiFile_t bgm;          
  } amidi_t;
 
-
-
 amidi_t* amidi;
 const midiFile_t* midiArray[sizeof(amidi_t)];
 
-buttonEvt_t evt;
+//editor variables
+int x = 0; //x position in editor
+int y = 0; //y position in editor
 
-//sona locations in plaza mode
-        int x_coords[] = {5+6, 74+3, 143-3, 212-6};
-        int y_coords[] = {120, 80}; 
-        int headoffset = 48; 
-
-//swadgepass
+//---------------------------------------------------------------------------------//
+//SWADGEPASS SEPECIFIC INFORMATION
 list_t spList = {0};
 
-//trophies
-
-    const trophyData_t atriumTrophies[] = {
-        {
-            .title       = "Welcome to the Atrium",
-            .description = "We've got music and games",
-            .image       = NO_IMAGE_SET,
-            .type        = TROPHY_TYPE_TRIGGER,
-            .difficulty  = TROPHY_DIFF_EASY,
-            .maxVal      = 1,
-            .hidden      = true,
-            .identifier  = NULL,
-        },
-    };
-
-    trophySettings_t atriumTrophySettings = {
-        .drawFromBottom   = true,
-        .staticDurationUs = DRAW_STATIC_US * 2,
-        .slideDurationUs  = DRAW_SLIDE_US,
-    };
-
-    trophyDataList_t atriumTrophyData = {
-    .settings = &atriumTrophySettings,
-    .list     = atriumTrophies,
-    .length   = ARRAY_SIZE(atriumTrophies),
-};
+//---------------------------------------------------------------------------------//
 
 
 static void atriumEnterMode()
@@ -224,15 +235,29 @@ static void atriumEnterMode()
     amidi = (amidi_t*)heap_caps_calloc(1, sizeof(amidi_t), MALLOC_CAP_8BIT);
     butts = (butts_t*)heap_caps_calloc(1, sizeof(butts_t), MALLOC_CAP_8BIT);
     //Dear emily, you need to do this for every struct. love, past you.    
+    
     getSwadgePasses(&spList, &atriumMode, true);
-
-    loadWsg(GAZEBO_WSG, &bgs->gazebo, true);
-    loadWsg(ATRIUMPLANT_1_WSG, &bgs->plant1, true);
-    loadWsg(ATRIUMPLANT_2_WSG, &bgs->plant2, true);
-    loadWsg(ARCADE_1_WSG, &bgs->arcade1, true);
-    loadWsg(ARCADE_2_WSG, &bgs->arcade2, true); 
-    loadWsg(CONCERT_1_WSG, &bgs->concert1, true);
-    loadWsg(CONCERT_2_WSG, &bgs->concert2, true);         
+    node_t* spNode = spList.first;
+        while (spNode)
+        {
+            // Make a convenience pointer to the data in this node
+            swadgePassData_t* spd = (swadgePassData_t*)spNode->val;
+        
+            // If the data hasn't been used yet
+            if (!isPacketUsedByMode(spd, &atriumMode))
+            {
+                // Print some packet data
+                ESP_LOGI("SP", "Receive from %s. Preamble is %d", spd->key, spd->data.packet.preamble);
+        
+                // Mark the packet as used
+                setPacketUsedByMode(spd, &atriumMode, true);
+            }
+        
+            // Iterate to the next data
+            spNode = spNode->next;
+        }
+    
+     
 
     //when its ready, I need to add sona data extraction from swadgepass packet, for now I am just hardcoding some sonas in to use:
     loadWsg(BALD_WSG, &misc->bald, true);
@@ -245,9 +270,9 @@ static void atriumEnterMode()
 
     printf("loaded misc wsgs!\n");
 
-    //test animations for sonas - dance only for now
+    //test animations for sonas - turned off for now
     loadWsg(DANCEBODY_1_WSG, &bods->d1, true);
-    loadWsg(DANCEBODY_2_WSG, &bods->d2, true);
+   /* loadWsg(DANCEBODY_2_WSG, &bods->d2, true);
     loadWsg(DANCEBODY_3_WSG, &bods->d3, true);
     loadWsg(DANCEBODY_4_WSG, &bods->d4, true);
     loadWsg(DANCEBODY_5_WSG, &bods->d5, true);
@@ -255,13 +280,11 @@ static void atriumEnterMode()
     loadWsg(DANCEBODY_7_WSG, &bods->d7, true);
     loadWsg(DANCEBODY_8_WSG, &bods->d8, true);
     loadWsg(DANCEBODY_9_WSG, &bods->d9, true);
-    loadWsg(DANCEBODY_10_WSG, &bods->d10, true);
+    loadWsg(DANCEBODY_10_WSG, &bods->d10, true); */
 
     loadWsg(ARROW_18_WSG, &butts->arrow, true);
 
-    
-    printf("loaded profile wsgs!\n");
-
+ 
     bodsArray[0] = &bods->d1;
     bodsArray[1] = &bods->d2;
     bodsArray[2] = &bods->d3;
@@ -273,13 +296,7 @@ static void atriumEnterMode()
     bodsArray[8] = &bods->d9;
     bodsArray[9] = &bods->d10;
 
-    cardsArray[0] = &cards->card1;
-    cardsArray[1] = &cards->card2;
-    cardsArray[2] = &cards->card3;
-    cardsArray[3] = &cards->card4;  
-    cardsArray[4] = &cards->card5;  
-    cardsArray[5] = &cards->card6;  
-    cardsArray[6] = &cards->card7;  
+
 
     miscArray[0] = &misc->bald;
     miscArray[1] = &misc->mainc;
@@ -290,9 +307,7 @@ static void atriumEnterMode()
     miscArray[6] = &misc->cow;
     miscArray[7] = &misc->trophy;
 
-    bgsArray[0] = &bgs->gazebo;
-    bgsArray[1] = &bgs->concert1;    
-    bgsArray[2] = &bgs->arcade1;
+
 
 
 
@@ -304,8 +319,7 @@ player -> loop = true;
 midiGmOn(player);
 globalMidiPlayerPlaySong(&amidi->bgm, MIDI_BGM);
 globalMidiPlayerSetVolume(MIDI_BGM, 12);
-    trophyUpdate(atriumTrophies[0], 1, 1); //trigger the trophy for entering the atrium
-    printf("Entered Atrium Mode!\n");
+     printf("Entered Atrium Mode!\n");
      atriumTitle(); //draw the title screen
    };
 
@@ -322,6 +336,9 @@ static void atriumExitMode()
     heap_caps_free(bgs);
     heap_caps_free(misc);
     heap_caps_free(bods);
+    heap_caps_free(cards);
+    heap_caps_free(amidi);
+    heap_caps_free(butts);
 
     freeSwadgePasses(&spList);	
 
@@ -365,6 +382,58 @@ else if (state == ATR_PROFILE) //if the state is title screen
             viewProfile();
         }
 
+else if (state == ATR_EDIT_PROFILE) //if the state is edit profile
+        {
+    while (checkButtonQueueWrapper(&evt))
+        {
+        if (evt.down) //if the button is pressed
+
+        {
+            if ((evt.button & PB_RIGHT))
+            {
+
+            }
+            else if ((evt.button & PB_LEFT))
+            {
+
+                }
+            }
+            else if ((evt.button & PB_UP))
+            {
+                if (y < 2){
+                y++;
+                }
+                else {
+                    y = 0; //wraparound
+            }
+            }
+            else if ((evt.button & PB_DOWN))
+            {
+                if (y > 0){
+                y--;
+                }
+                else {
+                    y = 2; //wraparound
+                }
+            }
+            else if ((evt.button & PB_A))
+            {
+                //select something
+            }
+            else if ((evt.button & PB_B))
+            {
+                state = ATR_PROFILE; //if B is pressed, go back to profile view
+            }
+            else {
+
+            }
+
+        }
+    }
+            editProfile(x,y);
+        }
+        
+printf("state: %d\n", state);
         
         
 };
@@ -408,7 +477,49 @@ void sonaDraw() {
 };
 
 void sonaIdle() {
-drawWsgSimple(bgsArray[PAGE], 0, 0); //draw the background based on page
+
+trophyUpdate(atriumTrophies[0], 1, 1); //trigger the trophy for entering the atrium
+
+if (loader == 0) {
+switch (PAGE) {
+    case 0:
+        freeWsg(&bgs->arcade1);
+        freeWsg(&bgs->concert1);
+        loadWsg(GAZEBO_WSG, &bgs->gazebo, true);
+                loadWsg(ATRIUMPLANT_1_WSG, &bgs->plant1, true);
+                loadWsg(ATRIUMPLANT_2_WSG, &bgs->plant2, true);
+        drawWsgSimple(&bgs->gazebo, 0, 0); //draw the background based on page
+        printf("Loaded GAZEBO_WSG!\n");
+        break;
+
+    case 1:
+    freeWsg(&bgs->gazebo);
+    freeWsg(&bgs->plant1);
+    freeWsg(&bgs->plant2);
+    freeWsg(&bgs->concert1);
+        loadWsg(ARCADE_1_WSG, &bgs->arcade1, true);
+        drawWsgSimple(&bgs->arcade1, 0, 0); //draw the background based on page
+        
+        break;
+
+    case 2:
+    freeWsg(&bgs->gazebo);
+    freeWsg(&bgs->plant1);
+    freeWsg(&bgs->plant2);
+    freeWsg(&bgs->arcade1);
+        loadWsg(CONCERT_1_WSG, &bgs->concert1, true);
+        drawWsgSimple(&bgs->concert1, 0, 0); //draw the background based on page
+        
+        break;
+
+    default:
+        printf("All WSGs loaded or invalid bgloader value.\n");
+        break;
+
+}
+loader = 1;
+}
+
 if (PAGE == 0 || PAGE == 1) {
     drawWsg(&butts->arrow, 260, 40, false, false, 90); //draw right arrow
 }
@@ -416,7 +527,9 @@ if (PAGE == 1 || PAGE == 2) {
     drawWsg(&butts->arrow, 20, 40, true, false, 270); //draw left arrow
 }
 
+printf("Page: %d\n", PAGE);
 
+//drawWsgSimple(bgsArray[PAGE], 0, 0); //draw the background based on page
 sonaDraw();
 
 if((PAGE == 0) & (planter <= 48)){ //if on page 0, draw the plants rising up
@@ -449,6 +562,11 @@ while (checkButtonQueueWrapper(&evt))
             {
                 if (PAGE < 2){
                 PAGE++;//next page
+                loader = 0; //reset the loader so the next background wsg can be loaded
+                }
+                else {
+                    PAGE = 2; //cap at max page
+                }
                 if (PAGE == 0){
                     planter = 0; //reset the planter so it can rise again
                 }
@@ -458,6 +576,7 @@ while (checkButtonQueueWrapper(&evt))
             {
                 if (PAGE > 0){
                 PAGE--;//previous page
+                loader = 0; //reset the loader so the next background wsg can be loaded
                 if (PAGE == 0){
                     planter = 0; //reset the planter so it can rise again
                 }
@@ -467,8 +586,8 @@ while (checkButtonQueueWrapper(&evt))
 
             }
 
-        }
-    }
+}
+    
 
 if (loopcount == 0) { //if nobody's idling
     for (int i = 0; i < 4; i++) {
@@ -478,7 +597,7 @@ if (loopcount == 0) { //if nobody's idling
     //decide if any of the sonas are gonna idle
 
     s = rand() % 4; //randomize which sona idles, 0-3
-    d = rand() % 1000; //randomize idle chance, 0-999
+    d = 2; //rand() % 1000; //randomize idle chance, 0-999
    
     
     if (d <= 1) //1% chance to dance
@@ -565,19 +684,26 @@ void viewProfile() {
     loadWsg(CARDMUSIC_WSG, &cards->card6, true);
     loadWsg(CARDSPACE_WSG, &cards->card7, true);
     loadWsg(WINGED_TROPHY_WSG, &misc->trophy, true);
-
     loader = 1;
+
+    cardsArray[0] = &cards->card1;
+    cardsArray[1] = &cards->card2;
+    cardsArray[2] = &cards->card3;
+    cardsArray[3] = &cards->card4;  
+    cardsArray[4] = &cards->card5;  
+    cardsArray[5] = &cards->card6;  
+    cardsArray[6] = &cards->card7;  
     }
 
 
-        while (checkButtonQueueWrapper(&evt))
+while (checkButtonQueueWrapper(&evt))
     {
-        if (evt.down) //if the button is pressed down on the title screen
+        if (evt.down)
 
         {
             if ((evt.button & PB_A))
             {
-                testercardselect = rand() % 7; //randomize the card selection, 0-6
+                state = ATR_EDIT_PROFILE; //if A is pressed, go to edit profile view
             }
             else if ((evt.button & PB_B))
             {
@@ -608,6 +734,31 @@ void viewProfile() {
     drawText(getSysFont(), c000, "This is 22 characters.", card_coords_x[0] + cardpadding, card_coords_y[1] + cardpadding+12); //draw the second text box info
     drawText(getSysFont(), c000, "Magfest is a: Donut", card_coords_x[0] + cardpadding, card_coords_y[1] + cardpadding+24); //draw the second text box info
     drawWsgSimpleScaled(&misc->trophy, card_coords_x[2]+7, card_coords_y[1]+3, 1, 1); //draw the trophy to fill in the small box for testing
-    drawText(getSysFont(), c000, "Press A to select a card", 48, 200); //draw the text for selecting a card
+    drawText(getSysFont(), c000, "Press A to Edit My Profile", 48, 200); //draw the text for selecting a card
     drawText(getSysFont(), c000, "Press B to return to menu", 48, 216); //draw the text for selecting a card
+};
+
+void atriumAddSP(struct swadgePassPacket* packet){
+    packet ->atriumMode.cardSelected = testercardselect; //for now, just set the card to the selected card
+    packet ->atriumMode.fact0 = 0; //select fave sandwich
+    packet ->atriumMode.fact1 = 0; //choose a class
+    packet ->atriumMode.fact2 = 0; //why you're here
+    packet ->atriumMode.festers = sizeof(spList); //set the number of festers collected to the number of swadgepasses in the list
+
+};
+
+void editProfile(int xselect, int yselect) {
+
+/* int card_coords_x[] = {24, 99, 208}; 
+int card_coords_y[] = {24+12, 112+12}; //needs testing, original location at 24,112 was too high on screen and clipping into radius
+int cardpadding = 4; //padding for box drawn around the card 
+int textbox1width = 156;
+int textbox2width = 172;*/
+
+int textboxcoords_x[] = {99, 24}; //x coords for the two textboxes
+int textbox1coords_y[] = {36, 48, 60, 72}; //y coords for the first textbox lines
+int textbox2coords_y[] = {124, 136, 148, 160}; //y coords for the second textbox lines
+ 
+drawTriangleOutlined(textboxcoords_x[x]-10,textbox1coords_y[y], textboxcoords_x[x]-10,textbox1coords_y[y]+11, textboxcoords_x[x],textbox1coords_y[y]+5, c555, c500); 
+
 };
