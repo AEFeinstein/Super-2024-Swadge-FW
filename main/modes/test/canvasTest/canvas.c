@@ -13,7 +13,7 @@
 
 static const char canvasMode[] = "CanvasTest";
 static const char* const strings[]
-    = {"Press 'A' to change color", "Press 'Up' to spawn arrow", "Press 'B' to show/hide example"};
+    = {"Press 'A' to change color", "Press arrows to spawn arrows", "Press 'B' to show/hide examples"};
 
 //==============================================================================
 // Function declarations
@@ -31,6 +31,7 @@ typedef struct
 {
     wsg_t canvas;
     wsg_t donut;
+    wsg_t donut2;
     bool displayDonut;
     wsgPalette_t pal;
     wsgPalette_t pal2;
@@ -75,16 +76,22 @@ static void stEnterMode(void)
     wsgPaletteSet(&st->pal2, cTransparent, c050);
     canvasBlankInit(&st->donut, 32, 32, c333, true);
     canvasDraw(&st->donut, KID_0_WSG, -16, -16);
-    canvasDraw(&st->donut, KID_0_WSG, 16, -16);
+    canvasDrawRotate(&st->donut, KID_0_WSG, 16, -16, 45);
     canvasDrawPalette(&st->donut, KID_0_WSG, -16, 16, st->pal2);
-    canvasDraw(&st->donut, KID_0_WSG, 16, 16);
+    canvasDrawFlip(&st->donut, KID_0_WSG, 16, 16, true, false);
 
+    // Tertiary canvas
+    canvasBlankInit(&st->donut2, 32, 32, cTransparent, true);
+    canvasDrawRotate(&st->donut2, KID_1_WSG, 0, 0, 260);
+
+    // Show memory after init
     ESP_LOGI("CANV", "After initialization");
     dumpAllocTable();
 }
 
 static void stExitMode(void)
 {
+    // Show memory before teardown
     ESP_LOGI("CANV", "Prior to teardown");
     dumpAllocTable();
     canvasFree(&st->canvas);
@@ -115,7 +122,19 @@ static void stMainLoop(int64_t elapsedUs)
             {
                 wsgPaletteSet(&st->pal, c555, st->currColor);
                 canvasDrawFlipPalette(&st->canvas, ARROW_19_WSG, esp_random() % (TFT_WIDTH - 19),
-                                  esp_random() % (TFT_HEIGHT - 19), false, true, st->pal);
+                                      esp_random() % (TFT_HEIGHT - 19), false, true, st->pal);
+            }
+            else if (evt.button & PB_RIGHT)
+            {
+                wsgPaletteSet(&st->pal, c555, st->currColor);
+                canvasDrawRotatePal(&st->canvas, ARROW_19_WSG, esp_random() % (TFT_WIDTH - 19),
+                                    esp_random() % (TFT_HEIGHT - 19), 90, st->pal);
+            }
+            else if (evt.button & PB_LEFT)
+            {
+                wsgPaletteSet(&st->pal, c555, st->currColor);
+                canvasDrawRotatePal(&st->canvas, ARROW_19_WSG, esp_random() % (TFT_WIDTH - 19),
+                                    esp_random() % (TFT_HEIGHT - 19), 270, st->pal);
             }
         }
     }
@@ -125,9 +144,14 @@ static void stMainLoop(int64_t elapsedUs)
     drawText(getSysFont(), c000, strings[0], 16, 8);
     drawText(getSysFont(), c000, strings[1], 16, 24);
     drawText(getSysFont(), c000, strings[2], 16, 40);
-    // TODO: Show allocated memory size (heap/SPI) to show that they're not increasing
     drawRect(0, 0, TFT_WIDTH, TFT_HEIGHT, st->currColor);
     drawRect(1, 1, TFT_WIDTH - 1, TFT_HEIGHT - 1, st->currColor);
     if (st->displayDonut)
-        drawWsgSimpleScaled(&st->donut, 92, 72, 3, 3);
+    {
+        drawWsgSimpleScaled(&st->donut, 142, 72, 3, 3);
+        drawRect(141, 72, 141 + 98, 71 + 98, c550);
+        drawWsgSimpleScaled(&st->donut2, 42, 72, 3, 3);
+        drawRect(41, 72, 41 + 98, 71 + 98, c550);
+    }
+    // TODO: Show allocated memory size (heap/SPI) to show that they're not increasing
 }

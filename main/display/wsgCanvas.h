@@ -4,9 +4,9 @@
  * @brief Provides a canvas to paint with low memory requirements
  * @version 1.0
  * @date 2025-09-02
- * 
+ *
  * @copyright Copyright (c) 2025
- * 
+ *
  */
 
 #pragma once
@@ -81,7 +81,37 @@ void canvasDrawFlip(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, 
  * @param flipY Flips applied image in the Y direction
  * @param pal Palette data to use to transform the image
  */
-void canvasDrawFlipPalette(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, bool flipX, bool flipY, wsgPalette_t pal);
+void canvasDrawFlipPalette(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, bool flipX, bool flipY,
+                           wsgPalette_t pal);
+
+/**
+ * @brief Draws an image to the canvas at a specified angle.
+ *
+ * @param canvas WSG to save changes to. Will work with any WSG, cannot be reverted
+ * @param image New cnfsFileIdx_t to apply to the canvas
+ * @param startX X position on canvas. Negative moves left, positive moves right. Pixels not on canvas are cropped.
+ * @param startY Y position on canvas. Negative moves left, positive moves right. Pixels not on canvas are cropped.
+ * @param flipX Flips applied image in the x direction
+ * @param flipY Flips applied image in the Y direction
+ * @param rotateDeg Angle to draw the image at
+ */
+void canvasDrawRotate(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY,
+                      int32_t rotateDeg);
+
+/**
+ * @brief Draws an image to the canvas at a specified angle.
+ *
+ * @param canvas WSG to save changes to. Will work with any WSG, cannot be reverted
+ * @param image New cnfsFileIdx_t to apply to the canvas
+ * @param startX X position on canvas. Negative moves left, positive moves right. Pixels not on canvas are cropped.
+ * @param startY Y position on canvas. Negative moves left, positive moves right. Pixels not on canvas are cropped.
+ * @param flipX Flips applied image in the x direction
+ * @param flipY Flips applied image in the Y direction
+ * @param rotateDeg Angle to draw the image at
+ * @param pal Palette data to use to transform the image
+ */
+void canvasDrawRotatePal(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, 
+                         int32_t rotateDeg, wsgPalette_t pal);
 
 /**
  * @brief Frees the canvas

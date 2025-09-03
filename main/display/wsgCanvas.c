@@ -74,19 +74,26 @@ void canvasDrawFlipPalette(wsg_t* canvas, cnfsFileIdx_t image, int startX, int s
     {
         for (int x = 0; x < w; x++)
         {
+            // Set initial variables
             int xPos = startX + x;
             int yPos = startY + y;
-            int nX = x;
-            int nY = y;
+            int nX   = x;
+            int nY   = y;
             if (flipX)
-            {
-                nX = w - x;
-            }
+                nX = w - x - 1;
             if (flipY)
-            {
-                nY = (h - y) - 1;
-            }
+                nY = h - y - 1;
             int idx = (nY * w) + nX + 4; // 4 is the offset into the data past the dims
+            if (idx < 0)
+            {
+                int x = 1;
+            }
+            if (idx > decompressedSize - 1)
+            {
+                int x = 1;
+            }
+
+            // Check if color/position is not valid and continue
             paletteColor_t col = pal.newColors[decompressedBuf[idx]];
             if (col == cTransparent ||  // If transparent
                 xPos < 0 ||             // If pixel is too far lef
@@ -94,10 +101,65 @@ void canvasDrawFlipPalette(wsg_t* canvas, cnfsFileIdx_t image, int startX, int s
                 yPos < 0 ||             // If pixel is too far right
                 yPos > canvas->h - 1    // If pixel is too low
             )
-            {
                 continue;
-            }
+
+            // Copy pixel to canvas
             canvas->px[((yPos)*canvas->w) + xPos] = col; // Have to use target width for proper wrapping
+        }
+    }
+
+    // Free buffered data
+    heap_caps_free(decompressedBuf);
+}
+
+void canvasDrawRotate(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, int32_t rotateDeg)
+{
+    wsgPalette_t pal;
+    wsgPaletteReset(&pal);
+    canvasDrawRotatePal(canvas, image, startX, startY, rotateDeg, pal);
+}
+
+void canvasDrawRotatePal(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, int32_t rotateDeg,
+                         wsgPalette_t pal)
+{
+    // Load the WSG from the file Idx
+    uint32_t decompressedSize = 0;
+    uint8_t* decompressedBuf  = readHeatshrinkFile(image, &decompressedSize, false);
+    int w                     = (decompressedBuf[0] << 8) | decompressedBuf[1];
+    int h                     = (decompressedBuf[2] << 8) | decompressedBuf[3];
+
+    // Overlay the new image using the offsets
+    // - Offsets can be negative to move them up or left
+    // - Pixels outside the canvas are not drawn
+    // - Clear pixels don't overwrite data underneath
+    // - Flip over x or y axis as required
+    for (int y = 0; y < h; y++)
+    {
+        for (int x = 0; x < w; x++)
+        {
+            // Check if color/position is not valid and continue
+            int xPos = startX + x;
+            int yPos = startY + y;
+            paletteColor_t col
+                = pal.newColors[decompressedBuf[(y * w) + x + 4]]; // 4 is the offset into the data past the dims
+            if (col == cTransparent ||                             // If transparent
+                xPos < 0 ||                                        // If pixel is too far lef
+                xPos > canvas->w - 1 ||                            // If pixel is too high
+                yPos < 0 ||                                        // If pixel is too far right
+                yPos > canvas->h - 1                               // If pixel is too low
+            )
+                continue;
+
+            // Handle rotation
+            int tx = x;
+            int ty = y;
+            rotatePixel(&tx, &ty, rotateDeg, w, h);
+            xPos = tx + startX;
+            yPos = ty + startY;
+            if (xPos < 0 || xPos > canvas->w - 1 || yPos < 0 || yPos > canvas->h - 1)
+                continue;
+            // Copy pixel to canvas
+            canvas->px[((yPos) * canvas->w) + xPos] = col; // Have to use target width for proper wrapping
         }
     }
 
