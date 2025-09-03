@@ -74,6 +74,7 @@ const trophyData_t danceNetworkTrophies[] = {
     {
         .title       = "Full Discography",
         .description = "Completely filled an album with tracks.",
+        .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EXTREME,
         .maxVal      = 1,
