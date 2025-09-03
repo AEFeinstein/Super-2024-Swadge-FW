@@ -189,7 +189,7 @@ void dn_updateBoard(dn_entity_t* self)
                                    == ((dn_boardData_t*)self->gameData->entityManager.board->data)
                                           ->p2Units[0]) // king is captured
                         {//a king has plunged
-                            trophyUpdate(self->gameData->trophyData[6], 1, true);
+                            trophyUpdate((*self->gameData->trophyData)[6], 1, true);
                             if(dn_findLastEntityOfType(self, DN_PROMPT_DATA))
                             {
                                 break;
@@ -198,8 +198,8 @@ void dn_updateBoard(dn_entity_t* self)
                             ///////////////////////////////
                             // Make the prompt Game Over //
                             ///////////////////////////////
-                            trophyUpdate(self->gameData->trophyData[4], 1, true);
-                            trophyUpdate(self->gameData->trophyData[7], trophyGetSavedValue(self->gameData->trophyData[7])+1, true);
+                            trophyUpdate((*self->gameData->trophyData)[4], 1, true);
+                            trophyUpdate((*self->gameData->trophyData)[7], trophyGetSavedValue((*self->gameData->trophyData)[7])+1, true);
                             dn_entity_t* promptGameOver = dn_createPrompt(&self->gameData->entityManager,
                                                                           (vec_t){0xffff, 0xffff}, self->gameData);
                             dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
@@ -226,7 +226,7 @@ void dn_updateBoard(dn_entity_t* self)
                             ////////////////////////////
                             // Make the prompt Sudoku //
                             ////////////////////////////
-                            trophyUpdate(self->gameData->trophyData[6], 1, true);
+                            trophyUpdate((*self->gameData->trophyData)[6], 1, true);
                             dn_entity_t* promptSudoku   = dn_createPrompt(&self->gameData->entityManager,
                                                                           (vec_t){0xffff, 0xffff}, self->gameData);
                             dn_promptData_t* promptData = (dn_promptData_t*)promptSudoku->data;
@@ -1049,7 +1049,7 @@ void dn_addTrackToAlbum(dn_entity_t* album, dn_boardPos_t trackCoords, dn_track_
     }
 
     //check for achievement thing
-    if(trophyGetSavedValue(album->gameData->trophyData[4]))
+    if(trophyGetSavedValue((*album->gameData->trophyData)[4]))
     {
         return;
     }
@@ -1058,7 +1058,7 @@ void dn_addTrackToAlbum(dn_entity_t* album, dn_boardPos_t trackCoords, dn_track_
         if(dn_trackTypeAtColor(album, trackCheck) == DN_NONE_TRACK)
             return;
     }
-    trophyUpdate(album->gameData->trophyData[4], 1, true);
+    trophyUpdate((*album->gameData->trophyData)[4], 1, true);
 }
 
 void dn_updateAlbum(dn_entity_t* self)
@@ -2430,7 +2430,7 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
     {
         if(self->gameData->characterSets[0] == DN_BLACK_CHESS_SET || self->gameData->characterSets[1] == DN_WHITE_CHESS_SET)
         {
-            trophyUpdate(self->gameData->trophyData[5], 1, true);
+            trophyUpdate((*self->gameData->trophyData)[5], 1, true);
         }
         self->gameData->camera.pos.y                = self->pos.y - (26 << DN_DECIMAL_BITS);
         self->gameData->entityManager.albums->pos.y = 63427;
@@ -3059,8 +3059,8 @@ void dn_updateBullet(dn_entity_t* self)
                 ///////////////////////////////
                 // Make the prompt Game Over //
                 ///////////////////////////////
-                trophyUpdate(self->gameData->trophyData[3], 1, true);
-                trophyUpdate(self->gameData->trophyData[7], trophyGetSavedValue(self->gameData->trophyData[7])+1, true);
+                trophyUpdate((*self->gameData->trophyData)[3], 1, true);
+                trophyUpdate((*self->gameData->trophyData)[7], trophyGetSavedValue((*self->gameData->trophyData)[7]) + 1, true);
                 dn_entity_t* promptGameOver
                     = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff, 0xffff}, self->gameData);
                 dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
@@ -3264,8 +3264,8 @@ void dn_moveUnit(dn_entity_t* self)
         ///////////////////////////////
         // Make the prompt Game Over //
         ///////////////////////////////
-        trophyUpdate(self->gameData->trophyData[3], 1, true);
-        trophyUpdate(self->gameData->trophyData[7], trophyGetSavedValue(self->gameData->trophyData[7])+1, true);
+        trophyUpdate((*self->gameData->trophyData)[3], 1, true);
+        trophyUpdate((*self->gameData->trophyData)[7], trophyGetSavedValue((*self->gameData->trophyData)[7]) + 1, true);
         dn_entity_t* promptGameOver
             = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff, 0xffff}, self->gameData);
         dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
@@ -3437,13 +3437,13 @@ void dn_updateTutorial(dn_entity_t* self)
     {
         if(tData->advancedTips)
         {
-            trophyUpdate(self->gameData->trophyData[1], 1, true);
-            trophySetChecklistTask(self->gameData->trophyData[2], 0x2, false, true);
+            trophyUpdate((*self->gameData->trophyData)[1], 1, true);
+            trophySetChecklistTask((*self->gameData->trophyData)[2], 0x2, false, true);
         }
         else
         {
-            trophyUpdate(self->gameData->trophyData[0], 1, true);
-            trophySetChecklistTask(self->gameData->trophyData[2], 0x1, false, true);
+            trophyUpdate((*self->gameData->trophyData)[0], 1, true);
+            trophySetChecklistTask((*self->gameData->trophyData)[2], 0x1, false, true);
         }
         dn_exitSubMode(self);
     }

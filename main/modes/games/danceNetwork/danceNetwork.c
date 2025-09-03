@@ -90,7 +90,7 @@ const trophyData_t danceNetworkTrophies[] = {
     {
         .title       = "My People Need Me",
         .description = "Jumped into the garbage pit.",
-        .image       = NO_IMAGE_SET,
+        .image       = EF_BIGBUG_SLV_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
@@ -200,10 +200,24 @@ static void dn_EnterMode(void)
 
     int32_t outVal;
     readNvs32(dnP1TroupeKey, &outVal);
-    gameData->characterSets[0] = outVal;
+    if(outVal >= 0 && outVal <= 2)//increase this if adding more than 3 troupes
+    {
+        gameData->characterSets[0] = outVal;
+    }
+    else
+    {
+        gameData->characterSets[0] = 0;
+    }
     outVal = 0;//zero it out just in case
     readNvs32(dnP2TroupeKey, &outVal);
-    gameData->characterSets[1] = outVal;
+    if(outVal >= 0 && outVal <= 2)//increase this if adding more than 3 troupes
+    {
+        gameData->characterSets[1] = outVal;
+    }
+    else
+    {
+        gameData->characterSets[1] = 0;
+    }
 
     strcpy(gameData->playerNames[0], "Player 1");
     strcpy(gameData->playerNames[1], "Player 2");
