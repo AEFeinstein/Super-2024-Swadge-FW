@@ -37,7 +37,7 @@
  * Lastly, call `canvasFree()` when done with the canvas, just like any other WSG.
  *
  * The canvas can be used like any WSG, so all wsg drawing functions work on it once it has been created.
- * 
+ *
  * \code {.c}
 // Create structs
 wsg_t canvas;

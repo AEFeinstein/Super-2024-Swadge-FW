@@ -32,7 +32,7 @@ void canvasBlankInit(wsg_t* canvas, int width, int height, paletteColor_t startC
     /* canvas->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * canvas->w * canvas->h,
                                                        spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, "wsg"); */
     canvas->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * canvas->w * canvas->h,
-                                                       spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT);
+                                                   spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT);
     for (int idx = 0; idx < (height * width); idx++)
     {
         canvas->px[idx] = startColor;

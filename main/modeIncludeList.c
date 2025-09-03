@@ -19,7 +19,7 @@ swadgeMode_t* const allSwadgeModes[]
     = {&accelTestMode,   &bouncyMode,     &colorchordMode, &cosCrunchMode,      &danceMode,      &danceNetworkMode,
        &factoryTestMode, &gamepadMode,    &introMode,      &jukeboxMode,        &keebTestMode,   &mainMenuMode,
        &modeCredits,     &modeDiceRoller, &modePicross,    &nameTestMode,       &roboRunnerMode, &sequencerMode,
-       &canvasTestMode,   &swadgedokuMode, &swadgeItMode,   &swadgePassTestMode, &synthMode,      &tCaseMode,
+       &canvasTestMode,  &swadgedokuMode, &swadgeItMode,   &swadgePassTestMode, &synthMode,      &tCaseMode,
        &touchTestMode,   &trophyTestMode, &tunernomeMode,  &modeCh32v003test};
 
 //==============================================================================
