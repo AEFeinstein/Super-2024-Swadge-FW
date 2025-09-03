@@ -43,7 +43,7 @@ void canvasBlankInit(wsg_t* canvas, int width, int height, paletteColor_t startC
  * @param startX X position on canvas. Negative moves left, positive moves right. Pixels not on canvas are cropped.
  * @param startY Y position on canvas. Negative moves left, positive moves right. Pixels not on canvas are cropped.
  */
-void canvasDraw(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY);
+void canvasDrawSimple(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY);
 
 /**
  * @brief Draws a image to the canvas at the specified coordinates relative to the canvas and applies a palette
@@ -54,35 +54,7 @@ void canvasDraw(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY);
  * @param startY Y position on canvas. Negative moves left, positive moves right. Pixels not on canvas are cropped.
  * @param pal Palette data to use to transform the image
  */
-void canvasDrawPalette(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, wsgPalette_t pal);
-
-/**
- * @brief Draws a image to the canvas at the specified coordinates relative to the canvas. Allows flipping for
- * mirroring.
- *
- * @param canvas WSG to save changes to. Will work with any WSG, cannot be reverted
- * @param image New cnfsFileIdx_t to apply to the canvas
- * @param startX X position on canvas. Negative moves left, positive moves right. Pixels not on canvas are cropped.
- * @param startY Y position on canvas. Negative moves left, positive moves right. Pixels not on canvas are cropped.
- * @param flipX Flips applied image in the x direction
- * @param flipY Flips applied image in the Y direction
- */
-void canvasDrawFlip(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, bool flipX, bool flipY);
-
-/**
- * @brief Draws a image to the canvas at the specified coordinates relative to the canvas and applies a palette. Allows
- * flipping for mirroring.
- *
- * @param canvas WSG to save changes to. Will work with any WSG, cannot be reverted
- * @param image New cnfsFileIdx_t to apply to the canvas
- * @param startX X position on canvas. Negative moves left, positive moves right. Pixels not on canvas are cropped.
- * @param startY Y position on canvas. Negative moves left, positive moves right. Pixels not on canvas are cropped.
- * @param flipX Flips applied image in the x direction
- * @param flipY Flips applied image in the Y direction
- * @param pal Palette data to use to transform the image
- */
-void canvasDrawFlipPalette(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, bool flipX, bool flipY,
-                           wsgPalette_t pal);
+void canvasDrawSimplePal(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, wsgPalette_t pal);
 
 /**
  * @brief Draws an image to the canvas at a specified angle.
@@ -95,8 +67,7 @@ void canvasDrawFlipPalette(wsg_t* canvas, cnfsFileIdx_t image, int startX, int s
  * @param flipY Flips applied image in the Y direction
  * @param rotateDeg Angle to draw the image at
  */
-void canvasDrawRotate(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY,
-                      int32_t rotateDeg);
+void canvasDraw(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, bool flipX, bool flipY, int32_t rotateDeg);
 
 /**
  * @brief Draws an image to the canvas at a specified angle.
@@ -110,8 +81,8 @@ void canvasDrawRotate(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY
  * @param rotateDeg Angle to draw the image at
  * @param pal Palette data to use to transform the image
  */
-void canvasDrawRotatePal(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, 
-                         int32_t rotateDeg, wsgPalette_t pal);
+void canvasDrawPal(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, bool flipX, bool flipY,
+                   int32_t rotateDeg, wsgPalette_t pal);
 
 /**
  * @brief Frees the canvas

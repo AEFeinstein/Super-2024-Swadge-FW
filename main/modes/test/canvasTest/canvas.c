@@ -75,14 +75,14 @@ static void stEnterMode(void)
     wsgPaletteReset(&st->pal2);
     wsgPaletteSet(&st->pal2, cTransparent, c050);
     canvasBlankInit(&st->donut, 32, 32, c333, true);
-    canvasDraw(&st->donut, KID_0_WSG, -16, -16);
-    canvasDrawRotate(&st->donut, KID_0_WSG, 16, -16, 45);
-    canvasDrawPalette(&st->donut, KID_0_WSG, -16, 16, st->pal2);
-    canvasDrawFlip(&st->donut, KID_0_WSG, 16, 16, true, false);
+    canvasDrawSimple(&st->donut, KID_0_WSG, -16, -16);
+    canvasDraw(&st->donut, KID_0_WSG, 16, -16, false, false, 45);
+    canvasDrawSimplePal(&st->donut, KID_0_WSG, -16, 16, st->pal2);
+    canvasDraw(&st->donut, KID_0_WSG, 16, 16, true, false, 0);
 
     // Tertiary canvas
     canvasBlankInit(&st->donut2, 32, 32, cTransparent, true);
-    canvasDrawRotate(&st->donut2, KID_1_WSG, 0, 0, 260);
+    canvasDraw(&st->donut2, KID_1_WSG, 0, 0, false, true, 235);
 
     // Show memory after init
     ESP_LOGI("CANV", "After initialization");
@@ -115,26 +115,26 @@ static void stMainLoop(int64_t elapsedUs)
             else if (evt.button & PB_UP)
             {
                 wsgPaletteSet(&st->pal, c555, st->currColor);
-                canvasDrawPalette(&st->canvas, ARROW_19_WSG, esp_random() % (TFT_WIDTH - 19),
+                canvasDrawSimplePal(&st->canvas, ARROW_19_WSG, esp_random() % (TFT_WIDTH - 19),
                                   esp_random() % (TFT_HEIGHT - 19), st->pal);
             }
             else if (evt.button & PB_DOWN)
             {
                 wsgPaletteSet(&st->pal, c555, st->currColor);
-                canvasDrawFlipPalette(&st->canvas, ARROW_19_WSG, esp_random() % (TFT_WIDTH - 19),
-                                      esp_random() % (TFT_HEIGHT - 19), false, true, st->pal);
+                canvasDrawPal(&st->canvas, ARROW_19_WSG, esp_random() % (TFT_WIDTH - 19),
+                                      esp_random() % (TFT_HEIGHT - 19), false, true, 0, st->pal);
             }
             else if (evt.button & PB_RIGHT)
             {
                 wsgPaletteSet(&st->pal, c555, st->currColor);
-                canvasDrawRotatePal(&st->canvas, ARROW_19_WSG, esp_random() % (TFT_WIDTH - 19),
-                                    esp_random() % (TFT_HEIGHT - 19), 90, st->pal);
+                canvasDrawPal(&st->canvas, ARROW_19_WSG, esp_random() % (TFT_WIDTH - 19),
+                                    esp_random() % (TFT_HEIGHT - 19), false, false, 90, st->pal);
             }
             else if (evt.button & PB_LEFT)
             {
                 wsgPaletteSet(&st->pal, c555, st->currColor);
-                canvasDrawRotatePal(&st->canvas, ARROW_19_WSG, esp_random() % (TFT_WIDTH - 19),
-                                    esp_random() % (TFT_HEIGHT - 19), 270, st->pal);
+                canvasDrawPal(&st->canvas, ARROW_19_WSG, esp_random() % (TFT_WIDTH - 19),
+                                    esp_random() % (TFT_HEIGHT - 19), false, true, 90, st->pal);
             }
         }
     }
