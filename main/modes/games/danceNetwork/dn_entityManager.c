@@ -67,16 +67,16 @@ void dn_initializeEntityManager(dn_entityManager_t* entityManager, dn_gameData_t
     wsgPaletteReset(&entityManager->palettes[DN_SUPERBRIGHT_GRAYSCALE_PALETTE]);
     for (paletteColor_t cur = c000; cur <= c555; cur++)
     {
-        uint32_t rgb = paletteToRGB(cur);
-        uint32_t r = (rgb >> 16) & 0xFF; // Extract red channel
-        uint32_t g = (rgb >> 8) & 0xFF;  // Extract green channel
-        uint32_t b = rgb & 0xFF;         // Extract blue channel
-        uint32_t sum = r + g + b;
+        uint32_t rgb    = paletteToRGB(cur);
+        uint32_t r      = (rgb >> 16) & 0xFF; // Extract red channel
+        uint32_t g      = (rgb >> 8) & 0xFF;  // Extract green channel
+        uint32_t b      = rgb & 0xFF;         // Extract blue channel
+        uint32_t sum    = r + g + b;
         uint32_t bright = CLAMP(sum * 4, 0, 765);
 
         sum = CLAMP(sum, 0, 765);
 
-        wsgPaletteSet(&entityManager->palettes[DN_GRAYSCALE_PALETTE], cur, (sum/153) * 43);
+        wsgPaletteSet(&entityManager->palettes[DN_GRAYSCALE_PALETTE], cur, (sum / 153) * 43);
         wsgPaletteSet(&entityManager->palettes[DN_SUPERBRIGHT_GRAYSCALE_PALETTE], cur, (bright / 153) * 43);
     }
 
@@ -143,7 +143,7 @@ void dn_updateEntities(dn_entityManager_t* entityManager)
         {
             entity->updateFunction(entity);
         }
-        if(entityManager->entities->first == NULL)//First may become NULL mid loop if all entities are destroyed.
+        if (entityManager->entities->first == NULL) // First may become NULL mid loop if all entities are destroyed.
         {
             return;
         }
@@ -326,7 +326,8 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
             {
                 dn_loadAsset(DN_ALPHA_ORTHO_WSG, 1, &gameData->assets[DN_ALPHA_ORTHO_ASSET]);
             }
-            if (gameData->characterSets[0] == DN_WHITE_CHESS_SET || gameData->characterSets[1] == DN_WHITE_CHESS_SET || gameData->characterSets[0] == DN_BLACK_CHESS_SET || gameData->characterSets[1] == DN_BLACK_CHESS_SET)
+            if (gameData->characterSets[0] == DN_WHITE_CHESS_SET || gameData->characterSets[1] == DN_WHITE_CHESS_SET
+                || gameData->characterSets[0] == DN_BLACK_CHESS_SET || gameData->characterSets[1] == DN_BLACK_CHESS_SET)
             {
                 dn_loadAsset(DN_CHESS_ORTHO_WSG, 1, &gameData->assets[DN_CHESS_ORTHO_ASSET]);
             }

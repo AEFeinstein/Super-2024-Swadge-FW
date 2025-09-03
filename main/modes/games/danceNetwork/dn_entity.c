@@ -5,30 +5,45 @@
 #include <linked_list.h>
 #include <limits.h>
 
-//A double array of dn_tutorialPage_t
+// A double array of dn_tutorialPage_t
 static const dn_tutorialPage_t tutorialText[2][23] = {
     {
         {"Dance 101", "Welcome to Dance class. Please, take a seat. We have some spots here in the front."},
-        {"Commander DancenoNighta", "I am Commander DancenoNighta, and I'll be bringing you up to speed on the dance scene in 2026."},
-        {"Win Conditions", "You can win by capturing the opponent's king. The other way to win is by moving your king onto the opponent's control point."},
-        {"Control Point", "The control points are simply the tiles where the kings start. They are outlined with cyan for player 1 and yellow for player 2."},
+        {"Commander DancenoNighta",
+         "I am Commander DancenoNighta, and I'll be bringing you up to speed on the dance scene in 2026."},
+        {"Win Conditions", "You can win by capturing the opponent's king. The other way to win is by moving your king "
+                           "onto the opponent's control point."},
+        {"Control Point", "The control points are simply the tiles where the kings start. They are outlined with cyan "
+                          "for player 1 and yellow for player 2."},
         {"Dance Arena", "The floor consists of a 5x5 grid built above our home."},
-        {"Dance Arena", "Bigma promised to bring us into a post-garbage techno future. And he made the right call. We can just keep building on top of the past!"},
-        {"Turn Phases", "On your turn, you will gain two rerolls. More about rerolls later. Just know that the rerolls for each player are displayed in the led lights (Alpha's eyes)."},
-        {"Dance Phase", "Tiles only illuminate under your units with valid dances. After selecting a unit, you can press 'b' to go back without committing to the dance."},
+        {"Dance Arena", "Bigma promised to bring us into a post-garbage techno future. And he made the right call. We "
+                        "can just keep building on top of the past!"},
+        {"Turn Phases", "On your turn, you will gain two rerolls. More about rerolls later. Just know that the rerolls "
+                        "for each player are displayed in the led lights (Alpha's eyes)."},
+        {"Dance Phase", "Tiles only illuminate under your units with valid dances. After selecting a unit, you can "
+                        "press 'b' to go back without committing to the dance."},
         {"Dance Phase", "Your available dances depend on what tracks are written on your album."},
-        {"Understanding Tracks", "There's a tiny stick figure in the middle of your album. You can imagine projecting that down onto any of your units then the tracks act relative to that unit."},
+        {"Understanding Tracks", "There's a tiny stick figure in the middle of your album. You can imagine projecting "
+                                 "that down onto any of your units then the tracks act relative to that unit."},
         {"Dance Actions - Fire", "Fire tracks (red) allow you to do a ranged attack."},
         {"Dance Actions - Move", "Moving tracks (blue) allow you to move any of your units to an unoccupied tile."},
-        {"Dance Actions - Remix", "Remix tracks (purple) allow you to attempt a ranged attack and then move in one turn!"},
-        {"Bringing Units Online", "If a unit fires a ranged attack, that unit goes offline and is unable to fire again. It will look grayscale when offline."},
-        {"Bringing Units Online", "You need to move a unit to bring it online so it can fire later. Remember, if a unit is fully colored then it's a threat!"},
-        {"Skipping a dance action", "You can skip a dance action, gaining another reroll. You might have to resort to skipping if no units have any valid dance tracks."},
+        {"Dance Actions - Remix",
+         "Remix tracks (purple) allow you to attempt a ranged attack and then move in one turn!"},
+        {"Bringing Units Online", "If a unit fires a ranged attack, that unit goes offline and is unable to fire "
+                                  "again. It will look grayscale when offline."},
+        {"Bringing Units Online", "You need to move a unit to bring it online so it can fire later. Remember, if a "
+                                  "unit is fully colored then it's a threat!"},
+        {"Skipping a dance action", "You can skip a dance action, gaining another reroll. You might have to resort to "
+                                    "skipping if no units have any valid dance tracks."},
         {"Albums", "Each album can hold a variety of tracks. After your dance action, you'll write a new track."},
-        {"Albums", "In the writing phase, you'll be able to spend any number of rerolls to influence the kind of track you write. Try to save up and turn the tides in your favor."},
-        {"Albums", "A track also randomly appears in the Creative Commons. Artists from around the world are adding tracks into the Creative Commons every single turn."},
-        {"Creative Commons", "You can spend 5 rerolls during your dance phase to swap with the Creative Commons, giving you a completely different moveset."},
-        {"Creative Commons", "Think about what your opponent can do with the Creative Commons if they can also afford it."},
+        {"Albums", "In the writing phase, you'll be able to spend any number of rerolls to influence the kind of track "
+                   "you write. Try to save up and turn the tides in your favor."},
+        {"Albums", "A track also randomly appears in the Creative Commons. Artists from around the world are adding "
+                   "tracks into the Creative Commons every single turn."},
+        {"Creative Commons", "You can spend 5 rerolls during your dance phase to swap with the Creative Commons, "
+                             "giving you a completely different moveset."},
+        {"Creative Commons",
+         "Think about what your opponent can do with the Creative Commons if they can also afford it."},
         {"Capturing", "When you capture an opponent unit, you gain 1 reroll and trade albums with the opponent."},
         {"Q&A", "That concludes the introductory course. Thank you for dancing, and long live Bigma!"},
     },
@@ -36,39 +51,50 @@ static const dn_tutorialPage_t tutorialText[2][23] = {
         {"Dance 200", "Welcome back, students!"},
         {"Dance 200", "As you should be well aware by now, the prerequisite for this course is Dance 101."},
         {"Dance 200", "Yes, question in the back with the hand raised..."},
-        {"Dance 200", "No, no, no. If you haven't danced in the main game either, you'll need to speak with your advisor to unenroll in Dance 200 before the end of the first week."},
+        {"Dance 200", "No, no, no. If you haven't danced in the main game either, you'll need to speak with your "
+                      "advisor to unenroll in Dance 200 before the end of the first week."},
         {"Dance 200", "I'm just as excited as all of you to further hone your skills on the dance floor."},
         {"Dance 200", "But first, a moment of silence for our fallen heroes from the Great Garbage War of '25."},
         {"Bugs", "..."},
         {"Dance Threat Calculus", "Thank you. We're going to go over some light refreshers."},
         {"Dance Actions", "Fire and Remix tracks can even target friendly units or unoccupied tiles."},
-        {"Dance Actions - Ranged Attack", "Friendly fire will harvest 3 rerolls. Sometimes sacrifices are necessary. Targeting an unoccupied tile will knock the tile out of the game and bounce the shot."},
-        {"Dance Actions - Ranged Attack", "When bouncing a shot, select a second Fire or Remix track as the target. The bullet will keep the Fire or Remix property from the first selection."},
-        {"Dance Actions - Ranged Attack", "You can knock out your own control point to keep it safe from occupation for a while. The Dance Floor can't have more than one hole at a time."},
-        {"Dance Actions - Ranged Attack", "So if another tile is shot out, your control point would come back into play. Create holes wisely to reduce the enemy's decision space."},
-        {"Dance Actions - Movement", "You could technically move into a hole and succumb to the garbage pit. At least this also results in gaining 3 rerolls."},
-        {"Dance Actions - Movement", "I lost a wing and a leg in the Great Garbage War. But Bigma gave me a second chance."},
-        {"Dance Actions - Remix", "There are a lot of situational factors to consider with a Remix which does a ranged attack if online, and also moves all in one go."},
+        {"Dance Actions - Ranged Attack",
+         "Friendly fire will harvest 3 rerolls. Sometimes sacrifices are necessary. Targeting an unoccupied tile will "
+         "knock the tile out of the game and bounce the shot."},
+        {"Dance Actions - Ranged Attack", "When bouncing a shot, select a second Fire or Remix track as the target. "
+                                          "The bullet will keep the Fire or Remix property from the first selection."},
+        {"Dance Actions - Ranged Attack", "You can knock out your own control point to keep it safe from occupation "
+                                          "for a while. The Dance Floor can't have more than one hole at a time."},
+        {"Dance Actions - Ranged Attack", "So if another tile is shot out, your control point would come back into "
+                                          "play. Create holes wisely to reduce the enemy's decision space."},
+        {"Dance Actions - Movement", "You could technically move into a hole and succumb to the garbage pit. At least "
+                                     "this also results in gaining 3 rerolls."},
+        {"Dance Actions - Movement",
+         "I lost a wing and a leg in the Great Garbage War. But Bigma gave me a second chance."},
+        {"Dance Actions - Remix", "There are a lot of situational factors to consider with a Remix which does a ranged "
+                                  "attack if online, and also moves all in one go."},
         {"Dance Actions - Remix", "That extra momentum of 2 actions in one phase can be quite helpful."},
-        {"Dance Actions - Remix", "But the intended target of a Remix should be occupied or you may incidentally create a hole and move into it, gaining 3 rerolls."},
-        {"Bringing Units Online", "Remixes can bring offline units online because they will fail to fire, but move successfully."},
-        {"Creative Commons", "If you end a turn with at least 3 rerolls, you'll have enough to take the Creative Commons next turn, because you gain 2 rerolls at the start of a turn."},
-        {"Capturing", "Think ahead about the tracks you would give your opponent if you capture, because your albums will swap when you capture."},
-        {"Rerolls", "Rerolls aren't just given out in the center of the board. You also get a reroll everytime you get a pawn to the other side of the board."},
-        {"Q&A", "That's all for the advanced tips. Your homework will be to achieve every trophy in the swadge and outdance the adversary."},
-    }
-};
+        {"Dance Actions - Remix", "But the intended target of a Remix should be occupied or you may incidentally "
+                                  "create a hole and move into it, gaining 3 rerolls."},
+        {"Bringing Units Online",
+         "Remixes can bring offline units online because they will fail to fire, but move successfully."},
+        {"Creative Commons", "If you end a turn with at least 3 rerolls, you'll have enough to take the Creative "
+                             "Commons next turn, because you gain 2 rerolls at the start of a turn."},
+        {"Capturing", "Think ahead about the tracks you would give your opponent if you capture, because your albums "
+                      "will swap when you capture."},
+        {"Rerolls", "Rerolls aren't just given out in the center of the board. You also get a reroll everytime you get "
+                    "a pawn to the other side of the board."},
+        {"Q&A", "That's all for the advanced tips. Your homework will be to achieve every trophy in the swadge and "
+                "outdance the adversary."},
+    }};
 
-static const dn_characterSet_t troupePermutations[7][2] =
-{
-    {DN_ALPHA_SET, DN_ALPHA_SET},
-    {DN_WHITE_CHESS_SET, DN_ALPHA_SET},
-    {DN_BLACK_CHESS_SET, DN_ALPHA_SET},
-    {DN_WHITE_CHESS_SET, DN_BLACK_CHESS_SET},
-    {DN_BLACK_CHESS_SET, DN_WHITE_CHESS_SET},
-    {DN_ALPHA_SET, DN_BLACK_CHESS_SET},
-    {DN_ALPHA_SET, DN_WHITE_CHESS_SET}
-};
+static const dn_characterSet_t troupePermutations[7][2] = {{DN_ALPHA_SET, DN_ALPHA_SET},
+                                                           {DN_WHITE_CHESS_SET, DN_ALPHA_SET},
+                                                           {DN_BLACK_CHESS_SET, DN_ALPHA_SET},
+                                                           {DN_WHITE_CHESS_SET, DN_BLACK_CHESS_SET},
+                                                           {DN_BLACK_CHESS_SET, DN_WHITE_CHESS_SET},
+                                                           {DN_ALPHA_SET, DN_BLACK_CHESS_SET},
+                                                           {DN_ALPHA_SET, DN_WHITE_CHESS_SET}};
 
 void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType)
 {
@@ -188,9 +214,9 @@ void dn_updateBoard(dn_entity_t* self)
                             || tileData->unit
                                    == ((dn_boardData_t*)self->gameData->entityManager.board->data)
                                           ->p2Units[0]) // king is captured
-                        {//a king has plunged
+                        {                               // a king has plunged
                             trophyUpdate((*self->gameData->trophyData)[6], 1, true);
-                            if(dn_findLastEntityOfType(self, DN_PROMPT_DATA))
+                            if (dn_findLastEntityOfType(self, DN_PROMPT_DATA))
                             {
                                 break;
                             }
@@ -199,7 +225,8 @@ void dn_updateBoard(dn_entity_t* self)
                             // Make the prompt Game Over //
                             ///////////////////////////////
                             trophyUpdate((*self->gameData->trophyData)[4], 1, true);
-                            trophyUpdate((*self->gameData->trophyData)[7], trophyGetSavedValue((*self->gameData->trophyData)[7])+1, true);
+                            trophyUpdate((*self->gameData->trophyData)[7],
+                                         trophyGetSavedValue((*self->gameData->trophyData)[7]) + 1, true);
                             dn_entity_t* promptGameOver = dn_createPrompt(&self->gameData->entityManager,
                                                                           (vec_t){0xffff, 0xffff}, self->gameData);
                             dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
@@ -311,96 +338,92 @@ void dn_drawBoard(dn_entity_t* self)
                             - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS)
                             + boardData->tiles[y][x].timeoutOffset;
 
-            switch(boardData->tiles[y][x].selectionType)
+            switch (boardData->tiles[y][x].selectionType)
             {
                 case DN_UNIT_SELECTION:
                 {
                     drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
-                                     drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
-                                     drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
-                                     &self->gameData->entityManager
-                                          .palettes[DN_RED_FLOOR_PALETTE
-                                                    + (((y * ((self->gameData->generalTimer >> 10) % 10) + x + 2)
-                                                        + (self->gameData->generalTimer >> 6))
-                                                       % 6)]);
+                                         drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                         drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                         &self->gameData->entityManager
+                                              .palettes[DN_RED_FLOOR_PALETTE
+                                                        + (((y * ((self->gameData->generalTimer >> 10) % 10) + x + 2)
+                                                            + (self->gameData->generalTimer >> 6))
+                                                           % 6)]);
                     break;
                 }
                 case DN_BLUE_TRACK:
                 {
                     drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
-                                     drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
-                                     drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
-                                     &self->gameData->entityManager
-                                          .palettes[DN_MOVE1_FLOOR_PALETTE + 2
-                                                    - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
-                                                            + (self->gameData->generalTimer >> 6))
-                                                           % 4)
-                                                          - 2)]);
+                                         drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                         drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                         &self->gameData->entityManager
+                                              .palettes[DN_MOVE1_FLOOR_PALETTE + 2
+                                                        - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
+                                                                + (self->gameData->generalTimer >> 6))
+                                                               % 4)
+                                                              - 2)]);
                     break;
                 }
                 case DN_RED_TRACK:
                 {
                     drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
-                                     drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
-                                     drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
-                                     &self->gameData->entityManager
-                                          .palettes[DN_ATTACK1_FLOOR_PALETTE + 2
-                                                    - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
-                                                            + (self->gameData->generalTimer >> 6))
-                                                           % 4)
-                                                          - 2)]);
+                                         drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                         drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                         &self->gameData->entityManager
+                                              .palettes[DN_ATTACK1_FLOOR_PALETTE + 2
+                                                        - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
+                                                                + (self->gameData->generalTimer >> 6))
+                                                               % 4)
+                                                              - 2)]);
                     break;
                 }
                 case DN_REMIX_TRACK:
                 {
                     drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
-                                     drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
-                                     drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
-                                     &self->gameData->entityManager
-                                          .palettes[DN_REMIX1_FLOOR_PALETTE + 2
-                                                    - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
-                                                            + (self->gameData->generalTimer >> 6))
-                                                           % 4)
-                                                          - 2)]);
+                                         drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                         drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                         &self->gameData->entityManager
+                                              .palettes[DN_REMIX1_FLOOR_PALETTE + 2
+                                                        - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
+                                                                + (self->gameData->generalTimer >> 6))
+                                                               % 4)
+                                                              - 2)]);
                     break;
                 }
                 default:
                 {
                     drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
-                              drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
-                              drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
+                                  drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                  drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
                     break;
                 }
             }
 
-            switch(boardData->tiles[y][x].selectionType)
+            switch (boardData->tiles[y][x].selectionType)
             {
-    
                 case DN_BLUE_TRACK_INVALID:
                 {
                     drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[2],
-                                     drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
-                                     drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
-                                     &self->gameData->entityManager
-                                          .palettes[DN_MOVE1_FLOOR_PALETTE]);
+                                         drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                         drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                         &self->gameData->entityManager.palettes[DN_MOVE1_FLOOR_PALETTE]);
                     break;
                 }
                 case DN_RED_TRACK_INVALID:
                 {
                     drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[2],
-                                     drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
-                                     drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
-                                     &self->gameData->entityManager
-                                          .palettes[DN_ATTACK1_FLOOR_PALETTE]);
+                                         drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                         drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                         &self->gameData->entityManager.palettes[DN_ATTACK1_FLOOR_PALETTE]);
                     break;
                 }
                 case DN_REMIX_TRACK_INVALID:
                 {
                     drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[2],
-                                     drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
-                                     drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
-                                     &self->gameData->entityManager
-                                          .palettes[DN_REMIX1_FLOOR_PALETTE]);
+                                         drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                         drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                         &self->gameData->entityManager.palettes[DN_REMIX1_FLOOR_PALETTE]);
                     break;
                 }
             }
@@ -414,11 +437,12 @@ void dn_drawBoard(dn_entity_t* self)
                               drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
                               drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
             }
-            if(x == 2 && (y == 0 || y == 4))
+            if (x == 2 && (y == 0 || y == 4))
             {
                 drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[1],
-                              drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
-                              drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY, &self->gameData->entityManager.palettes[DN_GREEN_TO_CYAN_PALETTE + (y == 0)]);
+                                     drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                     drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                     &self->gameData->entityManager.palettes[DN_GREEN_TO_CYAN_PALETTE + (y == 0)]);
             }
             if (boardData->tiles[y][x].selector != NULL)
             {
@@ -450,42 +474,40 @@ void dn_drawBoard(dn_entity_t* self)
                 // Draw the unit on the tile
                 dn_entity_t* unit            = boardData->tiles[y][x].unit;
                 dn_assetIdx_t miniAssetIndex = dn_isKing(unit) ? DN_KING_SMALL_ASSET : DN_PAWN_SMALL_ASSET;
-                bool belongsToP1 = dn_belongsToP1(unit);
-                if ((unit->assetIndex == DN_KING_ASSET || unit->assetIndex == DN_PAWN_ASSET)&&((belongsToP1 && self->gameData->characterSets[0]==DN_WHITE_CHESS_SET)||(!belongsToP1 && self->gameData->characterSets[1]==DN_WHITE_CHESS_SET)))
+                bool belongsToP1             = dn_belongsToP1(unit);
+                if ((unit->assetIndex == DN_KING_ASSET || unit->assetIndex == DN_PAWN_ASSET)
+                    && ((belongsToP1 && self->gameData->characterSets[0] == DN_WHITE_CHESS_SET)
+                        || (!belongsToP1 && self->gameData->characterSets[1] == DN_WHITE_CHESS_SET)))
                     // draw unit
                     drawWsgPaletteSimple(
                         &self->gameData->assets[unit->assetIndex].frames[0],
                         drawX - self->gameData->assets[unit->assetIndex].originX,
                         drawY - self->gameData->assets[unit->assetIndex].originY,
                         &self->gameData->entityManager
-                                .palettes[unit->paused ? DN_SUPERBRIGHT_GRAYSCALE_PALETTE : DN_WHITE_CHESS_PALETTE]);
+                             .palettes[unit->paused ? DN_SUPERBRIGHT_GRAYSCALE_PALETTE : DN_WHITE_CHESS_PALETTE]);
 
-                else if(unit->paused)
+                else if (unit->paused)
                 {
-                    drawWsgPaletteSimple(
-                        &self->gameData->assets[unit->assetIndex].frames[0],
-                        drawX - self->gameData->assets[unit->assetIndex].originX,
-                        drawY - self->gameData->assets[unit->assetIndex].originY,
-                        &self->gameData->entityManager
-                                .palettes[DN_GRAYSCALE_PALETTE]);
+                    drawWsgPaletteSimple(&self->gameData->assets[unit->assetIndex].frames[0],
+                                         drawX - self->gameData->assets[unit->assetIndex].originX,
+                                         drawY - self->gameData->assets[unit->assetIndex].originY,
+                                         &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE]);
                 }
                 else
                 {
-                    drawWsgSimple(
-                        &self->gameData->assets[unit->assetIndex].frames[0],
-                        drawX - self->gameData->assets[unit->assetIndex].originX,
-                        drawY - self->gameData->assets[unit->assetIndex].originY);
+                    drawWsgSimple(&self->gameData->assets[unit->assetIndex].frames[0],
+                                  drawX - self->gameData->assets[unit->assetIndex].originX,
+                                  drawY - self->gameData->assets[unit->assetIndex].originY);
                 }
                 // draw mini chess unit
-                if(belongsToP1)
+                if (belongsToP1)
                 {
-                    if(unit->paused)
+                    if (unit->paused)
                     {
                         drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[0],
-                                    miniDrawX - self->gameData->assets[miniAssetIndex].originX,
-                                    miniDrawY - self->gameData->assets[miniAssetIndex].originY,
-                                    &self->gameData->entityManager
-                                        .palettes[DN_SUPERBRIGHT_GRAYSCALE_PALETTE]);
+                                             miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                             miniDrawY - self->gameData->assets[miniAssetIndex].originY,
+                                             &self->gameData->entityManager.palettes[DN_SUPERBRIGHT_GRAYSCALE_PALETTE]);
                         // drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[1],
                         //             miniDrawX - self->gameData->assets[miniAssetIndex].originX,
                         //             miniDrawY - self->gameData->assets[miniAssetIndex].originY,
@@ -494,21 +516,19 @@ void dn_drawBoard(dn_entity_t* self)
                     else
                     {
                         drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[0],
-                                    miniDrawX - self->gameData->assets[miniAssetIndex].originX,
-                                    miniDrawY - self->gameData->assets[miniAssetIndex].originY,
-                                    &self->gameData->entityManager
-                                        .palettes[DN_WHITE_CHESS_PALETTE]);
+                                             miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                             miniDrawY - self->gameData->assets[miniAssetIndex].originY,
+                                             &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                     }
                 }
                 else
                 {
-                    if(unit->paused)
+                    if (unit->paused)
                     {
                         drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[0],
-                                    miniDrawX - self->gameData->assets[miniAssetIndex].originX,
-                                    miniDrawY - self->gameData->assets[miniAssetIndex].originY,
-                                    &self->gameData->entityManager
-                                        .palettes[DN_GRAYSCALE_PALETTE]);
+                                             miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                             miniDrawY - self->gameData->assets[miniAssetIndex].originY,
+                                             &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE]);
                         // drawWsgSimple(&self->gameData->assets[miniAssetIndex].frames[1],
                         //             miniDrawX - self->gameData->assets[miniAssetIndex].originX,
                         //             miniDrawY - self->gameData->assets[miniAssetIndex].originY);
@@ -516,8 +536,8 @@ void dn_drawBoard(dn_entity_t* self)
                     else
                     {
                         drawWsgSimple(&self->gameData->assets[miniAssetIndex].frames[0],
-                                    miniDrawX - self->gameData->assets[miniAssetIndex].originX,
-                                    miniDrawY - self->gameData->assets[miniAssetIndex].originY);
+                                      miniDrawX - self->gameData->assets[miniAssetIndex].originX,
+                                      miniDrawY - self->gameData->assets[miniAssetIndex].originY);
                     }
                 }
             }
@@ -573,7 +593,7 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks, list_t* invalidTracks)
                 {
                     case DN_REMIX_TRACK:
                     {
-                        if(unitAtTrack == NULL || !unit->paused)
+                        if (unitAtTrack == NULL || !unit->paused)
                         {
                             push(tracks, (void*)unitAction);
                         }
@@ -662,7 +682,7 @@ bool dn_calculateMoveableUnits(dn_entity_t* board)
             // That unit has died
             continue;
         }
-        list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+        list_t* myList   = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         list_t* invalids = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         memset(myList, 0, sizeof(list_t));
         memset(invalids, 0, sizeof(list_t));
@@ -781,8 +801,8 @@ void dn_drawCurtain(dn_entity_t* self)
             case DN_WHITE_CHESS_SET:
                 drawWsgPaletteSimple(&self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0],
                                      (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2)
-                                  - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1),
-                              50, &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                                         - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1),
+                                     50, &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                 break;
             default:
                 break;
@@ -1048,14 +1068,14 @@ void dn_addTrackToAlbum(dn_entity_t* album, dn_boardPos_t trackCoords, dn_track_
         wsgPaletteSet(&aData->screenAttackPalette, colors.lit, c510);
     }
 
-    //check for achievement thing
-    if(trophyGetSavedValue((*album->gameData->trophyData)[4]))
+    // check for achievement thing
+    if (trophyGetSavedValue((*album->gameData->trophyData)[4]))
     {
         return;
     }
     for (int trackCheck = 107; trackCheck <= 122; trackCheck++)
     {
-        if(dn_trackTypeAtColor(album, trackCheck) == DN_NONE_TRACK)
+        if (dn_trackTypeAtColor(album, trackCheck) == DN_NONE_TRACK)
             return;
     }
     trophyUpdate((*album->gameData->trophyData)[4], 1, true);
@@ -1230,7 +1250,9 @@ void dn_drawCharacterSelect(dn_entity_t* self)
                 if (drawX >= -self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w && drawX <= TFT_WIDTH)
                 {
                     // If this is the active maker, draw swapped pallete
-                    if (troupePermutations[pIdx][0] == self->gameData->characterSets[0] && troupePermutations[pIdx][1] == self->gameData->characterSets[1] && cData->selectDiamondShape[y * 5 + x + 2])
+                    if (troupePermutations[pIdx][0] == self->gameData->characterSets[0]
+                        && troupePermutations[pIdx][1] == self->gameData->characterSets[1]
+                        && cData->selectDiamondShape[y * 5 + x + 2])
                     {
                         drawWsgPaletteSimple(
                             &self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0], drawX, drawY,
@@ -1330,7 +1352,7 @@ void dn_drawCharacterSelect(dn_entity_t* self)
                 pawnUp   = DN_BUCKET_HAT_UP_ASSET;
                 break;
             }
-            default: //case 6
+            default: // case 6
             {
                 kingDown = DN_KING_ASSET;
                 kingUp   = DN_ALPHA_UP_ASSET;
@@ -1343,15 +1365,14 @@ void dn_drawCharacterSelect(dn_entity_t* self)
         {
             if (i == 2) // king is the middle piece
             {
-                if(kingDown == DN_KING_ASSET && (pIdx == 4 || pIdx == 6))
+                if (kingDown == DN_KING_ASSET && (pIdx == 4 || pIdx == 6))
                 {
-                    drawWsgPaletteSimple(
-                        &self->gameData->assets[kingDown].frames[0],
-                        xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i
-                            - self->gameData->assets[kingDown].originX,
-                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
-                            - self->gameData->assets[kingDown].originY,
-                        &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                    drawWsgPaletteSimple(&self->gameData->assets[kingDown].frames[0],
+                                         xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i
+                                             - self->gameData->assets[kingDown].originX,
+                                         yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
+                                             - self->gameData->assets[kingDown].originY,
+                                         &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                 }
                 else
                 {
@@ -1384,21 +1405,20 @@ void dn_drawCharacterSelect(dn_entity_t* self)
             {
                 if (pawnDown == DN_PAWN_ASSET && (pIdx == 4 || pIdx == 6))
                 {
-                    drawWsgPaletteSimple(
-                        &self->gameData->assets[pawnDown].frames[0],
-                        xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i
-                            - self->gameData->assets[pawnDown].originX,
-                        yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
-                            - self->gameData->assets[pawnDown].originY,
-                        &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                    drawWsgPaletteSimple(&self->gameData->assets[pawnDown].frames[0],
+                                         xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i
+                                             - self->gameData->assets[pawnDown].originX,
+                                         yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
+                                             - self->gameData->assets[pawnDown].originY,
+                                         &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                 }
                 else
                 {
                     drawWsgSimple(&self->gameData->assets[pawnDown].frames[0],
-                              xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i
-                                  - self->gameData->assets[pawnDown].originX,
-                              yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
-                                  - self->gameData->assets[pawnDown].originY);
+                                  xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i
+                                      - self->gameData->assets[pawnDown].originX,
+                                  yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
+                                      - self->gameData->assets[pawnDown].originY);
                 }
                 if (pawnUp == DN_PAWN_ASSET && (pIdx == 1 || pIdx == 3))
                 {
@@ -1470,13 +1490,13 @@ void dn_updateTileSelector(dn_entity_t* self)
     if (tData->pos.y == 5)
     {
         dn_findLastEntityOfType(self, DN_SWAPBUTTON_DATA)->paused = false;
-        self->destroyFlag                           = true;
+        self->destroyFlag                                         = true;
         return;
     }
     if (tData->pos.x == 5)
     {
         dn_findLastEntityOfType(self, DN_SKIPBUTTON_DATA)->paused = false;
-        self->destroyFlag                           = true;
+        self->destroyFlag                                         = true;
         return;
     }
 
@@ -1537,7 +1557,7 @@ void dn_trySelectUnit(dn_entity_t* self)
         dn_clearSelectableTiles(self);
 
         // recalculate selectable tiles
-        list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+        list_t* myList   = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         list_t* invalids = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
         memset(myList, 0, sizeof(list_t));
         memset(invalids, 0, sizeof(list_t));
@@ -1564,19 +1584,20 @@ void dn_trySelectUnit(dn_entity_t* self)
         free(invalids);
 
         // would make it do the selection idle here later
-        tData->a_callback   = dn_trySelectTrack;
-        tData->b_callback   = dn_setupDancePhase;
+        tData->a_callback = dn_trySelectTrack;
+        tData->b_callback = dn_setupDancePhase;
     }
-    else if((dn_belongsToP1(bData->tiles[tData->pos.y][tData->pos.x].unit) && self->gameData->phase < DN_P2_DANCE_PHASE) ||
-            (!dn_belongsToP1(bData->tiles[tData->pos.y][tData->pos.x].unit) && self->gameData->phase >= DN_P2_DANCE_PHASE))
+    else if ((dn_belongsToP1(bData->tiles[tData->pos.y][tData->pos.x].unit)
+              && self->gameData->phase < DN_P2_DANCE_PHASE)
+             || (!dn_belongsToP1(bData->tiles[tData->pos.y][tData->pos.x].unit)
+                 && self->gameData->phase >= DN_P2_DANCE_PHASE))
     {
         bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
         self->destroyFlag                                 = true;
         ////////////////////////////
         // make the prompt invalid//
         ////////////////////////////
-        dn_entity_t* prompt
-            = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff, 0xffff}, self->gameData);
+        dn_entity_t* prompt = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff, 0xffff}, self->gameData);
         dn_promptData_t* promptData = (dn_promptData_t*)prompt->data;
 
         strcpy(promptData->text, "Unit has no valid actions.");
@@ -1613,7 +1634,7 @@ void dn_trySelectTrack(dn_entity_t* self)
         {
             relativeTrack.x *= -1;
         }
-        dn_track_t type                                   = bData->tiles[tData->pos.y][tData->pos.x].selectionType;
+        dn_track_t type = bData->tiles[tData->pos.y][tData->pos.x].selectionType;
         if (type == DN_REMIX_TRACK && tData->selectedUnit->paused)
         {
             // just treat it like movement, because the unit can't shoot.
@@ -1625,14 +1646,14 @@ void dn_trySelectTrack(dn_entity_t* self)
             {
                 ((dn_unitData_t*)tData->selectedUnit->data)->moveTo = tData->pos;
                 tData->selectedUnit->updateFunction                 = dn_moveUnit;
-                bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
-                self->destroyFlag                                 = true;
+                bData->tiles[tData->pos.y][tData->pos.x].selector   = NULL;
+                self->destroyFlag                                   = true;
                 break;
             }
             case DN_RED_TRACK:
             case DN_REMIX_TRACK:
             {
-                if(!bData->tiles[tData->pos.y][tData->pos.x].unit && !bData->tiles[tData->pos.y][tData->pos.x].timeout)
+                if (!bData->tiles[tData->pos.y][tData->pos.x].unit && !bData->tiles[tData->pos.y][tData->pos.x].timeout)
                 {
                     tData->bounce = tData->pos;
                     //////////////////////////////////
@@ -1654,45 +1675,47 @@ void dn_trySelectTrack(dn_entity_t* self)
                     option1->callback          = dn_setupBounceOptions;
                     option1->downPressDetected = false;
                     push(promptData->options, (void*)option1);
-                    promptData->numOptions = 1;
-                    self->gameData->resolvingRemix                = type == DN_REMIX_TRACK;
+                    promptData->numOptions         = 1;
+                    self->gameData->resolvingRemix = type == DN_REMIX_TRACK;
                 }
                 else
                 {
                     bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
                     self->destroyFlag                                 = true;
-                    bData->tiles[from.y][from.x].unit->paused = true;
+                    bData->tiles[from.y][from.x].unit->paused         = true;
                     /////////////////////
                     // Make the bullet //
                     /////////////////////
 
-                    vec_t start = (vec_t){
-                        self->gameData->entityManager.board->pos.x
-                            + (from.x - from.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS)
-                            - (1 << DN_DECIMAL_BITS),
-                        self->gameData->entityManager.board->pos.y
-                            + (from.x + from.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS)
-                            - (bData->tiles[from.y][from.x].yOffset)};
+                    vec_t start
+                        = (vec_t){self->gameData->entityManager.board->pos.x
+                                      + (from.x - from.y)
+                                            * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS)
+                                      - (1 << DN_DECIMAL_BITS),
+                                  self->gameData->entityManager.board->pos.y
+                                      + (from.x + from.y)
+                                            * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS)
+                                      - (bData->tiles[from.y][from.x].yOffset)};
 
-                    dn_entity_t* bullet = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true,
-                                                                DN_NO_ASSET, 0, start, self->gameData);
+                    dn_entity_t* bullet    = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION,
+                                                                    true, DN_NO_ASSET, 0, start, self->gameData);
                     bullet->updateFunction = dn_updateBullet;
                     bullet->drawFunction   = dn_drawBullet;
                     bullet->data           = heap_caps_calloc(1, sizeof(dn_bulletData_t), MALLOC_CAP_SPIRAM);
                     memset(bullet->data, 0, sizeof(dn_bulletData_t));
-                    bullet->dataType                             = DN_BULLET_DATA;
-                    ((dn_bulletData_t*)bullet->data)->firstTarget = tData->pos;
-                    ((dn_bulletData_t*)bullet->data)->secondTarget = (dn_boardPos_t){-1,-1};
-                    ((dn_bulletData_t*)bullet->data)->start      = bullet->pos;
+                    bullet->dataType                               = DN_BULLET_DATA;
+                    ((dn_bulletData_t*)bullet->data)->firstTarget  = tData->pos;
+                    ((dn_bulletData_t*)bullet->data)->secondTarget = (dn_boardPos_t){-1, -1};
+                    ((dn_bulletData_t*)bullet->data)->start        = bullet->pos;
                     ((dn_bulletData_t*)bullet->data)->end
                         = (vec_t){self->gameData->entityManager.board->pos.x
-                                    + (tData->pos.x - tData->pos.y)
+                                      + (tData->pos.x - tData->pos.y)
                                             * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS)
-                                    - (1 << DN_DECIMAL_BITS),
-                                self->gameData->entityManager.board->pos.y
-                                    + (tData->pos.x + tData->pos.y)
+                                      - (1 << DN_DECIMAL_BITS),
+                                  self->gameData->entityManager.board->pos.y
+                                      + (tData->pos.x + tData->pos.y)
                                             * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS)
-                                    - (bData->tiles[tData->pos.y][tData->pos.x].yOffset)};
+                                      - (bData->tiles[tData->pos.y][tData->pos.x].yOffset)};
                     if (type == DN_REMIX_TRACK)
                     {
                         ((dn_bulletData_t*)bullet->data)->ownerToMove = from;
@@ -1893,7 +1916,7 @@ void dn_updatePrompt(dn_entity_t* self)
                     free(pData->options);
 
                     self->destroyFlag = true;
-                    
+
                     option->callback(self);
                 }
             }
@@ -2041,9 +2064,13 @@ void dn_gainRerollAndSetupDancePhase(dn_entity_t* self)
 void dn_setupDancePhase(dn_entity_t* self) // used to be dn_startMovePhase
 {
     dn_entity_t* existingSelector = dn_findLastEntityOfType(self, DN_TILE_SELECTOR_DATA);
-    if(existingSelector)
+    if (existingSelector)
     {
-        ((dn_boardData_t*)self->gameData->entityManager.board->data)->tiles[((dn_tileSelectorData_t*)existingSelector->data)->pos.y][((dn_tileSelectorData_t*)existingSelector->data)->pos.x].selector = NULL;
+        ((dn_boardData_t*)self->gameData->entityManager.board->data)
+            ->tiles[((dn_tileSelectorData_t*)existingSelector->data)->pos.y]
+                   [((dn_tileSelectorData_t*)existingSelector->data)->pos.x]
+            .selector
+            = NULL;
         existingSelector->destroyFlag = true;
     }
 
@@ -2172,7 +2199,7 @@ void dn_clearSelectableTiles(dn_entity_t* self)
 void dn_startUpgradeMenu(dn_entity_t* self, int32_t countOff)
 {
     self->gameData->resolvingRemix = false;
-    
+
     dn_zeroOutTileOffsets(self->gameData->entityManager.board);
 
     //////////////////////////
@@ -2184,11 +2211,11 @@ void dn_startUpgradeMenu(dn_entity_t* self, int32_t countOff)
         self->gameData);
     upgradeMenu->data = heap_caps_calloc(1, sizeof(dn_upgradeMenuData_t), MALLOC_CAP_SPIRAM);
     memset(upgradeMenu->data, 0, sizeof(dn_upgradeMenuData_t));
-    ((dn_upgradeMenuData_t*)upgradeMenu->data)->timer = countOff;
+    ((dn_upgradeMenuData_t*)upgradeMenu->data)->timer          = countOff;
     ((dn_upgradeMenuData_t*)upgradeMenu->data)->numTracksToAdd = -1;
-    upgradeMenu->dataType                             = DN_UPGRADE_MENU_DATA;
-    upgradeMenu->updateFunction                       = dn_updateUpgradeMenu;
-    upgradeMenu->drawFunction                         = dn_drawUpgradeMenu;
+    upgradeMenu->dataType                                      = DN_UPGRADE_MENU_DATA;
+    upgradeMenu->updateFunction                                = dn_updateUpgradeMenu;
+    upgradeMenu->drawFunction                                  = dn_drawUpgradeMenu;
 
     dn_initializeSecondUpgradeOption(upgradeMenu);
     dn_initializeThirdUpgradeOption(upgradeMenu);
@@ -2428,7 +2455,8 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
     }
     else if (self->gameData->entityManager.albums->pos.y != 63427)
     {
-        if(self->gameData->characterSets[0] == DN_BLACK_CHESS_SET || self->gameData->characterSets[1] == DN_WHITE_CHESS_SET)
+        if (self->gameData->characterSets[0] == DN_BLACK_CHESS_SET
+            || self->gameData->characterSets[1] == DN_WHITE_CHESS_SET)
         {
             trophyUpdate((*self->gameData->trophyData)[5], 1, true);
         }
@@ -2440,12 +2468,12 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
         aData->p2Album->pos.y                       = 62912;
     }
 
-    if(umData->numTracksToAdd > -1)
+    if (umData->numTracksToAdd > -1)
     {
         umData->flashyBoxSize -= self->gameData->elapsedUs >> 13;
         if (umData->flashyBoxSize < 0)
         {
-            switch(umData->numTracksToAdd)
+            switch (umData->numTracksToAdd)
             {
                 case 7:
                 case 1:
@@ -2455,34 +2483,37 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
                     {
                         case 0:
                         {
-                            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album;
+                            album
+                                = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p1Album;
                             break;
                         }
                         case 1:
                         {
-                            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album;
+                            album
+                                = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album;
                             break;
                         }
                         case 2:
                         {
-                            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum;
+                            album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)
+                                        ->creativeCommonsAlbum;
                             break;
                         }
                     }
                     dn_addTrackToAlbum(album, umData->track[0], umData->trackColor);
                     break;
                 }
-                case 5:// add a random track to creative commons in the upgrade menu
+                case 5: // add a random track to creative commons in the upgrade menu
                 {
                     dn_initializeFirstUpgradeOption(self);
                     break;
                 }
-                case 4:// add a random track to creative commons in the upgrade menu
+                case 4: // add a random track to creative commons in the upgrade menu
                 {
                     dn_initializeSecondUpgradeOption(self);
                     break;
                 }
-                case 3:// add a random track to creative commons in the upgrade menu
+                case 3: // add a random track to creative commons in the upgrade menu
                 {
                     umData->album[0] = 2;
                     break;
@@ -2659,24 +2690,23 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
         drawTextWordWrapCentered(&self->gameData->font_ibm, umData->selectionIdx == option ? c555 : c545, text, &xValue,
                                  &yValue, x + 141 + (length < 19 ? 8 : 0), y + 30 + 31 * option);
 
-        //Draw glitch art
-        if((umData->numTracksToAdd == 3 && option >= 2) ||
-             (umData->numTracksToAdd == 4 && option >= 1) ||
-             umData->numTracksToAdd == 5)
+        // Draw glitch art
+        if ((umData->numTracksToAdd == 3 && option >= 2) || (umData->numTracksToAdd == 4 && option >= 1)
+            || umData->numTracksToAdd == 5)
         {
-            for(uint8_t glitchX = 0; glitchX < 35; glitchX++)
+            for (uint8_t glitchX = 0; glitchX < 35; glitchX++)
             {
-                for(uint8_t glitchY = 0; glitchY < 3; glitchY++)
+                for (uint8_t glitchY = 0; glitchY < 3; glitchY++)
                 {
-                    if(dn_randomInt(0,2))
+                    if (dn_randomInt(0, 2))
                     {
                         // Use a deterministic pseudo-random value based on glitchX, glitchY, and flashyBoxSize
-                        uint8_t arbitraryByteFromMemory = (uint8_t)(
-                            ((option * 30 + glitchX + glitchY + umData->flashyBoxSize / 10) ^ 0xA5) % 256
-                        );
-                        if(arbitraryByteFromMemory > 100)
+                        uint8_t arbitraryByteFromMemory
+                            = (uint8_t)(((option * 30 + glitchX + glitchY + umData->flashyBoxSize / 10) ^ 0xA5) % 256);
+                        if (arbitraryByteFromMemory > 100)
                         {
-                            drawWsgSimple(&self->gameData->assets[DN_GLITCH_ASSET].frames[arbitraryByteFromMemory % 6], x + 4 + glitchX * 4, y + 6 + 31 * option + glitchY * 8);
+                            drawWsgSimple(&self->gameData->assets[DN_GLITCH_ASSET].frames[arbitraryByteFromMemory % 6],
+                                          x + 4 + glitchX * 4, y + 6 + 31 * option + glitchY * 8);
                         }
                     }
                 }
@@ -2684,20 +2714,21 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
         }
     }
 
-    if (self->gameData->camera.pos.y == (self->pos.y - (26 << DN_DECIMAL_BITS)) && self->updateFunction == dn_updateUpgradeMenu)
+    if (self->gameData->camera.pos.y == (self->pos.y - (26 << DN_DECIMAL_BITS))
+        && self->updateFunction == dn_updateUpgradeMenu)
     {
-        if(umData->numTracksToAdd == -1)
+        if (umData->numTracksToAdd == -1)
         {
-            //confirm button
-            drawRectFilled(x + 40, y + 98, x + dn_lerp(40, 125, dn_logRemap(umData->options[3].selectionAmount)), y + 116,
-                        c521);
+            // confirm button
+            drawRectFilled(x + 40, y + 98, x + dn_lerp(40, 125, dn_logRemap(umData->options[3].selectionAmount)),
+                           y + 116, c521);
             drawRect(x + 40, y + 98, x + 125, y + 116, umData->selectionIdx == 3 ? c555 : c434);
             tWidth = textWidth(&self->gameData->font_ibm, "CONFIRM");
-            drawText(&self->gameData->font_ibm, umData->selectionIdx == 3 ? c555 : c545, "CONFIRM", x + 82 - (tWidth >> 1),
-                    y + 102);
+            drawText(&self->gameData->font_ibm, umData->selectionIdx == 3 ? c555 : c545, "CONFIRM",
+                     x + 82 - (tWidth >> 1), y + 102);
         }
 
-        //here's the flashy rainbow square
+        // here's the flashy rainbow square
         uint16_t indicatorX = 56;
         uint16_t indicatorY = 175;
 
@@ -2714,16 +2745,21 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
         indicatorX += umData->track[0].x * 8 * (umData->album[0] == 1 ? -1 : 1);
         indicatorY -= umData->track[0].y * 8 * (umData->album[0] == 1 ? -1 : 1);
 
-        if(umData->numTracksToAdd == -1 || umData->numTracksToAdd == 7 || umData->numTracksToAdd == 1)
+        if (umData->numTracksToAdd == -1 || umData->numTracksToAdd == 7 || umData->numTracksToAdd == 1)
         {
             bool drawAnimated = umData->numTracksToAdd == 7 || umData->numTracksToAdd == 1;
-            drawRect(indicatorX - umData->flashyBoxSize * drawAnimated, indicatorY - umData->flashyBoxSize* drawAnimated, indicatorX + 9 + umData->flashyBoxSize* drawAnimated, indicatorY + 9 + umData->flashyBoxSize* drawAnimated, (paletteColor_t)dn_randomInt(0, 216));
-            drawRect(indicatorX + 1 - umData->flashyBoxSize* drawAnimated, indicatorY + 1 - umData->flashyBoxSize* drawAnimated, indicatorX + 8 + umData->flashyBoxSize* drawAnimated, indicatorY + 8 + umData->flashyBoxSize* drawAnimated, (paletteColor_t)dn_randomInt(0, 216));
+            drawRect(indicatorX - umData->flashyBoxSize * drawAnimated,
+                     indicatorY - umData->flashyBoxSize * drawAnimated,
+                     indicatorX + 9 + umData->flashyBoxSize * drawAnimated,
+                     indicatorY + 9 + umData->flashyBoxSize * drawAnimated, (paletteColor_t)dn_randomInt(0, 216));
+            drawRect(indicatorX + 1 - umData->flashyBoxSize * drawAnimated,
+                     indicatorY + 1 - umData->flashyBoxSize * drawAnimated,
+                     indicatorX + 8 + umData->flashyBoxSize * drawAnimated,
+                     indicatorY + 8 + umData->flashyBoxSize * drawAnimated, (paletteColor_t)dn_randomInt(0, 216));
 
-            
-            //draw warning text if track already exists
+            // draw warning text if track already exists
             dn_entity_t* album = NULL;
-            switch(umData->album[0])
+            switch (umData->album[0])
             {
                 case 0:
                 {
@@ -2737,14 +2773,16 @@ void dn_drawUpgradeMenu(dn_entity_t* self)
                 }
                 case 2:
                 {
-                    album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum;
+                    album = (dn_entity_t*)((dn_albumsData_t*)self->gameData->entityManager.albums->data)
+                                ->creativeCommonsAlbum;
                     break;
                 }
             }
-            if(dn_trackTypeAtCoords(album, umData->track[0]))
+            if (dn_trackTypeAtCoords(album, umData->track[0]))
             {
                 tWidth = textWidth(&self->gameData->font_ibm, "WARNING! This would overwrite!");
-                drawText(&self->gameData->font_ibm, c511, "WARNING! This would overwrite!", (TFT_WIDTH>>1) - (tWidth >> 1), 10);
+                drawText(&self->gameData->font_ibm, c511, "WARNING! This would overwrite!",
+                         (TFT_WIDTH >> 1) - (tWidth >> 1), 10);
             }
         }
     }
@@ -2880,7 +2918,7 @@ void dn_confirmUpgrade(dn_entity_t* self)
 {
     dn_upgradeMenuData_t* umData       = (dn_upgradeMenuData_t*)self->data;
     umData->options[3].selectionAmount = 0;
-    umData->numTracksToAdd = 7; //It really adds 2 tracks. Different things happen happen at 7,6,5,4,3,2,1, and 0
+    umData->numTracksToAdd = 7; // It really adds 2 tracks. Different things happen happen at 7,6,5,4,3,2,1, and 0
     umData->flashyBoxSize  = 127;
 }
 
@@ -3060,7 +3098,8 @@ void dn_updateBullet(dn_entity_t* self)
                 // Make the prompt Game Over //
                 ///////////////////////////////
                 trophyUpdate((*self->gameData->trophyData)[3], 1, true);
-                trophyUpdate((*self->gameData->trophyData)[7], trophyGetSavedValue((*self->gameData->trophyData)[7]) + 1, true);
+                trophyUpdate((*self->gameData->trophyData)[7],
+                             trophyGetSavedValue((*self->gameData->trophyData)[7]) + 1, true);
                 dn_entity_t* promptGameOver
                     = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff, 0xffff}, self->gameData);
                 dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
@@ -3163,22 +3202,21 @@ void dn_updateBullet(dn_entity_t* self)
             // knock this tile out
             targetTile->timeout = true;
 
-            
             if (buData->secondTarget.x != -1)
             {
                 buData->firstTarget = buData->secondTarget;
-                buData->lerpAmount = 0;
-                buData->start = buData->end;
+                buData->lerpAmount  = 0;
+                buData->start       = buData->end;
                 buData->end
-                        = (vec_t){self->gameData->entityManager.board->pos.x
-                            + (buData->secondTarget.x - buData->secondTarget.y)
-                                * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS)
-                            - (1 << DN_DECIMAL_BITS),
-                        self->gameData->entityManager.board->pos.y
-                            + (buData->secondTarget.x + buData->secondTarget.y)
-                                * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS)
-                            - (bData->tiles[buData->secondTarget.y][buData->secondTarget.x].yOffset)};
-                buData->secondTarget = (dn_boardPos_t){-1,-1};
+                    = (vec_t){self->gameData->entityManager.board->pos.x
+                                  + (buData->secondTarget.x - buData->secondTarget.y)
+                                        * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS)
+                                  - (1 << DN_DECIMAL_BITS),
+                              self->gameData->entityManager.board->pos.y
+                                  + (buData->secondTarget.x + buData->secondTarget.y)
+                                        * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS)
+                                  - (bData->tiles[buData->secondTarget.y][buData->secondTarget.x].yOffset)};
+                buData->secondTarget = (dn_boardPos_t){-1, -1};
                 return;
             }
             else if (!self->gameData->resolvingRemix)
@@ -3418,24 +3456,25 @@ void dn_unpauseSkipButton(dn_entity_t* self)
 void dn_updateTutorial(dn_entity_t* self)
 {
     dn_tutorialData_t* tData = (dn_tutorialData_t*)self->data;
-    if(self->gameData->btnDownState & PB_RIGHT && tData->page < sizeof(tutorialText[tData->advancedTips]) / sizeof(tutorialText[tData->advancedTips][0]))
+    if (self->gameData->btnDownState & PB_RIGHT
+        && tData->page < sizeof(tutorialText[tData->advancedTips]) / sizeof(tutorialText[tData->advancedTips][0]))
     {
         tData->page++;
     }
-    if(self->gameData->btnDownState & PB_LEFT)
+    if (self->gameData->btnDownState & PB_LEFT)
     {
-        if(tData->page)
+        if (tData->page)
             tData->page--;
         else
             dn_exitSubMode(self);
     }
-    if(self->gameData->btnDownState & PB_B)
+    if (self->gameData->btnDownState & PB_B)
     {
         dn_exitSubMode(self);
     }
-    if(tData->page == sizeof(tutorialText[tData->advancedTips]) / sizeof(tutorialText[tData->advancedTips][0]))
+    if (tData->page == sizeof(tutorialText[tData->advancedTips]) / sizeof(tutorialText[tData->advancedTips][0]))
     {
-        if(tData->advancedTips)
+        if (tData->advancedTips)
         {
             trophyUpdate((*self->gameData->trophyData)[1], 1, true);
             trophySetChecklistTask((*self->gameData->trophyData)[2], 0x2, false, true);
@@ -3459,30 +3498,32 @@ void dn_drawTutorial(dn_entity_t* self)
 
     int16_t x = 7;
     int16_t y = 45;
-    drawTextWordWrapCentered(&self->gameData->font_ibm, c445, tutorialText[tData->advancedTips][tData->page].title, &x, &y, 136, 114);
+    drawTextWordWrapCentered(&self->gameData->font_ibm, c445, tutorialText[tData->advancedTips][tData->page].title, &x,
+                             &y, 136, 114);
 
     x = 7;
     y = 100;
     char buffer[8];
-    snprintf(buffer, sizeof(buffer), "%d/%d", tData->page + 1, (uint8_t)(sizeof(tutorialText[tData->advancedTips]) / sizeof(tutorialText[tData->advancedTips][0])));
+    snprintf(buffer, sizeof(buffer), "%d/%d", tData->page + 1,
+             (uint8_t)(sizeof(tutorialText[tData->advancedTips]) / sizeof(tutorialText[tData->advancedTips][0])));
     drawTextWordWrapCentered(&self->gameData->font_ibm, c555, buffer, &x, &y, 136, 114);
 
     x = 24;
     y = 140;
-    drawTextWordWrap(&self->gameData->font_ibm, c555, tutorialText[tData->advancedTips][tData->page].body, &x, &y, x+225, y+80);
+    drawTextWordWrap(&self->gameData->font_ibm, c555, tutorialText[tData->advancedTips][tData->page].body, &x, &y,
+                     x + 225, y + 80);
 
-    if((self->gameData->generalTimer % 256) > 128)
+    if ((self->gameData->generalTimer % 256) > 128)
     {
-        if(tData->page)
+        if (tData->page)
         {
             drawWsg(&self->gameData->assets[DN_MMM_SUBMENU_ASSET].frames[0], 10, 205, true, false, 0);
         }
-        if(tData->page < sizeof(tutorialText[tData->advancedTips]) / sizeof(tutorialText[tData->advancedTips][0]))
+        if (tData->page < sizeof(tutorialText[tData->advancedTips]) / sizeof(tutorialText[tData->advancedTips][0]))
         {
             drawWsgSimple(&self->gameData->assets[DN_MMM_SUBMENU_ASSET].frames[0], 242, 205);
         }
     }
-
 }
 
 dn_entity_t* dn_findLastEntityOfType(dn_entity_t* self, dn_dataType_t type)
@@ -3491,7 +3532,7 @@ dn_entity_t* dn_findLastEntityOfType(dn_entity_t* self, dn_dataType_t type)
     while (((dn_entity_t*)cur->val)->dataType != type)
     {
         cur = cur->prev;
-        if(!cur)
+        if (!cur)
         {
             return NULL;
         }
@@ -3507,7 +3548,7 @@ void dn_setupBounceOptions(dn_entity_t* self)
     dn_clearSelectableTiles(self);
 
     // recalculate selectable tiles
-    list_t* myList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+    list_t* myList   = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
     list_t* invalids = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
     memset(myList, 0, sizeof(list_t));
     memset(invalids, 0, sizeof(list_t));
@@ -3516,20 +3557,22 @@ void dn_setupBounceOptions(dn_entity_t* self)
         node_t* cur = myList->first;
         while (cur != NULL)
         {
-            dn_action_t* action                                      = ((dn_action_t*)cur->val);
-            if(action->action == DN_RED_TRACK || action->action == DN_REMIX_TRACK)
+            dn_action_t* action = ((dn_action_t*)cur->val);
+            if (action->action == DN_RED_TRACK || action->action == DN_REMIX_TRACK)
             {
-                bData->tiles[action->pos.y][action->pos.x].selectionType = self->gameData->resolvingRemix ? DN_REMIX_TRACK : DN_RED_TRACK;
+                bData->tiles[action->pos.y][action->pos.x].selectionType
+                    = self->gameData->resolvingRemix ? DN_REMIX_TRACK : DN_RED_TRACK;
             }
-            cur                                                      = cur->next;
+            cur = cur->next;
         }
         cur = invalids->first;
-        while(cur != NULL)
+        while (cur != NULL)
         {
             dn_action_t* action = ((dn_action_t*)cur->val);
-            if(action->action == DN_RED_TRACK || action->action == DN_REMIX_TRACK)
+            if (action->action == DN_RED_TRACK || action->action == DN_REMIX_TRACK)
             {
-                bData->tiles[action->pos.y][action->pos.x].selectionType = self->gameData->resolvingRemix ? DN_REMIX_TRACK_INVALID : DN_RED_TRACK_INVALID;
+                bData->tiles[action->pos.y][action->pos.x].selectionType
+                    = self->gameData->resolvingRemix ? DN_REMIX_TRACK_INVALID : DN_RED_TRACK_INVALID;
             }
             cur = cur->next;
         }
@@ -3539,8 +3582,8 @@ void dn_setupBounceOptions(dn_entity_t* self)
     clear(invalids);
     free(invalids);
 
-    tData->a_callback   = dn_trySelectBounceDest;
-    tData->b_callback   = dn_setupDancePhase;
+    tData->a_callback = dn_trySelectBounceDest;
+    tData->b_callback = dn_setupDancePhase;
 }
 
 void dn_trySelectBounceDest(dn_entity_t* self)
@@ -3584,26 +3627,26 @@ void dn_trySelectBounceDest(dn_entity_t* self)
                     + (from.x + from.y) * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS)
                     - (bData->tiles[from.y][from.x].yOffset)};
 
-            dn_entity_t* bullet = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true,
+            dn_entity_t* bullet    = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true,
                                                             DN_NO_ASSET, 0, start, self->gameData);
             bullet->updateFunction = dn_updateBullet;
             bullet->drawFunction   = dn_drawBullet;
             bullet->data           = heap_caps_calloc(1, sizeof(dn_bulletData_t), MALLOC_CAP_SPIRAM);
             memset(bullet->data, 0, sizeof(dn_bulletData_t));
-            bullet->dataType                             = DN_BULLET_DATA;
-            ((dn_bulletData_t*)bullet->data)->ownerToMove = from;
-            ((dn_bulletData_t*)bullet->data)->firstTarget = tData->bounce;
+            bullet->dataType                               = DN_BULLET_DATA;
+            ((dn_bulletData_t*)bullet->data)->ownerToMove  = from;
+            ((dn_bulletData_t*)bullet->data)->firstTarget  = tData->bounce;
             ((dn_bulletData_t*)bullet->data)->secondTarget = tData->pos;
-            ((dn_bulletData_t*)bullet->data)->start      = bullet->pos;
+            ((dn_bulletData_t*)bullet->data)->start        = bullet->pos;
             ((dn_bulletData_t*)bullet->data)->end
                 = (vec_t){self->gameData->entityManager.board->pos.x
-                                + (tData->bounce.x - tData->bounce.y)
+                              + (tData->bounce.x - tData->bounce.y)
                                     * (self->gameData->assets[DN_GROUND_TILE_ASSET].originX << DN_DECIMAL_BITS)
-                                - (1 << DN_DECIMAL_BITS),
-                            self->gameData->entityManager.board->pos.y
-                                + (tData->bounce.x + tData->bounce.y)
+                              - (1 << DN_DECIMAL_BITS),
+                          self->gameData->entityManager.board->pos.y
+                              + (tData->bounce.x + tData->bounce.y)
                                     * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS)
-                                - (bData->tiles[tData->bounce.y][tData->bounce.x].yOffset)};
+                              - (bData->tiles[tData->bounce.y][tData->bounce.x].yOffset)};
         }
     }
 }
@@ -3617,7 +3660,7 @@ void dn_exitSubMode(dn_entity_t* self)
 
 void dn_updateQr(dn_entity_t* self)
 {
-    if(self->gameData->btnDownState & PB_B)
+    if (self->gameData->btnDownState & PB_B)
     {
         dn_exitSubMode(self);
     }
@@ -3625,7 +3668,9 @@ void dn_updateQr(dn_entity_t* self)
 
 void dn_drawQr(dn_entity_t* self)
 {
-    drawWsgSimpleScaled(&self->gameData->assets[DN_QR_ASSET].frames[0], (TFT_WIDTH / 2) - 74, (TFT_HEIGHT / 2) - 74, 4, 4);
+    drawWsgSimpleScaled(&self->gameData->assets[DN_QR_ASSET].frames[0], (TFT_WIDTH / 2) - 74, (TFT_HEIGHT / 2) - 74, 4,
+                        4);
     char text[16] = "Video Tutorial";
-    drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH / 2) - (textWidth(&self->gameData->font_ibm, text) / 2), 220);
+    drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH / 2) - (textWidth(&self->gameData->font_ibm, text) / 2),
+             220);
 }

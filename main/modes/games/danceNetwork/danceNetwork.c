@@ -61,7 +61,7 @@ const trophyData_t danceNetworkTrophies[] = {
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_CHECKLIST,
         .difficulty  = TROPHY_DIFF_EXTREME,
-        .maxVal      = 0x7,
+        .maxVal      = 0x7, // Three tasks, 0x01, 0x02, and 0x04
     },
     {
         .title       = "Boogie Omnipotence",
@@ -69,7 +69,7 @@ const trophyData_t danceNetworkTrophies[] = {
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1, // Three tasks, 0x01, 0x02, and 0x04
+        .maxVal      = 1,
     },
     {
         .title       = "Full Discography",
@@ -114,8 +114,8 @@ trophySettings_t danceNetworkTrophySettings = {
 
 // This is passed to the swadgeMode_t
 trophyDataList_t trophyData = {.settings = &danceNetworkTrophySettings,
-                                   .list = danceNetworkTrophies,
-                                   .length = ARRAY_SIZE(danceNetworkTrophies)};
+                               .list     = danceNetworkTrophies,
+                               .length   = ARRAY_SIZE(danceNetworkTrophies)};
 
 swadgeMode_t danceNetworkMode = {
     .modeName          = danceNetworkName, // Assign the name we created here
@@ -133,23 +133,23 @@ swadgeMode_t danceNetworkMode = {
     .fnEspNowRecvCb           = dn_EspNowRecvCb,           // If using Wifi, add the receive function here
     .fnEspNowSendCb           = dn_EspNowSendCb,           // If using Wifi, add the send function here
     .fnAdvancedUSB            = NULL,                      // If using advanced USB things.
-    .trophyData = &trophyData, // This line activates the trophy for this mode
+    .trophyData               = &trophyData,               // This line activates the trophy for this mode
 };
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-const char dn_Name[]                   = "Dance Network";
-static const char dn_MultiStr[]        = "Multiplayer";
-static const char dn_WirelessStr[]     = "Wireless Play";
-static const char dn_PassAndPlayStr[]  = "Pass and Play";
-static const char dn_MultiShortStr[]   = "Connect";
-//static const char dn_SingleStr[]       = "Single Player";
-static const char dn_DiffEasyStr[]     = "Easy";
-static const char dn_DiffMediumStr[]   = "Medium";
-static const char dn_DiffHardStr[]     = "Hard";
-static const char dn_CharacterSelStr[] = "Select Troupes";
+const char dn_Name[]                  = "Dance Network";
+static const char dn_MultiStr[]       = "Multiplayer";
+static const char dn_WirelessStr[]    = "Wireless Play";
+static const char dn_PassAndPlayStr[] = "Pass and Play";
+static const char dn_MultiShortStr[]  = "Connect";
+// static const char dn_SingleStr[]       = "Single Player";
+static const char dn_DiffEasyStr[]      = "Easy";
+static const char dn_DiffMediumStr[]    = "Medium";
+static const char dn_DiffHardStr[]      = "Hard";
+static const char dn_CharacterSelStr[]  = "Select Troupes";
 static const char dn_videoTutorialStr[] = "Video Tutorial";
-static const char dn_HowToStr[]        = "Text Tutorial";
-static const char dn_AdvancedHowToStr[]= "Advanced Tips";
+static const char dn_HowToStr[]         = "Text Tutorial";
+static const char dn_AdvancedHowToStr[] = "Advanced Tips";
 // static const char dn_ResultStr[]      = "Result";
 static const char dn_RecordsStr[] = "Records";
 static const char dn_Exit[]       = "Exit";
@@ -182,7 +182,7 @@ uint8_t* dn_decodeSpace;
 
 // This is in order such that index is the assetIdx.
 static const cnfsFileIdx_t dn_assetToWsgLookup[]
-    = {DN_ALPHA_DOWN_WSG, DN_ALPHA_ORTHO_WSG,  DN_ALPHA_UP_WSG,        DN_KING_WSG,          DN_KING_SMALL_0_WSG,
+    = {DN_ALPHA_DOWN_WSG, DN_ALPHA_ORTHO_WSG,  DN_ALPHA_UP_WSG,        DN_KING_WSG,         DN_KING_SMALL_0_WSG,
        DN_PAWN_WSG,       DN_PAWN_SMALL_0_WSG, DN_BUCKET_HAT_DOWN_WSG, DN_BUCKET_HAT_UP_WSG};
 
 // NVS keys
@@ -200,7 +200,7 @@ static void dn_EnterMode(void)
 
     int32_t outVal;
     readNvs32(dnP1TroupeKey, &outVal);
-    if(outVal >= 0 && outVal <= 2)//increase this if adding more than 3 troupes
+    if (outVal >= 0 && outVal <= 2) // increase this if adding more than 3 troupes
     {
         gameData->characterSets[0] = outVal;
     }
@@ -208,9 +208,9 @@ static void dn_EnterMode(void)
     {
         gameData->characterSets[0] = 0;
     }
-    outVal = 0;//zero it out just in case
+    outVal = 0; // zero it out just in case
     readNvs32(dnP2TroupeKey, &outVal);
-    if(outVal >= 0 && outVal <= 2)//increase this if adding more than 3 troupes
+    if (outVal >= 0 && outVal <= 2) // increase this if adding more than 3 troupes
     {
         gameData->characterSets[1] = outVal;
     }
@@ -321,24 +321,23 @@ static void dn_EnterMode(void)
     gameData->menu = initMenu(dn_Name, dn_MenuCb);
     addSingleItemToMenu(gameData->menu, dn_CharacterSelStr);
     gameData->menu = startSubMenu(gameData->menu, dn_MultiStr);
-    //unfinished submode
-    //addSingleItemToMenu(gameData->menu, dn_WirelessStr);
+    // unfinished submode
+    // addSingleItemToMenu(gameData->menu, dn_WirelessStr);
     addSingleItemToMenu(gameData->menu, dn_PassAndPlayStr);
     gameData->menu = endSubMenu(gameData->menu);
 
-    //unfinished submodes
-    // gameData->menu = startSubMenu(gameData->menu, dn_SingleStr);
-    // addSingleItemToMenu(gameData->menu, dn_DiffEasyStr);
-    // addSingleItemToMenu(gameData->menu, dn_DiffMediumStr);
-    // addSingleItemToMenu(gameData->menu, dn_DiffHardStr);
-    // gameData->menu = endSubMenu(gameData->menu);
+    // unfinished submodes
+    //  gameData->menu = startSubMenu(gameData->menu, dn_SingleStr);
+    //  addSingleItemToMenu(gameData->menu, dn_DiffEasyStr);
+    //  addSingleItemToMenu(gameData->menu, dn_DiffMediumStr);
+    //  addSingleItemToMenu(gameData->menu, dn_DiffHardStr);
+    //  gameData->menu = endSubMenu(gameData->menu);
 
-    
     addSingleItemToMenu(gameData->menu, dn_videoTutorialStr);
     addSingleItemToMenu(gameData->menu, dn_HowToStr);
     addSingleItemToMenu(gameData->menu, dn_AdvancedHowToStr);
-    //unfinished submode
-    //addSingleItemToMenu(gameData->menu, dn_RecordsStr);
+    // unfinished submode
+    // addSingleItemToMenu(gameData->menu, dn_RecordsStr);
     addSingleItemToMenu(gameData->menu, dn_Exit);
 
     // Initialize a menu with no entries to be used as a background
@@ -498,7 +497,7 @@ static void dn_MenuCb(const char* label, bool selected, uint32_t value)
             gameData->bgMenu->title = dn_CharacterSelStr;
             dn_ShowUi(UI_GAME);
         }
-        else if(dn_videoTutorialStr == label)
+        else if (dn_videoTutorialStr == label)
         {
             dn_initializeVideoTutorial();
             dn_ShowUi(UI_GAME);
@@ -509,7 +508,7 @@ static void dn_MenuCb(const char* label, bool selected, uint32_t value)
             dn_initializeTutorial(false);
             dn_ShowUi(UI_GAME);
         }
-        else if(dn_AdvancedHowToStr == label)
+        else if (dn_AdvancedHowToStr == label)
         {
             // Show advanced tutorial
             dn_initializeTutorial(true);
@@ -637,7 +636,6 @@ void dn_ShowUi(dn_Ui_t ui)
     }
 }
 
-
 static void dn_initializeTutorial(bool advanced)
 {
     setMegaLedsOn(gameData->menuRenderer, false);
@@ -647,17 +645,18 @@ static void dn_initializeTutorial(bool advanced)
     dn_loadAsset(MMM_SUBMENU_WSG, 1, &gameData->assets[DN_MMM_SUBMENU_ASSET]);
 
     /////////////////////
-    //Make the tutorial//
+    // Make the tutorial//
     /////////////////////
-    dn_entity_t* tutorial = dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0, 0}, gameData);
-    tutorial->data = heap_caps_calloc(1, sizeof(dn_tutorialData_t), MALLOC_CAP_SPIRAM);
+    dn_entity_t* tutorial = dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_NO_ASSET, 0,
+                                                   (vec_t){0, 0}, gameData);
+    tutorial->data        = heap_caps_calloc(1, sizeof(dn_tutorialData_t), MALLOC_CAP_SPIRAM);
     if (tutorial->data != NULL)
     {
         memset(tutorial->data, 0, sizeof(dn_tutorialData_t));
         ((dn_tutorialData_t*)tutorial->data)->advancedTips = advanced;
-        tutorial->dataType      = DN_TUTORIAL_DATA;
-        tutorial->updateFunction = dn_updateTutorial;
-        tutorial->drawFunction  = dn_drawTutorial;
+        tutorial->dataType                                 = DN_TUTORIAL_DATA;
+        tutorial->updateFunction                           = dn_updateTutorial;
+        tutorial->drawFunction                             = dn_drawTutorial;
     }
 }
 
@@ -666,12 +665,13 @@ static void dn_initializeVideoTutorial(void)
     setMegaLedsOn(gameData->menuRenderer, false);
     dn_loadAsset(DN_QR_0_WSG, 1, &gameData->assets[DN_QR_ASSET]);
     ////////////////////
-    //Make the qr code//
+    // Make the qr code//
     ////////////////////
     trophySetChecklistTask(danceNetworkTrophies[2], 0x4, false, true);
-    dn_entity_t* qr = dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_NO_ASSET, 0, (vec_t){0, 0}, gameData);
+    dn_entity_t* qr    = dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_NO_ASSET, 0,
+                                                (vec_t){0, 0}, gameData);
     qr->updateFunction = dn_updateQr;
-    qr->drawFunction  = dn_drawQr;
+    qr->drawFunction   = dn_drawQr;
 }
 
 static void dn_initializeGame(void)
@@ -889,7 +889,7 @@ static void dn_initializeGame(void)
         (vec_t){0xFFFF - (103 << DN_DECIMAL_BITS), 0xFFFF + (25 << DN_DECIMAL_BITS)}, gameData);
     swapButton->updateFunction = dn_updateSwapButton;
     swapButton->drawFunction   = dn_drawSwapButton;
-    swapButton->dataType = DN_SWAPBUTTON_DATA;
+    swapButton->dataType       = DN_SWAPBUTTON_DATA;
 
     //////////////////////////
     // Make the skip button //
@@ -899,7 +899,7 @@ static void dn_initializeGame(void)
                                  (vec_t){0xFFFF + (74 << DN_DECIMAL_BITS), 0xFFFF + (25 << DN_DECIMAL_BITS)}, gameData);
     skipButton->updateFunction = dn_updateSkipButton;
     skipButton->drawFunction   = dn_drawSkipButton;
-    skipButton->dataType = DN_SKIPBUTTON_DATA;
+    skipButton->dataType       = DN_SKIPBUTTON_DATA;
 
     /////////////////////////
     // Make the playerTurn //
