@@ -3472,7 +3472,7 @@ void dn_updateTutorial(dn_entity_t* self)
     {
         dn_exitSubMode(self);
     }
-    if(self->gameData->btnDownState & PB_LEFT || self->gameData->btnDownState & PB_RIGHT)
+    if (self->gameData->btnDownState & PB_LEFT || self->gameData->btnDownState & PB_RIGHT)
     {
         if (tData->page == sizeof(tutorialText[tData->advancedTips]) / sizeof(tutorialText[tData->advancedTips][0]))
         {
@@ -3488,22 +3488,23 @@ void dn_updateTutorial(dn_entity_t* self)
             }
             dn_exitSubMode(self);
         }
-        else if(!strcmp(tutorialText[tData->advancedTips][tData->page].title,"R.I.P."))
+        else if (!strcmp(tutorialText[tData->advancedTips][tData->page].title, "R.I.P."))
         {
             ///////////////////////
             // Make the memorial //
             ///////////////////////
-            dn_entity_t* memorial = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_BUG_ASSET, 0, (vec_t){0xFFFF,0xFFFFF}, self->gameData);
-            memorial->data = heap_caps_calloc(1, sizeof(dn_memorialData_t), MALLOC_CAP_SPIRAM);
+            dn_entity_t* memorial = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true,
+                                                           DN_BUG_ASSET, 0, (vec_t){0xFFFF, 0xFFFFF}, self->gameData);
+            memorial->data        = heap_caps_calloc(1, sizeof(dn_memorialData_t), MALLOC_CAP_SPIRAM);
             memset(memorial->data, 0, sizeof(dn_memorialData_t));
-            memorial->dataType = DN_MEMORIAL_DATA;
+            memorial->dataType       = DN_MEMORIAL_DATA;
             memorial->updateFunction = dn_updateMemorial;
-            memorial->drawFunction = dn_drawMemorial;
+            memorial->drawFunction   = dn_drawMemorial;
         }
         else
         {
             dn_entity_t* potentialMemorial = dn_findLastEntityOfType(self, DN_MEMORIAL_DATA);
-            if(potentialMemorial)
+            if (potentialMemorial)
             {
                 potentialMemorial->destroyFlag = true;
                 trophyUpdate((*self->gameData->trophyData)[8], 1, true);
@@ -3704,25 +3705,25 @@ void dn_updateMemorial(dn_entity_t* self)
     dn_memorialData_t* mData = (dn_memorialData_t*)self->data;
     if (mData)
     {
-        mData->timer+=self->gameData->elapsedUs>>12;
+        mData->timer += self->gameData->elapsedUs >> 12;
     }
 }
 
 void dn_drawMemorial(dn_entity_t* self)
 {
     dn_memorialData_t* mData = (dn_memorialData_t*)self->data;
-    uint8_t frame = 24*(mData->timer / 576);//bug
-    frame += 6*((mData->timer % 144)/36); //animation frame
-    uint8_t lighting = (mData->timer % 576)/48; //one brightness level per 12 ticks
-    if(lighting > 5)
+    uint8_t frame            = 24 * (mData->timer / 576); // bug
+    frame += 6 * ((mData->timer % 144) / 36);             // animation frame
+    uint8_t lighting = (mData->timer % 576) / 48;         // one brightness level per 12 ticks
+    if (lighting > 5)
     {
-        lighting = 11-lighting;
+        lighting = 11 - lighting;
     }
     frame += lighting;
-    if(frame > 143)
+    if (frame > 143)
     {
         self->destroyFlag = true;
         return;
     }
-    drawWsgSimple(&self->gameData->assets[DN_BUG_ASSET].frames[frame],57, 65);
+    drawWsgSimple(&self->gameData->assets[DN_BUG_ASSET].frames[frame], 57, 65);
 }

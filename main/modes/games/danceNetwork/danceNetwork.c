@@ -38,80 +38,88 @@ static void dn_freeAssets(void);
 //==============================================================================
 
 // Modify the following with your trophies
-const trophyData_t danceNetworkTrophies[] = {
-    {//0
-        .title       = "Dance 101",
-        .description = "Worth 3 credit hours at Dance University.",
-        .image       = NO_IMAGE_SET, // If set like this, it will draw a default trophy based on difficulty
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1, // For trigger type, set to one
-    },
-    {//1
-        .title       = "Dance 200",
-        .description = "Also worth 3 credit hours at Dance University.",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1,
-    },
-    {//2
-        .title       = "Certified Dance Freak",
-        .description = "Viewed the video tutorial, passed Dance 101, and passed Dance 200.",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_CHECKLIST,
-        .difficulty  = TROPHY_DIFF_EXTREME,
-        .maxVal      = 0x7, // Three tasks, 0x01, 0x02, and 0x04
-    },
-    {//3
-        .title       = "Boogie Omnipotence",
-        .description = "Finished a match of Dance Network.",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1,
-    },
-    {//4
-        .title       = "Full Discography",
-        .description = "Completely filled an album with tracks.",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EXTREME,
-        .maxVal      = 1,
-    },
-    {//5
-        .title       = "Utterly Confusing",
-        .description = "Played a game with white chess pieces for player 2 or black chess pieces for player 1.",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {//6
-        .title       = "My People Need Me",
-        .description = "Jumped into the garbage pit.",
-        .image       = EF_BIGBUG_SLV_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-    },
-    {//7
-        .title       = "Dance Veteran",
-        .description = "Completed 10 Dance Network matches. Puts DanceNoNighta to shame.",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_ADDITIVE,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 10,
-    },
-    {//8
-        .title       = "No Respect These Days",
-        .description = "Angered DanceNoNighta during the moment of silence.",
-        .image       = EF_BIGBUG_SLV_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-    }
-};
+const trophyData_t danceNetworkTrophies[]
+    = {{
+           // 0
+           .title       = "Dance 101",
+           .description = "Worth 3 credit hours at Dance University.",
+           .image       = NO_IMAGE_SET, // If set like this, it will draw a default trophy based on difficulty
+           .type        = TROPHY_TYPE_TRIGGER,
+           .difficulty  = TROPHY_DIFF_EASY,
+           .maxVal      = 1, // For trigger type, set to one
+       },
+       {
+           // 1
+           .title       = "Dance 200",
+           .description = "Also worth 3 credit hours at Dance University.",
+           .image       = NO_IMAGE_SET,
+           .type        = TROPHY_TYPE_TRIGGER,
+           .difficulty  = TROPHY_DIFF_HARD,
+           .maxVal      = 1,
+       },
+       {
+           // 2
+           .title       = "Certified Dance Freak",
+           .description = "Viewed the video tutorial, passed Dance 101, and passed Dance 200.",
+           .image       = NO_IMAGE_SET,
+           .type        = TROPHY_TYPE_CHECKLIST,
+           .difficulty  = TROPHY_DIFF_EXTREME,
+           .maxVal      = 0x7, // Three tasks, 0x01, 0x02, and 0x04
+       },
+       {
+           // 3
+           .title       = "Boogie Omnipotence",
+           .description = "Finished a match of Dance Network.",
+           .image       = NO_IMAGE_SET,
+           .type        = TROPHY_TYPE_TRIGGER,
+           .difficulty  = TROPHY_DIFF_HARD,
+           .maxVal      = 1,
+       },
+       {
+           // 4
+           .title       = "Full Discography",
+           .description = "Completely filled an album with tracks.",
+           .image       = NO_IMAGE_SET,
+           .type        = TROPHY_TYPE_TRIGGER,
+           .difficulty  = TROPHY_DIFF_EXTREME,
+           .maxVal      = 1,
+       },
+       {
+           // 5
+           .title       = "Utterly Confusing",
+           .description = "Played a game with white chess pieces for player 2 or black chess pieces for player 1.",
+           .image       = NO_IMAGE_SET,
+           .type        = TROPHY_TYPE_TRIGGER,
+           .difficulty  = TROPHY_DIFF_MEDIUM,
+           .maxVal      = 1,
+       },
+       {
+           // 6
+           .title       = "My People Need Me",
+           .description = "Jumped into the garbage pit.",
+           .image       = EF_BIGBUG_SLV_WSG,
+           .type        = TROPHY_TYPE_TRIGGER,
+           .difficulty  = TROPHY_DIFF_EASY,
+           .maxVal      = 1,
+       },
+       {
+           // 7
+           .title       = "Dance Veteran",
+           .description = "Completed 10 Dance Network matches. Puts DanceNoNighta to shame.",
+           .image       = NO_IMAGE_SET,
+           .type        = TROPHY_TYPE_ADDITIVE,
+           .difficulty  = TROPHY_DIFF_EASY,
+           .maxVal      = 10,
+       },
+       {
+           // 8
+           .title       = "No Respect These Days",
+           .description = "Angered DanceNoNighta during the moment of silence.",
+           .image       = EF_BIGBUG_SLV_WSG,
+           .type        = TROPHY_TYPE_TRIGGER,
+           .difficulty  = TROPHY_DIFF_EASY,
+           .maxVal      = 1,
+       }};
 
 // Individual mode settings
 trophySettings_t danceNetworkTrophySettings = {
@@ -651,7 +659,7 @@ static void dn_initializeTutorial(bool advanced)
     dn_loadAsset(DN_TFT_WSG, 1, &gameData->assets[DN_TFT_ASSET]);
     dn_loadAsset(DN_TEXT_BOX_WSG, 1, &gameData->assets[DN_TEXTBOX_ASSET]);
     dn_loadAsset(MMM_SUBMENU_WSG, 1, &gameData->assets[DN_MMM_SUBMENU_ASSET]);
-    dn_loadAsset(BU_0_WSG, 6*24, &gameData->assets[DN_BUG_ASSET]);
+    dn_loadAsset(BU_0_WSG, 6 * 24, &gameData->assets[DN_BUG_ASSET]);
 
     /////////////////////
     // Make the tutorial//

@@ -209,8 +209,7 @@ typedef struct
 typedef struct
 {
     uint32_t timer;
-}
-dn_memorialData_t;
+} dn_memorialData_t;
 
 //==============================================================================
 // Prototypes
