@@ -26,14 +26,11 @@
 
 void canvasBlankInit(wsg_t* canvas, int width, int height, paletteColor_t startColor, bool spiRam)
 {
-    canvas->h = height;
-    canvas->w = width;
+    canvas->h  = height;
+    canvas->w  = width;
     canvas->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * canvas->w * canvas->h,
                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT);
-    for (int idx = 0; idx < (height * width); idx++)
-    {
-        canvas->px[idx] = startColor;
-    }
+    memset(canvas->px, startColor, canvas->h * canvas->w * sizeof(paletteColor_t));
 }
 
 void canvasDrawSimple(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY)
@@ -87,7 +84,9 @@ void canvasDrawPal(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, b
                 yPos < 0 ||                                          // If pixel is too far right
                 yPos > canvas->h - 1                                 // If pixel is too low
             )
+            {
                 continue;
+            }
 
             // Handle rotation
             if (rotateDeg != 0) // Only enter this block if rotation isn't zero to save processing time
@@ -98,7 +97,9 @@ void canvasDrawPal(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, b
                 xPos = tx + startX;
                 yPos = ty + startY;
                 if (xPos < 0 || xPos > canvas->w - 1 || yPos < 0 || yPos > canvas->h - 1)
+                {
                     continue;
+                }
             }
 
             // Copy pixel to canvas

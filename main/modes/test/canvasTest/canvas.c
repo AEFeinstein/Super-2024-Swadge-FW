@@ -87,6 +87,8 @@ static void stEnterMode(void)
 
 static void stExitMode(void)
 {
+    freeWsg(&st->donut2);
+    freeWsg(&st->donut);
     freeWsg(&st->canvas);
 }
 
