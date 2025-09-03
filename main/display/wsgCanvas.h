@@ -21,20 +21,19 @@
  *
  * \section wsgCanvas_usage Usage
  *
- * Step one is to load up a canvas. Use `canvasBlankInit()` to create a blank canvas on which to paint, or load a normal
+ * Step one is to load up a canvas. Use canvasBlankInit() to create a blank canvas on which to paint, or load a normal
  * WSG. Just note that any changes you make cannot be revered without re-initializing the WSG.
  *
- * Next, use canvasDraw() to put WSGs onto the canvas. YOu can rotate, flip in both x and y, and position the WSG
+ * Next, use canvasDraw() to put WSGs onto the canvas. You can rotate, flip in both x and y, and position the WSG
  * however you like on the canvas. Pixels outside of the boundaries of the canvas will be discarded, and transparent
  * pixels will leave the color underneath to show through, allowing for complex layering.
  *
  * Palettes are also supported, so things like custom hair colors can be applied without having to rely on a drawing
  * function further down the line.
  *
- * Two additional "simple" versions have been provided that perform slightly faster is rotation and flipping aren't
- * required but speed is.
+ * Two additional "simple" versions have been provided for when rotation and flipping aren't required.
  *
- * Lastly, call `canvasFree()` when done with the canvas, just like any other WSG.
+ * Lastly, call freeWsg() when done with the canvas, just like any other WSG.
  *
  * The canvas can be used like any WSG, so all wsg drawing functions work on it once it has been created.
  *
@@ -54,7 +53,7 @@ wsgPaletteReset(&palette);
 canvasDrawPal(&canvas, KID_1_WSG, 160, 48, true, false, 15, palette);
 
 // Clean up
-canvasFree(&canvas);
+freeWsg(&canvas);
  * \endcode
  */
 
@@ -130,10 +129,3 @@ void canvasDraw(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, bool
  */
 void canvasDrawPal(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, bool flipX, bool flipY,
                    int32_t rotateDeg, wsgPalette_t pal);
-
-/**
- * @brief Frees the canvas
- *
- * @param canvas Canvas to free. Ensure this is run when closing down the program
- */
-void canvasFree(wsg_t* canvas);

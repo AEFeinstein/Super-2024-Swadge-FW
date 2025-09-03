@@ -87,7 +87,7 @@ static void stEnterMode(void)
 
 static void stExitMode(void)
 {
-    canvasFree(&st->canvas);
+    freeWsg(&st->canvas);
 }
 
 static void stMainLoop(int64_t elapsedUs)
