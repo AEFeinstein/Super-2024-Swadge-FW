@@ -426,6 +426,10 @@ void dn_drawBoard(dn_entity_t* self)
                                          &self->gameData->entityManager.palettes[DN_REMIX1_FLOOR_PALETTE]);
                     break;
                 }
+                default
+                {
+                    break;
+                }
             }
 
             if (boardData->tiles[y][x].rewards)
