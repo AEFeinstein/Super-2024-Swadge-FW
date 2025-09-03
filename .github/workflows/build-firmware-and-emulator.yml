@@ -83,8 +83,8 @@ jobs:
       if: matrix.family == 'osx'
       run: |
         # Not installing graphviz here because we don't actually build the docs and brew has trouble with its dependencies
-        brew install xquartz libxinerama clang-format cppcheck wget doxygen cmake dylibbundler
-      continue-on-error: true # this is because cmake may be previously installed from a different source
+        # Not installing cmake either because it seems to be already installed from another source and brew can't handle that
+        brew install xquartz libxinerama clang-format cppcheck wget doxygen dylibbundler
 
     - name: Install apt packages
       if: matrix.family == 'linux'
