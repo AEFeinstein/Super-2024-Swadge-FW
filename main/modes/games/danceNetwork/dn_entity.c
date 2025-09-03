@@ -3397,11 +3397,14 @@ void dn_updateTutorial(dn_entity_t* self)
     {
         tData->page++;
     }
-    else if(self->gameData->btnDownState & PB_LEFT && tData->page)
+    if(self->gameData->btnDownState & PB_LEFT)
     {
-        tData->page--;
+        if(tData->page)
+            tData->page--;
+        else
+            dn_exitSubMode(self);
     }
-    if(tData->page == sizeof(tutorialText[tData->advancedTips]) / sizeof(tutorialText[tData->advancedTips][0]))
+    if(self->gameData->btnDownState & PB_B || tData->page == sizeof(tutorialText[tData->advancedTips]) / sizeof(tutorialText[tData->advancedTips][0]))
     {
         dn_exitSubMode(self);
     }
