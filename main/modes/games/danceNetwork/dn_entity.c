@@ -1550,7 +1550,11 @@ void dn_trySelectUnit(dn_entity_t* self)
 {
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
     dn_boardData_t* bData        = (dn_boardData_t*)self->gameData->entityManager.board->data;
-    if (bData->tiles[tData->pos.y][tData->pos.x].unit != NULL && bData->tiles[tData->pos.y][tData->pos.x].selectionType)
+    if (bData->tiles[tData->pos.y][tData->pos.x].unit == NULL)
+    {
+        return;
+    }
+    if (bData->tiles[tData->pos.y][tData->pos.x].selectionType)
     {
         tData->selectedUnit = bData->tiles[tData->pos.y][tData->pos.x].unit;
 
