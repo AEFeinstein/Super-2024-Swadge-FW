@@ -224,7 +224,7 @@ void dn_updateBoard(dn_entity_t* self)
                             ///////////////////////////////
                             // Make the prompt Game Over //
                             ///////////////////////////////
-                            trophyUpdate((*self->gameData->trophyData)[4], 1, true);
+                            trophyUpdate((*self->gameData->trophyData)[3], 1, true);
                             trophyUpdate((*self->gameData->trophyData)[7],
                                          trophyGetSavedValue((*self->gameData->trophyData)[7]) + 1, true);
                             dn_entity_t* promptGameOver = dn_createPrompt(&self->gameData->entityManager,
