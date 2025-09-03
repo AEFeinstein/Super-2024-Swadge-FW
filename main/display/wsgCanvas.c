@@ -17,7 +17,6 @@
 
 #include <esp_heap_caps.h>
 
-#include "heatshrink_helper.h"
 #include "fs_wsg.h"
 #include "wsgCanvas.h"
 
