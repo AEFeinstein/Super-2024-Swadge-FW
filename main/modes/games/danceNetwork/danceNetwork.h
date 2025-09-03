@@ -48,6 +48,7 @@ typedef struct
 
 typedef struct dn_gameData_t
 {
+    trophyData_t* trophyData;
     p2pInfo p2p;
     // Current UI being shown
     dn_Ui_t ui;
