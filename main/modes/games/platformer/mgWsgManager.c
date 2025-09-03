@@ -100,9 +100,9 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(SPRITE_027_WSG, &self->wsgs[MG_WSG_1UP_1], false);
     loadWsg(SPRITE_028_WSG, &self->wsgs[MG_WSG_1UP_2], false);
     loadWsg(SPRITE_029_WSG, &self->wsgs[MG_WSG_1UP_3], false);
-    loadWsg(SPRITE_030_WSG, &self->wsgs[MG_WSG_WAVEBALL_1], false);
-    loadWsg(SPRITE_031_WSG, &self->wsgs[MG_WSG_WAVEBALL_2], false);
-    loadWsg(SPRITE_032_WSG, &self->wsgs[MG_WSG_WAVEBALL_3], false);
+    loadWsg(SHOT_BASIC_000_WSG, &self->wsgs[MG_WSG_WAVEBALL_1], false);
+    loadWsg(SHOT_BASIC_001_WSG, &self->wsgs[MG_WSG_WAVEBALL_2], false);
+    loadWsg(SHOT_BASIC_002_WSG, &self->wsgs[MG_WSG_WAVEBALL_3], false);
     loadWsg(SPRITE_033_WSG, &self->wsgs[MG_WSG_ENEMY_BUSH_L2], false);
     loadWsg(SPRITE_034_WSG, &self->wsgs[MG_WSG_ENEMY_BUSH_L3], false);
     loadWsg(SPRITE_035_WSG, &self->wsgs[MG_WSG_DUSTBUNNY_L2_IDLE], false);
