@@ -77,7 +77,7 @@ static void stEnterMode(void)
     canvasBlankInit(&st->donut, 32, 32, c333, true);
     canvasDrawSimple(&st->donut, KID_0_WSG, -16, -16);
     canvasDraw(&st->donut, KID_0_WSG, 16, -16, false, false, 45);
-    canvasDrawSimplePal(&st->donut, KID_0_WSG, -16, 16, st->pal2);
+    canvasDrawSimplePal(&st->donut, KID_0_WSG, -16, 16, &st->pal2);
     canvasDraw(&st->donut, KID_0_WSG, 16, 16, true, false, 0);
 
     // Tertiary canvas
@@ -111,25 +111,25 @@ static void stMainLoop(int64_t elapsedUs)
             {
                 wsgPaletteSet(&st->pal, c555, st->currColor);
                 canvasDrawSimplePal(&st->canvas, ARROW_19_WSG, esp_random() % (TFT_WIDTH - 19),
-                                    esp_random() % (TFT_HEIGHT - 19), st->pal);
+                                    esp_random() % (TFT_HEIGHT - 19), &st->pal);
             }
             else if (evt.button & PB_DOWN)
             {
                 wsgPaletteSet(&st->pal, c555, st->currColor);
                 canvasDrawPal(&st->canvas, ARROW_19_WSG, esp_random() % (TFT_WIDTH - 19),
-                              esp_random() % (TFT_HEIGHT - 19), false, true, 0, st->pal);
+                              esp_random() % (TFT_HEIGHT - 19), false, true, 0, &st->pal);
             }
             else if (evt.button & PB_RIGHT)
             {
                 wsgPaletteSet(&st->pal, c555, st->currColor);
                 canvasDrawPal(&st->canvas, ARROW_19_WSG, esp_random() % (TFT_WIDTH - 19),
-                              esp_random() % (TFT_HEIGHT - 19), false, false, 90, st->pal);
+                              esp_random() % (TFT_HEIGHT - 19), false, false, 90, &st->pal);
             }
             else if (evt.button & PB_LEFT)
             {
                 wsgPaletteSet(&st->pal, c555, st->currColor);
                 canvasDrawPal(&st->canvas, ARROW_19_WSG, esp_random() % (TFT_WIDTH - 19),
-                              esp_random() % (TFT_HEIGHT - 19), false, true, 90, st->pal);
+                              esp_random() % (TFT_HEIGHT - 19), false, true, 90, &st->pal);
             }
         }
     }
