@@ -87,7 +87,6 @@ void canvasDrawFlipPalette(wsg_t* canvas, cnfsFileIdx_t image, int startX, int s
                 nY = (h - y) - 1;
             }
             int idx = (nY * w) + nX + 4; // 4 is the offset into the data past the dims
-
             paletteColor_t col = pal.newColors[decompressedBuf[idx]];
             if (col == cTransparent ||  // If transparent
                 xPos < 0 ||             // If pixel is too far lef
