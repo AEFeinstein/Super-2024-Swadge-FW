@@ -1,3 +1,14 @@
+/**
+ * @file wsgCanvas.c
+ * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
+ * @brief Provides a canvas to paint with low memory requirements
+ * @version 1.0
+ * @date 2025-09-02
+ * 
+ * @copyright Copyright (c) 2025
+ * 
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -7,6 +18,7 @@
 #include <esp_heap_caps.h>
 
 #include "heatshrink_helper.h"
+#include "fs_wsg.h"
 #include "wsgCanvas.h"
 
 //==============================================================================
@@ -29,10 +41,22 @@ void canvasDraw(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY)
 {
     wsgPalette_t pal;
     wsgPaletteReset(&pal);
-    canvasDrawPalette(canvas, image, startX, startY, pal);
+    canvasDrawPaletteFlip(canvas, image, startX, startY, false, false, pal);
 }
 
 void canvasDrawPalette(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, wsgPalette_t pal)
+{
+    canvasDrawPaletteFlip(canvas, image, startX, startY, false, false, pal);
+}
+
+void canvasDrawFlip(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, bool flipX, bool flipY)
+{
+    wsgPalette_t pal;
+    wsgPaletteReset(&pal);
+    canvasDrawPaletteFlip(canvas, image, startX, startY, flipX, flipY, pal);
+}
+
+void canvasDrawPaletteFlip(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, bool flipX, bool flipY, wsgPalette_t pal)
 {
     // Load the WSG from the file Idx
     uint32_t decompressedSize = 0;
@@ -44,6 +68,7 @@ void canvasDrawPalette(wsg_t* canvas, cnfsFileIdx_t image, int startX, int start
     // - Offsets can be negative to move them up or left
     // - Pixels outside the canvas are not drawn
     // - Clear pixels don't overwrite data underneath
+    // - Flip over x or y axis as required
     for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
@@ -67,4 +92,9 @@ void canvasDrawPalette(wsg_t* canvas, cnfsFileIdx_t image, int startX, int start
 
     // Free buffered data
     heap_caps_free(decompressedBuf);
+}
+
+void canvasFree(wsg_t* canvas)
+{
+    freeWsg(canvas);
 }
