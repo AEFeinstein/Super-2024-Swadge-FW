@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,15 +13,62 @@ char* filenameToEnumName(const char* filename);
 #define CNFS_PATH_MAX 4096
 
 /**
- * @brief Wrapper for strcmp() to be used by qsort()
+ * @brief Natural order alphanumeric string comparison for qsort()
  *
  * @param a A string to compare
  * @param b Another string to compare
- * @return 0 if the strings are equal, non-zero otherwise
+ * @return <0 if a<b, 0 if equal, >0 if a>b
  */
 int stringcmp(const void* a, const void* b)
 {
-    return strcmp(*(const char* const*)a, *(const char* const*)b);
+    const char* s1 = *(const char* const*)a;
+    const char* s2 = *(const char* const*)b;
+
+    while (*s1 && *s2)
+    {
+        if (isdigit((unsigned char)*s1) && isdigit((unsigned char)*s2))
+        {
+            // Find the end of the digit sequences
+            const char* p1 = s1;
+            const char* p2 = s2;
+            while (isdigit((unsigned char)*p1)) p1++;
+            while (isdigit((unsigned char)*p2)) p2++;
+
+            // Compute lengths of the digit runs
+            int len1 = p1 - s1;
+            int len2 = p2 - s2;
+
+            // Compare by length first (longer number = larger)
+            if (len1 != len2)
+            {
+                return (len1 < len2) ? -1 : 1;
+            }
+
+            // Same length → compare digit by digit
+            int cmp = strncmp(s1, s2, len1);
+            if (cmp != 0)
+            {
+                return cmp;
+            }
+
+            // Numbers identical → move past them
+            s1 = p1;
+            s2 = p2;
+        }
+        else
+        {
+            // Compare characters directly
+            if (*s1 != *s2)
+            {
+                return (unsigned char)*s1 - (unsigned char)*s2;
+            }
+            s1++;
+            s2++;
+        }
+    }
+
+    // One string ended — shorter comes first
+    return (unsigned char)*s1 - (unsigned char)*s2;
 }
 
 /**
