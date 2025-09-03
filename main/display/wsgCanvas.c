@@ -25,11 +25,18 @@ void canvasBlankInit(wsg_t* canvas, int width, int height, paletteColor_t startC
     }
 }
 
-void canvasDraw(wsg_t* canvas, cnfsFileIdx_t splat, int startX, int startY)
+void canvasDraw(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY)
+{
+    wsgPalette_t pal;
+    wsgPaletteReset(&pal);
+    canvasDrawPalette(canvas, image, startX, startY, pal);
+}
+
+void canvasDrawPalette(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, wsgPalette_t pal)
 {
     // Load the WSG from the file Idx
     uint32_t decompressedSize = 0;
-    uint8_t* decompressedBuf  = readHeatshrinkFile(splat, &decompressedSize, false);
+    uint8_t* decompressedBuf  = readHeatshrinkFile(image, &decompressedSize, false);
     int w                     = (decompressedBuf[0] << 8) | decompressedBuf[1];
     int h                     = (decompressedBuf[2] << 8) | decompressedBuf[3];
 
@@ -37,20 +44,26 @@ void canvasDraw(wsg_t* canvas, cnfsFileIdx_t splat, int startX, int startY)
     // - Offsets can be negative to move them up or left
     // - Pixels outside the canvas are not drawn
     // - Clear pixels don't overwrite data underneath
-
     for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
         {
-            if(decompressedBuf[(y * w) + x + 4] == cTransparent)
+            int idx            = (y * w) + x + 4; // 4 is the offset into the data past the dims
+            int xPos           = startX + x;
+            int yPos           = startY + y;
+            paletteColor_t col = pal.newColors[decompressedBuf[idx]];
+            if (col == cTransparent ||  // If transparent
+                xPos < 0 ||             // If pixel is too far lef
+                xPos > canvas->w - 1 || // If pixel is too high
+                yPos < 0 ||             // If pixel is too far right
+                yPos > canvas->h - 1    // If pixel is too low
+            )
             {
                 continue;
             }
-            canvas->px[(y * canvas->w) + x] = decompressedBuf[(y * w) + x + 4];
+            canvas->px[((yPos)*canvas->w) + xPos] = col; // Have to use target width for proper wrapping
         }
     }
-
-    // memcpy(canvas->px, &decompressedBuf[4], decompressedSize - 4);
 
     // Free buffered data
     heap_caps_free(decompressedBuf);

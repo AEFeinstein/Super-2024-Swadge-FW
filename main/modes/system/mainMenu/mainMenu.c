@@ -567,6 +567,7 @@ void addSecretsMenu(void)
     addSingleItemToMenu(mainMenu->menu, swadgePassTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, trophyTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, nameTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, canvasTestMode.modeName);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, factoryResetName);
     addSingleItemToMenu(mainMenu->menu, confirmResetName);
