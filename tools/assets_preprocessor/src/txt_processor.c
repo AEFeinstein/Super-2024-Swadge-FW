@@ -36,7 +36,7 @@ long remove_chars(char* str, long len, char c)
     {
         *strWritePtr = *strReadPtr++;
         // Keep only printable characters, newlines, and everything except c
-        bool keep = (*strWritePtr != c) && (isprint(*strWritePtr) || '\n' == *strWritePtr);
+        bool keep = (*strWritePtr != c) && (isprint((int)(*strWritePtr)) || '\n' == *strWritePtr);
         if (keep)
         {
             newLen++;

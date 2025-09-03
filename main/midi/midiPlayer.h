@@ -485,6 +485,12 @@ typedef struct
 
             /// @brief 0 to loop forever, or the number of loops to play
             uint32_t loop;
+
+            /// @brief The start of the loop portion of the sample
+            uint32_t loopStart;
+
+            /// @brief The end of the loop portion of the sample
+            uint32_t loopEnd;
         } sample;
 
         struct
