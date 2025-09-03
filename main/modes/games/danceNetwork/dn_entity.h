@@ -29,6 +29,7 @@ typedef enum
     DN_TUTORIAL_DATA,
     DN_SWAPBUTTON_DATA,
     DN_SKIPBUTTON_DATA,
+    DN_MEMORIAL_DATA,
 } dn_dataType_t;
 
 //==============================================================================
@@ -205,6 +206,12 @@ typedef struct
     bool advancedTips;
 } dn_tutorialData_t;
 
+typedef struct
+{
+    uint32_t timer;
+}
+dn_memorialData_t;
+
 //==============================================================================
 // Prototypes
 //==============================================================================
@@ -314,3 +321,6 @@ void dn_exitSubMode(dn_entity_t* self);
 
 void dn_updateQr(dn_entity_t* self);
 void dn_drawQr(dn_entity_t* self);
+
+void dn_updateMemorial(dn_entity_t* self);
+void dn_drawMemorial(dn_entity_t* self);

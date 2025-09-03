@@ -55,7 +55,7 @@ static const dn_tutorialPage_t tutorialText[2][23] = {
                       "advisor to unenroll in Dance 200 before the end of the first week."},
         {"Dance 200", "I'm just as excited as all of you to further hone your skills on the dance floor."},
         {"Dance 200", "But first, a moment of silence for our fallen heroes from the Great Garbage War of '25."},
-        {"Bugs", "..."},
+        {"R.I.P.", "..."},
         {"Dance Threat Calculus", "Thank you. We're going to go over some light refreshers."},
         {"Dance Actions", "Fire and Remix tracks can even target friendly units or unoccupied tiles."},
         {"Dance Actions - Ranged Attack",
@@ -3472,19 +3472,43 @@ void dn_updateTutorial(dn_entity_t* self)
     {
         dn_exitSubMode(self);
     }
-    if (tData->page == sizeof(tutorialText[tData->advancedTips]) / sizeof(tutorialText[tData->advancedTips][0]))
+    if(self->gameData->btnDownState & PB_LEFT || self->gameData->btnDownState & PB_RIGHT)
     {
-        if (tData->advancedTips)
+        if (tData->page == sizeof(tutorialText[tData->advancedTips]) / sizeof(tutorialText[tData->advancedTips][0]))
         {
-            trophyUpdate((*self->gameData->trophyData)[1], 1, true);
-            trophySetChecklistTask((*self->gameData->trophyData)[2], 0x2, false, true);
+            if (tData->advancedTips)
+            {
+                trophyUpdate((*self->gameData->trophyData)[1], 1, true);
+                trophySetChecklistTask((*self->gameData->trophyData)[2], 0x2, true, true);
+            }
+            else
+            {
+                trophyUpdate((*self->gameData->trophyData)[0], 1, true);
+                trophySetChecklistTask((*self->gameData->trophyData)[2], 0x1, true, true);
+            }
+            dn_exitSubMode(self);
+        }
+        else if(!strcmp(tutorialText[tData->advancedTips][tData->page].title,"R.I.P."))
+        {
+            ///////////////////////
+            // Make the memorial //
+            ///////////////////////
+            dn_entity_t* memorial = dn_createEntitySpecial(&self->gameData->entityManager, 0, DN_NO_ANIMATION, true, DN_BUG_ASSET, 0, (vec_t){0xFFFF,0xFFFFF}, self->gameData);
+            memorial->data = heap_caps_calloc(1, sizeof(dn_memorialData_t), MALLOC_CAP_SPIRAM);
+            memset(memorial->data, 0, sizeof(dn_memorialData_t));
+            memorial->dataType = DN_MEMORIAL_DATA;
+            memorial->updateFunction = dn_updateMemorial;
+            memorial->drawFunction = dn_drawMemorial;
         }
         else
         {
-            trophyUpdate((*self->gameData->trophyData)[0], 1, true);
-            trophySetChecklistTask((*self->gameData->trophyData)[2], 0x1, false, true);
+            dn_entity_t* potentialMemorial = dn_findLastEntityOfType(self, DN_MEMORIAL_DATA);
+            if(potentialMemorial)
+            {
+                potentialMemorial->destroyFlag = true;
+                trophyUpdate((*self->gameData->trophyData)[8], 1, true);
+            }
         }
-        dn_exitSubMode(self);
     }
 }
 
@@ -3673,4 +3697,32 @@ void dn_drawQr(dn_entity_t* self)
     char text[16] = "Video Tutorial";
     drawText(&self->gameData->font_ibm, c555, text, (TFT_WIDTH / 2) - (textWidth(&self->gameData->font_ibm, text) / 2),
              220);
+}
+
+void dn_updateMemorial(dn_entity_t* self)
+{
+    dn_memorialData_t* mData = (dn_memorialData_t*)self->data;
+    if (mData)
+    {
+        mData->timer+=self->gameData->elapsedUs>>12;
+    }
+}
+
+void dn_drawMemorial(dn_entity_t* self)
+{
+    dn_memorialData_t* mData = (dn_memorialData_t*)self->data;
+    uint8_t frame = 24*(mData->timer / 576);//bug
+    frame += 6*((mData->timer % 144)/36); //animation frame
+    uint8_t lighting = (mData->timer % 576)/48; //one brightness level per 12 ticks
+    if(lighting > 5)
+    {
+        lighting = 11-lighting;
+    }
+    frame += lighting;
+    if(frame > 143)
+    {
+        self->destroyFlag = true;
+        return;
+    }
+    drawWsgSimple(&self->gameData->assets[DN_BUG_ASSET].frames[frame],57, 65);
 }

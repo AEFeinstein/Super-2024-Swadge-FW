@@ -8,7 +8,7 @@
 #define DN_BOARD_SIZE      5
 #define DN_TILE_WIDTH      51
 #define DN_TILE_HEIGHT     13
-#define NUM_ASSETS         31 // The number of dn_asset_t (last accounted for DN_QR_ASSET)
+#define NUM_ASSETS         32 // The number of dn_asset_t (last accounted for DN_BUG_ASSET)
 #define NUM_PALETTES       25 // The number of wsgPalette_t (last accounted for green to yellow)
 #define NUM_SELECTOR_LINES 15 // Creates more chaotic lines in the selector graphic
 
@@ -50,6 +50,7 @@ typedef enum __attribute__((packed))
     DN_MMM_NEXT_ASSET,
     DN_MMM_SUBMENU_ASSET,
     DN_QR_ASSET,
+    DN_BUG_ASSET,
     DN_NO_ASSET, // Keep this one at the end of the enum. Used for entities with no wsgs.
 } dn_assetIdx_t;
 
