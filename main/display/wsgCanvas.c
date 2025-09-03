@@ -4,9 +4,9 @@
  * @brief Provides a canvas to paint with low memory requirements
  * @version 1.0
  * @date 2025-09-02
- * 
+ *
  * @copyright Copyright (c) 2025
- * 
+ *
  */
 
 //==============================================================================
@@ -41,22 +41,23 @@ void canvasDraw(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY)
 {
     wsgPalette_t pal;
     wsgPaletteReset(&pal);
-    canvasDrawPaletteFlip(canvas, image, startX, startY, false, false, pal);
+    canvasDrawFlipPalette(canvas, image, startX, startY, false, false, pal);
 }
 
 void canvasDrawPalette(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, wsgPalette_t pal)
 {
-    canvasDrawPaletteFlip(canvas, image, startX, startY, false, false, pal);
+    canvasDrawFlipPalette(canvas, image, startX, startY, false, false, pal);
 }
 
 void canvasDrawFlip(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, bool flipX, bool flipY)
 {
     wsgPalette_t pal;
     wsgPaletteReset(&pal);
-    canvasDrawPaletteFlip(canvas, image, startX, startY, flipX, flipY, pal);
+    canvasDrawFlipPalette(canvas, image, startX, startY, flipX, flipY, pal);
 }
 
-void canvasDrawPaletteFlip(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, bool flipX, bool flipY, wsgPalette_t pal)
+void canvasDrawFlipPalette(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, bool flipX, bool flipY,
+                           wsgPalette_t pal)
 {
     // Load the WSG from the file Idx
     uint32_t decompressedSize = 0;
@@ -73,9 +74,20 @@ void canvasDrawPaletteFlip(wsg_t* canvas, cnfsFileIdx_t image, int startX, int s
     {
         for (int x = 0; x < w; x++)
         {
-            int idx            = (y * w) + x + 4; // 4 is the offset into the data past the dims
-            int xPos           = startX + x;
-            int yPos           = startY + y;
+            int xPos = startX + x;
+            int yPos = startY + y;
+            int nX = x;
+            int nY = y;
+            if (flipX)
+            {
+                nX = w - x;
+            }
+            if (flipY)
+            {
+                nY = (h - y) - 1;
+            }
+            int idx = (nY * w) + nX + 4; // 4 is the offset into the data past the dims
+
             paletteColor_t col = pal.newColors[decompressedBuf[idx]];
             if (col == cTransparent ||  // If transparent
                 xPos < 0 ||             // If pixel is too far lef

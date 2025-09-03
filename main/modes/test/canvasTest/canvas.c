@@ -111,6 +111,12 @@ static void stMainLoop(int64_t elapsedUs)
                 canvasDrawPalette(&st->canvas, ARROW_19_WSG, esp_random() % (TFT_WIDTH - 19),
                                   esp_random() % (TFT_HEIGHT - 19), st->pal);
             }
+            else if (evt.button & PB_DOWN)
+            {
+                wsgPaletteSet(&st->pal, c555, st->currColor);
+                canvasDrawFlipPalette(&st->canvas, ARROW_19_WSG, esp_random() % (TFT_WIDTH - 19),
+                                  esp_random() % (TFT_HEIGHT - 19), false, true, st->pal);
+            }
         }
     }
 

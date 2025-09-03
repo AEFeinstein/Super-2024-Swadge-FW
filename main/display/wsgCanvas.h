@@ -81,7 +81,7 @@ void canvasDrawFlip(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, 
  * @param flipY Flips applied image in the Y direction
  * @param pal Palette data to use to transform the image
  */
-void canvasDrawPaletteFlip(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, bool flipX, bool flipY, wsgPalette_t pal);
+void canvasDrawFlipPalette(wsg_t* canvas, cnfsFileIdx_t image, int startX, int startY, bool flipX, bool flipY, wsgPalette_t pal);
 
 /**
  * @brief Frees the canvas
