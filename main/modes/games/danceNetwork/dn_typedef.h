@@ -155,10 +155,9 @@ typedef struct __attribute__((packed))
     dn_track_t action;
 } dn_action_t;
 
-//remove redundant struct later
+// remove redundant struct later
 typedef struct __attribute__((packed))
 {
     char title[31];
     char body[160];
 } dn_tutorialPage_t;
-
