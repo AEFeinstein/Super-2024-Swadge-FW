@@ -121,6 +121,8 @@
  * - fill.h: Learn how to fill areas on the screen
  * - shapes.h: Learn how to draw shapes and curves on the screen
  * - wsg.h: Learn how to draw sprites on the screen
+ * - wsgCanvas.h: Tools for mixing wsgs into one file to save on memory space
+ * - wsgPalette.h: A layer on top of WSGs to allow the colors to be changed without new WSGs
  * - font.h: Learn how to draw text on the screen
  * - hdw-ch32v003.h: The matrix array driver on the 2026 Swadge
  *
