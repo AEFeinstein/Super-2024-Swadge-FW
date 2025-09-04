@@ -42,9 +42,11 @@ typedef struct
 
     vec_t sprayCenter;
     uint16_t sprayCenterOrigX;
+    uint16_t sprayCenterOrigY;
 
-    uint8_t sweepDirection;
-    bool firstSweep;
+    uint16_t oldXOffset;
+    int64_t yOffsetElapsedUs;
+    uint8_t sweepCount;
 
     bool nozzlePressed;
 } ccmgSpray_t;
@@ -54,8 +56,10 @@ ccmgSpray_t* ccmgs = NULL;
 #define SPRAY_CENTER_START_Y  50
 #define SPRAY_START_XY_JITTER 15
 #define SWEEP_RANGE_X         100
+#define SWEEP_CURVE_RANGE_X   5
 #define SWEEP_US_PER_SIN_DEG  5500
-#define SWEEP_US_PER_Y_PX     10000
+#define SWEEP_US_PER_Y_PX     13700
+#define SWEEP_HEIGHT          21
 
 #define SPRAY_CENTER_TO_CAN_X_DIST 40
 #define NOZZLE_TRAVEL_PX           2
@@ -89,8 +93,7 @@ static void ccmgSprayInitMicrogame(void)
     ccmgs->sprayCenter.x    = SPRAY_CENTER_START_X + esp_random() % SPRAY_START_XY_JITTER * 2 - SPRAY_START_XY_JITTER;
     ccmgs->sprayCenter.y    = SPRAY_CENTER_START_Y + esp_random() % SPRAY_START_XY_JITTER * 2 - SPRAY_START_XY_JITTER;
     ccmgs->sprayCenterOrigX = ccmgs->sprayCenter.x;
-
-    ccmgs->firstSweep = true;
+    ccmgs->sprayCenterOrigY = ccmgs->sprayCenter.y;
 
     loadWsg(CC_SPRAY_CAN_WSG, &ccmgs->wsg.can, false);
     loadWsg(CC_SPRAY_CAN_GRAPHICS_WSG, &ccmgs->wsg.canGraphics, false);
@@ -139,21 +142,30 @@ static void ccmgSprayMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCr
     if (state == CC_MG_PLAYING)
     {
         uint64_t totalElapsedUs = ccmgSpray.timeoutUs - timeRemainingUs;
+
         // xOffset is a range of 0..SWEEP_RANGE_X timed to a sine wave
         uint16_t xOffset
             = (getSin1024((totalElapsedUs / SWEEP_US_PER_SIN_DEG + 270) % 360) + 1024) * SWEEP_RANGE_X / 2048;
-        ccmgs->sprayCenter.x = ccmgs->sprayCenterOrigX - xOffset;
-        if (xOffset < 5 || xOffset > SWEEP_RANGE_X - 5)
+
+        if ((ccmgs->oldXOffset > SWEEP_RANGE_X - SWEEP_CURVE_RANGE_X && xOffset <= SWEEP_RANGE_X - SWEEP_CURVE_RANGE_X)
+            || (ccmgs->oldXOffset < SWEEP_CURVE_RANGE_X && xOffset >= SWEEP_CURVE_RANGE_X))
         {
-            if (!ccmgs->firstSweep)
-            {
-                ccmgs->sprayCenter.y += elapsedUs / SWEEP_US_PER_Y_PX;
-            }
+            ccmgs->sweepCount++;
+        }
+        ccmgs->sprayCenter.x = ccmgs->sprayCenterOrigX - xOffset;
+        ccmgs->sprayCenter.y = ccmgs->sprayCenterOrigY + MAX(ccmgs->sweepCount - 1, 0) * SWEEP_HEIGHT;
+
+        if (ccmgs->sweepCount > 0 && (xOffset < SWEEP_CURVE_RANGE_X || xOffset > SWEEP_RANGE_X - SWEEP_CURVE_RANGE_X))
+        {
+            ccmgs->yOffsetElapsedUs += elapsedUs;
+            ccmgs->sprayCenter.y += ccmgs->yOffsetElapsedUs / SWEEP_US_PER_Y_PX;
         }
         else
         {
-            ccmgs->firstSweep = false;
+            ccmgs->yOffsetElapsedUs = 0;
         }
+
+        ccmgs->oldXOffset = xOffset;
     }
 
     uint16_t canX    = ccmgs->sprayCenter.x + SPRAY_CENTER_TO_CAN_X_DIST;

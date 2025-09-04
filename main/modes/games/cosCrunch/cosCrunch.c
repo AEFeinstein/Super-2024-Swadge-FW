@@ -156,7 +156,7 @@ tintColor_t tintColors[] = {
 
 static void cosCrunchEnterMode(void)
 {
-    setFrameRateUs(1000000 / 40);
+    setFrameRateUs(1000000 / 60);
 
     cc        = heap_caps_calloc(1, sizeof(cosCrunch_t), MALLOC_CAP_8BIT);
     cc->state = CC_MENU;
