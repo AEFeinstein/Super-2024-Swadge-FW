@@ -1,6 +1,6 @@
 /**
  * @file swadgesona.h
- * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
+ * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com), Luna Toon (Natascha Santaella, makeupbyluna@hotmail.com)
  * @brief The data structures and Helper functions for utilizing Swadgesonas
  * @date 2025-05-02
  *
@@ -25,24 +25,40 @@
 typedef enum
 {
     SKIN_ZERO,       ///< Lightest skin tone
-    SKIN_ONE,        ///< Second lightest skin tone
-    SKIN_TWO,        ///< Medium skin tone
-    SKIN_THREE,      ///< Second darkest natural skin tone
-    SKIN_FOUR,       ///< Darkest natural skin tone
+    SKIN_ONE,        ///< Roseacea
+    SKIN_TWO,        ///< Second lightest skin tone
+    SKIN_THREE,      ///< Medium skin tone
+    SKIN_FOUR,       ///< Second darkest natural skin tone
+    SKIN_FIVE,       ///< Darkest natural skin tone
     SKIN_BLUE,       ///< Blue skin tone
     SKIN_GRAY,       ///< Grey skin tone
     SKIN_GREEN,      ///< Green skin tone
     SKIN_PURPLE,     ///< Purple skin tone
     SKIN_RED,        ///< Red skin tone
+    SKIN_PINK,       ///< Pink skin tone
     SKIN_COLOR_COUNT ///< Total number of skin tones
 } skinColor_t;
 
 /// @brief List of valid hair colors
 typedef enum
 {
-    HAIR_BLONDE,
-    HAIR_BLACK,
-    HAIR_COLOR_COUNT
+    HAIR_LPINK,      ///< Pink
+    HAIR_DPINK,      ///< Dark pink
+    HAIR_LAVENDER,   ///< Light purple
+    HAIR_PURPLE,     ///< Purple
+    HAIR_LBLUE,      ///< Light blue
+    HAIR_DBLUE,      ///< Dark blue
+    HAIR_LGREEN,     ///< Light green
+    HAIR_DGREEN,     ///< Dark green
+    HAIR_ORANGE,     ///< Orange
+    HAIR_RED,        ///< Red
+    HAIR_BLONDE,     ///< Blonde
+    HAIR_COPPER,     ///< Copper 
+    HAIR_WHITE,      ///< White
+    HAIR_GRAY,       ///< Grey (base)
+    HAIR_BROWN,      ///< Brown
+    HAIR_BLACK,      ///< Black
+    HAIR_COLOR_COUNT ///< Total number of hair colors
 } hairColor_t;
 
 /// @brief List of valid eye colors

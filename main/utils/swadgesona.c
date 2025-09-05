@@ -249,14 +249,15 @@ void drawSwadgesona(swadgesonaData_t* ssd, swadgesona_t* s, int x, int y, int sc
     drawWsgPaletteSimpleScaled(&ssd->eyes[s->eyeShape], x, y, &ssd->sw->eyePalette, scale, scale);
 
     // Mouth
-
+    drawWsgPaletteSimpleScaled(&ssd->mouths[s->mouthShape], x, y, &ssd->sw->eyePalette, scale, scale);//check palettes
     // Nose
-
+    drawWsgPaletteSimpleScaled(&ssd->noses[s->noseShape], x, y, &ssd->sw->eyePalette, scale, scale);
     // Eyebrows
-
+    drawWsgPaletteSimpleScaled(&ssd->eyebrows, x, y, &ssd->sw->eyePalette, scale, scale);
     // Hair
-
+    drawWsgPaletteSimpleScaled(&ssd->hairstyles, x, y, &ssd->sw->hairPalette, scale, scale);//hairpalette
     // Body marks
+    drawWsgPaletteSimpleScaled(&ssd->eyes[s->eyeShape], x, y, &ssd->sw->eyePalette, scale, scale);
 }
 
 //==============================================================================
@@ -276,26 +277,32 @@ static void _getSkinPaletteFromIdx(wsgPalette_t* palette, int idx)
         }
         case SKIN_ONE:
         {
-            palette->newColors[c422] = c432; // mid color
-            palette->newColors[c544] = c543; // base color
+            palette->newColors[c422] = c423; //mid color
+            palette->newColors[c544] = c545; // base color
             break;
         }
-        case SKIN_TWO: // TODO: Correct colors
+        case SKIN_TWO:
         {
             palette->newColors[c422] = c432; // mid color
             palette->newColors[c544] = c543; // base color
             break;
         }
-        case SKIN_THREE: // TODO: Correct colors
+        case SKIN_THREE:
         {
-            palette->newColors[c422] = c432; // mid color
-            palette->newColors[c544] = c543; // base color
+            palette->newColors[c422] = c321; // mid color
+            palette->newColors[c544] = c432; // base color
             break;
         }
-        case SKIN_FOUR: // TODO: Correct colors
+        case SKIN_FOUR:
         {
-            palette->newColors[c422] = c432; // mid color
-            palette->newColors[c544] = c543; // base color
+            palette->newColors[c422] = c211; // mid color
+            palette->newColors[c544] = c321; // base color
+            break;
+        }
+        case SKIN_FIVE:
+        {
+            palette->newColors[c422] = c200; // mid color
+            palette->newColors[c544] = c210; // base color
             break;
         }
         case SKIN_BLUE:
@@ -304,10 +311,10 @@ static void _getSkinPaletteFromIdx(wsgPalette_t* palette, int idx)
             palette->newColors[c544] = c255; // base color
             break;
         }
-        case SKIN_GRAY: // TODO: Correct colors
+        case SKIN_GRAY: 
         {
-            palette->newColors[c422] = c133; // mid color
-            palette->newColors[c544] = c243; // base color
+            palette->newColors[c422] = c333; // mid color
+            palette->newColors[c544] = c444; // base color
             break;
         }
         case SKIN_GREEN:
@@ -322,10 +329,16 @@ static void _getSkinPaletteFromIdx(wsgPalette_t* palette, int idx)
             palette->newColors[c544] = c334; // base color
             break;
         }
-        case SKIN_RED: // TODO: Correct colors
+        case SKIN_RED: 
         {
-            palette->newColors[c422] = c223; // mid color
-            palette->newColors[c544] = c334; // base color
+            palette->newColors[c422] = c411; // mid color
+            palette->newColors[c544] = c422; // base color
+            break;
+        }
+        case SKIN_PINK: 
+        {
+            palette->newColors[c422] = c525; //mid color
+            palette->newColors[c544] = c545; // base color
             break;
         }
     }
@@ -335,18 +348,116 @@ static void _getHairPaletteFromIdx(wsgPalette_t* palette, int idx)
 {
     switch (idx)
     {
+        case HAIR_GRAY:
+        { 
+            palette->newColors[c333] = c333;   //highlight
+            palette->newColors[c222] = c222;   //midtone
+            palette->newColors[c111] = c111;   //low light
+            break;
+        } 
         case HAIR_BLONDE:
-        { // FIXME: Get real colors
-            palette->newColors[c111] = c345;
-            palette->newColors[c222] = c123;
-            palette->newColors[c333] = c323;
+        { 
+            palette->newColors[c333] = c542;   //highlight
+            palette->newColors[c222] = c432;   //midtone
+            palette->newColors[c111] = c321;   //low light
+            break;
+        } 
+        case HAIR_COPPER:
+        { 
+            palette->newColors[c333] = c531;   //highlight
+            palette->newColors[c222] = c421;   //midtone
+            palette->newColors[c111] = c411;   //low light
+            break;
+        } 
+        case HAIR_ORANGE:
+        { 
+            palette->newColors[c333] = c520;   //highlight
+            palette->newColors[c222] = c400;   //midtone
+            palette->newColors[c111] = c300;   //low light
+            break;
+        } 
+        case HAIR_RED:
+        { 
+            palette->newColors[c333] = c300;   //highlight
+            palette->newColors[c222] = c200;   //midtone
+            palette->newColors[c111] = c100;   //low light
+            break;
+        } 
+        case HAIR_BROWN:
+        { 
+            palette->newColors[c333] = c210;   //highlight
+            palette->newColors[c222] = c100;   //midtone
+            palette->newColors[c111] = c000;   //low light
+            break;
+        } 
+        case HAIR_BLACK:
+        { 
+            palette->newColors[c333] = c000;   //highlight
+            palette->newColors[c222] = c012;   //midtone
+            palette->newColors[c111] = c001;   //low light
+            break;
+        } 
+        case HAIR_WHITE:
+        { 
+            palette->newColors[c333] = c555;   //highlight
+            palette->newColors[c222] = c444;   //midtone
+            palette->newColors[c111] = c222;   //low light
+            break;
+        } 
+        case HAIR_LPINK:
+        { 
+            palette->newColors[c333] = c535;   //highlight
+            palette->newColors[c222] = c424;   //midtone
+            palette->newColors[c111] = c302;   //low light
+            break;
+        } 
+        case HAIR_DPINK:
+        { 
+            palette->newColors[c333] = c413;   //highlight
+            palette->newColors[c222] = c302;   //midtone
+            palette->newColors[c111] = c201;   //low light
+            break;
+        } 
+        case HAIR_LAVENDER:
+        { 
+            palette->newColors[c333] = c435;   //highlight
+            palette->newColors[c222] = c324;   //midtone
+            palette->newColors[c111] = c314;   //low light
+            break;
+        } 
+        case HAIR_PURPLE:
+        { 
+            palette->newColors[c333] = c203;   //highlight
+            palette->newColors[c222] = c102;   //midtone
+            palette->newColors[c111] = c101;   //low light
+            break;
+        } 
+        case HAIR_LBLUE:
+        { 
+            palette->newColors[c333] = c044;   //high light
+            palette->newColors[c222] = c033;   //midtone
+            palette->newColors[c111] = c012;   //low light
             break;
         }
-        case HAIR_BLACK:
-        { // FIXME: Get real colors
-            palette->newColors[c111] = c345;
-            palette->newColors[c222] = c123;
-            palette->newColors[c333] = c323;
+        case HAIR_DBLUE:
+        { 
+            palette->newColors[c333] = c013;   //highlight
+            palette->newColors[c222] = c002;   //midtone
+            palette->newColors[c111] = c001;   //low light
+            break;
+        }
+        case HAIR_LGREEN:
+        { 
+            palette->newColors[c333] = c353;   //highlight
+            palette->newColors[c222] = c032;   //midtone
+            palette->newColors[c111] = c021;   //low light
+            break;
+        }
+        case HAIR_DGREEN:
+        { 
+            palette->newColors[c333] = c131;   //highlight
+            palette->newColors[c222] = c121;   //midtone
+            palette->newColors[c111] = c010;   //low light
             break;
         }
         default:
@@ -379,23 +490,23 @@ static void _getEyesPaletteFromIdx(wsgPalette_t* palette, int idx)
             palette->newColors[c010] = c210; // BASE
             break;
         }
-        case EYES_GRAY: // TODO: Set correct colors
+        case EYES_GRAY: 
         {
-            palette->newColors[c130] = c432; // HIGHLIGHT
-            palette->newColors[c010] = c210; // BASE
+            palette->newColors[c130] = c444; // HIGHLIGHT
+            palette->newColors[c010] = c222; // BASE
             break;
         }
         default:
         case EYES_GREEN:
         {
-            palette->newColors[c130] = c130; // HIGHLIGHT
-            palette->newColors[c010] = c010; // BASE
+            palette->newColors[c130] = c353; // HIGHLIGHT
+            palette->newColors[c010] = c121; // BASE
             break;
         }
-        case EYES_PINK: // TODO: Set correct colors
+        case EYES_PINK: 
         {
-            palette->newColors[c130] = c432; // HIGHLIGHT
-            palette->newColors[c010] = c210; // BASE
+            palette->newColors[c130] = c525; // HIGHLIGHT
+            palette->newColors[c010] = c403; // BASE
             break;
         }
         case EYES_PURPLE:
@@ -410,10 +521,10 @@ static void _getEyesPaletteFromIdx(wsgPalette_t* palette, int idx)
             palette->newColors[c010] = c300; // BASE
             break;
         }
-        case EYES_YELLOW: // TODO: Set correct colors
+        case EYES_YELLOW: 
         {
-            palette->newColors[c130] = c533; // HIGHLIGHT
-            palette->newColors[c010] = c300; // BASE
+            palette->newColors[c130] = c553; // HIGHLIGHT
+            palette->newColors[c010] = c541; // BASE
             break;
         }
     }
