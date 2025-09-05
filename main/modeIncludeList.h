@@ -49,6 +49,7 @@
 #include "picross_menu.h"
 #include "roboRunner.h"
 #include "sequencerMode.h"
+#include "canvas.h"
 #include "swadgedoku.h"
 #include "swadgeIt.h"
 #include "swadgePassTest.h"
