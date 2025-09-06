@@ -44,14 +44,14 @@ int stringcmp(const void* a, const void* b)
                 return (len1 < len2) ? -1 : 1;
             }
 
-            // Same length → compare digit by digit
+            // Same length -> compare digit by digit
             int cmp = strncmp(s1, s2, len1);
             if (cmp != 0)
             {
                 return cmp;
             }
 
-            // Numbers identical → move past them
+            // Numbers identical -> move past them
             s1 = p1;
             s2 = p2;
         }
@@ -67,7 +67,7 @@ int stringcmp(const void* a, const void* b)
         }
     }
 
-    // One string ended — shorter comes first
+    // One string ended - shorter comes first
     return (unsigned char)*s1 - (unsigned char)*s2;
 }
 
