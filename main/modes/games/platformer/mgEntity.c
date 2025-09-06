@@ -911,7 +911,7 @@ void animatePlayer(mgEntity_t* self)
             {
                 self->spriteIndex = MG_SP_PLAYER_WALK1;
             }
-            else if (self->gameData->frameCount % (10 - (abs(self->xspeed) >> 1)) == 0)
+            else if (self->gameData->frameCount % (5 /*- (abs(self->xspeed) >> 1)*/) == 0)
             {
                 self->spriteIndex++;
                 if(self->spriteIndex > MG_SP_PLAYER_WALK10)
