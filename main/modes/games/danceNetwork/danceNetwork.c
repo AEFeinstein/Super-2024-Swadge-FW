@@ -367,7 +367,7 @@ static void dn_ExitMode(void)
     freeFont(&gameData->font_ibm);
     freeFont(&gameData->font_righteous);
     freeFont(&gameData->outline_righteous);
-    free(gameData);
+    heap_caps_free(gameData);
 }
 
 /**
@@ -974,7 +974,7 @@ static void dn_freeAssets(void)
             {
                 freeWsg(&gameData->assets[i].frames[frameIdx]);
             }
-            free(gameData->assets[i].frames);
+            heap_caps_free(gameData->assets[i].frames);
             gameData->assets[i].allocated = false;
         }
     }

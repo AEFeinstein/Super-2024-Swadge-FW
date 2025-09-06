@@ -599,14 +599,14 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks, list_t* invalidTracks)
                     }
                     default:
                     {
-                        free(unitAction);
+                        heap_caps_free(unitAction);
                         break;
                     }
                 }
             }
             else
             {
-                free(unitAction);
+                heap_caps_free(unitAction);
             }
         }
     }
@@ -661,9 +661,9 @@ bool dn_calculateMoveableUnits(dn_entity_t* board)
             boardData->tiles[pos.y][pos.x].selectionType = DN_UNIT_SELECTION;
         }
         clear(myList);
-        free(myList);
+        heap_caps_free(myList);
         clear(invalids);
-        free(invalids);
+        heap_caps_free(invalids);
     }
 
     return playerHasMoves;
@@ -1562,9 +1562,9 @@ void dn_trySelectUnit(dn_entity_t* self)
             }
         }
         clear(myList);
-        free(myList);
+        heap_caps_free(myList);
         clear(invalids);
-        free(invalids);
+        heap_caps_free(invalids);
 
         // would make it do the selection idle here later
         tData->a_callback = dn_trySelectTrack;
@@ -1905,7 +1905,7 @@ void dn_updatePrompt(dn_entity_t* self)
                     option->selectionAmount = MAX_LERP_AMOUNT;
 
                     clear(pData->options);
-                    free(pData->options);
+                    heap_caps_free(pData->options);
 
                     self->destroyFlag = true;
 
@@ -3605,9 +3605,9 @@ void dn_setupBounceOptions(dn_entity_t* self)
         }
     }
     clear(myList);
-    free(myList);
+    heap_caps_free(myList);
     clear(invalids);
-    free(invalids);
+    heap_caps_free(invalids);
 
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)dn_findLastEntityOfType(self, DN_TILE_SELECTOR_DATA)->data;
     tData->pos                   = self->gameData->selectorPos;
