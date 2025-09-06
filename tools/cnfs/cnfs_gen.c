@@ -31,8 +31,14 @@ int stringcmp(const void* a, const void* b)
             // Find the end of the digit sequences
             const char* p1 = s1;
             const char* p2 = s2;
-            while (isdigit((unsigned char)*p1)) p1++;
-            while (isdigit((unsigned char)*p2)) p2++;
+            while (isdigit((unsigned char)*p1))
+            {
+                p1++;
+            }
+            while (isdigit((unsigned char)*p2))
+            {
+                p2++;
+            }
 
             // Compute lengths of the digit runs
             int len1 = p1 - s1;
@@ -44,14 +50,14 @@ int stringcmp(const void* a, const void* b)
                 return (len1 < len2) ? -1 : 1;
             }
 
-            // Same length → compare digit by digit
+            // Same length -> compare digit by digit
             int cmp = strncmp(s1, s2, len1);
             if (cmp != 0)
             {
                 return cmp;
             }
 
-            // Numbers identical → move past them
+            // Numbers identical -> move past them
             s1 = p1;
             s2 = p2;
         }
@@ -67,7 +73,7 @@ int stringcmp(const void* a, const void* b)
         }
     }
 
-    // One string ended — shorter comes first
+    // One string ended - shorter comes first
     return (unsigned char)*s1 - (unsigned char)*s2;
 }
 
