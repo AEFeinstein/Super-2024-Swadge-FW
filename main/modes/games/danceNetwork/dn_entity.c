@@ -3472,13 +3472,19 @@ void dn_updateTutorial(dn_entity_t* self)
     if (self->gameData->btnDownState & PB_LEFT)
     {
         if (tData->page)
+        {
             tData->page--;
+        }
         else
+        {
             dn_exitSubMode(self);
+            return;
+        }
     }
     if (self->gameData->btnDownState & PB_B)
     {
         dn_exitSubMode(self);
+        return;
     }
     if (self->gameData->btnDownState & PB_LEFT || self->gameData->btnDownState & PB_RIGHT)
     {
