@@ -5,88 +5,52 @@
 #include <linked_list.h>
 #include <limits.h>
 
-// A double array of dn_tutorialPage_t
-static const dn_tutorialPage_t tutorialText[2][23] = {
-    {
-        {"Dance 101", "Welcome to Dance class. Please, take a seat. We have some spots here in the front."},
-        {"Commander DancenoNighta",
-         "I am Commander DancenoNighta, and I'll be bringing you up to speed on the dance scene in 2026."},
-        {"Win Conditions", "You can win by capturing the opponent's king. The other way to win is by moving your king "
-                           "onto the opponent's control point."},
-        {"Control Point", "The control points are simply the tiles where the kings start. They are outlined with cyan "
-                          "for player 1 and yellow for player 2."},
-        {"Dance Arena", "The floor consists of a 5x5 grid built above our home."},
-        {"Dance Arena", "Bigma promised to bring us into a post-garbage techno future. And he made the right call. We "
-                        "can just keep building on top of the past!"},
-        {"Turn Phases", "On your turn, you will gain two rerolls. More about rerolls later. Just know that the rerolls "
-                        "for each player are displayed in the led lights (Alpha's eyes)."},
-        {"Dance Phase", "Tiles only illuminate under your units with valid dances. After selecting a unit, you can "
-                        "press 'b' to go back without committing to the dance."},
-        {"Dance Phase", "Your available dances depend on what tracks are written on your album."},
-        {"Understanding Tracks", "There's a tiny stick figure in the middle of your album. You can imagine projecting "
-                                 "that down onto any of your units then the tracks act relative to that unit."},
-        {"Dance Actions - Fire", "Fire tracks (red) allow you to do a ranged attack."},
-        {"Dance Actions - Move", "Moving tracks (blue) allow you to move any of your units to an unoccupied tile."},
-        {"Dance Actions - Remix",
-         "Remix tracks (purple) allow you to attempt a ranged attack and then move in one turn!"},
-        {"Bringing Units Online", "If a unit fires a ranged attack, that unit goes offline and is unable to fire "
-                                  "again. It will look grayscale when offline."},
-        {"Bringing Units Online", "You need to move a unit to bring it online so it can fire later. Remember, if a "
-                                  "unit is fully colored then it's a threat!"},
-        {"Skipping a dance action", "You can skip a dance action, gaining another reroll. You might have to resort to "
-                                    "skipping if no units have any valid dance tracks."},
-        {"Albums", "Each album can hold a variety of tracks. After your dance action, you'll write a new track."},
-        {"Albums", "In the writing phase, you'll be able to spend any number of rerolls to influence the kind of track "
-                   "you write. Try to save up and turn the tides in your favor."},
-        {"Albums", "A track also randomly appears in the Creative Commons. Artists from around the world are adding "
-                   "tracks into the Creative Commons every single turn."},
-        {"Creative Commons", "You can spend 5 rerolls during your dance phase to swap with the Creative Commons, "
-                             "giving you a completely different moveset."},
-        {"Creative Commons",
-         "Think about what your opponent can do with the Creative Commons if they can also afford it."},
-        {"Capturing", "When you capture an opponent unit, you gain 1 reroll and trade albums with the opponent."},
-        {"Q&A", "That concludes the introductory course. Thank you for dancing, and long live Bigma!"},
-    },
-    {
-        {"Dance 200", "Welcome back, students!"},
-        {"Dance 200", "As you should be well aware by now, the prerequisite for this course is Dance 101."},
-        {"Dance 200", "Yes, question in the back with the hand raised..."},
-        {"Dance 200", "No, no, no. If you haven't danced in the main game either, you'll need to speak with your "
-                      "advisor to unenroll in Dance 200 before the end of the first week."},
-        {"Dance 200", "I'm just as excited as all of you to further hone your skills on the dance floor."},
-        {"Dance 200", "But first, a moment of silence for our fallen heroes from the Great Garbage War of '25."},
-        {"R.I.P.", "..."},
-        {"Dance Threat Calculus", "Thank you. We're going to go over some light refreshers."},
-        {"Dance Actions", "Fire and Remix tracks can even target friendly units or unoccupied tiles."},
-        {"Dance Actions - Ranged Attack",
-         "Friendly fire will harvest 3 rerolls. Sometimes sacrifices are necessary. Targeting an unoccupied tile will "
-         "knock the tile out of the game and bounce the shot."},
-        {"Dance Actions - Ranged Attack", "When bouncing a shot, select a second Fire or Remix track as the target. "
-                                          "The bullet will keep the Fire or Remix property from the first selection."},
-        {"Dance Actions - Ranged Attack", "You can knock out your own control point to keep it safe from occupation "
-                                          "for a while. The Dance Floor can't have more than one hole at a time."},
-        {"Dance Actions - Ranged Attack", "So if another tile is shot out, your control point would come back into "
-                                          "play. Create holes wisely to reduce the enemy's decision space."},
-        {"Dance Actions - Movement", "You could technically move into a hole and succumb to the garbage pit. At least "
-                                     "this also results in gaining 3 rerolls."},
-        {"Dance Actions - Movement",
-         "I lost a wing and a leg in the Great Garbage War. But Bigma gave me a second chance."},
-        {"Dance Actions - Remix", "There are a lot of situational factors to consider with a Remix which does a ranged "
-                                  "attack if online, and also moves all in one go."},
-        {"Dance Actions - Remix", "That extra momentum of 2 actions in one phase can be quite helpful."},
-        {"Dance Actions - Remix", "But the intended target of a Remix should be occupied or you may incidentally "
-                                  "create a hole and move into it, gaining 3 rerolls."},
-        {"Bringing Units Online",
-         "Remixes can bring offline units online because they will fail to fire, but move successfully."},
-        {"Creative Commons", "If you end a turn with at least 3 rerolls, you'll have enough to take the Creative "
-                             "Commons next turn, because you gain 2 rerolls at the start of a turn."},
-        {"Capturing", "Think ahead about the tracks you would give your opponent if you capture, because your albums "
-                      "will swap when you capture."},
-        {"Rerolls", "Rerolls aren't just given out in the center of the board. You also get a reroll everytime you get "
-                    "a pawn to the other side of the board."},
-        {"Q&A", "That's all for the advanced tips. Your homework will be to achieve every trophy in the swadge and "
-                "outdance the adversary."},
-    }};
+static const dn_tutorialPage_t textTutorial[7] = {
+    {"Dance 101", "I am Commander DancenoNighta, and I'll be bringing you up to speed on the dance scene in 2026."},
+    {"Win Conditions", "You can win by capturing the opponent's king. The other way to win is by moving your king "
+                       "onto the opponent's control point."},
+    {"Phases", "Your turn consists of two phases: a dance phase, and an upgrade phase."},
+    {"Dance Phase", "In the dance phase, you do an action based on what is in your album."},
+    {"Upgrade Phase", "In the upgrade phase, you change what that album can do."},
+    {"Turn Order",
+     "Then it's your opponents turn. Pass the swadge to them so they can do the same phases and rinse and repeat."},
+    {"Dance Phase", "You can press 'b' in a lot of cases to go back. Try a few rounds to get to know the game. Then "
+                    "come back to the Advanced Tips."},
+};
+static const dn_tutorialPage_t advancedTips[17] = {
+    {"Dance 200", "Welcome back, students!"},
+    {"Dance 200", "As you should be well aware by now, you should have tried dancing before taking this course."},
+    {"Dance 200", "I'm just as excited as all of you to further hone your skills on the dance floor."},
+    {"Dance 200", "But first, a moment of silence for our fallen heroes from the Great Garbage War of '25."},
+    {"R.I.P.", "..."},
+    {"Understanding Albums", "Thank you. The albums show actions relative to any unit you would select. You have to "
+                             "imagine lining the album on one of your units on the board."},
+    {"Understanding Unit Status", "Units turn gray when they fire. You must move a unit to bring in  online since an "
+                                  "offline unit can't fire. Remember, a fully-colored unit is a threat!"},
+    {"Dance Actions - Remix", "Remix tracks (purple) allow you to fire and then move in one turn!"},
+    {"Bringing Units Online", "If a unit fires a ranged attack, that unit goes offline and is unable to fire again. It "
+                              "will look grayscale when offline."},
+    {"Bringing Units Online", "You need to move a unit to bring it online so it can fire later. Remember, if a unit is "
+                              "fully colored then it's a threat!"},
+    {"Upgrade phase", "In the writing phase, you to spend any number of your rerolls to influence the kind of track "
+                      "you write. Try to save up and turn the tides in your favor."},
+    {"Albums", "A track also randomly appears in the Creative Commons. Artists from around the world are adding tracks "
+               "into the Creative Commons every single turn."},
+    {"Creative Commons", "You can spend 5 rerolls during your dance phase to swap with the Creative Commons, giving "
+                         "you a completely different moveset."},
+    {"Dance Actions - Fire & Remix", "Fire and Remix tracks can even target friendly units or unoccupied tiles. You "
+                                     "should try it and see what happens."},
+    {"Ranged Attacks", "When bouncing a shot off an empty tile, select a second Fire or Remix track as the target. The "
+                       "bullet will keep the Fire or Remix property from your first selection."},
+    {"Rerolls", "Rerolls aren't just given out in the centered green squares on the board. You also get a reroll "
+                "everytime you get a unit to the other side of the board."},
+    {"Q&A", "That's all for the advanced tips. Your homework will be to achieve every trophy in the swadge and "
+            "outdance the enemy."},
+};
+
+static const dn_tutorialPage_t* tutorials[] = {textTutorial, advancedTips};
+uint8_t tutorialSizes[]
+    = {sizeof(textTutorial) / sizeof(textTutorial[0]), sizeof(advancedTips) / sizeof(advancedTips[0])};
 
 static const dn_characterSet_t troupePermutations[7][2] = {{DN_ALPHA_SET, DN_ALPHA_SET},
                                                            {DN_WHITE_CHESS_SET, DN_ALPHA_SET},
@@ -1468,7 +1432,11 @@ void dn_drawCharacterSelect(dn_entity_t* self)
 void dn_updateTileSelector(dn_entity_t* self)
 {
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
-    dn_boardData_t* bData        = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    if (tData->pos.x == -1 || tData->pos.y == -1)
+    {
+        return;
+    }
+    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
     // move with WASD
     bData->tiles[tData->pos.y][tData->pos.x].selector = NULL;
     if (self->gameData->btnDownState & PB_LEFT)
@@ -1491,16 +1459,18 @@ void dn_updateTileSelector(dn_entity_t* self)
     tData->pos.x = CLAMP(tData->pos.x, 0, 5);
     tData->pos.y = CLAMP(tData->pos.y, 0, 5);
 
+    self->gameData->selectorPos = tData->pos;
+
     if (tData->pos.y == 5)
     {
         dn_findLastEntityOfType(self, DN_SWAPBUTTON_DATA)->paused = false;
-        self->destroyFlag                                         = true;
+        tData->pos                                                = (dn_boardPos_t){-1, -1};
         return;
     }
     if (tData->pos.x == 5)
     {
         dn_findLastEntityOfType(self, DN_SKIPBUTTON_DATA)->paused = false;
-        self->destroyFlag                                         = true;
+        tData->pos                                                = (dn_boardPos_t){-1, -1};
         return;
     }
 
@@ -1553,14 +1523,19 @@ void dn_drawTileSelectorFrontHalf(dn_entity_t* self, int16_t x, int16_t y)
 void dn_trySelectUnit(dn_entity_t* self)
 {
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
-    dn_boardData_t* bData        = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    if (tData->pos.x == -1 || tData->pos.y == -1)
+    {
+        return;
+    }
+    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
     if (bData->tiles[tData->pos.y][tData->pos.x].unit == NULL)
     {
         return;
     }
     if (bData->tiles[tData->pos.y][tData->pos.x].selectionType)
     {
-        tData->selectedUnit = bData->tiles[tData->pos.y][tData->pos.x].unit;
+        tData->selectedUnit          = bData->tiles[tData->pos.y][tData->pos.x].unit;
+        self->gameData->selectedUnit = tData->selectedUnit;
 
         dn_clearSelectableTiles(self);
 
@@ -1625,7 +1600,11 @@ void dn_trySelectUnit(dn_entity_t* self)
 void dn_trySelectTrack(dn_entity_t* self)
 {
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
-    dn_boardData_t* bData        = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    if (tData->pos.x == -1 || tData->pos.y == -1)
+    {
+        return;
+    }
+    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
     if (bData->tiles[tData->pos.y][tData->pos.x].selectionType)
     {
         // determine the vector FROM the unit TO the track
@@ -1664,6 +1643,11 @@ void dn_trySelectTrack(dn_entity_t* self)
                 if (!bData->tiles[tData->pos.y][tData->pos.x].unit && !bData->tiles[tData->pos.y][tData->pos.x].timeout)
                 {
                     tData->bounce = tData->pos;
+                    tData->pos    = (dn_boardPos_t){-1, -1};
+                    ((dn_boardData_t*)self->gameData->entityManager.board->data)
+                        ->tiles[self->gameData->selectorPos.y][self->gameData->selectorPos.x]
+                        .selector
+                        = NULL;
                     //////////////////////////////////
                     // make the prompt bullet bounce//
                     //////////////////////////////////
@@ -2016,6 +2000,8 @@ void dn_startTurn(dn_entity_t* self)
 
     dn_setBlinkingLights(self);
 
+    self->gameData->selectorPos = (dn_boardPos_t){2, 2};
+
     ////////////////////////////////
     // Make the turn start prompt //
     ////////////////////////////////
@@ -2102,7 +2088,7 @@ void dn_setupDancePhase(dn_entity_t* self) // used to be dn_startMovePhase
     {
         tData->lineYs[i] = (255 * i) / NUM_SELECTOR_LINES;
     }
-    tData->pos = (dn_boardPos_t){2, 2};
+    tData->pos = self->gameData->selectorPos;
     // fancy line colors for player one
     tData->colors[0] = c125;
     tData->colors[1] = c345;
@@ -2116,7 +2102,8 @@ void dn_setupDancePhase(dn_entity_t* self) // used to be dn_startMovePhase
     tileSelector->updateFunction = dn_updateTileSelector;
     // Don't set the draw function, because it needs to happen in two parts behind and in front of units.
 
-    ((dn_boardData_t*)self->gameData->entityManager.board->data)->tiles[2][2].selector = tileSelector;
+    ((dn_boardData_t*)self->gameData->entityManager.board->data)->tiles[tData->pos.y][tData->pos.x].selector
+        = tileSelector;
 }
 
 void dn_acceptRerollAndSkip(dn_entity_t* self)
@@ -3361,6 +3348,10 @@ void dn_sharedButtonLogic(dn_entity_t* self)
     if (self->gameData->btnDownState & PB_UP)
     {
         self->paused = true;
+        dn_tileSelectorData_t* tData
+            = ((dn_tileSelectorData_t*)dn_findLastEntityOfType(self, DN_TILE_SELECTOR_DATA)->data);
+        tData->pos                  = (dn_boardPos_t){2, 2};
+        self->gameData->selectorPos = tData->pos;
         dn_setupDancePhase(self);
         self->gameData->btnDownState = 0;
     }
@@ -3464,8 +3455,7 @@ void dn_unpauseSkipButton(dn_entity_t* self)
 void dn_updateTutorial(dn_entity_t* self)
 {
     dn_tutorialData_t* tData = (dn_tutorialData_t*)self->data;
-    if (self->gameData->btnDownState & PB_RIGHT
-        && tData->page < sizeof(tutorialText[tData->advancedTips]) / sizeof(tutorialText[tData->advancedTips][0]))
+    if (self->gameData->btnDownState & PB_RIGHT && tData->page < tutorialSizes[tData->advancedTips])
     {
         tData->page++;
     }
@@ -3482,7 +3472,7 @@ void dn_updateTutorial(dn_entity_t* self)
     }
     if (self->gameData->btnDownState & PB_LEFT || self->gameData->btnDownState & PB_RIGHT)
     {
-        if (tData->page == sizeof(tutorialText[tData->advancedTips]) / sizeof(tutorialText[tData->advancedTips][0]))
+        if (tData->page == tutorialSizes[tData->advancedTips])
         {
             if (tData->advancedTips)
             {
@@ -3496,7 +3486,7 @@ void dn_updateTutorial(dn_entity_t* self)
             }
             dn_exitSubMode(self);
         }
-        else if (!strcmp(tutorialText[tData->advancedTips][tData->page].title, "R.I.P."))
+        else if (!strcmp(tutorials[tData->advancedTips][tData->page].title, "R.I.P."))
         {
             ///////////////////////
             // Make the memorial //
@@ -3531,20 +3521,19 @@ void dn_drawTutorial(dn_entity_t* self)
 
     int16_t x = 7;
     int16_t y = 45;
-    drawTextWordWrapCentered(&self->gameData->font_ibm, c445, tutorialText[tData->advancedTips][tData->page].title, &x,
-                             &y, 136, 114);
+    drawTextWordWrapCentered(&self->gameData->font_ibm, c445, tutorials[tData->advancedTips][tData->page].title, &x, &y,
+                             136, 114);
 
     x = 7;
     y = 100;
     char buffer[8];
-    snprintf(buffer, sizeof(buffer), "%d/%d", tData->page + 1,
-             (uint8_t)(sizeof(tutorialText[tData->advancedTips]) / sizeof(tutorialText[tData->advancedTips][0])));
+    snprintf(buffer, sizeof(buffer), "%d/%d", tData->page + 1, tutorialSizes[tData->advancedTips]);
     drawTextWordWrapCentered(&self->gameData->font_ibm, c555, buffer, &x, &y, 136, 114);
 
     x = 24;
     y = 140;
-    drawTextWordWrap(&self->gameData->font_ibm, c555, tutorialText[tData->advancedTips][tData->page].body, &x, &y,
-                     x + 225, y + 80);
+    drawTextWordWrap(&self->gameData->font_ibm, c555, tutorials[tData->advancedTips][tData->page].body, &x, &y, x + 225,
+                     y + 80);
 
     if ((self->gameData->generalTimer % 256) > 128)
     {
@@ -3552,7 +3541,7 @@ void dn_drawTutorial(dn_entity_t* self)
         {
             drawWsg(&self->gameData->assets[DN_MMM_SUBMENU_ASSET].frames[0], 10, 205, true, false, 0);
         }
-        if (tData->page < sizeof(tutorialText[tData->advancedTips]) / sizeof(tutorialText[tData->advancedTips][0]))
+        if (tData->page < tutorialSizes[tData->advancedTips])
         {
             drawWsgSimple(&self->gameData->assets[DN_MMM_SUBMENU_ASSET].frames[0], 242, 205);
         }
@@ -3575,8 +3564,7 @@ dn_entity_t* dn_findLastEntityOfType(dn_entity_t* self, dn_dataType_t type)
 
 void dn_setupBounceOptions(dn_entity_t* self)
 {
-    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)dn_findLastEntityOfType(self, DN_TILE_SELECTOR_DATA)->data;
-    dn_boardData_t* bData        = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
 
     dn_clearSelectableTiles(self);
 
@@ -3585,7 +3573,7 @@ void dn_setupBounceOptions(dn_entity_t* self)
     list_t* invalids = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
     memset(myList, 0, sizeof(list_t));
     memset(invalids, 0, sizeof(list_t));
-    if (dn_availableMoves(tData->selectedUnit, myList, invalids))
+    if (dn_availableMoves(self->gameData->selectedUnit, myList, invalids))
     {
         node_t* cur = myList->first;
         while (cur != NULL)
@@ -3615,14 +3603,19 @@ void dn_setupBounceOptions(dn_entity_t* self)
     clear(invalids);
     free(invalids);
 
-    tData->a_callback = dn_trySelectBounceDest;
-    tData->b_callback = dn_setupDancePhase;
+    dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)dn_findLastEntityOfType(self, DN_TILE_SELECTOR_DATA)->data;
+    tData->pos                   = self->gameData->selectorPos;
+    tData->a_callback            = dn_trySelectBounceDest;
 }
 
 void dn_trySelectBounceDest(dn_entity_t* self)
 {
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
-    dn_boardData_t* bData        = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    if (tData->pos.x == -1 || tData->pos.y == -1)
+    {
+        return;
+    }
+    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
     if (bData->tiles[tData->pos.y][tData->pos.x].selectionType)
     {
         dn_clearSelectableTiles(self);
