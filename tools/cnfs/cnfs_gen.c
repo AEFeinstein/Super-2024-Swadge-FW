@@ -13,7 +13,7 @@ char* filenameToEnumName(const char* filename);
 #define CNFS_PATH_MAX 4096
 
 /**
- * @brief Natural order alphanumeric string comparison for qsort()
+ * @brief alphanumeric ordering string comparison for qsort() that sorts nicely with and without leading zeros on digit sequences.
  *
  * @param a A string to compare
  * @param b Another string to compare
@@ -21,6 +21,7 @@ char* filenameToEnumName(const char* filename);
  */
 int stringcmp(const void* a, const void* b)
 {
+    //This function made with copilot and reviewed by James A.
     const char* s1 = *(const char* const*)a;
     const char* s2 = *(const char* const*)b;
 
