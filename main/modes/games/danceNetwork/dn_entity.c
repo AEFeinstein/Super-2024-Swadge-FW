@@ -1900,9 +1900,9 @@ void dn_updatePrompt(dn_entity_t* self)
             if (option->downPressDetected)
             {
                 option->selectionAmount += self->gameData->elapsedUs >> 3;
-                if (option->selectionAmount >= 30000)
+                if (option->selectionAmount >= MAX_LERP_AMOUNT)
                 {
-                    option->selectionAmount = 30000;
+                    option->selectionAmount = MAX_LERP_AMOUNT;
 
                     clear(pData->options);
                     free(pData->options);
@@ -2426,9 +2426,9 @@ void dn_updateUpgradeMenu(dn_entity_t* self)
         {
             umData->options[umData->selectionIdx].selectionAmount
                 += self->gameData->elapsedUs >> (3 + (umData->selectionIdx == 3) * 2); // confirm takes longer to press
-            if (umData->options[umData->selectionIdx].selectionAmount >= 30000)
+            if (umData->options[umData->selectionIdx].selectionAmount >= MAX_LERP_AMOUNT)
             {
-                umData->options[umData->selectionIdx].selectionAmount = 30000;
+                umData->options[umData->selectionIdx].selectionAmount = MAX_LERP_AMOUNT;
                 if (umData->options[umData->selectionIdx].callback)
                 {
                     umData->options[umData->selectionIdx].callback(self);
@@ -2942,9 +2942,9 @@ void dn_updateSwapAlbums(dn_entity_t* self)
     else
     {
         sData->lerpAmount += self->gameData->elapsedUs >> 6;
-        if (sData->lerpAmount >= 30000)
+        if (sData->lerpAmount >= MAX_LERP_AMOUNT)
         {
-            sData->lerpAmount       = 30000;
+            sData->lerpAmount       = MAX_LERP_AMOUNT;
             vec_t offset            = rotateVec2d(sData->offset, 180);
             sData->firstAlbum->pos  = addVec2d(sData->center, offset);
             offset                  = mulVec2d(offset, -1);
@@ -3071,9 +3071,9 @@ void dn_updateBullet(dn_entity_t* self)
     // increment the lerpAmount
     dn_bulletData_t* buData = (dn_bulletData_t*)self->data;
     buData->lerpAmount += self->gameData->elapsedUs >> 7;
-    if (buData->lerpAmount > 30000)
+    if (buData->lerpAmount > MAX_LERP_AMOUNT)
     {
-        buData->lerpAmount    = 30000;
+        buData->lerpAmount    = MAX_LERP_AMOUNT;
         dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
 
         bData->impactPos          = buData->firstTarget;

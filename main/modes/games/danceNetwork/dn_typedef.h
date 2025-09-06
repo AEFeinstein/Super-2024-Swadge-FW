@@ -11,6 +11,7 @@
 #define NUM_ASSETS         32 // The number of dn_asset_t (last accounted for DN_BUG_ASSET)
 #define NUM_PALETTES       25 // The number of wsgPalette_t (last accounted for green to yellow)
 #define NUM_SELECTOR_LINES 15 // Creates more chaotic lines in the selector graphic
+#define MAX_LERP_AMOUNT 30000
 
 typedef struct dn_entity_t dn_entity_t;
 typedef struct dn_gameData_t dn_gameData_t;
