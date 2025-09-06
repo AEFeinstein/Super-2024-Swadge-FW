@@ -1819,9 +1819,9 @@ void loadPicrossProgress()
 // */
 void saveCompletedOnSelectedLevel(bool completed)
 {
-    size_t size = sizeof(picrossVictoryData_t);
-    picrossVictoryData_t* victData
-        = heap_caps_calloc(1, size, MALLOC_CAP_8BIT); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
+    size_t size                    = sizeof(picrossVictoryData_t);
+    picrossVictoryData_t* victData = heap_caps_calloc(
+        1, size, MALLOC_CAP_8BIT); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
     readNvsBlob(picrossCompletedLevelData, victData, &size);
     victData->victories[(int)*&p->selectedLevel.index] = completed;
     writeNvsBlob(picrossCompletedLevelData, victData, sizeof(picrossVictoryData_t));

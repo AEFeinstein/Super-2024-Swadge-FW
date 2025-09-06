@@ -38,9 +38,9 @@ void picrossStartLevelSelect(font_t* bigFont, picrossLevelDef_t levels[])
     loadFont(EARLY_GAMEBOY_FONT, &(ls->smallFont), false);
     loadWsg(UNKNOWN_PUZZLE_WSG, &ls->unknownPuzzle, false);
 
-    size_t size = sizeof(picrossVictoryData_t);
-    picrossVictoryData_t* victData
-        = heap_caps_calloc(1, size, MALLOC_CAP_8BIT); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
+    size_t size                    = sizeof(picrossVictoryData_t);
+    picrossVictoryData_t* victData = heap_caps_calloc(
+        1, size, MALLOC_CAP_8BIT); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
     readNvsBlob(picrossCompletedLevelData, victData, &size);
     ls->currentIndex = -1; // set to impossible index so we don't continue level 0 when we haven't started level 0
     readNvs32(picrossCurrentPuzzleIndexKey, &ls->currentIndex);
@@ -117,9 +117,10 @@ void levelSelectInput()
             writeNvs32(picrossCurrentPuzzleIndexKey,
                        ls->hoverLevelIndex); // save the selected level before we lose context of the index.
 
-            size_t size = sizeof(picrossProgressData_t);
-            picrossProgressData_t* progress
-                = heap_caps_calloc(1, size, MALLOC_CAP_8BIT); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
+            size_t size                     = sizeof(picrossProgressData_t);
+            picrossProgressData_t* progress = heap_caps_calloc(
+                1, size,
+                MALLOC_CAP_8BIT); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
             readNvsBlob(picrossCompletedLevelData, progress, &size);
 
             selectPicrossLevel(ls->chosenLevel);

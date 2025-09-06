@@ -746,7 +746,7 @@ void ch32v003Teardown()
 int ch32v003Resume()
 {
     ResetPeripherals();
-    memset( &ch32v003state, 0, sizeof(ch32v003state) );
+    memset(&ch32v003state, 0, sizeof(ch32v003state));
     ch32v003runMode = 1;
     return 0;
 }

@@ -589,7 +589,7 @@ static int WaitForFlash(struct SWIOState* iss)
     do
     {
         rw = 0;
-        ReadWord(dev, 0x4002200C, &rw); // FLASH_STATR => 0x4002200C
+        ReadWord(dev, 0x4002200C, &rw);    // FLASH_STATR => 0x4002200C
     } while ((rw & 1) && timeout++ < 200); // BSY flag.
 
     WriteWord(dev, 0x4002200C, 0);
