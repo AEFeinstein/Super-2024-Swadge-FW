@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="255" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="85">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="255" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="90">
  <editorsettings>
   <export target="../../Development/Swadge/esp32/2026/Swadge-IDF-5.0/assets_image/kinetic-donut.bin" format="Mega Pulse EX"/>
  </editorsettings>
  <tileset firstgid="1" source="kinetic-donut-tileset.tsx"/>
- <tileset firstgid="129" source="mg-entity-tileset.tsx"/>
+ <tileset firstgid="199" source="mg-entity-tileset.tsx"/>
  <layer id="1" name="tiles" width="255" height="255">
   <data encoding="csv">
 37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,38,36,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,42,40,40,40,40,40,40,40,40,40,40,40,40,40,40,43,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,37,42,40,40,40,40,43,37,37,37,37,37,37,37,37,37,37,37,
@@ -276,7 +276,7 @@
   <object id="28" template="templates/Megaton Wasp (Lvl. 2).tx" type="SwadgeLandEntity" x="1160" y="504"/>
   <object id="29" template="templates/Megaton Wasp (Lvl. 3).tx" type="SwadgeLandEntity" x="1272" y="504"/>
   <object id="35" template="templates/Shrubble.tx" type="SwadgeLandEntity" x="232" y="440"/>
-  <object id="37" name="Player" type="SwadgeLandEntity" gid="273" x="40" y="304" width="30" height="30"/>
+  <object id="37" template="templates/Player.tx" type="SwadgeLandEntity" x="40" y="304"/>
   <object id="38" template="templates/Warp Entrance (Wall).tx" type="SwadgeLandEntity" x="3992" y="368">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="39"/>
@@ -329,6 +329,15 @@
    </properties>
   </object>
   <object id="84" template="templates/Warp Exit (Wall) .tx" x="24" y="288"/>
+  <object id="85" template="templates/Shrubble.tx" x="392" y="296"/>
+  <object id="86" template="templates/Shrubble (Lvl. 3).tx" gid="212" x="488" y="200"/>
+  <object id="87" template="templates/Warp Entrance (Floor).tx" x="2560" y="200">
+   <properties>
+    <property name="linkedEntitySpawn" type="object" value="89"/>
+   </properties>
+  </object>
+  <object id="88" template="templates/Warp Entrance (Wall).tx" x="2664" y="288"/>
+  <object id="89" template="templates/Warp Exit (Floor).tx" x="2568" y="264"/>
  </objectgroup>
  <objectgroup id="3" name="Annotations">
   <object id="6" x="16" y="16" width="560" height="64">
@@ -338,6 +347,6 @@
    <text fontfamily="Andale Mono" pixelsize="12" wrap="1" color="#ffffff">Use the Annotations layer to write notes.
 They will not appear in the actual game!</text>
   </object>
-  <object id="43" x="288" y="368" width="296" height="256"/>
+  <object id="43" x="1260" y="272" width="296" height="256"/>
  </objectgroup>
 </map>
