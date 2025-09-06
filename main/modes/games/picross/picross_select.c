@@ -32,7 +32,7 @@ void drawPicrossPreviewWindow(wsg_t* wsg);
 // Initiation
 void picrossStartLevelSelect(font_t* bigFont, picrossLevelDef_t levels[])
 {
-    ls            = calloc(1, sizeof(picrossLevelSelect_t));
+    ls            = heap_caps_calloc(1, sizeof(picrossLevelSelect_t), MALLOC_CAP_8BIT);
     ls->game_font = bigFont;
     // ls->smallFont = smallFont;
     loadFont(EARLY_GAMEBOY_FONT, &(ls->smallFont), false);
@@ -40,7 +40,7 @@ void picrossStartLevelSelect(font_t* bigFont, picrossLevelDef_t levels[])
 
     size_t size = sizeof(picrossVictoryData_t);
     picrossVictoryData_t* victData
-        = calloc(1, size); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
+        = heap_caps_calloc(1, size, MALLOC_CAP_8BIT); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
     readNvsBlob(picrossCompletedLevelData, victData, &size);
     ls->currentIndex = -1; // set to impossible index so we don't continue level 0 when we haven't started level 0
     readNvs32(picrossCurrentPuzzleIndexKey, &ls->currentIndex);
@@ -78,7 +78,7 @@ void picrossStartLevelSelect(font_t* bigFont, picrossLevelDef_t levels[])
     ls->gap         = 5;
     ls->gridScale   = 30; // PICROSS_MAX_SIZE * 2
 
-    free(victData);
+    heap_caps_free(victData);
 }
 
 void picrossLevelSelectLoop(int64_t elapsedUs)
@@ -119,12 +119,12 @@ void levelSelectInput()
 
             size_t size = sizeof(picrossProgressData_t);
             picrossProgressData_t* progress
-                = calloc(1, size); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
+                = heap_caps_calloc(1, size, MALLOC_CAP_8BIT); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
             readNvsBlob(picrossCompletedLevelData, progress, &size);
 
             selectPicrossLevel(ls->chosenLevel);
             picrossExitLevelSelect();
-            free(progress);
+            heap_caps_free(progress);
         }
         return;
     }
@@ -363,9 +363,9 @@ void picrossExitLevelSelect()
         freeFont(&(ls->smallFont));
 
         // freeFont((ls->game_font));
-        // free(&ls->chosenLevel->title);
-        // free(&ls->chosenLevel);
-        free(ls);
+        // heap_caps_free(&ls->chosenLevel->title);
+        // heap_caps_free(&ls->chosenLevel);
+        heap_caps_free(ls);
         ls = NULL;
     }
 }

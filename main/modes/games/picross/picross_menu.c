@@ -474,7 +474,7 @@ picrossMenu_t* pm;
 void picrossEnterMode(void)
 {
     // Allocate and zero memory
-    pm = calloc(1, sizeof(picrossMenu_t));
+    pm = heap_caps_calloc(1, sizeof(picrossMenu_t), MALLOC_CAP_8BIT);
 
     loadFont(MM_FONT, &(pm->mmFont), false);
 
@@ -546,7 +546,7 @@ void picrossExitMode(void)
     deinitMenuMegaRenderer(pm->renderer);
     // p2pDeinit(&jm->p2p);
     freeFont(&(pm->mmFont));
-    free(pm);
+    heap_caps_free(pm);
 }
 
 /**
@@ -761,15 +761,15 @@ void picrossMainMenuCb(const char* label, bool selected, uint32_t value)
 
             // see comment above as to why this isn't needed.
             //  size_t size = sizeof(picrossProgressData_t);
-            //  picrossProgressData_t* progData = calloc(1,size);//zero out = reset.
+            //  picrossProgressData_t* progData = heap_caps_calloc(1,size, MALLOC_CAP_8BIT);//zero out = reset.
             //  writeNvsBlob(picrossProgressData,progData,size);
-            //  free(progData);
+            //  heap_caps_free(progData);
 
             // the code to erase ALL (victory) progress. Still want to put this... somewhere
             //  size_t size = sizeof(picrossVictoryData_t);
-            //  picrossVictoryData_t* victData = calloc(1,size);//zero out = reset.
+            //  picrossVictoryData_t* victData = heap_caps_calloc(1,size, MALLOC_CAP_8BIT);//zero out = reset.
             //  writeNvsBlob(picrossCompletedLevelData,victData,size);
-            //  free(victData);
+            //  heap_caps_free(victData);
         }
     }
     else
