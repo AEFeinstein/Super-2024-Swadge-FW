@@ -31,8 +31,14 @@ int stringcmp(const void* a, const void* b)
             // Find the end of the digit sequences
             const char* p1 = s1;
             const char* p2 = s2;
-            while (isdigit((unsigned char)*p1)) p1++;
-            while (isdigit((unsigned char)*p2)) p2++;
+            while (isdigit((unsigned char)*p1))
+            {
+                p1++;
+            }
+            while (isdigit((unsigned char)*p2))
+            {
+                p2++;
+            }
 
             // Compute lengths of the digit runs
             int len1 = p1 - s1;
