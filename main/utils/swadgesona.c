@@ -172,7 +172,8 @@ void loadSwadgesona(swadgesona_t* sw, int idx)
     char nvsTag[NVS_KEY_NAME_MAX_SIZE];
     size_t len = 0;
     snprintf(nvsTag, NVS_KEY_NAME_MAX_SIZE - 1, "%s%" PRIu8, nvsStr[1], idx);
-    readNamespaceNvsBlob(nvsStr[0], nvsTag, &sw->core, &len);
+
+    readNamespaceNvsBlob(nvsStr[0], nvsTag, NULL, &len);
     if (!readNamespaceNvsBlob(nvsStr[0], nvsTag, &sw->core, &len))
     {
         ESP_LOGE("SONA", "Swadgesona failed to Load/does not exist");
@@ -180,6 +181,7 @@ void loadSwadgesona(swadgesona_t* sw, int idx)
     }
 
     // Ensure the image is generated and the name is generated
+    generateSwadgesonaImage(sw);
 }
 
 void generateRandomSwadgesona(swadgesona_t* sw)
@@ -250,8 +252,6 @@ void generateSwadgesonaImage(swadgesona_t* sw)
     // Hair
     // Use the same palette as the eyebrows
     canvasDrawSimplePal(&sw->image, hairWsgs[sw->core.hairStyle], 0, 0, &sw->pal);
-
-    // TODO: Jinx ear fix
 
     // Hats
     if (sw->core.hat != HAE_NONE)
