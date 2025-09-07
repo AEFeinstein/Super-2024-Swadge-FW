@@ -10,14 +10,18 @@
 #include "hdw-tft.h"
 #include "esp_heap_caps.h"
 #include "hdw-btn.h"
+#include "hdw-nvs.h"
 
 #include "structs.h"
 
-#define M_PI 3.1415927f
-#define TWO_PI 6.2831853f
+// #define M_PI 3.1415927f
+// #define TWO_PI 6.2831853f
 
+#define MIN_DISTX 0
 #define MAX_DISTX 0
+#define MIN_DISTY 0
 #define MAX_DISTY 20
+#define MIN_DISTZ 0
 #define MAX_DISTZ 0
 
 #define CHUNK_DISTX 1
@@ -49,7 +53,7 @@ float randomFloat(float a, float b);
 void placeBlock(int block, int x, int y, int z);
 float degToRad(float deg);
 float radToDeg(float rad);
-float lerp(float t, float a, float b);
+float lerpF(float t, float a, float b);
 float fade(float t);
 float dot(Vect3f a, Vect3f b);
 float perlinNoise2D(float x, float y);

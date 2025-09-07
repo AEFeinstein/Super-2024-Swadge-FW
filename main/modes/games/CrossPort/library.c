@@ -34,11 +34,12 @@ void swapVerts(int a[2], int b[2]) {
     b[0] = tmp[0]; b[1] = tmp[1];
 }
 
-int randomInt(int a, int b) { return a + esp_random() % (b - a + 1); }
-float randomFloat(float a, float b) { return (float)(a + esp_random() % ((int)b - (int)a + 1)); }
+int randomInt(int a, int b) { return a + rand() % (b - a + 1); }
+float randomFloat(float a, float b) { return (float)(a + rand() % ((int)b - (int)a + 1)); }
 float degToRad(float deg) { return deg * (M_PI / 180.0f); }
 float radToDeg(float rad) { return rad * (180.0f / M_PI); }
 float fade(float t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+float lerpF(float t, float a, float b) { return a + t * (b - a); }
 float dot(Vect3f a, Vect3f b) { return a.x*b.x + a.y*b.y + a.z*b.z; }
 
 static float grad(int hash, float x, float y, float z) {
@@ -77,10 +78,10 @@ float perlinNoise2D(float x, float y) {
     int A  = perm[X] + Y;
     int B  = perm[X + 1] + Y;
     
-    float res = lerp(v,
-                     lerp(u, grad(perm[A], x, y, 0),
+    float res = lerpF(v,
+                     lerpF(u, grad(perm[A], x, y, 0),
                              grad(perm[B], x - 1, y, 0)),
-                     lerp(u, grad(perm[A + 1], x, y - 1, 0),
+                     lerpF(u, grad(perm[A + 1], x, y - 1, 0),
                              grad(perm[B + 1], x - 1, y - 1, 0))
                     );
     return res;
@@ -105,13 +106,13 @@ float perlinNoise3D(float x, float y, float z) {
     int BA = perm[B] + Z;
     int BB = perm[B + 1] + Z;
 
-    return lerp(w, lerp(v, lerp(u, grad(perm[AA], x, y, z),
+    return lerpF(w, lerpF(v, lerpF(u, grad(perm[AA], x, y, z),
                                    grad(perm[BA], x - 1, y, z)),
-                           lerp(u, grad(perm[AB], x, y - 1, z),
+                           lerpF(u, grad(perm[AB], x, y - 1, z),
                                    grad(perm[BB], x - 1, y - 1, z))),
-                   lerp(v, lerp(u, grad(perm[AA + 1], x, y, z - 1),
+                   lerpF(v, lerpF(u, grad(perm[AA + 1], x, y, z - 1),
                                    grad(perm[BA + 1], x - 1, y, z - 1)),
-                           lerp(u, grad(perm[AB + 1], x, y - 1, z - 1),
+                           lerpF(u, grad(perm[AB + 1], x, y - 1, z - 1),
                                    grad(perm[BB + 1], x - 1, y - 1, z - 1))));
 }
 

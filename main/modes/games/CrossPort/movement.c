@@ -77,7 +77,7 @@ static void collCheck(Camera* c, Vect3i* cList, int listAmt){
 
     pMovement[0] /= frict;
     pMovement[2] /= frict;
-    // pMovement[1] -= fallVel;
+    pMovement[1] -= fallVel;
 }
 
 void movePlayer(Camera* c, Vect3i* Collidables, int amt){

@@ -80,17 +80,14 @@ float terrainModifiers[] = { 0.1f, 0.2f, 0.4f };
 
 void generateWorld(int chunkX, int chunkY, int chunkZ, int c, int seed){
     int chunkSeed = (chunkX * 73856093) ^ (chunkY * 19349663) ^ (chunkZ * 83492791);
-    initPerlinNoise((int)seed ^ chunkSeed);
+    initPerlinNoise((int)(seed ^ chunkSeed));
 
     float amplitude = 8.0f;
     float frequency = 0.3f;
 
-    if (MAX_DISTX>0 && chunkX > MAX_DISTX) { return; }
-    else if (MAX_DISTX>0 && chunkX < -MAX_DISTX) { return; }
-    if (MAX_DISTY>0 && chunkY > MAX_DISTY) { return; }
-    else if (MAX_DISTY>0 && chunkY < 0) { return; }
-    if (MAX_DISTZ>0 && chunkZ > MAX_DISTZ) { return; }
-    else if (MAX_DISTZ>0 && chunkZ < -MAX_DISTZ) { return; }
+    if ((MAX_DISTX != 0 || MIN_DISTX != 0) && (chunkX > MAX_DISTX || chunkX < -MAX_DISTX)) return;
+    if ((MAX_DISTY != 0 || MIN_DISTY != 0) && (chunkY > MAX_DISTY || chunkY < -MIN_DISTY)) return;
+    if ((MAX_DISTZ != 0 || MIN_DISTZ != 0) && (chunkZ > MAX_DISTZ || chunkZ < -MIN_DISTZ)) return;
 
     int MIN_TERRAIN_Y = 2;
     int MAX_TERRAIN_Y = CHUNK_SIZEY * MAX_DISTY - 2;

@@ -27,7 +27,7 @@ Vect3i* Collidables;
 
 chunkpos currentChunk;
 chunkpos lastChunk;
-const int renderRadius = 100;
+const int renderRadius = 8;
 const float camOffset = 0.7f;
 int seed = 0;
 
@@ -140,12 +140,12 @@ static void chunkBoarder(){
 
             if (!rend) { continue; }
         
-            drawLineFast(points[0][0], points[0][1], points[1][0], points[1][1], c000);
+            drawLineFast(points[0][0], points[0][1], points[1][0], points[1][1], c555);
         }
     }
 }
 
-static void renderModel(Mesh* model, float wx, float wy, float wz, Vect3f objRot, Vect3f size, int block, int objIndex, int colorDraw, int triDraw, int type){
+static void renderModel(Mesh* model, float wx, float wy, float wz, Vect3f objRot, Vect3f size, int block, int objIndex, int colorDraw, int triDraw, int type, paletteColor_t color){
     const float fovX = 140.0f * (3.14159265f / 180.0f);
     const float fovY = 2.0f * atanf(tanf(fovX * 0.5f) * ((float)(sH) / (float)(sW)));
 
@@ -204,14 +204,14 @@ static void renderModel(Mesh* model, float wx, float wy, float wz, Vect3f objRot
                     swapVerts(tri1[1], tri1[2]);
                 }
                 if (colorDraw) { drawFilledTris(tri1, block, index); }
-                if (triDraw) { drawTri(tri1); }
+                if (triDraw) { drawTri(tri1, color); }
 
                 if (output == 2) {
                     if (!windingOrder(tri2[0], tri2[1], tri2[2])){
                         swapVerts(tri2[1], tri2[2]);
                     }
                     if (colorDraw) { drawFilledTris(tri2, block, index); }
-                    if (triDraw) { drawTri(tri2); }
+                    if (triDraw) { drawTri(tri2, color); }
                 }
             }
         }
@@ -231,7 +231,7 @@ static void renderHit(){
         Vect3f objRot = { 0.0f, 0.0f, 0.0f };
         Vect3f size = { 1.0f, 1.0f, 1.0f };
 
-        renderModel(meshArray[block], wx, wy, wz, objRot, size, block, cId, 0, 1, 0);
+        renderModel(meshArray[block], wx, wy, wz, objRot, size, block, cId, 0, 1, 0, c222);
     }
 }
 
@@ -269,11 +269,11 @@ static void render() {
             Vect3f entRot = { renderingEntities[z].rotation.x, renderingEntities[z].rotation.y, renderingEntities[z].rotation.z };
             Vect3f entSize = { renderingEntities[z].size.x, renderingEntities[z].size.y, renderingEntities[z].size.z };
 
-            renderModel(entityModels[emodel], ex, ey, ez, entRot, entSize, z, 0, 1, 1, 0);
+            renderModel(entityModels[emodel], ex, ey, ez, entRot, entSize, z, 0, 1, 1, 0, c000);
             renderingEntities[z].rendered = 1;
         } */
 
-        renderModel(meshArray[block], wx, wy, wz, objRot, size, block, i, 1, 1, 1);
+        renderModel(meshArray[block], wx, wy, wz, objRot, size, block, i, 1, 1, 1, c000);
     }
 
     /* for (int z=0; z < rendEntCount; z++){
@@ -292,7 +292,7 @@ static void render() {
         renderingEntities[z].rendered = 1;
     } */
 
-    chunkBoarder();
+    // chunkBoarder();
     renderHit();
 
     cam.position.y -= camOffset;
@@ -419,8 +419,20 @@ static void checkChunk(){
             }
         }
 
-        cleanWorld();
-        // for (int c=0; c < CHUNK_AMT; c++){ generateWorld(chunkOffsets[c].x, chunkOffsets[c].y, chunkOffsets[c].z, c, seed); }
+        // cleanWorld();
+
+        char chnk[64];
+        size_t chnkSize = CHUNK_SIZEX * CHUNK_SIZEY * CHUNK_SIZEZ * sizeof(int);
+        for (int c=0; c < CHUNK_AMT; c++){
+            snprintf(chnk, sizeof(chnk), "crossport/%d_%d_%d", chunkOffsets[c].x, chunkOffsets[c].y, chunkOffsets[c].z);
+
+            if (nvsNamespaceInUse(chnk) && initStorage) {
+                readNvsBlob(chnk, blocks[c], &chnkSize);
+            } else {
+                generateWorld(chunkOffsets[c].x, chunkOffsets[c].y, chunkOffsets[c].z, c, seed);
+                writeNvsBlob(chnk, blocks[c], chnkSize);
+            }
+        }
 
         makeObjs();
     }
@@ -437,7 +449,9 @@ static void crossEnterMode(void) {
     Collidables = heap_caps_calloc(1, sizeof(Vect3i) * 36, MALLOC_CAP_SPIRAM);
     for (int c = 0; c < CHUNK_AMT; c++) { blocks[c] = heap_caps_calloc(1, sizeof(int) * total, MALLOC_CAP_SPIRAM); }
 
-    cam = createCamera(0.0f, 0.0f, -50.0f, 0.0f, 0.0f, 0.0f, 90.0f, 0.1f, 100.0f);
+    seed = randomInt(0, 9999);
+
+    cam = createCamera(0.0f, 150.0f, 0.0f, 0.0f, 0.0f, 0.0f, 90.0f, 0.1f, 100.0f);
     setupTilePos();
 
     checkChunk();
@@ -448,6 +462,8 @@ static void crossExitMode(void) {
     heap_caps_free(renderingBlocks);
     heap_caps_free(Collidables);
     heap_caps_free(blocks);
+
+    deinitNvs();
 }
 
 static void crossMainLoop(int64_t elapsedUs) {
@@ -457,17 +473,21 @@ static void crossMainLoop(int64_t elapsedUs) {
     while (checkButtonQueueWrapper(&evt)) { btn.input = evt.state; }
 
     int refresh = 0;
-    for (int i=0; i<CHUNK_AMT; i++){
+    char chnk[64];
+    size_t chnkSize = CHUNK_SIZEX * CHUNK_SIZEY * CHUNK_SIZEZ * sizeof(int);
+    for (int i=0; i < CHUNK_AMT; i++){
         if (chunkDirty[i]){
+            snprintf(chnk, sizeof(chnk), "crossport/%d_%d_%d", chunkOffsets[i].x, chunkOffsets[i].y, chunkOffsets[i].z);
+            writeNvsBlob(chnk, blocks[i], chnkSize);
+
             refresh = 1;
-            break;
         }
+        chunkDirty[i] = 0;
     }
     if (refresh) { makeObjs(); refresh=0; }
-
-
+    
     checkChunk();
-    movePlayer(&cam, Collidables, 0);
+    movePlayer(&cam, Collidables, collider);
 
     sortObjs();
 
@@ -480,4 +500,6 @@ static void crossMainLoop(int64_t elapsedUs) {
     char pos[64];
     snprintf(pos, sizeof(pos), "Pos: [ %d | %d | %d]", (int)floorf(cam.position.x), (int)floorf(cam.position.y), (int)floorf(cam.position.z));
     drawText( getSysFont(), c555, pos, 40, 40 );
+    snprintf(pos, sizeof(pos), "Cnk: [ %d | %d | %d]", (int)floorf(currentChunk.x), (int)floorf(currentChunk.y), (int)floorf(currentChunk.z));
+    drawText( getSysFont(), c555, pos, 40, 60 );
 }

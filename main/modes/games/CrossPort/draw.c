@@ -11,14 +11,33 @@ const int pattern[4][2][2] = {
     {{1,1},{1,1}}
 };
 
+const paletteColor_t palette[] = {
+    c000,      // black    - 0
+    c005,      // blue     - 1
+    c050,      // green    - 2
+    c055,      // cyan     - 3
+    c500,      // red      - 4
+    c505,      // magenta  - 5
+    c550,      // yellow   - 6
+    c530,      // brown    - 7
+    c540,      // brown    - 8
+    c555       // white    - 7
+};
+
+const int blockIDX[] = {
+    7, 8, 9
+};
+
 static void blockCol(int x, int y, int block, int faceIdx) {
+    SETUP_FOR_TURBO();
+
     int shade = blockColor[block] + faceAdd[faceIdx];
     if (shade > 3){ shade = 3; }
 
     int px = x % 2;
     int py = y % 2;
 
-    if (pattern[shade][py][px]){ TURBO_SET_PIXEL( x, y, c555 ); } else { TURBO_SET_PIXEL( x, y, c000 ); }
+    if (pattern[shade][py][px]){ TURBO_SET_PIXEL( x, y, palette[blockIDX[block]] ); } else { TURBO_SET_PIXEL( x, y, c000 ); }
 }
 
 void project2D(int point[2], float verts[3], float fov, float nearPlane) {
@@ -75,10 +94,10 @@ void RotateVertexObject(float x, float y, float z, float objRotX, float objRotY,
 
 int windingOrder(int *p0, int *p1, int *p2) { return (p0[0]*p1[1] - p0[1]*p1[0] + p1[0]*p2[1] - p1[1]*p2[0] + p2[0]*p0[1] - p2[1]*p0[0] > 0); }
 
-void drawTri(int tris[3][2]){
-    drawLineFast(tris[0][0], tris[0][1], tris[1][0], tris[1][1], c000);
-    drawLineFast(tris[1][0], tris[1][1], tris[2][0], tris[2][1], c000);
-    drawLineFast(tris[2][0], tris[2][1], tris[0][0], tris[0][1], c000);
+void drawTri(int tris[3][2], paletteColor_t color) {
+    drawLineFast(tris[0][0], tris[0][1], tris[1][0], tris[1][1], color);
+    drawLineFast(tris[1][0], tris[1][1], tris[2][0], tris[2][1], color);
+    drawLineFast(tris[2][0], tris[2][1], tris[0][0], tris[0][1], color);
 }
 
 void drawFilledTris(int tris[3][2], int block, int index) {
