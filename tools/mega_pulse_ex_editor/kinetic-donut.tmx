@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="255" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="90">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="255" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="95">
  <editorsettings>
-  <export target="../../Development/Swadge/esp32/2026/Swadge-IDF-5.0/assets_image/kinetic-donut.bin" format="Mega Pulse EX"/>
+  <export target="kinetic-donut.bin" format="Mega Pulse EX"/>
  </editorsettings>
  <tileset firstgid="1" source="kinetic-donut-tileset.tsx"/>
  <tileset firstgid="199" source="mg-entity-tileset.tsx"/>
@@ -277,13 +277,13 @@
   <object id="29" template="templates/Megaton Wasp (Lvl. 3).tx" type="SwadgeLandEntity" x="1272" y="504"/>
   <object id="35" template="templates/Shrubble.tx" type="SwadgeLandEntity" x="232" y="440"/>
   <object id="37" template="templates/Player.tx" type="SwadgeLandEntity" x="40" y="304"/>
-  <object id="38" template="templates/Warp Entrance (Wall).tx" type="SwadgeLandEntity" x="3992" y="368">
+  <object id="38" template="templates/Warp Entrance (Wall).tx" type="MegaPulseEntity_WarpEntrance" x="3992" y="368">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="39"/>
    </properties>
   </object>
   <object id="39" template="templates/Warp Exit (Wall) .tx" type="SwadgeLandEntity" x="56" y="864"/>
-  <object id="40" template="templates/Warp Entrance (Floor).tx" type="SwadgeLandEntity" x="3008" y="408">
+  <object id="40" template="templates/Warp Entrance (Floor).tx" type="MegaPulseEntity_WarpEntrance" x="3008" y="408">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="41"/>
    </properties>
@@ -294,14 +294,14 @@
   <object id="46" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="1352" y="520"/>
   <object id="47" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="1512" y="520"/>
   <object id="49" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="2264" y="392"/>
-  <object id="50" template="templates/Scroll Unlock (All Directions).tx" x="2020" y="112"/>
+  <object id="50" template="templates/Scroll Unlock (All Directions).tx" type="SwadgeLandEntity" x="2020" y="112"/>
   <object id="51" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="2600" y="392"/>
   <object id="52" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="2744" y="392"/>
   <object id="53" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="3008" y="392"/>
   <object id="55" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="3608" y="520"/>
   <object id="56" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="3864" y="520"/>
   <object id="57" template="templates/Scroll Lock (Down).tx" type="SwadgeLandEntity" x="3736" y="520"/>
-  <object id="58" template="templates/Scroll Unlock (All Directions).tx" x="3560" y="312"/>
+  <object id="58" template="templates/Scroll Unlock (All Directions).tx" type="SwadgeLandEntity" x="3560" y="312"/>
   <object id="59" template="templates/Scroll Lock (Down).tx" x="292" y="1144"/>
   <object id="60" template="templates/Scroll Lock (Down).tx" x="456" y="1144"/>
   <object id="61" template="templates/Scroll Lock (Down).tx" x="664" y="1144"/>
@@ -313,7 +313,7 @@
   <object id="69" template="templates/Scroll Lock (Up).tx" x="1688" y="808"/>
   <object id="70" template="templates/Scroll Lock (Down).tx" x="1640" y="1224"/>
   <object id="71" template="templates/Scroll Unlock (All Directions).tx" x="1800" y="1064"/>
-  <object id="72" template="templates/Scroll Lock (Up).tx" x="1912" y="808"/>
+  <object id="72" template="templates/Scroll Lock (Up).tx" x="1912" y="808" visible="1"/>
   <object id="73" template="templates/Scroll Lock (Down).tx" x="2024" y="1176"/>
   <object id="74" template="templates/Scroll Lock (Up).tx" x="2456" y="728"/>
   <object id="75" template="templates/Scroll Lock (Up).tx" x="2984" y="648"/>
@@ -331,13 +331,13 @@
   <object id="84" template="templates/Warp Exit (Wall) .tx" x="24" y="288"/>
   <object id="85" template="templates/Shrubble.tx" x="392" y="296"/>
   <object id="86" template="templates/Shrubble (Lvl. 3).tx" gid="212" x="488" y="200"/>
-  <object id="87" template="templates/Warp Entrance (Floor).tx" x="2560" y="200">
+  <object id="93" template="templates/Warp Entrance (Wall).tx" x="3256" y="488">
    <properties>
-    <property name="linkedEntitySpawn" type="object" value="89"/>
+    <property name="Destination Level Index (ignored if linked to Warp Exit)" type="int" propertytype="Mega Pulse Level Index" value="1"/>
+    <property name="Destination Tile X Coordinate (ignored if linked to Warp Exit)" type="int" value="4"/>
+    <property name="Destination Tile Y Coordinate (ignored if linked to Warp Exit)" type="int" value="4"/>
    </properties>
   </object>
-  <object id="88" template="templates/Warp Entrance (Wall).tx" x="2664" y="288"/>
-  <object id="89" template="templates/Warp Exit (Floor).tx" x="2568" y="264"/>
  </objectgroup>
  <objectgroup id="3" name="Annotations">
   <object id="6" x="16" y="16" width="560" height="64">
