@@ -155,7 +155,7 @@ typedef enum
     EAE_CAT,
     EAE_DOG,
     EAE_DOWN_COW,
-    EAE_DWARF, // FIXME: Not symmetrical
+    EAE_DWARF,
     EAE_EARRINGS,
     EAE_ELF,
     EAE_LEFT,
