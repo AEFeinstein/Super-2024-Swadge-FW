@@ -184,23 +184,24 @@ void loadSwadgesona(swadgesona_t* sw, int idx)
 
 void generateRandomSwadgesona(swadgesona_t* sw)
 {
-    /* sw->core->bodyMarks    = esp_random() % BODY_MARKS_COUNT;
-    sw->core->clothes      = esp_random() % CLOTHES_OPTION_COUNT;
-    sw->core->clothesColor = esp_random() % cTransparent;
-    sw->core->earShape     = esp_random() % EAR_COUNT;
-    sw->core->eyebrows     = esp_random() % EYEBROW_COUNT;
-    sw->core->eyeColor     = esp_random() % cTransparent;
-    sw->core->eyeShape     = esp_random() % EYE_SHAPE_COUNT;
-    sw->core->hairColor    = esp_random() % HAIR_COLOR_COUNT;
-    sw->core->hairStyle    = esp_random() % HAIR_STYLE_COUNT;
-    sw->core->mouthShape   = esp_random() % MOUTH_COUNT;
-    sw->core->noseShape    = esp_random() % NOSE_COUNT;
-    sw->core->skin         = esp_random() % SKIN_COLOR_COUNT;
+    sw->core.skin       = esp_random() % SKIN_COLOR_COUNT;
+    sw->core.hairColor  = esp_random() % HAIR_COLOR_COUNT;
+    sw->core.eyeColor   = esp_random() % EYE_COLOR_COUNT;
+    sw->core.clothes    = esp_random() % CLOTHES_COLOR_COUNT;
+    sw->core.hatColor   = esp_random() % HA_COLOR_COUNT;
+    sw->core.bodyMarks  = esp_random() % BME_COUNT;
+    sw->core.earShape   = esp_random() % EAE_COUNT;
+    sw->core.eyebrows   = esp_random() % EBE_COUNT;
+    sw->core.eyeShape   = esp_random() % EE_COUNT;
+    sw->core.hairStyle  = esp_random() % HE_COUNT;
+    sw->core.hat        = esp_random() % HAE_COUNT;
+    sw->core.mouthShape = esp_random() % ME_COUNT;
 
     // Generate name
     nameData_t nd = {.user = false};
     generateRandUsername(&nd);
-    sw->core->packedName = GET_PACKED_USERNAME(nd); */
+    sw->core.packedName = GET_PACKED_USERNAME(nd);
+    generateSwadgesonaImage(sw);
 }
 
 // Generate Swadgesona image
