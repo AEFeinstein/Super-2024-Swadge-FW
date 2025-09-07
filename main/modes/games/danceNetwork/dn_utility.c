@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 #include "dn_utility.h"
+#include <math.h>
 
 //==============================================================================
 // Functions
@@ -29,7 +30,8 @@ dn_assetIdx_t dn_getAssetIdx(dn_characterSet_t characterSet, dn_unitRank rank, d
             }
             break;
         }
-        case DN_CHESS_SET:
+        case DN_BLACK_CHESS_SET:
+        case DN_WHITE_CHESS_SET:
         {
             switch (rank)
             {
@@ -47,4 +49,27 @@ void dn_setFloorPalette(wsgPalette_t* palette, paletteColor_t color)
 {
     wsgPaletteSet(palette, c112, color);
     wsgPaletteSet(palette, c223, color);
+}
+
+/**
+ * @brief Lerp between a and b by amount
+ *
+ * @param a One of two inputs
+ * @param b One of two inputs
+ * @param amount Lerp amount from 0 to 30000. 0 returns a, 30000 returns b.
+ */
+int dn_lerp(int a, int b, uint16_t amount)
+{
+    return a + ((b - a) * amount) / 30000;
+}
+
+// input 0, output 0
+// input 30000, output 30000
+int16_t dn_logRemap(int16_t x)
+{
+    if (x <= 0)
+        return 0;
+
+    float factor = pow(x / 30000.0, 0.4); // Exponent > 1 flattens early
+    return (int16_t)(30000 * factor);
 }

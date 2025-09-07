@@ -334,12 +334,13 @@ struct
         .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
     },
     {
-        .name        = "bigbug",
-        .pzl         = EF_BIGBUG_PZL_WSG,
-        .slv         = EF_BIGBUG_SLV_WSG,
-        .marqueeFact = "Dr. Ovo Garbotnik fought bugs in a landfill. \"--Incoming transmission from mr. dev\" What in "
-                       "the heck? \"James was trying to solve the design issues that Dave the Diver ran into. But he "
-                       "sort of just ran into the same problems.",
+        .name = "bigbug",
+        .pzl  = EF_BIGBUG_PZL_WSG,
+        .slv  = EF_BIGBUG_SLV_WSG,
+        .marqueeFact
+        = "Dr. Ovo Garbotnik fought hordes of giant bugs in a garbage landfill in this 2025 swadge classic loosely "
+          "inspired by Dig Dug. Produced by James Albracht. \"--Incoming transmission from mr. dev--\" What in "
+          "the heck? \"Hey is thing working??? Check out my game on this device called \"Dance Network\"!",
     },
     {
         .name        = "pango",
