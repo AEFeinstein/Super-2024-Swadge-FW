@@ -11,6 +11,83 @@
     ],
     "propertyTypes": [
         {
+            "id": 3,
+            "name": "Mega Pulse Level Index",
+            "storageType": "int",
+            "type": "enum",
+            "values": [
+                "Kinetic Donut Stage",
+                "Swadge Land - Dac01",
+                "Swadge Land - Level 1-3",
+                "Swadge Land - Level 1-4",
+                "Swadge Land - Level 2-1",
+                "Swadge Land - Dac03",
+                "Swadge Land - Level 2-3",
+                "Swadge Land - Level 2-4",
+                "Swadge Land - Level 3-1",
+                "Swadge Land - Dac02",
+                "Swadge Land - Level 3-3",
+                "Swadge Land - Level 3-4",
+                "Swadge Land - Level 4-1",
+                "Swadge Land - Level 4-2",
+                "Swadge Land - Level 4-3",
+                "Swadge Land - Level 4-4",
+                "Swadge Land - Debug Stage"
+            ],
+            "valuesAsFlags": false
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": false,
+            "id": 4,
+            "members": [
+                {
+                    "name": "Destination Level Index (ignored if linked to Warp Exit)",
+                    "propertyType": "Mega Pulse Level Index",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "Destination Tile X Coordinate (ignored if linked to Warp Exit)",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "Destination Tile Y Coordinate (ignored if linked to Warp Exit)",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "Destination X Pixel Offset (ignored if linked to Warp Exit)",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "Destination Y Pixel Offset (ignored if linked to Warp Exit)",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "linkedEntitySpawn",
+                    "type": "object",
+                    "value": 0
+                },
+                {
+                    "name": "type",
+                    "propertyType": "Swadge Land Entity Index",
+                    "type": "int",
+                    "value": 37
+                }
+            ],
+            "name": "MegaPulseEntity_WarpEntrance",
+            "type": "class",
+            "useAs": [
+                "property",
+                "object",
+                "project"
+            ]
+        },
+        {
             "id": 1,
             "name": "Swadge Land Entity Index",
             "storageType": "int",

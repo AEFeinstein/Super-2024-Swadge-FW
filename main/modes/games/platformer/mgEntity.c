@@ -1098,19 +1098,47 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_WARP_ENTRANCE_WALL:
         case ENTITY_WARP_ENTRANCE_FLOOR:
         {   
-            // Execute warp
-            int32_t warpXoffset = other->x - self->x;
-            int32_t warpYoffset = other->y - self->y;
+            if(other->spawnData->linkedEntitySpawn != NULL){
+                // Execute warp within the current map
 
-            self->x = TO_SUBPIXEL_COORDS( (other->spawnData->linkedEntitySpawn->tx << SUBPIXEL_RESOLUTION) + other->spawnData->linkedEntitySpawn->xOffsetInPixels ) - warpXoffset;
-            self->y = TO_SUBPIXEL_COORDS( (other->spawnData->linkedEntitySpawn->ty << SUBPIXEL_RESOLUTION) + other->spawnData->linkedEntitySpawn->yOffsetInPixels ) - warpYoffset;
-            self->falling = true;
-            mg_viewFollowEntity(self->tilemap, self->entityManager->playerEntity);
+                int32_t warpXoffset = other->x - self->x;
+                int32_t warpYoffset = other->y - self->y;
 
-            mg_unlockScrolling(self->tilemap);
-            mg_deactivateAllEntities(self->entityManager, true);
-            self->tilemap->executeTileSpawnAll = true;
-            soundPlaySfx(&(self->soundManager->sndWarp), BZR_LEFT);
+                self->x = TO_SUBPIXEL_COORDS( (other->spawnData->linkedEntitySpawn->tx << SUBPIXEL_RESOLUTION) + other->spawnData->linkedEntitySpawn->xOffsetInPixels ) - warpXoffset;
+                self->y = TO_SUBPIXEL_COORDS( (other->spawnData->linkedEntitySpawn->ty << SUBPIXEL_RESOLUTION) + other->spawnData->linkedEntitySpawn->yOffsetInPixels ) - warpYoffset;
+                self->falling = true;
+                mg_viewFollowEntity(self->tilemap, self->entityManager->playerEntity);
+
+                mg_unlockScrolling(self->tilemap);
+                mg_deactivateAllEntities(self->entityManager, true);
+                self->tilemap->executeTileSpawnAll = true;
+                soundPlaySfx(&(self->soundManager->sndWarp), BZR_LEFT);
+            } else {
+                // Execute warp to a different map
+                uint8_t newLevelIndex = other->spawnData->special2;
+                uint8_t modifiedPlayerSpawn_tx = other->spawnData->special3;
+                uint8_t modifiedPlayerSpawn_ty = other->spawnData->special4;
+                uint8_t modifiedPlayerSpawn_xOffset = other->spawnData->special5;
+                uint8_t modifiedPlayerSpawn_yOffset = other->spawnData->special6;
+
+                self->gameData->level = newLevelIndex;
+                
+                mg_deactivateAllEntities(self->entityManager, true);
+                mg_loadMapFromFile(self->tilemap, leveldef[newLevelIndex].filename);
+                
+                if(self->tilemap->defaultPlayerSpawn != NULL){
+                    self->tilemap->defaultPlayerSpawn->tx = modifiedPlayerSpawn_tx;
+                    self->tilemap->defaultPlayerSpawn->ty = modifiedPlayerSpawn_ty;
+                    self->tilemap->defaultPlayerSpawn->xOffsetInPixels = modifiedPlayerSpawn_xOffset;
+                    self->tilemap->defaultPlayerSpawn->yOffsetInPixels = modifiedPlayerSpawn_yOffset;
+                }
+                
+                self->x = TO_SUBPIXEL_COORDS( (modifiedPlayerSpawn_tx * 16) +  modifiedPlayerSpawn_xOffset);
+                self->y = TO_SUBPIXEL_COORDS( (modifiedPlayerSpawn_ty * 16) +  modifiedPlayerSpawn_yOffset);
+
+                self->tilemap->executeTileSpawnAll = true;
+            }
+
             break;
         }
         default:
