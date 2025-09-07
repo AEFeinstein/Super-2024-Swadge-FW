@@ -171,6 +171,7 @@ void artilleryEnterMode(void)
 
     // Initialize mode menu renderer
     ad->mRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    ad->scoreFont = ad->mRenderer->menuFont;
 
     // Initialize in-game menu
     ad->gameMenu = initMenu(NULL, artilleryGameMenuCb);

@@ -69,6 +69,7 @@ typedef struct
     // In-game menu and renderer
     menu_t* modeMenu;
     menuMegaRenderer_t* mRenderer;
+    font_t* scoreFont;
 
     // The game state (i.e. moving, adjusting shot, etc.)
     artilleryGameState_t gState;

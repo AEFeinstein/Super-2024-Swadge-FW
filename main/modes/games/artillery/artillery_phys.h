@@ -12,6 +12,7 @@
 #include "vector2d.h"
 #include "geometryFl.h"
 #include "quaternions.h"
+#include "font.h"
 
 //==============================================================================
 // Defines
@@ -57,7 +58,9 @@ typedef struct
     float y1;
 } aabb_t;
 
-typedef struct
+struct _physCirc_t;
+
+typedef struct _physCirc_t
 {
     // Position
     int32_t zonemask;
@@ -96,11 +99,13 @@ typedef struct
     float shotPower;
     artilleryAmmoType_t ammo;
     const char* ammoLabel;
+    int32_t score;
 
     // Shell data
     int32_t bounces;
     int32_t explosionRadius;
     float explosionVel;
+    struct _physCirc_t* owner;
 } physCirc_t;
 
 typedef struct
@@ -156,7 +161,7 @@ void deinitPhys(physSim_t* phys);
 void physAddWorldBounds(physSim_t* phys);
 void physRemoveAllObjects(physSim_t* phys);
 
-void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs);
+void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_t moveTimeLeftUs);
 bool physStep(physSim_t* phys, int32_t elapsedUs);
 
 void physSpawnPlayers(physSim_t* phys, physCirc_t* players[], int32_t numPlayers);

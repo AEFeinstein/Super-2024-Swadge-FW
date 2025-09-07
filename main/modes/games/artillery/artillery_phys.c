@@ -390,9 +390,11 @@ static void checkTurnOver(physSim_t* phys)
  * @brief Draw the outlines of physics simulation objects
  *
  * @param phys The physics simulation
- * @param moveTimeLeftUs TODO
+ * @param players
+ * @param font
+ * @param moveTimeLeftUs
  */
-void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs)
+void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_t moveTimeLeftUs)
 {
     // Draw zones
     // for (int32_t z = 0; z < NUM_ZONES; z++)
@@ -572,6 +574,14 @@ void drawPhysOutline(physSim_t* phys, int32_t moveTimeLeftUs)
 
     // Draw gas gauge
     fillDisplayArea(0, 0, (TFT_WIDTH * moveTimeLeftUs) / TANK_MOVE_TIME_US, 16, c222);
+
+    // Draw score
+    char scoreStr[32] = {0};
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "%d", players[0]->score);
+    drawText(font, c555, scoreStr, 20, 20);
+
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "%d", players[1]->score);
+    drawText(font, c555, scoreStr, TFT_WIDTH - textWidth(font, scoreStr) - 20, 20);
 }
 
 /**
@@ -815,6 +825,8 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
     {
         // Create the shell at the tip of the barrel
         physCirc_t* shell = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, radius, CT_SHELL);
+        // Set the owner of the shell as the firing tank
+        shell->owner = circ;
 
         // Give it some initial velocity
         shell->vel.x = sinf(angStart) * circ->shotPower;
