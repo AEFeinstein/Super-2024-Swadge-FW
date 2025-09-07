@@ -56,7 +56,7 @@ bool process_greyscale(processorInput_t* arg)
             if( chuse == 4 ) { chuse = 3; }
 
             // Flip Y.
-            for( ch = 0; ch < n; ch++ )
+            for( ch = 0; ch < chuse; ch++ )
                 pv += data[(x+(h-y-1)*w)*4+ch];
 
             pv = (pv + chuse/2) / chuse;

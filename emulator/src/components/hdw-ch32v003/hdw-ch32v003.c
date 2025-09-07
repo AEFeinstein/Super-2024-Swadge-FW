@@ -873,6 +873,7 @@ int ch32v003WriteBitmap(int slot, uint8_t pixels[6][12])
     int i, x, y;
 
     for (y = 0; y < 6; y++)
+	{
         for (x = 0; x < 12; x++)
         {
             int intensity = pixels[y][x];
@@ -895,6 +896,7 @@ int ch32v003WriteBitmap(int slot, uint8_t pixels[6][12])
                 ledo += 9;
             }
         }
+	}
 
     // Make sure processor is halted if we're using it in framebuffer mode.
     // ch32v003SetReg(DMCONTROL, 0x80000001); // Request halt
