@@ -203,7 +203,7 @@ void generateRandomSwadgesona(swadgesona_t* sw)
     // Generate name
     generateRandUsername(&sw->name);
     sw->core.packedName = GET_PACKED_USERNAME(sw->name);
-    
+
     generateSwadgesonaImage(sw);
 }
 
