@@ -1,0 +1,516 @@
+/**
+ * @file swadgesona.c
+ * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
+ * @brief The data structures and Helper functions for utilizing Swadgesonas
+ * @date 2025-09-06
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
+
+//==============================================================================
+// Includes
+//==============================================================================
+
+#include "swadgesona.h"
+
+// C
+#include <stdio.h>
+#include <inttypes.h>
+
+// ESP
+#include <esp_log.h>
+#include <esp_random.h>
+
+// Swadge
+#include "hdw-nvs.h"
+#include "wsgCanvas.h"
+
+//==============================================================================
+// Defines
+//==============================================================================
+
+//==============================================================================
+// Consts
+//==============================================================================
+
+static const char* const nvsStr[] = {"swadgesona", "swadgesona-"};
+
+//==============================================================================
+// Enums
+//==============================================================================
+
+typedef enum
+{
+    COLOR_HAIR,
+    COLOR_SKIN,
+    COLOR_EYES,
+    COLOR_CLOTHES,
+    COLOR_HAT,
+} paletteSwap_t;
+
+//==============================================================================
+// Function declarations
+//==============================================================================
+
+/**
+ * @brief Grabs the relevant colors based on the provided index for the skin
+ *
+ * @param palette Palette to swap
+ * @param ps Which part of the palette to swap
+ * @param idx Index to switch colors on
+ */
+static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx);
+
+//==============================================================================
+// Functions
+//==============================================================================
+
+// Data
+void saveSwadgesona(swadgesona_t* sw, int idx)
+{
+    // Generate NVS key
+    char nvsTag[NVS_KEY_NAME_MAX_SIZE];
+    snprintf(nvsTag, NVS_KEY_NAME_MAX_SIZE - 1, "%s%" PRIu8, nvsStr[1], idx);
+    if (!writeNamespaceNvsBlob(nvsStr[0], nvsTag, sw->core, sizeof(sw->core)))
+    {
+        ESP_LOGE("SONA", "Swadgesona failed to save");
+    }
+}
+
+void loadSwadgesona(swadgesona_t* sw, int idx)
+{
+    char nvsTag[NVS_KEY_NAME_MAX_SIZE];
+    size_t len = 0;
+    snprintf(nvsTag, NVS_KEY_NAME_MAX_SIZE - 1, "%s%" PRIu8, nvsStr[1], idx);
+    readNamespaceNvsBlob(nvsStr[0], nvsTag, sw->core, &len);
+    if (!readNamespaceNvsBlob(nvsStr[0], nvsTag, sw->core, &len))
+    {
+        ESP_LOGE("SONA", "Swadgesona failed to Load/does not exist");
+        generateRandomSwadgesona(sw);
+    }
+
+    // Ensure the image is generated and the name is generated
+}
+
+void generateRandomSwadgesona(swadgesona_t* sw)
+{
+    /* sw->core->bodyMarks    = esp_random() % BODY_MARKS_COUNT;
+    sw->core->clothes      = esp_random() % CLOTHES_OPTION_COUNT;
+    sw->core->clothesColor = esp_random() % cTransparent;
+    sw->core->earShape     = esp_random() % EAR_COUNT;
+    sw->core->eyebrows     = esp_random() % EYEBROW_COUNT;
+    sw->core->eyeColor     = esp_random() % cTransparent;
+    sw->core->eyeShape     = esp_random() % EYE_SHAPE_COUNT;
+    sw->core->hairColor    = esp_random() % HAIR_COLOR_COUNT;
+    sw->core->hairStyle    = esp_random() % HAIR_STYLE_COUNT;
+    sw->core->mouthShape   = esp_random() % MOUTH_COUNT;
+    sw->core->noseShape    = esp_random() % NOSE_COUNT;
+    sw->core->skin         = esp_random() % SKIN_COLOR_COUNT;
+
+    // Generate name
+    nameData_t nd = {.user = false};
+    generateRandUsername(&nd);
+    sw->core->packedName = GET_PACKED_USERNAME(nd); */
+}
+
+// Generate Swadgesona image
+void generateSwadgesonaImage(swadgesona_t* sw)
+{
+
+}
+
+//==============================================================================
+// Static Functions
+//==============================================================================
+
+static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
+{
+    switch (ps)
+    {
+        case COLOR_SKIN:
+        {
+            switch (idx)
+            {
+                case SKIN_ZERO:
+                default:
+                {
+                    palette->newColors[c422] = c422; // mid color
+                    palette->newColors[c544] = c544; // base color
+                    break;
+                }
+                case SKIN_ONE:
+                {
+                    palette->newColors[c422] = c423; // mid color
+                    palette->newColors[c544] = c545; // base color
+                    break;
+                }
+                case SKIN_TWO: 
+                {
+                    palette->newColors[c422] = c432; // mid color
+                    palette->newColors[c544] = c543; // base color
+                    break;
+                }
+                case SKIN_THREE:
+                {
+                    palette->newColors[c422] = c321; // mid color
+                    palette->newColors[c544] = c432; // base color
+                    break;
+                }
+                case SKIN_FOUR:
+                {
+                    palette->newColors[c422] = c211; // mid color
+                    palette->newColors[c544] = c321; // base color
+                    break;
+                }
+                case SKIN_FIVE:
+                {
+                    palette->newColors[c422] = c200; // mid color
+                    palette->newColors[c544] = c210; // base color
+                    break;
+                }
+                case SKIN_BLUE:
+                {
+                    palette->newColors[c422] = c135; // mid color
+                    palette->newColors[c544] = c255; // base color
+                    break;
+                }
+                case SKIN_GRAY:
+                {
+                    palette->newColors[c422] = c333; // mid color
+                    palette->newColors[c544] = c444; // base color
+                    break;
+                }
+                case SKIN_GREEN:
+                {
+                    palette->newColors[c422] = c133; // mid color
+                    palette->newColors[c544] = c243; // base color
+                    break;
+                }
+                case SKIN_PINK:
+                {
+                    palette->newColors[c422] = c525; // mid color
+                    palette->newColors[c544] = c545; // base color
+                    break;
+                }
+                case SKIN_PURPLE:
+                {
+                    palette->newColors[c422] = c223; // mid color
+                    palette->newColors[c544] = c334; // base color
+                    break;
+                }
+                case SKIN_RED:
+                {
+                    palette->newColors[c422] = c411; // mid color
+                    palette->newColors[c544] = c422; // base color
+                    break;
+                }
+            }
+            break;
+        }
+        case COLOR_HAIR:
+        {
+            switch (idx)
+            {
+                case HAIR_GRAY:
+                {
+                    palette->newColors[c111] = c111;
+                    palette->newColors[c222] = c222;
+                    palette->newColors[c333] = c333;
+                    break;
+                }
+                case HAIR_BLONDE:
+                {
+                    palette->newColors[c111] = c321;
+                    palette->newColors[c222] = c432;
+                    palette->newColors[c333] = c542;
+                    break;
+                }
+                case HAIR_ORANGE:
+                { 
+                    palette->newColors[c111] = c411;
+                    palette->newColors[c222] = c421;
+                    palette->newColors[c333] = c531;
+                    break;
+                }
+                case HAIR_RED:
+                {
+                    palette->newColors[c111] = c300;
+                    palette->newColors[c222] = c400;
+                    palette->newColors[c333] = c520;
+                    break;
+                }
+                case HAIR_DARK_RED:
+                { 
+                    palette->newColors[c111] = c100;
+                    palette->newColors[c222] = c200;
+                    palette->newColors[c333] = c300;
+                    break;
+                }
+                case HAIR_BROWN:
+                { 
+                    palette->newColors[c111] = c000;
+                    palette->newColors[c222] = c100;
+                    palette->newColors[c333] = c210;
+                    break;
+                }
+                case HAIR_BLACK:
+                {
+                    palette->newColors[c111] = c001;
+                    palette->newColors[c222] = c012;
+                    palette->newColors[c333] = c000;
+                    break;
+                }
+                case HAIR_WHITE:
+                { 
+                    palette->newColors[c111] = c222;
+                    palette->newColors[c222] = c444;
+                    palette->newColors[c333] = c555;
+                    break;
+                }
+                case HAIR_PINK:
+                {
+                    palette->newColors[c111] = c302;
+                    palette->newColors[c222] = c424;
+                    palette->newColors[c333] = c535;
+                    break;
+                }
+                case HAIR_HOT_PINK:
+                {
+                    palette->newColors[c111] = c201;
+                    palette->newColors[c222] = c302;
+                    palette->newColors[c333] = c413;
+                    break;
+                }
+                case HAIR_PURPLE:
+                {
+                    palette->newColors[c111] = c314;
+                    palette->newColors[c222] = c324;
+                    palette->newColors[c333] = c435;
+                    break;
+                }
+                case HAIR_DARK_PURPLE:
+                {
+                    palette->newColors[c111] = c101;
+                    palette->newColors[c222] = c102;
+                    palette->newColors[c333] = c203;
+                    break;
+                }
+                case HAIR_TEAL:
+                { 
+                    palette->newColors[c111] = c012;
+                    palette->newColors[c222] = c133;
+                    palette->newColors[c333] = c144;
+                    break;
+                }
+                case HAIR_BLUE:
+                {
+                    palette->newColors[c111] = c001;
+                    palette->newColors[c222] = c002;
+                    palette->newColors[c333] = c013;
+                    break;
+                }
+                case HAIR_GREEN:
+                {
+                    palette->newColors[c111] = c021;
+                    palette->newColors[c222] = c032;
+                    palette->newColors[c333] = c353;
+                    break;
+                }
+                case HAIR_DARK_GREEN:
+                {
+                    palette->newColors[c111] = c010;
+                    palette->newColors[c222] = c121;
+                    palette->newColors[c333] = c131;
+                    break;
+                }
+            }
+            break;
+        }
+        case COLOR_EYES:
+        {
+            switch (idx)
+            {
+                case EYES_BLACK:
+                {
+                    palette->newColors[c130] = c444; // HIGHLIGHT
+                    palette->newColors[c010] = c000; // BASE
+                    break;
+                }
+                case EYES_BLUE:
+                {
+                    palette->newColors[c130] = c255; // HIGHLIGHT
+                    palette->newColors[c010] = c005; // BASE
+                    break;
+                }
+                case EYES_BROWN:
+                {
+                    palette->newColors[c130] = c432; // HIGHLIGHT
+                    palette->newColors[c010] = c210; // BASE
+                    break;
+                }
+                case EYES_GRAY:
+                {
+                    palette->newColors[c130] = c444; // HIGHLIGHT
+                    palette->newColors[c010] = c222; // BASE
+                    break;
+                }
+                default:
+                case EYES_GREEN:
+                {
+                    palette->newColors[c130] = c130; // HIGHLIGHT
+                    palette->newColors[c010] = c010; // BASE
+                    break;
+                }
+                case EYES_PINK:
+                {
+                    palette->newColors[c130] = c525; // HIGHLIGHT
+                    palette->newColors[c010] = c403; // BASE
+                    break;
+                }
+                case EYES_PURPLE:
+                {
+                    palette->newColors[c130] = c345; // HIGHLIGHT
+                    palette->newColors[c010] = c224; // BASE
+                    break;
+                }
+                case EYES_RED:
+                {
+                    palette->newColors[c130] = c533; // HIGHLIGHT
+                    palette->newColors[c010] = c300; // BASE
+                    break;
+                }
+                case EYES_YELLOW:
+                {
+                    palette->newColors[c130] = c533; // HIGHLIGHT
+                    palette->newColors[c010] = c541; // BASE
+                    break;
+                }
+            }
+            break;
+        }
+        case COLOR_CLOTHES:
+        {
+            break;
+        }
+        case COLOR_HAT:
+        {
+            switch (idx)
+            {
+                case HA_BLUE:
+                {
+                    palette->newColors[c533] = c345;
+                    palette->newColors[c514] = c135;
+                    palette->newColors[c513] = c124;
+                    palette->newColors[c502] = c014;
+                    break;
+                }
+                case HA_CYAN:
+                {
+                    palette->newColors[c533] = c455;
+                    palette->newColors[c514] = c255;
+                    palette->newColors[c513] = c144;
+                    palette->newColors[c502] = c033;
+                    break;
+                }
+                case HA_DARK_BLUE:
+                {
+                    palette->newColors[c533] = c134;
+                    palette->newColors[c514] = c123;
+                    palette->newColors[c513] = c112;
+                    palette->newColors[c502] = c002;
+                    break;
+                }
+                case HA_DARK_GREEN:
+                {
+                    palette->newColors[c533] = c340;
+                    palette->newColors[c514] = c230;
+                    palette->newColors[c513] = c120;
+                    palette->newColors[c502] = c010;
+                    break;
+                }
+                case HA_GRAY:
+                {
+                    palette->newColors[c533] = c444;
+                    palette->newColors[c514] = c333;
+                    palette->newColors[c513] = c222;
+                    palette->newColors[c502] = c000;
+                    break;
+                }
+                case HA_GREEN:
+                {
+                    palette->newColors[c533] = c454;
+                    palette->newColors[c514] = c053;
+                    palette->newColors[c513] = c142;
+                    palette->newColors[c502] = c032;
+                    break;
+                }
+                case HA_HOT_PINK:
+                {
+                    palette->newColors[c533] = c533;
+                    palette->newColors[c514] = c514;
+                    palette->newColors[c513] = c513;
+                    palette->newColors[c502] = c502;
+                    break;
+                }
+                case HA_MAUVE:
+                {
+                    palette->newColors[c533] = c534;
+                    palette->newColors[c514] = c512;
+                    palette->newColors[c513] = c412;
+                    palette->newColors[c502] = c312;
+                    break;
+                }
+                case HA_ORANGE:
+                {
+                    palette->newColors[c533] = c521;
+                    palette->newColors[c514] = c500;
+                    palette->newColors[c513] = c400;
+                    palette->newColors[c502] = c300;
+                    break;
+                }
+                case HA_PALE_BLUE:
+                {
+                    palette->newColors[c533] = c455;
+                    palette->newColors[c514] = c345;
+                    palette->newColors[c513] = c234;
+                    palette->newColors[c502] = c224;
+                    break;
+                }
+                case HA_PALE_YELLOW:
+                {
+                    palette->newColors[c533] = c554;
+                    palette->newColors[c514] = c543;
+                    palette->newColors[c513] = c432;
+                    palette->newColors[c502] = c322;
+                    break;
+                }
+                case HA_PINK:
+                {
+                    palette->newColors[c533] = c545;
+                    palette->newColors[c514] = c534;
+                    palette->newColors[c513] = c423;
+                    palette->newColors[c502] = c412;
+                    break;
+                }
+                case HA_PURPLE:
+                {
+                    palette->newColors[c533] = c314;
+                    palette->newColors[c514] = c313;
+                    palette->newColors[c513] = c212;
+                    palette->newColors[c502] = c202;
+                    break;
+                }
+                case HA_YELLOW:
+                {
+                    palette->newColors[c533] = c552;
+                    palette->newColors[c514] = c540;
+                    palette->newColors[c513] = c431;
+                    palette->newColors[c502] = c320;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+}
