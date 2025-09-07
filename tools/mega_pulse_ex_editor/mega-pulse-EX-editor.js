@@ -139,19 +139,41 @@ tiled.registerMapFormat("Mega Pulse EX", {
                         tiled.log(linkedEntityIndex);
 
                         entitiesBuffer.push(entity.resolvedProperty("type").value);
+                        tiled.log("Id " + entity.id + ", Type: " + entity.resolvedProperty("type").value);
                         entitiesBuffer.push(Math.floor(entity.x) >> tileSizeInPowersOf2);
                         entitiesBuffer.push(Math.floor(entity.y) >> tileSizeInPowersOf2);
                         entitiesBuffer.push(Math.floor(entity.x) % 16);
                         entitiesBuffer.push(Math.floor(entity.y) % 16);
                         entitiesBuffer.push((entity.tileFlippedVertically ? 2 : 0) + (entity.tileFlippedHorizontally ? 1 : 0));
+
+                        //TODO: use special0 and special1 to store rotation in degrees (0-359)
                         entitiesBuffer.push((entity.resolvedProperty("special0") != null) ? Math.floor(entity.resolvedProperty("special0")) : 0);
                         entitiesBuffer.push((entity.resolvedProperty("special1") != null) ? Math.floor(entity.resolvedProperty("special1")) : 0);
-                        entitiesBuffer.push((entity.resolvedProperty("special2") != null) ? Math.floor(entity.resolvedProperty("special2")) : 0);
-                        entitiesBuffer.push((entity.resolvedProperty("special3") != null) ? Math.floor(entity.resolvedProperty("special3")) : 0);
-                        entitiesBuffer.push((entity.resolvedProperty("special4") != null) ? Math.floor(entity.resolvedProperty("special4")) : 0);
-                        entitiesBuffer.push((entity.resolvedProperty("special5") != null) ? Math.floor(entity.resolvedProperty("special5")) : 0);
-                        entitiesBuffer.push((entity.resolvedProperty("special6") != null) ? Math.floor(entity.resolvedProperty("special6")) : 0);
-                        entitiesBuffer.push((entity.resolvedProperty("special7") != null) ? Math.floor(entity.resolvedProperty("special7")) : 0);
+
+
+
+                        switch(entity.resolvedProperty("type").value)
+                        {
+                            case 37:
+                            case 38:
+                                //Warp Entrance (Wall), Warp Entrance (Floor)
+                                entitiesBuffer.push((entity.resolvedProperty("Destination Level Index (ignored if linked to Warp Exit)").value != null) ? entity.resolvedProperty("Destination Level Index (ignored if linked to Warp Exit)").value : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("Destination Tile X Coordinate (ignored if linked to Warp Exit)") != null) ? Math.floor(entity.resolvedProperty("Destination Tile X Coordinate (ignored if linked to Warp Exit)")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("Destination Tile Y Coordinate (ignored if linked to Warp Exit)") != null) ? Math.floor(entity.resolvedProperty("Destination Tile Y Coordinate (ignored if linked to Warp Exit)")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("Destination X Pixel Offset (ignored if linked to Warp Exit)") != null) ? Math.floor(entity.resolvedProperty("Destination X Pixel Offset (ignored if linked to Warp Exit)")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("Destination Y Pixel Offset (ignored if linked to Warp Exit)") != null) ? Math.floor(entity.resolvedProperty("Destination Y Pixel Offset (ignored if linked to Warp Exit)")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("special7") != null) ? Math.floor(entity.resolvedProperty("special7")) : 0);
+                                break;
+                            default:
+                                entitiesBuffer.push((entity.resolvedProperty("special2") != null) ? Math.floor(entity.resolvedProperty("special2")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("special3") != null) ? Math.floor(entity.resolvedProperty("special3")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("special4") != null) ? Math.floor(entity.resolvedProperty("special4")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("special5") != null) ? Math.floor(entity.resolvedProperty("special5")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("special6") != null) ? Math.floor(entity.resolvedProperty("special6")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("special7") != null) ? Math.floor(entity.resolvedProperty("special7")) : 0);
+                                break;
+                        }
+                        
                         entitiesBuffer.push(linkedEntityIndex & 0b11111111);
                         entitiesBuffer.push((linkedEntityIndex & 0b1111111100000000) >> 8);
                     }

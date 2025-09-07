@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <template>
  <tileset firstgid="1" source="../mg-entity-tileset.tsx"/>
- <object name="Warp Entrance (Floor)" type="SwadgeLandEntity" gid="146" width="64" height="16">
+ <object name="Warp Entrance (Floor)" type="MegaPulseEntity_WarpEntrance" gid="146" width="64" height="16">
   <properties>
+   <property name="Destination Level Index (ignored if linked to Warp Exit)" type="int" propertytype="Mega Pulse Level Index" value="0"/>
    <property name="type" type="int" propertytype="Swadge Land Entity Index" value="38"/>
   </properties>
  </object>
