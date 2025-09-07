@@ -30,11 +30,99 @@
 // Defines
 //==============================================================================
 
+#define SWSN_HEIGHT 64
+#define SWSN_WIDTH  64
+
 //==============================================================================
 // Consts
 //==============================================================================
 
 static const char* const nvsStr[] = {"swadgesona", "swadgesona-"};
+
+static const cnfsFileIdx_t bodymarksWsgs[] = {
+    BM_BEARD_WSG,      BM_BLUSH_WSG,         BM_BOTTOM_MOLE_WSG,  BM_BOTTOM_WSG,       BM_CHIN_WSG,
+    BM_CHIN_PATCH_WSG, BM_CHIN_STRAP_WSG,    BM_COP_WSG,          BM_COWBOY_WSG,       BM_EYE_MOLE_WSG,
+    BM_FRECKLES_WSG,   BM_FULL_SCRAGGLY_WSG, BM_HALF_STACHE_WSG,  BM_HEART_STACHE_WSG, BM_LESS_WISE_WSG,
+    BM_MAGICIAN_WSG,   BM_MARILYN_WSG,       BM_OLD_WSG,          BM_PILLOW_WSG,       BM_SAND_P_WSG,
+    BM_SCRAGGLY_WSG,   BM_SMALL_CURL_WSG,    BM_SMALL_STACHE_WSG, BM_SOUL_PATCH_WSG,   BM_STACHE_AND_STRAP_WSG,
+    BM_STRONGMAN_WSG,  BM_THIN_CHIN_WSG,     BM_THIS_WSG,         BM_TIRED_WSG,        BM_WISEMAN_WSG,
+};
+static const cnfsFileIdx_t earWsgs[] = {
+    EA_BIG_HOOP_WSG, EA_BUNNY_WSG,    EA_CAT_WSG,        EA_DOG_WSG,  EA_DOWN_COW_WSG,
+    EA_DWARF_WSG,    EA_EARRINGS_WSG, EA_ELF_WSG,        EA_LEFT_WSG, EA_MEDIUM_HOOP_WSG,
+    EA_OPEN_COW_WSG, EA_RIGHT_WSG,    EA_SMALL_HOOP_WSG,
+};
+static const cnfsFileIdx_t eyebrowsWsgs[] = {
+    EB_ARCHED_WSG,
+    EB_BUSHY_WSG,
+    EB_CONCERN_WSG,
+    EB_CUT_LEFT_WSG,
+    EB_CUT_LEFT_PIERCING_WSG,
+    EB_CUT_RIGHT_WSG,
+    EB_CUT_RIGHT_PIERCING_WSG,
+    EB_DOT_WSG,
+    EB_DOWNTURNED_WSG,
+    EB_HMM_WSG,
+    EB_MISCHIEVOUS_WSG,
+    EB_ODD_WSG,
+    EB_PUFFY_WSG,
+    EB_SLIGHT_CONCERN_WSG,
+    EB_THICC_WSG,
+    EB_THIN_WSG,
+    EB_TINY_WSG,
+};
+static const cnfsFileIdx_t eyeWsgs[] = {
+    E_ANGRY_WSG, E_ANGY_WSG,        E_BABY_WSG,          E_BIG_WSG,           E_BIG_LINER_WSG, E_BOOPED_WSG,
+    E_CAT_WSG,   E_CLOSED_WSG,      E_CLOSED_LASHES_WSG, E_CLOSED_LINER_WSG,  E_CRAZY_WSG,     E_CROSSES_WSG,
+    E_CUTE_WSG,  E_DOOFY_WSG,       E_EXASPERATED_WSG,   E_HEARTS_WSG,        E_LINER_WSG,     E_MAKEUP_WSG,
+    E_SEXY_WSG,  E_SEXY_LASHES_WSG, E_SLEEPING_WSG,      E_SMALL_WLASHES_WSG, E_SQUINTING_WSG, E_SQUINTING_LASHES_WSG,
+    E_STARE_WSG, E_STARING_WSG,     E_SWIRLS_WSG,        E_THIN_WSG,          E_WIDE_WSG,
+};
+static const cnfsFileIdx_t hairWsgs[] = {
+    H_BALLET_BUN_WSG,   H_BOWL_CUT_WSG,  H_CHIBIUSA_WSG,    H_COTTON_CANDY_WSG,   H_CURLY_WSG,
+    H_CUTE_WSG,         H_DOLLY_WSG,     H_DOWN_DREADS_WSG, H_FRANKEY_STEIN_WSG,  H_HINATA_WSG,
+    H_JINX_WSG,         H_LONG_WSG,      H_LONG_PIGS_WSG,   H_MAIN_CHARACTER_WSG, H_MAIN_VILLAIN_WSG,
+    H_MALE_PATTERN_WSG, H_MCR_WSG,       H_MIDDLE_BANG_WSG, H_MINAKO_WSG,         H_MOHAWK_WSG,
+    H_POMPADOUR_WSG,    H_RAVEN_WSG,     H_SHORT_WSG,       H_SHORT_PIGS_WSG,     H_SIDE_PUFFS_WSG,
+    H_SKULL_WSG,        H_SKULL_R_WSG,   H_SMALL_BUNS_WSG,  H_SPOCK_WSG,          H_STAR_PUFF_NB_WSG,
+    H_STAR_PUFFS_WSG,   H_TATTOO_WSG,    H_THING_WSG,       H_USAGI_WSG,          H_WAVY_HAWK_WSG,
+    H_WAVY_HAWK_R_WSG,  H_WAVY_LONG_WSG, H_WEDNESDAY_WSG,   H_WET_CURLY_WSG,      H_WET_SHORT_WSG,
+};
+static const cnfsFileIdx_t hatWsgs[] = {
+    HA_BEANIE_WSG, HA_CHEF_WSG, HA_COOL_HAT_WSG, HA_COWBOY_WSG, HA_GRAD_CAP_WSG, HA_HEART_WSG, HA_PUFFBALL_BEANIE_WSG,
+};
+static const cnfsFileIdx_t mouthWsgs[] = {
+    M_AH_WSG,
+    M_ANGEL_BITE_WSG,
+    M_BAR_PIERCING_WSG,
+    M_BITE_WSG,
+    M_BITE_PIERCING_WSG,
+    M_CONCERN_WSG,
+    M_CONTENT_WSG,
+    M_DROOL_WSG,
+    M_HALF_SMILE_WSG,
+    M_KET_WSG,
+    M_KISSES_WSG,
+    M_LIP_WSG,
+    M_LITTLE_DROOL_WSG,
+    M_MISCHIEF_WSG,
+    M_MLEM_WSG,
+    M_NO_CUPID_BOW_WSG,
+    M_OH_WSG,
+    M_OH_PIERCING_WSG,
+    M_OPEN_SMILE_WSG,
+    M_PIERCING_WSG,
+    M_POUTY_WSG,
+    M_SAD_WSG,
+    M_SATISFIED_WSG,
+    M_SMILE_WSG,
+    M_STOIC_WSG,
+    M_TONGUE_WSG,
+    M_TONGUE_PIERCING_WSG,
+    M_UHM_WSG,
+    M_VAMPIRE_WSG,
+    M_YELLING_WSG,
+};
 
 //==============================================================================
 // Enums
@@ -117,7 +205,59 @@ void generateRandomSwadgesona(swadgesona_t* sw)
 // Generate Swadgesona image
 void generateSwadgesonaImage(swadgesona_t* sw)
 {
+    // Delete old images if saved
+    if (sw->image.px != NULL)
+    {
+        // FIXME: Clean up old WSG
+    }
 
+    // Make a new canvas
+    canvasBlankInit(&sw->image, SWSN_WIDTH, SWSN_HEIGHT, cTransparent, true);
+
+    // Body
+    wsgPaletteReset(&sw->pal);
+    _getPaletteFromIdx(&sw->pal, COLOR_SKIN, sw->core->skin);
+    _getPaletteFromIdx(&sw->pal, COLOR_CLOTHES, sw->core->clothes);
+    canvasDrawSimplePal(&sw->image, SWSN_BODY_WSG, 0, 0, &sw->pal);
+
+    // Ears
+    if (sw->core->earShape != EAE_HUMAN)
+    {
+        canvasDrawSimple(&sw->image, earWsgs[sw->core->earShape], 0, 0);
+    }
+
+    // Mouth
+    canvasDrawSimple(&sw->image, mouthWsgs[sw->core->mouthShape], 0, 0);
+
+    // Eyes
+    wsgPaletteReset(&sw->pal);
+    _getPaletteFromIdx(&sw->pal, COLOR_EYES, sw->core->eyeColor);
+    canvasDrawSimplePal(&sw->image, eyeWsgs[sw->core->eyeShape], 0, 0, &sw->pal);
+
+    // Eyebrows
+    wsgPaletteReset(&sw->pal);
+    _getPaletteFromIdx(&sw->pal, COLOR_HAIR, sw->core->hairColor);
+    canvasDrawSimplePal(&sw->image, eyebrowsWsgs[sw->core->eyebrows], 0, 0, &sw->pal);
+
+    // Hair
+    // Use the same palette as the eyebrows
+    canvasDrawSimplePal(&sw->image, hairWsgs[sw->core->hairStyle], 0, 0, &sw->pal);
+
+    // TODO: Jinx ear fix
+
+    // Body marks
+    if (sw->core->bodyMarks != BME_NONE)
+    {
+        canvasDrawSimple(&sw->image, bodymarksWsgs[sw->core->bodyMarks], 0, 0);
+    }
+
+    // Hats
+    if (sw->core->hat != HAE_NONE)
+    {
+        wsgPaletteReset(&sw->pal);
+        _getPaletteFromIdx(&sw->pal, COLOR_HAT, sw->core->hatColor);
+        canvasDrawSimplePal(&sw->image, hatWsgs[sw->core->hat], 0, 0, &sw->pal);
+    }
 }
 
 //==============================================================================
@@ -145,7 +285,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                     palette->newColors[c544] = c545; // base color
                     break;
                 }
-                case SKIN_TWO: 
+                case SKIN_TWO:
                 {
                     palette->newColors[c422] = c432; // mid color
                     palette->newColors[c544] = c543; // base color
@@ -227,7 +367,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                     break;
                 }
                 case HAIR_ORANGE:
-                { 
+                {
                     palette->newColors[c111] = c411;
                     palette->newColors[c222] = c421;
                     palette->newColors[c333] = c531;
@@ -241,14 +381,14 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                     break;
                 }
                 case HAIR_DARK_RED:
-                { 
+                {
                     palette->newColors[c111] = c100;
                     palette->newColors[c222] = c200;
                     palette->newColors[c333] = c300;
                     break;
                 }
                 case HAIR_BROWN:
-                { 
+                {
                     palette->newColors[c111] = c000;
                     palette->newColors[c222] = c100;
                     palette->newColors[c333] = c210;
@@ -262,7 +402,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                     break;
                 }
                 case HAIR_WHITE:
-                { 
+                {
                     palette->newColors[c111] = c222;
                     palette->newColors[c222] = c444;
                     palette->newColors[c333] = c555;
@@ -297,7 +437,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                     break;
                 }
                 case HAIR_TEAL:
-                { 
+                {
                     palette->newColors[c111] = c012;
                     palette->newColors[c222] = c133;
                     palette->newColors[c333] = c144;
