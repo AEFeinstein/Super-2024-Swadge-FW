@@ -258,7 +258,7 @@ typedef enum
     HE_SPOCK,
     HE_STAR_PUFF_N_B,
     HE_STAR_PUFF,
-    HE_TATTOO, // FIXME: Enters into Eyes
+    HE_TATTOO,
     HE_THING,
     HE_USAGI,
     HE_WAVY_HAWK,

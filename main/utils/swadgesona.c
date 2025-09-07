@@ -552,7 +552,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                 {
                     palette->newColors[c523] = c455;
                     palette->newColors[c514] = c255;
-                    palette->newColors[c523] = c144;
+                    palette->newColors[c513] = c144;
                     palette->newColors[c502] = c033;
                     break;
                 }
@@ -560,7 +560,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                 {
                     palette->newColors[c523] = c134;
                     palette->newColors[c514] = c123;
-                    palette->newColors[c523] = c112;
+                    palette->newColors[c513] = c112;
                     palette->newColors[c502] = c002;
                     break;
                 }
@@ -568,7 +568,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                 {
                     palette->newColors[c523] = c340;
                     palette->newColors[c514] = c230;
-                    palette->newColors[c523] = c120;
+                    palette->newColors[c513] = c120;
                     palette->newColors[c502] = c010;
                     break;
                 }
@@ -576,7 +576,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                 {
                     palette->newColors[c523] = c444;
                     palette->newColors[c514] = c333;
-                    palette->newColors[c523] = c222;
+                    palette->newColors[c513] = c222;
                     palette->newColors[c502] = c000;
                     break;
                 }
@@ -584,7 +584,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                 {
                     palette->newColors[c523] = c454;
                     palette->newColors[c514] = c053;
-                    palette->newColors[c523] = c142;
+                    palette->newColors[c513] = c142;
                     palette->newColors[c502] = c032;
                     break;
                 }
@@ -592,7 +592,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                 {
                     palette->newColors[c523] = c523;
                     palette->newColors[c514] = c514;
-                    palette->newColors[c523] = c523;
+                    palette->newColors[c513] = c513;
                     palette->newColors[c502] = c502;
                     break;
                 }
@@ -600,7 +600,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                 {
                     palette->newColors[c523] = c534;
                     palette->newColors[c514] = c512;
-                    palette->newColors[c523] = c412;
+                    palette->newColors[c513] = c412;
                     palette->newColors[c502] = c312;
                     break;
                 }
@@ -608,7 +608,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                 {
                     palette->newColors[c523] = c521;
                     palette->newColors[c514] = c500;
-                    palette->newColors[c523] = c400;
+                    palette->newColors[c513] = c400;
                     palette->newColors[c502] = c300;
                     break;
                 }
@@ -616,7 +616,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                 {
                     palette->newColors[c523] = c455;
                     palette->newColors[c514] = c345;
-                    palette->newColors[c523] = c234;
+                    palette->newColors[c513] = c234;
                     palette->newColors[c502] = c224;
                     break;
                 }
@@ -624,7 +624,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                 {
                     palette->newColors[c523] = c554;
                     palette->newColors[c514] = c543;
-                    palette->newColors[c523] = c432;
+                    palette->newColors[c513] = c432;
                     palette->newColors[c502] = c322;
                     break;
                 }
@@ -632,7 +632,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                 {
                     palette->newColors[c523] = c545;
                     palette->newColors[c514] = c534;
-                    palette->newColors[c523] = c423;
+                    palette->newColors[c513] = c423;
                     palette->newColors[c502] = c412;
                     break;
                 }
@@ -640,7 +640,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                 {
                     palette->newColors[c523] = c314;
                     palette->newColors[c514] = c313;
-                    palette->newColors[c523] = c212;
+                    palette->newColors[c513] = c212;
                     palette->newColors[c502] = c202;
                     break;
                 }
@@ -648,7 +648,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                 {
                     palette->newColors[c523] = c552;
                     palette->newColors[c514] = c540;
-                    palette->newColors[c523] = c431;
+                    palette->newColors[c513] = c431;
                     palette->newColors[c502] = c320;
                     break;
                 }
