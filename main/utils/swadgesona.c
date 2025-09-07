@@ -182,6 +182,7 @@ void loadSwadgesona(swadgesona_t* sw, int idx)
 
     // Ensure the image is generated and the name is generated
     generateSwadgesonaImage(sw);
+    setUsernameFrom32(&sw->name, sw->core.packedName);
 }
 
 void generateRandomSwadgesona(swadgesona_t* sw)
@@ -200,9 +201,9 @@ void generateRandomSwadgesona(swadgesona_t* sw)
     sw->core.mouthShape = esp_random() % ME_COUNT;
 
     // Generate name
-    nameData_t nd = {.user = false};
-    generateRandUsername(&nd);
-    sw->core.packedName = GET_PACKED_USERNAME(nd);
+    generateRandUsername(&sw->name);
+    sw->core.packedName = GET_PACKED_USERNAME(sw->name);
+    
     generateSwadgesonaImage(sw);
 }
 
