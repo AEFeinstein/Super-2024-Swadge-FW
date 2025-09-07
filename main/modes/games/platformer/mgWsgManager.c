@@ -433,7 +433,10 @@ void mg_initializeSprites(mgWsgManager_t* self)
 
 void mg_initializeTiles(mgWsgManager_t* self)
 {
-    self->tiles[0] = &self->wsgs[MG_WSG_GRASS];
+    for(uint8_t i = 0; i<MG_TILE_SET_SIZE; i++){
+        self->tiles[i] = NULL;
+    }
+    /*self->tiles[0] = &self->wsgs[MG_WSG_GRASS];
     self->tiles[1] = &self->wsgs[MG_WSG_GROUND];
     self->tiles[2] = &self->wsgs[MG_WSG_BRICK_BLOCK];
     self->tiles[3] = &self->wsgs[MG_WSG_BLOCK];
@@ -508,7 +511,7 @@ void mg_initializeTiles(mgWsgManager_t* self)
     self->tiles[68] = &self->wsgs[MG_WSG_BG_MOUNTAIN];
     self->tiles[69] = &self->wsgs[MG_WSG_BG_METAL];
     self->tiles[70] = &self->wsgs[MG_WSG_BG_CHAINS];
-    self->tiles[71] = &self->wsgs[MG_WSG_BG_WALL];
+    self->tiles[71] = &self->wsgs[MG_WSG_BG_WALL];*/
 }
 
 void mg_remapWsgToSprite(mgWsgManager_t* self, uint16_t spriteIndex, uint16_t wsgIndex)
