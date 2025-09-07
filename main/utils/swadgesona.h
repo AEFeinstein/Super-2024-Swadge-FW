@@ -258,7 +258,7 @@ typedef enum
     HE_SPOCK,
     HE_STAR_PUFF_N_B,
     HE_STAR_PUFF,
-    HE_TATTOO,
+    HE_TATTOO, //FIXME: Enters into Eyes
     HE_THING,
     HE_USAGI,
     HE_WAVY_HAWK,
@@ -331,20 +331,20 @@ typedef struct __attribute__((packed))
     int32_t packedName; // 32 bits
 
     // Color indexs - Use the grabPaletteFromIndex()
-    skinColor_t skin      : 4; 
-    hairColor_t hairColor : 5; 
-    eyeColor_t eyeColor   : 4; 
-    hatColor_t hatColor   : 4; 
-    clothsColor_t clothes : 4; 
+    skinColor_t skin      : 4;
+    hairColor_t hairColor : 5;
+    eyeColor_t eyeColor   : 4;
+    hatColor_t hatColor   : 4;
+    clothsColor_t clothes : 4;
 
     // Facial features
-    bodyMarks_t bodyMarks   : 5; 
-    earsShape_t earShape    : 4; 
-    eyebrowShape_t eyebrows : 5; 
-    eyeShape_t eyeShape     : 5; 
-    hairStyle_t hairStyle   : 6; 
-    hat_t hat               : 4; 
-    mouthShape_t mouthShape : 5; 
+    bodyMarks_t bodyMarks   : 5;
+    earsShape_t earShape    : 4;
+    eyebrowShape_t eyebrows : 5;
+    eyeShape_t eyeShape     : 5;
+    hairStyle_t hairStyle   : 6;
+    hat_t hat               : 4;
+    mouthShape_t mouthShape : 5;
 
     // 32 + 21 + 34 = 87 / 8 = 11 bytes
 } swadgesonaCore_t;

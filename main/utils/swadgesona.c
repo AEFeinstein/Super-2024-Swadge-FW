@@ -23,6 +23,7 @@
 #include <esp_random.h>
 
 // Swadge
+#include "fs_wsg.h"
 #include "hdw-nvs.h"
 #include "wsgCanvas.h"
 
@@ -111,9 +112,9 @@ static const cnfsFileIdx_t mouthWsgs[] = {
     M_OH_WSG,
     M_OH_PIERCING_WSG,
     M_OPEN_SMILE_WSG,
-    M_PIERCING_WSG,
     M_POUTY_WSG,
     M_SAD_WSG,
+    M_SAD_PIERCING_WSG,
     M_SATISFIED_WSG,
     M_SMILE_WSG,
     M_STOIC_WSG,
@@ -206,9 +207,9 @@ void generateRandomSwadgesona(swadgesona_t* sw)
 void generateSwadgesonaImage(swadgesona_t* sw)
 {
     // Delete old images if saved
-    if (sw->image.px != NULL)
+    if (sw->image.w != 0)
     {
-        // FIXME: Clean up old WSG
+        freeWsg(&sw->image);
     }
 
     // Make a new canvas
@@ -239,17 +240,17 @@ void generateSwadgesonaImage(swadgesona_t* sw)
     _getPaletteFromIdx(&sw->pal, COLOR_HAIR, sw->core.hairColor);
     canvasDrawSimplePal(&sw->image, eyebrowsWsgs[sw->core.eyebrows], 0, 0, &sw->pal);
 
-    // Hair
-    // Use the same palette as the eyebrows
-    canvasDrawSimplePal(&sw->image, hairWsgs[sw->core.hairStyle], 0, 0, &sw->pal);
-
-    // TODO: Jinx ear fix
-
     // Body marks
     if (sw->core.bodyMarks != BME_NONE)
     {
         canvasDrawSimplePal(&sw->image, bodymarksWsgs[sw->core.bodyMarks - 1], 0, 0, &sw->pal);
     }
+
+    // Hair
+    // Use the same palette as the eyebrows
+    canvasDrawSimplePal(&sw->image, hairWsgs[sw->core.hairStyle], 0, 0, &sw->pal);
+
+    // TODO: Jinx ear fix
 
     // Hats
     if (sw->core.hat != HAE_NONE)
@@ -474,56 +475,56 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                 case EYES_BLACK:
                 {
                     palette->newColors[c130] = c444; // HIGHLIGHT
-                    palette->newColors[c020] = c000; // BASE
+                    palette->newColors[c010] = c000; // BASE
                     break;
                 }
                 case EYES_BLUE:
                 {
                     palette->newColors[c130] = c255; // HIGHLIGHT
-                    palette->newColors[c020] = c005; // BASE
+                    palette->newColors[c010] = c005; // BASE
                     break;
                 }
                 case EYES_BROWN:
                 {
                     palette->newColors[c130] = c432; // HIGHLIGHT
-                    palette->newColors[c020] = c210; // BASE
+                    palette->newColors[c010] = c210; // BASE
                     break;
                 }
                 case EYES_GRAY:
                 {
                     palette->newColors[c130] = c444; // HIGHLIGHT
-                    palette->newColors[c020] = c222; // BASE
+                    palette->newColors[c010] = c222; // BASE
                     break;
                 }
                 default:
                 case EYES_GREEN:
                 {
                     palette->newColors[c130] = c130; // HIGHLIGHT
-                    palette->newColors[c020] = c010; // BASE
+                    palette->newColors[c010] = c010; // BASE
                     break;
                 }
                 case EYES_PINK:
                 {
                     palette->newColors[c130] = c525; // HIGHLIGHT
-                    palette->newColors[c020] = c403; // BASE
+                    palette->newColors[c010] = c403; // BASE
                     break;
                 }
                 case EYES_PURPLE:
                 {
                     palette->newColors[c130] = c345; // HIGHLIGHT
-                    palette->newColors[c020] = c224; // BASE
+                    palette->newColors[c010] = c224; // BASE
                     break;
                 }
                 case EYES_RED:
                 {
                     palette->newColors[c130] = c533; // HIGHLIGHT
-                    palette->newColors[c020] = c300; // BASE
+                    palette->newColors[c010] = c300; // BASE
                     break;
                 }
                 case EYES_YELLOW:
                 {
                     palette->newColors[c130] = c533; // HIGHLIGHT
-                    palette->newColors[c020] = c541; // BASE
+                    palette->newColors[c010] = c541; // BASE
                     break;
                 }
             }
@@ -539,7 +540,7 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
             {
                 case HA_BLUE:
                 {
-                    palette->newColors[c533] = c345;
+                    palette->newColors[c523] = c345;
                     palette->newColors[c514] = c135;
                     palette->newColors[c513] = c124;
                     palette->newColors[c502] = c014;
@@ -547,105 +548,105 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                 }
                 case HA_CYAN:
                 {
-                    palette->newColors[c533] = c455;
+                    palette->newColors[c523] = c455;
                     palette->newColors[c514] = c255;
-                    palette->newColors[c513] = c144;
+                    palette->newColors[c523] = c144;
                     palette->newColors[c502] = c033;
                     break;
                 }
                 case HA_DARK_BLUE:
                 {
-                    palette->newColors[c533] = c134;
+                    palette->newColors[c523] = c134;
                     palette->newColors[c514] = c123;
-                    palette->newColors[c513] = c112;
+                    palette->newColors[c523] = c112;
                     palette->newColors[c502] = c002;
                     break;
                 }
                 case HA_DARK_GREEN:
                 {
-                    palette->newColors[c533] = c340;
+                    palette->newColors[c523] = c340;
                     palette->newColors[c514] = c230;
-                    palette->newColors[c513] = c120;
+                    palette->newColors[c523] = c120;
                     palette->newColors[c502] = c010;
                     break;
                 }
                 case HA_GRAY:
                 {
-                    palette->newColors[c533] = c444;
+                    palette->newColors[c523] = c444;
                     palette->newColors[c514] = c333;
-                    palette->newColors[c513] = c222;
+                    palette->newColors[c523] = c222;
                     palette->newColors[c502] = c000;
                     break;
                 }
                 case HA_GREEN:
                 {
-                    palette->newColors[c533] = c454;
+                    palette->newColors[c523] = c454;
                     palette->newColors[c514] = c053;
-                    palette->newColors[c513] = c142;
+                    palette->newColors[c523] = c142;
                     palette->newColors[c502] = c032;
                     break;
                 }
                 case HA_HOT_PINK:
                 {
-                    palette->newColors[c533] = c533;
+                    palette->newColors[c523] = c523;
                     palette->newColors[c514] = c514;
-                    palette->newColors[c513] = c513;
+                    palette->newColors[c523] = c523;
                     palette->newColors[c502] = c502;
                     break;
                 }
                 case HA_MAUVE:
                 {
-                    palette->newColors[c533] = c534;
+                    palette->newColors[c523] = c534;
                     palette->newColors[c514] = c512;
-                    palette->newColors[c513] = c412;
+                    palette->newColors[c523] = c412;
                     palette->newColors[c502] = c312;
                     break;
                 }
                 case HA_ORANGE:
                 {
-                    palette->newColors[c533] = c521;
+                    palette->newColors[c523] = c521;
                     palette->newColors[c514] = c500;
-                    palette->newColors[c513] = c400;
+                    palette->newColors[c523] = c400;
                     palette->newColors[c502] = c300;
                     break;
                 }
                 case HA_PALE_BLUE:
                 {
-                    palette->newColors[c533] = c455;
+                    palette->newColors[c523] = c455;
                     palette->newColors[c514] = c345;
-                    palette->newColors[c513] = c234;
+                    palette->newColors[c523] = c234;
                     palette->newColors[c502] = c224;
                     break;
                 }
                 case HA_PALE_YELLOW:
                 {
-                    palette->newColors[c533] = c554;
+                    palette->newColors[c523] = c554;
                     palette->newColors[c514] = c543;
-                    palette->newColors[c513] = c432;
+                    palette->newColors[c523] = c432;
                     palette->newColors[c502] = c322;
                     break;
                 }
                 case HA_PINK:
                 {
-                    palette->newColors[c533] = c545;
+                    palette->newColors[c523] = c545;
                     palette->newColors[c514] = c534;
-                    palette->newColors[c513] = c423;
+                    palette->newColors[c523] = c423;
                     palette->newColors[c502] = c412;
                     break;
                 }
                 case HA_PURPLE:
                 {
-                    palette->newColors[c533] = c314;
+                    palette->newColors[c523] = c314;
                     palette->newColors[c514] = c313;
-                    palette->newColors[c513] = c212;
+                    palette->newColors[c523] = c212;
                     palette->newColors[c502] = c202;
                     break;
                 }
                 case HA_YELLOW:
                 {
-                    palette->newColors[c533] = c552;
+                    palette->newColors[c523] = c552;
                     palette->newColors[c514] = c540;
-                    palette->newColors[c513] = c431;
+                    palette->newColors[c523] = c431;
                     palette->newColors[c502] = c320;
                     break;
                 }
