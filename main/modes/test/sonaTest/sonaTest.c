@@ -86,6 +86,7 @@ static void stMainLoop(int64_t elapsedUs)
             // B randomizes
             else if (evt.button & PB_B)
             {
+                generateRandomSwadgesona(&st->swsn);
             }
             // A sets update
             else if (evt.button & PB_A)
