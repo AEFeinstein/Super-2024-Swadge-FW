@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "crossport.h": "c",
+        "library.h": "c",
+        "structs.h": "c"
+    }
+}

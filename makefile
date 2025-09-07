@@ -5,49 +5,16 @@
 ################################################################################
 
 IS_WSL := 0
-ifeq ($(OS),Windows_NT)
-    HOST_OS = Windows
-else
-    UNAME_S := $(shell uname -s)
-    ifeq ($(UNAME_S),Linux)
-        HOST_OS = Linux
-		# Check if this is WSL. 0 for not WSL, 1 for WSL
-	    IS_WSL := $(shell uname -a | grep -i WSL | wc -l)
-    else ifeq ($(UNAME_S),Darwin)
-        HOST_OS = Darwin
-    endif
-endif
+HOST_OS = Windows
 
 ################################################################################
 # Programs to use
 ################################################################################
 
-ifeq ($(HOST_OS),Windows)
-	CC = gcc
-else ifeq ($(HOST_OS),Linux)
-	CC = gcc
-else ifeq ($(UNAME_S),Darwin)
-	CC = gcc
-endif
-
+CC = gcc
 FIND:=find
-ifeq ($(HOST_OS),Windows)
-	FIND:=$(shell cygpath `where find | grep bin | grep -v " "`)
-endif
-
-# clang-format may actually be clang-format-17
-CLANG_FORMAT:=clang-format-17
-ifeq (, $(shell which $(CLANG_FORMAT)))
-	CLANG_FORMAT:=clang-format
-endif
-
-ifeq ($(HOST_OS),Linux)
-	ifneq (,$(shell getent group plugdev))
-		UDEV_GROUP:=plugdev
-	else
-		UDEV_GROUP:=$(USER)
-	endif
-endif
+FIND:=$(shell cygpath `where find | grep bin | grep -v " "`)
+CLANG_FORMAT:=clang-format
 
 ################################################################################
 # Source Files

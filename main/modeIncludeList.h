@@ -57,6 +57,7 @@
 #include "trophyCase.h"
 #include "trophyTest.h"
 #include "tunernome.h"
+#include "crossport.h"
 
 //==============================================================================
 // Function Prototypes
