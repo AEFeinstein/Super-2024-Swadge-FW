@@ -96,6 +96,7 @@ static void stMainLoop(int64_t elapsedUs)
             // Start accesses save options
             else if (evt.button & PB_START)
             {
+                loadSwadgesona(&st->swsn, 3);              
             }
         }
     }
@@ -118,15 +119,15 @@ static void stMainLoop(int64_t elapsedUs)
 
 static void stCopyListToSona(swadgesona_t* swsn, int* list)
 {
-    st->swsn.core.skin       = st->list[0]; // Working
-    st->swsn.core.hairColor  = st->list[1]; // Working
-    st->swsn.core.eyeColor   = st->list[2]; // Working
-    st->swsn.core.clothes    = st->list[3]; // Unimplemented
+    st->swsn.core.skin       = st->list[0]; 
+    st->swsn.core.hairColor  = st->list[1]; 
+    st->swsn.core.eyeColor   = st->list[2]; 
+    st->swsn.core.clothes    = st->list[3]; 
     st->swsn.core.hatColor   = st->list[4];
-    st->swsn.core.bodyMarks  = st->list[5]; // Working
-    st->swsn.core.earShape   = st->list[6]; // Failing
+    st->swsn.core.bodyMarks  = st->list[5]; 
+    st->swsn.core.earShape   = st->list[6]; 
     st->swsn.core.eyebrows   = st->list[7];
-    st->swsn.core.eyeShape   = st->list[8]; // Working
+    st->swsn.core.eyeShape   = st->list[8]; 
     st->swsn.core.hairStyle  = st->list[9];
     st->swsn.core.hat        = st->list[10];
     st->swsn.core.mouthShape = st->list[11];
