@@ -98,8 +98,8 @@ void mg_drawTileMap(mgTilemap_t* tilemap)
                 tile += tilemap->animationFrame;
             }
 
-            // Draw only non-garbage tiles
-            if (tile > 31 && tile < 111)
+            // Draw only visible tiles
+            if (tile > 31)
             {
                 if(tilemap->wsgManager->tiles[tile - 32] == NULL){
                     continue;
