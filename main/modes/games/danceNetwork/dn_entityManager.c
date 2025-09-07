@@ -23,6 +23,69 @@ void dn_initializeEntityManager(dn_entityManager_t* entityManager, dn_gameData_t
     wsgPaletteSet(&entityManager->palettes[DN_WHITE_CHESS_PALETTE], c012, c543);
     wsgPaletteSet(&entityManager->palettes[DN_WHITE_CHESS_PALETTE], c123, c554);
     wsgPaletteSet(&entityManager->palettes[DN_WHITE_CHESS_PALETTE], c145, c555);
+    wsgPaletteReset(&entityManager->palettes[DN_PIT_WALL_PALETTE]);
+    wsgPaletteSet(&entityManager->palettes[DN_PIT_WALL_PALETTE], c212, c100);
+    wsgPaletteReset(&entityManager->palettes[DN_REROLL_PALETTE]);
+    wsgPaletteSet(&entityManager->palettes[DN_REROLL_PALETTE], c123, c345); // reroll arrow
+    wsgPaletteSet(&entityManager->palettes[DN_REROLL_PALETTE], c444, c555); // top face
+    wsgPaletteSet(&entityManager->palettes[DN_REROLL_PALETTE], c222, c333); // side face
+    wsgPaletteSet(&entityManager->palettes[DN_REROLL_PALETTE], c100, c200); // reds
+    wsgPaletteSet(&entityManager->palettes[DN_REROLL_PALETTE], c200, c300);
+    wsgPaletteSet(&entityManager->palettes[DN_REROLL_PALETTE], c300, c500);
+    wsgPaletteReset(&entityManager->palettes[DN_P2_ARROW_PALETTE]); // flashy prompt arrow
+    wsgPaletteSet(&entityManager->palettes[DN_P2_ARROW_PALETTE], c245, c550);
+    wsgPaletteSet(&entityManager->palettes[DN_P2_ARROW_PALETTE], c001, c420);
+
+    wsgPaletteReset(&entityManager->palettes[DN_ATTACK1_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_ATTACK1_FLOOR_PALETTE], c500);
+    wsgPaletteReset(&entityManager->palettes[DN_ATTACK2_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_ATTACK2_FLOOR_PALETTE], c511);
+    wsgPaletteReset(&entityManager->palettes[DN_ATTACK3_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_ATTACK3_FLOOR_PALETTE], c533);
+    wsgPaletteReset(&entityManager->palettes[DN_MOVE1_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_MOVE1_FLOOR_PALETTE], c005);
+    wsgPaletteReset(&entityManager->palettes[DN_MOVE2_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_MOVE2_FLOOR_PALETTE], c125);
+    wsgPaletteReset(&entityManager->palettes[DN_MOVE3_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_MOVE3_FLOOR_PALETTE], c245);
+    wsgPaletteReset(&entityManager->palettes[DN_REMIX1_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_REMIX1_FLOOR_PALETTE], c304);
+    wsgPaletteReset(&entityManager->palettes[DN_REMIX2_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_REMIX2_FLOOR_PALETTE], c405);
+    wsgPaletteReset(&entityManager->palettes[DN_REMIX3_FLOOR_PALETTE]);
+    dn_setFloorPalette(&entityManager->palettes[DN_REMIX3_FLOOR_PALETTE], c415);
+
+    wsgPaletteReset(&entityManager->palettes[DN_DICE_NO_ARROW_PALETTE]);
+    wsgPaletteSet(&entityManager->palettes[DN_DICE_NO_ARROW_PALETTE], c123, cTransparent);
+    wsgPaletteSet(&entityManager->palettes[DN_DICE_NO_ARROW_PALETTE], c444, c555); // top face
+    wsgPaletteSet(&entityManager->palettes[DN_DICE_NO_ARROW_PALETTE], c222, c333); // side face
+    wsgPaletteSet(&entityManager->palettes[DN_DICE_NO_ARROW_PALETTE], c100, c200); // reds
+    wsgPaletteSet(&entityManager->palettes[DN_DICE_NO_ARROW_PALETTE], c200, c300);
+    wsgPaletteSet(&entityManager->palettes[DN_DICE_NO_ARROW_PALETTE], c300, c500);
+
+    wsgPaletteReset(&entityManager->palettes[DN_GRAYSCALE_PALETTE]);
+    wsgPaletteReset(&entityManager->palettes[DN_SUPERBRIGHT_GRAYSCALE_PALETTE]);
+    for (paletteColor_t cur = c000; cur <= c555; cur++)
+    {
+        uint32_t rgb    = paletteToRGB(cur);
+        uint32_t r      = (rgb >> 16) & 0xFF; // Extract red channel
+        uint32_t g      = (rgb >> 8) & 0xFF;  // Extract green channel
+        uint32_t b      = rgb & 0xFF;         // Extract blue channel
+        uint32_t sum    = r + g + b;
+        uint32_t bright = sum * 4;
+        if (bright > 765)
+            bright = 765;
+        if (sum > 765)
+            sum = 765;
+
+        wsgPaletteSet(&entityManager->palettes[DN_GRAYSCALE_PALETTE], cur, (sum / 153) * 43);
+        wsgPaletteSet(&entityManager->palettes[DN_SUPERBRIGHT_GRAYSCALE_PALETTE], cur, (bright / 153) * 43);
+    }
+
+    wsgPaletteReset(&entityManager->palettes[DN_GREEN_TO_CYAN_PALETTE]);
+    wsgPaletteSet(&entityManager->palettes[DN_GREEN_TO_CYAN_PALETTE], c050, c055);
+    wsgPaletteReset(&entityManager->palettes[DN_GREEN_TO_YELLOW_PALETTE]);
+    wsgPaletteSet(&entityManager->palettes[DN_GREEN_TO_YELLOW_PALETTE], c050, c550);
 
     dn_setCharacterSetPalette(&gameData->entityManager, gameData->characterSets[0]);
 }
@@ -64,6 +127,14 @@ void dn_freeAsset(dn_asset_t* asset)
     }
 }
 
+void dn_freeAllAssets(dn_gameData_t* gameData)
+{
+    for (uint8_t i = 0; i < NUM_ASSETS; i++)
+    {
+        dn_freeAsset(&gameData->assets[i]);
+    }
+}
+
 void dn_updateEntities(dn_entityManager_t* entityManager)
 {
     node_t* curNode = entityManager->entities->first;
@@ -73,6 +144,10 @@ void dn_updateEntities(dn_entityManager_t* entityManager)
         if (entity->updateFunction != NULL)
         {
             entity->updateFunction(entity);
+        }
+        if (entityManager->entities->first == NULL) // First may become NULL mid loop if all entities are destroyed.
+        {
+            return;
         }
         curNode = curNode->next;
     }
@@ -210,6 +285,7 @@ dn_entity_t* dn_createEntitySpecial(dn_entityManager_t* entityManager, uint8_t n
     entity->gameFramesPerAnimationFrame = gameFramesPerAnimationFrame;
     entity->pos                         = pos;
     entity->gameData                    = gameData;
+    entity->drawFunction                = dn_drawAsset;
 
     push(entityManager->entities, (void*)entity);
     return entity;
@@ -230,8 +306,12 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
         case DN_PAWN_SMALL_ASSET:
         case DN_BUCKET_HAT_DOWN_ASSET:
         case DN_BUCKET_HAT_UP_ASSET:
-        {
+        { // pawns
             entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+            entity->data         = heap_caps_calloc(1, sizeof(dn_unitData_t), MALLOC_CAP_SPIRAM);
+            entity->dataType     = DN_UNIT_DATA;
+            entity->drawFunction = dn_drawNothing; // Drawing of units is handled by dn_drawBoard
+            entity->paused       = true;
             break;
         }
         case DN_GROUND_TILE_ASSET:
@@ -248,7 +328,8 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
             {
                 dn_loadAsset(DN_ALPHA_ORTHO_WSG, 1, &gameData->assets[DN_ALPHA_ORTHO_ASSET]);
             }
-            if (gameData->characterSets[0] == DN_CHESS_SET || gameData->characterSets[1] == DN_CHESS_SET)
+            if (gameData->characterSets[0] == DN_WHITE_CHESS_SET || gameData->characterSets[1] == DN_WHITE_CHESS_SET
+                || gameData->characterSets[0] == DN_BLACK_CHESS_SET || gameData->characterSets[1] == DN_BLACK_CHESS_SET)
             {
                 dn_loadAsset(DN_CHESS_ORTHO_WSG, 1, &gameData->assets[DN_CHESS_ORTHO_ASSET]);
             }
@@ -267,15 +348,18 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
             dn_loadAsset(DN_ALBUM_WSG, 1, &gameData->assets[assetIndex]);
             dn_loadAsset(DN_STATUS_LIGHT_WSG, 1, &gameData->assets[DN_STATUS_LIGHT_ASSET]);
             entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
-            entity->data = heap_caps_calloc(1, sizeof(dn_albumData_t), MALLOC_CAP_SPIRAM);
+            entity->gameFramesPerAnimationFrame = 4;
+            entity->data                        = heap_caps_calloc(1, sizeof(dn_albumData_t), MALLOC_CAP_SPIRAM);
             wsgPaletteReset(&((dn_albumData_t*)entity->data)->screenOffPalette);
             wsgPaletteReset(&((dn_albumData_t*)entity->data)->screenOnPalette);
+            wsgPaletteReset(&((dn_albumData_t*)entity->data)->screenAttackPalette);
             wsgPaletteSet(&((dn_albumData_t*)entity->data)->screenOnPalette, c122, c233);
             // Set the color of each track to c344 (no action).
             for (int i = 0; i < 16; i++)
             {
                 wsgPaletteSet(&((dn_albumData_t*)entity->data)->screenOffPalette, c255 + i, c344);
                 wsgPaletteSet(&((dn_albumData_t*)entity->data)->screenOnPalette, c255 + i, c555);
+                wsgPaletteSet(&((dn_albumData_t*)entity->data)->screenAttackPalette, c255 + i, cTransparent);
                 // Color the upper and left edges shadowed by the cartridge bevel.
                 if (i < 4 || i == 8)
                 {
@@ -283,6 +367,7 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
                     wsgPaletteSet(&((dn_albumData_t*)entity->data)->screenOnPalette, c255 - 36 + i, c233);
                 }
             }
+
             entity->dataType       = DN_ALBUM_DATA;
             entity->drawFunction   = dn_drawAlbum;
             entity->updateFunction = dn_updateAlbum;
@@ -295,6 +380,21 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
         }
     }
     return entity;
+}
+
+dn_entity_t* dn_createPrompt(dn_entityManager_t* entityManager, vec_t pos, dn_gameData_t* gameData)
+{
+    dn_entity_t* prompt = dn_createEntitySpecial(entityManager, 0, DN_NO_ANIMATION, true, DN_NO_ASSET, 0,
+                                                 (vec_t){0xffff, 0xffff}, gameData);
+    prompt->data        = heap_caps_calloc(1, sizeof(dn_promptData_t), MALLOC_CAP_SPIRAM);
+    memset(prompt->data, 0, sizeof(dn_promptData_t));
+    dn_promptData_t* promptData     = (dn_promptData_t*)prompt->data;
+    promptData->animatingIntroSlide = true;
+    promptData->yOffset             = 320; // way off screen to allow more time to look at albums.
+    prompt->dataType                = DN_PROMPT_DATA;
+    prompt->updateFunction          = dn_updatePrompt;
+    prompt->drawFunction            = dn_drawPrompt;
+    return prompt;
 }
 
 void dn_freeEntityManager(dn_entityManager_t* entityManager)

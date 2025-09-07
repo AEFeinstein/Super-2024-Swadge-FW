@@ -7,7 +7,7 @@
 // Defines
 //==============================================================================
 
-#define DN_NUM_CHARACTERS 2
+#define DN_NUM_TROUPE_PERMUTATIONS 7
 
 //==============================================================================
 // Enums
@@ -18,8 +18,6 @@ typedef enum __attribute__((packed))
     UI_MENU,
     UI_CONNECTING,
     UI_GAME,
-    UI_CHARACTER_SELECT,
-    UI_HOW_TO,
     UI_RESULT,
 } dn_Ui_t;
 
@@ -50,6 +48,7 @@ typedef struct
 
 typedef struct dn_gameData_t
 {
+    const trophyData_t (*trophyData)[9];
     p2pInfo p2p;
     // Current UI being shown
     dn_Ui_t ui;
@@ -82,6 +81,13 @@ typedef struct dn_gameData_t
 
     uint8_t alphaFaceDir; // 0 = down, 1 = left, 2 = up, 3 = right
     bool isPlayer1;       // True if the player on this device is P1. False if P2
+    char playerNames[2][32];
+    char shortPlayerNames[2][9];
+    int8_t rerolls[2];   // The amount of rerolls for p1 and p2.
+    bool resolvingRemix; // True if a unit is still needing to do a second action.
+    bool pawnPlunging;
+    dn_boardPos_t selectorPos;
+    dn_entity_t* selectedUnit;
 } dn_gameData_t;
 
 //==============================================================================
@@ -99,7 +105,8 @@ void dn_ShowUi(dn_Ui_t ui);
 // extern const char tttWinKey[];
 // extern const char tttLossKey[];
 // extern const char tttDrawKey[];
-extern const char dnCharacterKey[];
+extern const char dnP1TroupeKey[];
+extern const char dnP2TroupeKey[];
 // extern const char tttTutorialKey[];
 // extern const char tttUnlockKey[];
 extern swadgeMode_t danceNetworkMode;

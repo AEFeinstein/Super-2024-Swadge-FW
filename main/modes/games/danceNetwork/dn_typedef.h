@@ -8,12 +8,15 @@
 #define DN_BOARD_SIZE      5
 #define DN_TILE_WIDTH      51
 #define DN_TILE_HEIGHT     13
-#define NUM_ASSETS         14 // The number of dn_asset_t (last accounted for DN_ALBUM_ASSET)
-#define NUM_PALETTES       7  // The number of wsgPalette_t (last accounted for DN_PURPLE_FLOOR_PALETTE)
+#define NUM_ASSETS         32 // The number of dn_asset_t (last accounted for DN_BUG_ASSET)
+#define NUM_PALETTES       25 // The number of wsgPalette_t (last accounted for green to yellow)
 #define NUM_SELECTOR_LINES 15 // Creates more chaotic lines in the selector graphic
+#define MAX_LERP_AMOUNT 30000
 
 typedef struct dn_entity_t dn_entity_t;
 typedef struct dn_gameData_t dn_gameData_t;
+
+typedef void (*dn_callbackFunction_t)(dn_entity_t* self);
 
 typedef enum __attribute__((packed))
 {
@@ -31,13 +34,32 @@ typedef enum __attribute__((packed))
     DN_CHESS_ORTHO_ASSET,
     DN_ALBUM_ASSET,
     DN_STATUS_LIGHT_ASSET,
+    DN_SPEAKER_STAND_ASSET,
+    DN_SPEAKER_ASSET,
+    DN_PIT_ASSET,
+    DN_MINI_TILE_ASSET,
+    DN_REROLL_ASSET,
+    DN_NUMBER_ASSET,
+    DN_ALBUM_EXPLOSION_ASSET,
+    DN_MMM_UP_ASSET,
+    DN_SWAP_ASSET,
+    DN_SKIP_ASSET,
+    DN_GLITCH_ASSET,
+    DN_DANCENONYDA_ASSET,
+    DN_TFT_ASSET,
+    DN_TEXTBOX_ASSET,
+    DN_MMM_NEXT_ASSET,
+    DN_MMM_SUBMENU_ASSET,
+    DN_QR_ASSET,
+    DN_BUG_ASSET,
     DN_NO_ASSET, // Keep this one at the end of the enum. Used for entities with no wsgs.
 } dn_assetIdx_t;
 
 typedef enum __attribute__((packed))
 {
     DN_ALPHA_SET,
-    DN_CHESS_SET,
+    DN_BLACK_CHESS_SET,
+    DN_WHITE_CHESS_SET,
 } dn_characterSet_t;
 
 typedef enum __attribute__((packed))
@@ -56,6 +78,24 @@ typedef enum __attribute__((packed))
     DN_GREEN_FLOOR_PALETTE,
     DN_BLUE_FLOOR_PALETTE,
     DN_PURPLE_FLOOR_PALETTE,
+    DN_PIT_WALL_PALETTE,
+    DN_REROLL_PALETTE,
+    DN_P2_ARROW_PALETTE, // up and down arrows for the player 2 prompt
+    DN_RED_ATTACK_FLOOR_PALETTE,
+    DN_ATTACK1_FLOOR_PALETTE,
+    DN_ATTACK2_FLOOR_PALETTE,
+    DN_ATTACK3_FLOOR_PALETTE,
+    DN_MOVE1_FLOOR_PALETTE,
+    DN_MOVE2_FLOOR_PALETTE,
+    DN_MOVE3_FLOOR_PALETTE,
+    DN_REMIX1_FLOOR_PALETTE,
+    DN_REMIX2_FLOOR_PALETTE,
+    DN_REMIX3_FLOOR_PALETTE,
+    DN_DICE_NO_ARROW_PALETTE,
+    DN_GRAYSCALE_PALETTE,
+    DN_SUPERBRIGHT_GRAYSCALE_PALETTE,
+    DN_GREEN_TO_CYAN_PALETTE,
+    DN_GREEN_TO_YELLOW_PALETTE,
 } dn_paletteIdx_t;
 
 typedef struct __attribute__((packed))
@@ -93,14 +133,10 @@ typedef enum __attribute__((packed))
 
 typedef enum __attribute__((packed))
 {
-    DN_P1_PICK_MOVE_OR_GAIN_REROLL_PHASE,
-    DN_P1_MOVE_PHASE,
+    DN_P1_DANCE_PHASE,
     DN_P1_UPGRADE_PHASE,
-    DN_P1_SWAP_PHASE,
-    DN_P2_PICK_MOVE_OR_GAIN_REROLL_PHASE,
-    DN_P2_MOVE_PHASE,
+    DN_P2_DANCE_PHASE,
     DN_P2_UPGRADE_PHASE,
-    DN_P2_SWAP_PHASE,
 } dn_phase_t;
 
 typedef enum __attribute__((packed))
@@ -108,4 +144,22 @@ typedef enum __attribute__((packed))
     DN_NONE_TRACK,
     DN_RED_TRACK,
     DN_BLUE_TRACK,
+    DN_REMIX_TRACK,
+    DN_RED_TRACK_INVALID,
+    DN_BLUE_TRACK_INVALID,
+    DN_REMIX_TRACK_INVALID,
+    DN_UNIT_SELECTION,
 } dn_track_t;
+
+typedef struct __attribute__((packed))
+{
+    dn_boardPos_t pos;
+    dn_track_t action;
+} dn_action_t;
+
+// remove redundant struct later
+typedef struct __attribute__((packed))
+{
+    char title[31];
+    char body[160];
+} dn_tutorialPage_t;
