@@ -84,6 +84,7 @@ typedef enum
 /// @brief List of valid clothes colors
 typedef enum
 {
+    CLOTHES_RED,
     CLOTHES_COLOR_COUNT
 } clothsColor_t;
 
@@ -154,7 +155,7 @@ typedef enum
     EAE_CAT,
     EAE_DOG,
     EAE_DOWN_COW,
-    EAE_DWARF,
+    EAE_DWARF, // FIXME: Not symmetrical
     EAE_EARRINGS,
     EAE_ELF,
     EAE_LEFT,
@@ -330,20 +331,20 @@ typedef struct __attribute__((packed))
     int32_t packedName; // 32 bits
 
     // Color indexs - Use the grabPaletteFromIndex()
-    skinColor_t skin      : 4; // 12 options
-    hairColor_t hairColor : 5; // 16 options
-    eyeColor_t eyeColor   : 4; // 9 options
-    hatColor_t hatColor   : 4; // 14 options
-    clothsColor_t clothes : 4; // Assuming < 16
+    skinColor_t skin      : 4; 
+    hairColor_t hairColor : 5; 
+    eyeColor_t eyeColor   : 4; 
+    hatColor_t hatColor   : 4; 
+    clothsColor_t clothes : 4; 
 
     // Facial features
-    bodyMarks_t bodyMarks   : 5; // Count: 31 
-    earsShape_t earShape    : 4; // Count: 14 
-    eyebrowShape_t eyebrows : 5; // Count: 17 
-    eyeShape_t eyeShape     : 5; // Count: 29 
-    hairStyle_t hairStyle   : 6; // Count: 40 
-    hat_t hat               : 4; // Count: 8 
-    mouthShape_t mouthShape : 5; // Count: 30 
+    bodyMarks_t bodyMarks   : 5; 
+    earsShape_t earShape    : 4; 
+    eyebrowShape_t eyebrows : 5; 
+    eyeShape_t eyeShape     : 5; 
+    hairStyle_t hairStyle   : 6; 
+    hat_t hat               : 4; 
+    mouthShape_t mouthShape : 5; 
 
     // 32 + 21 + 34 = 87 / 8 = 11 bytes
 } swadgesonaCore_t;
@@ -351,9 +352,9 @@ typedef struct __attribute__((packed))
 /// @brief Larger data for use of use
 typedef struct
 {
-    swadgesonaCore_t* core; ///< Data that is saved to the NVS
-    nameData_t name;        ///< The name of the swadgesona
-    wsgPalette_t pal;       ///< Palette for changing colors of images
+    swadgesonaCore_t core; ///< Data that is saved to the NVS
+    nameData_t name;       ///< The name of the swadgesona
+    wsgPalette_t pal;      ///< Palette for changing colors of images
     // Palette color spaces:
     // - Hair:    c333, c222, c111
     // - Skin:    c544, c422

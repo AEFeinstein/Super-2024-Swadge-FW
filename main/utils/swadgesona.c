@@ -160,7 +160,7 @@ void saveSwadgesona(swadgesona_t* sw, int idx)
     // Generate NVS key
     char nvsTag[NVS_KEY_NAME_MAX_SIZE];
     snprintf(nvsTag, NVS_KEY_NAME_MAX_SIZE - 1, "%s%" PRIu8, nvsStr[1], idx);
-    if (!writeNamespaceNvsBlob(nvsStr[0], nvsTag, sw->core, sizeof(sw->core)))
+    if (!writeNamespaceNvsBlob(nvsStr[0], nvsTag, &sw->core, sizeof(swadgesonaCore_t)))
     {
         ESP_LOGE("SONA", "Swadgesona failed to save");
     }
@@ -171,8 +171,8 @@ void loadSwadgesona(swadgesona_t* sw, int idx)
     char nvsTag[NVS_KEY_NAME_MAX_SIZE];
     size_t len = 0;
     snprintf(nvsTag, NVS_KEY_NAME_MAX_SIZE - 1, "%s%" PRIu8, nvsStr[1], idx);
-    readNamespaceNvsBlob(nvsStr[0], nvsTag, sw->core, &len);
-    if (!readNamespaceNvsBlob(nvsStr[0], nvsTag, sw->core, &len))
+    readNamespaceNvsBlob(nvsStr[0], nvsTag, &sw->core, &len);
+    if (!readNamespaceNvsBlob(nvsStr[0], nvsTag, &sw->core, &len))
     {
         ESP_LOGE("SONA", "Swadgesona failed to Load/does not exist");
         generateRandomSwadgesona(sw);
@@ -216,47 +216,47 @@ void generateSwadgesonaImage(swadgesona_t* sw)
 
     // Body
     wsgPaletteReset(&sw->pal);
-    _getPaletteFromIdx(&sw->pal, COLOR_SKIN, sw->core->skin);
-    _getPaletteFromIdx(&sw->pal, COLOR_CLOTHES, sw->core->clothes);
+    _getPaletteFromIdx(&sw->pal, COLOR_SKIN, sw->core.skin);
+    _getPaletteFromIdx(&sw->pal, COLOR_CLOTHES, sw->core.clothes);
     canvasDrawSimplePal(&sw->image, SWSN_BODY_WSG, 0, 0, &sw->pal);
 
     // Ears
-    if (sw->core->earShape != EAE_HUMAN)
+    if (sw->core.earShape != EAE_HUMAN)
     {
-        canvasDrawSimple(&sw->image, earWsgs[sw->core->earShape], 0, 0);
+        canvasDrawSimplePal(&sw->image, earWsgs[sw->core.earShape - 1], 0, 0, &sw->pal);
     }
 
     // Mouth
-    canvasDrawSimple(&sw->image, mouthWsgs[sw->core->mouthShape], 0, 0);
+    canvasDrawSimple(&sw->image, mouthWsgs[sw->core.mouthShape], 0, 0);
 
     // Eyes
     wsgPaletteReset(&sw->pal);
-    _getPaletteFromIdx(&sw->pal, COLOR_EYES, sw->core->eyeColor);
-    canvasDrawSimplePal(&sw->image, eyeWsgs[sw->core->eyeShape], 0, 0, &sw->pal);
+    _getPaletteFromIdx(&sw->pal, COLOR_EYES, sw->core.eyeColor);
+    canvasDrawSimplePal(&sw->image, eyeWsgs[sw->core.eyeShape], 0, 0, &sw->pal);
 
     // Eyebrows
     wsgPaletteReset(&sw->pal);
-    _getPaletteFromIdx(&sw->pal, COLOR_HAIR, sw->core->hairColor);
-    canvasDrawSimplePal(&sw->image, eyebrowsWsgs[sw->core->eyebrows], 0, 0, &sw->pal);
+    _getPaletteFromIdx(&sw->pal, COLOR_HAIR, sw->core.hairColor);
+    canvasDrawSimplePal(&sw->image, eyebrowsWsgs[sw->core.eyebrows], 0, 0, &sw->pal);
 
     // Hair
     // Use the same palette as the eyebrows
-    canvasDrawSimplePal(&sw->image, hairWsgs[sw->core->hairStyle], 0, 0, &sw->pal);
+    canvasDrawSimplePal(&sw->image, hairWsgs[sw->core.hairStyle], 0, 0, &sw->pal);
 
     // TODO: Jinx ear fix
 
     // Body marks
-    if (sw->core->bodyMarks != BME_NONE)
+    if (sw->core.bodyMarks != BME_NONE)
     {
-        canvasDrawSimple(&sw->image, bodymarksWsgs[sw->core->bodyMarks], 0, 0);
+        canvasDrawSimplePal(&sw->image, bodymarksWsgs[sw->core.bodyMarks - 1], 0, 0, &sw->pal);
     }
 
     // Hats
-    if (sw->core->hat != HAE_NONE)
+    if (sw->core.hat != HAE_NONE)
     {
         wsgPaletteReset(&sw->pal);
-        _getPaletteFromIdx(&sw->pal, COLOR_HAT, sw->core->hatColor);
-        canvasDrawSimplePal(&sw->image, hatWsgs[sw->core->hat], 0, 0, &sw->pal);
+        _getPaletteFromIdx(&sw->pal, COLOR_HAT, sw->core.hatColor);
+        canvasDrawSimplePal(&sw->image, hatWsgs[sw->core.hat - 1], 0, 0, &sw->pal);
     }
 }
 
@@ -474,56 +474,56 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                 case EYES_BLACK:
                 {
                     palette->newColors[c130] = c444; // HIGHLIGHT
-                    palette->newColors[c010] = c000; // BASE
+                    palette->newColors[c020] = c000; // BASE
                     break;
                 }
                 case EYES_BLUE:
                 {
                     palette->newColors[c130] = c255; // HIGHLIGHT
-                    palette->newColors[c010] = c005; // BASE
+                    palette->newColors[c020] = c005; // BASE
                     break;
                 }
                 case EYES_BROWN:
                 {
                     palette->newColors[c130] = c432; // HIGHLIGHT
-                    palette->newColors[c010] = c210; // BASE
+                    palette->newColors[c020] = c210; // BASE
                     break;
                 }
                 case EYES_GRAY:
                 {
                     palette->newColors[c130] = c444; // HIGHLIGHT
-                    palette->newColors[c010] = c222; // BASE
+                    palette->newColors[c020] = c222; // BASE
                     break;
                 }
                 default:
                 case EYES_GREEN:
                 {
                     palette->newColors[c130] = c130; // HIGHLIGHT
-                    palette->newColors[c010] = c010; // BASE
+                    palette->newColors[c020] = c010; // BASE
                     break;
                 }
                 case EYES_PINK:
                 {
                     palette->newColors[c130] = c525; // HIGHLIGHT
-                    palette->newColors[c010] = c403; // BASE
+                    palette->newColors[c020] = c403; // BASE
                     break;
                 }
                 case EYES_PURPLE:
                 {
                     palette->newColors[c130] = c345; // HIGHLIGHT
-                    palette->newColors[c010] = c224; // BASE
+                    palette->newColors[c020] = c224; // BASE
                     break;
                 }
                 case EYES_RED:
                 {
                     palette->newColors[c130] = c533; // HIGHLIGHT
-                    palette->newColors[c010] = c300; // BASE
+                    palette->newColors[c020] = c300; // BASE
                     break;
                 }
                 case EYES_YELLOW:
                 {
                     palette->newColors[c130] = c533; // HIGHLIGHT
-                    palette->newColors[c010] = c541; // BASE
+                    palette->newColors[c020] = c541; // BASE
                     break;
                 }
             }
