@@ -71,7 +71,7 @@ void platformerMainLoop(int64_t elapsedUs);
 typedef void (*gameUpdateFuncton_t)(platformer_t* self);
 struct platformer_t
 {
-    font_t radiostars;
+    font_t font;
     mgWsgManager_t wsgManager;
 
     mgTilemap_t tilemap;
@@ -94,6 +94,9 @@ struct platformer_t
     bool easterEgg;
 
     gameUpdateFuncton_t update;
+
+    menuMegaRenderer_t* menuRenderer;
+    menu_t* menu;
 };
 
 //==============================================================================
@@ -162,9 +165,10 @@ swadgeMode_t modePlatformer = {.modeName                 = platformerName,
 
 led_t platLeds[CONFIG_NUM_LEDS];
 
-static const char str_get_ready[]    = "Get Ready!";
+static const char str_get_ready[]    = "Let's GOOOOOO!";
+static const char str_get_ready_2[]  = "We're so back!";
 static const char str_time_up[]      = "-Time Up!-";
-static const char str_game_over[]    = "Game Over";
+static const char str_game_over[]    = "It's so over...";
 static const char str_well_done[]    = "Well done!";
 static const char str_congrats[]     = "Congratulations!";
 static const char str_initials[]     = "Enter your initials!";
@@ -173,8 +177,17 @@ static const char str_registrated[]  = "Your name registrated.";
 static const char str_do_your_best[] = "Do your best!";
 static const char str_pause[]        = "-Pause-";
 
-static const char KEY_SCORES[]  = "pf_scores";
-static const char KEY_UNLOCKS[] = "pf_unlocks";
+static const char KEY_SCORES[]  = "mg_scores";
+static const char KEY_UNLOCKS[] = "mg_unlocks";
+
+static const char mgMenuNewGame[]       = "New Game";
+static const char mgMenuPlaceholder[]   = "-------------";
+static const char mgMenuContinue[]      = "Continue";
+static const char mgMenuHighScores[]    = "High Scores";
+static const char mgMenuResetScores[]   = "Reset Scores";
+static const char mgMenuResetProgress[] = "Reset Progress";
+static const char mgMenuExit[]          = "Exit";
+static const char mgMenuSaveAndExit[]   = "Save & Exit";
 
 //==============================================================================
 // Functions
@@ -203,7 +216,9 @@ void platformerEnterMode(void)
         platformer->easterEgg = true;
     }
 
-    loadFont(RADIOSTARS_FONT, &platformer->radiostars, false);
+    loadFont(PULSE_AUX_FONT, &platformer->font, false);
+    platformer->menuRenderer = initMenuMegaRenderer(&platformer->font, &platformer->font, &platformer->font);
+
     mg_initializeWsgManager(&(platformer->wsgManager));
 
     mg_initializeTileMap(&(platformer->tilemap), &(platformer->wsgManager));
@@ -220,7 +235,7 @@ void platformerEnterMode(void)
 
     setFrameRateUs(16666);
 
-    platformer->update = &updateTitleScreen;
+    changeStateTitleScreen(platformer);
 }
 
 /**
@@ -229,7 +244,7 @@ void platformerEnterMode(void)
  */
 void platformerExitMode(void)
 {
-    freeFont(&platformer->radiostars);
+    freeFont(&platformer->font);
     mg_freeWsgManager(&(platformer->wsgManager));
     mg_freeTilemap(&(platformer->tilemap));
     mg_freeSoundManager(&(platformer->soundManager));
@@ -280,7 +295,7 @@ void updateGame(platformer_t* self)
     mg_drawEntities(&(self->entityManager));
     detectGameStateChange(self);
     detectBgmChange(self);
-    drawPlatformerHud(&(self->radiostars), &(self->gameData));
+    drawPlatformerHud(&(self->font), &(self->gameData));
 
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 59)
@@ -595,7 +610,7 @@ void updateTitleScreen(platformer_t* self)
         self->tilemap.mapOffsetX = 0;
     }
 
-    drawPlatformerTitleScreen(&(self->radiostars), &(self->gameData));
+    drawPlatformerTitleScreen(&(self->font), &(self->gameData));
 
     if (((self->gameData.frameCount) % 10) == 0)
     {
@@ -729,7 +744,7 @@ void updateReadyScreen(platformer_t* self)
         changeStateGame(self);
     }
 
-    drawReadyScreen(&(self->radiostars), &(self->gameData));
+    drawReadyScreen(&(self->font), &(self->gameData));
 }
 
 void drawReadyScreen(font_t* font, mgGameData_t* gameData)
@@ -861,11 +876,11 @@ void updateDead(platformer_t* self)
     mg_updateEntities(&(self->entityManager));
     mg_drawTileMap(&(self->tilemap));
     mg_drawEntities(&(self->entityManager));
-    drawPlatformerHud(&(self->radiostars), &(self->gameData));
+    drawPlatformerHud(&(self->font), &(self->gameData));
 
     if (self->gameData.countdown < 0)
     {
-        drawText(&(self->radiostars), c555, str_time_up, (TFT_WIDTH - textWidth(&(self->radiostars), str_time_up)) / 2,
+        drawText(&(self->font), c555, str_time_up, (TFT_WIDTH - textWidth(&(self->font), str_time_up)) / 2,
                  128);
     }
 }
@@ -898,7 +913,7 @@ void updateGameOver(platformer_t* self)
         changeStateNameEntry(self);
     }
 
-    drawGameOver(&(self->radiostars), &(self->gameData));
+    drawGameOver(&(self->font), &(self->gameData));
     mg_updateLedsGameOver(&(self->gameData));
 }
 
@@ -920,6 +935,7 @@ void drawGameOver(font_t* font, mgGameData_t* gameData)
 void changeStateTitleScreen(platformer_t* self)
 {
     self->gameData.frameCount = 0;
+    self->gameData.gameState = MG_ST_TITLE_SCREEN;
     self->update              = &updateTitleScreen;
 }
 
@@ -1031,8 +1047,8 @@ void updateLevelClear(platformer_t* self)
     mg_updateEntities(&(self->entityManager));
     mg_drawTileMap(&(self->tilemap));
     mg_drawEntities(&(self->entityManager));
-    drawPlatformerHud(&(self->radiostars), &(self->gameData));
-    drawLevelClear(&(self->radiostars), &(self->gameData));
+    drawPlatformerHud(&(self->font), &(self->gameData));
+    drawLevelClear(&(self->font), &(self->gameData));
     mg_updateLedsLevelClear(&(self->gameData));
 }
 
@@ -1075,8 +1091,8 @@ void updateGameClear(platformer_t* self)
         }
     }
 
-    drawPlatformerHud(&(self->radiostars), &(self->gameData));
-    drawGameClear(&(self->radiostars), &(self->gameData));
+    drawPlatformerHud(&(self->font), &(self->gameData));
+    drawGameClear(&(self->font), &(self->gameData));
     mg_updateLedsGameClear(&(self->gameData));
 }
 
@@ -1315,7 +1331,7 @@ void updateNameEntry(platformer_t* self)
         }
     }
 
-    drawNameEntry(&(self->radiostars), &(self->gameData), self->menuState);
+    drawNameEntry(&(self->font), &(self->gameData), self->menuState);
     mg_updateLedsShowHighScores(&(self->gameData));
 }
 
@@ -1358,8 +1374,8 @@ void updateShowHighScores(platformer_t* self)
         changeStateTitleScreen(self);
     }
 
-    drawShowHighScores(&(self->radiostars), self->menuState);
-    drawPlatformerHighScores(&(self->radiostars), &(self->highScores), &(self->gameData));
+    drawShowHighScores(&(self->font), self->menuState);
+    drawPlatformerHighScores(&(self->font), &(self->highScores), &(self->gameData));
 
     mg_updateLedsShowHighScores(&(self->gameData));
 }
@@ -1400,8 +1416,8 @@ void updatePause(platformer_t* self)
 
     mg_drawTileMap(&(self->tilemap));
     mg_drawEntities(&(self->entityManager));
-    drawPlatformerHud(&(self->radiostars), &(self->gameData));
-    drawPause(&(self->radiostars));
+    drawPlatformerHud(&(self->font), &(self->gameData));
+    drawPause(&(self->font));
 }
 
 void drawPause(font_t* font)
