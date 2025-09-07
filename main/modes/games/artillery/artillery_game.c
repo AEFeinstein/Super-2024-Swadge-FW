@@ -235,7 +235,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
     bool physChange = physStep(ad->phys, elapsedUs);
 
     // Draw the scene
-    drawPhysOutline(ad->phys, ad->moveTimerUs);
+    drawPhysOutline(ad->phys, ad->players, ad->scoreFont, ad->moveTimerUs);
 
     // Get the system font to draw text
     font_t* f = getSysFont();

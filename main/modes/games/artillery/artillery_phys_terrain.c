@@ -276,18 +276,28 @@ void explodeShell(physSim_t* phys, node_t* shellNode)
 
     if (shell->explosionVel)
     {
-        // Impart force on hit tanks
+        // Iterate through all circles
         node_t* cNode = phys->circles.first;
         while (cNode)
         {
             physCirc_t* circ = cNode->val;
-            if (cNode != shellNode && CT_TANK == circ->type)
+            // If this is a tank that was hit by the shell
+            if (cNode != shellNode && CT_TANK == circ->type
+                && circleCircleFlIntersection(ea->circ, circ->c, NULL, NULL))
             {
-                if (circleCircleFlIntersection(ea->circ, circ->c, NULL, NULL))
+                // Add or subtract score depending on who's hit
+                if (shell->owner == circ)
                 {
-                    circ->vel = addVecFl2d(
-                        circ->vel, mulVecFl2d(normVecFl2d(subVecFl2d(circ->c.pos, shell->c.pos)), shell->explosionVel));
+                    shell->owner->score -= shell->score;
                 }
+                else
+                {
+                    shell->owner->score += shell->score;
+                }
+
+                // Impart force on hit tanks
+                circ->vel = addVecFl2d(
+                    circ->vel, mulVecFl2d(normVecFl2d(subVecFl2d(circ->c.pos, shell->c.pos)), shell->explosionVel));
             }
             cNode = cNode->next;
         }
