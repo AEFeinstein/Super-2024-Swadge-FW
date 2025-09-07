@@ -410,7 +410,7 @@ void app_main(void)
 
     initLeds(GPIO_NUM_39, ledMirrorGpio, getLedBrightnessSetting());
 
-    initCh32v003(GPIO_SAO_2);
+    initCh32v003(GPIO_NUM_18);
 
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();
@@ -580,6 +580,9 @@ void app_main(void)
             esp_sleep_enable_timer_wakeup(1);
             esp_deep_sleep_start();
         }
+
+        // If you want to allow printf() from the ch32v003, you can call this. Note that it takes about 40us every time it's called.
+        // ch32v003CheckTerminal();
 
         // Yield to let the rest of the RTOS run
         taskYIELD();

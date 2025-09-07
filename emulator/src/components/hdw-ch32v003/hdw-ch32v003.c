@@ -36,6 +36,11 @@ void ch32v003CheckTerminal(void);
 void ch32v003Teardown(void);
 int ch32v003Resume(void);
 int ch32v003WriteFlash(const uint8_t* buf, int sz);
+int ch32v003WriteBitmapAsset(int slot, int asset_idx);
+int ch32v003WriteBitmap(int slot, uint8_t pixels[6][12]);
+int ch32v003SelectBitmap(int slot);
+
+#define CH32V003_MAX_IMAGE_SLOTS 20
 
 // For functions in this code.
 uint32_t GetSTK(void);
@@ -513,6 +518,13 @@ uint32_t GetSTK()
 
 static int CHPLoad(uint32_t address, uint32_t* regret, int size)
 {
+    if (address == 0x1ffff800 || address == 0x1ffff802)
+    {
+        // Doing weird option byte operations.
+        *regret = 0;
+        return 0;
+    }
+
     if (size != 4)
     {
         printf("Misaligned system load %08x\n", address);
@@ -575,6 +587,22 @@ static int CHPLoad(uint32_t address, uint32_t* regret, int size)
 
 static int CHPStore(uint32_t address, uint32_t regset, int size)
 {
+    if (address == 0x1ffff800 || address == 0x1ffff802)
+    {
+        // Doing weird option byte operations.
+        return 0;
+    }
+
+    // Tricky: when doing write (but only in the emulator) it will do size 1 writes.  This is not true for the real
+    // hardware.
+    if ((address & 0xfffffffc) == 0x40020064 && size == 1)
+    {
+        // This code does partial writes.
+        int ofs                 = address & 3;
+        ch32v003InternalLEDSets = (ch32v003InternalLEDSets & (~(0xff << (ofs * 8)))) | (regset << (ofs * 8));
+        return 0;
+    }
+
     if (size != 4)
     {
         printf("Misaligned system store %08x\n", address);
@@ -606,28 +634,28 @@ static int CHPStore(uint32_t address, uint32_t regset, int size)
     } // FLASH->ACTLR
     else if (address == 0x40021000)
     {
-    } // R32_RCC
+    } // R32_RCC_CFGR0
     else if (address == 0x40021004)
     {
-    } // R32_RCC
+    } // R32_RCC_INTR
     else if (address == 0x40021008)
     {
-    } // R32_RCC
+    } // R32_RCC_APB2PRSTR
     else if (address == 0x4002100c)
     {
-    } // R32_RCC
+    } // R32_RCC_APB1PRSTR
     else if (address == 0x40021010)
     {
-    } // R32_RCC
+    } // R32_RCC_AHBPCENR
     else if (address == 0x40021014)
     {
-    } // R32_RCC
+    } // R32_RCC_APB2PCENR
     else if (address == 0x40021018)
     {
-    } // R32_RCC
+    } // R32_RCC_APB1PCENR
     else if (address == 0x4002101C)
     {
-    } // R32_RCC
+    } // DMA1_Channel5->MADDR
     else if (address == 0x40020064)
     {
         ch32v003InternalLEDSets = regset;
@@ -756,20 +784,20 @@ int ch32v003WriteFlash(const uint8_t* buf, int sz)
     return ch32v003WriteMemory(buf, sz, 0);
 }
 
+static const uint16_t Coordmap[] = {
+    0x0000, 0x0100, 0x0200, 0x0300, 0x0400, 0x0500, 0xffff, 0xffff, 0x0002, 0x0102, 0x0202, 0x0302, 0x0402, 0x0502,
+    0xffff, 0xffff, 0x0001, 0x0101, 0x0201, 0x0301, 0x0401, 0x0501, 0xffff, 0xffff, 0x0008, 0x0108, 0x0208, 0x0308,
+    0x0408, 0x0508, 0xffff, 0xffff, 0x0007, 0x0107, 0x0207, 0x0307, 0x0407, 0x0507, 0xffff, 0xffff, 0x0006, 0x0106,
+    0x0206, 0x0306, 0x0406, 0x0506, 0xffff, 0xffff, 0x0005, 0x0205, 0x0405, 0x0605, 0x0600, 0x0700, 0xffff, 0xffff,
+    0x0004, 0x0204, 0x0404, 0x0604, 0x0602, 0x0702, 0xffff, 0xffff, 0x0003, 0x0203, 0x0403, 0x0603, 0x0601, 0x0701,
+    0xffff, 0xffff, 0x0105, 0x0305, 0x0505, 0x0705, 0x0608, 0x0708, 0xffff, 0xffff, 0x0104, 0x0304, 0x0504, 0x0704,
+    0x0607, 0x0707, 0xffff, 0xffff, 0x0103, 0x0303, 0x0503, 0x0703, 0x0606, 0x0706, 0xffff, 0xffff,
+};
+
 void ch32v003EmuDraw(int window_w, int window_h)
 {
     // We use the corresponding coordmap from swadge_matrix.h, so we can backtrack the steps
     // the source material takes to output the LEDs
-    static const uint16_t Coordmap[] = {
-        0x0000, 0x0100, 0x0200, 0x0300, 0x0400, 0x0500, 0xffff, 0xffff, 0x0002, 0x0102, 0x0202, 0x0302, 0x0402, 0x0502,
-        0xffff, 0xffff, 0x0001, 0x0101, 0x0201, 0x0301, 0x0401, 0x0501, 0xffff, 0xffff, 0x0008, 0x0108, 0x0208, 0x0308,
-        0x0408, 0x0508, 0xffff, 0xffff, 0x0007, 0x0107, 0x0207, 0x0307, 0x0407, 0x0507, 0xffff, 0xffff, 0x0006, 0x0106,
-        0x0206, 0x0306, 0x0406, 0x0506, 0xffff, 0xffff, 0x0005, 0x0205, 0x0405, 0x0605, 0x0600, 0x0700, 0xffff, 0xffff,
-        0x0004, 0x0204, 0x0404, 0x0604, 0x0602, 0x0702, 0xffff, 0xffff, 0x0003, 0x0203, 0x0403, 0x0603, 0x0601, 0x0701,
-        0xffff, 0xffff, 0x0105, 0x0305, 0x0505, 0x0705, 0x0608, 0x0708, 0xffff, 0xffff, 0x0104, 0x0304, 0x0504, 0x0704,
-        0x0607, 0x0707, 0xffff, 0xffff, 0x0103, 0x0303, 0x0503, 0x0703, 0x0606, 0x0706, 0xffff, 0xffff,
-    };
-
     uint32_t ils = ch32v003InternalLEDSets;
 
     // Make sure the DMA pointer is valid.  Otherwise, don't render the LEDs.
@@ -805,4 +833,86 @@ void ch32v003EmuDraw(int window_w, int window_h)
             CNFGTackRectangle(px - 4, py - 4, px + 4, py + 4);
         }
     }
+}
+
+int ch32v003WriteBitmapAsset(int slot, int asset_idx)
+{
+    size_t sz          = 0;
+    const uint8_t* buf = cnfsGetFile(asset_idx, &sz);
+    if (sz < 4)
+    {
+        printf("Error: Asset wrong size (%d) bytes.\n", (int)sz);
+        return -1;
+    }
+    if (((const uint16_t*)buf)[0] != 12 || ((const uint16_t*)buf)[1] != 6)
+    {
+        printf("Error: Asset wrong dimensions (%d x %d) needs (12 x 6).\n", ((const uint16_t*)buf)[0],
+               ((const uint16_t*)buf)[1]);
+        return -1;
+    }
+
+    struct PixelMap
+    {
+        uint8_t buffer[6][12];
+    };
+    struct PixelMap* pm = (struct PixelMap*)(buf + 4);
+
+    return ch32v003WriteBitmap(slot, pm->buffer);
+}
+
+int ch32v003WriteBitmap(int slot, uint8_t pixels[6][12])
+{
+    if (slot >= CH32V003_MAX_IMAGE_SLOTS)
+    {
+        printf("Error: requested slot too big.\n");
+        return -1;
+    }
+
+    uint8_t rkbuffer[128];
+
+    int i, x, y;
+
+    for (y = 0; y < 6; y++)
+        for (x = 0; x < 12; x++)
+        {
+            int intensity = pixels[y][x];
+            int coord     = Coordmap[x * 8 + y];
+
+            int ox = coord & 0xff;
+            int oy = coord >> 8;
+
+            int ofs       = ox;
+            uint8_t* ledo = &rkbuffer[ofs];
+            int imask     = ~(1 << oy);
+            int mask      = ~imask;
+
+            for (i = 0; i < 8; i++)
+            {
+                if (intensity & (1 << i))
+                    *ledo |= mask;
+                else
+                    *ledo &= imask;
+                ledo += 9;
+            }
+        }
+
+    // Make sure processor is halted if we're using it in framebuffer mode.
+    // ch32v003SetReg(DMCONTROL, 0x80000001); // Request halt
+    // ch32v003SetReg(DMCONTROL, 0x80000001); // Really request halt.
+    // ch32v003SetReg(DMCONTROL, 0x00000001); // Clear halt request.
+
+    return ch32v003WriteMemory(rkbuffer, sizeof(rkbuffer), 0x20000200 + slot * 72);
+}
+
+int ch32v003SelectBitmap(int slot)
+{
+    if (slot >= CH32V003_MAX_IMAGE_SLOTS)
+    {
+        printf("Error: requested slot too big.\n");
+        return -1;
+    }
+
+    uint32_t ledPointer = 0x20000200 + slot * 72;
+    // Overwrite DMA1_Channel5->MADDR, Assume we've been configured.
+    return ch32v003WriteMemory((uint8_t*)&ledPointer, 4, 0x40020064);
 }

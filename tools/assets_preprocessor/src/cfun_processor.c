@@ -55,6 +55,8 @@ bool process_cfun(processorInput_t* arg)
 
     char compile_line[16384];
 
+    printf( "Debug (Remove me later) %f %f \n", timeInSrc, timeInBin );
+
     if( timeInSrc > timeInBin || timeInBin < 0 )
     {
         char * idf = getenv("IDF_PATH");
@@ -112,7 +114,7 @@ bool process_cfun(processorInput_t* arg)
     }
 
     snprintf( compile_line, sizeof(compile_line),
-        "cp %s.bin %s.bin", arg->in.fileName, arg->out.fileName );
+        "cp %s.bin %s", arg->in.fileName, arg->out.fileName );
 
     printf( "$ %s\n", compile_line );
     if( system( compile_line ) )
