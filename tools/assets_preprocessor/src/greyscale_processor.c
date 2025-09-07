@@ -55,8 +55,9 @@ bool process_greyscale(processorInput_t* arg)
             // Don't blend alpha.
             if( chuse == 4 ) { chuse = 3; }
 
+            // Flip Y.
             for( ch = 0; ch < n; ch++ )
-                pv += data[(x+y*w)*4+ch];
+                pv += data[(x+(h-y-1)*w)*4+ch];
 
             pv = (pv + chuse/2) / chuse;
             pixelBuffer[y][x] = pv;
