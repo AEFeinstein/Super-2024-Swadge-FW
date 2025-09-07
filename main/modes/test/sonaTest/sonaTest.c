@@ -3,7 +3,13 @@
 
 #define OPTION_COUNT 12
 
-const char sonaTestName[]         = "Swadgesona test";
+const char sonaTestName[]          = "Swadgesona test";
+static const char* const strings[] = {
+    "Press A to save current swadgesona",
+    "Press B to load swadgesona",
+    "Press Up or down to change Swadgesona slot",
+    "Press start to go back",
+};
 const int arrayLims[OPTION_COUNT] = {
     SKIN_COLOR_COUNT, HAIR_COLOR_COUNT, EYE_COLOR_COUNT, CLOTHES_COLOR_COUNT, HA_COLOR_COUNT, BME_COUNT, EAE_COUNT,
     EBE_COUNT,        EE_COUNT,         HE_COUNT,        HAE_COUNT,           ME_COUNT,
@@ -20,6 +26,8 @@ typedef struct
     bool update;
     swadgesona_t swsn;
     int list[OPTION_COUNT];
+    bool menu;
+    int16_t menuSlot;
 } stData_t;
 
 swadgeMode_t sonaTestMode = {
@@ -33,7 +41,7 @@ stData_t* st;
 
 static void stEnterMode(void)
 {
-    st           = heap_caps_calloc(sizeof(stData_t), 1, MALLOC_CAP_8BIT);
+    st = heap_caps_calloc(sizeof(stData_t), 1, MALLOC_CAP_8BIT);
     stCopyListToSona(&st->swsn, st->list);
 }
 
@@ -45,6 +53,56 @@ static void stExitMode(void)
 static void stMainLoop(int64_t elapsedUs)
 {
     buttonEvt_t evt;
+    if (st->menu)
+    {
+        while (checkButtonQueueWrapper(&evt))
+        {
+            if (evt.down)
+            {
+                if (evt.button & PB_A)
+                {
+                    saveSwadgesona(&st->swsn, st->menuSlot);
+                }
+                else if (evt.button & PB_B)
+                {
+                    loadSwadgesona(&st->swsn, st->menuSlot);
+                }
+                else if (evt.button & PB_UP)
+                {
+                    st->menuSlot++;
+                    if (st->menuSlot > 10)
+                    {
+                        st->menuSlot = 0;
+                    }
+                }
+                else if (evt.button & PB_DOWN)
+                {
+                    st->menuSlot--;
+                    if (st->menuSlot < 0)
+                    {
+                        st->menuSlot = 9;
+                    }
+                }
+                else if (evt.button & PB_START)
+                {
+                    st->menu = false;
+                }
+            }
+        }
+        fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
+        int16_t x = 12;
+        int16_t y = 24;
+        drawTextWordWrap(getSysFont(), c550, strings[0], &x, &y, TFT_WIDTH - 12, TFT_HEIGHT);
+        drawText(getSysFont(), c505, strings[1], 12, 48);
+        x = 12;
+        y = 64;
+        drawTextWordWrap(getSysFont(), c055, strings[2], &x, &y, TFT_WIDTH - 12, TFT_HEIGHT);
+        drawText(getSysFont(), c555, strings[3], 12, 88);
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer) - 1, "Current slot: %" PRId16, st->menuSlot);
+        drawText(getSysFont(), c500, buffer, 12, 120);
+        return;
+    }
     while (checkButtonQueueWrapper(&evt))
     {
         if (evt.down)
@@ -96,7 +154,7 @@ static void stMainLoop(int64_t elapsedUs)
             // Start accesses save options
             else if (evt.button & PB_START)
             {
-                loadSwadgesona(&st->swsn, 3);              
+                st->menu = true;
             }
         }
     }
@@ -115,19 +173,20 @@ static void stMainLoop(int64_t elapsedUs)
     drawText(getSysFont(), c555, buffer, 32, TFT_HEIGHT - 32);
     snprintf(buffer, sizeof(buffer) - 1, "Index: %" PRId16, st->list[st->selection]);
     drawText(getSysFont(), c555, buffer, 32, TFT_HEIGHT - 16);
+    drawText(getSysFont(), c550, st->swsn.name.nameBuffer, 16, 16);
 }
 
 static void stCopyListToSona(swadgesona_t* swsn, int* list)
 {
-    st->swsn.core.skin       = st->list[0]; 
-    st->swsn.core.hairColor  = st->list[1]; 
-    st->swsn.core.eyeColor   = st->list[2]; 
-    st->swsn.core.clothes    = st->list[3]; 
+    st->swsn.core.skin       = st->list[0];
+    st->swsn.core.hairColor  = st->list[1];
+    st->swsn.core.eyeColor   = st->list[2];
+    st->swsn.core.clothes    = st->list[3];
     st->swsn.core.hatColor   = st->list[4];
-    st->swsn.core.bodyMarks  = st->list[5]; 
-    st->swsn.core.earShape   = st->list[6]; 
+    st->swsn.core.bodyMarks  = st->list[5];
+    st->swsn.core.earShape   = st->list[6];
     st->swsn.core.eyebrows   = st->list[7];
-    st->swsn.core.eyeShape   = st->list[8]; 
+    st->swsn.core.eyeShape   = st->list[8];
     st->swsn.core.hairStyle  = st->list[9];
     st->swsn.core.hat        = st->list[10];
     st->swsn.core.mouthShape = st->list[11];
