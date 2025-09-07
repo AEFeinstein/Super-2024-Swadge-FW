@@ -37,6 +37,7 @@ typedef struct __attribute__((packed))
     {
         vecFl_t pos;
         float barrelAngle;
+        int32_t score;
     } players[NUM_PLAYERS];
 
     uint16_t terrainPoints[NUM_TERRAIN_POINTS_A];
@@ -63,8 +64,10 @@ typedef struct __attribute__((packed))
     {
         vecFl_t pos;
         float barrelAngle;
+        int32_t score;
     } players[NUM_PLAYERS];
     vec_t camera;
+    int32_t moveTimeLeftUs;
 } artPktPlayers_t;
 
 typedef struct __attribute__((packed))
@@ -185,6 +188,7 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
             for (int32_t pIdx = 0; pIdx < ARRAY_SIZE(pkt->players); pIdx++)
             {
                 ad->players[pIdx] = physAddPlayer(ad->phys, pkt->players[pIdx].pos, pkt->players[pIdx].barrelAngle);
+                ad->players[pIdx]->score = pkt->players[pIdx].score;
             }
 
             // Mark as not ready until the other packet is received
@@ -218,11 +222,15 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
             {
                 ad->players[pIdx]->c.pos = pkt->players[pIdx].pos;
                 setBarrelAngle(ad->players[pIdx], pkt->players[pIdx].barrelAngle);
+                ad->players[pIdx]->score = pkt->players[pIdx].score;
             }
 
             // Update camera and don't track objects
             ad->phys->camera = pkt->camera;
             clear(&ad->phys->cameraTargets);
+
+            // Update gas gauge
+            ad->moveTimerUs = pkt->moveTimeLeftUs;
 
             return;
         }
@@ -273,8 +281,10 @@ void artilleryTxWorld(artilleryData_t* ad)
     pkt1->height                 = ad->phys->bounds.y;
     pkt1->players[0].pos         = ad->players[0]->c.pos;
     pkt1->players[0].barrelAngle = ad->players[0]->barrelAngle;
+    pkt1->players[0].score       = ad->players[0]->score;
     pkt1->players[1].pos         = ad->players[1]->c.pos;
     pkt1->players[1].barrelAngle = ad->players[1]->barrelAngle;
+    pkt1->players[1].score       = ad->players[1]->score;
 
     artPktTerrain_t* pkt2 = heap_caps_calloc(1, sizeof(artPktTerrain_t), MALLOC_CAP_SPIRAM);
     pkt2->type            = P2P_ADD_TERRAIN;
@@ -342,10 +352,14 @@ void artilleryTxPlayers(artilleryData_t* ad)
     {
         pkt->players[pIdx].pos         = ad->players[pIdx]->c.pos;
         pkt->players[pIdx].barrelAngle = ad->players[pIdx]->barrelAngle;
+        pkt->players[pIdx].score       = ad->players[pIdx]->score;
     }
 
     // Update camera
     pkt->camera = ad->phys->camera;
+
+    // Write gas gauge
+    pkt->moveTimeLeftUs = ad->moveTimerUs;
 
     // Push into the queue
     push(&ad->p2pQueue, pkt);

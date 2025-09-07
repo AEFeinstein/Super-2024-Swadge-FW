@@ -575,13 +575,16 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
     // Draw gas gauge
     fillDisplayArea(0, 0, (TFT_WIDTH * moveTimeLeftUs) / TANK_MOVE_TIME_US, 16, c222);
 
-    // Draw score
-    char scoreStr[32] = {0};
-    snprintf(scoreStr, sizeof(scoreStr) - 1, "%d", players[0]->score);
-    drawText(font, c555, scoreStr, 20, 20);
+    // Draw score if players are set
+    if (players[0])
+    {
+        char scoreStr[32] = {0};
+        snprintf(scoreStr, sizeof(scoreStr) - 1, "%d", players[0]->score);
+        drawText(font, c555, scoreStr, 20, 20);
 
-    snprintf(scoreStr, sizeof(scoreStr) - 1, "%d", players[1]->score);
-    drawText(font, c555, scoreStr, TFT_WIDTH - textWidth(font, scoreStr) - 20, 20);
+        snprintf(scoreStr, sizeof(scoreStr) - 1, "%d", players[1]->score);
+        drawText(font, c555, scoreStr, TFT_WIDTH - textWidth(font, scoreStr) - 20, 20);
+    }
 }
 
 /**
