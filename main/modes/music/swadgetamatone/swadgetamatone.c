@@ -95,7 +95,7 @@ swadgetamatone_t* stt = NULL;
 
 static void sttEnterMode(void);
 static void sttExitMode(void);
-static void sttMenu(const char* label, bool selected, uint32_t value);
+static bool sttMenu(const char* label, bool selected, uint32_t value);
 static void sttMainLoop(int64_t elapsedUs);
 static void sttBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void sttDrawMouthForegound(int16_t xRadius, int16_t yRadius, paletteColor_t color);
@@ -169,7 +169,7 @@ static void sttExitMode(void)
     heap_caps_free(stt);
 }
 
-static void sttMenu(const char* label, bool selected, uint32_t value)
+static bool sttMenu(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
@@ -186,6 +186,7 @@ static void sttMenu(const char* label, bool selected, uint32_t value)
             switchToSwadgeMode(&mainMenuMode);
         }
     }
+    return false;
 }
 
 static void sttMainLoop(int64_t elapsedUs)
