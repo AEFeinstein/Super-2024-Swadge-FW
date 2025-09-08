@@ -15,5 +15,6 @@ int apsqrt( int i );
 void SetPixel( int x, int y, int intensity );
 extern uint8_t LEDSets[9*8];
 extern const uint16_t Coordmap[8*16];
+int FLASH_WaitForLastOperation(uint32_t Timeout);
 
 #endif

@@ -581,6 +581,9 @@ void app_main(void)
             esp_deep_sleep_start();
         }
 
+        // If you want to allow printf() from the ch32v003, you can call this. Note that it takes about 40us every time it's called.
+        // ch32v003CheckTerminal();
+
         // Yield to let the rest of the RTOS run
         taskYIELD();
     }
