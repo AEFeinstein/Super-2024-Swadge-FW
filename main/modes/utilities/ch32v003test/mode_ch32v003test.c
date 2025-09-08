@@ -19,7 +19,7 @@
 void ch32v003testEnterMode(void);
 void ch32v003testExitMode(void);
 void ch32v003testMainLoop(int64_t elapsedUs);
-void ch32v003testUpdateFramebuffers();
+void ch32v003testUpdateFramebuffers(void);
 int uprintf(const char* fmt, ...);
 
 //==============================================================================
@@ -95,7 +95,7 @@ void ch32v003testEnterMode(void)
 /**
  * Update framebuffers on the ch32v003
  */
-void ch32v003testUpdateFramebuffers()
+void ch32v003testUpdateFramebuffers(void)
 {
     if (!ch32v003test->didSetFramebuffers)
     {

@@ -579,10 +579,10 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
     if (players[0])
     {
         char scoreStr[32] = {0};
-        snprintf(scoreStr, sizeof(scoreStr) - 1, "%d", players[0]->score);
+        snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, players[0]->score);
         drawText(font, c555, scoreStr, 20, 20);
 
-        snprintf(scoreStr, sizeof(scoreStr) - 1, "%d", players[1]->score);
+        snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, players[1]->score);
         drawText(font, c555, scoreStr, TFT_WIDTH - textWidth(font, scoreStr) - 20, 20);
     }
 }

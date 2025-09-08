@@ -419,7 +419,7 @@ int ch32v003WriteBitmapAsset(int slot, int asset_idx)
  * @param pixels are a greyscale image to be written out.
  * @return 0 if OK, nonzero if error.
  */
-int ch32v003WriteBitmap(int slot, uint8_t pixels[6][12])
+int ch32v003WriteBitmap(int slot, const uint8_t pixels[6][12])
 {
     if (slot >= CH32V003_MAX_IMAGE_SLOTS)
     {
