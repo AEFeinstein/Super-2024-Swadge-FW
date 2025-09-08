@@ -383,7 +383,8 @@ void ch32v003Teardown()
  * @brief Halt the processor, and write to RAM a greyscale asset image.
  *
  * @param slot Must be less than CH32V003_MAX_IMAGE_SLOTS.
- * @param asset_idx Is a .gs.png asset, for instance EYES_DEFAULT_GS (From eyes_default.gs.png).  This image must be 12x6 pixels in size.
+ * @param asset_idx Is a .gs.png asset, for instance EYES_DEFAULT_GS (From eyes_default.gs.png).  This image must be
+ * 12x6 pixels in size.
  * @return 0 if OK, nonzero if error.
  */
 int ch32v003WriteBitmapAsset(int slot, int asset_idx)

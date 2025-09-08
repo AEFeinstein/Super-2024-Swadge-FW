@@ -121,13 +121,13 @@ void ch32v003testUpdateFramebuffers()
         }
         ch32v003WriteBitmap(2, sendbuffer);
 
-        ch32v003WriteBitmapAsset( 3, EYES_DEAD_GS);
-        ch32v003WriteBitmapAsset( 4, EYES_DEFAULT_GS);
-        ch32v003WriteBitmapAsset( 5, EYES_HAPPY_GS);
-        ch32v003WriteBitmapAsset( 6, EYES_SAD_GS);
-        ch32v003WriteBitmapAsset( 7, EYES_SWIRL_0_GS);
-        ch32v003WriteBitmapAsset( 8, EYES_SWIRL_1_GS);
-        ch32v003WriteBitmapAsset( 9, EYES_SWIRL_2_GS);
+        ch32v003WriteBitmapAsset(3, EYES_DEAD_GS);
+        ch32v003WriteBitmapAsset(4, EYES_DEFAULT_GS);
+        ch32v003WriteBitmapAsset(5, EYES_HAPPY_GS);
+        ch32v003WriteBitmapAsset(6, EYES_SAD_GS);
+        ch32v003WriteBitmapAsset(7, EYES_SWIRL_0_GS);
+        ch32v003WriteBitmapAsset(8, EYES_SWIRL_1_GS);
+        ch32v003WriteBitmapAsset(9, EYES_SWIRL_2_GS);
         ch32v003WriteBitmapAsset(10, EYES_SWIRL_3_GS);
 
         ch32v003test->didSetFramebuffers = true;
