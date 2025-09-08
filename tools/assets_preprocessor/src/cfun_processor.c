@@ -55,8 +55,6 @@ bool process_cfun(processorInput_t* arg)
 
     char compile_line[16384];
 
-    printf( "Debug (Remove me later) %f %f \n", timeInSrc, timeInBin );
-
     if( timeInSrc > timeInBin || timeInBin < 0 )
     {
         char * idf = getenv("IDF_PATH");

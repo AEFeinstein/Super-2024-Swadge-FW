@@ -104,15 +104,21 @@ void ch32v003testUpdateFramebuffers()
         int i;
 
         for (i = 0; i < 72; i++)
+        {
             sendbuffer[i / 12][i % 12] = (i & 1) ? 0xff : 0x00;
+        }
         ch32v003WriteBitmap(0, sendbuffer);
 
         for (i = 0; i < 72; i++)
+        {
             sendbuffer[i / 12][i % 12] = i;
+        }
         ch32v003WriteBitmap(1, sendbuffer);
 
         for (i = 0; i < 72; i++)
+        {
             sendbuffer[i / 12][i % 12] = (i % 12) * 23;
+        }
         ch32v003WriteBitmap(2, sendbuffer);
 
         ch32v003WriteBitmapAsset( 3, EYES_DEAD_GS);
@@ -171,7 +177,9 @@ void ch32v003testMainLoop(int64_t elapsedUs)
 
                     ch32v003test->mode--;
                     if (ch32v003test->mode < 0)
+                    {
                         ch32v003test->mode = MAX_MODES - 1;
+                    }
 
                     ch32v003SelectBitmap(ch32v003test->mode);
                     break;
@@ -183,7 +191,9 @@ void ch32v003testMainLoop(int64_t elapsedUs)
 
                     ch32v003test->mode++;
                     if (ch32v003test->mode >= MAX_MODES)
+                    {
                         ch32v003test->mode = 0;
+                    }
 
                     ch32v003SelectBitmap(ch32v003test->mode);
                     break;
