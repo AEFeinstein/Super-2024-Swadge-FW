@@ -9,6 +9,59 @@ static const char sttSingLbl[]         = "Sing";
 static const char sttTutorialLbl[]     = "Tutorial";
 static const char sttExitLbl[]         = "Exit";
 
+static const char sttNvsNamespace[]          = "stt";
+static const char sttNvsKeyTotalTimePlayed[] = "total_time_played";
+
+const trophyData_t sttTrophies[] = {
+    {
+        .title       = "OOO EEE OOO",
+        .description = "Play your first note",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .hidden      = false,
+        .identifier  = NULL,
+    },
+    {
+        .title       = "Beginning Of A Career",
+        .description = "Play for 1 minute total",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .hidden      = false,
+        .identifier  = NULL,
+    },
+    {
+        .title       = "Bad Roommate",
+        .description = "Play for 10 minutes total",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 10,
+        .hidden      = false,
+        .identifier  = NULL,
+    },
+    {
+        .title       = "Swadgetamatone Master",
+        .description = "Play for 60 minutes total",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 60,
+        .hidden      = false,
+        .identifier  = NULL,
+    },
+};
+trophySettings_t sttTrophySettings = {
+    .drawFromBottom   = true,
+    .staticDurationUs = DRAW_STATIC_US * 2,
+    .slideDurationUs  = DRAW_SLIDE_US,
+};
+trophyDataList_t sttTrophyData
+    = {.settings = &sttTrophySettings, .list = sttTrophies, .length = ARRAY_SIZE(sttTrophies)};
+
 typedef enum
 {
     STT_MENU,
@@ -30,6 +83,8 @@ typedef struct
     /// Time since a button to play a note was pressed or released
     int64_t noteStateElapsedUs;
     int32_t freq;
+
+    int32_t totalTimePlayedMs;
 
     synthOscillator_t* oscillators[1];
     synthOscillator_t sttOsc;
@@ -59,6 +114,7 @@ swadgeMode_t swadgetamatoneMode = {
     .fnMainLoop               = sttMainLoop,
     .fnBackgroundDrawCallback = sttBackgroundDrawCallback,
     .fnDacCb                  = sttDacCallback,
+    .trophyData               = &sttTrophyData,
 };
 
 /// F
@@ -88,6 +144,8 @@ static void sttEnterMode(void)
     // Prevent mouth from animating closed at mode launch
     stt->noteStateElapsedUs = VOLUME_LERP_US;
 
+    readNamespaceNvs32(sttNvsNamespace, sttNvsKeyTotalTimePlayed, &stt->totalTimePlayedMs);
+
     // Initial freq/volume values don't matter since they'll get overwritten by touchpad data
     swSynthInitOscillatorWave(&stt->sttOsc, sttGenerateWaveform, 0, 0, 0);
     stt->oscillators[0] = &stt->sttOsc;
@@ -103,6 +161,8 @@ static void sttEnterMode(void)
 
 static void sttExitMode(void)
 {
+    writeNamespaceNvs32(sttNvsNamespace, sttNvsKeyTotalTimePlayed, stt->totalTimePlayedMs);
+
     deinitMenuMegaRenderer(stt->menuRenderer);
     deinitMenu(stt->menu);
     freeWsg(&stt->background);
@@ -170,9 +230,23 @@ static void sttMainLoop(int64_t elapsedUs)
                 {
                     stt->octavePressed      = octavePressed;
                     stt->noteStateElapsedUs = 0;
+                    trophyUpdate(sttTrophies[0], 1, true);
                 }
                 else if (!evt.down && stt->octavePressed == octavePressed)
                 {
+                    int32_t previousTotalTimePlayedMs = stt->totalTimePlayedMs;
+                    stt->totalTimePlayedMs += stt->noteStateElapsedUs / 1000;
+
+                    int32_t minutesPlayed = stt->totalTimePlayedMs / (60 * 1000);
+                    // Only update trophy progress once per minute of play time, since the milestone calls write to NVS
+                    if (previousTotalTimePlayedMs / (60 * 1000) < minutesPlayed)
+                    {
+                        writeNamespaceNvs32(sttNvsNamespace, sttNvsKeyTotalTimePlayed, stt->totalTimePlayedMs);
+                        trophyUpdateMilestone(sttTrophies[1], minutesPlayed, 100);
+                        trophyUpdateMilestone(sttTrophies[2], minutesPlayed, 20);
+                        trophyUpdateMilestone(sttTrophies[3], minutesPlayed, 25);
+                    }
+
                     stt->octavePressed      = 0;
                     stt->noteStateElapsedUs = 0;
                 }
