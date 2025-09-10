@@ -4,7 +4,6 @@
 #include "cnfs.h"
 #include "vector2d.h"
 #include "mgLeveldef.h"
-#include "mgWsgSet.h"
 
 //==============================================================================
 // Constants
@@ -973,44 +972,5 @@ static const mgLeveldef_t leveldef[17] = {{.filename = KINETIC_DONUT_BIN, .timeL
                                           {.filename = LEVEL_4_3_BIN, .timeLimit = 240, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
                                           {.filename = LEVEL_4_4_BIN, .timeLimit = 240, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
                                           {.filename = DEBUG_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT}};
-
-static const mgWsgSet_t kineticDonutWsgSet[] = {
-    { 
-        //DEFAULT
-        .tile_solid_visible_noninteractive_startingTileIndex = MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20, 
-        .tile_solid_visible_noninteractive_firstFilename = KD_TILE_032_WSG, 
-        .tile_solid_visible_noninteractive_numWsgsToLoad = 79,
-
-        .tile_solid_visible_interactive_startingTileIndex = MG_TILE_SOLID_VISIBLE_INTERACTIVE_80, 
-        .tile_solid_visible_interactive_firstFilename = KD_TILE_032_WSG, 
-        .tile_solid_visible_interactive_numWsgsToLoad = 0,
-
-        .tile_nonsolid_visible_interactive_startingTileIndex = MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0, 
-        .tile_nonsolid_visible_interactive_firstFilename = KD_TILE_160_WSG, 
-        .tile_nonsolid_visible_interactive_numWsgsToLoad = 1,
-
-        .tile_nonsolid_visible_noninteractive_startingTileIndex = MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0, 
-        .tile_nonsolid_visible_noninteractive_firstFilename = KD_TILE_192_WSG, 
-        .tile_nonsolid_visible_noninteractive_numWsgsToLoad = 6,
-    },
-    { 
-        //DEFAULT
-        .tile_solid_visible_noninteractive_startingTileIndex = MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20, 
-        .tile_solid_visible_noninteractive_firstFilename = KD_TILE_032_WSG, 
-        .tile_solid_visible_noninteractive_numWsgsToLoad = 79,
-
-        .tile_solid_visible_interactive_startingTileIndex = MG_TILE_SOLID_VISIBLE_INTERACTIVE_80, 
-        .tile_solid_visible_interactive_firstFilename = KD_TILE_032_WSG, 
-        .tile_solid_visible_interactive_numWsgsToLoad = 0,
-
-        .tile_nonsolid_visible_interactive_startingTileIndex = MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0, 
-        .tile_nonsolid_visible_interactive_firstFilename = KD_TILE_160_WSG, 
-        .tile_nonsolid_visible_interactive_numWsgsToLoad = 1,
-
-        .tile_nonsolid_visible_noninteractive_startingTileIndex = MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0, 
-        .tile_nonsolid_visible_noninteractive_firstFilename = KD_TILE_192_WSG, 
-        .tile_nonsolid_visible_noninteractive_numWsgsToLoad = 6,
-    }
-};
 
 #endif
