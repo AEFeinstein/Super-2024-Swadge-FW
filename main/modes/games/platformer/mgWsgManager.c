@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include "fs_wsg.h"
 #include "mgWsgManager.h"
-#include "mgWsgSet.h"
+#include "mgTilesetConfig.h"
 #include "mega_pulse_ex_typedef.h"
 #include <esp_log.h>
 
@@ -572,57 +572,23 @@ void mg_loadWsgSet(mgWsgManager_t* self, mgWsgSetIndex_t index){
         return;
     }
 
-    mgWsgSet_t newWsgSet = kineticDonutWsgSet[index];
-    uint16_t subiterator;
+    //TODO: Free ALL tile WSGs here?
 
-    for(uint16_t i = 0; i < newWsgSet.tile_solid_visible_noninteractive_numWsgsToLoad; i++){
-        if((self->wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20 + i].w && self->wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20 + i].h)){
-            freeWsg(&self->wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20 + i]);
-        }
-         
-         loadWsg(newWsgSet.tile_solid_visible_noninteractive_firstFilename + i, &self->wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20 + i], false);
-         self->tiles[(MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20 - 32) + i] = &self->wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20 + i];
-         ESP_LOGE("Hi", "Loaded file %d at into wsg %d, tile %d", newWsgSet.tile_solid_visible_noninteractive_firstFilename+i, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20+i, (MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20 - 32) + i);
+    switch(index){
+        case MG_WSGSET_KINETIC_DONUT:
+        default:
+            for(uint16_t i=0; i < MG_KINETIC_DONUT_TILESET_MAP_LENGTH; i++){
+                
+                uint16_t wsgIndex = mg_kineticDonutTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_WSG_INDEX_LOOKUP_OFFSET];
+                
+                if(self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h){
+                    freeWsg(&self->wsgs[wsgIndex]);
+                }
+
+                loadWsg(mg_kineticDonutTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_IMAGE_FILENAME_LOOKUP_OFFSET], &self->wsgs[wsgIndex], false);
+                self->tiles[mg_kineticDonutTileset[(i * MG_TILESET_MAP_ROW_LENGTH + MG_TILE_INDEX_LOOKUP_OFFSET)] - 32] = &self->wsgs[wsgIndex];
+            }
     }
 
-
-    for(uint16_t i = 0; i < newWsgSet.tile_solid_visible_interactive_numWsgsToLoad; i++){
-        if((self->wsgs[MG_WSG_TILE_SOLID_VISIBLE_INTERACTIVE_80 + i].w && self->wsgs[MG_WSG_TILE_SOLID_VISIBLE_INTERACTIVE_80 + i].h)){
-            freeWsg(&self->wsgs[MG_WSG_TILE_SOLID_VISIBLE_INTERACTIVE_80 + i]);
-        }
-         
-        loadWsg(newWsgSet.tile_solid_visible_interactive_firstFilename+ i, &self->wsgs[MG_WSG_TILE_SOLID_VISIBLE_INTERACTIVE_80 + i], false);
-        self->tiles[(MG_TILE_SOLID_VISIBLE_INTERACTIVE_80 - 32) + i] = &self->wsgs[MG_WSG_TILE_SOLID_VISIBLE_INTERACTIVE_80 + i];
-        ESP_LOGE("Hi", "Loaded file %d at into wsg %d, tile %d", newWsgSet.tile_solid_visible_interactive_firstFilename+i, MG_WSG_TILE_SOLID_VISIBLE_INTERACTIVE_80+i, (MG_TILE_SOLID_VISIBLE_INTERACTIVE_80 - 32) + i);
-    }
-
-    for(uint16_t i = 0; i < newWsgSet.tile_nonsolid_visible_interactive_numWsgsToLoad; i++){
-        if((self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0 + i].w && self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0 + i].h)){
-            freeWsg(&self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0 + i]);
-        }
-         
-        loadWsg(newWsgSet.tile_nonsolid_visible_interactive_firstFilename + i, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0 + i], false);
-        self->tiles[(MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0 - 32) + i] = &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0 + i];
-        ESP_LOGE("Hi", "Loaded file %d at into wsg %d, tile %d", newWsgSet.tile_nonsolid_visible_interactive_firstFilename+i, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0+i, (MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0 - 32) + i);
-    }
-
-    for(uint16_t i = 0; i < newWsgSet.tile_nonsolid_visible_noninteractive_numWsgsToLoad; i++){
-        if((self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0 + i].w && self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0 + i].h)){
-            freeWsg(&self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0 + i]);
-        }
-         
-        loadWsg(newWsgSet.tile_nonsolid_visible_noninteractive_firstFilename + i, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0 + i], false);
-        self->tiles[(MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0 - 32) + i] = &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0 + i];
-        ESP_LOGE("Hi", "Loaded file %d at into wsg %d, tile %d", newWsgSet.tile_nonsolid_visible_noninteractive_firstFilename+i, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0+i, (MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0 - 32) + i);
-    }
-
-    /*
-    for(uint16_t i = newWsgSet.firstWsgIndex; i < newWsgSet.firstWsgIndex + newWsgSet.numWsgsToLoad; i++){
-        
-        freeWsg(&self->wsgs[i]);
-        loadWsg(newWsgSet.firstFilename+subiterator, &self->wsgs[newWsgSet.firstWsgIndex+subiterator], false);
-        self->tiles[subiterator] = &self->wsgs[newWsgSet.firstWsgIndex+subiterator];
-        ESP_LOGE("Hi", "Loaded file %d at into wsg %d", newWsgSet.firstFilename+subiterator, newWsgSet.firstWsgIndex+subiterator);
-        subiterator++;
-    }*/
+    self->wsgSetIndex = index;
 }
