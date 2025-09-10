@@ -100,4 +100,7 @@ static const uint16_t mg_kineticDonutTileset[] = {
     KD_TILE_197_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C5, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C5,
 };
 
+bool mg_kineticDonutTileset_needsTransparency(uint8_t tileId);
+void mg_kineticDonutTileset_animateTiles(uint8_t tileId);
+
 #endif
