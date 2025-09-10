@@ -9,20 +9,65 @@ static const char sttSingLbl[]         = "Sing";
 static const char sttTutorialLbl[]     = "Tutorial";
 static const char sttExitLbl[]         = "Exit";
 
+static const char sttNvsNamespace[]          = "stt";
+static const char sttNvsKeyTotalTimePlayed[] = "total_time_played";
+
+const trophyData_t sttTrophies[] = {
+    {
+        .title       = "OOO EEE OOO",
+        .description = "Play your first note",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .hidden      = false,
+        .identifier  = NULL,
+    },
+    {
+        .title       = "Beginning Of A Career",
+        .description = "Play for 1 minute total",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .hidden      = false,
+        .identifier  = NULL,
+    },
+    {
+        .title       = "Bad Roommate",
+        .description = "Play for 10 minutes total",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 10,
+        .hidden      = false,
+        .identifier  = NULL,
+    },
+    {
+        .title       = "Swadgetamatone Master",
+        .description = "Play for 60 minutes total",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 60,
+        .hidden      = false,
+        .identifier  = NULL,
+    },
+};
+trophySettings_t sttTrophySettings = {
+    .drawFromBottom   = true,
+    .staticDurationUs = DRAW_STATIC_US * 2,
+    .slideDurationUs  = DRAW_SLIDE_US,
+};
+trophyDataList_t sttTrophyData
+    = {.settings = &sttTrophySettings, .list = sttTrophies, .length = ARRAY_SIZE(sttTrophies)};
+
 typedef enum
 {
     STT_MENU,
     STT_TUTORIAL,
     STT_SINGING,
 } sttState_t;
-
-typedef enum
-{
-    NONE,
-    HIGH,
-    MID,
-    LOW,
-} sttOctave_t;
 
 typedef struct
 {
@@ -32,10 +77,14 @@ typedef struct
     menuMegaRenderer_t* menuRenderer;
 
     vec_t touchpad;
-    sttOctave_t octavePressed;
+    /// Number from 1-4 for low-high. 0 means none pressed.
+    uint8_t octavePressed;
 
+    /// Time since a button to play a note was pressed or released
     int64_t noteStateElapsedUs;
     int32_t freq;
+
+    int32_t totalTimePlayedMs;
 
     synthOscillator_t* oscillators[1];
     synthOscillator_t sttOsc;
@@ -65,14 +114,16 @@ swadgeMode_t swadgetamatoneMode = {
     .fnMainLoop               = sttMainLoop,
     .fnBackgroundDrawCallback = sttBackgroundDrawCallback,
     .fnDacCb                  = sttDacCallback,
+    .trophyData               = &sttTrophyData,
 };
 
-#define LOW_MIN_HZ  110
-#define LOW_MAX_HZ  208
-#define MID_MIN_HZ  220
-#define MID_MAX_HZ  415
-#define HIGH_MIN_HZ 440
-#define HIGH_MAX_HZ 831
+/// F
+#define STT_MIN_HZ 87
+/// E
+#define STT_MAX_HZ 165
+
+#define STT_MIN_VOLUME 10
+#define STT_MAX_VOLUME 255
 
 /// Time to lerp pitch from (100 - PITCH_ATTACK_BEND_PCT)% to target pitch at button press
 #define PITCH_LERP_US 200000
@@ -89,8 +140,13 @@ static void sttEnterMode(void)
     stt->state = STT_SINGING; // TODO: Go to tutorial on first run
 
     stt->touchpad.x = 512;
-    stt->touchpad.y = 0;
+    stt->touchpad.y = 512;
+    // Prevent mouth from animating closed at mode launch
+    stt->noteStateElapsedUs = VOLUME_LERP_US;
 
+    readNamespaceNvs32(sttNvsNamespace, sttNvsKeyTotalTimePlayed, &stt->totalTimePlayedMs);
+
+    // Initial freq/volume values don't matter since they'll get overwritten by touchpad data
     swSynthInitOscillatorWave(&stt->sttOsc, sttGenerateWaveform, 0, 0, 0);
     stt->oscillators[0] = &stt->sttOsc;
 
@@ -105,6 +161,8 @@ static void sttEnterMode(void)
 
 static void sttExitMode(void)
 {
+    writeNamespaceNvs32(sttNvsNamespace, sttNvsKeyTotalTimePlayed, stt->totalTimePlayedMs);
+
     deinitMenuMegaRenderer(stt->menuRenderer);
     deinitMenu(stt->menu);
     freeWsg(&stt->background);
@@ -148,42 +206,48 @@ static void sttMainLoop(int64_t elapsedUs)
                 stt->state = STT_MENU;
             }
 
-            if (evt.button == PB_LEFT)
+            uint8_t octavePressed = 0;
+            if (evt.button == PB_DOWN)
             {
-                if (evt.down)
-                {
-                    stt->octavePressed      = LOW;
-                    stt->noteStateElapsedUs = 0;
-                }
-                else if (!evt.down && stt->octavePressed == LOW)
-                {
-                    stt->octavePressed      = NONE;
-                    stt->noteStateElapsedUs = 0;
-                }
+                octavePressed = 1;
             }
-            else if (evt.button == PB_UP)
+            else if (evt.button == PB_LEFT)
             {
-                if (evt.down)
-                {
-                    stt->octavePressed      = MID;
-                    stt->noteStateElapsedUs = 0;
-                }
-                else if (!evt.down && stt->octavePressed == MID)
-                {
-                    stt->octavePressed      = NONE;
-                    stt->noteStateElapsedUs = 0;
-                }
+                octavePressed = 2;
             }
             else if (evt.button == PB_RIGHT)
             {
+                octavePressed = 3;
+            }
+            else if (evt.button == PB_UP)
+            {
+                octavePressed = 4;
+            }
+
+            if (octavePressed != 0)
+            {
                 if (evt.down)
                 {
-                    stt->octavePressed      = HIGH;
+                    stt->octavePressed      = octavePressed;
                     stt->noteStateElapsedUs = 0;
+                    trophyUpdate(sttTrophies[0], 1, true);
                 }
-                else if (!evt.down && stt->octavePressed == HIGH)
+                else if (!evt.down && stt->octavePressed == octavePressed)
                 {
-                    stt->octavePressed      = NONE;
+                    int32_t previousTotalTimePlayedMs = stt->totalTimePlayedMs;
+                    stt->totalTimePlayedMs += stt->noteStateElapsedUs / 1000;
+
+                    int32_t minutesPlayed = stt->totalTimePlayedMs / (60 * 1000);
+                    // Only update trophy progress once per minute of play time, since the milestone calls write to NVS
+                    if (previousTotalTimePlayedMs / (60 * 1000) < minutesPlayed)
+                    {
+                        writeNamespaceNvs32(sttNvsNamespace, sttNvsKeyTotalTimePlayed, stt->totalTimePlayedMs);
+                        trophyUpdateMilestone(sttTrophies[1], minutesPlayed, 100);
+                        trophyUpdateMilestone(sttTrophies[2], minutesPlayed, 20);
+                        trophyUpdateMilestone(sttTrophies[3], minutesPlayed, 25);
+                    }
+
+                    stt->octavePressed      = 0;
                     stt->noteStateElapsedUs = 0;
                 }
             }
@@ -212,52 +276,42 @@ static void sttMainLoop(int64_t elapsedUs)
                 getTouchCartesianSquircle(angle, radius, &stt->touchpad.x, &stt->touchpad.y);
             }
 
-            if (stt->octavePressed != NONE)
+            uint8_t volume;
+            if (stt->octavePressed != 0)
             {
-                uint16_t minHz, maxHz;
-                switch (stt->octavePressed)
-                {
-                    case LOW:
-                        minHz = LOW_MIN_HZ;
-                        maxHz = LOW_MAX_HZ;
-                        break;
-                    case MID:
-                        minHz = MID_MIN_HZ;
-                        maxHz = MID_MAX_HZ;
-                        break;
-                    case HIGH:
-                        minHz = HIGH_MIN_HZ;
-                        maxHz = HIGH_MAX_HZ;
-                        break;
-                    default:
-                        minHz = 0;
-                        maxHz = 0;
-                        break;
-                }
-
-                uint32_t noteHz = stt->touchpad.x * (maxHz - minHz) / 1023 + minHz;
-                uint8_t volume  = stt->touchpad.y * 255 / 1023;
-
+                uint32_t noteHz = (stt->touchpad.x * (STT_MAX_HZ - STT_MIN_HZ) / 1023 + STT_MIN_HZ)
+                                  << (stt->octavePressed - 1);
                 if (stt->noteStateElapsedUs < PITCH_LERP_US)
                 {
                     noteHz -= noteHz / 100 * PITCH_ATTACK_BEND_PCT * (PITCH_LERP_US - stt->noteStateElapsedUs)
                               / PITCH_LERP_US;
                 }
+                swSynthSetFreq(&stt->sttOsc, noteHz);
+
+                volume = MAX(stt->touchpad.y * STT_MAX_VOLUME / 1023, STT_MIN_VOLUME);
                 if (stt->noteStateElapsedUs < VOLUME_LERP_US)
                 {
                     volume = volume * ((float)stt->noteStateElapsedUs / VOLUME_LERP_US);
                 }
-
-                swSynthSetFreq(&stt->sttOsc, noteHz);
-                swSynthSetVolume(&stt->sttOsc, volume);
             }
             else
             {
-                swSynthSetVolume(&stt->sttOsc, 0);
+                if (stt->noteStateElapsedUs < VOLUME_LERP_US)
+                {
+                    volume = stt->touchpad.y * STT_MAX_VOLUME / 1023;
+                    volume -= volume * ((float)stt->noteStateElapsedUs / VOLUME_LERP_US);
+                }
+                else
+                {
+                    volume = 0;
+                }
             }
 
-            int16_t xRadius = CLAMP(stt->touchpad.x * TFT_WIDTH / 1023, 0, TFT_WIDTH - 6) / 2;
-            int16_t yRadius = CLAMP(stt->touchpad.y * TFT_HEIGHT / 1023, 0, TFT_HEIGHT - 6) / 2;
+            swSynthSetVolume(&stt->sttOsc, volume);
+
+            int16_t xRadius = CLAMP(stt->touchpad.x * TFT_WIDTH / 1023, 8, TFT_WIDTH - 6) / 2;
+            // Use the calculated volume for height so it animates open/closed with the volume fade in/out
+            int16_t yRadius = MIN(volume * TFT_HEIGHT / STT_MAX_VOLUME, TFT_HEIGHT - 6) / 2;
             sttDrawMouthForegound(xRadius, yRadius, c444);
             drawEllipse(TFT_WIDTH / 2, TFT_HEIGHT / 2, xRadius, yRadius, c000);
 

@@ -136,6 +136,15 @@ const trophyData_t mainMenuTrophies[] = {
         .identifier  = &synthMode,
     },
     {
+        .title       = "The song of my people",
+        .description = "Opened Swadgetamatone for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &swadgetamatoneMode,
+    },
+    {
         .title       = "Blinded by the lights",
         .description = "Opened Light dances on purpose for the first time",
         .image       = NO_IMAGE_SET,
