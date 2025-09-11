@@ -152,10 +152,13 @@ void physRemoveAllObjects(physSim_t* phys)
  */
 void deinitPhys(physSim_t* phys)
 {
-    physRemoveAllObjects(phys);
+    if (phys)
+    {
+        physRemoveAllObjects(phys);
 
-    // Free the simulation
-    heap_caps_free(phys);
+        // Free the simulation
+        heap_caps_free(phys);
+    }
 }
 
 /**
@@ -491,19 +494,9 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
     {
         physCirc_t* pc = (physCirc_t*)cNode->val;
 
-        // Pick color based on type
-        paletteColor_t cCol = c522;
-        if (CT_TANK == pc->type)
-        {
-            cCol = c335;
-        }
-        else if (CT_SHELL == pc->type)
-        {
-            cCol = c550;
-        }
-        drawCircleFilled(pc->c.pos.x - phys->camera.x, //
-                         pc->c.pos.y - phys->camera.y, //
-                         pc->c.radius, cCol);
+        // Get color from object
+        paletteColor_t bCol = pc->baseColor;
+        paletteColor_t aCol = pc->accentColor;
 
         // Draw a gun barrel for tanks
         if (CT_TANK == pc->type)
@@ -513,8 +506,17 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
                          pc->c.pos.y - phys->camera.y,    //
                          absBarrelTip.x - phys->camera.x, //
                          absBarrelTip.y - phys->camera.y, //
-                         c335);
+                         aCol);
+        }
 
+        // Draw main circle
+        drawCircleFilled(pc->c.pos.x - phys->camera.x, //
+                         pc->c.pos.y - phys->camera.y, //
+                         pc->c.radius, bCol);
+
+        // Draw wheels for tanks too
+        if (CT_TANK == pc->type)
+        {
             // and some wheels too
             float wheelR = pc->c.radius / 2.0f;
             float wheelY = pc->c.radius - wheelR;
@@ -535,23 +537,23 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
 
             // Draw first wheel
             vecFl_t w1 = addVecFl2d(pc->c.pos, addVecFl2d(wheelOffVert, wheelOffHorz));
-            drawCircleFilled(w1.x - phys->camera.x, w1.y - phys->camera.y, wheelR, c225);
+            drawCircleFilled(w1.x - phys->camera.x, w1.y - phys->camera.y, wheelR, aCol);
 
             // Draw second wheel
             vecFl_t w2 = addVecFl2d(pc->c.pos, subVecFl2d(wheelOffVert, wheelOffHorz));
-            drawCircleFilled(w2.x - phys->camera.x, w2.y - phys->camera.y, wheelR, c225);
+            drawCircleFilled(w2.x - phys->camera.x, w2.y - phys->camera.y, wheelR, aCol);
 
             // Draw top tread
             drawLineFast(w1.x + treadOff.x - phys->camera.x, //
                          w1.y + treadOff.y - phys->camera.y, //
                          w2.x + treadOff.x - phys->camera.x, //
                          w2.y + treadOff.y - phys->camera.y, //
-                         c225);
+                         aCol);
             drawLineFast(w1.x - treadOff.x - phys->camera.x, //
                          w1.y - treadOff.y - phys->camera.y, //
                          w2.x - treadOff.x - phys->camera.x, //
                          w2.y - treadOff.y - phys->camera.y, //
-                         c225);
+                         aCol);
         }
 
         // Iterate
@@ -827,7 +829,7 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
     for (int32_t shellCount = 0; shellCount < numShells; shellCount++)
     {
         // Create the shell at the tip of the barrel
-        physCirc_t* shell = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, radius, CT_SHELL);
+        physCirc_t* shell = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, radius, CT_SHELL, c440, c000);
         // Set the owner of the shell as the firing tank
         shell->owner = circ;
 
@@ -845,13 +847,14 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param phys
- * @param players
  * @param numPlayers
+ * @param players
+ * @param colors
  */
-void physSpawnPlayers(physSim_t* phys, physCirc_t* players[], int32_t numPlayers)
+void physSpawnPlayers(physSim_t* phys, int32_t numPlayers, physCirc_t* players[], paletteColor_t* colors)
 {
     float margin  = phys->bounds.x / 8;
     float spacing = (phys->bounds.x - (2 * margin)) / (numPlayers - 1);
@@ -859,8 +862,10 @@ void physSpawnPlayers(physSim_t* phys, physCirc_t* players[], int32_t numPlayers
     float x = margin;
     for (int32_t p = 0; p < numPlayers; p++)
     {
+        paletteColor_t base   = *(colors++);
+        paletteColor_t accent = *(colors++);
         // Create a new player
-        players[p] = physAddCircle(phys, x, 1 + PLAYER_RADIUS, PLAYER_RADIUS, CT_TANK);
+        players[p] = physAddCircle(phys, x, 1 + PLAYER_RADIUS, PLAYER_RADIUS, CT_TANK, base, accent);
 
         // Adjust X for the net player
         x += spacing;
@@ -891,9 +896,10 @@ void physSpawnPlayers(physSim_t* phys, physCirc_t* players[], int32_t numPlayers
  * @param barrelAngle
  * @return physCirc_t*
  */
-physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, float barrelAngle)
+physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, float barrelAngle, paletteColor_t baseColor,
+                          paletteColor_t accentColor)
 {
-    physCirc_t* pc = physAddCircle(phys, pos.x, pos.y, PLAYER_RADIUS, CT_TANK);
+    physCirc_t* pc = physAddCircle(phys, pos.x, pos.y, PLAYER_RADIUS, CT_TANK, baseColor, accentColor);
     setBarrelAngle(pc, barrelAngle);
     return pc;
 }

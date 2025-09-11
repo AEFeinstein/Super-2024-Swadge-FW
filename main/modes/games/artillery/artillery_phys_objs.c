@@ -92,9 +92,12 @@ void updateLineProperties(physSim_t* phys, physLine_t* pl)
  * @param y1 The Y point of the center of the circle
  * @param r The radius of the circle
  * @param type The type of circle. CT_OBSTACLE is immobile, others are mobile.
+ * @param baseColor
+ * @param accentColor
  * @return The circle, also saved in the argument phys
  */
-physCirc_t* physAddCircle(physSim_t* phys, uint16_t x1, uint16_t y1, uint16_t r, circType_t type)
+physCirc_t* physAddCircle(physSim_t* phys, uint16_t x1, uint16_t y1, uint16_t r, circType_t type,
+                          paletteColor_t baseColor, paletteColor_t accentColor)
 {
     // Allocate the circle
     physCirc_t* pc = heap_caps_calloc(1, sizeof(physCirc_t), MALLOC_CAP_8BIT);
@@ -104,6 +107,9 @@ physCirc_t* physAddCircle(physSim_t* phys, uint16_t x1, uint16_t y1, uint16_t r,
     pc->c.pos.y  = y1;
     pc->c.radius = r;
     pc->type     = type;
+
+    pc->baseColor   = baseColor;
+    pc->accentColor = accentColor;
 
     // Additional initialization based on type
     switch (type)

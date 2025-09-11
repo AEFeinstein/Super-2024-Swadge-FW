@@ -26,6 +26,7 @@ typedef enum
     AMS_CONNECTING,
     AMS_GAME,
     AMS_HELP,
+    AMS_PAINT,
 } artilleryModeState_t;
 
 typedef enum
@@ -68,6 +69,7 @@ typedef struct
 
     // In-game menu and renderer
     menu_t* modeMenu;
+    menu_t* paintMenu;
     menuMegaRenderer_t* mRenderer;
     font_t* scoreFont;
 
@@ -92,6 +94,11 @@ typedef struct
     p2pInfo p2p;
     const char* conStr;
     list_t p2pQueue;
+
+    // Variables for tank colors
+    int32_t paintArrowBlinkTimer;
+    int32_t myColorIdx;
+    int32_t theirColorIdx;
 } artilleryData_t;
 
 extern const char load_ammo[];

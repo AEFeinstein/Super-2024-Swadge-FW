@@ -7,6 +7,7 @@
 #include "artillery_phys_terrain.h"
 #include "artillery_phys_bsp.h"
 #include "artillery_game.h"
+#include "artillery_paint.h"
 
 #define NUM_TERRAIN_POINTS_A (64 + 18)
 #define NUM_TERRAIN_POINTS_B (NUM_TERRAIN_POINTS - NUM_TERRAIN_POINTS_A)
@@ -17,6 +18,7 @@
 
 typedef enum __attribute__((packed))
 {
+    P2P_SET_COLOR,
     P2P_SET_WORLD,
     P2P_ADD_TERRAIN,
     P2P_SET_PLAYERS,
@@ -27,6 +29,12 @@ typedef enum __attribute__((packed))
 //==============================================================================
 // Structs
 //==============================================================================
+
+typedef struct __attribute__((packed))
+{
+    uint8_t type;
+    uint8_t colorIdx;
+} artPktColor_t;
 
 typedef struct __attribute__((packed))
 {
@@ -137,13 +145,7 @@ void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
             // If going first, generate and transmit the world
             if (GOING_FIRST == p2pGetPlayOrder(p2p))
             {
-                artilleryInitGame(AG_WIRELESS, true);
-                artilleryTxWorld(ad);
-            }
-            else
-            {
-                artilleryInitGame(AG_WIRELESS, false);
-                // Prepare to receive terrain
+                artilleryTxColor(ad);
             }
             break;
         }
@@ -172,6 +174,28 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 
     switch (payload[0])
     {
+        case P2P_SET_COLOR:
+        {
+            const artPktColor_t* pkt = (const artPktColor_t*)payload;
+            ad->theirColorIdx        = pkt->colorIdx;
+
+            // If going second
+            if (GOING_SECOND == p2pGetPlayOrder(p2p))
+            {
+                // Reply with our color
+                artilleryTxColor(ad);
+                // Prepare to receive terrain
+                artilleryInitGame(AG_WIRELESS, false);
+            }
+            // If going first
+            else
+            {
+                // Both colors transmitted, start the game
+                artilleryInitGame(AG_WIRELESS, true);
+                artilleryTxWorld(ad);
+            }
+            break;
+        }
         case P2P_SET_WORLD:
         {
             const artPktWorld_t* pkt = (const artPktWorld_t*)payload;
@@ -184,10 +208,27 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
             // Add lines from packet
             physAddTerrainPoints(ad->phys, 0, pkt->terrainPoints, NUM_TERRAIN_POINTS_A);
 
+            // Set the color indices depending on the play order
+            uint8_t colorIndices[2] = {0};
+            if (GOING_FIRST == p2pGetPlayOrder(p2p))
+            {
+                colorIndices[0] = ad->theirColorIdx;
+                colorIndices[1] = ad->myColorIdx;
+            }
+            else
+            {
+                colorIndices[0] = ad->myColorIdx;
+                colorIndices[1] = ad->theirColorIdx;
+            }
+
             // Add players from packet
             for (int32_t pIdx = 0; pIdx < ARRAY_SIZE(pkt->players); pIdx++)
             {
-                ad->players[pIdx] = physAddPlayer(ad->phys, pkt->players[pIdx].pos, pkt->players[pIdx].barrelAngle);
+                paletteColor_t base;
+                paletteColor_t accent;
+                artilleryGetTankColors(colorIndices[pIdx], &base, &accent);
+                ad->players[pIdx]
+                    = physAddPlayer(ad->phys, pkt->players[pIdx].pos, pkt->players[pIdx].barrelAngle, base, accent);
                 ad->players[pIdx]->score = pkt->players[pIdx].score;
             }
 
@@ -266,6 +307,26 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
  */
 void artillery_p2pMsgTxCb(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
 {
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param ad
+ */
+void artilleryTxColor(artilleryData_t* ad)
+{
+    // Allocate a packet
+    artPktColor_t* pkt = heap_caps_calloc(1, sizeof(artPktShot_t), MALLOC_CAP_SPIRAM);
+
+    // Write the type
+    pkt->type = P2P_SET_COLOR;
+
+    // Write the data
+    pkt->colorIdx = ad->myColorIdx;
+
+    // Push into the queue
+    push(&ad->p2pQueue, pkt);
 }
 
 /**
@@ -433,6 +494,10 @@ static uint8_t getSizeFromType(artilleryP2pPacketType_t type)
 {
     switch (type)
     {
+        case P2P_SET_COLOR:
+        {
+            return sizeof(artPktColor_t);
+        }
         case P2P_SET_WORLD:
         {
             return sizeof(artPktWorld_t);

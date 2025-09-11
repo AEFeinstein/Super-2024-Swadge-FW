@@ -87,6 +87,8 @@ typedef struct _physCirc_t
 
     // Common characteristics
     float bounciness; ///< Bounciness, from 0 (no bounce) to 1 (no velocity lost on bounce)
+    paletteColor_t baseColor;
+    paletteColor_t accentColor;
 
     // Game data
     circType_t type;
@@ -164,8 +166,9 @@ void physRemoveAllObjects(physSim_t* phys);
 void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_t moveTimeLeftUs);
 bool physStep(physSim_t* phys, int32_t elapsedUs);
 
-void physSpawnPlayers(physSim_t* phys, physCirc_t* players[], int32_t numPlayers);
-physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, float barrelAngle);
+void physSpawnPlayers(physSim_t* phys, int32_t numPlayers, physCirc_t* players[], paletteColor_t* colors);
+physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, float barrelAngle, paletteColor_t baseColor,
+                          paletteColor_t accentColor);
 
 void setBarrelAngle(physCirc_t* circ, float angle);
 void setShotPower(physCirc_t* circ, float power);
