@@ -141,6 +141,9 @@ void changeStatePause(platformer_t* self);
 void updatePause(platformer_t* self);
 void drawPause(font_t* font);
 uint16_t getLevelIndex(uint8_t world, uint8_t level);
+void changeStateMainMenu(platformer_t* self);
+void mgBuildMainMenu(platformer_t* self);
+void mgUpdateMainMenu(platformer_t * self);
 
 //==============================================================================
 // Variables
@@ -217,7 +220,7 @@ void platformerEnterMode(void)
     }
 
     loadFont(PULSE_AUX_FONT, &platformer->font, false);
-    platformer->menuRenderer = initMenuMegaRenderer(&platformer->font, &platformer->font, &platformer->font);
+    platformer->menuRenderer = initMenuMegaRenderer(NULL,NULL,NULL);
 
     mg_initializeWsgManager(&(platformer->wsgManager));
 
@@ -253,6 +256,82 @@ void platformerExitMode(void)
 }
 
 /**
+ * @brief This callback function is called when an item is selected from the menu
+ *
+ * @param label The item that was selected from the menu
+ * @param selected True if the item was selected with the A button, false if this is a multi-item which scrolled to
+ * @param settingVal The value of the setting, if the menu item is a settings item
+ */
+static void mgMenuCb(const char* label, bool selected, uint32_t settingVal)
+{
+    if (selected)
+    {
+        if (label == mgMenuNewGame)
+        {
+            uint16_t levelIndex = getLevelIndex(platformer->gameData.world, platformer->gameData.level);
+            if ((levelIndex >= NUM_LEVELS)
+                || (!platformer->gameData.debugMode && levelIndex > platformer->unlockables.maxLevelIndexUnlocked))
+            {
+                soundPlaySfx(&(platformer->soundManager.sndMenuDeny), BZR_STEREO);
+                return;
+            }
+
+            /*if(self->menuSelection == 0){
+                self->gameData.world = 1;
+                self->gameData.level = 1;
+            }*/
+
+            mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
+            changeStateReadyScreen(platformer);
+        }
+        else if (label == mgMenuContinue)
+        {
+            /*pango->gameData.level       = settingVal;
+            pango->gameData.caravanMode = false;
+            pa_initializeGameDataFromTitleScreen(&(pango->gameData));
+            pa_setDifficultyLevel(&(pango->wsgManager), &(pango->gameData), settingVal);
+            pango->entityManager.activeEnemies = 0;
+            pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
+            pa_generateMaze(&(pango->tilemap));
+            pa_placeEnemySpawns(&(pango->tilemap));
+
+            changeStateReadyScreen(pango);
+            deinitMenu(pango->menu);*/
+        }
+        else if (label == mgMenuHighScores)
+        {
+            changeStateShowHighScores(platformer);
+            platformer->gameData.btnState = 0;
+            deinitMenu(platformer->menu);
+        }
+        else if (label == mgMenuResetScores)
+        {
+            initializePlatformerHighScores(platformer);
+            soundPlaySfx(&(platformer->soundManager.sndSquish), MIDI_SFX);
+        }
+        else if (label == mgMenuResetProgress)
+        {
+            initializePlatformerUnlockables(platformer);
+            soundPlaySfx(&(platformer->soundManager.sndDie), MIDI_SFX);
+        }
+        else if (label == mgMenuSaveAndExit)
+        {
+            savePlatformerHighScores(platformer);
+            savePlatformerUnlockables(platformer);
+            switchToSwadgeMode(&mainMenuMode);
+        }
+        else if (label == mgMenuExit)
+        {
+            switchToSwadgeMode(&mainMenuMode);
+        }
+        else if (label == mgMenuPlaceholder)
+        {
+            soundPlaySfx(&(platformer->soundManager.sndMenuDeny), MIDI_SFX);
+        }
+    }
+}
+
+/**
  * @brief TODO
  *
  * @param elapsedUs
@@ -266,12 +345,54 @@ void platformerMainLoop(int64_t elapsedUs)
         // Save the button state
         platformer->btnState          = evt.state;
         platformer->gameData.btnState = evt.state;
+
+        if (platformer->update == &mgUpdateMainMenu)
+        {
+            // Pass button events to the menu
+            platformer->menu = menuButton(platformer->menu, evt);
+        }
     }
 
     platformer->update(platformer);
 
     platformer->prevBtnState          = platformer->btnState;
     platformer->gameData.prevBtnState = platformer->prevBtnState;
+}
+
+void changeStateMainMenu(platformer_t* self)
+{
+    self->gameData.frameCount = 0;
+    self->gameData.changeState = 0;
+    self->update = &mgUpdateMainMenu;
+    mgBuildMainMenu(self);
+}
+
+void mgBuildMainMenu(platformer_t* self)
+{
+    // Initialize the menu
+    self->menu = initMenu(platformerName, mgMenuCb);
+    addSingleItemToMenu(self->menu, mgMenuNewGame);
+
+    addSingleItemToMenu(self->menu, mgMenuPlaceholder);
+
+    addSingleItemToMenu(self->menu, mgMenuHighScores);
+
+    if (self->gameData.debugMode)
+    {
+        addSingleItemToMenu(self->menu, mgMenuResetProgress);
+        addSingleItemToMenu(self->menu, mgMenuResetScores);
+        addSingleItemToMenu(self->menu, mgMenuSaveAndExit);
+    }
+    else
+    {
+        addSingleItemToMenu(self->menu, mgMenuExit);
+    }
+}
+
+void mgUpdateMainMenu(platformer_t* self)
+{
+    // Draw the menu
+    drawMenuMega(self->menu, self->menuRenderer, 16666);
 }
 
 /**
@@ -363,267 +484,38 @@ void updateTitleScreen(platformer_t* self)
 
     self->gameData.frameCount++;
 
-    // Handle inputs
-    switch (platformer->menuState)
+    if ((self->gameData.btnState & cheatCode[self->menuSelection])
+        && !(self->gameData.prevBtnState & cheatCode[self->menuSelection]))
     {
-        case 0:
+        self->menuSelection++;
+
+        if (self->menuSelection > 8)
         {
-            if (self->gameData.frameCount > 600)
-            {
-                mg_resetGameDataLeds(&(self->gameData));
-                changeStateShowHighScores(self);
-            }
-
-            if ((self->gameData.btnState & cheatCode[platformer->cheatCodeIdx])
-                && !(self->gameData.prevBtnState & cheatCode[platformer->cheatCodeIdx]))
-            {
-                platformer->cheatCodeIdx++;
-
-                if (platformer->cheatCodeIdx > 10)
-                {
-                    platformer->cheatCodeIdx       = 0;
-                    platformer->menuState          = 1;
-                    platformer->gameData.debugMode = true;
-                    soundPlaySfx(&(platformer->soundManager.sndLevelClearS), BZR_STEREO);
-                    break;
-                }
-                else
-                {
-                    soundPlaySfx(&(platformer->soundManager.sndMenuSelect), BZR_STEREO);
-                    break;
-                }
-            }
-            else
-            {
-                if (!(self->gameData.frameCount % 150))
-                {
-                    platformer->cheatCodeIdx = 0;
-                }
-            }
-
-            if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START))
-                || ((self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A)))
-            {
-                soundPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
-                platformer->menuState     = 1;
-                platformer->menuSelection = 0;
-            }
-
-            break;
+            self->menuSelection      = 0;
+            self->menuState          = 1;
+            self->gameData.debugMode = true;
+            soundPlaySfx(&(self->soundManager.sndLevelClearS), MIDI_SFX);
         }
-        case 1:
-        {
-            if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START))
-                || ((self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A)))
-            {
-                switch (self->menuSelection)
-                {
-                    case 0 ... 1:
-                    {
-                        uint16_t levelIndex = getLevelIndex(self->gameData.world, self->gameData.level);
-                        if ((levelIndex >= NUM_LEVELS)
-                            || (!self->gameData.debugMode && levelIndex > self->unlockables.maxLevelIndexUnlocked))
-                        {
-                            soundPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
-                            break;
-                        }
-
-                        /*if(self->menuSelection == 0){
-                            self->gameData.world = 1;
-                            self->gameData.level = 1;
-                        }*/
-
-                        mg_initializeGameDataFromTitleScreen(&(self->gameData));
-                        changeStateReadyScreen(self);
-                        break;
-                    }
-                    case 2:
-                    {
-                        if (self->gameData.debugMode)
-                        {
-                            // Reset Progress
-                            initializePlatformerUnlockables(self);
-                            soundPlaySfx(&(self->soundManager.sndBreak), BZR_STEREO);
-                        }
-                        else
-                        {
-                            // Show High Scores
-                            self->menuSelection = 0;
-                            self->menuState     = 0;
-
-                            changeStateShowHighScores(self);
-                            soundPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
-                        }
-                        break;
-                    }
-                    case 3:
-                    {
-                        if (self->gameData.debugMode)
-                        {
-                            // Reset High Scores
-                            initializePlatformerHighScores(self);
-                            soundPlaySfx(&(self->soundManager.sndBreak), BZR_STEREO);
-                        }
-                        else
-                        {
-                            // Show Achievements
-                            self->menuSelection = 0;
-                            self->menuState     = 2;
-                            soundPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
-                        }
-                        break;
-                    }
-                    case 4:
-                    {
-                        if (self->gameData.debugMode)
-                        {
-                            // Save & Quit
-                            savePlatformerHighScores(self);
-                            savePlatformerUnlockables(self);
-                            soundPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
-                            switchToSwadgeMode(&mainMenuMode);
-                        }
-                        else
-                        {
-                            soundPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
-                            switchToSwadgeMode(&mainMenuMode);
-                        }
-                        break;
-                    }
-                    default:
-                    {
-                        soundPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
-                        self->menuSelection = 0;
-                    }
-                }
-            }
-            else if ((self->gameData.btnState & PB_UP && !(self->gameData.prevBtnState & PB_UP)))
-            {
-                if (platformer->menuSelection > 0)
-                {
-                    platformer->menuSelection--;
-
-                    if (!self->gameData.debugMode && platformer->menuSelection == 1
-                        && self->unlockables.maxLevelIndexUnlocked == 0)
-                    {
-                        platformer->menuSelection--;
-                    }
-
-                    soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
-                }
-            }
-            else if ((self->gameData.btnState & PB_DOWN && !(self->gameData.prevBtnState & PB_DOWN)))
-            {
-                if (platformer->menuSelection < 4)
-                {
-                    platformer->menuSelection++;
-
-                    if (!self->gameData.debugMode && platformer->menuSelection == 1
-                        && self->unlockables.maxLevelIndexUnlocked == 0)
-                    {
-                        platformer->menuSelection++;
-                    }
-
-                    soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
-                }
-                else
-                {
-                    soundPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
-                }
-            }
-            else if ((self->gameData.btnState & PB_LEFT && !(self->gameData.prevBtnState & PB_LEFT)))
-            {
-                if (platformer->menuSelection == 1)
-                {
-                    if (platformer->gameData.level == 1 && platformer->gameData.world == 1)
-                    {
-                        soundPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
-                    }
-                    else
-                    {
-                        platformer->gameData.level--;
-                        if (platformer->gameData.level < 1)
-                        {
-                            platformer->gameData.level = 4;
-                            if (platformer->gameData.world > 1)
-                            {
-                                platformer->gameData.world--;
-                            }
-                        }
-                        soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
-                    }
-                }
-            }
-            else if ((self->gameData.btnState & PB_RIGHT && !(self->gameData.prevBtnState & PB_RIGHT)))
-            {
-                if (platformer->menuSelection == 1)
-                {
-                    if ((platformer->gameData.level == 4 && platformer->gameData.world == 4)
-                        || (!platformer->gameData.debugMode
-                            && getLevelIndex(platformer->gameData.world, platformer->gameData.level + 1)
-                                   > platformer->unlockables.maxLevelIndexUnlocked))
-                    {
-                        soundPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
-                    }
-                    else
-                    {
-                        platformer->gameData.level++;
-                        if (platformer->gameData.level > 4)
-                        {
-                            platformer->gameData.level = 1;
-                            if (platformer->gameData.world < 8)
-                            {
-                                platformer->gameData.world++;
-                            }
-                        }
-                        soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
-                    }
-                }
-            }
-            else if ((self->gameData.btnState & PB_B && !(self->gameData.prevBtnState & PB_B)))
-            {
-                self->gameData.frameCount = 0;
-                platformer->menuState     = 0;
-                soundPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
-            }
-            break;
-        }
-        case 2:
-        {
-            if ((self->gameData.btnState & PB_B && !(self->gameData.prevBtnState & PB_B)))
-            {
-                self->gameData.frameCount = 0;
-                platformer->menuState     = 1;
-                soundPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
-            }
-            break;
-        }
-        default:
-            platformer->menuState = 0;
-            soundPlaySfx(&(platformer->soundManager.sndMenuDeny), BZR_STEREO);
-            break;
     }
 
-    mg_scrollTileMap(&(platformer->tilemap), 1, 0);
-    if (self->tilemap.mapOffsetX >= self->tilemap.maxMapOffsetX && self->gameData.frameCount > 58)
+    if ((((self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A))
+         || ((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START))))
     {
-        self->tilemap.mapOffsetX = 0;
+        self->gameData.btnState = 0;
+        self->menuSelection    = 0;
+
+        if (!self->gameData.debugMode)
+        {
+            soundPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
+        }
+
+        changeStateMainMenu(self);
+        return;
     }
 
     drawPlatformerTitleScreen(&(self->font), &(self->gameData));
 
-    if (((self->gameData.frameCount) % 10) == 0)
-    {
-        for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
-        {
-            // self->gameData.leds[i].r = (( (self->gameData.frameCount >> 4) % NUM_LEDS) == i) ? 0xFF : 0x00;
-
-            platLeds[i].r += (esp_random() % 1);
-            platLeds[i].g += (esp_random() % 8);
-            platLeds[i].b += (esp_random() % 8);
-        }
-    }
-    setLeds(platLeds, CONFIG_NUM_LEDS);
+    //leds
 }
 
 void drawPlatformerTitleScreen(font_t* font, mgGameData_t* gameData)
