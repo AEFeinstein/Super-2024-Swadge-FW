@@ -6,6 +6,8 @@
 #include "artillery_game.h"
 #include "artillery_phys_objs.h"
 #include "artillery_p2p.h"
+#include "artillery_paint.h"
+#include "mainMenu.h"
 
 //==============================================================================
 // Defines
@@ -119,7 +121,9 @@ const struct
 static const char str_passAndPlay[]     = "Pass and Play";
 static const char str_wirelessConnect[] = "Wireless Connect";
 static const char str_cpuPractice[]     = "CPU Practice";
+static const char str_paintSelect[]     = "Paint Shop";
 static const char str_help[]            = "Help!";
+static const char str_exit[]            = "Exit";
 
 static const char modeName[] = "Vector Tanks";
 
@@ -167,7 +171,11 @@ void artilleryEnterMode(void)
     addSingleItemToMenu(ad->modeMenu, str_passAndPlay);
     addSingleItemToMenu(ad->modeMenu, str_wirelessConnect);
     addSingleItemToMenu(ad->modeMenu, str_cpuPractice);
+    addSingleItemToMenu(ad->modeMenu, str_paintSelect);
     addSingleItemToMenu(ad->modeMenu, str_help);
+    addSingleItemToMenu(ad->modeMenu, str_exit);
+
+    ad->paintMenu = initMenu(str_paintSelect, NULL);
 
     // Initialize mode menu renderer
     ad->mRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
@@ -203,6 +211,9 @@ void artilleryEnterMode(void)
 
     // Set the touchpad as untouched
     ad->tpLastPhi = INT32_MIN;
+
+    // Load tank color
+    artilleryPaintLoadColor(ad);
 }
 
 /**
@@ -210,13 +221,24 @@ void artilleryEnterMode(void)
  */
 void artilleryExitMode(void)
 {
+    // Deinit physics
     deinitPhys(ad->phys);
+
+    // Deinit menus
     deinitMenuSimpleRenderer(ad->smRenderer);
+    deinitMenuMegaRenderer(ad->mRenderer);
+    deinitMenu(ad->modeMenu);
+    deinitMenu(ad->paintMenu);
+    deinitMenu(ad->gameMenu);
+
+    // Deinit p2p
     p2pDeinit(&ad->p2p);
     while (ad->p2pQueue.first)
     {
         heap_caps_free(pop(&ad->p2pQueue));
     }
+
+    // Free everything
     heap_caps_free(ad);
 }
 
@@ -259,6 +281,10 @@ void artilleryMainLoop(int64_t elapsedUs)
                 // TODO show help screen
                 break;
             }
+            case AMS_PAINT:
+            {
+                artilleryPaintInput(ad, &evt);
+            }
         }
     }
 
@@ -277,6 +303,7 @@ void artilleryMainLoop(int64_t elapsedUs)
             int16_t tWidth = textWidth(f, ad->conStr);
             drawText(ad->mRenderer->titleFont, c555, ad->conStr, (TFT_WIDTH - tWidth) / 2,
                      (TFT_HEIGHT - f->height) / 2);
+            artilleryCheckTxQueue(ad);
             break;
         }
         case AMS_GAME:
@@ -289,6 +316,10 @@ void artilleryMainLoop(int64_t elapsedUs)
         {
             // TODO render help
             break;
+        }
+        case AMS_PAINT:
+        {
+            artilleryPaintLoop(ad, elapsedUs);
         }
     }
 }
@@ -364,6 +395,16 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
         else if (str_help == label)
         {
             ESP_LOGI(ART_TAG, "TODO Start help!");
+            ad->mState = AMS_HELP;
+        }
+        else if (str_paintSelect == label)
+        {
+            ad->mState = AMS_PAINT;
+        }
+        else if (str_exit == label)
+        {
+            // Exit to the main menu
+            switchToSwadgeMode(&mainMenuMode);
         }
     }
     return false;
@@ -456,6 +497,13 @@ void setDriveInMenu(bool visible)
  */
 void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
 {
+    // For non-wireless games, pick a random color that's not the player's
+    if (gameType != AG_WIRELESS)
+    {
+        int32_t randomOffset = 1 + esp_random() % (artilleryGetNumTankColors() - 1);
+        ad->theirColorIdx    = (ad->myColorIdx + randomOffset) % artilleryGetNumTankColors();
+    }
+
     ad->gameType = gameType;
 
     // Initialize physics, including terrain
@@ -464,7 +512,10 @@ void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
     if (generateTerrain)
     {
         // Initialize players, including flattening terrain under them
-        physSpawnPlayers(ad->phys, ad->players, NUM_PLAYERS);
+        paletteColor_t colors[4];
+        artilleryGetTankColors(ad->myColorIdx, &colors[0], &colors[1]);
+        artilleryGetTankColors(ad->theirColorIdx, &colors[2], &colors[3]);
+        physSpawnPlayers(ad->phys, NUM_PLAYERS, ad->players, colors);
     }
 
     // Start with a full movement timer
