@@ -232,7 +232,7 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
 void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChanged)
 {
     // Draw the scene
-    drawPhysOutline(ad->phys, ad->players, ad->scoreFont, ad->moveTimerUs);
+    drawPhysOutline(ad->phys, ad->players, ad->scoreFont, ad->moveTimerUs, ad->turn);
 
     // Step the physics
     bool physChange = physStep(ad->phys, elapsedUs);
@@ -502,6 +502,21 @@ void artilleryPassTurn(artilleryData_t* ad)
 
     // Switch to the next player
     ad->plIdx = (ad->plIdx + 1) % NUM_PLAYERS;
+
+    // If we're back to the first player
+    if (0 == ad->plIdx)
+    {
+        // Increment the turn
+        ad->turn++;
+
+        if (7 == ad->turn)
+        {
+            // If all turns have been taken
+            // TODO end the game
+            ad->mState = AMS_MENU;
+            return;
+        }
+    }
 
     // Reset move timer
     ad->moveTimerUs = TANK_MOVE_TIME_US;

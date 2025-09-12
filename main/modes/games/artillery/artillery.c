@@ -537,6 +537,9 @@ void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
     // Start with a full movement timer
     ad->moveTimerUs = TANK_MOVE_TIME_US;
 
+    // Start on turn 1
+    ad->turn = 1;
+
     // Switch to showing the game
     ad->mState = AMS_GAME;
 

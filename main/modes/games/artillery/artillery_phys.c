@@ -488,7 +488,7 @@ void drawPhysBackground(physSim_t* phys, int16_t x0, int16_t y0, int16_t w, int1
  * @param font
  * @param moveTimeLeftUs
  */
-void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_t moveTimeLeftUs)
+void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_t moveTimeLeftUs, int32_t turn)
 {
     // Draw zones
     // for (int32_t z = 0; z < NUM_ZONES; z++)
@@ -587,18 +587,27 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
         eNode = eNode->next;
     }
 
+#define GAS_GAUGE_HEIGHT 16
+#define TEXT_Y           (GAS_GAUGE_HEIGHT + 4)
+#define TEXT_X_MARGIN    20
+
     // Draw gas gauge
-    fillDisplayArea(0, 0, (TFT_WIDTH * moveTimeLeftUs) / TANK_MOVE_TIME_US, 16, c222);
+    fillDisplayArea(0, 0, (TFT_WIDTH * moveTimeLeftUs) / TANK_MOVE_TIME_US, GAS_GAUGE_HEIGHT, c222);
+
+    // Draw turns
+    char turnStr[32] = {0};
+    snprintf(turnStr, sizeof(turnStr) - 1, "Turn %" PRId32, turn);
+    drawText(font, c444, turnStr, (TFT_WIDTH - textWidth(font, turnStr)) / 2, TEXT_Y);
 
     // Draw score if players are set
     if (players[0])
     {
         char scoreStr[32] = {0};
         snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, players[0]->score);
-        drawText(font, c555, scoreStr, 20, 20);
+        drawText(font, c555, scoreStr, TEXT_X_MARGIN, TEXT_Y);
 
         snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, players[1]->score);
-        drawText(font, c555, scoreStr, TFT_WIDTH - textWidth(font, scoreStr) - 20, 20);
+        drawText(font, c555, scoreStr, TFT_WIDTH - textWidth(font, scoreStr) - TEXT_X_MARGIN, TEXT_Y);
     }
 }
 
