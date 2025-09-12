@@ -16,9 +16,10 @@ static const char cosCrunchStartCraftingLbl[] = "Start Crafting";
 static const char cosCrunchHighScoresLbl[]    = "High Scores";
 static const char cosCrunchExitLbl[]          = "Exit";
 
-static const char cosCrunchGameOverTitle[]   = "Your costumes aren't done!";
-static const char cosCrunchYourScoreMsg[]    = "Your score: %" PRIi32;
-static const char cosCrunchNewHighScoreMsg[] = "New personal best!";
+static const char cosCrunchInterludeSpeedUp[] = "Speed up!";
+static const char cosCrunchGameOverTitle[]    = "Your costumes aren't done!";
+static const char cosCrunchYourScoreMsg[]     = "Your score: %" PRIi32;
+static const char cosCrunchNewHighScoreMsg[]  = "New personal best!";
 
 typedef enum
 {
@@ -28,6 +29,8 @@ typedef enum
     CC_MICROGAME_PENDING,
     /// A microgame is in progress
     CC_MICROGAME_RUNNING,
+    /// Displays a message between microgames, e.g., "Speed up!"
+    CC_INTERLUDE,
     /// The player has lost, but we still need to unload the last microgame played
     CC_GAME_OVER_PENDING,
     /// Game over screen
@@ -40,8 +43,13 @@ typedef struct
 {
     uint8_t lives;
     int32_t score;
+    int32_t microgamesAttempted;
+    float timeScale;
     bool personalBestAchieved;
     cosCrunchState state;
+
+    const char* interludeMessage;
+    int64_t interludeElapsedUs;
 
     menu_t* menu;
     menuMegaRenderer_t* menuRenderer;
@@ -131,7 +139,11 @@ const cosCrunchMicrogame_t* const microgames[] = {
 #define NUM_LIVES                        4
 #define MICROGAME_GET_READY_TIME_US      1000000
 #define MICROGAME_RESULT_DISPLAY_TIME_US 1800000
+#define INTERLUDE_TIME_US                1400000
 #define TIMER_PIXELS_PER_SECOND          10
+
+#define MICROGAMES_BETWEEN_SPEED_UPS 5
+#define SPEED_UP_AMOUNT              .08f
 
 #define MESSAGE_X_OFFSET 25
 #define MESSAGE_Y_OFFSET 45
@@ -227,9 +239,11 @@ static void cosCrunchMenu(const char* label, bool selected, uint32_t value)
     {
         if (label == cosCrunchStartCraftingLbl)
         {
-            cc->lives = NUM_LIVES;
-            cc->score = 0;
-            cc->state = CC_MICROGAME_PENDING;
+            cc->lives               = NUM_LIVES;
+            cc->score               = 0;
+            cc->microgamesAttempted = 0;
+            cc->timeScale           = 1.0f;
+            cc->state               = CC_MICROGAME_PENDING;
             // Reset the background splatter for the next game
             cosCrunchResetBackground();
         }
@@ -285,6 +299,24 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             drawMenuMega(cc->menu, cc->menuRenderer, elapsedUs);
             break;
 
+        case CC_INTERLUDE:
+        {
+            if (cc->activeMicrogame.game != NULL)
+            {
+                cc->activeMicrogame.game->fnDestroyMicrogame();
+                cc->activeMicrogame.game = NULL;
+            }
+
+            cosCrunchDisplayMessage(cc->interludeMessage);
+            cc->interludeElapsedUs += elapsedUs * cc->timeScale;
+            if (cc->interludeElapsedUs >= INTERLUDE_TIME_US)
+            {
+                cc->state = CC_MICROGAME_PENDING;
+            }
+
+            break;
+        }
+
         case CC_MICROGAME_PENDING:
             if (cc->activeMicrogame.game != NULL)
             {
@@ -311,8 +343,8 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
 
         case CC_MICROGAME_RUNNING:
         {
-            cc->activeMicrogame.stateElapsedUs += elapsedUs;
-            cc->activeMicrogame.game->fnMainLoop(elapsedUs, cc->activeMicrogame.gameTimeRemainingUs,
+            cc->activeMicrogame.stateElapsedUs += elapsedUs * cc->timeScale;
+            cc->activeMicrogame.game->fnMainLoop(elapsedUs * cc->timeScale, cc->activeMicrogame.gameTimeRemainingUs,
                                                  cc->activeMicrogame.state, evts, evtCount);
 
             switch (cc->activeMicrogame.state)
@@ -327,7 +359,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
 
                 case CC_MG_PLAYING:
                     cc->activeMicrogame.gameTimeRemainingUs
-                        = MAX(cc->activeMicrogame.gameTimeRemainingUs - elapsedUs, 0);
+                        = MAX(cc->activeMicrogame.gameTimeRemainingUs - elapsedUs * cc->timeScale, 0);
                     if (cc->activeMicrogame.gameTimeRemainingUs == 0)
                     {
                         if (cc->activeMicrogame.game->fnMicrogameTimeout != NULL)
@@ -366,7 +398,18 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                         }
                         else
                         {
-                            cc->state = CC_MICROGAME_PENDING;
+                            if (cc->microgamesAttempted > 0
+                                && cc->microgamesAttempted % MICROGAMES_BETWEEN_SPEED_UPS == 0)
+                            {
+                                cc->timeScale += SPEED_UP_AMOUNT;
+                                cc->state              = CC_INTERLUDE;
+                                cc->interludeMessage   = cosCrunchInterludeSpeedUp;
+                                cc->interludeElapsedUs = 0;
+                            }
+                            else
+                            {
+                                cc->state = CC_MICROGAME_PENDING;
+                            }
                         }
                     }
                     break;
@@ -472,11 +515,13 @@ static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
 {
     switch (cc->state)
     {
+        case CC_INTERLUDE:
         case CC_MICROGAME_RUNNING:
         case CC_GAME_OVER:
         case CC_HIGH_SCORES:
         {
-            if (cc->activeMicrogame.game != NULL && cc->activeMicrogame.game->fnBackgroundDrawCallback != NULL)
+            if (cc->state != CC_INTERLUDE && cc->activeMicrogame.game != NULL
+                && cc->activeMicrogame.game->fnBackgroundDrawCallback != NULL)
             {
                 if (y <= TFT_HEIGHT - cc->wsg.backgroundDesk.h)
                 {
@@ -608,6 +653,7 @@ void cosCrunchMicrogameResult(bool successful)
 {
     if (cc->state == CC_MICROGAME_RUNNING && cc->activeMicrogame.state == CC_MG_PLAYING)
     {
+        cc->microgamesAttempted++;
         if (successful)
         {
             cc->score++;
