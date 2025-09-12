@@ -170,8 +170,33 @@ void physStepBackground(physSim_t* phys)
 {
     if (phys->isReady)
     {
-        phys->terrainMoving        = moveTerrainLines(phys, PHYS_TIME_STEP_US);
+        // Move the terrain
+        phys->terrainMoving = moveTerrainLines(phys, PHYS_TIME_STEP_US);
+
+        // Raise a flag to update the foreground as well
         phys->shouldStepForeground = true;
+
+        // Clear surface points
+        memset(phys->surfacePoints, 0xFF, sizeof(phys->surfacePoints));
+
+        // Find all surface pixels in screen space
+        node_t* lNode = phys->lines.first;
+        while (lNode)
+        {
+            physLine_t* pl = (physLine_t*)lNode->val;
+            if (pl->isTerrain)
+            {
+                // Draw surface lines differently to track the ground fill
+                findSurfacePoints(pl->l.p1.x - phys->camera.x, //
+                                  pl->l.p1.y - phys->camera.y, //
+                                  pl->l.p2.x - phys->camera.x, //
+                                  pl->l.p2.y - phys->camera.y, //
+                                  phys->surfacePoints);
+            }
+
+            // Iterate
+            lNode = lNode->next;
+        }
     }
 }
 
@@ -409,32 +434,6 @@ static void checkTurnOver(physSim_t* phys)
  */
 void drawPhysBackground(physSim_t* phys, int16_t x0, int16_t y0, int16_t w, int16_t h)
 {
-    // If this is the first block being drawn, calculate surface points
-    if (y0 == 0)
-    {
-        // Clear surface points
-        memset(phys->surfacePoints, 0xFF, sizeof(phys->surfacePoints));
-
-        // Find all surface pixels in screen space
-        node_t* lNode = phys->lines.first;
-        while (lNode)
-        {
-            physLine_t* pl = (physLine_t*)lNode->val;
-            if (pl->isTerrain)
-            {
-                // Draw surface lines differently to track the ground fill
-                findSurfacePoints(pl->l.p1.x - phys->camera.x, //
-                                  pl->l.p1.y - phys->camera.y, //
-                                  pl->l.p2.x - phys->camera.x, //
-                                  pl->l.p2.y - phys->camera.y, //
-                                  phys->surfacePoints);
-            }
-
-            // Iterate
-            lNode = lNode->next;
-        }
-    }
-
     // Get a pointer to the framebuffer for this background update
     paletteColor_t* fb = &getPxTftFramebuffer()[y0 * TFT_WIDTH + x0];
 
