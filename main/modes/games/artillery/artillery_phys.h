@@ -131,7 +131,7 @@ typedef struct
 typedef struct
 {
     bool isReady;
-    bool shouldStepForeground;
+    bool shouldStepForeground; ///< This is set when the screen is drawn, every PHYS_TIME_STEP_US
 
     vecFl_t g;
     vecFl_t bounds;
