@@ -336,7 +336,23 @@ void artilleryMainLoop(int64_t elapsedUs)
  */
 void artilleryBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-    fillDisplayArea(x, y, x + w, y + h, c000);
+    if (AMS_GAME == ad->mState)
+    {
+        // If this is the first block
+        if (y == 0)
+        {
+            // Update terrain in the background
+            physStepBackground(ad->phys);
+        }
+
+        // Always draw the background
+        drawPhysBackground(ad->phys, x, y, w, h);
+    }
+    else
+    {
+        // Not the game, simply black it out
+        fillDisplayArea(x, y, x + w, y + h, c000);
+    }
 }
 
 /**

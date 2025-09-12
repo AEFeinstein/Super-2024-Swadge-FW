@@ -47,7 +47,7 @@ static void physFindObjDests(physSim_t* phys, float elapsedS);
 static bool physBinaryMoveObjects(physSim_t* phys);
 static void checkTurnOver(physSim_t* phys);
 static void physAnimateExplosions(physSim_t* phys, int32_t elapsedUs);
-static void findSurfacePoints(int x0, int y0, int x1, int y1, paletteColor_t color, int16_t* surfacePoints);
+static void findSurfacePoints(int x0, int y0, int x1, int y1, int16_t* surfacePoints);
 
 //==============================================================================
 // Functions
@@ -162,6 +162,20 @@ void deinitPhys(physSim_t* phys)
 }
 
 /**
+ * @brief Update any moving terrain in the background, before the background draw callback
+ *
+ * @param phys The physics simulation to move terrain in
+ */
+void physStepBackground(physSim_t* phys)
+{
+    if (phys->isReady)
+    {
+        phys->terrainMoving        = moveTerrainLines(phys, PHYS_TIME_STEP_US);
+        phys->shouldStepForeground = true;
+    }
+}
+
+/**
  * @brief Update the entire physics simulation by updating object position, velocity, and acceleration. This checks for
  * object collisions and doesn't allow object to clip into each other.
  *
@@ -171,18 +185,17 @@ void deinitPhys(physSim_t* phys)
 bool physStep(physSim_t* phys, int32_t elapsedUs)
 {
     bool change = false;
-    if (phys->isReady)
+    if (phys->isReady && phys->shouldStepForeground)
     {
+        phys->shouldStepForeground = false;
+
         // Calculate physics frames at a very regular PHYS_TIME_STEP
-        RUN_TIMER_EVERY(phys->frameTimer, PHYS_TIME_STEP_US, elapsedUs, {
-            physFindObjDests(phys, PHYS_TIME_STEP_S);
-            phys->terrainMoving = moveTerrainLines(phys, PHYS_TIME_STEP_US);
-            physCheckCollisions(phys);
-            change |= physBinaryMoveObjects(phys);
-            change |= physAdjustCameraTimer(phys);
-            physAnimateExplosions(phys, PHYS_TIME_STEP_US);
-            checkTurnOver(phys);
-        });
+        physFindObjDests(phys, PHYS_TIME_STEP_S);
+        physCheckCollisions(phys);
+        change |= physBinaryMoveObjects(phys);
+        change |= physAdjustCameraTimer(phys);
+        physAnimateExplosions(phys, PHYS_TIME_STEP_US);
+        checkTurnOver(phys);
     }
     return change;
 }
@@ -390,6 +403,85 @@ static void checkTurnOver(physSim_t* phys)
 }
 
 /**
+ * @brief Draw the background of the simulation (land, sky, and void)
+ *
+ * @param phys The physics simulation to draw
+ */
+void drawPhysBackground(physSim_t* phys, int16_t x0, int16_t y0, int16_t w, int16_t h)
+{
+    // If this is the first block being drawn, calculate surface points
+    if (y0 == 0)
+    {
+        // Clear surface points
+        memset(phys->surfacePoints, 0xFF, sizeof(phys->surfacePoints));
+
+        // Find all surface pixels in screen space
+        node_t* lNode = phys->lines.first;
+        while (lNode)
+        {
+            physLine_t* pl = (physLine_t*)lNode->val;
+            if (pl->isTerrain)
+            {
+                // Draw surface lines differently to track the ground fill
+                findSurfacePoints(pl->l.p1.x - phys->camera.x, //
+                                  pl->l.p1.y - phys->camera.y, //
+                                  pl->l.p2.x - phys->camera.x, //
+                                  pl->l.p2.y - phys->camera.y, //
+                                  phys->surfacePoints);
+            }
+
+            // Iterate
+            lNode = lNode->next;
+        }
+    }
+
+    // Get a pointer to the framebuffer for this background update
+    paletteColor_t* fb = &getPxTftFramebuffer()[y0 * TFT_WIDTH + x0];
+
+    // Fill black to start
+    memset(fb, c000, w * h);
+
+    // Find the Y bounds to draw ground and sky between
+    int16_t minY = CLAMP(-phys->camera.y, y0, y0 + h);
+    int16_t maxY = CLAMP(phys->bounds.y - phys->camera.y, y0, y0 + h);
+
+    // Move the pointer past any blank space on the top
+    fb += ((minY - y0) * TFT_WIDTH);
+
+    // For each row to draw
+    for (int16_t y = minY; y < maxY; y++)
+    {
+        // Find the X bounds to draw ground and sky between
+        int16_t minX = CLAMP(-phys->camera.x, 0, TFT_WIDTH);
+        int16_t maxX = CLAMP(phys->bounds.x - phys->camera.x, 0, TFT_WIDTH);
+
+        // Move the pointer past any blank space on the left
+        fb += minX;
+
+        // Draw and iterate pixels
+        for (int16_t x = minX; x < maxX; x++)
+        {
+            if (y < phys->surfacePoints[x])
+            {
+                // Green for ground
+                *fb = c002;
+            }
+            else
+            {
+                // Blue for sky
+                *fb = c020;
+            }
+
+            // Iterate pointer
+            fb++;
+        }
+
+        // Move the pointer past any blank space on the right
+        fb += (TFT_WIDTH - maxX);
+    }
+}
+
+/**
  * @brief Draw the outlines of physics simulation objects
  *
  * @param phys The physics simulation
@@ -409,84 +501,6 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
     //         phys->zones[z].pos.y + phys->zones[z].height - phys->camera.y, //
     //         c112);
     // }
-
-    // Clear surface points
-    memset(phys->surfacePoints, 0xFF, sizeof(phys->surfacePoints));
-
-    // Draw all lines
-    node_t* lNode = phys->lines.first;
-    while (lNode)
-    {
-        physLine_t* pl = (physLine_t*)lNode->val;
-        if (pl->isTerrain)
-        {
-            // Draw surface lines differently to track the ground fill
-            findSurfacePoints(pl->l.p1.x - phys->camera.x, //
-                              pl->l.p1.y - phys->camera.y, //
-                              pl->l.p2.x - phys->camera.x, //
-                              pl->l.p2.y - phys->camera.y, //
-                              c555, phys->surfacePoints);
-        }
-
-        // Iterate
-        lNode = lNode->next;
-    }
-
-    // Find the minimum and maximum surface points
-    int16_t minSurf = INT16_MAX;
-    int16_t maxSurf = INT16_MIN;
-    for (int idx = 0; idx < TFT_WIDTH; idx++)
-    {
-        if (phys->surfacePoints[idx] < minSurf && phys->surfacePoints[idx] >= 0)
-        {
-            minSurf = phys->surfacePoints[idx];
-        }
-        if (phys->surfacePoints[idx] > maxSurf)
-        {
-            maxSurf = phys->surfacePoints[idx];
-        }
-    }
-
-    // Check if a non-negative minimum surface point was found
-    if (INT16_MAX == minSurf)
-    {
-        minSurf = -1;
-    }
-
-    // Clamp to screen space for fills and draws
-    minSurf = CLAMP(minSurf, 0, TFT_WIDTH);
-    maxSurf = CLAMP(maxSurf, 0, TFT_HEIGHT);
-
-    // Fill sky and ground contiguous regions
-    fillDisplayArea(-phys->camera.x,                 //
-                    -phys->camera.y,                 //
-                    phys->bounds.x - phys->camera.x, //
-                    minSurf,                         //
-                    c002);
-    fillDisplayArea(-phys->camera.x,                 //
-                    maxSurf,                         //
-                    phys->bounds.x - phys->camera.x, //
-                    phys->bounds.y - phys->camera.y, //
-                    c020);
-
-    // Fill in boundary between sky and ground
-    SETUP_FOR_TURBO();
-    int16_t startX = CLAMP(-phys->camera.x, 0, TFT_WIDTH);
-    int16_t endX   = CLAMP(phys->bounds.x - phys->camera.x, 0, TFT_WIDTH);
-    for (int y = minSurf; y < maxSurf; y++)
-    {
-        for (int16_t x = startX; x < endX; x++)
-        {
-            if (y < phys->surfacePoints[x])
-            {
-                TURBO_SET_PIXEL(x, y, c002);
-            }
-            else
-            {
-                TURBO_SET_PIXEL(x, y, c020);
-            }
-        }
-    }
 
     // Draw all circles
     node_t* cNode = phys->circles.first;
@@ -596,10 +610,9 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
  * @param y0 The Y coordinate to start the line at
  * @param x1 The X coordinate to end the line at
  * @param y1 The Y coordinate to end the line at
- * @param color The color to draw the line
  * @param surfacePoints [OUT] An array where the highest surface point is written to
  */
-static void findSurfacePoints(int x0, int y0, int x1, int y1, paletteColor_t color, int16_t* surfacePoints)
+static void findSurfacePoints(int x0, int y0, int x1, int y1, int16_t* surfacePoints)
 {
     // X is ordered and these lines would definitely be off-screen
     if (x1 < 0 || x0 >= TFT_WIDTH)
