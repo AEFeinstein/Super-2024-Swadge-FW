@@ -231,11 +231,11 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
  */
 void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChanged)
 {
-    // Step the physics
-    bool physChange = physStep(ad->phys, elapsedUs);
-
     // Draw the scene
     drawPhysOutline(ad->phys, ad->players, ad->scoreFont, ad->moveTimerUs);
+
+    // Step the physics
+    bool physChange = physStep(ad->phys, elapsedUs);
 
     // Get the system font to draw text
     font_t* f = getSysFont();

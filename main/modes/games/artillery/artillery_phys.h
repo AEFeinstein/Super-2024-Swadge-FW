@@ -131,8 +131,7 @@ typedef struct
 typedef struct
 {
     bool isReady;
-
-    int32_t frameTimer;
+    bool shouldStepForeground;
 
     vecFl_t g;
     vecFl_t bounds;
@@ -163,7 +162,10 @@ void deinitPhys(physSim_t* phys);
 void physAddWorldBounds(physSim_t* phys);
 void physRemoveAllObjects(physSim_t* phys);
 
+void drawPhysBackground(physSim_t* phys, int16_t x, int16_t y, int16_t w, int16_t h);
 void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_t moveTimeLeftUs);
+
+void physStepBackground(physSim_t* phys);
 bool physStep(physSim_t* phys, int32_t elapsedUs);
 
 void physSpawnPlayers(physSim_t* phys, int32_t numPlayers, physCirc_t* players[], paletteColor_t* colors);
