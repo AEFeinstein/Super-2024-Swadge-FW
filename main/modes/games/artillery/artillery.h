@@ -63,6 +63,7 @@ typedef struct
     physCirc_t* players[NUM_PLAYERS];
     int32_t plIdx;
     int32_t cpuWaitTimer;
+    int32_t turn;
 
     // The mode state (i.e. main menu, connecting, game)
     artilleryModeState_t mState;
