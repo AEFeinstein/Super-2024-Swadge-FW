@@ -1,0 +1,20 @@
+Item,Price,Made from,Made in,,
+Coal,,"Burnt wood, mining",Smelter
+Concrete,,"Limestone, Rock",Mixer
+Copper Bar,,Copper Ore,Smelter
+Copper Ore,,Mining,Resource Patch
+Copper wire,,Copper Bar,Extruder
+Gold Bar,,Gold Ore,Smelter
+Gold Ore,,Mining,Resource Patch
+Gold wire,,Gold Bar,Extruder
+Iron Bar,,Iron Ore,Smelter
+Iron Nails,,Iron Bar,Metalworking station
+Iron Ore,,Mining,Resource Patch
+Iron Rods,,Iron Bar,Extruder
+Limestone,,Rock,Crusher
+Resin,,Chopping trees,Resource Patch
+Rock,,Mining,Resource Patch
+Sticks,,Chopping Trees,Resource Patch
+Wood Logs,,Chopping Trees,Resource Patch,,
+Wood Plank,,Wood logs,Sawmill
+Iron pipe,,Iron Bar,Extruder
