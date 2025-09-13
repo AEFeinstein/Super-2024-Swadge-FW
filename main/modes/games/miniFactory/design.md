@@ -52,7 +52,7 @@ Boards (Locations/Free build):
 - A: Use current tool
 - B: Back
 - C Stick: Select tool
-  - Selector: Allows player to interact with environment
+  - Selector: Allows player to interact with environment. Open machine inventories, cut trees, mine ore
   - Placer: Add a Machine
   - Deconstructor: Remove a Machine
   - Wire mode: Creates wires between machines
@@ -64,7 +64,7 @@ Boards (Locations/Free build):
   - Save/quit
   - View encyclopedia: See the stats of each machine
   - Shop: Allows the player to buy items
-  - Storage: Shows current inventory and allows the player to sell
+  - Storage: Shows current inventory and allows the player to sell or craft items
   - Enter planning mode: Free build. Only a few slots
 - Select: Prompts save and quit dialog
 - Shaking Swadge: Prompts player to reset board
@@ -74,14 +74,22 @@ In Menu/Encyclopedia/Shops/Etc:
 - Left/B: Go back
 - A: Select
 
+## Types
+
+- Smelter
+- Crafter
+- Extruder
+- Crusher
+- Mixer
+- Sawmill
+
 ## Eras:
 
-- Hand work: Clicking on stuff. Free.
-- Wood: Can be made and operated by hand, significantly speeds up crafting and stuff. Cannot be compressed
-- Steam: Basic metalworking, uses burning coal or wood to power some machines. Cannot be compressed
-- Basic electrical
-- Oil
-- Advanced electrical
+- Hand tools
+- Crude wood (Sawhorse, Workbench, Kiln)
+- Advanced wood/Basic metal (Sawmill, Waterwheel, Waterhammer)
+- Steam (Smelter, )
+- Basic
 
 ## Overworld map
 
