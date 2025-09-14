@@ -219,7 +219,7 @@ void platformerEnterMode(void)
         platformer->easterEgg = true;
     }
 
-    loadFont(PULSE_AUX_FONT, &platformer->font, false);
+    loadFont(MEGAMAX_JONES_FONT, &platformer->font, false);
     platformer->menuRenderer = initMenuMegaRenderer(NULL,NULL,NULL);
 
     mg_initializeWsgManager(&(platformer->wsgManager));
