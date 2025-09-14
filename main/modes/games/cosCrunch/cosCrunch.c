@@ -88,6 +88,13 @@ typedef struct
     font_t bigFont;
     font_t bigFontOutline;
 
+    midiFile_t menuBgm;
+    midiFile_t gameBgm;
+    midiFile_t gameOverBgm;
+    midiPlayer_t* bgmPlayer;
+    midiPlayer_t* sfxPlayer;
+    uint32_t gameBgmOriginalTempo;
+
     highScores_t highScores;
 } cosCrunch_t;
 cosCrunch_t* cc = NULL;
@@ -200,6 +207,18 @@ static void cosCrunchEnterMode(void)
     loadFont(RIGHTEOUS_150_FONT, &cc->bigFont, false);
     makeOutlineFont(&cc->bigFont, &cc->bigFontOutline, false);
 
+    loadMidiFile(HD_CREDITS_MID, &cc->menuBgm, true);
+    loadMidiFile(CHOWA_RACE_MID, &cc->gameBgm, true);
+    loadMidiFile(FAIRY_FOUNTAIN_MID, &cc->gameOverBgm, true);
+
+    cc->bgmPlayer       = globalMidiPlayerGet(MIDI_BGM);
+    cc->bgmPlayer->loop = true;
+    midiGmOn(cc->bgmPlayer);
+    globalMidiPlayerSetVolume(MIDI_BGM, 12);
+    globalMidiPlayerPlaySong(&cc->menuBgm, MIDI_BGM);
+
+    cc->sfxPlayer = globalMidiPlayerGet(MIDI_SFX);
+
     cc->highScores.highScoreCount = 10;
     initHighScores(&cc->highScores, CC_NVS_NAMESPACE);
 
@@ -230,6 +249,12 @@ static void cosCrunchExitMode(void)
     freeFont(&cc->bigFont);
     freeFont(&cc->bigFontOutline);
 
+    globalMidiPlayerStop(MIDI_BGM);
+    globalMidiPlayerStop(MIDI_SFX);
+    unloadMidiFile(&cc->menuBgm);
+    unloadMidiFile(&cc->gameBgm);
+    unloadMidiFile(&cc->gameOverBgm);
+
     heap_caps_free(cc);
 }
 
@@ -246,6 +271,8 @@ static void cosCrunchMenu(const char* label, bool selected, uint32_t value)
             cc->state               = CC_MICROGAME_PENDING;
             // Reset the background splatter for the next game
             cosCrunchResetBackground();
+
+            globalMidiPlayerPlaySong(&cc->gameBgm, MIDI_BGM);
         }
         else if (label == cosCrunchHighScoresLbl)
         {
@@ -273,6 +300,10 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         else if ((cc->state == CC_GAME_OVER || cc->state == CC_HIGH_SCORES)
                  && (evt.button == PB_A || evt.button == PB_B || evt.button == PB_START) && evt.down)
         {
+            if (cc->state == CC_GAME_OVER)
+            {
+                globalMidiPlayerPlaySong(&cc->menuBgm, MIDI_BGM);
+            }
             cc->state = CC_MENU;
         }
     }
@@ -305,6 +336,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             {
                 cc->activeMicrogame.game->fnDestroyMicrogame();
                 cc->activeMicrogame.game = NULL;
+                midiAllSoundOff(cc->sfxPlayer);
             }
 
             cosCrunchDisplayMessage(cc->interludeMessage);
@@ -322,6 +354,12 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             {
                 cc->activeMicrogame.game->fnDestroyMicrogame();
             }
+
+            // Reset anything that the previous microgame might have monkeyed with
+            midiPlayerReset(cc->sfxPlayer);
+            midiGmOn(cc->sfxPlayer);
+            cc->sfxPlayer->mode = MIDI_STREAMING;
+            midiPause(cc->sfxPlayer, false);
 
 #ifdef DEV_MODE_MICROGAME
             cc->activeMicrogame.game = DEV_MODE_MICROGAME;
@@ -405,6 +443,12 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                                 cc->state              = CC_INTERLUDE;
                                 cc->interludeMessage   = cosCrunchInterludeSpeedUp;
                                 cc->interludeElapsedUs = 0;
+
+                                if (cc->gameBgmOriginalTempo == 0)
+                                {
+                                    cc->gameBgmOriginalTempo = cc->bgmPlayer->tempo;
+                                }
+                                cc->bgmPlayer->tempo = cc->gameBgmOriginalTempo / cc->timeScale;
                             }
                             else
                             {
@@ -447,6 +491,8 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
 
             score_t scores[] = {{.score = cc->score, .swadgePassUsername = 0}};
             updateHighScores(&cc->highScores, CC_NVS_NAMESPACE, scores, ARRAY_SIZE(scores));
+
+            globalMidiPlayerPlaySong(&cc->gameOverBgm, MIDI_BGM);
             break;
         }
 
@@ -504,6 +550,13 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
 
             break;
         }
+    }
+
+    // Tempo resets when the BGM loops, so we need to write the tempo every frame while the game is active
+    if ((cc->state == CC_MICROGAME_PENDING || cc->state == CC_MICROGAME_RUNNING || cc->state == CC_INTERLUDE)
+        && cc->gameBgmOriginalTempo != 0)
+    {
+        cc->bgmPlayer->tempo = cc->gameBgmOriginalTempo / cc->timeScale;
     }
 
 #ifdef DEV_MODE_MICROGAME

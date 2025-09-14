@@ -78,6 +78,9 @@ typedef struct
     uint64_t waitTimeUs;
     uint64_t doorOpenElapsedTimeUs;
     uint16_t tumbleweedRotationOffset;
+    int32_t tumbleweedMinY;
+    int32_t tumbleweedLastY;
+    uint8_t knockCount;
 
     paletteColor_t timeOfDayColor;
     paletteColor_t wallColor;
@@ -91,6 +94,8 @@ typedef struct
     } wsg;
 
     font_t knockFont;
+
+    midiFile_t packageGetSfx;
 } ccmgDelivery_t;
 ccmgDelivery_t* ccmgd = NULL;
 
@@ -100,6 +105,7 @@ static void ccmgDeliveryInitMicrogame()
 
     ccmgd->waitTimeUs               = esp_random() % (MAXIMUM_WAIT_US - MINIMUM_WAIT_US) + MINIMUM_WAIT_US;
     ccmgd->tumbleweedRotationOffset = esp_random() % 360;
+    ccmgd->tumbleweedMinY           = INT32_MAX;
 
     ccmgd->timeOfDayColor = timeOfDayColors[esp_random() % ARRAY_SIZE(timeOfDayColors)];
     ccmgd->wallColor      = wallColors[esp_random() % ARRAY_SIZE(wallColors)];
@@ -110,6 +116,8 @@ static void ccmgDeliveryInitMicrogame()
     loadWsg(CC_TUMBLEWEED_WSG, &ccmgd->wsg.tumbleweed, false);
 
     loadFont(RODIN_EB_FONT, &ccmgd->knockFont, false);
+
+    loadMidiFile(CC_PACKAGE_GET_MID, &ccmgd->packageGetSfx, false);
 }
 
 static void ccmgDeliveryDestroyMicrogame()
@@ -120,6 +128,8 @@ static void ccmgDeliveryDestroyMicrogame()
     freeWsg(&ccmgd->wsg.tumbleweed);
 
     freeFont(&ccmgd->knockFont);
+
+    unloadMidiFile(&ccmgd->packageGetSfx);
 
     heap_caps_free(ccmgd);
 }
@@ -146,8 +156,14 @@ static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, co
             {
                 if (buttonEvts[i].button == PB_A && buttonEvts[i].down)
                 {
-                    cosCrunchMicrogameResult(totalElapsedTime >= ccmgd->waitTimeUs
-                                             && totalElapsedTime < ccmgd->waitTimeUs + BUTTON_PRESS_WINDOW_US);
+                    bool successful = totalElapsedTime >= ccmgd->waitTimeUs
+                                      && totalElapsedTime < ccmgd->waitTimeUs + BUTTON_PRESS_WINDOW_US;
+                    cosCrunchMicrogameResult(successful);
+
+                    if (successful)
+                    {
+                        globalMidiPlayerPlaySong(&ccmgd->packageGetSfx, MIDI_SFX);
+                    }
                     break;
                 }
             }
@@ -174,6 +190,17 @@ static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, co
             int32_t y = -ABS(getSin1024((rotationDeg * 2 + 90) % 360)) / (1024 / TUMBLEWEED_Y_RANGE);
             drawWsg(&ccmgd->wsg.tumbleweed, x + TUMBLEWEED_X_OFFSET, y + TUMBLEWEED_Y_OFFSET, false, false,
                     rotationDeg);
+
+            if (ccmgd->tumbleweedLastY > y && y > ccmgd->tumbleweedMinY)
+            {
+                midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, SPLASH_CYMBAL, 0x7f);
+                ccmgd->tumbleweedMinY = INT32_MAX;
+            }
+            else
+            {
+                ccmgd->tumbleweedMinY = MIN(ccmgd->tumbleweedMinY, y);
+            }
+            ccmgd->tumbleweedLastY = y;
             break;
         }
     }
@@ -233,11 +260,21 @@ static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, co
             if (totalElapsedTime > ccmgd->waitTimeUs && totalElapsedTime < ccmgd->waitTimeUs + KNOCK_DURATION_US)
             {
                 drawText(&ccmgd->knockFont, c000, ccmgDeliveryKnock, 100, 80);
+                if (ccmgd->knockCount == 0)
+                {
+                    midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, ELECTRIC_SNARE_OR_RIMSHOT, 0x7f);
+                    ccmgd->knockCount++;
+                }
             }
             if (totalElapsedTime > ccmgd->waitTimeUs + KNOCK_DELAY_US
                 && totalElapsedTime < ccmgd->waitTimeUs + KNOCK_DURATION_US)
             {
                 drawText(&ccmgd->knockFont, c000, ccmgDeliveryKnock, 120, 100);
+                if (ccmgd->knockCount == 1)
+                {
+                    midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, ELECTRIC_SNARE_OR_RIMSHOT, 0x7f);
+                    ccmgd->knockCount++;
+                }
             }
             break;
         }

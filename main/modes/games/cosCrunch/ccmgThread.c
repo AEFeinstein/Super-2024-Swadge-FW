@@ -173,6 +173,8 @@ static void ccmgThreadMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosC
                 {
                     ccmgt->threadX = needleCenterX;
                     cosCrunchMicrogameResult(false);
+
+                    midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, MARACAS, 0x7f);
                 }
             }
             break;

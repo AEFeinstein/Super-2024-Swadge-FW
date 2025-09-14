@@ -118,6 +118,8 @@ static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, c
 
                 drawToCanvasTint(ccmgbt->wsg.spill, ccmgbt->wsg.spill, 0, 0, 0, ccmgbt->liquidTintColor);
                 cosCrunchMicrogamePersistSplatter(ccmgbt->wsg.spill, MUG_DRAW_X - 42, MUG_DRAW_Y + 84);
+
+                midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, CRASH_CYMBAL_1, 0x7f);
             }
         }
     }
