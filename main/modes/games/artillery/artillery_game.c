@@ -513,7 +513,7 @@ void artilleryPassTurn(artilleryData_t* ad)
         {
             // If all turns have been taken
             // TODO end the game
-            ad->mState = AMS_MENU;
+            ad->mState = AMS_GAME_OVER;
             return;
         }
     }

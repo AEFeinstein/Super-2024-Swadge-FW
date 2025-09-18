@@ -7,6 +7,7 @@
 #include "artillery_phys_objs.h"
 #include "artillery_p2p.h"
 #include "artillery_paint.h"
+#include "artillery_game_over.h"
 #include "mainMenu.h"
 
 //==============================================================================
@@ -284,6 +285,12 @@ void artilleryMainLoop(int64_t elapsedUs)
             case AMS_PAINT:
             {
                 artilleryPaintInput(ad, &evt);
+                break;
+            }
+            case AMS_GAME_OVER:
+            {
+                artilleryGameOverInput(ad, &evt);
+                break;
             }
         }
     }
@@ -320,6 +327,12 @@ void artilleryMainLoop(int64_t elapsedUs)
         case AMS_PAINT:
         {
             artilleryPaintLoop(ad, elapsedUs);
+            break;
+        }
+        case AMS_GAME_OVER:
+        {
+            artilleryGameOverLoop(ad, elapsedUs);
+            break;
         }
     }
 }
