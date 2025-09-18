@@ -27,6 +27,7 @@ typedef enum
     AMS_GAME,
     AMS_HELP,
     AMS_PAINT,
+    AMS_GAME_OVER,
 } artilleryModeState_t;
 
 typedef enum
