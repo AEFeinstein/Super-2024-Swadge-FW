@@ -441,14 +441,14 @@ void updateGame(platformer_t* self)
 
 void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
 {
-    char coinStr[8];
-    snprintf(coinStr, sizeof(coinStr) - 1, "C:%02d", gameData->coins);
+    //char coinStr[8];
+    //snprintf(coinStr, sizeof(coinStr) - 1, "C:%02d", gameData->coins);
 
     char scoreStr[32];
     snprintf(scoreStr, sizeof(scoreStr) - 1, "%06" PRIu32, gameData->score);
 
-    char levelStr[15];
-    snprintf(levelStr, sizeof(levelStr) - 1, "Level %d-%d", gameData->world, gameData->level);
+    //char levelStr[15];
+    //snprintf(levelStr, sizeof(levelStr) - 1, "Level %d-%d", gameData->world, gameData->level);
 
     char livesStr[8];
     snprintf(livesStr, sizeof(livesStr) - 1, "x%d", gameData->lives);
@@ -462,9 +462,9 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
     }
 
     drawText(font, c555, livesStr, 56, 2);
-    drawText(font, c555, coinStr, 160, 16);
+    //drawText(font, c555, coinStr, 160, 16);
     drawText(font, c555, scoreStr, 8, 16);
-    drawText(font, c555, levelStr, 152, 2);
+    //drawText(font, c555, levelStr, 152, 2);
     drawText(font, (gameData->countdown > 30) ? c555 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 220, 16);
 
     if (gameData->comboTimer == 0)
