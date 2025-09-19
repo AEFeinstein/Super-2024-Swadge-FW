@@ -4020,7 +4020,7 @@ static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x
         if (chan->percussion || voices[voiceIdx].oscillators[0].cVol > 0 || voices[voiceIdx].oscillators[0].tVol > 0)
         {
             int16_t barH
-                = MAX((chan->percussion ? (voices[voiceIdx].velocity << 1 | 1) : voices[voiceIdx].oscillators[0].cVol)
+                = MAX((voices[voiceIdx].oscillators[0].cVol)
                           * BAR_HEIGHT / 255,
                       1);
 
