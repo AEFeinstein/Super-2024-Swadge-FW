@@ -57,6 +57,41 @@ These instruments are mainly basic wave shapes, with some extra goodies thrown i
 |        7 | Square Wave Hit |
 |        8 | Noise Hit       |
 
+### MMX Instruments (Bank 2) {#MMXPrograms}
+These instruments are based on the MMX SoundFont.
+| Program# | Name             |
+| -------- | ---------------- |
+|       11 | Vibraphone       |
+|       17 | Organ            |
+|       24 | Acoustic Guitar  |
+|       29 | Overdrive Guitar |
+|       30 | Distorted Guitar |
+|       36 | Slap Bas         |
+|       38 | Synth Bass       |
+|       48 | Strings          |
+|       55 | Orchestra Hit    |
+|       62 | Synth Brass      |
+|       80 | Square Wave      |
+|       81 | Saw Wave         |
+|       82 | Synth Lead       |
+|       83 | Synth Lead 2     |
+|      119 | Reverse Cymbal   |
+
+#### MMX Drum Kit
+The MMX drum kit is also available for percussion channels using Bank 2.
+
+| Note       | Note Number | Description  |
+| ---------- | ----------- | ------------ |
+| C1         | 36          | Kick         |
+| C♯1        | 37          | High-Q       |
+| D1 to E1   | 38 to 40    | Snare        |
+| F1         | 41          | Power Snare  |
+| F♯1 to G2  | 42 to 55    | Open Hi-Hat  |
+| G♯2 to C4  | 56 to 72    | Crash Cymbal |
+| C♯4 to C♯5 | 73 to 85    | Synth Tom    |
+| D5 to F♯6  | 86 to 102   | Tom          |
+
+
 #### Donut Swadge Drum Kit
 The Bank 1 Drum Kit includes a range of noise-based drum sounds originally featured on the [King Donut Swadge](https://swadge.com/donut/).
 By default, this drum kit is available on MIDI Channel 11.
