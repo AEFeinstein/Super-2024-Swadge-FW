@@ -6,6 +6,17 @@ controllers, and other features described in this document, it can still
 play any MIDI file, even ones containing unsupported commands. Unsupported
 commands are simply ignored and the rest of the file will play normally.
 
+## Utilities
+
+For editing MIDI files, [signal](https://signal.vercel.app) is a browser-based MIDI editor. It supports uploading custom SoundFont
+files (`.sf2` format). It can also connect to physical MIDI devices such as keyboards, as well as both the physical Swadge and the
+Swadge Emulator when the "MIDI Player" mode is active and in Streaming mode.
+
+While Signal is capable of editing MIDI files, it does not offer a straightforward way to assign instruments in banks other than
+the default General MIDI bank (Bank 0). To make this easier, [midi-assign](https://dylwhich.com/midi-assign/) is another
+browser-based tool made specifically for modifying instrument, bank, and track-to-channel assignments within MIDI files. It
+supports the Swadge instrument banks natively, so there is no need to know their numeric IDs.
+
 ## Basics
 
 The Swadge's 8-bit audio synthesizer supports up to 16 MIDI channels, with channels 10 and 11 reserved for
