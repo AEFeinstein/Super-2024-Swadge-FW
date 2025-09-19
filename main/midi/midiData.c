@@ -330,10 +330,10 @@ const midiTimbre_t mmx017Organ = {
             .fIdx = SF_MMX_017_ORGAN_BIN,
         },
         .loop = 0,
-        .loopStart = SAMPLE_NUM_CONV(1839, 14336, 16384),
-        .loopEnd = SAMPLE_NUM_CONV(1903, 14336, 16384),
+        .loopStart = 1839,
+        .loopEnd = 1903,
         // original rate: 14336
-        .rate = 16384,
+        .rate = 14336,
         // pitch keycenter=70, tune=65
         // TODO tune
         .baseNote = FREQ_A_SHARP_4,
@@ -342,7 +342,7 @@ const midiTimbre_t mmx017Organ = {
     .envelope = {
         .attackTime = SECONDS_CONV(0, 1000), // 1ms
         //LFO freq: 8.176
-
+        .sustainVol = 127,
     },
 };
 
@@ -365,6 +365,7 @@ const midiTimbre_t mmx024AcousticGuitar = {
         .attackTime = SECONDS_CONV(0, 1),
         .decayTime = SECONDS_CONV(2, 70530), // 2.07053s
         // LFO freq: 8.176
+        .sustainVol = 127,
     },
 };
 
@@ -386,6 +387,7 @@ const midiTimbre_t mmx029OverdrivenGuitar = {
     .name = "MMX Overdrive Guitar",
     .envelope = {
         .attackTime = SECONDS_CONV(0, 1000),
+        .sustainVol = 127,
     },
 };
 const midiTimbre_t mmx030DistortedGuitar = {
@@ -406,6 +408,7 @@ const midiTimbre_t mmx030DistortedGuitar = {
     .name = "MMX Distortion Guitar",
     .envelope = {
         .attackTime = SECONDS_CONV(0, 1000),
+        .sustainVol = 127,
     },
 };
 const midiTimbre_t mmx036SlapBass = {
@@ -425,6 +428,7 @@ const midiTimbre_t mmx036SlapBass = {
     .name = "MMX Slap Bass",
     .envelope = {
         .attackTime = SECONDS_CONV(0, 1000),
+        .sustainVol = 127,
     },
 };
 const midiTimbre_t mmx038SynthBass = {
@@ -446,6 +450,9 @@ const midiTimbre_t mmx038SynthBass = {
     .name = "MMX Synth Bass",
     .envelope = {
         .attackTime = SECONDS_CONV(0, 1000),
+        .sustainVol = 127,
+        .sustainVolVel = 0,
+        .sustainVol = 127,
     }
 };
 const midiTimbre_t mmx048Strings = {
@@ -466,6 +473,7 @@ const midiTimbre_t mmx048Strings = {
     .name = "MMX Strings",
     .envelope = {
         .attackTime = SECONDS_CONV(0, 1000),
+        .sustainVol = 127,
     },
 };
 const midiTimbre_t mmx055OrchestraHit = {
@@ -485,6 +493,7 @@ const midiTimbre_t mmx055OrchestraHit = {
     .name = "MMX Orchestra Hit",
     .envelope = {
         .attackTime = SECONDS_CONV(0, 1000),
+        .sustainVol = 127,
     },
 };
 const midiTimbre_t mmx062SynthBrass = {
@@ -505,6 +514,7 @@ const midiTimbre_t mmx062SynthBrass = {
     .name = "MMX Synth Brass",
     .envelope = {
         .attackTime = SECONDS_CONV(0, 1000),
+        .sustainVol = 127,
     },
 };
 const midiTimbre_t mmx080SquareWave = {
@@ -525,6 +535,7 @@ const midiTimbre_t mmx080SquareWave = {
     .name = "MMX Square Wave",
     .envelope = {
         .attackTime = SECONDS_CONV(0, 1000),
+        .sustainVol = 127,
     },
 };
 const midiTimbre_t mmx081SawWave = {
@@ -544,6 +555,7 @@ const midiTimbre_t mmx081SawWave = {
     .name = "MMX Saw Wave",
     .envelope = {
         .attackTime = SECONDS_CONV(0, 1000),
+        .sustainVol = 127,
     },
 };
 const midiTimbre_t mmx082SynthLead = {
@@ -564,6 +576,7 @@ const midiTimbre_t mmx082SynthLead = {
     .name = "MMX Synth Lead",
     .envelope = {
         .attackTime = SECONDS_CONV(0, 1000),
+        .sustainVol = 127,
     },
 };
 const midiTimbre_t mmx083SynthLead2 = {
@@ -584,6 +597,7 @@ const midiTimbre_t mmx083SynthLead2 = {
     .name = "MMX Synth Lead 2",
     .envelope = {
         .attackTime = SECONDS_CONV(0, 1000),
+        .sustainVol = 127,
     },
 };
 const midiTimbre_t mmx119ReverseCymbal = {
@@ -604,17 +618,177 @@ const midiTimbre_t mmx119ReverseCymbal = {
     .name = "MMX Reverse Cymbal",
     .envelope = {
         .attackTime = 1 * 16384 + 38032 * 16384 / 100000,
+        .sustainVol = 127,
+    },
+};
+
+const percussionSampleMap_t mmxDrumSampleMap[] = {
+    {
+        .noteStart = 36,
+        .noteEnd = 36,
+        .sample = {
+            .baseNote = FREQ_C1,
+            .config = {
+                .fIdx = KICK_BIN,
+            },
+            .rate = 30976,
+            .loop = 1,
+            .loopStart = 8,
+            .loopEnd = 3991,
+        },
+        .envelope = {
+            .attackTime = SECONDS_CONV(0, 1000),
+            .sustainVol = 127,
+        },
+    },
+    {
+        .noteStart = 37,
+        .noteEnd = 37,
+        .sample = {
+            .baseNote = FREQ_C_SHARP_1,
+            .config = {
+                .fIdx = HIGHQ_BIN,
+            },
+            .rate = 8576,
+            .loop = 1,
+            .loopStart = 8,
+            .loopEnd = 1991,
+        },
+        .envelope = {
+            .attackTime = SECONDS_CONV(0, 1000),
+            .sustainVol = 127,
+        },
+    },
+    {
+        .noteStart = 38,
+        .noteEnd = 40,
+        .sample = {
+            .baseNote = FREQ_B1,
+            .config = {
+                .fIdx = SNARE_BIN,
+            },
+            .rate = 25984,
+            .loop = 1,
+            .loopStart = 8,
+            .loopEnd = 6007,
+        },
+        .envelope = {
+            .attackTime = SECONDS_CONV(0, 1000),
+            .sustainVol = 127,
+        },
+    },
+    {
+        .noteStart = 41,
+        .noteEnd = 41,
+        .sample = {
+            .baseNote = FREQ_F1,
+            .config = {
+                .fIdx = POWERSNARE_BIN,
+            },
+            .rate = 32256,
+            .loop = 1, // TODO fixme?
+            .loopStart = 2095,
+            .loopEnd = 5087,
+        },
+        .envelope = {
+            .attackTime = SECONDS_CONV(0, 1000),
+            .decayTime = SECONDS_CONV(0, 771105u),
+            .sustainVol = 1,
+            // TODO: implement hold
+            //.holdTime = SECONDS_CONV(0, 84008)
+        },
+    },
+    {
+        .noteStart = 42,
+        .noteEnd = 55,
+        .sample = {
+            .baseNote = FREQ_G_SHARP_1,
+            .config = {
+                .fIdx = OPENHIHAT_BIN,
+            },
+            .rate = 20224,
+            .loop = 1, // TODO fixme?
+            .loopStart = 47,
+            .loopEnd = 2543,
+        },
+        .envelope = {
+            .attackTime = SECONDS_CONV(0, 1000),
+            .decayTime = SECONDS_CONV(2, 645000u),
+            .sustainVol = 1,
+            // no hold here
+        },
+    },
+    {
+        .noteStart = 56,
+        .noteEnd = 72,
+        .sample = {
+            .baseNote = FREQ_A3,
+            .config = {
+                .fIdx = CRASHCYMBAL_BIN,
+            },
+            .rate = 16640,
+            .loop = 1, // TODO re-enable loop
+            .loopStart = 2095,
+            .loopEnd = 4575,
+        },
+        {
+            .attackTime = SECONDS_CONV(0, 1000),
+            .decayTime = SECONDS_CONV(3, 448170),
+            .sustainVol = 1,
+        },
+    },
+    {
+        .noteStart = 73,
+        .noteEnd = 85,
+        .sample = {
+            .baseNote = FREQ_F_SHARP_4,
+            .config = {
+                .fIdx = SYNTHTOM_BIN,
+            },
+            .rate = 30976,
+            .loop = 1,
+            .loopStart = 8,
+            .loopEnd = 3495,
+        },
+        {
+            .attackTime = SECONDS_CONV(0, 1000),
+            .sustainVol = 127,
+        },
+    },
+    {
+        .noteStart = 86,
+        .noteEnd = 102,
+        .sample = {
+            .baseNote = FREQ_G5,
+            .config = {
+                .fIdx = TOM_BIN,
+            },
+            .rate = 14464,
+            .loop = 1,
+            .loopStart = 8,
+            .loopEnd = 2999,
+        },
+        {
+            .attackTime = SECONDS_CONV(0, 1000),
+            .sustainVol = 127,
+        },
     },
 };
 
 const midiTimbre_t mmxDrumkitTimbre = {
-    .type = NOISE,
+    .type = PERCUSSION_SAMPLE,
     .flags = TF_PERCUSSION,
     .percussion = {
-        .playFunc = mmxDrumkitFunc,
+        .playFunc = NULL,
         .data = NULL,
+        .sampleMap = mmxDrumSampleMap,
+        .sampleMapCount = ARRAY_SIZE(mmxDrumSampleMap),
     },
-    .envelope = { 0 },
+    .envelope = {
+        .attackTime = 0,
+        .sustainVol = 127,
+        .releaseTime = 0,
+    },
     .name = "MMX Drumkit",
 };
 
