@@ -157,6 +157,15 @@ typedef enum
 } timbreFlags_t;
 
 /**
+ * @brief Enum which defines the method used to retrieve a sample from each voice
+ */
+typedef enum {
+    VOICE_WAVE_FUNC,
+    VOICE_PLAY_FUNC,
+    VOICE_SAMPLE,
+} voiceType_t;
+
+/**
  * @brief Defines the MIDI note numbers mapped to by the General MIDI percussion note names
  */
 typedef enum
@@ -444,14 +453,14 @@ typedef struct
 
     union
     {
-        struct
+        /*struct
         {
             /// @brief A pointer to this timbre's sample data
             const uint8_t* data;
 
             /// @brief The length of the sample in bytes
             uint32_t count;
-        };
+        };*/
 
         struct
         {
@@ -541,6 +550,7 @@ typedef struct
  */
 typedef struct
 {
+    /*
     /// @brief The number of samples remaining before transitioning to the next state
     uint32_t transitionTicks;
 
@@ -549,9 +559,21 @@ typedef struct
 
     /// @brief The volume at the start of the transition time
     uint8_t transitionStartVol;
+    */
 
+    /// @brief The current volume as a fixed-point value.
+    q8_24 curVol;
+
+    /// @brief Rate-of-change of the volume per tick, can be positive or negative
+    q8_24 volRate;
+
+    /// @brief Acceleration of the volume per tick, which will be added to the rate
+    q8_24 volAccel;
+
+    /*
     /// @brief The target volume of this tick
     uint8_t targetVol;
+    */
 
     /// @brief The monotonic tick counter for playback of sampled timbres
     uint32_t sampleTick;
@@ -562,12 +584,56 @@ typedef struct
     /// @brief The MIDI note velocity of the playing note
     uint8_t velocity;
 
-    /// @brief The index of the MIDI channel that owns the currently playing note
+    /// @brief The index of the MIDI channel that owns the currently playing note.
+    /// If 255 or any other value >= 16, this was not played via MIDI
     uint8_t channel;
 
+    /*
     /// @brief The synthesizer oscillators used to generate the sounds
     synthOscillator_t oscillators[OSC_PER_VOICE];
+    */
 
+    /// @brief The method for obtaining the next audio sample
+    voiceType_t type;
+
+    union
+    {
+        struct {
+            /// @brief The raw sample data
+            const uint8_t* data;
+            /// @brief The number of samples in the data
+            uint32_t length;
+
+            /// @brief The sample number to return to after reaching the loop end
+            uint32_t loopStart;
+            /// @brief The sample number after which to return to the loop start
+            uint32_t loopEnd;
+
+            /// @brief The sample's base frequency
+            uq8_24 baseNote;
+
+            /// @brief The number of fractional samples remaining
+            uq24_8 error;
+
+            /// @brief The number of loops remaining before the voice will transition to the released state
+            uint32_t loopsRemaining;
+        } sample;
+
+        struct {
+            waveFunc_t func;
+            synthOscillator_t oscillators[OSC_PER_VOICE];
+        } wave;
+
+        struct {
+            percussionFunc_t func;
+            uint32_t scratch[4];
+        } perc;
+    };
+
+    /// @brief The envelope defined for this voice
+    envelope_t envelope;
+
+    /*
     // TODO union this with the oscillators? They shouldn't both be used
     // But we need to make sure those oscillators don't get summed
     union
@@ -587,6 +653,7 @@ typedef struct
 
     /// @brief A pointer to the timbre of this voice, which defines its musical characteristics
     const midiTimbre_t* timbre;
+    */
 } midiVoice_t;
 
 /**
