@@ -140,6 +140,7 @@ typedef enum
     SAMPLE,
     NOISE,
     WAVE_SHAPE,
+    PERCUSSION_SAMPLE,
 } timbreType_t;
 
 /**
@@ -431,6 +432,58 @@ typedef void (*midiTextCallback_t)(metaEventType_t type, const char* text, uint3
 typedef bool (*midiStreamingCallback_t)(midiEvent_t* event);
 
 /**
+ * @brief Struct that holds information about a sample that can be played
+ *
+ */
+typedef struct
+{
+    /// @brief The frequency of the base sample to be used when pitch shifting
+
+    // This should just always be C4? (440 << 8)
+    // uint32_t freq = (440 << 8);
+
+    union
+    {
+        struct
+        {
+            /// @brief A pointer to this timbre's sample data
+            const uint8_t* data;
+
+            /// @brief The length of the sample in bytes
+            uint32_t count;
+        };
+
+        struct
+        {
+            /// @brief The name of the sample to load into data
+            cnfsFileIdx_t fIdx;
+        } config;
+    };
+
+    /// @brief The sample rate.
+    uint32_t rate;
+
+    /// @brief The base frequency, at which the sample plays at normal speed
+    uq8_24 baseNote;
+
+    /// @brief 0 to loop forever, or the number of loops to play
+    uint32_t loop;
+
+    /// @brief The start of the loop portion of the sample
+    uint32_t loopStart;
+
+    /// @brief The end of the loop portion of the sample
+    uint32_t loopEnd;
+} timbreSample_t;
+
+typedef struct {
+    uint8_t noteStart;
+    uint8_t noteEnd;
+    timbreSample_t sample;
+    envelope_t envelope;
+} percussionSampleMap_t;
+
+/**
  * @brief Defines the sound characteristics of a particular instrument.
  */
 typedef struct
@@ -452,46 +505,7 @@ typedef struct
             waveFunc_t waveFunc;
         };
 
-        struct
-        {
-            /// @brief The frequency of the base sample to be used when pitch shifting
-
-            // This should just always be C4? (440 << 8)
-            // uint32_t freq = (440 << 8);
-
-            union
-            {
-                struct
-                {
-                    /// @brief A pointer to this timbre's sample data
-                    const uint8_t* data;
-
-                    /// @brief The length of the sample in bytes
-                    uint32_t count;
-                };
-
-                struct
-                {
-                    /// @brief The name of the sample to load into data
-                    cnfsFileIdx_t fIdx;
-                } config;
-            };
-
-            /// @brief The sample rate.
-            uint32_t rate;
-
-            /// @brief The base frequency, at which the sample plays at normal speed
-            uq8_24 baseNote;
-
-            /// @brief 0 to loop forever, or the number of loops to play
-            uint32_t loop;
-
-            /// @brief The start of the loop portion of the sample
-            uint32_t loopStart;
-
-            /// @brief The end of the loop portion of the sample
-            uint32_t loopEnd;
-        } sample;
+        timbreSample_t sample;
 
         struct
         {
@@ -499,6 +513,10 @@ typedef struct
             percussionFunc_t playFunc;
             /// @brief User data to pass to the drumkit
             void* data;
+            /// @brief A map of different samples to use
+            const percussionSampleMap_t* sampleMap;
+            /// @brief The length of the sample map
+            size_t sampleMapCount;
         } percussion;
 
         /// @brief The shape of this wave, when type is RAW_WAVE

@@ -90,7 +90,6 @@ static void midiStepVoice(midiChannel_t* channel, voiceStates_t* states, uint8_t
 static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre);
 static void initTimbre(midiTimbre_t* dest, const midiTimbre_t* config);
 static const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, uint8_t program);
-static int32_t midiSumPercussion(midiPlayer_t* player);
 static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event);
 static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex);
 static void handleMetaEvent(midiPlayer_t* player, const midiMetaEvent_t* event);
@@ -325,6 +324,8 @@ void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voice
                 // Transition from RELEASE to OFF
                 states->release &= ~voiceBit;
                 states->on &= ~voiceBit;
+                states->held &= ~voiceBit;
+                states->sustain &= ~voiceBit;
                 channels[voice->channel].allocedVoices &= ~voiceBit;
 
                 pressureVol = 0;
@@ -372,7 +373,6 @@ void midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t voice
         oscVol = VOICE_CUR_VOL(voice);
     }
 
-    if (voice->timbre->type != SAMPLE)
     {
         for (int i = 0; i < OSC_PER_VOICE; i++)
         {
@@ -415,6 +415,7 @@ static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
             }
 
             case SAMPLE:
+            case PERCUSSION_SAMPLE:
             {
                 // Just reset the oscillators in case they were previously in-use
                 swSynthSetVolume(&voice->oscillators[oscIdx], 0);
@@ -525,9 +526,7 @@ static int32_t midiSumOscillators(midiPlayer_t* player)
         playingVoices &= ~(1 << voiceIdx);
         midiVoice_t* voice = &(voices[voiceIdx]);
 
-        if (!(states->on || states->held || states->sustenuto || states->attack || states->decay || states->sustain
-              || states->release)
-            || voice->timbre->type == SAMPLE)
+        if (voice->timbre->type == SAMPLE)
         {
             continue;
         }
@@ -569,86 +568,6 @@ static int32_t midiSumOscillators(midiPlayer_t* player)
     return sum;
 }
 
-/**
- * @brief Step each playing percussion note forward by one sample and return the raw sum
- *
- * @param player The MIDI player to sum percussion notes for
- * @return int32_t The unsigned 32-bit sample, without any headroom or clipping applied
- */
-static int32_t midiSumPercussion(midiPlayer_t* player)
-{
-    voiceStates_t* states = &player->percVoiceStates;
-    midiVoice_t* voices   = player->percVoices;
-
-    int32_t sum = 0;
-
-    // Ignore the 'held' flag, this is percussion!
-    uint32_t playingVoices = states->on;
-    while (playingVoices != 0)
-    {
-        uint8_t voiceIdx = __builtin_ctz(playingVoices);
-        playingVoices &= ~(1 << voiceIdx);
-
-        bool done = false;
-        sum += voices[voiceIdx].timbre->percussion.playFunc(voices[voiceIdx].note, voices[voiceIdx].sampleTick++, &done,
-                                                            voices[voiceIdx].percScratch,
-                                                            voices[voiceIdx].timbre->percussion.data)
-               * voices[voiceIdx].velocity / 127;
-
-        if (done)
-        {
-            switch (voices[voiceIdx].note)
-            {
-                case CLOSED_HI_HAT:
-                case PEDAL_HI_HAT:
-                case OPEN_HI_HAT:
-                {
-                    player->percSpecialStates |= VOICE_FREE << SHIFT_HI_HAT;
-                    break;
-                }
-
-                case SHORT_WHISTLE:
-                case LONG_WHISTLE:
-                {
-                    player->percSpecialStates |= VOICE_FREE << SHIFT_WHISTLE;
-                    break;
-                }
-
-                case SHORT_GUIRO:
-                case LONG_GUIRO:
-                {
-                    player->percSpecialStates |= VOICE_FREE << SHIFT_GUIRO;
-                    break;
-                }
-
-                case MUTE_CUICA:
-                case OPEN_CUICA:
-                {
-                    player->percSpecialStates |= VOICE_FREE << SHIFT_CUICA;
-                    break;
-                }
-
-                case MUTE_TRIANGLE:
-                case OPEN_TRIANGLE:
-                {
-                    player->percSpecialStates |= VOICE_FREE << SHIFT_TRIANGLE;
-                    break;
-                }
-
-                default:
-                    break;
-            }
-
-            states->on &= ~(1 << voiceIdx);
-            player->channels[voices[voiceIdx].channel].allocedVoices &= ~(1 << voiceIdx);
-            voices[voiceIdx].sampleTick = 0;
-            memset(voices[voiceIdx].percScratch, 0, 4 * sizeof(uint32_t));
-        }
-    }
-
-    return sum;
-}
-
 static int32_t midiSumSamples(midiPlayer_t* player)
 {
     voiceStates_t* states = &player->poolVoiceStates;
@@ -656,15 +575,47 @@ static int32_t midiSumSamples(midiPlayer_t* player)
 
     int32_t sum = 0;
 
-    // Ignore the 'held' flag, this is percussion!
+    for (int step = 0; step < 2; step++)
+    {
     uint32_t playingVoices = states->on | states->held | states->sustenuto | states->attack | states->decay
                              | states->sustain | states->release;
     while (playingVoices != 0)
     {
         uint8_t voiceIdx = __builtin_ctz(playingVoices);
         playingVoices &= ~(1 << voiceIdx);
+        const timbreSample_t* sampleDef = NULL;
+        const uint8_t* sampleData = NULL;
+        uint32_t sampleCount = 0;
 
-        if (voices[voiceIdx].timbre->type != SAMPLE)
+        if (voices[voiceIdx].timbre->type == SAMPLE)
+        {
+            sampleDef = &voices[voiceIdx].timbre->sample;
+            sampleData = sampleDef->data;
+            sampleCount = sampleDef->count;
+        }
+        else if (voices[voiceIdx].timbre->type == PERCUSSION_SAMPLE)
+        {
+            // TODO: Reference the sample directly from the voice, not via a timbre
+            // This will save us a lookup every time and get rid of this hideous (though probably more performant than you'd think) linear search for multi-sample instruments
+            int n;
+            for (n = 0; n < voices[voiceIdx].timbre->percussion.sampleMapCount; n++)
+            {
+                if (voices[voiceIdx].timbre->percussion.sampleMap[n].noteStart <= voices[voiceIdx].note && voices[voiceIdx].note <= voices[voiceIdx].timbre->percussion.sampleMap[n].noteEnd)
+                {
+                    sampleDef = &voices[voiceIdx].timbre->percussion.sampleMap[n].sample;
+                    size_t len;
+                    sampleData = cnfsGetFile(sampleDef->config.fIdx, &len);
+                    sampleCount = len;
+                    break;
+                }
+            }
+
+            if (n == voices[voiceIdx].timbre->percussion.sampleMapCount) {
+                // We didn't find it...
+                continue;
+            }
+        }
+        else
         {
             // Only sample timbres past here!
             continue;
@@ -679,7 +630,7 @@ static int32_t midiSumSamples(midiPlayer_t* player)
         // Divide the desired note freq
 
         bool done      = false;
-        int32_t sample = (int)voices[voiceIdx].timbre->sample.data[voices[voiceIdx].sampleTick] - 128;
+        int32_t sample = (int)sampleData[voices[voiceIdx].sampleTick] - 128;
 
         // TODO: Possibly change to 0x08000 for rounding at the half?
         if (voices[voiceIdx].sampleError > 0x100)
@@ -694,29 +645,75 @@ static int32_t midiSumSamples(midiPlayer_t* player)
                 voices[voiceIdx].sampleTick++;
                 // We now need to omit (playRate / sampleDataRate) samples before continuing
                 voices[voiceIdx].sampleError += sampleRateRatio;
-                // And account for the sample we just played
+                // And account for the sample we just skipped
 
                 // loop if we reach the end of the sample or if the loop endpoint is set and we reach that
-                if (voices[voiceIdx].sampleTick == voices[voiceIdx].timbre->sample.count
-                    || voices[voiceIdx].sampleTick >= voices[voiceIdx].timbre->sample.loopEnd)
-                {
-                    if (voices[voiceIdx].sampleLoops > 0)
-                    {
-                        voices[voiceIdx].sampleLoops--;
 
-                        if (!voices[voiceIdx].sampleLoops)
+                if (sampleDef->loop != 1 && !(states->release & (1 << voiceIdx)) && ((states->attack | states->held | states->decay | states->sustain | states->sustenuto) & (1 << voiceIdx)))
+                {
+                    uint32_t endTick = (sampleDef->loopEnd != sampleDef->loopStart && sampleDef->loopEnd != 0) ? sampleDef->loopEnd : sampleCount;
+
+                    // Looping: enabled
+                    if (voices[voiceIdx].sampleTick == endTick)
+                    {
+                        if (voices[voiceIdx].sampleLoops > 0)
                         {
-                            done = true;
-                            break;
+                            voices[voiceIdx].sampleLoops--;
+                            if (!voices[voiceIdx].sampleLoops)
+                            {
+                                // we've reached the end of the last loop
+                                if (endTick == sampleCount)
+                                {
+                                    done = true;
+                                    break;
+                                }
+                                else
+                                {
+                                    // the end of the loop was not the end of the sample
+                                    // so we should continue playing it without looping
+                                    // unset held!
+                                    states->held &= ~(1 << voiceIdx);
+                                    // move into release!
+                                    states->release |= (1 << voiceIdx);
+
+                                    midiVoice_t* voice = &voices[voiceIdx];
+
+                                    // Calculate how long the release fadeout will take
+                                    uint32_t releaseTime = voice->timbre->envelope.releaseTime
+                                                        + ((voice->timbre->envelope.releaseTimeVel * (int8_t)voice->velocity) >> 8);
+
+                                    // Save the start volume to current volume and the target to 0
+                                    if (voice->transitionTicksTotal)
+                                    {
+                                        voice->transitionStartVol = VOICE_CUR_VOL(voice);
+                                    }
+                                    else
+                                    {
+                                        voice->transitionStartVol = voice->targetVol;
+                                    }
+
+                                    voice->targetVol = 0;
+
+                                    // Set the transition length accordingly
+                                    voice->transitionTicksTotal = voice->transitionTicks = releaseTime;
+
+                                    // TODO copy+pasted the above from midiStepVoice(), maybe have some utility functions for this
+                                }
+                            }
                         }
                         else
                         {
-                            voices[voiceIdx].sampleTick = voices[voiceIdx].timbre->sample.loopStart;
+                            voices[voiceIdx].sampleTick = sampleDef->loopStart;
                         }
                     }
-                    else
+                }
+                else
+                {
+                    // Looping: no thank you, we'll play to the end
+                    if (voices[voiceIdx].sampleTick == sampleCount)
                     {
-                        voices[voiceIdx].sampleTick = voices[voiceIdx].timbre->sample.loopStart;
+                        done = true;
+                        break;
                     }
                 }
             } while (voices[voiceIdx].sampleError < 0x100);
@@ -728,12 +725,18 @@ static int32_t midiSumSamples(midiPlayer_t* player)
 
         if (done)
         {
+            states->held &= ~(1 << voiceIdx);
+            states->sustain &= ~(1 << voiceIdx);
             states->on &= ~(1 << voiceIdx);
             player->channels[voices[voiceIdx].channel].allocedVoices &= ~(1 << voiceIdx);
             voices[voiceIdx].sampleTick  = 0;
             voices[voiceIdx].sampleLoops = 0;
             voices[voiceIdx].sampleError = 0;
         }
+    }
+
+        states = &player->percVoiceStates;
+        voices = player->percVoices;
     }
 
     return sum;
@@ -1332,11 +1335,20 @@ int32_t midiPlayerStep(midiPlayer_t* player)
         activeVoices &= ~(1 << voiceIdx);
     }
 
-    // TODO: Sample support
-    // sample += samplerSumSamplers(player->allSamplers, player->samplerCount)
+    // Now, repeat for the percussion voices!
+    activeVoices = player->percVoiceStates.on
+                    | player->percVoiceStates.held
+                    | player->percVoiceStates.sustenuto
+                    | player->percVoiceStates.release;
+    while (0 != activeVoices)
+    {
+        uint8_t voiceIdx = __builtin_ctz(activeVoices);
+        midiStepVoice(player->channels, &player->percVoiceStates, voiceIdx, &player->percVoices[voiceIdx]);
+        activeVoices &= ~(1 << voiceIdx);
+    }
+
     int32_t sample
         = midiSumOscillators(player); // swSynthSumOscillators(player->allOscillators, player->oscillatorCount);
-    sample += midiSumPercussion(player);
     sample += midiSumSamples(player);
 
     player->sampleCount++;
@@ -1742,26 +1754,42 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
         // Reset the percussion voice state
         voice->sampleTick = 0;
     }
+
+    // The volume based on the note velocity, used for the attack volume
+    uint8_t pressureVol = velocity << 1 | 1;
+    uint32_t attackTime
+        = chan->timbre.envelope.attackTime + ((chan->timbre.envelope.attackTimeVel * (int8_t)velocity) >> 8);
+
+    voice->transitionTicks = voice->transitionTicksTotal = attackTime;
+    states->attack |= voiceBit;
+    voice->transitionStartVol = 0;
+    voice->targetVol          = pressureVol;
+
+    // StepVoice() will take care of everything else
+
+    if (chan->timbre.type == PERCUSSION_SAMPLE)
+    {
+        voice->sampleTick = 0;
+        voice->sampleError = 0;
+        voice->sampleLoops = 1;
+
+        for (int n = 0; n < chan->timbre.percussion.sampleMapCount; n++)
+        {
+            if (chan->timbre.percussion.sampleMap[n].noteStart <= note && note <= chan->timbre.percussion.sampleMap[n].noteEnd)
+            {
+                voice->sampleLoops = chan->timbre.percussion.sampleMap[n].sample.loop;
+                break;
+            }
+        }
+    }
     else if (chan->timbre.type == SAMPLE)
     {
         voice->sampleTick  = 0;
         voice->sampleError = 0;
         voice->sampleLoops = chan->timbre.sample.loop;
     }
-    else
+    //else
     {
-        // The volume based on the note velocity, used for the attack volume
-        uint8_t pressureVol = velocity << 1 | 1;
-        uint32_t attackTime
-            = chan->timbre.envelope.attackTime + ((chan->timbre.envelope.attackTimeVel * (int8_t)velocity) >> 8);
-
-        voice->transitionTicks = voice->transitionTicksTotal = attackTime;
-        states->attack |= voiceBit;
-        voice->transitionStartVol = 0;
-        voice->targetVol          = pressureVol;
-
-        // StepVoice() will take care of everything else
-
         swSynthSetVolume(&voice->oscillators[0], attackTime ? 0 : pressureVol);
         swSynthSetFreqPrecise(&voice->oscillators[0], bendPitchWheel(note, chan->pitchBend));
     }

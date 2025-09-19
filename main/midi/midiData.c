@@ -306,10 +306,10 @@ const midiTimbre_t mmx011Vibraphone = {
         },
         .loop = 0,
         // 28928 Hz original file
-        .loopStart = SAMPLE_NUM_CONV(79, 28928, 16384),
-        .loopEnd = SAMPLE_NUM_CONV(95, 28928, 16384),
+        .loopStart = 79,
+        .loopEnd = 95,
         // But we convert it to avoid resampling
-        .rate = 16384,
+        .rate = 28928,
         // pitch keycenter=82, plus tune=50
         .baseNote = FREQ_A_SHARP_5 + (FREQ_B5 - FREQ_A_SHARP_5) / 2,
     },
@@ -317,7 +317,7 @@ const midiTimbre_t mmx011Vibraphone = {
     .envelope = {
         .attackTime = 0,
         .decayTime = SECONDS_CONV(2, 70530), // 2.070530s
-        .sustainVol = 1,
+        .sustainVol = 127,
         .releaseTime = 0,
     },
 };
