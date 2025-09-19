@@ -1548,24 +1548,6 @@ static void synthEnterMode(void)
         }
     }
 
-    if (sd->nvsMode)
-    {
-        synthSetFile(CNFS_NUM_FILES);
-    }
-    else if (sd->fileMode)
-    {
-        int32_t fIdx;
-        if (readNvs32(nvsKeyLastSong, &fIdx))
-        {
-            sd->customFile = true;
-            synthSetFile(fIdx);
-        }
-        else
-        {
-            ESP_LOGI("Synth", "No filename saved");
-        }
-    }
-
     sd->screen = SS_VIEW;
 
     sd->wheelTextArea.pos.x  = 15;
@@ -1633,6 +1615,24 @@ static void synthEnterMode(void)
     synthSetupMenu(true);
     setupShuffle(sd->customFiles.length);
     synthSetupPlayer();
+
+    if (sd->nvsMode)
+    {
+        synthSetFile(CNFS_NUM_FILES);
+    }
+    else if (sd->fileMode)
+    {
+        int32_t fIdx;
+        if (readNvs32(nvsKeyLastSong, &fIdx))
+        {
+            sd->customFile = true;
+            synthSetFile(fIdx);
+        }
+        else
+        {
+            ESP_LOGI("Synth", "No filename saved");
+        }
+    }
 
     sd->startupSeqComplete = true;
     sd->startupNote        = 60;
