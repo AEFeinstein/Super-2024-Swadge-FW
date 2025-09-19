@@ -514,6 +514,33 @@ void artilleryPassTurn(artilleryData_t* ad)
             // If all turns have been taken
             // TODO end the game
             ad->mState = AMS_GAME_OVER;
+
+            bool isP1 = true;
+            switch (ad->gameType)
+            {
+                default:
+                case AG_PASS_AND_PLAY:
+                case AG_CPU_PRACTICE:
+                {
+                    isP1 = true;
+                    break;
+                }
+                case AG_WIRELESS:
+                {
+                    isP1 = (GOING_FIRST == p2pGetPlayOrder(&ad->p2p));
+                }
+            }
+
+            ad->gameOverData[0].score       = ad->players[0]->score;
+            ad->gameOverData[0].baseColor   = ad->players[0]->baseColor;
+            ad->gameOverData[0].accentColor = ad->players[0]->accentColor;
+            ad->gameOverData[0].isPlayer    = isP1;
+
+            ad->gameOverData[1].score       = ad->players[1]->score;
+            ad->gameOverData[1].baseColor   = ad->players[1]->baseColor;
+            ad->gameOverData[1].accentColor = ad->players[1]->accentColor;
+            ad->gameOverData[1].isPlayer    = !isP1;
+
             return;
         }
     }

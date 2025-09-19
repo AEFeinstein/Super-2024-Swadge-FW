@@ -55,6 +55,14 @@ typedef enum
 
 typedef struct
 {
+    int32_t score;
+    paletteColor_t baseColor;
+    paletteColor_t accentColor;
+    bool isPlayer;
+} artilleryGameOverData_t;
+
+typedef struct
+{
     artilleryGameType_t gameType;
 
     // The physics simulation
@@ -101,6 +109,9 @@ typedef struct
     int32_t paintArrowBlinkTimer;
     int32_t myColorIdx;
     int32_t theirColorIdx;
+
+    // Variables for game over
+    artilleryGameOverData_t gameOverData[NUM_PLAYERS];
 } artilleryData_t;
 
 extern const char load_ammo[];
