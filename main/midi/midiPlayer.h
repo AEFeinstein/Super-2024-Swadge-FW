@@ -476,7 +476,8 @@ typedef struct
     uint32_t loopEnd;
 } timbreSample_t;
 
-typedef struct {
+typedef struct
+{
     uint8_t noteStart;
     uint8_t noteEnd;
     timbreSample_t sample;
