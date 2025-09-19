@@ -90,6 +90,7 @@ static void midiStepVoice(midiChannel_t* channel, voiceStates_t* states, uint8_t
 static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre);
 static void initTimbre(midiTimbre_t* dest, const midiTimbre_t* config);
 static const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, uint8_t program);
+static int32_t midiSumPercussion(midiPlayer_t* player);
 static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event);
 static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex);
 static void handleMetaEvent(midiPlayer_t* player, const midiMetaEvent_t* event);
@@ -526,7 +527,7 @@ static int32_t midiSumOscillators(midiPlayer_t* player)
         playingVoices &= ~(1 << voiceIdx);
         midiVoice_t* voice = &(voices[voiceIdx]);
 
-        if (voice->timbre->type == SAMPLE)
+        if (voice->timbre->type == SAMPLE || voice->timbre->type == PERCUSSION_SAMPLE)
         {
             continue;
         }
@@ -563,6 +564,91 @@ static int32_t midiSumOscillators(midiPlayer_t* player)
                      * ((int32_t)osc->cVol))
                     >> 8);
         } while (offset++ < osc->chorus);
+    }
+
+    return sum;
+}
+
+/**
+ * @brief Step each playing percussion note forward by one sample and return the raw sum
+ *
+ * @param player The MIDI player to sum percussion notes for
+ * @return int32_t The unsigned 32-bit sample, without any headroom or clipping applied
+ */
+static int32_t midiSumPercussion(midiPlayer_t* player)
+{
+    voiceStates_t* states = &player->percVoiceStates;
+    midiVoice_t* voices   = player->percVoices;
+
+    int32_t sum = 0;
+
+    // Ignore the 'held' flag, this is percussion!
+    uint32_t playingVoices = states->on;
+    while (playingVoices != 0)
+    {
+        uint8_t voiceIdx = __builtin_ctz(playingVoices);
+        playingVoices &= ~(1 << voiceIdx);
+
+        if (voices[voiceIdx].timbre->percussion.playFunc == NULL)
+        {
+            continue;
+        }
+
+        bool done = false;
+        sum += voices[voiceIdx].timbre->percussion.playFunc(voices[voiceIdx].note, voices[voiceIdx].sampleTick++, &done,
+                                                            voices[voiceIdx].percScratch,
+                                                            voices[voiceIdx].timbre->percussion.data)
+               * voices[voiceIdx].velocity / 127;
+
+        if (done)
+        {
+            switch (voices[voiceIdx].note)
+            {
+                case CLOSED_HI_HAT:
+                case PEDAL_HI_HAT:
+                case OPEN_HI_HAT:
+                {
+                    player->percSpecialStates |= VOICE_FREE << SHIFT_HI_HAT;
+                    break;
+                }
+
+                case SHORT_WHISTLE:
+                case LONG_WHISTLE:
+                {
+                    player->percSpecialStates |= VOICE_FREE << SHIFT_WHISTLE;
+                    break;
+                }
+
+                case SHORT_GUIRO:
+                case LONG_GUIRO:
+                {
+                    player->percSpecialStates |= VOICE_FREE << SHIFT_GUIRO;
+                    break;
+                }
+
+                case MUTE_CUICA:
+                case OPEN_CUICA:
+                {
+                    player->percSpecialStates |= VOICE_FREE << SHIFT_CUICA;
+                    break;
+                }
+
+                case MUTE_TRIANGLE:
+                case OPEN_TRIANGLE:
+                {
+                    player->percSpecialStates |= VOICE_FREE << SHIFT_TRIANGLE;
+                    break;
+                }
+
+                default:
+                    break;
+            }
+
+            states->on &= ~(1 << voiceIdx);
+            player->channels[voices[voiceIdx].channel].allocedVoices &= ~(1 << voiceIdx);
+            voices[voiceIdx].sampleTick = 0;
+            memset(voices[voiceIdx].percScratch, 0, 4 * sizeof(uint32_t));
+        }
     }
 
     return sum;
@@ -1359,6 +1445,7 @@ int32_t midiPlayerStep(midiPlayer_t* player)
     int32_t sample
         = midiSumOscillators(player); // swSynthSumOscillators(player->allOscillators, player->oscillatorCount);
     sample += midiSumSamples(player);
+    sample += midiSumPercussion(player);
 
     player->sampleCount++;
 
