@@ -76,6 +76,7 @@ typedef enum
     VM_VIZ     = 8,
     VM_LYRICS  = 16,
     VM_TIMING  = 32,
+    VM_DEBUG   = 64,
 } synthViewMode_t;
 
 typedef enum
@@ -1073,6 +1074,7 @@ static const char* const menuItemModeOptions[] = {
 static const char* const menuItemViewOptions[] = {
     "Pretty", "Visualizer", "Lyrics",         "Lyrics+Visualizer", "Waveform",
     "Table",  "Packets",    "Waveform+Table", "Waveform+Packets",  "Timing",
+    "Debug",
 };
 
 static const char* const menuItemButtonOptions[] = {
@@ -1132,6 +1134,7 @@ static const int32_t menuItemViewValues[] = {
     (int32_t)(VM_GRAPH | VM_TEXT),
     (int32_t)(VM_GRAPH | VM_PACKETS),
     (int32_t)VM_TIMING,
+    (int32_t)VM_DEBUG,
 };
 
 static const int32_t menuItemButtonValues[] = {
@@ -1215,7 +1218,7 @@ static settingParam_t menuItemModeBounds = {
 static settingParam_t menuItemViewBounds = {
     .def = VM_PRETTY,
     .min = VM_PRETTY,
-    .max = (VM_TIMING << 1) - 1,
+    .max = (VM_DEBUG << 1) - 1,
     .key = nvsKeyViewMode,
 };
 
@@ -3005,6 +3008,88 @@ static void drawSynthMode(int64_t elapsedUs)
 
             // Draw a mini metronome
             drawBeatsMetronome(true, 190, true, TFT_WIDTH / 2, TFT_HEIGHT - 25, 20);
+        }
+    }
+
+    if (sd->viewMode & VM_DEBUG)
+    {
+        // ok how is this gonna work
+        // basically make a grid of squares
+        // each column represents a voice (half column?)
+        // each row represents a particular state
+        // also we should somehow show envelope transition state
+
+        const voiceStates_t* states = &sd->midiPlayer.poolVoiceStates;
+        const midiVoice_t* voices = sd->midiPlayer.poolVoices;
+        int numVoices = POOL_VOICE_COUNT;
+        int xOffset = 0;
+        int yOffset = 0 + 10;
+        int w = TFT_WIDTH;
+        int h = TFT_HEIGHT / 2 - 10;
+
+        for (int step = 0; step < 2; step++)
+        {
+            for (int vIdx = 0; vIdx < numVoices; vIdx++)
+            {
+                const midiVoice_t* voice = &voices[vIdx];
+                int mask = 1 << (vIdx);
+
+                int x0 = xOffset + vIdx * w / numVoices;
+                int x1 = x0 + w / numVoices;
+                int y0 = yOffset;
+                int y1 = yOffset + h;
+
+                const paletteColor_t rowColors[] = {
+                    c500,
+                    c550,
+                    c050,
+                    c055,
+                    c005,
+                    c505,
+                };
+
+                const char rowLabels[] = "ADHSRU";
+
+                bool stateMap[] = {
+                    states->attack & mask,
+                    states->decay & mask,
+                    states->held & mask,
+                    states->sustain & mask,
+                    states->release & mask,
+                    states->sustenuto & mask,
+                };
+
+                for (int row = 0; row < ARRAY_SIZE(stateMap); row++)
+                {
+                    int ry0 = y0 + row * (y1 - y0) / ARRAY_SIZE(stateMap);
+                    int ry1 = ry0 + (y1 - y0) / ARRAY_SIZE(stateMap);
+
+                    if (stateMap[row])
+                    {
+                        char label = rowLabels[row];
+                        drawRectFilled(x0, ry0, x1, ry1, rowColors[row]);
+                        drawChar(c555, sd->font.height, &sd->font.chars[label - ' '], x0 + (x1 - x0 - sd->font.chars[label - ' '].width) / 2, ry0 + (ry1 - ry0 - sd->font.height) / 2);
+                    }
+                }
+
+                if (states->on & mask)
+                {
+                    drawRect(x0, y0, x1, y1, c555);
+                    if (voice->transitionTicks == UINT32_MAX)
+                    {
+                        drawLineFast(x0, y1, x1, y0, c505);
+                    }
+                    else if (voice->transitionTicksTotal != 0)
+                    {
+                        int lineX = x0 + (x1 - x0) * (voice->transitionTicksTotal - voice->transitionTicks) / voice->transitionTicksTotal;
+                        drawLineFast(lineX, y0, lineX, y1, c505);
+                    }
+                }
+            }
+            states = &sd->midiPlayer.percVoiceStates;
+            voices = sd->midiPlayer.percVoices;
+            numVoices = PERCUSSION_VOICES;
+            yOffset = TFT_HEIGHT / 2;
         }
     }
 
