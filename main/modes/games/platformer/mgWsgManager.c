@@ -169,6 +169,21 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(TILE_101_WSG, &self->wsgs[MG_WSG_BG_METAL], false);
     loadWsg(TILE_102_WSG, &self->wsgs[MG_WSG_BG_CHAINS], false);
     loadWsg(TILE_103_WSG, &self->wsgs[MG_WSG_BG_WALL], false);
+    loadWsg(HP_BOTTOM_ALPHA_WSG, &self->wsgs[MG_WSG_HP_BOTTOM_ALPHA], false);
+    loadWsg(HP_MIDDLE_0_WSG, &self->wsgs[MG_WSG_HP_MIDDLE_0], false);
+    loadWsg(HP_MIDDLE_1_WSG, &self->wsgs[MG_WSG_HP_MIDDLE_1], false);
+    loadWsg(HP_MIDDLE_2_WSG, &self->wsgs[MG_WSG_HP_MIDDLE_2], false);
+    loadWsg(HP_MIDDLE_3_WSG, &self->wsgs[MG_WSG_HP_MIDDLE_3], false);
+    loadWsg(HP_MIDDLE_4_WSG, &self->wsgs[MG_WSG_HP_MIDDLE_4], false);
+    loadWsg(HP_MIDDLE_5_WSG, &self->wsgs[MG_WSG_HP_MIDDLE_5], false);
+    loadWsg(HP_MIDDLE_6_WSG, &self->wsgs[MG_WSG_HP_MIDDLE_6], false);
+    loadWsg(HP_TOP_0_WSG, &self->wsgs[MG_WSG_HP_TOP_0], false);
+    loadWsg(HP_TOP_1_WSG, &self->wsgs[MG_WSG_HP_TOP_1], false);
+    loadWsg(HP_TOP_2_WSG, &self->wsgs[MG_WSG_HP_TOP_2], false);
+    loadWsg(HP_TOP_3_WSG, &self->wsgs[MG_WSG_HP_TOP_3], false);
+    loadWsg(HP_TOP_4_WSG, &self->wsgs[MG_WSG_HP_TOP_4], false);
+    loadWsg(HP_TOP_5_WSG, &self->wsgs[MG_WSG_HP_TOP_5], false);
+    loadWsg(HP_TOP_6_WSG, &self->wsgs[MG_WSG_HP_TOP_6], false);
 }
 
 void mg_initializeSprites(mgWsgManager_t* self)
