@@ -451,21 +451,51 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
     //snprintf(levelStr, sizeof(levelStr) - 1, "Level %d-%d", gameData->world, gameData->level);
 
     char livesStr[8];
-    snprintf(livesStr, sizeof(livesStr) - 1, "x%d", gameData->lives);
+    snprintf(livesStr, sizeof(livesStr) - 1, "x%02d", gameData->lives);
 
     char timeStr[10];
     snprintf(timeStr, sizeof(timeStr) - 1, "T:%03d", gameData->countdown);
 
-    if (gameData->frameCount > 29)
+    /*if (gameData->frameCount > 29)
     {
         drawText(font, c500, "1UP", 24, 2);
-    }
+    }*/
 
-    drawText(font, c555, livesStr, 56, 2);
     //drawText(font, c555, coinStr, 160, 16);
-    drawText(font, c555, scoreStr, 8, 16);
+    drawText(font, c000, scoreStr, 34, 4);
+    drawText(font, c555, scoreStr, 32, 2);
     //drawText(font, c555, levelStr, 152, 2);
-    drawText(font, (gameData->countdown > 30) ? c555 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 220, 16);
+    drawText(font, c000, timeStr, 214, 4);
+    drawText(font, (gameData->countdown > 30) ? c555 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 212, 2);
+    
+    if(platformer->entityManager.playerEntity != NULL){
+        drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOTTOM_ALPHA], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION);
+        
+        int8_t hp = platformer->entityManager.playerEntity->hp;
+
+        for(uint8_t i = 0; i < 4; i++){
+            if(hp > 6) {
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_MIDDLE_6], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i*16));
+            } else {
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_MIDDLE_0 + hp], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i*16));
+            }
+
+            hp -= 6;
+
+            if(hp < 0) {hp = 0;}
+        }
+
+        if(hp == 6) {
+            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_6], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4*16));
+        } else {
+            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_0 + hp], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4*16));
+        }
+    }
+    
+    drawText(font, c000, livesStr, 6, 166);
+    drawText(font, c555, livesStr, 4, 164);
+    
+    
 
     if (gameData->comboTimer == 0)
     {
@@ -474,7 +504,9 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
 
     snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
     drawText(font, (gameData->comboTimer < 60) ? c030 : greenColors[(platformer->gameData.frameCount >> 3) % 4],
-             scoreStr, 8, 30);
+             scoreStr, 32, 16);
+
+    
 }
 
 void updateTitleScreen(platformer_t* self)
@@ -671,7 +703,7 @@ void changeStateGame(platformer_t* self)
             = mg_createPlayer(entityManager, entityManager->tilemap->defaultPlayerSpawn->tx * 16 + entityManager->tilemap->defaultPlayerSpawn->xOffsetInPixels,
                             entityManager->tilemap->defaultPlayerSpawn->ty * 16 + entityManager->tilemap->defaultPlayerSpawn->yOffsetInPixels);
         entityManager->playerEntity     = entityManager->viewEntity;
-        entityManager->playerEntity->hp = self->gameData.initialHp;
+        //entityManager->playerEntity->hp = self->gameData.initialHp;
         mg_viewFollowEntity(&(self->tilemap), entityManager->playerEntity);
     }
 
