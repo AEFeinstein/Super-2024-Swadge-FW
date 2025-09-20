@@ -14,6 +14,8 @@
 #define MG_TILESIZE                16
 #define MG_HALF_TILESIZE           8
 #define DESPAWN_THRESHOLD          64
+#define MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION 148
+
 
 static const cnfsFileIdx_t MG_BGMS[]
     = {BGM_DE_MAGIO_MID, BGM_SMOOTH_MID, BGM_UNDERGROUND_MID, BGM_CASTLE_MID, BGM_NAME_ENTRY_MID};
@@ -600,7 +602,23 @@ typedef enum {
     MG_WSG_BG_MOUNTAIN,
     MG_WSG_BG_METAL,
     MG_WSG_BG_CHAINS,
-    MG_WSG_BG_WALL
+    MG_WSG_BG_WALL,
+
+    MG_WSG_HP_BOTTOM_ALPHA = 299,
+    MG_WSG_HP_MIDDLE_0,
+    MG_WSG_HP_MIDDLE_1,
+    MG_WSG_HP_MIDDLE_2,
+    MG_WSG_HP_MIDDLE_3,
+    MG_WSG_HP_MIDDLE_4,
+    MG_WSG_HP_MIDDLE_5,
+    MG_WSG_HP_MIDDLE_6,
+    MG_WSG_HP_TOP_0,
+    MG_WSG_HP_TOP_1,
+    MG_WSG_HP_TOP_2,
+    MG_WSG_HP_TOP_3,
+    MG_WSG_HP_TOP_4,
+    MG_WSG_HP_TOP_5,
+    MG_WSG_HP_TOP_6,
 } mg_wsgIndex_t;
 
 typedef enum {
@@ -829,7 +847,6 @@ typedef enum {
     MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_FE,
     MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_FF
 } mg_wsgGenericIndex_t;
-
 
 typedef enum
 {
