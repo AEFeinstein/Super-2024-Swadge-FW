@@ -297,7 +297,7 @@ mgEntity_t* mg_createPlayer(mgEntityManager_t* entityManager, uint16_t x, uint16
     entity->jumpPower          = 0;
     entity->canDash            = true;
     entity->spriteFlipVertical = false;
-    entity->hp                 = 1;
+    entity->hp                 = 30;
     entity->animationTimer     = 0; // Used as a cooldown for shooting square wave balls
     entity->shotsFired         = 0;
     entity->shotLimit          = 3;
