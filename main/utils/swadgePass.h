@@ -135,15 +135,15 @@ typedef struct __attribute__((packed)) swadgePassPacket
         uint16_t highScore;
     } roboRunner;
 
-    struct 
+    struct
     {
-        int8_t cardSelected; //which card the user has selected, 0-7
-        int8_t fact0; //random fact about the user, 0-7
-        int8_t fact1; //random fact about the user, 0-7
-        int8_t fact2; //random fact about the user, 0-7
-        int8_t festers; //how many festers they've collected, 0-99
+        int8_t cardSelected; // which card the user has selected, 0-7
+        int8_t fact0;        // random fact about the user, 0-7
+        int8_t fact1;        // random fact about the user, 0-7
+        int8_t fact2;        // random fact about the user, 0-7
+        int8_t festers;      // how many festers they've collected, 0-99
     } atriumMode;
-    
+
 } swadgePassPacket_t;
 
 /**
