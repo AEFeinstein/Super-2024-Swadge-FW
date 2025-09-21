@@ -174,17 +174,17 @@ typedef enum
 typedef enum
 {
     /// @brief On, in which the note is on but doesn't have any specific ADSR states set (what?)
-    ADSR_ON,
+    ADSR_ON = 0,
     /// @brief Attack, in which the volume rises from 0 to the max volume linearly
-    ADSR_ATTACK,
+    ADSR_ATTACK = 1,
     /// @brief Decay, in which the volume falls from the max volume to the sustain volume linearly
-    ADSR_DECAY,
+    ADSR_DECAY = 2,
     /// @brief Sustain, in which the volume remains at the sustain volume
-    ADSR_SUSTAIN,
+    ADSR_SUSTAIN = 3,
     /// @brief Release, in which the volume falls from the sustain volume to 0 quadratically
-    ADSR_RELEASE,
+    ADSR_RELEASE = 4,
     /// @brief Off, in which the note has finished playing completely
-    ADSR_OFF,
+    ADSR_OFF = 5,
 } adsrState_t;
 
 /**
@@ -592,7 +592,7 @@ typedef struct
     uint32_t stateChangeTick;
 
     /// @brief The ultimate pitch of this voice after pitch bending, etc.
-    uq8_24 pitch;
+    uq16_16 pitch;
 
     /// @brief The MIDI note number for the sound being played
     uint8_t note;
@@ -647,28 +647,6 @@ typedef struct
     /// @brief The envelope defined for this voice
     // TODO make this a pointer, why wasn't it to begin with?
     envelope_t envelope;
-
-    /*
-    // TODO union this with the oscillators? They shouldn't both be used
-    // But we need to make sure those oscillators don't get summed
-    union
-    {
-        /// @brief An array of scratch data for percussion functions to use
-        uint32_t percScratch[4];
-
-        struct
-        {
-            /// @brief The number of fractional samples remaining
-            uint32_t sampleError;
-
-            /// @brief The number of loops remaining
-            uint32_t sampleLoops;
-        };
-    };
-
-    /// @brief A pointer to the timbre of this voice, which defines its musical characteristics
-    const midiTimbre_t* timbre;
-    */
 } midiVoice_t;
 
 /**

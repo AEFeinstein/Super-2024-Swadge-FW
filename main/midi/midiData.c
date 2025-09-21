@@ -269,26 +269,31 @@ const midiTimbre_t* const magfestTimbres[] = {
 const size_t magfestTimbreCount = ARRAY_SIZE(magfestTimbres);
 
 const midiTimbre_t defaultDrumkitTimbre = {
-    .type = NOISE,
+    .type = PLAY_FUNC,
     .flags = TF_PERCUSSION,
     .percussion = {
         .playFunc = defaultDrumkitFunc,
         // TODO: Define the data and put it here!
         .data = NULL,
     },
-    .envelope = { 0 },
+    .envelope = {
+        .sustainVol = 0,
+        .decayTime = UINT32_MAX,
+    },
     .name = "Swadge Drums 0",
 };
 
 const midiTimbre_t donutDrumkitTimbre = {
-    .type = NOISE,
+    .type = PLAY_FUNC,
     .flags = TF_PERCUSSION,
     .percussion = {
         .playFunc = donutDrumkitFunc,
         // This should be set though
         .data = NULL,
     },
-    .envelope = { 0 },
+    .envelope = {
+        .sustainVol = 127,
+    },
     .name = "Donut Swadge Drums",
 };
 
