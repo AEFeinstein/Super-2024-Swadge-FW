@@ -152,6 +152,7 @@ void mg_initializeEntity(mgEntity_t* self, mgEntityManager_t* entityManager, mgT
 
 void mg_updatePlayer(mgEntity_t* self);
 void updateTestObject(mgEntity_t* self);
+void mg_updateInvincibilityFrames(mgEntity_t* self);
 void updateHitBlock(mgEntity_t* self);
 
 void mg_moveEntityWithTileCollisions(mgEntity_t* self);
