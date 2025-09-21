@@ -629,7 +629,7 @@ static int32_t stepSampleVoice(midiVoice_t* voice, voiceStates_t* states, uint8_
         voiceAdvanceAdsr(voice, states, voiceIdx, channel, specialStates, ADSR_OFF);
     }
 
-    return sample * (voice->curVol >> 24) / 255;
+    return sample * (int)((voice->curVol >> 24) & 0xFF) / 255;
 }
 
 static int32_t stepPlayFuncVoice(midiVoice_t* voice, voiceStates_t* states, uint8_t voiceIdx, midiChannel_t* channel, uint32_t* specialStates)
@@ -641,7 +641,7 @@ static int32_t stepPlayFuncVoice(midiVoice_t* voice, voiceStates_t* states, uint
         &done,
         voice->playFunc.scratch,
         NULL
-    ) * (voice->curVol >> 24) / 255;
+    ) * (int)((voice->curVol >> 24) & 0xFF) / 255;
 
     if (done)
     {
