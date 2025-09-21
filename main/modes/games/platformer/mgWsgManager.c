@@ -17,6 +17,7 @@
 void mg_initializeWsgManager(mgWsgManager_t* self)
 {
     self->wsgSetIndex = MG_WSGSET_DEFAULT;
+    self->transparencyFunction = &mg_dummyTileset_needsTransparency;
 
     mg_loadWsgs(self);
     mg_initializeSprites(self);
@@ -602,8 +603,13 @@ void mg_loadWsgSet(mgWsgManager_t* self, mgWsgSetIndex_t index){
 
                 loadWsg(mg_kineticDonutTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_IMAGE_FILENAME_LOOKUP_OFFSET], &self->wsgs[wsgIndex], false);
                 self->tiles[mg_kineticDonutTileset[(i * MG_TILESET_MAP_ROW_LENGTH + MG_TILE_INDEX_LOOKUP_OFFSET)] - 32] = &self->wsgs[wsgIndex];
+                self->transparencyFunction = &mg_kineticDonutTileset_needsTransparency;
             }
     }
 
     self->wsgSetIndex = index;
+}
+
+bool mg_dummyTileset_needsTransparency(uint8_t tile){
+    return false;
 }

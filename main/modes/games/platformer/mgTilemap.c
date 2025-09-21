@@ -92,12 +92,6 @@ void mg_drawTileMap(mgTilemap_t* tilemap)
                 continue;
             }
 
-            // Test animated tiles
-            if (tile == 64 || tile == 67)
-            {
-                tile += tilemap->animationFrame;
-            }
-
             // Draw only visible tiles
             if (tile > 31)
             {
@@ -105,7 +99,7 @@ void mg_drawTileMap(mgTilemap_t* tilemap)
                     continue;
                 }
 
-                if (mg_needsTransparency(tile))
+                if (tilemap->wsgManager->transparencyFunction(tile))
                 {
                     // drawWsgSimpleFast(&tilemap->tiles[tile - 32], x * MG_TILESIZE - tilemap->mapOffsetX, y *
                     // MG_TILESIZE - tilemap->mapOffsetY);
