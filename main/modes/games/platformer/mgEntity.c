@@ -282,19 +282,7 @@ void mg_updatePlayer(mgEntity_t* self)
         self->yspeed    = self->yspeed / 4;
     }
 
-    if (self->invincibilityFrames > 0)
-    {
-        self->invincibilityFrames--;
-        if (self->invincibilityFrames % 2)
-        {
-            self->visible = !self->visible;
-        }
-
-        if (self->invincibilityFrames <= 0)
-        {
-            self->visible = true;
-        }
-    }
+    mg_updateInvincibilityFrames(self);
 
     if (self->animationTimer > 0)
     {
@@ -344,10 +332,29 @@ void updateTestObject(mgEntity_t* self)
         self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
     }
 
+    mg_updateInvincibilityFrames(self);
+
     despawnWhenOffscreen(self);
     mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
     mg_detectEntityCollisions(self);
+}
+
+void mg_updateInvincibilityFrames(mgEntity_t * self)
+{
+    if (self->invincibilityFrames > 0)
+    {
+        self->invincibilityFrames--;
+        if (self->invincibilityFrames & 0b1)
+        {
+            self->visible = !self->visible;
+        }
+
+        if (self->invincibilityFrames <= 0)
+        {
+            self->visible = true;
+        }
+    }
 }
 
 void updateHitBlock(mgEntity_t* self)
@@ -1003,7 +1010,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         {
             other->xspeed = -other->xspeed;
 
-            if (self->y < other->y || self->yspeed > 0)
+            /*if (self->y < other->y || self->yspeed > 0)
             {
                 mg_scorePoints(self->gameData, other->scoreValue);
 
@@ -1014,9 +1021,9 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 self->jumpPower = 64 + ((abs(self->xspeed) + 16) >> 3);
                 self->falling   = true;
             }
-            else if (self->invincibilityFrames <= 0)
+            else */if (self->invincibilityFrames <= 0)
             {
-                self->hp--;
+                self->hp -= 5;
                 mg_updateLedsHpMeter(self->entityManager, self->gameData);
                 self->gameData->comboTimer = 0;
 
@@ -1177,12 +1184,25 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             killEnemy(self);
             break;
         case ENTITY_WAVE_BALL:
-            self->xspeed = other->xspeed >> 1;
-            self->yspeed = -abs(other->xspeed >> 1);
-            mg_scorePoints(self->gameData, self->scoreValue);
-            soundPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
-            killEnemy(self);
             mg_destroyShot(other);
+        
+            if(self->invincibilityFrames){
+                break;
+            }
+        
+            if(self->hp <= 0) {
+                self->xspeed = other->xspeed >> 1;
+                self->yspeed = -abs(other->xspeed >> 1);
+                mg_scorePoints(self->gameData, self->scoreValue);
+                soundPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
+                killEnemy(self);
+                
+                break;
+            }
+
+            self->hp--;
+            self->invincibilityFrames=4;
+
             break;
         default:
         {
@@ -1612,6 +1632,7 @@ void updateDustBunny(mgEntity_t* self)
         }
     }
 
+    mg_updateInvincibilityFrames(self);
     despawnWhenOffscreen(self);
     mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
@@ -1650,6 +1671,7 @@ void updateDustBunnyL2(mgEntity_t* self)
         }
     }
 
+    mg_updateInvincibilityFrames(self);
     despawnWhenOffscreen(self);
     mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
@@ -1692,6 +1714,7 @@ void updateDustBunnyL3(mgEntity_t* self)
         }
     }
 
+    mg_updateInvincibilityFrames(self);
     despawnWhenOffscreen(self);
     mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
@@ -1997,6 +2020,7 @@ void updateWasp(mgEntity_t* self)
             break;
     }
 
+    mg_updateInvincibilityFrames(self);
     despawnWhenOffscreen(self);
     mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
@@ -2135,6 +2159,7 @@ void updateWaspL3(mgEntity_t* self)
             break;
     }
 
+    mg_updateInvincibilityFrames(self);
     despawnWhenOffscreen(self);
     mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
@@ -2261,6 +2286,7 @@ void updateEnemyBushL3(mgEntity_t* self)
         self->yDamping = (1 + esp_random() % 7) * 30;
     }
 
+    mg_updateInvincibilityFrames(self);
     despawnWhenOffscreen(self);
     mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
