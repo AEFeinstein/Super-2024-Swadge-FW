@@ -18,7 +18,7 @@
 
 
 static const cnfsFileIdx_t MG_BGMS[]
-    = {BGM_DE_MAGIO_MID, BGM_SMOOTH_MID, BGM_UNDERGROUND_MID, BGM_CASTLE_MID, BGM_NAME_ENTRY_MID};
+    = {BGM_KINETIC_DONUT_MID, BGM_SMOOTH_MID, BGM_UNDERGROUND_MID, BGM_CASTLE_MID, BGM_NAME_ENTRY_MID};
 
 //==============================================================================
 // Macros
