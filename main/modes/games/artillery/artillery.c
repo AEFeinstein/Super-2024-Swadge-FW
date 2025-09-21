@@ -428,7 +428,9 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
         }
         else if (str_paintSelect == label)
         {
-            ad->mState = AMS_PAINT;
+            // Set title, which may be overwritten by AMS_GAME_OVER
+            ad->paintMenu->title = str_paintSelect;
+            ad->mState           = AMS_PAINT;
         }
         else if (str_exit == label)
         {

@@ -182,6 +182,25 @@ int16_t drawShinyTextBounds(const font_t* font, paletteColor_t outerColor, palet
 }
 
 /**
+ * @brief Draw text to a display with the given color, 1px offset drop shadow, and font
+ *
+ * @param font  The font to use for the text
+ * @param color The color of the character to draw
+ * @param shadowColor The color of the drop shadow, offset by 1px down and right
+ * @param text  The text to draw to the display
+ * @param xOff  The x offset to draw the text at
+ * @param yOff  The y offset to draw the text at
+ * @return The x offset at the end of the drawn string
+ */
+int16_t drawTextShadow(const font_t* font, paletteColor_t color, paletteColor_t shadowColor, const char* text,
+                       int16_t xOff, int16_t yOff)
+{
+    int16_t end = drawTextBounds(font, shadowColor, text, xOff + 1, yOff + 1, 0, 0, TFT_WIDTH, TFT_HEIGHT);
+    drawTextBounds(font, color, text, xOff, yOff, 0, 0, TFT_WIDTH, TFT_HEIGHT);
+    return end;
+}
+
+/**
  * @brief Draw text to a display with the given color and font
  *
  * @param font  The font to use for the text
