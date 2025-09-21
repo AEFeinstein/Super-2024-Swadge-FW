@@ -144,6 +144,7 @@ uint16_t getLevelIndex(uint8_t world, uint8_t level);
 void changeStateMainMenu(platformer_t* self);
 void mgBuildMainMenu(platformer_t* self);
 void mgUpdateMainMenu(platformer_t * self);
+static void mg_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 //==============================================================================
 // Variables
@@ -160,7 +161,7 @@ swadgeMode_t modePlatformer = {.modeName                 = platformerName,
                                .fnExitMode               = platformerExitMode,
                                .fnMainLoop               = platformerMainLoop,
                                .fnAudioCallback          = NULL,
-                               .fnBackgroundDrawCallback = NULL,
+                               .fnBackgroundDrawCallback = mg_backgroundDrawCallback,
                                .fnEspNowRecvCb           = NULL,
                                .fnEspNowSendCb           = NULL};
 
@@ -395,20 +396,12 @@ void mgUpdateMainMenu(platformer_t* self)
     drawMenuMega(self->menu, self->menuRenderer, 16666);
 }
 
-/**
- * @brief TODO
- *
- * @param opt
- */
-// void platformerCb(const char *opt)
-// {
-//     ESP_LOGI("MNU", "%s", opt);
-// }
+
 
 void updateGame(platformer_t* self)
 {
     // Clear the display
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
+    //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
 
     mg_updateEntities(&(self->entityManager));
 
@@ -512,7 +505,7 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
 void updateTitleScreen(platformer_t* self)
 {
     // Clear the display
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
+    //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
 
     self->gameData.frameCount++;
 
@@ -659,7 +652,7 @@ void changeStateReadyScreen(platformer_t* self)
 void updateReadyScreen(platformer_t* self)
 {
     // Clear the display
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 179)
@@ -715,6 +708,12 @@ void changeStateGame(platformer_t* self)
 
     self->update = &updateGame;
 }
+
+static void mg_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
+{
+    fillDisplayArea(x, y, x + w, y + h, c102 + ( (y >> 6) % 6) );
+}
+
 
 void detectGameStateChange(platformer_t* self)
 {
@@ -812,7 +811,7 @@ void updateDead(platformer_t* self)
 void updateGameOver(platformer_t* self)
 {
     // Clear the display
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 179)
@@ -877,7 +876,7 @@ void changeStateLevelClear(platformer_t* self)
 void updateLevelClear(platformer_t* self)
 {
     // Clear the display
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
+    //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
 
     self->gameData.frameCount++;
 
@@ -994,7 +993,7 @@ void changeStateGameClear(platformer_t* self)
 void updateGameClear(platformer_t* self)
 {
     // Clear the display
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
     self->gameData.frameCount++;
 
@@ -1195,7 +1194,7 @@ void changeStateNameEntry(platformer_t* self)
 
 void updateNameEntry(platformer_t* self)
 {
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
     self->gameData.frameCount++;
 
@@ -1284,7 +1283,7 @@ void changeStateShowHighScores(platformer_t* self)
 
 void updateShowHighScores(platformer_t* self)
 {
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
     self->gameData.frameCount++;
 
