@@ -3067,15 +3067,16 @@ static void drawSynthMode(int64_t elapsedUs)
                 if (states->on & mask)
                 {
                     drawRect(x0, y0, x1, y1, c555);
-                    if (voice->transitionTicks == UINT32_MAX)
+                    if (voice->stateChangeTick == UINT32_MAX)
                     {
                         drawLineFast(x0, y1, x1, y0, c505);
                     }
-                    else if (voice->transitionTicksTotal != 0)
+                    else if (voice->stateChangeTick > 0)
                     {
+                        // there's no way to tell when the note started this state...
                         int lineX = x0
-                                    + (x1 - x0) * (voice->transitionTicksTotal - voice->transitionTicks)
-                                          / voice->transitionTicksTotal;
+                                    + (x1 - x0) * (voice->stateChangeTick - voice->voiceTick)
+                                          / voice->stateChangeTick;
                         drawLineFast(lineX, y0, lineX, y1, c505);
                     }
                 }
@@ -4011,9 +4012,9 @@ static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x
         int16_t x0       = x + ((chan->percussion ? voiceIdx : i++) * (BAR_WIDTH + BAR_SPACING));
         int16_t x1       = x0 + BAR_WIDTH;
 
-        if (chan->percussion || voices[voiceIdx].oscillators[0].cVol > 0 || voices[voiceIdx].oscillators[0].tVol > 0)
+        if (voices[voiceIdx].curVol > 0)
         {
-            int16_t barH = MAX((voices[voiceIdx].oscillators[0].cVol) * BAR_HEIGHT / 255, 1);
+            int16_t barH = MAX((voices[voiceIdx].curVol >> 24) * BAR_HEIGHT / 255, 1);
 
             fillDisplayArea(x0, y + (BAR_HEIGHT - barH), x1, y + BAR_HEIGHT, noteToColor(voices[voiceIdx].note));
         }
