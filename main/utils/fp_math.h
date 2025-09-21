@@ -144,6 +144,107 @@ float fixToFloat(q24_8 fx);
      */
     #define TO_FX_FRAC(num, denom) DIV_FX(num, denom)
 
+    /**
+     * @brief Convert an integer to a q24_8
+     * @param in The integer to convert to q24_8
+     * @return A q24_8
+     */
+    #define TO_FX_QN(in, fracBits) ((in) * (1 << (fracBits)))
+
+    /**
+     * @brief Convert a q24_8 to an integer
+     * @param in The q24_8 to convert to integer
+     * @return An integer
+     */
+    #define FROM_FX_QN(in, fracBits) ((in) >> (fracBits))
+
+    /**
+     * @brief Add two q24_8 numbers together
+     * @param a An operand
+     * @param b The other operand
+     * @return The sum
+     */
+    #define ADD_FX_QN(a, b, fracBits) ((a) + (b))
+
+    /**
+     * @brief Subtract a q24_8 from another
+     * @param a The number to subtract from
+     * @param b The number to subtract
+     * @return The difference
+     */
+    #define SUB_FX_QN(a, b, fracBits) ((a) - (b))
+
+    /**
+     * @brief Multiply two q24_8
+     * @param a An operand
+     * @param b The other operand
+     * @return The result
+     */
+    #define MUL_FX_QN(a, b, fracBits) (((a) * (b)) >> (fracBits))
+
+    /**
+     * @brief Divide a q24_8 by another
+     * @param a The numerator
+     * @param b The denominator
+     * @return The result
+     */
+    #define DIV_FX_QN(a, b, fracBits) (((a) << (fracBits)) / (b))
+
+    /**
+     * @brief Find the floor of a q24_8
+     * @param a The number to floor
+     * @return The floor of the input
+     */
+    #define FLOOR_FX_QN(a, fracBits) ((a) & (~((1 << (fracBits)) - 1)))
+
+    /**
+     * @brief Convert an integer fraction to q24_8
+     * @param num The numerator
+     * @param denom The denominator
+     * @return The fraction in q24_8
+     */
+    #define TO_FX_FRAC_QN(num, denom, fracBits) DIV_FX(num, denom)
+
+    // q8_8
+    #define TO_FX_Q8_8(in) TO_FX_QN(in, 8)
+    #define FROM_FX_Q8_8(in) FROM_FX_QN(in, 8)
+    #define ADD_FX_Q8_8(a, b) ADD_FX_QN(a, b, 8)
+    #define SUB_FX_Q8_8(a, b) SUB_FX_QN(a, b, 8)
+    #define MUL_FX_Q8_8(a, b) MUL_FX_QN(a, b, 8)
+    #define DIV_FX_Q8_8(a, b) DIV_FX_QN(a, b, 8)
+    #define FLOOR_FX_Q8_8(a) FLOOR_FX_QN(a, 8)
+    #define TO_FX_FRAC_Q8_8(num, denom) TO_FX_FRAC(num, denom, 8)
+
+    // q24_8
+    #define TO_FX_Q24_8(in) TO_FX_QN(in, 8)
+    #define FROM_FX_Q24_8(in) FROM_FX_QN(in, 8)
+    #define ADD_FX_Q24_8(a, b) ADD_FX_QN(a, b, 8)
+    #define SUB_FX_Q24_8(a, b) SUB_FX_QN(a, b, 8)
+    #define MUL_FX_Q24_8(a, b) MUL_FX_QN(a, b, 8)
+    #define DIV_FX_Q24_8(a, b) DIV_FX_QN(a, b, 8)
+    #define FLOOR_FX_Q24_8(a) FLOOR_FX_QN(a, 8)
+    #define TO_FX_FRAC_Q24_8(num, denom) TO_FX_FRAC(num, denom, 8)
+
+    // q16_16
+    #define TO_FX_Q16_16(in) TO_FX_QN(in, 16)
+    #define FROM_FX_Q16_16(in) FROM_FX_QN(in, 16)
+    #define ADD_FX_Q16_16(a, b) ADD_FX_QN(a, b, 16)
+    #define SUB_FX_Q16_16(a, b) SUB_FX_QN(a, b, 16)
+    #define MUL_FX_Q16_16(a, b) MUL_FX_QN(a, b, 16)
+    #define DIV_FX_Q16_16(a, b) DIV_FX_QN(a, b, 16)
+    #define FLOOR_FX_Q16_16(a) FLOOR_FX_QN(a, 16)
+    #define TO_FX_FRAC_Q16_16(num, denom) TO_FX_FRAC(num, denom, 16)
+
+    // q8_24
+    #define TO_FX_Q8_24(in) TO_FX_QN(in, 24)
+    #define FROM_FX_Q8_24(in) FROM_FX_QN(in, 24)
+    #define ADD_FX_Q8_24(a, b) ADD_FX_QN(a, b, 24)
+    #define SUB_FX_Q8_24(a, b) SUB_FX_QN(a, b, 24)
+    #define MUL_FX_Q8_24(a, b) MUL_FX_QN(a, b, 24)
+    #define DIV_FX_Q8_24(a, b) DIV_FX_QN(a, b, 24)
+    #define FLOOR_FX_Q8_24(a) FLOOR_FX_QN(a, 24)
+    #define TO_FX_FRAC_Q8_24(num, denom) TO_FX_FRAC(num, denom, 24)
+
 #else
 
 static inline q24_8 TO_FX(uint32_t in)

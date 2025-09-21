@@ -141,6 +141,7 @@ typedef enum
     NOISE,
     WAVE_SHAPE,
     PERCUSSION_SAMPLE,
+    PLAY_FUNC,
 } timbreType_t;
 
 /**
@@ -159,11 +160,32 @@ typedef enum
 /**
  * @brief Enum which defines the method used to retrieve a sample from each voice
  */
-typedef enum {
+typedef enum
+{
     VOICE_WAVE_FUNC,
     VOICE_PLAY_FUNC,
     VOICE_SAMPLE,
 } voiceType_t;
+
+/**
+ * @brief Enum representing specific ADSR states
+ *
+ */
+typedef enum
+{
+    /// @brief On, in which the note is on but doesn't have any specific ADSR states set (what?)
+    ADSR_ON,
+    /// @brief Attack, in which the volume rises from 0 to the max volume linearly
+    ADSR_ATTACK,
+    /// @brief Decay, in which the volume falls from the max volume to the sustain volume linearly
+    ADSR_DECAY,
+    /// @brief Sustain, in which the volume remains at the sustain volume
+    ADSR_SUSTAIN,
+    /// @brief Release, in which the volume falls from the sustain volume to 0 quadratically
+    ADSR_RELEASE,
+    /// @brief Off, in which the note has finished playing completely
+    ADSR_OFF,
+} adsrState_t;
 
 /**
  * @brief Defines the MIDI note numbers mapped to by the General MIDI percussion note names
@@ -550,19 +572,9 @@ typedef struct
  */
 typedef struct
 {
-    /*
-    /// @brief The number of samples remaining before transitioning to the next state
-    uint32_t transitionTicks;
-
-    /// @brief The number of samples remaining before the next volume adjustment
-    uint32_t transitionTicksTotal;
-
-    /// @brief The volume at the start of the transition time
-    uint8_t transitionStartVol;
-    */
 
     /// @brief The current volume as a fixed-point value.
-    q8_24 curVol;
+    uq8_24 curVol;
 
     /// @brief Rate-of-change of the volume per tick, can be positive or negative
     q8_24 volRate;
@@ -570,13 +582,17 @@ typedef struct
     /// @brief Acceleration of the volume per tick, which will be added to the rate
     q8_24 volAccel;
 
-    /*
-    /// @brief The target volume of this tick
-    uint8_t targetVol;
-    */
+    /// @brief The monotonic tick counter for this voice since starting
+    uint32_t voiceTick;
 
-    /// @brief The monotonic tick counter for playback of sampled timbres
+    /// @brief The non-monotonic tick counter for playback of sampled timbres
     uint32_t sampleTick;
+
+    /// @brief The next tick at which state will change
+    uint32_t stateChangeTick;
+
+    /// @brief The ultimate pitch of this voice after pitch bending, etc.
+    uq8_24 pitch;
 
     /// @brief The MIDI note number for the sound being played
     uint8_t note;
@@ -588,11 +604,6 @@ typedef struct
     /// If 255 or any other value >= 16, this was not played via MIDI
     uint8_t channel;
 
-    /*
-    /// @brief The synthesizer oscillators used to generate the sounds
-    synthOscillator_t oscillators[OSC_PER_VOICE];
-    */
-
     /// @brief The method for obtaining the next audio sample
     voiceType_t type;
 
@@ -603,6 +614,9 @@ typedef struct
             const uint8_t* data;
             /// @brief The number of samples in the data
             uint32_t length;
+
+            /// @brief The number of samples per second of raw sample data
+            uint32_t rate;
 
             /// @brief The sample number to return to after reaching the loop end
             uint32_t loopStart;
@@ -627,10 +641,11 @@ typedef struct
         struct {
             percussionFunc_t func;
             uint32_t scratch[4];
-        } perc;
+        } playFunc;
     };
 
     /// @brief The envelope defined for this voice
+    // TODO make this a pointer, why wasn't it to begin with?
     envelope_t envelope;
 
     /*
