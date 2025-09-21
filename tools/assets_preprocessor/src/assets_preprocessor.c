@@ -29,6 +29,7 @@
 #include "chart_processor.h"
 #include "cfun_processor.h"
 #include "font_processor.h"
+#include "greyscale_processor.h"
 #include "image_processor.h"
 #include "json_processor.h"
 #include "raw_processor.h"
@@ -46,7 +47,7 @@
 static const assetProcessor_t* allAssetProcessors[] = {
     &binProcessor,   &chartProcessor, &fontProcessor, &heatshrinkProcessor,
     &imageProcessor, &jsonProcessor,  &sudokuProcessor, &textProcessor,
-    &cfunProcessor,
+    &cfunProcessor,  &greyscaleProcessor,
 };
 //==============================================================================
 // END Asset Processor List

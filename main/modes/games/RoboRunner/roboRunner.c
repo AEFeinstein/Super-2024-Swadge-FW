@@ -71,6 +71,9 @@ static const char* const strings[] = {
     "ROBO",
     "RUNNER",
     "Game over! Press A to play again.",
+    "Press A to play",
+    "Press B to show QR",
+    "Links to the 'how to make a swadge game' tutorial where this game was built!",
 };
 
 const trophyData_t roboRunnerTrophies[] = {
@@ -196,6 +199,10 @@ typedef struct
     // LEDs
     led_t leds[CONFIG_NUM_LEDS];
     int ledAnimIdx;
+
+    // QR code
+    wsg_t qr;
+    bool qrToggle;
 } runnerData_t;
 
 //==============================================================================
@@ -308,10 +315,13 @@ static void runnerEnterMode()
     rd->feetTraveledTotal = trophyGetSavedValue(roboRunnerTrophies[1]);
     rd->deaths            = trophyGetSavedValue(roboRunnerTrophies[2]);
     rd->state             = SPLASH;
+    // QR
+    loadWsg(QRTUTORIAL_WSG, &rd->qr, true);
 }
 
 static void runnerExitMode()
 {
+    freeWsg(&rd->qr);
     globalMidiPlayerStop(MIDI_BGM);
     unloadMidiFile(&rd->bgm);
     freeFont(&rd->titleFont);
@@ -340,8 +350,15 @@ static void runnerMainLoop(int64_t elapsedUs)
             {
                 if (evt.down)
                 {
-                    rd->state = RUNNING;
-                    resetGame();
+                    if (evt.button & PB_A && !rd->qrToggle)
+                    {
+                        rd->state = RUNNING;
+                        resetGame();
+                    }
+                    else if (evt.button & PB_B)
+                    {
+                        rd->qrToggle = !rd->qrToggle;
+                    }
                 }
             }
             drawSplash(elapsedUs);
@@ -545,6 +562,22 @@ static void increaseDifficulty(int64_t elapsedUs)
 static void drawSplash(int64_t elapsedUs)
 {
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c112);
+
+    // Handle QR code
+    if (rd->qrToggle)
+    {
+        // QR code
+        int16_t xCoord = (TFT_WIDTH - rd->qr.w * 5) >> 1;
+        drawWsgSimpleScaled(&rd->qr, xCoord, 12, 5, 5);
+
+        // Text
+        xCoord         = 16;
+        int16_t yCoord = TFT_HEIGHT - 44;
+        drawTextWordWrapCentered(getSysFont(), c555, strings[5], &xCoord, &yCoord, TFT_WIDTH - xCoord, TFT_HEIGHT);
+        return;
+    }
+
+    // If QR isn't being drawn
     drawLine(0, GROUND_HEIGHT, TFT_WIDTH, GROUND_HEIGHT, c555, 0);
     drawLine(0, CEILING_HEIGHT, TFT_WIDTH, CEILING_HEIGHT, c555, 0);
     for (int idx = 0; idx < 4; idx++)
@@ -573,14 +606,15 @@ static void drawSplash(int64_t elapsedUs)
     }
     else if (rd->attractToggle > 500000)
     {
-        drawText(getSysFont(), c555, "Press any button to continue", 32, TFT_HEIGHT - 48);
+        drawText(getSysFont(), c555, strings[3], 32, TFT_HEIGHT - 48);
+        drawText(getSysFont(), c555, strings[4], 32, TFT_HEIGHT - 24);
     }
     if (rd->otherHS > 0 || rd->prevScore > 0)
     {
         char buffer[64];
         snprintf(buffer, sizeof(buffer) - 1, "High Score: %" PRId32,
                  (rd->otherHS > rd->prevScore) ? rd->otherHS : rd->prevScore);
-        drawText(getSysFont(), c555, buffer, 32, TFT_HEIGHT - 32);
+        drawText(getSysFont(), c555, buffer, 48, 12);
         if (rd->otherHS <= rd->prevScore)
         {
             snprintf(buffer, sizeof(buffer) - 1, "By: You!");
@@ -589,7 +623,7 @@ static void drawSplash(int64_t elapsedUs)
         {
             snprintf(buffer, sizeof(buffer) - 1, "By: %s", rd->remotePlayer.nameBuffer);
         }
-        drawText(getSysFont(), c555, buffer, 32, TFT_HEIGHT - 16);
+        drawText(getSysFont(), c555, buffer, 48, 28);
     }
 }
 

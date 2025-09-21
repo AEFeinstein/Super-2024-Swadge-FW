@@ -404,7 +404,7 @@ static swadgedoku_t* sd = NULL;
 
 static void swadgedokuEnterMode(void)
 {
-    sd = calloc(1, sizeof(swadgedoku_t));
+    sd = heap_caps_calloc(1, sizeof(swadgedoku_t), MALLOC_CAP_8BIT);
     if (!sd)
     {
         // make cppcheck happy
@@ -455,7 +455,7 @@ static void swadgedokuExitMode(void)
     void* val = NULL;
     while (NULL != (val = pop(&sd->player.overlay.shapes)))
     {
-        free(val);
+        heap_caps_free(val);
     }
 
     freeFont(&sd->drawCtx.gridFont);
@@ -464,8 +464,8 @@ static void swadgedokuExitMode(void)
 
     freeWsg(&sd->drawCtx.noteTakingIcon);
 
-    free(sd->player.notes);
-    free(sd->player.overlay.gridOpts);
+    heap_caps_free(sd->player.notes);
+    heap_caps_free(sd->player.overlay.gridOpts);
 
     deinitWheelMenu(sd->numberWheelRenderer);
     deinitMenu(sd->numberWheel);
@@ -474,7 +474,7 @@ static void swadgedokuExitMode(void)
     deinitMenu(sd->menu);
     deinitMenu(sd->emptyMenu);
     deinitMenu(sd->pauseMenu);
-    free(sd);
+    heap_caps_free(sd);
     sd = NULL;
 }
 
