@@ -338,6 +338,7 @@ mgEntity_t* createTestObject(mgEntityManager_t* entityManager, uint16_t x, uint1
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->scoreValue           = 100;
+    entity->hp                   = 3;
 
     entity->type                 = mgEntity_tEST;
     entity->spriteIndex          = MG_SP_ENEMY_BASIC;
@@ -603,6 +604,7 @@ mgEntity_t* createDustBunny(mgEntityManager_t* entityManager, uint16_t x, uint16
     entity->gravity              = 4;
     entity->spriteFlipHorizontal = (x < (entityManager->tilemap->mapOffsetX + 120)) ? true : false;
     entity->spriteFlipVertical   = false;
+    entity->hp                   = 4;
 
     entity->scoreValue = 150;
 
@@ -642,6 +644,7 @@ mgEntity_t* createWasp(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
     entity->spriteFlipHorizontal = (x < (entityManager->tilemap->mapOffsetX + 120)) ? false : true;
     entity->spriteFlipVertical   = false;
     entity->scoreValue           = 200;
+    entity->hp                   = 5;
 
     entity->xspeed = (entity->spriteFlipHorizontal) ? -16 : 16;
 
@@ -716,6 +719,7 @@ mgEntity_t* createEnemyBushL3(mgEntityManager_t* entityManager, uint16_t x, uint
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->scoreValue           = 250;
+    entity->hp                   = 10;
 
     entity->yDamping = 20; // This will be repurposed as a state timer
 
@@ -756,6 +760,7 @@ mgEntity_t* createDustBunnyL2(mgEntityManager_t* entityManager, uint16_t x, uint
     entity->spriteFlipHorizontal = (x < (entityManager->tilemap->mapOffsetX + 120)) ? false : true;
     entity->spriteFlipVertical   = false;
     entity->scoreValue           = 200;
+    entity->hp                   = 8;
 
     entity->type                 = ENTITY_DUST_BUNNY_2;
     entity->spriteIndex          = MG_SP_DUSTBUNNY_L2_IDLE;
@@ -794,6 +799,7 @@ mgEntity_t* createDustBunnyL3(mgEntityManager_t* entityManager, uint16_t x, uint
     entity->spriteFlipHorizontal = (x < (entityManager->tilemap->mapOffsetX + 120)) ? true : false;
     entity->spriteFlipVertical   = false;
     entity->scoreValue           = 300;
+    entity->hp                   = 12;
 
     entity->type                 = ENTITY_DUST_BUNNY_3;
     entity->spriteIndex          = MG_SP_DUSTBUNNY_L3_IDLE;
@@ -833,6 +839,7 @@ mgEntity_t* createWaspL2(mgEntityManager_t* entityManager, uint16_t x, uint16_t 
     entity->spriteFlipVertical   = false;
     entity->falling              = false;
     entity->scoreValue           = 300;
+    entity->hp                   = 8;
 
     entity->xspeed = (entity->spriteFlipHorizontal) ? -24 : 24;
 
@@ -873,6 +880,7 @@ mgEntity_t* createWaspL3(mgEntityManager_t* entityManager, uint16_t x, uint16_t 
     entity->spriteFlipHorizontal = (x < (entityManager->tilemap->mapOffsetX + 120)) ? false : true;
     entity->spriteFlipVertical   = false;
     entity->scoreValue           = 400;
+    entity->hp                   = 10;
 
     entity->xspeed = (entity->spriteFlipHorizontal) ? -24 : 24;
 
