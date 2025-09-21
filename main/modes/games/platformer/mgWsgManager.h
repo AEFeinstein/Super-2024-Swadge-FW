@@ -24,6 +24,8 @@
 //==============================================================================
 // Structs
 //==============================================================================
+typedef bool (*mg_tileNeedsTransparencyFunction_t)(uint8_t tile);
+//typedef uint8_t (*mg_animateTileFunction_t)(uint8_t tile);
 typedef struct
 {
     wsg_t wsgs[MG_WSGS_SIZE];
@@ -34,6 +36,7 @@ typedef struct
     int16_t globalTileAnimationTimer;
 
     int8_t wsgSetIndex;
+    mg_tileNeedsTransparencyFunction_t transparencyFunction;
 } mgWsgManager_t;
 
 //==============================================================================
@@ -58,5 +61,7 @@ void mg_remapPlayerNotShootWsg(mgWsgManager_t* self);
 void mg_animateTiles(mgWsgManager_t* self);
 void mg_remapBlockTile(mgWsgManager_t* self, uint16_t newBlockWsgIndex);
 void mg_loadWsgSet(mgWsgManager_t* self, mgWsgSetIndex_t index);
+
+bool mg_dummyTileset_needsTransparency(uint8_t tile);
 
 #endif
