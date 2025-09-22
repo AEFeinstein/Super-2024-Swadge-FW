@@ -1265,7 +1265,6 @@ void drawPicrossScene(void)
         }
         int ox = lerp(0, p->offsetX, p->lerpAmount);
         int oy = lerp(0, p->offsetY, p->lerpAmount);
-
         for (int i = 0; i < w; i++)
         {
             for (int j = 0; j < h; j++)
@@ -1306,6 +1305,16 @@ void drawPicrossScene(void)
             p->marqueeScrollX += p->elapsedUs * 3;
             drawTextMarquee(&p->UIFont, c555, p->selectedLevel.marqueeFact, 27, 200, TFT_WIDTH - 30,
                             &p->marqueeScrollX);
+        }
+        else
+        {
+            //Draw an outline box during the slide to help pop against some of the black backgrounds.
+            box_t outlineBox = boxFromCoord(0, 0);
+            outlineBox.x0 += ox - 1;
+            outlineBox.y0 += oy - 1;
+            outlineBox.x1 = outlineBox.x0+2+ w * p->drawScale;
+            outlineBox.y1 = outlineBox.y0+2+ h * p->drawScale;
+            drawRect(outlineBox.x0, outlineBox.y0, outlineBox.x1, outlineBox.y1, c222);
         }
     }
 }
