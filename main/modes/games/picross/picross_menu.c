@@ -127,7 +127,7 @@ struct
         .name        = "flower",
         .pzl         = _55_FLOWER_PZL_WSG,
         .slv         = _55_FLOWER_SLV_WSG,
-        .marqueeFact = "Nearly all of the picross 2 puzzle art was created by @objectdiscret.itch.io",
+        .marqueeFact = "All but one of these puzzles are created by @objectdiscret.itch.io",
     },
     {
         .name        = "ghost",
@@ -168,25 +168,25 @@ struct
         .marqueeFact = "Congratulations! You found the triangle!",
     },
     {
-        .name        = "mag1",
+        .name        = "mag",
         .pzl         = _6F_MAG_1_PZL_WSG,
         .slv         = _6F_MAG_1_SLV_WSG,
         .marqueeFact = "Woooooooo! It's Music And Gaming!!!",
     },
     {
-        .name        = "mag2",
+        .name        = "fest",
         .pzl         = _6F_MAG_2_PZL_WSG,
         .slv         = _6F_MAG_2_SLV_WSG,
         .marqueeFact = "24,500 people attended the festival in 2025.",
     },
     {
-        .name        = "mag3",
+        .name        = "2026",
         .pzl         = _6F_MAG_3_PZL_WSG,
         .slv         = _6F_MAG_3_SLV_WSG,
         .marqueeFact = "2026 features Alpha Pulse who must take down evil Bigma to save the future of music!",
     },
     {
-        .name        = "maglogo",
+        .name        = "mag logo",
         .pzl         = _6F_MAGLOGO_PZL_WSG,
         .slv         = _6F_MAGLOGO_SLV_WSG,
         .marqueeFact = "The MAGFest logo features a joystick, a square wave, and a speaker.",
@@ -199,24 +199,24 @@ struct
                        "support for the megaman soundfont!",
     },
     {
-        .name        = "flyindonut",
+        .name        = "flyin donut",
         .pzl         = _8F_FLYINDONUT_PZL_WSG,
         .slv         = _8F_FLYINDONUT_SLV_WSG,
-        .marqueeFact = "Flight Sim from the 2022 chainsaw swadge and 2024 gunship swadge : Featured integration to "
+        .marqueeFact = "Flight Sims from the 2022 chainsaw swadge and 2024 gunship swadge : Featured integration to "
                        "VRchat by cnlohr inside a 3d Gaylord modeled by gplord.",
     },
     {
-        .name        = "mtype",
+        .name        = "m-type",
         .pzl         = _8F_MTYPE_PZL_WSG,
         .slv         = _8F_MTYPE_SLV_WSG,
-        .marqueeFact = "M-Type from the 2022 chainsaw swadge : Blast your way through an endless army of evil space "
+        .marqueeFact = "Produced by ? for the 2022 chainsaw swadge : Blast your way through an endless army of evil space "
                        "aliens with your experimental M-Type fighter!",
     },
     {
-        .name        = "personaldemon",
+        .name        = "personal demon",
         .pzl         = _8F_PERSONALDEMON_PZL_WSG,
         .slv         = _8F_PERSONALDEMON_SLV_WSG,
-        .marqueeFact = "Personal Demon from the 2022 chainsaw swadge by gelakinetic : We all have our own Personal "
+        .marqueeFact = "Produced by gelakinetic for the 2022 chainsaw swadge : We all have our own Personal "
                        "Demons, and now you can take care of yours!",
     },
     {
@@ -224,14 +224,14 @@ struct
         .pzl  = _8F_SHREDDER_PZL_WSG,
         .slv  = _8F_SHREDDER_SLV_WSG,
         .marqueeFact
-        = "Shredder from the 2022 chainsaw swadge : Hate'th Notes have taken over the arenas, and it's up to you to "
+        = "Produced by ? for the 2022 chainsaw swadge : Hate'th Notes have taken over the arenas, and it's up to you to "
           "Shred them to pieces! Wield your righteous guitar and get them before they get you with their scythes!",
     },
     {
         .name        = "stomp",
         .pzl         = _8F_STOMP_PZL_WSG,
         .slv         = _8F_STOMP_SLV_WSG,
-        .marqueeFact = "Stomp from the 2022 chainsaw swadge : The flying skulls are coming to get you and the only way "
+        .marqueeFact = "Produced by ? for the 2022 chainsaw swadge : The flying skulls are coming to get you and the only way "
                        "to stop them is to Stomp them into the ground!",
     },
     {
@@ -247,13 +247,13 @@ struct
         .marqueeFact = "BABA is NONOGRAM. NONOGRAM is WIN.",
     },
     {
-        .name        = "dragonball",
+        .name        = "dragon ball",
         .pzl         = AA_DRAGONBALL_PZL_WSG,
         .slv         = AA_DRAGONBALL_SLV_WSG,
         .marqueeFact = "If your head is empty, you can pack it with dreams!",
     },
     {
-        .name        = "heartpiece",
+        .name        = "heart piece",
         .pzl         = AA_HEARTPIECE_PZL_WSG,
         .slv         = AA_HEARTPIECE_SLV_WSG,
         .marqueeFact = "badabedem badabedem badabedem badabedem badabedem badabedem badabedem badabedem ...... DUN "
@@ -266,7 +266,7 @@ struct
         .marqueeFact = "jellyfish is helping yes. Y can't metroid crawl?",
     },
     {
-        .name        = "moonstick",
+        .name        = "moon stick",
         .pzl         = AA_MOONSTICK_PZL_WSG,
         .slv         = AA_MOONSTICK_SLV_WSG,
         .marqueeFact = "Moon Healing Escalation!",
@@ -278,7 +278,7 @@ struct
         .marqueeFact = "More snack break pls, to fuel puzzle solving.",
     },
     {
-        .name        = "pokeball",
+        .name        = "pocket ball",
         .pzl         = AA_POKEBALL_PZL_WSG,
         .slv         = AA_POKEBALL_SLV_WSG,
         .marqueeFact = "Sue me.",
@@ -296,92 +296,92 @@ struct
         .marqueeFact = "MORE. SNACKS.",
     },
     {
-        .name        = "donutjump",
+        .name        = "donut jump",
         .pzl         = AF_DONUTJUMP_PZL_WSG,
         .slv         = AF_DONUTJUMP_SLV_WSG,
-        .marqueeFact = "Donut Jump from the 2023 wavebird swadge : King Donut jumps to all the blocks without being "
+        .marqueeFact = "Produced by ? for the 2023 wavebird swadge : King Donut jumps to all the blocks without being "
                        "hit by the Evil Eclair or Devil Donut.",
     },
     {
         .name        = "picross",
         .pzl         = AF_PICROSS_PZL_WSG,
         .slv         = AF_PICROSS_SLV_WSG,
-        .marqueeFact = "Picross from the 2023 wavebird swadge by blooper : the prequel to this game!",
+        .marqueeFact = "Produced by blooper for the 2023 wavebird swadge : the prequel to this game!",
     },
     {
-        .name        = "superswadgeland",
+        .name        = "super swadge land",
         .pzl         = AF_SUPERSWADGELAND_PZL_WSG,
         .slv         = AF_SUPERSWADGELAND_SLV_WSG,
-        .marqueeFact = "Super Swadge Land from the 2023 wavebird swadge by JVeg199X : Rack up a high score across 16 "
+        .marqueeFact = "Produced by JVeg199X for the 2023 wavebird swadge : Rack up a high score across 16 "
                        "distinct areas, each full of secrets and danger!",
     },
     {
-        .name        = "swadgebros",
+        .name        = "swadge bros",
         .pzl         = AF_SWADGEBROS_PZL_WSG,
         .slv         = AF_SWADGEBROS_SLV_WSG,
-        .marqueeFact = "Swadge Bros from the 2023 wavebird swadge by gelakinetic & kaitie : Prove your might in "
+        .marqueeFact = "Produced by gelakinetic for the 2023 wavebird swadge with art by gplord & kaitie : Prove your might in "
                        "wireless PvP or versus a CPU!",
     },
     {
         .name        = "tiltrads",
         .pzl         = AF_TILTRADS_PZL_WSG,
         .slv         = AF_TILTRADS_SLV_WSG,
-        .marqueeFact = "Tiltrads from the 2023 wavebird swadge : I'm using tilt controls!",
+        .marqueeFact = "Produced by ? for the 2023 wavebird swadge : I'm using tilt controls!",
     },
     {
-        .name = "galacticbrickdown",
+        .name = "galactic brickdown",
         .pzl  = CF_GALACTICBRICKDOWN_PZL_WSG,
         .slv  = CF_GALACTICBRICKDOWN_SLV_WSG,
         .marqueeFact
-        = "Galactic Brickdown from the 2024 gunship swadge : This is a unique take on a \"breakout\" style game.",
+        = "Produced by ? for the 2024 gunship swadge : This is a unique take on a \"breakout\" style game.",
     },
     {
-        .name        = "lumberjacks",
+        .name        = "lumber jacks",
         .pzl         = CF_LUMBERJACKS_PZL_WSG,
         .slv         = CF_LUMBERJACKS_SLV_WSG,
-        .marqueeFact = "Lumberjacks from the 2024 gunship swadge : Tight arcade action with panic mode featuring "
+        .marqueeFact = "Produced by ? for the 2024 gunship swadge : Tight arcade action with panic mode featuring "
                        "rising water, and attack mode featuring wave after wave of Bad Seeds.",
     },
     {
-        .name = "magtroidpocket",
+        .name = "magtroid pocket",
         .pzl  = CF_MAGTROIDPOCKET_PZL_WSG,
         .slv  = CF_MAGTROIDPOCKET_SLV_WSG,
         .marqueeFact
-        = "Magtroid Pocket from the 2024 gunship swadge by gelakinetic, gplord, and newmajoe : Features a fully "
+        = "Flagship title of the 2024 gunship swadge made by gelakinetic, gplord, newmajoe, and others : Features a fully "
           "colored doom-style rendering engine, an epic soundtrack, and a complex single player campaign.",
     },
     {
-        .name        = "pushykawaiigo",
+        .name        = "pushy kawaii go",
         .pzl         = CF_PUSHYKAWAIIGO_PZL_WSG,
         .slv         = CF_PUSHYKAWAIIGO_SLV_WSG,
-        .marqueeFact = "Pushy Kawaii Go from the 2024 gunship swadge by blooper : Number go up.",
+        .marqueeFact = "Produced by ? for the 2024 gunship swadge : Number go up.",
     },
     {
-        .name        = "bigbug",
+        .name        = "big bug",
         .pzl         = EF_BIGBUG_PZL_WSG,
         .slv         = EF_BIGBUG_SLV_WSG,
-        .marqueeFact = "Big Bug from the 2025 hotdog swadge by DebrisHauler : Dr. Ovo Garbotnik fights hordes of giant "
+        .marqueeFact = "Produced by DebrisHauler for the 2025 hotdog swadge : Dr. Ovo Garbotnik fights hordes of giant "
                        "bugs in a garbage landfill loosely inspired by Dig Dug and Helldivers 2.",
     },
     {
         .name        = "pango",
         .pzl         = EF_PANGO_PZL_WSG,
         .slv         = EF_PANGO_SLV_WSG,
-        .marqueeFact = "Pango from the 2025 hotdog swadge by JVeg199X : Another high score chaser in which Pango must "
+        .marqueeFact = "Produced by JVeg199X for the 2025 hotdog swadge : Another high score chaser in which Pango must "
                        "destroy the Drill Bots by sliding ice blocks to hit them.",
     },
     {
         .name        = "2048",
         .pzl         = EF_2048_PZL_WSG,
         .slv         = EF_2048_SLV_WSG,
-        .marqueeFact = "2048 from the 2025 hotdog swadge by Jonny Wycliffe : Did you know? 2048 is so named because "
+        .marqueeFact = "Produced by Jonny Wycliffe for the 2025 hotdog swadge : Did you know? 2048 is so named because "
                        "that's the highest value the dev was able to get to before he started to cry !",
     },
     {
-        .name        = "chowagrove",
+        .name        = "chowa grove",
         .pzl         = EF_CHOWAGROVE_PZL_WSG,
         .slv         = EF_CHOWAGROVE_SLV_WSG,
-        .marqueeFact = "Chowa Grove from the 2025 hotdog swadge by Jonny Wycliffe : Did you know? Chowa Grove was "
+        .marqueeFact = "Produced by Jonny Wycliffe for the 2025 hotdog swadge : Did you know? Chowa Grove was "
                        "going to have multiple Chowa types but the dev got too lazy",
     },
     {
@@ -389,30 +389,30 @@ struct
         .pzl  = EF_HUNTERSPUZZLES_PZL_WSG,
         .slv  = EF_HUNTERSPUZZLES_SLV_WSG,
         .marqueeFact
-        = "Hunter's Puzzles from the 2025 hotdog swadge by blooper : A sokoban-style puzzle game where you are an eye.",
+        = "Produced by blooper for the 2025 hotdog swadge : A sokoban-style puzzle game where you are an eye.",
     },
     {
-        .name        = "swadgehero",
+        .name        = "swadge hero",
         .pzl         = EF_SWADGEHERO_PZL_WSG,
         .slv         = EF_SWADGEHERO_SLV_WSG,
-        .marqueeFact = "Swadge Hero from the 2025 hotdog swadge by gelakinetic and many volunteer composers : A rhythm "
+        .marqueeFact = "Swadge Hero from the 2025 hotdog swadge made by gelakinetic and many volunteer composers : A rhythm "
                        "game showing off the new new audio capabilities.",
     },
     {
-        .name        = "ultimatettt",
+        .name        = "ultimate ttt",
         .pzl         = EF_ULTIMATETTT_PZL_WSG,
         .slv         = EF_ULTIMATETTT_SLV_WSG,
-        .marqueeFact = "Ultimate Tic Tac Toe from the 2025 hotdog swadge by gelakinetic : Play 9 small PvP games at "
+        .marqueeFact = "Produced by gelakinetic for the 2025 hotdog swadge : Play 9 small PvP games at "
                        "the same dang time!",
     },
     {
-        .name        = "acleaf",
+        .name        = "leaf",
         .pzl         = FF_ACLEAF_PZL_WSG,
         .slv         = FF_ACLEAF_SLV_WSG,
         .marqueeFact = "The ultimate flat-pack furniture. IKEA could never.",
     },
     {
-        .name        = "doublebass",
+        .name        = "double bass",
         .pzl         = FF_DOUBLEBASS_PZL_WSG,
         .slv         = FF_DOUBLEBASS_SLV_WSG,
         .marqueeFact = "The Magfest Community Orchestra features over 200 volunteer musicians (including choir)",
@@ -464,7 +464,7 @@ struct
         .name        = "wing",
         .pzl         = FF_WING_PZL_WSG,
         .slv         = FF_WING_SLV_WSG,
-        .marqueeFact = "It's all feathery and sparkly! wow!",
+        .marqueeFact = "What does a Moogle need in the morning? A Kup-o Coffee!",
     },
 };
 
