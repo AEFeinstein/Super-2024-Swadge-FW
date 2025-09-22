@@ -1288,7 +1288,7 @@ void drawPicrossScene(void)
         }
         int16_t t = textWidth(&p->UIFont, p->selectedLevel.title);
         t         = ((TFT_WIDTH)-t) / 2; // from text width into padding.
-        drawText(&p->UIFont, c555, p->selectedLevel.title, t, 14);
+        drawShinyText(&p->UIFont, c245, c355, c555, p->selectedLevel.title, t, 14);
 
         // Draw the marquee fact.
         if (p->lerpAmount == PICROSS_LERP_AMOUNT)
@@ -1462,7 +1462,7 @@ void drawPicrossHud(font_t* font)
 void drawHint(font_t* font, picrossHint_t hint)
 {
     uint8_t h;
-    paletteColor_t hintShadeColor = c001; // todo: move to struct if we decide to keep this.
+    paletteColor_t hintShadeColor = p->animateBG==PICROSS_BG_HEXAGONS ? c034 : c001; // todo: move to struct if we decide to keep this.
     paletteColor_t hintColor      = c555; // white/
     if (p->fadeHints)
     {
