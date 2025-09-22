@@ -364,7 +364,8 @@ struct
         .name        = "big bug",
         .pzl         = EF_BIGBUG_PZL_WSG,
         .slv         = EF_BIGBUG_SLV_WSG,
-        .marqueeFact = "Produced by DebrisHauler for the 2025 hotdog swadge : Dr. Ovo Garbotnik fights hordes of giant "
+        .marqueeFact = "Produced by James Albracht for the 2025 hotdog swadge with assets from gplord, kaitie, "
+                       "newmajoe, and livingston rampey : Dr. Ovo Garbotnik fights hordes of giant "
                        "bugs in a garbage landfill loosely inspired by Dig Dug and Helldivers 2.",
     },
     {
