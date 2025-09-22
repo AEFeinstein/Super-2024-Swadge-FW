@@ -206,11 +206,12 @@ struct
                        "VRchat by cnlohr inside a 3d Gaylord modeled by gplord.",
     },
     {
-        .name        = "m-type",
-        .pzl         = _8F_MTYPE_PZL_WSG,
-        .slv         = _8F_MTYPE_SLV_WSG,
-        .marqueeFact = "Produced by ? for the 2022 chainsaw swadge : Blast your way through an endless army of evil space "
-                       "aliens with your experimental M-Type fighter!",
+        .name = "m-type",
+        .pzl  = _8F_MTYPE_PZL_WSG,
+        .slv  = _8F_MTYPE_SLV_WSG,
+        .marqueeFact
+        = "Produced by ? for the 2022 chainsaw swadge : Blast your way through an endless army of evil space "
+          "aliens with your experimental M-Type fighter!",
     },
     {
         .name        = "personal demon",
@@ -224,15 +225,17 @@ struct
         .pzl  = _8F_SHREDDER_PZL_WSG,
         .slv  = _8F_SHREDDER_SLV_WSG,
         .marqueeFact
-        = "Produced by ? for the 2022 chainsaw swadge : Hate'th Notes have taken over the arenas, and it's up to you to "
+        = "Produced by ? for the 2022 chainsaw swadge : Hate'th Notes have taken over the arenas, and it's up to you "
+          "to "
           "Shred them to pieces! Wield your righteous guitar and get them before they get you with their scythes!",
     },
     {
-        .name        = "stomp",
-        .pzl         = _8F_STOMP_PZL_WSG,
-        .slv         = _8F_STOMP_SLV_WSG,
-        .marqueeFact = "Produced by ? for the 2022 chainsaw swadge : The flying skulls are coming to get you and the only way "
-                       "to stop them is to Stomp them into the ground!",
+        .name = "stomp",
+        .pzl  = _8F_STOMP_PZL_WSG,
+        .slv  = _8F_STOMP_SLV_WSG,
+        .marqueeFact
+        = "Produced by ? for the 2022 chainsaw swadge : The flying skulls are coming to get you and the only way "
+          "to stop them is to Stomp them into the ground!",
     },
     {
         .name        = "apple",
@@ -316,11 +319,12 @@ struct
                        "distinct areas, each full of secrets and danger!",
     },
     {
-        .name        = "swadge bros",
-        .pzl         = AF_SWADGEBROS_PZL_WSG,
-        .slv         = AF_SWADGEBROS_SLV_WSG,
-        .marqueeFact = "Produced by gelakinetic for the 2023 wavebird swadge with art by gplord & kaitie : Prove your might in "
-                       "wireless PvP or versus a CPU!",
+        .name = "swadge bros",
+        .pzl  = AF_SWADGEBROS_PZL_WSG,
+        .slv  = AF_SWADGEBROS_SLV_WSG,
+        .marqueeFact
+        = "Produced by gelakinetic for the 2023 wavebird swadge with art by gplord & kaitie : Prove your might in "
+          "wireless PvP or versus a CPU!",
     },
     {
         .name        = "tiltrads",
@@ -343,12 +347,12 @@ struct
                        "rising water, and attack mode featuring wave after wave of Bad Seeds.",
     },
     {
-        .name = "magtroid pocket",
-        .pzl  = CF_MAGTROIDPOCKET_PZL_WSG,
-        .slv  = CF_MAGTROIDPOCKET_SLV_WSG,
-        .marqueeFact
-        = "Flagship title of the 2024 gunship swadge made by gelakinetic, gplord, newmajoe, and others : Features a fully "
-          "colored doom-style rendering engine, an epic soundtrack, and a complex single player campaign.",
+        .name        = "magtroid pocket",
+        .pzl         = CF_MAGTROIDPOCKET_PZL_WSG,
+        .slv         = CF_MAGTROIDPOCKET_SLV_WSG,
+        .marqueeFact = "Flagship title of the 2024 gunship swadge made by gelakinetic, gplord, newmajoe, and others : "
+                       "Features a fully "
+                       "colored doom-style rendering engine, an epic soundtrack, and a complex single player campaign.",
     },
     {
         .name        = "pushy kawaii go",
@@ -364,11 +368,12 @@ struct
                        "bugs in a garbage landfill loosely inspired by Dig Dug and Helldivers 2.",
     },
     {
-        .name        = "pango",
-        .pzl         = EF_PANGO_PZL_WSG,
-        .slv         = EF_PANGO_SLV_WSG,
-        .marqueeFact = "Produced by JVeg199X for the 2025 hotdog swadge : Another high score chaser in which Pango must "
-                       "destroy the Drill Bots by sliding ice blocks to hit them.",
+        .name = "pango",
+        .pzl  = EF_PANGO_PZL_WSG,
+        .slv  = EF_PANGO_SLV_WSG,
+        .marqueeFact
+        = "Produced by JVeg199X for the 2025 hotdog swadge : Another high score chaser in which Pango must "
+          "destroy the Drill Bots by sliding ice blocks to hit them.",
     },
     {
         .name        = "2048",
@@ -392,11 +397,12 @@ struct
         = "Produced by blooper for the 2025 hotdog swadge : A sokoban-style puzzle game where you are an eye.",
     },
     {
-        .name        = "swadge hero",
-        .pzl         = EF_SWADGEHERO_PZL_WSG,
-        .slv         = EF_SWADGEHERO_SLV_WSG,
-        .marqueeFact = "Swadge Hero from the 2025 hotdog swadge made by gelakinetic and many volunteer composers : A rhythm "
-                       "game showing off the new new audio capabilities.",
+        .name = "swadge hero",
+        .pzl  = EF_SWADGEHERO_PZL_WSG,
+        .slv  = EF_SWADGEHERO_SLV_WSG,
+        .marqueeFact
+        = "Swadge Hero from the 2025 hotdog swadge made by gelakinetic and many volunteer composers : A rhythm "
+          "game showing off the new new audio capabilities.",
     },
     {
         .name        = "ultimate ttt",
