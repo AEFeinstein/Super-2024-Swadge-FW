@@ -47,25 +47,29 @@ void physCheckCollisions(physSim_t* phys)
             // Keep track if the object should bounce or not
             bool countBounce = true;
 
-            // Check if out of bounds
-            if (pc->c.pos.x < 0 ||               //
-                pc->c.pos.x >= phys->bounds.x || //
-                pc->c.pos.y < 0 ||               //
-                pc->c.pos.y > phys->bounds.y)
+            // Remove out-of-bounds non-tanks objects. Removing tanks can cause crashes
+            if (CT_TANK != pc->type)
             {
-                // Out of bounds, remove circle
-                shouldRemoveNode = true;
-            }
-            else // In bounds, check if it's underground
-            {
-                int16_t screenX = pc->c.pos.x - phys->camera.x;
-                if (0 <= screenX && screenX < TFT_WIDTH)
+                // Check if out of bounds
+                if (pc->c.pos.x < 0 ||               //
+                    pc->c.pos.x >= phys->bounds.x || //
+                    pc->c.pos.y < 0 ||               //
+                    pc->c.pos.y > phys->bounds.y)
                 {
-                    int16_t screenY = pc->c.pos.y - phys->camera.y;
-                    if (screenY > phys->surfacePoints[screenX])
+                    // Out of bounds, remove circle
+                    shouldRemoveNode = true;
+                }
+                else // In bounds, check if it's underground
+                {
+                    int16_t screenX = pc->c.pos.x - phys->camera.x;
+                    if (0 <= screenX && screenX < TFT_WIDTH)
                     {
-                        // Out of bounds, remove circle
-                        shouldRemoveNode = true;
+                        int16_t screenY = pc->c.pos.y - phys->camera.y;
+                        if (screenY > phys->surfacePoints[screenX])
+                        {
+                            // Out of bounds, remove circle
+                            shouldRemoveNode = true;
+                        }
                     }
                 }
             }

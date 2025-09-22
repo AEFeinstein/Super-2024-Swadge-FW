@@ -173,9 +173,6 @@ void physStepBackground(physSim_t* phys)
         // Move the terrain
         phys->terrainMoving = moveTerrainLines(phys, PHYS_TIME_STEP_US);
 
-        // Raise a flag to update the foreground as well
-        phys->shouldStepForeground = true;
-
         // Clear surface points
         memset(phys->surfacePoints, 0xFF, sizeof(phys->surfacePoints));
 
@@ -197,6 +194,9 @@ void physStepBackground(physSim_t* phys)
             // Iterate
             lNode = lNode->next;
         }
+
+        // Raise a flag to update the foreground as well
+        phys->shouldStepForeground = true;
     }
 }
 
