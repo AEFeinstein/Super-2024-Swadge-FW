@@ -391,7 +391,7 @@ struct
                        "going to have multiple Chowa types but the dev got too lazy",
     },
     {
-        .name = "hunterspuzzles",
+        .name = "hunter's puzzles",
         .pzl  = EF_HUNTERSPUZZLES_PZL_WSG,
         .slv  = EF_HUNTERSPUZZLES_SLV_WSG,
         .marqueeFact
