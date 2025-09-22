@@ -1,4 +1,5 @@
 #include "atrium.h"
+#include "nameList.h"
 
 /// @brief
 
@@ -92,6 +93,7 @@ typedef enum
 
 atriumState state = 0;
 int loader        = 0;
+bool profileSetup = 0;
 
 //---------------------------------------------------------------------------------//
 // SONA ATRIUM SPECIFIC INFORMATION
@@ -210,6 +212,8 @@ typedef struct
     font_t font;
 } misc_t;
 
+const font_t* font;
+
 misc_t* misc;
 const wsg_t* miscArray[sizeof(misc_t)];
 
@@ -232,38 +236,27 @@ int y = 0; // y position in editor
 //---------------------------------------------------------------------------------//
 list_t spList = {0};
 
-typedef enum {
-    PBNJ,
-    BLT,
-    GRILLED,
-    REUBEN,
-    HOAGIE,
-    ICECREAM,
-    HOTDOG,
-    ANDKNUCKLES,
-} fact0; //SANDWICH
 
-typedef enum {
-    BARD,
-    TECHNOMANCER,
-    PINBALL,
-    MAKER,
-    SHARPSHOOTER,
-    TRASHMAN,
-    SPEEDRUNNER,
-    MEDIC,
-} fact1; //IAMA
+static const char* const fact0[8] = {"PB&J", "BLT", "Grilled Cheese", "Reuben", "Hoagie", "Ice Cream", "Hot Dog", "Knuckle"};
 
-typedef enum {
-    ARENA,
-    ARCADE,
-    GAZEBO,
-    SOAPBOX,
-    MAKERSPACE,
-    PANEL,
-    STAGE,
-    TABLETOP,
-} fact2; //LOCATION
+static const char* const fact1[8] = {"Bard", "Technomancer", "Pinball Wizard", "Maker", "Sharpshooter", "Trashman", "Speed Runner", "Medic"};
+
+static const char* const fact2[8] = {"Arena", "Arcade", "Gazebo", "Soapbox", "Marketplace", "Panels", "Main Stage", "Tabletop Room"};
+
+static const char* const preambles[3] = {"Fave Sandwich: ", "I am a: ", " the Fest: "};
+
+typedef struct {
+    int cardselect;
+    int fact0; //sandwich
+    int fact1; //class
+    int fact2; //wya
+    int sona; // sona img
+} userProfile; 
+
+userProfile sonaProfile; //VIEW PROFILE MODE
+userProfile myProfile; //MY SELECTIONS IN EDIT PROFILE MODE
+
+nameData_t* myUser;
 
 static void atriumEnterMode()
 {
@@ -273,13 +266,12 @@ static void atriumEnterMode()
     cards = (cards_t*)heap_caps_calloc(1, sizeof(cards_t), MALLOC_CAP_8BIT);
     amidi = (amidi_t*)heap_caps_calloc(1, sizeof(amidi_t), MALLOC_CAP_8BIT);
     butts = (butts_t*)heap_caps_calloc(1, sizeof(butts_t), MALLOC_CAP_8BIT);
+
+
     // Dear Emily, you need to do this for every struct. love, past you.
 
-    font = misc->font;
-    loadFont(IBM_VGA_8_FONT,font,true);
-
     getSwadgePasses(&spList, &atriumMode, true);
-    
+    myUser = getSystemUsername();
     node_t* spNode = spList.first;
     while (spNode)
     {
@@ -311,6 +303,9 @@ static void atriumEnterMode()
     loadWsg(COW_WSG, &misc->cow, true);
 
     printf("loaded misc wsgs!\n");
+    
+    loadFont(IBM_VGA_8_FONT,&misc->font, true);
+    font = &misc->font;
 
     // test animations for sonas - turned off for now
     loadWsg(DANCEBODY_1_WSG, &bods->d1, true);
@@ -350,10 +345,10 @@ static void atriumEnterMode()
     printf("loaded midi file!\n");
 
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    player->loop         = true;
+    player->loop         = false;
     midiGmOn(player);
     globalMidiPlayerPlaySong(&amidi->bgm, MIDI_BGM);
-    globalMidiPlayerSetVolume(MIDI_BGM, 12);
+    globalMidiPlayerSetVolume(MIDI_BGM, 0);
     printf("Entered Atrium Mode!\n");
     atriumTitle(); // draw the title screen
 }
@@ -719,6 +714,17 @@ void atriumTitle()
 
 void viewProfile()
 {
+printf("In view profile state\n");
+    if(profileSetup == 0){
+        //set profile rands for now
+        myProfile.cardselect = rand() % 8;
+        myProfile.fact0 = rand() % 8;
+        myProfile.fact1 = rand() % 8;  
+        myProfile.fact2 = rand() % 8;
+        myProfile.sona = rand() % 5; // randomize sona for now, eventually pull from swadgepass
+        profileSetup = 1;
+    }
+    printf("Cardselect: %d, Fact0: %d, Fact1: %d, Fact2: %d, Sona: %d\n", myProfile.cardselect, myProfile.fact0, myProfile.fact1, myProfile.fact2, myProfile.sona);
     if (loader == 0)
     {
         // WSG for profile mode only
@@ -765,20 +771,42 @@ void viewProfile()
             }
         }
     }
+    //concat card info
+    //line 0: name
+        //no copy required
+    //line 1: fact0
+        char factline0[sizeof(preambles[0]) + sizeof(fact0[myProfile.fact0])+1];
+        strcat(factline0, preambles[0]);
+        strcat(factline0, fact0[myProfile.fact0]);
+        printf("factline0: %s\n", factline0);
+    //line 2: fact1
+        char factline1[sizeof(preambles[1]) + sizeof(fact1[myProfile.fact1])+1];
+        printf("sizeof preamble1: %lu, sizeof fact1: %lu\n", sizeof(preambles[1]), sizeof(fact1[myProfile.fact1]));
+        printf("size of factline1: %lu\n", sizeof(factline1));
+        strcat(factline1, preambles[1]);
+        strcat(factline1, fact1[myProfile.fact1]);
+        printf("factline1: %s\n", factline1);
+    //line 3: fact2
+        char factline2[sizeof(preambles[2]) + sizeof(fact2[myProfile.fact2])+1];
+        printf("sizeof preamble2: %lu, sizeof fact2: %lu\n", sizeof(preambles[2]), sizeof(fact2[myProfile.fact2]));
+        printf("size of factline2: %lu\n", sizeof(factline2));
+        strcat(factline2, preambles[2]);
+        strcat(factline2, fact2[myProfile.fact2]);
+        printf("factline2: %s\n", factline2);
 
     // draw the card info
     drawWsgSimple(&bgs->gazebo, 0, 0);
-    drawWsgSimple(cardsArray[testercardselect], 0, 0 + 12);                         // draw the next card
-    drawWsgSimple(miscArray[testercardselect], card_coords_x[0], card_coords_y[0]); // draw the sona head
-    drawText(font, c030, "Magfester69420", card_coords_x[1] + cardpadding,
+    drawWsgSimple(cardsArray[myProfile.cardselect], 0, 0 + 12);                         // draw the next card
+    drawWsgSimple(miscArray[myProfile.sona], card_coords_x[0], card_coords_y[0]); // draw the sona head, hardcoded for now
+    drawText(font, c000, myUser->nameBuffer, card_coords_x[1] + cardpadding,
              card_coords_y[0] + cardpadding); // draw the name
-    drawText(font, c000, "Sandwich: Hot Dog", card_coords_x[1] + cardpadding,
+    drawText(font, c000, factline0, card_coords_x[1] + cardpadding,
              card_coords_y[0] + cardpadding + 12
                  + 4); // draw the sandwich info, needs extra padding to be balanced correctly
-    drawText(font, c000, "I am a: Cosplayer", card_coords_x[1] + cardpadding,
+    drawText(font, c000, factline1, card_coords_x[1] + cardpadding,
              card_coords_y[0] + cardpadding + 24
                  + 4); // draw the identity, needs extra padding to be balanced correctly
-    drawText(font, c000, "Class: Bard", card_coords_x[1] + cardpadding,
+    drawText(font, c000, factline2, card_coords_x[1] + cardpadding,
              card_coords_y[0] + cardpadding + 36 + 4); // draw the identity info
     drawText(font, c000, "Hello World!", card_coords_x[0] + cardpadding,
              card_coords_y[1] + cardpadding); // draw the second text box info
@@ -794,10 +822,10 @@ void viewProfile()
 
 void atriumAddSP(struct swadgePassPacket* packet)
 {
-    packet->atriumMode.cardSelected = testercardselect; // for now, just set the card to the selected card
-    packet->atriumMode.fact0        = 0;                // select fave sandwich
-    packet->atriumMode.fact1        = 0;                // choose a class
-    packet->atriumMode.fact2        = 0;                // why you're here
+    packet->atriumMode.cardSelected = myProfile.cardselect;             //which card bg
+    packet->atriumMode.fact0        = myProfile.fact0;                  // select fave sandwich
+    packet->atriumMode.fact1        = myProfile.fact1;                  // choose a class
+    packet->atriumMode.fact2        = myProfile.fact2;                  // wya
     packet->atriumMode.festers
         = sizeof(spList); // set the number of festers collected to the number of swadgepasses in the list
 }
@@ -813,6 +841,5 @@ void editProfile(int xselect, int yselect)
     int textbox1coords_y[] = {36, 48, 60, 72};     // y coords for the first textbox lines
     int textbox2coords_y[] = {124, 136, 148, 160}; // y coords for the second textbox lines
 
-    drawTriangleOutlined(textboxcoords_x[x] - 10, textbox1coords_y[y], textboxcoords_x[x] - 10,
-                         textbox1coords_y[y] + 11, textboxcoords_x[x], textbox1coords_y[y] + 5, c555, c500);
+    //drawTriangleOutlined(textboxcoords_x[x] - 10, textbox1coords_y[y], textboxcoords_x[x] - 10, textbox1coords_y[y] + 11, textboxcoords_x[x], textbox1coords_y[y] + 5, c555, c500);
 }
