@@ -802,10 +802,15 @@ void p2pRestart(p2pInfo* p2p)
         p2p->conCbFn(p2p, CON_LOST);
     }
 
-    uint8_t modeId         = p2p->modeId;
-    uint8_t incomingModeId = p2p->incomingModeId;
+    // Save old values
+    uint8_t modeId            = p2p->modeId;
+    uint8_t incomingModeId    = p2p->incomingModeId;
+    p2pConCbFn oldConCbFn     = p2p->conCbFn;
+    p2pMsgRxCbFn oldMsgRxCbFn = p2p->msgRxCbFn;
+    int8_t oldConnectionRssi  = p2p->connectionRssi;
+
     p2pDeinit(p2p);
-    p2pInitialize(p2p, modeId, p2p->conCbFn, p2p->msgRxCbFn, p2p->connectionRssi);
+    p2pInitialize(p2p, modeId, oldConCbFn, oldMsgRxCbFn, oldConnectionRssi);
 
     if (incomingModeId != modeId)
     {
