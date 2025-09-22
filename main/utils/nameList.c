@@ -48,23 +48,22 @@
 //==============================================================================
 
 static const char* const adjList1[] = {
-    "suitable", "eminent",  "shiny",    "modal",    "playful",  "fun",      "flexible", "wiggly",
-    "live",     "rhythmic", "amusing",  "fearless", "hot",      "debonair", "quirky",   "pleasant",
-    "sick",     "lovely",   "sassy",    "logical",  "smart",    "speedy",   "silent",   "correct",
-    "quick",    "elastic",  "accurate", "outgoing", "ordinary", "plain",    "loud",     "zany",
-    "festive",  "loutish",  "noxious",  "sly",      "known",    "sudden",   "sharp",    "glorious",
+    "groovy",  "fuzzy",  "shiny",   "modal",  "playful", "fun",   "flexy", "wiggly", "live",  "steady",
+    "amusing", "strong", "pastel",  "plucky", "quirky",  "keen",  "sick",  "lovely", "sassy", "muted",
+    "smart",   "speedy", "silent",  "blue",   "quick",   "antsy", "zippy", "silly",  "dewy",  "plain",
+    "loud",    "zany",   "festive", "pink",   "noxious", "sly",   "known", "sudden", "sharp", "moist",
 };
 static const char* const adjList2[] = {
-    "lazy",    "weepy",    "creative", "faded",    "shaggy",  "truthful", "dazzling", "measly", "absurd", "healthy",
-    "mammoth", "generous", "educated", "scraggly", "upset",   "cheeky",   "abnormal", "gentle", "useful", "ruddy",
-    "gentle",  "smoggy",   "lumpy",    "odd",      "helpful", "round",    "succinct", "weird",  "rabid",  "steady",
-    "untidy",  "bright",   "macho",    "nutty",    "hulking", "tuned",    "exciting", "wry",    "meek",   "hungry",
+    "idle",   "weepy",  "honest", "faded", "shaggy",  "lax",    "gaunt",   "measly", "absurd", "healthy",
+    "zany",   "kind",   "smart",  "messy", "upset",   "cheeky", "even",    "gentle", "useful", "ruddy",
+    "gentle", "smoggy", "lumpy",  "odd",   "helpful", "round",  "short",   "weird",  "rabid",  "steady",
+    "eerie",  "bright", "macho",  "nutty", "crisp",   "tuned",  "excited", "wry",    "meek",   "hungry",
 };
 static const char* const nounList[] = {
-    "lizard",   "hedgehog", "vocalist", "smurf",   "noob",     "bass",    "boss",     "badger", "drums",   "keyboard",
-    "pitch",    "octave",   "aardvark", "warthog", "cat",      "gamepad", "lemon",    "dog",    "harmony", "ghost",
-    "deer",     "guitar",   "gecko",    "seahawk", "musician", "osprey",  "hamster",  "string", "weasel",  "gamedev",
-    "woodwind", "drummer",  "rocker",   "wolf",    "snake",    "driver",  "seahorse", "artist", "foxbat",  "eagle",
+    "fox",   "quill",  "singer", "smurf",   "noob",  "bass",   "boss",  "badger", "drums",  "board",
+    "pitch", "octave", "hotdog", "warthog", "cat",   "gamer",  "lemon", "dog",    "song",   "ghost",
+    "deer",  "guitar", "gecko",  "pilot",   "raven", "osprey", "wheel", "string", "weasel", "pixel",
+    "pango", "donut",  "rocker", "wolf",    "snake", "driver", "berry", "artist", "foxbat", "eagle",
 };
 
 static const char nvsKeys[] = "username";
