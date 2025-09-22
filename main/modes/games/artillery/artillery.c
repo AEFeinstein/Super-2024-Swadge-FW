@@ -176,7 +176,7 @@ void artilleryEnterMode(void)
     addSingleItemToMenu(ad->modeMenu, str_help);
     addSingleItemToMenu(ad->modeMenu, str_exit);
 
-    ad->paintMenu = initMenu(str_paintSelect, NULL);
+    ad->blankMenu = initMenu(str_paintSelect, NULL);
 
     // Initialize mode menu renderer
     ad->mRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
@@ -229,7 +229,7 @@ void artilleryExitMode(void)
     deinitMenuSimpleRenderer(ad->smRenderer);
     deinitMenuMegaRenderer(ad->mRenderer);
     deinitMenu(ad->modeMenu);
-    deinitMenu(ad->paintMenu);
+    deinitMenu(ad->blankMenu);
     deinitMenu(ad->gameMenu);
 
     // Deinit p2p
@@ -305,11 +305,15 @@ void artilleryMainLoop(int64_t elapsedUs)
         }
         case AMS_CONNECTING:
         {
+            // Draw background
+            drawMenuMega(ad->blankMenu, ad->mRenderer, elapsedUs);
+
             // Draw connection text
-            font_t* f      = ad->mRenderer->titleFont;
-            int16_t tWidth = textWidth(f, ad->conStr);
-            drawText(ad->mRenderer->titleFont, c555, ad->conStr, (TFT_WIDTH - tWidth) / 2,
-                     (TFT_HEIGHT - f->height) / 2);
+            font_t* f      = ad->mRenderer->menuFont;
+            int16_t tWidth = textWidth(f, ad->conStr) + 1;
+            drawTextShadow(f, c555, c000, ad->conStr, (TFT_WIDTH - tWidth) / 2, 135 - (f->height / 2));
+
+            // Check for packets to transmit
             artilleryCheckTxQueue(ad);
             break;
         }
@@ -413,11 +417,12 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
         else if (str_wirelessConnect == label)
         {
             p2pStartConnection(&ad->p2p);
-            ad->mState = AMS_CONNECTING;
+            ad->mState           = AMS_CONNECTING;
+            ad->blankMenu->title = str_wirelessConnect;
         }
         else if (str_cpuPractice == label)
         {
-            // TODO implement CPU
+            // TODO implement CPU difficulty
             artilleryInitGame(AG_CPU_PRACTICE, true);
             artillerySwitchToGameState(ad, AGS_MENU);
         }
@@ -429,7 +434,7 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
         else if (str_paintSelect == label)
         {
             // Set title, which may be overwritten by AMS_GAME_OVER
-            ad->paintMenu->title = str_paintSelect;
+            ad->blankMenu->title = str_paintSelect;
             ad->mState           = AMS_PAINT;
         }
         else if (str_exit == label)

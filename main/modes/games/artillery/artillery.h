@@ -79,7 +79,7 @@ typedef struct
 
     // In-game menu and renderer
     menu_t* modeMenu;
-    menu_t* paintMenu;
+    menu_t* blankMenu;
     menuMegaRenderer_t* mRenderer;
     font_t* scoreFont;
 

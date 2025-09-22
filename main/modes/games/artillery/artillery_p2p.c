@@ -95,10 +95,10 @@ typedef struct __attribute__((packed))
 // Const Variables
 //==============================================================================
 
-const char str_conStarted[]     = "Connection Started";
-const char str_conRxAck[]       = "Rx Game Start Ack";
-const char str_conRxMsg[]       = "Rx Game Start Msg";
-const char str_conEstablished[] = "Connection Established";
+const char str_conStarted[]     = "Searching for Swadge";
+const char str_conRxAck[]       = "RX Game Start Ack";
+const char str_conRxMsg[]       = "RX Game Start Msg";
+const char str_conEstablished[] = "Connection Ready";
 const char str_conLost[]        = "Connection Lost";
 
 //==============================================================================
@@ -153,6 +153,7 @@ void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
         default:
         {
             ad->conStr = str_conLost;
+            ad->mState = AMS_MENU;
             break;
         }
     }

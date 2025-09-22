@@ -39,8 +39,8 @@ void artilleryGameOverInput(artilleryData_t* ad, buttonEvt_t* evt)
 void artilleryGameOverLoop(artilleryData_t* ad, uint32_t elapsedUs)
 {
     // Set title and draw background
-    ad->paintMenu->title = gameOverTitle;
-    drawMenuMega(ad->paintMenu, ad->mRenderer, elapsedUs);
+    ad->blankMenu->title = gameOverTitle;
+    drawMenuMega(ad->blankMenu, ad->mRenderer, elapsedUs);
 
     // Draw a top string
     // TODO adjust for CPU & P2P win/loss, but not pass-and-play
