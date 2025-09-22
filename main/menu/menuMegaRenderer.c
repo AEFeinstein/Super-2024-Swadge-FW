@@ -348,7 +348,7 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
         {
             renderer->bgColorDeg = 0;
         }
-        renderer->bgColorIdx = ((getSin1024(renderer->bgColorDeg) + 1024) / (2048/(renderer->numBgColors-1)));
+        renderer->bgColorIdx = ((getSin1024(renderer->bgColorDeg) + 1024) / (2048 / (renderer->numBgColors - 1)));
         renderer->yOff += renderer->bgColorIdx;
     });
 
@@ -367,8 +367,8 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
     // Clear the background
     paletteColor_t* fb = getPxTftFramebuffer();
     memset(fb, renderer->bgColors[renderer->bgColorIdx], sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
-    int16_t finalYOffset = ((renderer->yOff/10)%240);
-    drawWsgPaletteSimple(&renderer->bg, 0, -240+finalYOffset, &renderer->palette);
+    int16_t finalYOffset = ((renderer->yOff / 10) % 240);
+    drawWsgPaletteSimple(&renderer->bg, 0, -240 + finalYOffset, &renderer->palette);
     drawWsgPaletteSimple(&renderer->bg, 0, finalYOffset, &renderer->palette);
 
     // Find the start of the 'page'
@@ -407,7 +407,7 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
     // Move to drawing the rows
     y = Y_ITEM_START;
 
-    if(renderer->drawBody)
+    if (renderer->drawBody)
     {
         drawWsgPaletteSimple(&renderer->body, 0, 0, &renderer->palette);
     }
