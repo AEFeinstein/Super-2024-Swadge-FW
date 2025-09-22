@@ -232,7 +232,7 @@ struct
         .pzl         = _8F_STOMP_PZL_WSG,
         .slv         = _8F_STOMP_SLV_WSG,
         .marqueeFact = "Stomp from the 2022 chainsaw swadge : The flying skulls are coming to get you and the only way "
-                       "to stomp them is to Stomp them into the ground!",
+                       "to stop them is to Stomp them into the ground!",
     },
     {
         .name        = "apple",
@@ -306,7 +306,7 @@ struct
         .name        = "picross",
         .pzl         = AF_PICROSS_PZL_WSG,
         .slv         = AF_PICROSS_SLV_WSG,
-        .marqueeFact = "Picross from the 2023 wavebird swadge by blooper: the prequel to this game!",
+        .marqueeFact = "Picross from the 2023 wavebird swadge by blooper : the prequel to this game!",
     },
     {
         .name        = "superswadgeland",
@@ -354,7 +354,7 @@ struct
         .name        = "pushykawaiigo",
         .pzl         = CF_PUSHYKAWAIIGO_PZL_WSG,
         .slv         = CF_PUSHYKAWAIIGO_SLV_WSG,
-        .marqueeFact = "Pusy Kawaii Go from the 2024 gunship swadge by blooper : Number go up.",
+        .marqueeFact = "Pushy Kawaii Go from the 2024 gunship swadge by blooper : Number go up.",
     },
     {
         .name        = "bigbug",
@@ -375,7 +375,7 @@ struct
         .pzl         = EF_2048_PZL_WSG,
         .slv         = EF_2048_SLV_WSG,
         .marqueeFact = "2048 from the 2025 hotdog swadge by Jonny Wycliffe : Did you know? 2048 is so named because "
-                       "that's The highest value, the dev was able to get to before he started to cry !",
+                       "that's the highest value the dev was able to get to before he started to cry !",
     },
     {
         .name        = "chowagrove",
