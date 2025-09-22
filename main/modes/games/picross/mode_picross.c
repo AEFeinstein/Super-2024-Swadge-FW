@@ -1485,7 +1485,7 @@ void drawHint(font_t* font, picrossHint_t hint)
         if (p->input->showGuides && hint.index == p->input->y)
         {
             box_t hintbox = boxFromCoord(-1, hint.index);
-            hintbox.x0    = 0;
+            hintbox.x0    = (p->animateBG == PICROSS_BG_HEXAGONS) * 26;
             drawBox(hintbox, hintShadeColor, true, 0);
         }
 
@@ -1514,7 +1514,7 @@ void drawHint(font_t* font, picrossHint_t hint)
         if (p->input->showGuides && hint.index == p->input->x)
         {
             box_t hintbox = boxFromCoord(hint.index, -1);
-            hintbox.y0    = 0;
+            hintbox.y0    = (p->animateBG == PICROSS_BG_HEXAGONS) * 21;
             drawBox(hintbox, hintShadeColor, true, 0);
         }
 
