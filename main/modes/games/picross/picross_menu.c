@@ -36,7 +36,9 @@ typedef struct
     picrossScreen_t screen;
     int32_t savedIndex;
     int32_t options; // bit 0: hints
+    wsg_t bigBody; // for the background drawing effect
 } picrossMenu_t;
+
 
 //==============================================================================
 // Function Prototypes
@@ -83,7 +85,19 @@ static const char* strs_x_solid[] = {str_X, str_Solid};
 static const char str_Hints[]     = "Mistake Alert: ";
 static const char str_Guides[]    = "Guides: ";
 static const char str_Mark[]      = "Empty Marks: ";
-static const char str_AnimateBG[] = "BG Animate: ";
+static const char str_AnimateBG[] = "BG: ";
+static const char* str_Backgrounds[] = {"hexagons", "dots", "none"};
+
+static const int32_t backgroundVals[] = {
+    PICROSS_BG_HEXAGONS,
+    PICROSS_BG_DOTS,
+    PICROSS_BG_NONE
+};
+
+static const paletteColor_t bgColors[] = {
+    c033, c133, c034, c035, c025
+};
+
 
 static const int32_t trueFalseVals[] = {
     false,
@@ -481,6 +495,11 @@ void picrossEnterMode(void)
 
     pm->menu     = initMenu(str_picrossTitle, picrossMainMenuCb);
     pm->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    pm->renderer->bgColors    = bgColors;
+    pm->renderer->numBgColors = 5;
+    pm->renderer->bgColorIdx  = 0;
+
+    loadWsg(MMM_BIG_BODY_WSG, &pm->bigBody, false);
 
     pm->screen = PICROSS_MENU;
 
@@ -494,10 +513,15 @@ void picrossEnterMode(void)
         .max = trueFalseVals[ARRAY_SIZE(trueFalseVals) - 1],
         .def = trueFalseVals[0],
     };
+    settingParam_t sp_bg = {
+        .min = backgroundVals[0],
+        .max = backgroundVals[ARRAY_SIZE(backgroundVals) - 1],
+        .def = backgroundVals[0],
+    };
     addSettingsOptionsItemToMenu(pm->menu, str_Guides, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
                                  picrossGetSaveFlag(PO_SHOW_GUIDES));
-    addSettingsOptionsItemToMenu(pm->menu, str_AnimateBG, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
-                                 picrossGetLoadedSaveFlag(PO_ANIMATE_BG));
+    addSettingsOptionsItemToMenu(pm->menu, str_AnimateBG, str_Backgrounds, backgroundVals, ARRAY_SIZE(str_Backgrounds), &sp_bg,
+                                 -1 + picrossGetLoadedSaveFlag(PO_BG_HEXAGONS) + (picrossGetLoadedSaveFlag(PO_BG_DOTS) * 2) + (picrossGetLoadedSaveFlag(PO_BG_NONE) * 3));
     addSettingsOptionsItemToMenu(pm->menu, str_Mark, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_x_solid), &sp_tf,
                                  picrossGetLoadedSaveFlag(PO_MARK_X));
     addSettingsOptionsItemToMenu(pm->menu, str_Hints, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
@@ -541,6 +565,7 @@ void picrossExitMode(void)
         freeWsg(&pm->levels[i].levelWSG);
         freeWsg(&pm->levels[i].completedWSG);
     }
+    freeWsg(&pm->bigBody);
     picrossExitLevelSelect(); // this doesnt actually get called as we go in and out of levelselect (because it breaks
                               // everything), so lets call it now
     deinitMenu(pm->menu);
@@ -705,7 +730,7 @@ void continueGame()
 
     // load in the level we selected.
     // uh. read the currentLevelIndex and get the value from
-    picrossStartGame(&pm->mmFont, &pm->levels[currentIndex], true);
+    picrossStartGame(&pm->mmFont, &pm->levels[currentIndex], true, pm->renderer, &pm->bigBody);
     pm->screen = PICROSS_GAME;
 }
 
@@ -782,7 +807,30 @@ void picrossMainMenuCb(const char* label, bool selected, uint32_t value)
         }
         else if (str_AnimateBG == label)
         {
-            picrossSetSaveFlag(PO_ANIMATE_BG, value);
+            switch(value)
+            {
+                case PICROSS_BG_HEXAGONS:
+                {
+                    picrossSetSaveFlag(PO_BG_HEXAGONS, 1);
+                    picrossSetSaveFlag(PO_BG_DOTS, 0);
+                    picrossSetSaveFlag(PO_BG_NONE, 0);
+                    break;
+                }
+                case PICROSS_BG_DOTS:
+                {
+                    picrossSetSaveFlag(PO_BG_HEXAGONS, 0);
+                    picrossSetSaveFlag(PO_BG_DOTS, 1);
+                    picrossSetSaveFlag(PO_BG_NONE, 0);
+                    break;
+                }
+                case PICROSS_BG_NONE:
+                {
+                    picrossSetSaveFlag(PO_BG_HEXAGONS, 0);
+                    picrossSetSaveFlag(PO_BG_DOTS, 0);
+                    picrossSetSaveFlag(PO_BG_NONE, 1);
+                    break;
+                }
+            }
         }
         else if (str_Hints == label)
         {
@@ -805,7 +853,7 @@ void selectPicrossLevel(picrossLevelDef_t* selectedLevel)
 {
     // picrossExitLevelSelect();//we do this BEFORE we enter startGame.
     pm->screen = PICROSS_GAME;
-    picrossStartGame(&pm->mmFont, selectedLevel, false);
+    picrossStartGame(&pm->mmFont, selectedLevel, false, pm->renderer, &pm->bigBody);
 }
 
 // void returnToLevelSelect()//todo: rename
@@ -832,7 +880,7 @@ bool picrossGetSaveFlag(picrossOption_t pos)
     {
         // set default options
         // x's on, bg on, guide on, hintwarning off. On the fence on guides on or off.
-        int32_t defaults = (1 << PO_ANIMATE_BG) | (1 << PO_SHOW_GUIDES) | (1 << PO_MARK_X);
+        int32_t defaults = (1 << PO_BG_HEXAGONS) | (1 << PO_SHOW_GUIDES) | (1 << PO_MARK_X);
         writeNvs32(picrossSavedOptionsKey, defaults);
         pm->options = defaults;
     }

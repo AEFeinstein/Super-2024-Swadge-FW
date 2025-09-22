@@ -130,6 +130,9 @@ menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOut
     // LEDs on by default
     renderer->ledsOn = true;
 
+    // Draw the body by default
+    renderer->drawBody = true;
+
     // Reset the palette
     wsgPaletteReset(&renderer->palette);
 
@@ -178,6 +181,16 @@ void deinitMenuMegaRenderer(menuMegaRenderer_t* renderer)
     freeWsg(&renderer->up);
 
     heap_caps_free(renderer);
+}
+
+/**
+ * @brief Set whether or not to draw the sci-fi rectangle background body
+ *
+ * @param renderer The renderer.
+ */
+void setDrawBody(menuMegaRenderer_t* renderer, bool drawBody)
+{
+    renderer->drawBody = drawBody;
 }
 
 /**
@@ -331,11 +344,12 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
     // A cycle completes in 180 degrees, or three seconds
     RUN_TIMER_EVERY(renderer->bgColorTimer, 3000000 / 180, elapsedUs, {
         renderer->bgColorDeg++;
-        if (180 == renderer->bgColorDeg)
+        if (360 == renderer->bgColorDeg)
         {
             renderer->bgColorDeg = 0;
         }
-        renderer->bgColorIdx = ((getSin1024(renderer->bgColorDeg) * (renderer->numBgColors - 1)) + 512) / 1024;
+        renderer->bgColorIdx = ((getSin1024(renderer->bgColorDeg) + 1024) / (2048/(renderer->numBgColors-1)));
+        renderer->yOff += renderer->bgColorIdx;
     });
 
     // Run a timer to scroll text
@@ -353,7 +367,9 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
     // Clear the background
     paletteColor_t* fb = getPxTftFramebuffer();
     memset(fb, renderer->bgColors[renderer->bgColorIdx], sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
-    drawWsgPaletteSimple(&renderer->bg, 0, 0, &renderer->palette);
+    int16_t finalYOffset = ((renderer->yOff/10)%240);
+    drawWsgPaletteSimple(&renderer->bg, 0, -240+finalYOffset, &renderer->palette);
+    drawWsgPaletteSimple(&renderer->bg, 0, finalYOffset, &renderer->palette);
 
     // Find the start of the 'page'
     node_t* pageStart = menu->items->first;
@@ -391,7 +407,10 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
     // Move to drawing the rows
     y = Y_ITEM_START;
 
-    drawWsgPaletteSimple(&renderer->body, 0, 0, &renderer->palette);
+    if(renderer->drawBody)
+    {
+        drawWsgPaletteSimple(&renderer->body, 0, 0, &renderer->palette);
+    }
 
     if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > ARROW_PERIOD_US / 2)
     {
