@@ -225,7 +225,7 @@ struct
         .pzl  = _8F_SHREDDER_PZL_WSG,
         .slv  = _8F_SHREDDER_SLV_WSG,
         .marqueeFact
-        = "Produced by ? for the 2022 chainsaw swadge : Hate'th Notes have taken over the arenas, and it's up to you "
+        = "Produced by gelakinetic for the 2022 chainsaw swadge : Hate'th Notes have taken over the arenas, and it's up to you "
           "to "
           "Shred them to pieces! Wield your righteous guitar and get them before they get you with their scythes!",
     },
@@ -337,14 +337,15 @@ struct
         .pzl  = CF_GALACTICBRICKDOWN_PZL_WSG,
         .slv  = CF_GALACTICBRICKDOWN_SLV_WSG,
         .marqueeFact
-        = "Produced by ? for the 2024 gunship swadge : This is a unique take on a \"breakout\" style game.",
+        = "Produced by JVeg199X for the 2024 gunship swadge : This is a unique take on a \"breakout\" style game.",
     },
     {
-        .name        = "lumber jacks",
-        .pzl         = CF_LUMBERJACKS_PZL_WSG,
-        .slv         = CF_LUMBERJACKS_SLV_WSG,
-        .marqueeFact = "Produced by ? for the 2024 gunship swadge : Tight arcade action with panic mode featuring "
-                       "rising water, and attack mode featuring wave after wave of Bad Seeds.",
+        .name = "lumber jacks",
+        .pzl  = CF_LUMBERJACKS_PZL_WSG,
+        .slv  = CF_LUMBERJACKS_SLV_WSG,
+        .marqueeFact
+        = "Produced by Mr Troy for the 2024 gunship swadge : Tight arcade action with panic mode featuring "
+          "rising water, and attack mode featuring wave after wave of Bad Seeds.",
     },
     {
         .name        = "magtroid pocket",
@@ -355,17 +356,18 @@ struct
                        "colored doom-style rendering engine, an epic soundtrack, and a complex single player campaign.",
     },
     {
-        .name        = "pushy kawaii go",
-        .pzl         = CF_PUSHYKAWAIIGO_PZL_WSG,
-        .slv         = CF_PUSHYKAWAIIGO_SLV_WSG,
-        .marqueeFact = "Produced by ? for the 2024 gunship swadge : Number go up.",
+        .name = "pushy kawaii go",
+        .pzl  = CF_PUSHYKAWAIIGO_PZL_WSG,
+        .slv  = CF_PUSHYKAWAIIGO_SLV_WSG,
+        .marqueeFact
+        = "Produced by Bryce Browner for the 2024 gunship swadge : A swadge port of socks magoc's game. Number go up.",
     },
     {
         .name        = "big bug",
         .pzl         = EF_BIGBUG_PZL_WSG,
         .slv         = EF_BIGBUG_SLV_WSG,
-        .marqueeFact = "Produced by James Albracht for the 2025 hotdog swadge with assets from gplord, kaitie, "
-                       "newmajoe, and livingston rampey : Dr. Ovo Garbotnik fights hordes of giant "
+        .marqueeFact = "Produced by James Albracht for the 2025 hotdog swadge with art from gplord, kaitie, "
+                       "and music from newmajoe, and livingston rampey : Dr. Ovo Garbotnik fights hordes of giant "
                        "bugs in a garbage landfill loosely inspired by Dig Dug and Helldivers 2.",
     },
     {
