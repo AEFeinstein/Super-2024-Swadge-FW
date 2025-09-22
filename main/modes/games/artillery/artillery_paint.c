@@ -82,7 +82,7 @@ void artilleryPaintInput(artilleryData_t* ad, buttonEvt_t* evt)
 void artilleryPaintLoop(artilleryData_t* ad, uint32_t elapsedUs)
 {
     // Draw background
-    drawMenuMega(ad->paintMenu, ad->mRenderer, elapsedUs);
+    drawMenuMega(ad->blankMenu, ad->mRenderer, elapsedUs);
 
     // Blink arrows
     RUN_TIMER_EVERY(ad->paintArrowBlinkTimer, 1000000, elapsedUs, {});
