@@ -56,7 +56,8 @@ static picrossGame_t* p = NULL;
  * @param mmFont The font used for teh HUD, already loaded
  *
  */
-void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool cont, menuMegaRenderer_t* renderer, wsg_t* bigBody)
+void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool cont, menuMegaRenderer_t* renderer,
+                      wsg_t* bigBody)
 {
     // calloc is 0'd and malloc leaves memory uninitialized. I dont know which to use so im not gonna touch it, and
     // doing things once on load can be slower.
@@ -118,8 +119,9 @@ void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool con
     // load options data
     p->input->showHints  = picrossGetSaveFlag(PO_SHOW_HINTS);
     p->input->showGuides = picrossGetLoadedSaveFlag(PO_SHOW_GUIDES);
-    p->animateBG         = -1 + picrossGetLoadedSaveFlag(PO_BG_HEXAGONS) + (picrossGetLoadedSaveFlag(PO_BG_DOTS) * 2) + (picrossGetLoadedSaveFlag(PO_BG_NONE) * 3);
-    p->markX             = picrossGetLoadedSaveFlag(PO_MARK_X);
+    p->animateBG         = -1 + picrossGetLoadedSaveFlag(PO_BG_HEXAGONS) + (picrossGetLoadedSaveFlag(PO_BG_DOTS) * 2)
+                   + (picrossGetLoadedSaveFlag(PO_BG_NONE) * 3);
+    p->markX = picrossGetLoadedSaveFlag(PO_MARK_X);
 
     // cant tell if this is doing things the lazy way or not.
     for (int i = 0; i < CONFIG_NUM_LEDS; i++)
@@ -166,11 +168,11 @@ void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool con
     p->offsetX = (TFT_WIDTH / 2) - ((p->puzzle->width * p->drawScale) / 2) - p->drawScale - p->leftPad;
     p->offsetY = 38 - p->drawScale - p->topPad;
 
-    //used for the mega man background effect
+    // used for the mega man background effect
     setDrawBody(renderer, false);
-    p->menu = initMenu("", NULL);
+    p->menu     = initMenu("", NULL);
     p->renderer = renderer;
-    p->bigBody = bigBody;
+    p->bigBody  = bigBody;
 }
 
 void picrossSetupPuzzle(bool cont)
@@ -450,8 +452,8 @@ void picrossGameLoop(int64_t elapsedUs)
     if (p->exitThisFrame)
     {
         setDrawBody(p->renderer, true); // make the menu renderer default again with the background body drawn.
-        picrossExitGame();             // free variables
-        returnToPicrossMenuFromGame(); // change to menu
+        picrossExitGame();              // free variables
+        returnToPicrossMenuFromGame();  // change to menu
         // dont do more processing, we have switched back to level select screen.
         return;
     }
@@ -1281,7 +1283,7 @@ void drawPicrossScene(void)
         }
 
         // Draw the title of the puzzle, centered.
-        if(p->animateBG == PICROSS_BG_HEXAGONS)
+        if (p->animateBG == PICROSS_BG_HEXAGONS)
         {
             drawRectFilled(0, 7, TFT_WIDTH, 33, c001);
         }
@@ -1292,7 +1294,7 @@ void drawPicrossScene(void)
         // Draw the marquee fact.
         if (p->lerpAmount == PICROSS_LERP_AMOUNT)
         {
-            if(p->animateBG == PICROSS_BG_HEXAGONS)
+            if (p->animateBG == PICROSS_BG_HEXAGONS)
             {
                 drawRectFilled(0, 190, TFT_WIDTH, 225, c001);
             }
@@ -1308,12 +1310,12 @@ void drawPicrossScene(void)
         }
         else
         {
-            //Draw an outline box during the slide to help pop against some of the black backgrounds.
+            // Draw an outline box during the slide to help pop against some of the black backgrounds.
             box_t outlineBox = boxFromCoord(0, 0);
             outlineBox.x0 += ox - 1;
             outlineBox.y0 += oy - 1;
-            outlineBox.x1 = outlineBox.x0+2+ w * p->drawScale;
-            outlineBox.y1 = outlineBox.y0+2+ h * p->drawScale;
+            outlineBox.x1 = outlineBox.x0 + 2 + w * p->drawScale;
+            outlineBox.y1 = outlineBox.y0 + 2 + h * p->drawScale;
             drawRect(outlineBox.x0, outlineBox.y0, outlineBox.x1, outlineBox.y1, c222);
         }
     }
@@ -1471,8 +1473,9 @@ void drawPicrossHud(font_t* font)
 void drawHint(font_t* font, picrossHint_t hint)
 {
     uint8_t h;
-    paletteColor_t hintShadeColor = p->animateBG==PICROSS_BG_HEXAGONS ? c034 : c001; // todo: move to struct if we decide to keep this.
-    paletteColor_t hintColor      = c555; // white/
+    paletteColor_t hintShadeColor
+        = p->animateBG == PICROSS_BG_HEXAGONS ? c034 : c001; // todo: move to struct if we decide to keep this.
+    paletteColor_t hintColor = c555;                         // white/
     if (p->fadeHints)
     {
         if (hint.correct)
@@ -1678,7 +1681,7 @@ void drawPicrossInput(void)
  */
 void drawBackground(void)
 {
-    if(p->animateBG == PICROSS_BG_NONE)
+    if (p->animateBG == PICROSS_BG_NONE)
     {
         return;
     }
@@ -1693,13 +1696,13 @@ void drawBackground(void)
         p->bgScrollXFrame = p->bgScrollXFrame % 20;
         p->bgScrollYFrame = p->bgScrollYFrame % 20;
     }
-    
-    switch(p->animateBG)
+
+    switch (p->animateBG)
     {
         case PICROSS_BG_HEXAGONS:
         {
             drawMenuMega(p->menu, p->renderer, p->elapsedUs);
-            if(p->currentPhase != PICROSS_YOUAREWIN)
+            if (p->currentPhase != PICROSS_YOUAREWIN)
             {
                 drawWsgSimple(p->bigBody, 0, 0);
             }
@@ -1707,9 +1710,9 @@ void drawBackground(void)
         }
         case PICROSS_BG_DOTS:
         {
-            for (int16_t y = p->bgScrollYFrame; y < TFT_HEIGHT; y+=20)
+            for (int16_t y = p->bgScrollYFrame; y < TFT_HEIGHT; y += 20)
             {
-                for (int16_t x = 19 - p->bgScrollXFrame; x < TFT_WIDTH; x+=20)
+                for (int16_t x = 19 - p->bgScrollXFrame; x < TFT_WIDTH; x += 20)
                 {
                     setPxTft(x, y, c111); // Grid
                 }

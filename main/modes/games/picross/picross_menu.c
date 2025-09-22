@@ -36,9 +36,8 @@ typedef struct
     picrossScreen_t screen;
     int32_t savedIndex;
     int32_t options; // bit 0: hints
-    wsg_t bigBody; // for the background drawing effect
+    wsg_t bigBody;   // for the background drawing effect
 } picrossMenu_t;
-
 
 //==============================================================================
 // Function Prototypes
@@ -82,22 +81,15 @@ static const char str_X[]         = "X";
 static const char str_Solid[]     = "Solid";
 static const char* strs_x_solid[] = {str_X, str_Solid};
 
-static const char str_Hints[]     = "Mistake Alert: ";
-static const char str_Guides[]    = "Guides: ";
-static const char str_Mark[]      = "Empty Marks: ";
-static const char str_AnimateBG[] = "BG: ";
+static const char str_Hints[]        = "Mistake Alert: ";
+static const char str_Guides[]       = "Guides: ";
+static const char str_Mark[]         = "Empty Marks: ";
+static const char str_AnimateBG[]    = "BG: ";
 static const char* str_Backgrounds[] = {"hexagons", "dots", "none"};
 
-static const int32_t backgroundVals[] = {
-    PICROSS_BG_HEXAGONS,
-    PICROSS_BG_DOTS,
-    PICROSS_BG_NONE
-};
+static const int32_t backgroundVals[] = {PICROSS_BG_HEXAGONS, PICROSS_BG_DOTS, PICROSS_BG_NONE};
 
-static const paletteColor_t bgColors[] = {
-    c033, c133, c034, c035, c025
-};
-
+static const paletteColor_t bgColors[] = {c033, c133, c034, c035, c025};
 
 static const int32_t trueFalseVals[] = {
     false,
@@ -493,8 +485,8 @@ void picrossEnterMode(void)
 
     loadFont(MM_FONT, &(pm->mmFont), false);
 
-    pm->menu     = initMenu(str_picrossTitle, picrossMainMenuCb);
-    pm->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    pm->menu                  = initMenu(str_picrossTitle, picrossMainMenuCb);
+    pm->renderer              = initMenuMegaRenderer(NULL, NULL, NULL);
     pm->renderer->bgColors    = bgColors;
     pm->renderer->numBgColors = 5;
     pm->renderer->bgColorIdx  = 0;
@@ -520,8 +512,10 @@ void picrossEnterMode(void)
     };
     addSettingsOptionsItemToMenu(pm->menu, str_Guides, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
                                  picrossGetSaveFlag(PO_SHOW_GUIDES));
-    addSettingsOptionsItemToMenu(pm->menu, str_AnimateBG, str_Backgrounds, backgroundVals, ARRAY_SIZE(str_Backgrounds), &sp_bg,
-                                 -1 + picrossGetLoadedSaveFlag(PO_BG_HEXAGONS) + (picrossGetLoadedSaveFlag(PO_BG_DOTS) * 2) + (picrossGetLoadedSaveFlag(PO_BG_NONE) * 3));
+    addSettingsOptionsItemToMenu(
+        pm->menu, str_AnimateBG, str_Backgrounds, backgroundVals, ARRAY_SIZE(str_Backgrounds), &sp_bg,
+        -1 + picrossGetLoadedSaveFlag(PO_BG_HEXAGONS) + (picrossGetLoadedSaveFlag(PO_BG_DOTS) * 2)
+            + (picrossGetLoadedSaveFlag(PO_BG_NONE) * 3));
     addSettingsOptionsItemToMenu(pm->menu, str_Mark, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_x_solid), &sp_tf,
                                  picrossGetLoadedSaveFlag(PO_MARK_X));
     addSettingsOptionsItemToMenu(pm->menu, str_Hints, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
@@ -807,7 +801,7 @@ void picrossMainMenuCb(const char* label, bool selected, uint32_t value)
         }
         else if (str_AnimateBG == label)
         {
-            switch(value)
+            switch (value)
             {
                 case PICROSS_BG_HEXAGONS:
                 {
