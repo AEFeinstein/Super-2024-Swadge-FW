@@ -70,7 +70,7 @@ void mg_initializeEntity(mgEntity_t* self, mgEntityManager_t* entityManager, mgT
 void mg_updatePlayer(mgEntity_t* self)
 {
     switch(self->state){
-        case MG_MG_ST_NORMAL:
+        case MG_PL_ST_NORMAL:
         default:
             if (self->gameData->doubleTapBtnTimer > 0){
                 self->gameData->doubleTapBtnTimer --;
@@ -108,7 +108,7 @@ void mg_updatePlayer(mgEntity_t* self)
                         self->gameData->doubleTapBtnTimer = MG_DOUBLE_TAP_TIMER_FRAMES;
                     } else if (self->canDash) {
                         //Initiate dash
-                        self->state = MG_MG_ST_DASHING;
+                        /*self->state = MG_PL_ST_DASHING;
 
                         if(self->falling){
                             self->stateTimer = 20;
@@ -121,7 +121,7 @@ void mg_updatePlayer(mgEntity_t* self)
 
                         self->gameData->doubleTapBtnState = 0;
                         self->gameData->doubleTapBtnTimer = -1;
-                        self->gravity = 0;
+                        self->gravity = 0;*/
                     }
                         
                 }
@@ -143,7 +143,7 @@ void mg_updatePlayer(mgEntity_t* self)
                         self->gameData->doubleTapBtnTimer = MG_DOUBLE_TAP_TIMER_FRAMES;
                     } else if (self->canDash) {
                         //Initiate dash
-                        self->state = MG_MG_ST_DASHING;
+                        /*self->state = MG_PL_ST_DASHING;
 
                         if(self->falling){
                             self->stateTimer = 20;
@@ -156,13 +156,13 @@ void mg_updatePlayer(mgEntity_t* self)
 
                         self->gameData->doubleTapBtnState = 0;
                         self->gameData->doubleTapBtnTimer = -1;
-                        self->gravity = 0;
+                        self->gravity = 0;*/
                     }
                         
                 }
             }
             break;
-        case MG_MG_ST_DASHING:
+        case MG_PL_ST_DASHING:
 
             if(self->spriteFlipHorizontal) {
                 self->xspeed = -64;
@@ -184,8 +184,21 @@ void mg_updatePlayer(mgEntity_t* self)
             
             self->stateTimer--;
             if(self->stateTimer <= 0){
-                self->state = MG_MG_ST_NORMAL;
+                self->state = MG_PL_ST_NORMAL;
                 self->gravity = 4;
+            }
+            break;
+        
+        case MG_PL_ST_MIC_DROP:
+            if(self->yspeed > 0){
+                self->yspeed += 8;
+            }
+
+            self->stateTimer--;
+            if(self->stateTimer <= 0){
+                self->state = MG_PL_ST_NORMAL;
+                self->yMaxSpeed = 72;
+                self->spriteFlipVertical = false;
             }
             break;
     }
@@ -233,7 +246,7 @@ void mg_updatePlayer(mgEntity_t* self)
             self->yspeed    = -self->jumpPower;
             self->falling   = true;
 
-            if(self->state == MG_MG_ST_DASHING){
+            if(self->state == MG_PL_ST_DASHING){
                 self->canDash = false;
             }
 
@@ -244,8 +257,8 @@ void mg_updatePlayer(mgEntity_t* self)
                 self->yspeed    = -self->jumpPower;
                 self->falling   = true;
                 
-                if(self->state == MG_MG_ST_DASHING){
-                    self->state = MG_MG_ST_NORMAL;
+                if(self->state == MG_PL_ST_DASHING){
+                    self->state = MG_PL_ST_NORMAL;
                     self->stateTimer = -1;
                     self->gravity = 4;
                 }
@@ -293,23 +306,42 @@ void mg_updatePlayer(mgEntity_t* self)
         }
     }
 
-    if (/*self->hp > 2 &&*/ self->gameData->btnState & PB_B && !(self->gameData->prevBtnState & PB_B)
+    if (self->gameData->btnState & PB_B && !(self->gameData->prevBtnState & PB_B)
         && self->shotsFired < self->shotLimit)
     {
-        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
+        switch(self->state){
+            case MG_PL_ST_NORMAL:
+                if(self->falling && self->gameData->btnState & PB_DOWN)
+                {
+                    self->xspeed = 0;
+                    self->yspeed = -32l;
+                    self->spriteFlipVertical = true;
+                    self->state = MG_PL_ST_MIC_DROP;
+                    self->yMaxSpeed = 120;
+                    self->stateTimer = 180;
+                } 
+                else if(self->shotsFired < self->shotLimit)
+                {
+                    mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
                                                     TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y) - 2);
-        if (createdEntity != NULL)
-        {
-            createdEntity->xspeed    = (self->spriteFlipHorizontal) ? -(96 + abs(self->xspeed) /*+ abs(self->yspeed)*/)
-                                                                    : 96 + abs(self->xspeed) /*+ abs(self->yspeed)*/;
-            createdEntity->homeTileX = 0;
-            createdEntity->homeTileY = 0;
-            createdEntity->linkedEntity = self;
-            self->shotsFired++;
-            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
-            mg_remapPlayerShootWsg(self->tilemap->wsgManager);
+                    if (createdEntity != NULL)
+                    {
+                        createdEntity->xspeed    = (self->spriteFlipHorizontal) ? -(96 + abs(self->xspeed) /*+ abs(self->yspeed)*/)
+                                                                                : 96 + abs(self->xspeed) /*+ abs(self->yspeed)*/;
+                        createdEntity->homeTileX = 0;
+                        createdEntity->homeTileY = 0;
+                        createdEntity->linkedEntity = self;
+                        self->shotsFired++;
+                        soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                        mg_remapPlayerShootWsg(self->tilemap->wsgManager);
+                    }
+                    self->animationTimer = 10;
+                }
+                break;
+            default:
+                break;
         }
-        self->animationTimer = 10;
+        
     }
 
     if (((self->gameData->btnState & PB_START) && !(self->gameData->prevBtnState & PB_START)))
@@ -1008,6 +1040,10 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_WASP_2:
         case ENTITY_WASP_3:
         {
+            if(self->state == MG_PL_ST_MIC_DROP){
+                break;
+            }
+
             other->xspeed = -other->xspeed;
 
             /*if (self->y < other->y || self->yspeed > 0)
@@ -1204,6 +1240,28 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             self->invincibilityFrames=4;
 
             break;
+        case ENTITY_PLAYER: 
+            if(other->state == MG_PL_ST_MIC_DROP){
+                if(self->invincibilityFrames){
+                    break;
+                }
+
+                self->hp -= 8;
+                self->invincibilityFrames=4;
+        
+                if(self->hp <= 0) {
+                    self->xspeed = other->xspeed >> 1;
+                    self->yspeed = -abs(other->xspeed >> 1);
+                    mg_scorePoints(self->gameData, self->scoreValue);
+                    soundPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
+                    killEnemy(self);
+                    
+                    break;
+                }
+
+               
+            }
+            break;
         default:
         {
             break;
@@ -1396,6 +1454,12 @@ bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx,
                 self->falling = false;
                 self->canDash = true;
                 self->yspeed  = 0;
+
+                if(self->state == MG_PL_ST_MIC_DROP){
+                    self->state = MG_PL_ST_NORMAL;
+                    self->yMaxSpeed = 72;
+                    self->spriteFlipVertical = false;
+                }
                 break;
             default: // Should never hit
                 return false;
