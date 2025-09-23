@@ -71,16 +71,20 @@ typedef struct
     int32_t bgColorTimer;           ///< A timer to increment ::bgColorDeg in order to cycle through ::bgColors
     int32_t bgColorDeg; ///< When cycling through ::bgColors, a sine wave is followed. This counts the degrees into the
                         ///< sine wave, 0 to 180
+    int32_t yOff;       ///< An offset to the hexagons to make them scroll smoothly
     int32_t bgColorIdx; ///< The current index into ::bgColors
 
     led_t leds[CONFIG_NUM_LEDS]; ///< An array with the RGB LED state to be output
     bool ledsOn;                 ///< true if LEDs should be set by this renderer, false to leave LEDs alone
+
+    bool drawBody; ///< true to draw the sci-fi rectangle body background, false to skip it
 } menuMegaRenderer_t;
 
 menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);
 void deinitMenuMegaRenderer(menuMegaRenderer_t* renderer);
 void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs);
 void setMegaLedsOn(menuMegaRenderer_t* renderer, bool ledsOn);
+void setDrawBody(menuMegaRenderer_t* renderer, bool drawBody);
 void recolorMenuMegaRenderer(menuMegaRenderer_t* renderer, paletteColor_t textFill, paletteColor_t textOutline,
                              paletteColor_t c1, paletteColor_t c2, paletteColor_t c3, paletteColor_t c4,
                              paletteColor_t c5, paletteColor_t c6, paletteColor_t c7, paletteColor_t c8,
