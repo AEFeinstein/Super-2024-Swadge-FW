@@ -89,7 +89,7 @@ static const char* str_Backgrounds[] = {"hexagons", "dots", "none"};
 
 static const int32_t backgroundVals[] = {PICROSS_BG_HEXAGONS, PICROSS_BG_DOTS, PICROSS_BG_NONE};
 
-static const paletteColor_t bgColors[] = {c033, c133, c034, c035, c025};
+static const paletteColor_t bgColors[] = {c122, c132, c133, c144};
 
 static const int32_t trueFalseVals[] = {
     false,
@@ -518,7 +518,7 @@ void picrossEnterMode(void)
     pm->menu                  = initMenu(str_picrossTitle, picrossMainMenuCb);
     pm->renderer              = initMenuMegaRenderer(NULL, NULL, NULL);
     pm->renderer->bgColors    = bgColors;
-    pm->renderer->numBgColors = 5;
+    pm->renderer->numBgColors = ARRAY_SIZE(bgColors);
     pm->renderer->bgColorIdx  = 0;
 
     loadWsg(MMM_BIG_BODY_WSG, &pm->bigBody, false);

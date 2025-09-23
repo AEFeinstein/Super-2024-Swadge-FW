@@ -28,7 +28,7 @@
 //==============================================================================
 
 static const paletteColor_t defaultBgColors[] = {
-    c500, c410, c320, c230, c140, c050, c041, c032, c023, c014, c005,
+    c024, c025, c035, c034, c033, c043, c143, c254, c453, c553, c554,
 };
 
 //==============================================================================
@@ -527,17 +527,25 @@ void setMegaLedsOn(menuMegaRenderer_t* renderer, bool ledsOn)
  */
 static void setLedsFromBg(menuMegaRenderer_t* renderer)
 {
-    // Extract LED color from bg color
-    int32_t rgb = paletteToRGB(renderer->bgColors[renderer->bgColorIdx]);
-    led_t led   = {
-          .r = (rgb >> 16) & 0xFF,
-          .g = (rgb >> 8) & 0xFF,
-          .b = (rgb >> 0) & 0xFF,
-    };
+    
 
     // Set all LEDs
     for (int32_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
     {
+        int32_t ledDeg = renderer->bgColorDeg + 2*idx;
+        ledDeg = CLAMP(ledDeg, 0, 359);
+        int32_t ledColorIdx = ((getSin1024(ledDeg) + 1024) / (2049 / (renderer->numBgColors)));
+        if(ledColorIdx >= renderer->numBgColors)
+        {
+            ledColorIdx = renderer->numBgColors - 1;
+        }
+        // Extract LED color from bg color
+        int32_t rgb = paletteToRGB(renderer->bgColors[ledColorIdx]);
+        led_t led   = {
+            .r = (rgb >> 16) & 0xFF,
+            .g = (rgb >> 8) & 0xFF,
+            .b = (rgb >> 0) & 0xFF,
+        };
         renderer->leds[idx] = led;
     }
 }
