@@ -26,72 +26,86 @@ static const shSong_t shSongList[] = {
     {
         .name   = "Chowa Grove",
         .artist = "Newmajoe",
-        .fName  = "sh_cgrove",
+        .midi   = SH_CGROVE_MID,
+        .charts = {SH_CGROVE_E_CCH, SH_CGROVE_M_CCH, SH_CGROVE_H_CCH},
     },
     {
         .name   = "Hot Dog Credits",
         .artist = "Newmajoe",
-        .fName  = "sh_credits",
+        .midi   = SH_CREDITS_MID,
+        .charts = {SH_CREDITS_E_CCH, SH_CREDITS_M_CCH, SH_CREDITS_H_CCH},
     },
     {
         .name   = "Chowa Race",
         .artist = "Tuck",
-        .fName  = "sh_crace",
+        .midi   = SH_CRACE_MID,
+        .charts = {SH_CRACE_E_CCH, SH_CRACE_M_CCH, SH_CRACE_H_CCH},
     },
     {
         .name   = "Pango",
         .artist = "Newmajoe",
-        .fName  = "sh_pango",
+        .midi   = SH_PANGO_MID,
+        .charts = {SH_PANGO_E_CCH, SH_PANGO_M_CCH, SH_PANGO_H_CCH},
     },
     {
         .name   = "The Devil's Lullaby",
         .artist = "Meldecision",
-        .fName  = "sh_devils",
+        .midi   = SH_DEVILS_MID,
+        .charts = {SH_DEVILS_E_CCH, SH_DEVILS_M_CCH, SH_DEVILS_H_CCH},
     },
     {
         .name   = "Starfest Magway",
         .artist = "Ronin Op F",
-        .fName  = "sh_starfest",
+        .midi   = SH_STARFEST_MID,
+        .charts = {SH_STARFEST_E_CCH, SH_STARFEST_M_CCH, SH_STARFEST_H_CCH},
     },
     {
         .name   = "Wake Man Stage",
         .artist = "JnWake",
-        .fName  = "sh_wakeman",
+        .midi   = SH_WAKEMAN_MID,
+        .charts = {SH_WAKEMAN_E_CCH, SH_WAKEMAN_M_CCH, SH_WAKEMAN_H_CCH},
     },
     {
         .name   = "Ocean City 1989",
         .artist = "Carrie Wood",
-        .fName  = "sh_ocean",
+        .midi   = SH_OCEAN_MID,
+        .charts = {SH_OCEAN_E_CCH, SH_OCEAN_M_CCH, SH_OCEAN_H_CCH},
     },
     {
         .name   = "San Pablo Sunrise",
         .artist = "Ian Cowell",
-        .fName  = "sh_sunrise",
+        .midi   = SH_SUNRISE_MID,
+        .charts = {SH_SUNRISE_E_CCH, SH_SUNRISE_M_CCH, SH_SUNRISE_H_CCH},
     },
     {
         .name   = "The Dance of the Cremulons",
         .artist = "Mattmattat",
-        .fName  = "sh_cremulons",
+        .midi   = SH_CREMULONS_MID,
+        .charts = {SH_CREMULONS_E_CCH, SH_CREMULONS_M_CCH, SH_CREMULONS_H_CCH},
     },
     {
         .name   = "Let It Bleed",
         .artist = "TheManPF",
-        .fName  = "sh_bleed",
+        .midi   = SH_BLEED_MID,
+        .charts = {SH_BLEED_E_CCH, SH_BLEED_M_CCH, SH_BLEED_H_CCH},
     },
     {
         .name   = "Revenge",
         .artist = "Rampey",
-        .fName  = "sh_revenge",
+        .midi   = SH_REVENGE_MID,
+        .charts = {SH_REVENGE_E_CCH, SH_REVENGE_M_CCH, SH_REVENGE_H_CCH},
     },
     {
         .name   = "Pain",
         .artist = "Rampey",
-        .fName  = "sh_pain",
+        .midi   = SH_PAIN_MID,
+        .charts = {SH_PAIN_E_CCH, SH_PAIN_M_CCH, SH_PAIN_H_CCH},
     },
     {
         .name   = "Gunship Credits",
         .artist = "Newmajoe",
-        .fName  = "sh_gs_credits",
+        .midi   = SH_GS_CREDITS_MID,
+        .charts = {SH_GS_CREDITS_E_CCH, SH_GS_CREDITS_M_CCH, SH_GS_CREDITS_H_CCH},
     },
 };
 
@@ -171,7 +185,7 @@ void shSetupMenu(shVars_t* sh)
         {
             // Get the NVS key and try to read the value
             char nvsKey[16];
-            shGetNvsKey(shSongList[sIdx].fName, difficulties[i], nvsKey);
+            shGetNvsKey(shSongList[sIdx].name, difficulties[i], nvsKey);
             int32_t tmpScore;
             if (readNvs32(nvsKey, &tmpScore))
             {
