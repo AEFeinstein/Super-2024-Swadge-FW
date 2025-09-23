@@ -69,29 +69,64 @@ static void shEnterMode(void)
     shv = heap_caps_calloc(1, sizeof(shVars_t), MALLOC_CAP_8BIT);
 
     // Load fonts
-    loadFont("ibm_vga8.font", &shv->ibm, true);
-    loadFont("righteous_150.font", &shv->righteous, true);
-    loadFont("rodin_eb.font", &shv->rodin, true);
+    loadFont(IBM_VGA_8_FONT, &shv->ibm, true);
+    loadFont(RIGHTEOUS_150_FONT, &shv->righteous, true);
+    loadFont(RODIN_EB_FONT, &shv->rodin, true);
 
-    // Load icons
-    const char icons[] = {'l', 'd', 'u', 'r', 'b', 'a'};
-    for (int32_t i = 0; i < ARRAY_SIZE(shv->icons); i++)
+    struct
     {
-        char tmp[16];
-
-        for (int32_t fIdx = 0; fIdx < NUM_NOTE_FRAMES; fIdx++)
+        cnfsFileIdx_t f1;
+        cnfsFileIdx_t f2;
+        cnfsFileIdx_t outline;
+        cnfsFileIdx_t pressed;
+    } wsgFiles[] = {
         {
-            sprintf(tmp, "sh_%c%" PRId32 ".wsg", icons[i], fIdx + 1);
-            loadWsg(tmp, &shv->icons[i][fIdx], true);
-        }
+            .f1      = SH_L_1_WSG,
+            .f2      = SH_L_2_WSG,
+            .outline = SH_LO_WSG,
+            .pressed = SH_LP_WSG,
+        },
+        {
+            .f1      = SH_D_1_WSG,
+            .f2      = SH_D_2_WSG,
+            .outline = SH_DO_WSG,
+            .pressed = SH_DP_WSG,
+        },
+        {
+            .f1      = SH_U_1_WSG,
+            .f2      = SH_U_2_WSG,
+            .outline = SH_UO_WSG,
+            .pressed = SH_UP_WSG,
+        },
+        {
+            .f1      = SH_R_1_WSG,
+            .f2      = SH_R_2_WSG,
+            .outline = SH_RO_WSG,
+            .pressed = SH_RP_WSG,
+        },
+        {
+            .f1      = SH_B_1_WSG,
+            .f2      = SH_B_2_WSG,
+            .outline = SH_BO_WSG,
+            .pressed = SH_BP_WSG,
+        },
+        {
+            .f1      = SH_A_1_WSG,
+            .f2      = SH_A_2_WSG,
+            .outline = SH_AO_WSG,
+            .pressed = SH_AP_WSG,
+        },
+    };
 
-        sprintf(tmp, "sh_%co.wsg", icons[i]);
-        loadWsg(tmp, &shv->outlines[i], true);
-
-        sprintf(tmp, "sh_%cp.wsg", icons[i]);
-        loadWsg(tmp, &shv->pressed[i], true);
+    for (int i = 0; i < ARRAY_SIZE(wsgFiles); i++)
+    {
+        loadWsg(wsgFiles[i].f1, &shv->icons[i][0], true);
+        loadWsg(wsgFiles[i].f2, &shv->icons[i][1], true);
+        loadWsg(wsgFiles[i].outline, &shv->outlines[i], true);
+        loadWsg(wsgFiles[i].pressed, &shv->pressed[i], true);
     }
-    loadWsg("star.wsg", &shv->star, true);
+
+    loadWsg(STAR_WSG, &shv->star, true);
 
     // Show initial menu
     shChangeScreen(shv, SH_MENU);
