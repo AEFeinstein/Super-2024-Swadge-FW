@@ -447,7 +447,7 @@ void picrossGameLoop(int64_t elapsedUs)
         picrossCheckLevel();
     }
 
-    //Moving this before the user input, because picrossUserInput() also sets LED lights.
+    // Moving this before the user input, because picrossUserInput() also sets LED lights.
     clearPxTft();
     drawBackground();
 

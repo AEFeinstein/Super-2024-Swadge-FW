@@ -225,7 +225,8 @@ struct
         .pzl  = _8F_SHREDDER_PZL_WSG,
         .slv  = _8F_SHREDDER_SLV_WSG,
         .marqueeFact
-        = "Produced by gelakinetic for the 2022 chainsaw swadge : Hate'th Notes have taken over the arenas, and it's up to you "
+        = "Produced by gelakinetic for the 2022 chainsaw swadge : Hate'th Notes have taken over the arenas, and it's "
+          "up to you "
           "to "
           "Shred them to pieces! Wield your righteous guitar and get them before they get you with their scythes!",
     },
