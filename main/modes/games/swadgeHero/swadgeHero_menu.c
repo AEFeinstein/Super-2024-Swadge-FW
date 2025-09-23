@@ -24,6 +24,12 @@ static void shMenuCb(const char*, bool selected, uint32_t settingVal);
 
 static const shSong_t shSongList[] = {
     {
+        .name   = "Kinetic Donut",
+        .artist = "Newmajoe",
+        .midi   = BOSS_KINETIC_DONUT_MID,
+        .charts = {BOSS_KINETIC_DONUT_E_CCH, BOSS_KINETIC_DONUT_M_CCH, BOSS_KINETIC_DONUT_H_CCH},
+    },
+    {
         .name   = "Chowa Grove",
         .artist = "Newmajoe",
         .midi   = SH_CGROVE_MID,
