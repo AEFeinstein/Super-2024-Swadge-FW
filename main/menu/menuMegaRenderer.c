@@ -348,7 +348,11 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
         {
             renderer->bgColorDeg = 0;
         }
-        renderer->bgColorIdx = ((getSin1024(renderer->bgColorDeg) + 1024) / (2048 / (renderer->numBgColors - 1)));
+        renderer->bgColorIdx = ((getSin1024(renderer->bgColorDeg) + 1024) / (2049 / (renderer->numBgColors)));
+        if(renderer->bgColorIdx >= renderer->numBgColors)
+        {
+            renderer->bgColorIdx = renderer->numBgColors - 1;
+        }
         renderer->yOff += renderer->bgColorIdx;
     });
 
