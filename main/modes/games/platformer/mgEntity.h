@@ -64,8 +64,11 @@ typedef enum
 
 typedef enum
 {
-    MG_MG_ST_NORMAL,
-    MG_MG_ST_DASHING
+    MG_PL_ST_NORMAL,
+    MG_PL_ST_DASHING,
+    MG_PL_ST_MIC_DROP,
+    MG_PL_ST_UPPERCUT,
+    MG_PL_ST_SLIDE
 } mgPlayerState_t;
 
 //==============================================================================
@@ -125,7 +128,7 @@ struct mgEntity_t
     int8_t shotLimit;
 
     bool visible;
-    uint8_t hp;
+    int16_t hp;
     int8_t invincibilityFrames;
     uint16_t scoreValue;
 
