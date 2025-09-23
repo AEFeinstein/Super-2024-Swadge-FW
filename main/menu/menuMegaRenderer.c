@@ -349,7 +349,7 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
             renderer->bgColorDeg = 0;
         }
         renderer->bgColorIdx = ((getSin1024(renderer->bgColorDeg) + 1024) / (2049 / (renderer->numBgColors)));
-        if(renderer->bgColorIdx >= renderer->numBgColors)
+        if (renderer->bgColorIdx >= renderer->numBgColors)
         {
             renderer->bgColorIdx = renderer->numBgColors - 1;
         }
@@ -527,24 +527,22 @@ void setMegaLedsOn(menuMegaRenderer_t* renderer, bool ledsOn)
  */
 static void setLedsFromBg(menuMegaRenderer_t* renderer)
 {
-    
-
     // Set all LEDs
     for (int32_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
     {
-        int32_t ledDeg = renderer->bgColorDeg + 2*idx;
-        ledDeg = CLAMP(ledDeg, 0, 359);
+        int32_t ledDeg      = renderer->bgColorDeg + 2 * idx;
+        ledDeg              = CLAMP(ledDeg, 0, 359);
         int32_t ledColorIdx = ((getSin1024(ledDeg) + 1024) / (2049 / (renderer->numBgColors)));
-        if(ledColorIdx >= renderer->numBgColors)
+        if (ledColorIdx >= renderer->numBgColors)
         {
             ledColorIdx = renderer->numBgColors - 1;
         }
         // Extract LED color from bg color
         int32_t rgb = paletteToRGB(renderer->bgColors[ledColorIdx]);
         led_t led   = {
-            .r = (rgb >> 16) & 0xFF,
-            .g = (rgb >> 8) & 0xFF,
-            .b = (rgb >> 0) & 0xFF,
+              .r = (rgb >> 16) & 0xFF,
+              .g = (rgb >> 8) & 0xFF,
+              .b = (rgb >> 0) & 0xFF,
         };
         renderer->leds[idx] = led;
     }
