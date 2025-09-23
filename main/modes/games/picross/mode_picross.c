@@ -166,7 +166,7 @@ void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool con
 
     // set the winning positional offset.
     p->offsetX = (TFT_WIDTH / 2) - ((p->puzzle->width * p->drawScale) / 2) - p->drawScale - p->leftPad;
-    p->offsetY = 38 - p->drawScale - p->topPad;
+    p->offsetY = 111 - ((p->puzzle->height * p->drawScale) / 2) - p->drawScale - p->topPad;
 
     // used for the mega man background effect
     setDrawBody(renderer, false);
@@ -247,7 +247,6 @@ void picrossSetupPuzzle(bool cont)
 
     p->leftPad = (TFT_WIDTH - ((totalXCount * p->drawScale))) / 2 + p->maxHintsX * p->drawScale;
     p->topPad  = (TFT_HEIGHT - ((totalYCount * p->drawScale))) / 2 + p->maxHintsY * p->drawScale;
-
     // load the font
     // UIFont:
     loadFont(EARLY_GAMEBOY_FONT, &(p->UIFont), false);
@@ -447,6 +446,10 @@ void picrossGameLoop(int64_t elapsedUs)
     {
         picrossCheckLevel();
     }
+
+    //Moving this before the user input, because picrossUserInput() also sets LED lights.
+    clearPxTft();
+    drawBackground();
 
     picrossUserInput(elapsedUs);
     if (p->exitThisFrame)
@@ -1136,9 +1139,6 @@ void drawPicrossScene(void)
 {
     uint8_t w = p->puzzle->width;
     uint8_t h = p->puzzle->height;
-
-    clearPxTft();
-    drawBackground();
 
     box_t box;
     box_t xBox;
