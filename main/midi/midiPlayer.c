@@ -109,7 +109,7 @@ static const char* adsrStateNames[] = {
     "OFF",
 };
 
-static uint32_t allocVoice(const voiceStates_t* states, uint8_t voiceCount);
+static uint32_t allocVoice(const voiceStates_t* states, const midiVoice_t* voices, uint8_t voiceCount);
 static bool releaseNote(voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* voice);
 static adsrState_t voiceAdvanceAdsr(midiVoice_t* voice, voiceStates_t* states, uint8_t voiceIdx, midiChannel_t* channel, uint32_t* specialStates, adsrState_t target);
 static int32_t stepWaveVoice(midiVoice_t* voice, voiceStates_t* states, uint8_t voiceIdx, midiChannel_t* channel, uint32_t* specialStates);
@@ -133,14 +133,15 @@ static const char* adsrStateName(adsrState_t state);
  * @brief Return the index of an unallocated voice from the given voice pool.
  *
  * This function finds the voice index to allocate, but the caller is responsible for updating the state
- * bitmaps to actuallymark it as allocated.
+ * bitmaps to actually mark it as allocated.
  * If there are no unallocated voices remaining, an allocated voice index may be returned.
  *
  * @param states A pointer to the voice state bitmaps for this pool
+ * @param voices A pointer to the voices for this pool
  * @param voiceCount The number of voices in this pool
  * @return uint32_t The index of the voice to allocate
  */
-static uint32_t allocVoice(const voiceStates_t* states, uint8_t voiceCount)
+static uint32_t allocVoice(const voiceStates_t* states, const midiVoice_t* voices, uint8_t voiceCount)
 {
     uint32_t allStates = VS_ANY(states) | states->held | states->attack | states->decay | states->release
                          | states->sustain | states->sustenuto;
@@ -162,30 +163,28 @@ static uint32_t allocVoice(const voiceStates_t* states, uint8_t voiceCount)
         // Try a different approach, treat notes in release state as not in use to hopefully steal one of those
         allStates &= ~states->release;
         unusedVoices = (~allStates) & (0xFFFFFFFFu >> (32 - voiceCount));
-        if (unusedVoices != 0)
-        {
-            return __builtin_ctz(unusedVoices);
-        }
 
         // Gotta steal a note, so steal the first one by default
         uint32_t stealIdx = 0;
+        uint32_t soonestReleaseEnd = UINT32_MAX;
 
-        // TODO: Pass in the actual voices too (const), so they can be used to steal notes more intelligently
-        // based on which one was due to be released next
-        /*uint32_t soonestReleaseEnd = UINT32_MAX;
+        // But check to see which note is releasing soonest
         while (unusedVoices != 0)
         {
-            uint32_t voiceIdx = __builtin_ctz(allStates);
+            uint32_t voiceIdx = __builtin_ctz(unusedVoices);
+            uint32_t ticksUntilStateChange = voices[voiceIdx].stateChangeTick - voices[voiceIdx].voiceTick;
 
-            if (voices[voiceIdx].stateChangeTick - voices[voiceIdx].sampleTicks < soonestReleaseEnd)
+            if (ticksUntilStateChange < soonestReleaseEnd)
             {
-                soonestReleaseEnd = voices[voiceIdx].stateChangeTick - voices[voiceIdx].sampleTicks;
-                stealIdx = voiceIdx;''
+                soonestReleaseEnd = ticksUntilStateChange;
+                stealIdx = voiceIdx;
             }
 
             unusedVoices &= ~(1 << voiceIdx);
-        }*/
+        }
 
+        // stealIdx should now be the index of the note which is being released first, or 0
+        MIDI_DBG("Stealing released voice %" PRIu32 ", due to release in %" PRIu32 " ticks", stealIdx, soonestReleaseEnd);
         return stealIdx;
     }
 }
@@ -1822,7 +1821,7 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
     uint8_t voiceCount    = chan->percussion ? PERCUSSION_VOICES : POOL_VOICE_COUNT;
     // note that allocVoice() itself doesn't _claim_ the voice
     // that only happens when we set states->on |= (1 << voiceIdx)
-    uint32_t voiceIdx     = allocVoice(states, voiceCount);
+    uint32_t voiceIdx     = allocVoice(states, voices, voiceCount);
 
     if (chan->timbre.flags & TF_MONO)
     {
