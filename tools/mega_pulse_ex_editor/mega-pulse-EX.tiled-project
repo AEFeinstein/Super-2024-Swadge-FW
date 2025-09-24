@@ -133,7 +133,16 @@
                 "ENTITY_WARP_ENTRANCE_WALL",
                 "ENTITY_WARP_ENTRANCE_FLOOR",
                 "ENTITY_WARP_EXIT_WALL",
-                "ENTITY_WARP_EXIT_FLOOR"
+                "ENTITY_WARP_EXIT_FLOOR",
+                "ENTITY_CHARGIN_SCHMUCK",
+                "ENTITY_BOUNCIN_SCHMUCK",
+                "ENTITY_TURRET",
+                "ENTITY_SHELDON_SHIELDY",
+                "ENTITY_SPAWNER_BOT",
+                "ENTITY_SPIKY_MCGEE",
+                "ENTITY_AIR_TURRET",
+                "ENTITY_BOUNCE_PAD",
+                "ENTITY_BOUNCE_PAD_DIAGONAL"
             ],
             "valuesAsFlags": false
         },
