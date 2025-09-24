@@ -1,0 +1,45 @@
+{
+    "activeFile": "kinetic-donut.tmx",
+    "expandedProjectPaths": [
+        "templates",
+        "."
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "kinetic-donut-tileset.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 2.5072
+        },
+        "kinetic-donut.tmx": {
+            "scale": 0.74,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 2040.5405405405404,
+                "y": 2031.7567567567567
+            }
+        },
+        "mg-entity-tileset.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1
+        }
+    },
+    "last.exportedFilePath": "/Users/jvega/Development/Swadge/esp32/2026/Swadge-IDF-5.0/assets_image",
+    "last.objectTemplatePath": "/Users/jvega/Development/Swadge/esp32/2026/Swadge-IDF-5.0/tools/mega_pulse_ex_editor/templates",
+    "last.objectTypesPath": "/Users/jvega/Development/Swadge/esp32/2026/Swadge-IDF-5.0/tools/mega_pulse_ex_editor/MegaPulseEntityIndex_type.json",
+    "map.lastUsedExportFilter": "Mega Pulse EX map format (*.bin)",
+    "openFiles": [
+        "kinetic-donut.tmx",
+        "kinetic-donut-tileset.tsx"
+    ],
+    "project": "mega-pulse-EX.tiled-project",
+    "property.type": "Swadge Land Entity Index",
+    "recentFiles": [
+        "kinetic-donut-tileset.tsx",
+        "kinetic-donut.tmx"
+    ],
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}

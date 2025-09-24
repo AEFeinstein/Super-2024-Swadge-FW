@@ -139,4 +139,10 @@
  <tile id="148">
   <image source="mg-object-tiles/warp_wall_exit.png" width="16" height="64"/>
  </tile>
+<tile id="149">
+  <image source="mg-object-tiles/placeholder_24x24.png" width="24" height="24"/>
+ </tile>
+ <tile id="150">
+  <image source="mg-object-tiles/placeholder_30x30.png" width="30" height="30"/>
+ </tile>
 </tileset>
