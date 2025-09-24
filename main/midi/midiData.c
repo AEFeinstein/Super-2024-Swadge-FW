@@ -303,10 +303,9 @@ const midiTimbre_t mmx011Vibraphone = {
     },
     .name = "MMX Bell Synth",
     .envelope = {
-        .attackTime = 0,
-        .decayTime = SECONDS_CONV(2, 70530), // 2.070530s
+        .attackTime = SECONDS_CONV(0, 100000), // 1ms
+        .releaseTime = SECONDS_CONV(2, 70530), // 2.070530s
         .sustainVol = 127,
-        .releaseTime = 0,
     },
 };
 
@@ -322,13 +321,18 @@ const midiTimbre_t mmx017Organ = {
         .rate = 14336,
         // pitch keycenter=70, tune=65
         // TODO tune
+        // nah tune is just a minor adjustment
         .baseNote = FREQ_A_SHARP_4,
     },
     .name = "MMX Organ",
     .envelope = {
-        .attackTime = SECONDS_CONV(0, 1000), // 1ms
+        .attackTime = SECONDS_CONV(0, 100000), // 1ms
+        //.attackTimeVel = -2048,
         //LFO freq: 8.176
         .sustainVol = 127,
+        //.releaseTime = 8192,
+        // 128 ticks per velocity, up to 128*128 == 16384 ticks = 1s
+        .releaseTimeVel = 256 << 8,
     },
 };
 
@@ -338,18 +342,19 @@ const midiTimbre_t mmx024AcousticGuitar = {
     .sample = {
         .fIdx = SF_MMX_024_ACOUSTIC_GUITAR_BIN,
         .loop = 0,
-        .loopStart = SAMPLE_NUM_CONV(559, 37760, 16384),
-        .loopEnd = SAMPLE_NUM_CONV(671, 37760, 16384),
-        .rate = 16384,
+        .loopStart = 559,
+        .loopEnd = 671,
+        .rate = 37760,
         // keycenter=77, tune=57
         .baseNote = FREQ_F4,
     },
     .name = "MMX Acoustic Guitar",
     .envelope = {
-        .attackTime = SECONDS_CONV(0, 1),
+        .attackTime = SECONDS_CONV(0, 1000),
         .decayTime = SECONDS_CONV(2, 70530), // 2.07053s
         // LFO freq: 8.176
-        .sustainVol = 127,
+        .sustainVol = 1,
+        .releaseTime = SECONDS_CONV(2, 70530), // 2.07053s
     },
 };
 
@@ -359,10 +364,9 @@ const midiTimbre_t mmx029OverdrivenGuitar = {
     .sample = {
         .fIdx = SF_MMX_029_OVERDRIVEN_GUITAR_BIN,
         .loop = 0,
-        .loopStart = SAMPLE_NUM_CONV(1055, 25728, 16384),
-        .loopEnd = SAMPLE_NUM_CONV(1103, 25728, 16384),
-        // original rate: 25728 Hz
-        .rate = 16384,
+        .loopStart = 1055,
+        .loopEnd = 1103,
+        .rate = 25728,
         // keycenter=73, tune=56
         .baseNote = FREQ_C_SHARP_4,
     },
@@ -378,10 +382,10 @@ const midiTimbre_t mmx030DistortedGuitar = {
     .sample = {
         .fIdx = SF_MMX_030_DISTORTION_GUITAR_BIN,
         .loop = 0,
-        .loopStart = SAMPLE_NUM_CONV(1311, 23168, 16384),
-        .loopEnd = SAMPLE_NUM_CONV(8271, 23168, 16834),
+        .loopStart = 1311,
+        .loopEnd = 8271,
         // original rate: 23168 Hz
-        .rate = 16384,
+        .rate = 23168,
         // keycenter=52, tune=49
         .baseNote = FREQ_E2,
     },
@@ -397,10 +401,10 @@ const midiTimbre_t mmx036SlapBass = {
     .sample = {
         .fIdx = SF_MMX_036_SLAP_BASS_BIN,
         .loop = 0,
-        .loopStart = SAMPLE_NUM_CONV(2895, 13440, 16384),
-        .loopEnd = SAMPLE_NUM_CONV(3119, 13440, 16384),
+        .loopStart = 2895,
+        .loopEnd = 3119,
         // original rate: 13440 Hz
-        .rate = 16384,
+        .rate = 13440,
         .baseNote = FREQ_B2,
     },
     .name = "MMX Slap Bass",
@@ -415,11 +419,10 @@ const midiTimbre_t mmx038SynthBass = {
     .sample = {
         .fIdx = SF_MMX_038_SYNTH_BASS_BIN,
         .loop = 0,
-        .loopStart = SAMPLE_NUM_CONV(1247, 8960, 16384),
-        .loopEnd = SAMPLE_NUM_CONV(1391, 8960, 16384),
+        .loopStart = 1247,
+        .loopEnd = 1391,
         // original rate: 8960 Hz
-        // TODO: Should this be an 8192Hz file?
-        .rate = 16384,
+        .rate = 8960,
         // keycenter=48, tune=83
         .baseNote = FREQ_C2,
     },
@@ -437,10 +440,10 @@ const midiTimbre_t mmx048Strings = {
     .sample = {
         .fIdx = SF_MMX_048_STRINGS_BIN,
         .loop = 0,
-        .loopStart = SAMPLE_NUM_CONV(911, 30720, 16384),
-        .loopEnd = SAMPLE_NUM_CONV(5711, 30720, 16384),
+        .loopStart = 911,
+        .loopEnd = 5711,
         // Original rate: 30720 Hz
-        .rate = 16384,
+        .rate = 30720,
         // keycenter=76, tune=55
         .baseNote = FREQ_E4,
     },
@@ -458,7 +461,7 @@ const midiTimbre_t mmx055OrchestraHit = {
         // Play sample ONCE
         .loop = 1,
         // original rate: 16512 Hz
-        .rate = 16384,
+        .rate = 16512,
         // keycenter=61, tune=55
         .baseNote = FREQ_C_SHARP_3,
     },
@@ -474,10 +477,10 @@ const midiTimbre_t mmx062SynthBrass = {
     .sample = {
         .fIdx = SF_MMX_062_SYNTH_BRASS_BIN,
         .loop = 0,
-        .loopStart = SAMPLE_NUM_CONV(4479, 28928, 16384),
-        .loopEnd = SAMPLE_NUM_CONV(4543, 28928, 16384),
+        .loopStart = 4479,
+        .loopEnd = 4543,
         // original rate: 28928
-        .rate = 16384,
+        .rate = 28928,
         // keycenter=58, tune=50
         .baseNote = FREQ_A_SHARP_3,
     },
@@ -493,10 +496,10 @@ const midiTimbre_t mmx080SquareWave = {
     .sample = {
         .fIdx = SF_MMX_080_SQUARE_WAVE_BIN,
         .loop = 0,
-        .loopStart = SAMPLE_NUM_CONV(47, 28928, 16384),
-        .loopEnd = SAMPLE_NUM_CONV(79, 28928, 16384),
+        .loopStart = 47,
+        .loopEnd = 79,
         // original rate: 28928
-        .rate = 16384,
+        .rate = 28928,
         // keycenter=82, tune=50
         .baseNote = FREQ_A_SHARP_5,
     },
@@ -513,9 +516,9 @@ const midiTimbre_t mmx081SawWave = {
         .fIdx = SF_MMX_081_SAWTOOTH_WAVE_BIN,
         .loop = 0,
         // original rate: 13696 Hz
-        .loopStart = SAMPLE_NUM_CONV(47, 13696, 16384),
-        .loopEnd = SAMPLE_NUM_CONV(5887, 13696, 16384),
-        .rate = 16384,
+        .loopStart = 47,
+        .loopEnd = 5887,
+        .rate = 13696,
         .baseNote = FREQ_G3,
     },
     .name = "MMX Saw Wave",
@@ -530,10 +533,10 @@ const midiTimbre_t mmx082SynthLead = {
     .sample = {
         .fIdx = SF_MMX_082_SYNTH_LEAD_BIN,
         .loop = 0,
-        .loopStart = SAMPLE_NUM_CONV(47, 87040, 16384),
-        .loopEnd = SAMPLE_NUM_CONV(111, 87040, 16384),
+        .loopStart = 47,
+        .loopEnd = 111,
         // original rate: 87040 Hz
-        .rate = 16384,
+        .rate = 87040,
         // keycenter=89, tune=43
         .baseNote = FREQ_F5,
     },
@@ -549,10 +552,10 @@ const midiTimbre_t mmx083SynthLead2 = {
     .sample = {
         .fIdx = SF_MMX_083_SYNTH_LEAD_2_BIN,
         .loop = 0,
-        .loopStart = SAMPLE_NUM_CONV(47, 12032, 16384),
-        .loopEnd = SAMPLE_NUM_CONV(79, 12032, 16384),
+        .loopStart = 47,
+        .loopEnd = 79,
         // original rate: 12032 Hz
-        .rate = 16384,
+        .rate = 12032,
         // keycenter=67, tune=69
         .baseNote = FREQ_G3,
     },
@@ -568,17 +571,17 @@ const midiTimbre_t mmx119ReverseCymbal = {
     .sample = {
         .fIdx = CRASHCYMBAL_BIN,
         .loop = 0,
-        .loopStart = SAMPLE_NUM_CONV(2095, 16640, 16384),
-        .loopEnd = SAMPLE_NUM_CONV(4575, 16640, 16384),
+        .loopStart = 2095,
+        .loopEnd = 4575,
         // original rate: 16640 Hz
-        .rate = 16384,
+        .rate = 16640,
         // keycenter=60
         .baseNote = FREQ_C3,
     },
     .name = "MMX Reverse Cymbal",
     .envelope = {
-        .attackTime = 1 * 16384 + 38032 * 16384 / 100000,
-        .sustainVol = 127,
+        .attackTime = SECONDS_CONV(1, 380320u),
+        .sustainVol = 1,
     },
 };
 
@@ -638,14 +641,15 @@ const percussionSampleMap_t mmxDrumSampleMap[] = {
             .baseNote = FREQ_F1,
             .fIdx = POWERSNARE_BIN,
             .rate = 32256,
-            .loop = 1, // TODO fixme?
+            .loop = 0,
             .loopStart = 2095,
             .loopEnd = 5087,
         },
         .envelope = {
             .attackTime = SECONDS_CONV(0, 1000),
             .decayTime = SECONDS_CONV(0, 771105u),
-            .sustainVol = 1,
+            .sustainVol = 0,
+            .releaseTime = SECONDS_CONV(0, 771105u),
             // TODO: implement hold
             //.holdTime = SECONDS_CONV(0, 84008)
         },
@@ -657,14 +661,15 @@ const percussionSampleMap_t mmxDrumSampleMap[] = {
             .baseNote = FREQ_G_SHARP_1,
             .fIdx = OPENHIHAT_BIN,
             .rate = 20224,
-            .loop = 1, // TODO fixme?
+            .loop = 0,
             .loopStart = 47,
             .loopEnd = 2543,
         },
         .envelope = {
             .attackTime = SECONDS_CONV(0, 1000),
-            .decayTime = SECONDS_CONV(2, 645000u),
-            .sustainVol = 1,
+            .decayTime = SECONDS_CONV(2, 64500u),
+            .sustainVol = 0,
+            //.releaseTime = SECONDS_CONV(2, 64500u),
             // no hold here
         },
     },
@@ -675,14 +680,14 @@ const percussionSampleMap_t mmxDrumSampleMap[] = {
             .baseNote = FREQ_A3,
             .fIdx = CRASHCYMBAL_BIN,
             .rate = 16640,
-            .loop = 1, // TODO re-enable loop
+            .loop = 0,
             .loopStart = 2095,
             .loopEnd = 4575,
         },
         {
             .attackTime = SECONDS_CONV(0, 1000),
             .decayTime = SECONDS_CONV(3, 448170),
-            .sustainVol = 1,
+            .sustainVol = 0,
         },
     },
     {
