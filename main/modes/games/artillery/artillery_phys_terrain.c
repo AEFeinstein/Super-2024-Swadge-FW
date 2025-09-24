@@ -239,8 +239,9 @@ void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player)
  *
  * @param phys The physics simulation
  * @param shell The shell which exploded
+ * @param hitTank The tank that was hit by the shell, may be NULL
  */
-void explodeShell(physSim_t* phys, node_t* shellNode)
+void explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
 {
     physCirc_t* shell = shellNode->val;
 
@@ -248,7 +249,7 @@ void explodeShell(physSim_t* phys, node_t* shellNode)
     explosionAnim_t* ea = heap_caps_calloc(1, sizeof(explosionAnim_t), MALLOC_CAP_8BIT);
     ea->circ            = shell->c;
     ea->circ.radius     = shell->explosionRadius;
-    ea->color           = c500;
+    ea->color           = shell->baseColor;
     ea->ttlUs           = 500000;
     ea->expTimeUs       = ea->ttlUs;
     push(&phys->explosions, ea);
@@ -274,33 +275,30 @@ void explodeShell(physSim_t* phys, node_t* shellNode)
         lNode = lNode->next;
     }
 
-    if (shell->explosionVel)
+    // Iterate through all circles
+    node_t* cNode = phys->circles.first;
+    while (cNode)
     {
-        // Iterate through all circles
-        node_t* cNode = phys->circles.first;
-        while (cNode)
+        physCirc_t* circ = cNode->val;
+        // If this is a tank that was hit by the shell
+        if (cNode != shellNode && CT_TANK == circ->type
+            && (hitTank == circ || circleCircleFlIntersection(ea->circ, circ->c, NULL, NULL)))
         {
-            physCirc_t* circ = cNode->val;
-            // If this is a tank that was hit by the shell
-            if (cNode != shellNode && CT_TANK == circ->type
-                && circleCircleFlIntersection(ea->circ, circ->c, NULL, NULL))
+            // Add or subtract score depending on who's hit
+            if (shell->owner == circ)
             {
-                // Add or subtract score depending on who's hit
-                if (shell->owner == circ)
-                {
-                    shell->owner->score -= shell->score;
-                }
-                else
-                {
-                    shell->owner->score += shell->score;
-                }
-
-                // Impart force on hit tanks
-                circ->vel = addVecFl2d(
-                    circ->vel, mulVecFl2d(normVecFl2d(subVecFl2d(circ->c.pos, shell->c.pos)), shell->explosionVel));
+                shell->owner->score -= shell->score;
             }
-            cNode = cNode->next;
+            else
+            {
+                shell->owner->score += shell->score;
+            }
+
+            // Impart force on hit tanks
+            circ->vel = addVecFl2d(circ->vel,
+                                   mulVecFl2d(normVecFl2d(subVecFl2d(circ->c.pos, shell->c.pos)), shell->explosionVel));
         }
+        cNode = cNode->next;
     }
 
     // Remove this shell from camera tracking
