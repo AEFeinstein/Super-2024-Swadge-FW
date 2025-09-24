@@ -51,8 +51,8 @@ typedef struct
     uint8_t numBounces;
     uint8_t numSpread;
     uint8_t numConsec;
-    uint8_t score;
-    uint8_t expForce;
+    uint16_t score;
+    float expVel;
     uint8_t expRadius;
     const char* name;
 } artilleryAmmoAttrib_t;

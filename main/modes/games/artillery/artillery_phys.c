@@ -52,8 +52,41 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .numSpread  = 1,
         .numConsec  = 1,
         .score      = 100,
-        .expForce   = 0,
-        .expRadius  = 8,
+        .expVel     = 100,
+        .expRadius  = 20,
+    },
+    {
+        .name       = "Three Shot",
+        .color      = c500,
+        .radius     = 3,
+        .numBounces = 1,
+        .numSpread  = 3,
+        .numConsec  = 1,
+        .score      = 100,
+        .expVel     = 80,
+        .expRadius  = 15,
+    },
+    {
+        .name       = "Five Shot",
+        .color      = c500,
+        .radius     = 2,
+        .numBounces = 1,
+        .numSpread  = 5,
+        .numConsec  = 1,
+        .score      = 100,
+        .expVel     = 60,
+        .expRadius  = 10,
+    },
+    {
+        .name       = "Bouncy",
+        .color      = c125,
+        .radius     = 4,
+        .numBounces = 5,
+        .numSpread  = 1,
+        .numConsec  = 1,
+        .score      = 75,
+        .expVel     = 90,
+        .expRadius  = 20,
     },
     {
         .name       = "Sniper",
@@ -63,8 +96,19 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .numSpread  = 1,
         .numConsec  = 1,
         .score      = 300,
-        .expForce   = 0,
+        .expVel     = 0,
         .expRadius  = 1,
+    },
+    {
+        .name       = "Rocket Jump",
+        .color      = c555,
+        .radius     = 12,
+        .numBounces = 1,
+        .numSpread  = 1,
+        .numConsec  = 1,
+        .score      = 0,
+        .expVel     = 200,
+        .expRadius  = 12,
     },
 };
 
@@ -815,23 +859,34 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
 void fireShot(physSim_t* phys, physCirc_t* circ)
 {
     const artilleryAmmoAttrib_t* aa = getAmmoAttribute(circ->ammoIdx);
-    // TODO use all attribs
 
-    // For multiple shells, calculate angle spread and starting angle
-    const float spread = ((2 * M_PI) / 180.0f);
+    // Multiple shells are fired three degrees apart. Calculate the starting angle
+    const float spread = (3 * M_PI) / 180.0f;
     float angStart     = circ->barrelAngle - (aa->numSpread / 2) * spread;
 
     // This is where shells get spawned
     vecFl_t absBarrelTip = addVecFl2d(circ->c.pos, circ->relBarrelTip);
 
+    // Calculate individual shell score
+    int32_t shellScore = aa->score / (aa->numConsec * aa->numSpread);
+
+    // TODO set a timer for numConsec
+
     // Track shells, not players
     clear(&phys->cameraTargets);
+
+    // For shells that don't do damage (i.e. rocket jump), also track the player
+    if (0 == aa->score)
+    {
+        push(&phys->cameraTargets, circ);
+    }
 
     // Create each shell
     for (int32_t shellCount = 0; shellCount < aa->numSpread; shellCount++)
     {
         // Create the shell at the tip of the barrel
         physCirc_t* shell = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, aa->radius, CT_SHELL, c440, c000);
+
         // Set the owner of the shell as the firing tank
         shell->owner = circ;
 
@@ -840,11 +895,15 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
         shell->vel.y = -cosf(angStart) * circ->shotPower;
         angStart += spread;
 
-        // Some shells are bouncy, some aren't
-        shell->bounces = aa->numBounces;
+        // Set shell parameters
+        shell->bounces         = aa->numBounces;
+        shell->explosionRadius = aa->expRadius;
+        shell->explosionVel    = aa->expVel;
+        shell->score           = shellScore;
 
         // Set color
-        shell->baseColor = aa->color;
+        shell->baseColor   = aa->color;
+        shell->accentColor = c000;
 
         // Camera tracks all shells
         push(&phys->cameraTargets, shell);

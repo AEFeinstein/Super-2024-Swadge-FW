@@ -124,11 +124,9 @@ physCirc_t* physAddCircle(physSim_t* phys, uint16_t x1, uint16_t y1, uint16_t r,
         }
         case CT_SHELL:
         {
-            pc->fixed           = false;
-            pc->explosionRadius = r * 5;
-            pc->explosionVel    = 100;
-            pc->bounciness      = 0.75f;
-            pc->score           = 100;
+            pc->fixed      = false;
+            pc->bounciness = 0.75f;
+            // Other shell parameters set in fireShot()
             break;
         }
         default:

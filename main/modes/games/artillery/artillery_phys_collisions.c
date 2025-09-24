@@ -31,6 +31,7 @@ void physCheckCollisions(physSim_t* phys)
 {
     // For each circle
     bool shouldRemoveNode = false;
+    physCirc_t* hitTank   = NULL;
     node_t* cNode         = phys->circles.first;
     while (cNode)
     {
@@ -105,6 +106,7 @@ void physCheckCollisions(physSim_t* phys)
                         {
                             // it explodes
                             shouldRemoveNode = true;
+                            hitTank          = opc;
                         }
 
                         // Shells always bounce off obstacles
@@ -205,7 +207,7 @@ void physCheckCollisions(physSim_t* phys)
             // Shells explode
             if (pc->type == CT_SHELL)
             {
-                explodeShell(phys, cNode);
+                explodeShell(phys, cNode, hitTank);
             }
 
             // Remove the node
