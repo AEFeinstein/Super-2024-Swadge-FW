@@ -780,7 +780,7 @@ static bool setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
                         {
                             size_t len;
                             sampleDef = &timbre->percussion.sampleMap[n].sample;
-                            sampleData  = cnfsGetFile(sampleDef->config.fIdx, &len);
+                            sampleData  = cnfsGetFile(sampleDef->fIdx, &len);
                             sampleCount = len;
                             sampleEnvelope = &timbre->percussion.sampleMap[n].envelope;
                             // now we're done!
@@ -791,7 +791,7 @@ static bool setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
                 else
                 {
                     size_t len;
-                    sampleData = cnfsGetFile(sampleDef->config.fIdx, &len);
+                    sampleData = cnfsGetFile(sampleDef->fIdx, &len);
                     sampleCount = len;
                 }
 

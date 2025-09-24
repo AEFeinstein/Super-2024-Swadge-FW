@@ -468,28 +468,8 @@ typedef bool (*midiStreamingCallback_t)(midiEvent_t* event);
  */
 typedef struct
 {
-    /// @brief The frequency of the base sample to be used when pitch shifting
-
-    // This should just always be C4? (440 << 8)
-    // uint32_t freq = (440 << 8);
-
-    union
-    {
-        /*struct
-        {
-            /// @brief A pointer to this timbre's sample data
-            const uint8_t* data;
-
-            /// @brief The length of the sample in bytes
-            uint32_t count;
-        };*/
-
-        struct
-        {
-            /// @brief The name of the sample to load into data
-            cnfsFileIdx_t fIdx;
-        } config;
-    };
+    /// @brief The file index containing the sample data
+    cnfsFileIdx_t fIdx;
 
     /// @brief The sample rate.
     uint32_t rate;

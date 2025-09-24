@@ -179,10 +179,7 @@ const midiTimbre_t colossusTimbre = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        // Config will be replaced by .data and .count at load time
-        .config = {
-            .fIdx = COLOSSUS_BIN,
-        },
+        .fIdx = COLOSSUS_BIN,
         // Loop only once
         .loop = 1,
         //
@@ -196,10 +193,7 @@ const midiTimbre_t magTimbre = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        // Config will be replaced by .data and .count at load time
-        .config = {
-            .fIdx = DONUT_MAG_BIN,
-        },
+        .fIdx = DONUT_MAG_BIN,
         // Loop only once
         .loop = 1,
         //
@@ -213,10 +207,7 @@ const midiTimbre_t festTimbre = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        // Config will be replaced by .data and .count at load time
-        .config = {
-            .fIdx = DONUT_FEST_BIN,
-        },
+        .fIdx = DONUT_FEST_BIN,
         // Loop only once
         .loop = 1,
         //
@@ -230,10 +221,7 @@ const midiTimbre_t wilhelmTimbre = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        // Config will be replaced by .data and .count at load time
-        .config = {
-            .fIdx = WILHELM_BIN,
-        },
+        .fIdx = WILHELM_BIN,
         // Loop only once
         .loop = 0,
         //
@@ -247,10 +235,7 @@ const midiTimbre_t noriTimbre = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        // Config will be replaced by .data and .count at load time
-        .config = {
-            .fIdx = NORI_2_BIN,
-        },
+        .fIdx = NORI_2_BIN,
         // Loop only once
         .loop = 0,
         //
@@ -306,9 +291,7 @@ const midiTimbre_t mmx011Vibraphone = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        .config = {
-            .fIdx = SF_MMX_011_VIBRAPHONE_BIN,
-        },
+        .fIdx = SF_MMX_011_VIBRAPHONE_BIN,
         .loop = 0,
         // 28928 Hz original file
         .loopStart = 79,
@@ -331,9 +314,7 @@ const midiTimbre_t mmx017Organ = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        .config = {
-            .fIdx = SF_MMX_017_ORGAN_BIN,
-        },
+        .fIdx = SF_MMX_017_ORGAN_BIN,
         .loop = 0,
         .loopStart = 1839,
         .loopEnd = 1903,
@@ -355,9 +336,7 @@ const midiTimbre_t mmx024AcousticGuitar = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        .config = {
-            .fIdx = SF_MMX_024_ACOUSTIC_GUITAR_BIN,
-        },
+        .fIdx = SF_MMX_024_ACOUSTIC_GUITAR_BIN,
         .loop = 0,
         .loopStart = SAMPLE_NUM_CONV(559, 37760, 16384),
         .loopEnd = SAMPLE_NUM_CONV(671, 37760, 16384),
@@ -378,9 +357,7 @@ const midiTimbre_t mmx029OverdrivenGuitar = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        .config = {
-            .fIdx = SF_MMX_029_OVERDRIVEN_GUITAR_BIN,
-        },
+        .fIdx = SF_MMX_029_OVERDRIVEN_GUITAR_BIN,
         .loop = 0,
         .loopStart = SAMPLE_NUM_CONV(1055, 25728, 16384),
         .loopEnd = SAMPLE_NUM_CONV(1103, 25728, 16384),
@@ -399,9 +376,7 @@ const midiTimbre_t mmx030DistortedGuitar = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        .config = {
-            .fIdx = SF_MMX_030_DISTORTION_GUITAR_BIN,
-        },
+        .fIdx = SF_MMX_030_DISTORTION_GUITAR_BIN,
         .loop = 0,
         .loopStart = SAMPLE_NUM_CONV(1311, 23168, 16384),
         .loopEnd = SAMPLE_NUM_CONV(8271, 23168, 16834),
@@ -420,9 +395,7 @@ const midiTimbre_t mmx036SlapBass = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        .config = {
-            .fIdx = SF_MMX_036_SLAP_BASS_BIN,
-        },
+        .fIdx = SF_MMX_036_SLAP_BASS_BIN,
         .loop = 0,
         .loopStart = SAMPLE_NUM_CONV(2895, 13440, 16384),
         .loopEnd = SAMPLE_NUM_CONV(3119, 13440, 16384),
@@ -440,9 +413,7 @@ const midiTimbre_t mmx038SynthBass = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        .config = {
-            .fIdx = SF_MMX_038_SYNTH_BASS_BIN,
-        },
+        .fIdx = SF_MMX_038_SYNTH_BASS_BIN,
         .loop = 0,
         .loopStart = SAMPLE_NUM_CONV(1247, 8960, 16384),
         .loopEnd = SAMPLE_NUM_CONV(1391, 8960, 16384),
@@ -464,9 +435,7 @@ const midiTimbre_t mmx048Strings = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        .config = {
-            .fIdx = SF_MMX_048_STRINGS_BIN,
-        },
+        .fIdx = SF_MMX_048_STRINGS_BIN,
         .loop = 0,
         .loopStart = SAMPLE_NUM_CONV(911, 30720, 16384),
         .loopEnd = SAMPLE_NUM_CONV(5711, 30720, 16384),
@@ -485,9 +454,7 @@ const midiTimbre_t mmx055OrchestraHit = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        .config = {
-            .fIdx = SF_MMX_055_ORCHESTRA_HIT_BIN,
-        },
+        .fIdx = SF_MMX_055_ORCHESTRA_HIT_BIN,
         // Play sample ONCE
         .loop = 1,
         // original rate: 16512 Hz
@@ -505,9 +472,7 @@ const midiTimbre_t mmx062SynthBrass = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        .config = {
-            .fIdx = SF_MMX_062_SYNTH_BRASS_BIN,
-        },
+        .fIdx = SF_MMX_062_SYNTH_BRASS_BIN,
         .loop = 0,
         .loopStart = SAMPLE_NUM_CONV(4479, 28928, 16384),
         .loopEnd = SAMPLE_NUM_CONV(4543, 28928, 16384),
@@ -526,9 +491,7 @@ const midiTimbre_t mmx080SquareWave = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        .config = {
-            .fIdx = SF_MMX_080_SQUARE_WAVE_BIN,
-        },
+        .fIdx = SF_MMX_080_SQUARE_WAVE_BIN,
         .loop = 0,
         .loopStart = SAMPLE_NUM_CONV(47, 28928, 16384),
         .loopEnd = SAMPLE_NUM_CONV(79, 28928, 16384),
@@ -547,9 +510,7 @@ const midiTimbre_t mmx081SawWave = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        .config = {
-            .fIdx = SF_MMX_081_SAWTOOTH_WAVE_BIN,
-        },
+        .fIdx = SF_MMX_081_SAWTOOTH_WAVE_BIN,
         .loop = 0,
         // original rate: 13696 Hz
         .loopStart = SAMPLE_NUM_CONV(47, 13696, 16384),
@@ -567,9 +528,7 @@ const midiTimbre_t mmx082SynthLead = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        .config = {
-            .fIdx = SF_MMX_082_SYNTH_LEAD_BIN,
-        },
+        .fIdx = SF_MMX_082_SYNTH_LEAD_BIN,
         .loop = 0,
         .loopStart = SAMPLE_NUM_CONV(47, 87040, 16384),
         .loopEnd = SAMPLE_NUM_CONV(111, 87040, 16384),
@@ -588,9 +547,7 @@ const midiTimbre_t mmx083SynthLead2 = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        .config = {
-            .fIdx = SF_MMX_083_SYNTH_LEAD_2_BIN,
-        },
+        .fIdx = SF_MMX_083_SYNTH_LEAD_2_BIN,
         .loop = 0,
         .loopStart = SAMPLE_NUM_CONV(47, 12032, 16384),
         .loopEnd = SAMPLE_NUM_CONV(79, 12032, 16384),
@@ -609,9 +566,7 @@ const midiTimbre_t mmx119ReverseCymbal = {
     .type = SAMPLE,
     .flags = TF_NONE,
     .sample = {
-        .config = {
-            .fIdx = CRASHCYMBAL_BIN,
-        },
+        .fIdx = CRASHCYMBAL_BIN,
         .loop = 0,
         .loopStart = SAMPLE_NUM_CONV(2095, 16640, 16384),
         .loopEnd = SAMPLE_NUM_CONV(4575, 16640, 16384),
@@ -633,9 +588,7 @@ const percussionSampleMap_t mmxDrumSampleMap[] = {
         .noteEnd = 36,
         .sample = {
             .baseNote = FREQ_C1,
-            .config = {
-                .fIdx = KICK_BIN,
-            },
+            .fIdx = KICK_BIN,
             .rate = 30976,
             .loop = 1,
             .loopStart = 8,
@@ -651,9 +604,7 @@ const percussionSampleMap_t mmxDrumSampleMap[] = {
         .noteEnd = 37,
         .sample = {
             .baseNote = FREQ_C_SHARP_1,
-            .config = {
-                .fIdx = HIGHQ_BIN,
-            },
+            .fIdx = HIGHQ_BIN,
             .rate = 8576,
             .loop = 1,
             .loopStart = 8,
@@ -669,9 +620,7 @@ const percussionSampleMap_t mmxDrumSampleMap[] = {
         .noteEnd = 40,
         .sample = {
             .baseNote = FREQ_B1,
-            .config = {
-                .fIdx = SNARE_BIN,
-            },
+            .fIdx = SNARE_BIN,
             .rate = 25984,
             .loop = 1,
             .loopStart = 8,
@@ -687,9 +636,7 @@ const percussionSampleMap_t mmxDrumSampleMap[] = {
         .noteEnd = 41,
         .sample = {
             .baseNote = FREQ_F1,
-            .config = {
-                .fIdx = POWERSNARE_BIN,
-            },
+            .fIdx = POWERSNARE_BIN,
             .rate = 32256,
             .loop = 1, // TODO fixme?
             .loopStart = 2095,
@@ -708,9 +655,7 @@ const percussionSampleMap_t mmxDrumSampleMap[] = {
         .noteEnd = 55,
         .sample = {
             .baseNote = FREQ_G_SHARP_1,
-            .config = {
-                .fIdx = OPENHIHAT_BIN,
-            },
+            .fIdx = OPENHIHAT_BIN,
             .rate = 20224,
             .loop = 1, // TODO fixme?
             .loopStart = 47,
@@ -728,9 +673,7 @@ const percussionSampleMap_t mmxDrumSampleMap[] = {
         .noteEnd = 72,
         .sample = {
             .baseNote = FREQ_A3,
-            .config = {
-                .fIdx = CRASHCYMBAL_BIN,
-            },
+            .fIdx = CRASHCYMBAL_BIN,
             .rate = 16640,
             .loop = 1, // TODO re-enable loop
             .loopStart = 2095,
@@ -747,9 +690,7 @@ const percussionSampleMap_t mmxDrumSampleMap[] = {
         .noteEnd = 85,
         .sample = {
             .baseNote = FREQ_F_SHARP_4,
-            .config = {
-                .fIdx = SYNTHTOM_BIN,
-            },
+            .fIdx = SYNTHTOM_BIN,
             .rate = 30976,
             .loop = 1,
             .loopStart = 8,
@@ -765,9 +706,7 @@ const percussionSampleMap_t mmxDrumSampleMap[] = {
         .noteEnd = 102,
         .sample = {
             .baseNote = FREQ_G5,
-            .config = {
-                .fIdx = TOM_BIN,
-            },
+            .fIdx = TOM_BIN,
             .rate = 14464,
             .loop = 1,
             .loopStart = 8,
