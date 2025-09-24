@@ -2,6 +2,11 @@
 #include "math.h"
 
 static const char DR_NAMESTRING[] = "Caesar Cipher";
+static int rotateRPM = 10;
+static const vec_t ScreenCenter = {
+    .x = 140,
+    .y = 120,
+};
 //static const char ALPHABET[] = "ABCDEFG";
 
 typedef struct 
@@ -10,7 +15,10 @@ typedef struct
     bool rotating;
     bool direction;
     int32_t raceDiam;
+    int64_t timeSpinning;
 } cipherRace_t;
+
+static font_t ibm;
 
 
 static void cipherEnterMode(void);
@@ -39,25 +47,47 @@ swadgeMode_t cipherMode = {
     .fnEspNowSendCb           = NULL,            // If using Wifi, add the send function here
     .fnAdvancedUSB            = NULL,            // If using advanced USB things.
 };
+
 cipherRace_t* innerRace;
 cipherRace_t* outerRace;
 
+static vec_t RThetaToXY(vec_t RTheta){
+    //ESP_LOGI("RTheta","x: %d  | y: %d",(int)RTheta.x, (int)RTheta.y);
+    return (vec_t){
+        .x = ScreenCenter.x + RTheta.x * sin(RTheta.y * M_PI / 180),
+        .y = ScreenCenter.y + RTheta.x * cos(RTheta.y * M_PI / 180),
+    };
+}
 
 static void cipherEnterMode()
 {
     innerRace = (cipherRace_t*)heap_caps_calloc(1, sizeof(cipherRace_t), MALLOC_CAP_8BIT);
     outerRace = (cipherRace_t*)heap_caps_calloc(1, sizeof(cipherRace_t), MALLOC_CAP_8BIT);
 
-    ESP_LOGI("info","This is some text  %f",sin(3.14f));
+    innerRace->raceDiam = 15;
+    innerRace->timeSpinning = 0;
+
+    loadFont(IBM_VGA_8_FONT, &ibm, false);
 }
  
 static void cipherExitMode()
 {
     heap_caps_free(innerRace);
     heap_caps_free(outerRace);
+    freeFont(&ibm);
 }
  
 static void cipherMainLoop(int64_t elapsedUs)
 {
+    clearPxTft();
+
+    innerRace->timeSpinning += elapsedUs;
     
+
+    vec_t hold = {
+        .x = 70,
+        .y = innerRace->timeSpinning / (60000000 / (rotateRPM * 360)),
+    };
+    hold = RThetaToXY(hold);
+    drawText(&ibm, c555, "A", (int)hold.x, (int)hold.y);
 }
