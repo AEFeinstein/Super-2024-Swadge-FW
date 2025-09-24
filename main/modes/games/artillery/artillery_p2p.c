@@ -30,13 +30,13 @@ typedef enum __attribute__((packed))
 // Structs
 //==============================================================================
 
-typedef struct __attribute__((packed))
+typedef struct // __attribute__((packed))
 {
     uint8_t type;
     uint8_t colorIdx;
 } artPktColor_t;
 
-typedef struct __attribute__((packed))
+typedef struct //__attribute__((packed))
 {
     uint8_t type;
     uint16_t width;
@@ -51,7 +51,7 @@ typedef struct __attribute__((packed))
     uint16_t terrainPoints[NUM_TERRAIN_POINTS_A];
 } artPktWorld_t;
 
-typedef struct __attribute__((packed))
+typedef struct //__attribute__((packed))
 {
     uint8_t type;
     uint16_t terrainPoints[NUM_TERRAIN_POINTS_B];
@@ -65,7 +65,7 @@ typedef struct __attribute__((packed))
 
 } artPktTerrain_t;
 
-typedef struct __attribute__((packed))
+typedef struct // __attribute__((packed))
 {
     uint8_t type;
     struct
@@ -78,7 +78,7 @@ typedef struct __attribute__((packed))
     int32_t moveTimeLeftUs;
 } artPktPlayers_t;
 
-typedef struct __attribute__((packed))
+typedef struct // __attribute__((packed))
 {
     uint8_t type;
     uint8_t ammoIdx;
@@ -86,7 +86,7 @@ typedef struct __attribute__((packed))
     float shotPower;
 } artPktShot_t;
 
-typedef struct __attribute__((packed))
+typedef struct // __attribute__((packed))
 {
     uint8_t type;
 } artPktPassTurn_t;
