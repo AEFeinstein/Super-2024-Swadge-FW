@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 
+#include "artillery_game_over.h"
 #include "artillery_game.h"
 #include "artillery_paint.h"
 
@@ -62,9 +63,9 @@ void artilleryGameOverLoop(artilleryData_t* ad, uint32_t elapsedUs)
     int scoreY        = 185;
 
     // Draw scores
-    snprintf(scoreStr, sizeof(scoreStr) - 1, "%d", ad->gameOverData[0].score);
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, ad->gameOverData[0].score);
     drawTextShadow(font, c555, c000, scoreStr, margin + tankR - textWidth(font, scoreStr) / 2, scoreY);
 
-    snprintf(scoreStr, sizeof(scoreStr) - 1, "%d", ad->gameOverData[1].score);
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, ad->gameOverData[1].score);
     drawTextShadow(font, c555, c000, scoreStr, TFT_WIDTH - (margin + tankR) - textWidth(font, scoreStr) / 2, scoreY);
 }
