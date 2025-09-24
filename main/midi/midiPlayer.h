@@ -604,7 +604,7 @@ typedef struct
             uint32_t loopEnd;
 
             /// @brief The sample's base frequency
-            uq8_24 baseNote;
+            uq16_16 baseNote;
 
             /// @brief The number of fractional samples remaining
             uq24_8 error;
