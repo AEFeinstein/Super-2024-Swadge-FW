@@ -43,6 +43,46 @@
 // Function Declarations
 //==============================================================================
 
+const artilleryAmmoAttrib_t ammoAttributes[] = {
+    {
+        .name       = "Normal",
+        .color      = c500,
+        .radius     = 4,
+        .numBounces = 1,
+        .numSpread  = 1,
+        .numConsec  = 1,
+        .score      = 100,
+        .expForce   = 0,
+        .expRadius  = 8,
+    },
+    {
+        .name       = "Sniper",
+        .color      = c550,
+        .radius     = 1,
+        .numBounces = 1,
+        .numSpread  = 1,
+        .numConsec  = 1,
+        .score      = 300,
+        .expForce   = 0,
+        .expRadius  = 1,
+    },
+};
+
+const artilleryAmmoAttrib_t* getAmmoAttributes(uint16_t* numAttributes)
+{
+    *numAttributes = ARRAY_SIZE(ammoAttributes);
+    return ammoAttributes;
+}
+
+const artilleryAmmoAttrib_t* getAmmoAttribute(uint16_t idx)
+{
+    return &ammoAttributes[idx];
+}
+
+//==============================================================================
+// Function Declarations
+//==============================================================================
+
 static void physFindObjDests(physSim_t* phys, float elapsedS);
 static bool physBinaryMoveObjects(physSim_t* phys);
 static void checkTurnOver(physSim_t* phys);
@@ -774,71 +814,12 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
  */
 void fireShot(physSim_t* phys, physCirc_t* circ)
 {
-    int32_t radius    = 4;
-    int32_t numShells = 1;
-    int32_t bounces   = 1;
-
-    switch (circ->ammo)
-    {
-        case AMMO_NORMAL:
-        {
-            /* todo */
-            break;
-        }
-        case AMMO_BIG_EXPLODE:
-        {
-            /* todo */
-            radius = 8;
-            break;
-        }
-        case AMMO_THREE:
-        {
-            /* todo */
-            numShells = 3;
-            break;
-        }
-        case AMMO_FIVE:
-        {
-            /* todo */
-            numShells = 5;
-            break;
-        }
-        case AMMO_SNIPER:
-        {
-            /* todo */
-            break;
-        }
-        case AMMO_MACHINE_GUN:
-        {
-            /* todo */
-            break;
-        }
-        case AMMO_BOUNCY:
-        {
-            /* todo */
-            bounces = 5;
-            break;
-        }
-        case AMMO_JACKHAMMER:
-        {
-            /* todo */
-            break;
-        }
-        case AMMO_HILL_MAKER:
-        {
-            /* todo */
-            break;
-        }
-        case AMMO_JUMP:
-        {
-            /* todo */
-            break;
-        }
-    }
+    const artilleryAmmoAttrib_t* aa = getAmmoAttribute(circ->ammoIdx);
+    // TODO use all attribs
 
     // For multiple shells, calculate angle spread and starting angle
     const float spread = ((2 * M_PI) / 180.0f);
-    float angStart     = circ->barrelAngle - (numShells / 2) * spread;
+    float angStart     = circ->barrelAngle - (aa->numSpread / 2) * spread;
 
     // This is where shells get spawned
     vecFl_t absBarrelTip = addVecFl2d(circ->c.pos, circ->relBarrelTip);
@@ -847,10 +828,10 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
     clear(&phys->cameraTargets);
 
     // Create each shell
-    for (int32_t shellCount = 0; shellCount < numShells; shellCount++)
+    for (int32_t shellCount = 0; shellCount < aa->numSpread; shellCount++)
     {
         // Create the shell at the tip of the barrel
-        physCirc_t* shell = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, radius, CT_SHELL, c440, c000);
+        physCirc_t* shell = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, aa->radius, CT_SHELL, c440, c000);
         // Set the owner of the shell as the firing tank
         shell->owner = circ;
 
@@ -860,7 +841,10 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
         angStart += spread;
 
         // Some shells are bouncy, some aren't
-        shell->bounces = bounces;
+        shell->bounces = aa->numBounces;
+
+        // Set color
+        shell->baseColor = aa->color;
 
         // Camera tracks all shells
         push(&phys->cameraTargets, shell);

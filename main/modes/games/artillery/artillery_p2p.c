@@ -81,7 +81,7 @@ typedef struct __attribute__((packed))
 typedef struct __attribute__((packed))
 {
     uint8_t type;
-    artilleryAmmoType_t ammo;
+    uint8_t ammoIdx;
     float barrelAngle;
     float shotPower;
 } artPktShot_t;
@@ -281,7 +281,7 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
             const artPktShot_t* pkt = (const artPktShot_t*)payload;
 
             ad->players[ad->plIdx]->barrelAngle = pkt->barrelAngle;
-            ad->players[ad->plIdx]->ammo        = pkt->ammo;
+            ad->players[ad->plIdx]->ammoIdx     = pkt->ammoIdx;
             ad->players[ad->plIdx]->shotPower   = pkt->shotPower;
 
             fireShot(ad->phys, ad->players[ad->plIdx]);
@@ -442,7 +442,7 @@ void artilleryTxShot(artilleryData_t* ad, physCirc_t* player)
     pkt->type = P2P_FIRE_SHOT;
 
     // Write the data
-    pkt->ammo        = player->ammo;
+    pkt->ammoIdx     = player->ammoIdx;
     pkt->barrelAngle = player->barrelAngle;
     pkt->shotPower   = player->shotPower;
 

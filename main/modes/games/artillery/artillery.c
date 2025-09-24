@@ -72,53 +72,6 @@ const struct
     },
 };
 
-const struct
-{
-    const char* text;
-    artilleryAmmoType_t ammo;
-} ammoEntries[] = {
-    {
-        .text = "Normal Shot",
-        .ammo = AMMO_NORMAL,
-    },
-    {
-        .text = "Big Explosion",
-        .ammo = AMMO_BIG_EXPLODE,
-    },
-    {
-        .text = "Three Shot",
-        .ammo = AMMO_THREE,
-    },
-    {
-        .text = "Five Shot",
-        .ammo = AMMO_FIVE,
-    },
-    {
-        .text = "Sniper",
-        .ammo = AMMO_SNIPER,
-    },
-    {
-        .text = "Machine Gun",
-        .ammo = AMMO_MACHINE_GUN,
-    },
-    {
-        .text = "Bouncy Shot",
-        .ammo = AMMO_BOUNCY,
-    },
-    {
-        .text = "Jackhammer",
-        .ammo = AMMO_JACKHAMMER,
-    },
-    {
-        .text = "Hill Maker",
-        .ammo = AMMO_HILL_MAKER,
-    },
-    {
-        .text = "Jump Jets",
-        .ammo = AMMO_JUMP,
-    },
-};
-
 static const char str_passAndPlay[]     = "Pass and Play";
 static const char str_wirelessConnect[] = "Wireless Connect";
 static const char str_cpuPractice[]     = "CPU Practice";
@@ -189,9 +142,12 @@ void artilleryEnterMode(void)
         if (load_ammo == menuEntries[mIdx].text)
         {
             ad->gameMenu = startSubMenu(ad->gameMenu, load_ammo);
-            for (int aIdx = 0; aIdx < ARRAY_SIZE(ammoEntries); aIdx++)
+
+            uint16_t numAmmos;
+            const artilleryAmmoAttrib_t* ammos = getAmmoAttributes(&numAmmos);
+            for (int aIdx = 0; aIdx < numAmmos; aIdx++)
             {
-                addSingleItemToMenu(ad->gameMenu, ammoEntries[aIdx].text);
+                addSingleItemToMenu(ad->gameMenu, ammos[aIdx].name);
             }
             ad->gameMenu = endSubMenu(ad->gameMenu);
         }
@@ -468,13 +424,15 @@ bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value)
             }
         }
 
+        uint16_t numAmmos;
+        const artilleryAmmoAttrib_t* ammos = getAmmoAttributes(&numAmmos);
+
         // If not, iterate to see if an ammo was selected
-        for (int aIdx = 0; aIdx < ARRAY_SIZE(ammoEntries); aIdx++)
+        for (int aIdx = 0; aIdx < numAmmos; aIdx++)
         {
-            if (label == ammoEntries[aIdx].text)
+            if (label == ammos[aIdx].name)
             {
-                ad->players[ad->plIdx]->ammo      = ammoEntries[aIdx].ammo;
-                ad->players[ad->plIdx]->ammoLabel = label;
+                ad->players[ad->plIdx]->ammoIdx = aIdx;
                 // Return true to pop back to the parent menu
                 return true;
             }

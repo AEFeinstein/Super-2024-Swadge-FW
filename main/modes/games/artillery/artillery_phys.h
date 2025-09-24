@@ -32,20 +32,6 @@ typedef enum
     CT_OBSTACLE,
 } circType_t;
 
-typedef enum
-{
-    AMMO_NORMAL,
-    AMMO_BIG_EXPLODE,
-    AMMO_THREE,
-    AMMO_FIVE,
-    AMMO_SNIPER,
-    AMMO_MACHINE_GUN,
-    AMMO_BOUNCY,
-    AMMO_JACKHAMMER,
-    AMMO_HILL_MAKER,
-    AMMO_JUMP,
-} artilleryAmmoType_t;
-
 //==============================================================================
 // Structs
 //==============================================================================
@@ -57,6 +43,19 @@ typedef struct
     float x1;
     float y1;
 } aabb_t;
+
+typedef struct
+{
+    paletteColor_t color;
+    uint8_t radius;
+    uint8_t numBounces;
+    uint8_t numSpread;
+    uint8_t numConsec;
+    uint8_t score;
+    uint8_t expForce;
+    uint8_t expRadius;
+    const char* name;
+} artilleryAmmoAttrib_t;
 
 struct _physCirc_t;
 
@@ -99,8 +98,7 @@ typedef struct _physCirc_t
     float targetBarrelAngle;
     vecFl_t relBarrelTip;
     float shotPower;
-    artilleryAmmoType_t ammo;
-    const char* ammoLabel;
+    int16_t ammoIdx;
     int32_t score;
 
     // Shell data
@@ -177,3 +175,6 @@ void setShotPower(physCirc_t* circ, float power);
 void fireShot(physSim_t* phys, physCirc_t* circ);
 
 void adjustCpuShot(physSim_t* ad, physCirc_t* cpu, physCirc_t* target);
+
+const artilleryAmmoAttrib_t* getAmmoAttributes(uint16_t* numAttributes);
+const artilleryAmmoAttrib_t* getAmmoAttribute(uint16_t idx);

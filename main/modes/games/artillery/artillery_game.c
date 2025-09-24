@@ -95,7 +95,7 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
             // If the ammo menu was entered, scroll to current ammo
             if (oldMenu != ad->gameMenu && load_ammo == ad->gameMenu->title)
             {
-                menuNavigateToItem(ad->gameMenu, ad->players[ad->plIdx]->ammoLabel);
+                menuNavigateToItem(ad->gameMenu, getAmmoAttribute(ad->players[ad->plIdx]->ammoIdx)->name);
             }
             break;
         }
