@@ -110,6 +110,15 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .expVel     = 200,
         .expRadius  = 12,
     },
+    // TODO Big Concussive shot
+    // TODO Wall Maker (raise terrain)
+    // TODO Earthquake (randomzie terrain)
+    // TODO Acid Bath (poison terrain)
+    // TODO Landmines (leave mines for later)
+    // TODO Homing Missile (constant force towards opponent)
+    // TODO Machine Gun (shots fired one after the other)
+    // TODO Laser (zero gravity, maybe faster?)
+    // TODO Confusion (mess with angle & power)
 };
 
 const artilleryAmmoAttrib_t* getAmmoAttributes(uint16_t* numAttributes)
