@@ -843,7 +843,9 @@ static bool setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
                 voice->sample.rate = sampleDef->rate;
                 voice->sample.baseNote = sampleDef->baseNote;
                 voice->sample.loopStart = (sampleDef->loopStart < sampleCount) ? sampleDef->loopStart : 0;
-                voice->sample.loopEnd = (sampleDef->loopEnd <= sampleCount) ? sampleDef->loopEnd : voice->sample.length;
+                voice->sample.loopEnd = (sampleDef->loopEnd <= sampleCount && sampleDef->loopEnd > voice->sample.loopStart) ? sampleDef->loopEnd : voice->sample.length;
+
+                MIDI_DBG("Set up sample voice: length=%" PRIu32 ", loopStart=%" PRIu32 ", loopEnd=%" PRIu32, voice->sample.length, voice->sample.loopStart, voice->sample.loopEnd);
                 // take the easy way out on infinite looping being 0 loops. 2**32-1 loops ought to be enough for anyone!!
                 voice->sample.loopsRemaining = sampleDef->loop ? sampleDef->loop : UINT32_MAX;
                 voice->sample.error = 0;
