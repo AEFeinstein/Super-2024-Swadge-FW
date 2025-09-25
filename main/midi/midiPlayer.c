@@ -103,9 +103,12 @@ static const uint8_t oscDither[] = {
 
 static midiPlayer_t* globalPlayers = NULL;
 
+#ifdef DEBUG_MIDI
 static const char* adsrStateNames[] = {
     "ON", "ATTACK", "DECAY", "SUSTAIN", "RELEASE", "OFF",
 };
+static const char* adsrStateName(adsrState_t state);
+#endif
 
 static uint32_t allocVoice(const voiceStates_t* states, const midiVoice_t* voices, uint8_t voiceCount);
 static bool releaseNote(voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* voice);
@@ -128,8 +131,6 @@ static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex
 static void handleMetaEvent(midiPlayer_t* player, const midiMetaEvent_t* event);
 static void handleEvent(midiPlayer_t* player, const midiEvent_t* event);
 static void midiSongEnd(midiPlayer_t* player);
-
-static const char* adsrStateName(adsrState_t state);
 
 // Check for the first unused note, then try to steal one in order of less to more bad, and return INT32_MAX if none are
 // available
@@ -1418,6 +1419,7 @@ static void midiSongEnd(midiPlayer_t* player)
     }
 }
 
+#ifdef DEBUG_MIDI
 static const char* adsrStateName(adsrState_t state)
 {
     if (ADSR_ON <= state && state <= ADSR_OFF)
@@ -1429,6 +1431,7 @@ static const char* adsrStateName(adsrState_t state)
         return "???";
     }
 }
+#endif
 
 void midiPlayerInit(midiPlayer_t* player)
 {
