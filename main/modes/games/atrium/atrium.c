@@ -1046,7 +1046,7 @@ userProfile unpackProfile(unsigned packedProfile) {
     char strprofile[10];
     sprintf(strprofile, "%u", packedProfile);
     printf("unpacked profile string char 1 is %c\n", strprofile[0]);
-    unpackedprofile.cardselect = atoi(strprofile[0]); // convert char to int, i need to fix this bc its a single character
+    unpackedprofile.cardselect = atoi(strprofile[0]); // convert char to int, i need to fix this bc its a single character and i need to add a null terminator
     printf("unpacked cardselect is %d\n", unpackedprofile.cardselect);
     unpackedprofile.fact0 = atoi(strprofile[1]);
     printf("unpacked fact0 is %d\n", unpackedprofile.fact0);
