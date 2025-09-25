@@ -4,8 +4,8 @@
 
 static void ccmgSprayInitMicrogame(void);
 static void ccmgSprayDestroyMicrogame(void);
-static void ccmgSprayMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
-                              buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
+static void ccmgSprayMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
+                              cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 static bool ccmgSprayMicrogameTimeout(void);
 
 static const char ccmgSprayVerb[]       = "Spray";
@@ -42,11 +42,14 @@ typedef struct
 
     vec_t sprayCenter;
     uint16_t sprayCenterOrigX;
+    uint16_t sprayCenterOrigY;
 
-    uint8_t sweepDirection;
-    bool firstSweep;
+    uint16_t oldXOffset;
+    int64_t yOffsetElapsedUs;
+    uint8_t sweepCount;
 
     bool nozzlePressed;
+    cosCrunchMicrogameState previousState;
 } ccmgSpray_t;
 ccmgSpray_t* ccmgs = NULL;
 
@@ -54,8 +57,10 @@ ccmgSpray_t* ccmgs = NULL;
 #define SPRAY_CENTER_START_Y  50
 #define SPRAY_START_XY_JITTER 15
 #define SWEEP_RANGE_X         100
+#define SWEEP_CURVE_RANGE_X   5
 #define SWEEP_US_PER_SIN_DEG  5500
-#define SWEEP_US_PER_Y_PX     10000
+#define SWEEP_US_PER_Y_PX     13700
+#define SWEEP_HEIGHT          21
 
 #define SPRAY_CENTER_TO_CAN_X_DIST 40
 #define NOZZLE_TRAVEL_PX           2
@@ -76,8 +81,12 @@ static void ccmgSprayInitMicrogame(void)
 {
     ccmgs = heap_caps_calloc(1, sizeof(ccmgSpray_t), MALLOC_CAP_8BIT);
 
-    ccmgs->targetArea.width     = TARGET_AREA_WIDTH + esp_random() % TARGET_AREA_WH_JITTER;
-    ccmgs->targetArea.height    = TARGET_AREA_HEIGHT + esp_random() % TARGET_AREA_WH_JITTER;
+    ccmgs->targetArea.width  = TARGET_AREA_WIDTH + esp_random() % TARGET_AREA_WH_JITTER;
+    ccmgs->targetArea.height = TARGET_AREA_HEIGHT + esp_random() % TARGET_AREA_WH_JITTER;
+    // Width and height both need to be odd so the dithered shadow doesn't look weird
+    ccmgs->targetArea.width += ccmgs->targetArea.width % 2 - 1;
+    ccmgs->targetArea.height += ccmgs->targetArea.height % 2 - 1;
+
     ccmgs->targetArea.pos.x     = TARGET_AREA_CENTER_X - ccmgs->targetArea.width / 2;
     ccmgs->targetArea.pos.y     = TARGET_AREA_CENTER_Y - ccmgs->targetArea.height / 2;
     ccmgs->paintTimeRemainingUs = ccmgs->targetArea.width * ccmgs->targetArea.height * PAINT_US_PER_TARGET_PX;
@@ -85,8 +94,7 @@ static void ccmgSprayInitMicrogame(void)
     ccmgs->sprayCenter.x    = SPRAY_CENTER_START_X + esp_random() % SPRAY_START_XY_JITTER * 2 - SPRAY_START_XY_JITTER;
     ccmgs->sprayCenter.y    = SPRAY_CENTER_START_Y + esp_random() % SPRAY_START_XY_JITTER * 2 - SPRAY_START_XY_JITTER;
     ccmgs->sprayCenterOrigX = ccmgs->sprayCenter.x;
-
-    ccmgs->firstSweep = true;
+    ccmgs->sprayCenterOrigY = ccmgs->sprayCenter.y;
 
     loadWsg(CC_SPRAY_CAN_WSG, &ccmgs->wsg.can, false);
     loadWsg(CC_SPRAY_CAN_GRAPHICS_WSG, &ccmgs->wsg.canGraphics, false);
@@ -101,6 +109,10 @@ static void ccmgSprayInitMicrogame(void)
         ccmgs->canvasPixels[i] = cTransparent;
     }
     ccmgs->tintColor = cosCrunchMicrogameGetTintColor();
+
+    ccmgs->previousState = CC_MG_GET_READY;
+
+    globalMidiPlayerGet(MIDI_SFX)->channels[0].timbre.type = NOISE;
 }
 
 static void ccmgSprayDestroyMicrogame(void)
@@ -121,9 +133,10 @@ static void ccmgSprayDestroyMicrogame(void)
     heap_caps_free(ccmgs);
 }
 
-static void ccmgSprayMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
-                              buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
+static void ccmgSprayMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
+                              cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
 {
+    bool previousNozzlePressed = ccmgs->nozzlePressed;
     for (uint8_t i = 0; i < buttonEvtCount; i++)
     {
         if (buttonEvts[i].button == PB_A)
@@ -134,22 +147,37 @@ static void ccmgSprayMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCr
 
     if (state == CC_MG_PLAYING)
     {
+        if (ccmgs->nozzlePressed && ccmgs->paintTimeRemainingUs > 0
+            && (ccmgs->previousState == CC_MG_GET_READY || !previousNozzlePressed))
+        {
+            midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 0, 60, 0x7f);
+        }
+
         uint64_t totalElapsedUs = ccmgSpray.timeoutUs - timeRemainingUs;
+
         // xOffset is a range of 0..SWEEP_RANGE_X timed to a sine wave
         uint16_t xOffset
             = (getSin1024((totalElapsedUs / SWEEP_US_PER_SIN_DEG + 270) % 360) + 1024) * SWEEP_RANGE_X / 2048;
-        ccmgs->sprayCenter.x = ccmgs->sprayCenterOrigX - xOffset;
-        if (xOffset < 5 || xOffset > SWEEP_RANGE_X - 5)
+
+        if ((ccmgs->oldXOffset > SWEEP_RANGE_X - SWEEP_CURVE_RANGE_X && xOffset <= SWEEP_RANGE_X - SWEEP_CURVE_RANGE_X)
+            || (ccmgs->oldXOffset < SWEEP_CURVE_RANGE_X && xOffset >= SWEEP_CURVE_RANGE_X))
         {
-            if (!ccmgs->firstSweep)
-            {
-                ccmgs->sprayCenter.y += elapsedUs / SWEEP_US_PER_Y_PX;
-            }
+            ccmgs->sweepCount++;
+        }
+        ccmgs->sprayCenter.x = ccmgs->sprayCenterOrigX - xOffset;
+        ccmgs->sprayCenter.y = ccmgs->sprayCenterOrigY + MAX(ccmgs->sweepCount - 1, 0) * SWEEP_HEIGHT;
+
+        if (ccmgs->sweepCount > 0 && (xOffset < SWEEP_CURVE_RANGE_X || xOffset > SWEEP_RANGE_X - SWEEP_CURVE_RANGE_X))
+        {
+            ccmgs->yOffsetElapsedUs += elapsedUs;
+            ccmgs->sprayCenter.y += ccmgs->yOffsetElapsedUs / SWEEP_US_PER_Y_PX;
         }
         else
         {
-            ccmgs->firstSweep = false;
+            ccmgs->yOffsetElapsedUs = 0;
         }
+
+        ccmgs->oldXOffset = xOffset;
     }
 
     uint16_t canX    = ccmgs->sprayCenter.x + SPRAY_CENTER_TO_CAN_X_DIST;
@@ -160,31 +188,45 @@ static void ccmgSprayMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCr
         nozzleY += NOZZLE_TRAVEL_PX;
     }
 
-    // White rectangle, its shadow, and the paint already sprayed
-    drawRectFilled(ccmgs->targetArea.pos.x + 1, ccmgs->targetArea.pos.y + 1,
-                   ccmgs->targetArea.pos.x + ccmgs->targetArea.width + 2,
-                   ccmgs->targetArea.pos.y + ccmgs->targetArea.height + 2, c222); // c231
+    // White rectangle
     drawRectFilled(ccmgs->targetArea.pos.x, ccmgs->targetArea.pos.y, ccmgs->targetArea.pos.x + ccmgs->targetArea.width,
                    ccmgs->targetArea.pos.y + ccmgs->targetArea.height, c555);
+
+    // Dotted lines to make a dithered shadow
+    drawLine(ccmgs->targetArea.pos.x + 1, ccmgs->targetArea.pos.y + ccmgs->targetArea.height,
+             ccmgs->targetArea.pos.x + 1 + ccmgs->targetArea.width, ccmgs->targetArea.pos.y + ccmgs->targetArea.height,
+             c111, 1);
+    drawLine(ccmgs->targetArea.pos.x + 2, ccmgs->targetArea.pos.y + ccmgs->targetArea.height + 1,
+             ccmgs->targetArea.pos.x + 2 + ccmgs->targetArea.width,
+             ccmgs->targetArea.pos.y + ccmgs->targetArea.height + 1, c111, 1);
+    drawLine(ccmgs->targetArea.pos.x + ccmgs->targetArea.width, ccmgs->targetArea.pos.y + 1,
+             ccmgs->targetArea.pos.x + ccmgs->targetArea.width, ccmgs->targetArea.pos.y + 1 + ccmgs->targetArea.height,
+             c111, 1);
+    drawLine(ccmgs->targetArea.pos.x + ccmgs->targetArea.width + 1, ccmgs->targetArea.pos.y + 2,
+             ccmgs->targetArea.pos.x + ccmgs->targetArea.width + 1,
+             ccmgs->targetArea.pos.y + 2 + ccmgs->targetArea.height, c111, 1);
+
+    // Paint that's already been sprayed
     drawWsgSimple(&ccmgs->wsg.canvas, 0, 0);
 
-    if (state == CC_MG_PLAYING)
+    if (state == CC_MG_PLAYING && ccmgs->nozzlePressed && ccmgs->paintTimeRemainingUs > 0)
     {
-        if (ccmgs->nozzlePressed && ccmgs->paintTimeRemainingUs > 0)
-        {
-            ccmgs->paintTimeRemainingUs = MAX(ccmgs->paintTimeRemainingUs - elapsedUs, 0);
+        ccmgs->paintTimeRemainingUs = MAX(ccmgs->paintTimeRemainingUs - elapsedUs, 0);
 
-            // The actual spray decal, drawn to another wsg to track where we've painted already
-            uint16_t rotation = esp_random() % 360;
-            drawToCanvasTint(ccmgs->wsg.canvas, ccmgs->wsg.spray, ccmgs->sprayCenter.x - ccmgs->wsg.spray.w / 2,
-                             ccmgs->sprayCenter.y - ccmgs->wsg.spray.h / 2, rotation, ccmgs->tintColor);
+        // The actual spray decal, drawn to another wsg to track where we've painted already
+        uint16_t rotation = esp_random() % 360;
+        drawToCanvasTint(ccmgs->wsg.canvas, ccmgs->wsg.spray, ccmgs->sprayCenter.x - ccmgs->wsg.spray.w / 2,
+                         ccmgs->sprayCenter.y - ccmgs->wsg.spray.h / 2, rotation, ccmgs->tintColor);
 
-            // Lines that sound like "fssshhhhh"
-            drawLine(canX + ccmgs->wsg.can.w / 2 - 4, ccmgs->sprayCenter.y - 2, ccmgs->sprayCenter.x + 2,
-                     ccmgs->sprayCenter.y - (ccmgs->wsg.spray.h / 2 - 1), ccmgs->tintColor->lowlight, 6);
-            drawLine(canX + ccmgs->wsg.can.w / 2 - 4, ccmgs->sprayCenter.y + 2, ccmgs->sprayCenter.x + 2,
-                     ccmgs->sprayCenter.y + (ccmgs->wsg.spray.h / 2 - 1), ccmgs->tintColor->lowlight, 6);
-        }
+        // Lines that sound like "fssshhhhh"
+        drawLine(canX + ccmgs->wsg.can.w / 2 - 4, ccmgs->sprayCenter.y - 2, ccmgs->sprayCenter.x + 2,
+                 ccmgs->sprayCenter.y - (ccmgs->wsg.spray.h / 2 - 1), ccmgs->tintColor->lowlight, 6);
+        drawLine(canX + ccmgs->wsg.can.w / 2 - 4, ccmgs->sprayCenter.y + 2, ccmgs->sprayCenter.x + 2,
+                 ccmgs->sprayCenter.y + (ccmgs->wsg.spray.h / 2 - 1), ccmgs->tintColor->lowlight, 6);
+    }
+    else
+    {
+        midiAllNotesOff(globalMidiPlayerGet(MIDI_SFX), 0);
     }
 
     if (state == CC_MG_GET_READY || state == CC_MG_PLAYING)
@@ -196,6 +238,8 @@ static void ccmgSprayMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCr
     drawWsgSimple(&ccmgs->wsg.nozzle, canX + ccmgs->wsg.can.w / 2 - ccmgs->wsg.nozzle.w / 2, nozzleY);
     drawWsgSimple(&ccmgs->wsg.can, canX, canY);
     drawWsgPaletteSimple(&ccmgs->wsg.canGraphics, canX, canY + 23, cosCrunchMicrogameGetWsgPalette(ccmgs->tintColor));
+
+    ccmgs->previousState = state;
 }
 
 static bool ccmgSprayMicrogameTimeout()
