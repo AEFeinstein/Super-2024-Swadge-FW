@@ -2,8 +2,8 @@
 
 static void ccmgDeliveryInitMicrogame(void);
 static void ccmgDeliveryDestroyMicrogame(void);
-static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
-                                 buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
+static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
+                                 cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 static void ccmgDeliveryBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void ccmgDeliveryDrawStar(int16_t x, int16_t y);
 
@@ -134,8 +134,8 @@ static void ccmgDeliveryDestroyMicrogame()
     heap_caps_free(ccmgd);
 }
 
-static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
-                                 buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
+static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
+                                 cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
 {
     // The tumbleweed needs to draw over this but behind the walls, so draw it first
     ccmgDeliveryDrawStar(122, 76);
@@ -178,6 +178,10 @@ static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, co
                     (TFT_HEIGHT - ccmgd->wsg.starburst.h) / 2, false, false, rotationDeg);
             drawWsgSimple(&ccmgd->wsg.package, (TFT_WIDTH - ccmgd->wsg.package.w) / 2,
                           (TFT_HEIGHT - ccmgd->wsg.package.h) / 2);
+
+            // It's not great to hard code the tempo, but we can't retrieve it until the MIDI file has played for
+            // a few frames so eh
+            globalMidiPlayerGet(MIDI_SFX)->tempo = 400000 / timeScale;
             break;
         }
 

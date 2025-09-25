@@ -3,8 +3,8 @@
 
 static void ccmgSliceInitMicrogame(void);
 static void ccmgSliceDestroyMicrogame(void);
-static void ccmgSliceMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
-                              buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
+static void ccmgSliceMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
+                              cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 static int16_t ccmgSliceGetYIntersect(int16_t angle, int16_t width);
 
 #define KNIFE_Y_SPEED_PX_PER_US  (50.f / 1000000)
@@ -133,8 +133,8 @@ static void ccmgSliceDestroyMicrogame(void)
     heap_caps_free(ccmgsl);
 }
 
-static void ccmgSliceMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
-                              buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
+static void ccmgSliceMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
+                              cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
 {
     for (uint8_t i = 0; i < buttonEvtCount; i++)
     {

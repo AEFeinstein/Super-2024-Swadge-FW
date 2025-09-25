@@ -4,8 +4,8 @@
 
 static void ccmgSprayInitMicrogame(void);
 static void ccmgSprayDestroyMicrogame(void);
-static void ccmgSprayMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
-                              buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
+static void ccmgSprayMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
+                              cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 static bool ccmgSprayMicrogameTimeout(void);
 
 static const char ccmgSprayVerb[]       = "Spray";
@@ -133,8 +133,8 @@ static void ccmgSprayDestroyMicrogame(void)
     heap_caps_free(ccmgs);
 }
 
-static void ccmgSprayMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
-                              buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
+static void ccmgSprayMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
+                              cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
 {
     bool previousNozzlePressed = ccmgs->nozzlePressed;
     for (uint8_t i = 0; i < buttonEvtCount; i++)

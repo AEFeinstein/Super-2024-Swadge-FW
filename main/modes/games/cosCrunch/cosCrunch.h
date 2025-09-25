@@ -115,11 +115,13 @@ typedef struct
      * @param elapsedUs The time elapsed since the last time this function was called. Use this value to determine when
      * it's time to do things
      * @param timeRemainingUs The time left until the game is failed
+     * @param timeScale The rate that time has been scaled by. `elapsedUs` and `timeRemainingUs` have already been
+     * scaled by this value.
      * @param state The current game state
      * @param buttonEvts Button events that have occurred since the last main loop call
      * @param buttonEvtCount The number of button events in the buttonEvts array
      */
-    void (*fnMainLoop)(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
+    void (*fnMainLoop)(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale, cosCrunchMicrogameState state,
                        buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 
     /**

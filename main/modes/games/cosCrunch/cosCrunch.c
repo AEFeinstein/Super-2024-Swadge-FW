@@ -381,7 +381,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         {
             cc->activeMicrogame.stateElapsedUs += elapsedUs * cc->timeScale;
             cc->activeMicrogame.game->fnMainLoop(elapsedUs * cc->timeScale, cc->activeMicrogame.gameTimeRemainingUs,
-                                                 cc->activeMicrogame.state, evts, evtCount);
+                                                 cc->timeScale, cc->activeMicrogame.state, evts, evtCount);
 
             switch (cc->activeMicrogame.state)
             {
