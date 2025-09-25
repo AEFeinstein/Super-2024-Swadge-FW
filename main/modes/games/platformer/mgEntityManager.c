@@ -260,6 +260,45 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
         case ENTITY_WARP_ENTRANCE_FLOOR:
             createdEntity = createWarpEntranceFloor(entityManager, x, y);
             break;
+        case ENTITY_CHARGIN_SCHMUCK: 
+            createdEntity = createCharginSchmuck(entityManager, x, y);
+            break;
+        case ENTITY_BOUNCIN_SCHMUCK:
+            createdEntity = createBouncinSchmuck(entityManager, x, y);
+            break;
+        case ENTITY_TURRET: 
+            createdEntity = createTurret(entityManager, x, y);
+            break;
+        case ENTITY_SHELDON_SHIELDY:
+            createdEntity = createSheldonShieldy(entityManager, x, y);
+            break; 
+        case ENTITY_SPAWNER_BOT: 
+            createdEntity = NULL; //createSpawnerBot(entityManager, x, y);
+            break; 
+        case ENTITY_SPIKY_MCGEE:
+            createdEntity = createSpikyMcGee(entityManager, x, y);
+            break;  
+        case ENTITY_AIR_TURRET: 
+            createdEntity = createAirTurret(entityManager, x, y);
+            break;  
+        case ENTITY_BOUNCE_PAD: 
+            createdEntity = createBouncepad(entityManager, x, y);
+            break; 
+        case ENTITY_BOUNCE_PAD_DIAGONAL: 
+            createdEntity = createBouncepadDiagonal(entityManager, x, y);
+            break; 
+        case ENTITY_LIFE_REFILL_SMALL:
+            createdEntity = createLifeRefillSmall(entityManager, x, y);
+            break; 
+        case ENTITY_LIFE_REFILL_LARGE:
+            createdEntity = createLifeRefillLarge(entityManager, x, y);
+            break; 
+        case ENTITY_BOSS_TRIGGER: 
+            createdEntity = NULL;
+            break;
+        case ENTITY_MIXTAPE:
+            createdEntity = createMixtape(entityManager, x, y);
+            break; 
         default:
             createdEntity = NULL;
     }
@@ -1232,6 +1271,42 @@ mgEntity_t* createCheckpoint(mgEntityManager_t* entityManager, uint16_t x, uint1
     return entity;
 }
 
+mgEntity_t* createMixtape(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = (entityManager->playerEntity->x > entity->x) ? -16 : 16;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 4;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+
+    entity->type                 = ENTITY_MIXTAPE;
+    entity->spriteIndex          = MG_SP_MIXTAPE;
+    entity->animationTimer       = 0;
+    entity->updateFunction       = &updatePowerUp;
+    entity->collisionHandler     = &powerUpCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
+    return entity;
+}
+
 void mg_freeEntityManager(mgEntityManager_t* self)
 {
     heap_caps_free(self->entities);
@@ -1430,5 +1505,375 @@ mgEntity_t* createWarpEntranceFloor(mgEntityManager_t* entityManager, uint16_t x
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
     entity->drawHandler          = &mg_defaultEntityDrawHandler;
 
+    return entity;
+}
+
+mgEntity_t* createCharginSchmuck(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = (x < (entityManager->tilemap->mapOffsetX + 120)) ? 8 : -8;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 4;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->scoreValue           = 100;
+    entity->hp                   = 3;
+
+    entity->type                 = ENTITY_CHARGIN_SCHMUCK;
+    entity->spriteIndex          = MG_SP_CHARGIN_SCHMUCK_IDLE;
+    entity->updateFunction       = &mg_updateDummy;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
+    return entity;
+}
+
+mgEntity_t* createBouncinSchmuck(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = (x < (entityManager->tilemap->mapOffsetX + 120)) ? 8 : -8;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 4;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->scoreValue           = 100;
+    entity->hp                   = 3;
+
+    entity->type                 = ENTITY_BOUNCIN_SCHMUCK;
+    entity->spriteIndex          = MG_SP_CHARGIN_SCHMUCK_IDLE;
+    entity->updateFunction       = &mg_updateDummy;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
+    return entity;
+}
+
+mgEntity_t* createTurret(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = (x < (entityManager->tilemap->mapOffsetX + 120)) ? 8 : -8;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 4;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->scoreValue           = 100;
+    entity->hp                   = 3;
+
+    entity->type                 = ENTITY_TURRET;
+    entity->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
+    entity->updateFunction       = &mg_updateDummy;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
+    return entity;
+}
+
+mgEntity_t* createSheldonShieldy(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = (x < (entityManager->tilemap->mapOffsetX + 120)) ? 8 : -8;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 4;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->scoreValue           = 100;
+    entity->hp                   = 3;
+
+    entity->type                 = ENTITY_SHELDON_SHIELDY;
+    entity->spriteIndex          = MG_SP_SHELDON_SHIELDY_SHIELD;
+    entity->updateFunction       = &mg_updateDummy;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
+    return entity;
+}
+
+mgEntity_t* createSpikyMcGee(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = (x < (entityManager->tilemap->mapOffsetX + 120)) ? 8 : -8;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = false;
+    entity->gravity              = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->scoreValue           = 100;
+    entity->hp                   = 3;
+
+    entity->type                 = ENTITY_SPIKY_MCGEE;
+    entity->spriteIndex          = MG_SP_SPIKY_MCGEE;
+    entity->updateFunction       = &mg_updateDummy;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
+    return entity;
+}
+
+mgEntity_t* createAirTurret(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = (x < (entityManager->tilemap->mapOffsetX + 120)) ? 8 : -8;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = false;
+    entity->gravity              = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->scoreValue           = 100;
+    entity->hp                   = 3;
+
+    entity->type                 = ENTITY_AIR_TURRET;
+    entity->spriteIndex          = MG_SP_AIR_TURRET;
+    entity->updateFunction       = &mg_updateDummy;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
+    return entity;
+}
+
+mgEntity_t* createBouncepad(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = (x < (entityManager->tilemap->mapOffsetX + 120)) ? 8 : -8;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = false;
+    entity->gravity              = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->scoreValue           = 100;
+    entity->hp                   = 3;
+
+    entity->type                 = ENTITY_BOUNCE_PAD;
+    entity->spriteIndex          = MG_SP_BOUNCE_PAD;
+    entity->updateFunction       = &mg_updateDummy;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
+    return entity;
+}
+
+mgEntity_t* createBouncepadDiagonal(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = (x < (entityManager->tilemap->mapOffsetX + 120)) ? 8 : -8;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = false;
+    entity->gravity              = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->scoreValue           = 100;
+    entity->hp                   = 3;
+
+    entity->type                 = ENTITY_BOUNCE_PAD_DIAGONAL;
+    entity->spriteIndex          = MG_SP_BOUNCE_PAD_DIAGONAL;
+    entity->updateFunction       = &mg_updateDummy;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
+    return entity;
+}
+
+mgEntity_t* createLifeRefillSmall(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = (x < (entityManager->tilemap->mapOffsetX + 120)) ? 8 : -8;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = false;
+    entity->gravity              = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->scoreValue           = 100;
+    entity->hp                   = 3;
+
+    entity->type                 = ENTITY_LIFE_REFILL_SMALL;
+    entity->spriteIndex          = MG_SP_GAMING_1;
+    entity->updateFunction       = &mg_updateDummy;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
+    return entity;
+}
+
+mgEntity_t* createLifeRefillLarge(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = (x < (entityManager->tilemap->mapOffsetX + 120)) ? 8 : -8;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = false;
+    entity->gravity              = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->scoreValue           = 100;
+    entity->hp                   = 3;
+
+    entity->type                 = ENTITY_LIFE_REFILL_LARGE;
+    entity->spriteIndex          = MG_SP_MUSIC_1;
+    entity->updateFunction       = &mg_updateDummy;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
 }

@@ -352,13 +352,7 @@ bool mg_isSolid(uint8_t tileId)
         case MG_TILE_EMPTY ... MG_TILE_UNUSED_29:
             return false;
             break;
-        case MG_TILE_INVISIBLE_BLOCK ... MG_TILE_METAL_PIPE_V:
-            return true;
-            break;
-        case MG_TILE_BOUNCE_BLOCK:
-            return false;
-            break;
-        case MG_TILE_DIRT_PATH ... MG_TILE_CONTAINER_3:
+        case MG_TILE_INVISIBLE_BLOCK ... MG_TILE_SOLID_VISIBLE_INTERACTIVE_9F:
             return true;
             break;
         default:
@@ -389,7 +383,7 @@ bool mg_needsTransparency(uint8_t tileId)
         case MG_TILE_CONTAINER_1 ... MG_TILE_CONTAINER_3:
         case MG_TILE_COIN_1 ... MG_TILE_COIN_3:
         case MG_TILE_LADDER:
-        case MG_TILE_BG_GOAL_ZONE ... MG_TILE_BG_CLOUD_D:
+        //case MG_TILE_BG_GOAL_ZONE ... MG_TILE_BG_CLOUD_D:
             return true;
         case MG_TILE_BG_CLOUD:
             return false;

@@ -145,4 +145,7 @@
  <tile id="150">
   <image source="mg-object-tiles/placeholder_30x30.png" width="30" height="30"/>
  </tile>
+<tile id="151">
+  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
+ </tile>
 </tileset>
