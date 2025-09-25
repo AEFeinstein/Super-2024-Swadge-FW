@@ -728,24 +728,25 @@ int32_t midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t vo
 
     voice->volRate += voice->volAccel;
     int32_t nextSample = 0;
+    midiChannel_t* channel = (voice->channel < MIDI_CHANNEL_COUNT) ? &channels[voice->channel] : NULL;
 
     switch (voice->type)
     {
         case VOICE_WAVE_FUNC:
         {
-            nextSample = stepWaveVoice(voice, states, voiceIdx, &channels[voice->channel], specialStates);
+            nextSample = stepWaveVoice(voice, states, voiceIdx, channel, specialStates);
             break;
         }
 
         case VOICE_PLAY_FUNC:
         {
-            nextSample = stepPlayFuncVoice(voice, states, voiceIdx, &channels[voice->channel], specialStates);
+            nextSample = stepPlayFuncVoice(voice, states, voiceIdx, channel, specialStates);
             break;
         }
 
         case VOICE_SAMPLE:
         {
-            nextSample = stepSampleVoice(voice, states, voiceIdx, &channels[voice->channel], specialStates);
+            nextSample = stepSampleVoice(voice, states, voiceIdx, channel, specialStates);
             break;
         }
     }
