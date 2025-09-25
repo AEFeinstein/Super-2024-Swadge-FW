@@ -256,8 +256,8 @@ const size_t magfestTimbreCount = ARRAY_SIZE(magfestTimbres);
 const midiTimbre_t defaultDrumkitTimbre = {
     .type = PLAY_FUNC,
     .flags = TF_PERCUSSION,
-    .percussion = {
-        .playFunc = defaultDrumkitFunc,
+    .playFunc = {
+        .func = defaultDrumkitFunc,
         // TODO: Define the data and put it here!
         .data = NULL,
     },
@@ -271,8 +271,8 @@ const midiTimbre_t defaultDrumkitTimbre = {
 const midiTimbre_t donutDrumkitTimbre = {
     .type = PLAY_FUNC,
     .flags = TF_PERCUSSION,
-    .percussion = {
-        .playFunc = donutDrumkitFunc,
+    .playFunc = {
+        .func = donutDrumkitFunc,
         // This should be set though
         .data = NULL,
     },
@@ -284,7 +284,7 @@ const midiTimbre_t donutDrumkitTimbre = {
 
 // convert original sample numbers to account for sample rate changing
 #define SAMPLE_NUM_CONV(count, origRate, targetRate) ((count) * (targetRate) / (origRate))
-#define SECONDS_CONV(whole, microseconds)            ((whole) * 16384 + (microseconds) * 16384 / 1000000)
+#define SECONDS_CONV(whole, microseconds)            ((whole) * 16384 + (microseconds) * 16384u / 1000000u)
 #define PITCH_HZ(whole, thousandths)                 ((whole) << 16 | ((thousandths) * (1 << 16) / 1000))
 
 const midiTimbre_t mmx011Vibraphone = {
@@ -431,7 +431,6 @@ const midiTimbre_t mmx038SynthBass = {
         .attackTime = SECONDS_CONV(0, 1000),
         .sustainVol = 127,
         .sustainVolVel = 0,
-        .sustainVol = 127,
     }
 };
 const midiTimbre_t mmx048Strings = {
@@ -585,7 +584,7 @@ const midiTimbre_t mmx119ReverseCymbal = {
     },
 };
 
-const percussionSampleMap_t mmxDrumSampleMap[] = {
+const noteSampleMap_t mmxDrumSampleMap[] = {
     {
         .noteStart = 36,
         .noteEnd = 36,
@@ -727,11 +726,9 @@ const percussionSampleMap_t mmxDrumSampleMap[] = {
 const midiTimbre_t mmxDrumkitTimbre = {
     .type = PERCUSSION_SAMPLE,
     .flags = TF_PERCUSSION,
-    .percussion = {
-        .playFunc = NULL,
-        .data = NULL,
-        .sampleMap = mmxDrumSampleMap,
-        .sampleMapCount = ARRAY_SIZE(mmxDrumSampleMap),
+    .multiSample = {
+        .map = mmxDrumSampleMap,
+        .count = ARRAY_SIZE(mmxDrumSampleMap),
     },
     .envelope = {
         .attackTime = 0,

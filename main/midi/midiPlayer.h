@@ -493,7 +493,7 @@ typedef struct
     uint8_t noteEnd;
     timbreSample_t sample;
     envelope_t envelope;
-} percussionSampleMap_t;
+} noteSampleMap_t;
 
 /**
  * @brief Defines the sound characteristics of a particular instrument.
@@ -521,15 +521,19 @@ typedef struct
 
         struct
         {
+            /// @brief A map of different samples to use
+            const noteSampleMap_t* map;
+            /// @brief The length of the sample map
+            size_t count;
+        } multiSample;
+
+        struct
+        {
             /// @brief A callback to call for drum data
-            percussionFunc_t playFunc;
+            percussionFunc_t func;
             /// @brief User data to pass to the drumkit
             void* data;
-            /// @brief A map of different samples to use
-            const percussionSampleMap_t* sampleMap;
-            /// @brief The length of the sample map
-            size_t sampleMapCount;
-        } percussion;
+        } playFunc;
 
         /// @brief The shape of this wave, when type is RAW_WAVE
         oscillatorShape_t shape;
@@ -552,7 +556,6 @@ typedef struct
  */
 typedef struct
 {
-
     /// @brief The current volume as a fixed-point value.
     uq8_24 curVol;
 
@@ -589,7 +592,8 @@ typedef struct
 
     union
     {
-        struct {
+        struct
+        {
             /// @brief The raw sample data
             const uint8_t* data;
             /// @brief The number of samples in the data
@@ -616,12 +620,14 @@ typedef struct
             uq24_8 sampleRateRatio;
         } sample;
 
-        struct {
+        struct
+        {
             waveFunc_t func;
             synthOscillator_t oscillators[OSC_PER_VOICE];
         } wave;
 
-        struct {
+        struct
+        {
             percussionFunc_t func;
             uint32_t scratch[4];
         } playFunc;

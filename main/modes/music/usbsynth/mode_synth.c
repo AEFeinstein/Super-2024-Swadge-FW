@@ -1073,7 +1073,7 @@ static const char* const menuItemModeOptions[] = {
 
 static const char* const menuItemViewOptions[] = {
     "Pretty",           "Visualizer", "Lyrics", "Lyrics+Visualizer", "Waveform", "Table", "Packets", "Waveform+Table",
-    "Waveform+Packets", "Timing",     "Debug", "Debug+Table",
+    "Waveform+Packets", "Timing",     "Debug",  "Debug+Table",
 };
 
 static const char* const menuItemButtonOptions[] = {
@@ -3075,9 +3075,8 @@ static void drawSynthMode(int64_t elapsedUs)
                     else if (voice->stateChangeTick > 0)
                     {
                         // there's no way to tell when the note started this state...
-                        int lineX = x0
-                                    + (x1 - x0) * (voice->stateChangeTick - voice->voiceTick)
-                                          / voice->stateChangeTick;
+                        int lineX
+                            = x0 + (x1 - x0) * (voice->stateChangeTick - voice->voiceTick) / voice->stateChangeTick;
                         drawLineFast(lineX, y0, lineX, y1, c505);
                     }
                 }

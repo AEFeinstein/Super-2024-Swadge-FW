@@ -11,7 +11,6 @@
     #include "bakedDrums.h"
 #endif
 
-
 const char* getDrumName(percussionNote_t n)
 {
     const char* names[] = {"ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM",
