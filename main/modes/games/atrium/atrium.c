@@ -239,13 +239,14 @@ list_t spList = {0};
 
 static const char* const fact0[8] = {"PB&J", "BLT", "Grilled Cheese", "Reuben", "Hoagie", "Ice Cream", "Hot Dog", "Knuckle"};
 
-static const char* const fact1[8] = {"Bard", "Technomancer", "Pinball Wizard", "Maker", "Sharpshooter", "Trashman", "Speed Runner", "Medic"};
+static const char* const fact1[8] = {"Bard", "Superfan", "Pinball Wizard", "Maker", "Sharpshooter", "Trashman", "Speed Runner", "Medic"};
 
-static const char* const fact2[8] = {"Arena", "Arcade", "Gazebo", "Soapbox", "Marketplace", "Panels", "Main Stage", "Tabletop Room"};
+static const char* const fact2[8] = {"Arena", "Arcade", "Gazebo", "Soapbox", "Marketplace", "Panels", "Main Stage", "Tabletop"};
 
-static const char* const preambles[3] = {"Fave Sandwich: ", "I am a: ", " the Fest: "};
+static const char* const preambles[3] = {"Fave Sandwich: ", "I am a: ", "Find me at: "};
 
 typedef struct {
+    int created; // 0 or 1
     int cardselect;
     int fact0; //sandwich
     int fact1; //class
@@ -258,6 +259,13 @@ userProfile myProfile; //MY SELECTIONS IN EDIT PROFILE MODE
 
 nameData_t* myUser;
 
+const char atriumNVSprofile[] = "Atrium Profile:";
+const char atriumNVSfact0[] = "Atrium Fact 0:";
+const char atriumNVSfact1[] = "Atrium Fact 1:";
+const char atriumNVSfact2[] = "Atrium Fact 2:";
+const char atriumNVScard[] = "Atrium Card:";
+const char atriumNVSsona[] = "Atrium Sona:";
+
 static void atriumEnterMode()
 {
     bgs   = (backgrounds_t*)heap_caps_calloc(1, sizeof(backgrounds_t), MALLOC_CAP_8BIT);
@@ -266,8 +274,6 @@ static void atriumEnterMode()
     cards = (cards_t*)heap_caps_calloc(1, sizeof(cards_t), MALLOC_CAP_8BIT);
     amidi = (amidi_t*)heap_caps_calloc(1, sizeof(amidi_t), MALLOC_CAP_8BIT);
     butts = (butts_t*)heap_caps_calloc(1, sizeof(butts_t), MALLOC_CAP_8BIT);
-
-
     // Dear Emily, you need to do this for every struct. love, past you.
 
     getSwadgePasses(&spList, &atriumMode, true);
@@ -292,6 +298,32 @@ static void atriumEnterMode()
         spNode = spNode->next;
     }
 
+    if(!readNvs32(atriumNVSprofile, &myProfile.created))
+{
+    // We check if it found a value and if it didn't, we randomize a new profile for the user
+        myProfile.cardselect = rand() % 8;
+        myProfile.fact0 = rand() % 8;
+        myProfile.fact1 = rand() % 8;  
+        myProfile.fact2 = rand() % 8;
+        myProfile.sona = rand() % 5; 
+        myProfile.created = 1;
+
+        writeNvs32(atriumNVSprofile, myProfile.created);
+        writeNvs32(atriumNVScard, myProfile.cardselect);
+        writeNvs32(atriumNVSfact0, myProfile.fact0);
+        writeNvs32(atriumNVSfact1, myProfile.fact1);
+        writeNvs32(atriumNVSfact2, myProfile.fact2);
+        writeNvs32(atriumNVSsona, myProfile.sona);
+
+}
+
+    readNvs32(atriumNVSprofile, &myProfile.created);
+    readNvs32(atriumNVScard, &myProfile.cardselect);
+    readNvs32(atriumNVSfact0, &myProfile.fact0);
+    readNvs32(atriumNVSfact1, &myProfile.fact1);
+    readNvs32(atriumNVSfact2, &myProfile.fact2);
+    readNvs32(atriumNVSsona, &myProfile.sona);
+
     // when its ready, I need to add sona data extraction from swadgepass packet, for now I am just hardcoding some
     // sonas in to use:
     loadWsg(BALD_WSG, &misc->bald, true);
@@ -304,7 +336,7 @@ static void atriumEnterMode()
 
     printf("loaded misc wsgs!\n");
     
-    loadFont(IBM_VGA_8_FONT,&misc->font, true);
+    loadFont(OXANIUM_13MED_FONT,&misc->font, true);
     font = &misc->font;
 
     // test animations for sonas - turned off for now
@@ -348,7 +380,7 @@ static void atriumEnterMode()
     player->loop         = false;
     midiGmOn(player);
     globalMidiPlayerPlaySong(&amidi->bgm, MIDI_BGM);
-    globalMidiPlayerSetVolume(MIDI_BGM, 0);
+    globalMidiPlayerSetVolume(MIDI_BGM, 1);
     printf("Entered Atrium Mode!\n");
     atriumTitle(); // draw the title screen
 }
@@ -358,7 +390,6 @@ static void atriumExitMode()
         for (int i = 0; i < 10; i++)
     {
         freeWsg(bodsArray[i]);
-        // freeWsg(miscArray[i]);
     }
 
     heap_caps_free(bgs);
@@ -715,15 +746,7 @@ void atriumTitle()
 void viewProfile()
 {
 printf("In view profile state\n");
-    if(profileSetup == 0){
-        //set profile rands for now
-        myProfile.cardselect = rand() % 8;
-        myProfile.fact0 = rand() % 8;
-        myProfile.fact1 = rand() % 8;  
-        myProfile.fact2 = rand() % 8;
-        myProfile.sona = rand() % 5; // randomize sona for now, eventually pull from swadgepass
-        profileSetup = 1;
-    }
+
     printf("Cardselect: %d, Fact0: %d, Fact1: %d, Fact2: %d, Sona: %d\n", myProfile.cardselect, myProfile.fact0, myProfile.fact1, myProfile.fact2, myProfile.sona);
     if (loader == 0)
     {
@@ -775,23 +798,25 @@ printf("In view profile state\n");
     //line 0: name
         //no copy required
     //line 1: fact0
-        char factline0[sizeof(preambles[0]) + sizeof(fact0[myProfile.fact0])+1];
-        strcat(factline0, preambles[0]);
-        strcat(factline0, fact0[myProfile.fact0]);
+        char factline0[strlen(preambles[0]) + strlen(fact0[myProfile.fact0])] = {};
+        strncat(factline0, preambles[0], 40);
+        strncat(factline0, fact0[myProfile.fact0], 40);
         printf("factline0: %s\n", factline0);
+        printf("sizeof preamble0: %lu, sizeof fact0: %lu\n", sizeof(preambles[0]), sizeof(fact0[myProfile.fact0]));
+        printf("size of factline0: %lu\n", sizeof(factline0));
     //line 2: fact1
-        char factline1[sizeof(preambles[1]) + sizeof(fact1[myProfile.fact1])+1];
+        char factline1[strlen(preambles[1]) + strlen(fact1[myProfile.fact1])] = {};
         printf("sizeof preamble1: %lu, sizeof fact1: %lu\n", sizeof(preambles[1]), sizeof(fact1[myProfile.fact1]));
-        printf("size of factline1: %lu\n", sizeof(factline1));
-        strcat(factline1, preambles[1]);
-        strcat(factline1, fact1[myProfile.fact1]);
+        
+        strncat(factline1, preambles[1], 40);
+        strncat(factline1, fact1[myProfile.fact1], 40);
         printf("factline1: %s\n", factline1);
     //line 3: fact2
-        char factline2[sizeof(preambles[2]) + sizeof(fact2[myProfile.fact2])+1];
+        char factline2[strlen(preambles[2]) + strlen(fact2[myProfile.fact2])] = {};
         printf("sizeof preamble2: %lu, sizeof fact2: %lu\n", sizeof(preambles[2]), sizeof(fact2[myProfile.fact2]));
         printf("size of factline2: %lu\n", sizeof(factline2));
-        strcat(factline2, preambles[2]);
-        strcat(factline2, fact2[myProfile.fact2]);
+        strncat(factline2, preambles[2], 40);
+        strncat(factline2, fact2[myProfile.fact2], 40);
         printf("factline2: %s\n", factline2);
 
     // draw the card info
@@ -841,5 +866,5 @@ void editProfile(int xselect, int yselect)
     int textbox1coords_y[] = {36, 48, 60, 72};     // y coords for the first textbox lines
     int textbox2coords_y[] = {124, 136, 148, 160}; // y coords for the second textbox lines
 
-    //drawTriangleOutlined(textboxcoords_x[x] - 10, textbox1coords_y[y], textboxcoords_x[x] - 10, textbox1coords_y[y] + 11, textboxcoords_x[x], textbox1coords_y[y] + 5, c555, c500);
+    drawTriangleOutlined(textboxcoords_x[x] - 10, textbox1coords_y[y], textboxcoords_x[x] - 10, textbox1coords_y[y] + 11, textboxcoords_x[x], textbox1coords_y[y] + 5, c555, c500);
 }
