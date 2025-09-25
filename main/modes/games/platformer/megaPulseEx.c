@@ -661,20 +661,26 @@ void updateReadyScreen(platformer_t* self)
         changeStateGame(self);
     }
 
+    mg_drawTileMap(&(self->tilemap));
     drawReadyScreen(&(self->font), &(self->gameData));
 }
 
 void drawReadyScreen(font_t* font, mgGameData_t* gameData)
 {
-    drawPlatformerHud(font, gameData);
+    //drawPlatformerHud(font, gameData);
     int16_t xOff = (TFT_WIDTH - textWidth(font, str_get_ready)) / 2;
-    drawText(font, c555, str_get_ready, xOff, 128);
 
-    if (getLevelIndex(gameData->world, gameData->level) == 0)
+    if(gameData->frameCount & 0b1111){
+        drawText(font, c000, str_get_ready, xOff+2, 130);
+        drawText(font, c555, str_get_ready, xOff, 128);
+    }
+    
+
+    /*if (getLevelIndex(gameData->world, gameData->level) == 0)
     {
         drawText(font, c555, "A: Jump", xOff, 128 + (font->height + 3) * 3);
         drawText(font, c555, "B: Run / Fire", xOff, 128 + (font->height + 3) * 4);
-    }
+    }*/
 }
 
 void changeStateGame(platformer_t* self)
@@ -704,6 +710,7 @@ void changeStateGame(platformer_t* self)
 
     self->tilemap.executeTileSpawnAll = true;
 
+    globalMidiPlayerGet(MIDI_BGM)->channels[9].ignore = true;
     self->gameData.changeBgm = MG_BGM_MAIN;
 
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
