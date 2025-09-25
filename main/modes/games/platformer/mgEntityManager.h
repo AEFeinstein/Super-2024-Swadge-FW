@@ -87,6 +87,19 @@ mgEntity_t* createBgmChange4(mgEntityManager_t* entityManager, uint16_t x, uint1
 mgEntity_t* createBgmStop(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createWarpEntranceWall(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createWarpEntranceFloor(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createCharginSchmuck(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createBouncinSchmuck(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createTurret(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createSheldonShieldy(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+//mgEntity_t* createSpawnerBot(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createSpikyMcGee(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createAirTurret(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createBouncepad(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createBouncepadDiagonal(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createLifeRefillSmall(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createLifeRefillLarge(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+//mgEntity_t* createBossTrigger(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createMixtape(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 void mg_freeEntityManager(mgEntityManager_t* entityManager);
 
 #endif

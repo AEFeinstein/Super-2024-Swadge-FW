@@ -142,7 +142,11 @@
                 "ENTITY_SPIKY_MCGEE",
                 "ENTITY_AIR_TURRET",
                 "ENTITY_BOUNCE_PAD",
-                "ENTITY_BOUNCE_PAD_DIAGONAL"
+                "ENTITY_BOUNCE_PAD_DIAGONAL",
+                "ENTITY_LIFE_REFILL_SMALL",
+                "ENTITY_LIFE_REFILL_LARGE",
+                "ENTITY_BOSS_TRIGGER",
+                "ENTITY_MIXTAPE"
             ],
             "valuesAsFlags": false
         },

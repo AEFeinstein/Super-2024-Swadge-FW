@@ -484,10 +484,10 @@
 <tile id="160">
   <image source="mg-tiles/chain_collision.png" width="16" height="16"/>
 </tile>
-<!--
 <tile id="161">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
+  <image source="mg-tiles/tile_bounce_block.png" width="16" height="16"/>
 </tile>
+<!--
 <tile id="162">
   <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
 </tile>
