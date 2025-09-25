@@ -611,6 +611,9 @@ typedef struct
 
             /// @brief The number of loops remaining before the voice will transition to the released state
             uint32_t loopsRemaining;
+
+            /// @brief The pre-calculated samples-per-second
+            uq24_8 sampleRateRatio;
         } sample;
 
         struct {

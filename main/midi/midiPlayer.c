@@ -19,13 +19,16 @@
 // #define DEBUG_SYSEX 1
 
 // Uncomment for detailed debug logs without changing all log levels
-#define MIDI_DEBUG 1
+//#define MIDI_DEBUG 1
 
 #ifdef MIDI_DEBUG
 #define MIDI_DBG(...) ESP_LOGI("MIDI", __VA_ARGS__)
 #else
-#define MIDI_DBG(...) ESP_LOGD("MIDI", __VA_ARGS__)
+#define MIDI_DBG(...)
 #endif
+
+// Uncomment to use floats for the sample rate calculation
+//#define FLOAT_SAMPLE_RATE 1
 
 #define PRINT_VOICE_VOLUME(voice) do { \
      float flVol = 1.0 * voice->curVol / (1 << 24); \
@@ -117,6 +120,7 @@ static int32_t stepSampleVoice(midiVoice_t* voice, voiceStates_t* states, uint8_
 static int32_t stepPlayFuncVoice(midiVoice_t* voice, voiceStates_t* states, uint8_t voiceIdx, midiChannel_t* channel, uint32_t* specialStates);
 static int32_t midiStepVoice(midiChannel_t* channel, voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* voice, uint32_t* specialStates);
 static bool setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre);
+static void updateSampleVoicePitch(midiVoice_t* voice);
 static void initTimbre(midiTimbre_t* dest, const midiTimbre_t* config);
 static const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, uint8_t program);
 static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event);
@@ -585,14 +589,15 @@ static int32_t stepWaveVoice(midiVoice_t* voice, voiceStates_t* states, uint8_t 
 
 static int32_t stepSampleVoice(midiVoice_t* voice, voiceStates_t* states, uint8_t voiceIdx, midiChannel_t* channel, uint32_t* specialStates)
 {
-    // Same rate for now -- this is the number of times we need to output each source sample
-    // in order to maintain the desired speed/pitch ratio
-    uq16_16 sampleRateRatio = (DAC_SAMPLE_RATE_HZ << 16) / voice->sample.rate;
-    sampleRateRatio *= voice->sample.baseNote;
-    sampleRateRatio /= voice->pitch;
-
-    // Assume C4 is the base note? A4? doesn't really matter
-    // Divide the desired note freq
+#ifdef DEBUG_MIDI
+    if (voice->voiceTick == 0)
+    {
+        MIDI_DBG("SAMPLER: %" PRIu8 ", %" PRIu32 ", %" PRIu32 ", %" PRIu32 ", %" PRIu32, channel->program, voice->sample.rate, voice->sample.baseNote, voice->pitch, (uint32_t)(sampleRateRatio & 0xFFFFFFFF));
+        // eg if the sample's actual rate is 8192Hz, we need to output each sample
+        // exactly twice in order to play it at the "normal" rate
+        // but for 32768Hz, we need to skip every other sample to play it at the "normal" rate
+    }
+#endif
 
     bool done      = false;
     int32_t sample = (int)voice->sample.data[voice->sampleTick] - 128;
@@ -608,7 +613,7 @@ static int32_t stepSampleVoice(midiVoice_t* voice, voiceStates_t* states, uint8_
         {
             voice->sampleTick++;
             // We now need to omit (playRate / sampleDataRate) samples before continuing
-            voice->sample.error += sampleRateRatio;
+            voice->sample.error += voice->sample.sampleRateRatio;
             // And account for the sample we just skipped
 
             // loop if we reach the end of the sample or if the loop endpoint is set and we reach that
@@ -864,6 +869,22 @@ static bool setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
     }
 
     return true;
+}
+
+static void updateSampleVoicePitch(midiVoice_t* voice)
+{
+#ifdef FLOAT_SAMPLE_RATIO
+    voice->sample.sampleRateRatio = (int)((1.0f * DAC_SAMPLE_RATE_HZ / voice->sample.rate * (1.0f * voice->sample.baseNote / voice->pitch) + .5f) * (1 << 8));
+#else
+    uint64_t sampleRateTmp = DAC_SAMPLE_RATE_HZ << 8;
+    sampleRateTmp *= voice->sample.baseNote;
+    sampleRateTmp += (voice->pitch >> 1);
+    sampleRateTmp /= voice->pitch;
+    sampleRateTmp += (voice->sample.rate >> 1);
+    sampleRateTmp /= voice->sample.rate;
+
+    voice->sample.sampleRateRatio = (sampleRateTmp & 0xFFFFFFFF);
+#endif
 }
 
 /**
@@ -1991,6 +2012,10 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
     voice->sampleTick = 0;
     voice->curVol = 0;
     voice->pitch = bendPitchWheel(note, chan->pitchBend);
+    if (voice->type == VOICE_SAMPLE)
+    {
+        updateSampleVoicePitch(voice);
+    }
 
     // we need to put the note into its initial state...
     if (ADSR_OFF != voiceAdvanceAdsr(voice, states, voiceIdx, chan, &player->percSpecialStates, ADSR_ATTACK))
@@ -2604,7 +2629,7 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
     player->channels[channel].pitchBend = value;
 
     // TODO: is the rest of this even important? I'm pretty sure we do the pitch bend every tick anyway, no?
-    voiceStates_t* states = player->channels[channel].percussion ? &player->percVoiceStates : &player->poolVoiceStates;
+    const voiceStates_t* states = player->channels[channel].percussion ? &player->percVoiceStates : &player->poolVoiceStates;
     midiVoice_t* voices   = player->channels[channel].percussion ? player->percVoices : player->poolVoices;
 
     // Find all the voices currently sounding for this channel and update their frequencies
@@ -2626,8 +2651,12 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
                 // want to be able to control them separately here.
                 // Maybe we only apply that for like, chorus?
                 swSynthSetFreqPrecise(&voices[voiceIdx].wave.oscillators[oscIdx],
-                                        bendPitchWheel(voices[voiceIdx].note, value));
+                    voices[voiceIdx].pitch);
             }
+        }
+        else if (voices[voiceIdx].type == VOICE_SAMPLE)
+        {
+            updateSampleVoicePitch(&voices[voiceIdx]);
         }
 
         // Next!
