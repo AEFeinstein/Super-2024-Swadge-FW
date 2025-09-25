@@ -727,7 +727,7 @@ int32_t midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t vo
     }
 
     voice->volRate += voice->volAccel;
-    int32_t nextSample = 0;
+    int32_t nextSample     = 0;
     midiChannel_t* channel = (voice->channel < MIDI_CHANNEL_COUNT) ? &channels[voice->channel] : NULL;
 
     switch (voice->type)
