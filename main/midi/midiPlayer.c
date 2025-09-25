@@ -872,6 +872,7 @@ static bool setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
 static void updateSampleVoicePitch(midiVoice_t* voice)
 {
 #ifdef FLOAT_SAMPLE_RATIO
+    // In the highest few octaves, this is still significantly more accurate than even the fixed calculation.
     voice->sample.sampleRateRatio
         = (int)((1.0f * DAC_SAMPLE_RATE_HZ / voice->sample.rate * (1.0f * voice->sample.baseNote / voice->pitch) + .5f)
                 * (1 << 8));
@@ -896,23 +897,6 @@ static void updateSampleVoicePitch(midiVoice_t* voice)
 static void initTimbre(midiTimbre_t* dest, const midiTimbre_t* config)
 {
     memcpy(dest, config, sizeof(midiTimbre_t));
-
-    /*
-    if (config->type == SAMPLE)
-    {
-        // Sample-based timbres need to do a tiny bit of data loading
-        size_t sampleSize;
-        // TODO should sample.data just be a uint8_t instead? We probably need to convert it anyway
-        dest->sample.data  = cnfsGetFile(config->sample.config.fIdx, &sampleSize);
-        dest->sample.count = (uint32_t)sampleSize;
-
-        if (!dest->sample.data)
-        {
-            ESP_LOGE("MIDI", "Failed to get data for sample '%d'!", config->sample.config.fIdx);
-            dest->sample.count = 0;
-        }
-    }
-    */
 }
 
 /**
@@ -1014,7 +998,7 @@ static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event
                 break;
             }
 
-            // AfterTouc
+            // AfterTouch
             case 0xA:
             {
                 uint8_t midiKey  = event->data[0];
@@ -1466,25 +1450,6 @@ void midiPlayerInit(midiPlayer_t* player)
     // Zero out EVERYTHING
     memset(player, 0, sizeof(midiPlayer_t));
 
-    // Initialize the oscillators and count them
-    /*for (int voiceIdx = 0; voiceIdx < POOL_VOICE_COUNT + PERCUSSION_VOICES; voiceIdx++)
-    {
-        bool percussion = voiceIdx >= POOL_VOICE_COUNT;
-        midiVoice_t* voice
-            = percussion ? (&player->percVoices[voiceIdx - POOL_VOICE_COUNT]) : (&player->poolVoices[voiceIdx]);
-        for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
-        {
-            swSynthInitOscillatorWave(&voice->oscillators[oscIdx], waveTableFunc, (void*)((uint32_t)0), 0, 0);
-#ifdef OSC_DITHER
-            voice->oscillators[oscIdx].accumulator.bytes[3]
-                = (oscDither[player->oscillatorCount % ARRAY_SIZE(oscDither)]) & 0xFF;
-#endif
-            player->allOscillators[player->oscillatorCount++] = &voice->oscillators[oscIdx];
-        }
-
-        voice->timbre = percussion ? &defaultDrumkitTimbre : &acousticGrandPianoTimbre;
-    }*/
-
     // Set up the values which must be non-zero
     midiPlayerReset(player);
 }
@@ -1570,9 +1535,6 @@ int32_t midiPlayerStep(midiPlayer_t* player)
 
     int32_t sample = 0;
     // Handle ADSR transitions, etc. for all voices and get a sample
-    // TODO THIS
-    // FIXME I think this is why none of the drums are working?????
-    // FIXME this needs to check for all the states like attack and decay also...
     uint32_t activeVoices = player->poolVoiceStates.on | player->poolVoiceStates.held
                             | player->poolVoiceStates.sustenuto | player->poolVoiceStates.release
                             | player->poolVoiceStates.attack | player->poolVoiceStates.decay
