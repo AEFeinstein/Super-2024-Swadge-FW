@@ -65,12 +65,6 @@ static const uint8_t oscDither[] = {
 
 #define VS_ANY(statePtr) ((statePtr)->on)
 
-#define VOICE_CUR_VOL(voice)                                                                     \
-    (/*(uint8_t)*/ ((voice)->transitionStartVol                                                  \
-                    + ((int)(voice)->targetVol - (int)(voice)->transitionStartVol)               \
-                          * ((int)(voice)->transitionTicksTotal - (int)(voice)->transitionTicks) \
-                          / (int)(voice)->transitionTicksTotal))
-
 /// @brief Set only the MSB of a 14-bit value
 #define SET_MSB(target, val)                   \
     do                                         \
@@ -153,8 +147,8 @@ static const char* adsrStateName(adsrState_t state);
  */
 static uint32_t allocVoice(const voiceStates_t* states, const midiVoice_t* voices, uint8_t voiceCount)
 {
-    uint32_t allStates = VS_ANY(states) | states->held | states->attack | states->decay | states->release
-                         | states->sustain | states->sustenuto;
+    uint32_t allStates = states->on | states->held | states->attack | states->decay | states->release | states->sustain
+                         | states->sustenuto;
 
     // Set up a bitflag which has a 1 set for every voice that is NOT being used
     //                         /- flip the bits so a 1 represents an unused voice and a 0 represents an in-use voice
@@ -1772,7 +1766,7 @@ void midiAllNotesOff(midiPlayer_t* player, uint8_t channel)
     midiChannel_t* chan   = &player->channels[channel];
     voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &player->poolVoiceStates;
 
-    uint32_t playingVoices = VS_ANY(states) | states->held;
+    uint32_t playingVoices = states->on | states->held;
     while (playingVoices != 0)
     {
         // TODO / FIXME: This causes an additional search for the playing channel which is unnecessary
@@ -2020,7 +2014,7 @@ void midiAfterTouch(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t
     voiceStates_t* states = &player->poolVoiceStates;
     midiVoice_t* voices   = player->poolVoices;
 
-    uint32_t playingVoices = VS_ANY(states) & chan->allocedVoices;
+    uint32_t playingVoices = states->on & chan->allocedVoices;
 
     // Find the channel playing this note
     while (playingVoices != 0)
@@ -2100,7 +2094,7 @@ void midiNoteOff(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t ve
     int32_t maxVoices     = chan->percussion ? ARRAY_SIZE(player->percVoices) : ARRAY_SIZE(player->poolVoices);
 
     // check the bitmaps to see if there's any note to release
-    uint32_t playingVoices = VS_ANY(states) & chan->allocedVoices;
+    uint32_t playingVoices = states->on & chan->allocedVoices;
 
     if (chan->percussion)
     {
