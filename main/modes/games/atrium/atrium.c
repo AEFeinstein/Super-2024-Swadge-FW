@@ -363,6 +363,8 @@ static void atriumEnterMode()
     
     myUser = getSystemUsername();
     readNvs32(atriumNVSprofile, &myProfile.created);
+    printf("my profile nvs int is %d\n", myProfile.created);
+    myProfile = unpackProfile(myProfile.created);
 
     // when its ready, I need to add sona data extraction from swadgepass packet, for now I am just hardcoding some
     // sonas in to use:
@@ -535,8 +537,9 @@ static void atriumMainLoop(int64_t elapsedUs)
             {
             }
         }
+        editProfile(x, y);
     }
-    editProfile(x, y);
+    
 
 
 printf("state: %d\n", state);
@@ -1040,12 +1043,23 @@ unsigned packProfile(userProfile prof) {
 
 userProfile unpackProfile(unsigned packedProfile) {
     userProfile unpackedprofile;
-    unpackedprofile.cardselect = packedProfile / 100000;
-    unpackedprofile.fact0 = (packedProfile % 10000) / 10000;
-    unpackedprofile.fact1 = (packedProfile % 1000) / 1000;
-    unpackedprofile.fact2 = (packedProfile % 100) / 100;
-    unpackedprofile.sona = ( packedProfile % 10 ) / 10;
-    unpackedprofile.mine = packedProfile % 10; 
+    char strprofile[10];
+    sprintf(strprofile, "%u", packedProfile);
+    printf("unpacked profile string char 1 is %c\n", strprofile[0]);
+    unpackedprofile.cardselect = atoi(strprofile[0]); // convert char to int, i need to fix this bc its a single character
+    printf("unpacked cardselect is %d\n", unpackedprofile.cardselect);
+    unpackedprofile.fact0 = atoi(strprofile[1]);
+    printf("unpacked fact0 is %d\n", unpackedprofile.fact0);
+    unpackedprofile.fact1 = atoi(strprofile[2]);
+    printf("unpacked fact1 is %d\n", unpackedprofile.fact1);
+    unpackedprofile.fact2 = atoi(strprofile[3]);
+    printf("unpacked fact2 is %d\n", unpackedprofile.fact2);
+    unpackedprofile.sona = atoi(strprofile[4]);
+    printf("unpacked sona is %d\n", unpackedprofile.sona);
+    unpackedprofile.mine = atoi(strprofile[5]); // this profile is mine
+    printf("unpacked mine is %d\n", unpackedprofile.mine);
+    
+
 
     return unpackedprofile;
 }
