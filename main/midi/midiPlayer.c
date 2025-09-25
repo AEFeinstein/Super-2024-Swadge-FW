@@ -2594,7 +2594,9 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
     midiVoice_t* voices = player->channels[channel].percussion ? player->percVoices : player->poolVoices;
 
     // Find all the voices currently sounding for this channel and update their frequencies
-    uint32_t playingVoices = (VS_ANY(states) | states->held) & player->channels[channel].allocedVoices;
+    uint32_t playingVoices = (states->on | states->held | states->attack | states->decay | states->release
+                              | states->sustain | states->sustenuto)
+                             & player->channels[channel].allocedVoices;
 
     while (playingVoices != 0)
     {
