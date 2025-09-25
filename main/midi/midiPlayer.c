@@ -543,47 +543,42 @@ static adsrState_t voiceAdvanceAdsr(midiVoice_t* voice, voiceStates_t* states, u
 static int32_t stepWaveVoice(midiVoice_t* voice, voiceStates_t* states, uint8_t voiceIdx, midiChannel_t* channel,
                              uint32_t* specialStates)
 {
-    int32_t sample = 0;
-    for (uint8_t i = 0; i < OSC_PER_VOICE; i++)
+    int32_t sample         = 0;
+    synthOscillator_t* osc = &voice->wave.oscillator;
+
+    // set the actual current oscillator volume
+    swSynthSetVolume(&voice->wave.oscillator, (voice->curVol) >> 24);
+
+    if (osc->tVol == 0 && osc->cVol == 0)
     {
-        synthOscillator_t* osc = &voice->wave.oscillators[i];
-
-        // set the actual current oscillator volume
-        swSynthSetVolume(&voice->wave.oscillators[i], (voice->curVol) >> 24);
-
-        if (osc->tVol == 0 && osc->cVol == 0)
-        {
-            continue;
-        }
-
-        // Step the oscillator's accumulator
-        osc->accumulator.accum32 += osc->stepSize;
-
-        // If the oscillator's current volume doesn't match the target volume
-        if (osc->cVol != osc->tVol)
-        {
-            // Either increment or decrement it, depending
-            if (osc->cVol < osc->tVol)
-            {
-                osc->cVol++;
-            }
-            else
-            {
-                osc->cVol--;
-            }
-        }
-
-        // Mix this oscillator's output into the sample
-        uint8_t offset = 0;
-        do
-        {
-            sample += ((osc->waveFunc((osc->accumulator.bytes[2] + oscDither[offset]) % 256, osc->waveFuncData)
-                        * ((int32_t)osc->cVol))
-                       >> 8);
-        } while (offset++ < osc->chorus);
-
-        break;
+        return 0;
     }
+
+    // Step the oscillator's accumulator
+    osc->accumulator.accum32 += osc->stepSize;
+
+    // If the oscillator's current volume doesn't match the target volume
+    if (osc->cVol != osc->tVol)
+    {
+        // Either increment or decrement it, depending
+        if (osc->cVol < osc->tVol)
+        {
+            osc->cVol++;
+        }
+        else
+        {
+            osc->cVol--;
+        }
+    }
+
+    // Mix this oscillator's output into the sample
+    uint8_t offset = 0;
+    do
+    {
+        sample += ((osc->waveFunc((osc->accumulator.bytes[2] + oscDither[offset]) % 256, osc->waveFuncData)
+                    * ((int32_t)osc->cVol))
+                   >> 8);
+    } while (offset++ < osc->chorus);
 
     return sample;
 }
@@ -767,103 +762,98 @@ int32_t midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t vo
  */
 static bool setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
 {
-    for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
+    switch (timbre->type)
     {
-        switch (timbre->type)
+        case WAVETABLE:
         {
-            case WAVETABLE:
-            {
-                voice->type = VOICE_WAVE_FUNC;
-                swSynthSetWaveFunc(&voice->wave.oscillators[oscIdx], timbre->waveFunc,
-                                   (void*)((uintptr_t)timbre->waveIndex));
-                voice->wave.oscillators[oscIdx].chorus = (timbre->effects.chorus) >> 3;
-                voice->envelope                        = timbre->envelope;
-                break;
-            }
+            voice->type = VOICE_WAVE_FUNC;
+            swSynthSetWaveFunc(&voice->wave.oscillator, timbre->waveFunc, (void*)((uintptr_t)timbre->waveIndex));
+            voice->wave.oscillator.chorus = (timbre->effects.chorus) >> 3;
+            voice->envelope               = timbre->envelope;
+            break;
+        }
 
-            case NOISE:
-            {
-                voice->type = VOICE_WAVE_FUNC;
-                swSynthSetShape(&voice->wave.oscillators[oscIdx], SHAPE_NOISE);
-                voice->envelope = timbre->envelope;
-                break;
-            }
+        case NOISE:
+        {
+            voice->type = VOICE_WAVE_FUNC;
+            swSynthSetShape(&voice->wave.oscillator, SHAPE_NOISE);
+            voice->envelope = timbre->envelope;
+            break;
+        }
 
-            case WAVE_SHAPE:
-            {
-                voice->type = VOICE_WAVE_FUNC;
-                swSynthSetShape(&voice->wave.oscillators[oscIdx], timbre->shape);
-                voice->envelope = timbre->envelope;
-                break;
-            }
+        case WAVE_SHAPE:
+        {
+            voice->type = VOICE_WAVE_FUNC;
+            swSynthSetShape(&voice->wave.oscillator, timbre->shape);
+            voice->envelope = timbre->envelope;
+            break;
+        }
 
-            case SAMPLE:
-            case PERCUSSION_SAMPLE:
-            {
-                uint32_t sampleCount             = 0;
-                const uint8_t* sampleData        = NULL;
-                const timbreSample_t* sampleDef  = &timbre->sample;
-                const envelope_t* sampleEnvelope = &timbre->envelope;
+        case SAMPLE:
+        case PERCUSSION_SAMPLE:
+        {
+            uint32_t sampleCount             = 0;
+            const uint8_t* sampleData        = NULL;
+            const timbreSample_t* sampleDef  = &timbre->sample;
+            const envelope_t* sampleEnvelope = &timbre->envelope;
 
-                if (timbre->type == PERCUSSION_SAMPLE)
+            if (timbre->type == PERCUSSION_SAMPLE)
+            {
+                size_t n;
+                for (n = 0; n < timbre->multiSample.count; n++)
                 {
-                    size_t n;
-                    for (n = 0; n < timbre->multiSample.count; n++)
+                    if (timbre->multiSample.map[n].noteStart <= voice->note
+                        && voice->note <= timbre->multiSample.map[n].noteEnd)
                     {
-                        if (timbre->multiSample.map[n].noteStart <= voice->note
-                            && voice->note <= timbre->multiSample.map[n].noteEnd)
-                        {
-                            size_t len;
-                            sampleDef      = &timbre->multiSample.map[n].sample;
-                            sampleData     = cnfsGetFile(sampleDef->fIdx, &len);
-                            sampleCount    = len;
-                            sampleEnvelope = &timbre->multiSample.map[n].envelope;
-                            // now we're done!
-                            break;
-                        }
+                        size_t len;
+                        sampleDef      = &timbre->multiSample.map[n].sample;
+                        sampleData     = cnfsGetFile(sampleDef->fIdx, &len);
+                        sampleCount    = len;
+                        sampleEnvelope = &timbre->multiSample.map[n].envelope;
+                        // now we're done!
+                        break;
                     }
                 }
-                else
-                {
-                    size_t len;
-                    sampleData  = cnfsGetFile(sampleDef->fIdx, &len);
-                    sampleCount = len;
-                }
-
-                if (!sampleData)
-                {
-                    return false;
-                }
-
-                voice->type             = VOICE_SAMPLE;
-                voice->sample.data      = sampleData;
-                voice->sample.length    = sampleCount;
-                voice->sample.rate      = sampleDef->rate;
-                voice->sample.baseNote  = sampleDef->baseNote;
-                voice->sample.loopStart = (sampleDef->loopStart < sampleCount) ? sampleDef->loopStart : 0;
-                voice->sample.loopEnd
-                    = (sampleDef->loopEnd <= sampleCount && sampleDef->loopEnd > voice->sample.loopStart)
-                          ? sampleDef->loopEnd
-                          : voice->sample.length;
-
-                MIDI_DBG("Set up sample voice: length=%" PRIu32 ", loopStart=%" PRIu32 ", loopEnd=%" PRIu32,
-                         voice->sample.length, voice->sample.loopStart, voice->sample.loopEnd);
-                // take the easy way out on infinite looping being 0 loops. 2**32-1 loops ought to be enough for
-                // anyone!!
-                voice->sample.loopsRemaining = sampleDef->loop ? sampleDef->loop : UINT32_MAX;
-                voice->sample.error          = 0;
-                memcpy(&voice->envelope, sampleEnvelope, sizeof(envelope_t));
-                break;
             }
-
-            case PLAY_FUNC:
+            else
             {
-                voice->type          = VOICE_PLAY_FUNC;
-                voice->playFunc.func = timbre->playFunc.func;
-                memset(voice->playFunc.scratch, 0, sizeof(voice->playFunc.scratch));
-                voice->envelope = timbre->envelope;
-                break;
+                size_t len;
+                sampleData  = cnfsGetFile(sampleDef->fIdx, &len);
+                sampleCount = len;
             }
+
+            if (!sampleData)
+            {
+                return false;
+            }
+
+            voice->type             = VOICE_SAMPLE;
+            voice->sample.data      = sampleData;
+            voice->sample.length    = sampleCount;
+            voice->sample.rate      = sampleDef->rate;
+            voice->sample.baseNote  = sampleDef->baseNote;
+            voice->sample.loopStart = (sampleDef->loopStart < sampleCount) ? sampleDef->loopStart : 0;
+            voice->sample.loopEnd = (sampleDef->loopEnd <= sampleCount && sampleDef->loopEnd > voice->sample.loopStart)
+                                        ? sampleDef->loopEnd
+                                        : voice->sample.length;
+
+            MIDI_DBG("Set up sample voice: length=%" PRIu32 ", loopStart=%" PRIu32 ", loopEnd=%" PRIu32,
+                     voice->sample.length, voice->sample.loopStart, voice->sample.loopEnd);
+            // take the easy way out on infinite looping being 0 loops. 2**32-1 loops ought to be enough for
+            // anyone!!
+            voice->sample.loopsRemaining = sampleDef->loop ? sampleDef->loop : UINT32_MAX;
+            voice->sample.error          = 0;
+            memcpy(&voice->envelope, sampleEnvelope, sizeof(envelope_t));
+            break;
+        }
+
+        case PLAY_FUNC:
+        {
+            voice->type          = VOICE_PLAY_FUNC;
+            voice->playFunc.func = timbre->playFunc.func;
+            memset(voice->playFunc.scratch, 0, sizeof(voice->playFunc.scratch));
+            voice->envelope = timbre->envelope;
+            break;
         }
     }
 
@@ -2002,9 +1992,8 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
         // this is attack, or if attack time is 0, decay, or if decay time is 0, sustain
         if (voice->type == VOICE_WAVE_FUNC)
         {
-            // TODO may not be necessary?
-            swSynthSetVolume(&voice->wave.oscillators[0], (voice->curVol >> 24) & 0xFF);
-            swSynthSetFreqPrecise(&voice->wave.oscillators[0], bendPitchWheel(note, chan->pitchBend));
+            swSynthSetVolume(&voice->wave.oscillator, (voice->curVol >> 24) & 0xFF);
+            swSynthSetFreqPrecise(&voice->wave.oscillator, voice->pitch);
         }
     }
     else
@@ -2622,14 +2611,8 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
 
         if (voices[voiceIdx].type == VOICE_WAVE_FUNC)
         {
-            for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
-            {
-                // Apply the pitch bend to all this channel's oscillators
-                // TODO: If each voice has multiple oscillators, we would obviously
-                // want to be able to control them separately here.
-                // Maybe we only apply that for like, chorus?
-                swSynthSetFreqPrecise(&voices[voiceIdx].wave.oscillators[oscIdx], voices[voiceIdx].pitch);
-            }
+            // Apply the pitch bend to this channel's oscillator
+            swSynthSetFreqPrecise(&voices[voiceIdx].wave.oscillator, voices[voiceIdx].pitch);
         }
         else if (voices[voiceIdx].type == VOICE_SAMPLE)
         {

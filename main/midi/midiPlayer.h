@@ -74,8 +74,6 @@
 #define POOL_VOICE_COUNT 24
 // The number of voices reserved for percussion
 #define PERCUSSION_VOICES 8
-// The number of oscillators each voice gets. Maybe we'll need more than one for like, chorus?
-#define OSC_PER_VOICE 1
 // The number of global MIDI players
 #define NUM_GLOBAL_PLAYERS 2
 // The index of the system-wide MIDI player for sound effects
@@ -623,7 +621,7 @@ typedef struct
         struct
         {
             waveFunc_t func;
-            synthOscillator_t oscillators[OSC_PER_VOICE];
+            synthOscillator_t oscillator;
         } wave;
 
         struct
@@ -740,7 +738,7 @@ typedef struct
     voiceStates_t poolVoiceStates;
 
     /// @brief An array holding a pointer to every oscillator
-    synthOscillator_t* allOscillators[(POOL_VOICE_COUNT + PERCUSSION_VOICES) * OSC_PER_VOICE];
+    synthOscillator_t* allOscillators[POOL_VOICE_COUNT + PERCUSSION_VOICES];
 
     /// @brief The total number of oscillators in the \c allOscillators array
     uint16_t oscillatorCount;
