@@ -1073,7 +1073,7 @@ static const char* const menuItemModeOptions[] = {
 
 static const char* const menuItemViewOptions[] = {
     "Pretty",           "Visualizer", "Lyrics", "Lyrics+Visualizer", "Waveform", "Table", "Packets", "Waveform+Table",
-    "Waveform+Packets", "Timing",     "Debug",
+    "Waveform+Packets", "Timing",     "Debug", "Debug+Table",
 };
 
 static const char* const menuItemButtonOptions[] = {
@@ -1134,6 +1134,7 @@ static const int32_t menuItemViewValues[] = {
     (int32_t)(VM_GRAPH | VM_PACKETS),
     (int32_t)VM_TIMING,
     (int32_t)VM_DEBUG,
+    (int32_t)(VM_DEBUG | VM_TEXT),
 };
 
 static const int32_t menuItemButtonValues[] = {
