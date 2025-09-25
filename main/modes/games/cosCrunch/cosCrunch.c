@@ -2,6 +2,7 @@
 
 #include "ccmgBreakTime.h"
 #include "ccmgDelivery.h"
+#include "ccmgSlice.h"
 #include "ccmgSpray.h"
 #include "ccmgThread.h"
 #include "cosCrunchUtil.h"
@@ -135,10 +136,7 @@ swadgeMode_t cosCrunchMode = {
 // #define DEV_MODE_MICROGAME &ccmgWhatever
 
 const cosCrunchMicrogame_t* const microgames[] = {
-    &ccmgBreakTime,
-    &ccmgDelivery,
-    &ccmgSpray,
-    &ccmgThread,
+    &ccmgBreakTime, &ccmgDelivery, &ccmgSlice, &ccmgSpray, &ccmgThread,
 };
 
 #define CC_NVS_NAMESPACE "cc"
@@ -428,7 +426,12 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                         cosCrunchDisplayMessage(msg);
                     }
 
-                    if (cc->activeMicrogame.stateElapsedUs >= MICROGAME_RESULT_DISPLAY_TIME_US)
+                    uint64_t resultDisplayTimeUs = cc->activeMicrogame.game->resultDisplayTimeUs;
+                    if (resultDisplayTimeUs == 0)
+                    {
+                        resultDisplayTimeUs = MICROGAME_RESULT_DISPLAY_TIME_US;
+                    }
+                    if (cc->activeMicrogame.stateElapsedUs >= resultDisplayTimeUs)
                     {
                         if (cc->lives == 0)
                         {
@@ -585,11 +588,8 @@ static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
             else
             {
                 paletteColor_t* tftFb = getPxTftFramebuffer();
-                for (int16_t row = y; row < y + h; row++)
-                {
-                    memcpy(&tftFb[row * TFT_WIDTH + x], &cc->wsg.backgroundSplatter.px[row * TFT_WIDTH + x],
-                           w * sizeof(paletteColor_t));
-                }
+                memcpy(&tftFb[y * TFT_WIDTH + x], &cc->wsg.backgroundSplatter.px[y * TFT_WIDTH + x],
+                       w * h * sizeof(paletteColor_t));
             }
             break;
         }

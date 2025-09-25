@@ -91,6 +91,12 @@ typedef struct
     uint64_t timeoutUs;
 
     /**
+     * @brief How long the celebrating and despairing screens are displayed, in microseconds. Defaults to
+     * `MICROGAME_RESULT_DISPLAY_TIME_US` defined in `cosCrunch.c` if unspecified.
+     */
+    uint64_t resultDisplayTimeUs;
+
+    /**
      * @brief This function is called when this microgame is about to be started. It should initialize variables and
      * load assets.
      */
