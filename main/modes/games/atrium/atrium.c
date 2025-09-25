@@ -3,18 +3,55 @@
 
 /// @brief
 
+//---------------------------------------------------------------------------------//
+// PROFILE INFORMATION
+//---------------------------------------------------------------------------------//
+
+static const char* const fact0[8] = {"PB&J", "BLT", "Cheese", "Reuben", "Hoagie", "Ice Cream", "Hot Dog", "Knuckle"};
+static const char* const fact1[8] = {"Bard", "Superfan", "Pinball Wizard", "Maker", "Sharpshooter", "Trashman", "Speed Runner", "Medic"};
+static const char* const fact2[8] = {"Arena", "Arcade", "Gazebo", "Soapbox", "Marketplace", "Panels", "Main Stage", "Tabletop"};
+static const char* const preambles[3] = {"Fave Sandwich: ", "I am a: ", "Find me at: "};
+
+typedef struct {
+    int created; // 0 or 1
+    int cardselect;
+    int fact0; //sandwich
+    int fact1; //class
+    int fact2; //wya
+    int sona; // sona img
+} userProfile; 
+
+userProfile sonaProfile; //VIEW PROFILE MODE
+userProfile myProfile; //MY SELECTIONS IN EDIT PROFILE MODE
+
+int card_coords_x[]  = {24, 99, 208};
+int card_coords_y[]
+    = {24 + 12, 112 + 12}; // needs testing, original location at 24,112 was too high on screen and clipping into radius
+int cardpadding   = 4;     // padding for text written in card, in px
+int textbox1width = 156;
+int textbox2width = 172;
+
+// profile editor variables
+int x = 0; // x position in editor select
+int y = 0; // y position in editor select
+
+
+//---------------------------------------------------------------------------------//
+// FUNCTION DECLARATIONS
+//---------------------------------------------------------------------------------//
+
 static void atriumEnterMode(void);
 static void atriumExitMode(void);
 static void atriumMainLoop(int64_t elapsedUs);
 static void sonaDraw(void);
 static void sonaIdle(void);
 static void atriumTitle(void);
-static void viewProfile(void);
+static void viewProfile(userProfile prof);
 static void editProfile(int xselect, int yselect);
 static void atriumAddSP(struct swadgePassPacket* packet);
 
 //---------------------------------------------------------------------------------//
-// TROPHY CASE SPECIFIC INFORMATION
+// TROPHY CASE INFORMATION
 //---------------------------------------------------------------------------------//
 const trophyData_t atriumTrophies[] = {
     {
@@ -42,7 +79,7 @@ trophyDataList_t atriumTrophyData = {
 };
 
 //---------------------------------------------------------------------------------//
-// Setup
+// GENERAL ATRIUM MODE INFORMATION
 //---------------------------------------------------------------------------------//
 
 const char atriumModeName[] = "Atrium"; // idk working title
@@ -66,14 +103,6 @@ swadgeMode_t atriumMode     = {
         .fnAddToSwadgePassPacket  = atriumAddSP, // function to add data to swadgepass packet
 };
 
-int testercardselect = 0; // for testing card selection, 0-6
-int card_coords_x[]  = {24, 99, 208};
-int card_coords_y[]
-    = {24 + 12, 112 + 12}; // needs testing, original location at 24,112 was too high on screen and clipping into radius
-int cardpadding   = 4;     // padding for text written in card, in px
-int textbox1width = 156;
-int textbox2width = 172;
-
 buttonEvt_t evt;
 
 // STATE MACHINE FOR ATRIUM MAIN LOOP
@@ -93,7 +122,6 @@ typedef enum
 
 atriumState state = 0;
 int loader        = 0;
-bool profileSetup = 0;
 
 //---------------------------------------------------------------------------------//
 // SONA ATRIUM SPECIFIC INFORMATION
@@ -129,6 +157,13 @@ int planter          = 0;
 int x_coords[] = {5, 74, 143, 212};
 int y_coords[] = {120, 80};
 int headoffset = 48;
+
+int dancecount = 0;
+int loopcount  = 0;
+int numloops   = 0;
+int s          = 0; // sona index, 0-3
+int d          = 0; // dance chance
+
 
 //---------------------------------------------------------------------------------//
 // STRUCTURES FOR WSGS, MIDIS, ETC
@@ -168,12 +203,6 @@ typedef struct
 bodies_t* bods;
 const wsg_t* bodsArray[sizeof(bodies_t)];
 
-int dancecount = 0;
-int loopcount  = 0;
-int numloops   = 0;
-int s          = 0; // sona index, 0-3
-int d          = 0; // dance chance
-
 // Cards
 typedef struct
 {
@@ -209,13 +238,15 @@ typedef struct
     wsg_t num3;
     wsg_t cow;
     wsg_t trophy;
+    wsg_t mainchar;
+    wsg_t num4;
     font_t font;
 } misc_t;
 
 const font_t* font;
 
 misc_t* misc;
-const wsg_t* miscArray[sizeof(misc_t)];
+const wsg_t* miscArray[sizeof(bodies_t)];
 
 // midis
 
@@ -227,35 +258,10 @@ typedef struct
 amidi_t* amidi;
 const midiFile_t* midiArray[sizeof(amidi_t)];
 
-// editor variables
-int x = 0; // x position in editor
-int y = 0; // y position in editor
-
 //---------------------------------------------------------------------------------//
-// SWADGEPASS SEPECIFIC INFORMATION
+// SWADGEPASS, NVS INFORMATION
 //---------------------------------------------------------------------------------//
 list_t spList = {0};
-
-
-static const char* const fact0[8] = {"PB&J", "BLT", "Grilled Cheese", "Reuben", "Hoagie", "Ice Cream", "Hot Dog", "Knuckle"};
-
-static const char* const fact1[8] = {"Bard", "Superfan", "Pinball Wizard", "Maker", "Sharpshooter", "Trashman", "Speed Runner", "Medic"};
-
-static const char* const fact2[8] = {"Arena", "Arcade", "Gazebo", "Soapbox", "Marketplace", "Panels", "Main Stage", "Tabletop"};
-
-static const char* const preambles[3] = {"Fave Sandwich: ", "I am a: ", "Find me at: "};
-
-typedef struct {
-    int created; // 0 or 1
-    int cardselect;
-    int fact0; //sandwich
-    int fact1; //class
-    int fact2; //wya
-    int sona; // sona img
-} userProfile; 
-
-userProfile sonaProfile; //VIEW PROFILE MODE
-userProfile myProfile; //MY SELECTIONS IN EDIT PROFILE MODE
 
 nameData_t* myUser;
 
@@ -265,6 +271,14 @@ const char atriumNVSfact1[] = "Atrium Fact 1:";
 const char atriumNVSfact2[] = "Atrium Fact 2:";
 const char atriumNVScard[] = "Atrium Card:";
 const char atriumNVSsona[] = "Atrium Sona:";
+
+
+
+
+//---------------------------------------------------------------------------------//
+// END OF SETUP
+//---------------------------------------------------------------------------------//
+
 
 static void atriumEnterMode()
 {
@@ -277,7 +291,6 @@ static void atriumEnterMode()
     // Dear Emily, you need to do this for every struct. love, past you.
 
     getSwadgePasses(&spList, &atriumMode, true);
-    myUser = getSystemUsername();
     node_t* spNode = spList.first;
     while (spNode)
     {
@@ -316,7 +329,8 @@ static void atriumEnterMode()
         writeNvs32(atriumNVSsona, myProfile.sona);
 
 }
-
+    
+    myUser = getSystemUsername();
     readNvs32(atriumNVSprofile, &myProfile.created);
     readNvs32(atriumNVScard, &myProfile.cardselect);
     readNvs32(atriumNVSfact0, &myProfile.fact0);
@@ -331,6 +345,8 @@ static void atriumEnterMode()
     loadWsg(NUM_1_WSG, &misc->num1, true);
     loadWsg(NUM_2_WSG, &misc->num2, true);
     loadWsg(NUM_3_WSG, &misc->num3, true);
+    loadWsg(NUM_4_WSG, &misc->num4, true);
+    loadWsg(MAINCHAR_WSG, &misc->mainchar, true);
     loadWsg(POMP_WSG, &misc->pomp, true);
     loadWsg(COW_WSG, &misc->cow, true);
 
@@ -341,7 +357,7 @@ static void atriumEnterMode()
 
     // test animations for sonas - turned off for now
     loadWsg(DANCEBODY_1_WSG, &bods->d1, true);
-    /* loadWsg(DANCEBODY_2_WSG, &bods->d2, true);
+    loadWsg(DANCEBODY_2_WSG, &bods->d2, true);
      loadWsg(DANCEBODY_3_WSG, &bods->d3, true);
      loadWsg(DANCEBODY_4_WSG, &bods->d4, true);
      loadWsg(DANCEBODY_5_WSG, &bods->d5, true);
@@ -349,7 +365,7 @@ static void atriumEnterMode()
      loadWsg(DANCEBODY_7_WSG, &bods->d7, true);
      loadWsg(DANCEBODY_8_WSG, &bods->d8, true);
      loadWsg(DANCEBODY_9_WSG, &bods->d9, true);
-     loadWsg(DANCEBODY_10_WSG, &bods->d10, true); */
+     loadWsg(DANCEBODY_10_WSG, &bods->d10, true);
 
     loadWsg(ARROW_18_WSG, &butts->arrow, true);
 
@@ -372,6 +388,8 @@ static void atriumEnterMode()
     miscArray[5] = &misc->num3;
     miscArray[6] = &misc->cow;
     miscArray[7] = &misc->trophy;
+    miscArray[8] = &misc->mainchar;
+    miscArray[9] = &misc->num4;
 
     loadMidiFile(YALIKEJAZZ_MID, &amidi->bgm, true);
     printf("loaded midi file!\n");
@@ -380,16 +398,18 @@ static void atriumEnterMode()
     player->loop         = false;
     midiGmOn(player);
     globalMidiPlayerPlaySong(&amidi->bgm, MIDI_BGM);
-    globalMidiPlayerSetVolume(MIDI_BGM, 1);
+    globalMidiPlayerSetVolume(MIDI_BGM, 3);
     printf("Entered Atrium Mode!\n");
     atriumTitle(); // draw the title screen
 }
 
 static void atriumExitMode()
 {
-        for (int i = 0; i < 10; i++)
+
+    for (int i = 0; i < 10; i++)
     {
         freeWsg(bodsArray[i]);
+        freeWsg(miscArray[i]);
     }
 
     heap_caps_free(bgs);
@@ -400,7 +420,7 @@ static void atriumExitMode()
     heap_caps_free(butts);
 
     freeSwadgePasses(&spList);
-
+    freeFont(&misc->font);
     globalMidiPlayerStop(MIDI_BGM);
     unloadMidiFile(&amidi->bgm);
 }
@@ -437,7 +457,7 @@ static void atriumMainLoop(int64_t elapsedUs)
     }
     else if (state == ATR_PROFILE) // if the state is title screen
     {
-        viewProfile();
+        viewProfile(myProfile);
     }
 
     else if (state == ATR_EDIT_PROFILE) // if the state is edit profile
@@ -743,11 +763,11 @@ void atriumTitle()
     drawText(font, c555, "Press B to View/Edit Your Profile", 20, 120);
 }
 
-void viewProfile()
+void viewProfile(userProfile prof)
 {
 printf("In view profile state\n");
 
-    printf("Cardselect: %d, Fact0: %d, Fact1: %d, Fact2: %d, Sona: %d\n", myProfile.cardselect, myProfile.fact0, myProfile.fact1, myProfile.fact2, myProfile.sona);
+    printf("Cardselect: %d, Fact0: %d, Fact1: %d, Fact2: %d, Sona: %d\n", prof.cardselect, prof.fact0, prof.fact1, prof.fact2, prof.sona);
     if (loader == 0)
     {
         // WSG for profile mode only
@@ -777,7 +797,7 @@ printf("In view profile state\n");
         {
             if ((evt.button & PB_A))
             {
-                state = ATR_EDIT_PROFILE; // if A is pressed, go to edit profile view
+                state = ATR_EDIT_PROFILE; // if A is pressed, go to edit profile
             }
             else if ((evt.button & PB_B))
             {
@@ -794,45 +814,49 @@ printf("In view profile state\n");
             }
         }
     }
-    //concat card info
+
+//concat card info
     //line 0: name
-        //no copy required
+        //no concat required
     //line 1: fact0
-        char factline0[strlen(preambles[0]) + strlen(fact0[myProfile.fact0])] = {};
+        char factline0[strlen(preambles[0]) + strlen(fact0[prof.fact0])] = {};
         strncat(factline0, preambles[0], 40);
-        strncat(factline0, fact0[myProfile.fact0], 40);
+        strncat(factline0, fact0[prof.fact0], 40);
         printf("factline0: %s\n", factline0);
-        printf("sizeof preamble0: %lu, sizeof fact0: %lu\n", sizeof(preambles[0]), sizeof(fact0[myProfile.fact0]));
+        printf("sizeof preamble0: %lu, sizeof fact0: %lu\n", sizeof(preambles[0]), sizeof(fact0[prof.fact0]));
         printf("size of factline0: %lu\n", sizeof(factline0));
     //line 2: fact1
-        char factline1[strlen(preambles[1]) + strlen(fact1[myProfile.fact1])] = {};
-        printf("sizeof preamble1: %lu, sizeof fact1: %lu\n", sizeof(preambles[1]), sizeof(fact1[myProfile.fact1]));
+        char factline1[strlen(preambles[1]) + strlen(fact1[prof.fact1])] = {};
+        printf("sizeof preamble1: %lu, sizeof fact1: %lu\n", sizeof(preambles[1]), sizeof(fact1[prof.fact1]));
         
         strncat(factline1, preambles[1], 40);
-        strncat(factline1, fact1[myProfile.fact1], 40);
+        strncat(factline1, fact1[prof.fact1], 40);
         printf("factline1: %s\n", factline1);
     //line 3: fact2
-        char factline2[strlen(preambles[2]) + strlen(fact2[myProfile.fact2])] = {};
-        printf("sizeof preamble2: %lu, sizeof fact2: %lu\n", sizeof(preambles[2]), sizeof(fact2[myProfile.fact2]));
+        char factline2[strlen(preambles[2]) + strlen(fact2[prof.fact2])] = {};
+        printf("sizeof preamble2: %lu, sizeof fact2: %lu\n", sizeof(preambles[2]), sizeof(fact2[prof.fact2]));
         printf("size of factline2: %lu\n", sizeof(factline2));
         strncat(factline2, preambles[2], 40);
-        strncat(factline2, fact2[myProfile.fact2], 40);
+        strncat(factline2, fact2[prof.fact2], 40);
         printf("factline2: %s\n", factline2);
 
     // draw the card info
     drawWsgSimple(&bgs->gazebo, 0, 0);
-    drawWsgSimple(cardsArray[myProfile.cardselect], 0, 0 + 12);                         // draw the next card
-    drawWsgSimple(miscArray[myProfile.sona], card_coords_x[0], card_coords_y[0]); // draw the sona head, hardcoded for now
+    drawWsgSimple(cardsArray[prof.cardselect], 0, 0 + 12); // draw the card
+    drawWsgSimple(miscArray[prof.sona], card_coords_x[0], card_coords_y[0]); // draw the sona head, hardcoded for now
+    
     drawText(font, c000, myUser->nameBuffer, card_coords_x[1] + cardpadding,
              card_coords_y[0] + cardpadding); // draw the name
     drawText(font, c000, factline0, card_coords_x[1] + cardpadding,
-             card_coords_y[0] + cardpadding + 12
-                 + 4); // draw the sandwich info, needs extra padding to be balanced correctly
+             card_coords_y[0] + cardpadding + 13
+                 + 4); // draw the sandwich info
     drawText(font, c000, factline1, card_coords_x[1] + cardpadding,
-             card_coords_y[0] + cardpadding + 24
-                 + 4); // draw the identity, needs extra padding to be balanced correctly
+             card_coords_y[0] + cardpadding + 26
+                 + 4); // draw the identity
     drawText(font, c000, factline2, card_coords_x[1] + cardpadding,
-             card_coords_y[0] + cardpadding + 36 + 4); // draw the identity info
+             card_coords_y[0] + cardpadding + 39 + 4); // draw the identity info
+
+
     drawText(font, c000, "Hello World!", card_coords_x[0] + cardpadding,
              card_coords_y[1] + cardpadding); // draw the second text box info
     drawText(font, c000, "This is 22 characters.", card_coords_x[0] + cardpadding,
@@ -847,12 +871,11 @@ printf("In view profile state\n");
 
 void atriumAddSP(struct swadgePassPacket* packet)
 {
-    packet->atriumMode.cardSelected = myProfile.cardselect;             //which card bg
+    packet->atriumMode.cardSelected = myProfile.cardselect;             // which card bg
     packet->atriumMode.fact0        = myProfile.fact0;                  // select fave sandwich
     packet->atriumMode.fact1        = myProfile.fact1;                  // choose a class
     packet->atriumMode.fact2        = myProfile.fact2;                  // wya
-    packet->atriumMode.festers
-        = sizeof(spList); // set the number of festers collected to the number of swadgepasses in the list
+    packet->atriumMode.festers      = sizeof(spList); // set the number of festers collected to the number of swadgepasses in the list
 }
 
 void editProfile(int xselect, int yselect)
@@ -865,6 +888,4 @@ void editProfile(int xselect, int yselect)
     int textboxcoords_x[]  = {99, 24};             // x coords for the two textboxes
     int textbox1coords_y[] = {36, 48, 60, 72};     // y coords for the first textbox lines
     int textbox2coords_y[] = {124, 136, 148, 160}; // y coords for the second textbox lines
-
-    drawTriangleOutlined(textboxcoords_x[x] - 10, textbox1coords_y[y], textboxcoords_x[x] - 10, textbox1coords_y[y] + 11, textboxcoords_x[x], textbox1coords_y[y] + 5, c555, c500);
 }
