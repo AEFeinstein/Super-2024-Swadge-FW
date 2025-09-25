@@ -11,6 +11,59 @@
     #include "bakedDrums.h"
 #endif
 
+
+const char* getDrumName(percussionNote_t n)
+{
+    const char* names[] = {"ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM",
+                           "ELECTRIC_BASS_DRUM_OR_HIGH_BASS_DRUM",
+                           "SIDE_STICK",
+                           "ACOUSTIC_SNARE",
+                           "HAND_CLAP",
+                           "ELECTRIC_SNARE_OR_RIMSHOT",
+                           "LOW_FLOOR_TOM",
+                           "CLOSED_HI_HAT",
+                           "HIGH_FLOOR_TOM",
+                           "PEDAL_HI_HAT",
+                           "LOW_TOM",
+                           "OPEN_HI_HAT",
+                           "LOW_MID_TOM",
+                           "HIGH_MID_TOM",
+                           "CRASH_CYMBAL_1",
+                           "HIGH_TOM",
+                           "RIDE_CYMBAL_1",
+                           "CHINESE_CYMBAL",
+                           "RIDE_BELL",
+                           "TAMBOURINE",
+                           "SPLASH_CYMBAL",
+                           "COWBELL",
+                           "CRASH_CYMBAL_2",
+                           "VIBRASLAP",
+                           "RIDE_CYMBAL_2",
+                           "HIGH_BONGO",
+                           "LOW_BONGO",
+                           "MUTE_HIGH_CONGA",
+                           "OPEN_HIGH_CONGA",
+                           "LOW_CONGA",
+                           "HIGH_TIMBALE",
+                           "LOW_TIMBALE",
+                           "HIGH_AGOGO",
+                           "LOW_AGOGO",
+                           "CABASA",
+                           "MARACAS",
+                           "SHORT_WHISTLE",
+                           "LONG_WHISTLE",
+                           "SHORT_GUIRO",
+                           "LONG_GUIRO",
+                           "CLAVES",
+                           "HIGH_WOODBLOCK",
+                           "LOW_WOODBLOCK",
+                           "MUTE_CUICA",
+                           "OPEN_CUICA",
+                           "MUTE_TRIANGLE",
+                           "OPEN_TRIANGLE"};
+    return names[n - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM];
+}
+
 #ifndef USE_BAKED_DRUMS
 
     #define FREQ_HZ(whole) (((whole) & 0xFFFFu) << 16)
@@ -736,58 +789,6 @@ int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_
 
     #include <stdio.h>
     #include <inttypes.h>
-
-const char* getDrumName(percussionNote_t n)
-{
-    const char* names[] = {"ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM",
-                           "ELECTRIC_BASS_DRUM_OR_HIGH_BASS_DRUM",
-                           "SIDE_STICK",
-                           "ACOUSTIC_SNARE",
-                           "HAND_CLAP",
-                           "ELECTRIC_SNARE_OR_RIMSHOT",
-                           "LOW_FLOOR_TOM",
-                           "CLOSED_HI_HAT",
-                           "HIGH_FLOOR_TOM",
-                           "PEDAL_HI_HAT",
-                           "LOW_TOM",
-                           "OPEN_HI_HAT",
-                           "LOW_MID_TOM",
-                           "HIGH_MID_TOM",
-                           "CRASH_CYMBAL_1",
-                           "HIGH_TOM",
-                           "RIDE_CYMBAL_1",
-                           "CHINESE_CYMBAL",
-                           "RIDE_BELL",
-                           "TAMBOURINE",
-                           "SPLASH_CYMBAL",
-                           "COWBELL",
-                           "CRASH_CYMBAL_2",
-                           "VIBRASLAP",
-                           "RIDE_CYMBAL_2",
-                           "HIGH_BONGO",
-                           "LOW_BONGO",
-                           "MUTE_HIGH_CONGA",
-                           "OPEN_HIGH_CONGA",
-                           "LOW_CONGA",
-                           "HIGH_TIMBALE",
-                           "LOW_TIMBALE",
-                           "HIGH_AGOGO",
-                           "LOW_AGOGO",
-                           "CABASA",
-                           "MARACAS",
-                           "SHORT_WHISTLE",
-                           "LONG_WHISTLE",
-                           "SHORT_GUIRO",
-                           "LONG_GUIRO",
-                           "CLAVES",
-                           "HIGH_WOODBLOCK",
-                           "LOW_WOODBLOCK",
-                           "MUTE_CUICA",
-                           "OPEN_CUICA",
-                           "MUTE_TRIANGLE",
-                           "OPEN_TRIANGLE"};
-    return names[n - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM];
-}
 
 /**
  * @brief Call this function to print out all the drum samples

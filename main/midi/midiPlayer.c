@@ -1834,6 +1834,15 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
         return;
     }
 
+    if (ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM <= note && note <= OPEN_TRIANGLE)
+    {
+        MIDI_DBG("Note on: %" PRIu8 " (%s)", note, getDrumName(note));
+    }
+    else
+    {
+        MIDI_DBG("Note on: %" PRIu8, note);
+    }
+
     midiChannel_t* chan = &player->channels[chanId];
     // Use the appropriate voice pool for the instrument type
     // Percussion gets its own
@@ -2020,7 +2029,7 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
     // we need to put the note into its initial state...
     if (ADSR_OFF != voiceAdvanceAdsr(voice, states, voiceIdx, chan, &player->percSpecialStates, ADSR_ATTACK))
     {
-        MIDI_DBG("Note is now playing");
+        MIDI_DBG("Note is now playing at pitch %.3f Hz", 1.0 * voice->pitch / (1 << 16));
         // this is attack, or if attack time is 0, decay, or if decay time is 0, sustain
         if (voice->type == VOICE_WAVE_FUNC)
         {
@@ -2033,7 +2042,7 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
     {
         MIDI_DBG("Note proceeed to OFF state without ever playing sound (timbre: %s)", chan->timbre.name);
     }
-    MIDI_DBG("Envelope: A(v*%" PRId32 "+%" PRId32 "), D(v*%" PRId32 "+%" PRId32 "), S(v*%" PRId32 "+%" PRId32 "), S(v*%" PRId32 "+%" PRId32 ")",
+    MIDI_DBG("Envelope: A(v*%" PRId32 "+%" PRIu32 "), D(v*%" PRId32 "+%" PRId32 "), S(v*%" PRId32 "+%" PRIu8 "), S(v*%" PRId32 "+%" PRId32 ")",
                 voice->envelope.attackTimeVel, voice->envelope.attackTime,
                 voice->envelope.decayTimeVel, voice->envelope.decayTime,
                 voice->envelope.sustainVolVel, voice->envelope.sustainVol,
