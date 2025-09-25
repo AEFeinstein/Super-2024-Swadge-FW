@@ -49,6 +49,9 @@ static void atriumTitle(void);
 static void viewProfile(userProfile prof);
 static void editProfile(int xselect, int yselect);
 static void atriumAddSP(struct swadgePassPacket* packet);
+unsigned concatenate(unsigned x, unsigned y);
+unsigned packProfile(userProfile prof);
+userProfile unpackProfile(unsigned packedProfile);
 
 //---------------------------------------------------------------------------------//
 // TROPHY CASE INFORMATION
@@ -67,8 +70,8 @@ const trophyData_t atriumTrophies[] = {
 };
 
 trophySettings_t atriumTrophySettings = {
-    .drawFromBottom   = true,
-    .staticDurationUs = DRAW_STATIC_US * 2,
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 4,
     .slideDurationUs  = DRAW_SLIDE_US,
 };
 
@@ -266,13 +269,6 @@ list_t spList = {0};
 nameData_t* myUser;
 
 const char atriumNVSprofile[] = "Atrium Profile:";
-const char atriumNVSfact0[] = "Atrium Fact 0:";
-const char atriumNVSfact1[] = "Atrium Fact 1:";
-const char atriumNVSfact2[] = "Atrium Fact 2:";
-const char atriumNVScard[] = "Atrium Card:";
-const char atriumNVSsona[] = "Atrium Sona:";
-
-
 
 
 //---------------------------------------------------------------------------------//
@@ -319,24 +315,16 @@ static void atriumEnterMode()
         myProfile.fact1 = rand() % 8;  
         myProfile.fact2 = rand() % 8;
         myProfile.sona = rand() % 5; 
-        myProfile.created = 1;
-
+        
+        myProfile.created = concatenate(myProfile.cardselect, concatenate(myProfile.fact0, concatenate(myProfile.fact1, concatenate(myProfile.fact2, myProfile.sona))));
+        printf("no profile found, creating new one\n");
+        printf("randomized profile data: %d, %d, %d, %d, %d\n", myProfile.cardselect, myProfile.fact0, myProfile.fact1, myProfile.fact2, myProfile.sona);
+        printf("profile nvs int is %d\n", myProfile.created);
         writeNvs32(atriumNVSprofile, myProfile.created);
-        writeNvs32(atriumNVScard, myProfile.cardselect);
-        writeNvs32(atriumNVSfact0, myProfile.fact0);
-        writeNvs32(atriumNVSfact1, myProfile.fact1);
-        writeNvs32(atriumNVSfact2, myProfile.fact2);
-        writeNvs32(atriumNVSsona, myProfile.sona);
-
 }
     
     myUser = getSystemUsername();
     readNvs32(atriumNVSprofile, &myProfile.created);
-    readNvs32(atriumNVScard, &myProfile.cardselect);
-    readNvs32(atriumNVSfact0, &myProfile.fact0);
-    readNvs32(atriumNVSfact1, &myProfile.fact1);
-    readNvs32(atriumNVSfact2, &myProfile.fact2);
-    readNvs32(atriumNVSsona, &myProfile.sona);
 
     // when its ready, I need to add sona data extraction from swadgepass packet, for now I am just hardcoding some
     // sonas in to use:
@@ -888,4 +876,29 @@ void editProfile(int xselect, int yselect)
     int textboxcoords_x[]  = {99, 24};             // x coords for the two textboxes
     int textbox1coords_y[] = {36, 48, 60, 72};     // y coords for the first textbox lines
     int textbox2coords_y[] = {124, 136, 148, 160}; // y coords for the second textbox lines
+
+    //Save to NVS
+
+}
+
+unsigned concatenate(unsigned x, unsigned y) {
+    unsigned pow = 10;
+    while(y >= pow)
+        pow *= 10;
+    return x * pow + y;        
+}
+
+unsigned packProfile(userProfile prof) {
+    unsigned packedProfile = concatenate(prof.cardselect, concatenate(prof.fact0, concatenate(prof.fact1, concatenate(prof.fact2, prof.sona))));
+    return packedProfile;
+}
+userProfile unpackProfile(unsigned packedProfile) {
+    userProfile unpackedprofile;
+    unpackedprofile.cardselect = packedProfile / 10000;
+    unpackedprofile.fact0 = (packedProfile % 10000) / 1000;
+    unpackedprofile.fact1 = (packedProfile % 1000) / 100;
+    unpackedprofile.fact2 = (packedProfile % 100) / 10;
+    unpackedprofile.sona = packedProfile % 10;
+
+    return unpackedprofile;
 }
