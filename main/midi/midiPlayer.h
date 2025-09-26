@@ -73,7 +73,7 @@
 // The total number of pooled voices
 #define POOL_VOICE_COUNT 24
 // The number of voices reserved for percussion
-#define PERCUSSION_VOICES 8
+#define PERCUSSION_VOICES 16
 // The number of global MIDI players
 #define NUM_GLOBAL_PLAYERS 2
 // The index of the system-wide MIDI player for sound effects
@@ -87,7 +87,7 @@
 #define MIDI_FALSE        0x00
 #define MIDI_TO_BOOL(val) (val > 63)
 #define BOOL_TO_MIDI(val) (val ? MIDI_TRUE : MIDI_FALSE)
-#define MIDI_DEF_HEADROOM 0x2666
+#define MIDI_DEF_HEADROOM 0x4000
 #define PITCH_BEND_CENTER 0x2000
 
 /// @brief Convert the sample count to MIDI ticks
