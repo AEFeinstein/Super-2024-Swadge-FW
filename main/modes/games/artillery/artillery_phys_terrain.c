@@ -13,8 +13,8 @@
 // Function Declarations
 //==============================================================================
 
-static float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float expMin, float expMax);
-static bool moveTerrainPoint(vecFl_t* src, vecFl_t* dst);
+static float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float expMin, float expMax, bool raiseTerrain);
+static int32_t moveTerrainPoint(vecFl_t* src, vecFl_t* dst);
 
 //==============================================================================
 // Functions
@@ -245,14 +245,27 @@ void explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
 {
     physCirc_t* shell = shellNode->val;
 
-    // Create an explosion animation
-    explosionAnim_t* ea = heap_caps_calloc(1, sizeof(explosionAnim_t), MALLOC_CAP_8BIT);
-    ea->circ            = shell->c;
-    ea->circ.radius     = shell->explosionRadius;
-    ea->color           = shell->baseColor;
-    ea->ttlUs           = 500000;
-    ea->expTimeUs       = ea->ttlUs;
-    push(&phys->explosions, ea);
+    circleFl_t explosion = {
+        .pos    = shell->c.pos,
+        .radius = shell->explosionRadius,
+    };
+
+    bool raiseTerrain = false;
+    if (WALL_MAKER == shell->effect)
+    {
+        // Raise terrain without an explosion animation
+        raiseTerrain = true;
+    }
+    else
+    {
+        // Create an explosion animation
+        explosionAnim_t* ea = heap_caps_calloc(1, sizeof(explosionAnim_t), MALLOC_CAP_8BIT);
+        ea->circ            = explosion;
+        ea->color           = shell->baseColor;
+        ea->ttlUs           = 500000;
+        ea->expTimeUs       = ea->ttlUs;
+        push(&phys->explosions, ea);
+    }
 
     // Calculate the X bounds of the explosion and the squared radius
     float expMin = shell->c.pos.x - shell->explosionRadius;
@@ -268,8 +281,8 @@ void explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
         if (line->isTerrain)
         {
             // Attempt to deform points
-            line->destination.p1.y = deformTerrainPoint(&line->l.p1, &shell->c.pos, rSq, expMin, expMax);
-            line->destination.p2.y = deformTerrainPoint(&line->l.p2, &shell->c.pos, rSq, expMin, expMax);
+            line->destination.p1.y = deformTerrainPoint(&line->l.p1, &shell->c.pos, rSq, expMin, expMax, raiseTerrain);
+            line->destination.p2.y = deformTerrainPoint(&line->l.p2, &shell->c.pos, rSq, expMin, expMax, raiseTerrain);
         }
         // Iterate
         lNode = lNode->next;
@@ -282,7 +295,7 @@ void explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
         physCirc_t* circ = cNode->val;
         // If this is a tank that was hit by the shell
         if (cNode != shellNode && CT_TANK == circ->type
-            && (hitTank == circ || circleCircleFlIntersection(ea->circ, circ->c, NULL, NULL)))
+            && (hitTank == circ || circleCircleFlIntersection(explosion, circ->c, NULL, NULL)))
         {
             // Add or subtract score depending on who's hit
             if (shell->owner == circ)
@@ -297,6 +310,9 @@ void explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
             // Impart force on hit tanks
             circ->vel = addVecFl2d(circ->vel,
                                    mulVecFl2d(normVecFl2d(subVecFl2d(circ->c.pos, shell->c.pos)), shell->explosionVel));
+
+            // Track the tank after being hit
+            push(&phys->cameraTargets, circ);
         }
         cNode = cNode->next;
     }
@@ -315,12 +331,19 @@ void explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
  * @param rSq The squared radius of explosion
  * @param expMin The minimum X position which is affected
  * @param expMax The maximum X position which is affected
+ * @param raiseTerrain true to raise terrain, false to lower it
  * @return The new Y position of the deformed point
  */
-static float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float expMin, float expMax)
+static float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float expMin, float expMax, bool raiseTerrain)
 {
     if (expMin <= p->x && p->x < expMax)
     {
+        if (raiseTerrain)
+        {
+            // Simply raise terrain, but not out of bounds
+            return MAX(p->y - 40, 0);
+        }
+
         // X distance from shell to point to adjust
         float xDist = expPnt->x - p->x;
         // Explosion Y size at the point to adjust
@@ -349,15 +372,18 @@ static float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float ex
  *
  * @param src The point's current position
  * @param dst The point's desired position
- * @return true if the point moved, false otherwise
+ * @return A negative number if the point moved up, a positive number if it moved down, or zero for no movement
  */
-static bool moveTerrainPoint(vecFl_t* src, vecFl_t* dst)
+static int32_t moveTerrainPoint(vecFl_t* src, vecFl_t* dst)
 {
     if (src->y == dst->y)
     {
-        return false;
+        return 0;
     }
-    else if (ABS(dst->y - src->y) < 1)
+
+    int32_t direction = dst->y - src->y;
+
+    if (ABS(dst->y - src->y) < 1)
     {
         // Less than one pixel off, clamp it
         src->y = dst->y;
@@ -373,7 +399,7 @@ static bool moveTerrainPoint(vecFl_t* src, vecFl_t* dst)
         src->y--;
     }
 
-    return true;
+    return direction;
 }
 
 /**
@@ -390,6 +416,11 @@ bool moveTerrainLines(physSim_t* phys, int32_t elapsedUs)
     // Keep track if any terrain is moving anywhere
     bool anyTerrainMoving = false;
 
+    // Keep track of the patch of ground that's moving
+    int32_t minMoveX   = INT32_MAX;
+    int32_t maxMoveX   = INT32_MIN;
+    bool movingUpwards = false;
+
     // Iterate through all lines
     node_t* lNode = phys->lines.first;
     while (lNode)
@@ -399,19 +430,54 @@ bool moveTerrainLines(physSim_t* phys, int32_t elapsedUs)
         if (line->isTerrain)
         {
             // Track if this line is moving or needs a properties update
-            bool updateLine = moveTerrainPoint(&line->l.p1, &line->destination.p1)
-                              | moveTerrainPoint(&line->l.p2, &line->destination.p2);
+            int32_t direction = moveTerrainPoint(&line->l.p1, &line->destination.p1)
+                                + moveTerrainPoint(&line->l.p2, &line->destination.p2);
+
+            // If a segment is moving upwards
+            if (direction < 0)
+            {
+                // Raise a flag to check tanks for upward movement too
+                movingUpwards = true;
+            }
 
             // If the line needs a properties update
-            if (updateLine)
+            if (direction)
             {
                 anyTerrainMoving = true;
                 // Update slope and normals and such
                 updateLineProperties(phys, line);
+
+                // Update space that gets moved
+                minMoveX = MIN(minMoveX, line->l.p1.x);
+                maxMoveX = MAX(maxMoveX, line->l.p2.x);
             }
         }
         // Iterate
         lNode = lNode->next;
+    }
+
+    // If terrain is moving upwards
+    if (movingUpwards)
+    {
+        // Iterate through tanks and bump them upwards too
+        node_t* cNode = phys->circles.first;
+        while (cNode)
+        {
+            physCirc_t* c = cNode->val;
+            if (CT_TANK == c->type)
+            {
+                int32_t cx0 = c->c.pos.x - c->c.radius;
+                int32_t cx1 = c->c.pos.x + c->c.radius;
+
+                // If the tank is on upward moving terrain
+                if (cx0 <= maxMoveX && cx1 >= minMoveX)
+                {
+                    // bump the tank up too!
+                    c->c.pos.y--;
+                }
+            }
+            cNode = cNode->next;
+        }
     }
 
     // Return if any terrain anywhere is moving
