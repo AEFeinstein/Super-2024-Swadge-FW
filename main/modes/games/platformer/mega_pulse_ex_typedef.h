@@ -995,6 +995,7 @@ static const mg_EntityTileCollider_t entityTileCollider_1x2 = {
 typedef enum {
     MG_WSGSET_NULL = -1,
     MG_WSGSET_DEFAULT,
+    MG_WSGSET_LEVEL_SELECT,
     MG_WSGSET_KINETIC_DONUT,
     MG_WSGSET_SMASH_GORILLA,
     MG_WSGSET_DRAIN_BAT,
@@ -1004,7 +1005,9 @@ typedef enum {
     MG_WSGSET_FLARE_GRYFFYN
 } mgWsgSetIndex_t;
 
-static const mgLeveldef_t leveldef[17] = {{.filename = KINETIC_DONUT_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT},
+static const mgLeveldef_t leveldef[17] = {
+                                          {.filename = LEVEL_SELECT_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_LEVEL_SELECT},
+                                          {.filename = KINETIC_DONUT_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT},
                                           {.filename = DAC_01_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
                                           {.filename = LEVEL_1_3_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
                                           {.filename = LEVEL_1_4_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
