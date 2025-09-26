@@ -138,6 +138,12 @@ typedef struct
 
 typedef struct
 {
+    cnfsFileIdx_t fileIdx;
+    char name[16];
+} midiFileEntry_t;
+
+typedef struct
+{
     uint32_t state;
     uint32_t range;
     bool reversed;
@@ -243,6 +249,7 @@ typedef struct
     const char* filename;
     char* filenameBuf;
     bool customFile;
+    cnfsFileIdx_t fileIdx;
 
     bool localPitch;
     uint16_t pitch;
@@ -1545,6 +1552,19 @@ static void synthEnterMode(void)
         }
     }
 
+    cnfsFileIdx_t fIdx = cnfsFindNextFileOfType(CNFS_NUM_FILES, FILE_TYPE_MID);
+    while (fIdx < CNFS_NUM_FILES)
+    {
+        midiFileEntry_t* entry = calloc(1, sizeof(midiFileEntry_t));
+        if (entry)
+        {
+            entry->fileIdx = fIdx;
+            snprintf(entry->name, sizeof(entry->name), "File %d", (int)entry->fileIdx);
+            push(&sd->customFiles, entry);
+        }
+        fIdx = cnfsFindNextFileOfType(fIdx, FILE_TYPE_MID);
+    }
+
     if (sd->nvsMode)
     {
         synthSetFile(CNFS_NUM_FILES);
@@ -1707,10 +1727,10 @@ static void synthExitMode(void)
         heap_caps_free(control);
     }
 
-    char* customFilename;
-    while (NULL != (customFilename = pop(&sd->customFiles)))
+    midiFileEntry_t* entry;
+    while (NULL != (entry = pop(&sd->customFiles)))
     {
-        heap_caps_free(customFilename);
+        free(entry);
     }
 
     freeFont(&sd->betterOutline);
@@ -2488,7 +2508,11 @@ static void synthSetupMenu(bool forceReset)
 
     for (node_t* node = sd->customFiles.first; node != NULL; node = node->next)
     {
-        addSingleItemToMenu(sd->menu, (char*)node->val);
+        midiFileEntry_t* entry = (midiFileEntry_t*)node->val;
+        if (entry)
+        {
+            addSingleItemToMenu(sd->menu, entry->name);
+        }
     }
 
     // End File list
@@ -4460,15 +4484,18 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
             // Song items
             for (node_t* node = sd->customFiles.first; node != NULL; node = node->next)
             {
-                char* str = (char*)node->val;
-                if (label == str)
-                {
-                    // synthSetFile(label);
+                midiFileEntry_t* entry = (midiFileEntry_t*)node->val;
 
-                    if (sd->fileMode)
+                if (entry)
+                {
+                    if (entry->name == label)
                     {
-                        sd->filename = label;
-                        writeNvs32(nvsKeyMode, (int32_t)sd->fileMode);
+                        synthSetFile(entry->fileIdx);
+                        if (sd->fileMode)
+                        {
+                            sd->filename = entry->name;
+                            writeNvs32(nvsKeyMode, (int32_t)sd->fileMode);
+                        }
                     }
                 }
             }
@@ -4600,23 +4627,21 @@ static void nextSong(void)
     }
     else
     {
-        if (sd->filename)
+        if (sd->fileIdx < CNFS_NUM_FILES)
         {
             for (node_t* node = sd->customFiles.first; node != NULL; node = node->next)
             {
-                if (!strcmp((const char*)node->val, sd->filename))
+                if ((cnfsFileIdx_t)node->val == sd->fileIdx)
                 {
-                    if (node->next && node->next->val)
+                    if (node->next && (cnfsFileIdx_t)node->next->val < CNFS_NUM_FILES)
                     {
-                        pickedSong = (const char*)node->next->val;
-                        // synthSetFile(pickedSong);
+                        synthSetFile((cnfsFileIdx_t)node->next->val);
                     }
                     else if (sd->loop && sd->customFiles.first)
                     {
-                        if (sd->customFiles.first->val)
+                        if ((cnfsFileIdx_t)sd->customFiles.first->val < CNFS_NUM_FILES)
                         {
-                            pickedSong = (const char*)sd->customFiles.first->val;
-                            // synthSetFile(pickedSong);
+                            synthSetFile((cnfsFileIdx_t)sd->customFiles.first->val);
                         }
                     }
 
