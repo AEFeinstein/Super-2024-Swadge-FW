@@ -2,9 +2,10 @@
 
 static void ccmgDeliveryInitMicrogame(void);
 static void ccmgDeliveryDestroyMicrogame(void);
-static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
-                                 buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
+static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
+                                 cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 static void ccmgDeliveryBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+static void ccmgDeliveryDrawStar(int16_t x, int16_t y);
 
 #define MINIMUM_WAIT_US        500000
 #define MAXIMUM_WAIT_US        3000000
@@ -12,10 +13,13 @@ static void ccmgDeliveryBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, 
 #define KNOCK_DURATION_US      400000
 #define KNOCK_DELAY_US         200000
 
-#define OUTLINE_COLOR  c222
-#define FLOOR_COLOR    c431
-#define DOOR_COLOR     c432
-#define DOORKNOB_COLOR c444
+#define DAYTIME_BG_COLOR   c355
+#define NIGHTTIME_BG_COLOR c013
+#define STAR_COLOR         c554
+#define OUTLINE_COLOR      c222
+#define FLOOR_COLOR        c431
+#define DOOR_COLOR         c432
+#define DOORKNOB_COLOR     c444
 
 #define FLOOR_TOP_Y       157
 #define FLOOR_BOTTOM_Y    CC_DRAWABLE_HEIGHT
@@ -56,10 +60,8 @@ const cosCrunchMicrogame_t ccmgDelivery    = {
 };
 
 paletteColor_t const timeOfDayColors[] = {
-    // Daytime
-    c355,
-    // Nighttime
-    c013,
+    DAYTIME_BG_COLOR,
+    NIGHTTIME_BG_COLOR,
 };
 
 paletteColor_t const wallColors[] = {
@@ -76,6 +78,9 @@ typedef struct
     uint64_t waitTimeUs;
     uint64_t doorOpenElapsedTimeUs;
     uint16_t tumbleweedRotationOffset;
+    int32_t tumbleweedMinY;
+    int32_t tumbleweedLastY;
+    uint8_t knockCount;
 
     paletteColor_t timeOfDayColor;
     paletteColor_t wallColor;
@@ -89,6 +94,8 @@ typedef struct
     } wsg;
 
     font_t knockFont;
+
+    midiFile_t packageGetSfx;
 } ccmgDelivery_t;
 ccmgDelivery_t* ccmgd = NULL;
 
@@ -98,6 +105,7 @@ static void ccmgDeliveryInitMicrogame()
 
     ccmgd->waitTimeUs               = esp_random() % (MAXIMUM_WAIT_US - MINIMUM_WAIT_US) + MINIMUM_WAIT_US;
     ccmgd->tumbleweedRotationOffset = esp_random() % 360;
+    ccmgd->tumbleweedMinY           = INT32_MAX;
 
     ccmgd->timeOfDayColor = timeOfDayColors[esp_random() % ARRAY_SIZE(timeOfDayColors)];
     ccmgd->wallColor      = wallColors[esp_random() % ARRAY_SIZE(wallColors)];
@@ -108,6 +116,8 @@ static void ccmgDeliveryInitMicrogame()
     loadWsg(CC_TUMBLEWEED_WSG, &ccmgd->wsg.tumbleweed, false);
 
     loadFont(RODIN_EB_FONT, &ccmgd->knockFont, false);
+
+    loadMidiFile(CC_PACKAGE_GET_MID, &ccmgd->packageGetSfx, false);
 }
 
 static void ccmgDeliveryDestroyMicrogame()
@@ -119,13 +129,18 @@ static void ccmgDeliveryDestroyMicrogame()
 
     freeFont(&ccmgd->knockFont);
 
+    unloadMidiFile(&ccmgd->packageGetSfx);
+
     heap_caps_free(ccmgd);
 }
 
-static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
-                                 buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
+static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
+                                 cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
 {
     // The tumbleweed needs to draw over this but behind the walls, so draw it first
+    ccmgDeliveryDrawStar(122, 76);
+    ccmgDeliveryDrawStar(161, 90);
+    ccmgDeliveryDrawStar(139, 111);
     drawWsgTile(&ccmgd->wsg.grass, DOOR_X, FLOOR_TOP_Y - ccmgd->wsg.grass.h);
 
     switch (state)
@@ -141,8 +156,14 @@ static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, co
             {
                 if (buttonEvts[i].button == PB_A && buttonEvts[i].down)
                 {
-                    cosCrunchMicrogameResult(totalElapsedTime >= ccmgd->waitTimeUs
-                                             && totalElapsedTime < ccmgd->waitTimeUs + BUTTON_PRESS_WINDOW_US);
+                    bool successful = totalElapsedTime >= ccmgd->waitTimeUs
+                                      && totalElapsedTime < ccmgd->waitTimeUs + BUTTON_PRESS_WINDOW_US;
+                    cosCrunchMicrogameResult(successful);
+
+                    if (successful)
+                    {
+                        globalMidiPlayerPlaySong(&ccmgd->packageGetSfx, MIDI_SFX);
+                    }
                     break;
                 }
             }
@@ -157,6 +178,10 @@ static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, co
                     (TFT_HEIGHT - ccmgd->wsg.starburst.h) / 2, false, false, rotationDeg);
             drawWsgSimple(&ccmgd->wsg.package, (TFT_WIDTH - ccmgd->wsg.package.w) / 2,
                           (TFT_HEIGHT - ccmgd->wsg.package.h) / 2);
+
+            // It's not great to hard code the tempo, but we can't retrieve it until the MIDI file has played for
+            // a few frames so eh
+            globalMidiPlayerGet(MIDI_SFX)->tempo = 400000 / timeScale;
             break;
         }
 
@@ -169,6 +194,17 @@ static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, co
             int32_t y = -ABS(getSin1024((rotationDeg * 2 + 90) % 360)) / (1024 / TUMBLEWEED_Y_RANGE);
             drawWsg(&ccmgd->wsg.tumbleweed, x + TUMBLEWEED_X_OFFSET, y + TUMBLEWEED_Y_OFFSET, false, false,
                     rotationDeg);
+
+            if (ccmgd->tumbleweedLastY > y && y > ccmgd->tumbleweedMinY)
+            {
+                midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, SPLASH_CYMBAL, 0x7f);
+                ccmgd->tumbleweedMinY = INT32_MAX;
+            }
+            else
+            {
+                ccmgd->tumbleweedMinY = MIN(ccmgd->tumbleweedMinY, y);
+            }
+            ccmgd->tumbleweedLastY = y;
             break;
         }
     }
@@ -196,6 +232,7 @@ static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, co
                  WINDOW_TOP_Y + WINDOW_WIDTH - 1, OUTLINE_COLOR);
     drawLineFast(WINDOW_OFFSET_X, WINDOW_TOP_Y + WINDOW_WIDTH / 2, WINDOW_OFFSET_X + WINDOW_WIDTH - 1,
                  WINDOW_TOP_Y + WINDOW_WIDTH / 2, OUTLINE_COLOR);
+    ccmgDeliveryDrawStar(47, 59);
 
     // Right window
     drawRectFilled(TFT_WIDTH - (WINDOW_WIDTH + WINDOW_OFFSET_X), WINDOW_TOP_Y, TFT_WIDTH - WINDOW_OFFSET_X,
@@ -206,6 +243,8 @@ static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, co
                  TFT_WIDTH - (WINDOW_OFFSET_X + WINDOW_WIDTH / 2) - 1, WINDOW_TOP_Y + WINDOW_WIDTH - 1, OUTLINE_COLOR);
     drawLineFast(TFT_WIDTH - (WINDOW_OFFSET_X + WINDOW_WIDTH), WINDOW_TOP_Y + WINDOW_WIDTH / 2,
                  TFT_WIDTH - WINDOW_OFFSET_X - 1, WINDOW_TOP_Y + WINDOW_WIDTH / 2, OUTLINE_COLOR);
+    ccmgDeliveryDrawStar(234, 56);
+    ccmgDeliveryDrawStar(218, 73);
 
     switch (state)
     {
@@ -225,11 +264,21 @@ static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, co
             if (totalElapsedTime > ccmgd->waitTimeUs && totalElapsedTime < ccmgd->waitTimeUs + KNOCK_DURATION_US)
             {
                 drawText(&ccmgd->knockFont, c000, ccmgDeliveryKnock, 100, 80);
+                if (ccmgd->knockCount == 0)
+                {
+                    midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, ELECTRIC_SNARE_OR_RIMSHOT, 0x7f);
+                    ccmgd->knockCount++;
+                }
             }
             if (totalElapsedTime > ccmgd->waitTimeUs + KNOCK_DELAY_US
                 && totalElapsedTime < ccmgd->waitTimeUs + KNOCK_DURATION_US)
             {
                 drawText(&ccmgd->knockFont, c000, ccmgDeliveryKnock, 120, 100);
+                if (ccmgd->knockCount == 1)
+                {
+                    midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, ELECTRIC_SNARE_OR_RIMSHOT, 0x7f);
+                    ccmgd->knockCount++;
+                }
             }
             break;
         }
@@ -252,4 +301,13 @@ static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, co
 static void ccmgDeliveryBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
     fillDisplayArea(x, y, x + w, y + h, ccmgd->timeOfDayColor);
+}
+
+static void ccmgDeliveryDrawStar(int16_t x, int16_t y)
+{
+    if (ccmgd->timeOfDayColor == NIGHTTIME_BG_COLOR)
+    {
+        drawLineFast(x - 1, y, x + 1, y, STAR_COLOR);
+        drawLineFast(x, y - 2, x, y + 2, STAR_COLOR);
+    }
 }

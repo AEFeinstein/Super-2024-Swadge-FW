@@ -446,8 +446,8 @@ static int InitializeSWDSWIO(struct SWIOState* state)
     MCFWriteReg32(state, DMCONTROL, 0x00000001);
 
     // See if we can see a chip here...
-    uint32_t value;
-    int readdm = MCFReadReg32(state, DMCFGR, &value);
+    uint32_t value = 0;
+    int readdm     = MCFReadReg32(state, DMCFGR, &value);
     uprintf("DMCFGR (SWD): %d: %08x\n", (int)readdm, (unsigned)value);
     if (readdm == 0 && (value & 0xffff0000) == (0x5aa50000))
     {
@@ -589,7 +589,7 @@ static int WaitForFlash(struct SWIOState* iss)
     do
     {
         rw = 0;
-        ReadWord(dev, 0x4002200C, &rw); // FLASH_STATR => 0x4002200C
+        ReadWord(dev, 0x4002200C, &rw);    // FLASH_STATR => 0x4002200C
     } while ((rw & 1) && timeout++ < 200); // BSY flag.
 
     WriteWord(dev, 0x4002200C, 0);

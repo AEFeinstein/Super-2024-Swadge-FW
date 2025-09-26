@@ -293,10 +293,8 @@ const midiTimbre_t mmx011Vibraphone = {
     .sample = {
         .fIdx = SF_MMX_011_VIBRAPHONE_BIN,
         .loop = 0,
-        // 28928 Hz original file
         .loopStart = 79,
         .loopEnd = 95,
-        // But we convert it to avoid resampling
         .rate = 28928,
         // pitch keycenter=82, plus tune=50
         .baseNote = FREQ_A_SHARP_5 + (FREQ_B5 - FREQ_A_SHARP_5) / 2,

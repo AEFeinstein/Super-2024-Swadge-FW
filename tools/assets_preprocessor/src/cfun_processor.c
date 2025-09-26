@@ -112,7 +112,7 @@ bool process_cfun(processorInput_t* arg)
     }
 
     snprintf( compile_line, sizeof(compile_line),
-        "cp %s.bin %s.bin", arg->in.fileName, arg->out.fileName );
+        "cp %s.bin %s", arg->in.fileName, arg->out.fileName );
 
     printf( "$ %s\n", compile_line );
     if( system( compile_line ) )

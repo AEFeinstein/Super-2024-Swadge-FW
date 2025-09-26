@@ -82,8 +82,9 @@ jobs:
     - name: Install homebrew packages
       if: matrix.family == 'osx'
       run: |
-        # Not installing graphviz here because we don't actually build the docs and brew has trouble with its dependnencies
-        brew install xquartz libxinerama clang-format cppcheck wget doxygen cmake dylibbundler
+        # Not installing graphviz here because we don't actually build the docs and brew has trouble with its dependencies
+        # Not installing cmake either because it seems to be already installed from another source and brew can't handle that
+        brew install xquartz libxinerama clang-format cppcheck wget doxygen dylibbundler
 
     - name: Install apt packages
       if: matrix.family == 'linux'
@@ -149,6 +150,9 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
         msystem: MINGW64
+        update: true
+        cache: true
+        release: true
         location: C:\msys64
         install: >-
           base-devel

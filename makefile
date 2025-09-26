@@ -495,10 +495,10 @@ update-dependencies:
 
 # Target to flash over USB. 
 ifeq ($(HOST_OS),Windows)
-usbflash :
+usbflash : assets $(CNFS_FILE) firmware
 	tools/reflash_and_monitor.bat
 else
-usbflash :
+usbflash : assets $(CNFS_FILE) firmware
 	# In case we are already in the bootloader...
 	($(MAKE) -C tools/bootload_reboot_stub reboot)||(true)
 	# Command reboot out of game into bootloader.

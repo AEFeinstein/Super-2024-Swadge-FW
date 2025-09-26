@@ -3,8 +3,8 @@
 
 static void ccmgBreakTimeInitMicrogame(void);
 static void ccmgBreakTimeDestroyMicrogame(void);
-static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
-                                  buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
+static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
+                                  cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 static bool ccmgBreakTimeTimeout(void);
 
 static const char ccmgBreakTimeVerb[]       = "Break Time";
@@ -101,8 +101,8 @@ static void ccmgBreakTimeDestroyMicrogame(void)
     heap_caps_free(ccmgbt);
 }
 
-static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
-                                  buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
+static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
+                                  cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
 {
     if (state == CC_MG_PLAYING)
     {
@@ -118,6 +118,8 @@ static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, c
 
                 drawToCanvasTint(ccmgbt->wsg.spill, ccmgbt->wsg.spill, 0, 0, 0, ccmgbt->liquidTintColor);
                 cosCrunchMicrogamePersistSplatter(ccmgbt->wsg.spill, MUG_DRAW_X - 42, MUG_DRAW_Y + 84);
+
+                midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, CRASH_CYMBAL_1, 0x7f);
             }
         }
     }

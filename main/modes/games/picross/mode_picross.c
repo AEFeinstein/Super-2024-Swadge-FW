@@ -60,7 +60,7 @@ void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool con
 {
     // calloc is 0'd and malloc leaves memory uninitialized. I dont know which to use so im not gonna touch it, and
     // doing things once on load can be slower.
-    p                = calloc(1, sizeof(picrossGame_t));
+    p                = heap_caps_calloc(1, sizeof(picrossGame_t), MALLOC_CAP_8BIT);
     p->selectedLevel = *selectedLevel;
     p->currentPhase  = PICROSS_SOLVING;
     p->exitThisFrame = false;
@@ -74,12 +74,12 @@ void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool con
     p->ledAnimCount     = 0;
 
     // Puzzle
-    p->puzzle = calloc(1, sizeof(picrossPuzzle_t));
+    p->puzzle = heap_caps_calloc(1, sizeof(picrossPuzzle_t), MALLOC_CAP_8BIT);
     // puzzle gets set in picrossSetupPuzzle.
 
     p->fadeHints = true; // When should this be turned on or off? Options menu is a lot.
     // Input Setup
-    p->input                  = calloc(1, sizeof(picrossInput_t));
+    p->input                  = heap_caps_calloc(1, sizeof(picrossInput_t), MALLOC_CAP_8BIT);
     p->input->x               = 0;
     p->input->y               = 0;
     p->input->hoverBlockSizeX = 0;
@@ -1727,9 +1727,9 @@ void picrossExitGame(void)
 
         freeFont(&(p->hintFont));
         freeFont(&(p->UIFont));
-        free(p->input);
-        free(p->puzzle);
-        free(p);
+        heap_caps_free(p->input);
+        heap_caps_free(p->puzzle);
+        heap_caps_free(p);
         p = NULL;
     }
 }
@@ -1750,7 +1750,7 @@ void savePicrossProgress()
 {
     // save level progress
     size_t size                     = sizeof(picrossProgressData_t);
-    picrossProgressData_t* progress = calloc(1, size);
+    picrossProgressData_t* progress = heap_caps_calloc(1, size, MALLOC_CAP_8BIT);
 
     // save tentative marks
     size_t markSize = sizeof(p->tentativeMarks);
@@ -1779,7 +1779,7 @@ void savePicrossProgress()
     writeNvsBlob(picrossProgressData, progress, size);
     writeNvsBlob(picrossMarksData, tentativeMarks, markSize);
 
-    free(progress);
+    heap_caps_free(progress);
 }
 /**
  * @brief Loads the current picross level in from dataStore.
@@ -1819,13 +1819,13 @@ void loadPicrossProgress()
 // */
 void saveCompletedOnSelectedLevel(bool completed)
 {
-    size_t size = sizeof(picrossVictoryData_t);
-    picrossVictoryData_t* victData
-        = calloc(1, size); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
+    size_t size                    = sizeof(picrossVictoryData_t);
+    picrossVictoryData_t* victData = heap_caps_calloc(
+        1, size, MALLOC_CAP_8BIT); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
     readNvsBlob(picrossCompletedLevelData, victData, &size);
     victData->victories[(int)*&p->selectedLevel.index] = completed;
     writeNvsBlob(picrossCompletedLevelData, victData, sizeof(picrossVictoryData_t));
-    free(victData);
+    heap_caps_free(victData);
 }
 
 /// @brief Called when in victory state, animates RGBs. Copied from the dance code, needs cleaned up/minified; but it
