@@ -343,11 +343,35 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                 }
             }
 
-            // Draw the shot parameters
+            const physCirc_t* p = ad->players[ad->plIdx];
+
+            const int32_t BAR_WIDTH   = MAX_SHOT_POWER / 2;
+            const int32_t BAR_MARGIN  = ((TFT_WIDTH - BAR_WIDTH) / 2);
+            const int32_t FONT_MARGIN = 3;
+            const int32_t BAR_HEIGHT  = f->height + (FONT_MARGIN * 2);
+
+            // Draw power bar
+            int32_t barSplit = BAR_MARGIN + (p->shotPower / 2);
+            fillDisplayArea(BAR_MARGIN, TFT_HEIGHT - BAR_HEIGHT, barSplit, TFT_HEIGHT, c400);
+            fillDisplayArea(barSplit, TFT_HEIGHT - BAR_HEIGHT, TFT_WIDTH - BAR_MARGIN, TFT_HEIGHT, c222);
+            drawRect(BAR_MARGIN, TFT_HEIGHT - BAR_HEIGHT, TFT_WIDTH - BAR_MARGIN, TFT_HEIGHT, c000);
+
+            // Draw the power
             char fireParams[64];
-            snprintf(fireParams, sizeof(fireParams) - 1, "Angle %d, Power %d",
-                     (int)((180 * ad->players[ad->plIdx]->barrelAngle) / M_PI), (int)ad->players[ad->plIdx]->shotPower);
-            drawText(f, c555, fireParams, 40, TFT_HEIGHT - f->height - 2);
+            snprintf(fireParams, sizeof(fireParams) - 1, "Power %d", (int)p->shotPower);
+            drawText(f, c555, fireParams, BAR_MARGIN + FONT_MARGIN, TFT_HEIGHT - f->height - FONT_MARGIN);
+
+            // Draw the angle
+            snprintf(fireParams, sizeof(fireParams) - 1, "Angle %d", (int)((180 * p->barrelAngle) / M_PI));
+            drawTextShadow(f, c555, c000, fireParams, BAR_MARGIN + FONT_MARGIN,
+                           TFT_HEIGHT - (2 * f->height) - (3 * FONT_MARGIN));
+
+            // Draw the ammo
+            const char* ammo = getAmmoAttribute(p->ammoIdx)->name;
+            int16_t tWidth   = textWidth(f, ammo);
+            drawTextShadow(f, c555, c000, ammo, TFT_WIDTH - BAR_MARGIN - FONT_MARGIN - tWidth,
+                           TFT_HEIGHT - (2 * f->height) - (3 * FONT_MARGIN));
+
             break;
         }
         case AGS_FIRE:
