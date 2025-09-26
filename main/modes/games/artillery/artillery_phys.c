@@ -758,17 +758,17 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
     // Draw turns
     char turnStr[32] = {0};
     snprintf(turnStr, sizeof(turnStr) - 1, "Turn %" PRId32, turn);
-    drawText(font, c444, turnStr, (TFT_WIDTH - textWidth(font, turnStr)) / 2, TEXT_Y);
+    drawTextShadow(font, c555, c000, turnStr, (TFT_WIDTH - textWidth(font, turnStr)) / 2, TEXT_Y);
 
     // Draw score if players are set
     if (players[0])
     {
         char scoreStr[32] = {0};
         snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, players[0]->score);
-        drawText(font, c555, scoreStr, TEXT_X_MARGIN, TEXT_Y);
+        drawTextShadow(font, c555, c000, scoreStr, TEXT_X_MARGIN, TEXT_Y);
 
         snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, players[1]->score);
-        drawText(font, c555, scoreStr, TFT_WIDTH - textWidth(font, scoreStr) - TEXT_X_MARGIN, TEXT_Y);
+        drawTextShadow(font, c555, c000, scoreStr, TFT_WIDTH - textWidth(font, scoreStr) - TEXT_X_MARGIN, TEXT_Y);
     }
 }
 
@@ -863,7 +863,7 @@ void setBarrelAngle(physCirc_t* circ, float angle)
  */
 void setShotPower(physCirc_t* circ, float power)
 {
-    circ->shotPower = power;
+    circ->shotPower = CLAMP(power, 0, MAX_SHOT_POWER);
 }
 
 /**
