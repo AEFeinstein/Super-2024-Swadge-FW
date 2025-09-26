@@ -105,6 +105,18 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .effect     = NO_EFFECT,
     },
     {
+        .name       = "Big Shot",
+        .color      = c500,
+        .radius     = 7,
+        .numBounces = 1,
+        .numSpread  = 1,
+        .numConsec  = 1,
+        .score      = 40,
+        .expVel     = 200,
+        .expRadius  = 40,
+        .effect     = NO_EFFECT,
+    },
+    {
         .name       = "Rocket Jump",
         .color      = c555,
         .radius     = 12,
@@ -116,7 +128,6 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .expRadius  = 12,
         .effect     = NO_EFFECT,
     },
-    // TODO Big Concussive shot
     {
         .name       = "Wallmaker",
         .color      = c030,
@@ -129,7 +140,6 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .expRadius  = 20,
         .effect     = WALL_MAKER,
     },
-    // TODO Earthquake (randomize terrain)
     // TODO Acid Bath (poison terrain)
     // TODO Landmines (leave mines for later)
     // TODO Homing Missile (constant force towards opponent)
