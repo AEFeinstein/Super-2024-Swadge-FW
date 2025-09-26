@@ -632,7 +632,6 @@ typedef struct
     };
 
     /// @brief The envelope defined for this voice
-    // TODO make this a pointer, why wasn't it to begin with?
     envelope_t envelope;
 } midiVoice_t;
 
@@ -736,12 +735,6 @@ typedef struct
 
     /// @brief The global voice pool state bitmaps
     voiceStates_t poolVoiceStates;
-
-    /// @brief An array holding a pointer to every oscillator
-    synthOscillator_t* allOscillators[POOL_VOICE_COUNT + PERCUSSION_VOICES];
-
-    /// @brief The total number of oscillators in the \c allOscillators array
-    uint16_t oscillatorCount;
 
     /// @brief Whether this player is playing a song or a MIDI stream
     midiPlayerMode_t mode;
