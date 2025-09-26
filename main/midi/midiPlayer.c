@@ -63,7 +63,7 @@ static const uint8_t oscDither[] = {
 // For MIDI values with coarse and fine bytes, each 7 bits
 #define UINT14_MAX (0x3FFF)
 
-#define VS_ANY(statePtr) ((statePtr)->on)
+// #define VS_ANY(statePtr) ((statePtr)->on)
 
 /// @brief Set only the MSB of a 14-bit value
 #define SET_MSB(target, val)                   \
