@@ -356,7 +356,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
             if (false == ad->phys->shotFired)
             {
                 ad->phys->shotFired = true;
-                fireShot(ad->phys, ad->players[ad->plIdx]);
+                fireShot(ad->phys, ad->players[ad->plIdx], ad->players[(ad->plIdx + 1) % NUM_PLAYERS]);
                 artilleryTxShot(ad, ad->players[ad->plIdx]);
             }
             // Run a timer to wait between switching players, otherwise it's too rushed
