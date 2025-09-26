@@ -301,7 +301,7 @@ const midiTimbre_t mmx011Vibraphone = {
     },
     .name = "MMX Bell Synth",
     .envelope = {
-        .attackTime = SECONDS_CONV(0, 100), // 1ms
+        .attackTime = SECONDS_CONV(0, 1000), // 1ms
         // .releaseTime = SECONDS_CONV(2, 70530), // 2.070530s
         .releaseTime = SECONDS_CONV(1, 35530), // 2.070530s / 2
         .sustainVol = 127,
@@ -325,7 +325,7 @@ const midiTimbre_t mmx017Organ = {
     },
     .name = "MMX Organ",
     .envelope = {
-        .attackTime = SECONDS_CONV(0, 100000), // 1ms
+        .attackTime = SECONDS_CONV(0, 1000), // 1ms
         //.attackTimeVel = -2048,
         //LFO freq: 8.176
         .sustainVol = 127,
