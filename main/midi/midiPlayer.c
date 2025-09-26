@@ -785,14 +785,14 @@ static bool setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
         }
 
         case SAMPLE:
-        case PERCUSSION_SAMPLE:
+        case MULTI_SAMPLE:
         {
             uint32_t sampleCount             = 0;
             const uint8_t* sampleData        = NULL;
             const timbreSample_t* sampleDef  = &timbre->sample;
             const envelope_t* sampleEnvelope = &timbre->envelope;
 
-            if (timbre->type == PERCUSSION_SAMPLE)
+            if (timbre->type == MULTI_SAMPLE)
             {
                 size_t n;
                 for (n = 0; n < timbre->multiSample.count; n++)

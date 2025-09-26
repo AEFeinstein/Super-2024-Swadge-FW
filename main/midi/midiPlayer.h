@@ -138,7 +138,7 @@ typedef enum
     SAMPLE,
     NOISE,
     WAVE_SHAPE,
-    PERCUSSION_SAMPLE,
+    MULTI_SAMPLE,
     PLAY_FUNC,
 } timbreType_t;
 

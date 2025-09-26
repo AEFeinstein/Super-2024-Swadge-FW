@@ -724,7 +724,7 @@ const noteSampleMap_t mmxDrumSampleMap[] = {
 };
 
 const midiTimbre_t mmxDrumkitTimbre = {
-    .type = PERCUSSION_SAMPLE,
+    .type = MULTI_SAMPLE,
     .flags = TF_PERCUSSION,
     .multiSample = {
         .map = mmxDrumSampleMap,
