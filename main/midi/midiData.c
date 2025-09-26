@@ -303,7 +303,7 @@ const midiTimbre_t mmx011Vibraphone = {
     .envelope = {
         .attackTime = SECONDS_CONV(0, 1000), // 1ms
         // .releaseTime = SECONDS_CONV(2, 70530), // 2.070530s
-        .releaseTime = SECONDS_CONV(1, 35530), // 2.070530s / 2
+        .releaseTime = SECONDS_CONV(0, 675300), // ~2.070530s / 4
         .sustainVol = 127,
     },
 };
