@@ -179,13 +179,51 @@ int main(int argc, char** argv)
         int offset;
         int len;
         int padLen;
+        int fileType;
     } entries[MAX_FILES];
+
+    const char* fileTypeNames[MAX_FILES];
 
     // A count of input files
     int nr_file = 0;
 
     // The offset for the output file
     int offset = 0;
+
+    // A count of unique file extensions
+    int nr_types = 0;
+
+    // Build the list of file extensions first
+    for (int fno = 0; fno < numfiles_in; fno++)
+    {
+        const char* file_ext = strrchr(filelist[fno], '.');
+        if (file_ext)
+        {
+            file_ext++;
+        }
+        else
+        {
+            file_ext = filelist[fno];
+        }
+
+        int matched = 0;
+
+        for (int typeno = 0; typeno < nr_types; typeno++)
+        {
+            if (!strcasecmp(fileTypeNames[typeno], file_ext))
+            {
+                matched = 1;
+                break;
+            }
+        }
+
+        if (!matched)
+        {
+            fileTypeNames[nr_types++] = file_ext;
+        }
+    }
+
+    qsort(fileTypeNames, nr_types, sizeof(const char*), stringcmp);
 
     // For each input file
     for (int fno = 0; fno < numfiles_in; fno++)
@@ -209,6 +247,17 @@ int main(int argc, char** argv)
         int len = ftell(f);
         fseek(f, 0, SEEK_SET);
 
+        // Get the file extension
+        const char* ext = strrchr(fname_in, '.');
+        if (ext)
+        {
+            ext++;
+        }
+        else
+        {
+            ext = fname_in;
+        }
+
         // Save the input file into entries[]
         struct fileEntry* fe = &entries[nr_file];
         fe->data             = malloc(len);
@@ -216,6 +265,16 @@ int main(int argc, char** argv)
         fe->padLen           = ((len + 3) / 4) * 4;
         int readLen          = fread(fe->data, 1, len, f);
         fe->filename         = fname_in;
+
+        for (int typeno = 0; typeno < nr_types; typeno++)
+        {
+            if (!strcasecmp(fileTypeNames[typeno], ext))
+            {
+                fe->fileType = typeno;
+                break;
+            }
+        }
+
         if (readLen != fe->len)
         {
             fprintf(stderr, "Error: File %s truncated (expected %d bytes, got %d)\n", fname, fe->len, readLen);
@@ -247,10 +306,22 @@ int main(int argc, char** argv)
     fprintf(f, "\n");
     fprintf(f, "#include <stdint.h>\n");
     fprintf(f, "\n");
+    fprintf(f, "typedef enum\n");
+    fprintf(f, "{\n");
+    for (int typeno = 0; typeno < nr_types; typeno++)
+    {
+        char* enumName = filenameToEnumName(fileTypeNames[typeno]);
+        fprintf(f, "    FILE_TYPE_%s = %d, ///< .%s file\n", enumName, typeno, fileTypeNames[typeno]);
+        free(enumName);
+    }
+    fprintf(f, "    CNFS_NUM_TYPES = %d,\n", nr_types);
+    fprintf(f, "} cnfsFileType_t;\n");
+    fprintf(f, "\n");
     fprintf(f, "typedef struct\n");
     fprintf(f, "{\n");
-    fprintf(f, "    uint32_t len;    ///< The length of the file\n");
-    fprintf(f, "    uint32_t offset; ///< The offset of the file in cnfs_data[]\n");
+    fprintf(f, "    uint32_t len;        ///< The length of the file\n");
+    fprintf(f, "    uint32_t offset;     ///< The offset of the file in cnfs_data[]\n");
+    fprintf(f, "    cnfsFileType_t type; ///< The type of file by extension\n");
     fprintf(f, "} cnfsFileEntry;\n");
     fprintf(f, "\n");
     fprintf(f, "typedef enum\n");
@@ -303,8 +374,10 @@ int main(int argc, char** argv)
     for (int i = 0; i < nr_file; i++)
     {
         struct fileEntry* fe = entries + i;
-        fprintf(f, "    { .len = %d, .offset = %d },\n", fe->len, fe->offset);
-        directorySize += (((strlen(fe->filename) + 1) + 3) & (~3)) + 12;
+        char* typeName = filenameToEnumName(fileTypeNames[fe->fileType]);
+        fprintf(f, "    { .len = %d, .offset = %d, .type = FILE_TYPE_%s },\n", fe->len, fe->offset, typeName);
+        directorySize += (((strlen(fe->filename) + 1) + 3) & (~3)) + 16;
+        free(typeName);
     }
     fprintf(f, "};\n");
     fprintf(f, "\n");

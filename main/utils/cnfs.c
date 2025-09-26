@@ -77,6 +77,65 @@ const uint8_t* cnfsGetFile(cnfsFileIdx_t fIdx, size_t* flen)
 }
 
 /**
+ * @brief Return the type of a file
+ *
+ * @param fIdx the cnfsFileIdx_t of the file to get the type of
+ * @return The cnfsFileType_t for that file extension, or CNFS_NUM_TYPES if the file is not found
+ */
+cnfsFileType_t cnfsGetFileType(cnfsFileIdx_t fIdx)
+{
+    if (0 <= fIdx && fIdx < CNFS_NUM_FILES)
+    {
+        return cnfsFiles[fIdx].type;
+    }
+    else
+    {
+        return CNFS_NUM_TYPES;
+    }
+}
+
+/**
+ * @brief Return the index of the next file matching the type which is greater than the given one
+ *
+ * @param after The index before the first one to search, or CNFS_NUM_FILES to search the beginning
+ * @param type The type of file to search for
+ * @return cnfsFileIdx_t The index of the next file of that type, or CNFS_NUM_FILES if no more were found
+ */
+cnfsFileIdx_t cnfsFindNextFileOfType(cnfsFileIdx_t after, cnfsFileType_t type)
+{
+    if (type >= CNFS_NUM_TYPES)
+    {
+        // Short-circuit on a nonexistent type
+        return CNFS_NUM_FILES;
+    }
+
+    int cur = after;
+    if (cur >= CNFS_NUM_FILES)
+    {
+        // This is the first call, so search from the beginning
+        cur = 0;
+    }
+    else
+    {
+        // Move to the next one before searching!
+        cur++;
+    }
+
+    while (cur < CNFS_NUM_FILES)
+    {
+        if (cnfsFiles[cur].type == type)
+        {
+            return (cnfsFileIdx_t)cur;
+        }
+
+        cur++;
+    }
+
+    // We must not have found it
+    return CNFS_NUM_FILES;
+}
+
+/**
  * @brief Read a file from CNFS into an output array. Files that are in the
  * assets_image folder before compilation and flashing will automatically
  * be included in the firmware.

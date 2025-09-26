@@ -63,6 +63,8 @@
 bool initCnfs(void);
 bool deinitCnfs(void);
 const uint8_t* cnfsGetFile(cnfsFileIdx_t fIdx, size_t* flen);
+cnfsFileType_t cnfsGetFileType(cnfsFileIdx_t fIdx);
+cnfsFileIdx_t cnfsFindNextFileOfType(cnfsFileIdx_t after, cnfsFileType_t type);
 uint8_t* cnfsReadFile(cnfsFileIdx_t fIdx, size_t* outsize, bool readToSpiRam);
 
 #endif
