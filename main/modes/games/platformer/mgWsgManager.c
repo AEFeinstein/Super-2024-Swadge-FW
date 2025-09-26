@@ -670,6 +670,20 @@ void mg_loadWsgSet(mgWsgManager_t* self, mgWsgSetIndex_t index){
     //TODO: Free ALL tile WSGs here?
 
     switch(index){
+        case MG_WSGSET_LEVEL_SELECT:
+            for(uint16_t i=0; i < MG_LEVEL_SELECT_TILESET_MAP_LENGTH; i++){
+                
+                uint16_t wsgIndex = mg_levelSelectTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_WSG_INDEX_LOOKUP_OFFSET];
+                
+                if(self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h){
+                    freeWsg(&self->wsgs[wsgIndex]);
+                }
+
+                loadWsg(mg_levelSelectTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_IMAGE_FILENAME_LOOKUP_OFFSET], &self->wsgs[wsgIndex], false);
+                self->tiles[mg_levelSelectTileset[(i * MG_TILESET_MAP_ROW_LENGTH + MG_TILE_INDEX_LOOKUP_OFFSET)] - 32] = &self->wsgs[wsgIndex];
+                self->transparencyFunction = &mg_levelSelectTileset_needsTransparency;
+            }
+            break;
         case MG_WSGSET_KINETIC_DONUT:
         default:
             for(uint16_t i=0; i < MG_KINETIC_DONUT_TILESET_MAP_LENGTH; i++){
@@ -684,6 +698,7 @@ void mg_loadWsgSet(mgWsgManager_t* self, mgWsgSetIndex_t index){
                 self->tiles[mg_kineticDonutTileset[(i * MG_TILESET_MAP_ROW_LENGTH + MG_TILE_INDEX_LOOKUP_OFFSET)] - 32] = &self->wsgs[wsgIndex];
                 self->transparencyFunction = &mg_kineticDonutTileset_needsTransparency;
             }
+            break;
     }
 
     self->wsgSetIndex = index;
