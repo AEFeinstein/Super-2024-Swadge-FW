@@ -27,6 +27,8 @@ static void ccmgThreadMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, floa
 tintColor_t const fingersTintColors[] = {
     // Light
     {c321, c432, c554, c543},
+    // Medium
+    {c210, c321, c554, c432},
     // Dark
     {c100, c210, c543, c432},
 };
