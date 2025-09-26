@@ -426,21 +426,27 @@ static void physFindObjDests(physSim_t* phys, float elapsedS)
             }
             else
             {
-                // If not in contact, force is world and object gravity
-                totalForce = addVecFl2d(pc->g, phys->g);
-
                 // If there is a homing target
-                if (pc->homingTarget)
+                if (pc->homingTarget && LASER != pc->effect)
                 {
                     // Check if the shell is close enough to the target
                     vecFl_t toTarget = subVecFl2d(pc->homingTarget->c.pos, pc->c.pos);
-                    if (sqMagVecFl2d(toTarget) < (240 * 240))
+                    if (sqMagVecFl2d(toTarget) < (140 * 140))
                     {
-                        // Pull the shell to the target rather than be affected by gravity
-                        // TODO this doesn't work very well....
-                        totalForce = mulVecFl2d(normVecFl2d(toTarget), 600);
+                        vecFl_t targetNormal = normVecFl2d(toTarget);
+
+                        // Negate world gravity and point at the target
+                        pc->g      = addVecFl2d(mulVecFl2d(phys->g, -1), mulVecFl2d(targetNormal, 98));
+                        pc->effect = LASER;
+
+                        // Point the velocity right at the target, but don't change magnitude
+                        float velMag = magVecFl2d(pc->vel);
+                        pc->vel      = mulVecFl2d(normVecFl2d(toTarget), velMag);
                     }
                 }
+
+                // If not in contact, force is world and object gravity
+                totalForce = addVecFl2d(pc->g, phys->g);
             }
 
             // Calculate new velocity
