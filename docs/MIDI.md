@@ -57,6 +57,18 @@ These instruments are mainly basic wave shapes, with some extra goodies thrown i
 |        7 | Square Wave Hit |
 |        8 | Noise Hit       |
 
+#### Donut Swadge Drum Kit
+The Bank 1 Drum Kit includes a range of noise-based drum sounds originally featured on the [King Donut Swadge](https://swadge.com/donut/).
+By default, this drum kit is available on MIDI Channel 11.
+
+| Note     | Note Number | Description       |
+| -------- | ----------- | ----------------- |
+| B1 to B2 | 35 to 47    | Donut Drum Kit #1 |
+| C2 to C4 | 48 to 60    | Donut Drum Kit #2 |
+| C♯4      | 61          | WOAAAGGHHH        |
+| D4       | 72          | Donut "MAG"       |
+| D♯4      | 73          | Donut "Fest"      |
+
 ### MMX Instruments (Bank 2) {#MMXPrograms}
 These instruments are based on the MMX SoundFont.
 | Program# | Name             |
@@ -90,19 +102,6 @@ The MMX drum kit is also available for percussion channels using Bank 2.
 | G♯2 to C4  | 56 to 72    | Crash Cymbal |
 | C♯4 to C♯5 | 73 to 85    | Synth Tom    |
 | D5 to F♯6  | 86 to 102   | Tom          |
-
-
-#### Donut Swadge Drum Kit
-The Bank 1 Drum Kit includes a range of noise-based drum sounds originally featured on the [King Donut Swadge](https://swadge.com/donut/).
-By default, this drum kit is available on MIDI Channel 11.
-
-| Note     | Note Number | Description       |
-| -------- | ----------- | ----------------- |
-| B1 to B2 | 35 to 47    | Donut Drum Kit #1 |
-| C2 to C4 | 48 to 60    | Donut Drum Kit #2 |
-| C♯4      | 61          | WOAAAGGHHH        |
-| D4       | 72          | Donut "MAG"       |
-| D♯4      | 73          | Donut "Fest"      |
 
 
 ## MIDI Continuous Controllers
