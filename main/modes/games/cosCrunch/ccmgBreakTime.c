@@ -126,19 +126,14 @@ static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, f
 
     // Steam rises. This is 1 px per frame, so its speed is dependent on the frame rate.
     // As long as the frame time is somewhat consistent it looks fine.
-    for (uint16_t y = 0; y < STEAM_WSG_HEIGHT; y++)
+    for (uint16_t y = 0; y < STEAM_WSG_HEIGHT - 1; y++)
     {
-        for (uint16_t x = 0; x < STEAM_WSG_WIDTH; x++)
-        {
-            if (y == STEAM_WSG_HEIGHT - 1)
-            {
-                ccmgbt->wsg.steam.px[y * STEAM_WSG_WIDTH + x] = cTransparent;
-            }
-            else
-            {
-                ccmgbt->wsg.steam.px[y * STEAM_WSG_WIDTH + x] = ccmgbt->wsg.steam.px[(y + 1) * STEAM_WSG_WIDTH + x];
-            }
-        }
+        memcpy(&ccmgbt->wsg.steam.px[STEAM_WSG_WIDTH * y], &ccmgbt->wsg.steam.px[STEAM_WSG_WIDTH * (y + 1)],
+               STEAM_WSG_WIDTH * sizeof(paletteColor_t));
+    }
+    for (uint16_t x = 0; x < STEAM_WSG_WIDTH; x++)
+    {
+        ccmgbt->wsg.steam.px[(STEAM_WSG_HEIGHT - 1) * STEAM_WSG_WIDTH + x] = cTransparent;
     }
 
     switch (state)

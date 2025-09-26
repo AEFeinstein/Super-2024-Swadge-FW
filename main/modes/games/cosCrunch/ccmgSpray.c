@@ -33,11 +33,11 @@ typedef struct
         wsg_t spray;
         wsg_t canvas;
     } wsg;
-    paletteColor_t canvasPixels[TFT_WIDTH * TFT_HEIGHT];
 
     const tintColor_t* tintColor;
 
     rectangle_t targetArea;
+    vec_t canvasPos;
     uint32_t paintTimeRemainingUs;
 
     vec_t sprayCenter;
@@ -61,6 +61,7 @@ ccmgSpray_t* ccmgs = NULL;
 #define SWEEP_US_PER_SIN_DEG  5500
 #define SWEEP_US_PER_Y_PX     13700
 #define SWEEP_HEIGHT          21
+#define SWEEP_COUNT           6
 
 #define SPRAY_CENTER_TO_CAN_X_DIST 40
 #define NOZZLE_TRAVEL_PX           2
@@ -101,12 +102,16 @@ static void ccmgSprayInitMicrogame(void)
     loadWsg(CC_SPRAY_NOZZLE_WSG, &ccmgs->wsg.nozzle, false);
     loadWsg(CC_SPRAY_WSG, &ccmgs->wsg.spray, false);
 
-    ccmgs->wsg.canvas.w  = TFT_WIDTH;
-    ccmgs->wsg.canvas.h  = TFT_HEIGHT;
-    ccmgs->wsg.canvas.px = ccmgs->canvasPixels;
+    ccmgs->wsg.canvas.w = SWEEP_RANGE_X + ccmgs->wsg.spray.w;
+    ccmgs->wsg.canvas.h = SWEEP_HEIGHT * SWEEP_COUNT;
+    ccmgs->canvasPos.x  = ccmgs->sprayCenter.x - ccmgs->wsg.canvas.w + ccmgs->wsg.spray.w / 2;
+    ccmgs->canvasPos.y  = ccmgs->sprayCenter.y - ccmgs->wsg.spray.h / 2;
+
+    ccmgs->wsg.canvas.px = (paletteColor_t*)heap_caps_malloc_tag(
+        sizeof(paletteColor_t) * ccmgs->wsg.canvas.w * ccmgs->wsg.canvas.h, MALLOC_CAP_8BIT, "wsg");
     for (uint32_t i = 0; i < ccmgs->wsg.canvas.w * ccmgs->wsg.canvas.h; i++)
     {
-        ccmgs->canvasPixels[i] = cTransparent;
+        ccmgs->wsg.canvas.px[i] = cTransparent;
     }
     ccmgs->tintColor = cosCrunchMicrogameGetTintColor();
 
@@ -121,15 +126,17 @@ static void ccmgSprayDestroyMicrogame(void)
     {
         for (uint16_t y = ccmgs->targetArea.pos.y; y < ccmgs->targetArea.pos.y + ccmgs->targetArea.height; y++)
         {
-            ccmgs->wsg.canvas.px[y * ccmgs->wsg.canvas.w + x] = cTransparent;
+            ccmgs->wsg.canvas.px[(y - ccmgs->canvasPos.y) * ccmgs->wsg.canvas.w + (x - ccmgs->canvasPos.x)]
+                = cTransparent;
         }
     }
-    cosCrunchMicrogamePersistSplatter(ccmgs->wsg.canvas, 0, 0);
+    cosCrunchMicrogamePersistSplatter(ccmgs->wsg.canvas, ccmgs->canvasPos.x, ccmgs->canvasPos.y);
 
     freeWsg(&ccmgs->wsg.can);
     freeWsg(&ccmgs->wsg.canGraphics);
     freeWsg(&ccmgs->wsg.nozzle);
     freeWsg(&ccmgs->wsg.spray);
+    freeWsg(&ccmgs->wsg.canvas);
     heap_caps_free(ccmgs);
 }
 
@@ -207,7 +214,7 @@ static void ccmgSprayMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float
              ccmgs->targetArea.pos.y + 2 + ccmgs->targetArea.height, c111, 1);
 
     // Paint that's already been sprayed
-    drawWsgSimple(&ccmgs->wsg.canvas, 0, 0);
+    drawWsgSimple(&ccmgs->wsg.canvas, ccmgs->canvasPos.x, ccmgs->canvasPos.y);
 
     if (state == CC_MG_PLAYING && ccmgs->nozzlePressed && ccmgs->paintTimeRemainingUs > 0)
     {
@@ -215,8 +222,9 @@ static void ccmgSprayMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float
 
         // The actual spray decal, drawn to another wsg to track where we've painted already
         uint16_t rotation = esp_random() % 360;
-        drawToCanvasTint(ccmgs->wsg.canvas, ccmgs->wsg.spray, ccmgs->sprayCenter.x - ccmgs->wsg.spray.w / 2,
-                         ccmgs->sprayCenter.y - ccmgs->wsg.spray.h / 2, rotation, ccmgs->tintColor);
+        drawToCanvasTint(
+            ccmgs->wsg.canvas, ccmgs->wsg.spray, ccmgs->sprayCenter.x - ccmgs->wsg.spray.w / 2 - ccmgs->canvasPos.x,
+            ccmgs->sprayCenter.y - ccmgs->wsg.spray.h / 2 - ccmgs->canvasPos.y, rotation, ccmgs->tintColor);
 
         // Lines that sound like "fssshhhhh"
         drawLine(canX + ccmgs->wsg.can.w / 2 - 4, ccmgs->sprayCenter.y - 2, ccmgs->sprayCenter.x + 2,
@@ -249,7 +257,8 @@ static bool ccmgSprayMicrogameTimeout()
     {
         for (uint16_t y = ccmgs->targetArea.pos.y; y < ccmgs->targetArea.pos.y + ccmgs->targetArea.height; y++)
         {
-            if (ccmgs->wsg.canvas.px[y * ccmgs->wsg.canvas.w + x] == cTransparent)
+            if (ccmgs->wsg.canvas.px[(y - ccmgs->canvasPos.y) * ccmgs->wsg.canvas.w + (x - ccmgs->canvasPos.x)]
+                == cTransparent)
             {
                 missedPixels++;
             }
