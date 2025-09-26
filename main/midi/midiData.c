@@ -301,8 +301,9 @@ const midiTimbre_t mmx011Vibraphone = {
     },
     .name = "MMX Bell Synth",
     .envelope = {
-        .attackTime = SECONDS_CONV(0, 100000), // 1ms
-        .releaseTime = SECONDS_CONV(2, 70530), // 2.070530s
+        .attackTime = SECONDS_CONV(0, 100), // 1ms
+        // .releaseTime = SECONDS_CONV(2, 70530), // 2.070530s
+        .releaseTime = SECONDS_CONV(1, 35530), // 2.070530s / 2
         .sustainVol = 127,
     },
 };
@@ -352,7 +353,7 @@ const midiTimbre_t mmx024AcousticGuitar = {
         .decayTime = SECONDS_CONV(2, 70530), // 2.07053s
         // LFO freq: 8.176
         .sustainVol = 1,
-        .releaseTime = SECONDS_CONV(2, 70530), // 2.07053s
+        .releaseTime = SECONDS_CONV(1, 35530), // 2.07053s / 2
     },
 };
 
@@ -664,7 +665,7 @@ const noteSampleMap_t mmxDrumSampleMap[] = {
         },
         .envelope = {
             .attackTime = SECONDS_CONV(0, 1000),
-            .decayTime = SECONDS_CONV(2, 64500u),
+            .decayTime = SECONDS_CONV(1, 32250u),
             .sustainVol = 0,
             //.releaseTime = SECONDS_CONV(2, 64500u),
             // no hold here
@@ -683,7 +684,7 @@ const noteSampleMap_t mmxDrumSampleMap[] = {
         },
         {
             .attackTime = SECONDS_CONV(0, 1000),
-            .decayTime = SECONDS_CONV(3, 448170),
+            .decayTime = SECONDS_CONV(1, 224170),
             .sustainVol = 0,
         },
     },
