@@ -284,7 +284,7 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
             ad->players[ad->plIdx]->ammoIdx     = pkt->ammoIdx;
             ad->players[ad->plIdx]->shotPower   = pkt->shotPower;
 
-            fireShot(ad->phys, ad->players[ad->plIdx]);
+            fireShot(ad->phys, ad->players[ad->plIdx], ad->players[(ad->plIdx + 1) % NUM_PLAYERS]);
             return;
         }
         case P2P_PASS_TURN:

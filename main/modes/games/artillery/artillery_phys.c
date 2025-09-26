@@ -152,7 +152,18 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .expRadius  = 15,
         .effect     = LASER,
     },
-    // TODO Homing Missile (constant force towards opponent)
+    {
+        .name       = "Homing Shot",
+        .color      = c224,
+        .radius     = 4,
+        .numBounces = 1,
+        .numSpread  = 1,
+        .numConsec  = 1,
+        .score      = 50,
+        .expVel     = 100,
+        .expRadius  = 20,
+        .effect     = HOMING_MISSILE,
+    },
     // TODO Confusion (mess with angle & power)
     // TODO Machine Gun (shots fired one after the other)
     // TODO Acid Bath (poison terrain)
@@ -417,6 +428,19 @@ static void physFindObjDests(physSim_t* phys, float elapsedS)
             {
                 // If not in contact, force is world and object gravity
                 totalForce = addVecFl2d(pc->g, phys->g);
+
+                // If there is a homing target
+                if (pc->homingTarget)
+                {
+                    // Check if the shell is close enough to the target
+                    vecFl_t toTarget = subVecFl2d(pc->homingTarget->c.pos, pc->c.pos);
+                    if (sqMagVecFl2d(toTarget) < (240 * 240))
+                    {
+                        // Pull the shell to the target rather than be affected by gravity
+                        // TODO this doesn't work very well....
+                        totalForce = mulVecFl2d(normVecFl2d(toTarget), 600);
+                    }
+                }
             }
 
             // Calculate new velocity
@@ -901,18 +925,19 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
  * and shot power
  *
  * @param phys The physics simulation
- * @param circ A circle of type CT_TANK
+ * @param player The tank which fired the shot
+ * @param opponent The opposing tank
  */
-void fireShot(physSim_t* phys, physCirc_t* circ)
+void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent)
 {
-    const artilleryAmmoAttrib_t* aa = getAmmoAttribute(circ->ammoIdx);
+    const artilleryAmmoAttrib_t* aa = getAmmoAttribute(player->ammoIdx);
 
     // Multiple shells are fired three degrees apart. Calculate the starting angle
     const float spread = (3 * M_PI) / 180.0f;
-    float angStart     = circ->barrelAngle - (aa->numSpread / 2) * spread;
+    float angStart     = player->barrelAngle - (aa->numSpread / 2) * spread;
 
     // This is where shells get spawned
-    vecFl_t absBarrelTip = addVecFl2d(circ->c.pos, circ->relBarrelTip);
+    vecFl_t absBarrelTip = addVecFl2d(player->c.pos, player->relBarrelTip);
 
     // Calculate individual shell score
     int32_t shellScore = aa->score / (aa->numConsec * aa->numSpread);
@@ -929,11 +954,11 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
         physCirc_t* shell = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, aa->radius, CT_SHELL, c440, c000);
 
         // Set the owner of the shell as the firing tank
-        shell->owner = circ;
+        shell->owner = player;
 
         // Give it some initial velocity
-        shell->vel.x = sinf(angStart) * circ->shotPower;
-        shell->vel.y = -cosf(angStart) * circ->shotPower;
+        shell->vel.x = sinf(angStart) * player->shotPower;
+        shell->vel.y = -cosf(angStart) * player->shotPower;
         angStart += spread;
 
         // Set shell parameters
@@ -948,6 +973,10 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
         {
             shell->g   = mulVecFl2d(phys->g, -1);
             shell->vel = mulVecFl2d(shell->vel, 2);
+        }
+        else if (HOMING_MISSILE == shell->effect)
+        {
+            shell->homingTarget = opponent;
         }
 
         // Set color

@@ -119,6 +119,7 @@ typedef struct _physCirc_t
     float explosionVel;
     ammoEffect_t effect;
     struct _physCirc_t* owner;
+    struct _physCirc_t* homingTarget;
 } physCirc_t;
 
 typedef struct
@@ -185,7 +186,7 @@ physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, float barrelAngle, palet
 
 void setBarrelAngle(physCirc_t* circ, float angle);
 void setShotPower(physCirc_t* circ, float power);
-void fireShot(physSim_t* phys, physCirc_t* circ);
+void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent);
 
 void adjustCpuShot(physSim_t* ad, physCirc_t* cpu, physCirc_t* target);
 
