@@ -54,6 +54,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .score      = 100,
         .expVel     = 100,
         .expRadius  = 20,
+        .effect     = NO_EFFECT,
     },
     {
         .name       = "Three Shot",
@@ -65,6 +66,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .score      = 100,
         .expVel     = 80,
         .expRadius  = 15,
+        .effect     = NO_EFFECT,
     },
     {
         .name       = "Five Shot",
@@ -76,6 +78,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .score      = 100,
         .expVel     = 60,
         .expRadius  = 10,
+        .effect     = NO_EFFECT,
     },
     {
         .name       = "Bouncy",
@@ -87,6 +90,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .score      = 75,
         .expVel     = 90,
         .expRadius  = 20,
+        .effect     = NO_EFFECT,
     },
     {
         .name       = "Sniper",
@@ -98,6 +102,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .score      = 300,
         .expVel     = 0,
         .expRadius  = 1,
+        .effect     = NO_EFFECT,
     },
     {
         .name       = "Rocket Jump",
@@ -109,10 +114,22 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .score      = 0,
         .expVel     = 200,
         .expRadius  = 12,
+        .effect     = NO_EFFECT,
     },
     // TODO Big Concussive shot
-    // TODO Wall Maker (raise terrain)
-    // TODO Earthquake (randomzie terrain)
+    {
+        .name       = "Wallmaker",
+        .color      = c030,
+        .radius     = 4,
+        .numBounces = 1,
+        .numSpread  = 1,
+        .numConsec  = 1,
+        .score      = 0,
+        .expVel     = 0,
+        .expRadius  = 20,
+        .effect     = WALL_MAKER,
+    },
+    // TODO Earthquake (randomize terrain)
     // TODO Acid Bath (poison terrain)
     // TODO Landmines (leave mines for later)
     // TODO Homing Missile (constant force towards opponent)
@@ -884,12 +901,6 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
     // Track shells, not players
     clear(&phys->cameraTargets);
 
-    // For shells that don't do damage (i.e. rocket jump), also track the player
-    if (0 == aa->score)
-    {
-        push(&phys->cameraTargets, circ);
-    }
-
     // Create each shell
     for (int32_t shellCount = 0; shellCount < aa->numSpread; shellCount++)
     {
@@ -909,6 +920,7 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
         shell->explosionRadius = aa->expRadius;
         shell->explosionVel    = aa->expVel;
         shell->score           = shellScore;
+        shell->effect          = aa->effect;
 
         // Set color
         shell->baseColor   = aa->color;

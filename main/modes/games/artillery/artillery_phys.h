@@ -32,6 +32,16 @@ typedef enum
     CT_OBSTACLE,
 } circType_t;
 
+typedef enum __attribute__((packed))
+{
+    NO_EFFECT,
+    WALL_MAKER,
+    HOMING_MISSILE,
+    ACID_BATH,
+    LANDMINES,
+    CONFUSION,
+} ammoEffect_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -54,6 +64,7 @@ typedef struct
     uint16_t score;
     float expVel;
     uint8_t expRadius;
+    ammoEffect_t effect;
     const char* name;
 } artilleryAmmoAttrib_t;
 
@@ -105,6 +116,7 @@ typedef struct _physCirc_t
     int32_t bounces;
     int32_t explosionRadius;
     float explosionVel;
+    ammoEffect_t effect;
     struct _physCirc_t* owner;
 } physCirc_t;
 
