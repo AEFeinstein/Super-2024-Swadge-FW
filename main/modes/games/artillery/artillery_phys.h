@@ -40,6 +40,7 @@ typedef enum __attribute__((packed))
     ACID_BATH,
     LANDMINES,
     CONFUSION,
+    LASER,
 } ammoEffect_t;
 
 //==============================================================================
