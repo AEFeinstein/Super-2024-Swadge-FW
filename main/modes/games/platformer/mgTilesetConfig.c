@@ -22,3 +22,20 @@ void mg_kineticDonutTileset_animateTiles(uint8_t tileId)
 {
     //Nothing to do here... yet
 }
+
+
+bool mg_levelSelectTileset_needsTransparency(uint8_t tileId)
+{
+    switch (tileId)
+    {
+        case MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20 ... MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_28:
+            return true;
+        default:
+            return false;
+    }
+}
+
+void mg_levelSelectTileset_animateTiles(uint8_t tileId)
+{
+    //Nothing to do here... yet
+}
