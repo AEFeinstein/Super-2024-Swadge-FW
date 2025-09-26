@@ -140,12 +140,23 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .expRadius  = 20,
         .effect     = WALL_MAKER,
     },
+    {
+        .name       = "Laser Bolt",
+        .color      = c522,
+        .radius     = 4,
+        .numBounces = 1,
+        .numSpread  = 1,
+        .numConsec  = 1,
+        .score      = 150,
+        .expVel     = 75,
+        .expRadius  = 15,
+        .effect     = LASER,
+    },
+    // TODO Homing Missile (constant force towards opponent)
+    // TODO Confusion (mess with angle & power)
+    // TODO Machine Gun (shots fired one after the other)
     // TODO Acid Bath (poison terrain)
     // TODO Landmines (leave mines for later)
-    // TODO Homing Missile (constant force towards opponent)
-    // TODO Machine Gun (shots fired one after the other)
-    // TODO Laser (zero gravity, maybe faster?)
-    // TODO Confusion (mess with angle & power)
 };
 
 const artilleryAmmoAttrib_t* getAmmoAttributes(uint16_t* numAttributes)
@@ -931,6 +942,13 @@ void fireShot(physSim_t* phys, physCirc_t* circ)
         shell->explosionVel    = aa->expVel;
         shell->score           = shellScore;
         shell->effect          = aa->effect;
+
+        // Negate gravity for the laser and make it faster
+        if (LASER == shell->effect)
+        {
+            shell->g   = mulVecFl2d(phys->g, -1);
+            shell->vel = mulVecFl2d(shell->vel, 2);
+        }
 
         // Set color
         shell->baseColor   = aa->color;
