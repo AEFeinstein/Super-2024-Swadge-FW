@@ -226,7 +226,9 @@ void platformerEnterMode(void)
     mg_initializeWsgManager(&(platformer->wsgManager));
 
     mg_initializeTileMap(&(platformer->tilemap), &(platformer->wsgManager));
-    mg_loadMapFromFile(&(platformer->tilemap), leveldef[0].filename);
+
+    mg_loadWsgSet(&(platformer->wsgManager), leveldef[1].defaultWsgSetIndex);
+    mg_loadMapFromFile(&(platformer->tilemap), leveldef[1].filename);
 
     mg_initializeSoundManager(&(platformer->soundManager));
 
@@ -691,7 +693,9 @@ void changeStateGame(platformer_t* self)
 
     mg_deactivateAllEntities(&(self->entityManager), false);
 
-    uint16_t levelIndex = getLevelIndex(self->gameData.world, self->gameData.level);
+    uint16_t levelIndex = getLevelIndex(self->gameData.world, self->gameData.level) + 1;
+
+    mg_loadWsgSet(&(platformer->wsgManager), leveldef[levelIndex].defaultWsgSetIndex);
     mg_loadMapFromFile(&(platformer->tilemap), leveldef[levelIndex].filename);
     self->gameData.countdown = leveldef[levelIndex].timeLimit;
 
