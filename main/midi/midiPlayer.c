@@ -762,7 +762,7 @@ static bool setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
         case WAVETABLE:
         {
             voice->type = VOICE_WAVE_FUNC;
-            swSynthSetWaveFunc(&voice->wave.oscillator, timbre->waveFunc, (void*)((uintptr_t)timbre->waveIndex));
+            swSynthInitOscillatorWave(&voice->wave.oscillator, timbre->waveFunc, (void*)((uintptr_t)timbre->waveIndex), 0, 0);
             voice->wave.oscillator.chorus = (timbre->effects.chorus) >> 3;
             voice->envelope               = timbre->envelope;
             break;
@@ -771,7 +771,7 @@ static bool setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
         case NOISE:
         {
             voice->type = VOICE_WAVE_FUNC;
-            swSynthSetShape(&voice->wave.oscillator, SHAPE_NOISE);
+            swSynthInitOscillator(&voice->wave.oscillator, SHAPE_NOISE, 0, 0);
             voice->envelope = timbre->envelope;
             break;
         }
@@ -779,7 +779,7 @@ static bool setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
         case WAVE_SHAPE:
         {
             voice->type = VOICE_WAVE_FUNC;
-            swSynthSetShape(&voice->wave.oscillator, timbre->shape);
+            swSynthInitOscillator(&voice->wave.oscillator, timbre->shape, 0, 0);
             voice->envelope = timbre->envelope;
             break;
         }
