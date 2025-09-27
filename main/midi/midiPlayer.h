@@ -787,6 +787,9 @@ typedef struct
 
     /// @brief If true, the playing file will automatically repeat when complete
     bool loop;
+
+    /// @brief If true, all events from the current song have been read and we are waiting for notes to end.
+    bool songEnding;
 } midiPlayer_t;
 
 /**

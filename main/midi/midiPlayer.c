@@ -1452,32 +1452,36 @@ int32_t midiPlayerStep(midiPlayer_t* player)
         return 0;
     }
 
-    bool checkEvents = true;
+    bool checkEvents = !player->songEnding;
     if (player->mode == MIDI_FILE)
     {
-        if (!player->eventAvailable)
+        if (!player->songEnding)
         {
-            player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
-        }
+            if (!player->eventAvailable)
+            {
+                player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
+            }
 
-        if (!player->eventAvailable)
-        {
-            ESP_LOGI("MIDI", "Done playing file!");
-            midiSongEnd(player);
-            checkEvents = false;
-        }
+            if (!player->eventAvailable)
+            {
+                ESP_LOGI("MIDI", "Done playing file!");
+                player->songEnding = true;
+                //midiSongEnd(player);
+                checkEvents = false;
+            }
 
-        // Use a while loop since we may need to handle multiple events at the exact same time
-        while (checkEvents
-               && player->pendingEvent.absTime
-                      <= SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division))
-        {
-            // It's time, so handle the event now
-            handleEvent(player, &player->pendingEvent);
+            // Use a while loop since we may need to handle multiple events at the exact same time
+            while (checkEvents
+                && player->pendingEvent.absTime
+                        <= SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division))
+            {
+                // It's time, so handle the event now
+                handleEvent(player, &player->pendingEvent);
 
-            // Try and grab the next event, and if we got one, keep checking
-            player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
-            checkEvents            = player->eventAvailable;
+                // Try and grab the next event, and if we got one, keep checking
+                player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
+                checkEvents            = player->eventAvailable;
+            }
         }
     }
     else if (player->mode == MIDI_STREAMING)
@@ -1497,6 +1501,7 @@ int32_t midiPlayerStep(midiPlayer_t* player)
                             | player->poolVoiceStates.sustenuto | player->poolVoiceStates.release
                             | player->poolVoiceStates.attack | player->poolVoiceStates.decay
                             | player->poolVoiceStates.sustain;
+    uint32_t anyVoices = activeVoices;
     while (0 != activeVoices)
     {
         uint8_t voiceIdx = __builtin_ctz(activeVoices);
@@ -1509,6 +1514,7 @@ int32_t midiPlayerStep(midiPlayer_t* player)
     activeVoices = player->percVoiceStates.on | player->percVoiceStates.held | player->percVoiceStates.sustenuto
                    | player->percVoiceStates.release | player->percVoiceStates.attack | player->percVoiceStates.decay
                    | player->percVoiceStates.sustain;
+    anyVoices |= activeVoices;
     while (0 != activeVoices)
     {
         uint8_t voiceIdx = __builtin_ctz(activeVoices);
@@ -1522,6 +1528,11 @@ int32_t midiPlayerStep(midiPlayer_t* player)
     // Apply the global volume value
     sample *= player->volume;
     sample /= UINT14_MAX;
+
+    if (player->songEnding && !anyVoices)
+    {
+        midiSongEnd(player);
+    }
 
     return sample;
 }
