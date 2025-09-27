@@ -164,7 +164,18 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .expRadius  = 20,
         .effect     = HOMING_MISSILE,
     },
-    // TODO Confusion (mess with angle & power)
+    {
+        .name       = "Confuser",
+        .color      = c000,
+        .radius     = 4,
+        .numBounces = 1,
+        .numSpread  = 1,
+        .numConsec  = 1,
+        .score      = 50,
+        .expVel     = 100,
+        .expRadius  = 20,
+        .effect     = CONFUSION,
+    },
     // TODO Machine Gun (shots fired one after the other)
     // TODO Acid Bath (poison terrain)
     // TODO Landmines (leave mines for later)
