@@ -176,7 +176,18 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .expRadius  = 20,
         .effect     = CONFUSION,
     },
-    // TODO Machine Gun (shots fired one after the other)
+    {
+        .name       = "Machine Gun",
+        .color      = c500,
+        .radius     = 2,
+        .numBounces = 1,
+        .numSpread  = 1,
+        .numConsec  = 5,
+        .score      = 100,
+        .expVel     = 60,
+        .expRadius  = 10,
+        .effect     = NO_EFFECT,
+    },
     // TODO Acid Bath (poison terrain)
     // TODO Landmines (leave mines for later)
 };
@@ -945,7 +956,7 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
  * @param player The tank which fired the shot
  * @param opponent The opposing tank
  */
-void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent)
+void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool firstShot)
 {
     const artilleryAmmoAttrib_t* aa = getAmmoAttribute(player->ammoIdx);
 
@@ -959,10 +970,15 @@ void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent)
     // Calculate individual shell score
     int32_t shellScore = aa->score / (aa->numConsec * aa->numSpread);
 
-    // TODO set a timer for numConsec
+    // If this is the first shot, set up consecutive shots
+    if (firstShot)
+    {
+        player->shotsRemaining = aa->numConsec - 1;
+        player->shotTimer      = 0;
 
-    // Track shells, not players
-    clear(&phys->cameraTargets);
+        // Track shells, not players
+        clear(&phys->cameraTargets);
+    }
 
     // Create each shell
     for (int32_t shellCount = 0; shellCount < aa->numSpread; shellCount++)

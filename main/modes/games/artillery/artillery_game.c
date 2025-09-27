@@ -376,12 +376,22 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
         }
         case AGS_FIRE:
         {
+            physCirc_t* player   = ad->players[ad->plIdx];
+            physCirc_t* opponent = ad->players[(ad->plIdx + 1) % NUM_PLAYERS];
+
             // If the shot hasn't fired yet, fire away!
             if (false == ad->phys->shotFired)
             {
                 ad->phys->shotFired = true;
-                fireShot(ad->phys, ad->players[ad->plIdx], ad->players[(ad->plIdx + 1) % NUM_PLAYERS]);
-                artilleryTxShot(ad, ad->players[ad->plIdx]);
+                fireShot(ad->phys, player, opponent, true);
+                artilleryTxShot(ad, player);
+            }
+            else if (player->shotsRemaining)
+            {
+                RUN_TIMER_EVERY(player->shotTimer, 250000, elapsedUs, {
+                    player->shotsRemaining--;
+                    fireShot(ad->phys, player, opponent, false);
+                });
             }
             // Run a timer to wait between switching players, otherwise it's too rushed
             else if (ad->phys->playerSwapTimerUs)

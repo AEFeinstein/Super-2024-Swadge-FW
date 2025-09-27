@@ -114,6 +114,8 @@ typedef struct _physCirc_t
     float shotPower;
     int16_t ammoIdx;
     int32_t score;
+    int8_t shotsRemaining;
+    int32_t shotTimer;
 
     // Shell data
     int32_t bounces;
@@ -188,7 +190,7 @@ physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, float barrelAngle, palet
 
 void setBarrelAngle(physCirc_t* circ, float angle);
 void setShotPower(physCirc_t* circ, float power);
-void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent);
+void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool firstShot);
 
 void adjustCpuShot(physSim_t* ad, physCirc_t* cpu, physCirc_t* target);
 
