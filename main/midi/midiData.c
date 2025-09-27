@@ -185,6 +185,7 @@ const midiTimbre_t colossusTimbre = {
         //
         .rate = 8192,
         .baseNote = FREQ_C_SHARP_5,
+        .tune = 0,
     },
     .name = "Colossus Roar",
 };
@@ -199,6 +200,7 @@ const midiTimbre_t magTimbre = {
         //
         .rate = 8192,
         .baseNote = FREQ_A4,
+        .tune = 0,
     },
     .name = "MAG",
 };
@@ -213,6 +215,7 @@ const midiTimbre_t festTimbre = {
         //
         .rate = 8192,
         .baseNote = FREQ_A4,
+        .tune = 0,
     },
     .name = "FEST",
 };
@@ -227,6 +230,7 @@ const midiTimbre_t wilhelmTimbre = {
         //
         .rate = 8192,
         .baseNote = FREQ_A4,
+        .tune = 0,
     },
     .name = "Wilhelm",
 };
@@ -241,6 +245,7 @@ const midiTimbre_t noriTimbre = {
         //
         .rate = 8192,
         .baseNote = FREQ_A4,
+        .tune = 0,
     },
     .name = "Nori",
 };
@@ -297,7 +302,8 @@ const midiTimbre_t mmx011Vibraphone = {
         .loopEnd = 95,
         .rate = 28928,
         // pitch keycenter=82, plus tune=50
-        .baseNote = FREQ_A_SHARP_5 + (FREQ_B5 - FREQ_A_SHARP_5) / 2,
+        .baseNote = FREQ_A_SHARP_5,
+        .tune = 50,
     },
     .name = "MMX Bell Synth",
     .envelope = {
@@ -319,9 +325,8 @@ const midiTimbre_t mmx017Organ = {
         // original rate: 14336
         .rate = 14336,
         // pitch keycenter=70, tune=65
-        // TODO tune
-        // nah tune is just a minor adjustment
         .baseNote = FREQ_A_SHARP_4,
+        .tune = 65,
     },
     .name = "MMX Organ",
     .envelope = {
@@ -346,6 +351,7 @@ const midiTimbre_t mmx024AcousticGuitar = {
         .rate = 37760,
         // keycenter=77, tune=57
         .baseNote = FREQ_F4,
+        .tune = 57,
     },
     .name = "MMX Acoustic Guitar",
     .envelope = {
@@ -368,6 +374,7 @@ const midiTimbre_t mmx029OverdrivenGuitar = {
         .rate = 25728,
         // keycenter=73, tune=56
         .baseNote = FREQ_C_SHARP_4,
+        .tune = 56,
     },
     .name = "MMX Overdrive Guitar",
     .envelope = {
@@ -387,6 +394,7 @@ const midiTimbre_t mmx030DistortedGuitar = {
         .rate = 23168,
         // keycenter=52, tune=49
         .baseNote = FREQ_E2,
+        .tune = 49,
     },
     .name = "MMX Distortion Guitar",
     .envelope = {
@@ -405,6 +413,7 @@ const midiTimbre_t mmx036SlapBass = {
         // original rate: 13440 Hz
         .rate = 13440,
         .baseNote = FREQ_B2,
+        .tune = 45,
     },
     .name = "MMX Slap Bass",
     .envelope = {
@@ -424,6 +433,7 @@ const midiTimbre_t mmx038SynthBass = {
         .rate = 8960,
         // keycenter=48, tune=83
         .baseNote = FREQ_C2,
+        .tune = 83,
     },
     .name = "MMX Synth Bass",
     .envelope = {
@@ -444,6 +454,7 @@ const midiTimbre_t mmx048Strings = {
         .rate = 30720,
         // keycenter=76, tune=55
         .baseNote = FREQ_E4,
+        .tune = 55,
     },
     .name = "MMX Strings",
     .envelope = {
@@ -462,6 +473,9 @@ const midiTimbre_t mmx055OrchestraHit = {
         .rate = 16512,
         // keycenter=61, tune=55
         .baseNote = FREQ_C_SHARP_3,
+        .tune = 55,
+        .loopStart = 0,
+        .loopEnd = 0,
     },
     .name = "MMX Orchestra Hit",
     .envelope = {
@@ -481,6 +495,7 @@ const midiTimbre_t mmx062SynthBrass = {
         .rate = 28928,
         // keycenter=58, tune=50
         .baseNote = FREQ_A_SHARP_3,
+        .tune = 50,
     },
     .name = "MMX Synth Brass",
     .envelope = {
@@ -500,6 +515,7 @@ const midiTimbre_t mmx080SquareWave = {
         .rate = 28928,
         // keycenter=82, tune=50
         .baseNote = FREQ_A_SHARP_5,
+        .tune = 50,
     },
     .name = "MMX Square Wave",
     .envelope = {
@@ -518,6 +534,7 @@ const midiTimbre_t mmx081SawWave = {
         .loopEnd = 5887,
         .rate = 13696,
         .baseNote = FREQ_G3,
+        .tune = 50,
     },
     .name = "MMX Saw Wave",
     .envelope = {
@@ -537,6 +554,7 @@ const midiTimbre_t mmx082SynthLead = {
         .rate = 87040,
         // keycenter=89, tune=43
         .baseNote = FREQ_F5,
+        .tune = 45,
     },
     .name = "MMX Synth Lead",
     .envelope = {
@@ -556,6 +574,7 @@ const midiTimbre_t mmx083SynthLead2 = {
         .rate = 12032,
         // keycenter=67, tune=69
         .baseNote = FREQ_G3,
+        .tune = 69,
     },
     .name = "MMX Synth Lead 2",
     .envelope = {
@@ -589,6 +608,7 @@ const noteSampleMap_t mmxDrumSampleMap[] = {
         .noteEnd = 36,
         .sample = {
             .baseNote = FREQ_C1,
+            .tune = 0,
             .fIdx = KICK_BIN,
             .rate = 30976,
             .loop = 1,
@@ -605,6 +625,7 @@ const noteSampleMap_t mmxDrumSampleMap[] = {
         .noteEnd = 37,
         .sample = {
             .baseNote = FREQ_C_SHARP_1,
+            .tune = 0,
             .fIdx = HIGHQ_BIN,
             .rate = 8576,
             .loop = 1,
@@ -621,6 +642,7 @@ const noteSampleMap_t mmxDrumSampleMap[] = {
         .noteEnd = 40,
         .sample = {
             .baseNote = FREQ_B1,
+            .tune = 0,
             .fIdx = SNARE_BIN,
             .rate = 25984,
             .loop = 1,
@@ -637,6 +659,7 @@ const noteSampleMap_t mmxDrumSampleMap[] = {
         .noteEnd = 41,
         .sample = {
             .baseNote = FREQ_F1,
+            .tune = 0,
             .fIdx = POWERSNARE_BIN,
             .rate = 32256,
             .loop = 0,
@@ -657,6 +680,7 @@ const noteSampleMap_t mmxDrumSampleMap[] = {
         .noteEnd = 55,
         .sample = {
             .baseNote = FREQ_G_SHARP_1,
+            .tune = 0,
             .fIdx = OPENHIHAT_BIN,
             .rate = 20224,
             .loop = 0,
@@ -676,6 +700,7 @@ const noteSampleMap_t mmxDrumSampleMap[] = {
         .noteEnd = 72,
         .sample = {
             .baseNote = FREQ_A3,
+            .tune = 0,
             .fIdx = CRASHCYMBAL_BIN,
             .rate = 16640,
             .loop = 0,
@@ -693,6 +718,7 @@ const noteSampleMap_t mmxDrumSampleMap[] = {
         .noteEnd = 85,
         .sample = {
             .baseNote = FREQ_F_SHARP_4,
+            .tune = 0,
             .fIdx = SYNTHTOM_BIN,
             .rate = 30976,
             .loop = 1,
@@ -709,6 +735,7 @@ const noteSampleMap_t mmxDrumSampleMap[] = {
         .noteEnd = 102,
         .sample = {
             .baseNote = FREQ_G5,
+            .tune = 0,
             .fIdx = TOM_BIN,
             .rate = 14464,
             .loop = 1,

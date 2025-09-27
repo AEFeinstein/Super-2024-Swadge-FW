@@ -475,6 +475,9 @@ typedef struct
     /// @brief The base frequency, at which the sample plays at normal speed
     uq8_24 baseNote;
 
+    /// @brief Fine tuning of the note, +/- 100 cents
+    int8_t tune;
+
     /// @brief 0 to loop forever, or the number of loops to play
     uint32_t loop;
 
@@ -607,6 +610,9 @@ typedef struct
 
             /// @brief The sample's base frequency
             uq16_16 baseNote;
+
+            /// @brief The sample's fine tuning
+            int8_t tune;
 
             /// @brief The number of fractional samples remaining
             uq24_8 error;

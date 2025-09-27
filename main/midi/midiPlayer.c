@@ -775,6 +775,7 @@ static bool setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
             voice->sample.length    = sampleCount;
             voice->sample.rate      = sampleDef->rate;
             voice->sample.baseNote  = sampleDef->baseNote;
+            voice->sample.tune      = sampleDef->tune;
             voice->sample.loopStart = (sampleDef->loopStart < sampleCount) ? sampleDef->loopStart : 0;
             voice->sample.loopEnd = (sampleDef->loopEnd <= sampleCount && sampleDef->loopEnd > voice->sample.loopStart)
                                         ? sampleDef->loopEnd
@@ -808,15 +809,15 @@ static void updateSampleVoicePitch(midiVoice_t* voice)
 #ifdef FLOAT_SAMPLE_RATIO
     // In the highest few octaves, this is still significantly more accurate than even the fixed calculation.
     voice->sample.sampleRateRatio
-        = (int)((1.0f * DAC_SAMPLE_RATE_HZ / voice->sample.rate * (1.0f * voice->sample.baseNote / voice->pitch) + .5f)
+        = (int)((1.0f * DAC_SAMPLE_RATE_HZ / voice->sample.rate * (1.0f * voice->sample.baseNote / bendPitchFreq(voice->pitch, voice->sample.tune)) + .5f)
                 * (1 << 8));
 #else
+    uint64_t div = bendPitchFreq(voice->pitch, voice->sample.tune);
+    div *= voice->sample.rate;
     uint64_t sampleRateTmp = DAC_SAMPLE_RATE_HZ << 8;
     sampleRateTmp *= voice->sample.baseNote;
-    sampleRateTmp += (voice->pitch >> 1);
-    sampleRateTmp /= voice->pitch;
-    sampleRateTmp += (voice->sample.rate >> 1);
-    sampleRateTmp /= voice->sample.rate;
+    sampleRateTmp += (div >> 1);
+    sampleRateTmp /= div;
 
     voice->sample.sampleRateRatio = (sampleRateTmp & 0xFFFFFFFF);
 #endif
