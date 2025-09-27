@@ -207,58 +207,6 @@ static uint32_t allocVoice(const voiceStates_t* states, const midiVoice_t* voice
 static bool releaseNote(voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* voice)
 {
     return ADSR_OFF == voiceAdvanceAdsr(voice, states, voiceIdx, NULL, NULL, ADSR_RELEASE);
-
-    uint32_t voiceBit = 1 << voiceIdx;
-
-    // We'll return false unless the note has 0 release time
-    bool result = false;
-
-    if ((states->release | states->sustain) & voiceBit)
-    {
-        states->sustain &= ~voiceBit;
-        states->on &= ~voiceBit;
-        return false;
-    }
-    else
-    {
-        // we're not in release or anything yet so go straight there
-        return ADSR_OFF == voiceAdvanceAdsr(voice, states, voiceIdx, NULL, NULL, ADSR_RELEASE);
-    }
-    /*else if (states->release & voiceBit)
-    {
-        // already in release
-        states->on &= ~voiceBit;
-    }
-    else
-
-    // We don't care what state the note is in, as long as it's not already in the release state
-    else if (releaseTime)
-    {
-        // Release time will take some
-        states->release |= voiceBit;
-
-        voice->volRate = -voice->curVol / (releaseTime * releaseTime);
-        voice->stateChangeTick = voice->voiceTick + releaseTime;
-    }
-    else
-    {
-        // No release time, just end it immediately
-        states->release &= mask;
-        states->held &= mask;
-
-        voice->curVol = 0;
-        voice->volRate = 0;
-        voice->volAccel = 0;
-        voice->stateChangeTick = UINT32_MAX;
-
-        // return true to indicate the voice must be deallocated
-        result = true;
-    }*/
-    // else, release continues as normal at existing rate. not sure why that'd happen
-
-    // Unconditionally unset all other states
-
-    return result;
 }
 
 /**
