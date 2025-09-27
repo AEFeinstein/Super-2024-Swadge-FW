@@ -317,6 +317,12 @@ void explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
         cNode = cNode->next;
     }
 
+    if (CONFUSION == shell->effect)
+    {
+        setBarrelAngle(hitTank, (esp_random() % 360) * M_PI / 180.0f);
+        setShotPower(hitTank, esp_random() % MAX_SHOT_POWER);
+    }
+
     // Remove this shell from camera tracking
     removeVal(&phys->cameraTargets, shell);
 
