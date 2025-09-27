@@ -28,7 +28,7 @@
 #endif
 
 // Uncomment to use floats for the sample rate calculation
-// #define FLOAT_SAMPLE_RATE 1
+// #define FLOAT_SAMPLE_RATIO 1
 
 #ifdef MIDI_DEBUG
     #define PRINT_VOICE_VOLUME(voice)                                               \
@@ -710,7 +710,8 @@ static bool setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
         case WAVETABLE:
         {
             voice->type = VOICE_WAVE_FUNC;
-            swSynthInitOscillatorWave(&voice->wave.oscillator, timbre->waveFunc, (void*)((uintptr_t)timbre->waveIndex), 0, 0);
+            swSynthInitOscillatorWave(&voice->wave.oscillator, timbre->waveFunc, (void*)((uintptr_t)timbre->waveIndex),
+                                      0, 0);
             voice->wave.oscillator.chorus = (timbre->effects.chorus) >> 3;
             voice->envelope               = timbre->envelope;
             break;
@@ -809,7 +810,9 @@ static void updateSampleVoicePitch(midiVoice_t* voice)
 #ifdef FLOAT_SAMPLE_RATIO
     // In the highest few octaves, this is still significantly more accurate than even the fixed calculation.
     voice->sample.sampleRateRatio
-        = (int)((1.0f * DAC_SAMPLE_RATE_HZ / voice->sample.rate * (1.0f * voice->sample.baseNote / bendPitchFreq(voice->pitch, voice->sample.tune)) + .5f)
+        = (int)((1.0f * DAC_SAMPLE_RATE_HZ / voice->sample.rate
+                     * (1.0f * voice->sample.baseNote / bendPitchFreq(voice->pitch, voice->sample.tune))
+                 + .5f)
                 * (1 << 8));
 #else
     uint64_t div = bendPitchFreq(voice->pitch, voice->sample.tune);
