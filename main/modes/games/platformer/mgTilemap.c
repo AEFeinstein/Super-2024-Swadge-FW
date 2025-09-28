@@ -271,6 +271,8 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
 
             subiterator++;
         }
+    } else {
+        tilemap->entitySpawns = NULL;
     }
 
     heap_caps_free(buf);

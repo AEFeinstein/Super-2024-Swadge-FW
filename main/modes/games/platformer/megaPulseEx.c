@@ -145,6 +145,9 @@ void changeStateMainMenu(platformer_t* self);
 void mgBuildMainMenu(platformer_t* self);
 void mgUpdateMainMenu(platformer_t * self);
 static void mg_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+void changeStateLevelSelect(platformer_t* self);
+void updateLevelSelect(platformer_t* self);
+void drawLevelSelect(platformer_t* self);
 
 //==============================================================================
 // Variables
@@ -169,10 +172,10 @@ swadgeMode_t modePlatformer = {.modeName                 = platformerName,
 
 led_t platLeds[CONFIG_NUM_LEDS];
 
-static const char str_get_ready[]    = "Let's GOOOOOO!";
-static const char str_get_ready_2[]  = "We're so back!";
+static const char str_get_ready[]    = "LET'S GOOOOOO!";
+static const char str_get_ready_2[]  = "WE'RE SO BACK!";
 static const char str_time_up[]      = "-Time Up!-";
-static const char str_game_over[]    = "It's so over...";
+static const char str_game_over[]    = "IT'S SO OVER...";
 static const char str_well_done[]    = "Well done!";
 static const char str_congrats[]     = "Congratulations!";
 static const char str_initials[]     = "Enter your initials!";
@@ -241,7 +244,7 @@ void platformerEnterMode(void)
 
     setFrameRateUs(16666);
 
-    changeStateTitleScreen(platformer);
+    changeStateMainMenu(platformer);
 }
 
 /**
@@ -285,7 +288,7 @@ static void mgMenuCb(const char* label, bool selected, uint32_t settingVal)
             }*/
 
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
-            changeStateReadyScreen(platformer);
+            changeStateLevelSelect(platformer);
         }
         else if (label == mgMenuContinue)
         {
@@ -673,8 +676,8 @@ void drawReadyScreen(font_t* font, mgGameData_t* gameData)
     int16_t xOff = (TFT_WIDTH - textWidth(font, str_get_ready)) / 2;
 
     if(gameData->frameCount & 0b1111){
-        drawText(font, c000, str_get_ready, xOff+2, 130);
-        drawText(font, c555, str_get_ready, xOff, 128);
+        drawText(font, c000, ((gameData->levelDeaths > 0) ? str_get_ready_2 : str_get_ready), xOff+2, 130);
+        drawText(font, c555, ((gameData->levelDeaths > 0) ? str_get_ready_2 : str_get_ready), xOff, 128);
     }
     
 
@@ -1364,4 +1367,65 @@ void drawPause(font_t* font)
 uint16_t getLevelIndex(uint8_t world, uint8_t level)
 {
     return (world - 1) * 4 + (level - 1);
+}
+
+void changeStateLevelSelect(platformer_t* self)
+{
+    self->gameData.frameCount = 0;
+    self->menuState     = 0;
+    self->menuSelection = 0;
+
+    mg_loadWsgSet(&(platformer->wsgManager), leveldef[0].defaultWsgSetIndex);
+    mg_loadMapFromFile(&(platformer->tilemap), leveldef[0].filename);
+    self->tilemap.mapOffsetX = 12;
+    
+    self->update = &updateLevelSelect;
+}
+
+void updateLevelSelect(platformer_t* self)
+{
+    self->gameData.frameCount++;
+    if(self->gameData.frameCount > 59){
+        self->gameData.frameCount = 0;
+    }
+
+    if(self->menuState < 2 && ((self->gameData.btnState & PB_RIGHT) && !(self->gameData.prevBtnState & PB_RIGHT))){
+        self->menuState++;
+    } else if(self->menuState > 0 && ((self->gameData.btnState & PB_LEFT) && !(self->gameData.prevBtnState & PB_LEFT))){
+        self->menuState--;
+    }
+
+    if(self->menuSelection < 2 && ((self->gameData.btnState & PB_DOWN) && !(self->gameData.prevBtnState & PB_DOWN))){
+        self->menuSelection++;
+    } else if(self->menuSelection > 0 && ((self->gameData.btnState & PB_UP) && !(self->gameData.prevBtnState & PB_UP))){
+        self->menuSelection--;
+    }
+
+    if( (self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A))
+    {
+        self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
+
+        mg_loadWsgSet(&(platformer->wsgManager), leveldef[self->gameData.level].defaultWsgSetIndex);
+        mg_loadMapFromFile(&(platformer->tilemap), leveldef[self->gameData.level].filename);
+
+        changeStateReadyScreen(self);
+        return;
+    }
+
+    drawLevelSelect(self);
+}
+
+void drawLevelSelect(platformer_t* self)
+{
+    mg_drawTileMap(&(self->tilemap));
+
+    drawText(&self->font, c555, "STAGE SELECT", 90, 8);
+
+    drawRect(
+        (64 + self->menuState * 64) - self->tilemap.mapOffsetX + ((self->gameData.frameCount >> 2) & 0b0111), 
+        (48 + self->menuSelection * 64) - self->tilemap.mapOffsetY + ((self->gameData.frameCount >> 2) & 0b0111), 
+        (64 + 48 + self->menuState * 64) - self->tilemap.mapOffsetX - ((self->gameData.frameCount >> 2) & 0b0111), 
+        (48 + 48 + self->menuSelection * 64) - self->tilemap.mapOffsetY - ((self->gameData.frameCount >> 2) & 0b0111), 
+        highScoreNewEntryColors[self->gameData.frameCount % 4]
+    );
 }
