@@ -11,6 +11,7 @@
 #include "ext_gamepad.h"
 #include "hdw-nvs_emu.h"
 #include "emu_cnfs.h"
+#include "settingsManager.h"
 
 // Console command handlers
 static int screenshotCommandCb(const char** args, int argCount, char* out);
@@ -23,6 +24,7 @@ static int touchCommandCb(const char** args, int argCount, char* out);
 static int ledsCommandCb(const char** args, int argCount, char* out);
 static int injectCommandCb(const char** args, int argCount, char* out);
 static int joystickCommandCb(const char** args, int argCount, char* out);
+static int skipCommandCb(const char** args, int argCount, char* out);
 static int helpCommandCb(const char** args, int argCount, char* out);
 
 // command, usage, description
@@ -60,6 +62,7 @@ static const char* commandDocs[][3] = {
     {"inject nvs", "inject nvs [namespace] <key> <int|str|file> <value>",
      "injects data into an NVS key. Value can be either an integer, a string, or a file path"},
     {"inject asset", "inject asset <name> <filename>", "injects a file's entire contents as an asset"},
+    {"skip", "skip", "skips the tutorial and self-test modes"},
     {"help", "help [command]", "prints help text for all commands, or for commands matching [command]"},
 };
 
@@ -69,7 +72,7 @@ static const consoleCommand_t consoleCommands[] = {
     {.name = "record", .cb = recordCommandCb},         {.name = "fuzz", .cb = fuzzCommandCb},
     {.name = "touchpad", .cb = touchCommandCb},        {.name = "leds", .cb = ledsCommandCb},
     {.name = "inject", .cb = injectCommandCb},         {.name = "help", .cb = helpCommandCb},
-    {.name = "joystick", .cb = joystickCommandCb},
+    {.name = "joystick", .cb = joystickCommandCb},     {.name = "skip", .cb = skipCommandCb},
 };
 
 const consoleCommand_t* getConsoleCommands(void)
@@ -876,6 +879,15 @@ static int joystickCommandCb(const char** args, int argCount, char* out)
             }
         }
     }
+}
+
+static int skipCommandCb(const char** args, int argCount, char* out)
+{
+    setTestModePassedSetting(true);
+    setTutorialCompletedSetting(true);
+    emulatorSetSwadgeModeByName("Main Menu");
+
+    return 0;
 }
 
 static int helpCommandCb(const char** args, int argCount, char* out)
