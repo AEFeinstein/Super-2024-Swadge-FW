@@ -613,7 +613,7 @@ void handleConsoleCommand(const char* command)
         for (const consoleCommand_t* action = getConsoleCommands();
              action < (getConsoleCommands() + consoleCommandCount()); action++)
         {
-            if (!strcmp(action->name, values[0]))
+            if (!strcasecmp(action->name, values[0]))
             {
                 int outputLen = action->cb(values + 1, argCount - 1, consoleOutput);
 

@@ -115,7 +115,7 @@ const swadgeMode_t* emulatorFindSwadgeMode(const char* name)
 {
     for (uint8_t i = 0; i < modeListGetCount(); i++)
     {
-        if (!strncmp(allSwadgeModes[i]->modeName, name, strlen(name)))
+        if (!strncasecmp(allSwadgeModes[i]->modeName, name, strlen(name)))
         {
             return allSwadgeModes[i];
         }
