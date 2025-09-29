@@ -281,10 +281,20 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
         {
             const artPktShot_t* pkt = (const artPktShot_t*)payload;
 
-            ad->players[ad->plIdx]->barrelAngle = pkt->barrelAngle;
-            ad->players[ad->plIdx]->ammoIdx     = pkt->ammoIdx;
-            ad->players[ad->plIdx]->shotPower   = pkt->shotPower;
+            // Get player references
+            physCirc_t* player   = ad->players[ad->plIdx];
+            physCirc_t* opponent = ad->players[(ad->plIdx + 1) % NUM_PLAYERS];
 
+            // Set the player's shot
+            player->barrelAngle = pkt->barrelAngle;
+            player->ammoIdx     = pkt->ammoIdx;
+            player->shotPower   = pkt->shotPower;
+
+            // Tricky, fire the shot from here before switching game state
+            ad->phys->shotFired = true;
+            fireShot(ad->phys, player, opponent, true);
+
+            // Switch the game state after the shot is fired, preventing the receiving Swadge from TXing a P2P_FIRE_SHOT
             artillerySwitchToGameState(ad, AGS_FIRE);
             return;
         }
@@ -504,6 +514,8 @@ void artilleryCheckTxQueue(artilleryData_t* ad)
     if (ad->p2pQueue.first && p2pIsTxIdle(&ad->p2p))
     {
         uint8_t* payload = shift(&ad->p2pQueue);
+        ESP_LOGI("VT", "TX type %d, len %d", payload[0], getSizeFromType(payload[0]));
+
         // Send over p2p
         p2pSendMsg(&ad->p2p, payload, getSizeFromType(payload[0]), artillery_p2pMsgTxCb);
         // Free queued message
