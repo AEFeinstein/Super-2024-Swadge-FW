@@ -465,63 +465,63 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_CHARGIN_SCHMUCK_IDLE].origin  = &origin_11_11;
     self->sprites[MG_SP_CHARGIN_SCHMUCK_IDLE].hitBox  = &box_24_24;
     
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN1].wsg     = &self->wsgs[MG_SP_CHARGIN_SCHMUCK_RUN1];
+    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN1].wsg     = &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN1];
     self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN1].origin  = &origin_11_11;
     self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN1].hitBox  = &box_24_24;
  
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN2].wsg     = &self->wsgs[MG_SP_CHARGIN_SCHMUCK_RUN2];
+    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN2].wsg     = &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN2];
     self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN2].origin  = &origin_11_11;
     self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN2].hitBox  = &box_24_24;
 
-    self->sprites[MG_SP_TURRET_HORIZONTAL].wsg     = &self->wsgs[MG_SP_TURRET_HORIZONTAL];
+    self->sprites[MG_SP_TURRET_HORIZONTAL].wsg     = &self->wsgs[MG_WSG_TURRET_HORIZONTAL];
     self->sprites[MG_SP_TURRET_HORIZONTAL].origin  = &origin_11_11;
     self->sprites[MG_SP_TURRET_HORIZONTAL].hitBox  = &box_24_24;
 
-    self->sprites[MG_SP_TURRET_45DEG].wsg     = &self->wsgs[MG_SP_TURRET_45DEG];
+    self->sprites[MG_SP_TURRET_45DEG].wsg     = &self->wsgs[MG_WSG_TURRET_45DEG];
     self->sprites[MG_SP_TURRET_45DEG].origin  = &origin_11_11;
     self->sprites[MG_SP_TURRET_45DEG].hitBox  = &box_24_24;
 
-    self->sprites[MG_SP_TURRET_VERTICAL].wsg     = &self->wsgs[MG_SP_TURRET_VERTICAL];
+    self->sprites[MG_SP_TURRET_VERTICAL].wsg     = &self->wsgs[MG_WSG_TURRET_VERTICAL];
     self->sprites[MG_SP_TURRET_VERTICAL].origin  = &origin_11_11;
     self->sprites[MG_SP_TURRET_VERTICAL].hitBox  = &box_24_24;
 
-    self->sprites[MG_SP_LEMON_SHOT].wsg     = &self->wsgs[MG_SP_LEMON_SHOT];
+    self->sprites[MG_SP_LEMON_SHOT].wsg     = &self->wsgs[MG_WSG_LEMON_SHOT];
     self->sprites[MG_SP_LEMON_SHOT].origin  = &origin_8_8;
     self->sprites[MG_SP_LEMON_SHOT].hitBox  = &box_16_16;
 
-    self->sprites[MG_SP_SHELDON_SHIELDY_SHIELD].wsg     = &self->wsgs[MG_SP_SHELDON_SHIELDY_SHIELD];
+    self->sprites[MG_SP_SHELDON_SHIELDY_SHIELD].wsg     = &self->wsgs[MG_WSG_SHELDON_SHIELDY_SHIELD];
     self->sprites[MG_SP_SHELDON_SHIELDY_SHIELD].origin  = &origin_11_11;
     self->sprites[MG_SP_SHELDON_SHIELDY_SHIELD].hitBox  = &box_24_24;
 
-    self->sprites[MG_SP_SHELDON_SHIELDY_WALK1].wsg     = &self->wsgs[MG_SP_SHELDON_SHIELDY_WALK1];
+    self->sprites[MG_SP_SHELDON_SHIELDY_WALK1].wsg     = &self->wsgs[MG_WSG_SHELDON_SHIELDY_WALK1];
     self->sprites[MG_SP_SHELDON_SHIELDY_WALK1].origin  = &origin_11_11;
     self->sprites[MG_SP_SHELDON_SHIELDY_WALK1].hitBox  = &box_24_24;
     
-    self->sprites[MG_SP_SHELDON_SHIELDY_WALK2].wsg     = &self->wsgs[MG_SP_SHELDON_SHIELDY_WALK2];
+    self->sprites[MG_SP_SHELDON_SHIELDY_WALK2].wsg     = &self->wsgs[MG_WSG_SHELDON_SHIELDY_WALK2];
     self->sprites[MG_SP_SHELDON_SHIELDY_WALK2].origin  = &origin_11_11;
     self->sprites[MG_SP_SHELDON_SHIELDY_WALK2].hitBox  = &box_24_24;
 
-    self->sprites[MG_SP_SHELDON_SHIELDY_WALK3].wsg     = &self->wsgs[MG_SP_SHELDON_SHIELDY_WALK3];
+    self->sprites[MG_SP_SHELDON_SHIELDY_WALK3].wsg     = &self->wsgs[MG_WSG_SHELDON_SHIELDY_WALK3];
     self->sprites[MG_SP_SHELDON_SHIELDY_WALK3].origin  = &origin_11_11;
     self->sprites[MG_SP_SHELDON_SHIELDY_WALK3].hitBox  = &box_24_24;
 
-    self->sprites[MG_SP_SPIKY_MCGEE].wsg     = &self->wsgs[MG_SP_SPIKY_MCGEE];
+    self->sprites[MG_SP_SPIKY_MCGEE].wsg     = &self->wsgs[MG_WSG_SPIKY_MCGEE];
     self->sprites[MG_SP_SPIKY_MCGEE].origin  = &origin_11_11;
     self->sprites[MG_SP_SPIKY_MCGEE].hitBox  = &box_24_24;
 
-    self->sprites[MG_SP_AIR_TURRET].wsg     = &self->wsgs[MG_SP_AIR_TURRET];
+    self->sprites[MG_SP_AIR_TURRET].wsg     = &self->wsgs[MG_WSG_AIR_TURRET];
     self->sprites[MG_SP_AIR_TURRET].origin  = &origin_11_11;
     self->sprites[MG_SP_AIR_TURRET].hitBox  = &box_24_24;
 
-    self->sprites[MG_SP_BOUNCE_PAD].wsg     = &self->wsgs[MG_SP_BOUNCE_PAD];
+    self->sprites[MG_SP_BOUNCE_PAD].wsg     = &self->wsgs[MG_WSG_BOUNCE_PAD];
     self->sprites[MG_SP_BOUNCE_PAD].origin  = &origin_15_15;
     self->sprites[MG_SP_BOUNCE_PAD].hitBox  = &box_32_32;
 
-    self->sprites[MG_SP_BOUNCE_PAD_DIAGONAL].wsg     = &self->wsgs[MG_SP_BOUNCE_PAD_DIAGONAL];
+    self->sprites[MG_SP_BOUNCE_PAD_DIAGONAL].wsg     = &self->wsgs[MG_WSG_BOUNCE_PAD_DIAGONAL];
     self->sprites[MG_SP_BOUNCE_PAD_DIAGONAL].origin  = &origin_15_15;
     self->sprites[MG_SP_BOUNCE_PAD_DIAGONAL].hitBox  = &box_32_32;
 
-    self->sprites[MG_SP_MIXTAPE].wsg     = &self->wsgs[MG_SP_MIXTAPE];
+    self->sprites[MG_SP_MIXTAPE].wsg     = &self->wsgs[MG_WSG_MIXTAPE];
     self->sprites[MG_SP_MIXTAPE].origin  = &origin_8_8;
     self->sprites[MG_SP_MIXTAPE].hitBox  = &box_16_16;
 }
