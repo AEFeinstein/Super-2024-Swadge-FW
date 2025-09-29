@@ -1008,7 +1008,7 @@ typedef enum {
 static const mgLeveldef_t leveldef[17] = {
                                           {.filename = LEVEL_SELECT_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_LEVEL_SELECT},
                                           {.filename = KINETIC_DONUT_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT},
-                                          {.filename = DAC_01_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+                                          {.filename = TEST_ROOM_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT},
                                           {.filename = LEVEL_1_3_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
                                           {.filename = LEVEL_1_4_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
                                           {.filename = LEVEL_2_1_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
