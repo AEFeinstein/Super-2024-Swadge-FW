@@ -140,7 +140,8 @@ void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
         }
         case CON_ESTABLISHED:
         {
-            ad->conStr = str_conEstablished;
+            ad->conStr   = str_conEstablished;
+            ad->gameType = AG_WIRELESS;
 
             // If going first, generate and transmit the world
             if (GOING_FIRST == p2pGetPlayOrder(p2p))
@@ -317,6 +318,11 @@ void artillery_p2pMsgTxCb(p2pInfo* p2p, messageStatus_t status, const uint8_t* d
  */
 void artilleryTxColor(artilleryData_t* ad)
 {
+    if (AG_WIRELESS != ad->gameType)
+    {
+        return;
+    }
+
     // Allocate a packet
     artPktColor_t* pkt = heap_caps_calloc(1, sizeof(artPktShot_t), MALLOC_CAP_SPIRAM);
 
@@ -337,6 +343,11 @@ void artilleryTxColor(artilleryData_t* ad)
  */
 void artilleryTxWorld(artilleryData_t* ad)
 {
+    if (AG_WIRELESS != ad->gameType)
+    {
+        return;
+    }
+
     artPktWorld_t* pkt1          = heap_caps_calloc(1, sizeof(artPktWorld_t), MALLOC_CAP_SPIRAM);
     pkt1->type                   = P2P_SET_WORLD;
     pkt1->width                  = ad->phys->bounds.x;
@@ -390,6 +401,11 @@ void artilleryTxWorld(artilleryData_t* ad)
  */
 void artilleryTxPlayers(artilleryData_t* ad)
 {
+    if (AG_WIRELESS != ad->gameType)
+    {
+        return;
+    }
+
     // Remove any other enqueued packet of this type first
     node_t* pktNode = ad->p2pQueue.first;
     while (pktNode)
@@ -435,6 +451,11 @@ void artilleryTxPlayers(artilleryData_t* ad)
  */
 void artilleryTxShot(artilleryData_t* ad, physCirc_t* player)
 {
+    if (AG_WIRELESS != ad->gameType)
+    {
+        return;
+    }
+
     // Allocate a packet
     artPktShot_t* pkt = heap_caps_calloc(1, sizeof(artPktShot_t), MALLOC_CAP_SPIRAM);
 
@@ -457,6 +478,11 @@ void artilleryTxShot(artilleryData_t* ad, physCirc_t* player)
  */
 void artilleryTxPassTurn(artilleryData_t* ad)
 {
+    if (AG_WIRELESS != ad->gameType)
+    {
+        return;
+    }
+
     // Allocate a packet
     artPktPassTurn_t* pkt = heap_caps_calloc(1, sizeof(artPktPassTurn_t), MALLOC_CAP_SPIRAM);
 
