@@ -46,7 +46,7 @@
 const artilleryAmmoAttrib_t ammoAttributes[] = {
     {
         .name       = "Normal",
-        .color      = c500,
+        .color      = c315,
         .radius     = 4,
         .numBounces = 1,
         .numSpread  = 1,
@@ -58,7 +58,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Three Shot",
-        .color      = c500,
+        .color      = c341,
         .radius     = 3,
         .numBounces = 1,
         .numSpread  = 3,
@@ -70,7 +70,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Five Shot",
-        .color      = c500,
+        .color      = c314,
         .radius     = 2,
         .numBounces = 1,
         .numSpread  = 5,
@@ -82,7 +82,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Bouncy",
-        .color      = c125,
+        .color      = c224,
         .radius     = 4,
         .numBounces = 5,
         .numSpread  = 1,
@@ -94,7 +94,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Sniper",
-        .color      = c550,
+        .color      = c222,
         .radius     = 1,
         .numBounces = 1,
         .numSpread  = 1,
@@ -106,7 +106,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Big Shot",
-        .color      = c500,
+        .color      = c243,
         .radius     = 7,
         .numBounces = 1,
         .numSpread  = 1,
@@ -118,7 +118,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Rocket Jump",
-        .color      = c555,
+        .color      = c421,
         .radius     = 12,
         .numBounces = 1,
         .numSpread  = 1,
@@ -130,7 +130,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Wallmaker",
-        .color      = c030,
+        .color      = c242,
         .radius     = 4,
         .numBounces = 1,
         .numSpread  = 1,
@@ -142,7 +142,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Laser Bolt",
-        .color      = c522,
+        .color      = c331,
         .radius     = 4,
         .numBounces = 1,
         .numSpread  = 1,
@@ -154,7 +154,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Homing Shot",
-        .color      = c224,
+        .color      = c223,
         .radius     = 4,
         .numBounces = 1,
         .numSpread  = 1,
@@ -166,7 +166,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Confuser",
-        .color      = c000,
+        .color      = c244,
         .radius     = 4,
         .numBounces = 1,
         .numSpread  = 1,
@@ -178,7 +178,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Machine Gun",
-        .color      = c500,
+        .color      = c321,
         .radius     = 2,
         .numBounces = 1,
         .numSpread  = 1,
@@ -190,7 +190,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Floor is Lava",
-        .color      = c500,
+        .color      = c412,
         .radius     = 4,
         .numBounces = 1,
         .numSpread  = 1,
