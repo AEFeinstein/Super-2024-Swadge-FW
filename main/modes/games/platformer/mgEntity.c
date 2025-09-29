@@ -1184,6 +1184,21 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
 
             break;
         }
+        case ENTITY_BOUNCE_PAD:
+        {
+            self->yspeed = (other->spriteFlipVertical) ? 112 : -112;
+            self->falling = true;
+            soundPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
+            break;
+        }
+        case ENTITY_BOUNCE_PAD_DIAGONAL:
+        {
+            self->xspeed = (other->spriteFlipHorizontal) ? -112 : 112;
+            self->yspeed = (other->spriteFlipVertical) ? 112 : -112;
+            self->falling = true;
+            soundPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
+            break;
+        }
         default:
         {
             break;
