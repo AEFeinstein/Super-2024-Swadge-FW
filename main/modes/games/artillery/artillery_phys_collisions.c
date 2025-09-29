@@ -27,8 +27,10 @@ static bool physCircCircIntersection(physSim_t* phys, physCirc_t* cMoving, circl
  *
  * @param phys The physics simulation
  */
-void physCheckCollisions(physSim_t* phys)
+bool physCheckCollisions(physSim_t* phys)
 {
+    bool change = false;
+
     // For each circle
     bool shouldRemoveNode = false;
     physCirc_t* hitTank   = NULL;
@@ -207,7 +209,7 @@ void physCheckCollisions(physSim_t* phys)
             // Shells explode
             if (pc->type == CT_SHELL)
             {
-                explodeShell(phys, cNode, hitTank);
+                change |= explodeShell(phys, cNode, hitTank);
             }
 
             // Remove the node
@@ -216,6 +218,8 @@ void physCheckCollisions(physSim_t* phys)
         }
         cNode = nextNode;
     }
+
+    return change;
 }
 
 /**

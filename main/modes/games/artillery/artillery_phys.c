@@ -395,7 +395,7 @@ bool physStep(physSim_t* phys, int32_t elapsedUs, bool menuShowing)
 
         // Calculate physics frames at a very regular PHYS_TIME_STEP
         physFindObjDests(phys, PHYS_TIME_STEP_S);
-        physCheckCollisions(phys);
+        change |= physCheckCollisions(phys);
         change |= physBinaryMoveObjects(phys);
         change |= physAdjustCameraTimer(phys, menuShowing);
         physRunAnimateTimers(phys, PHYS_TIME_STEP_US);
