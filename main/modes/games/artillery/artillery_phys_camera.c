@@ -33,7 +33,7 @@ void physSetCameraButton(physSim_t* phys, buttonBit_t btn)
  *
  * @param phys The physics simulation to pan
  */
-bool physAdjustCameraTimer(physSim_t* phys)
+bool physAdjustCameraTimer(physSim_t* phys, bool menuShowing)
 {
     // Where the camera was
     vec_t oldCamera = phys->camera;
@@ -107,7 +107,14 @@ bool physAdjustCameraTimer(physSim_t* phys)
         vbStart.x -= CAMERA_MARGIN;
         vbStart.y -= CAMERA_MARGIN;
         vbEnd.x -= (TFT_WIDTH - CAMERA_MARGIN);
-        vbEnd.y -= (TFT_HEIGHT - CAMERA_MARGIN);
+        if (menuShowing)
+        {
+            vbEnd.y -= 110;
+        }
+        else
+        {
+            vbEnd.y -= (TFT_HEIGHT - CAMERA_MARGIN);
+        }
 
         // Desired camera starts as the current camera
         vec_t desiredCamera = phys->camera;

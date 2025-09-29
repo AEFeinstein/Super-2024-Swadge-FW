@@ -16,6 +16,9 @@
 #define PHYS_TIME_STEP_US (1000000 / PHYS_FPS)
 #define PHYS_TIME_STEP_S  (1 / (float)PHYS_FPS)
 
+#define LAVA_ANIM_PERIOD 500000
+#define LAVA_ANIM_BLINKS 3
+
 //==============================================================================
 // Enums
 //==============================================================================

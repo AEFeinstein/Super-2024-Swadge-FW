@@ -39,7 +39,7 @@ typedef enum __attribute__((packed))
     NO_EFFECT,
     WALL_MAKER,
     HOMING_MISSILE,
-    ACID_BATH,
+    FLOOR_LAVA,
     LANDMINES,
     CONFUSION,
     LASER,
@@ -116,6 +116,7 @@ typedef struct _physCirc_t
     int32_t score;
     int8_t shotsRemaining;
     int32_t shotTimer;
+    int32_t lavaAnimTimer;
 
     // Shell data
     int32_t bounces;
@@ -134,6 +135,7 @@ typedef struct
     bool isTerrain;
     lineFl_t destination;
     aabb_t aabb;
+    bool isLava;
 } physLine_t;
 
 typedef struct
@@ -166,6 +168,7 @@ typedef struct
     int32_t playerSwapTimerUs;
 
     int16_t surfacePoints[TFT_WIDTH];
+    paletteColor_t surfaceColors[TFT_WIDTH];
 } physSim_t;
 
 //==============================================================================
@@ -182,7 +185,7 @@ void drawPhysBackground(physSim_t* phys, int16_t x, int16_t y, int16_t w, int16_
 void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_t moveTimeLeftUs, int32_t turn);
 
 void physStepBackground(physSim_t* phys);
-bool physStep(physSim_t* phys, int32_t elapsedUs);
+bool physStep(physSim_t* phys, int32_t elapsedUs, bool menuShowing);
 
 void physSpawnPlayers(physSim_t* phys, int32_t numPlayers, physCirc_t* players[], paletteColor_t* colors);
 physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, float barrelAngle, paletteColor_t baseColor,

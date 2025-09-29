@@ -251,10 +251,15 @@ void explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
     };
 
     bool raiseTerrain = false;
+    bool makeLava     = false;
     if (WALL_MAKER == shell->effect)
     {
         // Raise terrain without an explosion animation
         raiseTerrain = true;
+    }
+    else if (FLOOR_LAVA == shell->effect)
+    {
+        makeLava = true;
     }
     else
     {
@@ -280,9 +285,22 @@ void explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
         // If this is terrain
         if (line->isTerrain)
         {
-            // Attempt to deform points
-            line->destination.p1.y = deformTerrainPoint(&line->l.p1, &shell->c.pos, rSq, expMin, expMax, raiseTerrain);
-            line->destination.p2.y = deformTerrainPoint(&line->l.p2, &shell->c.pos, rSq, expMin, expMax, raiseTerrain);
+            if (makeLava)
+            {
+                if ((expMin <= line->l.p1.x && line->l.p1.x < expMax)
+                    || (expMin <= line->l.p2.x && line->l.p2.x < expMax))
+                {
+                    line->isLava = true;
+                }
+            }
+            else
+            {
+                // Attempt to deform points
+                line->destination.p1.y
+                    = deformTerrainPoint(&line->l.p1, &shell->c.pos, rSq, expMin, expMax, raiseTerrain);
+                line->destination.p2.y
+                    = deformTerrainPoint(&line->l.p2, &shell->c.pos, rSq, expMin, expMax, raiseTerrain);
+            }
         }
         // Iterate
         lNode = lNode->next;
