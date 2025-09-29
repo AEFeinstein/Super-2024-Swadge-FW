@@ -303,7 +303,7 @@ void mg_hashSpawnEntity(mgEntityManager_t* entityManager, mgEntitySpawnData_t* e
     if (entityCreated != NULL)
     {
         entityCreated->spriteFlipHorizontal = entitySpawnData->flags & 0b1;
-        entityCreated->spriteFlipHorizontal = entitySpawnData->flags & 0b10;
+        entityCreated->spriteFlipVertical = entitySpawnData->flags & 0b10;
         
         entityCreated->spawnData = entitySpawnData;
 
