@@ -188,8 +188,18 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .expRadius  = 10,
         .effect     = NO_EFFECT,
     },
-    // TODO Acid Bath (poison terrain)
-    // TODO Landmines (leave mines for later)
+    {
+        .name       = "Floor is Lava",
+        .color      = c500,
+        .radius     = 4,
+        .numBounces = 1,
+        .numSpread  = 1,
+        .numConsec  = 1,
+        .score      = 100,
+        .expVel     = 100,
+        .expRadius  = 20,
+        .effect     = FLOOR_LAVA,
+    },
 };
 
 const artilleryAmmoAttrib_t* getAmmoAttributes(uint16_t* numAttributes)
@@ -210,7 +220,7 @@ const artilleryAmmoAttrib_t* getAmmoAttribute(uint16_t idx)
 static void physFindObjDests(physSim_t* phys, float elapsedS);
 static bool physBinaryMoveObjects(physSim_t* phys);
 static void checkTurnOver(physSim_t* phys);
-static void physAnimateExplosions(physSim_t* phys, int32_t elapsedUs);
+static void physRunAnimateTimers(physSim_t* phys, int32_t elapsedUs);
 static void findSurfacePoints(int x0, int y0, int x1, int y1, int16_t* surfacePoints);
 
 //==============================================================================
@@ -353,6 +363,11 @@ void physStepBackground(physSim_t* phys)
                                   pl->l.p2.x - phys->camera.x, //
                                   pl->l.p2.y - phys->camera.y, //
                                   phys->surfacePoints);
+
+                // Assign ground color
+                int16_t minScreenX = CLAMP(pl->l.p1.x - phys->camera.x, 0, TFT_WIDTH);
+                int16_t maxScreenX = CLAMP(pl->l.p2.x - phys->camera.x, 0, TFT_WIDTH);
+                memset(&phys->surfaceColors[minScreenX], pl->isLava ? c200 : c020, maxScreenX - minScreenX);
             }
 
             // Iterate
@@ -371,7 +386,7 @@ void physStepBackground(physSim_t* phys)
  * @param phys The physics simulation
  * @param elapsedUs The time elapsed since this was last called
  */
-bool physStep(physSim_t* phys, int32_t elapsedUs)
+bool physStep(physSim_t* phys, int32_t elapsedUs, bool menuShowing)
 {
     bool change = false;
     if (phys->isReady && phys->shouldStepForeground)
@@ -382,8 +397,8 @@ bool physStep(physSim_t* phys, int32_t elapsedUs)
         physFindObjDests(phys, PHYS_TIME_STEP_S);
         physCheckCollisions(phys);
         change |= physBinaryMoveObjects(phys);
-        change |= physAdjustCameraTimer(phys);
-        physAnimateExplosions(phys, PHYS_TIME_STEP_US);
+        change |= physAdjustCameraTimer(phys, menuShowing);
+        physRunAnimateTimers(phys, PHYS_TIME_STEP_US);
         checkTurnOver(phys);
     }
     return change;
@@ -645,13 +660,13 @@ void drawPhysBackground(physSim_t* phys, int16_t x0, int16_t y0, int16_t w, int1
         {
             if (y < phys->surfacePoints[x])
             {
-                // Green for ground
+                // Blue for sky
                 *fb = c002;
             }
             else
             {
-                // Blue for sky
-                *fb = c020;
+                // Ground is variable
+                *fb = phys->surfaceColors[x];
             }
 
             // Iterate pointer
@@ -693,6 +708,15 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
         // Get color from object
         paletteColor_t bCol = pc->baseColor;
         paletteColor_t aCol = pc->accentColor;
+
+        if (pc->lavaAnimTimer)
+        {
+            if (pc->lavaAnimTimer % LAVA_ANIM_PERIOD < (LAVA_ANIM_PERIOD / 2))
+            {
+                bCol = c200;
+                aCol = c200;
+            }
+        }
 
         // Draw a gun barrel for tanks
         if (CT_TANK == pc->type)
@@ -1085,7 +1109,7 @@ physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, float barrelAngle, palet
  * @param phys
  * @param elapsedUs
  */
-static void physAnimateExplosions(physSim_t* phys, int32_t elapsedUs)
+static void physRunAnimateTimers(physSim_t* phys, int32_t elapsedUs)
 {
     node_t* eNode = phys->explosions.first;
     while (eNode)
@@ -1100,5 +1124,24 @@ static void physAnimateExplosions(physSim_t* phys, int32_t elapsedUs)
         }
 
         eNode = eNodeNext;
+    }
+
+    node_t* cNode = phys->circles.first;
+    while (cNode)
+    {
+        // Get a convenience pointer
+        physCirc_t* pc = (physCirc_t*)cNode->val;
+        if (CT_TANK == pc->type)
+        {
+            if (pc->lavaAnimTimer)
+            {
+                pc->lavaAnimTimer -= elapsedUs;
+                if (pc->lavaAnimTimer < 0)
+                {
+                    pc->lavaAnimTimer = 0;
+                }
+            }
+        }
+        cNode = cNode->next;
     }
 }

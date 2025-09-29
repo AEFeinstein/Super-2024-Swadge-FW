@@ -235,7 +235,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
     drawPhysOutline(ad->phys, ad->players, ad->scoreFont, ad->moveTimerUs, ad->turn);
 
     // Step the physics
-    bool physChange = physStep(ad->phys, elapsedUs);
+    bool physChange = physStep(ad->phys, elapsedUs, AGS_MENU == ad->gState);
 
     // Get the system font to draw text
     font_t* f = getSysFont();
@@ -581,6 +581,27 @@ void artilleryPassTurn(artilleryData_t* ad)
 
     // Reset move timer
     ad->moveTimerUs = TANK_MOVE_TIME_US;
+
+    // Check if the tank is in lava
+    physCirc_t* player = ad->players[ad->plIdx];
+    node_t* lNode      = ad->phys->lines.first;
+    while (lNode)
+    {
+        physLine_t* l = lNode->val;
+        if (l->isTerrain && l->isLava)
+        {
+            if ((player->c.pos.x - player->c.radius) <= (l->l.p2.x) && //
+                (player->c.pos.x + player->c.radius) >= (l->l.p1.x))
+            {
+                // Touching lava, decrement score
+                player->score -= 50;
+                // Animate lava damage
+                player->lavaAnimTimer = (LAVA_ANIM_PERIOD * LAVA_ANIM_BLINKS);
+                break;
+            }
+        }
+        lNode = lNode->next;
+    }
 
     // Switch to the right state depending on game type
     switch (ad->gameType)
