@@ -241,8 +241,9 @@ void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player)
  * @param shell The shell which exploded
  * @param hitTank The tank that was hit by the shell, may be NULL
  */
-void explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
+bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
 {
+    bool change       = false;
     physCirc_t* shell = shellNode->val;
 
     circleFl_t explosion = {
@@ -335,16 +336,18 @@ void explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
         cNode = cNode->next;
     }
 
-    if (CONFUSION == shell->effect)
+    if (hitTank && CONFUSION == shell->effect)
     {
         setBarrelAngle(hitTank, (esp_random() % 360) * M_PI / 180.0f);
         setShotPower(hitTank, esp_random() % MAX_SHOT_POWER);
+        change = true;
     }
 
     // Remove this shell from camera tracking
     removeVal(&phys->cameraTargets, shell);
 
     phys->terrainMoving = true;
+    return change;
 }
 
 /**
