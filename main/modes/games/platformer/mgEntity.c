@@ -1039,6 +1039,9 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_DUST_BUNNY_3:
         case ENTITY_WASP_2:
         case ENTITY_WASP_3:
+        case ENTITY_CHARGIN_SCHMUCK:
+        case ENTITY_BOUNCIN_SCHMUCK:
+        case ENTITY_TURRET:
         {
             if(self->state == MG_PL_ST_MIC_DROP){
                 break;
@@ -1199,6 +1202,41 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             soundPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
             break;
         }
+        case ENTITY_WAVE_BALL:
+        {
+            if(other->linkedEntity == self)
+            {
+                break;
+            }
+
+            //TODO: This is a repeat of above code; move to its own function
+            if (self->invincibilityFrames <= 0)
+            {
+                self->hp -= 5;
+                mg_updateLedsHpMeter(self->entityManager, self->gameData);
+                self->gameData->comboTimer = 0;
+
+                if (!self->gameData->debugMode && self->hp == 0)
+                {
+                    self->updateFunction        = &updateEntityDead;
+                    self->type                  = ENTITY_DEAD;
+                    self->xspeed                = 0;
+                    self->yspeed                = -60;
+                    self->spriteIndex           = MG_SP_PLAYER_HURT;
+                    self->gameData->changeState = MG_ST_DEAD;
+                    self->gravityEnabled        = true;
+                    self->falling               = true;
+                }
+                else
+                {
+                    self->xspeed              = 0;
+                    self->yspeed              = 0;
+                    self->jumpPower           = 0;
+                    self->invincibilityFrames = 120;
+                    soundPlaySfx(&(self->soundManager->sndHurt), BZR_LEFT);
+                }
+            }
+        }
         default:
         {
             break;
@@ -1235,6 +1273,10 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             killEnemy(self);
             break;
         case ENTITY_WAVE_BALL:
+            if(other->linkedEntity == self){
+                break;
+            }
+
             mg_destroyShot(other);
         
             if(self->invincibilityFrames){
@@ -2578,4 +2620,86 @@ void mg_destroyShot(mgEntity_t* self){
     }
 
     mg_destroyEntity(self, false);
+}
+
+void mg_updateTurret(mgEntity_t* self)
+{
+    switch(self->state){
+        case 0:
+        default:
+            self->stateTimer++;
+
+            if(self->stateTimer > 60){
+                self->shotsFired = 0;
+                self->stateTimer = 0;
+
+                if(self->entityManager->playerEntity != NULL)
+                {
+                    self->jumpPower = getAtan2(self->entityManager->playerEntity->y - self->y, self->entityManager->playerEntity->x - self->x);  
+                }     
+
+                self->jumpPower = clampAngleTo8way(self->jumpPower);
+
+                self->state = 1;
+            }
+            break;
+        case 1 ... 3:
+            self->stateTimer++;
+
+            if(self->stateTimer > 5)
+            {
+                mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
+                                                    TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+                if (createdEntity != NULL)
+                {                                                
+                    int16_t sin = getSin1024(self->jumpPower);
+                    int16_t cos = getCos1024(self->jumpPower);
+
+                    createdEntity->xspeed = (64 * cos) / 1024;
+                    createdEntity->yspeed = (64 * sin) / 1024;
+
+                    createdEntity->linkedEntity = self;
+                    self->state++;
+                    soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                }
+
+                if(self->state >= 4)
+                {
+                    self->state = 0;
+                }
+
+                self->stateTimer = 0;
+            }
+            break;
+
+    }
+
+    mg_updateInvincibilityFrames(self);
+    mg_detectEntityCollisions(self);
+}
+
+int16_t clampAngleTo8way(int16_t angle)
+{
+    switch(angle)
+    {
+        case 0 ... 22:
+        default:
+            return 0;
+        case 23 ... 67:
+            return 45;
+        case 68 ... 112:
+            return 90;
+        case 113 ... 157:
+            return 135;
+        case 158 ... 202:
+            return 180;
+        case 203 ... 247:
+            return 225;
+        case 248 ... 292:
+            return 270;
+        case 293 ... 337:
+            return 315;
+        case 338 ... 359:
+            return 0;
+    }
 }
