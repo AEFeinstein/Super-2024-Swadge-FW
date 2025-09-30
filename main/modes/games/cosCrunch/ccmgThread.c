@@ -5,8 +5,8 @@
 
 static void ccmgThreadInitMicrogame(void);
 static void ccmgThreadDestroyMicrogame(void);
-static void ccmgThreadMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
-                               buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
+static void ccmgThreadMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
+                               cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 
 #define NEEDLE_X 90
 // These values need to line up with the needle image or the player will have a bad time
@@ -97,8 +97,8 @@ static void ccmgThreadDestroyMicrogame(void)
     heap_caps_free(ccmgt);
 }
 
-static void ccmgThreadMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
-                               buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
+static void ccmgThreadMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
+                               cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
 {
     switch (state)
     {
@@ -173,6 +173,8 @@ static void ccmgThreadMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosC
                 {
                     ccmgt->threadX = needleCenterX;
                     cosCrunchMicrogameResult(false);
+
+                    midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, MARACAS, 0x7f);
                 }
             }
             break;
