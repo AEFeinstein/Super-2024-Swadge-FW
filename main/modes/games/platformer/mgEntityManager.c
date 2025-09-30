@@ -1605,11 +1605,12 @@ mgEntity_t* createTurret(mgEntityManager_t* entityManager, uint16_t x, uint16_t 
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->scoreValue           = 100;
-    entity->hp                   = 3;
+    entity->hp                   = 10;
 
     entity->type                 = ENTITY_TURRET;
     entity->spriteIndex          = MG_SP_TURRET_HORIZONTAL;
-    entity->updateFunction       = &mg_updateDummy;
+    entity->state = 0;
+    entity->updateFunction       = &mg_updateTurret;
     entity->collisionHandler     = &mg_enemyCollisionHandler;
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;

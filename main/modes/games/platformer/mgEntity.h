@@ -249,4 +249,8 @@ void mg_defaultEntityDrawHandler(mgEntity_t* self);
 
 void mg_destroyShot(mgEntity_t* self);
 
+void mg_updateTurret(mgEntity_t* self);
+
+int16_t clampAngleTo8way(int16_t angle);
+
 #endif
