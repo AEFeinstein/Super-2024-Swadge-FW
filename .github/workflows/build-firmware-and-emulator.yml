@@ -27,6 +27,7 @@ jobs:
             emu_artifacts:
               - swadge_emulator.exe
               - version.txt
+              - nvs.json
             # TODO: What variable can we use to not hardcode this???
             idf_install: C:\Users\runneradmin\.espressif
             shell: 'msys2 {0}'
@@ -39,6 +40,7 @@ jobs:
             emu_artifacts:
               - SwadgeEmulator.app
               - version.txt
+              - nvs.json
             idf_install: ~/.espressif
           - os: osx-intel
             runner: macos-13
@@ -48,6 +50,7 @@ jobs:
             emu_artifacts:
               - SwadgeEmulator.app
               - version.txt
+              - nvs.json
             idf_install: ~/.espressif
           - os: linux
             runner: ubuntu-latest
@@ -60,6 +63,7 @@ jobs:
               - install.sh
               - icon.png
               - SwadgeEmulator.desktop
+              - nvs.json
             idf_install: ~/.espressif
 
     runs-on: ${{ matrix.runner }}
@@ -179,7 +183,12 @@ jobs:
       run: |
         make SwadgeEmulator.app
 
-    - name: Create Linux FreeDesktop files
+    - name: Copy default NVS file
+      if: matrix.emulator
+      run: |
+        cp emulator/resources/nvs.json .
+
+    - name: Copy Linux FreeDesktop files
       if: matrix.emulator && matrix.family == 'linux'
       run: |
         cp emulator/resources/install.sh .
