@@ -688,7 +688,6 @@ og_thread_t ch32v003thread;
 static void* ch32v003threadFn(void* v)
 {
     memset(&ch32v003state, 0, sizeof(ch32v003state));
-    ch32v003runMode = 0;
 
     double dLast = OGGetAbsoluteTime();
     while (ch32v003quitMode == 0)
@@ -715,7 +714,8 @@ static void* ch32v003threadFn(void* v)
 
 int initCh32v003(int swdio_pin)
 {
-    ch32v003thread = OGCreateThread(ch32v003threadFn, 0);
+    ch32v003runMode = 0;
+    ch32v003thread  = OGCreateThread(ch32v003threadFn, 0);
     return 0;
 }
 
