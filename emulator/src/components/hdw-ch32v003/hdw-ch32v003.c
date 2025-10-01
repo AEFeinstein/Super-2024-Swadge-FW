@@ -23,6 +23,8 @@
 
 #include "CNFG.h"
 
+#include "hdw-ch32c003_emu.h"
+
 //==============================================================================
 // Functions being stubbed.
 //==============================================================================
@@ -836,7 +838,14 @@ void ch32v003EmuDraw(int offX, int offY, int window_w, int window_h)
 
             int py = marginY + offY + (y * ledDim);
             int px = marginX + offX + ((x + spacing) * ledDim);
-            CNFGTackRectangle(px, py, px + ledDim, py + ledDim);
+            if (ledDim >= 3)
+            {
+                CNFGTackRectangle(px + 1, py + 1, px + ledDim - 1, py + ledDim - 1);
+            }
+            else
+            {
+                CNFGTackRectangle(px, py, px + ledDim, py + ledDim);
+            }
         }
     }
 }

@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include "ext_led_eyes.h"
 #include "hdw-ch32v003.h"
+#include "hdw-ch32c003_emu.h"
 
 static void drawLedEyes(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8_t numPanes);
 static bool ledEyesExtInit(emuArgs_t* args);

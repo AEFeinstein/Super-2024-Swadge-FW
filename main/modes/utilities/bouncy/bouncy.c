@@ -309,31 +309,28 @@ static void lightLEDs(LEDDirections_t dir)
     {
         case LED_NORTH:
         {
-            ssd->leds[1] = randColors;
-            ssd->leds[2] = randColors;
-            ssd->leds[3] = randColors;
+            ssd->leds[0] = randColors;
+            ssd->leds[5] = randColors;
             break;
         }
         case LED_SOUTH:
         {
-            ssd->leds[0] = randColors;
+            ssd->leds[1] = randColors;
             ssd->leds[4] = randColors;
-            ssd->leds[6] = randColors;
-            ssd->leds[7] = randColors;
             break;
         }
         case LED_EAST:
         {
             ssd->leds[0] = randColors;
             ssd->leds[1] = randColors;
-            ssd->leds[8] = randColors;
+            ssd->leds[2] = randColors;
             break;
         }
         case LED_WEST:
         {
             ssd->leds[3] = randColors;
+            ssd->leds[4] = randColors;
             ssd->leds[5] = randColors;
-            ssd->leds[6] = randColors;
             break;
         }
         default:
