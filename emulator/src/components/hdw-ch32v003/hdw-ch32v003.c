@@ -44,7 +44,6 @@ int ch32v003SelectBitmap(int slot);
 
 // For functions in this code.
 uint32_t GetSTK(void);
-void ch32v003EmuDraw(int window_w, int window_h);
 
 //==============================================================================
 // mini-rv32ima augmentations.
@@ -794,7 +793,7 @@ static const uint16_t Coordmap[] = {
     0x0607, 0x0707, 0xffff, 0xffff, 0x0103, 0x0303, 0x0503, 0x0703, 0x0606, 0x0706, 0xffff, 0xffff,
 };
 
-void ch32v003EmuDraw(int window_w, int window_h)
+void ch32v003EmuDraw(int offX, int offY, int window_w, int window_h)
 {
     // We use the corresponding coordmap from swadge_matrix.h, so we can backtrack the steps
     // the source material takes to output the LEDs
