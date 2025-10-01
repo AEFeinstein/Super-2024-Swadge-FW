@@ -803,16 +803,18 @@ void ch32v003EmuDraw(int offX, int offY, int window_w, int window_h)
     if (ils < RAMOFS || ils >= RAM_SIZE + RAMOFS - 72)
         return;
 
-    uint8_t* tptr = ch32v003ram + (ils - RAMOFS);
-    int w = 12, h = 6;
-    int x, y;
-    for (y = 0; y < h; y++)
-    {
-        for (x = 0; x < w; x++)
-        {
-            int py = window_h - y * 10 - 10;
-            int px = window_w / 2 - 5 * 10 - 5 + x * 10 + ((x >= w / 2) ? 10 : -10);
+    int ledW   = window_w / 13;
+    int ledH   = window_h / 6;
+    int ledDim = ledW < ledH ? ledW : ledH;
 
+    int marginX = (window_w - (13 * ledDim)) / 2;
+    int marginY = (window_h - (6 * ledDim)) / 2;
+
+    uint8_t* tptr = ch32v003ram + (ils - RAMOFS);
+    for (int y = 0; y < 6; y++)
+    {
+        for (int x = 0; x < 12; x++)
+        {
             uint16_t tc = Coordmap[y + x * 8];
             int bit     = 1 << (tc >> 8);
             int row     = tc & 0xff;
@@ -829,7 +831,12 @@ void ch32v003EmuDraw(int offX, int offY, int window_w, int window_h)
 
             // Apply any color tuning.  Right now we're just stark white.
             CNFGColor(0x000000ff | (intensity << 24) | (intensity << 8) | (intensity << 16));
-            CNFGTackRectangle(px - 4, py - 4, px + 4, py + 4);
+
+            int spacing = (x >= 6) ? 1 : 0;
+
+            int py = marginY + offY + (y * ledDim);
+            int px = marginX + offX + ((x + spacing) * ledDim);
+            CNFGTackRectangle(px, py, px + ledDim, py + ledDim);
         }
     }
 }
