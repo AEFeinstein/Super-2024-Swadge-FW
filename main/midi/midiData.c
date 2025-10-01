@@ -689,9 +689,9 @@ const noteSampleMap_t mmxDrumSampleMap[] = {
         },
         .envelope = {
             .attackTime = SECONDS_CONV(0, 1000),
-            .decayTime = SECONDS_CONV(1, 32250u),
+            .decayTime = SECONDS_CONV(2, 64500u),
             .sustainVol = 0,
-            //.releaseTime = SECONDS_CONV(2, 64500u),
+            .releaseTime = SECONDS_CONV(1, 16125u),
             // no hold here
         },
     },
