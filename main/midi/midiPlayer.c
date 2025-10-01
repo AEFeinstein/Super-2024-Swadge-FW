@@ -2051,7 +2051,7 @@ void midiNoteOff(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t ve
     // check the bitmaps to see if there's any note to release
     uint32_t playingVoices = states->on & chan->allocedVoices;
 
-    if (chan->percussion)
+    if (chan->percussion && chan->bank == 0)
     {
         switch (note)
         {
