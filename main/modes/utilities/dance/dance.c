@@ -19,11 +19,11 @@
 
 #define DANCE_IMPLEMENTATION
 #include "dance_Comet.h"
-#include "dance_Condiment.h"
+// #include "dance_Condiment.h"
 #include "dance_SharpRainbow.h"
 #include "dance_SmoothRainbow.h"
 #include "dance_RainbowSolid.h"
-#include "dance_Sweep.h"
+// #include "dance_Sweep.h"
 #include "dance_Rise.h"
 #include "dance_Pulse.h"
 #include "dance_Fire.h"
@@ -113,18 +113,18 @@ const ledDance_t ledDances[] = {
     {.func = danceComet, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Comet R"},
     {.func = danceComet, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Comet G"},
     {.func = danceComet, .arg = RGB_2_ARG(0, 0, 0xFF), .name = "Comet B"},
-    {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0x00, 0x00), .name = "Ketchup"},
-    {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0xFF, 0x00), .name = "Mustard"},
-    {.func = danceCondiment, .arg = RGB_2_ARG(0x00, 0xFF, 0x00), .name = "Relish"},
-    {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0xFF, 0xFF), .name = "Mayo"},
+    // {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0x00, 0x00), .name = "Ketchup"},
+    // {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0xFF, 0x00), .name = "Mustard"},
+    // {.func = danceCondiment, .arg = RGB_2_ARG(0x00, 0xFF, 0x00), .name = "Relish"},
+    // {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0xFF, 0xFF), .name = "Mayo"},
     {.func = danceSharpRainbow, .arg = 0, .name = "Rainbow Sharp"},
     {.func = danceSmoothRainbow, .arg = 20000, .name = "Rainbow Slow"},
     {.func = danceSmoothRainbow, .arg = 4000, .name = "Rainbow Fast"},
     {.func = danceRainbowSolid, .arg = 0, .name = "Rainbow Solid"},
-    {.func = danceSweep, .arg = RGB_2_ARG(0, 0, 0), .name = "Sweep RGB"},
-    {.func = danceSweep, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Sweep R"},
-    {.func = danceSweep, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Sweep G"},
-    {.func = danceSweep, .arg = RGB_2_ARG(0, 0, 0xFF), .name = "Sweep B"},
+    // {.func = danceSweep, .arg = RGB_2_ARG(0, 0, 0), .name = "Sweep RGB"},
+    // {.func = danceSweep, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Sweep R"},
+    // {.func = danceSweep, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Sweep G"},
+    // {.func = danceSweep, .arg = RGB_2_ARG(0, 0, 0xFF), .name = "Sweep B"},
     {.func = danceRise, .arg = RGB_2_ARG(0, 0, 0), .name = "Rise RGB"},
     {.func = danceRise, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Rise R"},
     {.func = danceRise, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Rise G"},
