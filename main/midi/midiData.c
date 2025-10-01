@@ -691,7 +691,7 @@ const noteSampleMap_t mmxDrumSampleMap[] = {
             .attackTime = SECONDS_CONV(0, 1000),
             .decayTime = SECONDS_CONV(2, 64500u),
             .sustainVol = 0,
-            .releaseTime = SECONDS_CONV(1, 16125u),
+            .releaseTime = SECONDS_CONV(0, 66125u),
             // no hold here
         },
     },
@@ -710,6 +710,8 @@ const noteSampleMap_t mmxDrumSampleMap[] = {
         {
             .attackTime = SECONDS_CONV(0, 1000),
             .decayTime = SECONDS_CONV(1, 224170),
+            // release is 1/2 of decay
+            .releaseTime = SECONDS_CONV(0, 612085),
             .sustainVol = 0,
         },
     },
