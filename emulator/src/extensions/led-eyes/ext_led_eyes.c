@@ -21,32 +21,29 @@ emuExtension_t ledEyesEmuExtension = {
 #define MIN_EYE_LED_DIM 8
 
 /**
- * @brief Initializes the LED panes
+ * @brief Initializes the Eyes LED pane
  *
- * @param args
+ * @param args Args which determine if the pane is hidden or not
  * @return true if the extension is enabled
- * @return true if the extension is not
+ * @return false if the extension is not
  */
 static bool ledEyesExtInit(emuArgs_t* args)
 {
     if (!args->hideLeds)
     {
-        requestPane(&ledEyesEmuExtension, PANE_TOP, MIN_EYE_LED_DIM * 13, MIN_EYE_LED_DIM * 6);
-        return true;
+        return -1 != requestPane(&ledEyesEmuExtension, PANE_TOP, MIN_EYE_LED_DIM * 13, MIN_EYE_LED_DIM * 6);
     }
 
     return false;
 }
 
 /**
- * @brief Draws the LEDs onto the screen
- *
- * If \c numPanes is less than 2, this function does nothing.
+ * @brief Draws the Eyes LEDs onto the screen
  *
  * @param winH unused
  * @param winW unused
- * @param panes A list of panes to draw the LEDs in.
- * @param numPane The number of items in \c panes.
+ * @param panes A list of panes to draw the LEDs in (should only be one)
+ * @param numPane The number of items in \c panes (should only be one)
  */
 static void drawLedEyes(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8_t numPanes)
 {
