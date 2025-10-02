@@ -253,4 +253,8 @@ void mg_updateTurret(mgEntity_t* self);
 
 int16_t clampAngleTo8way(int16_t angle);
 
+void mg_updateCharginSchmuck(mgEntity_t* self);
+
+void mg_enemySightBulletCollisionHandler(mgEntity_t* self, mgEntity_t* other);
+
 #endif

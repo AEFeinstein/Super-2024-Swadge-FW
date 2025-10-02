@@ -1220,6 +1220,7 @@ mgEntity_t* createWaveBall(mgEntityManager_t* entityManager, uint16_t x, uint16_
     entity->spriteFlipVertical   = false;
     entity->yDamping             = 3; // This will be repurposed as a state timer
     entity->xDamping             = 0; // This will be repurposed as a state tracker
+    entity->scoreValue           = 5;
 
     entity->type                 = ENTITY_WAVE_BALL;
     entity->spriteIndex          = MG_SP_WAVEBALL_1;
@@ -1522,20 +1523,21 @@ mgEntity_t* createCharginSchmuck(mgEntityManager_t* entityManager, uint16_t x, u
     entity->x       = TO_SUBPIXEL_COORDS(x);
     entity->y       = TO_SUBPIXEL_COORDS(y);
 
-    entity->xspeed               = (x < (entityManager->tilemap->mapOffsetX + 120)) ? 8 : -8;
+    entity->xspeed               = 0;
     entity->yspeed               = 0;
     entity->xMaxSpeed            = 132;
     entity->yMaxSpeed            = 132;
     entity->gravityEnabled       = true;
     entity->gravity              = 4;
-    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipHorizontal = (entityManager->playerEntity->x > x) ? false : true;
     entity->spriteFlipVertical   = false;
     entity->scoreValue           = 100;
-    entity->hp                   = 3;
+    entity->hp                   = 12;
 
     entity->type                 = ENTITY_CHARGIN_SCHMUCK;
     entity->spriteIndex          = MG_SP_CHARGIN_SCHMUCK_IDLE;
-    entity->updateFunction       = &mg_updateDummy;
+    entity->state                = 0;
+    entity->updateFunction       = &mg_updateCharginSchmuck;
     entity->collisionHandler     = &mg_enemyCollisionHandler;
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;

@@ -1210,9 +1210,9 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             }
 
             //TODO: This is a repeat of above code; move to its own function
-            if (self->invincibilityFrames <= 0)
+            if (self->invincibilityFrames <= 0 && other->scoreValue)
             {
-                self->hp -= 5;
+                self->hp -= other->scoreValue;
                 mg_updateLedsHpMeter(self->entityManager, self->gameData);
                 self->gameData->comboTimer = 0;
 
@@ -2520,6 +2520,10 @@ void updateWaveBall(mgEntity_t* self)
     //mg_moveEntityWithTileCollisions(self);
     //despawnWhenOffscreen(self);
 
+    uint8_t tx    = MG_TO_TILECOORDS(TO_PIXEL_COORDS(self->x));
+    uint8_t ty    = MG_TO_TILECOORDS(TO_PIXEL_COORDS(self->y));
+    self->overlapTileHandler(self, mg_getTile(self->tilemap, tx, ty), tx, ty);
+
     self->x += self->xspeed;
     self->y += self->yspeed;
 
@@ -2541,6 +2545,10 @@ void updateWaveBall(mgEntity_t* self)
     {
         mg_destroyShot(self);
     }
+
+    if(self->collisionHandler != &mg_dummyCollisionHandler){
+        mg_detectEntityCollisions(self);
+    }
 }
 
 // bool waveBallTileCollisionHandler(mgEntity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction){
@@ -2555,7 +2563,10 @@ void waveBallOverlapTileHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, ui
     if (mg_isSolid(tileId) || tileId == MG_TILE_BOUNCE_BLOCK)
     {
         mg_destroyShot(self);
-        soundPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
+
+        if(self->visible){
+            soundPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
+        }
     }
 }
 
@@ -2674,6 +2685,7 @@ void mg_updateTurret(mgEntity_t* self)
 
     }
 
+    despawnWhenOffscreen(self);
     mg_updateInvincibilityFrames(self);
     mg_detectEntityCollisions(self);
 }
@@ -2702,4 +2714,82 @@ int16_t clampAngleTo8way(int16_t angle)
         case 338 ... 359:
             return 0;
     }
+}
+
+void mg_updateCharginSchmuck(mgEntity_t* self)
+{
+    switch(self->state)
+    {
+        case 0:
+        default:
+            if(self->stateTimer == -69){
+                self->state = 1;
+                self->stateTimer = 0;
+                
+                break;
+            }
+
+            self->stateTimer++;
+            if(self->stateTimer > 20){
+                mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
+                                                    TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+                if (createdEntity != NULL)
+                {                                                
+                    
+                    createdEntity->xspeed = self->spriteFlipHorizontal ? -256 : 256;
+                    createdEntity->linkedEntity = self;
+                    createdEntity->overlapTileHandler = &waveBallOverlapTileHandler;
+                    createdEntity->collisionHandler = &mg_enemySightBulletCollisionHandler;
+                    createdEntity->scoreValue = 0;
+                    //createdEntity->visible = 0;
+                }
+            }
+            break;
+        case 1:
+            
+            self->stateTimer++;
+
+            if(!(self->stateTimer % 10)){
+                self->xspeed = (self->spriteFlipHorizontal) ? -64 : 64;
+            }
+
+            if(self->stateTimer > 180){
+                self->state = 0;
+                self->stateTimer = 0;
+            }
+            break;
+    }
+    
+    mg_updateInvincibilityFrames(self);
+
+    despawnWhenOffscreen(self);
+    mg_moveEntityWithTileCollisions(self);
+
+    if(self->xspeed)
+    {
+        self->spriteFlipHorizontal = (self->xspeed > 0) ? false : true;
+    }
+
+    applyDamping(self);
+    applyGravity(self);
+    mg_detectEntityCollisions(self);
+}
+
+void mg_enemySightBulletCollisionHandler(mgEntity_t* self, mgEntity_t* other)
+{
+    if(self->linkedEntity == other){
+        return;
+    }
+
+    switch(other->type){
+        case ENTITY_PLAYER:
+            if(self->linkedEntity != NULL && self->linkedEntity->active)
+            {
+                self->linkedEntity->stateTimer = -69;
+            }
+        default:
+            break;
+    }
+
+    mg_destroyEntity(self, false);
 }
