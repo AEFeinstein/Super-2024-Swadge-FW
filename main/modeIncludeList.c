@@ -63,9 +63,9 @@ void modeListSetMenu(menu_t* menu)
     addSingleItemToMenu(menu, modeCh32v003test.modeName);
     menu = endSubMenu(menu);
 
-    //Atrium
+    // Atrium
     addSingleItemToMenu(menu, atriumMode.modeName);
-    
+
     // Trophy Case
     addSingleItemToMenu(menu, tCaseMode.modeName);
 
