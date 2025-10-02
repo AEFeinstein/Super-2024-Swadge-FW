@@ -2741,7 +2741,7 @@ void mg_updateCharginSchmuck(mgEntity_t* self)
                     createdEntity->overlapTileHandler = &waveBallOverlapTileHandler;
                     createdEntity->collisionHandler = &mg_enemySightBulletCollisionHandler;
                     createdEntity->scoreValue = 0;
-                    //createdEntity->visible = 0;
+                    createdEntity->visible = 0;
                 }
             }
             break;
