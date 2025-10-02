@@ -23,7 +23,7 @@
 #include "dance_SharpRainbow.h"
 #include "dance_SmoothRainbow.h"
 #include "dance_RainbowSolid.h"
-// #include "dance_Sweep.h"
+#include "dance_Sweep.h"
 #include "dance_Rise.h"
 #include "dance_Pulse.h"
 #include "dance_Fire.h"
@@ -121,10 +121,10 @@ const ledDance_t ledDances[] = {
     {.func = danceSmoothRainbow, .arg = 20000, .name = "Rainbow Slow"},
     {.func = danceSmoothRainbow, .arg = 4000, .name = "Rainbow Fast"},
     {.func = danceRainbowSolid, .arg = 0, .name = "Rainbow Solid"},
-    // {.func = danceSweep, .arg = RGB_2_ARG(0, 0, 0), .name = "Sweep RGB"},
-    // {.func = danceSweep, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Sweep R"},
-    // {.func = danceSweep, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Sweep G"},
-    // {.func = danceSweep, .arg = RGB_2_ARG(0, 0, 0xFF), .name = "Sweep B"},
+    {.func = danceSweep, .arg = RGB_2_ARG(0, 0, 0), .name = "Sweep RGB"},
+    {.func = danceSweep, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Sweep R"},
+    {.func = danceSweep, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Sweep G"},
+    {.func = danceSweep, .arg = RGB_2_ARG(0, 0, 0xFF), .name = "Sweep B"},
     {.func = danceRise, .arg = RGB_2_ARG(0, 0, 0), .name = "Rise RGB"},
     {.func = danceRise, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Rise R"},
     {.func = danceRise, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Rise G"},
