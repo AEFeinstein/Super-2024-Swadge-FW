@@ -192,6 +192,7 @@ sonaSelect selection = 0;
 int ticker           = 0;
 int PAGE             = 0;
 int planter          = 0;
+int changer          = 0; 
 
 // sona locations
 int x_coords[] = {5, 74, 143, 212};
@@ -364,18 +365,18 @@ static void atriumEnterMode()
     myUser = getSystemUsername();
     readNvs32(atriumNVSprofile, &myProfile.created);
     printf("my profile nvs int is %d\n", myProfile.created);
-    myProfile = unpackProfile(myProfile.created);
+    //myProfile = unpackProfile(myProfile.created);
 
     // when its ready, I need to add sona data extraction from swadgepass packet, for now I am just hardcoding some
     // sonas in to use:
     loadWsg(BALD_WSG, &misc->bald, true);
-    loadWsg(MAINCHAR_WSG, &misc->mainc, true);
-    loadWsg(NUM_1_WSG, &misc->num1, true);
-    loadWsg(NUM_2_WSG, &misc->num2, true);
-    loadWsg(NUM_3_WSG, &misc->num3, true);
-    loadWsg(NUM_4_WSG, &misc->num4, true);
-    loadWsg(MAINCHAR_WSG, &misc->mainchar, true);
-    loadWsg(POMP_WSG, &misc->pomp, true);
+    loadWsg(PRINCESS_WSG, &misc->mainc, true);
+    loadWsg(GENIE_WSG, &misc->num1, true);
+    loadWsg(COOLGUY_WSG, &misc->num2, true);
+    loadWsg(CATDUDE_WSG, &misc->num3, true);
+    loadWsg(BIGMA_WSG, &misc->num4, true);
+    loadWsg(VOLDY_9000_WSG, &misc->mainchar, true);
+    loadWsg(GOBLINOPS_WSG, &misc->pomp, true);
     loadWsg(COW_WSG, &misc->cow, true);
 
     printf("loaded misc wsgs!\n");
@@ -419,14 +420,14 @@ static void atriumEnterMode()
     miscArray[8] = &misc->mainchar;
     miscArray[9] = &misc->num4;
 
-    loadMidiFile(YALIKEJAZZ_MID, &amidi->bgm, true);
+    loadMidiFile(MADEIT_MID, &amidi->bgm, true);
     printf("loaded midi file!\n");
 
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    player->loop         = false;
+    player->loop         = true;
     midiGmOn(player);
     globalMidiPlayerPlaySong(&amidi->bgm, MIDI_BGM);
-    globalMidiPlayerSetVolume(MIDI_BGM, 3);
+    globalMidiPlayerSetVolume(MIDI_BGM, 0);
     printf("Entered Atrium Mode!\n");
     atriumTitle(); // draw the title screen
 }
@@ -467,6 +468,7 @@ static void atriumMainLoop(int64_t elapsedUs)
                 {
                     state = ATR_ATR;
                     loader = 0;
+                    changer = 1;
                 }
                 else if ((evt.button & PB_B))
                 {
@@ -549,39 +551,21 @@ printf("state: %d\n", state);
 void sonaDraw()
 {
     // tester to see if the sonas show up right. up to 4 sonas drawn on the screen at one time. eventually, random
-    // swadgesona lines shall be selected to draw. in this tester, random hardcoded sonas are drawn in the required
+    // swadgepass lines shall be selected to draw. in this tester, random hardcoded sonas are drawn in the required
     // positions.
 
     int j = 0; // placeholder for drawing a second row maybe someday. one struggle at a time
 
     for (int i = 0; i < 4; i++)
     {
-        // int h = rand() % 4; //randomize head select
+         int h = rand() % 7; //randomize head select
         // int h = 2; //for now, just use this head
-        switch (i)
-        {
-            case 0:
-                drawWsgSimple(&misc->bald, x_coords[i],
+        drawWsgSimple(miscArray[h], x_coords[i],
                               y_coords[j] - headoffset); // place head on top of body minus offset
-                break;
 
-            case 1:
-                drawWsgSimple(&misc->pomp, x_coords[i], y_coords[j] - headoffset);
-                break;
-
-            case 2:
-                drawWsgSimple(&misc->num1, x_coords[i], y_coords[j] - headoffset);
-                break;
-
-            case 3:
-                drawWsgSimple(&misc->cow, x_coords[i], y_coords[j] - headoffset);
-                break;
-
-            case 4:
-                drawWsgSimple(&misc->num2, x_coords[i], y_coords[j] - headoffset);
-                break;
-        }
     }
+
+    changer = 0;
 
     // end sona tester
 }
@@ -602,6 +586,7 @@ void sonaIdle()
                 loadWsg(ATRIUMPLANT_2_WSG, &bgs->plant2, true);
                 drawWsgSimple(&bgs->gazebo, 0, 0); // draw the background based on page
                 printf("Loaded GAZEBO_WSG!\n");
+                changer = 1;
                 break;
 
             case 1:
@@ -611,7 +596,7 @@ void sonaIdle()
                 freeWsg(&bgs->concert1);
                 loadWsg(ARCADE_1_WSG, &bgs->arcade1, true);
                 drawWsgSimple(&bgs->arcade1, 0, 0); // draw the background based on page
-
+                changer = 1;
                 break;
 
             case 2:
@@ -621,7 +606,7 @@ void sonaIdle()
                 freeWsg(&bgs->arcade1);
                 loadWsg(CONCERT_1_WSG, &bgs->concert1, true);
                 drawWsgSimple(&bgs->concert1, 0, 0); // draw the background based on page
-
+                changer = 1;
                 break;
 
             default:
@@ -643,7 +628,11 @@ void sonaIdle()
     printf("Page: %d\n", PAGE);
 
     // drawWsgSimple(bgsArray[PAGE], 0, 0); //draw the background based on page
+
+    if (changer == 1)
+    {
     sonaDraw();
+    }
 
     if ((PAGE == 0) & (planter <= 48))
     {                                                    // if on page 0, draw the plants rising up
