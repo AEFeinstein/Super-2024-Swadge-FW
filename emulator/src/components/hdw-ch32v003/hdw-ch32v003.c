@@ -37,7 +37,7 @@ void ch32v003Teardown(void);
 int ch32v003Resume(void);
 int ch32v003WriteFlash(const uint8_t* buf, int sz);
 int ch32v003WriteBitmapAsset(int slot, int asset_idx);
-int ch32v003WriteBitmap(int slot, uint8_t pixels[6][12]);
+int ch32v003WriteBitmap(int slot, const uint8_t pixels[6][12]);
 int ch32v003SelectBitmap(int slot);
 
 #define CH32V003_MAX_IMAGE_SLOTS 20
@@ -855,12 +855,12 @@ int ch32v003WriteBitmapAsset(int slot, int asset_idx)
     {
         uint8_t buffer[6][12];
     };
-    struct PixelMap* pm = (struct PixelMap*)(buf + 4);
+    const struct PixelMap* pm = (const struct PixelMap*)(buf + 4);
 
     return ch32v003WriteBitmap(slot, pm->buffer);
 }
 
-int ch32v003WriteBitmap(int slot, uint8_t pixels[6][12])
+int ch32v003WriteBitmap(int slot, const uint8_t pixels[6][12])
 {
     if (slot >= CH32V003_MAX_IMAGE_SLOTS)
     {
