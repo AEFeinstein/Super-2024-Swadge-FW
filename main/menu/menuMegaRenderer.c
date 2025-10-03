@@ -376,7 +376,7 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
         {
             renderer->bgColorDeg = 0;
         }
-        renderer->bgColorIdx = ((getSin1024(renderer->bgColorDeg) + 1024) / (2049 / (renderer->numBgColors)));
+        renderer->bgColorIdx = ((getSin1024(renderer->bgColorDeg) + 1024) * renderer->numBgColors) / 2048;
         if (renderer->bgColorIdx >= renderer->numBgColors)
         {
             renderer->bgColorIdx = renderer->numBgColors - 1;
@@ -560,7 +560,7 @@ static void setLedsFromBg(menuMegaRenderer_t* renderer)
     {
         int32_t ledDeg      = renderer->bgColorDeg + 2 * idx;
         ledDeg              = CLAMP(ledDeg, 0, 359);
-        int32_t ledColorIdx = ((getSin1024(ledDeg) + 1024) / (2049 / (renderer->numBgColors)));
+        int32_t ledColorIdx = ((getSin1024(ledDeg) + 1024) * renderer->numBgColors) / 2048;
         if (ledColorIdx >= renderer->numBgColors)
         {
             ledColorIdx = renderer->numBgColors - 1;
