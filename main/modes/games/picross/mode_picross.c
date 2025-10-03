@@ -454,7 +454,7 @@ void picrossGameLoop(int64_t elapsedUs)
     {
         setDrawBody(p->renderer, true); // make the menu renderer default again with the background body drawn.
         picrossExitGame();              // free variables
-        returnToPicrossMenuFromGame();  // change to menu
+        returnToPicrossMenu();          // change to menu
         // dont do more processing, we have switched back to level select screen.
         return;
     }

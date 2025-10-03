@@ -78,12 +78,14 @@ typedef struct
     led_t leds[CONFIG_NUM_LEDS]; ///< An array with the RGB LED state to be output
     bool ledsOn;                 ///< true if LEDs should be set by this renderer, false to leave LEDs alone
 
-    bool drawBody; ///< true to draw the sci-fi rectangle body background, false to skip it
+    bool drawBody;          ///< true to draw the sci-fi rectangle body background, false to skip it
+    bool conveyorBeltStyle; ///< true to draw a sliding background and sliding lights
 } menuMegaRenderer_t;
 
 menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);
 void deinitMenuMegaRenderer(menuMegaRenderer_t* renderer);
-void drawMenuBody(uint16_t topLeftX, uint16_t topLeftY, uint8_t expansionHeight, bool flipLR, menuMegaRenderer_t* renderer);
+void drawMenuBody(uint16_t topLeftX, uint16_t topLeftY, uint8_t expansionHeight, bool flipLR,
+                  menuMegaRenderer_t* renderer);
 void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs);
 void setMegaLedsOn(menuMegaRenderer_t* renderer, bool ledsOn);
 void setDrawBody(menuMegaRenderer_t* renderer, bool drawBody);

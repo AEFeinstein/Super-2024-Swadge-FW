@@ -99,7 +99,7 @@ void levelSelectInput()
     if (ls->btnState & (PB_START | PB_B) && !(ls->prevBtnState & PB_START) && !(ls->btnState & PB_A))
     {
         // exit to main menu
-        returnToPicrossMenu(); // from level select.
+        returnToPicrossMenuFromLevelSelect();
         return;
     }
     // Choosing a Level

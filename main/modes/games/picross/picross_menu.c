@@ -299,11 +299,12 @@ struct
         .marqueeFact = "MORE. SNACKS.",
     },
     {
-        .name        = "donut jump",
-        .pzl         = AF_DONUTJUMP_PZL_WSG,
-        .slv         = AF_DONUTJUMP_SLV_WSG,
-        .marqueeFact = "Produced by MrTroy for the 2020 barrel swadge : King Donut jumps to all the blocks without being "
-                       "hit by the Evil Eclair or Devil Donut.",
+        .name = "donut jump",
+        .pzl  = AF_DONUTJUMP_PZL_WSG,
+        .slv  = AF_DONUTJUMP_SLV_WSG,
+        .marqueeFact
+        = "Produced by MrTroy for the 2020 barrel swadge : King Donut jumps to all the blocks without being "
+          "hit by the Evil Eclair or Devil Donut.",
     },
     {
         .name        = "picross",
@@ -330,7 +331,8 @@ struct
         .name        = "tiltrads",
         .pzl         = AF_TILTRADS_PZL_WSG,
         .slv         = AF_TILTRADS_SLV_WSG,
-        .marqueeFact = "Produced by jt-moriarty for the 2023 wavebird swadge : I'm using tilt controls! This game also made a colorized return on the 2023 wavebird swadge.",
+        .marqueeFact = "Produced by jt-moriarty for the 2023 wavebird swadge : I'm using tilt controls! This game also "
+                       "made a colorized return on the 2023 wavebird swadge.",
     },
     {
         .name = "galactic brickdown",
@@ -340,12 +342,11 @@ struct
         = "Produced by JVeg199X for the 2024 gunship swadge : This is a unique take on a \"breakout\" style game.",
     },
     {
-        .name = "lumber jacks",
-        .pzl  = CF_LUMBERJACKS_PZL_WSG,
-        .slv  = CF_LUMBERJACKS_SLV_WSG,
-        .marqueeFact
-        = "Produced by MrTroy for the 2024 gunship swadge : Tight arcade action with panic mode featuring "
-          "rising water, and attack mode featuring wave after wave of Bad Seeds.",
+        .name        = "lumber jacks",
+        .pzl         = CF_LUMBERJACKS_PZL_WSG,
+        .slv         = CF_LUMBERJACKS_SLV_WSG,
+        .marqueeFact = "Produced by MrTroy for the 2024 gunship swadge : Tight arcade action with panic mode featuring "
+                       "rising water, and attack mode featuring wave after wave of Bad Seeds.",
     },
     {
         .name        = "magtroid pocket",
@@ -515,11 +516,10 @@ void picrossEnterMode(void)
 
     loadFont(MM_FONT, &(pm->mmFont), false);
 
-    pm->menu                  = initMenu(str_picrossTitle, picrossMainMenuCb);
-    pm->renderer              = initMenuMegaRenderer(NULL, NULL, NULL);
-    pm->renderer->bgColors    = bgColors;
-    pm->renderer->numBgColors = ARRAY_SIZE(bgColors);
-    pm->renderer->bgColorIdx  = 0;
+    pm->menu                        = initMenu(str_picrossTitle, picrossMainMenuCb);
+    pm->renderer                    = initMenuMegaRenderer(NULL, NULL, NULL);
+    pm->renderer->bgColorIdx        = 0;
+    pm->renderer->conveyorBeltStyle = true;
 
     pm->screen = PICROSS_MENU;
 
@@ -717,21 +717,26 @@ void picrossTouchCb(bool touched)
 /////////////////////////
 
 /**
- * @brief Frees level select menu and returns to the picross menu. Should not be called by not-the-level-select-menu.
+ * @brief Frees level select menu and returns to the picross menu, except skipping past the level select menu.
  *
  */
 void returnToPicrossMenu(void)
 {
-    picrossExitLevelSelect(); // free data
     pm->screen = PICROSS_MENU;
+    // Reinit MenuMegaRenderer to go back to using default menu colors.
+    deinitMenuMegaRenderer(pm->renderer);
+    pm->renderer                    = initMenuMegaRenderer(NULL, NULL, NULL);
+    pm->renderer->conveyorBeltStyle = true;
 }
+
 /**
- * @brief Frees level select menu and returns to the picross menu, except skipping past the level select menu.
+ * @brief Frees level select menu and returns to the picross menu. Should not be called by not-the-level-select-menu.
  *
  */
-void returnToPicrossMenuFromGame(void)
+void returnToPicrossMenuFromLevelSelect(void)
 {
-    pm->screen = PICROSS_MENU;
+    picrossExitLevelSelect(); // free data
+    returnToPicrossMenu();
 }
 
 /**
@@ -748,6 +753,10 @@ void continueGame()
     // get the current level index
     int32_t currentIndex = 0; // just load 0 if its 0.
     readNvs32(picrossCurrentPuzzleIndexKey, &currentIndex);
+
+    // Set the level background to more muted colors.
+    pm->renderer->bgColors    = bgColors;
+    pm->renderer->numBgColors = ARRAY_SIZE(bgColors);
 
     // load in the level we selected.
     // uh. read the currentLevelIndex and get the value from

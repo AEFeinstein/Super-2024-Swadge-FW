@@ -31,6 +31,10 @@
 static const paletteColor_t defaultBgColors[] = {
     c024, c025, c035, c034, c033, c043, c143, c254, c453, c553,
 };
+// Routes through the helmet M, with three extra numbers slapped on the end so the hotdog won't crash.
+static const uint8_t ledConveyorOrder[] = {
+    1, 0, 2, 3, 5, 4, 6, 7, 8,
+};
 
 //==============================================================================
 // Function Prototypes
@@ -67,6 +71,7 @@ menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOut
     // Set the background
     renderer->bgColors    = defaultBgColors;
     renderer->numBgColors = ARRAY_SIZE(defaultBgColors);
+    renderer->bgColorIdx  = 0;
 
     loadWsg(MMM_BACK_WSG, &renderer->back, true);
     loadWsg(MMM_BG_WSG, &renderer->bg, true);
@@ -234,6 +239,7 @@ void recolorMenuMegaRenderer(menuMegaRenderer_t* renderer, paletteColor_t textFi
     {
         renderer->bgColors    = bgColors;
         renderer->numBgColors = numBgColors;
+        renderer->bgColorIdx  = 0;
     }
 }
 
@@ -322,18 +328,21 @@ static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t
  * @param flipLR true to flip the body horizontally
  * @param elapsedUs The time elapsed since this function was last called, for LED animation
  */
-void drawMenuBody(uint16_t topLeftX, uint16_t topLeftY, uint8_t expansionHeight, bool flipLR, menuMegaRenderer_t* renderer)
+void drawMenuBody(uint16_t topLeftX, uint16_t topLeftY, uint8_t expansionHeight, bool flipLR,
+                  menuMegaRenderer_t* renderer)
 {
     // Draw the top part of the body
     drawWsg(&renderer->body_top, topLeftX, topLeftY, flipLR, false, 0);
 
     // Draw filler rectangles between top and bottom sprites
-    if(expansionHeight > 0)
+    if (expansionHeight > 0)
     {
-        drawRectFilled(topLeftX + 8, topLeftY + renderer->body_top.h, topLeftX + 244, topLeftY + renderer->body_top.h + expansionHeight, c023);
-        drawRectFilled(topLeftX + 246, topLeftY + renderer->body_top.h, topLeftX + 248, topLeftY + renderer->body_top.h + expansionHeight, c034);
+        drawRectFilled(topLeftX + 8, topLeftY + renderer->body_top.h, topLeftX + 244,
+                       topLeftY + renderer->body_top.h + expansionHeight, c023);
+        drawRectFilled(topLeftX + 246, topLeftY + renderer->body_top.h, topLeftX + 248,
+                       topLeftY + renderer->body_top.h + expansionHeight, c034);
     }
-    
+
     // Draw the bottom part of the body
     drawWsg(&renderer->body_bottom, topLeftX + 8, topLeftY + renderer->body_top.h + expansionHeight, flipLR, false, 0);
 }
@@ -381,7 +390,10 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
         {
             renderer->bgColorIdx = renderer->numBgColors - 1;
         }
-        renderer->yOff += renderer->bgColorIdx;
+        if (renderer->conveyorBeltStyle)
+        {
+            renderer->yOff += renderer->bgColorIdx;
+        }
     });
 
     // Run a timer to scroll text
@@ -558,13 +570,17 @@ static void setLedsFromBg(menuMegaRenderer_t* renderer)
     // Set all LEDs
     for (int32_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
     {
-        int32_t ledDeg      = renderer->bgColorDeg + 2 * idx;
-        ledDeg              = CLAMP(ledDeg, 0, 359);
-        int32_t ledColorIdx = ((getSin1024(ledDeg) + 1024) * renderer->numBgColors) / 2048;
-        if (ledColorIdx >= renderer->numBgColors)
+        int32_t ledColorIdx = renderer->bgColorIdx;
+        if (renderer->conveyorBeltStyle)
         {
-            ledColorIdx = renderer->numBgColors - 1;
+            int32_t ledDeg = CLAMP(renderer->bgColorDeg + 2 * idx, 0, 359);
+            ledColorIdx    = ((getSin1024(ledDeg) + 1024) * renderer->numBgColors) / 2048;
+            if (ledColorIdx >= renderer->numBgColors)
+            {
+                ledColorIdx = renderer->numBgColors - 1;
+            }
         }
+
         // Extract LED color from bg color
         int32_t rgb = paletteToRGB(renderer->bgColors[ledColorIdx]);
         led_t led   = {
@@ -572,6 +588,6 @@ static void setLedsFromBg(menuMegaRenderer_t* renderer)
               .g = (rgb >> 8) & 0xFF,
               .b = (rgb >> 0) & 0xFF,
         };
-        renderer->leds[idx] = led;
+        renderer->leds[ledConveyorOrder[idx]] = led;
     }
 }

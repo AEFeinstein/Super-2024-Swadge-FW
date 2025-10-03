@@ -22,7 +22,7 @@ extern const char picrossProgressData[];
 extern const char picrossMarksData[];
 
 void returnToPicrossMenu(void);
-void returnToPicrossMenuFromGame(void);
+void returnToPicrossMenuFromLevelSelect(void);
 // void returnToLevelSelect(void);
 void selectPicrossLevel(picrossLevelDef_t* selectedLevel);
 void exitTutorial(void);
