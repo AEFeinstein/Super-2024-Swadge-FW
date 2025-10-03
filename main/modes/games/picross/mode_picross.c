@@ -1465,7 +1465,7 @@ void drawPicrossHud(font_t* font)
 
     // Draw counter
     snprintf(textBuffer, sizeof(textBuffer) - 1, "%d", p->count);
-    drawText(&(p->UIFont), c334, textBuffer, 30, 25 + p->UIFont.height * 2);
+    drawText(&(p->UIFont), c354, textBuffer, 30, 25 + p->UIFont.height * 2);
 }
 
 void drawHint(font_t* font, picrossHint_t hint)
