@@ -422,6 +422,9 @@ void app_main(void)
     // Initialize system font and trophy-get sound
     loadFont(IBM_VGA_8_FONT, &sysFont, true);
 
+    // TODO replace with default eye firmware
+    ch32v003RunBinaryAsset(MATRIX_DROPS_CFUN_BIN);
+
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)
     {
