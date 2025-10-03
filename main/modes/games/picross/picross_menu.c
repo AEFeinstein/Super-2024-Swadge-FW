@@ -209,7 +209,7 @@ struct
         .pzl  = _8F_MTYPE_PZL_WSG,
         .slv  = _8F_MTYPE_SLV_WSG,
         .marqueeFact
-        = "Produced by ? for the 2022 chainsaw swadge : Blast your way through an endless army of evil space "
+        = "Produced by jt-moriarty for the 2022 chainsaw swadge : Blast your way through an endless army of evil space "
           "aliens with your experimental M-Type fighter!",
     },
     {
@@ -234,7 +234,7 @@ struct
         .pzl  = _8F_STOMP_PZL_WSG,
         .slv  = _8F_STOMP_SLV_WSG,
         .marqueeFact
-        = "Produced by ? for the 2022 chainsaw swadge : The flying skulls are coming to get you and the only way "
+        = "Produced by Ruzihm for the 2022 chainsaw swadge : The flying skulls are coming to get you and the only way "
           "to stop them is to Stomp them into the ground!",
     },
     {
@@ -284,7 +284,7 @@ struct
         .name        = "pocket ball",
         .pzl         = AA_POKEBALL_PZL_WSG,
         .slv         = AA_POKEBALL_SLV_WSG,
-        .marqueeFact = "Sue me.",
+        .marqueeFact = "Redacted",
     },
     {
         .name        = "sword",
@@ -302,7 +302,7 @@ struct
         .name        = "donut jump",
         .pzl         = AF_DONUTJUMP_PZL_WSG,
         .slv         = AF_DONUTJUMP_SLV_WSG,
-        .marqueeFact = "Produced by ? for the 2023 wavebird swadge : King Donut jumps to all the blocks without being "
+        .marqueeFact = "Produced by MrTroy for the 2020 barrel swadge : King Donut jumps to all the blocks without being "
                        "hit by the Evil Eclair or Devil Donut.",
     },
     {
@@ -330,7 +330,7 @@ struct
         .name        = "tiltrads",
         .pzl         = AF_TILTRADS_PZL_WSG,
         .slv         = AF_TILTRADS_SLV_WSG,
-        .marqueeFact = "Produced by ? for the 2023 wavebird swadge : I'm using tilt controls!",
+        .marqueeFact = "Produced by jt-moriarty for the 2023 wavebird swadge : I'm using tilt controls! This game also made a colorized return on the 2023 wavebird swadge.",
     },
     {
         .name = "galactic brickdown",
@@ -344,7 +344,7 @@ struct
         .pzl  = CF_LUMBERJACKS_PZL_WSG,
         .slv  = CF_LUMBERJACKS_SLV_WSG,
         .marqueeFact
-        = "Produced by Mr Troy for the 2024 gunship swadge : Tight arcade action with panic mode featuring "
+        = "Produced by MrTroy for the 2024 gunship swadge : Tight arcade action with panic mode featuring "
           "rising water, and attack mode featuring wave after wave of Bad Seeds.",
     },
     {
