@@ -36,7 +36,6 @@ typedef struct
     picrossScreen_t screen;
     int32_t savedIndex;
     int32_t options; // bit 0: hints
-    wsg_t bigBody;   // for the background drawing effect
 } picrossMenu_t;
 
 //==============================================================================
@@ -522,8 +521,6 @@ void picrossEnterMode(void)
     pm->renderer->numBgColors = ARRAY_SIZE(bgColors);
     pm->renderer->bgColorIdx  = 0;
 
-    loadWsg(MMM_BIG_BODY_WSG, &pm->bigBody, false);
-
     pm->screen = PICROSS_MENU;
 
     addSingleItemToMenu(pm->menu, str_levelSelect);
@@ -590,7 +587,6 @@ void picrossExitMode(void)
         freeWsg(&pm->levels[i].levelWSG);
         freeWsg(&pm->levels[i].completedWSG);
     }
-    freeWsg(&pm->bigBody);
     picrossExitLevelSelect(); // this doesnt actually get called as we go in and out of levelselect (because it breaks
                               // everything), so lets call it now
     deinitMenu(pm->menu);
@@ -755,7 +751,7 @@ void continueGame()
 
     // load in the level we selected.
     // uh. read the currentLevelIndex and get the value from
-    picrossStartGame(&pm->mmFont, &pm->levels[currentIndex], true, pm->renderer, &pm->bigBody);
+    picrossStartGame(&pm->mmFont, &pm->levels[currentIndex], true, pm->renderer);
     pm->screen = PICROSS_GAME;
 }
 
@@ -878,7 +874,7 @@ void selectPicrossLevel(picrossLevelDef_t* selectedLevel)
 {
     // picrossExitLevelSelect();//we do this BEFORE we enter startGame.
     pm->screen = PICROSS_GAME;
-    picrossStartGame(&pm->mmFont, selectedLevel, false, pm->renderer, &pm->bigBody);
+    picrossStartGame(&pm->mmFont, selectedLevel, false, pm->renderer);
 }
 
 // void returnToLevelSelect()//todo: rename

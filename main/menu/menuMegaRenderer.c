@@ -10,6 +10,7 @@
 #include "menu_utils.h"
 #include "color_utils.h"
 #include "menuMegaRenderer.h"
+#include "shapes.h"
 
 //==============================================================================
 // Defines
@@ -69,7 +70,8 @@ menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOut
 
     loadWsg(MMM_BACK_WSG, &renderer->back, true);
     loadWsg(MMM_BG_WSG, &renderer->bg, true);
-    loadWsg(MMM_BODY_WSG, &renderer->body, true);
+    loadWsg(MMM_BODY_TOP_WSG, &renderer->body_top, true);
+    loadWsg(MMM_BODY_BOTTOM_WSG, &renderer->body_bottom, true);
     loadWsg(MMM_DOWN_WSG, &renderer->down, true);
     loadWsg(MMM_ITEM_WSG, &renderer->item, true);
     loadWsg(MMM_ITEM_SEL_WSG, &renderer->item_sel, true);
@@ -171,7 +173,8 @@ void deinitMenuMegaRenderer(menuMegaRenderer_t* renderer)
 
     freeWsg(&renderer->back);
     freeWsg(&renderer->bg);
-    freeWsg(&renderer->body);
+    freeWsg(&renderer->body_top);
+    freeWsg(&renderer->body_bottom);
     freeWsg(&renderer->down);
     freeWsg(&renderer->item);
     freeWsg(&renderer->item_sel);
@@ -311,6 +314,31 @@ static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t
 }
 
 /**
+ * @brief Draw the menu body background
+ *
+ * @param topLeftX The X coordinate of the top left corner of the body
+ * @param topLeftY The Y coordinate of the top left corner of the body
+ * @param expansionHeight The y distance of filler rectangle between the top and bottom parts of the body
+ * @param flipLR true to flip the body horizontally
+ * @param elapsedUs The time elapsed since this function was last called, for LED animation
+ */
+void drawMenuBody(uint16_t topLeftX, uint16_t topLeftY, uint8_t expansionHeight, bool flipLR, menuMegaRenderer_t* renderer)
+{
+    // Draw the top part of the body
+    drawWsg(&renderer->body_top, topLeftX, topLeftY, flipLR, false, 0);
+
+    // Draw filler rectangles between top and bottom sprites
+    if(expansionHeight > 0)
+    {
+        drawRectFilled(topLeftX + 8, topLeftY + renderer->body_top.h, topLeftX + 244, topLeftY + renderer->body_top.h + expansionHeight, c023);
+        drawRectFilled(topLeftX + 246, topLeftY + renderer->body_top.h, topLeftX + 248, topLeftY + renderer->body_top.h + expansionHeight, c034);
+    }
+    
+    // Draw the bottom part of the body
+    drawWsg(&renderer->body_bottom, topLeftX + 8, topLeftY + renderer->body_top.h + expansionHeight, flipLR, false, 0);
+}
+
+/**
  * @brief Draw a themed menu to the display and control the LEDs
  *
  * @param menu The menu to draw
@@ -413,7 +441,7 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
 
     if (renderer->drawBody)
     {
-        drawWsgPaletteSimple(&renderer->body, 0, 0, &renderer->palette);
+        drawMenuBody(12, 42, 66, false, renderer);
     }
 
     if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > ARROW_PERIOD_US / 2)

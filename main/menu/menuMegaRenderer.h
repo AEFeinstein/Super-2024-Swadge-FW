@@ -38,7 +38,8 @@
 typedef struct
 {
     wsg_t bg;             ///< The screen's background image with cutout hexagons
-    wsg_t body;           ///< The menu's solid background image
+    wsg_t body_top;       ///< The top part of the menu's background image.
+    wsg_t body_bottom;    ///< The bottom part of the menu's background image.
     wsg_t item;           ///< Background image for non-selected items
     wsg_t item_sel;       ///< Background image for the selected item
     wsg_t up;             ///< A single up arrow (previous page)
@@ -82,6 +83,7 @@ typedef struct
 
 menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);
 void deinitMenuMegaRenderer(menuMegaRenderer_t* renderer);
+void drawMenuBody(uint16_t topLeftX, uint16_t topLeftY, uint8_t expansionHeight, bool flipLR, menuMegaRenderer_t* renderer);
 void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs);
 void setMegaLedsOn(menuMegaRenderer_t* renderer, bool ledsOn);
 void setDrawBody(menuMegaRenderer_t* renderer, bool drawBody);

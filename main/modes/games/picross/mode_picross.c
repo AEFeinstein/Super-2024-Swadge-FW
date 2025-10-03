@@ -56,8 +56,7 @@ static picrossGame_t* p = NULL;
  * @param mmFont The font used for teh HUD, already loaded
  *
  */
-void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool cont, menuMegaRenderer_t* renderer,
-                      wsg_t* bigBody)
+void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool cont, menuMegaRenderer_t* renderer)
 {
     // calloc is 0'd and malloc leaves memory uninitialized. I dont know which to use so im not gonna touch it, and
     // doing things once on load can be slower.
@@ -172,7 +171,6 @@ void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool con
     setDrawBody(renderer, false);
     p->menu     = initMenu("", NULL);
     p->renderer = renderer;
-    p->bigBody  = bigBody;
 }
 
 void picrossSetupPuzzle(bool cont)
@@ -1704,7 +1702,7 @@ void drawBackground(void)
             drawMenuMega(p->menu, p->renderer, p->elapsedUs);
             if (p->currentPhase != PICROSS_YOUAREWIN)
             {
-                drawWsgSimple(p->bigBody, 0, 0);
+                drawMenuBody(18, 9, 107, false, p->renderer);
             }
             break;
         }

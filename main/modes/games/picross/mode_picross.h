@@ -148,11 +148,9 @@ typedef struct
     int32_t marqueeScrollX;       // for the marquee text
     menu_t* menu;                 // for the background drawing effect
     menuMegaRenderer_t* renderer; // for the background drawing effect
-    wsg_t* bigBody;               // for the background drawing effect
 } picrossGame_t;
 
-void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool cont, menuMegaRenderer_t* renderer,
-                      wsg_t* bigBody);
+void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool cont, menuMegaRenderer_t* renderer);
 void picrossGameLoop(int64_t elapsedUs);
 void picrossGameButtonCb(buttonEvt_t* evt);
 void picrossGameTouchCb(bool touched);
