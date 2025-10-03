@@ -62,9 +62,13 @@ void drawToCanvasTint(wsg_t canvas, wsg_t wsg, int32_t x, int32_t y, int32_t rot
                 if (rotationDeg != 0)
                 {
                     rotatePixel(&tx, &ty, rotationDeg, wsg.w, wsg.h);
+                    if (x + tx < 0 || x + tx > canvas.w - 1 || y + ty < 0 || y + ty > canvas.h - 1)
+                    {
+                        continue;
+                    }
                 }
 
-                canvas.px[x + wsgX + (y + wsgY) * canvas.w] = color;
+                canvas.px[x + tx + (y + ty) * canvas.w] = color;
             }
         }
     }
