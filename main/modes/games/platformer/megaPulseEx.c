@@ -717,7 +717,6 @@ void changeStateGame(platformer_t* self)
 
     self->tilemap.executeTileSpawnAll = true;
 
-    globalMidiPlayerGet(MIDI_BGM)->channels[9].ignore = true;
     self->gameData.changeBgm = MG_BGM_MAIN;
 
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
