@@ -18,7 +18,18 @@
 
 
 static const cnfsFileIdx_t MG_BGMS[]
-    = {BGM_KINETIC_DONUT_MID, BGM_SMOOTH_MID, BGM_UNDERGROUND_MID, BGM_CASTLE_MID, BGM_NAME_ENTRY_MID};
+    = {
+        BGM_DEADEYE_CHIRPZI_MID,
+        BGM_DRAIN_BAT_MID,
+        BGM_FLARE_GRYFFYN_MID,
+        BGM_GRIND_PANGOLIN_MID,
+        BGM_KINETIC_DONUT_MID,
+        BGM_RIP_BARONESS_MID,
+        BGM_SEVER_YAGATA_MID,
+        BGM_SMASH_GORILLA_MID,
+        BGM_STAGE_SELECT_MID,
+        BGM_NAME_ENTRY_MID
+    };
 
 //==============================================================================
 // Macros
@@ -67,10 +78,15 @@ typedef enum
 {
     MG_BGM_NO_CHANGE = -1,
     MG_BGM_NULL,
-    MG_BGM_MAIN,
-    MG_BGM_ATHLETIC,
-    MG_BGM_UNDERGROUND,
-    MG_BGM_FORTRESS,
+    MG_BGM_DEADEYE_CHIRPZI,
+    MG_BGM_DRAIN_BAT,
+    MG_BGM_FLARE_GRYFFYN,
+    MG_BGM_GRIND_PANGOLIN,
+    MG_BGM_KINETIC_DONUT,
+    MG_BGM_RIP_BARONESS,
+    MG_BGM_SEVER_YAGATA,
+    MG_BGM_SMASH_GORILLA,
+    MG_BGM_STAGE_SELECT,
     MG_BGM_NAME_ENTRY
 } mg_bgmEnum_t;
 
