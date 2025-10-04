@@ -1379,6 +1379,7 @@ void changeStateLevelSelect(platformer_t* self)
     self->tilemap.mapOffsetX = 12;
 
     mg_setBgm(&self->soundManager, MG_BGM_STAGE_SELECT);
+    globalMidiPlayerGet(MIDI_BGM)->loop = true;
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
     
     self->update = &updateLevelSelect;
@@ -1419,9 +1420,18 @@ void updateLevelSelect(platformer_t* self)
 
 void drawLevelSelect(platformer_t* self)
 {
+    drawText(&self->font, c555, "STAGE SELECT", 90, 8);
+
+    drawRectFilled(
+        (55 + self->menuState * 64) - self->tilemap.mapOffsetX, 
+        (39 + self->menuSelection * 64) - self->tilemap.mapOffsetY, 
+        (55 + 66 + self->menuState * 64) - self->tilemap.mapOffsetX, 
+        (39 + 66 + self->menuSelection * 64) - self->tilemap.mapOffsetY, 
+        redColors[(self->gameData.frameCount >> 3) % 4]
+    );
+    
     mg_drawTileMap(&(self->tilemap));
 
-    drawText(&self->font, c555, "STAGE SELECT", 90, 8);
 
     drawRect(
         (64 + self->menuState * 64) - self->tilemap.mapOffsetX + ((self->gameData.frameCount >> 2) & 0b0111), 
