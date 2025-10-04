@@ -25,6 +25,20 @@ typedef struct
     int mine;  // 1 if this is my profile, 0 if not
 } userProfile;
 
+typedef union __attribute__((packed))
+{
+    struct
+    {
+        int cardselect : 4;
+        int fact0      : 4; // sandwich
+        int fact1      : 4; // class
+        int fact2      : 4; // wya
+        int sona       : 4; // sona img
+        int padding    : 12;
+    } profile;
+    uint32_t data;
+} packedUserProfile_t;
+
 userProfile sonaProfile; // VIEW PROFILE MODE
 userProfile myProfile;   // MY SELECTIONS IN EDIT PROFILE MODE
 
@@ -87,9 +101,8 @@ static void atriumTitle(void);
 static void viewProfile(userProfile prof);
 int editProfile(int xselect, int yselect);
 static void atriumAddSP(struct swadgePassPacket* packet);
-unsigned concatenate(unsigned x, unsigned y);
-unsigned packProfile(userProfile prof);
-userProfile unpackProfile(unsigned packedProfile);
+uint32_t packProfile(userProfile prof);
+userProfile unpackProfile(uint32_t packedProfile);
 
 //---------------------------------------------------------------------------------//
 // TROPHY CASE INFORMATION
@@ -242,7 +255,7 @@ typedef struct
 } bodies_t;
 
 bodies_t* bods;
-const wsg_t* bodsArray[sizeof(bodies_t)];
+wsg_t* bodsArray[sizeof(bodies_t)];
 
 // Cards
 typedef struct
@@ -258,7 +271,7 @@ typedef struct
 } cards_t;
 
 cards_t* cards;
-const wsg_t* cardsArray[sizeof(cards_t)];
+wsg_t* cardsArray[sizeof(cards_t)];
 
 // Buttons
 typedef struct
@@ -287,7 +300,7 @@ typedef struct
 const font_t* font;
 
 misc_t* misc;
-const wsg_t* miscArray[sizeof(bodies_t)];
+wsg_t* miscArray[sizeof(bodies_t)];
 
 // midis
 
@@ -353,11 +366,7 @@ static void atriumEnterMode()
         myProfile.sona       = rand() % 5;
         myProfile.mine       = 1; // this profile is mine
 
-        myProfile.created = concatenate(
-            myProfile.cardselect,
-            concatenate(myProfile.fact0,
-                        concatenate(myProfile.fact1,
-                                    concatenate(myProfile.fact2, concatenate(myProfile.sona, myProfile.mine)))));
+        myProfile.created = 1;
         printf("no profile found, creating new one\n");
         printf("randomized profile data: %d, %d, %d, %d, %d, %d\n", myProfile.cardselect, myProfile.fact0,
                myProfile.fact1, myProfile.fact2, myProfile.sona, myProfile.mine);
@@ -443,17 +452,17 @@ static void atriumExitMode()
         freeWsg(miscArray[i]);
     }
 
+    freeSwadgePasses(&spList);
+    freeFont(&misc->font);
+    globalMidiPlayerStop(MIDI_BGM);
+    unloadMidiFile(&amidi->bgm);
+
     heap_caps_free(bgs);
     heap_caps_free(misc);
     heap_caps_free(bods);
     heap_caps_free(cards);
     heap_caps_free(amidi);
     heap_caps_free(butts);
-
-    freeSwadgePasses(&spList);
-    freeFont(&misc->font);
-    globalMidiPlayerStop(MIDI_BGM);
-    unloadMidiFile(&amidi->bgm);
 }
 
 static void atriumMainLoop(int64_t elapsedUs)
@@ -544,7 +553,7 @@ static void atriumMainLoop(int64_t elapsedUs)
         editProfile(x, y);
     }
 
-    printf("state: %d\n", state);
+    // printf("state: %d\n", state);
 }
 
 void sonaDraw()
@@ -623,7 +632,7 @@ void sonaIdle()
         drawWsg(&butts->arrow, 20, 40, true, false, 270); // draw left arrow
     }
 
-    printf("Page: %d\n", PAGE);
+    // printf("Page: %d\n", PAGE);
 
     // drawWsgSimple(bgsArray[PAGE], 0, 0); //draw the background based on page
 
@@ -781,10 +790,10 @@ void atriumTitle()
 
 void viewProfile(userProfile prof)
 {
-    printf("In view profile state\n");
+    // printf("In view profile state\n");
 
-    printf("Cardselect: %d, Fact0: %d, Fact1: %d, Fact2: %d, Sona: %d, Mine: %d\n", prof.cardselect, prof.fact0,
-           prof.fact1, prof.fact2, prof.sona, prof.mine);
+    // printf("Cardselect: %d, Fact0: %d, Fact1: %d, Fact2: %d, Sona: %d, Mine: %d\n", prof.cardselect, prof.fact0,
+    //        prof.fact1, prof.fact2, prof.sona, prof.mine);
     if (loader == 0)
     {
         // WSG for profile mode only
@@ -845,17 +854,14 @@ void viewProfile(userProfile prof)
     // line 0: name
     // no concat required
     // line 1: fact0
-    char factline0[strlen(preambles[0]) + strlen(fact0[prof.fact0])] = {};
-    strncat(factline0, preambles[0], 40);
-    strncat(factline0, fact0[prof.fact0], 40);
+    char factline0[64];
+    snprintf(factline0, sizeof(factline0) - 1, "%s%s", preambles[0], fact0[prof.fact0]);
     // line 2: fact1
-    char factline1[strlen(preambles[1]) + strlen(fact1[prof.fact1])] = {};
-    strncat(factline1, preambles[1], 40);
-    strncat(factline1, fact1[prof.fact1], 40);
+    char factline1[64];
+    snprintf(factline1, sizeof(factline1) - 1, "%s%s", preambles[0], fact1[prof.fact1]);
     // line 3: fact2
-    char factline2[strlen(preambles[2]) + strlen(fact2[prof.fact2])] = {};
-    strncat(factline2, preambles[2], 40);
-    strncat(factline2, fact2[prof.fact2], 40);
+    char factline2[64];
+    snprintf(factline2, sizeof(factline2) - 1, "%s%s", preambles[0], fact2[prof.fact2]);
     // draw the card info
     drawWsgSimple(&bgs->gazebo, 0, 0);
     drawWsgSimple(cardsArray[prof.cardselect], 0, 0 + 12);                   // draw the card
@@ -906,6 +912,7 @@ int editProfile(int xselect, int yselect)
             editorState = EDIT_CARD;
             drawText(font, c000, prompttext[0], 48, 200); // draw the text for selecting a card below the buttons
             printf("editor state is card\n");
+            break;
 
         case 1:
             switch (yselect)
@@ -915,28 +922,36 @@ int editProfile(int xselect, int yselect)
                     drawText(font, c000, prompttext[1], 48,
                              200); // draw the text for selecting a card below the buttons
                     printf("editor state is sona\n");
+                    break;
                 case 1:
                     editorState = EDIT_TEXT1;
                     // do more stuff with text lines later
                     // drawsomethingattextline();
                     printf("editor state is text1\n");
+                    break;
                 case 2:
                     editorState = EDIT_CANCEL;
                     printf("editor state is cancel\n");
+                    break;
             }
+            break;
         case 2:
             switch (yselect)
             {
                 case 0:
                     editorState = EDIT_TEXT0;
                     printf("editor state is text0\n");
+                    break;
                 case 1:
                     editorState = EDIT_SYMBOL;
                     printf("editor state is symbol\n");
+                    break;
                 case 2:
                     editorState = EDIT_SAVE;
                     printf("editor state is save\n");
+                    break;
             }
+            break;
         case 3:
             if (yselect == 0)
             {
@@ -948,6 +963,7 @@ int editProfile(int xselect, int yselect)
                 editorState = EDIT_SAVE;
                 printf("editor state is save\n");
             }
+            break;
     }
 
     while (checkButtonQueueWrapper(&evt))
@@ -1019,39 +1035,34 @@ int editProfile(int xselect, int yselect)
     }
 }
 
-unsigned concatenate(unsigned x, unsigned y)
+uint32_t packProfile(userProfile prof)
 {
-    unsigned pow = 10;
-    while (y >= pow)
-        pow *= 10;
-    return x * pow + y;
+    packedUserProfile_t ret = {
+        .profile.cardselect = prof.cardselect,
+        .profile.fact0      = prof.fact0,
+        .profile.fact1      = prof.fact1,
+        .profile.fact2      = prof.fact2,
+        .profile.sona       = prof.sona,
+    };
+    return ret.data;
 }
 
-unsigned packProfile(userProfile prof)
+userProfile unpackProfile(uint32_t packedProfile)
 {
-    unsigned packedProfile = concatenate(
-        prof.cardselect, concatenate(prof.fact0, concatenate(prof.fact1, concatenate(prof.fact2, prof.sona))));
-    return packedProfile;
-}
+    packedUserProfile_t pp      = {.data = packedProfile};
+    userProfile unpackedprofile = {
+        .cardselect = pp.profile.cardselect,
+        .fact0      = pp.profile.fact0,
+        .fact1      = pp.profile.fact1,
+        .fact2      = pp.profile.fact2,
+        .sona       = pp.profile.sona,
+    };
 
-userProfile unpackProfile(unsigned packedProfile)
-{
-    userProfile unpackedprofile;
-    char strprofile[10];
-    sprintf(strprofile, "%u", packedProfile);
-    printf("unpacked profile string char 1 is %c\n", strprofile[0]);
-    unpackedprofile.cardselect = atoi(strprofile[0]); // convert char to int, i need to fix this bc its a single
-                                                      // character and i need to add a null terminator
     printf("unpacked cardselect is %d\n", unpackedprofile.cardselect);
-    unpackedprofile.fact0 = atoi(strprofile[1]);
     printf("unpacked fact0 is %d\n", unpackedprofile.fact0);
-    unpackedprofile.fact1 = atoi(strprofile[2]);
     printf("unpacked fact1 is %d\n", unpackedprofile.fact1);
-    unpackedprofile.fact2 = atoi(strprofile[3]);
     printf("unpacked fact2 is %d\n", unpackedprofile.fact2);
-    unpackedprofile.sona = atoi(strprofile[4]);
     printf("unpacked sona is %d\n", unpackedprofile.sona);
-    unpackedprofile.mine = atoi(strprofile[5]); // this profile is mine
     printf("unpacked mine is %d\n", unpackedprofile.mine);
 
     return unpackedprofile;
