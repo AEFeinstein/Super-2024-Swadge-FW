@@ -2,6 +2,7 @@
 
 #include "ccmgBreakTime.h"
 #include "ccmgDelivery.h"
+#include "ccmgSew.h"
 #include "ccmgSlice.h"
 #include "ccmgSpray.h"
 #include "ccmgThread.h"
@@ -136,7 +137,7 @@ swadgeMode_t cosCrunchMode = {
 // #define DEV_MODE_MICROGAME &ccmgWhatever
 
 const cosCrunchMicrogame_t* const microgames[] = {
-    &ccmgBreakTime, &ccmgDelivery, &ccmgSlice, &ccmgSpray, &ccmgThread,
+    &ccmgBreakTime, &ccmgDelivery, &ccmgSew, &ccmgSlice, &ccmgSpray, &ccmgThread,
 };
 
 #define CC_NVS_NAMESPACE "cc"

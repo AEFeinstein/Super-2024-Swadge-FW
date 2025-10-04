@@ -9,7 +9,7 @@ static void ccmgSprayMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float
 static bool ccmgSprayMicrogameTimeout(void);
 
 static const char ccmgSprayVerb[]       = "Spray";
-static const char ccmgSpraySuccessMsg[] = "Nice job!";
+static const char ccmgSpraySuccessMsg[] = "Smooth coat";
 static const char ccmgSprayFailureMsg[] = "Poor coverage";
 const cosCrunchMicrogame_t ccmgSpray    = {
        .verb                     = ccmgSprayVerb,
