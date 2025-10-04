@@ -717,7 +717,7 @@ void changeStateGame(platformer_t* self)
 
     self->tilemap.executeTileSpawnAll = true;
 
-    self->gameData.changeBgm = MG_BGM_MAIN;
+    self->gameData.changeBgm = MG_BGM_KINETIC_DONUT;
 
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
 
@@ -1001,7 +1001,7 @@ void changeStateGameClear(platformer_t* self)
     self->gameData.frameCount = 0;
     self->update              = &updateGameClear;
     mg_resetGameDataLeds(&(self->gameData));
-    mg_setBgm(&(self->soundManager), MG_BGM_ATHLETIC);
+    mg_setBgm(&(self->soundManager), 0);
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
 }
 
@@ -1377,6 +1377,9 @@ void changeStateLevelSelect(platformer_t* self)
     mg_loadWsgSet(&(platformer->wsgManager), leveldef[0].defaultWsgSetIndex);
     mg_loadMapFromFile(&(platformer->tilemap), leveldef[0].filename);
     self->tilemap.mapOffsetX = 12;
+
+    mg_setBgm(&self->soundManager, MG_BGM_STAGE_SELECT);
+    soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
     
     self->update = &updateLevelSelect;
 }

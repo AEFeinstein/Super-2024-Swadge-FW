@@ -1326,7 +1326,7 @@ mgEntity_t* createBgmChange1(mgEntityManager_t* entityManager, uint16_t x, uint1
     entity->visible  = false;
     entity->x        = TO_SUBPIXEL_COORDS(x);
     entity->y        = TO_SUBPIXEL_COORDS(y);
-    entity->xDamping = MG_BGM_MAIN;
+    entity->xDamping = 0;
 
     entity->type                 = ENTITY_BGM_CHANGE_1;
     entity->updateFunction       = &updateBgmChange;
@@ -1351,7 +1351,7 @@ mgEntity_t* createBgmChange2(mgEntityManager_t* entityManager, uint16_t x, uint1
     entity->visible  = false;
     entity->x        = TO_SUBPIXEL_COORDS(x);
     entity->y        = TO_SUBPIXEL_COORDS(y);
-    entity->xDamping = MG_BGM_ATHLETIC;
+    entity->xDamping = 2;
 
     entity->type                 = ENTITY_BGM_CHANGE_2;
     entity->updateFunction       = &updateBgmChange;
@@ -1376,7 +1376,7 @@ mgEntity_t* createBgmChange3(mgEntityManager_t* entityManager, uint16_t x, uint1
     entity->visible  = false;
     entity->x        = TO_SUBPIXEL_COORDS(x);
     entity->y        = TO_SUBPIXEL_COORDS(y);
-    entity->xDamping = MG_BGM_UNDERGROUND;
+    entity->xDamping = 3;
 
     entity->type                 = ENTITY_BGM_CHANGE_3;
     entity->updateFunction       = &updateBgmChange;
@@ -1401,7 +1401,7 @@ mgEntity_t* createBgmChange4(mgEntityManager_t* entityManager, uint16_t x, uint1
     entity->visible  = false;
     entity->x        = TO_SUBPIXEL_COORDS(x);
     entity->y        = TO_SUBPIXEL_COORDS(y);
-    entity->xDamping = MG_BGM_FORTRESS;
+    entity->xDamping = 4;
 
     entity->type                 = ENTITY_BGM_CHANGE_4;
     entity->updateFunction       = &updateBgmChange;
