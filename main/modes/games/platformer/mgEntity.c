@@ -96,9 +96,9 @@ void mg_updatePlayer(mgEntity_t* self)
                 //self->xspeed -= (self->falling && self->xspeed < 0) ? (self->xspeed < -24) ? 0 : 2 : 3;
                 self->xspeed -= (self->falling && self->xspeed < 0) ? (self->xspeed < -24) ? 0 : 8 : 8;
 
-                if (self->xspeed < -self->xMaxSpeed)
+                if (!self->falling && self->xspeed < -self->xMaxSpeed)
                 {
-                    self->xspeed = -self->xMaxSpeed;
+                    self->xspeed += 8;
                 }
 
                 if(!(self->gameData->prevBtnState & PB_LEFT)) {
@@ -106,9 +106,9 @@ void mg_updatePlayer(mgEntity_t* self)
                     if(!(self->gameData->doubleTapBtnState & PB_LEFT) ) {
                         self->gameData->doubleTapBtnState = PB_LEFT;
                         self->gameData->doubleTapBtnTimer = MG_DOUBLE_TAP_TIMER_FRAMES;
-                    } else if (self->canDash) {
+                    } else if (self->canDash && !self->falling) {
                         //Initiate dash
-                        /*self->state = MG_PL_ST_DASHING;
+                        self->state = MG_PL_ST_DASHING;
 
                         if(self->falling){
                             self->stateTimer = 20;
@@ -121,7 +121,7 @@ void mg_updatePlayer(mgEntity_t* self)
 
                         self->gameData->doubleTapBtnState = 0;
                         self->gameData->doubleTapBtnTimer = -1;
-                        self->gravity = 0;*/
+                        //self->gravity = 0;
                     }
                         
                 }
@@ -131,9 +131,9 @@ void mg_updatePlayer(mgEntity_t* self)
                 //self->xspeed += (self->falling && self->xspeed > 0) ? (self->xspeed > 24) ? 0 : 2 : 3;
                 self->xspeed += (self->falling && self->xspeed > 0) ? (self->xspeed > 24) ? 0 : 8 : 8;
 
-                if (self->xspeed > self->xMaxSpeed)
+                if (!self->falling && self->xspeed > self->xMaxSpeed)
                 {
-                    self->xspeed = self->xMaxSpeed;
+                    self->xspeed -= 8;
                 }
 
                 if(!(self->gameData->prevBtnState & PB_RIGHT)) {
@@ -141,9 +141,9 @@ void mg_updatePlayer(mgEntity_t* self)
                     if(!(self->gameData->doubleTapBtnState & PB_RIGHT) ) {
                         self->gameData->doubleTapBtnState = PB_RIGHT;
                         self->gameData->doubleTapBtnTimer = MG_DOUBLE_TAP_TIMER_FRAMES;
-                    } else if (self->canDash) {
+                    } else if (self->canDash && !self->falling) {
                         //Initiate dash
-                        /*self->state = MG_PL_ST_DASHING;
+                        self->state = MG_PL_ST_DASHING;
 
                         if(self->falling){
                             self->stateTimer = 20;
@@ -156,7 +156,7 @@ void mg_updatePlayer(mgEntity_t* self)
 
                         self->gameData->doubleTapBtnState = 0;
                         self->gameData->doubleTapBtnTimer = -1;
-                        self->gravity = 0;*/
+                        //self->gravity = 0;
                     }
                         
                 }
@@ -264,7 +264,7 @@ void mg_updatePlayer(mgEntity_t* self)
                 }
                 
                 self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
-                soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
+                //soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
         }
         else if (self->jumpPower > 0 && self->yspeed < 0)
         {
@@ -272,7 +272,7 @@ void mg_updatePlayer(mgEntity_t* self)
             self->jumpPower -= 2; // 32
             self->yspeed = -self->jumpPower;
 
-            if (self->jumpPower > 35 && self->jumpPower < 37)
+            /*if (self->jumpPower > 35 && self->jumpPower < 37)
             {
                 soundPlaySfx(&(self->soundManager->sndJump2), BZR_LEFT);
             }
@@ -280,7 +280,7 @@ void mg_updatePlayer(mgEntity_t* self)
             if (self->yspeed > -6 && self->yspeed < -2)
             {
                 soundPlaySfx(&(self->soundManager->sndJump3), BZR_LEFT);
-            }
+            }*/
 
             if (self->jumpPower < 0)
             {
@@ -311,10 +311,11 @@ void mg_updatePlayer(mgEntity_t* self)
     {
         switch(self->state){
             case MG_PL_ST_NORMAL:
+            case MG_PL_ST_DASHING:
                 if(self->falling && self->gameData->btnState & PB_DOWN)
                 {
                     self->xspeed = 0;
-                    self->yspeed = -32l;
+                    self->yspeed = -32;
                     self->spriteFlipVertical = true;
                     self->state = MG_PL_ST_MIC_DROP;
                     self->yMaxSpeed = 120;
@@ -1044,7 +1045,27 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_TURRET:
         {
             if(self->state == MG_PL_ST_MIC_DROP){
-                break;
+                self->state = MG_PL_ST_NORMAL;
+                self->yspeed = -self->yspeed;
+                self->spriteFlipVertical = false;
+                self->invincibilityFrames = 5;
+
+                if(other->invincibilityFrames){
+                    break;
+                }
+
+                other->hp -= 8;
+                other->invincibilityFrames=4;
+        
+                if(other->hp <= 0) {
+                    other->xspeed = self->xspeed >> 1;
+                    other->yspeed = -abs(self->xspeed >> 1);
+                    mg_scorePoints(self->gameData, other->scoreValue);
+                    soundPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
+                    killEnemy(other);
+                    
+                    break;
+                }
             }
 
             other->xspeed = -other->xspeed;
@@ -1105,14 +1126,14 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         }
         case ENTITY_POWERUP:
         {
-            self->hp++;
-            if (self->hp > 3)
+            self->hp+=6;
+            if (self->hp > 30)
             {
-                self->hp = 3;
+                self->hp = 30;
             }
             mg_scorePoints(self->gameData, 1000);
             soundPlaySfx(&(self->soundManager->sndPowerUp), BZR_LEFT);
-            mg_updateLedsHpMeter(self->entityManager, self->gameData);
+            //mg_updateLedsHpMeter(self->entityManager, self->gameData);
             mg_destroyEntity(other, false);
             break;
         }
@@ -1623,7 +1644,7 @@ void dieWhenFallingOffScreen(mgEntity_t* self)
 
 void mg_updateDummy(mgEntity_t* self)
 {
-    // Do nothing, because that's what dummies do!
+    despawnWhenOffscreen(self);
 }
 
 void updateScrollLockLeft(mgEntity_t* self)
@@ -1672,11 +1693,11 @@ void updateEntityDead(mgEntity_t* self)
 
 void updatePowerUp(mgEntity_t* self)
 {
-    if (self->gameData->frameCount % 10 == 0)
+    /*if (self->gameData->frameCount % 10 == 0)
     {
         self->spriteIndex
             = ((self->entityManager->playerEntity->hp < 2) ? MG_SP_GAMING_1 : MG_SP_MUSIC_1) + ((self->spriteIndex + 1) % 3);
-    }
+    }*/
 
     mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
@@ -2365,6 +2386,11 @@ void killEnemy(mgEntity_t* target)
         target->spawnData->spawnedEntity = NULL;
         target->spawnData = NULL;
     }
+
+    if( (esp_random() % 100) > 90 ){
+        createPowerUp(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
+    }
+
     target->updateFunction     = &updateEntityDead;
 }
 
@@ -2763,7 +2789,7 @@ void mg_updateCharginSchmuck(mgEntity_t* self)
     mg_updateInvincibilityFrames(self);
 
     despawnWhenOffscreen(self);
-    mg_moveEntityWithTileCollisions(self);
+    mg_moveEntityWithTileCollisions3(self);
 
     if(self->xspeed)
     {

@@ -647,7 +647,7 @@ void changeStateReadyScreen(platformer_t* self)
     self->gameData.frameCount = 0;
 
     globalMidiPlayerGet(MIDI_BGM)->loop = false;
-    soundPlayBgm(&(self->soundManager.bgmIntro), BZR_STEREO);
+    //soundPlayBgm(&(self->soundManager.bgmIntro), BZR_STEREO);
 
     mg_resetGameDataLeds(&(self->gameData));
 
@@ -660,7 +660,7 @@ void updateReadyScreen(platformer_t* self)
     //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
     self->gameData.frameCount++;
-    if (self->gameData.frameCount > 179)
+    if (self->gameData.frameCount > 4)//179)
     {
         soundStop(true);
         changeStateGame(self);
