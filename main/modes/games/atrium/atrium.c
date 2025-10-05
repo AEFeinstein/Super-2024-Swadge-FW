@@ -44,7 +44,6 @@ userProfile sonaProfile; // VIEW PROFILE MODE
 userProfile myProfile;   // MY SELECTIONS IN EDIT PROFILE MODE
 
 int card_coords_x[] = {24, 99, 208};
-int card_coords_x[] = {24, 99, 208};
 int card_coords_y[]
     = {24 + 12, 112 + 12}; // needs testing, original location at 24,112 was too high on screen and clipping into radius
 int cardpadding   = 4;     // padding for text written in card, in px
@@ -683,16 +682,17 @@ void sonaIdle()
                         freeWsg(&bgs->gazebo);
                         freeWsg(&bgs->plant1);
                         freeWsg(&bgs->plant2);
+                        break;
                     } 
                     case 1:
                     {
-                        freeWsg(&bgs->arcade1);       
+                        freeWsg(&bgs->arcade1);
+                        break;       
                     }
                     case 2:
                     {
                         freeWsg(&bgs->concert1);
                     }
-                    
                 }
 
             }
