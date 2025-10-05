@@ -33,8 +33,6 @@ int modeListGetCount()
 
 void modeListSetMenu(menu_t* menu)
 {
-    addSingleItemToMenu(menu, sonaTestMode.modeName);
-
     // Games sub menu
     menu = startSubMenu(menu, "Games");
     addSingleItemToMenu(menu, cosCrunchMode.modeName);
