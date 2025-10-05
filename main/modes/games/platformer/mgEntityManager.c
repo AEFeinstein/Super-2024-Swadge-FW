@@ -562,7 +562,7 @@ mgEntity_t* createPowerUp(mgEntityManager_t* entityManager, uint16_t x, uint16_t
     entity->x       = TO_SUBPIXEL_COORDS(x);
     entity->y       = TO_SUBPIXEL_COORDS(y);
 
-    entity->xspeed               = (entityManager->playerEntity->x > entity->x) ? -16 : 16;
+    entity->xspeed               = 0;
     entity->yspeed               = 0;
     entity->xMaxSpeed            = 132;
     entity->yMaxSpeed            = 132;
@@ -572,7 +572,7 @@ mgEntity_t* createPowerUp(mgEntityManager_t* entityManager, uint16_t x, uint16_t
     entity->spriteFlipVertical   = false;
 
     entity->type                 = ENTITY_POWERUP;
-    entity->spriteIndex          = (entityManager->playerEntity->hp < 2) ? MG_SP_GAMING_1 : MG_SP_MUSIC_1;
+    entity->spriteIndex          = MG_SP_GAMING_1;
     entity->animationTimer       = 0;
     entity->updateFunction       = &updatePowerUp;
     entity->collisionHandler     = &powerUpCollisionHandler;
@@ -1542,6 +1542,7 @@ mgEntity_t* createCharginSchmuck(mgEntityManager_t* entityManager, uint16_t x, u
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+    entity->tileCollider         = &entityTileCollider_1x2;
 
     entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
@@ -1579,6 +1580,7 @@ mgEntity_t* createBouncinSchmuck(mgEntityManager_t* entityManager, uint16_t x, u
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+    entity->tileCollider         = &entityTileCollider_1x2;
 
     entity->drawHandler          = &mg_defaultEntityDrawHandler;
     return entity;
