@@ -34,7 +34,8 @@ typedef union __attribute__((packed))
         int fact1      : 4; // class
         int fact2      : 4; // wya
         int sona       : 4; // sona img
-        int padding    : 12;
+        int mine       : 1; // mine
+        int padding    : 11;
     } profile;
     uint32_t data;
 } packedUserProfile_t;
@@ -54,16 +55,6 @@ int textbox2width = 172;
 int textboxcoords_x[]  = {99, 24};             // x coords for the two textboxes
 int textbox1coords_y[] = {39, 51, 63, 75};     // y coords for the first textbox lines
 int textbox2coords_y[] = {124, 136, 148, 160}; // y coords for the second textbox lines
-int buttoncoord_x[]    = {99, 24};             // x coord for the button columns
-int buttoncoord_y      = 200;                  // y coord for the button row
-int buttonpadding      = 4;                    // padding for text written in button, in px
-int buttonwidth        = 60;                   // width of the button, in px
-int buttonheight       = 20; // height of the button, in px, i probably want a sprite here but i'll draw a box for now
-// static const char* const buttontext[] = {"CANCEL", "SAVE"};
-static const char* const prompttext[]
-    = {"Choose Card", "Edit Sona", "Pick Sandwich", "Choose Identity", "Choose Location"};
-// static const char* const confirmtext[] = {"Are you sure?", "This will overwrite your profile."};
-// static const char* const instructtext[] = {"Press arrows to scroll", "Press A to confirm selection"};
 int buttoncoord_x[]    = {99, 24};             // x coord for the button columns
 int buttoncoord_y      = 200;                  // y coord for the button row
 int buttonpadding      = 4;                    // padding for text written in button, in px
@@ -455,8 +446,9 @@ static void atriumEnterMode()
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     player->loop         = true;
     midiGmOn(player);
+    printf("Attempting to play bgm\n");
     globalMidiPlayerPlaySong(&amidi->bgm, MIDI_BGM);
-    globalMidiPlayerSetVolume(MIDI_BGM, 0);
+    globalMidiPlayerSetVolume(MIDI_BGM, 10);
     printf("Entered Atrium Mode!\n");
     atriumTitle(); // draw the title screen
 }
@@ -471,8 +463,9 @@ static void atriumExitMode()
 
     freeSwadgePasses(&spList);
     freeFont(&misc->font);
-    globalMidiPlayerStop(MIDI_BGM);
+    globalMidiPlayerStop(true);
     unloadMidiFile(&amidi->bgm);
+    unloadMidiFile(&amidi->edit_bgm);
 
     heap_caps_free(bgs);
     heap_caps_free(misc);
@@ -557,8 +550,9 @@ static void atriumMainLoop(int64_t elapsedUs)
             else if ((evt.button & PB_B))
             {
                 state  = ATR_PROFILE; // if B is pressed, go back to profile view
+                printf("Attempting to play bgm\n");
                 globalMidiPlayerPlaySong(&amidi->bgm, MIDI_BGM);
-                globalMidiPlayerSetVolume(MIDI_BGM, 3);
+                globalMidiPlayerSetVolume(MIDI_BGM, 10);
                 loader = 0;
             }
         }
@@ -682,6 +676,25 @@ void sonaIdle()
             else if ((evt.button & PB_B))
             {
                 state = ATR_TITLE; // if B is pressed, go to profile view}
+                switch (PAGE)
+                {
+                    case 0:
+                    {
+                        freeWsg(&bgs->gazebo);
+                        freeWsg(&bgs->plant1);
+                        freeWsg(&bgs->plant2);
+                    } 
+                    case 1:
+                    {
+                        freeWsg(&bgs->arcade1);       
+                    }
+                    case 2:
+                    {
+                        freeWsg(&bgs->concert1);
+                    }
+                    
+                }
+
             }
             else if ((evt.button & PB_RIGHT))
             {
@@ -841,10 +854,12 @@ void viewProfile(userProfile prof)
         {
             if ((evt.button & PB_A))
             {
+                printf("PB_A; prof.mine %d\n", prof.mine);
                 if (prof.mine == 1)
                 {
                     state = ATR_EDIT_PROFILE; // if A is pressed, go to edit profile
-
+                    printf("Attempting to play edit bgm\n");
+                    globalMidiPlayerPlaySong(&amidi->edit_bgm, MIDI_BGM);
                     editProfile(x, y);
                 }
                 else
@@ -856,11 +871,13 @@ void viewProfile(userProfile prof)
             {
                 state  = ATR_TITLE;          // if B is pressed, go back to title view
                 loader = 0;                  // reset the loader so the card wsgs are freed and reloaded next time
-                for (int i = 0; i <= 6; i++) // don't hardcode this
+                for (int i = 0; i < (sizeof(cards_t)/sizeof(wsg_t)); i++) // don't hardcode this
                 {
+                    printf("freeing card wsg %d\n", i);
                     freeWsg(cardsArray[i]);
                     printf("freed card wsg %d\n", i);
                 }
+                freeWsg(&misc->trophy);
             }
         }
     }
@@ -1076,6 +1093,7 @@ uint32_t packProfile(userProfile prof)
         .profile.fact1      = prof.fact1,
         .profile.fact2      = prof.fact2,
         .profile.sona       = prof.sona,
+        .profile.mine       = prof.mine,
     };
     return ret.data;
 }
@@ -1089,6 +1107,7 @@ userProfile unpackProfile(uint32_t packedProfile)
         .fact1      = pp.profile.fact1,
         .fact2      = pp.profile.fact2,
         .sona       = pp.profile.sona,
+        .mine       = pp.profile.mine
     };
 
     printf("unpacked cardselect is %" PRId32 "\n", unpackedprofile.cardselect);

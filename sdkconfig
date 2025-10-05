@@ -452,7 +452,7 @@ CONFIG_FACTORY_TEST_NORMAL=y
 #
 # LED Configuration
 #
-CONFIG_NUM_LEDS=9
+CONFIG_NUM_LEDS=6
 # end of LED Configuration
 
 #
