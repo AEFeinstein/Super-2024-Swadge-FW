@@ -16,13 +16,13 @@ static const char* const preambles[] = {"Fave Sandwich: ", "I am a: ", "Find me 
 
 typedef struct
 {
-    int created; // 0 or 1
-    int cardselect;
-    int fact0; // sandwich
-    int fact1; // class
-    int fact2; // wya
-    int sona;  // sona img
-    int mine;  // 1 if this is my profile, 0 if not
+    int32_t created; // 0 or 1
+    int32_t cardselect;
+    int32_t fact0; // sandwich
+    int32_t fact1; // class
+    int32_t fact2; // wya
+    int32_t sona;  // sona img
+    int32_t mine;  // 1 if this is my profile, 0 if not
 } userProfile;
 
 typedef union __attribute__((packed))
@@ -368,15 +368,16 @@ static void atriumEnterMode()
 
         myProfile.created = 1;
         printf("no profile found, creating new one\n");
-        printf("randomized profile data: %d, %d, %d, %d, %d, %d\n", myProfile.cardselect, myProfile.fact0,
-               myProfile.fact1, myProfile.fact2, myProfile.sona, myProfile.mine);
-        printf("profile nvs int is %d\n", myProfile.created);
+        printf("randomized profile data: %" PRId32 ", %" PRId32 ", %" PRId32 ", %" PRId32 ", %" PRId32 ", %" PRId32
+               "\n",
+               myProfile.cardselect, myProfile.fact0, myProfile.fact1, myProfile.fact2, myProfile.sona, myProfile.mine);
+        printf("profile nvs int is %" PRId32 "\n", myProfile.created);
         writeNvs32(atriumNVSprofile, myProfile.created);
     }
 
     myUser = getSystemUsername();
     readNvs32(atriumNVSprofile, &myProfile.created);
-    printf("my profile nvs int is %d\n", myProfile.created);
+    printf("my profile nvs int is %" PRId32 "\n", myProfile.created);
     // myProfile = unpackProfile(myProfile.created);
 
     // when its ready, I need to add sona data extraction from swadgepass packet, for now I am just hardcoding some
@@ -1066,12 +1067,12 @@ userProfile unpackProfile(uint32_t packedProfile)
         .sona       = pp.profile.sona,
     };
 
-    printf("unpacked cardselect is %d\n", unpackedprofile.cardselect);
-    printf("unpacked fact0 is %d\n", unpackedprofile.fact0);
-    printf("unpacked fact1 is %d\n", unpackedprofile.fact1);
-    printf("unpacked fact2 is %d\n", unpackedprofile.fact2);
-    printf("unpacked sona is %d\n", unpackedprofile.sona);
-    printf("unpacked mine is %d\n", unpackedprofile.mine);
+    printf("unpacked cardselect is %" PRId32 "\n", unpackedprofile.cardselect);
+    printf("unpacked fact0 is %" PRId32 "\n", unpackedprofile.fact0);
+    printf("unpacked fact1 is %" PRId32 "\n", unpackedprofile.fact1);
+    printf("unpacked fact2 is %" PRId32 "\n", unpackedprofile.fact2);
+    printf("unpacked sona is %" PRId32 "\n", unpackedprofile.sona);
+    printf("unpacked mine is %" PRId32 "\n", unpackedprofile.mine);
 
     return unpackedprofile;
 }
