@@ -80,14 +80,54 @@ static const cnfsFileIdx_t eyeWsgs[] = {
     E_STARE_WSG, E_STARING_WSG,     E_SWIRLS_WSG,        E_THIN_WSG,          E_WIDE_WSG,
 };
 static const cnfsFileIdx_t hairWsgs[] = {
-    H_BALLET_BUN_WSG,   H_BOWL_CUT_WSG,  H_CHIBIUSA_WSG,    H_COTTON_CANDY_WSG,   H_CURLY_WSG,
-    H_CUTE_WSG,         H_DOLLY_WSG,     H_DOWN_DREADS_WSG, H_FRANKEY_STEIN_WSG,  H_HINATA_WSG,
-    H_JINX_WSG,         H_LONG_WSG,      H_LONG_PIGS_WSG,   H_MAIN_CHARACTER_WSG, H_MAIN_VILLAIN_WSG,
-    H_MALE_PATTERN_WSG, H_MCR_WSG,       H_MIDDLE_BANG_WSG, H_MINAKO_WSG,         H_MOHAWK_WSG,
-    H_POMPADOUR_WSG,    H_RAVEN_WSG,     H_SHORT_WSG,       H_SHORT_PIGS_WSG,     H_SIDE_PUFFS_WSG,
-    H_SKULL_WSG,        H_SKULL_R_WSG,   H_SMALL_BUNS_WSG,  H_SPOCK_WSG,          H_STAR_PUFF_NB_WSG,
-    H_STAR_PUFFS_WSG,   H_TATTOO_WSG,    H_THING_WSG,       H_USAGI_WSG,          H_WAVY_HAWK_WSG,
-    H_WAVY_HAWK_R_WSG,  H_WAVY_LONG_WSG, H_WEDNESDAY_WSG,   H_WET_CURLY_WSG,      H_WET_SHORT_WSG,
+    H_BALLET_BUN_WSG,
+    H_BOWL_CUT_WSG,
+    H_CHIBIUSA_WSG,
+    H_CURLY_WSG,
+    H_CUTE_WSG,
+    H_CUTE_BANGS_WSG,
+    H_DOLLY_WSG,
+    H_DOWN_DREADS_WSG,
+    H_DOWN_DREADS_R_WSG,
+    H_FRANKEY_STEIN_WSG,
+    H_FRO_WSG,
+    H_HINATA_WSG,
+    H_JINX_WSG,
+    H_LONG_WSG,
+    H_LONG_PIGS_WSG,
+    H_MAIN_CHARACTER_WSG,
+    H_MAIN_CHARACTER_R_WSG,
+    H_MAIN_VILLAIN_WSG,
+    H_MAIN_VILLAIN_R_WSG,
+    H_MALE_PATTERN_WSG,
+    H_MCR_WSG,
+    H_MINAKO_WSG,
+    H_MOHAWK_WSG,
+    H_POMPADOUR_WSG,
+    H_RAVEN_WSG,
+    H_SHORT_WSG,
+    H_SHORT_PIGS_WSG,
+    H_SIDE_PUFFS_WSG,
+    H_SIDE_PUFFS_R_WSG,
+    H_SKULL_WSG,
+    H_SKULL_R_WSG,
+    H_SMALL_BUNS_WSG,
+    H_SPOCK_WSG,
+    H_STAR_PUFF_NB_WSG,
+    H_STAR_PUFFS_WSG,
+    H_STAR_PUFFS_R_WSG,
+    H_TATTOO_WSG,
+    H_THING_WSG,
+    H_VBANG_WSG,
+    H_USAGI_WSG,
+    H_WAVY_HAWK_WSG,
+    H_WAVY_HAWK_R_WSG,
+    H_WAVY_SHORT_WSG,
+    H_WAVY_LONG_WSG,
+    H_WEDNESDAY_WSG,
+    H_WEDNESDAY_R_WSG,
+    H_WET_CURLY_WSG,
+    H_WET_SHORT_WSG,
 };
 static const cnfsFileIdx_t hatWsgs[] = {
     HA_BEANIE_WSG, HA_CHEF_WSG, HA_COOL_HAT_WSG, HA_COWBOY_WSG, HA_GRAD_CAP_WSG, HA_HEART_WSG, HA_PUFFBALL_BEANIE_WSG,
@@ -241,14 +281,13 @@ void generateSwadgesonaImage(swadgesona_t* sw)
     canvasBlankInit(&sw->image, SWSN_WIDTH, SWSN_HEIGHT, cTransparent, true);
 
     // Body
-
     wsgPaletteReset(&sw->pal);
     _getPaletteFromIdx(&sw->pal, COLOR_SKIN, sw->core.skin);
     _getPaletteFromIdx(&sw->pal, COLOR_CLOTHES, sw->core.clothes);
     canvasDrawSimplePal(&sw->image, SWSN_HEAD_WSG, 0, 0, &sw->pal);
 
     // Ears
-    // FIXME: Bunny, Cat, and Dog ears go over the hair 
+    // FIXME: Bunny, Cat, and Dog ears go over the hair
     if (sw->core.earShape != EAE_HUMAN)
     {
         canvasDrawSimplePal(&sw->image, earWsgs[sw->core.earShape - 1], 0, 0, &sw->pal);
@@ -278,7 +317,7 @@ void generateSwadgesonaImage(swadgesona_t* sw)
     canvasDrawSimplePal(&sw->image, hairWsgs[sw->core.hairStyle], 0, 0, &sw->pal);
 
     // Draw shirt if required
-    // FIXME: Over most hair: Wednesday, WednesdayRainbow, and DOlly 
+    // FIXME: Over most hair: Wednesday, WednesdayRainbow, and DOlly
 
     // Glasses
     if (sw->core.glasses != G_NONE)
@@ -288,7 +327,7 @@ void generateSwadgesonaImage(swadgesona_t* sw)
     }
 
     // Hats
-    // FIXME: PUlse hat has special color options 
+    // FIXME: PUlse hat has special color options
     if (sw->core.hat != HAE_NONE)
     {
         wsgPaletteReset(&sw->pal);
