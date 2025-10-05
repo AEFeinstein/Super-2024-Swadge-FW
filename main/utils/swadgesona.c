@@ -98,6 +98,7 @@ static const cnfsFileIdx_t mouthWsgs[] = {
     M_BAR_PIERCING_WSG,
     M_BITE_WSG,
     M_BITE_PIERCING_WSG,
+    M_CENSOR_WSG,
     M_CONCERN_WSG,
     M_CONTENT_WSG,
     M_DROOL_WSG,
@@ -124,6 +125,23 @@ static const cnfsFileIdx_t mouthWsgs[] = {
     M_VAMPIRE_WSG,
     M_YELLING_WSG,
 };
+static const cnfsFileIdx_t glassesWsgs[] = {
+    G_3D_WSG,         G_ANIME_WSG,
+    G_BANDAGE_WSG,    G_BIG_WSG,
+    G_BIG_ANGLE_WSG,  G_BIG_ANGLE_SUN_WSG,
+    G_BIG_SQUARE_WSG, G_BIG_SQUARE_SUN_WSG,
+    G_BLACK_SUN_WSG,  G_EGGMAN_WSG,
+    G_GOEORDI_WSG,    G_LINDA_WSG,
+    G_LINDA_SUN_WSG,  G_LOW_WSG,
+    G_LOW_SUN_WSG,    G_PATCH_WSG,
+    G_RAY_BAN_WSG,    G_RAY_BAN_SUN_WSG,
+    G_READING_WSG,    G_SCOUTER_WSG,
+    G_SMALL_WSG,      G_SQUARE_WSG,
+    G_SQUARE_SUN_WSG, G_SQUIRTLE_SQUAD_WSG,
+    G_THIN_ANGLE_WSG, G_THIN_ANGLE_SUN_WSG,
+    G_UPTURNED_WSG,   G_UPTURNED_SUN_WSG,
+    G_WIDE_NOSE_WSG,  G_WIDE_NOSE_SUN_WSG,
+};
 
 //==============================================================================
 // Enums
@@ -136,6 +154,7 @@ typedef enum
     COLOR_EYES,
     COLOR_CLOTHES,
     COLOR_HAT,
+    COLOR_GLASSES,
 } paletteSwap_t;
 
 //==============================================================================
@@ -187,18 +206,20 @@ void loadSwadgesona(swadgesona_t* sw, int idx)
 
 void generateRandomSwadgesona(swadgesona_t* sw)
 {
-    sw->core.skin       = esp_random() % SKIN_COLOR_COUNT;
-    sw->core.hairColor  = esp_random() % HAIR_COLOR_COUNT;
-    sw->core.eyeColor   = esp_random() % EYE_COLOR_COUNT;
-    sw->core.clothes    = esp_random() % CLOTHES_COLOR_COUNT;
-    sw->core.hatColor   = esp_random() % HA_COLOR_COUNT;
-    sw->core.bodyMarks  = esp_random() % BME_COUNT;
-    sw->core.earShape   = esp_random() % EAE_COUNT;
-    sw->core.eyebrows   = esp_random() % EBE_COUNT;
-    sw->core.eyeShape   = esp_random() % EE_COUNT;
-    sw->core.hairStyle  = esp_random() % HE_COUNT;
-    sw->core.hat        = esp_random() % HAE_COUNT;
-    sw->core.mouthShape = esp_random() % ME_COUNT;
+    sw->core.skin         = esp_random() % SKIN_COLOR_COUNT;
+    sw->core.hairColor    = esp_random() % HAIR_COLOR_COUNT;
+    sw->core.eyeColor     = esp_random() % EYE_COLOR_COUNT;
+    sw->core.clothes      = esp_random() % C_COUNT;
+    sw->core.hatColor     = esp_random() % HA_COLOR_COUNT;
+    sw->core.glassesColor = esp_random() % GC_COUNT;
+    sw->core.bodyMarks    = esp_random() % BME_COUNT;
+    sw->core.earShape     = esp_random() % EAE_COUNT;
+    sw->core.eyebrows     = esp_random() % EBE_COUNT;
+    sw->core.eyeShape     = esp_random() % EE_COUNT;
+    sw->core.hairStyle    = esp_random() % HE_COUNT;
+    sw->core.hat          = esp_random() % HAE_COUNT;
+    sw->core.mouthShape   = esp_random() % ME_COUNT;
+    sw->core.glasses      = esp_random() % G_COUNT;
 
     // Generate name
     generateRandUsername(&sw->name);
@@ -220,12 +241,14 @@ void generateSwadgesonaImage(swadgesona_t* sw)
     canvasBlankInit(&sw->image, SWSN_WIDTH, SWSN_HEIGHT, cTransparent, true);
 
     // Body
+
     wsgPaletteReset(&sw->pal);
     _getPaletteFromIdx(&sw->pal, COLOR_SKIN, sw->core.skin);
     _getPaletteFromIdx(&sw->pal, COLOR_CLOTHES, sw->core.clothes);
-    canvasDrawSimplePal(&sw->image, SWSN_BODY_WSG, 0, 0, &sw->pal);
+    canvasDrawSimplePal(&sw->image, SWSN_HEAD_WSG, 0, 0, &sw->pal);
 
     // Ears
+    // FIXME: Bunny, Cat, and Dog ears go over the hair 
     if (sw->core.earShape != EAE_HUMAN)
     {
         canvasDrawSimplePal(&sw->image, earWsgs[sw->core.earShape - 1], 0, 0, &sw->pal);
@@ -254,7 +277,18 @@ void generateSwadgesonaImage(swadgesona_t* sw)
     // Use the same palette as the eyebrows
     canvasDrawSimplePal(&sw->image, hairWsgs[sw->core.hairStyle], 0, 0, &sw->pal);
 
+    // Draw shirt if required
+    // FIXME: Over most hair: Wednesday, WednesdayRainbow, and DOlly 
+
+    // Glasses
+    if (sw->core.glasses != G_NONE)
+    {
+        _getPaletteFromIdx(&sw->pal, COLOR_GLASSES, sw->core.glassesColor);
+        canvasDrawSimplePal(&sw->image, glassesWsgs[sw->core.glasses - 1], 0, 0, &sw->pal);
+    }
+
     // Hats
+    // FIXME: PUlse hat has special color options 
     if (sw->core.hat != HAE_NONE)
     {
         wsgPaletteReset(&sw->pal);
@@ -534,6 +568,163 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
         }
         case COLOR_CLOTHES:
         {
+            switch (idx)
+            {
+                case C_BLACK:
+                {
+                    palette->newColors[c000] = c001;
+                    palette->newColors[c301] = c111;
+                    palette->newColors[c401] = c000;
+                    break;
+                }
+                case C_BLUE:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c003;
+                    palette->newColors[c401] = c004;
+                    break;
+                }
+                case C_BROWN:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c100;
+                    palette->newColors[c401] = c210;
+                    break;
+                }
+                case C_CYAN:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c054;
+                    palette->newColors[c401] = c455;
+                    break;
+                }
+                case C_DARK_PINK:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c425;
+                    palette->newColors[c401] = c435;
+                    break;
+                }
+                case C_DARK_PURPLE:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c102;
+                    palette->newColors[c401] = c203;
+                    break;
+                }
+                case C_GRAY:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c111;
+                    palette->newColors[c401] = c222;
+                    break;
+                }
+                case C_GREEN:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c130;
+                    palette->newColors[c401] = c240;
+                    break;
+                }
+                case C_HOT_PINK:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c413;
+                    palette->newColors[c401] = c505;
+                    break;
+                }
+                case C_HOTTER_PINK:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c402;
+                    palette->newColors[c401] = c503;
+                    break;
+                }
+                case C_LIGHT_TEAL:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c122;
+                    palette->newColors[c401] = c233;
+                    break;
+                }
+                case C_LIME:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c253;
+                    palette->newColors[c401] = c554;
+                    break;
+                }
+                case C_OFF_BLACK:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c001;
+                    palette->newColors[c401] = c102;
+                    break;
+                }
+                case C_ORANGE:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c421;
+                    palette->newColors[c401] = c521;
+                    break;
+                }
+                case C_PEACH:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c533;
+                    palette->newColors[c401] = c544;
+                    break;
+                }
+                case C_PINK:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c535;
+                    palette->newColors[c401] = c545;
+                    break;
+                }
+                case C_PURPLE:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c214;
+                    palette->newColors[c401] = c305;
+                    break;
+                }
+                case C_RED:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c301;
+                    palette->newColors[c401] = c401;
+                    break;
+                }
+                case C_TAN:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c433;
+                    palette->newColors[c401] = c543;
+                    break;
+                }
+                case C_TEAL:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c022;
+                    palette->newColors[c401] = c033;
+                    break;
+                }
+                case C_WHITE:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c444;
+                    palette->newColors[c401] = c555;
+                    break;
+                }
+                case C_YELLOW:
+                {
+                    palette->newColors[c000] = c000;
+                    palette->newColors[c301] = c431;
+                    palette->newColors[c401] = c541;
+                    break;
+                }
+            }
             break;
         }
         case COLOR_HAT:
@@ -650,6 +841,28 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                     palette->newColors[c514] = c540;
                     palette->newColors[c513] = c431;
                     palette->newColors[c502] = c320;
+                    break;
+                }
+            }
+            break;
+        }
+        case COLOR_GLASSES:
+        {
+            switch (idx)
+            {
+                case GC_BLACK:
+                {
+                    palette->newColors[c410] = c000;
+                    break;
+                }
+                case GC_BROWN:
+                {
+                    palette->newColors[c410] = c211;
+                    break;
+                }
+                case GC_RED:
+                {
+                    palette->newColors[c410] = c410;
                     break;
                 }
             }

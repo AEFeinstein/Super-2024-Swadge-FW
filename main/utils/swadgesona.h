@@ -84,8 +84,29 @@ typedef enum
 /// @brief List of valid clothes colors
 typedef enum
 {
-    CLOTHES_RED,
-    CLOTHES_COLOR_COUNT
+    C_BLACK,
+    C_BLUE,
+    C_BROWN,
+    C_CYAN,
+    C_DARK_PINK,
+    C_DARK_PURPLE,
+    C_GRAY,
+    C_GREEN,
+    C_HOT_PINK,
+    C_HOTTER_PINK,
+    C_LIGHT_TEAL,
+    C_LIME,
+    C_OFF_BLACK,
+    C_ORANGE,
+    C_PEACH,
+    C_PINK,
+    C_PURPLE,
+    C_RED,
+    C_TAN,
+    C_TEAL,
+    C_WHITE,
+    C_YELLOW,
+    C_COUNT
 } clothsColor_t;
 
 /// @brief List of valid hat colors
@@ -107,6 +128,15 @@ typedef enum
     HA_YELLOW,
     HA_COLOR_COUNT
 } hatColor_t;
+
+/// @brief List of valid glasses colors
+typedef enum
+{
+    GC_BLACK, // c000
+    GC_BROWN, // c211
+    GC_RED,   // c410
+    GC_COUNT
+} glassesColor_t;
 
 // Images
 /// @brief Accessories, beauty marks, etc options
@@ -292,6 +322,7 @@ typedef enum
     ME_BAR_PIERCING,
     ME_BITE,
     ME_BITE_PIERCING,
+    ME_CENSOR,
     ME_CONCERN,
     ME_CONTENT,
     ME_DROOL,
@@ -320,6 +351,43 @@ typedef enum
     ME_COUNT
 } mouthShape_t;
 
+/// @brief Glasses options
+typedef enum
+{
+    G_NONE,
+    G_3D,
+    G_ANIME,
+    G_BANDAGE,
+    G_BIG,
+    G_BIGANGLE,
+    G_BIGANGLE_SUN,
+    G_BIGSQUARE,
+    G_BIGSQUARE_SUN,
+    G_BLACK_SUN,
+    G_EGGMAN,
+    G_GOEORDI,
+    G_LINDA,
+    G_LINDA_SUN,
+    G_LOW,
+    G_LOW_SUN,
+    G_PATCH,
+    G_RAYBAN,
+    G_RAYBAN_SUN,
+    G_READING,
+    G_SCOUTER,
+    G_SMALL,
+    G_SQUARE,
+    G_SQUARE_SUN,
+    G_SQUIRTLE,
+    G_THINANGLE,
+    G_THINANGLE_SUN,
+    G_UPTURNED,
+    G_UPTURNED_SUN,
+    G_WIDENOSE,
+    G_WIDENOSE_SUN,
+    G_COUNT
+} glasses_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -331,11 +399,12 @@ typedef struct __attribute__((packed))
     int32_t packedName; // 32 bits
 
     // Color indexs - Use the grabPaletteFromIndex()
-    skinColor_t skin      : 4;
-    hairColor_t hairColor : 5;
-    eyeColor_t eyeColor   : 4;
-    hatColor_t hatColor   : 4;
-    clothsColor_t clothes : 4;
+    skinColor_t skin            : 4;
+    hairColor_t hairColor       : 5;
+    eyeColor_t eyeColor         : 4;
+    hatColor_t hatColor         : 4;
+    clothsColor_t clothes       : 5;
+    glassesColor_t glassesColor : 2;
 
     // Facial features
     bodyMarks_t bodyMarks   : 5;
@@ -345,8 +414,9 @@ typedef struct __attribute__((packed))
     hairStyle_t hairStyle   : 6;
     hat_t hat               : 4;
     mouthShape_t mouthShape : 5;
+    glasses_t glasses       : 5;
 
-    // 32 + 21 + 34 = 87 / 8 = 11 bytes
+    // 24 + 39 + 32 = 95 / 8 = 12 bytes
 } swadgesonaCore_t;
 
 /// @brief Larger data for use of use
@@ -359,8 +429,9 @@ typedef struct
     // - Hair:    c333, c222, c111
     // - Skin:    c544, c422
     // - Eyes:    c130, c010
-    // - Clothes: c410, c310
+    // - Clothes: c401, c301, c000
     // - Hat:     c533, c514, c513, c502
+    // - Glasses: c410
 
     // Finished image
     wsg_t image;

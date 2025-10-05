@@ -1,7 +1,7 @@
 #include "sonaTest.h"
 #include "swadgesona.h"
 
-#define OPTION_COUNT 12
+#define OPTION_COUNT 14
 
 const char sonaTestName[]          = "Swadgesona test";
 static const char* const strings[] = {
@@ -11,8 +11,8 @@ static const char* const strings[] = {
     "Press start to go back",
 };
 const int arrayLims[OPTION_COUNT] = {
-    SKIN_COLOR_COUNT, HAIR_COLOR_COUNT, EYE_COLOR_COUNT, CLOTHES_COLOR_COUNT, HA_COLOR_COUNT, BME_COUNT, EAE_COUNT,
-    EBE_COUNT,        EE_COUNT,         HE_COUNT,        HAE_COUNT,           ME_COUNT,
+    SKIN_COLOR_COUNT, HAIR_COLOR_COUNT, EYE_COLOR_COUNT, C_COUNT,  HA_COLOR_COUNT, GC_COUNT, BME_COUNT,
+    EAE_COUNT,        EBE_COUNT,        EE_COUNT,        HE_COUNT, HAE_COUNT,      ME_COUNT, G_COUNT,
 };
 
 static void stEnterMode(void);
@@ -47,7 +47,7 @@ static void stEnterMode(void)
 
 static void stExitMode(void)
 {
-    free(st);
+    heap_caps_free(st);
 }
 
 static void stMainLoop(int64_t elapsedUs)
@@ -70,7 +70,7 @@ static void stMainLoop(int64_t elapsedUs)
                 else if (evt.button & PB_UP)
                 {
                     st->menuSlot++;
-                    if (st->menuSlot > 10)
+                    if (st->menuSlot > 9)
                     {
                         st->menuSlot = 0;
                     }
@@ -178,17 +178,19 @@ static void stMainLoop(int64_t elapsedUs)
 
 static void stCopyListToSona(swadgesona_t* swsn, int* list)
 {
-    st->swsn.core.skin       = st->list[0];
-    st->swsn.core.hairColor  = st->list[1];
-    st->swsn.core.eyeColor   = st->list[2];
-    st->swsn.core.clothes    = st->list[3];
-    st->swsn.core.hatColor   = st->list[4];
-    st->swsn.core.bodyMarks  = st->list[5];
-    st->swsn.core.earShape   = st->list[6];
-    st->swsn.core.eyebrows   = st->list[7];
-    st->swsn.core.eyeShape   = st->list[8];
-    st->swsn.core.hairStyle  = st->list[9];
-    st->swsn.core.hat        = st->list[10];
-    st->swsn.core.mouthShape = st->list[11];
+    st->swsn.core.skin         = st->list[0];
+    st->swsn.core.hairColor    = st->list[1];
+    st->swsn.core.eyeColor     = st->list[2];
+    st->swsn.core.clothes      = st->list[3];
+    st->swsn.core.hatColor     = st->list[4];
+    st->swsn.core.glassesColor = st->list[5];
+    st->swsn.core.bodyMarks    = st->list[6];
+    st->swsn.core.earShape     = st->list[7];
+    st->swsn.core.eyebrows     = st->list[8];
+    st->swsn.core.eyeShape     = st->list[9];
+    st->swsn.core.hairStyle    = st->list[10];
+    st->swsn.core.hat          = st->list[11];
+    st->swsn.core.mouthShape   = st->list[12];
+    st->swsn.core.glasses      = st->list[13];
     generateSwadgesonaImage(&st->swsn);
 }
