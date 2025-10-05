@@ -7,25 +7,42 @@
 // PROFILE INFORMATION
 //---------------------------------------------------------------------------------//
 
-static const char* const fact0[8] = {"PB&J", "BLT", "Cheese", "Reuben", "Hoagie", "Ice Cream", "Hot Dog", "Knuckle"};
-static const char* const fact1[8] = {"Bard", "Superfan", "Pinball Wizard", "Maker", "Sharpshooter", "Trashman", "Speed Runner", "Medic"};
-static const char* const fact2[8] = {"Arena", "Arcade", "Gazebo", "Soapbox", "Marketplace", "Panels", "Main Stage", "Tabletop"};
-static const char* const preambles[3] = {"Fave Sandwich: ", "I am a: ", "Find me at: "};
+static const char* const fact0[] = {"PB&J", "BLT", "Cheese", "Reuben", "Hoagie", "Ice Cream", "Hot Dog", "Knuckle"};
+static const char* const fact1[]
+    = {"Bard", "Superfan", "Pinball Wizard", "Maker", "Sharpshooter", "Trashman", "Speed Runner", "Medic"};
+static const char* const fact2[]
+    = {"Arena", "Arcade", "Gazebo", "Soapbox", "Marketplace", "Panels", "Main Stage", "Tabletop"};
+static const char* const preambles[] = {"Fave Sandwich: ", "I am a: ", "Find me at: "};
 
-typedef struct {
-    int created; // 0 or 1
-    int cardselect;
-    int fact0; //sandwich
-    int fact1; //class
-    int fact2; //wya
-    int sona; // sona img
-    int mine; // 1 if this is my profile, 0 if not
-} userProfile; 
+typedef struct
+{
+    int32_t created; // 0 or 1
+    int32_t cardselect;
+    int32_t fact0; // sandwich
+    int32_t fact1; // class
+    int32_t fact2; // wya
+    int32_t sona;  // sona img
+    int32_t mine;  // 1 if this is my profile, 0 if not
+} userProfile;
 
-userProfile sonaProfile; //VIEW PROFILE MODE
-userProfile myProfile; //MY SELECTIONS IN EDIT PROFILE MODE
+typedef union __attribute__((packed))
+{
+    struct
+    {
+        int cardselect : 4;
+        int fact0      : 4; // sandwich
+        int fact1      : 4; // class
+        int fact2      : 4; // wya
+        int sona       : 4; // sona img
+        int padding    : 12;
+    } profile;
+    uint32_t data;
+} packedUserProfile_t;
 
-int card_coords_x[]  = {24, 99, 208};
+userProfile sonaProfile; // VIEW PROFILE MODE
+userProfile myProfile;   // MY SELECTIONS IN EDIT PROFILE MODE
+
+int card_coords_x[] = {24, 99, 208};
 int card_coords_y[]
     = {24 + 12, 112 + 12}; // needs testing, original location at 24,112 was too high on screen and clipping into radius
 int cardpadding   = 4;     // padding for text written in card, in px
@@ -36,15 +53,16 @@ int textbox2width = 172;
 int textboxcoords_x[]  = {99, 24};             // x coords for the two textboxes
 int textbox1coords_y[] = {39, 51, 63, 75};     // y coords for the first textbox lines
 int textbox2coords_y[] = {124, 136, 148, 160}; // y coords for the second textbox lines
-int buttoncoord_x[] = {99, 24};              // x coord for the button columns
-int buttoncoord_y = 200;               // y coord for the button row
-int buttonpadding = 4;               // padding for text written in button, in px
-int buttonwidth = 60;              // width of the button, in px
-int buttonheight = 20;             // height of the button, in px, i probably want a sprite here but i'll draw a box for now
-//static const char* const buttontext[] = {"CANCEL", "SAVE"};
-static const char* const prompttext[] = {"Choose Card", "Edit Sona", "Pick Sandwich", "Choose Identity", "Choose Location"};
-//static const char* const confirmtext[] = {"Are you sure?", "This will overwrite your profile."};
-//static const char* const instructtext[] = {"Press arrows to scroll", "Press A to confirm selection"};
+int buttoncoord_x[]    = {99, 24};             // x coord for the button columns
+int buttoncoord_y      = 200;                  // y coord for the button row
+int buttonpadding      = 4;                    // padding for text written in button, in px
+int buttonwidth        = 60;                   // width of the button, in px
+int buttonheight       = 20; // height of the button, in px, i probably want a sprite here but i'll draw a box for now
+// static const char* const buttontext[] = {"CANCEL", "SAVE"};
+static const char* const prompttext[]
+    = {"Choose Card", "Edit Sona", "Pick Sandwich", "Choose Identity", "Choose Location"};
+// static const char* const confirmtext[] = {"Are you sure?", "This will overwrite your profile."};
+// static const char* const instructtext[] = {"Press arrows to scroll", "Press A to confirm selection"};
 int selctor = 0; // which item is selected in the editor
 
 enum editSelect
@@ -67,11 +85,8 @@ enum lineSelect
 };
 
 bool confirm = 0;
-int x = 0; // x position in editor select
-int y = 0; // y position in editor select
-
-
-
+int x        = 0; // x position in editor select
+int y        = 0; // y position in editor select
 
 //---------------------------------------------------------------------------------//
 // FUNCTION DECLARATIONS
@@ -86,9 +101,8 @@ static void atriumTitle(void);
 static void viewProfile(userProfile prof);
 int editProfile(int xselect, int yselect);
 static void atriumAddSP(struct swadgePassPacket* packet);
-unsigned concatenate(unsigned x, unsigned y);
-unsigned packProfile(userProfile prof);
-userProfile unpackProfile(unsigned packedProfile);
+uint32_t packProfile(userProfile prof);
+userProfile unpackProfile(uint32_t packedProfile);
 
 //---------------------------------------------------------------------------------//
 // TROPHY CASE INFORMATION
@@ -192,6 +206,7 @@ sonaSelect selection = 0;
 int ticker           = 0;
 int PAGE             = 0;
 int planter          = 0;
+int changer          = 0;
 
 // sona locations
 int x_coords[] = {5, 74, 143, 212};
@@ -203,7 +218,6 @@ int loopcount  = 0;
 int numloops   = 0;
 int s          = 0; // sona index, 0-3
 int d          = 0; // dance chance
-
 
 //---------------------------------------------------------------------------------//
 // STRUCTURES FOR WSGS, MIDIS, ETC
@@ -241,7 +255,7 @@ typedef struct
 } bodies_t;
 
 bodies_t* bods;
-const wsg_t* bodsArray[sizeof(bodies_t)];
+wsg_t* bodsArray[sizeof(bodies_t)];
 
 // Cards
 typedef struct
@@ -257,7 +271,7 @@ typedef struct
 } cards_t;
 
 cards_t* cards;
-const wsg_t* cardsArray[sizeof(cards_t)];
+wsg_t* cardsArray[sizeof(cards_t)];
 
 // Buttons
 typedef struct
@@ -286,7 +300,7 @@ typedef struct
 const font_t* font;
 
 misc_t* misc;
-const wsg_t* miscArray[sizeof(bodies_t)];
+wsg_t* miscArray[sizeof(bodies_t)];
 
 // midis
 
@@ -307,11 +321,9 @@ nameData_t* myUser;
 
 const char atriumNVSprofile[] = "Atrium Profile:";
 
-
 //---------------------------------------------------------------------------------//
 // END OF SETUP
 //---------------------------------------------------------------------------------//
-
 
 static void atriumEnterMode()
 {
@@ -344,56 +356,58 @@ static void atriumEnterMode()
         spNode = spNode->next;
     }
 
-    if(!readNvs32(atriumNVSprofile, &myProfile.created))
-{
-    // We check if it found a value and if it didn't, we randomize a new profile for the user
+    if (!readNvs32(atriumNVSprofile, &myProfile.created))
+    {
+        // We check if it found a value and if it didn't, we randomize a new profile for the user
         myProfile.cardselect = rand() % 8;
-        myProfile.fact0 = rand() % 8;
-        myProfile.fact1 = rand() % 8;  
-        myProfile.fact2 = rand() % 8;
-        myProfile.sona = rand() % 5; 
-        myProfile.mine = 1; // this profile is mine
-        
-        myProfile.created = concatenate(myProfile.cardselect, concatenate(myProfile.fact0, concatenate(myProfile.fact1, concatenate(myProfile.fact2, concatenate(myProfile.sona, myProfile.mine)))));
+        myProfile.fact0      = rand() % 8;
+        myProfile.fact1      = rand() % 8;
+        myProfile.fact2      = rand() % 8;
+        myProfile.sona       = rand() % 5;
+        myProfile.mine       = 1; // this profile is mine
+
+        myProfile.created = 1;
         printf("no profile found, creating new one\n");
-        printf("randomized profile data: %d, %d, %d, %d, %d, %d\n", myProfile.cardselect, myProfile.fact0, myProfile.fact1, myProfile.fact2, myProfile.sona, myProfile.mine);
-        printf("profile nvs int is %d\n", myProfile.created);
+        printf("randomized profile data: %" PRId32 ", %" PRId32 ", %" PRId32 ", %" PRId32 ", %" PRId32 ", %" PRId32
+               "\n",
+               myProfile.cardselect, myProfile.fact0, myProfile.fact1, myProfile.fact2, myProfile.sona, myProfile.mine);
+        printf("profile nvs int is %" PRId32 "\n", myProfile.created);
         writeNvs32(atriumNVSprofile, myProfile.created);
-}
-    
+    }
+
     myUser = getSystemUsername();
     readNvs32(atriumNVSprofile, &myProfile.created);
-    printf("my profile nvs int is %d\n", myProfile.created);
-    myProfile = unpackProfile(myProfile.created);
+    printf("my profile nvs int is %" PRId32 "\n", myProfile.created);
+    // myProfile = unpackProfile(myProfile.created);
 
     // when its ready, I need to add sona data extraction from swadgepass packet, for now I am just hardcoding some
     // sonas in to use:
     loadWsg(BALD_WSG, &misc->bald, true);
-    loadWsg(MAINCHAR_WSG, &misc->mainc, true);
-    loadWsg(NUM_1_WSG, &misc->num1, true);
-    loadWsg(NUM_2_WSG, &misc->num2, true);
-    loadWsg(NUM_3_WSG, &misc->num3, true);
-    loadWsg(NUM_4_WSG, &misc->num4, true);
-    loadWsg(MAINCHAR_WSG, &misc->mainchar, true);
-    loadWsg(POMP_WSG, &misc->pomp, true);
+    loadWsg(PRINCESS_WSG, &misc->mainc, true);
+    loadWsg(GENIE_WSG, &misc->num1, true);
+    loadWsg(COOLGUY_WSG, &misc->num2, true);
+    loadWsg(CATDUDE_WSG, &misc->num3, true);
+    loadWsg(BIGMA_WSG, &misc->num4, true);
+    loadWsg(VOLDY_9000_WSG, &misc->mainchar, true);
+    loadWsg(GOBLINOPS_WSG, &misc->pomp, true);
     loadWsg(COW_WSG, &misc->cow, true);
 
     printf("loaded misc wsgs!\n");
-    
-    loadFont(OXANIUM_13MED_FONT,&misc->font, true);
+
+    loadFont(OXANIUM_13MED_FONT, &misc->font, true);
     font = &misc->font;
 
     // test animations for sonas - turned off for now
     loadWsg(DANCEBODY_1_WSG, &bods->d1, true);
     loadWsg(DANCEBODY_2_WSG, &bods->d2, true);
-     loadWsg(DANCEBODY_3_WSG, &bods->d3, true);
-     loadWsg(DANCEBODY_4_WSG, &bods->d4, true);
-     loadWsg(DANCEBODY_5_WSG, &bods->d5, true);
-     loadWsg(DANCEBODY_6_WSG, &bods->d6, true);
-     loadWsg(DANCEBODY_7_WSG, &bods->d7, true);
-     loadWsg(DANCEBODY_8_WSG, &bods->d8, true);
-     loadWsg(DANCEBODY_9_WSG, &bods->d9, true);
-     loadWsg(DANCEBODY_10_WSG, &bods->d10, true);
+    loadWsg(DANCEBODY_3_WSG, &bods->d3, true);
+    loadWsg(DANCEBODY_4_WSG, &bods->d4, true);
+    loadWsg(DANCEBODY_5_WSG, &bods->d5, true);
+    loadWsg(DANCEBODY_6_WSG, &bods->d6, true);
+    loadWsg(DANCEBODY_7_WSG, &bods->d7, true);
+    loadWsg(DANCEBODY_8_WSG, &bods->d8, true);
+    loadWsg(DANCEBODY_9_WSG, &bods->d9, true);
+    loadWsg(DANCEBODY_10_WSG, &bods->d10, true);
 
     loadWsg(ARROW_18_WSG, &butts->arrow, true);
 
@@ -419,26 +433,30 @@ static void atriumEnterMode()
     miscArray[8] = &misc->mainchar;
     miscArray[9] = &misc->num4;
 
-    loadMidiFile(YALIKEJAZZ_MID, &amidi->bgm, true);
+    loadMidiFile(MADEIT_MID, &amidi->bgm, true);
     printf("loaded midi file!\n");
 
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    player->loop         = false;
+    player->loop         = true;
     midiGmOn(player);
     globalMidiPlayerPlaySong(&amidi->bgm, MIDI_BGM);
-    globalMidiPlayerSetVolume(MIDI_BGM, 3);
+    globalMidiPlayerSetVolume(MIDI_BGM, 0);
     printf("Entered Atrium Mode!\n");
     atriumTitle(); // draw the title screen
 }
 
 static void atriumExitMode()
 {
-
     for (int i = 0; i < 10; i++)
     {
         freeWsg(bodsArray[i]);
         freeWsg(miscArray[i]);
     }
+
+    freeSwadgePasses(&spList);
+    freeFont(&misc->font);
+    globalMidiPlayerStop(MIDI_BGM);
+    unloadMidiFile(&amidi->bgm);
 
     heap_caps_free(bgs);
     heap_caps_free(misc);
@@ -446,11 +464,6 @@ static void atriumExitMode()
     heap_caps_free(cards);
     heap_caps_free(amidi);
     heap_caps_free(butts);
-
-    freeSwadgePasses(&spList);
-    freeFont(&misc->font);
-    globalMidiPlayerStop(MIDI_BGM);
-    unloadMidiFile(&amidi->bgm);
 }
 
 static void atriumMainLoop(int64_t elapsedUs)
@@ -461,20 +474,17 @@ static void atriumMainLoop(int64_t elapsedUs)
         while (checkButtonQueueWrapper(&evt))
         {
             if (evt.down && state == ATR_TITLE) // if the button is pressed down on the title screen
-
             {
                 if ((evt.button & PB_A))
                 {
-                    state = ATR_ATR;
-                    loader = 0;
+                    state   = ATR_ATR;
+                    loader  = 0;
+                    changer = 1;
                 }
                 else if ((evt.button & PB_B))
                 {
-                    state = ATR_PROFILE; // if B is pressed, go to profile view
+                    state  = ATR_PROFILE; // if B is pressed, go to profile view
                     loader = 0;
-                }
-                else
-                {
                 }
             }
         }
@@ -493,14 +503,8 @@ static void atriumMainLoop(int64_t elapsedUs)
         while (checkButtonQueueWrapper(&evt))
         {
             if (evt.down) // if the button is pressed
-
             {
-                if ((evt.button & PB_RIGHT))
-                {
-                }
-                else if ((evt.button & PB_LEFT))
-                {
-                }
+                // Don't care about presses, only care about releases
             }
             else if ((evt.button & PB_UP))
             {
@@ -530,58 +534,33 @@ static void atriumMainLoop(int64_t elapsedUs)
             }
             else if ((evt.button & PB_B))
             {
-                state = ATR_PROFILE; // if B is pressed, go back to profile view
+                state  = ATR_PROFILE; // if B is pressed, go back to profile view
                 loader = 0;
-            }
-            else
-            {
             }
         }
         editProfile(x, y);
     }
-    
 
-
-printf("state: %d\n", state);
+    // printf("state: %d\n", state);
 }
-;
 
 void sonaDraw()
 {
     // tester to see if the sonas show up right. up to 4 sonas drawn on the screen at one time. eventually, random
-    // swadgesona lines shall be selected to draw. in this tester, random hardcoded sonas are drawn in the required
+    // swadgepass lines shall be selected to draw. in this tester, random hardcoded sonas are drawn in the required
     // positions.
 
     int j = 0; // placeholder for drawing a second row maybe someday. one struggle at a time
 
     for (int i = 0; i < 4; i++)
     {
-        // int h = rand() % 4; //randomize head select
+        int h = rand() % 7; // randomize head select
         // int h = 2; //for now, just use this head
-        switch (i)
-        {
-            case 0:
-                drawWsgSimple(&misc->bald, x_coords[i],
-                              y_coords[j] - headoffset); // place head on top of body minus offset
-                break;
-
-            case 1:
-                drawWsgSimple(&misc->pomp, x_coords[i], y_coords[j] - headoffset);
-                break;
-
-            case 2:
-                drawWsgSimple(&misc->num1, x_coords[i], y_coords[j] - headoffset);
-                break;
-
-            case 3:
-                drawWsgSimple(&misc->cow, x_coords[i], y_coords[j] - headoffset);
-                break;
-
-            case 4:
-                drawWsgSimple(&misc->num2, x_coords[i], y_coords[j] - headoffset);
-                break;
-        }
+        drawWsgSimple(miscArray[h], x_coords[i],
+                      y_coords[j] - headoffset); // place head on top of body minus offset
     }
+
+    changer = 0;
 
     // end sona tester
 }
@@ -595,6 +574,7 @@ void sonaIdle()
         switch (PAGE)
         {
             case 0:
+            {
                 freeWsg(&bgs->arcade1);
                 freeWsg(&bgs->concert1);
                 loadWsg(GAZEBO_WSG, &bgs->gazebo, true);
@@ -602,31 +582,36 @@ void sonaIdle()
                 loadWsg(ATRIUMPLANT_2_WSG, &bgs->plant2, true);
                 drawWsgSimple(&bgs->gazebo, 0, 0); // draw the background based on page
                 printf("Loaded GAZEBO_WSG!\n");
+                changer = 1;
                 break;
-
+            }
             case 1:
+            {
                 freeWsg(&bgs->gazebo);
                 freeWsg(&bgs->plant1);
                 freeWsg(&bgs->plant2);
                 freeWsg(&bgs->concert1);
                 loadWsg(ARCADE_1_WSG, &bgs->arcade1, true);
                 drawWsgSimple(&bgs->arcade1, 0, 0); // draw the background based on page
-
+                changer = 1;
                 break;
-
+            }
             case 2:
+            {
                 freeWsg(&bgs->gazebo);
                 freeWsg(&bgs->plant1);
                 freeWsg(&bgs->plant2);
                 freeWsg(&bgs->arcade1);
                 loadWsg(CONCERT_1_WSG, &bgs->concert1, true);
                 drawWsgSimple(&bgs->concert1, 0, 0); // draw the background based on page
-
+                changer = 1;
                 break;
-
+            }
             default:
+            {
                 printf("All WSGs loaded or invalid bgloader value.\n");
                 break;
+            }
         }
         loader = 1;
     }
@@ -640,10 +625,14 @@ void sonaIdle()
         drawWsg(&butts->arrow, 20, 40, true, false, 270); // draw left arrow
     }
 
-    printf("Page: %d\n", PAGE);
+    // printf("Page: %d\n", PAGE);
 
     // drawWsgSimple(bgsArray[PAGE], 0, 0); //draw the background based on page
-    sonaDraw();
+
+    if (changer == 1)
+    {
+        sonaDraw();
+    }
 
     if ((PAGE == 0) & (planter <= 48))
     {                                                    // if on page 0, draw the plants rising up
@@ -662,7 +651,6 @@ void sonaIdle()
     while (checkButtonQueueWrapper(&evt))
     {
         if (evt.down) // if the button is pressed
-
         {
             if ((evt.button & PB_A))
             {
@@ -700,13 +688,11 @@ void sonaIdle()
                 }
             }
         }
-        else
-        {
-        }
     }
 
     if (loopcount == 0)
-    { // if nobody's idling
+    {
+        // if nobody's idling
         for (int i = 0; i < 4; i++)
         {
             drawWsgSimple(bodsArray[0], x_coords[i] + 1, y_coords[0]); // draw everybody
@@ -727,7 +713,8 @@ void sonaIdle()
     }
 
     else
-    { // if somebody's idling
+    {
+        // if somebody's idling
         for (int i = 0; i < 4; i++)
         {
             if (i != s)
@@ -739,14 +726,16 @@ void sonaIdle()
         if (loopcount <= numloops)
         {
             if (dancecount <= 9)
-            { // if the dance count is less than or equal to 9, then keep dancing
+            {
+                // if the dance count is less than or equal to 9, then keep dancing
                 printf("Sona %d is dancing and the loop count is %d!\n", s, loopcount);
 
                 // draw the remaining sona bodiess not dancing
                 for (int i = 0; i < 4; i++)
                 {
                     if (i != s)
-                    { // if this sona is not the one dancing
+                    {
+                        // if this sona is not the one dancing
                         drawWsgSimple(bodsArray[0], x_coords[i] + 1, y_coords[0]); // draw the other sonas
                     }
                 }
@@ -758,7 +747,8 @@ void sonaIdle()
             }
 
             else
-            { // if the dance count is greater than 9, then stop dancing
+            {
+                // if the dance count is greater than 9, then stop dancing
                 dancecount = 0;
 
                 for (int i = 0; i < 4; i++)
@@ -771,7 +761,8 @@ void sonaIdle()
         }
 
         else
-        { // numloops has been reached
+        {
+            // numloops has been reached
             loopcount = 0;
             for (int i = 0; i < 4; i++)
             {
@@ -794,9 +785,10 @@ void atriumTitle()
 
 void viewProfile(userProfile prof)
 {
-printf("In view profile state\n");
+    // printf("In view profile state\n");
 
-    printf("Cardselect: %d, Fact0: %d, Fact1: %d, Fact2: %d, Sona: %d, Mine: %d\n", prof.cardselect, prof.fact0, prof.fact1, prof.fact2, prof.sona,prof.mine);
+    // printf("Cardselect: %d, Fact0: %d, Fact1: %d, Fact2: %d, Sona: %d, Mine: %d\n", prof.cardselect, prof.fact0,
+    //        prof.fact1, prof.fact2, prof.sona, prof.mine);
     if (loader == 0)
     {
         // WSG for profile mode only
@@ -822,66 +814,58 @@ printf("In view profile state\n");
     while (checkButtonQueueWrapper(&evt))
     {
         if (evt.down)
-
         {
             if ((evt.button & PB_A))
             {
-                if (prof.mine == 1) {
-                state = ATR_EDIT_PROFILE; // if A is pressed, go to edit profile
-                
-                editProfile(x, y);
+                if (prof.mine == 1)
+                {
+                    state = ATR_EDIT_PROFILE; // if A is pressed, go to edit profile
+
+                    editProfile(x, y);
+                }
+                else
+                {
+                    // do nothing, only let user edit their own profile
+                }
             }
-            else {
-                // do nothing, only let user edit their own profile
-            }
-        }
             else if ((evt.button & PB_B))
             {
-                state  = ATR_TITLE; // if B is pressed, go back to title view
-                loader = 0;         // reset the loader so the card wsgs are freed and reloaded next time
-                for (int i = 0; i <= 6; i++) //don't hardcode this
+                state  = ATR_TITLE;          // if B is pressed, go back to title view
+                loader = 0;                  // reset the loader so the card wsgs are freed and reloaded next time
+                for (int i = 0; i <= 6; i++) // don't hardcode this
                 {
                     freeWsg(cardsArray[i]);
                     printf("freed card wsg %d\n", i);
                 }
             }
-            else
-            {
-            }
         }
     }
 
-//concat card info
-    //line 0: name
-        //no concat required
-    //line 1: fact0
-        char factline0[strlen(preambles[0]) + strlen(fact0[prof.fact0])] = {};
-        strncat(factline0, preambles[0], 40);
-        strncat(factline0, fact0[prof.fact0], 40);
-    //line 2: fact1
-        char factline1[strlen(preambles[1]) + strlen(fact1[prof.fact1])] = {};
-        strncat(factline1, preambles[1], 40);
-        strncat(factline1, fact1[prof.fact1], 40);
-    //line 3: fact2
-        char factline2[strlen(preambles[2]) + strlen(fact2[prof.fact2])] = {};
-        strncat(factline2, preambles[2], 40);
-        strncat(factline2, fact2[prof.fact2], 40);
+    // concat card info
+    // line 0: name
+    // no concat required
+    // line 1: fact0
+    char factline0[64];
+    snprintf(factline0, sizeof(factline0) - 1, "%s%s", preambles[0], fact0[prof.fact0]);
+    // line 2: fact1
+    char factline1[64];
+    snprintf(factline1, sizeof(factline1) - 1, "%s%s", preambles[0], fact1[prof.fact1]);
+    // line 3: fact2
+    char factline2[64];
+    snprintf(factline2, sizeof(factline2) - 1, "%s%s", preambles[0], fact2[prof.fact2]);
     // draw the card info
     drawWsgSimple(&bgs->gazebo, 0, 0);
-    drawWsgSimple(cardsArray[prof.cardselect], 0, 0 + 12); // draw the card
+    drawWsgSimple(cardsArray[prof.cardselect], 0, 0 + 12);                   // draw the card
     drawWsgSimple(miscArray[prof.sona], card_coords_x[0], card_coords_y[0]); // draw the sona head
-    
+
     drawText(font, c000, myUser->nameBuffer, card_coords_x[1] + cardpadding,
              card_coords_y[0] + cardpadding); // draw the name
     drawText(font, c000, factline0, card_coords_x[1] + cardpadding,
-             card_coords_y[0] + cardpadding + 13
-                 + 4); // draw the sandwich info
+             card_coords_y[0] + cardpadding + 13 + 4); // draw the sandwich info
     drawText(font, c000, factline1, card_coords_x[1] + cardpadding,
-             card_coords_y[0] + cardpadding + 26
-                 + 4); // draw the identity
+             card_coords_y[0] + cardpadding + 26 + 4); // draw the identity
     drawText(font, c000, factline2, card_coords_x[1] + cardpadding,
              card_coords_y[0] + cardpadding + 39 + 4); // draw the identity info
-
 
     drawText(font, c000, "Hello World!", card_coords_x[0] + cardpadding,
              card_coords_y[1] + cardpadding); // draw the second text box info
@@ -890,84 +874,118 @@ printf("In view profile state\n");
     drawText(font, c000, "Magfest is a: Donut", card_coords_x[0] + cardpadding,
              card_coords_y[1] + cardpadding + 24); // draw the second text box info
     drawWsgSimpleScaled(&misc->trophy, card_coords_x[2] + 7, card_coords_y[1] + 3, 1,
-                        1); // draw the trophy to fill in the small box for testing
+                        1);                                      // draw the trophy to fill in the small box for testing
     drawText(font, c000, "Press A to Edit My Profile", 48, 200); // draw the text for selecting a card
     drawText(font, c000, "Press B to return to menu", 48, 216);  // draw the text for selecting a card
 }
 
 void atriumAddSP(struct swadgePassPacket* packet)
 {
-    packet->atriumMode.cardSelected = myProfile.cardselect;             // which card bg
-    packet->atriumMode.fact0        = myProfile.fact0;                  // select fave sandwich
-    packet->atriumMode.fact1        = myProfile.fact1;                  // choose a class
-    packet->atriumMode.fact2        = myProfile.fact2;                  // wya
-    packet->atriumMode.festers      = sizeof(spList); // set the number of festers collected to the number of swadgepasses in the list
+    packet->atriumMode.cardSelected = myProfile.cardselect; // which card bg
+    packet->atriumMode.fact0        = myProfile.fact0;      // select fave sandwich
+    packet->atriumMode.fact1        = myProfile.fact1;      // choose a class
+    packet->atriumMode.fact2        = myProfile.fact2;      // wya
+    packet->atriumMode.festers
+        = sizeof(spList); // set the number of festers collected to the number of swadgepasses in the list
 }
 
 int editProfile(int xselect, int yselect)
 {
     int editorState = 0;
-/* static const char* const buttontext[] = {"CANCEL", "SAVE"};
-static const char* const prompttext[] = {"Choose Card", "Edit Sona", "Pick Sandwich", "Choose Identity", "Choose Location"};
-static const char* const confirmtext[] = {"Are you sure?", "This will overwrite your profile."};
-static const char* const instructtext[] = {"Press arrows to scroll", "Press A to confirm selection"}; */
+    /* static const char* const buttontext[] = {"CANCEL", "SAVE"};
+    static const char* const prompttext[] = {"Choose Card", "Edit Sona", "Pick Sandwich", "Choose Identity", "Choose
+    Location"}; static const char* const confirmtext[] = {"Are you sure?", "This will overwrite your profile."}; static
+    const char* const instructtext[] = {"Press arrows to scroll", "Press A to confirm selection"}; */
 
-    switch (xselect) {
+    switch (xselect)
+    {
         case 0:
+        {
             editorState = EDIT_CARD;
             drawText(font, c000, prompttext[0], 48, 200); // draw the text for selecting a card below the buttons
             printf("editor state is card\n");
-            
+            break;
+        }
         case 1:
-            switch (yselect) {
+        {
+            switch (yselect)
+            {
                 case 0:
+                {
                     editorState = EDIT_SONA;
-                    drawText(font, c000, prompttext[1], 48, 200); // draw the text for selecting a card below the buttons
+                    drawText(font, c000, prompttext[1], 48,
+                             200); // draw the text for selecting a card below the buttons
                     printf("editor state is sona\n");
+                    break;
+                }
                 case 1:
+                {
                     editorState = EDIT_TEXT1;
-                    //do more stuff with text lines later
-                    //drawsomethingattextline();
+                    // do more stuff with text lines later
+                    // drawsomethingattextline();
                     printf("editor state is text1\n");
+                    break;
+                }
                 case 2:
+                {
                     editorState = EDIT_CANCEL;
                     printf("editor state is cancel\n");
-                    
+                    break;
+                }
             }
+            break;
+        }
         case 2:
-            switch (yselect) {
+        {
+            switch (yselect)
+            {
                 case 0:
+                {
                     editorState = EDIT_TEXT0;
                     printf("editor state is text0\n");
+                    break;
+                }
                 case 1:
+                {
                     editorState = EDIT_SYMBOL;
                     printf("editor state is symbol\n");
+                    break;
+                }
                 case 2:
+                {
                     editorState = EDIT_SAVE;
                     printf("editor state is save\n");
+                    break;
+                }
             }
-            case 3:
-            if(yselect == 0){
+            break;
+        }
+        case 3:
+        {
+            if (yselect == 0)
+            {
                 editorState = EDIT_CANCEL;
                 printf("editor state is cancel\n");
             }
-            else {
+            else
+            {
                 editorState = EDIT_SAVE;
                 printf("editor state is save\n");
-                }
-                }
-     
+            }
+            break;
+        }
+    }
+
     while (checkButtonQueueWrapper(&evt))
     {
         if (evt.down)
-
         {
             if ((evt.button & PB_A))
             {
-                //do something based on editorState
+                // do something based on editorState
             }
 
-            if((evt.button & PB_DOWN))
+            if ((evt.button & PB_DOWN))
             {
                 if (y < 2)
                 {
@@ -979,7 +997,7 @@ static const char* const instructtext[] = {"Press arrows to scroll", "Press A to
                 }
             }
 
-            if((evt.button & PB_UP))
+            if ((evt.button & PB_UP))
             {
                 if (y > 0)
                 {
@@ -1014,52 +1032,47 @@ static const char* const instructtext[] = {"Press arrows to scroll", "Press A to
                     x = 0; // wraparound
                 }
             }
-
         }
     }
-            
-    
-    
+
     return editorState;
-    if(confirm == 1){
-    //Save to NVS
-    writeNvs32(atriumNVSprofile, packProfile(myProfile));
-    confirm = 0;
-        }
-
+    // if (confirm == 1)
+    // {
+    //     // Save to NVS
+    //     writeNvs32(atriumNVSprofile, packProfile(myProfile));
+    //     confirm = 0;
+    // }
 }
 
-unsigned concatenate(unsigned x, unsigned y) {
-    unsigned pow = 10;
-    while(y >= pow)
-        pow *= 10;
-    return x * pow + y;        
+uint32_t packProfile(userProfile prof)
+{
+    packedUserProfile_t ret = {
+        .profile.cardselect = prof.cardselect,
+        .profile.fact0      = prof.fact0,
+        .profile.fact1      = prof.fact1,
+        .profile.fact2      = prof.fact2,
+        .profile.sona       = prof.sona,
+    };
+    return ret.data;
 }
 
-unsigned packProfile(userProfile prof) {
-    unsigned packedProfile = concatenate(prof.cardselect, concatenate(prof.fact0, concatenate(prof.fact1, concatenate(prof.fact2, prof.sona))));
-    return packedProfile;
-}
+userProfile unpackProfile(uint32_t packedProfile)
+{
+    packedUserProfile_t pp      = {.data = packedProfile};
+    userProfile unpackedprofile = {
+        .cardselect = pp.profile.cardselect,
+        .fact0      = pp.profile.fact0,
+        .fact1      = pp.profile.fact1,
+        .fact2      = pp.profile.fact2,
+        .sona       = pp.profile.sona,
+    };
 
-userProfile unpackProfile(unsigned packedProfile) {
-    userProfile unpackedprofile;
-    char strprofile[10];
-    sprintf(strprofile, "%u", packedProfile);
-    printf("unpacked profile string char 1 is %c\n", strprofile[0]);
-    unpackedprofile.cardselect = atoi(strprofile[0]); // convert char to int, i need to fix this bc its a single character and i need to add a null terminator
-    printf("unpacked cardselect is %d\n", unpackedprofile.cardselect);
-    unpackedprofile.fact0 = atoi(strprofile[1]);
-    printf("unpacked fact0 is %d\n", unpackedprofile.fact0);
-    unpackedprofile.fact1 = atoi(strprofile[2]);
-    printf("unpacked fact1 is %d\n", unpackedprofile.fact1);
-    unpackedprofile.fact2 = atoi(strprofile[3]);
-    printf("unpacked fact2 is %d\n", unpackedprofile.fact2);
-    unpackedprofile.sona = atoi(strprofile[4]);
-    printf("unpacked sona is %d\n", unpackedprofile.sona);
-    unpackedprofile.mine = atoi(strprofile[5]); // this profile is mine
-    printf("unpacked mine is %d\n", unpackedprofile.mine);
-    
-
+    printf("unpacked cardselect is %" PRId32 "\n", unpackedprofile.cardselect);
+    printf("unpacked fact0 is %" PRId32 "\n", unpackedprofile.fact0);
+    printf("unpacked fact1 is %" PRId32 "\n", unpackedprofile.fact1);
+    printf("unpacked fact2 is %" PRId32 "\n", unpackedprofile.fact2);
+    printf("unpacked sona is %" PRId32 "\n", unpackedprofile.sona);
+    printf("unpacked mine is %" PRId32 "\n", unpackedprofile.mine);
 
     return unpackedprofile;
 }
