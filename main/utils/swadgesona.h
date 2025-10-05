@@ -312,13 +312,21 @@ typedef enum
 typedef enum
 {
     HAE_NONE,
+    HAE_BATTRICE,
     HAE_BEANIE,
+    HAE_BIGMA,
     HAE_CHEF,
     HAE_COOL_HAT,
     HAE_COWBOY,
+    HAE_GARBOTNIK,
     HAE_GRAD_CAP,
     HAE_HEART,
+    HAE_KINETIC_DONUT,
+    HAE_MET_HELMET,
     HAE_PUFFBALL,
+    HAE_PULSE,
+    HAE_SAWTOOTH,
+    HAE_TRON,
     HAE_COUNT,
 } hat_t;
 
@@ -420,11 +428,11 @@ typedef struct __attribute__((packed))
     eyebrowShape_t eyebrows : 5;
     eyeShape_t eyeShape     : 5;
     hairStyle_t hairStyle   : 6;
-    hat_t hat               : 4;
+    hat_t hat               : 5;
     mouthShape_t mouthShape : 5;
     glasses_t glasses       : 5;
 
-    // 24 + 39 + 32 = 95 / 8 = 12 bytes
+    // 24 + 40 + 32 = 96 / 8 = 12 bytes
 } swadgesonaCore_t;
 
 /// @brief Larger data for use of use
@@ -473,10 +481,11 @@ void loadSwadgesona(swadgesona_t* sw, int idx);
  */
 void generateRandomSwadgesona(swadgesona_t* sw);
 
-// Generate Swadgesona image
 /**
  * @brief Generates the image based on the included data
  *
  * @param sw Swadgesona wrapper used ot generate the image
  */
 void generateSwadgesonaImage(swadgesona_t* sw);
+
+// TODO: Back hair image for Atrium

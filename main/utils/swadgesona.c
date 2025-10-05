@@ -130,7 +130,9 @@ static const cnfsFileIdx_t hairWsgs[] = {
     H_WET_SHORT_WSG,
 };
 static const cnfsFileIdx_t hatWsgs[] = {
-    HA_BEANIE_WSG, HA_CHEF_WSG, HA_COOL_HAT_WSG, HA_COWBOY_WSG, HA_GRAD_CAP_WSG, HA_HEART_WSG, HA_PUFFBALL_BEANIE_WSG,
+    HA_BATTRICE_WSG,   HA_BEANIE_WSG,          HA_BIGMA_WSG,    HA_CHEF_WSG,     HA_COOL_HAT_WSG,
+    HA_COWBOY_WSG,     HA_GARBOTNIK_WSG,       HA_GRAD_CAP_WSG, HA_HEART_WSG,    HA_KINETIC_DONUT_WSG,
+    HA_MET_HELMET_WSG, HA_PUFFBALL_BEANIE_WSG, HA_PULSE_WSG,    HA_SAWTOOTH_WSG, HA_TRON_WSG,
 };
 static const cnfsFileIdx_t mouthWsgs[] = {
     M_AH_WSG,
