@@ -34,7 +34,8 @@ typedef union __attribute__((packed))
         int fact1      : 4; // class
         int fact2      : 4; // wya
         int sona       : 4; // sona img
-        int padding    : 12;
+        int mine       : 1; // mine
+        int padding    : 11;
     } profile;
     uint32_t data;
 } packedUserProfile_t;
@@ -63,6 +64,7 @@ static const char* const prompttext[]
     = {"Choose Card", "Edit Sona", "Pick Sandwich", "Choose Identity", "Choose Location"};
 // static const char* const confirmtext[] = {"Are you sure?", "This will overwrite your profile."};
 // static const char* const instructtext[] = {"Press arrows to scroll", "Press A to confirm selection"};
+
 int selctor = 0; // which item is selected in the editor
 
 enum editSelect
@@ -307,6 +309,7 @@ wsg_t* miscArray[sizeof(bodies_t)];
 typedef struct
 {
     midiFile_t bgm;
+    midiFile_t edit_bgm;
 } amidi_t;
 
 amidi_t* amidi;
@@ -334,6 +337,7 @@ static void atriumEnterMode()
     amidi = (amidi_t*)heap_caps_calloc(1, sizeof(amidi_t), MALLOC_CAP_8BIT);
     butts = (butts_t*)heap_caps_calloc(1, sizeof(butts_t), MALLOC_CAP_8BIT);
     // Dear Emily, you need to do this for every struct. love, past you.
+    printf("memory initialized\n");
 
     getSwadgePasses(&spList, &atriumMode, true);
     node_t* spNode = spList.first;
@@ -395,6 +399,8 @@ static void atriumEnterMode()
     printf("loaded misc wsgs!\n");
 
     loadFont(OXANIUM_13MED_FONT, &misc->font, true);
+
+    loadFont(OXANIUM_13MED_FONT, &misc->font, true);
     font = &misc->font;
 
     // test animations for sonas - turned off for now
@@ -434,13 +440,15 @@ static void atriumEnterMode()
     miscArray[9] = &misc->num4;
 
     loadMidiFile(MADEIT_MID, &amidi->bgm, true);
+    loadMidiFile(ATRIUM_VIBE_MID, &amidi->edit_bgm, true);
     printf("loaded midi file!\n");
 
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     player->loop         = true;
     midiGmOn(player);
+    printf("Attempting to play bgm\n");
     globalMidiPlayerPlaySong(&amidi->bgm, MIDI_BGM);
-    globalMidiPlayerSetVolume(MIDI_BGM, 0);
+    globalMidiPlayerSetVolume(MIDI_BGM, 10);
     printf("Entered Atrium Mode!\n");
     atriumTitle(); // draw the title screen
 }
@@ -455,8 +463,9 @@ static void atriumExitMode()
 
     freeSwadgePasses(&spList);
     freeFont(&misc->font);
-    globalMidiPlayerStop(MIDI_BGM);
+    globalMidiPlayerStop(true);
     unloadMidiFile(&amidi->bgm);
+    unloadMidiFile(&amidi->edit_bgm);
 
     heap_caps_free(bgs);
     heap_caps_free(misc);
@@ -535,6 +544,9 @@ static void atriumMainLoop(int64_t elapsedUs)
             else if ((evt.button & PB_B))
             {
                 state  = ATR_PROFILE; // if B is pressed, go back to profile view
+                printf("Attempting to play bgm\n");
+                globalMidiPlayerPlaySong(&amidi->bgm, MIDI_BGM);
+                globalMidiPlayerSetVolume(MIDI_BGM, 10);
                 loader = 0;
             }
         }
@@ -658,6 +670,25 @@ void sonaIdle()
             else if ((evt.button & PB_B))
             {
                 state = ATR_TITLE; // if B is pressed, go to profile view}
+                switch (PAGE)
+                {
+                    case 0:
+                    {
+                        freeWsg(&bgs->gazebo);
+                        freeWsg(&bgs->plant1);
+                        freeWsg(&bgs->plant2);
+                    } 
+                    case 1:
+                    {
+                        freeWsg(&bgs->arcade1);       
+                    }
+                    case 2:
+                    {
+                        freeWsg(&bgs->concert1);
+                    }
+                    
+                }
+
             }
             else if ((evt.button & PB_RIGHT))
             {
@@ -817,10 +848,12 @@ void viewProfile(userProfile prof)
         {
             if ((evt.button & PB_A))
             {
+                printf("PB_A; prof.mine %d\n", prof.mine);
                 if (prof.mine == 1)
                 {
                     state = ATR_EDIT_PROFILE; // if A is pressed, go to edit profile
-
+                    printf("Attempting to play edit bgm\n");
+                    globalMidiPlayerPlaySong(&amidi->edit_bgm, MIDI_BGM);
                     editProfile(x, y);
                 }
                 else
@@ -832,11 +865,13 @@ void viewProfile(userProfile prof)
             {
                 state  = ATR_TITLE;          // if B is pressed, go back to title view
                 loader = 0;                  // reset the loader so the card wsgs are freed and reloaded next time
-                for (int i = 0; i <= 6; i++) // don't hardcode this
+                for (int i = 0; i < (sizeof(cards_t)/sizeof(wsg_t)); i++) // don't hardcode this
                 {
+                    printf("freeing card wsg %d\n", i);
                     freeWsg(cardsArray[i]);
                     printf("freed card wsg %d\n", i);
                 }
+                freeWsg(&misc->trophy);
             }
         }
     }
@@ -855,17 +890,20 @@ void viewProfile(userProfile prof)
     snprintf(factline2, sizeof(factline2) - 1, "%s%s", preambles[0], fact2[prof.fact2]);
     // draw the card info
     drawWsgSimple(&bgs->gazebo, 0, 0);
-    drawWsgSimple(cardsArray[prof.cardselect], 0, 0 + 12);                   // draw the card
+    drawWsgSimple(cardsArray[prof.cardselect], 0, 0 + 12); // draw the card
     drawWsgSimple(miscArray[prof.sona], card_coords_x[0], card_coords_y[0]); // draw the sona head
-
+    
     drawText(font, c000, myUser->nameBuffer, card_coords_x[1] + cardpadding,
              card_coords_y[0] + cardpadding); // draw the name
     drawText(font, c000, factline0, card_coords_x[1] + cardpadding,
-             card_coords_y[0] + cardpadding + 13 + 4); // draw the sandwich info
+             card_coords_y[0] + cardpadding + 13
+                 + 4); // draw the sandwich info
     drawText(font, c000, factline1, card_coords_x[1] + cardpadding,
-             card_coords_y[0] + cardpadding + 26 + 4); // draw the identity
+             card_coords_y[0] + cardpadding + 26
+                 + 4); // draw the identity
     drawText(font, c000, factline2, card_coords_x[1] + cardpadding,
              card_coords_y[0] + cardpadding + 39 + 4); // draw the identity info
+
 
     drawText(font, c000, "Hello World!", card_coords_x[0] + cardpadding,
              card_coords_y[1] + cardpadding); // draw the second text box info
@@ -874,31 +912,29 @@ void viewProfile(userProfile prof)
     drawText(font, c000, "Magfest is a: Donut", card_coords_x[0] + cardpadding,
              card_coords_y[1] + cardpadding + 24); // draw the second text box info
     drawWsgSimpleScaled(&misc->trophy, card_coords_x[2] + 7, card_coords_y[1] + 3, 1,
-                        1);                                      // draw the trophy to fill in the small box for testing
+                        1); // draw the trophy to fill in the small box for testing
     drawText(font, c000, "Press A to Edit My Profile", 48, 200); // draw the text for selecting a card
     drawText(font, c000, "Press B to return to menu", 48, 216);  // draw the text for selecting a card
 }
 
 void atriumAddSP(struct swadgePassPacket* packet)
 {
-    packet->atriumMode.cardSelected = myProfile.cardselect; // which card bg
-    packet->atriumMode.fact0        = myProfile.fact0;      // select fave sandwich
-    packet->atriumMode.fact1        = myProfile.fact1;      // choose a class
-    packet->atriumMode.fact2        = myProfile.fact2;      // wya
-    packet->atriumMode.festers
-        = sizeof(spList); // set the number of festers collected to the number of swadgepasses in the list
+    packet->atriumMode.cardSelected = myProfile.cardselect;             // which card bg
+    packet->atriumMode.fact0        = myProfile.fact0;                  // select fave sandwich
+    packet->atriumMode.fact1        = myProfile.fact1;                  // choose a class
+    packet->atriumMode.fact2        = myProfile.fact2;                  // wya
+    packet->atriumMode.festers      = sizeof(spList); // set the number of festers collected to the number of swadgepasses in the list
 }
 
 int editProfile(int xselect, int yselect)
 {
     int editorState = 0;
-    /* static const char* const buttontext[] = {"CANCEL", "SAVE"};
-    static const char* const prompttext[] = {"Choose Card", "Edit Sona", "Pick Sandwich", "Choose Identity", "Choose
-    Location"}; static const char* const confirmtext[] = {"Are you sure?", "This will overwrite your profile."}; static
-    const char* const instructtext[] = {"Press arrows to scroll", "Press A to confirm selection"}; */
+/* static const char* const buttontext[] = {"CANCEL", "SAVE"};
+static const char* const prompttext[] = {"Choose Card", "Edit Sona", "Pick Sandwich", "Choose Identity", "Choose Location"};
+static const char* const confirmtext[] = {"Are you sure?", "This will overwrite your profile."};
+static const char* const instructtext[] = {"Press arrows to scroll", "Press A to confirm selection"}; */
 
-    switch (xselect)
-    {
+    switch (xselect) {
         case 0:
         {
             editorState = EDIT_CARD;
@@ -913,16 +949,15 @@ int editProfile(int xselect, int yselect)
                 case 0:
                 {
                     editorState = EDIT_SONA;
-                    drawText(font, c000, prompttext[1], 48,
-                             200); // draw the text for selecting a card below the buttons
+                    drawText(font, c000, prompttext[1], 48, 200); // draw the text for selecting a card below the buttons
                     printf("editor state is sona\n");
                     break;
                 }
                 case 1:
                 {
                     editorState = EDIT_TEXT1;
-                    // do more stuff with text lines later
-                    // drawsomethingattextline();
+                    //do more stuff with text lines later
+                    //drawsomethingattextline();
                     printf("editor state is text1\n");
                     break;
                 }
@@ -967,8 +1002,7 @@ int editProfile(int xselect, int yselect)
                 editorState = EDIT_CANCEL;
                 printf("editor state is cancel\n");
             }
-            else
-            {
+            else {
                 editorState = EDIT_SAVE;
                 printf("editor state is save\n");
             }
@@ -1032,6 +1066,7 @@ int editProfile(int xselect, int yselect)
                     x = 0; // wraparound
                 }
             }
+
         }
     }
 
@@ -1052,6 +1087,7 @@ uint32_t packProfile(userProfile prof)
         .profile.fact1      = prof.fact1,
         .profile.fact2      = prof.fact2,
         .profile.sona       = prof.sona,
+        .profile.mine       = prof.mine,
     };
     return ret.data;
 }
@@ -1065,6 +1101,7 @@ userProfile unpackProfile(uint32_t packedProfile)
         .fact1      = pp.profile.fact1,
         .fact2      = pp.profile.fact2,
         .sona       = pp.profile.sona,
+        .mine       = pp.profile.mine
     };
 
     printf("unpacked cardselect is %" PRId32 "\n", unpackedprofile.cardselect);

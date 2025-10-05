@@ -213,6 +213,10 @@ jukeboxSong_t music_jukebox[] = {
         .fIdx = BANANA_MID,
         .name = "Banana",
     },
+    {
+        .fIdx = ATRIUM_VIBE_MID,
+        .name = "Atrium TEST",
+    },
 };
 
 jukeboxSong_t music_credits[] = {
