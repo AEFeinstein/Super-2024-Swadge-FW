@@ -7,12 +7,12 @@
 // PROFILE INFORMATION
 //---------------------------------------------------------------------------------//
 
-static const char* const fact0[8] = {"PB&J", "BLT", "Cheese", "Reuben", "Hoagie", "Ice Cream", "Hot Dog", "Knuckle"};
-static const char* const fact1[8]
+static const char* const fact0[] = {"PB&J", "BLT", "Cheese", "Reuben", "Hoagie", "Ice Cream", "Hot Dog", "Knuckle"};
+static const char* const fact1[]
     = {"Bard", "Superfan", "Pinball Wizard", "Maker", "Sharpshooter", "Trashman", "Speed Runner", "Medic"};
-static const char* const fact2[8]
+static const char* const fact2[]
     = {"Arena", "Arcade", "Gazebo", "Soapbox", "Marketplace", "Panels", "Main Stage", "Tabletop"};
-static const char* const preambles[3] = {"Fave Sandwich: ", "I am a: ", "Find me at: "};
+static const char* const preambles[] = {"Fave Sandwich: ", "I am a: ", "Find me at: "};
 
 typedef struct
 {
@@ -473,7 +473,6 @@ static void atriumMainLoop(int64_t elapsedUs)
         while (checkButtonQueueWrapper(&evt))
         {
             if (evt.down && state == ATR_TITLE) // if the button is pressed down on the title screen
-
             {
                 if ((evt.button & PB_A))
                 {
@@ -485,9 +484,6 @@ static void atriumMainLoop(int64_t elapsedUs)
                 {
                     state  = ATR_PROFILE; // if B is pressed, go to profile view
                     loader = 0;
-                }
-                else
-                {
                 }
             }
         }
@@ -506,14 +502,8 @@ static void atriumMainLoop(int64_t elapsedUs)
         while (checkButtonQueueWrapper(&evt))
         {
             if (evt.down) // if the button is pressed
-
             {
-                if ((evt.button & PB_RIGHT))
-                {
-                }
-                else if ((evt.button & PB_LEFT))
-                {
-                }
+                // Don't care about presses, only care about releases
             }
             else if ((evt.button & PB_UP))
             {
@@ -545,9 +535,6 @@ static void atriumMainLoop(int64_t elapsedUs)
             {
                 state  = ATR_PROFILE; // if B is pressed, go back to profile view
                 loader = 0;
-            }
-            else
-            {
             }
         }
         editProfile(x, y);
@@ -586,6 +573,7 @@ void sonaIdle()
         switch (PAGE)
         {
             case 0:
+            {
                 freeWsg(&bgs->arcade1);
                 freeWsg(&bgs->concert1);
                 loadWsg(GAZEBO_WSG, &bgs->gazebo, true);
@@ -595,8 +583,9 @@ void sonaIdle()
                 printf("Loaded GAZEBO_WSG!\n");
                 changer = 1;
                 break;
-
+            }
             case 1:
+            {
                 freeWsg(&bgs->gazebo);
                 freeWsg(&bgs->plant1);
                 freeWsg(&bgs->plant2);
@@ -605,8 +594,9 @@ void sonaIdle()
                 drawWsgSimple(&bgs->arcade1, 0, 0); // draw the background based on page
                 changer = 1;
                 break;
-
+            }
             case 2:
+            {
                 freeWsg(&bgs->gazebo);
                 freeWsg(&bgs->plant1);
                 freeWsg(&bgs->plant2);
@@ -615,10 +605,12 @@ void sonaIdle()
                 drawWsgSimple(&bgs->concert1, 0, 0); // draw the background based on page
                 changer = 1;
                 break;
-
+            }
             default:
+            {
                 printf("All WSGs loaded or invalid bgloader value.\n");
                 break;
+            }
         }
         loader = 1;
     }
@@ -658,7 +650,6 @@ void sonaIdle()
     while (checkButtonQueueWrapper(&evt))
     {
         if (evt.down) // if the button is pressed
-
         {
             if ((evt.button & PB_A))
             {
@@ -696,13 +687,11 @@ void sonaIdle()
                 }
             }
         }
-        else
-        {
-        }
     }
 
     if (loopcount == 0)
-    { // if nobody's idling
+    {
+        // if nobody's idling
         for (int i = 0; i < 4; i++)
         {
             drawWsgSimple(bodsArray[0], x_coords[i] + 1, y_coords[0]); // draw everybody
@@ -723,7 +712,8 @@ void sonaIdle()
     }
 
     else
-    { // if somebody's idling
+    {
+        // if somebody's idling
         for (int i = 0; i < 4; i++)
         {
             if (i != s)
@@ -735,14 +725,16 @@ void sonaIdle()
         if (loopcount <= numloops)
         {
             if (dancecount <= 9)
-            { // if the dance count is less than or equal to 9, then keep dancing
+            {
+                // if the dance count is less than or equal to 9, then keep dancing
                 printf("Sona %d is dancing and the loop count is %d!\n", s, loopcount);
 
                 // draw the remaining sona bodiess not dancing
                 for (int i = 0; i < 4; i++)
                 {
                     if (i != s)
-                    { // if this sona is not the one dancing
+                    {
+                        // if this sona is not the one dancing
                         drawWsgSimple(bodsArray[0], x_coords[i] + 1, y_coords[0]); // draw the other sonas
                     }
                 }
@@ -754,7 +746,8 @@ void sonaIdle()
             }
 
             else
-            { // if the dance count is greater than 9, then stop dancing
+            {
+                // if the dance count is greater than 9, then stop dancing
                 dancecount = 0;
 
                 for (int i = 0; i < 4; i++)
@@ -767,7 +760,8 @@ void sonaIdle()
         }
 
         else
-        { // numloops has been reached
+        {
+            // numloops has been reached
             loopcount = 0;
             for (int i = 0; i < 4; i++)
             {
@@ -819,7 +813,6 @@ void viewProfile(userProfile prof)
     while (checkButtonQueueWrapper(&evt))
     {
         if (evt.down)
-
         {
             if ((evt.button & PB_A))
             {
@@ -843,9 +836,6 @@ void viewProfile(userProfile prof)
                     freeWsg(cardsArray[i]);
                     printf("freed card wsg %d\n", i);
                 }
-            }
-            else
-            {
             }
         }
     }
@@ -909,50 +899,68 @@ int editProfile(int xselect, int yselect)
     switch (xselect)
     {
         case 0:
+        {
             editorState = EDIT_CARD;
             drawText(font, c000, prompttext[0], 48, 200); // draw the text for selecting a card below the buttons
             printf("editor state is card\n");
             break;
-
+        }
         case 1:
+        {
             switch (yselect)
             {
                 case 0:
+                {
                     editorState = EDIT_SONA;
                     drawText(font, c000, prompttext[1], 48,
                              200); // draw the text for selecting a card below the buttons
                     printf("editor state is sona\n");
                     break;
+                }
                 case 1:
+                {
                     editorState = EDIT_TEXT1;
                     // do more stuff with text lines later
                     // drawsomethingattextline();
                     printf("editor state is text1\n");
                     break;
+                }
                 case 2:
+                {
                     editorState = EDIT_CANCEL;
                     printf("editor state is cancel\n");
                     break;
+                }
             }
             break;
+        }
         case 2:
+        {
             switch (yselect)
             {
                 case 0:
+                {
                     editorState = EDIT_TEXT0;
                     printf("editor state is text0\n");
                     break;
+                }
                 case 1:
+                {
                     editorState = EDIT_SYMBOL;
                     printf("editor state is symbol\n");
                     break;
+                }
                 case 2:
+                {
                     editorState = EDIT_SAVE;
                     printf("editor state is save\n");
                     break;
+                }
             }
             break;
+        }
         case 3:
+        {
             if (yselect == 0)
             {
                 editorState = EDIT_CANCEL;
@@ -964,12 +972,12 @@ int editProfile(int xselect, int yselect)
                 printf("editor state is save\n");
             }
             break;
+        }
     }
 
     while (checkButtonQueueWrapper(&evt))
     {
         if (evt.down)
-
         {
             if ((evt.button & PB_A))
             {
@@ -1027,12 +1035,12 @@ int editProfile(int xselect, int yselect)
     }
 
     return editorState;
-    if (confirm == 1)
-    {
-        // Save to NVS
-        writeNvs32(atriumNVSprofile, packProfile(myProfile));
-        confirm = 0;
-    }
+    // if (confirm == 1)
+    // {
+    //     // Save to NVS
+    //     writeNvs32(atriumNVSprofile, packProfile(myProfile));
+    //     confirm = 0;
+    // }
 }
 
 uint32_t packProfile(userProfile prof)
