@@ -791,53 +791,16 @@ static int32_t getLatestRemoteScore()
 // LEDs
 static void updateLEDs(int idx)
 {
-    for (int i = 0; i < CONFIG_NUM_LEDS; i++)
+    // Clear all LEDs
+    memset(rd->leds, 0, sizeof(rd->leds));
+
+    // Set a specific LED based on distance traveled
+    const int8_t ledMap[] = {0, 2, 1, 4, 3, 5};
+    if (idx < ARRAY_SIZE(ledMap))
     {
-        led_t led   = {0};
-        rd->leds[i] = led;
+        rd->leds[ledMap[idx]].b = 255;
     }
-    switch (idx)
-    {
-        case 0:
-        {
-            rd->leds[1].b = 255;
-            rd->leds[8].b = 255;
-            break;
-        }
-        case 1:
-        {
-            rd->leds[1].b = 255;
-            rd->leds[0].b = 255;
-            break;
-        }
-        case 2:
-        {
-            rd->leds[2].b = 255;
-            rd->leds[7].b = 255;
-            break;
-        }
-        case 3:
-        {
-            rd->leds[2].b = 255;
-            rd->leds[6].b = 255;
-            break;
-        }
-        case 4:
-        {
-            rd->leds[3].b = 255;
-            rd->leds[4].b = 255;
-            break;
-        }
-        case 5:
-        {
-            rd->leds[3].b = 255;
-            rd->leds[5].b = 255;
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }
+
+    // Write LED data out
     setLeds(rd->leds, CONFIG_NUM_LEDS);
 }

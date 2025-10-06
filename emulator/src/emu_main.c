@@ -403,9 +403,6 @@ void taskYIELD(void)
         // After the screen has been fully rendered, call all the render callbacks to render anything else
         doExtRenderCb(window_w, window_h);
 
-        // TODO: Make this a ExtRenderCb maybe?
-        ch32v003EmuDraw(window_w, window_h);
-
         // Display the image and wait for time to display next frame.
         CNFGSwapBuffers();
 

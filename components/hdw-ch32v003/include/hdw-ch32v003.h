@@ -47,7 +47,4 @@ int ch32v003WriteBitmapAsset(int slot, int asset_idx);
 int ch32v003WriteBitmap(int slot, uint8_t pixels[6][12]);
 int ch32v003SelectBitmap(int slot);
 
-// Only available on the emulator
-void ch32v003EmuDraw(int window_w, int window_h);
-
 #endif

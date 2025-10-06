@@ -11,7 +11,8 @@
 // Defines
 //==============================================================================
 
-#define MIN_LED_HEIGHT 64
+#define MIN_LED_DIM 64
+#define LED_MARGIN  16
 
 //==============================================================================
 // Static Function Prototypes
@@ -39,15 +40,12 @@ emuExtension_t ledEmuExtension = {
 // first value is the LED column (top-to-bottom(?))
 // second value is the row
 static const vec_t ledOffsets[CONFIG_NUM_LEDS] = {
-    {.x = 5, .y = 1}, // 1
-    {.x = 6, .y = 0}, // 2
-    {.x = 3, .y = 0}, // 3
-    {.x = 0, .y = 0}, // 4
-    {.x = 1, .y = 1}, // 5
-    {.x = 0, .y = 2}, // 6
-    {.x = 2, .y = 2}, // 7
-    {.x = 4, .y = 2}, // 8
-    {.x = 6, .y = 2}  // 9,
+    {.x = 1, .y = 0}, // 1
+    {.x = 1, .y = 2}, // 2
+    {.x = 1, .y = 1}, // 3
+    {.x = 0, .y = 1}, // 4
+    {.x = 0, .y = 2}, // 5
+    {.x = 0, .y = 0}, // 6
 };
 
 //==============================================================================
@@ -65,8 +63,8 @@ static bool ledsExtInit(emuArgs_t* args)
 {
     if (!args->hideLeds)
     {
-        requestPane(&ledEmuExtension, PANE_TOP, 1, MIN_LED_HEIGHT);
-        requestPane(&ledEmuExtension, PANE_BOTTOM, 1, MIN_LED_HEIGHT * 2);
+        requestPane(&ledEmuExtension, PANE_LEFT, MIN_LED_DIM, MIN_LED_DIM * 3);
+        requestPane(&ledEmuExtension, PANE_RIGHT, MIN_LED_DIM, MIN_LED_DIM * 3);
         return true;
     }
 
@@ -99,24 +97,25 @@ static void drawLeds(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8
     {
         for (int i = 0; i < MIN(numLeds, ARRAY_SIZE(ledOffsets)); i++)
         {
-            int16_t xOffset, yOffset, ledW, ledH;
-            // Use top pane for offset 0, bottom for offsets 1 & 2
-            if (0 == ledOffsets[i].y)
+            // Use the left pane for offset 0, right pane for offset 1
+            const emuPane_t* pane;
+            if (0 == ledOffsets[i].x)
             {
-                ledH = panes[0].paneH;
-                ledW = panes[0].paneW / 4;
-
-                xOffset = panes[0].paneX + (ledOffsets[i].x * ledW) / 2;
-                yOffset = panes[0].paneY + (ledOffsets[i].y * ledH);
+                // Left pane
+                pane = &panes[0];
             }
             else
             {
-                ledH = panes[1].paneH / 2;
-                ledW = panes[1].paneW / 4;
-
-                xOffset = panes[1].paneX + (ledOffsets[i].x * ledW) / 2;
-                yOffset = panes[1].paneY + ((ledOffsets[i].y - 1) * ledH);
+                // Right pane
+                pane = &panes[1];
             }
+
+            int16_t ledH = (pane->paneH - (2 * LED_MARGIN)) / 3;
+            int16_t ledW = pane->paneW;
+
+            int16_t xOffset = pane->paneX;
+            int16_t yOffset = pane->paneY + (ledOffsets[i].y * (ledH + LED_MARGIN));
+
             CNFGColor((leds[i].r << 24) | (leds[i].g << 16) | (leds[i].b << 8) | 0xFF);
             CNFGTackRectangle(xOffset, yOffset, xOffset + ledW, yOffset + ledH);
         }

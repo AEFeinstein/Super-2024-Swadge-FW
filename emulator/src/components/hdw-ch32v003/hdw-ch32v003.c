@@ -23,6 +23,8 @@
 
 #include "CNFG.h"
 
+#include "hdw-ch32c003_emu.h"
+
 //==============================================================================
 // Functions being stubbed.
 //==============================================================================
@@ -37,14 +39,13 @@ void ch32v003Teardown(void);
 int ch32v003Resume(void);
 int ch32v003WriteFlash(const uint8_t* buf, int sz);
 int ch32v003WriteBitmapAsset(int slot, int asset_idx);
-int ch32v003WriteBitmap(int slot, uint8_t pixels[6][12]);
+int ch32v003WriteBitmap(int slot, const uint8_t pixels[6][12]);
 int ch32v003SelectBitmap(int slot);
 
 #define CH32V003_MAX_IMAGE_SLOTS 20
 
 // For functions in this code.
 uint32_t GetSTK(void);
-void ch32v003EmuDraw(int window_w, int window_h);
 
 //==============================================================================
 // mini-rv32ima augmentations.
@@ -687,7 +688,6 @@ og_thread_t ch32v003thread;
 static void* ch32v003threadFn(void* v)
 {
     memset(&ch32v003state, 0, sizeof(ch32v003state));
-    ch32v003runMode = 0;
 
     double dLast = OGGetAbsoluteTime();
     while (ch32v003quitMode == 0)
@@ -714,7 +714,8 @@ static void* ch32v003threadFn(void* v)
 
 int initCh32v003(int swdio_pin)
 {
-    ch32v003thread = OGCreateThread(ch32v003threadFn, 0);
+    ch32v003runMode = 0;
+    ch32v003thread  = OGCreateThread(ch32v003threadFn, 0);
     return 0;
 }
 
@@ -794,7 +795,7 @@ static const uint16_t Coordmap[] = {
     0x0607, 0x0707, 0xffff, 0xffff, 0x0103, 0x0303, 0x0503, 0x0703, 0x0606, 0x0706, 0xffff, 0xffff,
 };
 
-void ch32v003EmuDraw(int window_w, int window_h)
+void ch32v003EmuDraw(int offX, int offY, int window_w, int window_h)
 {
     // We use the corresponding coordmap from swadge_matrix.h, so we can backtrack the steps
     // the source material takes to output the LEDs
@@ -804,16 +805,18 @@ void ch32v003EmuDraw(int window_w, int window_h)
     if (ils < RAMOFS || ils >= RAM_SIZE + RAMOFS - 72)
         return;
 
-    uint8_t* tptr = ch32v003ram + (ils - RAMOFS);
-    int w = 12, h = 6;
-    int x, y;
-    for (y = 0; y < h; y++)
-    {
-        for (x = 0; x < w; x++)
-        {
-            int py = window_h - y * 10 - 10;
-            int px = window_w / 2 - 5 * 10 - 5 + x * 10 + ((x >= w / 2) ? 10 : -10);
+    int ledW   = window_w / 13;
+    int ledH   = window_h / 6;
+    int ledDim = ledW < ledH ? ledW : ledH;
 
+    int marginX = (window_w - (13 * ledDim)) / 2;
+    int marginY = (window_h - (6 * ledDim)) / 2;
+
+    uint8_t* tptr = ch32v003ram + (ils - RAMOFS);
+    for (int y = 0; y < 6; y++)
+    {
+        for (int x = 0; x < 12; x++)
+        {
             uint16_t tc = Coordmap[y + x * 8];
             int bit     = 1 << (tc >> 8);
             int row     = tc & 0xff;
@@ -830,7 +833,19 @@ void ch32v003EmuDraw(int window_w, int window_h)
 
             // Apply any color tuning.  Right now we're just stark white.
             CNFGColor(0x000000ff | (intensity << 24) | (intensity << 8) | (intensity << 16));
-            CNFGTackRectangle(px - 4, py - 4, px + 4, py + 4);
+
+            int spacing = (x >= 6) ? 1 : 0;
+
+            int py = marginY + offY + (y * ledDim);
+            int px = marginX + offX + ((x + spacing) * ledDim);
+            if (ledDim >= 3)
+            {
+                CNFGTackRectangle(px + 1, py + 1, px + ledDim - 1, py + ledDim - 1);
+            }
+            else
+            {
+                CNFGTackRectangle(px, py, px + ledDim, py + ledDim);
+            }
         }
     }
 }
@@ -855,12 +870,12 @@ int ch32v003WriteBitmapAsset(int slot, int asset_idx)
     {
         uint8_t buffer[6][12];
     };
-    struct PixelMap* pm = (struct PixelMap*)(buf + 4);
+    const struct PixelMap* pm = (const struct PixelMap*)(buf + 4);
 
     return ch32v003WriteBitmap(slot, pm->buffer);
 }
 
-int ch32v003WriteBitmap(int slot, uint8_t pixels[6][12])
+int ch32v003WriteBitmap(int slot, const uint8_t pixels[6][12])
 {
     if (slot >= CH32V003_MAX_IMAGE_SLOTS)
     {
