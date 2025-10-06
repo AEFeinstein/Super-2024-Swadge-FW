@@ -242,7 +242,7 @@ void loadSwadgesona(swadgesona_t* sw, int idx)
     }
 
     // Ensure the image is generated and the name is generated
-    generateSwadgesonaImage(sw);
+    generateSwadgesonaImage(sw, true);
     setUsernameFrom32(&sw->name, sw->core.packedName);
 }
 
@@ -267,11 +267,11 @@ void generateRandomSwadgesona(swadgesona_t* sw)
     generateRandUsername(&sw->name);
     sw->core.packedName = GET_PACKED_USERNAME(sw->name);
 
-    generateSwadgesonaImage(sw);
+    generateSwadgesonaImage(sw, true);
 }
 
 // Generate Swadgesona image
-void generateSwadgesonaImage(swadgesona_t* sw)
+void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
 {
     // Delete old images if saved
     if (sw->image.w != 0)
@@ -285,12 +285,12 @@ void generateSwadgesonaImage(swadgesona_t* sw)
     // Body
     wsgPaletteReset(&sw->pal);
     _getPaletteFromIdx(&sw->pal, COLOR_SKIN, sw->core.skin);
-    _getPaletteFromIdx(&sw->pal, COLOR_CLOTHES, sw->core.clothes);
     canvasDrawSimplePal(&sw->image, SWSN_HEAD_WSG, 0, 0, &sw->pal);
 
     // Ears
-    // FIXME: Bunny, Cat, and Dog ears go over the hair
-    if (sw->core.earShape != EAE_HUMAN)
+    // Bunny, Cat, and Dog ears go over the hair, so drawn later
+    if (sw->core.earShape != EAE_HUMAN && sw->core.earShape != EAE_BUNNY && sw->core.earShape != EAE_DOG
+        && sw->core.earShape != EAE_CAT)
     {
         canvasDrawSimplePal(&sw->image, earWsgs[sw->core.earShape - 1], 0, 0, &sw->pal);
     }
@@ -318,8 +318,28 @@ void generateSwadgesonaImage(swadgesona_t* sw)
     // Use the same palette as the eyebrows
     canvasDrawSimplePal(&sw->image, hairWsgs[sw->core.hairStyle], 0, 0, &sw->pal);
 
+    // Bunny, Cat, and Dog ears go over the hair
+    if (sw->core.earShape == EAE_BUNNY || sw->core.earShape == EAE_DOG || sw->core.earShape == EAE_CAT)
+    {
+        canvasDrawSimplePal(&sw->image, earWsgs[sw->core.earShape - 1], 0, 0, &sw->pal);
+    }
+
     // Draw shirt if required
-    // FIXME: Over most hair: Wednesday, WednesdayRainbow, and DOlly
+    if (drawBody)
+    {
+        wsgPaletteReset(&sw->pal);
+        _getPaletteFromIdx(&sw->pal, COLOR_SKIN, sw->core.skin);
+        _getPaletteFromIdx(&sw->pal, COLOR_CLOTHES, sw->core.clothes);
+        canvasDrawSimplePal(&sw->image, SWSN_BODY_WSG, 0, 0, &sw->pal);
+    }
+
+    // If the following hairstyles are included, they need to be redrawn over the shirt
+    if (sw->core.hairStyle == HE_DOLLY || sw->core.hairStyle == HE_WEDNESDAY || sw->core.hairStyle == HE_WEDNESDAY_R)
+    {
+        wsgPaletteReset(&sw->pal);
+        _getPaletteFromIdx(&sw->pal, COLOR_HAIR, sw->core.hairColor);
+        canvasDrawSimplePal(&sw->image, hairWsgs[sw->core.hairStyle], 0, 0, &sw->pal);
+    }
 
     // Glasses
     if (sw->core.glasses != G_NONE)
@@ -329,11 +349,60 @@ void generateSwadgesonaImage(swadgesona_t* sw)
     }
 
     // Hats
-    // FIXME: PUlse hat has special color options
     if (sw->core.hat != HAE_NONE)
     {
         wsgPaletteReset(&sw->pal);
-        _getPaletteFromIdx(&sw->pal, COLOR_HAT, sw->core.hatColor);
+        if (sw->core.hat == HAE_PULSE) // If pulse use special color code
+        {
+            switch (sw->core.hatColor)
+            {
+                case HA_BLUE:
+                case HA_DARK_BLUE:
+                {
+                    sw->pal.newColors[c033] = c005;
+                    sw->pal.newColors[c055] = c035;
+                    break;
+                }
+                case HA_DARK_GREEN:
+                case HA_GREEN:
+                {
+                    sw->pal.newColors[c033] = c142;
+                    sw->pal.newColors[c055] = c252;
+                    break;
+                }
+                case HA_HOT_PINK:
+                case HA_PINK:
+                case HA_PURPLE:
+                {
+                    sw->pal.newColors[c033] = c504;
+                    sw->pal.newColors[c055] = c515;
+                    break;
+                }
+                case HA_ORANGE: // Red
+                {
+                    sw->pal.newColors[c033] = c500;
+                    sw->pal.newColors[c055] = c532;
+                    break;
+                }
+                case HA_YELLOW:
+                {
+                    sw->pal.newColors[c033] = c541;
+                    sw->pal.newColors[c055] = c552;
+                    break;
+                }
+                default:
+                {
+                    sw->pal.newColors[c033] = c033;
+                    sw->pal.newColors[c055] = c055;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            _getPaletteFromIdx(&sw->pal, COLOR_HAT, sw->core.hatColor);
+        }
+        // Draw hat
         canvasDrawSimplePal(&sw->image, hatWsgs[sw->core.hat - 1], 0, 0, &sw->pal);
     }
 }

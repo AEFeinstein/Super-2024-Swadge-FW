@@ -486,6 +486,6 @@ void generateRandomSwadgesona(swadgesona_t* sw);
  *
  * @param sw Swadgesona wrapper used ot generate the image
  */
-void generateSwadgesonaImage(swadgesona_t* sw);
+void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody);
 
 // TODO: Back hair image for Atrium

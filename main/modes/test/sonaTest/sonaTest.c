@@ -192,5 +192,5 @@ static void stCopyListToSona(swadgesona_t* swsn, int* list)
     st->swsn.core.hat          = st->list[11];
     st->swsn.core.mouthShape   = st->list[12];
     st->swsn.core.glasses      = st->list[13];
-    generateSwadgesonaImage(&st->swsn);
+    generateSwadgesonaImage(&st->swsn, true);
 }
