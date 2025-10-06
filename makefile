@@ -440,6 +440,7 @@ clean-assets:
 	$(MAKE) -C ./tools/cnfs clean
 	-@rm -rf $(CNFS_FILE) $(CNFS_FILE_H)
 	-@rm -rf ./assets_image/*
+	-@rm -rf ./.assets_ts
 
 # Clean git. Be careful, since this will wipe uncommitted changes
 clean-git:
