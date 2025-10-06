@@ -27,6 +27,8 @@ static void ccmgThreadMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, floa
 tintColor_t const fingersTintColors[] = {
     // Light
     {c321, c432, c554, c543},
+    // Medium
+    {c210, c321, c554, c432},
     // Dark
     {c100, c210, c543, c432},
 };
@@ -80,8 +82,8 @@ static void ccmgThreadInitMicrogame(void)
 
     loadWsg(CC_THREAD_WSG, &ccmgt->wsg.thread, false);
     loadWsg(CC_FINGERS_WSG, &ccmgt->wsg.fingers, false);
-    loadWsg(CC_NEEDLE_LEFT_WSG, &ccmgt->wsg.needleLeft, false);
-    loadWsg(CC_NEEDLE_RIGHT_WSG, &ccmgt->wsg.needleRight, false);
+    loadWsg(CC_BIG_NEEDLE_LEFT_WSG, &ccmgt->wsg.needleLeft, false);
+    loadWsg(CC_BIG_NEEDLE_RIGHT_WSG, &ccmgt->wsg.needleRight, false);
 
     ccmgt->threadTintColor  = cosCrunchMicrogameGetTintColor();
     ccmgt->fingersTintColor = &fingersTintColors[esp_random() % ARRAY_SIZE(fingersTintColors)];
