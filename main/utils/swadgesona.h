@@ -2,9 +2,71 @@
  * @file swadgesona.h
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief The data structures and Helper functions for utilizing Swadgesonas
- * @date 2025-09-06
+ * @date 2025-10-5
  *
  * @copyright Copyright (c) 2025
+ *
+ */
+
+/*! \file swadgesona.h
+ *
+ * \section sona_overview Overview
+ *
+ * Swadgesonas are a Mii-like character that can be edited and personalized. The Swadgesonas are made to be as small as
+ * possible to be easily sent via swadgepass, only 12 bytes, and contain all the data that another swadge running the
+ * same software needs to reconstruct the sona.
+ *
+ * Sonas are 64x64 pixels. Recommend to scale them up when space permits to see the details.
+ *
+ * The customizable aspects of a sona are:
+ * - Skin color
+ * - Hair style and color
+ * - Eye shape and color
+ * - Eyebrow shape
+ * - Ear type (Cat, Dog, Human, Elf, etc.)
+ * - Mouth shape
+ * - Glasses and colour
+ * - Hats and hat colors
+ * - Some beauty marks
+ *
+ * The Swadgesonas are assembled by the system, so all the user needs to do is provide a space to load the sona into.
+ * The Sonas can easily be loaded and saved into the NVS and also regenerated if modifications have been made. Lastly, a
+ * random swadgesona can easily be generated to avoid always seeing the default when loading one up before data is
+ * initialized.
+ *
+ * \code {.c}
+// Data
+swadgesona_t sw; // The swadgesona object
+int saveSlot = 4; // You can save to any number of slots. They take 12 bytes each, so make sure there's space!
+bool drawBody = true; // If the body should be drawn. If set to false, you get a floating head!
+
+// Load from file
+loadSwadgesona(&sw, saveSlot);
+
+// Save to a slot
+saveSwadgesona(&sw, saveSlot);
+
+// Regenerate swadgesona image. Only need ot call this when modifying the sona, when loading a sona this function is
+// automatically called ***with*** a body. If you need a body without, use this with the drawBody set to false.
+generateSwadgesonaImage(&sw, drawBody);
+
+// Draw the sona
+drawWsgSimpleScaled(&sw->image, x, y, 3, 3); // Scaled to 3 times
+
+// Generate a random swadgesona
+generateRandomSwadgesona(&sw);
+
+ * \endcode
+ *
+ * Refer to the enums below for the current list of options.
+ *
+ * When adding new options, here's the process:
+ * - Add new item to relevant enum
+ * - Add new CNFS image to the .c file at the appropriate place in the array
+ * - Calculate the number of bits required to save the sonas in this .h file.
+ * - If adding a color, make sure to add the conversions to the palette generation function
+ *
+ * If any help is required, contact Jeremy Stintzcum (Johnny Wycliffe) for direct assistance.
  *
  */
 
