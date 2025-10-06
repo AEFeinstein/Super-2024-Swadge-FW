@@ -407,6 +407,12 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
     }
 }
 
+// Get indexes
+cnfsFileIdx_t getHairWSG(swadgesona_t* sw)
+{
+    return hairWsgs[sw->core.hairStyle];
+}
+
 //==============================================================================
 // Static Functions
 //==============================================================================

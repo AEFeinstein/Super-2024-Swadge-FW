@@ -481,11 +481,20 @@ void loadSwadgesona(swadgesona_t* sw, int idx);
  */
 void generateRandomSwadgesona(swadgesona_t* sw);
 
+// Generate swadgesona image
 /**
  * @brief Generates the image based on the included data
  *
  * @param sw Swadgesona wrapper used ot generate the image
+ * @param drawBody Whether or not to draw the shirt/neck
  */
 void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody);
 
-// TODO: Back hair image for Atrium
+// Get indexes
+/**
+ * @brief Get the hair CNFS index from the swadgesona for drawing behind custom bodies
+ *
+ * @param sw Swadgesona to extract wsg from
+ * @return cnfsFileIdx_t index into the CNFS system where the hairstyle is at.
+ */
+cnfsFileIdx_t getHairWSG(swadgesona_t* sw);
