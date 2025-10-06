@@ -142,6 +142,7 @@ static void ccmgSewMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float t
             if (ccmgsew->currentStep == BUTTON_PRESS_COUNT)
             {
                 cosCrunchMicrogameResult(true);
+                ccmgsew->currentStep = BUTTON_PRESS_COUNT - 1;
             }
         }
     }
