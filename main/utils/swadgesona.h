@@ -523,7 +523,7 @@ typedef struct
 /**
  * @brief Saves the Swadgesona to the NVS in the given slot.
  *
- * @param s Swadgesona data to save. provide the entire wrapper
+ * @param sw Swadgesona data to save. provide the entire wrapper
  * @param idx Index of slot to put swadgesona into
  */
 void saveSwadgesona(swadgesona_t* sw, int idx);
@@ -531,7 +531,7 @@ void saveSwadgesona(swadgesona_t* sw, int idx);
 /**
  * @brief Loads a swadgesona from the NVS
  *
- * @param s Swadgesona data to load. Will be randomized if the data doesn't exist.
+ * @param sw Swadgesona data to load. Will be randomized if the data doesn't exist.
  * @param idx Index of slot to put swadgesona into
  */
 void loadSwadgesona(swadgesona_t* sw, int idx);
@@ -539,7 +539,7 @@ void loadSwadgesona(swadgesona_t* sw, int idx);
 /**
  * @brief Generates a random Swadgesona automatically.
  *
- * @param s Swadgesona to load data into.
+ * @param sw Swadgesona to load data into.
  */
 void generateRandomSwadgesona(swadgesona_t* sw);
 
