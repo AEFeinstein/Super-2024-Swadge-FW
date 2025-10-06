@@ -71,8 +71,6 @@ Tables 1-4 contain the single byte tile representation to aid in generation of t
 - Bits 5-6: Special Data
 - Bit 7: UNUSED
 
-**Table 1: Surface Types**
-
 | Resource | ID  | Produces | Works with | Bits 5-6 |
 | -------- | --- | -------- | ---------- | -------- | 
 | Coal | 0 | Rocks, Coal | Miners | Starting resource range (Table 2) |
@@ -91,8 +89,7 @@ Tables 1-4 contain the single byte tile representation to aid in generation of t
 | UNUSED | D |
 | UNUSED | E |
 | UNUSED | F |
-
-**Table 2: Starting Resource Range**
+**Table 1: Surface Types**
 
 | Value | Range |
 | ----- | ----- |
@@ -100,8 +97,7 @@ Tables 1-4 contain the single byte tile representation to aid in generation of t
 | 1 | Low |
 | 2 | Med |
 | 3 | High |
-
-**Table 3: Mixture**
+**Table 2: Starting Resource Range**
 
 | Value | Mixture |
 | ----- | ------- |
@@ -109,8 +105,7 @@ Tables 1-4 contain the single byte tile representation to aid in generation of t
 | 1 | Coal/Iron |
 | 2 | Coal/Copper |
 | 3 | Silicon/Copper |
-
-**Table 4: Water Direction**
+**Table 3: Mixture**
 
 | Value | Direction |
 | ----- | --------- |
@@ -118,6 +113,7 @@ Tables 1-4 contain the single byte tile representation to aid in generation of t
 | 1 | East |
 | 2 | South |
 | 3 | West |
+**Table 4: Water Direction**
 
 #### Machines
 
@@ -143,43 +139,45 @@ When a machine is ready to convert (Turn items into other items) it goes through
 - Wait certain number of ticks. Only counts if power net is satisfied
 - Change items per recipe.
 
-##### Machine details
-
-Each machine has some details that make it unique.
-
-- Type: Common item ID, such as for a furnace
-- Name String
-- Description
-- Power type: What kind of power is required
-- Power consumption: How much power is required 
-- Power production type: If machine makes power, type
-- Power Production: If the machine makes power, amount
-- Resources required to craft
-- Recipes
-- Craft type
-  - Forge: Metal -> shaped metal
-  - Mine: Resource -> Ore
-  - Autcrafter: Items -> Items
-  - Smelter: Ore -> metal 
-- Pipe connectors: if connected to liquids, the inlets and outlets
-- Size/shape: Some machines are up to 16 tiles big.
-- Time required to operate: In ticks
-- Internal items inventory
-- Craft speed modifier
-
-See [Machines](./machines.csv) for a list of valid machines.
-
 ##### Special machines
 
 All IDs 0-23 are reserved for special machines. These one have special properties that require being handled differently. Most of these are based on the goals of the level. Most can be used in prototyping to provide resources for testing.
 
-| Machine name | ID  | Function |
-| ------------ | --- | -------- |
-| Drop-Off, Sell | 0 | Allows a player to sell items to the store |
-| Pick-Up | 1 | Zone where resources come from, in prototyping mode can automatically provide items |
-| Drop-Off, Goal | 2 | Put items here to accomplish a "Make x resource" goal, in prototyping mode can automatically void items |
-| Power lines | 3 | Connects to an external power grid, can be set to provide or consume electricity |
-| Pipeline | 4 | Connects to an external pipeline, can be set to produce or consume a piped resource |
+| ID  | Machine name | Function |
+| --- | ------------ | -------- |
+| 0 | Drop-Off, Sell | Allows a player to sell items to the store |
+| 1 | Pick-Up | Zone where resources come from, in prototyping mode can automatically provide items |
+| 2 | Drop-Off, Goal | Put items here to accomplish a "Make x resource" goal, in prototyping mode can automatically void items |
+| 3 | Power lines | Connects to an external power grid, can be set to provide or consume electricity |
+| 4 | Pipeline | Connects to an external pipeline, can be set to produce or consume a piped resource |
+
+##### Standard Machines
+
+Each machine has some details that make it unique. See the below table for a list of machines and their features
+
+| ID  | Name | Description | Recipe | Tile count/ Arrangement | Craft Type | Craft Speed Mod. | Input Type | Input req. | Output Type | Output Avail. | Pipe connecters | Addtl. notes |
+| --- | ---- | ----------- | ------ | ----------------------- | ---------- | ---------------- | ---------- | ---------- | ----------- | ------------- | --------------- | ------------ |
+| 24 | Crafting Table | A simple place to make simple items | Free | 1x1 | Crafter | 4x | N/A | N/A | N/A | N/A | N/A | Free to allow players to start |
+| 25 | Stone Kiln | Melt ores into ingots | 8x Stone | 1x1 | Smelter | 3x | Fuel | 2 per item | N/A | N/A | N/A | Use recipe group 0 |
+| 26 | Chest | Store items in one of 31 inventories | 1x1 | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | Is attached to an inventory (1-32) per map |
+| 27 | Waterwheel | Turns flowing water into Simple Power | 20x Planks, 2x Crude Gears, 4x Glue, 3x Shafts | "T" shape, 4 tiles | Generator | N/A | N/A | N/A | Simple | 20 | N/A | Top of "T" must be in flowing water and main shaft must be on land |
+| 28 | Shaft | Used to transmit Simple Power to simple machines | 1x Shaft | 1x1 | N/A | N/A | Simple | N/A | Simple | N/A | N/A | Can be oriented N/S or E/W |
+| 29 | Gearbox | Used to redirect and split Simple Power | 4x Planks, 3x Crude Gears | 1x1 | N/A | N/A | Simple | 1 | Simple | N/A | N/A | Can attach Shafts to all sides. Highest power shaft around is used as input and all others are set to that value -1 |
+| 30 | Simple Belt | Transports items from location to location | 2x Resin Rubber, 1x Glue, 2x Crude Gears, 1x Shafts | 1x1 | N/A | N/A | Simple | 0.1 | N/A | N/A | N/A | Belts Can face N/E/S/W, and all attached belts can be powered by one shaft. Each tile only carries one item at a time. Each 15 ticks item is moved to next tile | 
+| 31 | Simple Grabber | Moves items into and out of machines, chests, or from belt to belt | 4x Crude Gears, 2x Shafts, 1x Plank | 1x1 | N/A | N/A | Simple | 0.5 | N/A | N/A | N/A | N/E/S/W, Moves item from tile to the rear to the one in front every 20 ticks. Can be filtered. |
+| 32 | Simple AutoHammer | Shape metal and crush power automatically, if slowly. | 15x Planks, 5x Crude Gears, 10 Shafts, 10x Glue | 2x2 | Forger | 3x | Simple | 2 | N/A | N/A | N/A | Use recipe group 1 |
+| 33 | Simple AutoCrafter | Automatically make some simple items | 8x Planks, 10x Gears, 4x Glue, 5x Shafts | 2x2 | Crafter | 3x | Simple | 3 | N/A | N/A | N/A | Use recipe group 2 |
+| 34 | Simple AutoMiner | Automatically break rocks to get ores |
+| 35 | Simple AutoSaw | Automatically chop trees/Cut logs into planks |
+
+Craft Types:
+- Crafter: Items -> Items
+- Forge: Metal -> shaped metal
+- Generator: Creates power
+- Mine: Resource -> Ore
+- Smelter: Ore -> metal 
+
+See [Base Crafting Speed](#base-craft-speed) for craft speed formula.
 
 #### Nets 
 
@@ -187,15 +185,15 @@ When a machine is attached to a net, it consumes the stated amount from the net.
 
 Power is required to operate machines automatically, with the exception of solar/wind. Some machines will also provide power. There are converters (generators, motors), but those cause loss. Power nets must be extended to attach to machines. 
 
-| Type | ID  | Units | Example unit | Additional info |
-| ---- | --- | ----- | ------------ | --------------- |
-| None | 0 | N/A | Crafting table | None |
-| Mechanical (Simple) | 1 | Torque | Waterwheel | Used to power simple machines |
-| Mechanical (Advanced) | 2 | Torque | Motor | Used to power more advanced machines |
-| Steam | 3 | Pressure | Steam Turbine | Must be in a pipe | 
-| Oil | 4 | Pressure | Assembler | Must be in a pipe |
-| Water | 5 | Pressure | Assembler | Must be in a pipe |
-| Electrical | 6 | Power | Solar, wind, generator | Carried by wires | 
+| ID  | Type | Units | Example unit | Base Craft Speed | Additional info |
+| --- | ---- | ----- | ------------ | ---------------- | --------------- |
+| 0 | None | N/A | Crafting table |  | None |
+| 1 | Mechanical (Simple) | Torque | Waterwheel |  | Used to power simple machines |
+| 2 | Mechanical (Advanced) | Torque | Motor |  | Used to power more advanced machines |
+| 3 | Steam | Pressure | Steam Turbine |  | Must be in a pipe | 
+| 4 | Oil | Pressure | Assembler |  | Must be in a pipe |
+| 5 | Water | Pressure | Assembler |  | Must be in a pipe |
+| 6 | Electrical | Power | Solar, wind, generator |  | Carried by wires | 
 
 Nets are defined by the following data:
 - ID: (8 bits), provides the unique net
@@ -208,13 +206,27 @@ Nets are not saved to NVS and should be recalculated when loading.
 
 All items are simple, non-functional bits of data that are moved around the map to generate machines and be sold for money. Every machine has an item form when it's inside the inventory.
 
-- ID: The identified for a type of item. Due to containing Machines, probably 16 bits
-- Name
-- Description
-- Sell price: How much the player gets for exporting a single unit
-- Image: The image to display, plus a palette if required
+| ID  | Items | Recipe | Base craft speed | Sell Price | Addtl. Info |
+| --- | ----- | ------ | ---------------- | ---------- | ----------- |
+| 0 | Coal | Mined |  |  | Fuel value = 8 |
+| 1 | Copper Ore | Mined |  |  | Creates 2 ingots |
+| 2 | Iron Ore | Mined |  |  | Creates 2 ingots |
+| 3 | Silicon Ore | Mined |  |  |  |
+| 4 | Stone | Mined |  |  | Creates 4 lime when forged |
+| 5 | Wood | Mined |  |  | When processed, creates 3 planks and 1 resin |
+| 6 | Planks | Wood crafted |  |  | Fuel value = 2 |
+| 7 | Resin | Wood crafted |  |  | Fuel value = 2 |
+| 8 | Crude Gears | 4x Planks in Crafter |  |  |  |
+| 9 | Glue | 2x Resin in Crafter |  |  |  |
+| 10 | Resin Rubber | 3x Resin |  |  |  |
+| 11 | Shaft | 2x Planks in crafter |  |  |  |
 
-See [Items](./items.csv) for a list of items that exist.
+#### Base craft speed 
+The crafting speed is measured in ticks. To avoid using floating point numbers, the number of ticks is calculated by bit shifting.
+- 16 bit number
+- 1 tick: 32 sub ticks (Bit shift by 5 to get final number)
+- 10 ticks/s
+- Max ticks per craft is 2048, or 204.8 seconds, or 3 minutes 24.8 seconds. This includes with modifiers to keep the value inside 15 bit number
 
 #### Special items
 
@@ -222,7 +234,7 @@ There are a few special items.
 
 | Name | ID  | Usage | 
 | ---- | --- | ----- |
-| Anchor | 0 | Keeps a machine with an inventory anchored in place. |
+| Anchor | 0 | Keeps a machine with an inventory anchored in place. Invisible |
 | Artifacts | 1 | Valuable item that needs to be transported |
 | Gold | 2 | Valuable items that need to be transported |
 
@@ -287,7 +299,6 @@ A list of tools that can be selected
 ### Crafting
 
 - UI
-- Pocket crafting
 
 #### Recipes
 
@@ -295,7 +306,7 @@ Most items have a recipe to create them. These recipes tell a machine if it has 
 
 Each machine that can use a recipe has an recipe group that they can use.
 
-See [Recipes](./recipes.csv) for a list of groups and available items.
+Recipe groups need to be defined here.
 
 ### Rating System
 
