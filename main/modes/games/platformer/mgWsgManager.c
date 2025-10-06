@@ -185,6 +185,21 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(HP_TOP_4_WSG, &self->wsgs[MG_WSG_HP_TOP_4], false);
     loadWsg(HP_TOP_5_WSG, &self->wsgs[MG_WSG_HP_TOP_5], false);
     loadWsg(HP_TOP_6_WSG, &self->wsgs[MG_WSG_HP_TOP_6], false);
+    loadWsg(HP_BOTTOM_BIGMA_WSG, &self->wsgs[MG_WSG_HP_BOTTOM_BIGMA], false);
+    loadWsg(HP_BOSS_MIDDLE_0_WSG, &self->wsgs[MG_WSG_HP_BOSS_MIDDLE_0], false);
+    loadWsg(HP_BOSS_MIDDLE_1_WSG, &self->wsgs[MG_WSG_HP_BOSS_MIDDLE_1], false);
+    loadWsg(HP_BOSS_MIDDLE_2_WSG, &self->wsgs[MG_WSG_HP_BOSS_MIDDLE_2], false);
+    loadWsg(HP_BOSS_MIDDLE_3_WSG, &self->wsgs[MG_WSG_HP_BOSS_MIDDLE_3], false);
+    loadWsg(HP_BOSS_MIDDLE_4_WSG, &self->wsgs[MG_WSG_HP_BOSS_MIDDLE_4], false);
+    loadWsg(HP_BOSS_MIDDLE_5_WSG, &self->wsgs[MG_WSG_HP_BOSS_MIDDLE_5], false);
+    loadWsg(HP_BOSS_MIDDLE_6_WSG, &self->wsgs[MG_WSG_HP_BOSS_MIDDLE_6], false);
+    loadWsg(HP_BOSS_TOP_0_WSG, &self->wsgs[MG_WSG_HP_BOSS_TOP_0], false);
+    loadWsg(HP_BOSS_TOP_1_WSG, &self->wsgs[MG_WSG_HP_BOSS_TOP_1], false);
+    loadWsg(HP_BOSS_TOP_2_WSG, &self->wsgs[MG_WSG_HP_BOSS_TOP_2], false);
+    loadWsg(HP_BOSS_TOP_3_WSG, &self->wsgs[MG_WSG_HP_BOSS_TOP_3], false);
+    loadWsg(HP_BOSS_TOP_4_WSG, &self->wsgs[MG_WSG_HP_BOSS_TOP_4], false);
+    loadWsg(HP_BOSS_TOP_5_WSG, &self->wsgs[MG_WSG_HP_BOSS_TOP_5], false);
+    loadWsg(HP_BOSS_TOP_6_WSG, &self->wsgs[MG_WSG_HP_BOSS_TOP_6], false);
     loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_IDLE], false);
     loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN1], false);
     loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN2], false);
@@ -201,6 +216,11 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(KD_BURGER_BOUNCE_UPRIGHT_WSG, &self->wsgs[MG_WSG_BOUNCE_PAD], false);
     loadWsg(KD_BURGER_BOUNCE_DIAGONAL_WSG, &self->wsgs[MG_WSG_BOUNCE_PAD_DIAGONAL], false);
     loadWsg(TILE_TBD_WSG, &self->wsgs[MG_WSG_MIXTAPE], false);
+    loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_BOSS_IDLE], false);
+    loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_BOSS_MOVE_1], false);
+    loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_BOSS_MOVE_2], false);
+    loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_BOSS_MOVE_3], false);
+    loadWsg(WARP_WALL_WSG, &self->wsgs[MG_WSG_BOSS_DOOR], false);
 }
 
 void mg_initializeSprites(mgWsgManager_t* self)
@@ -524,6 +544,26 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_MIXTAPE].wsg     = &self->wsgs[MG_WSG_MIXTAPE];
     self->sprites[MG_SP_MIXTAPE].origin  = &origin_8_8;
     self->sprites[MG_SP_MIXTAPE].hitBox  = &box_16_16;
+
+    self->sprites[MG_SP_BOSS_IDLE].wsg     = &self->wsgs[MG_WSG_BOSS_IDLE];
+    self->sprites[MG_SP_BOSS_IDLE].origin  = &origin_15_15;
+    self->sprites[MG_SP_BOSS_IDLE].hitBox  = &box_16_32;
+    
+    self->sprites[MG_SP_BOSS_MOVE_1].wsg     = &self->wsgs[MG_WSG_BOSS_MOVE_1];
+    self->sprites[MG_SP_BOSS_MOVE_1].origin  = &origin_15_15;
+    self->sprites[MG_SP_BOSS_MOVE_1].hitBox  = &box_16_32;
+ 
+    self->sprites[MG_SP_BOSS_MOVE_2].wsg     = &self->wsgs[MG_WSG_BOSS_MOVE_2];
+    self->sprites[MG_SP_BOSS_MOVE_2].origin  = &origin_15_15;
+    self->sprites[MG_SP_BOSS_MOVE_2].hitBox  = &box_16_32;
+
+    self->sprites[MG_SP_BOSS_MOVE_3].wsg     = &self->wsgs[MG_WSG_BOSS_MOVE_3];
+    self->sprites[MG_SP_BOSS_MOVE_3].origin  = &origin_15_15;
+    self->sprites[MG_SP_BOSS_MOVE_3].hitBox  = &box_16_32;
+
+    self->sprites[MG_SP_BOSS_DOOR].wsg = &self->wsgs[MG_WSG_BOSS_DOOR];
+    self->sprites[MG_SP_BOSS_DOOR].origin  = &origin_7_31;
+    self->sprites[MG_SP_BOSS_DOOR].hitBox  = &box_16_64;
 }
 
 void mg_initializeTiles(mgWsgManager_t* self)

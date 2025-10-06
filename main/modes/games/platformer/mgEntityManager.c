@@ -293,12 +293,15 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
         case ENTITY_LIFE_REFILL_LARGE:
             createdEntity = createLifeRefillLarge(entityManager, x, y);
             break; 
-        case ENTITY_BOSS_TRIGGER: 
-            createdEntity = NULL;
+        case ENTITY_BOSS_TEST: 
+            createdEntity = createBossTest(entityManager, x, y);
             break;
         case ENTITY_MIXTAPE:
             createdEntity = createMixtape(entityManager, x, y);
             break; 
+        case ENTITY_BOSS_DOOR:
+            createdEntity = createBossDoor(entityManager, x, y);
+            break;
         default:
             createdEntity = NULL;
     }
@@ -1308,6 +1311,45 @@ mgEntity_t* createMixtape(mgEntityManager_t* entityManager, uint16_t x, uint16_t
     return entity;
 }
 
+mgEntity_t* createBossDoor(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = 0;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = false;
+    entity->gravity              = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->scoreValue           = 100;
+    entity->hp                   = 3;
+
+    entity->type                 = ENTITY_BOSS_DOOR;
+    entity->spriteIndex          = MG_SP_BOSS_DOOR;
+    entity->state                = 0;
+    entity->stateTimer           = 0;
+    entity->updateFunction       = &mg_updateBossDoor;
+    entity->collisionHandler     = &mg_bossDoorCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
+    return entity;
+}
+
 void mg_freeEntityManager(mgEntityManager_t* self)
 {
     heap_caps_free(self->entities);
@@ -1880,5 +1922,47 @@ mgEntity_t* createLifeRefillLarge(mgEntityManager_t* entityManager, uint16_t x, 
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
     entity->drawHandler          = &mg_defaultEntityDrawHandler;
+    return entity;
+}
+
+mgEntity_t* createBossTest(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = 0;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 1;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->scoreValue           = 100;
+    entity->hp                   = 30;
+
+    entity->type                 = ENTITY_BOSS_TEST;
+    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->state                = 0;
+    entity->stateTimer           = 0;
+    entity->updateFunction       = &mg_updateBossTest;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+    entity->tileCollider         = &entityTileCollider_1x2;
+
+    entity->drawHandler          = &mg_defaultEntityDrawHandler;
+
+    entityManager->bossEntity    = entity;
     return entity;
 }

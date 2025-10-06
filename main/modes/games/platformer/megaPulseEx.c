@@ -489,6 +489,30 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
             drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_0 + hp], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4*16));
         }
     }
+
+    if(platformer->entityManager.bossEntity != NULL){
+        drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOTTOM_BIGMA], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION);
+        
+        int8_t hp = platformer->entityManager.bossEntity->hp;
+
+        for(uint8_t i = 0; i < 4; i++){
+            if(hp > 6) {
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_6], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i*16));
+            } else {
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_0 + hp], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i*16));
+            }
+
+            hp -= 6;
+
+            if(hp < 0) {hp = 0;}
+        }
+
+        if(hp == 6) {
+            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_6], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4*16));
+        } else {
+            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_0 + hp], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4*16));
+        }
+    }
     
     drawText(font, c000, livesStr, 6, 166);
     drawText(font, c555, livesStr, 4, 164);

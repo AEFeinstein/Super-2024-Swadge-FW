@@ -71,8 +71,9 @@ typedef enum
     ENTITY_BOUNCE_PAD_DIAGONAL,
     ENTITY_LIFE_REFILL_SMALL,
     ENTITY_LIFE_REFILL_LARGE,
-    ENTITY_BOSS_TRIGGER,
-    ENTITY_MIXTAPE
+    ENTITY_BOSS_TEST,
+    ENTITY_MIXTAPE,
+    ENTITY_BOSS_DOOR
 } mgEntityIndex_t;
 
 typedef enum
@@ -256,5 +257,11 @@ int16_t clampAngleTo8way(int16_t angle);
 void mg_updateCharginSchmuck(mgEntity_t* self);
 
 void mg_enemySightBulletCollisionHandler(mgEntity_t* self, mgEntity_t* other);
+
+void mg_updateBossDoor(mgEntity_t* self);
+
+void mg_bossDoorCollisionHandler(mgEntity_t* self, mgEntity_t* other);
+
+void mg_updateBossTest(mgEntity_t* self);
 
 #endif
