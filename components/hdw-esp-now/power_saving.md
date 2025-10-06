@@ -11,11 +11,11 @@
 
 ## ESP-NOW Window & Interval
 
-[`esp_err_t esp_now_set_wake_window(uint16_t window)`](https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-reference/network/esp_now.html#_CPPv423esp_now_set_wake_window8uint16_t)
+[`esp_err_t esp_now_set_wake_window(uint16_t window)`](https://docs.espressif.com/projects/esp-idf/en/v5.2.6/esp32s2/api-reference/network/esp_now.html#_CPPv423esp_now_set_wake_window8uint16_t)
 > Set wake window for esp_now to wake up in interval unit.
 
 [`esp_err_t esp_wifi_connectionless_module_set_wake_interval(uint16_t wake_interval)`](
-https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-reference/network/esp_wifi.html#_CPPv448esp_wifi_connectionless_module_set_wake_interval8uint16_t)
+https://docs.espressif.com/projects/esp-idf/en/v5.2.6/esp32s2/api-reference/network/esp_wifi.html#_CPPv448esp_wifi_connectionless_module_set_wake_interval8uint16_t)
 > Set wake interval for connectionless modules to wake up periodically.
 
 ### Example Configuration
@@ -27,18 +27,18 @@ esp_wifi_connectionless_module_set_wake_interval(100);
 
 ## Espressif Documentation
 
-* [Sleep Modes, Wi-Fi and Sleep Modes](https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-reference/system/sleep_modes.html#wi-fi-and-sleep-modes)
+* [Sleep Modes, Wi-Fi and Sleep Modes](https://docs.espressif.com/projects/esp-idf/en/v5.2.6/esp32s2/api-reference/system/sleep_modes.html#wi-fi-and-sleep-modes)
 	> In Deep-sleep and Light-sleep modes, the wireless peripherals are powered down. Before entering Deep-sleep or Light-sleep modes, applications must disable Wi-Fi using the appropriate calls (`esp_wifi_stop()`). Wi-Fi connections are not maintained in Deep-sleep or Light-sleep mode, even if these functions are not called.
-* [Wi-Fi Driver, Connectionless Modules Power-saving](https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-guides/wifi.html#connectionless-module-power-save)
+* [Wi-Fi Driver, Connectionless Modules Power-saving](https://docs.espressif.com/projects/esp-idf/en/v5.2.6/esp32s2/api-guides/wifi.html#connectionless-module-power-save)
     > For each connectionless module, its supported to TX at any sleeping time without any extra configuration.
     >
     > For each connectionless module, two parameters shall be configured to RX at sleep, which are Window and Interval. At the start of Interval time, RF, PHY, BB would be turned on and kept for Window time. Connectionless Module could RX in the duration.
-* [ESP-NOW, Config ESP-NOW Power-saving Parameter](https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-reference/network/esp_now.html#config-esp-now-power-saving-parameter)
+* [ESP-NOW, Config ESP-NOW Power-saving Parameter](https://docs.espressif.com/projects/esp-idf/en/v5.2.6/esp32s2/api-reference/network/esp_now.html#config-esp-now-power-saving-parameter)
     > Call `esp_now_set_wake_window()` to configure Window for ESP-NOW RX at sleep. The default value is the maximum, which allowing RX all the time.
     > 
     > If Power-saving is needed for ESP-NOW, call `esp_wifi_connectionless_module_set_wake_interval()` to configure Interval as well.
 
 ### Wi-Fi Specific, not relevant to ESP-NOW?
 
-* [Wi-Fi Driver, ESP32-S2 Wi-Fi Power-saving Mode](https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s2/api-guides/wifi.html#esp32-s2-wi-fi-power-saving-mode)
-* [Low Power Mode Usage Guide, Auto Light-sleep + Wi-Fi scenario](https://docs.espressif.com/projects/esp-idf/zh_CN/v5.2.5/esp32s2/api-guides/low-power-mode.html#auto-light-sleep-wi-fi)
+* [Wi-Fi Driver, ESP32-S2 Wi-Fi Power-saving Mode](https://docs.espressif.com/projects/esp-idf/en/v5.2.6/esp32s2/api-guides/wifi.html#esp32-s2-wi-fi-power-saving-mode)
+* [Low Power Mode Usage Guide, Auto Light-sleep + Wi-Fi scenario](https://docs.espressif.com/projects/esp-idf/zh_CN/v5.2.6/esp32s2/api-guides/low-power-mode.html#auto-light-sleep-wi-fi)
