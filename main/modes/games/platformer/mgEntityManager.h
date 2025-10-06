@@ -33,6 +33,7 @@ struct mgEntityManager_t
 
     mgEntity_t* viewEntity;
     mgEntity_t* playerEntity;
+    mgEntity_t* bossEntity;
 
     mgTilemap_t* tilemap;
 };
@@ -98,8 +99,9 @@ mgEntity_t* createBouncepad(mgEntityManager_t* entityManager, uint16_t x, uint16
 mgEntity_t* createBouncepadDiagonal(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createLifeRefillSmall(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createLifeRefillLarge(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
-//mgEntity_t* createBossTrigger(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createBossTest(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createMixtape(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createBossDoor(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 void mg_freeEntityManager(mgEntityManager_t* entityManager);
 
 #endif
