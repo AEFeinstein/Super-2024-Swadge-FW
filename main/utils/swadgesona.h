@@ -66,7 +66,8 @@ generateRandomSwadgesona(&sw);
  * - Calculate the number of bits required to save the sonas in this .h file.
  * - If adding a color, make sure to add the conversions to the palette generation function
  *
- * If any help is required, contact Jeremy Stintzcum (Johnny Wycliffe) for direct assistance.
+ * If any help is required, try contacting the MAGFest discord, MAGFest slack, or Jeremy Stintzcum (Johnny Wycliffe) for
+ * direct assistance. There are plenty of people willing to help!
  *
  */
 
