@@ -54,6 +54,7 @@
 #include "swadgeIt.h"
 #include "swadgePassTest.h"
 #include "swadgetamatone.h"
+#include "sonaTest.h"
 #include "touchTest.h"
 #include "trophyCase.h"
 #include "trophyTest.h"
