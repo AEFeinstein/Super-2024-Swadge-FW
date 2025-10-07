@@ -287,9 +287,8 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
     canvasDrawSimplePal(&sw->image, SWSN_HEAD_WSG, 0, 0, &sw->pal);
 
     // Ears
-    // Bunny, Cat, and Dog ears go over the hair, so drawn later
-    if (sw->core.earShape != EAE_HUMAN && sw->core.earShape != EAE_BUNNY && sw->core.earShape != EAE_DOG
-        && sw->core.earShape != EAE_CAT)
+    // Human ears require no extra draw calls.
+    if (sw->core.earShape != EAE_HUMAN)
     {
         canvasDrawSimplePal(&sw->image, earWsgs[sw->core.earShape - 1], 0, 0, &sw->pal);
     }
