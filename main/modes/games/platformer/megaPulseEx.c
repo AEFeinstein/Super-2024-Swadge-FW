@@ -274,13 +274,13 @@ static void mgMenuCb(const char* label, bool selected, uint32_t settingVal)
     {
         if (label == mgMenuNewGame)
         {
-            uint16_t levelIndex = getLevelIndex(platformer->gameData.world, platformer->gameData.level);
+            /*uint16_t levelIndex = getLevelIndex(platformer->gameData.world, platformer->gameData.level);
             if ((levelIndex >= NUM_LEVELS)
                 || (!platformer->gameData.debugMode && levelIndex > platformer->unlockables.maxLevelIndexUnlocked))
             {
                 soundPlaySfx(&(platformer->soundManager.sndMenuDeny), BZR_STEREO);
                 return;
-            }
+            }*/
 
             /*if(self->menuSelection == 0){
                 self->gameData.world = 1;
@@ -1214,6 +1214,7 @@ void changeStateNameEntry(platformer_t* self)
     uint8_t rank              = getHighScoreRank(&(self->highScores), self->gameData.score);
     self->gameData.rank       = rank;
     self->menuState           = 0;
+    self->menuSelection       = 0;
 
     mg_resetGameDataLeds(&(self->gameData));
 
@@ -1333,7 +1334,7 @@ void updateShowHighScores(platformer_t* self)
         self->menuState     = 0;
         self->menuSelection = 0;
         soundStop(true);
-        changeStateTitleScreen(self);
+        changeStateMainMenu(self);
     }
 
     drawShowHighScores(&(self->font), self->menuState);
