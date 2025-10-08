@@ -1,5 +1,6 @@
 #include "menuCosCrunchRenderer.h"
 
+#include "cosCrunchUtil.h"
 #include "esp_heap_caps.h"
 #include "fs_wsg.h"
 #include "hdw-tft.h"
@@ -55,10 +56,8 @@ void drawMenuCosCrunch(menu_t* menu, menuCosCrunchRenderer_t* renderer, int64_t 
         int16_t itemWidth = textWidth(renderer->menuFont, item->label) + MENU_ITEM_PADDING * 2;
         int16_t itemX     = (TFT_WIDTH - itemWidth) / 2;
         int16_t itemY     = itemIdx * (itemHeight + itemMargin) + titleHeight;
-        drawRectFilled(itemX, itemY, itemX + itemWidth - renderer->wsg.fold.w, itemY + itemHeight, c553);
-        drawRectFilled(itemX, itemY + renderer->wsg.fold.w, itemX + itemWidth, itemY + itemHeight, c553);
-        drawWsgSimple(&renderer->wsg.fold, itemX + itemWidth - renderer->wsg.fold.w, itemY);
 
+        drawMessageBox(itemX, itemY, itemX + itemWidth, itemY + itemHeight, renderer->wsg.fold);
         drawText(renderer->menuFont, c000, item->label, itemX + MENU_ITEM_PADDING, itemY + MENU_ITEM_PADDING);
 
         if (node->val == menu->currentItem->val)
