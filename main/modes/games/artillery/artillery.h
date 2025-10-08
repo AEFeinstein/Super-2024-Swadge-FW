@@ -107,6 +107,9 @@ typedef struct
     p2pInfo p2p;
     const char* conStr;
     list_t p2pQueue;
+    bool p2pSetColorReceived;
+    bool p2pSetWorldReceived;
+    bool p2pAddTerrainReceived;
 
     // Variables for tank colors
     int32_t paintArrowBlinkTimer;

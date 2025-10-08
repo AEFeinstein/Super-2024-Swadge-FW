@@ -178,82 +178,98 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
     {
         case P2P_SET_COLOR:
         {
-            const artPktColor_t* pkt = (const artPktColor_t*)payload;
-            ad->theirColorIdx        = pkt->colorIdx;
-
-            // If going second
-            if (GOING_SECOND == p2pGetPlayOrder(p2p))
+            if (ad->p2pSetColorReceived)
             {
-                // Reply with our color
-                artilleryTxColor(ad);
-                // Prepare to receive terrain
-                artilleryInitGame(AG_WIRELESS, false);
+                return;
             }
-            // If going first
             else
             {
-                // Both colors transmitted, start the game
-                artilleryInitGame(AG_WIRELESS, true);
-                artilleryTxWorld(ad);
+                ad->p2pSetColorReceived  = true;
+                const artPktColor_t* pkt = (const artPktColor_t*)payload;
+                ad->theirColorIdx        = pkt->colorIdx;
+
+                // If going second
+                if (GOING_SECOND == p2pGetPlayOrder(p2p))
+                {
+                    // Reply with our color
+                    artilleryTxColor(ad);
+                    // Prepare to receive terrain
+                    artilleryInitGame(AG_WIRELESS, false);
+                }
+                // If going first
+                else
+                {
+                    // Both colors transmitted, start the game
+                    artilleryInitGame(AG_WIRELESS, true);
+                    artilleryTxWorld(ad);
+                }
             }
-            break;
+            return;
         }
         case P2P_SET_WORLD:
         {
-            const artPktWorld_t* pkt = (const artPktWorld_t*)payload;
-
-            // Remove everything before receiving
-            physRemoveAllObjects(ad->phys);
-            // Immediately add world bounds, not in the transmitted packet
-            physAddWorldBounds(ad->phys);
-
-            // Add lines from packet
-            physAddTerrainPoints(ad->phys, 0, pkt->terrainPoints, NUM_TERRAIN_POINTS_A);
-
-            // Set the color indices depending on the play order
-            uint8_t colorIndices[2] = {0};
-            if (GOING_FIRST == p2pGetPlayOrder(p2p))
+            if (ad->p2pSetWorldReceived)
             {
-                colorIndices[0] = ad->theirColorIdx;
-                colorIndices[1] = ad->myColorIdx;
+                return;
             }
             else
             {
-                colorIndices[0] = ad->myColorIdx;
-                colorIndices[1] = ad->theirColorIdx;
+                ad->p2pSetWorldReceived = true;
+
+                const artPktWorld_t* pkt = (const artPktWorld_t*)payload;
+
+                // Remove everything before receiving
+                physRemoveAllObjects(ad->phys);
+                // Immediately add world bounds, not in the transmitted packet
+                physAddWorldBounds(ad->phys);
+
+                // Add lines from packet
+                physAddTerrainPoints(ad->phys, 0, pkt->terrainPoints, NUM_TERRAIN_POINTS_A);
+
+                // Set the color indices
+                uint8_t colorIndices[2] = {0};
+                // TODO something is broken with p2p colors...
+                colorIndices[0] = ad->theirColorIdx;
+                colorIndices[1] = ad->myColorIdx;
+
+                // Add players from packet
+                for (int32_t pIdx = 0; pIdx < ARRAY_SIZE(pkt->players); pIdx++)
+                {
+                    paletteColor_t base;
+                    paletteColor_t accent;
+                    artilleryGetTankColors(colorIndices[pIdx], &base, &accent);
+                    ad->players[pIdx]
+                        = physAddPlayer(ad->phys, pkt->players[pIdx].pos, pkt->players[pIdx].barrelAngle, base, accent);
+                    ad->players[pIdx]->score = pkt->players[pIdx].score;
+                }
+
+                // Mark as not ready until the other packet is received
+                ad->phys->isReady = false;
             }
-
-            // Add players from packet
-            for (int32_t pIdx = 0; pIdx < ARRAY_SIZE(pkt->players); pIdx++)
-            {
-                paletteColor_t base;
-                paletteColor_t accent;
-                artilleryGetTankColors(colorIndices[pIdx], &base, &accent);
-                ad->players[pIdx]
-                    = physAddPlayer(ad->phys, pkt->players[pIdx].pos, pkt->players[pIdx].barrelAngle, base, accent);
-                ad->players[pIdx]->score = pkt->players[pIdx].score;
-            }
-
-            // Mark as not ready until the other packet is received
-            ad->phys->isReady = false;
-
             return;
         }
         case P2P_ADD_TERRAIN:
         {
-            const artPktTerrain_t* pkt = (const artPktTerrain_t*)payload;
+            if (ad->p2pAddTerrainReceived)
+            {
+                return;
+            }
+            else
+            {
+                const artPktTerrain_t* pkt = (const artPktTerrain_t*)payload;
 
-            // Add more lines from packet
-            physAddTerrainPoints(ad->phys, NUM_TERRAIN_POINTS_A - 1, pkt->terrainPoints, NUM_TERRAIN_POINTS_B);
+                // Add more lines from packet
+                physAddTerrainPoints(ad->phys, NUM_TERRAIN_POINTS_A - 1, pkt->terrainPoints, NUM_TERRAIN_POINTS_B);
 
-            // Now that terrain is received, create BSP zones
-            createBspZones(ad->phys);
+                // Now that terrain is received, create BSP zones
+                createBspZones(ad->phys);
 
-            // Mark simulation as ready
-            ad->phys->isReady = true;
+                // Mark simulation as ready
+                ad->phys->isReady = true;
 
-            // After receiving terrain, open the menu
-            artillerySwitchToGameState(ad, AGS_MENU);
+                // After receiving terrain, open the menu
+                artillerySwitchToGameState(ad, AGS_MENU);
+            }
             return;
         }
         case P2P_SET_PLAYERS:
@@ -279,23 +295,27 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
         }
         case P2P_FIRE_SHOT:
         {
-            const artPktShot_t* pkt = (const artPktShot_t*)payload;
+            if (!ad->phys->shotFired)
+            {
+                const artPktShot_t* pkt = (const artPktShot_t*)payload;
 
-            // Get player references
-            physCirc_t* player   = ad->players[ad->plIdx];
-            physCirc_t* opponent = ad->players[(ad->plIdx + 1) % NUM_PLAYERS];
+                // Get player references
+                physCirc_t* player   = ad->players[ad->plIdx];
+                physCirc_t* opponent = ad->players[(ad->plIdx + 1) % NUM_PLAYERS];
 
-            // Set the player's shot
-            player->barrelAngle = pkt->barrelAngle;
-            player->ammoIdx     = pkt->ammoIdx;
-            player->shotPower   = pkt->shotPower;
+                // Set the player's shot
+                player->barrelAngle = pkt->barrelAngle;
+                player->ammoIdx     = pkt->ammoIdx;
+                player->shotPower   = pkt->shotPower;
 
-            // Tricky, fire the shot from here before switching game state
-            ad->phys->shotFired = true;
-            fireShot(ad->phys, player, opponent, true);
+                // Tricky, fire the shot from here before switching game state
+                ad->phys->shotFired = true;
+                fireShot(ad->phys, player, opponent, true);
 
-            // Switch the game state after the shot is fired, preventing the receiving Swadge from TXing a P2P_FIRE_SHOT
-            artillerySwitchToGameState(ad, AGS_FIRE);
+                // Switch the game state after the shot is fired, preventing the receiving Swadge from TXing a
+                // P2P_FIRE_SHOT
+                artillerySwitchToGameState(ad, AGS_FIRE);
+            }
             return;
         }
         case P2P_PASS_TURN:
