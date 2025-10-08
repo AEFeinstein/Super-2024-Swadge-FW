@@ -1144,4 +1144,22 @@ static void physRunAnimateTimers(physSim_t* phys, int32_t elapsedUs)
         }
         cNode = cNode->next;
     }
+
+    led_t allLeds[CONFIG_NUM_LEDS] = {0};
+    if (phys->ledTimer > 0)
+    {
+        led_t led = {
+            .r = (phys->ledColor.r * phys->ledTimer) / LED_EXPLOSION_US,
+            .g = (phys->ledColor.g * phys->ledTimer) / LED_EXPLOSION_US,
+            .b = (phys->ledColor.b * phys->ledTimer) / LED_EXPLOSION_US,
+        };
+
+        phys->ledTimer -= elapsedUs;
+
+        for (int32_t lIdx = 0; lIdx < CONFIG_NUM_LEDS; lIdx++)
+        {
+            allLeds[lIdx] = led;
+        }
+    }
+    setLeds(allLeds, CONFIG_NUM_LEDS);
 }

@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include "hdw-btn.h"
 #include "hdw-tft.h"
+#include "hdw-led.h"
 #include "palette.h"
 #include "linked_list.h"
 #include "vector2d.h"
@@ -22,6 +23,8 @@
 #define NUM_ZONES 32
 
 #define MAX_SHOT_POWER 400
+
+#define LED_EXPLOSION_US 500000
 
 //==============================================================================
 // Enums
@@ -169,6 +172,9 @@ typedef struct
 
     int16_t surfacePoints[TFT_WIDTH];
     paletteColor_t surfaceColors[TFT_WIDTH];
+
+    led_t ledColor;
+    int32_t ledTimer;
 } physSim_t;
 
 //==============================================================================

@@ -6,6 +6,7 @@
 #include <esp_heap_caps.h>
 #include <esp_random.h>
 #include "macros.h"
+#include "color_utils.h"
 #include "artillery_phys_terrain.h"
 #include "artillery_phys_objs.h"
 
@@ -245,6 +246,12 @@ bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
 {
     bool change       = false;
     physCirc_t* shell = shellNode->val;
+
+    int32_t color    = paletteToRGB(shell->baseColor);
+    phys->ledColor.r = ((color >> 16) & 0xFF) / 2;
+    phys->ledColor.g = ((color >> 8) & 0xFF) / 2;
+    phys->ledColor.b = ((color >> 0) & 0xFF) / 2;
+    phys->ledTimer   = LED_EXPLOSION_US;
 
     circleFl_t explosion = {
         .pos    = shell->c.pos,
