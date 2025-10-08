@@ -228,9 +228,8 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 
                 // Set the color indices
                 uint8_t colorIndices[2] = {0};
-                // TODO something is broken with p2p colors...
-                colorIndices[0] = ad->theirColorIdx;
-                colorIndices[1] = ad->myColorIdx;
+                colorIndices[0]         = ad->myColorIdx;
+                colorIndices[1]         = ad->theirColorIdx;
 
                 // Add players from packet
                 for (int32_t pIdx = 0; pIdx < ARRAY_SIZE(pkt->players); pIdx++)

@@ -511,8 +511,16 @@ void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
     {
         // Initialize players, including flattening terrain under them
         paletteColor_t colors[4];
-        artilleryGetTankColors(ad->myColorIdx, &colors[0], &colors[1]);
-        artilleryGetTankColors(ad->theirColorIdx, &colors[2], &colors[3]);
+        if (gameType == AG_WIRELESS)
+        {
+            artilleryGetTankColors(ad->theirColorIdx, &colors[0], &colors[1]);
+            artilleryGetTankColors(ad->myColorIdx, &colors[2], &colors[3]);
+        }
+        else
+        {
+            artilleryGetTankColors(ad->myColorIdx, &colors[0], &colors[1]);
+            artilleryGetTankColors(ad->theirColorIdx, &colors[2], &colors[3]);
+        }
         physSpawnPlayers(ad->phys, NUM_PLAYERS, ad->players, colors);
     }
 
