@@ -8,6 +8,7 @@
 #include "artillery_p2p.h"
 #include "artillery_paint.h"
 #include "artillery_game_over.h"
+#include "artillery_help.h"
 #include "mainMenu.h"
 
 //==============================================================================
@@ -235,7 +236,7 @@ void artilleryMainLoop(int64_t elapsedUs)
             }
             case AMS_HELP:
             {
-                // TODO show help screen
+                artilleryHelpInput(ad, &evt);
                 break;
             }
             case AMS_PAINT:
@@ -281,7 +282,7 @@ void artilleryMainLoop(int64_t elapsedUs)
         }
         case AMS_HELP:
         {
-            // TODO render help
+            artilleryHelpLoop(ad, elapsedUs);
             break;
         }
         case AMS_PAINT:
