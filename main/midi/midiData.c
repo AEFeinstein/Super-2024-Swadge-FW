@@ -287,8 +287,6 @@ const midiTimbre_t donutDrumkitTimbre = {
     .name = "Donut Swadge Drums",
 };
 
-// convert original sample numbers to account for sample rate changing
-#define SAMPLE_NUM_CONV(count, origRate, targetRate) ((count) * (targetRate) / (origRate))
 #define SECONDS_CONV(whole, microseconds)            ((whole) * 16384 + ((int64_t)microseconds) * 16384 / 1000000)
 // #define PITCH_HZ(whole, thousandths)                 ((whole) << 16 | ((thousandths) * (1 << 16) / 1000))
 
