@@ -15,9 +15,9 @@
 // Defines
 //==============================================================================
 
-#define WORLD_WIDTH  (TFT_WIDTH * 2)
-#define WORLD_HEIGHT (TFT_HEIGHT * 2)
-#define GROUND_LEVEL (WORLD_HEIGHT - 60)
+#define WORLD_WIDTH  (TFT_WIDTH * 4)
+#define WORLD_HEIGHT (TFT_HEIGHT * 4)
+#define GROUND_LEVEL ((3 * WORLD_HEIGHT) / 4)
 
 #define DEFAULT_GRAV_X 0.0f
 #define DEFAULT_GRAV_Y 98.0f

@@ -1055,7 +1055,7 @@ void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool fi
  */
 void physSpawnPlayers(physSim_t* phys, int32_t numPlayers, physCirc_t* players[], paletteColor_t* colors)
 {
-    float margin  = phys->bounds.x / 8;
+    float margin  = phys->bounds.x / 4;
     float spacing = (phys->bounds.x - (2 * margin)) / (numPlayers - 1);
 
     float x = margin;
