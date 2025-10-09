@@ -110,6 +110,7 @@ typedef struct
     bool p2pSetColorReceived;
     bool p2pSetWorldReceived;
     bool p2pAddTerrainReceived;
+    bool p2pCloudsReceived;
 
     // Variables for tank colors
     int32_t paintArrowBlinkTimer;

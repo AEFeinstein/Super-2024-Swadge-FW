@@ -21,6 +21,7 @@ typedef enum __attribute__((packed))
     P2P_SET_COLOR,
     P2P_SET_WORLD,
     P2P_ADD_TERRAIN,
+    P2P_SET_CLOUDS,
     P2P_SET_PLAYERS,
     P2P_FIRE_SHOT,
     P2P_PASS_TURN,
@@ -64,6 +65,15 @@ typedef struct //__attribute__((packed))
     } obstacles[MAX_NUM_OBSTACLES];
 
 } artPktTerrain_t;
+
+// This doesn't use structs for better byte packing
+typedef struct
+{
+    uint8_t type;
+    uint16_t x[NUM_CLOUDS * CIRC_PER_CLOUD];
+    uint16_t y[NUM_CLOUDS * CIRC_PER_CLOUD];
+    uint8_t r[NUM_CLOUDS * CIRC_PER_CLOUD];
+} artPktCloud_t;
 
 typedef struct // __attribute__((packed))
 {
@@ -262,11 +272,30 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 
                 // Now that terrain is received, create BSP zones
                 createBspZones(ad->phys);
+            }
+            return;
+        }
+        case P2P_SET_CLOUDS:
+        {
+            if (ad->p2pCloudsReceived)
+            {
+                break;
+            }
+            else
+            {
+                const artPktCloud_t* pkt = (const artPktCloud_t*)payload;
+                // Add clouds from packet
+                for (uint16_t c = 0; c < NUM_CLOUDS * CIRC_PER_CLOUD; c++)
+                {
+                    ad->phys->clouds[c].pos.x  = pkt->x[c];
+                    ad->phys->clouds[c].pos.y  = pkt->y[c];
+                    ad->phys->clouds[c].radius = pkt->r[c];
+                }
 
                 // Mark simulation as ready
                 ad->phys->isReady = true;
 
-                // After receiving terrain, open the menu
+                // After receiving clouds, open the menu
                 artillerySwitchToGameState(ad, AGS_MENU);
             }
             return;
@@ -418,9 +447,20 @@ void artilleryTxWorld(artilleryData_t* ad)
         lNode = lNode->next;
     }
 
-    // TODO Enqueue the sizes, somehow
+    // Build the cloud packet
+    artPktCloud_t* pktCloud = heap_caps_calloc(1, sizeof(artPktCloud_t), MALLOC_CAP_SPIRAM);
+    pktCloud->type          = P2P_SET_CLOUDS;
+    for (uint16_t c = 0; c < NUM_CLOUDS * CIRC_PER_CLOUD; c++)
+    {
+        pktCloud->x[c] = ad->phys->clouds[c].pos.x;
+        pktCloud->y[c] = ad->phys->clouds[c].pos.y;
+        pktCloud->r[c] = ad->phys->clouds[c].radius;
+    }
+
+    // Enqueue packets for transmission
     push(&ad->p2pQueue, pkt1);
     push(&ad->p2pQueue, pkt2);
+    push(&ad->p2pQueue, pktCloud);
 }
 
 /**
@@ -563,6 +603,10 @@ static uint8_t getSizeFromType(artilleryP2pPacketType_t type)
         case P2P_ADD_TERRAIN:
         {
             return sizeof(artPktTerrain_t);
+        }
+        case P2P_SET_CLOUDS:
+        {
+            return sizeof(artPktCloud_t);
         }
         case P2P_SET_PLAYERS:
         {

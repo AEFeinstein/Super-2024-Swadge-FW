@@ -380,6 +380,7 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
             ad->p2pSetColorReceived   = false;
             ad->p2pSetWorldReceived   = false;
             ad->p2pAddTerrainReceived = false;
+            ad->p2pCloudsReceived     = false;
         }
         else if (str_cpuPractice == label)
         {
