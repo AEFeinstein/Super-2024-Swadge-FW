@@ -287,9 +287,7 @@ const midiTimbre_t donutDrumkitTimbre = {
     .name = "Donut Swadge Drums",
 };
 
-// convert original sample numbers to account for sample rate changing
-#define SAMPLE_NUM_CONV(count, origRate, targetRate) ((count) * (targetRate) / (origRate))
-#define SECONDS_CONV(whole, microseconds)            ((whole) * 16384 + (microseconds) * 16384 / 1000000)
+#define SECONDS_CONV(whole, microseconds)            ((whole) * 16384 + ((int64_t)microseconds) * 16384 / 1000000)
 // #define PITCH_HZ(whole, thousandths)                 ((whole) << 16 | ((thousandths) * (1 << 16) / 1000))
 
 const midiTimbre_t mmx011Vibraphone = {
@@ -334,9 +332,7 @@ const midiTimbre_t mmx017Organ = {
         //.attackTimeVel = -2048,
         //LFO freq: 8.176
         .sustainVol = 127,
-        //.releaseTime = 8192,
-        // 128 ticks per velocity, up to 128*128 == 16384 ticks = 1s
-        .releaseTimeVel = 256 << 8,
+        .releaseTime = 8192,
     },
 };
 
