@@ -7,6 +7,8 @@
 #include <esp_random.h>
 #include "macros.h"
 #include "color_utils.h"
+#include "geometry.h"
+#include "trigonometry.h"
 #include "artillery_phys_terrain.h"
 #include "artillery_phys_objs.h"
 
@@ -231,6 +233,82 @@ void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player)
         else
         { // Iterate lines
             lNode = lNode->next;
+        }
+    }
+}
+
+/**
+ * @brief TODO doc
+ * 
+ * TODO transmit over p2p
+ *
+ * @param phys
+ */
+void physGenerateClouds(physSim_t* phys)
+{
+    // Find highest land point
+    float highPoint = FLT_MAX;
+    node_t* lNode   = phys->lines.first;
+    while (lNode)
+    {
+        physLine_t* line = lNode->val;
+        if (line->isTerrain)
+        {
+            if (line->l.p1.y < highPoint)
+            {
+                highPoint = line->l.p1.y;
+            }
+            if (line->l.p2.y < highPoint)
+            {
+                highPoint = line->l.p2.y;
+            }
+        }
+        lNode = lNode->next;
+    }
+
+#define C_PART_RAD_MIN   8
+#define C_PART_RAD_MAX   24
+#define CLOUD_MAX_RADIUS (2 * C_PART_RAD_MAX)
+
+    vec_t cloudCell = {
+        .x = phys->bounds.x / CLOUD_COLS,
+        .y = highPoint / CLOUD_ROWS,
+    };
+
+    // Generate clouds above land
+    for (int y = 0; y < CLOUD_ROWS; y++)
+    {
+        for (int x = 0; x < CLOUD_COLS; x++)
+        {
+            // Math the cloud index
+            int c = (y * CLOUD_COLS) + x;
+
+            // Find the randomized midpoint in this cloud 'cell'
+            vec_t midpoint = {
+                .x = (x * cloudCell.x) + (C_PART_RAD_MAX + esp_random() % (cloudCell.x - (2 * CLOUD_MAX_RADIUS))),
+                .y = (y * cloudCell.y) + (C_PART_RAD_MAX + esp_random() % (cloudCell.y - (2 * CLOUD_MAX_RADIUS))),
+            };
+
+            // Find a random angle to start drawing fluffs at
+            int16_t randAngle = esp_random() % 360;
+
+            // For each fluff
+            for (int n = 0; n < CIRC_PER_CLOUD; n++)
+            {
+                // The circle to write
+                circle_t* circ = &phys->clouds[(c * CIRC_PER_CLOUD) + n];
+
+                // Randomize radius
+                int16_t r = C_PART_RAD_MIN + (esp_random() % (C_PART_RAD_MAX - C_PART_RAD_MIN));
+
+                // Write radius and position
+                circ->radius = r;
+                circ->pos.x  = midpoint.x + ((r - 2) * getSin1024(randAngle)) / 1024;
+                circ->pos.y  = midpoint.y + ((r - 2) * getCos1024(randAngle)) / 1024;
+
+                // Iterate the angle
+                randAngle = (randAngle + (360 / CIRC_PER_CLOUD)) % 360;
+            }
         }
     }
 }

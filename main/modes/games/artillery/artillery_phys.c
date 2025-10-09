@@ -263,6 +263,9 @@ physSim_t* initPhys(float w, float h, int32_t groundLevel, float gx, float gy, b
         // Create BSP zones
         createBspZones(phys);
 
+        // Generate clouds
+        physGenerateClouds(phys);
+
         phys->isReady = true;
     }
     else
@@ -698,6 +701,13 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
     //         phys->zones[z].pos.y + phys->zones[z].height - phys->camera.y, //
     //         c112);
     // }
+
+    // Draw clouds behind everything else
+    for (int32_t cIdx = 0; cIdx < ARRAY_SIZE(phys->clouds); cIdx++)
+    {
+        circle_t* cloud = &phys->clouds[cIdx];
+        drawCircleFilled(cloud->pos.x - phys->camera.x, cloud->pos.y - phys->camera.y, cloud->radius, c555);
+    }
 
     // Draw all circles
     node_t* cNode = phys->circles.first;

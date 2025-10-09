@@ -11,6 +11,7 @@
 #include "palette.h"
 #include "linked_list.h"
 #include "vector2d.h"
+#include "geometry.h"
 #include "geometryFl.h"
 #include "quaternions.h"
 #include "font.h"
@@ -25,6 +26,12 @@
 #define MAX_SHOT_POWER 400
 
 #define LED_EXPLOSION_US 500000
+
+#define CLOUD_ROWS 2
+#define CLOUD_COLS 6
+
+#define CIRC_PER_CLOUD 3
+#define NUM_CLOUDS     (CLOUD_ROWS * CLOUD_COLS)
 
 //==============================================================================
 // Enums
@@ -160,6 +167,7 @@ typedef struct
     list_t lines;
     list_t circles;
     list_t explosions;
+    circle_t clouds[NUM_CLOUDS * CIRC_PER_CLOUD];
 
     uint32_t cameraTimer;
     buttonBit_t cameraBtn;
