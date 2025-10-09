@@ -21,6 +21,10 @@ static int16_t ccmgSliceGetYIntersect(int16_t angle, int16_t width);
 #define TARGET_LINE_Y_MAX         60
 #define TARGET_ANGLE_MAX          35
 
+#define SPLATTER_AREA_WIDTH_OVERFLOW 40
+#define SPLATTER_AREA_HEIGHT         50
+#define SPLATTER_CONFETTI_COUNT      60
+
 #define TOTAL_ERROR_THRESHOLD 5
 
 #define END_ANIM_FADE_LENGTH_US        100000
@@ -56,7 +60,6 @@ typedef struct
         wsg_t slashOverlay;
         wsg_t canvas;
     } wsg;
-    paletteColor_t canvasPixels[TFT_WIDTH * TFT_HEIGHT];
 
     const tintColor_t* tintColor;
     wsgPalette_t tintPalette;
@@ -66,6 +69,7 @@ typedef struct
     rectangle_t targetArea;
     int16_t targetAngle;
     uint16_t targetLineY;
+    vec_t canvasPos;
 
     int16_t knifeX;
     float knifeBottomY;
@@ -80,24 +84,6 @@ ccmgSlice_t* ccmgsl = NULL;
 static void ccmgSliceInitMicrogame(void)
 {
     ccmgsl = heap_caps_calloc(1, sizeof(ccmgSlice_t), MALLOC_CAP_8BIT);
-
-    loadWsg(CC_KNIFE_TOP_WSG, &ccmgsl->wsg.knifeTop, false);
-    loadWsg(CC_KNIFE_BOTTOM_WSG, &ccmgsl->wsg.knifeBottom, false);
-    loadWsg(CC_SLASH_WSG, &ccmgsl->wsg.slash, false);
-    loadWsg(CC_SLASH_UNDERLAY_WSG, &ccmgsl->wsg.slashUnderlay, false);
-    loadWsg(CC_SLASH_OVERLAY_WSG, &ccmgsl->wsg.slashOverlay, false);
-
-    ccmgsl->wsg.canvas.w  = TFT_WIDTH;
-    ccmgsl->wsg.canvas.h  = TFT_HEIGHT;
-    ccmgsl->wsg.canvas.px = ccmgsl->canvasPixels;
-    for (uint32_t i = 0; i < ccmgsl->wsg.canvas.w * ccmgsl->wsg.canvas.h; i++)
-    {
-        ccmgsl->canvasPixels[i] = cTransparent;
-    }
-
-    ccmgsl->tintColor = cosCrunchMicrogameGetTintColor();
-    wsgPaletteReset(&ccmgsl->tintPalette);
-    tintPalette(&ccmgsl->tintPalette, ccmgsl->tintColor);
 
     ccmgsl->targetArea.width  = TARGET_AREA_WIDTH + esp_random() % TARGET_AREA_WH_JITTER - TARGET_AREA_WH_JITTER / 2;
     ccmgsl->targetArea.height = TARGET_AREA_HEIGHT + esp_random() % TARGET_AREA_WH_JITTER - TARGET_AREA_WH_JITTER / 2;
@@ -115,6 +101,28 @@ static void ccmgSliceInitMicrogame(void)
     ccmgsl->targetAngle = esp_random() % (TARGET_ANGLE_MAX * 2) - TARGET_ANGLE_MAX;
     ccmgsl->targetLineY = esp_random() % (TARGET_LINE_Y_MAX - TARGET_LINE_Y_MIN) + TARGET_LINE_Y_MIN;
 
+    loadWsg(CC_KNIFE_TOP_WSG, &ccmgsl->wsg.knifeTop, false);
+    loadWsg(CC_KNIFE_BOTTOM_WSG, &ccmgsl->wsg.knifeBottom, false);
+    loadWsg(CC_SLASH_WSG, &ccmgsl->wsg.slash, false);
+    loadWsg(CC_SLASH_UNDERLAY_WSG, &ccmgsl->wsg.slashUnderlay, false);
+    loadWsg(CC_SLASH_OVERLAY_WSG, &ccmgsl->wsg.slashOverlay, false);
+
+    ccmgsl->wsg.canvas.w = ccmgsl->targetArea.width + SPLATTER_AREA_WIDTH_OVERFLOW;
+    ccmgsl->wsg.canvas.h = SPLATTER_AREA_HEIGHT;
+    ccmgsl->canvasPos.x  = ccmgsl->targetArea.pos.x - SPLATTER_AREA_WIDTH_OVERFLOW / 2;
+    ccmgsl->canvasPos.y  = ccmgsl->targetArea.pos.y + ccmgsl->targetLineY - SPLATTER_AREA_HEIGHT / 2;
+
+    ccmgsl->wsg.canvas.px = (paletteColor_t*)heap_caps_malloc_tag(
+        sizeof(paletteColor_t) * ccmgsl->wsg.canvas.w * ccmgsl->wsg.canvas.h, MALLOC_CAP_8BIT, "wsg");
+    for (uint32_t i = 0; i < ccmgsl->wsg.canvas.w * ccmgsl->wsg.canvas.h; i++)
+    {
+        ccmgsl->wsg.canvas.px[i] = cTransparent;
+    }
+
+    ccmgsl->tintColor = cosCrunchMicrogameGetTintColor();
+    wsgPaletteReset(&ccmgsl->tintPalette);
+    tintPalette(&ccmgsl->tintPalette, ccmgsl->tintColor);
+
     ccmgsl->knifeX       = ccmgsl->targetArea.pos.x - KNIFE_X_OFFSET;
     ccmgsl->knifeBottomY = TFT_HEIGHT / 2 - ccmgsl->wsg.knifeBottom.h;
     ccmgsl->knifeAngle   = 0;
@@ -122,13 +130,14 @@ static void ccmgSliceInitMicrogame(void)
 
 static void ccmgSliceDestroyMicrogame(void)
 {
-    cosCrunchMicrogamePersistSplatter(ccmgsl->wsg.canvas, 0, 0);
+    cosCrunchMicrogamePersistSplatter(ccmgsl->wsg.canvas, ccmgsl->canvasPos.x, ccmgsl->canvasPos.y);
 
     freeWsg(&ccmgsl->wsg.knifeTop);
     freeWsg(&ccmgsl->wsg.knifeBottom);
     freeWsg(&ccmgsl->wsg.slash);
     freeWsg(&ccmgsl->wsg.slashUnderlay);
     freeWsg(&ccmgsl->wsg.slashOverlay);
+    freeWsg(&ccmgsl->wsg.canvas);
 
     heap_caps_free(ccmgsl);
 }
@@ -155,14 +164,10 @@ static void ccmgSliceMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float
             if (success)
             {
                 // Draw paper confetti on the canvas to persist to the mat
-                int16_t minX = ccmgsl->targetArea.pos.x - 15;
-                int16_t maxX = ccmgsl->targetArea.pos.x + ccmgsl->targetArea.width + 15;
-                int16_t minY = ccmgsl->targetArea.pos.y - 15;
-                int16_t maxY = ccmgsl->targetArea.pos.y + ccmgsl->targetLineY + 15;
-                for (uint8_t pxl = 0; pxl < 50; pxl++)
+                for (uint8_t pxl = 0; pxl < SPLATTER_CONFETTI_COUNT; pxl++)
                 {
-                    int16_t x = esp_random() % (maxX - minX) + minX;
-                    int16_t y = esp_random() % (maxY - minY) + minY;
+                    int16_t x = esp_random() % ccmgsl->wsg.canvas.w;
+                    int16_t y = esp_random() % ccmgsl->wsg.canvas.h;
                     paletteColor_t color;
                     if (esp_random() % 2 == 0)
                     {
@@ -172,7 +177,7 @@ static void ccmgSliceMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float
                     {
                         color = ccmgsl->tintColor->base;
                     }
-                    ccmgsl->wsg.canvas.px[TFT_WIDTH * y + x] = color;
+                    ccmgsl->wsg.canvas.px[ccmgsl->wsg.canvas.w * y + x] = color;
                 }
             }
         }
@@ -320,7 +325,7 @@ static void ccmgSliceMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float
         {
             if (state == CC_MG_CELEBRATING)
             {
-                drawWsgSimple(&ccmgsl->wsg.canvas, 0, 0);
+                drawWsgSimple(&ccmgsl->wsg.canvas, ccmgsl->canvasPos.x, ccmgsl->canvasPos.y);
             }
         }
 

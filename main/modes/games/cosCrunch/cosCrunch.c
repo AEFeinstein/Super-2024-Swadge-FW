@@ -2,12 +2,14 @@
 
 #include "ccmgBreakTime.h"
 #include "ccmgDelivery.h"
+#include "ccmgSew.h"
 #include "ccmgSlice.h"
 #include "ccmgSpray.h"
 #include "ccmgThread.h"
 #include "cosCrunchUtil.h"
 #include "highScores.h"
 #include "mainMenu.h"
+#include "menuCosCrunchRenderer.h"
 #include "nameList.h"
 #include "swadge2024.h"
 #include "wsgPalette.h"
@@ -53,7 +55,7 @@ typedef struct
     int64_t interludeElapsedUs;
 
     menu_t* menu;
-    menuMegaRenderer_t* menuRenderer;
+    menuCosCrunchRenderer_t* menuRenderer;
 
     struct
     {
@@ -136,7 +138,7 @@ swadgeMode_t cosCrunchMode = {
 // #define DEV_MODE_MICROGAME &ccmgWhatever
 
 const cosCrunchMicrogame_t* const microgames[] = {
-    &ccmgBreakTime, &ccmgDelivery, &ccmgSlice, &ccmgSpray, &ccmgThread,
+    &ccmgBreakTime, &ccmgDelivery, &ccmgSew, &ccmgSlice, &ccmgSpray, &ccmgThread,
 };
 
 #define CC_NVS_NAMESPACE "cc"
@@ -182,7 +184,7 @@ static void cosCrunchEnterMode(void)
     addSingleItemToMenu(cc->menu, cosCrunchStartCraftingLbl);
     addSingleItemToMenu(cc->menu, cosCrunchHighScoresLbl);
     addSingleItemToMenu(cc->menu, cosCrunchExitLbl);
-    cc->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    cc->menuRenderer = initMenuCosCrunchRenderer(&cc->bigFont, &cc->bigFontOutline, &cc->font);
 
     wsgPaletteReset(&cc->tintPalette);
     wsgPaletteReset(&cc->mgTintPalette);
@@ -233,7 +235,7 @@ static void cosCrunchExitMode(void)
         cc->activeMicrogame.game->fnDestroyMicrogame();
     }
 
-    deinitMenuMegaRenderer(cc->menuRenderer);
+    deinitMenuCosCrunchRenderer(cc->menuRenderer);
     deinitMenu(cc->menu);
 
     freeWsg(&cc->wsg.backgroundMat);
@@ -325,7 +327,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
     switch (cc->state)
     {
         case CC_MENU:
-            drawMenuMega(cc->menu, cc->menuRenderer, elapsedUs);
+            drawMenuCosCrunch(cc->menu, cc->menuRenderer, elapsedUs);
             break;
 
         case CC_INTERLUDE:
@@ -571,6 +573,7 @@ static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
 {
     switch (cc->state)
     {
+        case CC_MENU:
         case CC_INTERLUDE:
         case CC_MICROGAME_RUNNING:
         case CC_GAME_OVER:
@@ -594,7 +597,6 @@ static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
             break;
         }
 
-        case CC_MENU:
         case CC_MICROGAME_PENDING: // Nothing is drawn while loading a microgame, so do nothing to prevent flicker
         case CC_GAME_OVER_PENDING: // Same goes for unloading
             break;
