@@ -60,8 +60,7 @@ int buttonpadding      = 4;                    // padding for text written in bu
 int buttonwidth        = 60;                   // width of the button, in px
 int buttonheight       = 20; // height of the button, in px, i probably want a sprite here but i'll draw a box for now
 // static const char* const buttontext[] = {"CANCEL", "SAVE"};
-static const char* const prompttext[]
-    = {"Choose Card", "Edit Sona", "Pick Sandwich", "Choose Identity", "Choose Location"};
+//static const char* const prompttext[] = {"Choose Card", "Edit Sona", "Pick Sandwich", "Choose Identity", "Choose Location"};
 // static const char* const confirmtext[] = {"Are you sure?", "This will overwrite your profile."};
 // static const char* const instructtext[] = {"Press arrows to scroll", "Press A to confirm selection"};
 int selctor = 0; // which item is selected in the editor
@@ -890,10 +889,10 @@ void viewProfile(userProfile prof)
     snprintf(factline0, sizeof(factline0) - 1, "%s%s", preambles[0], fact0[prof.fact0]);
     // line 2: fact1
     char factline1[64];
-    snprintf(factline1, sizeof(factline1) - 1, "%s%s", preambles[0], fact1[prof.fact1]);
+    snprintf(factline1, sizeof(factline1) - 1, "%s%s", preambles[1], fact1[prof.fact1]);
     // line 3: fact2
     char factline2[64];
-    snprintf(factline2, sizeof(factline2) - 1, "%s%s", preambles[0], fact2[prof.fact2]);
+    snprintf(factline2, sizeof(factline2) - 1, "%s%s", preambles[2], fact2[prof.fact2]);
     // draw the card info
     drawWsgSimple(&bgs->gazebo, 0, 0);
     drawWsgSimple(cardsArray[prof.cardselect], 0, 0 + 12); // draw the card
@@ -935,10 +934,10 @@ void atriumAddSP(struct swadgePassPacket* packet)
 int editProfile(int xselect, int yselect)
 {
     int editorState = 0;
-/* static const char* const buttontext[] = {"CANCEL", "SAVE"};
+static const char* const buttontext[] = {"CANCEL", "SAVE"};
 static const char* const prompttext[] = {"Choose Card", "Edit Sona", "Pick Sandwich", "Choose Identity", "Choose Location"};
 static const char* const confirmtext[] = {"Are you sure?", "This will overwrite your profile."};
-static const char* const instructtext[] = {"Press arrows to scroll", "Press A to confirm selection"}; */
+static const char* const instructtext[] = {"Press arrows to scroll", "Press A to confirm selection"}; 
 
     switch (xselect) {
         case 0:
