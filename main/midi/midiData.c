@@ -334,9 +334,7 @@ const midiTimbre_t mmx017Organ = {
         //.attackTimeVel = -2048,
         //LFO freq: 8.176
         .sustainVol = 127,
-        //.releaseTime = 8192,
-        // 128 ticks per velocity, up to 128*128 == 16384 ticks = 1s
-        .releaseTimeVel = 256 << 8,
+        .releaseTime = 8192,
     },
 };
 
