@@ -74,7 +74,7 @@ jobs:
 
     #### Basic Steps
     - name: Check out repository code
-      uses: actions/checkout@v4.1.4
+      uses: actions/checkout@v5.0.0
       with:
         submodules: recursive
 
@@ -100,7 +100,7 @@ jobs:
     - name: Restore IDF Cache
       id: cache-esp-idf
       if: matrix.firmware
-      uses: actions/cache@v3
+      uses: actions/cache@v4.3.0
       with:
         path: |
           ${{ matrix.idf_install }}
@@ -132,18 +132,46 @@ jobs:
         ${{ runner.temp }}/esp-idf/export.sh
         idf.py build dfu
 
-    - name: Add firmware, bootloader, partition table, version, and flasher files to firmware artifact
+    - name: Add firmware to firmware artifact
       if: matrix.firmware
-      uses: actions/upload-artifact@v4.3.3
+      uses: actions/upload-artifact@v4.6.2
       with:
         name: ${{ env.FIRMWARE_ARTIFACT }}
         path: |
           build/swadge2024.elf
           build/swadge2024.bin
           build/dfu.bin
+
+    - name: Add bootloader to firmware artifact
+      if: matrix.firmware
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: ${{ env.FIRMWARE_ARTIFACT }}
+        path: |
           build/bootloader/bootloader.bin
+
+    - name: Add partition table to firmware artifact
+      if: matrix.firmware
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: ${{ env.FIRMWARE_ARTIFACT }}
+        path: |
           build/partition_table/partition-table.bin
+
+    - name: Add version to firmware artifact
+      if: matrix.firmware
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: ${{ env.FIRMWARE_ARTIFACT }}
+        path: |
           version.txt
+
+    - name: Add flasher files to firmware artifact
+      if: matrix.firmware
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: ${{ env.FIRMWARE_ARTIFACT }}
+        path: |
           tools/pyFlashGui/pyFlashGui.py
           tools/pyFlashGui/requirements.txt
 
@@ -151,7 +179,7 @@ jobs:
     - name: Install msys64 packages
       id: install-msys64
       if: matrix.emulator && matrix.family == 'windows'
-      uses: msys2/setup-msys2@v2
+      uses: msys2/setup-msys2@v2.29.0
       with:
         msystem: MINGW64
         update: true
@@ -208,7 +236,7 @@ jobs:
     #### Generic Emulator Upload
     - name: Upload Emulator Binary
       if: matrix.emulator
-      uses: actions/upload-artifact@v4.3.3
+      uses: actions/upload-artifact@v4.6.2
       with:
         name: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os }}
         path: SwadgeEmulator.zip
@@ -221,7 +249,7 @@ jobs:
     steps:
     - name: Download all previous build artifacts
       if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5.0.0
       with:
         merge-multiple: false
 
@@ -238,7 +266,7 @@ jobs:
 
     - name: Create release for latest artifacts
       if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
-      uses: ncipollo/release-action@v1
+      uses: ncipollo/release-action@v1.20.0
       with:
         # Allow the release to be updated, since it's not a "final" release
         prerelease: true
