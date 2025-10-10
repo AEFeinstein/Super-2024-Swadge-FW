@@ -108,6 +108,13 @@
 //==============================================================================
 
 #include "swadge2024.h"
+#include "swadgesona.h"
+
+//==============================================================================
+// Defines
+//==============================================================================
+
+#define MAX_NUM_SWADGE_PASSES 100
 
 //==============================================================================
 // Structs
@@ -134,16 +141,12 @@ typedef struct __attribute__((packed)) swadgePassPacket
     {
         uint16_t highScore;
     } roboRunner;
-
     struct
     {
-        int8_t cardSelected; // which card the user has selected, 0-7
-        int8_t fact0;        // random fact about the user, 0-7
-        int8_t fact1;        // random fact about the user, 0-7
-        int8_t fact2;        // random fact about the user, 0-7
-        int8_t festers;      // how many festers they've collected, 0-99
+        swadgesonaCore_t profile; // Packed profile
+        uint16_t numPasses;       // Number of passes
+        uint32_t latestTrophyIdx; // Latest trophy earned
     } atriumMode;
-
 } swadgePassPacket_t;
 
 /**
