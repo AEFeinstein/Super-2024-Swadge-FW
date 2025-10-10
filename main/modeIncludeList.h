@@ -80,6 +80,13 @@ int modeListGetCount(void);
 void modeListSetMenu(menu_t* menu);
 
 /**
+ * @brief Add secret items to a menu
+ *
+ * @param menu The menu to add secret items to
+ */
+void modeListAddSecretMenuModes(menu_t* menu);
+
+/**
  * @brief Get the unique index of a mode
  *
  * @param mode The mode to get an index for

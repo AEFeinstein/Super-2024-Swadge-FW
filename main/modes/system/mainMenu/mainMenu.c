@@ -569,15 +569,7 @@ void addSecretsMenu(void)
                                  showSecretsMenuSettingValues, ARRAY_SIZE(showSecretsMenuSettingOptions),
                                  getShowSecretsMenuSettingBounds(), getShowSecretsMenuSetting());
 
-    addSingleItemToMenu(mainMenu->menu, keebTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, swadgePassTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, trophyTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, nameTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, canvasTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, sonaTestMode.modeName);
+    modeListAddSecretMenuModes(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, factoryResetName);
     addSingleItemToMenu(mainMenu->menu, confirmResetName);

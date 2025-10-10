@@ -63,7 +63,6 @@ void modeListSetMenu(menu_t* menu)
     addSingleItemToMenu(menu, introMode.modeName);
     addSingleItemToMenu(menu, modeDiceRoller.modeName);
     addSingleItemToMenu(menu, bouncyMode.modeName);
-    addSingleItemToMenu(menu, modeCh32v003test.modeName);
     menu = endSubMenu(menu);
 
     // Trophy Case
@@ -71,6 +70,20 @@ void modeListSetMenu(menu_t* menu)
 
     // Credits
     addSingleItemToMenu(menu, modeCredits.modeName);
+}
+
+void modeListAddSecretMenuModes(menu_t* menu)
+{
+    addSingleItemToMenu(menu, keebTestMode.modeName);
+    addSingleItemToMenu(menu, accelTestMode.modeName);
+    addSingleItemToMenu(menu, touchTestMode.modeName);
+    addSingleItemToMenu(menu, factoryTestMode.modeName);
+    addSingleItemToMenu(menu, swadgePassTestMode.modeName);
+    addSingleItemToMenu(menu, trophyTestMode.modeName);
+    addSingleItemToMenu(menu, nameTestMode.modeName);
+    addSingleItemToMenu(menu, canvasTestMode.modeName);
+    addSingleItemToMenu(menu, sonaTestMode.modeName);
+    addSingleItemToMenu(menu, modeCh32v003test.modeName);
 }
 
 int32_t getModeIdx(const swadgeMode_t* mode)
