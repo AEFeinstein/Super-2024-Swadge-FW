@@ -287,7 +287,7 @@ const midiTimbre_t donutDrumkitTimbre = {
     .name = "Donut Swadge Drums",
 };
 
-#define SECONDS_CONV(whole, microseconds)            ((whole) * 16384 + ((int64_t)microseconds) * 16384 / 1000000)
+#define SECONDS_CONV(whole, microseconds) ((whole) * 16384 + ((int64_t)microseconds) * 16384 / 1000000)
 // #define PITCH_HZ(whole, thousandths)                 ((whole) << 16 | ((thousandths) * (1 << 16) / 1000))
 
 const midiTimbre_t mmx011Vibraphone = {
