@@ -445,6 +445,11 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
             bool readyToFire = false;
             if (-1 != cpu->targetBarrelAngle)
             {
+                // Randomize ammo
+                uint16_t numAmmos;
+                getAmmoAttributes(&numAmmos);
+                cpu->ammoIdx = esp_random() % numAmmos;
+
                 // Find the clockwise and counterclockwise distances to move the barrel to the target
                 float deltaCw = cpu->barrelAngle - cpu->targetBarrelAngle;
                 if (deltaCw < 0)

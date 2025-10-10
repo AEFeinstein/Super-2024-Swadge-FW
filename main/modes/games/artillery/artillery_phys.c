@@ -107,7 +107,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     {
         .name       = "Big Shot",
         .color      = c243,
-        .radius     = 7,
+        .radius     = 6,
         .numBounces = 1,
         .numSpread  = 1,
         .numConsec  = 1,
@@ -131,7 +131,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     {
         .name       = "Wallmaker",
         .color      = c242,
-        .radius     = 4,
+        .radius     = 3,
         .numBounces = 1,
         .numSpread  = 1,
         .numConsec  = 1,
@@ -143,7 +143,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     {
         .name       = "Laser Bolt",
         .color      = c331,
-        .radius     = 4,
+        .radius     = 2,
         .numBounces = 1,
         .numSpread  = 1,
         .numConsec  = 1,
@@ -191,7 +191,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     {
         .name       = "Floor is Lava",
         .color      = c412,
-        .radius     = 4,
+        .radius     = 3,
         .numBounces = 1,
         .numSpread  = 1,
         .numConsec  = 1,

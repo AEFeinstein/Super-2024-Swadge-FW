@@ -240,7 +240,7 @@ void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player)
 
 /**
  * @brief TODO doc
- * 
+ *
  * TODO transmit over p2p
  *
  * @param phys
