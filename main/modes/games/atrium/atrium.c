@@ -6,7 +6,10 @@
 // DEFINES
 //---------------------------------------------------------------------------------//
 
+// Lobby
 #define MAX_SWADGESONA_IDXS (BG_COUNT * 4)
+#define ANIM_TIMER_MS 16667
+#define PLANT_FINAL_Y 192
 
 /* int buttoncoord_y = 200; // y coord for the button row
 int buttonpadding = 4;   // padding for text written in button, in px
@@ -191,6 +194,8 @@ typedef struct
     lobbyState_t lbState;
     uint8_t lobbySwsnIdxs[MAX_SWADGESONA_IDXS];
     bool left, right;
+    int64_t animTimer;
+    int loadAnims;
 
     // BGM
     midiPlayer_t* player;
@@ -231,16 +236,14 @@ static void drawSonas(uint64_t elapsedUs);
 static void drawArcade(uint64_t elapsedUs);
 static void drawConcert(uint64_t elapsedUs);
 static void drawGazebo(uint64_t elapsedUs);
+static void drawGazeboForeground(uint64_t elapsedUs);
 static void drawArrows(bool, bool);
 
 // Swadgepass
 static void atriumAddSP(struct swadgePassPacket* packet);
 
 /*
-static void sonaDraw(void);
 static void viewProfile(userProfile prof);
-
-
 uint32_t packProfile(userProfile prof);
 userProfile unpackProfile(uint32_t packedProfile); */
 
@@ -304,7 +307,7 @@ atrium_t* atr;
 static void atriumEnterMode()
 {
     // Initialize memory
-    atr = (atrium_t*)heap_caps_calloc(1, sizeof(atrium_t), MALLOC_CAP_8BIT);
+    atr         = (atrium_t*)heap_caps_calloc(1, sizeof(atrium_t), MALLOC_CAP_8BIT);
     atr->bodies = heap_caps_calloc(ARRAY_SIZE(sonaBodies), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(sonaBodies); idx++)
     {
@@ -389,8 +392,8 @@ static void atriumEnterMode()
     // myProfile = unpackProfile(myProfile.created); */
 
     // BGM
-    atr->player = globalMidiPlayerGet(MIDI_BGM);
-    atr->player->loop         = true;
+    atr->player       = globalMidiPlayerGet(MIDI_BGM);
+    atr->player->loop = true;
     midiGmOn(atr->player);
     globalMidiPlayerPlaySong(&atr->bgm[0], MIDI_BGM);
     globalMidiPlayerSetVolume(MIDI_BGM, 10);
@@ -500,7 +503,7 @@ void atriumAddSP(struct swadgePassPacket* packet)
     // FIXME: Load the appropriate mode
     packet->atriumMode.profile.bodyMarks = atr->loadedProfile.swsn->core.bodyMarks; // TODO: Load everything
     packet->atriumMode.numPasses         = atr->loadedProfile.numPasses;
-    packet->atriumMode.latestTrophyIdx = 0; // FIXME: Load from NVS
+    packet->atriumMode.latestTrophyIdx   = 0; // FIXME: Load from NVS
 }
 
 // States
@@ -698,6 +701,7 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
                 {
                     atr->lbState--;
                 }
+                atr->loadAnims = 0;
             }
             else if (evt->button & PB_RIGHT)
             {
@@ -706,6 +710,7 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
                 {
                     atr->lbState++;
                 }
+                atr->loadAnims = 0;
             }
             else if (evt->button & PB_B)
             {
@@ -739,7 +744,22 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
     }
 
     // Draw the loaded 'sonas
-    // FIXME: drawSonas();
+    drawSonas(elapsedUs);
+
+    // Draw foregrounds
+    switch (atr->lbState)
+    {
+        case BG_GAZEBO:
+        {
+            drawGazeboForeground(elapsedUs);
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+    
 
     // UI
     drawArrows(atr->left, atr->right);
@@ -816,20 +836,28 @@ static void drawGazebo(uint64_t elapsedUs)
 
     // Animations
     // Draw plants
-    // - Include animations
-    /*
-        if ((PAGE == 0) & (planter <= 48))
-        {                                                    // if on page 0, draw the plants rising up
-            drawWsgSimple(&bgs->plant1, 0, 240 - planter);   // draw plant 1 rising into view
-            drawWsgSimple(&bgs->plant2, 168, 240 - planter); // draw plant 2 rising into view
-            planter++;
-        }
-        else if ((PAGE == 0) & (planter > 48))
-        {                                               // if on page 0, draw the plants normally
-            drawWsgSimple(&bgs->plant1, 0, 240 - 48);   // draw plant 1
-            drawWsgSimple(&bgs->plant2, 168, 240 - 48); // draw plant 2
-        }
-     */
+    
+}
+
+static void drawGazeboForeground(uint64_t elapsedUs)
+{
+    atr->animTimer += elapsedUs;
+    if (atr->animTimer >= ANIM_TIMER_MS)
+    {
+        atr->animTimer = 0;
+        atr->loadAnims++;
+    }
+    if (atr->loadAnims <= 48)
+    {               
+        int offset = TFT_HEIGHT - atr->loadAnims;                                    
+        drawWsgSimple(&atr->backgroundImages[1], 0, offset);   // draw plant 1 rising into view
+        drawWsgSimple(&atr->backgroundImages[2], 168, offset); // draw plant 2 rising into view
+    }
+    else 
+    {                                             
+        drawWsgSimple(&atr->backgroundImages[1], 0, PLANT_FINAL_Y);   // draw plant 1
+        drawWsgSimple(&atr->backgroundImages[2], 168, PLANT_FINAL_Y); // draw plant 2
+    }
 }
 
 static void drawSonas(uint64_t elapsedUs)
