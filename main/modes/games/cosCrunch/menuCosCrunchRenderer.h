@@ -9,6 +9,8 @@ typedef struct
     {
         wsg_t pin;
         wsg_t fold;
+        wsg_t arrowLeft;
+        wsg_t arrowRight;
     } wsg;
 
     font_t* titleFont;
