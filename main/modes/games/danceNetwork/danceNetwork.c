@@ -24,7 +24,7 @@ static void dn_MsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 static void dn_EnterMode(void);
 static void dn_ExitMode(void);
 static void dn_MainLoop(int64_t elapsedUs);
-static void dn_MenuCb(const char* label, bool selected, uint32_t value);
+static bool dn_MenuCb(const char* label, bool selected, uint32_t value);
 static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 static void dn_initializeTutorial(bool advanced);
@@ -457,8 +457,9 @@ static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
  * @param label The string label of the menu item selected
  * @param selected true if this was selected, false if it was moved to
  * @param value The value for settings, unused.
+ * @return true if the submenu should be exited, false to stay on it
  */
-static void dn_MenuCb(const char* label, bool selected, uint32_t value)
+static bool dn_MenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
@@ -541,6 +542,7 @@ static void dn_MenuCb(const char* label, bool selected, uint32_t value)
             switchToSwadgeMode(&mainMenuMode);
         }
     }
+    return false;
 }
 
 /**

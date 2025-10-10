@@ -213,12 +213,10 @@ void drawLineFast(int16_t x0, int16_t y0, int16_t x1, int16_t y1, paletteColor_t
     int cy            = y0;
 
     // Checks if both edges are outside of bounds
-    // writing it this way simultaneously checks for < 0 AND >= TFT_WIDTH
-    if ((uint32_t)cx >= (uint32_t)TFT_WIDTH && (uint32_t)x1 >= (uint32_t)TFT_WIDTH)
-    {
-        return;
-    }
-    if ((uint32_t)cy >= (uint32_t)TFT_HEIGHT && (uint32_t)y1 >= (uint32_t)TFT_HEIGHT)
+    // This is a simple, yet incomplete line clipping algorithm similar to Cohen–Sutherland
+    // that ignores more complex cases of diagonal lines outside the viewing area
+    if ((x0 < 0 && x1 < 0) || (x0 >= TFT_WIDTH && x1 >= TFT_WIDTH) || //
+        (y0 < 0 && y1 < 0) || (y0 >= TFT_HEIGHT && y1 >= TFT_HEIGHT))
     {
         return;
     }
@@ -1116,6 +1114,12 @@ void drawEllipse(int xm, int ym, int a, int b, paletteColor_t col)
  */
 static void drawCircleInner(int xm, int ym, int r, paletteColor_t col, int xOrigin, int yOrigin, int xScale, int yScale)
 {
+    // Don't draw off if off screen
+    if (((xm + r) < 0 || (xm - r) > TFT_WIDTH) || ((ym + r) < 0 || (ym - r) > TFT_HEIGHT))
+    {
+        return;
+    }
+
     SETUP_FOR_TURBO();
 
     int x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
@@ -1437,8 +1441,8 @@ static void drawEllipseRectInner(int x0, int y0, int x1, int y1, paletteColor_t 
     SETUP_FOR_TURBO();
 
     long a = abs(x1 - x0), b = abs(y1 - y0), b1 = b & 1;          /* diameter */
-    double dx = 4 * (1.0 - a) * b * b, dy = 4 * (b1 + 1) * a * a; /* error increment */
-    double err = dx + dy + b1 * a * a;                            /* error of 1.step */
+    float dx = 4 * (1.0f - a) * b * b, dy = 4 * (b1 + 1) * a * a; /* error increment */
+    float err = dx + dy + b1 * a * a;                             /* error of 1.step */
 
     if (x0 > x1)
     {
@@ -1460,7 +1464,7 @@ static void drawEllipseRectInner(int x0, int y0, int x1, int y1, paletteColor_t 
         TURBO_SET_PIXEL_BOUNDS(xOrigin + x0 * xScale, yOrigin + y0 * yScale, col); /*  II. Quadrant */
         TURBO_SET_PIXEL_BOUNDS(xOrigin + x0 * xScale, yOrigin + y1 * yScale, col); /* III. Quadrant */
         TURBO_SET_PIXEL_BOUNDS(xOrigin + x1 * xScale, yOrigin + y1 * yScale, col); /*  IV. Quadrant */
-        double e2 = 2 * err;
+        float e2 = 2 * err;
         if (e2 <= dy)
         {
             y0++;
@@ -1545,7 +1549,7 @@ static void drawQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y
 
     int sx = x2 - x1, sy = y2 - y1;
     long xx = x0 - x1, yy = y0 - y1; /* relative values for checks */
-    double cur = xx * sy - yy * sx;  /* curvature */
+    float cur = xx * sy - yy * sx;   /* curvature */
 
     assert(xx * sx <= 0 && yy * sy <= 0); /* sign of gradient must not change */
 
@@ -1573,11 +1577,11 @@ static void drawQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y
             xy  = -xy;
             cur = -cur;
         }
-        double dx = 4.0 * sy * cur * (x1 - x0) + xx - xy; /* differences 1st degree */
-        double dy = 4.0 * sx * cur * (y0 - y1) + yy - xy;
+        float dx = 4.0f * sy * cur * (x1 - x0) + xx - xy; /* differences 1st degree */
+        float dy = 4.0f * sx * cur * (y0 - y1) + yy - xy;
         xx += xx;
         yy += yy;
-        double err = dx + dy + xy; /* error 1st step */
+        float err = dx + dy + xy; /* error 1st step */
         do
         {
             TURBO_SET_PIXEL_BOUNDS(xOrigin + x0 * xScale, yOrigin + y0 * yScale, col); /* draw curve */
@@ -1663,7 +1667,7 @@ static void drawQuadBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, 
                                 int yOrigin, int xScale, int yScale)
 {
     int x = x0 - x1, y = y0 - y1;
-    double t = x0 - 2 * x1 + x2, r;
+    float t = x0 - 2 * x1 + x2, r;
 
     if ((long)x * (x2 - x1) > 0) /* horizontal cut at P4? */
     {
@@ -1676,30 +1680,30 @@ static void drawQuadBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, 
                 y2 = y + y1; /* swap points */
             }                /* now horizontal cut at P4 comes first */
         t = (x0 - x1) / t;
-        r = (1 - t) * ((1 - t) * y0 + 2.0 * t * y1) + t * t * y2; /* By(t=P4) */
-        t = (x0 * x2 - x1 * x1) * t / (x0 - x1);                  /* gradient dP4/dx=0 */
-        x = floor(t + 0.5);
-        y = floor(r + 0.5);
+        r = (1 - t) * ((1 - t) * y0 + 2.0f * t * y1) + t * t * y2; /* By(t=P4) */
+        t = (x0 * x2 - x1 * x1) * t / (x0 - x1);                   /* gradient dP4/dx=0 */
+        x = floor(t + 0.5f);
+        y = floor(r + 0.5f);
         r = (y1 - y0) * (t - x0) / (x1 - x0) + y0; /* intersect P3 | P0 P1 */
-        drawQuadBezierSegInner(x0, y0, x, floor(r + 0.5), x, y, col, xOrigin, yOrigin, xScale, yScale);
+        drawQuadBezierSegInner(x0, y0, x, floor(r + 0.5f), x, y, col, xOrigin, yOrigin, xScale, yScale);
         r  = (y1 - y2) * (t - x2) / (x1 - x2) + y2; /* intersect P4 | P1 P2 */
         x0 = x1 = x;
         y0      = y;
-        y1      = floor(r + 0.5); /* P0 = P4, P1 = P8 */
+        y1      = floor(r + 0.5f); /* P0 = P4, P1 = P8 */
     }
     if ((long)(y0 - y1) * (y2 - y1) > 0) /* vertical cut at P6? */
     {
         t = y0 - 2 * y1 + y2;
         t = (y0 - y1) / t;
-        r = (1 - t) * ((1 - t) * x0 + 2.0 * t * x1) + t * t * x2; /* Bx(t=P6) */
-        t = (y0 * y2 - y1 * y1) * t / (y0 - y1);                  /* gradient dP6/dy=0 */
-        x = floor(r + 0.5);
-        y = floor(t + 0.5);
+        r = (1 - t) * ((1 - t) * x0 + 2.0f * t * x1) + t * t * x2; /* Bx(t=P6) */
+        t = (y0 * y2 - y1 * y1) * t / (y0 - y1);                   /* gradient dP6/dy=0 */
+        x = floor(r + 0.5f);
+        y = floor(t + 0.5f);
         r = (x1 - x0) * (t - y0) / (y1 - y0) + x0; /* intersect P6 | P0 P1 */
-        drawQuadBezierSegInner(x0, y0, floor(r + 0.5), y, x, y, col, xOrigin, yOrigin, xScale, yScale);
+        drawQuadBezierSegInner(x0, y0, floor(r + 0.5f), y, x, y, col, xOrigin, yOrigin, xScale, yScale);
         r  = (x1 - x2) * (t - y2) / (y1 - y2) + x2; /* intersect P7 | P1 P2 */
         x0 = x;
-        x1 = floor(r + 0.5);
+        x1 = floor(r + 0.5f);
         y0 = y1 = y; /* P0 = P6, P1 = P7 */
     }
     drawQuadBezierSegInner(x0, y0, x1, y1, x2, y2, col, xOrigin, yOrigin, xScale, yScale); /* remaining part */
@@ -1761,12 +1765,12 @@ void drawQuadRationalBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2, f
     SETUP_FOR_TURBO();
 
     int sx = x2 - x1, sy = y2 - y1; /* relative values for checks */
-    double dx = x0 - x2, dy = y0 - y2, xx = x0 - x1, yy = y0 - y1;
-    double xy = xx * sy + yy * sx, cur = xx * sy - yy * sx; /* curvature */
+    float dx = x0 - x2, dy = y0 - y2, xx = x0 - x1, yy = y0 - y1;
+    float xy = xx * sy + yy * sx, cur = xx * sy - yy * sx; /* curvature */
 
-    assert(xx * sx <= 0.0 && yy * sy <= 0.0); /* sign of gradient must not change */
+    assert(xx * sx <= 0.0f && yy * sy <= 0.0f); /* sign of gradient must not change */
 
-    if (cur != 0.0 && w > 0.0) /* no straight line */
+    if (cur != 0.0f && w > 0.0f) /* no straight line */
     {
         if (sx * (long)sx + sy * (long)sy > xx * xx + yy * yy) /* begin with longer part */
         {
@@ -1776,38 +1780,38 @@ void drawQuadRationalBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2, f
             y0 -= dy;
             cur = -cur; /* swap P0 P2 */
         }
-        xx = 2.0 * (4.0 * w * sx * xx + dx * dx); /* differences 2nd degree */
-        yy = 2.0 * (4.0 * w * sy * yy + dy * dy);
+        xx = 2.0f * (4.0f * w * sx * xx + dx * dx); /* differences 2nd degree */
+        yy = 2.0f * (4.0f * w * sy * yy + dy * dy);
         sx = x0 < x2 ? 1 : -1; /* x step direction */
         sy = y0 < y2 ? 1 : -1; /* y step direction */
-        xy = -2.0 * sx * sy * (2.0 * w * xy + dx * dy);
+        xy = -2.0f * sx * sy * (2.0f * w * xy + dx * dy);
 
-        if (cur * sx * sy < 0.0) /* negated curvature? */
+        if (cur * sx * sy < 0.0f) /* negated curvature? */
         {
             xx  = -xx;
             yy  = -yy;
             xy  = -xy;
             cur = -cur;
         }
-        dx = 4.0 * w * (x1 - x0) * sy * cur + xx / 2.0 + xy; /* differences 1st degree */
-        dy = 4.0 * w * (y0 - y1) * sx * cur + yy / 2.0 + xy;
+        dx = 4.0f * w * (x1 - x0) * sy * cur + xx / 2.0f + xy; /* differences 1st degree */
+        dy = 4.0f * w * (y0 - y1) * sx * cur + yy / 2.0f + xy;
 
-        if (w < 0.5 && (dy > xy || dx < xy)) /* flat ellipse, algorithm fails */
+        if (w < 0.5f && (dy > xy || dx < xy)) /* flat ellipse, algorithm fails */
         {
-            cur = (w + 1.0) / 2.0;
+            cur = (w + 1.0f) / 2.0f;
             w   = sqrt(w);
-            xy  = 1.0 / (w + 1.0);
-            sx  = floor((x0 + 2.0 * w * x1 + x2) * xy / 2.0 + 0.5); /* subdivide curve in half */
-            sy  = floor((y0 + 2.0 * w * y1 + y2) * xy / 2.0 + 0.5);
-            dx  = floor((w * x1 + x0) * xy + 0.5);
-            dy  = floor((y1 * w + y0) * xy + 0.5);
+            xy  = 1.0f / (w + 1.0f);
+            sx  = floor((x0 + 2.0f * w * x1 + x2) * xy / 2.0f + 0.5f); /* subdivide curve in half */
+            sy  = floor((y0 + 2.0f * w * y1 + y2) * xy / 2.0f + 0.5f);
+            dx  = floor((w * x1 + x0) * xy + 0.5f);
+            dy  = floor((y1 * w + y0) * xy + 0.5f);
             drawQuadRationalBezierSeg(x0, y0, dx, dy, sx, sy, cur, col); /* draw separately */
-            dx = floor((w * x1 + x2) * xy + 0.5);
-            dy = floor((y1 * w + y2) * xy + 0.5);
+            dx = floor((w * x1 + x2) * xy + 0.5f);
+            dy = floor((y1 * w + y2) * xy + 0.5f);
             drawQuadRationalBezierSeg(sx, sy, dx, dy, x2, y2, cur, col);
             return;
         }
-        double err = dx + dy - xy; /* error 1.step */
+        float err = dx + dy - xy; /* error 1.step */
         do
         {
             TURBO_SET_PIXEL_BOUNDS(x0, y0, col); /* draw curve */
@@ -1849,9 +1853,9 @@ void drawQuadRationalBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2, f
 void drawQuadRationalBezier(int x0, int y0, int x1, int y1, int x2, int y2, float w, paletteColor_t col)
 {
     int x = x0 - 2 * x1 + x2, y = y0 - 2 * y1 + y2;
-    double xx = x0 - x1, yy = y0 - y1, ww, t, q;
+    float xx = x0 - x1, yy = y0 - y1, ww, t, q;
 
-    assert(w >= 0.0);
+    assert(w >= 0.0f);
 
     if (xx * (x2 - x1) > 0) /* horizontal cut at P4? */
     {
@@ -1863,61 +1867,61 @@ void drawQuadRationalBezier(int x0, int y0, int x1, int y1, int x2, int y2, floa
                 y0 = y2;
                 y2 = yy + y1; /* swap points */
             }                 /* now horizontal cut at P4 comes first */
-        if (x0 == x2 || w == 1.0)
+        if (x0 == x2 || w == 1.0f)
         {
-            t = (x0 - x1) / (double)x;
+            t = (x0 - x1) / (float)x;
         }
         else /* non-rational or rational case */
         {
-            q = sqrt(4.0 * w * w * (x0 - x1) * (x2 - x1) + (x2 - x0) * (long)(x2 - x0));
+            q = sqrt(4.0f * w * w * (x0 - x1) * (x2 - x1) + (x2 - x0) * (long)(x2 - x0));
             if (x1 < x0)
             {
                 q = -q;
             }
-            t = (2.0 * w * (x0 - x1) - x0 + x2 + q) / (2.0 * (1.0 - w) * (x2 - x0)); /* t at P4 */
+            t = (2.0f * w * (x0 - x1) - x0 + x2 + q) / (2.0f * (1.0f - w) * (x2 - x0)); /* t at P4 */
         }
-        q  = 1.0 / (2.0 * t * (1.0 - t) * (w - 1.0) + 1.0);                         /* sub-divide at t */
-        xx = (t * t * (x0 - 2.0 * w * x1 + x2) + 2.0 * t * (w * x1 - x0) + x0) * q; /* = P4 */
-        yy = (t * t * (y0 - 2.0 * w * y1 + y2) + 2.0 * t * (w * y1 - y0) + y0) * q;
-        ww = t * (w - 1.0) + 1.0;
-        ww *= ww * q;                                 /* squared weight P3 */
-        w  = ((1.0 - t) * (w - 1.0) + 1.0) * sqrt(q); /* weight P8 */
-        x  = floor(xx + 0.5);
-        y  = floor(yy + 0.5);                        /* P4 */
+        q  = 1.0f / (2.0f * t * (1.0f - t) * (w - 1.0f) + 1.0f);                      /* sub-divide at t */
+        xx = (t * t * (x0 - 2.0f * w * x1 + x2) + 2.0f * t * (w * x1 - x0) + x0) * q; /* = P4 */
+        yy = (t * t * (y0 - 2.0f * w * y1 + y2) + 2.0f * t * (w * y1 - y0) + y0) * q;
+        ww = t * (w - 1.0f) + 1.0f;
+        ww *= ww * q;                                     /* squared weight P3 */
+        w  = ((1.0f - t) * (w - 1.0f) + 1.0f) * sqrtf(q); /* weight P8 */
+        x  = floor(xx + 0.5f);
+        y  = floor(yy + 0.5f);                       /* P4 */
         yy = (xx - x0) * (y1 - y0) / (x1 - x0) + y0; /* intersect P3 | P0 P1 */
-        drawQuadRationalBezierSeg(x0, y0, x, floor(yy + 0.5), x, y, ww, col);
+        drawQuadRationalBezierSeg(x0, y0, x, floor(yy + 0.5f), x, y, ww, col);
         yy = (xx - x2) * (y1 - y2) / (x1 - x2) + y2; /* intersect P4 | P1 P2 */
-        y1 = floor(yy + 0.5);
+        y1 = floor(yy + 0.5f);
         x0 = x1 = x;
         y0      = y; /* P0 = P4, P1 = P8 */
     }
     if ((y0 - y1) * (long)(y2 - y1) > 0) /* vertical cut at P6? */
     {
-        if (y0 == y2 || w == 1.0)
+        if (y0 == y2 || w == 1.0f)
         {
-            t = (y0 - y1) / (y0 - 2.0 * y1 + y2);
+            t = (y0 - y1) / (y0 - 2.0f * y1 + y2);
         }
         else /* non-rational or rational case */
         {
-            q = sqrt(4.0 * w * w * (y0 - y1) * (y2 - y1) + (y2 - y0) * (long)(y2 - y0));
+            q = sqrt(4.0f * w * w * (y0 - y1) * (y2 - y1) + (y2 - y0) * (long)(y2 - y0));
             if (y1 < y0)
             {
                 q = -q;
             }
-            t = (2.0 * w * (y0 - y1) - y0 + y2 + q) / (2.0 * (1.0 - w) * (y2 - y0)); /* t at P6 */
+            t = (2.0f * w * (y0 - y1) - y0 + y2 + q) / (2.0f * (1.0f - w) * (y2 - y0)); /* t at P6 */
         }
-        q  = 1.0 / (2.0 * t * (1.0 - t) * (w - 1.0) + 1.0);                         /* sub-divide at t */
-        xx = (t * t * (x0 - 2.0 * w * x1 + x2) + 2.0 * t * (w * x1 - x0) + x0) * q; /* = P6 */
-        yy = (t * t * (y0 - 2.0 * w * y1 + y2) + 2.0 * t * (w * y1 - y0) + y0) * q;
-        ww = t * (w - 1.0) + 1.0;
-        ww *= ww * q;                                 /* squared weight P5 */
-        w  = ((1.0 - t) * (w - 1.0) + 1.0) * sqrt(q); /* weight P7 */
-        x  = floor(xx + 0.5);
-        y  = floor(yy + 0.5);                        /* P6 */
+        q  = 1.0f / (2.0f * t * (1.0f - t) * (w - 1.0f) + 1.0f);                      /* sub-divide at t */
+        xx = (t * t * (x0 - 2.0f * w * x1 + x2) + 2.0f * t * (w * x1 - x0) + x0) * q; /* = P6 */
+        yy = (t * t * (y0 - 2.0f * w * y1 + y2) + 2.0f * t * (w * y1 - y0) + y0) * q;
+        ww = t * (w - 1.0f) + 1.0f;
+        ww *= ww * q;                                     /* squared weight P5 */
+        w  = ((1.0f - t) * (w - 1.0f) + 1.0f) * sqrtf(q); /* weight P7 */
+        x  = floor(xx + 0.5f);
+        y  = floor(yy + 0.5f);                       /* P6 */
         xx = (x1 - x0) * (yy - y0) / (y1 - y0) + x0; /* intersect P6 | P0 P1 */
-        drawQuadRationalBezierSeg(x0, y0, floor(xx + 0.5), y, x, y, ww, col);
+        drawQuadRationalBezierSeg(x0, y0, floor(xx + 0.5f), y, x, y, ww, col);
         xx = (x1 - x2) * (yy - y2) / (y1 - y2) + x2; /* intersect P7 | P1 P2 */
-        x1 = floor(xx + 0.5);
+        x1 = floor(xx + 0.5f);
         x0 = x;
         y0 = y1 = y; /* P0 = P6, P1 = P7 */
     }
@@ -1939,10 +1943,10 @@ void drawRotatedEllipse(int x, int y, int a, int b, float angle, paletteColor_t 
     float xd = (long)a * a, yd = (long)b * b;
     float s = sin(angle), zd = (xd - yd) * s;       /* ellipse rotation */
     xd = sqrt(xd - zd * s), yd = sqrt(yd + zd * s); /* surrounding rectangle */
-    a  = xd + 0.5;
-    b  = yd + 0.5;
+    a  = xd + 0.5f;
+    b  = yd + 0.5f;
     zd = zd * a * b / (xd * yd); /* scale to integer */
-    drawRotatedEllipseRect(x - a, y - b, x + a, y + b, (long)(4 * zd * cos(angle)), col);
+    drawRotatedEllipseRect(x - a, y - b, x + a, y + b, (long)(4 * zd * cosf(angle)), col);
 }
 
 /**
@@ -1963,16 +1967,16 @@ void drawRotatedEllipseRect(int x0, int y0, int x1, int y1, long zd, paletteColo
     {
         return drawEllipseRect(x0, y0, x1, y1, col); /* looks nicer */
     }
-    if (w != 0.0)
+    if (w != 0.0f)
     {
         w = (w - zd) / (w + w); /* squared weight of P1 */
     }
-    assert(w <= 1.0 && w >= 0.0); /* limit angle to |zd|<=xd*yd */
-    xd = floor(xd * w + 0.5);
-    yd = floor(yd * w + 0.5); /* snap xe,ye to int */
-    drawQuadRationalBezierSeg(x0, y0 + yd, x0, y0, x0 + xd, y0, 1.0 - w, col);
+    assert(w <= 1.0f && w >= 0.0f); /* limit angle to |zd|<=xd*yd */
+    xd = floor(xd * w + 0.5f);
+    yd = floor(yd * w + 0.5f); /* snap xe,ye to int */
+    drawQuadRationalBezierSeg(x0, y0 + yd, x0, y0, x0 + xd, y0, 1.0f - w, col);
     drawQuadRationalBezierSeg(x0, y0 + yd, x0, y1, x1 - xd, y1, w, col);
-    drawQuadRationalBezierSeg(x1, y1 - yd, x1, y1, x1 - xd, y1, 1.0 - w, col);
+    drawQuadRationalBezierSeg(x1, y1 - yd, x1, y1, x1 - xd, y1, 1.0f - w, col);
     drawQuadRationalBezierSeg(x1, y1 - yd, x1, y0, x0 + xd, y0, w, col);
 }
 
@@ -2002,7 +2006,7 @@ static void drawCubicBezierSegInner(int x0, int y0, float x1, float y1, float x2
     int sx = x0 < x3 ? 1 : -1, sy = y0 < y3 ? 1 : -1; /* step direction */
     float xc = -fabs(x0 + x1 - x2 - x3), xa = xc - 4 * sx * (x1 - x2), xb = sx * (x0 - x1 - x2 + x3);
     float yc = -fabs(y0 + y1 - y2 - y3), ya = yc - 4 * sy * (y1 - y2), yb = sy * (y0 - y1 - y2 + y3);
-    double ab, ac, bc, cb, xx, xy, yy, dx, dy, ex, *pxy, EP = 0.01;
+    float ab, ac, bc, cb, xx, xy, yy, dx, dy, ex, *pxy, EP = 0.01f;
     /* check for curve restrains */
     /* slope P0-P1 == P2-P3    and  (P0-P3 == P1-P2      or   no slope change) */
     assert((x1 - x0) * (x2 - x3) < EP && ((x3 - x0) * (x1 - x2) < EP || xb * xb < xa * xc + EP));
@@ -2161,25 +2165,25 @@ static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2,
     long yc = y0 + y1 - y2 - y3, ya = yc - 4 * (y1 - y2);
     long yb = y0 - y1 - y2 + y3, yd = yb + 4 * (y1 + y2);
     float fx0 = x0, fy0 = y0;
-    double t1 = xb * xb - xa * xc, t2, t[5];
+    float t1 = xb * xb - xa * xc, t2, t[5];
     /* sub-divide curve at gradient sign changes */
     if (xa == 0) /* horizontal */
     {
         if (labs(xc) < 2 * labs(xb))
         {
-            t[n++] = xc / (2.0 * xb); /* one change */
+            t[n++] = xc / (2.0f * xb); /* one change */
         }
     }
-    else if (t1 > 0.0) /* two changes */
+    else if (t1 > 0.0f) /* two changes */
     {
         t2 = sqrt(t1);
         t1 = (xb - t2) / xa;
-        if (fabs(t1) < 1.0)
+        if (fabsf(t1) < 1.0f)
         {
             t[n++] = t1;
         }
         t1 = (xb + t2) / xa;
-        if (fabs(t1) < 1.0)
+        if (fabsf(t1) < 1.0f)
         {
             t[n++] = t1;
         }
@@ -2189,19 +2193,19 @@ static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2,
     {
         if (labs(yc) < 2 * labs(yb))
         {
-            t[n++] = yc / (2.0 * yb); /* one change */
+            t[n++] = yc / (2.0f * yb); /* one change */
         }
     }
-    else if (t1 > 0.0) /* two changes */
+    else if (t1 > 0.0f) /* two changes */
     {
         t2 = sqrt(t1);
         t1 = (yb - t2) / ya;
-        if (fabs(t1) < 1.0)
+        if (fabsf(t1) < 1.0f)
         {
             t[n++] = t1;
         }
         t1 = (yb + t2) / ya;
-        if (fabs(t1) < 1.0)
+        if (fabsf(t1) < 1.0f)
         {
             t[n++] = t1;
         }
@@ -2214,8 +2218,8 @@ static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2,
             i        = 0;
         }
 
-    t1   = -1.0;
-    t[n] = 1.0;              /* begin / end point */
+    t1   = -1.0f;
+    t[n] = 1.0f;             /* begin / end point */
     for (i = 0; i <= n; i++) /* draw each segment separately */
     {
         t2        = t[i]; /* sub-divide at t[i-1], t[i] */
@@ -2226,14 +2230,14 @@ static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2,
         float fx3, fy3;
         fx0 -= fx3 = (t2 * (t2 * (3 * xb - t2 * xa) - 3 * xc) + xd) / 8;
         fy0 -= fy3 = (t2 * (t2 * (3 * yb - t2 * ya) - 3 * yc) + yd) / 8;
-        x3         = floor(fx3 + 0.5);
-        y3         = floor(fy3 + 0.5); /* scale bounds to int */
-        if (fx0 != 0.0)
+        x3         = floor(fx3 + 0.5f);
+        y3         = floor(fy3 + 0.5f); /* scale bounds to int */
+        if (fx0 != 0.0f)
         {
             fx1 *= fx0 = (x0 - x3) / fx0;
             fx2 *= fx0;
         }
-        if (fy0 != 0.0)
+        if (fy0 != 0.0f)
         {
             fy1 *= fy0 = (y0 - y3) / fy0;
             fy2 *= fy0;
@@ -2319,13 +2323,13 @@ void drawQuadSpline(int n, int x[], int y[], paletteColor_t col)
     {
         if (i - 2 < M_MAX)
         {
-            m[i - 2] = mi = 1.0 / (6.0 - mi);
+            m[i - 2] = mi = 1.0f / (6.0f - mi);
         }
-        x[i] = x0 = floor(8 * x[i] - x0 * mi + 0.5); /* store yi */
-        y[i] = y0 = floor(8 * y[i] - y0 * mi + 0.5);
+        x[i] = x0 = floor(8 * x[i] - x0 * mi + 0.5f); /* store yi */
+        y[i] = y0 = floor(8 * y[i] - y0 * mi + 0.5f);
     }
-    x1 = floor((x0 - 2 * x2) / (5.0 - mi) + 0.5); /* correction last row */
-    y1 = floor((y0 - 2 * y2) / (5.0 - mi) + 0.5);
+    x1 = floor((x0 - 2 * x2) / (5.0f - mi) + 0.5f); /* correction last row */
+    y1 = floor((y0 - 2 * y2) / (5.0f - mi) + 0.5f);
 
     for (i = n - 2; i > 0; i--) /* back substitution */
     {
@@ -2333,8 +2337,8 @@ void drawQuadSpline(int n, int x[], int y[], paletteColor_t col)
         {
             mi = m[i - 1];
         }
-        x0 = floor((x[i] - x1) * mi + 0.5); /* next corner */
-        y0 = floor((y[i] - y1) * mi + 0.5);
+        x0 = floor((x[i] - x1) * mi + 0.5f); /* next corner */
+        y0 = floor((y[i] - y1) * mi + 0.5f);
         drawQuadBezier((x0 + x1) / 2, (y0 + y1) / 2, x1, y1, x2, y2, col);
         x2 = (x0 + x1) / 2;
         x1 = x0;
@@ -2355,7 +2359,7 @@ void drawQuadSpline(int n, int x[], int y[], paletteColor_t col)
 void drawCubicSpline(int n, int x[], int y[], paletteColor_t col)
 {
 #define M_MAX 6
-    float mi = 0.25, m[M_MAX] = {0}; /* diagonal constants of matrix */
+    float mi = 0.25f, m[M_MAX] = {0}; /* diagonal constants of matrix */
     int x3 = x[n - 1], y3 = y[n - 1], x4 = x[n], y4 = y[n];
     int i, x0, y0, x1, y1, x2, y2;
 
@@ -2368,33 +2372,33 @@ void drawCubicSpline(int n, int x[], int y[], paletteColor_t col)
     {
         if (i - 2 < M_MAX)
         {
-            m[i - 2] = mi = 0.25 / (2.0 - mi);
+            m[i - 2] = mi = 0.25f / (2.0f - mi);
         }
-        x[i] = x0 = floor(12 * x[i] - 2 * x0 * mi + 0.5);
-        y[i] = y0 = floor(12 * y[i] - 2 * y0 * mi + 0.5);
+        x[i] = x0 = floor(12 * x[i] - 2 * x0 * mi + 0.5f);
+        y[i] = y0 = floor(12 * y[i] - 2 * y0 * mi + 0.5f);
     }
-    x2 = floor((x0 - 3 * x4) / (7 - 4 * mi) + 0.5); /* correct last row */
-    y2 = floor((y0 - 3 * y4) / (7 - 4 * mi) + 0.5);
+    x2 = floor((x0 - 3 * x4) / (7 - 4 * mi) + 0.5f); /* correct last row */
+    y2 = floor((y0 - 3 * y4) / (7 - 4 * mi) + 0.5f);
     drawCubicBezier(x3, y3, (x2 + x4) / 2, (y2 + y4) / 2, x4, y4, x4, y4, col);
 
     if (n - 3 < M_MAX)
     {
         mi = m[n - 3];
     }
-    x1 = floor((x[n - 2] - 2 * x2) * mi + 0.5);
-    y1 = floor((y[n - 2] - 2 * y2) * mi + 0.5);
+    x1 = floor((x[n - 2] - 2 * x2) * mi + 0.5f);
+    y1 = floor((y[n - 2] - 2 * y2) * mi + 0.5f);
     for (i = n - 3; i > 0; i--) /* back substitution */
     {
         if (i <= M_MAX)
         {
             mi = m[i - 1];
         }
-        x0 = floor((x[i] - 2 * x1) * mi + 0.5);
-        y0 = floor((y[i] - 2 * y1) * mi + 0.5);
-        x4 = floor((x0 + 4 * x1 + x2 + 3) / 6.0); /* reconstruct P[i] */
-        y4 = floor((y0 + 4 * y1 + y2 + 3) / 6.0);
-        drawCubicBezier(x4, y4, floor((2 * x1 + x2) / 3 + 0.5), floor((2 * y1 + y2) / 3 + 0.5),
-                        floor((x1 + 2 * x2) / 3 + 0.5), floor((y1 + 2 * y2) / 3 + 0.5), x3, y3, col);
+        x0 = floor((x[i] - 2 * x1) * mi + 0.5f);
+        y0 = floor((y[i] - 2 * y1) * mi + 0.5f);
+        x4 = floor((x0 + 4 * x1 + x2 + 3) / 6.0f); /* reconstruct P[i] */
+        y4 = floor((y0 + 4 * y1 + y2 + 3) / 6.0f);
+        drawCubicBezier(x4, y4, floor((2 * x1 + x2) / 3 + 0.5f), floor((2 * y1 + y2) / 3 + 0.5f),
+                        floor((x1 + 2 * x2) / 3 + 0.5f), floor((y1 + 2 * y2) / 3 + 0.5f), x3, y3, col);
         x3 = x4;
         y3 = y4;
         x2 = x1;
@@ -2403,10 +2407,10 @@ void drawCubicSpline(int n, int x[], int y[], paletteColor_t col)
         y1 = y0;
     }
     x0 = x[0];
-    x4 = floor((3 * x0 + 7 * x1 + 2 * x2 + 6) / 12.0); /* reconstruct P[1] */
+    x4 = floor((3 * x0 + 7 * x1 + 2 * x2 + 6) / 12.0f); /* reconstruct P[1] */
     y0 = y[0];
-    y4 = floor((3 * y0 + 7 * y1 + 2 * y2 + 6) / 12.0);
-    drawCubicBezier(x4, y4, floor((2 * x1 + x2) / 3 + 0.5), floor((2 * y1 + y2) / 3 + 0.5),
-                    floor((x1 + 2 * x2) / 3 + 0.5), floor((y1 + 2 * y2) / 3 + 0.5), x3, y3, col);
+    y4 = floor((3 * y0 + 7 * y1 + 2 * y2 + 6) / 12.0f);
+    drawCubicBezier(x4, y4, floor((2 * x1 + x2) / 3 + 0.5f), floor((2 * y1 + y2) / 3 + 0.5f),
+                    floor((x1 + 2 * x2) / 3 + 0.5f), floor((y1 + 2 * y2) / 3 + 0.5f), x3, y3, col);
     drawCubicBezier(x0, y0, x0, y0, (x0 + x1) / 2, (y0 + y1) / 2, x4, y4, col);
 }

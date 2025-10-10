@@ -209,6 +209,48 @@ menuItem_t* addSingleItemToMenu(menu_t* menu, const char* label)
 }
 
 /**
+ * @brief Add a single item entry to the menu after a given label. When this
+ * item is selected, the ::menuCb callback is called with the given label as the argument.
+ *
+ * @param menu The menu to add a single item to
+ * @param newLabel The label for this item. The underlying memory isn't copied, so
+ *                 this string must persist for the lifetime of the menu
+ * @param afterLabel The label to add this entry after
+ * @return The new menuItem_t that was added to the menu
+ */
+menuItem_t* insertSingleItemToMenuAfter(menu_t* menu, const char* newLabel, const char* afterLabel)
+{
+    menuItem_t* newItem = heap_caps_calloc(1, sizeof(menuItem_t), MALLOC_CAP_SPIRAM);
+    newItem->label      = newLabel;
+    newItem->options    = NULL;
+    newItem->numOptions = 0;
+    newItem->currentOpt = 0;
+    newItem->subMenu    = NULL;
+
+    // Search for the label in the menu
+    node_t* mNode = menu->items->first;
+    while (mNode)
+    {
+        if (afterLabel == ((menuItem_t*)mNode->val)->label)
+        {
+            // Found it, break out of the loop
+            break;
+        }
+        mNode = mNode->next;
+    }
+
+    // Add the new entry after the existing label
+    addAfter(menu->items, newItem, mNode);
+
+    // If this is the first item, set it as the current
+    if (1 == menu->items->length)
+    {
+        menu->currentItem = menu->items->first;
+    }
+    return newItem;
+}
+
+/**
  * @brief Remove a single item entry from the menu. This item is removed by pointer,
  * not by doing a string comparison.
  *
@@ -498,6 +540,19 @@ static void menuCallCallbackForItem(menu_t* menu, menuItem_t* item, bool selecte
 }
 
 /**
+ * @brief Navigate to the first item in a menu, just as though it were scrolled to.
+ *
+ * @param menu The menu to change the selected item of
+ * @return A pointer to the menu to use for future function calls.
+ */
+menu_t* menuNavigateToTopItem(menu_t* menu)
+{
+    menu->currentItem = menu->items->first;
+    menuCallCallbackForItem(menu, (menuItem_t*)menu->currentItem->val, false);
+    return menu;
+}
+
+/**
  * @brief Changes the selected item to the one with the given label, just as though it were scrolled to.
  *
  * @param menu The menu to change the selected item of
@@ -728,17 +783,14 @@ menu_t* menuSelectCurrentItem(menu_t* menu)
     }
     else if (item->label)
     {
-        if (item->label == mnuBackStr && menu->parentMenu)
+        // Call the callback for single items
+        // If a back was requested, or if this is the back option, and a parent exists
+        if ((menu->cbFunc(item->label, true, 0) || item->label == mnuBackStr) || menu->parentMenu)
         {
-            // If this is the back string, return the parent menu
+            // Return the parent menu
             // Reset the current item when leaving a submenu
             menu->currentItem = menu->items->first;
             return menu->parentMenu;
-        }
-        else
-        {
-            // If this is a single item, call the callback
-            menu->cbFunc(item->label, true, 0);
         }
     }
     else if (item->options)

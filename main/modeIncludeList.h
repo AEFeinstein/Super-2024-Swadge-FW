@@ -30,6 +30,7 @@
 */
 
 #include "accelTest.h"
+#include "artillery.h"
 #include "bouncy.h"
 #include "canvas.h"
 #include "colorchord.h"
@@ -77,6 +78,13 @@ int modeListGetCount(void);
  * @param menu Menu to set
  */
 void modeListSetMenu(menu_t* menu);
+
+/**
+ * @brief Add secret items to a menu
+ *
+ * @param menu The menu to add secret items to
+ */
+void modeListAddSecretMenuModes(menu_t* menu);
 
 /**
  * @brief Get the unique index of a mode
