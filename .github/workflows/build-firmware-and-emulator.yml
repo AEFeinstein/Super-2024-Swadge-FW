@@ -134,7 +134,7 @@ jobs:
         idf.py build dfu
 
     - name: Consolidate firmware files
-      if: matrix.firmware && matrix.family != 'windows'
+      if: matrix.firmware
       run: |
         mkdir -p ${{ env.FIRMWARE_ARTIFACT_PATH }}/
         cp build/swadge2024.elf ${{ env.FIRMWARE_ARTIFACT_PATH }}/
@@ -147,7 +147,7 @@ jobs:
         cp tools/pyFlashGui/requirements.txt ${{ env.FIRMWARE_ARTIFACT_PATH }}/
 
     - name: Add files to firmware artifact
-      if: matrix.firmware && matrix.family != 'windows'
+      if: matrix.firmware
       uses: actions/upload-artifact@v4.6.2
       with:
         name: ${{ env.FIRMWARE_ARTIFACT }}
