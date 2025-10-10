@@ -31,6 +31,7 @@ bool swadgePassTestMenuCb(const char* label, bool selected, uint32_t value);
 //==============================================================================
 
 static const char swadgePassTestName[] = "SwadgePass Test";
+static const char noSwadgePass[]       = "No SwadgePass RX";
 
 //==============================================================================
 // Variables
@@ -75,13 +76,20 @@ static void swadgePassTestEnterMode(void)
     // Initialize menu
     spt->menu = initMenu(swadgePassTestName, swadgePassTestMenuCb);
 
-    // Add all keys to the menu
-    node_t* passNode = spt->swadgePasses.first;
-    while (passNode)
+    if (0 == spt->swadgePasses.length)
     {
-        swadgePassData_t* spd = (swadgePassData_t*)passNode->val;
-        addSingleItemToMenu(spt->menu, spd->key);
-        passNode = passNode->next;
+        addSingleItemToMenu(spt->menu, noSwadgePass);
+    }
+    else
+    {
+        // Add all keys to the menu
+        node_t* passNode = spt->swadgePasses.first;
+        while (passNode)
+        {
+            swadgePassData_t* spd = (swadgePassData_t*)passNode->val;
+            addSingleItemToMenu(spt->menu, spd->key);
+            passNode = passNode->next;
+        }
     }
 
     // Initialize renderer
