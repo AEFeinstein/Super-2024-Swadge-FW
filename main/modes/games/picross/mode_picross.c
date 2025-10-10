@@ -56,7 +56,7 @@ static picrossGame_t* p = NULL;
  * @param mmFont The font used for teh HUD, already loaded
  *
  */
-void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool cont)
+void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool cont, menuMegaRenderer_t* renderer)
 {
     // calloc is 0'd and malloc leaves memory uninitialized. I dont know which to use so im not gonna touch it, and
     // doing things once on load can be slower.
@@ -118,8 +118,9 @@ void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool con
     // load options data
     p->input->showHints  = picrossGetSaveFlag(PO_SHOW_HINTS);
     p->input->showGuides = picrossGetLoadedSaveFlag(PO_SHOW_GUIDES);
-    p->animateBG         = picrossGetLoadedSaveFlag(PO_ANIMATE_BG);
-    p->markX             = picrossGetLoadedSaveFlag(PO_MARK_X);
+    p->animateBG         = -1 + picrossGetLoadedSaveFlag(PO_BG_HEXAGONS) + (picrossGetLoadedSaveFlag(PO_BG_DOTS) * 2)
+                   + (picrossGetLoadedSaveFlag(PO_BG_NONE) * 3);
+    p->markX = picrossGetLoadedSaveFlag(PO_MARK_X);
 
     // cant tell if this is doing things the lazy way or not.
     for (int i = 0; i < CONFIG_NUM_LEDS; i++)
@@ -164,7 +165,12 @@ void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool con
 
     // set the winning positional offset.
     p->offsetX = (TFT_WIDTH / 2) - ((p->puzzle->width * p->drawScale) / 2) - p->drawScale - p->leftPad;
-    p->offsetY = 38 - p->drawScale - p->topPad;
+    p->offsetY = 111 - ((p->puzzle->height * p->drawScale) / 2) - p->drawScale - p->topPad;
+
+    // used for the mega man background effect
+    setDrawBody(renderer, false);
+    p->menu     = initMenu("", NULL);
+    p->renderer = renderer;
 }
 
 void picrossSetupPuzzle(bool cont)
@@ -239,7 +245,6 @@ void picrossSetupPuzzle(bool cont)
 
     p->leftPad = (TFT_WIDTH - ((totalXCount * p->drawScale))) / 2 + p->maxHintsX * p->drawScale;
     p->topPad  = (TFT_HEIGHT - ((totalYCount * p->drawScale))) / 2 + p->maxHintsY * p->drawScale;
-
     // load the font
     // UIFont:
     loadFont(EARLY_GAMEBOY_FONT, &(p->UIFont), false);
@@ -440,11 +445,16 @@ void picrossGameLoop(int64_t elapsedUs)
         picrossCheckLevel();
     }
 
+    // Moving this before the user input, because picrossUserInput() also sets LED lights.
+    clearPxTft();
+    drawBackground();
+
     picrossUserInput(elapsedUs);
     if (p->exitThisFrame)
     {
-        picrossExitGame();             // free variables
-        returnToPicrossMenuFromGame(); // change to menu
+        setDrawBody(p->renderer, true); // make the menu renderer default again with the background body drawn.
+        picrossExitGame();              // free variables
+        returnToPicrossMenu();          // change to menu
         // dont do more processing, we have switched back to level select screen.
         return;
     }
@@ -1128,9 +1138,6 @@ void drawPicrossScene(void)
     uint8_t w = p->puzzle->width;
     uint8_t h = p->puzzle->height;
 
-    clearPxTft();
-    drawBackground();
-
     box_t box;
     box_t xBox;
 
@@ -1258,7 +1265,6 @@ void drawPicrossScene(void)
         }
         int ox = lerp(0, p->offsetX, p->lerpAmount);
         int oy = lerp(0, p->offsetY, p->lerpAmount);
-
         for (int i = 0; i < w; i++)
         {
             for (int j = 0; j < h; j++)
@@ -1275,13 +1281,21 @@ void drawPicrossScene(void)
         }
 
         // Draw the title of the puzzle, centered.
+        if (p->animateBG == PICROSS_BG_HEXAGONS)
+        {
+            drawRectFilled(0, 7, TFT_WIDTH, 33, c001);
+        }
         int16_t t = textWidth(&p->UIFont, p->selectedLevel.title);
         t         = ((TFT_WIDTH)-t) / 2; // from text width into padding.
-        drawText(&p->UIFont, c555, p->selectedLevel.title, t, 14);
+        drawShinyText(&p->UIFont, c245, c355, c555, p->selectedLevel.title, t, 14);
 
         // Draw the marquee fact.
         if (p->lerpAmount == PICROSS_LERP_AMOUNT)
         {
+            if (p->animateBG == PICROSS_BG_HEXAGONS)
+            {
+                drawRectFilled(0, 190, TFT_WIDTH, 225, c001);
+            }
             if (p->loopingTimer > 0)
             {
                 drawText(&p->UIFont, c555, "<", 12, 200);
@@ -1291,6 +1305,16 @@ void drawPicrossScene(void)
             p->marqueeScrollX += p->elapsedUs * 3;
             drawTextMarquee(&p->UIFont, c555, p->selectedLevel.marqueeFact, 27, 200, TFT_WIDTH - 30,
                             &p->marqueeScrollX);
+        }
+        else
+        {
+            // Draw an outline box during the slide to help pop against some of the black backgrounds.
+            box_t outlineBox = boxFromCoord(0, 0);
+            outlineBox.x0 += ox - 1;
+            outlineBox.y0 += oy - 1;
+            outlineBox.x1 = outlineBox.x0 + 2 + w * p->drawScale;
+            outlineBox.y1 = outlineBox.y0 + 2 + h * p->drawScale;
+            drawRect(outlineBox.x0, outlineBox.y0, outlineBox.x1, outlineBox.y1, c222);
         }
     }
 }
@@ -1437,18 +1461,19 @@ void drawPicrossHud(font_t* font)
     // Draw current coordinates
     char textBuffer[9];
     snprintf(textBuffer, sizeof(textBuffer) - 1, "%d,%d", p->input->x + 1, p->input->y + 1);
-    drawText(&(p->UIFont), c555, textBuffer, 10, 20);
+    drawText(&(p->UIFont), c555, textBuffer, 30, 25);
 
     // Draw counter
     snprintf(textBuffer, sizeof(textBuffer) - 1, "%d", p->count);
-    drawText(&(p->UIFont), c334, textBuffer, 10, 20 + p->UIFont.height * 2);
+    drawText(&(p->UIFont), c354, textBuffer, 30, 25 + p->UIFont.height * 2);
 }
 
 void drawHint(font_t* font, picrossHint_t hint)
 {
     uint8_t h;
-    paletteColor_t hintShadeColor = c001; // todo: move to struct if we decide to keep this.
-    paletteColor_t hintColor      = c555; // white/
+    paletteColor_t hintShadeColor
+        = p->animateBG == PICROSS_BG_HEXAGONS ? c034 : c001; // todo: move to struct if we decide to keep this.
+    paletteColor_t hintColor = c555;                         // white/
     if (p->fadeHints)
     {
         if (hint.correct)
@@ -1470,7 +1495,7 @@ void drawHint(font_t* font, picrossHint_t hint)
         if (p->input->showGuides && hint.index == p->input->y)
         {
             box_t hintbox = boxFromCoord(-1, hint.index);
-            hintbox.x0    = 0;
+            hintbox.x0    = (p->animateBG == PICROSS_BG_HEXAGONS) * 26;
             drawBox(hintbox, hintShadeColor, true, 0);
         }
 
@@ -1499,7 +1524,7 @@ void drawHint(font_t* font, picrossHint_t hint)
         if (p->input->showGuides && hint.index == p->input->x)
         {
             box_t hintbox = boxFromCoord(hint.index, -1);
-            hintbox.y0    = 0;
+            hintbox.y0    = (p->animateBG == PICROSS_BG_HEXAGONS) * 21;
             drawBox(hintbox, hintShadeColor, true, 0);
         }
 
@@ -1654,43 +1679,47 @@ void drawPicrossInput(void)
  */
 void drawBackground(void)
 {
-    if (p->animateBG)
+    if (p->animateBG == PICROSS_BG_NONE)
     {
-        if (p->bgScrollTimer >= p->bgScrollSpeed)
-        {
-            p->bgScrollTimer = 0;
+        return;
+    }
 
-            p->bgScrollXFrame++;
-            p->bgScrollYFrame += p->bgScrollXFrame % 2; // scroll y twice as slowly as x
-            // loop frames
-            p->bgScrollXFrame = p->bgScrollXFrame % 20;
-            p->bgScrollYFrame = p->bgScrollYFrame % 20;
-        }
+    if (p->bgScrollTimer >= p->bgScrollSpeed)
+    {
+        p->bgScrollTimer = 0;
 
-        for (int16_t y = 0; y < TFT_HEIGHT; y++)
+        p->bgScrollXFrame++;
+        p->bgScrollYFrame += p->bgScrollXFrame % 2; // scroll y twice as slowly as x
+        // loop frames
+        p->bgScrollXFrame = p->bgScrollXFrame % 20;
+        p->bgScrollYFrame = p->bgScrollYFrame % 20;
+    }
+
+    switch (p->animateBG)
+    {
+        case PICROSS_BG_HEXAGONS:
         {
-            for (int16_t x = 0; x < TFT_WIDTH; x++)
+            drawMenuMega(p->menu, p->renderer, p->elapsedUs);
+            if (p->currentPhase != PICROSS_YOUAREWIN)
             {
-                if (((x % 20) == 19 - p->bgScrollXFrame) && ((y % 20) == p->bgScrollYFrame))
+                drawMenuBody(18, 9, 107, false, p->renderer);
+            }
+            break;
+        }
+        case PICROSS_BG_DOTS:
+        {
+            for (int16_t y = p->bgScrollYFrame; y < TFT_HEIGHT; y += 20)
+            {
+                for (int16_t x = 19 - p->bgScrollXFrame; x < TFT_WIDTH; x += 20)
                 {
                     setPxTft(x, y, c111); // Grid
                 }
-                else
-                {
-                    // d->setPx(x, y, c111); // Background
-                }
             }
+            break;
         }
-    }
-    else
-    {
-        // dont animate bg
-        for (int16_t y = 0; y < TFT_HEIGHT; y++)
+        case PICROSS_BG_NONE:
         {
-            for (int16_t x = 0; x < TFT_WIDTH; x++)
-            {
-                // d->setPx(x, y, c111); // Background. todo: save color values somewhere.
-            }
+            break;
         }
     }
 }
@@ -1724,6 +1753,9 @@ void picrossExitGame(void)
     {
         // set LED's to off.
         setLeds(p->offLEDS, CONFIG_NUM_LEDS);
+
+        // free the empty menu used for the megaman background effect.
+        deinitMenu(p->menu);
 
         freeFont(&(p->hintFont));
         freeFont(&(p->UIFont));
