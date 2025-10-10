@@ -9,6 +9,8 @@
 // Lobby
 #define MAX_SWADGESONA_IDXS (BG_COUNT * 4)
 #define ANIM_TIMER_MS 16667
+#define LOBBY_ARROW_Y 40
+#define LOBBY_BORDER_X 20
 
 /* int buttoncoord_y = 200; // y coord for the button row
 int buttonpadding = 4;   // padding for text written in button, in px
@@ -880,14 +882,15 @@ static void drawSonas(uint64_t elapsedUs)
 
 static void drawArrows(bool left, bool right)
 {
-    if (atr->lbState != BG_COUNT - 1)
-    {
-        drawWsg(&atr->uiElements[(right) ? 1 : 0], 260, 40, false, false, 0); // FIXME: Hardcoded
-    }
     if (atr->lbState != 0)
     {
-        drawWsg(&atr->uiElements[(left) ? 1 : 0], 20, 40, false, false, 180); // FIXME: Hardcoded
+        drawWsg(&atr->uiElements[(left) ? 1 : 0], LOBBY_BORDER_X, LOBBY_ARROW_Y, false, false, 180);
     }
+    if (atr->lbState != BG_COUNT - 1)
+    {
+        drawWsg(&atr->uiElements[(right) ? 1 : 0], TFT_WIDTH - (LOBBY_BORDER_X + atr->uiElements[0].w), LOBBY_ARROW_Y, false, false, 0);
+    }
+    
 }
 
 /*
