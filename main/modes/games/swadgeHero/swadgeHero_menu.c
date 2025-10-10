@@ -16,7 +16,7 @@
 // Function Declarations
 //==============================================================================
 
-static void shMenuCb(const char*, bool selected, uint32_t settingVal);
+static bool shMenuCb(const char*, bool selected, uint32_t settingVal);
 
 //==============================================================================
 // Const Variables
@@ -330,8 +330,9 @@ void shMenuDraw(shVars_t* sh, int32_t elapsedUs)
  * @param label The menu item that was selected or moved to
  * @param selected true if the item was selected, false if it was moved to
  * @param settingVal The value of the setting, if the menu item is a settings item
+ * @return false
  */
-static void shMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool shMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     // Get a reference to the game state because it isn't a callback arg
     shVars_t* sh = getShVars();
@@ -406,6 +407,7 @@ static void shMenuCb(const char* label, bool selected, uint32_t settingVal)
             writeNvs32(shs_speed_key, settingVal);
         }
     }
+    return false;
 }
 
 /**
