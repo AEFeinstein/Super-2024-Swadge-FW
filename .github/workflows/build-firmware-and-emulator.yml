@@ -11,6 +11,7 @@ on:
 
 env:
   FIRMWARE_ARTIFACT: swadge2024-firmware
+  FIRMWARE_ARTIFACT_PATH: fw-artifact
   EMULATOR_ARTIFACT: swadge2024-emulator
 
 jobs:
@@ -132,48 +133,25 @@ jobs:
         ${{ runner.temp }}/esp-idf/export.sh
         idf.py build dfu
 
-    - name: Add firmware to firmware artifact
-      if: matrix.firmware
-      uses: actions/upload-artifact@v4.6.2
-      with:
-        name: ${{ env.FIRMWARE_ARTIFACT }}
-        path: |
-          build/swadge2024.elf
-          build/swadge2024.bin
-          build/dfu.bin
+    - name: Consolidate firmware files
+      if: matrix.firmware && matrix.family != 'windows'
+      run: |
+        mkdir -p ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/swadge2024.elf ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/swadge2024.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/dfu.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/bootloader/bootloader.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/partition_table/partition-table.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp version.txt ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp tools/pyFlashGui/pyFlashGui.py ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp tools/pyFlashGui/requirements.txt ${{ env.FIRMWARE_ARTIFACT_PATH }}/
 
-    - name: Add bootloader to firmware artifact
-      if: matrix.firmware
+    - name: Add files to firmware artifact
+      if: matrix.firmware && matrix.family != 'windows'
       uses: actions/upload-artifact@v4.6.2
       with:
         name: ${{ env.FIRMWARE_ARTIFACT }}
-        path: |
-          build/bootloader/bootloader.bin
-
-    - name: Add partition table to firmware artifact
-      if: matrix.firmware
-      uses: actions/upload-artifact@v4.6.2
-      with:
-        name: ${{ env.FIRMWARE_ARTIFACT }}
-        path: |
-          build/partition_table/partition-table.bin
-
-    - name: Add version to firmware artifact
-      if: matrix.firmware
-      uses: actions/upload-artifact@v4.6.2
-      with:
-        name: ${{ env.FIRMWARE_ARTIFACT }}
-        path: |
-          version.txt
-
-    - name: Add flasher files to firmware artifact
-      if: matrix.firmware
-      uses: actions/upload-artifact@v4.6.2
-      with:
-        name: ${{ env.FIRMWARE_ARTIFACT }}
-        path: |
-          tools/pyFlashGui/pyFlashGui.py
-          tools/pyFlashGui/requirements.txt
+        path: ${{ env.FIRMWARE_ARTIFACT_PATH }}
 
     #### Platform-specific Emulator Builds
     - name: Install msys64 packages
