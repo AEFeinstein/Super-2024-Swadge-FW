@@ -893,22 +893,22 @@ static void findSurfacePoints(int x0, int y0, int x1, int y1, int16_t* surfacePo
  * @param circ A circle of type CT_TANK
  * @param angle The angle to set the barrel at, in radians
  */
-void setBarrelAngle(physCirc_t* circ, float angle)
+void setBarrelAngle(physCirc_t* circ, int16_t angle)
 {
     circ->barrelAngle = angle;
 
-    // Make sure it's in the range of 0 to 2*pi
+    // Make sure it's in the range of 0 to 360
     while (circ->barrelAngle < 0)
     {
-        circ->barrelAngle += (2 * M_PIf);
+        circ->barrelAngle += 360;
     }
-    while (circ->barrelAngle >= (2 * M_PIf))
+    while (circ->barrelAngle >= 360)
     {
-        circ->barrelAngle -= (2 * M_PIf);
+        circ->barrelAngle -= 360;
     }
 
-    circ->relBarrelTip.x = sinf(angle) * circ->c.radius * 2;
-    circ->relBarrelTip.y = -cosf(angle) * circ->c.radius * 2;
+    circ->relBarrelTip.x = (getSin1024(circ->barrelAngle) * circ->c.radius) / 512.0f;
+    circ->relBarrelTip.y = (-getCos1024(circ->barrelAngle) * circ->c.radius) / 512.0f;
 }
 
 /**
@@ -996,7 +996,7 @@ void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool fi
 
     // Multiple shells are fired three degrees apart. Calculate the starting angle
     const float spread = (3 * M_PIf) / 180.0f;
-    float angStart     = player->barrelAngle - (aa->numSpread / 2) * spread;
+    float angStart     = (M_PIf * player->barrelAngle / 180.0f) - (aa->numSpread / 2) * spread;
 
     // This is where shells get spawned
     vecFl_t absBarrelTip = addVecFl2d(player->c.pos, player->relBarrelTip);
@@ -1105,7 +1105,7 @@ void physSpawnPlayers(physSim_t* phys, int32_t numPlayers, physCirc_t* players[]
  * @param barrelAngle
  * @return physCirc_t*
  */
-physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, float barrelAngle, paletteColor_t baseColor,
+physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, int16_t barrelAngle, paletteColor_t baseColor,
                           paletteColor_t accentColor)
 {
     physCirc_t* pc = physAddCircle(phys, pos.x, pos.y, PLAYER_RADIUS, CT_TANK, baseColor, accentColor);

@@ -45,7 +45,7 @@ typedef struct //__attribute__((packed))
     struct
     {
         vecFl_t pos;
-        float barrelAngle;
+        int16_t barrelAngle;
         int32_t score;
     } players[NUM_PLAYERS];
 
@@ -81,7 +81,7 @@ typedef struct // __attribute__((packed))
     struct
     {
         vecFl_t pos;
-        float barrelAngle;
+        int16_t barrelAngle;
         int32_t score;
     } players[NUM_PLAYERS];
     vec_t camera;
@@ -92,7 +92,7 @@ typedef struct // __attribute__((packed))
 {
     uint8_t type;
     uint8_t ammoIdx;
-    float barrelAngle;
+    int16_t barrelAngle;
     float shotPower;
 } artPktShot_t;
 

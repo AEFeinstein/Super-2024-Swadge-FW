@@ -118,8 +118,8 @@ typedef struct _physCirc_t
 
     // Player data
     buttonBit_t moving; ///< Either the left, right, or no button held
-    float barrelAngle;
-    float targetBarrelAngle;
+    int16_t barrelAngle;
+    int16_t targetBarrelAngle;
     vecFl_t relBarrelTip;
     float shotPower;
     int16_t ammoIdx;
@@ -202,10 +202,10 @@ void physStepBackground(physSim_t* phys);
 bool physStep(physSim_t* phys, int32_t elapsedUs, bool menuShowing);
 
 void physSpawnPlayers(physSim_t* phys, int32_t numPlayers, physCirc_t* players[], paletteColor_t* colors);
-physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, float barrelAngle, paletteColor_t baseColor,
+physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, int16_t barrelAngle, paletteColor_t baseColor,
                           paletteColor_t accentColor);
 
-void setBarrelAngle(physCirc_t* circ, float angle);
+void setBarrelAngle(physCirc_t* circ, int16_t angle);
 void setShotPower(physCirc_t* circ, float power);
 void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool firstShot);
 

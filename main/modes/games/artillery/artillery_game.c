@@ -11,7 +11,7 @@
 // Defines
 //==============================================================================
 
-#define BARREL_INTERVAL      (M_PIf / 180.0f)
+#define BARREL_INTERVAL      1
 #define POWER_INTERVAL       1.0f
 #define TOUCH_DEG_PER_BARREL 8
 
@@ -167,7 +167,7 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     {
                         ad->adjButtonHeld       = evt.button;
                         ad->adjButtonStartTimer = 0;
-                        float bDiff             = (PB_LEFT == evt.button) ? -(BARREL_INTERVAL) : (BARREL_INTERVAL);
+                        int16_t bDiff           = (PB_LEFT == evt.button) ? -(BARREL_INTERVAL) : (BARREL_INTERVAL);
                         setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle + bDiff);
                         return true;
                     }
@@ -320,7 +320,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                             case PB_LEFT:
                             case PB_RIGHT:
                             {
-                                float bDiff = (PB_LEFT == ad->adjButtonHeld) ? -(BARREL_INTERVAL) : (BARREL_INTERVAL);
+                                int16_t bDiff = (PB_LEFT == ad->adjButtonHeld) ? -(BARREL_INTERVAL) : (BARREL_INTERVAL);
                                 setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle + bDiff);
                                 barrelChanged = true;
                                 break;
@@ -362,7 +362,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
             drawText(f, c555, fireParams, BAR_MARGIN + FONT_MARGIN, TFT_HEIGHT - f->height - FONT_MARGIN);
 
             // Draw the angle
-            snprintf(fireParams, sizeof(fireParams) - 1, "Angle %d", (int)((180 * p->barrelAngle) / M_PIf));
+            snprintf(fireParams, sizeof(fireParams) - 1, "Angle %d", p->barrelAngle);
             drawTextShadow(f, c555, c000, fireParams, BAR_MARGIN + FONT_MARGIN,
                            TFT_HEIGHT - (2 * f->height) - (3 * FONT_MARGIN));
 
@@ -451,19 +451,19 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                 cpu->ammoIdx = esp_random() % numAmmos;
 
                 // Find the clockwise and counterclockwise distances to move the barrel to the target
-                float deltaCw = cpu->barrelAngle - cpu->targetBarrelAngle;
+                int16_t deltaCw = cpu->barrelAngle - cpu->targetBarrelAngle;
                 if (deltaCw < 0)
                 {
-                    deltaCw += (2 * M_PIf);
+                    deltaCw += 360;
                 }
-                float deltaCCw = cpu->targetBarrelAngle - cpu->barrelAngle;
+                int16_t deltaCCw = cpu->targetBarrelAngle - cpu->barrelAngle;
                 if (deltaCCw < 0)
                 {
-                    deltaCCw += (2 * M_PIf);
+                    deltaCCw += 360;
                 }
 
                 // If the barrel isn't at the target, move barrel towards target
-                if (fabsf(deltaCw) > BARREL_INTERVAL)
+                if (abs(deltaCw) > BARREL_INTERVAL)
                 {
                     if (deltaCw < deltaCCw)
                     {
