@@ -785,7 +785,9 @@ menu_t* menuSelectCurrentItem(menu_t* menu)
     {
         // Call the callback for single items
         // If a back was requested, or if this is the back option, and a parent exists
-        if ((menu->cbFunc(item->label, true, 0) || item->label == mnuBackStr) || menu->parentMenu)
+        bool backRequested = (item->label == mnuBackStr);
+        backRequested |= (menu->cbFunc(item->label, true, 0) && menu->parentMenu);
+        if (backRequested)
         {
             // Return the parent menu
             // Reset the current item when leaving a submenu
