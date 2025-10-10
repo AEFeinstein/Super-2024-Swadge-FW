@@ -900,11 +900,11 @@ void setBarrelAngle(physCirc_t* circ, float angle)
     // Make sure it's in the range of 0 to 2*pi
     while (circ->barrelAngle < 0)
     {
-        circ->barrelAngle += (2 * M_PI);
+        circ->barrelAngle += (2 * M_PIf);
     }
-    while (circ->barrelAngle >= (2 * M_PI))
+    while (circ->barrelAngle >= (2 * M_PIf))
     {
-        circ->barrelAngle -= (2 * M_PI);
+        circ->barrelAngle -= (2 * M_PIf);
     }
 
     circ->relBarrelTip.x = sinf(angle) * circ->c.radius * 2;
@@ -977,7 +977,7 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
     cpu->targetBarrelAngle = atan2f(v0.x, -v0.y);
     while (cpu->targetBarrelAngle < 0)
     {
-        cpu->targetBarrelAngle += (2 * M_PI);
+        cpu->targetBarrelAngle += (2 * M_PIf);
     }
     setShotPower(cpu, magVecFl2d(v0));
 }
@@ -995,7 +995,7 @@ void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool fi
     const artilleryAmmoAttrib_t* aa = getAmmoAttribute(player->ammoIdx);
 
     // Multiple shells are fired three degrees apart. Calculate the starting angle
-    const float spread = (3 * M_PI) / 180.0f;
+    const float spread = (3 * M_PIf) / 180.0f;
     float angStart     = player->barrelAngle - (aa->numSpread / 2) * spread;
 
     // This is where shells get spawned

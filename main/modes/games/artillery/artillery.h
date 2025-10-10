@@ -8,6 +8,10 @@
 // Defines
 //==============================================================================
 
+#ifndef M_PIf
+    #define M_PIf ((float)M_PI)
+#endif
+
 #define NUM_PLAYERS 2
 
 #define TANK_MOVE_TIME_US 3000000

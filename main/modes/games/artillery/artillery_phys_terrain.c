@@ -9,6 +9,7 @@
 #include "color_utils.h"
 #include "geometry.h"
 #include "trigonometry.h"
+#include "artillery.h"
 #include "artillery_phys_terrain.h"
 #include "artillery_phys_objs.h"
 
@@ -423,7 +424,7 @@ bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
 
     if (hitTank && CONFUSION == shell->effect)
     {
-        setBarrelAngle(hitTank, (esp_random() % 360) * M_PI / 180.0f);
+        setBarrelAngle(hitTank, (esp_random() % 360) * M_PIf / 180.0f);
         setShotPower(hitTank, esp_random() % MAX_SHOT_POWER);
         change = true;
     }

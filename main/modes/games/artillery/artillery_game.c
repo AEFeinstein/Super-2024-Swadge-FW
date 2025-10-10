@@ -11,7 +11,7 @@
 // Defines
 //==============================================================================
 
-#define BARREL_INTERVAL      (M_PI / 180.0f)
+#define BARREL_INTERVAL      (M_PIf / 180.0f)
 #define POWER_INTERVAL       1.0f
 #define TOUCH_DEG_PER_BARREL 8
 
@@ -362,7 +362,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
             drawText(f, c555, fireParams, BAR_MARGIN + FONT_MARGIN, TFT_HEIGHT - f->height - FONT_MARGIN);
 
             // Draw the angle
-            snprintf(fireParams, sizeof(fireParams) - 1, "Angle %d", (int)((180 * p->barrelAngle) / M_PI));
+            snprintf(fireParams, sizeof(fireParams) - 1, "Angle %d", (int)((180 * p->barrelAngle) / M_PIf));
             drawTextShadow(f, c555, c000, fireParams, BAR_MARGIN + FONT_MARGIN,
                            TFT_HEIGHT - (2 * f->height) - (3 * FONT_MARGIN));
 
@@ -449,12 +449,12 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                 float deltaCw = cpu->barrelAngle - cpu->targetBarrelAngle;
                 if (deltaCw < 0)
                 {
-                    deltaCw += (2 * M_PI);
+                    deltaCw += (2 * M_PIf);
                 }
                 float deltaCCw = cpu->targetBarrelAngle - cpu->barrelAngle;
                 if (deltaCCw < 0)
                 {
-                    deltaCCw += (2 * M_PI);
+                    deltaCCw += (2 * M_PIf);
                 }
 
                 // If the barrel isn't at the target, move barrel towards target

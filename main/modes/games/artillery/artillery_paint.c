@@ -157,8 +157,8 @@ void drawTank(int32_t x, int32_t y, int32_t r, paletteColor_t baseColor, palette
 
     // Draw a thick barrel
     vecFl_t relBarrelTip = {
-        .x = sinf(M_PI / 4) * c.radius * 2,
-        .y = -cosf(M_PI / 4) * c.radius * 2,
+        .x = sinf(M_PIf / 4) * c.radius * 2,
+        .y = -cosf(M_PIf / 4) * c.radius * 2,
     };
     vecFl_t absBarrelTip = addVecFl2d(c.pos, relBarrelTip);
     vecFl_t offsets[]    = {
