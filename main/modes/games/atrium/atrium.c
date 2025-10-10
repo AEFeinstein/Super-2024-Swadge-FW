@@ -9,7 +9,6 @@
 // Lobby
 #define MAX_SWADGESONA_IDXS (BG_COUNT * 4)
 #define ANIM_TIMER_MS 16667
-#define PLANT_FINAL_Y 192
 
 /* int buttoncoord_y = 200; // y coord for the button row
 int buttonpadding = 4;   // padding for text written in button, in px
@@ -34,7 +33,7 @@ static const cnfsFileIdx_t uiImages[]   = {
     BBUTTON_1_WSG,     BBUTTON_2_WSG,     ATRIUMLOGO_WSG, KEEPON_WSG,
 };
 static const cnfsFileIdx_t bgImages[] = {
-    GAZEBO_WSG, ATRIUMPLANT_1_WSG, ATRIUMPLANT_2_WSG, ARCADE_1_WSG, ARCADE_2_WSG, CONCERT_1_WSG, CONCERT_2_WSG,
+    GAZEBO_WSG, ATRIUMPLANT_1_WSG, ARCADE_1_WSG, ARCADE_2_WSG, CONCERT_1_WSG, CONCERT_2_WSG,
 }; // Images used for the backgrounds
 static const cnfsFileIdx_t cardImages[]
     = {CARDGEN_WSG, CARDBLOSS_WSG, CARDBUBB_WSG, CARDDINO_WSG, CARDMAGFEST_WSG, CARDMUSIC_WSG, CARDSPACE_WSG};
@@ -816,7 +815,7 @@ static void shuffleSonas()
 static void drawArcade(uint64_t elapsedUs)
 {
     // Draw base BG
-    drawWsgSimple(&atr->backgroundImages[3], 0, 0);
+    drawWsgSimple(&atr->backgroundImages[2], 0, 0);
 
     // Animations
 }
@@ -824,7 +823,7 @@ static void drawArcade(uint64_t elapsedUs)
 static void drawConcert(uint64_t elapsedUs)
 {
     // Draw base BG
-    drawWsgSimple(&atr->backgroundImages[6], 0, 0);
+    drawWsgSimple(&atr->backgroundImages[5], 0, 0);
 
     // Animations
 }
@@ -835,28 +834,26 @@ static void drawGazebo(uint64_t elapsedUs)
     drawWsgSimple(&atr->backgroundImages[0], 0, 0);
 
     // Animations
-    // Draw plants
-    
 }
 
 static void drawGazeboForeground(uint64_t elapsedUs)
 {
     atr->animTimer += elapsedUs;
-    if (atr->animTimer >= ANIM_TIMER_MS)
+    if (atr->animTimer >= ANIM_TIMER_MS && atr->loadAnims < atr->backgroundImages[1].h)
     {
         atr->animTimer = 0;
         atr->loadAnims++;
     }
-    if (atr->loadAnims <= 48)
+    if (atr->loadAnims <= atr->backgroundImages[1].h)
     {               
         int offset = TFT_HEIGHT - atr->loadAnims;                                    
-        drawWsgSimple(&atr->backgroundImages[1], 0, offset);   // draw plant 1 rising into view
-        drawWsgSimple(&atr->backgroundImages[2], 168, offset); // draw plant 2 rising into view
+        drawWsgSimple(&atr->backgroundImages[1], 0, offset);  
+        drawWsg(&atr->backgroundImages[1], TFT_WIDTH - atr->backgroundImages[1].w, offset, true, false, 0); 
     }
     else 
     {                                             
-        drawWsgSimple(&atr->backgroundImages[1], 0, PLANT_FINAL_Y);   // draw plant 1
-        drawWsgSimple(&atr->backgroundImages[2], 168, PLANT_FINAL_Y); // draw plant 2
+        drawWsgSimple(&atr->backgroundImages[1], 0, TFT_HEIGHT - atr->loadAnims); 
+        drawWsg(&atr->backgroundImages[1], TFT_WIDTH - atr->backgroundImages[1].w, TFT_HEIGHT - atr->loadAnims, true, false, 0);
     }
 }
 
