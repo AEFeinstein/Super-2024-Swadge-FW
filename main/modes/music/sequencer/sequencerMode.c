@@ -18,8 +18,8 @@ static void sequencerExitMode(void);
 static void sequencerMainLoop(int64_t elapsedUs);
 static void sequencerBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
-static void sequencerSongMenuCb(const char*, bool selected, uint32_t settingVal);
-static void sequencerNoteMenuCb(const char*, bool selected, uint32_t settingVal);
+static bool sequencerSongMenuCb(const char*, bool selected, uint32_t settingVal);
+static bool sequencerNoteMenuCb(const char*, bool selected, uint32_t settingVal);
 
 static void sequencerSaveSong(const char* fname);
 static void sequencerLoadSong(const char* fname);
@@ -525,8 +525,9 @@ static void sequencerBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
  * @param label The menu item that was selected or moved to
  * @param selected true if the item was selected, false if it was moved to
  * @param settingVal The value of the setting, if the menu item is a settings item
+ * @return true to go up a menu level, false to remain here
  */
-static void sequencerSongMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool sequencerSongMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     bool returnToGrid = false;
 
@@ -656,6 +657,8 @@ static void sequencerSongMenuCb(const char* label, bool selected, uint32_t setti
     {
         setSequencerScreen(SEQUENCER_SEQ);
     }
+
+    return false;
 }
 
 /**
@@ -664,8 +667,9 @@ static void sequencerSongMenuCb(const char* label, bool selected, uint32_t setti
  * @param label The menu item that was selected or moved to
  * @param selected true if the item was selected, false if it was moved to
  * @param settingVal The value of the setting, if the menu item is a settings item
+ * @return true to go up a menu level, false to remain here
  */
-static void sequencerNoteMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool sequencerNoteMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     if (selected)
     {
@@ -688,6 +692,7 @@ static void sequencerNoteMenuCb(const char* label, bool selected, uint32_t setti
             }
         }
     }
+    return false;
 }
 
 /**

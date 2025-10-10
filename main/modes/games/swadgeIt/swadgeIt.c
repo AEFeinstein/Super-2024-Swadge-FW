@@ -139,7 +139,7 @@ static void swadgeItDacCallback(uint8_t* samples, int16_t len);
 static void swadgeItAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 static void swadgeItAddToSwadgePassPacket(swadgePassPacket_t* packet);
 
-static void swadgeItMenuCb(const char* label, bool selected, uint32_t value);
+static bool swadgeItMenuCb(const char* label, bool selected, uint32_t value);
 
 static bool swadgeItInput(swadgeItEvt_t evt);
 static void swadgeItCheckForShake(void);
@@ -1000,8 +1000,9 @@ static void swadgeItGameOver(void)
  * @param label A pointer to the label which was selected or scrolled to
  * @param selected true if the item was selected with the A button, false if it was scrolled to
  * @param value If a settings item was selected or scrolled, this is the new value for the setting
+ * @return true to go up a menu level, false to remain here
  */
-static void swadgeItMenuCb(const char* label, bool selected, uint32_t value)
+static bool swadgeItMenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
@@ -1020,6 +1021,7 @@ static void swadgeItMenuCb(const char* label, bool selected, uint32_t value)
             switchToSwadgeMode(&mainMenuMode);
         }
     }
+    return false;
 }
 
 /**

@@ -81,11 +81,14 @@ bool circlePointFlIntersection(circleFl_t circle, vecFl_t point, vecFl_t* collis
 bool circleRectFlIntersection(circleFl_t circle, rectangleFl_t rect, vecFl_t* collisionVec);
 bool circleLineFlIntersection(circleFl_t circle, lineFl_t line, bool checkEnds, vecFl_t* cpOnLine,
                               vecFl_t* collisionVec);
-int16_t circleLineFlIntersectionPoints(circleFl_t circle, lineFl_t line, vecFl_t* intersection_1,
-                                       vecFl_t* intersection_2);
+int16_t circleInfLineFlIntersectionPoints(circleFl_t circle, lineFl_t line, vecFl_t* intersection_1,
+                                          vecFl_t* intersection_2);
 bool rectRectFlIntersection(rectangleFl_t rect1, rectangleFl_t rect2, vecFl_t* collisionVec);
 bool rectLineFlIntersection(rectangleFl_t rect, lineFl_t line, vecFl_t* collisionVec);
-bool lineLineFlIntersection(lineFl_t line1, lineFl_t line2);
+bool lineLineFlIntersection(lineFl_t a, lineFl_t b, vecFl_t* intersection);
 vecFl_t infLineIntersectionPoint(lineFl_t a, lineFl_t b);
+
+lineFl_t getLineBoundingBox(lineFl_t line);
+int16_t circleLineSegFlIntersection(circleFl_t circle, lineFl_t line, lineFl_t boundingBox, vecFl_t* intersections);
 
 #endif

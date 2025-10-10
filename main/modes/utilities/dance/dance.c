@@ -79,7 +79,7 @@ typedef struct
 static void danceEnterMode(void);
 static void danceExitMode(void);
 static void danceMainLoop(int64_t elapsedUs);
-static void danceMenuCb(const char* label, bool selected, uint32_t value);
+static bool danceMenuCb(const char* label, bool selected, uint32_t value);
 
 static void danceEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 static void danceEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
@@ -371,8 +371,9 @@ void danceMainLoop(int64_t elapsedUs)
  * @param label The menu option that was selected or changed
  * @param selected True if the option was selected, false if it was only changed
  * @param value The setting value for this operation
+ * @return true to go up a menu level, false to remain here
  */
-void danceMenuCb(const char* label, bool selected, uint32_t value)
+bool danceMenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected && str_exit == label)
     {
@@ -395,6 +396,7 @@ void danceMenuCb(const char* label, bool selected, uint32_t value)
             danceState->resetDance = true;
         }
     }
+    return false;
 }
 
 /**
