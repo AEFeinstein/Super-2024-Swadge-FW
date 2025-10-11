@@ -276,7 +276,7 @@ static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t
     {
         // Drop shadow
         drawTextMarquee(renderer->menuFont, renderer->textOutlineColor, text, textX + 1, textY + 1,
-                        textX + MAX_ITEM_TEXT_WIDTH - 5, &renderer->selectedMarqueeTimer);
+                        textX + MAX_ITEM_TEXT_WIDTH - 5, &renderer->shadowMarqueeTimer);
         // Text
         drawTextMarquee(renderer->menuFont, renderer->textFillColor, text, textX, textY,
                         textX + MAX_ITEM_TEXT_WIDTH - 5, &renderer->selectedMarqueeTimer);
@@ -402,10 +402,12 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
         // Reset the timer when the item changes
         renderer->currentItem          = menu->currentItem;
         renderer->selectedMarqueeTimer = 0;
+        renderer->shadowMarqueeTimer   = 0;
     }
     else
     {
         renderer->selectedMarqueeTimer += elapsedUs;
+        renderer->shadowMarqueeTimer += elapsedUs;
     }
 
     // Clear the background
@@ -478,6 +480,7 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
             //     // Bounce the selected item
             //     renderer->selectedBounceIdx    = 1;
             //     renderer->selectedMarqueeTimer = 0;
+            //     renderer->shadowMarqueeTimer   = 0;
             // }
             // else if (isSelected)
             // {
@@ -488,6 +491,7 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
             //         if (value != renderer->selectedValue)
             //         {
             //             renderer->selectedMarqueeTimer = 0;
+            //             renderer->shadowMarqueeTimer   = 0;
             //             renderer->selectedValue        = value;
             //         }
             //     }
