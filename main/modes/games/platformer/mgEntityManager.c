@@ -1950,7 +1950,7 @@ mgEntity_t* createBossTest(mgEntityManager_t* entityManager, uint16_t x, uint16_
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->scoreValue           = 100;
-    entity->hp                   = 1;
+    entity->hp                   = 30;
 
     entity->type                 = ENTITY_BOSS_TEST;
     entity->spriteIndex          = MG_SP_BOSS_IDLE;
