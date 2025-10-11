@@ -1657,8 +1657,30 @@ void updateScrollLockLeft(mgEntity_t* self)
 
 void updateScrollLockRight(mgEntity_t* self)
 {
+    uint8_t tx, ty;
+    
+    //This is being used to close off a boss room and initiate the battle.
     self->tilemap->maxMapOffsetX = TO_PIXEL_COORDS(self->x) + 8 - MG_TILEMAP_DISPLAY_WIDTH_PIXELS;
     self->tilemap->minMapOffsetX = self->tilemap->maxMapOffsetX;
+    self->tilemap->mapOffsetX = self->tilemap->minMapOffsetX;
+
+    for(uint8_t i = 0; i < MG_TILEMAP_DISPLAY_HEIGHT_TILES; i++)
+    {
+        tx = (self->tilemap->mapOffsetX) >> MG_TILESIZE_IN_POWERS_OF_2;
+        ty = ((self->tilemap->mapOffsetY) >> MG_TILESIZE_IN_POWERS_OF_2) + i;
+
+        if(tx < 0 || tx > self->tilemap->mapWidth || ty < 0 || ty > self->tilemap->mapHeight){
+            break;
+        }
+
+        uint8_t checkTile = mg_getTile(self->tilemap, tx, ty);
+
+        if(!mg_isSolid(checkTile))
+        {
+            mg_setTile(self->tilemap, tx, ty, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20);
+        }
+    }
+
     mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
     mg_destroyEntity(self, true);
 }
