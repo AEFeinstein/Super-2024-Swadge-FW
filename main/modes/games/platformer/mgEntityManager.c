@@ -571,6 +571,7 @@ mgEntity_t* createPowerUp(mgEntityManager_t* entityManager, uint16_t x, uint16_t
     entity->yMaxSpeed            = 132;
     entity->gravityEnabled       = true;
     entity->gravity              = 4;
+    entity->falling              = true;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
 
@@ -1289,7 +1290,7 @@ mgEntity_t* createMixtape(mgEntityManager_t* entityManager, uint16_t x, uint16_t
     entity->x       = TO_SUBPIXEL_COORDS(x);
     entity->y       = TO_SUBPIXEL_COORDS(y);
 
-    entity->xspeed               = (entityManager->playerEntity->x > entity->x) ? -16 : 16;
+    entity->xspeed               = 0;
     entity->yspeed               = 0;
     entity->xMaxSpeed            = 132;
     entity->yMaxSpeed            = 132;
@@ -1297,6 +1298,7 @@ mgEntity_t* createMixtape(mgEntityManager_t* entityManager, uint16_t x, uint16_t
     entity->gravity              = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->falling = true;
 
     entity->type                 = ENTITY_MIXTAPE;
     entity->spriteIndex          = MG_SP_MIXTAPE;
@@ -1948,7 +1950,7 @@ mgEntity_t* createBossTest(mgEntityManager_t* entityManager, uint16_t x, uint16_
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->scoreValue           = 100;
-    entity->hp                   = 30;
+    entity->hp                   = 1;
 
     entity->type                 = ENTITY_BOSS_TEST;
     entity->spriteIndex          = MG_SP_BOSS_IDLE;

@@ -1258,6 +1258,15 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                     soundPlaySfx(&(self->soundManager->sndHurt), BZR_LEFT);
                 }
             }
+            break;l
+        }
+        case ENTITY_MIXTAPE:
+        {
+            soundPlaySfx(&(self->soundManager->sndLevelClearS), BZR_LEFT);
+            self->spriteIndex           = MG_SP_PLAYER_WIN;
+            self->updateFunction        = &mg_updateDummy;
+            self->gameData->changeState = MG_ST_LEVEL_CLEAR;
+            break;
         }
         default:
         {
@@ -3042,4 +3051,8 @@ void mg_updateBossTest(mgEntity_t* self)
     applyDamping(self);
     applyGravity(self);
     mg_detectEntityCollisions(self);
+
+    if(self->type == ENTITY_DEAD && self->linkedEntity == NULL){
+        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+    }
 }
