@@ -268,7 +268,7 @@ void platformerExitMode(void)
  * @param selected True if the item was selected with the A button, false if this is a multi-item which scrolled to
  * @param settingVal The value of the setting, if the menu item is a settings item
  */
-static void mgMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     if (selected)
     {
@@ -335,6 +335,8 @@ static void mgMenuCb(const char* label, bool selected, uint32_t settingVal)
             soundPlaySfx(&(platformer->soundManager.sndMenuDeny), MIDI_SFX);
         }
     }
+
+    return false;
 }
 
 /**
