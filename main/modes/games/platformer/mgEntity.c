@@ -1258,7 +1258,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                     soundPlaySfx(&(self->soundManager->sndHurt), BZR_LEFT);
                 }
             }
-            break;l
+            break;
         }
         case ENTITY_MIXTAPE:
         {

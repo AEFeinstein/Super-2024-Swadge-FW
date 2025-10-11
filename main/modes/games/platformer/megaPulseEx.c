@@ -982,7 +982,7 @@ void updateLevelClear(platformer_t* self)
             else
             {
                 // Advance to the next level
-                self->gameData.level++;
+                /*self->gameData.level++;
                 if (self->gameData.level > 4)
                 {
                     self->gameData.world++;
@@ -994,9 +994,9 @@ void updateLevelClear(platformer_t* self)
                 if (levelIndex > self->unlockables.maxLevelIndexUnlocked)
                 {
                     self->unlockables.maxLevelIndexUnlocked = levelIndex;
-                }
+                }*/
 
-                changeStateReadyScreen(self);
+                changeStateLevelSelect(self);
             }
 
             if (!self->gameData.debugMode)
@@ -1402,6 +1402,8 @@ void changeStateLevelSelect(platformer_t* self)
     mg_loadWsgSet(&(platformer->wsgManager), leveldef[0].defaultWsgSetIndex);
     mg_loadMapFromFile(&(platformer->tilemap), leveldef[0].filename);
     self->tilemap.mapOffsetX = 12;
+    self->tilemap.mapOffsetY = 0;
+    self->entityManager.viewEntity = NULL;
 
     mg_setBgm(&self->soundManager, MG_BGM_STAGE_SELECT);
     globalMidiPlayerGet(MIDI_BGM)->loop = true;
