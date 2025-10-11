@@ -1659,11 +1659,11 @@ void updateScrollLockRight(mgEntity_t* self)
 {
     uint8_t tx, ty;
     
-    //This is being used to close off a boss room and initiate the battle.
     self->tilemap->maxMapOffsetX = TO_PIXEL_COORDS(self->x) + 8 - MG_TILEMAP_DISPLAY_WIDTH_PIXELS;
     self->tilemap->minMapOffsetX = self->tilemap->maxMapOffsetX;
     self->tilemap->mapOffsetX = self->tilemap->minMapOffsetX;
 
+    //Close off left wall of boss room
     for(uint8_t i = 0; i < MG_TILEMAP_DISPLAY_HEIGHT_TILES; i++)
     {
         tx = (self->tilemap->mapOffsetX) >> MG_TILESIZE_IN_POWERS_OF_2;
@@ -1679,6 +1679,12 @@ void updateScrollLockRight(mgEntity_t* self)
         {
             mg_setTile(self->tilemap, tx, ty, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20);
         }
+    }
+
+    //Initiate boss battle.
+    //For this to work, the boss must be placed to the left of the scroll lock.
+    if(self->entityManager->bossEntity != NULL){
+        self->entityManager->bossEntity->state = 0;
     }
 
     mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
@@ -2916,6 +2922,10 @@ void mg_bossDoorCollisionHandler(mgEntity_t* self, mgEntity_t* other)
 void mg_updateBossTest(mgEntity_t* self)
 {
     switch(self->state){
+        case -1:
+        case 65535:
+            return;
+            break;
         case 0:
         default: 
             if(TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64) {

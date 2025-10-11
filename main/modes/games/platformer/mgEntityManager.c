@@ -1952,7 +1952,7 @@ mgEntity_t* createBossTest(mgEntityManager_t* entityManager, uint16_t x, uint16_
 
     entity->type                 = ENTITY_BOSS_TEST;
     entity->spriteIndex          = MG_SP_BOSS_IDLE;
-    entity->state                = 0;
+    entity->state                = -1;
     entity->stateTimer           = 0;
     entity->updateFunction       = &mg_updateBossTest;
     entity->collisionHandler     = &mg_enemyCollisionHandler;
