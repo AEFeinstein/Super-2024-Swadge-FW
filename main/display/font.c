@@ -704,18 +704,16 @@ int16_t drawTextMarquee(const font_t* font, paletteColor_t color, const char* te
 // Marquee speed in microseconds per pixel
 #define MARQUEE_SPEED 40000
     int16_t gapW        = 4 * textWidth(font, " ");
-    int64_t repeatDelay = gapW * MARQUEE_SPEED;
-    uint16_t textW      = textWidth(font, text);
-    int64_t loopPeriod  = (textW + 1 /*- (xMax - xOff)*/) * MARQUEE_SPEED + repeatDelay;
-
-    if (*timer > loopPeriod)
-    {
-        *timer %= loopPeriod;
-    }
 
     int16_t offset   = *timer / MARQUEE_SPEED;
     int16_t endX     = drawTextBounds(font, color, text, xOff - offset, yOff, xOff, 0, xMax, TFT_HEIGHT);
     int16_t endStart = endX + gapW;
+
+    // Restart the timer when the end text reaches the start
+    if (endStart <= xOff)
+    {
+        *timer = 0;
+    }
 
     if (endStart < xMax)
     {

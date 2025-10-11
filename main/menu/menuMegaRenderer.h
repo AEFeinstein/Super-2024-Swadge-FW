@@ -64,6 +64,7 @@ typedef struct
                                      ///< deinitMenuMegaRenderer()
 
     int32_t selectedMarqueeTimer; ///< The timer for marquee-ing the selected item text, if too long to fit
+    int32_t shadowMarqueeTimer;   ///< The timer for marquee-ing the selected item text, if too long to fit
     int32_t pageArrowTimer;       ///< The timer for blinking page up/down arrows
     node_t* currentItem;          ///< The currently selected menu item, resets ::selectedMarqueeTimer when changed
 
