@@ -467,8 +467,16 @@ static void swadgedokuExitMode(void)
     heap_caps_free(sd->player.notes);
     heap_caps_free(sd->player.overlay.gridOpts);
 
-    deinitWheelMenu(sd->numberWheelRenderer);
-    deinitMenu(sd->numberWheel);
+    if (sd->numberWheelRenderer != NULL)
+    {
+        deinitWheelMenu(sd->numberWheelRenderer);
+        sd->numberWheelRenderer = NULL;
+    }
+    if (sd->numberWheel != NULL)
+    {
+        deinitMenu(sd->numberWheel);
+        sd->numberWheel = NULL;
+    }
 
     deinitMenuMegaRenderer(sd->menuRenderer);
     deinitMenu(sd->menu);
@@ -774,6 +782,7 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
 
                         sd->playingContinuation = true;
                         setupSudokuPlayer(&sd->player, &sd->game);
+                        memcpy(sd->player.notes, sd->game.notes, sd->game.size * sizeof(uint16_t));
                         sudokuGetNotes(sd->game.notes, &sd->game, 0);
                         sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
                         swadgedokuSetupNumberWheel(sd->game.base, 0);
@@ -991,6 +1000,7 @@ static bool swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t val
                 if (!(sd->game.flags[n] & (SF_LOCKED | SF_VOID)))
                 {
                     sd->game.grid[n] = 0;
+                    sd->player.notes[n] = 0;
                 }
             }
             sd->playTimer = 0;
@@ -1005,9 +1015,12 @@ static bool swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t val
         {
             size_t size = getSudokuSaveSize(&sd->game, NULL, NULL, NULL, NULL);
             ESP_LOGE("Swadgedoku", "Writing %d bytes of swadgedoku save to NVS", (int)size);
+            uint16_t* tmpNotes = sd->game.notes;
+            sd->game.notes     = sd->player.notes;
             uint8_t data[size];
             // Write the data to the buffer
             writeSudokuData(data, &sd->game);
+            sd->game.notes = tmpNotes;
 
             // Write the buffer to NVS
             if (writeNvsBlob(settingKeyProgress, data, size))
@@ -1040,8 +1053,6 @@ static bool swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t val
 
 static bool numberWheelCb(const char* label, bool selected, uint32_t value)
 {
-    ESP_LOGE("Swadgedoku", "Number '%s' %s", label, selected ? "Selected" : "Scrolled");
-
     if (selected)
     {
         for (int i = 0; i < ARRAY_SIZE(digitLabels); i++)
