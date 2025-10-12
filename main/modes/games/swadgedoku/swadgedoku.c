@@ -467,8 +467,16 @@ static void swadgedokuExitMode(void)
     heap_caps_free(sd->player.notes);
     heap_caps_free(sd->player.overlay.gridOpts);
 
-    deinitWheelMenu(sd->numberWheelRenderer);
-    deinitMenu(sd->numberWheel);
+    if (sd->numberWheelRenderer != NULL)
+    {
+        deinitWheelMenu(sd->numberWheelRenderer);
+        sd->numberWheelRenderer = NULL;
+    }
+    if (sd->numberWheel != NULL)
+    {
+        deinitMenu(sd->numberWheel);
+        sd->numberWheel = NULL;
+    }
 
     deinitMenuMegaRenderer(sd->menuRenderer);
     deinitMenu(sd->menu);
@@ -1040,8 +1048,6 @@ static bool swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t val
 
 static bool numberWheelCb(const char* label, bool selected, uint32_t value)
 {
-    ESP_LOGE("Swadgedoku", "Number '%s' %s", label, selected ? "Selected" : "Scrolled");
-
     if (selected)
     {
         for (int i = 0; i < ARRAY_SIZE(digitLabels); i++)
