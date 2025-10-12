@@ -782,6 +782,7 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
 
                         sd->playingContinuation = true;
                         setupSudokuPlayer(&sd->player, &sd->game);
+                        memcpy(sd->player.notes, sd->game.notes, sd->game.size * sizeof(uint16_t));
                         sudokuGetNotes(sd->game.notes, &sd->game, 0);
                         sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
                         swadgedokuSetupNumberWheel(sd->game.base, 0);
@@ -1013,9 +1014,12 @@ static bool swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t val
         {
             size_t size = getSudokuSaveSize(&sd->game, NULL, NULL, NULL, NULL);
             ESP_LOGE("Swadgedoku", "Writing %d bytes of swadgedoku save to NVS", (int)size);
+            uint16_t* tmpNotes = sd->game.notes;
+            sd->game.notes = sd->player.notes;
             uint8_t data[size];
             // Write the data to the buffer
             writeSudokuData(data, &sd->game);
+            sd->game.notes = tmpNotes;
 
             // Write the buffer to NVS
             if (writeNvsBlob(settingKeyProgress, data, size))
