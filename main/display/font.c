@@ -703,7 +703,7 @@ int16_t drawTextMarquee(const font_t* font, paletteColor_t color, const char* te
 {
 // Marquee speed in microseconds per pixel
 #define MARQUEE_SPEED 40000
-    int16_t gapW        = 4 * textWidth(font, " ");
+    int16_t gapW = 4 * textWidth(font, " ");
 
     int16_t offset   = *timer / MARQUEE_SPEED;
     int16_t endX     = drawTextBounds(font, color, text, xOff - offset, yOff, xOff, 0, xMax, TFT_HEIGHT);
