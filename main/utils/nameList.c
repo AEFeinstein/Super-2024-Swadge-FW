@@ -207,7 +207,8 @@ void setUsernameFromND(nameData_t* nd)
         nd->idxs[ADJ1] = _checkIfUserIdxInBounds(nd->idxs[ADJ1], listLen[ADJ1], mutatorSeeds[ADJ1]);
         nd->idxs[ADJ2] = _checkIfUserIdxInBounds(nd->idxs[ADJ2], listLen[ADJ2], mutatorSeeds[ADJ2]);
         nd->idxs[NOUN] = _checkIfUserIdxInBounds(nd->idxs[NOUN], listLen[NOUN], mutatorSeeds[NOUN]);
-        nd->randCode   = baseMac[5];
+        // nd->randCode   = baseMac[5]; // HACK: If this is commented out, it always is zero, but commented it doesn't
+        // do any checking to ensure nobody is tampering. Is tampering actually an issue?
     }
 
     char buff1[MAX_ADJ1_LEN], buff2[MAX_ADJ2_LEN], buff3[MAX_NOUN_LEN];
