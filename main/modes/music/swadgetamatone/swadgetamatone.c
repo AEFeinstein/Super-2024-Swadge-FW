@@ -5,9 +5,12 @@
 #include "waveTables.h"
 
 static const char swadgetamatoneName[] = "Swadgetamatone";
+static const char sttShowNoteOn[]      = "Note Display: On";
+static const char sttShowNoteOff[]     = "Note Display: Off";
 
 static const char sttNvsNamespace[]          = "stt";
 static const char sttNvsKeyTotalTimePlayed[] = "total_time_played";
+static const char sttNvsKeyShowNote[]        = "show_note";
 
 const trophyData_t sttTrophies[] = {
     {
@@ -66,6 +69,9 @@ typedef struct
     /// Number from 1-4 for low-high. 0 means none pressed.
     uint8_t octavePressed;
 
+    int32_t showNote;
+    int64_t noteMessageTimeUs;
+
     /// Time since a button to play a note was pressed or released
     int64_t noteStateElapsedUs;
     int32_t freq;
@@ -105,10 +111,10 @@ swadgeMode_t swadgetamatoneMode = {
     .trophyData               = &sttTrophyData,
 };
 
-/// F
-#define STT_MIN_HZ 87
-/// E
-#define STT_MAX_HZ 165
+static const char* noteNames[]    = {"F", "F#", "G", "G#", "A", "A#", "B", "C", "C#", "D", "D#", "E", "F"};
+static const uint32_t noteFreqs[] = {87, 93, 98, 104, 110, 117, 123, 131, 139, 147, 156, 165, 175};
+#define STT_MIN_HZ noteFreqs[0]
+#define STT_MAX_HZ noteFreqs[ARRAY_SIZE(noteFreqs) - 1]
 
 #define STT_MIN_VOLUME 10
 #define STT_MAX_VOLUME 255
@@ -144,6 +150,7 @@ static void sttEnterMode(void)
     stt->blinkInProgress = true;
 
     readNamespaceNvs32(sttNvsNamespace, sttNvsKeyTotalTimePlayed, &stt->totalTimePlayedMs);
+    readNamespaceNvs32(sttNvsNamespace, sttNvsKeyShowNote, &stt->showNote);
 
     // Initial freq/volume values don't matter since they'll get overwritten by touchpad data
     swSynthInitOscillatorWave(&stt->sttOsc, sttGenerateWaveform, 0, 0, 0);
@@ -176,11 +183,19 @@ static void sttMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
+        stt->buttonState = evt.state;
+
+        if (evt.button == PB_A && evt.down)
+        {
+            stt->showNote          = !stt->showNote;
+            stt->noteMessageTimeUs = 1000000;
+            writeNamespaceNvs32(sttNvsNamespace, sttNvsKeyShowNote, stt->showNote);
+        }
+
         if (evt.button == PB_START && evt.down)
         {
             switchToSwadgeMode(&mainMenuMode);
         }
-        stt->buttonState = evt.state;
     }
 
     uint8_t octavePressed = 0;
@@ -253,10 +268,23 @@ static void sttMainLoop(int64_t elapsedUs)
         getTouchCartesianSquircle(angle, radius, &stt->touchpad.x, &stt->touchpad.y);
     }
 
+    const char* note = NULL;
     uint8_t volume;
     if (stt->octavePressed != 0)
     {
-        uint32_t noteHz = (stt->touchpad.x * (STT_MAX_HZ - STT_MIN_HZ) / 1023 + STT_MIN_HZ) << (stt->octavePressed - 1);
+        uint32_t noteHz = stt->touchpad.x * (STT_MAX_HZ - STT_MIN_HZ) / 1023 + STT_MIN_HZ;
+
+        for (int i = 0; i < ARRAY_SIZE(noteFreqs); i++)
+        {
+            // Max 1% variation to detect the note
+            if (noteFreqs[i] * .99 < noteHz && noteHz < noteFreqs[i] * 1.01)
+            {
+                note = noteNames[i];
+                break;
+            }
+        }
+
+        noteHz = noteHz << (stt->octavePressed - 1);
         if (stt->noteStateElapsedUs < PITCH_LERP_US)
         {
             noteHz -= noteHz / 100 * PITCH_ATTACK_BEND_PCT * (PITCH_LERP_US - stt->noteStateElapsedUs) / PITCH_LERP_US;
@@ -289,6 +317,29 @@ static void sttMainLoop(int64_t elapsedUs)
     int16_t yRadius = MIN(volume * TFT_HEIGHT / STT_MAX_VOLUME, TFT_HEIGHT - 6) / 2;
     sttDrawMouthForegound(xRadius, yRadius, c444);
     drawEllipse(TFT_WIDTH / 2, TFT_HEIGHT / 2, xRadius, yRadius, c000);
+
+    const char* msg = NULL;
+    if (stt->noteMessageTimeUs > 0)
+    {
+        if (stt->showNote)
+        {
+            msg = sttShowNoteOn;
+        }
+        else
+        {
+            msg = sttShowNoteOff;
+        }
+
+        stt->noteMessageTimeUs -= elapsedUs;
+    }
+    else if (stt->showNote)
+    {
+        msg = note;
+    }
+    if (msg != NULL)
+    {
+        drawTextShadow(getSysFont(), c555, c000, msg, 25, TFT_HEIGHT - getSysFont()->height - 5);
+    }
 }
 
 static void sttBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
