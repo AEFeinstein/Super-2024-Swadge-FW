@@ -557,9 +557,7 @@ void drawHistory(void)
         drawText(diceRoller->ibm_vga8, histTextColor, totalStr, histX + 14 - textWidth(diceRoller->ibm_vga8, totalStr),
                  histY + (i + 1) * histYEntryOffset);
         snprintf(totalStr, sizeof(totalStr), "%d", entry->total);
-        drawText(diceRoller->ibm_vga8, histTextColor, totalStr,         //
-                 histX + 17, //
-                 histY + (i + 1) * histYEntryOffset);
+        drawText(diceRoller->ibm_vga8, c555, totalStr, histX + 17, histY + (i + 1) * histYEntryOffset);
 
         // Iterate
         histNode = histNode->next;
