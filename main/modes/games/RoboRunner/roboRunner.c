@@ -299,6 +299,7 @@ runnerData_t* rd;
 
 static void runnerEnterMode()
 {
+    // Load WSGs
     rd             = (runnerData_t*)heap_caps_calloc(1, sizeof(runnerData_t), MALLOC_CAP_8BIT);
     rd->robot.imgs = heap_caps_calloc(ARRAY_SIZE(robotImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(robotImages); idx++)
@@ -311,16 +312,22 @@ static void runnerEnterMode()
         loadWsg(obstacleImages[idx], &rd->obstacleImgs[idx], true);
     }
     loadWsg(WARNING_WSG, &rd->warning, true);
+    
+    // Load fonts
     loadFont(RODIN_EB_FONT, &rd->titleFont, true);
+
+    // Load and initialize sounds
     loadMidiFile(CHOWA_RACE_MID, &rd->bgm, true);
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     player->loop         = true;
     midiGmOn(player);
     globalMidiPlayerSetVolume(MIDI_BGM, 12);
-    // globalMidiPlayerPlaySong(&rd->bgm, MIDI_BGM);
+    globalMidiPlayerPlaySong(&rd->bgm, MIDI_BGM);
     rd->sfxPlayer = globalMidiPlayerGet(MIDI_SFX);
     midiGmOn(rd->sfxPlayer);
     midiPause(rd->sfxPlayer, false);
+
+    // Initialize items that only need to be done once
     for (int idx = 0; idx < WINDOW_COUNT; idx++)
     {
         rd->windowXCoords[idx] = idx * (TFT_WIDTH + 4 * WINDOW_BORDER + WINDOW_BORDER) / WINDOW_COUNT;
@@ -333,16 +340,21 @@ static void runnerEnterMode()
     rd->robot.rect.height = rd->robot.imgs[0].h - HBOX_HEIGHT;
     rd->robot.rect.width  = rd->robot.imgs[0].w - HBOX_WIDTH;
     rd->robot.rect.pos.x  = PLAYER_X;
+
+    // Load saved score
     if (!readNvs32(roboRunnerNVSKey, &rd->prevScore))
     {
         rd->prevScore = 0;
     }
+
     // SwadgePass
     rd->otherHS = getLatestRemoteScore();
+
     // Trophy
     rd->feetTraveledTotal = trophyGetSavedValue(roboRunnerTrophies[1]);
     rd->deaths            = trophyGetSavedValue(roboRunnerTrophies[2]);
     rd->state             = SPLASH;
+
     // QR
     loadWsg(QRTUTORIAL_WSG, &rd->qr, true);
 }
@@ -373,6 +385,7 @@ static void runnerMainLoop(int64_t elapsedUs)
     buttonEvt_t evt;
     switch (rd->state)
     {
+        // Splash screen state
         case SPLASH:
         {
             while (checkButtonQueueWrapper(&evt))
@@ -393,6 +406,7 @@ static void runnerMainLoop(int64_t elapsedUs)
             drawSplash(elapsedUs);
             break;
         }
+        // Running/Dead states
         case RUNNING:
         default:
         {
@@ -451,11 +465,13 @@ static void resetGame()
         rd->obstacles[idx].active     = false;
         rd->obstacles[idx].rect.pos.x = -rd->obstacleImgs[0].w;
     }
+    // Save score to NVS if it's a new high score
     if (rd->prevScore < rd->score)
     {
         rd->prevScore = rd->score;
         writeNvs32(roboRunnerNVSKey, rd->score);
     }
+    // Reset everything else
     rd->remainingTime       = 0;
     rd->score               = 0;
     rd->spawnRate           = SPAWN_RATE_BASE;
@@ -473,6 +489,7 @@ static void resetGame()
 
 static void runnerLogic(int64_t elapsedUs)
 {
+    // If the robot is falling
     if (!rd->robot.onGround)
     {
         rd->robot.rect.pos.y += rd->robot.ySpeed;
@@ -484,6 +501,7 @@ static void runnerLogic(int64_t elapsedUs)
             rd->robot.ySpeed     = 0;
         }
     }
+    // If the robot is dead
     if (!rd->robot.dead)
     {
         // Move/spawn obstacles
