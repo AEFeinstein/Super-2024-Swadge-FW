@@ -463,7 +463,7 @@ static uint8_t _checkIfUserIdxInBounds(int8_t idx, uint8_t arrSize, uint8_t seed
     {
         idx += range;
     }
-    idx %= arrSize;
+    idx %= range;
     return idx;
 }
 
