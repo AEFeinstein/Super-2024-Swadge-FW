@@ -312,7 +312,7 @@ static void runnerEnterMode()
         loadWsg(obstacleImages[idx], &rd->obstacleImgs[idx], true);
     }
     loadWsg(WARNING_WSG, &rd->warning, true);
-    
+
     // Load fonts
     loadFont(RODIN_EB_FONT, &rd->titleFont, true);
 
@@ -730,11 +730,11 @@ static void drawWindow(int xCoord)
 {
     drawRect(xCoord, WINDOW_HEIGHT, xCoord + WINDOW_PANE, WINDOW_HEIGHT + WINDOW_PANE, c035);
     drawRect(xCoord + WINDOW_BORDER + WINDOW_PANE, WINDOW_HEIGHT, xCoord + 2 * WINDOW_PANE + WINDOW_BORDER,
-                    WINDOW_HEIGHT + WINDOW_PANE, c530);
+             WINDOW_HEIGHT + WINDOW_PANE, c530);
     drawRect(xCoord, WINDOW_HEIGHT + WINDOW_BORDER + WINDOW_PANE, xCoord + WINDOW_PANE,
-                    WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c305);
+             WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c305);
     drawRect(xCoord + WINDOW_BORDER + WINDOW_PANE, WINDOW_HEIGHT + WINDOW_BORDER + WINDOW_PANE,
-                    xCoord + 2 * WINDOW_PANE + WINDOW_BORDER, WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c503);
+             xCoord + 2 * WINDOW_PANE + WINDOW_BORDER, WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c503);
     /* fillDisplayArea(xCoord, WINDOW_HEIGHT, xCoord + WINDOW_PANE, WINDOW_HEIGHT + WINDOW_PANE, c035);
     fillDisplayArea(xCoord + WINDOW_BORDER + WINDOW_PANE, WINDOW_HEIGHT, xCoord + 2 * WINDOW_PANE + WINDOW_BORDER,
                     WINDOW_HEIGHT + WINDOW_PANE, c035);
@@ -802,9 +802,12 @@ static void drawObstacles(int64_t elapsedUs)
                     case HOOK:
                     {
                         drawWsgSimple(&rd->warning, TFT_WIDTH - 2 * rd->warning.w, rd->obstacles[idx].rect.pos.y);
-                        drawWsgSimple(&rd->warning, TFT_WIDTH - 2 * rd->warning.w, rd->obstacles[idx].rect.pos.y + (4 + rd->warning.h));
-                        drawWsgSimple(&rd->warning, TFT_WIDTH - 2 * rd->warning.w, rd->obstacles[idx].rect.pos.y + 2 * (4 + rd->warning.h));
-                        drawWsgSimple(&rd->warning, TFT_WIDTH - 2 * rd->warning.w, rd->obstacles[idx].rect.pos.y + 3 * (4 + rd->warning.h));
+                        drawWsgSimple(&rd->warning, TFT_WIDTH - 2 * rd->warning.w,
+                                      rd->obstacles[idx].rect.pos.y + (4 + rd->warning.h));
+                        drawWsgSimple(&rd->warning, TFT_WIDTH - 2 * rd->warning.w,
+                                      rd->obstacles[idx].rect.pos.y + 2 * (4 + rd->warning.h));
+                        drawWsgSimple(&rd->warning, TFT_WIDTH - 2 * rd->warning.w,
+                                      rd->obstacles[idx].rect.pos.y + 3 * (4 + rd->warning.h));
                         break;
                     }
                     default:
@@ -902,7 +905,7 @@ static void drawRunner(int64_t elapsedUs)
     if (rd->robot.dead)
     {
         int16_t x = 16;
-        int16_t y =  (TFT_HEIGHT - (getSysFont()->height + 60)) >> 1;
+        int16_t y = (TFT_HEIGHT - (getSysFont()->height + 60)) >> 1;
         drawTextWordWrap(getSysFont(), c555, strings[2], &x, &y, TFT_WIDTH - 16, TFT_HEIGHT);
     }
 
