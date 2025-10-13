@@ -72,8 +72,9 @@ static const char* const strings[] = {
     "RUNNER",
     "Game over! Press A to play again.",
     "Press A to play",
-    "Press B to show QR",
+    "Press B to show how-it's-made tutorial QR",
     "Links to the 'how to make a swadge game' tutorial where this game was built!",
+    "Hold 'Menu' to go back",
 };
 
 const trophyData_t roboRunnerTrophies[] = {
@@ -606,15 +607,22 @@ static void drawSplash(int64_t elapsedUs)
     }
     else if (rd->attractToggle > 500000)
     {
-        drawText(getSysFont(), c555, strings[3], 32, TFT_HEIGHT - 48);
-        drawText(getSysFont(), c555, strings[4], 32, TFT_HEIGHT - 24);
+        drawText(getSysFont(), c000, strings[3], 30, 104);
+        drawText(getSysFont(), c555, strings[3], 32, 106);
     }
+
+    int16_t x = 24;
+    int16_t y = TFT_HEIGHT - 50;
+    drawTextWordWrap(getSysFont(), c555, strings[4], &x, &y, TFT_WIDTH - 24, TFT_HEIGHT);
+
+    drawText(getSysFont(), c555, strings[6], 24, TFT_HEIGHT - 20);
+
     if (rd->otherHS > 0 || rd->prevScore > 0)
     {
         char buffer[64];
         snprintf(buffer, sizeof(buffer) - 1, "High Score: %" PRId32,
                  (rd->otherHS > rd->prevScore) ? rd->otherHS : rd->prevScore);
-        drawText(getSysFont(), c555, buffer, 48, 12);
+        drawText(getSysFont(), c555, buffer, 24, 12);
         if (rd->otherHS <= rd->prevScore)
         {
             snprintf(buffer, sizeof(buffer) - 1, "By: You!");
@@ -623,7 +631,7 @@ static void drawSplash(int64_t elapsedUs)
         {
             snprintf(buffer, sizeof(buffer) - 1, "By: %s", rd->remotePlayer.nameBuffer);
         }
-        drawText(getSysFont(), c555, buffer, 48, 28);
+        drawText(getSysFont(), c555, buffer, 24, 28);
     }
 }
 
