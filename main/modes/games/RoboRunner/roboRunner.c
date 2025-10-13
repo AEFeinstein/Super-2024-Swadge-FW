@@ -30,8 +30,8 @@
 // Obstacles
 #define MAX_OBSTACLES    5
 #define START_OBSTACLES  2
-#define SPAWN_RATE_BASE  80
-#define SPAWN_RATE_TIMER 15000000 // Fifteen seconds
+#define SPAWN_RATE_BASE  60
+#define SPAWN_RATE_TIMER 2000000 // 2 seconds
 #define SPEED_BASE       15
 #define SPEED_TIMER      3000000 // Three seconds
 #define SPEED_NUMERATOR  100000
@@ -552,7 +552,7 @@ static void increaseDifficulty(int64_t elapsedUs)
 
     // Increase obstacles
     rd->maxObstacleTimer += elapsedUs;
-    if (rd->speedDivisorTimer > SPEED_TIMER && rd->currentMaxObstacles < MAX_OBSTACLES)
+    if (rd->maxObstacleTimer > (SPEED_TIMER * 5) && rd->currentMaxObstacles < MAX_OBSTACLES)
     {
         rd->currentMaxObstacles++;
         rd->maxObstacleTimer = 0;
