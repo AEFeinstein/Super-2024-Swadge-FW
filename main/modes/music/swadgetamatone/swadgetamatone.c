@@ -11,7 +11,7 @@ static const char sttNvsKeyTotalTimePlayed[] = "total_time_played";
 
 const trophyData_t sttTrophies[] = {
     {
-        .title       = "OOO EEE OOO",
+        .title       = "Say \"AHHHHH\"",
         .description = "Play your first note",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -72,6 +72,9 @@ typedef struct
 
     int32_t totalTimePlayedMs;
 
+    bool blinkInProgress;
+    int64_t blinkTimerUs;
+
     synthOscillator_t* oscillators[1];
     synthOscillator_t sttOsc;
 
@@ -117,6 +120,16 @@ swadgeMode_t swadgetamatoneMode = {
 /// Time to lerp volume from 0 to target volume at button press
 #define VOLUME_LERP_US 100000
 
+#define EYES_SLOT_BLINK   3
+#define EYES_SLOT_DEFAULT 4
+/// Eyes for each octave are this + the octave number (1-4). +0 is the default eyes.
+#define EYES_SLOT_OCTAVES 4
+
+#define BLINK_DELAY_MIN_US  2000000
+#define BLINK_DELAY_MAX_US  6000000
+#define BLINK_LENGTH_MIN_US 100000
+#define BLINK_LENGTH_MAX_US 200000
+
 static void sttEnterMode(void)
 {
     setFrameRateUs(1000000 / 60);
@@ -127,6 +140,8 @@ static void sttEnterMode(void)
     stt->touchpad.y = 512;
     // Prevent mouth from animating closed at mode launch
     stt->noteStateElapsedUs = VOLUME_LERP_US;
+    // Prevent immediate blink at mode launch
+    stt->blinkInProgress = true;
 
     readNamespaceNvs32(sttNvsNamespace, sttNvsKeyTotalTimePlayed, &stt->totalTimePlayedMs);
 
@@ -135,6 +150,15 @@ static void sttEnterMode(void)
     stt->oscillators[0] = &stt->sttOsc;
 
     loadWsg(STT_BACKGROUND_WSG, &stt->background, false);
+
+    ch32v003WriteBitmapAsset(EYES_SLOT_BLINK, STT_EYES_BLINK_GS);
+    ch32v003WriteBitmapAsset(EYES_SLOT_DEFAULT, STT_EYES_DEFAULT_GS);
+    ch32v003WriteBitmapAsset(EYES_SLOT_OCTAVES + 1, STT_EYES_PLAYING_1_GS);
+    ch32v003WriteBitmapAsset(EYES_SLOT_OCTAVES + 2, STT_EYES_PLAYING_2_GS);
+    ch32v003WriteBitmapAsset(EYES_SLOT_OCTAVES + 3, STT_EYES_PLAYING_3_GS);
+    ch32v003WriteBitmapAsset(EYES_SLOT_OCTAVES + 4, STT_EYES_PLAYING_4_GS);
+
+    ch32v003SelectBitmap(EYES_SLOT_DEFAULT);
 }
 
 static void sttExitMode(void)
@@ -201,6 +225,26 @@ static void sttMainLoop(int64_t elapsedUs)
 
         stt->noteStateElapsedUs = 0;
         stt->octavePressed      = octavePressed;
+        ch32v003SelectBitmap(EYES_SLOT_OCTAVES + octavePressed);
+    }
+
+    if (stt->octavePressed == 0)
+    {
+        stt->blinkTimerUs -= elapsedUs;
+        if (stt->blinkTimerUs <= 0)
+        {
+            if (stt->blinkInProgress)
+            {
+                ch32v003SelectBitmap(EYES_SLOT_DEFAULT);
+                stt->blinkTimerUs = esp_random() % (BLINK_DELAY_MAX_US - BLINK_DELAY_MIN_US) + BLINK_DELAY_MIN_US;
+            }
+            else
+            {
+                ch32v003SelectBitmap(EYES_SLOT_BLINK);
+                stt->blinkTimerUs = esp_random() % (BLINK_LENGTH_MAX_US - BLINK_LENGTH_MIN_US) + BLINK_LENGTH_MIN_US;
+            }
+            stt->blinkInProgress = !stt->blinkInProgress;
+        }
     }
 
     int32_t angle, radius, intensity;
