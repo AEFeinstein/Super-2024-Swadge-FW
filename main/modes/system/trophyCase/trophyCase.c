@@ -26,6 +26,7 @@ const char tCaseModeName[]           = "Trophy Case";
 static const char* const menuItems[] = {"Scores", "Mode: "};
 static const char scoreStr[]         = "Scores";
 static const char individualStr[]    = "Individual modes";
+static const char exitStr[]          = "Exit Case";
 
 static const char* const caseOptions[] = {"All", "Unlocked", "Locked"};
 static const int32_t caseSettings[]    = {TROPHY_DISPLAY_ALL, TROPHY_DISPLAY_UNLOCKED, TROPHY_DISPLAY_LOCKED};
@@ -131,6 +132,7 @@ static void enterTCase(void)
             addSingleItemToMenu(tc->menu, allSwadgeModes[idx]->modeName);
         }
     }
+    addSingleItemToMenu(tc->menu, exitStr);
 }
 
 static void exitTCase(void)
@@ -198,6 +200,10 @@ static void runTCase(int64_t elapsedUs)
         {
             while (checkButtonQueueWrapper(&evt))
             {
+                if (evt.down && evt.button & PB_B)
+                {
+                    switchToSwadgeMode(&mainMenuMode);
+                }
                 tc->menu = menuButton(tc->menu, evt);
             }
             drawMenuMega(tc->menu, tc->rnd, elapsedUs);
@@ -224,6 +230,10 @@ static bool tCaseMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             tc->state = TC_STATS;
             tc->idx   = 0;
+        }
+        else if (label == exitStr)
+        {
+            switchToSwadgeMode(&mainMenuMode);
         }
     }
     if (label == menuItems[1])
