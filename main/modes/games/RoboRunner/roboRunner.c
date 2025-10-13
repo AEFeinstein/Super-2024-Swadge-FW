@@ -71,7 +71,7 @@ static const cnfsFileIdx_t robotImages[] = {
 static const char* const strings[] = {
     "ROBO",
     "RUNNER",
-    "Game over! Press A to play again.",
+    "Game over! Press Start to play again.",
     "Press A to play",
     "Press B to show how-it's-made tutorial QR",
     "Links to the 'how to make a swadge game' tutorial where this game was built!",
@@ -416,13 +416,13 @@ static void runnerMainLoop(int64_t elapsedUs)
                 {
                     if (rd->robot.dead)
                     {
-                        if (evt.button & PB_A)
+                        if (evt.button & PB_START)
                         {
                             resetGame();
                         }
                         else if (evt.button & PB_B)
                         {
-                            rd->state = RUNNING;
+                            rd->state = SPLASH;
                         }
                     }
                     else if ((evt.button & PB_A || evt.button & PB_UP) && rd->robot.onGround && !rd->robot.crawl)
@@ -691,7 +691,7 @@ static void drawSplash(int64_t elapsedUs)
         drawWsgSimple(&rd->obstacleImgs[2], 120, BARREL_GROUND_OFFSET);
     }
     drawText(&rd->titleFont, c550, strings[0], 32, 55);
-    drawText(&rd->titleFont, c550, strings[1], 32, 80);
+    drawText(&rd->titleFont, c550, strings[1], 40, 80);
     if (rd->attractToggle > 1000000)
     {
         rd->attractToggle = 0;
@@ -728,13 +728,20 @@ static void drawSplash(int64_t elapsedUs)
 
 static void drawWindow(int xCoord)
 {
-    fillDisplayArea(xCoord, WINDOW_HEIGHT, xCoord + WINDOW_PANE, WINDOW_HEIGHT + WINDOW_PANE, c035);
+    drawRect(xCoord, WINDOW_HEIGHT, xCoord + WINDOW_PANE, WINDOW_HEIGHT + WINDOW_PANE, c035);
+    drawRect(xCoord + WINDOW_BORDER + WINDOW_PANE, WINDOW_HEIGHT, xCoord + 2 * WINDOW_PANE + WINDOW_BORDER,
+                    WINDOW_HEIGHT + WINDOW_PANE, c530);
+    drawRect(xCoord, WINDOW_HEIGHT + WINDOW_BORDER + WINDOW_PANE, xCoord + WINDOW_PANE,
+                    WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c305);
+    drawRect(xCoord + WINDOW_BORDER + WINDOW_PANE, WINDOW_HEIGHT + WINDOW_BORDER + WINDOW_PANE,
+                    xCoord + 2 * WINDOW_PANE + WINDOW_BORDER, WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c503);
+    /* fillDisplayArea(xCoord, WINDOW_HEIGHT, xCoord + WINDOW_PANE, WINDOW_HEIGHT + WINDOW_PANE, c035);
     fillDisplayArea(xCoord + WINDOW_BORDER + WINDOW_PANE, WINDOW_HEIGHT, xCoord + 2 * WINDOW_PANE + WINDOW_BORDER,
                     WINDOW_HEIGHT + WINDOW_PANE, c035);
     fillDisplayArea(xCoord, WINDOW_HEIGHT + WINDOW_BORDER + WINDOW_PANE, xCoord + WINDOW_PANE,
                     WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c035);
     fillDisplayArea(xCoord + WINDOW_BORDER + WINDOW_PANE, WINDOW_HEIGHT + WINDOW_BORDER + WINDOW_PANE,
-                    xCoord + 2 * WINDOW_PANE + WINDOW_BORDER, WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c035);
+                    xCoord + 2 * WINDOW_PANE + WINDOW_BORDER, WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c035); */
 }
 
 static void drawObstacles(int64_t elapsedUs)
@@ -894,7 +901,9 @@ static void drawRunner(int64_t elapsedUs)
 
     if (rd->robot.dead)
     {
-        drawText(getSysFont(), c555, strings[2], 16, (TFT_HEIGHT - (getSysFont()->height + 60)) >> 1);
+        int16_t x = 16;
+        int16_t y =  (TFT_HEIGHT - (getSysFont()->height + 60)) >> 1;
+        drawTextWordWrap(getSysFont(), c555, strings[2], &x, &y, TFT_WIDTH - 16, TFT_HEIGHT);
     }
 
     // Show bounding boxes
