@@ -41,6 +41,7 @@
 #define MAX_NUM_OBST_TIMER 15000000 // 15 seconds
 #define FORCE_OBST_TIMER   2000000  // 2 seconds
 #define STALL_OBST_TIMER   200000   // 0.2 sconds
+#define WARNING_PIXELS     100
 
 // Score
 #define SCORE_MOD      10000
@@ -189,6 +190,7 @@ typedef struct
     wsg_t* obstacleImgs;                 // Array of obstacle images
     obstacle_t obstacles[MAX_OBSTACLES]; // Object data
     int64_t forceObstacle;               // Used to force an obstacle to spawn
+    wsg_t warning;
 
     // Score
     int32_t score;         // Current score
@@ -308,6 +310,7 @@ static void runnerEnterMode()
     {
         loadWsg(obstacleImages[idx], &rd->obstacleImgs[idx], true);
     }
+    loadWsg(WARNING_WSG, &rd->warning, true);
     loadFont(RODIN_EB_FONT, &rd->titleFont, true);
     loadMidiFile(CHOWA_RACE_MID, &rd->bgm, true);
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
@@ -350,6 +353,7 @@ static void runnerExitMode()
     globalMidiPlayerStop(MIDI_BGM);
     unloadMidiFile(&rd->bgm);
     freeFont(&rd->titleFont);
+    freeWsg(&rd->warning);
     for (int idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
     {
         freeWsg(&rd->obstacleImgs[idx]);
@@ -563,7 +567,7 @@ static void handleObstacles(int64_t elapsedUs)
             if (!rd->obstacles[idx].active)
             {
                 rd->obstacles[idx].active     = true;
-                rd->obstacles[idx].rect.pos.x = TFT_WIDTH;
+                rd->obstacles[idx].rect.pos.x = TFT_WIDTH + WARNING_PIXELS;
                 switch (esp_random() % NUM_OBSTACLE_TYPES)
                 {
                     case BARREL:
@@ -731,27 +735,57 @@ static void drawObstacles(int64_t elapsedUs)
     {
         if (rd->obstacles[idx].active)
         {
-            switch (rd->obstacles[idx].t)
+            if (rd->obstacles[idx].rect.pos.x < TFT_WIDTH)
             {
-                case BARREL:
+                switch (rd->obstacles[idx].t)
                 {
-                    drawWsgSimple(&rd->obstacleImgs[rd->barrelAnimIdx], rd->obstacles[idx].rect.pos.x,
-                                  rd->obstacles[idx].rect.pos.y);
-                    break;
+                    case BARREL:
+                    {
+                        drawWsgSimple(&rd->obstacleImgs[rd->barrelAnimIdx], rd->obstacles[idx].rect.pos.x,
+                                      rd->obstacles[idx].rect.pos.y);
+                        break;
+                    }
+                    case LAMP:
+                    {
+                        drawWsgSimple(&rd->obstacleImgs[3], rd->obstacles[idx].rect.pos.x,
+                                      rd->obstacles[idx].rect.pos.y);
+                        break;
+                    }
+                    case HOOK:
+                    {
+                        drawWsgSimple(&rd->obstacleImgs[4], rd->obstacles[idx].rect.pos.x,
+                                      rd->obstacles[idx].rect.pos.y);
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
                 }
-                case LAMP:
+            }
+            else
+            {
+                // Draw warnings
+                switch (rd->obstacles[idx].t)
                 {
-                    drawWsgSimple(&rd->obstacleImgs[3], rd->obstacles[idx].rect.pos.x, rd->obstacles[idx].rect.pos.y);
-                    break;
-                }
-                case HOOK:
-                {
-                    drawWsgSimple(&rd->obstacleImgs[4], rd->obstacles[idx].rect.pos.x, rd->obstacles[idx].rect.pos.y);
-                    break;
-                }
-                default:
-                {
-                    break;
+                    case BARREL:
+                    case LAMP:
+                    {
+                        drawWsgSimple(&rd->warning, TFT_WIDTH - 2 * rd->warning.w, rd->obstacles[idx].rect.pos.y);
+                        break;
+                    }
+                    case HOOK:
+                    {
+                        drawWsgSimple(&rd->warning, TFT_WIDTH - 2 * rd->warning.w, rd->obstacles[idx].rect.pos.y);
+                        drawWsgSimple(&rd->warning, TFT_WIDTH - 2 * rd->warning.w, rd->obstacles[idx].rect.pos.y + (4 + rd->warning.h));
+                        drawWsgSimple(&rd->warning, TFT_WIDTH - 2 * rd->warning.w, rd->obstacles[idx].rect.pos.y + 2 * (4 + rd->warning.h));
+                        drawWsgSimple(&rd->warning, TFT_WIDTH - 2 * rd->warning.w, rd->obstacles[idx].rect.pos.y + 3 * (4 + rd->warning.h));
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
                 }
             }
         }
