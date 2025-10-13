@@ -10,6 +10,8 @@
 
 #include "settingsManager.h"
 
+#include "nameList.h"
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -419,6 +421,8 @@ static void mainMenuMainLoop(int64_t elapsedUs)
 
     // Draw the menu
     drawMenuMega(mainMenu->menu, mainMenu->renderer, elapsedUs);
+
+    drawText(getSysFont(), c550, getSystemUsername()->nameBuffer, 32, 4);
 
     // If a trophy was showing, but the animation is done
     if (mainMenu->modeEnterTrophyShowing && !isTrophyDrawing())

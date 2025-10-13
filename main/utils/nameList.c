@@ -16,6 +16,7 @@
 #include "nameList.h"
 #include "macros.h"
 #include "swadge2024.h"
+#include "hdw-esp-now.h"
 
 // C
 #include <string.h>
@@ -87,8 +88,9 @@ typedef enum
 /**
  * @brief Grabs the Mac Address from the ESP
  *
+ * @return If the mac address was initialized
  */
-static void _getMacAddress(void);
+static bool _getMacAddress(void);
 
 /**
  * @brief Grabs a specific string from teh wordlists
@@ -378,6 +380,9 @@ void drawUsernamePicker(nameData_t* nd)
 
 nameData_t* getSystemUsername(void)
 {
+    int32_t packed = 0;
+    readNvs32(nvsKeys, &packed);
+    setUsernameFrom32(&swadgeUsername, packed);
     return &swadgeUsername;
 }
 
@@ -400,7 +405,7 @@ void setUsernameFrom32(nameData_t* nd, int32_t packed)
 // Static Functions
 //==============================================================================
 
-static void _getMacAddress()
+static bool _getMacAddress()
 {
     esp_err_t ret = esp_wifi_get_mac(WIFI_IF_STA, baseMac);
     if (ret != ESP_OK)
@@ -411,6 +416,7 @@ static void _getMacAddress()
             // Produces an obvious, statistically unlikely result
             baseMac[idx] = 0;
         }
+        return false;
     }
     ESP_LOGI("USRN", "MAC:%d:%d:%d:%d:%d:%d", baseMac[0], baseMac[1], baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
 
@@ -420,6 +426,7 @@ static void _getMacAddress()
     mutatorSeeds[ADJ1] = (baseMac[3] ^ baseMac[4] ^ baseMac[5]) % listLen[ADJ1];
     ESP_LOGI("USRN", "Seeds: Adj1: %d, Adj2: %d, Noun: %d, Number: %d", mutatorSeeds[0], mutatorSeeds[1],
              mutatorSeeds[2], baseMac[5]);
+    return true;
 }
 
 static void _getWordFromList(int listIdx, int idx, char* buffer, int buffLen)
