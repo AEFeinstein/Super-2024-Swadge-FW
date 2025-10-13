@@ -269,7 +269,6 @@ void diceEnterMode(void)
  */
 void diceExitMode(void)
 {
-    freeFont(diceRoller->ibm_vga8);
     freeWsg(&diceRoller->woodTexture);
     freeWsg(&diceRoller->cursor);
     freeWsg(&diceRoller->corner);
