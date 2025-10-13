@@ -999,7 +999,7 @@ static bool swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t val
                 // Just clear all non-player-set digits
                 if (!(sd->game.flags[n] & (SF_LOCKED | SF_VOID)))
                 {
-                    sd->game.grid[n] = 0;
+                    sd->game.grid[n]    = 0;
                     sd->player.notes[n] = 0;
                 }
             }
