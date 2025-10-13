@@ -15,10 +15,11 @@
 #define CEILING_HEIGHT 48
 
 // Robot
-#define JUMP_HEIGHT -12
-#define Y_ACCEL     1
-#define HBOX_WIDTH  30
-#define HBOX_HEIGHT 24
+#define JUMP_HEIGHT  -12
+#define Y_ACCEL      1
+#define HBOX_WIDTH   30
+#define HBOX_HEIGHT  24
+#define HBOX_CRAWL_H 48
 
 // Positioning
 #define PLAYER_X             48
@@ -26,6 +27,8 @@
 #define PLAYER_Y_IMG_OFFSET  16
 #define PLAYER_GROUND_OFFSET (GROUND_HEIGHT - 40)
 #define BARREL_GROUND_OFFSET (GROUND_HEIGHT - 18)
+#define PLAYER_X_CRAWL       24
+#define PLAYER_Y_CRAWL       160
 
 // Obstacles
 #define MAX_OBSTACLES    5
@@ -54,17 +57,11 @@ const char runnerModeName[]   = "Robo Runner";
 const char roboRunnerNVSKey[] = "roboRunner";
 
 static const cnfsFileIdx_t obstacleImages[] = {
-    BARREL_1_WSG,
-    BARREL_2_WSG,
-    BARREL_3_WSG,
-    LAMP_WSG,
+    BARREL_1_WSG, BARREL_2_WSG, BARREL_3_WSG, LAMP_WSG, HOOK_WSG,
 };
 
 static const cnfsFileIdx_t robotImages[] = {
-    ROBO_STANDING_WSG,
-    ROBO_RIGHT_WSG,
-    ROBO_LEFT_WSG,
-    ROBO_DEAD_WSG,
+    ROBO_STANDING_WSG, ROBO_RIGHT_WSG, ROBO_LEFT_WSG, ROBO_DEAD_WSG, ROBO_CRAWL_1_WSG, ROBO_CRAWL_2_WSG,
 };
 
 static const char* const strings[] = {
@@ -126,6 +123,7 @@ typedef enum
 {
     BARREL,
     LAMP,
+    HOOK,
     NUM_OBSTACLE_TYPES
 } ObstacleType_t;
 
@@ -140,6 +138,7 @@ typedef struct
     int animIdx;       // Animation index
     int64_t walkTimer; // time until we change animations
     bool onGround;     // If the player is touching the ground
+    bool crawl;        // If the player is crawling
     int ySpeed;        // The vertical speed. negative numbers are up.
     bool dead;         // If the player is dead
 } player_t;
@@ -240,7 +239,7 @@ static void updateLEDs(int idx);
 
 trophySettings_t runnerTrophySettings = {
     .drawFromBottom   = true,
-    .staticDurationUs = DRAW_STATIC_US,
+    .staticDurationUs = DRAW_STATIC_US * 2,
     .slideDurationUs  = DRAW_SLIDE_US,
 };
 
@@ -289,7 +288,7 @@ static void runnerEnterMode()
     player->loop         = true;
     midiGmOn(player);
     globalMidiPlayerSetVolume(MIDI_BGM, 12);
-    globalMidiPlayerPlaySong(&rd->bgm, MIDI_BGM);
+    // globalMidiPlayerPlaySong(&rd->bgm, MIDI_BGM);
     rd->sfxPlayer = globalMidiPlayerGet(MIDI_SFX);
     midiGmOn(rd->sfxPlayer);
     midiPause(rd->sfxPlayer, false);
@@ -299,9 +298,8 @@ static void runnerEnterMode()
     }
     for (int idx = 0; idx < MAX_OBSTACLES; idx++)
     {
-        rd->obstacles[idx].active      = false;
-        rd->obstacles[idx].rect.height = 24;
-        rd->obstacles[idx].rect.width  = 12;
+        rd->obstacles[idx].active     = false;
+        rd->obstacles[idx].rect.width = 12;
     }
     rd->robot.rect.height = rd->robot.imgs[0].h - HBOX_HEIGHT;
     rd->robot.rect.width  = rd->robot.imgs[0].w - HBOX_WIDTH;
@@ -383,15 +381,27 @@ static void runnerMainLoop(int64_t elapsedUs)
                             rd->state = RUNNING;
                         }
                     }
-                    else if ((evt.button & PB_A || evt.button & PB_UP) && rd->robot.onGround)
+                    else if ((evt.button & PB_A || evt.button & PB_UP) && rd->robot.onGround && !rd->robot.crawl)
                     {
                         rd->robot.ySpeed   = JUMP_HEIGHT;
                         rd->robot.onGround = false;
+                    }
+                    else if ((evt.button & PB_B || evt.button & PB_DOWN) && rd->robot.onGround)
+                    {
+                        rd->robot.rect.height = rd->robot.imgs[0].h - HBOX_CRAWL_H;
+                        rd->robot.crawl       = true;
+                        rd->robot.rect.pos.y = GROUND_HEIGHT;
                     }
                 }
                 else if ((evt.button & PB_A || evt.button & PB_UP) && rd->robot.ySpeed < JUMP_HEIGHT / 2)
                 {
                     rd->robot.ySpeed = JUMP_HEIGHT / 2;
+                }
+                else if ((evt.button & PB_B || evt.button & PB_DOWN))
+                {
+                    rd->robot.rect.height = rd->robot.imgs[0].h - HBOX_HEIGHT;
+                    rd->robot.crawl       = false;
+                    rd->robot.rect.pos.y = PLAYER_GROUND_OFFSET;
                 }
             }
             runnerLogic(elapsedUs);
@@ -433,13 +443,16 @@ static void resetGame()
 
 static void runnerLogic(int64_t elapsedUs)
 {
-    rd->robot.rect.pos.y += rd->robot.ySpeed;
-    rd->robot.ySpeed += Y_ACCEL;
-    if (rd->robot.rect.pos.y > PLAYER_GROUND_OFFSET)
+    if (!rd->robot.onGround)
     {
-        rd->robot.onGround   = true;
-        rd->robot.rect.pos.y = PLAYER_GROUND_OFFSET;
-        rd->robot.ySpeed     = 0;
+        rd->robot.rect.pos.y += rd->robot.ySpeed;
+        rd->robot.ySpeed += Y_ACCEL;
+        if (rd->robot.rect.pos.y > PLAYER_GROUND_OFFSET)
+        {
+            rd->robot.onGround   = true;
+            rd->robot.rect.pos.y = PLAYER_GROUND_OFFSET;
+            rd->robot.ySpeed     = 0;
+        }
     }
     if (!rd->robot.dead)
     {
@@ -515,14 +528,23 @@ static void handleObstacles(int64_t elapsedUs)
                     case BARREL:
                     default:
                     {
-                        rd->obstacles[idx].rect.pos.y = BARREL_GROUND_OFFSET;
-                        rd->obstacles[idx].t          = BARREL;
+                        rd->obstacles[idx].rect.height = 24;
+                        rd->obstacles[idx].rect.pos.y  = BARREL_GROUND_OFFSET;
+                        rd->obstacles[idx].t           = BARREL;
                         break;
                     }
                     case LAMP:
                     {
-                        rd->obstacles[idx].rect.pos.y = CEILING_HEIGHT;
-                        rd->obstacles[idx].t          = LAMP;
+                        rd->obstacles[idx].rect.height = 24;
+                        rd->obstacles[idx].rect.pos.y  = CEILING_HEIGHT;
+                        rd->obstacles[idx].t           = LAMP;
+                        break;
+                    }
+                    case HOOK:
+                    {
+                        rd->obstacles[idx].rect.height = 102;
+                        rd->obstacles[idx].rect.pos.y  = CEILING_HEIGHT;
+                        rd->obstacles[idx].t           = HOOK;
                         break;
                     }
                 }
@@ -675,6 +697,11 @@ static void drawObstacles(int64_t elapsedUs)
                     drawWsgSimple(&rd->obstacleImgs[3], rd->obstacles[idx].rect.pos.x, rd->obstacles[idx].rect.pos.y);
                     break;
                 }
+                case HOOK:
+                {
+                    drawWsgSimple(&rd->obstacleImgs[4], rd->obstacles[idx].rect.pos.x, rd->obstacles[idx].rect.pos.y);
+                    break;
+                }
                 default:
                 {
                     break;
@@ -712,6 +739,10 @@ static void drawPlayer(int64_t elapsedUs)
     else if (!rd->robot.onGround)
     {
         drawWsgSimple(&rd->robot.imgs[0], PLAYER_X - PLAYER_X_IMG_OFFSET, rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET);
+    }
+    else if (rd->robot.crawl)
+    {
+        drawWsgSimple(&rd->robot.imgs[rd->robot.animIdx + 4], PLAYER_X_CRAWL, PLAYER_Y_CRAWL);
     }
     else
     {
@@ -766,6 +797,16 @@ static void drawRunner(int64_t elapsedUs)
     {
         drawText(getSysFont(), c555, strings[2], 16, (TFT_HEIGHT - (getSysFont()->height + 60)) >> 1);
     }
+
+    // Show bounding boxes
+    /* drawRect(rd->robot.rect.pos.x, rd->robot.rect.pos.y, rd->robot.rect.pos.x + rd->robot.rect.width,
+             rd->robot.rect.pos.y + rd->robot.rect.height, c500);
+    for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+    {
+        drawRect(rd->obstacles[idx].rect.pos.x, rd->obstacles[idx].rect.pos.y,
+                 rd->obstacles[idx].rect.pos.x + rd->obstacles[idx].rect.width,
+                 rd->obstacles[idx].rect.pos.y + rd->obstacles[idx].rect.height, c500);
+    } */
 }
 
 // SwadgePass
