@@ -974,11 +974,12 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
     v0.x = deltaX / tTotal;
 
     // Use the initial velocity to find the barrel angle and magnitude
-    cpu->targetBarrelAngle = atan2f(v0.x, -v0.y);
-    while (cpu->targetBarrelAngle < 0)
+    float tba = atan2f(v0.x, -v0.y);
+    while (tba < 0)
     {
-        cpu->targetBarrelAngle += (2 * M_PIf);
+        tba += (2 * M_PIf);
     }
+    cpu->targetBarrelAngle = ((180 * tba) / M_PIf) + 0.5f;
     setShotPower(cpu, magVecFl2d(v0));
 }
 
