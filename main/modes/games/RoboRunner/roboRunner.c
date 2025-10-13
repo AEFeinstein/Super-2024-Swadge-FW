@@ -31,17 +31,20 @@
 #define PLAYER_Y_CRAWL       160
 
 // Obstacles
-#define MAX_OBSTACLES    5
-#define START_OBSTACLES  2
-#define SPAWN_RATE_BASE  60
-#define SPAWN_RATE_TIMER 2000000 // 2 seconds
-#define SPEED_BASE       15
-#define SPEED_TIMER      3000000 // Three seconds
-#define SPEED_NUMERATOR  100000
+#define MAX_OBSTACLES      5
+#define START_OBSTACLES    2
+#define SPAWN_RATE_BASE    60
+#define SPAWN_RATE_TIMER   2000000 // 2 seconds
+#define SPEED_BASE         15
+#define SPEED_TIMER        3000000 // 3 seconds
+#define SPEED_NUMERATOR    100000
+#define MAX_NUM_OBST_TIMER 15000000 // 15 seconds
+#define FORCE_OBST_TIMER   2000000  // 2 seconds
+#define STALL_OBST_TIMER   200000   // 0.2 sconds
 
 // Score
 #define SCORE_MOD      10000
-#define DEV_HIGH_SCORE 17145
+#define DEV_HIGH_SCORE 11457
 
 // Drawing
 #define WINDOW_PANE   25
@@ -100,11 +103,27 @@ const trophyData_t roboRunnerTrophies[] = {
         .maxVal      = 100,
     },
     {
+        .title       = "Gotta go expeditiously!",
+        .description = "Run 500 feet in one life",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 500,
+    },
+    {
+        .title       = "It's the 90's",
+        .description = "Run 750 feet in one life",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 750,
+    },
+    {
         .title       = "Neo would be proud",
         .description = "Run 1,000 feet in one life",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_PROGRESS,
-        .difficulty  = TROPHY_DIFF_HARD,
+        .difficulty  = TROPHY_DIFF_EXTREME,
         .maxVal      = 1000,
     },
 };
@@ -122,7 +141,13 @@ typedef enum
 typedef enum
 {
     BARREL,
+    BARREL2,
+    BARREL3,
+    BARREL4,
     LAMP,
+    LAMP2,
+    LAMP3,
+    LAMP4,
     HOOK,
     NUM_OBSTACLE_TYPES
 } ObstacleType_t;
@@ -163,6 +188,7 @@ typedef struct
     // Obstacles
     wsg_t* obstacleImgs;                 // Array of obstacle images
     obstacle_t obstacles[MAX_OBSTACLES]; // Object data
+    int64_t forceObstacle;               // Used to force an obstacle to spawn
 
     // Score
     int32_t score;         // Current score
@@ -390,7 +416,7 @@ static void runnerMainLoop(int64_t elapsedUs)
                     {
                         rd->robot.rect.height = rd->robot.imgs[0].h - HBOX_CRAWL_H;
                         rd->robot.crawl       = true;
-                        rd->robot.rect.pos.y = GROUND_HEIGHT;
+                        rd->robot.rect.pos.y  = GROUND_HEIGHT;
                     }
                 }
                 else if ((evt.button & PB_A || evt.button & PB_UP) && rd->robot.ySpeed < JUMP_HEIGHT / 2)
@@ -401,7 +427,7 @@ static void runnerMainLoop(int64_t elapsedUs)
                 {
                     rd->robot.rect.height = rd->robot.imgs[0].h - HBOX_HEIGHT;
                     rd->robot.crawl       = false;
-                    rd->robot.rect.pos.y = PLAYER_GROUND_OFFSET;
+                    rd->robot.rect.pos.y  = PLAYER_GROUND_OFFSET;
                 }
             }
             runnerLogic(elapsedUs);
@@ -499,6 +525,8 @@ static void handleObstacles(int64_t elapsedUs)
                 rd->robot.animIdx = 0;
                 rd->feetTraveledTotal += rd->feetTraveled;
                 // Trophies
+                trophyUpdateMilestone(roboRunnerTrophies[5], rd->feetTraveled, 10);
+                trophyUpdateMilestone(roboRunnerTrophies[4], rd->feetTraveled, 10);
                 trophyUpdateMilestone(roboRunnerTrophies[3], rd->feetTraveled, 10);
                 trophyUpdateMilestone(roboRunnerTrophies[2], ++rd->deaths, 25);
                 trophyUpdateMilestone(roboRunnerTrophies[1], rd->feetTraveledTotal, 10);
@@ -514,9 +542,22 @@ static void handleObstacles(int64_t elapsedUs)
             }
         }
     }
-    bool spawn = (esp_random() % rd->spawnRate) == 0;
+    rd->forceObstacle += elapsedUs;
+    bool spawn = false;
+    if (rd->forceObstacle > STALL_OBST_TIMER)
+    {
+        if (rd->forceObstacle > FORCE_OBST_TIMER)
+        {
+            spawn = true;
+        }
+        else
+        {
+            spawn = (esp_random() % rd->spawnRate) == 0;
+        }
+    }
     if (spawn)
     {
+        rd->forceObstacle = 0; // Reset timer when an obstacle spawns
         for (int idx = 0; idx < rd->currentMaxObstacles; idx++)
         {
             if (!rd->obstacles[idx].active)
@@ -526,6 +567,9 @@ static void handleObstacles(int64_t elapsedUs)
                 switch (esp_random() % NUM_OBSTACLE_TYPES)
                 {
                     case BARREL:
+                    case BARREL2:
+                    case BARREL3:
+                    case BARREL4:
                     default:
                     {
                         rd->obstacles[idx].rect.height = 24;
@@ -534,6 +578,9 @@ static void handleObstacles(int64_t elapsedUs)
                         break;
                     }
                     case LAMP:
+                    case LAMP2:
+                    case LAMP3:
+                    case LAMP4:
                     {
                         rd->obstacles[idx].rect.height = 24;
                         rd->obstacles[idx].rect.pos.y  = CEILING_HEIGHT;
@@ -574,7 +621,7 @@ static void increaseDifficulty(int64_t elapsedUs)
 
     // Increase obstacles
     rd->maxObstacleTimer += elapsedUs;
-    if (rd->maxObstacleTimer > (SPEED_TIMER * 5) && rd->currentMaxObstacles < MAX_OBSTACLES)
+    if (rd->maxObstacleTimer > MAX_NUM_OBST_TIMER && rd->currentMaxObstacles < MAX_OBSTACLES)
     {
         rd->currentMaxObstacles++;
         rd->maxObstacleTimer = 0;
