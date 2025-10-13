@@ -4,6 +4,7 @@
 
 #include "mode_diceroller.h"
 #include "portableDance.h"
+#include "mainMenu.h"
 
 //==============================================================================
 // Defines
@@ -58,7 +59,7 @@ typedef struct
 typedef struct
 {
     // UI variables
-    font_t ibm_vga8;
+    font_t* ibm_vga8;
     wsg_t woodTexture;
     wsg_t cursor;
     wsg_t corner;
@@ -227,7 +228,7 @@ void diceEnterMode(void)
 {
     diceRoller = heap_caps_calloc(1, sizeof(diceRoller_t), MALLOC_CAP_8BIT);
 
-    loadFont(IBM_VGA_8_FONT, &diceRoller->ibm_vga8, false);
+    diceRoller->ibm_vga8 = getSysFont();
     loadWsg(WOOD_TEXTURE_64_WSG, &diceRoller->woodTexture, false);
     loadWsg(UP_CURSOR_8_WSG, &diceRoller->cursor, false);
     loadWsg(GOLD_CORNER_TR_WSG, &diceRoller->corner, false);
@@ -268,7 +269,6 @@ void diceEnterMode(void)
  */
 void diceExitMode(void)
 {
-    freeFont(&diceRoller->ibm_vga8);
     freeWsg(&diceRoller->woodTexture);
     freeWsg(&diceRoller->cursor);
     freeWsg(&diceRoller->corner);
@@ -336,8 +336,6 @@ void diceButtonCb(buttonEvt_t* evt)
     switch (evt->button)
     {
         case PB_A:
-        case PB_B:
-        default:
         {
             if (evt->down)
             {
@@ -382,6 +380,14 @@ void diceButtonCb(buttonEvt_t* evt)
             }
             break;
         }
+        case PB_B:
+        {
+            switchToSwadgeMode(&mainMenuMode);
+        }
+        default:
+        {
+            // Don't roll unless you press A
+        }
     }
 }
 
@@ -420,8 +426,8 @@ void doStateMachine(int64_t elapsedUs)
         default:
         {
             // Draw the mode name
-            drawText(&diceRoller->ibm_vga8, textColor, DR_NAMESTRING,
-                     TFT_WIDTH / 2 - textWidth(&diceRoller->ibm_vga8, DR_NAMESTRING) / 2, TFT_HEIGHT / 2);
+            drawText(diceRoller->ibm_vga8, textColor, DR_NAMESTRING,
+                     TFT_WIDTH / 2 - textWidth(diceRoller->ibm_vga8, DR_NAMESTRING) / 2, TFT_HEIGHT / 2);
             break;
         }
         case DR_SHOW_ROLL:
@@ -534,8 +540,8 @@ void drawHistory(void)
     // Draw the header
     char totalStr[32];
     snprintf(totalStr, sizeof(totalStr), "History");
-    drawText(&diceRoller->ibm_vga8, totalTextColor, totalStr,        //
-             histX - textWidth(&diceRoller->ibm_vga8, totalStr) / 2, //
+    drawText(diceRoller->ibm_vga8, totalTextColor, totalStr,        //
+             histX - textWidth(diceRoller->ibm_vga8, totalStr) / 2, //
              histY);
 
     // For all the history
@@ -545,12 +551,12 @@ void drawHistory(void)
     {
         rollHistoryEntry_t* entry = histNode->val;
 
-        // Draw this history entry
-        snprintf(totalStr, sizeof(totalStr), "%dd%dk%d: %d", entry->count, entry->die.numFaces, entry->keep,
-                 entry->total);
-        drawText(&diceRoller->ibm_vga8, histTextColor, totalStr,         //
-                 histX - textWidth(&diceRoller->ibm_vga8, totalStr) / 2, //
+        // Draw this history entry centered around the colon
+        snprintf(totalStr, sizeof(totalStr), "%dd%dk%d:", entry->count, entry->die.numFaces, entry->keep);
+        drawText(diceRoller->ibm_vga8, histTextColor, totalStr, histX + 14 - textWidth(diceRoller->ibm_vga8, totalStr),
                  histY + (i + 1) * histYEntryOffset);
+        snprintf(totalStr, sizeof(totalStr), "%d", entry->total);
+        drawText(diceRoller->ibm_vga8, c555, totalStr, histX + 17, histY + (i + 1) * histYEntryOffset);
 
         // Iterate
         histNode = histNode->next;
@@ -582,8 +588,8 @@ void drawCurrentTotal(void)
 {
     char totalStr[32];
     snprintf(totalStr, sizeof(totalStr), "Total: %d", diceRoller->cRoll.total);
-    drawText(&diceRoller->ibm_vga8, totalTextColor, totalStr,
-             TFT_WIDTH / 2 - textWidth(&diceRoller->ibm_vga8, totalStr) / 2, TFT_HEIGHT * 7 / 8);
+    drawText(diceRoller->ibm_vga8, totalTextColor, totalStr,
+             TFT_WIDTH / 2 - textWidth(diceRoller->ibm_vga8, totalStr) / 2, TFT_HEIGHT * 7 / 8);
 }
 
 /**
@@ -808,7 +814,7 @@ void drawRegularPolygon(int xCenter, int yCenter, int8_t sides, float rotDeg, in
  */
 void drawSelectionText(void)
 {
-    font_t* font = &diceRoller->ibm_vga8;
+    font_t* font = diceRoller->ibm_vga8;
 
     // Create the whole string, measuring as we go
     char rollStr[32] = "Next roll is ";
@@ -902,8 +908,8 @@ void drawDiceText(int* diceVals)
             color = diceTextColorNoKeep;
         }
         // Draw the text
-        drawText(&diceRoller->ibm_vga8, color, rollOutcome,
-                 xGridOffsets[m] - textWidth(&diceRoller->ibm_vga8, rollOutcome) / 2, yGridOffsets[m]);
+        drawText(diceRoller->ibm_vga8, color, rollOutcome,
+                 xGridOffsets[m] - textWidth(diceRoller->ibm_vga8, rollOutcome) / 2, yGridOffsets[m]);
     }
 }
 
