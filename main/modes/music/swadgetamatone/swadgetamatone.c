@@ -85,6 +85,8 @@ typedef struct
     synthOscillator_t sttOsc;
 
     wsg_t background;
+
+    led_t leds[CONFIG_NUM_LEDS];
 } swadgetamatone_t;
 swadgetamatone_t* stt = NULL;
 
@@ -311,6 +313,14 @@ static void sttMainLoop(int64_t elapsedUs)
     }
 
     swSynthSetVolume(&stt->sttOsc, volume);
+
+    for (int i = 0; i < CONFIG_NUM_LEDS; i++)
+    {
+        stt->leds[i].r = volume / 2;
+        stt->leds[i].g = volume / 2;
+        stt->leds[i].b = volume / 2;
+    }
+    setLeds(stt->leds, CONFIG_NUM_LEDS);
 
     int16_t xRadius = CLAMP(stt->touchpad.x * TFT_WIDTH / 1023, 8, TFT_WIDTH - 6) / 2;
     // Use the calculated volume for height so it animates open/closed with the volume fade in/out
