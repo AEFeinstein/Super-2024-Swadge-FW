@@ -10,8 +10,9 @@
 // Defines
 //==============================================================================
 
-#define MENU_MARGIN 16
-#define FONT_MARGIN 8
+#define MENU_MARGIN        16
+#define FONT_MARGIN        8
+#define BLINK_ARROW_PERIOD 1000000
 
 //==============================================================================
 // Function Prototypes
@@ -56,6 +57,8 @@ menuSimpleRenderer_t* initMenuSimpleRenderer(font_t* font, paletteColor_t border
     renderer->borderColor  = border;
     renderer->rowTextColor = text;
 
+    loadWsg(ARROW_8_WSG, &renderer->arrow, true);
+
     return renderer;
 }
 
@@ -67,6 +70,7 @@ menuSimpleRenderer_t* initMenuSimpleRenderer(font_t* font, paletteColor_t border
  */
 void deinitMenuSimpleRenderer(menuSimpleRenderer_t* renderer)
 {
+    freeWsg(&renderer->arrow);
     heap_caps_free(renderer);
 }
 
@@ -127,9 +131,13 @@ static void drawMenuText(menuSimpleRenderer_t* renderer, const char* text, int16
  *
  * @param menu The menu to draw
  * @param renderer The renderer to draw with
+ * @param elapsedUs The time since this draw was last called
  */
-void drawMenuSimple(menu_t* menu, menuSimpleRenderer_t* renderer)
+void drawMenuSimple(menu_t* menu, menuSimpleRenderer_t* renderer, uint32_t elapsedUs)
 {
+    // Blink arrows
+    RUN_TIMER_EVERY(renderer->blinkTimer, BLINK_ARROW_PERIOD, elapsedUs, {});
+
     int32_t menuHeight = (renderer->numRows * (renderer->font->height + FONT_MARGIN)) + FONT_MARGIN;
 
     // Clear the background
@@ -171,9 +179,10 @@ void drawMenuSimple(menu_t* menu, menuSimpleRenderer_t* renderer)
     // Where to start drawing
     int16_t yOff = TFT_HEIGHT - menuHeight - FONT_MARGIN;
 
-    if (menu->items->length > renderer->numRows)
+    if (renderer->blinkTimer < (BLINK_ARROW_PERIOD / 2) && menu->items->length > renderer->numRows)
     {
-        // TODO Draw UP page
+        // Draw UP page
+        drawWsg(&renderer->arrow, MENU_MARGIN + (MENU_MARGIN - renderer->arrow.w) / 2, yOff, false, false, 0);
     }
 
     // Draw a page-worth of items
@@ -201,8 +210,10 @@ void drawMenuSimple(menu_t* menu, menuSimpleRenderer_t* renderer)
         yOff += (renderer->font->height + FONT_MARGIN);
     }
 
-    if (menu->items->length > renderer->numRows)
+    if (renderer->blinkTimer < (BLINK_ARROW_PERIOD / 2) && menu->items->length > renderer->numRows)
     {
-        // TODO Draw DOWN page
+        // Draw DOWN page
+        yOff -= (FONT_MARGIN + renderer->arrow.h);
+        drawWsg(&renderer->arrow, MENU_MARGIN + (MENU_MARGIN - renderer->arrow.w) / 2, yOff, false, true, 0);
     }
 }
