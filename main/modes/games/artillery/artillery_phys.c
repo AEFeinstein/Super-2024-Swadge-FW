@@ -1015,6 +1015,8 @@ void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool fi
     {
         // Remove fired ammo from the available list
         removeVal(&player->availableAmmo, (void*)((intptr_t)player->ammoIdx));
+        // TODO since the IDX changes, show the ammo menu first next round?
+        player->ammoIdx = (intptr_t)player->availableAmmo.first->val;
 
         player->shotsRemaining = aa->numConsec - 1;
         player->shotTimer      = 0;
