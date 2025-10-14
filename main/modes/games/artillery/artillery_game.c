@@ -555,7 +555,7 @@ void artilleryPassTurn(artilleryData_t* ad)
         // Increment the turn
         ad->turn++;
 
-        if (7 == ad->turn)
+        if (MAX_TURNS == ad->turn)
         {
             // If all turns have been taken
             // TODO end the game
