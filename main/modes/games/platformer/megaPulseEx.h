@@ -27,7 +27,7 @@ typedef struct
 
 typedef struct
 {
-    uint8_t maxLevelIndexUnlocked;
+    uint8_t levelsCleared;
     bool gameCleared;
     bool oneCreditCleared;
     bool bigScore;

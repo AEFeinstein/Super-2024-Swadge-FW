@@ -195,6 +195,8 @@ static const char mgMenuResetScores[]   = "Reset Scores";
 static const char mgMenuResetProgress[] = "Reset Progress";
 static const char mgMenuExit[]          = "Exit";
 static const char mgMenuSaveAndExit[]   = "Save & Exit";
+static const char mgMenuStartOver[] = "Start Over";
+static const char mgMenuConfirm[] = "Confirm";
 
 //==============================================================================
 // Functions
@@ -315,10 +317,13 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
             initializePlatformerHighScores(platformer);
             soundPlaySfx(&(platformer->soundManager.sndSquish), MIDI_SFX);
         }
-        else if (label == mgMenuResetProgress)
+        else if (label == mgMenuConfirm)
         {
             initializePlatformerUnlockables(platformer);
+            savePlatformerUnlockables(platformer);
             soundPlaySfx(&(platformer->soundManager.sndDie), MIDI_SFX);
+            mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
+            changeStateLevelSelect(platformer);
         }
         else if (label == mgMenuSaveAndExit)
         {
@@ -379,9 +384,18 @@ void mgBuildMainMenu(platformer_t* self)
 {
     // Initialize the menu
     self->menu = initMenu(platformerName, mgMenuCb);
-    addSingleItemToMenu(self->menu, mgMenuNewGame);
+    
 
-    addSingleItemToMenu(self->menu, mgMenuPlaceholder);
+    
+    if(self->unlockables.levelsCleared){
+        addSingleItemToMenu(self->menu, mgMenuContinue);
+
+        self->menu = startSubMenu(self->menu, mgMenuStartOver);
+        addSingleItemToMenu(self->menu, mgMenuConfirm);
+        self->menu = endSubMenu(self->menu);
+    } else {
+        addSingleItemToMenu(self->menu, mgMenuNewGame);
+    }
 
     addSingleItemToMenu(self->menu, mgMenuHighScores);
 
@@ -600,12 +614,12 @@ void drawPlatformerTitleScreen(font_t* font, mgGameData_t* gameData)
         {
             drawText(font, c555, "Start Game", 48, 128);
 
-            if (platformer->gameData.debugMode || platformer->unlockables.maxLevelIndexUnlocked > 0)
+            /*if (platformer->gameData.debugMode || platformer->unlockables.levelsCleared > 0)
             {
                 char levelStr[24];
                 snprintf(levelStr, sizeof(levelStr) - 1, "Level Select: %d-%d", gameData->world, gameData->level);
                 drawText(font, c555, levelStr, 48, 144);
-            }
+            }*/
 
             if (platformer->gameData.debugMode)
             {
@@ -722,7 +736,7 @@ void changeStateGame(platformer_t* self)
 
     mg_deactivateAllEntities(&(self->entityManager), false);
 
-    uint16_t levelIndex = getLevelIndex(self->gameData.world, self->gameData.level) + 1;
+    uint16_t levelIndex = getLevelIndex(1, self->gameData.level) + 1;
 
     mg_loadWsgSet(&(platformer->wsgManager), leveldef[levelIndex].defaultWsgSetIndex);
     mg_loadMapFromFile(&(platformer->tilemap), leveldef[levelIndex].filename);
@@ -947,9 +961,9 @@ void updateLevelClear(platformer_t* self)
         {
             // Hey look, it's a frame rule!
 
-            uint16_t levelIndex = getLevelIndex(self->gameData.world, self->gameData.level);
+            //uint16_t levelIndex = getLevelIndex(1, self->gameData.level);
 
-            if (levelIndex >= NUM_LEVELS - 1)
+            if (false /*levelIndex >= NUM_LEVELS - 1*/)
             {
                 // Game Cleared!
 
@@ -997,6 +1011,8 @@ void updateLevelClear(platformer_t* self)
                 {
                     self->unlockables.maxLevelIndexUnlocked = levelIndex;
                 }*/
+
+                self->unlockables.levelsCleared |= (1 << self->gameData.level);
 
                 changeStateLevelSelect(self);
             }
@@ -1137,7 +1153,7 @@ void savePlatformerHighScores(platformer_t* self)
 
 void initializePlatformerUnlockables(platformer_t* self)
 {
-    self->unlockables.maxLevelIndexUnlocked = 0;
+    self->unlockables.levelsCleared = 0;
     self->unlockables.gameCleared           = false;
     self->unlockables.oneCreditCleared      = false;
     self->unlockables.bigScore              = false;
@@ -1400,6 +1416,9 @@ void changeStateLevelSelect(platformer_t* self)
     self->gameData.frameCount = 0;
     self->menuState     = 0;
     self->menuSelection = 0;
+    self->gameData.level = 1;
+    self->gameData.btnState = 0;
+    self->gameData.prevBtnState = 0;
 
     mg_loadWsgSet(&(platformer->wsgManager), leveldef[0].defaultWsgSetIndex);
     mg_loadMapFromFile(&(platformer->tilemap), leveldef[0].filename);
@@ -1422,26 +1441,33 @@ void updateLevelSelect(platformer_t* self)
     }
 
     if(self->menuState < 2 && ((self->gameData.btnState & PB_RIGHT) && !(self->gameData.prevBtnState & PB_RIGHT))){
-        self->menuState++;
+        self->menuState++; self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
     } else if(self->menuState > 0 && ((self->gameData.btnState & PB_LEFT) && !(self->gameData.prevBtnState & PB_LEFT))){
-        self->menuState--;
+        self->menuState--; self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
     }
 
     if(self->menuSelection < 2 && ((self->gameData.btnState & PB_DOWN) && !(self->gameData.prevBtnState & PB_DOWN))){
-        self->menuSelection++;
+        self->menuSelection++; self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
     } else if(self->menuSelection > 0 && ((self->gameData.btnState & PB_UP) && !(self->gameData.prevBtnState & PB_UP))){
-        self->menuSelection--;
+        self->menuSelection--; self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
     }
 
     if( (self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A))
     {
         self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
+        
+        if(self->unlockables.levelsCleared & (1 << self->gameData.level))
+        {
+            soundPlaySfx(&(platformer->soundManager.sndMenuDeny), BZR_STEREO);
+        } else
+        {
+            mg_loadWsgSet(&(platformer->wsgManager), leveldef[self->gameData.level].defaultWsgSetIndex);
+            mg_loadMapFromFile(&(platformer->tilemap), leveldef[self->gameData.level].filename);
 
-        mg_loadWsgSet(&(platformer->wsgManager), leveldef[self->gameData.level].defaultWsgSetIndex);
-        mg_loadMapFromFile(&(platformer->tilemap), leveldef[self->gameData.level].filename);
-
-        changeStateReadyScreen(self);
-        return;
+            changeStateReadyScreen(self);
+            return;
+        }
+        
     }
 
     drawLevelSelect(self);
@@ -1462,11 +1488,19 @@ void drawLevelSelect(platformer_t* self)
     mg_drawTileMap(&(self->tilemap));
 
 
-    drawRect(
-        (64 + self->menuState * 64) - self->tilemap.mapOffsetX + ((self->gameData.frameCount >> 2) & 0b0111), 
-        (48 + self->menuSelection * 64) - self->tilemap.mapOffsetY + ((self->gameData.frameCount >> 2) & 0b0111), 
-        (64 + 48 + self->menuState * 64) - self->tilemap.mapOffsetX - ((self->gameData.frameCount >> 2) & 0b0111), 
-        (48 + 48 + self->menuSelection * 64) - self->tilemap.mapOffsetY - ((self->gameData.frameCount >> 2) & 0b0111), 
-        highScoreNewEntryColors[self->gameData.frameCount % 4]
-    );
+    if(self->unlockables.levelsCleared & (1 << self->gameData.level)) 
+    {
+        drawLine((64 + self->menuState * 64) - self->tilemap.mapOffsetX, (48 + self->menuSelection * 64) - self->tilemap.mapOffsetY, (64 + 48 + self->menuState * 64) - self->tilemap.mapOffsetX, (48 + 48 + self->menuSelection * 64) - self->tilemap.mapOffsetY, redColors[self->gameData.frameCount % 4], 0);
+        drawLine((64 + self->menuState * 64) - self->tilemap.mapOffsetX, (48 + 48 + self->menuSelection * 64) - self->tilemap.mapOffsetY, (64 + 48 + self->menuState * 64) - self->tilemap.mapOffsetX, (48 + self->menuSelection * 64) - self->tilemap.mapOffsetY, redColors[self->gameData.frameCount % 4], 0);
+    }
+    else
+    {
+        drawRect(
+            (64 + self->menuState * 64) - self->tilemap.mapOffsetX + ((self->gameData.frameCount >> 2) & 0b0111), 
+            (48 + self->menuSelection * 64) - self->tilemap.mapOffsetY + ((self->gameData.frameCount >> 2) & 0b0111), 
+            (64 + 48 + self->menuState * 64) - self->tilemap.mapOffsetX - ((self->gameData.frameCount >> 2) & 0b0111), 
+            (48 + 48 + self->menuSelection * 64) - self->tilemap.mapOffsetY - ((self->gameData.frameCount >> 2) & 0b0111), 
+            highScoreNewEntryColors[self->gameData.frameCount % 4]
+        );
+    }
 }

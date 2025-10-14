@@ -38,7 +38,6 @@ typedef struct
     int16_t countdown;
     uint16_t frameCount;
 
-    uint8_t world;
     uint8_t level;
 
     uint16_t combo;
