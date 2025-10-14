@@ -120,6 +120,14 @@ physCirc_t* physAddCircle(physSim_t* phys, uint16_t x1, uint16_t y1, uint16_t r,
             setShotPower(pc, 225.0f);
             pc->fixed      = false;
             pc->bounciness = 0.25f;
+
+            // Add useable ammo
+            uint16_t numAmmos;
+            getAmmoAttributes(&numAmmos);
+            for (uintptr_t aIdx = 0; aIdx < numAmmos; aIdx++)
+            {
+                push(&pc->availableAmmo, (void*)aIdx);
+            }
             break;
         }
         case CT_SHELL:

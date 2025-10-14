@@ -496,22 +496,28 @@ void setAmmoInMenu(void)
         menu = menu->parentMenu;
     }
 
-    // Get a reference to the player
-    physCirc_t* player = ad->players[ad->plIdx];
-
     // Clear out the ammo menu
     menu = menuNavigateToItem(menu, load_ammo);
     menu = ((menuItem_t*)menu->currentItem->val)->subMenu;
     removeAllItemsFromMenu(menu);
 
-    // Add available ammo to the menu
-    // TODO adjust this as shots are fired
+    // Get a reference to the player
+    list_t* availableAmmo = &ad->players[ad->plIdx]->availableAmmo;
+
+    // Get a reference to ammo attributes
     uint16_t numAmmos;
     const artilleryAmmoAttrib_t* ammos = getAmmoAttributes(&numAmmos);
-    for (int aIdx = 0; aIdx < numAmmos; aIdx++)
+
+    // Add this player's ammo to the menu
+    node_t* aNode = availableAmmo->first;
+    while (aNode)
     {
-        addSingleItemToMenu(menu, ammos[aIdx].name);
+        // Add available ammo to the menu
+        addSingleItemToMenu(menu, ammos[(intptr_t)aNode->val].name);
+        // Iterate
+        aNode = aNode->next;
     }
+    menu = menuNavigateToTopItem(menu);
 
     // Return to the top of the main menu
     while (menu->parentMenu)

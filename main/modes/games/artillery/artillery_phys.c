@@ -306,7 +306,12 @@ void physRemoveAllObjects(physSim_t* phys)
     // Free all circles
     while (phys->circles.first)
     {
-        heap_caps_free(pop(&phys->circles));
+        physCirc_t* circ = pop(&phys->circles);
+        while (circ->availableAmmo.first)
+        {
+            pop(&circ->availableAmmo);
+        }
+        heap_caps_free(circ);
     }
 
     // Free all explosions
@@ -1008,6 +1013,9 @@ void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool fi
     // If this is the first shot, set up consecutive shots
     if (firstShot)
     {
+        // Remove fired ammo from the available list
+        removeVal(&player->availableAmmo, (void*)((intptr_t)player->ammoIdx));
+
         player->shotsRemaining = aa->numConsec - 1;
         player->shotTimer      = 0;
 
