@@ -314,7 +314,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                 else
                 {
                     // Left/Right moves faster than Up/Down
-                    int32_t timerInterval = (ad->adjButtonHeld & (PB_LEFT | PB_RIGHT)) ? 10000 : 75000;
+                    int32_t timerInterval = (ad->adjButtonHeld & (PB_LEFT | PB_RIGHT)) ? 10000 : 40000;
 
                     // Run a periodic timer to adjust inputs
                     RUN_TIMER_EVERY(ad->adjButtonHeldTimer, timerInterval, elapsedUs, {
