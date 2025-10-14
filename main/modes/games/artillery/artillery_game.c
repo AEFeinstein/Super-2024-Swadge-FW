@@ -34,7 +34,10 @@ void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newSta
     clear(&ad->phys->cameraTargets);
 
     // Always stop moving when switching states
-    ad->players[ad->plIdx]->moving = 0;
+    if (ad->players[ad->plIdx])
+    {
+        ad->players[ad->plIdx]->moving = 0;
+    }
 
     // Additional state-specific setup
     switch (ad->gState)
