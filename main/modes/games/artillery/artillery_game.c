@@ -249,7 +249,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
         case AGS_MENU:
         {
             // Menu renderer
-            drawMenuSimple(ad->gameMenu, ad->smRenderer);
+            drawMenuSimple(ad->gameMenu, ad->smRenderer, elapsedUs);
             break;
         }
         case AGS_ADJUST:
