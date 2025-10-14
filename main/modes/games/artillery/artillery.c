@@ -143,13 +143,6 @@ void artilleryEnterMode(void)
         if (load_ammo == menuEntries[mIdx].text)
         {
             ad->gameMenu = startSubMenu(ad->gameMenu, load_ammo);
-
-            uint16_t numAmmos;
-            const artilleryAmmoAttrib_t* ammos = getAmmoAttributes(&numAmmos);
-            for (int aIdx = 0; aIdx < numAmmos; aIdx++)
-            {
-                addSingleItemToMenu(ad->gameMenu, ammos[aIdx].name);
-            }
             ad->gameMenu = endSubMenu(ad->gameMenu);
         }
         else
@@ -487,6 +480,45 @@ void setDriveInMenu(bool visible)
         removeSingleItemFromMenu(ad->gameMenu, drive);
         ad->smRenderer->numRows--;
     }
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param ad
+ */
+void setAmmoInMenu(void)
+{
+    // Return to the top level menu, just in case
+    menu_t* menu = ad->gameMenu;
+    while (menu->parentMenu)
+    {
+        menu = menu->parentMenu;
+    }
+
+    // Get a reference to the player
+    physCirc_t* player = ad->players[ad->plIdx];
+
+    // Clear out the ammo menu
+    menu = menuNavigateToItem(menu, load_ammo);
+    menu = ((menuItem_t*)menu->currentItem->val)->subMenu;
+    removeAllItemsFromMenu(menu);
+
+    // Add available ammo to the menu
+    // TODO adjust this as shots are fired
+    uint16_t numAmmos;
+    const artilleryAmmoAttrib_t* ammos = getAmmoAttributes(&numAmmos);
+    for (int aIdx = 0; aIdx < numAmmos; aIdx++)
+    {
+        addSingleItemToMenu(menu, ammos[aIdx].name);
+    }
+
+    // Return to the top of the main menu
+    while (menu->parentMenu)
+    {
+        menu = menu->parentMenu;
+    }
+    menu = menuNavigateToTopItem(menu);
 }
 
 /**

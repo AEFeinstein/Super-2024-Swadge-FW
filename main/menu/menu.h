@@ -193,6 +193,7 @@ menu_t* endSubMenu(menu_t* menu) __attribute__((warn_unused_result));
 menuItem_t* addSingleItemToMenu(menu_t* menu, const char* label);
 menuItem_t* insertSingleItemToMenuAfter(menu_t* menu, const char* newLabel, const char* afterLabel);
 void removeSingleItemFromMenu(menu_t* menu, const char* label);
+menu_t* removeAllItemsFromMenu(menu_t* menu);
 void addMultiItemToMenu(menu_t* menu, const char* const* labels, uint8_t numLabels, uint8_t currentLabel);
 void removeMultiItemFromMenu(menu_t* menu, const char* const* labels);
 void addSettingsItemToMenu(menu_t* menu, const char* label, const settingParam_t* bounds, int32_t val);

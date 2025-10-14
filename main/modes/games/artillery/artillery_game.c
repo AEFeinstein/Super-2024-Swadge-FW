@@ -42,6 +42,7 @@ void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newSta
         case AGS_MENU:
         {
             setDriveInMenu(ad->moveTimerUs);
+            setAmmoInMenu();
             break;
         }
         case AGS_CPU_ADJUST:
