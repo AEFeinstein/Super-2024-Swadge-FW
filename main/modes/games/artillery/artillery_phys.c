@@ -16,6 +16,7 @@
 #include "macros.h"
 #include "fill.h"
 
+#include "artillery_game.h"
 #include "artillery_phys_objs.h"
 #include "artillery_phys_camera.h"
 #include "artillery_phys_collisions.h"
@@ -818,7 +819,7 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
 
     // Draw turns
     char turnStr[32] = {0};
-    snprintf(turnStr, sizeof(turnStr) - 1, "Turn %" PRId32, turn);
+    snprintf(turnStr, sizeof(turnStr) - 1, "Turn %" PRId32 "/%d", turn, MAX_TURNS);
     drawTextShadow(font, c444, c000, turnStr, (TFT_WIDTH - textWidth(font, turnStr)) / 2, TEXT_Y);
 
     // Draw score if players are set
