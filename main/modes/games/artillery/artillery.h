@@ -129,5 +129,6 @@ extern const char load_ammo[];
 extern swadgeMode_t artilleryMode;
 
 void setDriveInMenu(bool visible);
+void setAmmoInMenu(void);
 artilleryData_t* getArtilleryData(void);
 void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain);

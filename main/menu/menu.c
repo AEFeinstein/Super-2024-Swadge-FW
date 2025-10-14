@@ -198,7 +198,16 @@ menuItem_t* addSingleItemToMenu(menu_t* menu, const char* label)
     newItem->numOptions = 0;
     newItem->currentOpt = 0;
     newItem->subMenu    = NULL;
-    push(menu->items, newItem);
+
+    // Make sure mnuBackStr is always the last item
+    if (menu->items->length && (mnuBackStr == ((menuItem_t*)menu->items->last->val)->label))
+    {
+        addBefore(menu->items, newItem, menu->items->last);
+    }
+    else
+    {
+        push(menu->items, newItem);
+    }
 
     // If this is the first item, set it as the current
     if (1 == menu->items->length)
@@ -282,6 +291,36 @@ void removeSingleItemFromMenu(menu_t* menu, const char* label)
         }
         listNode = listNode->next;
     }
+}
+
+/**
+ * @brief Remove all items from a menu, excluding the "Back" item
+ *
+ * @param menu The menu to remove all items from
+ * @return menu_t* The empty menu
+ */
+menu_t* removeAllItemsFromMenu(menu_t* menu)
+{
+    // While there are items in the list
+    while (menu->items->length)
+    {
+        // If the first item is the back entry
+        if (mnuBackStr == ((menuItem_t*)menu->items->first->val)->label)
+        {
+            // All non-back entries removed, so break
+            break;
+        }
+        else
+        {
+            // Remove and free the entry
+            heap_caps_free(shift(menu->items));
+        }
+    }
+
+    // Set the current item. May be 'back' or NULL
+    menu->currentItem = menu->items->first;
+
+    return menu;
 }
 
 /**
