@@ -127,6 +127,7 @@ typedef struct _physCirc_t
     int8_t shotsRemaining;
     int32_t shotTimer;
     int32_t lavaAnimTimer;
+    list_t availableAmmo;
 
     // Shell data
     int32_t bounces;
