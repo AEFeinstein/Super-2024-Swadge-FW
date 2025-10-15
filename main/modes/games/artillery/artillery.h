@@ -39,6 +39,7 @@ typedef enum
 
 typedef enum
 {
+    AGS_TOUR,
     AGS_WAIT,
     AGS_MENU,
     AGS_MOVE,

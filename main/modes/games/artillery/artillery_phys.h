@@ -174,6 +174,7 @@ typedef struct
     buttonBit_t cameraBtn;
     vec_t camera;
     list_t cameraTargets;
+    list_t cameraTour;
 
     bool shotFired;
     bool terrainMoving;

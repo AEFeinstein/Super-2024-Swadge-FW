@@ -42,6 +42,24 @@ void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newSta
     // Additional state-specific setup
     switch (ad->gState)
     {
+        case AGS_TOUR:
+        {
+            // Build a list of points for the camera to tour
+            clear(&ad->phys->cameraTour);
+            node_t* lNode = ad->phys->lines.first;
+            physLine_t* line;
+            while (lNode)
+            {
+                line = lNode->val;
+                if (line->isTerrain)
+                {
+                    push(&ad->phys->cameraTour, &line->l.p1);
+                }
+                lNode = lNode->next;
+            }
+            push(&ad->phys->cameraTour, &line->l.p2);
+            break;
+        }
         case AGS_MENU:
         {
             setDriveInMenu(ad->moveTimerUs);
@@ -88,6 +106,7 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
     switch (ad->gState)
     {
         default:
+        case AGS_TOUR:
         case AGS_WAIT:
         {
             // Do nothing!
@@ -254,6 +273,23 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
     // Draw depending on the game state
     switch (ad->gState)
     {
+        case AGS_TOUR:
+        {
+            // If there are no more points to tour
+            if (0 == ad->phys->cameraTour.length)
+            {
+                // Move to the next game state
+                if (artilleryIsMyTurn(ad))
+                {
+                    artillerySwitchToGameState(ad, AGS_MENU);
+                }
+                else
+                {
+                    artillerySwitchToGameState(ad, AGS_WAIT);
+                }
+            }
+            break;
+        }
         case AGS_MENU:
         {
             // Menu renderer

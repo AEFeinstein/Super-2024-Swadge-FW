@@ -37,8 +37,45 @@ bool physAdjustCameraTimer(physSim_t* phys, bool menuShowing)
 {
     bool cameraMoved = false;
 
-    // If there's no camera target
-    if (0 == phys->cameraTargets.length)
+    // If we're doing a camera tour
+    if (phys->cameraTour.length)
+    {
+        vecFl_t* flTarget = phys->cameraTour.first->val;
+        vec_t target      = {
+                 .x = flTarget->x - (TFT_WIDTH / 2),
+                 .y = flTarget->y - (TFT_HEIGHT / 2),
+        };
+
+        // Move one pixel towards X
+        if (phys->camera.x < target.x)
+        {
+            phys->camera.x++;
+        }
+        else if (phys->camera.x > target.x)
+        {
+            phys->camera.x--;
+        }
+
+        // Move one pixel towards Y
+        if (phys->camera.y < target.y)
+        {
+            phys->camera.y++;
+        }
+        else if (phys->camera.y > target.y)
+        {
+            phys->camera.y--;
+        }
+
+        // If the camera is at the destination
+        if ((phys->camera.x == target.x) && //
+            (phys->camera.y == target.y))
+        {
+            // Remove it
+            shift(&phys->cameraTour);
+        }
+    }
+    // Else if there's no camera target
+    else if (0 == phys->cameraTargets.length)
     {
         // move according to button input, vertically
         if (PB_UP & phys->cameraBtn)

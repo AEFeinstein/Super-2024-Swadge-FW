@@ -362,7 +362,7 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
         if (str_passAndPlay == label)
         {
             artilleryInitGame(AG_PASS_AND_PLAY, true);
-            artillerySwitchToGameState(ad, AGS_MENU);
+            artillerySwitchToGameState(ad, AGS_TOUR);
         }
         else if (str_wirelessConnect == label)
         {
@@ -379,11 +379,10 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
         {
             // TODO implement CPU difficulty
             artilleryInitGame(AG_CPU_PRACTICE, true);
-            artillerySwitchToGameState(ad, AGS_MENU);
+            artillerySwitchToGameState(ad, AGS_TOUR);
         }
         else if (str_help == label)
         {
-            ESP_LOGI(ART_TAG, "TODO Start help!");
             ad->mState = AMS_HELP;
         }
         else if (str_paintSelect == label)
@@ -589,7 +588,7 @@ void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
     // Switch to showing the game
     ad->mState = AMS_GAME;
 
-    // Start the game on the game menu
+    // Start the game waiting
     artillerySwitchToGameState(ad, AGS_WAIT);
 }
 

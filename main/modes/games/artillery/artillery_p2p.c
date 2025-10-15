@@ -187,7 +187,7 @@ void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
  */
 void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 {
-    ESP_LOGI("VT", "RX type %d, len %d", payload[0], len);
+    // ESP_LOGI("VT", "RX type %d, len %d", payload[0], len);
 
     artilleryData_t* ad = getArtilleryData();
 
@@ -302,8 +302,8 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
                 // Mark simulation as ready
                 ad->phys->isReady = true;
 
-                // After receiving clouds, open the menu
-                artillerySwitchToGameState(ad, AGS_MENU);
+                // After receiving clouds, go on a tour
+                artillerySwitchToGameState(ad, AGS_TOUR);
             }
             return;
         }
@@ -484,6 +484,9 @@ void artilleryTxWorld(artilleryData_t* ad)
     push(&ad->p2pQueue, pkt1);
     push(&ad->p2pQueue, pkt2);
     push(&ad->p2pQueue, pktCloud);
+
+    // After queueing world to send, go on a tour
+    artillerySwitchToGameState(ad, AGS_TOUR);
 }
 
 /**
@@ -632,7 +635,7 @@ void artilleryCheckTxQueue(artilleryData_t* ad)
     if (ad->p2pQueue.first && p2pIsTxIdle(&ad->p2p))
     {
         uint8_t* payload = shift(&ad->p2pQueue);
-        ESP_LOGI("VT", "TX type %d, len %d", payload[0], getSizeFromType(payload[0]));
+        // ESP_LOGI("VT", "TX type %d, len %d", payload[0], getSizeFromType(payload[0]));
 
         // Send over p2p
         p2pSendMsg(&ad->p2p, payload, getSizeFromType(payload[0]), artillery_p2pMsgTxCb);
