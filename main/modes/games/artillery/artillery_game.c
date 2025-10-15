@@ -569,8 +569,7 @@ void artilleryPassTurn(artilleryData_t* ad)
 
         if (MAX_TURNS == ad->turn)
         {
-            // If all turns have been taken
-            // TODO end the game
+            // If all turns have been taken end the game
             ad->mState = AMS_GAME_OVER;
 
             bool isP1 = true;
@@ -649,8 +648,17 @@ void artilleryPassTurn(artilleryData_t* ad)
         }
     }
 
-    // Reset menu to top item
-    ad->gameMenu = menuNavigateToTopItem(ad->gameMenu);
+    // If this isn't the first turn
+    if (ad->turn > 1)
+    {
+        // Open the ammo menu because the prior ammo was used
+        openAmmoMenu();
+    }
+    else
+    {
+        // Otherwise reset menu to top item
+        ad->gameMenu = menuNavigateToTopItem(ad->gameMenu);
+    }
 }
 
 /**
