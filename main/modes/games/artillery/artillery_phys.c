@@ -395,22 +395,22 @@ void physStepBackground(physSim_t* phys)
  * @param phys The physics simulation
  * @param elapsedUs The time elapsed since this was last called
  */
-bool physStep(physSim_t* phys, int32_t elapsedUs, bool menuShowing)
+void physStep(physSim_t* phys, int32_t elapsedUs, bool menuShowing, bool* playerMoved, bool* cameraMoved)
 {
-    bool change = false;
+    *playerMoved = false;
+    *cameraMoved = false;
     if (phys->isReady && phys->shouldStepForeground)
     {
         phys->shouldStepForeground = false;
 
         // Calculate physics frames at a very regular PHYS_TIME_STEP
         physFindObjDests(phys, PHYS_TIME_STEP_S);
-        change |= physCheckCollisions(phys);
-        change |= physBinaryMoveObjects(phys);
-        change |= physAdjustCameraTimer(phys, menuShowing);
+        physCheckCollisions(phys);
+        *playerMoved = physBinaryMoveObjects(phys);
+        *cameraMoved = physAdjustCameraTimer(phys, menuShowing);
         physRunAnimateTimers(phys, PHYS_TIME_STEP_US);
         checkTurnOver(phys);
     }
-    return change;
 }
 
 /**

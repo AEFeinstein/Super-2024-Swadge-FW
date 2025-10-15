@@ -118,6 +118,8 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     {
                         // Return to the menu
                         artillerySwitchToGameState(ad, AGS_MENU);
+                        // Send message that we've left AGS_LOOK
+                        artilleryTxCamera(ad);
                         return false;
                     }
                     default:
@@ -242,7 +244,9 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
     drawPhysOutline(ad->phys, ad->players, ad->scoreFont, ad->moveTimerUs, ad->turn);
 
     // Step the physics
-    bool physChange = physStep(ad->phys, elapsedUs, AGS_MENU == ad->gState);
+    bool playerMoved = false;
+    bool cameraMoved = false;
+    physStep(ad->phys, elapsedUs, AGS_MENU == ad->gState, &playerMoved, &cameraMoved);
 
     // Get the system font to draw text
     font_t* f = getSysFont();
@@ -390,11 +394,12 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
             if (false == ad->phys->shotFired)
             {
                 ad->phys->shotFired = true;
-                fireShot(ad->phys, player, opponent, true);
                 artilleryTxShot(ad, player);
+                fireShot(ad->phys, player, opponent, true);
             }
             else if (player->shotsRemaining)
             {
+                // TODO this is firing the wrong ammo for machine gun
                 RUN_TIMER_EVERY(player->shotTimer, 250000, elapsedUs, {
                     player->shotsRemaining--;
                     fireShot(ad->phys, player, opponent, false);
@@ -527,10 +532,17 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
     }
 
     // If this is a wireless game and there is some change and it's our turn
-    if (AG_WIRELESS == ad->gameType && (barrelChanged || physChange) && artilleryIsMyTurn(ad))
+    if (AG_WIRELESS == ad->gameType)
     {
-        // Transmit the change to the other Swadge
-        artilleryTxPlayers(ad);
+        if ((barrelChanged || playerMoved) && artilleryIsMyTurn(ad))
+        {
+            // Transmit the change to the other Swadge
+            artilleryTxPlayers(ad);
+        }
+        if (cameraMoved)
+        {
+            artilleryTxCamera(ad);
+        }
     }
 
     // TODO remove from production
