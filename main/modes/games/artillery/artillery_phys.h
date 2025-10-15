@@ -200,7 +200,7 @@ void drawPhysBackground(physSim_t* phys, int16_t x, int16_t y, int16_t w, int16_
 void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_t moveTimeLeftUs, int32_t turn);
 
 void physStepBackground(physSim_t* phys);
-bool physStep(physSim_t* phys, int32_t elapsedUs, bool menuShowing);
+void physStep(physSim_t* phys, int32_t elapsedUs, bool menuShowing, bool* playerMoved, bool* cameraMoved);
 
 void physSpawnPlayers(physSim_t* phys, int32_t numPlayers, physCirc_t* players[], paletteColor_t* colors);
 physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, int16_t barrelAngle, paletteColor_t baseColor,

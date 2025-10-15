@@ -23,6 +23,7 @@ typedef enum __attribute__((packed))
     P2P_ADD_TERRAIN,
     P2P_SET_CLOUDS,
     P2P_SET_PLAYERS,
+    P2P_SET_CAMERA,
     P2P_FIRE_SHOT,
     P2P_PASS_TURN,
 } artilleryP2pPacketType_t;
@@ -84,9 +85,15 @@ typedef struct // __attribute__((packed))
         int16_t barrelAngle;
         int32_t score;
     } players[NUM_PLAYERS];
-    vec_t camera;
     int32_t moveTimeLeftUs;
 } artPktPlayers_t;
+
+typedef struct
+{
+    uint8_t type;
+    vec_t camera;
+    bool looking;
+} artPktCamera_t;
 
 typedef struct // __attribute__((packed))
 {
@@ -312,12 +319,29 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
                 ad->players[pIdx]->score = pkt->players[pIdx].score;
             }
 
-            // Update camera and don't track objects
-            ad->phys->camera = pkt->camera;
-            clear(&ad->phys->cameraTargets);
-
             // Update gas gauge
             ad->moveTimerUs = pkt->moveTimeLeftUs;
+
+            return;
+        }
+        case P2P_SET_CAMERA:
+        {
+            // Receive and set camera
+            const artPktCamera_t* pkt = (const artPktCamera_t*)payload;
+
+            // Clear all camera targets
+            clear(&ad->phys->cameraTargets);
+
+            // If not looking around, focus on the player
+            if (!pkt->looking)
+            {
+                push(&ad->phys->cameraTargets, ad->players[ad->plIdx]);
+            }
+            else
+            {
+                // Set the camera
+                ad->phys->camera = pkt->camera;
+            }
 
             return;
         }
@@ -336,13 +360,12 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
                 player->ammoIdx     = pkt->ammoIdx;
                 player->shotPower   = pkt->shotPower;
 
-                // Tricky, fire the shot from here before switching game state
+                // Switch the game to firing
+                artillerySwitchToGameState(ad, AGS_FIRE);
+
+                // Fire the shot from here so that artilleryTxShot() isn't called from artilleryGameLoop()
                 ad->phys->shotFired = true;
                 fireShot(ad->phys, player, opponent, true);
-
-                // Switch the game state after the shot is fired, preventing the receiving Swadge from TXing a
-                // P2P_FIRE_SHOT
-                artillerySwitchToGameState(ad, AGS_FIRE);
             }
             return;
         }
@@ -502,11 +525,47 @@ void artilleryTxPlayers(artilleryData_t* ad)
         pkt->players[pIdx].score       = ad->players[pIdx]->score;
     }
 
-    // Update camera
-    pkt->camera = ad->phys->camera;
-
     // Write gas gauge
     pkt->moveTimeLeftUs = ad->moveTimerUs;
+
+    // Push into the queue
+    push(&ad->p2pQueue, pkt);
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param ad
+ */
+void artilleryTxCamera(artilleryData_t* ad)
+{
+    if (AG_WIRELESS != ad->gameType)
+    {
+        return;
+    }
+
+    // Remove any other enqueued packet of this type first
+    node_t* pktNode = ad->p2pQueue.first;
+    while (pktNode)
+    {
+        node_t* pktNodeNext           = pktNode->next;
+        artilleryP2pPacketType_t type = *((uint8_t*)pktNode->val);
+        if (P2P_SET_CAMERA == type)
+        {
+            heap_caps_free(removeEntry(&ad->p2pQueue, pktNode));
+        }
+        pktNode = pktNodeNext;
+    }
+
+    // Allocate a packet
+    artPktCamera_t* pkt = heap_caps_calloc(1, sizeof(artPktCamera_t), MALLOC_CAP_SPIRAM);
+
+    // Write the type
+    pkt->type = P2P_SET_CAMERA;
+
+    // Write the data
+    pkt->camera  = ad->phys->camera;
+    pkt->looking = (AGS_LOOK == ad->gState);
 
     // Push into the queue
     push(&ad->p2pQueue, pkt);
@@ -611,6 +670,10 @@ static uint8_t getSizeFromType(artilleryP2pPacketType_t type)
         case P2P_SET_PLAYERS:
         {
             return sizeof(artPktPlayers_t);
+        }
+        case P2P_SET_CAMERA:
+        {
+            return sizeof(artPktCamera_t);
         }
         case P2P_FIRE_SHOT:
         {
