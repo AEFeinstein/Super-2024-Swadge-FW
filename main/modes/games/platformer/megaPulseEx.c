@@ -702,13 +702,14 @@ void updateReadyScreen(platformer_t* self)
     //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
     self->gameData.frameCount++;
-    if (self->gameData.frameCount > 4)//179)
+    if (self->gameData.frameCount > 60)//179)
     {
-        soundStop(true);
-        changeStateGame(self);
+        soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
+        self->update = &updateGame;
     }
 
     mg_drawTileMap(&(self->tilemap));
+    mg_drawEntities(&(self->entityManager));
     drawReadyScreen(&(self->font), &(self->gameData));
 }
 
@@ -761,9 +762,10 @@ void changeStateGame(platformer_t* self)
 
     self->gameData.changeBgm = MG_BGM_KINETIC_DONUT;
 
-    soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
+    //soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
+    soundStop(true);
 
-    self->update = &updateGame;
+    self->update = &updateReadyScreen;
 }
 
 static void mg_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
@@ -786,7 +788,7 @@ void detectGameStateChange(platformer_t* self)
             break;
 
         case MG_ST_READY_SCREEN:
-            changeStateReadyScreen(self);
+            changeStateGame(self);
             break;
 
         case MG_ST_LEVEL_CLEAR:
@@ -845,7 +847,7 @@ void updateDead(platformer_t* self)
     {
         if (self->gameData.lives > 0)
         {
-            changeStateReadyScreen(self);
+            changeStateGame(self);
         }
         else
         {
@@ -1470,7 +1472,7 @@ void updateLevelSelect(platformer_t* self)
             mg_loadWsgSet(&(platformer->wsgManager), leveldef[self->gameData.level].defaultWsgSetIndex);
             mg_loadMapFromFile(&(platformer->tilemap), leveldef[self->gameData.level].filename);
 
-            changeStateReadyScreen(self);
+            changeStateGame(self);
             return;
         }
         
