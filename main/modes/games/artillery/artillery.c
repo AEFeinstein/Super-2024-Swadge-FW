@@ -528,6 +528,22 @@ void setAmmoInMenu(void)
 }
 
 /**
+ * @brief Navigate to the load ammo menu
+ */
+void openAmmoMenu(void)
+{
+    // Return to the top level menu, just in case
+    menu_t* menu = ad->gameMenu;
+    while (menu->parentMenu)
+    {
+        menu = menu->parentMenu;
+    }
+
+    ad->gameMenu = menuNavigateToItem(ad->gameMenu, load_ammo);
+    ad->gameMenu = menuSelectCurrentItem(ad->gameMenu);
+}
+
+/**
  * @brief Initialize the game, including physics and timers
  *
  * @param gameType The type of game to initialize
