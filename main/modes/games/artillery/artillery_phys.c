@@ -339,6 +339,12 @@ void deinitPhys(physSim_t* phys)
     {
         physRemoveAllObjects(phys);
 
+        // Deinit tour
+        while (phys->cameraTour.length)
+        {
+            pop(&phys->cameraTour);
+        }
+
         // Free the simulation
         heap_caps_free(phys);
     }
