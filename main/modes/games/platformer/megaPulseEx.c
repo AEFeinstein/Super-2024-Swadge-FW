@@ -305,6 +305,8 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
 
             changeStateReadyScreen(pango);
             deinitMenu(pango->menu);*/
+            mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
+            changeStateLevelSelect(platformer);
         }
         else if (label == mgMenuHighScores)
         {
@@ -1442,14 +1444,18 @@ void updateLevelSelect(platformer_t* self)
 
     if(self->menuState < 2 && ((self->gameData.btnState & PB_RIGHT) && !(self->gameData.prevBtnState & PB_RIGHT))){
         self->menuState++; self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
+        soundPlaySfx(&self->soundManager.sndMenuSelect, MIDI_SFX);
     } else if(self->menuState > 0 && ((self->gameData.btnState & PB_LEFT) && !(self->gameData.prevBtnState & PB_LEFT))){
         self->menuState--; self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
+        soundPlaySfx(&self->soundManager.sndMenuSelect, MIDI_SFX);
     }
 
     if(self->menuSelection < 2 && ((self->gameData.btnState & PB_DOWN) && !(self->gameData.prevBtnState & PB_DOWN))){
         self->menuSelection++; self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
+        soundPlaySfx(&self->soundManager.sndMenuSelect, MIDI_SFX);
     } else if(self->menuSelection > 0 && ((self->gameData.btnState & PB_UP) && !(self->gameData.prevBtnState & PB_UP))){
         self->menuSelection--; self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
+        soundPlaySfx(&self->soundManager.sndMenuSelect, MIDI_SFX);
     }
 
     if( (self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A))
@@ -1482,18 +1488,24 @@ void drawLevelSelect(platformer_t* self)
         (39 + self->menuSelection * 64) - self->tilemap.mapOffsetY, 
         (55 + 66 + self->menuState * 64) - self->tilemap.mapOffsetX, 
         (39 + 66 + self->menuSelection * 64) - self->tilemap.mapOffsetY, 
-        redColors[(self->gameData.frameCount >> 3) % 4]
+        (self->unlockables.levelsCleared & (1 << self->gameData.level)) ? greenColors[(self->gameData.frameCount >> 3) % 4] : redColors[(self->gameData.frameCount >> 3) % 4]
     );
     
     mg_drawTileMap(&(self->tilemap));
 
-
-    if(self->unlockables.levelsCleared & (1 << self->gameData.level)) 
+    for(uint8_t j = 0; j<3; j++)
     {
-        drawLine((64 + self->menuState * 64) - self->tilemap.mapOffsetX, (48 + self->menuSelection * 64) - self->tilemap.mapOffsetY, (64 + 48 + self->menuState * 64) - self->tilemap.mapOffsetX, (48 + 48 + self->menuSelection * 64) - self->tilemap.mapOffsetY, redColors[self->gameData.frameCount % 4], 0);
-        drawLine((64 + self->menuState * 64) - self->tilemap.mapOffsetX, (48 + 48 + self->menuSelection * 64) - self->tilemap.mapOffsetY, (64 + 48 + self->menuState * 64) - self->tilemap.mapOffsetX, (48 + self->menuSelection * 64) - self->tilemap.mapOffsetY, redColors[self->gameData.frameCount % 4], 0);
+        for(uint8_t i = 0; i<3; i++)
+        {
+            if(self->unlockables.levelsCleared & (1 << (((j * 3) + i) + 1)) )
+            {
+                drawLine((64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY, (64 + 48 + i * 64) - self->tilemap.mapOffsetX, (48 + 48 + j * 64) - self->tilemap.mapOffsetY, redColors[self->gameData.frameCount % 4], 0);
+                drawLine((64 + i * 64) - self->tilemap.mapOffsetX, (48 + 48 + j * 64) - self->tilemap.mapOffsetY, (64 + 48 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY, redColors[self->gameData.frameCount % 4], 0);
+            }
+        }
     }
-    else
+
+    if(!(self->unlockables.levelsCleared & (1 << self->gameData.level)))
     {
         drawRect(
             (64 + self->menuState * 64) - self->tilemap.mapOffsetX + ((self->gameData.frameCount >> 2) & 0b0111), 
