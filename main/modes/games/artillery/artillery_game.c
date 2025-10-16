@@ -691,16 +691,19 @@ void artilleryPassTurn(artilleryData_t* ad)
         }
     }
 
-    // If this isn't the first turn
-    if (ad->turn > 1)
+    if (artilleryIsMyTurn(ad))
     {
-        // Open the ammo menu because the prior ammo was used
-        openAmmoMenu();
-    }
-    else
-    {
-        // Otherwise reset menu to top item
-        ad->gameMenu = menuNavigateToTopItem(ad->gameMenu);
+        // If this isn't the first turn
+        if (ad->turn > 1)
+        {
+            // Open the ammo menu because the prior ammo was used
+            openAmmoMenu();
+        }
+        else
+        {
+            // Otherwise reset menu to top item
+            ad->gameMenu = menuNavigateToTopItem(ad->gameMenu);
+        }
     }
 }
 
