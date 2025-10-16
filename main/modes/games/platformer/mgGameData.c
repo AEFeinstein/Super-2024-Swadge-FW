@@ -153,7 +153,7 @@ void mg_updateLedsShowHighScores(mgGameData_t* gameData)
 {
     if (((gameData->frameCount) % 10) == 0)
     {
-        for (int32_t i = 0; i < 8; i++)
+        for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
             if (((gameData->frameCount >> 4) % CONFIG_NUM_LEDS) == i)
             {
