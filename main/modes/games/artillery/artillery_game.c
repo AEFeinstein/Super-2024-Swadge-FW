@@ -47,8 +47,8 @@ void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newSta
             bool initialCameraSet = false;
             // Build a list of points for the camera to tour
             clear(&ad->phys->cameraTour);
-            node_t* lNode = ad->phys->lines.first;
-            physLine_t* line;
+            node_t* lNode    = ad->phys->lines.first;
+            physLine_t* line = NULL;
             while (lNode)
             {
                 line = lNode->val;
