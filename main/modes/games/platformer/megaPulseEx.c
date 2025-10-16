@@ -756,6 +756,8 @@ void changeStateGame(platformer_t* self)
         mg_viewFollowEntity(&(self->tilemap), entityManager->playerEntity);
     }
 
+    entityManager->bossEntity = NULL;
+
     mg_updateLedsHpMeter(&(self->entityManager), &(self->gameData));
 
     self->tilemap.executeTileSpawnAll = true;
@@ -833,15 +835,13 @@ void changeStateDead(platformer_t* self)
     soundStop(true);
     globalMidiPlayerGet(MIDI_BGM)->loop = false;
     soundPlayBgm(&(self->soundManager.sndDie), BZR_STEREO);
+    self->entityManager.viewEntity = NULL;
 
     self->update = &updateDead;
 }
 
 void updateDead(platformer_t* self)
 {
-    // Clear the display
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
-
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 179)
     {
