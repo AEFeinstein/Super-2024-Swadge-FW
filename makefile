@@ -236,9 +236,9 @@ DEFINES_LIST = \
 	SOC_TOUCH_PAD_THRESHOLD_MAX=0x1FFFFF
 
 # If this is not WSL, use OpenGL for rawdraw
-ifeq ($(IS_WSL),0)
-	DEFINES_LIST += CNFGOGL
-endif
+# ifeq ($(IS_WSL),0)
+#	DEFINES_LIST += CNFGOGL
+#endif
 
 # Extra defines
 DEFINES_LIST += \
