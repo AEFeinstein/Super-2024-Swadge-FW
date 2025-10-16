@@ -25,7 +25,7 @@ typedef struct
 {
     int16_t btnState;
     int16_t prevBtnState;
-    
+
     int16_t doubleTapBtnTimer;
     int16_t doubleTapBtnState;
 

@@ -9,35 +9,24 @@
 // Constants
 //==============================================================================
 
-#define SUBPIXEL_RESOLUTION        4
-#define MG_TILESIZE_IN_POWERS_OF_2 4
-#define MG_TILESIZE                16
-#define MG_HALF_TILESIZE           8
-#define DESPAWN_THRESHOLD          64
+#define SUBPIXEL_RESOLUTION                 4
+#define MG_TILESIZE_IN_POWERS_OF_2          4
+#define MG_TILESIZE                         16
+#define MG_HALF_TILESIZE                    8
+#define DESPAWN_THRESHOLD                   64
 #define MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION 148
 
-
-static const cnfsFileIdx_t MG_BGMS[]
-    = {
-        BGM_DEADEYE_CHIRPZI_MID,
-        BGM_DRAIN_BAT_MID,
-        BGM_FLARE_GRYFFYN_MID,
-        BGM_GRIND_PANGOLIN_MID,
-        BGM_KINETIC_DONUT_MID,
-        BGM_RIP_BARONESS_MID,
-        BGM_SEVER_YAGATA_MID,
-        BGM_SMASH_GORILLA_MID,
-        BGM_STAGE_SELECT_MID,
-        BGM_NAME_ENTRY_MID
-    };
+static const cnfsFileIdx_t MG_BGMS[] = {
+    BGM_DEADEYE_CHIRPZI_MID, BGM_DRAIN_BAT_MID,    BGM_FLARE_GRYFFYN_MID, BGM_GRIND_PANGOLIN_MID, BGM_KINETIC_DONUT_MID,
+    BGM_RIP_BARONESS_MID,    BGM_SEVER_YAGATA_MID, BGM_SMASH_GORILLA_MID, BGM_STAGE_SELECT_MID,   BGM_NAME_ENTRY_MID};
 
 //==============================================================================
 // Macros
 //==============================================================================
 
-#define SIGNOF(x)           ((x > 0) - (x < 0))
-#define MG_TO_TILECOORDS(x) ((x) >> MG_TILESIZE_IN_POWERS_OF_2)
-#define TO_PIXEL_COORDS(x) ((x) >> SUBPIXEL_RESOLUTION)
+#define SIGNOF(x)             ((x > 0) - (x < 0))
+#define MG_TO_TILECOORDS(x)   ((x) >> MG_TILESIZE_IN_POWERS_OF_2)
+#define TO_PIXEL_COORDS(x)    ((x) >> SUBPIXEL_RESOLUTION)
 #define TO_SUBPIXEL_COORDS(x) ((x) << SUBPIXEL_RESOLUTION)
 
 typedef struct platformer_t platformer_t;
@@ -46,16 +35,18 @@ typedef struct mgTilemap_t mgTilemap_t;
 typedef struct mgEntity_t mgEntity_t;
 typedef struct mgEntitySpawnData_t mgEntitySpawnData_t;
 
-typedef struct {
+typedef struct
+{
     int32_t size;
     vec_t collisionPoints[];
 } mg_EntityTileCollisionPointList_t;
 
-typedef struct {
-   const mg_EntityTileCollisionPointList_t* bottomEdge;
-   const mg_EntityTileCollisionPointList_t* topEdge;
-   const mg_EntityTileCollisionPointList_t* rightEdge;
-   const mg_EntityTileCollisionPointList_t* leftEdge;
+typedef struct
+{
+    const mg_EntityTileCollisionPointList_t* bottomEdge;
+    const mg_EntityTileCollisionPointList_t* topEdge;
+    const mg_EntityTileCollisionPointList_t* rightEdge;
+    const mg_EntityTileCollisionPointList_t* leftEdge;
 } mg_EntityTileCollider_t;
 
 typedef enum
@@ -385,10 +376,10 @@ typedef enum
     MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_7D,
     MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_7E,
     MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_7F,
-    MG_TILE_SOLID_VISIBLE_INTERACTIVE_80, //Container Block
-    MG_TILE_SOLID_VISIBLE_INTERACTIVE_81, //Brick Block
+    MG_TILE_SOLID_VISIBLE_INTERACTIVE_80, // Container Block
+    MG_TILE_SOLID_VISIBLE_INTERACTIVE_81, // Brick Block
     MG_TILE_SOLID_VISIBLE_INTERACTIVE_82,
-    MG_TILE_SOLID_VISIBLE_INTERACTIVE_83, 
+    MG_TILE_SOLID_VISIBLE_INTERACTIVE_83,
     MG_TILE_SOLID_VISIBLE_INTERACTIVE_84,
     MG_TILE_SOLID_VISIBLE_INTERACTIVE_85,
     MG_TILE_SOLID_VISIBLE_INTERACTIVE_86,
@@ -417,8 +408,8 @@ typedef enum
     MG_TILE_SOLID_VISIBLE_INTERACTIVE_9D,
     MG_TILE_SOLID_VISIBLE_INTERACTIVE_9E,
     MG_TILE_SOLID_VISIBLE_INTERACTIVE_9F,
-    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0, //Ladder/chain 
-    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1, //Bounce Block
+    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0, // Ladder/chain
+    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1, // Bounce Block
     MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
     MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
     MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4,
@@ -515,7 +506,8 @@ typedef enum
     MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_FF
 } mg_genericTileIndex_t;
 
-typedef enum {
+typedef enum
+{
     MG_WSG_PLAYER_IDLE,
     MG_WSG_PLAYER_WALK1,
     MG_WSG_PLAYER_WALK2,
@@ -532,7 +524,7 @@ typedef enum {
     MG_WSG_PLAYER_JUMP2,
     MG_WSG_PLAYER_JUMP3,
     MG_WSG_PLAYER_JUMP4,
-    
+
     MG_WSG_PLAYER_SHOOT_IDLE,
     MG_WSG_PLAYER_SHOOT_WALK1,
     MG_WSG_PLAYER_SHOOT_WALK2,
@@ -694,7 +686,8 @@ typedef enum {
     MG_WSG_BOSS_DOOR
 } mg_wsgIndex_t;
 
-typedef enum {
+typedef enum
+{
     MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20 = 75,
     MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,
     MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_22,
@@ -958,82 +951,25 @@ static const int MG_TILE_COLLISION_OFFSETS_1x2_LEFT_EDGE[]
     = {-7, 14, -7, 0, -7, -14};
 */
 
-static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_bottomEdge = 
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_bottomEdge
+    = {.collisionPoints = {{.x = -7, .y = 15}, {.x = 0, .y = 15}, {.x = 6, .y = 15}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_topEdge
+    = {.collisionPoints = {{.x = -7, .y = -15}, {.x = 0, .y = -15}, {.x = 7, .y = -15}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_rightEdge
+    = {.collisionPoints = {{.x = 8, .y = 14}, {.x = 8, .y = 0}, {.x = 8, .y = -14}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_leftEdge
+    = {.collisionPoints = {{.x = -7, .y = 14}, {.x = -7, .y = 0}, {.x = -7, .y = -14}}, .size = 3};
+
+static const mg_EntityTileCollider_t entityTileCollider_1x2 = {.bottomEdge = &mgTileCollisionOffsets_1x2_bottomEdge,
+                                                               .topEdge    = &mgTileCollisionOffsets_1x2_topEdge,
+                                                               .rightEdge  = &mgTileCollisionOffsets_1x2_rightEdge,
+                                                               .leftEdge   = &mgTileCollisionOffsets_1x2_leftEdge};
+
+typedef enum
 {
-    .collisionPoints = {{
-        .x = -7,
-        .y = 15
-    },
-    {
-        .x = 0,
-        .y = 15
-    },
-    {
-        .x = 6,
-        .y = 15
-    }},
-    .size = 3
-};
-
-static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_topEdge = 
-{
-    .collisionPoints = {{
-        .x = -7,
-        .y = -15
-    },
-    {
-        .x = 0,
-        .y = -15
-    },
-    {
-        .x = 7,
-        .y = -15
-    }},
-    .size = 3
-};
-
-static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_rightEdge = 
-{
-    .collisionPoints = {{
-        .x = 8,
-        .y = 14
-    },
-    {
-        .x = 8,
-        .y = 0
-    },
-    {
-        .x = 8,
-        .y = -14
-    }},
-    .size = 3
-};
-
-static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_leftEdge = 
-{
-    .collisionPoints = {{
-        .x = -7,
-        .y = 14
-    },
-    {
-        .x = -7,
-        .y = 0
-    },
-    {
-        .x = -7,
-        .y = -14
-    }},
-    .size = 3
-};
-
-static const mg_EntityTileCollider_t entityTileCollider_1x2 = {
-    .bottomEdge = &mgTileCollisionOffsets_1x2_bottomEdge,
-    .topEdge = &mgTileCollisionOffsets_1x2_topEdge,
-    .rightEdge = &mgTileCollisionOffsets_1x2_rightEdge,
-    .leftEdge = &mgTileCollisionOffsets_1x2_leftEdge
-};
-
-typedef enum {
     MG_WSGSET_NULL = -1,
     MG_WSGSET_DEFAULT,
     MG_WSGSET_LEVEL_SELECT,
@@ -1046,24 +982,24 @@ typedef enum {
     MG_WSGSET_FLARE_GRYFFYN
 } mgWsgSetIndex_t;
 
-static const mgLeveldef_t leveldef[17] = {
-                                          {.filename = LEVEL_SELECT_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_LEVEL_SELECT},
-                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT},
-                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT},
-                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT},
-                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_02_BIN, .timeLimit = 220, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_02_BIN, .timeLimit = 200, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_02_BIN, .timeLimit = 220, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_02_BIN, .timeLimit = 270, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_02_BIN, .timeLimit = 240, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_02_BIN, .timeLimit = 240, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_02_BIN, .timeLimit = 240, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT}};
+static const mgLeveldef_t leveldef[17]
+    = {{.filename = LEVEL_SELECT_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_LEVEL_SELECT},
+       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT},
+       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT},
+       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT},
+       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+       {.filename = LEVEL_02_BIN, .timeLimit = 220, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+       {.filename = LEVEL_02_BIN, .timeLimit = 200, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+       {.filename = LEVEL_02_BIN, .timeLimit = 220, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+       {.filename = LEVEL_02_BIN, .timeLimit = 270, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+       {.filename = LEVEL_02_BIN, .timeLimit = 240, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+       {.filename = LEVEL_02_BIN, .timeLimit = 240, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+       {.filename = LEVEL_02_BIN, .timeLimit = 240, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT}};
 
 #endif

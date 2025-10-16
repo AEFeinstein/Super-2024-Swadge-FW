@@ -57,7 +57,7 @@ void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
     gameData->currentBgm         = 0;
     gameData->changeBgm          = MG_BGM_NO_CHANGE;
     gameData->initialHp          = 1;
-    gameData->continuesUsed      = 0;//(gameData->world == 1 && gameData->level == 1) ? false : true;
+    gameData->continuesUsed      = 0; //(gameData->world == 1 && gameData->level == 1) ? false : true;
     gameData->inGameTimer        = 0;
 
     mg_resetGameDataLeds(gameData);

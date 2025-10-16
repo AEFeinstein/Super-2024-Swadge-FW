@@ -22,7 +22,8 @@
 // Structs
 //==============================================================================
 
-struct mgEntitySpawnData_t {
+struct mgEntitySpawnData_t
+{
     bool spawnable;
     bool respawnable;
     uint8_t type;

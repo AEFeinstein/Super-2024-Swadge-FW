@@ -41,8 +41,8 @@ struct mgEntityManager_t
 //==============================================================================
 // Prototypes
 //==============================================================================
-void mg_initializeEntityManager(mgEntityManager_t* entityManager, mgWsgManager_t* wsgManager, mgTilemap_t* tilemap, mgGameData_t* gameData,
-                                mgSoundManager_t* soundManager);
+void mg_initializeEntityManager(mgEntityManager_t* entityManager, mgWsgManager_t* wsgManager, mgTilemap_t* tilemap,
+                                mgGameData_t* gameData, mgSoundManager_t* soundManager);
 void mg_updateEntities(mgEntityManager_t* entityManager);
 void mg_deactivateAllEntities(mgEntityManager_t* entityManager, bool excludePlayer);
 void mg_drawEntities(mgEntityManager_t* entityManager);
@@ -92,7 +92,7 @@ mgEntity_t* createCharginSchmuck(mgEntityManager_t* entityManager, uint16_t x, u
 mgEntity_t* createBouncinSchmuck(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createTurret(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createSheldonShieldy(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
-//mgEntity_t* createSpawnerBot(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+// mgEntity_t* createSpawnerBot(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createSpikyMcGee(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createAirTurret(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createBouncepad(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);

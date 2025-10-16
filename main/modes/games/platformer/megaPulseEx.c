@@ -143,7 +143,7 @@ void drawPause(font_t* font);
 uint16_t getLevelIndex(uint8_t world, uint8_t level);
 void changeStateMainMenu(platformer_t* self);
 void mgBuildMainMenu(platformer_t* self);
-void mgUpdateMainMenu(platformer_t * self);
+void mgUpdateMainMenu(platformer_t* self);
 static void mg_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 void changeStateLevelSelect(platformer_t* self);
 void updateLevelSelect(platformer_t* self);
@@ -195,8 +195,8 @@ static const char mgMenuResetScores[]   = "Reset Scores";
 static const char mgMenuResetProgress[] = "Reset Progress";
 static const char mgMenuExit[]          = "Exit";
 static const char mgMenuSaveAndExit[]   = "Save & Exit";
-static const char mgMenuStartOver[] = "Start Over";
-static const char mgMenuConfirm[] = "Confirm";
+static const char mgMenuStartOver[]     = "Start Over";
+static const char mgMenuConfirm[]       = "Confirm";
 
 //==============================================================================
 // Functions
@@ -226,7 +226,7 @@ void platformerEnterMode(void)
     }
 
     loadFont(MEGAMAX_JONES_FONT, &platformer->font, false);
-    platformer->menuRenderer = initMenuMegaRenderer(NULL,NULL,NULL);
+    platformer->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
 
     mg_initializeWsgManager(&(platformer->wsgManager));
 
@@ -238,8 +238,8 @@ void platformerEnterMode(void)
     mg_initializeSoundManager(&(platformer->soundManager));
 
     mg_initializeGameData(&(platformer->gameData), &(platformer->soundManager));
-    mg_initializeEntityManager(&(platformer->entityManager), &(platformer->wsgManager), &(platformer->tilemap), &(platformer->gameData),
-                               &(platformer->soundManager));
+    mg_initializeEntityManager(&(platformer->entityManager), &(platformer->wsgManager), &(platformer->tilemap),
+                               &(platformer->gameData), &(platformer->soundManager));
 
     platformer->tilemap.entityManager    = &(platformer->entityManager);
     platformer->tilemap.tileSpawnEnabled = true;
@@ -376,9 +376,9 @@ void platformerMainLoop(int64_t elapsedUs)
 
 void changeStateMainMenu(platformer_t* self)
 {
-    self->gameData.frameCount = 0;
+    self->gameData.frameCount  = 0;
     self->gameData.changeState = 0;
-    self->update = &mgUpdateMainMenu;
+    self->update               = &mgUpdateMainMenu;
     mgBuildMainMenu(self);
 }
 
@@ -386,16 +386,17 @@ void mgBuildMainMenu(platformer_t* self)
 {
     // Initialize the menu
     self->menu = initMenu(platformerName, mgMenuCb);
-    
 
-    
-    if(self->unlockables.levelsCleared){
+    if (self->unlockables.levelsCleared)
+    {
         addSingleItemToMenu(self->menu, mgMenuContinue);
 
         self->menu = startSubMenu(self->menu, mgMenuStartOver);
         addSingleItemToMenu(self->menu, mgMenuConfirm);
         self->menu = endSubMenu(self->menu);
-    } else {
+    }
+    else
+    {
         addSingleItemToMenu(self->menu, mgMenuNewGame);
     }
 
@@ -419,12 +420,10 @@ void mgUpdateMainMenu(platformer_t* self)
     drawMenuMega(self->menu, self->menuRenderer, 16666);
 }
 
-
-
 void updateGame(platformer_t* self)
 {
     // Clear the display
-    //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
+    // fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
 
     mg_updateEntities(&(self->entityManager));
 
@@ -457,14 +456,14 @@ void updateGame(platformer_t* self)
 
 void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
 {
-    //char coinStr[8];
-    //snprintf(coinStr, sizeof(coinStr) - 1, "C:%02d", gameData->coins);
+    // char coinStr[8];
+    // snprintf(coinStr, sizeof(coinStr) - 1, "C:%02d", gameData->coins);
 
     char scoreStr[32];
     snprintf(scoreStr, sizeof(scoreStr) - 1, "%06" PRIu32, gameData->score);
 
-    //char levelStr[15];
-    //snprintf(levelStr, sizeof(levelStr) - 1, "Level %d-%d", gameData->world, gameData->level);
+    // char levelStr[15];
+    // snprintf(levelStr, sizeof(levelStr) - 1, "Level %d-%d", gameData->world, gameData->level);
 
     char livesStr[8];
     snprintf(livesStr, sizeof(livesStr) - 1, "x%02d", gameData->lives);
@@ -477,65 +476,93 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
         drawText(font, c500, "1UP", 24, 2);
     }*/
 
-    //drawText(font, c555, coinStr, 160, 16);
+    // drawText(font, c555, coinStr, 160, 16);
     drawText(font, c000, scoreStr, 34, 4);
     drawText(font, c555, scoreStr, 32, 2);
-    //drawText(font, c555, levelStr, 152, 2);
+    // drawText(font, c555, levelStr, 152, 2);
     drawText(font, c000, timeStr, 214, 4);
     drawText(font, (gameData->countdown > 30) ? c555 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 212, 2);
-    
-    if(platformer->entityManager.playerEntity != NULL){
+
+    if (platformer->entityManager.playerEntity != NULL)
+    {
         drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOTTOM_ALPHA], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION);
-        
+
         int8_t hp = platformer->entityManager.playerEntity->hp;
 
-        for(uint8_t i = 0; i < 4; i++){
-            if(hp > 6) {
-                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_MIDDLE_6], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i*16));
-            } else {
-                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_MIDDLE_0 + hp], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i*16));
+        for (uint8_t i = 0; i < 4; i++)
+        {
+            if (hp > 6)
+            {
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_MIDDLE_6], 8,
+                            MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i * 16));
+            }
+            else
+            {
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_MIDDLE_0 + hp], 8,
+                            MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i * 16));
             }
 
             hp -= 6;
 
-            if(hp < 0) {hp = 0;}
+            if (hp < 0)
+            {
+                hp = 0;
+            }
         }
 
-        if(hp == 6) {
-            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_6], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4*16));
-        } else {
-            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_0 + hp], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4*16));
+        if (hp == 6)
+        {
+            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_6], 8,
+                        MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4 * 16));
+        }
+        else
+        {
+            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_0 + hp], 8,
+                        MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4 * 16));
         }
     }
 
-    if(platformer->entityManager.bossEntity != NULL){
+    if (platformer->entityManager.bossEntity != NULL)
+    {
         drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOTTOM_BIGMA], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION);
-        
+
         int8_t hp = platformer->entityManager.bossEntity->hp;
 
-        for(uint8_t i = 0; i < 4; i++){
-            if(hp > 6) {
-                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_6], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i*16));
-            } else {
-                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_0 + hp], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i*16));
+        for (uint8_t i = 0; i < 4; i++)
+        {
+            if (hp > 6)
+            {
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_6], 256,
+                            MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i * 16));
+            }
+            else
+            {
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_0 + hp], 256,
+                            MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i * 16));
             }
 
             hp -= 6;
 
-            if(hp < 0) {hp = 0;}
+            if (hp < 0)
+            {
+                hp = 0;
+            }
         }
 
-        if(hp == 6) {
-            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_6], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4*16));
-        } else {
-            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_0 + hp], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4*16));
+        if (hp == 6)
+        {
+            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_6], 256,
+                        MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4 * 16));
+        }
+        else
+        {
+            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_0 + hp], 256,
+                        MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4 * 16));
         }
     }
-    
+
     drawText(font, c000, livesStr, 6, 166);
     drawText(font, c555, livesStr, 4, 164);
-    
-    
 
     if (gameData->comboTimer == 0)
     {
@@ -545,14 +572,12 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
     snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
     drawText(font, (gameData->comboTimer < 60) ? c030 : greenColors[(platformer->gameData.frameCount >> 3) % 4],
              scoreStr, 32, 16);
-
-    
 }
 
 void updateTitleScreen(platformer_t* self)
 {
     // Clear the display
-    //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
+    // fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
 
     self->gameData.frameCount++;
 
@@ -574,7 +599,7 @@ void updateTitleScreen(platformer_t* self)
          || ((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START))))
     {
         self->gameData.btnState = 0;
-        self->menuSelection    = 0;
+        self->menuSelection     = 0;
 
         if (!self->gameData.debugMode)
         {
@@ -587,7 +612,7 @@ void updateTitleScreen(platformer_t* self)
 
     drawPlatformerTitleScreen(&(self->font), &(self->gameData));
 
-    //leds
+    // leds
 }
 
 void drawPlatformerTitleScreen(font_t* font, mgGameData_t* gameData)
@@ -689,7 +714,7 @@ void changeStateReadyScreen(platformer_t* self)
     self->gameData.frameCount = 0;
 
     globalMidiPlayerGet(MIDI_BGM)->loop = false;
-    //soundPlayBgm(&(self->soundManager.bgmIntro), BZR_STEREO);
+    // soundPlayBgm(&(self->soundManager.bgmIntro), BZR_STEREO);
 
     mg_resetGameDataLeds(&(self->gameData));
 
@@ -699,10 +724,10 @@ void changeStateReadyScreen(platformer_t* self)
 void updateReadyScreen(platformer_t* self)
 {
     // Clear the display
-    //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    // fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
     self->gameData.frameCount++;
-    if (self->gameData.frameCount > 60)//179)
+    if (self->gameData.frameCount > 60) // 179)
     {
         soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
         self->update = &updateGame;
@@ -715,14 +740,14 @@ void updateReadyScreen(platformer_t* self)
 
 void drawReadyScreen(font_t* font, mgGameData_t* gameData)
 {
-    //drawPlatformerHud(font, gameData);
+    // drawPlatformerHud(font, gameData);
     int16_t xOff = (TFT_WIDTH - textWidth(font, str_get_ready)) / 2;
 
-    if(gameData->frameCount & 0b1111){
-        drawText(font, c000, ((gameData->levelDeaths > 0) ? str_get_ready_2 : str_get_ready), xOff+2, 130);
+    if (gameData->frameCount & 0b1111)
+    {
+        drawText(font, c000, ((gameData->levelDeaths > 0) ? str_get_ready_2 : str_get_ready), xOff + 2, 130);
         drawText(font, c555, ((gameData->levelDeaths > 0) ? str_get_ready_2 : str_get_ready), xOff, 128);
     }
-    
 
     /*if (getLevelIndex(gameData->world, gameData->level) == 0)
     {
@@ -747,12 +772,15 @@ void changeStateGame(platformer_t* self)
 
     mgEntityManager_t* entityManager = &(self->entityManager);
 
-    if(platformer->tilemap.defaultPlayerSpawn != NULL){
-        entityManager->viewEntity
-            = mg_createPlayer(entityManager, entityManager->tilemap->defaultPlayerSpawn->tx * 16 + entityManager->tilemap->defaultPlayerSpawn->xOffsetInPixels,
-                            entityManager->tilemap->defaultPlayerSpawn->ty * 16 + entityManager->tilemap->defaultPlayerSpawn->yOffsetInPixels);
-        entityManager->playerEntity     = entityManager->viewEntity;
-        //entityManager->playerEntity->hp = self->gameData.initialHp;
+    if (platformer->tilemap.defaultPlayerSpawn != NULL)
+    {
+        entityManager->viewEntity   = mg_createPlayer(entityManager,
+                                                      entityManager->tilemap->defaultPlayerSpawn->tx * 16
+                                                          + entityManager->tilemap->defaultPlayerSpawn->xOffsetInPixels,
+                                                      entityManager->tilemap->defaultPlayerSpawn->ty * 16
+                                                          + entityManager->tilemap->defaultPlayerSpawn->yOffsetInPixels);
+        entityManager->playerEntity = entityManager->viewEntity;
+        // entityManager->playerEntity->hp = self->gameData.initialHp;
         mg_viewFollowEntity(&(self->tilemap), entityManager->playerEntity);
     }
 
@@ -764,7 +792,7 @@ void changeStateGame(platformer_t* self)
 
     self->gameData.changeBgm = MG_BGM_KINETIC_DONUT;
 
-    //soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
+    // soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
     soundStop(true);
 
     self->update = &updateReadyScreen;
@@ -772,9 +800,8 @@ void changeStateGame(platformer_t* self)
 
 static void mg_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-    fillDisplayArea(x, y, x + w, y + h, c102 + ( (y >> 6) % 6) );
+    fillDisplayArea(x, y, x + w, y + h, c102 + ((y >> 6) % 6));
 }
-
 
 void detectGameStateChange(platformer_t* self)
 {
@@ -815,7 +842,8 @@ void detectBgmChange(platformer_t* self)
         return;
     }
 
-    if(mg_setBgm(&(self->soundManager), self->gameData.changeBgm)){
+    if (mg_setBgm(&(self->soundManager), self->gameData.changeBgm))
+    {
         soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
     }
 
@@ -862,15 +890,14 @@ void updateDead(platformer_t* self)
 
     if (self->gameData.countdown < 0)
     {
-        drawText(&(self->font), c555, str_time_up, (TFT_WIDTH - textWidth(&(self->font), str_time_up)) / 2,
-                 128);
+        drawText(&(self->font), c555, str_time_up, (TFT_WIDTH - textWidth(&(self->font), str_time_up)) / 2, 128);
     }
 }
 
 void updateGameOver(platformer_t* self)
 {
     // Clear the display
-    //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    // fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 179)
@@ -917,7 +944,7 @@ void drawGameOver(font_t* font, mgGameData_t* gameData)
 void changeStateTitleScreen(platformer_t* self)
 {
     self->gameData.frameCount = 0;
-    self->gameData.gameState = MG_ST_TITLE_SCREEN;
+    self->gameData.gameState  = MG_ST_TITLE_SCREEN;
     self->update              = &updateTitleScreen;
 }
 
@@ -935,7 +962,7 @@ void changeStateLevelClear(platformer_t* self)
 void updateLevelClear(platformer_t* self)
 {
     // Clear the display
-    //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
+    // fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
 
     self->gameData.frameCount++;
 
@@ -965,7 +992,7 @@ void updateLevelClear(platformer_t* self)
         {
             // Hey look, it's a frame rule!
 
-            //uint16_t levelIndex = getLevelIndex(1, self->gameData.level);
+            // uint16_t levelIndex = getLevelIndex(1, self->gameData.level);
 
             if (false /*levelIndex >= NUM_LEVELS - 1*/)
             {
@@ -1054,7 +1081,7 @@ void changeStateGameClear(platformer_t* self)
 void updateGameClear(platformer_t* self)
 {
     // Clear the display
-    //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    // fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
     self->gameData.frameCount++;
 
@@ -1157,12 +1184,12 @@ void savePlatformerHighScores(platformer_t* self)
 
 void initializePlatformerUnlockables(platformer_t* self)
 {
-    self->unlockables.levelsCleared = 0;
-    self->unlockables.gameCleared           = false;
-    self->unlockables.oneCreditCleared      = false;
-    self->unlockables.bigScore              = false;
-    self->unlockables.fastTime              = false;
-    self->unlockables.biggerScore           = false;
+    self->unlockables.levelsCleared    = 0;
+    self->unlockables.gameCleared      = false;
+    self->unlockables.oneCreditCleared = false;
+    self->unlockables.bigScore         = false;
+    self->unlockables.fastTime         = false;
+    self->unlockables.biggerScore      = false;
 }
 
 void loadPlatformerUnlockables(platformer_t* self)
@@ -1256,7 +1283,7 @@ void changeStateNameEntry(platformer_t* self)
 
 void updateNameEntry(platformer_t* self)
 {
-    //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    // fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
     self->gameData.frameCount++;
 
@@ -1345,7 +1372,7 @@ void changeStateShowHighScores(platformer_t* self)
 
 void updateShowHighScores(platformer_t* self)
 {
-    //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    // fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
     self->gameData.frameCount++;
 
@@ -1394,9 +1421,9 @@ void updatePause(platformer_t* self)
 {
     if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START)))
     {
-        //soundResume();
+        // soundResume();
         soundPlaySfx(&(self->soundManager.sndPause), BZR_STEREO);
-        self->update              = &updateGame;
+        self->update = &updateGame;
     }
 
     mg_drawTileMap(&(self->tilemap));
@@ -1417,57 +1444,69 @@ uint16_t getLevelIndex(uint8_t world, uint8_t level)
 
 void changeStateLevelSelect(platformer_t* self)
 {
-    self->gameData.frameCount = 0;
-    self->menuState     = 0;
-    self->menuSelection = 0;
-    self->gameData.level = 1;
-    self->gameData.btnState = 0;
+    self->gameData.frameCount   = 0;
+    self->menuState             = 0;
+    self->menuSelection         = 0;
+    self->gameData.level        = 1;
+    self->gameData.btnState     = 0;
     self->gameData.prevBtnState = 0;
 
     mg_loadWsgSet(&(platformer->wsgManager), leveldef[0].defaultWsgSetIndex);
     mg_loadMapFromFile(&(platformer->tilemap), leveldef[0].filename);
-    self->tilemap.mapOffsetX = 12;
-    self->tilemap.mapOffsetY = 0;
+    self->tilemap.mapOffsetX       = 12;
+    self->tilemap.mapOffsetY       = 0;
     self->entityManager.viewEntity = NULL;
 
     mg_setBgm(&self->soundManager, MG_BGM_STAGE_SELECT);
     globalMidiPlayerGet(MIDI_BGM)->loop = true;
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
-    
+
     self->update = &updateLevelSelect;
 }
 
 void updateLevelSelect(platformer_t* self)
 {
     self->gameData.frameCount++;
-    if(self->gameData.frameCount > 59){
+    if (self->gameData.frameCount > 59)
+    {
         self->gameData.frameCount = 0;
     }
 
-    if(self->menuState < 2 && ((self->gameData.btnState & PB_RIGHT) && !(self->gameData.prevBtnState & PB_RIGHT))){
-        self->menuState++; self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
+    if (self->menuState < 2 && ((self->gameData.btnState & PB_RIGHT) && !(self->gameData.prevBtnState & PB_RIGHT)))
+    {
+        self->menuState++;
+        self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
         soundPlaySfx(&self->soundManager.sndMenuSelect, MIDI_SFX);
-    } else if(self->menuState > 0 && ((self->gameData.btnState & PB_LEFT) && !(self->gameData.prevBtnState & PB_LEFT))){
-        self->menuState--; self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
+    }
+    else if (self->menuState > 0 && ((self->gameData.btnState & PB_LEFT) && !(self->gameData.prevBtnState & PB_LEFT)))
+    {
+        self->menuState--;
+        self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
         soundPlaySfx(&self->soundManager.sndMenuSelect, MIDI_SFX);
     }
 
-    if(self->menuSelection < 2 && ((self->gameData.btnState & PB_DOWN) && !(self->gameData.prevBtnState & PB_DOWN))){
-        self->menuSelection++; self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
+    if (self->menuSelection < 2 && ((self->gameData.btnState & PB_DOWN) && !(self->gameData.prevBtnState & PB_DOWN)))
+    {
+        self->menuSelection++;
+        self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
         soundPlaySfx(&self->soundManager.sndMenuSelect, MIDI_SFX);
-    } else if(self->menuSelection > 0 && ((self->gameData.btnState & PB_UP) && !(self->gameData.prevBtnState & PB_UP))){
-        self->menuSelection--; self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
+    }
+    else if (self->menuSelection > 0 && ((self->gameData.btnState & PB_UP) && !(self->gameData.prevBtnState & PB_UP)))
+    {
+        self->menuSelection--;
+        self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
         soundPlaySfx(&self->soundManager.sndMenuSelect, MIDI_SFX);
     }
 
-    if( (self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A))
+    if ((self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A))
     {
         self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
-        
-        if(self->unlockables.levelsCleared & (1 << self->gameData.level))
+
+        if (self->unlockables.levelsCleared & (1 << self->gameData.level))
         {
             soundPlaySfx(&(platformer->soundManager.sndMenuDeny), BZR_STEREO);
-        } else
+        }
+        else
         {
             mg_loadWsgSet(&(platformer->wsgManager), leveldef[self->gameData.level].defaultWsgSetIndex);
             mg_loadMapFromFile(&(platformer->tilemap), leveldef[self->gameData.level].filename);
@@ -1475,7 +1514,6 @@ void updateLevelSelect(platformer_t* self)
             changeStateGame(self);
             return;
         }
-        
     }
 
     drawLevelSelect(self);
@@ -1485,36 +1523,40 @@ void drawLevelSelect(platformer_t* self)
 {
     drawText(&self->font, c555, "STAGE SELECT", 90, 8);
 
-    drawRectFilled(
-        (55 + self->menuState * 64) - self->tilemap.mapOffsetX, 
-        (39 + self->menuSelection * 64) - self->tilemap.mapOffsetY, 
-        (55 + 66 + self->menuState * 64) - self->tilemap.mapOffsetX, 
-        (39 + 66 + self->menuSelection * 64) - self->tilemap.mapOffsetY, 
-        (self->unlockables.levelsCleared & (1 << self->gameData.level)) ? greenColors[(self->gameData.frameCount >> 3) % 4] : redColors[(self->gameData.frameCount >> 3) % 4]
-    );
-    
+    drawRectFilled((55 + self->menuState * 64) - self->tilemap.mapOffsetX,
+                   (39 + self->menuSelection * 64) - self->tilemap.mapOffsetY,
+                   (55 + 66 + self->menuState * 64) - self->tilemap.mapOffsetX,
+                   (39 + 66 + self->menuSelection * 64) - self->tilemap.mapOffsetY,
+                   (self->unlockables.levelsCleared & (1 << self->gameData.level))
+                       ? greenColors[(self->gameData.frameCount >> 3) % 4]
+                       : redColors[(self->gameData.frameCount >> 3) % 4]);
+
     mg_drawTileMap(&(self->tilemap));
 
-    for(uint8_t j = 0; j<3; j++)
+    for (uint8_t j = 0; j < 3; j++)
     {
-        for(uint8_t i = 0; i<3; i++)
+        for (uint8_t i = 0; i < 3; i++)
         {
-            if(self->unlockables.levelsCleared & (1 << (((j * 3) + i) + 1)) )
+            if (self->unlockables.levelsCleared & (1 << (((j * 3) + i) + 1)))
             {
-                drawLine((64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY, (64 + 48 + i * 64) - self->tilemap.mapOffsetX, (48 + 48 + j * 64) - self->tilemap.mapOffsetY, redColors[self->gameData.frameCount % 4], 0);
-                drawLine((64 + i * 64) - self->tilemap.mapOffsetX, (48 + 48 + j * 64) - self->tilemap.mapOffsetY, (64 + 48 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY, redColors[self->gameData.frameCount % 4], 0);
+                drawLine((64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY,
+                         (64 + 48 + i * 64) - self->tilemap.mapOffsetX, (48 + 48 + j * 64) - self->tilemap.mapOffsetY,
+                         redColors[self->gameData.frameCount % 4], 0);
+                drawLine((64 + i * 64) - self->tilemap.mapOffsetX, (48 + 48 + j * 64) - self->tilemap.mapOffsetY,
+                         (64 + 48 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY,
+                         redColors[self->gameData.frameCount % 4], 0);
             }
         }
     }
 
-    if(!(self->unlockables.levelsCleared & (1 << self->gameData.level)))
+    if (!(self->unlockables.levelsCleared & (1 << self->gameData.level)))
     {
         drawRect(
-            (64 + self->menuState * 64) - self->tilemap.mapOffsetX + ((self->gameData.frameCount >> 2) & 0b0111), 
-            (48 + self->menuSelection * 64) - self->tilemap.mapOffsetY + ((self->gameData.frameCount >> 2) & 0b0111), 
-            (64 + 48 + self->menuState * 64) - self->tilemap.mapOffsetX - ((self->gameData.frameCount >> 2) & 0b0111), 
-            (48 + 48 + self->menuSelection * 64) - self->tilemap.mapOffsetY - ((self->gameData.frameCount >> 2) & 0b0111), 
-            highScoreNewEntryColors[self->gameData.frameCount % 4]
-        );
+            (64 + self->menuState * 64) - self->tilemap.mapOffsetX + ((self->gameData.frameCount >> 2) & 0b0111),
+            (48 + self->menuSelection * 64) - self->tilemap.mapOffsetY + ((self->gameData.frameCount >> 2) & 0b0111),
+            (64 + 48 + self->menuState * 64) - self->tilemap.mapOffsetX - ((self->gameData.frameCount >> 2) & 0b0111),
+            (48 + 48 + self->menuSelection * 64) - self->tilemap.mapOffsetY
+                - ((self->gameData.frameCount >> 2) & 0b0111),
+            highScoreNewEntryColors[self->gameData.frameCount % 4]);
     }
 }

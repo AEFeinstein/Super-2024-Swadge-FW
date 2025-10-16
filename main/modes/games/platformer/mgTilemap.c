@@ -39,10 +39,10 @@ void mg_initializeTileMap(mgTilemap_t* tilemap, mgWsgManager_t* wsgManager)
     tilemap->animationFrame = 0;
     tilemap->animationTimer = 23;
 
-    tilemap->wsgManager = wsgManager;
-    tilemap->map = NULL;
-    tilemap->entitySpawns = NULL;
-    tilemap->defaultPlayerSpawn = NULL;
+    tilemap->wsgManager           = wsgManager;
+    tilemap->map                  = NULL;
+    tilemap->entitySpawns         = NULL;
+    tilemap->defaultPlayerSpawn   = NULL;
     tilemap->entitySpawnMap.count = 0;
 }
 
@@ -74,14 +74,14 @@ void mg_drawTileMap(mgTilemap_t* tilemap)
             uint8_t tile = tilemap->map[(y * tilemap->mapWidth) + x];
 
             if (tilemap->tileSpawnEnabled
-                     && (tilemap->executeTileSpawnColumn == x || tilemap->executeTileSpawnRow == y
-                         || tilemap->executeTileSpawnAll))
+                && (tilemap->executeTileSpawnColumn == x || tilemap->executeTileSpawnRow == y
+                    || tilemap->executeTileSpawnAll))
             {
+                uint16_t key                     = ((y << 8) + (x));
+                mgEntitySpawnData_t* entitySpawn = hashGetBin(&(tilemap->entitySpawnMap), (const void*)key);
 
-                uint16_t key = ((y << 8) + (x));
-                mgEntitySpawnData_t* entitySpawn = hashGetBin(&(tilemap->entitySpawnMap), (const void*) key);
-            
-                if(entitySpawn != NULL && entitySpawn->spawnable){
+                if (entitySpawn != NULL && entitySpawn->spawnable)
+                {
                     ESP_LOGE("MAP", "Spawned entity at tile position %i, %i", x, y);
                     mg_hashSpawnEntity(tilemap->entityManager, entitySpawn);
                 }
@@ -95,7 +95,8 @@ void mg_drawTileMap(mgTilemap_t* tilemap)
             // Draw only visible tiles
             if (tile > 31)
             {
-                if(tilemap->wsgManager->tiles[tile - 32] == NULL){
+                if (tilemap->wsgManager->tiles[tile - 32] == NULL)
+                {
                     continue;
                 }
 
@@ -112,7 +113,7 @@ void mg_drawTileMap(mgTilemap_t* tilemap)
                                 y * MG_TILESIZE - tilemap->mapOffsetY);
                 }
             }
-            /*else*/ 
+            /*else*/
         }
     }
 
@@ -164,14 +165,16 @@ void mg_scrollTileMap(mgTilemap_t* tilemap, int16_t x, int16_t y)
 
 bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
 {
-    if(tilemap->entitySpawns != NULL){
+    if (tilemap->entitySpawns != NULL)
+    {
         heap_caps_free(tilemap->entitySpawns);
     }
-    
-    if(tilemap->entitySpawnMap.count > 0){
+
+    if (tilemap->entitySpawnMap.count > 0)
+    {
         hashDeinit(&(tilemap->entitySpawnMap));
     }
-    
+
     if (tilemap->map != NULL)
     {
         heap_caps_free(tilemap->map);
@@ -207,62 +210,69 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
         tilemap->warps[i].y = buf[2 + width * height + i * 2 + 1];
     }*/
 
-    uint32_t iterator = 2 + (width * height);
-    uint16_t numEntitySpawns = (buf[iterator+1] << 8) + buf[iterator];
+    uint32_t iterator        = 2 + (width * height);
+    uint16_t numEntitySpawns = (buf[iterator + 1] << 8) + buf[iterator];
     iterator += 2;
 
-    if(numEntitySpawns > 0){
-        tilemap->entitySpawns = (mgEntitySpawnData_t*)heap_caps_calloc(numEntitySpawns, sizeof(mgEntitySpawnData_t), MALLOC_CAP_SPIRAM);
+    if (numEntitySpawns > 0)
+    {
+        tilemap->entitySpawns
+            = (mgEntitySpawnData_t*)heap_caps_calloc(numEntitySpawns, sizeof(mgEntitySpawnData_t), MALLOC_CAP_SPIRAM);
 
         hashInitBin(&(tilemap->entitySpawnMap), numEntitySpawns + (numEntitySpawns >> 1), hashInt, intsEq);
         uint16_t subiterator = 0;
 
-        for(uint32_t i = iterator; i < iterator + (numEntitySpawns * 16); i += 16){
-            
+        for (uint32_t i = iterator; i < iterator + (numEntitySpawns * 16); i += 16)
+        {
             mgEntitySpawnData_t* entitySpawn = &(tilemap->entitySpawns[subiterator]);
-            entitySpawn->spawnable = true;
-            entitySpawn->respawnable = true;
-            entitySpawn->type = buf[i];
-            entitySpawn->tx = buf[i+1];
-            entitySpawn->ty = buf[i+2];
-            entitySpawn->xOffsetInPixels = buf[i+3];
-            entitySpawn->yOffsetInPixels = buf[i+4];
-            entitySpawn->flags = buf[i+5];
-            entitySpawn->special0 = buf[i+6];
-            entitySpawn->special1 = buf[i+7];
-            entitySpawn->special2 = buf[i+8];
-            entitySpawn->special3 = buf[i+9];
-            entitySpawn->special4 = buf[i+10];
-            entitySpawn->special5 = buf[i+11];
-            entitySpawn->special6 = buf[i+12];
-            entitySpawn->special7 = buf[i+13];
+            entitySpawn->spawnable           = true;
+            entitySpawn->respawnable         = true;
+            entitySpawn->type                = buf[i];
+            entitySpawn->tx                  = buf[i + 1];
+            entitySpawn->ty                  = buf[i + 2];
+            entitySpawn->xOffsetInPixels     = buf[i + 3];
+            entitySpawn->yOffsetInPixels     = buf[i + 4];
+            entitySpawn->flags               = buf[i + 5];
+            entitySpawn->special0            = buf[i + 6];
+            entitySpawn->special1            = buf[i + 7];
+            entitySpawn->special2            = buf[i + 8];
+            entitySpawn->special3            = buf[i + 9];
+            entitySpawn->special4            = buf[i + 10];
+            entitySpawn->special5            = buf[i + 11];
+            entitySpawn->special6            = buf[i + 12];
+            entitySpawn->special7            = buf[i + 13];
 
-            uint16_t linkedEntitySpawnIndex = (buf[i+15] << 8) + buf[i+14];
+            uint16_t linkedEntitySpawnIndex = (buf[i + 15] << 8) + buf[i + 14];
 
             ESP_LOGE("TEST", "Entity #%i: type %i", subiterator, entitySpawn->type);
-            ESP_LOGE("TEST", "specials %i %i %i %i %i %i %i %i", entitySpawn->special0, entitySpawn->special1, entitySpawn->special2, entitySpawn->special3, entitySpawn->special4, entitySpawn->special5, entitySpawn->special6, entitySpawn->special7);
+            ESP_LOGE("TEST", "specials %i %i %i %i %i %i %i %i", entitySpawn->special0, entitySpawn->special1,
+                     entitySpawn->special2, entitySpawn->special3, entitySpawn->special4, entitySpawn->special5,
+                     entitySpawn->special6, entitySpawn->special7);
 
-            if(linkedEntitySpawnIndex == 0xffff){
+            if (linkedEntitySpawnIndex == 0xffff)
+            {
                 entitySpawn->linkedEntitySpawn = NULL;
-                 ESP_LOGE("TEST", "Linked entity not found for %i, %i", subiterator, linkedEntitySpawnIndex);
-            } else {
+                ESP_LOGE("TEST", "Linked entity not found for %i, %i", subiterator, linkedEntitySpawnIndex);
+            }
+            else
+            {
                 entitySpawn->linkedEntitySpawn = &(tilemap->entitySpawns[linkedEntitySpawnIndex]);
                 ESP_LOGE("TEST", "Linked entity found for %i, %i", subiterator, linkedEntitySpawnIndex);
             }
-            
 
             uint16_t key = (entitySpawn->ty << 8) + (entitySpawn->tx);
-            hashPutBin(&(tilemap->entitySpawnMap), (const void*) key, (const void *) entitySpawn);
+            hashPutBin(&(tilemap->entitySpawnMap), (const void*)key, (const void*)entitySpawn);
 
-            switch(entitySpawn->type) {
+            switch (entitySpawn->type)
+            {
                 case ENTITY_PLAYER:
-                    entitySpawn->spawnable = false;
-                    entitySpawn->respawnable = false;
+                    entitySpawn->spawnable      = false;
+                    entitySpawn->respawnable    = false;
                     tilemap->defaultPlayerSpawn = entitySpawn;
                     break;
                 case ENTITY_WARP_EXIT_FLOOR:
                 case ENTITY_WARP_EXIT_WALL:
-                    entitySpawn->spawnable = false;
+                    entitySpawn->spawnable   = false;
                     entitySpawn->respawnable = false;
                     break;
                 default:
@@ -271,7 +281,9 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
 
             subiterator++;
         }
-    } else {
+    }
+    else
+    {
         tilemap->entitySpawns = NULL;
     }
 
@@ -297,17 +309,19 @@ void mg_tileSpawnEntity(mgTilemap_t* tilemap, uint8_t objectIndex, uint8_t tx, u
 void mg_hashSpawnEntity(mgEntityManager_t* entityManager, mgEntitySpawnData_t* entitySpawnData)
 {
     mgEntity_t* entityCreated
-        = mg_createEntity(entityManager, entitySpawnData->type, (entitySpawnData->tx << MG_TILESIZE_IN_POWERS_OF_2) + entitySpawnData->xOffsetInPixels,
+        = mg_createEntity(entityManager, entitySpawnData->type,
+                          (entitySpawnData->tx << MG_TILESIZE_IN_POWERS_OF_2) + entitySpawnData->xOffsetInPixels,
                           (entitySpawnData->ty << MG_TILESIZE_IN_POWERS_OF_2) + entitySpawnData->yOffsetInPixels);
 
     if (entityCreated != NULL)
     {
         entityCreated->spriteFlipHorizontal = entitySpawnData->flags & 0b1;
-        entityCreated->spriteFlipVertical = entitySpawnData->flags & 0b10;
-        
+        entityCreated->spriteFlipVertical   = entitySpawnData->flags & 0b10;
+
         entityCreated->spawnData = entitySpawnData;
 
-        if(entitySpawnData->linkedEntitySpawn != NULL){
+        if (entitySpawnData->linkedEntitySpawn != NULL)
+        {
             entityCreated->linkedEntity = entitySpawnData->linkedEntitySpawn->spawnedEntity;
         }
 
@@ -385,7 +399,7 @@ bool mg_needsTransparency(uint8_t tileId)
         case MG_TILE_CONTAINER_1 ... MG_TILE_CONTAINER_3:
         case MG_TILE_COIN_1 ... MG_TILE_COIN_3:
         case MG_TILE_LADDER:
-        //case MG_TILE_BG_GOAL_ZONE ... MG_TILE_BG_CLOUD_D:
+            // case MG_TILE_BG_GOAL_ZONE ... MG_TILE_BG_CLOUD_D:
             return true;
         case MG_TILE_BG_CLOUD:
             return false;

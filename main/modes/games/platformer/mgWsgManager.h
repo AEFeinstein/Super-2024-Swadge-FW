@@ -25,7 +25,7 @@
 // Structs
 //==============================================================================
 typedef bool (*mg_tileNeedsTransparencyFunction_t)(uint8_t tile);
-//typedef uint8_t (*mg_animateTileFunction_t)(uint8_t tile);
+// typedef uint8_t (*mg_animateTileFunction_t)(uint8_t tile);
 typedef struct
 {
     wsg_t wsgs[MG_WSGS_SIZE];

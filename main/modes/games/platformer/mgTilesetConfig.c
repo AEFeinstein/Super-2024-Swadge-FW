@@ -20,9 +20,8 @@ bool mg_kineticDonutTileset_needsTransparency(uint8_t tileId)
 
 void mg_kineticDonutTileset_animateTiles(uint8_t tileId)
 {
-    //Nothing to do here... yet
+    // Nothing to do here... yet
 }
-
 
 bool mg_levelSelectTileset_needsTransparency(uint8_t tileId)
 {
@@ -37,5 +36,5 @@ bool mg_levelSelectTileset_needsTransparency(uint8_t tileId)
 
 void mg_levelSelectTileset_animateTiles(uint8_t tileId)
 {
-    //Nothing to do here... yet
+    // Nothing to do here... yet
 }
