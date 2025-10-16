@@ -642,11 +642,11 @@ void mg_moveEntityWithTileCollisions(mgEntity_t* self)
 
 void mg_moveEntityWithTileCollisions3(mgEntity_t* self)
 {
-    uint16_t x                            = TO_PIXEL_COORDS(self->x);
-    uint16_t y                            = TO_PIXEL_COORDS(self->y);
-    int16_t xspeed                        = TO_PIXEL_COORDS(self->xspeed);
-    int16_t yspeed                        = TO_PIXEL_COORDS(self->yspeed);
-    mg_EntityTileCollider_t* tileCollider = self->tileCollider;
+    uint16_t x                                  = TO_PIXEL_COORDS(self->x);
+    uint16_t y                                  = TO_PIXEL_COORDS(self->y);
+    int16_t xspeed                              = TO_PIXEL_COORDS(self->xspeed);
+    int16_t yspeed                              = TO_PIXEL_COORDS(self->yspeed);
+    const mg_EntityTileCollider_t* tileCollider = self->tileCollider;
 
     int16_t offX, offY, tempX, tempY, tempTx, tempTy, tempT, newX, newY, onGround;
 
@@ -804,9 +804,9 @@ bool mg_canWallJump(mgEntity_t* self)
         return false;
     }
 
-    uint16_t x                            = TO_PIXEL_COORDS(self->x);
-    uint16_t y                            = TO_PIXEL_COORDS(self->y);
-    mg_EntityTileCollider_t* tileCollider = self->tileCollider;
+    uint16_t x                                  = TO_PIXEL_COORDS(self->x);
+    uint16_t y                                  = TO_PIXEL_COORDS(self->y);
+    const mg_EntityTileCollider_t* tileCollider = self->tileCollider;
 
     int16_t offX, offY, tempX, tempY, tempTx, tempTy, tempT;
 
@@ -1786,7 +1786,7 @@ void updateScrollLockRight(mgEntity_t* self)
         tx = (self->tilemap->mapOffsetX) >> MG_TILESIZE_IN_POWERS_OF_2;
         ty = ((self->tilemap->mapOffsetY) >> MG_TILESIZE_IN_POWERS_OF_2) + i;
 
-        if (tx < 0 || tx > self->tilemap->mapWidth || ty < 0 || ty > self->tilemap->mapHeight)
+        if (/*tx < 0 ||*/ tx > self->tilemap->mapWidth || /* ty < 0 || */ ty > self->tilemap->mapHeight)
         {
             break;
         }
@@ -1881,7 +1881,8 @@ void updateWarp(mgEntity_t* self)
                > (self->tilemap->mapOffsetY + MG_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD))
     {
         // In mg_destroyEntity, this will overflow to the correct value.
-        self->type = 128 + MG_TILE_CONTAINER_1;
+        // Mod 256 is used to suppress a -Woverflow warning, since type is 8 bits
+        self->type = (128 + MG_TILE_CONTAINER_1) % 256;
 
         mg_destroyEntity(self, true);
     }
@@ -3022,6 +3023,7 @@ void mg_updateBossDoor(mgEntity_t* self)
                 self->entityManager->playerEntity->xspeed = 32;
                 self->entityManager->playerEntity->state  = MG_PL_ST_NORMAL;
             }
+            break;
         }
         case 3:
         {
@@ -3066,10 +3068,8 @@ void mg_updateBossTest(mgEntity_t* self)
 {
     switch (self->state)
     {
-        case -1:
         case 65535:
             return;
-            break;
         case 0:
         default:
             if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)

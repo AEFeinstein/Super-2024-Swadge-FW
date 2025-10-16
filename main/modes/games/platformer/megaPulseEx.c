@@ -168,7 +168,7 @@ swadgeMode_t modePlatformer = {.modeName                 = platformerName,
                                .fnEspNowRecvCb           = NULL,
                                .fnEspNowSendCb           = NULL};
 
-#define NUM_LEVELS 16
+// #define NUM_LEVELS 16
 
 led_t platLeds[CONFIG_NUM_LEDS];
 

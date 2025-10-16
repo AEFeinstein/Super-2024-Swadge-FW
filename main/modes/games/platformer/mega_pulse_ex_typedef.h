@@ -982,7 +982,7 @@ typedef enum
     MG_WSGSET_FLARE_GRYFFYN
 } mgWsgSetIndex_t;
 
-static const mgLeveldef_t leveldef[17]
+static const mgLeveldef_t leveldef[]
     = {{.filename = LEVEL_SELECT_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_LEVEL_SELECT},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT},

@@ -158,7 +158,7 @@ struct mgEntity_t
     mg_overlapTileHandler_t overlapTileHandler;
     mg_drawHandler_t drawHandler;
 
-    mg_EntityTileCollider_t* tileCollider;
+    const mg_EntityTileCollider_t* tileCollider;
 };
 
 //==============================================================================

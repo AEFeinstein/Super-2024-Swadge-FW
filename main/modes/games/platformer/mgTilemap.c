@@ -77,8 +77,9 @@ void mg_drawTileMap(mgTilemap_t* tilemap)
                 && (tilemap->executeTileSpawnColumn == x || tilemap->executeTileSpawnRow == y
                     || tilemap->executeTileSpawnAll))
             {
-                uint16_t key                     = ((y << 8) + (x));
-                mgEntitySpawnData_t* entitySpawn = hashGetBin(&(tilemap->entitySpawnMap), (const void*)key);
+                uint16_t key = ((y << 8) + (x));
+                mgEntitySpawnData_t* entitySpawn
+                    = hashGetBin(&(tilemap->entitySpawnMap), (const void*)((uintptr_t)key));
 
                 if (entitySpawn != NULL && entitySpawn->spawnable)
                 {
@@ -261,7 +262,7 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
             }
 
             uint16_t key = (entitySpawn->ty << 8) + (entitySpawn->tx);
-            hashPutBin(&(tilemap->entitySpawnMap), (const void*)key, (const void*)entitySpawn);
+            hashPutBin(&(tilemap->entitySpawnMap), (const void*)((uintptr_t)key), (void*)entitySpawn);
 
             switch (entitySpawn->type)
             {
