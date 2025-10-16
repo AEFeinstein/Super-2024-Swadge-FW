@@ -1214,6 +1214,10 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             self->yspeed = (other->spriteFlipVertical) ? 112 : -112;
             self->falling = true;
             soundPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
+            if(self->state == MG_PL_ST_MIC_DROP){
+                self->stateTimer = -1;
+            }
+
             break;
         }
         case ENTITY_BOUNCE_PAD_DIAGONAL:
