@@ -46,29 +46,12 @@ bool physAdjustCameraTimer(physSim_t* phys, bool menuShowing)
                  .y = flTarget->y - (TFT_HEIGHT / 2),
         };
 
-        // Move one pixel towards X
-        if (phys->camera.x < target.x)
-        {
-            phys->camera.x++;
-        }
-        else if (phys->camera.x > target.x)
-        {
-            phys->camera.x--;
-        }
+        // Move camera a fraction of the way to desired camera
+        phys->camera = addVec2d(phys->camera, divVec2d(subVec2d(target, phys->camera), 48));
 
-        // Move one pixel towards Y
-        if (phys->camera.y < target.y)
-        {
-            phys->camera.y++;
-        }
-        else if (phys->camera.y > target.y)
-        {
-            phys->camera.y--;
-        }
-
-        // If the camera is at the destination
-        if ((phys->camera.x == target.x) && //
-            (phys->camera.y == target.y))
+        // If the camera is close enough to the destination
+        if (ABS(phys->camera.x - target.x) < 64 && //
+            ABS(phys->camera.y - target.y) < 64)
         {
             // Remove it
             shift(&phys->cameraTour);
