@@ -44,6 +44,7 @@ void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newSta
     {
         case AGS_TOUR:
         {
+            bool initialCameraSet = false;
             // Build a list of points for the camera to tour
             clear(&ad->phys->cameraTour);
             node_t* lNode = ad->phys->lines.first;
@@ -54,6 +55,12 @@ void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newSta
                 if (line->isTerrain)
                 {
                     push(&ad->phys->cameraTour, &line->l.p1);
+                    if (!initialCameraSet)
+                    {
+                        initialCameraSet   = true;
+                        ad->phys->camera.x = line->l.p1.x - (TFT_WIDTH / 2);
+                        ad->phys->camera.y = line->l.p1.y - (TFT_HEIGHT / 2);
+                    }
                 }
                 lNode = lNode->next;
             }
