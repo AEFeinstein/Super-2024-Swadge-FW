@@ -235,10 +235,14 @@ DEFINES_LIST = \
 	CONFIG_FACTORY_TEST_NORMAL=y \
 	SOC_TOUCH_PAD_THRESHOLD_MAX=0x1FFFFF
 
-# If this is not WSL, use OpenGL for rawdraw
-# ifeq ($(IS_WSL),0)
-#	DEFINES_LIST += CNFGOGL
-#endif
+# If this is not WSL
+ifeq ($(IS_WSL),0)
+# And this is not MacOS
+ifneq ($(HOST_OS),Darwin)
+# Use OpenGL for rawdraw
+DEFINES_LIST += CNFGOGL
+endif
+endif
 
 # Extra defines
 DEFINES_LIST += \
