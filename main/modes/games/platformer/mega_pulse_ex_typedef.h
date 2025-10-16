@@ -1048,22 +1048,22 @@ typedef enum {
 
 static const mgLeveldef_t leveldef[17] = {
                                           {.filename = LEVEL_SELECT_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_LEVEL_SELECT},
-                                          {.filename = KINETIC_DONUT_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT},
-                                          {.filename = TEST_ROOM_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT},
                                           {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT},
-                                          {.filename = LEVEL_1_4_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_2_1_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = DAC_03_BIN, .timeLimit = 220, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_2_3_BIN, .timeLimit = 200, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_2_4_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_3_1_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = DAC_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_3_3_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_3_4_BIN, .timeLimit = 220, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_4_1_BIN, .timeLimit = 270, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_4_2_BIN, .timeLimit = 240, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_4_3_BIN, .timeLimit = 240, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = LEVEL_4_4_BIN, .timeLimit = 240, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
-                                          {.filename = DEBUG_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT}};
+                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT},
+                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT},
+                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+                                          {.filename = LEVEL_02_BIN, .timeLimit = 220, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+                                          {.filename = LEVEL_02_BIN, .timeLimit = 200, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+                                          {.filename = LEVEL_02_BIN, .timeLimit = 220, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+                                          {.filename = LEVEL_02_BIN, .timeLimit = 270, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+                                          {.filename = LEVEL_02_BIN, .timeLimit = 240, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+                                          {.filename = LEVEL_02_BIN, .timeLimit = 240, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+                                          {.filename = LEVEL_02_BIN, .timeLimit = 240, .defaultWsgSetIndex = MG_WSGSET_DEFAULT},
+                                          {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_DEFAULT}};
 
 #endif
