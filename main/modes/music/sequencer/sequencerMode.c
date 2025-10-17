@@ -323,12 +323,12 @@ static void buildMainMenu(void)
             .min = MIN_MIDI_VELOCITY_SETTING,
             .max = MAX_MIDI_VELOCITY_SETTING,
         };
-        addSettingsItemToMenu(sv->songMenu, str_vel_piano, &sp_velocity, sp_velocity.max);
-        addSettingsItemToMenu(sv->songMenu, str_vel_brass, &sp_velocity, sp_velocity.max);
-        addSettingsItemToMenu(sv->songMenu, str_vel_sax, &sp_velocity, sp_velocity.max);
-        addSettingsItemToMenu(sv->songMenu, str_vel_synth, &sp_velocity, sp_velocity.max);
-        addSettingsItemToMenu(sv->songMenu, str_vel_bass, &sp_velocity, sp_velocity.max);
-        addSettingsItemToMenu(sv->songMenu, str_vel_drum, &sp_velocity, sp_velocity.max);
+        addSettingsItemToMenu(sv->songMenu, str_vel_piano, &sp_velocity, sv->songParams.velPiano);
+        addSettingsItemToMenu(sv->songMenu, str_vel_brass, &sp_velocity, sv->songParams.velBrass);
+        addSettingsItemToMenu(sv->songMenu, str_vel_sax, &sp_velocity, sv->songParams.velSax);
+        addSettingsItemToMenu(sv->songMenu, str_vel_synth, &sp_velocity, sv->songParams.velSynth);
+        addSettingsItemToMenu(sv->songMenu, str_vel_bass, &sp_velocity, sv->songParams.velBass);
+        addSettingsItemToMenu(sv->songMenu, str_vel_drum, &sp_velocity, sv->songParams.velDrum);
     }
     sv->songMenu = endSubMenu(sv->songMenu);
 
@@ -895,8 +895,6 @@ static void sequencerLoadSong(const char* fname)
         // Read song parameters from the blob
         memcpy(&sv->songParams, &blob[blobIdx], sizeof(sv->songParams));
         blobIdx += sizeof(sv->songParams);
-
-        // TODO set menu options from sv->songParams
 
         // Recalculate after load
         sv->usPerBeat = (60 * 1000000) / sv->songParams.tempo;
