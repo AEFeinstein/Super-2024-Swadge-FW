@@ -1804,6 +1804,8 @@ void updateScrollLockRight(mgEntity_t* self)
     if (self->entityManager->bossEntity != NULL)
     {
         self->entityManager->bossEntity->state = 0;
+        mg_setBgm(self->soundManager, leveldef[self->gameData->level].bossBgmIndex);
+        soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
     }
 
     mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
