@@ -43,6 +43,7 @@
 #include "jukebox.h"
 #include "keebTest.h"
 #include "mainMenu.h"
+#include "megaPulseEx.h"
 #include "mode_ch32v003test.h"
 #include "mode_credits.h"
 #include "mode_diceroller.h"

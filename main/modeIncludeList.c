@@ -15,14 +15,12 @@
 */
 
 /// @brief Add swadgeMode_t pointers to this struct to include them in emulator and main menu
-swadgeMode_t* const allSwadgeModes[] = {
-    &accelTestMode,      &artilleryMode,      &bouncyMode,       &canvasTestMode, &colorchordMode, &cosCrunchMode,
-    &danceMode,          &danceNetworkMode,   &factoryTestMode,  &gamepadMode,    &introMode,      &jukeboxMode,
-    &keebTestMode,       &mainMenuMode,       &modeCh32v003test, &modeCredits,    &modeDiceRoller, &modePicross,
-    &nameTestMode,       &roboRunnerMode,     &sequencerMode,    &sonaTestMode,   &swadgedokuMode, &swadgeItMode,
-    &swadgePassTestMode, &swadgetamatoneMode, &synthMode,        &tCaseMode,      &touchTestMode,  &trophyTestMode,
-    &tunernomeMode,
-};
+swadgeMode_t* const allSwadgeModes[]
+    = {&accelTestMode,   &bouncyMode,     &colorchordMode, &cosCrunchMode,  &danceMode,          &danceNetworkMode,
+       &factoryTestMode, &gamepadMode,    &introMode,      &jukeboxMode,    &keebTestMode,       &mainMenuMode,
+       &modeCredits,     &modeDiceRoller, &modePicross,    &modePlatformer, &nameTestMode,       &roboRunnerMode,
+       &sequencerMode,   &canvasTestMode, &swadgedokuMode, &swadgeItMode,   &swadgePassTestMode, &swadgetamatoneMode,
+       &synthMode,       &tCaseMode,      &touchTestMode,  &trophyTestMode, &tunernomeMode,      &modeCh32v003test};
 
 //==============================================================================
 // Functions
@@ -37,12 +35,15 @@ void modeListSetMenu(menu_t* menu)
 {
     // Games sub menu
     menu = startSubMenu(menu, "Games");
+
+    addSingleItemToMenu(menu, modePlatformer.modeName);
     addSingleItemToMenu(menu, cosCrunchMode.modeName);
     addSingleItemToMenu(menu, swadgeItMode.modeName);
     addSingleItemToMenu(menu, swadgedokuMode.modeName);
     addSingleItemToMenu(menu, danceNetworkMode.modeName);
     addSingleItemToMenu(menu, roboRunnerMode.modeName);
     addSingleItemToMenu(menu, modePicross.modeName);
+
     addSingleItemToMenu(menu, artilleryMode.modeName);
     menu = endSubMenu(menu);
 
