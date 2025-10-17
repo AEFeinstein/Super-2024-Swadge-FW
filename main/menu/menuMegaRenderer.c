@@ -24,6 +24,8 @@
 
 #define ARROW_PERIOD_US 1000000
 
+#define DEFAULT_BODY_HEIGHT 66
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -138,7 +140,8 @@ menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOut
     renderer->ledsOn = true;
 
     // Draw the body by default
-    renderer->drawBody = true;
+    renderer->drawBody   = true;
+    renderer->bodyHeight = DEFAULT_BODY_HEIGHT;
 
     // Reset the palette
     wsgPaletteReset(&renderer->palette);
@@ -199,6 +202,25 @@ void deinitMenuMegaRenderer(menuMegaRenderer_t* renderer)
 void setDrawBody(menuMegaRenderer_t* renderer, bool drawBody)
 {
     renderer->drawBody = drawBody;
+}
+
+/**
+ * @brief Set the height of the body between top and bottom decorated parts
+ * If the given height is negative, it will be set to the default height
+ *
+ * @param renderer The renderer to adjust the body height for
+ * @param height The new height. If the given value is negative, the default height will be set.
+ */
+void setBodyHeight(menuMegaRenderer_t* renderer, int16_t height)
+{
+    if (height < 0)
+    {
+        renderer->bodyHeight = 66;
+    }
+    else
+    {
+        renderer->bodyHeight = height;
+    }
 }
 
 /**
@@ -332,19 +354,20 @@ void drawMenuBody(uint16_t topLeftX, uint16_t topLeftY, uint8_t expansionHeight,
                   menuMegaRenderer_t* renderer)
 {
     // Draw the top part of the body
-    drawWsg(&renderer->body_top, topLeftX, topLeftY, flipLR, false, 0);
+    drawWsgPalette(&renderer->body_top, topLeftX, topLeftY, &renderer->palette, flipLR, false, 0);
 
     // Draw filler rectangles between top and bottom sprites
     if (expansionHeight > 0)
     {
         drawRectFilled(topLeftX + 8, topLeftY + renderer->body_top.h, topLeftX + 244,
-                       topLeftY + renderer->body_top.h + expansionHeight, c023);
+                       topLeftY + renderer->body_top.h + expansionHeight, renderer->palette.newColors[c023]);
         drawRectFilled(topLeftX + 246, topLeftY + renderer->body_top.h, topLeftX + 248,
-                       topLeftY + renderer->body_top.h + expansionHeight, c034);
+                       topLeftY + renderer->body_top.h + expansionHeight, renderer->palette.newColors[c034]);
     }
 
     // Draw the bottom part of the body
-    drawWsg(&renderer->body_bottom, topLeftX + 8, topLeftY + renderer->body_top.h + expansionHeight, flipLR, false, 0);
+    drawWsgPalette(&renderer->body_bottom, topLeftX + 8, topLeftY + renderer->body_top.h + expansionHeight,
+                   &renderer->palette, flipLR, false, 0);
 }
 
 /**
@@ -455,7 +478,7 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
 
     if (renderer->drawBody)
     {
-        drawMenuBody(12, 42, 66, false, renderer);
+        drawMenuBody(12, 42, renderer->bodyHeight, false, renderer);
     }
 
     if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > ARROW_PERIOD_US / 2)

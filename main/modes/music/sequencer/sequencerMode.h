@@ -57,13 +57,6 @@ typedef struct
     // Mode state
     sequencerScreen_t screen;
 
-    // Fonts
-    font_t font_ibm;
-    font_t font_rodin;
-    font_t font_rodin_outline;
-    font_t font_righteous;
-    font_t font_righteous_outline;
-
     // Cursor and scrolling
     vec_t cursorPos;
     vec_t gridOffset;

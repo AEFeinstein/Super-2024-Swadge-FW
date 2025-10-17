@@ -134,13 +134,6 @@ static void sequencerEnterMode(void)
     // Allocate memory for the mode
     sv = heap_caps_calloc(1, sizeof(sequencerVars_t), MALLOC_CAP_8BIT);
 
-    // Load fonts
-    loadFont(IBM_VGA_8_FONT, &sv->font_ibm, true);
-    loadFont(RODIN_EB_FONT, &sv->font_rodin, true);
-    makeOutlineFont(&sv->font_rodin, &sv->font_rodin_outline, true);
-    loadFont(RIGHTEOUS_150_FONT, &sv->font_righteous, true);
-    makeOutlineFont(&sv->font_righteous, &sv->font_righteous_outline, true);
-
     // Load WSGs
     for (uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
     {
@@ -322,7 +315,7 @@ static void buildWheelMenu(void)
         .width  = TFT_WIDTH - 30,
         .height = 40,
     };
-    sv->wheelRenderer = initWheelMenu(&sv->font_ibm, 90, &textRect);
+    sv->wheelRenderer = initWheelMenu(getSysFont(), 90, &textRect);
 
     wheelMenuSetColor(sv->wheelRenderer, c555);
 
@@ -396,11 +389,6 @@ static void sequencerExitMode(void)
         heap_caps_free(val);
     }
 
-    freeFont(&sv->font_ibm);
-    freeFont(&sv->font_righteous);
-    freeFont(&sv->font_righteous_outline);
-    freeFont(&sv->font_rodin);
-    freeFont(&sv->font_rodin_outline);
     deinitMenuMegaRenderer(sv->menuRenderer);
     deinitMenu(sv->songMenu);
     deinitMenu(sv->bgMenu);
@@ -849,10 +837,14 @@ void setSequencerScreen(sequencerScreen_t screen)
         setMegaLedsOn(sv->menuRenderer, false);
         led_t leds[CONFIG_NUM_LEDS] = {0};
         setLeds(leds, CONFIG_NUM_LEDS);
+        // Make body bigger
+        setBodyHeight(sv->menuRenderer, 100);
     }
     else
     {
         // Turn on LEDs for other screens
         setMegaLedsOn(sv->menuRenderer, true);
+        // Return body to default
+        setBodyHeight(sv->menuRenderer, -1);
     }
 }

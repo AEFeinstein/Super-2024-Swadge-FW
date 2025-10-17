@@ -326,9 +326,9 @@ void sequencerGridTouch(sequencerVars_t* sv)
  */
 void measureSequencerGrid(sequencerVars_t* sv)
 {
-    sv->labelWidth = textWidth(&sv->font_ibm, "C#7") + (2 * KEY_MARGIN);
+    sv->labelWidth = textWidth(getSysFont(), "C#7") + (2 * KEY_MARGIN);
     sv->cellWidth  = (4 * PX_PER_BEAT) / sv->songParams.grid;
-    sv->rowHeight  = sv->font_ibm.height + (2 * KEY_MARGIN) + 1;
+    sv->rowHeight  = getSysFont()->height + (2 * KEY_MARGIN) + 1;
     sv->numRows    = TFT_HEIGHT / sv->rowHeight;
 
     sv->usPerPx = sv->usPerBeat / PX_PER_BEAT;
@@ -583,13 +583,15 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
     // Start offset by the grid
     yOff = KEY_MARGIN - sv->gridOffset.y;
 
+    font_t* font = getSysFont();
+
     // Draw key labels
     while (yOff < TFT_HEIGHT)
     {
         if (yOff + sv->rowHeight <= 0)
         {
             // Off-screen, just increment until we're on screen
-            yOff += sv->font_ibm.height + (2 * KEY_MARGIN) + 1;
+            yOff += font->height + (2 * KEY_MARGIN) + 1;
         }
         else
         {
@@ -609,8 +611,8 @@ void drawSequencerGrid(sequencerVars_t* sv, int32_t elapsedUs)
             }
 
             // Draw the key label
-            fillDisplayArea(0, yOff - KEY_MARGIN, sv->labelWidth, yOff + sv->font_ibm.height + KEY_MARGIN, bgColor);
-            drawText(&sv->font_ibm, textColor, tmp, KEY_MARGIN, yOff);
+            fillDisplayArea(0, yOff - KEY_MARGIN, sv->labelWidth, yOff + font->height + KEY_MARGIN, bgColor);
+            drawText(font, textColor, tmp, KEY_MARGIN, yOff);
             yOff += sv->rowHeight;
         }
 
