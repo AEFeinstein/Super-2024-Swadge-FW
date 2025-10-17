@@ -143,6 +143,8 @@ void addOrRemoveNote(sequencerVars_t* sv, bool playPreview)
     newNote->sixteenthOn  = sv->cursorPos.x;
     newNote->sixteenthOff = newNote->sixteenthOn + (16 / sv->noteParams.type);
     newNote->channel      = sv->noteParams.channel;
+    // TODO get velocity per-channel. Channel is the value from instrumentVals[]
+    newNote->velocity = MIDI_VELOCITY;
 
     // Check for overlaps
     node_t* addBeforeThis = NULL;
@@ -191,16 +193,18 @@ void addOrRemoveNote(sequencerVars_t* sv, bool playPreview)
         // Stop it first if it's currently exampling
         if (0 < sv->exampleMidiNoteTimer)
         {
-            midiNoteOff(globalMidiPlayerGet(MIDI_BGM), sv->exampleMidiChannel, sv->exampleMidiNote, MIDI_VELOCITY);
+            midiNoteOff(globalMidiPlayerGet(MIDI_BGM), sv->exampleMidiChannel, sv->exampleMidiNote,
+                        sv->exampleMidiVelocity);
         }
 
         // Set the example note and timer
         sv->exampleMidiNote      = newNote->midiNum;
         sv->exampleMidiChannel   = sv->noteParams.channel;
         sv->exampleMidiNoteTimer = (sv->usPerBeat * 4) / (sv->noteParams.type);
+        sv->exampleMidiVelocity  = newNote->velocity;
 
         // Play it
-        midiNoteOn(globalMidiPlayerGet(MIDI_BGM), sv->exampleMidiChannel, sv->exampleMidiNote, MIDI_VELOCITY);
+        midiNoteOn(globalMidiPlayerGet(MIDI_BGM), sv->exampleMidiChannel, sv->exampleMidiNote, sv->exampleMidiVelocity);
     }
 }
 
@@ -354,7 +358,8 @@ void runSequencerTimers(sequencerVars_t* sv, int32_t elapsedUs)
         if (0 >= sv->exampleMidiNoteTimer)
         {
             // Stop the example note
-            midiNoteOff(globalMidiPlayerGet(MIDI_BGM), sv->exampleMidiChannel, sv->exampleMidiNote, MIDI_VELOCITY);
+            midiNoteOff(globalMidiPlayerGet(MIDI_BGM), sv->exampleMidiChannel, sv->exampleMidiNote,
+                        sv->exampleMidiVelocity);
         }
     }
 
@@ -458,7 +463,7 @@ void runSequencerTimers(sequencerVars_t* sv, int32_t elapsedUs)
                 {
                     // Turn the note on
                     note->isOn = true;
-                    midiNoteOn(globalMidiPlayerGet(MIDI_BGM), note->channel, note->midiNum, MIDI_VELOCITY);
+                    midiNoteOn(globalMidiPlayerGet(MIDI_BGM), note->channel, note->midiNum, note->velocity);
                 }
             }
             // If the note is on, and shouldn't be
@@ -466,7 +471,7 @@ void runSequencerTimers(sequencerVars_t* sv, int32_t elapsedUs)
             {
                 // Turn it off
                 note->isOn = false;
-                midiNoteOff(globalMidiPlayerGet(MIDI_BGM), note->channel, note->midiNum, MIDI_VELOCITY);
+                midiNoteOff(globalMidiPlayerGet(MIDI_BGM), note->channel, note->midiNum, note->velocity);
             }
 
             // Iterate

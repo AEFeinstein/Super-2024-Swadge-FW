@@ -26,6 +26,12 @@ typedef struct
     int32_t timeSig; ///< Time signature, 2, 3, 4, or 5
     int32_t songEnd; ///< Where the song ends, in 1/16 increments
     bool loop;       ///< True to loop when finished, false to stop
+    int8_t velPiano; ///< TODO
+    int8_t velBrass; ///< TODO
+    int8_t velSax;   ///< TODO
+    int8_t velSynth; ///< TODO
+    int8_t velBass;  ///< TODO
+    int8_t velDrum;  ///< TODO
 } seqSongParams_t;
 
 typedef struct
@@ -40,6 +46,7 @@ typedef struct
     int32_t sixteenthOn;
     int32_t sixteenthOff;
     int32_t channel;
+    uint8_t velocity;
     bool isOn;
 } sequencerNote_t;
 
@@ -95,6 +102,7 @@ typedef struct
     int32_t exampleMidiNote;
     int32_t exampleMidiChannel;
     int32_t exampleMidiNoteTimer;
+    uint8_t exampleMidiVelocity;
 
     // Help page
     uint32_t helpIdx;

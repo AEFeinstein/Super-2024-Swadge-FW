@@ -96,6 +96,13 @@ static const int32_t noteTypeVals[] = {1, 2, 4, 8, 16};
 static const cnfsFileIdx_t noteWsgs[]
     = {SEQ_WHOLE_NOTE_WSG, SEQ_HALF_NOTE_WSG, SEQ_QUARTER_NOTE_WSG, SEQ_EIGHTH_NOTE_WSG, SEQ_SIXTEENTH_NOTE_WSG};
 
+const char str_vel_piano[] = "Piano Vol";
+const char str_vel_brass[] = "Brass Vol";
+const char str_vel_bass[]  = "Bass Vol";
+const char str_vel_sax[]   = "Sax Vol";
+const char str_vel_drum[]  = "Drums Vol";
+const char str_vel_synth[] = "Synth Vol";
+
 swadgeMode_t sequencerMode = {
     .modeName                 = sequencerName,
     .wifiMode                 = NO_WIFI,
@@ -294,6 +301,18 @@ static void buildMainMenu(void)
 
         // Add option to mark the song end
         addSingleItemToMenu(sv->songMenu, str_songEnd);
+
+        // TODO add option for instrument velocities
+        settingParam_t sp_velocity = {
+            .min = 1,
+            .max = 16,
+        };
+        addSettingsItemToMenu(sv->songMenu, str_vel_piano, &sp_velocity, sp_velocity.max);
+        addSettingsItemToMenu(sv->songMenu, str_vel_brass, &sp_velocity, sp_velocity.max);
+        addSettingsItemToMenu(sv->songMenu, str_vel_sax, &sp_velocity, sp_velocity.max);
+        addSettingsItemToMenu(sv->songMenu, str_vel_synth, &sp_velocity, sp_velocity.max);
+        addSettingsItemToMenu(sv->songMenu, str_vel_bass, &sp_velocity, sp_velocity.max);
+        addSettingsItemToMenu(sv->songMenu, str_vel_drum, &sp_velocity, sp_velocity.max);
     }
     sv->songMenu = endSubMenu(sv->songMenu);
 
@@ -542,6 +561,36 @@ static bool sequencerSongMenuCb(const char* label, bool selected, uint32_t setti
         sv->songParams.loop = settingVal;
         measureSequencerGrid(sv);
         returnToGrid = selected;
+    }
+    else if (str_vel_bass == label)
+    {
+        sv->songParams.velBass = settingVal;
+        returnToGrid           = selected;
+    }
+    else if (str_vel_drum == label)
+    {
+        sv->songParams.velDrum = settingVal;
+        returnToGrid           = selected;
+    }
+    else if (str_vel_brass == label)
+    {
+        sv->songParams.velBrass = settingVal;
+        returnToGrid            = selected;
+    }
+    else if (str_vel_piano == label)
+    {
+        sv->songParams.velPiano = settingVal;
+        returnToGrid            = selected;
+    }
+    else if (str_vel_sax == label)
+    {
+        sv->songParams.velSax = settingVal;
+        returnToGrid          = selected;
+    }
+    else if (str_vel_synth == label)
+    {
+        sv->songParams.velSynth = settingVal;
+        returnToGrid            = selected;
     }
     else if (selected)
     {
