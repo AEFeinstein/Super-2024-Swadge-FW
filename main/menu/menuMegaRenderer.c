@@ -198,6 +198,7 @@ void deinitMenuMegaRenderer(menuMegaRenderer_t* renderer)
  * @brief Set whether or not to draw the sci-fi rectangle background body
  *
  * @param renderer The renderer.
+ * @param drawBody true to draw the body background, false to skip it
  */
 void setDrawBody(menuMegaRenderer_t* renderer, bool drawBody)
 {
@@ -348,7 +349,7 @@ static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t
  * @param topLeftY The Y coordinate of the top left corner of the body
  * @param expansionHeight The y distance of filler rectangle between the top and bottom parts of the body
  * @param flipLR true to flip the body horizontally
- * @param elapsedUs The time elapsed since this function was last called, for LED animation
+ * @param renderer The renderer to draw a body with
  */
 void drawMenuBody(uint16_t topLeftX, uint16_t topLeftY, uint8_t expansionHeight, bool flipLR,
                   menuMegaRenderer_t* renderer)
