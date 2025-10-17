@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+ <tileset firstgid="1" source="../mg-entity-tileset.tsx"/>
+ <object name="Warp Exit (Wall) " type="SwadgeLandEntity" gid="149" width="16" height="64">
+  <properties>
+   <property name="type" type="int" propertytype="Swadge Land Entity Index" value="39"/>
+  </properties>
+ </object>
+</template>

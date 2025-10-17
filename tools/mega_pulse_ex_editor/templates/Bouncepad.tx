@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+ <tileset firstgid="1" source="../mg-entity-tileset.tsx"/>
+ <object name="Bouncepad" type="SwadgeLandEntity" gid="39" width="32" height="32">
+  <properties>
+   <property name="type" type="int" propertytype="Swadge Land Entity Index" value="48"/>
+  </properties>
+ </object>
+</template>
