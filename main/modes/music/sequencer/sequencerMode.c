@@ -10,6 +10,14 @@
 #include "mainMenu.h"
 
 //==============================================================================
+// Defines
+//==============================================================================
+
+#define MIN_MIDI_VELOCITY_SETTING 0
+#define MAX_MIDI_VELOCITY_SETTING 16
+#define MAX_MIDI_VELOCITY         0x7F
+
+//==============================================================================
 // Function Declarations
 //==============================================================================
 
@@ -204,6 +212,14 @@ static void setDefaultParameters(void)
     // Note defaults
     sv->noteParams.channel = instrumentVals[0];
     sv->noteParams.type    = noteTypeVals[2];
+
+    // Velocity defaults
+    sv->songParams.velBass  = MAX_MIDI_VELOCITY_SETTING;
+    sv->songParams.velBrass = MAX_MIDI_VELOCITY_SETTING;
+    sv->songParams.velDrum  = MAX_MIDI_VELOCITY_SETTING;
+    sv->songParams.velPiano = MAX_MIDI_VELOCITY_SETTING;
+    sv->songParams.velSax   = MAX_MIDI_VELOCITY_SETTING;
+    sv->songParams.velSynth = MAX_MIDI_VELOCITY_SETTING;
 }
 
 /**
@@ -302,10 +318,10 @@ static void buildMainMenu(void)
         // Add option to mark the song end
         addSingleItemToMenu(sv->songMenu, str_songEnd);
 
-        // TODO add option for instrument velocities
+        // Add options for instrument velocities
         settingParam_t sp_velocity = {
-            .min = 1,
-            .max = 16,
+            .min = MIN_MIDI_VELOCITY_SETTING,
+            .max = MAX_MIDI_VELOCITY_SETTING,
         };
         addSettingsItemToMenu(sv->songMenu, str_vel_piano, &sp_velocity, sp_velocity.max);
         addSettingsItemToMenu(sv->songMenu, str_vel_brass, &sp_velocity, sp_velocity.max);
@@ -749,6 +765,60 @@ paletteColor_t getChannelColor(int32_t channel)
 }
 
 /**
+ * @brief Get velocity per-channel. Channel is the value from instrumentVals[]
+ *
+ * @param channel The channel to get MIDI velocity for
+ * @return The MIDI velocity
+ */
+uint8_t getChannelVelocity(int32_t channel)
+{
+    // channel are the values in instrumentVals[]
+    int8_t setting = MAX_MIDI_VELOCITY_SETTING;
+    switch (channel)
+    {
+        case 0:
+        {
+            setting = sv->songParams.velPiano;
+            break;
+        }
+        case 1:
+        {
+            setting = sv->songParams.velBrass;
+            break;
+        }
+        case 2:
+        {
+            setting = sv->songParams.velSax;
+            break;
+        }
+        case 3:
+        {
+            setting = sv->songParams.velSynth;
+            break;
+        }
+        case 4:
+        {
+            setting = sv->songParams.velBass;
+            break;
+        }
+        case 9:
+        {
+            setting = sv->songParams.velDrum;
+            break;
+        }
+        default:
+        {
+            setting = MAX_MIDI_VELOCITY_SETTING;
+            break;
+        }
+    }
+
+    // Return the velocity, converted from the setting value
+    return ((setting - MIN_MIDI_VELOCITY_SETTING) * MAX_MIDI_VELOCITY)
+           / (MAX_MIDI_VELOCITY_SETTING - MIN_MIDI_VELOCITY_SETTING);
+}
+
+/**
  * @brief Save the current song to NVM
  *
  * @param fname The filename to save the song as
@@ -825,6 +895,8 @@ static void sequencerLoadSong(const char* fname)
         // Read song parameters from the blob
         memcpy(&sv->songParams, &blob[blobIdx], sizeof(sv->songParams));
         blobIdx += sizeof(sv->songParams);
+
+        // TODO set menu options from sv->songParams
 
         // Recalculate after load
         sv->usPerBeat = (60 * 1000000) / sv->songParams.tempo;

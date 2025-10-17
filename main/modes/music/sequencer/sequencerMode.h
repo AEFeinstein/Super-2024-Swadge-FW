@@ -26,12 +26,12 @@ typedef struct
     int32_t timeSig; ///< Time signature, 2, 3, 4, or 5
     int32_t songEnd; ///< Where the song ends, in 1/16 increments
     bool loop;       ///< True to loop when finished, false to stop
-    int8_t velPiano; ///< TODO
-    int8_t velBrass; ///< TODO
-    int8_t velSax;   ///< TODO
-    int8_t velSynth; ///< TODO
-    int8_t velBass;  ///< TODO
-    int8_t velDrum;  ///< TODO
+    int8_t velPiano; ///< The MIDI velocity for the Piano channel
+    int8_t velBrass; ///< The MIDI velocity for the Brass channel
+    int8_t velSax;   ///< The MIDI velocity for the Sax channel
+    int8_t velSynth; ///< The MIDI velocity for the Synth channel
+    int8_t velBass;  ///< The MIDI velocity for the Bass channel
+    int8_t velDrum;  ///< The MIDI velocity for the Drum channel
 } seqSongParams_t;
 
 typedef struct
@@ -46,7 +46,6 @@ typedef struct
     int32_t sixteenthOn;
     int32_t sixteenthOff;
     int32_t channel;
-    uint8_t velocity;
     bool isOn;
 } sequencerNote_t;
 
@@ -125,6 +124,7 @@ extern const char str_songOptions[];
 //==============================================================================
 
 paletteColor_t getChannelColor(int32_t channel);
+uint8_t getChannelVelocity(int32_t channel);
 void setSequencerScreen(sequencerScreen_t screen);
 
 #endif
