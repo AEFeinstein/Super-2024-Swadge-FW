@@ -47,10 +47,8 @@ static const char str_cancel[]    = "Cancel";
 static const char str_reset[]     = "Reset This Song";
 
 static const char* const str_songNames[] = {
-    "Song 1",
-    "Song 2",
-    "Song 3",
-    "Song 4",
+    "Song 1", "Song 2",  "Song 3",  "Song 4",  "Song 5",  "Song 6",  "Song 7",  "Song 8",
+    "Song 9", "Song 10", "Song 11", "Song 12", "Song 13", "Song 14", "Song 15", "Song 16",
 };
 
 static const char str_noteOptions[] = "Note Options";
