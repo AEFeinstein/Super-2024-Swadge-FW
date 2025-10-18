@@ -80,6 +80,7 @@ typedef struct
     bool ledsOn;                 ///< true if LEDs should be set by this renderer, false to leave LEDs alone
 
     bool drawBody;          ///< true to draw the sci-fi rectangle body background, false to skip it
+    uint16_t bodyHeight;    ///< the height of the middle portion of the body, between top and bottom decorated parts
     bool conveyorBeltStyle; ///< true to draw a sliding background and sliding lights
 } menuMegaRenderer_t;
 
@@ -90,6 +91,7 @@ void drawMenuBody(uint16_t topLeftX, uint16_t topLeftY, uint8_t expansionHeight,
 void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs);
 void setMegaLedsOn(menuMegaRenderer_t* renderer, bool ledsOn);
 void setDrawBody(menuMegaRenderer_t* renderer, bool drawBody);
+void setBodyHeight(menuMegaRenderer_t* renderer, int16_t height);
 void recolorMenuMegaRenderer(menuMegaRenderer_t* renderer, paletteColor_t textFill, paletteColor_t textOutline,
                              paletteColor_t c1, paletteColor_t c2, paletteColor_t c3, paletteColor_t c4,
                              paletteColor_t c5, paletteColor_t c6, paletteColor_t c7, paletteColor_t c8,
