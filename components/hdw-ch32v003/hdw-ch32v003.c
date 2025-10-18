@@ -435,7 +435,7 @@ int ch32v003WriteBitmap(int slot, const uint8_t pixels[6][12])
         for (x = 0; x < 12; x++)
         {
             int intensity = pixels[y][x];
-            int coord     = Coordmap[x * 8 + y];
+            int coord     = Coordmap[x * 8 + (5 - y)];
 
             int ox = coord & 0xff;
             int oy = coord >> 8;
