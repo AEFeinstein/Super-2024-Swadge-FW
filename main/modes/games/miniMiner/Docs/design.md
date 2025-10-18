@@ -88,7 +88,7 @@ Tables 1-4 contain the single byte tile representation to aid in generation of t
 | Wood | C | Log | Loggers | Starting resource range (Table 2) |
 | UNUSED | D |
 | UNUSED | E |
-| UNUSED | F |
+| Debug | F | N/A | N/A | Style (Gray, Orange, Green, Blue) |
 **Table 1: Surface Types**
 
 | Value | Range |
