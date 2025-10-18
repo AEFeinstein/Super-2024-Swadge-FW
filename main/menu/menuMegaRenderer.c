@@ -216,7 +216,7 @@ void setBodyHeight(menuMegaRenderer_t* renderer, int16_t height)
 {
     if (height < 0)
     {
-        renderer->bodyHeight = 66;
+        renderer->bodyHeight = DEFAULT_BODY_HEIGHT;
     }
     else
     {
