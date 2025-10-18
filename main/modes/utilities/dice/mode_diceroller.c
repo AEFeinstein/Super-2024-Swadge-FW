@@ -107,6 +107,7 @@ typedef struct
     eyeDigit_t eyeDigits[10];
     uint8_t rollEyeFrame;
     int32_t rollEyeAnimTimerUs;
+    bool initialEyes;
 
     // DAC variables
     int32_t cScalePeriodSamples[8];
@@ -269,7 +270,6 @@ void diceEnterMode(void)
     ch32v003WriteBitmapAsset(EYES_SLOT_SWIRL + 1, EYES_SWIRL_1_GS);
     ch32v003WriteBitmapAsset(EYES_SLOT_SWIRL + 2, EYES_SWIRL_2_GS);
     ch32v003WriteBitmapAsset(EYES_SLOT_SWIRL + 3, EYES_SWIRL_3_GS);
-    ch32v003SelectBitmap(EYES_SLOT_DEAD);
 
     memset(&diceRoller->cRoll, 0, sizeof(rollHistoryEntry_t));
 
@@ -466,6 +466,11 @@ void doStateMachine(int64_t elapsedUs)
             // Draw the mode name
             drawText(diceRoller->ibm_vga8, textColor, DR_NAMESTRING,
                      TFT_WIDTH / 2 - textWidth(diceRoller->ibm_vga8, DR_NAMESTRING) / 2, TFT_HEIGHT / 2);
+            if (!diceRoller->initialEyes)
+            {
+                diceRoller->initialEyes = true;
+                ch32v003SelectBitmap(EYES_SLOT_SWIRL + 3);
+            }
             break;
         }
         case DR_SHOW_ROLL:
