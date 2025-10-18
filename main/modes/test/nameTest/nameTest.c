@@ -33,12 +33,12 @@ static void ntEnterMode(void)
 {
     nt          = heap_caps_calloc(sizeof(ntData_t), 1, MALLOC_CAP_8BIT);
     nt->nd.user = false;
- 
+
     // FIXME: Crashes if not called again here
     initUsernameSystem();
 
     nameData_t* temp = getSystemUsername();
-    nt->sys = *temp;
+    nt->sys          = *temp;
 
     // Run all things for testing purposes
     ntTestWPrint();
@@ -62,7 +62,9 @@ static void ntMainLoop(int64_t elapsedUs)
         if (nt->user)
         {
             finished = handleUsernamePickerInput(&evt, &nt->sys);
-        } else {
+        }
+        else
+        {
             finished = handleUsernamePickerInput(&evt, &nt->nd);
         }
     }
