@@ -817,7 +817,7 @@ void ch32v003EmuDraw(int offX, int offY, int window_w, int window_h)
     {
         for (int x = 0; x < 12; x++)
         {
-            uint16_t tc = Coordmap[y + x * 8];
+            uint16_t tc = Coordmap[(5 - y) + x * 8];
             int bit     = 1 << (tc >> 8);
             int row     = tc & 0xff;
 
