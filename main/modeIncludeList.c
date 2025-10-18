@@ -48,12 +48,12 @@ void modeListSetMenu(menu_t* menu)
 
     // Music sub menu
     menu = startSubMenu(menu, "Music");
+    addSingleItemToMenu(menu, swadgetamatoneMode.modeName);
     addSingleItemToMenu(menu, sequencerMode.modeName);
     addSingleItemToMenu(menu, colorchordMode.modeName);
     addSingleItemToMenu(menu, tunernomeMode.modeName);
     addSingleItemToMenu(menu, jukeboxMode.modeName);
     addSingleItemToMenu(menu, synthMode.modeName);
-    addSingleItemToMenu(menu, swadgetamatoneMode.modeName);
     menu = endSubMenu(menu);
 
     // Utilities sub menu

@@ -85,6 +85,8 @@ typedef struct
     synthOscillator_t sttOsc;
 
     wsg_t background;
+    font_t font;
+    font_t fontOutline;
 
     led_t leds[CONFIG_NUM_LEDS];
 } swadgetamatone_t;
@@ -160,6 +162,9 @@ static void sttEnterMode(void)
 
     loadWsg(STT_BACKGROUND_WSG, &stt->background, false);
 
+    loadFont(OXANIUM_FONT, &stt->font, false);
+    makeOutlineFont(&stt->font, &stt->fontOutline, false);
+
     ch32v003WriteBitmapAsset(EYES_SLOT_BLINK, STT_EYES_BLINK_GS);
     ch32v003WriteBitmapAsset(EYES_SLOT_DEFAULT, STT_EYES_DEFAULT_GS);
     ch32v003WriteBitmapAsset(EYES_SLOT_OCTAVES + 1, STT_EYES_PLAYING_1_GS);
@@ -175,6 +180,8 @@ static void sttExitMode(void)
     writeNamespaceNvs32(sttNvsNamespace, sttNvsKeyTotalTimePlayed, stt->totalTimePlayedMs);
 
     freeWsg(&stt->background);
+    freeFont(&stt->font);
+    freeFont(&stt->fontOutline);
     heap_caps_free(stt);
 }
 
@@ -276,13 +283,13 @@ static void sttMainLoop(int64_t elapsedUs)
     {
         uint32_t noteHz = stt->touchpad.x * (STT_MAX_HZ - STT_MIN_HZ) / 1023 + STT_MIN_HZ;
 
+        uint32_t closestFreq = 0;
         for (int i = 0; i < ARRAY_SIZE(noteFreqs); i++)
         {
-            // Max 1% variation to detect the note
-            if (noteFreqs[i] * .99 < noteHz && noteHz < noteFreqs[i] * 1.01)
+            if (ABS(noteHz - noteFreqs[i]) < ABS(noteHz - closestFreq))
             {
+                closestFreq = noteFreqs[i];
                 note = noteNames[i];
-                break;
             }
         }
 
@@ -348,7 +355,8 @@ static void sttMainLoop(int64_t elapsedUs)
     }
     if (msg != NULL)
     {
-        drawTextShadow(getSysFont(), c555, c000, msg, 25, TFT_HEIGHT - getSysFont()->height - 5);
+        drawText(&stt->font, c444, msg, 20, TFT_HEIGHT - stt->font.height);
+        drawText(&stt->fontOutline, c222, msg, 20, TFT_HEIGHT - stt->fontOutline.height);
     }
 }
 
