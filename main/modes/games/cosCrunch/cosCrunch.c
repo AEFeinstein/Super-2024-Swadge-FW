@@ -30,9 +30,11 @@ static const char cosCrunchYourScoreMsg[]    = "Your score: %" PRIi32;
 static const char cosCrunchPlayerScoreMsg[]  = "Player %" PRIu8 ": %" PRIi32;
 static const char cosCrunchNewHighScoreMsg[] = "New personal best!";
 
-static const char cosCrunchHowToPlayText[]
-    = "MAGFest is almost here, but your costumes aren't ready yet! Cut, sew, paint, and craft as fast as you can. "
-      "You'll never really be done, but maybe you can get close enough.";
+static const char* cosCrunchHowToPlayText[]
+    = {"MAGFest is almost here, but your costumes aren't ready yet! Cut, sew, paint, and craft as fast as you can with "
+       "the D-pad and A button. Every time you make a mistake, the Days 'Til MAG counts down.",
+       "See how many crafts you can complete before MAGFest arrives. Your score depends on it! You'll never really be "
+       "done, but maybe you can get close enough."};
 
 typedef enum
 {
@@ -62,6 +64,8 @@ typedef struct
 
 typedef struct
 {
+    uint8_t tutorialPage;
+
     uint8_t playerCount;
     uint8_t currentPlayer;
     bool announcePlayer;
@@ -217,7 +221,8 @@ static void cosCrunchEnterMode(void)
     }
     else
     {
-        cc->state = CC_TUTORIAL;
+        cc->state        = CC_TUTORIAL;
+        cc->tutorialPage = 0;
         writeNamespaceNvs32(CC_NVS_NAMESPACE, NVS_KEY_TUTORIAL_SEEN, true);
     }
 
@@ -335,7 +340,8 @@ static bool cosCrunchMenu(const char* label, bool selected, uint32_t value)
         }
         else if (label == cosCrunchHowToPlayLbl)
         {
-            cc->state = CC_TUTORIAL;
+            cc->state        = CC_TUTORIAL;
+            cc->tutorialPage = 0;
         }
         else if (label == cosCrunchExitLbl)
         {
@@ -357,7 +363,22 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         {
             cc->menu = menuButton(cc->menu, evt);
         }
-        else if ((cc->state == CC_GAME_OVER || cc->state == CC_TUTORIAL || cc->state == CC_HIGH_SCORES)
+        else if (cc->state == CC_TUTORIAL)
+        {
+            if (evt.button == PB_A && evt.down)
+            {
+                cc->tutorialPage++;
+                if (cc->tutorialPage >= ARRAY_SIZE(cosCrunchHowToPlayText))
+                {
+                    cc->state = CC_MENU;
+                }
+            }
+            else if (evt.button == PB_B && evt.down)
+            {
+                cc->tutorialPage = MAX(cc->tutorialPage - 1, 0);
+            }
+        }
+        else if ((cc->state == CC_GAME_OVER || cc->state == CC_HIGH_SCORES)
                  && (evt.button == PB_A || evt.button == PB_B || evt.button == PB_START) && evt.down)
         {
             if (cc->state == CC_GAME_OVER)
@@ -645,12 +666,11 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             drawText(&cc->bigFont, c555, cosCrunchHowToPlayLbl, (TFT_WIDTH - tw) / 2, 15);
             drawText(&cc->bigFontOutline, c000, cosCrunchHowToPlayLbl, (TFT_WIDTH - tw) / 2, 15);
 
+            const char* msgText = cosCrunchHowToPlayText[cc->tutorialPage];
             int16_t xOff = 30, yOff = 85;
-            int16_t textHeight
-                = textWordWrapHeight(&cc->font, cosCrunchHowToPlayText, TFT_WIDTH - xOff * 2, TFT_HEIGHT - yOff - xOff);
+            int16_t textHeight = textWordWrapHeight(&cc->font, msgText, TFT_WIDTH - xOff * 2, TFT_HEIGHT - yOff - xOff);
             drawMessageBox(20, 75, TFT_WIDTH - 20, 75 + textHeight + 20, cc->wsg.menuFold);
-            drawTextWordWrap(&cc->font, c000, cosCrunchHowToPlayText, &xOff, &yOff, TFT_WIDTH - xOff,
-                             TFT_HEIGHT - xOff);
+            drawTextWordWrap(&cc->font, c000, msgText, &xOff, &yOff, TFT_WIDTH - xOff, TFT_HEIGHT - xOff);
             break;
         }
 
