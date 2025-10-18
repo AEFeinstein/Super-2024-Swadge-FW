@@ -44,7 +44,7 @@ jobs:
               - nvs.json
             idf_install: ~/.espressif
           - os: osx-intel
-            runner: macos-13
+            runner: macos-15-intel
             family: osx
             emulator: true
             firmware: false
