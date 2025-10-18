@@ -13,6 +13,10 @@
 #define DR_MAX_HIST 6
 #define MAX_DICE    6
 
+#define EYES_SLOT_DEAD   3
+#define EYES_SLOT_SWIRL  4 ///< Starting slot for 4-frame swirl animation
+#define EYES_SLOT_DIGITS 10
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -58,6 +62,11 @@ typedef struct
 
 typedef struct
 {
+    uint8_t pixels[36];
+} eyeDigit_t;
+
+typedef struct
+{
     // UI variables
     font_t* ibm_vga8;
     wsg_t woodTexture;
@@ -93,6 +102,11 @@ typedef struct
 
     // LED Variables
     portableDance_t* pDance;
+
+    // Eye variables
+    eyeDigit_t eyeDigits[10];
+    uint8_t rollEyeFrame;
+    int32_t rollEyeAnimTimerUs;
 
     // DAC variables
     int32_t cScalePeriodSamples[8];
@@ -153,6 +167,7 @@ static const die_t dice[] = {
 
 static const int32_t rollAnimationPeriod = 1000000; // 1 Second Spin
 static const int32_t fakeValRerollPeriod = 100000;  // Change numbers every 0.1s
+static const int32_t eyeFramePeriod      = 250000;  // Change swirl eye frame every 0.25s
 
 static const char DR_NAMESTRING[] = "Dice Roller";
 
@@ -232,6 +247,29 @@ void diceEnterMode(void)
     loadWsg(WOOD_TEXTURE_64_WSG, &diceRoller->woodTexture, false);
     loadWsg(UP_CURSOR_8_WSG, &diceRoller->cursor, false);
     loadWsg(GOLD_CORNER_TR_WSG, &diceRoller->corner, false);
+
+    cnfsFileIdx_t digitGsFiles[] = {DICE_0_GS, DICE_1_GS, DICE_2_GS, DICE_3_GS, DICE_4_GS,
+                                    DICE_5_GS, DICE_6_GS, DICE_7_GS, DICE_8_GS, DICE_9_GS};
+    for (int i = 0; i < 10; i++)
+    {
+        size_t size        = 0;
+        const uint8_t* buf = cnfsGetFile(digitGsFiles[i], &size);
+        if (size != 40) // 4-byte header + 6x6
+        {
+            ESP_LOGW("DICE", "Eye digit asset %d wrong size (%d) bytes.\n", i, (int)size);
+        }
+        else
+        {
+            memcpy(&diceRoller->eyeDigits[i], buf + 4, ARRAY_SIZE(diceRoller->eyeDigits[i].pixels));
+        }
+    }
+
+    ch32v003WriteBitmapAsset(EYES_SLOT_DEAD, EYES_DEAD_GS);
+    ch32v003WriteBitmapAsset(EYES_SLOT_SWIRL + 0, EYES_SWIRL_0_GS);
+    ch32v003WriteBitmapAsset(EYES_SLOT_SWIRL + 1, EYES_SWIRL_1_GS);
+    ch32v003WriteBitmapAsset(EYES_SLOT_SWIRL + 2, EYES_SWIRL_2_GS);
+    ch32v003WriteBitmapAsset(EYES_SLOT_SWIRL + 3, EYES_SWIRL_3_GS);
+    ch32v003SelectBitmap(EYES_SLOT_DEAD);
 
     memset(&diceRoller->cRoll, 0, sizeof(rollHistoryEntry_t));
 
@@ -463,6 +501,12 @@ void doStateMachine(int64_t elapsedUs)
                 diceRoller->dacPeriodSample = newPeriod;
             });
 
+            // Run timer for eye animation
+            RUN_TIMER_EVERY(diceRoller->rollEyeAnimTimerUs, eyeFramePeriod, elapsedUs, {
+                diceRoller->rollEyeFrame = (diceRoller->rollEyeFrame + 1) % 4;
+                ch32v003SelectBitmap(EYES_SLOT_SWIRL + diceRoller->rollEyeFrame);
+            });
+
             // Draw everything
             drawDiceBackground((diceRoller->rollRotAnimTimerUs * 360) / rollAnimationPeriod);
             drawDiceText(diceRoller->fakeVals);
@@ -479,6 +523,30 @@ void doStateMachine(int64_t elapsedUs)
                 // Turn LEDs off
                 led_t leds[CONFIG_NUM_LEDS] = {0};
                 setLeds(leds, CONFIG_NUM_LEDS);
+
+                // Set eyes
+                if (diceRoller->cRoll.total < 100)
+                {
+                    uint8_t bitmap[6][12] = {0};
+                    eyeDigit_t* digits[2] = {&diceRoller->eyeDigits[diceRoller->cRoll.total / 10],
+                                             &diceRoller->eyeDigits[diceRoller->cRoll.total % 10]};
+                    for (int i = 0; i < 2; i++)
+                    {
+                        for (int x = 0; x < 6; x++)
+                        {
+                            for (int y = 0; y < 6; y++)
+                            {
+                                bitmap[y][x + 6 * i] = digits[i]->pixels[x + y * 6];
+                            }
+                        }
+                    }
+                    ch32v003WriteBitmap(EYES_SLOT_DIGITS, bitmap);
+                    ch32v003SelectBitmap(EYES_SLOT_DIGITS);
+                }
+                else
+                {
+                    ch32v003SelectBitmap(EYES_SLOT_DEAD);
+                }
             }
             break;
         }
@@ -702,6 +770,7 @@ void doRoll(int count, const die_t* die, int keep)
     // Start timers fresh
     diceRoller->rollRotAnimTimerUs = 0;
     diceRoller->rollNumAnimTimerUs = 0;
+    diceRoller->rollEyeAnimTimerUs = 0;
 
     // Roll the dice!
     for (int m = 0; m < count; m++)
@@ -736,6 +805,9 @@ void doRoll(int count, const die_t* die, int keep)
     diceRoller->dacPeriodSampleChangeTimer = 0;
     diceRoller->sampleCount                = 0;
     diceRoller->dacLow                     = false;
+
+    // Set swirly eyes
+    ch32v003SelectBitmap(EYES_SLOT_SWIRL);
 }
 
 /**
