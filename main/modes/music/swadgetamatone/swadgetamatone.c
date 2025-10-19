@@ -115,8 +115,8 @@ swadgeMode_t swadgetamatoneMode = {
     .trophyData               = &sttTrophyData,
 };
 
-static const char* noteNames[]    = {"F", "F#", "G", "G#", "A", "A#", "B", "C", "C#", "D", "D#", "E", "F"};
-static const uint32_t noteFreqs[] = {87, 93, 98, 104, 110, 117, 123, 131, 139, 147, 156, 165, 175};
+static const char* noteNames[]   = {"F", "F#", "G", "G#", "A", "A#", "B", "C", "C#", "D", "D#", "E", "F"};
+static const int32_t noteFreqs[] = {87, 93, 98, 104, 110, 117, 123, 131, 139, 147, 156, 165, 175};
 #define STT_MIN_HZ noteFreqs[0]
 #define STT_MAX_HZ noteFreqs[ARRAY_SIZE(noteFreqs) - 1]
 
@@ -281,15 +281,15 @@ static void sttMainLoop(int64_t elapsedUs)
     uint8_t volume;
     if (stt->octavePressed != 0)
     {
-        uint32_t noteHz = stt->touchpad.x * (STT_MAX_HZ - STT_MIN_HZ) / 1023 + STT_MIN_HZ;
+        int32_t noteHz = stt->touchpad.x * (STT_MAX_HZ - STT_MIN_HZ) / 1023 + STT_MIN_HZ;
 
-        uint32_t closestFreq = 0;
+        int32_t closestFreq = 0;
         for (int i = 0; i < ARRAY_SIZE(noteFreqs); i++)
         {
             if (ABS(noteHz - noteFreqs[i]) < ABS(noteHz - closestFreq))
             {
                 closestFreq = noteFreqs[i];
-                note = noteNames[i];
+                note        = noteNames[i];
             }
         }
 
