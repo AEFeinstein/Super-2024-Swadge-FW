@@ -222,6 +222,7 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_BOSS_MOVE_2], false);
     loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_BOSS_MOVE_3], false);
     loadWsg(WARP_WALL_WSG, &self->wsgs[MG_WSG_BOSS_DOOR], false);
+    loadWsg(PULSE_SLIDE_WSG, &self->wsgs[MG_WSG_PLAYER_DASH_SLIDE], false);
 }
 
 void mg_initializeSprites(mgWsgManager_t* self)
@@ -293,6 +294,10 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_PLAYER_SLIDE].wsg    = &self->wsgs[MG_WSG_PLAYER_SLIDE];
     self->sprites[MG_SP_PLAYER_SLIDE].origin = &origin_15_15;
     self->sprites[MG_SP_PLAYER_SLIDE].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_DASH_SLIDE].wsg    = &self->wsgs[MG_WSG_PLAYER_DASH_SLIDE];
+    self->sprites[MG_SP_PLAYER_DASH_SLIDE].origin = &origin_15_9;
+    self->sprites[MG_SP_PLAYER_DASH_SLIDE].hitBox = &box_32_20;
 
     self->sprites[MG_SP_PLAYER_HURT].wsg    = &self->wsgs[MG_WSG_PLAYER_HURT];
     self->sprites[MG_SP_PLAYER_HURT].origin = &origin_8_8;

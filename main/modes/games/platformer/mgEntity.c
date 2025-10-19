@@ -1028,30 +1028,38 @@ void animatePlayer(mgEntity_t* self)
     }
     else if (self->xspeed != 0)
     {
-        if (((self->gameData->btnState & PB_LEFT) && self->xspeed < 0)
-            || ((self->gameData->btnState & PB_RIGHT) && self->xspeed > 0))
-        {
-            // Running
-            self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
-
-            if (self->spriteIndex < MG_SP_PLAYER_WALK1 || self->spriteIndex > MG_SP_PLAYER_WALK10)
-            {
-                self->spriteIndex = MG_SP_PLAYER_WALK1;
-            }
-            else if (self->gameData->frameCount % (5 /*- (abs(self->xspeed) >> 1)*/) == 0)
-            {
-                self->spriteIndex++;
-                if (self->spriteIndex > MG_SP_PLAYER_WALK10)
+        switch(self->state){
+            default:
+                if (((self->gameData->btnState & PB_LEFT) && self->xspeed < 0)
+                || ((self->gameData->btnState & PB_RIGHT) && self->xspeed > 0))
                 {
-                    self->spriteIndex = MG_SP_PLAYER_WALK1;
+                    // Running
+                    self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
+
+                    if (self->spriteIndex < MG_SP_PLAYER_WALK1 || self->spriteIndex > MG_SP_PLAYER_WALK10)
+                    {
+                        self->spriteIndex = MG_SP_PLAYER_WALK1;
+                    }
+                    else if (self->gameData->frameCount % (5 /*- (abs(self->xspeed) >> 1)*/) == 0)
+                    {
+                        self->spriteIndex++;
+                        if (self->spriteIndex > MG_SP_PLAYER_WALK10)
+                        {
+                            self->spriteIndex = MG_SP_PLAYER_WALK1;
+                        }
+                    }       
                 }
-            }
+                else
+                {
+                    self->spriteIndex = MG_SP_PLAYER_SLIDE;
+                }
+                break;
+            case MG_PL_ST_DASHING:
+                self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
+                self->spriteIndex = MG_SP_PLAYER_DASH_SLIDE;
+                break;
         }
-        else
-        {
-            self->spriteIndex = MG_SP_PLAYER_SLIDE;
-        }
-    }
+    }  
     else
     {
         // Standing

@@ -120,6 +120,7 @@ typedef enum
     MG_SP_PLAYER_JUMP3,
     MG_SP_PLAYER_JUMP4,
     MG_SP_PLAYER_SLIDE,
+    MG_SP_PLAYER_DASH_SLIDE,
     MG_SP_PLAYER_HURT,
     MG_SP_PLAYER_CLIMB,
     MG_SP_PLAYER_WIN,
@@ -703,7 +704,8 @@ typedef enum
     MG_WSG_BOSS_MOVE_1,
     MG_WSG_BOSS_MOVE_2,
     MG_WSG_BOSS_MOVE_3,
-    MG_WSG_BOSS_DOOR
+    MG_WSG_BOSS_DOOR,
+    MG_WSG_PLAYER_DASH_SLIDE
 } mg_wsgIndex_t;
 
 typedef enum
@@ -1011,7 +1013,7 @@ static const mgLeveldef_t leveldef[]
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_NULL, .bossBgmIndex = MG_BGM_BOSS_BIGMA},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_SMASH_GORILLA, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_DEADEYE_CHIRPZI, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA},
-       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_GRIND_PANGOLIN, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA},
+       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_DRAIN_BAT, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_FLARE_GRYFFYN, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_KINETIC_DONUT, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_KINETIC_DONUT, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA},
