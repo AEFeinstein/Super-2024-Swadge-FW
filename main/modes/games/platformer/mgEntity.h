@@ -82,7 +82,7 @@ typedef enum
     MG_PL_ST_DASHING,
     MG_PL_ST_MIC_DROP,
     MG_PL_ST_UPPERCUT,
-    MG_PL_ST_SLIDE
+    MG_PL_ST_HURT
 } mgPlayerState_t;
 
 //==============================================================================

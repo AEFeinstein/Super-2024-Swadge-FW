@@ -217,7 +217,8 @@ void mg_updatePlayer(mgEntity_t* self)
             {
                 self->yspeed += 8;
             }
-
+            //no break; this is intentional.
+        case MG_PL_ST_HURT:
             self->stateTimer--;
             if (self->stateTimer <= 0)
             {
@@ -979,9 +980,14 @@ void mg_destroyEntity(mgEntity_t* self, bool respawn)
 
 void animatePlayer(mgEntity_t* self)
 {
-    if (self->spriteIndex == MG_SP_PLAYER_WIN || self->spriteIndex == MG_SP_PLAYER_HURT)
+    if (self->spriteIndex == MG_SP_PLAYER_WIN)
     {
         // Win pose has been set; don't change it!
+        return;
+    }
+
+    if(self->state == MG_PL_ST_HURT){
+        self->spriteIndex = playerDamageAnimFrames[((self->stateTimer + self->visible) >> 2) & 0b11];
         return;
     }
 
@@ -1092,6 +1098,8 @@ void mg_detectEntityCollisions(mgEntity_t* self)
     selfBox.x1 = (self->x >> SUBPIXEL_RESOLUTION) - selfSprite->origin->x + selfSpriteBox->x1;
     selfBox.y1 = (self->y >> SUBPIXEL_RESOLUTION) - selfSprite->origin->y + selfSpriteBox->y1;
 
+    drawRect(selfBox.x0 - self->tilemap->mapOffsetX, selfBox.y0 - self->tilemap->mapOffsetY, selfBox.x1 - self->tilemap->mapOffsetX, selfBox.y1 - self->tilemap->mapOffsetY, c500);
+
     mgEntity_t* checkEntity;
     mgSprite_t* checkEntitySprite;
     const box_t* checkEntitySpriteBox;
@@ -1193,7 +1201,8 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                     self->type                  = ENTITY_DEAD;
                     self->xspeed                = 0;
                     self->yspeed                = -60;
-                    self->spriteIndex           = MG_SP_PLAYER_HURT;
+                    self->state = MG_PL_ST_HURT;
+                    self->stateTimer = 20;
                     self->gameData->changeState = MG_ST_DEAD;
                     self->gravityEnabled        = true;
                     self->falling               = true;
@@ -1204,6 +1213,8 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                     self->yspeed              = 0;
                     self->jumpPower           = 0;
                     self->invincibilityFrames = 120;
+                    self->state = MG_PL_ST_HURT;
+                    self->stateTimer = 20;
                     soundPlaySfx(&(self->soundManager->sndHurt), BZR_LEFT);
                 }
             }

@@ -188,7 +188,9 @@ typedef enum
     MG_SP_BOSS_MOVE_1,
     MG_SP_BOSS_MOVE_2,
     MG_SP_BOSS_MOVE_3,
-    MG_SP_BOSS_DOOR
+    MG_SP_BOSS_DOOR,
+    MG_SP_PLAYER_HURT_2,
+    MG_SP_PLAYER_HURT_3
 } mg_spriteDef_t;
 
 typedef enum
@@ -705,7 +707,9 @@ typedef enum
     MG_WSG_BOSS_MOVE_2,
     MG_WSG_BOSS_MOVE_3,
     MG_WSG_BOSS_DOOR,
-    MG_WSG_PLAYER_DASH_SLIDE
+    MG_WSG_PLAYER_DASH_SLIDE,
+    MG_WSG_PLAYER_HURT_2,
+    MG_WSG_PLAYER_HURT_3
 } mg_wsgIndex_t;
 
 typedef enum
@@ -1023,5 +1027,7 @@ static const mgLeveldef_t leveldef[]
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_KINETIC_DONUT, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_KINETIC_DONUT, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_KINETIC_DONUT, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA},};
+
+static const mg_spriteDef_t playerDamageAnimFrames[] = {MG_SP_PLAYER_HURT, MG_SP_PLAYER_HURT_2, MG_SP_PLAYER_HURT, MG_SP_PLAYER_HURT_3};
 
 #endif
