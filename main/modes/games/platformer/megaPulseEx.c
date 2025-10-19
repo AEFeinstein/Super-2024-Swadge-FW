@@ -790,10 +790,10 @@ void changeStateGame(platformer_t* self)
 
     self->tilemap.executeTileSpawnAll = true;
 
-    //self->gameData.changeBgm = MG_BGM_KINETIC_DONUT;
+    // self->gameData.changeBgm = MG_BGM_KINETIC_DONUT;
     mg_setBgm(&self->soundManager, leveldef[self->gameData.level].mainBgmIndex);
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
-    
+
     soundStop(true);
 
     self->update = &updateReadyScreen;

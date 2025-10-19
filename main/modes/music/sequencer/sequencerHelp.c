@@ -9,8 +9,10 @@
 // Defines
 //==============================================================================
 
-#define TEXT_MARGIN_L 18
-#define TEXT_MARGIN_R 13
+#define TEXT_MARGIN   4
+#define TEXT_MARGIN_L (22 + TEXT_MARGIN)
+#define TEXT_MARGIN_R (24 + TEXT_MARGIN)
+#define TEXT_MARGIN_U (50 + TEXT_MARGIN)
 
 #define ARROW_BLINK_PERIOD 1000000
 
@@ -48,8 +50,7 @@ static const seqHelpPage_t helpPages[] = {
     {
         .title = str_file,
         .text  = "The song is auto saved when exiting the mode with the \"Exit\" option or the Menu button, but NOT if "
-                 "you turn off "
-                 "the Swadge!",
+                 "you turn off the Swadge!",
     },
     {
         .title = str_file,
@@ -146,27 +147,27 @@ void drawSequencerHelp(sequencerVars_t* sv, int32_t elapsedUs)
     // Draw background, without animation
     drawMenuMega(sv->bgMenu, sv->menuRenderer, 0);
 
+    font_t* f = sv->menuRenderer->menuFont;
+
     // Draw text
-    paletteColor_t textColor    = c000;
-    paletteColor_t outlineColor = c000;
-    int16_t xOff                = TEXT_MARGIN_L;
-    int16_t yOff                = MANIA_TITLE_HEIGHT + 8;
-    drawTextWordWrap(&sv->font_rodin, textColor, helpPages[sv->helpIdx].text, &xOff, &yOff, TFT_WIDTH - TEXT_MARGIN_R,
-                     TFT_HEIGHT);
+    paletteColor_t textColor   = c555;
+    paletteColor_t shadowColor = c000;
+    int16_t xOff               = TEXT_MARGIN_L + 1;
+    int16_t yOff               = TEXT_MARGIN_U + 1;
+    drawTextWordWrap(f, shadowColor, helpPages[sv->helpIdx].text, &xOff, &yOff, TFT_WIDTH - TEXT_MARGIN_R + 1,
+                     TFT_HEIGHT + 1);
     xOff = TEXT_MARGIN_L;
-    yOff = MANIA_TITLE_HEIGHT + 8;
-    drawTextWordWrap(&sv->font_rodin_outline, outlineColor, helpPages[sv->helpIdx].text, &xOff, &yOff,
-                     TFT_WIDTH - TEXT_MARGIN_R, TFT_HEIGHT);
+    yOff = TEXT_MARGIN_U;
+    drawTextWordWrap(f, textColor, helpPages[sv->helpIdx].text, &xOff, &yOff, TFT_WIDTH - TEXT_MARGIN_R, TFT_HEIGHT);
 
     // Draw page numbers
     char pageText[32];
     snprintf(pageText, sizeof(pageText) - 1, "%" PRId32 "/%" PRId32 "", 1 + sv->helpIdx,
              (int32_t)ARRAY_SIZE(helpPages));
 
-    int16_t tWidth = textWidth(&sv->font_rodin, pageText);
-    drawText(&sv->font_rodin, textColor, pageText, TFT_WIDTH - 30 - tWidth, TFT_HEIGHT - sv->font_rodin.height + 2);
-    drawText(&sv->font_rodin_outline, outlineColor, pageText, TFT_WIDTH - 30 - tWidth,
-             TFT_HEIGHT - sv->font_rodin_outline.height + 2);
+    int16_t tWidth = textWidth(f, pageText);
+    drawText(f, shadowColor, pageText, TFT_WIDTH - 50 - tWidth + 1, TFT_HEIGHT - f->height + 4);
+    drawText(f, textColor, pageText, TFT_WIDTH - 50 - tWidth, TFT_HEIGHT - f->height + 3);
 
     // Blink the arrows
     sv->arrowBlinkTimer += elapsedUs;
@@ -181,17 +182,15 @@ void drawSequencerHelp(sequencerVars_t* sv, int32_t elapsedUs)
         if (0 != sv->helpIdx)
         {
             // Draw left arrow if not on the first page
-            drawText(&sv->font_rodin, textColor, "<", 0, (TFT_HEIGHT - sv->font_rodin.height) / 2);
-            drawText(&sv->font_rodin_outline, outlineColor, "<", 0, (TFT_HEIGHT - sv->font_rodin_outline.height) / 2);
+            drawText(f, shadowColor, "<", 1, 1 + (TFT_HEIGHT - f->height) / 2);
+            drawText(f, textColor, "<", 0, (TFT_HEIGHT - f->height) / 2);
         }
 
         if ((ARRAY_SIZE(helpPages) - 1) != sv->helpIdx)
         {
             // Draw right arrow if not on the last page
-            drawText(&sv->font_rodin, textColor, ">", TFT_WIDTH - textWidth(&sv->font_rodin, ">"),
-                     (TFT_HEIGHT - sv->font_rodin.height) / 2);
-            drawText(&sv->font_rodin_outline, outlineColor, ">", TFT_WIDTH - textWidth(&sv->font_rodin, ">"),
-                     (TFT_HEIGHT - sv->font_rodin_outline.height) / 2);
+            drawText(f, shadowColor, ">", 1 + TFT_WIDTH - textWidth(f, ">"), 1 + (TFT_HEIGHT - f->height) / 2);
+            drawText(f, textColor, ">", TFT_WIDTH - textWidth(f, ">"), (TFT_HEIGHT - f->height) / 2);
         }
     }
 }
