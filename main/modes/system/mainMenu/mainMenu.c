@@ -273,6 +273,9 @@ static void mainMenuEnterMode(void)
     // Load a font
     loadFont(RODIN_EB_FONT, &mainMenu->font_rodin, false);
 
+    // TODO replace with default eye firmware
+    ch32v003RunBinaryAsset(MATRIX_DROPS_CFUN_BIN);
+
     // Load a song for when the volume changes
 #ifdef SW_VOL_CONTROL
     loadMidiFile(JINGLE_MID, &mainMenu->jingle, false);

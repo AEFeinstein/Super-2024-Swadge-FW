@@ -424,6 +424,8 @@ void app_main(void)
 
     // TODO replace with default eye firmware
     ch32v003RunBinaryAsset(MATRIX_DROPS_CFUN_BIN);
+    // If you do load custom firmware onto the 003, you must wait for it to run before yanking the framebuffer around.
+    vTaskDelay(1);
 
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)
