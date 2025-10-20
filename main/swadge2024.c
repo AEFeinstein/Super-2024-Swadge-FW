@@ -247,6 +247,9 @@
 /// @brief The current Swadge mode
 static const swadgeMode_t* cSwadgeMode = &mainMenuMode;
 
+/// @brief Flag set when the swadge mode is started up
+static bool cSwadgeModeInit = false;
+
 /// @brief A pending Swadge mode to use after a deep sleep
 static RTC_DATA_ATTR const swadgeMode_t* pendingSwadgeMode = NULL;
 
@@ -303,6 +306,9 @@ void app_main(void)
 
     // Read settings from NVS
     readAllSettings();
+
+    // Mark the mode as not initialized yet
+    cSwadgeModeInit = false;
 
 #ifdef CONFIG_FACTORY_TEST_NORMAL
     // If test mode was passed
@@ -431,6 +437,7 @@ void app_main(void)
         }
         cSwadgeMode->fnEnterMode();
     }
+    cSwadgeModeInit = true;
 
     // Initialize username settings
     initUsernameSystem();
@@ -444,7 +451,7 @@ void app_main(void)
         tLastLoopUs        = tNowUs;
 
         // Process ADC samples
-        if (NULL != cSwadgeMode->fnAudioCallback)
+        if (cSwadgeModeInit && NULL != cSwadgeMode->fnAudioCallback)
         {
             // This must have the same number of elements as the bounds in mic_param
             const uint16_t micGains[] = {
@@ -495,7 +502,7 @@ void app_main(void)
             uint64_t mainLoopCallDelay = 0;
 
             // Call the mode's main loop
-            if (NULL != cSwadgeMode->fnMainLoop)
+            if (cSwadgeModeInit && NULL != cSwadgeMode->fnMainLoop)
             {
                 // Keep track of the time between main loop calls
                 static uint64_t tLastMainLoopCall = 0;
@@ -538,9 +545,11 @@ void app_main(void)
 
                 // Save the current mode
                 modeBehindQuickSettings = cSwadgeMode;
+                cSwadgeModeInit         = false;
                 cSwadgeMode             = &quickSettingsMode;
                 // Show the quick settings
                 quickSettingsMode.fnEnterMode();
+                cSwadgeModeInit = true;
             }
             else if (shouldHideQuickSettings)
             {
@@ -589,8 +598,9 @@ void app_main(void)
     }
 
     // Deinitialize the swadge mode
-    if (NULL != cSwadgeMode->fnExitMode)
+    if (cSwadgeModeInit && NULL != cSwadgeMode->fnExitMode)
     {
+        cSwadgeModeInit = false;
         cSwadgeMode->fnExitMode();
     }
 
@@ -668,8 +678,9 @@ void deinitSystem(void)
     freeFont(&sysFont);
 
     // Deinit the swadge mode
-    if (NULL != cSwadgeMode->fnExitMode)
+    if (cSwadgeModeInit && NULL != cSwadgeMode->fnExitMode)
     {
+        cSwadgeModeInit = false;
         cSwadgeMode->fnExitMode();
     }
 
@@ -704,7 +715,7 @@ void deinitSystem(void)
 static void swadgeModeEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len,
                                    int8_t rssi)
 {
-    if (NULL != cSwadgeMode->fnEspNowRecvCb)
+    if (cSwadgeModeInit && NULL != cSwadgeMode->fnEspNowRecvCb)
     {
         cSwadgeMode->fnEspNowRecvCb(esp_now_info, data, len, rssi);
     }
@@ -719,7 +730,7 @@ static void swadgeModeEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, cons
  */
 static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
-    if (NULL != cSwadgeMode->fnEspNowSendCb)
+    if (cSwadgeModeInit && NULL != cSwadgeMode->fnEspNowSendCb)
     {
         cSwadgeMode->fnEspNowSendCb(mac_addr, status);
     }
@@ -739,6 +750,7 @@ static void setSwadgeMode(void* swadgeMode)
     }
 
     // Stop the prior mode
+    cSwadgeModeInit = false;
     if (cSwadgeMode->fnExitMode)
     {
         cSwadgeMode->fnExitMode();
@@ -754,6 +766,7 @@ static void setSwadgeMode(void* swadgeMode)
         }
         cSwadgeMode->fnEnterMode();
     }
+    cSwadgeModeInit = true;
 }
 
 /**
@@ -777,6 +790,7 @@ void softSwitchToPendingSwadge(void)
     if (pendingSwadgeMode)
     {
         // Exit the current mode
+        cSwadgeModeInit = false;
         if (NULL != cSwadgeMode->fnExitMode)
         {
             cSwadgeMode->fnExitMode();
@@ -801,6 +815,7 @@ void softSwitchToPendingSwadge(void)
             }
             cSwadgeMode->fnEnterMode();
         }
+        cSwadgeModeInit = true;
 
         // Reenable the TFT backlight
         enableTFTBacklight();
@@ -893,7 +908,7 @@ uint32_t getFrameRateUs(void)
 void dacCallback(uint8_t* samples, int16_t len)
 {
     // If there is a DAC callback for the current mode
-    if (cSwadgeMode->fnDacCb)
+    if (cSwadgeModeInit && cSwadgeMode->fnDacCb)
     {
         // Call that
         cSwadgeMode->fnDacCb(samples, len);
