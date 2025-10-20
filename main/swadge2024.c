@@ -422,11 +422,6 @@ void app_main(void)
     // Initialize system font and trophy-get sound
     loadFont(IBM_VGA_8_FONT, &sysFont, true);
 
-    // TODO replace with default eye firmware
-    ch32v003RunBinaryAsset(MATRIX_DROPS_CFUN_BIN);
-    // If you do load custom firmware onto the 003, you must wait for it to run before yanking the framebuffer around.
-    vTaskDelay(1);
-
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)
     {
@@ -657,6 +652,11 @@ static void initOptionalPeripherals(void)
     {
         initTemperatureSensor();
     }
+
+    // Load some default firmware that blinks eyes
+    ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
+    // If you do load custom firmware onto the 003, you must wait for it to run before yanking the framebuffer around.
+    vTaskDelay(10);
 }
 
 /**

@@ -1,0 +1,169 @@
+// Create a gradient on the matrix displaying brightnesses from 0..71 out of a maximum brightness of 255.
+
+#include <stdbool.h>
+#include "swadge_matrix.h"
+
+/**
+ * @brief Linear feedback shift register to generate pseudorandom numbers because rand() doesn't exist here?
+ *
+ * @return a pseudorandom number
+ */
+uint16_t lfsr_xorshift(void)
+{
+    static uint16_t lfsr = 0xACE1u; /* Any nonzero start state will work. */
+
+    lfsr ^= lfsr >> 7;
+    lfsr ^= lfsr << 9;
+    lfsr ^= lfsr >> 13;
+
+    return lfsr;
+}
+
+/**
+ * @brief Main loop for ch32v003. Eyes blink and pupils move around periodically, with some randomness
+ *
+ * @return 0
+ */
+int main()
+{
+    // Pixel values for the top and bottom edges of the eyes
+    const uint8_t edge[12] = {0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
+
+    // Timekeeping variables
+    int frameno = 0;
+    uint32_t nf = SysTick->CNT;
+
+    // Pupil movement variables
+    bool pupilsOffset         = false;
+    int pOffX                 = 2;
+    int pOffY                 = 2;
+    int nextPupilOffsetFrames = TARGET_FPS;
+
+    // Blinking variables
+    bool isBlinking     = true;
+    bool isClosing      = true;
+    int closeLevel      = 0;
+    int nextBlinkFrames = 0;
+
+    // Initialize the matrix
+    MatrixSetup();
+
+    // Loop forever
+    while (1)
+    {
+        // Wait to only run this loop at TARGET_FPS
+        while ((int)(nf - SysTick->CNT) > 0)
+        {
+            ;
+        }
+        nf = SysTick->CNT + 6000000 / TARGET_FPS;
+
+        // Draw the Eyes
+        for (int y = 0; y < 6; y++)
+        {
+            for (int x = 0; x < 12; x++)
+            {
+                if (y == closeLevel || y == 5 - closeLevel)
+                {
+                    // At the top or bottom close level, draw the edge of the eyes
+                    SetPixel(x, y, edge[x]);
+                }
+                else if (y < closeLevel || y > (5 - closeLevel))
+                {
+                    // Outside the close level, clear the pixels
+                    SetPixel(x, y, 0x00);
+                }
+                else if (0 == x || 5 == x || 6 == x || 11 == x)
+                {
+                    // Inside the eyes, draw boundaries at specific X values
+                    SetPixel(x, y, 0xFF);
+                }
+                else if ((x == pOffX || x == 1 + pOffX || x == 6 + pOffX || x == 7 + pOffX)
+                         && (y == pOffY || y == 1 + pOffY))
+                {
+                    // Turn the LEDs on for the pupils
+                    SetPixel(x, y, 0xFF);
+                    SetPixel(x, y, 0xFF);
+                }
+                else
+                {
+                    // Turn the LEDs off for anything else
+                    SetPixel(x, y, 0x00);
+                }
+            }
+        }
+
+        // Increment the frame count (loop runs at TARGET_FPS)
+        frameno++;
+
+        // Check if eyes are actively blinking
+        if (isBlinking)
+        {
+            // Animate 8 frames a second
+            if (0 == frameno % (TARGET_FPS / 8))
+            {
+                if (isClosing)
+                {
+                    // Close the eyes
+                    closeLevel++;
+                    if (2 == closeLevel)
+                    {
+                        // Start opening eyes once closed
+                        isClosing = !isClosing;
+                    }
+                }
+                else
+                {
+                    // Open eyes
+                    closeLevel--;
+                    if (0 == closeLevel)
+                    {
+                        // Leave eyes open for a bit
+                        isClosing  = !isClosing;
+                        isBlinking = false;
+
+                        // Next blink in between 5 and 8 seconds
+                        nextBlinkFrames = (5 * TARGET_FPS) + lfsr_xorshift() % (3 * TARGET_FPS);
+                    }
+                }
+            }
+        }
+        else
+        {
+            // Not blinking yet, run timer to blink again
+            nextBlinkFrames--;
+            if (0 == nextBlinkFrames)
+            {
+                isBlinking = true;
+            }
+        }
+
+        // Run a timer to move around pupils
+        nextPupilOffsetFrames--;
+        if (0 == nextPupilOffsetFrames)
+        {
+            if (pupilsOffset)
+            {
+                pOffX        = 2;
+                pOffY        = 2;
+                pupilsOffset = false;
+                // Look straight for 3-6 seconds
+                nextPupilOffsetFrames = 3 * TARGET_FPS + (lfsr_xorshift() % (3 * TARGET_FPS));
+            }
+            else
+            {
+                // Randomly move around pupils pOffX, pOffY
+                pOffX        = 1 + lfsr_xorshift() % 3;
+                pOffY        = 1 + lfsr_xorshift() % 3;
+                pupilsOffset = true;
+                // Look somewhere for 1-2 seconds
+                nextPupilOffsetFrames = TARGET_FPS + (lfsr_xorshift() % TARGET_FPS);
+            }
+        }
+
+        // Not sure what this does, but it seems important
+        *DMDATA1 = frameno;
+    }
+
+    return 0;
+}
