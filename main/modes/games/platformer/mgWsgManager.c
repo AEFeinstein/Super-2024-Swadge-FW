@@ -225,6 +225,8 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(PULSE_SLIDE_WSG, &self->wsgs[MG_WSG_PLAYER_DASH_SLIDE], false);
     loadWsg(PULSE_DMG_001_WSG, &self->wsgs[MG_WSG_PLAYER_HURT_2], false);
     loadWsg(PULSE_DMG_002_WSG, &self->wsgs[MG_WSG_PLAYER_HURT_3], false);
+    loadWsg(PULSE_MIC_DROP_00_WSG, &self->wsgs[MG_WSG_PLAYER_MIC_DROP_1], false);
+    loadWsg(PULSE_MIC_DROP_01_WSG, &self->wsgs[MG_WSG_PLAYER_MIC_DROP_2], false);
 }
 
 void mg_initializeSprites(mgWsgManager_t* self)
@@ -296,6 +298,14 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_PLAYER_SLIDE].wsg    = &self->wsgs[MG_WSG_PLAYER_SLIDE];
     self->sprites[MG_SP_PLAYER_SLIDE].origin = &origin_15_15;
     self->sprites[MG_SP_PLAYER_SLIDE].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_MIC_DROP_1].wsg    = &self->wsgs[MG_WSG_PLAYER_MIC_DROP_1];
+    self->sprites[MG_SP_PLAYER_MIC_DROP_1].origin = &origin_15_15;
+    self->sprites[MG_SP_PLAYER_MIC_DROP_1].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_MIC_DROP_2].wsg    = &self->wsgs[MG_WSG_PLAYER_MIC_DROP_2];
+    self->sprites[MG_SP_PLAYER_MIC_DROP_2].origin = &origin_15_15;
+    self->sprites[MG_SP_PLAYER_MIC_DROP_2].hitBox = &box_16_32;
 
     self->sprites[MG_SP_PLAYER_DASH_SLIDE].wsg    = &self->wsgs[MG_WSG_PLAYER_DASH_SLIDE];
     self->sprites[MG_SP_PLAYER_DASH_SLIDE].origin = &origin_15_9;

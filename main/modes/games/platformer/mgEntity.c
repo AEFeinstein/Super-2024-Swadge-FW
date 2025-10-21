@@ -224,7 +224,7 @@ void mg_updatePlayer(mgEntity_t* self)
             {
                 self->state              = MG_PL_ST_NORMAL;
                 self->yMaxSpeed          = 72;
-                self->spriteFlipVertical = false;
+                //self->spriteFlipVertical = false;
             }
             break;
     }
@@ -347,7 +347,7 @@ void mg_updatePlayer(mgEntity_t* self)
                 {
                     self->xspeed             = 0;
                     self->yspeed             = -32;
-                    self->spriteFlipVertical = true;
+                    //self->spriteFlipVertical = true;
                     self->state              = MG_PL_ST_MIC_DROP;
                     self->yMaxSpeed          = 120;
                     self->stateTimer         = 180;
@@ -989,6 +989,9 @@ void animatePlayer(mgEntity_t* self)
     if(self->state == MG_PL_ST_HURT){
         self->spriteIndex = playerDamageAnimFrames[((self->stateTimer + self->visible) >> 2) & 0b11];
         return;
+    } else if(self->state == MG_PL_ST_MIC_DROP){
+        self->spriteIndex = playerMicDropAnimFrames[(self->stateTimer >> 2) & 0b1];
+        return;
     }
 
     if (!self->gravityEnabled)
@@ -1152,7 +1155,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             {
                 self->state               = MG_PL_ST_NORMAL;
                 self->yspeed              = -self->yspeed;
-                self->spriteFlipVertical  = false;
+                //self->spriteFlipVertical  = false;
                 self->invincibilityFrames = 5;
 
                 if (other->invincibilityFrames)
@@ -1674,7 +1677,7 @@ bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx,
                 {
                     self->state              = MG_PL_ST_NORMAL;
                     self->yMaxSpeed          = 72;
-                    self->spriteFlipVertical = false;
+                    //self->spriteFlipVertical = false;
                 }
                 break;
             default: // Should never hit
