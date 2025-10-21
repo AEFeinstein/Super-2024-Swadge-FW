@@ -82,7 +82,7 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(PULSE_005_WSG, &self->wsgs[MG_WSG_PLAYER_SLIDE], false);
     loadWsg(PULSE_DMG_000_WSG, &self->wsgs[MG_WSG_PLAYER_HURT], false);
     loadWsg(SPRITE_007_WSG, &self->wsgs[MG_WSG_PLAYER_CLIMB], false);
-    loadWsg(SPRITE_008_WSG, &self->wsgs[MG_WSG_PLAYER_WIN], false);
+    loadWsg(PULSE_WIN_WSG, &self->wsgs[MG_WSG_PLAYER_WIN], false);
     loadWsg(SPRITE_009_WSG, &self->wsgs[MG_WSG_ENEMY_BASIC], false);
     loadWsg(SPRITE_012_WSG, &self->wsgs[MG_WSG_DUSTBUNNY_IDLE], false);
     loadWsg(SPRITE_013_WSG, &self->wsgs[MG_WSG_DUSTBUNNY_CHARGE], false);
@@ -310,8 +310,8 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_PLAYER_CLIMB].hitBox = &box_16_16;
 
     self->sprites[MG_SP_PLAYER_WIN].wsg    = &self->wsgs[MG_WSG_PLAYER_WIN];
-    self->sprites[MG_SP_PLAYER_WIN].origin = &origin_8_8;
-    self->sprites[MG_SP_PLAYER_WIN].hitBox = &box_16_16;
+    self->sprites[MG_SP_PLAYER_WIN].origin = &origin_15_15;
+    self->sprites[MG_SP_PLAYER_WIN].hitBox = &box_16_32;
 
     self->sprites[MG_SP_ENEMY_BASIC].wsg    = &self->wsgs[MG_WSG_ENEMY_BASIC];
     self->sprites[MG_SP_ENEMY_BASIC].origin = &origin_8_8;
@@ -490,16 +490,16 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_INVISIBLE_WARP_FLOOR].hitBox = &box_64_16;
 
     self->sprites[MG_SP_CHARGIN_SCHMUCK_IDLE].wsg    = &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_IDLE];
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_IDLE].origin = &origin_11_11;
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_IDLE].hitBox = &box_24_24;
+    self->sprites[MG_SP_CHARGIN_SCHMUCK_IDLE].origin = &origin_15_15;
+    self->sprites[MG_SP_CHARGIN_SCHMUCK_IDLE].hitBox = &box_30_30;
 
     self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN1].wsg    = &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN1];
     self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN1].origin = &origin_11_11;
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN1].hitBox = &box_24_24;
+    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN1].hitBox = &box_30_30;
 
     self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN2].wsg    = &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN2];
     self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN2].origin = &origin_11_11;
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN2].hitBox = &box_24_24;
+    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN2].hitBox = &box_30_30;
 
     self->sprites[MG_SP_TURRET_HORIZONTAL].wsg    = &self->wsgs[MG_WSG_TURRET_HORIZONTAL];
     self->sprites[MG_SP_TURRET_HORIZONTAL].origin = &origin_11_11;
