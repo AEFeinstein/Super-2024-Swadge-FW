@@ -1212,7 +1212,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 }
                 else
                 {
-                    self->xspeed              = 0;
+                    self->xspeed              = (self->x > other->x) ? 32 : -32;
                     self->yspeed              = 0;
                     self->jumpPower           = 0;
                     self->invincibilityFrames = 120;
@@ -1377,7 +1377,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 }
                 else
                 {
-                    self->xspeed              = 0;
+                    self->xspeed              = (self->x > other->x) ? 16 : -16;
                     self->yspeed              = 0;
                     self->jumpPower           = 0;
                     self->invincibilityFrames = 120;
