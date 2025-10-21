@@ -428,10 +428,11 @@ void updateGame(platformer_t* self)
     mg_updateEntities(&(self->entityManager));
 
     mg_drawTileMap(&(self->tilemap));
+    drawPlatformerHud(&(self->font), &(self->gameData));
     mg_drawEntities(&(self->entityManager));
     detectGameStateChange(self);
     detectBgmChange(self);
-    drawPlatformerHud(&(self->font), &(self->gameData));
+    
 
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 59)
