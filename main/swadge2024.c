@@ -665,8 +665,6 @@ static void initOptionalPeripherals(void)
 
     // Load some default firmware that blinks eyes
     ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
-    // If you do load custom firmware onto the 003, you must wait for it to run before yanking the framebuffer around.
-    vTaskDelay(10);
 }
 
 /**
