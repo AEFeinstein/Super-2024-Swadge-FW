@@ -78,12 +78,16 @@ int main()
                     // Inside the eyes, draw boundaries at specific X values
                     SetPixel(x, y, 0xFF);
                 }
+                else if ((x == pOffX || x == 6 + pOffX) && y == pOffY)
+                {
+                    // Bright pupil pixel in the top left
+                    SetPixel(x, y, 0xFF);
+                }
                 else if ((x == pOffX || x == 1 + pOffX || x == 6 + pOffX || x == 7 + pOffX)
                          && (y == pOffY || y == 1 + pOffY))
                 {
-                    // Turn the LEDs on for the pupils
-                    SetPixel(x, y, 0xFF);
-                    SetPixel(x, y, 0xFF);
+                    // Slightly dimmer pupil pixels otherwise
+                    SetPixel(x, y, 0x68);
                 }
                 else
                 {
