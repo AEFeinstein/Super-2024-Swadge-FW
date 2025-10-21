@@ -52,6 +52,8 @@ static const box_t box_16_64 = {.x0 = 0, .x1 = 15, .y0 = 0, .y1 = 63};
 
 static const box_t box_64_16 = {.x0 = 0, .x1 = 63, .y0 = 0, .y1 = 15};
 
+static const box_t box_30_30 = {.x0 = 0, .x1 = 29, .y0 = 0, .y1 = 29};
+
 static const box_t box_32_20 = {.x0 = 0, .x1 = 30, .y0 = 4, .y1 = 19};
 
 
