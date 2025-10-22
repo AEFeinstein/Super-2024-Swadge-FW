@@ -87,8 +87,8 @@ swadgeMode_t trophyTestMode = {
     .wifiMode      = NO_WIFI,
     //...
     .fnAdvancedUSB = NULL,
-    .trophyData    = &trophyTestData,
-}; // This line activates the trophy for this mode
+    .trophyData    = &trophyTestData, // This line activates the trophy for this mode
+};
  * \endcode
  *
  * This will allow the trophy system to access your trophies and make sure the right text and images are displayed when

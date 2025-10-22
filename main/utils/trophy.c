@@ -1352,12 +1352,10 @@ static int _genPoints(trophyDifficulty_t td)
 
 static void _genPlat(const char* modeName)
 {
-    char buffer[TROPHY_MAX_TITLE_LEN];
-    snprintf(buffer, sizeof(buffer) - 1, "%s%s%s", platStrings[0], modeName, platStrings[1]);
-    strcpy(trophySystem.plat.title, buffer);
-    char buffer2[TROPHY_MAX_DESC_LEN];
-    snprintf(buffer2, sizeof(buffer2) - 1, "%s%s", platStrings[2], modeName);
-    strcpy(trophySystem.plat.description, buffer2);
+    snprintf(trophySystem.plat.title, sizeof(trophySystem.plat.title) - 1, "%s%s%s", platStrings[0], modeName,
+             platStrings[1]);
+    snprintf(trophySystem.plat.description, sizeof(trophySystem.plat.description) - 1, "%s%s", platStrings[2],
+             modeName);
     trophySystem.plat.image      = MMX_TROPHY_WSG;
     trophySystem.plat.type       = TROPHY_TYPE_TRIGGER;
     trophySystem.plat.difficulty = TROPHY_DIFF_FINAL;
