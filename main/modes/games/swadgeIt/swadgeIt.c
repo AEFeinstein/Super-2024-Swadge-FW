@@ -752,9 +752,10 @@ static void swadgeItGameplayLogic(int64_t elapsedUs)
 static void swadgeItGameplayRender(void)
 {
     // Draw the character image
-    if (si->inputQueue.length)
+    if (si->dispEvt != &siGoData && si->dispEvt != &siGoodData && si->dispEvt != &siWaitData)
     {
-        drawWsgSimple(&si->img[(swadgeItEvt_t)si->inputQueue.first->val], si->dispEvt->imgPos.x, si->dispEvt->imgPos.y);
+        int idx = ((intptr_t)si->dispEvt - (intptr_t)siEvtData) / sizeof(swadgeItEvtData_t);
+        drawWsgSimple(&si->img[idx], si->dispEvt->imgPos.x, si->dispEvt->imgPos.y);
     }
 
     // Get a font, currently borrowed from the menu renderer
