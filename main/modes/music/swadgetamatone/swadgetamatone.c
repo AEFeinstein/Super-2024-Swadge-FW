@@ -54,13 +54,17 @@ const trophyData_t sttTrophies[] = {
         .identifier  = NULL,
     },
 };
-trophySettings_t sttTrophySettings = {
+const trophySettings_t sttTrophySettings = {
     .drawFromBottom   = true,
     .staticDurationUs = DRAW_STATIC_US * 2,
     .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = swadgetamatoneName,
 };
-trophyDataList_t sttTrophyData
-    = {.settings = &sttTrophySettings, .list = sttTrophies, .length = ARRAY_SIZE(sttTrophies)};
+const trophyDataList_t sttTrophyData = {
+    .settings = &sttTrophySettings,
+    .list     = sttTrophies,
+    .length   = ARRAY_SIZE(sttTrophies),
+};
 
 typedef struct
 {
@@ -229,7 +233,7 @@ static void sttMainLoop(int64_t elapsedUs)
     {
         if (octavePressed != 0)
         {
-            trophyUpdate(sttTrophies[0], 1, true);
+            trophyUpdate(&sttTrophies[0], 1, true);
         }
         else
         {
@@ -241,9 +245,9 @@ static void sttMainLoop(int64_t elapsedUs)
             if (previousTotalTimePlayedMs / (60 * 1000) < minutesPlayed)
             {
                 writeNamespaceNvs32(sttNvsNamespace, sttNvsKeyTotalTimePlayed, stt->totalTimePlayedMs);
-                trophyUpdateMilestone(sttTrophies[1], minutesPlayed, 100);
-                trophyUpdateMilestone(sttTrophies[2], minutesPlayed, 20);
-                trophyUpdateMilestone(sttTrophies[3], minutesPlayed, 25);
+                trophyUpdateMilestone(&sttTrophies[1], minutesPlayed, 100);
+                trophyUpdateMilestone(&sttTrophies[2], minutesPlayed, 20);
+                trophyUpdateMilestone(&sttTrophies[3], minutesPlayed, 25);
             }
         }
 

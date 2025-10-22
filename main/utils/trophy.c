@@ -83,9 +83,9 @@ typedef struct
 typedef struct
 {
     // Data
-    trophyDataList_t* data; ///< The settings of how the trophies behave
-    list_t trophyQueue;     ///< List of trophy updates to display. Holds type ::trophyDataWrapper_t*
-    int numTrophiesScore;   ///< Num of trophies adjusted for difficulty
+    const trophyDataList_t* data; ///< The settings of how the trophies behave
+    list_t trophyQueue;           ///< List of trophy updates to display. Holds type ::trophyDataWrapper_t*
+    int numTrophiesScore;         ///< Num of trophies adjusted for difficulty
 
     // Platinum
     trophyData_t plat; ///< Platinum trophy data
@@ -137,7 +137,7 @@ static void _save(trophyDataWrapper_t* t, int newVal);
  * @param tw Trophy Wrapper pointer
  * @param t Trophy Data
  */
-static void _load(trophyDataWrapper_t* tw, trophyData_t t);
+static void _load(trophyDataWrapper_t* tw, const trophyData_t* t);
 
 /**
  * @brief Saves the latest unlocked trophy to NVS for later retrieval
@@ -228,7 +228,7 @@ static trophyDataWrapper_t* _getCurrentDisplayTrophy(void);
  * @param fnt Font used
  * @return int Height
  */
-static int _getListItemHeight(trophyData_t t, font_t* fnt);
+static int _getListItemHeight(const trophyData_t* t, font_t* fnt);
 
 /**
  * @brief Draws the trophy list item
@@ -239,7 +239,7 @@ static int _getListItemHeight(trophyData_t t, font_t* fnt);
  * @param fnt Font used
  * @param image The image used, if any
  */
-static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t* fnt, wsg_t* image);
+static void _drawTrophyListItem(const trophyData_t* t, int yOffset, int height, font_t* fnt, wsg_t* image);
 
 /**
  * @brief Loads the default image to the wsg_t slot provided based on difficulty
@@ -271,21 +271,31 @@ static void _genPlat(const char* modeName);
 
 // System
 
-void trophySystemInit(trophyDataList_t* data, const char* modeName)
+void trophySystemInit(const trophyDataList_t* data, const char* modeName)
 {
+    // Make sure a namespace key was provided
+    if (NULL == data->settings->namespaceKey)
+    {
+        ESP_LOGE("TRO", "Trophy namespace NULL");
+        exit(1);
+        return;
+    }
+
+    // Make sure the namespace key isn't too big or small
+    uint32_t namespaceLen = strlen(data->settings->namespaceKey);
+    if (namespaceLen < 1 || (namespaceLen + 1) >= NVS_KEY_NAME_MAX_SIZE)
+    {
+        ESP_LOGE("TRO", "Trophy namespace too big or small, \"%s\" is %" PRIu32 " >= %d", data->settings->namespaceKey,
+                 namespaceLen, NVS_KEY_NAME_MAX_SIZE - 1);
+        exit(1);
+        return;
+    }
+
     // Reset timer
     trophySystem.animTimer = 0;
 
     // Copy settings
     trophySystem.data = data;
-
-    // If no namespace is provided, auto generate
-    if (strcmp(data->settings->namespaceKey, "") == 0)
-    {
-        char buffer[NVS_KEY_NAME_MAX_SIZE];
-        _truncateStr(buffer, modeName, NVS_KEY_NAME_MAX_SIZE);
-        strcpy(trophySystem.data->settings->namespaceKey, buffer);
-    }
 
     // Generate plat
     _genPlat(modeName);
@@ -333,7 +343,7 @@ void trophySystemInit(trophyDataList_t* data, const char* modeName)
 
 // Trophies
 
-bool trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
+bool trophyUpdate(const trophyData_t* t, int newVal, bool drawUpdate)
 {
     // Load
     trophyDataWrapper_t* tw = heap_caps_calloc(1, sizeof(trophyDataWrapper_t), MALLOC_CAP_8BIT);
@@ -434,7 +444,7 @@ bool trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
         if (final)
         {
             trophyDataWrapper_t* twf = heap_caps_calloc(1, sizeof(trophyDataWrapper_t), MALLOC_CAP_8BIT);
-            _load(twf, trophySystem.plat);
+            _load(twf, &trophySystem.plat);
             push(&trophySystem.trophyQueue, twf);
             twf->currentVal = trophySystem.platVal;
             _setPoints(_genPoints(twf->trophyData.difficulty));
@@ -448,13 +458,13 @@ bool trophyUpdate(trophyData_t t, int newVal, bool drawUpdate)
     return false;
 }
 
-bool trophyUpdateMilestone(trophyData_t t, int newVal, int threshold)
+bool trophyUpdateMilestone(const trophyData_t* t, int newVal, int threshold)
 {
     trophyDataWrapper_t tw = {};
     _load(&tw, t);
 
     // Check if completed
-    if (newVal >= t.maxVal)
+    if (newVal >= t->maxVal)
     {
         return trophyUpdate(t, newVal, true);
     }
@@ -465,27 +475,27 @@ bool trophyUpdateMilestone(trophyData_t t, int newVal, int threshold)
     {
         threshold = DEFAULT_MILESTONE;
     }
-    int32_t prev = (tw.currentVal * 100 / t.maxVal) / threshold; // Intentionally truncates to an integer
-    int32_t new  = (newVal * 100 / t.maxVal) / threshold;
+    int32_t prev = (tw.currentVal * 100 / t->maxVal) / threshold; // Intentionally truncates to an integer
+    int32_t new  = (newVal * 100 / t->maxVal) / threshold;
     return trophyUpdate(t, newVal, prev < new);
 }
 
-int32_t trophyGetSavedValue(trophyData_t t)
+int32_t trophyGetSavedValue(const trophyData_t* t)
 {
     int32_t val;
-    char buffer[NVS_KEY_NAME_MAX_SIZE];
-    _truncateStr(buffer, t.title, NVS_KEY_NAME_MAX_SIZE);
-    if (readNamespaceNvs32(trophySystem.data->settings->namespaceKey, buffer, &val))
+    char titleKey[NVS_KEY_NAME_MAX_SIZE];
+    _truncateStr(titleKey, t->title, NVS_KEY_NAME_MAX_SIZE);
+    if (readNamespaceNvs32(trophySystem.data->settings->namespaceKey, titleKey, &val))
     {
         return val;
     }
     return 0;
 }
 
-bool trophySetChecklistTask(trophyData_t t, int32_t flag, bool set, bool drawUpdate)
+bool trophySetChecklistTask(const trophyData_t* t, int32_t flag, bool set, bool drawUpdate)
 {
     // If not a checklist, abort
-    if (t.type != TROPHY_TYPE_CHECKLIST)
+    if (t->type != TROPHY_TYPE_CHECKLIST)
     {
         return false;
     }
@@ -505,14 +515,14 @@ bool trophySetChecklistTask(trophyData_t t, int32_t flag, bool set, bool drawUpd
     return ret;
 }
 
-void trophyClear(trophyData_t t)
+void trophyClear(const trophyData_t* t)
 {
     trophyDataWrapper_t tw = {};
     _load(&tw, t);
     // Reset points
-    if (tw.currentVal >= t.maxVal)
+    if (tw.currentVal >= t->maxVal)
     {
-        _setPoints(_genPoints(t.difficulty) * -1);
+        _setPoints(_genPoints(t->difficulty) * -1);
     }
     _save(&tw, 0);
 
@@ -520,7 +530,7 @@ void trophyClear(trophyData_t t)
     if (trophySystem.platVal > 0)
     {
         trophySystem.platVal = 0;
-        _load(&tw, trophySystem.plat);
+        _load(&tw, &trophySystem.plat);
         _setPoints(_genPoints(tw.trophyData.difficulty) * -1);
         _save(&tw, 0);
     }
@@ -550,12 +560,12 @@ int trophyGetPoints(bool total, const char* modeName)
     return _loadPoints(total, modeName);
 }
 
-trophyData_t trophyGetLatest()
+const trophyData_t* trophyGetLatest()
 {
     // Fetch data from NVS
-    char buffer[NVS_KEY_NAME_MAX_SIZE];
-    int trophyIdx   = _loadLatestWin(buffer);
-    trophyData_t td = {};
+    char modeName[NVS_KEY_NAME_MAX_SIZE];
+    int trophyIdx          = _loadLatestWin(modeName);
+    const trophyData_t* td = NULL;
 
     // Match mode
     for (int idx = 0; idx < modeListGetCount(); idx++)
@@ -564,18 +574,17 @@ trophyData_t trophyGetLatest()
         {
             continue;
         }
-        else if (strcmp(buffer, allSwadgeModes[idx]->trophyData->settings->namespaceKey) == 0)
+        else if (strcmp(modeName, allSwadgeModes[idx]->trophyData->settings->namespaceKey) == 0)
         {
-            td = allSwadgeModes[idx]->trophyData->list[trophyIdx];
+            td = &allSwadgeModes[idx]->trophyData->list[trophyIdx];
         }
     }
     return td;
 }
 
-void trophySetSystemData(trophyDataList_t* dl, const char* modeName)
+void trophySetSystemData(const trophyDataList_t* dl, const char* modeName)
 {
     trophySystem.data = dl;
-    _truncateStr(trophySystem.data->settings->namespaceKey, modeName, NVS_KEY_NAME_MAX_SIZE);
     _genPlat(modeName);
     _loadPalette();
 }
@@ -711,9 +720,9 @@ void trophyDrawList(font_t* fnt, int yOffset)
         tdl->heights = heap_caps_calloc(trophySystem.data->length, sizeof(int), MALLOC_CAP_8BIT);
         for (int idx = 0; idx < trophySystem.data->length; idx++)
         {
-            tdl->heights[idx] = _getListItemHeight(trophySystem.data->list[idx], fnt);
+            tdl->heights[idx] = _getListItemHeight(&trophySystem.data->list[idx], fnt);
         }
-        tdl->platHeight = _getListItemHeight(trophySystem.plat, fnt);
+        tdl->platHeight = _getListItemHeight(&trophySystem.plat, fnt);
     }
 
     // Draw
@@ -728,7 +737,7 @@ void trophyDrawList(font_t* fnt, int yOffset)
             if (trophySystem.platVal == 0)
             {
                 loadWsg(trophySystem.plat.image, &trophySystem.platImg, true);
-                _drawTrophyListItem(trophySystem.plat, -yOffset, tdl->platHeight, fnt, &trophySystem.platImg);
+                _drawTrophyListItem(&trophySystem.plat, -yOffset, tdl->platHeight, fnt, &trophySystem.platImg);
                 cumulativeHeight += tdl->platHeight;
                 freeWsg(&trophySystem.platImg);
             }
@@ -739,7 +748,7 @@ void trophyDrawList(font_t* fnt, int yOffset)
             if (trophySystem.platVal == 1)
             {
                 loadWsg(trophySystem.plat.image, &trophySystem.platImg, true);
-                _drawTrophyListItem(trophySystem.plat, -yOffset, tdl->platHeight, fnt, &trophySystem.platImg);
+                _drawTrophyListItem(&trophySystem.plat, -yOffset, tdl->platHeight, fnt, &trophySystem.platImg);
                 cumulativeHeight += tdl->platHeight;
                 freeWsg(&trophySystem.platImg);
             }
@@ -748,7 +757,7 @@ void trophyDrawList(font_t* fnt, int yOffset)
         default:
         {
             loadWsg(trophySystem.plat.image, &trophySystem.platImg, true);
-            _drawTrophyListItem(trophySystem.plat, -yOffset, tdl->platHeight, fnt, &trophySystem.platImg);
+            _drawTrophyListItem(&trophySystem.plat, -yOffset, tdl->platHeight, fnt, &trophySystem.platImg);
             cumulativeHeight += tdl->platHeight;
             freeWsg(&trophySystem.platImg);
             break;
@@ -764,10 +773,10 @@ void trophyDrawList(font_t* fnt, int yOffset)
             {
                 // If hidden and not unlocked, skip
                 trophyDataWrapper_t tw = {};
-                _load(&tw, trophySystem.data->list[idx]);
+                _load(&tw, &trophySystem.data->list[idx]);
                 if (!trophySystem.data->list[idx].hidden || (trophySystem.data->list[idx].maxVal <= tw.currentVal))
                 {
-                    _drawTrophyListItem(trophySystem.data->list[idx], -yOffset + cumulativeHeight, tdl->heights[idx],
+                    _drawTrophyListItem(&trophySystem.data->list[idx], -yOffset + cumulativeHeight, tdl->heights[idx],
                                         fnt, &tdl->images[idx]);
                     cumulativeHeight += tdl->heights[idx];
                 }
@@ -777,10 +786,10 @@ void trophyDrawList(font_t* fnt, int yOffset)
             {
                 // If hidden and not unlocked or just not unlocked, skip
                 trophyDataWrapper_t tw = {};
-                _load(&tw, trophySystem.data->list[idx]);
+                _load(&tw, &trophySystem.data->list[idx]);
                 if (trophySystem.data->list[idx].maxVal <= tw.currentVal)
                 {
-                    _drawTrophyListItem(trophySystem.data->list[idx], -yOffset + cumulativeHeight, tdl->heights[idx],
+                    _drawTrophyListItem(&trophySystem.data->list[idx], -yOffset + cumulativeHeight, tdl->heights[idx],
                                         fnt, &tdl->images[idx]);
                     cumulativeHeight += tdl->heights[idx];
                 }
@@ -790,10 +799,10 @@ void trophyDrawList(font_t* fnt, int yOffset)
             {
                 // If hidden and unlocked, skip
                 trophyDataWrapper_t tw = {};
-                _load(&tw, trophySystem.data->list[idx]);
+                _load(&tw, &trophySystem.data->list[idx]);
                 if (!trophySystem.data->list[idx].hidden && trophySystem.data->list[idx].maxVal > tw.currentVal)
                 {
-                    _drawTrophyListItem(trophySystem.data->list[idx], -yOffset + cumulativeHeight, tdl->heights[idx],
+                    _drawTrophyListItem(&trophySystem.data->list[idx], -yOffset + cumulativeHeight, tdl->heights[idx],
                                         fnt, &tdl->images[idx]);
                     cumulativeHeight += tdl->heights[idx];
                 }
@@ -801,7 +810,7 @@ void trophyDrawList(font_t* fnt, int yOffset)
             }
             default:
             {
-                _drawTrophyListItem(trophySystem.data->list[idx], -yOffset + cumulativeHeight, tdl->heights[idx], fnt,
+                _drawTrophyListItem(&trophySystem.data->list[idx], -yOffset + cumulativeHeight, tdl->heights[idx], fnt,
                                     &tdl->images[idx]);
                 cumulativeHeight += tdl->heights[idx];
             }
@@ -824,35 +833,35 @@ static void _truncateStr(char* to, const char* from, int len)
 
 static void _save(trophyDataWrapper_t* t, int newVal)
 {
-    char buffer[NVS_KEY_NAME_MAX_SIZE];
-    _truncateStr(buffer, t->trophyData.title, NVS_KEY_NAME_MAX_SIZE);
-    writeNamespaceNvs32(trophySystem.data->settings->namespaceKey, buffer, newVal);
+    char titleKey[NVS_KEY_NAME_MAX_SIZE];
+    _truncateStr(titleKey, t->trophyData.title, NVS_KEY_NAME_MAX_SIZE);
+    writeNamespaceNvs32(trophySystem.data->settings->namespaceKey, titleKey, newVal);
 }
 
-static void _load(trophyDataWrapper_t* tw, trophyData_t t)
+static void _load(trophyDataWrapper_t* tw, const trophyData_t* t)
 {
     // Copy t into tw
-    strcpy(tw->trophyData.title, t.title);
-    strcpy(tw->trophyData.description, t.description);
-    tw->trophyData.image      = t.image;
-    tw->trophyData.type       = t.type;
-    tw->trophyData.difficulty = t.difficulty;
-    tw->trophyData.maxVal     = t.maxVal;
-    tw->trophyData.hidden     = t.hidden;
-    tw->trophyData.noImage    = t.noImage;
+    strcpy(tw->trophyData.title, t->title);
+    strcpy(tw->trophyData.description, t->description);
+    tw->trophyData.image      = t->image;
+    tw->trophyData.type       = t->type;
+    tw->trophyData.difficulty = t->difficulty;
+    tw->trophyData.maxVal     = t->maxVal;
+    tw->trophyData.hidden     = t->hidden;
+    tw->trophyData.noImage    = t->noImage;
 
     // Pull Current Val from disk
     int32_t val;
-    char buffer[NVS_KEY_NAME_MAX_SIZE];
-    _truncateStr(buffer, t.title, NVS_KEY_NAME_MAX_SIZE);
-    if (readNamespaceNvs32(trophySystem.data->settings->namespaceKey, buffer, &val))
+    char titleKey[NVS_KEY_NAME_MAX_SIZE];
+    _truncateStr(titleKey, t->title, NVS_KEY_NAME_MAX_SIZE);
+    if (readNamespaceNvs32(trophySystem.data->settings->namespaceKey, titleKey, &val))
     {
         tw->currentVal = val;
     }
     else
     {
         tw->currentVal = 0;
-        writeNamespaceNvs32(trophySystem.data->settings->namespaceKey, buffer, 0);
+        writeNamespaceNvs32(trophySystem.data->settings->namespaceKey, titleKey, 0);
     }
 }
 
@@ -864,7 +873,7 @@ static void _saveLatestWin(trophyDataWrapper_t* tw)
         {
             writeNamespaceNvs32(NVSstrings[0], NVSstrings[2], idx);
             writeNamespaceNvsBlob(NVSstrings[0], NVSstrings[3], trophySystem.data->settings->namespaceKey,
-                                  NVS_KEY_NAME_MAX_SIZE);
+                                  strlen(trophySystem.data->settings->namespaceKey) + 1);
             return;
         }
     }
@@ -914,9 +923,9 @@ static int _loadPoints(bool total, const char* modeName)
         }
         else
         {
-            char buffer[NVS_KEY_NAME_MAX_SIZE];
-            _truncateStr(buffer, modeName, NVS_KEY_NAME_MAX_SIZE);
-            if (!readNamespaceNvs32(buffer, NVSstrings[1], &val))
+            char namespace[NVS_KEY_NAME_MAX_SIZE];
+            _truncateStr(namespace, modeName, NVS_KEY_NAME_MAX_SIZE);
+            if (!readNamespaceNvs32(namespace, NVSstrings[1], &val))
             {
                 val = 0;
             }
@@ -945,7 +954,7 @@ static bool _isFinalTrophy(void)
     for (int idx = 0; idx < trophySystem.data->length; idx++)
     {
         trophyDataWrapper_t tw = {};
-        _load(&tw, trophySystem.data->list[idx]);
+        _load(&tw, &trophySystem.data->list[idx]);
         if (tw.currentVal < tw.trophyData.maxVal)
         {
             final = false;
@@ -963,7 +972,7 @@ static bool _trophyIsWon(trophyDataWrapper_t* tw)
     {
         trophySystem.platVal    = 1;
         trophyDataWrapper_t twf = {};
-        _load(&twf, trophySystem.plat);
+        _load(&twf, &trophySystem.plat);
         _save(&twf, 1);
         return true;
     }
@@ -1177,7 +1186,7 @@ static trophyDataWrapper_t* _getCurrentDisplayTrophy(void)
     return NULL;
 }
 
-static int _getListItemHeight(trophyData_t t, font_t* fnt)
+static int _getListItemHeight(const trophyData_t* t, font_t* fnt)
 {
     // Load data
     trophyDataWrapper_t tw = {};
@@ -1188,10 +1197,10 @@ static int _getListItemHeight(trophyData_t t, font_t* fnt)
     int titleStart = SCREEN_CORNER_CLEARANCE;
     int titleEnd   = TFT_WIDTH - SCREEN_CORNER_CLEARANCE;
     // Get numbers space
-    if (t.type != TROPHY_TYPE_TRIGGER)
+    if (t->type != TROPHY_TYPE_TRIGGER)
     {
         char buffer[NUMBER_TEXT_BUFFER];
-        if (t.type != TROPHY_TYPE_CHECKLIST)
+        if (t->type != TROPHY_TYPE_CHECKLIST)
         {
             snprintf(buffer, sizeof(buffer) - 1, "%" PRId32 "/%" PRId32, tw.currentVal, tw.trophyData.maxVal);
         }
@@ -1210,18 +1219,18 @@ static int _getListItemHeight(trophyData_t t, font_t* fnt)
     }
 
     // Lay out text
-    boxHeight = textWordWrapHeight(fnt, t.title, titleEnd - titleStart, 100) + IMAGE_BUFFER;
+    boxHeight = textWordWrapHeight(fnt, t->title, titleEnd - titleStart, 100) + IMAGE_BUFFER;
     if (BANNER_MAX_ICON_DIM + IMAGE_BUFFER > boxHeight && !tw.trophyData.noImage)
     {
         boxHeight = BANNER_MAX_ICON_DIM + IMAGE_BUFFER;
     }
-    boxHeight += textWordWrapHeight(fnt, t.description, TFT_WIDTH - (SCREEN_CORNER_CLEARANCE * 2), 300) + IMAGE_BUFFER;
+    boxHeight += textWordWrapHeight(fnt, t->description, TFT_WIDTH - (SCREEN_CORNER_CLEARANCE * 2), 300) + IMAGE_BUFFER;
 
     // Close out
     return boxHeight;
 }
 
-static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t* fnt, wsg_t* image)
+static void _drawTrophyListItem(const trophyData_t* t, int yOffset, int height, font_t* fnt, wsg_t* image)
 {
     // Load relevant data
     trophyDisplayList_t* tdl = &trophySystem.tdl;
@@ -1237,10 +1246,10 @@ static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t*
     int titleEnd   = TFT_WIDTH - SCREEN_CORNER_CLEARANCE;
 
     // Draw Numbers
-    if (t.type != TROPHY_TYPE_TRIGGER)
+    if (t->type != TROPHY_TYPE_TRIGGER)
     {
         char buffer[NUMBER_TEXT_BUFFER];
-        if (t.type != TROPHY_TYPE_CHECKLIST)
+        if (t->type != TROPHY_TYPE_CHECKLIST)
         {
             snprintf(buffer, sizeof(buffer) - 1, "%" PRId32 "/%" PRId32, tw.currentVal, tw.trophyData.maxVal);
         }
@@ -1250,7 +1259,7 @@ static void _drawTrophyListItem(trophyData_t t, int yOffset, int height, font_t*
                      _GetNumFlags(&tw, true));
         }
         titleEnd -= textWidth(fnt, buffer) + 16;
-        drawText(fnt, (tw.currentVal >= t.maxVal) ? tdl->colorList[5] : tdl->colorList[3], buffer, titleEnd + 8,
+        drawText(fnt, (tw.currentVal >= t->maxVal) ? tdl->colorList[5] : tdl->colorList[3], buffer, titleEnd + 8,
                  yOffset + 4);
     }
 
@@ -1356,6 +1365,6 @@ static void _genPlat(const char* modeName)
 
     // get current val
     trophyDataWrapper_t tw = {};
-    _load(&tw, trophySystem.plat);
+    _load(&tw, &trophySystem.plat);
     trophySystem.platVal = tw.currentVal;
 }
