@@ -227,6 +227,10 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(PULSE_DMG_002_WSG, &self->wsgs[MG_WSG_PLAYER_HURT_3], false);
     loadWsg(PULSE_MIC_DROP_00_WSG, &self->wsgs[MG_WSG_PLAYER_MIC_DROP_1], false);
     loadWsg(PULSE_MIC_DROP_01_WSG, &self->wsgs[MG_WSG_PLAYER_MIC_DROP_2], false);
+    loadWsg(PULSE_SHIELD_000_WSG, &self->wsgs[MG_WSG_PLAYER_SHIELD_1], false);
+    loadWsg(PULSE_SHIELD_001_WSG, &self->wsgs[MG_WSG_PLAYER_SHIELD_2], false);
+    loadWsg(PULSE_SHIELD_002_WSG, &self->wsgs[MG_WSG_PLAYER_SHIELD_3], false);
+    loadWsg(PULSE_SHIELD_003_WSG, &self->wsgs[MG_WSG_PLAYER_SHIELD_4], false);
 }
 
 void mg_initializeSprites(mgWsgManager_t* self)

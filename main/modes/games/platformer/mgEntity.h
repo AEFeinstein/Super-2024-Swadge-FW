@@ -82,7 +82,8 @@ typedef enum
     MG_PL_ST_DASHING,
     MG_PL_ST_MIC_DROP,
     MG_PL_ST_UPPERCUT,
-    MG_PL_ST_HURT
+    MG_PL_ST_HURT,
+    MG_PL_ST_SHIELD
 } mgPlayerState_t;
 
 //==============================================================================
@@ -247,6 +248,8 @@ void waveBallOverlapTileHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, ui
 void powerUpCollisionHandler(mgEntity_t* self, mgEntity_t* other);
 void killPlayer(mgEntity_t* self);
 void mg_defaultEntityDrawHandler(mgEntity_t* self);
+
+void mg_playerDrawHandler(mgEntity_t* self);
 
 void mg_destroyShot(mgEntity_t* self);
 

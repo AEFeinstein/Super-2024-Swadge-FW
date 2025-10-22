@@ -174,6 +174,13 @@ void mg_updatePlayer(mgEntity_t* self)
                     }
                 }
             }
+
+            if(!self->falling && (self->gameData->btnState & PB_DOWN) && (self->gameData->btnState & PB_B) && !(self->gameData->prevBtnState & PB_B))
+            {
+                self->state = MG_PL_ST_SHIELD;
+                self->stateTimer = 60;
+            }
+
             break;
         case MG_PL_ST_DASHING:
 
@@ -211,7 +218,28 @@ void mg_updatePlayer(mgEntity_t* self)
                 self->gravity = 4;
             }
             break;
+        case MG_PL_ST_SHIELD:
+            if
+            (
+                ((self->gameData->btnState & PB_LEFT) && !(self->gameData->prevBtnState & PB_LEFT))
+                ||
+                ((self->gameData->btnState & PB_RIGHT) && !(self->gameData->prevBtnState & PB_RIGHT))
+                ||
+                ((self->gameData->btnState & PB_A) && !(self->gameData->prevBtnState & PB_A))
+                ||
+                (self->falling)
+            )
+            {
+                self->state = MG_PL_ST_NORMAL;
+                break;
+            }
 
+            self->stateTimer--;
+            if (self->stateTimer <= 0)
+            {
+                self->state              = MG_PL_ST_NORMAL;
+            }
+            break;
         case MG_PL_ST_MIC_DROP:
             if (self->yspeed > 0)
             {
@@ -1357,6 +1385,14 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 break;
             }
 
+            if (self->state == MG_PL_ST_SHIELD)
+            {
+                other->xspeed = -other->xspeed;
+                other->yspeed = -other->yspeed;
+                other->linkedEntity = self;
+                break;
+            }
+
             // TODO: This is a repeat of above code; move to its own function
             if (self->invincibilityFrames <= 0 && other->scoreValue)
             {
@@ -1430,7 +1466,7 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             killEnemy(self);
             break;
         case ENTITY_WAVE_BALL:
-            if (other->linkedEntity == self)
+            if (other->linkedEntity == self || !other->visible)
             {
                 break;
             }
@@ -2826,6 +2862,26 @@ void mg_defaultEntityDrawHandler(mgEntity_t* self)
             (self->y >> SUBPIXEL_RESOLUTION) - self->entityManager->tilemap->mapOffsetY
                 - self->entityManager->wsgManager->sprites[self->spriteIndex].origin->y,
             self->spriteFlipHorizontal, self->spriteFlipVertical, 0);
+}
+
+void mg_playerDrawHandler(mgEntity_t* self)
+{
+    drawWsg(self->entityManager->wsgManager->sprites[self->spriteIndex].wsg,
+            (self->x >> SUBPIXEL_RESOLUTION) - self->entityManager->wsgManager->sprites[self->spriteIndex].origin->x
+                - self->entityManager->tilemap->mapOffsetX,
+            (self->y >> SUBPIXEL_RESOLUTION) - self->entityManager->tilemap->mapOffsetY
+                - self->entityManager->wsgManager->sprites[self->spriteIndex].origin->y,
+            self->spriteFlipHorizontal, self->spriteFlipVertical, 0);
+
+    if(self->state == MG_PL_ST_SHIELD)
+    {
+        drawWsg(&(self->entityManager->wsgManager->wsgs[MG_WSG_PLAYER_SHIELD_1 + ((self->stateTimer >> 1) & 0b11)]),
+            (self->x >> SUBPIXEL_RESOLUTION) - 15
+                - self->entityManager->tilemap->mapOffsetX,
+            (self->y >> SUBPIXEL_RESOLUTION) - self->entityManager->tilemap->mapOffsetY
+                - 15,
+            self->spriteFlipHorizontal, self->spriteFlipVertical, 0);
+    }
 }
 
 void mg_destroyShot(mgEntity_t* self)
