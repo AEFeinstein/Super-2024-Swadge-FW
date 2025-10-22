@@ -258,6 +258,72 @@ const swadgeItEvtData_t siGoData = {
 // Variables
 //==============================================================================
 
+// Trophy Data
+const trophyData_t swadgeItTrophies[] = {
+    {
+        .title       = "Short Term Memory",
+        .description = "Score 5 in Memory mode",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Remember Like It Was Yesterday",
+        .description = "Score 18 in Memory mode",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Total Recall",
+        .description = "Score 30 in Memory mode",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "First Order Reaction",
+        .description = "Score 5 in Reaction mode",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Sustained Reaction",
+        .description = "Score 18 in Reaction mode",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Lightning Reaction",
+        .description = "Score 30 in Reaction mode",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+};
+
+// Individual mode settings
+const trophySettings_t swadgeItTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 4,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = swadgeItStrName,
+};
+
+const trophyDataList_t swadgeItTrophyData = {
+    .settings = &swadgeItTrophySettings,
+    .list     = swadgeItTrophies,
+    .length   = ARRAY_SIZE(swadgeItTrophies),
+};
+
 swadgeMode_t swadgeItMode = {
     .modeName                 = swadgeItStrName,
     .wifiMode                 = NO_WIFI,
@@ -275,6 +341,7 @@ swadgeMode_t swadgeItMode = {
     .fnAdvancedUSB            = NULL,
     .fnDacCb                  = swadgeItDacCallback,
     .fnAddToSwadgePassPacket  = swadgeItAddToSwadgePassPacket,
+    .trophyData               = &swadgeItTrophyData,
 };
 
 static swadgeIt_t* si;
@@ -1027,6 +1094,38 @@ static void swadgeItGameOver(void)
         si->memoryHighScore = si->score;
         writeNvs32(SI_MEMORY_HS_KEY, si->score);
         si->newHighScore = true;
+    }
+
+    // Check for trophies
+    if (SI_REACTION == si->screen)
+    {
+        if (si->score >= 5)
+        {
+            trophyUpdate(&swadgeItTrophies[3], 1, true); // Reaction, 5
+        }
+        if (si->score >= 18)
+        {
+            trophyUpdate(&swadgeItTrophies[4], 1, true); // Reaction, 18
+        }
+        if (si->score >= 30)
+        {
+            trophyUpdate(&swadgeItTrophies[5], 1, true); // Reaction, 30
+        }
+    }
+    else if (SI_MEMORY == si->screen)
+    {
+        if (si->score >= 5)
+        {
+            trophyUpdate(&swadgeItTrophies[0], 1, true); // Memory, 5
+        }
+        if (si->score >= 18)
+        {
+            trophyUpdate(&swadgeItTrophies[1], 1, true); // Memory, 18
+        }
+        if (si->score >= 30)
+        {
+            trophyUpdate(&swadgeItTrophies[2], 1, true); // Memory, 30
+        }
     }
 
     // Display round score
