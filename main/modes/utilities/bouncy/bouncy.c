@@ -144,11 +144,11 @@ static void screenEnterMode(void)
 
     // Set active images
     ssd->objs[0].isActive = true; // Always active
-    if (trophyGetPoints(false, roboRunnerMode.modeName) == 1000)
+    if (trophyGetPoints(false, roboRunnerMode.trophyData->settings->namespaceKey) == 1000)
     {
         ssd->objs[1].isActive = true;
     }
-    if (trophyGetPoints(false, mainMenuMode.modeName) == 1000)
+    if (trophyGetPoints(false, mainMenuMode.trophyData->settings->namespaceKey) == 1000)
     {
         ssd->objs[2].isActive = true;
     }

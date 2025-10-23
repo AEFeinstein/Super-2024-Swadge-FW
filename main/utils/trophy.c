@@ -165,9 +165,10 @@ static void _setPoints(int points);
  * @brief Load value from NVS. Can select between overall total or mode specific
  *
  * @param total True returns overall score, false returns score for mode
+ * @param namespace The namespace to load points from
  * @return int Current score
  */
-static int _loadPoints(bool total, const char* modeName);
+static int _loadPoints(bool total, const char* namespace);
 
 // Trophy handling
 
@@ -555,9 +556,9 @@ void setBitFlag(int32_t* flags, int8_t idx, bool setTrue)
     }
 }
 
-int trophyGetPoints(bool total, const char* modeName)
+int trophyGetPoints(bool total, const char* namespace)
 {
-    return _loadPoints(total, modeName);
+    return _loadPoints(total, namespace);
 }
 
 const trophyData_t* trophyGetLatest()
@@ -909,12 +910,12 @@ static void _setPoints(int points)
     writeNamespaceNvs32(NVSstrings[0], NVSstrings[1], prevVal);
 }
 
-static int _loadPoints(bool total, const char* modeName)
+static int _loadPoints(bool total, const char* namespace)
 {
     int32_t val;
     if (!total)
     {
-        if (modeName == NULL)
+        if (namespace == NULL)
         {
             if (!readNamespaceNvs32(trophySystem.data->settings->namespaceKey, NVSstrings[1], &val))
             {
@@ -923,8 +924,6 @@ static int _loadPoints(bool total, const char* modeName)
         }
         else
         {
-            char namespace[NVS_KEY_NAME_MAX_SIZE];
-            _truncateStr(namespace, modeName, NVS_KEY_NAME_MAX_SIZE);
             if (!readNamespaceNvs32(namespace, NVSstrings[1], &val))
             {
                 val = 0;

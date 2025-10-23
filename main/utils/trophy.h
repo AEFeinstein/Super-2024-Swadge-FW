@@ -419,10 +419,10 @@ void setBitFlag(int32_t* flags, int8_t idx, bool setTrue);
  * @brief Get the point totals for the gamer score
  *
  * @param total If loading the full score or for the current mode
- * @param modeName Mode name to load. Set to NULL to get currently loaded mode
+ * @param namespace namespace to load points from. Set to NULL to get currently loaded mode
  * @return int Value of the score
  */
-int trophyGetPoints(bool total, const char* modeName);
+int trophyGetPoints(bool total, const char* namespace);
 
 /**
  * @brief Get the Latest Trophy Idx object
