@@ -7,6 +7,7 @@
 #include "heatshrink_helper.h"
 #include "touchUtils.h"
 #include "embeddedOut.h"
+#include "helpPages.h"
 
 //==============================================================================
 // Defines
@@ -42,6 +43,7 @@ typedef enum
     SI_MEMORY,
     SI_HIGH_SCORES,
     SI_GAME_OVER,
+    SI_HELP,
 } swadgeItScreen_t;
 
 typedef enum
@@ -83,6 +85,10 @@ typedef struct
     // Menu and UI
     menu_t* menu;
     menuMegaRenderer_t* menuRenderer;
+
+    // Help pages
+    menu_t* bgMenu;
+    helpPageVars_t* help;
 
     // Game over UI variables
     int32_t gameOverTimer;
@@ -157,7 +163,7 @@ static void swadgeItCheckInputs(void);
 static void swadgeItGameplayLogic(int64_t elapsedUs);
 static void swadgeItGameplayRender(void);
 
-static void swadgeItHighScoreRender(void);
+static void swadgeItHighScoreRender(uint32_t elapsedUs);
 static void swadgeItGameOverRender(int64_t elapsedUs);
 
 static void swadgeItSwitchToScreen(swadgeItScreen_t newScreen);
@@ -170,6 +176,7 @@ static const char swadgeItStrName[]       = "Swadge It!";
 static const char swadgeItStrReaction[]   = "Reaction";
 static const char swadgeItStrMemory[]     = "Memory";
 static const char swadgeItStrHighScores[] = "High Scores";
+static const char swadgeItStrHelp[]       = "Help";
 static const char swadgeItStrExit[]       = "Exit";
 
 static const char SI_REACTION_HS_KEY[]    = "si_r_hs";
@@ -177,11 +184,16 @@ static const char SI_MEMORY_HS_KEY[]      = "si_m_hs";
 static const char SI_REACTION_HS_SP_KEY[] = "si_r_hs_sp";
 static const char SI_MEMORY_HS_SP_KEY[]   = "si_m_hs_sp";
 
+static const char swadgeItStrPress[] = "Press it!";
+static const char swadgeItStrShake[] = "Shake it!";
+static const char swadgeItStrShout[] = "Shout it!";
+static const char swadgeItStrSwirl[] = "Swirl it!";
+
 /** Must match order of swadgeItEvt_t */
 const swadgeItEvtData_t siEvtData[] = {
     {
         .sfx_fidx = PRESS_IT_RAW,
-        .label    = "Press it!",
+        .label    = swadgeItStrPress,
         .bgColor  = c043,
         .txColor  = c000,
         .ledColor = {.r = 0x00, .g = 0xCC, .b = 0x99},
@@ -191,7 +203,7 @@ const swadgeItEvtData_t siEvtData[] = {
     },
     {
         .sfx_fidx = SHAKE_IT_RAW,
-        .label    = "Shake it!",
+        .label    = swadgeItStrShake,
         .bgColor  = c411,
         .txColor  = c000,
         .ledColor = {.r = 0xCC, .g = 0x33, .b = 0x33},
@@ -201,7 +213,7 @@ const swadgeItEvtData_t siEvtData[] = {
     },
     {
         .sfx_fidx = SHOUT_IT_RAW,
-        .label    = "Shout it!",
+        .label    = swadgeItStrShout,
         .bgColor  = c444,
         .txColor  = c000,
         .ledColor = {.r = 0xCC, .g = 0xCC, .b = 0xCC},
@@ -211,7 +223,7 @@ const swadgeItEvtData_t siEvtData[] = {
     },
     {
         .sfx_fidx = SWIRL_IT_RAW,
-        .label    = "Swirl it!",
+        .label    = swadgeItStrSwirl,
         .bgColor  = c115,
         .txColor  = c555,
         .ledColor = {.r = 0x33, .g = 0x33, .b = 0xFF},
@@ -252,6 +264,41 @@ const swadgeItEvtData_t siGoData = {
     .image    = -1,
     .txtPos   = {.x = TFT_WIDTH / 2, .y = (TFT_HEIGHT / 2 - 23)},
     .imgPos   = {.x = 0, .y = 0},
+};
+
+static const helpPage_t siHelpPages[] = {
+    {
+        .title = swadgeItStrName,
+        .text  = "Welcome to Swadge It, a game that tests reaction or memory. Turn up the volume!",
+    },
+    {
+        .title = swadgeItStrReaction,
+        .text  = "In Reaction mode, you need to do what the Swadge says as fast as possible. The commands speed up!",
+    },
+    {
+        .title = swadgeItStrMemory,
+        .text = "In Memory mode, you need to remember the sequence the Swadge tells you and repeat it. Take your time.",
+    },
+    {
+        .title = swadgeItStrPress,
+        .text  = "To Press It! press any D-Pad, A or B button.",
+    },
+    {
+        .title = swadgeItStrShake,
+        .text  = "To Shake It! give the Swadge one good shake. Don't overdo it.",
+    },
+    {
+        .title = swadgeItStrShout,
+        .text  = "To Shout It! shout into the microphone. Blowing on it works well too.",
+    },
+    {
+        .title = swadgeItStrSwirl,
+        .text  = "To Swirl It! make a circle around the touchpad. Clockwise or counter both work.",
+    },
+    {
+        .title = swadgeItStrHighScores,
+        .text  = "High scores are saved for Reaction and Memory. The top high score from SwadgePass is also shown.",
+    },
 };
 
 //==============================================================================
@@ -366,8 +413,12 @@ static void swadgeItEnterMode(void)
     addSingleItemToMenu(si->menu, swadgeItStrReaction);
     addSingleItemToMenu(si->menu, swadgeItStrMemory);
     addSingleItemToMenu(si->menu, swadgeItStrHighScores);
+    addSingleItemToMenu(si->menu, swadgeItStrHelp);
     addSingleItemToMenu(si->menu, swadgeItStrExit);
     si->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
+
+    si->bgMenu = initMenu("Mode Name", NULL);
+    si->help   = initHelpScreen(si->bgMenu, si->menuRenderer, siHelpPages, ARRAY_SIZE(siHelpPages));
 
     // Load all SFX samples
     for (int8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
@@ -447,6 +498,10 @@ static void swadgeItExitMode(void)
     deinitMenuMegaRenderer(si->menuRenderer);
     deinitMenu(si->menu);
 
+    // Free help
+    deinitMenu(si->bgMenu);
+    deinitHelpScreen(si->help);
+
     // Free SFX
     for (int8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
     {
@@ -510,6 +565,15 @@ static void swadgeItMainLoop(int64_t elapsedUs)
                 }
                 break;
             }
+            case SI_HELP:
+            {
+                // Help button inputs
+                if (buttonHelp(si->help, &evt))
+                {
+                    swadgeItSwitchToScreen(SI_MENU);
+                }
+                break;
+            }
             case SI_GAME_OVER:
             {
                 // A button returns to the main menu after the timer
@@ -544,7 +608,13 @@ static void swadgeItMainLoop(int64_t elapsedUs)
         }
         case SI_HIGH_SCORES:
         {
-            swadgeItHighScoreRender();
+            swadgeItHighScoreRender(elapsedUs);
+            break;
+        }
+        case SI_HELP:
+        {
+            // Draw help
+            drawHelp(si->help, elapsedUs);
             break;
         }
         case SI_GAME_OVER:
@@ -571,6 +641,8 @@ static void swadgeItBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int1
     {
         default:
         case SI_MENU:
+        case SI_HELP:
+        case SI_HIGH_SCORES:
         {
             break;
         }
@@ -581,7 +653,6 @@ static void swadgeItBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int1
             fillDisplayArea(x, y, x + w, y + h, si->dispEvt->bgColor);
             break;
         }
-        case SI_HIGH_SCORES:
         case SI_GAME_OVER:
         {
             // Black background for these
@@ -856,9 +927,16 @@ static void swadgeItGameplayRender(void)
 
 /**
  * @brief Render the TFT during high score display. This draws the two high scores
+ *
+ * TODO redraw this to look good
+ *
+ * @param elapsedUs Time elapsed since the last call
  */
-static void swadgeItHighScoreRender(void)
+static void swadgeItHighScoreRender(uint32_t elapsedUs)
 {
+    // Draw the background menu
+    drawMenuMega(si->bgMenu, si->menuRenderer, elapsedUs);
+
     // Draw high scores
     font_t* font = si->menuRenderer->menuFont;
     char hsString[64];
@@ -873,7 +951,7 @@ static void swadgeItHighScoreRender(void)
     drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
     yOff += font->height + TEXT_Y_SPACING;
 
-    snprintf(hsString, sizeof(hsString) - 1, "SP %s: %" PRId32, swadgeItStrReaction, si->reactionHighScoreSP);
+    snprintf(hsString, sizeof(hsString) - 1, "SwadgePass %s: %" PRId32, swadgeItStrReaction, si->reactionHighScoreSP);
     tWidth = textWidth(font, hsString);
     drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
     yOff += font->height + TEXT_Y_SPACING;
@@ -884,7 +962,7 @@ static void swadgeItHighScoreRender(void)
     drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
     yOff += font->height + TEXT_Y_SPACING;
 
-    snprintf(hsString, sizeof(hsString) - 1, "SP %s: %" PRId32, swadgeItStrMemory, si->memoryHighScoreSP);
+    snprintf(hsString, sizeof(hsString) - 1, "SwadgePass %s: %" PRId32, swadgeItStrMemory, si->memoryHighScoreSP);
     tWidth = textWidth(font, hsString);
     drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
     yOff += font->height + TEXT_Y_SPACING;
@@ -1160,6 +1238,11 @@ static bool swadgeItMenuCb(const char* label, bool selected, uint32_t value)
             // Exit to the main menu
             switchToSwadgeMode(&mainMenuMode);
         }
+        else if (swadgeItStrHelp == label)
+        {
+            si->help->helpIdx = 0;
+            swadgeItSwitchToScreen(SI_HELP);
+        }
     }
     return false;
 }
@@ -1252,6 +1335,29 @@ static void swadgeItSwitchToScreen(swadgeItScreen_t newScreen)
 
     // Set the new screen
     si->screen = newScreen;
+
+    // Screen-specific setup
+    switch (newScreen)
+    {
+        case SI_HELP:
+        {
+            si->bgMenu->title = swadgeItStrName;
+            break;
+        }
+        case SI_HIGH_SCORES:
+        {
+            si->bgMenu->title = swadgeItStrHighScores;
+            break;
+        }
+        case SI_MENU:
+        case SI_REACTION:
+        case SI_MEMORY:
+        case SI_GAME_OVER:
+        default:
+        {
+            break;
+        }
+    }
 }
 
 /**

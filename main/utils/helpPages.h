@@ -29,7 +29,7 @@ static const helpPage_t helpPages[] = {
         .title = "Page 2",
         .text  = "This is the second page of help text. It probably has more details or something.",
     },
-}
+};
 
 // Set up the help screen when entering the mode
 // The menu must be empty
