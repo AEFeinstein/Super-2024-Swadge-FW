@@ -802,7 +802,7 @@ void changeStateGame(platformer_t* self)
 
 static void mg_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-    fillDisplayArea(x, y, x + w, y + h, c102 + ((y >> 6) % 6));
+    fillDisplayArea(x, y, x + w, y + h, leveldef[platformer->gameData.level].bgColors[((y >> 6) % 4)]);
 }
 
 void detectGameStateChange(platformer_t* self)
