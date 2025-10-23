@@ -80,6 +80,7 @@ typedef struct
         char message[32];
         int64_t timeUs;
         int64_t elapsedUs;
+        bool swirlyEyes;
     } interlude;
 
     menu_t* menu;
@@ -192,6 +193,13 @@ const cosCrunchMicrogame_t* const microgames[] = {
 #define MESSAGE_BOX_MARGIN    15
 #define MESSAGE_BOX_PADDING   10
 #define GAME_OVER_SCORE_BOX_Y 165
+
+#define EYES_SLOT_DEFAULT 3
+#define EYES_SLOT_HAPPY   4
+#define EYES_SLOT_SAD     5
+#define EYES_SLOT_DEAD    6
+#define EYES_SLOT_SWIRL   7
+#define EYES_SWIRL_FRAMES 4
 
 tintColor_t const blueTimerTintColor   = {c013, c125, c235, 0};
 tintColor_t const yellowTimerTintColor = {c430, c540, c554, 0};
@@ -340,6 +348,17 @@ static bool cosCrunchMenu(const char* label, bool selected, uint32_t value)
             cosCrunchResetBackground();
 
             globalMidiPlayerPlaySong(&cc->gameBgm, MIDI_BGM);
+
+            // Loading images will disable the default blink animation
+            ch32v003WriteBitmapAsset(EYES_SLOT_DEFAULT, EYES_DEFAULT_GS);
+            ch32v003WriteBitmapAsset(EYES_SLOT_HAPPY, EYES_HAPPY_GS);
+            ch32v003WriteBitmapAsset(EYES_SLOT_SAD, EYES_SAD_GS);
+            ch32v003WriteBitmapAsset(EYES_SLOT_DEAD, EYES_DEAD_GS);
+            ch32v003WriteBitmapAsset(EYES_SLOT_SWIRL + 0, EYES_SWIRL_0_GS);
+            ch32v003WriteBitmapAsset(EYES_SLOT_SWIRL + 1, EYES_SWIRL_1_GS);
+            ch32v003WriteBitmapAsset(EYES_SLOT_SWIRL + 2, EYES_SWIRL_2_GS);
+            ch32v003WriteBitmapAsset(EYES_SLOT_SWIRL + 3, EYES_SWIRL_3_GS);
+            ch32v003SelectBitmap(EYES_SLOT_DEFAULT);
         }
         else if (label == cosCrunchHighScoresLbl)
         {
@@ -391,6 +410,8 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             if (cc->state == CC_GAME_OVER)
             {
                 globalMidiPlayerPlaySong(&cc->menuBgm, MIDI_BGM);
+                // Resume default blink animations while in menu/high scores/tutorial
+                ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
             }
             cc->state = CC_MENU;
         }
@@ -402,8 +423,9 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         cc->state          = CC_INTERLUDE;
         snprintf(cc->interlude.message, sizeof(cc->interlude.message), cosCrunchInterludePlayerMsg,
                  cc->currentPlayer + 1);
-        cc->interlude.timeUs    = PLAYER_INTERLUDE_TIME_US;
-        cc->interlude.elapsedUs = 0;
+        cc->interlude.timeUs     = PLAYER_INTERLUDE_TIME_US;
+        cc->interlude.elapsedUs  = 0;
+        cc->interlude.swirlyEyes = false;
     }
 
     switch (cc->state)
@@ -426,6 +448,15 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             if (cc->interlude.elapsedUs >= cc->interlude.timeUs)
             {
                 cc->state = CC_MICROGAME_PENDING;
+            }
+            else if (cc->interlude.swirlyEyes)
+            {
+                int64_t frame = cc->interlude.elapsedUs / (cc->interlude.timeUs / EYES_SWIRL_FRAMES);
+                ch32v003SelectBitmap(EYES_SLOT_SWIRL + frame);
+            }
+            else
+            {
+                ch32v003SelectBitmap(EYES_SLOT_DEFAULT);
             }
 
             cosCrunchClearLeds();
@@ -461,6 +492,8 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             cc->activeMicrogame.state               = CC_MG_GET_READY;
             cc->activeMicrogame.stateElapsedUs      = 0;
             cc->state                               = CC_MICROGAME_RUNNING;
+
+            ch32v003SelectBitmap(EYES_SLOT_DEFAULT);
             break;
 
         case CC_MICROGAME_RUNNING:
@@ -527,6 +560,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                         if (totalLives == 0)
                         {
                             cc->state = CC_GAME_OVER_PENDING;
+                            ch32v003SelectBitmap(EYES_SLOT_DEAD);
                         }
                         else
                         {
@@ -542,8 +576,9 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                                 cc->timeScale += SPEED_UP_AMOUNT;
                                 cc->state = CC_INTERLUDE;
                                 strcpy(cc->interlude.message, cosCrunchInterludeSpeedUpMsg);
-                                cc->interlude.timeUs    = SPEED_UP_INTERLUDE_TIME_US;
-                                cc->interlude.elapsedUs = 0;
+                                cc->interlude.timeUs     = SPEED_UP_INTERLUDE_TIME_US;
+                                cc->interlude.elapsedUs  = 0;
+                                cc->interlude.swirlyEyes = true;
 
                                 if (cc->gameBgmOriginalTempo == 0)
                                 {
@@ -925,11 +960,13 @@ void cosCrunchMicrogameResult(bool successful)
         {
             cc->players[cc->currentPlayer].score++;
             cc->activeMicrogame.state = CC_MG_CELEBRATING;
+            ch32v003SelectBitmap(EYES_SLOT_HAPPY);
         }
         else
         {
             cc->players[cc->currentPlayer].lives--;
             cc->activeMicrogame.state = CC_MG_DESPAIRING;
+            ch32v003SelectBitmap(EYES_SLOT_SAD);
         }
         cc->activeMicrogame.stateElapsedUs = 0;
     }

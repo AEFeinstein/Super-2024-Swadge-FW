@@ -79,7 +79,7 @@ int main()
                     // Inside the eyes, draw boundaries at specific X values
                     SetPixel(x, y, EYE_LED_BRIGHT);
                 }
-                else if ((x == pOffX || x == 6 + pOffX) && y == pOffY)
+                else if ((x == pOffX || x == 6 + pOffX) && y == 1 + pOffY)
                 {
                     // Bright pupil pixel in the top left
                     SetPixel(x, y, EYE_LED_BRIGHT);
