@@ -260,7 +260,7 @@ static void tCaseDrawStats(font_t* fnt, int yOffset)
             && strcmp(allSwadgeModes[idx]->modeName, trophyTestMode.modeName) != 0)
         {
             snprintf(buffer, sizeof(buffer) - 1, "%s: %" PRId16, allSwadgeModes[idx]->modeName,
-                     trophyGetPoints(false, allSwadgeModes[idx]->modeName));
+                     trophyGetPoints(false, allSwadgeModes[idx]->trophyData->settings->namespaceKey));
             drawText(fnt, c454, buffer, 32, (32 + (line++) * 24) - yOffset);
         }
     }

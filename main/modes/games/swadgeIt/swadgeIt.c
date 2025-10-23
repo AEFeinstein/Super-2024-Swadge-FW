@@ -70,6 +70,9 @@ typedef struct
     const paletteColor_t bgColor;
     const paletteColor_t txColor;
     const led_t ledColor;
+    cnfsFileIdx_t image;
+    vec_t txtPos;
+    vec_t imgPos;
 } swadgeItEvtData_t;
 
 typedef struct
@@ -88,6 +91,9 @@ typedef struct
     // Sound effects
     rawSample_t sfx[MAX_NUM_EVTS];
     int32_t sampleIdx;
+
+    // Images
+    wsg_t img[MAX_NUM_EVTS];
 
     // Flag to switch from speaker to mic mode
     bool pendingSwitchToMic;
@@ -176,30 +182,42 @@ const swadgeItEvtData_t siEvtData[] = {
     {
         .sfx_fidx = PRESS_IT_RAW,
         .label    = "Press it!",
-        .bgColor  = c531,
-        .txColor  = c555,
-        .ledColor = {.r = 0xFF, .g = 0x99, .b = 0x33},
+        .bgColor  = c043,
+        .txColor  = c000,
+        .ledColor = {.r = 0x00, .g = 0xCC, .b = 0x99},
+        .image    = SI_PULSE_WSG,
+        .txtPos   = {.x = 87, .y = 77},
+        .imgPos   = {.x = TFT_WIDTH - 148, .y = 0},
     },
     {
         .sfx_fidx = SHAKE_IT_RAW,
         .label    = "Shake it!",
-        .bgColor  = c325,
-        .txColor  = c555,
-        .ledColor = {.r = 0x99, .g = 0x66, .b = 0xFF},
+        .bgColor  = c411,
+        .txColor  = c000,
+        .ledColor = {.r = 0xCC, .g = 0x33, .b = 0x33},
+        .image    = SI_SAWTOOTH_WSG,
+        .txtPos   = {.x = 189, .y = 86},
+        .imgPos   = {.x = 20, .y = 0},
     },
     {
         .sfx_fidx = SHOUT_IT_RAW,
         .label    = "Shout it!",
-        .bgColor  = c222,
-        .txColor  = c555,
-        .ledColor = {.r = 0x66, .g = 0x66, .b = 0x66},
+        .bgColor  = c444,
+        .txColor  = c000,
+        .ledColor = {.r = 0xCC, .g = 0xCC, .b = 0xCC},
+        .image    = SI_BAT_WSG,
+        .txtPos   = {.x = 213, .y = 132},
+        .imgPos   = {.x = 0, .y = 0},
     },
     {
         .sfx_fidx = SWIRL_IT_RAW,
         .label    = "Swirl it!",
-        .bgColor  = c412,
+        .bgColor  = c115,
         .txColor  = c555,
-        .ledColor = {.r = 0xCC, .g = 0x33, .b = 0x66},
+        .ledColor = {.r = 0x33, .g = 0x33, .b = 0xFF},
+        .image    = SI_PANGO_WSG,
+        .txtPos   = {.x = TFT_WIDTH / 2, .y = 0},
+        .imgPos   = {.x = 0, .y = TFT_HEIGHT - 183},
     },
 };
 
@@ -209,6 +227,9 @@ const swadgeItEvtData_t siGoodData = {
     .bgColor  = c453,
     .txColor  = c000,
     .ledColor = {.r = 0xCC, .g = 0xFF, .b = 0x99},
+    .image    = -1,
+    .txtPos   = {.x = TFT_WIDTH / 2, .y = (TFT_HEIGHT / 2 - 23)},
+    .imgPos   = {.x = 0, .y = 0},
 };
 
 const swadgeItEvtData_t siWaitData = {
@@ -217,6 +238,9 @@ const swadgeItEvtData_t siWaitData = {
     .bgColor  = c000,
     .txColor  = c555,
     .ledColor = {.r = 0x00, .g = 0x00, .b = 0x00},
+    .image    = -1,
+    .txtPos   = {.x = TFT_WIDTH / 2, .y = (TFT_HEIGHT / 2 - 23)},
+    .imgPos   = {.x = 0, .y = 0},
 };
 
 const swadgeItEvtData_t siGoData = {
@@ -225,11 +249,80 @@ const swadgeItEvtData_t siGoData = {
     .bgColor  = c555,
     .txColor  = c000,
     .ledColor = {.r = 0xFF, .g = 0xFF, .b = 0xFF},
+    .image    = -1,
+    .txtPos   = {.x = TFT_WIDTH / 2, .y = (TFT_HEIGHT / 2 - 23)},
+    .imgPos   = {.x = 0, .y = 0},
 };
 
 //==============================================================================
 // Variables
 //==============================================================================
+
+// Trophy Data
+const trophyData_t swadgeItTrophies[] = {
+    {
+        .title       = "Short Term Memory",
+        .description = "Score 5 in Memory mode",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Remember Like It Was Yesterday",
+        .description = "Score 18 in Memory mode",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Total Recall",
+        .description = "Score 30 in Memory mode",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "First Order Reaction",
+        .description = "Score 5 in Reaction mode",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Sustained Reaction",
+        .description = "Score 18 in Reaction mode",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Lightning Reaction",
+        .description = "Score 30 in Reaction mode",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+};
+
+// Individual mode settings
+const trophySettings_t swadgeItTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 4,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = swadgeItStrName,
+};
+
+const trophyDataList_t swadgeItTrophyData = {
+    .settings = &swadgeItTrophySettings,
+    .list     = swadgeItTrophies,
+    .length   = ARRAY_SIZE(swadgeItTrophies),
+};
 
 swadgeMode_t swadgeItMode = {
     .modeName                 = swadgeItStrName,
@@ -248,6 +341,7 @@ swadgeMode_t swadgeItMode = {
     .fnAdvancedUSB            = NULL,
     .fnDacCb                  = swadgeItDacCallback,
     .fnAddToSwadgePassPacket  = swadgeItAddToSwadgePassPacket,
+    .trophyData               = &swadgeItTrophyData,
 };
 
 static swadgeIt_t* si;
@@ -279,6 +373,12 @@ static void swadgeItEnterMode(void)
     for (int8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
     {
         si->sfx[i].samples = readHeatshrinkFile(siEvtData[i].sfx_fidx, &si->sfx[i].len, true);
+    }
+
+    // Load all images
+    for (int8_t i = 0; i < ARRAY_SIZE(si->img); i++)
+    {
+        loadWsg(siEvtData[i].image, &si->img[i], true);
     }
 
     // For yell detection
@@ -351,6 +451,12 @@ static void swadgeItExitMode(void)
     for (int8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
     {
         heap_caps_free(si->sfx[i].samples);
+    }
+
+    // Free images
+    for (int8_t i = 0; i < ARRAY_SIZE(si->img); i++)
+    {
+        freeWsg(&si->img[i]);
     }
 
     // Clear queues
@@ -712,20 +818,22 @@ static void swadgeItGameplayLogic(int64_t elapsedUs)
  */
 static void swadgeItGameplayRender(void)
 {
+    // Draw the character image
+    if (si->dispEvt != &siGoData && si->dispEvt != &siGoodData && si->dispEvt != &siWaitData)
+    {
+        int idx = ((intptr_t)si->dispEvt - (intptr_t)siEvtData) / sizeof(swadgeItEvtData_t);
+        drawWsgSimple(&si->img[idx], si->dispEvt->imgPos.x, si->dispEvt->imgPos.y);
+    }
+
     // Get a font, currently borrowed from the menu renderer
     font_t* font = si->menuRenderer->menuFont;
 
-    // Center text vertically
-    int numLines = 2;
-    if (SI_MEMORY == si->screen && 0 != si->inputIdx)
-    {
-        numLines = 3;
-    }
-    int16_t yOff = (TFT_HEIGHT - (numLines * font->height + (numLines - 1) * TEXT_Y_SPACING)) / 2;
+    // Place text here
+    int16_t yOff = si->dispEvt->txtPos.y;
 
     // Draw command
     int16_t tWidth = textWidth(font, si->dispEvt->label);
-    drawText(font, si->dispEvt->txColor, si->dispEvt->label, (TFT_WIDTH - tWidth) / 2, yOff);
+    drawText(font, si->dispEvt->txColor, si->dispEvt->label, si->dispEvt->txtPos.x - (tWidth / 2), yOff);
     yOff += font->height + TEXT_Y_SPACING;
 
     // Draw action index for memory mode when there is one
@@ -734,7 +842,7 @@ static void swadgeItGameplayRender(void)
         char idxStr[32];
         snprintf(idxStr, sizeof(idxStr) - 1, "Action %" PRId32, si->inputIdx);
         tWidth = textWidth(font, idxStr);
-        drawText(font, si->dispEvt->txColor, idxStr, (TFT_WIDTH - tWidth) / 2, yOff);
+        drawText(font, si->dispEvt->txColor, idxStr, si->dispEvt->txtPos.x - (tWidth / 2), yOff);
         yOff += font->height + TEXT_Y_SPACING;
     }
 
@@ -742,7 +850,7 @@ static void swadgeItGameplayRender(void)
     char scoreStr[32];
     snprintf(scoreStr, sizeof(scoreStr) - 1, "Score %" PRId32, si->score);
     tWidth = textWidth(font, scoreStr);
-    drawText(font, si->dispEvt->txColor, scoreStr, (TFT_WIDTH - tWidth) / 2, yOff);
+    drawText(font, si->dispEvt->txColor, scoreStr, si->dispEvt->txtPos.x - (tWidth / 2), yOff);
     yOff += font->height + TEXT_Y_SPACING;
 }
 
@@ -986,6 +1094,38 @@ static void swadgeItGameOver(void)
         si->memoryHighScore = si->score;
         writeNvs32(SI_MEMORY_HS_KEY, si->score);
         si->newHighScore = true;
+    }
+
+    // Check for trophies
+    if (SI_REACTION == si->screen)
+    {
+        if (si->score >= 5)
+        {
+            trophyUpdate(&swadgeItTrophies[3], 1, true); // Reaction, 5
+        }
+        if (si->score >= 18)
+        {
+            trophyUpdate(&swadgeItTrophies[4], 1, true); // Reaction, 18
+        }
+        if (si->score >= 30)
+        {
+            trophyUpdate(&swadgeItTrophies[5], 1, true); // Reaction, 30
+        }
+    }
+    else if (SI_MEMORY == si->screen)
+    {
+        if (si->score >= 5)
+        {
+            trophyUpdate(&swadgeItTrophies[0], 1, true); // Memory, 5
+        }
+        if (si->score >= 18)
+        {
+            trophyUpdate(&swadgeItTrophies[1], 1, true); // Memory, 18
+        }
+        if (si->score >= 30)
+        {
+            trophyUpdate(&swadgeItTrophies[2], 1, true); // Memory, 30
+        }
     }
 
     // Display round score
