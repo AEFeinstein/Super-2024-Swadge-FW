@@ -127,7 +127,7 @@ const trophySettings_t danceNetworkTrophySettings = {
     .drawFromBottom   = false,
     .staticDurationUs = DRAW_STATIC_US * 6,
     .slideDurationUs  = DRAW_SLIDE_US,
-    .namespaceKey     = danceNetworkName,
+    .namespaceKey     = "Alpha Pulse",
 };
 
 // This is passed to the swadgeMode_t
@@ -215,8 +215,6 @@ static void dn_EnterMode(void)
 {
     gameData = (dn_gameData_t*)heap_caps_calloc(1, sizeof(dn_gameData_t), MALLOC_CAP_8BIT);
     memset(gameData, 0, sizeof(dn_gameData_t));
-
-    gameData->trophyData = &danceNetworkTrophies;
 
     int32_t outVal;
     readNvs32(dnP1TroupeKey, &outVal);
@@ -690,7 +688,7 @@ static void dn_initializeVideoTutorial(void)
     ////////////////////
     // Make the qr code//
     ////////////////////
-    trophySetChecklistTask(gameData->trophyData[2], 0x4, true, true);
+    trophySetChecklistTask(&danceNetworkTrophies[2], 0x4, true, true);
     dn_entity_t* qr    = dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_NO_ASSET, 0,
                                                 (vec_t){0, 0}, gameData);
     qr->updateFunction = dn_updateQr;
