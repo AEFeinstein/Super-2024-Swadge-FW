@@ -6,7 +6,7 @@ static const int rotateRPM = 5;
 static const int64_t UsPerDeg = (60000000 / (rotateRPM*360));
 static const vec_t ScreenCenter = {
     .x = 140,
-    .y = 120,
+    .y = 180, //120 is the default center of the screen
 };
 static const char* lettersRace[] = {"M","4","R","H","N","Y","8","A","C","T","3","Z","K","W","F","1","X","G","Q","E","0","J","L","D","9","B","V","S","5","7","I","P","2","0","6","U"};;
 static const char* numbersRace[] = {"8","35","6","23","15","9","33","3","20","11","36","27","14","25","19","32","2","28","21","34","7","16","30","5","1","22","13","10","18","26","31","24","17","4","29","12"};
@@ -53,6 +53,9 @@ swadgeMode_t cipherMode = {
 static font_t ibm;
 cipherRace_t* innerRace;
 cipherRace_t* outerRace;
+int64_t RaceOffset = 0;
+bool OffsettingLeft = false;
+bool OffsettingRight = false;
 
 //Define functions
 static vec_t RThetaToXY(vec_t RTheta, bool TextBuffer){
@@ -66,8 +69,8 @@ static vec_t RThetaToXY(vec_t RTheta, bool TextBuffer){
     if(TextBuffer){
         //Keep x above 4 and below 280-18=>262
         //Keep y above 4 and below 240-14=>216
-        int hypX = fabs(fmax( fmax(mathPos.x - 262, 0) , fmax(4 - mathPos.x, 0) ) / sin(RTheta.y * M_PI / 180));
-        int hypY = fabs(fmax( fmax(mathPos.y - 226, 0) , fmax(4 - mathPos.y, 0) ) / cos(RTheta.y * M_PI / 180));
+        int hypX = fabs(fmax( fmax(mathPos.x - (ScreenCenter.x * 2 - 18), 0) , fmax(4 - mathPos.x, 0) ) / sin(RTheta.y * M_PI / 180));
+        int hypY = fabs(fmax( fmax(mathPos.y - (ScreenCenter.y * 2 - 14), 0) , fmax(4 - mathPos.y, 0) ) / cos(RTheta.y * M_PI / 180));
         //ESP_LOGI("trim", "hypX: %d, hypY: %d", hypX, hypY);
         mathPos = (vec_t){
             .x = ScreenCenter.x + (RTheta.x - fmax(hypX, hypY)) * sin(RTheta.y * M_PI / 180),
@@ -97,11 +100,11 @@ static void cipherEnterMode(){
     innerRace = (cipherRace_t*)heap_caps_calloc(1, sizeof(cipherRace_t), MALLOC_CAP_8BIT);
     innerRace->rotating = true;
     innerRace->direction = true;
-    innerRace->raceRad = 80;
+    innerRace->raceRad = 140;
     outerRace = (cipherRace_t*)heap_caps_calloc(1, sizeof(cipherRace_t), MALLOC_CAP_8BIT);
     outerRace->rotating = true;
     outerRace->direction=false;
-    outerRace->raceRad = 140;
+    outerRace->raceRad = 180;
 
     loadFont(IBM_VGA_8_FONT, &ibm, false);
 }
@@ -115,32 +118,39 @@ static void cipherExitMode(){
 static void cipherMainLoop(int64_t elapsedUs){
     clearPxTft();
 
-    if(innerRace->rotating){
-        innerRace->timeSpinning = (innerRace->timeSpinning + elapsedUs) % (UsPerDeg*360);
+    if(innerRace->rotating || innerRace->timeSpinning % (UsPerDeg*10) > 2){
+        innerRace->timeSpinning = (innerRace->timeSpinning + (int)fmin(elapsedUs,(UsPerDeg*10) - (innerRace->timeSpinning % (UsPerDeg*10)) + 1)) % (UsPerDeg*360);
     }
-    if(outerRace->rotating){
-        outerRace->timeSpinning = ((outerRace->timeSpinning - elapsedUs) + (UsPerDeg*360)) % (UsPerDeg*360);
+    if(outerRace->rotating || outerRace->timeSpinning % (UsPerDeg*10) > 2){
+        outerRace->timeSpinning = (outerRace->timeSpinning + (int)fmin(elapsedUs,(UsPerDeg*10) - (outerRace->timeSpinning % (UsPerDeg*10)) + 1)) % (UsPerDeg*360);
     }
+    if(OffsettingLeft){
+        RaceOffset = (RaceOffset + elapsedUs) % (UsPerDeg*360);
+    }
+    if(OffsettingRight){
+        RaceOffset = ((RaceOffset - elapsedUs) + (UsPerDeg*360)) % (UsPerDeg*360);
+    }
+
 
     for(int i=0;i<36;i++){ //i<36
 
         //Draw inner race
         vec_t inPos = {
             .x = innerRace->raceRad,
-            .y = (innerRace->timeSpinning / UsPerDeg) + 10*i, //Hard-coding a 36-part race => 360/36=10 degrees of difference to each text
+            .y = ((innerRace->timeSpinning + RaceOffset) / UsPerDeg) + 10*i, //Hard-coding a 36-part race => 360/36=10 degrees of difference to each text
         };
-        inPos = RThetaToXY(inPos, true);
+        inPos = RThetaToXY(inPos, false);
         drawText(&ibm, c252, lettersRace[i], inPos.x-5, inPos.y-5);
 
-        //dra
+        //draw outer race
         vec_t outPos = {
             .x = outerRace->raceRad,
-            .y = (outerRace->timeSpinning / UsPerDeg) + 10*i, //Hard-coding a 36-part race => 360/36=10 degrees of difference to each text
+            .y = (( (UsPerDeg*360) - outerRace->timeSpinning + RaceOffset) / UsPerDeg) + 10*i , //Hard-coding a 36-part race => 360/36=10 degrees of difference to each text
         };
-        outPos = RThetaToXY(outPos, true);
+        outPos = RThetaToXY(outPos, false);
         drawText(&ibm, c252, numbersRace[i], outPos.x, outPos.y);
 
-        DrawDividerLine(innerRace->raceRad-15, innerRace->raceRad+40,(innerRace->timeSpinning / UsPerDeg) + 10*i+5);
+        DrawDividerLine(innerRace->raceRad-15, innerRace->raceRad+40,(RaceOffset / UsPerDeg) + 10*i+5);
     }
 
     //handle input
@@ -155,11 +165,28 @@ static void cipherMainLoop(int64_t elapsedUs){
                 case PB_A:
                     outerRace->rotating = !outerRace->rotating;
                     break;
+                case PB_LEFT:
+                    OffsettingLeft = true;
+                    break;
+                case PB_RIGHT:
+                    OffsettingRight = true;
+                    break;
                 
                 default:
                     break;
             }
+        }else{ //The button is released
+            switch (evt.button){
+                case PB_LEFT:
+                    OffsettingLeft = false;
+                    break;
+                case PB_RIGHT:
+                    OffsettingRight = false;
+                    break;
+                default:break;
+            }
         }
+        
         
     }
 }
