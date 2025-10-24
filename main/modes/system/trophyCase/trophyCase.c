@@ -120,8 +120,15 @@ static void enterTCase(void)
     tc->menu = initMenu(tCaseModeName, tCaseMenuCb);
     tc->rnd  = initMenuMegaRenderer(NULL, NULL, NULL);
     addSingleItemToMenu(tc->menu, menuItems[0]);
+    // Note, TROPHY_DISPLAY_INCL_HIDDEN is not shown in this list
+    settingParam_t caseOptParams = {
+        .def = caseSettings[0],
+        .key = NULL,
+        .min = caseSettings[0],
+        .max = caseSettings[ARRAY_SIZE(caseSettings) - 1],
+    };
     addSettingsOptionsItemToMenu(tc->menu, menuItems[1], caseOptions, caseSettings, ARRAY_SIZE(caseOptions),
-                                 getScreensaverTimeSettingBounds(), 0);
+                                 &caseOptParams, 0);
 
     // Add all other modes to menu
     for (int idx = 0; idx < modeListGetCount(); idx++)
