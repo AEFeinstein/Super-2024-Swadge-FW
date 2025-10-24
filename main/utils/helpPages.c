@@ -14,7 +14,7 @@
 #define TEXT_MARGIN   4
 #define TEXT_MARGIN_L (22 + TEXT_MARGIN)
 #define TEXT_MARGIN_R (24 + TEXT_MARGIN)
-#define TEXT_MARGIN_U (49 + TEXT_MARGIN)
+#define TEXT_MARGIN_U (50 + TEXT_MARGIN)
 
 #define ARROW_BLINK_PERIOD 1000000
 
@@ -64,7 +64,10 @@ void drawHelp(helpPageVars_t* help, int32_t elapsedUs)
     help->bgMenu->title = help->pages[help->helpIdx].title;
 
     // Draw background, without animation
+    int16_t oldHeight              = help->menuRenderer->bodyHeight;
+    help->menuRenderer->bodyHeight = TFT_HEIGHT;
     drawMenuMega(help->bgMenu, help->menuRenderer, 0);
+    help->menuRenderer->bodyHeight = oldHeight;
 
     font_t* f = help->menuRenderer->menuFont;
 
