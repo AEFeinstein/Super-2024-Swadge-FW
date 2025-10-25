@@ -24,6 +24,7 @@
 
 #define SUBPIXEL_COUNT 256
 #define MAX_VELOCITY   (8 * SUBPIXEL_COUNT)
+#define SAVED_TIME_INC (1000 * 1000 * 60) // One minute
 
 //==============================================================================
 // Consts
@@ -90,11 +91,56 @@ typedef struct
     int64_t explosionTimer;
     bool displayWarning;
     wsg_t batteryImage;
+    uint64_t activeTimer;
+    uint16_t minutes;
 } bouncyData_t;
 
 //==============================================================================
 // Variables
 //==============================================================================
+
+const trophyData_t bounceTrophyData[] = {
+    {
+        .title       = "MOM GET THE CAMERA!",
+        .description = "Hit both corners at once",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1,
+        .hidden      = false,
+    },
+    {
+        .title       = "...Why though?",
+        .description = "Run the bounce mode for an hour total",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 60,
+        .hidden      = false,
+    },
+    {
+        .title       = "I hope you're on USB power",
+        .description = "Run the bounce mode for ten minutes straight",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 10,
+        .hidden      = false,
+    },
+};
+
+const trophySettings_t bounceTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 3,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = modeName,
+};
+
+const trophyDataList_t bounceTrophyList = {
+    .settings = &bounceTrophySettings,
+    .list     = bounceTrophyData,
+    .length   = ARRAY_SIZE(bounceTrophyData),
+};
 
 swadgeMode_t bouncyMode = {
     .modeName          = modeName,
@@ -105,6 +151,7 @@ swadgeMode_t bouncyMode = {
     .fnEnterMode       = screenEnterMode,
     .fnExitMode        = screenExitMode,
     .fnMainLoop        = screenMainLoop,
+    .trophyData        = &bounceTrophyList,
 };
 
 bouncyData_t* ssd;
@@ -208,6 +255,12 @@ static void screenMainLoop(int64_t elapsedUs)
     {
         drawWarning();
     }
+
+    // Timer
+    RUN_TIMER_EVERY(ssd->activeTimer, SAVED_TIME_INC, elapsedUs, ssd->minutes++;
+                    int totalTicks = trophyGetSavedValue(&bounceTrophyData[1]); totalTicks += 1;
+                    trophyUpdateMilestone(&bounceTrophyData[1], totalTicks, 10);
+                    trophyUpdateMilestone(&bounceTrophyData[2], ssd->minutes, 100););
 }
 
 static void updateObjects()
@@ -294,6 +347,7 @@ static void updateObjects()
         {
             ssd->explosion      = true;
             ssd->explosionTimer = 0;
+            trophyUpdate(&bounceTrophyData[0], 1, true);
         }
     }
 }
