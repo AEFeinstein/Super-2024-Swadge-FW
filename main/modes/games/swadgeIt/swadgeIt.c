@@ -420,7 +420,7 @@ static void swadgeItEnterMode(void)
     addSingleItemToMenu(si->menu, swadgeItStrExit);
     si->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
 
-    si->bgMenu = initMenu("Mode Name", NULL);
+    si->bgMenu = initMenu(NULL, NULL);
     si->help   = initHelpScreen(si->bgMenu, si->menuRenderer, siHelpPages, ARRAY_SIZE(siHelpPages));
 
     // Load all SFX samples
@@ -947,8 +947,6 @@ static void swadgeItGameplayRender(void)
 
 /**
  * @brief Render the TFT during high score display. This draws the two high scores
- *
- * TODO redraw this to look good
  *
  * @param elapsedUs Time elapsed since the last call
  */
