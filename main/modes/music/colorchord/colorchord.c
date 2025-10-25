@@ -323,7 +323,7 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
             {
                 if (y > (LED_H - colorchord->barHeights[x]))
                 {
-                    bitmap[LED_H - 1 - y][x] = 0x10;
+                    bitmap[LED_H - 1 - y][x] = EYE_LED_BRIGHT;
                 }
             }
         }

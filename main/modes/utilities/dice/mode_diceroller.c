@@ -541,7 +541,7 @@ void doStateMachine(int64_t elapsedUs)
                         {
                             for (int y = 0; y < 6; y++)
                             {
-                                bitmap[y][x + 6 * i] = digits[i]->pixels[x + y * 6] ? 0x10 : 0x00;
+                                bitmap[y][x + 6 * i] = digits[i]->pixels[x + y * 6] ? EYE_LED_BRIGHT : EYE_LED_OFF;
                             }
                         }
                     }
