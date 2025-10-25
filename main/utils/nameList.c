@@ -381,16 +381,15 @@ void drawUsernamePicker(nameData_t* nd)
 
 nameData_t* getSystemUsername(void)
 {
-    int32_t packed = 0;
-    readNvs32(nvsKeys, &packed);
-    setUsernameFrom32(&swadgeUsername, packed);
     return &swadgeUsername;
 }
 
 void setSystemUsername(nameData_t* nd)
 {
     nameData_t data = *nd;
-    writeNvs32(nvsKeys, GET_PACKED_USERNAME(data));
+    int32_t packed = GET_PACKED_USERNAME(data);
+    writeNvs32(nvsKeys, packed);
+    setUsernameFrom32(&swadgeUsername, packed);
 }
 
 void setUsernameFrom32(nameData_t* nd, int32_t packed)
