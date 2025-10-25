@@ -29,6 +29,7 @@ int initCh32v003(int swdio_pin);
         const uint8_t* buf = cnfsGetFile(asset, &sz);     \
         int r              = ch32v003WriteFlash(buf, sz); \
         ch32v003Resume();                                 \
+        vTaskDelay(10);                                   \
         r;                                                \
     })
 

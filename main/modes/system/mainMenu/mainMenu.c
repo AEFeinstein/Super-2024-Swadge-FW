@@ -173,13 +173,14 @@ const trophyData_t mainMenuTrophies[] = {
     },
 };
 
-trophySettings_t menuTrophySettings = {
+const trophySettings_t menuTrophySettings = {
     .drawFromBottom   = false,
     .staticDurationUs = DRAW_STATIC_US * 2,
     .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = mainMenuName,
 };
 
-trophyDataList_t menuTrophyData = {
+const trophyDataList_t menuTrophyData = {
     .settings = &menuTrophySettings,
     .list     = mainMenuTrophies,
     .length   = ARRAY_SIZE(mainMenuTrophies),
@@ -272,9 +273,6 @@ static void mainMenuEnterMode(void)
 
     // Load a font
     loadFont(RODIN_EB_FONT, &mainMenu->font_rodin, false);
-
-    // TODO replace with default eye firmware
-    ch32v003RunBinaryAsset(MATRIX_DROPS_CFUN_BIN);
 
     // Load a song for when the volume changes
 #ifdef SW_VOL_CONTROL
@@ -592,7 +590,7 @@ static bool _winTrophy(swadgeMode_t* sm)
     {
         if (mainMenuTrophies[idx].identifier == sm)
         {
-            return trophyUpdate(mainMenuTrophies[idx], 1, true);
+            return trophyUpdate(&mainMenuTrophies[idx], 1, true);
         }
     }
     return false;
