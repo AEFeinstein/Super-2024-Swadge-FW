@@ -266,7 +266,6 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
     drawText(getSysFont(), c555, exitText, (TFT_WIDTH - exitWidth) / 2, TFT_HEIGHT - getSysFont()->height - TEXT_Y);
 
     RUN_TIMER_EVERY(colorchord->eyeTimer, EYE_FPS_US, elapsedUs, {
-
         // There are 24 bins and 12 columns, so average every two bins into a column
         uint16_t binAvgs[LED_W] = {0};
         uint16_t maxBinAvg      = 0;
@@ -305,11 +304,11 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
             {
                 binAvgs[bIdx] = ((1 + LED_H) * binAvgs[bIdx]) / maxBinAvg;
 
-                if(binAvgs[bIdx] > colorchord->barHeights[bIdx])
+                if (binAvgs[bIdx] > colorchord->barHeights[bIdx])
                 {
-                    colorchord->barHeights[bIdx] = binAvgs[bIdx]; 
+                    colorchord->barHeights[bIdx] = binAvgs[bIdx];
                 }
-                else if(colorchord->barHeights[bIdx])
+                else if (colorchord->barHeights[bIdx])
                 {
                     colorchord->barHeights[bIdx]--;
                 }

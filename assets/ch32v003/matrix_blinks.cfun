@@ -3,8 +3,8 @@
 #include <stdbool.h>
 #include "swadge_matrix.h"
 
-#define LED_OFF  0x00
-#define LED_DIM  0x08
+#define LED_OFF    0x00
+#define LED_DIM    0x08
 #define LED_BRIGHT 0x10
 
 /**
@@ -31,7 +31,8 @@ uint16_t lfsr_xorshift(void)
 int main()
 {
     // Pixel values for the top and bottom edges of the eyes
-    const uint8_t edge[12] = {LED_OFF, LED_BRIGHT, LED_BRIGHT, LED_BRIGHT, LED_BRIGHT, LED_OFF, LED_OFF, LED_BRIGHT, LED_BRIGHT, LED_BRIGHT, LED_BRIGHT, LED_OFF};
+    const uint8_t edge[12] = {LED_OFF, LED_BRIGHT, LED_BRIGHT, LED_BRIGHT, LED_BRIGHT, LED_OFF,
+                              LED_OFF, LED_BRIGHT, LED_BRIGHT, LED_BRIGHT, LED_BRIGHT, LED_OFF};
 
     // Timekeeping variables
     int frameno = 0;
