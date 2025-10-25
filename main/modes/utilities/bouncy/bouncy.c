@@ -92,7 +92,7 @@ typedef struct
     bool displayWarning;
     wsg_t batteryImage;
     uint64_t activeTimer;
-    uint16_t minutes; 
+    uint16_t minutes;
 } bouncyData_t;
 
 //==============================================================================
@@ -257,13 +257,10 @@ static void screenMainLoop(int64_t elapsedUs)
     }
 
     // Timer
-    RUN_TIMER_EVERY(ssd->activeTimer, SAVED_TIME_INC, elapsedUs, 
-        ssd->minutes++;
-        int totalTicks = trophyGetSavedValue(&bounceTrophyData[1]);
-        totalTicks += 1;
-        trophyUpdateMilestone(&bounceTrophyData[1], totalTicks, 10);
-        trophyUpdateMilestone(&bounceTrophyData[2], ssd->minutes, 100);
-    );
+    RUN_TIMER_EVERY(ssd->activeTimer, SAVED_TIME_INC, elapsedUs, ssd->minutes++;
+                    int totalTicks = trophyGetSavedValue(&bounceTrophyData[1]); totalTicks += 1;
+                    trophyUpdateMilestone(&bounceTrophyData[1], totalTicks, 10);
+                    trophyUpdateMilestone(&bounceTrophyData[2], ssd->minutes, 100););
 }
 
 static void updateObjects()
