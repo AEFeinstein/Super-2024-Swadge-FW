@@ -54,6 +54,7 @@
 #include "sequencerMode.h"
 #include "sonaTest.h"
 #include "swadgedoku.h"
+#include "swsnCreator.h"
 #include "swadgeIt.h"
 #include "swadgePassTest.h"
 #include "swadgetamatone.h"
