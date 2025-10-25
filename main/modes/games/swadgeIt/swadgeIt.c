@@ -7,6 +7,7 @@
 #include "heatshrink_helper.h"
 #include "touchUtils.h"
 #include "embeddedOut.h"
+#include "helpPages.h"
 
 //==============================================================================
 // Defines
@@ -14,19 +15,20 @@
 
 // UI
 #define SWADGE_IT_FPS  40
-#define TEXT_Y_SPACING 4
+#define TEXT_Y_SPACING 2
 
 // Limits for detecting yells
 #define MIC_ENERGY_THRESHOLD  100000
 #define MIC_ENERGY_HYSTERESIS 20
 
 // Limits for the Reaction timers
+#define WAIT_EVENT_US          1500000
 #define INIT_EVENT_INPUT_US    3000000
 #define MIN_EVENT_INPUT_US     600000
-#define EVENT_SPEEDUP_INTERVAL ((INIT_EVENT_INPUT_US - MIN_EVENT_INPUT_US) / 20)
+#define EVENT_SPEEDUP_INTERVAL ((INIT_EVENT_INPUT_US - MIN_EVENT_INPUT_US) / 16)
 
 // Limit between verbal commands in memory mode
-#define TIME_BETWEEN_VERBAL_COMMANDS_US 750000
+#define TIME_BETWEEN_VERBAL_COMMANDS_US 400000
 
 // Time before the game over screen can be exited
 #define GAME_OVER_TIME_US 1000000
@@ -42,6 +44,7 @@ typedef enum
     SI_MEMORY,
     SI_HIGH_SCORES,
     SI_GAME_OVER,
+    SI_HELP,
 } swadgeItScreen_t;
 
 typedef enum
@@ -84,12 +87,17 @@ typedef struct
     menu_t* menu;
     menuMegaRenderer_t* menuRenderer;
 
+    // Help pages
+    menu_t* bgMenu;
+    helpPageVars_t* help;
+
     // Game over UI variables
     int32_t gameOverTimer;
     bool newHighScore;
 
     // Sound effects
     rawSample_t sfx[MAX_NUM_EVTS];
+    rawSample_t scream;
     int32_t sampleIdx;
 
     // Images
@@ -101,6 +109,7 @@ typedef struct
 
     // Gameplay variables
     int32_t timeToNextEvent;
+    bool initialWait;
     int32_t nextEvtTimer;
     list_t inputQueue;     // A queue of required inputs
     list_t memoryQueue;    // A growing queue of commands to memorize
@@ -157,7 +166,7 @@ static void swadgeItCheckInputs(void);
 static void swadgeItGameplayLogic(int64_t elapsedUs);
 static void swadgeItGameplayRender(void);
 
-static void swadgeItHighScoreRender(void);
+static void swadgeItHighScoreRender(uint32_t elapsedUs);
 static void swadgeItGameOverRender(int64_t elapsedUs);
 
 static void swadgeItSwitchToScreen(swadgeItScreen_t newScreen);
@@ -170,6 +179,7 @@ static const char swadgeItStrName[]       = "Swadge It!";
 static const char swadgeItStrReaction[]   = "Reaction";
 static const char swadgeItStrMemory[]     = "Memory";
 static const char swadgeItStrHighScores[] = "High Scores";
+static const char swadgeItStrHelp[]       = "Help";
 static const char swadgeItStrExit[]       = "Exit";
 
 static const char SI_REACTION_HS_KEY[]    = "si_r_hs";
@@ -177,11 +187,16 @@ static const char SI_MEMORY_HS_KEY[]      = "si_m_hs";
 static const char SI_REACTION_HS_SP_KEY[] = "si_r_hs_sp";
 static const char SI_MEMORY_HS_SP_KEY[]   = "si_m_hs_sp";
 
+static const char swadgeItStrPress[] = "Press it!";
+static const char swadgeItStrShake[] = "Shake it!";
+static const char swadgeItStrShout[] = "Shout it!";
+static const char swadgeItStrSwirl[] = "Swirl it!";
+
 /** Must match order of swadgeItEvt_t */
 const swadgeItEvtData_t siEvtData[] = {
     {
         .sfx_fidx = PRESS_IT_RAW,
-        .label    = "Press it!",
+        .label    = swadgeItStrPress,
         .bgColor  = c043,
         .txColor  = c000,
         .ledColor = {.r = 0x00, .g = 0xCC, .b = 0x99},
@@ -191,7 +206,7 @@ const swadgeItEvtData_t siEvtData[] = {
     },
     {
         .sfx_fidx = SHAKE_IT_RAW,
-        .label    = "Shake it!",
+        .label    = swadgeItStrShake,
         .bgColor  = c411,
         .txColor  = c000,
         .ledColor = {.r = 0xCC, .g = 0x33, .b = 0x33},
@@ -201,7 +216,7 @@ const swadgeItEvtData_t siEvtData[] = {
     },
     {
         .sfx_fidx = SHOUT_IT_RAW,
-        .label    = "Shout it!",
+        .label    = swadgeItStrShout,
         .bgColor  = c444,
         .txColor  = c000,
         .ledColor = {.r = 0xCC, .g = 0xCC, .b = 0xCC},
@@ -211,7 +226,7 @@ const swadgeItEvtData_t siEvtData[] = {
     },
     {
         .sfx_fidx = SWIRL_IT_RAW,
-        .label    = "Swirl it!",
+        .label    = swadgeItStrSwirl,
         .bgColor  = c115,
         .txColor  = c555,
         .ledColor = {.r = 0x33, .g = 0x33, .b = 0xFF},
@@ -252,6 +267,41 @@ const swadgeItEvtData_t siGoData = {
     .image    = -1,
     .txtPos   = {.x = TFT_WIDTH / 2, .y = (TFT_HEIGHT / 2 - 23)},
     .imgPos   = {.x = 0, .y = 0},
+};
+
+static const helpPage_t siHelpPages[] = {
+    {
+        .title = swadgeItStrName,
+        .text  = "Welcome to Swadge It, a game that tests reaction or memory. Turn up the volume!",
+    },
+    {
+        .title = swadgeItStrReaction,
+        .text  = "In Reaction mode, you need to do what the Swadge says as fast as possible. The commands speed up!",
+    },
+    {
+        .title = swadgeItStrMemory,
+        .text = "In Memory mode, you need to remember the sequence the Swadge tells you and repeat it. Take your time.",
+    },
+    {
+        .title = swadgeItStrPress,
+        .text  = "To Press It! press any D-Pad, A or B button.",
+    },
+    {
+        .title = swadgeItStrShake,
+        .text  = "To Shake It! give the Swadge one good shake. Don't overdo it.",
+    },
+    {
+        .title = swadgeItStrShout,
+        .text  = "To Shout It! shout into the microphone. Blowing on it works well too.",
+    },
+    {
+        .title = swadgeItStrSwirl,
+        .text  = "To Swirl It! make a circle around the touchpad. Clockwise or counter both work.",
+    },
+    {
+        .title = swadgeItStrHighScores,
+        .text  = "High scores are saved for Reaction and Memory. The top high score from SwadgePass is also shown.",
+    },
 };
 
 //==============================================================================
@@ -366,14 +416,19 @@ static void swadgeItEnterMode(void)
     addSingleItemToMenu(si->menu, swadgeItStrReaction);
     addSingleItemToMenu(si->menu, swadgeItStrMemory);
     addSingleItemToMenu(si->menu, swadgeItStrHighScores);
+    addSingleItemToMenu(si->menu, swadgeItStrHelp);
     addSingleItemToMenu(si->menu, swadgeItStrExit);
     si->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
+
+    si->bgMenu = initMenu(NULL, NULL);
+    si->help   = initHelpScreen(si->bgMenu, si->menuRenderer, siHelpPages, ARRAY_SIZE(siHelpPages));
 
     // Load all SFX samples
     for (int8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
     {
         si->sfx[i].samples = readHeatshrinkFile(siEvtData[i].sfx_fidx, &si->sfx[i].len, true);
     }
+    si->scream.samples = readHeatshrinkFile(WILHELM_RAW, &si->scream.len, true);
 
     // Load all images
     for (int8_t i = 0; i < ARRAY_SIZE(si->img); i++)
@@ -447,11 +502,16 @@ static void swadgeItExitMode(void)
     deinitMenuMegaRenderer(si->menuRenderer);
     deinitMenu(si->menu);
 
+    // Free help
+    deinitMenu(si->bgMenu);
+    deinitHelpScreen(si->help);
+
     // Free SFX
     for (int8_t i = 0; i < ARRAY_SIZE(si->sfx); i++)
     {
         heap_caps_free(si->sfx[i].samples);
     }
+    heap_caps_free(si->scream.samples);
 
     // Free images
     for (int8_t i = 0; i < ARRAY_SIZE(si->img); i++)
@@ -510,6 +570,15 @@ static void swadgeItMainLoop(int64_t elapsedUs)
                 }
                 break;
             }
+            case SI_HELP:
+            {
+                // Help button inputs
+                if (buttonHelp(si->help, &evt))
+                {
+                    swadgeItSwitchToScreen(SI_MENU);
+                }
+                break;
+            }
             case SI_GAME_OVER:
             {
                 // A button returns to the main menu after the timer
@@ -544,7 +613,13 @@ static void swadgeItMainLoop(int64_t elapsedUs)
         }
         case SI_HIGH_SCORES:
         {
-            swadgeItHighScoreRender();
+            swadgeItHighScoreRender(elapsedUs);
+            break;
+        }
+        case SI_HELP:
+        {
+            // Draw help
+            drawHelp(si->help, elapsedUs);
             break;
         }
         case SI_GAME_OVER:
@@ -571,6 +646,8 @@ static void swadgeItBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int1
     {
         default:
         case SI_MENU:
+        case SI_HELP:
+        case SI_HIGH_SCORES:
         {
             break;
         }
@@ -581,7 +658,6 @@ static void swadgeItBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int1
             fillDisplayArea(x, y, x + w, y + h, si->dispEvt->bgColor);
             break;
         }
-        case SI_HIGH_SCORES:
         case SI_GAME_OVER:
         {
             // Black background for these
@@ -605,7 +681,17 @@ static void swadgeItDacCallback(uint8_t* samples, int16_t len)
         si->speechQueue.length)    // There is something to say
     {
         // Get the raw samples
-        const rawSample_t* rs = &si->sfx[(swadgeItEvt_t)si->speechQueue.first->val];
+        swadgeItEvt_t evt = (swadgeItEvt_t)si->speechQueue.first->val;
+        const rawSample_t* rs;
+        if (evt < MAX_NUM_EVTS)
+        {
+            rs = &si->sfx[evt];
+        }
+        else
+        {
+            rs = &si->scream;
+        }
+
         if (rs->samples)
         {
             // Make sure we don't read out of bounds
@@ -766,7 +852,12 @@ static void swadgeItGameplayLogic(int64_t elapsedUs)
                     swadgeItUpdateDisplay();
 
                     // Decrement the time between events
-                    if (si->timeToNextEvent > MIN_EVENT_INPUT_US)
+                    if (si->initialWait)
+                    {
+                        si->initialWait     = false;
+                        si->timeToNextEvent = INIT_EVENT_INPUT_US;
+                    }
+                    else if (si->timeToNextEvent > MIN_EVENT_INPUT_US)
                     {
                         si->timeToNextEvent -= EVENT_SPEEDUP_INTERVAL;
                     }
@@ -856,42 +947,52 @@ static void swadgeItGameplayRender(void)
 
 /**
  * @brief Render the TFT during high score display. This draws the two high scores
+ *
+ * @param elapsedUs Time elapsed since the last call
  */
-static void swadgeItHighScoreRender(void)
+static void swadgeItHighScoreRender(uint32_t elapsedUs)
 {
+    // Draw the background menu
+    drawMenuMega(si->bgMenu, si->menuRenderer, elapsedUs);
+
     // Draw high scores
     font_t* font = si->menuRenderer->menuFont;
     char hsString[64];
 
     // Center text vertically
-    int numLines = 4;
-    int16_t yOff = (TFT_HEIGHT - (numLines * font->height + (numLines - 1) * TEXT_Y_SPACING)) / 2;
-
-    // Draw reaction string
-    snprintf(hsString, sizeof(hsString) - 1, "%s: %" PRId32, swadgeItStrReaction, si->reactionHighScore);
-    int16_t tWidth = textWidth(font, hsString);
-    drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
-    yOff += font->height + TEXT_Y_SPACING;
-
-    snprintf(hsString, sizeof(hsString) - 1, "SP %s: %" PRId32, swadgeItStrReaction, si->reactionHighScoreSP);
-    tWidth = textWidth(font, hsString);
-    drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
-    yOff += font->height + TEXT_Y_SPACING;
+    int16_t yOff = 64;
 
     // Draw memory string
     snprintf(hsString, sizeof(hsString) - 1, "%s: %" PRId32, swadgeItStrMemory, si->memoryHighScore);
-    tWidth = textWidth(font, hsString);
-    drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
+    int16_t tWidth = textWidth(font, hsString);
+    drawTextShadow(font, c555, c000, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
     yOff += font->height + TEXT_Y_SPACING;
 
-    snprintf(hsString, sizeof(hsString) - 1, "SP %s: %" PRId32, swadgeItStrMemory, si->memoryHighScoreSP);
+    snprintf(hsString, sizeof(hsString) - 1, "SwadgePass %s:", swadgeItStrMemory);
     tWidth = textWidth(font, hsString);
-    drawText(font, c555, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
+    drawTextShadow(font, c555, c000, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
     yOff += font->height + TEXT_Y_SPACING;
 
-    // Turn off LEDs
-    led_t leds[CONFIG_NUM_LEDS] = {0};
-    setLeds(leds, ARRAY_SIZE(leds));
+    snprintf(hsString, sizeof(hsString) - 1, "%" PRId32, si->memoryHighScoreSP);
+    tWidth = textWidth(font, hsString);
+    drawTextShadow(font, c555, c000, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
+    yOff += font->height + TEXT_Y_SPACING;
+
+    // Draw reaction string
+    snprintf(hsString, sizeof(hsString) - 1, "%s: %" PRId32, swadgeItStrReaction, si->reactionHighScore);
+    tWidth = textWidth(font, hsString);
+    drawTextShadow(font, c555, c000, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
+    yOff += font->height + TEXT_Y_SPACING;
+
+    snprintf(hsString, sizeof(hsString) - 1, "SwadgePass %s:", swadgeItStrReaction);
+    tWidth = textWidth(font, hsString);
+    drawTextShadow(font, c555, c000, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
+    yOff += font->height + TEXT_Y_SPACING;
+
+    snprintf(hsString, sizeof(hsString) - 1, "%" PRId32, si->reactionHighScoreSP);
+    tWidth = textWidth(font, hsString);
+    drawTextShadow(font, c555, c000, hsString, (TFT_WIDTH - tWidth) / 2, yOff);
+    yOff += font->height + TEXT_Y_SPACING;
 }
 
 /**
@@ -928,10 +1029,6 @@ static void swadgeItGameOverRender(int64_t elapsedUs)
         drawText(font, c555, newHighScoreStr, (TFT_WIDTH - tWidth) / 2, yOff);
         yOff += font->height + TEXT_Y_SPACING;
     }
-
-    // Turn off LEDs
-    led_t leds[CONFIG_NUM_LEDS] = {0};
-    setLeds(leds, ARRAY_SIZE(leds));
 }
 
 /**
@@ -1160,6 +1257,11 @@ static bool swadgeItMenuCb(const char* label, bool selected, uint32_t value)
             // Exit to the main menu
             switchToSwadgeMode(&mainMenuMode);
         }
+        else if (swadgeItStrHelp == label)
+        {
+            si->help->helpIdx = 0;
+            swadgeItSwitchToScreen(SI_HELP);
+        }
     }
     return false;
 }
@@ -1232,7 +1334,8 @@ static void swadgeItSwitchToScreen(swadgeItScreen_t newScreen)
     si->pendingSwitchToMic = true;
 
     // Clear gameplay variables
-    si->timeToNextEvent = INIT_EVENT_INPUT_US;
+    si->timeToNextEvent = WAIT_EVENT_US;
+    si->initialWait     = true;
     si->nextEvtTimer    = 0;
     clear(&si->inputQueue);
     clear(&si->memoryQueue);
@@ -1252,6 +1355,43 @@ static void swadgeItSwitchToScreen(swadgeItScreen_t newScreen)
 
     // Set the new screen
     si->screen = newScreen;
+
+    // Screen-specific setup
+    switch (newScreen)
+    {
+        case SI_HELP:
+        {
+            si->bgMenu->title = swadgeItStrName;
+            break;
+        }
+        case SI_HIGH_SCORES:
+        {
+            si->bgMenu->title = swadgeItStrHighScores;
+            break;
+        }
+        case SI_GAME_OVER:
+        {
+            // Enable speaker for a new verbal command and reset sample count
+            switchToSpeaker();
+            si->sampleIdx          = 0;
+            si->isListening        = false;
+            si->pendingSwitchToMic = false;
+
+            // Enqueue special event to scream
+            clear(&si->speechQueue);
+            swadgeItEvt_t newEvt = MAX_NUM_EVTS;
+            push(&si->speechQueue, (void*)newEvt);
+
+            break;
+        }
+        case SI_MENU:
+        case SI_REACTION:
+        case SI_MEMORY:
+        default:
+        {
+            break;
+        }
+    }
 }
 
 /**

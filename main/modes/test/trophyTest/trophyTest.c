@@ -222,8 +222,14 @@ static void enterTrophy()
     tt->rndr = initMenuMegaRenderer(NULL, NULL, NULL);
     addSingleItemToMenu(tt->menu, textBlobs[6]);
     addSingleItemToMenu(tt->menu, textBlobs[7]);
+    settingParam_t caseOptParams = {
+        .def = caseSettings[0],
+        .key = NULL,
+        .min = caseSettings[0],
+        .max = caseSettings[ARRAY_SIZE(caseSettings) - 1],
+    };
     addSettingsOptionsItemToMenu(tt->menu, textBlobs[8], caseOptions, caseSettings, ARRAY_SIZE(caseOptions),
-                                 getScreensaverTimeSettingBounds(), 0);
+                                 &caseOptParams, 0);
     addSingleItemToMenu(tt->menu, textBlobs[9]);
 
     tt->state = TROPHY_TEST_TESTING;
