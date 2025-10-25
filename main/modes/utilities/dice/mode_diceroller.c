@@ -1144,7 +1144,18 @@ void diceTrophyEval(void)
     }
 
     // If two nat 1s in a row
-    // TODO
+    if (diceRoller->cRoll.die.numFaces == 4 && diceRoller->cRoll.count == 1 && diceRoller->cRoll.total == 1)
+    {
+        node_t* histNode = diceRoller->history.first;
+        if (histNode != NULL)
+        {
+            rollHistoryEntry_t* entry = histNode->val;
+            if (entry->total == 1)
+            {
+                trophyUpdate(&diceTrophyList[2], 1, true);
+            }
+        }
+    }
 
     // If a single D20 for the first time
     if (diceRoller->cRoll.die.numFaces == 20 && diceRoller->cRoll.count == 1)
