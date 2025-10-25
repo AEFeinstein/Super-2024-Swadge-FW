@@ -1144,7 +1144,7 @@ void diceTrophyEval(void)
     }
 
     // If two nat 1s in a row
-    if (diceRoller->cRoll.die.numFaces == 4 && diceRoller->cRoll.count == 1 && diceRoller->cRoll.total == 1)
+    if (diceRoller->cRoll.die.numFaces == 20 && diceRoller->cRoll.count == 1 && diceRoller->cRoll.total == 1)
     {
         node_t* histNode = diceRoller->history.first;
         if (histNode != NULL)
