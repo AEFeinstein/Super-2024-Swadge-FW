@@ -35,8 +35,8 @@ static void ntEnterMode(void)
     nt->nd.user = false;
 
     // FIXME: Crashes if not called again here
-    initUsernameSystem();
-
+    //initUsernameSystem();
+    
     nameData_t* temp = getSystemUsername();
     nt->sys          = *temp;
 
