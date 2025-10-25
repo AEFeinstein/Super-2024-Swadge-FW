@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <math.h>
 #include "os_generic.h"
 
 #include "cnfs.h"
@@ -785,6 +786,12 @@ int ch32v003WriteFlash(const uint8_t* buf, int sz)
     return ch32v003WriteMemory(buf, sz, 0);
 }
 
+static uint8_t gammaCorrect(uint8_t in)
+{
+    const float gamma = 0.25f;
+    return roundf(powf(in, gamma) * (0xFF / powf(0xFF, gamma)));
+}
+
 static const uint16_t Coordmap[] = {
     0x0000, 0x0100, 0x0200, 0x0300, 0x0400, 0x0500, 0xffff, 0xffff, 0x0002, 0x0102, 0x0202, 0x0302, 0x0402, 0x0502,
     0xffff, 0xffff, 0x0001, 0x0101, 0x0201, 0x0301, 0x0401, 0x0501, 0xffff, 0xffff, 0x0008, 0x0108, 0x0208, 0x0308,
@@ -830,6 +837,8 @@ void ch32v003EmuDraw(int offX, int offY, int window_w, int window_h)
                     intensity += 1 << i;
                 pptr += 9;
             }
+
+            intensity = gammaCorrect(intensity);
 
             // Apply any color tuning.  Right now we're just stark white.
             CNFGColor(0x000000ff | (intensity << 24) | (intensity << 8) | (intensity << 16));
