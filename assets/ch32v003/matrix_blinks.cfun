@@ -3,6 +3,10 @@
 #include <stdbool.h>
 #include "swadge_matrix.h"
 
+#define LED_OFF  0x00
+#define LED_DIM  0x08
+#define LED_BRIGHT 0x10
+
 /**
  * @brief Linear feedback shift register to generate pseudorandom numbers because rand() doesn't exist here?
  *
@@ -27,7 +31,7 @@ uint16_t lfsr_xorshift(void)
 int main()
 {
     // Pixel values for the top and bottom edges of the eyes
-    const uint8_t edge[12] = {0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
+    const uint8_t edge[12] = {LED_OFF, LED_BRIGHT, LED_BRIGHT, LED_BRIGHT, LED_BRIGHT, LED_OFF, LED_OFF, LED_BRIGHT, LED_BRIGHT, LED_BRIGHT, LED_BRIGHT, LED_OFF};
 
     // Timekeeping variables
     int frameno = 0;
@@ -71,28 +75,28 @@ int main()
                 else if (y < closeLevel || y > (5 - closeLevel))
                 {
                     // Outside the close level, clear the pixels
-                    SetPixel(x, y, 0x00);
+                    SetPixel(x, y, LED_OFF);
                 }
                 else if (0 == x || 5 == x || 6 == x || 11 == x)
                 {
                     // Inside the eyes, draw boundaries at specific X values
-                    SetPixel(x, y, 0xFF);
+                    SetPixel(x, y, LED_BRIGHT);
                 }
                 else if ((x == pOffX || x == 6 + pOffX) && y == pOffY)
                 {
                     // Bright pupil pixel in the top left
-                    SetPixel(x, y, 0xFF);
+                    SetPixel(x, y, LED_BRIGHT);
                 }
                 else if ((x == pOffX || x == 1 + pOffX || x == 6 + pOffX || x == 7 + pOffX)
                          && (y == pOffY || y == 1 + pOffY))
                 {
                     // Slightly dimmer pupil pixels otherwise
-                    SetPixel(x, y, 0x68);
+                    SetPixel(x, y, LED_DIM);
                 }
                 else
                 {
                     // Turn the LEDs off for anything else
-                    SetPixel(x, y, 0x00);
+                    SetPixel(x, y, LED_OFF);
                 }
             }
         }
