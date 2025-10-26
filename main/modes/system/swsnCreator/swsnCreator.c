@@ -10,7 +10,10 @@
 // Define
 //==============================================================================
 
-#define MAX_SWSN_SLOTS 14
+#define MAX_SWSN_SLOTS    14
+#define SLIDE_TIME_AMOUNT (1000 * 500)
+#define NUM_PIXELS        100
+#define STEP              (SLIDE_TIME_AMOUNT / NUM_PIXELS)
 
 //==============================================================================
 // Consts
@@ -41,6 +44,13 @@ typedef enum
     NAMING,
     VIEWING,
 } swsnCreatorState_t;
+
+typedef enum
+{
+    BODY_PART,
+    SLIDING,
+    PANEL_OPEN,
+} creatorStates_t;
 
 typedef enum
 {
@@ -75,10 +85,12 @@ typedef struct
     menuMegaRenderer_t* renderer;
 
     // Creator
+    creatorStates_t cState;
     wsg_t* tabSprs;
     swadgesona_t activeSona;
     int selection; // Which body part we're on
-
+    bool out;
+    int64_t animTimer;
 } swsnCreatorData_t;
 
 //==============================================================================
@@ -89,9 +101,10 @@ static void swsnEnterMode(void);
 static void swsnExitMode(void);
 static void swsnLoop(int64_t elapsedUs);
 
-static void swsnMenuCb(const char* label, bool selected, uint32_t settingVal);
+static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal);
 
-static void drawTab(int y, int scale, bool flip, int labelIdx);
+static bool slideTab(int selected, bool out, uint64_t elapsedUs);
+static void drawTab(int xOffset, int y, int scale, bool flip, int labelIdx, bool selected);
 static void drawCreator(void);
 
 //==============================================================================
@@ -169,20 +182,89 @@ static void swsnLoop(int64_t elapsedUs)
         }
         case CREATING:
         {
-            while (checkButtonQueueWrapper(&evt))
+            switch (scd->cState)
             {
-                if (evt.down)
+                case BODY_PART:
                 {
-                    if (evt.button & PB_UP)
+                    while (checkButtonQueueWrapper(&evt))
                     {
-                        scd->selection--;
+                        if (evt.down)
+                        {
+                            if (evt.button & PB_UP)
+                            {
+                                scd->selection--;
+                                if (scd->selection < 0)
+                                {
+                                    scd->selection = NUM_CREATOR_OPTIONS - 1;
+                                }
+                            }
+                            else if (evt.button & PB_DOWN)
+                            {
+                                scd->selection++;
+                                if (scd->selection >= NUM_CREATOR_OPTIONS)
+                                {
+                                    scd->selection = 0;
+                                }
+                            }
+                            else if (evt.button & PB_LEFT && scd->selection > 4 && scd->selection < 10)
+                            {
+                                scd->selection -= 5;
+                            }
+                            else if (evt.button & PB_RIGHT && scd->selection < 5)
+                            {
+                                scd->selection += 5;
+                            }
+                            else if (evt.button & PB_A)
+                            {
+                                scd->out    = true;
+                                scd->cState = SLIDING;
+                            }
+                        }
                     }
+                    // Draw the creator
+                    drawCreator();
+                    break;
+                }
+                case SLIDING:
+                {
+                    while (checkButtonQueueWrapper(&evt))
+                    {
+                        if (evt.down)
+                        {
+                            if (scd->out)
+                            {
+                                scd->cState = PANEL_OPEN;
+                            }
+                            else
+                            {
+                                scd->cState = BODY_PART;
+                            }
+                        }
+                    }
+                    if (slideTab(scd->selection, scd->out, elapsedUs))
+                    {
+                        if (scd->out)
+                        {
+                            scd->cState = PANEL_OPEN;
+                        }
+                        else
+                        {
+                            scd->cState = BODY_PART;
+                        }
+                    }
+                    break;
+                }
+                case PANEL_OPEN:
+                {
+                    scd->out    = false;
+                    scd->cState = SLIDING;
+                    break;
+                }
+                default:
+                {
+                    break;
                 }
             }
-            // Apply the data
-
-            // Draw the creator
-            drawCreator();
             break;
         }
         case NAMING:
@@ -196,7 +278,7 @@ static void swsnLoop(int64_t elapsedUs)
     }
 }
 
-static void swsnMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     if (selected)
     {
@@ -216,19 +298,122 @@ static void swsnMenuCb(const char* label, bool selected, uint32_t settingVal)
             switchToSwadgeMode(&mainMenuMode);
         }
     }
+    return false;
 }
 
-static void drawTab(int y, int scale, bool flip, int labelIdx)
+static bool slideTab(int selected, bool out, uint64_t elapsedUs)
+{
+    // Update variables
+    scd->animTimer += elapsedUs;
+    // Change direction based selection
+    bool leftSide = scd->selection < 5;
+
+    // Draw BG
+    clearPxTft();
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c445);
+
+    // Draw swadgesona
+    int64_t steps = scd->animTimer;
+    int x         = (TFT_WIDTH - (scd->activeSona.image.w * 3)) >> 1;
+    int offset    = 0;
+    if (leftSide)
+    {
+        if (!out)
+        {
+            x += NUM_PIXELS;
+            offset += NUM_PIXELS;
+        }
+        while (steps > STEP)
+        {
+            steps -= STEP;
+            x      = (out) ? x + 1 : x - 1;
+            offset = (out) ? offset + 1 : offset - 1;
+        }
+        drawWsgSimpleScaled(&scd->activeSona.image, x, TFT_HEIGHT - 192, 3, 3);
+        for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
+        {
+            if (idx == scd->selection)
+            {
+                drawTab(offset, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2, scd->selection == idx);
+            }
+            else
+            {
+                drawTab((idx > 4) ? offset : 0, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2, scd->selection == idx);
+            }
+        }
+        fillDisplayArea(0, 32, offset, TFT_HEIGHT - 28, c555);
+        for (int i = 0; i < 3; i++)
+        {
+            drawLineFast(0, TFT_HEIGHT - (29 + i), offset, TFT_HEIGHT - (29 + i), c255);
+        }
+    }
+    else
+    {
+        if (!out)
+        {
+            x -= NUM_PIXELS;
+            offset -= NUM_PIXELS;
+        }
+        while (steps > STEP)
+        {
+            steps -= STEP;
+            x      = (out) ? x - 1 : x + 1;
+            offset = (out) ? offset - 1 : offset + 1;
+        }
+        drawWsgSimpleScaled(&scd->activeSona.image, x, TFT_HEIGHT - 192, 3, 3);
+        for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
+        {
+            if (idx == scd->selection)
+            {
+                drawTab(offset, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2, scd->selection == idx);
+            }
+            else
+            {
+                drawTab((idx < 5) ? offset : 0, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2, scd->selection == idx);
+            }
+        }
+        fillDisplayArea(TFT_WIDTH + offset, 32, TFT_WIDTH, TFT_HEIGHT - 28, c555);
+        for (int i = 0; i < 3; i++)
+        {
+            drawLineFast(TFT_WIDTH + offset, TFT_HEIGHT - (29 + i), TFT_WIDTH, TFT_HEIGHT - (29 + i), c255);
+        }
+    }
+
+    // Exit
+    if (scd->animTimer >= SLIDE_TIME_AMOUNT)
+    {
+        scd->animTimer = 0;
+        if (scd->out)
+        {
+            scd->cState = PANEL_OPEN;
+        }
+        else
+        {
+            scd->cState = BODY_PART;
+        }
+    }
+    return false;
+}
+
+static void drawTab(int xOffset, int y, int scale, bool flip, int labelIdx, bool selected)
 {
     int x = 0;
+    if (!selected)
+    {
+        x -= 5 * scale;
+    }
     wsg_t* tab = &scd->tabSprs[0];
     if (flip)
     {
-        tab    = &scd->tabSprs[1];
-        x = TFT_WIDTH -  scd->tabSprs[1].w * scale;
+        tab = &scd->tabSprs[1];
+        x   = TFT_WIDTH - scd->tabSprs[1].w * scale;
+        if (!selected)
+        {
+            x += 5 * scale;
+        }
     }
-    drawWsgSimpleScaled(tab, x, y, scale, scale);
-    drawWsgSimpleScaled(&scd->tabSprs[labelIdx], x, y, scale, scale);
+    drawWsgSimpleScaled(tab, xOffset + x, y, scale, scale);
+    drawWsgSimpleScaled(&scd->tabSprs[labelIdx], xOffset + x, y, scale, scale);
 }
 
 static void drawCreator(void)
@@ -245,6 +430,6 @@ static void drawCreator(void)
     // Draw the tabs
     for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
     {
-        drawTab(20 + (idx % 5) * 36, 3, (idx > 4), idx + 2);
+        drawTab(0, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2, scd->selection == idx);
     }
 }
