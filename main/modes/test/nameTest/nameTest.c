@@ -33,7 +33,7 @@ static void ntEnterMode(void)
 {
     nt          = heap_caps_calloc(sizeof(ntData_t), 1, MALLOC_CAP_8BIT);
     nt->nd.user = false;
-    
+
     nameData_t* temp = getSystemUsername();
     nt->sys          = *temp;
 
