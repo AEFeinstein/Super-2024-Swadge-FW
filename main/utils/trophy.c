@@ -155,7 +155,7 @@ static void _saveLatestWin(trophyDataWrapper_t* tw);
 /**
  * @brief Loads ther index of the latest win
  *
- * @return packedTrophy_t packed data to get the data from
+ * @param pt pointer to store the unpacked data in
  */
 static void _loadLatestWin(packedTrophy_t* pt);
 
