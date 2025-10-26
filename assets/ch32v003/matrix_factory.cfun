@@ -11,7 +11,7 @@ typedef enum
 } factoryLedState_t;
 
 /**
- * @brief Main loop for ch32v003. Eyes blink and pupils move around periodically, with some randomness
+ * @brief Main loop for ch32v003. LEDs start all on, then sweep across rows, then sweep across columns
  *
  * @return 0
  */
