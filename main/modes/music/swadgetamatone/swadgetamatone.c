@@ -5,16 +5,16 @@
 #include "waveTables.h"
 
 static const char swadgetamatoneName[] = "Swadgetamatone";
-static const char sttSingLbl[]         = "Sing";
-static const char sttTutorialLbl[]     = "Tutorial";
-static const char sttExitLbl[]         = "Exit";
+static const char sttShowNoteOn[]      = "Note Display: On";
+static const char sttShowNoteOff[]     = "Note Display: Off";
 
 static const char sttNvsNamespace[]          = "stt";
 static const char sttNvsKeyTotalTimePlayed[] = "total_time_played";
+static const char sttNvsKeyShowNote[]        = "show_note";
 
 const trophyData_t sttTrophies[] = {
     {
-        .title       = "OOO EEE OOO",
+        .title       = "Say \"AHHHHH\"",
         .description = "Play your first note",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -54,31 +54,27 @@ const trophyData_t sttTrophies[] = {
         .identifier  = NULL,
     },
 };
-trophySettings_t sttTrophySettings = {
+const trophySettings_t sttTrophySettings = {
     .drawFromBottom   = true,
     .staticDurationUs = DRAW_STATIC_US * 2,
     .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = swadgetamatoneName,
 };
-trophyDataList_t sttTrophyData
-    = {.settings = &sttTrophySettings, .list = sttTrophies, .length = ARRAY_SIZE(sttTrophies)};
-
-typedef enum
-{
-    STT_MENU,
-    STT_TUTORIAL,
-    STT_SINGING,
-} sttState_t;
+const trophyDataList_t sttTrophyData = {
+    .settings = &sttTrophySettings,
+    .list     = sttTrophies,
+    .length   = ARRAY_SIZE(sttTrophies),
+};
 
 typedef struct
 {
-    sttState_t state;
-
-    menu_t* menu;
-    menuMegaRenderer_t* menuRenderer;
-
     vec_t touchpad;
+    uint16_t buttonState;
     /// Number from 1-4 for low-high. 0 means none pressed.
     uint8_t octavePressed;
+
+    int32_t showNote;
+    int64_t noteMessageTimeUs;
 
     /// Time since a button to play a note was pressed or released
     int64_t noteStateElapsedUs;
@@ -86,16 +82,22 @@ typedef struct
 
     int32_t totalTimePlayedMs;
 
+    bool blinkInProgress;
+    int64_t blinkTimerUs;
+
     synthOscillator_t* oscillators[1];
     synthOscillator_t sttOsc;
 
     wsg_t background;
+    font_t font;
+    font_t fontOutline;
+
+    led_t leds[CONFIG_NUM_LEDS];
 } swadgetamatone_t;
 swadgetamatone_t* stt = NULL;
 
 static void sttEnterMode(void);
 static void sttExitMode(void);
-static bool sttMenu(const char* label, bool selected, uint32_t value);
 static void sttMainLoop(int64_t elapsedUs);
 static void sttBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void sttDrawMouthForegound(int16_t xRadius, int16_t yRadius, paletteColor_t color);
@@ -117,10 +119,10 @@ swadgeMode_t swadgetamatoneMode = {
     .trophyData               = &sttTrophyData,
 };
 
-/// F
-#define STT_MIN_HZ 87
-/// E
-#define STT_MAX_HZ 165
+static const char* noteNames[]   = {"F", "F#", "G", "G#", "A", "A#", "B", "C", "C#", "D", "D#", "E", "F"};
+static const int32_t noteFreqs[] = {87, 93, 98, 104, 110, 117, 123, 131, 139, 147, 156, 165, 175};
+#define STT_MIN_HZ noteFreqs[0]
+#define STT_MAX_HZ noteFreqs[ARRAY_SIZE(noteFreqs) - 1]
 
 #define STT_MIN_VOLUME 10
 #define STT_MAX_VOLUME 255
@@ -132,61 +134,59 @@ swadgeMode_t swadgetamatoneMode = {
 /// Time to lerp volume from 0 to target volume at button press
 #define VOLUME_LERP_US 100000
 
+#define EYES_SLOT_BLINK   3
+#define EYES_SLOT_DEFAULT 4
+/// Eyes for each octave are this + the octave number (1-4). +0 is the default eyes.
+#define EYES_SLOT_OCTAVES 4
+
+#define BLINK_DELAY_MIN_US  2000000
+#define BLINK_DELAY_MAX_US  6000000
+#define BLINK_LENGTH_MIN_US 100000
+#define BLINK_LENGTH_MAX_US 200000
+
 static void sttEnterMode(void)
 {
     setFrameRateUs(1000000 / 60);
 
-    stt        = heap_caps_calloc(1, sizeof(swadgetamatone_t), MALLOC_CAP_8BIT);
-    stt->state = STT_SINGING; // TODO: Go to tutorial on first run
+    stt = heap_caps_calloc(1, sizeof(swadgetamatone_t), MALLOC_CAP_8BIT);
 
     stt->touchpad.x = 512;
     stt->touchpad.y = 512;
     // Prevent mouth from animating closed at mode launch
     stt->noteStateElapsedUs = VOLUME_LERP_US;
+    // Prevent immediate blink at mode launch
+    stt->blinkInProgress = true;
 
     readNamespaceNvs32(sttNvsNamespace, sttNvsKeyTotalTimePlayed, &stt->totalTimePlayedMs);
+    readNamespaceNvs32(sttNvsNamespace, sttNvsKeyShowNote, &stt->showNote);
 
     // Initial freq/volume values don't matter since they'll get overwritten by touchpad data
     swSynthInitOscillatorWave(&stt->sttOsc, sttGenerateWaveform, 0, 0, 0);
     stt->oscillators[0] = &stt->sttOsc;
 
-    stt->menu = initMenu(swadgetamatoneName, sttMenu);
-    addSingleItemToMenu(stt->menu, sttSingLbl);
-    addSingleItemToMenu(stt->menu, sttTutorialLbl);
-    addSingleItemToMenu(stt->menu, sttExitLbl);
-    stt->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
-
     loadWsg(STT_BACKGROUND_WSG, &stt->background, false);
+
+    loadFont(OXANIUM_FONT, &stt->font, false);
+    makeOutlineFont(&stt->font, &stt->fontOutline, false);
+
+    ch32v003WriteBitmapAsset(EYES_SLOT_BLINK, STT_EYES_BLINK_GS);
+    ch32v003WriteBitmapAsset(EYES_SLOT_DEFAULT, STT_EYES_DEFAULT_GS);
+    ch32v003WriteBitmapAsset(EYES_SLOT_OCTAVES + 1, STT_EYES_PLAYING_1_GS);
+    ch32v003WriteBitmapAsset(EYES_SLOT_OCTAVES + 2, STT_EYES_PLAYING_2_GS);
+    ch32v003WriteBitmapAsset(EYES_SLOT_OCTAVES + 3, STT_EYES_PLAYING_3_GS);
+    ch32v003WriteBitmapAsset(EYES_SLOT_OCTAVES + 4, STT_EYES_PLAYING_4_GS);
+
+    ch32v003SelectBitmap(EYES_SLOT_DEFAULT);
 }
 
 static void sttExitMode(void)
 {
     writeNamespaceNvs32(sttNvsNamespace, sttNvsKeyTotalTimePlayed, stt->totalTimePlayedMs);
 
-    deinitMenuMegaRenderer(stt->menuRenderer);
-    deinitMenu(stt->menu);
     freeWsg(&stt->background);
+    freeFont(&stt->font);
+    freeFont(&stt->fontOutline);
     heap_caps_free(stt);
-}
-
-static bool sttMenu(const char* label, bool selected, uint32_t value)
-{
-    if (selected)
-    {
-        if (label == sttTutorialLbl)
-        {
-            // TODO
-        }
-        else if (label == sttSingLbl)
-        {
-            stt->state = STT_SINGING;
-        }
-        else if (label == sttExitLbl)
-        {
-            switchToSwadgeMode(&mainMenuMode);
-        }
-    }
-    return false;
 }
 
 static void sttMainLoop(int64_t elapsedUs)
@@ -196,128 +196,171 @@ static void sttMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        if (stt->state == STT_MENU)
+        stt->buttonState = evt.state;
+
+        if (evt.button == PB_A && evt.down)
         {
-            stt->menu = menuButton(stt->menu, evt);
+            stt->showNote          = !stt->showNote;
+            stt->noteMessageTimeUs = 1000000;
+            writeNamespaceNvs32(sttNvsNamespace, sttNvsKeyShowNote, stt->showNote);
         }
-        else
+
+        if (evt.button == PB_START && evt.down)
         {
-            if (evt.button == PB_START && evt.down)
-            {
-                stt->state = STT_MENU;
-            }
-
-            uint8_t octavePressed = 0;
-            if (evt.button == PB_DOWN)
-            {
-                octavePressed = 1;
-            }
-            else if (evt.button == PB_LEFT)
-            {
-                octavePressed = 2;
-            }
-            else if (evt.button == PB_RIGHT)
-            {
-                octavePressed = 3;
-            }
-            else if (evt.button == PB_UP)
-            {
-                octavePressed = 4;
-            }
-
-            if (octavePressed != 0)
-            {
-                if (evt.down)
-                {
-                    stt->octavePressed      = octavePressed;
-                    stt->noteStateElapsedUs = 0;
-                    trophyUpdate(sttTrophies[0], 1, true);
-                }
-                else if (!evt.down && stt->octavePressed == octavePressed)
-                {
-                    int32_t previousTotalTimePlayedMs = stt->totalTimePlayedMs;
-                    stt->totalTimePlayedMs += stt->noteStateElapsedUs / 1000;
-
-                    int32_t minutesPlayed = stt->totalTimePlayedMs / (60 * 1000);
-                    // Only update trophy progress once per minute of play time, since the milestone calls write to NVS
-                    if (previousTotalTimePlayedMs / (60 * 1000) < minutesPlayed)
-                    {
-                        writeNamespaceNvs32(sttNvsNamespace, sttNvsKeyTotalTimePlayed, stt->totalTimePlayedMs);
-                        trophyUpdateMilestone(sttTrophies[1], minutesPlayed, 100);
-                        trophyUpdateMilestone(sttTrophies[2], minutesPlayed, 20);
-                        trophyUpdateMilestone(sttTrophies[3], minutesPlayed, 25);
-                    }
-
-                    stt->octavePressed      = 0;
-                    stt->noteStateElapsedUs = 0;
-                }
-            }
+            switchToSwadgeMode(&mainMenuMode);
         }
     }
 
-    switch (stt->state)
+    uint8_t octavePressed = 0;
+    if (stt->buttonState & PB_DOWN)
     {
-        case STT_MENU:
-        {
-            drawMenuMega(stt->menu, stt->menuRenderer, elapsedUs);
-            break;
-        }
+        octavePressed = 1;
+    }
+    else if (stt->buttonState & PB_LEFT)
+    {
+        octavePressed = 2;
+    }
+    else if (stt->buttonState & PB_RIGHT)
+    {
+        octavePressed = 3;
+    }
+    else if (stt->buttonState & PB_UP)
+    {
+        octavePressed = 4;
+    }
 
-        case STT_TUTORIAL:
+    if (octavePressed != stt->octavePressed)
+    {
+        if (octavePressed != 0)
         {
-            // TODO
-            break;
+            trophyUpdate(&sttTrophies[0], 1, true);
         }
-
-        case STT_SINGING:
+        else
         {
-            int32_t angle, radius, intensity;
-            if (getTouchJoystick(&angle, &radius, &intensity))
+            int32_t previousTotalTimePlayedMs = stt->totalTimePlayedMs;
+            stt->totalTimePlayedMs += stt->noteStateElapsedUs / 1000;
+
+            int32_t minutesPlayed = stt->totalTimePlayedMs / (60 * 1000);
+            // Only update trophy progress once per minute of play time, since the milestone calls write to NVS
+            if (previousTotalTimePlayedMs / (60 * 1000) < minutesPlayed)
             {
-                getTouchCartesianSquircle(angle, radius, &stt->touchpad.x, &stt->touchpad.y);
+                writeNamespaceNvs32(sttNvsNamespace, sttNvsKeyTotalTimePlayed, stt->totalTimePlayedMs);
+                trophyUpdateMilestone(&sttTrophies[1], minutesPlayed, 100);
+                trophyUpdateMilestone(&sttTrophies[2], minutesPlayed, 20);
+                trophyUpdateMilestone(&sttTrophies[3], minutesPlayed, 25);
             }
+        }
 
-            uint8_t volume;
-            if (stt->octavePressed != 0)
+        stt->noteStateElapsedUs = 0;
+        stt->octavePressed      = octavePressed;
+        ch32v003SelectBitmap(EYES_SLOT_OCTAVES + octavePressed);
+    }
+
+    if (stt->octavePressed == 0)
+    {
+        stt->blinkTimerUs -= elapsedUs;
+        if (stt->blinkTimerUs <= 0)
+        {
+            if (stt->blinkInProgress)
             {
-                uint32_t noteHz = (stt->touchpad.x * (STT_MAX_HZ - STT_MIN_HZ) / 1023 + STT_MIN_HZ)
-                                  << (stt->octavePressed - 1);
-                if (stt->noteStateElapsedUs < PITCH_LERP_US)
-                {
-                    noteHz -= noteHz / 100 * PITCH_ATTACK_BEND_PCT * (PITCH_LERP_US - stt->noteStateElapsedUs)
-                              / PITCH_LERP_US;
-                }
-                swSynthSetFreq(&stt->sttOsc, noteHz);
-
-                volume = MAX(stt->touchpad.y * STT_MAX_VOLUME / 1023, STT_MIN_VOLUME);
-                if (stt->noteStateElapsedUs < VOLUME_LERP_US)
-                {
-                    volume = volume * ((float)stt->noteStateElapsedUs / VOLUME_LERP_US);
-                }
+                ch32v003SelectBitmap(EYES_SLOT_DEFAULT);
+                stt->blinkTimerUs = esp_random() % (BLINK_DELAY_MAX_US - BLINK_DELAY_MIN_US) + BLINK_DELAY_MIN_US;
             }
             else
             {
-                if (stt->noteStateElapsedUs < VOLUME_LERP_US)
-                {
-                    volume = stt->touchpad.y * STT_MAX_VOLUME / 1023;
-                    volume -= volume * ((float)stt->noteStateElapsedUs / VOLUME_LERP_US);
-                }
-                else
-                {
-                    volume = 0;
-                }
+                ch32v003SelectBitmap(EYES_SLOT_BLINK);
+                stt->blinkTimerUs = esp_random() % (BLINK_LENGTH_MAX_US - BLINK_LENGTH_MIN_US) + BLINK_LENGTH_MIN_US;
             }
-
-            swSynthSetVolume(&stt->sttOsc, volume);
-
-            int16_t xRadius = CLAMP(stt->touchpad.x * TFT_WIDTH / 1023, 8, TFT_WIDTH - 6) / 2;
-            // Use the calculated volume for height so it animates open/closed with the volume fade in/out
-            int16_t yRadius = MIN(volume * TFT_HEIGHT / STT_MAX_VOLUME, TFT_HEIGHT - 6) / 2;
-            sttDrawMouthForegound(xRadius, yRadius, c444);
-            drawEllipse(TFT_WIDTH / 2, TFT_HEIGHT / 2, xRadius, yRadius, c000);
-
-            break;
+            stt->blinkInProgress = !stt->blinkInProgress;
         }
+    }
+
+    int32_t angle, radius, intensity;
+    if (getTouchJoystick(&angle, &radius, &intensity))
+    {
+        getTouchCartesianSquircle(angle, radius, &stt->touchpad.x, &stt->touchpad.y);
+    }
+
+    const char* note = NULL;
+    uint8_t volume;
+    if (stt->octavePressed != 0)
+    {
+        int32_t noteHz = stt->touchpad.x * (STT_MAX_HZ - STT_MIN_HZ) / 1023 + STT_MIN_HZ;
+
+        int32_t closestFreq = 0;
+        for (int i = 0; i < ARRAY_SIZE(noteFreqs); i++)
+        {
+            if (ABS(noteHz - noteFreqs[i]) < ABS(noteHz - closestFreq))
+            {
+                closestFreq = noteFreqs[i];
+                note        = noteNames[i];
+            }
+        }
+
+        noteHz = noteHz << (stt->octavePressed - 1);
+        if (stt->noteStateElapsedUs < PITCH_LERP_US)
+        {
+            noteHz -= noteHz / 100 * PITCH_ATTACK_BEND_PCT * (PITCH_LERP_US - stt->noteStateElapsedUs) / PITCH_LERP_US;
+        }
+        swSynthSetFreq(&stt->sttOsc, noteHz);
+
+        volume = MAX(stt->touchpad.y * STT_MAX_VOLUME / 1023, STT_MIN_VOLUME);
+        if (stt->noteStateElapsedUs < VOLUME_LERP_US)
+        {
+            volume = volume * ((float)stt->noteStateElapsedUs / VOLUME_LERP_US);
+        }
+    }
+    else
+    {
+        if (stt->noteStateElapsedUs < VOLUME_LERP_US)
+        {
+            volume = stt->touchpad.y * STT_MAX_VOLUME / 1023;
+            volume -= volume * ((float)stt->noteStateElapsedUs / VOLUME_LERP_US);
+        }
+        else
+        {
+            volume = 0;
+        }
+    }
+
+    swSynthSetVolume(&stt->sttOsc, volume);
+
+    for (int i = 0; i < CONFIG_NUM_LEDS; i++)
+    {
+        stt->leds[i].r = volume / 2;
+        stt->leds[i].g = volume / 2;
+        stt->leds[i].b = volume / 2;
+    }
+    setLeds(stt->leds, CONFIG_NUM_LEDS);
+
+    int16_t xRadius = CLAMP(stt->touchpad.x * TFT_WIDTH / 1023, 8, TFT_WIDTH - 6) / 2;
+    // Use the calculated volume for height so it animates open/closed with the volume fade in/out
+    int16_t yRadius = MIN(volume * TFT_HEIGHT / STT_MAX_VOLUME, TFT_HEIGHT - 6) / 2;
+    sttDrawMouthForegound(xRadius, yRadius, c444);
+    drawEllipse(TFT_WIDTH / 2, TFT_HEIGHT / 2, xRadius, yRadius, c000);
+
+    const char* msg = NULL;
+    if (stt->noteMessageTimeUs > 0)
+    {
+        if (stt->showNote)
+        {
+            msg = sttShowNoteOn;
+        }
+        else
+        {
+            msg = sttShowNoteOff;
+        }
+
+        stt->noteMessageTimeUs -= elapsedUs;
+    }
+    else if (stt->showNote)
+    {
+        msg = note;
+    }
+    if (msg != NULL)
+    {
+        drawText(&stt->font, c444, msg, 20, TFT_HEIGHT - stt->font.height);
+        drawText(&stt->fontOutline, c222, msg, 20, TFT_HEIGHT - stt->fontOutline.height);
     }
 }
 

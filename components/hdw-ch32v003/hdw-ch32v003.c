@@ -382,7 +382,7 @@ void ch32v003Teardown()
 /**
  * @brief Halt the processor, and write to RAM a greyscale asset image.
  *
- * @param slot Must be less than CH32V003_MAX_IMAGE_SLOTS.
+ * @param slot Must be less than \ref CH32V003_MAX_IMAGE_SLOTS.
  * @param asset_idx Is a .gs.png asset, for instance EYES_DEFAULT_GS (From eyes_default.gs.png).  This image must be
  * 12x6 pixels in size.
  * @return 0 if OK, nonzero if error.
@@ -415,7 +415,7 @@ int ch32v003WriteBitmapAsset(int slot, int asset_idx)
 /**
  * @brief Write a 12x6 pixel greyscale image into a RAM slot on the ch32v003.
  *
- * @param slot Must be less than CH32V003_MAX_IMAGE_SLOTS.
+ * @param slot Must be less than \ref CH32V003_MAX_IMAGE_SLOTS.
  * @param pixels are a greyscale image to be written out.
  * @return 0 if OK, nonzero if error.
  */
@@ -435,7 +435,7 @@ int ch32v003WriteBitmap(int slot, const uint8_t pixels[6][12])
         for (x = 0; x < 12; x++)
         {
             int intensity = pixels[y][x];
-            int coord     = Coordmap[x * 8 + y];
+            int coord     = Coordmap[x * 8 + (5 - y)];
 
             int ox = coord & 0xff;
             int oy = coord >> 8;
@@ -466,7 +466,7 @@ int ch32v003WriteBitmap(int slot, const uint8_t pixels[6][12])
 /**
  * @brief Override the DMA pointer on the 003 to point at a pre-loaded image in RAM.
  *
- * @param slot Must be less than CH32V003_MAX_IMAGE_SLOTS.
+ * @param slot Must be less than \ref CH32V003_MAX_IMAGE_SLOTS.
  * @return 0 if OK, nonzero if error.
  */
 int ch32v003SelectBitmap(int slot)

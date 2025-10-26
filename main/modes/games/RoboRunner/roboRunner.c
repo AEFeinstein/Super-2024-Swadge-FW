@@ -129,6 +129,19 @@ const trophyData_t roboRunnerTrophies[] = {
     },
 };
 
+const trophySettings_t runnerTrophySettings = {
+    .drawFromBottom   = true,
+    .staticDurationUs = DRAW_STATIC_US * 2,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = runnerModeName,
+};
+
+const trophyDataList_t runnerTrophyData = {
+    .settings = &runnerTrophySettings,
+    .list     = roboRunnerTrophies,
+    .length   = ARRAY_SIZE(roboRunnerTrophies),
+};
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -265,18 +278,6 @@ static void updateLEDs(int idx);
 // Variables
 //==============================================================================
 
-trophySettings_t runnerTrophySettings = {
-    .drawFromBottom   = true,
-    .staticDurationUs = DRAW_STATIC_US * 2,
-    .slideDurationUs  = DRAW_SLIDE_US,
-};
-
-trophyDataList_t runnerTrophyData = {
-    .settings = &runnerTrophySettings,
-    .list     = roboRunnerTrophies,
-    .length   = ARRAY_SIZE(roboRunnerTrophies),
-};
-
 swadgeMode_t roboRunnerMode = {
     .modeName                = runnerModeName,
     .wifiMode                = NO_WIFI,
@@ -351,8 +352,8 @@ static void runnerEnterMode()
     rd->otherHS = getLatestRemoteScore();
 
     // Trophy
-    rd->feetTraveledTotal = trophyGetSavedValue(roboRunnerTrophies[1]);
-    rd->deaths            = trophyGetSavedValue(roboRunnerTrophies[2]);
+    rd->feetTraveledTotal = trophyGetSavedValue(&roboRunnerTrophies[1]);
+    rd->deaths            = trophyGetSavedValue(&roboRunnerTrophies[2]);
     rd->state             = SPLASH;
 
     // QR
@@ -547,14 +548,14 @@ static void handleObstacles(int64_t elapsedUs)
                 rd->robot.animIdx = 0;
                 rd->feetTraveledTotal += rd->feetTraveled;
                 // Trophies
-                trophyUpdateMilestone(roboRunnerTrophies[5], rd->feetTraveled, 10);
-                trophyUpdateMilestone(roboRunnerTrophies[4], rd->feetTraveled, 10);
-                trophyUpdateMilestone(roboRunnerTrophies[3], rd->feetTraveled, 10);
-                trophyUpdateMilestone(roboRunnerTrophies[2], ++rd->deaths, 25);
-                trophyUpdateMilestone(roboRunnerTrophies[1], rd->feetTraveledTotal, 10);
+                trophyUpdateMilestone(&roboRunnerTrophies[5], rd->feetTraveled, 10);
+                trophyUpdateMilestone(&roboRunnerTrophies[4], rd->feetTraveled, 10);
+                trophyUpdateMilestone(&roboRunnerTrophies[3], rd->feetTraveled, 10);
+                trophyUpdateMilestone(&roboRunnerTrophies[2], ++rd->deaths, 25);
+                trophyUpdateMilestone(&roboRunnerTrophies[1], rd->feetTraveledTotal, 10);
                 if (DEV_HIGH_SCORE <= rd->score)
                 {
-                    trophyUpdate(roboRunnerTrophies[0], 1, true);
+                    trophyUpdate(&roboRunnerTrophies[0], 1, true);
                 }
             }
             if (rd->obstacles[idx].rect.pos.x < -rd->obstacleImgs[0].w)
