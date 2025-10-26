@@ -2608,7 +2608,7 @@ void killEnemy(mgEntity_t* target)
 
 void updateBgCol(mgEntity_t* self)
 {
-    self->gameData->bgColor = self->xDamping;
+    self->gameData->bgColors = &bgGradientGray;
     mg_destroyEntity(self, true);
 }
 

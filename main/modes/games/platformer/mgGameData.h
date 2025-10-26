@@ -51,7 +51,7 @@ typedef struct
 
     led_t leds[CONFIG_NUM_LEDS];
 
-    paletteColor_t bgColor;
+    paletteColor_t* bgColors;
 
     char initials[3];
     uint8_t rank;

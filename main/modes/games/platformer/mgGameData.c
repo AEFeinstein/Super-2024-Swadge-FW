@@ -24,7 +24,6 @@ void mg_initializeGameData(mgGameData_t* gameData, mgSoundManager_t* soundManage
     gameData->coins              = 0;
     gameData->combo              = 0;
     gameData->comboTimer         = 0;
-    gameData->bgColor            = c335;
     gameData->initials[0]        = 'A';
     gameData->initials[1]        = 'A';
     gameData->initials[2]        = 'A';
@@ -37,6 +36,7 @@ void mg_initializeGameData(mgGameData_t* gameData, mgSoundManager_t* soundManage
     gameData->continuesUsed      = false;
     gameData->inGameTimer        = 0;
     gameData->soundManager       = soundManager;
+    gameData->bgColors           = &bgGradientCyan;
 }
 
 void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
@@ -50,7 +50,6 @@ void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
     gameData->coins              = 0;
     gameData->combo              = 0;
     gameData->comboTimer         = 0;
-    gameData->bgColor            = c000;
     gameData->extraLifeCollected = false;
     gameData->checkpoint         = 0;
     gameData->levelDeaths        = 0;
@@ -59,6 +58,7 @@ void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
     gameData->initialHp          = 1;
     gameData->continuesUsed      = 0; //(gameData->world == 1 && gameData->level == 1) ? false : true;
     gameData->inGameTimer        = 0;
+    gameData->bgColors           = &bgGradientCyan;
 
     mg_resetGameDataLeds(gameData);
 }
@@ -80,7 +80,7 @@ void mg_updateLedsHpMeter(mgEntityManager_t* entityManager, mgGameData_t* gameDa
     // 3 4
     // 2 5
     // 1 6
-    for (int32_t i = 1; i < 7; i++)
+    for (int32_t i = 1; i < CONFIG_NUM_LEDS; i++)
     {
         gameData->leds[i].r = 0x80;
         gameData->leds[i].g = 0x00;

@@ -794,7 +794,8 @@ void changeStateGame(platformer_t* self)
     //self->gameData.changeBgm = MG_BGM_KINETIC_DONUT;
     mg_setBgm(&self->soundManager, leveldef[self->gameData.level].mainBgmIndex);
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
-    
+    self->gameData.bgColors = leveldef[self->gameData.level].bgColors;
+
     soundStop(true);
 
     self->update = &updateReadyScreen;
@@ -802,7 +803,7 @@ void changeStateGame(platformer_t* self)
 
 static void mg_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-    fillDisplayArea(x, y, x + w, y + h, leveldef[platformer->gameData.level].bgColors[((y >> 6) % 4)]);
+    fillDisplayArea(x, y, x + w, y + h, platformer->gameData.bgColors[((y >> 6) % 4)]);
 }
 
 void detectGameStateChange(platformer_t* self)
@@ -1462,6 +1463,7 @@ void changeStateLevelSelect(platformer_t* self)
     mg_setBgm(&self->soundManager, MG_BGM_STAGE_SELECT);
     globalMidiPlayerGet(MIDI_BGM)->loop = true;
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
+    self->gameData.bgColors = &bgGradientMenu;
 
     self->update = &updateLevelSelect;
 }
