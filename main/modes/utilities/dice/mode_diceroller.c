@@ -62,7 +62,7 @@ typedef struct
 
 typedef struct
 {
-    uint8_t pixels[36];
+    uint8_t pixels[EYE_LED_W * EYE_LED_H];
 } eyeDigit_t;
 
 typedef struct
@@ -615,16 +615,17 @@ void doStateMachine(int64_t elapsedUs)
                 // Set eyes
                 if (diceRoller->cRoll.total < 100)
                 {
-                    uint8_t bitmap[6][12] = {0};
-                    eyeDigit_t* digits[2] = {&diceRoller->eyeDigits[diceRoller->cRoll.total / 10],
-                                             &diceRoller->eyeDigits[diceRoller->cRoll.total % 10]};
+                    uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
+                    eyeDigit_t* digits[2]                = {&diceRoller->eyeDigits[diceRoller->cRoll.total / 10],
+                                                            &diceRoller->eyeDigits[diceRoller->cRoll.total % 10]};
                     for (int i = 0; i < 2; i++)
                     {
-                        for (int x = 0; x < 6; x++)
+                        for (int x = 0; x < EYE_LED_H; x++)
                         {
-                            for (int y = 0; y < 6; y++)
+                            for (int y = 0; y < (EYE_LED_W / 2); y++)
                             {
-                                bitmap[y][x + 6 * i] = digits[i]->pixels[x + y * 6] ? EYE_LED_BRIGHT : EYE_LED_OFF;
+                                bitmap[y][x + (EYE_LED_W / 2) * i]
+                                    = digits[i]->pixels[x + y * EYE_LED_H] ? EYE_LED_BRIGHT : EYE_LED_OFF;
                             }
                         }
                     }

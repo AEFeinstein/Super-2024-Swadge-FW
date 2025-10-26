@@ -387,7 +387,7 @@ nameData_t* getSystemUsername(void)
 void setSystemUsername(nameData_t* nd)
 {
     nameData_t data = *nd;
-    int32_t packed = GET_PACKED_USERNAME(data);
+    int32_t packed  = GET_PACKED_USERNAME(data);
     writeNvs32(nvsKeys, packed);
     setUsernameFrom32(&swadgeUsername, packed);
 }

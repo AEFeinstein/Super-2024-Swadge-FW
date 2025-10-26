@@ -204,6 +204,9 @@ void testEnterMode(void)
     accelSetRegistersAndReset();
     accelPerformCal();
 
+    // Load some default firmware that blinks eyes
+    ch32v003RunBinaryAsset(MATRIX_FACTORY_CFUN_BIN);
+
     // Set NVM to indicate test not passed yet
     // setTestModePassedSetting(false);
 }

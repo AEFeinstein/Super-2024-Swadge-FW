@@ -31,7 +31,9 @@ static bool ledEyesExtInit(emuArgs_t* args)
 {
     if (!args->hideLeds)
     {
-        return -1 != requestPane(&ledEyesEmuExtension, PANE_TOP, MIN_EYE_LED_DIM * 13, MIN_EYE_LED_DIM * 6);
+        return -1
+               != requestPane(&ledEyesEmuExtension, PANE_TOP, MIN_EYE_LED_DIM * (EYE_LED_W + 1),
+                              MIN_EYE_LED_DIM * EYE_LED_H);
     }
 
     return false;
