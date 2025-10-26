@@ -11,6 +11,11 @@
 #include <stdint.h>
 #include <driver/gpio.h>
 
+// Convenience macros for consistent LED values across modes
+#define EYE_LED_OFF    0x00
+#define EYE_LED_DIM    0x08
+#define EYE_LED_BRIGHT 0x10
+
 int initCh32v003(int swdio_pin);
 
 #define CH32V003_MAX_IMAGE_SLOTS 20

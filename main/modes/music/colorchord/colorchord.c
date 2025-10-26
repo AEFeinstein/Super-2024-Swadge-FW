@@ -22,6 +22,9 @@
 #define EYE_FPS    20
 #define EYE_FPS_US (1000000 / EYE_FPS)
 
+#define LED_W 12
+#define LED_H 6
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -64,6 +67,7 @@ typedef struct
     int32_t eyeTimer;
     uint16_t binAvgHist[EYE_FPS];
     int32_t bahIdx;
+    uint8_t barHeights[LED_W];
 } colorchord_t;
 
 //==============================================================================
@@ -262,9 +266,6 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
     drawText(getSysFont(), c555, exitText, (TFT_WIDTH - exitWidth) / 2, TFT_HEIGHT - getSysFont()->height - TEXT_Y);
 
     RUN_TIMER_EVERY(colorchord->eyeTimer, EYE_FPS_US, elapsedUs, {
-
-#define LED_W 12
-#define LED_H 6
         // There are 24 bins and 12 columns, so average every two bins into a column
         uint16_t binAvgs[LED_W] = {0};
         uint16_t maxBinAvg      = 0;
@@ -302,6 +303,15 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
             for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(binAvgs); bIdx++)
             {
                 binAvgs[bIdx] = ((1 + LED_H) * binAvgs[bIdx]) / maxBinAvg;
+
+                if (binAvgs[bIdx] > colorchord->barHeights[bIdx])
+                {
+                    colorchord->barHeights[bIdx] = binAvgs[bIdx];
+                }
+                else if (colorchord->barHeights[bIdx])
+                {
+                    colorchord->barHeights[bIdx]--;
+                }
             }
         }
 
@@ -311,9 +321,9 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
         {
             for (int y = 0; y < LED_H; y++)
             {
-                if (y > (LED_H - binAvgs[x]))
+                if (y > (LED_H - colorchord->barHeights[x]))
                 {
-                    bitmap[LED_H - 1 - y][x] = 0xFF;
+                    bitmap[LED_H - 1 - y][x] = EYE_LED_BRIGHT;
                 }
             }
         }
