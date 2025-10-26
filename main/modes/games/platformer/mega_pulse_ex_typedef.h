@@ -1017,28 +1017,29 @@ typedef enum
     MG_WSGSET_FLARE_GRYFFYN
 } mgWsgSetIndex_t;
 
-static const paletteColor_t bgGradientGray[] = {c000, c111, c222, c333};
-static const paletteColor_t bgGradientPurple[] = {c102, c103, c104, c105};
-static const paletteColor_t bgGradientBlue[] = {c002, c003, c004, c005};
-static const paletteColor_t bgGradientCyan[] = {c012, c023, c034, c045};
-static const paletteColor_t bgGradientGreen[] = {c000, c010, c120, c130};
-static const paletteColor_t bgGradientYellow[] = {c110, c220, c330, c440};
-static const paletteColor_t bgGradientOrange[] = {c000, c100, c210, c310};
-static const paletteColor_t bgGradientRed[] = {c100, c200, c300, c400};
-static const paletteColor_t bgGradientMenu[] = {c012, c123, c234, c345};
+//Note: none of these names match actual colors
+static const paletteColor_t bgGradientGray[] = {c001, c112, c223, c334};
+static const paletteColor_t bgGradientPurple[] = {c202, c203, c204, c205};
+static const paletteColor_t bgGradientBlue[] = {c102, c103, c104, c105};
+static const paletteColor_t bgGradientCyan[] = {c003, c013, c023, c033};
+static const paletteColor_t bgGradientGreen[] = {c001, c111, c221, c331};
+static const paletteColor_t bgGradientYellow[] = {c202, c312, c422, c532};
+static const paletteColor_t bgGradientOrange[] = {c040, c230, c220, c210};
+static const paletteColor_t bgGradientRed[] = {c101, c201, c301, c411};
+static const paletteColor_t bgGradientMenu[] = {c001, c012, c123, c234};
 
 
 static const mgLeveldef_t leveldef[]
     = {{.filename = LEVEL_SELECT_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_LEVEL_SELECT, .mainBgmIndex = MG_BGM_STAGE_SELECT, .bossBgmIndex = MG_BGM_NULL, .bgColors = &bgGradientMenu},
-       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_KINETIC_DONUT, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = &bgGradientPurple},
-       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_GRIND_PANGOLIN, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = &bgGradientBlue},
+       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_KINETIC_DONUT, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = &bgGradientBlue},
+       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_GRIND_PANGOLIN, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = &bgGradientPurple},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_SEVER_YAGATA, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = &bgGradientCyan},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_RIP_BARONESS, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = &bgGradientGreen},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_NULL, .bossBgmIndex = MG_BGM_BOSS_BIGMA, .bgColors = &bgGradientRed},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_SMASH_GORILLA, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = &bgGradientYellow},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_DEADEYE_CHIRPZI, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = &bgGradientOrange},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_DRAIN_BAT, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = &bgGradientGray},
-       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_FLARE_GRYFFYN, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = &bgGradientPurple},
+       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_FLARE_GRYFFYN, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = &bgGradientMenu},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_KINETIC_DONUT, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = &bgGradientPurple},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_KINETIC_DONUT, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = &bgGradientPurple},
        {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_KINETIC_DONUT, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = &bgGradientPurple},
