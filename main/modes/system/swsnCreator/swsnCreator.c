@@ -12,7 +12,7 @@
 
 #define MAX_SWSN_SLOTS    14
 #define SLIDE_TIME_AMOUNT (1000 * 500)
-#define NUM_PIXELS        100
+#define NUM_PIXELS        75
 #define STEP              (SLIDE_TIME_AMOUNT / NUM_PIXELS)
 
 //==============================================================================
@@ -256,9 +256,9 @@ static void swsnLoop(int64_t elapsedUs)
                 }
                 case PANEL_OPEN:
                 {
-                    scd->out    = false;
+                    /* scd->out    = false;
                     scd->cState = SLIDING;
-                    break;
+                     */break;
                 }
                 default:
                 {
@@ -321,13 +321,13 @@ static bool slideTab(int selected, bool out, uint64_t elapsedUs)
         if (!out)
         {
             x += NUM_PIXELS;
-            offset += NUM_PIXELS;
+            offset += NUM_PIXELS * 2;
         }
         while (steps > STEP)
         {
             steps -= STEP;
             x      = (out) ? x + 1 : x - 1;
-            offset = (out) ? offset + 1 : offset - 1;
+            offset = (out) ? offset + 2 : offset - 2;
         }
         drawWsgSimpleScaled(&scd->activeSona.image, x, TFT_HEIGHT - 192, 3, 3);
         for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
@@ -352,13 +352,13 @@ static bool slideTab(int selected, bool out, uint64_t elapsedUs)
         if (!out)
         {
             x -= NUM_PIXELS;
-            offset -= NUM_PIXELS;
+            offset -= NUM_PIXELS * 2;
         }
         while (steps > STEP)
         {
             steps -= STEP;
             x      = (out) ? x - 1 : x + 1;
-            offset = (out) ? offset - 1 : offset + 1;
+            offset = (out) ? offset - 2 : offset + 2;
         }
         drawWsgSimpleScaled(&scd->activeSona.image, x, TFT_HEIGHT - 192, 3, 3);
         for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
@@ -423,7 +423,6 @@ static void drawCreator(void)
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c445);
 
     // Draw the swadgesona face
-    // TODO: slide to avoid tab panels
     drawWsgSimpleScaled(&scd->activeSona.image, (TFT_WIDTH - (scd->activeSona.image.w * 3)) >> 1, TFT_HEIGHT - 192, 3,
                         3);
 
