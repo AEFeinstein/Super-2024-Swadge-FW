@@ -15,6 +15,15 @@
 #define NUM_PIXELS        75
 #define STEP              (SLIDE_TIME_AMOUNT / NUM_PIXELS)
 
+// Tab Panels
+#define GRID_ROW   3
+#define GRID_COL   4
+#define GRID_SIZE  (GRID_ROW * GRID_COL)
+#define SWATCH_H   26
+#define SWATCH_W   35
+#define PADDING    7
+#define CORNER_RAD 12
+
 //==============================================================================
 // Consts
 //==============================================================================
@@ -29,9 +38,19 @@ static const char* const menuOptions[] = {
     "Exit",
 };
 
-static const cnfsFileIdx_t tabImages[]
-    = {OPEN_TAB_LEFT_WSG, OPEN_TAB_RIGHT_WSG,   SWSN_SKIN_WSG, SWSN_EYEBROW_WSG, SWSN_EYE_WSG,     SWSN_EAR_WSG,
-       SWSN_MOUTH_WSG,    SWSN_FACIAL_HAIR_WSG, SWSN_HAIR_WSG, SWSN_HATS_WSG,    SWSN_GLASSES_WSG, SWSN_SHIRT_WSG};
+static const cnfsFileIdx_t tabImages[] = {
+    OPEN_TAB_LEFT_WSG, OPEN_TAB_RIGHT_WSG, SWSN_SKIN_WSG,        SWSN_EYEBROW_WSG, SWSN_EYE_WSG,
+    SWSN_EAR_WSG,      SWSN_MOUTH_WSG,     SWSN_FACIAL_HAIR_WSG, SWSN_HAIR_WSG,    SWSN_HATS_WSG,
+    SWSN_GLASSES_WSG,  SWSN_SHIRT_WSG,     SWSN_ARROW_R_WSG,     SWSN_ARROW_L_WSG,
+};
+
+static const paletteColor_t skinSwatch[] = {
+    c544, c545, c543, c432, c321, c210, c255, c444, c243, c545, c334, c422,
+};
+static const paletteColor_t clothesSwatch[] = {
+    c000, c004, c210, c455, c435, c203, c222, c240, c505, c503, c233,
+    c554, c102, c521, c544, c545, c305, c401, c543, c033, c555, c541,
+};
 
 //==============================================================================
 // Enums
@@ -85,12 +104,18 @@ typedef struct
     menuMegaRenderer_t* renderer;
 
     // Creator
-    creatorStates_t cState;
-    wsg_t* tabSprs;
-    swadgesona_t activeSona;
-    int selection; // Which body part we're on
+    creatorStates_t cState;  // Sub-state
+    wsg_t* tabSprs;          // Image location
+    swadgesona_t activeSona; // Drawn to the screen
+    int selection;           // Primary selection
+
+    // Animations
     bool out;
     int64_t animTimer;
+
+    // Panel
+    int page;
+    int subSelection;
 } swsnCreatorData_t;
 
 //==============================================================================
@@ -100,11 +125,17 @@ typedef struct
 static void swsnEnterMode(void);
 static void swsnExitMode(void);
 static void swsnLoop(int64_t elapsedUs);
-
 static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal);
 
+// Mode
 static bool slideTab(int selected, bool out, uint64_t elapsedUs);
+static bool panelOpen(buttonEvt_t* evt);
+
+// Draw
 static void drawTab(int xOffset, int y, int scale, bool flip, int labelIdx, bool selected);
+static void drawColors(const paletteColor_t* colors, int arrSize, bool left);
+static void drawArrows(const paletteColor_t* colors, int arrSize, bool left);
+static void drawTabContents(void);
 static void drawCreator(void);
 
 //==============================================================================
@@ -218,6 +249,9 @@ static void swsnLoop(int64_t elapsedUs)
                             {
                                 scd->out    = true;
                                 scd->cState = SLIDING;
+                                // TODO: Automatically set vars to sona
+                                scd->page         = 0;
+                                scd->subSelection = 0;
                             }
                         }
                     }
@@ -256,19 +290,14 @@ static void swsnLoop(int64_t elapsedUs)
                 }
                 case PANEL_OPEN:
                 {
-                    /* scd->out    = false;
-                    scd->cState = SLIDING;
-                     */break;
+                    panelOpen(&evt);
+                    break;
                 }
                 default:
                 {
                     break;
                 }
             }
-            break;
-        }
-        case NAMING:
-        {
             break;
         }
         default:
@@ -395,6 +424,97 @@ static bool slideTab(int selected, bool out, uint64_t elapsedUs)
     return false;
 }
 
+static bool panelOpen(buttonEvt_t* evt)
+{
+    // Handle input
+    // - Selection
+    // - Page
+    // - Back
+    while (checkButtonQueueWrapper(evt))
+    {
+        if (evt->down)
+        {
+            if (evt->button & PB_RIGHT)
+            {
+            }
+            else if (evt->button & PB_LEFT)
+            {
+            }
+            else if (evt->button & PB_UP)
+            {
+                scd->page++;
+            }
+            else if (evt->button & PB_DOWN)
+            {
+                scd->page--;
+            }
+            else if (evt->button & PB_A)
+            {
+            }
+            else if (evt->button & PB_B)
+            {
+                scd->cState = SLIDING;
+                scd->out    = false;
+            }
+        }
+    }
+
+    // Draw
+    clearPxTft();
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c445);
+
+    // Draw open tab
+    bool leftSide = scd->selection < 5;
+    int x         = (TFT_WIDTH - (scd->activeSona.image.w * 3)) >> 1;
+    if (leftSide)
+    {
+        drawWsgSimpleScaled(&scd->activeSona.image, x + NUM_PIXELS, TFT_HEIGHT - 192, 3, 3);
+        for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
+        {
+            if (idx == scd->selection)
+            {
+                drawTab(NUM_PIXELS * 2, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2, scd->selection == idx);
+            }
+            else
+            {
+                drawTab((idx > 4) ? NUM_PIXELS * 2 : 0, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2,
+                        scd->selection == idx);
+            }
+        }
+        fillDisplayArea(0, 32, NUM_PIXELS * 2, TFT_HEIGHT - 28, c555);
+        for (int i = 0; i < 3; i++)
+        {
+            drawLineFast(0, TFT_HEIGHT - (29 + i), NUM_PIXELS * 2 - 1, TFT_HEIGHT - (29 + i), c255);
+        }
+    }
+    else
+    {
+        drawWsgSimpleScaled(&scd->activeSona.image, x - NUM_PIXELS, TFT_HEIGHT - 192, 3, 3);
+        for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
+        {
+            if (idx == scd->selection)
+            {
+                drawTab(-NUM_PIXELS * 2, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2, scd->selection == idx);
+            }
+            else
+            {
+                drawTab((idx < 5) ? -NUM_PIXELS * 2 : 0, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2,
+                        scd->selection == idx);
+            }
+        }
+        fillDisplayArea(TFT_WIDTH - NUM_PIXELS * 2, 32, TFT_WIDTH, TFT_HEIGHT - 28, c555);
+        for (int i = 0; i < 3; i++)
+        {
+            drawLineFast(TFT_WIDTH - NUM_PIXELS * 2, TFT_HEIGHT - (29 + i), TFT_WIDTH, TFT_HEIGHT - (29 + i), c255);
+        }
+    }
+
+    drawTabContents();
+
+    // When to update sona?
+    return false;
+}
+
 static void drawTab(int xOffset, int y, int scale, bool flip, int labelIdx, bool selected)
 {
     int x = 0;
@@ -414,6 +534,89 @@ static void drawTab(int xOffset, int y, int scale, bool flip, int labelIdx, bool
     }
     drawWsgSimpleScaled(tab, xOffset + x, y, scale, scale);
     drawWsgSimpleScaled(&scd->tabSprs[labelIdx], xOffset + x, y, scale, scale);
+}
+
+static void drawColors(const paletteColor_t* colors, int arrSize, bool left)
+{
+    int end = (arrSize - (GRID_SIZE * scd->page) < GRID_SIZE) ? arrSize - (GRID_SIZE * scd->page) : GRID_SIZE;
+    if (left)
+    {
+        for (int idx = 0; idx < end; idx++)
+        {
+            drawRoundedRect(PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
+                            32 + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)),
+                            PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + SWATCH_W,
+                            32 + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + SWATCH_H, CORNER_RAD,
+                            colors[idx + (scd->page * GRID_SIZE)], c000);
+        }
+    }
+    else
+    {
+        for (int idx = 0; idx < end; idx++)
+        {
+            drawRoundedRect((TFT_WIDTH - NUM_PIXELS * 2) + PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
+                            32 + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)),
+                            (TFT_WIDTH - NUM_PIXELS * 2) + PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W))
+                                + SWATCH_W,
+                            32 + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + SWATCH_H, CORNER_RAD,
+                            colors[idx + (scd->page * GRID_SIZE)], c000);
+        }
+    }
+    drawArrows(colors, arrSize, left);
+}
+
+static void drawArrows(const paletteColor_t* colors, int arrSize, bool left)
+{
+    if (arrSize <= GRID_SIZE)
+    {
+        return;
+    }
+    if (left)
+    {
+        if (scd->page * GRID_SIZE < arrSize - GRID_SIZE)
+        {
+            drawWsgSimpleScaled(&scd->tabSprs[12], NUM_PIXELS + 13, TFT_HEIGHT - (28 + scd->tabSprs[12].h + 14), 2, 2);
+        }
+
+        if (scd->page != 0)
+        {
+            drawWsgSimpleScaled(&scd->tabSprs[13], NUM_PIXELS - (26 + scd->tabSprs[13].w),
+                                TFT_HEIGHT - (28 + scd->tabSprs[13].h + 14), 2, 2);
+        }
+    }
+    else
+    {
+        if (scd->page * GRID_SIZE < arrSize - GRID_SIZE)
+        {
+            drawWsgSimpleScaled(&scd->tabSprs[12], TFT_WIDTH - (NUM_PIXELS - 13),
+                                TFT_HEIGHT - (28 + scd->tabSprs[12].h + 14), 2, 2);
+        }
+        if (scd->page != 0)
+        {
+            drawWsgSimpleScaled(&scd->tabSprs[13], TFT_WIDTH - (NUM_PIXELS + (26 + scd->tabSprs[12].w)),
+                                TFT_HEIGHT - (28 + scd->tabSprs[13].h + 14), 2, 2);
+        }
+    }
+}
+
+static void drawTabContents(void)
+{
+    switch (scd->selection)
+    {
+        case SKIN:
+        {
+            drawColors(skinSwatch, ARRAY_SIZE(skinSwatch), true);
+            break;
+        }
+        case CLOTHES:
+        {
+            drawColors(clothesSwatch, ARRAY_SIZE(clothesSwatch), false);
+        }
+        default:
+        {
+            break;
+        }
+    }
 }
 
 static void drawCreator(void)
