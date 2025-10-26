@@ -427,7 +427,7 @@ int trophyGetPoints(bool total, const char* namespace);
 /**
  * @brief Get the Latest Trophy Idx object
  *
- * @return trophyData_t data for the latest win
+ * @return trophyData_t data for the latest win. NULL if no trophies have been won yet.
  */
 const trophyData_t* trophyGetLatest(void);
 
