@@ -51,7 +51,7 @@
 // Consts
 //==============================================================================
 
-static const char* const NVSstrings[] = {"trophy", "points", "latest", "mode"};
+static const char* const NVSstrings[] = {"trophy", "points", "latest"};
 
 static const char* const platStrings[] = {"All ", " Trophies Won!", "Win all the trophies for "};
 
@@ -102,6 +102,12 @@ typedef struct
     trophyDisplayList_t tdl; ///< Display list data
 } trophySystem_t;
 
+typedef struct __attribute__((packed))
+{
+    int modeIdx   : 8;
+    int trophyIdx : 24;
+} packedTrophy_t;
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -149,10 +155,9 @@ static void _saveLatestWin(trophyDataWrapper_t* tw);
 /**
  * @brief Loads ther index of the latest win
  *
- * @param buffer Array to shove modename into
- * @return int32_t index of the trophy
+ * @return packedTrophy_t packed data to get the data from
  */
-int32_t _loadLatestWin(char* buffer);
+static void _loadLatestWin(packedTrophy_t* pt);
 
 /**
  * @brief Saves new points value to NVS. Saves both overall value and mode-specific
@@ -564,22 +569,16 @@ int trophyGetPoints(bool total, const char* namespace)
 const trophyData_t* trophyGetLatest()
 {
     // Fetch data from NVS
-    char modeName[NVS_KEY_NAME_MAX_SIZE];
-    int trophyIdx          = _loadLatestWin(modeName);
+    packedTrophy_t pt;
+    packedTrophy_t* p = &pt;
+    _loadLatestWin(p);
+    if (p->trophyIdx == 0x7fffff)
+    {
+        return NULL;
+    }
     const trophyData_t* td = NULL;
 
-    // Match mode
-    for (int idx = 0; idx < modeListGetCount(); idx++)
-    {
-        if (allSwadgeModes[idx]->trophyData == NULL)
-        {
-            continue;
-        }
-        else if (strcmp(modeName, allSwadgeModes[idx]->trophyData->settings->namespaceKey) == 0)
-        {
-            td = &allSwadgeModes[idx]->trophyData->list[trophyIdx];
-        }
-    }
+    td = &allSwadgeModes[p->modeIdx]->trophyData->list[p->trophyIdx];
     return td;
 }
 
@@ -868,26 +867,43 @@ static void _load(trophyDataWrapper_t* tw, const trophyData_t* t)
 
 static void _saveLatestWin(trophyDataWrapper_t* tw)
 {
-    for (int idx = 0; idx < trophySystem.data->length; idx++)
+    int32_t packed = 0;
+    for (int trophyIdx = 0; trophyIdx < trophySystem.data->length; trophyIdx++)
     {
-        if (strcmp(tw->trophyData.title, trophySystem.data->list[idx].title) == 0)
+        if (strcmp(tw->trophyData.title, trophySystem.data->list[trophyIdx].title) == 0)
         {
-            writeNamespaceNvs32(NVSstrings[0], NVSstrings[2], idx);
-            writeNamespaceNvsBlob(NVSstrings[0], NVSstrings[3], trophySystem.data->settings->namespaceKey,
-                                  strlen(trophySystem.data->settings->namespaceKey) + 1);
-            return;
+            for (int i = 0; i < modeListGetCount(); i++)
+            {
+                if (allSwadgeModes[i]->trophyData == NULL)
+                {
+                    continue;
+                }
+                if (strcmp(trophySystem.data->settings->namespaceKey,
+                           allSwadgeModes[i]->trophyData->settings->namespaceKey)
+                    == 0)
+                {
+                    packed = i;
+                    packed = packed << 24;
+                    packed |= trophyIdx;
+                    writeNamespaceNvs32(NVSstrings[0], NVSstrings[2], packed);
+                    return;
+                }
+            }
         }
     }
+    ESP_LOGE("TRO", "Latest trophy did not save!");
 }
 
-int32_t _loadLatestWin(char* buffer)
+static void _loadLatestWin(packedTrophy_t* pt)
 {
-    int32_t idx;
-    size_t blobLen;
-    readNamespaceNvs32(NVSstrings[0], NVSstrings[2], &idx);
-    readNamespaceNvsBlob(NVSstrings[0], NVSstrings[3], NULL, &blobLen);
-    readNamespaceNvsBlob(NVSstrings[0], NVSstrings[3], buffer, &blobLen);
-    return idx;
+    int32_t packed;
+    if (!readNamespaceNvs32(NVSstrings[0], NVSstrings[2], &packed))
+    {
+        pt->trophyIdx = 0x7fffff;
+        return;
+    }
+    pt->trophyIdx = packed & 0x00ffffff;
+    pt->modeIdx   = (packed & 0xff000000) >> 24;
 }
 
 static void _setPoints(int points)
