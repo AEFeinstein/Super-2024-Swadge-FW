@@ -34,6 +34,7 @@
 const char sonaModeName[]                 = "Swadgesona Creator";
 static const char sonaMenuName[]          = "Sona Creator";
 static const char sonaSlotUninitialized[] = "Uninitialized";
+static const char pointerNVS[] = "pointer";
 
 static const char* const menuOptions[] = {
     "Create!",
@@ -363,15 +364,18 @@ static void swsnEnterMode(void)
     }
     scd->menu = endSubMenu(scd->menu);
     addSingleItemToMenu(scd->menu, menuOptions[1]);
-    // FIXME: Pointer image selection crashes
+
+    // Pointer
+    int32_t prevSaved;
+    readNvs32(pointerNVS, &prevSaved);
     const settingParam_t pointerImages = {
-        .def = pointerSprs[0],
-        .key = "swsnPointer",
+        .def = prevSaved,
+        .key = NULL,
         .min = pointerSprs[0],
         .max = pointerSprs[ARRAY_SIZE(pointerSprs) - 1],
     };
     addSettingsOptionsItemToMenu(scd->menu, menuOptions[2], pointerOptions, pointerSprs, ARRAY_SIZE(pointerSprs),
-                                 &pointerImages, SWSN_POINTER_ARROW_WSG);
+                                 &pointerImages, prevSaved);
     addSingleItemToMenu(scd->menu, menuOptions[3]);
 }
 
@@ -534,6 +538,11 @@ static void swsnLoop(int64_t elapsedUs)
                                     }
                                 }
                             }
+                            else if (evt.button & PB_B)
+                            {
+                                freeWsg(&scd->pointerImage);
+                                scd->state = MENU;
+                            }
                         }
                     }
                     // Draw the creator
@@ -597,21 +606,26 @@ static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal)
             // Load the creator
             generateRandomSwadgesona(&scd->activeSona);
             scd->state = CREATING;
-            loadWsg(pointerSprs[scd->pointerType], &scd->pointerImage, true);
+            readNvs32(pointerNVS, &scd->pointerType);
+            loadWsg(scd->pointerType, &scd->pointerImage, true);
         }
         else if (label == menuOptions[1])
         {
             // Enter the viewer
         }
-        else if (label == menuOptions[2])
+        else if (label == menuOptions[3])
         {
             // Exit the mode
             switchToSwadgeMode(&mainMenuMode);
         }
     }
-    else // XXX: Remove when done
+    else
     {
-        printf("%s %s, setting=%d\n", label, selected ? "selected" : "scrolled to", settingVal);
+        if (label == menuOptions[2])
+        {
+            // Handle saving pointer
+            writeNvs32(pointerNVS, settingVal);
+        }
     }
     return false;
 }
@@ -900,7 +914,6 @@ static bool panelOpen(buttonEvt_t* evt)
                     heap_caps_free(scd->selectionImages);
                     scd->selectionImages = NULL;
                 }
-                freeWsg(&scd->pointerImage);
             }
         }
     }
