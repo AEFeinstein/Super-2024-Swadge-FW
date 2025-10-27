@@ -785,22 +785,55 @@ static bool panelOpen(buttonEvt_t* evt)
         {
             if (evt->button & PB_RIGHT)
             {
+                if (scd->subSelection % GRID_ROW == GRID_ROW - 1)
+                {
+                    if (scd->page < (size / GRID_SIZE)
+                        && !(scd->page + 1 == (size / GRID_SIZE) && (size % GRID_SIZE) == 0))
+                    {
+                        scd->page++;
+                        scd->subSelection += GRID_SIZE - (GRID_ROW - 1);
+                    }
+                    if (scd->subSelection > size - 1)
+                    {
+                        scd->subSelection = size - 1;
+                    }
+                }
+                else if (scd->subSelection < size - 1)
+                {
+                    scd->subSelection++;
+                }
             }
             else if (evt->button & PB_LEFT)
             {
+                if (scd->subSelection % GRID_ROW == 0)
+                {
+                    if (scd->page > 0)
+                    {
+                        scd->page--;
+                        scd->subSelection -= GRID_SIZE - (GRID_ROW - 1);
+                    }
+                }
+                else if (scd->subSelection > 0)
+                {
+                    scd->subSelection--;
+                }
             }
             else if (evt->button & PB_UP)
             {
-                if (scd->page < (size / GRID_SIZE) && !(scd->page + 1 == (size / GRID_SIZE) && (size % GRID_SIZE) == 0))
+                if (scd->subSelection >= GRID_ROW + scd->page * GRID_SIZE)
                 {
-                    scd->page++;
+                    scd->subSelection -= GRID_ROW;
                 }
             }
             else if (evt->button & PB_DOWN)
             {
-                if (scd->page > 0)
+                if (scd->subSelection < (scd->page + 1) * GRID_SIZE - GRID_ROW)
                 {
-                    scd->page--;
+                    scd->subSelection += GRID_ROW;
+                }
+                if (scd->subSelection > size - 1)
+                {
+                    scd->subSelection = size - 1;
                 }
             }
             else if (evt->button & PB_A)
