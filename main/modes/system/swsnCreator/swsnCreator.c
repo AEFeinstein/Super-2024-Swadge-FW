@@ -11,12 +11,15 @@
 // Define
 //==============================================================================
 
-#define MAX_SWSN_SLOTS    14
+#define MAX_SWSN_SLOTS 14
+
+// Animations
 #define SLIDE_TIME_AMOUNT (1000 * 500)
 #define NUM_PIXELS        75
 #define STEP              (SLIDE_TIME_AMOUNT / NUM_PIXELS)
 
-// Tab Panels
+// Tab Panel Pixel data
+#define NUM_TABS     5
 #define GRID_ROW     3
 #define GRID_COL     4
 #define GRID_SIZE    (GRID_ROW * GRID_COL)
@@ -26,6 +29,10 @@
 #define Y_PADDING    32
 #define BOTT_PADDING 28
 #define CORNER_RAD   12
+#define ARROW_SHIFT  13
+#define ARROW_HEIGHT 14
+#define SONA_SCALE   3
+#define TAB_SPACE    -4
 
 //==============================================================================
 // Consts
@@ -34,20 +41,21 @@
 const char sonaModeName[]                 = "Swadgesona Creator";
 static const char sonaMenuName[]          = "Sona Creator";
 static const char sonaSlotUninitialized[] = "Uninitialized";
-static const char pointerNVS[] = "pointer";
+static const char cursorNVS[]             = "cursor";
 
+// Main
 static const char* const menuOptions[] = {
     "Create!",
     "View",
-    "Pointer: ",
+    "cursor: ",
     "Exit",
 };
-static const char* const pointerOptions[] = {
-    "Default", "Ball",         "Beaker", "Bow",   "Candy Cane", "Carrot", "White Paw", "Black Paw",  "Computer Pointer",
+static const char* const cursorOptions[] = {
+    "Default", "Ball",         "Beaker", "Bow",   "Candy Cane", "Carrot", "White Paw", "Black Paw",  "Computer cursor",
     "Donut",   "Hotdog",       "Ender",  "Gem",   "Ghost",      "Hammer", "Heart",     "Leaf",       " Magic Wand",
     "Glove",   "Corner arrow", "Pencil", "Pizza", "Rainbow",    "Ruler",  "Sword",     "Watermelon", "Weiner",
 };
-static const int32_t pointerSprs[] = {
+static const int32_t cursorSprs[] = {
     SWSN_POINTER_ARROW_WSG,
     SWSN_POINTER_BALL_WSG,
     SWSN_POINTER_BEAKER_WSG,
@@ -77,12 +85,14 @@ static const int32_t pointerSprs[] = {
     SWSN_POINTER_WEINER_WSG,
 };
 
+// Tab data
 static const cnfsFileIdx_t tabImages[] = {
     OPEN_TAB_LEFT_WSG, OPEN_TAB_RIGHT_WSG, SWSN_SKIN_WSG,        SWSN_EYEBROW_WSG, SWSN_EYE_WSG,
     SWSN_MOUTH_WSG,    SWSN_EAR_WSG,       SWSN_FACIAL_HAIR_WSG, SWSN_HAIR_WSG,    SWSN_HATS_WSG,
     SWSN_GLASSES_WSG,  SWSN_SHIRT_WSG,     SWSN_ARROW_R_WSG,     SWSN_ARROW_L_WSG,
 };
 
+// Panel data
 static const paletteColor_t skinSwatch[] = {
     c544, c545, c543, c432, c321, c210, c255, c444, c243, c545, c334, c422,
 };
@@ -292,7 +302,7 @@ typedef struct
     swadgesona_t activeSona; // Drawn to the screen
     int selection;           // Primary selection
 
-    // Animations
+    // Slide
     bool out;
     int64_t animTimer;
 
@@ -300,8 +310,8 @@ typedef struct
     int page;
     int subSelection;
     wsg_t* selectionImages;
-    int pointerType;
-    wsg_t pointerImage;
+    int cursorType;
+    wsg_t cursorImage;
 } swsnCreatorData_t;
 
 //==============================================================================
@@ -311,18 +321,24 @@ typedef struct
 static void swsnEnterMode(void);
 static void swsnExitMode(void);
 static void swsnLoop(int64_t elapsedUs);
+
+// Menu
 static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal);
 
-// Mode
+// Creating
 static bool slideTab(int selected, bool out, uint64_t elapsedUs);
+static void runCreator(buttonEvt_t evt);
+
+// Drawing
+static void drawCreator(void);
 static bool panelOpen(buttonEvt_t* evt);
 
-// Draw
+// Subdraw
 static void drawTab(int xOffset, int y, int scale, bool flip, int labelIdx, bool selected);
 static void drawColors(const paletteColor_t* colors, int arrSize, bool left);
 static void drawArrows(int arrSize, bool left);
+static void drawItems(int arrSize, bool left, bool half);
 static void drawTabContents(void);
-static void drawCreator(void);
 
 //==============================================================================
 // Variables
@@ -345,18 +361,19 @@ swsnCreatorData_t* scd;
 
 static void swsnEnterMode(void)
 {
-    scd           = (swsnCreatorData_t*)heap_caps_calloc(1, sizeof(swsnCreatorData_t), MALLOC_CAP_8BIT);
-    scd->menu     = initMenu(sonaMenuName, swsnMenuCb);
-    scd->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    scd = (swsnCreatorData_t*)heap_caps_calloc(1, sizeof(swsnCreatorData_t), MALLOC_CAP_8BIT);
 
+    // Load
     scd->tabSprs = heap_caps_calloc(ARRAY_SIZE(tabImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(tabImages); idx++)
     {
         loadWsg(tabImages[idx], &scd->tabSprs[idx], true);
     }
 
-    // Setup menu options
-    scd->menu = startSubMenu(scd->menu, menuOptions[0]);
+    // Menu
+    scd->menu     = initMenu(sonaMenuName, swsnMenuCb);
+    scd->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    scd->menu     = startSubMenu(scd->menu, menuOptions[0]);
     for (int16_t idx = 0; idx < MAX_SWSN_SLOTS; idx++)
     {
         // TODO: Load swsn name from NVS when slot is used
@@ -365,17 +382,19 @@ static void swsnEnterMode(void)
     scd->menu = endSubMenu(scd->menu);
     addSingleItemToMenu(scd->menu, menuOptions[1]);
 
-    // Pointer
+    // Cursor
     int32_t prevSaved;
-    readNvs32(pointerNVS, &prevSaved);
-    const settingParam_t pointerImages = {
+    readNvs32(cursorNVS, &prevSaved);
+    const settingParam_t cursorImages = {
         .def = prevSaved,
         .key = NULL,
-        .min = pointerSprs[0],
-        .max = pointerSprs[ARRAY_SIZE(pointerSprs) - 1],
+        .min = cursorSprs[0],
+        .max = cursorSprs[ARRAY_SIZE(cursorSprs) - 1],
     };
-    addSettingsOptionsItemToMenu(scd->menu, menuOptions[2], pointerOptions, pointerSprs, ARRAY_SIZE(pointerSprs),
-                                 &pointerImages, prevSaved);
+    addSettingsOptionsItemToMenu(scd->menu, menuOptions[2], cursorOptions, cursorSprs, ARRAY_SIZE(cursorSprs),
+                                 &cursorImages, prevSaved);
+
+    // Exit
     addSingleItemToMenu(scd->menu, menuOptions[3]);
 }
 
@@ -415,138 +434,8 @@ static void swsnLoop(int64_t elapsedUs)
             {
                 case BODY_PART:
                 {
-                    while (checkButtonQueueWrapper(&evt))
-                    {
-                        if (evt.down)
-                        {
-                            if (evt.button & PB_UP)
-                            {
-                                scd->selection--;
-                                if (scd->selection < 0)
-                                {
-                                    scd->selection = NUM_CREATOR_OPTIONS - 1;
-                                }
-                            }
-                            else if (evt.button & PB_DOWN)
-                            {
-                                scd->selection++;
-                                if (scd->selection >= NUM_CREATOR_OPTIONS)
-                                {
-                                    scd->selection = 0;
-                                }
-                            }
-                            else if (evt.button & PB_LEFT && scd->selection > 4 && scd->selection < 10)
-                            {
-                                scd->selection -= 5;
-                            }
-                            else if (evt.button & PB_RIGHT && scd->selection < 5)
-                            {
-                                scd->selection += 5;
-                            }
-                            else if (evt.button & PB_A)
-                            {
-                                scd->out    = true;
-                                scd->cState = SLIDING;
-                                // FIXME: Automatically set vars to sona
-                                scd->page         = 0;
-                                scd->subSelection = 0;
-                                switch (scd->selection)
-                                {
-                                    case HAIR:
-                                    {
-                                        scd->selectionImages
-                                            = heap_caps_calloc(ARRAY_SIZE(hairWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
-                                        for (int i = 0; i < ARRAY_SIZE(hairWsgs); i++)
-                                        {
-                                            loadWsg(hairWsgs[i], &scd->selectionImages[i], true);
-                                        }
-                                        break;
-                                    }
-                                    case EYES:
-                                    {
-                                        scd->selectionImages
-                                            = heap_caps_calloc(ARRAY_SIZE(eyeWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
-                                        for (int i = 0; i < ARRAY_SIZE(eyeWsgs); i++)
-                                        {
-                                            loadWsg(eyeWsgs[i], &scd->selectionImages[i], true);
-                                        }
-                                        break;
-                                    }
-                                    case HAT:
-                                    {
-                                        scd->selectionImages
-                                            = heap_caps_calloc(ARRAY_SIZE(hatWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
-                                        for (int i = 0; i < ARRAY_SIZE(hatWsgs); i++)
-                                        {
-                                            loadWsg(hatWsgs[i], &scd->selectionImages[i], true);
-                                        }
-                                        break;
-                                    }
-                                    case MOUTH:
-                                    {
-                                        scd->selectionImages
-                                            = heap_caps_calloc(ARRAY_SIZE(mouthWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
-                                        for (int i = 0; i < ARRAY_SIZE(mouthWsgs); i++)
-                                        {
-                                            loadWsg(mouthWsgs[i], &scd->selectionImages[i], true);
-                                        }
-                                        break;
-                                    }
-                                    case GLASSES:
-                                    {
-                                        scd->selectionImages
-                                            = heap_caps_calloc(ARRAY_SIZE(glassesWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
-                                        for (int i = 0; i < ARRAY_SIZE(glassesWsgs); i++)
-                                        {
-                                            loadWsg(glassesWsgs[i], &scd->selectionImages[i], true);
-                                        }
-                                        break;
-                                    }
-                                    case BODY_MODS:
-                                    {
-                                        scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(bodymarksWsgs),
-                                                                                sizeof(wsg_t), MALLOC_CAP_8BIT);
-                                        for (int i = 0; i < ARRAY_SIZE(bodymarksWsgs); i++)
-                                        {
-                                            loadWsg(bodymarksWsgs[i], &scd->selectionImages[i], true);
-                                        }
-                                        break;
-                                    }
-                                    case EARS:
-                                    {
-                                        scd->selectionImages
-                                            = heap_caps_calloc(ARRAY_SIZE(earWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
-                                        for (int i = 0; i < ARRAY_SIZE(earWsgs); i++)
-                                        {
-                                            loadWsg(earWsgs[i], &scd->selectionImages[i], true);
-                                        }
-                                        break;
-                                    }
-                                    case EYEBROWS:
-                                    {
-                                        scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(eyebrowsWsgs), sizeof(wsg_t),
-                                                                                MALLOC_CAP_8BIT);
-                                        for (int i = 0; i < ARRAY_SIZE(eyebrowsWsgs); i++)
-                                        {
-                                            loadWsg(eyebrowsWsgs[i], &scd->selectionImages[i], true);
-                                        }
-                                        break;
-                                    }
-                                    default:
-                                    {
-                                        break;
-                                    }
-                                }
-                            }
-                            else if (evt.button & PB_B)
-                            {
-                                freeWsg(&scd->pointerImage);
-                                scd->state = MENU;
-                            }
-                        }
-                    }
-                    // Draw the creator
-                    drawCreator();
+                    // Input
+                    runCreator(evt);
                     break;
                 }
                 case SLIDING:
@@ -555,25 +444,14 @@ static void swsnLoop(int64_t elapsedUs)
                     {
                         if (evt.down)
                         {
-                            if (scd->out)
-                            {
-                                scd->cState = PANEL_OPEN;
-                            }
-                            else
-                            {
-                                scd->cState = BODY_PART;
-                            }
+                            scd->cState = (scd->out) ? PANEL_OPEN : BODY_PART;
                         }
                     }
                     if (slideTab(scd->selection, scd->out, elapsedUs))
                     {
-                        if (scd->out)
+                        if (evt.down)
                         {
-                            scd->cState = PANEL_OPEN;
-                        }
-                        else
-                        {
-                            scd->cState = BODY_PART;
+                            scd->cState = (scd->out) ? PANEL_OPEN : BODY_PART;
                         }
                     }
                     break;
@@ -597,6 +475,7 @@ static void swsnLoop(int64_t elapsedUs)
     }
 }
 
+// Menu
 static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     if (selected)
@@ -606,8 +485,8 @@ static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal)
             // Load the creator
             generateRandomSwadgesona(&scd->activeSona);
             scd->state = CREATING;
-            readNvs32(pointerNVS, &scd->pointerType);
-            loadWsg(scd->pointerType, &scd->pointerImage, true);
+            readNvs32(cursorNVS, &scd->cursorType);
+            loadWsg(scd->cursorType, &scd->cursorImage, true);
         }
         else if (label == menuOptions[1])
         {
@@ -623,108 +502,164 @@ static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal)
     {
         if (label == menuOptions[2])
         {
-            // Handle saving pointer
-            writeNvs32(pointerNVS, settingVal);
+            // Handle saving cursor
+            writeNvs32(cursorNVS, settingVal);
         }
     }
     return false;
 }
 
-static bool slideTab(int selected, bool out, uint64_t elapsedUs)
+// Creating
+static void runCreator(buttonEvt_t evt)
 {
-    // Update variables
-    scd->animTimer += elapsedUs;
-    // Change direction based selection
-    bool leftSide = scd->selection < 5;
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down)
+        {
+            if (evt.button & PB_UP)
+            {
+                scd->selection--;
+                if (scd->selection < 0)
+                {
+                    scd->selection = NUM_CREATOR_OPTIONS - 1;
+                }
+            }
+            else if (evt.button & PB_DOWN)
+            {
+                scd->selection++;
+                if (scd->selection >= NUM_CREATOR_OPTIONS)
+                {
+                    scd->selection = 0;
+                }
+            }
+            else if (evt.button & PB_LEFT && scd->selection > 4 && scd->selection < 10)
+            {
+                scd->selection -= 5;
+            }
+            else if (evt.button & PB_RIGHT && scd->selection < 5)
+            {
+                scd->selection += 5;
+            }
+            else if (evt.button & PB_A)
+            {
+                scd->out    = true;
+                scd->cState = SLIDING;
+                // FIXME: Automatically set vars to sona
+                scd->page         = 0;
+                scd->subSelection = 0;
+                switch (scd->selection)
+                {
+                    case HAIR:
+                    {
+                        scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(hairWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
+                        for (int i = 0; i < ARRAY_SIZE(hairWsgs); i++)
+                        {
+                            loadWsg(hairWsgs[i], &scd->selectionImages[i], true);
+                        }
+                        break;
+                    }
+                    case EYES:
+                    {
+                        scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(eyeWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
+                        for (int i = 0; i < ARRAY_SIZE(eyeWsgs); i++)
+                        {
+                            loadWsg(eyeWsgs[i], &scd->selectionImages[i], true);
+                        }
+                        break;
+                    }
+                    case HAT:
+                    {
+                        scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(hatWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
+                        for (int i = 0; i < ARRAY_SIZE(hatWsgs); i++)
+                        {
+                            loadWsg(hatWsgs[i], &scd->selectionImages[i], true);
+                        }
+                        break;
+                    }
+                    case MOUTH:
+                    {
+                        scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(mouthWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
+                        for (int i = 0; i < ARRAY_SIZE(mouthWsgs); i++)
+                        {
+                            loadWsg(mouthWsgs[i], &scd->selectionImages[i], true);
+                        }
+                        break;
+                    }
+                    case GLASSES:
+                    {
+                        scd->selectionImages
+                            = heap_caps_calloc(ARRAY_SIZE(glassesWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
+                        for (int i = 0; i < ARRAY_SIZE(glassesWsgs); i++)
+                        {
+                            loadWsg(glassesWsgs[i], &scd->selectionImages[i], true);
+                        }
+                        break;
+                    }
+                    case BODY_MODS:
+                    {
+                        scd->selectionImages
+                            = heap_caps_calloc(ARRAY_SIZE(bodymarksWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
+                        for (int i = 0; i < ARRAY_SIZE(bodymarksWsgs); i++)
+                        {
+                            loadWsg(bodymarksWsgs[i], &scd->selectionImages[i], true);
+                        }
+                        break;
+                    }
+                    case EARS:
+                    {
+                        scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(earWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
+                        for (int i = 0; i < ARRAY_SIZE(earWsgs); i++)
+                        {
+                            loadWsg(earWsgs[i], &scd->selectionImages[i], true);
+                        }
+                        break;
+                    }
+                    case EYEBROWS:
+                    {
+                        scd->selectionImages
+                            = heap_caps_calloc(ARRAY_SIZE(eyebrowsWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
+                        for (int i = 0; i < ARRAY_SIZE(eyebrowsWsgs); i++)
+                        {
+                            loadWsg(eyebrowsWsgs[i], &scd->selectionImages[i], true);
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+            }
+            else if (evt.button & PB_B)
+            {
+                freeWsg(&scd->cursorImage);
+                scd->state = MENU;
+            }
+        }
+    }
+    drawCreator();
+}
 
-    // Draw BG
+// Drawing
+// Main creator
+static void drawCreator(void)
+{
+    // Background
     clearPxTft();
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c445);
 
-    // Draw swadgesona
-    int64_t steps = scd->animTimer;
-    int x         = (TFT_WIDTH - (scd->activeSona.image.w * 3)) >> 1;
-    int offset    = 0;
-    if (leftSide)
-    {
-        if (!out)
-        {
-            x += NUM_PIXELS;
-            offset += NUM_PIXELS * 2;
-        }
-        while (steps > STEP)
-        {
-            steps -= STEP;
-            x      = (out) ? x + 1 : x - 1;
-            offset = (out) ? offset + 2 : offset - 2;
-        }
-        drawWsgSimpleScaled(&scd->activeSona.image, x, TFT_HEIGHT - 192, 3, 3);
-        for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
-        {
-            if (idx == scd->selection)
-            {
-                drawTab(offset, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2, scd->selection == idx);
-            }
-            else
-            {
-                drawTab((idx > 4) ? offset : 0, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2, scd->selection == idx);
-            }
-        }
-        fillDisplayArea(0, Y_PADDING, offset, TFT_HEIGHT - BOTT_PADDING, c555);
-        for (int i = 0; i < 3; i++)
-        {
-            drawLineFast(0, TFT_HEIGHT - (BOTT_PADDING + 1 + i), offset, TFT_HEIGHT - (BOTT_PADDING + 1 + i), c255);
-        }
-    }
-    else
-    {
-        if (!out)
-        {
-            x -= NUM_PIXELS;
-            offset -= NUM_PIXELS * 2;
-        }
-        while (steps > STEP)
-        {
-            steps -= STEP;
-            x      = (out) ? x - 1 : x + 1;
-            offset = (out) ? offset - 2 : offset + 2;
-        }
-        drawWsgSimpleScaled(&scd->activeSona.image, x, TFT_HEIGHT - 192, 3, 3);
-        for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
-        {
-            if (idx == scd->selection)
-            {
-                drawTab(offset, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2, scd->selection == idx);
-            }
-            else
-            {
-                drawTab((idx < 5) ? offset : 0, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2, scd->selection == idx);
-            }
-        }
-        fillDisplayArea(TFT_WIDTH + offset, Y_PADDING, TFT_WIDTH, TFT_HEIGHT - BOTT_PADDING, c555);
-        for (int i = 0; i < 3; i++)
-        {
-            drawLineFast(TFT_WIDTH + offset, TFT_HEIGHT - (BOTT_PADDING + 1 + i), TFT_WIDTH,
-                         TFT_HEIGHT - (BOTT_PADDING + 1 + i), c255);
-        }
-    }
+    // Draw the swadgesona face
+    drawWsgSimpleScaled(&scd->activeSona.image, (TFT_WIDTH - (scd->activeSona.image.w * SONA_SCALE)) >> 1,
+                        TFT_HEIGHT - (scd->activeSona.image.h * SONA_SCALE), SONA_SCALE, SONA_SCALE);
 
-    // Exit
-    if (scd->animTimer >= SLIDE_TIME_AMOUNT)
+    // Draw the tabs
+    for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
     {
-        scd->animTimer = 0;
-        if (scd->out)
-        {
-            scd->cState = PANEL_OPEN;
-        }
-        else
-        {
-            scd->cState = BODY_PART;
-        }
+        drawTab(0, 20 + (idx % NUM_TABS) * (scd->tabSprs[0].h + TAB_SPACE) * SONA_SCALE, SONA_SCALE, (idx >= NUM_TABS), idx + 2, scd->selection == idx);
     }
-    return false;
 }
 
+// Panel open
 static bool panelOpen(buttonEvt_t* evt)
 {
     // Draw
@@ -732,21 +667,24 @@ static bool panelOpen(buttonEvt_t* evt)
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c445);
 
     // Draw open tab
-    bool leftSide = scd->selection < 5;
-    int x         = (TFT_WIDTH - (scd->activeSona.image.w * 3)) >> 1;
+    bool leftSide = scd->selection < NUM_TABS;
+    int x         = (TFT_WIDTH - (scd->activeSona.image.w * SONA_SCALE)) >> 1;
     if (leftSide)
     {
-        drawWsgSimpleScaled(&scd->activeSona.image, x + NUM_PIXELS, TFT_HEIGHT - 192, 3, 3);
+        drawWsgSimpleScaled(&scd->activeSona.image, x + NUM_PIXELS, TFT_HEIGHT - (scd->activeSona.image.h * SONA_SCALE),
+                            SONA_SCALE, SONA_SCALE);
         for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
         {
             if (idx == scd->selection)
             {
-                drawTab(NUM_PIXELS * 2, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2, scd->selection == idx);
+                drawTab(NUM_PIXELS * 2, 20 + (idx % NUM_TABS) * (scd->tabSprs[0].h - TAB_SPACE) * SONA_SCALE,
+                        SONA_SCALE, (idx >= NUM_TABS), idx + 2, scd->selection == idx);
             }
             else
             {
-                drawTab((idx > 4) ? NUM_PIXELS * 2 : 0, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2,
-                        scd->selection == idx);
+                drawTab((idx >= NUM_TABS) ? NUM_PIXELS * 2 : 0,
+                        20 + (idx % NUM_TABS) * (scd->tabSprs[0].h - TAB_SPACE) * SONA_SCALE, SONA_SCALE,
+                        (idx >= NUM_TABS), idx + 2, scd->selection == idx);
             }
         }
         fillDisplayArea(0, Y_PADDING, NUM_PIXELS * 2, TFT_HEIGHT - BOTT_PADDING, c555);
@@ -758,16 +696,17 @@ static bool panelOpen(buttonEvt_t* evt)
     }
     else
     {
-        drawWsgSimpleScaled(&scd->activeSona.image, x - NUM_PIXELS, TFT_HEIGHT - 192, 3, 3);
+        drawWsgSimpleScaled(&scd->activeSona.image, x - NUM_PIXELS, TFT_HEIGHT - (scd->activeSona.image.h * SONA_SCALE),
+                            SONA_SCALE, SONA_SCALE);
         for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
         {
             if (idx == scd->selection)
             {
-                drawTab(-NUM_PIXELS * 2, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2, scd->selection == idx);
+                drawTab(-NUM_PIXELS * 2, 20 + (idx % 5) * (scd->tabSprs[0].h - TAB_SPACE) * SONA_SCALE, SONA_SCALE, (idx > 4), idx + 2, scd->selection == idx);
             }
             else
             {
-                drawTab((idx < 5) ? -NUM_PIXELS * 2 : 0, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2,
+                drawTab((idx < 5) ? -NUM_PIXELS * 2 : 0, 20 + (idx % 5) * (scd->tabSprs[0].h - TAB_SPACE) * SONA_SCALE, SONA_SCALE, (idx > 4), idx + 2,
                         scd->selection == idx);
             }
         }
@@ -922,12 +861,116 @@ static bool panelOpen(buttonEvt_t* evt)
     return false;
 }
 
+// Sliding
+static bool slideTab(int selected, bool out, uint64_t elapsedUs)
+{
+    // Update variables
+    scd->animTimer += elapsedUs;
+    // Change direction based selection
+    bool left = scd->selection < NUM_TABS;
+
+    // Draw BG
+    clearPxTft();
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c445);
+
+    // Draw swadgesona
+    int64_t steps = scd->animTimer;
+    int x         = (TFT_WIDTH - (scd->activeSona.image.w * SONA_SCALE)) >> 1;
+    int offset    = 0;
+    if (left)
+    {
+        if (!out)
+        {
+            x += NUM_PIXELS;
+            offset += NUM_PIXELS * 2;
+        }
+        while (steps > STEP)
+        {
+            steps -= STEP;
+            x      = (out) ? x + 1 : x - 1;
+            offset = (out) ? offset + 2 : offset - 2;
+        }
+        drawWsgSimpleScaled(&scd->activeSona.image, x, TFT_HEIGHT - (scd->activeSona.image.h * SONA_SCALE), SONA_SCALE,
+                            SONA_SCALE);
+        for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
+        {
+            if (idx == scd->selection)
+            {
+                drawTab(offset, 20 + (idx % NUM_TABS) * (scd->tabSprs[0].h - TAB_SPACE) * SONA_SCALE, SONA_SCALE, (idx >= NUM_TABS), idx + 2,
+                        scd->selection == idx);
+            }
+            else
+            {
+                drawTab((idx >= NUM_TABS) ? offset : 0, 20 + (idx % NUM_TABS) * (scd->tabSprs[0].h - TAB_SPACE) * SONA_SCALE, SONA_SCALE, (idx >= NUM_TABS),
+                        idx + 2, scd->selection == idx);
+            }
+        }
+        fillDisplayArea(0, Y_PADDING, offset, TFT_HEIGHT - BOTT_PADDING, c555);
+        for (int i = 0; i < 3; i++)
+        {
+            drawLineFast(0, TFT_HEIGHT - (BOTT_PADDING + 1 + i), offset, TFT_HEIGHT - (BOTT_PADDING + 1 + i), c255);
+        }
+    }
+    else
+    {
+        if (!out)
+        {
+            x -= NUM_PIXELS;
+            offset -= NUM_PIXELS * 2;
+        }
+        while (steps > STEP)
+        {
+            steps -= STEP;
+            x      = (out) ? x - 1 : x + 1;
+            offset = (out) ? offset - 2 : offset + 2;
+        }
+        drawWsgSimpleScaled(&scd->activeSona.image, x, TFT_HEIGHT - (scd->activeSona.image.h * SONA_SCALE), SONA_SCALE,
+                            SONA_SCALE);
+        for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
+        {
+            if (idx == scd->selection)
+            {
+                drawTab(offset, 20 + (idx % NUM_TABS) * (scd->tabSprs[0].h - TAB_SPACE) * SONA_SCALE, SONA_SCALE, (idx >= NUM_TABS), idx + 2,
+                        scd->selection == idx);
+            }
+            else
+            {
+                drawTab((idx < NUM_TABS) ? offset : 0, 20 + (idx % NUM_TABS) * (scd->tabSprs[0].h - TAB_SPACE) * SONA_SCALE, SONA_SCALE, (idx >= NUM_TABS),
+                        idx + 2, scd->selection == idx);
+            }
+        }
+        fillDisplayArea(TFT_WIDTH + offset, Y_PADDING, TFT_WIDTH, TFT_HEIGHT - BOTT_PADDING, c555);
+        for (int i = 0; i < 3; i++)
+        {
+            drawLineFast(TFT_WIDTH + offset, TFT_HEIGHT - (BOTT_PADDING + 1 + i), TFT_WIDTH,
+                         TFT_HEIGHT - (BOTT_PADDING + 1 + i), c255);
+        }
+    }
+
+    // Exit
+    if (scd->animTimer >= SLIDE_TIME_AMOUNT)
+    {
+        scd->animTimer = 0;
+        if (scd->out)
+        {
+            scd->cState = PANEL_OPEN;
+        }
+        else
+        {
+            scd->cState = BODY_PART;
+        }
+    }
+    return false;
+}
+
+// Subdrawing
+
 static void drawTab(int xOffset, int y, int scale, bool flip, int labelIdx, bool selected)
 {
     int x = 0;
     if (!selected)
     {
-        x -= 5 * scale;
+        x -= NUM_TABS * scale;
     }
     wsg_t* tab = &scd->tabSprs[0];
     if (flip)
@@ -936,166 +979,11 @@ static void drawTab(int xOffset, int y, int scale, bool flip, int labelIdx, bool
         x   = TFT_WIDTH - scd->tabSprs[1].w * scale;
         if (!selected)
         {
-            x += 5 * scale;
+            x += NUM_TABS * scale;
         }
     }
     drawWsgSimpleScaled(tab, xOffset + x, y, scale, scale);
     drawWsgSimpleScaled(&scd->tabSprs[labelIdx], xOffset + x, y, scale, scale);
-}
-
-static void drawColors(const paletteColor_t* colors, int arrSize, bool left)
-{
-    int end = (arrSize - (GRID_SIZE * scd->page) < GRID_SIZE) ? arrSize - (GRID_SIZE * scd->page) : GRID_SIZE;
-    if (left)
-    {
-        for (int idx = 0; idx < end; idx++)
-        {
-            drawRoundedRect(PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
-                            Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)),
-                            PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + SWATCH_W,
-                            Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + SWATCH_H, CORNER_RAD,
-                            colors[idx + (scd->page * GRID_SIZE)], c000);
-            if (scd->subSelection == idx + (scd->page * GRID_SIZE))
-            {
-                drawWsgSimpleScaled(&scd->pointerImage, PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
-                                    Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
-            }
-        }
-    }
-    else
-    {
-        for (int idx = 0; idx < end; idx++)
-        {
-            drawRoundedRect((TFT_WIDTH - NUM_PIXELS * 2) + PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
-                            Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)),
-                            (TFT_WIDTH - NUM_PIXELS * 2) + PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W))
-                                + SWATCH_W,
-                            Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + SWATCH_H, CORNER_RAD,
-                            colors[idx + (scd->page * GRID_SIZE)], c000);
-            if (scd->subSelection == idx + (scd->page * GRID_SIZE))
-            {
-                drawWsgSimpleScaled(&scd->pointerImage,
-                                    (TFT_WIDTH - NUM_PIXELS * 2) + PADDING
-                                        + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
-                                    Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
-            }
-        }
-    }
-
-    // Arrows
-    drawArrows(arrSize, left);
-}
-
-static void drawArrows(int arrSize, bool left)
-{
-    if (arrSize <= GRID_SIZE)
-    {
-        return;
-    }
-    if (left)
-    {
-        if (scd->page * GRID_SIZE < arrSize - GRID_SIZE)
-        {
-            drawWsgSimpleScaled(&scd->tabSprs[12], NUM_PIXELS + 13,
-                                TFT_HEIGHT - (BOTT_PADDING + scd->tabSprs[12].h + 14), 2, 2);
-        }
-
-        if (scd->page != 0)
-        {
-            drawWsgSimpleScaled(&scd->tabSprs[13], NUM_PIXELS - (26 + scd->tabSprs[13].w),
-                                TFT_HEIGHT - (BOTT_PADDING + scd->tabSprs[13].h + 14), 2, 2);
-        }
-    }
-    else
-    {
-        if (scd->page * GRID_SIZE < arrSize - GRID_SIZE)
-        {
-            drawWsgSimpleScaled(&scd->tabSprs[12], TFT_WIDTH - (NUM_PIXELS - 13),
-                                TFT_HEIGHT - (BOTT_PADDING + scd->tabSprs[12].h + 14), 2, 2);
-        }
-        if (scd->page != 0)
-        {
-            drawWsgSimpleScaled(&scd->tabSprs[13], TFT_WIDTH - (NUM_PIXELS + (26 + scd->tabSprs[12].w)),
-                                TFT_HEIGHT - (BOTT_PADDING + scd->tabSprs[13].h + 14), 2, 2);
-        }
-    }
-}
-
-static void drawItems(int arrSize, bool left, bool half)
-{
-    int end = (arrSize - (GRID_SIZE * scd->page) < GRID_SIZE) ? arrSize - (GRID_SIZE * scd->page) : GRID_SIZE;
-    if (left)
-    {
-        if (half)
-        {
-            for (int idx = 0; idx < end; idx++)
-            {
-                drawWsgSimpleHalf(&scd->selectionImages[idx + (scd->page * GRID_SIZE)],
-                                  PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
-                                  Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
-                if (scd->subSelection == idx + (scd->page * GRID_SIZE))
-                {
-                    drawWsgSimpleScaled(&scd->pointerImage,
-                                        PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
-                                        Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
-                }
-            }
-        }
-        else
-        {
-            for (int idx = 0; idx < end; idx++)
-            {
-                drawWsgSimple(&scd->selectionImages[idx + (scd->page * GRID_SIZE)],
-                              PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) - 16,
-                              Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) - 16);
-                if (scd->subSelection == idx + (scd->page * GRID_SIZE))
-                {
-                    drawWsgSimpleScaled(&scd->pointerImage,
-                                        PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
-                                        Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
-                }
-            }
-        }
-    }
-    else
-    {
-        if (half)
-        {
-            for (int idx = 0; idx < end; idx++)
-            {
-                drawWsgSimpleHalf(&scd->selectionImages[idx + (scd->page * GRID_SIZE)],
-                                  (TFT_WIDTH - NUM_PIXELS * 2) + PADDING
-                                      + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
-                                  Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
-                if (scd->subSelection == idx + (scd->page * GRID_SIZE))
-                {
-                    drawWsgSimpleScaled(&scd->pointerImage,
-                                        (TFT_WIDTH - NUM_PIXELS * 2) + PADDING
-                                            + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
-                                        Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
-                }
-            }
-        }
-        else
-        {
-            for (int idx = 0; idx < end; idx++)
-            {
-                drawWsgSimple(&scd->selectionImages[idx + (scd->page * GRID_SIZE)],
-                              (TFT_WIDTH - NUM_PIXELS * 2) + PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W))
-                                  - 16,
-                              Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) - 16);
-                if (scd->subSelection == idx + (scd->page * GRID_SIZE))
-                {
-                    drawWsgSimpleScaled(&scd->pointerImage,
-                                        (TFT_WIDTH - NUM_PIXELS * 2) + PADDING
-                                            + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
-                                        Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
-                }
-            }
-        }
-    }
-    // Arrows
-    drawArrows(arrSize, left);
 }
 
 static void drawTabContents(void)
@@ -1159,19 +1047,155 @@ static void drawTabContents(void)
     }
 }
 
-static void drawCreator(void)
+static void drawColors(const paletteColor_t* colors, int arrSize, bool left)
 {
-    // Background
-    clearPxTft();
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c445);
-
-    // Draw the swadgesona face
-    drawWsgSimpleScaled(&scd->activeSona.image, (TFT_WIDTH - (scd->activeSona.image.w * 3)) >> 1, TFT_HEIGHT - 192, 3,
-                        3);
-
-    // Draw the tabs
-    for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
+    int end = (arrSize - (GRID_SIZE * scd->page) < GRID_SIZE) ? arrSize - (GRID_SIZE * scd->page) : GRID_SIZE;
+    if (left)
     {
-        drawTab(0, 20 + (idx % 5) * 36, 3, (idx > 4), idx + 2, scd->selection == idx);
+        for (int idx = 0; idx < end; idx++)
+        {
+            drawRoundedRect(PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
+                            Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)),
+                            PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + SWATCH_W,
+                            Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + SWATCH_H, CORNER_RAD,
+                            colors[idx + (scd->page * GRID_SIZE)], c000);
+            if (scd->subSelection == idx + (scd->page * GRID_SIZE))
+            {
+                drawWsgSimpleScaled(&scd->cursorImage, PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
+                                    Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
+            }
+        }
+    }
+    else
+    {
+        for (int idx = 0; idx < end; idx++)
+        {
+            drawRoundedRect((TFT_WIDTH - NUM_PIXELS * 2) + PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
+                            Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)),
+                            (TFT_WIDTH - NUM_PIXELS * 2) + PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W))
+                                + SWATCH_W,
+                            Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + SWATCH_H, CORNER_RAD,
+                            colors[idx + (scd->page * GRID_SIZE)], c000);
+            if (scd->subSelection == idx + (scd->page * GRID_SIZE))
+            {
+                drawWsgSimpleScaled(&scd->cursorImage,
+                                    (TFT_WIDTH - NUM_PIXELS * 2) + PADDING
+                                        + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
+                                    Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
+            }
+        }
+    }
+
+    // Arrows
+    drawArrows(arrSize, left);
+}
+
+static void drawItems(int arrSize, bool left, bool half)
+{
+    int end = (arrSize - (GRID_SIZE * scd->page) < GRID_SIZE) ? arrSize - (GRID_SIZE * scd->page) : GRID_SIZE;
+    if (left)
+    {
+        if (half)
+        {
+            for (int idx = 0; idx < end; idx++)
+            {
+                drawWsgSimpleHalf(&scd->selectionImages[idx + (scd->page * GRID_SIZE)],
+                                  PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
+                                  Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
+                if (scd->subSelection == idx + (scd->page * GRID_SIZE))
+                {
+                    drawWsgSimpleScaled(&scd->cursorImage, PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
+                                        Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
+                }
+            }
+        }
+        else
+        {
+            for (int idx = 0; idx < end; idx++)
+            {
+                drawWsgSimple(&scd->selectionImages[idx + (scd->page * GRID_SIZE)],
+                              PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) - 16,
+                              Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) - 16);
+                if (scd->subSelection == idx + (scd->page * GRID_SIZE))
+                {
+                    drawWsgSimpleScaled(&scd->cursorImage, PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
+                                        Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
+                }
+            }
+        }
+    }
+    else
+    {
+        if (half)
+        {
+            for (int idx = 0; idx < end; idx++)
+            {
+                drawWsgSimpleHalf(&scd->selectionImages[idx + (scd->page * GRID_SIZE)],
+                                  (TFT_WIDTH - NUM_PIXELS * 2) + PADDING
+                                      + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
+                                  Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
+                if (scd->subSelection == idx + (scd->page * GRID_SIZE))
+                {
+                    drawWsgSimpleScaled(&scd->cursorImage,
+                                        (TFT_WIDTH - NUM_PIXELS * 2) + PADDING
+                                            + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
+                                        Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
+                }
+            }
+        }
+        else
+        {
+            for (int idx = 0; idx < end; idx++)
+            {
+                drawWsgSimple(&scd->selectionImages[idx + (scd->page * GRID_SIZE)],
+                              (TFT_WIDTH - NUM_PIXELS * 2) + PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W))
+                                  - 16,
+                              Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) - 16);
+                if (scd->subSelection == idx + (scd->page * GRID_SIZE))
+                {
+                    drawWsgSimpleScaled(&scd->cursorImage,
+                                        (TFT_WIDTH - NUM_PIXELS * 2) + PADDING
+                                            + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
+                                        Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
+                }
+            }
+        }
+    }
+    // Arrows
+    drawArrows(arrSize, left);
+}
+
+static void drawArrows(int arrSize, bool left)
+{
+    if (arrSize <= GRID_SIZE)
+    {
+        return;
+    }
+    if (left)
+    {
+        if (scd->page * GRID_SIZE < arrSize - GRID_SIZE)
+        {
+            drawWsgSimpleScaled(&scd->tabSprs[12], NUM_PIXELS + ARROW_SHIFT,
+                                TFT_HEIGHT - (BOTT_PADDING + scd->tabSprs[12].h + ARROW_HEIGHT), 2, 2);
+        }
+
+        if (scd->page != 0)
+        {
+            drawWsgSimpleScaled(&scd->tabSprs[13], NUM_PIXELS - (ARROW_SHIFT * 2 + scd->tabSprs[13].w),
+                                TFT_HEIGHT - (BOTT_PADDING + scd->tabSprs[13].h + ARROW_HEIGHT), 2, 2);
+        }
+    }
+    else
+    {
+        if (scd->page * GRID_SIZE < arrSize - GRID_SIZE)
+        {
+            drawWsgSimpleScaled(&scd->tabSprs[12], TFT_WIDTH - (NUM_PIXELS - ARROW_SHIFT),
+                                TFT_HEIGHT - (BOTT_PADDING + scd->tabSprs[12].h + ARROW_HEIGHT), 2, 2);
+        }
+        if (scd->page != 0)
+        {
+            drawWsgSimpleScaled(&scd->tabSprs[13], TFT_WIDTH - (NUM_PIXELS + (ARROW_SHIFT * 2 + scd->tabSprs[13].w)),
+                                TFT_HEIGHT - (BOTT_PADDING + scd->tabSprs[13].h + ARROW_HEIGHT), 2, 2);
+        }
     }
 }
