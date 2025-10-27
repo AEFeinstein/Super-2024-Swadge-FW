@@ -63,6 +63,8 @@ static const char spkTitle[]      = "Speaker";
 static const char micTitle[]      = "Microphone";
 static const char touchpadTitle[] = "Touchpad";
 static const char imuTitle[]      = "Tilt Controls";
+//static const char passTitle[]     = "SwadgePass";
+//static const char sonaTitle[]     = "Your Sona";
 
 static const tutorialStep_t buttonsSteps[] = {
     {
@@ -79,7 +81,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .buttons = DPAD_BUTTONS,
         },
         .title = dpadTitle,
-        .detail = "These four buttons on the left side of the Swadge are the D-Pad. Use them to navigate. Try them all out!",
+        .detail = "The 4 buttons on the left side of the Swadge are the D-Pad. Use them to navigate. Try them all out!",
     },
     {
         .trigger = {
@@ -87,7 +89,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .buttons = PB_A,
         },
         .title = aBtnTitle,
-        .detail = "The A Button is used to select, or trigger a primary action. Give it a try!",
+        .detail = "The A Button is used to select, or trigger a primary action. Tap it!",
     },
     {
         .trigger = {
@@ -103,7 +105,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .buttons = PB_START,
         },
         .title = pauseBtnTitle,
-        .detail = "The Pause button is mode-specific, but usually pauses a game or performs a special function. Give it a try!",
+        .detail = "The Pause button is mode-specific, but usually pauses a game or performs a special function. Tap it!",
     },
     {
         .trigger = {
@@ -111,7 +113,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .intData = -1,
         },
         .title = touchpadTitle,
-        .detail = "The C Gem is a touchpad! Give it a try by spinning your finger around it clockwise."
+        .detail = "The joystick is a touchpad! Give it a try by spinning your finger around it clockwise."
     },
     {
         .trigger = {
@@ -142,7 +144,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = MIC_LOUD,
         },
         .title = micTitle,
-        .detail = "The metal dot to the right of the screen is a microphone. Give a roar (or blow on it) to continue."
+        .detail = "The metal dot to the left of the screen is a microphone. Give a roar (or blow on it) to continue."
     },
     {
         .trigger = {
