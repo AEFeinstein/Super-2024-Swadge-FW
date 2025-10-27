@@ -93,7 +93,6 @@ typedef struct
         uint64_t stateElapsedUs;
     } activeMicrogame;
 
-    tintColor_t timerTintColor;
     /// Used to tint grayscale images (c111, c222, c333, c444). See PALETTE_* defines
     wsgPalette_t tintPalette;
 
@@ -120,6 +119,8 @@ typedef struct
     font_t bigFont;
     font_t bigFontOutline;
 
+    led_t leds[CONFIG_NUM_LEDS];
+
     midiFile_t menuBgm;
     midiFile_t gameBgm;
     midiFile_t gameOverBgm;
@@ -138,6 +139,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs);
 static void cosCrunchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void cosCrunchResetBackground(void);
 static void cosCrunchDisplayMessage(const char* msg);
+static void cosCrunchClearLeds(void);
 static void cosCrunchDrawTimer(void);
 static void cosCrunchAddToSwadgePassPacket(swadgePassPacket_t* packet);
 static int32_t cosCrunchGetSwadgePassHighScore(const swadgePassPacket_t* packet);
@@ -194,6 +196,9 @@ const cosCrunchMicrogame_t* const microgames[] = {
 tintColor_t const blueTimerTintColor   = {c013, c125, c235, 0};
 tintColor_t const yellowTimerTintColor = {c430, c540, c554, 0};
 tintColor_t const redTimerTintColor    = {c300, c500, c533, 0};
+led_t const blueLedColor               = {.r = 0, .g = 0, .b = 255};
+led_t const yellowLedColor             = {.r = 255, .g = 255, .b = 0};
+led_t const redLedColor                = {.r = 255, .g = 0, .b = 0};
 
 /// Colors randomly given to games that request a color
 tintColor_t tintColors[] = {
@@ -271,6 +276,8 @@ static void cosCrunchEnterMode(void)
     globalMidiPlayerPlaySong(&cc->menuBgm, MIDI_BGM);
 
     cc->sfxPlayer = globalMidiPlayerGet(MIDI_SFX);
+
+    cosCrunchClearLeds();
 
     cc->highScores.highScoreCount = 10;
     initHighScores(&cc->highScores, CC_NVS_NAMESPACE);
@@ -389,22 +396,6 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         }
     }
 
-    if (cc->activeMicrogame.game != NULL)
-    {
-        if (cc->activeMicrogame.gameTimeRemainingUs <= cc->activeMicrogame.game->timeoutUs / 4)
-        {
-            cc->timerTintColor = redTimerTintColor;
-        }
-        else if (cc->activeMicrogame.gameTimeRemainingUs <= cc->activeMicrogame.game->timeoutUs / 2)
-        {
-            cc->timerTintColor = yellowTimerTintColor;
-        }
-        else
-        {
-            cc->timerTintColor = blueTimerTintColor;
-        }
-    }
-
     if (cc->state == CC_MICROGAME_PENDING && cc->announcePlayer)
     {
         cc->announcePlayer = false;
@@ -436,6 +427,8 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             {
                 cc->state = CC_MICROGAME_PENDING;
             }
+
+            cosCrunchClearLeds();
 
             break;
         }
@@ -606,6 +599,8 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                 cc->personalBestAchieved = false;
             }
 
+            cosCrunchClearLeds();
+
             globalMidiPlayerPlaySong(&cc->gameOverBgm, MIDI_BGM);
             break;
         }
@@ -775,9 +770,72 @@ static void cosCrunchDisplayMessage(const char* msg)
                              TFT_HEIGHT - MESSAGE_Y_OFFSET);
 }
 
+static void cosCrunchClearLeds(void)
+{
+    for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+    {
+        cc->leds[i].r = 0;
+        cc->leds[i].g = 0;
+        cc->leds[i].b = 0;
+    }
+    setLeds(cc->leds, CONFIG_NUM_LEDS);
+}
+
 static void cosCrunchDrawTimer()
 {
-    tintPalette(&cc->tintPalette, &cc->timerTintColor);
+    const tintColor_t* timerTintColor;
+    led_t const* ledColor;
+    bool topLeds, middleLeds, bottomLeds;
+    if (cc->activeMicrogame.gameTimeRemainingUs <= cc->activeMicrogame.game->timeoutUs / 4)
+    {
+        timerTintColor = &redTimerTintColor;
+
+        ledColor   = &redLedColor;
+        topLeds    = false;
+        middleLeds = false;
+        bottomLeds = cc->activeMicrogame.gameTimeRemainingUs > 0;
+    }
+    else if (cc->activeMicrogame.gameTimeRemainingUs <= cc->activeMicrogame.game->timeoutUs / 2)
+    {
+        timerTintColor = &yellowTimerTintColor;
+
+        ledColor   = &yellowLedColor;
+        topLeds    = false;
+        middleLeds = true;
+        bottomLeds = true;
+    }
+    else
+    {
+        timerTintColor = &blueTimerTintColor;
+
+        ledColor   = &blueLedColor;
+        topLeds    = true;
+        middleLeds = true;
+        bottomLeds = true;
+    }
+
+    for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+    {
+        // LED indices as laid out on the swadge:
+        // 5 0
+        // 3 2
+        // 4 1
+        if ((bottomLeds && (i == 1 || i == 4)) || (middleLeds && (i == 2 || i == 3)) || (topLeds && (i == 0 || i == 5)))
+        {
+            cc->leds[i].r = ledColor->r;
+            cc->leds[i].g = ledColor->g;
+            cc->leds[i].b = ledColor->b;
+        }
+        else
+        {
+            cc->leds[i].r = 0;
+            cc->leds[i].g = 0;
+            cc->leds[i].b = 0;
+        }
+    }
+    setLeds(cc->leds, CONFIG_NUM_LEDS);
+
+    tintPalette(&cc->tintPalette, timerTintColor);
 
     if (cc->activeMicrogame.gameTimeRemainingUs > 0)
     {
@@ -802,11 +860,11 @@ static void cosCrunchDrawTimer()
         // Long straight paint line
         int16_t timerX = 61 + offsetX + cc->wsg.timerLeft.w;
         int16_t timerY = TFT_HEIGHT - 17 + offsetY;
-        fillDisplayArea(timerX, timerY, timerX + timer_width, timerY + 4, cc->timerTintColor.base);
+        fillDisplayArea(timerX, timerY, timerX + timer_width, timerY + 4, timerTintColor->base);
 
         // Paint line highlight, lowlight, shadow
-        drawLineFast(timerX, timerY + 1, timerX + timer_width, timerY + 1, cc->timerTintColor.highlight);
-        drawLineFast(timerX, timerY + 4, timerX + timer_width, timerY + 4, cc->timerTintColor.lowlight);
+        drawLineFast(timerX, timerY + 1, timerX + timer_width, timerY + 1, timerTintColor->highlight);
+        drawLineFast(timerX, timerY + 4, timerX + timer_width, timerY + 4, timerTintColor->lowlight);
         drawLineFast(timerX, timerY + 5, timerX + timer_width, timerY + 5, c210);
 
         // Round end cap
