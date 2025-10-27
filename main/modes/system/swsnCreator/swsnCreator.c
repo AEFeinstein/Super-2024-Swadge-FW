@@ -5,6 +5,7 @@
 #include "swsnCreator.h"
 #include "mainMenu.h"
 #include "swadgesona.h"
+#include "settingsManager.h"
 
 //==============================================================================
 // Define
@@ -37,14 +38,48 @@ static const char sonaSlotUninitialized[] = "Uninitialized";
 static const char* const menuOptions[] = {
     "Create!",
     "View",
+    "Pointer: ",
     "Exit",
+};
+static const char* const pointerOptions[] = {
+    "Default", "Ball",         "Beaker", "Bow",   "Candy Cane", "Carrot", "White Paw", "Black Paw",  "Computer Pointer",
+    "Donut",   "Hotdog",       "Ender",  "Gem",   "Ghost",      "Hammer", "Heart",     "Leaf",       " Magic Wand",
+    "Glove",   "Corner arrow", "Pencil", "Pizza", "Rainbow",    "Ruler",  "Sword",     "Watermelon", "Weiner",
+};
+static const int32_t pointerSprs[] = {
+    SWSN_POINTER_ARROW_WSG,
+    SWSN_POINTER_BALL_WSG,
+    SWSN_POINTER_BEAKER_WSG,
+    SWSN_POINTER_BOW_WSG,
+    SWSN_POINTER_CANDY_CANE_WSG,
+    SWSN_POINTER_CARROT_WSG,
+    SWSN_POINTER_CAT_PAW_WSG,
+    SWSN_POINTER_CAT_PAW_B_WSG,
+    SWSN_POINTER_COMPUTER_POINTER_WSG,
+    SWSN_POINTER_DONUT_WSG,
+    SWSN_POINTER_DRESSED_WEINER_WSG,
+    SWSN_POINTER_ENDER_WSG,
+    SWSN_POINTER_GEM_WSG,
+    SWSN_POINTER_GHOST_WSG,
+    SWSN_POINTER_HAMMER_WSG,
+    SWSN_POINTER_HEART_WSG,
+    SWSN_POINTER_LEAF_WSG,
+    SWSN_POINTER_MAGIC_WAND_WSG,
+    SWSN_POINTER_NO_GLOVE_NO_LOVE_WSG,
+    SWSN_POINTER_NO_STEM_WSG,
+    SWSN_POINTER_PENCIL_WSG,
+    SWSN_POINTER_PIZZA_WSG,
+    SWSN_POINTER_RAINBOW_WSG,
+    SWSN_POINTER_RULER_WSG,
+    SWSN_POINTER_SWORD_WSG,
+    SWSN_POINTER_WATERMELON_WSG,
+    SWSN_POINTER_WEINER_WSG,
 };
 
 static const cnfsFileIdx_t tabImages[] = {
-    OPEN_TAB_LEFT_WSG, OPEN_TAB_RIGHT_WSG, SWSN_SKIN_WSG,          SWSN_EYEBROW_WSG,
-    SWSN_EYE_WSG,      SWSN_MOUTH_WSG,     SWSN_EAR_WSG,           SWSN_FACIAL_HAIR_WSG,
-    SWSN_HAIR_WSG,     SWSN_HATS_WSG,      SWSN_GLASSES_WSG,       SWSN_SHIRT_WSG,
-    SWSN_ARROW_R_WSG,  SWSN_ARROW_L_WSG,   SWSN_POINTER_ARROW_WSG, SWSN_POINTER_SWORD_WSG,
+    OPEN_TAB_LEFT_WSG, OPEN_TAB_RIGHT_WSG, SWSN_SKIN_WSG,        SWSN_EYEBROW_WSG, SWSN_EYE_WSG,
+    SWSN_MOUTH_WSG,    SWSN_EAR_WSG,       SWSN_FACIAL_HAIR_WSG, SWSN_HAIR_WSG,    SWSN_HATS_WSG,
+    SWSN_GLASSES_WSG,  SWSN_SHIRT_WSG,     SWSN_ARROW_R_WSG,     SWSN_ARROW_L_WSG,
 };
 
 static const paletteColor_t skinSwatch[] = {
@@ -264,6 +299,8 @@ typedef struct
     int page;
     int subSelection;
     wsg_t* selectionImages;
+    int pointerType;
+    wsg_t pointerImage;
 } swsnCreatorData_t;
 
 //==============================================================================
@@ -326,7 +363,16 @@ static void swsnEnterMode(void)
     }
     scd->menu = endSubMenu(scd->menu);
     addSingleItemToMenu(scd->menu, menuOptions[1]);
-    addSingleItemToMenu(scd->menu, menuOptions[2]);
+    // FIXME: Pointer image selection crashes
+    const settingParam_t pointerImages = {
+        .def = pointerSprs[0],
+        .key = "swsnPointer",
+        .min = pointerSprs[0],
+        .max = pointerSprs[ARRAY_SIZE(pointerSprs) - 1],
+    };
+    addSettingsOptionsItemToMenu(scd->menu, menuOptions[2], pointerOptions, pointerSprs, ARRAY_SIZE(pointerSprs),
+                                 &pointerImages, SWSN_POINTER_ARROW_WSG);
+    addSingleItemToMenu(scd->menu, menuOptions[3]);
 }
 
 static void swsnExitMode(void)
@@ -551,6 +597,7 @@ static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal)
             // Load the creator
             generateRandomSwadgesona(&scd->activeSona);
             scd->state = CREATING;
+            loadWsg(pointerSprs[scd->pointerType], &scd->pointerImage, true);
         }
         else if (label == menuOptions[1])
         {
@@ -561,6 +608,10 @@ static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal)
             // Exit the mode
             switchToSwadgeMode(&mainMenuMode);
         }
+    }
+    else // XXX: Remove when done
+    {
+        printf("%s %s, setting=%d\n", label, selected ? "selected" : "scrolled to", settingVal);
     }
     return false;
 }
@@ -776,9 +827,6 @@ static bool panelOpen(buttonEvt_t* evt)
     }
 
     // Handle input
-    // - Selection
-    // - Page
-    // - Back
     while (checkButtonQueueWrapper(evt))
     {
         if (evt->down)
@@ -852,6 +900,7 @@ static bool panelOpen(buttonEvt_t* evt)
                     heap_caps_free(scd->selectionImages);
                     scd->selectionImages = NULL;
                 }
+                freeWsg(&scd->pointerImage);
             }
         }
     }
@@ -895,7 +944,7 @@ static void drawColors(const paletteColor_t* colors, int arrSize, bool left)
                             colors[idx + (scd->page * GRID_SIZE)], c000);
             if (scd->subSelection == idx + (scd->page * GRID_SIZE))
             {
-                drawWsgSimpleScaled(&scd->tabSprs[14], PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
+                drawWsgSimpleScaled(&scd->pointerImage, PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
                                     Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
             }
         }
@@ -912,7 +961,7 @@ static void drawColors(const paletteColor_t* colors, int arrSize, bool left)
                             colors[idx + (scd->page * GRID_SIZE)], c000);
             if (scd->subSelection == idx + (scd->page * GRID_SIZE))
             {
-                drawWsgSimpleScaled(&scd->tabSprs[14],
+                drawWsgSimpleScaled(&scd->pointerImage,
                                     (TFT_WIDTH - NUM_PIXELS * 2) + PADDING
                                         + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
                                     Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
@@ -973,7 +1022,8 @@ static void drawItems(int arrSize, bool left, bool half)
                                   Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
                 if (scd->subSelection == idx + (scd->page * GRID_SIZE))
                 {
-                    drawWsgSimpleScaled(&scd->tabSprs[14], PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
+                    drawWsgSimpleScaled(&scd->pointerImage,
+                                        PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
                                         Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
                 }
             }
@@ -987,7 +1037,8 @@ static void drawItems(int arrSize, bool left, bool half)
                               Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) - 16);
                 if (scd->subSelection == idx + (scd->page * GRID_SIZE))
                 {
-                    drawWsgSimpleScaled(&scd->tabSprs[14], PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
+                    drawWsgSimpleScaled(&scd->pointerImage,
+                                        PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
                                         Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
                 }
             }
@@ -1005,7 +1056,7 @@ static void drawItems(int arrSize, bool left, bool half)
                                   Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
                 if (scd->subSelection == idx + (scd->page * GRID_SIZE))
                 {
-                    drawWsgSimpleScaled(&scd->tabSprs[14],
+                    drawWsgSimpleScaled(&scd->pointerImage,
                                         (TFT_WIDTH - NUM_PIXELS * 2) + PADDING
                                             + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
                                         Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
@@ -1022,7 +1073,7 @@ static void drawItems(int arrSize, bool left, bool half)
                               Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) - 16);
                 if (scd->subSelection == idx + (scd->page * GRID_SIZE))
                 {
-                    drawWsgSimpleScaled(&scd->tabSprs[14],
+                    drawWsgSimpleScaled(&scd->pointerImage,
                                         (TFT_WIDTH - NUM_PIXELS * 2) + PADDING
                                             + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + 20,
                                         Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
