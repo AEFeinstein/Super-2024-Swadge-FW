@@ -419,7 +419,7 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
                 }
             }
         }
-        else
+        else if (sw->core.hat != HAE_BIGMA && sw->core.hat != HAE_BATTRICE && sw->core.hat != HAE_MET_HELMET && sw->core.hat != HAE_SAWTOOTH)
         {
             _getPaletteFromIdx(&sw->pal, COLOR_HAT, sw->core.hatColor);
         }
