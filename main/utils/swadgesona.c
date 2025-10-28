@@ -340,7 +340,8 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
     }
 
     // Bunny, Cat, and Dog ears go over the hair
-    if (sw->core.earShape == EAE_BUNNY || sw->core.earShape == EAE_DOG || sw->core.earShape == EAE_CAT)
+    if (sw->core.earShape == EAE_BUNNY || sw->core.earShape == EAE_DOG || sw->core.earShape == EAE_CAT
+        || sw->core.earShape == EAE_DOWN_COW || sw->core.earShape == EAE_OPEN_COW)
     {
         canvasDrawSimplePal(&sw->image, earWsgs[sw->core.earShape - 1], 0, 0, &sw->pal);
     }
@@ -359,7 +360,12 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
     {
         wsgPaletteReset(&sw->pal);
         _getPaletteFromIdx(&sw->pal, COLOR_HAIR, sw->core.hairColor);
-        canvasDrawSimplePal(&sw->image, hairWsgs[sw->core.hairStyle], 0, 0, &sw->pal);
+        canvasDrawSimplePal(&sw->image, hairWsgs[sw->core.hairStyle - 1], 0, 0, &sw->pal);
+    } else if (sw->core.hairStyle == HE_JINX)
+    {
+        wsgPaletteReset(&sw->pal);
+        _getPaletteFromIdx(&sw->pal, COLOR_HAIR, sw->core.hairColor);
+        canvasDrawSimplePal(&sw->image, H_JINX_HALF_WSG, 0, 0, &sw->pal);
     }
 
     // Glasses
@@ -419,7 +425,8 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
                 }
             }
         }
-        else if (sw->core.hat != HAE_BIGMA && sw->core.hat != HAE_BATTRICE && sw->core.hat != HAE_MET_HELMET && sw->core.hat != HAE_SAWTOOTH)
+        else if (sw->core.hat != HAE_BIGMA && sw->core.hat != HAE_BATTRICE && sw->core.hat != HAE_MET_HELMET
+                 && sw->core.hat != HAE_SAWTOOTH)
         {
             _getPaletteFromIdx(&sw->pal, COLOR_HAT, sw->core.hatColor);
         }
