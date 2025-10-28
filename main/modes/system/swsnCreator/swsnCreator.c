@@ -104,17 +104,27 @@ static const paletteColor_t clothesSwatch[] = {
     c554, c102, c521, c544, c545, c305, c401, c543, c033, c555, c541,
 };
 static const cnfsFileIdx_t bodymarksWsgs[] = {
-    BM_BEARD_WSG,      BM_BLUSH_WSG,         BM_BOTTOM_MOLE_WSG,  BM_BOTTOM_WSG,       BM_CHIN_WSG,
-    BM_CHIN_PATCH_WSG, BM_CHIN_STRAP_WSG,    BM_COP_WSG,          BM_COWBOY_WSG,       BM_EYE_MOLE_WSG,
-    BM_FRECKLES_WSG,   BM_FULL_SCRAGGLY_WSG, BM_HALF_STACHE_WSG,  BM_HEART_STACHE_WSG, BM_LESS_WISE_WSG,
-    BM_MAGICIAN_WSG,   BM_MARILYN_WSG,       BM_OLD_WSG,          BM_PILLOW_WSG,       BM_SAND_P_WSG,
-    BM_SCRAGGLY_WSG,   BM_SMALL_CURL_WSG,    BM_SMALL_STACHE_WSG, BM_SOUL_PATCH_WSG,   BM_STACHE_AND_STRAP_WSG,
-    BM_STRONGMAN_WSG,  BM_THIN_CHIN_WSG,     BM_THIS_WSG,         BM_TIRED_WSG,        BM_WISEMAN_WSG,
+    SWSN_NO_GO_WSG,       BM_BEARD_WSG,
+    BM_BLUSH_WSG,         BM_BOTTOM_MOLE_WSG,
+    BM_BOTTOM_WSG,        BM_CHIN_WSG,
+    BM_CHIN_PATCH_WSG,    BM_CHIN_STRAP_WSG,
+    BM_COP_WSG,           BM_COWBOY_WSG,
+    BM_EYE_MOLE_WSG,      BM_FRECKLES_WSG,
+    BM_FULL_SCRAGGLY_WSG, BM_HALF_STACHE_WSG,
+    BM_HEART_STACHE_WSG,  BM_LESS_WISE_WSG,
+    BM_MAGICIAN_WSG,      BM_MARILYN_WSG,
+    BM_OLD_WSG,           BM_PILLOW_WSG,
+    BM_SAND_P_WSG,        BM_SCRAGGLY_WSG,
+    BM_SMALL_CURL_WSG,    BM_SMALL_STACHE_WSG,
+    BM_SOUL_PATCH_WSG,    BM_STACHE_AND_STRAP_WSG,
+    BM_STRONGMAN_WSG,     BM_THIN_CHIN_WSG,
+    BM_THIS_WSG,          BM_TIRED_WSG,
+    BM_WISEMAN_WSG,
 };
 static const cnfsFileIdx_t earWsgs[] = {
-    EA_BIG_HOOP_WSG, EA_BUNNY_WSG,    EA_CAT_WSG,        EA_DOG_WSG,  EA_DOWN_COW_WSG,
-    EA_DWARF_WSG,    EA_EARRINGS_WSG, EA_ELF_WSG,        EA_LEFT_WSG, EA_MEDIUM_HOOP_WSG,
-    EA_OPEN_COW_WSG, EA_RIGHT_WSG,    EA_SMALL_HOOP_WSG,
+    SWSN_NO_GO_WSG,     EA_BIG_HOOP_WSG, EA_BUNNY_WSG,    EA_CAT_WSG,        EA_DOG_WSG,
+    EA_DOWN_COW_WSG,    EA_DWARF_WSG,    EA_EARRINGS_WSG, EA_ELF_WSG,        EA_LEFT_WSG,
+    EA_MEDIUM_HOOP_WSG, EA_OPEN_COW_WSG, EA_RIGHT_WSG,    EA_SMALL_HOOP_WSG,
 };
 static const cnfsFileIdx_t eyebrowsWsgs[] = {
     EB_ARCHED_WSG,
@@ -143,59 +153,28 @@ static const cnfsFileIdx_t eyeWsgs[] = {
     E_STARE_WSG, E_STARING_WSG,     E_SWIRLS_WSG,        E_THIN_WSG,          E_WIDE_WSG,
 };
 static const cnfsFileIdx_t hairWsgs[] = {
-    H_BALLET_BUN_WSG,
-    H_BOWL_CUT_WSG,
-    H_CHIBIUSA_WSG,
-    H_CURLY_WSG,
-    H_CUTE_WSG,
-    H_CUTE_BANGS_WSG,
-    H_DOLLY_WSG,
-    H_DOWN_DREADS_WSG,
-    H_DOWN_DREADS_R_WSG,
-    H_FRANKEY_STEIN_WSG,
-    H_FRO_WSG,
-    H_HINATA_WSG,
-    H_JINX_WSG,
-    H_LONG_WSG,
-    H_LONG_PIGS_WSG,
-    H_MAIN_CHARACTER_WSG,
-    H_MAIN_CHARACTER_R_WSG,
-    H_MAIN_VILLAIN_WSG,
-    H_MAIN_VILLAIN_R_WSG,
-    H_MALE_PATTERN_WSG,
-    H_MCR_WSG,
-    H_MINAKO_WSG,
-    H_MOHAWK_WSG,
-    H_POMPADOUR_WSG,
-    H_RAVEN_WSG,
-    H_SHORT_WSG,
-    H_SHORT_PIGS_WSG,
-    H_SIDE_PUFFS_WSG,
-    H_SIDE_PUFFS_R_WSG,
-    H_SKULL_WSG,
-    H_SKULL_R_WSG,
-    H_SMALL_BUNS_WSG,
-    H_SPOCK_WSG,
-    H_STAR_PUFF_NB_WSG,
-    H_STAR_PUFFS_WSG,
-    H_STAR_PUFFS_R_WSG,
-    H_TATTOO_WSG,
-    H_THING_WSG,
-    H_VBANG_WSG,
-    H_USAGI_WSG,
-    H_WAVY_HAWK_WSG,
-    H_WAVY_HAWK_R_WSG,
-    H_WAVY_SHORT_WSG,
-    H_WAVY_LONG_WSG,
-    H_WEDNESDAY_WSG,
-    H_WEDNESDAY_R_WSG,
-    H_WET_CURLY_WSG,
+    SWSN_NO_GO_WSG,      H_BALLET_BUN_WSG,     H_BOWL_CUT_WSG,
+    H_CHIBIUSA_WSG,      H_CURLY_WSG,          H_CUTE_WSG,
+    H_CUTE_BANGS_WSG,    H_DOLLY_WSG,          H_DOWN_DREADS_WSG,
+    H_DOWN_DREADS_R_WSG, H_FRANKEY_STEIN_WSG,  H_FRO_WSG,
+    H_HINATA_WSG,        H_JINX_WSG,           H_LONG_WSG,
+    H_LONG_PIGS_WSG,     H_MAIN_CHARACTER_WSG, H_MAIN_CHARACTER_R_WSG,
+    H_MAIN_VILLAIN_WSG,  H_MAIN_VILLAIN_R_WSG, H_MALE_PATTERN_WSG,
+    H_MCR_WSG,           H_MINAKO_WSG,         H_MOHAWK_WSG,
+    H_POMPADOUR_WSG,     H_RAVEN_WSG,          H_SHORT_WSG,
+    H_SHORT_PIGS_WSG,    H_SIDE_PUFFS_WSG,     H_SIDE_PUFFS_R_WSG,
+    H_SKULL_WSG,         H_SKULL_R_WSG,        H_SMALL_BUNS_WSG,
+    H_SPOCK_WSG,         H_STAR_PUFF_NB_WSG,   H_STAR_PUFFS_WSG,
+    H_STAR_PUFFS_R_WSG,  H_TATTOO_WSG,         H_THING_WSG,
+    H_VBANG_WSG,         H_USAGI_WSG,          H_WAVY_HAWK_WSG,
+    H_WAVY_HAWK_R_WSG,   H_WAVY_SHORT_WSG,     H_WAVY_LONG_WSG,
+    H_WEDNESDAY_WSG,     H_WEDNESDAY_R_WSG,    H_WET_CURLY_WSG,
     H_WET_SHORT_WSG,
 };
 static const cnfsFileIdx_t hatWsgs[] = {
-    HA_BATTRICE_WSG,   HA_BEANIE_WSG,          HA_BIGMA_WSG,    HA_CHEF_WSG,     HA_COOL_HAT_WSG,
-    HA_COWBOY_WSG,     HA_GARBOTNIK_WSG,       HA_GRAD_CAP_WSG, HA_HEART_WSG,    HA_KINETIC_DONUT_WSG,
-    HA_MET_HELMET_WSG, HA_PUFFBALL_BEANIE_WSG, HA_PULSE_WSG,    HA_SAWTOOTH_WSG, HA_TRON_WSG,
+    SWSN_NO_GO_WSG,         HA_BATTRICE_WSG,  HA_BEANIE_WSG,   HA_BIGMA_WSG, HA_CHEF_WSG,          HA_COOL_HAT_WSG,
+    HA_COWBOY_WSG,          HA_GARBOTNIK_WSG, HA_GRAD_CAP_WSG, HA_HEART_WSG, HA_KINETIC_DONUT_WSG, HA_MET_HELMET_WSG,
+    HA_PUFFBALL_BEANIE_WSG, HA_PULSE_WSG,     HA_SAWTOOTH_WSG, HA_TRON_WSG,
 };
 static const cnfsFileIdx_t mouthWsgs[] = {
     M_AH_WSG,
@@ -231,21 +210,17 @@ static const cnfsFileIdx_t mouthWsgs[] = {
     M_YELLING_WSG,
 };
 static const cnfsFileIdx_t glassesWsgs[] = {
-    G_3D_WSG,         G_ANIME_WSG,
-    G_BANDAGE_WSG,    G_BIG_WSG,
-    G_BIG_ANGLE_WSG,  G_BIG_ANGLE_SUN_WSG,
-    G_BIG_SQUARE_WSG, G_BIG_SQUARE_SUN_WSG,
-    G_BLACK_SUN_WSG,  G_EGGMAN_WSG,
-    G_GOEORDI_WSG,    G_LINDA_WSG,
-    G_LINDA_SUN_WSG,  G_LOW_WSG,
-    G_LOW_SUN_WSG,    G_PATCH_WSG,
-    G_RAY_BAN_WSG,    G_RAY_BAN_SUN_WSG,
-    G_READING_WSG,    G_SCOUTER_WSG,
-    G_SMALL_WSG,      G_SQUARE_WSG,
-    G_SQUARE_SUN_WSG, G_SQUIRTLE_SQUAD_WSG,
-    G_THIN_ANGLE_WSG, G_THIN_ANGLE_SUN_WSG,
-    G_UPTURNED_WSG,   G_UPTURNED_SUN_WSG,
-    G_WIDE_NOSE_WSG,  G_WIDE_NOSE_SUN_WSG,
+    SWSN_NO_GO_WSG,       G_3D_WSG,           G_ANIME_WSG,
+    G_BANDAGE_WSG,        G_BIG_WSG,          G_BIG_ANGLE_WSG,
+    G_BIG_ANGLE_SUN_WSG,  G_BIG_SQUARE_WSG,   G_BIG_SQUARE_SUN_WSG,
+    G_BLACK_SUN_WSG,      G_EGGMAN_WSG,       G_GOEORDI_WSG,
+    G_LINDA_WSG,          G_LINDA_SUN_WSG,    G_LOW_WSG,
+    G_LOW_SUN_WSG,        G_PATCH_WSG,        G_RAY_BAN_WSG,
+    G_RAY_BAN_SUN_WSG,    G_READING_WSG,      G_SCOUTER_WSG,
+    G_SMALL_WSG,          G_SQUARE_WSG,       G_SQUARE_SUN_WSG,
+    G_SQUIRTLE_SQUAD_WSG, G_THIN_ANGLE_WSG,   G_THIN_ANGLE_SUN_WSG,
+    G_UPTURNED_WSG,       G_UPTURNED_SUN_WSG, G_WIDE_NOSE_WSG,
+    G_WIDE_NOSE_SUN_WSG,
 };
 
 //==============================================================================
@@ -283,8 +258,16 @@ typedef enum
     CLOTHES,
     // Exit
     EXIT,
-    NUM_CREATOR_OPTIONS
+    NUM_CREATOR_OPTIONS,
 } creatorSelections_t;
+
+typedef enum
+{
+    HAIR_COLOR = 10,
+    EYE_COLOR,
+    HAT_COLOR,
+    GLASSES_COLOR,
+} creatorColor_t;
 
 //==============================================================================
 // Structs
@@ -303,7 +286,9 @@ typedef struct
     creatorStates_t cState;  // Sub-state
     wsg_t* tabSprs;          // Image location
     swadgesona_t activeSona; // Drawn to the screen
-    int selection;           // Primary selection
+    int arr[14];
+    swadgesona_t liveSona; // Used for editing
+    int selection;         // Primary selection
 
     // Slide
     bool out;
@@ -311,7 +296,6 @@ typedef struct
 
     // Panel
     int page;
-    int subSelection;
     wsg_t* selectionImages;
     int cursorType;
     wsg_t cursorImage;
@@ -331,6 +315,8 @@ static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal);
 // Creating
 static bool slideTab(int selected, bool out, uint64_t elapsedUs);
 static void runCreator(buttonEvt_t evt);
+static void stCopySonaToList(swadgesona_t* swsn);
+static void stCopyListToSona(swadgesona_t* swsn);
 
 // Drawing
 static void drawCreator(void);
@@ -545,11 +531,11 @@ static void runCreator(buttonEvt_t evt)
             }
             else if (evt.button & PB_A)
             {
-                scd->out    = true;
-                scd->cState = SLIDING;
-                // FIXME: Automatically set vars to sona
-                scd->page         = 0;
-                scd->subSelection = 0;
+                copySwadgesona(&scd->liveSona, &scd->activeSona);
+                stCopySonaToList(&scd->activeSona);
+                scd->out                 = true;
+                scd->cState              = SLIDING;
+                scd->arr[scd->selection] = 0;
                 switch (scd->selection)
                 {
                     case HAIR:
@@ -559,6 +545,7 @@ static void runCreator(buttonEvt_t evt)
                         {
                             loadWsg(hairWsgs[i], &scd->selectionImages[i], true);
                         }
+                        scd->arr[scd->selection] = scd->activeSona.core.hairStyle;
                         break;
                     }
                     case EYES:
@@ -568,6 +555,7 @@ static void runCreator(buttonEvt_t evt)
                         {
                             loadWsg(eyeWsgs[i], &scd->selectionImages[i], true);
                         }
+                        scd->arr[scd->selection] = scd->activeSona.core.eyeShape;
                         break;
                     }
                     case HAT:
@@ -577,6 +565,7 @@ static void runCreator(buttonEvt_t evt)
                         {
                             loadWsg(hatWsgs[i], &scd->selectionImages[i], true);
                         }
+                        scd->arr[scd->selection] = scd->activeSona.core.hat;
                         break;
                     }
                     case MOUTH:
@@ -586,6 +575,7 @@ static void runCreator(buttonEvt_t evt)
                         {
                             loadWsg(mouthWsgs[i], &scd->selectionImages[i], true);
                         }
+                        scd->arr[scd->selection] = scd->activeSona.core.mouthShape;
                         break;
                     }
                     case GLASSES:
@@ -596,6 +586,7 @@ static void runCreator(buttonEvt_t evt)
                         {
                             loadWsg(glassesWsgs[i], &scd->selectionImages[i], true);
                         }
+                        scd->arr[scd->selection] = scd->activeSona.core.glasses;
                         break;
                     }
                     case BODY_MODS:
@@ -606,6 +597,7 @@ static void runCreator(buttonEvt_t evt)
                         {
                             loadWsg(bodymarksWsgs[i], &scd->selectionImages[i], true);
                         }
+                        scd->arr[scd->selection] = scd->activeSona.core.bodyMarks;
                         break;
                     }
                     case EARS:
@@ -615,6 +607,7 @@ static void runCreator(buttonEvt_t evt)
                         {
                             loadWsg(earWsgs[i], &scd->selectionImages[i], true);
                         }
+                        scd->arr[scd->selection] = scd->activeSona.core.earShape;
                         break;
                     }
                     case EYEBROWS:
@@ -625,6 +618,17 @@ static void runCreator(buttonEvt_t evt)
                         {
                             loadWsg(eyebrowsWsgs[i], &scd->selectionImages[i], true);
                         }
+                        scd->arr[scd->selection] = scd->activeSona.core.eyebrows;
+                        break;
+                    }
+                    case SKIN:
+                    {
+                        scd->arr[scd->selection] = scd->activeSona.core.skin;
+                        break;
+                    }
+                    case CLOTHES:
+                    {
+                        scd->arr[scd->selection] = scd->activeSona.core.clothes;
                         break;
                     }
                     default:
@@ -632,6 +636,7 @@ static void runCreator(buttonEvt_t evt)
                         break;
                     }
                 }
+                scd->page = scd->arr[scd->selection] / GRID_SIZE;
             }
             else if (evt.button & PB_B)
             {
@@ -675,7 +680,7 @@ static bool panelOpen(buttonEvt_t* evt)
     int x         = (TFT_WIDTH - (scd->activeSona.image.w * SONA_SCALE)) >> 1;
     if (leftSide)
     {
-        drawWsgSimpleScaled(&scd->activeSona.image, x + NUM_PIXELS, TFT_HEIGHT - (scd->activeSona.image.h * SONA_SCALE),
+        drawWsgSimpleScaled(&scd->liveSona.image, x + NUM_PIXELS, TFT_HEIGHT - (scd->activeSona.image.h * SONA_SCALE),
                             SONA_SCALE, SONA_SCALE);
         for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
         {
@@ -700,19 +705,20 @@ static bool panelOpen(buttonEvt_t* evt)
     }
     else
     {
-        drawWsgSimpleScaled(&scd->activeSona.image, x - NUM_PIXELS, TFT_HEIGHT - (scd->activeSona.image.h * SONA_SCALE),
+        drawWsgSimpleScaled(&scd->liveSona.image, x - NUM_PIXELS, TFT_HEIGHT - (scd->activeSona.image.h * SONA_SCALE),
                             SONA_SCALE, SONA_SCALE);
         for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
         {
             if (idx == scd->selection)
             {
-                drawTab(-NUM_PIXELS * 2, 20 + (idx % 5) * (scd->tabSprs[0].h + TAB_SPACE) * SONA_SCALE, SONA_SCALE,
-                        (idx > 4), idx + 2, scd->selection == idx);
+                drawTab(-NUM_PIXELS * 2, 20 + (idx % NUM_TABS) * (scd->tabSprs[0].h + TAB_SPACE) * SONA_SCALE,
+                        SONA_SCALE, (idx > 4), idx + 2, scd->selection == idx);
             }
             else
             {
-                drawTab((idx < 5) ? -NUM_PIXELS * 2 : 0, 20 + (idx % 5) * (scd->tabSprs[0].h + TAB_SPACE) * SONA_SCALE,
-                        SONA_SCALE, (idx > 4), idx + 2, scd->selection == idx);
+                drawTab((idx < 5) ? -NUM_PIXELS * 2 : 0,
+                        20 + (idx % NUM_TABS) * (scd->tabSprs[0].h + TAB_SPACE) * SONA_SCALE, SONA_SCALE,
+                        (idx >= NUM_TABS), idx + 2, scd->selection == idx);
             }
         }
         fillDisplayArea(TFT_WIDTH - NUM_PIXELS * 2, Y_PADDING, TFT_WIDTH, TFT_HEIGHT - BOTT_PADDING, c555);
@@ -791,59 +797,71 @@ static bool panelOpen(buttonEvt_t* evt)
         {
             if (evt->button & PB_RIGHT)
             {
-                if (scd->subSelection % GRID_ROW == GRID_ROW - 1)
+                if (scd->arr[scd->selection] % GRID_ROW == GRID_ROW - 1)
                 {
                     if (scd->page < (size / GRID_SIZE)
                         && !(scd->page + 1 == (size / GRID_SIZE) && (size % GRID_SIZE) == 0))
                     {
                         scd->page++;
-                        scd->subSelection += GRID_SIZE - (GRID_ROW - 1);
+                        scd->arr[scd->selection] += GRID_SIZE - (GRID_ROW - 1);
                     }
-                    if (scd->subSelection > size - 1)
+                    if (scd->arr[scd->selection] > size - 1)
                     {
-                        scd->subSelection = size - 1;
+                        scd->arr[scd->selection] = size - 1;
                     }
                 }
-                else if (scd->subSelection < size - 1)
+                else if (scd->arr[scd->selection] < size - 1)
                 {
-                    scd->subSelection++;
+                    scd->arr[scd->selection]++;
                 }
             }
             else if (evt->button & PB_LEFT)
             {
-                if (scd->subSelection % GRID_ROW == 0)
+                if (scd->arr[scd->selection] % GRID_ROW == 0)
                 {
                     if (scd->page > 0)
                     {
                         scd->page--;
-                        scd->subSelection -= GRID_SIZE - (GRID_ROW - 1);
+                        scd->arr[scd->selection] -= GRID_SIZE - (GRID_ROW - 1);
                     }
                 }
-                else if (scd->subSelection > 0)
+                else if (scd->arr[scd->selection] > 0)
                 {
-                    scd->subSelection--;
+                    scd->arr[scd->selection]--;
                 }
             }
             else if (evt->button & PB_UP)
             {
-                if (scd->subSelection >= GRID_ROW + scd->page * GRID_SIZE)
+                if (scd->arr[scd->selection] >= GRID_ROW + scd->page * GRID_SIZE)
                 {
-                    scd->subSelection -= GRID_ROW;
+                    scd->arr[scd->selection] -= GRID_ROW;
                 }
             }
             else if (evt->button & PB_DOWN)
             {
-                if (scd->subSelection < (scd->page + 1) * GRID_SIZE - GRID_ROW)
+                if (scd->arr[scd->selection] < (scd->page + 1) * GRID_SIZE - GRID_ROW)
                 {
-                    scd->subSelection += GRID_ROW;
+                    scd->arr[scd->selection] += GRID_ROW;
                 }
-                if (scd->subSelection > size - 1)
+                if (scd->arr[scd->selection] > size - 1)
                 {
-                    scd->subSelection = size - 1;
+                    scd->arr[scd->selection] = size - 1;
                 }
             }
             else if (evt->button & PB_A)
             {
+                stCopyListToSona(&scd->activeSona);
+                scd->cState = SLIDING;
+                scd->out    = false;
+                if (scd->selectionImages != NULL)
+                {
+                    for (int i = 0; i < size; i++)
+                    {
+                        freeWsg(&scd->selectionImages[i]);
+                    }
+                    heap_caps_free(scd->selectionImages);
+                    scd->selectionImages = NULL;
+                }
             }
             else if (evt->button & PB_B)
             {
@@ -859,11 +877,50 @@ static bool panelOpen(buttonEvt_t* evt)
                     scd->selectionImages = NULL;
                 }
             }
+            // Copy selection into live
+            stCopyListToSona(&scd->liveSona);
         }
     }
 
     // When to update sona?
     return false;
+}
+
+static void stCopySonaToList(swadgesona_t* swsn)
+{
+    scd->arr[SKIN]          = swsn->core.skin;
+    scd->arr[HAIR_COLOR]    = swsn->core.hairColor;
+    scd->arr[EYE_COLOR]     = swsn->core.eyeColor;
+    scd->arr[CLOTHES]       = swsn->core.clothes;
+    scd->arr[HAT_COLOR]     = swsn->core.hatColor;
+    scd->arr[GLASSES_COLOR] = swsn->core.glassesColor;
+    scd->arr[BODY_MODS]     = swsn->core.bodyMarks;
+    scd->arr[EARS]          = swsn->core.earShape;
+    scd->arr[EYEBROWS]      = swsn->core.eyebrows;
+    scd->arr[EYES]          = swsn->core.eyeShape;
+    scd->arr[HAIR]          = swsn->core.hairStyle;
+    scd->arr[HAT]           = swsn->core.hat;
+    scd->arr[MOUTH]         = swsn->core.mouthShape;
+    scd->arr[GLASSES]       = swsn->core.glasses;
+}
+
+static void stCopyListToSona(swadgesona_t* swsn)
+{
+    swsn->core.skin         = scd->arr[SKIN];
+    swsn->core.hairColor    = scd->arr[HAIR_COLOR];
+    swsn->core.eyeColor     = scd->arr[EYE_COLOR];
+    swsn->core.clothes      = scd->arr[CLOTHES];
+    swsn->core.hatColor     = scd->arr[HAT_COLOR];
+    swsn->core.glassesColor = scd->arr[GLASSES_COLOR];
+    swsn->core.bodyMarks    = scd->arr[BODY_MODS];
+    swsn->core.eyebrows     = scd->arr[EYEBROWS];
+    swsn->core.earShape     = scd->arr[EARS];
+    swsn->core.eyeShape     = scd->arr[EYES];
+    swsn->core.hairStyle    = scd->arr[HAIR];
+    swsn->core.hat          = scd->arr[HAT];
+    swsn->core.mouthShape   = scd->arr[MOUTH];
+    swsn->core.glasses      = scd->arr[GLASSES];
+    generateSwadgesonaImage(swsn, true);
 }
 
 // Sliding
@@ -1065,7 +1122,7 @@ static void drawColors(const paletteColor_t* colors, int arrSize, bool left)
                             PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + SWATCH_W,
                             Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + SWATCH_H, CORNER_RAD,
                             colors[idx + (scd->page * GRID_SIZE)], c000);
-            if (scd->subSelection == idx + (scd->page * GRID_SIZE))
+            if (scd->arr[scd->selection] == idx + (scd->page * GRID_SIZE))
             {
                 drawWsgSimpleScaled(&scd->cursorImage,
                                     PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + CURSOR_POS_X,
@@ -1084,7 +1141,7 @@ static void drawColors(const paletteColor_t* colors, int arrSize, bool left)
                                 + SWATCH_W,
                             Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + SWATCH_H, CORNER_RAD,
                             colors[idx + (scd->page * GRID_SIZE)], c000);
-            if (scd->subSelection == idx + (scd->page * GRID_SIZE))
+            if (scd->arr[scd->selection] == idx + (scd->page * GRID_SIZE))
             {
                 drawWsgSimpleScaled(&scd->cursorImage,
                                     (TFT_WIDTH - NUM_PIXELS * 2) + PADDING
@@ -1110,7 +1167,7 @@ static void drawItems(int arrSize, bool left, bool half)
                 drawWsgSimpleHalf(&scd->selectionImages[idx + (scd->page * GRID_SIZE)],
                                   PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
                                   Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
-                if (scd->subSelection == idx + (scd->page * GRID_SIZE))
+                if (scd->arr[scd->selection] == idx + (scd->page * GRID_SIZE))
                 {
                     drawWsgSimpleScaled(
                         &scd->cursorImage, PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + CURSOR_POS_X,
@@ -1127,7 +1184,7 @@ static void drawItems(int arrSize, bool left, bool half)
                               PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) - (scd->activeSona.image.h >> 2),
                               Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H))
                                   - (scd->activeSona.image.h >> 2));
-                if (scd->subSelection == idx + (scd->page * GRID_SIZE))
+                if (scd->arr[scd->selection] == idx + (scd->page * GRID_SIZE))
                 {
                     drawWsgSimpleScaled(
                         &scd->cursorImage, PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + CURSOR_POS_X,
@@ -1147,7 +1204,7 @@ static void drawItems(int arrSize, bool left, bool half)
                                   (TFT_WIDTH - NUM_PIXELS * 2) + PADDING
                                       + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
                                   Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
-                if (scd->subSelection == idx + (scd->page * GRID_SIZE))
+                if (scd->arr[scd->selection] == idx + (scd->page * GRID_SIZE))
                 {
                     drawWsgSimpleScaled(&scd->cursorImage,
                                         (TFT_WIDTH - NUM_PIXELS * 2) + PADDING
@@ -1167,7 +1224,7 @@ static void drawItems(int arrSize, bool left, bool half)
                                   - (scd->activeSona.image.h >> 2),
                               Y_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H))
                                   - (scd->activeSona.image.h >> 2));
-                if (scd->subSelection == idx + (scd->page * GRID_SIZE))
+                if (scd->arr[scd->selection] == idx + (scd->page * GRID_SIZE))
                 {
                     drawWsgSimpleScaled(&scd->cursorImage,
                                         (TFT_WIDTH - NUM_PIXELS * 2) + PADDING
