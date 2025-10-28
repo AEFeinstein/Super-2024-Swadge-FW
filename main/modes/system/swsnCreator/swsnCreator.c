@@ -103,6 +103,20 @@ static const paletteColor_t clothesSwatch[] = {
     c000, c004, c210, c455, c435, c203, c222, c240, c505, c503, c233,
     c554, c102, c521, c544, c545, c305, c401, c543, c033, c555, c541,
 };
+static const paletteColor_t hairSwatch[] = {
+    c333, c542, c531, c520, c300, c210, c000, c555, c535, c413, c435, c203, c144, c013, c353, c131,
+};
+static const paletteColor_t eyeSwatch[] = {
+    c000, c005, c210, c222, c010, c403, c224, c300, c541,
+};
+static const paletteColor_t hatSwatch[] = {
+    c135, c255, c123, c230, c333, c053, c514, c512, c500, c345, c543, c534, c313, c540,
+};
+static const paletteColor_t glassesSwatch[] = {
+    c000,
+    c211,
+    c410,
+};
 static const cnfsFileIdx_t bodymarksWsgs[] = {
     SWSN_NO_GO_WSG,       BM_BEARD_WSG,
     BM_BLUSH_WSG,         BM_BOTTOM_MOLE_WSG,
@@ -256,18 +270,14 @@ typedef enum
     HAT,
     GLASSES,
     CLOTHES,
-    // Exit
-    EXIT,
-    NUM_CREATOR_OPTIONS,
-} creatorSelections_t;
-
-typedef enum
-{
-    HAIR_COLOR = 10,
+    // Not tabs
+    HAIR_COLOR,
     EYE_COLOR,
     HAT_COLOR,
     GLASSES_COLOR,
-} creatorColor_t;
+    // Exit
+    EXIT
+} creatorSelections_t;
 
 //==============================================================================
 // Structs
@@ -510,13 +520,13 @@ static void runCreator(buttonEvt_t evt)
                 scd->selection--;
                 if (scd->selection < 0)
                 {
-                    scd->selection = NUM_CREATOR_OPTIONS - 1;
+                    scd->selection = (NUM_TABS * 2);
                 }
             }
             else if (evt.button & PB_DOWN)
             {
                 scd->selection++;
-                if (scd->selection >= NUM_CREATOR_OPTIONS)
+                if (scd->selection >= (NUM_TABS * 2))
                 {
                     scd->selection = 0;
                 }
@@ -661,7 +671,7 @@ static void drawCreator(void)
                         TFT_HEIGHT - (scd->activeSona.image.h * SONA_SCALE), SONA_SCALE, SONA_SCALE);
 
     // Draw the tabs
-    for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
+    for (int idx = 0; idx < (NUM_TABS * 2); idx++)
     {
         drawTab(0, 20 + (idx % NUM_TABS) * (scd->tabSprs[0].h + TAB_SPACE) * SONA_SCALE, SONA_SCALE, (idx >= NUM_TABS),
                 idx + 2, scd->selection == idx);
@@ -682,7 +692,7 @@ static bool panelOpen(buttonEvt_t* evt)
     {
         drawWsgSimpleScaled(&scd->liveSona.image, x + NUM_PIXELS, TFT_HEIGHT - (scd->activeSona.image.h * SONA_SCALE),
                             SONA_SCALE, SONA_SCALE);
-        for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
+        for (int idx = 0; idx < (NUM_TABS * 2); idx++)
         {
             if (idx == scd->selection)
             {
@@ -707,7 +717,7 @@ static bool panelOpen(buttonEvt_t* evt)
     {
         drawWsgSimpleScaled(&scd->liveSona.image, x - NUM_PIXELS, TFT_HEIGHT - (scd->activeSona.image.h * SONA_SCALE),
                             SONA_SCALE, SONA_SCALE);
-        for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
+        for (int idx = 0; idx < (NUM_TABS * 2); idx++)
         {
             if (idx == scd->selection)
             {
@@ -739,14 +749,29 @@ static bool panelOpen(buttonEvt_t* evt)
             size = ARRAY_SIZE(hairWsgs);
             break;
         }
+        case HAIR_COLOR:
+        {
+            size = ARRAY_SIZE(hairSwatch);
+            break;
+        }
         case EYES:
         {
             size = ARRAY_SIZE(eyeWsgs);
             break;
         }
+        case EYE_COLOR:
+        {
+            size = ARRAY_SIZE(eyeSwatch);
+            break;
+        }
         case HAT:
         {
             size = ARRAY_SIZE(hatWsgs);
+            break;
+        }
+        case HAT_COLOR:
+        {
+            size = ARRAY_SIZE(hatSwatch);
             break;
         }
         case MOUTH:
@@ -757,6 +782,11 @@ static bool panelOpen(buttonEvt_t* evt)
         case GLASSES:
         {
             size = ARRAY_SIZE(glassesWsgs);
+            break;
+        }
+        case GLASSES_COLOR:
+        {
+            size = ARRAY_SIZE(glassesSwatch);
             break;
         }
         case BODY_MODS:
@@ -850,17 +880,49 @@ static bool panelOpen(buttonEvt_t* evt)
             }
             else if (evt->button & PB_A)
             {
-                stCopyListToSona(&scd->activeSona);
-                scd->cState = SLIDING;
-                scd->out    = false;
-                if (scd->selectionImages != NULL)
+                switch (scd->selection)
                 {
-                    for (int i = 0; i < size; i++)
+                    case HAIR:
                     {
-                        freeWsg(&scd->selectionImages[i]);
+                        scd->selection = HAIR_COLOR;
+                        scd->page      = scd->arr[scd->selection] / GRID_SIZE;
+                        break;
                     }
-                    heap_caps_free(scd->selectionImages);
-                    scd->selectionImages = NULL;
+                    case EYES:
+                    {
+                        scd->selection = EYE_COLOR;
+                        scd->page      = scd->arr[scd->selection] / GRID_SIZE;
+                        break;
+                    }
+                    case HAT:
+                    {
+                        scd->selection = HAT_COLOR;
+                        scd->page      = scd->arr[scd->selection] / GRID_SIZE;
+                        break;
+                    }
+                    case GLASSES:
+                    {
+                        scd->selection = GLASSES_COLOR;
+                        scd->page      = scd->arr[scd->selection] / GRID_SIZE;
+                        break;
+                    }
+                    default:
+                    {
+                        // If no color needs to be selected
+                        stCopyListToSona(&scd->activeSona);
+                        scd->cState = SLIDING;
+                        scd->out    = false;
+                        if (scd->selectionImages != NULL)
+                        {
+                            for (int i = 0; i < size; i++)
+                            {
+                                freeWsg(&scd->selectionImages[i]);
+                            }
+                            heap_caps_free(scd->selectionImages);
+                            scd->selectionImages = NULL;
+                        }
+                        break;
+                    }
                 }
             }
             else if (evt->button & PB_B)
@@ -954,7 +1016,7 @@ static bool slideTab(int selected, bool out, uint64_t elapsedUs)
         }
         drawWsgSimpleScaled(&scd->activeSona.image, x, TFT_HEIGHT - (scd->activeSona.image.h * SONA_SCALE), SONA_SCALE,
                             SONA_SCALE);
-        for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
+        for (int idx = 0; idx < (NUM_TABS * 2); idx++)
         {
             if (idx == scd->selection)
             {
@@ -989,7 +1051,7 @@ static bool slideTab(int selected, bool out, uint64_t elapsedUs)
         }
         drawWsgSimpleScaled(&scd->activeSona.image, x, TFT_HEIGHT - (scd->activeSona.image.h * SONA_SCALE), SONA_SCALE,
                             SONA_SCALE);
-        for (int idx = 0; idx < NUM_CREATOR_OPTIONS - 1; idx++)
+        for (int idx = 0; idx < (NUM_TABS * 2); idx++)
         {
             if (idx == scd->selection)
             {
@@ -1068,14 +1130,29 @@ static void drawTabContents(void)
             drawItems(ARRAY_SIZE(hairWsgs), false, true);
             break;
         }
+        case HAIR_COLOR:
+        {
+            drawColors(hairSwatch, ARRAY_SIZE(hairSwatch), false);
+            break;
+        }
         case EYES:
         {
             drawItems(ARRAY_SIZE(eyeWsgs), true, false);
             break;
         }
+        case EYE_COLOR:
+        {
+            drawColors(eyeSwatch, ARRAY_SIZE(eyeSwatch), false);
+            break;
+        }
         case HAT:
         {
             drawItems(ARRAY_SIZE(hatWsgs), false, true);
+            break;
+        }
+        case HAT_COLOR:
+        {
+            drawColors(hatSwatch, ARRAY_SIZE(hatSwatch), false);
             break;
         }
         case MOUTH:
@@ -1086,6 +1163,11 @@ static void drawTabContents(void)
         case GLASSES:
         {
             drawItems(ARRAY_SIZE(glassesWsgs), false, true);
+            break;
+        }
+        case GLASSES_COLOR:
+        {
+            drawColors(glassesSwatch, ARRAY_SIZE(glassesSwatch), false);
             break;
         }
         case BODY_MODS:
