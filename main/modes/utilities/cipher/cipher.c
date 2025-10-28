@@ -6,9 +6,9 @@ static const int rotateRPM = 5;
 static const int64_t UsPerDeg = (60000000 / (rotateRPM*360));
 static const vec_t ScreenCenter = {
     .x = 140,
-    .y = 180, //120 is the default center of the screen
+    .y = 135, //120 is the default center of the screen
 };
-static const char* lettersRace[] = {"M","4","R","H","N","Y","8","A","C","T","3","Z","K","W","F","1","X","G","Q","E","0","J","L","D","9","B","V","S","5","7","I","P","2","0","6","U"};;
+static const char* lettersRace[] = {"M","4","R","H","N","Y","8","A","C","T","3","Z","K","W","F","1","X","G","Q","E","O","J","L","D","9","B","V","S","5","7","I","P","2","0","6","U"};;
 static const char* numbersRace[] = {"8","35","6","23","15","9","33","3","20","11","36","27","14","25","19","32","2","28","21","34","7","16","30","5","1","22","13","10","18","26","31","24","17","4","29","12"};
 
 //Declare struct for spinning races
@@ -100,11 +100,11 @@ static void cipherEnterMode(){
     innerRace = (cipherRace_t*)heap_caps_calloc(1, sizeof(cipherRace_t), MALLOC_CAP_8BIT);
     innerRace->rotating = true;
     innerRace->direction = true;
-    innerRace->raceRad = 140;
+    innerRace->raceRad = 100;
     outerRace = (cipherRace_t*)heap_caps_calloc(1, sizeof(cipherRace_t), MALLOC_CAP_8BIT);
     outerRace->rotating = true;
     outerRace->direction=false;
-    outerRace->raceRad = 180;
+    outerRace->raceRad = 125;
 
     loadFont(IBM_VGA_8_FONT, &ibm, false);
 }
@@ -140,7 +140,7 @@ static void cipherMainLoop(int64_t elapsedUs){
             .y = ((innerRace->timeSpinning + RaceOffset) / UsPerDeg) + 10*i, //Hard-coding a 36-part race => 360/36=10 degrees of difference to each text
         };
         inPos = RThetaToXY(inPos, false);
-        drawText(&ibm, c252, lettersRace[i], inPos.x-5, inPos.y-5);
+        drawText(&ibm, c252, lettersRace[i], inPos.x-4, inPos.y-5);
 
         //draw outer race
         vec_t outPos = {
@@ -148,7 +148,7 @@ static void cipherMainLoop(int64_t elapsedUs){
             .y = (( (UsPerDeg*360) - outerRace->timeSpinning + RaceOffset) / UsPerDeg) + 10*i , //Hard-coding a 36-part race => 360/36=10 degrees of difference to each text
         };
         outPos = RThetaToXY(outPos, false);
-        drawText(&ibm, c252, numbersRace[i], outPos.x, outPos.y);
+        drawText(&ibm, c252, numbersRace[i], outPos.x-7, outPos.y-5);
 
         DrawDividerLine(innerRace->raceRad-15, innerRace->raceRad+40,(RaceOffset / UsPerDeg) + 10*i+5);
     }
