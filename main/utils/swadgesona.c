@@ -245,6 +245,26 @@ void loadSwadgesona(swadgesona_t* sw, int idx)
     setUsernameFrom32(&sw->name, sw->core.packedName);
 }
 
+void copySwadgesona(swadgesona_t* to, swadgesona_t* from)
+{
+    to->core.skin       = from->core.skin;
+    to->core.hairColor  = from->core.hairColor;
+    to->core.eyeColor   = from->core.eyeColor;
+    to->core.clothes    = from->core.clothes;
+    to->core.hatColor   = from->core.hatColor;
+    to->core.bodyMarks  = from->core.bodyMarks;
+    to->core.earShape   = from->core.earShape;
+    to->core.eyebrows   = from->core.eyebrows;
+    to->core.eyeShape   = from->core.eyeShape;
+    to->core.hairStyle  = from->core.hairStyle;
+    to->core.hat        = from->core.hat;
+    to->core.mouthShape = from->core.mouthShape;
+    to->core.glasses    = from->core.glasses;
+    to->name            = from->name;
+    setUsernameFromND(&to->name);
+    generateSwadgesonaImage(to, true);
+}
+
 void generateRandomSwadgesona(swadgesona_t* sw)
 {
     sw->core.skin         = esp_random() % SKIN_COLOR_COUNT;
@@ -314,7 +334,10 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
 
     // Hair
     // Use the same palette as the eyebrows
-    canvasDrawSimplePal(&sw->image, hairWsgs[sw->core.hairStyle], 0, 0, &sw->pal);
+    if (sw->core.hairStyle != HE_NONE)
+    {
+        canvasDrawSimplePal(&sw->image, hairWsgs[sw->core.hairStyle - 1], 0, 0, &sw->pal);
+    }
 
     // Bunny, Cat, and Dog ears go over the hair
     if (sw->core.earShape == EAE_BUNNY || sw->core.earShape == EAE_DOG || sw->core.earShape == EAE_CAT)
