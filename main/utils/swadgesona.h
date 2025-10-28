@@ -320,6 +320,7 @@ typedef enum
 /// @brief hairstyle variations
 typedef enum
 {
+    HE_NONE,
     HE_BALLET_BUN,
     HE_BOWL_CUT,
     HE_CHIBI_USA,
@@ -536,6 +537,8 @@ void saveSwadgesona(swadgesona_t* sw, int idx);
  * @param idx Index of slot to put swadgesona into
  */
 void loadSwadgesona(swadgesona_t* sw, int idx);
+
+void copySwadgesona(swadgesona_t* to, swadgesona_t* from);
 
 /**
  * @brief Generates a random Swadgesona automatically.
