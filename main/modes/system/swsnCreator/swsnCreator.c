@@ -325,8 +325,9 @@ static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal);
 // Creating
 static bool slideTab(int selected, bool out, uint64_t elapsedUs);
 static void runCreator(buttonEvt_t evt);
-static void stCopySonaToList(swadgesona_t* swsn);
-static void stCopyListToSona(swadgesona_t* swsn);
+static void copySonaToList(swadgesona_t* swsn);
+static void copyListToSona(swadgesona_t* swsn);
+static void slideClosed(int size);
 
 // Drawing
 static void drawCreator(void);
@@ -542,7 +543,7 @@ static void runCreator(buttonEvt_t evt)
             else if (evt.button & PB_A)
             {
                 copySwadgesona(&scd->liveSona, &scd->activeSona);
-                stCopySonaToList(&scd->activeSona);
+                copySonaToList(&scd->activeSona);
                 scd->out                 = true;
                 scd->cState              = SLIDING;
                 scd->arr[scd->selection] = 0;
@@ -688,7 +689,7 @@ static bool panelOpen(buttonEvt_t* evt)
     // Draw open tab
     bool leftSide = scd->selection < NUM_TABS;
     int x         = (TFT_WIDTH - (scd->activeSona.image.w * SONA_SCALE)) >> 1;
-    if (leftSide)
+    if (leftSide || scd->selection == EYE_COLOR)
     {
         drawWsgSimpleScaled(&scd->liveSona.image, x + NUM_PIXELS, TFT_HEIGHT - (scd->activeSona.image.h * SONA_SCALE),
                             SONA_SCALE, SONA_SCALE);
@@ -698,6 +699,11 @@ static bool panelOpen(buttonEvt_t* evt)
             {
                 drawTab(NUM_PIXELS * 2, 20 + (idx % NUM_TABS) * (scd->tabSprs[0].h + TAB_SPACE) * SONA_SCALE,
                         SONA_SCALE, (idx >= NUM_TABS), idx + 2, scd->selection == idx);
+            }
+            else if (scd->selection == EYE_COLOR)
+            {
+                drawTab(NUM_PIXELS * 2, 20 + (EYES % NUM_TABS) * (scd->tabSprs[0].h + TAB_SPACE) * SONA_SCALE,
+                        SONA_SCALE, (idx >= NUM_TABS), EYES + 2, true);
             }
             else
             {
@@ -722,7 +728,22 @@ static bool panelOpen(buttonEvt_t* evt)
             if (idx == scd->selection)
             {
                 drawTab(-NUM_PIXELS * 2, 20 + (idx % NUM_TABS) * (scd->tabSprs[0].h + TAB_SPACE) * SONA_SCALE,
-                        SONA_SCALE, (idx > 4), idx + 2, scd->selection == idx);
+                        SONA_SCALE, (idx >= NUM_TABS), idx + 2, scd->selection == idx);
+            }
+            else if (scd->selection == HAIR_COLOR)
+            {
+                drawTab(-NUM_PIXELS * 2, 20 + (HAIR % NUM_TABS) * (scd->tabSprs[0].h + TAB_SPACE) * SONA_SCALE,
+                        SONA_SCALE, (idx >= NUM_TABS), HAIR + 2, true);
+            }
+            else if (scd->selection == HAT_COLOR)
+            {
+                drawTab(-NUM_PIXELS * 2, 20 + (HAT % NUM_TABS) * (scd->tabSprs[0].h + TAB_SPACE) * SONA_SCALE,
+                        SONA_SCALE, (idx >= NUM_TABS), HAT + 2, true);
+            }
+            else if (scd->selection == GLASSES_COLOR)
+            {
+                drawTab(-NUM_PIXELS * 2, 20 + (GLASSES % NUM_TABS) * (scd->tabSprs[0].h + TAB_SPACE) * SONA_SCALE,
+                        SONA_SCALE, (idx >= NUM_TABS), GLASSES + 2, true);
             }
             else
             {
@@ -896,31 +917,58 @@ static bool panelOpen(buttonEvt_t* evt)
                     }
                     case HAT:
                     {
-                        scd->selection = HAT_COLOR;
-                        scd->page      = scd->arr[scd->selection] / GRID_SIZE;
+                        if (scd->arr[scd->selection] == HAE_BEANIE || scd->arr[scd->selection] == HAE_COOL_HAT
+                            || scd->arr[scd->selection] == HAE_PUFFBALL || scd->arr[scd->selection] == HAE_HEART)
+                        {
+                            scd->selection = HAT_COLOR;
+                            scd->page      = scd->arr[scd->selection] / GRID_SIZE;
+                            break;
+                        }
+                        slideClosed(size);
                         break;
                     }
                     case GLASSES:
                     {
+                        if (scd->arr[scd->selection] == G_NONE)
+                        {
+                            slideClosed(size);
+                            break;
+                        }
                         scd->selection = GLASSES_COLOR;
                         scd->page      = scd->arr[scd->selection] / GRID_SIZE;
                         break;
                     }
                     default:
                     {
-                        // If no color needs to be selected
-                        stCopyListToSona(&scd->activeSona);
-                        scd->cState = SLIDING;
-                        scd->out    = false;
-                        if (scd->selectionImages != NULL)
+                        switch (scd->selection)
                         {
-                            for (int i = 0; i < size; i++)
+                            case HAIR_COLOR:
                             {
-                                freeWsg(&scd->selectionImages[i]);
+                                scd->selection = HAIR;
+                                break;
                             }
-                            heap_caps_free(scd->selectionImages);
-                            scd->selectionImages = NULL;
+                            case EYE_COLOR:
+                            {
+                                scd->selection = EYES;
+                                break;
+                            }
+                            case HAT_COLOR:
+                            {
+                                scd->selection = HAT;
+                                break;
+                            }
+                            case GLASSES_COLOR:
+                            {
+                                scd->selection = GLASSES;
+                                break;
+                            }
+                            default:
+                            {
+                                break;
+                            }
                         }
+                        // If no color needs to be selected
+                        slideClosed(size);
                         break;
                     }
                 }
@@ -940,7 +988,7 @@ static bool panelOpen(buttonEvt_t* evt)
                 }
             }
             // Copy selection into live
-            stCopyListToSona(&scd->liveSona);
+            copyListToSona(&scd->liveSona);
         }
     }
 
@@ -948,7 +996,7 @@ static bool panelOpen(buttonEvt_t* evt)
     return false;
 }
 
-static void stCopySonaToList(swadgesona_t* swsn)
+static void copySonaToList(swadgesona_t* swsn)
 {
     scd->arr[SKIN]          = swsn->core.skin;
     scd->arr[HAIR_COLOR]    = swsn->core.hairColor;
@@ -966,7 +1014,7 @@ static void stCopySonaToList(swadgesona_t* swsn)
     scd->arr[GLASSES]       = swsn->core.glasses;
 }
 
-static void stCopyListToSona(swadgesona_t* swsn)
+static void copyListToSona(swadgesona_t* swsn)
 {
     swsn->core.skin         = scd->arr[SKIN];
     swsn->core.hairColor    = scd->arr[HAIR_COLOR];
@@ -985,6 +1033,22 @@ static void stCopyListToSona(swadgesona_t* swsn)
     generateSwadgesonaImage(swsn, true);
 }
 
+static void slideClosed(int size)
+{
+    copyListToSona(&scd->activeSona);
+    scd->cState = SLIDING;
+    scd->out    = false;
+    if (scd->selectionImages != NULL)
+    {
+        for (int i = 0; i < size; i++)
+        {
+            freeWsg(&scd->selectionImages[i]);
+        }
+        heap_caps_free(scd->selectionImages);
+        scd->selectionImages = NULL;
+    }
+}
+
 // Sliding
 static bool slideTab(int selected, bool out, uint64_t elapsedUs)
 {
@@ -1001,7 +1065,7 @@ static bool slideTab(int selected, bool out, uint64_t elapsedUs)
     int64_t steps = scd->animTimer;
     int x         = (TFT_WIDTH - (scd->activeSona.image.w * SONA_SCALE)) >> 1;
     int offset    = 0;
-    if (left)
+    if (left || scd->selection == EYE_COLOR)
     {
         if (!out)
         {
@@ -1142,7 +1206,7 @@ static void drawTabContents(void)
         }
         case EYE_COLOR:
         {
-            drawColors(eyeSwatch, ARRAY_SIZE(eyeSwatch), false);
+            drawColors(eyeSwatch, ARRAY_SIZE(eyeSwatch), true);
             break;
         }
         case HAT:
