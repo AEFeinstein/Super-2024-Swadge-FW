@@ -6,6 +6,7 @@
 #include "mainMenu.h"
 #include "swadgesona.h"
 #include "settingsManager.h"
+#include "textEntry.h"
 
 //==============================================================================
 // Define
@@ -37,6 +38,16 @@
 #define CURSOR_POS_X 20
 #define CURSOR_POS_Y 12
 
+// Nickname
+#define MAX_NAME_LEN 20
+
+// Warning
+#define W_BORDER       16
+#define W_HEIGHT       24
+#define WB_HEIGHT      48
+#define OPTIONS_BORDER 24
+#define OPTIONS_H      48
+
 //==============================================================================
 // Consts
 //==============================================================================
@@ -45,6 +56,7 @@ const char sonaModeName[]                 = "Swadgesona Creator";
 static const char sonaMenuName[]          = "Sona Creator";
 static const char sonaSlotUninitialized[] = "Uninitialized";
 static const char cursorNVS[]             = "cursor";
+static const char prompt[]                = "Name this Swadgesona";
 
 // Main
 static const char* const menuOptions[] = {
@@ -58,6 +70,19 @@ static const char* const cursorOptions[] = {
     "Donut",   "Hotdog",       "Ender",  "Gem",   "Ghost",      "Hammer", "Heart",     "Leaf",       " Magic Wand",
     "Glove",   "Corner arrow", "Pencil", "Pizza", "Rainbow",    "Ruler",  "Sword",     "Watermelon", "Weiner",
 };
+static const char* const creatorText[] = {"Save | Quit", "Save ", " Quit"};
+static const char* const warningText[] = {
+    "WARNING!",
+    "You have unsaved changes. To save your changes, select 'Enter Name'. To exit without saving, select 'exit'.",
+    "Enter name",
+    "Exit",
+};
+static const char* const NVSStrings[] = {
+    "sonaCreator",
+    "slot-",
+    "-nick",
+};
+
 static const int32_t cursorSprs[] = {
     SWSN_POINTER_ARROW_WSG,
     SWSN_POINTER_BALL_WSG,
@@ -246,6 +271,7 @@ typedef enum
     MENU,
     CREATING,
     NAMING,
+    PROMPT_SAVE,
     VIEWING,
 } swsnCreatorState_t;
 
@@ -276,6 +302,7 @@ typedef enum
     HAT_COLOR,
     GLASSES_COLOR,
     // Exit
+    SAVE,
     EXIT
 } creatorSelections_t;
 
@@ -286,6 +313,7 @@ typedef enum
 typedef struct
 {
     // Main
+    font_t fnt;
     swsnCreatorState_t state;
 
     // Menu
@@ -300,6 +328,11 @@ typedef struct
     swadgesona_t liveSona; // Used for editing
     int selection;         // Primary selection
 
+    // Save system
+    bool hasChanged; // If the sona has changed
+    bool shouldQuit;
+    uint8_t slot;
+
     // Slide
     bool out;
     int64_t animTimer;
@@ -309,6 +342,9 @@ typedef struct
     wsg_t* selectionImages;
     int cursorType;
     wsg_t cursorImage;
+
+    // Nickname
+    char nickname[MAX_NAME_LEN];
 } swsnCreatorData_t;
 
 //==============================================================================
@@ -328,6 +364,7 @@ static void runCreator(buttonEvt_t evt);
 static void copySonaToList(swadgesona_t* swsn);
 static void copyListToSona(swadgesona_t* swsn);
 static void slideClosed(int size);
+static void initTextEntry(void);
 
 // Drawing
 static void drawCreator(void);
@@ -369,6 +406,7 @@ static void swsnEnterMode(void)
     {
         loadWsg(tabImages[idx], &scd->tabSprs[idx], true);
     }
+    loadFont(RODIN_EB_FONT, &scd->fnt, true);
 
     // Menu
     scd->menu     = initMenu(sonaMenuName, swsnMenuCb);
@@ -402,6 +440,7 @@ static void swsnExitMode(void)
 {
     deinitMenuMegaRenderer(scd->renderer);
     deinitMenu(scd->menu);
+    freeFont(&scd->fnt);
     for (int idx = 0; idx < ARRAY_SIZE(tabImages); idx++)
     {
         freeWsg(&scd->tabSprs[idx]);
@@ -468,6 +507,82 @@ static void swsnLoop(int64_t elapsedUs)
             }
             break;
         }
+        case NAMING:
+        {
+            bool done = false;
+            while (checkButtonQueueWrapper(&evt))
+            {
+                done = !textEntryInput(evt.down, evt.button);
+            }
+            if (done)
+            {
+                char buffer[16];
+                snprintf(buffer, sizeof(buffer) - 1, "%s%" PRId16, NVSStrings[1], scd->slot);
+                writeNamespaceNvsBlob(NVSStrings[0], buffer, &scd->activeSona.core, sizeof(swadgesonaCore_t));
+                snprintf(buffer, sizeof(buffer) - 1, "%s%d%s", NVSStrings[1], scd->slot, NVSStrings[2]);
+                writeNamespaceNvsBlob(NVSStrings[0], buffer, &scd->nickname, MAX_NAME_LEN);
+                scd->state      = CREATING;
+                scd->hasChanged = false;
+            }
+            drawCreator();
+            textEntryDraw(elapsedUs);
+            break;
+        }
+        case PROMPT_SAVE:
+        {
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down)
+                {
+                    if (evt.button & PB_LEFT)
+                    {
+                        scd->shouldQuit = false;
+                    }
+                    else if (evt.button & PB_RIGHT)
+                    {
+                        scd->shouldQuit = true;
+                    }
+                    else if (evt.button & PB_A)
+                    {
+                        if (scd->shouldQuit)
+                        {
+                            freeWsg(&scd->cursorImage);
+                            scd->state     = MENU;
+                            scd->selection = 0;
+                        }
+                        else
+                        {
+                            initTextEntry();
+                        }
+                    }
+                    else if (evt.button & PB_B)
+                    {
+                        scd->state = CREATING;
+                    }
+                }
+            }
+
+            // Draw
+            clearPxTft();
+            drawText(&scd->fnt, c511, warningText[0], (TFT_WIDTH - textWidth(&scd->fnt, warningText[0])) >> 1,
+                     W_HEIGHT);
+            int16_t x = W_BORDER;
+            int16_t y = WB_HEIGHT;
+            drawTextWordWrapCentered(&scd->fnt, c555, warningText[1], &x, &y, TFT_WIDTH - W_BORDER,
+                                     TFT_HEIGHT - OPTIONS_H);
+            if (scd->shouldQuit)
+            {
+                drawText(&scd->fnt, c333, warningText[2], OPTIONS_BORDER, TFT_HEIGHT - OPTIONS_H);
+                drawText(&scd->fnt, c550, warningText[3],
+                         (TFT_WIDTH - (textWidth(&scd->fnt, warningText[3]) + OPTIONS_BORDER)), TFT_HEIGHT - OPTIONS_H);
+            }
+            else
+            {
+                drawText(&scd->fnt, c550, warningText[2], OPTIONS_BORDER, TFT_HEIGHT - OPTIONS_H);
+                drawText(&scd->fnt, c333, warningText[3],
+                         (TFT_WIDTH - (textWidth(&scd->fnt, warningText[3]) + OPTIONS_BORDER)), TFT_HEIGHT - OPTIONS_H);
+            }
+        }
         default:
         {
             break;
@@ -521,27 +636,54 @@ static void runCreator(buttonEvt_t evt)
                 scd->selection--;
                 if (scd->selection < 0)
                 {
-                    scd->selection = (NUM_TABS * 2);
+                    scd->selection = EXIT;
+                }
+                else if (scd->selection >= (NUM_TABS * 2) && scd->selection < SAVE)
+                {
+                    scd->selection = (NUM_TABS * 2) - 1;
                 }
             }
             else if (evt.button & PB_DOWN)
             {
                 scd->selection++;
-                if (scd->selection >= (NUM_TABS * 2))
+                if (scd->selection > EXIT)
                 {
                     scd->selection = 0;
                 }
+                else if (scd->selection >= (NUM_TABS * 2) && scd->selection < SAVE)
+                {
+                    scd->selection = SAVE;
+                }
             }
-            else if (evt.button & PB_LEFT && scd->selection > 4 && scd->selection < 10)
+            else if (evt.button & PB_LEFT && scd->selection >= NUM_TABS && scd->selection < (NUM_TABS * 2))
             {
-                scd->selection -= 5;
+                scd->selection -= NUM_TABS;
             }
-            else if (evt.button & PB_RIGHT && scd->selection < 5)
+            else if (evt.button & PB_RIGHT && scd->selection < NUM_TABS)
             {
-                scd->selection += 5;
+                scd->selection += NUM_TABS;
             }
             else if (evt.button & PB_A)
             {
+                if (scd->selection == EXIT)
+                {
+                    // Handle exit
+                    if (scd->hasChanged)
+                    {
+                        scd->shouldQuit = false;
+                        scd->state      = PROMPT_SAVE;
+                        return;
+                    }
+                    freeWsg(&scd->cursorImage);
+                    scd->state     = MENU;
+                    scd->selection = 0;
+                    return;
+                }
+                else if (scd->selection == SAVE)
+                {
+                    initTextEntry();
+                    return;
+                }
                 copySwadgesona(&scd->liveSona, &scd->activeSona);
                 copySonaToList(&scd->activeSona);
                 scd->out                 = true;
@@ -676,6 +818,23 @@ static void drawCreator(void)
     {
         drawTab(0, 20 + (idx % NUM_TABS) * (scd->tabSprs[0].h + TAB_SPACE) * SONA_SCALE, SONA_SCALE, (idx >= NUM_TABS),
                 idx + 2, scd->selection == idx);
+    }
+
+    // Draw nickname
+    if (scd->state != NAMING)
+    {
+        drawText(getSysFont(), c000, scd->nickname, (TFT_WIDTH - textWidth(getSysFont(), scd->nickname)) >> 1, 32);
+    }
+
+    // Draw save / quit options
+    drawText(&scd->fnt, c000, creatorText[0], (TFT_WIDTH - textWidth(&scd->fnt, creatorText[0])) >> 1, 6);
+    if (scd->selection == SAVE)
+    {
+        drawText(&scd->fnt, c142, creatorText[1], (TFT_WIDTH >> 1) - textWidth(&scd->fnt, creatorText[1]), 6);
+    }
+    else if (scd->selection == EXIT)
+    {
+        drawText(&scd->fnt, c500, creatorText[2], (TFT_WIDTH >> 1) + 4, 6);
     }
 }
 
@@ -1036,8 +1195,9 @@ static void copyListToSona(swadgesona_t* swsn)
 static void slideClosed(int size)
 {
     copyListToSona(&scd->activeSona);
-    scd->cState = SLIDING;
-    scd->out    = false;
+    scd->hasChanged = true;
+    scd->cState     = SLIDING;
+    scd->out        = false;
     if (scd->selectionImages != NULL)
     {
         for (int i = 0; i < size; i++)
@@ -1049,7 +1209,6 @@ static void slideClosed(int size)
     }
 }
 
-// Sliding
 static bool slideTab(int selected, bool out, uint64_t elapsedUs)
 {
     // Update variables
@@ -1151,6 +1310,18 @@ static bool slideTab(int selected, bool out, uint64_t elapsedUs)
         }
     }
     return false;
+}
+
+static void initTextEntry(void)
+{
+    scd->state = NAMING;
+    textEntryInit(getSysFont(), MAX_NAME_LEN, scd->nickname);
+    textEntrySetBGTransparent();
+    textEntrySetNewEnterStyle(false);
+    textEntrySetPrompt(prompt);
+    textEntrySetNounMode();
+    textEntrySetShadowboxColor(true, c202);
+    scd->selection = 0;
 }
 
 // Subdrawing
