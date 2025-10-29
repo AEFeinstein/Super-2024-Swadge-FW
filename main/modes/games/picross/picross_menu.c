@@ -36,6 +36,7 @@ typedef struct
     picrossScreen_t screen;
     int32_t savedIndex;
     int32_t options; // bit 0: hints
+    midiFile_t bgm;
 } picrossMenu_t;
 
 //==============================================================================
@@ -44,6 +45,7 @@ typedef struct
 
 void picrossEnterMode(void);
 void picrossExitMode(void);
+static void picrossBgmCb(void);
 void picrossMainLoop(int64_t elapsedUs);
 void picrossButtonCb(buttonEvt_t* evt);
 void picrossTouchCb(bool touched);
@@ -516,6 +518,14 @@ void picrossEnterMode(void)
     // Allocate and zero memory
     pm = heap_caps_calloc(1, sizeof(picrossMenu_t), MALLOC_CAP_8BIT);
 
+    // Load sounds
+    loadMidiFile(LULLABY_IN_NUMBERS_MID, &pm->bgm, true);
+
+    // Init sound player
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    midiGmOn(player);
+    soundPlayBgmCb(&pm->bgm, MIDI_BGM, picrossBgmCb);
+
     loadFont(MM_FONT, &(pm->mmFont), false);
 
     pm->menu                        = initMenu(str_picrossTitle, picrossMainMenuCb);
@@ -559,6 +569,7 @@ void picrossEnterMode(void)
 
 void picrossExitMode(void)
 {
+    unloadMidiFile(&pm->bgm);
     switch (pm->screen)
     {
         case PICROSS_MENU:
@@ -596,6 +607,15 @@ void picrossExitMode(void)
     // p2pDeinit(&jm->p2p);
     freeFont(&(pm->mmFont));
     heap_caps_free(pm);
+}
+
+/**
+ * @brief Restarts the BGM once the track ends
+ *
+ */
+static void picrossBgmCb()
+{
+    soundPlayBgm(&pm->bgm, MIDI_BGM);
 }
 
 /**
