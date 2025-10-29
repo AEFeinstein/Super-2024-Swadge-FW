@@ -782,7 +782,7 @@ void continueGame(bool solved, int8_t currentIdx)
 
     // load in the level we selected.
     // uh. read the currentLevelIndex and get the value from
-    if(solved)
+    if (solved)
     {
         currentIndex = currentIdx;
     }

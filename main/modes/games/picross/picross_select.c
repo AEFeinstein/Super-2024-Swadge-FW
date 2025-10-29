@@ -91,7 +91,7 @@ void picrossStartLevelSelect(font_t* bigFont, picrossLevelDef_t levels[])
 void picrossLevelSelectLoop(int64_t elapsedUs)
 {
     // Draw The Screen
-    if(!ls->decidingLevelAction)
+    if (!ls->decidingLevelAction)
     {
         drawLevelSelectScreen(ls->game_font);
     }
@@ -99,16 +99,16 @@ void picrossLevelSelectLoop(int64_t elapsedUs)
     {
         drawLevelActionScreen(ls->game_font);
     }
-    
 
     // Handle Input
     // has to happen last so we can free up on exit.
     // todo: make a (free/exit) bool flag.
-    if(!ls->decidingLevelAction)
+    if (!ls->decidingLevelAction)
     {
         levelSelectInput();
     }
-    else{
+    else
+    {
         levelActionInput();
     }
 }
@@ -117,7 +117,8 @@ void levelSelectInput()
 {
     // todo: quit with both start+select
 
-    if (ls->btnState & (PB_START | PB_B) && !(ls->prevBtnState & PB_START) && !(ls->prevBtnState & PB_B) && !(ls->btnState & PB_A))
+    if (ls->btnState & (PB_START | PB_B) && !(ls->prevBtnState & PB_START) && !(ls->prevBtnState & PB_B)
+        && !(ls->btnState & PB_A))
     {
         // exit to main menu
         returnToPicrossMenuFromLevelSelect();
@@ -137,7 +138,7 @@ void levelSelectInput()
             if (ls->levels[ls->hoverLevelIndex].completed)
             {
                 ls->decidingLevelAction = true;
-                ls->levelActionIndex = 0;
+                ls->levelActionIndex    = 0;
             }
             else
             {
@@ -156,7 +157,6 @@ void levelSelectInput()
                 heap_caps_free(progress);
                 return;
             }
-            
         }
         ls->prevBtnState = ls->btnState;
         return;
@@ -270,13 +270,12 @@ void levelActionInput()
     {
         ls->decidingLevelAction = false;
     }
-    else if (ls->btnState& PB_A && !(ls->prevBtnState & PB_A))
+    else if (ls->btnState & PB_A && !(ls->prevBtnState & PB_A))
     {
-        switch(ls->levelActionIndex)
+        switch (ls->levelActionIndex)
         {
             case 0:
             {
-                
                 continueGame(true, ls->hoverLevelIndex);
                 picrossExitLevelSelect();
                 return;
@@ -285,7 +284,7 @@ void levelActionInput()
             case 1:
             {
                 ls->levels[ls->hoverLevelIndex].completed = false;
-                ls->decidingLevelAction = false;
+                ls->decidingLevelAction                   = false;
                 break;
             }
             case 2:
@@ -437,12 +436,12 @@ void drawLevelActionScreen(font_t* font)
 
     static const char options[3][14] = {"View Solution", "Reset Puzzle", "Back"};
 
-    for(int idx = 0; idx < 3; idx++)
+    for (int idx = 0; idx < 3; idx++)
     {
         int16_t x = 5;
         int16_t y = 50 + 50 * idx;
-        drawRectFilled(x, y-8, 181, y + 28, idx == ls->levelActionIndex ? c115 : c111);
-        drawTextWordWrapCentered(font, idx == ls->levelActionIndex ? c555 : c333, options[idx], &x, &y, 180, y+40);
+        drawRectFilled(x, y - 8, 181, y + 28, idx == ls->levelActionIndex ? c115 : c111);
+        drawTextWordWrapCentered(font, idx == ls->levelActionIndex ? c555 : c333, options[idx], &x, &y, 180, y + 40);
     }
 
     drawRect(3, 40 + 50 * ls->levelActionIndex, 183, 80 + 50 * ls->levelActionIndex, c445);

@@ -150,7 +150,8 @@ typedef struct
     menuMegaRenderer_t* renderer; // for the background drawing effect
 } picrossGame_t;
 
-void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool cont, menuMegaRenderer_t* renderer, bool solved);
+void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool cont, menuMegaRenderer_t* renderer,
+                      bool solved);
 void picrossGameLoop(int64_t elapsedUs);
 void picrossGameButtonCb(buttonEvt_t* evt);
 void picrossGameTouchCb(bool touched);

@@ -56,7 +56,8 @@ static picrossGame_t* p = NULL;
  * @param mmFont The font used for teh HUD, already loaded
  *
  */
-void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool cont, menuMegaRenderer_t* renderer, bool solved)
+void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool cont, menuMegaRenderer_t* renderer,
+                      bool solved)
 {
     // calloc is 0'd and malloc leaves memory uninitialized. I dont know which to use so im not gonna touch it, and
     // doing things once on load can be slower.
@@ -172,7 +173,7 @@ void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool con
     p->menu     = initMenu("", NULL);
     p->renderer = renderer;
 
-    if(solved)
+    if (solved)
     {
         memcpy(p->puzzle->level, p->puzzle->completeLevel, 15 * 15 * sizeof(picrossSpaceType_t));
     }
