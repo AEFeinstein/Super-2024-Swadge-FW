@@ -20,6 +20,8 @@ extern const char picrossSavedOptionsKey[];
 extern const char picrossCompletedLevelData[];
 extern const char picrossProgressData[];
 extern const char picrossMarksData[];
+extern const char picrossHoverLevelIndexKey[];
+extern const char picrossTopVisibleRowKey[];
 
 void returnToPicrossMenu(void);
 void returnToPicrossMenuFromLevelSelect(void);

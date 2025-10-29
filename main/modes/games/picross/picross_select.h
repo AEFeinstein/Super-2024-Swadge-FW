@@ -20,8 +20,8 @@ typedef struct
     font_t smallFont;
     picrossLevelDef_t* chosenLevel;
     uint8_t gridScale;
-    int8_t hoverLevelIndex;
-    uint8_t topVisibleRow;
+    int32_t hoverLevelIndex; // int32_t because nvs
+    int32_t topVisibleRow;   // int32_t because nvs
     int8_t hoverX;
     int8_t hoverY;
     uint8_t rows;

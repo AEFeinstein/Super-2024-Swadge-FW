@@ -748,6 +748,13 @@ void picrossUserInput(int64_t elapsedUs)
         //&& !(p->input->prevBtnState & PB_B)
         if (p->input->btnState & PB_B && !(p->input->prevBtnState & PB_B))
         {
+            int32_t temp;
+            readNvs32(picrossHoverLevelIndexKey, &temp);
+            if (temp < PICROSS_LEVEL_COUNT - 1)
+            {
+                temp++;
+            }
+            writeNvs32(picrossHoverLevelIndexKey, temp);
             // return to level select instead of main menu?
             p->exitThisFrame = true;
         }
@@ -1314,6 +1321,8 @@ void drawPicrossScene(void)
             outlineBox.y0 += oy - 1;
             outlineBox.x1 = outlineBox.x0 + 2 + w * p->drawScale;
             outlineBox.y1 = outlineBox.y0 + 2 + h * p->drawScale;
+            drawRect(outlineBox.x0 - 2, outlineBox.y0 - 2, outlineBox.x1 + 2, outlineBox.y1 + 2, c222);
+            drawRect(outlineBox.x0 - 1, outlineBox.y0 - 1, outlineBox.x1 + 1, outlineBox.y1 + 1, c444);
             drawRect(outlineBox.x0, outlineBox.y0, outlineBox.x1, outlineBox.y1, c222);
         }
     }

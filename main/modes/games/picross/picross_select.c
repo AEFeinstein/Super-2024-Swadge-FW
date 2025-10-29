@@ -61,16 +61,21 @@ void picrossStartLevelSelect(font_t* bigFont, picrossLevelDef_t levels[])
         ls->levels[i] = levels[i];
     }
 
-    ls->hoverX          = 0;
-    ls->hoverY          = 0;
-    ls->hoverLevelIndex = 0;
-    ls->topVisibleRow   = 0; // todo: move to hold.
-    ls->prevBtnState    = PB_SELECT | PB_START | PB_A | PB_B | PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT;
+    readNvs32(picrossHoverLevelIndexKey, &ls->hoverLevelIndex);
+    ls->cols   = 5;
+    ls->hoverX = ls->hoverLevelIndex % ls->cols;
+    ls->hoverY = ls->hoverLevelIndex / ls->cols;
+    readNvs32(picrossTopVisibleRowKey, &ls->topVisibleRow); // todo: move to hold.
+    while (ls->hoverY - ls->topVisibleRow >= 6)
+    {
+        ls->topVisibleRow++;
+    }
+    ls->hoverY -= ls->topVisibleRow;
+    ls->prevBtnState = PB_SELECT | PB_START | PB_A | PB_B | PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT;
 
     ls->btnState = 0;
 
     // visual settings
-    ls->cols        = 5;
     ls->rows        = 6;
     ls->totalRows   = (PICROSS_LEVEL_COUNT + (ls->cols - 1)) / ls->cols;
     ls->paddingLeft = 10;
@@ -360,6 +365,8 @@ void picrossExitLevelSelect()
 {
     if (NULL != ls)
     {
+        writeNvs32(picrossHoverLevelIndexKey, ls->hoverLevelIndex);
+        writeNvs32(picrossTopVisibleRowKey, ls->topVisibleRow);
         freeWsg(&ls->unknownPuzzle);
         freeFont(&(ls->smallFont));
 

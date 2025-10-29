@@ -61,6 +61,8 @@ const char picrossSavedOptionsKey[]       = "pic_opts";
 const char picrossCompletedLevelData[]    = "pic_victs"; // todo: rename to Key suffix
 const char picrossProgressData[]          = "pic_prog";  // todo: rename to key suffix
 const char picrossMarksData[]             = "pic_marks";
+const char picrossHoverLevelIndexKey[]    = "pic_hov_ind";
+const char picrossTopVisibleRowKey[]      = "pic_scroll_ind";
 
 // Main menu strings
 static char str_picrossTitle[]      = "Pi-cross 2"; // \x7f is interpreted as the pi char
