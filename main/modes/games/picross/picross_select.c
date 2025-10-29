@@ -22,7 +22,9 @@ static const char str_win[] = "You Are Win!";
 // Function Prototypes
 //
 void levelSelectInput(void);
+void levelActionInput(void);
 void drawLevelSelectScreen(font_t* font);
+void drawLevelActionScreen(font_t* font);
 void drawPicrossLevelWSG(wsg_t* wsg, int16_t xOff, int16_t yOff, bool highlight);
 void drawPicrossPreviewWindow(wsg_t* wsg);
 //====
@@ -89,19 +91,33 @@ void picrossStartLevelSelect(font_t* bigFont, picrossLevelDef_t levels[])
 void picrossLevelSelectLoop(int64_t elapsedUs)
 {
     // Draw The Screen
-    drawLevelSelectScreen(ls->game_font);
+    if(!ls->decidingLevelAction)
+    {
+        drawLevelSelectScreen(ls->game_font);
+    }
+    else
+    {
+        drawLevelActionScreen(ls->game_font);
+    }
+    
 
     // Handle Input
     // has to happen last so we can free up on exit.
     // todo: make a (free/exit) bool flag.
-    levelSelectInput();
+    if(!ls->decidingLevelAction)
+    {
+        levelSelectInput();
+    }
+    else{
+        levelActionInput();
+    }
 }
 
 void levelSelectInput()
 {
     // todo: quit with both start+select
 
-    if (ls->btnState & (PB_START | PB_B) && !(ls->prevBtnState & PB_START) && !(ls->btnState & PB_A))
+    if (ls->btnState & (PB_START | PB_B) && !(ls->prevBtnState & PB_START) && !(ls->prevBtnState & PB_B) && !(ls->btnState & PB_A))
     {
         // exit to main menu
         returnToPicrossMenuFromLevelSelect();
@@ -112,26 +128,37 @@ void levelSelectInput()
     {
         if (ls->hoverLevelIndex == ls->currentIndex)
         {
-            continueGame();
+            continueGame(false, -1);
             picrossExitLevelSelect();
             return;
         }
         if (ls->hoverLevelIndex < PICROSS_LEVEL_COUNT)
         {
-            ls->chosenLevel = &ls->levels[ls->hoverLevelIndex];
-            writeNvs32(picrossCurrentPuzzleIndexKey,
-                       ls->hoverLevelIndex); // save the selected level before we lose context of the index.
+            if (ls->levels[ls->hoverLevelIndex].completed)
+            {
+                ls->decidingLevelAction = true;
+                ls->levelActionIndex = 0;
+            }
+            else
+            {
+                ls->chosenLevel = &ls->levels[ls->hoverLevelIndex];
+                writeNvs32(picrossCurrentPuzzleIndexKey,
+                           ls->hoverLevelIndex); // save the selected level before we lose context of the index.
 
-            size_t size                     = sizeof(picrossProgressData_t);
-            picrossProgressData_t* progress = heap_caps_calloc(
-                1, size,
-                MALLOC_CAP_8BIT); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
-            readNvsBlob(picrossCompletedLevelData, progress, &size);
+                size_t size                     = sizeof(picrossProgressData_t);
+                picrossProgressData_t* progress = heap_caps_calloc(
+                    1, size,
+                    MALLOC_CAP_8BIT); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
+                readNvsBlob(picrossCompletedLevelData, progress, &size);
 
-            selectPicrossLevel(ls->chosenLevel);
-            picrossExitLevelSelect();
-            heap_caps_free(progress);
+                selectPicrossLevel(ls->chosenLevel);
+                picrossExitLevelSelect();
+                heap_caps_free(progress);
+                return;
+            }
+            
         }
+        ls->prevBtnState = ls->btnState;
         return;
     }
 
@@ -226,6 +253,52 @@ void levelSelectInput()
         levelSelectInput();
     }
 
+    ls->prevBtnState = ls->btnState;
+}
+
+void levelActionInput()
+{
+    if (ls->btnState & PB_DOWN && !(ls->prevBtnState & PB_DOWN) && ls->levelActionIndex < 2)
+    {
+        ls->levelActionIndex++;
+    }
+    else if (ls->btnState & PB_UP && !(ls->prevBtnState & PB_UP) && ls->levelActionIndex > 0)
+    {
+        ls->levelActionIndex--;
+    }
+    else if (ls->btnState & PB_B && !(ls->prevBtnState & PB_B))
+    {
+        ls->decidingLevelAction = false;
+    }
+    else if (ls->btnState& PB_A && !(ls->prevBtnState & PB_A))
+    {
+        switch(ls->levelActionIndex)
+        {
+            case 0:
+            {
+                
+                continueGame(true, ls->hoverLevelIndex);
+                picrossExitLevelSelect();
+                return;
+                break;
+            }
+            case 1:
+            {
+                ls->levels[ls->hoverLevelIndex].completed = false;
+                ls->decidingLevelAction = false;
+                break;
+            }
+            case 2:
+            {
+                ls->decidingLevelAction = false;
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+    }
     ls->prevBtnState = ls->btnState;
 }
 
@@ -354,6 +427,25 @@ void drawLevelSelectScreen(font_t* font)
         drawText(ls->game_font, c000, str_win, 53, 103);
         drawText(ls->game_font, c555, str_win, 50, 100);
     }
+}
+
+void drawLevelActionScreen(font_t* font)
+{
+    clearPxTft();
+
+    drawPicrossPreviewWindow(&ls->levels[ls->hoverLevelIndex].completedWSG);
+
+    static const char options[3][14] = {"View Solution", "Reset Puzzle", "Back"};
+
+    for(int idx = 0; idx < 3; idx++)
+    {
+        int16_t x = 5;
+        int16_t y = 50 + 50 * idx;
+        drawRectFilled(x, y-8, 181, y + 28, idx == ls->levelActionIndex ? c115 : c111);
+        drawTextWordWrapCentered(font, idx == ls->levelActionIndex ? c555 : c333, options[idx], &x, &y, 180, y+40);
+    }
+
+    drawRect(3, 40 + 50 * ls->levelActionIndex, 183, 80 + 50 * ls->levelActionIndex, c445);
 }
 
 void picrossLevelSelectButtonCb(buttonEvt_t* evt)

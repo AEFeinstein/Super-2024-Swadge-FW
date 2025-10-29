@@ -33,6 +33,8 @@ typedef struct
     uint8_t paddingLeft;
     uint8_t gap;
     int32_t currentIndex; // s32bit because its stored i an nvs
+    int8_t levelActionIndex;
+    bool decidingLevelAction;
     wsg_t unknownPuzzle;
     bool allLevelsComplete;
     picrossLevelDef_t levels[PICROSS_LEVEL_COUNT];

@@ -31,5 +31,5 @@ void exitTutorial(void);
 void picrossSetSaveFlag(picrossOption_t pos, bool on);
 bool picrossGetSaveFlag(picrossOption_t pos);
 bool picrossGetLoadedSaveFlag(picrossOption_t pos);
-void continueGame(void);
+void continueGame(bool solved, int8_t currentIdx);
 #endif
