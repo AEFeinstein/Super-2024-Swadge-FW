@@ -432,9 +432,22 @@ void drawLevelActionScreen(font_t* font)
 {
     clearPxTft();
 
+    char textBuffer[64];
+
+    // todo: Draw Choose Level Text.
+    drawText(font, c555, "Puzzle", 190, 30);
+    drawText(font, c555, "Select", 190, 60);
+    snprintf(textBuffer, sizeof(textBuffer) - 1, "%d/%d", (int)ls->hoverLevelIndex + 1, (int)PICROSS_LEVEL_COUNT);
+    int16_t t = textWidth(&ls->smallFont, textBuffer) / 2;
+    drawText(&ls->smallFont, c555, textBuffer, TFT_WIDTH - 54 - t, 90);
+    snprintf(textBuffer, sizeof(textBuffer) - 1, "%" PRIu16 "x%" PRIu16,
+    (int)ls->levels[ls->hoverLevelIndex].levelWSG.w, (int)ls->levels[ls->hoverLevelIndex].levelWSG.h);
+    t = textWidth(&ls->smallFont, textBuffer) / 2;
+    drawText(&ls->smallFont, c555, textBuffer, TFT_WIDTH - 54 - t, TFT_HEIGHT - 28);
+
     drawPicrossPreviewWindow(&ls->levels[ls->hoverLevelIndex].completedWSG);
 
-    static const char options[3][14] = {"View Solution", "Reset Puzzle", "Back"};
+    static const char options[3][14] = {"Appreciate It", "Reset Puzzle", "Back"};
 
     for (int idx = 0; idx < 3; idx++)
     {
