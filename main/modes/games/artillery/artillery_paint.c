@@ -5,15 +5,21 @@
 #include "artillery_paint.h"
 
 //==============================================================================
+// Defines
+//==============================================================================
+
+#define COLOR_ARROW         c555
+#define COLOR_ARROW_OUTLINE c000
+
+//==============================================================================
 // Static Const Variables
 //==============================================================================
 
 static const char key_tankColor[] = "tankColor";
 
 static const paletteColor_t cOpts[][2] = {
-    {c401, c301}, {c102, c001}, {c004, c003}, {c505, c413}, {c033, c022}, {c305, c214}, {c521, c421},
-    {c503, c402}, {c241, c131}, {c541, c431}, {c203, c102}, {c333, c444}, {c000, c222}, {c545, c535},
-    {c543, c433}, {c554, c253}, {c455, c054}, {c233, c122}, {c544, c533}, {c435, c425},
+    {c433, c322}, {c554, c221}, {c441, c220}, {c254, c032}, {c234, c123}, {c405, c314}, {c411, c300}, {c322, c211},
+    {c431, c320}, {c241, c030}, {c513, c503}, {c151, c030}, {c515, c404}, {c104, c003}, {c131, c020}, {c451, c230},
 };
 
 //==============================================================================
@@ -96,10 +102,10 @@ void artilleryPaintLoop(artilleryData_t* ad, uint32_t elapsedUs)
         const char lArrow[] = "<-";
         const char rArrow[] = "->";
 
-        drawText(font, c555, lArrow, xMargin, yOff);
-        drawText(fontOutline, c000, lArrow, xMargin, yOff);
-        drawText(font, c555, rArrow, TFT_WIDTH - xMargin - textWidth(font, rArrow), yOff);
-        drawText(fontOutline, c000, rArrow, TFT_WIDTH - xMargin - textWidth(font, rArrow), yOff);
+        drawText(font, COLOR_ARROW, lArrow, xMargin, yOff);
+        drawText(fontOutline, COLOR_ARROW_OUTLINE, lArrow, xMargin, yOff);
+        drawText(font, COLOR_ARROW, rArrow, TFT_WIDTH - xMargin - textWidth(font, rArrow), yOff);
+        drawText(fontOutline, COLOR_ARROW_OUTLINE, rArrow, TFT_WIDTH - xMargin - textWidth(font, rArrow), yOff);
     }
 
     // Draw tank
