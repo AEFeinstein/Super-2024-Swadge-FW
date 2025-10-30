@@ -73,7 +73,8 @@ typedef enum
     ENTITY_LIFE_REFILL_LARGE,
     ENTITY_BOSS_TEST,
     ENTITY_MIXTAPE,
-    ENTITY_BOSS_DOOR
+    ENTITY_BOSS_DOOR,
+    ENTITY_SHRUBBLE_LV4
 } mgEntityIndex_t;
 
 typedef enum
@@ -85,6 +86,18 @@ typedef enum
     MG_PL_ST_HURT,
     MG_PL_ST_SHIELD
 } mgPlayerState_t;
+
+typedef enum
+{
+    CRAWLER_TOP_TO_RIGHT,
+    CRAWLER_RIGHT_TO_BOTTOM,
+    CRAWLER_BOTTOM_TO_LEFT,
+    CRAWLER_LEFT_TO_TOP,
+    CRAWLER_TOP_TO_LEFT,
+    CRAWLER_RIGHT_TO_TOP,
+    CRAWLER_BOTTOM_TO_RIGHT,
+    CRAWLER_LEFT_TO_BOTTOM
+} crawlerMoveState_t;
 
 //==============================================================================
 // Structs
@@ -125,6 +138,7 @@ struct mgEntity_t
     uint8_t spriteIndex;
     bool spriteFlipHorizontal;
     bool spriteFlipVertical;
+    int16_t spriteRotateAngle;
     uint8_t animationTimer;
 
     mgTilemap_t* tilemap;
@@ -266,5 +280,9 @@ void mg_updateBossDoor(mgEntity_t* self);
 void mg_bossDoorCollisionHandler(mgEntity_t* self, mgEntity_t* other);
 
 void mg_updateBossTest(mgEntity_t* self);
+
+void mg_updateShrubbleLv4(mgEntity_t* self);
+
+void crawlerSetMoveState(mgEntity_t* self, uint8_t state);
 
 #endif

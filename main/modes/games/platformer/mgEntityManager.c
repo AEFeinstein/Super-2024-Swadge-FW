@@ -302,6 +302,9 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
         case ENTITY_BOSS_DOOR:
             createdEntity = createBossDoor(entityManager, x, y);
             break;
+        case ENTITY_SHRUBBLE_LV4:
+            createdEntity = createShrubbleLv4(entityManager, x, y);
+            break;
         default:
             createdEntity = NULL;
     }
@@ -339,6 +342,7 @@ mgEntity_t* mg_createPlayer(mgEntityManager_t* entityManager, uint16_t x, uint16
     entity->jumpPower          = 0;
     entity->canDash            = true;
     entity->spriteFlipVertical = false;
+    entity->spriteRotateAngle    = 0;
     entity->hp                 = 30;
     entity->animationTimer     = 0; // Used as a cooldown for shooting square wave balls
     entity->shotsFired         = 0;
@@ -379,6 +383,7 @@ mgEntity_t* createTestObject(mgEntityManager_t* entityManager, uint16_t x, uint1
     entity->gravity              = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
     entity->hp                   = 3;
 
@@ -538,6 +543,7 @@ mgEntity_t* createHitBlock(mgEntityManager_t* entityManager, uint16_t x, uint16_
 
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
 
     entity->type                 = ENTITY_HIT_BLOCK;
     entity->spriteIndex          = MG_SP_HITBLOCK_CONTAINER;
@@ -574,6 +580,7 @@ mgEntity_t* createPowerUp(mgEntityManager_t* entityManager, uint16_t x, uint16_t
     entity->falling              = true;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
 
     entity->type                 = ENTITY_POWERUP;
     entity->spriteIndex          = MG_SP_GAMING_1;
@@ -610,6 +617,7 @@ mgEntity_t* createWarp(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
     entity->gravity        = 4;
 
     entity->spriteFlipVertical = false;
+    entity->spriteRotateAngle    = 0;
 
     entity->type                 = ENTITY_WARP;
     entity->spriteIndex          = MG_SP_WARP_1;
@@ -647,6 +655,7 @@ mgEntity_t* createDustBunny(mgEntityManager_t* entityManager, uint16_t x, uint16
     entity->gravity              = 4;
     entity->spriteFlipHorizontal = (x < (entityManager->tilemap->mapOffsetX + 120)) ? true : false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->hp                   = 4;
 
     entity->scoreValue = 150;
@@ -686,6 +695,7 @@ mgEntity_t* createWasp(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
     entity->gravity              = 8;
     entity->spriteFlipHorizontal = (x < (entityManager->tilemap->mapOffsetX + 120)) ? false : true;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 200;
     entity->hp                   = 5;
 
@@ -725,6 +735,7 @@ mgEntity_t* createEnemyBushL2(mgEntityManager_t* entityManager, uint16_t x, uint
     entity->gravity              = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 150;
 
     entity->type                 = ENTITY_BUSH_2;
@@ -761,6 +772,7 @@ mgEntity_t* createEnemyBushL3(mgEntityManager_t* entityManager, uint16_t x, uint
     entity->gravity              = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 250;
     entity->hp                   = 10;
 
@@ -802,6 +814,7 @@ mgEntity_t* createDustBunnyL2(mgEntityManager_t* entityManager, uint16_t x, uint
     entity->gravity              = 4;
     entity->spriteFlipHorizontal = (x < (entityManager->tilemap->mapOffsetX + 120)) ? false : true;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 200;
     entity->hp                   = 8;
 
@@ -841,6 +854,7 @@ mgEntity_t* createDustBunnyL3(mgEntityManager_t* entityManager, uint16_t x, uint
     entity->gravity              = 4;
     entity->spriteFlipHorizontal = (x < (entityManager->tilemap->mapOffsetX + 120)) ? true : false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 300;
     entity->hp                   = 12;
 
@@ -880,6 +894,7 @@ mgEntity_t* createWaspL2(mgEntityManager_t* entityManager, uint16_t x, uint16_t 
     entity->gravity              = 8;
     entity->spriteFlipHorizontal = (x < (entityManager->tilemap->mapOffsetX + 120)) ? false : true;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->falling              = false;
     entity->scoreValue           = 300;
     entity->hp                   = 8;
@@ -922,6 +937,7 @@ mgEntity_t* createWaspL3(mgEntityManager_t* entityManager, uint16_t x, uint16_t 
     entity->gravity              = 8;
     entity->spriteFlipHorizontal = (x < (entityManager->tilemap->mapOffsetX + 120)) ? false : true;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 400;
     entity->hp                   = 10;
 
@@ -1186,6 +1202,7 @@ mgEntity_t* create1up(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
     entity->gravity              = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
 
     entity->type                 = ENTITY_1UP;
     entity->spriteIndex          = MG_SP_1UP_1;
@@ -1222,6 +1239,7 @@ mgEntity_t* createWaveBall(mgEntityManager_t* entityManager, uint16_t x, uint16_
     entity->gravity              = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->yDamping             = 3; // This will be repurposed as a state timer
     entity->xDamping             = 0; // This will be repurposed as a state tracker
     entity->scoreValue           = 5;
@@ -1261,6 +1279,7 @@ mgEntity_t* createCheckpoint(mgEntityManager_t* entityManager, uint16_t x, uint1
     entity->gravity              = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
 
     entity->xDamping = 0; // State of the checkpoint. 0 = inactive, 1 = active
 
@@ -1298,6 +1317,7 @@ mgEntity_t* createMixtape(mgEntityManager_t* entityManager, uint16_t x, uint16_t
     entity->gravity              = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->falling              = true;
 
     entity->type                 = ENTITY_MIXTAPE;
@@ -1335,6 +1355,7 @@ mgEntity_t* createBossDoor(mgEntityManager_t* entityManager, uint16_t x, uint16_
     entity->gravity              = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
     entity->hp                   = 3;
 
@@ -1346,6 +1367,43 @@ mgEntity_t* createBossDoor(mgEntityManager_t* entityManager, uint16_t x, uint16_
     entity->collisionHandler     = &mg_bossDoorCollisionHandler;
     entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+
+    entity->drawHandler = &mg_defaultEntityDrawHandler;
+    return entity;
+}
+
+mgEntity_t* createShrubbleLv4(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = 8;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 4;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
+    entity->scoreValue           = 150;
+
+    entity->type                 = ENTITY_SHRUBBLE_LV4;
+    entity->spriteIndex          = MG_SP_ENEMY_BUSH_L2;
+    entity->updateFunction       = &mg_updateShrubbleLv4;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
+    entity->fallOffTileHandler   = &turnAroundAtEdgeOfTileHandler;
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
 
     entity->drawHandler = &mg_defaultEntityDrawHandler;
@@ -1577,6 +1635,7 @@ mgEntity_t* createCharginSchmuck(mgEntityManager_t* entityManager, uint16_t x, u
     entity->gravity              = 4;
     entity->spriteFlipHorizontal = (entityManager->playerEntity->x > x) ? false : true;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
     entity->hp                   = 12;
 
@@ -1616,6 +1675,7 @@ mgEntity_t* createBouncinSchmuck(mgEntityManager_t* entityManager, uint16_t x, u
     entity->gravity              = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
     entity->hp                   = 3;
 
@@ -1654,6 +1714,7 @@ mgEntity_t* createTurret(mgEntityManager_t* entityManager, uint16_t x, uint16_t 
     entity->gravity              = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
     entity->hp                   = 10;
 
@@ -1692,6 +1753,7 @@ mgEntity_t* createSheldonShieldy(mgEntityManager_t* entityManager, uint16_t x, u
     entity->gravity              = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
     entity->hp                   = 3;
 
@@ -1729,6 +1791,7 @@ mgEntity_t* createSpikyMcGee(mgEntityManager_t* entityManager, uint16_t x, uint1
     entity->gravity              = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
     entity->hp                   = 3;
 
@@ -1766,6 +1829,7 @@ mgEntity_t* createAirTurret(mgEntityManager_t* entityManager, uint16_t x, uint16
     entity->gravity              = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
     entity->hp                   = 3;
 
@@ -1803,6 +1867,7 @@ mgEntity_t* createBouncepad(mgEntityManager_t* entityManager, uint16_t x, uint16
     entity->gravity              = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
     entity->hp                   = 3;
 
@@ -1840,6 +1905,7 @@ mgEntity_t* createBouncepadDiagonal(mgEntityManager_t* entityManager, uint16_t x
     entity->gravity              = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
     entity->hp                   = 3;
 
@@ -1877,6 +1943,7 @@ mgEntity_t* createLifeRefillSmall(mgEntityManager_t* entityManager, uint16_t x, 
     entity->gravity              = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
     entity->hp                   = 3;
 
@@ -1914,6 +1981,7 @@ mgEntity_t* createLifeRefillLarge(mgEntityManager_t* entityManager, uint16_t x, 
     entity->gravity              = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
     entity->hp                   = 3;
 
@@ -1951,6 +2019,7 @@ mgEntity_t* createBossTest(mgEntityManager_t* entityManager, uint16_t x, uint16_
     entity->gravity              = 1;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
     entity->hp                   = 30;
 

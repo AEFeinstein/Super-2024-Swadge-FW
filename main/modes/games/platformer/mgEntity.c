@@ -2861,7 +2861,7 @@ void mg_defaultEntityDrawHandler(mgEntity_t* self)
                 - self->entityManager->tilemap->mapOffsetX,
             (self->y >> SUBPIXEL_RESOLUTION) - self->entityManager->tilemap->mapOffsetY
                 - self->entityManager->wsgManager->sprites[self->spriteIndex].origin->y,
-            self->spriteFlipHorizontal, self->spriteFlipVertical, 0);
+            self->spriteFlipHorizontal, self->spriteFlipVertical, self->spriteRotateAngle);
 }
 
 void mg_playerDrawHandler(mgEntity_t* self)
@@ -2871,7 +2871,7 @@ void mg_playerDrawHandler(mgEntity_t* self)
                 - self->entityManager->tilemap->mapOffsetX,
             (self->y >> SUBPIXEL_RESOLUTION) - self->entityManager->tilemap->mapOffsetY
                 - self->entityManager->wsgManager->sprites[self->spriteIndex].origin->y,
-            self->spriteFlipHorizontal, self->spriteFlipVertical, 0);
+            self->spriteFlipHorizontal, self->spriteFlipVertical, self->spriteRotateAngle);
 
     if(self->state == MG_PL_ST_SHIELD)
     {
@@ -3289,4 +3289,304 @@ void mg_updateBossTest(mgEntity_t* self)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
     }
+}
+
+void mg_updateShrubbleLv4(mgEntity_t* self)
+{
+    if (self->gameData->frameCount % 10 == 0)
+    {
+        self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
+    }
+
+    /*if (self->breakInfiniteLoopBounceThreshold > 0)
+    {
+        self->breakInfiniteLoopBounceThreshold--;
+    }*/
+
+    mg_detectEntityCollisions(self);
+
+    uint8_t tx = MG_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
+    uint8_t ty = MG_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
+    uint8_t t;
+
+    switch (self->animationTimer)
+    {
+        // CLOCKWISE
+        case CRAWLER_TOP_TO_RIGHT: // On top of a block, going right
+            if (((self->x % (MG_TILESIZE << SUBPIXEL_RESOLUTION)) - (MG_HALF_TILESIZE << SUBPIXEL_RESOLUTION)))
+            {
+                break;
+            }
+
+            t = mg_getTile(self->tilemap, tx, ty + 1);
+            if (!mg_isSolid(t))
+            {
+                crawlerSetMoveState(self, CRAWLER_RIGHT_TO_BOTTOM);
+                //self->bouncesOffUnbreakableBlocks++;
+            }
+            else
+            {
+                //self->bouncesOffUnbreakableBlocks = 0;
+            }
+
+            t = mg_getTile(self->tilemap, tx + 1, ty);
+            if (mg_isSolid(t))
+            {
+                crawlerSetMoveState(self, CRAWLER_LEFT_TO_TOP);
+            }
+
+            break;
+
+        case CRAWLER_RIGHT_TO_BOTTOM: // On the right side of a block, going down
+            if (((self->y % (MG_TILESIZE << SUBPIXEL_RESOLUTION)) - (MG_HALF_TILESIZE << SUBPIXEL_RESOLUTION)))
+            {
+                break;
+            }
+
+            t = mg_getTile(self->tilemap, tx - 1, ty);
+            if (!mg_isSolid(t))
+            {
+                crawlerSetMoveState(self, CRAWLER_BOTTOM_TO_LEFT);
+                //self->bouncesOffUnbreakableBlocks++;
+            }
+            else
+            {
+                //self->bouncesOffUnbreakableBlocks = 0;
+            }
+            t = mg_getTile(self->tilemap, tx, ty + 1);
+            if (mg_isSolid(t))
+            {
+                crawlerSetMoveState(self, CRAWLER_TOP_TO_RIGHT);
+            }
+
+            break;
+
+        case CRAWLER_BOTTOM_TO_LEFT: // On the bottom of a block, going left
+            if (((self->x % (MG_TILESIZE << SUBPIXEL_RESOLUTION)) - (MG_HALF_TILESIZE << SUBPIXEL_RESOLUTION)))
+            {
+                break;
+            }
+
+            t = mg_getTile(self->tilemap, tx, ty - 1);
+            if (!mg_isSolid(t))
+            {
+                crawlerSetMoveState(self, CRAWLER_LEFT_TO_TOP);
+                //self->bouncesOffUnbreakableBlocks++;
+            }
+            else
+            {
+                //self->bouncesOffUnbreakableBlocks = 0;
+            }
+            t = mg_getTile(self->tilemap, tx - 1, ty);
+            if (mg_isSolid(t))
+            {
+                crawlerSetMoveState(self, CRAWLER_RIGHT_TO_BOTTOM);
+            }
+
+            break;
+
+        case CRAWLER_LEFT_TO_TOP: // On the left side of a block, going up
+            if (((self->y % (MG_TILESIZE << SUBPIXEL_RESOLUTION)) - (MG_HALF_TILESIZE << SUBPIXEL_RESOLUTION)))
+            {
+                break;
+            }
+
+            t = mg_getTile(self->tilemap, tx + 1, ty);
+            if (!mg_isSolid(t))
+            {
+                crawlerSetMoveState(self, CRAWLER_TOP_TO_RIGHT);
+                //self->bouncesOffUnbreakableBlocks++;
+            }
+            else
+            {
+                //self->bouncesOffUnbreakableBlocks = 0;
+            }
+            t = mg_getTile(self->tilemap, tx, ty - 1);
+            if (mg_isSolid(t))
+            {
+                crawlerSetMoveState(self, CRAWLER_BOTTOM_TO_LEFT);
+            }
+
+            break;
+
+        // COUNTER-CLOCKWISE
+        case CRAWLER_TOP_TO_LEFT: // On top of a block, going left
+            if (((self->x % (MG_TILESIZE << SUBPIXEL_RESOLUTION)) - (MG_HALF_TILESIZE << SUBPIXEL_RESOLUTION)))
+            {
+                break;
+            }
+
+            t = mg_getTile(self->tilemap, tx, ty + 1);
+            if (!mg_isSolid(t))
+            {
+                crawlerSetMoveState(self, CRAWLER_LEFT_TO_BOTTOM);
+                //self->bouncesOffUnbreakableBlocks++;
+            }
+            else
+            {
+                //self->bouncesOffUnbreakableBlocks = 0;
+            }
+            t = mg_getTile(self->tilemap, tx - 1, ty);
+            if (mg_isSolid(t))
+            {
+                crawlerSetMoveState(self, CRAWLER_RIGHT_TO_TOP);
+            }
+
+            break;
+
+        case CRAWLER_LEFT_TO_BOTTOM: // On the left side of a block, going down
+            if (((self->y % (MG_TILESIZE << SUBPIXEL_RESOLUTION)) - (MG_HALF_TILESIZE << SUBPIXEL_RESOLUTION)))
+            {
+                break;
+            }
+
+            t = mg_getTile(self->tilemap, tx + 1, ty);
+            if (!mg_isSolid(t))
+            {
+                crawlerSetMoveState(self, CRAWLER_BOTTOM_TO_RIGHT);
+                //self->bouncesOffUnbreakableBlocks++;
+            }
+            else
+            {
+                //self->bouncesOffUnbreakableBlocks = 0;
+            }
+            t = mg_getTile(self->tilemap, tx, ty + 1);
+            if (mg_isSolid(t))
+            {
+                crawlerSetMoveState(self, CRAWLER_TOP_TO_LEFT);
+            }
+
+            break;
+
+        case CRAWLER_BOTTOM_TO_RIGHT: // On the bottom of a block, going right
+            if (((self->x % (MG_TILESIZE << SUBPIXEL_RESOLUTION)) - (MG_HALF_TILESIZE << SUBPIXEL_RESOLUTION)))
+            {
+                break;
+            }
+
+            t = mg_getTile(self->tilemap, tx, ty - 1);
+            if (!mg_isSolid(t))
+            {
+                crawlerSetMoveState(self, CRAWLER_RIGHT_TO_TOP);
+                //self->bouncesOffUnbreakableBlocks++;
+            }
+            else
+            {
+                //self->bouncesOffUnbreakableBlocks = 0;
+            }
+
+            t = mg_getTile(self->tilemap, tx + 1, ty);
+            if (mg_isSolid(t))
+            {
+                crawlerSetMoveState(self, CRAWLER_LEFT_TO_BOTTOM);
+            }
+
+            break;
+
+        case CRAWLER_RIGHT_TO_TOP: // On the right side of a block, going up
+            if (((self->y % (MG_TILESIZE << SUBPIXEL_RESOLUTION)) - (MG_HALF_TILESIZE << SUBPIXEL_RESOLUTION)))
+            {
+                break;
+            }
+
+            t = mg_getTile(self->tilemap, tx - 1, ty);
+            if (!mg_isSolid(t))
+            {
+                crawlerSetMoveState(self, CRAWLER_TOP_TO_LEFT);
+                //self->bouncesOffUnbreakableBlocks++;
+            }
+            else
+            {
+                //self->bouncesOffUnbreakableBlocks = 0;
+            }
+
+            t = mg_getTile(self->tilemap, tx, ty - 1);
+            if (mg_isSolid(t))
+            {
+                crawlerSetMoveState(self, CRAWLER_BOTTOM_TO_RIGHT);
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    /*if (self->bouncesOffUnbreakableBlocks > 4)
+    {
+        scorePoints(self->gameData, 100, 1);
+        explodeBomb(self);
+    }*/
+
+    /*if (isOutsidePlayfield(self))
+    {
+        destroyEntity(self, false);
+    }*/
+
+    despawnWhenOffscreen(self);
+
+    self->x += self->xspeed;
+    self->y += self->yspeed;
+}
+
+void crawlerSetMoveState(mgEntity_t* self, uint8_t state)
+{
+    int16_t baseSpeed = abs( (self->xspeed != 0) ? self->xspeed : self->yspeed );
+
+    switch (state)
+    {
+        // CLOCKWISE
+        case CRAWLER_TOP_TO_RIGHT: // On top of a block, going right
+            self->xspeed            = baseSpeed;
+            self->yspeed            = 0;
+            self->spriteRotateAngle = 0;
+            self->spriteIndex       = MG_SP_CRAWLER_TOP;
+            break;
+        case CRAWLER_RIGHT_TO_BOTTOM: // On the right side of a block, going down
+            self->yspeed            = baseSpeed;
+            self->xspeed            = 0;
+            self->spriteRotateAngle = 90;
+            self->spriteIndex       = MG_SP_CRAWLER_RIGHT;
+            break;
+        case CRAWLER_BOTTOM_TO_LEFT: // On the bottom of a block, going left
+            self->xspeed            = -baseSpeed;
+            self->yspeed            = 0;
+            self->spriteRotateAngle = 180;
+            self->spriteIndex       = MG_SP_CRAWLER_BOTTOM;
+            break;
+        case CRAWLER_LEFT_TO_TOP: // On the left side of a block, going up
+            self->yspeed            = -baseSpeed;
+            self->xspeed            = 0;
+            self->spriteRotateAngle = 270;
+            self->spriteIndex       = MG_SP_CRAWLER_LEFT;
+            break;
+        // COUNTER-CLOCKWISE
+        case CRAWLER_TOP_TO_LEFT: // On top of a block, going left
+            self->xspeed            = -baseSpeed;
+            self->yspeed            = 0;
+            self->spriteRotateAngle = 0;
+            self->spriteIndex       = MG_SP_CRAWLER_TOP;
+            break;
+        case CRAWLER_LEFT_TO_BOTTOM: // On the left side of a block, going down
+            self->yspeed            = baseSpeed;
+            self->xspeed            = 0;
+            self->spriteRotateAngle = 270;
+            self->spriteIndex       = MG_SP_CRAWLER_LEFT;
+            break;
+        case CRAWLER_BOTTOM_TO_RIGHT: // On the bottom of a block, going right
+            self->xspeed            = baseSpeed;
+            self->yspeed            = 0;
+            self->spriteRotateAngle = 180;
+            self->spriteIndex       = MG_SP_CRAWLER_BOTTOM;
+            break;
+        case CRAWLER_RIGHT_TO_TOP: // On the right side of a block, going up
+            self->yspeed            = -baseSpeed;
+            self->xspeed            = 0;
+            self->spriteRotateAngle = 90;
+            self->spriteIndex       = MG_SP_CRAWLER_RIGHT;
+            break;
+        default:
+            break;
+    }
+
+    self->animationTimer = state;
 }

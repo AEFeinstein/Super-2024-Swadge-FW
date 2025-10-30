@@ -594,6 +594,22 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_PLAYER_HURT_3].wsg    = &self->wsgs[MG_WSG_PLAYER_HURT_3];
     self->sprites[MG_SP_PLAYER_HURT_3].origin = &origin_15_15;
     self->sprites[MG_SP_PLAYER_HURT_3].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_CRAWLER_TOP].wsg    = &self->wsgs[MG_WSG_ENEMY_BUSH_L2];
+    self->sprites[MG_SP_CRAWLER_TOP].origin = &origin_8_8;
+    self->sprites[MG_SP_CRAWLER_TOP].hitBox = &box_16_16;
+    
+    self->sprites[MG_SP_CRAWLER_RIGHT].wsg    = &self->wsgs[MG_WSG_ENEMY_BUSH_L2];
+    self->sprites[MG_SP_CRAWLER_RIGHT].origin = &origin_8_8;
+    self->sprites[MG_SP_CRAWLER_RIGHT].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_CRAWLER_BOTTOM].wsg    = &self->wsgs[MG_WSG_ENEMY_BUSH_L2];
+    self->sprites[MG_SP_CRAWLER_BOTTOM].origin = &origin_8_8;
+    self->sprites[MG_SP_CRAWLER_BOTTOM].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_CRAWLER_LEFT].wsg    = &self->wsgs[MG_WSG_ENEMY_BUSH_L2];
+    self->sprites[MG_SP_CRAWLER_LEFT].origin = &origin_8_8;
+    self->sprites[MG_SP_CRAWLER_LEFT].hitBox = &box_16_16;
 }
 
 void mg_initializeTiles(mgWsgManager_t* self)
