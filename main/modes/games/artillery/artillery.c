@@ -22,6 +22,13 @@
 #define DEFAULT_GRAV_X 0.0f
 #define DEFAULT_GRAV_Y 98.0f
 
+#define COLOR_SIMPLE_MENU_BORDER     c005
+#define COLOR_SIMPLE_MENU_BACKGROUND c111
+#define COLOR_SIMPLE_MENU_TEXT       c555
+
+#define COLOR_TEXT        c555
+#define COLOR_TEXT_SHADOW c000
+
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -152,7 +159,8 @@ void artilleryEnterMode(void)
     }
 
     // Initialize in-game menu renderer
-    ad->smRenderer = initMenuSimpleRenderer(NULL, c005, c111, c555, 5);
+    ad->smRenderer = initMenuSimpleRenderer(NULL, COLOR_SIMPLE_MENU_BORDER, COLOR_SIMPLE_MENU_BACKGROUND,
+                                            COLOR_SIMPLE_MENU_TEXT, 5);
 
     // Initialize p2p
     p2pInitialize(&ad->p2p, 0x76, artillery_p2pConCb, artillery_p2pMsgRxCb, -70);
@@ -261,7 +269,8 @@ void artilleryMainLoop(int64_t elapsedUs)
             // Draw connection text
             font_t* f      = ad->mRenderer->menuFont;
             int16_t tWidth = textWidth(f, ad->conStr) + 1;
-            drawTextShadow(f, c555, c000, ad->conStr, (TFT_WIDTH - tWidth) / 2, 135 - (f->height / 2));
+            drawTextShadow(f, COLOR_TEXT, COLOR_TEXT_SHADOW, ad->conStr, (TFT_WIDTH - tWidth) / 2,
+                           135 - (f->height / 2));
 
             // Check for packets to transmit
             artilleryCheckTxQueue(ad);
@@ -314,11 +323,6 @@ void artilleryBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h,
 
         // Always draw the background
         drawPhysBackground(ad->phys, x, y, w, h);
-    }
-    else
-    {
-        // Not the game, simply black it out
-        fillDisplayArea(x, y, x + w, y + h, c000);
     }
 }
 

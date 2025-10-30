@@ -40,6 +40,16 @@
 
 #define PLAYER_RADIUS 8
 
+#define COLOR_VOID   c000
+#define COLOR_SKY    c002
+#define COLOR_CLOUD  c555
+#define COLOR_GROUND c020
+#define COLOR_LAVA   c200
+
+#define COLOR_TEXT        c444
+#define COLOR_TEXT_SHADOW c000
+#define COLOR_GAS_GAUGE   c222
+
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -191,7 +201,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Floor is Lava",
-        .color      = c412,
+        .color      = COLOR_LAVA,
         .radius     = 3,
         .numBounces = 1,
         .numSpread  = 1,
@@ -382,7 +392,8 @@ void physStepBackground(physSim_t* phys)
                 // Assign ground color
                 int16_t minScreenX = CLAMP(pl->l.p1.x - phys->camera.x, 0, TFT_WIDTH);
                 int16_t maxScreenX = CLAMP(pl->l.p2.x - phys->camera.x, 0, TFT_WIDTH);
-                memset(&phys->surfaceColors[minScreenX], pl->isLava ? c200 : c020, maxScreenX - minScreenX);
+                memset(&phys->surfaceColors[minScreenX], pl->isLava ? COLOR_LAVA : COLOR_GROUND,
+                       maxScreenX - minScreenX);
             }
 
             // Iterate
@@ -651,7 +662,7 @@ void drawPhysBackground(physSim_t* phys, int16_t x0, int16_t y0, int16_t w, int1
     paletteColor_t* fb = &getPxTftFramebuffer()[y0 * TFT_WIDTH + x0];
 
     // Fill black to start
-    memset(fb, c000, w * h);
+    memset(fb, COLOR_VOID, w * h);
 
     // Find the Y bounds to draw ground and sky between
     int16_t minY = CLAMP(-phys->camera.y, y0, y0 + h);
@@ -676,7 +687,7 @@ void drawPhysBackground(physSim_t* phys, int16_t x0, int16_t y0, int16_t w, int1
             if (y < phys->surfacePoints[x])
             {
                 // Blue for sky
-                *fb = c002;
+                *fb = COLOR_SKY;
             }
             else
             {
@@ -718,7 +729,7 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
     for (int32_t cIdx = 0; cIdx < ARRAY_SIZE(phys->clouds); cIdx++)
     {
         circle_t* cloud = &phys->clouds[cIdx];
-        drawCircleFilled(cloud->pos.x - phys->camera.x, cloud->pos.y - phys->camera.y, cloud->radius, c555);
+        drawCircleFilled(cloud->pos.x - phys->camera.x, cloud->pos.y - phys->camera.y, cloud->radius, COLOR_CLOUD);
     }
 
     // Draw all circles
@@ -735,8 +746,8 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
         {
             if (pc->lavaAnimTimer % LAVA_ANIM_PERIOD < (LAVA_ANIM_PERIOD / 2))
             {
-                bCol = c200;
-                aCol = c200;
+                bCol = COLOR_LAVA;
+                aCol = COLOR_LAVA;
             }
         }
 
@@ -821,22 +832,23 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
 #define TEXT_X_MARGIN    20
 
     // Draw gas gauge
-    fillDisplayArea(0, 0, (TFT_WIDTH * moveTimeLeftUs) / TANK_MOVE_TIME_US, GAS_GAUGE_HEIGHT, c222);
+    fillDisplayArea(0, 0, (TFT_WIDTH * moveTimeLeftUs) / TANK_MOVE_TIME_US, GAS_GAUGE_HEIGHT, COLOR_GAS_GAUGE);
 
     // Draw turns
     char turnStr[32] = {0};
     snprintf(turnStr, sizeof(turnStr) - 1, "Turn %" PRId32 "/%d", turn, MAX_TURNS);
-    drawTextShadow(font, c444, c000, turnStr, (TFT_WIDTH - textWidth(font, turnStr)) / 2, TEXT_Y);
+    drawTextShadow(font, COLOR_TEXT, COLOR_TEXT_SHADOW, turnStr, (TFT_WIDTH - textWidth(font, turnStr)) / 2, TEXT_Y);
 
     // Draw score if players are set
     if (players[0])
     {
         char scoreStr[32] = {0};
         snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, players[0]->score);
-        drawTextShadow(font, c444, c000, scoreStr, TEXT_X_MARGIN, TEXT_Y);
+        drawTextShadow(font, COLOR_TEXT, COLOR_TEXT_SHADOW, scoreStr, TEXT_X_MARGIN, TEXT_Y);
 
         snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, players[1]->score);
-        drawTextShadow(font, c444, c000, scoreStr, TFT_WIDTH - textWidth(font, scoreStr) - TEXT_X_MARGIN, TEXT_Y);
+        drawTextShadow(font, COLOR_TEXT, COLOR_TEXT_SHADOW, scoreStr,
+                       TFT_WIDTH - textWidth(font, scoreStr) - TEXT_X_MARGIN, TEXT_Y);
     }
 }
 
@@ -1039,7 +1051,8 @@ void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool fi
     for (int32_t shellCount = 0; shellCount < aa->numSpread; shellCount++)
     {
         // Create the shell at the tip of the barrel
-        physCirc_t* shell = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, aa->radius, CT_SHELL, c440, c000);
+        physCirc_t* shell
+            = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, aa->radius, CT_SHELL, aa->color, aa->color);
 
         // Set the owner of the shell as the firing tank
         shell->owner = player;
@@ -1066,10 +1079,6 @@ void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool fi
         {
             shell->homingTarget = opponent;
         }
-
-        // Set color
-        shell->baseColor   = aa->color;
-        shell->accentColor = c000;
 
         // Camera tracks all shells
         push(&phys->cameraTargets, shell);

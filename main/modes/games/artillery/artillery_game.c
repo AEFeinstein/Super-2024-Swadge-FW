@@ -15,6 +15,13 @@
 #define POWER_INTERVAL       1.0f
 #define TOUCH_DEG_PER_BARREL 8
 
+#define COLOR_POWER_BAR_FILL   c400
+#define COLOR_POWER_BAR_EMPTY  c222
+#define COLOR_POWER_BAR_BORDER c000
+
+#define COLOR_TEXT        c555
+#define COLOR_TEXT_SHADOW c000
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -406,24 +413,25 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
 
             // Draw power bar
             int32_t barSplit = BAR_MARGIN + (p->shotPower / 2);
-            fillDisplayArea(BAR_MARGIN, TFT_HEIGHT - BAR_HEIGHT, barSplit, TFT_HEIGHT, c400);
-            fillDisplayArea(barSplit, TFT_HEIGHT - BAR_HEIGHT, TFT_WIDTH - BAR_MARGIN, TFT_HEIGHT, c222);
-            drawRect(BAR_MARGIN, TFT_HEIGHT - BAR_HEIGHT, TFT_WIDTH - BAR_MARGIN, TFT_HEIGHT, c000);
+            fillDisplayArea(BAR_MARGIN, TFT_HEIGHT - BAR_HEIGHT, barSplit, TFT_HEIGHT, COLOR_POWER_BAR_FILL);
+            fillDisplayArea(barSplit, TFT_HEIGHT - BAR_HEIGHT, TFT_WIDTH - BAR_MARGIN, TFT_HEIGHT,
+                            COLOR_POWER_BAR_EMPTY);
+            drawRect(BAR_MARGIN, TFT_HEIGHT - BAR_HEIGHT, TFT_WIDTH - BAR_MARGIN, TFT_HEIGHT, COLOR_POWER_BAR_BORDER);
 
             // Draw the power
             char fireParams[64];
             snprintf(fireParams, sizeof(fireParams) - 1, "Power %d", (int)p->shotPower);
-            drawText(f, c555, fireParams, BAR_MARGIN + FONT_MARGIN, TFT_HEIGHT - f->height - FONT_MARGIN);
+            drawText(f, COLOR_TEXT, fireParams, BAR_MARGIN + FONT_MARGIN, TFT_HEIGHT - f->height - FONT_MARGIN);
 
             // Draw the angle
             snprintf(fireParams, sizeof(fireParams) - 1, "Angle %d", p->barrelAngle);
-            drawTextShadow(f, c555, c000, fireParams, BAR_MARGIN + FONT_MARGIN,
+            drawTextShadow(f, COLOR_TEXT, COLOR_TEXT_SHADOW, fireParams, BAR_MARGIN + FONT_MARGIN,
                            TFT_HEIGHT - (2 * f->height) - (3 * FONT_MARGIN));
 
             // Draw the ammo
             const char* ammo = getAmmoAttribute(p->ammoIdx)->name;
             int16_t tWidth   = textWidth(f, ammo);
-            drawTextShadow(f, c555, c000, ammo, TFT_WIDTH - BAR_MARGIN - FONT_MARGIN - tWidth,
+            drawTextShadow(f, COLOR_TEXT, COLOR_TEXT_SHADOW, ammo, TFT_WIDTH - BAR_MARGIN - FONT_MARGIN - tWidth,
                            TFT_HEIGHT - (2 * f->height) - (3 * FONT_MARGIN));
 
             break;
