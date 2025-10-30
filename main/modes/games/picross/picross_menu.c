@@ -370,7 +370,7 @@ struct
         .name        = "big bug",
         .pzl         = EF_BIGBUG_PZL_WSG,
         .slv         = EF_BIGBUG_SLV_WSG,
-        .marqueeFact = "Produced by James Albracht for the 2025 hotdog swadge with art from gplord, kaitie, "
+        .marqueeFact = "Produced by James Albracht for the 2025 hotdog swadge with art from gplord, kaitie, Nathan, "
                        "and music from newmajoe, and livingston rampey : Dr. Ovo Garbotnik fights hordes of giant "
                        "bugs in a garbage landfill loosely inspired by Dig Dug and Helldivers 2.",
     },
@@ -428,7 +428,7 @@ struct
         .name        = "double bass",
         .pzl         = FF_DOUBLEBASS_PZL_WSG,
         .slv         = FF_DOUBLEBASS_SLV_WSG,
-        .marqueeFact = "The Magfest Community Orchestra features over 200 volunteer musicians (including choir)",
+        .marqueeFact = "The Magfest Community Orchestra features over 200 volunteer musicians.",
     },
     {
         .name = "drum",
@@ -481,6 +481,30 @@ struct
     },
 };
 
+const trophyData_t trophyPicrossModeTrophies[] = {
+    {
+        .title       = "I missed my flight home",
+        .description = "solved all picross puzzles",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1, // For trigger type, set to one
+    }
+};
+
+const trophySettings_t trophyPicrossModeTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 2,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = str_picrossTitle,
+};
+
+const trophyDataList_t trophyPicrossModeData = {
+    .settings = &trophyPicrossModeTrophySettings,
+    .list     = trophyPicrossModeTrophies,
+    .length   = ARRAY_SIZE(trophyPicrossModeTrophies),
+};
+
 swadgeMode_t modePicross = {
     .modeName                 = str_picrossTitle,
     .wifiMode                 = NO_WIFI,
@@ -498,7 +522,7 @@ swadgeMode_t modePicross = {
     .fnAdvancedUSB            = NULL,
     .fnDacCb                  = NULL,
     .fnAddToSwadgePassPacket  = NULL,
-    .trophyData               = NULL,
+    .trophyData               = &trophyPicrossModeData,
 };
 
 picrossMenu_t* pm;

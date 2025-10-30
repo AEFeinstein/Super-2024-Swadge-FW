@@ -63,6 +63,11 @@ void picrossStartLevelSelect(font_t* bigFont, picrossLevelDef_t levels[])
         ls->levels[i] = levels[i];
     }
 
+    if(ls->allLevelsComplete)
+    {
+        trophyUpdate(&trophyPicrossModeTrophies[0], 1, true);
+    }
+
     readNvs32(picrossHoverLevelIndexKey, &ls->hoverLevelIndex);
     ls->cols   = 5;
     ls->hoverX = ls->hoverLevelIndex % ls->cols;
