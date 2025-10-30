@@ -5,6 +5,13 @@
 #include "artillery_help.h"
 
 //==============================================================================
+// Defines
+//==============================================================================
+
+#define COLOR_TEXT        c555
+#define COLOR_TEXT_SHADOW c000
+
+//==============================================================================
 // Static Const Variables
 //==============================================================================
 
@@ -66,11 +73,12 @@ void artilleryHelpLoop(artilleryData_t* ad, uint32_t elapsedUs)
 
     int16_t xOff = TEXT_MARGIN_L + 1;
     int16_t yOff = TEXT_MARGIN_U + 1;
-    drawTextWordWrap(f, c000, loremIpsum, &xOff, &yOff, TFT_WIDTH - TEXT_MARGIN_R + 1, TFT_HEIGHT - TEXT_MARGIN_D + 1);
+    drawTextWordWrap(f, COLOR_TEXT_SHADOW, loremIpsum, &xOff, &yOff, TFT_WIDTH - TEXT_MARGIN_R + 1,
+                     TFT_HEIGHT - TEXT_MARGIN_D + 1);
 
     xOff = TEXT_MARGIN_L;
     yOff = TEXT_MARGIN_U;
-    drawTextWordWrap(f, c555, loremIpsum, &xOff, &yOff,
+    drawTextWordWrap(f, COLOR_TEXT, loremIpsum, &xOff, &yOff,
                      // TEXT_MARGIN, OFFSET_Y + TEXT_MARGIN,
                      TFT_WIDTH - TEXT_MARGIN_R, TFT_HEIGHT - TEXT_MARGIN_D);
 }
