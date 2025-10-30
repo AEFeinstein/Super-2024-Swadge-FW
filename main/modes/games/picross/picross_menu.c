@@ -36,6 +36,7 @@ typedef struct
     picrossScreen_t screen;
     int32_t savedIndex;
     int32_t options; // bit 0: hints
+    midiFile_t bgm;
 } picrossMenu_t;
 
 //==============================================================================
@@ -61,6 +62,8 @@ const char picrossSavedOptionsKey[]       = "pic_opts";
 const char picrossCompletedLevelData[]    = "pic_victs"; // todo: rename to Key suffix
 const char picrossProgressData[]          = "pic_prog";  // todo: rename to key suffix
 const char picrossMarksData[]             = "pic_marks";
+const char picrossHoverLevelIndexKey[]    = "pic_hov_ind";
+const char picrossTopVisibleRowKey[]      = "pic_scroll_ind";
 
 // Main menu strings
 static char str_picrossTitle[]      = "Pi-cross 2"; // \x7f is interpreted as the pi char
@@ -514,6 +517,15 @@ void picrossEnterMode(void)
     // Allocate and zero memory
     pm = heap_caps_calloc(1, sizeof(picrossMenu_t), MALLOC_CAP_8BIT);
 
+    // Load sounds
+    loadMidiFile(LULLABY_IN_NUMBERS_MID, &pm->bgm, true);
+
+    // Init sound player
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    player->loop         = true;
+    midiGmOn(player);
+    soundPlayBgm(&pm->bgm, MIDI_BGM);
+
     loadFont(MM_FONT, &(pm->mmFont), false);
 
     pm->menu                        = initMenu(str_picrossTitle, picrossMainMenuCb);
@@ -557,6 +569,7 @@ void picrossEnterMode(void)
 
 void picrossExitMode(void)
 {
+    unloadMidiFile(&pm->bgm);
     switch (pm->screen)
     {
         case PICROSS_MENU:
@@ -748,7 +761,7 @@ void exitTutorial(void)
     pm->screen = PICROSS_MENU;
 }
 
-void continueGame()
+void continueGame(bool solved, int8_t currentIdx)
 {
     // get the current level index
     int32_t currentIndex = 0; // just load 0 if its 0.
@@ -760,7 +773,11 @@ void continueGame()
 
     // load in the level we selected.
     // uh. read the currentLevelIndex and get the value from
-    picrossStartGame(&pm->mmFont, &pm->levels[currentIndex], true, pm->renderer);
+    if (solved)
+    {
+        currentIndex = currentIdx;
+    }
+    picrossStartGame(&pm->mmFont, &pm->levels[currentIndex], true, pm->renderer, solved);
     pm->screen = PICROSS_GAME;
 }
 
@@ -771,7 +788,7 @@ bool picrossMainMenuCb(const char* label, bool selected, uint32_t value)
     {
         if (label == str_continue)
         {
-            continueGame();
+            continueGame(false, -1);
 
             // Turn off LEDs
             led_t leds[CONFIG_NUM_LEDS] = {0};
@@ -877,7 +894,7 @@ void selectPicrossLevel(picrossLevelDef_t* selectedLevel)
 {
     // picrossExitLevelSelect();//we do this BEFORE we enter startGame.
     pm->screen = PICROSS_GAME;
-    picrossStartGame(&pm->mmFont, selectedLevel, false, pm->renderer);
+    picrossStartGame(&pm->mmFont, selectedLevel, false, pm->renderer, false);
 }
 
 // void returnToLevelSelect()//todo: rename

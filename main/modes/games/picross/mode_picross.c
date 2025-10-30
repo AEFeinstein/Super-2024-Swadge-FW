@@ -56,7 +56,8 @@ static picrossGame_t* p = NULL;
  * @param mmFont The font used for teh HUD, already loaded
  *
  */
-void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool cont, menuMegaRenderer_t* renderer)
+void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool cont, menuMegaRenderer_t* renderer,
+                      bool solved)
 {
     // calloc is 0'd and malloc leaves memory uninitialized. I dont know which to use so im not gonna touch it, and
     // doing things once on load can be slower.
@@ -171,6 +172,11 @@ void picrossStartGame(font_t* mmFont, picrossLevelDef_t* selectedLevel, bool con
     setDrawBody(renderer, false);
     p->menu     = initMenu("", NULL);
     p->renderer = renderer;
+
+    if (solved)
+    {
+        memcpy(p->puzzle->level, p->puzzle->completeLevel, 15 * 15 * sizeof(picrossSpaceType_t));
+    }
 }
 
 void picrossSetupPuzzle(bool cont)
@@ -748,6 +754,13 @@ void picrossUserInput(int64_t elapsedUs)
         //&& !(p->input->prevBtnState & PB_B)
         if (p->input->btnState & PB_B && !(p->input->prevBtnState & PB_B))
         {
+            int32_t temp;
+            readNvs32(picrossHoverLevelIndexKey, &temp);
+            if (temp < PICROSS_LEVEL_COUNT - 1)
+            {
+                temp++;
+            }
+            writeNvs32(picrossHoverLevelIndexKey, temp);
             // return to level select instead of main menu?
             p->exitThisFrame = true;
         }
@@ -1314,6 +1327,8 @@ void drawPicrossScene(void)
             outlineBox.y0 += oy - 1;
             outlineBox.x1 = outlineBox.x0 + 2 + w * p->drawScale;
             outlineBox.y1 = outlineBox.y0 + 2 + h * p->drawScale;
+            drawRect(outlineBox.x0 - 2, outlineBox.y0 - 2, outlineBox.x1 + 2, outlineBox.y1 + 2, c222);
+            drawRect(outlineBox.x0 - 1, outlineBox.y0 - 1, outlineBox.x1 + 1, outlineBox.y1 + 1, c444);
             drawRect(outlineBox.x0, outlineBox.y0, outlineBox.x1, outlineBox.y1, c222);
         }
     }
