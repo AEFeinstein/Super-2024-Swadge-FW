@@ -624,6 +624,9 @@ static bool parseMidiHeader(midiFile_t* file)
 
     offset += 4;
 
+    // Save the start of the header chunk data
+    uint8_t* ptr = file->data + offset;
+
     uint16_t format = (file->data[offset] << 8) | file->data[offset + 1];
     offset += 2;
 
@@ -684,12 +687,11 @@ static bool parseMidiHeader(midiFile_t* file)
         file->timeDivision           = ticksPerQuarterNote;
     }
 
-    // TODO: Actually do something with the timing info
-
     // Skip anything extra that might be in the header
-    if (offset < chunkLen)
+    if (offset < (ptr - file->data) + chunkLen)
     {
-        offset = chunkLen - (sizeof(midiHeader) + 4);
+        ESP_LOGW("MIDIParser", "Improper MIDI file header; length is %" PRIu32 " when it should be 6", chunkLen);
+        offset = (ptr - file->data) + chunkLen;
         if (offset >= file->length)
         {
             ESP_LOGE("MIDIParser", "Header length exceeds data length");
@@ -704,7 +706,7 @@ static bool parseMidiHeader(midiFile_t* file)
     }
 
     // Current offset should be at the next track
-    uint8_t* ptr = file->data + offset;
+    ptr = file->data + offset;
 
     // Regardless, if there are multiple tracks we want to grab pointers to them all
     int i = 0;
