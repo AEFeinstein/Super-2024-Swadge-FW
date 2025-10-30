@@ -285,7 +285,8 @@ void levelActionInput()
             {
                 size_t size                    = sizeof(picrossVictoryData_t);
                 picrossVictoryData_t* victData = heap_caps_calloc(
-                    1, size, MALLOC_CAP_8BIT); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
+                    1, size,
+                    MALLOC_CAP_8BIT); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
                 readNvsBlob(picrossCompletedLevelData, victData, &size);
                 victData->victories[ls->hoverLevelIndex] = false;
                 writeNvsBlob(picrossCompletedLevelData, victData, size);
