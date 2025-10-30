@@ -45,7 +45,6 @@ typedef struct
 
 void picrossEnterMode(void);
 void picrossExitMode(void);
-static void picrossBgmCb(void);
 void picrossMainLoop(int64_t elapsedUs);
 void picrossButtonCb(buttonEvt_t* evt);
 void picrossTouchCb(bool touched);
@@ -523,8 +522,9 @@ void picrossEnterMode(void)
 
     // Init sound player
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    player->loop         = true;
     midiGmOn(player);
-    soundPlayBgmCb(&pm->bgm, MIDI_BGM, picrossBgmCb);
+    soundPlayBgm(&pm->bgm, MIDI_BGM);
 
     loadFont(MM_FONT, &(pm->mmFont), false);
 
@@ -607,15 +607,6 @@ void picrossExitMode(void)
     // p2pDeinit(&jm->p2p);
     freeFont(&(pm->mmFont));
     heap_caps_free(pm);
-}
-
-/**
- * @brief Restarts the BGM once the track ends
- *
- */
-static void picrossBgmCb()
-{
-    soundPlayBgm(&pm->bgm, MIDI_BGM);
 }
 
 /**
