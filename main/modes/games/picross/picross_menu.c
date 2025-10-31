@@ -409,7 +409,7 @@ struct
         .slv  = EF_SWADGEHERO_SLV_WSG,
         .marqueeFact
         = "Swadge Hero from the 2025 hotdog swadge made by gelakinetic and many volunteer composers : A rhythm "
-          "game showing off the new new audio capabilities.",
+          "game showing off the new audio capabilities.",
     },
     {
         .name        = "ultimate ttt",
@@ -444,7 +444,7 @@ struct
         .marqueeFact = "We're gonna need a bigger Holy.",
     },
     {
-        .name        = "pslogo",
+        .name        = "ps logo",
         .pzl         = FF_PSLOGO_PZL_WSG,
         .slv         = FF_PSLOGO_SLV_WSG,
         .marqueeFact = "You are now hearing the PS1 start-up jingle in your head.",
@@ -456,7 +456,7 @@ struct
         .marqueeFact = "Newmajoe's instrument of choice.",
     },
     {
-        .name        = "sfclogo",
+        .name        = "sfc logo",
         .pzl         = FF_SFCLOGO_PZL_WSG,
         .slv         = FF_SFCLOGO_SLV_WSG,
         .marqueeFact = "YOU ARE A SUPER PLAYER!!",
@@ -481,16 +481,14 @@ struct
     },
 };
 
-const trophyData_t trophyPicrossModeTrophies[] = {
-    {
-        .title       = "I missed my flight home",
-        .description = "solved all picross puzzles",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EXTREME,
-        .maxVal      = 1, // For trigger type, set to one
-    }
-};
+const trophyData_t trophyPicrossModeTrophies[] = {{
+    .title       = "I missed my flight home",
+    .description = "solved all picross puzzles",
+    .image       = NO_IMAGE_SET,
+    .type        = TROPHY_TYPE_TRIGGER,
+    .difficulty  = TROPHY_DIFF_EXTREME,
+    .maxVal      = 1, // For trigger type, set to one
+}};
 
 const trophySettings_t trophyPicrossModeTrophySettings = {
     .drawFromBottom   = false,
