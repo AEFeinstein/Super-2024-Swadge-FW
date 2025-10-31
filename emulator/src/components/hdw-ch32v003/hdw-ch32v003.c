@@ -825,7 +825,7 @@ void ch32v003EmuDraw(int offX, int offY, int window_w, int window_h)
     {
         for (int x = 0; x < EYE_LED_W; x++)
         {
-            uint16_t tc = Coordmap[(5 - y) + x * 8];
+            uint16_t tc = Coordmap[y + x * 8];
             int bit     = 1 << (tc >> 8);
             int row     = tc & 0xff;
 
@@ -902,7 +902,7 @@ int ch32v003WriteBitmap(int slot, const uint8_t pixels[EYE_LED_H][EYE_LED_W])
         for (x = 0; x < EYE_LED_W; x++)
         {
             int intensity = pixels[y][x];
-            int coord     = Coordmap[x * 8 + y];
+            int coord     = Coordmap[x * 8 + (5 - y)];
 
             int ox = coord & 0xff;
             int oy = coord >> 8;
