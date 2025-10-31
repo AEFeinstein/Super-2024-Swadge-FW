@@ -94,10 +94,9 @@ void artilleryPaintLoop(artilleryData_t* ad, uint32_t elapsedUs)
     RUN_TIMER_EVERY(ad->paintArrowBlinkTimer, 1000000, elapsedUs, {});
     if (ad->paintArrowBlinkTimer < 1000000 / 2)
     {
-        font_t* font        = ad->mRenderer->titleFont;
-        font_t* fontOutline = ad->mRenderer->titleFontOutline;
-        int xMargin         = 32;
-        int yOff            = TFT_HEIGHT / 2 + 15 - (font->height / 2);
+        font_t* font = ad->mRenderer->titleFont;
+        int xMargin  = 32;
+        int yOff     = TFT_HEIGHT / 2 + 15 - (font->height / 2);
 
         const char lArrow[] = "<-";
         const char rArrow[] = "->";
