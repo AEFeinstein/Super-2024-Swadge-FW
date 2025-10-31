@@ -93,6 +93,9 @@ void setMegaLedsOn(menuMegaRenderer_t* renderer, bool ledsOn);
 void setDrawBody(menuMegaRenderer_t* renderer, bool drawBody);
 void setBodyHeight(menuMegaRenderer_t* renderer, int16_t height);
 void recolorMenuMegaRenderer(menuMegaRenderer_t* renderer, paletteColor_t textFill, paletteColor_t textOutline,
-                             paletteColor_t c1, paletteColor_t c2, paletteColor_t c3, paletteColor_t c4,
-                             paletteColor_t c5, paletteColor_t c6, paletteColor_t c7, paletteColor_t c8,
+                             paletteColor_t hexaBackground, paletteColor_t bodyBackground,
+                             paletteColor_t bodyAccentDark, paletteColor_t bodyAccentLight, paletteColor_t bodyArrowBg,
+                             paletteColor_t rowUnselectedBg, paletteColor_t rowUnselectedShadow,
+                             paletteColor_t rowSelectedBg, paletteColor_t rowSelectedAccent,
+                             paletteColor_t rowSelectedOutline, paletteColor_t rowArrowBg,
                              const paletteColor_t* bgColors, int32_t numBgColors);

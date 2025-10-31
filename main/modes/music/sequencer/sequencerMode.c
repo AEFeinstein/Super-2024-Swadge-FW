@@ -262,7 +262,22 @@ static void sequencerEnterMode(void)
     buildMainMenu();
 
     // Color the menu
-    recolorMenuMegaRenderer(sv->menuRenderer, c555, c000, c100, c210, c320, c311, c421, c430, c540, c554, NULL, 0);
+    static const paletteColor_t cycle[] = {c521};
+    recolorMenuMegaRenderer(sv->menuRenderer,
+                            c555, // textFill
+                            c000, // textOutline
+                            c333, // hexaBackground
+                            c522, // bodyBackground
+                            c521, // bodyAccentDark
+                            c523, // bodyAccentLight
+                            c000, // bodyArrowBg
+                            c000, // rowUnselectedBg
+                            c101, // rowUnselectedShadow
+                            c202, // rowSelectedBg
+                            c202, // rowSelectedAccent
+                            c444, // rowSelectedOutline
+                            c303, // rowArrowBg
+                            cycle, ARRAY_SIZE(cycle));
 
     // Set up the help screen
     sv->bgMenu = initMenu(sequencerName, NULL);
