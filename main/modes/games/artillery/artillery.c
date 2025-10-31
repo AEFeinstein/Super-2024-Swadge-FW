@@ -22,13 +22,6 @@
 #define DEFAULT_GRAV_X 0.0f
 #define DEFAULT_GRAV_Y 98.0f
 
-#define COLOR_SIMPLE_MENU_BORDER     c005
-#define COLOR_SIMPLE_MENU_BACKGROUND c111
-#define COLOR_SIMPLE_MENU_TEXT       c555
-
-#define COLOR_TEXT        c555
-#define COLOR_TEXT_SHADOW c000
-
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -142,6 +135,26 @@ void artilleryEnterMode(void)
     // Initialize mode menu renderer
     ad->mRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
     ad->scoreFont = ad->mRenderer->menuFont;
+
+    static const paletteColor_t cycle[] = {
+        COLOR_GRADIENT_1, COLOR_GRADIENT_2, COLOR_GRADIENT_3, COLOR_GRADIENT_4,
+        COLOR_GRADIENT_5, COLOR_GRADIENT_6, COLOR_GRADIENT_7, COLOR_GRADIENT_8,
+    };
+    recolorMenuMegaRenderer(ad->mRenderer,
+                            COLOR_TEXT,              //
+                            COLOR_TEXT_SHADOW,       //
+                            COLOR_HEXA_BACKGROUND,   //
+                            COLOR_BODY_BG,           //
+                            COLOR_BODY_ACCENT_DARK,  //
+                            COLOR_BODY_ACCENT_LIGHT, //
+                            COLOR_BODY_ARROW_BG,     //
+                            COLOR_ROW_UNSEL_BG,      //
+                            COLOR_ROW_UNSEL_SHADOW,  //
+                            COLOR_ROW_SEL_BG,        //
+                            COLOR_ROW_SEL_ACCENT,    //
+                            COLOR_ROW_SEL_OUTLINE,   //
+                            COLOR_ROW_ARROW_BG,      //
+                            cycle, ARRAY_SIZE(cycle));
 
     // Initialize in-game menu
     ad->gameMenu = initMenu(NULL, artilleryGameMenuCb);
@@ -394,6 +407,7 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
             // Set title, which may be overwritten by AMS_GAME_OVER
             ad->blankMenu->title = str_paintSelect;
             ad->mState           = AMS_PAINT;
+            setDrawBody(ad->mRenderer, false);
         }
         else if (str_exit == label)
         {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "swadge2024.h"
+#include "artillery_colors.h"
 #include "artillery_phys.h"
 #include "menuSimpleRenderer.h"
 

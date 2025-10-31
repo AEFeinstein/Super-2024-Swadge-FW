@@ -114,8 +114,8 @@
             uint32_t fps = (1000000 * NUM_FRAME_TIMES) / tElapsed;            \
             char tmp[16];                                                     \
             snprintf(tmp, sizeof(tmp) - 1, "%" PRIu32, fps);                  \
-            fillDisplayArea(34, 1, 51, 3 + font.height, c000);                \
-            drawText(&font, c555, tmp, 35, 2);                                \
+            fillDisplayArea(0, 114, 17, 116 + font.height, c000);             \
+            drawText(&font, c555, tmp, 1, 115);                               \
         }                                                                     \
         frameTimesIdx             = (frameTimesIdx + 1) % NUM_FRAME_TIMES;    \
         frameTimes[frameTimesIdx] = esp_timer_get_time();                     \
