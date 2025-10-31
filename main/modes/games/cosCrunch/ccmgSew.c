@@ -139,6 +139,8 @@ static void ccmgSewMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float t
         if (pressedButton == ccmgsew->stitchType->buttonOrder[ccmgsew->currentStep])
         {
             ccmgsew->currentStep++;
+            midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, SIDE_STICK, 0x7f);
+
             if (ccmgsew->currentStep == BUTTON_PRESS_COUNT)
             {
                 cosCrunchMicrogameResult(true);
