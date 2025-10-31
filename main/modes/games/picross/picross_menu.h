@@ -23,6 +23,8 @@ extern const char picrossMarksData[];
 extern const char picrossHoverLevelIndexKey[];
 extern const char picrossTopVisibleRowKey[];
 
+extern const trophyData_t trophyPicrossModeTrophies[];
+
 void returnToPicrossMenu(void);
 void returnToPicrossMenuFromLevelSelect(void);
 // void returnToLevelSelect(void);
