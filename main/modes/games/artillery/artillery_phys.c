@@ -40,16 +40,6 @@
 
 #define PLAYER_RADIUS 8
 
-#define COLOR_VOID   c000
-#define COLOR_SKY    c002
-#define COLOR_CLOUD  c555
-#define COLOR_GROUND c020
-#define COLOR_LAVA   c200
-
-#define COLOR_TEXT        c444
-#define COLOR_TEXT_SHADOW c000
-#define COLOR_GAS_GAUGE   c222
-
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -710,9 +700,8 @@ void drawPhysBackground(physSim_t* phys, int16_t x0, int16_t y0, int16_t w, int1
  * @param phys The physics simulation
  * @param players
  * @param font
- * @param moveTimeLeftUs
  */
-void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_t moveTimeLeftUs, int32_t turn)
+void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_t turn)
 {
     // Draw zones
     // for (int32_t z = 0; z < NUM_ZONES; z++)
@@ -827,28 +816,23 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
         eNode = eNode->next;
     }
 
-#define GAS_GAUGE_HEIGHT 16
-#define TEXT_Y           (GAS_GAUGE_HEIGHT + 4)
-#define TEXT_X_MARGIN    20
-
-    // Draw gas gauge
-    fillDisplayArea(0, 0, (TFT_WIDTH * moveTimeLeftUs) / TANK_MOVE_TIME_US, GAS_GAUGE_HEIGHT, COLOR_GAS_GAUGE);
+#define TEXT_Y        4
+#define TEXT_X_MARGIN 20
 
     // Draw turns
     char turnStr[32] = {0};
     snprintf(turnStr, sizeof(turnStr) - 1, "Turn %" PRId32 "/%d", turn, MAX_TURNS);
-    drawTextShadow(font, COLOR_TEXT, COLOR_TEXT_SHADOW, turnStr, (TFT_WIDTH - textWidth(font, turnStr)) / 2, TEXT_Y);
+    drawText(font, COLOR_HUD_TEXT, turnStr, (TFT_WIDTH - textWidth(font, turnStr)) / 2, TEXT_Y);
 
     // Draw score if players are set
     if (players[0])
     {
         char scoreStr[32] = {0};
         snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, players[0]->score);
-        drawTextShadow(font, COLOR_TEXT, COLOR_TEXT_SHADOW, scoreStr, TEXT_X_MARGIN, TEXT_Y);
+        drawText(font, COLOR_HUD_TEXT, scoreStr, TEXT_X_MARGIN, TEXT_Y);
 
         snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, players[1]->score);
-        drawTextShadow(font, COLOR_TEXT, COLOR_TEXT_SHADOW, scoreStr,
-                       TFT_WIDTH - textWidth(font, scoreStr) - TEXT_X_MARGIN, TEXT_Y);
+        drawText(font, COLOR_HUD_TEXT, scoreStr, TFT_WIDTH - textWidth(font, scoreStr) - TEXT_X_MARGIN, TEXT_Y);
     }
 }
 

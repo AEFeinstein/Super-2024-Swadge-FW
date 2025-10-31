@@ -15,13 +15,6 @@
 #define POWER_INTERVAL       1.0f
 #define TOUCH_DEG_PER_BARREL 8
 
-#define COLOR_POWER_BAR_FILL   c400
-#define COLOR_POWER_BAR_EMPTY  c222
-#define COLOR_POWER_BAR_BORDER c000
-
-#define COLOR_TEXT        c555
-#define COLOR_TEXT_SHADOW c000
-
 //==============================================================================
 // Functions
 //==============================================================================
@@ -120,7 +113,29 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
     switch (ad->gState)
     {
         default:
+        {
+            // Do nothing
+            break;
+        }
         case AGS_TOUR:
+        {
+            if (evt.down && ((PB_START | PB_SELECT) & evt.button))
+            {
+                // Immediately clear the tour points
+                clear(&ad->phys->cameraTour);
+
+                // Move to the next game state
+                if (artilleryIsMyTurn(ad))
+                {
+                    artillerySwitchToGameState(ad, AGS_MENU);
+                }
+                else
+                {
+                    artillerySwitchToGameState(ad, AGS_WAIT);
+                }
+            }
+            break;
+        }
         case AGS_WAIT:
         {
             // Do nothing!
@@ -274,7 +289,7 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
 void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChanged)
 {
     // Draw the scene
-    drawPhysOutline(ad->phys, ad->players, ad->scoreFont, ad->moveTimerUs, ad->turn);
+    drawPhysOutline(ad->phys, ad->players, ad->scoreFont, ad->turn);
 
     // Step the physics
     bool playerMoved = false;
@@ -492,7 +507,13 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                     artillerySwitchToGameState(ad, (ad->gState == AGS_MOVE) ? AGS_MENU : AGS_CPU_ADJUST);
                 }
             }
-            // TODO TX gas gauge too!
+
+            // Draw gas gauge
+            fillDisplayArea(0, TFT_HEIGHT - 24, (TFT_WIDTH * ad->moveTimerUs) / TANK_MOVE_TIME_US, TFT_HEIGHT,
+                            COLOR_GAS_GAUGE);
+            shadeDisplayArea(0, TFT_HEIGHT - 24, (TFT_WIDTH * ad->moveTimerUs) / TANK_MOVE_TIME_US, TFT_HEIGHT, 2,
+                             COLOR_GAS_GAUGE_2);
+
             break;
         }
         case AGS_LOOK:

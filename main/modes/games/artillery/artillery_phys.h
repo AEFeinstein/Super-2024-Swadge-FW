@@ -198,7 +198,7 @@ void physAddWorldBounds(physSim_t* phys);
 void physRemoveAllObjects(physSim_t* phys);
 
 void drawPhysBackground(physSim_t* phys, int16_t x, int16_t y, int16_t w, int16_t h);
-void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_t moveTimeLeftUs, int32_t turn);
+void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_t turn);
 
 void physStepBackground(physSim_t* phys);
 void physStep(physSim_t* phys, int32_t elapsedUs, bool menuShowing, bool* playerMoved, bool* cameraMoved);
