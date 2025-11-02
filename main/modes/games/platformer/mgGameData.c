@@ -36,7 +36,7 @@ void mg_initializeGameData(mgGameData_t* gameData, mgSoundManager_t* soundManage
     gameData->continuesUsed      = false;
     gameData->inGameTimer        = 0;
     gameData->soundManager       = soundManager;
-    gameData->bgColors           = &bgGradientCyan;
+    gameData->bgColors           = bgGradientCyan;
 }
 
 void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
@@ -58,7 +58,7 @@ void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
     gameData->initialHp          = 1;
     gameData->continuesUsed      = 0; //(gameData->world == 1 && gameData->level == 1) ? false : true;
     gameData->inGameTimer        = 0;
-    gameData->bgColors           = &bgGradientCyan;
+    gameData->bgColors           = bgGradientCyan;
 
     mg_resetGameDataLeds(gameData);
 }

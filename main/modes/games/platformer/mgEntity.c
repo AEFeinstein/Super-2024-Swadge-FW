@@ -245,7 +245,7 @@ void mg_updatePlayer(mgEntity_t* self)
             {
                 self->yspeed += 8;
             }
-            //no break; this is intentional.
+            //fallthrough
         case MG_PL_ST_HURT:
             self->stateTimer--;
             if (self->stateTimer <= 0)
@@ -2608,7 +2608,7 @@ void killEnemy(mgEntity_t* target)
 
 void updateBgCol(mgEntity_t* self)
 {
-    self->gameData->bgColors = &bgGradientGray;
+    self->gameData->bgColors = bgGradientGray;
     mg_destroyEntity(self, true);
 }
 

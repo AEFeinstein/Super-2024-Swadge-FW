@@ -17,7 +17,7 @@ typedef struct
     uint16_t defaultWsgSetIndex;
     uint8_t mainBgmIndex;
     uint8_t bossBgmIndex;
-    paletteColor_t* bgColors;
+    const paletteColor_t* bgColors;
 } mgLeveldef_t;
 
 #endif

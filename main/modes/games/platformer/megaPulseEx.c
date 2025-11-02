@@ -1463,7 +1463,7 @@ void changeStateLevelSelect(platformer_t* self)
     mg_setBgm(&self->soundManager, MG_BGM_STAGE_SELECT);
     globalMidiPlayerGet(MIDI_BGM)->loop = true;
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
-    self->gameData.bgColors = &bgGradientMenu;
+    self->gameData.bgColors = bgGradientMenu;
 
     self->update = &updateLevelSelect;
 }
