@@ -131,7 +131,6 @@ static bool megaPulseInjectFile(const char* path)
 {
     if (emuCnfsInjectFile(megaPulseFile, megaPulseFile))
     {
-        //emuInjectNvs32("storage", "synth_playmode", 2);
         emuNvsInjectBlobFile("storage", "user_level", megaPulseFile);
         emulatorSetSwadgeModeByName(modePlatformer.modeName);
 
