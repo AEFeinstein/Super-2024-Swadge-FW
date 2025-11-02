@@ -598,7 +598,7 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_CRAWLER_TOP].wsg    = &self->wsgs[MG_WSG_ENEMY_BUSH_L2];
     self->sprites[MG_SP_CRAWLER_TOP].origin = &origin_8_8;
     self->sprites[MG_SP_CRAWLER_TOP].hitBox = &box_16_16;
-    
+
     self->sprites[MG_SP_CRAWLER_RIGHT].wsg    = &self->wsgs[MG_WSG_ENEMY_BUSH_L2];
     self->sprites[MG_SP_CRAWLER_RIGHT].origin = &origin_8_8;
     self->sprites[MG_SP_CRAWLER_RIGHT].hitBox = &box_16_16;

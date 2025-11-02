@@ -175,9 +175,10 @@ void mg_updatePlayer(mgEntity_t* self)
                 }
             }
 
-            if(!self->falling && (self->gameData->btnState & PB_DOWN) && (self->gameData->btnState & PB_B) && !(self->gameData->prevBtnState & PB_B))
+            if (!self->falling && (self->gameData->btnState & PB_DOWN) && (self->gameData->btnState & PB_B)
+                && !(self->gameData->prevBtnState & PB_B))
             {
-                self->state = MG_PL_ST_SHIELD;
+                self->state      = MG_PL_ST_SHIELD;
                 self->stateTimer = 60;
             }
 
@@ -219,16 +220,9 @@ void mg_updatePlayer(mgEntity_t* self)
             }
             break;
         case MG_PL_ST_SHIELD:
-            if
-            (
-                ((self->gameData->btnState & PB_LEFT) && !(self->gameData->prevBtnState & PB_LEFT))
-                ||
-                ((self->gameData->btnState & PB_RIGHT) && !(self->gameData->prevBtnState & PB_RIGHT))
-                ||
-                ((self->gameData->btnState & PB_A) && !(self->gameData->prevBtnState & PB_A))
-                ||
-                (self->falling)
-            )
+            if (((self->gameData->btnState & PB_LEFT) && !(self->gameData->prevBtnState & PB_LEFT))
+                || ((self->gameData->btnState & PB_RIGHT) && !(self->gameData->prevBtnState & PB_RIGHT))
+                || ((self->gameData->btnState & PB_A) && !(self->gameData->prevBtnState & PB_A)) || (self->falling))
             {
                 self->state = MG_PL_ST_NORMAL;
                 break;
@@ -237,7 +231,7 @@ void mg_updatePlayer(mgEntity_t* self)
             self->stateTimer--;
             if (self->stateTimer <= 0)
             {
-                self->state              = MG_PL_ST_NORMAL;
+                self->state = MG_PL_ST_NORMAL;
             }
             break;
         case MG_PL_ST_MIC_DROP:
@@ -245,14 +239,14 @@ void mg_updatePlayer(mgEntity_t* self)
             {
                 self->yspeed += 8;
             }
-            //fallthrough
+            // fallthrough
         case MG_PL_ST_HURT:
             self->stateTimer--;
             if (self->stateTimer <= 0)
             {
-                self->state              = MG_PL_ST_NORMAL;
-                self->yMaxSpeed          = 72;
-                //self->spriteFlipVertical = false;
+                self->state     = MG_PL_ST_NORMAL;
+                self->yMaxSpeed = 72;
+                // self->spriteFlipVertical = false;
             }
             break;
     }
@@ -373,12 +367,12 @@ void mg_updatePlayer(mgEntity_t* self)
             case MG_PL_ST_DASHING:
                 if (self->falling && self->gameData->btnState & PB_DOWN)
                 {
-                    self->xspeed             = 0;
-                    self->yspeed             = -32;
-                    //self->spriteFlipVertical = true;
-                    self->state              = MG_PL_ST_MIC_DROP;
-                    self->yMaxSpeed          = 120;
-                    self->stateTimer         = 180;
+                    self->xspeed = 0;
+                    self->yspeed = -32;
+                    // self->spriteFlipVertical = true;
+                    self->state      = MG_PL_ST_MIC_DROP;
+                    self->yMaxSpeed  = 120;
+                    self->stateTimer = 180;
                 }
                 else if (self->shotsFired < self->shotLimit)
                 {
@@ -1014,10 +1008,13 @@ void animatePlayer(mgEntity_t* self)
         return;
     }
 
-    if(self->state == MG_PL_ST_HURT){
+    if (self->state == MG_PL_ST_HURT)
+    {
         self->spriteIndex = playerDamageAnimFrames[((self->stateTimer + self->visible) >> 2) & 0b11];
         return;
-    } else if(self->state == MG_PL_ST_MIC_DROP){
+    }
+    else if (self->state == MG_PL_ST_MIC_DROP)
+    {
         self->spriteIndex = playerMicDropAnimFrames[(self->stateTimer >> 2) & 0b1];
         return;
     }
@@ -1065,10 +1062,11 @@ void animatePlayer(mgEntity_t* self)
     }
     else if (self->xspeed != 0)
     {
-        switch(self->state){
+        switch (self->state)
+        {
             default:
                 if (((self->gameData->btnState & PB_LEFT) && self->xspeed < 0)
-                || ((self->gameData->btnState & PB_RIGHT) && self->xspeed > 0))
+                    || ((self->gameData->btnState & PB_RIGHT) && self->xspeed > 0))
                 {
                     // Running
                     self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
@@ -1084,7 +1082,7 @@ void animatePlayer(mgEntity_t* self)
                         {
                             self->spriteIndex = MG_SP_PLAYER_WALK1;
                         }
-                    }       
+                    }
                 }
                 else
                 {
@@ -1093,10 +1091,10 @@ void animatePlayer(mgEntity_t* self)
                 break;
             case MG_PL_ST_DASHING:
                 self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
-                self->spriteIndex = MG_SP_PLAYER_DASH_SLIDE;
+                self->spriteIndex          = MG_SP_PLAYER_DASH_SLIDE;
                 break;
         }
-    }  
+    }
     else
     {
         // Standing
@@ -1129,7 +1127,8 @@ void mg_detectEntityCollisions(mgEntity_t* self)
     selfBox.x1 = (self->x >> SUBPIXEL_RESOLUTION) - selfSprite->origin->x + selfSpriteBox->x1;
     selfBox.y1 = (self->y >> SUBPIXEL_RESOLUTION) - selfSprite->origin->y + selfSpriteBox->y1;
 
-    //drawRect(selfBox.x0 - self->tilemap->mapOffsetX, selfBox.y0 - self->tilemap->mapOffsetY, selfBox.x1 - self->tilemap->mapOffsetX, selfBox.y1 - self->tilemap->mapOffsetY, c500);
+    // drawRect(selfBox.x0 - self->tilemap->mapOffsetX, selfBox.y0 - self->tilemap->mapOffsetY, selfBox.x1 -
+    // self->tilemap->mapOffsetX, selfBox.y1 - self->tilemap->mapOffsetY, c500);
 
     mgEntity_t* checkEntity;
     mgSprite_t* checkEntitySprite;
@@ -1181,9 +1180,9 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         {
             if (self->state == MG_PL_ST_MIC_DROP)
             {
-                self->state               = MG_PL_ST_NORMAL;
-                self->yspeed              = -self->yspeed;
-                //self->spriteFlipVertical  = false;
+                self->state  = MG_PL_ST_NORMAL;
+                self->yspeed = -self->yspeed;
+                // self->spriteFlipVertical  = false;
                 self->invincibilityFrames = 5;
 
                 if (other->invincibilityFrames)
@@ -1232,8 +1231,8 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                     self->type                  = ENTITY_DEAD;
                     self->xspeed                = 0;
                     self->yspeed                = -60;
-                    self->state = MG_PL_ST_HURT;
-                    self->stateTimer = 20;
+                    self->state                 = MG_PL_ST_HURT;
+                    self->stateTimer            = 20;
                     self->gameData->changeState = MG_ST_DEAD;
                     self->gravityEnabled        = true;
                     self->falling               = true;
@@ -1244,8 +1243,8 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                     self->yspeed              = 0;
                     self->jumpPower           = 0;
                     self->invincibilityFrames = 120;
-                    self->state = MG_PL_ST_HURT;
-                    self->stateTimer = 20;
+                    self->state               = MG_PL_ST_HURT;
+                    self->stateTimer          = 20;
                     soundPlaySfx(&(self->soundManager->sndHurt), BZR_LEFT);
                 }
             }
@@ -1387,8 +1386,8 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
 
             if (self->state == MG_PL_ST_SHIELD)
             {
-                other->xspeed = -other->xspeed;
-                other->yspeed = -other->yspeed;
+                other->xspeed       = -other->xspeed;
+                other->yspeed       = -other->yspeed;
                 other->linkedEntity = self;
                 break;
             }
@@ -1711,9 +1710,9 @@ bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx,
 
                 if (self->state == MG_PL_ST_MIC_DROP)
                 {
-                    self->state              = MG_PL_ST_NORMAL;
-                    self->yMaxSpeed          = 72;
-                    //self->spriteFlipVertical = false;
+                    self->state     = MG_PL_ST_NORMAL;
+                    self->yMaxSpeed = 72;
+                    // self->spriteFlipVertical = false;
                 }
                 break;
             default: // Should never hit
@@ -2873,14 +2872,12 @@ void mg_playerDrawHandler(mgEntity_t* self)
                 - self->entityManager->wsgManager->sprites[self->spriteIndex].origin->y,
             self->spriteFlipHorizontal, self->spriteFlipVertical, self->spriteRotateAngle);
 
-    if(self->state == MG_PL_ST_SHIELD)
+    if (self->state == MG_PL_ST_SHIELD)
     {
         drawWsg(&(self->entityManager->wsgManager->wsgs[MG_WSG_PLAYER_SHIELD_1 + ((self->stateTimer >> 1) & 0b11)]),
-            (self->x >> SUBPIXEL_RESOLUTION) - 15
-                - self->entityManager->tilemap->mapOffsetX,
-            (self->y >> SUBPIXEL_RESOLUTION) - self->entityManager->tilemap->mapOffsetY
-                - 15,
-            self->spriteFlipHorizontal, self->spriteFlipVertical, 0);
+                (self->x >> SUBPIXEL_RESOLUTION) - 15 - self->entityManager->tilemap->mapOffsetX,
+                (self->y >> SUBPIXEL_RESOLUTION) - self->entityManager->tilemap->mapOffsetY - 15,
+                self->spriteFlipHorizontal, self->spriteFlipVertical, 0);
     }
 }
 
@@ -3322,11 +3319,11 @@ void mg_updateShrubbleLv4(mgEntity_t* self)
             if (!mg_isSolid(t))
             {
                 crawlerSetMoveState(self, CRAWLER_RIGHT_TO_BOTTOM);
-                //self->bouncesOffUnbreakableBlocks++;
+                // self->bouncesOffUnbreakableBlocks++;
             }
             else
             {
-                //self->bouncesOffUnbreakableBlocks = 0;
+                // self->bouncesOffUnbreakableBlocks = 0;
             }
 
             t = mg_getTile(self->tilemap, tx + 1, ty);
@@ -3347,11 +3344,11 @@ void mg_updateShrubbleLv4(mgEntity_t* self)
             if (!mg_isSolid(t))
             {
                 crawlerSetMoveState(self, CRAWLER_BOTTOM_TO_LEFT);
-                //self->bouncesOffUnbreakableBlocks++;
+                // self->bouncesOffUnbreakableBlocks++;
             }
             else
             {
-                //self->bouncesOffUnbreakableBlocks = 0;
+                // self->bouncesOffUnbreakableBlocks = 0;
             }
             t = mg_getTile(self->tilemap, tx, ty + 1);
             if (mg_isSolid(t))
@@ -3371,11 +3368,11 @@ void mg_updateShrubbleLv4(mgEntity_t* self)
             if (!mg_isSolid(t))
             {
                 crawlerSetMoveState(self, CRAWLER_LEFT_TO_TOP);
-                //self->bouncesOffUnbreakableBlocks++;
+                // self->bouncesOffUnbreakableBlocks++;
             }
             else
             {
-                //self->bouncesOffUnbreakableBlocks = 0;
+                // self->bouncesOffUnbreakableBlocks = 0;
             }
             t = mg_getTile(self->tilemap, tx - 1, ty);
             if (mg_isSolid(t))
@@ -3395,11 +3392,11 @@ void mg_updateShrubbleLv4(mgEntity_t* self)
             if (!mg_isSolid(t))
             {
                 crawlerSetMoveState(self, CRAWLER_TOP_TO_RIGHT);
-                //self->bouncesOffUnbreakableBlocks++;
+                // self->bouncesOffUnbreakableBlocks++;
             }
             else
             {
-                //self->bouncesOffUnbreakableBlocks = 0;
+                // self->bouncesOffUnbreakableBlocks = 0;
             }
             t = mg_getTile(self->tilemap, tx, ty - 1);
             if (mg_isSolid(t))
@@ -3420,11 +3417,11 @@ void mg_updateShrubbleLv4(mgEntity_t* self)
             if (!mg_isSolid(t))
             {
                 crawlerSetMoveState(self, CRAWLER_LEFT_TO_BOTTOM);
-                //self->bouncesOffUnbreakableBlocks++;
+                // self->bouncesOffUnbreakableBlocks++;
             }
             else
             {
-                //self->bouncesOffUnbreakableBlocks = 0;
+                // self->bouncesOffUnbreakableBlocks = 0;
             }
             t = mg_getTile(self->tilemap, tx - 1, ty);
             if (mg_isSolid(t))
@@ -3444,11 +3441,11 @@ void mg_updateShrubbleLv4(mgEntity_t* self)
             if (!mg_isSolid(t))
             {
                 crawlerSetMoveState(self, CRAWLER_BOTTOM_TO_RIGHT);
-                //self->bouncesOffUnbreakableBlocks++;
+                // self->bouncesOffUnbreakableBlocks++;
             }
             else
             {
-                //self->bouncesOffUnbreakableBlocks = 0;
+                // self->bouncesOffUnbreakableBlocks = 0;
             }
             t = mg_getTile(self->tilemap, tx, ty + 1);
             if (mg_isSolid(t))
@@ -3468,11 +3465,11 @@ void mg_updateShrubbleLv4(mgEntity_t* self)
             if (!mg_isSolid(t))
             {
                 crawlerSetMoveState(self, CRAWLER_RIGHT_TO_TOP);
-                //self->bouncesOffUnbreakableBlocks++;
+                // self->bouncesOffUnbreakableBlocks++;
             }
             else
             {
-                //self->bouncesOffUnbreakableBlocks = 0;
+                // self->bouncesOffUnbreakableBlocks = 0;
             }
 
             t = mg_getTile(self->tilemap, tx + 1, ty);
@@ -3493,11 +3490,11 @@ void mg_updateShrubbleLv4(mgEntity_t* self)
             if (!mg_isSolid(t))
             {
                 crawlerSetMoveState(self, CRAWLER_TOP_TO_LEFT);
-                //self->bouncesOffUnbreakableBlocks++;
+                // self->bouncesOffUnbreakableBlocks++;
             }
             else
             {
-                //self->bouncesOffUnbreakableBlocks = 0;
+                // self->bouncesOffUnbreakableBlocks = 0;
             }
 
             t = mg_getTile(self->tilemap, tx, ty - 1);
@@ -3530,7 +3527,7 @@ void mg_updateShrubbleLv4(mgEntity_t* self)
 
 void crawlerSetMoveState(mgEntity_t* self, uint8_t state)
 {
-    int16_t baseSpeed = abs( (self->xspeed != 0) ? self->xspeed : self->yspeed );
+    int16_t baseSpeed = abs((self->xspeed != 0) ? self->xspeed : self->yspeed);
 
     switch (state)
     {

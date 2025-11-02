@@ -128,33 +128,33 @@ static const char mainDoc[] = "Emulates a swadge";
 // Long argument name definitions
 // These MUST be defined here, so that they are
 // the same in both options and argDocs
-static const char argFakeFps[]     = "fake-fps";
-static const char argFakeTime[]    = "fake-time";
-static const char argFullscreen[]  = "fullscreen";
-static const char argFuzz[]        = "fuzz";
-static const char argFuzzButtons[] = "fuzz-buttons";
-static const char argFuzzTouch[]   = "fuzz-touch";
-static const char argFuzzTime[]    = "fuzz-time";
-static const char argFuzzMotion[]  = "fuzz-motion";
-static const char argHeadless[]    = "headless";
-static const char argHideLeds[]    = "hide-leds";
-static const char argJoystick[]    = "joystick";
-static const char argJsPreset[]    = "preset";
-static const char argKeymap[]      = "keymap";
-static const char argLock[]        = "lock";
-static const char argMidiFile[]    = "midi-file";
-static const char argMegaPulseFile[]    = "mega-pulse-file";
-static const char argMode[]        = "mode";
-static const char argModeSwitch[]  = "mode-switch";
-static const char argModeList[]    = "modes-list";
-static const char argPlayback[]    = "playback";
-static const char argRecord[]      = "record";
-static const char argSeed[]        = "seed";
-static const char argShowFps[]     = "show-fps";
-static const char argTouch[]       = "touch";
-static const char argVsync[]       = "vsync";
-static const char argHelp[]        = "help";
-static const char argUsage[]       = "usage";
+static const char argFakeFps[]       = "fake-fps";
+static const char argFakeTime[]      = "fake-time";
+static const char argFullscreen[]    = "fullscreen";
+static const char argFuzz[]          = "fuzz";
+static const char argFuzzButtons[]   = "fuzz-buttons";
+static const char argFuzzTouch[]     = "fuzz-touch";
+static const char argFuzzTime[]      = "fuzz-time";
+static const char argFuzzMotion[]    = "fuzz-motion";
+static const char argHeadless[]      = "headless";
+static const char argHideLeds[]      = "hide-leds";
+static const char argJoystick[]      = "joystick";
+static const char argJsPreset[]      = "preset";
+static const char argKeymap[]        = "keymap";
+static const char argLock[]          = "lock";
+static const char argMidiFile[]      = "midi-file";
+static const char argMegaPulseFile[] = "mega-pulse-file";
+static const char argMode[]          = "mode";
+static const char argModeSwitch[]    = "mode-switch";
+static const char argModeList[]      = "modes-list";
+static const char argPlayback[]      = "playback";
+static const char argRecord[]        = "record";
+static const char argSeed[]          = "seed";
+static const char argShowFps[]       = "show-fps";
+static const char argTouch[]         = "touch";
+static const char argVsync[]         = "vsync";
+static const char argHelp[]          = "help";
+static const char argUsage[]         = "usage";
 
 // clang-format off
 /**

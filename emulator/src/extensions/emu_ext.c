@@ -33,11 +33,10 @@
 // ADD ALL EXTENSIONS HERE IN ORDER TO REGISTER THEM
 //==============================================================================
 
-static const emuExtension_t* registeredExtensions[] = {
-    &touchEmuCallback,  &ledEmuExtension,   &ledEyesEmuExtension, &fuzzerEmuExtension, &toolsEmuExtension,
-    &keymapEmuCallback, &modesEmuExtension, &gamepadEmuExtension, &replayEmuExtension, &midiEmuExtension,
-    &megaPulseEmuExtension
-};
+static const emuExtension_t* registeredExtensions[]
+    = {&touchEmuCallback,   &ledEmuExtension,   &ledEyesEmuExtension,  &fuzzerEmuExtension,
+       &toolsEmuExtension,  &keymapEmuCallback, &modesEmuExtension,    &gamepadEmuExtension,
+       &replayEmuExtension, &midiEmuExtension,  &megaPulseEmuExtension};
 
 //==============================================================================
 // Macros

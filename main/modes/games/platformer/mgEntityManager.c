@@ -342,7 +342,7 @@ mgEntity_t* mg_createPlayer(mgEntityManager_t* entityManager, uint16_t x, uint16
     entity->jumpPower          = 0;
     entity->canDash            = true;
     entity->spriteFlipVertical = false;
-    entity->spriteRotateAngle    = 0;
+    entity->spriteRotateAngle  = 0;
     entity->hp                 = 30;
     entity->animationTimer     = 0; // Used as a cooldown for shooting square wave balls
     entity->shotsFired         = 0;
@@ -617,7 +617,7 @@ mgEntity_t* createWarp(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
     entity->gravity        = 4;
 
     entity->spriteFlipVertical = false;
-    entity->spriteRotateAngle    = 0;
+    entity->spriteRotateAngle  = 0;
 
     entity->type                 = ENTITY_WARP;
     entity->spriteIndex          = MG_SP_WARP_1;

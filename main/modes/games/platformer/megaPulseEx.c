@@ -187,27 +187,23 @@ static const char str_pause[]        = "-Pause-";
 static const char KEY_SCORES[]  = "mg_scores";
 static const char KEY_UNLOCKS[] = "mg_unlocks";
 
-static const char mgMenuNewGame[]       = "New Game";
-static const char mgMenuPlaceholder[]   = "-------------";
-static const char mgMenuContinue[]      = "Continue";
-static const char mgMenuHighScores[]    = "High Scores";
-static const char mgMenuResetScores[]   = "Reset Scores";
-static const char mgMenuResetProgress[] = "Reset Progress";
-static const char mgMenuExit[]          = "Exit";
-static const char mgMenuSaveAndExit[]   = "Save & Exit";
-static const char mgMenuStartOver[]     = "Start Over";
-static const char mgMenuConfirm[]       = "Confirm";
-static const char mgMenuPlayCustomLevel[]       = "Play Custom Level";
-static const char mgMenuGo[]       = "Go!!!";
+static const char mgMenuNewGame[]            = "New Game";
+static const char mgMenuPlaceholder[]        = "-------------";
+static const char mgMenuContinue[]           = "Continue";
+static const char mgMenuHighScores[]         = "High Scores";
+static const char mgMenuResetScores[]        = "Reset Scores";
+static const char mgMenuResetProgress[]      = "Reset Progress";
+static const char mgMenuExit[]               = "Exit";
+static const char mgMenuSaveAndExit[]        = "Save & Exit";
+static const char mgMenuStartOver[]          = "Start Over";
+static const char mgMenuConfirm[]            = "Confirm";
+static const char mgMenuPlayCustomLevel[]    = "Play Custom Level";
+static const char mgMenuGo[]                 = "Go!!!";
 static const char mgMenuSetGameState[]       = "Set Game State";
-static const char mgMenuSetLevelMetadata[]       = "Set Level Metadata";
-static const char mgMenuAbilityUnlockState[]       = "LvlsClear";
+static const char mgMenuSetLevelMetadata[]   = "Set Level Metadata";
+static const char mgMenuAbilityUnlockState[] = "LvlsClear";
 
-static const settingParam_t mgAbilityUnlockStateSettingBounds = {
-    .min = 0,
-    .max = 256,
-    .key = KEY_UNLOCKS
-};
+static const settingParam_t mgAbilityUnlockStateSettingBounds = {.min = 0, .max = 256, .key = KEY_UNLOCKS};
 
 //==============================================================================
 // Functions
@@ -352,15 +348,18 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             soundPlaySfx(&(platformer->soundManager.sndMenuDeny), MIDI_SFX);
         }
-        else if (label == mgMenuGo){
+        else if (label == mgMenuGo)
+        {
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
             platformer->gameData.countdown = -69;
             changeStateGame(platformer);
         }
-        else if (label == mgMenuAbilityUnlockState){
+        else if (label == mgMenuAbilityUnlockState)
+        {
             platformer->unlockables.levelsCleared = settingVal;
         }
-        else if (label == mgMenuSetLevelMetadata){
+        else if (label == mgMenuSetLevelMetadata)
+        {
             platformer->gameData.level = settingVal;
         }
     }
@@ -410,13 +409,14 @@ void mgBuildMainMenu(platformer_t* self)
     self->menu = initMenu(platformerName, mgMenuCb);
 
     size_t size;
-    if (readNvsBlob("user_level", NULL, &size)){
+    if (readNvsBlob("user_level", NULL, &size))
+    {
         self->menu = startSubMenu(self->menu, mgMenuPlayCustomLevel);
-            addSingleItemToMenu(self->menu, mgMenuGo);
-            self->menu = startSubMenu(self->menu, mgMenuSetGameState);
-                addSettingsItemToMenu(self->menu, mgMenuSetLevelMetadata, &mgAbilityUnlockStateSettingBounds, 1);
-                addSettingsItemToMenu(self->menu, mgMenuAbilityUnlockState, &mgAbilityUnlockStateSettingBounds, 255);
-            self->menu = endSubMenu(self->menu);
+        addSingleItemToMenu(self->menu, mgMenuGo);
+        self->menu = startSubMenu(self->menu, mgMenuSetGameState);
+        addSettingsItemToMenu(self->menu, mgMenuSetLevelMetadata, &mgAbilityUnlockStateSettingBounds, 1);
+        addSettingsItemToMenu(self->menu, mgMenuAbilityUnlockState, &mgAbilityUnlockStateSettingBounds, 255);
+        self->menu = endSubMenu(self->menu);
         self->menu = endSubMenu(self->menu);
     }
 
@@ -465,7 +465,6 @@ void updateGame(platformer_t* self)
     mg_drawEntities(&(self->entityManager));
     detectGameStateChange(self);
     detectBgmChange(self);
-    
 
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 59)
@@ -802,9 +801,12 @@ void changeStateGame(platformer_t* self)
 
     mg_loadWsgSet(&(platformer->wsgManager), leveldef[levelIndex].defaultWsgSetIndex);
 
-    if(self->gameData.countdown == -69){
+    if (self->gameData.countdown == -69)
+    {
         mg_loadMapFromFile(&(platformer->tilemap), -69);
-    } else {
+    }
+    else
+    {
         mg_loadMapFromFile(&(platformer->tilemap), leveldef[levelIndex].filename);
     }
     self->gameData.countdown = leveldef[levelIndex].timeLimit;
@@ -829,7 +831,7 @@ void changeStateGame(platformer_t* self)
 
     self->tilemap.executeTileSpawnAll = true;
 
-    //self->gameData.changeBgm = MG_BGM_KINETIC_DONUT;
+    // self->gameData.changeBgm = MG_BGM_KINETIC_DONUT;
     mg_setBgm(&self->soundManager, leveldef[self->gameData.level].mainBgmIndex);
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
     self->gameData.bgColors = leveldef[self->gameData.level].bgColors;
