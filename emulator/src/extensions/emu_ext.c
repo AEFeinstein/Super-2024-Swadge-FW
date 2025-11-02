@@ -23,6 +23,7 @@
 #include "ext_modes.h"
 #include "ext_replay.h"
 #include "ext_tools.h"
+#include "ext_mega_pulse_ex.h"
 
 //==============================================================================
 // Registered Extensions
@@ -35,6 +36,7 @@
 static const emuExtension_t* registeredExtensions[] = {
     &touchEmuCallback,  &ledEmuExtension,   &ledEyesEmuExtension, &fuzzerEmuExtension, &toolsEmuExtension,
     &keymapEmuCallback, &modesEmuExtension, &gamepadEmuExtension, &replayEmuExtension, &midiEmuExtension,
+    &megaPulseEmuExtension
 };
 
 //==============================================================================

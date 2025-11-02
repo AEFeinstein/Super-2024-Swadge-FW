@@ -14,6 +14,7 @@
 #include "hashMap.h"
 #include "mgEntitySpawnData.h"
 #include "mega_pulse_ex_typedef.h"
+#include "hdw-nvs.h"
 
 #include "cnfs.h"
 
@@ -182,7 +183,22 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
     }
 
     size_t sz;
-    uint8_t* buf = cnfsReadFile(name, &sz, false);
+    uint8_t* buf = NULL;
+    ESP_LOGE("MAP", "Loading %i", name);
+
+    if(name == -69){
+        if(readNvsBlob("user_level", NULL, &sz)){
+            buf = heap_caps_malloc(sz, MALLOC_CAP_8BIT);
+
+            if(NULL != buf){
+                if (readNvsBlob("user_level", buf, &sz)){
+                    ESP_LOGE("MAP", "Loading user level...");
+                }
+            }
+        }
+    } else {
+        buf = cnfsReadFile(name, &sz, false);
+    }
 
     if (NULL == buf)
     {
