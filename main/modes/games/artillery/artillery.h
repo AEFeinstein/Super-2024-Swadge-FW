@@ -129,6 +129,7 @@ typedef struct
 
 extern const char load_ammo[];
 extern swadgeMode_t artilleryMode;
+extern const char str_paintSelect[];
 
 void setDriveInMenu(bool visible);
 void setAmmoInMenu(void);

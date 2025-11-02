@@ -76,7 +76,7 @@ const struct
 static const char str_passAndPlay[]     = "Pass and Play";
 static const char str_wirelessConnect[] = "Wireless Connect";
 static const char str_cpuPractice[]     = "CPU Practice";
-static const char str_paintSelect[]     = "Paint Shop";
+const char str_paintSelect[]            = "Paint Shop";
 static const char str_help[]            = "Help!";
 static const char str_exit[]            = "Exit";
 

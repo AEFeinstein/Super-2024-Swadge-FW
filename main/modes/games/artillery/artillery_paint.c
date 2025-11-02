@@ -81,14 +81,15 @@ void artilleryPaintInput(artilleryData_t* ad, buttonEvt_t* evt)
  */
 void artilleryPaintLoop(artilleryData_t* ad, uint32_t elapsedUs)
 {
-    // Draw background
-    drawMenuMega(ad->blankMenu, ad->mRenderer, elapsedUs);
-
 // Draw sky and ground
-#define TITLE_H 54
 #define HORIZON 176
-    fillDisplayArea(0, TITLE_H, TFT_WIDTH, HORIZON, COLOR_SKY);
+    fillDisplayArea(0, 0, TFT_WIDTH, HORIZON, COLOR_SKY);
     fillDisplayArea(0, HORIZON, TFT_WIDTH, TFT_HEIGHT, COLOR_GROUND);
+
+    // Draw the menu text
+    drawText(ad->mRenderer->titleFont, c555, str_paintSelect, 20, 13);
+    // Outline the menu text
+    drawText(ad->mRenderer->titleFontOutline, c000, str_paintSelect, 20, 13);
 
     // Blink arrows
     RUN_TIMER_EVERY(ad->paintArrowBlinkTimer, 1000000, elapsedUs, {});
