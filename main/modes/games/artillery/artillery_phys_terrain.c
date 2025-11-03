@@ -12,6 +12,7 @@
 #include "artillery.h"
 #include "artillery_phys_terrain.h"
 #include "artillery_phys_objs.h"
+#include "artillery_game.h"
 
 //==============================================================================
 // Function Declarations
@@ -410,6 +411,11 @@ bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
             else
             {
                 shell->owner->score += shell->score;
+
+                if ((SNIPER == shell->effect) && artilleryIsMyTurn(getArtilleryData()))
+                {
+                    trophyUpdate(&artilleryTrophySniper, true, true);
+                }
             }
 
             // Impart force on hit tanks

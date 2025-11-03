@@ -82,6 +82,55 @@ static const char str_exit[]            = "Exit";
 
 static const char modeName[] = "Vector Tanks";
 
+const trophyData_t artilleryTrophyRoyalSampler = {
+    .title       = "Royal Sampler",
+    .description = "Try firing all the different ammo",
+    .image       = NO_IMAGE_SET,
+    .type        = TROPHY_TYPE_CHECKLIST,
+    .difficulty  = TROPHY_DIFF_EASY,
+    .maxVal      = 0x1FFF, // Thirteen ammos in ammoAttributes[]
+};
+
+const trophyData_t artilleryTrophySkynet = {
+    .title       = "Take That Skynet",
+    .description = "You defeated the CPU player",
+    .image       = NO_IMAGE_SET,
+    .type        = TROPHY_TYPE_TRIGGER,
+    .difficulty  = TROPHY_DIFF_MEDIUM,
+    .maxVal      = 1, // For trigger type, set to one
+};
+
+const trophyData_t artilleryTrophySniper = {
+    .title       = "Sniper No Sniping",
+    .description = "Hit another player with the sniper ammo",
+    .image       = NO_IMAGE_SET,
+    .type        = TROPHY_TYPE_TRIGGER,
+    .difficulty  = TROPHY_DIFF_MEDIUM,
+    .maxVal      = 1, // For trigger type, set to one
+};
+
+// Modify the following with your trophies
+const trophyData_t artilleryTrophies[] = {
+    artilleryTrophyRoyalSampler,
+    artilleryTrophySkynet,
+    artilleryTrophySniper,
+};
+
+// Individual mode settings
+const trophySettings_t artilleryTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 2,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = modeName,
+};
+
+// This is passed to the swadgeMode_t
+const trophyDataList_t artilleryTrophyData = {
+    .settings = &artilleryTrophySettings,
+    .list     = artilleryTrophies,
+    .length   = ARRAY_SIZE(artilleryTrophies),
+};
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -103,7 +152,7 @@ swadgeMode_t artilleryMode = {
     .fnAdvancedUSB            = NULL,
     .fnDacCb                  = NULL,
     .fnAddToSwadgePassPacket  = NULL,
-    .trophyData               = NULL,
+    .trophyData               = &artilleryTrophyData,
 };
 
 artilleryData_t* ad;

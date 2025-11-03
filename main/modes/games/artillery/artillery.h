@@ -131,6 +131,10 @@ extern const char load_ammo[];
 extern swadgeMode_t artilleryMode;
 extern const char str_paintSelect[];
 
+extern const trophyData_t artilleryTrophyRoyalSampler;
+extern const trophyData_t artilleryTrophySkynet;
+extern const trophyData_t artilleryTrophySniper;
+
 void setDriveInMenu(bool visible);
 void setAmmoInMenu(void);
 void openAmmoMenu(void);
