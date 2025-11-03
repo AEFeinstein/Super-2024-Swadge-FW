@@ -79,11 +79,20 @@ void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newSta
             ad->cpuWaitTimer                          = 2000000;
             break;
         }
+        case AGS_FIRE:
+        {
+            // If this is the player
+            if (artilleryIsMyTurn(ad))
+            {
+                // Check the trophy for all ammo types
+                trophySetChecklistTask(&artilleryTrophyRoyalSampler, ad->players[ad->plIdx]->ammoIdx, true, true);
+            }
+            break;
+        }
         default:
         case AGS_WAIT:
         case AGS_MOVE:
         case AGS_ADJUST:
-        case AGS_FIRE:
         case AGS_CPU_MOVE:
         case AGS_LOOK:
         {
@@ -647,9 +656,16 @@ void artilleryPassTurn(artilleryData_t* ad)
             bool isP1 = true;
             switch (ad->gameType)
             {
+                case AG_CPU_PRACTICE:
+                {
+                    if (ad->players[0]->score > ad->players[1]->score)
+                    {
+                        trophyUpdate(&artilleryTrophySkynet, true, true);
+                    }
+                }
+                // fallthrough
                 default:
                 case AG_PASS_AND_PLAY:
-                case AG_CPU_PRACTICE:
                 {
                     isP1 = true;
                     break;

@@ -103,7 +103,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .score      = 300,
         .expVel     = 0,
         .expRadius  = 1,
-        .effect     = NO_EFFECT,
+        .effect     = SNIPER,
     },
     {
         .name       = "Big Shot",

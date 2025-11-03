@@ -50,9 +50,9 @@ typedef enum __attribute__((packed))
     WALL_MAKER,
     HOMING_MISSILE,
     FLOOR_LAVA,
-    LANDMINES,
     CONFUSION,
     LASER,
+    SNIPER,
 } ammoEffect_t;
 
 //==============================================================================
