@@ -134,13 +134,18 @@ extern const char load_ammo[];
 extern swadgeMode_t artilleryMode;
 extern const char str_paintSelect[];
 
-extern const trophyData_t artilleryTrophyRoyalSampler;
-extern const trophyData_t artilleryTrophySkynet;
-extern const trophyData_t artilleryTrophySniper;
-extern const trophyData_t artilleryTrophyHittingYourself;
-extern const trophyData_t artilleryTrophyPassAndPlay;
-extern const trophyData_t artilleryTrophyP2P;
-extern const trophyData_t artilleryTrophyToTheMoon;
+// WARNING! Must match the order of trophies in artilleryTrophies[]
+typedef enum
+{
+    AT_ROYAL_SAMPLER,
+    AT_HITTING_YOURSELF,
+    AT_TO_THE_MOON,
+    AT_PASS_AND_PLAY,
+    AT_P2P,
+    AT_SKYNET,
+    AT_SNIPER,
+} artilleryTrophyType;
+extern const trophyData_t artilleryTrophies[];
 
 void setDriveInMenu(bool visible);
 void setAmmoInMenu(void);

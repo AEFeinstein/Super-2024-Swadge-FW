@@ -82,73 +82,71 @@ static const char str_exit[]            = "Exit";
 
 static const char modeName[] = "Vector Tanks";
 
-const trophyData_t artilleryTrophyRoyalSampler = {
-    .title       = "Royal Sampler",
-    .description = "Try firing all the different ammo",
-    .image       = NO_IMAGE_SET,
-    .type        = TROPHY_TYPE_CHECKLIST,
-    .difficulty  = TROPHY_DIFF_EASY,
-    .maxVal      = 0x1FFF, // Thirteen ammos in ammoAttributes[]
-};
-
-const trophyData_t artilleryTrophyHittingYourself = {
-    .title       = "Stop Hitting Yourself",
-    .description = "Damage yourself with a shot you fired",
-    .image       = NO_IMAGE_SET,
-    .type        = TROPHY_TYPE_TRIGGER,
-    .difficulty  = TROPHY_DIFF_EASY,
-    .maxVal      = 1, // For trigger type, set to one
-};
-
-const trophyData_t artilleryTrophyToTheMoon = {
-    .title       = "To The Moon",
-    .description = "Bounce off the top of the sky",
-    .image       = NO_IMAGE_SET,
-    .type        = TROPHY_TYPE_TRIGGER,
-    .difficulty  = TROPHY_DIFF_EASY,
-    .maxVal      = 1, // For trigger type, set to one
-};
-
-const trophyData_t artilleryTrophyPassAndPlay = {
-    .title       = "Pass Master",
-    .description = "Play 10 Pass and Play games",
-    .image       = NO_IMAGE_SET,
-    .type        = TROPHY_TYPE_ADDITIVE,
-    .difficulty  = TROPHY_DIFF_MEDIUM,
-    .maxVal      = 10,
-};
-
-const trophyData_t artilleryTrophyP2P = {
-    .title       = "Wireless Master",
-    .description = "Play 10 Wireless Connect games",
-    .image       = NO_IMAGE_SET,
-    .type        = TROPHY_TYPE_ADDITIVE,
-    .difficulty  = TROPHY_DIFF_MEDIUM,
-    .maxVal      = 10,
-};
-
-const trophyData_t artilleryTrophySkynet = {
-    .title       = "Take That Skynet",
-    .description = "You defeated the CPU player",
-    .image       = NO_IMAGE_SET,
-    .type        = TROPHY_TYPE_TRIGGER,
-    .difficulty  = TROPHY_DIFF_HARD,
-    .maxVal      = 1, // For trigger type, set to one
-};
-
-const trophyData_t artilleryTrophySniper = {
-    .title       = "Sniper No Sniping",
-    .description = "Hit another player with the sniper ammo",
-    .image       = NO_IMAGE_SET,
-    .type        = TROPHY_TYPE_TRIGGER,
-    .difficulty  = TROPHY_DIFF_HARD,
-    .maxVal      = 1, // For trigger type, set to one
-};
-
 // List of trophies
 const trophyData_t artilleryTrophies[] = {
-    artilleryTrophyRoyalSampler, artilleryTrophyHittingYourself, artilleryTrophyPassAndPlay,
-    artilleryTrophyP2P,          artilleryTrophySniper,          artilleryTrophySkynet,
+    {
+        // RoyalSampler
+        .title       = "Royal Sampler",
+        .description = "Try firing all the different ammo",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_CHECKLIST,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 0x1FFF, // Thirteen ammos in ammoAttributes[]
+    },
+    {
+        // HittingYourself
+        .title       = "Stop Hitting Yourself",
+        .description = "Damage yourself with a shot you fired",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        // ToTheMoon
+        .title       = "To The Moon",
+        .description = "Bounce off the top of the sky",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        // PassAndPlay
+        .title       = "Pass Master",
+        .description = "Play 10 Pass and Play games",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 10,
+    },
+    {
+        // P2P
+        .title       = "Wireless Master",
+        .description = "Play 10 Wireless Connect games",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 10,
+    },
+    {
+        // Skynet
+        .title       = "Take That Skynet",
+        .description = "You defeated the CPU player",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        // Sniper
+        .title       = "Sniper No Sniping",
+        .description = "Hit another player with the sniper ammo",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1, // For trigger type, set to one
+    },
 };
 
 // Individual mode settings
