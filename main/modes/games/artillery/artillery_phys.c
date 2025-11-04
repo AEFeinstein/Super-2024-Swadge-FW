@@ -1067,6 +1067,9 @@ void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool fi
         // Camera tracks all shells
         push(&phys->cameraTargets, shell);
     }
+
+    // Play SFX (shot fired)
+    midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, CRASH_CYMBAL_1, 0x7F);
 }
 
 /**

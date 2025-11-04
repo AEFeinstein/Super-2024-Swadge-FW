@@ -125,6 +125,9 @@ typedef struct
 
     // Variables for game over
     artilleryGameOverData_t gameOverData[NUM_PLAYERS];
+
+    // Audio
+    midiFile_t bgm;
 } artilleryData_t;
 
 extern const char load_ammo[];
