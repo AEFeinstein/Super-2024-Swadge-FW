@@ -600,6 +600,7 @@ static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal)
                     generateRandomSwadgesona(&scd->activeSona);
                     scd->slot  = idx;
                     scd->state = CREATING;
+                    strcpy(scd->nickname, "");
                     readNvs32(cursorNVS, &scd->cursorType);
                     loadWsg(scd->cursorType, &scd->cursorImage, true);
                 }
