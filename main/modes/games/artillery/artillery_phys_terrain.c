@@ -446,7 +446,7 @@ bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
     phys->terrainMoving = true;
 
     // Play SFX (explosion)
-    midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, SPLASH_CYMBAL, 0x7F);
+    midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, CRASH_CYMBAL_2, 0x7F);
 
     return change;
 }
