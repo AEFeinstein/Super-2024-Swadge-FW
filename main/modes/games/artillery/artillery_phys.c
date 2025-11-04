@@ -1082,7 +1082,7 @@ void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool fi
     }
 
     // Play SFX (shot fired)
-    midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, CRASH_CYMBAL_1, 0x7F);
+    midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, ELECTRIC_SNARE_OR_RIMSHOT, 0x7F);
 }
 
 /**
