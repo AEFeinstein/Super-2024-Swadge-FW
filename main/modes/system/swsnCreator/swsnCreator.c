@@ -1204,13 +1204,18 @@ static bool panelOpen(buttonEvt_t* evt)
                     }
                     case GLASSES:
                     {
-                        if (scd->arr[scd->selection] == G_NONE)
+                        if (scd->arr[scd->selection] == G_BIG || scd->arr[scd->selection] == G_BIGANGLE
+                            || scd->arr[scd->selection] == G_BIGSQUARE || scd->arr[scd->selection] == G_LINDA
+                            || scd->arr[scd->selection] == G_LOW || scd->arr[scd->selection] == G_RAYBAN
+                            || scd->arr[scd->selection] == G_READING || scd->arr[scd->selection] == G_SMALL
+                            || scd->arr[scd->selection] == G_SQUARE || scd->arr[scd->selection] == G_THINANGLE
+                            || scd->arr[scd->selection] == G_UPTURNED || scd->arr[scd->selection] == G_WIDENOSE)
                         {
-                            initSlideTabClosed(size);
+                            scd->selection = GLASSES_COLOR;
+                            scd->page      = scd->arr[scd->selection] / GRID_SIZE;
                             break;
                         }
-                        scd->selection = GLASSES_COLOR;
-                        scd->page      = scd->arr[scd->selection] / GRID_SIZE;
+                        initSlideTabClosed(size);
                         break;
                     }
                     default:
@@ -1417,9 +1422,11 @@ static void drawItems(int arrSize, bool left, bool half)
         // If None selected option
         if (scd->page * GRID_SIZE + idx == 0
             && (scd->selection == EARS || scd->selection == BODY_MODS || scd->selection == HAT
-                || scd->selection == GLASSES))
+                || scd->selection == GLASSES || scd->selection == HAIR))
         {
-            drawWsgSimple(&scd->selectionImages[idx + (scd->page * GRID_SIZE)], cursorXOffset + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)), TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
+            drawWsgSimple(&scd->selectionImages[idx + (scd->page * GRID_SIZE)],
+                          cursorXOffset + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
+                          TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
         }
         else
         {
