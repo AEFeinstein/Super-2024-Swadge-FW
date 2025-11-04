@@ -932,7 +932,7 @@ static bool slideTab(int selected, bool out, uint64_t elapsedUs)
     {
         if (!out)
         {
-            x += PANEL_WIDTH >> 1;
+            x += SONA_SLIDE;
             offset += PANEL_WIDTH;
         }
         while (steps > STEP)
@@ -967,7 +967,7 @@ static bool slideTab(int selected, bool out, uint64_t elapsedUs)
     {
         if (!out)
         {
-            x -= PANEL_WIDTH >> 1;
+            x -= SONA_SLIDE;
             offset -= PANEL_WIDTH;
         }
         while (steps > STEP)
@@ -1435,45 +1435,27 @@ static void drawPanelContents(void)
 
 static void drawColors(const paletteColor_t* colors, int arrSize, bool left)
 {
-    int end = (arrSize - (GRID_SIZE * scd->page) < GRID_SIZE) ? arrSize - (GRID_SIZE * scd->page) : GRID_SIZE;
-    if (left)
+    int end    = (arrSize - (GRID_SIZE * scd->page) < GRID_SIZE) ? arrSize - (GRID_SIZE * scd->page) : GRID_SIZE;
+    int xStart = PADDING;
+    if (!left)
     {
-        for (int idx = 0; idx < end; idx++)
+        xStart += (TFT_WIDTH - PANEL_WIDTH);
+    }
+    for (int idx = 0; idx < end; idx++)
+    {
+        drawRoundedRect(xStart + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
+                        TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)),
+                        xStart + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + SWATCH_W,
+                        TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + SWATCH_H, CORNER_RAD,
+                        colors[idx + (scd->page * GRID_SIZE)], c000);
+        if (scd->arr[scd->selection] == idx + (scd->page * GRID_SIZE))
         {
-            drawRoundedRect(PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
-                            TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)),
-                            PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + SWATCH_W,
-                            TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + SWATCH_H,
-                            CORNER_RAD, colors[idx + (scd->page * GRID_SIZE)], c000);
-            if (scd->arr[scd->selection] == idx + (scd->page * GRID_SIZE))
-            {
-                drawWsgSimpleScaled(
-                    &scd->cursorImage, PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + CURSOR_POS_X,
-                    TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + CURSOR_POS_Y, CURSOR_SCALE,
-                    CURSOR_SCALE);
-            }
+            drawWsgSimpleScaled(&scd->cursorImage,
+                                xStart + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + CURSOR_POS_X,
+                                TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + CURSOR_POS_Y,
+                                CURSOR_SCALE, CURSOR_SCALE);
         }
     }
-    else
-    {
-        for (int idx = 0; idx < end; idx++)
-        {
-            drawRoundedRect((TFT_WIDTH - PANEL_WIDTH) + PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
-                            TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)),
-                            (TFT_WIDTH - PANEL_WIDTH) + PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W))
-                                + SWATCH_W,
-                            TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + SWATCH_H,
-                            CORNER_RAD, colors[idx + (scd->page * GRID_SIZE)], c000);
-            if (scd->arr[scd->selection] == idx + (scd->page * GRID_SIZE))
-            {
-                drawWsgSimpleScaled(&scd->cursorImage,
-                                    (TFT_WIDTH - PANEL_WIDTH) + PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W))
-                                        + 20,
-                                    TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + 12, 2, 2);
-            }
-        }
-    }
-
     // Arrows
     drawArrows(arrSize, left);
 }
