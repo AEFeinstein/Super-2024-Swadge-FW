@@ -407,6 +407,11 @@ bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
             if (shell->owner == circ)
             {
                 shell->owner->score -= shell->score;
+
+                if (shell->score && artilleryIsMyTurn(getArtilleryData()))
+                {
+                    trophyUpdate(&artilleryTrophyHittingYourself, true, true);
+                }
             }
             else
             {
