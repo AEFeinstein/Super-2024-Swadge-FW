@@ -32,7 +32,7 @@
 #define SWATCH_H   26
 #define SWATCH_W   35
 #define CORNER_RAD 12
-#define PADDING    7
+#define PADDING    8
 // Arrows
 #define ARROW_X     13
 #define ARROW_Y     14
@@ -388,7 +388,7 @@ static void initSlideTabClosed(int size);
 
 // Open Panels
 static bool panelOpen(buttonEvt_t* evt);
-static void drawPanelContents(void);
+static int drawPanelContents(void);
 static void drawColors(const paletteColor_t* colors, int arrSize, bool left);
 static void drawArrows(int arrSize, bool left);
 static void drawItems(int arrSize, bool left, bool half);
@@ -1067,7 +1067,6 @@ static bool panelOpen(buttonEvt_t* evt)
             }
         }
         fillDisplayArea(0, TOP_PADDING, PANEL_WIDTH, TFT_HEIGHT - BOTTOM_PADDING, c555);
-        drawLineFast(PANEL_WIDTH, 0, PANEL_WIDTH, TFT_HEIGHT, c500);
         for (int i = 0; i < 3; i++)
         {
             drawLineFast(0, TFT_HEIGHT - (BOTTOM_PADDING + 1 + i), PANEL_WIDTH - 1,
@@ -1108,7 +1107,6 @@ static bool panelOpen(buttonEvt_t* evt)
             }
         }
         fillDisplayArea(TFT_WIDTH - PANEL_WIDTH, TOP_PADDING, TFT_WIDTH, TFT_HEIGHT - BOTTOM_PADDING, c555);
-        drawLineFast(TFT_WIDTH - PANEL_WIDTH, 0, TFT_WIDTH - PANEL_WIDTH, TFT_HEIGHT, c500);
         for (int i = 0; i < 3; i++)
         {
             drawLineFast(TFT_WIDTH - PANEL_WIDTH, TFT_HEIGHT - (BOTTOM_PADDING + 1 + i), TFT_WIDTH,
@@ -1116,86 +1114,7 @@ static bool panelOpen(buttonEvt_t* evt)
         }
     }
 
-    drawPanelContents();
-
-    int size = -1;
-    switch (scd->selection)
-    {
-        case HAIR:
-        {
-            size = ARRAY_SIZE(hairWsgs);
-            break;
-        }
-        case HAIR_COLOR:
-        {
-            size = ARRAY_SIZE(hairSwatch);
-            break;
-        }
-        case EYES:
-        {
-            size = ARRAY_SIZE(eyeWsgs);
-            break;
-        }
-        case EYE_COLOR:
-        {
-            size = ARRAY_SIZE(eyeSwatch);
-            break;
-        }
-        case HAT:
-        {
-            size = ARRAY_SIZE(hatWsgs);
-            break;
-        }
-        case HAT_COLOR:
-        {
-            size = ARRAY_SIZE(hatSwatch);
-            break;
-        }
-        case MOUTH:
-        {
-            size = ARRAY_SIZE(mouthWsgs);
-            break;
-        }
-        case GLASSES:
-        {
-            size = ARRAY_SIZE(glassesWsgs);
-            break;
-        }
-        case GLASSES_COLOR:
-        {
-            size = ARRAY_SIZE(glassesSwatch);
-            break;
-        }
-        case BODY_MODS:
-        {
-            size = ARRAY_SIZE(bodymarksWsgs);
-            break;
-        }
-        case EARS:
-        {
-            size = ARRAY_SIZE(earWsgs);
-            break;
-        }
-        case EYEBROWS:
-        {
-            size = ARRAY_SIZE(eyebrowsWsgs);
-            break;
-        }
-        case CLOTHES:
-        {
-            size = ARRAY_SIZE(clothesSwatch);
-            break;
-        }
-        case SKIN:
-        {
-            size = ARRAY_SIZE(skinSwatch);
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }
+    int size = drawPanelContents();
 
     // Handle input
     while (checkButtonQueueWrapper(evt))
@@ -1352,78 +1271,93 @@ static bool panelOpen(buttonEvt_t* evt)
     return false;
 }
 
-static void drawPanelContents(void)
+static int drawPanelContents(void)
 {
+    int size = -1;
     switch (scd->selection)
     {
         case SKIN:
         {
-            drawColors(skinSwatch, ARRAY_SIZE(skinSwatch), true);
+            size = ARRAY_SIZE(skinSwatch);
+            drawColors(skinSwatch, size, true);
             break;
         }
         case CLOTHES:
         {
-            drawColors(clothesSwatch, ARRAY_SIZE(clothesSwatch), false);
+            size = ARRAY_SIZE(clothesSwatch);
+            drawColors(clothesSwatch, size, false);
             break;
         }
         case HAIR:
         {
-            drawItems(ARRAY_SIZE(hairWsgs), false, true);
+            size = ARRAY_SIZE(hairWsgs);
+            drawItems(size, false, true);
             break;
         }
         case HAIR_COLOR:
         {
-            drawColors(hairSwatch, ARRAY_SIZE(hairSwatch), false);
+            size = ARRAY_SIZE(hairSwatch);
+            drawColors(hairSwatch, size, false);
             break;
         }
         case EYES:
         {
-            drawItems(ARRAY_SIZE(eyeWsgs), true, false);
+            size = ARRAY_SIZE(eyeWsgs);
+            drawItems(size, true, false);
             break;
         }
         case EYE_COLOR:
         {
-            drawColors(eyeSwatch, ARRAY_SIZE(eyeSwatch), true);
+            size = ARRAY_SIZE(eyeSwatch);
+            drawColors(eyeSwatch, size, true);
             break;
         }
         case HAT:
         {
-            drawItems(ARRAY_SIZE(hatWsgs), false, true);
+            size = ARRAY_SIZE(hatWsgs);
+            drawItems(size, false, true);
             break;
         }
         case HAT_COLOR:
         {
-            drawColors(hatSwatch, ARRAY_SIZE(hatSwatch), false);
+            size = ARRAY_SIZE(hatSwatch);
+            drawColors(hatSwatch, size, false);
             break;
         }
         case MOUTH:
         {
-            drawItems(ARRAY_SIZE(mouthWsgs), true, false);
+            size = ARRAY_SIZE(mouthWsgs);
+            drawItems(size, true, false);
             break;
         }
         case GLASSES:
         {
-            drawItems(ARRAY_SIZE(glassesWsgs), false, true);
+            size = ARRAY_SIZE(glassesWsgs);
+            drawItems(size, false, true);
             break;
         }
         case GLASSES_COLOR:
         {
-            drawColors(glassesSwatch, ARRAY_SIZE(glassesSwatch), false);
+            size = ARRAY_SIZE(glassesSwatch);
+            drawColors(glassesSwatch, size, false);
             break;
         }
         case BODY_MODS:
         {
-            drawItems(ARRAY_SIZE(bodymarksWsgs), false, false);
+            size = ARRAY_SIZE(bodymarksWsgs);
+            drawItems(size, false, false);
             break;
         }
         case EARS:
         {
-            drawItems(ARRAY_SIZE(earWsgs), true, true);
+            size = ARRAY_SIZE(earWsgs);
+            drawItems(size, true, true);
             break;
         }
         case EYEBROWS:
         {
-            drawItems(ARRAY_SIZE(eyebrowsWsgs), true, false);
+            size = ARRAY_SIZE(eyebrowsWsgs);
+            drawItems(size, true, false);
             break;
         }
         default:
@@ -1431,6 +1365,7 @@ static void drawPanelContents(void)
             break;
         }
     }
+    return size;
 }
 
 static void drawColors(const paletteColor_t* colors, int arrSize, bool left)
@@ -1462,86 +1397,46 @@ static void drawColors(const paletteColor_t* colors, int arrSize, bool left)
 
 static void drawItems(int arrSize, bool left, bool half)
 {
-    int end = (arrSize - (GRID_SIZE * scd->page) < GRID_SIZE) ? arrSize - (GRID_SIZE * scd->page) : GRID_SIZE;
-    if (left)
-    {
-        if (half)
-        {
-            for (int idx = 0; idx < end; idx++)
-            {
-                drawWsgSimpleHalf(&scd->selectionImages[idx + (scd->page * GRID_SIZE)],
-                                  PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
-                                  TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
-                if (scd->arr[scd->selection] == idx + (scd->page * GRID_SIZE))
-                {
-                    drawWsgSimpleScaled(
-                        &scd->cursorImage, PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + CURSOR_POS_X,
-                        TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + CURSOR_POS_Y,
-                        CURSOR_SCALE, CURSOR_SCALE);
-                }
-            }
-        }
-        else
-        {
-            for (int idx = 0; idx < end; idx++)
-            {
-                drawWsgSimple(&scd->selectionImages[idx + (scd->page * GRID_SIZE)],
-                              PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) - (scd->activeSona.image.h >> 2),
-                              TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H))
-                                  - (scd->activeSona.image.h >> 2));
-                if (scd->arr[scd->selection] == idx + (scd->page * GRID_SIZE))
-                {
-                    drawWsgSimpleScaled(
-                        &scd->cursorImage, PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + CURSOR_POS_X,
-                        TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + CURSOR_POS_Y,
-                        CURSOR_SCALE, CURSOR_SCALE);
-                }
-            }
-        }
-    }
-    else
-    {
-        if (half)
-        {
-            for (int idx = 0; idx < end; idx++)
-            {
-                drawWsgSimpleHalf(&scd->selectionImages[idx + (scd->page * GRID_SIZE)],
-                                  (TFT_WIDTH - PANEL_WIDTH) + PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
-                                  TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
-                if (scd->arr[scd->selection] == idx + (scd->page * GRID_SIZE))
-                {
-                    drawWsgSimpleScaled(&scd->cursorImage,
-                                        (TFT_WIDTH - PANEL_WIDTH) + PADDING
-                                            + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + CURSOR_POS_X,
-                                        TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H))
-                                            + CURSOR_POS_Y,
-                                        CURSOR_SCALE, CURSOR_SCALE);
-                }
-            }
-        }
-        else
-        {
-            for (int idx = 0; idx < end; idx++)
-            {
-                drawWsgSimple(&scd->selectionImages[idx + (scd->page * GRID_SIZE)],
-                              (TFT_WIDTH - PANEL_WIDTH) + PADDING + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W))
-                                  - (scd->activeSona.image.h >> 2),
-                              TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H))
-                                  - (scd->activeSona.image.h >> 2));
-                if (scd->arr[scd->selection] == idx + (scd->page * GRID_SIZE))
-                {
-                    drawWsgSimpleScaled(&scd->cursorImage,
-                                        (TFT_WIDTH - PANEL_WIDTH) + PADDING
-                                            + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + CURSOR_POS_X,
-                                        TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H))
-                                            + CURSOR_POS_Y,
-                                        CURSOR_SCALE, CURSOR_SCALE);
-                }
-            }
-        }
-    }
     // Arrows
     drawArrows(arrSize, left);
+
+    // Images
+    int end = (arrSize - (GRID_SIZE * scd->page) < GRID_SIZE) ? arrSize - (GRID_SIZE * scd->page) : GRID_SIZE;
+    void (*drawFunc)(const wsg_t* wsg, int16_t xOff, int16_t yOff) = drawWsgSimpleHalf;
+    int yOffset                                                    = (half) ? TOP_PADDING + PADDING : TOP_PADDING;
+    int xOffset       = (left) ? PADDING : PADDING + (TFT_WIDTH - PANEL_WIDTH);
+    int cursorXOffset = xOffset;
+    if (!half)
+    {
+        drawFunc = drawWsgSimple;
+        xOffset -= (scd->activeSona.image.w >> 2);
+        yOffset -= (scd->activeSona.image.h >> 2);
+    }
+    for (int idx = 0; idx < end; idx++)
+    {
+        // If None selected option
+        if (scd->page * GRID_SIZE + idx == 0
+            && (scd->selection == EARS || scd->selection == BODY_MODS || scd->selection == HAT
+                || scd->selection == GLASSES))
+        {
+            drawWsgSimple(&scd->selectionImages[idx + (scd->page * GRID_SIZE)], cursorXOffset + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)), TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
+        }
+        else
+        {
+            drawFunc(&scd->selectionImages[idx + (scd->page * GRID_SIZE)],
+                     xOffset + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
+                     yOffset + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
+        }
+
+        // Cursor
+        if (scd->arr[scd->selection] == idx + (scd->page * GRID_SIZE))
+        {
+            drawWsgSimpleScaled(&scd->cursorImage,
+                                cursorXOffset + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + CURSOR_POS_X,
+                                TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + CURSOR_POS_Y,
+                                CURSOR_SCALE, CURSOR_SCALE);
+        }
+    }
 }
 
 static void drawArrows(int arrSize, bool left)
