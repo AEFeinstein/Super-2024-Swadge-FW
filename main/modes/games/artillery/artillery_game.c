@@ -658,21 +658,26 @@ void artilleryPassTurn(artilleryData_t* ad)
             {
                 case AG_CPU_PRACTICE:
                 {
+                    isP1 = true;
                     if (ad->players[0]->score > ad->players[1]->score)
                     {
                         trophyUpdate(&artilleryTrophySkynet, true, true);
                     }
+                    break;
                 }
-                // fallthrough
                 default:
                 case AG_PASS_AND_PLAY:
                 {
                     isP1 = true;
+                    trophyUpdate(&artilleryTrophyPassAndPlay, trophyGetSavedValue(&artilleryTrophyPassAndPlay) + 1,
+                                 true);
                     break;
                 }
                 case AG_WIRELESS:
                 {
                     isP1 = (GOING_FIRST == p2pGetPlayOrder(&ad->p2p));
+                    trophyUpdate(&artilleryTrophyP2P, trophyGetSavedValue(&artilleryTrophyP2P) + 1, true);
+                    break;
                 }
             }
 

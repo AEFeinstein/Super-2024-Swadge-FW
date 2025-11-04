@@ -127,7 +127,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .score      = 0,
         .expVel     = 200,
         .expRadius  = 12,
-        .effect     = NO_EFFECT,
+        .effect     = ROCKET_JUMP,
     },
     {
         .name       = "Wallmaker",
@@ -592,6 +592,12 @@ static bool physBinaryMoveObjects(physSim_t* phys)
             {
                 playerMoved = true;
             }
+
+            // Check if the tank bounced off the skybox
+            if (CT_TANK == pc->type && pc->c.pos.y <= pc->c.radius + 1)
+            {
+                trophyUpdate(&artilleryTrophyToTheMoon, true, true);
+            }
         }
 
         // Iterate
@@ -1049,9 +1055,16 @@ void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool fi
         // Set shell parameters
         shell->bounces         = aa->numBounces;
         shell->explosionRadius = aa->expRadius;
-        shell->explosionVel    = aa->expVel;
-        shell->score           = shellScore;
-        shell->effect          = aa->effect;
+        if (ROCKET_JUMP == aa->effect)
+        {
+            shell->explosionVel = player->shotPower;
+        }
+        else
+        {
+            shell->explosionVel = aa->expVel;
+        }
+        shell->score  = shellScore;
+        shell->effect = aa->effect;
 
         // Negate gravity for the laser and make it faster
         if (LASER == shell->effect)
