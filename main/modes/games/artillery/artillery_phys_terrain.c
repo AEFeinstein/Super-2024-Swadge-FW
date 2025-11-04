@@ -410,7 +410,7 @@ bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
 
                 if (shell->score && artilleryIsMyTurn(getArtilleryData()))
                 {
-                    trophyUpdate(&artilleryTrophyHittingYourself, true, true);
+                    trophyUpdate(&artilleryTrophies[AT_HITTING_YOURSELF], true, true);
                 }
             }
             else
@@ -419,7 +419,7 @@ bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
 
                 if ((SNIPER == shell->effect) && artilleryIsMyTurn(getArtilleryData()))
                 {
-                    trophyUpdate(&artilleryTrophySniper, true, true);
+                    trophyUpdate(&artilleryTrophies[AT_SNIPER], true, true);
                 }
             }
 

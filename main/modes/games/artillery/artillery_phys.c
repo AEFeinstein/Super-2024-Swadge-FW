@@ -596,7 +596,7 @@ static bool physBinaryMoveObjects(physSim_t* phys)
             // Check if the tank bounced off the skybox
             if (CT_TANK == pc->type && pc->c.pos.y <= pc->c.radius + 1)
             {
-                trophyUpdate(&artilleryTrophyToTheMoon, true, true);
+                trophyUpdate(&artilleryTrophies[AT_TO_THE_MOON], true, true);
             }
         }
 

@@ -85,7 +85,8 @@ void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newSta
             if (artilleryIsMyTurn(ad))
             {
                 // Check the trophy for all ammo types
-                trophySetChecklistTask(&artilleryTrophyRoyalSampler, ad->players[ad->plIdx]->ammoIdx, true, true);
+                trophySetChecklistTask(&artilleryTrophies[AT_ROYAL_SAMPLER], ad->players[ad->plIdx]->ammoIdx, true,
+                                       true);
             }
             break;
         }
@@ -661,7 +662,7 @@ void artilleryPassTurn(artilleryData_t* ad)
                     isP1 = true;
                     if (ad->players[0]->score > ad->players[1]->score)
                     {
-                        trophyUpdate(&artilleryTrophySkynet, true, true);
+                        trophyUpdate(&artilleryTrophies[AT_SKYNET], true, true);
                     }
                     break;
                 }
@@ -669,14 +670,14 @@ void artilleryPassTurn(artilleryData_t* ad)
                 case AG_PASS_AND_PLAY:
                 {
                     isP1 = true;
-                    trophyUpdate(&artilleryTrophyPassAndPlay, trophyGetSavedValue(&artilleryTrophyPassAndPlay) + 1,
-                                 true);
+                    trophyUpdate(&artilleryTrophies[AT_PASS_AND_PLAY],
+                                 trophyGetSavedValue(&artilleryTrophies[AT_PASS_AND_PLAY]) + 1, true);
                     break;
                 }
                 case AG_WIRELESS:
                 {
                     isP1 = (GOING_FIRST == p2pGetPlayOrder(&ad->p2p));
-                    trophyUpdate(&artilleryTrophyP2P, trophyGetSavedValue(&artilleryTrophyP2P) + 1, true);
+                    trophyUpdate(&artilleryTrophies[AT_P2P], trophyGetSavedValue(&artilleryTrophies[AT_P2P]) + 1, true);
                     break;
                 }
             }
