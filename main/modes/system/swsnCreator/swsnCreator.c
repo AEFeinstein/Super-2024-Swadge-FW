@@ -388,6 +388,7 @@ static void initSlideTabClosed(int size);
 
 // Open Panels
 static bool panelOpen(buttonEvt_t* evt);
+static void panelInput(buttonEvt_t* evt, int size);
 static int drawPanelContents(void);
 static void drawColors(const paletteColor_t* colors, int arrSize, bool left);
 static void drawArrows(int arrSize, bool left);
@@ -1116,7 +1117,15 @@ static bool panelOpen(buttonEvt_t* evt)
 
     int size = drawPanelContents();
 
-    // Handle input
+    // Handle input after drawing because input can free resources
+    panelInput(evt, size);
+
+    // When to update sona?
+    return false;
+}
+
+static void panelInput(buttonEvt_t* evt, int size)
+{
     while (checkButtonQueueWrapper(evt))
     {
         if (evt->down)
@@ -1271,9 +1280,6 @@ static bool panelOpen(buttonEvt_t* evt)
             copyListToSona(&scd->liveSona);
         }
     }
-
-    // When to update sona?
-    return false;
 }
 
 static int drawPanelContents(void)
