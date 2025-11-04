@@ -13,6 +13,7 @@
 //==============================================================================
 
 #define MAX_SWSN_SLOTS 14
+#define MAX_STR_LEN    50
 
 // Creator Settings
 #define NUM_TABS_PER_SIDE 5
@@ -333,6 +334,7 @@ typedef struct
     // Menu
     menu_t* menu;
     menuMegaRenderer_t* renderer;
+    char savedNames[MAX_SWSN_SLOTS][MAX_STR_LEN];
 
     // Creator
     creatorStates_t cState;  // Sub-state
@@ -371,6 +373,7 @@ static void swsnLoop(int64_t elapsedUs);
 
 // Menu
 static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal);
+static void swsnResetMenu(void);
 
 // Creator
 static void runCreator(buttonEvt_t evt);
@@ -429,32 +432,7 @@ static void swsnEnterMode(void)
     }
     loadFont(RODIN_EB_FONT, &scd->fnt, true);
 
-    // Menu
-    scd->menu     = initMenu(sonaMenuName, swsnMenuCb);
-    scd->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
-    scd->menu     = startSubMenu(scd->menu, menuOptions[0]);
-    for (int16_t idx = 0; idx < MAX_SWSN_SLOTS; idx++)
-    {
-        // TODO: Load swsn name from NVS when slot is used
-        addSingleItemToMenu(scd->menu, sonaSlotUninitialized);
-    }
-    scd->menu = endSubMenu(scd->menu);
-    addSingleItemToMenu(scd->menu, menuOptions[1]);
-
-    // Cursor
-    int32_t prevSaved;
-    readNvs32(cursorNVS, &prevSaved);
-    const settingParam_t cursorImages = {
-        .def = prevSaved,
-        .key = NULL,
-        .min = cursorSprs[0],
-        .max = cursorSprs[ARRAY_SIZE(cursorSprs) - 1],
-    };
-    addSettingsOptionsItemToMenu(scd->menu, menuOptions[2], cursorOptions, cursorSprs, ARRAY_SIZE(cursorSprs),
-                                 &cursorImages, prevSaved);
-
-    // Exit
-    addSingleItemToMenu(scd->menu, menuOptions[3]);
+    swsnResetMenu();
 }
 
 static void swsnExitMode(void)
@@ -602,15 +580,7 @@ static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     if (selected)
     {
-        if (label == sonaSlotUninitialized)
-        {
-            // Load the creator
-            generateRandomSwadgesona(&scd->activeSona);
-            scd->state = CREATING;
-            readNvs32(cursorNVS, &scd->cursorType);
-            loadWsg(scd->cursorType, &scd->cursorImage, true);
-        }
-        else if (label == menuOptions[1])
+        if (label == menuOptions[1])
         {
             // Enter the viewer
         }
@@ -618,6 +588,41 @@ static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             // Exit the mode
             switchToSwadgeMode(&mainMenuMode);
+        }
+        else if (label != menuOptions[2] && label != menuOptions[0])
+        {
+            for (int idx = 0; idx < MAX_SWSN_SLOTS; idx++)
+            {
+                char buffer[32];
+                snprintf(buffer, sizeof(buffer) - 1, "Slot %d: %s", idx + 1, sonaSlotUninitialized);
+                if (strncmp(buffer, label, 17) == 0)
+                {
+                    generateRandomSwadgesona(&scd->activeSona);
+                    scd->slot  = idx;
+                    scd->state = CREATING;
+                    readNvs32(cursorNVS, &scd->cursorType);
+                    loadWsg(scd->cursorType, &scd->cursorImage, true);
+                }
+                snprintf(buffer, sizeof(buffer) - 1, "Slot %d: ", idx + 1);
+                if (strncmp(buffer, label, 8) == 0)
+                {
+                    // Pull data from NVS
+                    size_t len = sizeof(swadgesonaCore_t);
+                    char nvsBuffer[16];
+                    snprintf(nvsBuffer, sizeof(nvsBuffer) - 1, "%s%" PRId16, NVSStrings[1], idx);
+                    readNamespaceNvsBlob(NVSStrings[0], nvsBuffer, &scd->activeSona.core, &len);
+                    snprintf(nvsBuffer, sizeof(nvsBuffer) - 1, "%s%d%s", NVSStrings[1], idx, NVSStrings[2]);
+                    readNamespaceNvsBlob(NVSStrings[0], nvsBuffer, NULL, &len);
+                    readNamespaceNvsBlob(NVSStrings[0], nvsBuffer, scd->nickname, &len);
+                    generateSwadgesonaImage(&scd->activeSona, true);
+
+                    // Move to creator mode
+                    scd->slot  = idx;
+                    scd->state = CREATING;
+                    readNvs32(cursorNVS, &scd->cursorType);
+                    loadWsg(scd->cursorType, &scd->cursorImage, true);
+                }
+            }
         }
     }
     else
@@ -629,6 +634,50 @@ static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal)
         }
     }
     return false;
+}
+
+static void swsnResetMenu()
+{
+    // Menu
+    scd->menu     = initMenu(sonaMenuName, swsnMenuCb);
+    scd->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    scd->menu     = startSubMenu(scd->menu, menuOptions[0]);
+    for (int16_t idx = 0; idx < MAX_SWSN_SLOTS; idx++)
+    {
+        char nvsBuffer[16];
+        size_t len;
+        snprintf(nvsBuffer, sizeof(nvsBuffer) - 1, "%s%d%s", NVSStrings[1], idx, NVSStrings[2]);
+        readNamespaceNvsBlob(NVSStrings[0], nvsBuffer, NULL, &len);
+        char buff[MAX_STR_LEN - 9];
+        if (!readNamespaceNvsBlob(NVSStrings[0], nvsBuffer, buff, &len))
+        {
+            snprintf(scd->savedNames[idx], sizeof(scd->savedNames[idx]) - 1, "Slot %d: %s", idx + 1,
+                     sonaSlotUninitialized);
+            addSingleItemToMenu(scd->menu, scd->savedNames[idx]);
+        }
+        else
+        {
+            snprintf(scd->savedNames[idx], sizeof(scd->savedNames[idx]) - 1, "Slot %d: %s", idx + 1, buff);
+            addSingleItemToMenu(scd->menu, scd->savedNames[idx]);
+        }
+    }
+    scd->menu = endSubMenu(scd->menu);
+    addSingleItemToMenu(scd->menu, menuOptions[1]);
+
+    // Cursor
+    int32_t prevSaved;
+    readNvs32(cursorNVS, &prevSaved);
+    const settingParam_t cursorImages = {
+        .def = prevSaved,
+        .key = NULL,
+        .min = cursorSprs[0],
+        .max = cursorSprs[ARRAY_SIZE(cursorSprs) - 1],
+    };
+    addSettingsOptionsItemToMenu(scd->menu, menuOptions[2], cursorOptions, cursorSprs, ARRAY_SIZE(cursorSprs),
+                                 &cursorImages, prevSaved);
+
+    // Exit
+    addSingleItemToMenu(scd->menu, menuOptions[3]);
 }
 
 // Creator
@@ -681,6 +730,7 @@ static void runCreator(buttonEvt_t evt)
                         freeWsg(&scd->cursorImage);
                         scd->state     = MENU;
                         scd->selection = 0;
+                        swsnResetMenu();
                         return;
                     }
                     return;
@@ -802,7 +852,9 @@ static void runCreator(buttonEvt_t evt)
                 if (!promptSaveBeforeQuit())
                 {
                     freeWsg(&scd->cursorImage);
-                    scd->state = MENU;
+                    scd->state     = MENU;
+                    scd->selection = 0;
+                    swsnResetMenu();
                 }
                 return;
             }
