@@ -53,6 +53,7 @@ typedef enum __attribute__((packed))
     CONFUSION,
     LASER,
     SNIPER,
+    ROCKET_JUMP,
 } ammoEffect_t;
 
 //==============================================================================

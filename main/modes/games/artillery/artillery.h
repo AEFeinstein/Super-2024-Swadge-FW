@@ -138,6 +138,9 @@ extern const trophyData_t artilleryTrophyRoyalSampler;
 extern const trophyData_t artilleryTrophySkynet;
 extern const trophyData_t artilleryTrophySniper;
 extern const trophyData_t artilleryTrophyHittingYourself;
+extern const trophyData_t artilleryTrophyPassAndPlay;
+extern const trophyData_t artilleryTrophyP2P;
+extern const trophyData_t artilleryTrophyToTheMoon;
 
 void setDriveInMenu(bool visible);
 void setAmmoInMenu(void);
