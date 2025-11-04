@@ -137,6 +137,7 @@ extern const char str_paintSelect[];
 extern const trophyData_t artilleryTrophyRoyalSampler;
 extern const trophyData_t artilleryTrophySkynet;
 extern const trophyData_t artilleryTrophySniper;
+extern const trophyData_t artilleryTrophyHittingYourself;
 
 void setDriveInMenu(bool visible);
 void setAmmoInMenu(void);

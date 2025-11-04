@@ -109,9 +109,19 @@ const trophyData_t artilleryTrophySniper = {
     .maxVal      = 1, // For trigger type, set to one
 };
 
+const trophyData_t artilleryTrophyHittingYourself = {
+    .title       = "Stop Hitting Yourself",
+    .description = "Damage yourself with a shot you fired",
+    .image       = NO_IMAGE_SET,
+    .type        = TROPHY_TYPE_TRIGGER,
+    .difficulty  = TROPHY_DIFF_EASY,
+    .maxVal      = 1, // For trigger type, set to one
+};
+
 // Modify the following with your trophies
 const trophyData_t artilleryTrophies[] = {
     artilleryTrophyRoyalSampler,
+    artilleryTrophyHittingYourself,
     artilleryTrophySkynet,
     artilleryTrophySniper,
 };
@@ -119,7 +129,7 @@ const trophyData_t artilleryTrophies[] = {
 // Individual mode settings
 const trophySettings_t artilleryTrophySettings = {
     .drawFromBottom   = false,
-    .staticDurationUs = DRAW_STATIC_US * 2,
+    .staticDurationUs = DRAW_STATIC_US * 6,
     .slideDurationUs  = DRAW_SLIDE_US,
     .namespaceKey     = modeName,
 };
