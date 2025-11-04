@@ -235,6 +235,16 @@ void artilleryEnterMode(void)
 
     // Load tank color
     artilleryPaintLoadColor(ad);
+
+    // Load and initialize sounds
+    loadMidiFile(FOLLINESQUE_MID, &ad->bgm, true);
+    globalMidiPlayerGet(MIDI_BGM)->loop = true;
+    midiGmOn(globalMidiPlayerGet(MIDI_BGM));
+    midiPause(globalMidiPlayerGet(MIDI_BGM), true);
+
+    // Set up SFX (see sfxPlayer)
+    midiGmOn(globalMidiPlayerGet(MIDI_SFX));
+    midiPause(globalMidiPlayerGet(MIDI_SFX), false);
 }
 
 /**
@@ -258,6 +268,9 @@ void artilleryExitMode(void)
     {
         heap_caps_free(pop(&ad->p2pQueue));
     }
+
+    // Deinit music
+    unloadMidiFile(&ad->bgm);
 
     // Free everything
     heap_caps_free(ad);
@@ -654,6 +667,9 @@ void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
 
     // Switch to showing the game
     ad->mState = AMS_GAME;
+
+    // Start playing music
+    globalMidiPlayerPlaySong(&ad->bgm, MIDI_BGM);
 
     // Start the game waiting
     artillerySwitchToGameState(ad, AGS_WAIT);

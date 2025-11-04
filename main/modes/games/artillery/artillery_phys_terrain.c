@@ -439,6 +439,10 @@ bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
     removeVal(&phys->cameraTargets, shell);
 
     phys->terrainMoving = true;
+
+    // Play SFX (explosion)
+    midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, SPLASH_CYMBAL, 0x7F);
+
     return change;
 }
 
