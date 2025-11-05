@@ -36,7 +36,7 @@ until enter/okay is selected.
  * - Directions: navigate the keyboard
  * - A: Select currently highlighted symbol
  * - B: Backspace
- * - Start: Move cursor to the enter key
+ * - Start: Cycle through text entry modes.
  *
  * \section textEntry_example Example
  *
