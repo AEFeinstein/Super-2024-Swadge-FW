@@ -202,8 +202,8 @@ uint8_t* dn_decodeSpace;
 
 // This is in order such that index is the assetIdx.
 static const cnfsFileIdx_t dn_assetToWsgLookup[]
-    = {DN_ALPHA_DOWN_WSG, DN_ALPHA_ORTHO_WSG,  DN_ALPHA_UP_WSG,        DN_KING_WSG,         DN_KING_SMALL_0_WSG,
-       DN_PAWN_WSG,       DN_PAWN_SMALL_0_WSG, DN_BUCKET_HAT_DOWN_WSG, DN_BUCKET_HAT_UP_WSG};
+    = {DN_ALPHA_DOWN_0_WSG, DN_ALPHA_ORTHO_WSG,  DN_ALPHA_UP_0_WSG,        DN_KING_0_WSG,         DN_KING_SMALL_0_WSG,
+       DN_PAWN_0_WSG,       DN_PAWN_SMALL_0_WSG, DN_BUCKET_HAT_DOWN_0_WSG, DN_BUCKET_HAT_UP_0_WSG};
 
 // NVS keys
 const char dnP1TroupeKey[] = "dn_P1_Troupe";
@@ -251,7 +251,7 @@ static void dn_EnterMode(void)
 
     gameData->assets[DN_ALPHA_DOWN_ASSET].originX   = 9;
     gameData->assets[DN_ALPHA_DOWN_ASSET].originY   = 54;
-    gameData->assets[DN_ALPHA_DOWN_ASSET].numFrames = 1;
+    gameData->assets[DN_ALPHA_DOWN_ASSET].numFrames = 17;
 
     gameData->assets[DN_ALPHA_ORTHO_ASSET].originX   = 10;
     gameData->assets[DN_ALPHA_ORTHO_ASSET].originY   = 10;
@@ -259,11 +259,11 @@ static void dn_EnterMode(void)
 
     gameData->assets[DN_ALPHA_UP_ASSET].originX   = 14;
     gameData->assets[DN_ALPHA_UP_ASSET].originY   = 53;
-    gameData->assets[DN_ALPHA_UP_ASSET].numFrames = 1;
+    gameData->assets[DN_ALPHA_UP_ASSET].numFrames = 17;
 
     gameData->assets[DN_KING_ASSET].originX   = 10;
     gameData->assets[DN_KING_ASSET].originY   = 54;
-    gameData->assets[DN_KING_ASSET].numFrames = 1;
+    gameData->assets[DN_KING_ASSET].numFrames = 14;
 
     gameData->assets[DN_KING_SMALL_ASSET].originX   = 4;
     gameData->assets[DN_KING_SMALL_ASSET].originY   = 19;
@@ -271,7 +271,7 @@ static void dn_EnterMode(void)
 
     gameData->assets[DN_PAWN_ASSET].originX   = 10;
     gameData->assets[DN_PAWN_ASSET].originY   = 44;
-    gameData->assets[DN_PAWN_ASSET].numFrames = 1;
+    gameData->assets[DN_PAWN_ASSET].numFrames = 16;
 
     gameData->assets[DN_PAWN_SMALL_ASSET].originX   = 4;
     gameData->assets[DN_PAWN_SMALL_ASSET].originY   = 14;
@@ -279,11 +279,11 @@ static void dn_EnterMode(void)
 
     gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originX   = 10;
     gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originY   = 33;
-    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].numFrames = 1;
+    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].numFrames = 28;
 
     gameData->assets[DN_BUCKET_HAT_UP_ASSET].originX   = 14;
     gameData->assets[DN_BUCKET_HAT_UP_ASSET].originY   = 30;
-    gameData->assets[DN_BUCKET_HAT_UP_ASSET].numFrames = 1;
+    gameData->assets[DN_BUCKET_HAT_UP_ASSET].numFrames = 28;
 
     gameData->assets[DN_GROUND_TILE_ASSET].originX   = 25;
     gameData->assets[DN_GROUND_TILE_ASSET].originY   = 13;
@@ -942,12 +942,12 @@ static void dn_initializeGame(void)
  */
 static void dn_initializeCharacterSelect(void)
 {
-    dn_loadAsset(DN_ALPHA_DOWN_WSG, 1, &gameData->assets[DN_ALPHA_DOWN_ASSET]);
-    dn_loadAsset(DN_ALPHA_UP_WSG, 1, &gameData->assets[DN_ALPHA_UP_ASSET]);
-    dn_loadAsset(DN_BUCKET_HAT_DOWN_WSG, 1, &gameData->assets[DN_BUCKET_HAT_DOWN_ASSET]);
-    dn_loadAsset(DN_BUCKET_HAT_UP_WSG, 1, &gameData->assets[DN_BUCKET_HAT_UP_ASSET]);
-    dn_loadAsset(DN_KING_WSG, 1, &gameData->assets[DN_KING_ASSET]);
-    dn_loadAsset(DN_PAWN_WSG, 1, &gameData->assets[DN_PAWN_ASSET]);
+    dn_loadAsset(DN_ALPHA_DOWN_0_WSG, 1, &gameData->assets[DN_ALPHA_DOWN_ASSET]);
+    dn_loadAsset(DN_ALPHA_UP_0_WSG, 1, &gameData->assets[DN_ALPHA_UP_ASSET]);
+    dn_loadAsset(DN_BUCKET_HAT_DOWN_0_WSG, 1, &gameData->assets[DN_BUCKET_HAT_DOWN_ASSET]);
+    dn_loadAsset(DN_BUCKET_HAT_UP_0_WSG, 1, &gameData->assets[DN_BUCKET_HAT_UP_ASSET]);
+    dn_loadAsset(DN_KING_0_WSG, 1, &gameData->assets[DN_KING_ASSET]);
+    dn_loadAsset(DN_PAWN_0_WSG, 1, &gameData->assets[DN_PAWN_ASSET]);
     dn_loadAsset(DN_GROUND_TILE_0_WSG, 3, &gameData->assets[DN_GROUND_TILE_ASSET]);
     ///////////////////////////////
     // Make the character select //
