@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.11.2" name="mg-entity-tileset" tilewidth="64" tileheight="64" tilecount="46" columns="0" objectalignment="center">
+<tileset version="1.10" tiledversion="1.11.2" name="mg-entity-tileset" tilewidth="64" tileheight="64" tilecount="52" columns="0" objectalignment="center">
  <grid orientation="orthogonal" width="1" height="1"/>
  <tile id="0">
   <image source="mg-object-tiles/tile181.png" width="16" height="16"/>
@@ -139,13 +139,22 @@
  <tile id="148">
   <image source="mg-object-tiles/warp_wall_exit.png" width="16" height="64"/>
  </tile>
-<tile id="149">
+ <tile id="149">
   <image source="mg-object-tiles/placeholder_24x24.png" width="24" height="24"/>
  </tile>
  <tile id="150">
   <image source="mg-object-tiles/placeholder_30x30.png" width="30" height="30"/>
  </tile>
-<tile id="151">
+ <tile id="151">
   <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
+ </tile>
+ <tile id="152">
+  <image source="../../assets/platformer/sprites/CharginSchmuck3.png" width="32" height="32"/>
+ </tile>
+ <tile id="153">
+  <image source="../../assets/platformer/sprites/Turret5.png" width="32" height="32"/>
+ </tile>
+ <tile id="154">
+  <image source="../../assets/platformer/sprites/SpikyMcGee1.png" width="32" height="32"/>
  </tile>
 </tileset>
