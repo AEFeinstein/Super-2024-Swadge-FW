@@ -384,7 +384,7 @@ void ch32v003Teardown()
  *
  * @param slot Must be less than \ref CH32V003_MAX_IMAGE_SLOTS.
  * @param asset_idx Is a .gs.png asset, for instance EYES_DEFAULT_GS (From eyes_default.gs.png).  This image must be
- * 12x6 pixels in size.
+ * ::EYE_LED_W x ::EYE_LED_H pixels in size.
  * @return 0 if OK, nonzero if error.
  */
 int ch32v003WriteBitmapAsset(int slot, int asset_idx)
@@ -396,16 +396,16 @@ int ch32v003WriteBitmapAsset(int slot, int asset_idx)
         printf("Error: Asset wrong size (%d) bytes.\n", (int)sz);
         return -1;
     }
-    if (((const uint16_t*)buf)[0] != 12 || ((const uint16_t*)buf)[1] != 6)
+    if (((const uint16_t*)buf)[0] != EYE_LED_W || ((const uint16_t*)buf)[1] != EYE_LED_H)
     {
-        printf("Error: Asset wrong dimensions (%d x %d) needs (12 x 6).\n", ((const uint16_t*)buf)[0],
-               ((const uint16_t*)buf)[1]);
+        printf("Error: Asset wrong dimensions (%d x %d) needs (%d, %d).\n", ((const uint16_t*)buf)[0],
+               ((const uint16_t*)buf)[1], EYE_LED_W, EYE_LED_H);
         return -1;
     }
 
     struct PixelMap
     {
-        uint8_t buffer[6][12];
+        uint8_t buffer[EYE_LED_H][EYE_LED_W];
     };
     struct PixelMap* pm = (struct PixelMap*)(buf + 4);
 
@@ -413,13 +413,13 @@ int ch32v003WriteBitmapAsset(int slot, int asset_idx)
 }
 
 /**
- * @brief Write a 12x6 pixel greyscale image into a RAM slot on the ch32v003.
+ * @brief Write a ::EYE_LED_W x ::EYE_LED_H pixel greyscale image into a RAM slot on the ch32v003.
  *
  * @param slot Must be less than \ref CH32V003_MAX_IMAGE_SLOTS.
  * @param pixels are a greyscale image to be written out.
  * @return 0 if OK, nonzero if error.
  */
-int ch32v003WriteBitmap(int slot, const uint8_t pixels[6][12])
+int ch32v003WriteBitmap(int slot, const uint8_t pixels[EYE_LED_H][EYE_LED_W])
 {
     if (slot >= CH32V003_MAX_IMAGE_SLOTS)
     {
@@ -431,8 +431,8 @@ int ch32v003WriteBitmap(int slot, const uint8_t pixels[6][12])
 
     int i, x, y;
 
-    for (y = 0; y < 6; y++)
-        for (x = 0; x < 12; x++)
+    for (y = 0; y < EYE_LED_H; y++)
+        for (x = 0; x < EYE_LED_W; x++)
         {
             int intensity = pixels[y][x];
             int coord     = Coordmap[x * 8 + (5 - y)];

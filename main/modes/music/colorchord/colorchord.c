@@ -64,6 +64,7 @@ typedef struct
     int32_t eyeTimer;
     uint16_t binAvgHist[EYE_FPS];
     int32_t bahIdx;
+    uint8_t barHeights[EYE_LED_W];
 } colorchord_t;
 
 //==============================================================================
@@ -262,12 +263,9 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
     drawText(getSysFont(), c555, exitText, (TFT_WIDTH - exitWidth) / 2, TFT_HEIGHT - getSysFont()->height - TEXT_Y);
 
     RUN_TIMER_EVERY(colorchord->eyeTimer, EYE_FPS_US, elapsedUs, {
-
-#define LED_W 12
-#define LED_H 6
         // There are 24 bins and 12 columns, so average every two bins into a column
-        uint16_t binAvgs[LED_W] = {0};
-        uint16_t maxBinAvg      = 0;
+        uint16_t binAvgs[EYE_LED_W] = {0};
+        uint16_t maxBinAvg          = 0;
         for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(binAvgs); bIdx++)
         {
             binAvgs[bIdx] = (colorchord->end.folded_bins[2 * bIdx] + colorchord->end.folded_bins[(2 * bIdx) + 1]) / 2;
@@ -301,19 +299,28 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
         {
             for (int32_t bIdx = 0; bIdx < ARRAY_SIZE(binAvgs); bIdx++)
             {
-                binAvgs[bIdx] = ((1 + LED_H) * binAvgs[bIdx]) / maxBinAvg;
+                binAvgs[bIdx] = ((1 + EYE_LED_H) * binAvgs[bIdx]) / maxBinAvg;
+
+                if (binAvgs[bIdx] > colorchord->barHeights[bIdx])
+                {
+                    colorchord->barHeights[bIdx] = binAvgs[bIdx];
+                }
+                else if (colorchord->barHeights[bIdx])
+                {
+                    colorchord->barHeights[bIdx]--;
+                }
             }
         }
 
         // Draw bars to the eye LEDs
-        uint8_t bitmap[LED_H][LED_W] = {0};
-        for (int x = 0; x < LED_W; x++)
+        uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
+        for (int x = 0; x < EYE_LED_W; x++)
         {
-            for (int y = 0; y < LED_H; y++)
+            for (int y = 0; y < EYE_LED_H; y++)
             {
-                if (y > (LED_H - binAvgs[x]))
+                if (y > (EYE_LED_H - colorchord->barHeights[x]))
                 {
-                    bitmap[LED_H - 1 - y][x] = 0xFF;
+                    bitmap[EYE_LED_H - 1 - y][x] = EYE_LED_BRIGHT;
                 }
             }
         }
