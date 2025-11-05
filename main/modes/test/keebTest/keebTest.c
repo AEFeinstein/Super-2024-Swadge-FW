@@ -109,7 +109,7 @@ static void drawIncidentalBG(void);
 const char keebTestName[] = "Keyboard Test"; // Doubles as mode name
 
 static const char teMenuStart[]  = "Start Typing!";
-static const char teFontSelect[] = "Choose font";
+static const char teFontSelect[] = "Choose font: ";
 static const char teMenuReset[]  = "Reset TextEntry";
 
 static const char textSamplePrompt[] = "Type some text!";

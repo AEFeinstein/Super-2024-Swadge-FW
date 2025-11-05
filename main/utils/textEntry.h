@@ -7,36 +7,36 @@
  *
  * \section textEntry_usage Usage
  *
- * Text entry in initialize with textEntryInit(), where the settings, string pointer and the desired font are
+ * Initialize text entry with textEntryInit(), where the settings, string pointer and the desired font are
  * provided. By default, a blank, black background is used with white text and red as the emphasis color.
- *
  * textEntryInit() can be called once during initialization or just before the text entry is required, but cannot be
  * inside the loop or it will not function.
  *
- * The text entry is re-drawn from scratch every cycle.
- *
  * Settings:
- * - textPrompt: The text prompt at the top of the screen
- * - maxLen: The maximum length that the string may build to
- * - startKMod: There are several capitalization modes. This sets the initial mode. The options are TE_NO_SHIFT,
-TE_SHIFT, TE_CAPS_LOCK, and TE_PROPER_NOUN
- * - useMultiLine: Uses a larger text box for longer strings
- * - useNewCapsStyle: Use the second capslock style
- * - useOKEnterStyle: Use 'OK' instead of the return symbol
- * - blink: If the cursor should blink
- * - textColor: Color of most of the text in the UI
- * - emphasisColor: Color of certain UI elements to help users
- * - bgColor: Color that the background is drawn, set to cTransparent to not draw anything
- * - shadowboxColor: Color of shadowboxes drawn to allow text to stand out. Set to cTransparent to not draw
+ * - textEntrySettings_t.textPrompt: The text prompt at the top of the screen
+ * - textEntrySettings_t.maxLen: The maximum length that the string may build to
+ * - textEntrySettings_t.startKMod: There are several capitalization modes. This sets the initial mode. The options are
+::TE_NO_SHIFT,
+::TE_SHIFT, ::TE_CAPS_LOCK, and ::TE_PROPER_NOUN
+ * - textEntrySettings_t.useMultiLine: Uses a larger text box for longer strings
+ * - textEntrySettings_t.useNewCapsStyle: Use the second caps lock style
+ * - textEntrySettings_t.useOKEnterStyle: Use 'OK' instead of the return symbol
+ * - textEntrySettings_t.blink: If the cursor should blink
+ * - textEntrySettings_t.textColor: Color of most of the text in the UI
+ * - textEntrySettings_t.emphasisColor: Color of certain UI elements to help users
+ * - textEntrySettings_t.bgColor: Color that the background is drawn, set to cTransparent to not draw anything
+ * - textEntrySettings_t.shadowboxColor: Color of shadowboxes drawn to allow text to stand out. Set to cTransparent to
+not draw
  *
  * After all of the initialization is done, use textEntryDraw() to draw the current text entry box and textEntryInput()
- * to send inputs to the tent entry. textEntryInput() returns false until enter/okay is selected.
+ * to send inputs to the tent entry. The text entry is re-drawn from scratch every cycle. textEntryInput() returns false
+until enter/okay is selected.
  *
  * The controls are as follows:
- * Directions: navigate the keyboard
- * A: Select currently highlighted symbol
- * B: Backspace
- * Start: Move cursor to the enter key
+ * - Directions: navigate the keyboard
+ * - A: Select currently highlighted symbol
+ * - B: Backspace
+ * - Start: Move cursor to the enter key
  *
  * \section textEntry_example Example
  *
