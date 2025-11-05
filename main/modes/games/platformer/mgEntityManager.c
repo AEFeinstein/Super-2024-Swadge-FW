@@ -1640,7 +1640,7 @@ mgEntity_t* createCharginSchmuck(mgEntityManager_t* entityManager, uint16_t x, u
     entity->hp                   = 12;
 
     entity->type                 = ENTITY_CHARGIN_SCHMUCK;
-    entity->spriteIndex          = MG_SP_CHARGIN_SCHMUCK_IDLE;
+    entity->spriteIndex          = MG_SP_CHARGIN_SCHMUCK_RUN1;
     entity->state                = 0;
     entity->updateFunction       = &mg_updateCharginSchmuck;
     entity->collisionHandler     = &mg_enemyCollisionHandler;
@@ -1680,7 +1680,7 @@ mgEntity_t* createBouncinSchmuck(mgEntityManager_t* entityManager, uint16_t x, u
     entity->hp                   = 3;
 
     entity->type                 = ENTITY_BOUNCIN_SCHMUCK;
-    entity->spriteIndex          = MG_SP_CHARGIN_SCHMUCK_IDLE;
+    entity->spriteIndex          = MG_SP_CHARGIN_SCHMUCK_RUN1;
     entity->updateFunction       = &mg_updateDummy;
     entity->collisionHandler     = &mg_enemyCollisionHandler;
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;

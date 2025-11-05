@@ -201,18 +201,18 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(HP_BOSS_TOP_4_WSG, &self->wsgs[MG_WSG_HP_BOSS_TOP_4], false);
     loadWsg(HP_BOSS_TOP_5_WSG, &self->wsgs[MG_WSG_HP_BOSS_TOP_5], false);
     loadWsg(HP_BOSS_TOP_6_WSG, &self->wsgs[MG_WSG_HP_BOSS_TOP_6], false);
-    loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_IDLE], false);
-    loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN1], false);
-    loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN2], false);
-    loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_TURRET_HORIZONTAL], false);
-    loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_TURRET_45DEG], false);
-    loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_TURRET_VERTICAL], false);
+    loadWsg(SPIKY_MC_GEE_2_WSG, &self->wsgs[MG_WSG_SPIKY_MCGEE_2], false);
+    loadWsg(CHARGIN_SCHMUCK_3_WSG, &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN1], false);
+    loadWsg(CHARGIN_SCHMUCK_4_WSG, &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN2], false);
+    loadWsg(TURRET_5_WSG, &self->wsgs[MG_WSG_TURRET_HORIZONTAL], false);
+    loadWsg(TURRET_4_WSG, &self->wsgs[MG_WSG_TURRET_45DEG], false);
+    loadWsg(TURRET_3_WSG, &self->wsgs[MG_WSG_TURRET_VERTICAL], false);
     loadWsg(TILE_TBD_WSG, &self->wsgs[MG_WSG_LEMON_SHOT], false);
     loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_SHELDON_SHIELDY_SHIELD], false);
     loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_SHELDON_SHIELDY_WALK1], false);
     loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_SHELDON_SHIELDY_WALK2], false);
     loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_SHELDON_SHIELDY_WALK3], false);
-    loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_SPIKY_MCGEE], false);
+    loadWsg(SPIKY_MC_GEE_1_WSG, &self->wsgs[MG_WSG_SPIKY_MCGEE], false);
     loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_AIR_TURRET], false);
     loadWsg(KD_BURGER_BOUNCE_UPRIGHT_WSG, &self->wsgs[MG_WSG_BOUNCE_PAD], false);
     loadWsg(KD_BURGER_BOUNCE_DIAGONAL_WSG, &self->wsgs[MG_WSG_BOUNCE_PAD_DIAGONAL], false);
@@ -503,28 +503,28 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_INVISIBLE_WARP_FLOOR].origin = &origin_31_7;
     self->sprites[MG_SP_INVISIBLE_WARP_FLOOR].hitBox = &box_64_16;
 
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_IDLE].wsg    = &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_IDLE];
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_IDLE].origin = &origin_15_15;
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_IDLE].hitBox = &box_30_30;
+    self->sprites[MG_SP_SPIKY_MCGEE_2].wsg    = &self->wsgs[MG_WSG_SPIKY_MCGEE_2];
+    self->sprites[MG_SP_SPIKY_MCGEE_2].origin = &origin_11_11;
+    self->sprites[MG_SP_SPIKY_MCGEE_2].hitBox = &box_24_24;
 
     self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN1].wsg    = &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN1];
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN1].origin = &origin_11_11;
+    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN1].origin = &origin_15_15;
     self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN1].hitBox = &box_30_30;
 
     self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN2].wsg    = &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN2];
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN2].origin = &origin_11_11;
+    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN2].origin = &origin_15_15;
     self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN2].hitBox = &box_30_30;
 
     self->sprites[MG_SP_TURRET_HORIZONTAL].wsg    = &self->wsgs[MG_WSG_TURRET_HORIZONTAL];
-    self->sprites[MG_SP_TURRET_HORIZONTAL].origin = &origin_11_11;
+    self->sprites[MG_SP_TURRET_HORIZONTAL].origin = &origin_15_15;
     self->sprites[MG_SP_TURRET_HORIZONTAL].hitBox = &box_24_24;
 
     self->sprites[MG_SP_TURRET_45DEG].wsg    = &self->wsgs[MG_WSG_TURRET_45DEG];
-    self->sprites[MG_SP_TURRET_45DEG].origin = &origin_11_11;
+    self->sprites[MG_SP_TURRET_45DEG].origin = &origin_15_15;
     self->sprites[MG_SP_TURRET_45DEG].hitBox = &box_24_24;
 
     self->sprites[MG_SP_TURRET_VERTICAL].wsg    = &self->wsgs[MG_WSG_TURRET_VERTICAL];
-    self->sprites[MG_SP_TURRET_VERTICAL].origin = &origin_11_11;
+    self->sprites[MG_SP_TURRET_VERTICAL].origin = &origin_15_15;
     self->sprites[MG_SP_TURRET_VERTICAL].hitBox = &box_24_24;
 
     self->sprites[MG_SP_LEMON_SHOT].wsg    = &self->wsgs[MG_WSG_LEMON_SHOT];
