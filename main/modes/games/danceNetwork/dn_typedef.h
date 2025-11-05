@@ -161,5 +161,5 @@ typedef struct __attribute__((packed))
 typedef struct __attribute__((packed))
 {
     char title[31];
-    char body[160];
+    char body[170];
 } dn_tutorialPage_t;
