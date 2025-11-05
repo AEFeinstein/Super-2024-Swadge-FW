@@ -277,6 +277,21 @@ static const cnfsFileIdx_t glassesWsgs[] = {
     G_WIDE_NOSE_SUN_WSG,
 };
 
+// Text Entry
+static const textEntrySettings_t tes = {
+    .textPrompt      = prompt,
+    .maxLen          = MAX_NAME_LEN,
+    .startKMod       = TE_PROPER_NOUN,
+    .useMultiLine    = false,
+    .useNewCapsStyle = true,
+    .useOKEnterStyle = false,
+    .blink           = true,
+    .textColor       = c555,
+    .emphasisColor   = c500,
+    .bgColor         = cTransparent,
+    .shadowboxColor  = c202, // c202
+};
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -515,7 +530,7 @@ static void swsnLoop(int64_t elapsedUs)
                 {
                     scd->state = CREATING;
                 }
-                done = !textEntryInput(evt.down, evt.button);
+                done = textEntryInput(evt);
             }
             if (done)
             {
@@ -524,8 +539,10 @@ static void swsnLoop(int64_t elapsedUs)
                 writeNamespaceNvsBlob(NVSStrings[0], buffer, &scd->activeSona.core, sizeof(swadgesonaCore_t));
                 snprintf(buffer, sizeof(buffer) - 1, "%s%d%s", NVSStrings[1], scd->slot, NVSStrings[2]);
                 writeNamespaceNvsBlob(NVSStrings[0], buffer, &scd->nickname, MAX_NAME_LEN);
+                textEntryDeinit();
                 scd->state      = CREATING;
                 scd->hasChanged = false;
+                break;
             }
             drawCreator();
             textEntryDraw(elapsedUs);
@@ -904,12 +921,7 @@ static void drawCreator(void)
 static void initTextEntry(void)
 {
     scd->state = NAMING;
-    textEntryInit(getSysFont(), MAX_NAME_LEN, scd->nickname);
-    textEntrySetBGTransparent();
-    textEntrySetNewEnterStyle(false);
-    textEntrySetPrompt(prompt);
-    textEntrySetNounMode();
-    textEntrySetShadowboxColor(true, c202);
+    textEntryInit(&tes, &scd->nickname, getSysFont());
     scd->selection = 0;
 }
 

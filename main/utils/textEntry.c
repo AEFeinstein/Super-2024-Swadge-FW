@@ -308,8 +308,10 @@ bool textEntryDraw(int64_t elapsedUs)
         return false;
     }
     // Background
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT,
-                    te->tes->bgColor); // Always draw, if it's cTransparent it'll end quick enough
+    if (te->tes->bgColor != cTransparent)
+    {
+        fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, te->tes->bgColor);
+    }
     // Draw an indicator for the current key modifier
     _drawTypeMode();
     // Draw the rest of the owl
@@ -356,17 +358,23 @@ static int16_t _drawStr(int16_t endH, int64_t eUs)
         int16_t startY = CORNER_MARGIN;
         int16_t endX   = TFT_WIDTH - CORNER_MARGIN;
         int16_t endY   = endH - CORNER_MARGIN;
-        fillDisplayArea(startX - SHADOWBOX_MARGIN, startY - SHADOWBOX_MARGIN, endX + SHADOWBOX_MARGIN,
-                        endY + SHADOWBOX_MARGIN, te->tes->shadowboxColor);
+        if (te->tes->shadowboxColor != cTransparent)
+        {
+            fillDisplayArea(startX - SHADOWBOX_MARGIN, startY - SHADOWBOX_MARGIN, endX + SHADOWBOX_MARGIN,
+                            endY + SHADOWBOX_MARGIN, te->tes->shadowboxColor);
+        }
         drawTextWordWrap(te->font, te->tes->textColor, te->text, &startX, &startY, endX, endY);
         return startY - SHADOWBOX_MARGIN;
     }
     else
     {
         int16_t hStart = endH - ((te->font->height + SHADOWBOX_MARGIN) * 2);
-        fillDisplayArea(CORNER_MARGIN - SHADOWBOX_MARGIN, hStart - SHADOWBOX_MARGIN,
-                        TFT_WIDTH - CORNER_MARGIN + SHADOWBOX_MARGIN, hStart + te->font->height + SHADOWBOX_MARGIN,
-                        te->tes->shadowboxColor);
+        if (te->tes->shadowboxColor != cTransparent)
+        {
+            fillDisplayArea(CORNER_MARGIN - SHADOWBOX_MARGIN, hStart - SHADOWBOX_MARGIN,
+                            TFT_WIDTH - CORNER_MARGIN + SHADOWBOX_MARGIN, hStart + te->font->height + SHADOWBOX_MARGIN,
+                            te->tes->shadowboxColor);
+        }
         int16_t textLen = textWidth(te->font, te->text) + te->font->chars[0].width;
         int16_t endPos  = drawText(te->font, te->tes->textColor, te->text, (TFT_WIDTH - textLen) / 2, hStart);
         _drawCursor(eUs, endPos, hStart);
@@ -385,8 +393,11 @@ static int16_t _drawKeyboard()
     int16_t StartX         = (TFT_WIDTH >> 1) - ((lengthPerLine[0] * (width + KEY_SPACING)) >> 1);
     int16_t keyboardHeight = KB_LINES * (te->font->height + KEY_SPACING);
     int16_t StartY         = TFT_HEIGHT - (keyboardHeight + te->font->height + (3 * SHADOWBOX_MARGIN));
-    fillDisplayArea(StartX - SHADOWBOX_MARGIN, StartY - SHADOWBOX_MARGIN, TFT_WIDTH - StartX + SHADOWBOX_MARGIN,
-                    StartY + keyboardHeight, te->tes->shadowboxColor);
+    if (te->tes->shadowboxColor != cTransparent)
+    {
+        fillDisplayArea(StartX - SHADOWBOX_MARGIN, StartY - SHADOWBOX_MARGIN, TFT_WIDTH - StartX + SHADOWBOX_MARGIN,
+                        StartY + keyboardHeight, te->tes->shadowboxColor);
+    }
     int col = 0;
     int row = 0;
     char c;
@@ -521,8 +532,12 @@ static void _drawTypeMode()
     }
     int16_t typingWidth = textWidth(te->font, modeStrs[0]);
     int16_t width       = textWidth(te->font, text) + typingWidth;
-    fillDisplayArea((TFT_WIDTH - width) / 2 - SHADOWBOX_MARGIN, TFT_HEIGHT - (te->font->height + 4 + SHADOWBOX_MARGIN),
-                    (TFT_WIDTH + width) / 2 + SHADOWBOX_MARGIN, TFT_HEIGHT, te->tes->shadowboxColor);
+    if (te->tes->shadowboxColor != cTransparent)
+    {
+        fillDisplayArea((TFT_WIDTH - width) / 2 - SHADOWBOX_MARGIN,
+                        TFT_HEIGHT - (te->font->height + 4 + SHADOWBOX_MARGIN),
+                        (TFT_WIDTH + width) / 2 + SHADOWBOX_MARGIN, TFT_HEIGHT, te->tes->shadowboxColor);
+    }
     char buffer[32];
     snprintf(buffer, sizeof(buffer) - 1, "%s%s", modeStrs[0], text);
     drawText(te->font, te->tes->textColor, buffer, (TFT_WIDTH - width) / 2, TFT_HEIGHT - te->font->height - 4);
@@ -549,16 +564,22 @@ static void _drawPrompt(int16_t hPos)
     int16_t width = textWidth(te->font, te->tes->textPrompt);
     if (te->tes->useMultiLine)
     {
-        fillDisplayArea(CORNER_MARGIN, 0, CORNER_MARGIN + width + (2 * SHADOWBOX_MARGIN),
-                        te->font->height + (2 * SHADOWBOX_MARGIN), te->tes->shadowboxColor);
+        if (te->tes->shadowboxColor != cTransparent)
+        {
+            fillDisplayArea(CORNER_MARGIN, 0, CORNER_MARGIN + width + (2 * SHADOWBOX_MARGIN),
+                            te->font->height + (2 * SHADOWBOX_MARGIN), te->tes->shadowboxColor);
+        }
         drawText(te->font, te->tes->emphasisColor, te->tes->textPrompt, CORNER_MARGIN + SHADOWBOX_MARGIN,
                  SHADOWBOX_MARGIN);
     }
     else
     {
-        fillDisplayArea((TFT_WIDTH - width) / 2 - SHADOWBOX_MARGIN, hPos - (te->font->height + (3 * SHADOWBOX_MARGIN)),
-                        (TFT_WIDTH + width) / 2 + (2 * SHADOWBOX_MARGIN), hPos - SHADOWBOX_MARGIN,
-                        te->tes->shadowboxColor);
+        if (te->tes->shadowboxColor != cTransparent)
+        {
+            fillDisplayArea(
+                (TFT_WIDTH - width) / 2 - SHADOWBOX_MARGIN, hPos - (te->font->height + (3 * SHADOWBOX_MARGIN)),
+                (TFT_WIDTH + width) / 2 + (2 * SHADOWBOX_MARGIN), hPos - SHADOWBOX_MARGIN, te->tes->shadowboxColor);
+        }
         drawText(te->font, te->tes->emphasisColor, te->tes->textPrompt, (TFT_WIDTH - width) / 2,
                  hPos - (te->font->height + (2 * SHADOWBOX_MARGIN)));
     }
