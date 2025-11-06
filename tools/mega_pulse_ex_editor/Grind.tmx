@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="255" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="413">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="255" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="414">
  <editorsettings>
   <export target="../../../../../Downloads/Grind.bin" format="Mega Pulse EX"/>
  </editorsettings>
@@ -315,6 +315,7 @@
   <object id="409" template="templates/Scroll Lock (Up).tx" x="2744" y="1032"/>
   <object id="410" template="templates/Scroll Lock (Right).tx" x="3380" y="1144"/>
   <object id="411" template="templates/Scroll Lock (Down).tx" x="2776" y="1256"/>
+  <object id="413" template="templates/Scroll Lock (Down).tx" x="88" y="680"/>
  </objectgroup>
  <objectgroup id="3" name="Annotations">
   <object id="43" x="292" y="684" width="296" height="256"/>
