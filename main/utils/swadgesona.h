@@ -207,6 +207,7 @@ typedef enum
 /// @brief Accessories, beauty marks, etc options
 typedef enum
 {
+    BME_AVATAR,
     BME_NONE,
     BME_BEARD,
     BME_BLUSH,
@@ -215,6 +216,7 @@ typedef enum
     BME_CHIN,
     BME_CHIN_PATCH,
     BME_CHIN_STRAP,
+    BME_CHOKER,
     BME_COP,
     BME_COWBOY,
     BME_EYE_MOLE,
@@ -225,6 +227,7 @@ typedef enum
     BME_LESS_WISE,
     BME_MAGICIAN,
     BME_MARILYN,
+    BME_NECK_BLOOD,
     BME_OLD,
     BME_PILLOW,
     BME_S_AND_P,
@@ -232,6 +235,7 @@ typedef enum
     BME_SMALL_CURL,
     BME_SMALL_STACHE,
     BME_SOUL_PATCH,
+    BME_SPIKED_NECKLACE,
     BME_STACHE_AND_STRAP,
     BME_STRONGMAN,
     BME_THIN_CHIN,
@@ -292,12 +296,14 @@ typedef enum
     EE_BABY,
     EE_BIG,
     EE_BIG_LINER,
+    EE_BLOOD,
     EE_BOOPED,
     EE_CAT,
     EE_CLOSED,
     EE_CLOSED_LASHES,
     EE_CLOSED_LINER,
     EE_CRAZY,
+    EE_CRYING,
     EE_CROSSES,
     EE_CUTE,
     EE_DOOFY,
@@ -378,22 +384,29 @@ typedef enum
 typedef enum
 {
     HAE_NONE,
+    HAE_ANGEL,
     HAE_BATTRICE,
     HAE_BEANIE,
     HAE_BIGMA,
     HAE_CHEF,
     HAE_COOL_HAT,
     HAE_COWBOY,
+    HAE_DEVIL,
     HAE_GARBOTNIK,
     HAE_GRAD_CAP,
     HAE_HEART,
+    HAE_HOMESTUCK,
     HAE_KINETIC_DONUT,
     HAE_MET_HELMET,
+    HAE_MINI_HOMESTUCK,
     HAE_PUFFBALL,
     HAE_PULSE,
     HAE_SAWTOOTH,
+    HAE_TALL_HOMESTUCK,
+    HAE_TINY_HOMESTUCK,
     HAE_TRON,
     HAE_COUNT,
+    HAE_WIDE_HOMESTUCK,
 } hat_t;
 
 /// @brief List of mouth options
@@ -446,6 +459,7 @@ typedef enum
     G_BIGSQUARE,
     G_BIGSQUARE_SUN,
     G_BLACK_SUN,
+    G_CUTE_PATCH,
     G_EGGMAN,
     G_GOEORDI,
     G_LINDA,
@@ -489,16 +503,16 @@ typedef struct __attribute__((packed))
     glassesColor_t glassesColor : 2;
 
     // Facial features
-    bodyMarks_t bodyMarks   : 5;
+    bodyMarks_t bodyMarks   : 6;
     earsShape_t earShape    : 4;
     eyebrowShape_t eyebrows : 5;
     eyeShape_t eyeShape     : 5;
     hairStyle_t hairStyle   : 6;
     hat_t hat               : 5;
     mouthShape_t mouthShape : 5;
-    glasses_t glasses       : 5;
+    glasses_t glasses       : 6;
 
-    // 24 + 40 + 32 = 96 / 8 = 12 bytes
+    // 24 + 42 + 32 = 98 / 8 = 13 bytes
 } swadgesonaCore_t;
 
 /// @brief Larger data for use of use
