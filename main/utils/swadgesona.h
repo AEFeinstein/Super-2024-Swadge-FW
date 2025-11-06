@@ -83,6 +83,8 @@ generateRandomSwadgesona(&sw);
 #include "nameList.h"
 #include "wsgPalette.h"
 
+extern const char spSonaNVSKey[];
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -538,6 +540,12 @@ void saveSwadgesona(swadgesona_t* sw, int idx);
  */
 void loadSwadgesona(swadgesona_t* sw, int idx);
 
+/**
+ * @brief Copy one swadgesona to another
+ * 
+ * @param to The swadgesona to copy to
+ * @param from The source swadgesona
+ */
 void copySwadgesona(swadgesona_t* to, swadgesona_t* from);
 
 /**
@@ -555,6 +563,13 @@ void generateRandomSwadgesona(swadgesona_t* sw);
  * @param drawBody Whether or not to draw the shirt/neck
  */
 void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody);
+
+/**
+ * @brief Loads the swadgepass sona
+ * 
+ * @param sw Data out. Is set to NULL if nothing is loaded
+ */
+void loadSPSona(swadgesona_t* sw);
 
 // Get indexes
 /**

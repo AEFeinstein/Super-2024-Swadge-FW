@@ -39,6 +39,7 @@
 //==============================================================================
 
 static const char* const nvsStr[] = {"swadgesona", "swadgesona-"};
+const char spSonaNVSKey[]         = "spSona";
 
 static const cnfsFileIdx_t bodymarksWsgs[] = {
     BM_BEARD_WSG,      BM_BLUSH_WSG,         BM_BOTTOM_MOLE_WSG,  BM_BOTTOM_WSG,       BM_CHIN_WSG,
@@ -361,7 +362,8 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
         wsgPaletteReset(&sw->pal);
         _getPaletteFromIdx(&sw->pal, COLOR_HAIR, sw->core.hairColor);
         canvasDrawSimplePal(&sw->image, hairWsgs[sw->core.hairStyle - 1], 0, 0, &sw->pal);
-    } else if (sw->core.hairStyle == HE_JINX)
+    }
+    else if (sw->core.hairStyle == HE_JINX)
     {
         wsgPaletteReset(&sw->pal);
         _getPaletteFromIdx(&sw->pal, COLOR_HAIR, sw->core.hairColor);
@@ -432,6 +434,15 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
         }
         // Draw hat
         canvasDrawSimplePal(&sw->image, hatWsgs[sw->core.hat - 1], 0, 0, &sw->pal);
+    }
+}
+
+void loadSPSona(swadgesona_t* sw)
+{
+    size_t len = sizeof(swadgesonaCore_t);
+    if (!readNvsBlob(spSonaNVSKey, sw, &len))
+    {
+        sw = NULL;
     }
 }
 

@@ -75,10 +75,7 @@ static const char prompt[]                = "Name this Swadgesona";
 
 // Main
 static const char* const menuOptions[] = {
-    "Create!",
-    "View",
-    "cursor: ",
-    "Exit",
+    "Create!", "View", "cursor: ", "Exit", "Edit SwadgePass Sona",
 };
 static const char* const cursorOptions[] = {
     "Default", "Ball",         "Beaker", "Bow",   "Candy Cane", "Carrot", "White Paw", "Black Paw",  "Computer cursor",
@@ -301,6 +298,7 @@ typedef enum
     MENU,
     CREATING,
     NAMING,
+    SP_NAMING,
     PROMPT_SAVE,
     VIEWING,
 } swsnCreatorState_t;
@@ -548,6 +546,25 @@ static void swsnLoop(int64_t elapsedUs)
             textEntryDraw(elapsedUs);
             break;
         }
+        case SP_NAMING:
+        {
+            bool done = false;
+            while (checkButtonQueueWrapper(&evt))
+            {
+                done = handleUsernamePickerInput(&evt, &scd->activeSona.name);
+            }
+            if (done)
+            {
+                strcpy(scd->nickname, scd->activeSona.name.nameBuffer);
+                setSystemUsername(&scd->activeSona.name);
+                writeNvsBlob(spSonaNVSKey, &scd->activeSona.core, sizeof(swadgesonaCore_t));
+                scd->state      = CREATING;
+                scd->hasChanged = false;
+                break;
+            }
+            drawUsernamePicker(&scd->activeSona.name);
+            break;
+        }
         case PROMPT_SAVE:
         {
             while (checkButtonQueueWrapper(&evt))
@@ -605,6 +622,29 @@ static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             // Exit the mode
             switchToSwadgeMode(&mainMenuMode);
+        }
+        else if (label == menuOptions[4])
+        {
+            // Set swadgepass swadgesona
+            // Pull data from NVS
+            size_t len = sizeof(swadgesonaCore_t);
+            if (!readNvsBlob(spSonaNVSKey, &scd->activeSona.core, &len))
+            {
+                generateRandomSwadgesona(&scd->activeSona);
+            }
+            else
+            {
+                generateSwadgesonaImage(&scd->activeSona, true);
+            }
+
+            // Move to creator mode
+            scd->activeSona.name = *getSystemUsername();
+            strcpy(scd->nickname, scd->activeSona.name.nameBuffer);
+
+            scd->slot  = 255; // Indicates it's the SP Sona
+            scd->state = CREATING;
+            readNvs32(cursorNVS, &scd->cursorType);
+            loadWsg(scd->cursorType, &scd->cursorImage, true);
         }
         else if (label != menuOptions[2] && label != menuOptions[0])
         {
@@ -680,6 +720,7 @@ static void swsnResetMenu()
         }
     }
     scd->menu = endSubMenu(scd->menu);
+    addSingleItemToMenu(scd->menu, menuOptions[4]);
     addSingleItemToMenu(scd->menu, menuOptions[1]);
 
     // Cursor
@@ -920,9 +961,15 @@ static void drawCreator(void)
 // Text entry / prompt save
 static void initTextEntry(void)
 {
-    scd->state = NAMING;
-    textEntryInit(&tes, &scd->nickname, getSysFont());
-    scd->selection = 0;
+    if (scd->slot == 255)
+    {
+        scd->state = SP_NAMING;
+    }
+    else
+    {
+        scd->state = NAMING;
+        textEntryInit(&tes, scd->nickname, getSysFont());
+    }
 }
 
 static bool promptSaveBeforeQuit()
