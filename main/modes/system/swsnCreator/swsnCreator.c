@@ -379,7 +379,7 @@ typedef struct
     // Menu
     menu_t* menu;
     menuMegaRenderer_t* renderer;
-    char savedNames[MAX_SWSN_SLOTS][MAX_STR_LEN];
+    char savedNames[MAX_SWSN_SLOTS][MAX_STR_LEN + 12];
 
     // Creator
     creatorStates_t cState;  // Sub-state
@@ -517,7 +517,7 @@ static void swsnExitMode(void)
 
 static void swsnLoop(int64_t elapsedUs)
 {
-    buttonEvt_t evt;
+    buttonEvt_t evt = {0};
     switch (scd->state)
     {
         case MENU:
@@ -754,13 +754,13 @@ static void swsnResetMenu()
     scd->menu     = initMenu(sonaMenuName, swsnMenuCb);
     scd->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
     scd->menu     = startSubMenu(scd->menu, menuOptions[0]);
-    for (int16_t idx = 0; idx < MAX_SWSN_SLOTS; idx++)
+    for (int8_t idx = 0; idx < MAX_SWSN_SLOTS; idx++)
     {
-        char nvsBuffer[16];
+        char nvsBuffer[32];
         size_t len;
         snprintf(nvsBuffer, sizeof(nvsBuffer) - 1, "%s%d%s", NVSStrings[1], idx, NVSStrings[2]);
         readNamespaceNvsBlob(NVSStrings[0], nvsBuffer, NULL, &len);
-        char buff[MAX_STR_LEN - 9];
+        char buff[MAX_STR_LEN];
         if (!readNamespaceNvsBlob(NVSStrings[0], nvsBuffer, buff, &len))
         {
             snprintf(scd->savedNames[idx], sizeof(scd->savedNames[idx]) - 1, "Slot %d: %s", idx + 1,
