@@ -786,40 +786,60 @@ static void runCreator(buttonEvt_t evt)
     {
         if (evt.down)
         {
-            if (evt.button & PB_UP)
+            if (scd->selection >= (NUM_TABS_PER_SIDE * 2))
             {
-                scd->selection--;
-                if (scd->selection < 0)
+                if (evt.button & PB_DOWN)
+                {
+                    if (scd->selection == EXIT)
+                    {
+                        scd->selection = NUM_TABS_PER_SIDE;
+                    }
+                    else if (scd->selection == SAVE)
+                    {
+                        scd->selection = 0;
+                    }
+                }
+                else if (evt.button & PB_RIGHT)
                 {
                     scd->selection = EXIT;
                 }
-                else if (scd->selection >= (NUM_TABS_PER_SIDE * 2) && scd->selection < SAVE)
-                {
-                    scd->selection = (NUM_TABS_PER_SIDE * 2) - 1;
-                }
-            }
-            else if (evt.button & PB_DOWN)
-            {
-                scd->selection++;
-                if (scd->selection > EXIT)
-                {
-                    scd->selection = 0;
-                }
-                else if (scd->selection >= (NUM_TABS_PER_SIDE * 2) && scd->selection < SAVE)
+                else if (evt.button & PB_LEFT)
                 {
                     scd->selection = SAVE;
                 }
             }
-            else if (evt.button & PB_LEFT && scd->selection >= NUM_TABS_PER_SIDE
-                     && scd->selection < (NUM_TABS_PER_SIDE * 2))
+            else
             {
-                scd->selection -= NUM_TABS_PER_SIDE;
+                if (evt.button & PB_UP)
+                {
+                    scd->selection--;
+                    if (scd->selection < 0)
+                    {
+                        scd->selection = SAVE;
+                    }
+                    else if (scd->selection == NUM_TABS_PER_SIDE - 1)
+                    {
+                        scd->selection = EXIT;
+                    }
+                }
+                else if (evt.button & PB_DOWN)
+                {
+                    if ((scd->selection + 1) % NUM_TABS_PER_SIDE != 0)
+                    {
+                        scd->selection++;
+                    }
+                }
+                else if (evt.button & PB_LEFT && scd->selection >= NUM_TABS_PER_SIDE
+                         && scd->selection < (NUM_TABS_PER_SIDE * 2))
+                {
+                    scd->selection -= NUM_TABS_PER_SIDE;
+                }
+                else if (evt.button & PB_RIGHT && scd->selection < NUM_TABS_PER_SIDE)
+                {
+                    scd->selection += NUM_TABS_PER_SIDE;
+                }
             }
-            else if (evt.button & PB_RIGHT && scd->selection < NUM_TABS_PER_SIDE)
-            {
-                scd->selection += NUM_TABS_PER_SIDE;
-            }
-            else if (evt.button & PB_A)
+            if (evt.button & PB_A)
             {
                 if (scd->selection == EXIT)
                 {

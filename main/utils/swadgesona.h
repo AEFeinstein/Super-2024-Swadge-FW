@@ -556,7 +556,7 @@ void loadSwadgesona(swadgesona_t* sw, int idx);
 
 /**
  * @brief Copy one swadgesona to another
- * 
+ *
  * @param to The swadgesona to copy to
  * @param from The source swadgesona
  */
@@ -580,7 +580,7 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody);
 
 /**
  * @brief Loads the swadgepass sona
- * 
+ *
  * @param sw Data out. Is set to NULL if nothing is loaded
  */
 void loadSPSona(swadgesona_t* sw);
