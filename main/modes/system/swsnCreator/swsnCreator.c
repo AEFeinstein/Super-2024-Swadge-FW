@@ -445,6 +445,19 @@ static void swsnEnterMode(void)
     }
     loadFont(RODIN_EB_FONT, &scd->fnt, true);
 
+    // If the SP swadgesona isn't saved yet, automatically load into creating the SP Sona
+    size_t len = sizeof(swadgesonaCore_t);
+    if (!readNvsBlob(spSonaNVSKey, &scd->activeSona.core, &len))
+    {
+        generateRandomSwadgesona(&scd->activeSona);
+        scd->activeSona.name = *getSystemUsername();
+        strcpy(scd->nickname, scd->activeSona.name.nameBuffer);
+        scd->slot  = 255; // Indicates it's the SP Sona
+        scd->state = CREATING;
+        readNvs32(cursorNVS, &scd->cursorType);
+        loadWsg(scd->cursorType, &scd->cursorImage, true);
+    }
+
     swsnResetMenu();
 }
 
