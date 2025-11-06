@@ -18,7 +18,7 @@
 #include "embeddedOut.h"
 #include "bunny.h"
 
-//#define CUSTOM_INTRO_SOUND
+// #define CUSTOM_INTRO_SOUND
 
 static void introEnterMode(void);
 static void introExitMode(void);
@@ -48,7 +48,7 @@ static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, 
 
 // #define ALL_TOUCH (TB_CENTER | TB_RIGHT | TB_UP | TB_LEFT | TB_DOWN)
 
-static const char startTitle[]        = "Welcome!"; 
+static const char startTitle[]        = "Welcome!";
 static const char holdLongerMessage[] = "Almost! Keep holding MENU for one second to exit.";
 static const char endTitle[]          = "Exiting Modes";
 static const char endDetail[]         = "You are now Swadge Certified! Remember, with great power comes great "
@@ -63,8 +63,8 @@ static const char spkTitle[]      = "Speaker";
 static const char micTitle[]      = "Microphone";
 static const char touchpadTitle[] = "Touchpad";
 static const char imuTitle[]      = "Tilt Controls";
-//static const char passTitle[]     = "SwadgePass";
-//static const char sonaTitle[]     = "Your Sona";
+// static const char passTitle[]     = "SwadgePass";
+// static const char sonaTitle[]     = "Your Sona";
 
 static const tutorialStep_t buttonsSteps[] = {
     {
@@ -706,11 +706,10 @@ static void introMainLoop(int64_t elapsedUs)
     int16_t detailYmin = titleY + iv->bigFont.height + 1 - 20;
     int16_t detailYmax = TFT_HEIGHT - 30;
     int16_t detailX    = 25;
-    //drawMenuBody(25, detailYmax - detailYmin, 33, true, iv->renderer);
+    // drawMenuBody(25, detailYmax - detailYmin, 33, true, iv->renderer);
 
-    uint16_t detailH   = textWordWrapHeight(&iv->smallFont, detail, TFT_WIDTH - 60, detailYmax - detailYmin);
-    
-    int16_t detailY    = detailYmax - detailH;
+    uint16_t detailH = textWordWrapHeight(&iv->smallFont, detail, TFT_WIDTH - 60, detailYmax - detailYmin);
+    int16_t detailY  = detailYmax - detailH;
 
     switch (iv->drawMode)
     {
@@ -937,8 +936,7 @@ static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, butt
     paletteColor_t notNeededColor  = c111;
 
     // Draw the background of the swadge
-    //fillDisplayArea(x, y, iv->swadgeViewWidth, iv->swadgeViewHeight, c222);
-    drawWsgSimpleScaled(&iv->icon.swadge, x, y, 1, 1);
+    drawWsgSimple(&iv->icon.swadge, x, y);
 
     for (int stage = 0; stage < 2; stage++)
     {
@@ -1009,9 +1007,8 @@ static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, butt
     }
 }
 
-#define TOUCHPAD_RADIUS 70
-#define TOUCHPAD_X      (TFT_WIDTH / 2)
-#define TOUCHPAD_Y      (TFT_HEIGHT / 2)
+#define TOUCHPAD_X (TFT_WIDTH / 2)
+#define TOUCHPAD_Y ((TFT_HEIGHT / 2) - 5)
 
 /**
  * @brief TODO
@@ -1021,13 +1018,15 @@ static void introDrawSwadgeButtons(int64_t elapsedUs, int16_t x, int16_t y, butt
  */
 static vec_t getTouchScreenCoord(vec_t touchPoint)
 {
+    int32_t tpRadius = iv->icon.touchGem.w / 2;
+
     // Draw the dot (0 to 1024)
     vec_t cartesianStart = {
-        .x = TOUCHPAD_X - TOUCHPAD_RADIUS,
-        .y = TOUCHPAD_Y - TOUCHPAD_RADIUS,
+        .x = TOUCHPAD_X - tpRadius,
+        .y = TOUCHPAD_Y - tpRadius,
     };
 
-    vec_t drawPoint = addVec2d(cartesianStart, divVec2d(mulVec2d(touchPoint, TOUCHPAD_RADIUS * 2), 1024));
+    vec_t drawPoint = addVec2d(cartesianStart, divVec2d(mulVec2d(touchPoint, tpRadius * 2), 1024));
     drawPoint.y     = TOUCHPAD_Y + (TOUCHPAD_Y - drawPoint.y);
     return drawPoint;
 }
@@ -1042,8 +1041,7 @@ static vec_t getTouchScreenCoord(vec_t touchPoint)
 static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint, list_t* touchHist)
 {
     // Draw the pad
-    drawWsgSimpleScaled(&iv->icon.touchGem, (TFT_WIDTH - iv->icon.touchGem.w*2) / 2, (TFT_HEIGHT - iv->icon.touchGem.h*2) / 2 - 5, 2, 2);
-
+    drawWsgSimple(&iv->icon.touchGem, TOUCHPAD_X - (iv->icon.touchGem.w / 2), TOUCHPAD_Y - (iv->icon.touchGem.h / 2));
 
     // Animate how the user should spin
     iv->angleTimer += elapsedUs;
@@ -1058,26 +1056,27 @@ static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint, list_t*
     }
 
     // Draw a guide
+    int32_t tpRadius = iv->icon.touchGem.w / 2;
     for (int32_t a = 0; a < iv->angle; a++)
     {
         int32_t x = TOUCHPAD_X;
         if (iv->tut.curStep->trigger.intData < 0)
         {
-            x += (TOUCHPAD_RADIUS * 3 * getSin1024(a)) / (1024 * 4);
+            x += (tpRadius * 3 * getSin1024(a)) / (1024 * 4);
         }
         else
         {
-            x -= (TOUCHPAD_RADIUS * 3 * getSin1024(a)) / (1024 * 4);
+            x -= (tpRadius * 3 * getSin1024(a)) / (1024 * 4);
         }
-        int32_t y = TOUCHPAD_Y - (TOUCHPAD_RADIUS * 3 * getCos1024(a)) / (1024 * 4);
-        drawCircleFilled(x, y - 5, 4, c555); //emily DO NOT HARDCODE THIS -5 GOOFBALL TODO
+        int32_t y = TOUCHPAD_Y - (tpRadius * 3 * getCos1024(a)) / (1024 * 4);
+        drawCircleFilled(x, y, 4, c555);
     }
 
     // Draw the touch point
     if (0 != touchPoint.x || 0 != touchPoint.y)
     {
         vec_t drawPoint = getTouchScreenCoord(touchPoint);
-        drawCircleFilled(drawPoint.x, drawPoint.y - 5, 5, c511); //HARDCODE LOL
+        drawCircleFilled(drawPoint.x, drawPoint.y, 5, c511);
     }
 
     // Draw the touch tail
@@ -1188,10 +1187,12 @@ static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, 
     }
 }
 
-static void introDrawSona() {
+static void introDrawSona()
+{
+    ;
+}
 
-};
-
-static void introSwadgePass() {
-
+static void introSwadgePass()
+{
+    ;
 }
