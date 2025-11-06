@@ -372,6 +372,10 @@ typedef struct
     font_t fnt;
     swsnCreatorState_t state;
 
+    // Audio
+    midiFile_t bgm;
+    midiPlayer_t* bgmPlayer;
+
     // Menu
     menu_t* menu;
     menuMegaRenderer_t* renderer;
@@ -473,6 +477,13 @@ static void swsnEnterMode(void)
     }
     loadFont(RODIN_EB_FONT, &scd->fnt, true);
 
+    // Load audio
+    loadMidiFile(ODE_MID, &scd->bgm, true);
+    scd->bgmPlayer = globalMidiPlayerGet(MIDI_BGM);
+    scd->bgmPlayer->loop = true;
+    midiGmOn(scd->bgmPlayer);
+    globalMidiPlayerPlaySong(&scd->bgm, MIDI_BGM);
+
     // If the SP swadgesona isn't saved yet, automatically load into creating the SP Sona
     size_t len = sizeof(swadgesonaCore_t);
     if (!readNvsBlob(spSonaNVSKey, &scd->activeSona.core, &len))
@@ -491,6 +502,8 @@ static void swsnEnterMode(void)
 
 static void swsnExitMode(void)
 {
+    globalMidiPlayerStop(true);
+    unloadMidiFile(&scd->bgm);
     deinitMenuMegaRenderer(scd->renderer);
     deinitMenu(scd->menu);
     freeFont(&scd->fnt);
