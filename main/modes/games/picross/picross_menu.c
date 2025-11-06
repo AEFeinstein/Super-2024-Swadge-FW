@@ -36,6 +36,7 @@ typedef struct
     picrossScreen_t screen;
     int32_t savedIndex;
     int32_t options; // bit 0: hints
+    midiFile_t bgm;
 } picrossMenu_t;
 
 //==============================================================================
@@ -61,6 +62,8 @@ const char picrossSavedOptionsKey[]       = "pic_opts";
 const char picrossCompletedLevelData[]    = "pic_victs"; // todo: rename to Key suffix
 const char picrossProgressData[]          = "pic_prog";  // todo: rename to key suffix
 const char picrossMarksData[]             = "pic_marks";
+const char picrossHoverLevelIndexKey[]    = "pic_hov_ind";
+const char picrossTopVisibleRowKey[]      = "pic_scroll_ind";
 
 // Main menu strings
 static char str_picrossTitle[]      = "Pi-cross 2"; // \x7f is interpreted as the pi char
@@ -367,7 +370,7 @@ struct
         .name        = "big bug",
         .pzl         = EF_BIGBUG_PZL_WSG,
         .slv         = EF_BIGBUG_SLV_WSG,
-        .marqueeFact = "Produced by James Albracht for the 2025 hotdog swadge with art from gplord, kaitie, "
+        .marqueeFact = "Produced by James Albracht for the 2025 hotdog swadge with art from gplord, kaitie, Nathan, "
                        "and music from newmajoe, and livingston rampey : Dr. Ovo Garbotnik fights hordes of giant "
                        "bugs in a garbage landfill loosely inspired by Dig Dug and Helldivers 2.",
     },
@@ -406,7 +409,7 @@ struct
         .slv  = EF_SWADGEHERO_SLV_WSG,
         .marqueeFact
         = "Swadge Hero from the 2025 hotdog swadge made by gelakinetic and many volunteer composers : A rhythm "
-          "game showing off the new new audio capabilities.",
+          "game showing off the new audio capabilities.",
     },
     {
         .name        = "ultimate ttt",
@@ -425,7 +428,7 @@ struct
         .name        = "double bass",
         .pzl         = FF_DOUBLEBASS_PZL_WSG,
         .slv         = FF_DOUBLEBASS_SLV_WSG,
-        .marqueeFact = "The Magfest Community Orchestra features over 200 volunteer musicians (including choir)",
+        .marqueeFact = "The Magfest Community Orchestra features over 200 volunteer musicians.",
     },
     {
         .name = "drum",
@@ -441,7 +444,7 @@ struct
         .marqueeFact = "We're gonna need a bigger Holy.",
     },
     {
-        .name        = "pslogo",
+        .name        = "ps logo",
         .pzl         = FF_PSLOGO_PZL_WSG,
         .slv         = FF_PSLOGO_SLV_WSG,
         .marqueeFact = "You are now hearing the PS1 start-up jingle in your head.",
@@ -453,7 +456,7 @@ struct
         .marqueeFact = "Newmajoe's instrument of choice.",
     },
     {
-        .name        = "sfclogo",
+        .name        = "sfc logo",
         .pzl         = FF_SFCLOGO_PZL_WSG,
         .slv         = FF_SFCLOGO_SLV_WSG,
         .marqueeFact = "YOU ARE A SUPER PLAYER!!",
@@ -478,6 +481,28 @@ struct
     },
 };
 
+const trophyData_t trophyPicrossModeTrophies[] = {{
+    .title       = "I missed my flight home",
+    .description = "solved all picross puzzles",
+    .image       = NO_IMAGE_SET,
+    .type        = TROPHY_TYPE_TRIGGER,
+    .difficulty  = TROPHY_DIFF_EXTREME,
+    .maxVal      = 1, // For trigger type, set to one
+}};
+
+const trophySettings_t trophyPicrossModeTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 2,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = str_picrossTitle,
+};
+
+const trophyDataList_t trophyPicrossModeData = {
+    .settings = &trophyPicrossModeTrophySettings,
+    .list     = trophyPicrossModeTrophies,
+    .length   = ARRAY_SIZE(trophyPicrossModeTrophies),
+};
+
 swadgeMode_t modePicross = {
     .modeName                 = str_picrossTitle,
     .wifiMode                 = NO_WIFI,
@@ -495,7 +520,7 @@ swadgeMode_t modePicross = {
     .fnAdvancedUSB            = NULL,
     .fnDacCb                  = NULL,
     .fnAddToSwadgePassPacket  = NULL,
-    .trophyData               = NULL,
+    .trophyData               = &trophyPicrossModeData,
 };
 
 picrossMenu_t* pm;
@@ -513,6 +538,15 @@ void picrossEnterMode(void)
 {
     // Allocate and zero memory
     pm = heap_caps_calloc(1, sizeof(picrossMenu_t), MALLOC_CAP_8BIT);
+
+    // Load sounds
+    loadMidiFile(LULLABY_IN_NUMBERS_MID, &pm->bgm, true);
+
+    // Init sound player
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    player->loop         = true;
+    midiGmOn(player);
+    soundPlayBgm(&pm->bgm, MIDI_BGM);
 
     loadFont(MM_FONT, &(pm->mmFont), false);
 
@@ -557,6 +591,7 @@ void picrossEnterMode(void)
 
 void picrossExitMode(void)
 {
+    unloadMidiFile(&pm->bgm);
     switch (pm->screen)
     {
         case PICROSS_MENU:
@@ -748,7 +783,7 @@ void exitTutorial(void)
     pm->screen = PICROSS_MENU;
 }
 
-void continueGame()
+void continueGame(bool solved, int8_t currentIdx)
 {
     // get the current level index
     int32_t currentIndex = 0; // just load 0 if its 0.
@@ -760,7 +795,11 @@ void continueGame()
 
     // load in the level we selected.
     // uh. read the currentLevelIndex and get the value from
-    picrossStartGame(&pm->mmFont, &pm->levels[currentIndex], true, pm->renderer);
+    if (solved)
+    {
+        currentIndex = currentIdx;
+    }
+    picrossStartGame(&pm->mmFont, &pm->levels[currentIndex], true, pm->renderer, solved);
     pm->screen = PICROSS_GAME;
 }
 
@@ -771,7 +810,7 @@ bool picrossMainMenuCb(const char* label, bool selected, uint32_t value)
     {
         if (label == str_continue)
         {
-            continueGame();
+            continueGame(false, -1);
 
             // Turn off LEDs
             led_t leds[CONFIG_NUM_LEDS] = {0};
@@ -877,7 +916,7 @@ void selectPicrossLevel(picrossLevelDef_t* selectedLevel)
 {
     // picrossExitLevelSelect();//we do this BEFORE we enter startGame.
     pm->screen = PICROSS_GAME;
-    picrossStartGame(&pm->mmFont, selectedLevel, false, pm->renderer);
+    picrossStartGame(&pm->mmFont, selectedLevel, false, pm->renderer, false);
 }
 
 // void returnToLevelSelect()//todo: rename

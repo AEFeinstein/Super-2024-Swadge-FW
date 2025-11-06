@@ -358,15 +358,19 @@ const trophyData_t swadgedokuTrophies[] = {{
                                            }};
 
 // Individual mode settings
-trophySettings_t swadgedokuTrophySettings = {
+const trophySettings_t swadgedokuTrophySettings = {
     .drawFromBottom   = false,
     .staticDurationUs = DRAW_STATIC_US * 2,
     .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = swadgedokuModeName,
 };
 
 // This is passed to the swadgeMode_t
-trophyDataList_t swadgedokuTrophyData
-    = {.settings = &swadgedokuTrophySettings, .list = swadgedokuTrophies, .length = ARRAY_SIZE(swadgedokuTrophies)};
+const trophyDataList_t swadgedokuTrophyData = {
+    .settings = &swadgedokuTrophySettings,
+    .list     = swadgedokuTrophies,
+    .length   = ARRAY_SIZE(swadgedokuTrophies),
+};
 
 // Aliases for trophies
 const trophyData_t* trophySolveAny = &swadgedokuTrophies[0];
@@ -1102,11 +1106,11 @@ static void swadgedokuCheckTrophyTriggers(void)
             switch (trophy->type)
             {
                 case TROPHY_TYPE_TRIGGER:
-                    trophyUpdate(*trophy, 1, true);
+                    trophyUpdate(trophy, 1, true);
                     break;
 
                 case TROPHY_TYPE_PROGRESS:
-                    trophyUpdate(*trophy, sd->currentDifficulty + 1, true);
+                    trophyUpdate(trophy, sd->currentDifficulty + 1, true);
                     break;
 
                 case TROPHY_TYPE_ADDITIVE:
@@ -1116,7 +1120,7 @@ static void swadgedokuCheckTrophyTriggers(void)
 
                 case TROPHY_TYPE_CHECKLIST:
                     // Checklist will probably be for the mode
-                    trophySetChecklistTask(*trophy, 1 << sd->currentMode, false, true);
+                    trophySetChecklistTask(trophy, 1 << sd->currentMode, false, true);
                     break;
             }
         }

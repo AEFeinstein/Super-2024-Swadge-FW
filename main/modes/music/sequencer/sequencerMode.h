@@ -3,6 +3,7 @@
 
 #include "swadge2024.h"
 #include "wheel_menu.h"
+#include "helpPages.h"
 
 //==============================================================================
 // Enums
@@ -104,8 +105,7 @@ typedef struct
     uint8_t exampleMidiVelocity;
 
     // Help page
-    uint32_t helpIdx;
-    uint32_t arrowBlinkTimer;
+    helpPageVars_t* help;
 } sequencerVars_t;
 
 //==============================================================================

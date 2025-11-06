@@ -394,6 +394,13 @@ static uint32_t lfsrCur(const lfsrState_t* state);
 // Variabes
 //==============================================================================
 
+static const textEntrySettings_t tes = {
+    .shadowboxColor = c000,
+    .bgColor        = cTransparent,
+    .maxLen         = 128,
+    .startKMod      = TE_PROPER_NOUN,
+};
+
 static const char readyStr[] = "Ready!";
 
 static const char* const gmProgramNames[] = {
@@ -1834,6 +1841,7 @@ static void synthMainLoop(int64_t elapsedUs)
 
         if (!textEntryDraw(elapsedUs))
         {
+            textEntryDeinit();
             // Entry is finished
             if (sd->filenameBuf && *sd->filenameBuf)
             {
@@ -3904,7 +3912,7 @@ static void synthHandleInput(int64_t elapsedUs)
                     {
                         if (evt.down)
                         {
-                            textEntryInput(evt.down, evt.button);
+                            textEntryInput(evt);
                         }
                     }
                 }
@@ -4333,9 +4341,7 @@ static bool synthMenuCb(const char* label, bool selected, uint32_t value)
             }
             else
             {
-                textEntryInit(&sd->font, 128, sd->filenameBuf);
-                textEntrySetBGTransparent();
-                textEntrySetShadowboxColor(true, c000);
+                textEntryInit(&tes, sd->filenameBuf, getSysFont());
             }
         }
     }

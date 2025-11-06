@@ -80,7 +80,7 @@ void mg_updateLedsHpMeter(mgEntityManager_t* entityManager, mgGameData_t* gameDa
     // 3 4
     // 2 5
     // 1 6
-    for (int32_t i = 1; i < 7; i++)
+    for (int32_t i = 1; i < CONFIG_NUM_LEDS; i++)
     {
         gameData->leds[i].r = 0x80;
         gameData->leds[i].g = 0x00;

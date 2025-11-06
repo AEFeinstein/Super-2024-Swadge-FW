@@ -371,7 +371,7 @@ typedef struct swadgeMode
     /**
      * @brief A struct with the settings and data required for trophy behavior. Set to NULL for no trophies
      */
-    trophyDataList_t* trophyData;
+    const trophyDataList_t* trophyData;
 } swadgeMode_t;
 
 bool checkButtonQueueWrapper(buttonEvt_t* evt);

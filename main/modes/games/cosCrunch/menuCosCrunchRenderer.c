@@ -6,6 +6,7 @@
 #include "hdw-tft.h"
 #include "macros.h"
 #include "menu_utils.h"
+#include "shapes.h"
 
 #include <string.h>
 
@@ -59,7 +60,8 @@ void drawMenuCosCrunch(menu_t* menu, menuCosCrunchRenderer_t* renderer, int64_t 
     while (node != NULL)
     {
         menuItem_t* item        = node->val;
-        int16_t itemWidth       = textWidth(renderer->menuFont, item->label) + MENU_ITEM_PADDING * 2;
+        uint16_t itemTextWidth  = textWidth(renderer->menuFont, item->label);
+        int16_t itemWidth       = itemTextWidth + MENU_ITEM_PADDING * 2;
         uint16_t optionMaxWidth = 0;
         if (item->options)
         {
@@ -103,6 +105,11 @@ void drawMenuCosCrunch(menu_t* menu, menuCosCrunchRenderer_t* renderer, int64_t 
         if (node->val == menu->currentItem->val)
         {
             drawWsgSimple(&renderer->wsg.pin, itemX - 8, itemY - 4);
+            drawQuadBezier(itemX + MENU_ITEM_PADDING, itemY + MENU_ITEM_PADDING + renderer->menuFont->height + 5,
+                           itemX + MENU_ITEM_PADDING + itemTextWidth / 2,
+                           itemY + MENU_ITEM_PADDING + renderer->menuFont->height,
+                           itemX + MENU_ITEM_PADDING + itemTextWidth,
+                           itemY + MENU_ITEM_PADDING + renderer->menuFont->height + 2, c511);
         }
 
         node = node->next;
