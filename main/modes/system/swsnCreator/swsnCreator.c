@@ -493,9 +493,15 @@ static void swsnEnterMode(void)
         strcpy(scd->nickname, scd->activeSona.name.nameBuffer);
         scd->slot  = 255; // Indicates it's the SP Sona
         scd->state = CREATING;
-        readNvs32(cursorNVS, &scd->cursorType);
-        loadWsg(scd->cursorType, &scd->cursorImage, true);
     }
+
+    // Load the cursor, using the default if it doesn't exist yet
+    if (!readNvs32(cursorNVS, &scd->cursorType))
+    {
+        writeNvs32(cursorNVS, cursorSprs[0]);
+        scd->cursorType = cursorSprs[0];
+    }
+    loadWsg(scd->cursorType, &scd->cursorImage, true);
 
     swsnResetMenu();
 }
