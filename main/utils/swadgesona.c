@@ -394,7 +394,7 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
             || sw->core.bodyMarks == BME_NECK_BLOOD)
         {
             wsgPaletteReset(&sw->pal);
-            canvasDrawSimple(&sw->image, bodymarksWsgs[sw->core.bodyMarks -1], 0, 0);
+            canvasDrawSimple(&sw->image, bodymarksWsgs[sw->core.bodyMarks - 1], 0, 0);
         }
     }
 

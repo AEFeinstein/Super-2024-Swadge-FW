@@ -376,9 +376,8 @@ static int16_t _drawStr(int16_t endH, int64_t eUs)
         int16_t wStart = (TFT_WIDTH - (te->tes->maxLen * te->widestChar)) >> 1;
         if (te->tes->shadowboxColor != cTransparent)
         {
-            fillDisplayArea(wStart, hStart - SHADOWBOX_MARGIN,
-                            wStart + (te->tes->maxLen * te->widestChar), hStart + te->font->height + SHADOWBOX_MARGIN,
-                            te->tes->shadowboxColor);
+            fillDisplayArea(wStart, hStart - SHADOWBOX_MARGIN, wStart + (te->tes->maxLen * te->widestChar),
+                            hStart + te->font->height + SHADOWBOX_MARGIN, te->tes->shadowboxColor);
         }
         int16_t textLen = textWidth(te->font, te->text) + te->font->chars[0].width;
         int16_t endPos  = drawText(te->font, te->tes->textColor, te->text, (TFT_WIDTH - textLen) / 2, hStart);

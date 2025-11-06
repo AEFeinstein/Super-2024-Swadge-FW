@@ -479,7 +479,7 @@ static void swsnEnterMode(void)
 
     // Load audio
     loadMidiFile(ODE_MID, &scd->bgm, true);
-    scd->bgmPlayer = globalMidiPlayerGet(MIDI_BGM);
+    scd->bgmPlayer       = globalMidiPlayerGet(MIDI_BGM);
     scd->bgmPlayer->loop = true;
     midiGmOn(scd->bgmPlayer);
     globalMidiPlayerPlaySong(&scd->bgm, MIDI_BGM);
