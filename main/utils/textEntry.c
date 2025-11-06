@@ -132,6 +132,10 @@ void textEntryInit(const textEntrySettings_t* settings, char* entryText, font_t*
     // Set the widest character
     _textEntrySetWideChar(te->font);
 
+    // Move to enter by default
+    te->selX = 12;
+    te->selY = 2;
+
     // Set defaults
     te->kMod       = te->tes->startKMod;
     te->blinkState = true;
@@ -369,10 +373,11 @@ static int16_t _drawStr(int16_t endH, int64_t eUs)
     else
     {
         int16_t hStart = endH - ((te->font->height + SHADOWBOX_MARGIN) * 2);
+        int16_t wStart = (TFT_WIDTH - (te->tes->maxLen * te->widestChar)) >> 1;
         if (te->tes->shadowboxColor != cTransparent)
         {
-            fillDisplayArea(CORNER_MARGIN - SHADOWBOX_MARGIN, hStart - SHADOWBOX_MARGIN,
-                            TFT_WIDTH - CORNER_MARGIN + SHADOWBOX_MARGIN, hStart + te->font->height + SHADOWBOX_MARGIN,
+            fillDisplayArea(wStart, hStart - SHADOWBOX_MARGIN,
+                            wStart + (te->tes->maxLen * te->widestChar), hStart + te->font->height + SHADOWBOX_MARGIN,
                             te->tes->shadowboxColor);
         }
         int16_t textLen = textWidth(te->font, te->text) + te->font->chars[0].width;

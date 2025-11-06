@@ -241,6 +241,7 @@ typedef enum
     BME_THIN_CHIN,
     BME_THIS,
     BME_TIRED,
+    BME_VITILIGO,
     BME_WISE_MAN,
     BME_COUNT
 } bodyMarks_t;

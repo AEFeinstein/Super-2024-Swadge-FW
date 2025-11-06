@@ -162,7 +162,8 @@ static const cnfsFileIdx_t bodymarksWsgs[] = {
     BM_HALF_STACHE_WSG, BM_HEART_STACHE_WSG, BM_LESS_WISE_WSG,  BM_MAGICIAN_WSG,        BM_MARILYN_WSG,
     BM_NECK_BLOOD_WSG,  BM_OLD_WSG,          BM_PILLOW_WSG,     BM_SAND_P_WSG,          BM_SCRAGGLY_WSG,
     BM_SMALL_CURL_WSG,  BM_SMALL_STACHE_WSG, BM_SOUL_PATCH_WSG, BM_SPIKED_NECKLACE_WSG, BM_STACHE_AND_STRAP_WSG,
-    BM_STRONGMAN_WSG,   BM_THIN_CHIN_WSG,    BM_THIS_WSG,       BM_TIRED_WSG,           BM_WISEMAN_WSG,
+    BM_STRONGMAN_WSG,   BM_THIN_CHIN_WSG,    BM_THIS_WSG,       BM_TIRED_WSG,           BM_VITILIGO_WSG,
+    BM_WISEMAN_WSG,
 };
 static const cnfsFileIdx_t earWsgs[] = {
     SWSN_NO_GO_WSG,     EA_BIG_HOOP_WSG, EA_BUNNY_WSG,    EA_CAT_WSG,        EA_DOG_WSG,
@@ -311,7 +312,7 @@ static const textEntrySettings_t tes = {
     .useOKEnterStyle = false,
     .blink           = true,
     .textColor       = c555,
-    .emphasisColor   = c500,
+    .emphasisColor   = c544,
     .bgColor         = cTransparent,
     .shadowboxColor  = c202, // c202
 };

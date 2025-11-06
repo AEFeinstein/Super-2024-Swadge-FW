@@ -48,7 +48,7 @@ static const cnfsFileIdx_t bodymarksWsgs[] = {
     BM_HEART_STACHE_WSG, BM_LESS_WISE_WSG,  BM_MAGICIAN_WSG,        BM_MARILYN_WSG,          BM_NECK_BLOOD_WSG,
     BM_OLD_WSG,          BM_PILLOW_WSG,     BM_SAND_P_WSG,          BM_SCRAGGLY_WSG,         BM_SMALL_CURL_WSG,
     BM_SMALL_STACHE_WSG, BM_SOUL_PATCH_WSG, BM_SPIKED_NECKLACE_WSG, BM_STACHE_AND_STRAP_WSG, BM_STRONGMAN_WSG,
-    BM_THIN_CHIN_WSG,    BM_THIS_WSG,       BM_TIRED_WSG,           BM_WISEMAN_WSG,
+    BM_THIN_CHIN_WSG,    BM_THIS_WSG,       BM_TIRED_WSG,           BM_VITILIGO_WSG,         BM_WISEMAN_WSG,
 };
 static const cnfsFileIdx_t earWsgs[] = {
     EA_BIG_HOOP_WSG, EA_BUNNY_WSG,    EA_CAT_WSG,        EA_DOG_WSG,  EA_DOWN_COW_WSG,
@@ -338,6 +338,11 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
     _getPaletteFromIdx(&sw->pal, COLOR_SKIN, sw->core.skin);
     canvasDrawSimplePal(&sw->image, SWSN_HEAD_WSG, 0, 0, &sw->pal);
 
+    if (sw->core.bodyMarks == BME_VITILIGO)
+    {
+        canvasDrawSimple(&sw->image, BM_VITILIGO_WSG, 0, 0);
+    }
+
     // Ears
     // Human ears require no extra draw calls.
     if (sw->core.earShape != EAE_HUMAN)
@@ -359,7 +364,7 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
     canvasDrawSimplePal(&sw->image, eyebrowsWsgs[sw->core.eyebrows], 0, 0, &sw->pal);
 
     // Body marks
-    if (sw->core.bodyMarks != BME_NONE)
+    if (sw->core.bodyMarks != BME_NONE && sw->core.bodyMarks != BME_VITILIGO)
     {
         canvasDrawSimplePal(&sw->image, bodymarksWsgs[sw->core.bodyMarks - 1], 0, 0, &sw->pal);
     }
@@ -385,6 +390,12 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
         _getPaletteFromIdx(&sw->pal, COLOR_SKIN, sw->core.skin);
         _getPaletteFromIdx(&sw->pal, COLOR_CLOTHES, sw->core.clothes);
         canvasDrawSimplePal(&sw->image, SWSN_BODY_WSG, 0, 0, &sw->pal);
+        if (sw->core.bodyMarks == BME_CHOKER || sw->core.bodyMarks == BME_SPIKED_NECKLACE
+            || sw->core.bodyMarks == BME_NECK_BLOOD)
+        {
+            wsgPaletteReset(&sw->pal);
+            canvasDrawSimple(&sw->image, bodymarksWsgs[sw->core.bodyMarks -1], 0, 0);
+        }
     }
 
     // If the following hairstyles are included, they need to be redrawn over the shirt
