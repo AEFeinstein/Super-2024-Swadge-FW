@@ -129,7 +129,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .orientation = {0, 0, 245},
         },
         .title = imuTitle,
-        .detail = "The Swadge is tilt-sensitive. Try looking at it top-down by putting the Swadge face up on a flat surface."
+        .detail = "The Swadge is tilt-sensitive. Try looking at the bunny top-down by putting the Swadge face up on a flat surface."
     },
     {
         .trigger = {
