@@ -247,8 +247,8 @@ static void dn_EnterMode(void)
     gameData->camera.pos.y -= (57 << DN_DECIMAL_BITS); // Move the camera a bit.
     dn_initializeEntityManager(&gameData->entityManager, gameData);
 
-    gameData->assets[DN_ALPHA_DOWN_ASSET].originX   = 9;
-    gameData->assets[DN_ALPHA_DOWN_ASSET].originY   = 54;
+    gameData->assets[DN_ALPHA_DOWN_ASSET].originX   = 18;
+    gameData->assets[DN_ALPHA_DOWN_ASSET].originY   = 53;
     gameData->assets[DN_ALPHA_DOWN_ASSET].numFrames = 17;
 
     gameData->assets[DN_ALPHA_ORTHO_ASSET].originX   = 10;
@@ -754,20 +754,20 @@ static void dn_initializeGame(void)
     ///////////////////////////
     // Make the left speaker //
     ///////////////////////////
-    dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0,
-                           (vec_t){0xFFFF - (123 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
-    dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 3,
-                           (vec_t){0xFFFF - (123 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
+    // dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0,
+    //                        (vec_t){0xFFFF - (123 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
+    // dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 3,
+    //                        (vec_t){0xFFFF - (123 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
 
     ////////////////////////////
     // Make the right speaker //
     ////////////////////////////
-    dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0,
-                           (vec_t){0xFFFF + (122 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
-    dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 4,
-                           (vec_t){0xFFFF + (124 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData)
-        ->flipped
-        = true;
+    // dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0,
+    //                        (vec_t){0xFFFF + (122 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
+    // dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 4,
+    //                        (vec_t){0xFFFF + (124 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData)
+    //     ->flipped
+    //     = true;
 
     ///////////////////
     // Make the board//
@@ -845,24 +845,31 @@ static void dn_initializeGame(void)
     boardData->p1Units[0]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[0]; // Set the unit on the tile
-    boardData->p1Units[0]->paused                 = false;
+    
     // p1 pawns
     assetIdx = dn_getAssetIdx(gameData->characterSets[0], DN_PAWN, DN_UP);
     boardPos = (dn_boardPos_t){0, 4};
     boardData->p1Units[1]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p1Units[1]->gray = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[1]; // Set the unit on the tile
+
     boardPos                                      = (dn_boardPos_t){1, 4};
     boardData->p1Units[2]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p1Units[2]->gray = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[2]; // Set the unit on the tile
+
     boardPos                                      = (dn_boardPos_t){3, 4};
     boardData->p1Units[3]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p1Units[3]->gray = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[3]; // Set the unit on the tile
+    
     boardPos                                      = (dn_boardPos_t){4, 4};
     boardData->p1Units[4]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p1Units[4]->gray = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[4]; // Set the unit on the tile
 
     // p2 king
@@ -871,24 +878,31 @@ static void dn_initializeGame(void)
     boardData->p2Units[0]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[0]; // Set the unit on the tile
-    boardData->p2Units[0]->paused                 = false;
+
     // p2 pawns
     assetIdx = dn_getAssetIdx(gameData->characterSets[1], DN_PAWN, DN_DOWN);
     boardPos = (dn_boardPos_t){0, 0};
     boardData->p2Units[1]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p2Units[1]->gray = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[1]; // Set the unit on the tile
+
     boardPos                                      = (dn_boardPos_t){1, 0};
     boardData->p2Units[2]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p2Units[2]->gray = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[2]; // Set the unit on the tile
+
     boardPos                                      = (dn_boardPos_t){3, 0};
     boardData->p2Units[3]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p2Units[3]->gray = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[3]; // Set the unit on the tile
+
     boardPos                                      = (dn_boardPos_t){4, 0};
     boardData->p2Units[4]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p2Units[4]->gray = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[4]; // Set the unit on the tile
 
     /////////////////////////////
@@ -907,6 +921,7 @@ static void dn_initializeGame(void)
     swapButton->updateFunction = dn_updateSwapButton;
     swapButton->drawFunction   = dn_drawSwapButton;
     swapButton->dataType       = DN_SWAPBUTTON_DATA;
+    swapButton->gray = true;
 
     //////////////////////////
     // Make the skip button //
@@ -917,6 +932,7 @@ static void dn_initializeGame(void)
     skipButton->updateFunction = dn_updateSkipButton;
     skipButton->drawFunction   = dn_drawSkipButton;
     skipButton->dataType       = DN_SKIPBUTTON_DATA;
+    skipButton->gray = true;
 
     /////////////////////////
     // Make the playerTurn //

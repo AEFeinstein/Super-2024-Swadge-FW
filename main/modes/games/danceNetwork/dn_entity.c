@@ -73,22 +73,11 @@ void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType)
 
 void dn_drawAsset(dn_entity_t* self)
 {
-    if (!self->paused && (self->type == DN_LOOPING_ANIMATION || self->type == DN_ONESHOT_ANIMATION))
-    {
-        self->animationTimer++;
-        if (self->animationTimer >= self->gameFramesPerAnimationFrame)
-        {
-            self->animationTimer = 0;
-            self->currentAnimationFrame++;
-            if (self->currentAnimationFrame >= self->gameData->assets[self->assetIndex].numFrames)
-                self->currentAnimationFrame = 0;
-        }
-    }
     int32_t x = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originX;
     int32_t y = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                 - self->gameData->assets[self->assetIndex].originY;
-    if (self->paused)
+    if (self->gray)
     {
         drawWsgPalette(&self->gameData->assets[self->assetIndex].frames[self->currentAnimationFrame], x, y,
                        &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE], self->flipped, false, 0);
@@ -448,29 +437,29 @@ void dn_drawBoard(dn_entity_t* self)
                         || (!belongsToP1 && self->gameData->characterSets[1] == DN_WHITE_CHESS_SET)))
                     // draw unit
                     drawWsgPaletteSimple(
-                        &self->gameData->assets[unit->assetIndex].frames[0],
+                        &self->gameData->assets[unit->assetIndex].frames[unit->currentAnimationFrame],
                         drawX - self->gameData->assets[unit->assetIndex].originX,
                         drawY - self->gameData->assets[unit->assetIndex].originY,
                         &self->gameData->entityManager
-                             .palettes[unit->paused ? DN_SUPERBRIGHT_GRAYSCALE_PALETTE : DN_WHITE_CHESS_PALETTE]);
+                             .palettes[unit->gray ? DN_SUPERBRIGHT_GRAYSCALE_PALETTE : DN_WHITE_CHESS_PALETTE]);
 
-                else if (unit->paused)
+                else if (unit->gray)
                 {
-                    drawWsgPaletteSimple(&self->gameData->assets[unit->assetIndex].frames[0],
+                    drawWsgPaletteSimple(&self->gameData->assets[unit->assetIndex].frames[unit->currentAnimationFrame],
                                          drawX - self->gameData->assets[unit->assetIndex].originX,
                                          drawY - self->gameData->assets[unit->assetIndex].originY,
                                          &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE]);
                 }
                 else
                 {
-                    drawWsgSimple(&self->gameData->assets[unit->assetIndex].frames[0],
+                    drawWsgSimple(&self->gameData->assets[unit->assetIndex].frames[unit->currentAnimationFrame],
                                   drawX - self->gameData->assets[unit->assetIndex].originX,
                                   drawY - self->gameData->assets[unit->assetIndex].originY);
                 }
                 // draw mini chess unit
                 if (belongsToP1)
                 {
-                    if (unit->paused)
+                    if (unit->gray)
                     {
                         drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[0],
                                              miniDrawX - self->gameData->assets[miniAssetIndex].originX,
@@ -491,7 +480,7 @@ void dn_drawBoard(dn_entity_t* self)
                 }
                 else
                 {
-                    if (unit->paused)
+                    if (unit->gray)
                     {
                         drawWsgPaletteSimple(&self->gameData->assets[miniAssetIndex].frames[0],
                                              miniDrawX - self->gameData->assets[miniAssetIndex].originX,
@@ -561,7 +550,7 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks, list_t* invalidTracks)
                 {
                     case DN_REMIX_TRACK:
                     {
-                        if (unitAtTrack == NULL || !unit->paused)
+                        if (unitAtTrack == NULL || !unit->gray)
                         {
                             push(tracks, (void*)unitAction);
                         }
@@ -574,7 +563,7 @@ bool dn_availableMoves(dn_entity_t* unit, list_t* tracks, list_t* invalidTracks)
                     case DN_RED_TRACK: // ranged attack and remixed track
                     {
                         // You can shoot ANY tile. (muahahaha)
-                        if (!unit->paused)
+                        if (!unit->gray)
                         {
                             push(tracks, (void*)unitAction);
                         }
@@ -1536,6 +1525,9 @@ void dn_trySelectUnit(dn_entity_t* self)
     {
         tData->selectedUnit          = bData->tiles[tData->pos.y][tData->pos.x].unit;
         self->gameData->selectedUnit = tData->selectedUnit;
+        tData->selectedUnit->paused = false;
+        tData->selectedUnit->currentAnimationFrame = 1;
+        ((dn_unitData_t*)self->gameData->selectedUnit->data)->animation = DN_UNIT_SELECTED;
 
         dn_clearSelectableTiles(self);
 
@@ -3348,6 +3340,7 @@ void dn_sharedButtonLogic(dn_entity_t* self)
     if (self->gameData->btnDownState & PB_UP)
     {
         self->paused = true;
+        self->gray = true;
         dn_tileSelectorData_t* tData
             = ((dn_tileSelectorData_t*)dn_findLastEntityOfType(self, DN_TILE_SELECTOR_DATA)->data);
         tData->pos                  = (dn_boardPos_t){2, 2};
@@ -3369,11 +3362,13 @@ void dn_updateSwapButton(dn_entity_t* self)
     if (self->gameData->btnDownState & PB_RIGHT)
     {
         self->paused = true;
+        self->gray = true;
         dn_unpauseSkipButton(self);
     }
     else if (self->gameData->btnDownState & PB_A)
     {
         self->paused = true;
+        self->gray = true;
         dn_acceptSwapCC(self);
     }
 }
@@ -3402,7 +3397,9 @@ void dn_drawSwapButton(dn_entity_t* self)
 
 void dn_unpauseSwapButton(dn_entity_t* self)
 {
-    dn_findLastEntityOfType(self, DN_SWAPBUTTON_DATA)->paused = false;
+    dn_entity_t* swapButton = dn_findLastEntityOfType(self, DN_SWAPBUTTON_DATA);
+    swapButton->paused = false;
+    swapButton->gray = false;
 }
 
 void dn_updateSkipButton(dn_entity_t* self)
@@ -3417,11 +3414,13 @@ void dn_updateSkipButton(dn_entity_t* self)
     if (self->gameData->btnDownState & PB_LEFT)
     {
         self->paused = true;
+        self->gray = true;
         dn_unpauseSwapButton(self);
     }
     else if (self->gameData->btnDownState & PB_A)
     {
         self->paused                 = true;
+        self->gray = true;
         self->gameData->btnDownState = 0;
         dn_acceptRerollAndSkip(self);
     }
@@ -3449,7 +3448,9 @@ void dn_drawSkipButton(dn_entity_t* self)
 
 void dn_unpauseSkipButton(dn_entity_t* self)
 {
-    dn_findLastEntityOfType(self, DN_SKIPBUTTON_DATA)->paused = false;
+    dn_entity_t* skipButton = dn_findLastEntityOfType(self, DN_SKIPBUTTON_DATA);
+    skipButton->paused = false;
+    skipButton->gray = false;
 }
 
 void dn_updateTutorial(dn_entity_t* self)
@@ -3647,7 +3648,7 @@ void dn_trySelectBounceDest(dn_entity_t* self)
         dn_track_t type                                   = dn_trackTypeAtCoords(album, relativeTrack);
         if (type == DN_REMIX_TRACK || type == DN_RED_TRACK)
         {
-            bData->tiles[from.y][from.x].unit->paused = true;
+            bData->tiles[from.y][from.x].unit->gray = true;
             /////////////////////
             // Make the bullet //
             /////////////////////
@@ -3733,4 +3734,127 @@ void dn_drawMemorial(dn_entity_t* self)
         return;
     }
     drawWsgSimple(&self->gameData->assets[DN_BUG_ASSET].frames[frame], 57, 65);
+}
+
+dn_drawFunction_t getAnimFunctionForAsset(dn_assetIdx_t idx)
+{
+    switch(idx)
+    {
+        case DN_ALPHA_DOWN_ASSET:
+        case DN_ALPHA_UP_ASSET:
+        {
+            return dn_updateAlphaAnimation;
+            break;
+        }
+        case DN_BUCKET_HAT_DOWN_ASSET:
+        case DN_BUCKET_HAT_UP_ASSET:
+        {
+            return dn_updateBucketHatAnimation;
+        }
+        case DN_KING_ASSET:
+        {
+            return dn_updateChessKingAnimation;
+            break;
+        }
+        default: //DN_PAWN_ASSET
+        {
+            return dn_updateChessPawnAnimation;
+            break;
+        }
+    }
+}
+
+void dn_updateAlphaAnimation(dn_entity_t* self)
+{
+    dn_unitData_t* uData = (dn_unitData_t*)self->data;
+    switch(uData->animation)
+    {
+        case DN_UNIT_SELECTED:
+        {
+            if(self->currentAnimationFrame >= 8)
+            {
+                self->currentAnimationFrame = 8;
+                self->paused = true;
+            }
+            break;
+        }
+        case DN_UNIT_TELEPORT:
+        {
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+}
+void dn_updateBucketHatAnimation(dn_entity_t* self)
+{
+ dn_unitData_t* uData = (dn_unitData_t*)self->data;
+     switch(uData->animation)
+    {
+        case DN_UNIT_SELECTED:
+        {
+            if(self->currentAnimationFrame >= 6)
+            {
+                self->currentAnimationFrame = 6;
+                self->paused = true;
+            }
+            break;
+        }
+        case DN_UNIT_TELEPORT:
+        {
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+}
+void dn_updateChessKingAnimation(dn_entity_t* self)
+{
+    dn_unitData_t* uData = (dn_unitData_t*)self->data;
+     switch(uData->animation)
+    {
+        case DN_UNIT_SELECTED:
+        {
+            if(self->currentAnimationFrame >= 7)
+            {
+                self->currentAnimationFrame = 1;
+            }
+            break;
+        }
+        case DN_UNIT_TELEPORT:
+        {
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+}
+void dn_updateChessPawnAnimation(dn_entity_t* self)
+{
+    dn_unitData_t* uData = (dn_unitData_t*)self->data;
+     switch(uData->animation)
+    {
+        case DN_UNIT_SELECTED:
+        {
+            if(self->currentAnimationFrame >= 7)
+            {
+                self->currentAnimationFrame = 1;
+            }
+            break;
+        }
+        case DN_UNIT_TELEPORT:
+        {
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
 }
