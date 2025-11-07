@@ -423,6 +423,15 @@ bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
                 }
             }
 
+            // Set eyes to [X X]
+            artilleryData_t* ad = getArtilleryData();
+            if (EYES_DEAD != ad->eyeSlot)
+            {
+                ad->eyeSlot = EYES_DEAD;
+                ch32v003SelectBitmap(ad->eyeSlot);
+                ad->deadEyeTimer = 3000000;
+            }
+
             // Impart force on hit tanks
             circ->vel = addVecFl2d(circ->vel,
                                    mulVecFl2d(normVecFl2d(subVecFl2d(circ->c.pos, shell->c.pos)), shell->explosionVel));

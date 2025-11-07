@@ -278,6 +278,22 @@ void artilleryEnterMode(void)
     // Set up SFX (see sfxPlayer)
     midiGmOn(globalMidiPlayerGet(MIDI_SFX));
     midiPause(globalMidiPlayerGet(MIDI_SFX), false);
+
+    // Write ch32 assets
+    ch32v003WriteBitmapAsset(EYES_CC, EYES_DEFAULT_GS);
+    ch32v003WriteBitmapAsset(EYES_UL, EYES_UL_GS);
+    ch32v003WriteBitmapAsset(EYES_UC, EYES_UC_GS);
+    ch32v003WriteBitmapAsset(EYES_UR, EYES_UR_GS);
+    ch32v003WriteBitmapAsset(EYES_CR, EYES_CR_GS);
+    ch32v003WriteBitmapAsset(EYES_DR, EYES_DR_GS);
+    ch32v003WriteBitmapAsset(EYES_DC, EYES_DC_GS);
+    ch32v003WriteBitmapAsset(EYES_DL, EYES_DL_GS);
+    ch32v003WriteBitmapAsset(EYES_CL, EYES_CL_GS);
+    ch32v003WriteBitmapAsset(EYES_DEAD, EYES_DEAD_GS);
+
+    // Start idle
+    ad->eyeSlot = EYES_CC;
+    ch32v003SelectBitmap(ad->eyeSlot);
 }
 
 /**
@@ -404,6 +420,18 @@ void artilleryMainLoop(int64_t elapsedUs)
         {
             artilleryGameOverLoop(ad, elapsedUs);
             break;
+        }
+    }
+
+    // Run the timer to clear dead eyes
+    if (ad->deadEyeTimer > 0)
+    {
+        ad->deadEyeTimer -= elapsedUs;
+        if (ad->deadEyeTimer <= 0)
+        {
+            // Go back to idle
+            ad->eyeSlot = EYES_CC;
+            ch32v003SelectBitmap(ad->eyeSlot);
         }
     }
 }

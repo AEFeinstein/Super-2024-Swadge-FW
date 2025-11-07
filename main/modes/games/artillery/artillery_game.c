@@ -475,7 +475,6 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
             }
             else if (player->shotsRemaining)
             {
-                // TODO this is firing the wrong ammo for machine gun
                 RUN_TIMER_EVERY(player->shotTimer, 250000, elapsedUs, {
                     player->shotsRemaining--;
                     fireShot(ad->phys, player, opponent, false);
@@ -489,6 +488,105 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                 {
                     artilleryPassTurn(ad);
                     artilleryTxPassTurn(ad);
+
+                    // Only switch back to idle eyes if dead eyes aren't being shown
+                    if (ad->deadEyeTimer <= 0)
+                    {
+                        // Go back to idle
+                        ad->eyeSlot = EYES_CC;
+                        ch32v003SelectBitmap(ad->eyeSlot);
+                    }
+                }
+            }
+            else if (ad->phys->cameraTargets.length)
+            {
+                // Center Pulse's viewpoint a bit below the player
+                vec_t center = {
+                    .x = ad->phys->bounds.x / 2,
+                    .y = ad->players[ad->plIdx]->c.pos.y + 16,
+                };
+
+                // Look at the first camera target
+                physCirc_t* target = ad->phys->cameraTargets.first->val;
+                vec_t look         = {
+                            .x = target->c.pos.x - center.x,
+                            .y = target->c.pos.y - center.y,
+                };
+
+                // Pick the eye slot based on the looking direction
+                artilleryEye_t eyeSlot = EYES_CC;
+                if (0 == look.x)
+                {
+                    if (look.y < 0)
+                    {
+                        eyeSlot = EYES_UC;
+                    }
+                    else
+                    {
+                        eyeSlot = EYES_DC;
+                    }
+                }
+                else
+                {
+                    // Find the slope of the look vector
+                    int slope = (1024 * look.y) / look.x;
+
+                    // Pick where the eyes are pointing depending on the slope
+                    if (slope > 2472 || slope < -2472)
+                    {
+                        // Up or down
+                        if (look.y < 0)
+                        {
+                            eyeSlot = EYES_UC;
+                        }
+                        else
+                        {
+                            eyeSlot = EYES_DC;
+                        }
+                    }
+                    else if (slope > 424) // between 424 and 2472
+                    {
+                        // Down right or up left
+                        if (look.x > 0)
+                        {
+                            eyeSlot = EYES_DR;
+                        }
+                        else
+                        {
+                            eyeSlot = EYES_UL;
+                        }
+                    }
+                    else if (slope > -424) // between -424 and 424
+                    {
+                        // Right or Left
+                        if (look.x > 0)
+                        {
+                            eyeSlot = EYES_CR;
+                        }
+                        else
+                        {
+                            eyeSlot = EYES_CL;
+                        }
+                    }
+                    else // between -2472 and -424
+                    {
+                        // Up right or down left
+                        if (look.x > 0)
+                        {
+                            eyeSlot = EYES_UR;
+                        }
+                        else
+                        {
+                            eyeSlot = EYES_DL;
+                        }
+                    }
+                }
+
+                // Select new eyes if it changed, and deadeyes aren't being displayed
+                if (ad->deadEyeTimer <= 0 && eyeSlot != ad->eyeSlot)
+                {
+                    ad->eyeSlot = eyeSlot;
+                    ch32v003SelectBitmap(ad->eyeSlot);
                 }
             }
             break;

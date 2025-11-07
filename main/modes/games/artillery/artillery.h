@@ -58,6 +58,20 @@ typedef enum
     AG_CPU_PRACTICE,
 } artilleryGameType_t;
 
+typedef enum
+{
+    EYES_CC,
+    EYES_UL,
+    EYES_UC,
+    EYES_UR,
+    EYES_CR,
+    EYES_DR,
+    EYES_DC,
+    EYES_DL,
+    EYES_CL,
+    EYES_DEAD,
+} artilleryEye_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -128,6 +142,10 @@ typedef struct
 
     // Audio
     midiFile_t bgm;
+
+    // Eye LEDs
+    artilleryEye_t eyeSlot;
+    int32_t deadEyeTimer;
 } artilleryData_t;
 
 extern const char load_ammo[];
