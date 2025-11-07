@@ -206,6 +206,18 @@ void dn_drawEntity(dn_entity_t* entity)
 {
     if (entity->drawFunction == NULL)
         return;
+
+    if (!entity->paused && (entity->type == DN_LOOPING_ANIMATION || entity->type == DN_ONESHOT_ANIMATION))
+    {
+        entity->animationTimer++;
+        if (entity->animationTimer >= entity->gameFramesPerAnimationFrame)
+        {
+            entity->animationTimer = 0;
+            entity->currentAnimationFrame++;
+            if (entity->currentAnimationFrame >= entity->gameData->assets[entity->assetIndex].numFrames)
+                entity->currentAnimationFrame = 0;
+        }
+    }
     entity->drawFunction(entity);
 }
 
@@ -306,11 +318,11 @@ dn_entity_t* dn_createEntitySimple(dn_entityManager_t* entityManager, dn_assetId
         case DN_PAWN_SMALL_ASSET:
         case DN_BUCKET_HAT_DOWN_ASSET:
         case DN_BUCKET_HAT_UP_ASSET:
-        { // pawns
-            entity = dn_createEntitySpecial(entityManager, 1, DN_NO_ANIMATION, true, assetIndex, 0, pos, gameData);
+        { // units
+            entity = dn_createEntitySpecial(entityManager, 1, DN_LOOPING_ANIMATION, true, assetIndex, 3, pos, gameData);
             entity->data         = heap_caps_calloc(1, sizeof(dn_unitData_t), MALLOC_CAP_SPIRAM);
             entity->dataType     = DN_UNIT_DATA;
-            entity->drawFunction = dn_drawNothing; // Drawing of units is handled by dn_drawBoard
+            entity->drawFunction = getAnimFunctionForAsset(assetIndex); // Drawing of units is handled by dn_drawBoard
             entity->paused       = true;
             break;
         }

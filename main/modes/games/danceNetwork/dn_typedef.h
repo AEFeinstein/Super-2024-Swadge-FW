@@ -151,6 +151,13 @@ typedef enum __attribute__((packed))
     DN_UNIT_SELECTION,
 } dn_track_t;
 
+typedef enum __attribute__((packed))
+{
+    DN_UNIT_STILL,
+    DN_UNIT_SELECTED,
+    DN_UNIT_TELEPORT,
+} dn_animation_t;
+
 typedef struct __attribute__((packed))
 {
     dn_boardPos_t pos;
