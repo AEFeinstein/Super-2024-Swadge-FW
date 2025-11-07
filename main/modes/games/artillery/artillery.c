@@ -257,6 +257,9 @@ void artilleryEnterMode(void)
     ad->smRenderer = initMenuSimpleRenderer(NULL, COLOR_SIMPLE_MENU_BORDER, COLOR_SIMPLE_MENU_BACKGROUND,
                                             COLOR_SIMPLE_MENU_TEXT, 5);
 
+    // Initialize help menu
+    artilleryHelpInit(ad);
+
     // Initialize p2p
     p2pInitialize(&ad->p2p, 0x76, artillery_p2pConCb, artillery_p2pMsgRxCb, -70);
 
@@ -303,6 +306,9 @@ void artilleryExitMode(void)
 {
     // Deinit physics
     deinitPhys(ad->phys);
+
+    // Deinit help menu
+    artilleryHelpDeinit(ad);
 
     // Deinit menus
     deinitMenuSimpleRenderer(ad->smRenderer);

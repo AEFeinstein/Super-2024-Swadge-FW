@@ -113,6 +113,9 @@ typedef struct
     menu_t* gameMenu;
     menuSimpleRenderer_t* smRenderer;
 
+    // Help pages
+    helpPageVars_t* help;
+
     // Timer to only allow a little bit of movement
     int32_t moveTimerUs;
 

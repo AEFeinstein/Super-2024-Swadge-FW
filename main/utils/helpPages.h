@@ -39,7 +39,7 @@ helpPageVars_t* help             = initHelpScreen(bgMenu, menuRenderer, helpPage
 
 
 // Call this in the mode's fnMainLoop function when checkButtonQueueWrapper() emits an event
-if(buttonHelp(helpPageVars_t* help, buttonEvt_t* evt))
+if(buttonHelp(help, evt)) // buttonEvt_t* evt
 {
     // Exit the help menu
 }
