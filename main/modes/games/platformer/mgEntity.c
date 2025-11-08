@@ -1169,12 +1169,14 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_WASP:
         case ENTITY_BUSH_2:
         case ENTITY_BUSH_3:
+        case ENTITY_SHRUBBLE_LV4:
         case ENTITY_DUST_BUNNY_2:
         case ENTITY_DUST_BUNNY_3:
         case ENTITY_WASP_2:
         case ENTITY_WASP_3:
         case ENTITY_CHARGIN_SCHMUCK:
         case ENTITY_BOUNCIN_SCHMUCK:
+        case ENTITY_SPIKY_MCGEE:
         case ENTITY_TURRET:
         case ENTITY_BOSS_TEST:
         {
