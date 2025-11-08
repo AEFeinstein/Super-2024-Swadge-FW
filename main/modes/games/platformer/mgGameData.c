@@ -59,6 +59,7 @@ void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
     gameData->continuesUsed      = 0; //(gameData->world == 1 && gameData->level == 1) ? false : true;
     gameData->inGameTimer        = 0;
     gameData->bgColors           = bgGradientCyan;
+    gameData->customLevel        = false;
 
     mg_resetGameDataLeds(gameData);
 }

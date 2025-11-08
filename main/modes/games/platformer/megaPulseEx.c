@@ -351,7 +351,7 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == mgMenuGo)
         {
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
-            platformer->gameData.countdown = -69;
+            platformer->gameData.customLevel = true;
             changeStateGame(platformer);
         }
         else if (label == mgMenuAbilityUnlockState)
@@ -801,7 +801,7 @@ void changeStateGame(platformer_t* self)
 
     mg_loadWsgSet(&(platformer->wsgManager), leveldef[levelIndex].defaultWsgSetIndex);
 
-    if (self->gameData.countdown == -69)
+    if (self->gameData.customLevel)
     {
         mg_loadMapFromFile(&(platformer->tilemap), -69);
     }
