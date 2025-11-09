@@ -1387,7 +1387,7 @@ mgEntity_t* createShrubbleLv4(mgEntityManager_t* entityManager, uint16_t x, uint
     entity->x       = TO_SUBPIXEL_COORDS(x);
     entity->y       = TO_SUBPIXEL_COORDS(y);
 
-    entity->xspeed               = 8;
+    entity->xspeed               = 0;
     entity->yspeed               = 0;
     entity->xMaxSpeed            = 132;
     entity->yMaxSpeed            = 132;
@@ -1405,6 +1405,7 @@ mgEntity_t* createShrubbleLv4(mgEntityManager_t* entityManager, uint16_t x, uint
     entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
     entity->fallOffTileHandler   = &turnAroundAtEdgeOfTileHandler;
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+    entity->animationTimer       = CRAWLER_NONE;
 
     entity->drawHandler = &mg_defaultEntityDrawHandler;
     return entity;

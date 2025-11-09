@@ -1207,7 +1207,11 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 }
             }
 
-            other->xspeed = -other->xspeed;
+            if(other->type == ENTITY_SHRUBBLE_LV4){
+                crawlerSetMoveState(other, ((other->animationTimer + 4) % 8)+1);
+            } else {
+                other->xspeed = -other->xspeed;
+            }
 
             /*if (self->y < other->y || self->yspeed > 0)
             {
@@ -1516,6 +1520,10 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                     break;
                 }
             }
+            break;
+        case ENTITY_SHRUBBLE_LV4:
+            crawlerSetMoveState(self, ((self->animationTimer + 4) % 8)+1);
+            crawlerSetMoveState(other, ((other->animationTimer + 4) % 8)+1);
             break;
         default:
         {
@@ -3319,6 +3327,14 @@ void mg_updateShrubbleLv4(mgEntity_t* self)
 
     switch (self->animationTimer)
     {
+        case CRAWLER_NONE:
+        {
+            self->animationTimer = mg_crawlerGettInitialMoveState(self->spriteRotateAngle, (bool) self->spawnData->special2);
+            self->xspeed = (self->spawnData->special3);
+           
+            crawlerSetMoveState(self, self->animationTimer);
+            break;
+        }
         // CLOCKWISE
         case CRAWLER_TOP_TO_RIGHT: // On top of a block, going right
             if (((self->x % (MG_TILESIZE << SUBPIXEL_RESOLUTION)) - (MG_HALF_TILESIZE << SUBPIXEL_RESOLUTION)))
@@ -3597,4 +3613,29 @@ void crawlerSetMoveState(mgEntity_t* self, uint8_t state)
     }
 
     self->animationTimer = state;
+}
+
+uint8_t mg_crawlerGettInitialMoveState(int16_t angle, bool clockwise){
+    switch (angle)
+    {
+        case 0 ... 22:
+        default:
+            return clockwise ? CRAWLER_TOP_TO_RIGHT : CRAWLER_TOP_TO_LEFT;
+        case 23 ... 67:
+            return clockwise ? CRAWLER_TOP_TO_RIGHT : CRAWLER_TOP_TO_LEFT;
+        case 68 ... 112:
+            return clockwise ? CRAWLER_RIGHT_TO_BOTTOM : CRAWLER_LEFT_TO_BOTTOM;
+        case 113 ... 157:
+            return clockwise ? CRAWLER_RIGHT_TO_BOTTOM : CRAWLER_LEFT_TO_BOTTOM;
+        case 158 ... 202:
+            return clockwise ? CRAWLER_BOTTOM_TO_LEFT : CRAWLER_BOTTOM_TO_RIGHT;
+        case 203 ... 247:
+            return clockwise ? CRAWLER_BOTTOM_TO_LEFT : CRAWLER_BOTTOM_TO_RIGHT;
+        case 248 ... 292:
+            return clockwise ? CRAWLER_LEFT_TO_TOP : CRAWLER_RIGHT_TO_TOP;
+        case 293 ... 337:
+            return clockwise ? CRAWLER_LEFT_TO_TOP : CRAWLER_RIGHT_TO_TOP;
+        case 338 ... 359:
+            return clockwise ? CRAWLER_TOP_TO_RIGHT : CRAWLER_TOP_TO_LEFT;
+    }
 }

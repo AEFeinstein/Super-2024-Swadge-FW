@@ -161,6 +161,15 @@ tiled.registerMapFormat("Mega Pulse EX", {
                                 entitiesBuffer.push((entity.resolvedProperty("Destination Y Pixel Offset (ignored if linked to Warp Exit)") != null) ? Math.floor(entity.resolvedProperty("Destination Y Pixel Offset (ignored if linked to Warp Exit)")) : 0);
                                 entitiesBuffer.push((entity.resolvedProperty("special7") != null) ? Math.floor(entity.resolvedProperty("special7")) : 0);
                                 break;
+                            case 55:
+                                //Shrubble Lv.4
+                                entitiesBuffer.push((entity.resolvedProperty("moveClockwise") != null) ? Math.floor(entity.resolvedProperty("moveClockwise")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("baseSpeed_subPixelsPerFrame") != null) ? Math.floor(entity.resolvedProperty("baseSpeed_subPixelsPerFrame")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("special4") != null) ? Math.floor(entity.resolvedProperty("special4")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("special5") != null) ? Math.floor(entity.resolvedProperty("special5")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("special6") != null) ? Math.floor(entity.resolvedProperty("special6")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("special7") != null) ? Math.floor(entity.resolvedProperty("special7")) : 0);
+                                break;
                             default:
                                 entitiesBuffer.push((entity.resolvedProperty("special2") != null) ? Math.floor(entity.resolvedProperty("special2")) : 0);
                                 entitiesBuffer.push((entity.resolvedProperty("special3") != null) ? Math.floor(entity.resolvedProperty("special3")) : 0);

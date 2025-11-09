@@ -89,6 +89,7 @@ typedef enum
 
 typedef enum
 {
+    CRAWLER_NONE,
     CRAWLER_TOP_TO_RIGHT,
     CRAWLER_RIGHT_TO_BOTTOM,
     CRAWLER_BOTTOM_TO_LEFT,
@@ -284,5 +285,7 @@ void mg_updateBossTest(mgEntity_t* self);
 void mg_updateShrubbleLv4(mgEntity_t* self);
 
 void crawlerSetMoveState(mgEntity_t* self, uint8_t state);
+
+uint8_t mg_crawlerGettInitialMoveState(int16_t angle, bool counterclockwise);
 
 #endif
