@@ -1544,7 +1544,7 @@ bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx,
 
             if (hitBlock != NULL)
             {
-                mg_setTile(self->tilemap, tx, ty, MG_TILE_INVISIBLE_BLOCK);
+                mg_setTile(self->tilemap, tx, ty, (tileId == MG_TILE_BOUNCE_BLOCK) ? MG_TILE_EMPTY : MG_TILE_INVISIBLE_BLOCK);
                 hitBlock->homeTileX = tx;
                 hitBlock->homeTileY = ty;
                 hitBlock->jumpPower = tileId;
@@ -1590,6 +1590,7 @@ bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx,
                         if (tileId == MG_TILE_BOUNCE_BLOCK)
                         {
                             self->yspeed = -64;
+                            self->falling = true;
                             if (self->gameData->btnState & PB_A)
                             {
                                 self->jumpPower = 80 + ((abs(self->xspeed) + 16) >> 3);
