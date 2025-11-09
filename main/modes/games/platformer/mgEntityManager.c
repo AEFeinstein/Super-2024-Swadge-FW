@@ -1397,6 +1397,7 @@ mgEntity_t* createShrubbleLv4(mgEntityManager_t* entityManager, uint16_t x, uint
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 150;
+    entity->hp                   = 8;
 
     entity->type                 = ENTITY_SHRUBBLE_LV4;
     entity->spriteIndex          = MG_SP_ENEMY_BUSH_L2;

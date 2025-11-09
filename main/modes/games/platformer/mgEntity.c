@@ -3546,6 +3546,7 @@ void mg_updateShrubbleLv4(mgEntity_t* self)
         destroyEntity(self, false);
     }*/
 
+    mg_updateInvincibilityFrames(self);
     despawnWhenOffscreen(self);
 
     self->x += self->xspeed;
