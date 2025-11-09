@@ -125,10 +125,10 @@ static void cipherMainLoop(int64_t elapsedUs){
         outerRace->timeSpinning = (outerRace->timeSpinning + (int)fmin(elapsedUs,(UsPerDeg*10) - (outerRace->timeSpinning % (UsPerDeg*10)) + 1)) % (UsPerDeg*360);
     }
     if(OffsettingLeft){
-        RaceOffset = (RaceOffset + elapsedUs) % (UsPerDeg*360);
+        RaceOffset = (RaceOffset + elapsedUs*2) % (UsPerDeg*360);
     }
     if(OffsettingRight){
-        RaceOffset = ((RaceOffset - elapsedUs) + (UsPerDeg*360)) % (UsPerDeg*360);
+        RaceOffset = ((RaceOffset - elapsedUs*2) + (UsPerDeg*360)) % (UsPerDeg*360);
     }
 
 
