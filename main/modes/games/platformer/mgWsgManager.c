@@ -122,7 +122,7 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(SPRITE_047_WSG, &self->wsgs[MG_WSG_CHECKPOINT_INACTIVE], false);
     loadWsg(SPRITE_048_WSG, &self->wsgs[MG_WSG_CHECKPOINT_ACTIVE_1], false);
     loadWsg(SPRITE_049_WSG, &self->wsgs[MG_WSG_CHECKPOINT_ACTIVE_2], false);
-    loadWsg(TILE_039_WSG, &self->wsgs[MG_WSG_BOUNCE_BLOCK], false);
+    loadWsg(TILE_039_WSG, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1], false);
     loadWsg(TILE_066_WSG, &self->wsgs[MG_WSG_CONTAINER_1], false);
     loadWsg(TILE_034_WSG, &self->wsgs[MG_WSG_BRICK_BLOCK], false);
     loadWsg(TILE_032_WSG, &self->wsgs[MG_WSG_GRASS], false);
@@ -231,6 +231,10 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(PULSE_SHIELD_001_WSG, &self->wsgs[MG_WSG_PLAYER_SHIELD_2], false);
     loadWsg(PULSE_SHIELD_002_WSG, &self->wsgs[MG_WSG_PLAYER_SHIELD_3], false);
     loadWsg(PULSE_SHIELD_003_WSG, &self->wsgs[MG_WSG_PLAYER_SHIELD_4], false);
+    loadWsg(SPIKE_TILE_TOP_00_WSG, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2], false);
+    loadWsg(SPIKE_TILE_LEFT_00_WSG, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3], false);
+    loadWsg(SPIKE_TILE_BOTTOM_00_WSG, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4], false);
+    loadWsg(SPIKE_TILE_RIGHT_00_WSG, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5], false);
 }
 
 void mg_initializeSprites(mgWsgManager_t* self)

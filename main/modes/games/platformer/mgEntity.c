@@ -1685,6 +1685,14 @@ bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx,
             }
             break;
         }
+        //Spike or Lava Tiles
+        case MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2 ... MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5:
+        {
+            if(!self->invincibilityFrames && !self->gameData->debugMode){
+                killPlayer(self);
+            }
+            break;
+        }
         default:
         {
             break;
