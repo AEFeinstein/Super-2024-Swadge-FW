@@ -256,8 +256,7 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
             entitySpawn->xOffsetInPixels     = buf[i + 3];
             entitySpawn->yOffsetInPixels     = buf[i + 4];
             entitySpawn->flags               = buf[i + 5];
-            entitySpawn->special0            = buf[i + 6];
-            entitySpawn->special1            = buf[i + 7];
+            entitySpawn->spriteRotateAngle   = (buf[i + 7] << 8) + buf[i + 6];
             entitySpawn->special2            = buf[i + 8];
             entitySpawn->special3            = buf[i + 9];
             entitySpawn->special4            = buf[i + 10];
@@ -268,7 +267,7 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
             uint16_t linkedEntitySpawnIndex = (buf[i + 15] << 8) + buf[i + 14];
 
             ESP_LOGE("TEST", "Entity #%i: type %i", subiterator, entitySpawn->type);
-            ESP_LOGE("TEST", "specials %i %i %i %i %i %i %i %i", entitySpawn->special0, entitySpawn->special1,
+            ESP_LOGE("TEST", "specials 2-7: %i %i %i %i %i %i",
                      entitySpawn->special2, entitySpawn->special3, entitySpawn->special4, entitySpawn->special5,
                      entitySpawn->special6, entitySpawn->special7);
 
@@ -340,6 +339,7 @@ void mg_hashSpawnEntity(mgEntityManager_t* entityManager, mgEntitySpawnData_t* e
     {
         entityCreated->spriteFlipHorizontal = entitySpawnData->flags & 0b1;
         entityCreated->spriteFlipVertical   = entitySpawnData->flags & 0b10;
+        entityCreated->spriteRotateAngle    = entitySpawnData->spriteRotateAngle;
 
         entityCreated->spawnData = entitySpawnData;
 

@@ -146,11 +146,8 @@ tiled.registerMapFormat("Mega Pulse EX", {
                         entitiesBuffer.push(Math.floor(entity.y) % 16);
                         entitiesBuffer.push((entity.tileFlippedVertically ? 2 : 0) + (entity.tileFlippedHorizontally ? 1 : 0));
 
-                        //TODO: use special0 and special1 to store rotation in degrees (0-359)
-                        entitiesBuffer.push((entity.resolvedProperty("special0") != null) ? Math.floor(entity.resolvedProperty("special0")) : 0);
-                        entitiesBuffer.push((entity.resolvedProperty("special1") != null) ? Math.floor(entity.resolvedProperty("special1")) : 0);
-
-
+                        entitiesBuffer.push( Math.floor(entity.rotation) > 0 ? (Math.floor(entity.rotation) & 0b11111111) : 0);
+                        entitiesBuffer.push( Math.floor(entity.rotation) > 0 ? ((Math.floor(entity.rotation) & 0b1111111100000000) >> 8) : 0);
 
                         switch(entity.resolvedProperty("type").value)
                         {
