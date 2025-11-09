@@ -495,7 +495,7 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_CHECKPOINT_ACTIVE_2].origin = &origin_8_8;
     self->sprites[MG_SP_CHECKPOINT_ACTIVE_2].hitBox = &box_16_16;
 
-    self->sprites[MG_SP_BOUNCE_BLOCK].wsg    = &self->wsgs[MG_WSG_BOUNCE_BLOCK];
+    self->sprites[MG_SP_BOUNCE_BLOCK].wsg    = &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1];
     self->sprites[MG_SP_BOUNCE_BLOCK].origin = &origin_8_8;
     self->sprites[MG_SP_BOUNCE_BLOCK].hitBox = &box_16_16;
 
