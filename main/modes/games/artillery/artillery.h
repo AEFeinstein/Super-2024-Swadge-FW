@@ -17,7 +17,7 @@
 
 #define TANK_MOVE_TIME_US 3000000
 
-#define PHYS_FPS          60
+#define PHYS_FPS          40
 #define PHYS_TIME_STEP_US (1000000 / PHYS_FPS)
 #define PHYS_TIME_STEP_S  (1 / (float)PHYS_FPS)
 
