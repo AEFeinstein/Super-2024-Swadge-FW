@@ -397,6 +397,14 @@ void createBspZones(physSim_t* phys)
         }
 
         // Free the zone that was just split
+        while (zone->circles.length)
+        {
+            pop(&zone->circles);
+        }
+        while (zone->lines.length)
+        {
+            pop(&zone->lines);
+        }
         heap_caps_free(zone);
     }
 
@@ -412,6 +420,14 @@ void createBspZones(physSim_t* phys)
         phys->zones[zIdx].height = zone->aabb.y1 - zone->aabb.y0;
         zIdx++;
 
+        while (zone->circles.length)
+        {
+            pop(&zone->circles);
+        }
+        while (zone->lines.length)
+        {
+            pop(&zone->lines);
+        }
         heap_caps_free(shift(&zList));
     }
 
