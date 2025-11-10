@@ -602,7 +602,7 @@ static int CHPStore(uint32_t address, uint32_t regset, int size)
     {
         // This code does partial writes.
         int ofs                 = address & 3;
-        ch32v003InternalLEDSets = (ch32v003InternalLEDSets & (~(0xff << (ofs * 8)))) | (regset << (ofs * 8));
+        ch32v003InternalLEDSets = (ch32v003InternalLEDSets & (~(0xffu << (ofs * 8)))) | (regset << (ofs * 8));
         return 0;
     }
 
@@ -829,8 +829,8 @@ void ch32v003EmuDraw(int offX, int offY, int window_w, int window_h)
             int bit     = 1 << (tc >> 8);
             int row     = tc & 0xff;
 
-            uint8_t* pptr = tptr + row;
-            int intensity = 0;
+            uint8_t* pptr     = tptr + row;
+            uint32_t intensity = 0;
             int i;
             for (i = 0; i < 8; i++)
             {

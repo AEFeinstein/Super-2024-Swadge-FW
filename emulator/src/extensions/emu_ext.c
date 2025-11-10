@@ -786,7 +786,7 @@ void doExtRenderCb(uint32_t winW, uint32_t winH)
     {
         emuExtInfo_t* info = (emuExtInfo_t*)(node->val);
 
-        if (info && info->enabled && info->extension && info->extension->fnRenderCb)
+        if (info && info->enabled && info->extension && info->extension->fnRenderCb && 0 != info->panes.length)
         {
             emuPane_t panes[info->panes.length];
             uint8_t i        = 0;

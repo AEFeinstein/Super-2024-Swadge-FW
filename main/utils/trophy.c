@@ -511,7 +511,7 @@ bool trophySetChecklistTask(const trophyData_t* t, int32_t flag, bool set, bool 
     trophyDataWrapper_t* tw = heap_caps_calloc(1, sizeof(trophyDataWrapper_t), MALLOC_CAP_8BIT);
     _load(tw, t);
 
-    int32_t newVal = tw->currentVal;
+    uint32_t newVal = tw->currentVal;
     setBitFlag(&newVal, flag, set);
 
     // Run Update
@@ -545,20 +545,20 @@ void trophyClear(const trophyData_t* t)
 
 // Helpers
 
-bool checkBitFlag(int32_t flags, int8_t idx)
+bool checkBitFlag(uint32_t flags, int8_t idx)
 {
-    return ((flags & (1 << idx)) != 0);
+    return ((flags & (1u << idx)) != 0);
 }
 
-void setBitFlag(int32_t* flags, int8_t idx, bool setTrue)
+void setBitFlag(uint32_t* flags, int8_t idx, bool setTrue)
 {
     if (!setTrue)
     {
-        *flags &= ~(1 << idx);
+        *flags &= ~(1u << idx);
     }
     else
     {
-        *flags |= 1 << idx;
+        *flags |= 1u << idx;
     }
 }
 

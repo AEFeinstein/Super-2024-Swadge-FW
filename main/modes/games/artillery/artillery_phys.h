@@ -141,7 +141,7 @@ typedef struct _physCirc_t
 
 typedef struct
 {
-    int32_t zonemask;
+    uint32_t zonemask;
     lineFl_t l;
     vecFl_t unitNormal;
     bool isTerrain;
