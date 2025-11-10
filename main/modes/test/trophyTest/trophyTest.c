@@ -133,7 +133,7 @@ typedef struct
     bool timing;
 
     // Checklist
-    int32_t checklistFlags;
+    uint32_t checklistFlags;
 
     // Trophy Case
     int idx; ///< Current display index

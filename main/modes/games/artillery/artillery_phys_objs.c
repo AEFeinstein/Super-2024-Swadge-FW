@@ -189,7 +189,7 @@ static void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl)
     {
         if (rectLineFlIntersection(phys->zones[zIdx], pl->l, NULL))
         {
-            pl->zonemask |= (1 << zIdx);
+            pl->zonemask |= (1u << zIdx);
         }
     }
 }

@@ -229,7 +229,7 @@ static adsrState_t voiceAdvanceAdsr(midiVoice_t* voice, voiceStates_t* states, u
     uint32_t decayTime  = voice->envelope.decayTime + ((voice->envelope.decayTimeVel * (int)voice->velocity) >> 8);
     uint32_t releaseTime = voice->envelope.releaseTime + ((voice->envelope.releaseTimeVel * (int)voice->velocity) >> 8);
 
-    uint8_t pressureVol = voice->velocity << 1 | 1;
+    uint32_t pressureVol = voice->velocity << 1 | 1;
     uint32_t sustainVol
         = ((voice->envelope.sustainVol << 24) + ((voice->envelope.sustainVolVel * (int8_t)voice->velocity) >> 8));
 

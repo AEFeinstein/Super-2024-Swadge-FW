@@ -422,10 +422,15 @@ int16_t circleLineSegFlIntersection(circleFl_t circle, lineFl_t line, lineFl_t b
  */
 bool lineLineFlIntersection(lineFl_t a, lineFl_t b, vecFl_t* intersection)
 {
+    float denom = ((b.p2.y - b.p1.y) * (a.p2.x - a.p1.x) - (b.p2.x - b.p1.x) * (a.p2.y - a.p1.y));
+    if (0 == denom)
+    {
+        return false;
+    }
     float uA = ((b.p2.x - b.p1.x) * (a.p1.y - b.p1.y) - (b.p2.y - b.p1.y) * (a.p1.x - b.p1.x)) / //
-               ((b.p2.y - b.p1.y) * (a.p2.x - a.p1.x) - (b.p2.x - b.p1.x) * (a.p2.y - a.p1.y));
+               denom;
     float uB = ((a.p2.x - a.p1.x) * (a.p1.y - b.p1.y) - (a.p2.y - a.p1.y) * (a.p1.x - b.p1.x)) / //
-               ((b.p2.y - b.p1.y) * (a.p2.x - a.p1.x) - (b.p2.x - b.p1.x) * (a.p2.y - a.p1.y));
+               denom;
 
     if (uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1)
     {
