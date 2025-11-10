@@ -139,7 +139,7 @@ static int CHPStore(uint32_t address, uint32_t regret, int size);
     }
 static inline uint32_t MINIRV32_LOAD4s(uint32_t ofs, uint32_t* rval, uint32_t* trap)
 {
-    uint32_t tmp;
+    uint32_t tmp = 0;
     if (ofs < FLASH_SIZE - 3)
     {
         tmp = *(uint32_t*)(ch32v003flash + ofs);
@@ -160,7 +160,7 @@ static inline uint32_t MINIRV32_LOAD4s(uint32_t ofs, uint32_t* rval, uint32_t* t
 }
 static inline uint16_t MINIRV32_LOAD2s(uint32_t ofs, uint32_t* rval, uint32_t* trap)
 {
-    uint16_t tmp;
+    uint16_t tmp = 0;
     if (ofs < FLASH_SIZE - 1)
     {
         tmp = *(uint16_t*)(ch32v003flash + ofs);
@@ -181,7 +181,7 @@ static inline uint16_t MINIRV32_LOAD2s(uint32_t ofs, uint32_t* rval, uint32_t* t
 }
 static inline uint8_t MINIRV32_LOAD1s(uint32_t ofs, uint32_t* rval, uint32_t* trap)
 {
-    uint8_t tmp;
+    uint8_t tmp = 0;
     if (ofs < FLASH_SIZE - 0)
     {
         tmp = *(uint8_t*)(ch32v003flash + ofs);
@@ -202,7 +202,7 @@ static inline uint8_t MINIRV32_LOAD1s(uint32_t ofs, uint32_t* rval, uint32_t* tr
 }
 static inline int16_t MINIRV32_LOAD2_SIGNEDs(uint32_t ofs, uint32_t* rval, uint32_t* trap)
 {
-    int16_t tmp;
+    int16_t tmp = 0;
     if (ofs < FLASH_SIZE - 1)
     {
         tmp = *(int16_t*)(ch32v003flash + ofs);
@@ -223,7 +223,7 @@ static inline int16_t MINIRV32_LOAD2_SIGNEDs(uint32_t ofs, uint32_t* rval, uint3
 }
 static inline int8_t MINIRV32_LOAD1_SIGNEDs(uint32_t ofs, uint32_t* rval, uint32_t* trap)
 {
-    int8_t tmp;
+    int8_t tmp = 0;
     if (ofs < FLASH_SIZE - 0)
     {
         tmp = *(int8_t*)(ch32v003flash + ofs);
