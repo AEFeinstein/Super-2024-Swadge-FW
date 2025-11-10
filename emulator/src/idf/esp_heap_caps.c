@@ -7,6 +7,9 @@
 #include <string.h>
 #include <stdbool.h>
 #include "esp_heap_caps.h"
+#ifdef ESP_PLATFORM
+    #include "esp_timer.h"
+#endif
 
 //==============================================================================
 // Defines
@@ -126,14 +129,20 @@ static void printMemoryOperation(memOp_t op, allocation_t* al)
     static bool headerPrinted = false;
     if (!headerPrinted)
     {
-        printf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Operation", "File", "Function", "Line", "Tag", "Pointer", "INT Diff",
-               "SPI Diff", "INT Used", "SPI Used");
+        printf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Timestamp", "Operation", "File", "Function", "Line", "Tag",
+               "Pointer", "INT Diff", "SPI Diff", "INT Used", "SPI Used");
         headerPrinted = true;
     }
 
     // esp_timer_get_time() is impossible to use here for some reason
-    printf("%s,%s,%s,%d,%s,%p,%d,%d,%d,%d\n", opStr, al->file, al->func, al->line, al->tag, al->ptr, internalDiff,
-           spiRamDiff, (uint32_t)usedMemory[0], (uint32_t)usedMemory[1]);
+    printf("%" PRId64 ",%s,%s,%s,%d,%s,%p,%d,%d,%d,%d\n",
+    #ifdef ESP_PLATFORM
+           esp_timer_get_time(),
+    #else
+           (int64_t)0,
+    #endif
+           opStr, al->file, al->func, al->line, al->tag, al->ptr, internalDiff, spiRamDiff, (uint32_t)usedMemory[0],
+           (uint32_t)usedMemory[1]);
 #endif
 }
 

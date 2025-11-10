@@ -461,6 +461,7 @@ bool trophyUpdate(const trophyData_t* t, int newVal, bool drawUpdate)
         return true;
     }
     // not drawing an update
+    heap_caps_free(tw);
     return false;
 }
 
