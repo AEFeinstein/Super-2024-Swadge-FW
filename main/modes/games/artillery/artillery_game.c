@@ -306,9 +306,6 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
     bool cameraMoved = false;
     physStep(ad->phys, elapsedUs, AGS_MENU == ad->gState, &playerMoved, &cameraMoved);
 
-    // Get the system font to draw text
-    font_t* f = getSysFont();
-
     // Draw depending on the game state
     switch (ad->gState)
     {
@@ -429,6 +426,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                 }
             }
 
+            font_t* f           = getSysFont();
             const physCirc_t* p = ad->players[ad->plIdx];
 
             const int32_t BAR_WIDTH   = MAX_SHOT_POWER / 2;
@@ -726,7 +724,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
     }
 
     // TODO remove from production
-    DRAW_FPS_COUNTER((*f));
+    DRAW_FPS_COUNTER((*getSysFont()));
 }
 
 /**
