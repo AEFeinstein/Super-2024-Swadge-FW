@@ -207,8 +207,8 @@ typedef enum
 /// @brief Accessories, beauty marks, etc options
 typedef enum
 {
-    BME_AVATAR,
     BME_NONE,
+    BME_AVATAR,
     BME_BEARD,
     BME_BLUSH,
     BME_BOTTOM,
