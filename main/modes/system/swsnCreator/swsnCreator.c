@@ -450,17 +450,21 @@ static void drawItems(int arrSize, bool left, bool half);
 static void copySonaToList(swadgesona_t* swsn);
 static void copyListToSona(swadgesona_t* swsn);
 
+// SP Packet
+static void swsnPacket(swadgePassPacket_t* packet);
+
 //==============================================================================
 // Variables
 //==============================================================================
 
 swadgeMode_t swsnCreatorMode = {
-    .modeName          = sonaModeName,
-    .wifiMode          = NO_WIFI,
-    .usesAccelerometer = true,
-    .fnEnterMode       = swsnEnterMode,
-    .fnExitMode        = swsnExitMode,
-    .fnMainLoop        = swsnLoop,
+    .modeName                = sonaModeName,
+    .wifiMode                = NO_WIFI,
+    .usesAccelerometer       = true,
+    .fnEnterMode             = swsnEnterMode,
+    .fnExitMode              = swsnExitMode,
+    .fnMainLoop              = swsnLoop,
+    .fnAddToSwadgePassPacket = swsnPacket,
 };
 
 swsnCreatorData_t* scd;
@@ -718,6 +722,7 @@ static bool swsnMenuCb(const char* label, bool selected, uint32_t settingVal)
         if (label == menuOptions[1])
         {
             // Enter the viewer
+            // TODO: Link to viewer mode.
         }
         else if (label == menuOptions[3])
         {
@@ -1723,4 +1728,25 @@ static void copyListToSona(swadgesona_t* swsn)
     swsn->core.mouthShape   = scd->arr[MOUTH];
     swsn->core.glasses      = scd->arr[GLASSES];
     generateSwadgesonaImage(swsn, true);
+}
+
+// SP Packet
+static void swsnPacket(swadgePassPacket_t* packet)
+{
+    swadgesonaCore_t core = {0};
+    size_t size           = sizeof(swadgesonaCore_t);
+    readNvsBlob(spSonaNVSKey, &core, &size);
+    packet->swadgesona.core.skin         = core.skin;
+    packet->swadgesona.core.hairColor    = core.hairColor;
+    packet->swadgesona.core.eyeColor     = core.eyeColor;
+    packet->swadgesona.core.clothes      = core.clothes;
+    packet->swadgesona.core.hatColor     = core.hatColor;
+    packet->swadgesona.core.glassesColor = core.glassesColor;
+    packet->swadgesona.core.eyebrows     = core.eyebrows;
+    packet->swadgesona.core.earShape     = core.earShape;
+    packet->swadgesona.core.eyeShape     = core.eyeShape;
+    packet->swadgesona.core.hairStyle    = core.hairStyle;
+    packet->swadgesona.core.hat          = core.hat;
+    packet->swadgesona.core.mouthShape   = core.mouthShape;
+    packet->swadgesona.core.glasses      = core.glasses;
 }

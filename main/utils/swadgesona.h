@@ -70,6 +70,7 @@ generateRandomSwadgesona(&sw);
  * direct assistance. There are plenty of people willing to help!
  *
  */
+#pragma once
 
 //==============================================================================
 // Includes
