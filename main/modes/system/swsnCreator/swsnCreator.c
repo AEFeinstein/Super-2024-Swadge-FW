@@ -435,8 +435,8 @@ static bool slideTab(int selected, bool out, uint64_t elapsedUs);
 static void initSlideTabClosed(int size);
 
 // Open Panels
-static bool panelOpen(buttonEvt_t* evt);
-static void panelInput(buttonEvt_t* evt, int size);
+static int panelOpen(void);
+static void panelInput(buttonEvt_t evt, int size);
 static int drawPanelContents(void);
 static void drawColors(const paletteColor_t* colors, int arrSize, bool left);
 static void drawArrows(int arrSize, bool left);
@@ -485,6 +485,13 @@ static void swsnEnterMode(void)
     globalMidiPlayerPlaySong(&scd->bgm, MIDI_BGM);
 
     // If the SP swadgesona isn't saved yet, automatically load into creating the SP Sona
+
+    // FIXME: I don't understand why I have to re-initialize this every time, but I do.
+    // If I don't, on hardware it lists this as all zeros. It's consistent over 5+ factory resets.
+    // It's supposed to be called in swadge2024.c (line 443) and then be active for the whole system, but apparently
+    // not. If there's a solution to this, I don't know it.
+    initUsernameSystem();
+
     size_t len = sizeof(swadgesonaCore_t);
     if (!readNvsBlob(spSonaNVSKey, &scd->activeSona.core, &len))
     {
@@ -546,7 +553,11 @@ static void swsnLoop(int64_t elapsedUs)
                 case BODY_PART:
                 {
                     // Input
-                    runCreator(evt);
+                    while (checkButtonQueueWrapper(&evt))
+                    {
+                        runCreator(evt);
+                    }
+                    drawCreator();
                     break;
                 }
                 case SLIDING:
@@ -569,7 +580,12 @@ static void swsnLoop(int64_t elapsedUs)
                 }
                 case PANEL_OPEN:
                 {
-                    panelOpen(&evt);
+                    int size = panelOpen();
+                    // Handle input after drawing because input can free resources
+                    while (checkButtonQueueWrapper(&evt))
+                    {
+                        panelInput(evt, size);
+                    }
                     break;
                 }
                 default:
@@ -802,204 +818,197 @@ static void swsnResetMenu()
 // Creator
 static void runCreator(buttonEvt_t evt)
 {
-    while (checkButtonQueueWrapper(&evt))
+    if (evt.down)
     {
-        if (evt.down)
+        if (scd->selection >= (NUM_TABS_PER_SIDE * 2))
         {
-            if (scd->selection >= (NUM_TABS_PER_SIDE * 2))
-            {
-                if (evt.button & PB_DOWN)
-                {
-                    if (scd->selection == EXIT)
-                    {
-                        scd->selection = NUM_TABS_PER_SIDE;
-                    }
-                    else if (scd->selection == SAVE)
-                    {
-                        scd->selection = 0;
-                    }
-                }
-                else if (evt.button & PB_RIGHT)
-                {
-                    scd->selection = EXIT;
-                }
-                else if (evt.button & PB_LEFT)
-                {
-                    scd->selection = SAVE;
-                }
-            }
-            else
-            {
-                if (evt.button & PB_UP)
-                {
-                    scd->selection--;
-                    if (scd->selection < 0)
-                    {
-                        scd->selection = SAVE;
-                    }
-                    else if (scd->selection == NUM_TABS_PER_SIDE - 1)
-                    {
-                        scd->selection = EXIT;
-                    }
-                }
-                else if (evt.button & PB_DOWN)
-                {
-                    if ((scd->selection + 1) % NUM_TABS_PER_SIDE != 0)
-                    {
-                        scd->selection++;
-                    }
-                }
-                else if (evt.button & PB_LEFT && scd->selection >= NUM_TABS_PER_SIDE
-                         && scd->selection < (NUM_TABS_PER_SIDE * 2))
-                {
-                    scd->selection -= NUM_TABS_PER_SIDE;
-                }
-                else if (evt.button & PB_RIGHT && scd->selection < NUM_TABS_PER_SIDE)
-                {
-                    scd->selection += NUM_TABS_PER_SIDE;
-                }
-            }
-            if (evt.button & PB_A)
+            if (evt.button & PB_DOWN)
             {
                 if (scd->selection == EXIT)
                 {
-                    // Handle exit
-                    if (!promptSaveBeforeQuit())
-                    {
-                        freeWsg(&scd->cursorImage);
-                        scd->state     = MENU;
-                        scd->selection = 0;
-                        swsnResetMenu();
-                        return;
-                    }
-                    return;
+                    scd->selection = NUM_TABS_PER_SIDE;
                 }
                 else if (scd->selection == SAVE)
                 {
-                    initTextEntry();
-                    return;
+                    scd->selection = 0;
                 }
-                copySwadgesona(&scd->liveSona, &scd->activeSona);
-                copySonaToList(&scd->activeSona);
-                scd->out                 = true;
-                scd->cState              = SLIDING;
-                scd->arr[scd->selection] = 0;
-                switch (scd->selection)
-                {
-                    case HAIR:
-                    {
-                        scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(hairWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
-                        for (int i = 0; i < ARRAY_SIZE(hairWsgs); i++)
-                        {
-                            loadWsg(hairWsgs[i], &scd->selectionImages[i], true);
-                        }
-                        scd->arr[scd->selection] = scd->activeSona.core.hairStyle;
-                        break;
-                    }
-                    case EYES:
-                    {
-                        scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(eyeWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
-                        for (int i = 0; i < ARRAY_SIZE(eyeWsgs); i++)
-                        {
-                            loadWsg(eyeWsgs[i], &scd->selectionImages[i], true);
-                        }
-                        scd->arr[scd->selection] = scd->activeSona.core.eyeShape;
-                        break;
-                    }
-                    case HAT:
-                    {
-                        scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(hatWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
-                        for (int i = 0; i < ARRAY_SIZE(hatWsgs); i++)
-                        {
-                            loadWsg(hatWsgs[i], &scd->selectionImages[i], true);
-                        }
-                        scd->arr[scd->selection] = scd->activeSona.core.hat;
-                        break;
-                    }
-                    case MOUTH:
-                    {
-                        scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(mouthWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
-                        for (int i = 0; i < ARRAY_SIZE(mouthWsgs); i++)
-                        {
-                            loadWsg(mouthWsgs[i], &scd->selectionImages[i], true);
-                        }
-                        scd->arr[scd->selection] = scd->activeSona.core.mouthShape;
-                        break;
-                    }
-                    case GLASSES:
-                    {
-                        scd->selectionImages
-                            = heap_caps_calloc(ARRAY_SIZE(glassesWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
-                        for (int i = 0; i < ARRAY_SIZE(glassesWsgs); i++)
-                        {
-                            loadWsg(glassesWsgs[i], &scd->selectionImages[i], true);
-                        }
-                        scd->arr[scd->selection] = scd->activeSona.core.glasses;
-                        break;
-                    }
-                    case BODY_MODS:
-                    {
-                        scd->selectionImages
-                            = heap_caps_calloc(ARRAY_SIZE(bodymarksWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
-                        for (int i = 0; i < ARRAY_SIZE(bodymarksWsgs); i++)
-                        {
-                            loadWsg(bodymarksWsgs[i], &scd->selectionImages[i], true);
-                        }
-                        scd->arr[scd->selection] = scd->activeSona.core.bodyMarks;
-                        break;
-                    }
-                    case EARS:
-                    {
-                        scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(earWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
-                        for (int i = 0; i < ARRAY_SIZE(earWsgs); i++)
-                        {
-                            loadWsg(earWsgs[i], &scd->selectionImages[i], true);
-                        }
-                        scd->arr[scd->selection] = scd->activeSona.core.earShape;
-                        break;
-                    }
-                    case EYEBROWS:
-                    {
-                        scd->selectionImages
-                            = heap_caps_calloc(ARRAY_SIZE(eyebrowsWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
-                        for (int i = 0; i < ARRAY_SIZE(eyebrowsWsgs); i++)
-                        {
-                            loadWsg(eyebrowsWsgs[i], &scd->selectionImages[i], true);
-                        }
-                        scd->arr[scd->selection] = scd->activeSona.core.eyebrows;
-                        break;
-                    }
-                    case SKIN:
-                    {
-                        scd->arr[scd->selection] = scd->activeSona.core.skin;
-                        break;
-                    }
-                    case CLOTHES:
-                    {
-                        scd->arr[scd->selection] = scd->activeSona.core.clothes;
-                        break;
-                    }
-                    default:
-                    {
-                        break;
-                    }
-                }
-                scd->page = scd->arr[scd->selection] / GRID_SIZE;
             }
-            else if (evt.button & PB_B)
+            else if (evt.button & PB_RIGHT)
             {
+                scd->selection = EXIT;
+            }
+            else if (evt.button & PB_LEFT)
+            {
+                scd->selection = SAVE;
+            }
+        }
+        else
+        {
+            if (evt.button & PB_UP)
+            {
+                scd->selection--;
+                if (scd->selection < 0)
+                {
+                    scd->selection = SAVE;
+                }
+                else if (scd->selection == NUM_TABS_PER_SIDE - 1)
+                {
+                    scd->selection = EXIT;
+                }
+            }
+            else if (evt.button & PB_DOWN)
+            {
+                if ((scd->selection + 1) % NUM_TABS_PER_SIDE != 0)
+                {
+                    scd->selection++;
+                }
+            }
+            else if (evt.button & PB_LEFT && scd->selection >= NUM_TABS_PER_SIDE
+                     && scd->selection < (NUM_TABS_PER_SIDE * 2))
+            {
+                scd->selection -= NUM_TABS_PER_SIDE;
+            }
+            else if (evt.button & PB_RIGHT && scd->selection < NUM_TABS_PER_SIDE)
+            {
+                scd->selection += NUM_TABS_PER_SIDE;
+            }
+        }
+        if (evt.button & PB_A)
+        {
+            if (scd->selection == EXIT)
+            {
+                // Handle exit
                 if (!promptSaveBeforeQuit())
                 {
                     freeWsg(&scd->cursorImage);
                     scd->state     = MENU;
                     scd->selection = 0;
                     swsnResetMenu();
+                    return;
                 }
                 return;
             }
+            else if (scd->selection == SAVE)
+            {
+                initTextEntry();
+                return;
+            }
+            copySwadgesona(&scd->liveSona, &scd->activeSona);
+            copySonaToList(&scd->activeSona);
+            scd->out                 = true;
+            scd->cState              = SLIDING;
+            scd->arr[scd->selection] = 0;
+            switch (scd->selection)
+            {
+                case HAIR:
+                {
+                    scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(hairWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
+                    for (int i = 0; i < ARRAY_SIZE(hairWsgs); i++)
+                    {
+                        loadWsg(hairWsgs[i], &scd->selectionImages[i], true);
+                    }
+                    scd->arr[scd->selection] = scd->activeSona.core.hairStyle;
+                    break;
+                }
+                case EYES:
+                {
+                    scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(eyeWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
+                    for (int i = 0; i < ARRAY_SIZE(eyeWsgs); i++)
+                    {
+                        loadWsg(eyeWsgs[i], &scd->selectionImages[i], true);
+                    }
+                    scd->arr[scd->selection] = scd->activeSona.core.eyeShape;
+                    break;
+                }
+                case HAT:
+                {
+                    scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(hatWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
+                    for (int i = 0; i < ARRAY_SIZE(hatWsgs); i++)
+                    {
+                        loadWsg(hatWsgs[i], &scd->selectionImages[i], true);
+                    }
+                    scd->arr[scd->selection] = scd->activeSona.core.hat;
+                    break;
+                }
+                case MOUTH:
+                {
+                    scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(mouthWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
+                    for (int i = 0; i < ARRAY_SIZE(mouthWsgs); i++)
+                    {
+                        loadWsg(mouthWsgs[i], &scd->selectionImages[i], true);
+                    }
+                    scd->arr[scd->selection] = scd->activeSona.core.mouthShape;
+                    break;
+                }
+                case GLASSES:
+                {
+                    scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(glassesWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
+                    for (int i = 0; i < ARRAY_SIZE(glassesWsgs); i++)
+                    {
+                        loadWsg(glassesWsgs[i], &scd->selectionImages[i], true);
+                    }
+                    scd->arr[scd->selection] = scd->activeSona.core.glasses;
+                    break;
+                }
+                case BODY_MODS:
+                {
+                    scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(bodymarksWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
+                    for (int i = 0; i < ARRAY_SIZE(bodymarksWsgs); i++)
+                    {
+                        loadWsg(bodymarksWsgs[i], &scd->selectionImages[i], true);
+                    }
+                    scd->arr[scd->selection] = scd->activeSona.core.bodyMarks;
+                    break;
+                }
+                case EARS:
+                {
+                    scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(earWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
+                    for (int i = 0; i < ARRAY_SIZE(earWsgs); i++)
+                    {
+                        loadWsg(earWsgs[i], &scd->selectionImages[i], true);
+                    }
+                    scd->arr[scd->selection] = scd->activeSona.core.earShape;
+                    break;
+                }
+                case EYEBROWS:
+                {
+                    scd->selectionImages = heap_caps_calloc(ARRAY_SIZE(eyebrowsWsgs), sizeof(wsg_t), MALLOC_CAP_8BIT);
+                    for (int i = 0; i < ARRAY_SIZE(eyebrowsWsgs); i++)
+                    {
+                        loadWsg(eyebrowsWsgs[i], &scd->selectionImages[i], true);
+                    }
+                    scd->arr[scd->selection] = scd->activeSona.core.eyebrows;
+                    break;
+                }
+                case SKIN:
+                {
+                    scd->arr[scd->selection] = scd->activeSona.core.skin;
+                    break;
+                }
+                case CLOTHES:
+                {
+                    scd->arr[scd->selection] = scd->activeSona.core.clothes;
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+            scd->page = scd->arr[scd->selection] / GRID_SIZE;
+        }
+        else if (evt.button & PB_B)
+        {
+            if (!promptSaveBeforeQuit())
+            {
+                freeWsg(&scd->cursorImage);
+                scd->state     = MENU;
+                scd->selection = 0;
+                swsnResetMenu();
+            }
+            return;
         }
     }
-    drawCreator();
 }
 
 static void drawCreator(void)
@@ -1225,7 +1234,7 @@ static void initSlideTabClosed(int size)
 }
 
 // Open Panels
-static bool panelOpen(buttonEvt_t* evt)
+static int panelOpen()
 {
     // Draw
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c445);
@@ -1304,170 +1313,161 @@ static bool panelOpen(buttonEvt_t* evt)
         }
     }
 
-    int size = drawPanelContents();
-
-    // Handle input after drawing because input can free resources
-    panelInput(evt, size);
-
     // When to update sona?
-    return false;
+    return drawPanelContents();
 }
 
-static void panelInput(buttonEvt_t* evt, int size)
+static void panelInput(buttonEvt_t evt, int size)
 {
-    while (checkButtonQueueWrapper(evt))
+    if (evt.down)
     {
-        if (evt->down)
+        if (evt.button & PB_RIGHT)
         {
-            if (evt->button & PB_RIGHT)
+            if (scd->arr[scd->selection] % GRID_ROW == GRID_ROW - 1)
             {
-                if (scd->arr[scd->selection] % GRID_ROW == GRID_ROW - 1)
+                if (scd->page < (size / GRID_SIZE) && !(scd->page + 1 == (size / GRID_SIZE) && (size % GRID_SIZE) == 0))
                 {
-                    if (scd->page < (size / GRID_SIZE)
-                        && !(scd->page + 1 == (size / GRID_SIZE) && (size % GRID_SIZE) == 0))
-                    {
-                        scd->page++;
-                        scd->arr[scd->selection] += GRID_SIZE - (GRID_ROW - 1);
-                    }
-                    if (scd->arr[scd->selection] > size - 1)
-                    {
-                        scd->arr[scd->selection] = size - 1;
-                    }
-                }
-                else if (scd->arr[scd->selection] < size - 1)
-                {
-                    scd->arr[scd->selection]++;
-                }
-            }
-            else if (evt->button & PB_LEFT)
-            {
-                if (scd->arr[scd->selection] % GRID_ROW == 0)
-                {
-                    if (scd->page > 0)
-                    {
-                        scd->page--;
-                        scd->arr[scd->selection] -= GRID_SIZE - (GRID_ROW - 1);
-                    }
-                }
-                else if (scd->arr[scd->selection] > 0)
-                {
-                    scd->arr[scd->selection]--;
-                }
-            }
-            else if (evt->button & PB_UP)
-            {
-                if (scd->arr[scd->selection] >= GRID_ROW + scd->page * GRID_SIZE)
-                {
-                    scd->arr[scd->selection] -= GRID_ROW;
-                }
-            }
-            else if (evt->button & PB_DOWN)
-            {
-                if (scd->arr[scd->selection] < (scd->page + 1) * GRID_SIZE - GRID_ROW)
-                {
-                    scd->arr[scd->selection] += GRID_ROW;
+                    scd->page++;
+                    scd->arr[scd->selection] += GRID_SIZE - (GRID_ROW - 1);
                 }
                 if (scd->arr[scd->selection] > size - 1)
                 {
                     scd->arr[scd->selection] = size - 1;
                 }
             }
-            else if (evt->button & PB_A)
+            else if (scd->arr[scd->selection] < size - 1)
             {
-                switch (scd->selection)
-                {
-                    case HAIR:
-                    {
-                        scd->selection = HAIR_COLOR;
-                        scd->page      = scd->arr[scd->selection] / GRID_SIZE;
-                        break;
-                    }
-                    case EYES:
-                    {
-                        scd->selection = EYE_COLOR;
-                        scd->page      = scd->arr[scd->selection] / GRID_SIZE;
-                        break;
-                    }
-                    case HAT:
-                    {
-                        if (scd->arr[scd->selection] == HAE_BEANIE || scd->arr[scd->selection] == HAE_COOL_HAT
-                            || scd->arr[scd->selection] == HAE_PUFFBALL || scd->arr[scd->selection] == HAE_HEART)
-                        {
-                            scd->selection = HAT_COLOR;
-                            scd->page      = scd->arr[scd->selection] / GRID_SIZE;
-                            break;
-                        }
-                        initSlideTabClosed(size);
-                        break;
-                    }
-                    case GLASSES:
-                    {
-                        if (scd->arr[scd->selection] == G_BIG || scd->arr[scd->selection] == G_BIGANGLE
-                            || scd->arr[scd->selection] == G_BIGSQUARE || scd->arr[scd->selection] == G_LINDA
-                            || scd->arr[scd->selection] == G_LOW || scd->arr[scd->selection] == G_RAYBAN
-                            || scd->arr[scd->selection] == G_READING || scd->arr[scd->selection] == G_SMALL
-                            || scd->arr[scd->selection] == G_SQUARE || scd->arr[scd->selection] == G_THINANGLE
-                            || scd->arr[scd->selection] == G_UPTURNED || scd->arr[scd->selection] == G_WIDENOSE)
-                        {
-                            scd->selection = GLASSES_COLOR;
-                            scd->page      = scd->arr[scd->selection] / GRID_SIZE;
-                            break;
-                        }
-                        initSlideTabClosed(size);
-                        break;
-                    }
-                    default:
-                    {
-                        switch (scd->selection)
-                        {
-                            case HAIR_COLOR:
-                            {
-                                scd->selection = HAIR;
-                                break;
-                            }
-                            case EYE_COLOR:
-                            {
-                                scd->selection = EYES;
-                                break;
-                            }
-                            case HAT_COLOR:
-                            {
-                                scd->selection = HAT;
-                                break;
-                            }
-                            case GLASSES_COLOR:
-                            {
-                                scd->selection = GLASSES;
-                                break;
-                            }
-                            default:
-                            {
-                                break;
-                            }
-                        }
-                        // If no color needs to be selected
-                        initSlideTabClosed(size);
-                        break;
-                    }
-                }
+                scd->arr[scd->selection]++;
             }
-            else if (evt->button & PB_B)
-            {
-                scd->cState = SLIDING;
-                scd->out    = false;
-                if (scd->selectionImages != NULL)
-                {
-                    for (int i = 0; i < size; i++)
-                    {
-                        freeWsg(&scd->selectionImages[i]);
-                    }
-                    heap_caps_free(scd->selectionImages);
-                    scd->selectionImages = NULL;
-                }
-            }
-            // Copy selection into live
-            copyListToSona(&scd->liveSona);
         }
+        else if (evt.button & PB_LEFT)
+        {
+            if (scd->arr[scd->selection] % GRID_ROW == 0)
+            {
+                if (scd->page > 0)
+                {
+                    scd->page--;
+                    scd->arr[scd->selection] -= GRID_SIZE - (GRID_ROW - 1);
+                }
+            }
+            else if (scd->arr[scd->selection] > 0)
+            {
+                scd->arr[scd->selection]--;
+            }
+        }
+        else if (evt.button & PB_UP)
+        {
+            if (scd->arr[scd->selection] >= GRID_ROW + scd->page * GRID_SIZE)
+            {
+                scd->arr[scd->selection] -= GRID_ROW;
+            }
+        }
+        else if (evt.button & PB_DOWN)
+        {
+            if (scd->arr[scd->selection] < (scd->page + 1) * GRID_SIZE - GRID_ROW)
+            {
+                scd->arr[scd->selection] += GRID_ROW;
+            }
+            if (scd->arr[scd->selection] > size - 1)
+            {
+                scd->arr[scd->selection] = size - 1;
+            }
+        }
+        else if (evt.button & PB_A)
+        {
+            switch (scd->selection)
+            {
+                case HAIR:
+                {
+                    scd->selection = HAIR_COLOR;
+                    scd->page      = scd->arr[scd->selection] / GRID_SIZE;
+                    break;
+                }
+                case EYES:
+                {
+                    scd->selection = EYE_COLOR;
+                    scd->page      = scd->arr[scd->selection] / GRID_SIZE;
+                    break;
+                }
+                case HAT:
+                {
+                    if (scd->arr[scd->selection] == HAE_BEANIE || scd->arr[scd->selection] == HAE_COOL_HAT
+                        || scd->arr[scd->selection] == HAE_PUFFBALL || scd->arr[scd->selection] == HAE_HEART)
+                    {
+                        scd->selection = HAT_COLOR;
+                        scd->page      = scd->arr[scd->selection] / GRID_SIZE;
+                        break;
+                    }
+                    initSlideTabClosed(size);
+                    break;
+                }
+                case GLASSES:
+                {
+                    if (scd->arr[scd->selection] == G_BIG || scd->arr[scd->selection] == G_BIGANGLE
+                        || scd->arr[scd->selection] == G_BIGSQUARE || scd->arr[scd->selection] == G_LINDA
+                        || scd->arr[scd->selection] == G_LOW || scd->arr[scd->selection] == G_RAYBAN
+                        || scd->arr[scd->selection] == G_READING || scd->arr[scd->selection] == G_SMALL
+                        || scd->arr[scd->selection] == G_SQUARE || scd->arr[scd->selection] == G_THINANGLE
+                        || scd->arr[scd->selection] == G_UPTURNED || scd->arr[scd->selection] == G_WIDENOSE)
+                    {
+                        scd->selection = GLASSES_COLOR;
+                        scd->page      = scd->arr[scd->selection] / GRID_SIZE;
+                        break;
+                    }
+                    initSlideTabClosed(size);
+                    break;
+                }
+                default:
+                {
+                    switch (scd->selection)
+                    {
+                        case HAIR_COLOR:
+                        {
+                            scd->selection = HAIR;
+                            break;
+                        }
+                        case EYE_COLOR:
+                        {
+                            scd->selection = EYES;
+                            break;
+                        }
+                        case HAT_COLOR:
+                        {
+                            scd->selection = HAT;
+                            break;
+                        }
+                        case GLASSES_COLOR:
+                        {
+                            scd->selection = GLASSES;
+                            break;
+                        }
+                        default:
+                        {
+                            break;
+                        }
+                    }
+                    // If no color needs to be selected
+                    initSlideTabClosed(size);
+                    break;
+                }
+            }
+        }
+        else if (evt.button & PB_B)
+        {
+            scd->cState = SLIDING;
+            scd->out    = false;
+            if (scd->selectionImages != NULL)
+            {
+                for (int i = 0; i < size; i++)
+                {
+                    freeWsg(&scd->selectionImages[i]);
+                }
+                heap_caps_free(scd->selectionImages);
+                scd->selectionImages = NULL;
+            }
+        }
+        // Copy selection into live
+        copyListToSona(&scd->liveSona);
     }
 }
 
