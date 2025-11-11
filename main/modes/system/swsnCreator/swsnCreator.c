@@ -63,6 +63,9 @@
 #define OPTIONS_BORDER 24
 #define OPTIONS_H      48
 
+// Saved message
+#define SAVE_TIMER 1500000
+
 //==============================================================================
 // Consts
 //==============================================================================
@@ -82,7 +85,7 @@ static const char* const cursorOptions[] = {
     "Donut",   "Hotdog",       "Ender",  "Gem",   "Ghost",      "Hammer", "Heart",     "Leaf",       " Magic Wand",
     "Glove",   "Corner arrow", "Pencil", "Pizza", "Rainbow",    "Ruler",  "Sword",     "Watermelon", "Weiner",
 };
-static const char* const creatorText[] = {"Save | Quit", "Save ", " Quit"};
+static const char* const creatorText[] = {"Save | Quit", "Save ", " Quit", "SAVED!"};
 static const char* const warningText[] = {
     "WARNING!",
     "You have unsaved changes. To save your changes, select 'Enter Name'. To exit without saving, select 'exit'.",
@@ -328,7 +331,7 @@ typedef enum
     NAMING,
     SP_NAMING,
     PROMPT_SAVE,
-    VIEWING,
+    SAVED,
 } swsnCreatorState_t;
 
 typedef enum
@@ -393,6 +396,7 @@ typedef struct
     bool hasChanged; // If the sona has changed
     bool shouldQuit;
     uint8_t slot;
+    int64_t savedTimer;
 
     // Slide
     bool out;
@@ -542,10 +546,6 @@ static void swsnLoop(int64_t elapsedUs)
             drawMenuMega(scd->menu, scd->renderer, elapsedUs);
             break;
         }
-        case VIEWING:
-        {
-            break;
-        }
         case CREATING:
         {
             switch (scd->cState)
@@ -614,7 +614,7 @@ static void swsnLoop(int64_t elapsedUs)
                 snprintf(buffer, sizeof(buffer) - 1, "%s%d%s", NVSStrings[1], scd->slot, NVSStrings[2]);
                 writeNamespaceNvsBlob(NVSStrings[0], buffer, &scd->nickname, MAX_NAME_LEN);
                 textEntryDeinit();
-                scd->state      = CREATING;
+                scd->state      = SAVED;
                 scd->hasChanged = false;
                 break;
             }
@@ -634,7 +634,7 @@ static void swsnLoop(int64_t elapsedUs)
                 strcpy(scd->nickname, scd->activeSona.name.nameBuffer);
                 setSystemUsername(&scd->activeSona.name);
                 writeNvsBlob(spSonaNVSKey, &scd->activeSona.core, sizeof(swadgesonaCore_t));
-                scd->state      = CREATING;
+                scd->state      = SAVED;
                 scd->hasChanged = false;
                 break;
             }
@@ -666,6 +666,7 @@ static void swsnLoop(int64_t elapsedUs)
                         else
                         {
                             initTextEntry();
+                            scd->shouldQuit = true; // Automatically close when done
                         }
                     }
                     else if (evt.button & PB_B)
@@ -677,6 +678,30 @@ static void swsnLoop(int64_t elapsedUs)
 
             // Draw
             drawPrompt();
+            break;
+        }
+        case SAVED:
+        {
+            scd->savedTimer += elapsedUs;
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down)
+                {
+                    scd->state      = (scd->shouldQuit) ? MENU : CREATING;
+                    scd->shouldQuit = false;
+                    scd->savedTimer = 0;
+                }
+            }
+            if (scd->savedTimer > SAVE_TIMER)
+            {
+                scd->state      = (scd->shouldQuit) ? MENU : CREATING;
+                scd->shouldQuit = false;
+                scd->savedTimer = 0;
+            }
+            clearPxTft();
+            drawText(&scd->fnt, c555, creatorText[3], (TFT_WIDTH - textWidth(&scd->fnt, creatorText[3])) >> 1,
+                     (TFT_HEIGHT - scd->fnt.height) >> 1);
+            break;
         }
         default:
         {
