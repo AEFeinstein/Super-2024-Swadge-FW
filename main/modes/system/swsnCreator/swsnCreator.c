@@ -478,7 +478,7 @@ static void swsnEnterMode(void)
     loadFont(RODIN_EB_FONT, &scd->fnt, true);
 
     // Load audio
-    loadMidiFile(ODE_MID, &scd->bgm, true);
+    loadMidiFile(SWSN_CREATOR_BGM1_MID, &scd->bgm, true);
     scd->bgmPlayer       = globalMidiPlayerGet(MIDI_BGM);
     scd->bgmPlayer->loop = true;
     midiGmOn(scd->bgmPlayer);
@@ -1005,7 +1005,6 @@ static void runCreator(buttonEvt_t evt)
 static void drawCreator(void)
 {
     // Background
-    clearPxTft();
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c445);
 
     // Draw the swadgesona face
@@ -1114,7 +1113,6 @@ static bool slideTab(int selected, bool out, uint64_t elapsedUs)
     bool left = scd->selection < NUM_TABS_PER_SIDE;
 
     // Draw BG
-    clearPxTft();
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c445);
 
     // Draw swadgesona
@@ -1230,7 +1228,6 @@ static void initSlideTabClosed(int size)
 static bool panelOpen(buttonEvt_t* evt)
 {
     // Draw
-    clearPxTft();
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c445);
 
     // Draw open tab
