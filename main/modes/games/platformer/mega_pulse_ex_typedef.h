@@ -1002,10 +1002,25 @@ static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_rightE
 static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_leftEdge
     = {.collisionPoints = {{.x = -7, .y = 14}, {.x = -7, .y = 0}, {.x = -7, .y = -14}}, .size = 3};
 
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_topEdge_dash_slide
+= {.collisionPoints = {{.x = -7, .y = 0}, {.x = 0, .y = 0}, {.x = 7, .y = -0}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_rightEdge_dash_slide
+    = {.collisionPoints = {{.x = 8, .y = 14}, {.x = 8, .y = 0}, {.x = 8, .y = 1}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_leftEdge_dash_slide
+    = {.collisionPoints = {{.x = -7, .y = 14}, {.x = -7, .y = 0}, {.x = -7, .y = 1}}, .size = 3};
+
 static const mg_EntityTileCollider_t entityTileCollider_1x2 = {.bottomEdge = &mgTileCollisionOffsets_1x2_bottomEdge,
                                                                .topEdge    = &mgTileCollisionOffsets_1x2_topEdge,
                                                                .rightEdge  = &mgTileCollisionOffsets_1x2_rightEdge,
                                                                .leftEdge   = &mgTileCollisionOffsets_1x2_leftEdge};
+
+
+static const mg_EntityTileCollider_t entityTileCollider_1x2_dash_slide = {.bottomEdge = &mgTileCollisionOffsets_1x2_bottomEdge,
+                                                               .topEdge    = &mgTileCollisionOffsets_1x2_topEdge_dash_slide,
+                                                               .rightEdge  = &mgTileCollisionOffsets_1x2_rightEdge_dash_slide,
+                                                               .leftEdge   = &mgTileCollisionOffsets_1x2_leftEdge_dash_slide};
 
 typedef enum
 {

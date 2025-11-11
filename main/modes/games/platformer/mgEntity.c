@@ -115,6 +115,7 @@ void mg_updatePlayer(mgEntity_t* self)
                     {
                         // Initiate dash
                         self->state = MG_PL_ST_DASHING;
+                        self->tileCollider = &entityTileCollider_1x2_dash_slide;
 
                         if (self->falling)
                         {
@@ -155,6 +156,7 @@ void mg_updatePlayer(mgEntity_t* self)
                     {
                         // Initiate dash
                         self->state = MG_PL_ST_DASHING;
+                        self->tileCollider = &entityTileCollider_1x2_dash_slide;
 
                         if (self->falling)
                         {
@@ -191,11 +193,17 @@ void mg_updatePlayer(mgEntity_t* self)
 
                 if (!self->falling && !(self->gameData->btnState & PB_LEFT))
                 {
-                    self->stateTimer = 0;
+                    if(mg_canExitDashSlide(self))
+                    {
+                        self->stateTimer = 0;
+                    }
                 }
-                else if (self->gameData->btnState & PB_RIGHT)
+                 
+                if (self->gameData->btnState & PB_RIGHT)
                 {
                     self->spriteFlipHorizontal = false;
+                    self->xspeed = 64;
+                    soundPlaySfx(&(self->soundManager->sndJump3), BZR_LEFT);
                 }
             }
             else
@@ -204,19 +212,30 @@ void mg_updatePlayer(mgEntity_t* self)
 
                 if (!self->falling && !(self->gameData->btnState & PB_RIGHT))
                 {
-                    self->stateTimer = 0;
+                    if(mg_canExitDashSlide(self))
+                    {
+                        self->stateTimer = 0;
+                    }
                 }
-                else if (self->gameData->btnState & PB_LEFT)
+                
+                if (self->gameData->btnState & PB_LEFT)
                 {
                     self->spriteFlipHorizontal = true;
+                    self->xspeed = -64;
+                    soundPlaySfx(&(self->soundManager->sndJump3), BZR_LEFT);
                 }
             }
 
             self->stateTimer--;
             if (self->stateTimer <= 0)
             {
-                self->state   = MG_PL_ST_NORMAL;
-                self->gravity = 4;
+                if(mg_canExitDashSlide(self)){
+                    self->state   = MG_PL_ST_NORMAL;
+                    self->tileCollider = &entityTileCollider_1x2;
+                    self->gravity = 4;
+                } else {
+                    self->stateTimer = 32;
+                }
             }
             break;
         case MG_PL_ST_SHIELD:
@@ -311,6 +330,7 @@ void mg_updatePlayer(mgEntity_t* self)
             if (self->state == MG_PL_ST_DASHING)
             {
                 self->state      = MG_PL_ST_NORMAL;
+                self->tileCollider = &entityTileCollider_1x2;
                 self->stateTimer = -1;
                 self->gravity    = 4;
             }
@@ -891,6 +911,48 @@ bool mg_canWallJump(mgEntity_t* self)
     }
 
     return false;
+}
+
+bool mg_canExitDashSlide(mgEntity_t* self)
+{
+    uint16_t x                                  = TO_PIXEL_COORDS(self->x);
+    uint16_t y                                  = TO_PIXEL_COORDS(self->y);
+    const mg_EntityTileCollider_t* tileCollider = self->tileCollider;
+
+    int16_t offX, offY, tempX, tempY, tempTx, tempTy, tempT;
+
+        const mg_EntityTileCollisionPointList_t* topEdge = tileCollider->topEdge;
+        for (int i = 0; i < topEdge->size; i++)
+        {
+            offX  = topEdge->collisionPoints[i].x;
+            offY  = topEdge->collisionPoints[i].y;
+            tempX = x + offX;
+            tempY = y + offY - 2;
+
+            tempTx = MG_TO_TILECOORDS(tempX);
+            tempTy = MG_TO_TILECOORDS(tempY);
+
+             drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + self->xspeed +
+             (SIGNOF(self->xspeed) * MG_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + self->yspeed + (SIGNOF(self->yspeed) *
+             MG_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0); drawRect((tempTx << MG_TILESIZE_IN_POWERS_OF_2)
+             - self->tilemap->mapOffsetX, (tempTy << MG_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx
+             << MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetX, (tempTy <<
+             MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetY, c500);
+
+            tempT = mg_getTile(self->tilemap, tempTx, tempTy);
+
+            // if (self->tileCollisionHandler(self, tempT, tempTx, tempTy, 1))
+            // {
+            //     return false;
+            // }
+
+            if (mg_isSolid(tempT))
+            {
+                return false;
+            }
+        }
+    soundPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
+    return true;
 }
 
 void defaultFallOffTileHandler(mgEntity_t* self)

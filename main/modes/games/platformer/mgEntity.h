@@ -191,6 +191,7 @@ void updateHitBlock(mgEntity_t* self);
 void mg_moveEntityWithTileCollisions(mgEntity_t* self);
 void mg_moveEntityWithTileCollisions3(mgEntity_t* self);
 bool mg_canWallJump(mgEntity_t* self);
+bool mg_canExitDashSlide(mgEntity_t* self);
 void defaultFallOffTileHandler(mgEntity_t* self);
 
 void despawnWhenOffscreen(mgEntity_t* self);
