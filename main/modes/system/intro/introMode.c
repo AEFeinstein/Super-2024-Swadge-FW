@@ -14,11 +14,14 @@
 #include "font.h"
 #include "shapes.h"
 #include "wsg.h"
+#include "nameList.h"
 
 #include "embeddedOut.h"
 #include "bunny.h"
 
-// #define CUSTOM_INTRO_SOUND
+//#define CUSTOM_INTRO_SOUND
+
+#define INTRO_MUSIC
 
 static void introEnterMode(void);
 static void introExitMode(void);
@@ -42,6 +45,7 @@ static void introDrawSwadgeTouchpad(int64_t elapsedUs, vec_t touchPoint, list_t*
 static void introDrawSwadgeImu(int64_t elapsedUs);
 static void introDrawSwadgeSpeaker(int64_t elapsedUs);
 static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, uint16_t maxValue);
+static void introSwadgePass(int64_t elapsedUs);
 
 #define ALL_BUTTONS  (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_B | PB_START | PB_SELECT)
 #define DPAD_BUTTONS (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT)
@@ -49,7 +53,7 @@ static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, 
 // #define ALL_TOUCH (TB_CENTER | TB_RIGHT | TB_UP | TB_LEFT | TB_DOWN)
 
 static const char startTitle[]        = "Welcome!";
-static const char holdLongerMessage[] = "Almost! Keep holding MENU for one second to exit.";
+//static const char holdLongerMessage[] = "Almost! Keep holding MENU for one second to exit.";
 static const char endTitle[]          = "Exiting Modes";
 static const char endDetail[]         = "You are now Swadge Certified! Remember, with great power comes great "
                                         "responsibility. Hold MENU to exit the tutorial and get started!";
@@ -63,7 +67,7 @@ static const char spkTitle[]      = "Speaker";
 static const char micTitle[]      = "Microphone";
 static const char touchpadTitle[] = "Touchpad";
 static const char imuTitle[]      = "Tilt Controls";
-// static const char passTitle[]     = "SwadgePass";
+static const char passTitle[]     = "SwadgePass";
 // static const char sonaTitle[]     = "Your Sona";
 
 static const tutorialStep_t buttonsSteps[] = {
@@ -200,7 +204,15 @@ static const tutorialStep_t buttonsSteps[] = {
         .title = endTitle,
         .detail = endDetail,
     },
-    {
+        {
+        .trigger = {
+            .type = BUTTON_PRESS,
+            .buttons = PB_A,
+        },
+        .title = passTitle,
+        .detail = "SwadgePass transfers your profile data to other users. Leave your Swadge turned on during the Fest to meet others. Press A to set your profile up."
+    },
+    /*{
         .trigger = {
             .type = TIME_PASSED,
             .intData = EXIT_TIME_US / 3,
@@ -251,14 +263,14 @@ static const tutorialStep_t buttonsSteps[] = {
         },
         .title = "Exiting in 0...",
         .detail = "Goodbye!",
-    },
+    },*/
 };
 
 static const char introName[] = "Tutorial";
 
 swadgeMode_t introMode = {
     .modeName                 = introName,
-    .wifiMode                 = NO_WIFI,
+    .wifiMode                 = ESP_NOW, //changed this to generate username 
     .overrideUsb              = false,
     .usesAccelerometer        = true,
     .usesThermometer          = false,
@@ -294,6 +306,7 @@ typedef struct
 bool playSample(audioSamplePlayer_t* player, uint8_t* samples, int16_t len);
 #endif
 
+
 typedef struct
 {
     int16_t x;
@@ -314,6 +327,7 @@ typedef enum
     DRAW_IMU,
     DRAW_SPK,
     DRAW_MIC,
+    SWADGE_PASS,
 } introDrawMode_t;
 
 typedef struct
@@ -381,6 +395,7 @@ typedef struct
 
     // Speaker test
     midiFile_t song;
+    midiFile_t intro_song;
 } introVars_t;
 
 static introVars_t* iv;
@@ -399,7 +414,7 @@ static void introEnterMode(void)
     makeOutlineFont(&iv->logoFont, &iv->logoFontOutline, true);
 
 #ifdef CUSTOM_INTRO_SOUND
-    iv->samplePlayer.sample = cnfsGetFile(MAGFEST_BIN, &iv->samplePlayer.sampleCount);
+    iv->samplePlayer.sample = cnfsGetFile(INTROJINGLE_MID, &iv->samplePlayer.sampleCount);
     iv->samplePlayer.factor = 2;
 #endif
 
@@ -479,12 +494,15 @@ static void introEnterMode(void)
     switchToSpeaker();
 #endif
 
-    // Load the MIDI file
+    // Load the test MIDI file
     loadMidiFile(HD_CREDITS_MID, &iv->song, true);
 
     // Init CC
     InitColorChord(&iv->end, &iv->dd);
     iv->maxValue = 1;
+
+
+
 }
 
 /**
@@ -513,6 +531,12 @@ static void introExitMode(void)
     freeWsg(&iv->icon.full_swadge);
 
     unloadMidiFile(&iv->song);
+
+    #ifdef INTRO_MUSIC
+
+    unloadMidiFile(&iv->intro_song);
+
+    #endif
 
     heap_caps_free(iv);
 }
@@ -706,7 +730,6 @@ static void introMainLoop(int64_t elapsedUs)
     int16_t detailYmin = titleY + iv->bigFont.height + 1 - 20;
     int16_t detailYmax = TFT_HEIGHT - 30;
     int16_t detailX    = 25;
-    // drawMenuBody(25, detailYmax - detailYmin, 33, true, iv->renderer);
 
     uint16_t detailH = textWordWrapHeight(&iv->smallFont, detail, TFT_WIDTH - 60, detailYmax - detailYmin);
     int16_t detailY  = detailYmax - detailH;
@@ -739,6 +762,11 @@ static void introMainLoop(int64_t elapsedUs)
         case DRAW_MIC:
         {
             introDrawSwadgeMicrophone(elapsedUs, iv->end.fuzzed_bins, iv->maxValue);
+            break;
+        }
+        case SWADGE_PASS:
+        {
+            introSwadgePass(elapsedUs);
             break;
         }
     }
@@ -1187,12 +1215,28 @@ static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, 
     }
 }
 
-static void introDrawSona()
+/*static void introDrawSona()
 {
     ;
+}*/
+
+static void introSwadgePass(int64_t elapsedUs)
+{
+    //draw username 
+    
+    nameData_t username = *getSystemUsername();
+    char prefix[] = "Your username is ";
+    char suffix[] = ". If you don't like it, you can adjust it in the next step.";
+    int namelen = sizeof(username.nameBuffer);
+    int prelen = sizeof(prefix);
+    int suflen = sizeof(suffix);
+    
+
+    char buf[namelen+prelen+suflen];
+        snprintf(buf, sizeof(buf) - 1, "%s%s%s", prefix, username.nameBuffer, suffix);
+            
+
+    drawTextWordWrap(&iv->smallFont, c000, buf, 20, 40, TFT_WIDTH - 25, 100);
 }
 
-static void introSwadgePass()
-{
-    ;
-}
+
