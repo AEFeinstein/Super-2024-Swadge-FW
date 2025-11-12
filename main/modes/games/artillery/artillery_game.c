@@ -752,6 +752,11 @@ void artilleryPassTurn(artilleryData_t* ad)
 
             // Stop playing music
             globalMidiPlayerStop(MIDI_BGM);
+            midiGmOn(globalMidiPlayerGet(MIDI_BGM));
+            midiPause(globalMidiPlayerGet(MIDI_BGM), true);
+            globalMidiPlayerStop(MIDI_SFX);
+            midiGmOn(globalMidiPlayerGet(MIDI_SFX));
+            midiPause(globalMidiPlayerGet(MIDI_SFX), false);
 
             bool isP1 = true;
             switch (ad->gameType)
