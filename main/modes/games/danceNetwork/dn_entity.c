@@ -1700,6 +1700,7 @@ void dn_trySelectTrack(dn_entity_t* self)
                                       + (tData->pos.x + tData->pos.y)
                                             * (self->gameData->assets[DN_GROUND_TILE_ASSET].originY << DN_DECIMAL_BITS)
                                       - (bData->tiles[tData->pos.y][tData->pos.x].yOffset)};
+                    ((dn_bulletData_t*)bullet->data)->secondYOffset = 60;
                     if (type == DN_REMIX_TRACK)
                     {
                         ((dn_bulletData_t*)bullet->data)->ownerToMove = from;
@@ -2049,14 +2050,19 @@ void dn_gainRerollAndSetupDancePhase(dn_entity_t* self)
 
 void dn_setupDancePhase(dn_entity_t* self) // used to be dn_startMovePhase
 {
+    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
     dn_entity_t* existingSelector = dn_findLastEntityOfType(self, DN_TILE_SELECTOR_DATA);
     if (existingSelector)
     {
-        ((dn_boardData_t*)self->gameData->entityManager.board->data)
-            ->tiles[((dn_tileSelectorData_t*)existingSelector->data)->pos.y]
-                   [((dn_tileSelectorData_t*)existingSelector->data)->pos.x]
+        dn_boardPos_t* pos = &((dn_tileSelectorData_t*)existingSelector->data)->pos;
+        if(pos->y != -1 && pos->x != -1)
+        {
+            bData->tiles[pos->y]
+                   [pos->x]
             .selector
             = NULL;
+        }
+        
         existingSelector->destroyFlag = true;
     }
 
@@ -2096,6 +2102,14 @@ void dn_setupDancePhase(dn_entity_t* self) // used to be dn_startMovePhase
 
     ((dn_boardData_t*)self->gameData->entityManager.board->data)->tiles[tData->pos.y][tData->pos.x].selector
         = tileSelector;
+
+    for(int i = 0; i < 5; i++)
+    {
+        bData->p1Units[i]->paused = true;
+        bData->p2Units[i]->paused = true;
+        ((dn_unitData_t*)bData->p1Units[i]->data)->animation = DN_UNIT_STILL;
+        ((dn_unitData_t*)bData->p2Units[i]->data)->animation = DN_UNIT_STILL;
+    }
 }
 
 void dn_acceptRerollAndSkip(dn_entity_t* self)
@@ -3230,6 +3244,17 @@ void dn_updateBullet(dn_entity_t* self)
 
     // sine wave that peaks at 75 pixels to fake a parabola.
     buData->yOffset = (int8_t)(sin(buData->lerpAmount * 0.00010471975511965977461542144610931676280657) * 75);
+    buData->yOffset += dn_lerp(buData->secondYOffset, 0, buData->lerpAmount);
+
+    if(buData->lerpAmount > MAX_LERP_AMOUNT / 2)
+    {
+        dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
+        for(int i = 0; i < 5; i++)
+        {
+            ((dn_unitData_t*)bData->p1Units[i]->data)->animation = DN_UNIT_STILL;
+            ((dn_unitData_t*)bData->p2Units[i]->data)->animation = DN_UNIT_STILL;
+        }
+    }
 }
 
 void dn_drawBullet(dn_entity_t* self)
@@ -3247,29 +3272,42 @@ void dn_drawBullet(dn_entity_t* self)
 
 void dn_moveUnit(dn_entity_t* self)
 {
-    self->paused          = false;
-    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
     dn_unitData_t* uData  = (dn_unitData_t*)self->data;
-
-    for (int y = 0; y < DN_BOARD_SIZE; y++)
+    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    uData->animation = DN_UNIT_TELEPORT;
+    if(self->currentAnimationFrame != self->gameData->assets[self->assetIndex].numFrames - 1 && self->currentAnimationFrame != 10)
     {
-        for (int x = 0; x < DN_BOARD_SIZE; x++)
+        return;
+    }
+    else if(self->currentAnimationFrame == self->gameData->assets[self->assetIndex].numFrames - 1)
+    {
+        for (int y = 0; y < DN_BOARD_SIZE; y++)
         {
-            if (bData->tiles[y][x].unit == self)
+            for (int x = 0; x < DN_BOARD_SIZE; x++)
             {
-                bData->tiles[y][x].unit = NULL;
-                if (y != 0 && y != 4
-                    && ((self->gameData->phase < DN_P2_DANCE_PHASE && uData->moveTo.y == 0)
-                        || (self->gameData->phase >= DN_P2_DANCE_PHASE && uData->moveTo.y == 4)))
+                if (bData->tiles[y][x].unit == self && (y != uData->moveTo.y || x != uData->moveTo.x))
                 {
-                    // units get a reroll for moving into the farthest rank.
-                    dn_gainReroll(self);
+                    bData->tiles[uData->moveTo.y][uData->moveTo.x].unit = self;
+                    bData->tiles[y][x].unit = NULL;
+                    if (y != 0 && y != 4
+                        && ((self->gameData->phase < DN_P2_DANCE_PHASE && uData->moveTo.y == 0)
+                            || (self->gameData->phase >= DN_P2_DANCE_PHASE && uData->moveTo.y == 4)))
+                    {
+                        // units get a reroll for moving into the farthest rank.
+                        dn_gainReroll(self);
+                    }
+                    break;
                 }
-                break;
             }
         }
+        return;
     }
-    bData->tiles[uData->moveTo.y][uData->moveTo.x].unit = self;
+
+    if(bData->tiles[uData->moveTo.y][uData->moveTo.x].unit != self)
+    {
+        return;
+    }
+
     bData->impactPos                                    = uData->moveTo;
 
     self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]
@@ -3779,10 +3817,44 @@ void dn_updateAlphaAnimation(dn_entity_t* self)
         }
         case DN_UNIT_TELEPORT:
         {
+            if(self->paused)
+            {
+                self->animationTimer++;
+                if(self->animationTimer >= self->gameFramesPerAnimationFrame)
+                {
+                    self->animationTimer = 0;
+
+                    if(self->currentAnimationFrame > 0 && self->currentAnimationFrame != 10)
+                    {
+                        self->currentAnimationFrame--;
+                    }
+                    else if(self->currentAnimationFrame == 0)
+                    {
+                        self->currentAnimationFrame = 10;
+                        self->paused = false;
+                    }
+                    else if(self->currentAnimationFrame == 10)
+                    {
+                        self->paused = true;
+                        self->currentAnimationFrame = 0;
+                        uData->animation = DN_UNIT_STILL;
+                    }
+                }
+            }
+            else if(self->currentAnimationFrame == 16)
+            {
+                self->paused = true;
+            }
             break;
         }
-        default:
+        default://DN_UNIT_STILL
         {
+            self->animationTimer++;
+            if(self->currentAnimationFrame > 0 && self->animationTimer >= self->gameFramesPerAnimationFrame)
+            {
+                self->animationTimer = 0;
+                self->currentAnimationFrame--;
+            }
             break;
         }
     }
@@ -3851,7 +3923,7 @@ void dn_updateChessPawnAnimation(dn_entity_t* self)
         {
             break;
         }
-        default:
+        default://DN_UNIT_STILL
         {
             break;
         }
