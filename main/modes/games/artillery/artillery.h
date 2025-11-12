@@ -104,7 +104,6 @@ typedef struct
     menu_t* modeMenu;
     menu_t* blankMenu;
     menuMegaRenderer_t* mRenderer;
-    font_t* scoreFont;
 
     // The game state (i.e. moving, adjusting shot, etc.)
     artilleryGameState_t gState;
@@ -149,6 +148,11 @@ typedef struct
     // Eye LEDs
     artilleryEye_t eyeSlot;
     int32_t deadEyeTimer;
+
+    // Fonts
+    font_t font_oxanium;
+    font_t font_oxaniumOutline;
+    font_t font_pulseAux;
 } artilleryData_t;
 
 extern const char load_ammo[];

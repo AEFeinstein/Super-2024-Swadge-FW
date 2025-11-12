@@ -171,7 +171,7 @@ const trophyDataList_t artilleryTrophyData = {
 swadgeMode_t artilleryMode = {
     .modeName                 = modeName,
     .wifiMode                 = ESP_NOW,
-    .overrideUsb              = false,
+    .overrideUsb              = true,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
     .overrideSelectBtn        = false,
@@ -214,9 +214,13 @@ void artilleryEnterMode(void)
 
     ad->blankMenu = initMenu(str_paintSelect, NULL);
 
+    // Load fonts, not to SPIRAM
+    loadFont(OXANIUM_FONT, &ad->font_oxanium, false);
+    makeOutlineFont(&ad->font_oxanium, &ad->font_oxaniumOutline, false);
+    loadFont(PULSE_AUX_FONT, &ad->font_pulseAux, false);
+
     // Initialize mode menu renderer
-    ad->mRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
-    ad->scoreFont = ad->mRenderer->menuFont;
+    ad->mRenderer = initMenuMegaRenderer(&ad->font_oxanium, &ad->font_oxaniumOutline, &ad->font_pulseAux);
 
     static const paletteColor_t cycle[] = {
         COLOR_GRADIENT_1, COLOR_GRADIENT_2, COLOR_GRADIENT_3, COLOR_GRADIENT_4,
@@ -273,7 +277,7 @@ void artilleryEnterMode(void)
     artilleryPaintLoadColor(ad);
 
     // Load and initialize sounds
-    loadMidiFile(FOLLINESQUE_MID, &ad->bgm, true);
+    loadMidiFile(FOLLINESQUE_MID, &ad->bgm, false);
     globalMidiPlayerGet(MIDI_BGM)->loop = true;
     midiGmOn(globalMidiPlayerGet(MIDI_BGM));
     midiPause(globalMidiPlayerGet(MIDI_BGM), true);
@@ -316,6 +320,11 @@ void artilleryExitMode(void)
     deinitMenu(ad->modeMenu);
     deinitMenu(ad->blankMenu);
     deinitMenu(ad->gameMenu);
+
+    // Free fonts
+    freeFont(&ad->font_oxanium);
+    freeFont(&ad->font_oxaniumOutline);
+    freeFont(&ad->font_pulseAux);
 
     // Deinit p2p
     p2pDeinit(&ad->p2p);

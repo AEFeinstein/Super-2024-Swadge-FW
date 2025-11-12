@@ -5,10 +5,12 @@
 #include <math.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 #include "hdw-tft.h"
 #include "shapes.h"
 #include "fill.h"
+#include "macros.h"
 
 //==============================================================================
 // Defines
@@ -1399,7 +1401,72 @@ void drawCircleOutline(int xm, int ym, int r, int stroke, paletteColor_t col)
  */
 void drawCircleFilled(int xm, int ym, int r, paletteColor_t col)
 {
-    drawCircleFilledInner(xm, ym, r, col, 0, 0, 1, 1);
+    // Quick bounds check first
+    if (xm + r < 0 || xm - r >= TFT_WIDTH || ym + r < 0 || ym - r >= TFT_HEIGHT)
+    {
+        return;
+    }
+
+    // Get a framebuffer to draw to
+    paletteColor_t* fb = getPxTftFramebuffer();
+
+    // Variables for tracing the circle
+    int x        = -r;
+    int y        = 0;
+    int err      = 2 - 2 * r; /* bottom left to top right */
+    bool drawRow = true;
+
+    // Loop
+    do
+    {
+        // Only fill a new row when Y changes
+        if (drawRow)
+        {
+            drawRow = false;
+
+            // Find where X starts and ends on this row, clamped to the display
+            int xMin   = xm + x;
+            xMin       = CLAMP(xMin, 0, TFT_WIDTH);
+            int xMax   = xm - x;
+            xMax       = CLAMP(xMax, 0, TFT_WIDTH);
+            int xWidth = xMax - xMin;
+
+            // If there is something to draw
+            if (xWidth)
+            {
+                // Fill a row of the lower half of the circle, if on screen
+                int ymp = (ym + y);
+                if (0 <= ymp && ymp < TFT_HEIGHT)
+                {
+                    memset(&fb[TFT_WIDTH * ymp + xMin], col, xWidth);
+                }
+
+                // Fill a row of the upper half of the circle, if on screen
+                int ymn = (ym - y);
+                if (0 <= ymn && ymn < TFT_HEIGHT)
+                {
+                    memset(&fb[TFT_WIDTH * ymn + xMin], col, xWidth);
+                }
+            }
+        }
+
+        // Circle math
+        r = err;
+        if (r <= y)
+        {
+            /* e_xy + e_y < 0 */
+            err += ++y * 2 + 1;
+
+            // y changed, so fill the next rows
+            drawRow = true;
+        }
+        /* e_xy + e_x > 0 or no 2nd y-step */
+        if (r > x || err > y)
+        {
+            /* -> x-step now */
+            err += ++x * 2 + 1;
+        }
+    } while (x < 0);
 }
 
 /**

@@ -310,7 +310,7 @@ void powerUpTft(void)
 
 /**
  * @brief Return the pixel framebuffer, which is (TFT_WIDTH * TFT_HEIGHT) pixels
- * in row order, starting from the top left. This can be used t directly modify
+ * in row order, starting from the top left. This can be used to directly modify
  * individual pixels without calling ::setPxTft()
  *
  * @return The pixel framebuffer
