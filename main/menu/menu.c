@@ -48,13 +48,41 @@ static void deinitSubMenu(menu_t* menu);
  */
 menu_t* initMenu(const char* title, menuCb cbFunc)
 {
-    menu_t* menu      = heap_caps_calloc(1, sizeof(menu_t), MALLOC_CAP_SPIRAM);
+    return initMenuRam(title, cbFunc, MALLOC_CAP_SPIRAM);
+}
+
+/**
+ * @brief Initialize and return an empty menu. A menu is a collection of vertically
+ * scrollable rows. The rows are separated into pages, and when a page
+ * boundary is crossed the whole page scrolls.
+ *
+ * Rows may be single items, or multi items, which are collections of horizontally
+ * scrollable items. The callback is called whenever a row is moved to or selected,
+ * and when a multi item is scrolled to or selected.
+ *
+ * Rows may also be submenus. When a submenu is selected, the callback is not
+ * called, and instead a the submenu is rendered. Each submenu automatically
+ * has a "Back" item added to it, which returns to the parent menu
+ *
+ * @param title  The title to be displayed for this menu. The underlying memory
+ *               isn't copied, so this string must persist for the lifetime of
+ *               the menu.
+ * @param cbFunc The function to call when a menu option is selected. The
+ *               argument to the callback will be the same pointer
+ * @param memCaps Where to allocate memory
+ * @return A pointer to the newly allocated menu_t. This must be de-initialized
+ *         when the menu is not used anymore.
+ */
+menu_t* initMenuRam(const char* title, menuCb cbFunc, uint32_t memCaps)
+{
+    menu_t* menu      = heap_caps_calloc(1, sizeof(menu_t), memCaps);
     menu->title       = title;
     menu->cbFunc      = cbFunc;
     menu->currentItem = NULL;
-    menu->items       = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+    menu->items       = heap_caps_calloc(1, sizeof(list_t), memCaps);
     menu->parentMenu  = NULL;
     menu->showBattery = false;
+    menu->memCaps     = memCaps;
     return menu;
 }
 
@@ -131,15 +159,16 @@ static void deinitSubMenu(menu_t* menu)
 menu_t* startSubMenu(menu_t* menu, const char* label)
 {
     // Allocate a submenu
-    menu_t* subMenu      = heap_caps_calloc(1, sizeof(menu_t), MALLOC_CAP_SPIRAM);
+    menu_t* subMenu      = heap_caps_calloc(1, sizeof(menu_t), menu->memCaps);
     subMenu->title       = label;
     subMenu->cbFunc      = menu->cbFunc;
     subMenu->currentItem = NULL;
-    subMenu->items       = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
+    subMenu->items       = heap_caps_calloc(1, sizeof(list_t), menu->memCaps);
     subMenu->parentMenu  = menu;
+    subMenu->memCaps     = menu->memCaps;
 
     // Allocate a new menu item
-    menuItem_t* newItem = heap_caps_calloc(1, sizeof(menuItem_t), MALLOC_CAP_SPIRAM);
+    menuItem_t* newItem = heap_caps_calloc(1, sizeof(menuItem_t), menu->memCaps);
     newItem->label      = label;
     newItem->options    = NULL;
     newItem->numOptions = 0;
@@ -192,7 +221,7 @@ menu_t* endSubMenu(menu_t* menu)
  */
 menuItem_t* addSingleItemToMenu(menu_t* menu, const char* label)
 {
-    menuItem_t* newItem = heap_caps_calloc(1, sizeof(menuItem_t), MALLOC_CAP_SPIRAM);
+    menuItem_t* newItem = heap_caps_calloc(1, sizeof(menuItem_t), menu->memCaps);
     newItem->label      = label;
     newItem->options    = NULL;
     newItem->numOptions = 0;
@@ -229,7 +258,7 @@ menuItem_t* addSingleItemToMenu(menu_t* menu, const char* label)
  */
 menuItem_t* insertSingleItemToMenuAfter(menu_t* menu, const char* newLabel, const char* afterLabel)
 {
-    menuItem_t* newItem = heap_caps_calloc(1, sizeof(menuItem_t), MALLOC_CAP_SPIRAM);
+    menuItem_t* newItem = heap_caps_calloc(1, sizeof(menuItem_t), menu->memCaps);
     newItem->label      = newLabel;
     newItem->options    = NULL;
     newItem->numOptions = 0;
@@ -342,7 +371,7 @@ menu_t* removeAllItemsFromMenu(menu_t* menu)
  */
 void addMultiItemToMenu(menu_t* menu, const char* const* labels, uint8_t numLabels, uint8_t currentLabel)
 {
-    menuItem_t* newItem = heap_caps_calloc(1, sizeof(menuItem_t), MALLOC_CAP_SPIRAM);
+    menuItem_t* newItem = heap_caps_calloc(1, sizeof(menuItem_t), menu->memCaps);
     newItem->label      = NULL;
     newItem->options    = labels;
     newItem->numOptions = numLabels;
@@ -409,7 +438,7 @@ void removeMultiItemFromMenu(menu_t* menu, const char* const* labels)
  */
 void addSettingsItemToMenu(menu_t* menu, const char* label, const settingParam_t* bounds, int32_t val)
 {
-    menuItem_t* newItem     = heap_caps_calloc(1, sizeof(menuItem_t), MALLOC_CAP_SPIRAM);
+    menuItem_t* newItem     = heap_caps_calloc(1, sizeof(menuItem_t), menu->memCaps);
     newItem->label          = label;
     newItem->minSetting     = bounds->min;
     newItem->maxSetting     = bounds->max;
@@ -488,7 +517,7 @@ menuItem_t* addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel,
                                          const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
                                          int32_t currentValue)
 {
-    menuItem_t* newItem     = heap_caps_calloc(1, sizeof(menuItem_t), MALLOC_CAP_SPIRAM);
+    menuItem_t* newItem     = heap_caps_calloc(1, sizeof(menuItem_t), menu->memCaps);
     newItem->label          = settingLabel;
     newItem->options        = optionLabels;
     newItem->settingVals    = optionValues;

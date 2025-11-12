@@ -426,7 +426,7 @@ void app_main(void)
     tLastLoopUs                = esp_timer_get_time();
 
     // Initialize system font and trophy-get sound
-    loadFont(IBM_VGA_8_FONT, &sysFont, true);
+    loadFont(IBM_VGA_8_FONT, &sysFont, false);
 
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)
