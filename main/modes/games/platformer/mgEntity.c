@@ -855,12 +855,12 @@ bool mg_canExitDashSlide(mgEntity_t* self)
             tempTx = MG_TO_TILECOORDS(tempX);
             tempTy = MG_TO_TILECOORDS(tempY);
 
-             drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + self->xspeed +
-             (SIGNOF(self->xspeed) * MG_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + self->yspeed + (SIGNOF(self->yspeed) *
-             MG_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0); drawRect((tempTx << MG_TILESIZE_IN_POWERS_OF_2)
-             - self->tilemap->mapOffsetX, (tempTy << MG_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx
-             << MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetX, (tempTy <<
-             MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetY, c500);
+            //  drawLine(tempX - self->tilemap->mapOffsetX, tempY  - self->tilemap->mapOffsetY, tempX + self->xspeed +
+            //  (SIGNOF(self->xspeed) * MG_HALF_TILESIZE)  - self->tilemap->mapOffsetX, tempY + self->yspeed + (SIGNOF(self->yspeed) *
+            //  MG_HALF_TILESIZE)  - self->tilemap->mapOffsetY, c500, 0); drawRect((tempTx << MG_TILESIZE_IN_POWERS_OF_2)
+            //  - self->tilemap->mapOffsetX, (tempTy << MG_TILESIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetY, (tempTx
+            //  << MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetX, (tempTy <<
+            //  MG_TILESIZE_IN_POWERS_OF_2) + MG_TILESIZE - self->tilemap->mapOffsetY, c500);
 
             tempT = mg_getTile(self->tilemap, tempTx, tempTy);
 
@@ -874,7 +874,7 @@ bool mg_canExitDashSlide(mgEntity_t* self)
                 return false;
             }
         }
-    soundPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
+    //soundPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
     return true;
 }
 
