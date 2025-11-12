@@ -143,7 +143,7 @@ void mg_updatePlayer(mgEntity_t* self)
                     self->tileCollider = &entityTileCollider_1x2;
                     self->gravity = 4;
                 } else {
-                    self->stateTimer = 32;
+                    self->stateTimer = 1;
                 }
             }
             break;
