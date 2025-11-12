@@ -584,12 +584,6 @@ static void swsnEnterMode(void)
 
     // If the SP swadgesona isn't saved yet, automatically load into creating the SP Sona
 
-    // XXX: I don't understand why I have to re-initialize this every time, but I do.
-    // If I don't, on hardware it lists this as all zeros. It's consistent over 5+ factory resets.
-    // It's supposed to be called in swadge2024.c (line 443) and then be active for the whole system, but apparently
-    // not. If there's a solution to this, I don't know it.
-    // initUsernameSystem();
-
     size_t len = sizeof(swadgesonaCore_t);
     if (!readNvsBlob(spSonaNVSKey, &scd->activeSona.core, &len))
     {

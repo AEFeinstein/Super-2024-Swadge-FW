@@ -404,8 +404,7 @@ void setUsernameFrom32(nameData_t* nd, int32_t packed)
 
 static bool _getMacAddress()
 {
-    esp_err_t ret = esp_wifi_get_mac(WIFI_IF_STA, baseMac);
-    if (ret != ESP_OK)
+    if (!getMacAddrNvs(baseMac))
     {
         ESP_LOGE("USRN", "Failed to read MAC address");
         for (int idx = 0; idx < 6; idx++)
