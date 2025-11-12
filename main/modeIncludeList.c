@@ -61,19 +61,17 @@ void modeListSetMenu(menu_t* menu)
     menu = startSubMenu(menu, "Utilities");
     addSingleItemToMenu(menu, gamepadMode.modeName);
     addSingleItemToMenu(menu, danceMode.modeName);
-    addSingleItemToMenu(menu, introMode.modeName);
     addSingleItemToMenu(menu, modeDiceRoller.modeName);
     addSingleItemToMenu(menu, bouncyMode.modeName);
+    addSingleItemToMenu(menu, tCaseMode.modeName);
+    addSingleItemToMenu(menu, introMode.modeName);
+    addSingleItemToMenu(menu, modeCredits.modeName);
     menu = endSubMenu(menu);
 
-    // Swadgsona creator
+    // Swadgepass
+    menu = startSubMenu(menu, "SwadgePass");
     addSingleItemToMenu(menu, swsnCreatorMode.modeName);
-
-    // Trophy Case
-    addSingleItemToMenu(menu, tCaseMode.modeName);
-
-    // Credits
-    addSingleItemToMenu(menu, modeCredits.modeName);
+    menu = endSubMenu(menu);
 }
 
 void modeListAddSecretMenuModes(menu_t* menu)
