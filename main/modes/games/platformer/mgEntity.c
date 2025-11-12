@@ -104,36 +104,36 @@ void mg_updatePlayer(mgEntity_t* self)
                     self->xspeed += 8;
                 }
 
-                if (!(self->gameData->prevBtnState & PB_LEFT))
-                {
-                    if (!(self->gameData->doubleTapBtnState & PB_LEFT))
-                    {
-                        self->gameData->doubleTapBtnState = PB_LEFT;
-                        self->gameData->doubleTapBtnTimer = MG_DOUBLE_TAP_TIMER_FRAMES;
-                    }
-                    else if (self->canDash && !self->falling)
-                    {
-                        // Initiate dash
-                        self->state = MG_PL_ST_DASHING;
-                        self->tileCollider = &entityTileCollider_1x2_dash_slide;
+                // if (!(self->gameData->prevBtnState & PB_LEFT))
+                // {
+                //     if (!(self->gameData->doubleTapBtnState & PB_LEFT))
+                //     {
+                //         self->gameData->doubleTapBtnState = PB_LEFT;
+                //         self->gameData->doubleTapBtnTimer = MG_DOUBLE_TAP_TIMER_FRAMES;
+                //     }
+                //     else if (self->canDash && !self->falling)
+                //     {
+                //         // Initiate dash
+                //         self->state = MG_PL_ST_DASHING;
+                //         self->tileCollider = &entityTileCollider_1x2_dash_slide;
 
-                        if (self->falling)
-                        {
-                            self->stateTimer = 20;
-                            self->jumpPower  = 0;
-                            self->yspeed     = 0;
-                            self->canDash    = false;
-                        }
-                        else
-                        {
-                            self->stateTimer = 32;
-                        }
+                //         if (self->falling)
+                //         {
+                //             self->stateTimer = 20;
+                //             self->jumpPower  = 0;
+                //             self->yspeed     = 0;
+                //             self->canDash    = false;
+                //         }
+                //         else
+                //         {
+                //             self->stateTimer = 32;
+                //         }
 
-                        self->gameData->doubleTapBtnState = 0;
-                        self->gameData->doubleTapBtnTimer = -1;
-                        // self->gravity = 0;
-                    }
-                }
+                //         self->gameData->doubleTapBtnState = 0;
+                //         self->gameData->doubleTapBtnTimer = -1;
+                //         // self->gravity = 0;
+                //     }
+                // }
             }
             else if (self->gameData->btnState & PB_RIGHT)
             {
@@ -145,36 +145,36 @@ void mg_updatePlayer(mgEntity_t* self)
                     self->xspeed -= 8;
                 }
 
-                if (!(self->gameData->prevBtnState & PB_RIGHT))
-                {
-                    if (!(self->gameData->doubleTapBtnState & PB_RIGHT))
-                    {
-                        self->gameData->doubleTapBtnState = PB_RIGHT;
-                        self->gameData->doubleTapBtnTimer = MG_DOUBLE_TAP_TIMER_FRAMES;
-                    }
-                    else if (self->canDash && !self->falling)
-                    {
-                        // Initiate dash
-                        self->state = MG_PL_ST_DASHING;
-                        self->tileCollider = &entityTileCollider_1x2_dash_slide;
+                // if (!(self->gameData->prevBtnState & PB_RIGHT))
+                // {
+                //     if (!(self->gameData->doubleTapBtnState & PB_RIGHT))
+                //     {
+                //         self->gameData->doubleTapBtnState = PB_RIGHT;
+                //         self->gameData->doubleTapBtnTimer = MG_DOUBLE_TAP_TIMER_FRAMES;
+                //     }
+                //     else if (self->canDash && !self->falling)
+                //     {
+                //         // Initiate dash
+                //         self->state = MG_PL_ST_DASHING;
+                //         self->tileCollider = &entityTileCollider_1x2_dash_slide;
 
-                        if (self->falling)
-                        {
-                            self->stateTimer = 20;
-                            self->jumpPower  = 0;
-                            self->yspeed     = 0;
-                            self->canDash    = false;
-                        }
-                        else
-                        {
-                            self->stateTimer = 32;
-                        }
+                //         if (self->falling)
+                //         {
+                //             self->stateTimer = 20;
+                //             self->jumpPower  = 0;
+                //             self->yspeed     = 0;
+                //             self->canDash    = false;
+                //         }
+                //         else
+                //         {
+                //             self->stateTimer = 32;
+                //         }
 
-                        self->gameData->doubleTapBtnState = 0;
-                        self->gameData->doubleTapBtnTimer = -1;
-                        // self->gravity = 0;
-                    }
-                }
+                //         self->gameData->doubleTapBtnState = 0;
+                //         self->gameData->doubleTapBtnTimer = -1;
+                //         // self->gravity = 0;
+                //     }
+                // }
             }
 
             if (!self->falling && (self->gameData->btnState & PB_DOWN) && (self->gameData->btnState & PB_B)
@@ -191,15 +191,15 @@ void mg_updatePlayer(mgEntity_t* self)
             {
                 self->xspeed = -64;
 
-                if (!self->falling && !(self->gameData->btnState & PB_LEFT))
+                /*if (!self->falling && !(self->gameData->btnState & PB_LEFT))
                 {
                     if(mg_canExitDashSlide(self))
                     {
                         self->stateTimer = 0;
                     }
-                }
+                }*/
                  
-                if (self->gameData->btnState & PB_RIGHT)
+                if ((self->gameData->btnState & PB_RIGHT) && !(self->gameData->prevBtnState & PB_RIGHT))
                 {
                     self->spriteFlipHorizontal = false;
                     self->xspeed = 64;
@@ -210,15 +210,15 @@ void mg_updatePlayer(mgEntity_t* self)
             {
                 self->xspeed = 64;
 
-                if (!self->falling && !(self->gameData->btnState & PB_RIGHT))
+                /*if (!self->falling && !(self->gameData->btnState & PB_RIGHT))
                 {
                     if(mg_canExitDashSlide(self))
                     {
                         self->stateTimer = 0;
                     }
-                }
+                }*/
                 
-                if (self->gameData->btnState & PB_LEFT)
+                if ( (self->gameData->btnState & PB_LEFT) && !(self->gameData->prevBtnState & PB_LEFT))
                 {
                     self->spriteFlipHorizontal = true;
                     self->xspeed = -64;
@@ -306,59 +306,82 @@ void mg_updatePlayer(mgEntity_t* self)
 
     if (self->gameData->btnState & PB_A)
     {
-        if (!self->falling && !(self->gameData->prevBtnState & PB_A))
+        if(!(self->gameData->prevBtnState & PB_A))
         {
-            // initiate jump
-            self->jumpPower = 60; //+ ((abs(self->xspeed) + 16) >> 3);
-            self->yspeed    = -self->jumpPower;
-            self->falling   = true;
-
-            if (self->state == MG_PL_ST_DASHING)
+            if(!self->falling)
             {
-                self->canDash = false;
+                if(self->gameData->btnState & PB_DOWN)
+                {
+                    //initiate dash slide
+                    self->state = MG_PL_ST_DASHING;
+                    self->tileCollider = &entityTileCollider_1x2_dash_slide;
+
+                    if (self->falling)
+                    {
+                        self->stateTimer = 20;
+                        self->jumpPower  = 0;
+                        self->yspeed     = 0;
+                        self->canDash    = false;
+                    }
+                    else
+                    {
+                        self->stateTimer = 32;
+                    }
+                } else {
+                    // initiate jump
+                    self->jumpPower = 60; //+ ((abs(self->xspeed) + 16) >> 3);
+                    self->yspeed    = -self->jumpPower;
+                    self->falling   = true;
+
+                    if (self->state == MG_PL_ST_DASHING)
+                    {
+                        self->canDash = false;
+                    }
+
+                    soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
+                }
+            } 
+            else if (mg_canWallJump(self))
+            {
+                //initiate wall jump
+                self->jumpPower = 60; //+ ((abs(self->xspeed) + 16) >> 3);
+                self->xspeed    = (self->spriteFlipHorizontal) ? 32 : -32;
+                self->yspeed    = -self->jumpPower;
+                self->falling   = true;
+
+                if (self->state == MG_PL_ST_DASHING)
+                {
+                    self->state      = MG_PL_ST_NORMAL;
+                    self->tileCollider = &entityTileCollider_1x2;
+                    self->stateTimer = -1;
+                    self->gravity    = 4;
+                }
+
+                self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
+                // soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
             }
-
-            soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
-        }
-        else if (mg_canWallJump(self) && !(self->gameData->prevBtnState & PB_A))
-        {
-            self->jumpPower = 60; //+ ((abs(self->xspeed) + 16) >> 3);
-            self->xspeed    = (self->spriteFlipHorizontal) ? 32 : -32;
-            self->yspeed    = -self->jumpPower;
-            self->falling   = true;
-
-            if (self->state == MG_PL_ST_DASHING)
+            
+        } else if (self->jumpPower > 0 && self->yspeed < 0)
             {
-                self->state      = MG_PL_ST_NORMAL;
-                self->tileCollider = &entityTileCollider_1x2;
-                self->stateTimer = -1;
-                self->gravity    = 4;
+                //dampen jump
+                self->jumpPower -= 2; // 32
+                self->yspeed = -self->jumpPower;
+
+                /*if (self->jumpPower > 35 && self->jumpPower < 37)
+                {
+                    soundPlaySfx(&(self->soundManager->sndJump2), BZR_LEFT);
+                }
+
+                if (self->yspeed > -6 && self->yspeed < -2)
+                {
+                    soundPlaySfx(&(self->soundManager->sndJump3), BZR_LEFT);
+                }*/
+
+                if (self->jumpPower < 0)
+                {
+                    self->jumpPower = 0;
+                }
             }
-
-            self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
-            // soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
-        }
-        else if (self->jumpPower > 0 && self->yspeed < 0)
-        {
-            // jump dampening
-            self->jumpPower -= 2; // 32
-            self->yspeed = -self->jumpPower;
-
-            /*if (self->jumpPower > 35 && self->jumpPower < 37)
-            {
-                soundPlaySfx(&(self->soundManager->sndJump2), BZR_LEFT);
-            }
-
-            if (self->yspeed > -6 && self->yspeed < -2)
-            {
-                soundPlaySfx(&(self->soundManager->sndJump3), BZR_LEFT);
-            }*/
-
-            if (self->jumpPower < 0)
-            {
-                self->jumpPower = 0;
-            }
-        }
     }
     else if (self->falling && self->jumpPower > 0 && self->yspeed < 0)
     {
@@ -366,6 +389,69 @@ void mg_updatePlayer(mgEntity_t* self)
         self->jumpPower = 0;
         self->yspeed    = self->yspeed / 4;
     }
+
+    // if (self->gameData->btnState & PB_A)
+    // {
+    //     if (!self->falling && !(self->gameData->prevBtnState & PB_A))
+    //     {
+    //         // initiate jump
+    //         self->jumpPower = 60; //+ ((abs(self->xspeed) + 16) >> 3);
+    //         self->yspeed    = -self->jumpPower;
+    //         self->falling   = true;
+
+    //         if (self->state == MG_PL_ST_DASHING)
+    //         {
+    //             self->canDash = false;
+    //         }
+
+    //         soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
+    //     }
+    //     else if (mg_canWallJump(self) && !(self->gameData->prevBtnState & PB_A))
+    //     {
+    //         self->jumpPower = 60; //+ ((abs(self->xspeed) + 16) >> 3);
+    //         self->xspeed    = (self->spriteFlipHorizontal) ? 32 : -32;
+    //         self->yspeed    = -self->jumpPower;
+    //         self->falling   = true;
+
+    //         if (self->state == MG_PL_ST_DASHING)
+    //         {
+    //             self->state      = MG_PL_ST_NORMAL;
+    //             self->tileCollider = &entityTileCollider_1x2;
+    //             self->stateTimer = -1;
+    //             self->gravity    = 4;
+    //         }
+
+    //         self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
+    //         // soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
+    //     }
+    //     else if (self->jumpPower > 0 && self->yspeed < 0)
+    //     {
+    //         // jump dampening
+    //         self->jumpPower -= 2; // 32
+    //         self->yspeed = -self->jumpPower;
+
+    //         /*if (self->jumpPower > 35 && self->jumpPower < 37)
+    //         {
+    //             soundPlaySfx(&(self->soundManager->sndJump2), BZR_LEFT);
+    //         }
+
+    //         if (self->yspeed > -6 && self->yspeed < -2)
+    //         {
+    //             soundPlaySfx(&(self->soundManager->sndJump3), BZR_LEFT);
+    //         }*/
+
+    //         if (self->jumpPower < 0)
+    //         {
+    //             self->jumpPower = 0;
+    //         }
+    //     }
+    // }
+    // else if (self->falling && self->jumpPower > 0 && self->yspeed < 0)
+    // {
+    //     // Cut jump short if player lets go of jump button
+    //     self->jumpPower = 0;
+    //     self->yspeed    = self->yspeed / 4;
+    // }
 
     mg_updateInvincibilityFrames(self);
 
