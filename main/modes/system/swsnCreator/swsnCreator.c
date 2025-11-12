@@ -71,6 +71,7 @@
 //==============================================================================
 
 const char sonaModeName[]                 = "Swadgesona Creator";
+const char sonaTrophyNVS[]                = "SonaTrophyNVS";
 static const char sonaMenuName[]          = "Sona Creator";
 static const char sonaSlotUninitialized[] = "Uninitialized";
 static const char cursorNVS[]             = "cursor";
@@ -410,6 +411,11 @@ typedef struct
 
     // Nickname
     char nickname[MAX_NAME_LEN];
+
+    // Shake detection
+    vec3d_t lastOrientation;
+    list_t shakeHistory;
+    bool isShook;
 } swsnCreatorData_t;
 
 //==============================================================================
@@ -457,6 +463,79 @@ static void swsnPacket(swadgePassPacket_t* packet);
 // Variables
 //==============================================================================
 
+const trophyData_t swsnTrophies[] = {
+    {
+        .title       = "Mirror Mirror",
+        .description = "Create your first swadgesona!",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "New face who dis?",
+        .description = "Edit your SwadgePass Swadgesona for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Randomizer",
+        .description = "Randomize your swadgesona 10 times",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 10,
+    },
+    {
+        .title       = "Chaos Goblin",
+        .description = "Randomize and save without making changes",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1,
+        .hidden      = true,
+    },
+    {
+        .title       = "Michelangelo",
+        .description = "Fill 5 swadgesona slots with swadgesonas",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Donatello",
+        .description = "Fill 10 swadgesona slots with swadgesonas",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Marcel Duchamp",
+        .description = "Fill 14 swadgesona slots with swadgesonas",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1,
+    },
+};
+
+const trophySettings_t swsnTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = sonaTrophyNVS,
+};
+
+const trophyDataList_t swsnTrophyDataList = {
+    .settings = &swsnTrophySettings,
+    .list     = swsnTrophies,
+    .length   = ARRAY_SIZE(swsnTrophies),
+};
+
 swadgeMode_t swsnCreatorMode = {
     .modeName                = sonaModeName,
     .wifiMode                = NO_WIFI,
@@ -465,6 +544,7 @@ swadgeMode_t swsnCreatorMode = {
     .fnExitMode              = swsnExitMode,
     .fnMainLoop              = swsnLoop,
     .fnAddToSwadgePassPacket = swsnPacket,
+    .trophyData              = &swsnTrophyDataList,
 };
 
 swsnCreatorData_t* scd;
@@ -490,7 +570,7 @@ static void swsnEnterMode(void)
     scd->bgmPlayer       = globalMidiPlayerGet(MIDI_BGM);
     scd->bgmPlayer->loop = true;
     midiGmOn(scd->bgmPlayer);
-    globalMidiPlayerPlaySong(&scd->bgm, MIDI_BGM);
+    //globalMidiPlayerPlaySong(&scd->bgm, MIDI_BGM);
 
     // If the SP swadgesona isn't saved yet, automatically load into creating the SP Sona
 
@@ -561,6 +641,16 @@ static void swsnLoop(int64_t elapsedUs)
                     {
                         runCreator(evt);
                     }
+                    if (checkForShake(&scd->lastOrientation, &scd->shakeHistory, &scd->isShook))
+                    {
+                        if (!scd->isShook)
+                        {
+                            // Stopped shaking, time to randomize
+                            generateRandomSwadgesona(&scd->activeSona);
+
+                        }
+                    }
+
                     drawCreator();
                     break;
                 }
@@ -609,6 +699,11 @@ static void swsnLoop(int64_t elapsedUs)
                     scd->state = CREATING;
                 }
                 done = textEntryInput(evt);
+                if (done && strcmp(scd->nickname, "") == 0)
+                {
+                    done = false;
+                    textEntryInit(&tes, scd->nickname, getSysFont());
+                }
             }
             if (done)
             {
@@ -620,6 +715,30 @@ static void swsnLoop(int64_t elapsedUs)
                 textEntryDeinit();
                 scd->state      = SAVED;
                 scd->hasChanged = false;
+                trophyUpdate(&swsnTrophies[0], 1, true);
+                // Calculate number of slots used
+                int accum = 0;
+                for (int idx = 0; idx < MAX_SWSN_SLOTS; idx++)
+                {
+                    snprintf(buffer, sizeof(buffer) - 1, "%s%" PRId16, NVSStrings[1], idx);
+                    size_t len = sizeof(swadgesonaCore_t);
+                    if (readNamespaceNvsBlob(NVSStrings[0], buffer, &scd->activeSona.core, &len))
+                    {
+                        accum++;
+                    }
+                }
+                if (accum >= MAX_SWSN_SLOTS)
+                {
+                    trophyUpdate(&swsnTrophies[6], 1, true);
+                }
+                else if (accum >= 10)
+                {
+                    trophyUpdate(&swsnTrophies[5], 1, true);
+                }
+                else if (accum >= 5)
+                {
+                    trophyUpdate(&swsnTrophies[4], 1, true);
+                }
                 break;
             }
             drawCreator();
@@ -640,6 +759,7 @@ static void swsnLoop(int64_t elapsedUs)
                 writeNvsBlob(spSonaNVSKey, &scd->activeSona.core, sizeof(swadgesonaCore_t));
                 scd->state      = SAVED;
                 scd->hasChanged = false;
+                trophyUpdate(&swsnTrophies[1], 1, true);
                 break;
             }
             drawUsernamePicker(&scd->activeSona.name);
