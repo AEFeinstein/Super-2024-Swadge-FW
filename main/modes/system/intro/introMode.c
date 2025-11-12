@@ -19,7 +19,7 @@
 #include "embeddedOut.h"
 #include "bunny.h"
 
-//#define CUSTOM_INTRO_SOUND
+// #define CUSTOM_INTRO_SOUND
 
 #define INTRO_MUSIC
 
@@ -54,11 +54,11 @@ static void introAtrium(int64_t elapsedUs);
 
 // #define ALL_TOUCH (TB_CENTER | TB_RIGHT | TB_UP | TB_LEFT | TB_DOWN)
 
-static const char startTitle[]        = "Welcome!";
-//static const char holdLongerMessage[] = "Almost! Keep holding MENU for one second to exit.";
-static const char endTitle[]          = "Exiting Modes";
-static const char endDetail[]         = "You are now Swadge Certified! Remember, with great power comes great "
-                                        "responsibility.";
+static const char startTitle[] = "Welcome!";
+// static const char holdLongerMessage[] = "Almost! Keep holding MENU for one second to exit.";
+static const char endTitle[]  = "Exiting Modes";
+static const char endDetail[] = "You are now Swadge Certified! Remember, with great power comes great "
+                                "responsibility.";
 
 static const char dpadTitle[]     = "The D-Pad";
 static const char aBtnTitle[]     = "A Button";
@@ -280,7 +280,7 @@ static const char introName[] = "Tutorial";
 
 swadgeMode_t introMode = {
     .modeName                 = introName,
-    .wifiMode                 = ESP_NOW, //changed this to generate username 
+    .wifiMode                 = ESP_NOW, // changed this to generate username
     .overrideUsb              = false,
     .usesAccelerometer        = true,
     .usesThermometer          = false,
@@ -315,7 +315,6 @@ typedef struct
 
 bool playSample(audioSamplePlayer_t* player, uint8_t* samples, int16_t len);
 #endif
-
 
 typedef struct
 {
@@ -513,9 +512,6 @@ static void introEnterMode(void)
     // Init CC
     InitColorChord(&iv->end, &iv->dd);
     iv->maxValue = 1;
-
-
-
 }
 
 /**
@@ -545,11 +541,11 @@ static void introExitMode(void)
 
     unloadMidiFile(&iv->song);
 
-    #ifdef INTRO_MUSIC
+#ifdef INTRO_MUSIC
 
     unloadMidiFile(&iv->intro_song);
 
-    #endif
+#endif
 
     heap_caps_free(iv);
 }
@@ -1243,7 +1239,7 @@ static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, 
 
 static void introSona(int64_t elapsedUs)
 {
-    drawWsgSimple(&iv->icon.sona,(TFT_WIDTH/2)-16,TFT_HEIGHT/2);
+    drawWsgSimple(&iv->icon.sona, (TFT_WIDTH / 2) - 16, TFT_HEIGHT / 2);
 }
 
 static void introAtrium(int64_t elapsedUs)
@@ -1253,29 +1249,26 @@ static void introAtrium(int64_t elapsedUs)
 
 static void introSwadgePass(int64_t elapsedUs)
 {
-    //draw username 
- typedef struct {
-    int16_t x;
-    int16_t y;
-    } locs_t; //this is stupid
+    // draw username
+    typedef struct
+    {
+        int16_t x;
+        int16_t y;
+    } locs_t; // this is stupid
 
     locs_t locs;
     locs.x = 25;
     locs.y = 60;
 
     nameData_t username = *getSystemUsername();
-    char prefix[] = "Your username is \n";
-    char suffix[] = "\nIf you don't like it, you can adjust it in the next step.";
-    int namelen = sizeof(username.nameBuffer);
-    int prelen = sizeof(prefix);
-    int suflen = sizeof(suffix);
-    
+    char prefix[]       = "Your username is \n";
+    char suffix[]       = "\nIf you don't like it, you can adjust it in the next step.";
+    int namelen         = sizeof(username.nameBuffer);
+    int prelen          = sizeof(prefix);
+    int suflen          = sizeof(suffix);
 
-    char buf[namelen+prelen+suflen+2];
-        snprintf(buf, sizeof(buf) - 1, "%s%s%s", prefix, username.nameBuffer, suffix);
-            
+    char buf[namelen + prelen + suflen + 2];
+    snprintf(buf, sizeof(buf) - 1, "%s%s%s", prefix, username.nameBuffer, suffix);
 
-    drawTextWordWrap(&iv->smallFont, c000, buf, &locs.x,  &locs.y, TFT_WIDTH - 25, 140);
+    drawTextWordWrap(&iv->smallFont, c000, buf, &locs.x, &locs.y, TFT_WIDTH - 25, 140);
 }
-
-
