@@ -49,7 +49,7 @@
 #define STEP              (SLIDE_TIME_AMOUNT / (PANEL_WIDTH >> 1))
 
 // Nickname
-#define MAX_NAME_LEN 20
+#define MAX_NAME_LEN 30
 #define NICK_Y_OFF   32
 
 // Save/Quit
@@ -584,17 +584,18 @@ static void swsnEnterMode(void)
 
     // If the SP swadgesona isn't saved yet, automatically load into creating the SP Sona
 
-    // FIXME: I don't understand why I have to re-initialize this every time, but I do.
+    // XXX: I don't understand why I have to re-initialize this every time, but I do.
     // If I don't, on hardware it lists this as all zeros. It's consistent over 5+ factory resets.
     // It's supposed to be called in swadge2024.c (line 443) and then be active for the whole system, but apparently
     // not. If there's a solution to this, I don't know it.
-    initUsernameSystem();
+    // initUsernameSystem();
 
     size_t len = sizeof(swadgesonaCore_t);
     if (!readNvsBlob(spSonaNVSKey, &scd->activeSona.core, &len))
     {
         generateRandomSwadgesona(&scd->activeSona);
-        scd->activeSona.name = *getSystemUsername();
+        scd->activeSona.name      = *getSystemUsername();
+        scd->activeSona.name.user = true;
         strcpy(scd->nickname, scd->activeSona.name.nameBuffer);
         scd->slot  = 255; // Indicates it's the SP Sona
         scd->state = CREATING;
@@ -633,7 +634,7 @@ static void swsnExitMode(void)
 
 static void swsnLoop(int64_t elapsedUs)
 {
-    bool shaketh = checkForShake(&scd->lastOrientation, &scd->shakeHistory, &scd->isShook);
+    bool shaketh    = checkForShake(&scd->lastOrientation, &scd->shakeHistory, &scd->isShook);
     buttonEvt_t evt = {0};
     switch (scd->state)
     {
