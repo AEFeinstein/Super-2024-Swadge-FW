@@ -66,6 +66,9 @@
 // Saved message
 #define SAVE_TIMER 1500000
 
+// Shake exclusion
+#define SHAKE_TIMER 500000
+
 //==============================================================================
 // Consts
 //==============================================================================
@@ -421,6 +424,7 @@ typedef struct
     bool isShook;
     bool untouchedRandom;
     int shakeRandom;
+    int32_t shakeTimer;
 } swsnCreatorData_t;
 
 //==============================================================================
@@ -593,6 +597,7 @@ static void swsnEnterMode(void)
         strcpy(scd->nickname, scd->activeSona.name.nameBuffer);
         scd->slot  = 255; // Indicates it's the SP Sona
         scd->state = CREATING;
+        scd->shakeTimer = SHAKE_TIMER;
     }
 
     // Load the cursor, using the default if it doesn't exist yet
@@ -652,10 +657,15 @@ static void swsnLoop(int64_t elapsedUs)
                     {
                         runCreator(evt);
                     }
+                    if (scd->shakeTimer >= 0)
+                    {
+                        scd->shakeTimer -= elapsedUs;
+                    }
                     if (shaketh)
                     {
-                        if (!scd->isShook)
+                        if (!scd->isShook && !(scd->shakeTimer >= 0))
                         {
+                            scd->shakeTimer = SHAKE_TIMER;
                             scd->shakeRandom++;
                             // Stopped shaking, time to randomize
                             generateRandomSwadgesona(&scd->activeSona);
