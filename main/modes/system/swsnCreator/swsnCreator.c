@@ -1877,20 +1877,5 @@ static void copyListToSona(swadgesona_t* swsn)
 // SP Packet
 static void swsnPacket(swadgePassPacket_t* packet)
 {
-    swadgesonaCore_t core = {0};
-    size_t size           = sizeof(swadgesonaCore_t);
-    readNvsBlob(spSonaNVSKey, &core, &size);
-    packet->swadgesona.core.skin         = core.skin;
-    packet->swadgesona.core.hairColor    = core.hairColor;
-    packet->swadgesona.core.eyeColor     = core.eyeColor;
-    packet->swadgesona.core.clothes      = core.clothes;
-    packet->swadgesona.core.hatColor     = core.hatColor;
-    packet->swadgesona.core.glassesColor = core.glassesColor;
-    packet->swadgesona.core.eyebrows     = core.eyebrows;
-    packet->swadgesona.core.earShape     = core.earShape;
-    packet->swadgesona.core.eyeShape     = core.eyeShape;
-    packet->swadgesona.core.hairStyle    = core.hairStyle;
-    packet->swadgesona.core.hat          = core.hat;
-    packet->swadgesona.core.mouthShape   = core.mouthShape;
-    packet->swadgesona.core.glasses      = core.glasses;
+    readNvsBlob(spSonaNVSKey, &packet->swadgesona.core, sizeof(swadgesonaCore_t));
 }
