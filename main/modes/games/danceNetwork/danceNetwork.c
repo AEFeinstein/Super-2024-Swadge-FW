@@ -250,7 +250,7 @@ static void dn_EnterMode(void)
     dn_initializeEntityManager(&gameData->entityManager, gameData);
 
     gameData->assets[DN_ALPHA_DOWN_ASSET].originX   = 18;
-    gameData->assets[DN_ALPHA_DOWN_ASSET].originY   = 53;
+    gameData->assets[DN_ALPHA_DOWN_ASSET].originY   = 82;
     gameData->assets[DN_ALPHA_DOWN_ASSET].numFrames = 17;
 
     gameData->assets[DN_ALPHA_ORTHO_ASSET].originX   = 10;
