@@ -243,7 +243,7 @@ void artilleryEnterMode(void)
                             cycle, ARRAY_SIZE(cycle));
 
     // Initialize in-game menu
-    ad->gameMenu = initMenu(NULL, artilleryGameMenuCb);
+    ad->gameMenu = initMenuRam(NULL, artilleryGameMenuCb, MALLOC_CAP_8BIT);
     for (int mIdx = 0; mIdx < ARRAY_SIZE(menuEntries); mIdx++)
     {
         if (load_ammo == menuEntries[mIdx].text)

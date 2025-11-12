@@ -38,7 +38,7 @@ static void drawMenuText(menuSimpleRenderer_t* renderer, const char* text, int16
 menuSimpleRenderer_t* initMenuSimpleRenderer(font_t* font, paletteColor_t border, paletteColor_t bg,
                                              paletteColor_t text, int32_t rows)
 {
-    menuSimpleRenderer_t* renderer = heap_caps_calloc(1, sizeof(menuSimpleRenderer_t), MALLOC_CAP_SPIRAM);
+    menuSimpleRenderer_t* renderer = heap_caps_calloc(1, sizeof(menuSimpleRenderer_t), MALLOC_CAP_8BIT);
 
     // Save or allocate font
     if (font)
@@ -57,7 +57,7 @@ menuSimpleRenderer_t* initMenuSimpleRenderer(font_t* font, paletteColor_t border
     renderer->borderColor  = border;
     renderer->rowTextColor = text;
 
-    loadWsg(ARROW_8_WSG, &renderer->arrow, true);
+    loadWsg(ARROW_8_WSG, &renderer->arrow, false);
 
     return renderer;
 }

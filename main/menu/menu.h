@@ -181,12 +181,14 @@ typedef struct _menu_t
     bool showBattery;         ///< true if the battery measurement should be shown. false by default
     int32_t batteryReadTimer; ///< A timer to read the battery every 10s
     int batteryLevel;         ///< The current battery measurement
+    uint32_t memCaps;         ///< Where to allocate memory
 } menu_t;
 
 /// @brief A string used to return to super-menus that says "Back"
 extern const char* mnuBackStr;
 
 menu_t* initMenu(const char* title, menuCb cbFunc) __attribute__((warn_unused_result));
+menu_t* initMenuRam(const char* title, menuCb cbFunc, uint32_t memCaps) __attribute__((warn_unused_result));
 void deinitMenu(menu_t* menu);
 menu_t* startSubMenu(menu_t* menu, const char* label) __attribute__((warn_unused_result));
 menu_t* endSubMenu(menu_t* menu) __attribute__((warn_unused_result));
