@@ -196,6 +196,7 @@ typedef struct
     vec_t start;
     vec_t end;
     int8_t yOffset;
+    int8_t secondYOffset;
     int16_t lerpAmount;
     dn_boardPos_t firstTarget;
     dn_boardPos_t secondTarget;
