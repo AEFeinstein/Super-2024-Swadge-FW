@@ -379,6 +379,9 @@ typedef struct
     // Audio
     midiFile_t bgm;
     midiPlayer_t* bgmPlayer;
+    midiFile_t sfxClick;
+    midiFile_t sfxMove;
+    midiPlayer_t* sfxPlayer;
 
     // Menu
     menu_t* menu;
@@ -569,10 +572,15 @@ static void swsnEnterMode(void)
 
     // Load audio
     loadMidiFile(SWSN_CREATOR_BGM1_MID, &scd->bgm, true);
+    loadMidiFile(SWSN_CHOOSE_SFX_MID, &scd->sfxClick, true);
+    loadMidiFile(SWSN_MOVE_SFX_MID, &scd->sfxMove, true);
     scd->bgmPlayer       = globalMidiPlayerGet(MIDI_BGM);
+    scd->sfxPlayer       = globalMidiPlayerGet(MIDI_SFX);
     scd->bgmPlayer->loop = true;
     midiGmOn(scd->bgmPlayer);
-    // globalMidiPlayerPlaySong(&scd->bgm, MIDI_BGM);
+    midiGmOn(scd->sfxPlayer);
+    globalMidiPlayerSetVolume(MIDI_BGM, 12);
+    globalMidiPlayerPlaySong(&scd->bgm, MIDI_BGM);
 
     // If the SP swadgesona isn't saved yet, automatically load into creating the SP Sona
 
@@ -610,6 +618,8 @@ static void swsnExitMode(void)
 {
     globalMidiPlayerStop(true);
     unloadMidiFile(&scd->bgm);
+    unloadMidiFile(&scd->sfxClick);
+    unloadMidiFile(&scd->sfxMove);
     deinitMenuMegaRenderer(scd->renderer);
     deinitMenu(scd->menu);
     freeFont(&scd->fnt);
@@ -716,6 +726,7 @@ static void swsnLoop(int64_t elapsedUs)
             }
             if (done)
             {
+                globalMidiPlayerPlaySong(&scd->sfxClick, MIDI_SFX);
                 char buffer[16];
                 snprintf(buffer, sizeof(buffer) - 1, "%s%" PRId16, NVSStrings[1], scd->slot);
                 writeNamespaceNvsBlob(NVSStrings[0], buffer, &scd->activeSona.core, sizeof(swadgesonaCore_t));
@@ -768,6 +779,7 @@ static void swsnLoop(int64_t elapsedUs)
             }
             if (done)
             {
+                globalMidiPlayerPlaySong(&scd->sfxClick, MIDI_SFX);
                 strcpy(scd->nickname, scd->activeSona.name.nameBuffer);
                 setSystemUsername(&scd->activeSona.name);
                 writeNvsBlob(spSonaNVSKey, &scd->activeSona.core, sizeof(swadgesonaCore_t));
@@ -984,6 +996,7 @@ static void runCreator(buttonEvt_t evt)
 {
     if (evt.down)
     {
+        globalMidiPlayerPlaySong(&scd->sfxMove, MIDI_SFX);
         if (scd->selection >= (NUM_TABS_PER_SIDE * 2))
         {
             if (evt.button & PB_DOWN)
@@ -1485,6 +1498,7 @@ static void panelInput(buttonEvt_t evt, int size)
 {
     if (evt.down)
     {
+        globalMidiPlayerPlaySong(&scd->sfxMove, MIDI_SFX);
         if (evt.button & PB_RIGHT)
         {
             if (scd->arr[scd->selection] % GRID_ROW == GRID_ROW - 1)
