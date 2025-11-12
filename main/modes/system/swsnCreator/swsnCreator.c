@@ -1877,5 +1877,6 @@ static void copyListToSona(swadgesona_t* swsn)
 // SP Packet
 static void swsnPacket(swadgePassPacket_t* packet)
 {
-    readNvsBlob(spSonaNVSKey, &packet->swadgesona.core, sizeof(swadgesonaCore_t));
+    size_t len = sizeof(swadgesonaCore_t);
+    readNvsBlob(spSonaNVSKey, &packet->swadgesona.core, &len);
 }
