@@ -194,6 +194,8 @@ bool mg_canWallJump(mgEntity_t* self);
 bool mg_canExitDashSlide(mgEntity_t* self);
 void defaultFallOffTileHandler(mgEntity_t* self);
 
+void mg_playerFallOffTileHandler(mgEntity_t* self);
+
 void despawnWhenOffscreen(mgEntity_t* self);
 
 void mg_destroyEntity(mgEntity_t* self, bool respawn);

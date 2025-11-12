@@ -354,7 +354,7 @@ mgEntity_t* mg_createPlayer(mgEntityManager_t* entityManager, uint16_t x, uint16
     entity->updateFunction       = &mg_updatePlayer;
     entity->collisionHandler     = &mg_playerCollisionHandler;
     entity->tileCollisionHandler = &mg_playerTileCollisionHandler;
-    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->fallOffTileHandler   = &mg_playerFallOffTileHandler;
     entity->overlapTileHandler   = &mg_playerOverlapTileHandler;
     entity->drawHandler          = &mg_playerDrawHandler;
     entity->tileCollider         = &entityTileCollider_1x2;

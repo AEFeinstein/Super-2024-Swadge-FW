@@ -102,7 +102,7 @@ void mg_updatePlayer(mgEntity_t* self)
                 }
             }
 
-            if (!self->falling && (self->gameData->btnState & PB_DOWN) && (self->gameData->btnState & PB_B)
+            if ((self->gameData->btnState & PB_DOWN) && (self->gameData->btnState & PB_B)
                 && !(self->gameData->prevBtnState & PB_B))
             {
                 self->state      = MG_PL_ST_SHIELD;
@@ -135,6 +135,14 @@ void mg_updatePlayer(mgEntity_t* self)
                 }
             }
 
+            //Ugh... this is repeated here unfortunately
+            if ((self->gameData->btnState & PB_DOWN) && (self->gameData->btnState & PB_B)
+                && !(self->gameData->prevBtnState & PB_B))
+            {
+                self->state      = MG_PL_ST_SHIELD;
+                self->stateTimer = 60;
+            }
+
             self->stateTimer--;
             if (self->stateTimer <= 0)
             {
@@ -150,7 +158,7 @@ void mg_updatePlayer(mgEntity_t* self)
         case MG_PL_ST_SHIELD:
             if (((self->gameData->btnState & PB_LEFT) && !(self->gameData->prevBtnState & PB_LEFT))
                 || ((self->gameData->btnState & PB_RIGHT) && !(self->gameData->prevBtnState & PB_RIGHT))
-                || ((self->gameData->btnState & PB_A) && !(self->gameData->prevBtnState & PB_A)) || (self->falling))
+                || ((self->gameData->btnState & PB_A) && !(self->gameData->prevBtnState & PB_A)))
             {
                 self->state = MG_PL_ST_NORMAL;
                 break;
@@ -757,6 +765,9 @@ void mg_moveEntityWithTileCollisions3(mgEntity_t* self)
         }
 
         self->falling = !onGround;
+        if(self->falling){
+            self->fallOffTileHandler(self);
+        }
     }
 
     self->x = newX ? TO_SUBPIXEL_COORDS(newX) : self->x + self->xspeed;
@@ -881,6 +892,14 @@ bool mg_canExitDashSlide(mgEntity_t* self)
 void defaultFallOffTileHandler(mgEntity_t* self)
 {
     self->falling = true;
+}
+
+void mg_playerFallOffTileHandler(mgEntity_t* self)
+{
+    self->falling = true;
+    if(self->state == MG_PL_ST_DASHING){
+        self->stateTimer = 1;
+    }
 }
 
 void applyDamping(mgEntity_t* self)
