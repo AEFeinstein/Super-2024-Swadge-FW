@@ -255,8 +255,8 @@ static void dn_EnterMode(void)
     gameData->assets[DN_ALPHA_ORTHO_ASSET].originY   = 10;
     gameData->assets[DN_ALPHA_ORTHO_ASSET].numFrames = 1;
 
-    gameData->assets[DN_ALPHA_UP_ASSET].originX   = 14;
-    gameData->assets[DN_ALPHA_UP_ASSET].originY   = 53;
+    gameData->assets[DN_ALPHA_UP_ASSET].originX   = 16;
+    gameData->assets[DN_ALPHA_UP_ASSET].originY   = 84;
     gameData->assets[DN_ALPHA_UP_ASSET].numFrames = 17;
 
     gameData->assets[DN_KING_ASSET].originX   = 10;
