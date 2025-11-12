@@ -46,6 +46,8 @@ static void introDrawSwadgeImu(int64_t elapsedUs);
 static void introDrawSwadgeSpeaker(int64_t elapsedUs);
 static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, uint16_t maxValue);
 static void introSwadgePass(int64_t elapsedUs);
+static void introSona(int64_t elapsedUs);
+static void introAtrium(int64_t elapsedUs);
 
 #define ALL_BUTTONS  (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_B | PB_START | PB_SELECT)
 #define DPAD_BUTTONS (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT)
@@ -56,7 +58,7 @@ static const char startTitle[]        = "Welcome!";
 //static const char holdLongerMessage[] = "Almost! Keep holding MENU for one second to exit.";
 static const char endTitle[]          = "Exiting Modes";
 static const char endDetail[]         = "You are now Swadge Certified! Remember, with great power comes great "
-                                        "responsibility. Hold MENU to exit the tutorial and get started!";
+                                        "responsibility.";
 
 static const char dpadTitle[]     = "The D-Pad";
 static const char aBtnTitle[]     = "A Button";
@@ -68,7 +70,7 @@ static const char micTitle[]      = "Microphone";
 static const char touchpadTitle[] = "Touchpad";
 static const char imuTitle[]      = "Tilt Controls";
 static const char passTitle[]     = "SwadgePass";
-// static const char sonaTitle[]     = "Your Sona";
+static const char sonaTitle[]     = "Your Sona";
 
 static const tutorialStep_t buttonsSteps[] = {
     {
@@ -210,7 +212,15 @@ static const tutorialStep_t buttonsSteps[] = {
             .buttons = PB_A,
         },
         .title = passTitle,
-        .detail = "SwadgePass transfers your profile data to other users. Leave your Swadge turned on during the Fest to meet others. Press A to set your profile up."
+        .detail = "SwadgePass shares your profile data with other users close to you. Leave your Swadge turned on during the Fest to meet others. Lets set your profile."
+    },
+    {
+        .trigger = {
+            .type = BUTTON_PRESS,
+            .buttons = PB_A,
+        },
+        .title = sonaTitle,
+        .detail = "This is a Sona. Make your personal Sona by pressing A."
     },
     /*{
         .trigger = {
@@ -328,6 +338,8 @@ typedef enum
     DRAW_SPK,
     DRAW_MIC,
     SWADGE_PASS,
+    PROFILE,
+    SONA,
 } introDrawMode_t;
 
 typedef struct
@@ -362,6 +374,7 @@ typedef struct
         wsg_t touchGem;
         wsg_t swadge;
         wsg_t full_swadge;
+        wsg_t sona;
     } icon;
 
     buttonBit_t buttons;
@@ -427,7 +440,7 @@ static void introEnterMode(void)
     loadWsg(SPK_WSG, &iv->icon.speaker, true);
     loadWsg(TOUCH_GEM_WSG, &iv->icon.touchGem, true);
     loadWsg(INTRO_SWADGE_CHOPPED_WSG, &iv->icon.swadge, true);
-    loadWsg(INTRO_SWADGE_WSG, &iv->icon.full_swadge, true);
+    loadWsg(PINKIE_WSG, &iv->icon.sona, true);
 
     iv->bgMenu   = initMenu(startTitle, NULL);
     iv->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
@@ -528,7 +541,7 @@ static void introExitMode(void)
     freeWsg(&iv->icon.speaker);
     freeWsg(&iv->icon.touchGem);
     freeWsg(&iv->icon.swadge);
-    freeWsg(&iv->icon.full_swadge);
+    freeWsg(&iv->icon.sona);
 
     unloadMidiFile(&iv->song);
 
@@ -769,6 +782,11 @@ static void introMainLoop(int64_t elapsedUs)
             introSwadgePass(elapsedUs);
             break;
         }
+        case SONA:
+        {
+            introSona(elapsedUs);
+            break;
+        }
     }
 
     const char* remaining
@@ -905,6 +923,14 @@ static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, 
         globalMidiPlayerPauseAll();
         iv->drawMode = DRAW_IMU;
     }
+    else if (passTitle == next->title)
+    {
+        iv->drawMode = SWADGE_PASS;
+    }
+    else if (sonaTitle == next->title)
+    {
+        iv->drawMode = SONA;
+    }
     else
     {
         globalMidiPlayerPauseAll();
@@ -912,7 +938,7 @@ static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, 
     }
 
     // TODO maybe don't hardcode this
-    if (next == (buttonsSteps + 12))
+    if (next == (buttonsSteps + 11))
     {
         setDacShutdown(true);
     }
@@ -922,7 +948,7 @@ static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, 
         iv->quickSettingsOpened = true;
         openQuickSettings();
     }
-    else if (next == (buttonsSteps + 15))
+    else if (next == (buttonsSteps + 18))
     {
         iv->quickSettingsOpened = false;
     }
@@ -1215,28 +1241,41 @@ static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, 
     }
 }
 
-/*static void introDrawSona()
+static void introSona(int64_t elapsedUs)
+{
+    drawWsgSimple(&iv->icon.sona,(TFT_WIDTH/2)-16,TFT_HEIGHT/2);
+}
+
+static void introAtrium(int64_t elapsedUs)
 {
     ;
-}*/
+}
 
 static void introSwadgePass(int64_t elapsedUs)
 {
     //draw username 
-    
+ typedef struct {
+    int16_t x;
+    int16_t y;
+    } locs_t; //this is stupid
+
+    locs_t locs;
+    locs.x = 25;
+    locs.y = 60;
+
     nameData_t username = *getSystemUsername();
-    char prefix[] = "Your username is ";
-    char suffix[] = ". If you don't like it, you can adjust it in the next step.";
+    char prefix[] = "Your username is \n";
+    char suffix[] = "\nIf you don't like it, you can adjust it in the next step.";
     int namelen = sizeof(username.nameBuffer);
     int prelen = sizeof(prefix);
     int suflen = sizeof(suffix);
     
 
-    char buf[namelen+prelen+suflen];
+    char buf[namelen+prelen+suflen+2];
         snprintf(buf, sizeof(buf) - 1, "%s%s%s", prefix, username.nameBuffer, suffix);
             
 
-    drawTextWordWrap(&iv->smallFont, c000, buf, 20, 40, TFT_WIDTH - 25, 100);
+    drawTextWordWrap(&iv->smallFont, c000, buf, &locs.x,  &locs.y, TFT_WIDTH - 25, 140);
 }
 
 
