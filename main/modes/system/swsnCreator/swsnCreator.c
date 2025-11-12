@@ -406,7 +406,7 @@ typedef struct
     // Panel
     int page;
     wsg_t* selectionImages;
-    int cursorType;
+    int32_t cursorType;
     wsg_t cursorImage;
 
     // Nickname
@@ -416,6 +416,8 @@ typedef struct
     vec3d_t lastOrientation;
     list_t shakeHistory;
     bool isShook;
+    bool untouchedRandom;
+    int shakeRandom;
 } swsnCreatorData_t;
 
 //==============================================================================
@@ -570,7 +572,7 @@ static void swsnEnterMode(void)
     scd->bgmPlayer       = globalMidiPlayerGet(MIDI_BGM);
     scd->bgmPlayer->loop = true;
     midiGmOn(scd->bgmPlayer);
-    //globalMidiPlayerPlaySong(&scd->bgm, MIDI_BGM);
+    // globalMidiPlayerPlaySong(&scd->bgm, MIDI_BGM);
 
     // If the SP swadgesona isn't saved yet, automatically load into creating the SP Sona
 
@@ -598,6 +600,9 @@ static void swsnEnterMode(void)
     }
     loadWsg(scd->cursorType, &scd->cursorImage, true);
 
+    // Load trophy data
+    scd->shakeRandom = trophyGetSavedValue(&swsnTrophies[2]);
+
     swsnResetMenu();
 }
 
@@ -618,6 +623,7 @@ static void swsnExitMode(void)
 
 static void swsnLoop(int64_t elapsedUs)
 {
+    bool shaketh = checkForShake(&scd->lastOrientation, &scd->shakeHistory, &scd->isShook);
     buttonEvt_t evt = {0};
     switch (scd->state)
     {
@@ -641,16 +647,19 @@ static void swsnLoop(int64_t elapsedUs)
                     {
                         runCreator(evt);
                     }
-                    if (checkForShake(&scd->lastOrientation, &scd->shakeHistory, &scd->isShook))
+                    if (shaketh)
                     {
                         if (!scd->isShook)
                         {
+                            scd->shakeRandom++;
                             // Stopped shaking, time to randomize
                             generateRandomSwadgesona(&scd->activeSona);
-
+                            // Add a count to the randomized total
+                            trophyUpdate(&swsnTrophies[2], scd->shakeRandom, true);
+                            // Set bool for unedited randomized sona
+                            scd->untouchedRandom = true;
                         }
                     }
-
                     drawCreator();
                     break;
                 }
@@ -716,6 +725,7 @@ static void swsnLoop(int64_t elapsedUs)
                 scd->state      = SAVED;
                 scd->hasChanged = false;
                 trophyUpdate(&swsnTrophies[0], 1, true);
+
                 // Calculate number of slots used
                 int accum = 0;
                 for (int idx = 0; idx < MAX_SWSN_SLOTS; idx++)
@@ -738,6 +748,10 @@ static void swsnLoop(int64_t elapsedUs)
                 else if (accum >= 5)
                 {
                     trophyUpdate(&swsnTrophies[4], 1, true);
+                }
+                if (scd->untouchedRandom)
+                {
+                    trophyUpdate(&swsnTrophies[3], 1, true);
                 }
                 break;
             }
@@ -1601,6 +1615,7 @@ static void panelInput(buttonEvt_t evt, int size)
                     break;
                 }
             }
+            scd->untouchedRandom = false;
         }
         else if (evt.button & PB_B)
         {
