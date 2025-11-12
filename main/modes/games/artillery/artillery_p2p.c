@@ -405,7 +405,7 @@ void artilleryTxColor(artilleryData_t* ad)
     }
 
     // Allocate a packet
-    artPktColor_t* pkt = heap_caps_calloc(1, sizeof(artPktShot_t), MALLOC_CAP_SPIRAM);
+    artPktColor_t* pkt = heap_caps_calloc(1, sizeof(artPktShot_t), MALLOC_CAP_8BIT);
 
     // Write the type
     pkt->type = P2P_SET_COLOR;
@@ -429,7 +429,7 @@ void artilleryTxWorld(artilleryData_t* ad)
         return;
     }
 
-    artPktWorld_t* pkt1          = heap_caps_calloc(1, sizeof(artPktWorld_t), MALLOC_CAP_SPIRAM);
+    artPktWorld_t* pkt1          = heap_caps_calloc(1, sizeof(artPktWorld_t), MALLOC_CAP_8BIT);
     pkt1->type                   = P2P_SET_WORLD;
     pkt1->width                  = ad->phys->bounds.x;
     pkt1->height                 = ad->phys->bounds.y;
@@ -440,7 +440,7 @@ void artilleryTxWorld(artilleryData_t* ad)
     pkt1->players[1].barrelAngle = ad->players[1]->barrelAngle;
     pkt1->players[1].score       = ad->players[1]->score;
 
-    artPktTerrain_t* pkt2 = heap_caps_calloc(1, sizeof(artPktTerrain_t), MALLOC_CAP_SPIRAM);
+    artPktTerrain_t* pkt2 = heap_caps_calloc(1, sizeof(artPktTerrain_t), MALLOC_CAP_8BIT);
     pkt2->type            = P2P_ADD_TERRAIN;
 
     // Build a list of Y values
@@ -471,7 +471,7 @@ void artilleryTxWorld(artilleryData_t* ad)
     }
 
     // Build the cloud packet
-    artPktCloud_t* pktCloud = heap_caps_calloc(1, sizeof(artPktCloud_t), MALLOC_CAP_SPIRAM);
+    artPktCloud_t* pktCloud = heap_caps_calloc(1, sizeof(artPktCloud_t), MALLOC_CAP_8BIT);
     pktCloud->type          = P2P_SET_CLOUDS;
     for (uint16_t c = 0; c < NUM_CLOUDS * CIRC_PER_CLOUD; c++)
     {
@@ -515,7 +515,7 @@ void artilleryTxPlayers(artilleryData_t* ad)
     }
 
     // Allocate a packet
-    artPktPlayers_t* pkt = heap_caps_calloc(1, sizeof(artPktPlayers_t), MALLOC_CAP_SPIRAM);
+    artPktPlayers_t* pkt = heap_caps_calloc(1, sizeof(artPktPlayers_t), MALLOC_CAP_8BIT);
 
     // Write the type
     pkt->type = P2P_SET_PLAYERS;
@@ -561,7 +561,7 @@ void artilleryTxCamera(artilleryData_t* ad)
     }
 
     // Allocate a packet
-    artPktCamera_t* pkt = heap_caps_calloc(1, sizeof(artPktCamera_t), MALLOC_CAP_SPIRAM);
+    artPktCamera_t* pkt = heap_caps_calloc(1, sizeof(artPktCamera_t), MALLOC_CAP_8BIT);
 
     // Write the type
     pkt->type = P2P_SET_CAMERA;
@@ -588,7 +588,7 @@ void artilleryTxShot(artilleryData_t* ad, physCirc_t* player)
     }
 
     // Allocate a packet
-    artPktShot_t* pkt = heap_caps_calloc(1, sizeof(artPktShot_t), MALLOC_CAP_SPIRAM);
+    artPktShot_t* pkt = heap_caps_calloc(1, sizeof(artPktShot_t), MALLOC_CAP_8BIT);
 
     // Write the type
     pkt->type = P2P_FIRE_SHOT;
@@ -615,7 +615,7 @@ void artilleryTxPassTurn(artilleryData_t* ad)
     }
 
     // Allocate a packet
-    artPktPassTurn_t* pkt = heap_caps_calloc(1, sizeof(artPktPassTurn_t), MALLOC_CAP_SPIRAM);
+    artPktPassTurn_t* pkt = heap_caps_calloc(1, sizeof(artPktPassTurn_t), MALLOC_CAP_8BIT);
 
     // Write the type
     pkt->type = P2P_PASS_TURN;

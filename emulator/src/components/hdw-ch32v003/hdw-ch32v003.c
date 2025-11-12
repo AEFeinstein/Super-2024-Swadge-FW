@@ -829,7 +829,7 @@ void ch32v003EmuDraw(int offX, int offY, int window_w, int window_h)
             int bit     = 1 << (tc >> 8);
             int row     = tc & 0xff;
 
-            uint8_t* pptr     = tptr + row;
+            uint8_t* pptr      = tptr + row;
             uint32_t intensity = 0;
             int i;
             for (i = 0; i < 8; i++)

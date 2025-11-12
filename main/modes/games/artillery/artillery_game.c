@@ -299,7 +299,7 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
 void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChanged)
 {
     // Draw the scene
-    drawPhysOutline(ad->phys, ad->players, ad->scoreFont, ad->turn);
+    drawPhysOutline(ad->phys, ad->players, &ad->font_pulseAux, ad->turn);
 
     // Step the physics
     bool playerMoved = false;
@@ -749,6 +749,9 @@ void artilleryPassTurn(artilleryData_t* ad)
         {
             // If all turns have been taken end the game
             ad->mState = AMS_GAME_OVER;
+
+            // Stop playing music
+            globalMidiPlayerStop(MIDI_BGM);
 
             bool isP1 = true;
             switch (ad->gameType)
