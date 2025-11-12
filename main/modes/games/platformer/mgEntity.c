@@ -239,7 +239,16 @@ void mg_updatePlayer(mgEntity_t* self)
 
                     soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
                 }
-            } 
+            }
+            else if (self->state != MG_PL_ST_MIC_DROP && self->gameData->btnState & PB_DOWN)
+            {
+                self->xspeed = 0;
+                self->yspeed = -32;
+                self->state      = MG_PL_ST_MIC_DROP;
+                self->tileCollider = &entityTileCollider_1x2;
+                self->yMaxSpeed  = 120;
+                self->stateTimer = 180;
+            }
             else if (mg_canWallJump(self))
             {
                 //initiate wall jump
@@ -289,7 +298,7 @@ void mg_updatePlayer(mgEntity_t* self)
         self->yspeed    = self->yspeed / 4;
     }
 
-    
+
     mg_updateInvincibilityFrames(self);
 
     if (self->animationTimer > 0)
@@ -308,16 +317,7 @@ void mg_updatePlayer(mgEntity_t* self)
         {
             case MG_PL_ST_NORMAL:
             case MG_PL_ST_DASHING:
-                if (self->falling && self->gameData->btnState & PB_DOWN)
-                {
-                    self->xspeed = 0;
-                    self->yspeed = -32;
-                    // self->spriteFlipVertical = true;
-                    self->state      = MG_PL_ST_MIC_DROP;
-                    self->yMaxSpeed  = 120;
-                    self->stateTimer = 180;
-                }
-                else if (self->shotsFired < self->shotLimit)
+                if (self->shotsFired < self->shotLimit)
                 {
                     mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
                                                                 TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y) - 2);
