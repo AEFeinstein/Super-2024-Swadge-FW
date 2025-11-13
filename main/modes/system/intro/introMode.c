@@ -20,9 +20,10 @@
 #include "embeddedOut.h"
 #include "bunny.h"
 
-// #define CUSTOM_INTRO_SOUND
+// #define CUSTOM_INTRO_SOUND //this is for playing a sample at the start of tutorial mode; hot dog used this, pulse
+// uses INTRO_MUSIC
 
-#define INTRO_MUSIC
+#define INTRO_MUSIC // this is for playing a midi at the start of tutorial mode
 
 static void introEnterMode(void);
 static void introExitMode(void);
@@ -32,10 +33,6 @@ static void introAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 
 #ifdef CUSTOM_INTRO_SOUND
 static void introDacCallback(uint8_t* samples, int16_t len);
-#endif
-
-#ifdef INTRO_MUSIC
-static void intromusicCallback();
 #endif
 
 // static void introMenuCb(const char*, bool selected, uint32_t settingVal);
@@ -69,6 +66,7 @@ static const char dpadTitle[]          = "The D-Pad";
 static const char aBtnTitle[]          = "A Button";
 static const char bBtnTitle[]          = "B Button";
 static const char mnuBtnTitle[]        = "Menu Button";
+static const char quickmnuTitle[]      = "Quick Settings";
 static const char pauseBtnTitle[]      = "Pause Button";
 static const char spkTitle[]           = "Speaker";
 static const char micTitle[]           = "Microphone";
@@ -79,7 +77,10 @@ static const char sonaTitle[]          = "Your Sona";
 static const char exitTitle[]          = "Mission Complete";
 static const cnfsFileIdx_t introwsgs[] = {
 
-    MAGCOM_1_WSG, MAGCOM_2_WSG, MAGCOM_3_WSG, MAGCOM_4_WSG, MAGCOM_5_WSG,
+    MAGCOM_2_WSG,
+    MAGCOM_3_WSG,
+    MAGCOM_4_WSG,
+    MAGCOM_5_WSG,
 
 };
 
@@ -98,7 +99,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .buttons = DPAD_BUTTONS,
         },
         .title = dpadTitle,
-        .detail = "The 4 buttons on the left side of the Swadge are the D-Pad. Try them all out!",
+        .detail = "The four buttons on the left side of the Swadge are the D-Pad. Try them all out!", 
     },
     {
         .trigger = {
@@ -206,8 +207,8 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = CUSTOM_TRIGGER,
             .custom.checkFn = introCheckQuickSettingsTrigger,
         },
-        .title = mnuBtnTitle,
-        .detail = "This is the Quick Settings Menu! It's in most modes except Main Menu and Gamepad. Press the Menu button again to close.",
+        .title = quickmnuTitle,
+        .detail = "It's in most modes but Main Menu & Gamepad. Press Menu again to close.",
     },
         {
         .trigger = {
@@ -216,7 +217,7 @@ static const tutorialStep_t buttonsSteps[] = {
             
         },
         .title = passTitle,
-        .detail = "SwadgePass shares your profile data with other users nearby. Leave your Swadge turned on to meet others. Let's set your profile.",
+        .detail = "SwadgePass shares your profile data with other users nearby. Leave your Swadge turned on to meet others.",
         
     },
         {
@@ -282,6 +283,48 @@ static const tutorialStep_t buttonsSteps[] = {
 
 static const char introName[] = "Tutorial";
 
+const trophyData_t tutorialTrophies[] = {
+    {
+        .title       = "Hello World",
+        .description = "Welcome to the Swadge!",
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .image       = NO_IMAGE_SET,
+    },
+    {
+        .title       = "Do a Flip",
+        .description = "Flip your Swadge upside down",
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .image       = NO_IMAGE_SET,
+    },
+    {
+        .title       = "The Bare Minimum",
+        .description = "Complete Tutorial Mode",
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .image       = NO_IMAGE_SET,
+    },
+};
+ 
+// Individual mode settings
+const trophySettings_t tutorialTrophySettings = {
+    .drawFromBottom   = true,
+    .staticDurationUs = DRAW_STATIC_US * 3,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = introName,
+};
+ 
+// This is passed to the swadgeMode_t
+const trophyDataList_t trophyTutorialData = {
+    .settings = &tutorialTrophySettings,
+    .list     = tutorialTrophies,
+    .length   = ARRAY_SIZE(tutorialTrophies),
+};
+
 swadgeMode_t introMode = {
     .modeName                 = introName,
     .wifiMode                 = ESP_NOW, // changed this to generate username
@@ -297,6 +340,7 @@ swadgeMode_t introMode = {
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
+    .trophyData    = &trophyTutorialData,
 #ifdef CUSTOM_INTRO_SOUND
     .fnDacCb = introDacCallback,
 #else
@@ -379,7 +423,6 @@ typedef struct
         wsg_t speaker;
         wsg_t touchGem;
         wsg_t swadge;
-        wsg_t full_swadge;
         wsg_t sona;
     } icon;
 
@@ -525,7 +568,6 @@ static void introEnterMode(void)
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     midiGmOn(player);
     globalMidiPlayerPlaySong(&iv->intro_song, MIDI_BGM);
-    printf("playing midi here\n");
 
     iv->introimgs = heap_caps_calloc(sizeof(wsg_t), ARRAY_SIZE(introwsgs), MALLOC_CAP_8BIT);
     for (int i = 0; i < ARRAY_SIZE(introwsgs); i++)
@@ -596,6 +638,7 @@ static void introMainLoop(int64_t elapsedUs)
         playIntro(elapsedUs);
         return;
     }
+    trophyUpdate(&tutorialTrophies[0],1,1);
 #endif
 
 #ifdef CUSTOM_INTRO_SOUND
@@ -920,12 +963,6 @@ static void introDacCallback(uint8_t* samples, int16_t len)
 }
 #endif
 
-#ifdef INTRO_MUSIC
-static void intromusicCallback()
-{
-}
-#endif
-
 static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
                             bool backtrack)
 {
@@ -958,6 +995,7 @@ static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, 
     }
     else if (micTitle == next->title)
     {
+        trophyUpdate(&tutorialTrophies[1],1,1);
         switchToMicrophone();
         iv->drawMode = DRAW_MIC;
     }
@@ -985,6 +1023,7 @@ static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, 
     else if (exitTitle == next->title)
     {
         iv->drawMode = SONA;
+        trophyUpdate(&tutorialTrophies[2],1,1);
     }
     else if (endTitle == next->title)
     {
@@ -1267,7 +1306,7 @@ static void introDrawSwadgeImu(int64_t elapsedUs)
 static void introDrawSwadgeSpeaker(int64_t elapsedUs)
 {
     // Draw speaker icon
-    drawWsgSimple(&iv->icon.speaker, (TFT_WIDTH - iv->icon.speaker.w) / 2, MANIA_TITLE_HEIGHT + 8);
+    drawWsgSimple(&iv->icon.speaker, (TFT_WIDTH - iv->icon.speaker.w) / 2, MANIA_TITLE_HEIGHT);
 }
 
 /**
@@ -1334,59 +1373,47 @@ static void playIntro(int64_t elapsedUs)
         case 13:
         case 14:
         case 15:
+        case 16:
         {
             fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
             break;
         }
-        case 16:
-        {
-            drawWsgSimple(&iv->introimgs[0], (TFT_WIDTH - iv->introimgs[0].w) >> 1,
-                          (TFT_HEIGHT - iv->introimgs[0].h) >> 1);
-            break;
-        }
         case 17:
         {
-            drawWsgSimple(&iv->introimgs[1], (TFT_WIDTH - iv->introimgs[0].w) >> 1,
-                          (TFT_HEIGHT - iv->introimgs[0].h) >> 1);
+            drawWsgSimple(&iv->introimgs[0], (TFT_WIDTH - iv->introimgs[0].w) / 2,
+                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
             break;
         }
         case 18:
         {
-            drawWsgSimple(&iv->introimgs[2], (TFT_WIDTH - iv->introimgs[0].w) >> 1,
-                          (TFT_HEIGHT - iv->introimgs[0].h) >> 1);
+            drawWsgSimple(&iv->introimgs[1], (TFT_WIDTH - iv->introimgs[0].w) / 2,
+                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
             break;
         }
         case 19:
         {
-            drawWsgSimple(&iv->introimgs[3], (TFT_WIDTH - iv->introimgs[0].w) >> 1,
-                          (TFT_HEIGHT - iv->introimgs[0].h) >> 1);
-            break;
-        }
-        case 40:
-        {
-            drawWsgSimple(&iv->introimgs[3], (TFT_WIDTH - iv->introimgs[0].w) >> 1,
-                          (TFT_HEIGHT - iv->introimgs[0].h) >> 1);
-            break;
-        }
-        case 41:
-        {
-            drawWsgSimple(&iv->introimgs[2], (TFT_WIDTH - iv->introimgs[0].w) >> 1,
-                          (TFT_HEIGHT - iv->introimgs[0].h) >> 1);
+            drawWsgSimple(&iv->introimgs[2], (TFT_WIDTH - iv->introimgs[0].w) / 2,
+                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
             break;
         }
         case 42:
         {
-            drawWsgSimple(&iv->introimgs[1], (TFT_WIDTH - iv->introimgs[0].w) >> 1,
-                          (TFT_HEIGHT - iv->introimgs[0].h) >> 1);
+            drawWsgSimple(&iv->introimgs[2], (TFT_WIDTH - iv->introimgs[0].w) / 2,
+                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
             break;
         }
         case 43:
         {
-            drawWsgSimple(&iv->introimgs[0], (TFT_WIDTH - iv->introimgs[0].w) >> 1,
-                          (TFT_HEIGHT - iv->introimgs[0].h) >> 1);
+            drawWsgSimple(&iv->introimgs[1], (TFT_WIDTH - iv->introimgs[0].w) / 2,
+                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
             break;
         }
         case 44:
+        {
+            drawWsgSimple(&iv->introimgs[0], (TFT_WIDTH - iv->introimgs[0].w) / 2,
+                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
+            break;
+        }
         case 45:
         case 46:
         case 47:
@@ -1400,8 +1427,8 @@ static void playIntro(int64_t elapsedUs)
 
         default:
         {
-            drawWsgSimple(&iv->introimgs[4], (TFT_WIDTH - iv->introimgs[0].w) >> 1,
-                          (TFT_HEIGHT - iv->introimgs[0].h) >> 1);
+            drawWsgSimple(&iv->introimgs[3], (TFT_WIDTH - iv->introimgs[0].w) / 2,
+                          (TFT_HEIGHT - iv->introimgs[0].h) / 2);
             break;
         }
             // add case 26,27, etc for twinkle later
