@@ -1,0 +1,106 @@
+// Create a gradient on the matrix displaying brightnesses from 0..71 out of a maximum brightness of 255.
+
+#include <stdbool.h>
+#include "swadge_matrix.h"
+
+typedef enum
+{
+    ALL_ON,
+    ROW_SWEEP,
+    COL_SWEEP
+} factoryLedState_t;
+
+/**
+ * @brief Main loop for ch32v003. LEDs start all on, then sweep across rows, then sweep across columns
+ *
+ * @return 0
+ */
+int main()
+{
+    // Timekeeping variables
+    int frameno = 0;
+    uint32_t nf = SysTick->CNT;
+
+    // Initialize the matrix
+    MatrixSetup();
+
+    factoryLedState_t state = ALL_ON;
+    int allOnTimer          = 0;
+    int colsVisible         = 0;
+    int rowsVisible         = 0;
+
+    // Loop forever
+    while (1)
+    {
+        // Wait to only run this loop at TARGET_FPS
+        while ((int)(nf - SysTick->CNT) > 0)
+        {
+            ;
+        }
+        nf = SysTick->CNT + 6000000 / TARGET_FPS;
+
+        // Run test patterns
+        for (int y = 0; y < EYE_LED_H; y++)
+        {
+            for (int x = 0; x < EYE_LED_W; x++)
+            {
+                if (ALL_ON == state || (ROW_SWEEP == state && y < rowsVisible)
+                    || (COL_SWEEP == state && x < colsVisible))
+                {
+                    SetPixel(x, y, 0x10);
+                }
+                else
+                {
+                    SetPixel(x, y, 0x00);
+                }
+            }
+        }
+
+        // Increment the frame count (loop runs at TARGET_FPS)
+        frameno++;
+
+        // Half second tick
+        if (0 == frameno % (TARGET_FPS / 2))
+        {
+            switch (state)
+            {
+                default:
+                case ALL_ON:
+                {
+                    allOnTimer++;
+                    if (4 == allOnTimer)
+                    {
+                        state       = ROW_SWEEP;
+                        rowsVisible = 0;
+                    }
+                    break;
+                }
+                case ROW_SWEEP:
+                {
+                    rowsVisible++;
+                    if (rowsVisible == EYE_LED_H + 1)
+                    {
+                        state       = COL_SWEEP;
+                        colsVisible = 0;
+                    }
+                    break;
+                }
+                case COL_SWEEP:
+                {
+                    colsVisible++;
+                    if (colsVisible == EYE_LED_W + 1)
+                    {
+                        state      = ALL_ON;
+                        allOnTimer = 0;
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Not sure what this does, but it seems important
+        *DMDATA1 = frameno;
+    }
+
+    return 0;
+}

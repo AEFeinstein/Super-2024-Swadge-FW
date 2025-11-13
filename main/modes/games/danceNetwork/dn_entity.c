@@ -59,6 +59,63 @@ static const dn_characterSet_t troupePermutations[7][2] = {{DN_ALPHA_SET, DN_ALP
                                                            {DN_BLACK_CHESS_SET, DN_WHITE_CHESS_SET},
                                                            {DN_ALPHA_SET, DN_BLACK_CHESS_SET},
                                                            {DN_ALPHA_SET, DN_WHITE_CHESS_SET}};
+#include <linked_list.h>
+#include <limits.h>
+
+static const dn_tutorialPage_t textTutorial[7] = {
+    {"Dance 101", "I am Commander DancenoNighta, and I'll be bringing you up to speed on the dance scene in 2026."},
+    {"Win Conditions", "You can win by capturing the opponent's king. The other way to win is by moving your king "
+                       "onto the opponent's control point."},
+    {"Phases", "Your turn consists of two phases: a dance phase, and an upgrade phase."},
+    {"Dance Phase", "In the dance phase, you do an action based on what is in your album."},
+    {"Upgrade Phase", "In the upgrade phase, you change what that album can do."},
+    {"Turn Order",
+     "Then it's your opponents turn. Pass the swadge to them so they can do the same phases and rinse and repeat."},
+    {"Dance Phase", "You can press 'b' in a lot of cases to go back. Try a few rounds to get to know the game. Then "
+                    "come back to the Advanced Tips."},
+};
+static const dn_tutorialPage_t advancedTips[17] = {
+    {"Dance 200", "Welcome back, students!"},
+    {"Dance 200", "As you should be well aware by now, you should have tried dancing before taking this course."},
+    {"Dance 200", "I'm just as excited as all of you to further hone your skills on the dance floor."},
+    {"Dance 200", "But first, a moment of silence for our fallen heroes from the Great Garbage War of '25."},
+    {"R.I.P.", "..."},
+    {"Understanding Albums", "Thank you. The albums show actions relative to any unit you would select. You have to "
+                             "imagine lining the album on one of your units on the board."},
+    {"Understanding Unit Status", "Units turn gray when they fire. You must move a unit to bring in  online since an "
+                                  "offline unit can't fire. Remember, a fully-colored unit is a threat!"},
+    {"Dance Actions - Remix", "Remix tracks (purple) allow you to fire and then move in one turn!"},
+    {"Bringing Units Online", "If a unit fires a ranged attack, that unit goes offline and is unable to fire again. It "
+                              "will look grayscale when offline."},
+    {"Bringing Units Online", "You need to move a unit to bring it online so it can fire later. Remember, if a unit is "
+                              "fully colored then it's a threat!"},
+    {"Upgrade phase", "In the writing phase, you to spend any number of your rerolls to influence the kind of track "
+                      "you write. Try to save up and turn the tides in your favor."},
+    {"Albums", "A track also randomly appears in the Creative Commons. Artists from around the world are adding tracks "
+               "into the Creative Commons every single turn."},
+    {"Creative Commons", "You can spend 5 rerolls during your dance phase to swap with the Creative Commons, giving "
+                         "you a completely different moveset."},
+    {"Dance Actions - Fire & Remix", "Fire and Remix tracks can even target friendly units or unoccupied tiles. You "
+                                     "should try it and see what happens."},
+    {"Ranged Attacks", "When bouncing a shot off an empty tile, select a second Fire or Remix track as the target. The "
+                       "bullet will keep the Fire or Remix property from your first selection."},
+    {"Rerolls", "Rerolls aren't just given out in the centered green squares on the board. You also get a reroll "
+                "everytime you get a unit to the other side of the board."},
+    {"Q&A", "That's all for the advanced tips. Your homework will be to achieve every trophy in the swadge and "
+            "outdance the enemy."},
+};
+
+static const dn_tutorialPage_t* tutorials[] = {textTutorial, advancedTips};
+uint8_t tutorialSizes[]
+    = {sizeof(textTutorial) / sizeof(textTutorial[0]), sizeof(advancedTips) / sizeof(advancedTips[0])};
+
+static const dn_characterSet_t troupePermutations[7][2] = {{DN_ALPHA_SET, DN_ALPHA_SET},
+                                                           {DN_WHITE_CHESS_SET, DN_ALPHA_SET},
+                                                           {DN_BLACK_CHESS_SET, DN_ALPHA_SET},
+                                                           {DN_WHITE_CHESS_SET, DN_BLACK_CHESS_SET},
+                                                           {DN_BLACK_CHESS_SET, DN_WHITE_CHESS_SET},
+                                                           {DN_ALPHA_SET, DN_BLACK_CHESS_SET},
+                                                           {DN_ALPHA_SET, DN_WHITE_CHESS_SET}};
 
 void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType)
 {
@@ -108,6 +165,7 @@ void dn_updateBoard(dn_entity_t* self)
             if (x == boardData->impactPos.x && y == boardData->impactPos.y)
             {
                 // the selected tile approaches a particular offset
+                tileData->yVel += (((int16_t)((60 << DN_DECIMAL_BITS) - tileData->yOffset)) / 3);
                 tileData->yVel += (((int16_t)((60 << DN_DECIMAL_BITS) - tileData->yOffset)) / 3);
             }
             else
@@ -281,8 +339,126 @@ void dn_drawBoard(dn_entity_t* self)
         {
             int drawX = ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
                         + (x - y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originX - 1;
+                        + (x - y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originX - 1;
             int drawY = ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
                         + (x + y) * self->gameData->assets[DN_GROUND_TILE_ASSET].originY
+                        - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS) + boardData->tiles[y][x].timeoutOffset;
+            int miniDrawX = -85 + ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
+                            + (x - y) * self->gameData->assets[DN_MINI_TILE_ASSET].originX - 1;
+            int miniDrawY = -233 + ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS)
+                            + (x + y) * self->gameData->assets[DN_MINI_TILE_ASSET].originY
+                            - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS)
+                            + boardData->tiles[y][x].timeoutOffset;
+
+            switch (boardData->tiles[y][x].selectionType)
+            {
+                case DN_UNIT_SELECTION:
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
+                                         drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                         drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                         &self->gameData->entityManager
+                                              .palettes[DN_RED_FLOOR_PALETTE
+                                                        + (((y * ((self->gameData->generalTimer >> 10) % 10) + x + 2)
+                                                            + (self->gameData->generalTimer >> 6))
+                                                           % 6)]);
+                    break;
+                }
+                case DN_BLUE_TRACK:
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
+                                         drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                         drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                         &self->gameData->entityManager
+                                              .palettes[DN_MOVE1_FLOOR_PALETTE + 2
+                                                        - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
+                                                                + (self->gameData->generalTimer >> 6))
+                                                               % 4)
+                                                              - 2)]);
+                    break;
+                }
+                case DN_RED_TRACK:
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
+                                         drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                         drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                         &self->gameData->entityManager
+                                              .palettes[DN_ATTACK1_FLOOR_PALETTE + 2
+                                                        - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
+                                                                + (self->gameData->generalTimer >> 6))
+                                                               % 4)
+                                                              - 2)]);
+                    break;
+                }
+                case DN_REMIX_TRACK:
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
+                                         drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                         drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                         &self->gameData->entityManager
+                                              .palettes[DN_REMIX1_FLOOR_PALETTE + 2
+                                                        - abs((((y * ((self->gameData->generalTimer >> 9) % 10) + x + 2)
+                                                                + (self->gameData->generalTimer >> 6))
+                                                               % 4)
+                                                              - 2)]);
+                    break;
+                }
+                default:
+                {
+                    drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0],
+                                  drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                  drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
+                    break;
+                }
+            }
+
+            switch (boardData->tiles[y][x].selectionType)
+            {
+                case DN_BLUE_TRACK_INVALID:
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[2],
+                                         drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                         drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                         &self->gameData->entityManager.palettes[DN_MOVE1_FLOOR_PALETTE]);
+                    break;
+                }
+                case DN_RED_TRACK_INVALID:
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[2],
+                                         drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                         drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                         &self->gameData->entityManager.palettes[DN_ATTACK1_FLOOR_PALETTE]);
+                    break;
+                }
+                case DN_REMIX_TRACK_INVALID:
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[2],
+                                         drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                         drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                         &self->gameData->entityManager.palettes[DN_REMIX1_FLOOR_PALETTE]);
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+
+            if (boardData->tiles[y][x].rewards)
+            {
+                char reward[6];
+                snprintf(reward, sizeof(reward), "+%d", boardData->tiles[y][x].rewards);
+                drawShinyText(&self->gameData->font_ibm, c153, c254, c555, reward, drawX - 8, drawY - 5);
+                drawWsgSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[1],
+                              drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                              drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY);
+            }
+            if (x == 2 && (y == 0 || y == 4))
+            {
+                drawWsgPaletteSimple(&self->gameData->assets[DN_GROUND_TILE_ASSET].frames[1],
+                                     drawX - self->gameData->assets[DN_GROUND_TILE_ASSET].originX,
+                                     drawY - self->gameData->assets[DN_GROUND_TILE_ASSET].originY,
+                                     &self->gameData->entityManager.palettes[DN_GREEN_TO_CYAN_PALETTE + (y == 0)]);
                         - (boardData->tiles[y][x].yOffset >> DN_DECIMAL_BITS) + boardData->tiles[y][x].timeoutOffset;
             int miniDrawX = -85 + ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS)
                             + (x - y) * self->gameData->assets[DN_MINI_TILE_ASSET].originX - 1;
@@ -425,10 +601,34 @@ void dn_drawBoard(dn_entity_t* self)
                              miniDrawX - self->gameData->assets[DN_MINI_TILE_ASSET].originX + 1, miniDrawY, c050);
                 drawLineFast(miniDrawX - self->gameData->assets[DN_MINI_TILE_ASSET].originX + 1, miniDrawY, miniDrawX,
                              miniDrawY + self->gameData->assets[DN_MINI_TILE_ASSET].originY - 1, c050);
+                dn_drawTileSelectorBackHalf(boardData->tiles[y][x].selector, drawX,
+                                            drawY - boardData->tiles[y][x].timeoutOffset);
+            }
+
+            // Draw the mini board
+            drawWsgSimple(&self->gameData->assets[DN_MINI_TILE_ASSET].frames[0],
+                          miniDrawX - self->gameData->assets[DN_MINI_TILE_ASSET].originX,
+                          miniDrawY - self->gameData->assets[DN_MINI_TILE_ASSET].originY);
+            if (boardData->tiles[y][x].rewards)
+            {
+                // char reward[6];
+                // snprintf(reward, sizeof(reward), "+%d", boardData->tiles[y][x].rewards);
+                // drawShinyText(&self->gameData->font_ibm, c031, c254, c555, reward, miniDrawX, miniDrawY);
+                drawLineFast(miniDrawX, miniDrawY - self->gameData->assets[DN_MINI_TILE_ASSET].originY + 1,
+                             miniDrawX + self->gameData->assets[DN_MINI_TILE_ASSET].originX - 1, miniDrawY, c050);
+                drawLineFast(miniDrawX + self->gameData->assets[DN_MINI_TILE_ASSET].originX - 1, miniDrawY, miniDrawX,
+                             miniDrawY + self->gameData->assets[DN_MINI_TILE_ASSET].originY - 1, c050);
+                drawLineFast(miniDrawX, miniDrawY - self->gameData->assets[DN_MINI_TILE_ASSET].originY + 1,
+                             miniDrawX - self->gameData->assets[DN_MINI_TILE_ASSET].originX + 1, miniDrawY, c050);
+                drawLineFast(miniDrawX - self->gameData->assets[DN_MINI_TILE_ASSET].originX + 1, miniDrawY, miniDrawX,
+                             miniDrawY + self->gameData->assets[DN_MINI_TILE_ASSET].originY - 1, c050);
             }
             if (boardData->tiles[y][x].unit != NULL)
             {
                 // Draw the unit on the tile
+                dn_entity_t* unit            = boardData->tiles[y][x].unit;
+                dn_assetIdx_t miniAssetIndex = dn_isKing(unit) ? DN_KING_SMALL_ASSET : DN_PAWN_SMALL_ASSET;
+                bool belongsToP1             = dn_belongsToP1(unit);
                 dn_entity_t* unit            = boardData->tiles[y][x].unit;
                 dn_assetIdx_t miniAssetIndex = dn_isKing(unit) ? DN_KING_SMALL_ASSET : DN_PAWN_SMALL_ASSET;
                 bool belongsToP1             = dn_belongsToP1(unit);
@@ -448,6 +648,7 @@ void dn_drawBoard(dn_entity_t* self)
                     drawWsgPaletteSimple(&self->gameData->assets[unit->assetIndex].frames[unit->currentAnimationFrame],
                                          drawX - self->gameData->assets[unit->assetIndex].originX,
                                          drawY - self->gameData->assets[unit->assetIndex].originY,
+                                         &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE]);
                                          &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE]);
                 }
                 else
@@ -501,6 +702,8 @@ void dn_drawBoard(dn_entity_t* self)
             if (boardData->tiles[y][x].selector != NULL)
             {
                 // Draw the front part of the selector
+                dn_drawTileSelectorFrontHalf(boardData->tiles[y][x].selector, drawX,
+                                             drawY - boardData->tiles[y][x].timeoutOffset);
                 dn_drawTileSelectorFrontHalf(boardData->tiles[y][x].selector, drawX,
                                              drawY - boardData->tiles[y][x].timeoutOffset);
             }
@@ -689,9 +892,15 @@ void dn_drawCurtain(dn_entity_t* self)
                   ((curtainData->separation > 0) * -curtainData->separation), 0);
     drawWsg(&self->gameData->assets[DN_CURTAIN_ASSET].frames[0],
             (TFT_WIDTH >> 1) + ((curtainData->separation > 0) * curtainData->separation), 0, true, false, 0);
+    drawWsgSimple(&self->gameData->assets[DN_CURTAIN_ASSET].frames[0],
+                  ((curtainData->separation > 0) * -curtainData->separation), 0);
+    drawWsg(&self->gameData->assets[DN_CURTAIN_ASSET].frames[0],
+            (TFT_WIDTH >> 1) + ((curtainData->separation > 0) * curtainData->separation), 0, true, false, 0);
     // get the text width
     uint16_t tWidth = textWidth(&self->gameData->font_ibm, self->gameData->playerNames[0]);
+    uint16_t tWidth = textWidth(&self->gameData->font_ibm, self->gameData->playerNames[0]);
     int16_t x       = (TFT_WIDTH >> 2) - (tWidth >> 1);
+    int16_t y       = 210;
     int16_t y       = 210;
     // Draw the intro text
     if (curtainData->separation > -700 && curtainData->separation < -50)
@@ -699,10 +908,14 @@ void dn_drawCurtain(dn_entity_t* self)
         drawCircleFilled((TFT_WIDTH >> 2) + 8, y - 38, 80, c055);
         drawCircleFilled(TFT_WIDTH >> 2, y - 30, 80, c000);
         drawShinyText(&self->gameData->font_ibm, c245, c355, c555, self->gameData->playerNames[0], x, y);
+        drawCircleFilled((TFT_WIDTH >> 2) + 8, y - 38, 80, c055);
+        drawCircleFilled(TFT_WIDTH >> 2, y - 30, 80, c000);
+        drawShinyText(&self->gameData->font_ibm, c245, c355, c555, self->gameData->playerNames[0], x, y);
         switch (self->gameData->characterSets[0])
         {
             case DN_ALPHA_SET:
                 drawWsgSimple(&self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0],
+                              (TFT_WIDTH >> 2) - (self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0].w >> 1), 95);
                               (TFT_WIDTH >> 2) - (self->gameData->assets[DN_ALPHA_ORTHO_ASSET].frames[0].w >> 1), 95);
                 break;
             case DN_BLACK_CHESS_SET:
@@ -712,8 +925,16 @@ void dn_drawCurtain(dn_entity_t* self)
                 break;
             }
             case DN_WHITE_CHESS_SET:
+            case DN_BLACK_CHESS_SET:
+            {
+                drawWsgSimple(&self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0],
+                              (TFT_WIDTH >> 2) - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1), 95);
+                break;
+            }
+            case DN_WHITE_CHESS_SET:
                 drawWsgPaletteSimple(&self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0],
                                      (TFT_WIDTH >> 2) - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1),
+                                     95, &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                                      95, &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                 break;
             default:
@@ -725,11 +946,20 @@ void dn_drawCurtain(dn_entity_t* self)
         tWidth = textWidth(&self->gameData->font_righteous, "VS");
         drawText(&self->gameData->font_righteous, c535, "VS", (TFT_WIDTH >> 1) - (tWidth >> 1), 90);
         drawText(&self->gameData->outline_righteous, c314, "VS", (TFT_WIDTH >> 1) - (tWidth >> 1), 90);
+        tWidth = textWidth(&self->gameData->font_righteous, "VS");
+        drawText(&self->gameData->font_righteous, c535, "VS", (TFT_WIDTH >> 1) - (tWidth >> 1), 90);
+        drawText(&self->gameData->outline_righteous, c314, "VS", (TFT_WIDTH >> 1) - (tWidth >> 1), 90);
     }
     if (curtainData->separation > -500 && curtainData->separation < -50)
     {
         tWidth = textWidth(&self->gameData->font_ibm, self->gameData->playerNames[1]);
+        tWidth = textWidth(&self->gameData->font_ibm, self->gameData->playerNames[1]);
         x      = (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2) - (tWidth >> 1);
+        y      = 30;
+
+        drawCircleFilled(((TFT_WIDTH >> 1) + (TFT_WIDTH >> 2)) - 8, y - 22, 80, c550);
+        drawCircleFilled((TFT_WIDTH >> 1) + (TFT_WIDTH >> 2), y - 30, 80, c000);
+        drawShinyText(&self->gameData->font_ibm, c442, c553, c555, self->gameData->playerNames[1], x, y);
         y      = 30;
 
         drawCircleFilled(((TFT_WIDTH >> 1) + (TFT_WIDTH >> 2)) - 8, y - 22, 80, c550);
@@ -749,10 +979,19 @@ void dn_drawCurtain(dn_entity_t* self)
                 break;
             case DN_BLACK_CHESS_SET:
             {
+            case DN_BLACK_CHESS_SET:
+            {
                 drawWsgSimple(&self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0],
                               (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2)
                                   - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1),
                               50);
+                break;
+            }
+            case DN_WHITE_CHESS_SET:
+                drawWsgPaletteSimple(&self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0],
+                                     (TFT_WIDTH >> 1) + (TFT_WIDTH >> 2)
+                                         - (self->gameData->assets[DN_CHESS_ORTHO_ASSET].frames[0].w >> 1),
+                                     50, &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
                 break;
             }
             case DN_WHITE_CHESS_SET:
@@ -788,14 +1027,29 @@ void dn_drawAlbums(dn_entity_t* self)
                       ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1),
                       ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 10);
     }
+    if (self->pos.y < 63550)
+    {
+        strcpy(text, "Creative");
+        tWidth = textWidth(&self->gameData->font_ibm, text);
+        drawShinyText(&self->gameData->font_ibm, c425, c535, c555, text,
+                      ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1),
+                      ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) - 1);
+        strcpy(text, "Commons");
+        tWidth = textWidth(&self->gameData->font_ibm, text);
+        drawShinyText(&self->gameData->font_ibm, c425, c535, c555, text,
+                      ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1),
+                      ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS) + 10);
+    }
 
     strcpy(text, "Player 2");
     tWidth = textWidth(&self->gameData->font_ibm, text);
+    drawShinyText(&self->gameData->font_ibm, c442, c553, c555, text,
     drawShinyText(&self->gameData->font_ibm, c442, c553, c555, text,
                   ((self->pos.x - self->gameData->camera.pos.x) >> DN_DECIMAL_BITS) - (tWidth >> 1) + 80,
                   ((self->pos.y - self->gameData->camera.pos.y) >> DN_DECIMAL_BITS));
 }
 
+dn_boardPos_t dn_colorToTrackCoords(paletteColor_t color)
 dn_boardPos_t dn_colorToTrackCoords(paletteColor_t color)
 {
     switch (color)
@@ -804,78 +1058,96 @@ dn_boardPos_t dn_colorToTrackCoords(paletteColor_t color)
         case c155:
         {
             return (dn_boardPos_t){-1, 2};
+            return (dn_boardPos_t){-1, 2};
         }
         case c300:
         case c200:
         {
+            return (dn_boardPos_t){0, 2};
             return (dn_boardPos_t){0, 2};
         }
         case c301:
         case c201:
         {
             return (dn_boardPos_t){1, 2};
+            return (dn_boardPos_t){1, 2};
         }
         case c302:
         case c202:
         {
             return (dn_boardPos_t){-2, 1};
+            return (dn_boardPos_t){-2, 1};
         }
         case c303:
         {
+            return (dn_boardPos_t){-1, 1};
             return (dn_boardPos_t){-1, 1};
         }
         case c304:
         {
             return (dn_boardPos_t){0, 1};
+            return (dn_boardPos_t){0, 1};
         }
         case c305:
         {
             return (dn_boardPos_t){1, 1};
+            return (dn_boardPos_t){1, 1};
         }
         case c310:
         {
+            return (dn_boardPos_t){2, 1};
             return (dn_boardPos_t){2, 1};
         }
         case c311:
         case c111:
         {
             return (dn_boardPos_t){-2, 0};
+            return (dn_boardPos_t){-2, 0};
         }
         case c312:
         {
+            return (dn_boardPos_t){-1, 0};
             return (dn_boardPos_t){-1, 0};
         }
         case c313:
         {
             return (dn_boardPos_t){1, 0};
+            return (dn_boardPos_t){1, 0};
         }
         case c314:
         {
+            return (dn_boardPos_t){2, 0};
             return (dn_boardPos_t){2, 0};
         }
         case c315:
         {
             return (dn_boardPos_t){-1, -1};
+            return (dn_boardPos_t){-1, -1};
         }
         case c320:
         {
+            return (dn_boardPos_t){0, -1};
             return (dn_boardPos_t){0, -1};
         }
         case c321:
         {
             return (dn_boardPos_t){1, -1};
+            return (dn_boardPos_t){1, -1};
         }
         case c322:
         {
+            return (dn_boardPos_t){0, -2};
             return (dn_boardPos_t){0, -2};
         }
         default:
         {
             return (dn_boardPos_t){0, 0};
+            return (dn_boardPos_t){0, 0};
         }
     }
 }
 
+dn_twoColors_t dn_trackCoordsToColor(dn_boardPos_t trackCoords)
 dn_twoColors_t dn_trackCoordsToColor(dn_boardPos_t trackCoords)
 {
     switch (trackCoords.y)
@@ -1009,6 +1281,7 @@ dn_twoColors_t dn_trackCoordsToColor(dn_boardPos_t trackCoords)
 }
 
 void dn_addTrackToAlbum(dn_entity_t* album, dn_boardPos_t trackCoords, dn_track_t track)
+void dn_addTrackToAlbum(dn_entity_t* album, dn_boardPos_t trackCoords, dn_track_t track)
 {
     dn_albumData_t* aData = (dn_albumData_t*)album->data;
     dn_twoColors_t colors = dn_trackCoordsToColor(trackCoords);
@@ -1065,6 +1338,25 @@ void dn_updateAlbum(dn_entity_t* self)
             aData->screenIsOn    = true;
             aData->timer         = 0;
             self->updateFunction = NULL;
+            while (true && self != ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->creativeCommonsAlbum)
+            {
+                dn_boardPos_t pos = (dn_boardPos_t){dn_randomInt(-2, 2), 1};
+                if (dn_trackTypeAtCoords(self, pos) == DN_NONE_TRACK)
+                {
+                    dn_addTrackToAlbum(self, pos, DN_RED_TRACK);
+                    break;
+                }
+            }
+            if (self == ((dn_albumsData_t*)self->gameData->entityManager.albums->data)->p2Album)
+            {
+                // third album has finished the bootup animation
+                self->gameData->phase = DN_P1_DANCE_PHASE;
+                dn_startTurn(self);
+            }
+            aData->cornerLightOn = true;
+            aData->screenIsOn    = true;
+            aData->timer         = 0;
+            self->updateFunction = NULL;
         }
     }
 }
@@ -1078,6 +1370,10 @@ void dn_drawAlbum(dn_entity_t* self)
                 - self->gameData->assets[DN_ALBUM_ASSET].originY;
     drawWsgPalette(&self->gameData->assets[DN_ALBUM_ASSET].frames[0], x, y,
                    aData->screenIsOn ? &aData->screenOnPalette : &aData->screenOffPalette, false, false, aData->rot);
+    drawWsgPalette(&self->gameData->assets[DN_ALBUM_EXPLOSION_ASSET].frames[self->currentAnimationFrame], x, y,
+                   &aData->screenAttackPalette, false, false, aData->rot);
+    if ((aData->cornerLightOn && !aData->cornerLightBlinking)
+        || (aData->cornerLightOn && aData->cornerLightBlinking && (self->gameData->generalTimer & 0b111111) > 15))
     drawWsgPalette(&self->gameData->assets[DN_ALBUM_EXPLOSION_ASSET].frames[self->currentAnimationFrame], x, y,
                    &aData->screenAttackPalette, false, false, aData->rot);
     if ((aData->cornerLightOn && !aData->cornerLightBlinking)
@@ -1105,6 +1401,16 @@ void dn_drawAlbum(dn_entity_t* self)
             self->currentAnimationFrame = 0;
         }
     }
+    self->animationTimer++;
+    if (self->animationTimer >= self->gameFramesPerAnimationFrame)
+    {
+        self->animationTimer = 0;
+        self->currentAnimationFrame++;
+        if (self->currentAnimationFrame >= self->gameData->assets[DN_ALBUM_EXPLOSION_ASSET].numFrames)
+        {
+            self->currentAnimationFrame = 0;
+        }
+    }
 }
 
 void dn_updateCharacterSelect(dn_entity_t* self)
@@ -1114,7 +1420,11 @@ void dn_updateCharacterSelect(dn_entity_t* self)
     {
         self->gameData->characterSets[0] = troupePermutations[cData->selectCharacterIdx][0];
         self->gameData->characterSets[1] = troupePermutations[cData->selectCharacterIdx][1];
+        self->gameData->characterSets[0] = troupePermutations[cData->selectCharacterIdx][0];
+        self->gameData->characterSets[1] = troupePermutations[cData->selectCharacterIdx][1];
         // save to NVS
+        writeNvs32(dnP1TroupeKey, self->gameData->characterSets[0]);
+        writeNvs32(dnP2TroupeKey, self->gameData->characterSets[1]);
         writeNvs32(dnP1TroupeKey, self->gameData->characterSets[0]);
         writeNvs32(dnP2TroupeKey, self->gameData->characterSets[1]);
 
@@ -1122,6 +1432,7 @@ void dn_updateCharacterSelect(dn_entity_t* self)
     }
     if (self->gameData->btnDownState & PB_B)
     {
+        dn_exitSubMode(self);
         dn_exitSubMode(self);
         return;
     }
@@ -1132,6 +1443,7 @@ void dn_updateCharacterSelect(dn_entity_t* self)
             // scroll left
             if (cData->selectCharacterIdx == 0)
             {
+                cData->selectCharacterIdx = DN_NUM_TROUPE_PERMUTATIONS - 1;
                 cData->selectCharacterIdx = DN_NUM_TROUPE_PERMUTATIONS - 1;
             }
             else
@@ -1146,6 +1458,7 @@ void dn_updateCharacterSelect(dn_entity_t* self)
         if (cData->xSelectScrollOffset == 0)
         {
             // scroll right
+            cData->selectCharacterIdx = (cData->selectCharacterIdx + 1) % DN_NUM_TROUPE_PERMUTATIONS;
             cData->selectCharacterIdx = (cData->selectCharacterIdx + 1) % DN_NUM_TROUPE_PERMUTATIONS;
             // increment the offset to scroll
             cData->xSelectScrollOffset += self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
@@ -1191,6 +1504,7 @@ void dn_drawCharacterSelect(dn_entity_t* self)
     if (pIdx < 0)
     {
         pIdx = DN_NUM_TROUPE_PERMUTATIONS - 1;
+        pIdx = DN_NUM_TROUPE_PERMUTATIONS - 1;
     }
 
     // Draw floor tiles
@@ -1207,6 +1521,9 @@ void dn_drawCharacterSelect(dn_entity_t* self)
                 if (drawX >= -self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w && drawX <= TFT_WIDTH)
                 {
                     // If this is the active maker, draw swapped pallete
+                    if (troupePermutations[pIdx][0] == self->gameData->characterSets[0]
+                        && troupePermutations[pIdx][1] == self->gameData->characterSets[1]
+                        && cData->selectDiamondShape[y * 5 + x + 2])
                     if (troupePermutations[pIdx][0] == self->gameData->characterSets[0]
                         && troupePermutations[pIdx][1] == self->gameData->characterSets[1]
                         && cData->selectDiamondShape[y * 5 + x + 2])
@@ -1229,6 +1546,7 @@ void dn_drawCharacterSelect(dn_entity_t* self)
             xOff += self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
             // Increment marker index
             pIdx = (pIdx + 1) % DN_NUM_TROUPE_PERMUTATIONS;
+            pIdx = (pIdx + 1) % DN_NUM_TROUPE_PERMUTATIONS;
         }
         // reset values
         xOff = ((TFT_WIDTH - self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w) >> 1)
@@ -1244,6 +1562,7 @@ void dn_drawCharacterSelect(dn_entity_t* self)
         // Don't use a negative index!
         while (pIdx < 0)
         {
+            pIdx += DN_NUM_TROUPE_PERMUTATIONS;
             pIdx += DN_NUM_TROUPE_PERMUTATIONS;
         }
     }
@@ -1262,6 +1581,7 @@ void dn_drawCharacterSelect(dn_entity_t* self)
         switch (pIdx)
         {
             case 0:
+            case 0:
             {
                 kingDown = DN_ALPHA_DOWN_ASSET;
                 kingUp   = DN_ALPHA_UP_ASSET;
@@ -1269,6 +1589,23 @@ void dn_drawCharacterSelect(dn_entity_t* self)
                 pawnUp   = DN_BUCKET_HAT_UP_ASSET;
                 break;
             }
+            case 1:
+            {
+                kingDown = DN_ALPHA_DOWN_ASSET;
+                kingUp   = DN_KING_ASSET;
+                pawnDown = DN_BUCKET_HAT_DOWN_ASSET;
+                pawnUp   = DN_PAWN_ASSET;
+                break;
+            }
+            case 2:
+            {
+                kingDown = DN_ALPHA_DOWN_ASSET;
+                kingUp   = DN_KING_ASSET;
+                pawnDown = DN_BUCKET_HAT_DOWN_ASSET;
+                pawnUp   = DN_PAWN_ASSET;
+                break;
+            }
+            case 3:
             case 1:
             {
                 kingDown = DN_ALPHA_DOWN_ASSET;
@@ -1310,7 +1647,28 @@ void dn_drawCharacterSelect(dn_entity_t* self)
                 break;
             }
             default: // case 6
+            case 4:
             {
+                kingDown = DN_KING_ASSET;
+                kingUp   = DN_KING_ASSET;
+                pawnDown = DN_PAWN_ASSET;
+                pawnUp   = DN_PAWN_ASSET;
+                break;
+            }
+            case 5:
+            {
+                kingDown = DN_KING_ASSET;
+                kingUp   = DN_ALPHA_UP_ASSET;
+                pawnDown = DN_PAWN_ASSET;
+                pawnUp   = DN_BUCKET_HAT_UP_ASSET;
+                break;
+            }
+            default: // case 6
+            {
+                kingDown = DN_KING_ASSET;
+                kingUp   = DN_ALPHA_UP_ASSET;
+                pawnDown = DN_PAWN_ASSET;
+                pawnUp   = DN_BUCKET_HAT_UP_ASSET;
                 kingDown = DN_KING_ASSET;
                 kingUp   = DN_ALPHA_UP_ASSET;
                 pawnDown = DN_PAWN_ASSET;
@@ -1321,6 +1679,25 @@ void dn_drawCharacterSelect(dn_entity_t* self)
         for (int8_t i = 0; i < 5; i++)
         {
             if (i == 2) // king is the middle piece
+            {
+                if (kingDown == DN_KING_ASSET && (pIdx == 4 || pIdx == 6))
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[kingDown].frames[0],
+                                         xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i
+                                             - self->gameData->assets[kingDown].originX,
+                                         yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
+                                             - self->gameData->assets[kingDown].originY,
+                                         &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                }
+                else
+                {
+                    drawWsgSimple(&self->gameData->assets[kingDown].frames[0],
+                                  xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i
+                                      - self->gameData->assets[kingDown].originX,
+                                  yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
+                                      - self->gameData->assets[kingDown].originY);
+                }
+                if (kingUp == DN_KING_ASSET && (pIdx == 1 || pIdx == 3))
             {
                 if (kingDown == DN_KING_ASSET && (pIdx == 4 || pIdx == 6))
                 {
@@ -1378,6 +1755,27 @@ void dn_drawCharacterSelect(dn_entity_t* self)
                                       - self->gameData->assets[pawnDown].originY);
                 }
                 if (pawnUp == DN_PAWN_ASSET && (pIdx == 1 || pIdx == 3))
+            }
+            else
+            {
+                if (pawnDown == DN_PAWN_ASSET && (pIdx == 4 || pIdx == 6))
+                {
+                    drawWsgPaletteSimple(&self->gameData->assets[pawnDown].frames[0],
+                                         xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i
+                                             - self->gameData->assets[pawnDown].originX,
+                                         yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
+                                             - self->gameData->assets[pawnDown].originY,
+                                         &self->gameData->entityManager.palettes[DN_WHITE_CHESS_PALETTE]);
+                }
+                else
+                {
+                    drawWsgSimple(&self->gameData->assets[pawnDown].frames[0],
+                                  xOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w >> 1) * i
+                                      - self->gameData->assets[pawnDown].originX,
+                                  yOff + (self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].h >> 1) * i
+                                      - self->gameData->assets[pawnDown].originY);
+                }
+                if (pawnUp == DN_PAWN_ASSET && (pIdx == 1 || pIdx == 3))
                 {
                     drawWsgPaletteSimple(
                         &self->gameData->assets[pawnUp].frames[0],
@@ -1402,6 +1800,7 @@ void dn_drawCharacterSelect(dn_entity_t* self)
         xOff += self->gameData->assets[DN_GROUND_TILE_ASSET].frames[0].w * 5;
         // Increment marker index
         pIdx = (pIdx + 1) % DN_NUM_TROUPE_PERMUTATIONS;
+        pIdx = (pIdx + 1) % DN_NUM_TROUPE_PERMUTATIONS;
     }
 
     // Draw arrows to indicate this can be scrolled
@@ -1421,6 +1820,11 @@ void dn_drawCharacterSelect(dn_entity_t* self)
 void dn_updateTileSelector(dn_entity_t* self)
 {
     dn_tileSelectorData_t* tData = (dn_tileSelectorData_t*)self->data;
+    if (tData->pos.x == -1 || tData->pos.y == -1)
+    {
+        return;
+    }
+    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
     if (tData->pos.x == -1 || tData->pos.y == -1)
     {
         return;
@@ -1468,6 +1872,15 @@ void dn_updateTileSelector(dn_entity_t* self)
     }
 
     bData->tiles[tData->pos.y][tData->pos.x].selector = self;
+
+    if (tData->b_callback && self->gameData->btnDownState & PB_B)
+    {
+        tData->b_callback(self);
+    }
+    else if (self->gameData->btnDownState & PB_A)
+    {
+        tData->a_callback(self);
+    }
 
     if (tData->b_callback && self->gameData->btnDownState & PB_B)
     {
@@ -1811,6 +2224,10 @@ void dn_drawPlayerTurn(dn_entity_t* self)
     drawCircleQuadrants(TFT_WIDTH - 42, TFT_HEIGHT - 42, 41, true, false, false, false, col);
     drawRect(0, 0, TFT_WIDTH - 0, TFT_HEIGHT - 0, col);
 
+    drawCircleQuadrants(41, 41, 40, false, false, true, false, col);
+    drawCircleQuadrants(TFT_WIDTH - 42, 41, 40, false, false, false, true, col);
+    drawCircleQuadrants(41, TFT_HEIGHT - 42, 40, false, true, false, false, col);
+    drawCircleQuadrants(TFT_WIDTH - 42, TFT_HEIGHT - 42, 40, true, false, false, false, col);
     drawCircleQuadrants(41, 41, 40, false, false, true, false, col);
     drawCircleQuadrants(TFT_WIDTH - 42, 41, 40, false, false, false, true, col);
     drawCircleQuadrants(41, TFT_HEIGHT - 42, 40, false, true, false, false, col);

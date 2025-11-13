@@ -49,7 +49,7 @@ const trophyData_t trophyTestModeTrophies[] = {
     {
         .title       = "Progress Trophy",
         .description = "Hold down the up button for eight seconds",
-        .image       = NO_IMAGE_SET,
+        .image       = NO_IMAGE_SET, // Hardcoded "Ignore" value
         .type        = TROPHY_TYPE_PROGRESS,
         .difficulty  = TROPHY_DIFF_EXTREME,
         .maxVal      = 8,
@@ -67,23 +67,28 @@ const trophyData_t trophyTestModeTrophies[] = {
 };
 
 // Individual mode settings
-trophySettings_t trophyTestModeTrophySettings = {
+const trophySettings_t trophyTestModeTrophySettings = {
     .drawFromBottom   = false,
     .staticDurationUs = DRAW_STATIC_US * 2,
     .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = trophyModeName,
 };
 
 // This is passed to the swadgeMode_t
-trophyDataList_t trophyTestData = {.settings = &trophyTestModeTrophySettings,
-                                   .list = trophyTestModeTrophies,
-                                   .length = ARRAY_SIZE(trophyTestModeTrophies)};
+const trophyDataList_t trophyTestData = {
+    .settings = &trophyTestModeTrophySettings,
+    .list     = trophyTestModeTrophies,
+    .length   = ARRAY_SIZE(trophyTestModeTrophies),
+};
 
 // swadgeMode_t
-swadgeMode_t trophyTestMode = {.modeName      = modeName,
-                               .wifiMode      = NO_WIFI,
-                               //...
-                               .fnAdvancedUSB = NULL,
-                               .trophyData    = &trophyTestData}; // This line activates the trophy for this mode
+swadgeMode_t trophyTestMode = {
+    .modeName      = modeName,
+    .wifiMode      = NO_WIFI,
+    //...
+    .fnAdvancedUSB = NULL,
+    .trophyData    = &trophyTestData, // This line activates the trophy for this mode
+};
  * \endcode
  *
  * This will allow the trophy system to access your trophies and make sure the right text and images are displayed when
@@ -312,18 +317,18 @@ typedef struct
 /// @brief Settings for the trophy system
 typedef struct
 {
-    bool drawFromBottom;                      ///< If banner should be drawn from the bottom of the screen
-    int32_t staticDurationUs;                 ///< How long the banner will be drawn fully extended
-    int32_t slideDurationUs;                  ///< How long the banner will take to slide in and out
-    char namespaceKey[NVS_KEY_NAME_MAX_SIZE]; ///< key used for trophy namespace
+    bool drawFromBottom;      ///< If banner should be drawn from the bottom of the screen
+    int32_t staticDurationUs; ///< How long the banner will be drawn fully extended
+    int32_t slideDurationUs;  ///< How long the banner will take to slide in and out
+    const char* namespaceKey; ///< key used for trophy namespace
 } trophySettings_t;
 
 /// @brief The data object dev hands to the trophy showcase that contains all the const data.
 typedef struct
 {
-    int32_t length;                 ///< Length of the trophy arrays
-    const trophyData_t* const list; ///< Array of trophies
-    trophySettings_t* settings;     ///< Setting data
+    int32_t length;                   ///< Length of the trophy arrays
+    const trophyData_t* const list;   ///< Array of trophies
+    const trophySettings_t* settings; ///< Setting data
 } trophyDataList_t;
 
 //==============================================================================
@@ -339,7 +344,7 @@ typedef struct
  * @param settings The settings data
  * @param modeName Name of the mode
  */
-void trophySystemInit(trophyDataList_t* settings, const char* modeName);
+void trophySystemInit(const trophyDataList_t* settings, const char* modeName);
 
 // Utilize trophies
 
@@ -351,7 +356,7 @@ void trophySystemInit(trophyDataList_t* settings, const char* modeName);
  * @param drawUpdate If this update should be drawn to the screen
  * @return true if a notification is being drawn, false otherwise
  */
-bool trophyUpdate(trophyData_t t, int newVal, bool drawUpdate);
+bool trophyUpdate(const trophyData_t* t, int newVal, bool drawUpdate);
 
 /**
  * @brief Updates just like `trophyUpdate()`, but only draws when crossing percentage boundary
@@ -361,7 +366,7 @@ bool trophyUpdate(trophyData_t t, int newVal, bool drawUpdate);
  * @param threshold Value (0-100, representing a percent) to draw at
  * @return true if a notification is being drawn, false otherwise
  */
-bool trophyUpdateMilestone(trophyData_t t, int newVal, int threshold);
+bool trophyUpdateMilestone(const trophyData_t* t, int newVal, int threshold);
 
 /**
  * @brief Returns the value saved to the NVS or 0 if the key isn't found.
@@ -369,7 +374,7 @@ bool trophyUpdateMilestone(trophyData_t t, int newVal, int threshold);
  * @param t Trophy to grab value for
  * @return int32_t Stored value for the requested trophy
  */
-int32_t trophyGetSavedValue(trophyData_t t);
+int32_t trophyGetSavedValue(const trophyData_t* t);
 
 /**
  * @brief Sets or unsets a checklist item.
@@ -380,14 +385,14 @@ int32_t trophyGetSavedValue(trophyData_t t);
  * @param drawUpdate If this update should be drawn
  * @return true if a notification is being drawn, false otherwise
  */
-bool trophySetChecklistTask(trophyData_t t, int32_t flag, bool unset, bool drawUpdate);
+bool trophySetChecklistTask(const trophyData_t* t, int32_t flag, bool unset, bool drawUpdate);
 
 /**
  * @brief Erases completion data from swadge. Only use in extreme circumstances.
  *
  * @param t Trophy to set to 0
  */
-void trophyClear(trophyData_t t);
+void trophyClear(const trophyData_t* t);
 
 // Helpers
 
@@ -414,17 +419,17 @@ void setBitFlag(int32_t* flags, int8_t idx, bool setTrue);
  * @brief Get the point totals for the gamer score
  *
  * @param total If loading the full score or for the current mode
- * @param modeName Mode name to load. Set to NULL to get currently loaded mode
+ * @param namespace namespace to load points from. Set to NULL to get currently loaded mode
  * @return int Value of the score
  */
-int trophyGetPoints(bool total, const char* modeName);
+int trophyGetPoints(bool total, const char* namespace);
 
 /**
  * @brief Get the Latest Trophy Idx object
  *
- * @return trophyData_t data for the latest win
+ * @return trophyData_t data for the latest win. NULL if no trophies have been won yet.
  */
-trophyData_t trophyGetLatest(void);
+const trophyData_t* trophyGetLatest(void);
 
 /**
  * @brief Set the Trophy System to a specific mode's values
@@ -432,7 +437,7 @@ trophyData_t trophyGetLatest(void);
  * @param dl Data object from the mode
  * @param modeName Name of the mode
  */
-void trophySetSystemData(trophyDataList_t* dl, const char* modeName);
+void trophySetSystemData(const trophyDataList_t* dl, const char* modeName);
 
 // Drawing functions
 

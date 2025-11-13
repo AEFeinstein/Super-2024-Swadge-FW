@@ -1,6 +1,6 @@
 /*! \file hdw-ch32v003.h
  *
- * TODO
+ * This file contains the header to control the semihosted ch32v003 via the swio programming pin.
  *
  */
 
@@ -11,7 +11,17 @@
 #include <stdint.h>
 #include <driver/gpio.h>
 
+// Convenience macros for consistent LED values across modes
+#define EYE_LED_OFF    0x00
+#define EYE_LED_DIM    0x08
+#define EYE_LED_BRIGHT 0x10
+
+#define EYE_LED_W 12
+#define EYE_LED_H 6
+
 int initCh32v003(int swdio_pin);
+
+#define CH32V003_MAX_IMAGE_SLOTS 20
 
 /**
  * @brief Load and run a binary image from the assets folder on the ch32v003. Included as a `#define` because we can't
@@ -27,6 +37,7 @@ int initCh32v003(int swdio_pin);
         const uint8_t* buf = cnfsGetFile(asset, &sz);     \
         int r              = ch32v003WriteFlash(buf, sz); \
         ch32v003Resume();                                 \
+        vTaskDelay(10);                                   \
         r;                                                \
     })
 
@@ -41,7 +52,8 @@ int ch32v003Resume();
 void ch32v003CheckTerminal();
 void ch32v003Teardown();
 
-// Only available on the emulator
-void ch32v003EmuDraw(int window_w, int window_h);
+int ch32v003WriteBitmapAsset(int slot, int asset_idx);
+int ch32v003WriteBitmap(int slot, const uint8_t pixels[6][12]);
+int ch32v003SelectBitmap(int slot);
 
 #endif

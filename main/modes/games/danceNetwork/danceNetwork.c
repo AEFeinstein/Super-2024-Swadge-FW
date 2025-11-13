@@ -24,7 +24,7 @@ static void dn_MsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 static void dn_EnterMode(void);
 static void dn_ExitMode(void);
 static void dn_MainLoop(int64_t elapsedUs);
-static void dn_MenuCb(const char* label, bool selected, uint32_t value);
+static bool dn_MenuCb(const char* label, bool selected, uint32_t value);
 static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 static void dn_initializeTutorial(bool advanced);
@@ -38,6 +38,7 @@ static void dn_freeAssets(void);
 //==============================================================================
 
 // Modify the following with your trophies
+<<<<<<< HEAD
 const trophyData_t danceNetworkTrophies[]
     = {{
            // 0
@@ -132,6 +133,106 @@ trophySettings_t danceNetworkTrophySettings = {
 trophyDataList_t trophyData = {.settings = &danceNetworkTrophySettings,
                                .list     = danceNetworkTrophies,
                                .length   = ARRAY_SIZE(danceNetworkTrophies)};
+=======
+const trophyData_t danceNetworkTrophies[] = {
+    {
+        // 0
+        .title       = "Dance 101",
+        .description = "Worth 3 credit hours at Dance University.",
+        .image       = NO_IMAGE_SET, // If set like this, it will draw a default trophy based on difficulty
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        // 1
+        .title       = "Dance 200",
+        .description = "Also worth 3 credit hours at Dance University.",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1,
+    },
+    {
+        // 2
+        .title       = "Certified Dance Freak",
+        .description = "Viewed the video tutorial, passed Dance 101, and passed Dance 200.",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_CHECKLIST,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 0x7, // Three tasks, 0x01, 0x02, and 0x04
+    },
+    {
+        // 3
+        .title       = "Boogie Omnipotence",
+        .description = "Finished a match of Dance Network.",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1,
+    },
+    {
+        // 4
+        .title       = "Full Discography",
+        .description = "Completely filled an album with tracks.",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1,
+    },
+    {
+        // 5
+        .title       = "Utterly Confusing",
+        .description = "Played a game with white chess pieces for player 2 or black chess pieces for player 1.",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        // 6
+        .title       = "My People Need Me",
+        .description = "Jumped into the garbage pit.",
+        .image       = EF_BIGBUG_SLV_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        // 7
+        .title       = "Dance Veteran",
+        .description = "Completed 10 Dance Network matches. Puts DanceNoNighta to shame.",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 10,
+    },
+    {
+        // 8
+        .title       = "No Respect These Days",
+        .description = "Angered DanceNoNighta during the moment of silence.",
+        .image       = EF_BIGBUG_SLV_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+};
+
+// Individual mode settings
+const trophySettings_t danceNetworkTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 6,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = "Alpha Pulse",
+};
+
+// This is passed to the swadgeMode_t
+const trophyDataList_t trophyData = {
+    .settings = &danceNetworkTrophySettings,
+    .list     = danceNetworkTrophies,
+    .length   = ARRAY_SIZE(danceNetworkTrophies),
+};
+>>>>>>> main
 
 swadgeMode_t danceNetworkMode = {
     .modeName          = danceNetworkName, // Assign the name we created here
@@ -198,8 +299,13 @@ uint8_t* dn_decodeSpace;
 
 // This is in order such that index is the assetIdx.
 static const cnfsFileIdx_t dn_assetToWsgLookup[]
+<<<<<<< HEAD
     = {DN_ALPHA_DOWN_0_WSG, DN_ALPHA_ORTHO_WSG,  DN_ALPHA_UP_0_WSG,        DN_KING_0_WSG,         DN_KING_SMALL_0_WSG,
        DN_PAWN_0_WSG,       DN_PAWN_SMALL_0_WSG, DN_BUCKET_HAT_DOWN_0_WSG, DN_BUCKET_HAT_UP_0_WSG};
+=======
+    = {DN_ALPHA_DOWN_WSG, DN_ALPHA_ORTHO_WSG,  DN_ALPHA_UP_WSG,        DN_KING_WSG,         DN_KING_SMALL_0_WSG,
+       DN_PAWN_WSG,       DN_PAWN_SMALL_0_WSG, DN_BUCKET_HAT_DOWN_WSG, DN_BUCKET_HAT_UP_WSG};
+>>>>>>> main
 
 // NVS keys
 const char dnP1TroupeKey[] = "dn_P1_Troupe";
@@ -211,8 +317,11 @@ static void dn_EnterMode(void)
 {
     gameData = (dn_gameData_t*)heap_caps_calloc(1, sizeof(dn_gameData_t), MALLOC_CAP_8BIT);
     memset(gameData, 0, sizeof(dn_gameData_t));
+<<<<<<< HEAD
 
     gameData->trophyData = &danceNetworkTrophies;
+=======
+>>>>>>> main
 
     int32_t outVal;
     readNvs32(dnP1TroupeKey, &outVal);
@@ -247,7 +356,69 @@ static void dn_EnterMode(void)
     gameData->camera.pos.y -= (57 << DN_DECIMAL_BITS); // Move the camera a bit.
     dn_initializeEntityManager(&gameData->entityManager, gameData);
 
+<<<<<<< HEAD
     dn_setAssetMetaData();
+=======
+    gameData->assets[DN_ALPHA_DOWN_ASSET].originX   = 9;
+    gameData->assets[DN_ALPHA_DOWN_ASSET].originY   = 54;
+    gameData->assets[DN_ALPHA_DOWN_ASSET].numFrames = 1;
+
+    gameData->assets[DN_ALPHA_ORTHO_ASSET].originX   = 10;
+    gameData->assets[DN_ALPHA_ORTHO_ASSET].originY   = 10;
+    gameData->assets[DN_ALPHA_ORTHO_ASSET].numFrames = 1;
+
+    gameData->assets[DN_ALPHA_UP_ASSET].originX   = 14;
+    gameData->assets[DN_ALPHA_UP_ASSET].originY   = 53;
+    gameData->assets[DN_ALPHA_UP_ASSET].numFrames = 1;
+
+    gameData->assets[DN_KING_ASSET].originX   = 10;
+    gameData->assets[DN_KING_ASSET].originY   = 54;
+    gameData->assets[DN_KING_ASSET].numFrames = 1;
+
+    gameData->assets[DN_KING_SMALL_ASSET].originX   = 4;
+    gameData->assets[DN_KING_SMALL_ASSET].originY   = 19;
+    gameData->assets[DN_KING_SMALL_ASSET].numFrames = 1;
+
+    gameData->assets[DN_PAWN_ASSET].originX   = 10;
+    gameData->assets[DN_PAWN_ASSET].originY   = 44;
+    gameData->assets[DN_PAWN_ASSET].numFrames = 1;
+
+    gameData->assets[DN_PAWN_SMALL_ASSET].originX   = 4;
+    gameData->assets[DN_PAWN_SMALL_ASSET].originY   = 14;
+    gameData->assets[DN_PAWN_SMALL_ASSET].numFrames = 1;
+
+    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originX   = 10;
+    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originY   = 33;
+    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].numFrames = 1;
+
+    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originX   = 14;
+    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originY   = 30;
+    gameData->assets[DN_BUCKET_HAT_UP_ASSET].numFrames = 1;
+
+    gameData->assets[DN_GROUND_TILE_ASSET].originX   = 25;
+    gameData->assets[DN_GROUND_TILE_ASSET].originY   = 13;
+    gameData->assets[DN_GROUND_TILE_ASSET].numFrames = 1;
+
+    gameData->assets[DN_CURTAIN_ASSET].numFrames = 1;
+
+    gameData->assets[DN_ALBUM_ASSET].originX = 31;
+    gameData->assets[DN_ALBUM_ASSET].originY = 34;
+>>>>>>> main
+
+    gameData->assets[DN_SPEAKER_ASSET].originX = 12;
+    gameData->assets[DN_SPEAKER_ASSET].originY = 44;
+
+    gameData->assets[DN_SPEAKER_STAND_ASSET].originX = 6;
+    gameData->assets[DN_SPEAKER_STAND_ASSET].originY = 8;
+
+    gameData->assets[DN_PIT_ASSET].originX = 126;
+    gameData->assets[DN_PIT_ASSET].originY = 0;
+
+    gameData->assets[DN_MINI_TILE_ASSET].originX = 10;
+    gameData->assets[DN_MINI_TILE_ASSET].originY = 5;
+
+    gameData->assets[DN_MMM_UP_ASSET].originX = 17 / 2;
+    gameData->assets[DN_MMM_UP_ASSET].originY = 12 / 2;
 
     // Allocate WSG loading helpers
     dn_hsd = heatshrink_decoder_alloc(256, 8, 4);
@@ -464,8 +635,9 @@ static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
  * @param label The string label of the menu item selected
  * @param selected true if this was selected, false if it was moved to
  * @param value The value for settings, unused.
+ * @return true if the submenu should be exited, false to stay on it
  */
-static void dn_MenuCb(const char* label, bool selected, uint32_t value)
+static bool dn_MenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
@@ -548,6 +720,7 @@ static void dn_MenuCb(const char* label, bool selected, uint32_t value)
             switchToSwadgeMode(&mainMenuMode);
         }
     }
+    return false;
 }
 
 /**
@@ -691,7 +864,11 @@ static void dn_initializeVideoTutorial(void)
     ////////////////////
     // Make the qr code//
     ////////////////////
+<<<<<<< HEAD
     trophySetChecklistTask((*gameData->trophyData)[2], 0x4, true, true);
+=======
+    trophySetChecklistTask(&danceNetworkTrophies[2], 0x4, true, true);
+>>>>>>> main
     dn_entity_t* qr    = dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_NO_ASSET, 0,
                                                 (vec_t){0, 0}, gameData);
     qr->updateFunction = dn_updateQr;
@@ -761,20 +938,36 @@ static void dn_initializeGame(void)
     ///////////////////////////
     // Make the left speaker //
     ///////////////////////////
+<<<<<<< HEAD
     // dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0,
     //                        (vec_t){0xFFFF - (123 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
     // dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 3,
     //                        (vec_t){0xFFFF - (123 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
+=======
+    dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0,
+                           (vec_t){0xFFFF - (123 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 3,
+                           (vec_t){0xFFFF - (123 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
+>>>>>>> main
 
     ////////////////////////////
     // Make the right speaker //
     ////////////////////////////
+<<<<<<< HEAD
     // dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0,
     //                        (vec_t){0xFFFF + (122 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
     // dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 4,
     //                        (vec_t){0xFFFF + (124 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData)
     //     ->flipped
     //     = true;
+=======
+    dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0,
+                           (vec_t){0xFFFF + (122 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 4,
+                           (vec_t){0xFFFF + (124 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData)
+        ->flipped
+        = true;
+>>>>>>> main
 
     ///////////////////
     // Make the board//
@@ -852,7 +1045,11 @@ static void dn_initializeGame(void)
     boardData->p1Units[0]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[0]; // Set the unit on the tile
+<<<<<<< HEAD
 
+=======
+    boardData->p1Units[0]->paused                 = false;
+>>>>>>> main
     // p1 pawns
     assetIdx = dn_getAssetIdx(gameData->characterSets[0], DN_PAWN, DN_UP);
     boardPos = (dn_boardPos_t){0, 4};
@@ -885,7 +1082,11 @@ static void dn_initializeGame(void)
     boardData->p2Units[0]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[0]; // Set the unit on the tile
+<<<<<<< HEAD
 
+=======
+    boardData->p2Units[0]->paused                 = false;
+>>>>>>> main
     // p2 pawns
     assetIdx = dn_getAssetIdx(gameData->characterSets[1], DN_PAWN, DN_DOWN);
     boardPos = (dn_boardPos_t){0, 0};
@@ -928,7 +1129,10 @@ static void dn_initializeGame(void)
     swapButton->updateFunction = dn_updateSwapButton;
     swapButton->drawFunction   = dn_drawSwapButton;
     swapButton->dataType       = DN_SWAPBUTTON_DATA;
+<<<<<<< HEAD
     swapButton->gray           = true;
+=======
+>>>>>>> main
 
     //////////////////////////
     // Make the skip button //
@@ -939,7 +1143,10 @@ static void dn_initializeGame(void)
     skipButton->updateFunction = dn_updateSkipButton;
     skipButton->drawFunction   = dn_drawSkipButton;
     skipButton->dataType       = DN_SKIPBUTTON_DATA;
+<<<<<<< HEAD
     skipButton->gray           = true;
+=======
+>>>>>>> main
 
     /////////////////////////
     // Make the playerTurn //
@@ -961,12 +1168,21 @@ static void dn_initializeGame(void)
  */
 static void dn_initializeCharacterSelect(void)
 {
+<<<<<<< HEAD
     dn_loadAsset(DN_ALPHA_DOWN_0_WSG, 1, &gameData->assets[DN_ALPHA_DOWN_ASSET]);
     dn_loadAsset(DN_ALPHA_UP_0_WSG, 1, &gameData->assets[DN_ALPHA_UP_ASSET]);
     dn_loadAsset(DN_BUCKET_HAT_DOWN_0_WSG, 1, &gameData->assets[DN_BUCKET_HAT_DOWN_ASSET]);
     dn_loadAsset(DN_BUCKET_HAT_UP_0_WSG, 1, &gameData->assets[DN_BUCKET_HAT_UP_ASSET]);
     dn_loadAsset(DN_KING_0_WSG, 1, &gameData->assets[DN_KING_ASSET]);
     dn_loadAsset(DN_PAWN_0_WSG, 1, &gameData->assets[DN_PAWN_ASSET]);
+=======
+    dn_loadAsset(DN_ALPHA_DOWN_WSG, 1, &gameData->assets[DN_ALPHA_DOWN_ASSET]);
+    dn_loadAsset(DN_ALPHA_UP_WSG, 1, &gameData->assets[DN_ALPHA_UP_ASSET]);
+    dn_loadAsset(DN_BUCKET_HAT_DOWN_WSG, 1, &gameData->assets[DN_BUCKET_HAT_DOWN_ASSET]);
+    dn_loadAsset(DN_BUCKET_HAT_UP_WSG, 1, &gameData->assets[DN_BUCKET_HAT_UP_ASSET]);
+    dn_loadAsset(DN_KING_WSG, 1, &gameData->assets[DN_KING_ASSET]);
+    dn_loadAsset(DN_PAWN_WSG, 1, &gameData->assets[DN_PAWN_ASSET]);
+>>>>>>> main
     dn_loadAsset(DN_GROUND_TILE_0_WSG, 3, &gameData->assets[DN_GROUND_TILE_ASSET]);
     ///////////////////////////////
     // Make the character select //

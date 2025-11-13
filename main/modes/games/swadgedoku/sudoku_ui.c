@@ -424,7 +424,7 @@ void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, b
                          sudokuShapeTag_t tag)
 {
     // add a circle
-    sudokuOverlayShape_t* circle = malloc(sizeof(sudokuOverlayShape_t));
+    sudokuOverlayShape_t* circle = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
     if (circle)
     {
         circle->type  = OVERLAY_CIRCLE;
@@ -439,7 +439,7 @@ void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, b
     // add a left line
     if (c > 0)
     {
-        sudokuOverlayShape_t* leftLine = malloc(sizeof(sudokuOverlayShape_t));
+        sudokuOverlayShape_t* leftLine = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
 
         if (leftLine)
         {
@@ -456,7 +456,7 @@ void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, b
     // add a right line
     if (c < gridSize - 1)
     {
-        sudokuOverlayShape_t* rightLine = malloc(sizeof(sudokuOverlayShape_t));
+        sudokuOverlayShape_t* rightLine = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
 
         if (rightLine)
         {
@@ -473,7 +473,7 @@ void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, b
     // add a top line
     if (r > 0)
     {
-        sudokuOverlayShape_t* topLine = malloc(sizeof(sudokuOverlayShape_t));
+        sudokuOverlayShape_t* topLine = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
 
         if (topLine)
         {
@@ -490,7 +490,7 @@ void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, b
     // add a bottom line
     if (r < gridSize - 1)
     {
-        sudokuOverlayShape_t* bottomLine = malloc(sizeof(sudokuOverlayShape_t));
+        sudokuOverlayShape_t* bottomLine = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
 
         if (bottomLine)
         {

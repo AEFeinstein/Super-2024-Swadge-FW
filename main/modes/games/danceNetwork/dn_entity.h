@@ -30,6 +30,15 @@ typedef enum
     DN_SWAPBUTTON_DATA,
     DN_SKIPBUTTON_DATA,
     DN_MEMORIAL_DATA,
+    DN_PROMPT_DATA,
+    DN_UPGRADE_MENU_DATA,
+    DN_SWAP_DATA,
+    DN_BULLET_DATA,
+    DN_UNIT_DATA,
+    DN_TUTORIAL_DATA,
+    DN_SWAPBUTTON_DATA,
+    DN_SKIPBUTTON_DATA,
+    DN_MEMORIAL_DATA,
 } dn_dataType_t;
 
 //==============================================================================
@@ -49,6 +58,9 @@ struct dn_entity_t
     dn_updateFunction_t updateFunction; // Only set for entities that need update logic
     bool flipped;                       // draw flipped
     dn_drawFunction_t drawFunction;     // Only set for entities such as Garbotnik that need custom drawing logic
+    dn_updateFunction_t updateFunction; // Only set for entities that need update logic
+    bool flipped;                       // draw flipped
+    dn_drawFunction_t drawFunction;     // Only set for entities such as Garbotnik that need custom drawing logic
     bool destroyFlag; // Entity will be cleanly destroyed after engine updating and before engine drawing.
     vec_t pos;
     dn_animationType_t type;
@@ -57,7 +69,10 @@ struct dn_entity_t
     dn_assetIdx_t assetIndex;
 
     uint16_t animationTimer;
+
+    uint16_t animationTimer;
     uint8_t gameFramesPerAnimationFrame;
+    uint8_t currentAnimationFrame;
     uint8_t currentAnimationFrame;
     dn_gameData_t* gameData;
 };
@@ -68,6 +83,10 @@ typedef struct
     int16_t yVel;
     dn_entity_t* unit;     // Pointer to the unit on this tile. NULL if no unit is present.
     dn_entity_t* selector; // Pointer to the tile selector. NULL if no selector is present.
+    dn_track_t selectionType;
+    bool timeout;          // Becomes true if shot out. Becomes false when another tile is shot out.
+    uint8_t timeoutOffset; // further offsets the yOffset when in timeout.
+    uint8_t rewards;       // some number of rerolls given to the first visitor here.
     dn_track_t selectionType;
     bool timeout;          // Becomes true if shot out. Becomes false when another tile is shot out.
     uint8_t timeoutOffset; // further offsets the yOffset when in timeout.
@@ -110,6 +129,9 @@ typedef struct
     wsgPalette_t screenAttackPalette; // Makes some explosions appear at certain tracks.
     dn_track_t tracks[16];            // Array of action tracks in this album in raster order.
     uint16_t rot;                     // Rotation degrees from 0-359 for drawing.
+    wsgPalette_t screenAttackPalette; // Makes some explosions appear at certain tracks.
+    dn_track_t tracks[16];            // Array of action tracks in this album in raster order.
+    uint16_t rot;                     // Rotation degrees from 0-359 for drawing.
     bool cornerLightBlinking;
     bool cornerLightOn;
     bool screenIsOn;
@@ -132,6 +154,13 @@ typedef struct
     paletteColor_t colors[3];
     // which chess tile the selector is on
     dn_boardPos_t pos;
+    // callback when A is pressed.
+    dn_callbackFunction_t a_callback;
+    // callback when B is pressed.
+    dn_callbackFunction_t b_callback;
+    dn_entity_t* selectedUnit;
+    // Stores bounce location for certain attacks
+    dn_boardPos_t bounce;
     // callback when A is pressed.
     dn_callbackFunction_t a_callback;
     // callback when B is pressed.
@@ -222,11 +251,20 @@ void dn_setData(dn_entity_t* self, void* data, dn_dataType_t dataType);
 // main game entities
 void dn_drawAsset(dn_entity_t* self);
 void dn_drawNothing(dn_entity_t* self);
+void dn_drawAsset(dn_entity_t* self);
+void dn_drawNothing(dn_entity_t* self);
 
 void dn_updateBoard(dn_entity_t* self);
 void dn_zeroOutTileOffsets(dn_entity_t* board);
 bool dn_belongsToP1(dn_entity_t* unit);
+void dn_zeroOutTileOffsets(dn_entity_t* board);
+bool dn_belongsToP1(dn_entity_t* unit);
 void dn_drawBoard(dn_entity_t* self);
+bool dn_availableMoves(dn_entity_t* unit, list_t* tracks, list_t* invalidTracks);
+dn_track_t dn_trackTypeAtColor(dn_entity_t* album, paletteColor_t trackCoords);
+dn_track_t dn_trackTypeAtCoords(dn_entity_t* album, dn_boardPos_t trackCoords);
+bool dn_calculateMoveableUnits(dn_entity_t* board);
+bool dn_isKing(dn_entity_t* unit);
 bool dn_availableMoves(dn_entity_t* unit, list_t* tracks, list_t* invalidTracks);
 dn_track_t dn_trackTypeAtColor(dn_entity_t* album, paletteColor_t trackCoords);
 dn_track_t dn_trackTypeAtCoords(dn_entity_t* album, dn_boardPos_t trackCoords);
@@ -241,6 +279,9 @@ void dn_drawAlbums(dn_entity_t* self);
 dn_boardPos_t dn_colorToTrackCoords(paletteColor_t color);
 dn_twoColors_t dn_trackCoordsToColor(dn_boardPos_t trackCoords);
 void dn_addTrackToAlbum(dn_entity_t* album, dn_boardPos_t trackCoords, dn_track_t track);
+dn_boardPos_t dn_colorToTrackCoords(paletteColor_t color);
+dn_twoColors_t dn_trackCoordsToColor(dn_boardPos_t trackCoords);
+void dn_addTrackToAlbum(dn_entity_t* album, dn_boardPos_t trackCoords, dn_track_t track);
 void dn_updateAlbum(dn_entity_t* self);
 void dn_drawAlbum(dn_entity_t* self);
 
@@ -251,6 +292,8 @@ void dn_drawCharacterSelect(dn_entity_t* self);
 void dn_updateTileSelector(dn_entity_t* self);
 void dn_drawTileSelectorBackHalf(dn_entity_t* self, int16_t x, int16_t y);
 void dn_drawTileSelectorFrontHalf(dn_entity_t* self, int16_t x, int16_t y);
+void dn_trySelectUnit(dn_entity_t* self);
+void dn_trySelectTrack(dn_entity_t* self);
 void dn_trySelectUnit(dn_entity_t* self);
 void dn_trySelectTrack(dn_entity_t* self);
 

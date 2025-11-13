@@ -115,9 +115,10 @@
  *
  * Receive menu callbacks:
  * \code{.c}
- * static void demoMenuCb(const char* label, bool selected, uint32_t settingVal)
+ * static bool demoMenuCb(const char* label, bool selected, uint32_t settingVal)
  * {
  *     printf("%s %s, setting=%d\n", label, selected ? "selected" : "scrolled to", settingVal);
+ *     return false;
  * }
  * \endcode
  *
@@ -145,8 +146,9 @@
  * @param label A pointer to the label which was selected or scrolled to
  * @param selected true if the item was selected with the A button, false if it was scrolled to
  * @param value If a settings item was selected or scrolled, this is the new value for the setting
+ * @return true if the submenu should be exited, false to stay on it
  */
-typedef void (*menuCb)(const char* label, bool selected, uint32_t value);
+typedef bool (*menuCb)(const char* label, bool selected, uint32_t value);
 
 typedef struct _menu_t menu_t;
 
@@ -189,6 +191,7 @@ void deinitMenu(menu_t* menu);
 menu_t* startSubMenu(menu_t* menu, const char* label) __attribute__((warn_unused_result));
 menu_t* endSubMenu(menu_t* menu) __attribute__((warn_unused_result));
 menuItem_t* addSingleItemToMenu(menu_t* menu, const char* label);
+menuItem_t* insertSingleItemToMenuAfter(menu_t* menu, const char* newLabel, const char* afterLabel);
 void removeSingleItemFromMenu(menu_t* menu, const char* label);
 void addMultiItemToMenu(menu_t* menu, const char* const* labels, uint8_t numLabels, uint8_t currentLabel);
 void removeMultiItemFromMenu(menu_t* menu, const char* const* labels);
@@ -199,6 +202,7 @@ menuItem_t* addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel,
                                          int32_t currentValue);
 void removeSettingsOptionsItemFromMenu(menu_t* menu, const char* const* optionLabels);
 
+menu_t* menuNavigateToTopItem(menu_t* menu);
 menu_t* menuNavigateToItem(menu_t* menu, const char* label);
 menu_t* menuNavigateToPrevItem(menu_t* menu);
 menu_t* menuNavigateToNextItem(menu_t* menu);

@@ -282,14 +282,13 @@ const uint16_t freqBinIdxsBanjo[] = {
 };
 
 const led_position_t ledIdxToPos[CONFIG_NUM_LEDS]
-    = {LED_POS_DOWN, LED_POS_UP,   LED_POS_UP,   LED_POS_UP,  LED_POS_DOWN,
-       LED_POS_DOWN, LED_POS_DOWN, LED_POS_DOWN, LED_POS_DOWN};
+    = {LED_POS_UP, LED_POS_UP, LED_POS_DOWN, LED_POS_DOWN, LED_POS_UP, LED_POS_UP};
 
-const uint16_t fourNoteStringIdxToLedIdx[] = {3, 4, 0, 1};
+const uint16_t fourNoteStringIdxToLedIdx[] = {0, 1, 4, 5};
 
-const uint16_t fiveNoteStringIdxToLedIdx[] = {3, 4, 2, 0, 1};
+const uint16_t fiveNoteStringIdxToLedIdx[] = {0, 2, 1, 4, 5};
 
-const uint16_t sixNoteStringIdxToLedIdx[] = {3, 4, 2, 7, 0, 1};
+const uint16_t sixNoteStringIdxToLedIdx[] = {0, 2, 1, 4, 3, 5};
 
 const char* const guitarNoteNames[] = {"E2", "A2", "D3", "G3", "B3", "E4"};
 
@@ -1097,7 +1096,7 @@ void tunernomeMainLoop(int64_t elapsedUs)
                 }
                 else
                 {
-                    const uint8_t offBeatLeds[] = {1, 3, 5, 8};
+                    const uint8_t offBeatLeds[] = {2, 3};
                     tunernome->midiNote         = 69; // A4
                     for (int i = 0; i < ARRAY_SIZE(offBeatLeds); i++)
                     {
