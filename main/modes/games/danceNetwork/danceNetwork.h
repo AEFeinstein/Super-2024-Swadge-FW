@@ -87,6 +87,8 @@ typedef struct dn_gameData_t
     bool pawnPlunging;
     dn_boardPos_t selectorPos;
     dn_entity_t* selectedUnit;
+    
+    eyeDigit_t eyeDigits[10];
 } dn_gameData_t;
 
 //==============================================================================

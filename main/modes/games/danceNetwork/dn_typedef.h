@@ -39,7 +39,7 @@ typedef enum __attribute__((packed))
     DN_PIT_ASSET,
     DN_MINI_TILE_ASSET,
     DN_REROLL_ASSET,
-    DN_NUMBER_ASSET,
+    //DN_NUMBER_ASSET,
     DN_ALBUM_EXPLOSION_ASSET,
     DN_MMM_UP_ASSET,
     DN_SWAP_ASSET,
@@ -170,3 +170,8 @@ typedef struct __attribute__((packed))
     char title[31];
     char body[170];
 } dn_tutorialPage_t;
+
+typedef struct
+{
+    uint8_t pixels[12 * 6];
+} eyeDigit_t;
