@@ -3267,8 +3267,14 @@ void dn_updateBullet(dn_entity_t* self)
         dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
         for (int i = 0; i < 5; i++)
         {
-            ((dn_unitData_t*)bData->p1Units[i]->data)->animation = DN_UNIT_STILL;
-            ((dn_unitData_t*)bData->p2Units[i]->data)->animation = DN_UNIT_STILL;
+            if(bData->p1Units[i]!=NULL)
+            {
+                ((dn_unitData_t*)bData->p1Units[i]->data)->animation = DN_UNIT_STILL;
+            }
+            if(bData->p1Units[i]!=NULL)
+            {
+                ((dn_unitData_t*)bData->p2Units[i]->data)->animation = DN_UNIT_STILL;
+            }
         }
     }
 }
