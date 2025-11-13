@@ -239,11 +239,12 @@ void mg_updatePlayer(mgEntity_t* self)
                     self->jumpPower = 60; //+ ((abs(self->xspeed) + 16) >> 3);
                     self->yspeed    = -self->jumpPower;
                     self->falling   = true;
+                    self->canDash   = true;
 
-                    if (self->state == MG_PL_ST_DASHING)
-                    {
-                        self->canDash = false;
-                    }
+                    //if (self->state == MG_PL_ST_DASHING)
+                    //{
+                    //    self->canDash = false;
+                    //}
 
                     soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
                 }
@@ -275,6 +276,15 @@ void mg_updatePlayer(mgEntity_t* self)
 
                 self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
                 // soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
+            }
+            else if (self->canDash)
+            {
+                //initiate double jump
+                self->jumpPower = 60;
+                self->xspeed    = (self->spriteFlipHorizontal) ? -32 : 32;
+                self->yspeed    = -self->jumpPower;
+                self->falling   = true;
+                self->canDash   = false;
             }
             
         } else if (self->jumpPower > 0 && self->yspeed < 0)
