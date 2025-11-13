@@ -223,23 +223,23 @@ static const cnfsFileIdx_t hairWsgs[] = {
     H_LONG_PIGS_WSG,     H_MAIN_CHARACTER_WSG, H_MAIN_CHARACTER_R_WSG,
     H_MAIN_VILLAIN_WSG,  H_MAIN_VILLAIN_R_WSG, H_MALE_PATTERN_WSG,
     H_MCR_WSG,           H_MINAKO_WSG,         H_MOHAWK_WSG,
-    H_POMPADOUR_WSG,     H_RAVEN_WSG,          H_SHORT_WSG,
-    H_SHORT_PIGS_WSG,    H_SIDE_PUFFS_WSG,     H_SIDE_PUFFS_R_WSG,
-    H_SKULL_WSG,         H_SKULL_R_WSG,        H_SMALL_BUNS_WSG,
-    H_SPOCK_WSG,         H_STAR_PUFF_NB_WSG,   H_STAR_PUFFS_WSG,
-    H_STAR_PUFFS_R_WSG,  H_TATTOO_WSG,         H_THING_WSG,
-    H_VBANG_WSG,         H_USAGI_WSG,          H_WAVY_HAWK_WSG,
-    H_WAVY_HAWK_R_WSG,   H_WAVY_SHORT_WSG,     H_WAVY_LONG_WSG,
-    H_WEDNESDAY_WSG,     H_WEDNESDAY_R_WSG,    H_WET_CURLY_WSG,
-    H_WET_SHORT_WSG,
+    H_POMPADOUR_WSG,     H_PONYTAIL_WSG,       H_PONYTAIL_NO_BANGS_WSG,
+    H_RAVEN_WSG,         H_SHORT_WSG,          H_SHORT_PIGS_WSG,
+    H_SIDE_PUFFS_WSG,    H_SIDE_PUFFS_R_WSG,   H_SKULL_WSG,
+    H_SKULL_R_WSG,       H_SMALL_BUNS_WSG,     H_SPOCK_WSG,
+    H_STAR_PUFF_NB_WSG,  H_STAR_PUFFS_WSG,     H_STAR_PUFFS_R_WSG,
+    H_TATTOO_WSG,        H_THING_WSG,          H_VBANG_WSG,
+    H_USAGI_WSG,         H_WAVY_HAWK_WSG,      H_WAVY_HAWK_R_WSG,
+    H_WAVY_SHORT_WSG,    H_WAVY_LONG_WSG,      H_WEDNESDAY_WSG,
+    H_WEDNESDAY_R_WSG,   H_WET_CURLY_WSG,      H_WET_SHORT_WSG,
 };
 static const cnfsFileIdx_t hatWsgs[] = {
-    SWSN_NO_GO_WSG,         HA_ANGEL_WSG,         HA_BATTRICE_WSG,       HA_BEANIE_WSG,
-    HA_BIGMA_WSG,           HA_CHEF_WSG,          HA_COOL_HAT_WSG,       HA_COWBOY_WSG,
-    HA_DEVIL_WSG,           HA_GARBOTNIK_WSG,     HA_GRAD_CAP_WSG,       HA_HEART_WSG,
-    HA_HOMESTUCK_WSG,       HA_KINETIC_DONUT_WSG, HA_MET_HELMET_WSG,     HA_MINI_HOMESTUCK_WSG,
-    HA_PUFFBALL_BEANIE_WSG, HA_PULSE_WSG,         HA_SAWTOOTH_WSG,       HA_TALL_HOMESTUCK_WSG,
-    HA_TINY_HOMESTUCK_WSG,  HA_TRON_WSG,          HA_WIDE_HOMESTUCK_WSG,
+    SWSN_NO_GO_WSG,    HA_ANGEL_WSG,    HA_BATTRICE_WSG,       HA_BEANIE_WSG,         HA_BIGMA_WSG,
+    HA_BLITZO_WSG,     HA_CHEF_WSG,     HA_COOL_HAT_WSG,       HA_COWBOY_WSG,         HA_DEVIL_WSG,
+    HA_GARBOTNIK_WSG,  HA_GRAD_CAP_WSG, HA_HEART_WSG,          HA_HOMESTUCK_WSG,      HA_KINETIC_DONUT_WSG,
+    HA_MET_HELMET_WSG, HA_MILLIE_WSG,   HA_MINI_HOMESTUCK_WSG, HA_MOXXIE_WSG,         HA_PUFFBALL_BEANIE_WSG,
+    HA_PULSE_WSG,      HA_SANS_WSG,     HA_SAWTOOTH_WSG,       HA_TALL_HOMESTUCK_WSG, HA_TINY_HOMESTUCK_WSG,
+    HA_TENNA_WSG,      HA_TRON_WSG,     HA_TV_HEAD_WSG,        HA_VEROSIKA_WSG,       HA_WIDE_HOMESTUCK_WSG,
 };
 static const cnfsFileIdx_t mouthWsgs[] = {
     M_AH_WSG,
@@ -492,7 +492,7 @@ const trophyData_t swsnTrophies[] = {
     {
         .title       = "Randomizer",
         .description = "Randomize your swadgesona 10 times",
-        .image       = NO_IMAGE_SET,
+        .image       = SWSN_RANDOMIZER_WSG,
         .type        = TROPHY_TYPE_ADDITIVE,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 10,
@@ -587,7 +587,6 @@ static void swsnEnterMode(void)
     globalMidiPlayerPlaySong(&scd->bgm, MIDI_BGM);
 
     // If the SP swadgesona isn't saved yet, automatically load into creating the SP Sona
-
     size_t len = sizeof(swadgesonaCore_t);
     if (!readNvsBlob(spSonaNVSKey, &scd->activeSona.core, &len))
     {
@@ -595,8 +594,8 @@ static void swsnEnterMode(void)
         scd->activeSona.name      = *getSystemUsername();
         scd->activeSona.name.user = true;
         strcpy(scd->nickname, scd->activeSona.name.nameBuffer);
-        scd->slot  = 255; // Indicates it's the SP Sona
-        scd->state = CREATING;
+        scd->slot       = 255; // Indicates it's the SP Sona
+        scd->state      = CREATING;
         scd->shakeTimer = SHAKE_TIMER;
     }
 
