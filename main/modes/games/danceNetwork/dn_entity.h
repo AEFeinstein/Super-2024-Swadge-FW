@@ -76,7 +76,7 @@ typedef struct
 
 typedef struct
 {
-    dn_boardPos_t moveTo; // Coordinates the unit is moving to.
+    dn_boardPos_t moveTo;     // Coordinates the unit is moving to.
     dn_animation_t animation; // The current animation (still, selected, teleporting, etc...)
 } dn_unitData_t;
 
