@@ -476,7 +476,7 @@ const trophyData_t swsnTrophies[] = {
     {
         .title       = "Mirror Mirror",
         .description = "Create your first swadgesona!",
-        .image       = NO_IMAGE_SET,
+        .image       = SWSN_MIRROR_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
@@ -529,6 +529,15 @@ const trophyData_t swsnTrophies[] = {
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_HARD,
         .maxVal      = 1,
+    },
+    {
+        .title       = "A Face Made for Radio",
+        .description = "Kidding, kidding, It looks great!",
+        .image       = SWSN_EYE_TROPHY_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1,
+        .hidden = true,
     },
 };
 
@@ -767,6 +776,10 @@ static void swsnLoop(int64_t elapsedUs)
                 if (scd->untouchedRandom)
                 {
                     trophyUpdate(&swsnTrophies[3], 1, true);
+                }
+                if (esp_random() % 100 == 0)
+                {
+                    trophyUpdate(&swsnTrophies[7], 1, true);
                 }
                 break;
             }
