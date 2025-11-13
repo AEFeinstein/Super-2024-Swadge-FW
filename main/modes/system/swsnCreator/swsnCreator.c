@@ -101,6 +101,11 @@ static const char* const NVSStrings[] = {
     "slot-",
     "-nick",
 };
+static const char* const atriumText[] = {
+    "Would you like to go to the atrium mode to edit your SwadgePass profile?",
+    "Yes",
+    "No",
+};
 
 static const int32_t cursorSprs[] = {
     SWSN_POINTER_ARROW_WSG,
@@ -336,6 +341,7 @@ typedef enum
     SP_NAMING,
     PROMPT_SAVE,
     SAVED,
+    GOTO_ATRIUM,
 } swsnCreatorState_t;
 
 typedef enum
@@ -447,6 +453,7 @@ static void drawCreator(void);
 static void initTextEntry(void);
 static bool promptSaveBeforeQuit(void);
 static void drawPrompt(void);
+static void drawAtriumPrompt(void);
 
 // Tabs
 static void drawTab(int xOffset, int y, bool flip, int labelIdx, bool selected);
@@ -537,7 +544,7 @@ const trophyData_t swsnTrophies[] = {
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EXTREME,
         .maxVal      = 1,
-        .hidden = true,
+        .hidden      = true,
     },
 };
 
@@ -800,7 +807,7 @@ static void swsnLoop(int64_t elapsedUs)
                 strcpy(scd->nickname, scd->activeSona.name.nameBuffer);
                 setSystemUsername(&scd->activeSona.name);
                 writeNvsBlob(spSonaNVSKey, &scd->activeSona.core, sizeof(swadgesonaCore_t));
-                scd->state      = SAVED;
+                scd->state      = GOTO_ATRIUM;
                 scd->hasChanged = false;
                 trophyUpdate(&swsnTrophies[1], 1, true);
                 break;
@@ -868,6 +875,41 @@ static void swsnLoop(int64_t elapsedUs)
             clearPxTft();
             drawText(&scd->fnt, c555, creatorText[3], (TFT_WIDTH - textWidth(&scd->fnt, creatorText[3])) >> 1,
                      (TFT_HEIGHT - scd->fnt.height) >> 1);
+            break;
+        }
+        case GOTO_ATRIUM:
+        {
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down)
+                {
+                    if (evt.button & PB_LEFT)
+                    {
+                        scd->shouldQuit = false;
+                    }
+                    else if (evt.button & PB_RIGHT)
+                    {
+                        scd->shouldQuit = true;
+                    }
+                    else if (evt.button & PB_A)
+                    {
+                        if (!scd->shouldQuit)
+                        {
+                            freeWsg(&scd->cursorImage);
+                            //switchToSwadgeMode(&); TODO Atrium
+                        }
+                        else
+                        {
+                            scd->state = CREATING;
+                        }
+                    }
+                    else if (evt.button & PB_B)
+                    {
+                        scd->state = CREATING;
+                    }
+                }
+            }
+            drawAtriumPrompt();
             break;
         }
         default:
@@ -1282,6 +1324,26 @@ static void drawPrompt()
     {
         drawText(&scd->fnt, c550, warningText[2], OPTIONS_BORDER, TFT_HEIGHT - OPTIONS_H);
         drawText(&scd->fnt, c333, warningText[3], (TFT_WIDTH - (textWidth(&scd->fnt, warningText[3]) + OPTIONS_BORDER)),
+                 TFT_HEIGHT - OPTIONS_H);
+    }
+}
+
+static void drawAtriumPrompt()
+{
+    clearPxTft();
+    int16_t x = W_BORDER;
+    int16_t y = WB_HEIGHT;
+    drawTextWordWrapCentered(&scd->fnt, c555, atriumText[0], &x, &y, TFT_WIDTH - W_BORDER, TFT_HEIGHT - OPTIONS_H);
+    if (scd->shouldQuit)
+    {
+        drawText(&scd->fnt, c333, atriumText[1], OPTIONS_BORDER, TFT_HEIGHT - OPTIONS_H);
+        drawText(&scd->fnt, c550, atriumText[2], (TFT_WIDTH - (textWidth(&scd->fnt, atriumText[2]) + OPTIONS_BORDER)),
+                 TFT_HEIGHT - OPTIONS_H);
+    }
+    else
+    {
+        drawText(&scd->fnt, c550, atriumText[1], OPTIONS_BORDER, TFT_HEIGHT - OPTIONS_H);
+        drawText(&scd->fnt, c333, atriumText[2], (TFT_WIDTH - (textWidth(&scd->fnt, atriumText[2]) + OPTIONS_BORDER)),
                  TFT_HEIGHT - OPTIONS_H);
     }
 }
