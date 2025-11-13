@@ -507,7 +507,7 @@ const trophyData_t swsnTrophies[] = {
     {
         .title       = "Chaos Goblin",
         .description = "Randomize and save without making changes",
-        .image       = NO_IMAGE_SET,
+        .image       = SWSN_CHAOS_GOBLIN_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_HARD,
         .maxVal      = 1,

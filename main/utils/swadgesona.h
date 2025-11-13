@@ -393,6 +393,7 @@ typedef enum
     HAE_BEANIE,
     HAE_BIGMA,
     HAE_BLITZO_WSG,
+    HAE_CHAOS_GOBLIN,
     HAE_CHEF,
     HAE_COOL_HAT,
     HAE_COWBOY,
