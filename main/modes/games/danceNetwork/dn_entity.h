@@ -333,3 +333,5 @@ void dn_updateAlphaAnimation(dn_entity_t* self);
 void dn_updateBucketHatAnimation(dn_entity_t* self);
 void dn_updateChessKingAnimation(dn_entity_t* self);
 void dn_updateChessPawnAnimation(dn_entity_t* self);
+
+void dn_setEyes(dn_entity_t* self);

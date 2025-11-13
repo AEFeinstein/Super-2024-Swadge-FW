@@ -48,6 +48,7 @@ static const dn_tutorialPage_t advancedTips[17] = {
             "outdance the enemy."},
 };
 
+
 static const dn_tutorialPage_t* tutorials[] = {textTutorial, advancedTips};
 uint8_t tutorialSizes[]
     = {sizeof(textTutorial) / sizeof(textTutorial[0]), sizeof(advancedTips) / sizeof(advancedTips[0])};
@@ -1799,10 +1800,12 @@ void dn_trySelectTrack(dn_entity_t* self)
 void dn_drawPlayerTurn(dn_entity_t* self)
 {
     // Temporary solution to showing rerolls until LED Matrix works
-    drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[0]], 5,
-                        30 + 100 * (self->gameData->camera.pos.y < 60060), 3, 3);
-    drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[1]], 257,
-                        30 + 100 * (self->gameData->camera.pos.y < 60060), 3, 3);
+    // drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[0]], 5,
+    //                     30 + 100 * (self->gameData->camera.pos.y < 60060), 3, 3);
+    // drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[1]], 257,
+    //                     30 + 100 * (self->gameData->camera.pos.y < 60060), 3, 3);
+
+    dn_setEyes(self);
 
     paletteColor_t col = self->gameData->phase < DN_P2_DANCE_PHASE ? c055 : c550;
     drawCircleQuadrants(41, 41, 41, false, false, true, false, col);
@@ -4067,4 +4070,24 @@ void dn_updateChessPawnAnimation(dn_entity_t* self)
             break;
         }
     }
+}
+
+void dn_setEyes(dn_entity_t* self)
+{
+    uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
+    eyeDigit_t* digits[2]                = {&self->gameData->eyeDigits[self->gameData->rerolls[0]],
+                                            &self->gameData->eyeDigits[self->gameData->rerolls[1]]};
+    for (int i = 0; i < 2; i++)
+    {
+        for (int x = 0; x < EYE_LED_H; x++)
+        {
+            for (int y = 0; y < (EYE_LED_W / 2); y++)
+            {
+                bitmap[y][x + (EYE_LED_W / 2) * i]
+                    = digits[i]->pixels[x + y * EYE_LED_H] ? EYE_LED_BRIGHT : EYE_LED_OFF;
+            }
+        }
+    }
+    ch32v003WriteBitmap(3, bitmap);
+    ch32v003SelectBitmap(3);
 }

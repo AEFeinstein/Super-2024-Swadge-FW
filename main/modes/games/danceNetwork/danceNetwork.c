@@ -209,6 +209,8 @@ const char dnP2TroupeKey[] = "dn_P2_Troupe";
 
 dn_gameData_t* gameData;
 
+
+
 static void dn_EnterMode(void)
 {
     gameData = (dn_gameData_t*)heap_caps_calloc(1, sizeof(dn_gameData_t), MALLOC_CAP_8BIT);
@@ -303,7 +305,22 @@ static void dn_EnterMode(void)
     // Initialize a menu with no entries to be used as a background
     gameData->bgMenu = initMenu(dn_CharacterSelStr, NULL);
 
+    cnfsFileIdx_t digitGsFiles[] = {DN_NUMBER_0_GS, DN_NUMBER_1_GS, DN_NUMBER_2_GS, DN_NUMBER_3_GS, DN_NUMBER_4_GS,
+                                    DN_NUMBER_5_GS, DN_NUMBER_6_GS, DN_NUMBER_7_GS, DN_NUMBER_8_GS, DN_NUMBER_9_GS};
 
+    for (int i = 0; i < 10; i++)
+    {
+        size_t size        = 0;
+        const uint8_t* buf = cnfsGetFile(digitGsFiles[i], &size);
+        if (size != 40) // 4-byte header + 6x6
+        {
+            ESP_LOGW("DICE", "Eye digit asset %d wrong size (%d) bytes.\n", i, (int)size);
+        }
+        else
+        {
+            memcpy(&gameData->eyeDigits[i], buf + 4, ARRAY_SIZE(gameData->eyeDigits[i].pixels));
+        }
+    }
 }
 
 void dn_setAssetMetaData(void)
@@ -703,6 +720,13 @@ static void dn_initializeVideoTutorial(void)
 
 static void dn_initializeGame(void)
 {
+    // Loading images will disable the default blink animation
+    for(int i = 0; i < 10; i++)
+    {
+        ch32v003WriteBitmapAsset(i+3, DICE_0_GS+i);
+    }
+    ch32v003SelectBitmap(3);
+
     setMegaLedsOn(gameData->menuRenderer, false);
 
     ////////////////////
@@ -736,7 +760,7 @@ static void dn_initializeGame(void)
 
     dn_loadAsset(DN_REROLL_WSG, 1, &gameData->assets[DN_REROLL_ASSET]);
 
-    dn_loadAsset(DN_NUMBER_0_WSG, 10, &gameData->assets[DN_NUMBER_ASSET]);
+    //dn_loadAsset(DN_NUMBER_0_WSG, 10, &gameData->assets[DN_NUMBER_ASSET]);
 
     dn_loadAsset(DN_ALBUM_EXPLOSION_0_WSG, 7, &gameData->assets[DN_ALBUM_EXPLOSION_ASSET]);
 
