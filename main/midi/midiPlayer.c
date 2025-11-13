@@ -103,7 +103,7 @@ static const uint8_t oscDither[] = {
 
 static midiPlayer_t* globalPlayers = NULL;
 
-#ifdef DEBUG_MIDI
+#ifdef MIDI_DEBUG
 static const char* adsrStateNames[] = {
     "ON", "ATTACK", "DECAY", "SUSTAIN", "RELEASE", "OFF",
 };
@@ -339,10 +339,13 @@ static adsrState_t voiceAdvanceAdsr(midiVoice_t* voice, voiceStates_t* states, u
         else if (target == ADSR_OFF || (target == ADSR_ON && (states->release & voiceBit)))
         {
             // Transition from RELEASE to OFF
-            states->release &= ~voiceBit;
             states->on &= ~voiceBit;
-            states->held &= ~voiceBit;
+            states->attack &= ~voiceBit;
             states->sustain &= ~voiceBit;
+            states->decay &= ~voiceBit;
+            states->release &= ~voiceBit;
+            states->held &= ~voiceBit;
+            states->sustenuto &= ~voiceBit;
 
             if (channel)
             {
@@ -529,11 +532,12 @@ static int32_t stepWaveVoice(midiVoice_t* voice, voiceStates_t* states, uint8_t 
 static int32_t stepSampleVoice(midiVoice_t* voice, voiceStates_t* states, uint8_t voiceIdx, midiChannel_t* channel,
                                uint32_t* specialStates)
 {
-#ifdef DEBUG_MIDI
+#ifdef MIDI_DEBUG
     if (voice->voiceTick == 0)
     {
         MIDI_DBG("SAMPLER: %" PRIu8 ", %" PRIu32 ", %" PRIu32 ", %" PRIu32 ", %" PRIu32, channel->program,
-                 voice->sample.rate, voice->sample.baseNote, voice->pitch, (uint32_t)(sampleRateRatio & 0xFFFFFFFF));
+                 voice->sample.rate, voice->sample.baseNote, voice->pitch,
+                 (uint32_t)(voice->sample.sampleRateRatio & 0xFFFFFFFF));
         // eg if the sample's actual rate is 8192Hz, we need to output each sample
         // exactly twice in order to play it at the "normal" rate
         // but for 32768Hz, we need to skip every other sample to play it at the "normal" rate
@@ -1371,7 +1375,7 @@ static void midiSongEnd(midiPlayer_t* player)
     }
 }
 
-#ifdef DEBUG_MIDI
+#ifdef MIDI_DEBUG
 static const char* adsrStateName(adsrState_t state)
 {
     if (ADSR_ON <= state && state <= ADSR_OFF)
