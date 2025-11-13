@@ -104,6 +104,7 @@ void tutorialCheckTriggers(tutorialState_t* state)
             state->loudSound = false;
 
             next = state->curStep;
+            printf("next state is %d\n", (int)next);
         }
     }
     else if (tutorialCheckTrigger(state, &state->curStep->backtrack))
