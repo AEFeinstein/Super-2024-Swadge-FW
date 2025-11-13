@@ -247,65 +247,7 @@ static void dn_EnterMode(void)
     gameData->camera.pos.y -= (57 << DN_DECIMAL_BITS); // Move the camera a bit.
     dn_initializeEntityManager(&gameData->entityManager, gameData);
 
-    gameData->assets[DN_ALPHA_DOWN_ASSET].originX   = 18;
-    gameData->assets[DN_ALPHA_DOWN_ASSET].originY   = 82;
-    gameData->assets[DN_ALPHA_DOWN_ASSET].numFrames = 17;
-
-    gameData->assets[DN_ALPHA_ORTHO_ASSET].originX   = 10;
-    gameData->assets[DN_ALPHA_ORTHO_ASSET].originY   = 10;
-    gameData->assets[DN_ALPHA_ORTHO_ASSET].numFrames = 1;
-
-    gameData->assets[DN_ALPHA_UP_ASSET].originX   = 16;
-    gameData->assets[DN_ALPHA_UP_ASSET].originY   = 82;
-    gameData->assets[DN_ALPHA_UP_ASSET].numFrames = 17;
-
-    gameData->assets[DN_KING_ASSET].originX   = 10;
-    gameData->assets[DN_KING_ASSET].originY   = 54;
-    gameData->assets[DN_KING_ASSET].numFrames = 14;
-
-    gameData->assets[DN_KING_SMALL_ASSET].originX   = 4;
-    gameData->assets[DN_KING_SMALL_ASSET].originY   = 19;
-    gameData->assets[DN_KING_SMALL_ASSET].numFrames = 1;
-
-    gameData->assets[DN_PAWN_ASSET].originX   = 10;
-    gameData->assets[DN_PAWN_ASSET].originY   = 44;
-    gameData->assets[DN_PAWN_ASSET].numFrames = 16;
-
-    gameData->assets[DN_PAWN_SMALL_ASSET].originX   = 4;
-    gameData->assets[DN_PAWN_SMALL_ASSET].originY   = 14;
-    gameData->assets[DN_PAWN_SMALL_ASSET].numFrames = 1;
-
-    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originX   = 10;
-    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originY   = 33;
-    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].numFrames = 28;
-
-    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originX   = 14;
-    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originY   = 30;
-    gameData->assets[DN_BUCKET_HAT_UP_ASSET].numFrames = 28;
-
-    gameData->assets[DN_GROUND_TILE_ASSET].originX   = 25;
-    gameData->assets[DN_GROUND_TILE_ASSET].originY   = 13;
-    gameData->assets[DN_GROUND_TILE_ASSET].numFrames = 1;
-
-    gameData->assets[DN_CURTAIN_ASSET].numFrames = 1;
-
-    gameData->assets[DN_ALBUM_ASSET].originX = 31;
-    gameData->assets[DN_ALBUM_ASSET].originY = 34;
-
-    gameData->assets[DN_SPEAKER_ASSET].originX = 12;
-    gameData->assets[DN_SPEAKER_ASSET].originY = 44;
-
-    gameData->assets[DN_SPEAKER_STAND_ASSET].originX = 6;
-    gameData->assets[DN_SPEAKER_STAND_ASSET].originY = 8;
-
-    gameData->assets[DN_PIT_ASSET].originX = 126;
-    gameData->assets[DN_PIT_ASSET].originY = 0;
-
-    gameData->assets[DN_MINI_TILE_ASSET].originX = 10;
-    gameData->assets[DN_MINI_TILE_ASSET].originY = 5;
-
-    gameData->assets[DN_MMM_UP_ASSET].originX = 17 / 2;
-    gameData->assets[DN_MMM_UP_ASSET].originY = 12 / 2;
+    dn_setAssetMetaData();
 
     // Allocate WSG loading helpers
     dn_hsd = heatshrink_decoder_alloc(256, 8, 4);
@@ -358,6 +300,71 @@ static void dn_EnterMode(void)
 
     // Initialize a menu with no entries to be used as a background
     gameData->bgMenu = initMenu(dn_CharacterSelStr, NULL);
+
+
+}
+
+void dn_setAssetMetaData(void)
+    {
+    gameData->assets[DN_ALPHA_DOWN_ASSET].originX   = 18;
+    gameData->assets[DN_ALPHA_DOWN_ASSET].originY   = 82;
+    gameData->assets[DN_ALPHA_DOWN_ASSET].numFrames = 17;
+
+    gameData->assets[DN_ALPHA_ORTHO_ASSET].originX   = 10;
+    gameData->assets[DN_ALPHA_ORTHO_ASSET].originY   = 10;
+    gameData->assets[DN_ALPHA_ORTHO_ASSET].numFrames = 1;
+
+    gameData->assets[DN_ALPHA_UP_ASSET].originX   = 16;
+    gameData->assets[DN_ALPHA_UP_ASSET].originY   = 82;
+    gameData->assets[DN_ALPHA_UP_ASSET].numFrames = 17;
+
+    gameData->assets[DN_KING_ASSET].originX   = 19;
+    gameData->assets[DN_KING_ASSET].originY   = 83;
+    gameData->assets[DN_KING_ASSET].numFrames = 13;
+
+    gameData->assets[DN_KING_SMALL_ASSET].originX   = 4;
+    gameData->assets[DN_KING_SMALL_ASSET].originY   = 19;
+    gameData->assets[DN_KING_SMALL_ASSET].numFrames = 1;
+
+    gameData->assets[DN_PAWN_ASSET].originX   = 21;
+    gameData->assets[DN_PAWN_ASSET].originY   = 83;
+    gameData->assets[DN_PAWN_ASSET].numFrames = 16;
+
+    gameData->assets[DN_PAWN_SMALL_ASSET].originX   = 4;
+    gameData->assets[DN_PAWN_SMALL_ASSET].originY   = 14;
+    gameData->assets[DN_PAWN_SMALL_ASSET].numFrames = 1;
+
+    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originX   = 10;
+    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originY   = 75;
+    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].numFrames = 27;
+
+    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originX   = 18;
+    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originY   = 73;
+    gameData->assets[DN_BUCKET_HAT_UP_ASSET].numFrames = 27;
+
+    gameData->assets[DN_GROUND_TILE_ASSET].originX   = 25;
+    gameData->assets[DN_GROUND_TILE_ASSET].originY   = 13;
+    gameData->assets[DN_GROUND_TILE_ASSET].numFrames = 1;
+
+    gameData->assets[DN_CURTAIN_ASSET].numFrames = 1;
+
+    gameData->assets[DN_ALBUM_ASSET].originX = 31;
+    gameData->assets[DN_ALBUM_ASSET].originY = 34;
+
+    gameData->assets[DN_SPEAKER_ASSET].originX = 12;
+    gameData->assets[DN_SPEAKER_ASSET].originY = 44;
+
+    gameData->assets[DN_SPEAKER_STAND_ASSET].originX = 6;
+    gameData->assets[DN_SPEAKER_STAND_ASSET].originY = 8;
+
+    gameData->assets[DN_PIT_ASSET].originX = 126;
+    gameData->assets[DN_PIT_ASSET].originY = 0;
+
+    gameData->assets[DN_MINI_TILE_ASSET].originX = 10;
+    gameData->assets[DN_MINI_TILE_ASSET].originY = 5;
+
+    gameData->assets[DN_MMM_UP_ASSET].originX = 17 / 2;
+    gameData->assets[DN_MMM_UP_ASSET].originY = 12 / 2;
 }
 
 static void dn_ExitMode(void)
@@ -845,31 +852,31 @@ static void dn_initializeGame(void)
     boardData->p1Units[0]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[0]; // Set the unit on the tile
-    
+
     // p1 pawns
     assetIdx = dn_getAssetIdx(gameData->characterSets[0], DN_PAWN, DN_UP);
     boardPos = (dn_boardPos_t){0, 4};
     boardData->p1Units[1]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
-    boardData->p1Units[1]->gray = true;
+    boardData->p1Units[1]->gray                   = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[1]; // Set the unit on the tile
 
-    boardPos                                      = (dn_boardPos_t){1, 4};
+    boardPos = (dn_boardPos_t){1, 4};
     boardData->p1Units[2]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
-    boardData->p1Units[2]->gray = true;
+    boardData->p1Units[2]->gray                   = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[2]; // Set the unit on the tile
 
-    boardPos                                      = (dn_boardPos_t){3, 4};
+    boardPos = (dn_boardPos_t){3, 4};
     boardData->p1Units[3]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
-    boardData->p1Units[3]->gray = true;
+    boardData->p1Units[3]->gray                   = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[3]; // Set the unit on the tile
-    
-    boardPos                                      = (dn_boardPos_t){4, 4};
+
+    boardPos = (dn_boardPos_t){4, 4};
     boardData->p1Units[4]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
-    boardData->p1Units[4]->gray = true;
+    boardData->p1Units[4]->gray                   = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[4]; // Set the unit on the tile
 
     // p2 king
@@ -884,25 +891,25 @@ static void dn_initializeGame(void)
     boardPos = (dn_boardPos_t){0, 0};
     boardData->p2Units[1]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
-    boardData->p2Units[1]->gray = true;
+    boardData->p2Units[1]->gray                   = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[1]; // Set the unit on the tile
 
-    boardPos                                      = (dn_boardPos_t){1, 0};
+    boardPos = (dn_boardPos_t){1, 0};
     boardData->p2Units[2]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
-    boardData->p2Units[2]->gray = true;
+    boardData->p2Units[2]->gray                   = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[2]; // Set the unit on the tile
 
-    boardPos                                      = (dn_boardPos_t){3, 0};
+    boardPos = (dn_boardPos_t){3, 0};
     boardData->p2Units[3]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
-    boardData->p2Units[3]->gray = true;
+    boardData->p2Units[3]->gray                   = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[3]; // Set the unit on the tile
 
-    boardPos                                      = (dn_boardPos_t){4, 0};
+    boardPos = (dn_boardPos_t){4, 0};
     boardData->p2Units[4]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
-    boardData->p2Units[4]->gray = true;
+    boardData->p2Units[4]->gray                   = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[4]; // Set the unit on the tile
 
     /////////////////////////////
@@ -921,7 +928,7 @@ static void dn_initializeGame(void)
     swapButton->updateFunction = dn_updateSwapButton;
     swapButton->drawFunction   = dn_drawSwapButton;
     swapButton->dataType       = DN_SWAPBUTTON_DATA;
-    swapButton->gray = true;
+    swapButton->gray           = true;
 
     //////////////////////////
     // Make the skip button //
@@ -932,7 +939,7 @@ static void dn_initializeGame(void)
     skipButton->updateFunction = dn_updateSkipButton;
     skipButton->drawFunction   = dn_drawSkipButton;
     skipButton->dataType       = DN_SKIPBUTTON_DATA;
-    skipButton->gray = true;
+    skipButton->gray           = true;
 
     /////////////////////////
     // Make the playerTurn //
