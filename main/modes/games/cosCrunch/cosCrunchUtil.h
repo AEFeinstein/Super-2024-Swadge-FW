@@ -67,3 +67,14 @@ void drawToCanvasTint(wsg_t canvas, wsg_t wsg, int32_t x, int32_t y, int32_t rot
  * @param y y position to draw the wsg
  */
 void drawToCanvasTile(wsg_t canvas, wsg_t wsg, uint16_t x, uint16_t y);
+
+/**
+ * @brief Draws a box styled like a piece of paper for displaying text.
+ *
+ * @param x1 Left position of box
+ * @param y1 Top position of box
+ * @param x2 Right position of box
+ * @param y2 Bottom position of box
+ * @param fold Pointer to a top-right corner image. You probably want \ref CC_MENU_FOLD_WSG
+ */
+void drawMessageBox(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, wsg_t fold);

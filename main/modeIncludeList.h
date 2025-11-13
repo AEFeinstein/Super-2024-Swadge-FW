@@ -30,7 +30,9 @@
 */
 
 #include "accelTest.h"
+#include "artillery.h"
 #include "bouncy.h"
+#include "canvas.h"
 #include "colorchord.h"
 #include "cosCrunch.h"
 #include "dance.h"
@@ -41,18 +43,20 @@
 #include "jukebox.h"
 #include "keebTest.h"
 #include "mainMenu.h"
-#include "mode_credits.h"
+#include "megaPulseEx.h"
 #include "mode_ch32v003test.h"
+#include "mode_credits.h"
 #include "mode_diceroller.h"
 #include "mode_synth.h"
 #include "nameTest.h"
 #include "picross_menu.h"
 #include "roboRunner.h"
 #include "sequencerMode.h"
-#include "canvas.h"
+#include "sonaTest.h"
 #include "swadgedoku.h"
 #include "swadgeIt.h"
 #include "swadgePassTest.h"
+#include "swadgetamatone.h"
 #include "touchTest.h"
 #include "trophyCase.h"
 #include "trophyTest.h"
@@ -75,6 +79,13 @@ int modeListGetCount(void);
  * @param menu Menu to set
  */
 void modeListSetMenu(menu_t* menu);
+
+/**
+ * @brief Add secret items to a menu
+ *
+ * @param menu The menu to add secret items to
+ */
+void modeListAddSecretMenuModes(menu_t* menu);
 
 /**
  * @brief Get the unique index of a mode

@@ -196,7 +196,7 @@ static int fuzzCommandCb(const char** args, int argCount, char* out)
         // touch (toggle)
         // motion (toggle)
 
-        if (!strncmp("on", args[0], strlen(args[0])))
+        if (!strncasecmp("on", args[0], strlen(args[0])))
         {
             // fuzz on
             if (!emulatorArgs.fuzz)
@@ -211,7 +211,7 @@ static int fuzzCommandCb(const char** args, int argCount, char* out)
                 return sprintf(out, "Fuzzer enabled\n");
             }
         }
-        else if (!strncmp("off", args[0], strlen(args[0])))
+        else if (!strncasecmp("off", args[0], strlen(args[0])))
         {
             // fuzz off
             if (emulatorArgs.fuzz)
@@ -222,26 +222,26 @@ static int fuzzCommandCb(const char** args, int argCount, char* out)
                 return sprintf(out, "Fuzzer disabled\n");
             }
         }
-        else if (!strncmp("buttons", args[0], strlen(args[0])))
+        else if (!strncasecmp("buttons", args[0], strlen(args[0])))
         {
             if (argCount > 1)
             {
                 // fuzz buttons ...
-                if (!strncmp("on", args[1], strlen(args[1])))
+                if (!strncasecmp("on", args[1], strlen(args[1])))
                 {
                     // fuzz buttons on
                     emuSetFuzzButtonsEnabled(true);
 
                     return sprintf(out, "Fuzzing buttons enabled\n");
                 }
-                else if (!strncmp("off", args[1], strlen(args[1])))
+                else if (!strncasecmp("off", args[1], strlen(args[1])))
                 {
                     // fuzz buttons off
                     emuSetFuzzButtonsEnabled(false);
 
                     return sprintf(out, "Fuzzing buttons disabled\n");
                 }
-                else if (!strncmp("mask", args[1], strlen(args[1])))
+                else if (!strncasecmp("mask", args[1], strlen(args[1])))
                 {
                     // Set mask (fuzz buttons mask up down left right a b start select)
                     if (argCount > 2)
@@ -285,16 +285,16 @@ static int fuzzCommandCb(const char** args, int argCount, char* out)
                 return sprintf(out, "Fuzzing buttons %s\n", emuGetFuzzButtonsEnabled() ? "enabled" : "disabled");
             }
         }
-        else if (!strncmp("touch", args[0], strlen(args[0])))
+        else if (!strncasecmp("touch", args[0], strlen(args[0])))
         {
             if (argCount > 1)
             {
-                if (!strncmp("on", args[1], strlen(args[1])))
+                if (!strncasecmp("on", args[1], strlen(args[1])))
                 {
                     emuSetFuzzTouchEnabled(true);
                     return sprintf(out, "Fuzzing touch enabled\n");
                 }
-                else if (!strncmp("off", args[1], strlen(args[1])))
+                else if (!strncasecmp("off", args[1], strlen(args[1])))
                 {
                     emuSetFuzzTouchEnabled(false);
                     return sprintf(out, "Fuzzing touch disabled\n");
@@ -307,16 +307,16 @@ static int fuzzCommandCb(const char** args, int argCount, char* out)
                 return sprintf(out, "Fuzzing touch %s\n", emuGetFuzzTouchEnabled() ? "enabled" : "disabled");
             }
         }
-        else if (!strncmp("motion", args[0], strlen(args[0])))
+        else if (!strncasecmp("motion", args[0], strlen(args[0])))
         {
             if (argCount > 1)
             {
-                if (!strncmp("on", args[1], strlen(args[1])))
+                if (!strncasecmp("on", args[1], strlen(args[1])))
                 {
                     emuSetFuzzMotionEnabled(true);
                     return sprintf(out, "Fuzzing motion enabled\n");
                 }
-                else if (!strncmp("off", args[1], strlen(args[1])))
+                else if (!strncasecmp("off", args[1], strlen(args[1])))
                 {
                     emuSetFuzzMotionEnabled(false);
                     return sprintf(out, "Fuzzing motion disabled\n");
@@ -329,16 +329,16 @@ static int fuzzCommandCb(const char** args, int argCount, char* out)
                 return sprintf(out, "Fuzzing motion %s\n", emuGetFuzzMotionEnabled() ? "enabled" : "disabled");
             }
         }
-        else if (!strncmp("time", args[0], strlen(args[0])))
+        else if (!strncasecmp("time", args[0], strlen(args[0])))
         {
             if (argCount > 1)
             {
-                if (!strncmp("on", args[1], strlen(args[1])))
+                if (!strncasecmp("on", args[1], strlen(args[1])))
                 {
                     emuSetFuzzTimeEnabled(true);
                     return sprintf(out, "Fuzzing time enabled\n");
                 }
-                else if (!strncmp("off", args[1], strlen(args[1])))
+                else if (!strncasecmp("off", args[1], strlen(args[1])))
                 {
                     emuSetFuzzTimeEnabled(false);
                     return sprintf(out, "Fuzzing time disabled\n");
@@ -377,11 +377,11 @@ static int touchCommandCb(const char** args, int argCount, char* out)
     bool enable = false;
     if (argCount > 0)
     {
-        if (!strncmp("on", args[0], strlen(args[0])))
+        if (!strncasecmp("on", args[0], strlen(args[0])))
         {
             enable = true;
         }
-        else if (!strncmp("off", args[0], strlen(args[0])))
+        else if (!strncasecmp("off", args[0], strlen(args[0])))
         {
             enable = false;
         }
@@ -418,11 +418,11 @@ static int ledsCommandCb(const char** args, int argCount, char* out)
     bool enable = false;
     if (argCount > 0)
     {
-        if (!strncmp("on", args[0], strlen(args[0])))
+        if (!strncasecmp("on", args[0], strlen(args[0])))
         {
             enable = true;
         }
-        else if (!strncmp("off", args[0], strlen(args[0])))
+        else if (!strncasecmp("off", args[0], strlen(args[0])))
         {
             enable = false;
         }
@@ -456,7 +456,7 @@ static int injectCommandCb(const char** args, int argCount, char* out)
         return 0;
     }
 
-    if (!strncmp("nvs", args[0], strlen(args[0])))
+    if (!strncasecmp("nvs", args[0], strlen(args[0])))
     {
         // inject nvs [namespace] <key> <int|str|file> <value>
         // inject nvs   <key> <int|str|file> <value>
@@ -473,7 +473,7 @@ static int injectCommandCb(const char** args, int argCount, char* out)
 
         const char* namespace = "storage";
 
-        if (!strcmp(typeArg, "int") || !strcmp(typeArg, "str") || !strcmp(typeArg, "file"))
+        if (!strcasecmp(typeArg, "int") || !strcasecmp(typeArg, "str") || !strcasecmp(typeArg, "file"))
         {
             namespace = args[1];
             if (argCount > 4)
@@ -492,7 +492,7 @@ static int injectCommandCb(const char** args, int argCount, char* out)
             }
         }
 
-        if (!strcmp(typeArg, "int"))
+        if (!strcasecmp(typeArg, "int"))
         {
             if (!valueArg)
             {
@@ -512,7 +512,7 @@ static int injectCommandCb(const char** args, int argCount, char* out)
 
             return snprintf(out, 1024, "Set NVS %s:%s to %" PRId32 "\n", namespace, keyArg, intVal);
         }
-        else if (!strcmp(typeArg, "str"))
+        else if (!strcasecmp(typeArg, "str"))
         {
             char valueBuf[512];
             char* bufOut = valueBuf;
@@ -540,7 +540,7 @@ static int injectCommandCb(const char** args, int argCount, char* out)
 
             return snprintf(out, 1024, "Set NVS %s:%s to %s\n", namespace, keyArg, valueBuf);
         }
-        else if (!strcmp(typeArg, "file"))
+        else if (!strcasecmp(typeArg, "file"))
         {
             if (!valueArg)
             {
@@ -594,7 +594,7 @@ static int injectCommandCb(const char** args, int argCount, char* out)
             return snprintf(out, 1024, "Invalid type '%s'\n", typeArg);
         }
     }
-    else if (!strncmp("asset", args[0], strlen(args[0])))
+    else if (!strncasecmp("asset", args[0], strlen(args[0])))
     {
         // inject asset <name> <filename>
         if (argCount > 2)
@@ -627,7 +627,7 @@ static int joystickCommandCb(const char** args, int argCount, char* out)
 {
     if (argCount > 0)
     {
-        if (!strncmp("on", args[0], strlen(args[0])))
+        if (!strncasecmp("on", args[0], strlen(args[0])))
         {
             disableExtension("gamepad");
             enableExtension("gamepad");
@@ -641,13 +641,13 @@ static int joystickCommandCb(const char** args, int argCount, char* out)
                 return snprintf(out, 1024, "Failed to connect to joystick\n");
             }
         }
-        else if (!strncmp("off", args[0], strlen(args[0])))
+        else if (!strncasecmp("off", args[0], strlen(args[0])))
         {
             disableExtension("gamepad");
 
             return snprintf(out, 1024, "Joystick disconnected\n");
         }
-        else if (!strncmp("device", args[0], strlen(args[0])))
+        else if (!strncasecmp("device", args[0], strlen(args[0])))
         {
             const char* deviceName  = NULL;
             const char* originalArg = emulatorArgs.joystick;
@@ -678,11 +678,11 @@ static int joystickCommandCb(const char** args, int argCount, char* out)
                 return snprintf(out, 1024, "Failed to connect to joystick %s\n", joyDevName);
             }
         }
-        else if (!strncmp("map", args[0], strlen(args[0])))
+        else if (!strncasecmp("map", args[0], strlen(args[0])))
         {
             if (argCount > 1)
             {
-                if (!strncmp("button", args[1], strlen(args[1])))
+                if (!strncasecmp("button", args[1], strlen(args[1])))
                 {
                     // joystick map button <button-idx> <button-name>
                     if (0 != (argCount % 2))
@@ -707,7 +707,7 @@ static int joystickCommandCb(const char** args, int argCount, char* out)
                         emuSetGamepadButtonMapping(buttonNum, button);
                     }
                 }
-                else if (!strncmp("touchpad", args[1], strlen(args[1])))
+                else if (!strncasecmp("touchpad", args[1], strlen(args[1])))
                 {
                     // joystick map touchpad <x-axis> <y-axis>
                     if (argCount < 4)
@@ -732,7 +732,7 @@ static int joystickCommandCb(const char** args, int argCount, char* out)
 
                     emuSetTouchpadAxisMapping(xAxis, yAxis);
                 }
-                else if (!strncmp("motion", args[1], strlen(args[1])))
+                else if (!strncasecmp("motion", args[1], strlen(args[1])))
                 {
                     // joystick map motion <x-axis> <y-axis> <z-axis>
                     if (argCount < 5)
@@ -764,7 +764,7 @@ static int joystickCommandCb(const char** args, int argCount, char* out)
 
                     emuSetAccelAxisMapping(xAxis, yAxis, zAxis);
                 }
-                else if (!strncmp("dpad", args[1], strlen(args[1])))
+                else if (!strncasecmp("dpad", args[1], strlen(args[1])))
                 {
                     // joystick map dpad <x-axis> <y-axis>
                     if (argCount < 4)
@@ -798,11 +798,11 @@ static int joystickCommandCb(const char** args, int argCount, char* out)
 
             return cur - out;
         }
-        else if (!strncmp("deadzone", args[0], strlen(args[0])))
+        else if (!strncasecmp("deadzone", args[0], strlen(args[0])))
         {
             if (argCount > 1)
             {
-                if (!strncmp("touchpad", args[1], strlen(args[1])))
+                if (!strncasecmp("touchpad", args[1], strlen(args[1])))
                 {
                     int deadzone = emuGetTouchpadDeadzone();
                     if (argCount > 2)
@@ -829,7 +829,7 @@ static int joystickCommandCb(const char** args, int argCount, char* out)
                 return snprintf(out, 1024, "Touchpad deadzone: %d\n", emuGetTouchpadDeadzone());
             }
         }
-        else if (!strncmp("preset", args[0], strlen(args[0])))
+        else if (!strncasecmp("preset", args[0], strlen(args[0])))
         {
             if (argCount > 1)
             {

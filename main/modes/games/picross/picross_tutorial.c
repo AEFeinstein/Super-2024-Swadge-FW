@@ -16,7 +16,7 @@ picrossTutorial_t* tut;
 
 void picrossStartTutorial(font_t* font)
 {
-    tut = calloc(1, sizeof(picrossTutorial_t));
+    tut = heap_caps_calloc(1, sizeof(picrossTutorial_t), MALLOC_CAP_8BIT);
 
     tut->titleFont = *font;
     loadWsg(TUT_WSG, &tut->qrlink, false);
@@ -110,8 +110,8 @@ void picrossExitTutorial(void)
     freeWsg(&(tut->qrlink));
     freeFont(&(tut->smallFont));
     // freeFont(&(tut->titleFont));
-    // free(&(tut->d));
-    free(tut);
+    // heap_caps_free(&(tut->d));
+    heap_caps_free(tut);
 }
 
 void drawPicrossQRCode()

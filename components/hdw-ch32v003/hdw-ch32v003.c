@@ -58,6 +58,11 @@ static volatile uint32_t* GPIO_VAR_IN_R          = &GPIO.in;
 #include "ch32v003_swio.h"
 
 //==============================================================================
+// External overrides
+//==============================================================================
+const uint8_t* cnfsGetFile(int index, size_t* size);
+
+//==============================================================================
 // Defines
 //==============================================================================
 
@@ -68,6 +73,17 @@ static volatile uint32_t* GPIO_VAR_IN_R          = &GPIO.in;
 //==============================================================================
 // Variables
 //==============================================================================
+
+// Coordinate map is used any time you want to do custom work with the 003's framebuffer.
+const uint16_t Coordmap[8 * 16] = {
+    0x0000, 0x0100, 0x0200, 0x0300, 0x0400, 0x0500, 0xffff, 0xffff, 0x0002, 0x0102, 0x0202, 0x0302, 0x0402, 0x0502,
+    0xffff, 0xffff, 0x0001, 0x0101, 0x0201, 0x0301, 0x0401, 0x0501, 0xffff, 0xffff, 0x0008, 0x0108, 0x0208, 0x0308,
+    0x0408, 0x0508, 0xffff, 0xffff, 0x0007, 0x0107, 0x0207, 0x0307, 0x0407, 0x0507, 0xffff, 0xffff, 0x0006, 0x0106,
+    0x0206, 0x0306, 0x0406, 0x0506, 0xffff, 0xffff, 0x0005, 0x0205, 0x0405, 0x0605, 0x0600, 0x0700, 0xffff, 0xffff,
+    0x0004, 0x0204, 0x0404, 0x0604, 0x0602, 0x0702, 0xffff, 0xffff, 0x0003, 0x0203, 0x0403, 0x0603, 0x0601, 0x0701,
+    0xffff, 0xffff, 0x0105, 0x0305, 0x0505, 0x0705, 0x0608, 0x0708, 0xffff, 0xffff, 0x0104, 0x0304, 0x0504, 0x0704,
+    0x0607, 0x0707, 0xffff, 0xffff, 0x0103, 0x0303, 0x0503, 0x0703, 0x0606, 0x0706, 0xffff, 0xffff,
+};
 
 // Keep available outside this file just in case someone wants to access
 // the hardware directly.
@@ -150,7 +166,7 @@ int ch32v003WriteMemory(const uint8_t* binary, uint32_t length, uint32_t offset)
                 ch32v003Teardown();
                 return -5;
             }
-            uprintf("Write4 %08x %08x\n", (unsigned)offset, *(const uint32_t*)binary);
+            // uprintf("Write4 %08x %08x\n", (unsigned)offset, *(const uint32_t*)binary);
             binary += 4;
         }
     }
@@ -337,7 +353,7 @@ void ch32v003CheckTerminal()
     if (r > 0 && r < sizeof(buffer) - 1)
     {
         buffer[r] = 0;
-        ESP_LOGI("ch32v003", "%s", buffer);
+        // ESP_LOGI("ch32v003", "%s", buffer);
         uprintf("%s", buffer);
     }
 }
@@ -361,6 +377,108 @@ void ch32v003Teardown()
     }
 
     memset(&swioContext, 0, sizeof(swioContext));
+}
+
+/**
+ * @brief Halt the processor, and write to RAM a greyscale asset image.
+ *
+ * @param slot Must be less than \ref CH32V003_MAX_IMAGE_SLOTS.
+ * @param asset_idx Is a .gs.png asset, for instance EYES_DEFAULT_GS (From eyes_default.gs.png).  This image must be
+ * ::EYE_LED_W x ::EYE_LED_H pixels in size.
+ * @return 0 if OK, nonzero if error.
+ */
+int ch32v003WriteBitmapAsset(int slot, int asset_idx)
+{
+    size_t sz          = 0;
+    const uint8_t* buf = cnfsGetFile(asset_idx, &sz);
+    if (sz < 4)
+    {
+        printf("Error: Asset wrong size (%d) bytes.\n", (int)sz);
+        return -1;
+    }
+    if (((const uint16_t*)buf)[0] != EYE_LED_W || ((const uint16_t*)buf)[1] != EYE_LED_H)
+    {
+        printf("Error: Asset wrong dimensions (%d x %d) needs (%d, %d).\n", ((const uint16_t*)buf)[0],
+               ((const uint16_t*)buf)[1], EYE_LED_W, EYE_LED_H);
+        return -1;
+    }
+
+    struct PixelMap
+    {
+        uint8_t buffer[EYE_LED_H][EYE_LED_W];
+    };
+    struct PixelMap* pm = (struct PixelMap*)(buf + 4);
+
+    return ch32v003WriteBitmap(slot, pm->buffer);
+}
+
+/**
+ * @brief Write a ::EYE_LED_W x ::EYE_LED_H pixel greyscale image into a RAM slot on the ch32v003.
+ *
+ * @param slot Must be less than \ref CH32V003_MAX_IMAGE_SLOTS.
+ * @param pixels are a greyscale image to be written out.
+ * @return 0 if OK, nonzero if error.
+ */
+int ch32v003WriteBitmap(int slot, const uint8_t pixels[EYE_LED_H][EYE_LED_W])
+{
+    if (slot >= CH32V003_MAX_IMAGE_SLOTS)
+    {
+        ESP_LOGE("ch32v003", "Failed: requested slot too big.\n");
+        return -1;
+    }
+
+    uint8_t rkbuffer[128];
+
+    int i, x, y;
+
+    for (y = 0; y < EYE_LED_H; y++)
+        for (x = 0; x < EYE_LED_W; x++)
+        {
+            int intensity = pixels[y][x];
+            int coord     = Coordmap[x * 8 + (5 - y)];
+
+            int ox = coord & 0xff;
+            int oy = coord >> 8;
+
+            int ofs       = ox;
+            uint8_t* ledo = &rkbuffer[ofs];
+            int imask     = ~(1 << oy);
+            int mask      = ~imask;
+
+            for (i = 0; i < 8; i++)
+            {
+                if (intensity & (1 << i))
+                    *ledo |= mask;
+                else
+                    *ledo &= imask;
+                ledo += 9;
+            }
+        }
+
+    // Make sure processor is halted if we're using it in framebuffer mode.
+    ch32v003SetReg(DMCONTROL, 0x80000001); // Request halt
+    ch32v003SetReg(DMCONTROL, 0x80000001); // Really request halt.
+    ch32v003SetReg(DMCONTROL, 0x00000001); // Clear halt request.
+
+    return ch32v003WriteMemory(rkbuffer, sizeof(rkbuffer), 0x20000200 + slot * 72);
+}
+
+/**
+ * @brief Override the DMA pointer on the 003 to point at a pre-loaded image in RAM.
+ *
+ * @param slot Must be less than \ref CH32V003_MAX_IMAGE_SLOTS.
+ * @return 0 if OK, nonzero if error.
+ */
+int ch32v003SelectBitmap(int slot)
+{
+    if (slot >= CH32V003_MAX_IMAGE_SLOTS)
+    {
+        ESP_LOGE("ch32v003", "Failed: requested slot too big.\n");
+        return -1;
+    }
+    uint32_t ledPointer = 0x20000200 + slot * 72;
+    // Overwrite DMA1_Channel5->MADDR, Assume we've been configured.
+    return ch32v003WriteMemory((uint8_t*)&ledPointer, 4, 0x40020064);
 }
 
 static int ch32v003Check()

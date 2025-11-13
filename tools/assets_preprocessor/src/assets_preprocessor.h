@@ -178,6 +178,9 @@
  * will be reduced to fit the web-safe color palette, along with one fully
  * transparent color, \ref paletteColor_t::cTransparent.
  *
+ * \paragraph assetProc_gs gs
+ * Process 12x6 pixel images as greyscale for the eyes.
+ *
  * Supports the option `dither`, which is false by default. If set to true,
  * images will be dithered when reducing their colors to the web-safe palette,
  * which may improve the appearance of larger images.

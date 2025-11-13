@@ -13,7 +13,6 @@ int main()
 #define CONCURRENT_DROPS 3
 #define DROPLIFE         1200
 #define SEPARATION       2
-
     int droptime[CONCURRENT_DROPS];
     int droplife[CONCURRENT_DROPS];
     int dropx[CONCURRENT_DROPS];
