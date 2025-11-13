@@ -107,6 +107,8 @@ typedef enum
     SKIN_PINK,
     SKIN_PURPLE,
     SKIN_RED,
+    SKIN_ALBINO,
+    SKIN_MAUVE,
     SKIN_COLOR_COUNT
 } skinColor_t;
 
@@ -313,6 +315,8 @@ typedef enum
     EE_HEARTS,
     EE_LINER,
     EE_MAKEUP,
+    EE_MY_EYES,
+    EE_RANDOMIZER,
     EE_SEXY,
     EE_SEXY_LASHES,
     EE_SLEEPING,

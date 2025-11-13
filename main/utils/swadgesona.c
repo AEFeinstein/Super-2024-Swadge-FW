@@ -75,21 +75,14 @@ static const cnfsFileIdx_t eyebrowsWsgs[] = {
     EB_TINY_WSG,
 };
 static const cnfsFileIdx_t eyeWsgs[] = {
-    E_ANGRY_WSG,        E_ANGY_WSG,
-    E_BABY_WSG,         E_BIG_WSG,
-    E_BIG_LINER_WSG,    E_BLOOD_WSG,
-    E_BOOPED_WSG,       E_CAT_WSG,
-    E_CLOSED_WSG,       E_CLOSED_LASHES_WSG,
-    E_CLOSED_LINER_WSG, E_CRAZY_WSG,
-    E_CRYING_WSG,       E_CROSSES_WSG,
-    E_CUTE_WSG,         E_DOOFY_WSG,
-    E_EXASPERATED_WSG,  E_HEARTS_WSG,
-    E_LINER_WSG,        E_MAKEUP_WSG,
-    E_SEXY_WSG,         E_SEXY_LASHES_WSG,
-    E_SLEEPING_WSG,     E_SMALL_WLASHES_WSG,
-    E_SQUINTING_WSG,    E_SQUINTING_LASHES_WSG,
-    E_STARE_WSG,        E_STARING_WSG,
-    E_SWIRLS_WSG,       E_THIN_WSG,
+    E_ANGRY_WSG,       E_ANGY_WSG,          E_BABY_WSG,         E_BIG_WSG,
+    E_BIG_LINER_WSG,   E_BLOOD_WSG,         E_BOOPED_WSG,       E_CAT_WSG,
+    E_CLOSED_WSG,      E_CLOSED_LASHES_WSG, E_CLOSED_LINER_WSG, E_CRAZY_WSG,
+    E_CRYING_WSG,      E_CROSSES_WSG,       E_CUTE_WSG,         E_DOOFY_WSG,
+    E_EXASPERATED_WSG, E_HEARTS_WSG,        E_LINER_WSG,        E_MAKEUP_WSG,
+    E_MY_EYES_WSG,     E_RANDOMIZER_WSG,    E_SEXY_WSG,         E_SEXY_LASHES_WSG,
+    E_SLEEPING_WSG,    E_SMALL_WLASHES_WSG, E_SQUINTING_WSG,    E_SQUINTING_LASHES_WSG,
+    E_STARE_WSG,       E_STARING_WSG,       E_SWIRLS_WSG,       E_THIN_WSG,
     E_WIDE_WSG,
 };
 static const cnfsFileIdx_t hairWsgs[] = {
@@ -579,6 +572,18 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                 {
                     palette->newColors[c422] = c411; // mid color
                     palette->newColors[c544] = c422; // base color
+                    break;
+                }
+                case SKIN_ALBINO:
+                {
+                    palette->newColors[c422] = c444; // mid color
+                    palette->newColors[c544] = c555; // base color
+                    break;
+                }
+                case SKIN_MAUVE:
+                {
+                    palette->newColors[c422] = c212; // mid color
+                    palette->newColors[c544] = c312; // base color
                     break;
                 }
             }

@@ -146,7 +146,7 @@ static const cnfsFileIdx_t tabImages[] = {
 
 // Panel data
 static const paletteColor_t skinSwatch[] = {
-    c544, c545, c543, c432, c321, c210, c255, c444, c243, c545, c334, c422,
+    c544, c545, c543, c432, c321, c210, c255, c444, c243, c545, c334, c422, c555, c312,
 };
 static const paletteColor_t clothesSwatch[] = {
     c000, c004, c210, c455, c435, c203, c222, c240, c505, c503, c233,
@@ -202,21 +202,14 @@ static const cnfsFileIdx_t eyebrowsWsgs[] = {
     EB_TINY_WSG,
 };
 static const cnfsFileIdx_t eyeWsgs[] = {
-    E_ANGRY_WSG,        E_ANGY_WSG,
-    E_BABY_WSG,         E_BIG_WSG,
-    E_BIG_LINER_WSG,    E_BLOOD_WSG,
-    E_BOOPED_WSG,       E_CAT_WSG,
-    E_CLOSED_WSG,       E_CLOSED_LASHES_WSG,
-    E_CLOSED_LINER_WSG, E_CRAZY_WSG,
-    E_CRYING_WSG,       E_CROSSES_WSG,
-    E_CUTE_WSG,         E_DOOFY_WSG,
-    E_EXASPERATED_WSG,  E_HEARTS_WSG,
-    E_LINER_WSG,        E_MAKEUP_WSG,
-    E_SEXY_WSG,         E_SEXY_LASHES_WSG,
-    E_SLEEPING_WSG,     E_SMALL_WLASHES_WSG,
-    E_SQUINTING_WSG,    E_SQUINTING_LASHES_WSG,
-    E_STARE_WSG,        E_STARING_WSG,
-    E_SWIRLS_WSG,       E_THIN_WSG,
+    E_ANGRY_WSG,       E_ANGY_WSG,          E_BABY_WSG,         E_BIG_WSG,
+    E_BIG_LINER_WSG,   E_BLOOD_WSG,         E_BOOPED_WSG,       E_CAT_WSG,
+    E_CLOSED_WSG,      E_CLOSED_LASHES_WSG, E_CLOSED_LINER_WSG, E_CRAZY_WSG,
+    E_CRYING_WSG,      E_CROSSES_WSG,       E_CUTE_WSG,         E_DOOFY_WSG,
+    E_EXASPERATED_WSG, E_HEARTS_WSG,        E_LINER_WSG,        E_MAKEUP_WSG,
+    E_MY_EYES_WSG,     E_RANDOMIZER_WSG,    E_SEXY_WSG,         E_SEXY_LASHES_WSG,
+    E_SLEEPING_WSG,    E_SMALL_WLASHES_WSG, E_SQUINTING_WSG,    E_SQUINTING_LASHES_WSG,
+    E_STARE_WSG,       E_STARING_WSG,       E_SWIRLS_WSG,       E_THIN_WSG,
     E_WIDE_WSG,
 };
 static const cnfsFileIdx_t hairWsgs[] = {
@@ -239,12 +232,13 @@ static const cnfsFileIdx_t hairWsgs[] = {
     H_WEDNESDAY_R_WSG,   H_WET_CURLY_WSG,      H_WET_SHORT_WSG,
 };
 static const cnfsFileIdx_t hatWsgs[] = {
-    SWSN_NO_GO_WSG,    HA_ANGEL_WSG,    HA_BATTRICE_WSG,       HA_BEANIE_WSG,         HA_BIGMA_WSG,
-    HA_BLITZO_WSG,     HA_CHEF_WSG,     HA_COOL_HAT_WSG,       HA_COWBOY_WSG,         HA_DEVIL_WSG,
-    HA_GARBOTNIK_WSG,  HA_GRAD_CAP_WSG, HA_HEART_WSG,          HA_HOMESTUCK_WSG,      HA_KINETIC_DONUT_WSG,
-    HA_MET_HELMET_WSG, HA_MILLIE_WSG,   HA_MINI_HOMESTUCK_WSG, HA_MOXXIE_WSG,         HA_PUFFBALL_BEANIE_WSG,
-    HA_PULSE_WSG,      HA_SANS_WSG,     HA_SAWTOOTH_WSG,       HA_TALL_HOMESTUCK_WSG, HA_TINY_HOMESTUCK_WSG,
-    HA_TENNA_WSG,      HA_TRON_WSG,     HA_TV_HEAD_WSG,        HA_VEROSIKA_WSG,       HA_WIDE_HOMESTUCK_WSG,
+    SWSN_NO_GO_WSG,         HA_ANGEL_WSG,        HA_BATTRICE_WSG, HA_BEANIE_WSG,         HA_BIGMA_WSG,
+    HA_BLITZO_WSG,          HA_CHAOS_GOBLIN_WSG, HA_CHEF_WSG,     HA_COOL_HAT_WSG,       HA_COWBOY_WSG,
+    HA_DEVIL_WSG,           HA_GARBOTNIK_WSG,    HA_GRAD_CAP_WSG, HA_HEART_WSG,          HA_HOMESTUCK_WSG,
+    HA_KINETIC_DONUT_WSG,   HA_MET_HELMET_WSG,   HA_MILLIE_WSG,   HA_MINI_HOMESTUCK_WSG, HA_MOXXIE_WSG,
+    HA_PUFFBALL_BEANIE_WSG, HA_PULSE_WSG,        HA_SANS_WSG,     HA_SAWTOOTH_WSG,       HA_TALL_HOMESTUCK_WSG,
+    HA_TINY_HOMESTUCK_WSG,  HA_TENNA_WSG,        HA_TRON_WSG,     HA_TV_HEAD_WSG,        HA_VEROSIKA_WSG,
+    HA_WIDE_HOMESTUCK_WSG,
 };
 static const cnfsFileIdx_t mouthWsgs[] = {
     M_AH_WSG,
@@ -491,7 +485,7 @@ const trophyData_t swsnTrophies[] = {
     {
         .title       = "New face who dis?",
         .description = "Edit your SwadgePass Swadgesona for the first time",
-        .image       = NO_IMAGE_SET,
+        .image       = SWSN_NEW_FACE_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
@@ -499,7 +493,7 @@ const trophyData_t swsnTrophies[] = {
     {
         .title       = "Randomizer",
         .description = "Randomize your swadgesona 10 times",
-        .image       = SWSN_RANDOMIZER_WSG,
+        .image       = E_RANDOMIZER_WSG,
         .type        = TROPHY_TYPE_ADDITIVE,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 10,
@@ -540,7 +534,7 @@ const trophyData_t swsnTrophies[] = {
     {
         .title       = "A Face Made for Radio",
         .description = "Kidding, kidding, It looks great!",
-        .image       = SWSN_EYE_TROPHY_WSG,
+        .image       = E_MY_EYES_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EXTREME,
         .maxVal      = 1,
@@ -896,7 +890,7 @@ static void swsnLoop(int64_t elapsedUs)
                         if (!scd->shouldQuit)
                         {
                             freeWsg(&scd->cursorImage);
-                            //switchToSwadgeMode(&); TODO Atrium
+                            // switchToSwadgeMode(&); TODO Atrium
                         }
                         else
                         {
@@ -1577,6 +1571,8 @@ static void panelInput(buttonEvt_t evt, int size)
 {
     if (evt.down)
     {
+        // TODO: If a item is locked, skip it.
+        // TODO: Decide if can hover over, but cannot click?
         globalMidiPlayerPlaySong(&scd->sfxMove, MIDI_SFX);
         if (evt.button & PB_RIGHT)
         {
@@ -1841,6 +1837,13 @@ static void drawColors(const paletteColor_t* colors, int arrSize, bool left)
                         xStart + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + SWATCH_W,
                         TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + SWATCH_H, CORNER_RAD,
                         colors[idx + (scd->page * GRID_SIZE)], c000);
+        // FIXME: Need to load no go image
+        // TODO: Stop showing symbol if trophy won
+        /* if (scd->selection == SKIN && idx + (scd->page * GRID_SIZE) == SKIN_MAUVE)
+        {
+            drawWsgSimple(&scd->selectionImages[0], xStart + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
+                          TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
+        } */
         if (scd->arr[scd->selection] == idx + (scd->page * GRID_SIZE))
         {
             drawWsgSimpleScaled(&scd->cursorImage,
@@ -1887,7 +1890,13 @@ static void drawItems(int arrSize, bool left, bool half)
                      xOffset + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
                      yOffset + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
         }
-
+        // TODO: Add new eye variants (Swirly and that stupid bug eyed one)
+        // TODO: Stop showing symbol if trophy won
+        if ((scd->selection == HAT && idx + (scd->page * GRID_SIZE) == HAE_CHAOS_GOBLIN))
+        {
+            drawWsgSimple(&scd->selectionImages[0], cursorXOffset + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
+                          TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
+        }
         // Cursor
         if (scd->arr[scd->selection] == idx + (scd->page * GRID_SIZE))
         {
