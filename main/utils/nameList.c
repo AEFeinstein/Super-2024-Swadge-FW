@@ -16,7 +16,6 @@
 #include "nameList.h"
 #include "macros.h"
 #include "swadge2024.h"
-#include "hdw-esp-now.h"
 
 // C
 #include <string.h>
@@ -49,22 +48,23 @@
 //==============================================================================
 
 static const char* const adjList1[] = {
-    "groovy",  "fuzzy",  "shiny",   "modal",  "playful", "fun",   "flexy", "wiggly", "live",  "steady",
-    "amusing", "strong", "pastel",  "plucky", "quirky",  "keen",  "sick",  "lovely", "sassy", "muted",
-    "smart",   "speedy", "silent",  "blue",   "quick",   "antsy", "zippy", "silly",  "dewy",  "plain",
-    "loud",    "zany",   "festive", "pink",   "noxious", "sly",   "known", "sudden", "sharp", "moist",
+    "suitable", "eminent",  "shiny",    "modal",    "playful",  "fun",      "flexible", "wiggly",
+    "live",     "rhythmic", "amusing",  "fearless", "hot",      "debonair", "quirky",   "pleasant",
+    "sick",     "lovely",   "sassy",    "logical",  "smart",    "speedy",   "silent",   "correct",
+    "quick",    "elastic",  "accurate", "outgoing", "ordinary", "plain",    "loud",     "zany",
+    "festive",  "loutish",  "noxious",  "sly",      "known",    "sudden",   "sharp",    "glorious",
 };
 static const char* const adjList2[] = {
-    "idle",   "weepy",  "honest", "faded", "shaggy",  "lax",    "gaunt",   "measly", "absurd", "healthy",
-    "zany",   "kind",   "smart",  "messy", "upset",   "cheeky", "even",    "gentle", "useful", "ruddy",
-    "gentle", "smoggy", "lumpy",  "odd",   "helpful", "round",  "short",   "weird",  "rabid",  "steady",
-    "eerie",  "bright", "macho",  "nutty", "crisp",   "tuned",  "excited", "wry",    "meek",   "hungry",
+    "lazy",    "weepy",    "creative", "faded",    "shaggy",  "truthful", "dazzling", "measly", "absurd", "healthy",
+    "mammoth", "generous", "educated", "scraggly", "upset",   "cheeky",   "abnormal", "gentle", "useful", "ruddy",
+    "gentle",  "smoggy",   "lumpy",    "odd",      "helpful", "round",    "succinct", "weird",  "rabid",  "steady",
+    "untidy",  "bright",   "macho",    "nutty",    "hulking", "tuned",    "exciting", "wry",    "meek",   "hungry",
 };
 static const char* const nounList[] = {
-    "fox",   "quill",  "singer", "smurf",   "noob",  "bass",   "boss",  "badger", "drums",  "board",
-    "pitch", "octave", "hotdog", "warthog", "cat",   "gamer",  "lemon", "dog",    "song",   "ghost",
-    "deer",  "guitar", "gecko",  "pilot",   "raven", "osprey", "wheel", "string", "weasel", "pixel",
-    "pango", "donut",  "rocker", "wolf",    "snake", "driver", "berry", "artist", "foxbat", "eagle",
+    "lizard",   "hedgehog", "vocalist", "smurf",   "noob",     "bass",    "boss",     "badger", "drums",   "keyboard",
+    "pitch",    "octave",   "aardvark", "warthog", "cat",      "gamepad", "lemon",    "dog",    "harmony", "ghost",
+    "deer",     "guitar",   "gecko",    "seahawk", "musician", "osprey",  "hamster",  "string", "weasel",  "gamedev",
+    "woodwind", "drummer",  "rocker",   "wolf",    "snake",    "driver",  "seahorse", "artist", "foxbat",  "eagle",
 };
 
 static const char nvsKeys[] = "username";
@@ -88,9 +88,8 @@ typedef enum
 /**
  * @brief Grabs the Mac Address from the ESP
  *
- * @return If the mac address was initialized
  */
-static bool _getMacAddress(void);
+static void _getMacAddress(void);
 
 /**
  * @brief Grabs a specific string from teh wordlists
@@ -207,8 +206,7 @@ void setUsernameFromND(nameData_t* nd)
         nd->idxs[ADJ1] = _checkIfUserIdxInBounds(nd->idxs[ADJ1], listLen[ADJ1], mutatorSeeds[ADJ1]);
         nd->idxs[ADJ2] = _checkIfUserIdxInBounds(nd->idxs[ADJ2], listLen[ADJ2], mutatorSeeds[ADJ2]);
         nd->idxs[NOUN] = _checkIfUserIdxInBounds(nd->idxs[NOUN], listLen[NOUN], mutatorSeeds[NOUN]);
-        // nd->randCode   = baseMac[5]; // HACK: If this is commented out, it always is zero, but commented it doesn't
-        // do any checking to ensure nobody is tampering. Is tampering actually an issue?
+        nd->randCode   = baseMac[5];
     }
 
     char buff1[MAX_ADJ1_LEN], buff2[MAX_ADJ2_LEN], buff3[MAX_NOUN_LEN];
@@ -387,9 +385,7 @@ nameData_t* getSystemUsername(void)
 void setSystemUsername(nameData_t* nd)
 {
     nameData_t data = *nd;
-    int32_t packed  = GET_PACKED_USERNAME(data);
-    writeNvs32(nvsKeys, packed);
-    setUsernameFrom32(&swadgeUsername, packed);
+    writeNvs32(nvsKeys, GET_PACKED_USERNAME(data));
 }
 
 void setUsernameFrom32(nameData_t* nd, int32_t packed)
@@ -405,7 +401,7 @@ void setUsernameFrom32(nameData_t* nd, int32_t packed)
 // Static Functions
 //==============================================================================
 
-static bool _getMacAddress()
+static void _getMacAddress()
 {
     esp_err_t ret = esp_wifi_get_mac(WIFI_IF_STA, baseMac);
     if (ret != ESP_OK)
@@ -416,7 +412,6 @@ static bool _getMacAddress()
             // Produces an obvious, statistically unlikely result
             baseMac[idx] = 0;
         }
-        return false;
     }
     ESP_LOGI("USRN", "MAC:%d:%d:%d:%d:%d:%d", baseMac[0], baseMac[1], baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
 
@@ -426,7 +421,6 @@ static bool _getMacAddress()
     mutatorSeeds[ADJ1] = (baseMac[3] ^ baseMac[4] ^ baseMac[5]) % listLen[ADJ1];
     ESP_LOGI("USRN", "Seeds: Adj1: %d, Adj2: %d, Noun: %d, Number: %d", mutatorSeeds[0], mutatorSeeds[1],
              mutatorSeeds[2], baseMac[5]);
-    return true;
 }
 
 static void _getWordFromList(int listIdx, int idx, char* buffer, int buffLen)
@@ -462,7 +456,7 @@ static uint8_t _checkIfUserIdxInBounds(int8_t idx, uint8_t arrSize, uint8_t seed
     {
         idx += range;
     }
-    idx %= range;
+    idx %= arrSize;
     return idx;
 }
 

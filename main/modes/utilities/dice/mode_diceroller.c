@@ -4,7 +4,6 @@
 
 #include "mode_diceroller.h"
 #include "portableDance.h"
-#include "mainMenu.h"
 
 //==============================================================================
 // Defines
@@ -12,10 +11,6 @@
 
 #define DR_MAX_HIST 6
 #define MAX_DICE    6
-
-#define EYES_SLOT_DEAD   3
-#define EYES_SLOT_SWIRL  4 ///< Starting slot for 4-frame swirl animation
-#define EYES_SLOT_DIGITS 10
 
 //==============================================================================
 // Enums
@@ -62,13 +57,8 @@ typedef struct
 
 typedef struct
 {
-    uint8_t pixels[EYE_LED_W * EYE_LED_H];
-} eyeDigit_t;
-
-typedef struct
-{
     // UI variables
-    font_t* ibm_vga8;
+    font_t ibm_vga8;
     wsg_t woodTexture;
     wsg_t cursor;
     wsg_t corner;
@@ -102,12 +92,6 @@ typedef struct
 
     // LED Variables
     portableDance_t* pDance;
-
-    // Eye variables
-    eyeDigit_t eyeDigits[10];
-    uint8_t rollEyeFrame;
-    int32_t rollEyeAnimTimerUs;
-    bool initialEyes;
 
     // DAC variables
     int32_t cScalePeriodSamples[8];
@@ -156,8 +140,6 @@ float cosDeg(float degrees);
 float sinDeg(float degrees);
 int intComparator(const void* a, const void* b);
 
-void diceTrophyEval(void);
-
 //==============================================================================
 // Const Variables
 //==============================================================================
@@ -170,7 +152,6 @@ static const die_t dice[] = {
 
 static const int32_t rollAnimationPeriod = 1000000; // 1 Second Spin
 static const int32_t fakeValRerollPeriod = 100000;  // Change numbers every 0.1s
-static const int32_t eyeFramePeriod      = 250000;  // Change swirl eye frame every 0.25s
 
 static const char DR_NAMESTRING[] = "Dice Roller";
 
@@ -215,85 +196,6 @@ static float cScaleFrequencies[] = {
 // Variables
 //==============================================================================
 
-const trophyData_t diceTrophyList[] = {
-    {
-        .title       = "Nice.",
-        .description = "Get the funny number",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-        .hidden      = true,
-    },
-    {
-        .title       = "With advantage!",
-        .description = "Have less keeps than rolls",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-        .hidden      = false,
-    },
-    {
-        .title       = "Where's the die jail?",
-        .description = "Get two natural 1's in a row on a d20",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1,
-        .hidden      = false,
-    },
-    {
-        .title       = "Roll for initiative",
-        .description = "Roll a single D20",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-        .hidden      = false,
-    },
-    {
-        .title       = "AAAAAAAHHhhhhHHHHhhhHHH!",
-        .description = "Roll by shaking the swadge",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-        .hidden      = false,
-    },
-    {
-        .title       = "The Marketplace has real dice, you know?",
-        .description = "Roll 2000 virtual dice",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_ADDITIVE,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 2000,
-        .hidden      = false,
-    },
-    {
-        .title       = "Yahtzee!",
-        .description = "Get five of a kind when rolling 5d6",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1,
-        .hidden      = false,
-    },
-};
-
-const trophySettings_t diceTrophySettings = {
-    .drawFromBottom   = true,
-    .staticDurationUs = DRAW_STATIC_US * 6,
-    .slideDurationUs  = DRAW_SLIDE_US,
-    .namespaceKey     = DR_NAMESTRING,
-};
-
-const trophyDataList_t diceTrophyData = {
-    .settings = &diceTrophySettings,
-    .list     = diceTrophyList,
-    .length   = ARRAY_SIZE(diceTrophyList),
-};
-
 swadgeMode_t modeDiceRoller = {
     .modeName                 = DR_NAMESTRING,
     .wifiMode                 = NO_WIFI,
@@ -310,7 +212,6 @@ swadgeMode_t modeDiceRoller = {
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
     .fnDacCb                  = diceDacCallback,
-    .trophyData               = &diceTrophyData,
 };
 
 diceRoller_t* diceRoller;
@@ -326,32 +227,10 @@ void diceEnterMode(void)
 {
     diceRoller = heap_caps_calloc(1, sizeof(diceRoller_t), MALLOC_CAP_8BIT);
 
-    diceRoller->ibm_vga8 = getSysFont();
+    loadFont(IBM_VGA_8_FONT, &diceRoller->ibm_vga8, false);
     loadWsg(WOOD_TEXTURE_64_WSG, &diceRoller->woodTexture, false);
     loadWsg(UP_CURSOR_8_WSG, &diceRoller->cursor, false);
     loadWsg(GOLD_CORNER_TR_WSG, &diceRoller->corner, false);
-
-    cnfsFileIdx_t digitGsFiles[] = {DICE_0_GS, DICE_1_GS, DICE_2_GS, DICE_3_GS, DICE_4_GS,
-                                    DICE_5_GS, DICE_6_GS, DICE_7_GS, DICE_8_GS, DICE_9_GS};
-    for (int i = 0; i < 10; i++)
-    {
-        size_t size        = 0;
-        const uint8_t* buf = cnfsGetFile(digitGsFiles[i], &size);
-        if (size != 40) // 4-byte header + 6x6
-        {
-            ESP_LOGW("DICE", "Eye digit asset %d wrong size (%d) bytes.\n", i, (int)size);
-        }
-        else
-        {
-            memcpy(&diceRoller->eyeDigits[i], buf + 4, ARRAY_SIZE(diceRoller->eyeDigits[i].pixels));
-        }
-    }
-
-    ch32v003WriteBitmapAsset(EYES_SLOT_DEAD, EYES_DEAD_GS);
-    ch32v003WriteBitmapAsset(EYES_SLOT_SWIRL + 0, EYES_SWIRL_0_GS);
-    ch32v003WriteBitmapAsset(EYES_SLOT_SWIRL + 1, EYES_SWIRL_1_GS);
-    ch32v003WriteBitmapAsset(EYES_SLOT_SWIRL + 2, EYES_SWIRL_2_GS);
-    ch32v003WriteBitmapAsset(EYES_SLOT_SWIRL + 3, EYES_SWIRL_3_GS);
 
     memset(&diceRoller->cRoll, 0, sizeof(rollHistoryEntry_t));
 
@@ -389,6 +268,7 @@ void diceEnterMode(void)
  */
 void diceExitMode(void)
 {
+    freeFont(&diceRoller->ibm_vga8);
     freeWsg(&diceRoller->woodTexture);
     freeWsg(&diceRoller->cursor);
     freeWsg(&diceRoller->corner);
@@ -439,7 +319,6 @@ void diceMainLoop(int64_t elapsedUs)
         if ((diceRoller->noShakeTimer <= 0) && (diceRoller->isShook))
         {
             doRoll(diceRoller->requestCount, &dice[diceRoller->requestDieIdx], diceRoller->requestKeep);
-            trophyUpdate(&diceTrophyList[4], 1, true);
         }
     }
 
@@ -457,6 +336,8 @@ void diceButtonCb(buttonEvt_t* evt)
     switch (evt->button)
     {
         case PB_A:
+        case PB_B:
+        default:
         {
             if (evt->down)
             {
@@ -501,14 +382,6 @@ void diceButtonCb(buttonEvt_t* evt)
             }
             break;
         }
-        case PB_B:
-        {
-            switchToSwadgeMode(&mainMenuMode);
-        }
-        default:
-        {
-            // Don't roll unless you press A
-        }
     }
 }
 
@@ -547,13 +420,8 @@ void doStateMachine(int64_t elapsedUs)
         default:
         {
             // Draw the mode name
-            drawText(diceRoller->ibm_vga8, textColor, DR_NAMESTRING,
-                     TFT_WIDTH / 2 - textWidth(diceRoller->ibm_vga8, DR_NAMESTRING) / 2, TFT_HEIGHT / 2);
-            if (!diceRoller->initialEyes)
-            {
-                diceRoller->initialEyes = true;
-                ch32v003SelectBitmap(EYES_SLOT_SWIRL + 3);
-            }
+            drawText(&diceRoller->ibm_vga8, textColor, DR_NAMESTRING,
+                     TFT_WIDTH / 2 - textWidth(&diceRoller->ibm_vga8, DR_NAMESTRING) / 2, TFT_HEIGHT / 2);
             break;
         }
         case DR_SHOW_ROLL:
@@ -589,12 +457,6 @@ void doStateMachine(int64_t elapsedUs)
                 diceRoller->dacPeriodSample = newPeriod;
             });
 
-            // Run timer for eye animation
-            RUN_TIMER_EVERY(diceRoller->rollEyeAnimTimerUs, eyeFramePeriod, elapsedUs, {
-                diceRoller->rollEyeFrame = (diceRoller->rollEyeFrame + 1) % 4;
-                ch32v003SelectBitmap(EYES_SLOT_SWIRL + diceRoller->rollEyeFrame);
-            });
-
             // Draw everything
             drawDiceBackground((diceRoller->rollRotAnimTimerUs * 360) / rollAnimationPeriod);
             drawDiceText(diceRoller->fakeVals);
@@ -611,31 +473,6 @@ void doStateMachine(int64_t elapsedUs)
                 // Turn LEDs off
                 led_t leds[CONFIG_NUM_LEDS] = {0};
                 setLeds(leds, CONFIG_NUM_LEDS);
-
-                // Set eyes
-                if (diceRoller->cRoll.total < 100)
-                {
-                    uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
-                    eyeDigit_t* digits[2]                = {&diceRoller->eyeDigits[diceRoller->cRoll.total / 10],
-                                                            &diceRoller->eyeDigits[diceRoller->cRoll.total % 10]};
-                    for (int i = 0; i < 2; i++)
-                    {
-                        for (int x = 0; x < EYE_LED_H; x++)
-                        {
-                            for (int y = 0; y < (EYE_LED_W / 2); y++)
-                            {
-                                bitmap[y][x + (EYE_LED_W / 2) * i]
-                                    = digits[i]->pixels[x + y * EYE_LED_H] ? EYE_LED_BRIGHT : EYE_LED_OFF;
-                            }
-                        }
-                    }
-                    ch32v003WriteBitmap(EYES_SLOT_DIGITS, bitmap);
-                    ch32v003SelectBitmap(EYES_SLOT_DIGITS);
-                }
-                else
-                {
-                    ch32v003SelectBitmap(EYES_SLOT_DEAD);
-                }
             }
             break;
         }
@@ -697,8 +534,8 @@ void drawHistory(void)
     // Draw the header
     char totalStr[32];
     snprintf(totalStr, sizeof(totalStr), "History");
-    drawText(diceRoller->ibm_vga8, totalTextColor, totalStr,        //
-             histX - textWidth(diceRoller->ibm_vga8, totalStr) / 2, //
+    drawText(&diceRoller->ibm_vga8, totalTextColor, totalStr,        //
+             histX - textWidth(&diceRoller->ibm_vga8, totalStr) / 2, //
              histY);
 
     // For all the history
@@ -708,12 +545,12 @@ void drawHistory(void)
     {
         rollHistoryEntry_t* entry = histNode->val;
 
-        // Draw this history entry centered around the colon
-        snprintf(totalStr, sizeof(totalStr), "%dd%dk%d:", entry->count, entry->die.numFaces, entry->keep);
-        drawText(diceRoller->ibm_vga8, histTextColor, totalStr, histX + 14 - textWidth(diceRoller->ibm_vga8, totalStr),
+        // Draw this history entry
+        snprintf(totalStr, sizeof(totalStr), "%dd%dk%d: %d", entry->count, entry->die.numFaces, entry->keep,
+                 entry->total);
+        drawText(&diceRoller->ibm_vga8, histTextColor, totalStr,         //
+                 histX - textWidth(&diceRoller->ibm_vga8, totalStr) / 2, //
                  histY + (i + 1) * histYEntryOffset);
-        snprintf(totalStr, sizeof(totalStr), "%d", entry->total);
-        drawText(diceRoller->ibm_vga8, c555, totalStr, histX + 17, histY + (i + 1) * histYEntryOffset);
 
         // Iterate
         histNode = histNode->next;
@@ -745,8 +582,8 @@ void drawCurrentTotal(void)
 {
     char totalStr[32];
     snprintf(totalStr, sizeof(totalStr), "Total: %d", diceRoller->cRoll.total);
-    drawText(diceRoller->ibm_vga8, totalTextColor, totalStr,
-             TFT_WIDTH / 2 - textWidth(diceRoller->ibm_vga8, totalStr) / 2, TFT_HEIGHT * 7 / 8);
+    drawText(&diceRoller->ibm_vga8, totalTextColor, totalStr,
+             TFT_WIDTH / 2 - textWidth(&diceRoller->ibm_vga8, totalStr) / 2, TFT_HEIGHT * 7 / 8);
 }
 
 /**
@@ -859,7 +696,6 @@ void doRoll(int count, const die_t* die, int keep)
     // Start timers fresh
     diceRoller->rollRotAnimTimerUs = 0;
     diceRoller->rollNumAnimTimerUs = 0;
-    diceRoller->rollEyeAnimTimerUs = 0;
 
     // Roll the dice!
     for (int m = 0; m < count; m++)
@@ -894,12 +730,6 @@ void doRoll(int count, const die_t* die, int keep)
     diceRoller->dacPeriodSampleChangeTimer = 0;
     diceRoller->sampleCount                = 0;
     diceRoller->dacLow                     = false;
-
-    // Set swirly eyes
-    ch32v003SelectBitmap(EYES_SLOT_SWIRL);
-
-    // Check trophies
-    diceTrophyEval();
 }
 
 /**
@@ -978,7 +808,7 @@ void drawRegularPolygon(int xCenter, int yCenter, int8_t sides, float rotDeg, in
  */
 void drawSelectionText(void)
 {
-    font_t* font = diceRoller->ibm_vga8;
+    font_t* font = &diceRoller->ibm_vga8;
 
     // Create the whole string, measuring as we go
     char rollStr[32] = "Next roll is ";
@@ -1072,8 +902,8 @@ void drawDiceText(int* diceVals)
             color = diceTextColorNoKeep;
         }
         // Draw the text
-        drawText(diceRoller->ibm_vga8, color, rollOutcome,
-                 xGridOffsets[m] - textWidth(diceRoller->ibm_vga8, rollOutcome) / 2, yGridOffsets[m]);
+        drawText(&diceRoller->ibm_vga8, color, rollOutcome,
+                 xGridOffsets[m] - textWidth(&diceRoller->ibm_vga8, rollOutcome) / 2, yGridOffsets[m]);
     }
 }
 
@@ -1128,64 +958,4 @@ void diceDacCallback(uint8_t* samples, int16_t len)
         // Not rolling, zero the output
         memset(samples, 128, len);
     }
-}
-
-void diceTrophyEval(void)
-{
-    // Check if the player got 69
-    if (diceRoller->cRoll.total == 69)
-    {
-        trophyUpdate(&diceTrophyList[0], 1, true);
-    }
-
-    // Check if 'keeps' mechanic is being used
-    if (diceRoller->cRoll.keep < diceRoller->cRoll.count)
-    {
-        trophyUpdate(&diceTrophyList[1], 1, true);
-    }
-
-    // If two nat 1s in a row
-    if (diceRoller->cRoll.die.numFaces == 20 && diceRoller->cRoll.count == 1 && diceRoller->cRoll.total == 1)
-    {
-        node_t* histNode = diceRoller->history.first;
-        if (histNode != NULL)
-        {
-            rollHistoryEntry_t* entry = histNode->val;
-            if (entry->total == 1)
-            {
-                trophyUpdate(&diceTrophyList[2], 1, true);
-            }
-        }
-    }
-
-    // If a single D20 for the first time
-    if (diceRoller->cRoll.die.numFaces == 20 && diceRoller->cRoll.count == 1)
-    {
-        trophyUpdate(&diceTrophyList[3], 1, true);
-    }
-
-    // If yahtzee
-    if (diceRoller->cRoll.count == 5 && diceRoller->cRoll.die.numFaces == 6)
-    {
-        // Check if all rolls are equal
-        int val   = diceRoller->rolls[0];
-        bool same = true;
-        for (int i = 1; i < diceRoller->cRoll.count; i++)
-        {
-            if (val != diceRoller->rolls[i])
-            {
-                same = false;
-                break;
-            }
-        }
-        if (same)
-        {
-            trophyUpdate(&diceTrophyList[6], 1, true);
-        }
-    }
-
-    // Save rolled dice
-    int totalDiceRolled = trophyGetSavedValue(&diceTrophyList[5]);
-    totalDiceRolled += diceRoller->cRoll.count;
-    trophyUpdateMilestone(&diceTrophyList[5], totalDiceRolled, 5);
 }

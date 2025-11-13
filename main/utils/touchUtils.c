@@ -7,9 +7,6 @@
 #include "macros.h"
 #include "trigonometry.h"
 
-#include <float.h>
-#include <math.h>
-
 /**
  * @brief Convert touchpad angle and radius to cartesian coordinates
  *
@@ -29,58 +26,6 @@ void getTouchCartesian(int32_t angle, int32_t radius, int32_t* x, int32_t* y)
     if (y)
     {
         *y = CLAMP((1024 + getSin1024(angle) * radius / 1024) / 2, 0, 1023);
-    }
-}
-
-/**
- * @brief Convert touchpad angle and radius to cartesian coordinates, deforming the corners to make a square. This is an
- * implementation of an algorithm described at https://squircular.blogspot.com/2015/09/fg-squircle-mapping.html
- *
- * @param angle  The touchpad angle to convert
- * @param radius The touchpad radius to convert
- * @param[out] x A pointer to be set to the X touch coordinate, from 0 to 1023
- * @param[out] y A pointer to be set to the Y touch coordinate, from 0 to 1023
- */
-void getTouchCartesianSquircle(int32_t angle, int32_t radius, int32_t* x, int32_t* y)
-{
-    int32_t u_1024, v_1024;
-    getTouchCartesian(angle, radius, &u_1024, &v_1024);
-    float u = (u_1024 - 511) / 512.0f;
-    float v = (v_1024 - 511) / 512.0f;
-
-    float r2    = u * u + v * v;
-    float uv    = u * v;
-    float rad   = r2 * (r2 - 4 * uv * uv);
-    float sqrto = sqrtf((r2 - sqrtf(rad)) / 2);
-
-    float uv_sign = 1.0f;
-    if (uv < 0)
-    {
-        uv_sign = -1.0f;
-    }
-
-    if (x)
-    {
-        if (ABS(v) > FLT_EPSILON)
-        {
-            *x = CLAMP((int32_t)(uv_sign / v * sqrto * 512 + 512), 0, 1023);
-        }
-        else
-        {
-            *x = u_1024;
-        }
-    }
-
-    if (y)
-    {
-        if (ABS(u) > FLT_EPSILON)
-        {
-            *y = CLAMP((int32_t)(uv_sign / u * sqrto * 512 + 512), 0, 1023);
-        }
-        else
-        {
-            *y = v_1024;
-        }
     }
 }
 

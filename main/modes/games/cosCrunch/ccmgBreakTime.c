@@ -3,8 +3,8 @@
 
 static void ccmgBreakTimeInitMicrogame(void);
 static void ccmgBreakTimeDestroyMicrogame(void);
-static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
-                                  cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
+static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
+                                  buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 static bool ccmgBreakTimeTimeout(void);
 
 static const char ccmgBreakTimeVerb[]       = "Break Time";
@@ -101,8 +101,8 @@ static void ccmgBreakTimeDestroyMicrogame(void)
     heap_caps_free(ccmgbt);
 }
 
-static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
-                                  cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
+static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
+                                  buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
 {
     if (state == CC_MG_PLAYING)
     {
@@ -118,22 +118,25 @@ static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, f
 
                 drawToCanvasTint(ccmgbt->wsg.spill, ccmgbt->wsg.spill, 0, 0, 0, ccmgbt->liquidTintColor);
                 cosCrunchMicrogamePersistSplatter(ccmgbt->wsg.spill, MUG_DRAW_X - 42, MUG_DRAW_Y + 84);
-
-                midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, CRASH_CYMBAL_1, 0x7f);
             }
         }
     }
 
     // Steam rises. This is 1 px per frame, so its speed is dependent on the frame rate.
     // As long as the frame time is somewhat consistent it looks fine.
-    for (uint16_t y = 0; y < STEAM_WSG_HEIGHT - 1; y++)
+    for (uint16_t y = 0; y < STEAM_WSG_HEIGHT; y++)
     {
-        memcpy(&ccmgbt->wsg.steam.px[STEAM_WSG_WIDTH * y], &ccmgbt->wsg.steam.px[STEAM_WSG_WIDTH * (y + 1)],
-               STEAM_WSG_WIDTH * sizeof(paletteColor_t));
-    }
-    for (uint16_t x = 0; x < STEAM_WSG_WIDTH; x++)
-    {
-        ccmgbt->wsg.steam.px[(STEAM_WSG_HEIGHT - 1) * STEAM_WSG_WIDTH + x] = cTransparent;
+        for (uint16_t x = 0; x < STEAM_WSG_WIDTH; x++)
+        {
+            if (y == STEAM_WSG_HEIGHT - 1)
+            {
+                ccmgbt->wsg.steam.px[y * STEAM_WSG_WIDTH + x] = cTransparent;
+            }
+            else
+            {
+                ccmgbt->wsg.steam.px[y * STEAM_WSG_WIDTH + x] = ccmgbt->wsg.steam.px[(y + 1) * STEAM_WSG_WIDTH + x];
+            }
+        }
     }
 
     switch (state)

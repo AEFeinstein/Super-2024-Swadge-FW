@@ -21,34 +21,34 @@ bool initSudokuGame(sudokuGrid_t* game, int size, int base, sudokuMode_t mode)
     // Allocate all the things
     int totalSquares = size * size;
 
-    uint8_t* grid = heap_caps_calloc(totalSquares, sizeof(uint8_t), MALLOC_CAP_8BIT);
+    uint8_t* grid = calloc(totalSquares, sizeof(uint8_t));
 
     if (!grid)
     {
         return false;
     }
 
-    sudokuFlag_t* flags = heap_caps_calloc(totalSquares, sizeof(sudokuFlag_t), MALLOC_CAP_8BIT);
+    sudokuFlag_t* flags = calloc(totalSquares, sizeof(sudokuFlag_t));
     if (!flags)
     {
-        heap_caps_free(grid);
+        free(grid);
         return false;
     }
 
-    uint16_t* notes = heap_caps_calloc(totalSquares, sizeof(uint16_t), MALLOC_CAP_8BIT);
+    uint16_t* notes = calloc(totalSquares, sizeof(uint16_t));
     if (!notes)
     {
-        heap_caps_free(flags);
-        heap_caps_free(grid);
+        free(flags);
+        free(grid);
         return false;
     }
 
-    uint8_t* boxMap = heap_caps_calloc(totalSquares, sizeof(uint8_t), MALLOC_CAP_8BIT);
+    uint8_t* boxMap = calloc(totalSquares, sizeof(uint8_t));
     if (!boxMap)
     {
-        heap_caps_free(notes);
-        heap_caps_free(flags);
-        heap_caps_free(grid);
+        free(notes);
+        free(flags);
+        free(grid);
         return false;
     }
 
@@ -68,25 +68,25 @@ void deinitSudokuGame(sudokuGrid_t* game)
 {
     if (game->boxMap != NULL)
     {
-        heap_caps_free(game->boxMap);
+        free(game->boxMap);
         game->boxMap = NULL;
     }
 
     if (game->flags != NULL)
     {
-        heap_caps_free(game->flags);
+        free(game->flags);
         game->flags = NULL;
     }
 
     if (game->notes != NULL)
     {
-        heap_caps_free(game->notes);
+        free(game->notes);
         game->notes = NULL;
     }
 
     if (game->grid != NULL)
     {
-        heap_caps_free(game->grid);
+        free(game->grid);
         game->grid = NULL;
     }
 
@@ -111,34 +111,34 @@ bool setupSudokuGame(sudokuGrid_t* game, sudokuMode_t mode, int base, int size)
             // Allocate all the things
             int totalSquares = size * size;
 
-            uint8_t* grid = heap_caps_calloc(totalSquares, sizeof(uint8_t), MALLOC_CAP_8BIT);
+            uint8_t* grid = calloc(totalSquares, sizeof(uint8_t));
 
             if (!grid)
             {
                 return false;
             }
 
-            sudokuFlag_t* flags = heap_caps_calloc(totalSquares, sizeof(sudokuFlag_t), MALLOC_CAP_8BIT);
+            sudokuFlag_t* flags = calloc(totalSquares, sizeof(sudokuFlag_t));
             if (!flags)
             {
-                heap_caps_free(grid);
+                free(grid);
                 return false;
             }
 
-            uint16_t* notes = heap_caps_calloc(totalSquares, sizeof(uint16_t), MALLOC_CAP_8BIT);
+            uint16_t* notes = calloc(totalSquares, sizeof(uint16_t));
             if (!notes)
             {
-                heap_caps_free(flags);
-                heap_caps_free(grid);
+                free(flags);
+                free(grid);
                 return false;
             }
 
-            uint8_t* boxMap = heap_caps_calloc(totalSquares, sizeof(uint8_t), MALLOC_CAP_8BIT);
+            uint8_t* boxMap = calloc(totalSquares, sizeof(uint8_t));
             if (!boxMap)
             {
-                heap_caps_free(notes);
-                heap_caps_free(flags);
-                heap_caps_free(grid);
+                free(notes);
+                free(flags);
+                free(grid);
                 return false;
             }
 
@@ -414,14 +414,14 @@ void setupSudokuPlayer(sudokuPlayer_t* player, const sudokuGrid_t* game)
 {
     if (player->notes != NULL)
     {
-        heap_caps_free(player->notes);
+        free(player->notes);
         player->notes = NULL;
     }
 
     // TODO: Have an init/deinit function for overlays
     if (player->overlay.gridOpts != NULL)
     {
-        heap_caps_free(player->overlay.gridOpts);
+        free(player->overlay.gridOpts);
         player->overlay.gridOpts = NULL;
     }
 
@@ -430,13 +430,13 @@ void setupSudokuPlayer(sudokuPlayer_t* player, const sudokuGrid_t* game)
     sudokuOverlayShape_t* shape = NULL;
     while (NULL != (shape = pop(&player->overlay.shapes)))
     {
-        heap_caps_free(shape);
+        free(shape);
     }
 
-    player->notes            = heap_caps_calloc(game->size * game->size, sizeof(uint16_t), MALLOC_CAP_8BIT);
-    player->overlay.gridOpts = heap_caps_calloc(game->size * game->size, sizeof(sudokuOverlayOpt_t), MALLOC_CAP_8BIT);
+    player->notes            = calloc(game->size * game->size, sizeof(uint16_t));
+    player->overlay.gridOpts = calloc(game->size * game->size, sizeof(sudokuOverlayOpt_t));
 
-    player->cursorShape = heap_caps_calloc(1, sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+    player->cursorShape = calloc(1, sizeof(sudokuOverlayShape_t));
 
     if (player->cursorShape)
     {
@@ -659,7 +659,7 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
         if (shape->tag == ST_ANNOTATE)
         {
             removeEntry(&overlay->shapes, node);
-            heap_caps_free(shape);
+            free(shape);
         }
     }
 

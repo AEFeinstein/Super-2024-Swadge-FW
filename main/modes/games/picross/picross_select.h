@@ -20,8 +20,8 @@ typedef struct
     font_t smallFont;
     picrossLevelDef_t* chosenLevel;
     uint8_t gridScale;
-    int32_t hoverLevelIndex; // int32_t because nvs
-    int32_t topVisibleRow;   // int32_t because nvs
+    int8_t hoverLevelIndex;
+    uint8_t topVisibleRow;
     int8_t hoverX;
     int8_t hoverY;
     uint8_t rows;
@@ -33,8 +33,6 @@ typedef struct
     uint8_t paddingLeft;
     uint8_t gap;
     int32_t currentIndex; // s32bit because its stored i an nvs
-    int8_t levelActionIndex;
-    bool decidingLevelAction;
     wsg_t unknownPuzzle;
     bool allLevelsComplete;
     picrossLevelDef_t levels[PICROSS_LEVEL_COUNT];

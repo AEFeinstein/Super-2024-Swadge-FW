@@ -16,10 +16,10 @@ void danceRise(uint32_t tElapsedUs, uint32_t arg, bool reset);
 void danceRise(uint32_t tElapsedUs, uint32_t arg, bool reset)
 {
     #define RISE_LEVELS 3
-    static const int8_t ledsPerLevel[RISE_LEVELS][2] = {
-        {4, 1},
-        {3, 2},
-        {5, 0},
+    static const int8_t ledsPerLevel[RISE_LEVELS][4] = {
+        {5, 6, 7, 8},
+        {0, 4, -1, -1},
+        {1, 2, 3, -1},
     };
 
     static int16_t levels[RISE_LEVELS] = {0, -256, -512};

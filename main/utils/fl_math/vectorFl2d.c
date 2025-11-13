@@ -1,6 +1,5 @@
 #include <math.h>
 #include "vectorFl2d.h"
-#include "quaternions.h"
 
 /**
  * @brief Add two vectors and return the resulting vector
@@ -118,31 +117,36 @@ float sqMagVecFl2d(vecFl_t vector)
  */
 float magVecFl2d(vecFl_t vector)
 {
-    return 1 / rsqrtf((vector.x * vector.x) + (vector.y * vector.y));
+    return sqrtf((vector.x * vector.x) + (vector.y * vector.y));
 }
 
 /**
  * @brief Normalize and return a vector
  *
- * @param vector The input vector
+ * @param in The input vector
  * @return The normalized vector
  */
-vecFl_t normVecFl2d(vecFl_t vector)
+vecFl_t normVecFl2d(vecFl_t in)
 {
-    return mulVecFl2d(vector, rsqrtf((vector.x * vector.x) + (vector.y * vector.y)));
+    float len    = sqrt(sqMagVecFl2d(in));
+    vecFl_t norm = {
+        .x = in.x / len,
+        .y = in.y / len,
+    };
+    return norm;
 }
 
 /**
  * @brief Return a vector perpendicular to the input
  *
- * @param vector The input vector
+ * @param in The input vector
  * @return The perpendicular vector
  */
-vecFl_t perpendicularVecFl2d(vecFl_t vector)
+vecFl_t perpendicularVecFl2d(vecFl_t in)
 {
     vecFl_t perp = {
-        .x = -vector.y,
-        .y = vector.x,
+        .x = -in.y,
+        .y = in.x,
     };
     return perp;
 }

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<template>
- <tileset firstgid="1" source="../mg-entity-tileset.tsx"/>
- <object name="Warp Entrance (Wall)" type="MegaPulseEntity_WarpEntrance" gid="148" width="16" height="64">
-  <properties>
-   <property name="type" type="int" propertytype="Swadge Land Entity Index" value="37"/>
-  </properties>
- </object>
-</template>

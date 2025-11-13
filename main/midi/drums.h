@@ -27,7 +27,7 @@ int8_t defaultDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint3
  */
 int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_t scratch[4], void* data);
 
-const char* getDrumName(percussionNote_t n);
+int8_t mmxDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_t scratch[4], void* data);
 
 #ifdef BAKE_DRUMS
 void bakeDrums(void);

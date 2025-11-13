@@ -34,7 +34,6 @@ typedef struct
 } touchSpinState_t;
 
 void getTouchCartesian(int32_t angle, int32_t radius, int32_t* x, int32_t* y);
-void getTouchCartesianSquircle(int32_t angle, int32_t radius, int32_t* x, int32_t* y);
 touchJoystick_t getTouchJoystickZones(int32_t angle, int32_t radius, bool useCenter, bool useDiagonals);
 void getTouchSpins(touchSpinState_t* state, int32_t angle, int32_t radius);
 

@@ -99,7 +99,6 @@ void addBefore(list_t* list, void* val, node_t* entry);
 void addAfter(list_t* list, void* val, node_t* entry);
 void* removeIdx(list_t* list, uint16_t index);
 void* removeEntry(list_t* list, node_t* entry);
-void* removeVal(list_t* list, void* val);
 void clear(list_t* list);
 node_t* getNextWraparound(list_t* list, node_t* node);
 

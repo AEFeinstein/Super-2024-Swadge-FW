@@ -17,7 +17,7 @@ void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset);
 void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset)
 {
     static const int8_t ledOrder[][2] = {
-        {4, -1}, {5, -1}, {3, -1}, {2, -1}, {0, -1}, {1, -1},
+        {3, 5}, {4, -1}, {6, -1}, {2, -1}, {7, -1}, {0, -1}, {1, 8},
     };
 
     static int32_t sweepTimer                      = 0;
@@ -41,8 +41,8 @@ void danceSweep(uint32_t tElapsedUs, uint32_t arg, bool reset)
 
     RUN_TIMER_EVERY(sweepTimer, DEFAULT_FRAME_RATE_US, tElapsedUs, {
         // Run an exciter to lead the strip
-        int8_t stripIdx = stripExciter / 12;
-        if (stripExciter % 12 == 0 && stripIdx < ARRAY_SIZE(ledOrder))
+        int8_t stripIdx = stripExciter / 8;
+        if (stripExciter % 8 == 0 && stripIdx < ARRAY_SIZE(ledOrder))
         {
             stripVals[stripIdx] = 0xFF;
         }

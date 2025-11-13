@@ -73,7 +73,9 @@
 // The total number of pooled voices
 #define POOL_VOICE_COUNT 24
 // The number of voices reserved for percussion
-#define PERCUSSION_VOICES 16
+#define PERCUSSION_VOICES 8
+// The number of oscillators each voice gets. Maybe we'll need more than one for like, chorus?
+#define OSC_PER_VOICE 1
 // The number of global MIDI players
 #define NUM_GLOBAL_PLAYERS 2
 // The index of the system-wide MIDI player for sound effects
@@ -87,7 +89,7 @@
 #define MIDI_FALSE        0x00
 #define MIDI_TO_BOOL(val) (val > 63)
 #define BOOL_TO_MIDI(val) (val ? MIDI_TRUE : MIDI_FALSE)
-#define MIDI_DEF_HEADROOM 0x4000
+#define MIDI_DEF_HEADROOM 0x2666
 #define PITCH_BEND_CENTER 0x2000
 
 /// @brief Convert the sample count to MIDI ticks
@@ -138,8 +140,6 @@ typedef enum
     SAMPLE,
     NOISE,
     WAVE_SHAPE,
-    MULTI_SAMPLE,
-    PLAY_FUNC,
 } timbreType_t;
 
 /**
@@ -154,36 +154,6 @@ typedef enum
     /// @brief This timbre represents a monophonic instrument
     TF_MONO = 2,
 } timbreFlags_t;
-
-/**
- * @brief Enum which defines the method used to retrieve a sample from each voice
- */
-typedef enum
-{
-    VOICE_WAVE_FUNC,
-    VOICE_PLAY_FUNC,
-    VOICE_SAMPLE,
-} voiceType_t;
-
-/**
- * @brief Enum representing specific ADSR states
- *
- */
-typedef enum
-{
-    /// @brief On, in which the note is on but doesn't have any specific ADSR states set (what?)
-    ADSR_ON = 0,
-    /// @brief Attack, in which the volume rises from 0 to the max volume linearly
-    ADSR_ATTACK = 1,
-    /// @brief Decay, in which the volume falls from the max volume to the sustain volume linearly
-    ADSR_DECAY = 2,
-    /// @brief Sustain, in which the volume remains at the sustain volume
-    ADSR_SUSTAIN = 3,
-    /// @brief Release, in which the volume falls from the sustain volume to 0 quadratically
-    ADSR_RELEASE = 4,
-    /// @brief Off, in which the note has finished playing completely
-    ADSR_OFF = 5,
-} adsrState_t;
 
 /**
  * @brief Defines the MIDI note numbers mapped to by the General MIDI percussion note names
@@ -461,42 +431,6 @@ typedef void (*midiTextCallback_t)(metaEventType_t type, const char* text, uint3
 typedef bool (*midiStreamingCallback_t)(midiEvent_t* event);
 
 /**
- * @brief Struct that holds information about a sample that can be played
- *
- */
-typedef struct
-{
-    /// @brief The file index containing the sample data
-    cnfsFileIdx_t fIdx;
-
-    /// @brief The sample rate.
-    uint32_t rate;
-
-    /// @brief The base frequency, at which the sample plays at normal speed
-    uq8_24 baseNote;
-
-    /// @brief Fine tuning of the note, +/- 100 cents
-    int8_t tune;
-
-    /// @brief 0 to loop forever, or the number of loops to play
-    uint32_t loop;
-
-    /// @brief The start of the loop portion of the sample
-    uint32_t loopStart;
-
-    /// @brief The end of the loop portion of the sample
-    uint32_t loopEnd;
-} timbreSample_t;
-
-typedef struct
-{
-    uint8_t noteStart;
-    uint8_t noteEnd;
-    timbreSample_t sample;
-    envelope_t envelope;
-} noteSampleMap_t;
-
-/**
  * @brief Defines the sound characteristics of a particular instrument.
  */
 typedef struct
@@ -518,23 +452,54 @@ typedef struct
             waveFunc_t waveFunc;
         };
 
-        timbreSample_t sample;
-
         struct
         {
-            /// @brief A map of different samples to use
-            const noteSampleMap_t* map;
-            /// @brief The length of the sample map
-            size_t count;
-        } multiSample;
+            /// @brief The frequency of the base sample to be used when pitch shifting
+
+            // This should just always be C4? (440 << 8)
+            // uint32_t freq = (440 << 8);
+
+            union
+            {
+                struct
+                {
+                    /// @brief A pointer to this timbre's sample data
+                    const uint8_t* data;
+
+                    /// @brief The length of the sample in bytes
+                    uint32_t count;
+                };
+
+                struct
+                {
+                    /// @brief The name of the sample to load into data
+                    cnfsFileIdx_t fIdx;
+                } config;
+            };
+
+            /// @brief The sample rate.
+            uint32_t rate;
+
+            /// @brief The base frequency, at which the sample plays at normal speed
+            uq8_24 baseNote;
+
+            /// @brief 0 to loop forever, or the number of loops to play
+            uint32_t loop;
+
+            /// @brief The start of the loop portion of the sample
+            uint32_t loopStart;
+
+            /// @brief The end of the loop portion of the sample
+            uint32_t loopEnd;
+        } sample;
 
         struct
         {
             /// @brief A callback to call for drum data
-            percussionFunc_t func;
+            percussionFunc_t playFunc;
             /// @brief User data to pass to the drumkit
             void* data;
-        } playFunc;
+        } percussion;
 
         /// @brief The shape of this wave, when type is RAW_WAVE
         oscillatorShape_t shape;
@@ -557,26 +522,20 @@ typedef struct
  */
 typedef struct
 {
-    /// @brief The current volume as a fixed-point value.
-    uq8_24 curVol;
+    /// @brief The number of samples remaining before transitioning to the next state
+    uint32_t transitionTicks;
 
-    /// @brief Rate-of-change of the volume per tick, can be positive or negative
-    q8_24 volRate;
+    /// @brief The number of samples remaining before the next volume adjustment
+    uint32_t transitionTicksTotal;
 
-    /// @brief Acceleration of the volume per tick, which will be added to the rate
-    q8_24 volAccel;
+    /// @brief The volume at the start of the transition time
+    uint8_t transitionStartVol;
 
-    /// @brief The monotonic tick counter for this voice since starting
-    uint32_t voiceTick;
+    /// @brief The target volume of this tick
+    uint8_t targetVol;
 
-    /// @brief The non-monotonic tick counter for playback of sampled timbres
+    /// @brief The monotonic tick counter for playback of sampled timbres
     uint32_t sampleTick;
-
-    /// @brief The next tick at which state will change
-    uint32_t stateChangeTick;
-
-    /// @brief The ultimate pitch of this voice after pitch bending, etc.
-    uq16_16 pitch;
 
     /// @brief The MIDI note number for the sound being played
     uint8_t note;
@@ -584,61 +543,31 @@ typedef struct
     /// @brief The MIDI note velocity of the playing note
     uint8_t velocity;
 
-    /// @brief The index of the MIDI channel that owns the currently playing note.
-    /// If 255 or any other value >= 16, this was not played via MIDI
+    /// @brief The index of the MIDI channel that owns the currently playing note
     uint8_t channel;
 
-    /// @brief The method for obtaining the next audio sample
-    voiceType_t type;
+    /// @brief The synthesizer oscillators used to generate the sounds
+    synthOscillator_t oscillators[OSC_PER_VOICE];
 
+    // TODO union this with the oscillators? They shouldn't both be used
+    // But we need to make sure those oscillators don't get summed
     union
     {
+        /// @brief An array of scratch data for percussion functions to use
+        uint32_t percScratch[4];
+
         struct
         {
-            /// @brief The raw sample data
-            const uint8_t* data;
-            /// @brief The number of samples in the data
-            uint32_t length;
-
-            /// @brief The number of samples per second of raw sample data
-            uint32_t rate;
-
-            /// @brief The sample number to return to after reaching the loop end
-            uint32_t loopStart;
-            /// @brief The sample number after which to return to the loop start
-            uint32_t loopEnd;
-
-            /// @brief The sample's base frequency
-            uq16_16 baseNote;
-
-            /// @brief The sample's fine tuning
-            int8_t tune;
-
             /// @brief The number of fractional samples remaining
-            uq24_8 error;
+            uint32_t sampleError;
 
-            /// @brief The number of loops remaining before the voice will transition to the released state
-            uint32_t loopsRemaining;
-
-            /// @brief The pre-calculated samples-per-second
-            uq24_8 sampleRateRatio;
-        } sample;
-
-        struct
-        {
-            waveFunc_t func;
-            synthOscillator_t oscillator;
-        } wave;
-
-        struct
-        {
-            percussionFunc_t func;
-            uint32_t scratch[4];
-        } playFunc;
+            /// @brief The number of loops remaining
+            uint32_t sampleLoops;
+        };
     };
 
-    /// @brief The envelope defined for this voice
-    envelope_t envelope;
+    /// @brief A pointer to the timbre of this voice, which defines its musical characteristics
+    const midiTimbre_t* timbre;
 } midiVoice_t;
 
 /**
@@ -741,6 +670,12 @@ typedef struct
 
     /// @brief The global voice pool state bitmaps
     voiceStates_t poolVoiceStates;
+
+    /// @brief An array holding a pointer to every oscillator
+    synthOscillator_t* allOscillators[(POOL_VOICE_COUNT + PERCUSSION_VOICES) * OSC_PER_VOICE];
+
+    /// @brief The total number of oscillators in the \c allOscillators array
+    uint16_t oscillatorCount;
 
     /// @brief Whether this player is playing a song or a MIDI stream
     midiPlayerMode_t mode;

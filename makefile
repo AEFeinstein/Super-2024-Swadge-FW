@@ -53,16 +53,9 @@ endif
 # Source Files
 ################################################################################
 
-ASSETS_IN = ./assets
-ASSETS_OUT = ./assets_image
-ASSET_FILES = $(shell $(FIND) $(ASSETS_IN) -type f)
+ASSET_FILES = $(shell $(FIND) assets -type f)
 CNFS_FILE   = main/utils/cnfs_image.c
 CNFS_FILE_H = main/utils/cnfs_image.h
-ASSETS_TIMESTAMP_FILE = ./.assets_ts
-ASSETS_CONF_FILE = ./assets.conf
-
-ASSETS_PROJ_FOLDER = ./tools/assets_preprocessor
-ASSETS_PREPROCESSOR = $(ASSETS_PROJ_FOLDER)/assets_preprocessor
 
 # This is a list of directories to scan for c files recursively
 SRC_DIRS_RECURSIVE = emulator/src main
@@ -224,7 +217,7 @@ DEFINES_LIST = \
 	CONFIG_GC9307_240x280=y \
 	CONFIG_TFT_MAX_BRIGHTNESS=200 \
 	CONFIG_TFT_MIN_BRIGHTNESS=10 \
-	CONFIG_NUM_LEDS=6 \
+	CONFIG_NUM_LEDS=9 \
 	configENABLE_FREERTOS_DEBUG_OCDAWARE=1 \
 	_GNU_SOURCE \
 	IDF_VER="v5.2.5" \
@@ -235,13 +228,9 @@ DEFINES_LIST = \
 	CONFIG_FACTORY_TEST_NORMAL=y \
 	SOC_TOUCH_PAD_THRESHOLD_MAX=0x1FFFFF
 
-# If this is not WSL
+# If this is not WSL, use OpenGL for rawdraw
 ifeq ($(IS_WSL),0)
-# And this is not MacOS
-ifneq ($(HOST_OS),Darwin)
-# Use OpenGL for rawdraw
-DEFINES_LIST += CNFGOGL
-endif
+	DEFINES_LIST += CNFGOGL
 endif
 
 # Extra defines
@@ -368,20 +357,20 @@ $(ARGS_C_FLAGS):makefile
 preprocess-assets: clean-assets assets
 
 # Asset processing prereqs
-$(ASSETS_PREPROCESSOR):
-	$(MAKE) -C $(ASSETS_PROJ_FOLDER)
+./tools/assets_preprocessor/assets_preprocessor:
+	$(MAKE) -C ./tools/assets_preprocessor
 
 ./tools/cnfs/cnfs_gen:
 	$(MAKE) -C ./tools/cnfs
 
 # The "assets" target is dependent on all the asset files
-assets $(ASSETS_TIMESTAMP_FILE) &: $(ASSETS_CONF_FILE) $(ASSET_FILES)
-	$(MAKE) -C $(ASSETS_PROJ_FOLDER)
-	$(ASSETS_PREPROCESSOR) -c $(ASSETS_CONF_FILE) -i $(ASSETS_IN)/ -o $(ASSETS_OUT)/ -t $(ASSETS_TIMESTAMP_FILE)
+assets ./.assets_ts &: ./assets.conf $(ASSET_FILES)
+	$(MAKE) -C ./tools/assets_preprocessor/
+	./tools/assets_preprocessor/assets_preprocessor -c ./assets.conf -i ./assets/ -o ./assets_image/ -t ./.assets_ts
 
 # To create CNFS_FILE, first the assets must be processed
-$(CNFS_FILE) $(CNFS_FILE_H) &: $(ASSETS_TIMESTAMP_FILE) | ./tools/cnfs/cnfs_gen assets
-	./tools/cnfs/cnfs_gen $(ASSETS_OUT)/ $(CNFS_FILE) $(CNFS_FILE_H)
+$(CNFS_FILE) $(CNFS_FILE_H) &: ./.assets_ts | ./tools/cnfs/cnfs_gen assets
+	./tools/cnfs/cnfs_gen assets_image/ $(CNFS_FILE) $(CNFS_FILE_H)
 
 # To build the main file, you have to compile the objects
 $(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
@@ -447,10 +436,10 @@ clean-docs:
 
 # Clean assets
 clean-assets:
-	$(MAKE) -C $(ASSETS_PROJ_FOLDER) clean
+	$(MAKE) -C ./tools/assets_preprocessor/ clean
 	$(MAKE) -C ./tools/cnfs clean
 	-@rm -rf $(CNFS_FILE) $(CNFS_FILE_H)
-	-@rm -rf $(ASSETS_OUT)/* $(ASSETS_TIMESTAMP_FILE)
+	-@rm -rf ./assets_image/*
 
 # Clean git. Be careful, since this will wipe uncommitted changes
 clean-git:
@@ -506,10 +495,10 @@ update-dependencies:
 
 # Target to flash over USB. 
 ifeq ($(HOST_OS),Windows)
-usbflash : assets $(CNFS_FILE) firmware
+usbflash :
 	tools/reflash_and_monitor.bat
 else
-usbflash : assets $(CNFS_FILE) firmware
+usbflash :
 	# In case we are already in the bootloader...
 	($(MAKE) -C tools/bootload_reboot_stub reboot)||(true)
 	# Command reboot out of game into bootloader.

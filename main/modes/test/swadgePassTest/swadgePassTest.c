@@ -24,14 +24,13 @@ typedef struct
 static void swadgePassTestMainLoop(int64_t elapsedUs);
 static void swadgePassTestEnterMode(void);
 static void swadgePassTestExitMode(void);
-bool swadgePassTestMenuCb(const char* label, bool selected, uint32_t value);
+void swadgePassTestMenuCb(const char* label, bool selected, uint32_t value);
 
 //==============================================================================
 // Strings
 //==============================================================================
 
 static const char swadgePassTestName[] = "SwadgePass Test";
-static const char noSwadgePass[]       = "No SwadgePass RX";
 
 //==============================================================================
 // Variables
@@ -76,20 +75,13 @@ static void swadgePassTestEnterMode(void)
     // Initialize menu
     spt->menu = initMenu(swadgePassTestName, swadgePassTestMenuCb);
 
-    if (0 == spt->swadgePasses.length)
+    // Add all keys to the menu
+    node_t* passNode = spt->swadgePasses.first;
+    while (passNode)
     {
-        addSingleItemToMenu(spt->menu, noSwadgePass);
-    }
-    else
-    {
-        // Add all keys to the menu
-        node_t* passNode = spt->swadgePasses.first;
-        while (passNode)
-        {
-            swadgePassData_t* spd = (swadgePassData_t*)passNode->val;
-            addSingleItemToMenu(spt->menu, spd->key);
-            passNode = passNode->next;
-        }
+        swadgePassData_t* spd = (swadgePassData_t*)passNode->val;
+        addSingleItemToMenu(spt->menu, spd->key);
+        passNode = passNode->next;
     }
 
     // Initialize renderer
@@ -190,9 +182,8 @@ static void swadgePassTestMainLoop(int64_t elapsedUs)
  * @param label A pointer to the label which was selected or scrolled to
  * @param selected true if the item was selected with the A button, false if it was scrolled to
  * @param value If a settings item was selected or scrolled, this is the new value for the setting
- * @return true to go up a menu level, false to remain here
  */
-bool swadgePassTestMenuCb(const char* label, bool selected, uint32_t value)
+void swadgePassTestMenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
@@ -205,7 +196,7 @@ bool swadgePassTestMenuCb(const char* label, bool selected, uint32_t value)
             if (!strcmp(label, spd->key))
             {
                 spt->currSpd = spd;
-                return false;
+                return;
             }
             else
             {
@@ -214,5 +205,4 @@ bool swadgePassTestMenuCb(const char* label, bool selected, uint32_t value)
             }
         }
     }
-    return false;
 }

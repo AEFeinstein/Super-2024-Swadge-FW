@@ -15,9 +15,6 @@ void danceSmoothRainbow(uint32_t tElapsedUs, uint32_t arg, bool reset);
  */
 void danceSmoothRainbow(uint32_t tElapsedUs, uint32_t arg, bool reset)
 {
-    // Map comet index to LED index
-    const int8_t ledMap[CONFIG_NUM_LEDS] = {0, 2, 1, 4, 3, 5};
-
     static uint32_t tAccumulated = 0;
     static uint8_t ledCount      = 0;
 
@@ -46,9 +43,9 @@ void danceSmoothRainbow(uint32_t tElapsedUs, uint32_t arg, bool reset)
             int16_t angle  = ((((i * 256) / CONFIG_NUM_LEDS)) + ledCount) % 256;
             uint32_t color = EHSVtoHEXhelper(angle, 0xFF, 0xFF, false);
 
-            leds[ledMap[i]].r = (color >> 0) & 0xFF;
-            leds[ledMap[i]].g = (color >> 8) & 0xFF;
-            leds[ledMap[i]].b = (color >> 16) & 0xFF;
+            leds[i].r = (color >> 0) & 0xFF;
+            leds[i].g = (color >> 8) & 0xFF;
+            leds[i].b = (color >> 16) & 0xFF;
         }
     }
     // Output the LED data, actually turning them on

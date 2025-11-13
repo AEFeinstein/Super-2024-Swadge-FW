@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<template>
- <tileset firstgid="1" source="../mg-entity-tileset.tsx"/>
- <object name="Spiky McGee" type="SwadgeLandEntity" gid="150" width="24" height="24">
-  <properties>
-   <property name="type" type="int" propertytype="Swadge Land Entity Index" value="46"/>
-  </properties>
- </object>
-</template>

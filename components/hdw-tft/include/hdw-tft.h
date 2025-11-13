@@ -174,34 +174,11 @@ void drawDisplayTft(fnBackgroundDrawCallback_t cb);
             : "a4");
 #else
     /// @brief Do nothing if this isn't an __XTENSA__ platform
-    #define SETUP_FOR_TURBO() bool turboSetup = true
+    #define SETUP_FOR_TURBO()
     /// @brief Passthrough call to setPxTft() if this isn't an __XTENSA__ platform
-    #define TURBO_SET_PIXEL(opxc, opy, colorVal)                               \
-        do                                                                     \
-        {                                                                      \
-            if (!turboSetup)                                                   \
-            {                                                                  \
-                fprintf(stderr, "SETUP_FOR_TURBO() not called\n");             \
-                exit(1);                                                       \
-            }                                                                  \
-            if (opxc < 0 || opxc >= TFT_WIDTH || opy < 0 || opy >= TFT_HEIGHT) \
-            {                                                                  \
-                fprintf(stderr, "PXL OOB (%d, %d)\n", opxc, opy);              \
-                exit(1);                                                       \
-            }                                                                  \
-            setPxTft(opxc, opy, colorVal);                                     \
-        } while (0)
+    #define TURBO_SET_PIXEL(opxc, opy, colorVal)        setPxTft(opxc, opy, colorVal)
     /// @brief Passthrough call to setPxTft() if this isn't an __XTENSA__ platform
-    #define TURBO_SET_PIXEL_BOUNDS(opxc, opy, colorVal)            \
-        do                                                         \
-        {                                                          \
-            if (!turboSetup)                                       \
-            {                                                      \
-                fprintf(stderr, "SETUP_FOR_TURBO() not called\n"); \
-                exit(1);                                           \
-            }                                                      \
-            setPxTft(opxc, opy, colorVal);                         \
-        } while (0)
+    #define TURBO_SET_PIXEL_BOUNDS(opxc, opy, colorVal) setPxTft(opxc, opy, colorVal)
 #endif
 
 #endif

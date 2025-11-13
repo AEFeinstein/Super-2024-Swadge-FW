@@ -22,10 +22,7 @@ static const char str_win[] = "You Are Win!";
 // Function Prototypes
 //
 void levelSelectInput(void);
-void levelActionInput(void);
 void drawLevelSelectScreen(font_t* font);
-void drawLevelActionScreen(font_t* font);
-void drawLevelInfo(font_t* font);
 void drawPicrossLevelWSG(wsg_t* wsg, int16_t xOff, int16_t yOff, bool highlight);
 void drawPicrossPreviewWindow(wsg_t* wsg);
 //====
@@ -35,15 +32,15 @@ void drawPicrossPreviewWindow(wsg_t* wsg);
 // Initiation
 void picrossStartLevelSelect(font_t* bigFont, picrossLevelDef_t levels[])
 {
-    ls            = heap_caps_calloc(1, sizeof(picrossLevelSelect_t), MALLOC_CAP_8BIT);
+    ls            = calloc(1, sizeof(picrossLevelSelect_t));
     ls->game_font = bigFont;
     // ls->smallFont = smallFont;
     loadFont(EARLY_GAMEBOY_FONT, &(ls->smallFont), false);
     loadWsg(UNKNOWN_PUZZLE_WSG, &ls->unknownPuzzle, false);
 
-    size_t size                    = sizeof(picrossVictoryData_t);
-    picrossVictoryData_t* victData = heap_caps_calloc(
-        1, size, MALLOC_CAP_8BIT); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
+    size_t size = sizeof(picrossVictoryData_t);
+    picrossVictoryData_t* victData
+        = calloc(1, size); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
     readNvsBlob(picrossCompletedLevelData, victData, &size);
     ls->currentIndex = -1; // set to impossible index so we don't continue level 0 when we haven't started level 0
     readNvs32(picrossCurrentPuzzleIndexKey, &ls->currentIndex);
@@ -64,26 +61,16 @@ void picrossStartLevelSelect(font_t* bigFont, picrossLevelDef_t levels[])
         ls->levels[i] = levels[i];
     }
 
-    if (ls->allLevelsComplete)
-    {
-        trophyUpdate(&trophyPicrossModeTrophies[0], 1, true);
-    }
-
-    readNvs32(picrossHoverLevelIndexKey, &ls->hoverLevelIndex);
-    ls->cols   = 5;
-    ls->hoverX = ls->hoverLevelIndex % ls->cols;
-    ls->hoverY = ls->hoverLevelIndex / ls->cols;
-    readNvs32(picrossTopVisibleRowKey, &ls->topVisibleRow); // todo: move to hold.
-    while (ls->hoverY - ls->topVisibleRow >= 6)
-    {
-        ls->topVisibleRow++;
-    }
-    ls->hoverY -= ls->topVisibleRow;
-    ls->prevBtnState = PB_SELECT | PB_START | PB_A | PB_B | PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT;
+    ls->hoverX          = 0;
+    ls->hoverY          = 0;
+    ls->hoverLevelIndex = 0;
+    ls->topVisibleRow   = 0; // todo: move to hold.
+    ls->prevBtnState    = PB_SELECT | PB_START | PB_A | PB_B | PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT;
 
     ls->btnState = 0;
 
     // visual settings
+    ls->cols        = 5;
     ls->rows        = 6;
     ls->totalRows   = (PICROSS_LEVEL_COUNT + (ls->cols - 1)) / ls->cols;
     ls->paddingLeft = 10;
@@ -91,43 +78,28 @@ void picrossStartLevelSelect(font_t* bigFont, picrossLevelDef_t levels[])
     ls->gap         = 5;
     ls->gridScale   = 30; // PICROSS_MAX_SIZE * 2
 
-    heap_caps_free(victData);
+    free(victData);
 }
 
 void picrossLevelSelectLoop(int64_t elapsedUs)
 {
     // Draw The Screen
-    if (!ls->decidingLevelAction)
-    {
-        drawLevelSelectScreen(ls->game_font);
-    }
-    else
-    {
-        drawLevelActionScreen(ls->game_font);
-    }
+    drawLevelSelectScreen(ls->game_font);
 
     // Handle Input
     // has to happen last so we can free up on exit.
     // todo: make a (free/exit) bool flag.
-    if (!ls->decidingLevelAction)
-    {
-        levelSelectInput();
-    }
-    else
-    {
-        levelActionInput();
-    }
+    levelSelectInput();
 }
 
 void levelSelectInput()
 {
     // todo: quit with both start+select
 
-    if (ls->btnState & (PB_START | PB_B) && !(ls->prevBtnState & PB_START) && !(ls->prevBtnState & PB_B)
-        && !(ls->btnState & PB_A))
+    if (ls->btnState & (PB_START | PB_B) && !(ls->prevBtnState & PB_START) && !(ls->btnState & PB_A))
     {
         // exit to main menu
-        returnToPicrossMenuFromLevelSelect();
+        returnToPicrossMenu(); // from level select.
         return;
     }
     // Choosing a Level
@@ -135,36 +107,25 @@ void levelSelectInput()
     {
         if (ls->hoverLevelIndex == ls->currentIndex)
         {
-            continueGame(false, -1);
+            continueGame();
             picrossExitLevelSelect();
             return;
         }
         if (ls->hoverLevelIndex < PICROSS_LEVEL_COUNT)
         {
-            if (ls->levels[ls->hoverLevelIndex].completed)
-            {
-                ls->decidingLevelAction = true;
-                ls->levelActionIndex    = 0;
-            }
-            else
-            {
-                ls->chosenLevel = &ls->levels[ls->hoverLevelIndex];
-                writeNvs32(picrossCurrentPuzzleIndexKey,
-                           ls->hoverLevelIndex); // save the selected level before we lose context of the index.
+            ls->chosenLevel = &ls->levels[ls->hoverLevelIndex];
+            writeNvs32(picrossCurrentPuzzleIndexKey,
+                       ls->hoverLevelIndex); // save the selected level before we lose context of the index.
 
-                size_t size                     = sizeof(picrossProgressData_t);
-                picrossProgressData_t* progress = heap_caps_calloc(
-                    1, size,
-                    MALLOC_CAP_8BIT); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
-                readNvsBlob(picrossCompletedLevelData, progress, &size);
+            size_t size = sizeof(picrossProgressData_t);
+            picrossProgressData_t* progress
+                = calloc(1, size); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
+            readNvsBlob(picrossCompletedLevelData, progress, &size);
 
-                selectPicrossLevel(ls->chosenLevel);
-                picrossExitLevelSelect();
-                heap_caps_free(progress);
-                return;
-            }
+            selectPicrossLevel(ls->chosenLevel);
+            picrossExitLevelSelect();
+            free(progress);
         }
-        ls->prevBtnState = ls->btnState;
         return;
     }
 
@@ -262,65 +223,20 @@ void levelSelectInput()
     ls->prevBtnState = ls->btnState;
 }
 
-void levelActionInput()
-{
-    if (ls->btnState & PB_DOWN && !(ls->prevBtnState & PB_DOWN) && ls->levelActionIndex < 2)
-    {
-        ls->levelActionIndex++;
-    }
-    else if (ls->btnState & PB_UP && !(ls->prevBtnState & PB_UP) && ls->levelActionIndex > 0)
-    {
-        ls->levelActionIndex--;
-    }
-    else if (ls->btnState & PB_B && !(ls->prevBtnState & PB_B))
-    {
-        ls->decidingLevelAction = false;
-    }
-    else if (ls->btnState & PB_A && !(ls->prevBtnState & PB_A))
-    {
-        switch (ls->levelActionIndex)
-        {
-            case 0:
-            {
-                continueGame(true, ls->hoverLevelIndex);
-                picrossExitLevelSelect();
-                return;
-                break;
-            }
-            case 1:
-            {
-                size_t size                    = sizeof(picrossVictoryData_t);
-                picrossVictoryData_t* victData = heap_caps_calloc(
-                    1, size,
-                    MALLOC_CAP_8BIT); // zero out. if data doesnt exist, then its been correctly initialized to all 0s.
-                readNvsBlob(picrossCompletedLevelData, victData, &size);
-                victData->victories[ls->hoverLevelIndex] = false;
-                writeNvsBlob(picrossCompletedLevelData, victData, size);
-                heap_caps_free(victData);
-                ls->levels[ls->hoverLevelIndex].completed = false;
-                ls->decidingLevelAction                   = false;
-                break;
-            }
-            case 2:
-            {
-                ls->decidingLevelAction = false;
-                break;
-            }
-            default:
-            {
-                break;
-            }
-        }
-    }
-    ls->prevBtnState = ls->btnState;
-}
-
 void drawLevelSelectScreen(font_t* font)
 {
     clearPxTft();
     uint8_t s = ls->gridScale; // scale
     uint8_t x;
     uint8_t y;
+    char textBuffer[64];
+
+    // todo: Draw Choose Level Text.
+    drawText(font, c555, "Puzzle", 190, 30);
+    drawText(font, c555, "Select", 190, 60);
+    snprintf(textBuffer, sizeof(textBuffer) - 1, "%d/%d", (int)ls->hoverLevelIndex + 1, (int)PICROSS_LEVEL_COUNT);
+    int16_t t = textWidth(&ls->smallFont, textBuffer) / 2;
+    drawText(&ls->smallFont, c555, textBuffer, TFT_WIDTH - 54 - t, 90);
 
     int start = ls->topVisibleRow * ls->cols;
     int end   = ls->cols * ls->rows;
@@ -382,8 +298,15 @@ void drawLevelSelectScreen(font_t* font)
         }
     }
 
-    // common header / preview / size text
-    drawLevelInfo(ls->game_font);
+    if (ls->hoverLevelIndex < PICROSS_LEVEL_COUNT)
+    {
+        // Draw the current level difficulty at the bottom left.
+        //(debug)
+        snprintf(textBuffer, sizeof(textBuffer) - 1, "%" PRIu16 "x%" PRIu16,
+                 (int)ls->levels[ls->hoverLevelIndex].levelWSG.w, (int)ls->levels[ls->hoverLevelIndex].levelWSG.h);
+        t = textWidth(&ls->smallFont, textBuffer) / 2;
+        drawText(&ls->smallFont, c555, textBuffer, TFT_WIDTH - 54 - t, TFT_HEIGHT - 28);
+    }
 
     //
     // draw level choose input
@@ -427,58 +350,6 @@ void drawLevelSelectScreen(font_t* font)
     }
 }
 
-void drawLevelActionScreen(font_t* font)
-{
-    clearPxTft();
-
-    // draw the common header/preview/size text
-    drawLevelInfo(font);
-
-    static const char options[3][14] = {"Appreciate It", "Reset Puzzle", "Back"};
-
-    for (int idx = 0; idx < 3; idx++)
-    {
-        int16_t x = 5;
-        int16_t y = 50 + 50 * idx;
-        drawRectFilled(x, y - 8, 181, y + 28, idx == ls->levelActionIndex ? c115 : c111);
-        drawTextWordWrapCentered(font, idx == ls->levelActionIndex ? c555 : c333, options[idx], &x, &y, 180, y + 40);
-    }
-
-    drawRect(3, 40 + 50 * ls->levelActionIndex, 183, 80 + 50 * ls->levelActionIndex, c445);
-}
-
-void drawLevelInfo(font_t* font)
-{
-    char textBuffer[64];
-    // Header
-    drawText(font, c555, "Puzzle", 190, 30);
-    drawText(font, c555, "Select", 190, 60);
-
-    // index/count at upper-right
-    snprintf(textBuffer, sizeof(textBuffer) - 1, "%d/%d", (int)ls->hoverLevelIndex + 1, (int)PICROSS_LEVEL_COUNT);
-    int16_t t = textWidth(&ls->smallFont, textBuffer) / 2;
-    drawText(&ls->smallFont, c555, textBuffer, TFT_WIDTH - 54 - t, 90);
-
-    // level size at bottom-right (only if valid hover index)
-    if (ls->hoverLevelIndex < PICROSS_LEVEL_COUNT)
-    {
-        snprintf(textBuffer, sizeof(textBuffer) - 1, "%" PRIu16 "x%" PRIu16,
-                 (int)ls->levels[ls->hoverLevelIndex].levelWSG.w, (int)ls->levels[ls->hoverLevelIndex].levelWSG.h);
-        t = textWidth(&ls->smallFont, textBuffer) / 2;
-        drawText(&ls->smallFont, c555, textBuffer, TFT_WIDTH - 54 - t, TFT_HEIGHT - 28);
-
-        // Draw preview window for the hovered level (completed or unknown)
-        if (ls->levels[ls->hoverLevelIndex].completed)
-        {
-            drawPicrossPreviewWindow(&ls->levels[ls->hoverLevelIndex].completedWSG);
-        }
-        else
-        {
-            drawPicrossPreviewWindow(&ls->unknownPuzzle);
-        }
-    }
-}
-
 void picrossLevelSelectButtonCb(buttonEvt_t* evt)
 {
     ls->btnState = evt->state;
@@ -488,15 +359,13 @@ void picrossExitLevelSelect()
 {
     if (NULL != ls)
     {
-        writeNvs32(picrossHoverLevelIndexKey, ls->hoverLevelIndex);
-        writeNvs32(picrossTopVisibleRowKey, ls->topVisibleRow);
         freeWsg(&ls->unknownPuzzle);
         freeFont(&(ls->smallFont));
 
         // freeFont((ls->game_font));
-        // heap_caps_free(&ls->chosenLevel->title);
-        // heap_caps_free(&ls->chosenLevel);
-        heap_caps_free(ls);
+        // free(&ls->chosenLevel->title);
+        // free(&ls->chosenLevel);
+        free(ls);
         ls = NULL;
     }
 }

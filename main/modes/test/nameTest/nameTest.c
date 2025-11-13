@@ -11,13 +11,11 @@ static void ntTestWPrint(void);
 typedef struct
 {
     nameData_t nd;
-    nameData_t sys;
-    bool user;
 } ntData_t;
 
 swadgeMode_t nameTestMode = {
     .modeName          = nameMode,
-    .wifiMode          = ESP_NOW,
+    .wifiMode          = NO_WIFI,
     .overrideUsb       = false,
     .usesAccelerometer = false,
     .usesThermometer   = false,
@@ -33,9 +31,6 @@ static void ntEnterMode(void)
 {
     nt          = heap_caps_calloc(sizeof(ntData_t), 1, MALLOC_CAP_8BIT);
     nt->nd.user = false;
-
-    nameData_t* temp = getSystemUsername();
-    nt->sys          = *temp;
 
     // Run all things for testing purposes
     ntTestWPrint();
@@ -54,31 +49,18 @@ static void ntMainLoop(int64_t elapsedUs)
     {
         if (evt.down && evt.button & PB_B)
         {
-            nt->user = !nt->user;
+            nt->nd.user = !nt->nd.user;
         }
-        if (nt->user)
-        {
-            finished = handleUsernamePickerInput(&evt, &nt->sys);
-        }
-        else
-        {
-            finished = handleUsernamePickerInput(&evt, &nt->nd);
-        }
+        finished = handleUsernamePickerInput(&evt, &nt->nd);
     }
-
-    drawUsernamePicker((nt->user) ? &nt->sys : &nt->nd);
 
     if (finished)
     {
-        if (nt->user)
-        {
-            // Save
-            setSystemUsername(&nt->sys);
-        }
+        // do more code
     }
 
-    // Draw current username
-    drawText(getSysFont(), c555, getSystemUsername()->nameBuffer, 32, 8);
+    // Draw nt->string
+    drawUsernamePicker(&nt->nd);
 }
 
 static void ntTestWPrint()

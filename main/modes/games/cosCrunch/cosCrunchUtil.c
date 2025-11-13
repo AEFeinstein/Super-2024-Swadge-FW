@@ -1,7 +1,6 @@
 #include "cosCrunchUtil.h"
 
 #include "macros.h"
-#include "shapes.h"
 #include "wsg.h"
 #include "wsgPalette.h"
 
@@ -63,13 +62,9 @@ void drawToCanvasTint(wsg_t canvas, wsg_t wsg, int32_t x, int32_t y, int32_t rot
                 if (rotationDeg != 0)
                 {
                     rotatePixel(&tx, &ty, rotationDeg, wsg.w, wsg.h);
-                    if (x + tx < 0 || x + tx > canvas.w - 1 || y + ty < 0 || y + ty > canvas.h - 1)
-                    {
-                        continue;
-                    }
                 }
 
-                canvas.px[x + tx + (y + ty) * canvas.w] = color;
+                canvas.px[x + wsgX + (y + wsgY) * canvas.w] = color;
             }
         }
     }
@@ -83,20 +78,4 @@ void drawToCanvasTile(wsg_t canvas, wsg_t wsg, uint16_t x, uint16_t y)
     {
         memcpy(&canvas.px[(wsgY + y) * canvas.w + x], &wsg.px[wsgY * wsg.w], width * sizeof(paletteColor_t));
     }
-}
-
-void drawMessageBox(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, wsg_t fold)
-{
-    // Rect with corner missing
-    drawRectFilled(x1, y1, x2 - fold.w, y2, c553);
-    drawRectFilled(x2 - fold.w, y1 + fold.h, x2, y2, c553);
-
-    // Corner
-    drawWsgSimple(&fold, x2 - fold.w, y1);
-
-    // Dithered shadows
-    drawLine(x2, y2, x1, y2, c000, 1);
-    drawLine(x2 + 1, y2 + 1, x1 + 1, y2 + 1, c000, 1);
-    drawLine(x2, y2, x2, y1 + fold.h - 1, c000, 1);
-    drawLine(x2 + 1, y2 + 1, x2 + 1, y1 + fold.h, c000, 1);
 }

@@ -6,17 +6,6 @@ controllers, and other features described in this document, it can still
 play any MIDI file, even ones containing unsupported commands. Unsupported
 commands are simply ignored and the rest of the file will play normally.
 
-## Utilities
-
-For editing MIDI files, [signal](https://signal.vercel.app) is a browser-based MIDI editor. It supports uploading custom SoundFont
-files (`.sf2` format). It can also connect to physical MIDI devices such as keyboards, as well as both the physical Swadge and the
-Swadge Emulator when the "MIDI Player" mode is active and in Streaming mode.
-
-While Signal is capable of editing MIDI files, it does not offer a straightforward way to assign instruments in banks other than
-the default General MIDI bank (Bank 0). To make this easier, [midi-assign](https://dylwhich.com/midi-assign/) is another
-browser-based tool made specifically for modifying instrument, bank, and track-to-channel assignments within MIDI files. It
-supports the Swadge instrument banks natively, so there is no need to know their numeric IDs.
-
 ## Basics
 
 The Swadge's 8-bit audio synthesizer supports up to 16 MIDI channels, with channels 10 and 11 reserved for
@@ -68,40 +57,6 @@ By default, this drum kit is available on MIDI Channel 11.
 | C♯4      | 61          | WOAAAGGHHH        |
 | D4       | 72          | Donut "MAG"       |
 | D♯4      | 73          | Donut "Fest"      |
-
-### MMX Instruments (Bank 2) {#MMXPrograms}
-These instruments are based on the MMX SoundFont.
-| Program# | Name             |
-| -------- | ---------------- |
-|       11 | Vibraphone       |
-|       17 | Organ            |
-|       24 | Acoustic Guitar  |
-|       29 | Overdrive Guitar |
-|       30 | Distorted Guitar |
-|       36 | Slap Bas         |
-|       38 | Synth Bass       |
-|       48 | Strings          |
-|       55 | Orchestra Hit    |
-|       62 | Synth Brass      |
-|       80 | Square Wave      |
-|       81 | Saw Wave         |
-|       82 | Synth Lead       |
-|       83 | Synth Lead 2     |
-|      119 | Reverse Cymbal   |
-
-#### MMX Drum Kit
-The MMX drum kit is also available for percussion channels using Bank 2.
-
-| Note       | Note Number | Description  |
-| ---------- | ----------- | ------------ |
-| C1         | 36          | Kick         |
-| C♯1        | 37          | High-Q       |
-| D1 to E1   | 38 to 40    | Snare        |
-| F1         | 41          | Power Snare  |
-| F♯1 to G2  | 42 to 55    | Open Hi-Hat  |
-| G♯2 to C4  | 56 to 72    | Crash Cymbal |
-| C♯4 to C♯5 | 73 to 85    | Synth Tom    |
-| D5 to F♯6  | 86 to 102   | Tom          |
 
 
 ## MIDI Continuous Controllers

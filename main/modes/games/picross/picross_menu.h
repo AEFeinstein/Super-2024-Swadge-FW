@@ -8,10 +8,8 @@ typedef enum
 {
     PO_SHOW_HINTS  = 0,
     PO_SHOW_GUIDES = 1,
-    PO_BG_HEXAGONS = 2,
-    PO_BG_DOTS     = 3,
-    PO_BG_NONE     = 4,
-    PO_MARK_X      = 5,
+    PO_ANIMATE_BG  = 2,
+    PO_MARK_X      = 3,
 } picrossOption_t;
 
 extern swadgeMode_t modePicross;
@@ -20,18 +18,14 @@ extern const char picrossSavedOptionsKey[];
 extern const char picrossCompletedLevelData[];
 extern const char picrossProgressData[];
 extern const char picrossMarksData[];
-extern const char picrossHoverLevelIndexKey[];
-extern const char picrossTopVisibleRowKey[];
-
-extern const trophyData_t trophyPicrossModeTrophies[];
 
 void returnToPicrossMenu(void);
-void returnToPicrossMenuFromLevelSelect(void);
+void returnToPicrossMenuFromGame(void);
 // void returnToLevelSelect(void);
 void selectPicrossLevel(picrossLevelDef_t* selectedLevel);
 void exitTutorial(void);
 void picrossSetSaveFlag(picrossOption_t pos, bool on);
 bool picrossGetSaveFlag(picrossOption_t pos);
 bool picrossGetLoadedSaveFlag(picrossOption_t pos);
-void continueGame(bool solved, int8_t currentIdx);
+void continueGame(void);
 #endif

@@ -41,6 +41,7 @@ static const char* P2P_TAG = "P2P";
 static void p2pConnectionTimeout(void* arg);
 static void p2pTxAllRetriesTimeout(void* arg);
 static void p2pTxRetryTimeout(void* arg);
+static void p2pRestart(p2pInfo* p2p);
 static void p2pRestartTmrCb(void* arg);
 static void p2pStartRestartTimer(void* arg);
 static void p2pProcConnectionEvt(p2pInfo* p2p, connectionEvt_t event);
@@ -793,7 +794,7 @@ static void p2pRestartTmrCb(void* arg)
  *
  * @param p2p The p2pInfo struct with all the state information
  */
-void p2pRestart(p2pInfo* p2p)
+static void p2pRestart(p2pInfo* p2p)
 {
     P2P_LOG("%s", __func__);
 
@@ -802,15 +803,10 @@ void p2pRestart(p2pInfo* p2p)
         p2p->conCbFn(p2p, CON_LOST);
     }
 
-    // Save old values
-    uint8_t modeId            = p2p->modeId;
-    uint8_t incomingModeId    = p2p->incomingModeId;
-    p2pConCbFn oldConCbFn     = p2p->conCbFn;
-    p2pMsgRxCbFn oldMsgRxCbFn = p2p->msgRxCbFn;
-    int8_t oldConnectionRssi  = p2p->connectionRssi;
-
+    uint8_t modeId         = p2p->modeId;
+    uint8_t incomingModeId = p2p->incomingModeId;
     p2pDeinit(p2p);
-    p2pInitialize(p2p, modeId, oldConCbFn, oldMsgRxCbFn, oldConnectionRssi);
+    p2pInitialize(p2p, modeId, p2p->conCbFn, p2p->msgRxCbFn, p2p->connectionRssi);
 
     if (incomingModeId != modeId)
     {
@@ -907,16 +903,4 @@ playOrder_t p2pGetPlayOrder(p2pInfo* p2p)
 void p2pSetPlayOrder(p2pInfo* p2p, playOrder_t order)
 {
     p2p->cnc.playOrder = order;
-}
-
-/**
- * @brief Return if a transmission is idle, or in progress
- *
- * @param p2p The p2pInfo struct with all the state information
- * @return true if a transmission is idle and ready to send a new packet.
- *         false if transmission is in progress or not connected at all.
- */
-bool p2pIsTxIdle(p2pInfo* p2p)
-{
-    return p2p->cnc.isConnected && !p2p->ack.isWaitingForAck;
 }

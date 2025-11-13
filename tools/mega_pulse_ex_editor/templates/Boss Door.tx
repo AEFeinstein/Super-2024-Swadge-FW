@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<template>
- <tileset firstgid="1" source="../mg-entity-tileset.tsx"/>
- <object name="Boss Door" type="SwadgeLandEntity" gid="148" width="16" height="64">
-  <properties>
-   <property name="type" type="int" propertytype="Swadge Land Entity Index" value="54"/>
-  </properties>
- </object>
-</template>

@@ -4,18 +4,10 @@
 
 #include <esp_heap_caps.h>
 #include "menu.h"
-#include "helpPages.h"
 #include "sequencerMode.h"
 #include "sequencerGrid.h"
+#include "sequencerHelp.h"
 #include "mainMenu.h"
-
-//==============================================================================
-// Defines
-//==============================================================================
-
-#define MIN_MIDI_VELOCITY_SETTING 0
-#define MAX_MIDI_VELOCITY_SETTING 16
-#define MAX_MIDI_VELOCITY         0x7F
 
 //==============================================================================
 // Function Declarations
@@ -26,8 +18,8 @@ static void sequencerExitMode(void);
 static void sequencerMainLoop(int64_t elapsedUs);
 static void sequencerBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
-static bool sequencerSongMenuCb(const char*, bool selected, uint32_t settingVal);
-static bool sequencerNoteMenuCb(const char*, bool selected, uint32_t settingVal);
+static void sequencerSongMenuCb(const char*, bool selected, uint32_t settingVal);
+static void sequencerNoteMenuCb(const char*, bool selected, uint32_t settingVal);
 
 static void sequencerSaveSong(const char* fname);
 static void sequencerLoadSong(const char* fname);
@@ -55,8 +47,10 @@ static const char str_cancel[]    = "Cancel";
 static const char str_reset[]     = "Reset This Song";
 
 static const char* const str_songNames[] = {
-    "Song 1", "Song 2",  "Song 3",  "Song 4",  "Song 5",  "Song 6",  "Song 7",  "Song 8",
-    "Song 9", "Song 10", "Song 11", "Song 12", "Song 13", "Song 14", "Song 15", "Song 16",
+    "Song 1",
+    "Song 2",
+    "Song 3",
+    "Song 4",
 };
 
 static const char str_noteOptions[] = "Note Options";
@@ -104,116 +98,6 @@ static const int32_t noteTypeVals[] = {1, 2, 4, 8, 16};
 static const cnfsFileIdx_t noteWsgs[]
     = {SEQ_WHOLE_NOTE_WSG, SEQ_HALF_NOTE_WSG, SEQ_QUARTER_NOTE_WSG, SEQ_EIGHTH_NOTE_WSG, SEQ_SIXTEENTH_NOTE_WSG};
 
-const char str_vel_piano[] = "Piano Vol";
-const char str_vel_brass[] = "Brass Vol";
-const char str_vel_bass[]  = "Bass Vol";
-const char str_vel_sax[]   = "Sax Vol";
-const char str_vel_drum[]  = "Drums Vol";
-const char str_vel_synth[] = "Synth Vol";
-
-static const helpPage_t helpPages[] = {
-    {
-        .title = sequencerName,
-        .text  = "Welcome to the Sequencer. Let's learn how to make some music!",
-    },
-    {
-        .title = sequencerName,
-        .text  = "First off, pressing the Pause button always switches between viewing the menu and the grid.",
-    },
-    {
-        .title = str_file,
-        .text  = "In the menu, there are four \"File\" options which manage song data.",
-    },
-    {
-        .title = str_file,
-        .text  = "\"Save\" will save the currently loaded song.",
-    },
-    {
-        .title = str_file,
-        .text  = "The song is auto saved when exiting the mode with the \"Exit\" option or the Menu button, but NOT if "
-                 "you turn off the Swadge!",
-    },
-    {
-        .title = str_file,
-        .text  = "\"Save As\" will save the song in the slot of your choice. There are four slots.",
-    },
-    {
-        .title = str_file,
-        .text  = "\"Load\" will load a song from a slot with data in it.",
-    },
-    {
-        .title = str_file,
-        .text  = "\"Reset This Song\" will reset the grid to empty. This does not affect saved data.",
-    },
-    {
-        .title = str_songOptions,
-        .text = "In the menu, there are five \"Song Options\" that configure how the grid is shown and how the song is "
-                "played.",
-    },
-    {
-        .title = str_songOptions,
-        .text  = "\"Tempo\" changes how fast the song is played, from slow (60 bpm) to fast (300 bpm).",
-    },
-    {
-        .title = str_songOptions,
-        .text = "\"Grid\" changes what notes the grid is drawn at and where the cursor snaps, from wide (whole notes), "
-                "to narrow (sixteenth notes).",
-    },
-    {
-        .title = str_songOptions,
-        .text  = "\"Signature\" changes how many quarter notes are in a bar, from two (2/4) to seven (7/4).",
-    },
-    {
-        .title = str_songOptions,
-        .text = "\"Loop\" changes if the song starts playing from the beginning again when finished (On) or not (Off).",
-    },
-    {
-        .title = str_songOptions,
-        .text  = "\"End Song Here\" sets the song's ending where the cursor currently is. The song will either stop or "
-                 "loop here.",
-    },
-    {
-        .title = str_grid,
-        .text  = "On the grid you can write and play back a song.",
-    },
-    {
-        .title = str_grid,
-        .text  = "The D-Pad moves the cursor.",
-    },
-    {
-        .title = str_grid,
-        .text  = "The A button adds a note to empty space or removes a note if one is in the cursor.",
-    },
-    {
-        .title = str_grid,
-        .text  = "The B button jumps to the beginning of the song, starts playing, and stops playing.",
-    },
-    {
-        .title = str_grid,
-        .text  = "The touchpad is a wheel menu that adjusts the note settings.",
-    },
-    {
-        .title = str_grid,
-        .text  = "Up on the touchpad changes the instrument being placed.",
-    },
-    {
-        .title = str_grid,
-        .text  = "Down on the touchpad changes the length of the note from sixteenth note to whole note.",
-    },
-    {
-        .title = str_grid,
-        .text  = "The drums don't have hits for every note, so play around and find the good ones.",
-    },
-    {
-        .title = sequencerName,
-        .text  = "Now go make a masterpiece!",
-    },
-};
-
-//==============================================================================
-// Variables
-//==============================================================================
-
 swadgeMode_t sequencerMode = {
     .modeName                 = sequencerName,
     .wifiMode                 = NO_WIFI,
@@ -231,6 +115,10 @@ swadgeMode_t sequencerMode = {
     .fnAdvancedUSB            = NULL,
 };
 
+//==============================================================================
+// Variables
+//==============================================================================
+
 static sequencerVars_t* sv;
 
 //==============================================================================
@@ -246,6 +134,13 @@ static void sequencerEnterMode(void)
     // Allocate memory for the mode
     sv = heap_caps_calloc(1, sizeof(sequencerVars_t), MALLOC_CAP_8BIT);
 
+    // Load fonts
+    loadFont(IBM_VGA_8_FONT, &sv->font_ibm, true);
+    loadFont(RODIN_EB_FONT, &sv->font_rodin, true);
+    makeOutlineFont(&sv->font_rodin, &sv->font_rodin_outline, true);
+    loadFont(RIGHTEOUS_150_FONT, &sv->font_righteous, true);
+    makeOutlineFont(&sv->font_righteous, &sv->font_righteous_outline, true);
+
     // Load WSGs
     for (uint32_t i = 0; i < ARRAY_SIZE(instrumentVals); i++)
     {
@@ -259,14 +154,11 @@ static void sequencerEnterMode(void)
     setDefaultParameters();
 
     // Build out the main menu
+    sv->bgMenu = initMenu(sequencerName, NULL);
     buildMainMenu();
 
     // Color the menu
     recolorMenuMegaRenderer(sv->menuRenderer, c555, c000, c100, c210, c320, c311, c421, c430, c540, c554, NULL, 0);
-
-    // Set up the help screen
-    sv->bgMenu = initMenu(sequencerName, NULL);
-    sv->help   = initHelpScreen(sv->bgMenu, sv->menuRenderer, helpPages, ARRAY_SIZE(helpPages));
 
     // Show the menu by default
     setSequencerScreen(SEQUENCER_MENU);
@@ -314,14 +206,6 @@ static void setDefaultParameters(void)
     // Note defaults
     sv->noteParams.channel = instrumentVals[0];
     sv->noteParams.type    = noteTypeVals[2];
-
-    // Velocity defaults
-    sv->songParams.velBass  = MAX_MIDI_VELOCITY_SETTING;
-    sv->songParams.velBrass = MAX_MIDI_VELOCITY_SETTING;
-    sv->songParams.velDrum  = MAX_MIDI_VELOCITY_SETTING;
-    sv->songParams.velPiano = MAX_MIDI_VELOCITY_SETTING;
-    sv->songParams.velSax   = MAX_MIDI_VELOCITY_SETTING;
-    sv->songParams.velSynth = MAX_MIDI_VELOCITY_SETTING;
 }
 
 /**
@@ -419,18 +303,6 @@ static void buildMainMenu(void)
 
         // Add option to mark the song end
         addSingleItemToMenu(sv->songMenu, str_songEnd);
-
-        // Add options for instrument velocities
-        settingParam_t sp_velocity = {
-            .min = MIN_MIDI_VELOCITY_SETTING,
-            .max = MAX_MIDI_VELOCITY_SETTING,
-        };
-        addSettingsItemToMenu(sv->songMenu, str_vel_piano, &sp_velocity, sv->songParams.velPiano);
-        addSettingsItemToMenu(sv->songMenu, str_vel_brass, &sp_velocity, sv->songParams.velBrass);
-        addSettingsItemToMenu(sv->songMenu, str_vel_sax, &sp_velocity, sv->songParams.velSax);
-        addSettingsItemToMenu(sv->songMenu, str_vel_synth, &sp_velocity, sv->songParams.velSynth);
-        addSettingsItemToMenu(sv->songMenu, str_vel_bass, &sp_velocity, sv->songParams.velBass);
-        addSettingsItemToMenu(sv->songMenu, str_vel_drum, &sp_velocity, sv->songParams.velDrum);
     }
     sv->songMenu = endSubMenu(sv->songMenu);
 
@@ -450,7 +322,7 @@ static void buildWheelMenu(void)
         .width  = TFT_WIDTH - 30,
         .height = 40,
     };
-    sv->wheelRenderer = initWheelMenu(getSysFont(), 90, &textRect);
+    sv->wheelRenderer = initWheelMenu(&sv->font_ibm, 90, &textRect);
 
     wheelMenuSetColor(sv->wheelRenderer, c555);
 
@@ -524,11 +396,13 @@ static void sequencerExitMode(void)
         heap_caps_free(val);
     }
 
+    freeFont(&sv->font_ibm);
+    freeFont(&sv->font_righteous);
+    freeFont(&sv->font_righteous_outline);
+    freeFont(&sv->font_rodin);
+    freeFont(&sv->font_rodin_outline);
     deinitMenuMegaRenderer(sv->menuRenderer);
     deinitMenu(sv->songMenu);
-
-    // Free help screen
-    deinitHelpScreen(sv->help);
     deinitMenu(sv->bgMenu);
 
     deinitWheelMenu(sv->wheelRenderer);
@@ -591,10 +465,7 @@ static void sequencerMainLoop(int64_t elapsedUs)
                 }
                 case SEQUENCER_HELP:
                 {
-                    if (buttonHelp(sv->help, &evt))
-                    {
-                        setSequencerScreen(SEQUENCER_MENU);
-                    }
+                    buttonSequencerHelp(sv, &evt);
                     break;
                 }
             }
@@ -625,7 +496,7 @@ static void sequencerMainLoop(int64_t elapsedUs)
         }
         case SEQUENCER_HELP:
         {
-            drawHelp(sv->help, elapsedUs);
+            drawSequencerHelp(sv, elapsedUs);
             break;
         }
     }
@@ -654,9 +525,8 @@ static void sequencerBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
  * @param label The menu item that was selected or moved to
  * @param selected true if the item was selected, false if it was moved to
  * @param settingVal The value of the setting, if the menu item is a settings item
- * @return true to go up a menu level, false to remain here
  */
-static bool sequencerSongMenuCb(const char* label, bool selected, uint32_t settingVal)
+static void sequencerSongMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     bool returnToGrid = false;
 
@@ -685,36 +555,6 @@ static bool sequencerSongMenuCb(const char* label, bool selected, uint32_t setti
         sv->songParams.loop = settingVal;
         measureSequencerGrid(sv);
         returnToGrid = selected;
-    }
-    else if (str_vel_bass == label)
-    {
-        sv->songParams.velBass = settingVal;
-        returnToGrid           = selected;
-    }
-    else if (str_vel_drum == label)
-    {
-        sv->songParams.velDrum = settingVal;
-        returnToGrid           = selected;
-    }
-    else if (str_vel_brass == label)
-    {
-        sv->songParams.velBrass = settingVal;
-        returnToGrid            = selected;
-    }
-    else if (str_vel_piano == label)
-    {
-        sv->songParams.velPiano = settingVal;
-        returnToGrid            = selected;
-    }
-    else if (str_vel_sax == label)
-    {
-        sv->songParams.velSax = settingVal;
-        returnToGrid          = selected;
-    }
-    else if (str_vel_synth == label)
-    {
-        sv->songParams.velSynth = settingVal;
-        returnToGrid            = selected;
     }
     else if (selected)
     {
@@ -761,7 +601,7 @@ static bool sequencerSongMenuCb(const char* label, bool selected, uint32_t setti
         {
             // Show help
             setSequencerScreen(SEQUENCER_HELP);
-            sv->help->helpIdx = 0;
+            sv->helpIdx = 0;
         }
         else if (str_overwrite == label)
         {
@@ -816,8 +656,6 @@ static bool sequencerSongMenuCb(const char* label, bool selected, uint32_t setti
     {
         setSequencerScreen(SEQUENCER_SEQ);
     }
-
-    return false;
 }
 
 /**
@@ -826,9 +664,8 @@ static bool sequencerSongMenuCb(const char* label, bool selected, uint32_t setti
  * @param label The menu item that was selected or moved to
  * @param selected true if the item was selected, false if it was moved to
  * @param settingVal The value of the setting, if the menu item is a settings item
- * @return true to go up a menu level, false to remain here
  */
-static bool sequencerNoteMenuCb(const char* label, bool selected, uint32_t settingVal)
+static void sequencerNoteMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     if (selected)
     {
@@ -851,7 +688,6 @@ static bool sequencerNoteMenuCb(const char* label, bool selected, uint32_t setti
             }
         }
     }
-    return false;
 }
 
 /**
@@ -870,60 +706,6 @@ paletteColor_t getChannelColor(int32_t channel)
         }
     }
     return instrumentColors[0];
-}
-
-/**
- * @brief Get velocity per-channel. Channel is the value from instrumentVals[]
- *
- * @param channel The channel to get MIDI velocity for
- * @return The MIDI velocity
- */
-uint8_t getChannelVelocity(int32_t channel)
-{
-    // channel are the values in instrumentVals[]
-    int8_t setting = MAX_MIDI_VELOCITY_SETTING;
-    switch (channel)
-    {
-        case 0:
-        {
-            setting = sv->songParams.velPiano;
-            break;
-        }
-        case 1:
-        {
-            setting = sv->songParams.velBrass;
-            break;
-        }
-        case 2:
-        {
-            setting = sv->songParams.velSax;
-            break;
-        }
-        case 3:
-        {
-            setting = sv->songParams.velSynth;
-            break;
-        }
-        case 4:
-        {
-            setting = sv->songParams.velBass;
-            break;
-        }
-        case 9:
-        {
-            setting = sv->songParams.velDrum;
-            break;
-        }
-        default:
-        {
-            setting = MAX_MIDI_VELOCITY_SETTING;
-            break;
-        }
-    }
-
-    // Return the velocity, converted from the setting value
-    return ((setting - MIN_MIDI_VELOCITY_SETTING) * MAX_MIDI_VELOCITY)
-           / (MAX_MIDI_VELOCITY_SETTING - MIN_MIDI_VELOCITY_SETTING);
 }
 
 /**
@@ -1062,14 +844,10 @@ void setSequencerScreen(sequencerScreen_t screen)
         setMegaLedsOn(sv->menuRenderer, false);
         led_t leds[CONFIG_NUM_LEDS] = {0};
         setLeds(leds, CONFIG_NUM_LEDS);
-        // Make body bigger
-        setBodyHeight(sv->menuRenderer, 100);
     }
     else
     {
         // Turn on LEDs for other screens
         setMegaLedsOn(sv->menuRenderer, true);
-        // Return body to default
-        setBodyHeight(sv->menuRenderer, -1);
     }
 }

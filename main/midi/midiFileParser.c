@@ -606,7 +606,6 @@ static bool parseMidiHeader(midiFile_t* file)
     if (file->length < (8 + 6))
     {
         ESP_LOGE("MIDIParser", "Not a MIDI file! Length insufficient for header");
-        return false;
     }
 
     // I mean, offset should be 0

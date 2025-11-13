@@ -5,8 +5,8 @@
 
 static void ccmgThreadInitMicrogame(void);
 static void ccmgThreadDestroyMicrogame(void);
-static void ccmgThreadMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
-                               cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
+static void ccmgThreadMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
+                               buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 
 #define NEEDLE_X 90
 // These values need to line up with the needle image or the player will have a bad time
@@ -27,8 +27,6 @@ static void ccmgThreadMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, floa
 tintColor_t const fingersTintColors[] = {
     // Light
     {c321, c432, c554, c543},
-    // Medium
-    {c210, c321, c554, c432},
     // Dark
     {c100, c210, c543, c432},
 };
@@ -82,8 +80,8 @@ static void ccmgThreadInitMicrogame(void)
 
     loadWsg(CC_THREAD_WSG, &ccmgt->wsg.thread, false);
     loadWsg(CC_FINGERS_WSG, &ccmgt->wsg.fingers, false);
-    loadWsg(CC_BIG_NEEDLE_LEFT_WSG, &ccmgt->wsg.needleLeft, false);
-    loadWsg(CC_BIG_NEEDLE_RIGHT_WSG, &ccmgt->wsg.needleRight, false);
+    loadWsg(CC_NEEDLE_LEFT_WSG, &ccmgt->wsg.needleLeft, false);
+    loadWsg(CC_NEEDLE_RIGHT_WSG, &ccmgt->wsg.needleRight, false);
 
     ccmgt->threadTintColor  = cosCrunchMicrogameGetTintColor();
     ccmgt->fingersTintColor = &fingersTintColors[esp_random() % ARRAY_SIZE(fingersTintColors)];
@@ -99,8 +97,8 @@ static void ccmgThreadDestroyMicrogame(void)
     heap_caps_free(ccmgt);
 }
 
-static void ccmgThreadMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
-                               cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
+static void ccmgThreadMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, cosCrunchMicrogameState state,
+                               buttonEvt_t buttonEvts[], uint8_t buttonEvtCount)
 {
     switch (state)
     {
@@ -175,8 +173,6 @@ static void ccmgThreadMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, floa
                 {
                     ccmgt->threadX = needleCenterX;
                     cosCrunchMicrogameResult(false);
-
-                    midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, MARACAS, 0x7f);
                 }
             }
             break;

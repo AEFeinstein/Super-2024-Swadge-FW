@@ -21,13 +21,6 @@
 
 #if defined(USING_WINDOWS)
     #include <WinSock2.h>
-
-    #ifdef __LP64__
-        #pragma push_macro("u_long")
-        #undef u_long
-        #define u_long __ms_u_long
-    #endif
-
 #elif defined(USING_LINUX) || defined(USING_MAC)
     #include <sys/socket.h> // for socket(), connect(), sendto(), and recvfrom()
     #include <arpa/inet.h>  // for sockaddr_in and inet_addr()
@@ -123,7 +116,7 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
     // socket based on the numerical value of iMode.
     // If iMode = 0, blocking is enabled;
     // If iMode != 0, non-blocking mode is enabled.
-    u_long iMode = 1;
+    unsigned int iMode = 1;
     if (ioctlsocket(socketFd, FIONBIO, &iMode) != 0)
     {
         ESP_LOGE("WIFI", "ioctlsocket() failed");

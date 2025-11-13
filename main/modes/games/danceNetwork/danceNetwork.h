@@ -114,4 +114,3 @@ extern swadgeMode_t danceNetworkMode;
 extern heatshrink_decoder* dn_hsd;
 extern uint8_t* dn_decodeSpace;
 // extern const int16_t markersUnlockedAtWins[NUM_UNLOCKABLE_MARKERS];
-extern const trophyData_t danceNetworkTrophies[];

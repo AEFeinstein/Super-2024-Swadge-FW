@@ -92,7 +92,7 @@ void gamepadMainLoop(int64_t elapsedUs);
 void gamepadButtonCb(buttonEvt_t* evt);
 void gamepadReportStateToHost(void);
 
-bool gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal);
+void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal);
 void gamepadMenuLoop(int64_t elapsedUs);
 void gamepadStart(gamepadType_t type);
 
@@ -314,7 +314,7 @@ void gamepadExitMode(void)
     heap_caps_free(gamepad);
 }
 
-bool gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
+void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     if (selected)
     {
@@ -322,19 +322,19 @@ bool gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             gamepadStart(GAMEPAD_GENERIC);
             gamepad->screen = GAMEPAD_MAIN;
-            return false;
+            return;
         }
         else if (label == str_ns)
         {
             gamepadStart(GAMEPAD_NS);
             gamepad->screen = GAMEPAD_MAIN;
-            return false;
+            return;
         }
         else if (label == str_exit)
         {
             // Exit to main menu
             switchToSwadgeMode(&mainMenuMode);
-            return false;
+            return;
         }
     }
     else
@@ -348,7 +348,6 @@ bool gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
             setGamepadTouchSetting(settingVal);
         }
     }
-    return false;
 }
 
 void gamepadStart(gamepadType_t type)
