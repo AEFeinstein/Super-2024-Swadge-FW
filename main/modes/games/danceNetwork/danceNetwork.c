@@ -11,6 +11,7 @@
 #include "hdw-ch32v003.h"
 
 const char danceNetworkName[] = "Alpha Pulse: Dance Network";
+const char danceNetworkTrophyNVS[] = "DanceNetTroph";
 
 //==============================================================================
 // Function Prototypes
@@ -24,7 +25,7 @@ static void dn_MsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 static void dn_EnterMode(void);
 static void dn_ExitMode(void);
 static void dn_MainLoop(int64_t elapsedUs);
-static void dn_MenuCb(const char* label, bool selected, uint32_t value);
+bool dn_MenuCb(const char* label, bool selected, uint32_t value);
 static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 static void dn_initializeTutorial(bool advanced);
@@ -126,6 +127,7 @@ trophySettings_t danceNetworkTrophySettings = {
     .drawFromBottom   = false,
     .staticDurationUs = DRAW_STATIC_US * 6,
     .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = danceNetworkTrophyNVS,
 };
 
 // This is passed to the swadgeMode_t
@@ -465,7 +467,7 @@ static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
  * @param selected true if this was selected, false if it was moved to
  * @param value The value for settings, unused.
  */
-static void dn_MenuCb(const char* label, bool selected, uint32_t value)
+bool dn_MenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
@@ -548,6 +550,7 @@ static void dn_MenuCb(const char* label, bool selected, uint32_t value)
             switchToSwadgeMode(&mainMenuMode);
         }
     }
+    return false;
 }
 
 /**
@@ -691,7 +694,7 @@ static void dn_initializeVideoTutorial(void)
     ////////////////////
     // Make the qr code//
     ////////////////////
-    trophySetChecklistTask((*gameData->trophyData)[2], 0x4, true, true);
+    trophySetChecklistTask(&(*gameData->trophyData)[2], 0x4, true, true);
     dn_entity_t* qr    = dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_NO_ASSET, 0,
                                                 (vec_t){0, 0}, gameData);
     qr->updateFunction = dn_updateQr;
