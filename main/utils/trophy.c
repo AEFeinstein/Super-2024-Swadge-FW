@@ -668,7 +668,7 @@ void trophyDrawListInit(trophyListDisplayMode_t mode)
     trophySystem.tdl.mode = mode;
 
     // Colors
-    trophyDrawListColors(c000, c111, c222, c444, c555, c050);
+    trophyDrawListColors(c000, c012, c023, c045, c054, c050);
 
     // Load all the WSGs
     trophySystem.tdl.images = heap_caps_calloc(trophySystem.data->length, sizeof(wsg_t), MALLOC_CAP_8BIT);
