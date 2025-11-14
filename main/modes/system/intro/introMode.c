@@ -640,7 +640,6 @@ static void introMainLoop(int64_t elapsedUs)
         playIntro(elapsedUs);
         return;
     }
-    trophyUpdate(&tutorialTrophies[0], 1, 1);
 #endif
 
 #ifdef CUSTOM_INTRO_SOUND
@@ -735,6 +734,8 @@ static void introMainLoop(int64_t elapsedUs)
         }
     }
 #endif
+
+    trophyUpdate(&tutorialTrophies[0], 1, 1);
 
     // Process button events
     buttonEvt_t evt = {0};
