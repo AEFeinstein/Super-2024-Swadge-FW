@@ -15,10 +15,11 @@
 #define CEILING_HEIGHT 48
 
 // Robot
-#define JUMP_HEIGHT -12
-#define Y_ACCEL     1
-#define HBOX_WIDTH  30
-#define HBOX_HEIGHT 24
+#define JUMP_HEIGHT  -12
+#define Y_ACCEL      1
+#define HBOX_WIDTH   30
+#define HBOX_HEIGHT  24
+#define HBOX_CRAWL_H 48
 
 // Positioning
 #define PLAYER_X             48
@@ -26,19 +27,25 @@
 #define PLAYER_Y_IMG_OFFSET  16
 #define PLAYER_GROUND_OFFSET (GROUND_HEIGHT - 40)
 #define BARREL_GROUND_OFFSET (GROUND_HEIGHT - 18)
+#define PLAYER_X_CRAWL       24
+#define PLAYER_Y_CRAWL       160
 
 // Obstacles
-#define MAX_OBSTACLES    5
-#define START_OBSTACLES  2
-#define SPAWN_RATE_BASE  80
-#define SPAWN_RATE_TIMER 15000000 // Fifteen seconds
-#define SPEED_BASE       15
-#define SPEED_TIMER      3000000 // Three seconds
-#define SPEED_NUMERATOR  100000
+#define MAX_OBSTACLES      5
+#define START_OBSTACLES    2
+#define SPAWN_RATE_BASE    60
+#define SPAWN_RATE_TIMER   2000000 // 2 seconds
+#define SPEED_BASE         15
+#define SPEED_TIMER        3000000 // 3 seconds
+#define SPEED_NUMERATOR    100000
+#define MAX_NUM_OBST_TIMER 15000000 // 15 seconds
+#define FORCE_OBST_TIMER   2000000  // 2 seconds
+#define STALL_OBST_TIMER   200000   // 0.2 sconds
+#define WARNING_PIXELS     100
 
 // Score
 #define SCORE_MOD      10000
-#define DEV_HIGH_SCORE 17145
+#define DEV_HIGH_SCORE 11457
 
 // Drawing
 #define WINDOW_PANE   25
@@ -54,26 +61,21 @@ const char runnerModeName[]   = "Robo Runner";
 const char roboRunnerNVSKey[] = "roboRunner";
 
 static const cnfsFileIdx_t obstacleImages[] = {
-    BARREL_1_WSG,
-    BARREL_2_WSG,
-    BARREL_3_WSG,
-    LAMP_WSG,
+    BARREL_1_WSG, BARREL_2_WSG, BARREL_3_WSG, LAMP_WSG, HOOK_WSG,
 };
 
 static const cnfsFileIdx_t robotImages[] = {
-    ROBO_STANDING_WSG,
-    ROBO_RIGHT_WSG,
-    ROBO_LEFT_WSG,
-    ROBO_DEAD_WSG,
+    ROBO_STANDING_WSG, ROBO_RIGHT_WSG, ROBO_LEFT_WSG, ROBO_DEAD_WSG, ROBO_CRAWL_1_WSG, ROBO_CRAWL_2_WSG,
 };
 
 static const char* const strings[] = {
     "ROBO",
     "RUNNER",
-    "Game over! Press A to play again.",
+    "Game over! Press Start to play again.",
     "Press A to play",
-    "Press B to show QR",
+    "Press B to show how-it's-made tutorial QR",
     "Links to the 'how to make a swadge game' tutorial where this game was built!",
+    "Hold 'Menu' to go back",
 };
 
 const trophyData_t roboRunnerTrophies[] = {
@@ -102,13 +104,42 @@ const trophyData_t roboRunnerTrophies[] = {
         .maxVal      = 100,
     },
     {
+        .title       = "Gotta go expeditiously!",
+        .description = "Run 500 feet in one life",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 500,
+    },
+    {
+        .title       = "It's the 90's",
+        .description = "Run 750 feet in one life",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 750,
+    },
+    {
         .title       = "Neo would be proud",
         .description = "Run 1,000 feet in one life",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_PROGRESS,
-        .difficulty  = TROPHY_DIFF_HARD,
+        .difficulty  = TROPHY_DIFF_EXTREME,
         .maxVal      = 1000,
     },
+};
+
+const trophySettings_t runnerTrophySettings = {
+    .drawFromBottom   = true,
+    .staticDurationUs = DRAW_STATIC_US * 2,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = runnerModeName,
+};
+
+const trophyDataList_t runnerTrophyData = {
+    .settings = &runnerTrophySettings,
+    .list     = roboRunnerTrophies,
+    .length   = ARRAY_SIZE(roboRunnerTrophies),
 };
 
 //==============================================================================
@@ -124,7 +155,14 @@ typedef enum
 typedef enum
 {
     BARREL,
+    BARREL2,
+    BARREL3,
+    BARREL4,
     LAMP,
+    LAMP2,
+    LAMP3,
+    LAMP4,
+    HOOK,
     NUM_OBSTACLE_TYPES
 } ObstacleType_t;
 
@@ -139,6 +177,7 @@ typedef struct
     int animIdx;       // Animation index
     int64_t walkTimer; // time until we change animations
     bool onGround;     // If the player is touching the ground
+    bool crawl;        // If the player is crawling
     int ySpeed;        // The vertical speed. negative numbers are up.
     bool dead;         // If the player is dead
 } player_t;
@@ -163,6 +202,8 @@ typedef struct
     // Obstacles
     wsg_t* obstacleImgs;                 // Array of obstacle images
     obstacle_t obstacles[MAX_OBSTACLES]; // Object data
+    int64_t forceObstacle;               // Used to force an obstacle to spawn
+    wsg_t warning;
 
     // Score
     int32_t score;         // Current score
@@ -237,18 +278,6 @@ static void updateLEDs(int idx);
 // Variables
 //==============================================================================
 
-trophySettings_t runnerTrophySettings = {
-    .drawFromBottom   = true,
-    .staticDurationUs = DRAW_STATIC_US,
-    .slideDurationUs  = DRAW_SLIDE_US,
-};
-
-trophyDataList_t runnerTrophyData = {
-    .settings = &runnerTrophySettings,
-    .list     = roboRunnerTrophies,
-    .length   = ARRAY_SIZE(roboRunnerTrophies),
-};
-
 swadgeMode_t roboRunnerMode = {
     .modeName                = runnerModeName,
     .wifiMode                = NO_WIFI,
@@ -271,6 +300,7 @@ runnerData_t* rd;
 
 static void runnerEnterMode()
 {
+    // Load WSGs
     rd             = (runnerData_t*)heap_caps_calloc(1, sizeof(runnerData_t), MALLOC_CAP_8BIT);
     rd->robot.imgs = heap_caps_calloc(ARRAY_SIZE(robotImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(robotImages); idx++)
@@ -282,8 +312,13 @@ static void runnerEnterMode()
     {
         loadWsg(obstacleImages[idx], &rd->obstacleImgs[idx], true);
     }
+    loadWsg(WARNING_WSG, &rd->warning, true);
+
+    // Load fonts
     loadFont(RODIN_EB_FONT, &rd->titleFont, true);
-    loadMidiFile(CHOWA_RACE_MID, &rd->bgm, true);
+
+    // Load and initialize sounds
+    loadMidiFile(ROBO_RUNNER_BGM_MID, &rd->bgm, true);
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     player->loop         = true;
     midiGmOn(player);
@@ -292,29 +327,35 @@ static void runnerEnterMode()
     rd->sfxPlayer = globalMidiPlayerGet(MIDI_SFX);
     midiGmOn(rd->sfxPlayer);
     midiPause(rd->sfxPlayer, false);
+
+    // Initialize items that only need to be done once
     for (int idx = 0; idx < WINDOW_COUNT; idx++)
     {
         rd->windowXCoords[idx] = idx * (TFT_WIDTH + 4 * WINDOW_BORDER + WINDOW_BORDER) / WINDOW_COUNT;
     }
     for (int idx = 0; idx < MAX_OBSTACLES; idx++)
     {
-        rd->obstacles[idx].active      = false;
-        rd->obstacles[idx].rect.height = 24;
-        rd->obstacles[idx].rect.width  = 12;
+        rd->obstacles[idx].active     = false;
+        rd->obstacles[idx].rect.width = 12;
     }
     rd->robot.rect.height = rd->robot.imgs[0].h - HBOX_HEIGHT;
     rd->robot.rect.width  = rd->robot.imgs[0].w - HBOX_WIDTH;
     rd->robot.rect.pos.x  = PLAYER_X;
+
+    // Load saved score
     if (!readNvs32(roboRunnerNVSKey, &rd->prevScore))
     {
         rd->prevScore = 0;
     }
+
     // SwadgePass
     rd->otherHS = getLatestRemoteScore();
+
     // Trophy
-    rd->feetTraveledTotal = trophyGetSavedValue(roboRunnerTrophies[1]);
-    rd->deaths            = trophyGetSavedValue(roboRunnerTrophies[2]);
+    rd->feetTraveledTotal = trophyGetSavedValue(&roboRunnerTrophies[1]);
+    rd->deaths            = trophyGetSavedValue(&roboRunnerTrophies[2]);
     rd->state             = SPLASH;
+
     // QR
     loadWsg(QRTUTORIAL_WSG, &rd->qr, true);
 }
@@ -325,6 +366,7 @@ static void runnerExitMode()
     globalMidiPlayerStop(MIDI_BGM);
     unloadMidiFile(&rd->bgm);
     freeFont(&rd->titleFont);
+    freeWsg(&rd->warning);
     for (int idx = 0; idx < ARRAY_SIZE(obstacleImages); idx++)
     {
         freeWsg(&rd->obstacleImgs[idx]);
@@ -344,6 +386,7 @@ static void runnerMainLoop(int64_t elapsedUs)
     buttonEvt_t evt;
     switch (rd->state)
     {
+        // Splash screen state
         case SPLASH:
         {
             while (checkButtonQueueWrapper(&evt))
@@ -364,6 +407,7 @@ static void runnerMainLoop(int64_t elapsedUs)
             drawSplash(elapsedUs);
             break;
         }
+        // Running/Dead states
         case RUNNING:
         default:
         {
@@ -373,24 +417,36 @@ static void runnerMainLoop(int64_t elapsedUs)
                 {
                     if (rd->robot.dead)
                     {
-                        if (evt.button & PB_A)
+                        if (evt.button & PB_START)
                         {
                             resetGame();
                         }
                         else if (evt.button & PB_B)
                         {
-                            rd->state = RUNNING;
+                            rd->state = SPLASH;
                         }
                     }
-                    else if ((evt.button & PB_A || evt.button & PB_UP) && rd->robot.onGround)
+                    else if ((evt.button & PB_A || evt.button & PB_UP) && rd->robot.onGround && !rd->robot.crawl)
                     {
                         rd->robot.ySpeed   = JUMP_HEIGHT;
                         rd->robot.onGround = false;
+                    }
+                    else if ((evt.button & PB_B || evt.button & PB_DOWN) && rd->robot.onGround)
+                    {
+                        rd->robot.rect.height = rd->robot.imgs[0].h - HBOX_CRAWL_H;
+                        rd->robot.crawl       = true;
+                        rd->robot.rect.pos.y  = GROUND_HEIGHT;
                     }
                 }
                 else if ((evt.button & PB_A || evt.button & PB_UP) && rd->robot.ySpeed < JUMP_HEIGHT / 2)
                 {
                     rd->robot.ySpeed = JUMP_HEIGHT / 2;
+                }
+                else if ((evt.button & PB_B || evt.button & PB_DOWN))
+                {
+                    rd->robot.rect.height = rd->robot.imgs[0].h - HBOX_HEIGHT;
+                    rd->robot.crawl       = false;
+                    rd->robot.rect.pos.y  = PLAYER_GROUND_OFFSET;
                 }
             }
             runnerLogic(elapsedUs);
@@ -410,11 +466,13 @@ static void resetGame()
         rd->obstacles[idx].active     = false;
         rd->obstacles[idx].rect.pos.x = -rd->obstacleImgs[0].w;
     }
+    // Save score to NVS if it's a new high score
     if (rd->prevScore < rd->score)
     {
         rd->prevScore = rd->score;
         writeNvs32(roboRunnerNVSKey, rd->score);
     }
+    // Reset everything else
     rd->remainingTime       = 0;
     rd->score               = 0;
     rd->spawnRate           = SPAWN_RATE_BASE;
@@ -432,14 +490,19 @@ static void resetGame()
 
 static void runnerLogic(int64_t elapsedUs)
 {
-    rd->robot.rect.pos.y += rd->robot.ySpeed;
-    rd->robot.ySpeed += Y_ACCEL;
-    if (rd->robot.rect.pos.y > PLAYER_GROUND_OFFSET)
+    // If the robot is falling
+    if (!rd->robot.onGround)
     {
-        rd->robot.onGround   = true;
-        rd->robot.rect.pos.y = PLAYER_GROUND_OFFSET;
-        rd->robot.ySpeed     = 0;
+        rd->robot.rect.pos.y += rd->robot.ySpeed;
+        rd->robot.ySpeed += Y_ACCEL;
+        if (rd->robot.rect.pos.y > PLAYER_GROUND_OFFSET)
+        {
+            rd->robot.onGround   = true;
+            rd->robot.rect.pos.y = PLAYER_GROUND_OFFSET;
+            rd->robot.ySpeed     = 0;
+        }
     }
+    // If the robot is dead
     if (!rd->robot.dead)
     {
         // Move/spawn obstacles
@@ -485,12 +548,14 @@ static void handleObstacles(int64_t elapsedUs)
                 rd->robot.animIdx = 0;
                 rd->feetTraveledTotal += rd->feetTraveled;
                 // Trophies
-                trophyUpdateMilestone(roboRunnerTrophies[3], rd->feetTraveled, 10);
-                trophyUpdateMilestone(roboRunnerTrophies[2], ++rd->deaths, 25);
-                trophyUpdateMilestone(roboRunnerTrophies[1], rd->feetTraveledTotal, 10);
+                trophyUpdateMilestone(&roboRunnerTrophies[5], rd->feetTraveled, 10);
+                trophyUpdateMilestone(&roboRunnerTrophies[4], rd->feetTraveled, 10);
+                trophyUpdateMilestone(&roboRunnerTrophies[3], rd->feetTraveled, 10);
+                trophyUpdateMilestone(&roboRunnerTrophies[2], ++rd->deaths, 25);
+                trophyUpdateMilestone(&roboRunnerTrophies[1], rd->feetTraveledTotal, 10);
                 if (DEV_HIGH_SCORE <= rd->score)
                 {
-                    trophyUpdate(roboRunnerTrophies[0], 1, true);
+                    trophyUpdate(&roboRunnerTrophies[0], 1, true);
                 }
             }
             if (rd->obstacles[idx].rect.pos.x < -rd->obstacleImgs[0].w)
@@ -500,28 +565,56 @@ static void handleObstacles(int64_t elapsedUs)
             }
         }
     }
-    bool spawn = (esp_random() % rd->spawnRate) == 0;
+    rd->forceObstacle += elapsedUs;
+    bool spawn = false;
+    if (rd->forceObstacle > STALL_OBST_TIMER)
+    {
+        if (rd->forceObstacle > FORCE_OBST_TIMER)
+        {
+            spawn = true;
+        }
+        else
+        {
+            spawn = (esp_random() % rd->spawnRate) == 0;
+        }
+    }
     if (spawn)
     {
+        rd->forceObstacle = 0; // Reset timer when an obstacle spawns
         for (int idx = 0; idx < rd->currentMaxObstacles; idx++)
         {
             if (!rd->obstacles[idx].active)
             {
                 rd->obstacles[idx].active     = true;
-                rd->obstacles[idx].rect.pos.x = TFT_WIDTH;
+                rd->obstacles[idx].rect.pos.x = TFT_WIDTH + WARNING_PIXELS;
                 switch (esp_random() % NUM_OBSTACLE_TYPES)
                 {
                     case BARREL:
+                    case BARREL2:
+                    case BARREL3:
+                    case BARREL4:
                     default:
                     {
-                        rd->obstacles[idx].rect.pos.y = BARREL_GROUND_OFFSET;
-                        rd->obstacles[idx].t          = BARREL;
+                        rd->obstacles[idx].rect.height = 24;
+                        rd->obstacles[idx].rect.pos.y  = BARREL_GROUND_OFFSET;
+                        rd->obstacles[idx].t           = BARREL;
                         break;
                     }
                     case LAMP:
+                    case LAMP2:
+                    case LAMP3:
+                    case LAMP4:
                     {
-                        rd->obstacles[idx].rect.pos.y = CEILING_HEIGHT;
-                        rd->obstacles[idx].t          = LAMP;
+                        rd->obstacles[idx].rect.height = 24;
+                        rd->obstacles[idx].rect.pos.y  = CEILING_HEIGHT;
+                        rd->obstacles[idx].t           = LAMP;
+                        break;
+                    }
+                    case HOOK:
+                    {
+                        rd->obstacles[idx].rect.height = 102;
+                        rd->obstacles[idx].rect.pos.y  = CEILING_HEIGHT;
+                        rd->obstacles[idx].t           = HOOK;
                         break;
                     }
                 }
@@ -551,7 +644,7 @@ static void increaseDifficulty(int64_t elapsedUs)
 
     // Increase obstacles
     rd->maxObstacleTimer += elapsedUs;
-    if (rd->speedDivisorTimer > SPEED_TIMER && rd->currentMaxObstacles < MAX_OBSTACLES)
+    if (rd->maxObstacleTimer > MAX_NUM_OBST_TIMER && rd->currentMaxObstacles < MAX_OBSTACLES)
     {
         rd->currentMaxObstacles++;
         rd->maxObstacleTimer = 0;
@@ -599,22 +692,29 @@ static void drawSplash(int64_t elapsedUs)
         drawWsgSimple(&rd->obstacleImgs[2], 120, BARREL_GROUND_OFFSET);
     }
     drawText(&rd->titleFont, c550, strings[0], 32, 55);
-    drawText(&rd->titleFont, c550, strings[1], 32, 80);
+    drawText(&rd->titleFont, c550, strings[1], 40, 80);
     if (rd->attractToggle > 1000000)
     {
         rd->attractToggle = 0;
     }
     else if (rd->attractToggle > 500000)
     {
-        drawText(getSysFont(), c555, strings[3], 32, TFT_HEIGHT - 48);
-        drawText(getSysFont(), c555, strings[4], 32, TFT_HEIGHT - 24);
+        drawText(getSysFont(), c000, strings[3], 30, 104);
+        drawText(getSysFont(), c555, strings[3], 32, 106);
     }
+
+    int16_t x = 24;
+    int16_t y = TFT_HEIGHT - 50;
+    drawTextWordWrap(getSysFont(), c555, strings[4], &x, &y, TFT_WIDTH - 24, TFT_HEIGHT);
+
+    drawText(getSysFont(), c555, strings[6], 24, TFT_HEIGHT - 20);
+
     if (rd->otherHS > 0 || rd->prevScore > 0)
     {
         char buffer[64];
         snprintf(buffer, sizeof(buffer) - 1, "High Score: %" PRId32,
                  (rd->otherHS > rd->prevScore) ? rd->otherHS : rd->prevScore);
-        drawText(getSysFont(), c555, buffer, 48, 12);
+        drawText(getSysFont(), c555, buffer, 24, 12);
         if (rd->otherHS <= rd->prevScore)
         {
             snprintf(buffer, sizeof(buffer) - 1, "By: You!");
@@ -623,19 +723,26 @@ static void drawSplash(int64_t elapsedUs)
         {
             snprintf(buffer, sizeof(buffer) - 1, "By: %s", rd->remotePlayer.nameBuffer);
         }
-        drawText(getSysFont(), c555, buffer, 48, 28);
+        drawText(getSysFont(), c555, buffer, 24, 28);
     }
 }
 
 static void drawWindow(int xCoord)
 {
-    fillDisplayArea(xCoord, WINDOW_HEIGHT, xCoord + WINDOW_PANE, WINDOW_HEIGHT + WINDOW_PANE, c035);
+    drawRect(xCoord, WINDOW_HEIGHT, xCoord + WINDOW_PANE, WINDOW_HEIGHT + WINDOW_PANE, c035);
+    drawRect(xCoord + WINDOW_BORDER + WINDOW_PANE, WINDOW_HEIGHT, xCoord + 2 * WINDOW_PANE + WINDOW_BORDER,
+             WINDOW_HEIGHT + WINDOW_PANE, c530);
+    drawRect(xCoord, WINDOW_HEIGHT + WINDOW_BORDER + WINDOW_PANE, xCoord + WINDOW_PANE,
+             WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c305);
+    drawRect(xCoord + WINDOW_BORDER + WINDOW_PANE, WINDOW_HEIGHT + WINDOW_BORDER + WINDOW_PANE,
+             xCoord + 2 * WINDOW_PANE + WINDOW_BORDER, WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c503);
+    /* fillDisplayArea(xCoord, WINDOW_HEIGHT, xCoord + WINDOW_PANE, WINDOW_HEIGHT + WINDOW_PANE, c035);
     fillDisplayArea(xCoord + WINDOW_BORDER + WINDOW_PANE, WINDOW_HEIGHT, xCoord + 2 * WINDOW_PANE + WINDOW_BORDER,
                     WINDOW_HEIGHT + WINDOW_PANE, c035);
     fillDisplayArea(xCoord, WINDOW_HEIGHT + WINDOW_BORDER + WINDOW_PANE, xCoord + WINDOW_PANE,
                     WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c035);
     fillDisplayArea(xCoord + WINDOW_BORDER + WINDOW_PANE, WINDOW_HEIGHT + WINDOW_BORDER + WINDOW_PANE,
-                    xCoord + 2 * WINDOW_PANE + WINDOW_BORDER, WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c035);
+                    xCoord + 2 * WINDOW_PANE + WINDOW_BORDER, WINDOW_HEIGHT + 2 * WINDOW_PANE + WINDOW_BORDER, c035); */
 }
 
 static void drawObstacles(int64_t elapsedUs)
@@ -654,22 +761,60 @@ static void drawObstacles(int64_t elapsedUs)
     {
         if (rd->obstacles[idx].active)
         {
-            switch (rd->obstacles[idx].t)
+            if (rd->obstacles[idx].rect.pos.x < TFT_WIDTH)
             {
-                case BARREL:
+                switch (rd->obstacles[idx].t)
                 {
-                    drawWsgSimple(&rd->obstacleImgs[rd->barrelAnimIdx], rd->obstacles[idx].rect.pos.x,
-                                  rd->obstacles[idx].rect.pos.y);
-                    break;
+                    case BARREL:
+                    {
+                        drawWsgSimple(&rd->obstacleImgs[rd->barrelAnimIdx], rd->obstacles[idx].rect.pos.x,
+                                      rd->obstacles[idx].rect.pos.y);
+                        break;
+                    }
+                    case LAMP:
+                    {
+                        drawWsgSimple(&rd->obstacleImgs[3], rd->obstacles[idx].rect.pos.x,
+                                      rd->obstacles[idx].rect.pos.y);
+                        break;
+                    }
+                    case HOOK:
+                    {
+                        drawWsgSimple(&rd->obstacleImgs[4], rd->obstacles[idx].rect.pos.x,
+                                      rd->obstacles[idx].rect.pos.y);
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
                 }
-                case LAMP:
+            }
+            else
+            {
+                // Draw warnings
+                switch (rd->obstacles[idx].t)
                 {
-                    drawWsgSimple(&rd->obstacleImgs[3], rd->obstacles[idx].rect.pos.x, rd->obstacles[idx].rect.pos.y);
-                    break;
-                }
-                default:
-                {
-                    break;
+                    case BARREL:
+                    case LAMP:
+                    {
+                        drawWsgSimple(&rd->warning, TFT_WIDTH - 2 * rd->warning.w, rd->obstacles[idx].rect.pos.y);
+                        break;
+                    }
+                    case HOOK:
+                    {
+                        drawWsgSimple(&rd->warning, TFT_WIDTH - 2 * rd->warning.w, rd->obstacles[idx].rect.pos.y);
+                        drawWsgSimple(&rd->warning, TFT_WIDTH - 2 * rd->warning.w,
+                                      rd->obstacles[idx].rect.pos.y + (4 + rd->warning.h));
+                        drawWsgSimple(&rd->warning, TFT_WIDTH - 2 * rd->warning.w,
+                                      rd->obstacles[idx].rect.pos.y + 2 * (4 + rd->warning.h));
+                        drawWsgSimple(&rd->warning, TFT_WIDTH - 2 * rd->warning.w,
+                                      rd->obstacles[idx].rect.pos.y + 3 * (4 + rd->warning.h));
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -704,6 +849,10 @@ static void drawPlayer(int64_t elapsedUs)
     else if (!rd->robot.onGround)
     {
         drawWsgSimple(&rd->robot.imgs[0], PLAYER_X - PLAYER_X_IMG_OFFSET, rd->robot.rect.pos.y - PLAYER_Y_IMG_OFFSET);
+    }
+    else if (rd->robot.crawl)
+    {
+        drawWsgSimple(&rd->robot.imgs[rd->robot.animIdx + 4], PLAYER_X_CRAWL, PLAYER_Y_CRAWL);
     }
     else
     {
@@ -756,8 +905,20 @@ static void drawRunner(int64_t elapsedUs)
 
     if (rd->robot.dead)
     {
-        drawText(getSysFont(), c555, strings[2], 16, (TFT_HEIGHT - (getSysFont()->height + 60)) >> 1);
+        int16_t x = 16;
+        int16_t y = (TFT_HEIGHT - (getSysFont()->height + 60)) >> 1;
+        drawTextWordWrap(getSysFont(), c555, strings[2], &x, &y, TFT_WIDTH - 16, TFT_HEIGHT);
     }
+
+    // Show bounding boxes
+    /* drawRect(rd->robot.rect.pos.x, rd->robot.rect.pos.y, rd->robot.rect.pos.x + rd->robot.rect.width,
+             rd->robot.rect.pos.y + rd->robot.rect.height, c500);
+    for (int idx = 0; idx < MAX_OBSTACLES; idx++)
+    {
+        drawRect(rd->obstacles[idx].rect.pos.x, rd->obstacles[idx].rect.pos.y,
+                 rd->obstacles[idx].rect.pos.x + rd->obstacles[idx].rect.width,
+                 rd->obstacles[idx].rect.pos.y + rd->obstacles[idx].rect.height, c500);
+    } */
 }
 
 // SwadgePass

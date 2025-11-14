@@ -36,6 +36,7 @@ typedef struct
     picrossScreen_t screen;
     int32_t savedIndex;
     int32_t options; // bit 0: hints
+    midiFile_t bgm;
 } picrossMenu_t;
 
 //==============================================================================
@@ -48,7 +49,7 @@ void picrossMainLoop(int64_t elapsedUs);
 void picrossButtonCb(buttonEvt_t* evt);
 void picrossTouchCb(bool touched);
 void loadLevels(void);
-void picrossMainMenuCb(const char* label, bool selected, uint32_t value);
+bool picrossMainMenuCb(const char* label, bool selected, uint32_t value);
 void picrossMenuOptionsCb(const char* opt);
 
 //==============================================================================
@@ -61,6 +62,8 @@ const char picrossSavedOptionsKey[]       = "pic_opts";
 const char picrossCompletedLevelData[]    = "pic_victs"; // todo: rename to Key suffix
 const char picrossProgressData[]          = "pic_prog";  // todo: rename to key suffix
 const char picrossMarksData[]             = "pic_marks";
+const char picrossHoverLevelIndexKey[]    = "pic_hov_ind";
+const char picrossTopVisibleRowKey[]      = "pic_scroll_ind";
 
 // Main menu strings
 static char str_picrossTitle[]      = "Pi-cross 2"; // \x7f is interpreted as the pi char
@@ -80,10 +83,15 @@ static const char str_X[]         = "X";
 static const char str_Solid[]     = "Solid";
 static const char* strs_x_solid[] = {str_X, str_Solid};
 
-static const char str_Hints[]     = "Mistake Alert: ";
-static const char str_Guides[]    = "Guides: ";
-static const char str_Mark[]      = "Empty Marks: ";
-static const char str_AnimateBG[] = "BG Animate: ";
+static const char str_Hints[]        = "Mistake Alert: ";
+static const char str_Guides[]       = "Guides: ";
+static const char str_Mark[]         = "Empty Marks: ";
+static const char str_AnimateBG[]    = "BG: ";
+static const char* str_Backgrounds[] = {"hexagons", "dots", "none"};
+
+static const int32_t backgroundVals[] = {PICROSS_BG_HEXAGONS, PICROSS_BG_DOTS, PICROSS_BG_NONE};
+
+static const paletteColor_t bgColors[] = {c122, c132, c133, c144};
 
 static const int32_t trueFalseVals[] = {
     false,
@@ -103,43 +111,43 @@ struct
         .name        = "arrow",
         .pzl         = _55_ARROW_PZL_WSG,
         .slv         = _55_ARROW_SLV_WSG,
-        .marqueeFact = "An arrow pointing up, blah blah blah.",
+        .marqueeFact = "You solved it!",
     },
     {
         .name        = "check",
         .pzl         = _55_CHECK_PZL_WSG,
         .slv         = _55_CHECK_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "A new feature in Picross 2 is transparent blocks in some solutions.",
     },
     {
         .name        = "crown",
         .pzl         = _55_CROWN_PZL_WSG,
         .slv         = _55_CROWN_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "Perhaps this belongs to that donut character?",
     },
     {
         .name        = "flower",
         .pzl         = _55_FLOWER_PZL_WSG,
         .slv         = _55_FLOWER_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "All but one of these puzzles are created by @objectdiscret.itch.io",
     },
     {
         .name        = "ghost",
         .pzl         = _55_GHOST_PZL_WSG,
         .slv         = _55_GHOST_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "We shall name her Maggy.",
     },
     {
         .name        = "heart",
         .pzl         = _55_HEART_PZL_WSG,
         .slv         = _55_HEART_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "Love you for making it this far!",
     },
     {
         .name        = "kitty",
         .pzl         = _55_KITTY_PZL_WSG,
         .slv         = _55_KITTY_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "Every year at magfest, staff's pet photos will appear on the jumbotron.",
     },
     {
         .name        = "pacman",
@@ -151,7 +159,9 @@ struct
         .name        = "rainbow",
         .pzl         = _55_RAINBOW_PZL_WSG,
         .slv         = _55_RAINBOW_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "MAGPIE nest, new in 2025, hosts several events to contextualize marginalized groups at "
+                       "MAGFest. Not just for LGBTQIA+ communities, but also people of color, parents, disabled folks, "
+                       "women, neurodivergence, and more.",
     },
     {
         .name        = "triangle",
@@ -160,70 +170,81 @@ struct
         .marqueeFact = "Congratulations! You found the triangle!",
     },
     {
-        .name        = "mag1",
+        .name        = "mag",
         .pzl         = _6F_MAG_1_PZL_WSG,
         .slv         = _6F_MAG_1_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "Woooooooo! It's Music And Gaming!!!",
     },
     {
-        .name        = "mag2",
+        .name        = "fest",
         .pzl         = _6F_MAG_2_PZL_WSG,
         .slv         = _6F_MAG_2_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "24,500 people attended the festival in 2025.",
     },
     {
-        .name        = "mag3",
+        .name        = "2026",
         .pzl         = _6F_MAG_3_PZL_WSG,
         .slv         = _6F_MAG_3_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "2026 features Alpha Pulse who must take down evil Bigma to save the future of music!",
     },
     {
-        .name        = "maglogo",
+        .name        = "mag logo",
         .pzl         = _6F_MAGLOGO_PZL_WSG,
         .slv         = _6F_MAGLOGO_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "The MAGFest logo features a joystick, a square wave, and a speaker.",
     },
     {
         .name        = "music",
         .pzl         = _6F_MUSIC_PZL_WSG,
         .slv         = _6F_MUSIC_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "The 2025 swadge upgraded the buzzers to a speaker and midi player. In 2026, dylwhich added "
+                       "support for the megaman soundfont!",
     },
     {
-        .name        = "flyindonut",
+        .name        = "flyin donut",
         .pzl         = _8F_FLYINDONUT_PZL_WSG,
         .slv         = _8F_FLYINDONUT_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "Flight Sims from the 2022 chainsaw swadge and 2024 gunship swadge : Featured integration to "
+                       "VRchat by cnlohr inside a 3d Gaylord modeled by gplord.",
     },
     {
-        .name        = "mtype",
-        .pzl         = _8F_MTYPE_PZL_WSG,
-        .slv         = _8F_MTYPE_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .name = "m-type",
+        .pzl  = _8F_MTYPE_PZL_WSG,
+        .slv  = _8F_MTYPE_SLV_WSG,
+        .marqueeFact
+        = "Produced by jt-moriarty for the 2022 chainsaw swadge : Blast your way through an endless army of evil space "
+          "aliens with your experimental M-Type fighter!",
     },
     {
-        .name        = "personaldemon",
+        .name        = "personal demon",
         .pzl         = _8F_PERSONALDEMON_PZL_WSG,
         .slv         = _8F_PERSONALDEMON_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "Produced by gelakinetic for the 2022 chainsaw swadge : We all have our own Personal "
+                       "Demons, and now you can take care of yours!",
     },
     {
-        .name        = "shredder",
-        .pzl         = _8F_SHREDDER_PZL_WSG,
-        .slv         = _8F_SHREDDER_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .name = "shredder",
+        .pzl  = _8F_SHREDDER_PZL_WSG,
+        .slv  = _8F_SHREDDER_SLV_WSG,
+        .marqueeFact
+        = "Produced by gelakinetic for the 2022 chainsaw swadge : Hate'th Notes have taken over the arenas, and it's "
+          "up to you "
+          "to "
+          "Shred them to pieces! Wield your righteous guitar and get them before they get you with their scythes!",
     },
     {
-        .name        = "stomp",
-        .pzl         = _8F_STOMP_PZL_WSG,
-        .slv         = _8F_STOMP_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .name = "stomp",
+        .pzl  = _8F_STOMP_PZL_WSG,
+        .slv  = _8F_STOMP_SLV_WSG,
+        .marqueeFact
+        = "Produced by Ruzihm for the 2022 chainsaw swadge : The flying skulls are coming to get you and the only way "
+          "to stop them is to Stomp them into the ground!",
     },
     {
         .name        = "apple",
         .pzl         = AA_APPLE_PZL_WSG,
         .slv         = AA_APPLE_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "Quick snack break from all the swadge history.",
     },
     {
         .name        = "baba",
@@ -232,16 +253,17 @@ struct
         .marqueeFact = "BABA is NONOGRAM. NONOGRAM is WIN.",
     },
     {
-        .name        = "dragonball",
+        .name        = "dragon ball",
         .pzl         = AA_DRAGONBALL_PZL_WSG,
         .slv         = AA_DRAGONBALL_SLV_WSG,
         .marqueeFact = "If your head is empty, you can pack it with dreams!",
     },
     {
-        .name        = "heartpiece",
+        .name        = "heart piece",
         .pzl         = AA_HEARTPIECE_PZL_WSG,
         .slv         = AA_HEARTPIECE_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "badabedem badabedem badabedem badabedem badabedem badabedem badabedem badabedem ...... DUN "
+                       "DADADADA DUUUUUHNNNN!",
     },
     {
         .name        = "metroid",
@@ -250,7 +272,7 @@ struct
         .marqueeFact = "jellyfish is helping yes. Y can't metroid crawl?",
     },
     {
-        .name        = "moonstick",
+        .name        = "moon stick",
         .pzl         = AA_MOONSTICK_PZL_WSG,
         .slv         = AA_MOONSTICK_SLV_WSG,
         .marqueeFact = "Moon Healing Escalation!",
@@ -259,143 +281,161 @@ struct
         .name        = "peach",
         .pzl         = AA_PEACH_PZL_WSG,
         .slv         = AA_PEACH_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "More snack break pls, to fuel puzzle solving.",
     },
     {
-        .name        = "pokeball",
+        .name        = "pocket ball",
         .pzl         = AA_POKEBALL_PZL_WSG,
         .slv         = AA_POKEBALL_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "Redacted",
     },
     {
         .name        = "sword",
         .pzl         = AA_SWORD_PZL_WSG,
         .slv         = AA_SWORD_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "Fitting for the 2025 MAGStock theme.",
     },
     {
         .name        = "toadstool",
         .pzl         = AA_TOADSTOOL_PZL_WSG,
         .slv         = AA_TOADSTOOL_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "MORE. SNACKS.",
     },
     {
-        .name        = "donutjump",
-        .pzl         = AF_DONUTJUMP_PZL_WSG,
-        .slv         = AF_DONUTJUMP_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .name = "donut jump",
+        .pzl  = AF_DONUTJUMP_PZL_WSG,
+        .slv  = AF_DONUTJUMP_SLV_WSG,
+        .marqueeFact
+        = "Produced by MrTroy for the 2020 barrel swadge : King Donut jumps to all the blocks without being "
+          "hit by the Evil Eclair or Devil Donut.",
     },
     {
         .name        = "picross",
         .pzl         = AF_PICROSS_PZL_WSG,
         .slv         = AF_PICROSS_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "Produced by blooper for the 2023 wavebird swadge : the prequel to this game!",
     },
     {
-        .name        = "superswadgeland",
+        .name        = "super swadge land",
         .pzl         = AF_SUPERSWADGELAND_PZL_WSG,
         .slv         = AF_SUPERSWADGELAND_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "Produced by JVeg199X for the 2023 wavebird swadge : Rack up a high score across 16 "
+                       "distinct areas, each full of secrets and danger!",
     },
     {
-        .name        = "swadgebros",
-        .pzl         = AF_SWADGEBROS_PZL_WSG,
-        .slv         = AF_SWADGEBROS_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .name = "swadge bros",
+        .pzl  = AF_SWADGEBROS_PZL_WSG,
+        .slv  = AF_SWADGEBROS_SLV_WSG,
+        .marqueeFact
+        = "Produced by gelakinetic for the 2023 wavebird swadge with art by gplord & kaitie : Prove your might in "
+          "wireless PvP or versus a CPU!",
     },
     {
         .name        = "tiltrads",
         .pzl         = AF_TILTRADS_PZL_WSG,
         .slv         = AF_TILTRADS_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "Produced by jt-moriarty for the 2023 wavebird swadge : I'm using tilt controls! This game also "
+                       "made a colorized return on the 2023 wavebird swadge.",
     },
     {
-        .name        = "galacticbrickdown",
-        .pzl         = CF_GALACTICBRICKDOWN_PZL_WSG,
-        .slv         = CF_GALACTICBRICKDOWN_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .name = "galactic brickdown",
+        .pzl  = CF_GALACTICBRICKDOWN_PZL_WSG,
+        .slv  = CF_GALACTICBRICKDOWN_SLV_WSG,
+        .marqueeFact
+        = "Produced by JVeg199X for the 2024 gunship swadge : This is a unique take on a \"breakout\" style game.",
     },
     {
-        .name        = "lumberjacks",
+        .name        = "lumber jacks",
         .pzl         = CF_LUMBERJACKS_PZL_WSG,
         .slv         = CF_LUMBERJACKS_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "Produced by MrTroy for the 2024 gunship swadge : Tight arcade action with panic mode featuring "
+                       "rising water, and attack mode featuring wave after wave of Bad Seeds.",
     },
     {
-        .name        = "magtroidpocket",
+        .name        = "magtroid pocket",
         .pzl         = CF_MAGTROIDPOCKET_PZL_WSG,
         .slv         = CF_MAGTROIDPOCKET_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "Flagship title of the 2024 gunship swadge made by gelakinetic, gplord, newmajoe, and others : "
+                       "Features a fully "
+                       "colored doom-style rendering engine, an epic soundtrack, and a complex single player campaign.",
     },
     {
-        .name        = "pushykawaiigo",
-        .pzl         = CF_PUSHYKAWAIIGO_PZL_WSG,
-        .slv         = CF_PUSHYKAWAIIGO_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-    },
-    {
-        .name = "bigbug",
-        .pzl  = EF_BIGBUG_PZL_WSG,
-        .slv  = EF_BIGBUG_SLV_WSG,
+        .name = "pushy kawaii go",
+        .pzl  = CF_PUSHYKAWAIIGO_PZL_WSG,
+        .slv  = CF_PUSHYKAWAIIGO_SLV_WSG,
         .marqueeFact
-        = "Dr. Ovo Garbotnik fought hordes of giant bugs in a garbage landfill in this 2025 swadge classic loosely "
-          "inspired by Dig Dug. Produced by James Albracht. \"--Incoming transmission from mr. dev--\" What in "
-          "the heck? \"Hey is thing working??? Check out my game on this device called \"Dance Network\"!",
+        = "Produced by Bryce Browner for the 2024 gunship swadge : A swadge port of socks magoc's game. Number go up.",
     },
     {
-        .name        = "pango",
-        .pzl         = EF_PANGO_PZL_WSG,
-        .slv         = EF_PANGO_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .name        = "big bug",
+        .pzl         = EF_BIGBUG_PZL_WSG,
+        .slv         = EF_BIGBUG_SLV_WSG,
+        .marqueeFact = "Produced by James Albracht for the 2025 hotdog swadge with art from gplord, kaitie, Nathan, "
+                       "and music from newmajoe, and livingston rampey : Dr. Ovo Garbotnik fights hordes of giant "
+                       "bugs in a garbage landfill loosely inspired by Dig Dug and Helldivers 2.",
+    },
+    {
+        .name = "pango",
+        .pzl  = EF_PANGO_PZL_WSG,
+        .slv  = EF_PANGO_SLV_WSG,
+        .marqueeFact
+        = "Produced by JVeg199X for the 2025 hotdog swadge : Another high score chaser in which Pango must "
+          "destroy the Drill Bots by sliding ice blocks to hit them.",
     },
     {
         .name        = "2048",
         .pzl         = EF_2048_PZL_WSG,
         .slv         = EF_2048_SLV_WSG,
-        .marqueeFact = "Did you know? 2048 is so named because that's The highest value, the dev was able to get to "
-                       "before he started to cry !",
+        .marqueeFact = "Produced by Jonny Wycliffe for the 2025 hotdog swadge : Did you know? 2048 is so named because "
+                       "that's the highest value the dev was able to get to before he started to cry !",
     },
     {
-        .name        = "chowagrove",
+        .name        = "chowa grove",
         .pzl         = EF_CHOWAGROVE_PZL_WSG,
         .slv         = EF_CHOWAGROVE_SLV_WSG,
-        .marqueeFact = "Did you know? Chowa Grove was going to have multiple Chowa types but the dev got too lazy",
+        .marqueeFact = "Produced by Jonny Wycliffe for the 2025 hotdog swadge : Did you know? Chowa Grove was "
+                       "going to have multiple Chowa types but the dev got too lazy",
     },
     {
-        .name        = "hunterspuzzles",
-        .pzl         = EF_HUNTERSPUZZLES_PZL_WSG,
-        .slv         = EF_HUNTERSPUZZLES_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .name = "hunter's puzzles",
+        .pzl  = EF_HUNTERSPUZZLES_PZL_WSG,
+        .slv  = EF_HUNTERSPUZZLES_SLV_WSG,
+        .marqueeFact
+        = "Produced by blooper for the 2025 hotdog swadge : A sokoban-style puzzle game where you are an eye.",
     },
     {
-        .name        = "swadgehero",
-        .pzl         = EF_SWADGEHERO_PZL_WSG,
-        .slv         = EF_SWADGEHERO_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .name = "swadge hero",
+        .pzl  = EF_SWADGEHERO_PZL_WSG,
+        .slv  = EF_SWADGEHERO_SLV_WSG,
+        .marqueeFact
+        = "Swadge Hero from the 2025 hotdog swadge made by gelakinetic and many volunteer composers : A rhythm "
+          "game showing off the new audio capabilities.",
     },
     {
-        .name        = "ultimatettt",
+        .name        = "ultimate ttt",
         .pzl         = EF_ULTIMATETTT_PZL_WSG,
         .slv         = EF_ULTIMATETTT_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "Produced by gelakinetic for the 2025 hotdog swadge : Play 9 small PvP games at "
+                       "the same dang time!",
     },
     {
-        .name        = "acleaf",
+        .name        = "leaf",
         .pzl         = FF_ACLEAF_PZL_WSG,
         .slv         = FF_ACLEAF_SLV_WSG,
         .marqueeFact = "The ultimate flat-pack furniture. IKEA could never.",
     },
     {
-        .name        = "doublebass",
+        .name        = "double bass",
         .pzl         = FF_DOUBLEBASS_PZL_WSG,
         .slv         = FF_DOUBLEBASS_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "The Magfest Community Orchestra features over 200 volunteer musicians.",
     },
     {
-        .name        = "drum",
-        .pzl         = FF_DRUM_PZL_WSG,
-        .slv         = FF_DRUM_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .name = "drum",
+        .pzl  = FF_DRUM_PZL_WSG,
+        .slv  = FF_DRUM_SLV_WSG,
+        .marqueeFact
+        = "Musicians of all instruments and skill levels join together to improve their chops at Jam Clinic.",
     },
     {
         .name        = "meteor",
@@ -404,7 +444,7 @@ struct
         .marqueeFact = "We're gonna need a bigger Holy.",
     },
     {
-        .name        = "pslogo",
+        .name        = "ps logo",
         .pzl         = FF_PSLOGO_PZL_WSG,
         .slv         = FF_PSLOGO_SLV_WSG,
         .marqueeFact = "You are now hearing the PS1 start-up jingle in your head.",
@@ -413,10 +453,10 @@ struct
         .name        = "sax",
         .pzl         = FF_SAX_PZL_WSG,
         .slv         = FF_SAX_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "Newmajoe's instrument of choice.",
     },
     {
-        .name        = "sfclogo",
+        .name        = "sfc logo",
         .pzl         = FF_SFCLOGO_PZL_WSG,
         .slv         = FF_SFCLOGO_SLV_WSG,
         .marqueeFact = "YOU ARE A SUPER PLAYER!!",
@@ -431,14 +471,36 @@ struct
         .name        = "trumpet",
         .pzl         = FF_TRUMPET_PZL_WSG,
         .slv         = FF_TRUMPET_SLV_WSG,
-        .marqueeFact = "doot doot",
+        .marqueeFact = "Come see the orchestra perform on Saturday morning in the atrium!",
     },
     {
         .name        = "wing",
         .pzl         = FF_WING_PZL_WSG,
         .slv         = FF_WING_SLV_WSG,
-        .marqueeFact = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        .marqueeFact = "What does a Moogle need in the morning? A Kup-o Coffee!",
     },
+};
+
+const trophyData_t trophyPicrossModeTrophies[] = {{
+    .title       = "I missed my flight home",
+    .description = "solved all picross puzzles",
+    .image       = NO_IMAGE_SET,
+    .type        = TROPHY_TYPE_TRIGGER,
+    .difficulty  = TROPHY_DIFF_EXTREME,
+    .maxVal      = 1, // For trigger type, set to one
+}};
+
+const trophySettings_t trophyPicrossModeTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 2,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = str_picrossTitle,
+};
+
+const trophyDataList_t trophyPicrossModeData = {
+    .settings = &trophyPicrossModeTrophySettings,
+    .list     = trophyPicrossModeTrophies,
+    .length   = ARRAY_SIZE(trophyPicrossModeTrophies),
 };
 
 swadgeMode_t modePicross = {
@@ -458,7 +520,7 @@ swadgeMode_t modePicross = {
     .fnAdvancedUSB            = NULL,
     .fnDacCb                  = NULL,
     .fnAddToSwadgePassPacket  = NULL,
-    .trophyData               = NULL,
+    .trophyData               = &trophyPicrossModeData,
 };
 
 picrossMenu_t* pm;
@@ -477,10 +539,21 @@ void picrossEnterMode(void)
     // Allocate and zero memory
     pm = heap_caps_calloc(1, sizeof(picrossMenu_t), MALLOC_CAP_8BIT);
 
+    // Load sounds
+    loadMidiFile(LULLABY_IN_NUMBERS_MID, &pm->bgm, true);
+
+    // Init sound player
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    player->loop         = true;
+    midiGmOn(player);
+    soundPlayBgm(&pm->bgm, MIDI_BGM);
+
     loadFont(MM_FONT, &(pm->mmFont), false);
 
-    pm->menu     = initMenu(str_picrossTitle, picrossMainMenuCb);
-    pm->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    pm->menu                        = initMenu(str_picrossTitle, picrossMainMenuCb);
+    pm->renderer                    = initMenuMegaRenderer(NULL, NULL, NULL);
+    pm->renderer->bgColorIdx        = 0;
+    pm->renderer->conveyorBeltStyle = true;
 
     pm->screen = PICROSS_MENU;
 
@@ -494,10 +567,17 @@ void picrossEnterMode(void)
         .max = trueFalseVals[ARRAY_SIZE(trueFalseVals) - 1],
         .def = trueFalseVals[0],
     };
+    settingParam_t sp_bg = {
+        .min = backgroundVals[0],
+        .max = backgroundVals[ARRAY_SIZE(backgroundVals) - 1],
+        .def = backgroundVals[0],
+    };
     addSettingsOptionsItemToMenu(pm->menu, str_Guides, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
                                  picrossGetSaveFlag(PO_SHOW_GUIDES));
-    addSettingsOptionsItemToMenu(pm->menu, str_AnimateBG, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
-                                 picrossGetLoadedSaveFlag(PO_ANIMATE_BG));
+    addSettingsOptionsItemToMenu(
+        pm->menu, str_AnimateBG, str_Backgrounds, backgroundVals, ARRAY_SIZE(str_Backgrounds), &sp_bg,
+        -1 + picrossGetLoadedSaveFlag(PO_BG_HEXAGONS) + (picrossGetLoadedSaveFlag(PO_BG_DOTS) * 2)
+            + (picrossGetLoadedSaveFlag(PO_BG_NONE) * 3));
     addSettingsOptionsItemToMenu(pm->menu, str_Mark, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_x_solid), &sp_tf,
                                  picrossGetLoadedSaveFlag(PO_MARK_X));
     addSettingsOptionsItemToMenu(pm->menu, str_Hints, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
@@ -511,6 +591,7 @@ void picrossEnterMode(void)
 
 void picrossExitMode(void)
 {
+    unloadMidiFile(&pm->bgm);
     switch (pm->screen)
     {
         case PICROSS_MENU:
@@ -671,21 +752,26 @@ void picrossTouchCb(bool touched)
 /////////////////////////
 
 /**
- * @brief Frees level select menu and returns to the picross menu. Should not be called by not-the-level-select-menu.
+ * @brief Frees level select menu and returns to the picross menu, except skipping past the level select menu.
  *
  */
 void returnToPicrossMenu(void)
 {
-    picrossExitLevelSelect(); // free data
     pm->screen = PICROSS_MENU;
+    // Reinit MenuMegaRenderer to go back to using default menu colors.
+    deinitMenuMegaRenderer(pm->renderer);
+    pm->renderer                    = initMenuMegaRenderer(NULL, NULL, NULL);
+    pm->renderer->conveyorBeltStyle = true;
 }
+
 /**
- * @brief Frees level select menu and returns to the picross menu, except skipping past the level select menu.
+ * @brief Frees level select menu and returns to the picross menu. Should not be called by not-the-level-select-menu.
  *
  */
-void returnToPicrossMenuFromGame(void)
+void returnToPicrossMenuFromLevelSelect(void)
 {
-    pm->screen = PICROSS_MENU;
+    picrossExitLevelSelect(); // free data
+    returnToPicrossMenu();
 }
 
 /**
@@ -697,34 +783,40 @@ void exitTutorial(void)
     pm->screen = PICROSS_MENU;
 }
 
-void continueGame()
+void continueGame(bool solved, int8_t currentIdx)
 {
     // get the current level index
     int32_t currentIndex = 0; // just load 0 if its 0.
     readNvs32(picrossCurrentPuzzleIndexKey, &currentIndex);
 
+    // Set the level background to more muted colors.
+    pm->renderer->bgColors    = bgColors;
+    pm->renderer->numBgColors = ARRAY_SIZE(bgColors);
+
     // load in the level we selected.
     // uh. read the currentLevelIndex and get the value from
-    picrossStartGame(&pm->mmFont, &pm->levels[currentIndex], true);
+    if (solved)
+    {
+        currentIndex = currentIdx;
+    }
+    picrossStartGame(&pm->mmFont, &pm->levels[currentIndex], true, pm->renderer, solved);
     pm->screen = PICROSS_GAME;
 }
 
 // menu button & options menu callbacks. Set the screen and call the appropriate start functions
-void picrossMainMenuCb(const char* label, bool selected, uint32_t value)
+bool picrossMainMenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
         if (label == str_continue)
         {
-            continueGame();
+            continueGame(false, -1);
 
             // Turn off LEDs
             led_t leds[CONFIG_NUM_LEDS] = {0};
             setLeds(leds, CONFIG_NUM_LEDS);
-
-            return;
         }
-        if (label == str_howtoplay)
+        else if (label == str_howtoplay)
         {
             pm->screen = PICROSS_TUTORIAL;
             picrossStartTutorial(&pm->mmFont);
@@ -732,10 +824,8 @@ void picrossMainMenuCb(const char* label, bool selected, uint32_t value)
             // Turn off LEDs
             led_t leds[CONFIG_NUM_LEDS] = {0};
             setLeds(leds, CONFIG_NUM_LEDS);
-
-            return;
         }
-        if (label == str_levelSelect)
+        else if (label == str_levelSelect)
         {
             pm->screen = PICROSS_LEVELSELECT;
             picrossStartLevelSelect(&pm->mmFont, pm->levels);
@@ -743,14 +833,11 @@ void picrossMainMenuCb(const char* label, bool selected, uint32_t value)
             // Turn off LEDs
             led_t leds[CONFIG_NUM_LEDS] = {0};
             setLeds(leds, CONFIG_NUM_LEDS);
-
-            return;
         }
-        if (label == str_exit)
+        else if (label == str_exit)
         {
             // Exit to main menu
             switchToSwadgeMode(&mainMenuMode);
-            return;
         }
         else if (label == str_eraseProgress)
         {
@@ -782,7 +869,30 @@ void picrossMainMenuCb(const char* label, bool selected, uint32_t value)
         }
         else if (str_AnimateBG == label)
         {
-            picrossSetSaveFlag(PO_ANIMATE_BG, value);
+            switch (value)
+            {
+                case PICROSS_BG_HEXAGONS:
+                {
+                    picrossSetSaveFlag(PO_BG_HEXAGONS, 1);
+                    picrossSetSaveFlag(PO_BG_DOTS, 0);
+                    picrossSetSaveFlag(PO_BG_NONE, 0);
+                    break;
+                }
+                case PICROSS_BG_DOTS:
+                {
+                    picrossSetSaveFlag(PO_BG_HEXAGONS, 0);
+                    picrossSetSaveFlag(PO_BG_DOTS, 1);
+                    picrossSetSaveFlag(PO_BG_NONE, 0);
+                    break;
+                }
+                case PICROSS_BG_NONE:
+                {
+                    picrossSetSaveFlag(PO_BG_HEXAGONS, 0);
+                    picrossSetSaveFlag(PO_BG_DOTS, 0);
+                    picrossSetSaveFlag(PO_BG_NONE, 1);
+                    break;
+                }
+            }
         }
         else if (str_Hints == label)
         {
@@ -793,6 +903,7 @@ void picrossMainMenuCb(const char* label, bool selected, uint32_t value)
             picrossSetSaveFlag(PO_MARK_X, value);
         }
     }
+    return false;
 }
 
 /**
@@ -805,7 +916,7 @@ void selectPicrossLevel(picrossLevelDef_t* selectedLevel)
 {
     // picrossExitLevelSelect();//we do this BEFORE we enter startGame.
     pm->screen = PICROSS_GAME;
-    picrossStartGame(&pm->mmFont, selectedLevel, false);
+    picrossStartGame(&pm->mmFont, selectedLevel, false, pm->renderer, false);
 }
 
 // void returnToLevelSelect()//todo: rename
@@ -832,7 +943,7 @@ bool picrossGetSaveFlag(picrossOption_t pos)
     {
         // set default options
         // x's on, bg on, guide on, hintwarning off. On the fence on guides on or off.
-        int32_t defaults = (1 << PO_ANIMATE_BG) | (1 << PO_SHOW_GUIDES) | (1 << PO_MARK_X);
+        int32_t defaults = (1 << PO_BG_HEXAGONS) | (1 << PO_SHOW_GUIDES) | (1 << PO_MARK_X);
         writeNvs32(picrossSavedOptionsKey, defaults);
         pm->options = defaults;
     }

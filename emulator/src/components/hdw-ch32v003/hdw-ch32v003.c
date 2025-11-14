@@ -17,12 +17,14 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <math.h>
 #include "os_generic.h"
 
 #include "cnfs.h"
 
 #include "CNFG.h"
 
+#include "hdw-ch32v003.h"
 #include "hdw-ch32c003_emu.h"
 
 //==============================================================================
@@ -39,7 +41,7 @@ void ch32v003Teardown(void);
 int ch32v003Resume(void);
 int ch32v003WriteFlash(const uint8_t* buf, int sz);
 int ch32v003WriteBitmapAsset(int slot, int asset_idx);
-int ch32v003WriteBitmap(int slot, const uint8_t pixels[6][12]);
+int ch32v003WriteBitmap(int slot, const uint8_t pixels[EYE_LED_H][EYE_LED_W]);
 int ch32v003SelectBitmap(int slot);
 
 #define CH32V003_MAX_IMAGE_SLOTS 20
@@ -785,6 +787,12 @@ int ch32v003WriteFlash(const uint8_t* buf, int sz)
     return ch32v003WriteMemory(buf, sz, 0);
 }
 
+static uint8_t gammaCorrect(uint8_t in)
+{
+    const float gamma = 0.25f;
+    return roundf(powf(in, gamma) * (0xFF / powf(0xFF, gamma)));
+}
+
 static const uint16_t Coordmap[] = {
     0x0000, 0x0100, 0x0200, 0x0300, 0x0400, 0x0500, 0xffff, 0xffff, 0x0002, 0x0102, 0x0202, 0x0302, 0x0402, 0x0502,
     0xffff, 0xffff, 0x0001, 0x0101, 0x0201, 0x0301, 0x0401, 0x0501, 0xffff, 0xffff, 0x0008, 0x0108, 0x0208, 0x0308,
@@ -805,17 +813,17 @@ void ch32v003EmuDraw(int offX, int offY, int window_w, int window_h)
     if (ils < RAMOFS || ils >= RAM_SIZE + RAMOFS - 72)
         return;
 
-    int ledW   = window_w / 13;
-    int ledH   = window_h / 6;
+    int ledW   = window_w / (EYE_LED_W + 1);
+    int ledH   = window_h / EYE_LED_H;
     int ledDim = ledW < ledH ? ledW : ledH;
 
-    int marginX = (window_w - (13 * ledDim)) / 2;
-    int marginY = (window_h - (6 * ledDim)) / 2;
+    int marginX = (window_w - ((EYE_LED_W + 1) * ledDim)) / 2;
+    int marginY = (window_h - (EYE_LED_H * ledDim)) / 2;
 
     uint8_t* tptr = ch32v003ram + (ils - RAMOFS);
-    for (int y = 0; y < 6; y++)
+    for (int y = 0; y < EYE_LED_H; y++)
     {
-        for (int x = 0; x < 12; x++)
+        for (int x = 0; x < EYE_LED_W; x++)
         {
             uint16_t tc = Coordmap[y + x * 8];
             int bit     = 1 << (tc >> 8);
@@ -831,10 +839,12 @@ void ch32v003EmuDraw(int offX, int offY, int window_w, int window_h)
                 pptr += 9;
             }
 
+            intensity = gammaCorrect(intensity);
+
             // Apply any color tuning.  Right now we're just stark white.
             CNFGColor(0x000000ff | (intensity << 24) | (intensity << 8) | (intensity << 16));
 
-            int spacing = (x >= 6) ? 1 : 0;
+            int spacing = (x >= EYE_LED_H) ? 1 : 0;
 
             int py = marginY + offY + (y * ledDim);
             int px = marginX + offX + ((x + spacing) * ledDim);
@@ -859,23 +869,23 @@ int ch32v003WriteBitmapAsset(int slot, int asset_idx)
         printf("Error: Asset wrong size (%d) bytes.\n", (int)sz);
         return -1;
     }
-    if (((const uint16_t*)buf)[0] != 12 || ((const uint16_t*)buf)[1] != 6)
+    if (((const uint16_t*)buf)[0] != EYE_LED_W || ((const uint16_t*)buf)[1] != EYE_LED_H)
     {
-        printf("Error: Asset wrong dimensions (%d x %d) needs (12 x 6).\n", ((const uint16_t*)buf)[0],
-               ((const uint16_t*)buf)[1]);
+        printf("Error: Asset wrong dimensions (%d x %d) needs (%d x %d).\n", ((const uint16_t*)buf)[0],
+               ((const uint16_t*)buf)[1], EYE_LED_W, EYE_LED_H);
         return -1;
     }
 
     struct PixelMap
     {
-        uint8_t buffer[6][12];
+        uint8_t buffer[EYE_LED_H][EYE_LED_W];
     };
     const struct PixelMap* pm = (const struct PixelMap*)(buf + 4);
 
     return ch32v003WriteBitmap(slot, pm->buffer);
 }
 
-int ch32v003WriteBitmap(int slot, const uint8_t pixels[6][12])
+int ch32v003WriteBitmap(int slot, const uint8_t pixels[EYE_LED_H][EYE_LED_W])
 {
     if (slot >= CH32V003_MAX_IMAGE_SLOTS)
     {
@@ -887,12 +897,12 @@ int ch32v003WriteBitmap(int slot, const uint8_t pixels[6][12])
 
     int i, x, y;
 
-    for (y = 0; y < 6; y++)
+    for (y = 0; y < EYE_LED_H; y++)
     {
-        for (x = 0; x < 12; x++)
+        for (x = 0; x < EYE_LED_W; x++)
         {
             int intensity = pixels[y][x];
-            int coord     = Coordmap[x * 8 + y];
+            int coord     = Coordmap[x * 8 + (5 - y)];
 
             int ox = coord & 0xff;
             int oy = coord >> 8;

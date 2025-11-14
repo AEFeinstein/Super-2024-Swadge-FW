@@ -1096,7 +1096,7 @@ void tunernomeMainLoop(int64_t elapsedUs)
                 }
                 else
                 {
-                    const uint8_t offBeatLeds[] = {1, 3, 5, 8};
+                    const uint8_t offBeatLeds[] = {2, 3};
                     tunernome->midiNote         = 69; // A4
                     for (int i = 0; i < ARRAY_SIZE(offBeatLeds); i++)
                     {

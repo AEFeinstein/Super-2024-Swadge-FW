@@ -43,7 +43,7 @@ typedef struct
 static void mainMenuEnterMode(void);
 static void mainMenuExitMode(void);
 static void mainMenuMainLoop(int64_t elapsedUs);
-static void mainMenuCb(const char* label, bool selected, uint32_t settingVal);
+static bool mainMenuCb(const char* label, bool selected, uint32_t settingVal);
 void addSecretsMenu(void);
 static void fanfareFinishedCb(void);
 static bool _winTrophy(swadgeMode_t* sm);
@@ -64,6 +64,15 @@ const trophyData_t mainMenuTrophies[] = {
         .identifier  = NULL,
     },
     {
+        .title       = "LEMONS!",
+        .description = "Played Mega Pulse EX for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &modePlatformer,
+    },
+    {
         .title       = "Day -1",
         .description = "Played Cosplay Crunch for the first time",
         .image       = NO_IMAGE_SET,
@@ -82,6 +91,24 @@ const trophyData_t mainMenuTrophies[] = {
         .identifier  = &swadgeItMode,
     },
     {
+        .title       = "Swordfish isn't always password",
+        .description = "Played Swadgedoku for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &swadgedokuMode,
+    },
+    {
+        .title       = "PulseMan and the King... Man",
+        .description = "Played Alpha Pulse for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &danceNetworkMode,
+    },
+    {
         .title       = "Runnin' and runnin'",
         .description = "Played Robo Runner for the first time",
         .image       = NO_IMAGE_SET,
@@ -89,6 +116,24 @@ const trophyData_t mainMenuTrophies[] = {
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
         .identifier  = &roboRunnerMode,
+    },
+    {
+        .title       = "It's pronounced 'Pie-Cross'",
+        .description = "Played Picross for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &modePicross,
+    },
+    {
+        .title       = "First Asteroids, now this",
+        .description = "Played Vector Tanks for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &artilleryMode,
     },
     {
         .title       = "Daft Punk would be proud",
@@ -109,7 +154,7 @@ const trophyData_t mainMenuTrophies[] = {
         .identifier  = &jukeboxMode,
     },
     {
-        .title       = "Make some tunes",
+        .title       = "mm2wood.mid",
         .description = "Opened the Sequencer for the first time",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -163,6 +208,24 @@ const trophyData_t mainMenuTrophies[] = {
         .identifier  = &modeDiceRoller,
     },
     {
+        .title       = "It can't hit the corner",
+        .description = "Opened Bouncy items for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &bouncyMode,
+    },
+    {
+        .title       = "...Was once not enough?",
+        .description = "Opened the intro again for some reason",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &introMode,
+    },
+    {
         .title       = "Switch Amateur Controller",
         .description = "Opened Gamepad for the first time",
         .image       = NO_IMAGE_SET,
@@ -173,13 +236,14 @@ const trophyData_t mainMenuTrophies[] = {
     },
 };
 
-trophySettings_t menuTrophySettings = {
+const trophySettings_t menuTrophySettings = {
     .drawFromBottom   = false,
     .staticDurationUs = DRAW_STATIC_US * 2,
     .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = mainMenuName,
 };
 
-trophyDataList_t menuTrophyData = {
+const trophyDataList_t menuTrophyData = {
     .settings = &menuTrophySettings,
     .list     = mainMenuTrophies,
     .length   = ARRAY_SIZE(mainMenuTrophies),
@@ -449,8 +513,9 @@ static void fanfareFinishedCb(void)
  * @param label The menu item that was selected or moved to
  * @param selected true if the item was selected, false if it was moved to
  * @param settingVal The value of the setting, if the menu item is a settings item
+ * @return true to go up a menu level, false to remain here
  */
-static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool mainMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     // Stop the buzzer first no matter what, so that it turns off
     // if we scroll away from the BGM or SFX settings.
@@ -547,6 +612,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
             setShowSecretsMenuSetting(settingVal);
         }
     }
+    return false;
 }
 
 void addSecretsMenu(void)
@@ -567,15 +633,7 @@ void addSecretsMenu(void)
                                  showSecretsMenuSettingValues, ARRAY_SIZE(showSecretsMenuSettingOptions),
                                  getShowSecretsMenuSettingBounds(), getShowSecretsMenuSetting());
 
-    addSingleItemToMenu(mainMenu->menu, keebTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, swadgePassTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, trophyTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, nameTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, canvasTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, sonaTestMode.modeName);
+    modeListAddSecretMenuModes(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, factoryResetName);
     addSingleItemToMenu(mainMenu->menu, confirmResetName);
@@ -595,7 +653,7 @@ static bool _winTrophy(swadgeMode_t* sm)
     {
         if (mainMenuTrophies[idx].identifier == sm)
         {
-            return trophyUpdate(mainMenuTrophies[idx], 1, true);
+            return trophyUpdate(&mainMenuTrophies[idx], 1, true);
         }
     }
     return false;

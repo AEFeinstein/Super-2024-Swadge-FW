@@ -48,7 +48,6 @@ typedef struct
 
 typedef struct dn_gameData_t
 {
-    const trophyData_t (*trophyData)[9];
     p2pInfo p2p;
     // Current UI being shown
     dn_Ui_t ui;
@@ -113,3 +112,4 @@ extern swadgeMode_t danceNetworkMode;
 extern heatshrink_decoder* dn_hsd;
 extern uint8_t* dn_decodeSpace;
 // extern const int16_t markersUnlockedAtWins[NUM_UNLOCKABLE_MARKERS];
+extern const trophyData_t danceNetworkTrophies[];

@@ -139,10 +139,11 @@ static void ccmgSewMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float t
         if (pressedButton == ccmgsew->stitchType->buttonOrder[ccmgsew->currentStep])
         {
             ccmgsew->currentStep++;
+            midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, SIDE_STICK, 0x7f);
+
             if (ccmgsew->currentStep == BUTTON_PRESS_COUNT)
             {
                 cosCrunchMicrogameResult(true);
-                ccmgsew->currentStep = BUTTON_PRESS_COUNT - 1;
             }
         }
     }
@@ -182,77 +183,70 @@ static void ccmgSewMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float t
         }
     }
 
-    bool mirrorLR;
-    int32_t rotateDeg;
-    int16_t needlePointXOffset, needlePointYOffset;
-    int16_t needleEyeXOffset, needleEyeYOffset;
-    int16_t threadEyeXOffset, threadEyeYOffset;
-    int16_t threadStartX, threadStartY;
-
-    switch (ccmgsew->stitchType->buttonOrder[ccmgsew->currentStep])
-    {
-        case PB_LEFT:
-            mirrorLR           = false;
-            rotateDeg          = 90;
-            needlePointXOffset = 0;
-            needlePointYOffset = 0;
-            needleEyeXOffset   = ccmgsew->wsg.needleEye.h;
-            needleEyeYOffset   = 0;
-            threadEyeXOffset   = needleEyeXOffset + 8;
-            threadEyeYOffset   = needleEyeYOffset + 12;
-            break;
-        case PB_RIGHT:
-            mirrorLR           = true;
-            rotateDeg          = 270;
-            needlePointXOffset = 30;
-            needlePointYOffset = 20;
-            needleEyeXOffset   = needlePointXOffset - ccmgsew->wsg.needleEye.h;
-            needleEyeYOffset   = needlePointYOffset;
-            threadEyeXOffset   = needleEyeXOffset - 4;
-            threadEyeYOffset   = needleEyeYOffset + 12;
-            break;
-        case PB_UP:
-            mirrorLR           = true;
-            rotateDeg          = 180;
-            needlePointXOffset = 0;
-            needlePointYOffset = -ccmgsew->wsg.needleEye.h;
-            needleEyeXOffset   = 0;
-            needleEyeYOffset   = needlePointYOffset + ccmgsew->wsg.needleEye.h;
-            threadEyeXOffset   = needleEyeXOffset + 2;
-            threadEyeYOffset   = needleEyeYOffset + 18;
-            break;
-        case PB_DOWN:
-        default:
-            mirrorLR           = false;
-            rotateDeg          = 0;
-            needlePointXOffset = 0;
-            needlePointYOffset = 0;
-            needleEyeXOffset   = 0;
-            needleEyeYOffset   = -ccmgsew->wsg.needleEye.h;
-            threadEyeXOffset   = needleEyeXOffset + 2;
-            threadEyeYOffset   = needleEyeYOffset + 6;
-            break;
-    }
-
-    if (ccmgsew->currentStep == 0)
-    {
-        threadStartX = 0;
-        threadStartY = STITCH_Y - 50;
-    }
-    else
-    {
-        uint8_t lastStep = ccmgsew->currentStep - 1;
-        while (lastStep > 0 && ccmgsew->stitchType->buttonOrder[lastStep] != PB_UP
-               && ccmgsew->stitchType->buttonOrder[lastStep] != PB_DOWN)
-        {
-            lastStep--;
-        }
-        threadStartX = ccmgsew->stitchType->needlePos[lastStep].x;
-        threadStartY = STITCH_Y;
-    }
+    bool mirrorLR              = false;
+    int32_t rotateDeg          = 0;
+    int16_t needlePointXOffset = 0, needlePointYOffset = 0;
+    int16_t needleEyeXOffset = 0, needleEyeYOffset = -ccmgsew->wsg.needleEye.h;
+    int16_t threadEyeXOffset = needleEyeXOffset + 2, threadEyeYOffset = needleEyeYOffset + 6;
+    int16_t threadStartX = 0, threadStartY = 0;
 
     if (ccmgsew->currentStep < BUTTON_PRESS_COUNT)
     {
+        switch (ccmgsew->stitchType->buttonOrder[ccmgsew->currentStep])
+        {
+            case PB_LEFT:
+                mirrorLR           = false;
+                rotateDeg          = 90;
+                needlePointXOffset = 0;
+                needlePointYOffset = 0;
+                needleEyeXOffset   = ccmgsew->wsg.needleEye.h;
+                needleEyeYOffset   = 0;
+                threadEyeXOffset   = needleEyeXOffset + 8;
+                threadEyeYOffset   = needleEyeYOffset + 12;
+                break;
+            case PB_RIGHT:
+                mirrorLR           = true;
+                rotateDeg          = 270;
+                needlePointXOffset = 30;
+                needlePointYOffset = 20;
+                needleEyeXOffset   = needlePointXOffset - ccmgsew->wsg.needleEye.h;
+                needleEyeYOffset   = needlePointYOffset;
+                threadEyeXOffset   = needleEyeXOffset - 4;
+                threadEyeYOffset   = needleEyeYOffset + 12;
+                break;
+            case PB_UP:
+                mirrorLR           = true;
+                rotateDeg          = 180;
+                needlePointXOffset = 0;
+                needlePointYOffset = -ccmgsew->wsg.needleEye.h;
+                needleEyeXOffset   = 0;
+                needleEyeYOffset   = needlePointYOffset + ccmgsew->wsg.needleEye.h;
+                threadEyeXOffset   = needleEyeXOffset + 2;
+                threadEyeYOffset   = needleEyeYOffset + 18;
+                break;
+            case PB_DOWN:
+            default:
+                // Defaults set at initialization
+                break;
+        }
+
+        if (ccmgsew->currentStep == 0)
+        {
+            threadStartX = 0;
+            threadStartY = STITCH_Y - 50;
+        }
+        else
+        {
+            uint8_t lastStep = ccmgsew->currentStep - 1;
+            while (lastStep > 0 && ccmgsew->stitchType->buttonOrder[lastStep] != PB_UP
+                   && ccmgsew->stitchType->buttonOrder[lastStep] != PB_DOWN)
+            {
+                lastStep--;
+            }
+            threadStartX = ccmgsew->stitchType->needlePos[lastStep].x;
+            threadStartY = STITCH_Y;
+        }
+
         if (eyeUnderFabric)
         {
             drawWsg(&ccmgsew->wsg.needleEye, ccmgsew->stitchType->needlePos[ccmgsew->currentStep].x + needleEyeXOffset,

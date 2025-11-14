@@ -111,12 +111,6 @@
 #include "swadgesona.h"
 
 //==============================================================================
-// Defines
-//==============================================================================
-
-#define MAX_NUM_SWADGE_PASSES 100
-
-//==============================================================================
 // Structs
 //==============================================================================
 
@@ -143,10 +137,8 @@ typedef struct __attribute__((packed)) swadgePassPacket
     } roboRunner;
     struct
     {
-        swadgesonaCore_t profile; // Packed profile
-        uint16_t numPasses;       // Number of passes
-        uint32_t latestTrophyIdx; // Latest trophy earned
-    } atriumMode;
+        swadgesonaCore_t core;
+    } swadgesona;
 } swadgePassPacket_t;
 
 /**

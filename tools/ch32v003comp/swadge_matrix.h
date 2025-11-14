@@ -10,6 +10,13 @@
 #define TARGET_FPS 90
 #define MAX_INTENSITY 255
 
+#define EYE_LED_OFF    0x00
+#define EYE_LED_DIM    0x08
+#define EYE_LED_BRIGHT 0x10
+
+#define EYE_LED_W 12
+#define EYE_LED_H 6
+
 void MatrixSetup();
 int apsqrt( int i );
 void SetPixel( int x, int y, int intensity );

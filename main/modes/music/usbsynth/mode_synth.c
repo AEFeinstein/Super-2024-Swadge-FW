@@ -376,7 +376,7 @@ static void drawSampleGraphCircular(void);
 static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo);
 static int writeMidiText(char* dest, size_t n, midiTextInfo_t* text, bool kar);
 static void midiTextCallback(metaEventType_t type, const char* text, uint32_t length);
-static void synthMenuCb(const char* label, bool selected, uint32_t value);
+static bool synthMenuCb(const char* label, bool selected, uint32_t value);
 static void songEndCb(void);
 static void setupShuffle(int numSongs);
 static void prevSong(void);
@@ -393,6 +393,13 @@ static uint32_t lfsrCur(const lfsrState_t* state);
 //==============================================================================
 // Variabes
 //==============================================================================
+
+static const textEntrySettings_t tes = {
+    .shadowboxColor = c000,
+    .bgColor        = cTransparent,
+    .maxLen         = 128,
+    .startKMod      = TE_PROPER_NOUN,
+};
 
 static const char readyStr[] = "Ready!";
 
@@ -1834,6 +1841,7 @@ static void synthMainLoop(int64_t elapsedUs)
 
         if (!textEntryDraw(elapsedUs))
         {
+            textEntryDeinit();
             // Entry is finished
             if (sd->filenameBuf && *sd->filenameBuf)
             {
@@ -3904,7 +3912,7 @@ static void synthHandleInput(int64_t elapsedUs)
                     {
                         if (evt.down)
                         {
-                            textEntryInput(evt.down, evt.button);
+                            textEntryInput(evt);
                         }
                     }
                 }
@@ -4170,7 +4178,7 @@ static void midiTextCallback(metaEventType_t type, const char* text, uint32_t le
     }
 }
 
-static void synthMenuCb(const char* label, bool selected, uint32_t value)
+static bool synthMenuCb(const char* label, bool selected, uint32_t value)
 {
     // printf("synthMenuCb(%s, %s, %" PRIu32 ")\n", label, selected ? "true" : "false", value);
     if (NULL == label)
@@ -4333,9 +4341,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
             }
             else
             {
-                textEntryInit(&sd->font, 128, sd->filenameBuf);
-                textEntrySetBGTransparent();
-                textEntrySetShadowboxColor(true, c000);
+                textEntryInit(&tes, sd->filenameBuf, getSysFont());
             }
         }
     }
@@ -4551,6 +4557,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
             }
         }
     }
+    return false;
 }
 
 static void songEndCb(void)

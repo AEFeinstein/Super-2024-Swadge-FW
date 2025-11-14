@@ -120,10 +120,10 @@ static void swadgedokuMainLoop(int64_t elapsedUs);
 static void swadgedokuBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 static void swadgedokuSetupMenu(void);
-static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t value);
-static void swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t value);
+static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t value);
+static bool swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t value);
 static void swadgedokuSetupNumberWheel(int base, uint16_t disableMask);
-static void numberWheelCb(const char* label, bool selected, uint32_t value);
+static bool numberWheelCb(const char* label, bool selected, uint32_t value);
 
 static void swadgedokuCheckTrophyTriggers(void);
 static void swadgedokuPlayerSetDigit(uint8_t digit);
@@ -358,15 +358,19 @@ const trophyData_t swadgedokuTrophies[] = {{
                                            }};
 
 // Individual mode settings
-trophySettings_t swadgedokuTrophySettings = {
+const trophySettings_t swadgedokuTrophySettings = {
     .drawFromBottom   = false,
     .staticDurationUs = DRAW_STATIC_US * 2,
     .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = swadgedokuModeName,
 };
 
 // This is passed to the swadgeMode_t
-trophyDataList_t swadgedokuTrophyData
-    = {.settings = &swadgedokuTrophySettings, .list = swadgedokuTrophies, .length = ARRAY_SIZE(swadgedokuTrophies)};
+const trophyDataList_t swadgedokuTrophyData = {
+    .settings = &swadgedokuTrophySettings,
+    .list     = swadgedokuTrophies,
+    .length   = ARRAY_SIZE(swadgedokuTrophies),
+};
 
 // Aliases for trophies
 const trophyData_t* trophySolveAny = &swadgedokuTrophies[0];
@@ -467,8 +471,16 @@ static void swadgedokuExitMode(void)
     heap_caps_free(sd->player.notes);
     heap_caps_free(sd->player.overlay.gridOpts);
 
-    deinitWheelMenu(sd->numberWheelRenderer);
-    deinitMenu(sd->numberWheel);
+    if (sd->numberWheelRenderer != NULL)
+    {
+        deinitWheelMenu(sd->numberWheelRenderer);
+        sd->numberWheelRenderer = NULL;
+    }
+    if (sd->numberWheel != NULL)
+    {
+        deinitMenu(sd->numberWheel);
+        sd->numberWheel = NULL;
+    }
 
     deinitMenuMegaRenderer(sd->menuRenderer);
     deinitMenu(sd->menu);
@@ -734,7 +746,7 @@ static void swadgedokuSetupNumberWheel(int base, uint16_t disableMask)
     }
 }
 
-static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t value)
+static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
@@ -774,6 +786,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
 
                         sd->playingContinuation = true;
                         setupSudokuPlayer(&sd->player, &sd->game);
+                        memcpy(sd->player.notes, sd->game.notes, sd->game.size * sizeof(uint16_t));
                         sudokuGetNotes(sd->game.notes, &sd->game, 0);
                         sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
                         swadgedokuSetupNumberWheel(sd->game.base, 0);
@@ -797,14 +810,14 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             if (file < SUDOKU_PUZ_MIN || file > SUDOKU_PUZ_MAX)
             {
                 ESP_LOGE("Swadgedoku", "Tried to load illegal game file %" PRIu32, value);
-                return;
+                return false;
             }
             size_t fileLen;
             const uint8_t* sudokuData = cnfsGetFile(file, &fileLen);
             if (!loadSudokuData(sudokuData, fileLen, &sd->game))
             {
                 ESP_LOGE("Swadgedoku", "Couldn't load game file");
-                return;
+                return false;
             }
 
             sd->playTimer           = 0;
@@ -833,7 +846,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                                  sd->customSizeMenuItem->currentSetting, sd->customSizeMenuItem->currentSetting))
             {
                 ESP_LOGE("Swadgedoku", "Couldn't setup custom game???");
-                return;
+                return false;
             }
 
             sd->currentMode       = sd->customModeMenuItem->currentSetting;
@@ -852,7 +865,7 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
         {
             if (!setupSudokuGame(&sd->game, SM_JIGSAW, 9, 9))
             {
-                return;
+                return false;
             }
 
             sd->playTimer           = 0;
@@ -971,9 +984,10 @@ static void swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             }
         }
     }
+    return false;
 }
 
-static void swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t value)
+static bool swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
@@ -989,7 +1003,8 @@ static void swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t val
                 // Just clear all non-player-set digits
                 if (!(sd->game.flags[n] & (SF_LOCKED | SF_VOID)))
                 {
-                    sd->game.grid[n] = 0;
+                    sd->game.grid[n]    = 0;
+                    sd->player.notes[n] = 0;
                 }
             }
             sd->playTimer = 0;
@@ -1004,9 +1019,12 @@ static void swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t val
         {
             size_t size = getSudokuSaveSize(&sd->game, NULL, NULL, NULL, NULL);
             ESP_LOGE("Swadgedoku", "Writing %d bytes of swadgedoku save to NVS", (int)size);
+            uint16_t* tmpNotes = sd->game.notes;
+            sd->game.notes     = sd->player.notes;
             uint8_t data[size];
             // Write the data to the buffer
             writeSudokuData(data, &sd->game);
+            sd->game.notes = tmpNotes;
 
             // Write the buffer to NVS
             if (writeNvsBlob(settingKeyProgress, data, size))
@@ -1034,12 +1052,11 @@ static void swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t val
             }
         }
     }
+    return false;
 }
 
-static void numberWheelCb(const char* label, bool selected, uint32_t value)
+static bool numberWheelCb(const char* label, bool selected, uint32_t value)
 {
-    ESP_LOGE("Swadgedoku", "Number '%s' %s", label, selected ? "Selected" : "Scrolled");
-
     if (selected)
     {
         for (int i = 0; i < ARRAY_SIZE(digitLabels); i++)
@@ -1055,6 +1072,7 @@ static void numberWheelCb(const char* label, bool selected, uint32_t value)
             }
         }
     }
+    return false;
 }
 
 static void swadgedokuCheckTrophyTriggers(void)
@@ -1088,11 +1106,11 @@ static void swadgedokuCheckTrophyTriggers(void)
             switch (trophy->type)
             {
                 case TROPHY_TYPE_TRIGGER:
-                    trophyUpdate(*trophy, 1, true);
+                    trophyUpdate(trophy, 1, true);
                     break;
 
                 case TROPHY_TYPE_PROGRESS:
-                    trophyUpdate(*trophy, sd->currentDifficulty + 1, true);
+                    trophyUpdate(trophy, sd->currentDifficulty + 1, true);
                     break;
 
                 case TROPHY_TYPE_ADDITIVE:
@@ -1102,7 +1120,7 @@ static void swadgedokuCheckTrophyTriggers(void)
 
                 case TROPHY_TYPE_CHECKLIST:
                     // Checklist will probably be for the mode
-                    trophySetChecklistTask(*trophy, 1 << sd->currentMode, false, true);
+                    trophySetChecklistTask(trophy, 1 << sd->currentMode, false, true);
                     break;
             }
         }

@@ -255,9 +255,12 @@ static void ccmgSliceMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float
     if (!ccmgsl->endFadeComplete)
     {
         // Dashed line to show where the cut should go
-        drawLine(ccmgsl->targetArea.pos.x, ccmgsl->targetLineY + ccmgsl->targetArea.pos.y,
-                 ccmgsl->targetArea.pos.x + ccmgsl->targetArea.width - 1,
-                 ccmgsl->targetLineY + ccmgsl->targetArea.pos.y - targetDeltaY, ccmgsl->tintColor->lowlight, 4);
+        for (int y = -1; y <= 1; y++)
+        {
+            drawLine(ccmgsl->targetArea.pos.x, ccmgsl->targetLineY + ccmgsl->targetArea.pos.y + y,
+                     ccmgsl->targetArea.pos.x + ccmgsl->targetArea.width - 1,
+                     ccmgsl->targetLineY + ccmgsl->targetArea.pos.y - targetDeltaY + y, ccmgsl->tintColor->lowlight, 4);
+        }
 
         // Solid line showing where the knife will cut
         drawLineFast(ccmgsl->knifeX, ccmgsl->knifeBottomY + ccmgsl->wsg.knifeBottom.h,

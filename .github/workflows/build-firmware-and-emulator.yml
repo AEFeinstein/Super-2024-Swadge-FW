@@ -11,6 +11,7 @@ on:
 
 env:
   FIRMWARE_ARTIFACT: swadge2024-firmware
+  FIRMWARE_ARTIFACT_PATH: fw-artifact
   EMULATOR_ARTIFACT: swadge2024-emulator
 
 jobs:
@@ -43,7 +44,7 @@ jobs:
               - nvs.json
             idf_install: ~/.espressif
           - os: osx-intel
-            runner: macos-13
+            runner: macos-15-intel
             family: osx
             emulator: true
             firmware: false
@@ -74,7 +75,7 @@ jobs:
 
     #### Basic Steps
     - name: Check out repository code
-      uses: actions/checkout@v4.1.4
+      uses: actions/checkout@v5.0.0
       with:
         submodules: recursive
 
@@ -100,7 +101,7 @@ jobs:
     - name: Restore IDF Cache
       id: cache-esp-idf
       if: matrix.firmware
-      uses: actions/cache@v3
+      uses: actions/cache@v4.3.0
       with:
         path: |
           ${{ matrix.idf_install }}
@@ -132,26 +133,31 @@ jobs:
         ${{ runner.temp }}/esp-idf/export.sh
         idf.py build dfu
 
-    - name: Add firmware, bootloader, partition table, version, and flasher files to firmware artifact
+    - name: Consolidate firmware files
       if: matrix.firmware
-      uses: actions/upload-artifact@v4.3.3
+      run: |
+        mkdir -p ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/swadge2024.elf ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/swadge2024.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/dfu.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/bootloader/bootloader.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/partition_table/partition-table.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp version.txt ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp tools/pyFlashGui/pyFlashGui.py ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp tools/pyFlashGui/requirements.txt ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+
+    - name: Add files to firmware artifact
+      if: matrix.firmware
+      uses: actions/upload-artifact@v4.6.2
       with:
         name: ${{ env.FIRMWARE_ARTIFACT }}
-        path: |
-          build/swadge2024.elf
-          build/swadge2024.bin
-          build/dfu.bin
-          build/bootloader/bootloader.bin
-          build/partition_table/partition-table.bin
-          version.txt
-          tools/pyFlashGui/pyFlashGui.py
-          tools/pyFlashGui/requirements.txt
+        path: ${{ env.FIRMWARE_ARTIFACT_PATH }}
 
     #### Platform-specific Emulator Builds
     - name: Install msys64 packages
       id: install-msys64
       if: matrix.emulator && matrix.family == 'windows'
-      uses: msys2/setup-msys2@v2
+      uses: msys2/setup-msys2@v2.29.0
       with:
         msystem: MINGW64
         update: true
@@ -208,7 +214,7 @@ jobs:
     #### Generic Emulator Upload
     - name: Upload Emulator Binary
       if: matrix.emulator
-      uses: actions/upload-artifact@v4.3.3
+      uses: actions/upload-artifact@v4.6.2
       with:
         name: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os }}
         path: SwadgeEmulator.zip
@@ -221,7 +227,7 @@ jobs:
     steps:
     - name: Download all previous build artifacts
       if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5.0.0
       with:
         merge-multiple: false
 
@@ -238,7 +244,7 @@ jobs:
 
     - name: Create release for latest artifacts
       if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
-      uses: ncipollo/release-action@v1
+      uses: ncipollo/release-action@v1.20.0
       with:
         # Allow the release to be updated, since it's not a "final" release
         prerelease: true

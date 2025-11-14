@@ -92,7 +92,7 @@ void gamepadMainLoop(int64_t elapsedUs);
 void gamepadButtonCb(buttonEvt_t* evt);
 void gamepadReportStateToHost(void);
 
-void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal);
+bool gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal);
 void gamepadMenuLoop(int64_t elapsedUs);
 void gamepadStart(gamepadType_t type);
 
@@ -314,7 +314,7 @@ void gamepadExitMode(void)
     heap_caps_free(gamepad);
 }
 
-void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
+bool gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     if (selected)
     {
@@ -322,19 +322,19 @@ void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             gamepadStart(GAMEPAD_GENERIC);
             gamepad->screen = GAMEPAD_MAIN;
-            return;
+            return false;
         }
         else if (label == str_ns)
         {
             gamepadStart(GAMEPAD_NS);
             gamepad->screen = GAMEPAD_MAIN;
-            return;
+            return false;
         }
         else if (label == str_exit)
         {
             // Exit to main menu
             switchToSwadgeMode(&mainMenuMode);
-            return;
+            return false;
         }
     }
     else
@@ -348,6 +348,7 @@ void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
             setGamepadTouchSetting(settingVal);
         }
     }
+    return false;
 }
 
 void gamepadStart(gamepadType_t type)
@@ -362,9 +363,10 @@ void gamepadStart(gamepadType_t type)
     {
         // Unused code for unique HID serials
         // If there are device conflicts with 2+ Swadges, uncomment and figure out if we need to convert the MAC to
-        // alphaneumeric const uint8_t macBytes = 6; // This is part of the ESP API's design, and cannot be changed here
+        // alphanumeric
+        // const uint8_t macBytes = 6;
         // uint8_t mac[macBytes];
-        // if (ESP_OK == esp_wifi_get_mac(WIFI_IF_STA, mac))
+        // if (ESP_OK == getMacAddrNvs(mac))
         // {
         //     memcpy(&hid_string_descriptor[3], mac, macBytes);
         // }

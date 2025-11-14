@@ -24,7 +24,7 @@ static void dn_MsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 static void dn_EnterMode(void);
 static void dn_ExitMode(void);
 static void dn_MainLoop(int64_t elapsedUs);
-static void dn_MenuCb(const char* label, bool selected, uint32_t value);
+static bool dn_MenuCb(const char* label, bool selected, uint32_t value);
 static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 static void dn_initializeTutorial(bool advanced);
@@ -38,100 +38,104 @@ static void dn_freeAssets(void);
 //==============================================================================
 
 // Modify the following with your trophies
-const trophyData_t danceNetworkTrophies[]
-    = {{
-           // 0
-           .title       = "Dance 101",
-           .description = "Worth 3 credit hours at Dance University.",
-           .image       = NO_IMAGE_SET, // If set like this, it will draw a default trophy based on difficulty
-           .type        = TROPHY_TYPE_TRIGGER,
-           .difficulty  = TROPHY_DIFF_EASY,
-           .maxVal      = 1, // For trigger type, set to one
-       },
-       {
-           // 1
-           .title       = "Dance 200",
-           .description = "Also worth 3 credit hours at Dance University.",
-           .image       = NO_IMAGE_SET,
-           .type        = TROPHY_TYPE_TRIGGER,
-           .difficulty  = TROPHY_DIFF_HARD,
-           .maxVal      = 1,
-       },
-       {
-           // 2
-           .title       = "Certified Dance Freak",
-           .description = "Viewed the video tutorial, passed Dance 101, and passed Dance 200.",
-           .image       = NO_IMAGE_SET,
-           .type        = TROPHY_TYPE_CHECKLIST,
-           .difficulty  = TROPHY_DIFF_EXTREME,
-           .maxVal      = 0x7, // Three tasks, 0x01, 0x02, and 0x04
-       },
-       {
-           // 3
-           .title       = "Boogie Omnipotence",
-           .description = "Finished a match of Dance Network.",
-           .image       = NO_IMAGE_SET,
-           .type        = TROPHY_TYPE_TRIGGER,
-           .difficulty  = TROPHY_DIFF_HARD,
-           .maxVal      = 1,
-       },
-       {
-           // 4
-           .title       = "Full Discography",
-           .description = "Completely filled an album with tracks.",
-           .image       = NO_IMAGE_SET,
-           .type        = TROPHY_TYPE_TRIGGER,
-           .difficulty  = TROPHY_DIFF_EXTREME,
-           .maxVal      = 1,
-       },
-       {
-           // 5
-           .title       = "Utterly Confusing",
-           .description = "Played a game with white chess pieces for player 2 or black chess pieces for player 1.",
-           .image       = NO_IMAGE_SET,
-           .type        = TROPHY_TYPE_TRIGGER,
-           .difficulty  = TROPHY_DIFF_MEDIUM,
-           .maxVal      = 1,
-       },
-       {
-           // 6
-           .title       = "My People Need Me",
-           .description = "Jumped into the garbage pit.",
-           .image       = EF_BIGBUG_SLV_WSG,
-           .type        = TROPHY_TYPE_TRIGGER,
-           .difficulty  = TROPHY_DIFF_EASY,
-           .maxVal      = 1,
-       },
-       {
-           // 7
-           .title       = "Dance Veteran",
-           .description = "Completed 10 Dance Network matches. Puts DanceNoNighta to shame.",
-           .image       = NO_IMAGE_SET,
-           .type        = TROPHY_TYPE_ADDITIVE,
-           .difficulty  = TROPHY_DIFF_EASY,
-           .maxVal      = 10,
-       },
-       {
-           // 8
-           .title       = "No Respect These Days",
-           .description = "Angered DanceNoNighta during the moment of silence.",
-           .image       = EF_BIGBUG_SLV_WSG,
-           .type        = TROPHY_TYPE_TRIGGER,
-           .difficulty  = TROPHY_DIFF_EASY,
-           .maxVal      = 1,
-       }};
+const trophyData_t danceNetworkTrophies[] = {
+    {
+        // 0
+        .title       = "Dance 101",
+        .description = "Worth 3 credit hours at Dance University.",
+        .image       = NO_IMAGE_SET, // If set like this, it will draw a default trophy based on difficulty
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        // 1
+        .title       = "Dance 200",
+        .description = "Also worth 3 credit hours at Dance University.",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1,
+    },
+    {
+        // 2
+        .title       = "Certified Dance Freak",
+        .description = "Viewed the video tutorial, passed Dance 101, and passed Dance 200.",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_CHECKLIST,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 0x7, // Three tasks, 0x01, 0x02, and 0x04
+    },
+    {
+        // 3
+        .title       = "Boogie Omnipotence",
+        .description = "Finished a match of Dance Network.",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1,
+    },
+    {
+        // 4
+        .title       = "Full Discography",
+        .description = "Completely filled an album with tracks.",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1,
+    },
+    {
+        // 5
+        .title       = "Utterly Confusing",
+        .description = "Played a game with white chess pieces for player 2 or black chess pieces for player 1.",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        // 6
+        .title       = "My People Need Me",
+        .description = "Jumped into the garbage pit.",
+        .image       = EF_BIGBUG_SLV_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        // 7
+        .title       = "Dance Veteran",
+        .description = "Completed 10 Dance Network matches. Puts DanceNoNighta to shame.",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 10,
+    },
+    {
+        // 8
+        .title       = "No Respect These Days",
+        .description = "Angered DanceNoNighta during the moment of silence.",
+        .image       = EF_BIGBUG_SLV_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+};
 
 // Individual mode settings
-trophySettings_t danceNetworkTrophySettings = {
+const trophySettings_t danceNetworkTrophySettings = {
     .drawFromBottom   = false,
     .staticDurationUs = DRAW_STATIC_US * 6,
     .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = "Alpha Pulse",
 };
 
 // This is passed to the swadgeMode_t
-trophyDataList_t trophyData = {.settings = &danceNetworkTrophySettings,
-                               .list     = danceNetworkTrophies,
-                               .length   = ARRAY_SIZE(danceNetworkTrophies)};
+const trophyDataList_t trophyData = {
+    .settings = &danceNetworkTrophySettings,
+    .list     = danceNetworkTrophies,
+    .length   = ARRAY_SIZE(danceNetworkTrophies),
+};
 
 swadgeMode_t danceNetworkMode = {
     .modeName          = danceNetworkName, // Assign the name we created here
@@ -211,8 +215,6 @@ static void dn_EnterMode(void)
 {
     gameData = (dn_gameData_t*)heap_caps_calloc(1, sizeof(dn_gameData_t), MALLOC_CAP_8BIT);
     memset(gameData, 0, sizeof(dn_gameData_t));
-
-    gameData->trophyData = &danceNetworkTrophies;
 
     int32_t outVal;
     readNvs32(dnP1TroupeKey, &outVal);
@@ -457,8 +459,9 @@ static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
  * @param label The string label of the menu item selected
  * @param selected true if this was selected, false if it was moved to
  * @param value The value for settings, unused.
+ * @return true if the submenu should be exited, false to stay on it
  */
-static void dn_MenuCb(const char* label, bool selected, uint32_t value)
+static bool dn_MenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
@@ -541,6 +544,7 @@ static void dn_MenuCb(const char* label, bool selected, uint32_t value)
             switchToSwadgeMode(&mainMenuMode);
         }
     }
+    return false;
 }
 
 /**
@@ -684,7 +688,7 @@ static void dn_initializeVideoTutorial(void)
     ////////////////////
     // Make the qr code//
     ////////////////////
-    trophySetChecklistTask((*gameData->trophyData)[2], 0x4, true, true);
+    trophySetChecklistTask(&danceNetworkTrophies[2], 0x4, true, true);
     dn_entity_t* qr    = dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_NO_ASSET, 0,
                                                 (vec_t){0, 0}, gameData);
     qr->updateFunction = dn_updateQr;

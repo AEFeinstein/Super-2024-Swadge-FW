@@ -38,7 +38,8 @@
 typedef struct
 {
     wsg_t bg;             ///< The screen's background image with cutout hexagons
-    wsg_t body;           ///< The menu's solid background image
+    wsg_t body_top;       ///< The top part of the menu's background image.
+    wsg_t body_bottom;    ///< The bottom part of the menu's background image.
     wsg_t item;           ///< Background image for non-selected items
     wsg_t item_sel;       ///< Background image for the selected item
     wsg_t up;             ///< A single up arrow (previous page)
@@ -63,6 +64,7 @@ typedef struct
                                      ///< deinitMenuMegaRenderer()
 
     int32_t selectedMarqueeTimer; ///< The timer for marquee-ing the selected item text, if too long to fit
+    int32_t shadowMarqueeTimer;   ///< The timer for marquee-ing the selected item text, if too long to fit
     int32_t pageArrowTimer;       ///< The timer for blinking page up/down arrows
     node_t* currentItem;          ///< The currently selected menu item, resets ::selectedMarqueeTimer when changed
 
@@ -71,16 +73,25 @@ typedef struct
     int32_t bgColorTimer;           ///< A timer to increment ::bgColorDeg in order to cycle through ::bgColors
     int32_t bgColorDeg; ///< When cycling through ::bgColors, a sine wave is followed. This counts the degrees into the
                         ///< sine wave, 0 to 180
+    int32_t yOff;       ///< An offset to the hexagons to make them scroll smoothly
     int32_t bgColorIdx; ///< The current index into ::bgColors
 
     led_t leds[CONFIG_NUM_LEDS]; ///< An array with the RGB LED state to be output
     bool ledsOn;                 ///< true if LEDs should be set by this renderer, false to leave LEDs alone
+
+    bool drawBody;          ///< true to draw the sci-fi rectangle body background, false to skip it
+    uint16_t bodyHeight;    ///< the height of the middle portion of the body, between top and bottom decorated parts
+    bool conveyorBeltStyle; ///< true to draw a sliding background and sliding lights
 } menuMegaRenderer_t;
 
 menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);
 void deinitMenuMegaRenderer(menuMegaRenderer_t* renderer);
+void drawMenuBody(uint16_t topLeftX, uint16_t topLeftY, uint8_t expansionHeight, bool flipLR,
+                  menuMegaRenderer_t* renderer);
 void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs);
 void setMegaLedsOn(menuMegaRenderer_t* renderer, bool ledsOn);
+void setDrawBody(menuMegaRenderer_t* renderer, bool drawBody);
+void setBodyHeight(menuMegaRenderer_t* renderer, int16_t height);
 void recolorMenuMegaRenderer(menuMegaRenderer_t* renderer, paletteColor_t textFill, paletteColor_t textOutline,
                              paletteColor_t c1, paletteColor_t c2, paletteColor_t c3, paletteColor_t c4,
                              paletteColor_t c5, paletteColor_t c6, paletteColor_t c7, paletteColor_t c8,
