@@ -294,7 +294,10 @@ void copySwadgesona(swadgesona_t* to, swadgesona_t* from)
 
 void generateRandomSwadgesona(swadgesona_t* sw)
 {
-    sw->core.skin         = esp_random() % SKIN_COLOR_COUNT;
+    do
+    {
+        sw->core.skin = esp_random() % SKIN_COLOR_COUNT;
+    } while (sw->core.skin == SKIN_MAUVE);
     sw->core.hairColor    = esp_random() % HAIR_COLOR_COUNT;
     sw->core.eyeColor     = esp_random() % EYE_COLOR_COUNT;
     sw->core.clothes      = esp_random() % C_COUNT;
@@ -303,11 +306,17 @@ void generateRandomSwadgesona(swadgesona_t* sw)
     sw->core.bodyMarks    = esp_random() % BME_COUNT;
     sw->core.earShape     = esp_random() % EAE_COUNT;
     sw->core.eyebrows     = esp_random() % EBE_COUNT;
-    sw->core.eyeShape     = esp_random() % EE_COUNT;
-    sw->core.hairStyle    = esp_random() % HE_COUNT;
-    sw->core.hat          = esp_random() % HAE_COUNT;
-    sw->core.mouthShape   = esp_random() % ME_COUNT;
-    sw->core.glasses      = esp_random() % G_COUNT;
+    do
+    {
+        sw->core.eyeShape = esp_random() % EE_COUNT;
+    } while (sw->core.eyeShape == EE_RANDOMIZER || sw->core.eyeShape == EE_MY_EYES);
+    sw->core.hairStyle = esp_random() % HE_COUNT;
+    do
+    {
+        sw->core.hat = esp_random() % HAE_COUNT;
+    } while (sw->core.hat == HAE_CHAOS_GOBLIN);
+    sw->core.mouthShape = esp_random() % ME_COUNT;
+    sw->core.glasses    = esp_random() % G_COUNT;
 
     // Generate name
     generateRandUsername(&sw->name);

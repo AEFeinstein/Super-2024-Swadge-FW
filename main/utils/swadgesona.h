@@ -522,13 +522,13 @@ typedef struct __attribute__((packed))
     bodyMarks_t bodyMarks   : 6;
     earsShape_t earShape    : 4;
     eyebrowShape_t eyebrows : 5;
-    eyeShape_t eyeShape     : 5;
+    eyeShape_t eyeShape     : 6;
     hairStyle_t hairStyle   : 6;
     hat_t hat               : 5;
     mouthShape_t mouthShape : 5;
     glasses_t glasses       : 6;
 
-    // 24 + 42 + 32 = 98 / 8 = 13 bytes
+    // 24 + 43 + 32 = 99 bits / 8 = 13 bytes
 } swadgesonaCore_t;
 
 /// @brief Larger data for use of use

@@ -1592,8 +1592,6 @@ static void panelInput(buttonEvt_t evt, int size)
 {
     if (evt.down)
     {
-        // TODO: If a item is locked, skip it.
-        // TODO: Decide if can hover over, but cannot click?
         globalMidiPlayerPlaySong(&scd->sfxMove, MIDI_SFX);
         if (evt.button & PB_RIGHT)
         {
