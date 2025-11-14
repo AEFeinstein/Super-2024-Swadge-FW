@@ -723,8 +723,8 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
         }
     }
 
-    // TODO remove from production
-    DRAW_FPS_COUNTER((*getSysFont()));
+    // Uncomment to draw FPS
+    // DRAW_FPS_COUNTER((*getSysFont()));
 }
 
 /**
