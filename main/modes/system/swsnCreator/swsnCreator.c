@@ -323,6 +323,89 @@ static const textEntrySettings_t tes = {
     .shadowboxColor  = c202, // c202
 };
 
+// Trophies
+const trophyData_t swsnTrophies[] = {
+    {
+        .title       = "Mirror Mirror",
+        .description = "Create your first swadgesona!",
+        .image       = SWSN_MIRROR_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "New face who dis?",
+        .description = "Edit your SwadgePass Swadgesona for the first time",
+        .image       = SWSN_NEW_FACE_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Randomizer",
+        .description = "Randomize your swadgesona 10 times",
+        .image       = E_RANDOMIZER_WSG,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 10,
+    },
+    {
+        .title       = "Chaos Goblin",
+        .description = "Randomize and save without making changes",
+        .image       = SWSN_CHAOS_GOBLIN_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1,
+        .hidden      = true,
+    },
+    {
+        .title       = "Michelangelo",
+        .description = "Fill 5 swadgesona slots with swadgesonas",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Donatello",
+        .description = "Fill 10 swadgesona slots with swadgesonas",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Marcel Duchamp",
+        .description = "Fill 14 swadgesona slots with swadgesonas",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "A Face Made for Radio",
+        .description = "Kidding, kidding, It looks great!",
+        .image       = E_MY_EYES_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1,
+        .hidden      = true,
+    },
+};
+
+const trophySettings_t swsnTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = sonaTrophyNVS,
+};
+
+const trophyDataList_t swsnTrophyDataList = {
+    .settings = &swsnTrophySettings,
+    .list     = swsnTrophies,
+    .length   = ARRAY_SIZE(swsnTrophies),
+};
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -425,6 +508,10 @@ typedef struct
     bool untouchedRandom;
     int shakeRandom;
     int32_t shakeTimer;
+
+    // Trophy Locked items
+    bool trophiesUnlocked[ARRAY_SIZE(swsnTrophies)];
+    wsg_t noGo;
 } swsnCreatorData_t;
 
 //==============================================================================
@@ -473,88 +560,6 @@ static void swsnPacket(swadgePassPacket_t* packet);
 // Variables
 //==============================================================================
 
-const trophyData_t swsnTrophies[] = {
-    {
-        .title       = "Mirror Mirror",
-        .description = "Create your first swadgesona!",
-        .image       = SWSN_MIRROR_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "New face who dis?",
-        .description = "Edit your SwadgePass Swadgesona for the first time",
-        .image       = SWSN_NEW_FACE_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Randomizer",
-        .description = "Randomize your swadgesona 10 times",
-        .image       = E_RANDOMIZER_WSG,
-        .type        = TROPHY_TYPE_ADDITIVE,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 10,
-    },
-    {
-        .title       = "Chaos Goblin",
-        .description = "Randomize and save without making changes",
-        .image       = SWSN_CHAOS_GOBLIN_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1,
-        .hidden      = true,
-    },
-    {
-        .title       = "Michelangelo",
-        .description = "Fill 5 swadgesona slots with swadgesonas",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Donatello",
-        .description = "Fill 10 swadgesona slots with swadgesonas",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Marcel Duchamp",
-        .description = "Fill 14 swadgesona slots with swadgesonas",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "A Face Made for Radio",
-        .description = "Kidding, kidding, It looks great!",
-        .image       = E_MY_EYES_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EXTREME,
-        .maxVal      = 1,
-        .hidden      = true,
-    },
-};
-
-const trophySettings_t swsnTrophySettings = {
-    .drawFromBottom   = false,
-    .staticDurationUs = DRAW_STATIC_US,
-    .slideDurationUs  = DRAW_SLIDE_US,
-    .namespaceKey     = sonaTrophyNVS,
-};
-
-const trophyDataList_t swsnTrophyDataList = {
-    .settings = &swsnTrophySettings,
-    .list     = swsnTrophies,
-    .length   = ARRAY_SIZE(swsnTrophies),
-};
-
 swadgeMode_t swsnCreatorMode = {
     .modeName                = sonaModeName,
     .wifiMode                = NO_WIFI,
@@ -583,6 +588,7 @@ static void swsnEnterMode(void)
         loadWsg(tabImages[idx], &scd->tabSprs[idx], true);
     }
     loadFont(RODIN_EB_FONT, &scd->fnt, true);
+    loadWsg(SWSN_NO_GO_WSG, &scd->noGo, true);
 
     // Load audio
     loadMidiFile(SWSN_CREATOR_BGM1_MID, &scd->bgm, true);
@@ -595,6 +601,13 @@ static void swsnEnterMode(void)
     midiGmOn(scd->sfxPlayer);
     globalMidiPlayerSetVolume(MIDI_BGM, 12);
     globalMidiPlayerPlaySong(&scd->bgm, MIDI_BGM);
+
+    // Load previous trophy win states into RAM to avoid excessive NVS calls
+    // Yes, I know reads aren't limited or destructive, they're just kinda slow. Shush.
+    scd->trophiesUnlocked[1] = trophyGetSavedValue(&swsnTrophies[1]); // Booleans are just '0' or '1' in C
+    scd->trophiesUnlocked[2] = (trophyGetSavedValue(&swsnTrophies[2]) == 10);
+    scd->trophiesUnlocked[3] = trophyGetSavedValue(&swsnTrophies[3]);
+    scd->trophiesUnlocked[7] = trophyGetSavedValue(&swsnTrophies[7]);
 
     // If the SP swadgesona isn't saved yet, automatically load into creating the SP Sona
     size_t len = sizeof(swadgesonaCore_t);
@@ -631,6 +644,7 @@ static void swsnExitMode(void)
     unloadMidiFile(&scd->sfxMove);
     deinitMenuMegaRenderer(scd->renderer);
     deinitMenu(scd->menu);
+    freeWsg(&scd->noGo);
     freeFont(&scd->fnt);
     for (int idx = 0; idx < ARRAY_SIZE(tabImages); idx++)
     {
@@ -682,6 +696,10 @@ static void swsnLoop(int64_t elapsedUs)
                             trophyUpdate(&swsnTrophies[2], scd->shakeRandom, true);
                             // Set bool for unedited randomized sona
                             scd->untouchedRandom = true;
+                            if (scd->shakeRandom >= 10)
+                            {
+                                scd->trophiesUnlocked[2] = true;
+                            }
                         }
                     }
                     drawCreator();
@@ -777,10 +795,12 @@ static void swsnLoop(int64_t elapsedUs)
                 if (scd->untouchedRandom)
                 {
                     trophyUpdate(&swsnTrophies[3], 1, true);
+                    scd->trophiesUnlocked[3] = true;
                 }
                 if (esp_random() % 100 == 0)
                 {
                     trophyUpdate(&swsnTrophies[7], 1, true);
+                    scd->trophiesUnlocked[7] = true;
                 }
                 break;
             }
@@ -804,6 +824,7 @@ static void swsnLoop(int64_t elapsedUs)
                 scd->state      = GOTO_ATRIUM;
                 scd->hasChanged = false;
                 trophyUpdate(&swsnTrophies[1], 1, true);
+                scd->trophiesUnlocked[1] = true;
                 break;
             }
             drawUsernamePicker(&scd->activeSona.name);
@@ -1638,12 +1659,21 @@ static void panelInput(buttonEvt_t evt, int size)
                 }
                 case EYES:
                 {
+                    if ((scd->arr[EYES] == EE_RANDOMIZER && !scd->trophiesUnlocked[2])
+                        || (scd->arr[EYES] == EE_MY_EYES && !scd->trophiesUnlocked[7]))
+                    {
+                        break; // Don't save this one
+                    }
                     scd->selection = EYE_COLOR;
                     scd->page      = scd->arr[scd->selection] / GRID_SIZE;
                     break;
                 }
                 case HAT:
                 {
+                    if (scd->arr[HAT] == HAE_CHAOS_GOBLIN && !scd->trophiesUnlocked[3])
+                    {
+                        break; // Don't save this one
+                    }
                     if (scd->arr[scd->selection] == HAE_BEANIE || scd->arr[scd->selection] == HAE_COOL_HAT
                         || scd->arr[scd->selection] == HAE_PUFFBALL || scd->arr[scd->selection] == HAE_HEART)
                     {
@@ -1672,6 +1702,10 @@ static void panelInput(buttonEvt_t evt, int size)
                 }
                 default:
                 {
+                    if (scd->selection == SKIN && scd->arr[SKIN] == 13 && !scd->trophiesUnlocked[1])
+                    {
+                        break; // Don't select this one
+                    }
                     switch (scd->selection)
                     {
                         case HAIR_COLOR:
@@ -1837,13 +1871,11 @@ static void drawColors(const paletteColor_t* colors, int arrSize, bool left)
                         xStart + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)) + SWATCH_W,
                         TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)) + SWATCH_H, CORNER_RAD,
                         colors[idx + (scd->page * GRID_SIZE)], c000);
-        // FIXME: Need to load no go image
-        // TODO: Stop showing symbol if trophy won
-        /* if (scd->selection == SKIN && idx + (scd->page * GRID_SIZE) == SKIN_MAUVE)
+        if (scd->selection == SKIN && idx + (scd->page * GRID_SIZE) == SKIN_MAUVE && !scd->trophiesUnlocked[1])
         {
-            drawWsgSimple(&scd->selectionImages[0], xStart + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
-                          TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
-        } */
+            drawWsgSimple(&scd->noGo, xStart + 1 + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
+                          TOP_PADDING + PADDING - 2 + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
+        }
         if (scd->arr[scd->selection] == idx + (scd->page * GRID_SIZE))
         {
             drawWsgSimpleScaled(&scd->cursorImage,
@@ -1890,11 +1922,11 @@ static void drawItems(int arrSize, bool left, bool half)
                      xOffset + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
                      yOffset + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
         }
-        // TODO: Add new eye variants (Swirly and that stupid bug eyed one)
-        // TODO: Stop showing symbol if trophy won
-        if ((scd->selection == HAT && idx + (scd->page * GRID_SIZE) == HAE_CHAOS_GOBLIN))
+        if ((scd->selection == HAT && idx + (scd->page * GRID_SIZE) == HAE_CHAOS_GOBLIN && !scd->trophiesUnlocked[3])
+            || (scd->selection == EYES && idx + (scd->page * GRID_SIZE) == EE_MY_EYES && !scd->trophiesUnlocked[7])
+            || (scd->selection == EYES && idx + (scd->page * GRID_SIZE) == EE_RANDOMIZER && !scd->trophiesUnlocked[2]))
         {
-            drawWsgSimple(&scd->selectionImages[0], cursorXOffset + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
+            drawWsgSimple(&scd->noGo, cursorXOffset + ((idx % GRID_ROW) * (PADDING * 2 + SWATCH_W)),
                           TOP_PADDING + PADDING + ((idx / GRID_ROW) * (PADDING * 2 + SWATCH_H)));
         }
         // Cursor
