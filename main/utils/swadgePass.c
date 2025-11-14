@@ -18,6 +18,8 @@
 #define SWADGE_PASS_PREAMBLE 0x5350 // 'SP' in ASCII
 #define SWADGE_PASS_VERSION  0      // Version 0 for 2026
 
+#define MAX_NUM_SWADGE_PASSES 100
+
 //==============================================================================
 // Const Variables
 //==============================================================================

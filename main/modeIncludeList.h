@@ -30,8 +30,10 @@
 */
 
 #include "accelTest.h"
+#include "artillery.h"
 #include "atrium.h"
 #include "bouncy.h"
+#include "canvas.h"
 #include "colorchord.h"
 #include "cosCrunch.h"
 #include "dance.h"
@@ -42,24 +44,26 @@
 #include "jukebox.h"
 #include "keebTest.h"
 #include "mainMenu.h"
-#include "mode_credits.h"
+#include "megaPulseEx.h"
 #include "mode_ch32v003test.h"
+#include "mode_credits.h"
 #include "mode_diceroller.h"
 #include "mode_synth.h"
 #include "nameTest.h"
 #include "picross_menu.h"
 #include "roboRunner.h"
 #include "sequencerMode.h"
-#include "canvas.h"
+#include "sonaTest.h"
 #include "swadgedoku.h"
+#include "swsnCreator.h"
 #include "swadgeIt.h"
 #include "swadgePassTest.h"
 #include "swadgetamatone.h"
-#include "sonaTest.h"
 #include "touchTest.h"
 #include "trophyCase.h"
 #include "trophyTest.h"
 #include "tunernome.h"
+
 
 //==============================================================================
 // Function Prototypes

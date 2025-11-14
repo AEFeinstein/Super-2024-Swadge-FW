@@ -1,28 +1,37 @@
 #include "atrium.h"
 #include "nameList.h"
 #include "swadgesona.h"
+#include "swadgePass.h"
 
 //---------------------------------------------------------------------------------//
 // DEFINES
 //---------------------------------------------------------------------------------//
 
+#define TFT_WIDTH 280
+#define TFT_HEIGHT 240
+#define MAX_NUM_SWADGE_PASSES 50
+
 // Lobby
-#define MAX_SWADGESONA_IDXS (BG_COUNT * 4)
+#define SONA_PER 4
+#define MAX_SWADGESONA_IDXS (BG_COUNT * SONA_PER)
 #define ANIM_TIMER_MS 16667
 #define LOBBY_ARROW_Y 40
 #define LOBBY_BORDER_X 20
 
-/* int buttoncoord_y = 200; // y coord for the button row
-int buttonpadding = 4;   // padding for text written in button, in px
-int buttonwidth   = 60;  // width of the button, in px
-int buttonheight  = 20;  // height of the button, in px, i probably want a sprite here but i'll draw a box for now
+// Profile
+#define CARDTEXTPAD 4
+#define TEXTBOX1WIDTH 156
+#define TEXTBOX2WIDTH 172
+#define SONALOC_X 24
+#define SONALOC_Y 36
 
-int cardpadding   = 4; // padding for text written in card, in px
-int textbox1width = 156;
-int textbox2width = 172;
-
-// sona locations
-int headoffset = 48; */
+// Coordinates
+/* static const int textboxcoords_x[]  = {99, 24};             // x coords for the two textboxes
+static const int textbox1coords_y[] = {39, 51, 63, 75};     // y coords for the first textbox lines
+static const int textbox2coords_y[] = {124, 136, 148, 160}; // y coords for the second textbox lines
+static const int buttoncoord_x[]    = {99, 24};             // x coord for the button columns
+static const int x_coords[]         = {5, 74, 143, 212};
+static const int y_coords[]         = {120, 80}; */
 
 //---------------------------------------------------------------------------------//
 // CONSTS
@@ -32,7 +41,7 @@ int headoffset = 48; */
 static const cnfsFileIdx_t sonaBodies[] = {DANCEBODY_1_WSG}; // Sona bodies
 static const cnfsFileIdx_t uiImages[]   = {
     ARROWBUTTON_1_WSG, ARROWBUTTON_2_WSG, ABUTTON_1_WSG,  ABUTTON_2_WSG,
-    BBUTTON_1_WSG,     BBUTTON_2_WSG,     ATRIUMLOGO_WSG, KEEPON_WSG,
+    BBUTTON_1_WSG,     BBUTTON_2_WSG,     ATRIUMLOGO_WSG, KEEPON_WSG, ATRIUMLOGO_WSG, 
 };
 static const cnfsFileIdx_t bgImages[] = {
     GAZEBO_WSG, ATRIUMPLANT_1_WSG, ARCADE_1_WSG, ARCADE_2_WSG, CONCERT_1_WSG, CONCERT_2_WSG,
@@ -40,7 +49,6 @@ static const cnfsFileIdx_t bgImages[] = {
 static const cnfsFileIdx_t cardImages[]
     = {CARDGEN_WSG, CARDBLOSS_WSG, CARDBUBB_WSG, CARDDINO_WSG, CARDMAGFEST_WSG, CARDMUSIC_WSG, CARDSPACE_WSG};
 static const cnfsFileIdx_t midiBGM[] = {
-    MADEIT_MID,
     ATRIUM_VIBE_MID,
 };
 static const cnfsFileIdx_t midiSFX[]   = {};
@@ -51,18 +59,18 @@ static const cnfsFileIdx_t fontsIdxs[] = {
 const char atriumModeName[] = "Atrium";
 
 // Strings
-static const char* const titleScreenText[] = {
+/*static const char* const titleScreenText[] = {
     "SwadgePass",
     "Atrium",
     "Press A to Enter the Atrium",
     "Press B to View/Edit Your Profile",
 };
-/* static const char* const editButtonText[] = {
+ static const char* const editButtonText[] = {
     "CANCEL",
     "SAVE",
 };
 static const char* const editPromptText[] = {
-    "Choose Card", "Edit Sona", "Pick Sandwich", "Choose Identity", "Choose Location",
+    "Choose Card", "Edit Sona", "Choose Identity", "Choose Location",
 };
 static const char* const editConfirmText[] = {
     "Are you sure?",
@@ -88,18 +96,7 @@ static const char* const preambles[] = {"Fave Sandwich: ", "I am a: ", "Find me 
 // static const char* const confirmtext[] = {"Are you sure?", "This will overwrite your profile."};
 // static const char* const instructtext[] = {"Press arrows to scroll", "Press A to confirm selection"};
 
-/* int card_coords_x[] = {24, 99, 208};
-int card_coords_y[]
-    = {24 + 12, 112 + 12}; // needs testing, original location at 24,112 was too high on screen and clipping into radius
-*/
 
-// Coordinates
-/* static const int textboxcoords_x[]  = {99, 24};             // x coords for the two textboxes
-static const int textbox1coords_y[] = {39, 51, 63, 75};     // y coords for the first textbox lines
-static const int textbox2coords_y[] = {124, 136, 148, 160}; // y coords for the second textbox lines
-static const int buttoncoord_x[]    = {99, 24};             // x coord for the button columns
-static const int x_coords[]         = {5, 74, 143, 212};
-static const int y_coords[]         = {120, 80}; */
 
 //---------------------------------------------------------------------------------//
 // ENUMS
@@ -201,20 +198,15 @@ typedef struct
     // BGM
     midiPlayer_t* player;
 
+    //SwadgePass List
+    list_t spList;
+
     /* int selector; // which item is selected in the editor
     bool confirm;
     int x; // x position in editor select
     int y; // y position in editor select
 
-    sonaSelect selection;
-    int ticker;
-    int PAGE;
-    int planter;
-    int dancecount;
-    int loopcount;
-    int numloops;
-    int s; // sona index, 0-3
-    int d; // dance chance */
+ */
 } atrium_t;
 
 //---------------------------------------------------------------------------------//
@@ -230,7 +222,7 @@ static void atriumMainLoop(int64_t elapsedUs);
 static void editProfile(buttonEvt_t* evt);
 
 // Draw
-static void drawAtriumTitle(void);
+static void drawAtriumTitle(uint64_t elapsedUs);
 static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs);
 static void shuffleSonas(void);
 static void drawSonas(uint64_t elapsedUs);
@@ -241,12 +233,8 @@ static void drawGazeboForeground(uint64_t elapsedUs);
 static void drawArrows(bool, bool);
 
 // Swadgepass
-static void atriumAddSP(struct swadgePassPacket* packet);
+static void atriumAddSP(struct swadgePassPacket* packet); 
 
-/*
-static void viewProfile(userProfile prof);
-uint32_t packProfile(userProfile prof);
-userProfile unpackProfile(uint32_t packedProfile); */
 
 //---------------------------------------------------------------------------------//
 // VARIABLES
@@ -281,7 +269,7 @@ trophyDataList_t atriumTrophyData = {
 // Main variables
 swadgeMode_t atriumMode = {
     .modeName          = atriumModeName, // Assign the name we created here
-    .wifiMode          = ESP_NOW,        // If we want WiFi
+    .wifiMode          = false,        // If we want WiFi
     .overrideUsb       = false,          // Overrides the default USB behavior.
     .usesAccelerometer = false,          // If we're using motion controls
     .usesThermometer   = false,          // If we're using the internal thermometer
@@ -295,7 +283,7 @@ swadgeMode_t atriumMode = {
     .fnEspNowRecvCb           = NULL,            // If using Wifi, add the receive function here
     .fnEspNowSendCb           = NULL,            // If using Wifi, add the send function here
     .fnAdvancedUSB            = NULL,            // If using advanced USB things.
-    .trophyData               = &atriumTrophyData,
+    //.trophyData               = &atriumTrophyData,
     .fnAddToSwadgePassPacket  = atriumAddSP, // function to add data to swadgepass packet
 };
 
@@ -345,10 +333,9 @@ static void atriumEnterMode()
         loadFont(fontsIdxs[idx], &atr->fonts[idx], true);
     }
 
-    /* // Swadgepass
-    list_t spList = {0};
-    getSwadgePasses(&spList, &atriumMode, true);
-    node_t* spNode = spList.first;
+// Swadgepass
+    getSwadgePasses(&atr->spList, &atriumMode, true);
+    node_t* spNode = atr->spList.first;
     while (spNode)
     {
         // Make a convenience pointer to the data in this node
@@ -368,7 +355,7 @@ static void atriumEnterMode()
         spNode = spNode->next;
     }
 
-     if (!readNvs32(atriumNVSprofile, &myProfile.created))
+    /* if (!readNvs32(atriumNVSprofile, &myProfile.created))
     {
         // We check if it found a value and if it didn't, we randomize a new profile for the user
         myProfile.cardselect = rand() % 8;
@@ -387,10 +374,6 @@ static void atriumEnterMode()
         writeNvs32(atriumNVSprofile, myProfile.created);
     } */
 
-    /* myUser = getSystemUsername();
-    readNvs32(atriumNVSprofile, &myProfile.created);
-    printf("my profile nvs int is %" PRId32 "\n", myProfile.created);
-    // myProfile = unpackProfile(myProfile.created); */
 
     // BGM
     atr->player       = globalMidiPlayerGet(MIDI_BGM);
@@ -466,7 +449,7 @@ static void atriumMainLoop(int64_t elapsedUs)
                     // TODO: Load Profile before editing
                 }
             }
-            drawAtriumTitle();
+            drawAtriumTitle(elapsedUs);
             break;
         }
         case ATR_DISPLAY:
@@ -502,172 +485,40 @@ static void atriumMainLoop(int64_t elapsedUs)
 void atriumAddSP(struct swadgePassPacket* packet)
 {
     // FIXME: Load the appropriate mode
-    packet->atriumMode.profile.bodyMarks = atr->loadedProfile.swsn->core.bodyMarks; // TODO: Load everything
-    packet->atriumMode.numPasses         = atr->loadedProfile.numPasses;
-    packet->atriumMode.latestTrophyIdx   = 0; // FIXME: Load from NVS
+    //packet->atriumMode.numPasses         = atr->loadedProfile.numPasses;
+    //packet->atriumMode.latestTrophyIdx   = trophyGetLatest();
 }
 
 // States
 static void editProfile(buttonEvt_t* evt)
 {
-    /* int editorState = 0;
-    switch (xselect)
-    {
-        case 0:
-        {
-            editorState = EDIT_CARD;
-            drawText(font, c000, prompttext[0], 48, 200); // draw the text for selecting a card below the buttons
-            printf("editor state is card\n");
-            break;
-        }
-        case 1:
-        {
-            switch (yselect)
-            {
-                case 0:
-                {
-                    editorState = EDIT_SONA;
-                    drawText(font, c000, prompttext[1], 48,
-                             200); // draw the text for selecting a card below the buttons
-                    printf("editor state is sona\n");
-                    break;
-                }
-                case 1:
-                {
-                    editorState = EDIT_TEXT1;
-                    // do more stuff with text lines later
-                    // drawsomethingattextline();
-                    printf("editor state is text1\n");
-                    break;
-                }
-                case 2:
-                {
-                    editorState = EDIT_CANCEL;
-                    printf("editor state is cancel\n");
-                    break;
-                }
-            }
-            break;
-        }
-        case 2:
-        {
-            switch (yselect)
-            {
-                case 0:
-                {
-                    editorState = EDIT_TEXT0;
-                    printf("editor state is text0\n");
-                    break;
-                }
-                case 1:
-                {
-                    editorState = EDIT_SYMBOL;
-                    printf("editor state is symbol\n");
-                    break;
-                }
-                case 2:
-                {
-                    editorState = EDIT_SAVE;
-                    printf("editor state is save\n");
-                    break;
-                }
-            }
-            break;
-        }
-        case 3:
-        {
-            if (yselect == 0)
-            {
-                editorState = EDIT_CANCEL;
-                printf("editor state is cancel\n");
-            }
-            else
-            {
-                editorState = EDIT_SAVE;
-                printf("editor state is save\n");
-            }
-            break;
-        }
-    }
 
-    while (checkButtonQueueWrapper(&evt))
-    {
-        if (evt.down)
-        {
-            if ((evt.button & PB_A))
-            {
-                // do something based on editorState
-            }
-
-            if ((evt.button & PB_DOWN))
-            {
-                if (y < 2)
-                {
-                    y++;
-                }
-                else
-                {
-                    y = 0; // wraparound
-                }
-            }
-
-            if ((evt.button & PB_UP))
-            {
-                if (y > 0)
-                {
-                    y--;
-                }
-                else
-                {
-                    y = 2; // wraparound
-                }
-            }
-
-            if ((evt.button & PB_LEFT))
-            {
-                if (x > 0)
-                {
-                    x--;
-                }
-                else
-                {
-                    x = 3; // wraparound
-                }
-            }
-
-            if ((evt.button & PB_RIGHT))
-            {
-                if (x < 3)
-                {
-                    x++;
-                }
-                else
-                {
-                    x = 0; // wraparound
-                }
-            }
-        }
-    }
-
-    return editorState;
-    // if (confirm == 1)
-    // {
-    //     // Save to NVS
-    //     writeNvs32(atriumNVSprofile, packProfile(myProfile));
-    //     confirm = 0;
-    // }
-     */
 }
 
 // Draw
-static void drawAtriumTitle(void)
+static void drawAtriumTitle(uint64_t elapsedUs)
 {
     // draw the title screen for the atrium mode
-    drawRectFilled(0, 0, 280, 240, c000); // fill the screen with black
-    drawText(&atr->fonts[0], c555, titleScreenText[0], 20, 20);
-    drawText(&atr->fonts[0], c555, titleScreenText[1], 20, 40);
-    drawText(&atr->fonts[0], c555, titleScreenText[2], 20, 100);
-    drawText(&atr->fonts[0], c555, titleScreenText[3], 20, 120);
+    drawRectFilled(0, 0, TFT_WIDTH, TFT_HEIGHT, c555); // fill the screen with white
+    atr->animTimer += elapsedUs;
+    if (atr->animTimer >= ANIM_TIMER_MS && atr->loadAnims < 20)
+    {
+        atr->animTimer = 0;
+        atr->loadAnims++;
+    }
+
+    //draw and bounce the logo
+    if (atr->loadAnims <= 20)
+    {               
+        int offset = 21 - atr->loadAnims;                                    
+        drawWsgSimple(&atr->uiElements[6], 0, offset);  
+        
+    }
+    else
+    {                                             
+        drawWsgSimple(&atr->uiElements[6], 0, 0); 
+        
+    }
 }
 
 static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
@@ -767,7 +618,7 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
     drawText(&atr->fonts[0], c000, "Press B to return to menu", 48, 216); // FIXME: Hardcoded
 
     // Trophy
-    trophyUpdate(atriumTrophies[0], 1, 1); // trigger the trophy for entering a lobby
+    
 }
 
 static void shuffleSonas()
@@ -861,23 +712,7 @@ static void drawGazeboForeground(uint64_t elapsedUs)
 
 static void drawSonas(uint64_t elapsedUs)
 {
-    // tester to see if the sonas show up right. up to 4 sonas drawn on the screen at one time. eventually, random
-    // swadgepass lines shall be selected to draw. in this tester, random hardcoded sonas are drawn in the required
-    // positions.
-
-    /* int j = 0; // placeholder for drawing a second row maybe someday. one struggle at a time
-
-    for (int i = 0; i < 4; i++)
-    {
-        int h = rand() % 7; // randomize head select
-        // int h = 2; //for now, just use this head
-        drawWsgSimple(miscArray[h], x_coords[i],
-                      y_coords[j] - headoffset); // place head on top of body minus offset
-    }
-
-    changer = 0;
- */
-    // end sona tester
+   
 }
 
 static void drawArrows(bool left, bool right)
@@ -896,67 +731,7 @@ static void drawArrows(bool left, bool right)
 /*
 void viewProfile(userProfile prof)
 {
-    // printf("In view profile state\n");
-
-    // printf("Cardselect: %d, Fact0: %d, Fact1: %d, Fact2: %d, Sona: %d, Mine: %d\n", prof.cardselect, prof.fact0,
-    //        prof.fact1, prof.fact2, prof.sona, prof.mine);
-    if (loader == 0)
-    {
-        // WSG for profile mode only
-        loadWsg(CARDBLOSS_WSG, &cards->card1, true);
-        loadWsg(CARDBUBB_WSG, &cards->card2, true);
-        loadWsg(CARDDINO_WSG, &cards->card3, true);
-        loadWsg(CARDGEN_WSG, &cards->card4, true);
-        loadWsg(CARDMAGFEST_WSG, &cards->card5, true);
-        loadWsg(CARDMUSIC_WSG, &cards->card6, true);
-        loadWsg(CARDSPACE_WSG, &cards->card7, true);
-        loadWsg(WINGED_TROPHY_WSG, &misc->trophy, true);
-        loader = 1;
-
-        cardsArray[0] = &cards->card1;
-        cardsArray[1] = &cards->card2;
-        cardsArray[2] = &cards->card3;
-        cardsArray[3] = &cards->card4;
-        cardsArray[4] = &cards->card5;
-        cardsArray[5] = &cards->card6;
-        cardsArray[6] = &cards->card7;
-    }
-
-    while (checkButtonQueueWrapper(&evt))
-    {
-        if (evt.down)
-        {
-            if ((evt.button & PB_A))
-            {
-                printf("PB_A; prof.mine %d\n", prof.mine);
-                if (prof.mine == 1)
-                {
-                    state = ATR_EDIT_PROFILE; // if A is pressed, go to edit profile
-                    printf("Attempting to play edit bgm\n");
-                    globalMidiPlayerPlaySong(&amidi->edit_bgm, MIDI_BGM);
-                    editProfile(x, y);
-                }
-                else
-                {
-                    // do nothing, only let user edit their own profile
-                }
-            }
-            else if ((evt.button & PB_B))
-            {
-                state  = ATR_TITLE; // if B is pressed, go back to title view
-                loader = 0;         // reset the loader so the card wsgs are freed and reloaded next time
-                for (int i = 0; i < (sizeof(cards_t) / sizeof(wsg_t)); i++) // don't hardcode this
-                {
-                    printf("freeing card wsg %d\n", i);
-                    freeWsg(cardsArray[i]);
-                    printf("freed card wsg %d\n", i);
-                }
-                freeWsg(&misc->trophy);
-            }
-        }
-    }
-
-    // concat card info
+   // concat card info
     // line 0: name
     // no concat required
     // line 1: fact0
