@@ -13,6 +13,7 @@
 
 #include "hdw-esp-now.h"
 #include "p2pConnection.h"
+#include "hdw-nvs.h"
 
 //==============================================================================
 // Defines
@@ -93,7 +94,7 @@ void p2pInitialize(p2pInfo* p2p, uint8_t modeId, p2pConCbFn conCbFn, p2pMsgRxCbF
     p2p->incomingModeId = modeId;
 
     // Get and save the string form of our MAC address
-    esp_wifi_get_mac(WIFI_IF_STA, p2p->cnc.myMac);
+    getMacAddrNvs(p2p->cnc.myMac);
 
     // Set up the connection message
     p2p->conMsg.startByte   = P2P_START_BYTE;
@@ -919,4 +920,41 @@ void p2pSetPlayOrder(p2pInfo* p2p, playOrder_t order)
 bool p2pIsTxIdle(p2pInfo* p2p)
 {
     return p2p->cnc.isConnected && !p2p->ack.isWaitingForAck;
+}
+
+/**
+ * @brief Get this Swadge's MAC address.
+ *
+ * Reading the MAC from the WiFi Interface may fail if WiFi isn't initialized, so this saves a copy of the MAC in NVS
+ * once it's read and returns the copy if the WiFi Interface isn't initialized.
+ *
+ * @param mac Where to read the MAC address into. Must be at least six bytes long.
+ * @return true if the MAC was read, false if it wasn't
+ */
+bool getMacAddrNvs(uint8_t* mac)
+{
+    // MAC addresses are always 6 bytes long
+    size_t macSize = 6;
+    // NVS key to save the MAC
+    const char macNvsKey[] = "MAC";
+
+    // Try to read MAC from NVS first
+    if (false == readNvsBlob(macNvsKey, mac, &macSize))
+    {
+        // If the NVS read fails, read MAC from hardware
+        if (ESP_OK == esp_wifi_get_mac(WIFI_IF_STA, mac))
+        {
+            // If the hardware read succeeds, write it to NVS
+            writeNvsBlob(macNvsKey, mac, macSize);
+        }
+        else
+        {
+            // Both NVS and HW reads failed
+            memset(mac, 0, macSize);
+            return false;
+        }
+    }
+
+    // MAC was read from somewhere, return it
+    return true;
 }

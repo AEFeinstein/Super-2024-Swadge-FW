@@ -108,6 +108,7 @@
 //==============================================================================
 
 #include "swadge2024.h"
+#include "swadgesona.h"
 
 //==============================================================================
 // Structs
@@ -134,6 +135,10 @@ typedef struct __attribute__((packed)) swadgePassPacket
     {
         uint16_t highScore;
     } roboRunner;
+    struct
+    {
+        swadgesonaCore_t core;
+    } swadgesona;
 } swadgePassPacket_t;
 
 /**
