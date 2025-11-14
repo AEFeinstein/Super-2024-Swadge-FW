@@ -15,7 +15,7 @@
 #include "shapes.h"
 #include "wsg.h"
 #include "nameList.h"
-#include "sonaTest.h"
+#include "swsnCreator.h"
 
 #include "embeddedOut.h"
 #include "bunny.h"
@@ -870,7 +870,7 @@ static void introMainLoop(int64_t elapsedUs)
         }
         case END:
         {
-            switchToSwadgeMode(&sonaTestMode); // TODO swsnCreator
+            switchToSwadgeMode(&swsnCreatorMode);
             break;
         }
         case MAGCOM:
