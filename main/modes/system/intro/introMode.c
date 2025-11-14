@@ -309,7 +309,7 @@ const trophyData_t tutorialTrophies[] = {
         .image       = NO_IMAGE_SET,
     },
 };
- 
+
 // Individual mode settings
 const trophySettings_t tutorialTrophySettings = {
     .drawFromBottom   = true,
@@ -317,7 +317,7 @@ const trophySettings_t tutorialTrophySettings = {
     .slideDurationUs  = DRAW_SLIDE_US,
     .namespaceKey     = introName,
 };
- 
+
 // This is passed to the swadgeMode_t
 const trophyDataList_t trophyTutorialData = {
     .settings = &tutorialTrophySettings,
@@ -340,7 +340,7 @@ swadgeMode_t introMode = {
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
-    .trophyData    = &trophyTutorialData,
+    .trophyData               = &trophyTutorialData,
 #ifdef CUSTOM_INTRO_SOUND
     .fnDacCb = introDacCallback,
 #else
@@ -467,6 +467,8 @@ typedef struct
 } introVars_t;
 
 static introVars_t* iv;
+
+static const char TAG[] = "TUT";
 
 /**
  * This function is called when this mode is started. It should initialize
@@ -638,7 +640,7 @@ static void introMainLoop(int64_t elapsedUs)
         playIntro(elapsedUs);
         return;
     }
-    trophyUpdate(&tutorialTrophies[0],1,1);
+    trophyUpdate(&tutorialTrophies[0], 1, 1);
 #endif
 
 #ifdef CUSTOM_INTRO_SOUND
@@ -881,7 +883,7 @@ static void introMainLoop(int64_t elapsedUs)
         = drawTextWordWrap(&iv->smallFont, c000, detail, &detailX, &detailY, TFT_WIDTH - 25, detailYmax);
     if (NULL != remaining)
     {
-        ESP_LOGI("Intro", "Remaining text: ...%s", remaining);
+        ESP_LOGI(TAG, "Remaining text: ...%s", remaining);
         // TODO handle remaining text sensibly
     }
 }
@@ -953,7 +955,7 @@ static void introDacCallback(uint8_t* samples, int16_t len)
         iv->playingSound = playSample(&iv->samplePlayer, samples, len);
         if (!iv->playingSound)
         {
-            ESP_LOGI("Intro", "Finished playing sample");
+            ESP_LOGI(TAG, "Finished playing sample");
         }
     }
     else
@@ -966,8 +968,8 @@ static void introDacCallback(uint8_t* samples, int16_t len)
 static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
                             bool backtrack)
 {
-    ESP_LOGI("Intro", "'%s' Triggered!", prev->title);
-    ESP_LOGI("Intro", "Onto '%s'", next->title);
+    ESP_LOGI(TAG, "'%s' Triggered!", prev->title);
+    ESP_LOGI(TAG, "Onto '%s'", next->title);
 
     // Switch peripherals
     if (spkTitle == next->title)
@@ -995,7 +997,7 @@ static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, 
     }
     else if (micTitle == next->title)
     {
-        trophyUpdate(&tutorialTrophies[1],1,1);
+        trophyUpdate(&tutorialTrophies[1], 1, 1);
         switchToMicrophone();
         iv->drawMode = DRAW_MIC;
     }
@@ -1023,7 +1025,7 @@ static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, 
     else if (exitTitle == next->title)
     {
         iv->drawMode = SONA;
-        trophyUpdate(&tutorialTrophies[2],1,1);
+        trophyUpdate(&tutorialTrophies[2], 1, 1);
     }
     else if (endTitle == next->title)
     {
@@ -1043,7 +1045,7 @@ static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, 
     }
     else if (next == (buttonsSteps + 14))
     {
-        ESP_LOGI("Intro", "Oh it's the one we want: %s", next->title);
+        ESP_LOGI(TAG, "Oh it's the one we want: %s", next->title);
         iv->quickSettingsOpened = true;
         openQuickSettings();
     }
@@ -1055,7 +1057,7 @@ static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, 
     {
         setTutorialCompletedSetting(true);
         switchToSwadgeMode(&mainMenuMode);
-        ESP_LOGI("Intro", "Last trigger entered!");
+        ESP_LOGI(TAG, "Last trigger entered!");
     }
 }
 
@@ -1352,7 +1354,7 @@ static void playIntro(int64_t elapsedUs)
     {
         iv->animateidx++;
         iv->animatetimer = 0;
-        printf("animate index is %d\n", iv->animateidx);
+        ESP_LOGI(TAG, "animate index is %d", iv->animateidx);
     }
 
     switch (iv->animateidx)
