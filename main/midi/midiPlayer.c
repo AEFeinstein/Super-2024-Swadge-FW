@@ -1376,6 +1376,7 @@ static void midiSongEnd(midiPlayer_t* player)
     {
         resetMidiParser(&player->reader);
         player->sampleCount = 0;
+        player->tick        = 0;
         player->paused      = false;
     }
     else
@@ -1419,7 +1420,10 @@ void midiPlayerReset(midiPlayer_t* player)
 
     // We need the tempo to not be zero, so set it to the default of 120BPM until we get a tempo event
     // 120 BPM == 500,000 microseconds per quarter note
-    player->tempo = 500000;
+    player->tempo            = 500000;
+    player->tick             = 0;
+    player->samplesPerTick   = 0;
+    player->forceCheckEvents = true;
 
     // Set all the relevant bits to 1, meaning not in use
     player->percSpecialStates = 0b00111111111111111111111111111111; // 0x4fffffff
@@ -1441,8 +1445,10 @@ void midiPlayerResetNewSong(midiPlayer_t* player)
     // Set all the relevant bits to 1, meaning not in use
     player->percSpecialStates = 0b00111111111111111111111111111111; // 0x4fffffff
 
-    player->sampleCount    = 0;
-    player->eventAvailable = false;
+    player->sampleCount      = 0;
+    player->tick             = 0;
+    player->eventAvailable   = false;
+    player->forceCheckEvents = true;
 }
 
 int32_t midiPlayerStep(midiPlayer_t* player)
@@ -1452,36 +1458,30 @@ int32_t midiPlayerStep(midiPlayer_t* player)
         return 0;
     }
 
-    bool checkEvents = !player->songEnding;
-    if (player->mode == MIDI_FILE)
+    bool checkEvents = !player->songEnding && player->forceCheckEvents;
+    if (checkEvents && player->mode == MIDI_FILE)
     {
-        if (!player->songEnding)
+        player->forceCheckEvents = false;
+        if (!player->eventAvailable)
         {
-            if (!player->eventAvailable)
-            {
-                player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
-            }
+            player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
+        }
 
-            if (!player->eventAvailable)
-            {
-                ESP_LOGI("MIDI", "Done playing file!");
-                player->songEnding = true;
-                //midiSongEnd(player);
-                checkEvents = false;
-            }
+        if (!player->eventAvailable)
+        {
+            ESP_LOGI("MIDI", "Done playing file!");
+            player->songEnding = true;
+            checkEvents        = false;
+        }
+        // Use a while loop since we may need to handle multiple events at the exact same time
+        while (checkEvents && player->pendingEvent.absTime <= player->tick)
+        {
+            // It's time, so handle the event now
+            handleEvent(player, &player->pendingEvent);
 
-            // Use a while loop since we may need to handle multiple events at the exact same time
-            while (checkEvents
-                && player->pendingEvent.absTime
-                        <= SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division))
-            {
-                // It's time, so handle the event now
-                handleEvent(player, &player->pendingEvent);
-
-                // Try and grab the next event, and if we got one, keep checking
-                player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
-                checkEvents            = player->eventAvailable;
-            }
+            // Try and grab the next event, and if we got one, keep checking
+            player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
+            checkEvents            = player->eventAvailable;
         }
     }
     else if (player->mode == MIDI_STREAMING)
@@ -1524,6 +1524,11 @@ int32_t midiPlayerStep(midiPlayer_t* player)
     }
 
     player->sampleCount++;
+    if (player->samplesPerTick && 0 == player->sampleCount % player->samplesPerTick)
+    {
+        player->tick++;
+        player->forceCheckEvents = true;
+    }
 
     // Apply the global volume value
     sample *= player->volume;
@@ -2609,7 +2614,12 @@ void midiSetTempo(midiPlayer_t* player, uint32_t tempo)
     uint32_t oldTempo = player->tempo;
 
     player->tempo       = tempo;
-    player->sampleCount = player->sampleCount * tempo / oldTempo;
+    player->sampleCount = 0;
+    if (player->mode == MIDI_FILE)
+    {
+        player->samplesPerTick   = SAMPLES_PER_TICK(player->tempo, player->reader.division);
+        player->forceCheckEvents = true;
+    }
 }
 
 void midiSetFile(midiPlayer_t* player, const midiFile_t* song)
@@ -2624,11 +2634,13 @@ void midiSetFile(midiPlayer_t* player, const midiFile_t* song)
         deinitMidiParser(&player->reader);
         player->mode   = MIDI_STREAMING;
         player->paused = true;
+        return;
     }
     else
     {
         midiParserSetFile(&player->reader, song);
     }
+    player->samplesPerTick = SAMPLES_PER_TICK(player->tempo, player->reader.division);
 }
 
 void midiPause(midiPlayer_t* player, bool pause)
@@ -2650,7 +2662,7 @@ void midiSeek(midiPlayer_t* player, uint32_t ticks)
         player->songFinishedCallback = NULL;
         bool loop                    = player->loop;
 
-        if (SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division) > ticks)
+        if (player->tick > ticks)
         {
             // We have to go back
             midiPlayerReset(player);
@@ -2672,7 +2684,7 @@ void midiSeek(midiPlayer_t* player, uint32_t ticks)
 
         ESP_LOGD("MIDI", "Seeking to %" PRIu32, ticks);
 
-        uint32_t curTick = SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division);
+        uint32_t curTick = player->tick;
         ESP_LOGD("MIDI", "Current tick is %" PRIu32, curTick);
 
         while (curTick < ticks)
@@ -2698,12 +2710,15 @@ void midiSeek(midiPlayer_t* player, uint32_t ticks)
 
             curTick = player->pendingEvent.absTime;
             ESP_LOGD("MIDI", "Next event is at tick %" PRIu32, curTick);
+            player->tick        = curTick;
             player->sampleCount = TICKS_TO_SAMPLES(curTick, player->tempo, player->reader.division);
             handleEvent(player, &player->pendingEvent);
             player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
         }
 
-        player->sampleCount = TICKS_TO_SAMPLES(curTick, player->tempo, player->reader.division);
+        player->sampleCount      = TICKS_TO_SAMPLES(curTick, player->tempo, player->reader.division);
+        player->tick             = curTick;
+        player->forceCheckEvents = true;
 
         stopped = !player->eventAvailable
                   && !(player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent));
