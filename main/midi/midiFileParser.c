@@ -1029,7 +1029,7 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
         return false;
     }
 
-    *event           = nextTrack->nextEvent;
+    *event = nextTrack->nextEvent;
     nextTrack->time += event->deltaTime;
     nextTrack->eventParsed = trackParseNext(reader, nextTrack);
     return true;

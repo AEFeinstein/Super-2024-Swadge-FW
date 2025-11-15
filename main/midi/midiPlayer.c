@@ -222,7 +222,7 @@ static bool releaseNote(voiceStates_t* states, uint8_t voiceIdx, midiVoice_t* vo
 static adsrState_t voiceAdvanceAdsr(midiVoice_t* voice, voiceStates_t* states, uint8_t voiceIdx, midiChannel_t* channel,
                                     uint32_t* specialStates, adsrState_t target)
 {
-    uint32_t voiceBit  = (1 << voiceIdx);
+    uint32_t voiceBit = (1 << voiceIdx);
     // Initialize these to zero because the compiler is a big ole square
     uint32_t attackTime = 0, decayTime = 0, releaseTime = 0;
     uint8_t pressureVol = voice->velocity << 1 | 1;
@@ -271,11 +271,16 @@ static adsrState_t voiceAdvanceAdsr(midiVoice_t* voice, voiceStates_t* states, u
             }
         }
 
-        case ADSR_ATTACK: goto adsrAttack;
-        case ADSR_DECAY: goto adsrDecay;
-        case ADSR_SUSTAIN: goto adsrSustain;
-        case ADSR_RELEASE: goto adsrRelease;
-        case ADSR_OFF: goto adsrOff;
+        case ADSR_ATTACK:
+            goto adsrAttack;
+        case ADSR_DECAY:
+            goto adsrDecay;
+        case ADSR_SUSTAIN:
+            goto adsrSustain;
+        case ADSR_RELEASE:
+            goto adsrRelease;
+        case ADSR_OFF:
+            goto adsrOff;
     }
 
     /////////////////////////////////////////////
@@ -311,7 +316,7 @@ adsrAttack:
     // Decay State
     /////////////////////////////////////////////
 adsrDecay:
-    decayTime  = voice->envelope.decayTime + ((voice->envelope.decayTimeVel * (int)voice->velocity) >> 8);
+    decayTime = voice->envelope.decayTime + ((voice->envelope.decayTimeVel * (int)voice->velocity) >> 8);
 
     // Move from ATTACK to DECAY state
     // This means that we move from the current volume (which is normally just the pressure volume)
@@ -340,8 +345,7 @@ adsrDecay:
         voice->volAccel        = 0;
         voice->stateChangeTick = voice->voiceTick + decayTime;
 
-        MIDI_DBG("Moving to decay for %" PRIu32 " ticks at rate %.3f", decayTime,
-                    1.0 * voice->volRate / (1 << 24));
+        MIDI_DBG("Moving to decay for %" PRIu32 " ticks at rate %.3f", decayTime, 1.0 * voice->volRate / (1 << 24));
         return ADSR_DECAY;
     }
 
@@ -378,8 +382,8 @@ adsrSustain:
     }
 
     MIDI_DBG("Skipping sustain: no sustain volume or note already released");
-    MIDI_DBG("States: %" PRIx32 ", sustainVol: %" PRIu32,
-                voiceBit & (states->on | states->held | states->sustenuto), sustainVol);
+    MIDI_DBG("States: %" PRIx32 ", sustainVol: %" PRIu32, voiceBit & (states->on | states->held | states->sustenuto),
+             sustainVol);
 
     /////////////////////////////////////////////
     // Release State
@@ -412,8 +416,7 @@ adsrRelease:
 
         // releaseTime * releaseTime / 163
         voice->stateChangeTick = voice->voiceTick + releaseTime;
-        MIDI_DBG("Moved to release for %" PRIu32 " ticks at rate %.3f", releaseTime,
-                    1.0 * voice->volRate / (1 << 24));
+        MIDI_DBG("Moved to release for %" PRIu32 " ticks at rate %.3f", releaseTime, 1.0 * voice->volRate / (1 << 24));
         return ADSR_RELEASE;
     }
     else if (releaseTime)
