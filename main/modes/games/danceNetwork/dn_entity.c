@@ -207,7 +207,6 @@ void dn_updateBoard(dn_entity_t* self)
                         }
                         else // a pawn has plunged
                         {
-                            dn_calculateSong(self);
                             ////////////////////////////
                             // Make the prompt Sudoku //
                             ////////////////////////////
@@ -246,6 +245,7 @@ void dn_updateBoard(dn_entity_t* self)
                             }
                         }
                         tileData->unit = NULL;
+                        dn_calculateSong(self);
                     }
                 }
             }
@@ -3156,7 +3156,6 @@ void dn_updateBullet(dn_entity_t* self)
             else if ((dn_belongsToP1(targetTile->unit) && self->gameData->phase >= DN_P2_DANCE_PHASE)
                      || (!dn_belongsToP1(targetTile->unit) && self->gameData->phase < DN_P2_DANCE_PHASE))
             {
-                dn_calculateSong(self);
                 ///////////////////////////////////
                 // Make the prompt enemy captured//
                 ///////////////////////////////////
@@ -3180,7 +3179,6 @@ void dn_updateBullet(dn_entity_t* self)
             }
             else // friendly fire!
             {
-                dn_calculateSong(self);
                 //////////////////////////////////////
                 // Make the prompt for friendly fire//
                 //////////////////////////////////////
@@ -3218,6 +3216,7 @@ void dn_updateBullet(dn_entity_t* self)
                 }
             }
             targetTile->unit = NULL;
+            dn_calculateSong(self);
         }
         else
         {
@@ -4126,7 +4125,7 @@ void dn_calculateSong(dn_entity_t* self)
     for(int i = 0; i < 5; i++)
     {
         p1PiecesCount += bData->p1Units[i] != NULL;
-        p2PiecesCount += bData->p1Units[i] != NULL;
+        p2PiecesCount += bData->p2Units[i] != NULL;
     }
     if(p1PiecesCount == p2PiecesCount)//balanced
     {
@@ -4143,6 +4142,7 @@ void dn_calculateSong(dn_entity_t* self)
 
     if(self->gameData->currentSong != calculatedSong)
     {
+        self->gameData->currentSong = calculatedSong;
         midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
         uint32_t curTick = SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division);
         midiPlayerResetNewSong(player);
