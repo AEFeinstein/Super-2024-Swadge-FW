@@ -218,6 +218,7 @@ void artilleryEnterMode(void)
     loadFont(OXANIUM_FONT, &ad->font_oxanium, false);
     makeOutlineFont(&ad->font_oxanium, &ad->font_oxaniumOutline, false);
     loadFont(PULSE_AUX_FONT, &ad->font_pulseAux, false);
+    makeOutlineFont(&ad->font_pulseAux, &ad->font_pulseAuxOutline, false);
 
     // Initialize mode menu renderer
     ad->mRenderer = initMenuMegaRenderer(&ad->font_oxanium, &ad->font_oxaniumOutline, &ad->font_pulseAux);
@@ -325,6 +326,7 @@ void artilleryExitMode(void)
     freeFont(&ad->font_oxanium);
     freeFont(&ad->font_oxaniumOutline);
     freeFont(&ad->font_pulseAux);
+    freeFont(&ad->font_pulseAuxOutline);
 
     // Deinit p2p
     p2pDeinit(&ad->p2p);

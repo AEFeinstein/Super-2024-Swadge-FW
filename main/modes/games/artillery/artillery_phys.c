@@ -707,7 +707,7 @@ void drawPhysBackground(physSim_t* phys, int16_t x0, int16_t y0, int16_t w, int1
  * @param players
  * @param font
  */
-void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_t turn)
+void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, font_t* fontOutline, int32_t turn)
 {
     // Draw zones
     // for (int32_t z = 0; z < NUM_ZONES; z++)
@@ -835,10 +835,13 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
     {
         char scoreStr[32] = {0};
         snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, players[0]->score);
-        drawText(font, COLOR_HUD_TEXT, scoreStr, TEXT_X_MARGIN, TEXT_Y);
+        drawText(font, players[0]->baseColor, scoreStr, TEXT_X_MARGIN, TEXT_Y);
+        drawText(fontOutline, players[0]->accentColor, scoreStr, TEXT_X_MARGIN, TEXT_Y);
 
         snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, players[1]->score);
-        drawText(font, COLOR_HUD_TEXT, scoreStr, TFT_WIDTH - textWidth(font, scoreStr) - TEXT_X_MARGIN, TEXT_Y);
+        drawText(font, players[1]->baseColor, scoreStr, TFT_WIDTH - textWidth(font, scoreStr) - TEXT_X_MARGIN, TEXT_Y);
+        drawText(fontOutline, players[1]->accentColor, scoreStr, TFT_WIDTH - textWidth(font, scoreStr) - TEXT_X_MARGIN,
+                 TEXT_Y);
     }
 }
 
