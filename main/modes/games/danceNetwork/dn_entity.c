@@ -1808,8 +1808,6 @@ void dn_drawPlayerTurn(dn_entity_t* self)
     // drawWsgSimpleScaled(&self->gameData->assets[DN_NUMBER_ASSET].frames[self->gameData->rerolls[1]], 257,
     //                     30 + 100 * (self->gameData->camera.pos.y < 60060), 3, 3);
 
-    dn_setEyes(self);
-
     paletteColor_t col = self->gameData->phase < DN_P2_DANCE_PHASE ? c055 : c550;
     drawCircleQuadrants(41, 41, 41, false, false, true, false, col);
     drawCircleQuadrants(TFT_WIDTH - 42, 41, 41, false, false, false, true, col);
@@ -2048,6 +2046,7 @@ void dn_gainReroll(dn_entity_t* self)
     self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]++;
     self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]
         = CLAMP(self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE], 0, 9);
+    dn_setEyes(self);
 }
 
 void dn_gainRerollAndSetupDancePhase(dn_entity_t* self)
@@ -2060,6 +2059,7 @@ void dn_gainRerollAndSetupDancePhase(dn_entity_t* self)
 
 void dn_setupDancePhase(dn_entity_t* self) // used to be dn_startMovePhase
 {
+    dn_setEyes(self);
     dn_calculateSong(self);
     dn_boardData_t* bData         = (dn_boardData_t*)self->gameData->entityManager.board->data;
     dn_entity_t* existingSelector = dn_findLastEntityOfType(self, DN_TILE_SELECTOR_DATA);
@@ -2271,6 +2271,7 @@ void dn_acceptSwapCC(dn_entity_t* self)
     }
 
     self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE] -= 5;
+    dn_setEyes(self);
     ///////////////////
     // Make the swap //
     ///////////////////
@@ -2862,6 +2863,7 @@ void dn_initializeUpgradeConfirmOption(dn_entity_t* self)
 void dn_rerollSecondUpgradeOption(dn_entity_t* self)
 {
     self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]--;
+    dn_setEyes(self);
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
     uint8_t separatorIdx         = 0;
     for (int i = 0; i < sizeof(umData->track) / sizeof(umData->track[0]); i++)
@@ -2885,6 +2887,7 @@ void dn_rerollSecondUpgradeOption(dn_entity_t* self)
 void dn_rerollThirdUpgradeOption(dn_entity_t* self)
 {
     self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]--;
+    dn_setEyes(self);
     dn_upgradeMenuData_t* umData = (dn_upgradeMenuData_t*)self->data;
     uint8_t separatorIdx         = 0;
     for (int i = 0; i < sizeof(umData->album) / sizeof(umData->album[0]); i++)
@@ -2931,6 +2934,7 @@ void dn_rerollFirstUpgradeOptionFree(dn_entity_t* self)
 void dn_rerollFirstUpgradeOption(dn_entity_t* self)
 {
     self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]--;
+    dn_setEyes(self);
     dn_rerollFirstUpgradeOptionFree(self);
 }
 
@@ -3383,6 +3387,7 @@ void dn_moveUnit(dn_entity_t* self)
         += bData->tiles[bData->impactPos.y][bData->impactPos.x].rewards;
     self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE]
         = CLAMP(self->gameData->rerolls[self->gameData->phase >= DN_P2_DANCE_PHASE], 0, 9);
+    dn_setEyes(self);
     bData->tiles[bData->impactPos.y][bData->impactPos.x].rewards = 0;
 
     bData->tiles[bData->impactPos.y][bData->impactPos.x].yVel = -700;
