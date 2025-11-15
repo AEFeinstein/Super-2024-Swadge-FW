@@ -178,6 +178,8 @@ void dn_updateBoard(dn_entity_t* self)
                             ///////////////////////////////
                             // Make the prompt Game Over //
                             ///////////////////////////////
+                            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+                            globalMidiPlayerPlaySong(&self->gameData->songs[3], MIDI_BGM);
                             trophyUpdate(&(*self->gameData->trophyData)[3], 1, true);
                             trophyUpdate(&(*self->gameData->trophyData)[7],
                                          trophyGetSavedValue(&(*self->gameData->trophyData)[7]) + 1, true);
@@ -204,6 +206,7 @@ void dn_updateBoard(dn_entity_t* self)
                         }
                         else // a pawn has plunged
                         {
+                            dn_calculateSong(self);
                             ////////////////////////////
                             // Make the prompt Sudoku //
                             ////////////////////////////
@@ -2057,6 +2060,7 @@ void dn_gainRerollAndSetupDancePhase(dn_entity_t* self)
 
 void dn_setupDancePhase(dn_entity_t* self) // used to be dn_startMovePhase
 {
+    dn_calculateSong(self);
     dn_boardData_t* bData         = (dn_boardData_t*)self->gameData->entityManager.board->data;
     dn_entity_t* existingSelector = dn_findLastEntityOfType(self, DN_TILE_SELECTOR_DATA);
     if (existingSelector)
@@ -3113,6 +3117,8 @@ void dn_updateBullet(dn_entity_t* self)
                 ///////////////////////////////
                 // Make the prompt Game Over //
                 ///////////////////////////////
+                midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+                globalMidiPlayerPlaySong(&self->gameData->songs[3], MIDI_BGM);
                 trophyUpdate(&(*self->gameData->trophyData)[3], 1, true);
                 trophyUpdate(&(*self->gameData->trophyData)[7],
                              trophyGetSavedValue(&(*self->gameData->trophyData)[7]) + 1, true);
@@ -3143,6 +3149,7 @@ void dn_updateBullet(dn_entity_t* self)
             else if ((dn_belongsToP1(targetTile->unit) && self->gameData->phase >= DN_P2_DANCE_PHASE)
                      || (!dn_belongsToP1(targetTile->unit) && self->gameData->phase < DN_P2_DANCE_PHASE))
             {
+                dn_calculateSong(self);
                 ///////////////////////////////////
                 // Make the prompt enemy captured//
                 ///////////////////////////////////
@@ -3166,6 +3173,7 @@ void dn_updateBullet(dn_entity_t* self)
             }
             else // friendly fire!
             {
+                dn_calculateSong(self);
                 //////////////////////////////////////
                 // Make the prompt for friendly fire//
                 //////////////////////////////////////
@@ -3304,7 +3312,7 @@ void dn_moveUnit(dn_entity_t* self)
         moveFrame = 17;
     }
 
-    int impactFrame;
+    int impactFrame = 0;
     switch (self->assetIndex)
     {
         case DN_BUCKET_HAT_UP_ASSET:
@@ -3387,6 +3395,8 @@ void dn_moveUnit(dn_entity_t* self)
         ///////////////////////////////
         // Make the prompt Game Over //
         ///////////////////////////////
+        midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+        globalMidiPlayerPlaySong(&self->gameData->songs[3], MIDI_BGM);
         trophyUpdate(&(*self->gameData->trophyData)[3], 1, true);
         trophyUpdate(&(*self->gameData->trophyData)[7], trophyGetSavedValue(&(*self->gameData->trophyData)[7]) + 1, true);
         dn_entity_t* promptGameOver
@@ -4096,4 +4106,38 @@ void dn_setEyes(dn_entity_t* self)
     }
     ch32v003WriteBitmap(3, bitmap);
     ch32v003SelectBitmap(3);
+}
+
+void dn_calculateSong(dn_entity_t* self)
+{
+    uint8_t calculatedSong = 0;
+    uint8_t p1PiecesCount = 0;
+    uint8_t p2PiecesCount = 0;
+    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    for(int i = 0; i < 5; i++)
+    {
+        p1PiecesCount += bData->p1Units[i] != NULL;
+        p2PiecesCount += bData->p1Units[i] != NULL;
+    }
+    if(p1PiecesCount == p2PiecesCount)//balanced
+    {
+        calculatedSong = 0;
+    }
+    else if((self->gameData->phase < DN_P2_DANCE_PHASE && p1PiecesCount > p2PiecesCount) || (self->gameData->phase >= DN_P2_DANCE_PHASE && p2PiecesCount > p1PiecesCount))//winning
+    {
+        calculatedSong = 1;
+    }
+    else//losing
+    {
+        calculatedSong = 2;
+    }
+
+    if(self->gameData->currentSong != calculatedSong)
+    {
+        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+        uint32_t curTick = SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division);
+        midiPlayerResetNewSong(player);
+        globalMidiPlayerPlaySong(&self->gameData->songs[calculatedSong], MIDI_BGM);
+        midiSeek(player, curTick);
+    }
 }

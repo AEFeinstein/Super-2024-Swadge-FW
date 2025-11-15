@@ -90,6 +90,10 @@ typedef struct dn_gameData_t
     dn_entity_t* selectedUnit;
     
     eyeDigit_t eyeDigits[10];
+    
+    midiFile_t songs[4];
+    uint8_t currentSong;
+    
 } dn_gameData_t;
 
 //==============================================================================

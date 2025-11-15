@@ -321,6 +321,13 @@ static void dn_EnterMode(void)
             memcpy(&gameData->eyeDigits[i], buf + 4, ARRAY_SIZE(gameData->eyeDigits[i].pixels));
         }
     }
+
+    loadMidiFile(PAWNS_GAMBIT_MID, &gameData->songs[0], true);//balanced
+    loadMidiFile(THE_WILL_TO_WIN_MID, &gameData->songs[1], true);//winning
+    loadMidiFile(NEXT_MOVE_MID, &gameData->songs[2], true);//losing
+    loadMidiFile(RETURN_OF_THE_VALIANT_MID, &gameData->songs[3], true);//won
+    globalMidiPlayerGet(MIDI_BGM)->loop = true;
+    globalMidiPlayerPlaySong(&gameData->songs[0], MIDI_BGM);
 }
 
 void dn_setAssetMetaData(void)
