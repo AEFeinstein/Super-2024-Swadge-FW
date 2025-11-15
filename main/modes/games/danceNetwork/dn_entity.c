@@ -3286,7 +3286,7 @@ void dn_updateBullet(dn_entity_t* self)
             {
                 ((dn_unitData_t*)bData->p1Units[i]->data)->animation = DN_UNIT_STILL;
             }
-            if(bData->p1Units[i]!=NULL)
+            if(bData->p2Units[i]!=NULL)
             {
                 ((dn_unitData_t*)bData->p2Units[i]->data)->animation = DN_UNIT_STILL;
             }
