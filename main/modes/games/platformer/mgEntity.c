@@ -362,7 +362,6 @@ void mg_updatePlayer(mgEntity_t* self)
                     self->state = MG_PL_ST_UPPERCUT;
                     self->yspeed = 0;
                     self->falling = true;
-                    //self->canDash = false;
                     self->jumpPower = -1;
                     self->stateTimer = 32;
                 }
