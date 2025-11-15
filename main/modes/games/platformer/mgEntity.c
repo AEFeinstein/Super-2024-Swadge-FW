@@ -357,12 +357,13 @@ void mg_updatePlayer(mgEntity_t* self)
         {
             case MG_PL_ST_NORMAL:
             case MG_PL_ST_DASHING:
-                if (self->gameData->btnState & PB_UP && self->canDash)
+                if (self->gameData->btnState & PB_UP && ( (self->jumpPower >= 0) || (!self->falling)))
                 {
                     self->state = MG_PL_ST_UPPERCUT;
                     self->yspeed = 0;
                     self->falling = true;
-                    self->canDash = false;
+                    //self->canDash = false;
+                    self->jumpPower = -1;
                     self->stateTimer = 32;
                 }
                 else if (self->shotsFired < self->shotLimit)
