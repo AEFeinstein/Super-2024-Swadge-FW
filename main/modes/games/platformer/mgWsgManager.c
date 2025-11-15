@@ -235,6 +235,8 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(SPIKE_TILE_LEFT_00_WSG, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3], false);
     loadWsg(SPIKE_TILE_BOTTOM_00_WSG, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4], false);
     loadWsg(SPIKE_TILE_RIGHT_00_WSG, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5], false);
+    loadWsg(PULSE_SURE_YOU_CAN_000_WSG, &self->wsgs[MG_WSG_PLAYER_SUREYOUCAN_1], false);
+    loadWsg(PULSE_SURE_YOU_CAN_001_WSG, &self->wsgs[MG_WSG_PLAYER_SUREYOUCAN_2], false);
 }
 
 void mg_initializeSprites(mgWsgManager_t* self)
@@ -614,6 +616,14 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_CRAWLER_LEFT].wsg    = &self->wsgs[MG_WSG_ENEMY_BUSH_L2];
     self->sprites[MG_SP_CRAWLER_LEFT].origin = &origin_8_8;
     self->sprites[MG_SP_CRAWLER_LEFT].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_PLAYER_SUREYOUCAN_1].wsg    = &self->wsgs[MG_WSG_PLAYER_SUREYOUCAN_1];
+    self->sprites[MG_SP_PLAYER_SUREYOUCAN_1].origin = &origin_15_15;
+    self->sprites[MG_SP_PLAYER_SUREYOUCAN_1].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_SUREYOUCAN_2].wsg    = &self->wsgs[MG_WSG_PLAYER_SUREYOUCAN_2];
+    self->sprites[MG_SP_PLAYER_SUREYOUCAN_2].origin = &origin_15_15;
+    self->sprites[MG_SP_PLAYER_SUREYOUCAN_2].hitBox = &box_16_32;
 }
 
 void mg_initializeTiles(mgWsgManager_t* self)

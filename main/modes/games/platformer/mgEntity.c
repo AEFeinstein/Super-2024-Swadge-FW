@@ -16,10 +16,23 @@
 #include "soundFuncs.h"
 #include "mega_pulse_ex_typedef.h"
 #include "shapes.h"
+#include "vector2d.h"
 
 //==============================================================================
 // Constants
 //==============================================================================
+
+static const vec_t mg_sureYouCanVectors[] = {
+    //These are in reverse order
+    {.x = 8, .y = 4},
+    {.x = 8, .y = -2},
+    {.x = 8, .y = -4},
+    {.x = 8, .y = -8},
+    {.x = 16, .y = -128},
+    {.x = 16, .y = -64},
+    {.x = 32, .y = -16},
+    {.x = 16, .y = -8}
+};
 
 //==============================================================================
 // Functions
@@ -169,7 +182,7 @@ void mg_updatePlayer(mgEntity_t* self)
             {
                 self->state = MG_PL_ST_NORMAL;
             }
-            break;
+            break;            
         case MG_PL_ST_MIC_DROP:
             if (self->yspeed > 0)
             {
@@ -183,6 +196,15 @@ void mg_updatePlayer(mgEntity_t* self)
                 self->state     = MG_PL_ST_NORMAL;
                 self->yMaxSpeed = 72;
                 // self->spriteFlipVertical = false;
+            }
+            break;
+        case MG_PL_ST_UPPERCUT:
+            self->xspeed = mg_sureYouCanVectors[(self->stateTimer >> 2)].x * (self->spriteFlipHorizontal ? -1 : 1);
+            self->yspeed = mg_sureYouCanVectors[(self->stateTimer >> 2)].y;
+            self->stateTimer--;
+            if (self->stateTimer <= 0)
+            {
+                self->state     = MG_PL_ST_NORMAL;
             }
             break;
     }
@@ -335,7 +357,15 @@ void mg_updatePlayer(mgEntity_t* self)
         {
             case MG_PL_ST_NORMAL:
             case MG_PL_ST_DASHING:
-                if (self->shotsFired < self->shotLimit)
+                if (self->gameData->btnState & PB_UP && self->canDash)
+                {
+                    self->state = MG_PL_ST_UPPERCUT;
+                    self->yspeed = 0;
+                    self->falling = true;
+                    self->canDash = false;
+                    self->stateTimer = 32;
+                }
+                else if (self->shotsFired < self->shotLimit)
                 {
                     mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
                                                                 TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y) - 2);
@@ -1032,6 +1062,15 @@ void animatePlayer(mgEntity_t* self)
         self->spriteIndex = playerMicDropAnimFrames[(self->stateTimer >> 2) & 0b1];
         return;
     }
+    else if (self->state == MG_PL_ST_UPPERCUT)
+    {
+        self->spriteIndex = playerSureYouCanAnimnFrames[(self->stateTimer >> 2)];
+        if(self->stateTimer == 4) {
+            self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
+            self->falling = true;
+        }
+        return;
+    }
 
     if (!self->gravityEnabled)
     {
@@ -1213,6 +1252,31 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 {
                     other->xspeed = self->xspeed >> 1;
                     other->yspeed = -abs(self->xspeed >> 1);
+                    mg_scorePoints(self->gameData, other->scoreValue);
+                    soundPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
+                    killEnemy(other);
+
+                    break;
+                }
+            } else if (self->state == MG_PL_ST_UPPERCUT)
+            {
+                self->invincibilityFrames = 5;
+
+                if (other->invincibilityFrames)
+                {
+                    break;
+                }
+
+                other->hp -= 2;
+                other->invincibilityFrames = 3;
+                other->xspeed += (self->xspeed + (SIGNOF(self->xspeed) * (self->xspeed >> 1)));
+                other->yspeed += (self->yspeed + (SIGNOF(self->yspeed) * (self->yspeed >> 1)));
+                other->falling = true;
+
+                if (other->hp <= 0)
+                {
+                    other->xspeed = self->xspeed >> 1;
+                    other->yspeed = -abs(self->yspeed);
                     mg_scorePoints(self->gameData, other->scoreValue);
                     soundPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
                     killEnemy(other);

@@ -197,7 +197,9 @@ typedef enum
     MG_SP_CRAWLER_TOP,
     MG_SP_CRAWLER_RIGHT,
     MG_SP_CRAWLER_BOTTOM,
-    MG_SP_CRAWLER_LEFT
+    MG_SP_CRAWLER_LEFT,
+    MG_SP_PLAYER_SUREYOUCAN_1,
+    MG_SP_PLAYER_SUREYOUCAN_2
 } mg_spriteDef_t;
 
 typedef enum
@@ -722,7 +724,9 @@ typedef enum
     MG_WSG_PLAYER_SHIELD_1,
     MG_WSG_PLAYER_SHIELD_2,
     MG_WSG_PLAYER_SHIELD_3,
-    MG_WSG_PLAYER_SHIELD_4
+    MG_WSG_PLAYER_SHIELD_4,
+    MG_WSG_PLAYER_SUREYOUCAN_1,
+    MG_WSG_PLAYER_SUREYOUCAN_2
 } mg_wsgIndex_t;
 
 typedef enum
@@ -1070,5 +1074,17 @@ static const mgLeveldef_t leveldef[]
 
 static const mg_spriteDef_t playerDamageAnimFrames[] = {MG_SP_PLAYER_HURT, MG_SP_PLAYER_HURT_2, MG_SP_PLAYER_HURT, MG_SP_PLAYER_HURT_3};
 static const mg_spriteDef_t playerMicDropAnimFrames[] = {MG_SP_PLAYER_MIC_DROP_1, MG_SP_PLAYER_MIC_DROP_2};
+static const mg_spriteDef_t playerSureYouCanAnimnFrames[] = 
+    {
+        //These are in reverse order
+        MG_SP_PLAYER_SUREYOUCAN_2,
+        MG_SP_PLAYER_SUREYOUCAN_2,
+        MG_SP_PLAYER_SUREYOUCAN_2,
+        MG_SP_PLAYER_SUREYOUCAN_1,
+        MG_SP_PLAYER_SUREYOUCAN_1,
+        MG_SP_PLAYER_JUMP,
+        MG_WSG_PLAYER_WALK5,
+        MG_WSG_PLAYER_WALK6
+    };
 
 #endif
