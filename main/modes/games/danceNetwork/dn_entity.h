@@ -335,3 +335,5 @@ void dn_updateChessKingAnimation(dn_entity_t* self);
 void dn_updateChessPawnAnimation(dn_entity_t* self);
 
 void dn_setEyes(dn_entity_t* self);
+
+void dn_calculateSong(dn_entity_t* self);
