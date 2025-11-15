@@ -180,6 +180,7 @@ void dn_updateBoard(dn_entity_t* self)
                             ///////////////////////////////
                             midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
                             globalMidiPlayerPlaySong(&self->gameData->songs[3], MIDI_BGM);
+                            globalMidiPlayerGet(MIDI_BGM)->loop = true;
                             trophyUpdate(&(*self->gameData->trophyData)[3], 1, true);
                             trophyUpdate(&(*self->gameData->trophyData)[7],
                                          trophyGetSavedValue(&(*self->gameData->trophyData)[7]) + 1, true);
@@ -682,6 +683,7 @@ void dn_updateCurtain(dn_entity_t* self)
     }
     if (curtainData->separation > (TFT_WIDTH >> 1))
     {
+        dn_setEyes(self);
         self->destroyFlag = true;
     }
 }
@@ -3123,6 +3125,7 @@ void dn_updateBullet(dn_entity_t* self)
                 ///////////////////////////////
                 midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
                 globalMidiPlayerPlaySong(&self->gameData->songs[3], MIDI_BGM);
+                globalMidiPlayerGet(MIDI_BGM)->loop = true;
                 trophyUpdate(&(*self->gameData->trophyData)[3], 1, true);
                 trophyUpdate(&(*self->gameData->trophyData)[7],
                              trophyGetSavedValue(&(*self->gameData->trophyData)[7]) + 1, true);
@@ -3402,6 +3405,7 @@ void dn_moveUnit(dn_entity_t* self)
         ///////////////////////////////
         midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
         globalMidiPlayerPlaySong(&self->gameData->songs[3], MIDI_BGM);
+        globalMidiPlayerGet(MIDI_BGM)->loop = true;
         trophyUpdate(&(*self->gameData->trophyData)[3], 1, true);
         trophyUpdate(&(*self->gameData->trophyData)[7], trophyGetSavedValue(&(*self->gameData->trophyData)[7]) + 1, true);
         dn_entity_t* promptGameOver
@@ -4143,6 +4147,7 @@ void dn_calculateSong(dn_entity_t* self)
         uint32_t curTick = SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division);
         midiPlayerResetNewSong(player);
         globalMidiPlayerPlaySong(&self->gameData->songs[calculatedSong], MIDI_BGM);
+        player->loop = true;
         midiSeek(player, curTick);
     }
 }
