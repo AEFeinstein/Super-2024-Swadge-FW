@@ -299,7 +299,7 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
 void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChanged)
 {
     // Draw the scene
-    drawPhysOutline(ad->phys, ad->players, &ad->font_pulseAux, ad->turn);
+    drawPhysOutline(ad->phys, ad->players, &ad->font_pulseAux, &ad->font_pulseAuxOutline, ad->turn);
 
     // Step the physics
     bool playerMoved = false;

@@ -153,6 +153,7 @@ typedef struct
     font_t font_oxanium;
     font_t font_oxaniumOutline;
     font_t font_pulseAux;
+    font_t font_pulseAuxOutline;
 } artilleryData_t;
 
 extern const char load_ammo[];
