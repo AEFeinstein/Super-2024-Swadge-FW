@@ -987,40 +987,41 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
     {
         midiTrackState_t* info = &reader->states[i];
 
-        if (!info->eventParsed && info->nextEvent.deltaTime != UINT32_MAX)
+        // WE ARE ASSERTING NOW
+        // The events are ALWAYS parsed!
+        // If there is no event parsed, we are done!
+        if (info->done)
         {
-            // Avoid trying and failing to parse a track we've already finished
-            if (info->done)
-            {
-                continue;
-            }
-            info->eventParsed = trackParseNext(reader, info);
+            continue;
+        }
+
+        if (!info->eventParsed)
+        {
+            info->done = true;
+            continue;
         }
 
         // Check if we either already have a parsed event waiting, or are able to parse one now
         // Short-circuiting will make sure we only parse another event when needed and permitted
         // TODO doesn't this basically do the same thing as the block above?
-        if (info->eventParsed || (info->nextEvent.deltaTime != UINT32_MAX && trackParseNext(reader, info)))
+        // info->nextEvent has now been set by trackParseNext()
+        if (!info->nextEvent.deltaTime || (reader && reader->file && reader->file->format == MIDI_FORMAT_2))
         {
-            // info->nextEvent has now been set by trackParseNext()
-            if (!info->nextEvent.deltaTime || (reader && reader->file && reader->file->format == MIDI_FORMAT_2))
-            {
-                // The delta-time is 0! Just return this event immediately
-                *event = info->nextEvent;
+            // The delta-time is 0! Just return this event immediately
+            *event = info->nextEvent;
 
-                // Consume the event!
-                info->eventParsed = false;
+            // Add to the time still, since deltaTime could be non-zero
+            info->time += info->nextEvent.deltaTime;
 
-                // Add to the time still, since deltaTime could be non-zero
-                info->time += info->nextEvent.deltaTime;
-                return true;
-            }
-            else if (info->time + info->nextEvent.deltaTime < minTime)
-            {
-                // This is the most-next event, so set minTime to its time
-                minTime   = info->time + info->nextEvent.deltaTime;
-                nextTrack = info;
-            }
+            // Consume the event!
+            info->eventParsed = trackParseNext(reader, info);
+            return true;
+        }
+        else if (info->time + info->nextEvent.deltaTime < minTime)
+        {
+            // This is the most-next event, so set minTime to its time
+            minTime   = info->time + info->nextEvent.deltaTime;
+            nextTrack = info;
         }
     }
 
@@ -1030,9 +1031,9 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
         return false;
     }
 
-    *event                 = nextTrack->nextEvent;
-    nextTrack->eventParsed = false;
+    *event = nextTrack->nextEvent;
     nextTrack->time += event->deltaTime;
+    nextTrack->eventParsed = trackParseNext(reader, nextTrack);
     return true;
 }
 
