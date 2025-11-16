@@ -426,7 +426,7 @@ bool mg_needsTransparency(uint8_t tileId)
             return true;
         case MG_TILE_BG_CLOUD:
             return false;
-        case MG_TILE_BG_TALL_GRASS ... MG_TILE_BG_MOUNTAIN_R:
+        case MG_TILE_BRICK_BLOCK ... MG_TILE_BG_MOUNTAIN_R:
             return true;
         case MG_TILE_BG_MOUNTAIN ... MG_TILE_BG_METAL:
             return false;

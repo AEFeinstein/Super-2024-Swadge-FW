@@ -352,6 +352,9 @@
  <tile id="165">
   <image source="../../assets/platformer/tiles/SpikeTile_right_00.png" width="16" height="16"/>
  </tile>
+  <tile id="166">
+  <image source="mg-tiles/crumble_block.png" width="16" height="16"/>
+ </tile>
  <tile id="192">
   <image source="mg-tiles/discoball_nocollision.png" width="16" height="16"/>
  </tile>

@@ -1622,7 +1622,7 @@ bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx,
         case MG_TILE_CONTAINER_1:
         case MG_TILE_BRICK_BLOCK:
         case MG_TILE_INVISIBLE_CONTAINER:
-        case MG_TILE_BOUNCE_BLOCK:
+        case MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1:
         {
             mgEntity_t* hitBlock
                 = mg_createEntity(self->entityManager, ENTITY_HIT_BLOCK, (tx * MG_TILESIZE) + MG_HALF_TILESIZE,
@@ -1630,7 +1630,7 @@ bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx,
 
             if (hitBlock != NULL)
             {
-                mg_setTile(self->tilemap, tx, ty, (tileId == MG_TILE_BOUNCE_BLOCK) ? MG_TILE_EMPTY : MG_TILE_INVISIBLE_BLOCK);
+                mg_setTile(self->tilemap, tx, ty, (tileId == MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1) ? MG_TILE_EMPTY : MG_TILE_INVISIBLE_BLOCK);
                 hitBlock->homeTileX = tx;
                 hitBlock->homeTileY = ty;
                 hitBlock->jumpPower = tileId;
@@ -1643,7 +1643,7 @@ bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx,
                     }
                 }
 
-                if (tileId == MG_TILE_BOUNCE_BLOCK)
+                if (tileId == MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1)
                 {
                     hitBlock->spriteIndex = MG_SP_BOUNCE_BLOCK;
                 }
@@ -1652,28 +1652,28 @@ bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx,
                 {
                     case 0:
                         hitBlock->xspeed = -24;
-                        if (tileId == MG_TILE_BOUNCE_BLOCK)
+                        if (tileId == MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1)
                         {
                             self->xspeed = 48;
                         }
                         break;
                     case 1:
                         hitBlock->xspeed = 24;
-                        if (tileId == MG_TILE_BOUNCE_BLOCK)
+                        if (tileId == MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1)
                         {
                             self->xspeed = -48;
                         }
                         break;
                     case 2:
                         hitBlock->yspeed = -48;
-                        if (tileId == MG_TILE_BOUNCE_BLOCK)
+                        if (tileId == MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1)
                         {
                             self->yspeed = 48;
                         }
                         break;
                     case 4:
                         hitBlock->yspeed = (tileId == MG_TILE_BRICK_BLOCK) ? 16 : 24;
-                        if (tileId == MG_TILE_BOUNCE_BLOCK)
+                        if (tileId == MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1)
                         {
                             self->yspeed = -64;
                             self->falling = true;
