@@ -727,7 +727,8 @@ typedef enum
     MG_WSG_PLAYER_SHIELD_4,
     MG_WSG_PLAYER_SUREYOUCAN_1,
     MG_WSG_PLAYER_SUREYOUCAN_2,
-    MG_WSG_CRUMBLED_BLOCK
+    MG_WSG_CRUMBLED_BLOCK,
+    MG_WSG_SALSA
 } mg_wsgIndex_t;
 
 typedef enum

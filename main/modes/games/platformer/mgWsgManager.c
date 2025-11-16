@@ -236,7 +236,8 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(SPIKE_TILE_RIGHT_00_WSG, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5], false);
     loadWsg(PULSE_SURE_YOU_CAN_000_WSG, &self->wsgs[MG_WSG_PLAYER_SUREYOUCAN_1], false);
     loadWsg(PULSE_SURE_YOU_CAN_001_WSG, &self->wsgs[MG_WSG_PLAYER_SUREYOUCAN_2], false);
-     loadWsg(CRUMBLE_BLOCK_4_WSG, &self->wsgs[MG_WSG_CRUMBLED_BLOCK], false);
+    loadWsg(CRUMBLE_BLOCK_4_WSG, &self->wsgs[MG_WSG_CRUMBLED_BLOCK], false);
+    loadWsg(SALSA_WSG, &self->wsgs[MG_WSG_SALSA], false);
 }
 
 void mg_initializeSprites(mgWsgManager_t* self)

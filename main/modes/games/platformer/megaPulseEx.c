@@ -522,6 +522,12 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
 
         int8_t hp = platformer->entityManager.playerEntity->hp;
 
+        if(hp > 30){
+            drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_SALSA], 8,
+                            MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 96);
+            hp = 30;
+        }
+
         for (uint8_t i = 0; i < 4; i++)
         {
             if (hp > 6)
@@ -560,6 +566,12 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
         drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOTTOM_BIGMA], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION);
 
         int8_t hp = platformer->entityManager.bossEntity->hp;
+
+        if(hp > 30){
+            drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_SALSA], 256,
+                            MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 96);
+            hp = 30;
+        }
 
         for (uint8_t i = 0; i < 4; i++)
         {
