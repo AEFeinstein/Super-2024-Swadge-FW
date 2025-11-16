@@ -1624,7 +1624,7 @@ void dn_trySelectTrack(dn_entity_t* self)
             relativeTrack.x *= -1;
         }
         dn_track_t type = bData->tiles[tData->pos.y][tData->pos.x].selectionType;
-        if (type == DN_REMIX_TRACK && tData->selectedUnit->paused)
+        if (type == DN_REMIX_TRACK && tData->selectedUnit->gray)
         {
             // just treat it like movement, because the unit can't shoot.
             type = DN_BLUE_TRACK;
