@@ -252,13 +252,13 @@ static adsrState_t voiceAdvanceAdsr(midiVoice_t* voice, voiceStates_t* states, u
             {
                 goto adsrSustain;
             }
-            else if (states->release & voiceBit)
-            {
-                goto adsrOff;
-            }
             else if (states->sustain & voiceBit)
             {
                 goto adsrRelease;
+            }
+            else if (states->release & voiceBit)
+            {
+                goto adsrOff;
             }
             else if (states->on & voiceBit)
             {
