@@ -194,6 +194,7 @@ void mg_updatePlayer(mgEntity_t* self)
             if (self->stateTimer <= 0)
             {
                 self->state     = MG_PL_ST_NORMAL;
+                self->spriteRotateAngle = 0;
                 self->yMaxSpeed = 72;
                 // self->spriteFlipVertical = false;
             }
@@ -448,8 +449,15 @@ void updateHitBlock(mgEntity_t* self)
     self->animationTimer++;
     if (self->animationTimer == 6)
     {
-        self->xspeed = -self->xspeed;
-        self->yspeed = -self->yspeed;
+        if(self->yDamping != 1)
+        {
+            self->xspeed = -self->xspeed;
+            self->yspeed = -self->yspeed;
+        } 
+        else 
+        {
+            self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
+        }
     }
     if (self->animationTimer > 12)
     {
@@ -1060,6 +1068,7 @@ void animatePlayer(mgEntity_t* self)
     else if (self->state == MG_PL_ST_MIC_DROP)
     {
         self->spriteIndex = playerMicDropAnimFrames[(self->stateTimer >> 2) & 0b1];
+        self->spriteRotateAngle = getAtan2(self->yspeed, self->xspeed) - 90;
         return;
     }
     else if (self->state == MG_PL_ST_UPPERCUT)
@@ -1237,6 +1246,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             {
                 self->state  = MG_PL_ST_NORMAL;
                 self->yspeed = -self->yspeed;
+                self->spriteRotateAngle = 0;
                 // self->spriteFlipVertical  = false;
                 self->invincibilityFrames = 5;
 
@@ -1445,6 +1455,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         {
             self->yspeed  = (other->spriteFlipVertical) ? 112 : -112;
             self->falling = true;
+            self->canDash = true;
             soundPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
             if (self->state == MG_PL_ST_MIC_DROP)
             {
@@ -1458,6 +1469,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             self->xspeed  = (other->spriteFlipHorizontal) ? -112 : 112;
             self->yspeed  = (other->spriteFlipVertical) ? 112 : -112;
             self->falling = true;
+            self->canDash = true;
             soundPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
             break;
         }
@@ -1636,10 +1648,14 @@ bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx,
                 hitBlock->jumpPower = tileId;
                 if (tileId == MG_TILE_BRICK_BLOCK)
                 {
-                    hitBlock->spriteIndex = MG_SP_HITBLOCK_BRICKS;
-                    if (abs(self->xspeed) > 51 && self->yspeed <= 0)
+                    
+                    if (/*abs(self->xspeed) > 51 && */ self->yspeed >= 0)
                     {
                         hitBlock->yDamping = 1;
+                        hitBlock->spriteIndex = MG_SP_CRUMBLED_BLOCK;
+                        hitBlock->spriteFlipHorizontal = (esp_random() % 2);
+                    } else {
+                        hitBlock->spriteIndex = MG_SP_HITBLOCK_BRICKS;
                     }
                 }
 
@@ -1808,6 +1824,7 @@ bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx,
                 if (self->state == MG_PL_ST_MIC_DROP)
                 {
                     self->state     = MG_PL_ST_NORMAL;
+                    self->spriteRotateAngle = 0;
                     self->yMaxSpeed = 72;
                     // self->spriteFlipVertical = false;
                 }

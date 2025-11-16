@@ -124,7 +124,6 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(SPRITE_049_WSG, &self->wsgs[MG_WSG_CHECKPOINT_ACTIVE_2], false);
     loadWsg(TILE_039_WSG, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1], false);
     loadWsg(TILE_066_WSG, &self->wsgs[MG_WSG_CONTAINER_1], false);
-    loadWsg(TILE_034_WSG, &self->wsgs[MG_WSG_BRICK_BLOCK], false);
     loadWsg(TILE_032_WSG, &self->wsgs[MG_WSG_GRASS], false);
     loadWsg(TILE_033_WSG, &self->wsgs[MG_WSG_GROUND], false);
     loadWsg(TILE_034_WSG, &self->wsgs[MG_WSG_BRICK_BLOCK], false);
@@ -237,6 +236,7 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(SPIKE_TILE_RIGHT_00_WSG, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5], false);
     loadWsg(PULSE_SURE_YOU_CAN_000_WSG, &self->wsgs[MG_WSG_PLAYER_SUREYOUCAN_1], false);
     loadWsg(PULSE_SURE_YOU_CAN_001_WSG, &self->wsgs[MG_WSG_PLAYER_SUREYOUCAN_2], false);
+     loadWsg(CRUMBLE_BLOCK_4_WSG, &self->wsgs[MG_WSG_CRUMBLED_BLOCK], false);
 }
 
 void mg_initializeSprites(mgWsgManager_t* self)
@@ -341,9 +341,13 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_HITBLOCK_CONTAINER].origin = &origin_8_8;
     self->sprites[MG_SP_HITBLOCK_CONTAINER].hitBox = &box_16_16;
 
-    self->sprites[MG_SP_HITBLOCK_BRICKS].wsg    = &self->wsgs[MG_WSG_BRICK_BLOCK];
+    self->sprites[MG_SP_HITBLOCK_BRICKS].wsg    = &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6];
     self->sprites[MG_SP_HITBLOCK_BRICKS].origin = &origin_8_8;
     self->sprites[MG_SP_HITBLOCK_BRICKS].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_CRUMBLED_BLOCK].wsg    = &self->wsgs[MG_WSG_CRUMBLED_BLOCK];
+    self->sprites[MG_SP_CRUMBLED_BLOCK].origin = &origin_8_8;
+    self->sprites[MG_SP_CRUMBLED_BLOCK].hitBox = &box_16_16;
 
     self->sprites[MG_SP_DUSTBUNNY_IDLE].wsg    = &self->wsgs[MG_WSG_DUSTBUNNY_IDLE];
     self->sprites[MG_SP_DUSTBUNNY_IDLE].origin = &origin_8_8;
