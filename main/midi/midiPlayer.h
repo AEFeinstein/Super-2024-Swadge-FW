@@ -773,7 +773,7 @@ typedef struct
     uint64_t sampleCount;
 
     /// @brief The current MIDI tick
-    uint64_t tick;
+    uint32_t tick;
 
     /// @brief The next event in the MIDI file, which occurs after the current time
     midiEvent_t pendingEvent;
