@@ -278,7 +278,10 @@ void artilleryEnterMode(void)
     artilleryPaintLoadColor(ad);
 
     // Load and initialize sounds
-    loadMidiFile(FOLLINESQUE_MID, &ad->bgm, false);
+    loadMidiFile(VT_FIGHT_ON_MID, &ad->bgms[0], false);
+    loadMidiFile(VT_FUNK_MID, &ad->bgms[1], false);
+    loadMidiFile(VT_RISK_MID, &ad->bgms[2], false);
+    loadMidiFile(VT_POP_MID, &ad->bgms[2], false);
     globalMidiPlayerGet(MIDI_BGM)->loop = true;
     midiGmOn(globalMidiPlayerGet(MIDI_BGM));
     midiPause(globalMidiPlayerGet(MIDI_BGM), true);
@@ -329,14 +332,17 @@ void artilleryExitMode(void)
     freeFont(&ad->font_pulseAuxOutline);
 
     // Deinit p2p
-    p2pDeinit(&ad->p2p);
+    p2pDeinit(&ad->p2p, true);
     while (ad->p2pQueue.first)
     {
         heap_caps_free(pop(&ad->p2pQueue));
     }
 
     // Deinit music
-    unloadMidiFile(&ad->bgm);
+    for (uint32_t i = 0; i < ARRAY_SIZE(ad->bgms); i++)
+    {
+        unloadMidiFile(&ad->bgms[i]);
+    }
 
     // Free everything
     heap_caps_free(ad);
@@ -735,6 +741,12 @@ void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
             artilleryGetTankColors(ad->theirColorIdx, &colors[2], &colors[3]);
         }
         physSpawnPlayers(ad->phys, NUM_PLAYERS, ad->players, colors);
+
+        // Pick random music here
+        ad->bgmIdx = esp_random() % ARRAY_SIZE(ad->bgms);
+        // Start playing music
+        globalMidiPlayerPlaySong(&ad->bgms[ad->bgmIdx], MIDI_BGM);
+        globalMidiPlayerGet(MIDI_BGM)->loop = true;
     }
 
     // Start with a full movement timer
@@ -745,9 +757,6 @@ void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
 
     // Switch to showing the game
     ad->mState = AMS_GAME;
-
-    // Start playing music
-    globalMidiPlayerPlaySong(&ad->bgm, MIDI_BGM);
 
     // Start the game waiting
     artillerySwitchToGameState(ad, AGS_WAIT);

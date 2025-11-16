@@ -41,6 +41,7 @@ typedef struct // __attribute__((packed))
 typedef struct //__attribute__((packed))
 {
     uint8_t type;
+    uint8_t bgmIdx;
     uint16_t width;
     uint16_t height;
     struct
@@ -259,6 +260,11 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
                     ad->players[pIdx]->score = pkt->players[pIdx].score;
                 }
 
+                // Play the music from the packet
+                ad->bgmIdx = pkt->bgmIdx;
+                globalMidiPlayerPlaySong(&ad->bgms[ad->bgmIdx], MIDI_BGM);
+                globalMidiPlayerGet(MIDI_BGM)->loop = true;
+
                 // Mark as not ready until the other packet is received
                 ad->phys->isReady = false;
             }
@@ -439,6 +445,7 @@ void artilleryTxWorld(artilleryData_t* ad)
     pkt1->players[1].pos         = ad->players[1]->c.pos;
     pkt1->players[1].barrelAngle = ad->players[1]->barrelAngle;
     pkt1->players[1].score       = ad->players[1]->score;
+    pkt1->bgmIdx                 = ad->bgmIdx;
 
     artPktTerrain_t* pkt2 = heap_caps_calloc(1, sizeof(artPktTerrain_t), MALLOC_CAP_8BIT);
     pkt2->type            = P2P_ADD_TERRAIN;
