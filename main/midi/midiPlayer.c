@@ -272,15 +272,29 @@ static adsrState_t voiceAdvanceAdsr(midiVoice_t* voice, voiceStates_t* states, u
         }
 
         case ADSR_ATTACK:
+        {
             goto adsrAttack;
+        }
+
         case ADSR_DECAY:
+        {
             goto adsrDecay;
+        }
+
         case ADSR_SUSTAIN:
+        {
             goto adsrSustain;
+        }
+
         case ADSR_RELEASE:
+        {
             goto adsrRelease;
+        }
+
         case ADSR_OFF:
+        {
             goto adsrOff;
+        }
     }
 
     /////////////////////////////////////////////
