@@ -2617,8 +2617,6 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
 
 void midiSetTempo(midiPlayer_t* player, uint32_t tempo)
 {
-    uint32_t oldTempo = player->tempo;
-
     player->tempo       = tempo;
     player->sampleCount = 0;
     if (player->mode == MIDI_FILE)
