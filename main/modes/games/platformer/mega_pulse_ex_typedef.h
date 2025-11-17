@@ -1068,11 +1068,11 @@ static const paletteColor_t bgGradientMenu[] = {c001, c012, c123, c234};
 
 static const mgLeveldef_t leveldef[]
     = {{.filename = LEVEL_SELECT_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_LEVEL_SELECT, .mainBgmIndex = MG_BGM_STAGE_SELECT, .bossBgmIndex = MG_BGM_NULL, .bgColors = bgGradientMenu},
-       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_KINETIC_DONUT, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = bgGradientBlue},
+       {.filename = DONUT_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_KINETIC_DONUT, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = bgGradientBlue},
        {.filename = GRIND_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_GRIND_PANGOLIN, .bossBgmIndex = MG_BGM_BOSS_GRIND_PANGOLIN, .bgColors = bgGradientPurple},
        {.filename = SEVER_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_SEVER_YAGATA, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = bgGradientCyan},
        {.filename = DUMP_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_RIP_BARONESS, .bossBgmIndex = MG_BGM_BOSS_TRASH_MAN, .bgColors = bgGradientGreen},
-       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_NULL, .bossBgmIndex = MG_BGM_BOSS_BIGMA, .bgColors = bgGradientMenu},
+       {.filename = LEVEL_02_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_KINETIC_DONUT, .bossBgmIndex = MG_BGM_BOSS_BIGMA, .bgColors = bgGradientMenu},
        {.filename = SMASH_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_SMASH_GORILLA, .bossBgmIndex = MG_BGM_BOSS_SEVER_YAGATA, .bgColors = bgGradientYellow},
        {.filename = DEADEYE_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_DEADEYE_CHIRPZI, .bossBgmIndex = MG_BGM_BOSS_DEADEYE_CHIRPZI, .bgColors = bgGradientOrange},
        {.filename = DRAIN_BIN, .timeLimit = 180, .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT, .mainBgmIndex = MG_BGM_DRAIN_BAT, .bossBgmIndex = MG_BGM_BOSS_DRAIN_BAT, .bgColors = bgGradientGray},
