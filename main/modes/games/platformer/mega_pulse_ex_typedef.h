@@ -200,7 +200,13 @@ typedef enum
     MG_SP_CRAWLER_LEFT,
     MG_SP_PLAYER_SUREYOUCAN_1,
     MG_SP_PLAYER_SUREYOUCAN_2,
-    MG_SP_CRUMBLED_BLOCK
+    MG_SP_CRUMBLED_BLOCK,
+    MG_SP_CHARGE_SHOT_LVL1_1,
+    MG_SP_CHARGE_SHOT_LVL1_2,
+    MG_SP_CHARGE_SHOT_LVL1_3,
+    MG_SP_CHARGE_SHOT_MAX_1,
+    MG_SP_CHARGE_SHOT_MAX_2,
+    MG_SP_CHARGE_SHOT_MAX_3
 } mg_spriteDef_t;
 
 typedef enum
@@ -728,7 +734,13 @@ typedef enum
     MG_WSG_PLAYER_SUREYOUCAN_1,
     MG_WSG_PLAYER_SUREYOUCAN_2,
     MG_WSG_CRUMBLED_BLOCK,
-    MG_WSG_SALSA
+    MG_WSG_SALSA,
+    MG_WSG_CHARGE_SHOT_LVL1_1,
+    MG_WSG_CHARGE_SHOT_LVL1_2,
+    MG_WSG_CHARGE_SHOT_LVL1_3,
+    MG_WSG_CHARGE_SHOT_MAX_1,
+    MG_WSG_CHARGE_SHOT_MAX_2,
+    MG_WSG_CHARGE_SHOT_MAX_3
 } mg_wsgIndex_t;
 
 typedef enum
@@ -1088,5 +1100,9 @@ static const mg_spriteDef_t playerSureYouCanAnimnFrames[] =
         MG_WSG_PLAYER_WALK5,
         MG_WSG_PLAYER_WALK6
     };
+
+static const mg_spriteDef_t normalShotAnimFrames[] = {MG_SP_WAVEBALL_1, MG_SP_WAVEBALL_2, MG_SP_WAVEBALL_3};
+static const mg_spriteDef_t chargeShotAnimFrames[] = {MG_SP_CHARGE_SHOT_LVL1_1, MG_SP_CHARGE_SHOT_LVL1_2, MG_SP_CHARGE_SHOT_LVL1_3};
+static const mg_spriteDef_t maxChargeShotAnimFrames[] = {MG_SP_CHARGE_SHOT_MAX_1, MG_SP_CHARGE_SHOT_MAX_2, MG_SP_CHARGE_SHOT_MAX_3};
 
 #endif

@@ -1246,6 +1246,7 @@ mgEntity_t* createWaveBall(mgEntityManager_t* entityManager, uint16_t x, uint16_
 
     entity->type                 = ENTITY_WAVE_BALL;
     entity->spriteIndex          = MG_SP_WAVEBALL_1;
+    entity->state                = 0;
     entity->animationTimer       = 0;
     entity->updateFunction       = &updateWaveBall;
     entity->collisionHandler     = &mg_dummyCollisionHandler;

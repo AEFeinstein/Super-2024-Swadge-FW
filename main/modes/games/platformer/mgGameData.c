@@ -265,3 +265,84 @@ void mg_updateLedsGameClear(mgGameData_t* gameData)
     }
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
 }
+
+void mg_updateLeds(mgEntityManager_t* entityManager)
+{
+    if(entityManager->playerEntity == NULL)
+    {
+        return;
+    }
+
+    mgEntity_t* playerEntity = entityManager->playerEntity;
+    mgGameData_t* gameData = playerEntity->gameData;
+
+    for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
+    {
+        gameData->leds[i].b = 0x20 + abs(playerEntity->shotsFired << 1);
+
+        if((playerEntity->shotsFired <= -63) && (((gameData->frameCount >> 3) % 7) == i))
+        {
+            gameData->leds[i].g = 0xFF;
+        } 
+        else 
+        {
+            gameData->leds[i].g = 0x30 + abs(playerEntity->shotsFired << 1);
+        }
+
+        if(playerEntity->hp < 7)
+        {
+            gameData->leds[i].r = (gameData->frameCount << 2);
+        }
+        else if(playerEntity->hp < 13) 
+        {
+            gameData->leds[i].r = (gameData->frameCount << 1);
+        } 
+        else 
+        {
+            gameData->leds[i].r = 0;
+        }
+    }
+
+    setLeds(gameData->leds, CONFIG_NUM_LEDS);
+}
+
+void mg_updateLedsDead(mgGameData_t* gameData)
+{
+    for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
+    {
+         if(gameData->frameCount < 16){
+            gameData->leds[i].r += 0x0F;
+            gameData->leds[i].g += 0x0F;
+            gameData->leds[i].b += 0x0F;
+        } else {
+            if (gameData->leds[i].r > 0x02)
+            {
+                gameData->leds[i].r -= 0x02;
+            }
+            else
+            {
+                gameData->leds[i].r -= 0;
+            }
+
+            if (gameData->leds[i].g > 0x05)
+            {
+                gameData->leds[i].g -= 0x05;
+            }
+            else
+            {
+                gameData->leds[i].g -= 0;
+            }
+
+            if (gameData->leds[i].b > 0x20)
+            {
+                gameData->leds[i].b -= 0x20;
+            }
+            else
+            {
+                gameData->leds[i].b = 0;
+            }
+        }
+    }
+
+     setLeds(gameData->leds, CONFIG_NUM_LEDS);
+}

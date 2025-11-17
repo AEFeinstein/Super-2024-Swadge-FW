@@ -378,7 +378,23 @@ void mg_updatePlayer(mgEntity_t* self)
                         createdEntity->homeTileX    = 0;
                         createdEntity->homeTileY    = 0;
                         createdEntity->linkedEntity = self;
+                        
+                        if(self->shotsFired <= -63){
+                            createdEntity->state = 2;
+                            createdEntity->spriteIndex = MG_SP_CHARGE_SHOT_MAX_1;
+                        } else if (self->shotsFired <= -31){
+                            createdEntity->state = 1;
+                            createdEntity->spriteIndex = MG_SP_CHARGE_SHOT_LVL1_1;
+                        } else {
+                            createdEntity->state = 0;
+                        }
+
+                        if(self->shotsFired < 0){
+                            self->shotsFired = 0;
+                        }
+                        
                         self->shotsFired++;
+
                         soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
                         mg_remapPlayerShootWsg(self->tilemap->wsgManager);
                     }
@@ -388,6 +404,11 @@ void mg_updatePlayer(mgEntity_t* self)
             default:
                 break;
         }
+    }
+
+    if((self->gameData->frameCount & 0b1) && self->shotsFired <=0 && self->shotsFired > -63)
+    {
+        self->shotsFired--;
     }
 
     if (((self->gameData->btnState & PB_START) && !(self->gameData->prevBtnState & PB_START)))
@@ -1189,8 +1210,8 @@ void mg_detectEntityCollisions(mgEntity_t* self)
     selfBox.x1 = (self->x >> SUBPIXEL_RESOLUTION) - selfSprite->origin->x + selfSpriteBox->x1;
     selfBox.y1 = (self->y >> SUBPIXEL_RESOLUTION) - selfSprite->origin->y + selfSpriteBox->y1;
 
-    // drawRect(selfBox.x0 - self->tilemap->mapOffsetX, selfBox.y0 - self->tilemap->mapOffsetY, selfBox.x1 -
-    // self->tilemap->mapOffsetX, selfBox.y1 - self->tilemap->mapOffsetY, c500);
+//  drawRect(selfBox.x0 - self->tilemap->mapOffsetX, selfBox.y0 - self->tilemap->mapOffsetY, selfBox.x1 -
+//      self->tilemap->mapOffsetX, selfBox.y1 - self->tilemap->mapOffsetY, c500);
 
     mgEntity_t* checkEntity;
     mgSprite_t* checkEntitySprite;
@@ -1316,8 +1337,11 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             if (self->invincibilityFrames <= 0)
             {
                 self->hp -= 5;
-                mg_updateLedsHpMeter(self->entityManager, self->gameData);
                 self->gameData->comboTimer = 0;
+                
+                if(self->shotsFired < 0){
+                    self->shotsFired = 0;
+                }
 
                 if (!self->gameData->debugMode && self->hp <= 0)
                 {
@@ -1566,12 +1590,27 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 break;
             }
 
-            mg_destroyShot(other);
+           
 
             if (self->invincibilityFrames)
             {
                 break;
             }
+
+            switch(other->state){
+                case 0:
+                default:
+                    self->hp--;
+                    break;
+                case 1:
+                    self->hp-=4;
+                    break;
+                case 2:
+                    self->hp-=8;
+                    break;
+            }
+
+            
 
             if (self->hp <= 0)
             {
@@ -1581,10 +1620,17 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 soundPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
                 killEnemy(self);
 
+                if(other->state != 2){
+                    mg_destroyShot(other);
+                }
+
                 break;
+            } else {
+                mg_destroyShot(other);
             }
 
-            self->hp--;
+            
+
             self->invincibilityFrames = 4;
 
             break;
@@ -2828,11 +2874,26 @@ void updateBgmChange(mgEntity_t* self)
 
 void updateWaveBall(mgEntity_t* self)
 {
+    self->spriteRotateAngle = getAtan2(self->yspeed, self->xspeed);
+
+    self->animationTimer++;
     if (self->gameData->frameCount % 2 == 0)
     {
-        self->spriteIndex = (self->spriteIndex >= MG_SP_WAVEBALL_3) ? MG_SP_WAVEBALL_1 : self->spriteIndex + 1;
-        //(MG_SP_WAVEBALL_1 + ((self->spriteIndex + 1) % 3));
+        switch(self->state) {
+            case 0:
+            default:
+                self->spriteIndex = normalShotAnimFrames[(self->animationTimer % 3)];
+                break;
+            case 1:
+                self->spriteIndex = chargeShotAnimFrames[(self->animationTimer % 3)];
+                break;
+            case 2:
+                self->spriteIndex = maxChargeShotAnimFrames[(self->animationTimer % 3)];
+                break;
+        }
     }
+
+    
 
     /*if (self->gameData->frameCount % 4 == 0)
     {
@@ -3105,7 +3166,7 @@ void mg_updateCharginSchmuck(mgEntity_t* self)
             }
 
             self->stateTimer++;
-            if (self->stateTimer > 20)
+            if ((self->stateTimer >> 2) & 0b1)
             {
                 mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
                                                             TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));

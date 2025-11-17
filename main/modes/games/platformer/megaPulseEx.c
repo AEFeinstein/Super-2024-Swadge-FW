@@ -463,6 +463,7 @@ void updateGame(platformer_t* self)
     mg_drawTileMap(&(self->tilemap));
     drawPlatformerHud(&(self->font), &(self->gameData));
     mg_drawEntities(&(self->entityManager));
+    mg_updateLeds(&self->entityManager);
     detectGameStateChange(self);
     detectBgmChange(self);
 
@@ -485,6 +486,7 @@ void updateGame(platformer_t* self)
     }
 
     updateComboTimer(&(self->gameData));
+    
 }
 
 void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
@@ -839,7 +841,7 @@ void changeStateGame(platformer_t* self)
 
     entityManager->bossEntity = NULL;
 
-    mg_updateLedsHpMeter(&(self->entityManager), &(self->gameData));
+    //mg_updateLedsHpMeter(&(self->entityManager), &(self->gameData));
 
     self->tilemap.executeTileSpawnAll = true;
 
@@ -916,6 +918,7 @@ void changeStateDead(platformer_t* self)
     self->gameData.initialHp  = 1;
 
     soundStop(true);
+    mg_resetGameDataLeds(&self->gameData);
     globalMidiPlayerGet(MIDI_BGM)->loop = false;
     soundPlayBgm(&(self->soundManager.sndDie), BZR_STEREO);
     self->entityManager.viewEntity = NULL;
@@ -942,6 +945,7 @@ void updateDead(platformer_t* self)
     mg_drawTileMap(&(self->tilemap));
     mg_drawEntities(&(self->entityManager));
     drawPlatformerHud(&(self->font), &(self->gameData));
+    mg_updateLedsDead(&self->gameData);
 
     if (self->gameData.countdown < 0)
     {
