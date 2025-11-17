@@ -529,6 +529,7 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
         }
         else if (str_wirelessConnect == label)
         {
+            p2pRestart(&ad->p2p);
             p2pStartConnection(&ad->p2p);
             ad->mState           = AMS_CONNECTING;
             ad->blankMenu->title = str_wirelessConnect;
