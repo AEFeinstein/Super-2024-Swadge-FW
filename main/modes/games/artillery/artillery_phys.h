@@ -80,6 +80,7 @@ typedef struct
     uint8_t expRadius;
     ammoEffect_t effect;
     const char* name;
+    const char* help;
 } artilleryAmmoAttrib_t;
 
 struct _physCirc_t;

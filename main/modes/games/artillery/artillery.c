@@ -42,9 +42,11 @@ bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value);
 
 const char ART_TAG[] = "ART";
 
-const char load_ammo[]   = "Load Ammo";
-const char drive[]       = "Drive";
-const char look_around[] = "Look Around";
+const char str_load_ammo[]   = "Load Ammo";
+const char str_drive[]       = "Drive";
+const char str_look_around[] = "Look Around";
+const char str_adjust[]      = "Adjust Shot";
+const char str_fire[]        = "Fire!";
 
 const struct
 {
@@ -52,35 +54,35 @@ const struct
     artilleryGameState_t nextState;
 } menuEntries[] = {
     {
-        .text      = look_around,
+        .text      = str_look_around,
         .nextState = AGS_LOOK,
     },
     {
-        .text      = drive,
+        .text      = str_drive,
         .nextState = AGS_MOVE,
     },
     {
-        .text      = load_ammo,
+        .text      = str_load_ammo,
         .nextState = AGS_MENU,
     },
     {
-        .text      = "Adjust Shot",
+        .text      = str_adjust,
         .nextState = AGS_ADJUST,
     },
     {
-        .text      = "Fire!",
+        .text      = str_fire,
         .nextState = AGS_FIRE,
     },
 };
 
-static const char str_passAndPlay[]     = "Pass and Play";
-static const char str_wirelessConnect[] = "Wireless Connect";
-static const char str_cpuPractice[]     = "CPU Practice";
-const char str_paintSelect[]            = "Paint Shop";
-static const char str_help[]            = "Help!";
-static const char str_exit[]            = "Exit";
+const char str_passAndPlay[]     = "Pass and Play";
+const char str_wirelessConnect[] = "Wireless Connect";
+const char str_cpuPractice[]     = "CPU Practice";
+const char str_paintSelect[]     = "Paint Shop";
+const char str_help[]            = "Help!";
+const char str_exit[]            = "Exit";
 
-static const char modeName[] = "Vector Tanks";
+const char artilleryModeName[] = "Vector Tanks";
 
 // List of trophies
 const trophyData_t artilleryTrophies[] = {
@@ -154,7 +156,7 @@ const trophySettings_t artilleryTrophySettings = {
     .drawFromBottom   = false,
     .staticDurationUs = DRAW_STATIC_US * 6,
     .slideDurationUs  = DRAW_SLIDE_US,
-    .namespaceKey     = modeName,
+    .namespaceKey     = artilleryModeName,
 };
 
 // This is passed to the swadgeMode_t
@@ -169,7 +171,7 @@ const trophyDataList_t artilleryTrophyData = {
 //==============================================================================
 
 swadgeMode_t artilleryMode = {
-    .modeName                 = modeName,
+    .modeName                 = artilleryModeName,
     .wifiMode                 = ESP_NOW,
     .overrideUsb              = true,
     .usesAccelerometer        = false,
@@ -204,7 +206,7 @@ void artilleryEnterMode(void)
     ad = heap_caps_calloc(1, sizeof(artilleryData_t), MALLOC_CAP_8BIT);
 
     // Initialize mode menu
-    ad->modeMenu = initMenu(modeName, artilleryModeMenuCb);
+    ad->modeMenu = initMenu(artilleryModeName, artilleryModeMenuCb);
     addSingleItemToMenu(ad->modeMenu, str_passAndPlay);
     addSingleItemToMenu(ad->modeMenu, str_wirelessConnect);
     addSingleItemToMenu(ad->modeMenu, str_cpuPractice);
@@ -247,9 +249,9 @@ void artilleryEnterMode(void)
     ad->gameMenu = initMenuRam(NULL, artilleryGameMenuCb, MALLOC_CAP_8BIT);
     for (int mIdx = 0; mIdx < ARRAY_SIZE(menuEntries); mIdx++)
     {
-        if (load_ammo == menuEntries[mIdx].text)
+        if (str_load_ammo == menuEntries[mIdx].text)
         {
-            ad->gameMenu = startSubMenu(ad->gameMenu, load_ammo);
+            ad->gameMenu = startSubMenu(ad->gameMenu, str_load_ammo);
             ad->gameMenu = endSubMenu(ad->gameMenu);
         }
         else
@@ -275,7 +277,13 @@ void artilleryEnterMode(void)
     ad->tpLastPhi = INT32_MIN;
 
     // Load tank color
-    artilleryPaintLoadColor(ad);
+    if (false == artilleryPaintLoadColor(ad))
+    {
+        // No paint yet, load to the paint shop
+        ad->blankMenu->title = str_paintSelect;
+        ad->mState           = AMS_PAINT;
+        setDrawBody(ad->mRenderer, false);
+    }
 
     // Load and initialize sounds
     loadMidiFile(VT_FIGHT_ON_MID, &ad->bgms[0], false);
@@ -625,7 +633,7 @@ void setDriveInMenu(bool visible)
     while (mNode)
     {
         menuItem_t* item = mNode->val;
-        if (drive == item->label)
+        if (str_drive == item->label)
         {
             driveInMenu = true;
             break;
@@ -636,12 +644,12 @@ void setDriveInMenu(bool visible)
     // Adjust menu as necessary
     if (visible && !driveInMenu)
     {
-        insertSingleItemToMenuAfter(ad->gameMenu, drive, look_around);
+        insertSingleItemToMenuAfter(ad->gameMenu, str_drive, str_look_around);
         ad->smRenderer->numRows++;
     }
     else if (!visible && driveInMenu)
     {
-        removeSingleItemFromMenu(ad->gameMenu, drive);
+        removeSingleItemFromMenu(ad->gameMenu, str_drive);
         ad->smRenderer->numRows--;
     }
 }
@@ -661,7 +669,7 @@ void setAmmoInMenu(void)
     }
 
     // Clear out the ammo menu
-    menu = menuNavigateToItem(menu, load_ammo);
+    menu = menuNavigateToItem(menu, str_load_ammo);
     menu = ((menuItem_t*)menu->currentItem->val)->subMenu;
     removeAllItemsFromMenu(menu);
 
@@ -703,7 +711,7 @@ void openAmmoMenu(void)
         menu = menu->parentMenu;
     }
 
-    ad->gameMenu = menuNavigateToItem(ad->gameMenu, load_ammo);
+    ad->gameMenu = menuNavigateToItem(ad->gameMenu, str_load_ammo);
     ad->gameMenu = menuSelectCurrentItem(ad->gameMenu);
 }
 

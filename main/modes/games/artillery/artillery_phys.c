@@ -47,6 +47,7 @@
 const artilleryAmmoAttrib_t ammoAttributes[] = {
     {
         .name       = "Normal",
+        .help       = "TODO help",
         .color      = c315,
         .radius     = 4,
         .numBounces = 1,
@@ -59,6 +60,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Three Shot",
+        .help       = "TODO help",
         .color      = c341,
         .radius     = 3,
         .numBounces = 1,
@@ -71,6 +73,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Five Shot",
+        .help       = "TODO help",
         .color      = c314,
         .radius     = 2,
         .numBounces = 1,
@@ -83,6 +86,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Bouncy",
+        .help       = "TODO help",
         .color      = c224,
         .radius     = 4,
         .numBounces = 5,
@@ -95,6 +99,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Sniper",
+        .help       = "TODO help",
         .color      = c222,
         .radius     = 1,
         .numBounces = 1,
@@ -107,6 +112,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Big Shot",
+        .help       = "TODO help",
         .color      = c243,
         .radius     = 6,
         .numBounces = 1,
@@ -119,6 +125,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Rocket Jump",
+        .help       = "TODO help",
         .color      = c421,
         .radius     = 12,
         .numBounces = 1,
@@ -131,6 +138,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Wallmaker",
+        .help       = "TODO help",
         .color      = c242,
         .radius     = 3,
         .numBounces = 1,
@@ -143,6 +151,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Laser Bolt",
+        .help       = "TODO help",
         .color      = c331,
         .radius     = 2,
         .numBounces = 1,
@@ -155,6 +164,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Homing Shot",
+        .help       = "TODO help",
         .color      = c223,
         .radius     = 4,
         .numBounces = 1,
@@ -167,6 +177,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Confuser",
+        .help       = "TODO help",
         .color      = c244,
         .radius     = 4,
         .numBounces = 1,
@@ -179,6 +190,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Machine Gun",
+        .help       = "TODO help",
         .color      = c321,
         .radius     = 2,
         .numBounces = 1,
@@ -191,6 +203,7 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
     {
         .name       = "Floor is Lava",
+        .help       = "TODO help",
         .color      = COLOR_LAVA,
         .radius     = 3,
         .numBounces = 1,

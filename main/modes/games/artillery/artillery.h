@@ -114,6 +114,7 @@ typedef struct
 
     // Help pages
     helpPageVars_t* help;
+    helpPage_t* helpPages;
 
     // Timer to only allow a little bit of movement
     int32_t moveTimerUs;
@@ -157,9 +158,22 @@ typedef struct
     font_t font_pulseAuxOutline;
 } artilleryData_t;
 
-extern const char load_ammo[];
-extern swadgeMode_t artilleryMode;
+extern const char artilleryModeName[];
+
+extern const char str_passAndPlay[];
+extern const char str_wirelessConnect[];
+extern const char str_cpuPractice[];
 extern const char str_paintSelect[];
+extern const char str_help[];
+extern const char str_exit[];
+
+extern const char str_load_ammo[];
+extern const char str_drive[];
+extern const char str_look_around[];
+extern const char str_adjust[];
+extern const char str_fire[];
+
+extern swadgeMode_t artilleryMode;
 
 // WARNING! Must match the order of trophies in artilleryTrophies[]
 typedef enum

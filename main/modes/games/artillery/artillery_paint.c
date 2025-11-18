@@ -24,12 +24,14 @@ static const paletteColor_t tankPaints[][2] = {
  *
  * @param ad
  */
-void artilleryPaintLoadColor(artilleryData_t* ad)
+bool artilleryPaintLoadColor(artilleryData_t* ad)
 {
     if (!readNvs32(key_tankColor, &ad->myColorIdx))
     {
         ad->myColorIdx = 0;
+        return false;
     }
+    return true;
 }
 
 /**
