@@ -479,6 +479,11 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
         }
     }
 
+    if (renderer->drawBody)
+    {
+        drawMenuBody(12, 42, renderer->bodyHeight, false, renderer);
+    }
+
     // Where to start drawing
     int16_t y = Y_SECTION_MARGIN;
 
@@ -490,11 +495,6 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
 
     // Move to drawing the rows
     y = Y_ITEM_START;
-
-    if (renderer->drawBody)
-    {
-        drawMenuBody(12, 42, renderer->bodyHeight, false, renderer);
-    }
 
     if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > ARROW_PERIOD_US / 2)
     {
