@@ -12,52 +12,66 @@
 static const helpPage_t helpPages1[] = {
     {
         .title = artilleryModeName,
-        .text  = "This is the first page of help text! Welcome!",
+        .text  = "Welcome to Vector Tanks! You'll take turns positioning your tank, adjusting your shot, and firing "
+                 "away to score the most points!",
     },
     {
-        .title = str_passAndPlay,
-        .text  = "TODO str_passAndPlay note",
+        .title = artilleryModeName,
+        .text  = "You get points for landing shots on your opponent. Watch out, friendly fire is turned on too!",
+    },
+    {
+        .title = artilleryModeName,
+        .text  = "Each match is seven rounds long and whoever has the most points at the end wins all the bragging "
+                 "rights, until the next match.",
     },
     {
         .title = str_wirelessConnect,
-        .text  = "TODO str_wirelessConnect note",
+        .text  = "In Wireless PvP, play a match with two Swadges and a friend. Hold Swadges close to pair them. No "
+                 "screen peeking!",
+    },
+    {
+        .title = str_passAndPlay,
+        .text = "In Pass and Play, play a match with one Swadge and a friend by passing the Swadge around. Remember to "
+                "wash hands!",
     },
     {
         .title = str_cpuPractice,
-        .text  = "TODO str_cpuPractice note",
+        .text  = "In CPU Practice, play a practice match against a CPU opponent. It's not your friend. Show no mercy.",
     },
     {
         .title = str_paintSelect,
-        .text  = "TODO str_paintSelect note",
+        .text  = "Select your tank's colors in the Paint Shop. Which one is the most you?",
     },
     {
-        .title = str_help,
-        .text  = "TODO str_help note",
+        .title = artilleryModeName,
+        .text  = "When you're playing a match you can take a few actions each turn.",
     },
-    {
-        .title = str_exit,
-        .text  = "TODO str_exit note",
-    },
-
     {
         .title = str_load_ammo,
-        .text  = "TODO str_load_ammo note",
-    },
-    {
-        .title = str_drive,
-        .text  = "TODO str_drive note",
+        .text  = "Start a turn by loading ammo. Each ammo has special properties and can only be used once each match. "
+                 "Choose wisely.",
     },
     {
         .title = str_look_around,
-        .text  = "TODO str_look_around note",
+        .text  = "Then you can look around the field to see terrain and where your opponent is before driving or "
+                 "adjusting your shot.",
+    },
+    {
+        .title = str_drive,
+        .text  = "Each turn you have a little fuel to drive around. Tanks are not very efficient movers. Take cover or "
+                 "get a clearer shot!",
     },
     {
         .title = str_adjust,
-        .text  = "TODO str_adjust note",
+        .text  = "Adjust the angle and power of the shot before firing. Spinning the touchpad adjusts the angle too.",
     },
     {
         .title = str_fire,
-        .text  = "TODO str_fire note",
+        .text  = "Once you're in position with loaded ammo and an adjusted shot, fire away!",
+    },
+    {
+        .title = str_load_ammo,
+        .text  = "Let's go over the ammo's special properties.",
     },
 };
 

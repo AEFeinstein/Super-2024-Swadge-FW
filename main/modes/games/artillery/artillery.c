@@ -76,7 +76,7 @@ const struct
 };
 
 const char str_passAndPlay[]     = "Pass and Play";
-const char str_wirelessConnect[] = "Wireless Connect";
+const char str_wirelessConnect[] = "Wireless PvP";
 const char str_cpuPractice[]     = "CPU Practice";
 const char str_paintSelect[]     = "Paint Shop";
 const char str_help[]            = "Help!";
@@ -590,7 +590,10 @@ bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value)
         {
             if (label == menuEntries[mIdx].text)
             {
-                artillerySwitchToGameState(ad, menuEntries[mIdx].nextState);
+                if (ad->gState != menuEntries[mIdx].nextState)
+                {
+                    artillerySwitchToGameState(ad, menuEntries[mIdx].nextState);
+                }
                 return false;
             }
         }

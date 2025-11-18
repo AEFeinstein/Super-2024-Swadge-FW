@@ -138,6 +138,8 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                 if (artilleryIsMyTurn(ad))
                 {
                     artillerySwitchToGameState(ad, AGS_MENU);
+                    // And start on the ammo menu
+                    openAmmoMenu();
                 }
                 else
                 {
@@ -318,6 +320,8 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                 if (artilleryIsMyTurn(ad))
                 {
                     artillerySwitchToGameState(ad, AGS_MENU);
+                    // And start on the ammo menu
+                    openAmmoMenu();
                 }
                 else
                 {
@@ -848,17 +852,8 @@ void artilleryPassTurn(artilleryData_t* ad)
 
     if (artilleryIsMyTurn(ad))
     {
-        // If this isn't the first turn
-        if (ad->turn > 1)
-        {
-            // Open the ammo menu because the prior ammo was used
-            openAmmoMenu();
-        }
-        else
-        {
-            // Otherwise reset menu to top item
-            ad->gameMenu = menuNavigateToTopItem(ad->gameMenu);
-        }
+        // Always open ammo menu after passing turn because the prior ammo was used
+        openAmmoMenu();
     }
 }
 

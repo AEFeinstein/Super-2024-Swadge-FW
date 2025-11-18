@@ -384,6 +384,7 @@ bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
             else
             {
                 // Attempt to deform points
+                // TODO this doesn't work great with machine gun b/c it doesn't accumulate deformations
                 line->destination.p1.y
                     = deformTerrainPoint(&line->l.p1, &shell->c.pos, rSq, expMin, expMax, raiseTerrain);
                 line->destination.p2.y
@@ -478,7 +479,7 @@ static float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float ex
         if (raiseTerrain)
         {
             // Simply raise terrain, but not out of bounds
-            return MAX(p->y - 40, 0);
+            return MAX(p->y - 80, 0);
         }
 
         // X distance from shell to point to adjust
