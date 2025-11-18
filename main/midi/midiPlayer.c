@@ -1399,6 +1399,7 @@ static void midiSongEnd(midiPlayer_t* player)
         player->sampleCount = 0;
         player->tick        = 0;
         player->paused      = false;
+        player->songEnding  = false;
     }
     else
     {
