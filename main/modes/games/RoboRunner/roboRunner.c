@@ -941,7 +941,7 @@ static int32_t getLatestRemoteScore()
         setPacketUsedByMode(spd, &roboRunnerMode, true);
         if (val < spd->data.packet.roboRunner.highScore)
         {
-            setUsernameFrom32(&rd->remotePlayer, spd->data.packet.username);
+            setUsernameFrom32(&rd->remotePlayer, spd->data.packet.swadgesona.core.packedName);
             val = spd->data.packet.roboRunner.highScore;
         }
         spNode = spNode->next;

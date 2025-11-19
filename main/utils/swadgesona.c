@@ -483,7 +483,7 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
     }
 }
 
-void loadSPSona(swadgesona_t* sw)
+void loadSPSona(swadgesonaCore_t* sw)
 {
     size_t len = sizeof(swadgesonaCore_t);
     if (!readNvsBlob(spSonaNVSKey, sw, &len))

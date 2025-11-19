@@ -37,6 +37,36 @@ static const char* cosCrunchHowToPlayText[]
        "See how many crafts you can complete before MAGFest arrives. Your score depends on it! You'll never really be "
        "done, but maybe you can get close enough."};
 
+#define CC_NVS_NAMESPACE      "cc"
+#define NVS_KEY_TUTORIAL_SEEN "tutorialSeen"
+
+#define NUM_LIVES                        4
+#define MICROGAME_GET_READY_TIME_US      1000000
+#define MICROGAME_RESULT_DISPLAY_TIME_US 1800000
+#define SPEED_UP_INTERLUDE_TIME_US       1400000
+#define PLAYER_INTERLUDE_TIME_US         2500000
+#define TIMER_PIXELS_PER_SECOND          10
+
+#define HIGH_SCORE_COUNT 7
+
+#define MICROGAMES_BETWEEN_SPEED_UPS 5
+#define SPEED_UP_AMOUNT              .08f
+
+#define MESSAGE_X_OFFSET 25
+#define MESSAGE_Y_OFFSET 45
+#define TEXT_Y_SPACING   5
+
+#define MESSAGE_BOX_MARGIN    15
+#define MESSAGE_BOX_PADDING   10
+#define GAME_OVER_SCORE_BOX_Y 165
+
+#define EYES_SLOT_DEFAULT 3
+#define EYES_SLOT_HAPPY   4
+#define EYES_SLOT_SAD     5
+#define EYES_SLOT_DEAD    6
+#define EYES_SLOT_SWIRL   7
+#define EYES_SWIRL_FRAMES 4
+
 typedef enum
 {
     /// Main menu
@@ -131,6 +161,7 @@ typedef struct
     uint32_t gameBgmOriginalTempo;
 
     highScores_t highScores;
+    swadgesona_t highScoreSonas[HIGH_SCORE_COUNT];
 } cosCrunch_t;
 cosCrunch_t* cc = NULL;
 
@@ -173,34 +204,6 @@ swadgeMode_t cosCrunchMode = {
 const cosCrunchMicrogame_t* const microgames[] = {
     &ccmgBreakTime, &ccmgCatch, &ccmgDelivery, &ccmgSew, &ccmgSlice, &ccmgSpray, &ccmgThread,
 };
-
-#define CC_NVS_NAMESPACE      "cc"
-#define NVS_KEY_TUTORIAL_SEEN "tutorialSeen"
-
-#define NUM_LIVES                        4
-#define MICROGAME_GET_READY_TIME_US      1000000
-#define MICROGAME_RESULT_DISPLAY_TIME_US 1800000
-#define SPEED_UP_INTERLUDE_TIME_US       1400000
-#define PLAYER_INTERLUDE_TIME_US         2500000
-#define TIMER_PIXELS_PER_SECOND          10
-
-#define MICROGAMES_BETWEEN_SPEED_UPS 5
-#define SPEED_UP_AMOUNT              .08f
-
-#define MESSAGE_X_OFFSET 25
-#define MESSAGE_Y_OFFSET 45
-#define TEXT_Y_SPACING   5
-
-#define MESSAGE_BOX_MARGIN    15
-#define MESSAGE_BOX_PADDING   10
-#define GAME_OVER_SCORE_BOX_Y 165
-
-#define EYES_SLOT_DEFAULT 3
-#define EYES_SLOT_HAPPY   4
-#define EYES_SLOT_SAD     5
-#define EYES_SLOT_DEAD    6
-#define EYES_SLOT_SWIRL   7
-#define EYES_SWIRL_FRAMES 4
 
 tintColor_t const blueTimerTintColor   = {c013, c125, c235, 0};
 tintColor_t const yellowTimerTintColor = {c430, c540, c554, 0};
@@ -288,10 +291,11 @@ static void cosCrunchEnterMode(void)
 
     cosCrunchClearLeds();
 
-    cc->highScores.highScoreCount = 10;
+    cc->highScores.highScoreCount = HIGH_SCORE_COUNT;
     initHighScores(&cc->highScores, CC_NVS_NAMESPACE);
 
     list_t swadgePasses = {0};
+    // It's okay to get already-used passes, since the high score table only saves one per SP user.
     getSwadgePasses(&swadgePasses, &cosCrunchMode, true);
     saveHighScoresFromSwadgePass(&cc->highScores, CC_NVS_NAMESPACE, swadgePasses, cosCrunchGetSwadgePassHighScore);
     freeSwadgePasses(&swadgePasses);
@@ -324,6 +328,8 @@ static void cosCrunchExitMode(void)
     unloadMidiFile(&cc->menuBgm);
     unloadMidiFile(&cc->gameBgm);
     unloadMidiFile(&cc->gameOverBgm);
+
+    freeHighScoreSonas(&cc->highScores, cc->highScoreSonas);
 
     heap_caps_free(cc);
 }
@@ -363,6 +369,7 @@ static bool cosCrunchMenu(const char* label, bool selected, uint32_t value)
         }
         else if (label == cosCrunchHighScoresLbl)
         {
+            initHighScoreSonas(&cc->highScores, cc->highScoreSonas);
             cc->state = CC_HIGH_SCORES;
         }
         else if (label == cosCrunchHowToPlayLbl)
@@ -627,7 +634,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             if (cc->playerCount == 1)
             {
                 cc->personalBestAchieved = cc->players[0].score > cc->highScores.userHighScore;
-                score_t scores[]         = {{.score = cc->players[0].score, .swadgePassUsername = 0}};
+                score_t scores[]         = {{.score = cc->players[0].score, .spKey = {0}, .swadgesona = {0}}};
                 updateHighScores(&cc->highScores, CC_NVS_NAMESPACE, scores, ARRAY_SIZE(scores));
             }
             else
@@ -708,32 +715,26 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         case CC_HIGH_SCORES:
         {
             uint16_t tw = textWidth(&cc->bigFont, cosCrunchHighScoresLbl);
-            drawText(&cc->bigFont, c555, cosCrunchHighScoresLbl, (TFT_WIDTH - tw) / 2, 15);
-            drawText(&cc->bigFontOutline, c000, cosCrunchHighScoresLbl, (TFT_WIDTH - tw) / 2, 15);
+            drawText(&cc->bigFont, c555, cosCrunchHighScoresLbl, (TFT_WIDTH - tw) / 2, -2);
+            drawText(&cc->bigFontOutline, c000, cosCrunchHighScoresLbl, (TFT_WIDTH - tw) / 2, -2);
 
-            int16_t yOff        = 75;
+            drawMessageBox(11, 53, TFT_WIDTH - 11, TFT_HEIGHT, cc->wsg.menuFold);
+
+            int16_t yOff        = 64;
             uint16_t scoreWidth = textWidth(&cc->font, "0000");
-            for (int i = 0; i < ARRAY_SIZE(cc->highScores.highScores); i++)
+            for (int i = 0; i < HIGH_SCORE_COUNT; i++)
             {
                 if (cc->highScores.highScores[i].score > 0)
                 {
-                    nameData_t username = {0};
-                    if (cc->highScores.highScores[i].swadgePassUsername == 0)
-                    {
-                        username = *getSystemUsername();
-                    }
-                    else
-                    {
-                        setUsernameFrom32(&username, cc->highScores.highScores[i].swadgePassUsername);
-                    }
-                    drawTextEllipsize(&cc->font, c555, username.nameBuffer, 20, yOff,
-                                      TFT_WIDTH - 20 * 2 - scoreWidth - 5, false);
+                    drawWsgSimpleHalf(&cc->highScoreSonas[i].image, 12, yOff - 10);
+                    drawTextEllipsize(&cc->font, c000, cc->highScoreSonas[i].name.nameBuffer, 47, yOff,
+                                      TFT_WIDTH - 67 - scoreWidth - 5, false);
 
                     char buf[16];
                     snprintf(buf, sizeof(buf), "%" PRIi32, cc->highScores.highScores[i].score);
                     tw = textWidth(&cc->font, buf);
-                    drawText(&cc->font, c555, buf, TFT_WIDTH - tw - 20, yOff);
-                    yOff += cc->font.height + TEXT_Y_SPACING;
+                    drawText(&cc->font, c000, buf, TFT_WIDTH - tw - 18, yOff);
+                    yOff += cc->font.height + TEXT_Y_SPACING + 11;
                 }
             }
 

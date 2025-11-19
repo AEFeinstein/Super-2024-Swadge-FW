@@ -2002,4 +2002,7 @@ static void swsnPacket(swadgePassPacket_t* packet)
 {
     size_t len = sizeof(swadgesonaCore_t);
     readNvsBlob(spSonaNVSKey, &packet->swadgesona.core, &len);
+
+    nameData_t nd                      = *getSystemUsername();
+    packet->swadgesona.core.packedName = GET_PACKED_USERNAME(nd);
 }
