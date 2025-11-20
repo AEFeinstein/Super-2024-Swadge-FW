@@ -12,8 +12,8 @@
 static const helpPage_t helpPages1[] = {
     {
         .title = artilleryModeName,
-        .text  = "Welcome to Vector Tanks! You'll take turns positioning your tank, adjusting your shot, and firing "
-                 "away to score the most points!",
+        .text  = "Welcome to Vector Tanks! You'll take turns driving your tank, adjusting your shot, and firing "
+                 "to score the most points!",
     },
     {
         .title = artilleryModeName,
@@ -75,10 +75,12 @@ static const helpPage_t helpPages1[] = {
     },
 };
 
+// Ammo pages inserted here during initialization
+
 static const helpPage_t helpPages2[] = {
     {
         .title = artilleryModeName,
-        .text  = "TODO Good luck!",
+        .text  = "That's all you need to know. Get out there and be the best tank captain ever!",
     },
 };
 
