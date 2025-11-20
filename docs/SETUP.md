@@ -64,7 +64,7 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
 1. Run the following commands, depending on your package manager, to install all necessary packages:
     * `apt`:
         ```bash
-        sudo apt install build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev git libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov gdb graphviz
+        sudo apt install build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev git libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov gdb graphviz libudev-dev
         ```
     * `dnf`:
         ```bash
