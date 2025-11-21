@@ -65,6 +65,7 @@ typedef struct
     uint16_t binAvgHist[EYE_FPS];
     int32_t bahIdx;
     uint8_t barHeights[EYE_LED_W];
+    uint8_t bmpSlot;
 } colorchord_t;
 
 //==============================================================================
@@ -294,6 +295,9 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
         // This prevents visualizing noise on the LEDs
         maxBinAvg = MAX(87 * gain, maxBinAvg);
 
+        // Don't bother drawing if there is no change
+        bool change = false;
+
         // Normalize the values to LED_H
         if (maxBinAvg)
         {
@@ -304,28 +308,36 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
                 if (binAvgs[bIdx] > colorchord->barHeights[bIdx])
                 {
                     colorchord->barHeights[bIdx] = binAvgs[bIdx];
+                    change                       = true;
                 }
                 else if (colorchord->barHeights[bIdx])
                 {
                     colorchord->barHeights[bIdx]--;
+                    change = true;
                 }
             }
         }
 
-        // Draw bars to the eye LEDs
-        uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
-        for (int x = 0; x < EYE_LED_W; x++)
+        if (change)
         {
-            for (int y = 0; y < EYE_LED_H; y++)
+            // Draw bars to the eye LEDs
+            uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
+            for (int x = 0; x < EYE_LED_W; x++)
             {
-                if (y > (EYE_LED_H - colorchord->barHeights[x]))
+                for (int y = 0; y < EYE_LED_H; y++)
                 {
-                    bitmap[EYE_LED_H - 1 - y][x] = EYE_LED_BRIGHT;
+                    if (y > (EYE_LED_H - colorchord->barHeights[x]))
+                    {
+                        bitmap[EYE_LED_H - 1 - y][x] = EYE_LED_BRIGHT;
+                    }
                 }
             }
+            // Write and select the bitmap to an unused slot
+            ch32v003WriteBitmap(colorchord->bmpSlot, bitmap);
+            ch32v003SelectBitmap(colorchord->bmpSlot);
+            // Set up the next slot for the next frame
+            colorchord->bmpSlot = (colorchord->bmpSlot + 1) % CH32V003_MAX_IMAGE_SLOTS;
         }
-        ch32v003WriteBitmap(0, bitmap);
-        ch32v003SelectBitmap(0);
     });
 }
 

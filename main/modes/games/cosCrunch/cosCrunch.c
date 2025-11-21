@@ -112,6 +112,7 @@ typedef struct
         int64_t timeUs;
         int64_t elapsedUs;
         bool swirlyEyes;
+        int8_t swirlFrame;
     } interlude;
 
     menu_t* menu;
@@ -460,7 +461,11 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             else if (cc->interlude.swirlyEyes)
             {
                 int64_t frame = cc->interlude.elapsedUs / (cc->interlude.timeUs / EYES_SWIRL_FRAMES);
-                ch32v003SelectBitmap(EYES_SLOT_SWIRL + frame);
+                if (cc->interlude.swirlFrame != frame)
+                {
+                    ch32v003SelectBitmap(EYES_SLOT_SWIRL + frame);
+                    cc->interlude.swirlFrame = frame;
+                }
             }
             else
             {
@@ -587,6 +592,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                                 cc->interlude.timeUs     = SPEED_UP_INTERLUDE_TIME_US;
                                 cc->interlude.elapsedUs  = 0;
                                 cc->interlude.swirlyEyes = true;
+                                cc->interlude.swirlFrame = -1;
 
                                 if (cc->gameBgmOriginalTempo == 0)
                                 {
