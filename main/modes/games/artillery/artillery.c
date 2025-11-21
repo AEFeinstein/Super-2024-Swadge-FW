@@ -364,8 +364,8 @@ void artilleryExitMode(void)
  */
 void artilleryMainLoop(int64_t elapsedUs)
 {
-    bool barrelChanged = false;
-    buttonEvt_t evt    = {0};
+    bool stateChanged = false;
+    buttonEvt_t evt   = {0};
     while (checkButtonQueueWrapper(&evt))
     {
         switch (ad->mState)
@@ -387,7 +387,7 @@ void artilleryMainLoop(int64_t elapsedUs)
             }
             case AMS_GAME:
             {
-                barrelChanged = artilleryGameInput(ad, evt);
+                stateChanged = artilleryGameInput(ad, evt);
                 break;
             }
             case AMS_HELP:
@@ -433,7 +433,7 @@ void artilleryMainLoop(int64_t elapsedUs)
         }
         case AMS_GAME:
         {
-            artilleryGameLoop(ad, elapsedUs, barrelChanged);
+            artilleryGameLoop(ad, elapsedUs, stateChanged);
             artilleryCheckTxQueue(ad);
             break;
         }
@@ -756,9 +756,12 @@ void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
 
         // Pick random music here
         ad->bgmIdx = esp_random() % ARRAY_SIZE(ad->bgms);
-        // Start playing music
-        globalMidiPlayerPlaySong(&ad->bgms[ad->bgmIdx], MIDI_BGM);
-        globalMidiPlayerGet(MIDI_BGM)->loop = true;
+        if (AG_WIRELESS != ad->gameType)
+        {
+            // Start playing music
+            globalMidiPlayerPlaySong(&ad->bgms[ad->bgmIdx], MIDI_BGM);
+            globalMidiPlayerGet(MIDI_BGM)->loop = true;
+        }
     }
 
     // Start with a full movement timer
