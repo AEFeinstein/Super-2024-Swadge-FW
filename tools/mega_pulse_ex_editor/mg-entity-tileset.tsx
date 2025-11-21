@@ -157,4 +157,7 @@
  <tile id="154">
   <image source="../../assets/platformer/sprites/SpikyMcGee1.png" width="32" height="32"/>
  </tile>
+ <tile id="155">
+  <image source="mg-object-tiles/checkpoint30x30.png" width="30" height="30"/>
+ </tile>
 </tileset>

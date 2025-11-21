@@ -248,6 +248,7 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
         for (uint32_t i = iterator; i < iterator + (numEntitySpawns * 16); i += 16)
         {
             mgEntitySpawnData_t* entitySpawn = &(tilemap->entitySpawns[subiterator]);
+            entitySpawn->id                  = subiterator;
             entitySpawn->spawnable           = true;
             entitySpawn->respawnable         = true;
             entitySpawn->type                = buf[i];

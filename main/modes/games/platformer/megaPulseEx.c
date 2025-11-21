@@ -811,6 +811,11 @@ void changeStateGame(platformer_t* self)
 
     mg_deactivateAllEntities(&(self->entityManager), false);
 
+    bool checkpointActive = self->gameData.checkpointLevel && self->gameData.checkpointSpawnIndex;
+    if(checkpointActive){
+        self->gameData.level = self->gameData.checkpointLevel;
+    }
+
     uint16_t levelIndex = getLevelIndex(1, self->gameData.level) + 1;
 
     mg_loadWsgSet(&(platformer->wsgManager), leveldef[levelIndex].defaultWsgSetIndex);
@@ -827,13 +832,15 @@ void changeStateGame(platformer_t* self)
 
     mgEntityManager_t* entityManager = &(self->entityManager);
 
-    if (platformer->tilemap.defaultPlayerSpawn != NULL)
+    mgEntitySpawnData_t* playerSpawn = (checkpointActive) ? &(self->tilemap.entitySpawns[self->gameData.checkpointSpawnIndex]) : self->tilemap.defaultPlayerSpawn;
+
+    if (playerSpawn != NULL)
     {
         entityManager->viewEntity   = mg_createPlayer(entityManager,
-                                                      entityManager->tilemap->defaultPlayerSpawn->tx * 16
-                                                          + entityManager->tilemap->defaultPlayerSpawn->xOffsetInPixels,
-                                                      entityManager->tilemap->defaultPlayerSpawn->ty * 16
-                                                          + entityManager->tilemap->defaultPlayerSpawn->yOffsetInPixels);
+                                                      playerSpawn->tx * 16
+                                                          + playerSpawn->xOffsetInPixels,
+                                                     playerSpawn->ty * 16
+                                                          + playerSpawn->yOffsetInPixels);
         entityManager->playerEntity = entityManager->viewEntity;
         // entityManager->playerEntity->hp = self->gameData.initialHp;
         mg_viewFollowEntity(&(self->tilemap), entityManager->playerEntity);
@@ -1010,7 +1017,8 @@ void changeStateTitleScreen(platformer_t* self)
 void changeStateLevelClear(platformer_t* self)
 {
     self->gameData.frameCount         = 0;
-    self->gameData.checkpoint         = 0;
+    self->gameData.checkpointLevel    = 0;
+    self->gameData.checkpointSpawnIndex    = 0;
     self->gameData.levelDeaths        = 0;
     self->gameData.initialHp          = self->entityManager.playerEntity->hp;
     self->gameData.extraLifeCollected = false;

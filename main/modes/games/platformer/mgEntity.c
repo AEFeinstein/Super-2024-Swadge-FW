@@ -1409,15 +1409,16 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             if (!other->xDamping)
             {
                 // Get tile above checkpoint
-                uint8_t aboveTile
-                    = self->tilemap->map[(other->homeTileY - 1) * self->tilemap->mapWidth + other->homeTileX];
+                //uint8_t aboveTile
+                //    = self->tilemap->map[(other->homeTileY - 1) * self->tilemap->mapWidth + other->homeTileX];
 
-                if (aboveTile >= MG_TILE_WARP_0 && aboveTile <= MG_TILE_WARP_F)
-                {
-                    self->gameData->checkpoint = aboveTile - MG_TILE_WARP_0;
+                //if (aboveTile >= MG_TILE_WARP_0 && aboveTile <= MG_TILE_WARP_F)
+                //{
+                    self->gameData->checkpointLevel = self->gameData->level;
+                    self->gameData->checkpointSpawnIndex = other->spawnData->id;
                     other->xDamping            = 1;
                     soundPlaySfx(&(self->soundManager->sndCheckpoint), BZR_LEFT);
-                }
+                //}
             }
             break;
         }

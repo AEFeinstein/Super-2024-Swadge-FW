@@ -24,10 +24,10 @@
 
 struct mgEntitySpawnData_t
 {
+    uint16_t id;
     bool spawnable;
     bool respawnable;
     uint8_t type;
-
     uint8_t tx;
     uint8_t ty;
     uint8_t xOffsetInPixels;

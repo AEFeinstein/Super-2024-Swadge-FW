@@ -40,12 +40,14 @@ typedef struct
 
     uint8_t level;
 
+    uint8_t checkpointLevel;
+    uint16_t checkpointSpawnIndex;
+
     uint16_t combo;
     int16_t comboTimer;
     uint32_t comboScore;
 
     bool extraLifeCollected;
-    uint8_t checkpoint;
     uint8_t levelDeaths;
     uint8_t initialHp;
 

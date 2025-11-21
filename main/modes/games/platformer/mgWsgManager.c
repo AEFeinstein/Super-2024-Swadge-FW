@@ -497,16 +497,16 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_WASP_L3_DIVE].hitBox = &box_16_16;
 
     self->sprites[MG_SP_CHECKPOINT_INACTIVE].wsg    = &self->wsgs[MG_WSG_CHECKPOINT_INACTIVE];
-    self->sprites[MG_SP_CHECKPOINT_INACTIVE].origin = &origin_8_8;
-    self->sprites[MG_SP_CHECKPOINT_INACTIVE].hitBox = &box_16_16;
+    self->sprites[MG_SP_CHECKPOINT_INACTIVE].origin = &origin_15_15;
+    self->sprites[MG_SP_CHECKPOINT_INACTIVE].hitBox = &box_30_30;
 
     self->sprites[MG_SP_CHECKPOINT_ACTIVE_1].wsg    = &self->wsgs[MG_WSG_CHECKPOINT_ACTIVE_1];
-    self->sprites[MG_SP_CHECKPOINT_ACTIVE_1].origin = &origin_8_8;
-    self->sprites[MG_SP_CHECKPOINT_ACTIVE_1].hitBox = &box_16_16;
+    self->sprites[MG_SP_CHECKPOINT_ACTIVE_1].origin = &origin_15_15;
+    self->sprites[MG_SP_CHECKPOINT_ACTIVE_1].hitBox = &box_30_30;
 
     self->sprites[MG_SP_CHECKPOINT_ACTIVE_2].wsg    = &self->wsgs[MG_WSG_CHECKPOINT_ACTIVE_2];
-    self->sprites[MG_SP_CHECKPOINT_ACTIVE_2].origin = &origin_8_8;
-    self->sprites[MG_SP_CHECKPOINT_ACTIVE_2].hitBox = &box_16_16;
+    self->sprites[MG_SP_CHECKPOINT_ACTIVE_2].origin = &origin_15_15;
+    self->sprites[MG_SP_CHECKPOINT_ACTIVE_2].hitBox = &box_30_30;
 
     self->sprites[MG_SP_BOUNCE_BLOCK].wsg    = &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1];
     self->sprites[MG_SP_BOUNCE_BLOCK].origin = &origin_8_8;

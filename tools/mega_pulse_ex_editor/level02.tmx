@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="48" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="117">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="48" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="118">
  <editorsettings>
   <export target="../../assets/platformer/levels/level02.bin" format="Mega Pulse EX"/>
  </editorsettings>
@@ -142,6 +142,7 @@
   <object id="109" template="templates/Chargin' Schmuck.tx" x="1076" y="480"/>
   <object id="110" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="1728" y="624"/>
   <object id="111" template="templates/Chargin' Schmuck.tx" x="2116" y="656"/>
+  <object id="117" template="templates/Checkpoint.tx" type="SwadgeLandEntity" x="3055.42" y="626.033"/>
  </objectgroup>
  <objectgroup id="3" name="annotations">
   <object id="1" x="3316" y="512" width="280" height="240"/>

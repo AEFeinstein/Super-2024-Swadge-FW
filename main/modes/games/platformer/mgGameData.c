@@ -29,7 +29,7 @@ void mg_initializeGameData(mgGameData_t* gameData, mgSoundManager_t* soundManage
     gameData->initials[2]        = 'A';
     gameData->rank               = 5;
     gameData->extraLifeCollected = false;
-    gameData->checkpoint         = 0;
+    gameData->checkpointSpawnIndex         = 0;
     gameData->levelDeaths        = 0;
     gameData->initialHp          = 1;
     gameData->debugMode          = false;
@@ -51,7 +51,8 @@ void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
     gameData->combo              = 0;
     gameData->comboTimer         = 0;
     gameData->extraLifeCollected = false;
-    gameData->checkpoint         = 0;
+    gameData->checkpointLevel    = 0;
+    gameData->checkpointSpawnIndex    = 0;
     gameData->levelDeaths        = 0;
     gameData->currentBgm         = 0;
     gameData->changeBgm          = MG_BGM_NO_CHANGE;
