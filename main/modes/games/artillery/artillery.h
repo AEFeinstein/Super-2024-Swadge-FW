@@ -72,6 +72,17 @@ typedef enum
     EYES_DEAD,
 } artilleryEye_t;
 
+typedef enum __attribute__((packed))
+{
+    P2P_SET_COLOR,
+    P2P_SET_WORLD,
+    P2P_ADD_TERRAIN,
+    P2P_SET_CLOUDS,
+    P2P_FINISH_TOUR,
+    P2P_SET_STATE,
+    P2P_FIRE_SHOT,
+} artilleryP2pPacketType_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -130,10 +141,12 @@ typedef struct
     p2pInfo p2p;
     const char* conStr;
     list_t p2pQueue;
+    // TODO replace with artilleryP2pPacketType_t expectedPacket;
     bool p2pSetColorReceived;
     bool p2pSetWorldReceived;
     bool p2pAddTerrainReceived;
     bool p2pCloudsReceived;
+    artilleryP2pPacketType_t lastTxType;
 
     // Variables for tank colors
     int32_t paintArrowBlinkTimer;

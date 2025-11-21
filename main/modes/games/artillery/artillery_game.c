@@ -116,7 +116,7 @@ void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newSta
  *
  * @param ad All the artillery mode data
  * @param evt The button event
- * @return true if the barrel angle changed (need to TX a packet), false otherwise
+ * @return true if the p2p state changed (barrel angle, camera, etc.) which will TX a packet, false otherwise
  */
 bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
 {
@@ -131,20 +131,8 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
         {
             if (evt.down && ((PB_START | PB_SELECT) & evt.button))
             {
-                // Immediately clear the tour points
-                clear(&ad->phys->cameraTour);
-
-                // Move to the next game state
-                if (artilleryIsMyTurn(ad))
-                {
-                    artillerySwitchToGameState(ad, AGS_MENU);
-                    // And start on the ammo menu
-                    openAmmoMenu();
-                }
-                else
-                {
-                    artillerySwitchToGameState(ad, AGS_WAIT);
-                }
+                artilleryTxFinishTour(ad);
+                artilleryFinishTour(ad);
             }
             break;
         }
@@ -178,9 +166,8 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     {
                         // Return to the menu
                         artillerySwitchToGameState(ad, AGS_MENU);
-                        // Send message that we've left AGS_LOOK
-                        artilleryTxCamera(ad);
-                        return false;
+                        // Return true to send state
+                        return true;
                     }
                     default:
                     {
@@ -296,9 +283,9 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
  *
  * @param ad All the artillery mode data
  * @param elapsedUs The time elapsed since this was last called.
- * @param barrelChanged
+ * @param stateChanged
  */
-void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChanged)
+void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool stateChanged)
 {
     // Draw the scene
     drawPhysOutline(ad->phys, ad->players, &ad->font_pulseAux, &ad->font_pulseAuxOutline, ad->turn);
@@ -369,13 +356,13 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                 {
                     ad->tpCumulativeDiff -= TOUCH_DEG_PER_BARREL;
                     setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle + BARREL_INTERVAL);
-                    barrelChanged = true;
+                    stateChanged = true;
                 }
                 while (ad->tpCumulativeDiff <= -TOUCH_DEG_PER_BARREL)
                 {
                     ad->tpCumulativeDiff += TOUCH_DEG_PER_BARREL;
                     setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle - BARREL_INTERVAL);
-                    barrelChanged = true;
+                    stateChanged = true;
                 }
 
                 // Save the current touchpad angle
@@ -409,7 +396,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                             {
                                 int16_t bDiff = (PB_LEFT == ad->adjButtonHeld) ? -(BARREL_INTERVAL) : (BARREL_INTERVAL);
                                 setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle + bDiff);
-                                barrelChanged = true;
+                                stateChanged = true;
                                 break;
                             }
                             case PB_UP:
@@ -417,7 +404,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                             {
                                 float pDiff = (PB_UP == ad->adjButtonHeld) ? POWER_INTERVAL : -POWER_INTERVAL;
                                 setShotPower(ad->players[ad->plIdx], ad->players[ad->plIdx]->shotPower + pDiff);
-                                barrelChanged = true;
+                                stateChanged = true;
                                 break;
                             }
                             default:
@@ -489,7 +476,6 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                 if (ad->phys->playerSwapTimerUs <= 0)
                 {
                     artilleryPassTurn(ad);
-                    artilleryTxPassTurn(ad);
 
                     // Only switch back to idle eyes if dead eyes aren't being shown
                     if (ad->deadEyeTimer <= 0)
@@ -716,19 +702,38 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
     // If this is a wireless game and there is some change and it's our turn
     if (AG_WIRELESS == ad->gameType)
     {
-        if ((barrelChanged || playerMoved) && artilleryIsMyTurn(ad))
+        if ((stateChanged || playerMoved || cameraMoved) && artilleryIsMyTurn(ad))
         {
-            // Transmit the change to the other Swadge
-            artilleryTxPlayers(ad);
-        }
-        if (cameraMoved)
-        {
-            artilleryTxCamera(ad);
+            // Transmit the player and camera state to the other Swadge
+            artilleryTxState(ad);
         }
     }
 
     // Uncomment to draw FPS
     // DRAW_FPS_COUNTER((*getSysFont()));
+}
+
+/**
+ * @brief TODO
+ *
+ * @param ad
+ */
+void artilleryFinishTour(artilleryData_t* ad)
+{
+    // Immediately clear the tour points
+    clear(&ad->phys->cameraTour);
+
+    // Move to the next game state
+    if (artilleryIsMyTurn(ad))
+    {
+        artillerySwitchToGameState(ad, AGS_MENU);
+        // And start on the ammo menu
+        openAmmoMenu();
+    }
+    else
+    {
+        artillerySwitchToGameState(ad, AGS_WAIT);
+    }
 }
 
 /**
@@ -878,7 +883,8 @@ bool artilleryIsMyTurn(artilleryData_t* ad)
         }
         case AG_WIRELESS:
         {
-            return (GOING_FIRST == p2pGetPlayOrder(&ad->p2p)) != (0 == ad->plIdx);
+            // 'GOING_FIRST' sends game parameters first, so 'GOING_SECOND' makes the first move
+            return (GOING_SECOND == p2pGetPlayOrder(&ad->p2p)) == (0 == ad->plIdx);
         }
     }
 }

@@ -9,8 +9,7 @@ void artillery_p2pMsgTxCb(p2pInfo* p2p, messageStatus_t status, const uint8_t* d
 
 void artilleryTxColor(artilleryData_t* ad);
 void artilleryTxWorld(artilleryData_t* ad);
-void artilleryTxPlayers(artilleryData_t* ad);
+void artilleryTxFinishTour(artilleryData_t* ad);
+void artilleryTxState(artilleryData_t* ad);
 void artilleryTxShot(artilleryData_t* ad, physCirc_t* player);
-void artilleryTxPassTurn(artilleryData_t* ad);
 void artilleryCheckTxQueue(artilleryData_t* ad);
-void artilleryTxCamera(artilleryData_t* ad);
