@@ -3,7 +3,7 @@
 
 #include "mega_pulse_ex_typedef.h"
 
-#define MG_KINETIC_DONUT_TILESET_MAP_LENGTH 90
+#define MG_KINETIC_DONUT_TILESET_MAP_LENGTH 92
 
 #define MG_IMAGE_FILENAME_LOOKUP_OFFSET 0
 #define MG_WSG_INDEX_LOOKUP_OFFSET      1
