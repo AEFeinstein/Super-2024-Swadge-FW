@@ -93,6 +93,8 @@
 /// @brief Convert the sample count to MIDI ticks
 #define SAMPLES_TO_MIDI_TICKS(n, tempo, div) ((int64_t)(n) * 1000000 * (div) / DAC_SAMPLE_RATE_HZ / (tempo))
 
+#define SAMPLES_PER_TICK(tempo, div) ((uint64_t)DAC_SAMPLE_RATE_HZ * (tempo) / div / 1000000)
+
 /// @brief Convert a number of MIDI ticks to the offset of the first sample of the
 #define TICKS_TO_SAMPLES(ticks, tempo, div) ((int64_t)(ticks) * DAC_SAMPLE_RATE_HZ / (1000000) * (tempo) / (div))
 
@@ -770,6 +772,9 @@ typedef struct
     /// @brief The number of samples elapsed in the playing song
     uint64_t sampleCount;
 
+    /// @brief The current MIDI tick
+    uint32_t tick;
+
     /// @brief The next event in the MIDI file, which occurs after the current time
     midiEvent_t pendingEvent;
 
@@ -779,6 +784,9 @@ typedef struct
     /// @brief The number of microseconds per quarter note
     uint32_t tempo;
 
+    /// @brief The number of audio samples per MIDI tick
+    uint32_t samplesPerTick;
+
     /// @brief True when playback of the current file is paused
     bool paused;
 
@@ -787,6 +795,12 @@ typedef struct
 
     /// @brief If true, the playing file will automatically repeat when complete
     bool loop;
+
+    /// @brief If true, all events from the current song have been read and we are waiting for notes to end.
+    bool songEnding;
+
+    /// @brief Force a check for MIDI events on the next sample
+    bool forceCheckEvents;
 } midiPlayer_t;
 
 /**

@@ -24,7 +24,7 @@ bool updateHighScores(highScores_t* hs, const char* nvsNamespace, score_t newSco
     int32_t userHighScore = hs->userHighScore;
     for (int i = 0; i < numNewScores; i++)
     {
-        if (newScores[i].swadgePassUsername == 0)
+        if (newScores[i].spKey[0] == '\0')
         {
             userHighScore = MAX(userHighScore, newScores[i].score);
         }
@@ -41,11 +41,11 @@ bool updateHighScores(highScores_t* hs, const char* nvsNamespace, score_t newSco
         int pos = HIGH_SCORE_COUNT(hs);
 
         // Only include a single high score from any given SwadgePass user
-        if (newScores[i].swadgePassUsername != 0)
+        if (newScores[i].spKey[0] != '\0')
         {
             for (int highScorePos = 0; highScorePos < HIGH_SCORE_COUNT(hs); highScorePos++)
             {
-                if (newScores[i].swadgePassUsername == hs->highScores[highScorePos].swadgePassUsername)
+                if (strcmp(newScores[i].spKey, hs->highScores[highScorePos].spKey) == 0)
                 {
                     pos = highScorePos;
                     if (newScores[i].score > hs->highScores[highScorePos].score)
@@ -78,7 +78,7 @@ bool updateHighScores(highScores_t* hs, const char* nvsNamespace, score_t newSco
     bool userScoreExists = false;
     for (int i = 0; i < HIGH_SCORE_COUNT(hs); i++)
     {
-        if (hs->highScores[i].swadgePassUsername == 0)
+        if (hs->highScores[i].spKey[0] == '\0')
         {
             userScoreExists = true;
             break;
@@ -86,9 +86,9 @@ bool updateHighScores(highScores_t* hs, const char* nvsNamespace, score_t newSco
     }
     if (!userScoreExists)
     {
-        hs->highScores[HIGH_SCORE_COUNT(hs) - 1].score              = hs->userHighScore;
-        hs->highScores[HIGH_SCORE_COUNT(hs) - 1].swadgePassUsername = 0;
-        changed                                                     = true;
+        hs->highScores[HIGH_SCORE_COUNT(hs) - 1].score = hs->userHighScore;
+        memset(&hs->highScores[HIGH_SCORE_COUNT(hs) - 1].swadgesona, 0, sizeof(swadgesonaCore_t));
+        changed = true;
     }
 
     if (changed)
@@ -109,9 +109,10 @@ void saveHighScoresFromSwadgePass(highScores_t* hs, const char* nvsNamespace, li
         node_t* node = swadgePasses.first;
         while (node)
         {
-            swadgePassData_t* spd          = node->val;
-            spScores[i].score              = fnGetSwadgePassHighScore(&spd->data.packet);
-            spScores[i].swadgePassUsername = spd->data.packet.username;
+            swadgePassData_t* spd = node->val;
+            spScores[i].score     = fnGetSwadgePassHighScore(&spd->data.packet);
+            memcpy(&spScores[i].spKey, &spd->key, NVS_KEY_NAME_MAX_SIZE);
+            memcpy(&spScores[i].swadgesona, &spd->data.packet.swadgesona.core, sizeof(swadgesonaCore_t));
             i++;
             node = node->next;
         }
@@ -125,4 +126,45 @@ void addHighScoreToSwadgePassPacket(const char* nvsNamespace, swadgePassPacket_t
     int32_t highScore = 0;
     readNamespaceNvs32(nvsNamespace, NVS_KEY_USER_HIGH_SCORE, &highScore);
     fnSetSwadgePassHighScore(packet, highScore);
+}
+
+void initHighScoreSonas(highScores_t* hs, swadgesona_t sonas[])
+{
+    for (int i = 0; i < hs->highScoreCount; i++)
+    {
+        if (hs->highScores[i].score > 0)
+        {
+            if (sonas[i].image.w != 0)
+            {
+                freeWsg(&sonas[i].image);
+            }
+
+            if (hs->highScores[i].spKey[0] == '\0')
+            {
+                nameData_t username = *getSystemUsername();
+                memcpy(&sonas[i].name.nameBuffer, username.nameBuffer, USERNAME_MAX_LEN);
+
+                loadSPSona(&sonas[i].core);
+            }
+            else
+            {
+                setUsernameFrom32(&sonas[i].name, hs->highScores[i].swadgesona.packedName);
+
+                memcpy(&sonas[i].core, &hs->highScores[i].swadgesona, sizeof(swadgesonaCore_t));
+            }
+
+            generateSwadgesonaImage(&sonas[i], false);
+        }
+    }
+}
+
+void freeHighScoreSonas(highScores_t* hs, swadgesona_t sonas[])
+{
+    for (int i = 0; i < hs->highScoreCount; i++)
+    {
+        if (sonas[i].image.w != 0)
+        {
+            freeWsg(&sonas[i].image);
+        }
+    }
 }

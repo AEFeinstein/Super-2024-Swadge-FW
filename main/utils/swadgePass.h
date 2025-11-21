@@ -108,6 +108,7 @@
 //==============================================================================
 
 #include "swadge2024.h"
+#include "swadgesona.h"
 
 //==============================================================================
 // Structs
@@ -120,7 +121,6 @@ typedef struct __attribute__((packed)) swadgePassPacket
 {
     uint16_t preamble; ///< Two bytes that specifically begin a SwadgePass packet
     uint8_t version;   ///< A version byte to differentiate packets per-year
-    int32_t username;  ///< The username of the swadge owner
     struct
     {
         uint16_t highScore;
@@ -134,6 +134,10 @@ typedef struct __attribute__((packed)) swadgePassPacket
     {
         uint16_t highScore;
     } roboRunner;
+    struct
+    {
+        swadgesonaCore_t core;
+    } swadgesona;
 } swadgePassPacket_t;
 
 /**

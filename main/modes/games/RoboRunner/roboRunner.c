@@ -318,7 +318,7 @@ static void runnerEnterMode()
     loadFont(RODIN_EB_FONT, &rd->titleFont, true);
 
     // Load and initialize sounds
-    loadMidiFile(CHOWA_RACE_MID, &rd->bgm, true);
+    loadMidiFile(ROBO_RUNNER_BGM_MID, &rd->bgm, true);
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     player->loop         = true;
     midiGmOn(player);
@@ -941,7 +941,7 @@ static int32_t getLatestRemoteScore()
         setPacketUsedByMode(spd, &roboRunnerMode, true);
         if (val < spd->data.packet.roboRunner.highScore)
         {
-            setUsernameFrom32(&rd->remotePlayer, spd->data.packet.username);
+            setUsernameFrom32(&rd->remotePlayer, spd->data.packet.swadgesona.core.packedName);
             val = spd->data.packet.roboRunner.highScore;
         }
         spNode = spNode->next;

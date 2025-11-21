@@ -404,4 +404,6 @@ bool p2pIsTxIdle(p2pInfo* p2p);
 playOrder_t p2pGetPlayOrder(p2pInfo* p2p);
 void p2pSetPlayOrder(p2pInfo* p2p, playOrder_t order);
 
+bool getMacAddrNvs(uint8_t* mac);
+
 #endif

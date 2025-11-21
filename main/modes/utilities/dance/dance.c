@@ -34,12 +34,11 @@
 #include "dance_Flashlight.h"
 #include "dance_None.h"
 #include "dance_RandomDance.h"
+#include "portableDance.h"
 
 //==============================================================================
 // Defines
 //==============================================================================
-
-#define DANCE_SPEED_MULT 8
 
 // Sleep the TFT after 5s
 #define TFT_TIMEOUT_US 5000000
@@ -50,10 +49,8 @@
 
 typedef struct
 {
-    uint32_t danceIdx;
-    uint32_t danceSpeed;
+    portableDance_t* dance;
 
-    bool resetDance;
     bool blankScreen;
 
     uint32_t buttonPressedTimer;
@@ -107,6 +104,7 @@ static const int32_t speedVals[] = {
     4,  // 2x
     2,  // 4x
 };
+static const char nvsNs[] = "light_dances";
 
 const ledDance_t ledDances[] = {
     {.func = danceComet, .arg = RGB_2_ARG(0, 0, 0), .name = "Comet RGB"},
@@ -178,10 +176,8 @@ void danceEnterMode(void)
 
     danceState = heap_caps_calloc(1, sizeof(danceMode_t), MALLOC_CAP_8BIT);
 
-    danceState->danceIdx   = 0;
-    danceState->danceSpeed = DANCE_SPEED_MULT;
+    danceState->dance = initPortableDance(nvsNs);
 
-    danceState->resetDance  = true;
     danceState->blankScreen = false;
 
     danceState->buttonPressedTimer = 0;
@@ -216,7 +212,7 @@ void danceEnterMode(void)
         .max = ARRAY_SIZE(ledDances) - 1,
     };
     addSettingsOptionsItemToMenu(danceState->menu, NULL, danceState->danceNames, danceState->danceVals,
-                                 ARRAY_SIZE(ledDances), &danceParam, 0);
+                                 ARRAY_SIZE(ledDances), &danceParam, danceState->dance->danceIndex);
 
     // Add brightness to the menu
     addSettingsItemToMenu(danceState->menu, str_brightness, getLedBrightnessSettingBounds(), getLedBrightnessSetting());
@@ -227,7 +223,7 @@ void danceEnterMode(void)
         .max = speedVals[ARRAY_SIZE(speedVals) - 1],
     };
     addSettingsOptionsItemToMenu(danceState->menu, str_speed, speedLabels, speedVals, ARRAY_SIZE(speedVals),
-                                 &speedParam, speedVals[5]);
+                                 &speedParam, danceState->dance->speed);
 
     // Add exit to the menu
     addSingleItemToMenu(danceState->menu, str_exit);
@@ -253,6 +249,8 @@ void danceExitMode(void)
     deinitMenu(danceState->menu);
 
     deinitSwadgePassReceiver();
+
+    freePortableDance(danceState->dance);
 
     heap_caps_free(danceState->danceNames);
     heap_caps_free(danceState->danceVals);
@@ -284,9 +282,7 @@ void danceMainLoop(int64_t elapsedUs)
     }
 
     // Light the LEDs!
-    ledDances[danceState->danceIdx].func(elapsedUs * DANCE_SPEED_MULT / danceState->danceSpeed,
-                                         ledDances[danceState->danceIdx].arg, danceState->resetDance);
-    danceState->resetDance = false;
+    portableDanceMainLoop(danceState->dance, elapsedUs);
 
     // If the screen is blank
     if (danceState->blankScreen)
@@ -386,14 +382,13 @@ bool danceMenuCb(const char* label, bool selected, uint32_t value)
     }
     else if (str_speed == label)
     {
-        danceState->danceSpeed = value;
+        portableDanceSetSpeed(danceState->dance, (int32_t)value);
     }
     else if (NULL == label) // Dance names are label-less
     {
-        if (danceState->danceIdx != value)
+        if (danceState->dance->danceIndex != value)
         {
-            danceState->danceIdx   = value;
-            danceState->resetDance = true;
+            portableDanceSetByIndex(danceState->dance, value);
         }
     }
     return false;
