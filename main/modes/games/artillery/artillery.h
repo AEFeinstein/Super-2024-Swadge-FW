@@ -1,6 +1,7 @@
 #pragma once
 
 #include "swadge2024.h"
+#include "artillery_colors.h"
 #include "artillery_phys.h"
 #include "menuSimpleRenderer.h"
 
@@ -16,7 +17,7 @@
 
 #define TANK_MOVE_TIME_US 3000000
 
-#define PHYS_FPS          60
+#define PHYS_FPS          40
 #define PHYS_TIME_STEP_US (1000000 / PHYS_FPS)
 #define PHYS_TIME_STEP_S  (1 / (float)PHYS_FPS)
 
@@ -39,6 +40,7 @@ typedef enum
 
 typedef enum
 {
+    AGS_TOUR,
     AGS_WAIT,
     AGS_MENU,
     AGS_MOVE,
@@ -55,6 +57,20 @@ typedef enum
     AG_WIRELESS,
     AG_CPU_PRACTICE,
 } artilleryGameType_t;
+
+typedef enum
+{
+    EYES_CC,
+    EYES_UL,
+    EYES_UC,
+    EYES_UR,
+    EYES_CR,
+    EYES_DR,
+    EYES_DC,
+    EYES_DL,
+    EYES_CL,
+    EYES_DEAD,
+} artilleryEye_t;
 
 //==============================================================================
 // Structs
@@ -88,7 +104,6 @@ typedef struct
     menu_t* modeMenu;
     menu_t* blankMenu;
     menuMegaRenderer_t* mRenderer;
-    font_t* scoreFont;
 
     // The game state (i.e. moving, adjusting shot, etc.)
     artilleryGameState_t gState;
@@ -96,6 +111,10 @@ typedef struct
     // In-game menu and renderer
     menu_t* gameMenu;
     menuSimpleRenderer_t* smRenderer;
+
+    // Help pages
+    helpPageVars_t* help;
+    helpPage_t* helpPages;
 
     // Timer to only allow a little bit of movement
     int32_t moveTimerUs;
@@ -123,11 +142,54 @@ typedef struct
 
     // Variables for game over
     artilleryGameOverData_t gameOverData[NUM_PLAYERS];
+
+    // Audio
+    midiFile_t bgms[4];
+    uint32_t bgmIdx;
+
+    // Eye LEDs
+    artilleryEye_t eyeSlot;
+    int32_t deadEyeTimer;
+
+    // Fonts
+    font_t font_oxanium;
+    font_t font_oxaniumOutline;
+    font_t font_pulseAux;
+    font_t font_pulseAuxOutline;
 } artilleryData_t;
 
-extern const char load_ammo[];
+extern const char artilleryModeName[];
+
+extern const char str_passAndPlay[];
+extern const char str_wirelessConnect[];
+extern const char str_cpuPractice[];
+extern const char str_paintSelect[];
+extern const char str_help[];
+extern const char str_exit[];
+
+extern const char str_load_ammo[];
+extern const char str_drive[];
+extern const char str_look_around[];
+extern const char str_adjust[];
+extern const char str_fire[];
+
 extern swadgeMode_t artilleryMode;
 
+// WARNING! Must match the order of trophies in artilleryTrophies[]
+typedef enum
+{
+    AT_ROYAL_SAMPLER,
+    AT_HITTING_YOURSELF,
+    AT_TO_THE_MOON,
+    AT_PASS_AND_PLAY,
+    AT_P2P,
+    AT_SKYNET,
+    AT_SNIPER,
+} artilleryTrophyType;
+extern const trophyData_t artilleryTrophies[];
+
 void setDriveInMenu(bool visible);
+void setAmmoInMenu(void);
+void openAmmoMenu(void);
 artilleryData_t* getArtilleryData(void);
 void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain);

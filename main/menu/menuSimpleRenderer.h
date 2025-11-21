@@ -40,9 +40,12 @@ typedef struct
     paletteColor_t borderColor;  ///< The color of the background border
     paletteColor_t bgColor;      ///< The color of the screen background
     paletteColor_t rowTextColor; ///< The color of the row text
+
+    wsg_t arrow;        ///< The arrow to draw to indicate pages
+    int32_t blinkTimer; ///< A timer used to blink the page arrows
 } menuSimpleRenderer_t;
 
 menuSimpleRenderer_t* initMenuSimpleRenderer(font_t* font, paletteColor_t border, paletteColor_t bg,
                                              paletteColor_t text, int32_t rows);
 void deinitMenuSimpleRenderer(menuSimpleRenderer_t* renderer);
-void drawMenuSimple(menu_t* menu, menuSimpleRenderer_t* renderer);
+void drawMenuSimple(menu_t* menu, menuSimpleRenderer_t* renderer, uint32_t elapsedUs);

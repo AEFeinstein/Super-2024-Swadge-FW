@@ -107,7 +107,7 @@ I (1202) gpio: GPIO[38]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulld
 
 This option will route serial debug output through a pin on the Simple Add-On (SAO) connector (GPIO 18). It's functionally the same as `DEBUG_OUTPUT_UART`, but in a more physically accessible location. The two pins used are:
 
-<img src="./sao_hdr.png" width="512">
+<img src="./images/sao_hdr.png" width="512">
 
 ### DEBUG_OUTPUT_USB
 

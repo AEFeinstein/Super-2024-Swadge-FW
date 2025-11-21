@@ -12,6 +12,7 @@
 #include "artillery.h"
 #include "artillery_phys_terrain.h"
 #include "artillery_phys_objs.h"
+#include "artillery_game.h"
 
 //==============================================================================
 // Function Declarations
@@ -383,6 +384,7 @@ bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
             else
             {
                 // Attempt to deform points
+                // TODO this doesn't work great with machine gun b/c it doesn't accumulate deformations
                 line->destination.p1.y
                     = deformTerrainPoint(&line->l.p1, &shell->c.pos, rSq, expMin, expMax, raiseTerrain);
                 line->destination.p2.y
@@ -406,10 +408,29 @@ bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
             if (shell->owner == circ)
             {
                 shell->owner->score -= shell->score;
+
+                if (shell->score && artilleryIsMyTurn(getArtilleryData()))
+                {
+                    trophyUpdate(&artilleryTrophies[AT_HITTING_YOURSELF], true, true);
+                }
             }
             else
             {
                 shell->owner->score += shell->score;
+
+                if ((SNIPER == shell->effect) && artilleryIsMyTurn(getArtilleryData()))
+                {
+                    trophyUpdate(&artilleryTrophies[AT_SNIPER], true, true);
+                }
+            }
+
+            // Set eyes to [X X]
+            artilleryData_t* ad = getArtilleryData();
+            if (EYES_DEAD != ad->eyeSlot)
+            {
+                ad->eyeSlot = EYES_DEAD;
+                ch32v003SelectBitmap(ad->eyeSlot);
+                ad->deadEyeTimer = 3000000;
             }
 
             // Impart force on hit tanks
@@ -433,6 +454,10 @@ bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
     removeVal(&phys->cameraTargets, shell);
 
     phys->terrainMoving = true;
+
+    // Play SFX (explosion)
+    midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, CRASH_CYMBAL_2, 0x7F);
+
     return change;
 }
 
@@ -454,7 +479,7 @@ static float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float ex
         if (raiseTerrain)
         {
             // Simply raise terrain, but not out of bounds
-            return MAX(p->y - 40, 0);
+            return MAX(p->y - 80, 0);
         }
 
         // X distance from shell to point to adjust

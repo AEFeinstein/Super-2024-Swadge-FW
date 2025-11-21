@@ -52,7 +52,7 @@ void dn_HandleConnectingInput(dn_gameData_t* data, buttonEvt_t* evt)
     if (evt->down && PB_B == evt->button)
     {
         // Cancel the connection and return to the main menu
-        p2pDeinit(&data->p2p);
+        p2pDeinit(&data->p2p, true);
         dn_ShowUi(UI_MENU);
     }
 }

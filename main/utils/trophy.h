@@ -404,7 +404,7 @@ void trophyClear(const trophyData_t* t);
  * @return true If bit is set
  * @return false If bit is not set
  */
-bool checkBitFlag(int32_t flags, int8_t idx);
+bool checkBitFlag(uint32_t flags, int8_t idx);
 
 /**
  * @brief Set a bit flag
@@ -413,7 +413,7 @@ bool checkBitFlag(int32_t flags, int8_t idx);
  * @param idx Index of the bit to set
  * @param setTrue Set to false to unset the
  */
-void setBitFlag(int32_t* flags, int8_t idx, bool setTrue);
+void setBitFlag(uint32_t* flags, int8_t idx, bool setTrue);
 
 /**
  * @brief Get the point totals for the gamer score
