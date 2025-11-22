@@ -268,9 +268,8 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
             uint16_t linkedEntitySpawnIndex = (buf[i + 15] << 8) + buf[i + 14];
 
             ESP_LOGE("TEST", "Entity #%i: type %i", subiterator, entitySpawn->type);
-            ESP_LOGE("TEST", "specials 2-7: %i %i %i %i %i %i",
-                     entitySpawn->special2, entitySpawn->special3, entitySpawn->special4, entitySpawn->special5,
-                     entitySpawn->special6, entitySpawn->special7);
+            ESP_LOGE("TEST", "specials 2-7: %i %i %i %i %i %i", entitySpawn->special2, entitySpawn->special3,
+                     entitySpawn->special4, entitySpawn->special5, entitySpawn->special6, entitySpawn->special7);
 
             if (linkedEntitySpawnIndex == 0xffff)
             {

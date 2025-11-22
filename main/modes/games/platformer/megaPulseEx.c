@@ -486,7 +486,6 @@ void updateGame(platformer_t* self)
     }
 
     updateComboTimer(&(self->gameData));
-    
 }
 
 void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
@@ -524,9 +523,9 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
 
         int8_t hp = platformer->entityManager.playerEntity->hp;
 
-        if(hp > 30){
-            drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_SALSA], 8,
-                            MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 96);
+        if (hp > 30)
+        {
+            drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_SALSA], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 96);
             hp = 30;
         }
 
@@ -569,9 +568,9 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
 
         int8_t hp = platformer->entityManager.bossEntity->hp;
 
-        if(hp > 30){
-            drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_SALSA], 256,
-                            MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 96);
+        if (hp > 30)
+        {
+            drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_SALSA], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 96);
             hp = 30;
         }
 
@@ -812,7 +811,8 @@ void changeStateGame(platformer_t* self)
     mg_deactivateAllEntities(&(self->entityManager), false);
 
     bool checkpointActive = self->gameData.checkpointLevel && self->gameData.checkpointSpawnIndex;
-    if(checkpointActive){
+    if (checkpointActive)
+    {
         self->gameData.level = self->gameData.checkpointLevel;
     }
 
@@ -832,15 +832,14 @@ void changeStateGame(platformer_t* self)
 
     mgEntityManager_t* entityManager = &(self->entityManager);
 
-    mgEntitySpawnData_t* playerSpawn = (checkpointActive) ? &(self->tilemap.entitySpawns[self->gameData.checkpointSpawnIndex]) : self->tilemap.defaultPlayerSpawn;
+    mgEntitySpawnData_t* playerSpawn = (checkpointActive)
+                                           ? &(self->tilemap.entitySpawns[self->gameData.checkpointSpawnIndex])
+                                           : self->tilemap.defaultPlayerSpawn;
 
     if (playerSpawn != NULL)
     {
-        entityManager->viewEntity   = mg_createPlayer(entityManager,
-                                                      playerSpawn->tx * 16
-                                                          + playerSpawn->xOffsetInPixels,
-                                                     playerSpawn->ty * 16
-                                                          + playerSpawn->yOffsetInPixels);
+        entityManager->viewEntity = mg_createPlayer(entityManager, playerSpawn->tx * 16 + playerSpawn->xOffsetInPixels,
+                                                    playerSpawn->ty * 16 + playerSpawn->yOffsetInPixels);
         entityManager->playerEntity = entityManager->viewEntity;
         // entityManager->playerEntity->hp = self->gameData.initialHp;
         mg_viewFollowEntity(&(self->tilemap), entityManager->playerEntity);
@@ -848,7 +847,7 @@ void changeStateGame(platformer_t* self)
 
     entityManager->bossEntity = NULL;
 
-    //mg_updateLedsHpMeter(&(self->entityManager), &(self->gameData));
+    // mg_updateLedsHpMeter(&(self->entityManager), &(self->gameData));
 
     self->tilemap.executeTileSpawnAll = true;
 
@@ -1016,12 +1015,12 @@ void changeStateTitleScreen(platformer_t* self)
 
 void changeStateLevelClear(platformer_t* self)
 {
-    self->gameData.frameCount         = 0;
-    self->gameData.checkpointLevel    = 0;
-    self->gameData.checkpointSpawnIndex    = 0;
-    self->gameData.levelDeaths        = 0;
-    self->gameData.initialHp          = self->entityManager.playerEntity->hp;
-    self->gameData.extraLifeCollected = false;
+    self->gameData.frameCount           = 0;
+    self->gameData.checkpointLevel      = 0;
+    self->gameData.checkpointSpawnIndex = 0;
+    self->gameData.levelDeaths          = 0;
+    self->gameData.initialHp            = self->entityManager.playerEntity->hp;
+    self->gameData.extraLifeCollected   = false;
     mg_resetGameDataLeds(&(self->gameData));
     self->update = &updateLevelClear;
 }

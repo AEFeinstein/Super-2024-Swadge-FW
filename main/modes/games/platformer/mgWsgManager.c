@@ -643,7 +643,7 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_CHARGE_SHOT_LVL1_2].wsg    = &self->wsgs[MG_WSG_CHARGE_SHOT_LVL1_2];
     self->sprites[MG_SP_CHARGE_SHOT_LVL1_2].origin = &origin_15_11;
     self->sprites[MG_SP_CHARGE_SHOT_LVL1_2].hitBox = &box_charge_shot_lvl1;
-    
+
     self->sprites[MG_SP_CHARGE_SHOT_LVL1_3].wsg    = &self->wsgs[MG_WSG_CHARGE_SHOT_LVL1_3];
     self->sprites[MG_SP_CHARGE_SHOT_LVL1_3].origin = &origin_15_11;
     self->sprites[MG_SP_CHARGE_SHOT_LVL1_3].hitBox = &box_charge_shot_lvl1;
@@ -655,7 +655,7 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_CHARGE_SHOT_MAX_2].wsg    = &self->wsgs[MG_WSG_CHARGE_SHOT_MAX_2];
     self->sprites[MG_SP_CHARGE_SHOT_MAX_2].origin = &origin_26_16;
     self->sprites[MG_SP_CHARGE_SHOT_MAX_2].hitBox = &box_charge_shot_max;
-    
+
     self->sprites[MG_SP_CHARGE_SHOT_MAX_3].wsg    = &self->wsgs[MG_WSG_CHARGE_SHOT_MAX_3];
     self->sprites[MG_SP_CHARGE_SHOT_MAX_3].origin = &origin_26_16;
     self->sprites[MG_SP_CHARGE_SHOT_MAX_3].hitBox = &box_charge_shot_max;
