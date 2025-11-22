@@ -1392,6 +1392,7 @@ static void midiSongEnd(midiPlayer_t* player)
     {
         midiAllNotesOff(player, 0);
     }
+    player->songEnding = false;
 
     if (player->loop && player->mode == MIDI_FILE && player->reader.file)
     {
@@ -1399,7 +1400,6 @@ static void midiSongEnd(midiPlayer_t* player)
         player->sampleCount = 0;
         player->tick        = 0;
         player->paused      = false;
-        player->songEnding  = false;
     }
     else
     {
@@ -1457,7 +1457,8 @@ void midiPlayerReset(midiPlayer_t* player)
     player->headroom       = MIDI_DEF_HEADROOM;
 
     deinitMidiParser(&player->reader);
-    player->paused = true;
+    player->paused     = true;
+    player->songEnding = false;
 }
 
 void midiPlayerResetNewSong(midiPlayer_t* player)
@@ -1471,6 +1472,7 @@ void midiPlayerResetNewSong(midiPlayer_t* player)
     player->tick             = 0;
     player->eventAvailable   = false;
     player->forceCheckEvents = true;
+    player->songEnding       = false;
 }
 
 int32_t midiPlayerStep(midiPlayer_t* player)
