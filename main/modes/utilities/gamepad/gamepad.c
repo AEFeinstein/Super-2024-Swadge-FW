@@ -877,6 +877,12 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                         break;
                 }
 
+                // Write and select the bitmap to an unused slot
+                ch32v003WriteBitmap(gamepad->bmpSlot, bitmap);
+                ch32v003SelectBitmap(gamepad->bmpSlot);
+                // Set up the next slot for the next frame
+                gamepad->bmpSlot = (gamepad->bmpSlot + 1) % CH32V003_MAX_IMAGE_SLOTS;
+
                 // Save current state as new "previous" for stable eye drawing.
                 gamepad->previousButtons = gamepad->gpState.buttons;
                 gamepad->previousHat     = gamepad->gpState.hat;
