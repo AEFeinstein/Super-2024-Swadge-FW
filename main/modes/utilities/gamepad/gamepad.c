@@ -670,6 +670,9 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
         }
 
         // Display controller state on Eye LED arrays
+        uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
+        uint8_t btnBrightness = 0;
+
         switch (gamepad->gamepadType)
         {
             case GAMEPAD_NS:
@@ -680,7 +683,7 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                     break;
                 }
 
-                uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
+                
                 bitmap[5][0]  = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_TL) ? EYE_LED_BRIGHT : 0;
                 bitmap[5][5]  = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_TL2) ? EYE_LED_BRIGHT : 0;
                 bitmap[5][6]  = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_TR2) ? EYE_LED_BRIGHT : 0;
@@ -690,8 +693,6 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                 bitmap[0][5]  = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_MINUS) ? EYE_LED_BRIGHT : 0;
                 bitmap[0][6]  = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_PLUS) ? EYE_LED_BRIGHT : 0;
                 bitmap[0][11] = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_HOME) ? EYE_LED_BRIGHT : 0;
-
-                uint8_t btnBrightness = 0;
 
                 btnBrightness = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_X) ? EYE_LED_BRIGHT : 0;
                 bitmap[5][8]  = btnBrightness;
@@ -791,13 +792,10 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                     break;
                 }
 
-                uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
                 bitmap[5][0]  = (gamepad->gpState.buttons & GAMEPAD_BUTTON_TL) ? EYE_LED_BRIGHT : 0;
                 bitmap[5][5]  = (gamepad->gpState.buttons & GAMEPAD_BUTTON_TL2) ? EYE_LED_BRIGHT : 0;
                 bitmap[5][6]  = (gamepad->gpState.buttons & GAMEPAD_BUTTON_TR2) ? EYE_LED_BRIGHT : 0;
                 bitmap[5][11] = (gamepad->gpState.buttons & GAMEPAD_BUTTON_TR) ? EYE_LED_BRIGHT : 0;
-
-                uint8_t btnBrightness = 0;
 
                 btnBrightness = (gamepad->gpState.buttons & GAMEPAD_BUTTON_X) ? EYE_LED_BRIGHT : 0;
                 bitmap[5][8]  = btnBrightness;
