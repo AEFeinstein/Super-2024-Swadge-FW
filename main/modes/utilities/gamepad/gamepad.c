@@ -669,34 +669,35 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
             // barY += (ACCEL_BAR_HEIGHT + ACCEL_BAR_SEP);
         }
 
-        //Display controller state on Eye LED arrays
-        switch(gamepad->gamepadType)
+        // Display controller state on Eye LED arrays
+        switch (gamepad->gamepadType)
         {
             case GAMEPAD_NS:
-                if( (gamepad->gpNsState.hat == gamepad->previousHat) && (gamepad->gpNsState.buttons == gamepad->previousButtons) ){
-                    //Skip eye update if no change
+                if ((gamepad->gpNsState.hat == gamepad->previousHat)
+                    && (gamepad->gpNsState.buttons == gamepad->previousButtons))
+                {
+                    // Skip eye update if no change
                     break;
                 }
 
                 uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
-                bitmap[5][0] = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_TL) ? EYE_LED_BRIGHT : 0;
-                bitmap[5][5] = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_TL2) ? EYE_LED_BRIGHT : 0;
-                bitmap[5][6] = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_TR2) ? EYE_LED_BRIGHT : 0;
+                bitmap[5][0]  = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_TL) ? EYE_LED_BRIGHT : 0;
+                bitmap[5][5]  = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_TL2) ? EYE_LED_BRIGHT : 0;
+                bitmap[5][6]  = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_TR2) ? EYE_LED_BRIGHT : 0;
                 bitmap[5][11] = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_TR) ? EYE_LED_BRIGHT : 0;
 
-                bitmap[0][0] = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_CAPTURE) ? EYE_LED_BRIGHT : 0;
-                bitmap[0][5] = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_MINUS) ? EYE_LED_BRIGHT : 0;
-                bitmap[0][6] = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_PLUS) ? EYE_LED_BRIGHT : 0;
+                bitmap[0][0]  = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_CAPTURE) ? EYE_LED_BRIGHT : 0;
+                bitmap[0][5]  = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_MINUS) ? EYE_LED_BRIGHT : 0;
+                bitmap[0][6]  = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_PLUS) ? EYE_LED_BRIGHT : 0;
                 bitmap[0][11] = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_HOME) ? EYE_LED_BRIGHT : 0;
 
-                
                 uint8_t btnBrightness = 0;
-               
+
                 btnBrightness = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_X) ? EYE_LED_BRIGHT : 0;
-                bitmap[5][8] = btnBrightness;
-                bitmap[5][9] = btnBrightness;
-                bitmap[4][8] = btnBrightness;
-                bitmap[4][9] = btnBrightness;
+                bitmap[5][8]  = btnBrightness;
+                bitmap[5][9]  = btnBrightness;
+                bitmap[4][8]  = btnBrightness;
+                bitmap[4][9]  = btnBrightness;
 
                 btnBrightness = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_A) ? EYE_LED_BRIGHT : 0;
                 bitmap[3][10] = btnBrightness;
@@ -705,19 +706,19 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                 bitmap[2][11] = btnBrightness;
 
                 btnBrightness = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_B) ? EYE_LED_BRIGHT : 0;
-                bitmap[1][8] = btnBrightness;
-                bitmap[1][9] = btnBrightness;
-                bitmap[0][8] = btnBrightness;
-                bitmap[0][9] = btnBrightness;
+                bitmap[1][8]  = btnBrightness;
+                bitmap[1][9]  = btnBrightness;
+                bitmap[0][8]  = btnBrightness;
+                bitmap[0][9]  = btnBrightness;
 
                 btnBrightness = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_Y) ? EYE_LED_BRIGHT : 0;
-                bitmap[3][6] = btnBrightness;
-                bitmap[3][7] = btnBrightness;
-                bitmap[2][6] = btnBrightness;
-                bitmap[2][7] = btnBrightness;
+                bitmap[3][6]  = btnBrightness;
+                bitmap[3][7]  = btnBrightness;
+                bitmap[2][6]  = btnBrightness;
+                bitmap[2][7]  = btnBrightness;
 
-
-                switch(gamepad->gpNsState.hat){
+                switch (gamepad->gpNsState.hat)
+                {
                     case GAMEPAD_NS_HAT_UP:
                     case GAMEPAD_NS_HAT_UP_LEFT:
                     case GAMEPAD_NS_HAT_UP_RIGHT:
@@ -725,12 +726,13 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                         bitmap[5][3] = EYE_LED_BRIGHT;
                         bitmap[4][2] = EYE_LED_BRIGHT;
                         bitmap[4][3] = EYE_LED_BRIGHT;
-                        //fallthrough
+                        // fallthrough
                     default:
                         break;
                 }
 
-                switch(gamepad->gpNsState.hat){
+                switch (gamepad->gpNsState.hat)
+                {
                     case GAMEPAD_NS_HAT_RIGHT:
                     case GAMEPAD_NS_HAT_UP_RIGHT:
                     case GAMEPAD_NS_HAT_DOWN_RIGHT:
@@ -738,12 +740,13 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                         bitmap[3][5] = EYE_LED_BRIGHT;
                         bitmap[2][4] = EYE_LED_BRIGHT;
                         bitmap[2][5] = EYE_LED_BRIGHT;
-                        //fallthrough
+                        // fallthrough
                     default:
                         break;
                 }
 
-                switch(gamepad->gpNsState.hat){
+                switch (gamepad->gpNsState.hat)
+                {
                     case GAMEPAD_NS_HAT_DOWN:
                     case GAMEPAD_NS_HAT_DOWN_RIGHT:
                     case GAMEPAD_NS_HAT_DOWN_LEFT:
@@ -751,12 +754,13 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                         bitmap[1][3] = EYE_LED_BRIGHT;
                         bitmap[0][2] = EYE_LED_BRIGHT;
                         bitmap[0][3] = EYE_LED_BRIGHT;
-                        //fallthrough
+                        // fallthrough
                     default:
                         break;
                 }
 
-                switch(gamepad->gpNsState.hat){
+                switch (gamepad->gpNsState.hat)
+                {
                     case GAMEPAD_NS_HAT_LEFT:
                     case GAMEPAD_NS_HAT_UP_LEFT:
                     case GAMEPAD_NS_HAT_DOWN_LEFT:
@@ -764,10 +768,10 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                         bitmap[3][1] = EYE_LED_BRIGHT;
                         bitmap[2][0] = EYE_LED_BRIGHT;
                         bitmap[2][1] = EYE_LED_BRIGHT;
-                        //fallthrough
+                        // fallthrough
                     default:
                         break;
-                }               
+                }
 
                 // Write and select the bitmap to an unused slot
                 ch32v003WriteBitmap(gamepad->bmpSlot, bitmap);
@@ -775,30 +779,31 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                 // Set up the next slot for the next frame
                 gamepad->bmpSlot = (gamepad->bmpSlot + 1) % CH32V003_MAX_IMAGE_SLOTS;
 
-                //Save current state as new "previous" for stable eye drawing.
+                // Save current state as new "previous" for stable eye drawing.
                 gamepad->previousButtons = gamepad->gpNsState.buttons;
                 gamepad->previousHat     = gamepad->gpNsState.hat;
                 break;
             case GAMEPAD_GENERIC:
-                if( (gamepad->gpState.hat == gamepad->previousHat) && (gamepad->gpState.buttons == gamepad->previousButtons) ){
-                    //Skip eye update if no change
+                if ((gamepad->gpState.hat == gamepad->previousHat)
+                    && (gamepad->gpState.buttons == gamepad->previousButtons))
+                {
+                    // Skip eye update if no change
                     break;
                 }
 
                 uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
-                bitmap[5][0] = (gamepad->gpState.buttons & GAMEPAD_BUTTON_TL) ? EYE_LED_BRIGHT : 0;
-                bitmap[5][5] = (gamepad->gpState.buttons & GAMEPAD_BUTTON_TL2) ? EYE_LED_BRIGHT : 0;
-                bitmap[5][6] = (gamepad->gpState.buttons & GAMEPAD_BUTTON_TR2) ? EYE_LED_BRIGHT : 0;
+                bitmap[5][0]  = (gamepad->gpState.buttons & GAMEPAD_BUTTON_TL) ? EYE_LED_BRIGHT : 0;
+                bitmap[5][5]  = (gamepad->gpState.buttons & GAMEPAD_BUTTON_TL2) ? EYE_LED_BRIGHT : 0;
+                bitmap[5][6]  = (gamepad->gpState.buttons & GAMEPAD_BUTTON_TR2) ? EYE_LED_BRIGHT : 0;
                 bitmap[5][11] = (gamepad->gpState.buttons & GAMEPAD_BUTTON_TR) ? EYE_LED_BRIGHT : 0;
 
-                
                 uint8_t btnBrightness = 0;
-               
+
                 btnBrightness = (gamepad->gpState.buttons & GAMEPAD_BUTTON_X) ? EYE_LED_BRIGHT : 0;
-                bitmap[5][8] = btnBrightness;
-                bitmap[5][9] = btnBrightness;
-                bitmap[4][8] = btnBrightness;
-                bitmap[4][9] = btnBrightness;
+                bitmap[5][8]  = btnBrightness;
+                bitmap[5][9]  = btnBrightness;
+                bitmap[4][8]  = btnBrightness;
+                bitmap[4][9]  = btnBrightness;
 
                 btnBrightness = (gamepad->gpState.buttons & GAMEPAD_BUTTON_A) ? EYE_LED_BRIGHT : 0;
                 bitmap[3][10] = btnBrightness;
@@ -807,19 +812,19 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                 bitmap[2][11] = btnBrightness;
 
                 btnBrightness = (gamepad->gpState.buttons & GAMEPAD_BUTTON_B) ? EYE_LED_BRIGHT : 0;
-                bitmap[1][8] = btnBrightness;
-                bitmap[1][9] = btnBrightness;
-                bitmap[0][8] = btnBrightness;
-                bitmap[0][9] = btnBrightness;
+                bitmap[1][8]  = btnBrightness;
+                bitmap[1][9]  = btnBrightness;
+                bitmap[0][8]  = btnBrightness;
+                bitmap[0][9]  = btnBrightness;
 
                 btnBrightness = (gamepad->gpState.buttons & GAMEPAD_BUTTON_Y) ? EYE_LED_BRIGHT : 0;
-                bitmap[3][6] = btnBrightness;
-                bitmap[3][7] = btnBrightness;
-                bitmap[2][6] = btnBrightness;
-                bitmap[2][7] = btnBrightness;
+                bitmap[3][6]  = btnBrightness;
+                bitmap[3][7]  = btnBrightness;
+                bitmap[2][6]  = btnBrightness;
+                bitmap[2][7]  = btnBrightness;
 
-
-                switch(gamepad->gpState.hat){
+                switch (gamepad->gpState.hat)
+                {
                     case GAMEPAD_HAT_UP:
                     case GAMEPAD_HAT_UP_LEFT:
                     case GAMEPAD_HAT_UP_RIGHT:
@@ -827,12 +832,13 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                         bitmap[5][3] = EYE_LED_BRIGHT;
                         bitmap[4][2] = EYE_LED_BRIGHT;
                         bitmap[4][3] = EYE_LED_BRIGHT;
-                        //fallthrough
+                        // fallthrough
                     default:
                         break;
                 }
 
-                switch(gamepad->gpState.hat){
+                switch (gamepad->gpState.hat)
+                {
                     case GAMEPAD_HAT_RIGHT:
                     case GAMEPAD_HAT_UP_RIGHT:
                     case GAMEPAD_HAT_DOWN_RIGHT:
@@ -840,12 +846,13 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                         bitmap[3][5] = EYE_LED_BRIGHT;
                         bitmap[2][4] = EYE_LED_BRIGHT;
                         bitmap[2][5] = EYE_LED_BRIGHT;
-                        //fallthrough
+                        // fallthrough
                     default:
                         break;
                 }
 
-                switch(gamepad->gpState.hat){
+                switch (gamepad->gpState.hat)
+                {
                     case GAMEPAD_HAT_DOWN:
                     case GAMEPAD_HAT_DOWN_RIGHT:
                     case GAMEPAD_HAT_DOWN_LEFT:
@@ -853,12 +860,13 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                         bitmap[1][3] = EYE_LED_BRIGHT;
                         bitmap[0][2] = EYE_LED_BRIGHT;
                         bitmap[0][3] = EYE_LED_BRIGHT;
-                        //fallthrough
+                        // fallthrough
                     default:
                         break;
                 }
 
-                switch(gamepad->gpState.hat){
+                switch (gamepad->gpState.hat)
+                {
                     case GAMEPAD_HAT_LEFT:
                     case GAMEPAD_HAT_UP_LEFT:
                     case GAMEPAD_HAT_DOWN_LEFT:
@@ -866,12 +874,12 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                         bitmap[3][1] = EYE_LED_BRIGHT;
                         bitmap[2][0] = EYE_LED_BRIGHT;
                         bitmap[2][1] = EYE_LED_BRIGHT;
-                        //fallthrough
+                        // fallthrough
                     default:
                         break;
-                }               
+                }
 
-                //Save current state as new "previous" for stable eye drawing.
+                // Save current state as new "previous" for stable eye drawing.
                 gamepad->previousButtons = gamepad->gpState.buttons;
                 gamepad->previousHat     = gamepad->gpState.hat;
                 break;
