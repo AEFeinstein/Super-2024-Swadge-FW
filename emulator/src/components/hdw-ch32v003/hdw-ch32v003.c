@@ -139,7 +139,7 @@ static int CHPStore(uint32_t address, uint32_t regret, int size);
     }
 static inline uint32_t MINIRV32_LOAD4s(uint32_t ofs, uint32_t* rval, uint32_t* trap)
 {
-    uint32_t tmp;
+    uint32_t tmp = 0;
     if (ofs < FLASH_SIZE - 3)
     {
         tmp = *(uint32_t*)(ch32v003flash + ofs);
@@ -160,7 +160,7 @@ static inline uint32_t MINIRV32_LOAD4s(uint32_t ofs, uint32_t* rval, uint32_t* t
 }
 static inline uint16_t MINIRV32_LOAD2s(uint32_t ofs, uint32_t* rval, uint32_t* trap)
 {
-    uint16_t tmp;
+    uint16_t tmp = 0;
     if (ofs < FLASH_SIZE - 1)
     {
         tmp = *(uint16_t*)(ch32v003flash + ofs);
@@ -181,7 +181,7 @@ static inline uint16_t MINIRV32_LOAD2s(uint32_t ofs, uint32_t* rval, uint32_t* t
 }
 static inline uint8_t MINIRV32_LOAD1s(uint32_t ofs, uint32_t* rval, uint32_t* trap)
 {
-    uint8_t tmp;
+    uint8_t tmp = 0;
     if (ofs < FLASH_SIZE - 0)
     {
         tmp = *(uint8_t*)(ch32v003flash + ofs);
@@ -202,7 +202,7 @@ static inline uint8_t MINIRV32_LOAD1s(uint32_t ofs, uint32_t* rval, uint32_t* tr
 }
 static inline int16_t MINIRV32_LOAD2_SIGNEDs(uint32_t ofs, uint32_t* rval, uint32_t* trap)
 {
-    int16_t tmp;
+    int16_t tmp = 0;
     if (ofs < FLASH_SIZE - 1)
     {
         tmp = *(int16_t*)(ch32v003flash + ofs);
@@ -223,7 +223,7 @@ static inline int16_t MINIRV32_LOAD2_SIGNEDs(uint32_t ofs, uint32_t* rval, uint3
 }
 static inline int8_t MINIRV32_LOAD1_SIGNEDs(uint32_t ofs, uint32_t* rval, uint32_t* trap)
 {
-    int8_t tmp;
+    int8_t tmp = 0;
     if (ofs < FLASH_SIZE - 0)
     {
         tmp = *(int8_t*)(ch32v003flash + ofs);
@@ -602,7 +602,7 @@ static int CHPStore(uint32_t address, uint32_t regset, int size)
     {
         // This code does partial writes.
         int ofs                 = address & 3;
-        ch32v003InternalLEDSets = (ch32v003InternalLEDSets & (~(0xff << (ofs * 8)))) | (regset << (ofs * 8));
+        ch32v003InternalLEDSets = (ch32v003InternalLEDSets & (~(0xffu << (ofs * 8)))) | (regset << (ofs * 8));
         return 0;
     }
 
@@ -829,8 +829,8 @@ void ch32v003EmuDraw(int offX, int offY, int window_w, int window_h)
             int bit     = 1 << (tc >> 8);
             int row     = tc & 0xff;
 
-            uint8_t* pptr = tptr + row;
-            int intensity = 0;
+            uint8_t* pptr      = tptr + row;
+            uint32_t intensity = 0;
             int i;
             for (i = 0; i < 8; i++)
             {

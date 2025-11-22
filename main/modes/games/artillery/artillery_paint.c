@@ -10,10 +10,9 @@
 
 static const char key_tankColor[] = "tankColor";
 
-static const paletteColor_t cOpts[][2] = {
-    {c401, c301}, {c102, c001}, {c004, c003}, {c505, c413}, {c033, c022}, {c305, c214}, {c521, c421},
-    {c503, c402}, {c241, c131}, {c541, c431}, {c203, c102}, {c333, c444}, {c000, c222}, {c545, c535},
-    {c543, c433}, {c554, c253}, {c455, c054}, {c233, c122}, {c544, c533}, {c435, c425},
+static const paletteColor_t tankPaints[][2] = {
+    {c433, c322}, {c554, c211}, {c441, c220}, {c254, c032}, {c234, c123}, {c405, c304}, {c411, c300}, {c322, c211},
+    {c431, c320}, {c241, c030}, {c513, c402}, {c151, c030}, {c515, c404}, {c104, c003}, {c131, c020}, {c451, c230},
 };
 
 //==============================================================================
@@ -25,12 +24,14 @@ static const paletteColor_t cOpts[][2] = {
  *
  * @param ad
  */
-void artilleryPaintLoadColor(artilleryData_t* ad)
+bool artilleryPaintLoadColor(artilleryData_t* ad)
 {
     if (!readNvs32(key_tankColor, &ad->myColorIdx))
     {
         ad->myColorIdx = 0;
+        return false;
     }
+    return true;
 }
 
 /**
@@ -53,13 +54,13 @@ void artilleryPaintInput(artilleryData_t* ad, buttonEvt_t* evt)
                 }
                 else
                 {
-                    ad->myColorIdx = ARRAY_SIZE(cOpts) - 1;
+                    ad->myColorIdx = ARRAY_SIZE(tankPaints) - 1;
                 }
                 break;
             }
             case PB_RIGHT:
             {
-                ad->myColorIdx = (ad->myColorIdx + 1) % ARRAY_SIZE(cOpts);
+                ad->myColorIdx = (ad->myColorIdx + 1) % ARRAY_SIZE(tankPaints);
                 break;
             }
             default:
@@ -67,6 +68,7 @@ void artilleryPaintInput(artilleryData_t* ad, buttonEvt_t* evt)
                 writeNvs32(key_tankColor, ad->myColorIdx);
                 artilleryPaintLoadColor(ad);
                 ad->mState = AMS_MENU;
+                setDrawBody(ad->mRenderer, true);
                 break;
             }
         }
@@ -81,30 +83,35 @@ void artilleryPaintInput(artilleryData_t* ad, buttonEvt_t* evt)
  */
 void artilleryPaintLoop(artilleryData_t* ad, uint32_t elapsedUs)
 {
-    // Draw background
-    drawMenuMega(ad->blankMenu, ad->mRenderer, elapsedUs);
+// Draw sky and ground
+#define HORIZON 176
+    fillDisplayArea(0, 0, TFT_WIDTH, HORIZON, COLOR_SKY);
+    fillDisplayArea(0, HORIZON, TFT_WIDTH, TFT_HEIGHT, COLOR_GROUND);
+
+    // Draw the menu text
+    drawText(ad->mRenderer->titleFont, c555, str_paintSelect, 20, 13);
+    // Outline the menu text
+    drawText(ad->mRenderer->titleFontOutline, c000, str_paintSelect, 20, 13);
 
     // Blink arrows
     RUN_TIMER_EVERY(ad->paintArrowBlinkTimer, 1000000, elapsedUs, {});
     if (ad->paintArrowBlinkTimer < 1000000 / 2)
     {
-        font_t* font        = ad->mRenderer->titleFont;
-        font_t* fontOutline = ad->mRenderer->titleFontOutline;
-        int xMargin         = 32;
-        int yOff            = TFT_HEIGHT / 2 + 15 - (font->height / 2);
+        font_t* font = ad->mRenderer->titleFont;
+        int xMargin  = 32;
+        int yOff     = TFT_HEIGHT / 2 + 15 - (font->height / 2);
 
         const char lArrow[] = "<-";
         const char rArrow[] = "->";
 
-        drawText(font, c555, lArrow, xMargin, yOff);
-        drawText(fontOutline, c000, lArrow, xMargin, yOff);
-        drawText(font, c555, rArrow, TFT_WIDTH - xMargin - textWidth(font, rArrow), yOff);
-        drawText(fontOutline, c000, rArrow, TFT_WIDTH - xMargin - textWidth(font, rArrow), yOff);
+        drawTextShadow(font, COLOR_TEXT, COLOR_TEXT_SHADOW, lArrow, xMargin, yOff);
+        drawTextShadow(font, COLOR_TEXT, COLOR_TEXT_SHADOW, rArrow, TFT_WIDTH - xMargin - textWidth(font, rArrow),
+                       yOff);
     }
 
     // Draw tank
-    paletteColor_t bCol = cOpts[ad->myColorIdx][0];
-    paletteColor_t hCol = cOpts[ad->myColorIdx][1];
+    paletteColor_t bCol = tankPaints[ad->myColorIdx][0];
+    paletteColor_t hCol = tankPaints[ad->myColorIdx][1];
 
     drawTank(TFT_WIDTH / 2, TFT_HEIGHT / 2 + 15, 40, bCol, hCol, 5);
 }
@@ -116,7 +123,7 @@ void artilleryPaintLoop(artilleryData_t* ad, uint32_t elapsedUs)
  */
 int32_t artilleryGetNumTankColors(void)
 {
-    return ARRAY_SIZE(cOpts);
+    return ARRAY_SIZE(tankPaints);
 }
 
 /**
@@ -128,13 +135,13 @@ int32_t artilleryGetNumTankColors(void)
  */
 void artilleryGetTankColors(int32_t idx, paletteColor_t* base, paletteColor_t* accent)
 {
-    if (idx < 0 || idx >= ARRAY_SIZE(cOpts))
+    if (idx < 0 || idx >= ARRAY_SIZE(tankPaints))
     {
         idx = 0;
     }
 
-    *base   = cOpts[idx][0];
-    *accent = cOpts[idx][1];
+    *base   = tankPaints[idx][0];
+    *accent = tankPaints[idx][1];
 }
 
 /**

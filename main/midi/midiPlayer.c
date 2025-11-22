@@ -571,7 +571,8 @@ static int32_t stepSampleVoice(midiVoice_t* voice, voiceStates_t* states, uint8_
     if (voice->voiceTick == 0)
     {
         MIDI_DBG("SAMPLER: %" PRIu8 ", %" PRIu32 ", %" PRIu32 ", %" PRIu32 ", %" PRIu32, channel->program,
-                 voice->sample.rate, voice->sample.baseNote, voice->pitch, (uint32_t)(sampleRateRatio & 0xFFFFFFFF));
+                 voice->sample.rate, voice->sample.baseNote, voice->pitch,
+                 (uint32_t)(voice->sample.sampleRateRatio & 0xFFFFFFFF));
         // eg if the sample's actual rate is 8192Hz, we need to output each sample
         // exactly twice in order to play it at the "normal" rate
         // but for 32768Hz, we need to skip every other sample to play it at the "normal" rate
@@ -1391,6 +1392,7 @@ static void midiSongEnd(midiPlayer_t* player)
     {
         midiAllNotesOff(player, 0);
     }
+    player->songEnding = false;
 
     if (player->loop && player->mode == MIDI_FILE && player->reader.file)
     {
@@ -1455,7 +1457,8 @@ void midiPlayerReset(midiPlayer_t* player)
     player->headroom       = MIDI_DEF_HEADROOM;
 
     deinitMidiParser(&player->reader);
-    player->paused = true;
+    player->paused     = true;
+    player->songEnding = false;
 }
 
 void midiPlayerResetNewSong(midiPlayer_t* player)
@@ -1469,6 +1472,7 @@ void midiPlayerResetNewSong(midiPlayer_t* player)
     player->tick             = 0;
     player->eventAvailable   = false;
     player->forceCheckEvents = true;
+    player->songEnding       = false;
 }
 
 int32_t midiPlayerStep(midiPlayer_t* player)

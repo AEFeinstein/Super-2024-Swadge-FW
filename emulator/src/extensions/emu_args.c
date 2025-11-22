@@ -945,7 +945,7 @@ bool emuParseArgs(int argc, char** argv)
                     // Do what getopt would  have done for the long opt:
                     // Set the flag to the option val
                     // This we we don't need to handle this manually anyway just for the short opt
-                    *(option->flag) = option->val;
+                    *(option->flag) = (int)option->val;
                 }
             }
         }

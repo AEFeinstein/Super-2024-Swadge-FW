@@ -66,7 +66,7 @@ void drawHelp(helpPageVars_t* help, int32_t elapsedUs)
     // Draw background, without animation
     int16_t oldHeight              = help->menuRenderer->bodyHeight;
     help->menuRenderer->bodyHeight = TFT_HEIGHT;
-    drawMenuMega(help->bgMenu, help->menuRenderer, 0);
+    drawMenuMega(help->bgMenu, help->menuRenderer, elapsedUs);
     help->menuRenderer->bodyHeight = oldHeight;
 
     font_t* f = help->menuRenderer->menuFont;

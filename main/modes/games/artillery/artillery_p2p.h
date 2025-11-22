@@ -13,3 +13,4 @@ void artilleryTxPlayers(artilleryData_t* ad);
 void artilleryTxShot(artilleryData_t* ad, physCirc_t* player);
 void artilleryTxPassTurn(artilleryData_t* ad);
 void artilleryCheckTxQueue(artilleryData_t* ad);
+void artilleryTxCamera(artilleryData_t* ad);

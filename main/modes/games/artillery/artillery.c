@@ -42,9 +42,11 @@ bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value);
 
 const char ART_TAG[] = "ART";
 
-const char load_ammo[]   = "Load Ammo";
-const char drive[]       = "Drive";
-const char look_around[] = "Look Around";
+const char str_load_ammo[]   = "Load Ammo";
+const char str_drive[]       = "Drive";
+const char str_look_around[] = "Look Around";
+const char str_adjust[]      = "Adjust Shot";
+const char str_fire[]        = "Fire!";
 
 const struct
 {
@@ -52,44 +54,126 @@ const struct
     artilleryGameState_t nextState;
 } menuEntries[] = {
     {
-        .text      = look_around,
+        .text      = str_look_around,
         .nextState = AGS_LOOK,
     },
     {
-        .text      = drive,
+        .text      = str_drive,
         .nextState = AGS_MOVE,
     },
     {
-        .text      = load_ammo,
+        .text      = str_load_ammo,
         .nextState = AGS_MENU,
     },
     {
-        .text      = "Adjust Shot",
+        .text      = str_adjust,
         .nextState = AGS_ADJUST,
     },
     {
-        .text      = "Fire!",
+        .text      = str_fire,
         .nextState = AGS_FIRE,
     },
 };
 
-static const char str_passAndPlay[]     = "Pass and Play";
-static const char str_wirelessConnect[] = "Wireless Connect";
-static const char str_cpuPractice[]     = "CPU Practice";
-static const char str_paintSelect[]     = "Paint Shop";
-static const char str_help[]            = "Help!";
-static const char str_exit[]            = "Exit";
+const char str_passAndPlay[]     = "Pass and Play";
+const char str_wirelessConnect[] = "Wireless PvP";
+const char str_cpuPractice[]     = "CPU Practice";
+const char str_paintSelect[]     = "Paint Shop";
+const char str_help[]            = "Help!";
+const char str_exit[]            = "Exit";
 
-static const char modeName[] = "Vector Tanks";
+const char artilleryModeName[] = "Vector Tanks";
+
+// List of trophies
+const trophyData_t artilleryTrophies[] = {
+    {
+        // RoyalSampler
+        .title       = "Royal Sampler",
+        .description = "Try firing all the different ammo",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_CHECKLIST,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 0x1FFF, // Thirteen ammos in ammoAttributes[]
+    },
+    {
+        // HittingYourself
+        .title       = "Stop Hitting Yourself",
+        .description = "Damage yourself with a shot you fired",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        // ToTheMoon
+        .title       = "To The Moon",
+        .description = "Bounce off the top of the sky",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        // PassAndPlay
+        .title       = "Pass Master",
+        .description = "Play 10 Pass and Play games",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 10,
+    },
+    {
+        // P2P
+        .title       = "Wireless Master",
+        .description = "Play 10 Wireless Connect games",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 10,
+    },
+    {
+        // Skynet
+        .title       = "Take That Skynet",
+        .description = "You defeated the CPU player",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        // Sniper
+        .title       = "Sniper No Sniping",
+        .description = "Hit another player with the sniper ammo",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+};
+
+// Individual mode settings
+const trophySettings_t artilleryTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 6,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = artilleryModeName,
+};
+
+// This is passed to the swadgeMode_t
+const trophyDataList_t artilleryTrophyData = {
+    .settings = &artilleryTrophySettings,
+    .list     = artilleryTrophies,
+    .length   = ARRAY_SIZE(artilleryTrophies),
+};
 
 //==============================================================================
 // Variables
 //==============================================================================
 
 swadgeMode_t artilleryMode = {
-    .modeName                 = modeName,
+    .modeName                 = artilleryModeName,
     .wifiMode                 = ESP_NOW,
-    .overrideUsb              = false,
+    .overrideUsb              = true,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
     .overrideSelectBtn        = false,
@@ -103,7 +187,7 @@ swadgeMode_t artilleryMode = {
     .fnAdvancedUSB            = NULL,
     .fnDacCb                  = NULL,
     .fnAddToSwadgePassPacket  = NULL,
-    .trophyData               = NULL,
+    .trophyData               = &artilleryTrophyData,
 };
 
 artilleryData_t* ad;
@@ -122,7 +206,7 @@ void artilleryEnterMode(void)
     ad = heap_caps_calloc(1, sizeof(artilleryData_t), MALLOC_CAP_8BIT);
 
     // Initialize mode menu
-    ad->modeMenu = initMenu(modeName, artilleryModeMenuCb);
+    ad->modeMenu = initMenu(artilleryModeName, artilleryModeMenuCb);
     addSingleItemToMenu(ad->modeMenu, str_passAndPlay);
     addSingleItemToMenu(ad->modeMenu, str_wirelessConnect);
     addSingleItemToMenu(ad->modeMenu, str_cpuPractice);
@@ -132,24 +216,42 @@ void artilleryEnterMode(void)
 
     ad->blankMenu = initMenu(str_paintSelect, NULL);
 
+    // Load fonts, not to SPIRAM
+    loadFont(OXANIUM_FONT, &ad->font_oxanium, false);
+    makeOutlineFont(&ad->font_oxanium, &ad->font_oxaniumOutline, false);
+    loadFont(PULSE_AUX_FONT, &ad->font_pulseAux, false);
+    makeOutlineFont(&ad->font_pulseAux, &ad->font_pulseAuxOutline, false);
+
     // Initialize mode menu renderer
-    ad->mRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
-    ad->scoreFont = ad->mRenderer->menuFont;
+    ad->mRenderer = initMenuMegaRenderer(&ad->font_oxanium, &ad->font_oxaniumOutline, &ad->font_pulseAux);
+
+    static const paletteColor_t cycle[] = {
+        COLOR_GRADIENT_1, COLOR_GRADIENT_2, COLOR_GRADIENT_3, COLOR_GRADIENT_4,
+        COLOR_GRADIENT_5, COLOR_GRADIENT_6, COLOR_GRADIENT_7, COLOR_GRADIENT_8,
+    };
+    recolorMenuMegaRenderer(ad->mRenderer,
+                            COLOR_TEXT,              //
+                            COLOR_TEXT_SHADOW,       //
+                            COLOR_HEXA_BACKGROUND,   //
+                            COLOR_BODY_BG,           //
+                            COLOR_BODY_ACCENT_DARK,  //
+                            COLOR_BODY_ACCENT_LIGHT, //
+                            COLOR_BODY_ARROW_BG,     //
+                            COLOR_ROW_UNSEL_BG,      //
+                            COLOR_ROW_UNSEL_SHADOW,  //
+                            COLOR_ROW_SEL_BG,        //
+                            COLOR_ROW_SEL_ACCENT,    //
+                            COLOR_ROW_SEL_OUTLINE,   //
+                            COLOR_ROW_ARROW_BG,      //
+                            cycle, ARRAY_SIZE(cycle));
 
     // Initialize in-game menu
-    ad->gameMenu = initMenu(NULL, artilleryGameMenuCb);
+    ad->gameMenu = initMenuRam(NULL, artilleryGameMenuCb, MALLOC_CAP_8BIT);
     for (int mIdx = 0; mIdx < ARRAY_SIZE(menuEntries); mIdx++)
     {
-        if (load_ammo == menuEntries[mIdx].text)
+        if (str_load_ammo == menuEntries[mIdx].text)
         {
-            ad->gameMenu = startSubMenu(ad->gameMenu, load_ammo);
-
-            uint16_t numAmmos;
-            const artilleryAmmoAttrib_t* ammos = getAmmoAttributes(&numAmmos);
-            for (int aIdx = 0; aIdx < numAmmos; aIdx++)
-            {
-                addSingleItemToMenu(ad->gameMenu, ammos[aIdx].name);
-            }
+            ad->gameMenu = startSubMenu(ad->gameMenu, str_load_ammo);
             ad->gameMenu = endSubMenu(ad->gameMenu);
         }
         else
@@ -159,7 +261,11 @@ void artilleryEnterMode(void)
     }
 
     // Initialize in-game menu renderer
-    ad->smRenderer = initMenuSimpleRenderer(NULL, c005, c111, c555, 5);
+    ad->smRenderer = initMenuSimpleRenderer(NULL, COLOR_SIMPLE_MENU_BORDER, COLOR_SIMPLE_MENU_BACKGROUND,
+                                            COLOR_SIMPLE_MENU_TEXT, 5);
+
+    // Initialize help menu
+    artilleryHelpInit(ad);
 
     // Initialize p2p
     p2pInitialize(&ad->p2p, 0x76, artillery_p2pConCb, artillery_p2pMsgRxCb, -70);
@@ -171,7 +277,42 @@ void artilleryEnterMode(void)
     ad->tpLastPhi = INT32_MIN;
 
     // Load tank color
-    artilleryPaintLoadColor(ad);
+    if (false == artilleryPaintLoadColor(ad))
+    {
+        // No paint yet, load to the paint shop
+        ad->blankMenu->title = str_paintSelect;
+        ad->mState           = AMS_PAINT;
+        setDrawBody(ad->mRenderer, false);
+    }
+
+    // Load and initialize sounds
+    loadMidiFile(VT_FIGHT_ON_MID, &ad->bgms[0], false);
+    loadMidiFile(VT_FUNK_MID, &ad->bgms[1], false);
+    loadMidiFile(VT_RISK_MID, &ad->bgms[2], false);
+    loadMidiFile(VT_POP_MID, &ad->bgms[3], false);
+    globalMidiPlayerGet(MIDI_BGM)->loop = true;
+    midiGmOn(globalMidiPlayerGet(MIDI_BGM));
+    midiPause(globalMidiPlayerGet(MIDI_BGM), true);
+
+    // Set up SFX (see sfxPlayer)
+    midiGmOn(globalMidiPlayerGet(MIDI_SFX));
+    midiPause(globalMidiPlayerGet(MIDI_SFX), false);
+
+    // Write ch32 assets
+    ch32v003WriteBitmapAsset(EYES_CC, EYES_DEFAULT_GS);
+    ch32v003WriteBitmapAsset(EYES_UL, EYES_UL_GS);
+    ch32v003WriteBitmapAsset(EYES_UC, EYES_UC_GS);
+    ch32v003WriteBitmapAsset(EYES_UR, EYES_UR_GS);
+    ch32v003WriteBitmapAsset(EYES_CR, EYES_CR_GS);
+    ch32v003WriteBitmapAsset(EYES_DR, EYES_DR_GS);
+    ch32v003WriteBitmapAsset(EYES_DC, EYES_DC_GS);
+    ch32v003WriteBitmapAsset(EYES_DL, EYES_DL_GS);
+    ch32v003WriteBitmapAsset(EYES_CL, EYES_CL_GS);
+    ch32v003WriteBitmapAsset(EYES_DEAD, EYES_DEAD_GS);
+
+    // Start idle
+    ad->eyeSlot = EYES_CC;
+    ch32v003SelectBitmap(ad->eyeSlot);
 }
 
 /**
@@ -182,6 +323,9 @@ void artilleryExitMode(void)
     // Deinit physics
     deinitPhys(ad->phys);
 
+    // Deinit help menu
+    artilleryHelpDeinit(ad);
+
     // Deinit menus
     deinitMenuSimpleRenderer(ad->smRenderer);
     deinitMenuMegaRenderer(ad->mRenderer);
@@ -189,11 +333,23 @@ void artilleryExitMode(void)
     deinitMenu(ad->blankMenu);
     deinitMenu(ad->gameMenu);
 
+    // Free fonts
+    freeFont(&ad->font_oxanium);
+    freeFont(&ad->font_oxaniumOutline);
+    freeFont(&ad->font_pulseAux);
+    freeFont(&ad->font_pulseAuxOutline);
+
     // Deinit p2p
-    p2pDeinit(&ad->p2p);
+    p2pDeinit(&ad->p2p, true);
     while (ad->p2pQueue.first)
     {
         heap_caps_free(pop(&ad->p2pQueue));
+    }
+
+    // Deinit music
+    for (uint32_t i = 0; i < ARRAY_SIZE(ad->bgms); i++)
+    {
+        unloadMidiFile(&ad->bgms[i]);
     }
 
     // Free everything
@@ -268,7 +424,8 @@ void artilleryMainLoop(int64_t elapsedUs)
             // Draw connection text
             font_t* f      = ad->mRenderer->menuFont;
             int16_t tWidth = textWidth(f, ad->conStr) + 1;
-            drawTextShadow(f, c555, c000, ad->conStr, (TFT_WIDTH - tWidth) / 2, 135 - (f->height / 2));
+            drawTextShadow(f, COLOR_TEXT, COLOR_TEXT_SHADOW, ad->conStr, (TFT_WIDTH - tWidth) / 2,
+                           135 - (f->height / 2));
 
             // Check for packets to transmit
             artilleryCheckTxQueue(ad);
@@ -296,6 +453,18 @@ void artilleryMainLoop(int64_t elapsedUs)
             break;
         }
     }
+
+    // Run the timer to clear dead eyes
+    if (ad->deadEyeTimer > 0)
+    {
+        ad->deadEyeTimer -= elapsedUs;
+        if (ad->deadEyeTimer <= 0)
+        {
+            // Go back to idle
+            ad->eyeSlot = EYES_CC;
+            ch32v003SelectBitmap(ad->eyeSlot);
+        }
+    }
 }
 
 /**
@@ -321,11 +490,6 @@ void artilleryBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h,
 
         // Always draw the background
         drawPhysBackground(ad->phys, x, y, w, h);
-    }
-    else
-    {
-        // Not the game, simply black it out
-        fillDisplayArea(x, y, x + w, y + h, c000);
     }
 }
 
@@ -369,10 +533,11 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
         if (str_passAndPlay == label)
         {
             artilleryInitGame(AG_PASS_AND_PLAY, true);
-            artillerySwitchToGameState(ad, AGS_MENU);
+            artillerySwitchToGameState(ad, AGS_TOUR);
         }
         else if (str_wirelessConnect == label)
         {
+            p2pRestart(&ad->p2p);
             p2pStartConnection(&ad->p2p);
             ad->mState           = AMS_CONNECTING;
             ad->blankMenu->title = str_wirelessConnect;
@@ -386,11 +551,10 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
         {
             // TODO implement CPU difficulty
             artilleryInitGame(AG_CPU_PRACTICE, true);
-            artillerySwitchToGameState(ad, AGS_MENU);
+            artillerySwitchToGameState(ad, AGS_TOUR);
         }
         else if (str_help == label)
         {
-            ESP_LOGI(ART_TAG, "TODO Start help!");
             ad->mState = AMS_HELP;
         }
         else if (str_paintSelect == label)
@@ -398,6 +562,7 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
             // Set title, which may be overwritten by AMS_GAME_OVER
             ad->blankMenu->title = str_paintSelect;
             ad->mState           = AMS_PAINT;
+            setDrawBody(ad->mRenderer, false);
         }
         else if (str_exit == label)
         {
@@ -425,7 +590,10 @@ bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value)
         {
             if (label == menuEntries[mIdx].text)
             {
-                artillerySwitchToGameState(ad, menuEntries[mIdx].nextState);
+                if (ad->gState != menuEntries[mIdx].nextState)
+                {
+                    artillerySwitchToGameState(ad, menuEntries[mIdx].nextState);
+                }
                 return false;
             }
         }
@@ -468,7 +636,7 @@ void setDriveInMenu(bool visible)
     while (mNode)
     {
         menuItem_t* item = mNode->val;
-        if (drive == item->label)
+        if (str_drive == item->label)
         {
             driveInMenu = true;
             break;
@@ -479,14 +647,75 @@ void setDriveInMenu(bool visible)
     // Adjust menu as necessary
     if (visible && !driveInMenu)
     {
-        insertSingleItemToMenuAfter(ad->gameMenu, drive, look_around);
+        insertSingleItemToMenuAfter(ad->gameMenu, str_drive, str_look_around);
         ad->smRenderer->numRows++;
     }
     else if (!visible && driveInMenu)
     {
-        removeSingleItemFromMenu(ad->gameMenu, drive);
+        removeSingleItemFromMenu(ad->gameMenu, str_drive);
         ad->smRenderer->numRows--;
     }
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param ad
+ */
+void setAmmoInMenu(void)
+{
+    // Return to the top level menu, just in case
+    menu_t* menu = ad->gameMenu;
+    while (menu->parentMenu)
+    {
+        menu = menu->parentMenu;
+    }
+
+    // Clear out the ammo menu
+    menu = menuNavigateToItem(menu, str_load_ammo);
+    menu = ((menuItem_t*)menu->currentItem->val)->subMenu;
+    removeAllItemsFromMenu(menu);
+
+    // Get a reference to the player
+    list_t* availableAmmo = &ad->players[ad->plIdx]->availableAmmo;
+
+    // Get a reference to ammo attributes
+    uint16_t numAmmos;
+    const artilleryAmmoAttrib_t* ammos = getAmmoAttributes(&numAmmos);
+
+    // Add this player's ammo to the menu
+    node_t* aNode = availableAmmo->first;
+    while (aNode)
+    {
+        // Add available ammo to the menu
+        addSingleItemToMenu(menu, ammos[(intptr_t)aNode->val].name);
+        // Iterate
+        aNode = aNode->next;
+    }
+    menu = menuNavigateToTopItem(menu);
+
+    // Return to the top of the main menu
+    while (menu->parentMenu)
+    {
+        menu = menu->parentMenu;
+    }
+    menu = menuNavigateToTopItem(menu);
+}
+
+/**
+ * @brief Navigate to the load ammo menu
+ */
+void openAmmoMenu(void)
+{
+    // Return to the top level menu, just in case
+    menu_t* menu = ad->gameMenu;
+    while (menu->parentMenu)
+    {
+        menu = menu->parentMenu;
+    }
+
+    ad->gameMenu = menuNavigateToItem(ad->gameMenu, str_load_ammo);
+    ad->gameMenu = menuSelectCurrentItem(ad->gameMenu);
 }
 
 /**
@@ -524,6 +753,12 @@ void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
             artilleryGetTankColors(ad->theirColorIdx, &colors[2], &colors[3]);
         }
         physSpawnPlayers(ad->phys, NUM_PLAYERS, ad->players, colors);
+
+        // Pick random music here
+        ad->bgmIdx = esp_random() % ARRAY_SIZE(ad->bgms);
+        // Start playing music
+        globalMidiPlayerPlaySong(&ad->bgms[ad->bgmIdx], MIDI_BGM);
+        globalMidiPlayerGet(MIDI_BGM)->loop = true;
     }
 
     // Start with a full movement timer
@@ -535,7 +770,7 @@ void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
     // Switch to showing the game
     ad->mState = AMS_GAME;
 
-    // Start the game on the game menu
+    // Start the game waiting
     artillerySwitchToGameState(ad, AGS_WAIT);
 }
 
