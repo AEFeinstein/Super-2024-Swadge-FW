@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.11.2" name="kinetic-donut-tileset" tilewidth="16" tileheight="16" tilecount="128" columns="0">
+<tileset version="1.10" tiledversion="1.11.2" name="kinetic-donut-tileset" tilewidth="16" tileheight="16" tilecount="123" columns="0">
  <grid orientation="orthogonal" width="1" height="1"/>
  <tile id="0">
   <image source="mg-tiles/tile000.png" width="16" height="16"/>
@@ -334,445 +334,45 @@
  <tile id="110">
   <image source="mg-tiles/tile110.png" width="16" height="16"/>
  </tile>
-<!-- <tile id="111">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
- </tile>
- <tile id="112">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
- </tile>
- <tile id="113">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
- </tile>
- <tile id="114">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
- </tile>
- <tile id="115">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
- </tile>
- <tile id="116">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
- </tile>
- <tile id="117">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
- </tile>
- <tile id="118">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
- </tile>
- <tile id="119">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
- </tile>
- <tile id="120">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
- </tile>
- <tile id="121">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
- </tile>
- <tile id="122">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
- </tile>
- <tile id="123">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
- </tile>
- <tile id="124">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
- </tile>
- <tile id="125">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
- </tile>
- <tile id="126">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
- </tile>
- <tile id="127">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
- </tile>
-<tile id="128">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="129">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="130">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="131">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="132">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="133">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="134">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="135">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="136">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="137">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="138">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="139">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="140">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="141">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="142">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="143">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="144">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="145">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="146">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="147">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="148">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="149">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="150">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="151">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="152">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="153">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="154">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="155">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="156">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="157">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="158">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="159">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile> -->
-<tile id="160">
+ <tile id="160">
   <image source="mg-tiles/chain_collision.png" width="16" height="16"/>
-</tile>
-<tile id="161">
+ </tile>
+ <tile id="161">
   <image source="mg-tiles/tile_bounce_block.png" width="16" height="16"/>
-</tile>
-<!--
-<tile id="162">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="163">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="164">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="165">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="166">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="167">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="168">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="169">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="170">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="171">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="172">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="173">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="174">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="175">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="176">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="177">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="178">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="179">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="180">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="181">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="182">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="183">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="184">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="185">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="186">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="187">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="188">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="189">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="190">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="191">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
--->
-<tile id="192">
+ </tile>
+ <tile id="162">
+  <image source="../../assets/platformer/tiles/SpikeTile_top_00.png" width="16" height="16"/>
+ </tile>
+ <tile id="163">
+  <image source="../../assets/platformer/tiles/SpikeTile_left_00.png" width="16" height="16"/>
+ </tile>
+ <tile id="164">
+  <image source="../../assets/platformer/tiles/SpikeTile_bottom_00.png" width="16" height="16"/>
+ </tile>
+ <tile id="165">
+  <image source="../../assets/platformer/tiles/SpikeTile_right_00.png" width="16" height="16"/>
+ </tile>
+  <tile id="166">
+  <image source="mg-tiles/crumble_block.png" width="16" height="16"/>
+ </tile>
+ <tile id="192">
   <image source="mg-tiles/discoball_nocollision.png" width="16" height="16"/>
-</tile>
-<tile id="193">
+ </tile>
+ <tile id="193">
   <image source="mg-tiles/clublight_blue.png" width="16" height="16"/>
-</tile>
-<tile id="194">
+ </tile>
+ <tile id="194">
   <image source="mg-tiles/clublight_pink.png" width="16" height="16"/>
-</tile>
-<tile id="195">
+ </tile>
+ <tile id="195">
   <image source="mg-tiles/KD_donut_coil.png" width="16" height="16"/>
-</tile>
-<tile id="196">
+ </tile>
+ <tile id="196">
   <image source="mg-tiles/chain_nocollision.png" width="16" height="16"/>
-</tile>
-<tile id="197">
+ </tile>
+ <tile id="197">
   <image source="mg-tiles/chainsmall_nocollision.png" width="16" height="16"/>
-</tile>
-<!--
-<tile id="198">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="199">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="200">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="201">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="202">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="203">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="204">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="205">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="206">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="207">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="208">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="209">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="210">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="211">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="212">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="213">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="214">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="215">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="216">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="217">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="218">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="219">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="220">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="221">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="222">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="223">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="224">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="225">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="226">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="227">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="228">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="229">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="230">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="231">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="232">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="233">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="234">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="235">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="236">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="237">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="238">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="239">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="240">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="241">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="242">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="243">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="244">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="245">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="246">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="247">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="248">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="249">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="250">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="251">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="252">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="253">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="254">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
-<tile id="255">
-  <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
-</tile>
--->
+ </tile>
  <wangsets>
   <wangset name="Kinetic Donut Terrain Set" type="corner" tile="32">
    <wangcolor name="floor" color="#ff0000" tile="33" probability="1"/>

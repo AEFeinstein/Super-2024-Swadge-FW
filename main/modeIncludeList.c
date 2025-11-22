@@ -44,6 +44,7 @@ void modeListSetMenu(menu_t* menu)
     addSingleItemToMenu(menu, danceNetworkMode.modeName);
     addSingleItemToMenu(menu, roboRunnerMode.modeName);
     addSingleItemToMenu(menu, modePicross.modeName);
+
     addSingleItemToMenu(menu, artilleryMode.modeName);
     menu = endSubMenu(menu);
 
