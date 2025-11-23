@@ -797,6 +797,11 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                 bitmap[5][6]  = (gamepad->gpState.buttons & GAMEPAD_BUTTON_TR2) ? EYE_LED_BRIGHT : 0;
                 bitmap[5][11] = (gamepad->gpState.buttons & GAMEPAD_BUTTON_TR) ? EYE_LED_BRIGHT : 0;
 
+                bitmap[0][0]  = (gamepad->gpState.buttons & GAMEPAD_BUTTON_Z) ? EYE_LED_BRIGHT : 0;
+                bitmap[0][5]  = (gamepad->gpState.buttons & GAMEPAD_BUTTON_SELECT) ? EYE_LED_BRIGHT : 0;
+                bitmap[0][6]  = (gamepad->gpState.buttons & GAMEPAD_BUTTON_START) ? EYE_LED_BRIGHT : 0;
+                bitmap[0][11] = (gamepad->gpState.buttons & GAMEPAD_BUTTON_MODE) ? EYE_LED_BRIGHT : 0;
+
                 btnBrightness = (gamepad->gpState.buttons & GAMEPAD_BUTTON_X) ? EYE_LED_BRIGHT : 0;
                 bitmap[5][8]  = btnBrightness;
                 bitmap[5][9]  = btnBrightness;
