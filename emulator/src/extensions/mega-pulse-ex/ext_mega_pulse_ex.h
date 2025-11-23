@@ -1,6 +1,6 @@
-/*! \file ext_midi.h
+/*! \file ext_mega_pulse_ex.h
  *
- * \section ext_midi Extended Emulator MIDI Support
+ * \section ext_mega_pulse_ex Inject Mega Pulse EX level data into the emulator
  */
 
 #pragma once
