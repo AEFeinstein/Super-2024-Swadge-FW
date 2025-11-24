@@ -1,0 +1,321 @@
+emulator/src/components/hdw-ch32v003/hdw-ch32v003.c:519:5: runtime error: 1.05837e+16 is outside the range of representable values of type 'unsigned int'
+emulator/src/components/hdw-ch32v003/hdw-ch32v003.c:145:15: runtime error: load of misaligned address 0x55e891660ea6 for type 'uint32_t', which requires 4 byte alignment
+0x55e891660ea6: note: pointer points here
+ a1 cc 82 80 97 01  00 20 93 81 61 19 13 81  41 40 09 65 13 05 05 88  73 10 05 30 8d 46 17 05  00 00
+             ^ 
+[CNFA] Registering Driver: NULL
+[CNFA] Registering Driver: ALSA
+[CNFA] Registering Driver: PULSE
+Extension touch initializing...
+enabled!
+Extension leds initializing...
+enabled!
+Extension ledEyes initializing...
+enabled!
+Extension fuzzer initializing...
+disabled!
+Extension tools initializing...
+enabled!
+Extension keymap initializing...
+disabled!
+Extension modes initializing...
+enabled!
+Extension gamepad initializing...
+I (6727363) GamepadExt | emulator/src/extensions/gamepad/ext_gamepad.c:825 - gamepadInitCb() | Connected to joystick with 12 axes and 8 buttons
+
+enabled!
+Extension replay initializing...
+disabled!
+Extension midi initializing...
+disabled!
+Pulse: from: [O/I] (null)/(null) (Swadge Emulator) / (16384,8000)x(2,1) (512)
+PA REC RES: 0
+Pulse initialized.
+Using NVS file nvs.json
+initUsb is UNIMPLEMENTED
+checkAndInstallCrashwrap is UNIMPLEMENTED
+I (0) CNFS | emulator/src/emu_cnfs.c:42 - initCnfs() | Size: 1339532, Files: 1305
+I (0) DAC | emulator/src/components/hdw-dac/hdw-dac.c:155 - setDacShutdown() |  
+I (0) DAC | emulator/src/components/hdw-dac/hdw-dac.c:90 - dacStop() |  
+I (0) MIC | emulator/src/components/hdw-mic/hdw-mic.c:41 - initMic() |  
+I (0) MIC | emulator/src/components/hdw-mic/hdw-mic.c:68 - startMic() |  
+PRINTF FROM CH32V003: [00000080 00000000]
+I (100) USRN | main/utils/nameList.c:417 - _getMacAddress() | MAC:194:49:141:107:97:83
+I (100) USRN | main/utils/nameList.c:423 - _getMacAddress() | Seeds: Adj1: 9, Adj2: 16, Noun: 10, Number: 83
+I (110) MIC | emulator/src/components/hdw-mic/hdw-mic.c:97 - stopMic() |  
+I (110) MIC | emulator/src/components/hdw-mic/hdw-mic.c:106 - deinitMic() |  
+I (110) DAC | emulator/src/components/hdw-dac/hdw-dac.c:39 - initDac() |  
+I (110) DAC | emulator/src/components/hdw-dac/hdw-dac.c:155 - setDacShutdown() |  
+I (110) DAC | emulator/src/components/hdw-dac/hdw-dac.c:80 - dacStart() |  
+I (110) MIDIFileParser | main/midi/midiFileParser.c:869 - loadMidiFile() | Song 835 has 1165 bytes
+I (113) MIDIFileParser | main/midi/midiFileParser.c:869 - loadMidiFile() | Song 828 has 18495 bytes
+HandleKey 65280 up
+keycode 65280, up
+HandleKey 61440 down
+keycode 61440, down
+inject 16, up
+inject 16, up
+inject 16, up
+inject 16, up
+inject 16, up
+inject 16, up
+inject 16, up
+inject 16, up
+inject 16, up
+inject 16, up
+inject 16, up
+inject 16, up
+inject 16, up
+inject 16, up
+inject 16, up
+inject 16, up
+inject 16, up
+inject 16, up
+inject 16, up
+inject 16, up
+I (120) DAC | emulator/src/components/hdw-dac/hdw-dac.c:155 - setDacShutdown() |  
+I (120) DAC | emulator/src/components/hdw-dac/hdw-dac.c:80 - dacStart() |  
+I (120) DAC | emulator/src/components/hdw-dac/hdw-dac.c:39 - initDac() |  
+I (120) DAC | emulator/src/components/hdw-dac/hdw-dac.c:80 - dacStart() |  
+PRINTF FROM CH32V003: [00000080 00000000]
+I (227) MIDIFileParser | main/midi/midiFileParser.c:869 - loadMidiFile() | Song 1293 has 14726 bytes
+I (230) MIDIFileParser | main/midi/midiFileParser.c:869 - loadMidiFile() | Song 1294 has 48841 bytes
+I (233) MIDIFileParser | main/midi/midiFileParser.c:869 - loadMidiFile() | Song 1296 has 33405 bytes
+I (235) MIDIFileParser | main/midi/midiFileParser.c:869 - loadMidiFile() | Song 1295 has 25234 bytes
+HandleKey 115 down
+keycode 115, down
+inject 2, down
+HandleKey 115 up
+keycode 115, up
+inject 2, up
+HandleKey 108 down
+keycode 108, down
+inject 16, down
+rand() seeding...
+Random Seed: 1763910735
+HandleKey 108 up
+keycode 108, up
+inject 16, up
+HandleKey 61440 up
+keycode 61440, up
+main/modes/games/artillery/artillery_p2p.c:233:54: runtime error: member access within misaligned address 0x73fe51a8790f for type 'const struct artPktWorld_t', which requires 4 byte alignment
+0x73fe51a8790f: note: pointer points here
+ 8d 6b 61 53 01  00 60 04 c0 03 00 00 00  00 8c 43 00 40 21 44 00  00 00 00 00 00 00 00 00  00 52 44
+             ^ 
+main/modes/games/artillery/artillery_phys_terrain.c:640:37: runtime error: load of misaligned address 0x73fe51a87937 for type 'const uint16_t', which requires 2 byte alignment
+0x73fe51a87937: note: pointer points here
+ 00 00 00 00 d0  02 ca 02 c6 02 c0 02 bf  02 bb 02 b7 02 b0 02 b0  02 a8 02 a5 02 a3 02 a1  02 9a 02
+             ^ 
+main/modes/games/artillery/artillery_phys_terrain.c:653:61: runtime error: load of misaligned address 0x73fe51a87939 for type 'const uint16_t', which requires 2 byte alignment
+0x73fe51a87939: note: pointer points here
+ 00 00 d0  02 ca 02 c6 02 c0 02 bf  02 bb 02 b7 02 b0 02 b0  02 a8 02 a5 02 a3 02 a1  02 9a 02 9a 02
+              ^ 
+main/modes/games/artillery/artillery_phys_terrain.c:655:30: runtime error: load of misaligned address 0x73fe51a87939 for type 'const uint16_t', which requires 2 byte alignment
+0x73fe51a87939: note: pointer points here
+ 00 00 d0  02 ca 02 c6 02 c0 02 bf  02 bb 02 b7 02 b0 02 b0  02 a8 02 a5 02 a3 02 a1  02 9a 02 9a 02
+              ^ 
+main/modes/games/artillery/artillery_p2p.c:247:93: runtime error: member access within misaligned address 0x73fe51a8790f for type 'const struct artPktWorld_t', which requires 4 byte alignment
+0x73fe51a8790f: note: pointer points here
+ 8d 6b 61 53 01  00 60 04 c0 03 00 00 00  00 8c 43 00 40 21 44 00  00 00 00 00 00 00 00 00  00 52 44
+             ^ 
+main/modes/games/artillery/artillery_p2p.c:247:27: runtime error: member access within misaligned address 0x73fe51a8790f for type 'const struct artPktWorld_t', which requires 4 byte alignment
+0x73fe51a8790f: note: pointer points here
+ 8d 6b 61 53 01  00 60 04 c0 03 00 00 00  00 8c 43 00 40 21 44 00  00 00 00 00 00 00 00 00  00 52 44
+             ^ 
+main/modes/games/artillery/artillery_p2p.c:248:66: runtime error: member access within misaligned address 0x73fe51a8790f for type 'const struct artPktWorld_t', which requires 4 byte alignment
+0x73fe51a8790f: note: pointer points here
+ 8d 6b 61 53 01  00 60 04 c0 03 00 00 00  00 8c 43 00 40 21 44 00  00 00 00 00 00 00 00 00  00 52 44
+             ^ 
+main/modes/games/artillery/artillery_p2p.c:252:33: runtime error: member access within misaligned address 0x73fe51a8790f for type 'const struct artPktWorld_t', which requires 4 byte alignment
+0x73fe51a8790f: note: pointer points here
+ 8d 6b 61 53 01  00 60 04 c0 03 00 00 00  00 8c 43 00 40 21 44 00  00 00 00 00 00 00 00 00  00 52 44
+             ^ 
+main/modes/games/artillery/artillery_p2p.c:274:77: runtime error: member access within misaligned address 0x73fe51a8c10f for type 'const struct artPktTerrain_t', which requires 2 byte alignment
+0x73fe51a8c10f: note: pointer points here
+ 8d 6b 61 53 02  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  00 00 00
+             ^ 
+main/midi/midiPlayer.c:313:47: runtime error: left shift of 163 by 24 places cannot be represented in type 'int'
+main/modes/games/artillery/artillery_p2p.c:295:56: runtime error: member access within misaligned address 0x73fe51a9010f for type 'const struct artPktCloud_t', which requires 2 byte alignment
+0x73fe51a9010f: note: pointer points here
+ 8d 6b 61 53 03  00 57 00 71 00 64 00 05  01 14 01 02 01 c4 01 e6  01 d5 01 4c 02 42 02 3f  02 10 03
+             ^ 
+main/modes/games/artillery/artillery_p2p.c:296:56: runtime error: member access within misaligned address 0x73fe51a9010f for type 'const struct artPktCloud_t', which requires 2 byte alignment
+0x73fe51a9010f: note: pointer points here
+ 8d 6b 61 53 03  00 57 00 71 00 64 00 05  01 14 01 02 01 c4 01 e6  01 d5 01 4c 02 42 02 3f  02 10 03
+             ^ 
+main/modes/games/artillery/artillery_p2p.c:297:56: runtime error: member access within misaligned address 0x73fe51a9010f for type 'const struct artPktCloud_t', which requires 2 byte alignment
+0x73fe51a9010f: note: pointer points here
+ 8d 6b 61 53 03  00 57 00 71 00 64 00 05  01 14 01 02 01 c4 01 e6  01 d5 01 4c 02 42 02 3f  02 10 03
+             ^ 
+I (4066) MIDIParser | main/midi/midiFileParser.c:385 - trackParseNext() | End of track #0
+HandleKey 61440 down
+keycode 61440, down
+HandleKey 111 down
+keycode 111, down
+inject 64, down
+HandleKey 111 up
+keycode 111, up
+inject 64, up
+HandleKey 115 down
+keycode 115, down
+inject 2, down
+HandleKey 115 up
+keycode 115, up
+inject 2, up
+HandleKey 119 down
+keycode 119, down
+inject 1, down
+HandleKey 119 up
+keycode 119, up
+inject 1, up
+HandleKey 119 down
+keycode 119, down
+inject 1, down
+HandleKey 119 up
+keycode 119, up
+inject 1, up
+HandleKey 115 down
+keycode 115, down
+inject 2, down
+HandleKey 115 up
+keycode 115, up
+inject 2, up
+HandleKey 108 down
+keycode 108, down
+inject 16, down
+HandleKey 108 up
+keycode 108, up
+inject 16, up
+HandleKey 119 down
+keycode 119, down
+inject 1, down
+HandleKey 119 up
+keycode 119, up
+inject 1, up
+HandleKey 115 down
+keycode 115, down
+inject 2, down
+HandleKey 115 up
+keycode 115, up
+inject 2, up
+HandleKey 115 down
+keycode 115, down
+inject 2, down
+HandleKey 115 up
+keycode 115, up
+inject 2, up
+HandleKey 115 down
+keycode 115, down
+inject 2, down
+HandleKey 115 up
+keycode 115, up
+inject 2, up
+HandleKey 108 down
+keycode 108, down
+inject 16, down
+main/midi/midiPlayer.c:325:39: runtime error: left shift of 255 by 24 places cannot be represented in type 'int'
+HandleKey 108 up
+keycode 108, up
+inject 16, up
+HandleKey 65513 down
+keycode 65513, down
+HandleKey 61440 up
+keycode 61440, up
+main/modes/games/artillery/artillery_p2p.c:378:46: runtime error: member access within misaligned address 0x73fe51a9a10f for type 'const struct artPktShot_t', which requires 4 byte alignment
+0x73fe51a9a10f: note: pointer points here
+ 8d 6b 61 53 06  00 00 00 00 00 61 43 00  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  00 00 00
+             ^ 
+main/modes/games/artillery/artillery_p2p.c:379:46: runtime error: member access within misaligned address 0x73fe51a9a10f for type 'const struct artPktShot_t', which requires 4 byte alignment
+0x73fe51a9a10f: note: pointer points here
+ 8d 6b 61 53 06  00 00 00 00 00 61 43 00  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  00 00 00
+             ^ 
+main/modes/games/artillery/artillery_p2p.c:380:46: runtime error: member access within misaligned address 0x73fe51a9a10f for type 'const struct artPktShot_t', which requires 4 byte alignment
+0x73fe51a9a10f: note: pointer points here
+ 8d 6b 61 53 06  00 00 00 00 00 61 43 00  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  00 00 00
+             ^ 
+main/modes/games/artillery/artillery_p2p.c:337:46: runtime error: member access within misaligned address 0x73fe51a2990f for type 'const struct artPktState_t', which requires 4 byte alignment
+0x73fe51a2990f: note: pointer points here
+ 8d 6b 61 53 05  00 00 00 c0 c6 2d 00 6e  02 00 00 e8 01 00 00 00  00 8c 43 f0 fe 22 44 00  00 00 00
+             ^ 
+main/modes/games/artillery/artillery_p2p.c:338:73: runtime error: member access within misaligned address 0x73fe51a2990f for type 'const struct artPktState_t', which requires 4 byte alignment
+0x73fe51a2990f: note: pointer points here
+ 8d 6b 61 53 05  00 00 00 c0 c6 2d 00 6e  02 00 00 e8 01 00 00 00  00 8c 43 f0 fe 22 44 00  00 00 00
+             ^ 
+main/modes/games/artillery/artillery_p2p.c:339:66: runtime error: member access within misaligned address 0x73fe51a2990f for type 'const struct artPktState_t', which requires 4 byte alignment
+0x73fe51a2990f: note: pointer points here
+ 8d 6b 61 53 05  00 00 00 c0 c6 2d 00 6e  02 00 00 e8 01 00 00 00  00 8c 43 f0 fe 22 44 00  00 00 00
+             ^ 
+main/modes/games/artillery/artillery_p2p.c:343:38: runtime error: member access within misaligned address 0x73fe51a2990f for type 'const struct artPktState_t', which requires 4 byte alignment
+0x73fe51a2990f: note: pointer points here
+ 8d 6b 61 53 05  00 00 00 c0 c6 2d 00 6e  02 00 00 e8 01 00 00 00  00 8c 43 f0 fe 22 44 00  00 00 00
+             ^ 
+main/modes/games/artillery/artillery_p2p.c:348:25: runtime error: member access within misaligned address 0x73fe51a2990f for type 'const struct artPktState_t', which requires 4 byte alignment
+0x73fe51a2990f: note: pointer points here
+ 8d 6b 61 53 05  00 00 00 c0 c6 2d 00 6e  02 00 00 e8 01 00 00 00  00 8c 43 f0 fe 22 44 00  00 00 00
+             ^ 
+HandleKey 61440 down
+keycode 61440, down
+HandleKey 115 down
+keycode 115, down
+inject 2, down
+HandleKey 115 up
+keycode 115, up
+inject 2, up
+HandleKey 108 down
+keycode 108, down
+inject 16, down
+HandleKey 108 up
+keycode 108, up
+inject 16, up
+HandleKey 119 down
+keycode 119, down
+inject 1, down
+HandleKey 119 up
+keycode 119, up
+inject 1, up
+HandleKey 119 down
+keycode 119, down
+inject 1, down
+HandleKey 119 up
+keycode 119, up
+inject 1, up
+HandleKey 119 down
+keycode 119, down
+inject 1, down
+HandleKey 119 up
+keycode 119, up
+inject 1, up
+HandleKey 108 down
+keycode 108, down
+inject 16, down
+HandleKey 108 up
+keycode 108, up
+inject 16, up
+I (40594) DAC | emulator/src/components/hdw-dac/hdw-dac.c:51 - deinitDac() |  
+I (40594) MIC | emulator/src/components/hdw-mic/hdw-mic.c:106 - deinitMic() |  
+deinitTemperatureSensor is UNIMPLEMENTED
+
+=================================================================
+==35133==ERROR: LeakSanitizer: detected memory leaks
+
+Direct leak of 1684124 byte(s) in 102 object(s) allocated from:
+    #0 0x55e88ffc733b in malloc (/home/adam/git/Super-2024-Swadge-FW/unit1/swadge_emulator+0x89633b) (BuildId: 3d0cec19c6494181bcf1a70014e4c0feb72a35a7)
+    #1 0x73fe4ee0bed1  (/lib/x86_64-linux-gnu/libnvidia-glcore.so.580.95.05+0xa0bed1) (BuildId: 514f3952a25a0573fe54d66bb96e06a0f68e2c17)
+
+Direct leak of 272507 byte(s) in 59 object(s) allocated from:
+    #0 0x55e88ffc6c83 in calloc (/home/adam/git/Super-2024-Swadge-FW/unit1/swadge_emulator+0x895c83) (BuildId: 3d0cec19c6494181bcf1a70014e4c0feb72a35a7)
+    #1 0x73fe4ee0c18d  (/lib/x86_64-linux-gnu/libnvidia-glcore.so.580.95.05+0xa0c18d) (BuildId: 514f3952a25a0573fe54d66bb96e06a0f68e2c17)
+
+Indirect leak of 187320 byte(s) in 78 object(s) allocated from:
+    #0 0x55e88ffc6c83 in calloc (/home/adam/git/Super-2024-Swadge-FW/unit1/swadge_emulator+0x895c83) (BuildId: 3d0cec19c6494181bcf1a70014e4c0feb72a35a7)
+    #1 0x73fe4ee0c18d  (/lib/x86_64-linux-gnu/libnvidia-glcore.so.580.95.05+0xa0c18d) (BuildId: 514f3952a25a0573fe54d66bb96e06a0f68e2c17)
+
+Indirect leak of 17949 byte(s) in 463 object(s) allocated from:
+    #0 0x55e88ffc733b in malloc (/home/adam/git/Super-2024-Swadge-FW/unit1/swadge_emulator+0x89633b) (BuildId: 3d0cec19c6494181bcf1a70014e4c0feb72a35a7)
+    #1 0x73fe4ee0bed1  (/lib/x86_64-linux-gnu/libnvidia-glcore.so.580.95.05+0xa0bed1) (BuildId: 514f3952a25a0573fe54d66bb96e06a0f68e2c17)
+
+Indirect leak of 48 byte(s) in 1 object(s) allocated from:
+    #0 0x55e88ffc610b in realloc.part.0 (/home/adam/git/Super-2024-Swadge-FW/unit1/swadge_emulator+0x89510b) (BuildId: 3d0cec19c6494181bcf1a70014e4c0feb72a35a7)
+    #1 0x73fe4ee0c563  (/lib/x86_64-linux-gnu/libnvidia-glcore.so.580.95.05+0xa0c563) (BuildId: 514f3952a25a0573fe54d66bb96e06a0f68e2c17)
+
+SUMMARY: AddressSanitizer: 2161948 byte(s) leaked in 703 allocation(s).

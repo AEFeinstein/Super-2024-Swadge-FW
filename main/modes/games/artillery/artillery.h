@@ -141,11 +141,7 @@ typedef struct
     p2pInfo p2p;
     const char* conStr;
     list_t p2pQueue;
-    // TODO replace with artilleryP2pPacketType_t expectedPacket;
-    bool p2pSetColorReceived;
-    bool p2pSetWorldReceived;
-    bool p2pAddTerrainReceived;
-    bool p2pCloudsReceived;
+    artilleryP2pPacketType_t expectedPacket;
     artilleryP2pPacketType_t lastTxType;
 
     // Variables for tank colors

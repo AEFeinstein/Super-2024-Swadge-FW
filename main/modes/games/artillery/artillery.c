@@ -542,10 +542,7 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
             ad->mState           = AMS_CONNECTING;
             ad->blankMenu->title = str_wirelessConnect;
 
-            ad->p2pSetColorReceived   = false;
-            ad->p2pSetWorldReceived   = false;
-            ad->p2pAddTerrainReceived = false;
-            ad->p2pCloudsReceived     = false;
+            ad->expectedPacket = P2P_SET_COLOR;
         }
         else if (str_cpuPractice == label)
         {

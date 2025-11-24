@@ -1,3 +1,41 @@
+/*
+@startuml
+
+== Setup ==
+
+"Going First" -> "Going Second": artilleryTxColor(), P2P_SET_COLOR
+note over "Going Second": artilleryInitGame(false)
+"Going Second" -> "Going First": artilleryTxColor(), P2P_SET_COLOR
+note over "Going First": artilleryInitGame(true)
+"Going First" -> "Going Second": artilleryTxWorld(), P2P_SET_WORLD
+note over "Going Second": physRemoveAllObjects()\nphysAddWorldBounds()\nphysAddTerrainPoints()
+"Going First" -> "Going Second": artilleryTxWorld(), P2P_ADD_TERRAIN
+note over "Going Second": physAddTerrainPoints()
+"Going First" -> "Going Second": artilleryTxWorld(), P2P_SET_CLOUDS
+note over "Going Second": Set Clouds
+note over "Going First": artillerySwitchToGameState(AGS_TOUR)
+note over "Going Second": artillerySwitchToGameState(AGS_TOUR)
+
+== Optional ==
+
+note over "Going First", "Going Second": "Either side may send this message end the tour early
+"Going First" -> "Going Second": P2P_FINISH_TOUR
+"Going Second" -> "Going First": P2P_FINISH_TOUR
+
+== Loop for Seven Turns ==
+
+group Optional, Repeated
+    "Going Second" -> "Going First": P2P_SET_STATE
+end
+"Going Second" -> "Going First": P2P_FIRE_SHOT
+group Optional, Repeated
+    "Going First" -> "Going Second": P2P_SET_STATE
+end
+"Going First" -> "Going Second": P2P_FIRE_SHOT
+
+@enduml
+*/
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -176,13 +214,21 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
     {
         case P2P_SET_COLOR:
         {
-            if (ad->p2pSetColorReceived)
+            if (P2P_SET_COLOR != ad->expectedPacket)
             {
                 return;
             }
             else
             {
-                ad->p2pSetColorReceived  = true;
+                if (GOING_FIRST == p2pGetPlayOrder(&ad->p2p))
+                {
+                    ad->expectedPacket = P2P_SET_STATE;
+                }
+                else
+                {
+                    ad->expectedPacket = P2P_SET_WORLD;
+                }
+
                 const artPktColor_t* pkt = (const artPktColor_t*)payload;
                 ad->theirColorIdx        = pkt->colorIdx;
 
@@ -206,13 +252,13 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
         }
         case P2P_SET_WORLD:
         {
-            if (ad->p2pSetWorldReceived)
+            if (P2P_SET_WORLD != ad->expectedPacket)
             {
                 return;
             }
             else
             {
-                ad->p2pSetWorldReceived = true;
+                ad->expectedPacket = P2P_ADD_TERRAIN;
 
                 const artPktWorld_t* pkt = (const artPktWorld_t*)payload;
 
@@ -252,12 +298,14 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
         }
         case P2P_ADD_TERRAIN:
         {
-            if (ad->p2pAddTerrainReceived)
+            if (P2P_ADD_TERRAIN != ad->expectedPacket)
             {
                 return;
             }
             else
             {
+                ad->expectedPacket = P2P_SET_CLOUDS;
+
                 const artPktTerrain_t* pkt = (const artPktTerrain_t*)payload;
 
                 // Add more lines from packet
@@ -270,12 +318,14 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
         }
         case P2P_SET_CLOUDS:
         {
-            if (ad->p2pCloudsReceived)
+            if (P2P_SET_CLOUDS != ad->expectedPacket)
             {
-                break;
+                return;
             }
             else
             {
+                ad->expectedPacket = P2P_SET_STATE;
+
                 const artPktCloud_t* pkt = (const artPktCloud_t*)payload;
                 // Add clouds from packet
                 for (uint16_t c = 0; c < NUM_CLOUDS * CIRC_PER_CLOUD; c++)
@@ -295,60 +345,82 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
         }
         case P2P_FINISH_TOUR:
         {
-            artilleryFinishTour(ad);
-            break;
+            // P2P_FINISH_TOUR can also be received while expecting P2P_SET_STATE
+            if (P2P_SET_STATE != ad->expectedPacket)
+            {
+                return;
+            }
+            else if (AGS_TOUR == ad->gState)
+            {
+                artilleryFinishTour(ad);
+            }
+            return;
         }
         case P2P_SET_STATE:
         {
-            const artPktState_t* pkt = (const artPktState_t*)payload;
-
-            // Update player location and barrel angle
-            for (int32_t pIdx = 0; pIdx < ARRAY_SIZE(pkt->players); pIdx++)
+            if (P2P_SET_STATE != ad->expectedPacket && !artilleryIsMyTurn(ad))
             {
-                ad->players[pIdx]->c.pos = pkt->players[pIdx].pos;
-                setBarrelAngle(ad->players[pIdx], pkt->players[pIdx].barrelAngle);
-                ad->players[pIdx]->score = pkt->players[pIdx].score;
-            }
-
-            // Update gas gauge
-            ad->moveTimerUs = pkt->moveTimeLeftUs;
-            // Clear all camera targets
-            clear(&ad->phys->cameraTargets);
-
-            // If not looking around, focus on the player
-            if (!pkt->looking)
-            {
-                push(&ad->phys->cameraTargets, ad->players[ad->plIdx]);
+                return;
             }
             else
             {
-                // Set the camera
-                ad->phys->camera = pkt->camera;
-            }
+                const artPktState_t* pkt = (const artPktState_t*)payload;
 
+                // Update player location and barrel angle
+                for (int32_t pIdx = 0; pIdx < ARRAY_SIZE(pkt->players); pIdx++)
+                {
+                    ad->players[pIdx]->c.pos = pkt->players[pIdx].pos;
+                    setBarrelAngle(ad->players[pIdx], pkt->players[pIdx].barrelAngle);
+                    ad->players[pIdx]->score = pkt->players[pIdx].score;
+                }
+
+                // Update gas gauge
+                ad->moveTimerUs = pkt->moveTimeLeftUs;
+                // Clear all camera targets
+                clear(&ad->phys->cameraTargets);
+
+                // If not looking around, focus on the player
+                if (!pkt->looking)
+                {
+                    push(&ad->phys->cameraTargets, ad->players[ad->plIdx]);
+                }
+                else
+                {
+                    // Set the camera
+                    ad->phys->camera = pkt->camera;
+                }
+            }
             return;
         }
         case P2P_FIRE_SHOT:
         {
-            if (!ad->phys->shotFired)
+            // P2P_FIRE_SHOT can also be received while expecting P2P_SET_STATE
+            if (P2P_SET_STATE != ad->expectedPacket && !artilleryIsMyTurn(ad))
             {
-                const artPktShot_t* pkt = (const artPktShot_t*)payload;
+                return;
+            }
+            else
+            {
+                if (!ad->phys->shotFired)
+                {
+                    const artPktShot_t* pkt = (const artPktShot_t*)payload;
 
-                // Get player references
-                physCirc_t* player   = ad->players[ad->plIdx];
-                physCirc_t* opponent = ad->players[(ad->plIdx + 1) % NUM_PLAYERS];
+                    // Get player references
+                    physCirc_t* player   = ad->players[ad->plIdx];
+                    physCirc_t* opponent = ad->players[(ad->plIdx + 1) % NUM_PLAYERS];
 
-                // Set the player's shot
-                player->barrelAngle = pkt->barrelAngle;
-                player->ammoIdx     = pkt->ammoIdx;
-                player->shotPower   = pkt->shotPower;
+                    // Set the player's shot
+                    player->barrelAngle = pkt->barrelAngle;
+                    player->ammoIdx     = pkt->ammoIdx;
+                    player->shotPower   = pkt->shotPower;
 
-                // Switch the game to firing
-                artillerySwitchToGameState(ad, AGS_FIRE);
+                    // Switch the game to firing
+                    artillerySwitchToGameState(ad, AGS_FIRE);
 
-                // Fire the shot from here so that artilleryTxShot() isn't called from artilleryGameLoop()
-                ad->phys->shotFired = true;
-                fireShot(ad->phys, player, opponent, true);
+                    // Fire the shot from here so that artilleryTxShot() isn't called from artilleryGameLoop()
+                    ad->phys->shotFired = true;
+                    fireShot(ad->phys, player, opponent, true);
+                }
             }
             return;
         }
