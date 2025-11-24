@@ -508,19 +508,19 @@ void HandleKey(int keycode, int bDown)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wlogical-op"
     // can't use a switch here in case these are the same on some platforms
-    if (keycode == CNFG_KEY_ALT || keycode == CNFG_KEY_LEFT_ALT || keycode == CNFG_KEY_RIGHT_ALT)
-    {
-        if (bDown)
-        {
-            modifiers |= EMU_MOD_ALT;
-        }
-        else
-        {
-            modifiers &= ~EMU_MOD_ALT;
-        }
-    }
-
-    else if (keycode == CNFG_KEY_CTRL || keycode == CNFG_KEY_LEFT_CONTROL || keycode == CNFG_KEY_RIGHT_CONTROL)
+    // if (keycode == CNFG_KEY_ALT || keycode == CNFG_KEY_LEFT_ALT || keycode == CNFG_KEY_RIGHT_ALT)
+    // {
+    //     if (bDown)
+    //     {
+    //         modifiers |= EMU_MOD_ALT;
+    //     }
+    //     else
+    //     {
+    //         modifiers &= ~EMU_MOD_ALT;
+    //     }
+    // }
+    // else
+    if (keycode == CNFG_KEY_CTRL || keycode == CNFG_KEY_LEFT_CONTROL || keycode == CNFG_KEY_RIGHT_CONTROL)
     {
         if (bDown)
         {
