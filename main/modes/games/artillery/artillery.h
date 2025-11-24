@@ -83,6 +83,13 @@ typedef enum __attribute__((packed))
     P2P_FIRE_SHOT,
 } artilleryP2pPacketType_t;
 
+typedef enum
+{
+    CPU_EASY,
+    CPU_MEDIUM,
+    CPU_HARD,
+} artilleryCpuDifficulty_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -107,6 +114,7 @@ typedef struct
     int32_t plIdx;
     int32_t cpuWaitTimer;
     int32_t turn;
+    artilleryCpuDifficulty_t cpu;
 
     // The mode state (i.e. main menu, connecting, game)
     artilleryModeState_t mState;

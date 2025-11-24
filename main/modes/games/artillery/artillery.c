@@ -84,6 +84,10 @@ const char str_exit[]            = "Exit";
 
 const char artilleryModeName[] = "Vector Tanks";
 
+const char str_cpuEasy[]   = "Easy";
+const char str_cpuMedium[] = "Medium";
+const char str_cpuHard[]   = "Hard";
+
 // List of trophies
 const trophyData_t artilleryTrophies[] = {
     {
@@ -209,7 +213,13 @@ void artilleryEnterMode(void)
     ad->modeMenu = initMenu(artilleryModeName, artilleryModeMenuCb);
     addSingleItemToMenu(ad->modeMenu, str_passAndPlay);
     addSingleItemToMenu(ad->modeMenu, str_wirelessConnect);
-    addSingleItemToMenu(ad->modeMenu, str_cpuPractice);
+
+    ad->modeMenu = startSubMenu(ad->modeMenu, str_cpuPractice);
+    addSingleItemToMenu(ad->modeMenu, str_cpuEasy);
+    addSingleItemToMenu(ad->modeMenu, str_cpuMedium);
+    addSingleItemToMenu(ad->modeMenu, str_cpuHard);
+    ad->modeMenu = endSubMenu(ad->modeMenu);
+
     addSingleItemToMenu(ad->modeMenu, str_paintSelect);
     addSingleItemToMenu(ad->modeMenu, str_help);
     addSingleItemToMenu(ad->modeMenu, str_exit);
@@ -544,9 +554,20 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
 
             ad->expectedPacket = P2P_SET_COLOR;
         }
-        else if (str_cpuPractice == label)
+        else if ((str_cpuEasy == label) || (str_cpuMedium == label) || (str_cpuHard == label))
         {
-            // TODO implement CPU difficulty
+            if (str_cpuEasy == label)
+            {
+                ad->cpu = CPU_EASY;
+            }
+            else if (str_cpuMedium == label)
+            {
+                ad->cpu = CPU_MEDIUM;
+            }
+            else if (str_cpuHard == label)
+            {
+                ad->cpu = CPU_HARD;
+            }
             artilleryInitGame(AG_CPU_PRACTICE, true);
             artillerySwitchToGameState(ad, AGS_TOUR);
         }
