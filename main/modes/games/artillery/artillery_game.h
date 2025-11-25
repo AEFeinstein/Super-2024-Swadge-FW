@@ -1,6 +1,6 @@
 #pragma once
 
-#include "artillery.h"
+#include "artillery_types.h"
 
 #define MAX_TURNS 7
 

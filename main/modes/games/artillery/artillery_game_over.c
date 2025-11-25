@@ -2,8 +2,8 @@
 // Includes
 //==============================================================================
 
-#include "artillery_game_over.h"
 #include "artillery_game.h"
+#include "artillery_game_over.h"
 #include "artillery_paint.h"
 
 //==============================================================================

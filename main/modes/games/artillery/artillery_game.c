@@ -4,8 +4,9 @@
 
 #include "artillery.h"
 #include "artillery_game.h"
-#include "artillery_phys_camera.h"
 #include "artillery_p2p.h"
+#include "artillery_phys.h"
+#include "artillery_phys_camera.h"
 #include "artillery_phys_objs.h"
 
 //==============================================================================
@@ -72,6 +73,39 @@ void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newSta
         {
             setDriveInMenu(ad->moveTimerUs);
             setAmmoInMenu();
+            break;
+        }
+        case AGS_CPU_MOVE:
+        {
+            // Pick a random direction for the CPU to move
+            switch (ad->cpu)
+            {
+                case CPU_EASY:
+                {
+                    // No movement for easy CPU
+                    artillerySwitchToGameState(ad, AGS_CPU_ADJUST);
+                    return;
+                }
+                case CPU_MEDIUM:
+                {
+                    // Medium moves every other turn
+                    if (0 == ad->turn % 2)
+                    {
+                        artillerySwitchToGameState(ad, AGS_CPU_ADJUST);
+                        return;
+                    }
+                }
+                // fallthrough
+                case CPU_HARD:
+                {
+                    // Random movement
+                    if ((AGS_CPU_MOVE == ad->gState) && (0 == ad->players[ad->plIdx]->moving))
+                    {
+                        ad->players[ad->plIdx]->moving = (esp_random() & 0x01) ? PB_LEFT : PB_RIGHT;
+                    }
+                    break;
+                }
+            }
             break;
         }
         case AGS_CPU_ADJUST:
@@ -176,7 +210,6 @@ void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newSta
         case AGS_WAIT:
         case AGS_MOVE:
         case AGS_ADJUST:
-        case AGS_CPU_MOVE:
         case AGS_LOOK:
         {
             break;
@@ -664,13 +697,6 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool stateChange
         case AGS_MOVE:
         case AGS_CPU_MOVE:
         {
-            // TODO CPU difficulty
-            // Pick a random direction for the CPU to move
-            if ((AGS_CPU_MOVE == ad->gState) && (0 == ad->players[ad->plIdx]->moving))
-            {
-                ad->players[ad->plIdx]->moving = (esp_random() & 0x01) ? PB_LEFT : PB_RIGHT;
-            }
-
             // If there is time left to move and the player is moving
             if (ad->moveTimerUs && ad->players[ad->plIdx]->moving)
             {
@@ -749,7 +775,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool stateChange
                     if (cpu->targetBarrelAngle < 0)
                     {
                         // Calculate the shot
-                        adjustCpuShot(ad->phys, cpu, ad->players[(ad->plIdx + 1) % NUM_PLAYERS]);
+                        adjustCpuShot(ad->phys, cpu, ad->players[(ad->plIdx + 1) % NUM_PLAYERS], ad->cpu);
 
                         // Round power and angle, to be fair
                         cpu->shotPower

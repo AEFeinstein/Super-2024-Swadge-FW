@@ -1,6 +1,6 @@
 #pragma once
 
-#include "artillery_phys.h"
+#include "artillery_types.h"
 
 #define TERRAIN_ITERATIONS 7
 #define NUM_TERRAIN_POINTS ((1 << TERRAIN_ITERATIONS) + 1)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "artillery_phys.h"
+#include "artillery_types.h"
 
 physLine_t* physAddLine(physSim_t* phys, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, bool isTerrain);
 physCirc_t* physAddCircle(physSim_t* phys, uint16_t x1, uint16_t y1, uint16_t r, circType_t type,

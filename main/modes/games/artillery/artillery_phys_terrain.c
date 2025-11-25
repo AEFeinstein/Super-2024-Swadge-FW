@@ -2,17 +2,11 @@
 // Includes
 //==============================================================================
 
-#include <math.h>
-#include <esp_heap_caps.h>
-#include <esp_random.h>
-#include "macros.h"
-#include "color_utils.h"
-#include "geometry.h"
-#include "trigonometry.h"
 #include "artillery.h"
-#include "artillery_phys_terrain.h"
-#include "artillery_phys_objs.h"
 #include "artillery_game.h"
+#include "artillery_phys.h"
+#include "artillery_phys_objs.h"
+#include "artillery_phys_terrain.h"
 
 //==============================================================================
 // Function Declarations

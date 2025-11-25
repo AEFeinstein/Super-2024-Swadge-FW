@@ -1,7 +1,6 @@
 #pragma once
 
-#include "p2pConnection.h"
-#include "artillery.h"
+#include "artillery_types.h"
 
 void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt);
 void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);

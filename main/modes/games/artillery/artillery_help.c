@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 
+#include "artillery.h"
 #include "artillery_help.h"
 #include "artillery_phys.h"
 

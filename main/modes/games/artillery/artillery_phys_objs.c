@@ -2,9 +2,9 @@
 // Includes
 //==============================================================================
 
-#include <stddef.h>
 #include "macros.h"
-#include "esp_heap_caps.h"
+
+#include "artillery_phys.h"
 #include "artillery_phys_objs.h"
 
 void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl);
@@ -210,7 +210,7 @@ static void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc)
     {
         if (circleRectFlIntersection(pc->c, phys->zones[zIdx], NULL))
         {
-            pc->zonemask |= (1 << zIdx);
+            pc->zonemask |= (1u << zIdx);
         }
     }
 }

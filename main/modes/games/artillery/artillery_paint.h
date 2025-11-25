@@ -1,7 +1,6 @@
 #pragma once
 
-#include "hdw-btn.h"
-#include "artillery.h"
+#include "artillery_types.h"
 
 bool artilleryPaintLoadColor(artilleryData_t* ad);
 void artilleryPaintInput(artilleryData_t* ad, buttonEvt_t* evt);

@@ -11,17 +11,17 @@
 #include <hdw-tft.h>
 
 #include "shapes.h"
-#include "artillery.h"
-#include "artillery_phys.h"
 #include "macros.h"
 #include "fill.h"
 
+#include "artillery.h"
 #include "artillery_game.h"
-#include "artillery_phys_objs.h"
+#include "artillery_phys.h"
+#include "artillery_phys_bsp.h"
 #include "artillery_phys_camera.h"
 #include "artillery_phys_collisions.h"
+#include "artillery_phys_objs.h"
 #include "artillery_phys_terrain.h"
-#include "artillery_phys_bsp.h"
 
 //==============================================================================
 // Defines
@@ -968,7 +968,7 @@ void setShotPower(physCirc_t* circ, float power)
  * @param cpu The CPU firing a shot
  * @param target The target
  */
-void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
+void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target, artilleryCpuDifficulty_t difficulty)
 {
     const artilleryAmmoAttrib_t* aa = getAmmoAttribute(cpu->ammoIdx);
 
@@ -1011,9 +1011,26 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
         lNode = lNode->next;
     }
 
-    // TODO CPU difficulty, better CPU won't arc as much
-    // Scale it closer towards the ceiling
-    minY = MIN(minY * 0.75f, minY - 240);
+    // Easier CPUs arc shots higher, which is less accurate because barrel
+    // angle changes are more pronounced with more powerful shots
+    switch (difficulty)
+    {
+        case CPU_EASY:
+        {
+            minY = MIN(minY * 0.25f, minY - 240);
+            break;
+        }
+        case CPU_MEDIUM:
+        {
+            minY = MIN(minY * 0.5f, minY - 240);
+            break;
+        }
+        case CPU_HARD:
+        {
+            minY = MIN(minY * 0.75f, minY - 240);
+            break;
+        }
+    }
 
     // Starting position
     vecFl_t absBarrelTip = addVecFl2d(cpu->c.pos, cpu->relBarrelTip);

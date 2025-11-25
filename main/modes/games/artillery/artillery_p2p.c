@@ -41,11 +41,12 @@ end
 //==============================================================================
 
 #include "artillery.h"
+#include "artillery_game.h"
 #include "artillery_p2p.h"
+#include "artillery_paint.h"
+#include "artillery_phys.h"
 #include "artillery_phys_terrain.h"
 #include "artillery_phys_bsp.h"
-#include "artillery_game.h"
-#include "artillery_paint.h"
 
 #define NUM_TERRAIN_POINTS_A (64 + 18)
 #define NUM_TERRAIN_POINTS_B (NUM_TERRAIN_POINTS - NUM_TERRAIN_POINTS_A)

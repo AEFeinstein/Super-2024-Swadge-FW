@@ -4,11 +4,13 @@
 
 #include "artillery.h"
 #include "artillery_game.h"
-#include "artillery_phys_objs.h"
-#include "artillery_p2p.h"
-#include "artillery_paint.h"
 #include "artillery_game_over.h"
 #include "artillery_help.h"
+#include "artillery_p2p.h"
+#include "artillery_paint.h"
+#include "artillery_phys.h"
+#include "artillery_phys_objs.h"
+
 #include "mainMenu.h"
 
 //==============================================================================
