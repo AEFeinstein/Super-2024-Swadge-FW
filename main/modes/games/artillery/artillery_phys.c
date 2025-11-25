@@ -970,6 +970,26 @@ void setShotPower(physCirc_t* circ, float power)
  */
 void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
 {
+    const artilleryAmmoAttrib_t* aa = getAmmoAttribute(cpu->ammoIdx);
+
+    // If this is a laser bolt
+    if (LASER == aa->effect)
+    {
+        // Point it right at the opponent
+        vecFl_t v0 = subVecFl2d(target->c.pos, cpu->c.pos);
+        float tba  = atan2f(v0.x, -v0.y);
+        while (tba < 0)
+        {
+            tba += (2 * M_PIf);
+        }
+        cpu->targetBarrelAngle = ((180 * tba) / M_PIf) + 0.5f;
+
+        setShotPower(cpu, 250);
+
+        // No need to do anything fancy
+        return;
+    }
+
     // Arc the shot between the terrain peak and ceiling
     // First find the terrain peak
     float minY    = phys->bounds.y;
@@ -990,8 +1010,10 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
         }
         lNode = lNode->next;
     }
+
+    // TODO CPU difficulty, better CPU won't arc as much
     // Scale it closer towards the ceiling
-    minY /= 4.0f;
+    minY = MIN(minY * 0.75f, minY - 240);
 
     // Starting position
     vecFl_t absBarrelTip = addVecFl2d(cpu->c.pos, cpu->relBarrelTip);
@@ -1019,7 +1041,14 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
         tba += (2 * M_PIf);
     }
     cpu->targetBarrelAngle = ((180 * tba) / M_PIf) + 0.5f;
-    setShotPower(cpu, magVecFl2d(v0));
+
+    float power = magVecFl2d(v0);
+    // Shorten wallmaker shots
+    if (WALL_MAKER == aa->effect)
+    {
+        power -= 3;
+    }
+    setShotPower(cpu, power);
 }
 
 /**

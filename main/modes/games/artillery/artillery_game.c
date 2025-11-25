@@ -6,6 +6,7 @@
 #include "artillery_game.h"
 #include "artillery_phys_camera.h"
 #include "artillery_p2p.h"
+#include "artillery_phys_objs.h"
 
 //==============================================================================
 // Defines
@@ -75,6 +76,87 @@ void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newSta
         }
         case AGS_CPU_ADJUST:
         {
+            // Pick an ammo when transitioning to AGS_CPU_ADJUST
+            physCirc_t* cpu    = ad->players[ad->plIdx];
+            physCirc_t* target = ad->players[(ad->plIdx + 1) % NUM_PLAYERS];
+
+            // Make a line from the CPU to the player
+            physLine_t laserLine = {
+                .l = {
+                    .p1 = cpu->c.pos,
+                    .p2 = target->c.pos,
+                },
+            };
+            physSetZoneMaskLine(ad->phys, &laserLine);
+
+            // Check if the laser line ever intersects with another line (ground)
+            bool groundIntersection = false;
+            node_t* lNode           = ad->phys->lines.first;
+            while (lNode)
+            {
+                physLine_t* pl = lNode->val;
+                if (pl->zonemask & laserLine.zonemask)
+                {
+                    if (lineLineFlIntersection(laserLine.l, pl->l, NULL))
+                    {
+                        groundIntersection = true;
+                        break;
+                    }
+                }
+
+                // Iterate
+                lNode = lNode->next;
+            }
+
+            // If there's a clear line to the target
+            bool laserSelected = false;
+            if (false == groundIntersection)
+            {
+                // Find which ammo index is the laser
+                uint16_t numAttributes;
+                const artilleryAmmoAttrib_t* attribs = getAmmoAttributes(&numAttributes);
+                uint16_t lIdx;
+                for (lIdx = 0; lIdx < numAttributes; lIdx++)
+                {
+                    if (LASER == attribs[lIdx].effect)
+                    {
+                        break;
+                    }
+                }
+
+                // Check if the laser is still available to fire
+                node_t* aNode = cpu->availableAmmo.first;
+                while (aNode)
+                {
+                    intptr_t aIdx = (intptr_t)aNode->val;
+                    if (aIdx == lIdx)
+                    {
+                        // Fire the laser!
+                        cpu->ammoIdx  = lIdx;
+                        laserSelected = true;
+                        break;
+                    }
+                    aNode = aNode->next;
+                }
+            }
+
+            // Fire some non-laser ammo
+            if (!laserSelected)
+            {
+                do
+                {
+                    // Get a random index
+                    int32_t randAmmo = esp_random() % cpu->availableAmmo.length;
+                    // Iterate that many times
+                    node_t* ammoNode = cpu->availableAmmo.first;
+                    while (randAmmo-- && ammoNode)
+                    {
+                        cpu->ammoIdx = (intptr_t)ammoNode->val;
+                        ammoNode     = ammoNode->next;
+                    }
+                } while (LASER == getAmmoAttribute(cpu->ammoIdx)->effect);
+            }
+
             ad->players[ad->plIdx]->targetBarrelAngle = -1;
             ad->cpuWaitTimer                          = 2000000;
             break;
@@ -582,6 +664,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool stateChange
         case AGS_MOVE:
         case AGS_CPU_MOVE:
         {
+            // TODO CPU difficulty
             // Pick a random direction for the CPU to move
             if ((AGS_CPU_MOVE == ad->gState) && (0 == ad->players[ad->plIdx]->moving))
             {
@@ -625,11 +708,6 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool stateChange
             bool readyToFire = false;
             if (-1 != cpu->targetBarrelAngle)
             {
-                // Randomize ammo
-                uint16_t numAmmos;
-                getAmmoAttributes(&numAmmos);
-                cpu->ammoIdx = esp_random() % numAmmos;
-
                 // Find the clockwise and counterclockwise distances to move the barrel to the target
                 int16_t deltaCw = cpu->barrelAngle - cpu->targetBarrelAngle;
                 if (deltaCw < 0)

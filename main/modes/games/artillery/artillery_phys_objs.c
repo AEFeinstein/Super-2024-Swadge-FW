@@ -7,7 +7,7 @@
 #include "esp_heap_caps.h"
 #include "artillery_phys_objs.h"
 
-static void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl);
+void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl);
 static void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc);
 
 //==============================================================================
@@ -179,7 +179,7 @@ void updateCircleProperties(physSim_t* phys, physCirc_t* pc)
  * @param phys The physics simulation
  * @param pl The line to calculate zones for
  */
-static void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl)
+void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl)
 {
     // Clear the zone mask
     pl->zonemask = 0;

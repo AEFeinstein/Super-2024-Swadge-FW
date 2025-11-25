@@ -7,3 +7,4 @@ physCirc_t* physAddCircle(physSim_t* phys, uint16_t x1, uint16_t y1, uint16_t r,
                           paletteColor_t baseColor, paletteColor_t accentColor);
 void updateLineProperties(physSim_t* phys, physLine_t* pl);
 void updateCircleProperties(physSim_t* phys, physCirc_t* pc);
+void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl);
