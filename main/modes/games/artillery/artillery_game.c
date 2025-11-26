@@ -1,7 +1,7 @@
 /**
  * @file artillery_game.c
  * @author gelakinetic (gelakinetic@gmail.com)
- * @brief TODO file summary
+ * @brief The main game logic for Vector Tanks
  * @date 2025-11-26
  */
 

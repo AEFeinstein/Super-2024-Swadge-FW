@@ -1,7 +1,7 @@
 /**
  * @file artillery_p2p.c
  * @author gelakinetic (gelakinetic@gmail.com)
- * @brief TODO file summary
+ * @brief Peer to peer messaging for Vector Tanks
  * @date 2025-11-26
  * @startuml{conn_seq.png} "Connection Sequence"
 == Setup ==
@@ -50,7 +50,7 @@ end
 #include "artillery_phys_terrain.h"
 #include "artillery_phys_bsp.h"
 
-#define NUM_TERRAIN_POINTS_A (64 + 18)
+#define NUM_TERRAIN_POINTS_A (55)
 #define NUM_TERRAIN_POINTS_B (NUM_TERRAIN_POINTS - NUM_TERRAIN_POINTS_A)
 
 //==============================================================================
@@ -58,20 +58,18 @@ end
 //==============================================================================
 
 /**
- * @brief TODO doc
- *
+ * @brief A p2p packet which sends this player's color
  */
-typedef struct // __attribute__((packed))
+typedef struct
 {
     uint8_t type;
     uint8_t colorIdx;
 } artPktColor_t;
 
 /**
- * @brief TODO doc
- *
+ * @brief A p2p packet which contains some of the initial game state including music, world size, players
  */
-typedef struct //__attribute__((packed))
+typedef struct
 {
     uint8_t type;
     uint8_t bgmIdx;
@@ -88,27 +86,17 @@ typedef struct //__attribute__((packed))
 } artPktWorld_t;
 
 /**
- * @brief TODO doc
+ * @brief A p2p packet which contains some of the initial game state
  *
  */
-typedef struct //__attribute__((packed))
+typedef struct
 {
     uint8_t type;
-    uint8_t numObstacles;
-    struct
-    {
-        uint16_t x;
-        uint16_t y;
-        uint8_t r;
-    } obstacles[MAX_NUM_OBSTACLES];
-
     uint16_t terrainPoints[NUM_TERRAIN_POINTS_B];
 } artPktTerrain_t;
 
 /**
- * @brief TODO doc
- * This doesn't use structs for better byte packing
- */
+ * @brief A p2p packet which contains the cloud positions and sizes */
 typedef struct
 {
     uint8_t type;
@@ -119,8 +107,7 @@ typedef struct
 } artPktCloud_t;
 
 /**
- * @brief TODO doc
- *
+ * @brief A p2p packet indicating the tour should be immediately finished
  */
 typedef struct
 {
@@ -128,10 +115,9 @@ typedef struct
 } artPktFinishTour_t;
 
 /**
- * @brief TODO doc
- *
+ * @brief A p2p packet containing updating game state, including camera and player data
  */
-typedef struct // __attribute__((packed))
+typedef struct
 {
     uint8_t type;
     bool looking;
@@ -146,10 +132,9 @@ typedef struct // __attribute__((packed))
 } artPktState_t;
 
 /**
- * @brief TODO doc
- *
+ * @brief A p2p packet indicating a shot was fired by a player
  */
-typedef struct // __attribute__((packed))
+typedef struct
 {
     uint8_t type;
     uint8_t ammoIdx;

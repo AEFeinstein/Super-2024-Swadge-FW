@@ -1,7 +1,7 @@
 /**
  * @file artillery_phys.c
  * @author gelakinetic (gelakinetic@gmail.com)
- * @brief TODO file summary
+ * @brief Physics simulation for Vector Tanks
  * @date 2025-11-26
  */
 

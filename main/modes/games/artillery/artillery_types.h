@@ -152,8 +152,7 @@ typedef enum
 //==============================================================================
 
 /**
- * @brief TODO doc
- *
+ * @brief An axis aligned bounding box with a top-left point and a bottom-right point
  */
 typedef struct
 {
@@ -164,8 +163,7 @@ typedef struct
 } aabb_t;
 
 /**
- * @brief TODO doc
- *
+ * @brief Attributes for ammo including size, explosiveness, special behaviors, etc.
  */
 typedef struct
 {
@@ -185,8 +183,8 @@ typedef struct
 struct _physCirc_t;
 
 /**
- * @brief TODO doc
- *
+ * @brief A circle with physical attributes for simulation.
+ * This also contains fields for player and ammo data, which isn't the most space-efficient design
  */
 typedef struct _physCirc_t
 {
@@ -244,8 +242,7 @@ typedef struct _physCirc_t
 } physCirc_t;
 
 /**
- * @brief TODO doc
- *
+ * @brief A line with physical attributes for simulation.
  */
 typedef struct
 {
@@ -259,8 +256,7 @@ typedef struct
 } physLine_t;
 
 /**
- * @brief TODO doc
- *
+ * @brief An explosion animation, which is a circle that shrinks over time
  */
 typedef struct
 {
@@ -271,8 +267,8 @@ typedef struct
 } explosionAnim_t;
 
 /**
- * @brief TODO doc
- *
+ * @brief A physics simulation containing lines and circles.
+ * It uses a binary space partition to minimize collision check math
  */
 typedef struct
 {
@@ -309,8 +305,7 @@ typedef struct
 //==============================================================================
 
 /**
- * @brief TODO doc
- *
+ * @brief Data for a single player on the game over screen
  */
 typedef struct
 {
@@ -321,8 +316,7 @@ typedef struct
 } artilleryGameOverData_t;
 
 /**
- * @brief TODO doc
- *
+ * @brief All of the data necessary for Vector Tanks
  */
 typedef struct
 {

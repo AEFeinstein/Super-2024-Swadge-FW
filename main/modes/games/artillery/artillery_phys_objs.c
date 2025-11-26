@@ -1,7 +1,7 @@
 /**
  * @file artillery_phys_objs.c
  * @author gelakinetic (gelakinetic@gmail.com)
- * @brief TODO file summary
+ * @brief Physics objects (lines and circles) for Vector Tanks
  * @date 2025-11-26
  */
 

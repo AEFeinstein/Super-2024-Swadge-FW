@@ -1,7 +1,7 @@
 /**
  * @file artillery_phys_camera.c
  * @author gelakinetic (gelakinetic@gmail.com)
- * @brief TODO file summary
+ * @brief Camera movement for Vector Tanks
  * @date 2025-11-26
  */
 

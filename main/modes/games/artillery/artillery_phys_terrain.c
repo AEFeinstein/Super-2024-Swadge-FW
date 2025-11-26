@@ -1,7 +1,7 @@
 /**
  * @file artillery_phys_terrain.c
  * @author gelakinetic (gelakinetic@gmail.com)
- * @brief TODO file summary
+ * @brief Terrain management and deformations for Vector Tanks
  * @date 2025-11-26
  */
 

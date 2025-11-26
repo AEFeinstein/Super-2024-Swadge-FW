@@ -1,7 +1,7 @@
 /**
  * @file artillery.c
  * @author gelakinetic (gelakinetic@gmail.com)
- * @brief TODO file summary
+ * @brief The main Swadge Mode for Vector Tanks
  * @date 2025-11-26
  */
 

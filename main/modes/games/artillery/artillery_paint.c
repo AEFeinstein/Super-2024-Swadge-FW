@@ -1,7 +1,7 @@
 /**
  * @file artillery_paint.c
  * @author gelakinetic (gelakinetic@gmail.com)
- * @brief TODO file summary
+ * @brief The screen to pick a paint color for Vector Tanks
  * @date 2025-11-26
  */
 

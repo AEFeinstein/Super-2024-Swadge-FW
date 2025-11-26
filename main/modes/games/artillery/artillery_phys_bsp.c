@@ -1,7 +1,7 @@
 /**
  * @file artillery_phys_bsp.c
  * @author gelakinetic (gelakinetic@gmail.com)
- * @brief TODO file summary
+ * @brief Binary Space Partition creation for Vector Tanks
  * @date 2025-11-26
  */
 
