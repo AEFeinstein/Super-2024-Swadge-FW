@@ -40,22 +40,25 @@ typedef struct
 
     uint8_t level;
 
+    uint8_t checkpointLevel;
+    uint16_t checkpointSpawnIndex;
+
     uint16_t combo;
     int16_t comboTimer;
     uint32_t comboScore;
 
     bool extraLifeCollected;
-    uint8_t checkpoint;
     uint8_t levelDeaths;
     uint8_t initialHp;
 
     led_t leds[CONFIG_NUM_LEDS];
 
-    paletteColor_t bgColor;
+    const paletteColor_t* bgColors;
 
     char initials[3];
     uint8_t rank;
     bool debugMode;
+    bool customLevel;
 
     int8_t changeBgm;
     uint8_t currentBgm;
@@ -79,6 +82,11 @@ void mg_resetGameDataLeds(mgGameData_t* gameData);
 void mg_updateLedsShowHighScores(mgGameData_t* gameData);
 void mg_updateLedsLevelClear(mgGameData_t* gameData);
 void mg_updateLedsGameClear(mgGameData_t* gameData);
+<<<<<<< HEAD
+=======
+void mg_updateLeds(mgEntityManager_t* entityManager);
+void mg_updateLedsDead(mgGameData_t* gameData);
+>>>>>>> origin/main
 void mg_updateLedsGameOver(mgGameData_t* gameData);
 
 #endif

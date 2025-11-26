@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<<<<<<< HEAD
 <map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="255" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="95">
+=======
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="255" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="100">
+>>>>>>> origin/main
  <editorsettings>
   <export target="kinetic-donut.bin" format="Mega Pulse EX"/>
  </editorsettings>

@@ -50,9 +50,16 @@ typedef enum __attribute__((packed))
     WALL_MAKER,
     HOMING_MISSILE,
     FLOOR_LAVA,
+<<<<<<< HEAD
     LANDMINES,
     CONFUSION,
     LASER,
+=======
+    CONFUSION,
+    LASER,
+    SNIPER,
+    ROCKET_JUMP,
+>>>>>>> origin/main
 } ammoEffect_t;
 
 //==============================================================================
@@ -79,6 +86,10 @@ typedef struct
     uint8_t expRadius;
     ammoEffect_t effect;
     const char* name;
+<<<<<<< HEAD
+=======
+    const char* help;
+>>>>>>> origin/main
 } artilleryAmmoAttrib_t;
 
 struct _physCirc_t;
@@ -127,6 +138,10 @@ typedef struct _physCirc_t
     int8_t shotsRemaining;
     int32_t shotTimer;
     int32_t lavaAnimTimer;
+<<<<<<< HEAD
+=======
+    list_t availableAmmo;
+>>>>>>> origin/main
 
     // Shell data
     int32_t bounces;
@@ -139,7 +154,11 @@ typedef struct _physCirc_t
 
 typedef struct
 {
+<<<<<<< HEAD
     int32_t zonemask;
+=======
+    uint32_t zonemask;
+>>>>>>> origin/main
     lineFl_t l;
     vecFl_t unitNormal;
     bool isTerrain;
@@ -173,6 +192,10 @@ typedef struct
     buttonBit_t cameraBtn;
     vec_t camera;
     list_t cameraTargets;
+<<<<<<< HEAD
+=======
+    list_t cameraTour;
+>>>>>>> origin/main
 
     bool shotFired;
     bool terrainMoving;
@@ -196,10 +219,17 @@ void physAddWorldBounds(physSim_t* phys);
 void physRemoveAllObjects(physSim_t* phys);
 
 void drawPhysBackground(physSim_t* phys, int16_t x, int16_t y, int16_t w, int16_t h);
+<<<<<<< HEAD
 void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_t moveTimeLeftUs, int32_t turn);
 
 void physStepBackground(physSim_t* phys);
 bool physStep(physSim_t* phys, int32_t elapsedUs, bool menuShowing);
+=======
+void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, font_t* fontOutline, int32_t turn);
+
+void physStepBackground(physSim_t* phys);
+void physStep(physSim_t* phys, int32_t elapsedUs, bool menuShowing, bool* playerMoved, bool* cameraMoved);
+>>>>>>> origin/main
 
 void physSpawnPlayers(physSim_t* phys, int32_t numPlayers, physCirc_t* players[], paletteColor_t* colors);
 physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, int16_t barrelAngle, paletteColor_t baseColor,

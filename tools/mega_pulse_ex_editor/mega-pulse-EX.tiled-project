@@ -39,6 +39,44 @@
         {
             "color": "#ffa0a0a4",
             "drawFill": false,
+<<<<<<< HEAD
+=======
+            "id": 2,
+            "members": [
+                {
+                    "name": "baseSpeed_subPixelsPerFrame",
+                    "type": "int",
+                    "value": 8
+                },
+                {
+                    "name": "linkedEntitySpawn",
+                    "type": "object",
+                    "value": 0
+                },
+                {
+                    "name": "moveClockwise",
+                    "type": "bool",
+                    "value": false
+                },
+                {
+                    "name": "type",
+                    "propertyType": "Swadge Land Entity Index",
+                    "type": "int",
+                    "value": 55
+                }
+            ],
+            "name": "MegaPulseEntity_ShrubbleLv4",
+            "type": "class",
+            "useAs": [
+                "property",
+                "object",
+                "project"
+            ]
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": false,
+>>>>>>> origin/main
             "id": 4,
             "members": [
                 {
@@ -147,7 +185,12 @@
                 "ENTITY_LIFE_REFILL_LARGE",
                 "ENTITY_BOSS_TEST",
                 "ENTITY_MIXTAPE",
+<<<<<<< HEAD
                 "ENTITY_BOSS_DOOR"
+=======
+                "ENTITY_BOSS_DOOR",
+                "ENTITY_SHRUBBLE_LV4"
+>>>>>>> origin/main
             ],
             "valuesAsFlags": false
         },

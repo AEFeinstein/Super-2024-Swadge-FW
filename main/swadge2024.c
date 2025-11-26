@@ -426,7 +426,10 @@ void app_main(void)
     tLastLoopUs                = esp_timer_get_time();
 
     // Initialize system font and trophy-get sound
-    loadFont(IBM_VGA_8_FONT, &sysFont, true);
+    loadFont(IBM_VGA_8_FONT, &sysFont, false);
+
+    // Initialize username settings, must be done before the swadge mode
+    initUsernameSystem();
 
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)
@@ -438,9 +441,12 @@ void app_main(void)
         cSwadgeMode->fnEnterMode();
     }
     cSwadgeModeInit = true;
+<<<<<<< HEAD
 
     // Initialize username settings
     initUsernameSystem();
+=======
+>>>>>>> origin/main
 
     // Run the main loop, forever
     while (true)

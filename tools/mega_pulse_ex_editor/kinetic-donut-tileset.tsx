@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<<<<<<< HEAD
 <tileset version="1.10" tiledversion="1.11.2" name="kinetic-donut-tileset" tilewidth="16" tileheight="16" tilecount="128" columns="0">
+=======
+<tileset version="1.10" tiledversion="1.11.2" name="kinetic-donut-tileset" tilewidth="16" tileheight="16" tilecount="123" columns="0">
+>>>>>>> origin/main
  <grid orientation="orthogonal" width="1" height="1"/>
  <tile id="0">
   <image source="mg-tiles/tile000.png" width="16" height="16"/>
@@ -334,6 +338,7 @@
  <tile id="110">
   <image source="mg-tiles/tile110.png" width="16" height="16"/>
  </tile>
+<<<<<<< HEAD
 <!-- <tile id="111">
   <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
  </tile>
@@ -773,6 +778,47 @@
   <image source="mg-tiles/tileTBD.png" width="16" height="16"/>
 </tile>
 -->
+=======
+ <tile id="160">
+  <image source="mg-tiles/chain_collision.png" width="16" height="16"/>
+ </tile>
+ <tile id="161">
+  <image source="mg-tiles/tile_bounce_block.png" width="16" height="16"/>
+ </tile>
+ <tile id="162">
+  <image source="../../assets/platformer/tiles/SpikeTile_top_00.png" width="16" height="16"/>
+ </tile>
+ <tile id="163">
+  <image source="../../assets/platformer/tiles/SpikeTile_left_00.png" width="16" height="16"/>
+ </tile>
+ <tile id="164">
+  <image source="../../assets/platformer/tiles/SpikeTile_bottom_00.png" width="16" height="16"/>
+ </tile>
+ <tile id="165">
+  <image source="../../assets/platformer/tiles/SpikeTile_right_00.png" width="16" height="16"/>
+ </tile>
+  <tile id="166">
+  <image source="mg-tiles/crumble_block.png" width="16" height="16"/>
+ </tile>
+ <tile id="192">
+  <image source="mg-tiles/discoball_nocollision.png" width="16" height="16"/>
+ </tile>
+ <tile id="193">
+  <image source="mg-tiles/clublight_blue.png" width="16" height="16"/>
+ </tile>
+ <tile id="194">
+  <image source="mg-tiles/clublight_pink.png" width="16" height="16"/>
+ </tile>
+ <tile id="195">
+  <image source="mg-tiles/KD_donut_coil.png" width="16" height="16"/>
+ </tile>
+ <tile id="196">
+  <image source="mg-tiles/chain_nocollision.png" width="16" height="16"/>
+ </tile>
+ <tile id="197">
+  <image source="mg-tiles/chainsmall_nocollision.png" width="16" height="16"/>
+ </tile>
+>>>>>>> origin/main
  <wangsets>
   <wangset name="Kinetic Donut Terrain Set" type="corner" tile="32">
    <wangcolor name="floor" color="#ff0000" tile="33" probability="1"/>

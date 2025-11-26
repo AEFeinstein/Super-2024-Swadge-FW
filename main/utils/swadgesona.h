@@ -70,6 +70,10 @@ generateRandomSwadgesona(&sw);
  * direct assistance. There are plenty of people willing to help!
  *
  */
+<<<<<<< HEAD
+=======
+#pragma once
+>>>>>>> origin/main
 
 //==============================================================================
 // Includes
@@ -83,6 +87,11 @@ generateRandomSwadgesona(&sw);
 #include "nameList.h"
 #include "wsgPalette.h"
 
+<<<<<<< HEAD
+=======
+extern const char spSonaNVSKey[];
+
+>>>>>>> origin/main
 //==============================================================================
 // Enums
 //==============================================================================
@@ -104,6 +113,11 @@ typedef enum
     SKIN_PINK,
     SKIN_PURPLE,
     SKIN_RED,
+<<<<<<< HEAD
+=======
+    SKIN_ALBINO,
+    SKIN_MAUVE,
+>>>>>>> origin/main
     SKIN_COLOR_COUNT
 } skinColor_t;
 
@@ -206,6 +220,10 @@ typedef enum
 typedef enum
 {
     BME_NONE,
+<<<<<<< HEAD
+=======
+    BME_AVATAR,
+>>>>>>> origin/main
     BME_BEARD,
     BME_BLUSH,
     BME_BOTTOM,
@@ -213,6 +231,10 @@ typedef enum
     BME_CHIN,
     BME_CHIN_PATCH,
     BME_CHIN_STRAP,
+<<<<<<< HEAD
+=======
+    BME_CHOKER,
+>>>>>>> origin/main
     BME_COP,
     BME_COWBOY,
     BME_EYE_MOLE,
@@ -223,6 +245,10 @@ typedef enum
     BME_LESS_WISE,
     BME_MAGICIAN,
     BME_MARILYN,
+<<<<<<< HEAD
+=======
+    BME_NECK_BLOOD,
+>>>>>>> origin/main
     BME_OLD,
     BME_PILLOW,
     BME_S_AND_P,
@@ -230,11 +256,19 @@ typedef enum
     BME_SMALL_CURL,
     BME_SMALL_STACHE,
     BME_SOUL_PATCH,
+<<<<<<< HEAD
+=======
+    BME_SPIKED_NECKLACE,
+>>>>>>> origin/main
     BME_STACHE_AND_STRAP,
     BME_STRONGMAN,
     BME_THIN_CHIN,
     BME_THIS,
     BME_TIRED,
+<<<<<<< HEAD
+=======
+    BME_VITILIGO,
+>>>>>>> origin/main
     BME_WISE_MAN,
     BME_COUNT
 } bodyMarks_t;
@@ -290,12 +324,20 @@ typedef enum
     EE_BABY,
     EE_BIG,
     EE_BIG_LINER,
+<<<<<<< HEAD
+=======
+    EE_BLOOD,
+>>>>>>> origin/main
     EE_BOOPED,
     EE_CAT,
     EE_CLOSED,
     EE_CLOSED_LASHES,
     EE_CLOSED_LINER,
     EE_CRAZY,
+<<<<<<< HEAD
+=======
+    EE_CRYING,
+>>>>>>> origin/main
     EE_CROSSES,
     EE_CUTE,
     EE_DOOFY,
@@ -303,6 +345,11 @@ typedef enum
     EE_HEARTS,
     EE_LINER,
     EE_MAKEUP,
+<<<<<<< HEAD
+=======
+    EE_MY_EYES,
+    EE_RANDOMIZER,
+>>>>>>> origin/main
     EE_SEXY,
     EE_SEXY_LASHES,
     EE_SLEEPING,
@@ -320,6 +367,10 @@ typedef enum
 /// @brief hairstyle variations
 typedef enum
 {
+<<<<<<< HEAD
+=======
+    HE_NONE,
+>>>>>>> origin/main
     HE_BALLET_BUN,
     HE_BOWL_CUT,
     HE_CHIBI_USA,
@@ -344,6 +395,11 @@ typedef enum
     HE_MINAKO,
     HE_MOHAWK,
     HE_POMPADOUR,
+<<<<<<< HEAD
+=======
+    HE_PONYTAIL,
+    HE_PONYTAIL_NO_BANGS,
+>>>>>>> origin/main
     HE_RAVEN,
     HE_SHORT,
     HE_SHORT_PIGS,
@@ -375,6 +431,7 @@ typedef enum
 typedef enum
 {
     HAE_NONE,
+<<<<<<< HEAD
     HAE_BATTRICE,
     HAE_BEANIE,
     HAE_BIGMA,
@@ -391,6 +448,39 @@ typedef enum
     HAE_SAWTOOTH,
     HAE_TRON,
     HAE_COUNT,
+=======
+    HAE_ANGEL,
+    HAE_BATTRICE,
+    HAE_BEANIE,
+    HAE_BIGMA,
+    HAE_BLITZO_WSG,
+    HAE_CHAOS_GOBLIN,
+    HAE_CHEF,
+    HAE_COOL_HAT,
+    HAE_COWBOY,
+    HAE_DEVIL,
+    HAE_GARBOTNIK,
+    HAE_GRAD_CAP,
+    HAE_HEART,
+    HAE_HOMESTUCK,
+    HAE_KINETIC_DONUT,
+    HAE_MET_HELMET,
+    HAE_MILLIE,
+    HAE_MINI_HOMESTUCK,
+    HAE_MOXXIE,
+    HAE_PUFFBALL,
+    HAE_PULSE,
+    HAE_SANS,
+    HAE_SAWTOOTH,
+    HAE_TALL_HOMESTUCK,
+    HAE_TENNA,
+    HAE_TINY_HOMESTUCK,
+    HAE_TRON,
+    HAE_TV_HEAD,
+    HAE_VEROSIKA,
+    HAE_WIDE_HOMESTUCK,
+    HAE_COUNT
+>>>>>>> origin/main
 } hat_t;
 
 /// @brief List of mouth options
@@ -443,6 +533,10 @@ typedef enum
     G_BIGSQUARE,
     G_BIGSQUARE_SUN,
     G_BLACK_SUN,
+<<<<<<< HEAD
+=======
+    G_CUTE_PATCH,
+>>>>>>> origin/main
     G_EGGMAN,
     G_GOEORDI,
     G_LINDA,
@@ -486,6 +580,7 @@ typedef struct __attribute__((packed))
     glassesColor_t glassesColor : 2;
 
     // Facial features
+<<<<<<< HEAD
     bodyMarks_t bodyMarks   : 5;
     earsShape_t earShape    : 4;
     eyebrowShape_t eyebrows : 5;
@@ -496,6 +591,18 @@ typedef struct __attribute__((packed))
     glasses_t glasses       : 5;
 
     // 24 + 40 + 32 = 96 / 8 = 12 bytes
+=======
+    bodyMarks_t bodyMarks   : 6;
+    earsShape_t earShape    : 4;
+    eyebrowShape_t eyebrows : 5;
+    eyeShape_t eyeShape     : 6;
+    hairStyle_t hairStyle   : 6;
+    hat_t hat               : 5;
+    mouthShape_t mouthShape : 5;
+    glasses_t glasses       : 6;
+
+    // 24 + 43 + 32 = 99 bits / 8 = 13 bytes
+>>>>>>> origin/main
 } swadgesonaCore_t;
 
 /// @brief Larger data for use of use
@@ -538,6 +645,17 @@ void saveSwadgesona(swadgesona_t* sw, int idx);
 void loadSwadgesona(swadgesona_t* sw, int idx);
 
 /**
+<<<<<<< HEAD
+=======
+ * @brief Copy one swadgesona to another
+ *
+ * @param to The swadgesona to copy to
+ * @param from The source swadgesona
+ */
+void copySwadgesona(swadgesona_t* to, swadgesona_t* from);
+
+/**
+>>>>>>> origin/main
  * @brief Generates a random Swadgesona automatically.
  *
  * @param sw Swadgesona to load data into.
@@ -553,6 +671,16 @@ void generateRandomSwadgesona(swadgesona_t* sw);
  */
 void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody);
 
+<<<<<<< HEAD
+=======
+/**
+ * @brief Loads the swadgepass sona
+ *
+ * @param sw Data out. Is set to NULL if nothing is loaded
+ */
+void loadSPSona(swadgesonaCore_t* sw);
+
+>>>>>>> origin/main
 // Get indexes
 /**
  * @brief Get the hair CNFS index from the swadgesona for drawing behind custom bodies

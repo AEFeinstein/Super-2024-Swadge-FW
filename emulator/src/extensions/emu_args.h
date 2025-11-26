@@ -22,23 +22,23 @@
 typedef struct
 {
     float fakeFps;
-    bool fakeTime;
+    int fakeTime;
 
-    bool fullscreen;
-    bool hideLeds;
+    int fullscreen;
+    int hideLeds;
 
-    bool fuzz;
-    bool fuzzButtons;
-    bool fuzzTime;
-    bool fuzzTouch;
-    bool fuzzMotion;
+    int fuzz;
+    int fuzzButtons;
+    int fuzzTime;
+    int fuzzTouch;
+    int fuzzMotion;
 
-    bool headless;
+    int headless;
 
     /// @brief Name of the keymap to use, or NULL if none
     const char* keymap;
 
-    bool lock;
+    int lock;
 
     const char* startMode;
     uint32_t modeSwitchTime;
@@ -50,15 +50,15 @@ typedef struct
 
     // Touch Extension
 
-    bool emulateTouch;
+    int emulateTouch;
 
     // Replay Extension
 
     /// @brief Whether or not to record the inputs to a file
-    bool record;
+    int record;
 
     /// @brief Whether or not to play back recorded inputs from a file
-    bool playback;
+    int playback;
 
     /// @brief Name of the file to record inputs to, or NULL for the default
     const char* recordFile;
@@ -67,13 +67,13 @@ typedef struct
     const char* replayFile;
 
     /// @brief A value to use to manually seed the random number generator
-    uint32_t seed;
+    int seed;
 
     /// @brief Whether to display an FPS counter
-    bool showFps;
+    int showFps;
 
     /// @brief Whether VSync is enabled
-    bool vsync;
+    int vsync;
 
     // MIDI
     const char* midiFile;
@@ -83,6 +83,9 @@ typedef struct
 
     // Joystick config preset name
     const char* jsPreset;
+
+    // Mega Pulse EX level file
+    const char* megaPulseFile;
 } emuArgs_t;
 
 //==============================================================================

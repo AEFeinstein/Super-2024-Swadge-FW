@@ -39,6 +39,7 @@
 //==============================================================================
 
 static const char* const nvsStr[] = {"swadgesona", "swadgesona-"};
+<<<<<<< HEAD
 
 static const cnfsFileIdx_t bodymarksWsgs[] = {
     BM_BEARD_WSG,      BM_BLUSH_WSG,         BM_BOTTOM_MOLE_WSG,  BM_BOTTOM_WSG,       BM_CHIN_WSG,
@@ -47,6 +48,18 @@ static const cnfsFileIdx_t bodymarksWsgs[] = {
     BM_MAGICIAN_WSG,   BM_MARILYN_WSG,       BM_OLD_WSG,          BM_PILLOW_WSG,       BM_SAND_P_WSG,
     BM_SCRAGGLY_WSG,   BM_SMALL_CURL_WSG,    BM_SMALL_STACHE_WSG, BM_SOUL_PATCH_WSG,   BM_STACHE_AND_STRAP_WSG,
     BM_STRONGMAN_WSG,  BM_THIN_CHIN_WSG,     BM_THIS_WSG,         BM_TIRED_WSG,        BM_WISEMAN_WSG,
+=======
+const char spSonaNVSKey[]         = "spSona";
+
+static const cnfsFileIdx_t bodymarksWsgs[] = {
+    BM_AVATAR_WSG,       BM_BEARD_WSG,      BM_BLUSH_WSG,           BM_BOTTOM_MOLE_WSG,      BM_BOTTOM_WSG,
+    BM_CHIN_WSG,         BM_CHIN_PATCH_WSG, BM_CHIN_STRAP_WSG,      BM_CHOKER_WSG,           BM_COP_WSG,
+    BM_COWBOY_WSG,       BM_EYE_MOLE_WSG,   BM_FRECKLES_WSG,        BM_FULL_SCRAGGLY_WSG,    BM_HALF_STACHE_WSG,
+    BM_HEART_STACHE_WSG, BM_LESS_WISE_WSG,  BM_MAGICIAN_WSG,        BM_MARILYN_WSG,          BM_NECK_BLOOD_WSG,
+    BM_OLD_WSG,          BM_PILLOW_WSG,     BM_SAND_P_WSG,          BM_SCRAGGLY_WSG,         BM_SMALL_CURL_WSG,
+    BM_SMALL_STACHE_WSG, BM_SOUL_PATCH_WSG, BM_SPIKED_NECKLACE_WSG, BM_STACHE_AND_STRAP_WSG, BM_STRONGMAN_WSG,
+    BM_THIN_CHIN_WSG,    BM_THIS_WSG,       BM_TIRED_WSG,           BM_VITILIGO_WSG,         BM_WISEMAN_WSG,
+>>>>>>> origin/main
 };
 static const cnfsFileIdx_t earWsgs[] = {
     EA_BIG_HOOP_WSG, EA_BUNNY_WSG,    EA_CAT_WSG,        EA_DOG_WSG,  EA_DOWN_COW_WSG,
@@ -73,11 +86,23 @@ static const cnfsFileIdx_t eyebrowsWsgs[] = {
     EB_TINY_WSG,
 };
 static const cnfsFileIdx_t eyeWsgs[] = {
+<<<<<<< HEAD
     E_ANGRY_WSG, E_ANGY_WSG,        E_BABY_WSG,          E_BIG_WSG,           E_BIG_LINER_WSG, E_BOOPED_WSG,
     E_CAT_WSG,   E_CLOSED_WSG,      E_CLOSED_LASHES_WSG, E_CLOSED_LINER_WSG,  E_CRAZY_WSG,     E_CROSSES_WSG,
     E_CUTE_WSG,  E_DOOFY_WSG,       E_EXASPERATED_WSG,   E_HEARTS_WSG,        E_LINER_WSG,     E_MAKEUP_WSG,
     E_SEXY_WSG,  E_SEXY_LASHES_WSG, E_SLEEPING_WSG,      E_SMALL_WLASHES_WSG, E_SQUINTING_WSG, E_SQUINTING_LASHES_WSG,
     E_STARE_WSG, E_STARING_WSG,     E_SWIRLS_WSG,        E_THIN_WSG,          E_WIDE_WSG,
+=======
+    E_ANGRY_WSG,       E_ANGY_WSG,          E_BABY_WSG,         E_BIG_WSG,
+    E_BIG_LINER_WSG,   E_BLOOD_WSG,         E_BOOPED_WSG,       E_CAT_WSG,
+    E_CLOSED_WSG,      E_CLOSED_LASHES_WSG, E_CLOSED_LINER_WSG, E_CRAZY_WSG,
+    E_CRYING_WSG,      E_CROSSES_WSG,       E_CUTE_WSG,         E_DOOFY_WSG,
+    E_EXASPERATED_WSG, E_HEARTS_WSG,        E_LINER_WSG,        E_MAKEUP_WSG,
+    E_MY_EYES_WSG,     E_RANDOMIZER_WSG,    E_SEXY_WSG,         E_SEXY_LASHES_WSG,
+    E_SLEEPING_WSG,    E_SMALL_WLASHES_WSG, E_SQUINTING_WSG,    E_SQUINTING_LASHES_WSG,
+    E_STARE_WSG,       E_STARING_WSG,       E_SWIRLS_WSG,       E_THIN_WSG,
+    E_WIDE_WSG,
+>>>>>>> origin/main
 };
 static const cnfsFileIdx_t hairWsgs[] = {
     H_BALLET_BUN_WSG,
@@ -104,6 +129,11 @@ static const cnfsFileIdx_t hairWsgs[] = {
     H_MINAKO_WSG,
     H_MOHAWK_WSG,
     H_POMPADOUR_WSG,
+<<<<<<< HEAD
+=======
+    H_PONYTAIL_WSG,
+    H_PONYTAIL_NO_BANGS_WSG,
+>>>>>>> origin/main
     H_RAVEN_WSG,
     H_SHORT_WSG,
     H_SHORT_PIGS_WSG,
@@ -130,9 +160,18 @@ static const cnfsFileIdx_t hairWsgs[] = {
     H_WET_SHORT_WSG,
 };
 static const cnfsFileIdx_t hatWsgs[] = {
+<<<<<<< HEAD
     HA_BATTRICE_WSG,   HA_BEANIE_WSG,          HA_BIGMA_WSG,    HA_CHEF_WSG,     HA_COOL_HAT_WSG,
     HA_COWBOY_WSG,     HA_GARBOTNIK_WSG,       HA_GRAD_CAP_WSG, HA_HEART_WSG,    HA_KINETIC_DONUT_WSG,
     HA_MET_HELMET_WSG, HA_PUFFBALL_BEANIE_WSG, HA_PULSE_WSG,    HA_SAWTOOTH_WSG, HA_TRON_WSG,
+=======
+    HA_ANGEL_WSG,        HA_BATTRICE_WSG, HA_BEANIE_WSG,         HA_BIGMA_WSG,          HA_BLITZO_WSG,
+    HA_CHAOS_GOBLIN_WSG, HA_CHEF_WSG,     HA_COOL_HAT_WSG,       HA_COWBOY_WSG,         HA_DEVIL_WSG,
+    HA_GARBOTNIK_WSG,    HA_GRAD_CAP_WSG, HA_HEART_WSG,          HA_HOMESTUCK_WSG,      HA_KINETIC_DONUT_WSG,
+    HA_MET_HELMET_WSG,   HA_MILLIE_WSG,   HA_MINI_HOMESTUCK_WSG, HA_MOXXIE_WSG,         HA_PUFFBALL_BEANIE_WSG,
+    HA_PULSE_WSG,        HA_SANS_WSG,     HA_SAWTOOTH_WSG,       HA_TALL_HOMESTUCK_WSG, HA_TINY_HOMESTUCK_WSG,
+    HA_TENNA_WSG,        HA_TRON_WSG,     HA_TV_HEAD_WSG,        HA_VEROSIKA_WSG,       HA_WIDE_HOMESTUCK_WSG,
+>>>>>>> origin/main
 };
 static const cnfsFileIdx_t mouthWsgs[] = {
     M_AH_WSG,
@@ -168,6 +207,7 @@ static const cnfsFileIdx_t mouthWsgs[] = {
     M_YELLING_WSG,
 };
 static const cnfsFileIdx_t glassesWsgs[] = {
+<<<<<<< HEAD
     G_3D_WSG,         G_ANIME_WSG,
     G_BANDAGE_WSG,    G_BIG_WSG,
     G_BIG_ANGLE_WSG,  G_BIG_ANGLE_SUN_WSG,
@@ -183,6 +223,39 @@ static const cnfsFileIdx_t glassesWsgs[] = {
     G_THIN_ANGLE_WSG, G_THIN_ANGLE_SUN_WSG,
     G_UPTURNED_WSG,   G_UPTURNED_SUN_WSG,
     G_WIDE_NOSE_WSG,  G_WIDE_NOSE_SUN_WSG,
+=======
+    G_3D_WSG,
+    G_ANIME_WSG,
+    G_BANDAGE_WSG,
+    G_BIG_WSG,
+    G_BIG_ANGLE_WSG,
+    G_BIG_ANGLE_SUN_WSG,
+    G_BIG_SQUARE_WSG,
+    G_BIG_SQUARE_SUN_WSG,
+    G_BLACK_SUN_WSG,
+    G_CUTE_PATCH_WSG,
+    G_EGGMAN_WSG,
+    G_GOEORDI_WSG,
+    G_LINDA_WSG,
+    G_LINDA_SUN_WSG,
+    G_LOW_WSG,
+    G_LOW_SUN_WSG,
+    G_PATCH_WSG,
+    G_RAY_BAN_WSG,
+    G_RAY_BAN_SUN_WSG,
+    G_READING_WSG,
+    G_SCOUTER_WSG,
+    G_SMALL_WSG,
+    G_SQUARE_WSG,
+    G_SQUARE_SUN_WSG,
+    G_SQUIRTLE_SQUAD_WSG,
+    G_THIN_ANGLE_WSG,
+    G_THIN_ANGLE_SUN_WSG,
+    G_UPTURNED_WSG,
+    G_UPTURNED_SUN_WSG,
+    G_WIDE_NOSE_WSG,
+    G_WIDE_NOSE_SUN_WSG,
+>>>>>>> origin/main
 };
 
 //==============================================================================
@@ -245,9 +318,38 @@ void loadSwadgesona(swadgesona_t* sw, int idx)
     setUsernameFrom32(&sw->name, sw->core.packedName);
 }
 
+<<<<<<< HEAD
 void generateRandomSwadgesona(swadgesona_t* sw)
 {
     sw->core.skin         = esp_random() % SKIN_COLOR_COUNT;
+=======
+void copySwadgesona(swadgesona_t* to, swadgesona_t* from)
+{
+    to->core.skin       = from->core.skin;
+    to->core.hairColor  = from->core.hairColor;
+    to->core.eyeColor   = from->core.eyeColor;
+    to->core.clothes    = from->core.clothes;
+    to->core.hatColor   = from->core.hatColor;
+    to->core.bodyMarks  = from->core.bodyMarks;
+    to->core.earShape   = from->core.earShape;
+    to->core.eyebrows   = from->core.eyebrows;
+    to->core.eyeShape   = from->core.eyeShape;
+    to->core.hairStyle  = from->core.hairStyle;
+    to->core.hat        = from->core.hat;
+    to->core.mouthShape = from->core.mouthShape;
+    to->core.glasses    = from->core.glasses;
+    to->name            = from->name;
+    setUsernameFromND(&to->name);
+    generateSwadgesonaImage(to, true);
+}
+
+void generateRandomSwadgesona(swadgesona_t* sw)
+{
+    do
+    {
+        sw->core.skin = esp_random() % SKIN_COLOR_COUNT;
+    } while (sw->core.skin == SKIN_MAUVE);
+>>>>>>> origin/main
     sw->core.hairColor    = esp_random() % HAIR_COLOR_COUNT;
     sw->core.eyeColor     = esp_random() % EYE_COLOR_COUNT;
     sw->core.clothes      = esp_random() % C_COUNT;
@@ -256,11 +358,25 @@ void generateRandomSwadgesona(swadgesona_t* sw)
     sw->core.bodyMarks    = esp_random() % BME_COUNT;
     sw->core.earShape     = esp_random() % EAE_COUNT;
     sw->core.eyebrows     = esp_random() % EBE_COUNT;
+<<<<<<< HEAD
     sw->core.eyeShape     = esp_random() % EE_COUNT;
     sw->core.hairStyle    = esp_random() % HE_COUNT;
     sw->core.hat          = esp_random() % HAE_COUNT;
     sw->core.mouthShape   = esp_random() % ME_COUNT;
     sw->core.glasses      = esp_random() % G_COUNT;
+=======
+    do
+    {
+        sw->core.eyeShape = esp_random() % EE_COUNT;
+    } while (sw->core.eyeShape == EE_RANDOMIZER || sw->core.eyeShape == EE_MY_EYES);
+    sw->core.hairStyle = esp_random() % HE_COUNT;
+    do
+    {
+        sw->core.hat = esp_random() % HAE_COUNT;
+    } while (sw->core.hat == HAE_CHAOS_GOBLIN);
+    sw->core.mouthShape = esp_random() % ME_COUNT;
+    sw->core.glasses    = esp_random() % G_COUNT;
+>>>>>>> origin/main
 
     // Generate name
     generateRandUsername(&sw->name);
@@ -286,6 +402,14 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
     _getPaletteFromIdx(&sw->pal, COLOR_SKIN, sw->core.skin);
     canvasDrawSimplePal(&sw->image, SWSN_HEAD_WSG, 0, 0, &sw->pal);
 
+<<<<<<< HEAD
+=======
+    if (sw->core.bodyMarks == BME_VITILIGO)
+    {
+        canvasDrawSimple(&sw->image, BM_VITILIGO_WSG, 0, 0);
+    }
+
+>>>>>>> origin/main
     // Ears
     // Human ears require no extra draw calls.
     if (sw->core.earShape != EAE_HUMAN)
@@ -307,17 +431,32 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
     canvasDrawSimplePal(&sw->image, eyebrowsWsgs[sw->core.eyebrows], 0, 0, &sw->pal);
 
     // Body marks
+<<<<<<< HEAD
     if (sw->core.bodyMarks != BME_NONE)
+=======
+    if (sw->core.bodyMarks != BME_NONE && sw->core.bodyMarks != BME_VITILIGO)
+>>>>>>> origin/main
     {
         canvasDrawSimplePal(&sw->image, bodymarksWsgs[sw->core.bodyMarks - 1], 0, 0, &sw->pal);
     }
 
     // Hair
     // Use the same palette as the eyebrows
+<<<<<<< HEAD
     canvasDrawSimplePal(&sw->image, hairWsgs[sw->core.hairStyle], 0, 0, &sw->pal);
 
     // Bunny, Cat, and Dog ears go over the hair
     if (sw->core.earShape == EAE_BUNNY || sw->core.earShape == EAE_DOG || sw->core.earShape == EAE_CAT)
+=======
+    if (sw->core.hairStyle != HE_NONE)
+    {
+        canvasDrawSimplePal(&sw->image, hairWsgs[sw->core.hairStyle - 1], 0, 0, &sw->pal);
+    }
+
+    // Bunny, Cat, and Dog ears go over the hair
+    if (sw->core.earShape == EAE_BUNNY || sw->core.earShape == EAE_DOG || sw->core.earShape == EAE_CAT
+        || sw->core.earShape == EAE_DOWN_COW || sw->core.earShape == EAE_OPEN_COW)
+>>>>>>> origin/main
     {
         canvasDrawSimplePal(&sw->image, earWsgs[sw->core.earShape - 1], 0, 0, &sw->pal);
     }
@@ -329,6 +468,15 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
         _getPaletteFromIdx(&sw->pal, COLOR_SKIN, sw->core.skin);
         _getPaletteFromIdx(&sw->pal, COLOR_CLOTHES, sw->core.clothes);
         canvasDrawSimplePal(&sw->image, SWSN_BODY_WSG, 0, 0, &sw->pal);
+<<<<<<< HEAD
+=======
+        if (sw->core.bodyMarks == BME_CHOKER || sw->core.bodyMarks == BME_SPIKED_NECKLACE
+            || sw->core.bodyMarks == BME_NECK_BLOOD)
+        {
+            wsgPaletteReset(&sw->pal);
+            canvasDrawSimple(&sw->image, bodymarksWsgs[sw->core.bodyMarks - 1], 0, 0);
+        }
+>>>>>>> origin/main
     }
 
     // If the following hairstyles are included, they need to be redrawn over the shirt
@@ -336,7 +484,17 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
     {
         wsgPaletteReset(&sw->pal);
         _getPaletteFromIdx(&sw->pal, COLOR_HAIR, sw->core.hairColor);
+<<<<<<< HEAD
         canvasDrawSimplePal(&sw->image, hairWsgs[sw->core.hairStyle], 0, 0, &sw->pal);
+=======
+        canvasDrawSimplePal(&sw->image, hairWsgs[sw->core.hairStyle - 1], 0, 0, &sw->pal);
+    }
+    else if (sw->core.hairStyle == HE_JINX)
+    {
+        wsgPaletteReset(&sw->pal);
+        _getPaletteFromIdx(&sw->pal, COLOR_HAIR, sw->core.hairColor);
+        canvasDrawSimplePal(&sw->image, H_JINX_HALF_WSG, 0, 0, &sw->pal);
+>>>>>>> origin/main
     }
 
     // Glasses
@@ -396,7 +554,12 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
                 }
             }
         }
+<<<<<<< HEAD
         else
+=======
+        else if (sw->core.hat != HAE_BIGMA && sw->core.hat != HAE_BATTRICE && sw->core.hat != HAE_MET_HELMET
+                 && sw->core.hat != HAE_SAWTOOTH)
+>>>>>>> origin/main
         {
             _getPaletteFromIdx(&sw->pal, COLOR_HAT, sw->core.hatColor);
         }
@@ -405,6 +568,18 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody)
     }
 }
 
+<<<<<<< HEAD
+=======
+void loadSPSona(swadgesonaCore_t* sw)
+{
+    size_t len = sizeof(swadgesonaCore_t);
+    if (!readNvsBlob(spSonaNVSKey, sw, &len))
+    {
+        sw = NULL;
+    }
+}
+
+>>>>>>> origin/main
 // Get indexes
 cnfsFileIdx_t getHairWSG(swadgesona_t* sw)
 {
@@ -496,6 +671,21 @@ static void _getPaletteFromIdx(wsgPalette_t* palette, paletteSwap_t ps, int idx)
                     palette->newColors[c544] = c422; // base color
                     break;
                 }
+<<<<<<< HEAD
+=======
+                case SKIN_ALBINO:
+                {
+                    palette->newColors[c422] = c444; // mid color
+                    palette->newColors[c544] = c555; // base color
+                    break;
+                }
+                case SKIN_MAUVE:
+                {
+                    palette->newColors[c422] = c212; // mid color
+                    palette->newColors[c544] = c312; // base color
+                    break;
+                }
+>>>>>>> origin/main
             }
             break;
         }

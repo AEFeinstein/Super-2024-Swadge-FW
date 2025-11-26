@@ -10,8 +10,14 @@
 // Defines
 //==============================================================================
 
+<<<<<<< HEAD
 #define MENU_MARGIN 16
 #define FONT_MARGIN 8
+=======
+#define MENU_MARGIN        16
+#define FONT_MARGIN        8
+#define BLINK_ARROW_PERIOD 1000000
+>>>>>>> origin/main
 
 //==============================================================================
 // Function Prototypes
@@ -37,7 +43,11 @@ static void drawMenuText(menuSimpleRenderer_t* renderer, const char* text, int16
 menuSimpleRenderer_t* initMenuSimpleRenderer(font_t* font, paletteColor_t border, paletteColor_t bg,
                                              paletteColor_t text, int32_t rows)
 {
+<<<<<<< HEAD
     menuSimpleRenderer_t* renderer = heap_caps_calloc(1, sizeof(menuSimpleRenderer_t), MALLOC_CAP_SPIRAM);
+=======
+    menuSimpleRenderer_t* renderer = heap_caps_calloc(1, sizeof(menuSimpleRenderer_t), MALLOC_CAP_8BIT);
+>>>>>>> origin/main
 
     // Save or allocate font
     if (font)
@@ -56,6 +66,11 @@ menuSimpleRenderer_t* initMenuSimpleRenderer(font_t* font, paletteColor_t border
     renderer->borderColor  = border;
     renderer->rowTextColor = text;
 
+<<<<<<< HEAD
+=======
+    loadWsg(ARROW_8_WSG, &renderer->arrow, false);
+
+>>>>>>> origin/main
     return renderer;
 }
 
@@ -67,6 +82,10 @@ menuSimpleRenderer_t* initMenuSimpleRenderer(font_t* font, paletteColor_t border
  */
 void deinitMenuSimpleRenderer(menuSimpleRenderer_t* renderer)
 {
+<<<<<<< HEAD
+=======
+    freeWsg(&renderer->arrow);
+>>>>>>> origin/main
     heap_caps_free(renderer);
 }
 
@@ -127,9 +146,19 @@ static void drawMenuText(menuSimpleRenderer_t* renderer, const char* text, int16
  *
  * @param menu The menu to draw
  * @param renderer The renderer to draw with
+<<<<<<< HEAD
  */
 void drawMenuSimple(menu_t* menu, menuSimpleRenderer_t* renderer)
 {
+=======
+ * @param elapsedUs The time since this draw was last called
+ */
+void drawMenuSimple(menu_t* menu, menuSimpleRenderer_t* renderer, uint32_t elapsedUs)
+{
+    // Blink arrows
+    RUN_TIMER_EVERY(renderer->blinkTimer, BLINK_ARROW_PERIOD, elapsedUs, {});
+
+>>>>>>> origin/main
     int32_t menuHeight = (renderer->numRows * (renderer->font->height + FONT_MARGIN)) + FONT_MARGIN;
 
     // Clear the background
@@ -171,9 +200,16 @@ void drawMenuSimple(menu_t* menu, menuSimpleRenderer_t* renderer)
     // Where to start drawing
     int16_t yOff = TFT_HEIGHT - menuHeight - FONT_MARGIN;
 
+<<<<<<< HEAD
     if (menu->items->length > renderer->numRows)
     {
         // TODO Draw UP page
+=======
+    if (renderer->blinkTimer < (BLINK_ARROW_PERIOD / 2) && menu->items->length > renderer->numRows)
+    {
+        // Draw UP page
+        drawWsg(&renderer->arrow, MENU_MARGIN + (MENU_MARGIN - renderer->arrow.w) / 2, yOff, false, false, 0);
+>>>>>>> origin/main
     }
 
     // Draw a page-worth of items
@@ -201,8 +237,16 @@ void drawMenuSimple(menu_t* menu, menuSimpleRenderer_t* renderer)
         yOff += (renderer->font->height + FONT_MARGIN);
     }
 
+<<<<<<< HEAD
     if (menu->items->length > renderer->numRows)
     {
         // TODO Draw DOWN page
+=======
+    if (renderer->blinkTimer < (BLINK_ARROW_PERIOD / 2) && menu->items->length > renderer->numRows)
+    {
+        // Draw DOWN page
+        yOff -= (FONT_MARGIN + renderer->arrow.h);
+        drawWsg(&renderer->arrow, MENU_MARGIN + (MENU_MARGIN - renderer->arrow.w) / 2, yOff, false, true, 0);
+>>>>>>> origin/main
     }
 }

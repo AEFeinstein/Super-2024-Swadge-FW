@@ -16,12 +16,21 @@
 
 /// @brief Add swadgeMode_t pointers to this struct to include them in emulator and main menu
 swadgeMode_t* const allSwadgeModes[] = {
+<<<<<<< HEAD
     &accelTestMode,  &artilleryMode,      &bouncyMode,         &canvasTestMode, &colorchordMode, &cosCrunchMode,
     &danceMode,      &danceNetworkMode,   &factoryTestMode,    &gamepadMode,    &introMode,      &jukeboxMode,
     &keebTestMode,   &mainMenuMode,       &modeCh32v003test,   &modeCredits,    &modeDiceRoller, &modePicross,
     &modePlatformer, &nameTestMode,       &roboRunnerMode,     &sequencerMode,  &sonaTestMode,   &swadgedokuMode,
     &swadgeItMode,   &swadgePassTestMode, &swadgetamatoneMode, &synthMode,      &tCaseMode,      &touchTestMode,
     &trophyTestMode, &tunernomeMode,
+=======
+    &accelTestMode,      &artilleryMode,    &bouncyMode,         &canvasTestMode,  &colorchordMode, &cosCrunchMode,
+    &danceMode,          &danceNetworkMode, &factoryTestMode,    &gamepadMode,     &introMode,      &jukeboxMode,
+    &keebTestMode,       &mainMenuMode,     &modeCh32v003test,   &modeCredits,     &modeDiceRoller, &modePicross,
+    &modePlatformer,     &nameTestMode,     &roboRunnerMode,     &sequencerMode,   &sonaTestMode,   &swadgeItMode,
+    &swadgePassTestMode, &swadgedokuMode,   &swadgetamatoneMode, &swsnCreatorMode, &synthMode,      &tCaseMode,
+    &touchTestMode,      &trophyTestMode,   &tunernomeMode,
+>>>>>>> origin/main
 };
 
 //==============================================================================
@@ -37,7 +46,10 @@ void modeListSetMenu(menu_t* menu)
 {
     // Games sub menu
     menu = startSubMenu(menu, "Games");
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
     addSingleItemToMenu(menu, modePlatformer.modeName);
     addSingleItemToMenu(menu, cosCrunchMode.modeName);
     addSingleItemToMenu(menu, swadgeItMode.modeName);
@@ -45,6 +57,10 @@ void modeListSetMenu(menu_t* menu)
     addSingleItemToMenu(menu, danceNetworkMode.modeName);
     addSingleItemToMenu(menu, roboRunnerMode.modeName);
     addSingleItemToMenu(menu, modePicross.modeName);
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
     addSingleItemToMenu(menu, artilleryMode.modeName);
     menu = endSubMenu(menu);
 
@@ -62,16 +78,34 @@ void modeListSetMenu(menu_t* menu)
     menu = startSubMenu(menu, "Utilities");
     addSingleItemToMenu(menu, gamepadMode.modeName);
     addSingleItemToMenu(menu, danceMode.modeName);
-    addSingleItemToMenu(menu, introMode.modeName);
     addSingleItemToMenu(menu, modeDiceRoller.modeName);
     addSingleItemToMenu(menu, bouncyMode.modeName);
+<<<<<<< HEAD
+=======
+    addSingleItemToMenu(menu, tCaseMode.modeName);
+    addSingleItemToMenu(menu, introMode.modeName);
+    addSingleItemToMenu(menu, modeCredits.modeName);
+>>>>>>> origin/main
     menu = endSubMenu(menu);
 
-    // Trophy Case
-    addSingleItemToMenu(menu, tCaseMode.modeName);
+    // Swadgepass
+    menu = startSubMenu(menu, "SwadgePass");
+    addSingleItemToMenu(menu, swsnCreatorMode.modeName);
+    menu = endSubMenu(menu);
+}
 
-    // Credits
-    addSingleItemToMenu(menu, modeCredits.modeName);
+void modeListAddSecretMenuModes(menu_t* menu)
+{
+    addSingleItemToMenu(menu, keebTestMode.modeName);
+    addSingleItemToMenu(menu, accelTestMode.modeName);
+    addSingleItemToMenu(menu, touchTestMode.modeName);
+    addSingleItemToMenu(menu, factoryTestMode.modeName);
+    addSingleItemToMenu(menu, swadgePassTestMode.modeName);
+    addSingleItemToMenu(menu, trophyTestMode.modeName);
+    addSingleItemToMenu(menu, nameTestMode.modeName);
+    addSingleItemToMenu(menu, canvasTestMode.modeName);
+    addSingleItemToMenu(menu, sonaTestMode.modeName);
+    addSingleItemToMenu(menu, modeCh32v003test.modeName);
 }
 
 void modeListAddSecretMenuModes(menu_t* menu)

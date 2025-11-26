@@ -126,7 +126,7 @@ int16_t drawTextBounds(const font_t* font, paletteColor_t color, const char* tex
         }
 
         // Move to the next char
-        xOff += (font->chars[(*text) - ' '].width + 1);
+        xOff += (font->chars[(*text) - ' '].width + gCharSpacing);
         text++;
 
         // If this char is offscreen, finish drawing

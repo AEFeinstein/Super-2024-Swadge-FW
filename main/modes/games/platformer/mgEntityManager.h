@@ -102,6 +102,10 @@ mgEntity_t* createLifeRefillLarge(mgEntityManager_t* entityManager, uint16_t x, 
 mgEntity_t* createBossTest(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createMixtape(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createBossDoor(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+<<<<<<< HEAD
+=======
+mgEntity_t* createShrubbleLv4(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+>>>>>>> origin/main
 void mg_freeEntityManager(mgEntityManager_t* entityManager);
 
 #endif

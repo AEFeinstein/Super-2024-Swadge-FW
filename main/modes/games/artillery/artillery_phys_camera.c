@@ -35,30 +35,73 @@ void physSetCameraButton(physSim_t* phys, buttonBit_t btn)
  */
 bool physAdjustCameraTimer(physSim_t* phys, bool menuShowing)
 {
+<<<<<<< HEAD
     // Where the camera was
     vec_t oldCamera = phys->camera;
 
     // If there's no camera target
     if (0 == phys->cameraTargets.length)
+=======
+    bool cameraMoved = false;
+
+    // If we're doing a camera tour
+    if (phys->cameraTour.length)
+    {
+        vecFl_t* flTarget = phys->cameraTour.first->val;
+        vec_t target      = {
+                 .x = flTarget->x - (TFT_WIDTH / 2),
+                 .y = flTarget->y - (TFT_HEIGHT / 2),
+        };
+
+        // Move camera a fraction of the way to desired camera
+        phys->camera = addVec2d(phys->camera, divVec2d(subVec2d(target, phys->camera), 48));
+
+        // If the camera is close enough to the destination
+        if (ABS(phys->camera.x - target.x) < 64 && //
+            ABS(phys->camera.y - target.y) < 64)
+        {
+            // Remove it
+            shift(&phys->cameraTour);
+        }
+    }
+    // Else if there's no camera target
+    else if (0 == phys->cameraTargets.length)
+>>>>>>> origin/main
     {
         // move according to button input, vertically
         if (PB_UP & phys->cameraBtn)
         {
             phys->camera.y -= CAMERA_BTN_MOVE_INTERVAL;
+<<<<<<< HEAD
+=======
+            cameraMoved = true;
+>>>>>>> origin/main
         }
         else if (PB_DOWN & phys->cameraBtn)
         {
             phys->camera.y += CAMERA_BTN_MOVE_INTERVAL;
+<<<<<<< HEAD
+=======
+            cameraMoved = true;
+>>>>>>> origin/main
         }
 
         // Horizontally
         if (PB_LEFT & phys->cameraBtn)
         {
             phys->camera.x -= CAMERA_BTN_MOVE_INTERVAL;
+<<<<<<< HEAD
+=======
+            cameraMoved = true;
+>>>>>>> origin/main
         }
         else if (PB_RIGHT & phys->cameraBtn)
         {
             phys->camera.x += CAMERA_BTN_MOVE_INTERVAL;
+<<<<<<< HEAD
+=======
+            cameraMoved = true;
+>>>>>>> origin/main
         }
     }
     else
@@ -143,5 +186,9 @@ bool physAdjustCameraTimer(physSim_t* phys, bool menuShowing)
         phys->camera = addVec2d(phys->camera, divVec2d(subVec2d(desiredCamera, phys->camera), 3));
     }
 
+<<<<<<< HEAD
     return (oldCamera.x != phys->camera.x) || (oldCamera.y != phys->camera.y);
+=======
+    return cameraMoved;
+>>>>>>> origin/main
 }

@@ -65,7 +65,11 @@ static bool aabbIntersect(aabb_t* zone, aabb_t* obj)
 static zone_t* createFirstZone(physSim_t* phys)
 {
     // Create the first zone, which is all objects
+<<<<<<< HEAD
     zone_t* zone  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_SPIRAM);
+=======
+    zone_t* zone  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_8BIT);
+>>>>>>> origin/main
     zone->aabb.x1 = phys->bounds.x;
     zone->aabb.y1 = phys->bounds.y;
 
@@ -368,13 +372,21 @@ void createBspZones(physSim_t* phys)
         if (splitHorz)
         {
             // More items are split by the X axis
+<<<<<<< HEAD
             zone_t* nzA  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_SPIRAM);
+=======
+            zone_t* nzA  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_8BIT);
+>>>>>>> origin/main
             nzA->aabb    = zone->aabb;
             nzA->aabb.x1 = median.x;
             assignObjectsToZone(zone, nzA);
             insertZoneSorted(&zList, nzA);
 
+<<<<<<< HEAD
             zone_t* nzB  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_SPIRAM);
+=======
+            zone_t* nzB  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_8BIT);
+>>>>>>> origin/main
             nzB->aabb    = zone->aabb;
             nzB->aabb.x0 = median.x;
             assignObjectsToZone(zone, nzB);
@@ -383,13 +395,21 @@ void createBspZones(physSim_t* phys)
         else
         {
             // More items are split by the Y axis
+<<<<<<< HEAD
             zone_t* nzA  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_SPIRAM);
+=======
+            zone_t* nzA  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_8BIT);
+>>>>>>> origin/main
             nzA->aabb    = zone->aabb;
             nzA->aabb.y1 = median.y;
             assignObjectsToZone(zone, nzA);
             insertZoneSorted(&zList, nzA);
 
+<<<<<<< HEAD
             zone_t* nzB  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_SPIRAM);
+=======
+            zone_t* nzB  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_8BIT);
+>>>>>>> origin/main
             nzB->aabb    = zone->aabb;
             nzB->aabb.y0 = median.y;
             assignObjectsToZone(zone, nzB);
@@ -397,6 +417,17 @@ void createBspZones(physSim_t* phys)
         }
 
         // Free the zone that was just split
+<<<<<<< HEAD
+=======
+        while (zone->circles.length)
+        {
+            pop(&zone->circles);
+        }
+        while (zone->lines.length)
+        {
+            pop(&zone->lines);
+        }
+>>>>>>> origin/main
         heap_caps_free(zone);
     }
 
@@ -412,6 +443,17 @@ void createBspZones(physSim_t* phys)
         phys->zones[zIdx].height = zone->aabb.y1 - zone->aabb.y0;
         zIdx++;
 
+<<<<<<< HEAD
+=======
+        while (zone->circles.length)
+        {
+            pop(&zone->circles);
+        }
+        while (zone->lines.length)
+        {
+            pop(&zone->lines);
+        }
+>>>>>>> origin/main
         heap_caps_free(shift(&zList));
     }
 

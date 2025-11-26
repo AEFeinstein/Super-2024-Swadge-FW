@@ -85,6 +85,11 @@ typedef struct
     bool blinkInProgress;
     int64_t blinkTimerUs;
 
+<<<<<<< HEAD
+=======
+    float cheekFlushRate;
+
+>>>>>>> origin/main
     synthOscillator_t* oscillators[1];
     synthOscillator_t sttOsc;
 
@@ -144,6 +149,12 @@ static const int32_t noteFreqs[] = {87, 93, 98, 104, 110, 117, 123, 131, 139, 14
 #define BLINK_LENGTH_MIN_US 100000
 #define BLINK_LENGTH_MAX_US 200000
 
+<<<<<<< HEAD
+=======
+#define CHEEK_FLUSH_DELAY_US 1000000
+#define CHEEK_FLUSH_TIME_US  6000000
+
+>>>>>>> origin/main
 static void sttEnterMode(void)
 {
     setFrameRateUs(1000000 / 60);
@@ -309,6 +320,12 @@ static void sttMainLoop(int64_t elapsedUs)
         {
             volume = volume * ((float)stt->noteStateElapsedUs / VOLUME_LERP_US);
         }
+<<<<<<< HEAD
+=======
+
+        stt->cheekFlushRate
+            = CLAMP(1.0f - ((float)stt->noteStateElapsedUs - CHEEK_FLUSH_DELAY_US) / CHEEK_FLUSH_TIME_US, 0, 1.0f);
+>>>>>>> origin/main
     }
     else
     {
@@ -327,9 +344,23 @@ static void sttMainLoop(int64_t elapsedUs)
 
     for (int i = 0; i < CONFIG_NUM_LEDS; i++)
     {
+<<<<<<< HEAD
         stt->leds[i].r = volume / 2;
         stt->leds[i].g = volume / 2;
         stt->leds[i].b = volume / 2;
+=======
+        stt->leds[i].r = volume;
+        if (i == 1 || i == 4) // Bottom 2 LED indices
+        {
+            stt->leds[i].g = volume * stt->cheekFlushRate;
+            stt->leds[i].b = volume * stt->cheekFlushRate;
+        }
+        else
+        {
+            stt->leds[i].g = volume;
+            stt->leds[i].b = volume;
+        }
+>>>>>>> origin/main
     }
     setLeds(stt->leds, CONFIG_NUM_LEDS);
 

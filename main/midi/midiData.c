@@ -307,7 +307,11 @@ const midiTimbre_t mmx011Vibraphone = {
     .envelope = {
         .attackTime = SECONDS_CONV(0, 1000), // 1ms
         // .releaseTime = SECONDS_CONV(2, 70530), // 2.070530s
+<<<<<<< HEAD
         .releaseTime = SECONDS_CONV(0, 675300), // ~2.070530s / 4
+=======
+        .releaseTime = 0,
+>>>>>>> origin/main
         .sustainVol = 127,
     },
 };
@@ -769,7 +773,7 @@ const midiTimbre_t* const mmxTimbres[] = {
 };
 
 const uint8_t mmxTimbreMap[] = {
-    11, 17, 24, 29, 30, 36, 38, 48, 50, 62, 80, 81, 82, 83, 119,
+    11, 17, 24, 29, 30, 36, 38, 48, 55, 62, 80, 81, 82, 83, 119,
 };
 
 const size_t mmxTimbreCount = sizeof(mmxTimbres) / sizeof(*mmxTimbres);

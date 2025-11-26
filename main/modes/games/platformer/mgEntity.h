@@ -73,7 +73,12 @@ typedef enum
     ENTITY_LIFE_REFILL_LARGE,
     ENTITY_BOSS_TEST,
     ENTITY_MIXTAPE,
+<<<<<<< HEAD
     ENTITY_BOSS_DOOR
+=======
+    ENTITY_BOSS_DOOR,
+    ENTITY_SHRUBBLE_LV4
+>>>>>>> origin/main
 } mgEntityIndex_t;
 
 typedef enum
@@ -82,9 +87,29 @@ typedef enum
     MG_PL_ST_DASHING,
     MG_PL_ST_MIC_DROP,
     MG_PL_ST_UPPERCUT,
+<<<<<<< HEAD
     MG_PL_ST_SLIDE
 } mgPlayerState_t;
 
+=======
+    MG_PL_ST_HURT,
+    MG_PL_ST_SHIELD
+} mgPlayerState_t;
+
+typedef enum
+{
+    CRAWLER_NONE,
+    CRAWLER_TOP_TO_RIGHT,
+    CRAWLER_RIGHT_TO_BOTTOM,
+    CRAWLER_BOTTOM_TO_LEFT,
+    CRAWLER_LEFT_TO_TOP,
+    CRAWLER_TOP_TO_LEFT,
+    CRAWLER_RIGHT_TO_TOP,
+    CRAWLER_BOTTOM_TO_RIGHT,
+    CRAWLER_LEFT_TO_BOTTOM
+} crawlerMoveState_t;
+
+>>>>>>> origin/main
 //==============================================================================
 // Structs
 //==============================================================================
@@ -124,6 +149,10 @@ struct mgEntity_t
     uint8_t spriteIndex;
     bool spriteFlipHorizontal;
     bool spriteFlipVertical;
+<<<<<<< HEAD
+=======
+    int16_t spriteRotateAngle;
+>>>>>>> origin/main
     uint8_t animationTimer;
 
     mgTilemap_t* tilemap;
@@ -175,8 +204,16 @@ void updateHitBlock(mgEntity_t* self);
 void mg_moveEntityWithTileCollisions(mgEntity_t* self);
 void mg_moveEntityWithTileCollisions3(mgEntity_t* self);
 bool mg_canWallJump(mgEntity_t* self);
+<<<<<<< HEAD
 void defaultFallOffTileHandler(mgEntity_t* self);
 
+=======
+bool mg_canExitDashSlide(mgEntity_t* self);
+void defaultFallOffTileHandler(mgEntity_t* self);
+
+void mg_playerFallOffTileHandler(mgEntity_t* self);
+
+>>>>>>> origin/main
 void despawnWhenOffscreen(mgEntity_t* self);
 
 void mg_destroyEntity(mgEntity_t* self, bool respawn);
@@ -248,6 +285,11 @@ void powerUpCollisionHandler(mgEntity_t* self, mgEntity_t* other);
 void killPlayer(mgEntity_t* self);
 void mg_defaultEntityDrawHandler(mgEntity_t* self);
 
+<<<<<<< HEAD
+=======
+void mg_playerDrawHandler(mgEntity_t* self);
+
+>>>>>>> origin/main
 void mg_destroyShot(mgEntity_t* self);
 
 void mg_updateTurret(mgEntity_t* self);
@@ -264,4 +306,13 @@ void mg_bossDoorCollisionHandler(mgEntity_t* self, mgEntity_t* other);
 
 void mg_updateBossTest(mgEntity_t* self);
 
+<<<<<<< HEAD
+=======
+void mg_updateShrubbleLv4(mgEntity_t* self);
+
+void crawlerSetMoveState(mgEntity_t* self, uint8_t state);
+
+uint8_t mg_crawlerGettInitialMoveState(int16_t angle, bool counterclockwise);
+
+>>>>>>> origin/main
 #endif

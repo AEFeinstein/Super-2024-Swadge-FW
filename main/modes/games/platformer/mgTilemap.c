@@ -14,6 +14,10 @@
 #include "hashMap.h"
 #include "mgEntitySpawnData.h"
 #include "mega_pulse_ex_typedef.h"
+<<<<<<< HEAD
+=======
+#include "hdw-nvs.h"
+>>>>>>> origin/main
 
 #include "cnfs.h"
 
@@ -182,7 +186,32 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
     }
 
     size_t sz;
+<<<<<<< HEAD
     uint8_t* buf = cnfsReadFile(name, &sz, false);
+=======
+    uint8_t* buf = NULL;
+    ESP_LOGE("MAP", "Loading %i", name);
+
+    if (name == -69)
+    {
+        if (readNvsBlob("user_level", NULL, &sz))
+        {
+            buf = heap_caps_malloc(sz, MALLOC_CAP_8BIT);
+
+            if (NULL != buf)
+            {
+                if (readNvsBlob("user_level", buf, &sz))
+                {
+                    ESP_LOGE("MAP", "Loading user level...");
+                }
+            }
+        }
+    }
+    else
+    {
+        buf = cnfsReadFile(name, &sz, false);
+    }
+>>>>>>> origin/main
 
     if (NULL == buf)
     {
@@ -226,6 +255,10 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
         for (uint32_t i = iterator; i < iterator + (numEntitySpawns * 16); i += 16)
         {
             mgEntitySpawnData_t* entitySpawn = &(tilemap->entitySpawns[subiterator]);
+<<<<<<< HEAD
+=======
+            entitySpawn->id                  = subiterator;
+>>>>>>> origin/main
             entitySpawn->spawnable           = true;
             entitySpawn->respawnable         = true;
             entitySpawn->type                = buf[i];
@@ -234,8 +267,12 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
             entitySpawn->xOffsetInPixels     = buf[i + 3];
             entitySpawn->yOffsetInPixels     = buf[i + 4];
             entitySpawn->flags               = buf[i + 5];
+<<<<<<< HEAD
             entitySpawn->special0            = buf[i + 6];
             entitySpawn->special1            = buf[i + 7];
+=======
+            entitySpawn->spriteRotateAngle   = (buf[i + 7] << 8) + buf[i + 6];
+>>>>>>> origin/main
             entitySpawn->special2            = buf[i + 8];
             entitySpawn->special3            = buf[i + 9];
             entitySpawn->special4            = buf[i + 10];
@@ -246,9 +283,14 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
             uint16_t linkedEntitySpawnIndex = (buf[i + 15] << 8) + buf[i + 14];
 
             ESP_LOGE("TEST", "Entity #%i: type %i", subiterator, entitySpawn->type);
+<<<<<<< HEAD
             ESP_LOGE("TEST", "specials %i %i %i %i %i %i %i %i", entitySpawn->special0, entitySpawn->special1,
                      entitySpawn->special2, entitySpawn->special3, entitySpawn->special4, entitySpawn->special5,
                      entitySpawn->special6, entitySpawn->special7);
+=======
+            ESP_LOGE("TEST", "specials 2-7: %i %i %i %i %i %i", entitySpawn->special2, entitySpawn->special3,
+                     entitySpawn->special4, entitySpawn->special5, entitySpawn->special6, entitySpawn->special7);
+>>>>>>> origin/main
 
             if (linkedEntitySpawnIndex == 0xffff)
             {
@@ -318,6 +360,10 @@ void mg_hashSpawnEntity(mgEntityManager_t* entityManager, mgEntitySpawnData_t* e
     {
         entityCreated->spriteFlipHorizontal = entitySpawnData->flags & 0b1;
         entityCreated->spriteFlipVertical   = entitySpawnData->flags & 0b10;
+<<<<<<< HEAD
+=======
+        entityCreated->spriteRotateAngle    = entitySpawnData->spriteRotateAngle;
+>>>>>>> origin/main
 
         entityCreated->spawnData = entitySpawnData;
 
@@ -404,7 +450,11 @@ bool mg_needsTransparency(uint8_t tileId)
             return true;
         case MG_TILE_BG_CLOUD:
             return false;
+<<<<<<< HEAD
         case MG_TILE_BG_TALL_GRASS ... MG_TILE_BG_MOUNTAIN_R:
+=======
+        case MG_TILE_BRICK_BLOCK ... MG_TILE_BG_MOUNTAIN_R:
+>>>>>>> origin/main
             return true;
         case MG_TILE_BG_MOUNTAIN ... MG_TILE_BG_METAL:
             return false;

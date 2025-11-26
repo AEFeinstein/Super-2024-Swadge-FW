@@ -146,11 +146,16 @@ tiled.registerMapFormat("Mega Pulse EX", {
                         entitiesBuffer.push(Math.floor(entity.y) % 16);
                         entitiesBuffer.push((entity.tileFlippedVertically ? 2 : 0) + (entity.tileFlippedHorizontally ? 1 : 0));
 
+<<<<<<< HEAD
                         //TODO: use special0 and special1 to store rotation in degrees (0-359)
                         entitiesBuffer.push((entity.resolvedProperty("special0") != null) ? Math.floor(entity.resolvedProperty("special0")) : 0);
                         entitiesBuffer.push((entity.resolvedProperty("special1") != null) ? Math.floor(entity.resolvedProperty("special1")) : 0);
 
 
+=======
+                        entitiesBuffer.push( Math.floor(entity.rotation) > 0 ? (Math.floor(entity.rotation) & 0b11111111) : 0);
+                        entitiesBuffer.push( Math.floor(entity.rotation) > 0 ? ((Math.floor(entity.rotation) & 0b1111111100000000) >> 8) : 0);
+>>>>>>> origin/main
 
                         switch(entity.resolvedProperty("type").value)
                         {
@@ -164,6 +169,18 @@ tiled.registerMapFormat("Mega Pulse EX", {
                                 entitiesBuffer.push((entity.resolvedProperty("Destination Y Pixel Offset (ignored if linked to Warp Exit)") != null) ? Math.floor(entity.resolvedProperty("Destination Y Pixel Offset (ignored if linked to Warp Exit)")) : 0);
                                 entitiesBuffer.push((entity.resolvedProperty("special7") != null) ? Math.floor(entity.resolvedProperty("special7")) : 0);
                                 break;
+<<<<<<< HEAD
+=======
+                            case 55:
+                                //Shrubble Lv.4
+                                entitiesBuffer.push((entity.resolvedProperty("moveClockwise") != null) ? Math.floor(entity.resolvedProperty("moveClockwise")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("baseSpeed_subPixelsPerFrame") != null) ? Math.floor(entity.resolvedProperty("baseSpeed_subPixelsPerFrame")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("special4") != null) ? Math.floor(entity.resolvedProperty("special4")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("special5") != null) ? Math.floor(entity.resolvedProperty("special5")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("special6") != null) ? Math.floor(entity.resolvedProperty("special6")) : 0);
+                                entitiesBuffer.push((entity.resolvedProperty("special7") != null) ? Math.floor(entity.resolvedProperty("special7")) : 0);
+                                break;
+>>>>>>> origin/main
                             default:
                                 entitiesBuffer.push((entity.resolvedProperty("special2") != null) ? Math.floor(entity.resolvedProperty("special2")) : 0);
                                 entitiesBuffer.push((entity.resolvedProperty("special3") != null) ? Math.floor(entity.resolvedProperty("special3")) : 0);

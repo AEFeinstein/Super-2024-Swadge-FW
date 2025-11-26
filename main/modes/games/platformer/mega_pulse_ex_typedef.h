@@ -4,6 +4,10 @@
 #include "cnfs.h"
 #include "vector2d.h"
 #include "mgLeveldef.h"
+<<<<<<< HEAD
+=======
+#include "palette.h"
+>>>>>>> origin/main
 
 //==============================================================================
 // Constants
@@ -113,6 +117,10 @@ typedef enum
     MG_SP_PLAYER_JUMP3,
     MG_SP_PLAYER_JUMP4,
     MG_SP_PLAYER_SLIDE,
+<<<<<<< HEAD
+=======
+    MG_SP_PLAYER_DASH_SLIDE,
+>>>>>>> origin/main
     MG_SP_PLAYER_HURT,
     MG_SP_PLAYER_CLIMB,
     MG_SP_PLAYER_WIN,
@@ -160,7 +168,11 @@ typedef enum
     MG_SP_BOUNCE_BLOCK,
     MG_SP_INVISIBLE_WARP_WALL,
     MG_SP_INVISIBLE_WARP_FLOOR,
+<<<<<<< HEAD
     MG_SP_CHARGIN_SCHMUCK_IDLE,
+=======
+    MG_SP_SPIKY_MCGEE_2,
+>>>>>>> origin/main
     MG_SP_CHARGIN_SCHMUCK_RUN1,
     MG_SP_CHARGIN_SCHMUCK_RUN2,
     MG_SP_TURRET_HORIZONTAL,
@@ -180,7 +192,28 @@ typedef enum
     MG_SP_BOSS_MOVE_1,
     MG_SP_BOSS_MOVE_2,
     MG_SP_BOSS_MOVE_3,
+<<<<<<< HEAD
     MG_SP_BOSS_DOOR
+=======
+    MG_SP_BOSS_DOOR,
+    MG_SP_PLAYER_HURT_2,
+    MG_SP_PLAYER_HURT_3,
+    MG_SP_PLAYER_MIC_DROP_1,
+    MG_SP_PLAYER_MIC_DROP_2,
+    MG_SP_CRAWLER_TOP,
+    MG_SP_CRAWLER_RIGHT,
+    MG_SP_CRAWLER_BOTTOM,
+    MG_SP_CRAWLER_LEFT,
+    MG_SP_PLAYER_SUREYOUCAN_1,
+    MG_SP_PLAYER_SUREYOUCAN_2,
+    MG_SP_CRUMBLED_BLOCK,
+    MG_SP_CHARGE_SHOT_LVL1_1,
+    MG_SP_CHARGE_SHOT_LVL1_2,
+    MG_SP_CHARGE_SHOT_LVL1_3,
+    MG_SP_CHARGE_SHOT_MAX_1,
+    MG_SP_CHARGE_SHOT_MAX_2,
+    MG_SP_CHARGE_SHOT_MAX_3
+>>>>>>> origin/main
 } mg_spriteDef_t;
 
 typedef enum
@@ -247,7 +280,10 @@ typedef enum
     MG_TILE_GOAL_1000PTS,
     MG_TILE_GOAL_2000PTS,
     MG_TILE_GOAL_5000PTS,
+<<<<<<< HEAD
     MG_TILE_BRICK_BLOCK,
+=======
+>>>>>>> origin/main
     MG_TILE_CONTAINER_1,
     MG_TILE_CONTAINER_2,
     MG_TILE_CONTAINER_3,
@@ -281,7 +317,11 @@ typedef enum
     MG_TILE_BG_CLOUD_RU,
     MG_TILE_BG_CLOUD_D,
     MG_TILE_BG_CLOUD,
+<<<<<<< HEAD
     MG_TILE_BG_TALL_GRASS,
+=======
+    MG_TILE_BRICK_BLOCK,
+>>>>>>> origin/main
     MG_TILE_BG_MOUNTAIN_L,
     MG_TILE_BG_MOUNTAIN_U,
     MG_TILE_BG_MOUNTAIN_R,
@@ -390,7 +430,11 @@ typedef enum
     MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_7E,
     MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_7F,
     MG_TILE_SOLID_VISIBLE_INTERACTIVE_80, // Container Block
+<<<<<<< HEAD
     MG_TILE_SOLID_VISIBLE_INTERACTIVE_81, // Brick Block
+=======
+    MG_TILE_SOLID_VISIBLE_INTERACTIVE_81, // Brick/Crumbling Block
+>>>>>>> origin/main
     MG_TILE_SOLID_VISIBLE_INTERACTIVE_82,
     MG_TILE_SOLID_VISIBLE_INTERACTIVE_83,
     MG_TILE_SOLID_VISIBLE_INTERACTIVE_84,
@@ -423,11 +467,19 @@ typedef enum
     MG_TILE_SOLID_VISIBLE_INTERACTIVE_9F,
     MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0, // Ladder/chain
     MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1, // Bounce Block
+<<<<<<< HEAD
     MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
     MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
     MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4,
     MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
     MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
+=======
+    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, // Spikes/lava top
+    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, // Spikes/lava left
+    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4, // Spikes/lava bottom
+    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, // Spikes/lava right
+    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6, // Crumble block
+>>>>>>> origin/main
     MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A7,
     MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A8,
     MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A9,
@@ -676,7 +728,11 @@ typedef enum
     MG_WSG_HP_BOSS_TOP_4,
     MG_WSG_HP_BOSS_TOP_5,
     MG_WSG_HP_BOSS_TOP_6,
+<<<<<<< HEAD
     MG_WSG_CHARGIN_SCHMUCK_IDLE,
+=======
+    MG_WSG_SPIKY_MCGEE_2,
+>>>>>>> origin/main
     MG_WSG_CHARGIN_SCHMUCK_RUN1,
     MG_WSG_CHARGIN_SCHMUCK_RUN2,
     MG_WSG_TURRET_HORIZONTAL,
@@ -696,7 +752,30 @@ typedef enum
     MG_WSG_BOSS_MOVE_1,
     MG_WSG_BOSS_MOVE_2,
     MG_WSG_BOSS_MOVE_3,
+<<<<<<< HEAD
     MG_WSG_BOSS_DOOR
+=======
+    MG_WSG_BOSS_DOOR,
+    MG_WSG_PLAYER_DASH_SLIDE,
+    MG_WSG_PLAYER_HURT_2,
+    MG_WSG_PLAYER_HURT_3,
+    MG_WSG_PLAYER_MIC_DROP_1,
+    MG_WSG_PLAYER_MIC_DROP_2,
+    MG_WSG_PLAYER_SHIELD_1,
+    MG_WSG_PLAYER_SHIELD_2,
+    MG_WSG_PLAYER_SHIELD_3,
+    MG_WSG_PLAYER_SHIELD_4,
+    MG_WSG_PLAYER_SUREYOUCAN_1,
+    MG_WSG_PLAYER_SUREYOUCAN_2,
+    MG_WSG_CRUMBLED_BLOCK,
+    MG_WSG_SALSA,
+    MG_WSG_CHARGE_SHOT_LVL1_1,
+    MG_WSG_CHARGE_SHOT_LVL1_2,
+    MG_WSG_CHARGE_SHOT_LVL1_3,
+    MG_WSG_CHARGE_SHOT_MAX_1,
+    MG_WSG_CHARGE_SHOT_MAX_2,
+    MG_WSG_CHARGE_SHOT_MAX_3
+>>>>>>> origin/main
 } mg_wsgIndex_t;
 
 typedef enum
@@ -976,11 +1055,32 @@ static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_rightE
 static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_leftEdge
     = {.collisionPoints = {{.x = -7, .y = 14}, {.x = -7, .y = 0}, {.x = -7, .y = -14}}, .size = 3};
 
+<<<<<<< HEAD
+=======
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_topEdge_dash_slide
+    = {.collisionPoints = {{.x = -7, .y = 0}, {.x = 0, .y = 0}, {.x = 7, .y = -0}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_rightEdge_dash_slide
+    = {.collisionPoints = {{.x = 8, .y = 14}, {.x = 8, .y = 0}, {.x = 8, .y = 1}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_leftEdge_dash_slide
+    = {.collisionPoints = {{.x = -7, .y = 14}, {.x = -7, .y = 0}, {.x = -7, .y = 1}}, .size = 3};
+
+>>>>>>> origin/main
 static const mg_EntityTileCollider_t entityTileCollider_1x2 = {.bottomEdge = &mgTileCollisionOffsets_1x2_bottomEdge,
                                                                .topEdge    = &mgTileCollisionOffsets_1x2_topEdge,
                                                                .rightEdge  = &mgTileCollisionOffsets_1x2_rightEdge,
                                                                .leftEdge   = &mgTileCollisionOffsets_1x2_leftEdge};
 
+<<<<<<< HEAD
+=======
+static const mg_EntityTileCollider_t entityTileCollider_1x2_dash_slide
+    = {.bottomEdge = &mgTileCollisionOffsets_1x2_bottomEdge,
+       .topEdge    = &mgTileCollisionOffsets_1x2_topEdge_dash_slide,
+       .rightEdge  = &mgTileCollisionOffsets_1x2_rightEdge_dash_slide,
+       .leftEdge   = &mgTileCollisionOffsets_1x2_leftEdge_dash_slide};
+
+>>>>>>> origin/main
 typedef enum
 {
     MG_WSGSET_NULL = -1,
@@ -995,11 +1095,26 @@ typedef enum
     MG_WSGSET_FLARE_GRYFFYN
 } mgWsgSetIndex_t;
 
+<<<<<<< HEAD
+=======
+// Note: none of these names match actual colors
+static const paletteColor_t bgGradientGray[]   = {c001, c112, c223, c334};
+static const paletteColor_t bgGradientPurple[] = {c202, c203, c204, c205};
+static const paletteColor_t bgGradientBlue[]   = {c102, c103, c104, c105};
+static const paletteColor_t bgGradientCyan[]   = {c003, c013, c023, c033};
+static const paletteColor_t bgGradientGreen[]  = {c001, c111, c221, c331};
+static const paletteColor_t bgGradientYellow[] = {c202, c312, c422, c532};
+static const paletteColor_t bgGradientOrange[] = {c040, c230, c220, c210};
+static const paletteColor_t bgGradientRed[]    = {c101, c201, c301, c411};
+static const paletteColor_t bgGradientMenu[]   = {c001, c012, c123, c234};
+
+>>>>>>> origin/main
 static const mgLeveldef_t leveldef[] = {
     {.filename           = LEVEL_SELECT_BIN,
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_LEVEL_SELECT,
      .mainBgmIndex       = MG_BGM_STAGE_SELECT,
+<<<<<<< HEAD
      .bossBgmIndex       = MG_BGM_NULL},
     {.filename           = LEVEL_02_BIN,
      .timeLimit          = 180,
@@ -1046,46 +1161,160 @@ static const mgLeveldef_t leveldef[] = {
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
      .mainBgmIndex       = MG_BGM_FLARE_GRYFFYN,
      .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA},
+=======
+     .bossBgmIndex       = MG_BGM_NULL,
+     .bgColors           = bgGradientMenu},
+    {.filename           = DONUT_BIN,
+     .timeLimit          = 180,
+     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
+     .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
+     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
+     .bgColors           = bgGradientBlue},
+    {.filename           = GRIND_BIN,
+     .timeLimit          = 180,
+     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
+     .mainBgmIndex       = MG_BGM_GRIND_PANGOLIN,
+     .bossBgmIndex       = MG_BGM_BOSS_GRIND_PANGOLIN,
+     .bgColors           = bgGradientPurple},
+    {.filename           = SEVER_BIN,
+     .timeLimit          = 180,
+     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
+     .mainBgmIndex       = MG_BGM_SEVER_YAGATA,
+     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
+     .bgColors           = bgGradientCyan},
+    {.filename           = DUMP_BIN,
+     .timeLimit          = 180,
+     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
+     .mainBgmIndex       = MG_BGM_RIP_BARONESS,
+     .bossBgmIndex       = MG_BGM_BOSS_TRASH_MAN,
+     .bgColors           = bgGradientGreen},
     {.filename           = LEVEL_02_BIN,
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
+     .bossBgmIndex       = MG_BGM_BOSS_BIGMA,
+     .bgColors           = bgGradientMenu},
+    {.filename           = SMASH_BIN,
+     .timeLimit          = 180,
+     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
+     .mainBgmIndex       = MG_BGM_SMASH_GORILLA,
+     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
+     .bgColors           = bgGradientYellow},
+    {.filename           = DEADEYE_BIN,
+     .timeLimit          = 180,
+     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
+     .mainBgmIndex       = MG_BGM_DEADEYE_CHIRPZI,
+     .bossBgmIndex       = MG_BGM_BOSS_DEADEYE_CHIRPZI,
+     .bgColors           = bgGradientOrange},
+    {.filename           = DRAIN_BIN,
+     .timeLimit          = 180,
+     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
+     .mainBgmIndex       = MG_BGM_DRAIN_BAT,
+     .bossBgmIndex       = MG_BGM_BOSS_DRAIN_BAT,
+     .bgColors           = bgGradientGray},
+    {.filename           = GRYFFYN_BIN,
+     .timeLimit          = 180,
+     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
+     .mainBgmIndex       = MG_BGM_FLARE_GRYFFYN,
+     .bossBgmIndex       = MG_BGM_BOSS_FLARE_GRYFFYN,
+     .bgColors           = bgGradientRed},
+>>>>>>> origin/main
+    {.filename           = LEVEL_02_BIN,
+     .timeLimit          = 180,
+     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
+     .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
+<<<<<<< HEAD
      .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA},
+=======
+     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
+     .bgColors           = bgGradientPurple},
+>>>>>>> origin/main
     {.filename           = LEVEL_02_BIN,
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
+<<<<<<< HEAD
      .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA},
+=======
+     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
+     .bgColors           = bgGradientPurple},
+>>>>>>> origin/main
     {.filename           = LEVEL_02_BIN,
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
+<<<<<<< HEAD
      .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA},
+=======
+     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
+     .bgColors           = bgGradientPurple},
+>>>>>>> origin/main
     {.filename           = LEVEL_02_BIN,
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
+<<<<<<< HEAD
      .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA},
+=======
+     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
+     .bgColors           = bgGradientPurple},
+>>>>>>> origin/main
     {.filename           = LEVEL_02_BIN,
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
+<<<<<<< HEAD
      .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA},
+=======
+     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
+     .bgColors           = bgGradientPurple},
+>>>>>>> origin/main
     {.filename           = LEVEL_02_BIN,
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
+<<<<<<< HEAD
      .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA},
+=======
+     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
+     .bgColors           = bgGradientPurple},
+>>>>>>> origin/main
     {.filename           = LEVEL_02_BIN,
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
+<<<<<<< HEAD
      .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA},
+=======
+     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
+     .bgColors           = bgGradientPurple},
+>>>>>>> origin/main
     {.filename           = LEVEL_02_BIN,
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
+<<<<<<< HEAD
      .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA},
 };
 
+=======
+     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
+     .bgColors           = bgGradientPurple},
+};
+
+static const mg_spriteDef_t playerDamageAnimFrames[]
+    = {MG_SP_PLAYER_HURT, MG_SP_PLAYER_HURT_2, MG_SP_PLAYER_HURT, MG_SP_PLAYER_HURT_3};
+static const mg_spriteDef_t playerMicDropAnimFrames[]     = {MG_SP_PLAYER_MIC_DROP_1, MG_SP_PLAYER_MIC_DROP_2};
+static const mg_spriteDef_t playerSureYouCanAnimnFrames[] = {
+    // These are in reverse order
+    MG_SP_PLAYER_SUREYOUCAN_2, MG_SP_PLAYER_SUREYOUCAN_2, MG_SP_PLAYER_SUREYOUCAN_2, MG_SP_PLAYER_SUREYOUCAN_1,
+    MG_SP_PLAYER_SUREYOUCAN_1, MG_SP_PLAYER_JUMP,         MG_WSG_PLAYER_WALK5,       MG_WSG_PLAYER_WALK6};
+
+static const mg_spriteDef_t normalShotAnimFrames[] = {MG_SP_WAVEBALL_1, MG_SP_WAVEBALL_2, MG_SP_WAVEBALL_3};
+static const mg_spriteDef_t chargeShotAnimFrames[]
+    = {MG_SP_CHARGE_SHOT_LVL1_1, MG_SP_CHARGE_SHOT_LVL1_2, MG_SP_CHARGE_SHOT_LVL1_3};
+static const mg_spriteDef_t maxChargeShotAnimFrames[]
+    = {MG_SP_CHARGE_SHOT_MAX_1, MG_SP_CHARGE_SHOT_MAX_2, MG_SP_CHARGE_SHOT_MAX_3};
+
+>>>>>>> origin/main
 #endif

@@ -120,12 +120,27 @@ physCirc_t* physAddCircle(physSim_t* phys, uint16_t x1, uint16_t y1, uint16_t r,
             setShotPower(pc, 225.0f);
             pc->fixed      = false;
             pc->bounciness = 0.25f;
+<<<<<<< HEAD
+=======
+
+            // Add useable ammo
+            uint16_t numAmmos;
+            getAmmoAttributes(&numAmmos);
+            for (uintptr_t aIdx = 0; aIdx < numAmmos; aIdx++)
+            {
+                push(&pc->availableAmmo, (void*)aIdx);
+            }
+>>>>>>> origin/main
             break;
         }
         case CT_SHELL:
         {
             pc->fixed      = false;
+<<<<<<< HEAD
             pc->bounciness = 0.75f;
+=======
+            pc->bounciness = 0.5f;
+>>>>>>> origin/main
             // Other shell parameters set in fireShot()
             break;
         }
@@ -181,7 +196,11 @@ static void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl)
     {
         if (rectLineFlIntersection(phys->zones[zIdx], pl->l, NULL))
         {
+<<<<<<< HEAD
             pl->zonemask |= (1 << zIdx);
+=======
+            pl->zonemask |= (1u << zIdx);
+>>>>>>> origin/main
         }
     }
 }

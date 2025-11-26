@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <template>
  <tileset firstgid="1" source="../mg-entity-tileset.tsx"/>
+<<<<<<< HEAD
  <object name="Chargin' Schmuck" type="SwadgeLandEntity" gid="151" width="30" height="30">
+=======
+ <object name="Chargin' Schmuck" type="SwadgeLandEntity" gid="153" width="30" height="30">
+>>>>>>> origin/main
   <properties>
    <property name="type" type="int" propertytype="Swadge Land Entity Index" value="41"/>
   </properties>

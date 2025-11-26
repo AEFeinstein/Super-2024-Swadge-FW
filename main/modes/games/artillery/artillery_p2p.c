@@ -23,6 +23,10 @@ typedef enum __attribute__((packed))
     P2P_ADD_TERRAIN,
     P2P_SET_CLOUDS,
     P2P_SET_PLAYERS,
+<<<<<<< HEAD
+=======
+    P2P_SET_CAMERA,
+>>>>>>> origin/main
     P2P_FIRE_SHOT,
     P2P_PASS_TURN,
 } artilleryP2pPacketType_t;
@@ -40,6 +44,10 @@ typedef struct // __attribute__((packed))
 typedef struct //__attribute__((packed))
 {
     uint8_t type;
+<<<<<<< HEAD
+=======
+    uint8_t bgmIdx;
+>>>>>>> origin/main
     uint16_t width;
     uint16_t height;
     struct
@@ -84,10 +92,23 @@ typedef struct // __attribute__((packed))
         int16_t barrelAngle;
         int32_t score;
     } players[NUM_PLAYERS];
+<<<<<<< HEAD
     vec_t camera;
     int32_t moveTimeLeftUs;
 } artPktPlayers_t;
 
+=======
+    int32_t moveTimeLeftUs;
+} artPktPlayers_t;
+
+typedef struct
+{
+    uint8_t type;
+    vec_t camera;
+    bool looking;
+} artPktCamera_t;
+
+>>>>>>> origin/main
 typedef struct // __attribute__((packed))
 {
     uint8_t type;
@@ -180,7 +201,11 @@ void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
  */
 void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 {
+<<<<<<< HEAD
     ESP_LOGI("VT", "RX type %d, len %d", payload[0], len);
+=======
+    // ESP_LOGI("VT", "RX type %d, len %d", payload[0], len);
+>>>>>>> origin/main
 
     artilleryData_t* ad = getArtilleryData();
 
@@ -252,6 +277,14 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
                     ad->players[pIdx]->score = pkt->players[pIdx].score;
                 }
 
+<<<<<<< HEAD
+=======
+                // Play the music from the packet
+                ad->bgmIdx = pkt->bgmIdx;
+                globalMidiPlayerPlaySong(&ad->bgms[ad->bgmIdx], MIDI_BGM);
+                globalMidiPlayerGet(MIDI_BGM)->loop = true;
+
+>>>>>>> origin/main
                 // Mark as not ready until the other packet is received
                 ad->phys->isReady = false;
             }
@@ -295,8 +328,13 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
                 // Mark simulation as ready
                 ad->phys->isReady = true;
 
+<<<<<<< HEAD
                 // After receiving clouds, open the menu
                 artillerySwitchToGameState(ad, AGS_MENU);
+=======
+                // After receiving clouds, go on a tour
+                artillerySwitchToGameState(ad, AGS_TOUR);
+>>>>>>> origin/main
             }
             return;
         }
@@ -312,15 +350,42 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
                 ad->players[pIdx]->score = pkt->players[pIdx].score;
             }
 
+<<<<<<< HEAD
             // Update camera and don't track objects
             ad->phys->camera = pkt->camera;
             clear(&ad->phys->cameraTargets);
 
+=======
+>>>>>>> origin/main
             // Update gas gauge
             ad->moveTimerUs = pkt->moveTimeLeftUs;
 
             return;
         }
+<<<<<<< HEAD
+=======
+        case P2P_SET_CAMERA:
+        {
+            // Receive and set camera
+            const artPktCamera_t* pkt = (const artPktCamera_t*)payload;
+
+            // Clear all camera targets
+            clear(&ad->phys->cameraTargets);
+
+            // If not looking around, focus on the player
+            if (!pkt->looking)
+            {
+                push(&ad->phys->cameraTargets, ad->players[ad->plIdx]);
+            }
+            else
+            {
+                // Set the camera
+                ad->phys->camera = pkt->camera;
+            }
+
+            return;
+        }
+>>>>>>> origin/main
         case P2P_FIRE_SHOT:
         {
             if (!ad->phys->shotFired)
@@ -336,6 +401,7 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
                 player->ammoIdx     = pkt->ammoIdx;
                 player->shotPower   = pkt->shotPower;
 
+<<<<<<< HEAD
                 // Tricky, fire the shot from here before switching game state
                 ad->phys->shotFired = true;
                 fireShot(ad->phys, player, opponent, true);
@@ -343,6 +409,14 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
                 // Switch the game state after the shot is fired, preventing the receiving Swadge from TXing a
                 // P2P_FIRE_SHOT
                 artillerySwitchToGameState(ad, AGS_FIRE);
+=======
+                // Switch the game to firing
+                artillerySwitchToGameState(ad, AGS_FIRE);
+
+                // Fire the shot from here so that artilleryTxShot() isn't called from artilleryGameLoop()
+                ad->phys->shotFired = true;
+                fireShot(ad->phys, player, opponent, true);
+>>>>>>> origin/main
             }
             return;
         }
@@ -382,7 +456,11 @@ void artilleryTxColor(artilleryData_t* ad)
     }
 
     // Allocate a packet
+<<<<<<< HEAD
     artPktColor_t* pkt = heap_caps_calloc(1, sizeof(artPktShot_t), MALLOC_CAP_SPIRAM);
+=======
+    artPktColor_t* pkt = heap_caps_calloc(1, sizeof(artPktShot_t), MALLOC_CAP_8BIT);
+>>>>>>> origin/main
 
     // Write the type
     pkt->type = P2P_SET_COLOR;
@@ -406,7 +484,11 @@ void artilleryTxWorld(artilleryData_t* ad)
         return;
     }
 
+<<<<<<< HEAD
     artPktWorld_t* pkt1          = heap_caps_calloc(1, sizeof(artPktWorld_t), MALLOC_CAP_SPIRAM);
+=======
+    artPktWorld_t* pkt1          = heap_caps_calloc(1, sizeof(artPktWorld_t), MALLOC_CAP_8BIT);
+>>>>>>> origin/main
     pkt1->type                   = P2P_SET_WORLD;
     pkt1->width                  = ad->phys->bounds.x;
     pkt1->height                 = ad->phys->bounds.y;
@@ -416,8 +498,14 @@ void artilleryTxWorld(artilleryData_t* ad)
     pkt1->players[1].pos         = ad->players[1]->c.pos;
     pkt1->players[1].barrelAngle = ad->players[1]->barrelAngle;
     pkt1->players[1].score       = ad->players[1]->score;
+<<<<<<< HEAD
 
     artPktTerrain_t* pkt2 = heap_caps_calloc(1, sizeof(artPktTerrain_t), MALLOC_CAP_SPIRAM);
+=======
+    pkt1->bgmIdx                 = ad->bgmIdx;
+
+    artPktTerrain_t* pkt2 = heap_caps_calloc(1, sizeof(artPktTerrain_t), MALLOC_CAP_8BIT);
+>>>>>>> origin/main
     pkt2->type            = P2P_ADD_TERRAIN;
 
     // Build a list of Y values
@@ -448,7 +536,11 @@ void artilleryTxWorld(artilleryData_t* ad)
     }
 
     // Build the cloud packet
+<<<<<<< HEAD
     artPktCloud_t* pktCloud = heap_caps_calloc(1, sizeof(artPktCloud_t), MALLOC_CAP_SPIRAM);
+=======
+    artPktCloud_t* pktCloud = heap_caps_calloc(1, sizeof(artPktCloud_t), MALLOC_CAP_8BIT);
+>>>>>>> origin/main
     pktCloud->type          = P2P_SET_CLOUDS;
     for (uint16_t c = 0; c < NUM_CLOUDS * CIRC_PER_CLOUD; c++)
     {
@@ -461,6 +553,12 @@ void artilleryTxWorld(artilleryData_t* ad)
     push(&ad->p2pQueue, pkt1);
     push(&ad->p2pQueue, pkt2);
     push(&ad->p2pQueue, pktCloud);
+<<<<<<< HEAD
+=======
+
+    // After queueing world to send, go on a tour
+    artillerySwitchToGameState(ad, AGS_TOUR);
+>>>>>>> origin/main
 }
 
 /**
@@ -489,7 +587,11 @@ void artilleryTxPlayers(artilleryData_t* ad)
     }
 
     // Allocate a packet
+<<<<<<< HEAD
     artPktPlayers_t* pkt = heap_caps_calloc(1, sizeof(artPktPlayers_t), MALLOC_CAP_SPIRAM);
+=======
+    artPktPlayers_t* pkt = heap_caps_calloc(1, sizeof(artPktPlayers_t), MALLOC_CAP_8BIT);
+>>>>>>> origin/main
 
     // Write the type
     pkt->type = P2P_SET_PLAYERS;
@@ -502,9 +604,12 @@ void artilleryTxPlayers(artilleryData_t* ad)
         pkt->players[pIdx].score       = ad->players[pIdx]->score;
     }
 
+<<<<<<< HEAD
     // Update camera
     pkt->camera = ad->phys->camera;
 
+=======
+>>>>>>> origin/main
     // Write gas gauge
     pkt->moveTimeLeftUs = ad->moveTimerUs;
 
@@ -516,6 +621,48 @@ void artilleryTxPlayers(artilleryData_t* ad)
  * @brief TODO doc
  *
  * @param ad
+<<<<<<< HEAD
+=======
+ */
+void artilleryTxCamera(artilleryData_t* ad)
+{
+    if (AG_WIRELESS != ad->gameType)
+    {
+        return;
+    }
+
+    // Remove any other enqueued packet of this type first
+    node_t* pktNode = ad->p2pQueue.first;
+    while (pktNode)
+    {
+        node_t* pktNodeNext           = pktNode->next;
+        artilleryP2pPacketType_t type = *((uint8_t*)pktNode->val);
+        if (P2P_SET_CAMERA == type)
+        {
+            heap_caps_free(removeEntry(&ad->p2pQueue, pktNode));
+        }
+        pktNode = pktNodeNext;
+    }
+
+    // Allocate a packet
+    artPktCamera_t* pkt = heap_caps_calloc(1, sizeof(artPktCamera_t), MALLOC_CAP_8BIT);
+
+    // Write the type
+    pkt->type = P2P_SET_CAMERA;
+
+    // Write the data
+    pkt->camera  = ad->phys->camera;
+    pkt->looking = (AGS_LOOK == ad->gState);
+
+    // Push into the queue
+    push(&ad->p2pQueue, pkt);
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param ad
+>>>>>>> origin/main
  * @param player
  */
 void artilleryTxShot(artilleryData_t* ad, physCirc_t* player)
@@ -526,7 +673,11 @@ void artilleryTxShot(artilleryData_t* ad, physCirc_t* player)
     }
 
     // Allocate a packet
+<<<<<<< HEAD
     artPktShot_t* pkt = heap_caps_calloc(1, sizeof(artPktShot_t), MALLOC_CAP_SPIRAM);
+=======
+    artPktShot_t* pkt = heap_caps_calloc(1, sizeof(artPktShot_t), MALLOC_CAP_8BIT);
+>>>>>>> origin/main
 
     // Write the type
     pkt->type = P2P_FIRE_SHOT;
@@ -553,7 +704,11 @@ void artilleryTxPassTurn(artilleryData_t* ad)
     }
 
     // Allocate a packet
+<<<<<<< HEAD
     artPktPassTurn_t* pkt = heap_caps_calloc(1, sizeof(artPktPassTurn_t), MALLOC_CAP_SPIRAM);
+=======
+    artPktPassTurn_t* pkt = heap_caps_calloc(1, sizeof(artPktPassTurn_t), MALLOC_CAP_8BIT);
+>>>>>>> origin/main
 
     // Write the type
     pkt->type = P2P_PASS_TURN;
@@ -573,7 +728,11 @@ void artilleryCheckTxQueue(artilleryData_t* ad)
     if (ad->p2pQueue.first && p2pIsTxIdle(&ad->p2p))
     {
         uint8_t* payload = shift(&ad->p2pQueue);
+<<<<<<< HEAD
         ESP_LOGI("VT", "TX type %d, len %d", payload[0], getSizeFromType(payload[0]));
+=======
+        // ESP_LOGI("VT", "TX type %d, len %d", payload[0], getSizeFromType(payload[0]));
+>>>>>>> origin/main
 
         // Send over p2p
         p2pSendMsg(&ad->p2p, payload, getSizeFromType(payload[0]), artillery_p2pMsgTxCb);
@@ -612,6 +771,13 @@ static uint8_t getSizeFromType(artilleryP2pPacketType_t type)
         {
             return sizeof(artPktPlayers_t);
         }
+<<<<<<< HEAD
+=======
+        case P2P_SET_CAMERA:
+        {
+            return sizeof(artPktCamera_t);
+        }
+>>>>>>> origin/main
         case P2P_FIRE_SHOT:
         {
             return sizeof(artPktShot_t);

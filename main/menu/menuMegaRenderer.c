@@ -225,38 +225,56 @@ void setBodyHeight(menuMegaRenderer_t* renderer, int16_t height)
 }
 
 /**
+<<<<<<< HEAD
  * @brief Recolor the Mega menu renderer. Arguments c1 through c8 should get progressively lighter
+=======
+ * @brief Recolor the Mega menu renderer.
+>>>>>>> origin/main
  *
  * @param renderer The renderer to recolor
  * @param textFill The color of the text fill, originally white
  * @param textOutline The color of the text outline, originally black
- * @param c1 Replacement for Darkest blue
- * @param c2 Replacement for Very dark blue
- * @param c3 Replacement for Dark blue
- * @param c4 Replacement for Dark moderate blue
- * @param c5 Replacement for Dark strong blue
- * @param c6 Replacement for Light strong blue
- * @param c7 Replacement for Pure cyan
- * @param c8 Replacement for Very pale cyan
+ * @param hexaBackground The color of the hexagonal background
+ * @param bodyBackground The color of the background between hexagons and items
+ * @param bodyAccentDark The dark accent color of the background
+ * @param bodyAccentLight The light accent color of the background
+ * @param bodyArrowBg The color of the up and down arrows
+ * @param rowUnselectedBg The color of the background of an unselected row
+ * @param rowUnselectedShadow The color of the shadow of an unselected row
+ * @param rowSelectedBg The color of the background of the selected row
+ * @param rowSelectedAccent The accent color of the selected row
+ * @param rowSelectedOutline The outline color of the selected row
+ * @param rowArrowBg The background color of left and right arrows
  * @param bgColors A list of colors to cycle through in the hexagonal background. May be NULL for no change.
  * @param numBgColors The length of bgColors
  */
 void recolorMenuMegaRenderer(menuMegaRenderer_t* renderer, paletteColor_t textFill, paletteColor_t textOutline,
-                             paletteColor_t c1, paletteColor_t c2, paletteColor_t c3, paletteColor_t c4,
-                             paletteColor_t c5, paletteColor_t c6, paletteColor_t c7, paletteColor_t c8,
+                             paletteColor_t hexaBackground, paletteColor_t bodyBackground,
+                             paletteColor_t bodyAccentDark, paletteColor_t bodyAccentLight, paletteColor_t bodyArrowBg,
+                             paletteColor_t rowUnselectedBg, paletteColor_t rowUnselectedShadow,
+                             paletteColor_t rowSelectedBg, paletteColor_t rowSelectedAccent,
+                             paletteColor_t rowSelectedOutline, paletteColor_t rowArrowBg,
                              const paletteColor_t* bgColors, int32_t numBgColors)
 {
     renderer->textFillColor    = textFill;
     renderer->textOutlineColor = textOutline;
 
-    wsgPaletteSet(&renderer->palette, c001, c1); // Darkest blue
-    wsgPaletteSet(&renderer->palette, c012, c2); // Very dark blue
-    wsgPaletteSet(&renderer->palette, c023, c3); // Dark blue
-    wsgPaletteSet(&renderer->palette, c113, c4); // Dark moderate blue
-    wsgPaletteSet(&renderer->palette, c124, c5); // Dark strong blue
-    wsgPaletteSet(&renderer->palette, c034, c6); // Light strong blue
-    wsgPaletteSet(&renderer->palette, c045, c7); // Pure cyan
-    wsgPaletteSet(&renderer->palette, c455, c8); // Very pale cyan
+    // Background colors
+    wsgPaletteSet(&renderer->palette, c012, hexaBackground); // Very dark blue
+
+    // Body colors
+    wsgPaletteSet(&renderer->palette, c023, bodyBackground);  // Dark blue
+    wsgPaletteSet(&renderer->palette, c000, bodyAccentDark);  // Black
+    wsgPaletteSet(&renderer->palette, c034, bodyAccentLight); // Light strong blue
+    wsgPaletteSet(&renderer->palette, c455, bodyArrowBg);     // Very pale cyan
+
+    // Item colors
+    wsgPaletteSet(&renderer->palette, c001, rowUnselectedBg); // Also rowSelectedShadow, Darkest blue
+    wsgPaletteSet(&renderer->palette, c112, rowUnselectedShadow);
+    wsgPaletteSet(&renderer->palette, c124, rowSelectedBg);      // Dark strong blue
+    wsgPaletteSet(&renderer->palette, c045, rowSelectedAccent);  // Pure cyan
+    wsgPaletteSet(&renderer->palette, c555, rowSelectedOutline); // White
+    wsgPaletteSet(&renderer->palette, c113, rowArrowBg);
 
     if (bgColors)
     {
@@ -465,6 +483,11 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
         }
     }
 
+    if (renderer->drawBody)
+    {
+        drawMenuBody(12, 42, renderer->bodyHeight, false, renderer);
+    }
+
     // Where to start drawing
     int16_t y = Y_SECTION_MARGIN;
 
@@ -477,11 +500,14 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
     // Move to drawing the rows
     y = Y_ITEM_START;
 
+<<<<<<< HEAD
     if (renderer->drawBody)
     {
         drawMenuBody(12, 42, renderer->bodyHeight, false, renderer);
     }
 
+=======
+>>>>>>> origin/main
     if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > ARROW_PERIOD_US / 2)
     {
         // Draw UP page indicator
