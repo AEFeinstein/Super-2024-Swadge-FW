@@ -41,7 +41,7 @@
 #define PLAYER_RADIUS 8
 
 //==============================================================================
-// Function Declarations
+// Const variables
 //==============================================================================
 
 const artilleryAmmoAttrib_t ammoAttributes[] = {
@@ -225,17 +225,6 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
 };
 
-const artilleryAmmoAttrib_t* getAmmoAttributes(uint16_t* numAttributes)
-{
-    *numAttributes = ARRAY_SIZE(ammoAttributes);
-    return ammoAttributes;
-}
-
-const artilleryAmmoAttrib_t* getAmmoAttribute(uint16_t idx)
-{
-    return &ammoAttributes[idx];
-}
-
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -249,6 +238,29 @@ static void findSurfacePoints(int x0, int y0, int x1, int y1, int16_t* surfacePo
 //==============================================================================
 // Functions
 //==============================================================================
+
+/**
+ * @brief TODO doc
+ *
+ * @param numAttributes
+ * @return const artilleryAmmoAttrib_t*
+ */
+const artilleryAmmoAttrib_t* getAmmoAttributes(uint16_t* numAttributes)
+{
+    *numAttributes = ARRAY_SIZE(ammoAttributes);
+    return ammoAttributes;
+}
+
+/**
+ * @brief TODO doc
+ *
+ * @param idx
+ * @return const artilleryAmmoAttrib_t*
+ */
+const artilleryAmmoAttrib_t* getAmmoAttribute(uint16_t idx)
+{
+    return &ammoAttributes[idx];
+}
 
 /**
  * @brief Initialize a physics simulation with world bounds and gravity.
@@ -381,8 +393,8 @@ void physStepBackground(physSim_t* phys)
 {
     if (phys->isReady)
     {
-        // Move the terrain
-        phys->terrainMoving = moveTerrainLines(phys, PHYS_TIME_STEP_US);
+        // Move the terrain every PHYS_TIME_STEP_US
+        phys->terrainMoving = moveTerrainLines(phys);
 
         // Clear surface points
         memset(phys->surfacePoints, 0xFF, sizeof(phys->surfacePoints));
@@ -404,8 +416,11 @@ void physStepBackground(physSim_t* phys)
                 // Assign ground color
                 int16_t minScreenX = CLAMP(pl->l.p1.x - phys->camera.x, 0, TFT_WIDTH);
                 int16_t maxScreenX = CLAMP(pl->l.p2.x - phys->camera.x, 0, TFT_WIDTH);
-                memset(&phys->surfaceColors[minScreenX], pl->isLava ? COLOR_LAVA : COLOR_GROUND,
-                       maxScreenX - minScreenX);
+                if (maxScreenX - minScreenX)
+                {
+                    memset(&phys->surfaceColors[minScreenX], pl->isLava ? COLOR_LAVA : COLOR_GROUND,
+                           maxScreenX - minScreenX);
+                }
             }
 
             // Iterate
@@ -423,6 +438,9 @@ void physStepBackground(physSim_t* phys)
  *
  * @param phys The physics simulation
  * @param elapsedUs The time elapsed since this was last called
+ * @param menuShowing true if the in-game menu is showing
+ * @param playerMoved [OUT] true if the player moves, false otherwise
+ * @param cameraMoved [OUT] true if the camera moves, false otherwise
  */
 void physStep(physSim_t* phys, int32_t elapsedUs, bool menuShowing, bool* playerMoved, bool* cameraMoved)
 {
@@ -673,6 +691,10 @@ static void checkTurnOver(physSim_t* phys)
  * @brief Draw the background of the simulation (land, sky, and void)
  *
  * @param phys The physics simulation to draw
+ * @param x0
+ * @param y0
+ * @param w
+ * @param h
  */
 void drawPhysBackground(physSim_t* phys, int16_t x0, int16_t y0, int16_t w, int16_t h)
 {
@@ -726,8 +748,10 @@ void drawPhysBackground(physSim_t* phys, int16_t x0, int16_t y0, int16_t w, int1
  * @brief Draw the outlines of physics simulation objects
  *
  * @param phys The physics simulation
- * @param players
- * @param font
+ * @param players An array of pointers to the two players
+ * @param font The font to draw the HUD with
+ * @param fontOutline The outline font to draw the HUD with
+ * @param turn The turn to draw on the HUD
  */
 void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, font_t* fontOutline, int32_t turn)
 {
@@ -967,6 +991,7 @@ void setShotPower(physCirc_t* circ, float power)
  * @param phys The physics simulation
  * @param cpu The CPU firing a shot
  * @param target The target
+ * @param difficulty The CPU's difficulty level
  */
 void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target, artilleryCpuDifficulty_t difficulty)
 {
@@ -1059,6 +1084,8 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target, artille
     }
     cpu->targetBarrelAngle = ((180 * tba) / M_PIf) + 0.5f;
 
+    // TODO add some randomness to barrel angle for CPU_EASY maybe
+
     float power = magVecFl2d(v0);
     // Shorten wallmaker shots
     if (WALL_MAKER == aa->effect)
@@ -1075,6 +1102,7 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target, artille
  * @param phys The physics simulation
  * @param player The tank which fired the shot
  * @param opponent The opposing tank
+ * @param firstShot true if this is the first shot, false if it is a consecutive shot (machine gun)
  */
 void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool firstShot)
 {
@@ -1159,7 +1187,7 @@ void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool fi
 /**
  * @brief TODO doc
  *
- * @param phys
+ * @param phys The physics simulation
  * @param numPlayers
  * @param players
  * @param colors
@@ -1199,11 +1227,13 @@ void physSpawnPlayers(physSim_t* phys, int32_t numPlayers, physCirc_t* players[]
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
- * @param phys
+ * @param phys The physics simulation
  * @param pos
  * @param barrelAngle
+ * @param baseColor
+ * @param accentColor
  * @return physCirc_t*
  */
 physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, int16_t barrelAngle, paletteColor_t baseColor,
@@ -1215,9 +1245,9 @@ physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, int16_t barrelAngle, pal
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
- * @param phys
+ * @param phys The physics simulation
  * @param elapsedUs
  */
 static void physRunAnimateTimers(physSim_t* phys, int32_t elapsedUs)

@@ -149,8 +149,9 @@ static uint8_t getSizeFromType(artilleryP2pPacketType_t type);
 //==============================================================================
 
 /**
- * @brief This typedef is for the function callback which delivers connection statuses to the Swadge mode
- * TODO doc
+ * @brief TODO doc
+ *
+ * Receive connection statuses for p2p
  *
  * @param p2p The p2pInfo
  * @param evt The connection event
@@ -198,8 +199,9 @@ void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
 }
 
 /**
- * @brief This typedef is for the function callback which delivers received p2p packets to the Swadge mode
- * TODO doc
+ * @brief TODO doc
+ *
+ * Receive a p2p packet
  *
  * @param p2p The p2pInfo
  * @param payload The data that was received
@@ -429,9 +431,9 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 }
 
 /**
- * @brief This typedef is for the function callback which delivers acknowledge status for transmitted messages to the
- * Swadge mode
- * TODO doc
+ * @brief TODO doc
+ *
+ * Receive acknowledge status for transmitted messages to the Swadge mode
  *
  * @param p2p The p2pInfo
  * @param status The status of the transmission
@@ -468,7 +470,7 @@ void artillery_p2pMsgTxCb(p2pInfo* p2p, messageStatus_t status, const uint8_t* d
 /**
  * @brief TODO doc
  *
- * @param ad
+ * @param ad All the artillery mode data
  */
 void artilleryTxColor(artilleryData_t* ad)
 {
@@ -651,7 +653,7 @@ void artilleryTxState(artilleryData_t* ad)
 /**
  * @brief TODO doc
  *
- * @param ad
+ * @param ad All the artillery mode data
  * @param player
  */
 void artilleryTxShot(artilleryData_t* ad, physCirc_t* player)

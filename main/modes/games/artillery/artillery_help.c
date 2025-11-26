@@ -92,7 +92,7 @@ static const helpPage_t helpPages2[] = {
 /**
  * @brief TODO doc
  *
- * @param ad
+ * @param ad All the artillery mode data
  */
 void artilleryHelpInit(artilleryData_t* ad)
 {
@@ -133,7 +133,7 @@ void artilleryHelpInit(artilleryData_t* ad)
 /**
  * @brief TODO doc
  *
- * @param ad
+ * @param ad All the artillery mode data
  */
 void artilleryHelpDeinit(artilleryData_t* ad)
 {
@@ -148,7 +148,7 @@ void artilleryHelpDeinit(artilleryData_t* ad)
 /**
  * @brief TODO doc
  *
- * @param ad
+ * @param ad All the artillery mode data
  * @param evt
  */
 void artilleryHelpInput(artilleryData_t* ad, buttonEvt_t* evt)
@@ -163,7 +163,7 @@ void artilleryHelpInput(artilleryData_t* ad, buttonEvt_t* evt)
 /**
  * @brief TODO doc
  *
- * @param ad
+ * @param ad All the artillery mode data
  * @param elapsedUs
  */
 void artilleryHelpLoop(artilleryData_t* ad, uint32_t elapsedUs)

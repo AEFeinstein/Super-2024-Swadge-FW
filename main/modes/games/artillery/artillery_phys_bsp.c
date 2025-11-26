@@ -129,7 +129,7 @@ static vecFl_t findZoneMedian(zone_t* zone)
         cNode = cNode->next;
     }
 
-    // Add line points ot the list
+    // Add line points to the list
     node_t* lNode = zone->lines.first;
     while (lNode)
     {

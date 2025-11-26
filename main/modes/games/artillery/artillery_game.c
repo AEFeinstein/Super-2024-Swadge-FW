@@ -398,7 +398,7 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
  *
  * @param ad All the artillery mode data
  * @param elapsedUs The time elapsed since this was last called.
- * @param stateChanged
+ * @param stateChanged True if the state changed prior to this loop and a p2p packet should be transmitted
  */
 void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool stateChanged)
 {
@@ -818,9 +818,9 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool stateChange
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
- * @param ad
+ * @param ad All the artillery mode data
  */
 void artilleryFinishTour(artilleryData_t* ad)
 {
@@ -843,6 +843,7 @@ void artilleryFinishTour(artilleryData_t* ad)
 /**
  * @brief TODO doc
  *
+ * @param ad All the artillery mode data
  */
 void artilleryPassTurn(artilleryData_t* ad)
 {
@@ -969,7 +970,7 @@ void artilleryPassTurn(artilleryData_t* ad)
 /**
  * @brief TODO doc
  *
- * @param ad
+ * @param ad All the artillery mode data
  * @return true if it is this player's turn, false otherwise
  */
 bool artilleryIsMyTurn(artilleryData_t* ad)

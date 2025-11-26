@@ -11,5 +11,5 @@ void physGenerateTerrain(physSim_t* phys, int32_t groundLevel);
 void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player);
 void physGenerateClouds(physSim_t* phys);
 bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank);
-bool moveTerrainLines(physSim_t* phys, int32_t elapsedUs);
+bool moveTerrainLines(physSim_t* phys);
 void physAddTerrainPoints(physSim_t* phys, uint16_t tIdx, const uint16_t* terrainPoints, uint16_t numTerrainPoints);

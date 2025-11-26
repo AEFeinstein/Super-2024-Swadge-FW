@@ -92,8 +92,8 @@ void updateLineProperties(physSim_t* phys, physLine_t* pl)
  * @param y1 The Y point of the center of the circle
  * @param r The radius of the circle
  * @param type The type of circle. CT_OBSTACLE is immobile, others are mobile.
- * @param baseColor
- * @param accentColor
+ * @param baseColor The circle's main color
+ * @param accentColor The circle's accent color
  * @return The circle, also saved in the argument phys
  */
 physCirc_t* physAddCircle(physSim_t* phys, uint16_t x1, uint16_t y1, uint16_t r, circType_t type,

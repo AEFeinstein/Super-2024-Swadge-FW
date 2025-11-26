@@ -31,7 +31,11 @@ void physSetCameraButton(physSim_t* phys, buttonBit_t btn)
 /**
  * @brief Move the camera according to input buttons or object tracking
  *
+ * This is run every PHYS_TIME_STEP_US
+ *
  * @param phys The physics simulation to pan
+ * @param menuShowing True if the in-game menu is showing and the camera should focus above it
+ * @return true if the camera moved, false if it didn't
  */
 bool physAdjustCameraTimer(physSim_t* phys, bool menuShowing)
 {

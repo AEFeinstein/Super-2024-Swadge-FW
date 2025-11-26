@@ -20,7 +20,7 @@ const char gg[]            = "Good Game!";
 /**
  * @brief TODO doc
  *
- * @param ad
+ * @param ad All the artillery mode data
  * @param evt
  */
 void artilleryGameOverInput(artilleryData_t* ad, buttonEvt_t* evt)
@@ -34,7 +34,7 @@ void artilleryGameOverInput(artilleryData_t* ad, buttonEvt_t* evt)
 /**
  * @brief TODO doc
  *
- * @param ad
+ * @param ad All the artillery mode data
  * @param elapsedUs
  */
 void artilleryGameOverLoop(artilleryData_t* ad, uint32_t elapsedUs)

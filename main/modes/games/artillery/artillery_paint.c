@@ -23,9 +23,9 @@ static const paletteColor_t tankPaints[][2] = {
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
- * @param ad
+ * @param ad All the artillery mode data
  */
 bool artilleryPaintLoadColor(artilleryData_t* ad)
 {
@@ -40,7 +40,7 @@ bool artilleryPaintLoadColor(artilleryData_t* ad)
 /**
  * @brief TODO doc
  *
- * @param ad
+ * @param ad All the artillery mode data
  * @param evt
  */
 void artilleryPaintInput(artilleryData_t* ad, buttonEvt_t* evt)
@@ -81,7 +81,7 @@ void artilleryPaintInput(artilleryData_t* ad, buttonEvt_t* evt)
 /**
  * @brief TODO doc
  *
- * @param ad
+ * @param ad All the artillery mode data
  * @param elapsedUs
  */
 void artilleryPaintLoop(artilleryData_t* ad, uint32_t elapsedUs)
@@ -120,7 +120,7 @@ void artilleryPaintLoop(artilleryData_t* ad, uint32_t elapsedUs)
 }
 
 /**
- * @brief TODO
+ * @brief TODO doc
  *
  * @return int32_t
  */

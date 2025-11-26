@@ -262,7 +262,7 @@ bool physAnyCollision(physSim_t* phys, physCirc_t* c)
 }
 
 /**
- * @param phys The physics simulation
+ * @brief TODO doc
  *
  * @param phys The physics simulation
  * @param pc [IN] the moving circle
