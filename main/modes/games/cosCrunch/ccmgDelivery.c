@@ -181,7 +181,7 @@ static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, fl
 
             // It's not great to hard code the tempo, but we can't retrieve it until the MIDI file has played for
             // a few frames so eh
-            globalMidiPlayerGet(MIDI_SFX)->tempo = 400000 / timeScale;
+            midiSetTempo(globalMidiPlayerGet(MIDI_SFX), 400000 / timeScale);
             break;
         }
 

@@ -279,7 +279,7 @@ static void cosCrunchEnterMode(void)
     makeOutlineFont(&cc->bigFont, &cc->bigFontOutline, false);
 
     loadMidiFile(HD_CREDITS_MID, &cc->menuBgm, true);
-    loadMidiFile(CHOWA_RACE_MID, &cc->gameBgm, true);
+    loadMidiFile(COSPLAY_CRUNCH_BGM_MID, &cc->gameBgm, true);
     loadMidiFile(FAIRY_FOUNTAIN_MID, &cc->gameOverBgm, true);
 
     cc->bgmPlayer       = globalMidiPlayerGet(MIDI_BGM);
@@ -598,7 +598,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                                 {
                                     cc->gameBgmOriginalTempo = cc->bgmPlayer->tempo;
                                 }
-                                cc->bgmPlayer->tempo = cc->gameBgmOriginalTempo / cc->timeScale;
+                                midiSetTempo(cc->bgmPlayer, cc->gameBgmOriginalTempo / cc->timeScale);
                             }
                             else
                             {
@@ -748,11 +748,15 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         }
     }
 
-    // Tempo resets when the BGM loops, so we need to write the tempo every frame while the game is active
+    // Tempo resets when the BGM loops, so re-reset it
     if ((cc->state == CC_MICROGAME_PENDING || cc->state == CC_MICROGAME_RUNNING || cc->state == CC_INTERLUDE)
         && cc->gameBgmOriginalTempo != 0)
     {
-        cc->bgmPlayer->tempo = cc->gameBgmOriginalTempo / cc->timeScale;
+        uint32_t scaledTempo = cc->gameBgmOriginalTempo / cc->timeScale;
+        if (cc->bgmPlayer->tempo != scaledTempo)
+        {
+            midiSetTempo(cc->bgmPlayer, scaledTempo);
+        }
     }
 
 #ifdef DEV_MODE_MICROGAME
