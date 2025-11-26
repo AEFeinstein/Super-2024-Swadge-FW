@@ -1,6 +1,9 @@
-/*
-@startuml
-
+/**
+ * @file artillery_p2p.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief TODO file summary
+ * @date 2025-11-26
+ * @startuml{conn_seq.png} "Connection Sequence"
 == Setup ==
 
 "Going First" -> "Going Second": artilleryTxColor(), P2P_SET_COLOR
@@ -32,9 +35,8 @@ group Optional, Repeated
     "Going First" -> "Going Second": P2P_SET_STATE
 end
 "Going First" -> "Going Second": P2P_FIRE_SHOT
-
-@enduml
-*/
+ * @enduml
+ */
 
 //==============================================================================
 // Includes
@@ -55,12 +57,20 @@ end
 // Structs
 //==============================================================================
 
+/**
+ * @brief TODO doc
+ *
+ */
 typedef struct // __attribute__((packed))
 {
     uint8_t type;
     uint8_t colorIdx;
 } artPktColor_t;
 
+/**
+ * @brief TODO doc
+ *
+ */
 typedef struct //__attribute__((packed))
 {
     uint8_t type;
@@ -77,6 +87,10 @@ typedef struct //__attribute__((packed))
     uint16_t terrainPoints[NUM_TERRAIN_POINTS_A];
 } artPktWorld_t;
 
+/**
+ * @brief TODO doc
+ *
+ */
 typedef struct //__attribute__((packed))
 {
     uint8_t type;
@@ -91,7 +105,10 @@ typedef struct //__attribute__((packed))
     uint16_t terrainPoints[NUM_TERRAIN_POINTS_B];
 } artPktTerrain_t;
 
-// This doesn't use structs for better byte packing
+/**
+ * @brief TODO doc
+ * This doesn't use structs for better byte packing
+ */
 typedef struct
 {
     uint8_t type;
@@ -101,11 +118,19 @@ typedef struct
     uint8_t r[NUM_CLOUDS * CIRC_PER_CLOUD];
 } artPktCloud_t;
 
+/**
+ * @brief TODO doc
+ *
+ */
 typedef struct
 {
     uint8_t type;
 } artPktFinishTour_t;
 
+/**
+ * @brief TODO doc
+ *
+ */
 typedef struct // __attribute__((packed))
 {
     uint8_t type;
@@ -120,6 +145,10 @@ typedef struct // __attribute__((packed))
     } players[NUM_PLAYERS];
 } artPktState_t;
 
+/**
+ * @brief TODO doc
+ *
+ */
 typedef struct // __attribute__((packed))
 {
     uint8_t type;
@@ -149,9 +178,10 @@ static uint8_t getSizeFromType(artilleryP2pPacketType_t type);
 //==============================================================================
 
 /**
- * @brief TODO doc
+ * @brief Receive connection statues for p2p
  *
- * Receive connection statuses for p2p
+ * TODO update strings
+ * TODO more when CON_LOST is received
  *
  * @param p2p The p2pInfo
  * @param evt The connection event
@@ -199,9 +229,7 @@ void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
 }
 
 /**
- * @brief TODO doc
- *
- * Receive a p2p packet
+ * @brief Receive and process a p2p packet. If the packet is not expected in the current state, it is discarded
  *
  * @param p2p The p2pInfo
  * @param payload The data that was received
@@ -431,9 +459,10 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 }
 
 /**
- * @brief TODO doc
+ * @brief Receive a TX status for a transmitted message.
+ * Start playing music after P2P_SET_WORLD is ACKed.
  *
- * Receive acknowledge status for transmitted messages to the Swadge mode
+ * TODO something if MSG_FAILED is received?
  *
  * @param p2p The p2pInfo
  * @param status The status of the transmission
@@ -468,7 +497,8 @@ void artillery_p2pMsgTxCb(p2pInfo* p2p, messageStatus_t status, const uint8_t* d
 }
 
 /**
- * @brief TODO doc
+ * @brief Enqueue the P2P_SET_COLOR packet to transmit.
+ * This packet will only be sent once.
  *
  * @param ad All the artillery mode data
  */
@@ -493,7 +523,9 @@ void artilleryTxColor(artilleryData_t* ad)
 }
 
 /**
- * @brief TODO doc
+ * @brief Enqueue the P2P_SET_WORLD, P2P_ADD_TERRAIN, and P2P_SET_CLOUDS packets to transmit
+ * the entire initial game state from one Swadge to another.
+ * These packets will only be sent once
  *
  * @param ad All the artillery mode data
  */
@@ -566,7 +598,8 @@ void artilleryTxWorld(artilleryData_t* ad)
 }
 
 /**
- * @brief TODO doc
+ * @brief Enqueue the P2P_FINISH_TOUR message to finish the tour early.
+ * This may not be used at all, but if it is, it is only sent once.
  *
  * @param ad All the artillery mode data
  */
@@ -575,19 +608,6 @@ void artilleryTxFinishTour(artilleryData_t* ad)
     if (AG_WIRELESS != ad->gameType)
     {
         return;
-    }
-
-    // Remove any other enqueued packet of this type first
-    node_t* pktNode = ad->p2pQueue.first;
-    while (pktNode)
-    {
-        node_t* pktNodeNext           = pktNode->next;
-        artilleryP2pPacketType_t type = *((uint8_t*)pktNode->val);
-        if (P2P_FINISH_TOUR == type)
-        {
-            heap_caps_free(removeEntry(&ad->p2pQueue, pktNode));
-        }
-        pktNode = pktNodeNext;
     }
 
     // Allocate a packet
@@ -601,7 +621,9 @@ void artilleryTxFinishTour(artilleryData_t* ad)
 }
 
 /**
- * @brief TODO doc
+ * @brief Enqueue the P2P_SET_STATE message for transmission (camera, players, move timer).
+ * This may be sent multiple times per turn.
+ * This will remove prior enqueued P2P_SET_STATE messages so that only the latest state is transmitted.
  *
  * @param ad All the artillery mode data
  */
@@ -651,10 +673,11 @@ void artilleryTxState(artilleryData_t* ad)
 }
 
 /**
- * @brief TODO doc
+ * @brief Enqueue the P2P_FIRE_SHOT message for transmission.
+ * This will only be sent once per turn and the turn will pass after the shot has finished.
  *
  * @param ad All the artillery mode data
- * @param player
+ * @param player The player that fired the shot
  */
 void artilleryTxShot(artilleryData_t* ad, physCirc_t* player)
 {
@@ -679,7 +702,8 @@ void artilleryTxShot(artilleryData_t* ad, physCirc_t* player)
 }
 
 /**
- * @brief TODO doc
+ * @brief Check the transmit queue for any p2p packets to send.
+ * Packets are only sent when p2p is idle
  *
  * @param ad All the artillery mode data
  */
@@ -700,10 +724,10 @@ void artilleryCheckTxQueue(artilleryData_t* ad)
 }
 
 /**
- * @brief TODO doc
+ * @brief Get the size of a p2p packet from the type of the packet
  *
- * @param type
- * @return uint8_t
+ * @param type The type of the packet
+ * @return The size of a packet of the given type
  */
 static uint8_t getSizeFromType(artilleryP2pPacketType_t type)
 {

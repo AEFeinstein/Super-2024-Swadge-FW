@@ -1,3 +1,10 @@
+/**
+ * @file artillery_phys_terrain.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief TODO file summary
+ * @date 2025-11-26
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -314,6 +321,7 @@ void physGenerateClouds(physSim_t* phys)
  * @param phys The physics simulation
  * @param shellNode The shell which exploded
  * @param hitTank The tank that was hit by the shell, may be NULL
+ * @return true if this shell caused a change that requires a packet transmission
  */
 bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
 {

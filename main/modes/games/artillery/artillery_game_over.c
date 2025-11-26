@@ -1,7 +1,15 @@
+/**
+ * @file artillery_game_over.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief A screen that shows Game Over with scores
+ * @date 2025-11-26
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
 
+#include <math.h>
 #include "artillery_game.h"
 #include "artillery_game_over.h"
 #include "artillery_paint.h"
@@ -18,13 +26,14 @@ const char gg[]            = "Good Game!";
 //==============================================================================
 
 /**
- * @brief TODO doc
+ * @brief Process button input for the Game Over screen
  *
  * @param ad All the artillery mode data
- * @param evt
+ * @param evt The button event to process
  */
 void artilleryGameOverInput(artilleryData_t* ad, buttonEvt_t* evt)
 {
+    // Everything returns to the main menu
     if (evt->down)
     {
         ad->mState = AMS_MENU;
@@ -32,10 +41,10 @@ void artilleryGameOverInput(artilleryData_t* ad, buttonEvt_t* evt)
 }
 
 /**
- * @brief TODO doc
+ * @brief Draw the game over screen with two tanks and their scores
  *
  * @param ad All the artillery mode data
- * @param elapsedUs
+ * @param elapsedUs The time since this function was last called
  */
 void artilleryGameOverLoop(artilleryData_t* ad, uint32_t elapsedUs)
 {
@@ -53,10 +62,21 @@ void artilleryGameOverLoop(artilleryData_t* ad, uint32_t elapsedUs)
     int16_t margin = (TFT_WIDTH - (4 * tankR)) / 3;
     int16_t tankY  = 141;
 
+    vecFl_t wheelOffVert = {
+        .x = 0,
+        .y = 1,
+    };
+
+    vecFl_t relBarrelTip = {
+        .x = sinf(M_PIf / 4) * tankR * 2,
+        .y = -cosf(M_PIf / 4) * tankR * 2,
+    };
+
     // Draw tanks
-    drawTank(margin + tankR, tankY, tankR, ad->gameOverData[0].baseColor, ad->gameOverData[0].accentColor, 5);
+    drawTank(margin + tankR, tankY, tankR, ad->gameOverData[0].baseColor, ad->gameOverData[0].accentColor, 5,
+             wheelOffVert, relBarrelTip);
     drawTank(TFT_WIDTH - (margin + tankR), tankY, tankR, ad->gameOverData[1].baseColor, ad->gameOverData[1].accentColor,
-             5);
+             5, wheelOffVert, relBarrelTip);
 
     // Set parameters to draw scores
     char scoreStr[64] = {0};

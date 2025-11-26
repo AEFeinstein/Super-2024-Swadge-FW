@@ -1,3 +1,10 @@
+/**
+ * @file artillery_phys.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief TODO file summary
+ * @date 2025-11-26
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -16,6 +23,7 @@
 
 #include "artillery.h"
 #include "artillery_game.h"
+#include "artillery_paint.h"
 #include "artillery_phys.h"
 #include "artillery_phys_bsp.h"
 #include "artillery_phys_camera.h"
@@ -240,10 +248,10 @@ static void findSurfacePoints(int x0, int y0, int x1, int y1, int16_t* surfacePo
 //==============================================================================
 
 /**
- * @brief TODO doc
+ * @brief Get all the ammo attributes
  *
- * @param numAttributes
- * @return const artilleryAmmoAttrib_t*
+ * @param numAttributes [OUT] The number of ammo attributes is written here
+ * @return A pointer to a list of ammo attributes
  */
 const artilleryAmmoAttrib_t* getAmmoAttributes(uint16_t* numAttributes)
 {
@@ -252,10 +260,10 @@ const artilleryAmmoAttrib_t* getAmmoAttributes(uint16_t* numAttributes)
 }
 
 /**
- * @brief TODO doc
+ * @brief Get a specific ammo's attributes
  *
- * @param idx
- * @return const artilleryAmmoAttrib_t*
+ * @param idx The index of the ammo attribute to get
+ * @return A pointer to the ammo's attributes
  */
 const artilleryAmmoAttrib_t* getAmmoAttribute(uint16_t idx)
 {
@@ -566,6 +574,7 @@ static void physFindObjDests(physSim_t* phys, float elapsedS)
  * destination.
  *
  * @param phys The physics simulation
+ * @return true if an object moved an integer amount and needs to be transmitted
  */
 static bool physBinaryMoveObjects(physSim_t* phys)
 {
@@ -691,10 +700,10 @@ static void checkTurnOver(physSim_t* phys)
  * @brief Draw the background of the simulation (land, sky, and void)
  *
  * @param phys The physics simulation to draw
- * @param x0
- * @param y0
- * @param w
- * @param h
+ * @param x0 The X position to start drawing at
+ * @param y0 The Y position to start drawing at
+ * @param w The width of the section to draw
+ * @param h The height of the section to draw
  */
 void drawPhysBackground(physSim_t* phys, int16_t x0, int16_t y0, int16_t w, int16_t h)
 {
@@ -792,62 +801,21 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, font_t
             }
         }
 
-        // Draw a gun barrel for tanks
         if (CT_TANK == pc->type)
         {
-            vecFl_t absBarrelTip = addVecFl2d(pc->c.pos, pc->relBarrelTip);
-            drawLineFast(pc->c.pos.x - phys->camera.x,    //
-                         pc->c.pos.y - phys->camera.y,    //
-                         absBarrelTip.x - phys->camera.x, //
-                         absBarrelTip.y - phys->camera.y, //
-                         aCol);
-        }
-
-        // Draw main circle
-        drawCircleFilled(pc->c.pos.x - phys->camera.x, //
-                         pc->c.pos.y - phys->camera.y, //
-                         pc->c.radius, bCol);
-
-        // Draw wheels for tanks too
-        if (CT_TANK == pc->type)
-        {
-            // and some wheels too
-            float wheelR = pc->c.radius / 2.0f;
-            float wheelY = pc->c.radius - wheelR;
-
             // Find the vector pointing from the center of the tank to the floor
-            vecFl_t wheelOffVert = mulVecFl2d(normVecFl2d(addVecFl2d(pc->contactNorm, pc->lastContactNorm)), -1);
-
-            // Rotate by 90 deg, doesn't matter which way
-            vecFl_t wheelOffHorz = {
-                .x = wheelOffVert.y,
-                .y = -wheelOffVert.x,
-            };
-
-            // Scale vectors to place the wheels
-            vecFl_t treadOff = mulVecFl2d(wheelOffVert, wheelR);
-            wheelOffVert     = mulVecFl2d(wheelOffVert, wheelY);
-            wheelOffHorz     = mulVecFl2d(wheelOffHorz, pc->c.radius);
-
-            // Draw first wheel
-            vecFl_t w1 = addVecFl2d(pc->c.pos, addVecFl2d(wheelOffVert, wheelOffHorz));
-            drawCircleFilled(w1.x - phys->camera.x, w1.y - phys->camera.y, wheelR, aCol);
-
-            // Draw second wheel
-            vecFl_t w2 = addVecFl2d(pc->c.pos, subVecFl2d(wheelOffVert, wheelOffHorz));
-            drawCircleFilled(w2.x - phys->camera.x, w2.y - phys->camera.y, wheelR, aCol);
-
-            // Draw top tread
-            drawLineFast(w1.x + treadOff.x - phys->camera.x, //
-                         w1.y + treadOff.y - phys->camera.y, //
-                         w2.x + treadOff.x - phys->camera.x, //
-                         w2.y + treadOff.y - phys->camera.y, //
-                         aCol);
-            drawLineFast(w1.x - treadOff.x - phys->camera.x, //
-                         w1.y - treadOff.y - phys->camera.y, //
-                         w2.x - treadOff.x - phys->camera.x, //
-                         w2.y - treadOff.y - phys->camera.y, //
-                         aCol);
+            // Normalize to 1.01 instead of 1.0 to avoid floating floating point 0.99999 weirdness
+            vecFl_t wheelOffVert = mulVecFl2d(normVecFl2d(addVecFl2d(pc->contactNorm, pc->lastContactNorm)), -1.01);
+            // Draw tank
+            drawTank(pc->c.pos.x - phys->camera.x, pc->c.pos.y - phys->camera.y, //
+                     pc->c.radius, bCol, aCol, 1, wheelOffVert, pc->relBarrelTip);
+        }
+        else
+        {
+            // Draw main circle
+            drawCircleFilled(pc->c.pos.x - phys->camera.x, //
+                             pc->c.pos.y - phys->camera.y, //
+                             pc->c.radius, bCol);
         }
 
         // Iterate
@@ -1185,12 +1153,12 @@ void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool fi
 }
 
 /**
- * @brief TODO doc
+ * @brief Spawn the players in the physics simulation
  *
  * @param phys The physics simulation
- * @param numPlayers
- * @param players
- * @param colors
+ * @param numPlayers The number of players to spawn
+ * @param players [OUT] An array of pointers where pointers to the players are written
+ * @param colors A list of colors base and accent for the players. Length must be 2x the number of players
  */
 void physSpawnPlayers(physSim_t* phys, int32_t numPlayers, physCirc_t* players[], paletteColor_t* colors)
 {
@@ -1227,14 +1195,14 @@ void physSpawnPlayers(physSim_t* phys, int32_t numPlayers, physCirc_t* players[]
 }
 
 /**
- * @brief TODO doc
+ * @brief Add a single player to the physics simulation. Called when a P2P_SET_WORLD packet is received
  *
  * @param phys The physics simulation
- * @param pos
- * @param barrelAngle
- * @param baseColor
- * @param accentColor
- * @return physCirc_t*
+ * @param pos The position to add the player at
+ * @param barrelAngle The player's barrel angle
+ * @param baseColor The player's base color
+ * @param accentColor The player's accent color
+ * @return The added player
  */
 physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, int16_t barrelAngle, paletteColor_t baseColor,
                           paletteColor_t accentColor)
@@ -1245,10 +1213,12 @@ physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, int16_t barrelAngle, pal
 }
 
 /**
- * @brief TODO doc
+ * @brief Run animation timers for explosions, lava, and LEDs
+ *
+ * deadEyeTimer is handled in artilleryMainLoop() because eyes are displayed on non-game screens
  *
  * @param phys The physics simulation
- * @param elapsedUs
+ * @param elapsedUs The time since this function was last called
  */
 static void physRunAnimateTimers(physSim_t* phys, int32_t elapsedUs)
 {

@@ -151,6 +151,10 @@ typedef enum
 // Physics Structs
 //==============================================================================
 
+/**
+ * @brief TODO doc
+ *
+ */
 typedef struct
 {
     float x0;
@@ -159,6 +163,10 @@ typedef struct
     float y1;
 } aabb_t;
 
+/**
+ * @brief TODO doc
+ *
+ */
 typedef struct
 {
     paletteColor_t color;
@@ -176,6 +184,10 @@ typedef struct
 
 struct _physCirc_t;
 
+/**
+ * @brief TODO doc
+ *
+ */
 typedef struct _physCirc_t
 {
     // Position
@@ -231,6 +243,10 @@ typedef struct _physCirc_t
     struct _physCirc_t* homingTarget;
 } physCirc_t;
 
+/**
+ * @brief TODO doc
+ *
+ */
 typedef struct
 {
     uint32_t zonemask;
@@ -242,6 +258,10 @@ typedef struct
     bool isLava;
 } physLine_t;
 
+/**
+ * @brief TODO doc
+ *
+ */
 typedef struct
 {
     circleFl_t circ;
@@ -250,6 +270,10 @@ typedef struct
     int32_t ttlUs;
 } explosionAnim_t;
 
+/**
+ * @brief TODO doc
+ *
+ */
 typedef struct
 {
     bool isReady;
@@ -284,6 +308,10 @@ typedef struct
 // Structs
 //==============================================================================
 
+/**
+ * @brief TODO doc
+ *
+ */
 typedef struct
 {
     int32_t score;
@@ -292,6 +320,10 @@ typedef struct
     bool isPlayer;
 } artilleryGameOverData_t;
 
+/**
+ * @brief TODO doc
+ *
+ */
 typedef struct
 {
     artilleryGameType_t gameType;

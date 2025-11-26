@@ -1,3 +1,10 @@
+/**
+ * @file artillery_help.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief Display help pages for Vector Tanks
+ * @date 2025-11-26
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -90,7 +97,7 @@ static const helpPage_t helpPages2[] = {
 //==============================================================================
 
 /**
- * @brief TODO doc
+ * @brief Initialize the help pages. This combines the help pages written here and ammo notes
  *
  * @param ad All the artillery mode data
  */
@@ -131,13 +138,18 @@ void artilleryHelpInit(artilleryData_t* ad)
 }
 
 /**
- * @brief TODO doc
+ * @brief Free data for the help pages
  *
  * @param ad All the artillery mode data
  */
 void artilleryHelpDeinit(artilleryData_t* ad)
 {
-    deinitHelpScreen(ad->help);
+    if (ad->help)
+    {
+        deinitHelpScreen(ad->help);
+        ad->help = NULL;
+    }
+
     if (ad->helpPages)
     {
         heap_caps_free(ad->helpPages);
@@ -146,13 +158,14 @@ void artilleryHelpDeinit(artilleryData_t* ad)
 }
 
 /**
- * @brief TODO doc
+ * @brief Process input for the help pages
  *
  * @param ad All the artillery mode data
- * @param evt
+ * @param evt The button event to process
  */
 void artilleryHelpInput(artilleryData_t* ad, buttonEvt_t* evt)
 {
+    // Scrolls left and right
     if (buttonHelp(ad->help, evt))
     {
         // Exit the help menu
@@ -161,10 +174,10 @@ void artilleryHelpInput(artilleryData_t* ad, buttonEvt_t* evt)
 }
 
 /**
- * @brief TODO doc
+ * @brief Draw the help pages
  *
  * @param ad All the artillery mode data
- * @param elapsedUs
+ * @param elapsedUs The time since this function was last called
  */
 void artilleryHelpLoop(artilleryData_t* ad, uint32_t elapsedUs)
 {

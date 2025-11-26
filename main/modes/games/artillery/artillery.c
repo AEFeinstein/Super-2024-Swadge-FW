@@ -1,3 +1,10 @@
+/**
+ * @file artillery.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief TODO file summary
+ * @date 2025-11-26
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -41,8 +48,6 @@ bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value);
 //==============================================================================
 // Const Variables
 //==============================================================================
-
-const char ART_TAG[] = "ART";
 
 const char str_load_ammo[]   = "Load Ammo";
 const char str_drive[]       = "Drive";
@@ -759,7 +764,7 @@ void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
     if (generateTerrain)
     {
         // Initialize players, including flattening terrain under them
-        paletteColor_t colors[4];
+        paletteColor_t colors[NUM_PLAYERS * 2];
         if (gameType == AG_WIRELESS)
         {
             artilleryGetTankColors(ad->theirColorIdx, &colors[0], &colors[1]);

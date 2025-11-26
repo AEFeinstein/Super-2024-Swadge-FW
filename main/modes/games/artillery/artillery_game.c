@@ -1,3 +1,10 @@
+/**
+ * @file artillery_game.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief TODO file summary
+ * @date 2025-11-26
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -818,7 +825,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool stateChange
 }
 
 /**
- * @brief TODO doc
+ * @brief Finish the terrain tour early by clearing all camera points to visit moving to the next game state
  *
  * @param ad All the artillery mode data
  */
@@ -841,7 +848,10 @@ void artilleryFinishTour(artilleryData_t* ad)
 }
 
 /**
- * @brief TODO doc
+ * @brief Pass the turn to the next player.
+ * Check if a tank is in lava at the beginning of a turn.
+ * Check if all the turns have been taken and the game is over.
+ * Check if any trophies are won at the end of a game.
  *
  * @param ad All the artillery mode data
  */
@@ -872,6 +882,7 @@ void artilleryPassTurn(artilleryData_t* ad)
             midiGmOn(globalMidiPlayerGet(MIDI_SFX));
             midiPause(globalMidiPlayerGet(MIDI_SFX), false);
 
+            // Assign who is P1 and P2 and check for any trophies won at the end of the game
             bool isP1 = true;
             switch (ad->gameType)
             {
@@ -900,6 +911,7 @@ void artilleryPassTurn(artilleryData_t* ad)
                 }
             }
 
+            // Set up data to display on the game over screen
             ad->gameOverData[0].score       = ad->players[0]->score;
             ad->gameOverData[0].baseColor   = ad->players[0]->baseColor;
             ad->gameOverData[0].accentColor = ad->players[0]->accentColor;
@@ -968,7 +980,8 @@ void artilleryPassTurn(artilleryData_t* ad)
 }
 
 /**
- * @brief TODO doc
+ * @brief Return true if this turn requires human input.
+ * This is always true for AG_PASS_AND_PLAY (all human input) but not for AG_CPU_PRACTICE or AG_WIRELESS.
  *
  * @param ad All the artillery mode data
  * @return true if it is this player's turn, false otherwise
