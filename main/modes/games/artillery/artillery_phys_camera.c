@@ -58,7 +58,7 @@ bool physAdjustCameraTimer(physSim_t* phys, bool menuShowing)
         };
 
         // Move camera a fraction of the way to desired camera
-        phys->camera = addVec2d(phys->camera, divVec2d(subVec2d(target, phys->camera), 48));
+        phys->camera = addVec2d(phys->camera, divVec2d(subVec2d(target, phys->camera), 24));
 
         // If the camera is close enough to the destination
         if (ABS(phys->camera.x - target.x) < 64 && //
