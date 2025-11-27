@@ -18,8 +18,11 @@
 // Static Const Variables
 //==============================================================================
 
-const char gameOverTitle[] = "Game Over";
-const char gg[]            = "Good Game!";
+static const char str_gameOver[] = "Game Over";
+static const char str_gg[]       = "Good Game!";
+static const char str_win[]      = "You win!";
+static const char str_lose[]     = "Tough loss";
+static const char str_draw[]     = "Call it a draw";
 
 //==============================================================================
 // Functions
@@ -49,13 +52,53 @@ void artilleryGameOverInput(artilleryData_t* ad, buttonEvt_t* evt)
 void artilleryGameOverLoop(artilleryData_t* ad, uint32_t elapsedUs)
 {
     // Set title and draw background
-    ad->blankMenu->title = gameOverTitle;
+    ad->blankMenu->title = str_gameOver;
     drawMenuMega(ad->blankMenu, ad->mRenderer, elapsedUs);
 
     // Draw a top string
-    // TODO adjust for CPU & P2P win/loss, but not pass-and-play
+    const char* title = str_gg;
+    switch (ad->gameType)
+    {
+        default:
+        case AG_PASS_AND_PLAY:
+        {
+            title = str_gg;
+            break;
+        }
+        case AG_CPU_PRACTICE:
+        case AG_WIRELESS:
+        {
+            int32_t thisScore  = 0;
+            int32_t otherScore = 0;
+            if (ad->gameOverData[0].isPlayer)
+            {
+                thisScore  = ad->gameOverData[0].score;
+                otherScore = ad->gameOverData[1].score;
+            }
+            else
+            {
+                thisScore  = ad->gameOverData[1].score;
+                otherScore = ad->gameOverData[0].score;
+            }
+
+            if (thisScore > otherScore)
+            {
+                title = str_win;
+            }
+            else if (thisScore < otherScore)
+            {
+                title = str_lose;
+            }
+            else
+            {
+                title = str_draw;
+            }
+            break;
+        }
+    }
     font_t* font = ad->mRenderer->menuFont;
-    drawTextShadow(font, COLOR_TEXT, COLOR_TEXT_SHADOW, gg, (TFT_WIDTH - textWidth(font, gg)) / 2, 66);
+
+    drawTextShadow(font, COLOR_TEXT, COLOR_TEXT_SHADOW, title, (TFT_WIDTH - textWidth(font, title)) / 2, 66);
 
     // Set parameters to draw tanks
     int16_t tankR  = 30;
