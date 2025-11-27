@@ -603,12 +603,10 @@ static bool physBinaryMoveObjects(physSim_t* phys)
                 // If the final destination isn't valid, binary search
                 bool collision = true;
 
-                // TODO pick a better number?
+                // Iterating five times is fine for performance
                 int32_t numIter = 5;
-                while (numIter)
+                while (numIter--)
                 {
-                    numIter--;
-
                     // Set circle to the midpoint of the travel line
                     pc->c.pos = divVecFl2d(addVecFl2d(pc->travelLine.p1, pc->travelLine.p2), 2);
                     updateCircleProperties(phys, pc);

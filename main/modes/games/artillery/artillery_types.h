@@ -367,6 +367,8 @@ typedef struct
     list_t p2pQueue;
     artilleryP2pPacketType_t expectedPacket;
     artilleryP2pPacketType_t lastTxType;
+    int32_t connSpinTimer;
+    float connBarrelAngle;
 
     // Variables for tank colors
     int32_t paintArrowBlinkTimer;

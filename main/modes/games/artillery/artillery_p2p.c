@@ -146,9 +146,8 @@ typedef struct
 // Const Variables
 //==============================================================================
 
-const char str_conStarted[]     = "Searching for Swadge";
-const char str_conRxAck[]       = "RX Game Start Ack";
-const char str_conRxMsg[]       = "RX Game Start Msg";
+const char str_conStarted[]     = "Hold close to another Swadge to pair";
+const char str_conProgress[]    = "Connection in Progress";
 const char str_conEstablished[] = "Connection Ready";
 const char str_conLost[]        = "Connection Lost";
 
@@ -165,9 +164,6 @@ static uint8_t getSizeFromType(artilleryP2pPacketType_t type);
 /**
  * @brief Receive connection statues for p2p
  *
- * TODO update strings
- * TODO more when CON_LOST is received
- *
  * @param p2p The p2pInfo
  * @param evt The connection event
  */
@@ -183,12 +179,12 @@ void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
         }
         case RX_GAME_START_ACK:
         {
-            ad->conStr = str_conRxAck;
+            ad->conStr = str_conProgress;
             break;
         }
         case RX_GAME_START_MSG:
         {
-            ad->conStr = str_conRxMsg;
+            ad->conStr = str_conProgress;
             break;
         }
         case CON_ESTABLISHED:
@@ -206,8 +202,9 @@ void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
         case CON_LOST:
         default:
         {
+            // This goes back and displays the connection lost string
             ad->conStr = str_conLost;
-            ad->mState = AMS_MENU;
+            ad->mState = AMS_CONNECTING;
             break;
         }
     }

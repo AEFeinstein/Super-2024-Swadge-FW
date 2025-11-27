@@ -395,10 +395,22 @@ void artilleryMainLoop(int64_t elapsedUs)
             }
             case AMS_CONNECTING:
             {
-                if (evt.down && PB_B == evt.button)
+                if (evt.down)
                 {
-                    // Cancel the connection
-                    p2pRestart(&ad->p2p);
+                    // If connection is not active (i.e. showing "Connection Lost"),
+                    // any button returns to the menu
+                    if (!ad->p2p.cnc.isActive)
+                    {
+                        ad->mState = AMS_MENU;
+                    }
+                    // If a connection is active, A and B buttons cancel it
+                    else if (PB_A == evt.button || PB_B == evt.button)
+                    {
+                        // Cancel the connection
+                        p2pRestart(&ad->p2p);
+                        // Go right back to the main menu, don't show "Connection Lost"
+                        ad->mState = AMS_MENU;
+                    }
                 }
                 break;
             }
@@ -439,10 +451,51 @@ void artilleryMainLoop(int64_t elapsedUs)
             drawMenuMega(ad->blankMenu, ad->mRenderer, elapsedUs);
 
             // Draw connection text
-            font_t* f      = ad->mRenderer->menuFont;
-            int16_t tWidth = textWidth(f, ad->conStr) + 1;
-            drawTextShadow(f, COLOR_TEXT, COLOR_TEXT_SHADOW, ad->conStr, (TFT_WIDTH - tWidth) / 2,
-                           135 - (f->height / 2));
+            font_t* f = ad->mRenderer->menuFont;
+
+            // Shadow first
+            int16_t margin = 20;
+            int16_t xOff   = 20 + margin + 1;
+            int16_t yOff   = 54 + margin + 1;
+            drawTextWordWrapCentered(f, COLOR_TEXT_SHADOW, ad->conStr, &xOff, &yOff, TFT_WIDTH - 20 - margin + 1,
+                                     TFT_HEIGHT - 23 - margin + 1);
+
+            // Then text
+            xOff = 20 + margin;
+            yOff = 54 + margin;
+            drawTextWordWrapCentered(f, COLOR_TEXT, ad->conStr, &xOff, &yOff, TFT_WIDTH - 20 - margin,
+                                     TFT_HEIGHT - 23 - margin);
+
+            // Draw a tank. Get the colors first
+            paletteColor_t base;
+            paletteColor_t accent;
+            artilleryGetTankColors(ad->myColorIdx, &base, &accent);
+
+            // Spin the tank every two seconds
+            RUN_TIMER_EVERY(ad->connSpinTimer, 5555, elapsedUs, {
+                ad->connBarrelAngle += (M_PIf / 180.0f);
+                if (ad->connBarrelAngle > 2 * M_PIf)
+                {
+                    ad->connBarrelAngle -= 2 * M_PIf;
+                }
+            });
+
+            // Wheels spin around
+            vecFl_t wheelOffVert = {
+                .x = sinf(ad->connBarrelAngle),
+                .y = -cosf(ad->connBarrelAngle),
+            };
+
+            // Calculate where the barrel tip is
+            const float radius       = 20;
+            const float barrelOffset = M_PIf + (M_PIf / 4.0f);
+            vecFl_t relBarrelTip     = {
+                    .x = sinf(ad->connBarrelAngle + barrelOffset) * radius * 2,
+                    .y = -cosf(ad->connBarrelAngle + barrelOffset) * radius * 2,
+            };
+
+            // Actually draw the tank
+            drawTank(TFT_WIDTH / 2, TFT_HEIGHT - 54, radius, base, accent, 3, wheelOffVert, relBarrelTip);
 
             // Check for packets to transmit
             artilleryCheckTxQueue(ad);
