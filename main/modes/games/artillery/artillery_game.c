@@ -85,33 +85,39 @@ void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newSta
         case AGS_CPU_MOVE:
         {
             // Pick a random direction for the CPU to move
+            bool shouldMove = false;
             switch (ad->cpu)
             {
                 case CPU_EASY:
                 {
-                    // No movement for easy CPU
-                    artillerySwitchToGameState(ad, AGS_CPU_ADJUST);
-                    return;
+                    // Easy moves every fourth turn
+                    shouldMove = (0 == ad->turn % 4);
+                    break;
                 }
                 case CPU_MEDIUM:
                 {
                     // Medium moves every other turn
-                    if (0 == ad->turn % 2)
-                    {
-                        artillerySwitchToGameState(ad, AGS_CPU_ADJUST);
-                        return;
-                    }
-                }
-                // fallthrough
-                case CPU_HARD:
-                {
-                    // Random movement
-                    if ((AGS_CPU_MOVE == ad->gState) && (0 == ad->players[ad->plIdx]->moving))
-                    {
-                        ad->players[ad->plIdx]->moving = (esp_random() & 0x01) ? PB_LEFT : PB_RIGHT;
-                    }
+                    shouldMove = (0 == ad->turn % 2);
                     break;
                 }
+                case CPU_HARD:
+                {
+                    // Hard moves every turn
+                    shouldMove = true;
+                    break;
+                }
+            }
+
+            // If the CPU should move, or is in lava
+            if (shouldMove || ad->players[ad->plIdx]->lavaAnimTimer)
+            {
+                // Random movement
+                ad->players[ad->plIdx]->moving = (esp_random() & 0x01) ? PB_LEFT : PB_RIGHT;
+            }
+            else
+            {
+                // Adjust the shot
+                artillerySwitchToGameState(ad, AGS_CPU_ADJUST);
             }
             break;
         }
