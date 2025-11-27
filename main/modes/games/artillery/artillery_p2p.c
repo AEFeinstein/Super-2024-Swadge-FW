@@ -444,8 +444,6 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
  * @brief Receive a TX status for a transmitted message.
  * Start playing music after P2P_SET_WORLD is ACKed.
  *
- * TODO something if MSG_FAILED is received?
- *
  * @param p2p The p2pInfo
  * @param status The status of the transmission
  * @param data The data that was transmitted
@@ -475,6 +473,12 @@ void artillery_p2pMsgTxCb(p2pInfo* p2p, messageStatus_t status, const uint8_t* d
                 break;
             }
         }
+    }
+    else
+    {
+        // Message failed to transmit. Exit and display the connection lost string
+        getArtilleryData()->conStr = str_conLost;
+        getArtilleryData()->mState = AMS_CONNECTING;
     }
 }
 

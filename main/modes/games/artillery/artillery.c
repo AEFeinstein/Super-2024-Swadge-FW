@@ -339,6 +339,7 @@ void artilleryExitMode(void)
 {
     // Deinit physics
     deinitPhys(ad->phys);
+    ad->phys = NULL;
 
     // Deinit help menu
     artilleryHelpDeinit(ad);
@@ -812,6 +813,10 @@ void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
     ad->gameType = gameType;
 
     // Initialize physics, including terrain
+    if (NULL != ad->phys)
+    {
+        deinitPhys(ad->phys);
+    }
     ad->phys = initPhys(WORLD_WIDTH, WORLD_HEIGHT, GROUND_LEVEL, DEFAULT_GRAV_X, DEFAULT_GRAV_Y, generateTerrain);
 
     if (generateTerrain)
