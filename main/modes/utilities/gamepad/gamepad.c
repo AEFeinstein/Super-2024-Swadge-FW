@@ -671,7 +671,7 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
 
         // Display controller state on Eye LED arrays
         uint8_t bitmap[EYE_LED_H][EYE_LED_W] = {0};
-        uint8_t btnBrightness = 0;
+        uint8_t btnBrightness                = 0;
 
         switch (gamepad->gamepadType)
         {
@@ -683,7 +683,6 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                     break;
                 }
 
-                
                 bitmap[5][0]  = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_TL) ? EYE_LED_BRIGHT : 0;
                 bitmap[5][5]  = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_TL2) ? EYE_LED_BRIGHT : 0;
                 bitmap[5][6]  = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_TR2) ? EYE_LED_BRIGHT : 0;
