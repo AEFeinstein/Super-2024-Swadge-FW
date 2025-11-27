@@ -782,7 +782,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool stateChange
                     if (cpu->targetBarrelAngle < 0)
                     {
                         // Calculate the shot
-                        adjustCpuShot(ad->phys, cpu, ad->players[(ad->plIdx + 1) % NUM_PLAYERS], ad->cpu);
+                        adjustCpuShot(ad->phys, cpu, ad->players[(ad->plIdx + 1) % NUM_PLAYERS], ad->cpu, ad->turn);
 
                         // Round power and angle, to be fair
                         cpu->shotPower

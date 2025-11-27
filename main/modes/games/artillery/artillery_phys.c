@@ -958,8 +958,10 @@ void setShotPower(physCirc_t* circ, float power)
  * @param cpu The CPU firing a shot
  * @param target The target
  * @param difficulty The CPU's difficulty level
+ * @param turn The current turn
  */
-void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target, artilleryCpuDifficulty_t difficulty)
+void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target, artilleryCpuDifficulty_t difficulty,
+                   int32_t turn)
 {
     const artilleryAmmoAttrib_t* aa = getAmmoAttribute(cpu->ammoIdx);
 
@@ -1050,7 +1052,30 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target, artille
     }
     cpu->targetBarrelAngle = ((180 * tba) / M_PIf) + 0.5f;
 
-    // TODO add some randomness to barrel angle for CPU_EASY maybe
+    // Add some randomness to barrel angle depending on difficulty and turn
+    int32_t randBound = 0;
+    switch (difficulty)
+    {
+        case CPU_EASY:
+        {
+            // Easy gets more accurate every other turn
+            randBound = (MAX_TURNS - turn) / 2;
+            break;
+        }
+        case CPU_MEDIUM:
+        {
+            // Medium gets more accurate every fourth turn
+            randBound = (MAX_TURNS - turn) / 4;
+            break;
+        }
+        case CPU_HARD:
+        {
+            // Hard is always accurate
+            randBound = 0;
+            break;
+        }
+    }
+    cpu->targetBarrelAngle += ((esp_random() % (randBound * 2 + 1)) - randBound);
 
     float power = magVecFl2d(v0);
     // Shorten wallmaker shots

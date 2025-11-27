@@ -40,7 +40,8 @@ void setBarrelAngle(physCirc_t* circ, int16_t angle);
 void setShotPower(physCirc_t* circ, float power);
 void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool firstShot);
 
-void adjustCpuShot(physSim_t* ad, physCirc_t* cpu, physCirc_t* target, artilleryCpuDifficulty_t difficulty);
+void adjustCpuShot(physSim_t* ad, physCirc_t* cpu, physCirc_t* target, artilleryCpuDifficulty_t difficulty,
+                   int32_t turn);
 
 const artilleryAmmoAttrib_t* getAmmoAttributes(uint16_t* numAttributes);
 const artilleryAmmoAttrib_t* getAmmoAttribute(uint16_t idx);
