@@ -428,7 +428,7 @@ static void swadgeItEnterMode(void)
     {
         si->sfx[i].samples = readHeatshrinkFile(siEvtData[i].sfx_fidx, &si->sfx[i].len, true);
     }
-    si->scream.samples = readHeatshrinkFile(WILHELM_RAW, &si->scream.len, true);
+    si->scream.samples = readHeatshrinkFile(DAC_SCREAM_RAW, &si->scream.len, true);
 
     // Load all images
     for (int8_t i = 0; i < ARRAY_SIZE(si->img); i++)
