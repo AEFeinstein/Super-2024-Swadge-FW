@@ -7,10 +7,6 @@
 // Defines
 //==============================================================================
 
-#ifndef M_PIf
-    #define M_PIf ((float)M_PI)
-#endif
-
 #define TANK_MOVE_TIME_US 3000000
 
 #define PHYS_FPS          40

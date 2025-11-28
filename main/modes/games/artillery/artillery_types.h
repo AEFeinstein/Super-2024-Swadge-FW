@@ -46,6 +46,10 @@
 #define CIRC_PER_CLOUD 3
 #define NUM_CLOUDS     (CLOUD_ROWS * CLOUD_COLS)
 
+#ifndef M_PIf
+    #define M_PIf ((float)M_PI)
+#endif
+
 //==============================================================================
 // Physics Enums
 //==============================================================================

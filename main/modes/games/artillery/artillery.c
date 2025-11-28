@@ -315,21 +315,7 @@ void artilleryEnterMode(void)
     midiGmOn(globalMidiPlayerGet(MIDI_SFX));
     midiPause(globalMidiPlayerGet(MIDI_SFX), false);
 
-    // Write ch32 assets
-    ch32v003WriteBitmapAsset(EYES_CC, EYES_DEFAULT_GS);
-    ch32v003WriteBitmapAsset(EYES_UL, EYES_UL_GS);
-    ch32v003WriteBitmapAsset(EYES_UC, EYES_UC_GS);
-    ch32v003WriteBitmapAsset(EYES_UR, EYES_UR_GS);
-    ch32v003WriteBitmapAsset(EYES_CR, EYES_CR_GS);
-    ch32v003WriteBitmapAsset(EYES_DR, EYES_DR_GS);
-    ch32v003WriteBitmapAsset(EYES_DC, EYES_DC_GS);
-    ch32v003WriteBitmapAsset(EYES_DL, EYES_DL_GS);
-    ch32v003WriteBitmapAsset(EYES_CL, EYES_CL_GS);
-    ch32v003WriteBitmapAsset(EYES_DEAD, EYES_DEAD_GS);
-
-    // Start idle
-    ad->eyeSlot = EYES_CC;
-    ch32v003SelectBitmap(ad->eyeSlot);
+    ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
 }
 
 /**
@@ -803,6 +789,22 @@ void openAmmoMenu(void)
  */
 void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
 {
+    // Write ch32 assets
+    ch32v003WriteBitmapAsset(EYES_CC, EYES_DEFAULT_GS);
+    ch32v003WriteBitmapAsset(EYES_UL, EYES_UL_GS);
+    ch32v003WriteBitmapAsset(EYES_UC, EYES_UC_GS);
+    ch32v003WriteBitmapAsset(EYES_UR, EYES_UR_GS);
+    ch32v003WriteBitmapAsset(EYES_CR, EYES_CR_GS);
+    ch32v003WriteBitmapAsset(EYES_DR, EYES_DR_GS);
+    ch32v003WriteBitmapAsset(EYES_DC, EYES_DC_GS);
+    ch32v003WriteBitmapAsset(EYES_DL, EYES_DL_GS);
+    ch32v003WriteBitmapAsset(EYES_CL, EYES_CL_GS);
+    ch32v003WriteBitmapAsset(EYES_DEAD, EYES_DEAD_GS);
+
+    // Start idle
+    ad->eyeSlot = EYES_CC;
+    ch32v003SelectBitmap(ad->eyeSlot);
+
     // For non-wireless games, pick a random color that's not the player's
     if (gameType != AG_WIRELESS)
     {

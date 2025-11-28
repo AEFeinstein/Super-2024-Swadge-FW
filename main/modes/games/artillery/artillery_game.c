@@ -888,6 +888,9 @@ void artilleryPassTurn(artilleryData_t* ad)
             midiGmOn(globalMidiPlayerGet(MIDI_SFX));
             midiPause(globalMidiPlayerGet(MIDI_SFX), false);
 
+            // Return eyes to blinking
+            ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
+
             // Assign who is P1 and P2 and check for any trophies won at the end of the game
             bool isP1 = true;
             switch (ad->gameType)
