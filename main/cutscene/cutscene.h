@@ -7,6 +7,8 @@
 #include "hdw-btn.h"
 #include "font.h"
 #include "cnfs_image.h"
+#include "wsg.h"
+
 
 /**
  * @brief A callback which is called when this cutscene concludes. Use it to unpause your game loop.
@@ -46,10 +48,13 @@ typedef struct
     uint8_t blinkTimer; ///< Increments and overflows to make the next graphic blink.
     bool a_down;        ///< True when the a button is held.
     uint8_t yOffset;    ///< Decrements to slide the character portait in from below.
+    wsg_t* sprite;      ///< The sprite rendered behind the text.
 } cutscene_t;
 
 cutscene_t* initCutscene(cutsceneCb cbFunc) __attribute__((warn_unused_result));
 void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t color, cnfsFileIdx_t spriteIdx, uint8_t numPoseVariations);
-void addCutsceneLine(cutscene_t* cutscene, char* title, char* body);
+void addCutsceneLine(cutscene_t* cutscene, char* title, char* body, uint8_t styleIdx);
 void updateCutscene(cutscene_t* cutscene);
 void drawCutscene(cutscene_t* cutscene, font_t* font);
+
+#endif
