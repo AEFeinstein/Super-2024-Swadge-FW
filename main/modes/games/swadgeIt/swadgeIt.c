@@ -189,7 +189,7 @@ static const char SI_MEMORY_HS_SP_KEY[]   = "si_m_hs_sp";
 
 static const char swadgeItStrPress[] = "Press it!";
 static const char swadgeItStrShake[] = "Shake it!";
-static const char swadgeItStrShout[] = "Shout it!";
+static const char swadgeItStrBlow[] = "Blow it!";
 static const char swadgeItStrSwirl[] = "Swirl it!";
 
 /** Must match order of swadgeItEvt_t */
@@ -215,8 +215,8 @@ const swadgeItEvtData_t siEvtData[] = {
         .imgPos   = {.x = 20, .y = 0},
     },
     {
-        .sfx_fidx = SHOUT_IT_RAW,
-        .label    = swadgeItStrShout,
+        .sfx_fidx = BLOW_IT_RAW,
+        .label    = swadgeItStrBlow,
         .bgColor  = c444,
         .txColor  = c000,
         .ledColor = {.r = 0xCC, .g = 0xCC, .b = 0xCC},
@@ -291,8 +291,8 @@ static const helpPage_t siHelpPages[] = {
         .text  = "To Shake It! give the Swadge one good shake. Don't overdo it.",
     },
     {
-        .title = swadgeItStrShout,
-        .text  = "To Shout It! shout into the microphone. Blowing on it works well too.",
+        .title = swadgeItStrBlow,
+        .text  = "To Blow It! blow into the microphone. Blowing on it works well too.",
     },
     {
         .title = swadgeItStrSwirl,
