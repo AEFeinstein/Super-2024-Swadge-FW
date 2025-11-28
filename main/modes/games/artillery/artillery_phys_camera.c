@@ -137,40 +137,52 @@ bool physAdjustCameraTimer(physSim_t* phys, bool menuShowing)
             ctNode = ctNode->next;
         }
 
-        // Adjust viewbox to be inside the camera margin
-        vbStart.x -= CAMERA_MARGIN;
-        vbStart.y -= CAMERA_MARGIN;
-        vbEnd.x -= (TFT_WIDTH - CAMERA_MARGIN);
-        if (menuShowing)
-        {
-            vbEnd.y -= 110;
-        }
-        else
-        {
-            vbEnd.y -= (TFT_HEIGHT - CAMERA_MARGIN);
-        }
-
         // Desired camera starts as the current camera
         vec_t desiredCamera = phys->camera;
 
-        // Adjust the desired camera so that it contains the viewbox (X)
-        if (desiredCamera.x > vbStart.x)
+        // If the entire viewbox fits on screen
+        if ((vbEnd.x - vbStart.x < TFT_WIDTH - (2 * CAMERA_MARGIN))
+            && (vbEnd.y - vbStart.y < TFT_HEIGHT - (2 * CAMERA_MARGIN)))
         {
-            desiredCamera.x = vbStart.x;
-        }
-        else if (desiredCamera.x < vbEnd.x)
-        {
-            desiredCamera.x = vbEnd.x;
-        }
+            // Adjust viewbox to be inside the camera margin
+            vbStart.x -= CAMERA_MARGIN;
+            vbStart.y -= CAMERA_MARGIN;
+            vbEnd.x -= (TFT_WIDTH - CAMERA_MARGIN);
+            if (menuShowing)
+            {
+                vbEnd.y -= 110;
+            }
+            else
+            {
+                vbEnd.y -= (TFT_HEIGHT - CAMERA_MARGIN);
+            }
 
-        // Adjust the desired camera so that it contains the viewbox (Y)
-        if (desiredCamera.y > vbStart.y)
-        {
-            desiredCamera.y = vbStart.y;
+            // Adjust the desired camera so that it contains the viewbox (X)
+            if (desiredCamera.x > vbStart.x)
+            {
+                desiredCamera.x = vbStart.x;
+            }
+            else if (desiredCamera.x < vbEnd.x)
+            {
+                desiredCamera.x = vbEnd.x;
+            }
+
+            // Adjust the desired camera so that it contains the viewbox (Y)
+            if (desiredCamera.y > vbStart.y)
+            {
+                desiredCamera.y = vbStart.y;
+            }
+            else if (desiredCamera.y < vbEnd.y)
+            {
+                desiredCamera.y = vbEnd.y;
+            }
         }
-        else if (desiredCamera.y < vbEnd.y)
+        else
         {
-            desiredCamera.y = vbEnd.y;
+            // Viewbox is bigger than screen, just center it
+            desiredCamera = divVec2d(addVec2d(vbEnd, vbStart), 2);
+            desiredCamera.x -= (TFT_WIDTH / 2);
+            desiredCamera.y -= (TFT_HEIGHT / 2);
         }
 
         // Move camera a third of the way to desired camera
