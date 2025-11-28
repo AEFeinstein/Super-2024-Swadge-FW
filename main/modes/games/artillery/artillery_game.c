@@ -900,7 +900,10 @@ void artilleryPassTurn(artilleryData_t* ad)
                     isP1 = true;
                     if (ad->players[0]->score > ad->players[1]->score)
                     {
-                        trophyUpdate(&artilleryTrophies[AT_SKYNET], true, true);
+                        if (CPU_HARD == ad->cpu)
+                        {
+                            trophyUpdate(&artilleryTrophies[AT_SKYNET], true, true);
+                        }
                     }
                     break;
                 }

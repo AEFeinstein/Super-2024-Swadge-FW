@@ -145,7 +145,7 @@ const trophyData_t artilleryTrophies[] = {
     {
         // Skynet
         .title       = "Take That Skynet",
-        .description = "You defeated the CPU player",
+        .description = "You defeated the hard CPU player",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_HARD,
