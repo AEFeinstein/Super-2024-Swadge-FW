@@ -1425,9 +1425,9 @@ void drawCircleFilled(int xm, int ym, int r, paletteColor_t col)
             // Find where X starts and ends on this row, clamped to the display
             int xMin   = xm + x;
             xMin       = CLAMP(xMin, 0, TFT_WIDTH);
-            int xMax   = xm - x;
+            int xMax   = xm - x + 1;
             xMax       = CLAMP(xMax, 0, TFT_WIDTH);
-            int xWidth = xMax - xMin + 1;
+            int xWidth = xMax - xMin;
 
             // Fill a row of the lower half of the circle, if on screen
             int ymp = (ym + y);
