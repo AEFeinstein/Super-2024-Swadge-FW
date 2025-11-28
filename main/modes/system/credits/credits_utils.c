@@ -41,7 +41,7 @@ void initCredits(credits_t* credits, font_t* font, const creditsEntry_t* entries
     midiGmOn(player);
 
     // Load the MIDI file
-    loadMidiFile(HD_CREDITS_MID, &credits->song, true);
+    loadMidiFile(MAXIMUM_HYPE_CREDITS_MID, &credits->song, true);
     midiSetFile(player, &credits->song);
 
     // Play the song

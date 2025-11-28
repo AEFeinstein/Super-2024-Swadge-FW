@@ -45,35 +45,26 @@ swadgeMode_t modeCredits = {
 
 // Everyone's here
 static const creditsEntry_t entries[] = {
-    {.name = "Adam Feinstein\n", .color = c031},
-    {.name = "Bryce Browner\n", .color = c315},
-    {.name = "Carrie Wood\n", .color = c203},
-    {.name = "cnlohr\n", .color = c541},
-    {.name = "Dac\n", .color = c545},
-    {.name = "dylwhich\n", .color = c055},
-    {.name = "Emily Anthony\n", .color = c435},
-    {.name = "Eriktronic101\n", .color = c135},
-    {.name = "Gerald M. (GEMISIS)\n", .color = c510},
-    {.name = "Grav\n", .color = c130},
-    {.name = "Greg Lord (gplord)\n", .color = c025},
-    {.name = "Heather \"Heathstaa\"", .color = c445},
-    {.name = "Hamilton\n", .color = c445},
-    {.name = "Hunter Dyar\n", .color = c433},
-    {.name = "James Albracht\n", .color = c440},
-    {.name = "Jeremy Stintzcum\n", .color = c032},
-    {.name = "Joe Newman\n", .color = c245},
-    {.name = "Jon Vega", .color = c250},
-    {.name = "(JVeg199X)\n", .color = c250},
-    {.name = "Kaitie Lawson\n", .color = c551},
-    {.name = "Kevin \"PF3k\" Lin\n", .color = c250},
-    {.name = "Livingston Rampey\n", .color = c205},
-    {.name = "Logan Tucker\n", .color = c522},
-    {.name = "LunaToon\n", .color = c513},
-    {.name = "Nathan M. Schultz\n", .color = c311},
-    {.name = "Pixel\n", .color = c143},
-    {.name = "Producer Scott\n", .color = c015},
+    {.name = "Adam Feinstein\n", .color = c230},
+    {.name = "Andy (Illiterate)\n", .color = c520},
+    {.name = "crobi\n", .color = c044},
+    {.name = "Dac\n", .color = c515},
+    {.name = "Emily Anthony\n", .color = c104},
+    {.name = "Greg Lord\n", .color = c035},
+    {.name = "Heather HeathStaa\n", .color = c335},
+    {.name = "James Albracht\n", .color = c552},
+    {.name = "Jarett Millard\n", .color = c341},
+    {.name = "Jeremy Stintzcum\n", .color = c241},
+    {.name = "Joe \"Newmajoe\"", .color = c045},
+    {.name = "Newman\n", .color = c045},
+    {.name = "Kaitie Muncie\n", .color = c500},
+    {.name = "Livingston Rampey\n", .color = c215},
+    {.name = "Logan Tucker\n", .color = c450},
+    {.name = "Luna Toon\n", .color = c445},
+    {.name = "Nick. Harman\n", .color = c305},
+    {.name = "objet discret\n", .color = c345},
     {.name = "Swadgeman (jfrye)\n", .color = c505},
-    {.name = "Thaeli\n", .color = c425},
+    {.name = "Thaeli\n", .color = c145},
     {.name = "", .color = c000},
     {.name = "", .color = c000},
     {.name = "Thanks for", .color = c524},
@@ -95,12 +86,14 @@ static const creditsEntry_t entries[] = {
  */
 void creditsEnterMode(void)
 {
+    setFrameRateUs(1000000/50);
+
     // Allocate memory for this mode
     credits = (credits_t*)heap_caps_calloc(1, sizeof(credits_t), MALLOC_CAP_8BIT);
 
     // Load a font
     font_t* creditsFont = (font_t*)heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_8BIT);
-    loadFont(SONIC_FONT, creditsFont, false);
+    loadFont(OXANIUM_FONT, creditsFont, false);
 
     // Initialize credits
     initCredits(credits, creditsFont, entries, ARRAY_SIZE(entries));
@@ -137,5 +130,5 @@ void creditsMainLoop(int64_t elapsedUs)
     }
 
     drawCredits(credits, elapsedUs);
-    // DRAW_FPS_COUNTER(*credits->font);
+    // DRAW_FPS_COUNTER((*credits->font));
 }
