@@ -1411,43 +1411,41 @@ void drawCircleFilled(int xm, int ym, int r, paletteColor_t col)
     paletteColor_t* fb = getPxTftFramebuffer();
 
     // Variables for tracing the circle
-    int x        = -r;
-    int y        = 0;
-    int err      = 2 - 2 * r; /* bottom left to top right */
-    bool drawRow = true;
+    int x         = -r;
+    int y         = 0;
+    int err       = 2 - 2 * r; /* bottom left to top right */
+    bool skipDraw = false;
 
     // Loop
     do
     {
         // Only fill a new row when Y changes
-        if (drawRow)
+        if (!skipDraw)
         {
-            drawRow = false;
-
             // Find where X starts and ends on this row, clamped to the display
             int xMin   = xm + x;
             xMin       = CLAMP(xMin, 0, TFT_WIDTH);
             int xMax   = xm - x;
             xMax       = CLAMP(xMax, 0, TFT_WIDTH);
-            int xWidth = xMax - xMin;
+            int xWidth = xMax - xMin + 1;
 
-            // If there is something to draw
-            if (xWidth)
+            // Fill a row of the lower half of the circle, if on screen
+            int ymp = (ym + y);
+            if (0 <= ymp && ymp < TFT_HEIGHT)
             {
-                // Fill a row of the lower half of the circle, if on screen
-                int ymp = (ym + y);
-                if (0 <= ymp && ymp < TFT_HEIGHT)
-                {
-                    memset(&fb[TFT_WIDTH * ymp + xMin], col, xWidth);
-                }
-
-                // Fill a row of the upper half of the circle, if on screen
-                int ymn = (ym - y);
-                if (0 <= ymn && ymn < TFT_HEIGHT)
-                {
-                    memset(&fb[TFT_WIDTH * ymn + xMin], col, xWidth);
-                }
+                memset(&fb[TFT_WIDTH * ymp + xMin], col, xWidth);
             }
+
+            // Fill a row of the upper half of the circle, if on screen
+            int ymn = (ym - y);
+            if (0 <= ymn && ymn < TFT_HEIGHT)
+            {
+                memset(&fb[TFT_WIDTH * ymn + xMin], col, xWidth);
+            }
+        }
+        else
+        {
+            skipDraw = false;
         }
 
         // Circle math
@@ -1456,10 +1454,13 @@ void drawCircleFilled(int xm, int ym, int r, paletteColor_t col)
         {
             /* e_xy + e_y < 0 */
             err += ++y * 2 + 1;
-
-            // y changed, so fill the next rows
-            drawRow = true;
         }
+        else
+        {
+            // Y didn't change, and X shrinks, so skip the next fill
+            skipDraw = true;
+        }
+
         /* e_xy + e_x > 0 or no 2nd y-step */
         if (r > x || err > y)
         {
