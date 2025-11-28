@@ -56,6 +56,7 @@ cipherRace_t* outerRace;
 int64_t RaceOffset = 0;
 bool OffsettingLeft = false;
 bool OffsettingRight = false;
+wsg_t logo;
 
 //Define functions
 static vec_t RThetaToXY(vec_t RTheta, bool TextBuffer){
@@ -107,6 +108,9 @@ static void cipherEnterMode(){
     outerRace->raceRad = 125;
 
     loadFont(IBM_VGA_8_FONT, &ibm, false);
+    initShapes();
+
+    loadWsg(PROTOMEN_SMALL_WSG, &logo, true);
 }
  
 static void cipherExitMode(){
@@ -131,26 +135,41 @@ static void cipherMainLoop(int64_t elapsedUs){
         RaceOffset = ((RaceOffset - elapsedUs*2) + (UsPerDeg*360)) % (UsPerDeg*360);
     }
 
+    //Draw Background
+    drawRectFilled(0,0,280,240,c412);
+
+    //Draw Logo
+    drawWsg(&logo, 65, 80, false, false, 0);
 
     for(int i=0;i<36;i++){ //i<36
-
+        //Every other letter gets a rotated ellipse beneath it to help aid in readability
+        //DrawDividerLine(innerRace->raceRad-15, innerRace->raceRad+40,(RaceOffset / UsPerDeg) + 10*i+5);
+        vec_t center = {
+            .x = innerRace->raceRad + 12,
+            .y = (RaceOffset / UsPerDeg) + 10*i,
+        };
+        center = RThetaToXY(center, false);
+        drawRotatedEllipse(center.x, center.y, 9,32, -6.28 * ((RaceOffset / UsPerDeg) + 10*i) / 360, c555);
+        
+        floodFill(center.x, fmin(239,center.y), c134, center.x-30, center.y-30, center.x+30, center.y+30);
+    }
+        
+    for(int i=0;i<36;i++){ //i<36
         //Draw inner race
         vec_t inPos = {
             .x = innerRace->raceRad,
             .y = ((innerRace->timeSpinning + RaceOffset) / UsPerDeg) + 10*i, //Hard-coding a 36-part race => 360/36=10 degrees of difference to each text
         };
         inPos = RThetaToXY(inPos, false);
-        drawText(&ibm, c252, lettersRace[i], inPos.x-4, inPos.y-5);
+        drawText(&ibm, c142, lettersRace[i], inPos.x-4, inPos.y-5);
 
         //draw outer race
         vec_t outPos = {
             .x = outerRace->raceRad,
-            .y = (( (UsPerDeg*360) - outerRace->timeSpinning + RaceOffset) / UsPerDeg) + 10*i , //Hard-coding a 36-part race => 360/36=10 degrees of difference to each text
+            .y = ((outerRace->timeSpinning + RaceOffset) / UsPerDeg) + 10*i , //Hard-coding a 36-part race => 360/36=10 degrees of difference to each text
         };
         outPos = RThetaToXY(outPos, false);
-        drawText(&ibm, c252, numbersRace[i], outPos.x-7, outPos.y-5);
-
-        DrawDividerLine(innerRace->raceRad-15, innerRace->raceRad+40,(RaceOffset / UsPerDeg) + 10*i+5);
+        drawText(&ibm, c142, numbersRace[i], outPos.x-7, outPos.y-5);
     }
 
     //handle input
