@@ -34,6 +34,7 @@
 #include <inttypes.h>
 #include "mainMenu.h"
 #include "fill.h"
+#include "cutscene.h"
 
 //==============================================================================
 // Constants
@@ -97,6 +98,8 @@ struct platformer_t
 
     menuMegaRenderer_t* menuRenderer;
     menu_t* menu;
+
+    cutscene_t* cutscene;
 };
 
 //==============================================================================
@@ -105,6 +108,8 @@ struct platformer_t
 void drawPlatformerHud(font_t* font, mgGameData_t* gameData);
 void drawPlatformerTitleScreen(font_t* font, mgGameData_t* gameData);
 void changeStateReadyScreen(platformer_t* self);
+void updateCutsceneScreen(platformer_t* self);
+void drawCutsceneScreen(platformer_t* self);
 void updateReadyScreen(platformer_t* self);
 void drawReadyScreen(font_t* font, mgGameData_t* gameData);
 void changeStateGame(platformer_t* self);
@@ -148,6 +153,7 @@ static void mg_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 void changeStateLevelSelect(platformer_t* self);
 void updateLevelSelect(platformer_t* self);
 void drawLevelSelect(platformer_t* self);
+void goToReadyScreen();
 
 //==============================================================================
 // Variables
@@ -767,6 +773,19 @@ void changeStateReadyScreen(platformer_t* self)
     self->update = &updateReadyScreen;
 }
 
+void updateCutsceneScreen(platformer_t* self)
+{
+    updateCutscene(self->cutscene);
+    drawCutsceneScreen(self);
+}
+
+void drawCutsceneScreen(platformer_t* self)
+{
+    mg_drawTileMap(&(self->tilemap));
+    mg_drawEntities(&(self->entityManager));
+    drawCutscene(self->cutscene, &self->font);
+}
+
 void updateReadyScreen(platformer_t* self)
 {
     // Clear the display
@@ -858,7 +877,13 @@ void changeStateGame(platformer_t* self)
 
     soundStop(true);
 
-    self->update = &updateReadyScreen;
+    //every level starts with a cutscene
+    self->cutscene = initCutscene(goToReadyScreen);
+    addCutsceneStyle(self->cutscene, c555, SAWTOOTH_PORTRAIT_0_WSG, 4);
+    addCutsceneLine(self->cutscene, "sawtooth", "This is the first test.", 0);
+    addCutsceneLine(self->cutscene, "sawtooth", "And this is the second test. yo yo yo yo yo yo yo yo yo yo yo yo yo waddup.", 0);
+
+    self->update = &updateCutsceneScreen;
 }
 
 static void mg_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
