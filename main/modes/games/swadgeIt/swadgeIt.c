@@ -189,7 +189,7 @@ static const char SI_MEMORY_HS_SP_KEY[]   = "si_m_hs_sp";
 
 static const char swadgeItStrPress[] = "Press it!";
 static const char swadgeItStrShake[] = "Shake it!";
-static const char swadgeItStrBlow[] = "Blow it!";
+static const char swadgeItStrBlow[]  = "Blow it!";
 static const char swadgeItStrSwirl[] = "Swirl it!";
 
 /** Must match order of swadgeItEvt_t */
