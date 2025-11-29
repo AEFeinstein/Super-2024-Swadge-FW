@@ -1,18 +1,19 @@
+/**
+ * @file artillery_phys_terrain.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief Terrain management and deformations for Vector Tanks
+ * @date 2025-11-26
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
 
-#include <math.h>
-#include <esp_heap_caps.h>
-#include <esp_random.h>
-#include "macros.h"
-#include "color_utils.h"
-#include "geometry.h"
-#include "trigonometry.h"
 #include "artillery.h"
-#include "artillery_phys_terrain.h"
-#include "artillery_phys_objs.h"
 #include "artillery_game.h"
+#include "artillery_phys.h"
+#include "artillery_phys_objs.h"
+#include "artillery_phys_terrain.h"
 
 //==============================================================================
 // Function Declarations
@@ -240,11 +241,10 @@ void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player)
 }
 
 /**
- * @brief TODO doc
+ * @brief Generate random background clouds which are somewhat evenly spaced.
+ * These are non-interactive but are good reference points for when the projectile moves through air.
  *
- * TODO transmit over p2p
- *
- * @param phys
+ * @param phys The physics simulation
  */
 void physGenerateClouds(physSim_t* phys)
 {
@@ -319,8 +319,9 @@ void physGenerateClouds(physSim_t* phys)
  * @brief Explode a shell and deform terrain
  *
  * @param phys The physics simulation
- * @param shell The shell which exploded
+ * @param shellNode The shell which exploded
  * @param hitTank The tank that was hit by the shell, may be NULL
+ * @return true if this shell caused a change that requires a packet transmission
  */
 bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
 {
@@ -543,13 +544,12 @@ static int32_t moveTerrainPoint(vecFl_t* src, vecFl_t* dst)
 /**
  * @brief Move terrain lines a bit towards where they should be after shell explosion
  *
- * TODO use elapsedUs
+ * This is called every PHYS_TIME_STEP_US
  *
  * @param phys The physics simulation
- * @param elapsedUs The time elapsed since this was last called
  * @return true if terrain is actively moving, false otherwise
  */
-bool moveTerrainLines(physSim_t* phys, int32_t elapsedUs)
+bool moveTerrainLines(physSim_t* phys)
 {
     // Keep track if any terrain is moving anywhere
     bool anyTerrainMoving = false;

@@ -1,4 +1,5 @@
 #pragma once
-#include "artillery_phys.h"
+
+#include "artillery_types.h"
 
 void createBspZones(physSim_t* phys);

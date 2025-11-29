@@ -1,3 +1,10 @@
+/**
+ * @file artillery_phys.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief Physics simulation for Vector Tanks
+ * @date 2025-11-26
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -11,17 +18,18 @@
 #include <hdw-tft.h>
 
 #include "shapes.h"
-#include "artillery.h"
-#include "artillery_phys.h"
 #include "macros.h"
 #include "fill.h"
 
+#include "artillery.h"
 #include "artillery_game.h"
-#include "artillery_phys_objs.h"
+#include "artillery_paint.h"
+#include "artillery_phys.h"
+#include "artillery_phys_bsp.h"
 #include "artillery_phys_camera.h"
 #include "artillery_phys_collisions.h"
+#include "artillery_phys_objs.h"
 #include "artillery_phys_terrain.h"
-#include "artillery_phys_bsp.h"
 
 //==============================================================================
 // Defines
@@ -41,7 +49,7 @@
 #define PLAYER_RADIUS 8
 
 //==============================================================================
-// Function Declarations
+// Const variables
 //==============================================================================
 
 const artilleryAmmoAttrib_t ammoAttributes[] = {
@@ -225,17 +233,6 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
     },
 };
 
-const artilleryAmmoAttrib_t* getAmmoAttributes(uint16_t* numAttributes)
-{
-    *numAttributes = ARRAY_SIZE(ammoAttributes);
-    return ammoAttributes;
-}
-
-const artilleryAmmoAttrib_t* getAmmoAttribute(uint16_t idx)
-{
-    return &ammoAttributes[idx];
-}
-
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -249,6 +246,29 @@ static void findSurfacePoints(int x0, int y0, int x1, int y1, int16_t* surfacePo
 //==============================================================================
 // Functions
 //==============================================================================
+
+/**
+ * @brief Get all the ammo attributes
+ *
+ * @param numAttributes [OUT] The number of ammo attributes is written here
+ * @return A pointer to a list of ammo attributes
+ */
+const artilleryAmmoAttrib_t* getAmmoAttributes(uint16_t* numAttributes)
+{
+    *numAttributes = ARRAY_SIZE(ammoAttributes);
+    return ammoAttributes;
+}
+
+/**
+ * @brief Get a specific ammo's attributes
+ *
+ * @param idx The index of the ammo attribute to get
+ * @return A pointer to the ammo's attributes
+ */
+const artilleryAmmoAttrib_t* getAmmoAttribute(uint16_t idx)
+{
+    return &ammoAttributes[idx];
+}
 
 /**
  * @brief Initialize a physics simulation with world bounds and gravity.
@@ -381,8 +401,8 @@ void physStepBackground(physSim_t* phys)
 {
     if (phys->isReady)
     {
-        // Move the terrain
-        phys->terrainMoving = moveTerrainLines(phys, PHYS_TIME_STEP_US);
+        // Move the terrain every PHYS_TIME_STEP_US
+        phys->terrainMoving = moveTerrainLines(phys);
 
         // Clear surface points
         memset(phys->surfacePoints, 0xFF, sizeof(phys->surfacePoints));
@@ -404,8 +424,11 @@ void physStepBackground(physSim_t* phys)
                 // Assign ground color
                 int16_t minScreenX = CLAMP(pl->l.p1.x - phys->camera.x, 0, TFT_WIDTH);
                 int16_t maxScreenX = CLAMP(pl->l.p2.x - phys->camera.x, 0, TFT_WIDTH);
-                memset(&phys->surfaceColors[minScreenX], pl->isLava ? COLOR_LAVA : COLOR_GROUND,
-                       maxScreenX - minScreenX);
+                if (maxScreenX - minScreenX)
+                {
+                    memset(&phys->surfaceColors[minScreenX], pl->isLava ? COLOR_LAVA : COLOR_GROUND,
+                           maxScreenX - minScreenX);
+                }
             }
 
             // Iterate
@@ -423,6 +446,9 @@ void physStepBackground(physSim_t* phys)
  *
  * @param phys The physics simulation
  * @param elapsedUs The time elapsed since this was last called
+ * @param menuShowing true if the in-game menu is showing
+ * @param playerMoved [OUT] true if the player moves, false otherwise
+ * @param cameraMoved [OUT] true if the camera moves, false otherwise
  */
 void physStep(physSim_t* phys, int32_t elapsedUs, bool menuShowing, bool* playerMoved, bool* cameraMoved)
 {
@@ -548,6 +574,7 @@ static void physFindObjDests(physSim_t* phys, float elapsedS)
  * destination.
  *
  * @param phys The physics simulation
+ * @return true if an object moved an integer amount and needs to be transmitted
  */
 static bool physBinaryMoveObjects(physSim_t* phys)
 {
@@ -576,12 +603,10 @@ static bool physBinaryMoveObjects(physSim_t* phys)
                 // If the final destination isn't valid, binary search
                 bool collision = true;
 
-                // TODO pick a better number?
+                // Iterating five times is fine for performance
                 int32_t numIter = 5;
-                while (numIter)
+                while (numIter--)
                 {
-                    numIter--;
-
                     // Set circle to the midpoint of the travel line
                     pc->c.pos = divVecFl2d(addVecFl2d(pc->travelLine.p1, pc->travelLine.p2), 2);
                     updateCircleProperties(phys, pc);
@@ -673,6 +698,10 @@ static void checkTurnOver(physSim_t* phys)
  * @brief Draw the background of the simulation (land, sky, and void)
  *
  * @param phys The physics simulation to draw
+ * @param x0 The X position to start drawing at
+ * @param y0 The Y position to start drawing at
+ * @param w The width of the section to draw
+ * @param h The height of the section to draw
  */
 void drawPhysBackground(physSim_t* phys, int16_t x0, int16_t y0, int16_t w, int16_t h)
 {
@@ -726,8 +755,10 @@ void drawPhysBackground(physSim_t* phys, int16_t x0, int16_t y0, int16_t w, int1
  * @brief Draw the outlines of physics simulation objects
  *
  * @param phys The physics simulation
- * @param players
- * @param font
+ * @param players An array of pointers to the two players
+ * @param font The font to draw the HUD with
+ * @param fontOutline The outline font to draw the HUD with
+ * @param turn The turn to draw on the HUD
  */
 void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, font_t* fontOutline, int32_t turn)
 {
@@ -768,62 +799,21 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, font_t
             }
         }
 
-        // Draw a gun barrel for tanks
         if (CT_TANK == pc->type)
         {
-            vecFl_t absBarrelTip = addVecFl2d(pc->c.pos, pc->relBarrelTip);
-            drawLineFast(pc->c.pos.x - phys->camera.x,    //
-                         pc->c.pos.y - phys->camera.y,    //
-                         absBarrelTip.x - phys->camera.x, //
-                         absBarrelTip.y - phys->camera.y, //
-                         aCol);
-        }
-
-        // Draw main circle
-        drawCircleFilled(pc->c.pos.x - phys->camera.x, //
-                         pc->c.pos.y - phys->camera.y, //
-                         pc->c.radius, bCol);
-
-        // Draw wheels for tanks too
-        if (CT_TANK == pc->type)
-        {
-            // and some wheels too
-            float wheelR = pc->c.radius / 2.0f;
-            float wheelY = pc->c.radius - wheelR;
-
             // Find the vector pointing from the center of the tank to the floor
-            vecFl_t wheelOffVert = mulVecFl2d(normVecFl2d(addVecFl2d(pc->contactNorm, pc->lastContactNorm)), -1);
-
-            // Rotate by 90 deg, doesn't matter which way
-            vecFl_t wheelOffHorz = {
-                .x = wheelOffVert.y,
-                .y = -wheelOffVert.x,
-            };
-
-            // Scale vectors to place the wheels
-            vecFl_t treadOff = mulVecFl2d(wheelOffVert, wheelR);
-            wheelOffVert     = mulVecFl2d(wheelOffVert, wheelY);
-            wheelOffHorz     = mulVecFl2d(wheelOffHorz, pc->c.radius);
-
-            // Draw first wheel
-            vecFl_t w1 = addVecFl2d(pc->c.pos, addVecFl2d(wheelOffVert, wheelOffHorz));
-            drawCircleFilled(w1.x - phys->camera.x, w1.y - phys->camera.y, wheelR, aCol);
-
-            // Draw second wheel
-            vecFl_t w2 = addVecFl2d(pc->c.pos, subVecFl2d(wheelOffVert, wheelOffHorz));
-            drawCircleFilled(w2.x - phys->camera.x, w2.y - phys->camera.y, wheelR, aCol);
-
-            // Draw top tread
-            drawLineFast(w1.x + treadOff.x - phys->camera.x, //
-                         w1.y + treadOff.y - phys->camera.y, //
-                         w2.x + treadOff.x - phys->camera.x, //
-                         w2.y + treadOff.y - phys->camera.y, //
-                         aCol);
-            drawLineFast(w1.x - treadOff.x - phys->camera.x, //
-                         w1.y - treadOff.y - phys->camera.y, //
-                         w2.x - treadOff.x - phys->camera.x, //
-                         w2.y - treadOff.y - phys->camera.y, //
-                         aCol);
+            // Normalize to 1.01 instead of 1.0 to avoid floating floating point 0.99999 weirdness
+            vecFl_t wheelOffVert = mulVecFl2d(normVecFl2d(addVecFl2d(pc->contactNorm, pc->lastContactNorm)), -1.01);
+            // Draw tank
+            drawTank(pc->c.pos.x - phys->camera.x, pc->c.pos.y - phys->camera.y, //
+                     pc->c.radius, bCol, aCol, 1, wheelOffVert, pc->relBarrelTip);
+        }
+        else
+        {
+            // Draw main circle
+            drawCircleFilled(pc->c.pos.x - phys->camera.x, //
+                             pc->c.pos.y - phys->camera.y, //
+                             pc->c.radius, bCol);
         }
 
         // Iterate
@@ -967,9 +957,32 @@ void setShotPower(physCirc_t* circ, float power)
  * @param phys The physics simulation
  * @param cpu The CPU firing a shot
  * @param target The target
+ * @param difficulty The CPU's difficulty level
+ * @param turn The current turn
  */
-void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
+void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target, artilleryCpuDifficulty_t difficulty,
+                   int32_t turn)
 {
+    const artilleryAmmoAttrib_t* aa = getAmmoAttribute(cpu->ammoIdx);
+
+    // If this is a laser bolt
+    if (LASER == aa->effect)
+    {
+        // Point it right at the opponent
+        vecFl_t v0 = subVecFl2d(target->c.pos, cpu->c.pos);
+        float tba  = atan2f(v0.x, -v0.y);
+        while (tba < 0)
+        {
+            tba += (2 * M_PIf);
+        }
+        cpu->targetBarrelAngle = ((180 * tba) / M_PIf) + 0.5f;
+
+        setShotPower(cpu, 250);
+
+        // No need to do anything fancy
+        return;
+    }
+
     // Arc the shot between the terrain peak and ceiling
     // First find the terrain peak
     float minY    = phys->bounds.y;
@@ -990,8 +1003,27 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
         }
         lNode = lNode->next;
     }
-    // Scale it closer towards the ceiling
-    minY /= 4.0f;
+
+    // Easier CPUs arc shots higher, which is less accurate because barrel
+    // angle changes are more pronounced with more powerful shots
+    switch (difficulty)
+    {
+        case CPU_EASY:
+        {
+            minY = MIN(minY * 0.25f, minY - 240);
+            break;
+        }
+        case CPU_MEDIUM:
+        {
+            minY = MIN(minY * 0.5f, minY - 240);
+            break;
+        }
+        case CPU_HARD:
+        {
+            minY = MIN(minY * 0.75f, minY - 240);
+            break;
+        }
+    }
 
     // Starting position
     vecFl_t absBarrelTip = addVecFl2d(cpu->c.pos, cpu->relBarrelTip);
@@ -1019,7 +1051,39 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
         tba += (2 * M_PIf);
     }
     cpu->targetBarrelAngle = ((180 * tba) / M_PIf) + 0.5f;
-    setShotPower(cpu, magVecFl2d(v0));
+
+    // Add some randomness to barrel angle depending on difficulty and turn
+    int32_t randBound = 0;
+    switch (difficulty)
+    {
+        case CPU_EASY:
+        {
+            // Easy gets more accurate every other turn
+            randBound = (MAX_TURNS - turn) / 2;
+            break;
+        }
+        case CPU_MEDIUM:
+        {
+            // Medium gets more accurate every fourth turn
+            randBound = (MAX_TURNS - turn) / 4;
+            break;
+        }
+        case CPU_HARD:
+        {
+            // Hard is always accurate
+            randBound = 0;
+            break;
+        }
+    }
+    cpu->targetBarrelAngle += ((esp_random() % (randBound * 2 + 1)) - randBound);
+
+    float power = magVecFl2d(v0);
+    // Shorten wallmaker shots
+    if (WALL_MAKER == aa->effect)
+    {
+        power -= 3;
+    }
+    setShotPower(cpu, power);
 }
 
 /**
@@ -1029,6 +1093,7 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
  * @param phys The physics simulation
  * @param player The tank which fired the shot
  * @param opponent The opposing tank
+ * @param firstShot true if this is the first shot, false if it is a consecutive shot (machine gun)
  */
 void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool firstShot)
 {
@@ -1111,12 +1176,12 @@ void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool fi
 }
 
 /**
- * @brief TODO doc
+ * @brief Spawn the players in the physics simulation
  *
- * @param phys
- * @param numPlayers
- * @param players
- * @param colors
+ * @param phys The physics simulation
+ * @param numPlayers The number of players to spawn
+ * @param players [OUT] An array of pointers where pointers to the players are written
+ * @param colors A list of colors base and accent for the players. Length must be 2x the number of players
  */
 void physSpawnPlayers(physSim_t* phys, int32_t numPlayers, physCirc_t* players[], paletteColor_t* colors)
 {
@@ -1153,12 +1218,14 @@ void physSpawnPlayers(physSim_t* phys, int32_t numPlayers, physCirc_t* players[]
 }
 
 /**
- * @brief TODO
+ * @brief Add a single player to the physics simulation. Called when a P2P_SET_WORLD packet is received
  *
- * @param phys
- * @param pos
- * @param barrelAngle
- * @return physCirc_t*
+ * @param phys The physics simulation
+ * @param pos The position to add the player at
+ * @param barrelAngle The player's barrel angle
+ * @param baseColor The player's base color
+ * @param accentColor The player's accent color
+ * @return The added player
  */
 physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, int16_t barrelAngle, paletteColor_t baseColor,
                           paletteColor_t accentColor)
@@ -1169,10 +1236,12 @@ physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, int16_t barrelAngle, pal
 }
 
 /**
- * @brief TODO
+ * @brief Run animation timers for explosions, lava, and LEDs
  *
- * @param phys
- * @param elapsedUs
+ * deadEyeTimer is handled in artilleryMainLoop() because eyes are displayed on non-game screens
+ *
+ * @param phys The physics simulation
+ * @param elapsedUs The time since this function was last called
  */
 static void physRunAnimateTimers(physSim_t* phys, int32_t elapsedUs)
 {

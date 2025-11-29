@@ -1,11 +1,20 @@
+/**
+ * @file artillery_game.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief The main game logic for Vector Tanks
+ * @date 2025-11-26
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
 
 #include "artillery.h"
 #include "artillery_game.h"
-#include "artillery_phys_camera.h"
 #include "artillery_p2p.h"
+#include "artillery_phys.h"
+#include "artillery_phys_camera.h"
+#include "artillery_phys_objs.h"
 
 //==============================================================================
 // Defines
@@ -73,8 +82,128 @@ void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newSta
             setAmmoInMenu();
             break;
         }
+        case AGS_CPU_MOVE:
+        {
+            // Pick a random direction for the CPU to move
+            bool shouldMove = false;
+            switch (ad->cpu)
+            {
+                case CPU_EASY:
+                {
+                    // Easy moves every fourth turn
+                    shouldMove = (0 == ad->turn % 4);
+                    break;
+                }
+                case CPU_MEDIUM:
+                {
+                    // Medium moves every other turn
+                    shouldMove = (0 == ad->turn % 2);
+                    break;
+                }
+                case CPU_HARD:
+                {
+                    // Hard moves every turn
+                    shouldMove = true;
+                    break;
+                }
+            }
+
+            // If the CPU should move, or is in lava
+            if (shouldMove || ad->players[ad->plIdx]->lavaAnimTimer)
+            {
+                // Random movement
+                ad->players[ad->plIdx]->moving = (esp_random() & 0x01) ? PB_LEFT : PB_RIGHT;
+            }
+            else
+            {
+                // Adjust the shot
+                artillerySwitchToGameState(ad, AGS_CPU_ADJUST);
+            }
+            break;
+        }
         case AGS_CPU_ADJUST:
         {
+            // Pick an ammo when transitioning to AGS_CPU_ADJUST
+            physCirc_t* cpu    = ad->players[ad->plIdx];
+            physCirc_t* target = ad->players[(ad->plIdx + 1) % NUM_PLAYERS];
+
+            // Make a line from the CPU to the player
+            physLine_t laserLine = {
+                .l = {
+                    .p1 = cpu->c.pos,
+                    .p2 = target->c.pos,
+                },
+            };
+            physSetZoneMaskLine(ad->phys, &laserLine);
+
+            // Check if the laser line ever intersects with another line (ground)
+            bool groundIntersection = false;
+            node_t* lNode           = ad->phys->lines.first;
+            while (lNode)
+            {
+                physLine_t* pl = lNode->val;
+                if (pl->zonemask & laserLine.zonemask)
+                {
+                    if (lineLineFlIntersection(laserLine.l, pl->l, NULL))
+                    {
+                        groundIntersection = true;
+                        break;
+                    }
+                }
+
+                // Iterate
+                lNode = lNode->next;
+            }
+
+            // If there's a clear line to the target
+            bool laserSelected = false;
+            if (false == groundIntersection)
+            {
+                // Find which ammo index is the laser
+                uint16_t numAttributes;
+                const artilleryAmmoAttrib_t* attribs = getAmmoAttributes(&numAttributes);
+                uint16_t lIdx;
+                for (lIdx = 0; lIdx < numAttributes; lIdx++)
+                {
+                    if (LASER == attribs[lIdx].effect)
+                    {
+                        break;
+                    }
+                }
+
+                // Check if the laser is still available to fire
+                node_t* aNode = cpu->availableAmmo.first;
+                while (aNode)
+                {
+                    intptr_t aIdx = (intptr_t)aNode->val;
+                    if (aIdx == lIdx)
+                    {
+                        // Fire the laser!
+                        cpu->ammoIdx  = lIdx;
+                        laserSelected = true;
+                        break;
+                    }
+                    aNode = aNode->next;
+                }
+            }
+
+            // Fire some non-laser ammo
+            if (!laserSelected)
+            {
+                do
+                {
+                    // Get a random index
+                    int32_t randAmmo = esp_random() % cpu->availableAmmo.length;
+                    // Iterate that many times
+                    node_t* ammoNode = cpu->availableAmmo.first;
+                    while (randAmmo-- && ammoNode)
+                    {
+                        cpu->ammoIdx = (intptr_t)ammoNode->val;
+                        ammoNode     = ammoNode->next;
+                    }
+                } while (LASER == getAmmoAttribute(cpu->ammoIdx)->effect);
+            }
+
             ad->players[ad->plIdx]->targetBarrelAngle = -1;
             ad->cpuWaitTimer                          = 2000000;
             break;
@@ -94,7 +223,6 @@ void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newSta
         case AGS_WAIT:
         case AGS_MOVE:
         case AGS_ADJUST:
-        case AGS_CPU_MOVE:
         case AGS_LOOK:
         {
             break;
@@ -116,7 +244,7 @@ void artillerySwitchToGameState(artilleryData_t* ad, artilleryGameState_t newSta
  *
  * @param ad All the artillery mode data
  * @param evt The button event
- * @return true if the barrel angle changed (need to TX a packet), false otherwise
+ * @return true if the p2p state changed (barrel angle, camera, etc.) which will TX a packet, false otherwise
  */
 bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
 {
@@ -131,20 +259,8 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
         {
             if (evt.down && ((PB_START | PB_SELECT) & evt.button))
             {
-                // Immediately clear the tour points
-                clear(&ad->phys->cameraTour);
-
-                // Move to the next game state
-                if (artilleryIsMyTurn(ad))
-                {
-                    artillerySwitchToGameState(ad, AGS_MENU);
-                    // And start on the ammo menu
-                    openAmmoMenu();
-                }
-                else
-                {
-                    artillerySwitchToGameState(ad, AGS_WAIT);
-                }
+                artilleryTxFinishTour(ad);
+                artilleryFinishTour(ad);
             }
             break;
         }
@@ -178,9 +294,8 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
                     {
                         // Return to the menu
                         artillerySwitchToGameState(ad, AGS_MENU);
-                        // Send message that we've left AGS_LOOK
-                        artilleryTxCamera(ad);
-                        return false;
+                        // Return true to send state
+                        return true;
                     }
                     default:
                     {
@@ -296,9 +411,9 @@ bool artilleryGameInput(artilleryData_t* ad, buttonEvt_t evt)
  *
  * @param ad All the artillery mode data
  * @param elapsedUs The time elapsed since this was last called.
- * @param barrelChanged
+ * @param stateChanged True if the state changed prior to this loop and a p2p packet should be transmitted
  */
-void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChanged)
+void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool stateChanged)
 {
     // Draw the scene
     drawPhysOutline(ad->phys, ad->players, &ad->font_pulseAux, &ad->font_pulseAuxOutline, ad->turn);
@@ -369,13 +484,13 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                 {
                     ad->tpCumulativeDiff -= TOUCH_DEG_PER_BARREL;
                     setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle + BARREL_INTERVAL);
-                    barrelChanged = true;
+                    stateChanged = true;
                 }
                 while (ad->tpCumulativeDiff <= -TOUCH_DEG_PER_BARREL)
                 {
                     ad->tpCumulativeDiff += TOUCH_DEG_PER_BARREL;
                     setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle - BARREL_INTERVAL);
-                    barrelChanged = true;
+                    stateChanged = true;
                 }
 
                 // Save the current touchpad angle
@@ -409,7 +524,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                             {
                                 int16_t bDiff = (PB_LEFT == ad->adjButtonHeld) ? -(BARREL_INTERVAL) : (BARREL_INTERVAL);
                                 setBarrelAngle(ad->players[ad->plIdx], ad->players[ad->plIdx]->barrelAngle + bDiff);
-                                barrelChanged = true;
+                                stateChanged = true;
                                 break;
                             }
                             case PB_UP:
@@ -417,7 +532,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                             {
                                 float pDiff = (PB_UP == ad->adjButtonHeld) ? POWER_INTERVAL : -POWER_INTERVAL;
                                 setShotPower(ad->players[ad->plIdx], ad->players[ad->plIdx]->shotPower + pDiff);
-                                barrelChanged = true;
+                                stateChanged = true;
                                 break;
                             }
                             default:
@@ -489,7 +604,6 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                 if (ad->phys->playerSwapTimerUs <= 0)
                 {
                     artilleryPassTurn(ad);
-                    artilleryTxPassTurn(ad);
 
                     // Only switch back to idle eyes if dead eyes aren't being shown
                     if (ad->deadEyeTimer <= 0)
@@ -596,12 +710,6 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
         case AGS_MOVE:
         case AGS_CPU_MOVE:
         {
-            // Pick a random direction for the CPU to move
-            if ((AGS_CPU_MOVE == ad->gState) && (0 == ad->players[ad->plIdx]->moving))
-            {
-                ad->players[ad->plIdx]->moving = (esp_random() & 0x01) ? PB_LEFT : PB_RIGHT;
-            }
-
             // If there is time left to move and the player is moving
             if (ad->moveTimerUs && ad->players[ad->plIdx]->moving)
             {
@@ -639,11 +747,6 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
             bool readyToFire = false;
             if (-1 != cpu->targetBarrelAngle)
             {
-                // Randomize ammo
-                uint16_t numAmmos;
-                getAmmoAttributes(&numAmmos);
-                cpu->ammoIdx = esp_random() % numAmmos;
-
                 // Find the clockwise and counterclockwise distances to move the barrel to the target
                 int16_t deltaCw = cpu->barrelAngle - cpu->targetBarrelAngle;
                 if (deltaCw < 0)
@@ -685,7 +788,7 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
                     if (cpu->targetBarrelAngle < 0)
                     {
                         // Calculate the shot
-                        adjustCpuShot(ad->phys, cpu, ad->players[(ad->plIdx + 1) % NUM_PLAYERS]);
+                        adjustCpuShot(ad->phys, cpu, ad->players[(ad->plIdx + 1) % NUM_PLAYERS], ad->cpu, ad->turn);
 
                         // Round power and angle, to be fair
                         cpu->shotPower
@@ -716,14 +819,10 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
     // If this is a wireless game and there is some change and it's our turn
     if (AG_WIRELESS == ad->gameType)
     {
-        if ((barrelChanged || playerMoved) && artilleryIsMyTurn(ad))
+        if ((stateChanged || playerMoved || cameraMoved) && artilleryIsMyTurn(ad))
         {
-            // Transmit the change to the other Swadge
-            artilleryTxPlayers(ad);
-        }
-        if (cameraMoved)
-        {
-            artilleryTxCamera(ad);
+            // Transmit the player and camera state to the other Swadge
+            artilleryTxState(ad);
         }
     }
 
@@ -732,8 +831,35 @@ void artilleryGameLoop(artilleryData_t* ad, uint32_t elapsedUs, bool barrelChang
 }
 
 /**
- * @brief TODO doc
+ * @brief Finish the terrain tour early by clearing all camera points to visit moving to the next game state
  *
+ * @param ad All the artillery mode data
+ */
+void artilleryFinishTour(artilleryData_t* ad)
+{
+    // Immediately clear the tour points
+    clear(&ad->phys->cameraTour);
+
+    // Move to the next game state
+    if (artilleryIsMyTurn(ad))
+    {
+        artillerySwitchToGameState(ad, AGS_MENU);
+        // And start on the ammo menu
+        openAmmoMenu();
+    }
+    else
+    {
+        artillerySwitchToGameState(ad, AGS_WAIT);
+    }
+}
+
+/**
+ * @brief Pass the turn to the next player.
+ * Check if a tank is in lava at the beginning of a turn.
+ * Check if all the turns have been taken and the game is over.
+ * Check if any trophies are won at the end of a game.
+ *
+ * @param ad All the artillery mode data
  */
 void artilleryPassTurn(artilleryData_t* ad)
 {
@@ -749,7 +875,7 @@ void artilleryPassTurn(artilleryData_t* ad)
         // Increment the turn
         ad->turn++;
 
-        if (MAX_TURNS == ad->turn + 1)
+        if (MAX_TURNS == ad->turn - 1)
         {
             // If all turns have been taken end the game
             ad->mState = AMS_GAME_OVER;
@@ -762,6 +888,10 @@ void artilleryPassTurn(artilleryData_t* ad)
             midiGmOn(globalMidiPlayerGet(MIDI_SFX));
             midiPause(globalMidiPlayerGet(MIDI_SFX), false);
 
+            // Return eyes to blinking
+            ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
+
+            // Assign who is P1 and P2 and check for any trophies won at the end of the game
             bool isP1 = true;
             switch (ad->gameType)
             {
@@ -770,7 +900,10 @@ void artilleryPassTurn(artilleryData_t* ad)
                     isP1 = true;
                     if (ad->players[0]->score > ad->players[1]->score)
                     {
-                        trophyUpdate(&artilleryTrophies[AT_SKYNET], true, true);
+                        if (CPU_HARD == ad->cpu)
+                        {
+                            trophyUpdate(&artilleryTrophies[AT_SKYNET], true, true);
+                        }
                     }
                     break;
                 }
@@ -790,6 +923,7 @@ void artilleryPassTurn(artilleryData_t* ad)
                 }
             }
 
+            // Set up data to display on the game over screen
             ad->gameOverData[0].score       = ad->players[0]->score;
             ad->gameOverData[0].baseColor   = ad->players[0]->baseColor;
             ad->gameOverData[0].accentColor = ad->players[0]->accentColor;
@@ -858,9 +992,10 @@ void artilleryPassTurn(artilleryData_t* ad)
 }
 
 /**
- * @brief TODO doc
+ * @brief Return true if this turn requires human input.
+ * This is always true for AG_PASS_AND_PLAY (all human input) but not for AG_CPU_PRACTICE or AG_WIRELESS.
  *
- * @param ad
+ * @param ad All the artillery mode data
  * @return true if it is this player's turn, false otherwise
  */
 bool artilleryIsMyTurn(artilleryData_t* ad)
@@ -878,7 +1013,8 @@ bool artilleryIsMyTurn(artilleryData_t* ad)
         }
         case AG_WIRELESS:
         {
-            return (GOING_FIRST == p2pGetPlayOrder(&ad->p2p)) != (0 == ad->plIdx);
+            // 'GOING_FIRST' sends game parameters first, so 'GOING_SECOND' makes the first move
+            return (GOING_SECOND == p2pGetPlayOrder(&ad->p2p)) == (0 == ad->plIdx);
         }
     }
 }
