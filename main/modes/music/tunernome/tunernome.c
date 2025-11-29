@@ -282,43 +282,56 @@ const uint16_t freqBinIdxsBanjo[] = {
 };
 
 /**
- * Left-to-right on the strings display on-screen, which hardware LED index looks like it phyiscally corresponds to each string?
- * LEDs lit for each string will go through one lookup:
+ * Left-to-right on the strings display on-screen, which hardware LED index looks like it physically corresponds to each
+ * string? LEDs lit for each string will go through one lookup:
  *   - String index is transformed (here in sixNoteStringIdxToLedIdx) to get a physical LED index.
+ *
  * Strings displayed on-screen will go through two lookups:
  *   - First, string index is transformed (here with sixNoteStringIdxToLedIdx) to get a physical LED index.
- *   - Then, that physical LED index is transformed (with ledIdxToPos) to get the "up" vs "down" position of the LED, to draw the note name in the matching location.
- * The best way to make this list is to look at the physical hardware in a sweep left-to-right and write down the LED indices as you hit them.
+ *   - Then, that physical LED index is transformed (with ledIdxToPos) to get the "up" vs "down" position of the LED, to
+ *     draw the note name in the matching location.
+ *
+ * The best way to make this list is to look at the physical hardware in a sweep left-to-right and write down the LED
+ * indices as you hit them.
  */
 const uint16_t sixNoteStringIdxToLedIdx[] = {4, 5, 3, 2, 0, 1};
 
 /**
- * Left-to-right on the strings display on-screen, which hardware LED index looks like it phyiscally corresponds to each string?
- * LEDs lit for each string will go through one lookup:
+ * Left-to-right on the strings display on-screen, which hardware LED index looks like it physically corresponds to each
+ * string? LEDs lit for each string will go through one lookup:
  *   - String index is transformed (here in sixNoteStringIdxToLedIdx) to get a physical LED index.
+ *
  * Strings displayed on-screen will go through two lookups:
  *   - First, string index is transformed (here with sixNoteStringIdxToLedIdx) to get a physical LED index.
- *   - Then, that physical LED index is transformed (with ledIdxToPos) to get the "up" vs "down" position of the LED, to draw the note name in the matching location.
- * The best way to make this list is to follow the instructions for making the six-string list, then cut out the least-symmetrical LED (or the least-noticeable LED to have turned off.)
+ *   - Then, that physical LED index is transformed (with ledIdxToPos) to get the "up" vs "down" position of the LED, to
+ *     draw the note name in the matching location.
+ *
+ * The best way to make this list is to follow the instructions for making the six-string list, then cut out the
+ * least-symmetrical LED (or the least-noticeable LED to have turned off.)
  */
 const uint16_t fiveNoteStringIdxToLedIdx[] = {4, 5, 2, 0, 1};
 
 /**
- * Left-to-right on the strings display on-screen, which hardware LED index looks like it phyiscally corresponds to each string?
- * LEDs lit for each string will go through one lookup:
+ * Left-to-right on the strings display on-screen, which hardware LED index looks like it physically corresponds to each
+ * string? LEDs lit for each string will go through one lookup:
  *   - String index is transformed (here in sixNoteStringIdxToLedIdx) to get a physical LED index.
+ *
  * Strings displayed on-screen will go through two lookups:
  *   - First, string index is transformed (here with sixNoteStringIdxToLedIdx) to get a physical LED index.
- *   - Then, that physical LED index is transformed (with ledIdxToPos) to get the "up" vs "down" position of the LED, to draw the note name in the matching location.
- * The best way to make this list is to follow the instructions for making the six-string list, then cut out the 2 least-symmetrical LEDs (or the 2 least-noticeable LEDs to have turned off.)
+ *   - Then, that physical LED index is transformed (with ledIdxToPos) to get the "up" vs "down" position of the LED, to
+ *     draw the note name in the matching location.
+ *
+ * The best way to make this list is to follow the instructions for making the six-string list, then cut out the 2
+ * least-symmetrical LEDs (or the 2 least-noticeable LEDs to have turned off.)
  */
 const uint16_t fourNoteStringIdxToLedIdx[] = {4, 3, 2, 1};
 
 /**
- * Starting from LED index 0, and going up in index (which could be any direction on physical hardware), does each LED look higher or lower?
- * "LED_POS_UP" and "LED_POS_DOWN" will draw note names above or below the instrument name, respectively.
- * If LEDs are in a line, make them all LED_POS_UP if they're above the screen, or LED_POS_DOWN if they're below the screen.
- * The indices of this array do NOT correspond to left-to-right on the strings display on-screen. That's handled by sixNoteStringIdxToLedIdx, fiveNoteStringIdxToLedIdx, and fourNoteStringIdxToLedIdx.
+ * Starting from LED index 0, and going up in index (which could be any direction on physical hardware), does each LED
+ * look higher or lower? "LED_POS_UP" and "LED_POS_DOWN" will draw note names above or below the instrument name,
+ * respectively. If LEDs are in a line, make them all LED_POS_UP if they're above the screen, or LED_POS_DOWN if they're
+ * below the screen. The indices of this array do NOT correspond to left-to-right on the strings display on-screen.
+ * That's handled by sixNoteStringIdxToLedIdx, fiveNoteStringIdxToLedIdx, and fourNoteStringIdxToLedIdx.
  */
 const led_position_t ledIdxToPos[CONFIG_NUM_LEDS]
     = {LED_POS_UP, LED_POS_DOWN, LED_POS_DOWN, LED_POS_DOWN, LED_POS_DOWN, LED_POS_UP};
