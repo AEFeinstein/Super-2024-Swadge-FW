@@ -58,6 +58,9 @@ bool OffsettingLeft = false;
 bool OffsettingRight = false;
 wsg_t logo;
 
+//paletteColor_t bg = c011;paletteColor_t shade = c133;paletteColor_t text = c155;
+paletteColor_t bg = c311;paletteColor_t shade = c431;paletteColor_t text = c101;
+
 //Define functions
 static vec_t RThetaToXY(vec_t RTheta, bool TextBuffer){
     //This function uses the global ScreenCenter vec_t object to allow text to be pushed to the corners of the screen without overrunning it
@@ -94,7 +97,7 @@ static void DrawDividerLine(int RStart, int REnd, int ThetaDeg){
         .y=ThetaDeg,
     }, false);
 
-    drawLine (start.x, start.y, end.x, end.y, c011, 0);
+    drawLine (start.x, start.y, end.x, end.y, bg, 0);
 }
 
 static void cipherEnterMode(){
@@ -136,23 +139,24 @@ static void cipherMainLoop(int64_t elapsedUs){
     }
 
     //Draw Background
-    drawRectFilled(0,0,280,240,c011);
+    drawRectFilled(0,0,280,240,bg);
 
     //Draw filled circle for text to live on
-    drawCircleFilled(ScreenCenter.x, ScreenCenter.y, outerRace->raceRad+10, c133);
+    drawCircleFilled(ScreenCenter.x, ScreenCenter.y, outerRace->raceRad+10, shade);
 
     //Draw inner circle "cutout" for logo to sit on
-    drawCircleFilled(ScreenCenter.x, ScreenCenter.y, innerRace->raceRad-10, c011);
+    drawCircleFilled(ScreenCenter.x, ScreenCenter.y, innerRace->raceRad-10, bg);
 
     //Draw Logo
     drawWsg(&logo, 65, 80, false, false, 0);
 
+    //Draw text dividers that do not move when either race is spinning
     for(int i=0;i<36;i++){ //i<36
         //Draw divider lines
         DrawDividerLine(innerRace->raceRad-10, outerRace->raceRad+10, ((RaceOffset) / UsPerDeg) + 10*i+5);
     }
 
-        
+    //Draw Text on top
     for(int i=0;i<36;i++){ //i<36
 
         //Draw inner race
@@ -161,7 +165,7 @@ static void cipherMainLoop(int64_t elapsedUs){
             .y = ((innerRace->timeSpinning + RaceOffset) / UsPerDeg) + 10*i, //Hard-coding a 36-part race => 360/36=10 degrees of difference to each text
         };
         inPos = RThetaToXY(inPos, false);
-        drawText(&ibm, c155, lettersRace[i], inPos.x-4, inPos.y-5);
+        drawText(&ibm, text, lettersRace[i], inPos.x-4, inPos.y-5);
 
         //draw outer race
         vec_t outPos = {
@@ -169,7 +173,7 @@ static void cipherMainLoop(int64_t elapsedUs){
             .y = ((outerRace->timeSpinning + RaceOffset) / UsPerDeg) + 10*i , //Hard-coding a 36-part race => 360/36=10 degrees of difference to each text
         };
         outPos = RThetaToXY(outPos, false);
-        drawText(&ibm, c155, numbersRace[i], outPos.x-7, outPos.y-5);
+        drawText(&ibm, text, numbersRace[i], outPos.x-7, outPos.y-5);
     }
 
     //handle input
@@ -189,6 +193,12 @@ static void cipherMainLoop(int64_t elapsedUs){
                     break;
                 case PB_RIGHT:
                     OffsettingRight = true;
+                    break;
+                case PB_UP:
+                    innerRace->timeSpinning += 3;
+                    break;
+                case PB_DOWN:
+                    outerRace->timeSpinning += 3;
                     break;
                 
                 default:
