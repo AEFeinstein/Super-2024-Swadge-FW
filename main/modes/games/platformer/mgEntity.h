@@ -71,10 +71,19 @@ typedef enum
     ENTITY_BOUNCE_PAD_DIAGONAL,
     ENTITY_LIFE_REFILL_SMALL,
     ENTITY_LIFE_REFILL_LARGE,
-    ENTITY_BOSS_TEST,
+    ENTITY_BOSS_SEVER_YAGATA,
     ENTITY_MIXTAPE,
     ENTITY_BOSS_DOOR,
-    ENTITY_SHRUBBLE_LV4
+    ENTITY_SHRUBBLE_LV4,
+    ENTITY_BOSS_SMASH_GORILLA,
+    ENTITY_BOSS_GRIND_PANGOLIN,
+    ENTITY_BOSS_DRAIN_BAT,
+    ENTITY_BOSS_KINETIC_DONUT,
+    ENTITY_BOSS_TRASH_MAN,
+    ENTITY_BOSS_FLARE_GRYFFYN,
+    ENTITY_BOSS_DEADEYE_CHIRPZI,
+    ENTITY_BOSS_BIGMA,
+    ENTITY_BOSS_HANK_WADDLE
 } mgEntityIndex_t;
 
 typedef enum
@@ -283,7 +292,25 @@ void mg_updateBossDoor(mgEntity_t* self);
 
 void mg_bossDoorCollisionHandler(mgEntity_t* self, mgEntity_t* other);
 
-void mg_updateBossTest(mgEntity_t* self);
+void mg_updateBossSeverYagata(mgEntity_t* self);
+
+void mg_updateBossSmashGorilla(mgEntity_t* self);
+
+void mg_updateBossGrindPangolin(mgEntity_t* self);
+
+void mg_updateBossDrainBat(mgEntity_t* self);
+
+void mg_updateBossKineticDonut(mgEntity_t* self);
+
+void mg_updateBossTrashMan(mgEntity_t* self);
+
+void mg_updateBossFlareGryffyn(mgEntity_t* self);
+
+void mg_updateBossDeadeyeChirpzi(mgEntity_t* self);
+
+void mg_updateBossBigma(mgEntity_t* self);
+
+void mg_updateBossHankWaddle(mgEntity_t* self);
 
 void mg_updateShrubbleLv4(mgEntity_t* self);
 

@@ -180,10 +180,19 @@
                 "ENTITY_BOUNCE_PAD_DIAGONAL",
                 "ENTITY_LIFE_REFILL_SMALL",
                 "ENTITY_LIFE_REFILL_LARGE",
-                "ENTITY_BOSS_TEST",
+                "ENTITY_BOSS_SEVER_YAGATA",
                 "ENTITY_MIXTAPE",
                 "ENTITY_BOSS_DOOR",
-                "ENTITY_SHRUBBLE_LV4"
+                "ENTITY_SHRUBBLE_LV4",
+                "ENTITY_BOSS_SMASH_GORILLA",
+                "ENTITY_BOSS_GRIND_PANGOLIN",
+                "ENTITY_BOSS_DRAIN_BAT",
+                "ENTITY_BOSS_KINETIC_DONUT",
+                "ENTITY_BOSS_TRASH_MAN",
+                "ENTITY_BOSS_FLARE_GRYFFYN",
+                "ENTITY_BOSS_DEADEYE_CHIRPZI",
+                "ENTITY_BOSS_BIGMA",
+                "ENTITY_BOSS_HANK_WADDLE"
             ],
             "valuesAsFlags": false
         },

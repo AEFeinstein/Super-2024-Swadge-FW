@@ -1268,7 +1268,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_BOUNCIN_SCHMUCK:
         case ENTITY_SPIKY_MCGEE:
         case ENTITY_TURRET:
-        case ENTITY_BOSS_TEST:
+        case ENTITY_BOSS_SEVER_YAGATA:
         {
             if (self->state == MG_PL_ST_MIC_DROP)
             {
@@ -3330,153 +3330,6 @@ void mg_bossDoorCollisionHandler(mgEntity_t* self, mgEntity_t* other)
     }
 }
 
-void mg_updateBossTest(mgEntity_t* self)
-{
-    switch (self->state)
-    {
-        case 65535:
-            return;
-        case 0:
-        default:
-            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
-            {
-                self->yspeed -= 4;
-            }
-
-            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
-            {
-                self->xspeed = 64;
-            }
-
-            if (self->stateTimer == 120)
-            {
-                self->jumpPower = 1;
-            }
-
-            self->stateTimer++;
-            if (self->stateTimer > 180)
-            {
-                self->stateTimer = 0;
-                switch (esp_random() % 3)
-                {
-                    case 0:
-                        self->state = 1;
-                        break;
-                    case 1:
-                        self->state = 2;
-                        break;
-                    case 2:
-                        self->state = 3;
-                        break;
-                }
-            }
-            break;
-        case 1:
-            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
-            {
-                self->yspeed -= 4;
-            }
-
-            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
-            {
-                self->xspeed = -64;
-            }
-
-            if (self->stateTimer == 120)
-            {
-                self->jumpPower = 1;
-            }
-
-            self->stateTimer++;
-            if (self->stateTimer > 180)
-            {
-                self->stateTimer = 0;
-                switch (esp_random() % 3)
-                {
-                    case 0:
-                        self->state = 0;
-                        break;
-                    case 1:
-                        self->state = 2;
-                        break;
-                    case 2:
-                        self->state = 3;
-                        break;
-                }
-            }
-
-            break;
-        case 2:
-
-            if (self->stateTimer < 60)
-            {
-                if (self->x < self->entityManager->playerEntity->x)
-                {
-                    self->xspeed = 32;
-                }
-                else
-                {
-                    self->xspeed = -32;
-                }
-            }
-
-            if (!self->falling || self->y > self->entityManager->playerEntity->y)
-            {
-                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
-                self->stateTimer = 0;
-            }
-
-            self->stateTimer++;
-
-            break;
-        case 3:
-            self->stateTimer++;
-
-            if (!(self->stateTimer % 60))
-            {
-                self->jumpPower = 1;
-            }
-
-            if (self->stateTimer > 239)
-            {
-                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
-                self->stateTimer = 0;
-            }
-            break;
-    }
-
-    if (self->jumpPower > 0)
-    {
-        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
-                                                    TO_PIXEL_COORDS(self->y));
-        if (createdEntity != NULL)
-        {
-            int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->y,
-                                     self->entityManager->playerEntity->x - self->x);
-            int16_t sin   = getSin1024(angle);
-            int16_t cos   = getCos1024(angle);
-
-            createdEntity->xspeed = (80 * cos) / 1024;
-            createdEntity->yspeed = (80 * sin) / 1024;
-
-            createdEntity->linkedEntity = self;
-            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
-            self->jumpPower = 0;
-        }
-    }
-
-    mg_updateInvincibilityFrames(self);
-    mg_moveEntityWithTileCollisions3(self);
-    applyDamping(self);
-    applyGravity(self);
-    mg_detectEntityCollisions(self);
-
-    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
-    {
-        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
-    }
-}
-
 void mg_updateShrubbleLv4(mgEntity_t* self)
 {
     if (self->gameData->frameCount % 10 == 0)
@@ -3810,5 +3663,1475 @@ uint8_t mg_crawlerGettInitialMoveState(int16_t angle, bool clockwise)
             return clockwise ? CRAWLER_LEFT_TO_TOP : CRAWLER_RIGHT_TO_TOP;
         case 338 ... 359:
             return clockwise ? CRAWLER_TOP_TO_RIGHT : CRAWLER_TOP_TO_LEFT;
+    }
+}
+
+void mg_updateBossSeverYagata(mgEntity_t* self)
+{
+    switch (self->state)
+    {
+        case 65535:
+            return;
+        case 0:
+        default:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
+            {
+                self->xspeed = 64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 1;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+            break;
+        case 1:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
+            {
+                self->xspeed = -64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 0;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+
+            break;
+        case 2:
+
+            if (self->stateTimer < 60)
+            {
+                if (self->x < self->entityManager->playerEntity->x)
+                {
+                    self->xspeed = 32;
+                }
+                else
+                {
+                    self->xspeed = -32;
+                }
+            }
+
+            if (!self->falling || self->y > self->entityManager->playerEntity->y)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+
+            self->stateTimer++;
+
+            break;
+        case 3:
+            self->stateTimer++;
+
+            if (!(self->stateTimer % 60))
+            {
+                self->jumpPower = 1;
+            }
+
+            if (self->stateTimer > 239)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+            break;
+    }
+
+    if (self->jumpPower > 0)
+    {
+        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                    TO_PIXEL_COORDS(self->y));
+        if (createdEntity != NULL)
+        {
+            int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->y,
+                                     self->entityManager->playerEntity->x - self->x);
+            int16_t sin   = getSin1024(angle);
+            int16_t cos   = getCos1024(angle);
+
+            createdEntity->xspeed = (80 * cos) / 1024;
+            createdEntity->yspeed = (80 * sin) / 1024;
+
+            createdEntity->linkedEntity = self;
+            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+            self->jumpPower = 0;
+        }
+    }
+
+    mg_updateInvincibilityFrames(self);
+    mg_moveEntityWithTileCollisions3(self);
+    applyDamping(self);
+    applyGravity(self);
+    mg_detectEntityCollisions(self);
+
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    {
+        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+    }
+}
+
+void mg_updateBossSmashGorilla(mgEntity_t* self)
+{
+    switch (self->state)
+    {
+        case 65535:
+            return;
+        case 0:
+        default:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
+            {
+                self->xspeed = 64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 1;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+            break;
+        case 1:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
+            {
+                self->xspeed = -64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 0;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+
+            break;
+        case 2:
+
+            if (self->stateTimer < 60)
+            {
+                if (self->x < self->entityManager->playerEntity->x)
+                {
+                    self->xspeed = 32;
+                }
+                else
+                {
+                    self->xspeed = -32;
+                }
+            }
+
+            if (!self->falling || self->y > self->entityManager->playerEntity->y)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+
+            self->stateTimer++;
+
+            break;
+        case 3:
+            self->stateTimer++;
+
+            if (!(self->stateTimer % 60))
+            {
+                self->jumpPower = 1;
+            }
+
+            if (self->stateTimer > 239)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+            break;
+    }
+
+    if (self->jumpPower > 0)
+    {
+        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                    TO_PIXEL_COORDS(self->y));
+        if (createdEntity != NULL)
+        {
+            int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->y,
+                                     self->entityManager->playerEntity->x - self->x);
+            int16_t sin   = getSin1024(angle);
+            int16_t cos   = getCos1024(angle);
+
+            createdEntity->xspeed = (80 * cos) / 1024;
+            createdEntity->yspeed = (80 * sin) / 1024;
+
+            createdEntity->linkedEntity = self;
+            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+            self->jumpPower = 0;
+        }
+    }
+
+    mg_updateInvincibilityFrames(self);
+    mg_moveEntityWithTileCollisions3(self);
+    applyDamping(self);
+    applyGravity(self);
+    mg_detectEntityCollisions(self);
+
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    {
+        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+    }
+}
+
+void mg_updateBossGrindPangolin(mgEntity_t* self)
+{
+    switch (self->state)
+    {
+        case 65535:
+            return;
+        case 0:
+        default:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
+            {
+                self->xspeed = 64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 1;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+            break;
+        case 1:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
+            {
+                self->xspeed = -64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 0;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+
+            break;
+        case 2:
+
+            if (self->stateTimer < 60)
+            {
+                if (self->x < self->entityManager->playerEntity->x)
+                {
+                    self->xspeed = 32;
+                }
+                else
+                {
+                    self->xspeed = -32;
+                }
+            }
+
+            if (!self->falling || self->y > self->entityManager->playerEntity->y)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+
+            self->stateTimer++;
+
+            break;
+        case 3:
+            self->stateTimer++;
+
+            if (!(self->stateTimer % 60))
+            {
+                self->jumpPower = 1;
+            }
+
+            if (self->stateTimer > 239)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+            break;
+    }
+
+    if (self->jumpPower > 0)
+    {
+        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                    TO_PIXEL_COORDS(self->y));
+        if (createdEntity != NULL)
+        {
+            int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->y,
+                                     self->entityManager->playerEntity->x - self->x);
+            int16_t sin   = getSin1024(angle);
+            int16_t cos   = getCos1024(angle);
+
+            createdEntity->xspeed = (80 * cos) / 1024;
+            createdEntity->yspeed = (80 * sin) / 1024;
+
+            createdEntity->linkedEntity = self;
+            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+            self->jumpPower = 0;
+        }
+    }
+
+    mg_updateInvincibilityFrames(self);
+    mg_moveEntityWithTileCollisions3(self);
+    applyDamping(self);
+    applyGravity(self);
+    mg_detectEntityCollisions(self);
+
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    {
+        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+    }
+}
+
+void mg_updateBossDrainBat(mgEntity_t* self)
+{
+    switch (self->state)
+    {
+        case 65535:
+            return;
+        case 0:
+        default:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
+            {
+                self->xspeed = 64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 1;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+            break;
+        case 1:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
+            {
+                self->xspeed = -64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 0;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+
+            break;
+        case 2:
+
+            if (self->stateTimer < 60)
+            {
+                if (self->x < self->entityManager->playerEntity->x)
+                {
+                    self->xspeed = 32;
+                }
+                else
+                {
+                    self->xspeed = -32;
+                }
+            }
+
+            if (!self->falling || self->y > self->entityManager->playerEntity->y)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+
+            self->stateTimer++;
+
+            break;
+        case 3:
+            self->stateTimer++;
+
+            if (!(self->stateTimer % 60))
+            {
+                self->jumpPower = 1;
+            }
+
+            if (self->stateTimer > 239)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+            break;
+    }
+
+    if (self->jumpPower > 0)
+    {
+        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                    TO_PIXEL_COORDS(self->y));
+        if (createdEntity != NULL)
+        {
+            int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->y,
+                                     self->entityManager->playerEntity->x - self->x);
+            int16_t sin   = getSin1024(angle);
+            int16_t cos   = getCos1024(angle);
+
+            createdEntity->xspeed = (80 * cos) / 1024;
+            createdEntity->yspeed = (80 * sin) / 1024;
+
+            createdEntity->linkedEntity = self;
+            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+            self->jumpPower = 0;
+        }
+    }
+
+    mg_updateInvincibilityFrames(self);
+    mg_moveEntityWithTileCollisions3(self);
+    applyDamping(self);
+    applyGravity(self);
+    mg_detectEntityCollisions(self);
+
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    {
+        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+    }
+}
+
+void mg_updateBossKineticDonut(mgEntity_t* self)
+{
+    switch (self->state)
+    {
+        case 65535:
+            return;
+        case 0:
+        default:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
+            {
+                self->xspeed = 64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 1;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+            break;
+        case 1:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
+            {
+                self->xspeed = -64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 0;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+
+            break;
+        case 2:
+
+            if (self->stateTimer < 60)
+            {
+                if (self->x < self->entityManager->playerEntity->x)
+                {
+                    self->xspeed = 32;
+                }
+                else
+                {
+                    self->xspeed = -32;
+                }
+            }
+
+            if (!self->falling || self->y > self->entityManager->playerEntity->y)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+
+            self->stateTimer++;
+
+            break;
+        case 3:
+            self->stateTimer++;
+
+            if (!(self->stateTimer % 60))
+            {
+                self->jumpPower = 1;
+            }
+
+            if (self->stateTimer > 239)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+            break;
+    }
+
+    if (self->jumpPower > 0)
+    {
+        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                    TO_PIXEL_COORDS(self->y));
+        if (createdEntity != NULL)
+        {
+            int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->y,
+                                     self->entityManager->playerEntity->x - self->x);
+            int16_t sin   = getSin1024(angle);
+            int16_t cos   = getCos1024(angle);
+
+            createdEntity->xspeed = (80 * cos) / 1024;
+            createdEntity->yspeed = (80 * sin) / 1024;
+
+            createdEntity->linkedEntity = self;
+            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+            self->jumpPower = 0;
+        }
+    }
+
+    mg_updateInvincibilityFrames(self);
+    mg_moveEntityWithTileCollisions3(self);
+    applyDamping(self);
+    applyGravity(self);
+    mg_detectEntityCollisions(self);
+
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    {
+        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+    }
+}
+
+void mg_updateBossTrashMan(mgEntity_t* self)
+{
+    switch (self->state)
+    {
+        case 65535:
+            return;
+        case 0:
+        default:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
+            {
+                self->xspeed = 64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 1;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+            break;
+        case 1:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
+            {
+                self->xspeed = -64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 0;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+
+            break;
+        case 2:
+
+            if (self->stateTimer < 60)
+            {
+                if (self->x < self->entityManager->playerEntity->x)
+                {
+                    self->xspeed = 32;
+                }
+                else
+                {
+                    self->xspeed = -32;
+                }
+            }
+
+            if (!self->falling || self->y > self->entityManager->playerEntity->y)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+
+            self->stateTimer++;
+
+            break;
+        case 3:
+            self->stateTimer++;
+
+            if (!(self->stateTimer % 60))
+            {
+                self->jumpPower = 1;
+            }
+
+            if (self->stateTimer > 239)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+            break;
+    }
+
+    if (self->jumpPower > 0)
+    {
+        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                    TO_PIXEL_COORDS(self->y));
+        if (createdEntity != NULL)
+        {
+            int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->y,
+                                     self->entityManager->playerEntity->x - self->x);
+            int16_t sin   = getSin1024(angle);
+            int16_t cos   = getCos1024(angle);
+
+            createdEntity->xspeed = (80 * cos) / 1024;
+            createdEntity->yspeed = (80 * sin) / 1024;
+
+            createdEntity->linkedEntity = self;
+            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+            self->jumpPower = 0;
+        }
+    }
+
+    mg_updateInvincibilityFrames(self);
+    mg_moveEntityWithTileCollisions3(self);
+    applyDamping(self);
+    applyGravity(self);
+    mg_detectEntityCollisions(self);
+
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    {
+        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+    }
+}
+
+void mg_updateBossFlareGryffyn(mgEntity_t* self)
+{
+    switch (self->state)
+    {
+        case 65535:
+            return;
+        case 0:
+        default:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
+            {
+                self->xspeed = 64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 1;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+            break;
+        case 1:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
+            {
+                self->xspeed = -64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 0;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+
+            break;
+        case 2:
+
+            if (self->stateTimer < 60)
+            {
+                if (self->x < self->entityManager->playerEntity->x)
+                {
+                    self->xspeed = 32;
+                }
+                else
+                {
+                    self->xspeed = -32;
+                }
+            }
+
+            if (!self->falling || self->y > self->entityManager->playerEntity->y)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+
+            self->stateTimer++;
+
+            break;
+        case 3:
+            self->stateTimer++;
+
+            if (!(self->stateTimer % 60))
+            {
+                self->jumpPower = 1;
+            }
+
+            if (self->stateTimer > 239)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+            break;
+    }
+
+    if (self->jumpPower > 0)
+    {
+        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                    TO_PIXEL_COORDS(self->y));
+        if (createdEntity != NULL)
+        {
+            int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->y,
+                                     self->entityManager->playerEntity->x - self->x);
+            int16_t sin   = getSin1024(angle);
+            int16_t cos   = getCos1024(angle);
+
+            createdEntity->xspeed = (80 * cos) / 1024;
+            createdEntity->yspeed = (80 * sin) / 1024;
+
+            createdEntity->linkedEntity = self;
+            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+            self->jumpPower = 0;
+        }
+    }
+
+    mg_updateInvincibilityFrames(self);
+    mg_moveEntityWithTileCollisions3(self);
+    applyDamping(self);
+    applyGravity(self);
+    mg_detectEntityCollisions(self);
+
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    {
+        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+    }
+}
+
+void mg_updateBossDeadeyeChirpzi(mgEntity_t* self)
+{
+    switch (self->state)
+    {
+        case 65535:
+            return;
+        case 0:
+        default:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
+            {
+                self->xspeed = 64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 1;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+            break;
+        case 1:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
+            {
+                self->xspeed = -64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 0;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+
+            break;
+        case 2:
+
+            if (self->stateTimer < 60)
+            {
+                if (self->x < self->entityManager->playerEntity->x)
+                {
+                    self->xspeed = 32;
+                }
+                else
+                {
+                    self->xspeed = -32;
+                }
+            }
+
+            if (!self->falling || self->y > self->entityManager->playerEntity->y)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+
+            self->stateTimer++;
+
+            break;
+        case 3:
+            self->stateTimer++;
+
+            if (!(self->stateTimer % 60))
+            {
+                self->jumpPower = 1;
+            }
+
+            if (self->stateTimer > 239)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+            break;
+    }
+
+    if (self->jumpPower > 0)
+    {
+        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                    TO_PIXEL_COORDS(self->y));
+        if (createdEntity != NULL)
+        {
+            int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->y,
+                                     self->entityManager->playerEntity->x - self->x);
+            int16_t sin   = getSin1024(angle);
+            int16_t cos   = getCos1024(angle);
+
+            createdEntity->xspeed = (80 * cos) / 1024;
+            createdEntity->yspeed = (80 * sin) / 1024;
+
+            createdEntity->linkedEntity = self;
+            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+            self->jumpPower = 0;
+        }
+    }
+
+    mg_updateInvincibilityFrames(self);
+    mg_moveEntityWithTileCollisions3(self);
+    applyDamping(self);
+    applyGravity(self);
+    mg_detectEntityCollisions(self);
+
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    {
+        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+    }
+}
+
+void mg_updateBossBigma(mgEntity_t* self)
+{
+    switch (self->state)
+    {
+        case 65535:
+            return;
+        case 0:
+        default:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
+            {
+                self->xspeed = 64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 1;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+            break;
+        case 1:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
+            {
+                self->xspeed = -64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 0;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+
+            break;
+        case 2:
+
+            if (self->stateTimer < 60)
+            {
+                if (self->x < self->entityManager->playerEntity->x)
+                {
+                    self->xspeed = 32;
+                }
+                else
+                {
+                    self->xspeed = -32;
+                }
+            }
+
+            if (!self->falling || self->y > self->entityManager->playerEntity->y)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+
+            self->stateTimer++;
+
+            break;
+        case 3:
+            self->stateTimer++;
+
+            if (!(self->stateTimer % 60))
+            {
+                self->jumpPower = 1;
+            }
+
+            if (self->stateTimer > 239)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+            break;
+    }
+
+    if (self->jumpPower > 0)
+    {
+        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                    TO_PIXEL_COORDS(self->y));
+        if (createdEntity != NULL)
+        {
+            int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->y,
+                                     self->entityManager->playerEntity->x - self->x);
+            int16_t sin   = getSin1024(angle);
+            int16_t cos   = getCos1024(angle);
+
+            createdEntity->xspeed = (80 * cos) / 1024;
+            createdEntity->yspeed = (80 * sin) / 1024;
+
+            createdEntity->linkedEntity = self;
+            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+            self->jumpPower = 0;
+        }
+    }
+
+    mg_updateInvincibilityFrames(self);
+    mg_moveEntityWithTileCollisions3(self);
+    applyDamping(self);
+    applyGravity(self);
+    mg_detectEntityCollisions(self);
+
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    {
+        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+    }
+}
+
+void mg_updateBossHankWaddle(mgEntity_t* self)
+{
+    switch (self->state)
+    {
+        case 65535:
+            return;
+        case 0:
+        default:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
+            {
+                self->xspeed = 64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 1;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+            break;
+        case 1:
+            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
+            {
+                self->yspeed -= 4;
+            }
+
+            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
+            {
+                self->xspeed = -64;
+            }
+
+            if (self->stateTimer == 120)
+            {
+                self->jumpPower = 1;
+            }
+
+            self->stateTimer++;
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 3)
+                {
+                    case 0:
+                        self->state = 0;
+                        break;
+                    case 1:
+                        self->state = 2;
+                        break;
+                    case 2:
+                        self->state = 3;
+                        break;
+                }
+            }
+
+            break;
+        case 2:
+
+            if (self->stateTimer < 60)
+            {
+                if (self->x < self->entityManager->playerEntity->x)
+                {
+                    self->xspeed = 32;
+                }
+                else
+                {
+                    self->xspeed = -32;
+                }
+            }
+
+            if (!self->falling || self->y > self->entityManager->playerEntity->y)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+
+            self->stateTimer++;
+
+            break;
+        case 3:
+            self->stateTimer++;
+
+            if (!(self->stateTimer % 60))
+            {
+                self->jumpPower = 1;
+            }
+
+            if (self->stateTimer > 239)
+            {
+                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->stateTimer = 0;
+            }
+            break;
+    }
+
+    if (self->jumpPower > 0)
+    {
+        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                    TO_PIXEL_COORDS(self->y));
+        if (createdEntity != NULL)
+        {
+            int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->y,
+                                     self->entityManager->playerEntity->x - self->x);
+            int16_t sin   = getSin1024(angle);
+            int16_t cos   = getCos1024(angle);
+
+            createdEntity->xspeed = (80 * cos) / 1024;
+            createdEntity->yspeed = (80 * sin) / 1024;
+
+            createdEntity->linkedEntity = self;
+            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+            self->jumpPower = 0;
+        }
+    }
+
+    mg_updateInvincibilityFrames(self);
+    mg_moveEntityWithTileCollisions3(self);
+    applyDamping(self);
+    applyGravity(self);
+    mg_detectEntityCollisions(self);
+
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    {
+        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
     }
 }

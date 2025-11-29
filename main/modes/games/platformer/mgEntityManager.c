@@ -293,8 +293,8 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
         case ENTITY_LIFE_REFILL_LARGE:
             createdEntity = createLifeRefillLarge(entityManager, x, y);
             break;
-        case ENTITY_BOSS_TEST:
-            createdEntity = createBossTest(entityManager, x, y);
+        case ENTITY_BOSS_SEVER_YAGATA:
+            createdEntity = createBossSeverYagata(entityManager, x, y);
             break;
         case ENTITY_MIXTAPE:
             createdEntity = createMixtape(entityManager, x, y);
@@ -2000,7 +2000,7 @@ mgEntity_t* createLifeRefillLarge(mgEntityManager_t* entityManager, uint16_t x, 
     return entity;
 }
 
-mgEntity_t* createBossTest(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createBossSeverYagata(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
     mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
@@ -2026,11 +2026,407 @@ mgEntity_t* createBossTest(mgEntityManager_t* entityManager, uint16_t x, uint16_
     entity->scoreValue           = 100;
     entity->hp                   = 30;
 
-    entity->type                 = ENTITY_BOSS_TEST;
+    entity->type                 = ENTITY_BOSS_SEVER_YAGATA;
     entity->spriteIndex          = MG_SP_BOSS_IDLE;
     entity->state                = -1;
     entity->stateTimer           = 0;
-    entity->updateFunction       = &mg_updateBossTest;
+    entity->updateFunction       = &mg_updateBossSeverYagata;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+    entity->tileCollider         = &entityTileCollider_1x2;
+
+    entity->drawHandler  = &mg_defaultEntityDrawHandler;
+    entity->linkedEntity = NULL;
+
+    entityManager->bossEntity = entity;
+    return entity;
+}
+
+mgEntity_t* createBossSmashGorilla(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = 0;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 1;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
+    entity->scoreValue           = 100;
+    entity->hp                   = 30;
+
+    entity->type                 = ENTITY_BOSS_SMASH_GORILLA;
+    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->state                = -1;
+    entity->stateTimer           = 0;
+    entity->updateFunction       = &mg_updateBossSmashGorilla;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+    entity->tileCollider         = &entityTileCollider_1x2;
+
+    entity->drawHandler  = &mg_defaultEntityDrawHandler;
+    entity->linkedEntity = NULL;
+
+    entityManager->bossEntity = entity;
+    return entity;
+}
+
+mgEntity_t* createBossGrindPangolin(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = 0;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 1;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
+    entity->scoreValue           = 100;
+    entity->hp                   = 30;
+
+    entity->type                 = ENTITY_BOSS_GRIND_PANGOLIN;
+    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->state                = -1;
+    entity->stateTimer           = 0;
+    entity->updateFunction       = &mg_updateBossGrindPangolin;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+    entity->tileCollider         = &entityTileCollider_1x2;
+
+    entity->drawHandler  = &mg_defaultEntityDrawHandler;
+    entity->linkedEntity = NULL;
+
+    entityManager->bossEntity = entity;
+    return entity;
+}
+
+mgEntity_t* createBossDrainBat(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = 0;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 1;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
+    entity->scoreValue           = 100;
+    entity->hp                   = 30;
+
+    entity->type                 = ENTITY_BOSS_DRAIN_BAT;
+    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->state                = -1;
+    entity->stateTimer           = 0;
+    entity->updateFunction       = &mg_updateBossDrainBat;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+    entity->tileCollider         = &entityTileCollider_1x2;
+
+    entity->drawHandler  = &mg_defaultEntityDrawHandler;
+    entity->linkedEntity = NULL;
+
+    entityManager->bossEntity = entity;
+    return entity;
+}
+
+mgEntity_t* createBossKineticDonut(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = 0;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 1;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
+    entity->scoreValue           = 100;
+    entity->hp                   = 30;
+
+    entity->type                 = ENTITY_BOSS_KINETIC_DONUT;
+    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->state                = -1;
+    entity->stateTimer           = 0;
+    entity->updateFunction       = &mg_updateBossKineticDonut;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+    entity->tileCollider         = &entityTileCollider_1x2;
+
+    entity->drawHandler  = &mg_defaultEntityDrawHandler;
+    entity->linkedEntity = NULL;
+
+    entityManager->bossEntity = entity;
+    return entity;
+}
+
+mgEntity_t* createBossTrashMan(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = 0;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 1;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
+    entity->scoreValue           = 100;
+    entity->hp                   = 30;
+
+    entity->type                 = ENTITY_BOSS_TRASH_MAN;
+    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->state                = -1;
+    entity->stateTimer           = 0;
+    entity->updateFunction       = &mg_updateBossTrashMan;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+    entity->tileCollider         = &entityTileCollider_1x2;
+
+    entity->drawHandler  = &mg_defaultEntityDrawHandler;
+    entity->linkedEntity = NULL;
+
+    entityManager->bossEntity = entity;
+    return entity;
+}
+
+mgEntity_t* createBossFlareGryffyn(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = 0;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 1;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
+    entity->scoreValue           = 100;
+    entity->hp                   = 30;
+
+    entity->type                 = ENTITY_BOSS_FLARE_GRYFFYN;
+    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->state                = -1;
+    entity->stateTimer           = 0;
+    entity->updateFunction       = &mg_updateBossFlareGryffyn;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+    entity->tileCollider         = &entityTileCollider_1x2;
+
+    entity->drawHandler  = &mg_defaultEntityDrawHandler;
+    entity->linkedEntity = NULL;
+
+    entityManager->bossEntity = entity;
+    return entity;
+}
+
+mgEntity_t* createBossDeadeyeChirpzi(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = 0;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 1;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
+    entity->scoreValue           = 100;
+    entity->hp                   = 30;
+
+    entity->type                 = ENTITY_BOSS_DEADEYE_CHIRPZI;
+    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->state                = -1;
+    entity->stateTimer           = 0;
+    entity->updateFunction       = &mg_updateBossDeadeyeChirpzi;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+    entity->tileCollider         = &entityTileCollider_1x2;
+
+    entity->drawHandler  = &mg_defaultEntityDrawHandler;
+    entity->linkedEntity = NULL;
+
+    entityManager->bossEntity = entity;
+    return entity;
+}
+
+mgEntity_t* createBossBigma(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = 0;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 1;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
+    entity->scoreValue           = 100;
+    entity->hp                   = 30;
+
+    entity->type                 = ENTITY_BOSS_BIGMA;
+    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->state                = -1;
+    entity->stateTimer           = 0;
+    entity->updateFunction       = &mg_updateBossBigma;
+    entity->collisionHandler     = &mg_enemyCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+    entity->tileCollider         = &entityTileCollider_1x2;
+
+    entity->drawHandler  = &mg_defaultEntityDrawHandler;
+    entity->linkedEntity = NULL;
+
+    entityManager->bossEntity = entity;
+    return entity;
+}
+
+mgEntity_t* createBossHankWaddle(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = 0;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 1;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
+    entity->scoreValue           = 100;
+    entity->hp                   = 30;
+
+    entity->type                 = ENTITY_BOSS_HANK_WADDLE;
+    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->state                = -1;
+    entity->stateTimer           = 0;
+    entity->updateFunction       = &mg_updateBossHankWaddle;
     entity->collisionHandler     = &mg_enemyCollisionHandler;
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
