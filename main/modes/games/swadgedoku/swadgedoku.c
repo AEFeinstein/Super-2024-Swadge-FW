@@ -93,6 +93,7 @@ typedef struct
     int currentMode;
     bool playingContinuation;
     int currentLevelNumber;
+    int hintsUsed;
 
     menu_t* numberWheel;
     wheelMenuRenderer_t* numberWheelRenderer;
@@ -102,7 +103,9 @@ typedef struct
     bool showingHint;
     sudokuMoveDesc_t hint;
     dialogBox_t* hintDialogBox;
-    char* hintText;
+    dialogBoxOption_t* hintMoreLessOption;
+    char hintText[256];
+    char hintDetailText[1024];
 
     menu_t* pauseMenu;
 
@@ -132,6 +135,7 @@ static bool swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t val
 static void swadgedokuSetupNumberWheel(int base, uint16_t disableMask);
 static bool numberWheelCb(const char* label, bool selected, uint32_t value);
 
+static void swadgedokuDoWinCheck(void);
 static void swadgedokuCheckTrophyTriggers(void);
 static void swadgedokuPlayerSetDigit(uint8_t digit);
 static void swadgedokuShowHint(void);
@@ -175,7 +179,10 @@ static const char menuItemAbandonPuzzle[] = "Abandon Puzzle";
 
 // Dialog box
 static const char hintDialogTitle[]    = "Hint";
+static const char detailDialogTitle[]  = "Details";
 static const char dialogOptionOk[]     = "OK";
+static const char dialogOptionMore[]   = "Why though?";
+static const char dialogOptionLess[]   = "Makes sense";
 static const char dialogOptionCancel[] = "Cancel";
 
 // Number wheel title
@@ -288,6 +295,25 @@ static int32_t noYesValues[] = {
     1,
 };
 
+static const char* const aOrAnTable[] = {
+    "", // a 0
+    "", // a 1
+    "", // a 2
+    "", // a 3
+    "", // a 4
+    "", // a 5
+    "", // a 6
+    "", // a 7
+    "n", // an 8
+    "", // a 9
+    "n", // an A
+    "", // a B
+    "", // a C
+    "", // a D
+    "n", // an E
+    "n", // an F
+};
+
 /// @brief A default light-mode display theme
 static const sudokuTheme_t lightTheme = {.bgColor        = c333,
                                          .fillColor      = c555,
@@ -370,6 +396,24 @@ const trophyData_t swadgedokuTrophies[] = {{
                                                .difficulty  = TROPHY_DIFF_HARD,
                                                .maxVal      = (1 << ((int)SM_X_GRID + 1)) - 1,
                                                .identifier  = &anyPuzzleTrigger,
+                                           },
+                                           {
+                                               .title = "A little help",
+                                               .description = "Use a hint",
+                                               .image = NO_IMAGE_SET,
+                                               .type = TROPHY_TYPE_TRIGGER,
+                                               .difficulty = TROPHY_DIFF_EASY,
+                                               .maxVal = 1,
+                                               .identifier = NULL,
+                                           },
+                                           {
+                                               .title = "All by myself",
+                                               .description = "Solve a puzzle without any hints",
+                                               .image = NO_IMAGE_SET,
+                                               .type = TROPHY_TYPE_TRIGGER,
+                                               .difficulty = TROPHY_DIFF_MEDIUM,
+                                               .maxVal = 1,
+                                               .identifier = NULL,
                                            }};
 
 // Individual mode settings
@@ -391,6 +435,8 @@ const trophyDataList_t swadgedokuTrophyData = {
 const trophyData_t* trophySolveAny = &swadgedokuTrophies[0];
 const trophyData_t* trophyTenMins  = &swadgedokuTrophies[1];
 const trophyData_t* trophyFiveMins = &swadgedokuTrophies[2];
+const trophyData_t* trophyUseHint  = &swadgedokuTrophies[5];
+const trophyData_t* trophyNoHints  = &swadgedokuTrophies[6];
 
 //==============================================================================
 // Variables
@@ -582,9 +628,10 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
 
                 uint16_t dialogY = DIALOG_CENTER;
 
-                if (hintY >= TFT_HEIGHT / 3)
+                if (hintY >= TFT_HEIGHT / 3 || sd->hintDialogBox->title == detailDialogTitle)
                 {
                     // Middle or bottom of the screen, put the dialog at the top
+                    // Also always put the full-explanation dialog at the top, it can overlap the hint cell
                     dialogY = 0;
                 }
                 drawDialogBox(sd->hintDialogBox, getSysFont(), getSysFont(), DIALOG_CENTER, dialogY, DIALOG_AUTO, DIALOG_AUTO, 3);
@@ -827,6 +874,7 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                             sd->playTimer = 0;
                         }
 
+                        sd->hintsUsed = 0;
                         sd->playingContinuation = true;
                         setupSudokuPlayer(&sd->player, &sd->game);
                         memcpy(sd->player.notes, sd->game.notes, sd->game.size * sizeof(uint16_t));
@@ -863,6 +911,7 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                 return false;
             }
 
+            sd->hintsUsed           = 0;
             sd->playTimer           = 0;
             sd->playingContinuation = false;
             sd->currentLevelNumber  = value;
@@ -895,6 +944,7 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             sd->currentMode       = sd->customModeMenuItem->currentSetting;
             sd->currentDifficulty = sd->customDifficultyMenuItem->currentSetting;
 
+            sd->hintsUsed           = 0;
             sd->playTimer           = 0;
             sd->playingContinuation = false;
             sd->currentLevelNumber  = -1;
@@ -911,6 +961,7 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                 return false;
             }
 
+            sd->hintsUsed           = 0;
             sd->playTimer           = 0;
             sd->playingContinuation = false;
             sd->currentLevelNumber  = -1;
@@ -1123,6 +1174,72 @@ static bool numberWheelCb(const char* label, bool selected, uint32_t value)
     return false;
 }
 
+static void swadgedokuDoWinCheck(void)
+{
+    switch (swadgedokuCheckWin(&sd->game))
+    {
+        case SUDOKU_INVALID:
+            ESP_LOGD("Swadgedoku", "Invalid sudoku board!");
+            break;
+
+        case SUDOKU_INCOMPLETE:
+            ESP_LOGD("Swadgedoku", "Sudoku OK but incomplete");
+            break;
+
+        case SUDOKU_COMPLETE:
+        {
+            swadgedokuCheckTrophyTriggers();
+            if (sd->playingContinuation)
+            {
+                // Clear saved game since we just finished it
+                if (!eraseNvsKey(settingKeyProgress))
+                {
+                    ESP_LOGE("Swadgedoku", "Couldn't erase game progress from NVS!");
+                }
+
+                if (!eraseNvsKey(settingKeyProgressId))
+                {
+                    ESP_LOGE("Swadgedoku", "Couldn't erase progress level ID value");
+                }
+
+                if (!eraseNvsKey(settingKeyProgressTime))
+                {
+                    ESP_LOGE("Swadgedoku", "Couldn't erase progress timer value");
+                }
+            }
+
+            if (sd->currentLevelNumber != -1)
+            {
+                // Update the max level if needed
+                if (sd->currentLevelNumber >= sd->maxLevel && sd->maxLevel < settingLevelSelectBounds.max)
+                {
+                    ESP_LOGI("Swadgedoku", "Updating max completed level from %d to %d", sd->maxLevel,
+                                sd->currentLevelNumber + 1);
+                    sd->maxLevel = sd->currentLevelNumber + 1;
+                    if (!writeNvs32(settingKeyMaxLevel, sd->maxLevel))
+                    {
+                        ESP_LOGE("Swadgedoku", "Couldn't write updated max level to NVS");
+                    }
+                }
+
+                if (sd->lastLevel < sd->maxLevel)
+                {
+                    ESP_LOGI("Swadgedoku", "Updating last completed level from %d to %d", sd->lastLevel,
+                                sd->currentLevelNumber + 1);
+                    sd->lastLevel = sd->currentLevelNumber + 1;
+                    if (!writeNvs32(settingKeyLastLevel, sd->lastLevel))
+                    {
+                        ESP_LOGE("Swadgedoku", "Couldn't write updated last level to NVS");
+                    }
+                }
+                sd->currentLevelNumber = -1;
+            }
+            sd->screen = SWADGEDOKU_WIN;
+            break;
+        }
+    }
+}
+
 static void swadgedokuCheckTrophyTriggers(void)
 {
     for (const trophyData_t* trophy = swadgedokuTrophyData.list;
@@ -1173,6 +1290,11 @@ static void swadgedokuCheckTrophyTriggers(void)
             }
         }
     }
+
+    if (sd->hintsUsed == 0)
+    {
+        trophyUpdate(trophyNoHints, 1, true);
+    }
 }
 
 static void swadgedokuPlayerSetDigit(uint8_t digit)
@@ -1198,68 +1320,7 @@ static void swadgedokuPlayerSetDigit(uint8_t digit)
     {
         if (setDigit(&sd->game, digit, sd->player.curX, sd->player.curY))
         {
-            switch (swadgedokuCheckWin(&sd->game))
-            {
-                case SUDOKU_INVALID:
-                    ESP_LOGD("Swadgedoku", "Invalid sudoku board!");
-                    break;
-
-                case SUDOKU_INCOMPLETE:
-                    ESP_LOGD("Swadgedoku", "Sudoku OK but incomplete");
-                    break;
-
-                case SUDOKU_COMPLETE:
-                {
-                    swadgedokuCheckTrophyTriggers();
-                    if (sd->playingContinuation)
-                    {
-                        // Clear saved game since we just finished it
-                        if (!eraseNvsKey(settingKeyProgress))
-                        {
-                            ESP_LOGE("Swadgedoku", "Couldn't erase game progress from NVS!");
-                        }
-
-                        if (!eraseNvsKey(settingKeyProgressId))
-                        {
-                            ESP_LOGE("Swadgedoku", "Couldn't erase progress level ID value");
-                        }
-
-                        if (!eraseNvsKey(settingKeyProgressTime))
-                        {
-                            ESP_LOGE("Swadgedoku", "Couldn't erase progress timer value");
-                        }
-                    }
-
-                    if (sd->currentLevelNumber != -1)
-                    {
-                        // Update the max level if needed
-                        if (sd->currentLevelNumber >= sd->maxLevel && sd->maxLevel < settingLevelSelectBounds.max)
-                        {
-                            ESP_LOGI("Swadgedoku", "Updating max completed level from %d to %d", sd->maxLevel,
-                                     sd->currentLevelNumber + 1);
-                            sd->maxLevel = sd->currentLevelNumber + 1;
-                            if (!writeNvs32(settingKeyMaxLevel, sd->maxLevel))
-                            {
-                                ESP_LOGE("Swadgedoku", "Couldn't write updated max level to NVS");
-                            }
-                        }
-
-                        if (sd->lastLevel < sd->maxLevel)
-                        {
-                            ESP_LOGI("Swadgedoku", "Updating last completed level from %d to %d", sd->lastLevel,
-                                     sd->currentLevelNumber + 1);
-                            sd->lastLevel = sd->currentLevelNumber + 1;
-                            if (!writeNvs32(settingKeyLastLevel, sd->lastLevel))
-                            {
-                                ESP_LOGE("Swadgedoku", "Couldn't write updated last level to NVS");
-                            }
-                        }
-                        sd->currentLevelNumber = -1;
-                    }
-                    sd->screen = SWADGEDOKU_WIN;
-                    break;
-                }
-            }
+            swadgedokuDoWinCheck();
         }
     }
 }
@@ -1273,35 +1334,39 @@ static void swadgedokuShowHint(void)
     if (sudokuNextMove(&sd->hint, &sd->player.overlay, &sd->game))
     {
         ESP_LOGI("Swadgedoku", "Got hint!");
-        char temp[1024];
 //#pragma clang diagnostic push
 #pragma GCC diagnostic push
 //#pragma clang diagnostic ignored "-Wformat-nonliteral"
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
-        snprintf(temp, sizeof(temp), sd->hint.message, (int)sd->hint.digit, (int)(sd->hint.pos / sd->game.size) + 1, (int)(sd->hint.pos % sd->game.size) + 1);
+        snprintf(sd->hintText, sizeof(sd->hintText), sd->hint.message, (int)sd->hint.digit, (int)(sd->hint.pos / sd->game.size) + 1, (int)(sd->hint.pos % sd->game.size) + 1, aOrAnTable[sd->hint.digit]);
+        if (sd->hint.detail)
+        {
+            snprintf(sd->hintDetailText, sizeof(sd->hintDetailText), sd->hint.detail, (int)sd->hint.digit, (int)(sd->hint.pos / sd->game.size) + 1, (int)(sd->hint.pos % sd->game.size) + 1, aOrAnTable[sd->hint.digit]);
+        }
+        else
+        {
+            *sd->hintDetailText = '\0';
+        }
 //#pragma clang diagnostic pop
 #pragma GCC diagnostic pop
-
-        if (sd->hintText != NULL)
-        {
-            free(sd->hintText);
-            sd->hintText = NULL;
-        }
-        sd->hintText = strdup(temp);
 
         if (sd->hintDialogBox == NULL)
         {
             sd->hintDialogBox = initDialogBox(hintDialogTitle, sd->hintText, NULL, swadgedokuHintDialogCb);
             dialogBoxAddOption(sd->hintDialogBox, dialogOptionOk, NULL, OPTHINT_OK | OPTHINT_DEFAULT);
+            dialogBoxAddOption(sd->hintDialogBox, dialogOptionMore, NULL, OPTHINT_NORMAL);
+            sd->hintMoreLessOption = (dialogBoxOption_t*)sd->hintDialogBox->options.last->val;
             dialogBoxAddOption(sd->hintDialogBox, dialogOptionCancel, NULL, OPTHINT_CANCEL);
         }
         else
         {
+            sd->hintDialogBox->title = hintDialogTitle;
             sd->hintDialogBox->detail = sd->hintText;
             sd->hintDialogBox->selectedOption = sd->hintDialogBox->options.first;
+            sd->hintMoreLessOption->label = dialogOptionMore;
         }
 
-        ESP_LOGI("Swadgedoku", "Move: %s", temp);
+        ESP_LOGI("Swadgedoku", "Move: %s", sd->hintText);
         sd->showingHint = true;
     }
     else
@@ -1471,9 +1536,28 @@ static void swadgedokuHintDialogCb(const char* label)
     if (label == dialogOptionOk)
     {
         // Apply the hint
-        sd->game.grid[sd->hint.pos] = sd->hint.digit;
-        sudokuReevaluatePeers(sd->game.notes, &sd->game, sd->hint.pos / sd->game.size, sd->hint.pos % sd->game.size, 0);
-        sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
+        sd->hintsUsed++;
+        setDigit(&sd->game, sd->hint.digit, sd->hint.pos % sd->game.size, sd->hint.pos / sd->game.size);
+        swadgedokuDoWinCheck();
+
+        // Apply the trophy for using a hint
+        trophyUpdate(trophyUseHint, 1, true);
+    }
+    else if (label == dialogOptionMore)
+    {
+        sd->hintDialogBox->title = detailDialogTitle;
+        sd->hintDialogBox->detail = sd->hintDetailText;
+        sd->hintMoreLessOption->label = dialogOptionLess;
+        // Early return; don't stop showing the hint dialog
+        return;
+    }
+    else if (label == dialogOptionLess)
+    {
+        sd->hintDialogBox->title = hintDialogTitle;
+        sd->hintDialogBox->detail = sd->hintText;
+        sd->hintMoreLessOption->label = dialogOptionMore;
+        // Early return; don't stop showing the hint dialog
+        return;
     }
     else if (label == dialogOptionCancel)
     {
