@@ -25,6 +25,8 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
     uint16_t colNotes[board->size];
     uint16_t boxNotes[board->base];
     int overlayBox = -1;
+    int overlayRow = -1;
+    int overlayCol = -1;
 
     // 0. Copy the board notes
     memcpy(notes, board->notes, sizeof(uint16_t) * boardLen);
@@ -77,7 +79,8 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
                         // Done! We found exactly one valid position for this digit
                         desc->pos = pos;
                         desc->digit = digit;
-                        desc->message = "This is the only valid position for a %1$d within the box";
+                        desc->message = "This is the only valid position for a%4$s %1$d within the box";
+                        desc->detail = NULL;
                         overlayBox = box;
                         goto do_overlay;
                     }
@@ -102,7 +105,7 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
                     for (int n = 0; n < board->size; n++)
                     {
                         uint16_t curPos = row * board->size + n;
-                        if (0 == board->grid[curPos] && (notes[n] & bit))
+                        if (0 == board->grid[curPos] && (notes[curPos] & bit))
                         {
                             if (++count > 1)
                             {
@@ -117,7 +120,8 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
                     {
                         desc->pos = pos;
                         desc->digit = digit;
-                        desc->message = "This is the only valid position for a %1$d within row %2$d";
+                        desc->message = "This is the only valid position for a%4$s %1$d within row %2$d";
+                        overlayRow = pos / board->size;
                         goto do_overlay;
                     }
                 }
@@ -139,7 +143,7 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
                     for (int n = 0; n < board->size; n++)
                     {
                         uint16_t curPos = n * board->size + col;
-                        if (0 == board->grid[curPos] && (notes[n] & bit))
+                        if (0 == board->grid[curPos] && (notes[curPos] & bit))
                         {
                             // No digit in this cell, and the current digit is a possibility here
                             if (++count > 1)
@@ -155,7 +159,8 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
                     {
                         desc->pos = pos;
                         desc->digit = digit;
-                        desc->message = "This is the only valid position for a %1$d within column %3$d";
+                        desc->message = "This is the only valid position for a%4$s %1$d within column %3$d";
+                        overlayCol = pos % board->size;
                         goto do_overlay;
                     }
                 }
@@ -171,7 +176,9 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
                 // only one possibility!
                 desc->pos = n;
                 desc->digit = __builtin_ctz(notes[n]) + 1;
-                desc->message = "A %1$d is the only possible digit in this square";
+                desc->message = "A%4$s %1$d is the only possible digit in this square";
+                overlayRow = n / board->size;
+                overlayCol = n % board->size;
                 goto do_overlay;
             }
         }
@@ -268,6 +275,38 @@ do_overlay:
                     }
                 }
             }
+        }
+
+        if (overlayRow >= 0 && overlayCol >= 0)
+        {
+            // box a single square
+            shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+            shape->type = OVERLAY_RECT;
+            shape->color = c050;
+            shape->tag = ST_HINT;
+            getOverlayPos(&shape->rectangle.pos.x, &shape->rectangle.pos.y, overlayRow, overlayCol, SUBPOS_NW);
+            getOverlayPos(&shape->rectangle.width, &shape->rectangle.height, 1, 1, SUBPOS_NW);
+            push(&overlay->shapes, shape);
+        }
+        else if (overlayRow >= 0)
+        {
+            shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+            shape->type = OVERLAY_RECT;
+            shape->color = c050;
+            shape->tag = ST_HINT;
+            getOverlayPos(&shape->rectangle.pos.x, &shape->rectangle.pos.y, overlayRow, 0, SUBPOS_NW);
+            getOverlayPos(&shape->rectangle.width, &shape->rectangle.height, 1, board->size, SUBPOS_NW);
+            push(&overlay->shapes, shape);
+        }
+        else if (overlayCol >= 0)
+        {
+            shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+            shape->type = OVERLAY_RECT;
+            shape->color = c050;
+            shape->tag = ST_HINT;
+            getOverlayPos(&shape->rectangle.pos.x, &shape->rectangle.pos.y, 0, overlayCol, SUBPOS_NW);
+            getOverlayPos(&shape->rectangle.width, &shape->rectangle.height, board->size, 1, SUBPOS_NW);
+            push(&overlay->shapes, shape);
         }
 
         int r = desc->pos / board->size;

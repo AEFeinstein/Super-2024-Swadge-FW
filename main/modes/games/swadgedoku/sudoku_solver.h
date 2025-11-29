@@ -16,6 +16,9 @@ typedef struct
 
     /// @brief A text description of the hint accompanying this move
     char* message;
+
+    /// @brief A detailed text description of the technique used in this move
+    char* detail;
 } sudokuMoveDesc_t;
 
 bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudokuGrid_t* board);
