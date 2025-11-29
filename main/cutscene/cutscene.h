@@ -54,7 +54,7 @@ typedef struct
 cutscene_t* initCutscene(cutsceneCb cbFunc) __attribute__((warn_unused_result));
 void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t color, cnfsFileIdx_t spriteIdx, char* title, uint8_t numPoseVariations);
 void addCutsceneLine(cutscene_t* cutscene, char* body, uint8_t styleIdx);
-void updateCutscene(cutscene_t* cutscene);
+void updateCutscene(cutscene_t* cutscene, int16_t btnState);
 void drawCutscene(cutscene_t* cutscene, font_t* font);
 
 #endif
