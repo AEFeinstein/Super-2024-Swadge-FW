@@ -26,13 +26,15 @@ cutscene_t* initCutscene(cutsceneCb cbFunc)
     cutscene->lines = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
     cutscene->styles = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
     cutscene->sprite = heap_caps_calloc(1, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
-    cutscene->yOffset = 240;
+    cutscene->xOffset = 280;
     return cutscene;
 }
 
-void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileIdx_t spriteIdx, uint8_t numSpriteVariations)
+void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileIdx_t spriteIdx, char* title, uint8_t numSpriteVariations)
 {
     cutsceneStyle_t* style = (cutsceneStyle_t*)heap_caps_calloc(1, sizeof(cutsceneLine_t), MALLOC_CAP_SPIRAM);
+    style->title = (char*)heap_caps_calloc(strlen(title) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
+    strcpy(style->title, title);
     style->textColor = textColor;
     style->spriteIdx = spriteIdx;
     style->numSpriteVariations = numSpriteVariations;
@@ -41,11 +43,9 @@ void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileId
     push(cutscene->styles, (void*)style);
 }
 
-void addCutsceneLine(cutscene_t* cutscene, char* title, char* body, uint8_t styleIdx)
+void addCutsceneLine(cutscene_t* cutscene, char* body, uint8_t styleIdx)
 {
     cutsceneLine_t* line = (cutsceneLine_t*)heap_caps_calloc(1, sizeof(cutsceneLine_t), MALLOC_CAP_SPIRAM);
-    line->title = (char*)heap_caps_calloc(strlen(title) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
-    strcpy(line->title, title);
     line->body = (char*)heap_caps_calloc(strlen(body) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
     strcpy(line->body, body);
     line->styleIdx = styleIdx;
@@ -77,9 +77,9 @@ static cutsceneStyle_t* getCurrentStyle(cutscene_t* cutscene)
 
 void updateCutscene(cutscene_t* cutscene)
 {
-    if(cutscene->yOffset > 0)
+    if(cutscene->xOffset > 0)
     {
-        cutscene->yOffset-=8;
+        cutscene->xOffset-=8;
     }
     cutscene->blinkTimer++;
     if(cutscene->sprite->w == 0)
@@ -93,16 +93,16 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
 {
     cutsceneLine_t* line = (cutsceneLine_t*)cutscene->lines->first->val;
 
-    drawWsgSimple(cutscene->sprite, 0, cutscene->yOffset);
+    drawWsgSimple(cutscene->sprite, cutscene->xOffset, 0);
 
     // if (dData->blinkTimer > 0)
     // {
     //     drawWsgSimple(&dData->spriteNext, 254 + (textColor == c525 ? 4 : 0), -dData->offsetY + 186);
     // }
-    if(cutscene->yOffset == 0)
+    if(cutscene->xOffset == 0)
     {
         cutsceneStyle_t* style = getAtIndex(cutscene->styles, line->styleIdx);
-        drawText(font, style->textColor, line->title, 13, 152);
+        drawText(font, style->textColor, style->title, 13, 152);
 
         int16_t xOff = 13;
         int16_t yOff = 177;
