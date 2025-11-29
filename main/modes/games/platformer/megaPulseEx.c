@@ -775,7 +775,7 @@ void changeStateReadyScreen(platformer_t* self)
 
 void updateCutsceneScreen(platformer_t* self)
 {
-    updateCutscene(self->cutscene);
+    updateCutscene(self->cutscene, self->btnState);
     drawCutsceneScreen(self);
 }
 
@@ -879,9 +879,9 @@ void changeStateGame(platformer_t* self)
 
     //every level starts with a cutscene
     self->cutscene = initCutscene(goToReadyScreen);
-    addCutsceneStyle(self->cutscene, c555, SAWTOOTH_PORTRAIT_0_WSG, "Sawtooth" 4);
-    addCutsceneLine(self->cutscene, "Sawtooth", "This is the first test.", 0);
-    addCutsceneLine(self->cutscene, "Sawtooth", "And this is the second test. yo yo yo yo yo yo yo yo yo yo yo yo yo waddup.", 0);
+    addCutsceneStyle(self->cutscene, c555, SAWTOOTH_PORTRAIT_0_WSG, "Sawtooth", 4);
+    addCutsceneLine(self->cutscene, "This is the first test.", 0);
+    addCutsceneLine(self->cutscene, "And this is the second test. yo yo yo yo yo yo yo yo yo yo yo yo yo waddup.", 0);
 
     self->update = &updateCutsceneScreen;
 }

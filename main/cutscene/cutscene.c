@@ -32,7 +32,7 @@ cutscene_t* initCutscene(cutsceneCb cbFunc)
 
 void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileIdx_t spriteIdx, char* title, uint8_t numSpriteVariations)
 {
-    cutsceneStyle_t* style = (cutsceneStyle_t*)heap_caps_calloc(1, sizeof(cutsceneLine_t), MALLOC_CAP_SPIRAM);
+    cutsceneStyle_t* style = (cutsceneStyle_t*)heap_caps_calloc(1, sizeof(cutsceneStyle_t), MALLOC_CAP_SPIRAM);
     style->title = (char*)heap_caps_calloc(strlen(title) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
     strcpy(style->title, title);
     style->textColor = textColor;
@@ -75,7 +75,7 @@ static cutsceneStyle_t* getCurrentStyle(cutscene_t* cutscene)
     return getAtIndex(cutscene->styles, ((cutsceneLine_t*)cutscene->lines->first->val)->styleIdx);
 }
 
-void updateCutscene(cutscene_t* cutscene)
+void updateCutscene(cutscene_t* cutscene, int16_t btnState)
 {
     if(cutscene->xOffset > 0)
     {
