@@ -567,14 +567,8 @@ void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, i
     }
 }
 
-void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
+void sudokuGetIndividualNotes(uint16_t* rowNotes, uint16_t* colNotes, uint16_t* boxNotes, const sudokuGrid_t* game, int flags)
 {
-    // Summaries of the possibilities for each row, box, and column
-    // We will construct these from
-    uint16_t rowNotes[game->size];
-    uint16_t colNotes[game->size];
-    uint16_t boxNotes[game->base];
-
     // This means 'all values are possible in this row/cell'
     const uint16_t allNotes = (1 << game->base) - 1;
 
@@ -611,6 +605,20 @@ void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
             }
         }
     }
+}
+
+void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
+{
+    // Means all digits are possible
+    const uint16_t allNotes = (1 << game->base) - 1;
+
+    // Summaries of the possibilities for each row, box, and column
+    // We will construct these from
+    uint16_t rowNotes[game->size];
+    uint16_t colNotes[game->size];
+    uint16_t boxNotes[game->base];
+
+    sudokuGetIndividualNotes(rowNotes, colNotes, boxNotes, game, flags);
 
     for (int row = 0; row < game->size; row++)
     {
