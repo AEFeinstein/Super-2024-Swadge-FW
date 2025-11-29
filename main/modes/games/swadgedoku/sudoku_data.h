@@ -69,6 +69,8 @@ typedef enum
     OVERLAY_CHECK = 1024,
     /// @brief Overlays the computed notes onto the square
     OVERLAY_NOTES = 2048,
+    /// @brief Prevents the digit or notes from being drawn
+    OVERLAY_SKIP = 4096,
 } sudokuOverlayOpt_t;
 
 typedef enum
@@ -77,6 +79,8 @@ typedef enum
     ST_CURSOR,
     /// @brief This is a temporary annotation added by sudokuAnnotate()
     ST_ANNOTATE,
+    /// @brief This is a temporary annotation added for a hint
+    ST_HINT,
 } sudokuShapeTag_t;
 
 typedef enum
@@ -86,6 +90,8 @@ typedef enum
     OVERLAY_LINE,
     OVERLAY_ARROW,
     OVERLAY_TEXT,
+    OVERLAY_DIGIT,
+    OVERLAY_NOTES_SHAPE,
 } sudokuOverlayShapeType_t;
 
 typedef enum
@@ -119,6 +125,18 @@ typedef struct
             const char* val;
             bool center;
         } text;
+
+        struct
+        {
+            vec_t pos;
+            uint8_t digit;
+        } digit;
+
+        struct
+        {
+            vec_t pos;
+            uint16_t notes;
+        } notes;
     };
 } sudokuOverlayShape_t;
 

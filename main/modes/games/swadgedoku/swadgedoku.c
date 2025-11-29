@@ -6,11 +6,13 @@
 
 #include "sudoku_data.h"
 #include "sudoku_game.h"
+#include "sudoku_solver.h"
 #include "sudoku_ui.h"
 
 #include "menu.h"
 #include "wheel_menu.h"
 #include "mainMenu.h"
+#include "dialogBox.h"
 
 //==============================================================================
 // Defines
@@ -97,6 +99,11 @@ typedef struct
     rectangle_t wheelMenuTextBox;
     bool touchState;
 
+    bool showingHint;
+    sudokuMoveDesc_t hint;
+    dialogBox_t* hintDialogBox;
+    char* hintText;
+
     menu_t* pauseMenu;
 
     // Settings cache!
@@ -127,7 +134,9 @@ static bool numberWheelCb(const char* label, bool selected, uint32_t value);
 
 static void swadgedokuCheckTrophyTriggers(void);
 static void swadgedokuPlayerSetDigit(uint8_t digit);
+static void swadgedokuShowHint(void);
 static void swadgedokuGameButton(buttonEvt_t evt);
+static void swadgedokuHintDialogCb(const char* label);
 
 static sudokuDifficulty_t getLevelDifficulty(int level);
 
@@ -159,9 +168,15 @@ static const char menuItemHighlightOnlyOptions[]   = "Highlight Only-Possible: "
 // Pause menu
 static const char strPaused[]             = "Paused";
 static const char menuItemResume[]        = "Resume";
+static const char menuItemHint[]          = "Hint";
 static const char menuItemExitPuzzle[]    = "Save and Exit";
 static const char menuItemResetPuzzle[]   = "Reset Puzzle";
 static const char menuItemAbandonPuzzle[] = "Abandon Puzzle";
+
+// Dialog box
+static const char hintDialogTitle[]    = "Hint";
+static const char dialogOptionOk[]     = "OK";
+static const char dialogOptionCancel[] = "Cancel";
 
 // Number wheel title
 static const char strSelectDigit[] = "Select Digit";
@@ -445,6 +460,7 @@ static void swadgedokuEnterMode(void)
     sd->pauseMenu = initMenu(strPaused, swadgedokuPauseMenuCb);
 
     addSingleItemToMenu(sd->pauseMenu, menuItemResume);
+    addSingleItemToMenu(sd->pauseMenu, menuItemHint);
     addSingleItemToMenu(sd->pauseMenu, menuItemResetPuzzle);
     addSingleItemToMenu(sd->pauseMenu, menuItemAbandonPuzzle);
     addSingleItemToMenu(sd->pauseMenu, menuItemExitPuzzle);
@@ -508,31 +524,35 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
 
         case SWADGEDOKU_GAME:
         {
-            int32_t phi, r, intensity;
-            if (getTouchJoystick(&phi, &r, &intensity))
+            bool inWheelMenu = false;
+            if (!sd->showingHint)
             {
-                wheelMenuTouch(sd->numberWheel, sd->numberWheelRenderer, phi, r);
-                sd->touchState = true;
-            }
-            else if (sd->touchState)
-            {
-                wheelMenuTouchRelease(sd->numberWheel, sd->numberWheelRenderer);
-                sd->touchState = false;
-            }
+                int32_t phi, r, intensity;
+                if (getTouchJoystick(&phi, &r, &intensity))
+                {
+                    wheelMenuTouch(sd->numberWheel, sd->numberWheelRenderer, phi, r);
+                    sd->touchState = true;
+                }
+                else if (sd->touchState)
+                {
+                    wheelMenuTouchRelease(sd->numberWheel, sd->numberWheelRenderer);
+                    sd->touchState = false;
+                }
 
-            // Now that touches have been handled, check if the wheel is active
-            bool inWheelMenu = wheelMenuActive(sd->numberWheel, sd->numberWheelRenderer);
+                // Now that touches have been handled, check if the wheel is active
+                inWheelMenu = wheelMenuActive(sd->numberWheel, sd->numberWheelRenderer);
 
-            if (!inWheelMenu)
-            {
-                sd->playTimer += elapsedUs;
+                if (!inWheelMenu)
+                {
+                    sd->playTimer += elapsedUs;
+                }
+                // TODO I started to put an else here but I forgot what was supposed to go in it
             }
-            // TODO I started to put an else here but I forgot what was supposed to go in it
 
             buttonEvt_t evt = {0};
             while (checkButtonQueueWrapper(&evt))
             {
-                if (inWheelMenu)
+                if (inWheelMenu && !sd->showingHint)
                 {
                     wheelMenuButton(sd->numberWheel, sd->numberWheelRenderer, &evt);
                 }
@@ -549,30 +569,53 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
             }
             swadgedokuDrawGame(&sd->game, notes, &sd->player.overlay, &lightTheme, &sd->drawCtx);
 
-            if (sd->player.noteTaking)
+            if (sd->showingHint)
             {
-                // draw like, a pencil
-                drawWsgSimple(&sd->drawCtx.noteTakingIcon, TFT_WIDTH - 5 - sd->drawCtx.noteTakingIcon.w,
-                              (TFT_HEIGHT - sd->drawCtx.gridFont.height) / 2 - 5 - sd->drawCtx.noteTakingIcon.h);
+                // Calculate where on the screen the hint square is, so we can avoid covering it with the dialog box
+                int16_t hintX, hintY;
+                int gridX, gridY;
+                int32_t overlayX, overlayY;
+
+                swadgedokuGetGridPos(&gridX, &gridY, &sd->game);
+                getOverlayPos(&overlayX, &overlayY, sd->hint.pos / sd->game.size, sd->hint.pos % sd->game.size, SUBPOS_CENTER);
+                getRealOverlayPos(&hintX, &hintY, gridX, gridY, swadgedokuGetSquareSize(&sd->game), overlayX, overlayY);
+
+                uint16_t dialogY = DIALOG_CENTER;
+
+                if (hintY >= TFT_HEIGHT / 3)
+                {
+                    // Middle or bottom of the screen, put the dialog at the top
+                    dialogY = 0;
+                }
+                drawDialogBox(sd->hintDialogBox, getSysFont(), getSysFont(), DIALOG_CENTER, dialogY, DIALOG_AUTO, DIALOG_AUTO, 3);
             }
-
-            if (sd->player.selectedDigit)
+            else
             {
-                char curDigitStr[16];
-                snprintf(curDigitStr, sizeof(curDigitStr), "%" PRIX8, sd->player.selectedDigit);
-                int textW = textWidth(&sd->drawCtx.gridFont, curDigitStr);
+                if (sd->player.noteTaking)
+                {
+                    // draw like, a pencil
+                    drawWsgSimple(&sd->drawCtx.noteTakingIcon, TFT_WIDTH - 5 - sd->drawCtx.noteTakingIcon.w,
+                                (TFT_HEIGHT - sd->drawCtx.gridFont.height) / 2 - 5 - sd->drawCtx.noteTakingIcon.h);
+                }
 
-                drawText(&sd->drawCtx.gridFont, lightTheme.uiTextColor, curDigitStr, TFT_WIDTH - 5 - textW,
-                         (TFT_HEIGHT - sd->drawCtx.gridFont.height) / 2);
-            }
+                if (sd->player.selectedDigit)
+                {
+                    char curDigitStr[16];
+                    snprintf(curDigitStr, sizeof(curDigitStr), "%" PRIX8, sd->player.selectedDigit);
+                    int textW = textWidth(&sd->drawCtx.gridFont, curDigitStr);
 
-            if (inWheelMenu)
-            {
-                shadeDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, 2, c111);
-                drawRoundedRect(sd->wheelMenuTextBox.pos.x - 2, sd->wheelMenuTextBox.pos.y - 2,
-                                sd->wheelMenuTextBox.pos.x + sd->wheelMenuTextBox.width + 2,
-                                sd->wheelMenuTextBox.pos.y + sd->wheelMenuTextBox.height + 2, 5, c555, c000);
-                drawWheelMenu(sd->numberWheel, sd->numberWheelRenderer, elapsedUs);
+                    drawText(&sd->drawCtx.gridFont, lightTheme.uiTextColor, curDigitStr, TFT_WIDTH - 5 - textW,
+                            (TFT_HEIGHT - sd->drawCtx.gridFont.height) / 2);
+                }
+
+                if (inWheelMenu)
+                {
+                    shadeDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, 2, c111);
+                    drawRoundedRect(sd->wheelMenuTextBox.pos.x - 2, sd->wheelMenuTextBox.pos.y - 2,
+                                    sd->wheelMenuTextBox.pos.x + sd->wheelMenuTextBox.width + 2,
+                                    sd->wheelMenuTextBox.pos.y + sd->wheelMenuTextBox.height + 2, 5, c555, c000);
+                    drawWheelMenu(sd->numberWheel, sd->numberWheelRenderer, elapsedUs);
+                }
             }
             break;
         }
@@ -996,6 +1039,11 @@ static bool swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t val
         {
             sd->screen = SWADGEDOKU_GAME;
         }
+        else if (menuItemHint == label)
+        {
+            swadgedokuShowHint();
+            sd->screen = SWADGEDOKU_GAME;
+        }
         else if (menuItemResetPuzzle == label)
         {
             for (int n = 0; n < sd->game.size * sd->game.size; n++)
@@ -1216,8 +1264,60 @@ static void swadgedokuPlayerSetDigit(uint8_t digit)
     }
 }
 
+static void swadgedokuShowHint(void)
+{
+    sudokuOverlay_t overlay;
+    sudokuOverlayOpt_t opts[sd->game.size * sd->game.size];
+    overlay.gridOpts = opts;
+
+    if (sudokuNextMove(&sd->hint, &sd->player.overlay, &sd->game))
+    {
+        ESP_LOGI("Swadgedoku", "Got hint!");
+        char temp[1024];
+//#pragma clang diagnostic push
+#pragma GCC diagnostic push
+//#pragma clang diagnostic ignored "-Wformat-nonliteral"
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+        snprintf(temp, sizeof(temp), sd->hint.message, (int)sd->hint.digit, (int)(sd->hint.pos / sd->game.size) + 1, (int)(sd->hint.pos % sd->game.size) + 1);
+//#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
+
+        if (sd->hintText != NULL)
+        {
+            free(sd->hintText);
+            sd->hintText = NULL;
+        }
+        sd->hintText = strdup(temp);
+
+        if (sd->hintDialogBox == NULL)
+        {
+            sd->hintDialogBox = initDialogBox(hintDialogTitle, sd->hintText, NULL, swadgedokuHintDialogCb);
+            dialogBoxAddOption(sd->hintDialogBox, dialogOptionOk, NULL, OPTHINT_OK | OPTHINT_DEFAULT);
+            dialogBoxAddOption(sd->hintDialogBox, dialogOptionCancel, NULL, OPTHINT_CANCEL);
+        }
+        else
+        {
+            sd->hintDialogBox->detail = sd->hintText;
+            sd->hintDialogBox->selectedOption = sd->hintDialogBox->options.first;
+        }
+
+        ESP_LOGI("Swadgedoku", "Move: %s", temp);
+        sd->showingHint = true;
+    }
+    else
+    {
+        ESP_LOGI("Swadgedoku", "No hint :(");
+    }
+}
+
 static void swadgedokuGameButton(buttonEvt_t evt)
 {
+    if (sd->showingHint)
+    {
+        dialogBoxButton(sd->hintDialogBox, &evt);
+        return;
+    }
+
     if (evt.down)
     {
         bool moved      = false;
@@ -1364,6 +1464,47 @@ static void swadgedokuGameButton(buttonEvt_t evt)
             sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
         }
     }
+}
+
+static void swadgedokuHintDialogCb(const char* label)
+{
+    if (label == dialogOptionOk)
+    {
+        // Apply the hint
+        sd->game.grid[sd->hint.pos] = sd->hint.digit;
+        sudokuReevaluatePeers(sd->game.notes, &sd->game, sd->hint.pos / sd->game.size, sd->hint.pos % sd->game.size, 0);
+        sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
+    }
+    else if (label == dialogOptionCancel)
+    {
+        sd->showingHint = false;
+    }
+
+    node_t* node = sd->player.overlay.shapes.first;
+    while (node != NULL)
+    {
+        sudokuOverlayShape_t* shape = (sudokuOverlayShape_t*)node->val;
+        if (shape->tag == ST_HINT)
+        {
+            node_t* tmp = node;
+            node = node->next;
+            removeEntry(&sd->player.overlay.shapes, tmp);
+            free(shape);
+        }
+        else
+        {
+            node = node->next;
+        }
+    }
+
+    for (int n = 0; n < sd->game.size * sd->game.size; n++)
+    {
+        if (sd->player.overlay.gridOpts[n] & OVERLAY_SKIP)
+        {
+            sd->player.overlay.gridOpts[n] &= ~OVERLAY_SKIP;
+        }
+    }
+    sd->showingHint = false;
 }
 
 static sudokuDifficulty_t getLevelDifficulty(int level)

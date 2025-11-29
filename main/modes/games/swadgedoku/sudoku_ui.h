@@ -19,6 +19,8 @@
  */
 #define SUBPOS_XY(x, y) (((y) * BOX_SIZE_SUBPOS) + (x))
 
+#define GRID_MARGIN 1
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -103,6 +105,8 @@ typedef struct
 // Function Declarations
 //==============================================================================
 
+int swadgedokuGetSquareSize(const sudokuGrid_t* game);
+void swadgedokuGetGridPos(int* gridX, int* gridY, const sudokuGrid_t* game);
 void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay,
                         const sudokuTheme_t* theme, const sudokuDrawContext_t* context);
 void getOverlayPos(int32_t* x, int32_t* y, int r, int c, sudokuSubpos_t subpos);

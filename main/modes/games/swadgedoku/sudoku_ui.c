@@ -8,14 +8,39 @@
 // Functions
 //==============================================================================
 
+int swadgedokuGetSquareSize(const sudokuGrid_t* game)
+{
+    // Total space around the grid
+    int gridMargin = GRID_MARGIN;
+    return (TFT_HEIGHT - gridMargin) / game->size;
+}
+
+void swadgedokuGetGridPos(int* gridX, int* gridY, const sudokuGrid_t* game)
+{
+    int maxSquareSize = swadgedokuGetSquareSize(game);
+
+    // Total size of the grid (add 1px for border)
+    int gridSize = game->size * maxSquareSize;
+
+    // Center the grid vertically
+    if (gridY)
+    {
+        *gridY = (TFT_HEIGHT - gridSize) / 2;
+    }
+
+    // Align the grid to the left to leave some space to the right for UI
+    if (gridX)
+    {
+        *gridX = (TFT_WIDTH - gridSize) / 2;
+    }
+}
+
 void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay,
                         const sudokuTheme_t* theme, const sudokuDrawContext_t* context)
 {
-    // Total space around the grid
-    int gridMargin = 1;
-
     // Max size of individual square
-    int maxSquareSize = (TFT_HEIGHT - gridMargin) / game->size;
+    int maxSquareSize = swadgedokuGetSquareSize(game);
+
     // Total size of the grid (add 1px for border)
     int gridSize = game->size * maxSquareSize;
 
@@ -81,6 +106,8 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
 
             sudokuOverlayOpt_t opts = OVERLAY_NONE;
             sudokuFlag_t flags      = game->flags[r * game->size + c];
+            // For some kinds of overlays, we need to skip drawing the actual digit/notes
+            bool skipSquare = false;
 
             if (flags & SF_VOID)
             {
@@ -89,6 +116,11 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
             else if (overlay)
             {
                 opts = overlay->gridOpts[r * game->size + c];
+
+                if (opts & OVERLAY_SKIP)
+                {
+                    skipSquare = true;
+                }
 
                 if (opts & OVERLAY_ERROR)
                 {
@@ -193,7 +225,7 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
             uint16_t squareVal = game->grid[r * game->size + c];
 
             // NOW! Draw the number, or the notes
-            if (NULL != notes && 0 == squareVal)
+            if (NULL != notes && 0 == squareVal && !skipSquare)
             {
                 // Draw notes
                 uint16_t squareNote = notes[r * game->size + c];
@@ -244,7 +276,7 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                     }
                 }
             }
-            else if (0 != squareVal)
+            else if (0 != squareVal && !skipSquare)
             {
                 // Draw number
                 char buf[16];
@@ -377,6 +409,30 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                     }
 
                     drawText(&context->uiFont, shape->color, shape->text.val, x, y);
+                    break;
+                }
+
+                case OVERLAY_DIGIT:
+                {
+                    int c = shape->digit.pos.x / BOX_SIZE_SUBPOS;
+                    int r = shape->digit.pos.y / BOX_SIZE_SUBPOS;
+
+                    int x = gridX + c * maxSquareSize;
+                    int y = gridY + r * maxSquareSize;
+
+                    // Draw number
+                    char buf[16];
+                    snprintf(buf, sizeof(buf), "%X", shape->digit.digit);
+
+                    int textX = x + (maxSquareSize - textWidth(&context->gridFont, buf)) / 2;
+                    int textY = y + (maxSquareSize - context->gridFont.height) / 2;
+
+                    drawText(&context->gridFont, shape->color, buf, textX, textY);
+                    break;
+                }
+
+                case OVERLAY_NOTES_SHAPE:
+                {
                     break;
                 }
             }
