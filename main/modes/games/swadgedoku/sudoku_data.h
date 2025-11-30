@@ -71,16 +71,20 @@ typedef enum
     OVERLAY_NOTES = 2048,
     /// @brief Prevents the digit or notes from being drawn
     OVERLAY_SKIP = 4096,
+    /// @brief Mask for all overlay options
+    OVERLAY_ALL = 0xFFFF,
 } sudokuOverlayOpt_t;
 
 typedef enum
 {
     /// @brief This shape is a cursor and shouldn't be removed
-    ST_CURSOR,
+    ST_CURSOR = 1,
     /// @brief This is a temporary annotation added by sudokuAnnotate()
-    ST_ANNOTATE,
+    ST_ANNOTATE = 2,
     /// @brief This is a temporary annotation added for a hint
-    ST_HINT,
+    ST_HINT = 4,
+    /// @brief Mask for all shape tags
+    ST_ALL = 0xFF,
 } sudokuShapeTag_t;
 
 typedef enum

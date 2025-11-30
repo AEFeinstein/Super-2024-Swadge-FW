@@ -36,7 +36,8 @@ void swadgedokuGetGridPos(int* gridX, int* gridY, const sudokuGrid_t* game)
 }
 
 void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay,
-                        const sudokuTheme_t* theme, const sudokuDrawContext_t* context)
+                        const sudokuTheme_t* theme, const sudokuDrawContext_t* context,
+                        sudokuShapeTag_t tagMask, sudokuOverlayOpt_t overlayMask)
 {
     // Max size of individual square
     int maxSquareSize = swadgedokuGetSquareSize(game);
@@ -106,6 +107,7 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
 
             sudokuOverlayOpt_t opts = OVERLAY_NONE;
             sudokuFlag_t flags      = game->flags[r * game->size + c];
+
             // For some kinds of overlays, we need to skip drawing the actual digit/notes
             bool skipSquare = false;
 
@@ -115,7 +117,7 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
             }
             else if (overlay)
             {
-                opts = overlay->gridOpts[r * game->size + c];
+                opts = overlay->gridOpts[r * game->size + c] & overlayMask;
 
                 if (opts & OVERLAY_SKIP)
                 {
@@ -344,6 +346,12 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
         {
             const sudokuOverlayShape_t* shape = (sudokuOverlayShape_t*)node->val;
 
+            if (!(tagMask & shape->tag))
+            {
+                // Skip tags not in the mask
+                continue;
+            }
+
             switch (shape->type)
             {
                 case OVERLAY_RECT:
@@ -433,6 +441,55 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
 
                 case OVERLAY_NOTES_SHAPE:
                 {
+                    char buf[16];
+                    uint16_t squareNote = shape->notes.notes;
+                    int baseRoot = 3;
+                    switch (game->base)
+                    {
+                        case 1:
+                            baseRoot = 1;
+                            break;
+
+                        case 2:
+                        case 3:
+                        case 4:
+                            baseRoot = 2;
+                            break;
+
+                        case 10:
+                        case 11:
+                        case 12:
+                        case 13:
+                        case 14:
+                        case 15:
+                        case 16:
+                            baseRoot = 4;
+                            break;
+                        default:
+                            break;
+                    }
+                    int miniSquareSize = maxSquareSize / baseRoot;
+
+                    int x = gridX + game->size * maxSquareSize;
+                    int y = gridY + game->size * maxSquareSize;
+
+                    for (int n = 0; n < game->base; n++)
+                    {
+                        if (squareNote & (1 << n))
+                        {
+                            snprintf(buf, sizeof(buf), "%X", n + 1);
+
+                            // TODO center?
+                            // int charW = textWidth(&context->noteFont, buf);
+
+                            int noteX = x + (n % baseRoot) * maxSquareSize / baseRoot
+                                        + (miniSquareSize - textWidth(&context->noteFont, buf)) / 2 + 1;
+                            int noteY = y + (n / baseRoot) * maxSquareSize / baseRoot
+                                        + (miniSquareSize - context->noteFont.height) / 2 + 2;
+
+                            drawText(&context->noteFont, shape->color, buf, noteX, noteY);
+                        }
+                    }
                     break;
                 }
             }

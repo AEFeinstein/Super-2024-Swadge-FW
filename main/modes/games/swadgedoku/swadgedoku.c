@@ -613,7 +613,14 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
             {
                 notes = sd->game.notes;
             }
-            swadgedokuDrawGame(&sd->game, notes, &sd->player.overlay, &lightTheme, &sd->drawCtx);
+            sudokuOverlayOpt_t optMask = OVERLAY_ALL;
+            sudokuShapeTag_t tagMask = ST_ALL;
+            if (sd->showingHint)
+            {
+                tagMask = ST_HINT;
+                optMask &= ~(OVERLAY_QUESTION | OVERLAY_CHECK | OVERLAY_HIGHLIGHT_A | OVERLAY_HIGHLIGHT_B | OVERLAY_HIGHLIGHT_C | OVERLAY_HIGHLIGHT_D);
+            }
+            swadgedokuDrawGame(&sd->game, notes, &sd->player.overlay, &lightTheme, &sd->drawCtx, tagMask, optMask);
 
             if (sd->showingHint)
             {
@@ -1107,6 +1114,7 @@ static bool swadgedokuPauseMenuCb(const char* label, bool selected, uint32_t val
                 }
             }
             sd->playTimer = 0;
+            sd->hintsUsed = 0;
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
         }
         else if (menuItemAbandonPuzzle == label)
@@ -1368,6 +1376,14 @@ static void swadgedokuShowHint(void)
 
         ESP_LOGI("Swadgedoku", "Move: %s", sd->hintText);
         sd->showingHint = true;
+
+        if (sd->hint.stepCount != 0)
+        {
+            if (sd->hint.eliminationSteps[0].eliminationCount > 0)
+            {
+                ESP_LOGI("Swadgedoku", "Some things were eliminated");
+            }
+        }
     }
     else
     {
