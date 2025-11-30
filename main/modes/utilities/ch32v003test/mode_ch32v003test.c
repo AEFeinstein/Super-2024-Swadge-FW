@@ -19,7 +19,7 @@
 void ch32v003testEnterMode(void);
 void ch32v003testExitMode(void);
 void ch32v003testMainLoop(int64_t elapsedUs);
-void ch32v003testUpdateFramebuffers();
+void ch32v003testUpdateFramebuffers(void);
 int uprintf(const char* fmt, ...);
 
 //==============================================================================
@@ -73,9 +73,6 @@ void ch32v003testEnterMode(void)
     // It is normally safe to assume it was already initialized.
     initial_success = ch32v003RunBinaryAsset(MATRIX_GRADIENT_CFUN_BIN);
 
-    // If you do load custom firmware onto the 003, you must wait for it to run before yanking the framebuffer around.
-    // vTaskDelay(1);
-
     // Load a font
     font_t* ch32v003testFont = (font_t*)heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_8BIT);
     loadFont(SONIC_FONT, ch32v003testFont, false);
@@ -95,7 +92,7 @@ void ch32v003testEnterMode(void)
 /**
  * Update framebuffers on the ch32v003
  */
-void ch32v003testUpdateFramebuffers()
+void ch32v003testUpdateFramebuffers(void)
 {
     if (!ch32v003test->didSetFramebuffers)
     {

@@ -126,7 +126,7 @@ int16_t drawTextBounds(const font_t* font, paletteColor_t color, const char* tex
         }
 
         // Move to the next char
-        xOff += (font->chars[(*text) - ' '].width + 1);
+        xOff += (font->chars[(*text) - ' '].width + gCharSpacing);
         text++;
 
         // If this char is offscreen, finish drawing
@@ -179,6 +179,25 @@ int16_t drawShinyTextBounds(const font_t* font, paletteColor_t outerColor, palet
         }
     }
     return xOff;
+}
+
+/**
+ * @brief Draw text to a display with the given color, 1px offset drop shadow, and font
+ *
+ * @param font  The font to use for the text
+ * @param color The color of the character to draw
+ * @param shadowColor The color of the drop shadow, offset by 1px down and right
+ * @param text  The text to draw to the display
+ * @param xOff  The x offset to draw the text at
+ * @param yOff  The y offset to draw the text at
+ * @return The x offset at the end of the drawn string
+ */
+int16_t drawTextShadow(const font_t* font, paletteColor_t color, paletteColor_t shadowColor, const char* text,
+                       int16_t xOff, int16_t yOff)
+{
+    int16_t end = drawTextBounds(font, shadowColor, text, xOff + 1, yOff + 1, 0, 0, TFT_WIDTH, TFT_HEIGHT);
+    drawTextBounds(font, color, text, xOff, yOff, 0, 0, TFT_WIDTH, TFT_HEIGHT);
+    return end;
 }
 
 /**
@@ -683,20 +702,18 @@ int16_t drawTextMarquee(const font_t* font, paletteColor_t color, const char* te
                         int16_t xMax, int32_t* timer)
 {
 // Marquee speed in microseconds per pixel
-#define MARQUEE_SPEED 40000
-    int16_t gapW        = 4 * textWidth(font, " ");
-    int64_t repeatDelay = gapW * MARQUEE_SPEED;
-    uint16_t textW      = textWidth(font, text);
-    int64_t loopPeriod  = (textW + 1 /*- (xMax - xOff)*/) * MARQUEE_SPEED + repeatDelay;
-
-    if (*timer > loopPeriod)
-    {
-        *timer %= loopPeriod;
-    }
+#define MARQUEE_SPEED 30000
+    int16_t gapW = 4 * textWidth(font, " ");
 
     int16_t offset   = *timer / MARQUEE_SPEED;
     int16_t endX     = drawTextBounds(font, color, text, xOff - offset, yOff, xOff, 0, xMax, TFT_HEIGHT);
     int16_t endStart = endX + gapW;
+
+    // Restart the timer when the end text reaches the start
+    if (endStart <= xOff)
+    {
+        *timer = 0;
+    }
 
     if (endStart < xMax)
     {

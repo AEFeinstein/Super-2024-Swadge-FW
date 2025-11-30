@@ -128,32 +128,33 @@ static const char mainDoc[] = "Emulates a swadge";
 // Long argument name definitions
 // These MUST be defined here, so that they are
 // the same in both options and argDocs
-static const char argFakeFps[]     = "fake-fps";
-static const char argFakeTime[]    = "fake-time";
-static const char argFullscreen[]  = "fullscreen";
-static const char argFuzz[]        = "fuzz";
-static const char argFuzzButtons[] = "fuzz-buttons";
-static const char argFuzzTouch[]   = "fuzz-touch";
-static const char argFuzzTime[]    = "fuzz-time";
-static const char argFuzzMotion[]  = "fuzz-motion";
-static const char argHeadless[]    = "headless";
-static const char argHideLeds[]    = "hide-leds";
-static const char argJoystick[]    = "joystick";
-static const char argJsPreset[]    = "preset";
-static const char argKeymap[]      = "keymap";
-static const char argLock[]        = "lock";
-static const char argMidiFile[]    = "midi-file";
-static const char argMode[]        = "mode";
-static const char argModeSwitch[]  = "mode-switch";
-static const char argModeList[]    = "modes-list";
-static const char argPlayback[]    = "playback";
-static const char argRecord[]      = "record";
-static const char argSeed[]        = "seed";
-static const char argShowFps[]     = "show-fps";
-static const char argTouch[]       = "touch";
-static const char argVsync[]       = "vsync";
-static const char argHelp[]        = "help";
-static const char argUsage[]       = "usage";
+static const char argFakeFps[]       = "fake-fps";
+static const char argFakeTime[]      = "fake-time";
+static const char argFullscreen[]    = "fullscreen";
+static const char argFuzz[]          = "fuzz";
+static const char argFuzzButtons[]   = "fuzz-buttons";
+static const char argFuzzTouch[]     = "fuzz-touch";
+static const char argFuzzTime[]      = "fuzz-time";
+static const char argFuzzMotion[]    = "fuzz-motion";
+static const char argHeadless[]      = "headless";
+static const char argHideLeds[]      = "hide-leds";
+static const char argJoystick[]      = "joystick";
+static const char argJsPreset[]      = "preset";
+static const char argKeymap[]        = "keymap";
+static const char argLock[]          = "lock";
+static const char argMidiFile[]      = "midi-file";
+static const char argMegaPulseFile[] = "mega-pulse-file";
+static const char argMode[]          = "mode";
+static const char argModeSwitch[]    = "mode-switch";
+static const char argModeList[]      = "modes-list";
+static const char argPlayback[]      = "playback";
+static const char argRecord[]        = "record";
+static const char argSeed[]          = "seed";
+static const char argShowFps[]       = "show-fps";
+static const char argTouch[]         = "touch";
+static const char argVsync[]         = "vsync";
+static const char argHelp[]          = "help";
+static const char argUsage[]         = "usage";
 
 // clang-format off
 /**
@@ -176,6 +177,7 @@ static const struct option options[] =
     { argKeymap,      required_argument, NULL,                             'k'  },
     { argLock,        no_argument,       (int*)&emulatorArgs.lock,         true },
     { argMidiFile,    required_argument, NULL,                             0    },
+    { argMegaPulseFile,    required_argument, NULL,                             0    },
     { argMode,        required_argument, NULL,                             'm'  },
     { argPlayback,    required_argument, (int*)&emulatorArgs.playback,     'p'  },
     { argRecord,      optional_argument, (int*)&emulatorArgs.record,       'r'  },
@@ -210,6 +212,7 @@ static const optDoc_t argDocs[] =
     {'k', argKeymap,     "LAYOUT", "Use an alternative keymap. LAYOUT can be azerty, colemak, or dvorak"},
     {'l', argLock,        NULL,    "Lock the emulator in the start mode" },
     { 0,  argMidiFile,    "FILE",  "Open and immediately play a MIDI file" },
+    { 0,  argMegaPulseFile,    "FILE",  "Load a custom level file into Mega Pulse EX, immediately launching into said mode" },
     {'m', argMode,        "MODE",  "Start the emulator in the swadge mode MODE instead of the main menu"},
     { 0,  argModeSwitch,  "TIME",  "Enable or set the timer to switch modes automatically" },
     { 0,  argModeList,    NULL,    "Print out a list of all possible values for MODE" },
@@ -328,6 +331,10 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
     else if (argMidiFile == optName)
     {
         emulatorArgs.midiFile = arg;
+    }
+    else if (argMegaPulseFile == optName)
+    {
+        emulatorArgs.megaPulseFile = arg;
     }
     else if (argMode == optName)
     {
@@ -938,7 +945,7 @@ bool emuParseArgs(int argc, char** argv)
                     // Do what getopt would  have done for the long opt:
                     // Set the flag to the option val
                     // This we we don't need to handle this manually anyway just for the short opt
-                    *(option->flag) = option->val;
+                    *(option->flag) = (int)option->val;
                 }
             }
         }

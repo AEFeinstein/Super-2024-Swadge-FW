@@ -5,7 +5,7 @@
 /**
  * @brief Perform a fast, approximate reciprocal square root
  *
- * @param x The number to take a recriprocal square root of.
+ * @param x The number to take a reciprocal square root of.
  * @return approximately 1/sqrt(x)
  */
 float rsqrtf(float x)

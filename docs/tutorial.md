@@ -1967,7 +1967,7 @@ rd->maxObstacleTimer    = 0;
 
 // Main loop
 rd->maxObstacleTimer += elapsedUs;
-if (rd->speedDivisorTimer > SPEED_TIMER && rd->currentMaxObstacles < MAX_OBSTACLES)
+if (rd->maxObstacleTimer > SPEED_TIMER * 5 && rd->currentMaxObstacles < MAX_OBSTACLES)
 {
     rd->currentMaxObstacles++;
     rd->maxObstacleTimer = 0;
@@ -2605,7 +2605,7 @@ static void runnerMainLoop(int64_t elapsedUs)
 
     // Increase obstacles
     rd->maxObstacleTimer += elapsedUs;
-    if (rd->speedDivisorTimer > SPEED_TIMER && rd->currentMaxObstacles < MAX_OBSTACLES)
+    if (rd->maxObstacleTimer > SPEED_TIMER * 5 && rd->currentMaxObstacles < MAX_OBSTACLES)
     {
         rd->currentMaxObstacles++;
         rd->maxObstacleTimer = 0;
@@ -2898,7 +2898,7 @@ Looks like we did a pretty good job.
 
 So, what's next? Well, we can either claim this one it done and move on to the next project, or we can continue to polish this one up. Here's the list of some more things that could be added to make the game more fun:
 
-- Add better controls: Maybe make it so you queue up the jump button so you don't have to be landed before you can press the button, but don't jump until the robot touches the ground. Or, how long you press down the button affects how hight he robot jumps?
+- Add better controls: Maybe make it so you queue up the jump button so you don't have to be landed before you can press the button, but don't jump until the robot touches the ground. Or, how long you press down the button affects how high the robot jumps?
 - Add the splash screen: It would be nice to get a moment to absorb what's going on before going into a game.
 - Add death text: Provide some text to tell the player to press any button to start over.
 - Add Trophies: as of 2025, we have trophies we can add to a mode. See trophy.h for info on how to do that.
@@ -2906,14 +2906,20 @@ So, what's next? Well, we can either claim this one it done and move on to the n
 - LEDs: There's LEDs around the Swadge. Make them light up in response to what's going on in the game. See hdw-led.h for info on how to do that.
 - Accelerometer: Shake to jump? See hdw-imu.h for info on how to do that.
 - Add Power-ups: Invincibility? Super jump? Bonus score? See what you can make!
+- Add more obstacles: Right now it's pretty easy, really. Why not add a slide mechanic and a lower hanging obstacle?
+- Add anticipations: Little things to show where an obstacle is before it gets to the screen, improving player's time to react. 
 - Fiddle with the code: Code is a form of art as much as drawings or music is. Adjust the code we've already made to see what can change!
 
 Some other things:
-
 - Comment all your code! Commenting code helps other people figure out what the heck you were doing, and helps you know what you were doing three months ago last time you were working on the project. Also, it helps the reviewer who has to understand what you did figure out what you're doing.
-- Look at other modes. This will show you how other people tackle challenges handle weird edge cases, and generally provide some insight on what you can do with your mode.
-- Checkout the [Pong Mode](https://github.com/AEFeinstein/Super-2024-Swadge-FW/blob/fdce1624625a5888a1866c84c56ac994a58ae1cb/main/modes/pong/pong.c).
 - Check out the current build of [RoboRunner](https://github.com/AEFeinstein/Super-2024-Swadge-FW/tree/main/main/modes/games/RoboRunner/) with a bunch of the above considerations considered. I kept working on it to make it into a game I can be happy with, and theres a decent chance you found this tutorial through the QR code embedded in the current mode!
+  - Trophies and Swadgepass functionality are implemented
+  - Code has been refactored into something easier to work with
+  - Jumps are variable height
+  - Added a "crawl" and a low-hanging obstacle to avoid
+  - Added warnings to players when an obstacle spawns
+- Checkout the [Pong Mode](https://github.com/AEFeinstein/Super-2024-Swadge-FW/blob/fdce1624625a5888a1866c84c56ac994a58ae1cb/main/modes/pong/pong.c).
+- Check out what everyone else is doing! [Here](https://github.com/AEFeinstein/Super-2024-Swadge-FW/tree/main/main/modes) are the currently active modes and [here](https://github.com/AEFeinstein/Super-2024-Swadge-FW/tree/main/attic) are the mode from year's past.
 
 I hope this tutorial has been useful in getting you started. Feel free to ping me on discord or talk to me on slack if you happen to need assistance. I'm JohnnyWycliffe on both.
 

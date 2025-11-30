@@ -10,6 +10,7 @@
 #include "menu_utils.h"
 #include "color_utils.h"
 #include "menuMegaRenderer.h"
+#include "shapes.h"
 
 //==============================================================================
 // Defines
@@ -23,12 +24,18 @@
 
 #define ARROW_PERIOD_US 1000000
 
+#define DEFAULT_BODY_HEIGHT 66
+
 //==============================================================================
 // Variables
 //==============================================================================
 
 static const paletteColor_t defaultBgColors[] = {
-    c500, c410, c320, c230, c140, c050, c041, c032, c023, c014, c005,
+    c024, c025, c035, c034, c033, c043, c143, c254, c453, c553,
+};
+// Routes through the helmet M, with three extra numbers slapped on the end so the hotdog won't crash.
+static const uint8_t ledConveyorOrder[] = {
+    1, 0, 2, 3, 5, 4, 6, 7, 8,
 };
 
 //==============================================================================
@@ -66,10 +73,12 @@ menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOut
     // Set the background
     renderer->bgColors    = defaultBgColors;
     renderer->numBgColors = ARRAY_SIZE(defaultBgColors);
+    renderer->bgColorIdx  = 0;
 
     loadWsg(MMM_BACK_WSG, &renderer->back, true);
     loadWsg(MMM_BG_WSG, &renderer->bg, true);
-    loadWsg(MMM_BODY_WSG, &renderer->body, true);
+    loadWsg(MMM_BODY_TOP_WSG, &renderer->body_top, true);
+    loadWsg(MMM_BODY_BOTTOM_WSG, &renderer->body_bottom, true);
     loadWsg(MMM_DOWN_WSG, &renderer->down, true);
     loadWsg(MMM_ITEM_WSG, &renderer->item, true);
     loadWsg(MMM_ITEM_SEL_WSG, &renderer->item_sel, true);
@@ -130,6 +139,10 @@ menuMegaRenderer_t* initMenuMegaRenderer(font_t* titleFont, font_t* titleFontOut
     // LEDs on by default
     renderer->ledsOn = true;
 
+    // Draw the body by default
+    renderer->drawBody   = true;
+    renderer->bodyHeight = DEFAULT_BODY_HEIGHT;
+
     // Reset the palette
     wsgPaletteReset(&renderer->palette);
 
@@ -168,7 +181,8 @@ void deinitMenuMegaRenderer(menuMegaRenderer_t* renderer)
 
     freeWsg(&renderer->back);
     freeWsg(&renderer->bg);
-    freeWsg(&renderer->body);
+    freeWsg(&renderer->body_top);
+    freeWsg(&renderer->body_bottom);
     freeWsg(&renderer->down);
     freeWsg(&renderer->item);
     freeWsg(&renderer->item_sel);
@@ -181,43 +195,88 @@ void deinitMenuMegaRenderer(menuMegaRenderer_t* renderer)
 }
 
 /**
- * @brief Recolor the Mega menu renderer. Arguments c1 through c8 should get progressively lighter
+ * @brief Set whether or not to draw the sci-fi rectangle background body
+ *
+ * @param renderer The renderer.
+ * @param drawBody true to draw the body background, false to skip it
+ */
+void setDrawBody(menuMegaRenderer_t* renderer, bool drawBody)
+{
+    renderer->drawBody = drawBody;
+}
+
+/**
+ * @brief Set the height of the body between top and bottom decorated parts
+ * If the given height is negative, it will be set to the default height
+ *
+ * @param renderer The renderer to adjust the body height for
+ * @param height The new height. If the given value is negative, the default height will be set.
+ */
+void setBodyHeight(menuMegaRenderer_t* renderer, int16_t height)
+{
+    if (height < 0)
+    {
+        renderer->bodyHeight = DEFAULT_BODY_HEIGHT;
+    }
+    else
+    {
+        renderer->bodyHeight = height;
+    }
+}
+
+/**
+ * @brief Recolor the Mega menu renderer.
  *
  * @param renderer The renderer to recolor
  * @param textFill The color of the text fill, originally white
  * @param textOutline The color of the text outline, originally black
- * @param c1 Replacement for Darkest blue
- * @param c2 Replacement for Very dark blue
- * @param c3 Replacement for Dark blue
- * @param c4 Replacement for Dark moderate blue
- * @param c5 Replacement for Dark strong blue
- * @param c6 Replacement for Light strong blue
- * @param c7 Replacement for Pure cyan
- * @param c8 Replacement for Very pale cyan
+ * @param hexaBackground The color of the hexagonal background
+ * @param bodyBackground The color of the background between hexagons and items
+ * @param bodyAccentDark The dark accent color of the background
+ * @param bodyAccentLight The light accent color of the background
+ * @param bodyArrowBg The color of the up and down arrows
+ * @param rowUnselectedBg The color of the background of an unselected row
+ * @param rowUnselectedShadow The color of the shadow of an unselected row
+ * @param rowSelectedBg The color of the background of the selected row
+ * @param rowSelectedAccent The accent color of the selected row
+ * @param rowSelectedOutline The outline color of the selected row
+ * @param rowArrowBg The background color of left and right arrows
  * @param bgColors A list of colors to cycle through in the hexagonal background. May be NULL for no change.
  * @param numBgColors The length of bgColors
  */
 void recolorMenuMegaRenderer(menuMegaRenderer_t* renderer, paletteColor_t textFill, paletteColor_t textOutline,
-                             paletteColor_t c1, paletteColor_t c2, paletteColor_t c3, paletteColor_t c4,
-                             paletteColor_t c5, paletteColor_t c6, paletteColor_t c7, paletteColor_t c8,
+                             paletteColor_t hexaBackground, paletteColor_t bodyBackground,
+                             paletteColor_t bodyAccentDark, paletteColor_t bodyAccentLight, paletteColor_t bodyArrowBg,
+                             paletteColor_t rowUnselectedBg, paletteColor_t rowUnselectedShadow,
+                             paletteColor_t rowSelectedBg, paletteColor_t rowSelectedAccent,
+                             paletteColor_t rowSelectedOutline, paletteColor_t rowArrowBg,
                              const paletteColor_t* bgColors, int32_t numBgColors)
 {
     renderer->textFillColor    = textFill;
     renderer->textOutlineColor = textOutline;
 
-    wsgPaletteSet(&renderer->palette, c001, c1); // Darkest blue
-    wsgPaletteSet(&renderer->palette, c012, c2); // Very dark blue
-    wsgPaletteSet(&renderer->palette, c023, c3); // Dark blue
-    wsgPaletteSet(&renderer->palette, c113, c4); // Dark moderate blue
-    wsgPaletteSet(&renderer->palette, c124, c5); // Dark strong blue
-    wsgPaletteSet(&renderer->palette, c034, c6); // Light strong blue
-    wsgPaletteSet(&renderer->palette, c045, c7); // Pure cyan
-    wsgPaletteSet(&renderer->palette, c455, c8); // Very pale cyan
+    // Background colors
+    wsgPaletteSet(&renderer->palette, c012, hexaBackground); // Very dark blue
+
+    // Body colors
+    wsgPaletteSet(&renderer->palette, c023, bodyBackground);  // Dark blue
+    wsgPaletteSet(&renderer->palette, c000, bodyAccentDark);  // Black
+    wsgPaletteSet(&renderer->palette, c034, bodyAccentLight); // Light strong blue
+    wsgPaletteSet(&renderer->palette, c455, bodyArrowBg);     // Very pale cyan
+
+    // Item colors
+    wsgPaletteSet(&renderer->palette, c001, rowUnselectedBg); // Also rowSelectedShadow, Darkest blue
+    wsgPaletteSet(&renderer->palette, c112, rowUnselectedShadow);
+    wsgPaletteSet(&renderer->palette, c124, rowSelectedBg);      // Dark strong blue
+    wsgPaletteSet(&renderer->palette, c045, rowSelectedAccent);  // Pure cyan
+    wsgPaletteSet(&renderer->palette, c555, rowSelectedOutline); // White
+    wsgPaletteSet(&renderer->palette, c113, rowArrowBg);
 
     if (bgColors)
     {
         renderer->bgColors    = bgColors;
         renderer->numBgColors = numBgColors;
+        renderer->bgColorIdx  = 0;
     }
 }
 
@@ -254,7 +313,7 @@ static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t
     {
         // Drop shadow
         drawTextMarquee(renderer->menuFont, renderer->textOutlineColor, text, textX + 1, textY + 1,
-                        textX + MAX_ITEM_TEXT_WIDTH - 5, &renderer->selectedMarqueeTimer);
+                        textX + MAX_ITEM_TEXT_WIDTH - 5, &renderer->shadowMarqueeTimer);
         // Text
         drawTextMarquee(renderer->menuFont, renderer->textFillColor, text, textX, textY,
                         textX + MAX_ITEM_TEXT_WIDTH - 5, &renderer->selectedMarqueeTimer);
@@ -298,6 +357,35 @@ static void drawMenuText(menuMegaRenderer_t* renderer, const char* text, int16_t
 }
 
 /**
+ * @brief Draw the menu body background
+ *
+ * @param topLeftX The X coordinate of the top left corner of the body
+ * @param topLeftY The Y coordinate of the top left corner of the body
+ * @param expansionHeight The y distance of filler rectangle between the top and bottom parts of the body
+ * @param flipLR true to flip the body horizontally
+ * @param renderer The renderer to draw a body with
+ */
+void drawMenuBody(uint16_t topLeftX, uint16_t topLeftY, uint8_t expansionHeight, bool flipLR,
+                  menuMegaRenderer_t* renderer)
+{
+    // Draw the top part of the body
+    drawWsgPalette(&renderer->body_top, topLeftX, topLeftY, &renderer->palette, flipLR, false, 0);
+
+    // Draw filler rectangles between top and bottom sprites
+    if (expansionHeight > 0)
+    {
+        drawRectFilled(topLeftX + 8, topLeftY + renderer->body_top.h, topLeftX + 244,
+                       topLeftY + renderer->body_top.h + expansionHeight, renderer->palette.newColors[c023]);
+        drawRectFilled(topLeftX + 246, topLeftY + renderer->body_top.h, topLeftX + 248,
+                       topLeftY + renderer->body_top.h + expansionHeight, renderer->palette.newColors[c034]);
+    }
+
+    // Draw the bottom part of the body
+    drawWsgPalette(&renderer->body_bottom, topLeftX + 8, topLeftY + renderer->body_top.h + expansionHeight,
+                   &renderer->palette, flipLR, false, 0);
+}
+
+/**
  * @brief Draw a themed menu to the display and control the LEDs
  *
  * @param menu The menu to draw
@@ -331,11 +419,19 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
     // A cycle completes in 180 degrees, or three seconds
     RUN_TIMER_EVERY(renderer->bgColorTimer, 3000000 / 180, elapsedUs, {
         renderer->bgColorDeg++;
-        if (180 == renderer->bgColorDeg)
+        if (360 == renderer->bgColorDeg)
         {
             renderer->bgColorDeg = 0;
         }
-        renderer->bgColorIdx = ((getSin1024(renderer->bgColorDeg) * (renderer->numBgColors - 1)) + 512) / 1024;
+        renderer->bgColorIdx = ((getSin1024(renderer->bgColorDeg) + 1024) * renderer->numBgColors) / 2048;
+        if (renderer->bgColorIdx >= renderer->numBgColors)
+        {
+            renderer->bgColorIdx = renderer->numBgColors - 1;
+        }
+        if (renderer->conveyorBeltStyle)
+        {
+            renderer->yOff += renderer->bgColorIdx;
+        }
     });
 
     // Run a timer to scroll text
@@ -344,16 +440,20 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
         // Reset the timer when the item changes
         renderer->currentItem          = menu->currentItem;
         renderer->selectedMarqueeTimer = 0;
+        renderer->shadowMarqueeTimer   = 0;
     }
     else
     {
         renderer->selectedMarqueeTimer += elapsedUs;
+        renderer->shadowMarqueeTimer += elapsedUs;
     }
 
     // Clear the background
     paletteColor_t* fb = getPxTftFramebuffer();
     memset(fb, renderer->bgColors[renderer->bgColorIdx], sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
-    drawWsgPaletteSimple(&renderer->bg, 0, 0, &renderer->palette);
+    int16_t finalYOffset = ((renderer->yOff / 10) % 240);
+    drawWsgPaletteSimple(&renderer->bg, 0, -240 + finalYOffset, &renderer->palette);
+    drawWsgPaletteSimple(&renderer->bg, 0, finalYOffset, &renderer->palette);
 
     // Find the start of the 'page'
     node_t* pageStart = menu->items->first;
@@ -379,6 +479,11 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
         }
     }
 
+    if (renderer->drawBody)
+    {
+        drawMenuBody(12, 42, renderer->bodyHeight, false, renderer);
+    }
+
     // Where to start drawing
     int16_t y = Y_SECTION_MARGIN;
 
@@ -390,8 +495,6 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
 
     // Move to drawing the rows
     y = Y_ITEM_START;
-
-    drawWsgPaletteSimple(&renderer->body, 0, 0, &renderer->palette);
 
     if (menu->items->length > ITEMS_PER_PAGE && renderer->pageArrowTimer > ARROW_PERIOD_US / 2)
     {
@@ -415,6 +518,7 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
             //     // Bounce the selected item
             //     renderer->selectedBounceIdx    = 1;
             //     renderer->selectedMarqueeTimer = 0;
+            //     renderer->shadowMarqueeTimer   = 0;
             // }
             // else if (isSelected)
             // {
@@ -425,6 +529,7 @@ void drawMenuMega(menu_t* menu, menuMegaRenderer_t* renderer, int64_t elapsedUs)
             //         if (value != renderer->selectedValue)
             //         {
             //             renderer->selectedMarqueeTimer = 0;
+            //             renderer->shadowMarqueeTimer   = 0;
             //             renderer->selectedValue        = value;
             //         }
             //     }
@@ -504,17 +609,27 @@ void setMegaLedsOn(menuMegaRenderer_t* renderer, bool ledsOn)
  */
 static void setLedsFromBg(menuMegaRenderer_t* renderer)
 {
-    // Extract LED color from bg color
-    int32_t rgb = paletteToRGB(renderer->bgColors[renderer->bgColorIdx]);
-    led_t led   = {
-          .r = (rgb >> 16) & 0xFF,
-          .g = (rgb >> 8) & 0xFF,
-          .b = (rgb >> 0) & 0xFF,
-    };
-
     // Set all LEDs
     for (int32_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
     {
-        renderer->leds[idx] = led;
+        int32_t ledColorIdx = renderer->bgColorIdx;
+        if (renderer->conveyorBeltStyle)
+        {
+            int32_t ledDeg = CLAMP(renderer->bgColorDeg + 2 * idx, 0, 359);
+            ledColorIdx    = ((getSin1024(ledDeg) + 1024) * renderer->numBgColors) / 2048;
+            if (ledColorIdx >= renderer->numBgColors)
+            {
+                ledColorIdx = renderer->numBgColors - 1;
+            }
+        }
+
+        // Extract LED color from bg color
+        int32_t rgb = paletteToRGB(renderer->bgColors[ledColorIdx]);
+        led_t led   = {
+              .r = (rgb >> 16) & 0xFF,
+              .g = (rgb >> 8) & 0xFF,
+              .b = (rgb >> 0) & 0xFF,
+        };
+        renderer->leds[ledConveyorOrder[idx]] = led;
     }
 }
