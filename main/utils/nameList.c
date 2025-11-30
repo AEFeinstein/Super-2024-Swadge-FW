@@ -162,7 +162,6 @@ void initUsernameSystem()
         // Unpack currently stored data
         setUsernameFrom32(&swadgeUsername, packed);
     }
-    setUsernameFromND(&swadgeUsername);
     // ESP_LOGI("USRN", "Current name code: %d, which is %d, %d, %d, %d", GET_PACKED_USERNAME(swadgeUsername),
     // swadgeUsername.idxs[0], swadgeUsername.idxs[1], swadgeUsername.idxs[2], swadgeUsername.randCode);
 }
@@ -454,12 +453,7 @@ static void _getWordFromList(int listIdx, int idx, char* buffer, int buffLen)
 static uint8_t _checkIfUserIdxInBounds(int8_t idx, uint8_t arrSize, uint8_t seed)
 {
     int range = arrSize >> USER_LIST_SHIFT;
-    while (idx < seed)
-    {
-        idx += range;
-    }
-    idx %= range;
-    return idx;
+    return ((idx - seed + arrSize) % range + seed) % arrSize;
 }
 
 // Drawing functions
@@ -499,7 +493,7 @@ static void _drawFadingWords(nameData_t* nd)
             }
             default:
             {
-                break;
+                continue;
             }
         }
         for (int offset = 1; offset < 4; offset++)
