@@ -117,8 +117,8 @@ static const char* getButtonName(hid_gamepad_button_bm_t button);
 
 static const char str_pc[]    = "Computer";
 static const char str_ns[]    = "Switch";
-static const char str_accel[] = "Accel: ";
-static const char str_touch[] = "Switch Touch: ";
+static const char str_accel[] = "Accel (PC only): ";
+static const char str_touch[] = "Touch: ";
 static const char str_exit[]  = "Exit";
 
 static const int32_t accelSettingsValues[] = {0, 1};
@@ -1788,7 +1788,10 @@ void gamepadGenericButtonCb(buttonEvt_t* evt)
 
     // Build a list of all independent buttons held down
     gamepad->gpState.buttons
-        &= ~(GAMEPAD_BUTTON_A | GAMEPAD_BUTTON_B | GAMEPAD_BUTTON_START | GAMEPAD_BUTTON_SELECT);
+        &= ~(GAMEPAD_BUTTON_A | GAMEPAD_BUTTON_B | GAMEPAD_BUTTON_START | GAMEPAD_BUTTON_SELECT
+                | GAMEPAD_BUTTON_MODE | GAMEPAD_BUTTON_Z | GAMEPAD_BUTTON_X | GAMEPAD_BUTTON_Y
+                | GAMEPAD_BUTTON_TL | GAMEPAD_BUTTON_TR | GAMEPAD_BUTTON_TL2 | GAMEPAD_BUTTON_TR2);
+
     if (evt->state & PB_A)
     {
         gamepad->gpState.buttons |= GAMEPAD_BUTTON_A;
@@ -1799,11 +1802,25 @@ void gamepadGenericButtonCb(buttonEvt_t* evt)
     }
     if (evt->state & PB_START)
     {
-        gamepad->gpState.buttons |= GAMEPAD_BUTTON_START;
+        if (evt->state & PB_DOWN)
+        {
+            gamepad->gpState.buttons |= GAMEPAD_BUTTON_MODE;
+        }
+        else
+        {
+            gamepad->gpState.buttons |= GAMEPAD_BUTTON_START;
+        }
     }
     if (evt->state & PB_SELECT)
     {
-        gamepad->gpState.buttons |= GAMEPAD_BUTTON_SELECT;
+        if (evt->state & PB_DOWN)
+        {
+            gamepad->gpState.buttons |= GAMEPAD_BUTTON_Z;
+        }
+        else
+        {
+            gamepad->gpState.buttons |= GAMEPAD_BUTTON_SELECT;
+        }
     }
 
     // Figure out which way the D-Pad is pointing
@@ -2128,20 +2145,103 @@ void gamepadGenericReportStateToHost(void)
         int32_t phi, r, intensity;
         touched = getTouchJoystick(&phi, &r, &intensity);
 
+        int32_t x, y, z;
         if (touched)
         {
-            int32_t x, y;
+            
             getTouchCartesian(phi, r, &x, &y);
-            gamepad->gpState.x = (255 * x) / 1024 - 128;
-            gamepad->gpState.y = (-255 * y) / 1024 - 128;
+            x = (255 * x) / 1024 - 128;
+            y = (-255 * y) / 1024 - 128;
             // gamepad->gpState.z = (127 * (phi - 180)) / 360;
-            gamepad->gpState.z = 0;
+            z = 0;
         }
         else
         {
-            gamepad->gpState.x = 0;
-            gamepad->gpState.y = 0;
-            gamepad->gpState.z = 0;
+            x = 0;
+            y = 0;
+            z = 0;
+        }
+
+        gamepadTouch_t touchSetting = getGamepadTouchSetting();
+        switch (touchSetting)
+        {
+            case GAMEPAD_TOUCH_MORE_BUTTONS_SETTING:
+            {
+                gamepad->gpState.buttons
+                    &= ~(GAMEPAD_BUTTON_X | GAMEPAD_BUTTON_Y | GAMEPAD_BUTTON_TL | GAMEPAD_BUTTON_TR
+                            | GAMEPAD_BUTTON_TL2 | GAMEPAD_BUTTON_TR2);
+                if (!touched)
+                {
+                    break;
+                }
+
+                touchJoystick_t tdir = getTouchJoystickZones(phi, r, false, true);
+                switch (tdir)
+                {
+                    case TB_CENTER:
+                    default:
+                    {
+                        break;
+                    }
+                    case TB_RIGHT:
+                    {
+                        gamepad->gpState.buttons |= GAMEPAD_BUTTON_X;
+                        break;
+                    }
+                    case TB_UP_RIGHT:
+                    {
+                        gamepad->gpState.buttons |= GAMEPAD_BUTTON_TR;
+                        break;
+                    }
+                    case TB_UP:
+                    {
+                        gamepad->gpState.buttons |= GAMEPAD_BUTTON_TR;
+                        gamepad->gpState.buttons |= GAMEPAD_BUTTON_TL;
+                        break;
+                    }
+                    case TB_UP_LEFT:
+                    {
+                        gamepad->gpState.buttons |= GAMEPAD_BUTTON_TL;
+                        break;
+                    }
+                    case TB_LEFT:
+                    {
+                        gamepad->gpState.buttons |= GAMEPAD_BUTTON_Y;
+                        break;
+                    }
+                    case TB_DOWN_LEFT:
+                    {
+                        gamepad->gpState.buttons |= GAMEPAD_BUTTON_TL2;
+                        break;
+                    }
+                    case TB_DOWN:
+                    {
+                        gamepad->gpState.buttons |= GAMEPAD_BUTTON_TL2;
+                        gamepad->gpState.buttons |= GAMEPAD_BUTTON_TR2;
+                        break;
+                    }
+                    case TB_DOWN_RIGHT:
+                    {
+                        gamepad->gpState.buttons |= GAMEPAD_BUTTON_TR2;
+                        break;
+                    }
+                }
+                break;
+            }
+            case GAMEPAD_TOUCH_L_STICK_SETTING:
+            {
+                gamepad->gpState.x = x;
+                gamepad->gpState.y = y;
+                gamepad->gpState.z = z;
+                break;
+            }
+            case GAMEPAD_TOUCH_R_STICK_SETTING:
+            {
+                gamepad->gpState.rx = x;
+                gamepad->gpState.ry = y;
+                gamepad->gpState.rz = z;
+                break;
+            }
         }
 
         // Send the state over USB
