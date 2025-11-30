@@ -1,4 +1,12 @@
-// Create a pretty raindrop animation on the LED matrix on the swadge.
+// Put the CH32V003 to deep sleep.
+// To use this, you can flash the deep sleep, and resume.
+// Note that when coming out of deep sleep you will need to tickle the ch32v003 briefly before you can program it.
+//
+// Basic (non-FS test)
+//
+//  ch32v003WriteFlash( deep_sleep, sizeof( deep_sleep ) );
+//  ch32v003Resume();
+//
 
 #include "swadge_matrix.h"
 
