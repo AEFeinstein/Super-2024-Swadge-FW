@@ -16,6 +16,7 @@
 #include "nameList.h"
 #include "macros.h"
 #include "swadge2024.h"
+#include "hdw-esp-now.h"
 
 // C
 #include <string.h>
@@ -87,8 +88,9 @@ typedef enum
 /**
  * @brief Grabs the Mac Address from the ESP
  *
+ * @return If the mac address was initialized
  */
-static void _getMacAddress(void);
+static bool _getMacAddress(void);
 
 /**
  * @brief Grabs a specific string from teh wordlists
@@ -134,7 +136,7 @@ static void _drawFadingWords(nameData_t* nd);
 //==============================================================================
 
 static uint8_t baseMac[6];
-static int listLen[3];
+static const int listLen[3] = {ARRAY_SIZE(adjList1), ARRAY_SIZE(adjList2), ARRAY_SIZE(nounList)};
 static uint8_t mutatorSeeds[3];
 nameData_t swadgeUsername;
 
@@ -144,9 +146,6 @@ nameData_t swadgeUsername;
 
 void initUsernameSystem()
 {
-    listLen[0] = ARRAY_SIZE(adjList1);
-    listLen[1] = ARRAY_SIZE(adjList2);
-    listLen[2] = ARRAY_SIZE(nounList);
     _getMacAddress();
 
     // Initialize
@@ -163,7 +162,6 @@ void initUsernameSystem()
         // Unpack currently stored data
         setUsernameFrom32(&swadgeUsername, packed);
     }
-    setUsernameFromND(&swadgeUsername);
     // ESP_LOGI("USRN", "Current name code: %d, which is %d, %d, %d, %d", GET_PACKED_USERNAME(swadgeUsername),
     // swadgeUsername.idxs[0], swadgeUsername.idxs[1], swadgeUsername.idxs[2], swadgeUsername.randCode);
 }
@@ -205,7 +203,8 @@ void setUsernameFromND(nameData_t* nd)
         nd->idxs[ADJ1] = _checkIfUserIdxInBounds(nd->idxs[ADJ1], listLen[ADJ1], mutatorSeeds[ADJ1]);
         nd->idxs[ADJ2] = _checkIfUserIdxInBounds(nd->idxs[ADJ2], listLen[ADJ2], mutatorSeeds[ADJ2]);
         nd->idxs[NOUN] = _checkIfUserIdxInBounds(nd->idxs[NOUN], listLen[NOUN], mutatorSeeds[NOUN]);
-        nd->randCode   = baseMac[5];
+        // nd->randCode   = baseMac[5]; // HACK: If this is commented out, it always is zero, but commented it doesn't
+        // do any checking to ensure nobody is tampering. Is tampering actually an issue?
     }
 
     char buff1[MAX_ADJ1_LEN], buff2[MAX_ADJ2_LEN], buff3[MAX_NOUN_LEN];
@@ -384,7 +383,9 @@ nameData_t* getSystemUsername(void)
 void setSystemUsername(nameData_t* nd)
 {
     nameData_t data = *nd;
-    writeNvs32(nvsKeys, GET_PACKED_USERNAME(data));
+    int32_t packed  = GET_PACKED_USERNAME(data);
+    writeNvs32(nvsKeys, packed);
+    setUsernameFrom32(&swadgeUsername, packed);
 }
 
 void setUsernameFrom32(nameData_t* nd, int32_t packed)
@@ -400,10 +401,9 @@ void setUsernameFrom32(nameData_t* nd, int32_t packed)
 // Static Functions
 //==============================================================================
 
-static void _getMacAddress()
+static bool _getMacAddress()
 {
-    esp_err_t ret = esp_wifi_get_mac(WIFI_IF_STA, baseMac);
-    if (ret != ESP_OK)
+    if (!getMacAddrNvs(baseMac))
     {
         ESP_LOGE("USRN", "Failed to read MAC address");
         for (int idx = 0; idx < 6; idx++)
@@ -411,6 +411,7 @@ static void _getMacAddress()
             // Produces an obvious, statistically unlikely result
             baseMac[idx] = 0;
         }
+        return false;
     }
     ESP_LOGI("USRN", "MAC:%d:%d:%d:%d:%d:%d", baseMac[0], baseMac[1], baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
 
@@ -420,6 +421,7 @@ static void _getMacAddress()
     mutatorSeeds[ADJ1] = (baseMac[3] ^ baseMac[4] ^ baseMac[5]) % listLen[ADJ1];
     ESP_LOGI("USRN", "Seeds: Adj1: %d, Adj2: %d, Noun: %d, Number: %d", mutatorSeeds[0], mutatorSeeds[1],
              mutatorSeeds[2], baseMac[5]);
+    return true;
 }
 
 static void _getWordFromList(int listIdx, int idx, char* buffer, int buffLen)
@@ -451,12 +453,7 @@ static void _getWordFromList(int listIdx, int idx, char* buffer, int buffLen)
 static uint8_t _checkIfUserIdxInBounds(int8_t idx, uint8_t arrSize, uint8_t seed)
 {
     int range = arrSize >> USER_LIST_SHIFT;
-    while (idx < seed)
-    {
-        idx += range;
-    }
-    idx %= arrSize;
-    return idx;
+    return ((idx - seed + arrSize) % range + seed) % arrSize;
 }
 
 // Drawing functions
@@ -496,7 +493,7 @@ static void _drawFadingWords(nameData_t* nd)
             }
             default:
             {
-                break;
+                continue;
             }
         }
         for (int offset = 1; offset < 4; offset++)

@@ -17,11 +17,15 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <math.h>
 #include "os_generic.h"
 
 #include "cnfs.h"
 
 #include "CNFG.h"
+
+#include "hdw-ch32v003.h"
+#include "hdw-ch32c003_emu.h"
 
 //==============================================================================
 // Functions being stubbed.
@@ -37,14 +41,13 @@ void ch32v003Teardown(void);
 int ch32v003Resume(void);
 int ch32v003WriteFlash(const uint8_t* buf, int sz);
 int ch32v003WriteBitmapAsset(int slot, int asset_idx);
-int ch32v003WriteBitmap(int slot, uint8_t pixels[6][12]);
+int ch32v003WriteBitmap(int slot, const uint8_t pixels[EYE_LED_H][EYE_LED_W]);
 int ch32v003SelectBitmap(int slot);
 
 #define CH32V003_MAX_IMAGE_SLOTS 20
 
 // For functions in this code.
 uint32_t GetSTK(void);
-void ch32v003EmuDraw(int window_w, int window_h);
 
 //==============================================================================
 // mini-rv32ima augmentations.
@@ -136,7 +139,7 @@ static int CHPStore(uint32_t address, uint32_t regret, int size);
     }
 static inline uint32_t MINIRV32_LOAD4s(uint32_t ofs, uint32_t* rval, uint32_t* trap)
 {
-    uint32_t tmp;
+    uint32_t tmp = 0;
     if (ofs < FLASH_SIZE - 3)
     {
         tmp = *(uint32_t*)(ch32v003flash + ofs);
@@ -157,7 +160,7 @@ static inline uint32_t MINIRV32_LOAD4s(uint32_t ofs, uint32_t* rval, uint32_t* t
 }
 static inline uint16_t MINIRV32_LOAD2s(uint32_t ofs, uint32_t* rval, uint32_t* trap)
 {
-    uint16_t tmp;
+    uint16_t tmp = 0;
     if (ofs < FLASH_SIZE - 1)
     {
         tmp = *(uint16_t*)(ch32v003flash + ofs);
@@ -178,7 +181,7 @@ static inline uint16_t MINIRV32_LOAD2s(uint32_t ofs, uint32_t* rval, uint32_t* t
 }
 static inline uint8_t MINIRV32_LOAD1s(uint32_t ofs, uint32_t* rval, uint32_t* trap)
 {
-    uint8_t tmp;
+    uint8_t tmp = 0;
     if (ofs < FLASH_SIZE - 0)
     {
         tmp = *(uint8_t*)(ch32v003flash + ofs);
@@ -199,7 +202,7 @@ static inline uint8_t MINIRV32_LOAD1s(uint32_t ofs, uint32_t* rval, uint32_t* tr
 }
 static inline int16_t MINIRV32_LOAD2_SIGNEDs(uint32_t ofs, uint32_t* rval, uint32_t* trap)
 {
-    int16_t tmp;
+    int16_t tmp = 0;
     if (ofs < FLASH_SIZE - 1)
     {
         tmp = *(int16_t*)(ch32v003flash + ofs);
@@ -220,7 +223,7 @@ static inline int16_t MINIRV32_LOAD2_SIGNEDs(uint32_t ofs, uint32_t* rval, uint3
 }
 static inline int8_t MINIRV32_LOAD1_SIGNEDs(uint32_t ofs, uint32_t* rval, uint32_t* trap)
 {
-    int8_t tmp;
+    int8_t tmp = 0;
     if (ofs < FLASH_SIZE - 0)
     {
         tmp = *(int8_t*)(ch32v003flash + ofs);
@@ -599,7 +602,7 @@ static int CHPStore(uint32_t address, uint32_t regset, int size)
     {
         // This code does partial writes.
         int ofs                 = address & 3;
-        ch32v003InternalLEDSets = (ch32v003InternalLEDSets & (~(0xff << (ofs * 8)))) | (regset << (ofs * 8));
+        ch32v003InternalLEDSets = (ch32v003InternalLEDSets & (~(0xffu << (ofs * 8)))) | (regset << (ofs * 8));
         return 0;
     }
 
@@ -687,7 +690,6 @@ og_thread_t ch32v003thread;
 static void* ch32v003threadFn(void* v)
 {
     memset(&ch32v003state, 0, sizeof(ch32v003state));
-    ch32v003runMode = 0;
 
     double dLast = OGGetAbsoluteTime();
     while (ch32v003quitMode == 0)
@@ -714,7 +716,8 @@ static void* ch32v003threadFn(void* v)
 
 int initCh32v003(int swdio_pin)
 {
-    ch32v003thread = OGCreateThread(ch32v003threadFn, 0);
+    ch32v003runMode = 0;
+    ch32v003thread  = OGCreateThread(ch32v003threadFn, 0);
     return 0;
 }
 
@@ -784,6 +787,12 @@ int ch32v003WriteFlash(const uint8_t* buf, int sz)
     return ch32v003WriteMemory(buf, sz, 0);
 }
 
+static uint8_t gammaCorrect(uint8_t in)
+{
+    const float gamma = 0.25f;
+    return roundf(powf(in, gamma) * (0xFF / powf(0xFF, gamma)));
+}
+
 static const uint16_t Coordmap[] = {
     0x0000, 0x0100, 0x0200, 0x0300, 0x0400, 0x0500, 0xffff, 0xffff, 0x0002, 0x0102, 0x0202, 0x0302, 0x0402, 0x0502,
     0xffff, 0xffff, 0x0001, 0x0101, 0x0201, 0x0301, 0x0401, 0x0501, 0xffff, 0xffff, 0x0008, 0x0108, 0x0208, 0x0308,
@@ -794,7 +803,7 @@ static const uint16_t Coordmap[] = {
     0x0607, 0x0707, 0xffff, 0xffff, 0x0103, 0x0303, 0x0503, 0x0703, 0x0606, 0x0706, 0xffff, 0xffff,
 };
 
-void ch32v003EmuDraw(int window_w, int window_h)
+void ch32v003EmuDraw(int offX, int offY, int window_w, int window_h)
 {
     // We use the corresponding coordmap from swadge_matrix.h, so we can backtrack the steps
     // the source material takes to output the LEDs
@@ -804,22 +813,24 @@ void ch32v003EmuDraw(int window_w, int window_h)
     if (ils < RAMOFS || ils >= RAM_SIZE + RAMOFS - 72)
         return;
 
-    uint8_t* tptr = ch32v003ram + (ils - RAMOFS);
-    int w = 12, h = 6;
-    int x, y;
-    for (y = 0; y < h; y++)
-    {
-        for (x = 0; x < w; x++)
-        {
-            int py = window_h - y * 10 - 10;
-            int px = window_w / 2 - 5 * 10 - 5 + x * 10 + ((x >= w / 2) ? 10 : -10);
+    int ledW   = window_w / (EYE_LED_W + 1);
+    int ledH   = window_h / EYE_LED_H;
+    int ledDim = ledW < ledH ? ledW : ledH;
 
+    int marginX = (window_w - ((EYE_LED_W + 1) * ledDim)) / 2;
+    int marginY = (window_h - (EYE_LED_H * ledDim)) / 2;
+
+    uint8_t* tptr = ch32v003ram + (ils - RAMOFS);
+    for (int y = 0; y < EYE_LED_H; y++)
+    {
+        for (int x = 0; x < EYE_LED_W; x++)
+        {
             uint16_t tc = Coordmap[y + x * 8];
             int bit     = 1 << (tc >> 8);
             int row     = tc & 0xff;
 
-            uint8_t* pptr = tptr + row;
-            int intensity = 0;
+            uint8_t* pptr      = tptr + row;
+            uint32_t intensity = 0;
             int i;
             for (i = 0; i < 8; i++)
             {
@@ -828,9 +839,23 @@ void ch32v003EmuDraw(int window_w, int window_h)
                 pptr += 9;
             }
 
+            intensity = gammaCorrect(intensity);
+
             // Apply any color tuning.  Right now we're just stark white.
             CNFGColor(0x000000ff | (intensity << 24) | (intensity << 8) | (intensity << 16));
-            CNFGTackRectangle(px - 4, py - 4, px + 4, py + 4);
+
+            int spacing = (x >= EYE_LED_H) ? 1 : 0;
+
+            int py = marginY + offY + (y * ledDim);
+            int px = marginX + offX + ((x + spacing) * ledDim);
+            if (ledDim >= 3)
+            {
+                CNFGTackRectangle(px + 1, py + 1, px + ledDim - 1, py + ledDim - 1);
+            }
+            else
+            {
+                CNFGTackRectangle(px, py, px + ledDim, py + ledDim);
+            }
         }
     }
 }
@@ -844,23 +869,23 @@ int ch32v003WriteBitmapAsset(int slot, int asset_idx)
         printf("Error: Asset wrong size (%d) bytes.\n", (int)sz);
         return -1;
     }
-    if (((const uint16_t*)buf)[0] != 12 || ((const uint16_t*)buf)[1] != 6)
+    if (((const uint16_t*)buf)[0] != EYE_LED_W || ((const uint16_t*)buf)[1] != EYE_LED_H)
     {
-        printf("Error: Asset wrong dimensions (%d x %d) needs (12 x 6).\n", ((const uint16_t*)buf)[0],
-               ((const uint16_t*)buf)[1]);
+        printf("Error: Asset wrong dimensions (%d x %d) needs (%d x %d).\n", ((const uint16_t*)buf)[0],
+               ((const uint16_t*)buf)[1], EYE_LED_W, EYE_LED_H);
         return -1;
     }
 
     struct PixelMap
     {
-        uint8_t buffer[6][12];
+        uint8_t buffer[EYE_LED_H][EYE_LED_W];
     };
-    struct PixelMap* pm = (struct PixelMap*)(buf + 4);
+    const struct PixelMap* pm = (const struct PixelMap*)(buf + 4);
 
     return ch32v003WriteBitmap(slot, pm->buffer);
 }
 
-int ch32v003WriteBitmap(int slot, uint8_t pixels[6][12])
+int ch32v003WriteBitmap(int slot, const uint8_t pixels[EYE_LED_H][EYE_LED_W])
 {
     if (slot >= CH32V003_MAX_IMAGE_SLOTS)
     {
@@ -872,12 +897,12 @@ int ch32v003WriteBitmap(int slot, uint8_t pixels[6][12])
 
     int i, x, y;
 
-    for (y = 0; y < 6; y++)
+    for (y = 0; y < EYE_LED_H; y++)
     {
-        for (x = 0; x < 12; x++)
+        for (x = 0; x < EYE_LED_W; x++)
         {
             int intensity = pixels[y][x];
-            int coord     = Coordmap[x * 8 + y];
+            int coord     = Coordmap[x * 8 + (5 - y)];
 
             int ox = coord & 0xff;
             int oy = coord >> 8;

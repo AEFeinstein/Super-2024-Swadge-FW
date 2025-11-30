@@ -403,9 +403,6 @@ void taskYIELD(void)
         // After the screen has been fully rendered, call all the render callbacks to render anything else
         doExtRenderCb(window_w, window_h);
 
-        // TODO: Make this a ExtRenderCb maybe?
-        ch32v003EmuDraw(window_w, window_h);
-
         // Display the image and wait for time to display next frame.
         CNFGSwapBuffers();
 
@@ -511,19 +508,25 @@ void HandleKey(int keycode, int bDown)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wlogical-op"
     // can't use a switch here in case these are the same on some platforms
-    if (keycode == CNFG_KEY_ALT || keycode == CNFG_KEY_LEFT_ALT || keycode == CNFG_KEY_RIGHT_ALT)
-    {
-        if (bDown)
-        {
-            modifiers |= EMU_MOD_ALT;
-        }
-        else
-        {
-            modifiers &= ~EMU_MOD_ALT;
-        }
-    }
 
-    else if (keycode == CNFG_KEY_CTRL || keycode == CNFG_KEY_LEFT_CONTROL || keycode == CNFG_KEY_RIGHT_CONTROL)
+    /* CNFG_KEY_ALT is intentionally disabled. There's an issue on some OSs with alt+tab where the
+     * alt key down is captured by the program, but the alt key up is not (because focus has shifted
+     * to some other program). This leaves EMU_MOD_ALT permanently set and when a modifier is set,
+     * emulatorHandleKeys() isn't called.
+     */
+    // if (keycode == CNFG_KEY_ALT || keycode == CNFG_KEY_LEFT_ALT || keycode == CNFG_KEY_RIGHT_ALT)
+    // {
+    //     if (bDown)
+    //     {
+    //         modifiers |= EMU_MOD_ALT;
+    //     }
+    //     else
+    //     {
+    //         modifiers &= ~EMU_MOD_ALT;
+    //     }
+    // }
+    // else
+    if (keycode == CNFG_KEY_CTRL || keycode == CNFG_KEY_LEFT_CONTROL || keycode == CNFG_KEY_RIGHT_CONTROL)
     {
         if (bDown)
         {

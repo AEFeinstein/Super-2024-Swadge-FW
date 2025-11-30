@@ -306,24 +306,24 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
 
 #if defined(CNFGOGL)
                     // ARGB
-                    uint8_t a = (color) & 0xFF;
-                    uint8_t r = (color >> 8) & 0xFF;
-                    r         = (r * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
-                    uint8_t g = (color >> 16) & 0xFF;
-                    g         = (g * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
-                    uint8_t b = (color >> 24) & 0xFF;
-                    b         = (b * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
+                    uint32_t a = (color) & 0xFF;
+                    uint32_t r = (color >> 8) & 0xFF;
+                    r          = (r * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
+                    uint32_t g = (color >> 16) & 0xFF;
+                    g          = (g * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
+                    uint32_t b = (color >> 24) & 0xFF;
+                    b          = (b * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
 
                     color = (b << 24) | (g << 16) | (r << 8) | (a);
 #else
                     // RGBA
-                    uint8_t r = (color >> 0) & 0xFF;
-                    r         = (r * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
-                    uint8_t g = (color >> 8) & 0xFF;
-                    g         = (g * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
-                    uint8_t b = (color >> 16) & 0xFF;
-                    b         = (b * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
-                    uint8_t a = (color >> 24) & 0xFF;
+                    uint32_t r = (color >> 0) & 0xFF;
+                    r          = (r * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
+                    uint32_t g = (color >> 8) & 0xFF;
+                    g          = (g * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
+                    uint32_t b = (color >> 16) & 0xFF;
+                    b          = (b * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
+                    uint32_t a = (color >> 24) & 0xFF;
 
                     color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
 #endif
