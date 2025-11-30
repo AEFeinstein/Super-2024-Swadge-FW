@@ -1,0 +1,41 @@
+// Create a pretty raindrop animation on the LED matrix on the swadge.
+
+#include "swadge_matrix.h"
+
+#define RANDOM_STRENGTH 2
+#include "lib_rand.h"
+
+int main()
+{
+    SystemInit();
+    Delay_Ms(1500); // Allow a window of time to program, in case things go south.
+
+    // Only power on what's needed.
+    RCC->AHBPCENR = RCC_AHBPeriph_SRAM;
+    RCC->APB2PCENR = RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO;
+    GPIOD->CFGLR = (GPIO_CFGLR_IN_FLOAT)<<(4*1);
+    funDigitalWrite( PD1, 1 );
+
+    RCC->APB2PCENR |= RCC_AFIOEN;
+
+    // assign pin 1 interrupt from portD (0b11) to EXTI
+    AFIO->EXTICR |= (uint32_t)(0b11 << (1*2));
+
+    // enable line2 interrupt event
+    EXTI->EVENR |= EXTI_Line1;
+    EXTI->FTENR |= EXTI_Line1;
+
+    // select standby on power-down
+    PWR->CTLR = PWR_CTLR_PDDS;
+
+    // peripheral interrupt controller send to deep sleep
+    PFIC->SCTLR |= (1 << 2);
+
+    while(1)
+    {
+        __WFE();
+        Delay_Ms(1500);
+    }
+
+    return 0;
+}
