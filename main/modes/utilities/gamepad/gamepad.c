@@ -109,6 +109,8 @@ bool gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal);
 void gamepadMenuLoop(int64_t elapsedUs);
 void gamepadStart(gamepadType_t type);
 
+static void gp_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+
 static const char* getButtonName(hid_gamepad_button_bm_t button);
 
 //==============================================================================
@@ -150,7 +152,7 @@ swadgeMode_t gamepadMode = {
     .fnExitMode               = gamepadExitMode,
     .fnMainLoop               = gamepadMenuLoop,
     .fnAudioCallback          = NULL,
-    .fnBackgroundDrawCallback = NULL,
+    .fnBackgroundDrawCallback = gp_backgroundDrawCallback,
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
@@ -394,6 +396,9 @@ void gamepadStart(gamepadType_t type)
     led_t leds[CONFIG_NUM_LEDS];
     memset(leds, 0, sizeof(leds));
     setLeds(leds, CONFIG_NUM_LEDS);
+
+    setFrameRateUs(16666);
+    //setFrameRateUs(8333);
 }
 
 /**
@@ -404,6 +409,7 @@ void gamepadStart(gamepadType_t type)
 void gamepadMenuLoop(int64_t elapsedUs)
 {
     buttonEvt_t evt = {0};
+    bool eventsProcessed = false;
 
     switch (gamepad->screen)
     {
@@ -421,7 +427,14 @@ void gamepadMenuLoop(int64_t elapsedUs)
             while (checkButtonQueueWrapper(&evt))
             {
                 gamepadGenericButtonCb(&evt);
+                eventsProcessed = true;
             }
+
+            if(!eventsProcessed)
+            {
+                gamepadReportStateToHost();
+            }
+
             gamepadGenericMainLoop(elapsedUs);
             break;
         }
@@ -430,7 +443,14 @@ void gamepadMenuLoop(int64_t elapsedUs)
             while (checkButtonQueueWrapper(&evt))
             {
                 gamepadNsButtonCb(&evt);
+                eventsProcessed = true;
             }
+
+            if(!eventsProcessed)
+            {
+                gamepadNsReportStateToHost();
+            }
+
             gamepadNsMainLoop(elapsedUs);
             break;
         }
@@ -438,6 +458,7 @@ void gamepadMenuLoop(int64_t elapsedUs)
     }
 
     accelIntegrate();
+    DRAW_FPS_COUNTER(gamepad->ibmFont);
 }
 
 /**
@@ -952,9 +973,6 @@ void gamepadNsMainLoop(int64_t elapsedUs __attribute__((unused)))
         gamepad->isPluggedIn = tud_ready();
     }
 
-    // Clear the display
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c213);
-
     if (gamepad->exitTimer > 0)
     {
         gamepad->exitTimer += elapsedUs;
@@ -1199,7 +1217,7 @@ void gamepadNsMainLoop(int64_t elapsedUs __attribute__((unused)))
         }
 
         // Send state to host
-        gamepadNsReportStateToHost();
+        //gamepadNsReportStateToHost();
     }
     else
     {
@@ -1224,9 +1242,6 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
     {
         gamepad->isPluggedIn = tud_ready();
     }
-
-    // Clear the display
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c213);
 
     if (gamepad->exitTimer > 0)
     {
@@ -1479,7 +1494,7 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
         }
 
         // Send state to host
-        gamepadGenericReportStateToHost();
+        //gamepadGenericReportStateToHost();
     }
     else
     {
@@ -2317,4 +2332,9 @@ static const char* getButtonName(hid_gamepad_button_bm_t button)
             return "";
         }
     }
+}
+
+static void gp_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
+{
+    fillDisplayArea(x, y, x + w, y + h, c000);
 }
