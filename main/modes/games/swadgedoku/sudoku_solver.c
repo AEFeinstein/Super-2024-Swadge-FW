@@ -2,9 +2,424 @@
 #include "sudoku_game.h"
 #include "sudoku_ui.h"
 
-static void eliminateShadows(uint16_t* notes, const sudokuGrid_t* board)
+static bool eliminateShadows(sudokuMoveDesc_t* desc, uint16_t* notes, const sudokuGrid_t* board);
+static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* pos0, uint8_t* pos1, uint8_t* pos2, const sudokuGrid_t* board);
+static void applyCellElimination(const sudokuGrid_t* board, uint16_t* notes, int pos, uint16_t mask, int elimCount, uint8_t* eliminations);
+static void addElimination(sudokuMoveDesc_t* desc, int cellCount, uint16_t digits, sudokuRegionType_t regionType, int regionNum, uint8_t* cellPos);
+
+static bool eliminateShadows(sudokuMoveDesc_t* desc, uint16_t* notes, const sudokuGrid_t* board)
 {
     // TODO
+    // Ok here's the strategy:
+    // - One digit at a time,
+    for (int digit = 1; digit < board->base; digit++)
+    {
+        uint16_t bit = 1 << (digit - 1);
+
+        // - Keep track, per-box, of the row and column (separately) of each possibility
+        int possibleRows[board->base];
+        int possibleCols[board->base];
+
+        // -1 here will mean "not yet set"
+        // -2 will mean "multiple matches"
+        for (int i = 0; i < board->base; i++)
+        {
+            possibleRows[i] = -1;
+            possibleCols[i] = -1;
+        }
+
+        // - Go through all cells
+        for (int n = 0; n < board->size * board->size; n++)
+        {
+            int row = n / board->size;
+            int col = n % board->size;
+
+            // - Once set, if the row or column differs from the previous, then it's a no-go
+            int box = board->boxMap[n];
+            if (box != BOX_NONE)
+            {
+                if (notes[n] & bit)
+                {
+                    // This digit is a possibility! Write that down.
+                    if (possibleRows[box] == -1)
+                    {
+                        // Not found in any row yet, save the first one
+                        possibleRows[box] = row;
+                    }
+                    else if (possibleRows[box] != row)
+                    {
+                        // Already found in a different row
+                        // Set to -2 aka "multiple matches"
+                        possibleRows[box] = -2;
+                    }
+
+                    // And do the same for columns
+                    if (possibleCols[box] == -1)
+                    {
+                        possibleCols[box] = col;
+                    }
+                    else if (possibleCols[box] != col)
+                    {
+                        possibleCols[box] = -2;
+                    }
+                }
+            }
+        }
+
+        // - At the end of the cell loop, eliminate matching possibilities from their row/column
+        for (int box = 0; box < board->base; box++)
+        {
+            if (possibleRows[box] >= 0)
+            {
+                bool eliminated = false;
+                uint8_t cellPos[16];
+                int cellCount = 0;
+
+                // eliminate the digit from all spots in the row
+                for (int c = 0; c < board->size; c++)
+                {
+                    int pos = possibleRows[box] * board->size + c;
+                    if (board->boxMap[pos] != box)
+                    {
+                        if ((notes[pos] & bit))
+                        {
+                            // we can eliminate the possibility
+                            notes[pos] &= ~bit;
+                            eliminated = true;
+                        }
+                    }
+                    else
+                    {
+                        cellPos[cellCount++] = pos;
+                    }
+                }
+
+                if (eliminated)
+                {
+                    addElimination(desc, cellCount, bit, REGION_ROW, possibleRows[box], cellPos);
+                    return true;
+                }
+            }
+
+            if (possibleCols[box] >= 0)
+            {
+                bool eliminated = false;
+                uint8_t cellPos[16];
+                int cellCount = 0;
+
+                // eliminate the digit from all spots in the row
+                for (int r = 0; r < board->size; r++)
+                {
+                    int pos = r * board->size + possibleCols[box];
+                    if (board->boxMap[pos] != box)
+                    {
+                        if ((notes[pos] & bit))
+                        {
+                            notes[pos] &= ~bit;
+                            eliminated = true;
+                        }
+                    }
+                    else
+                    {
+                        cellPos[cellCount++] = pos;
+                    }
+                }
+
+                if (eliminated)
+                {
+                    addElimination(desc, cellCount, bit, REGION_COLUMN, possibleCols[box], cellPos);
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* pos0, uint8_t* pos1, uint8_t* pos2, const sudokuGrid_t* board)
+{
+    // TODO: more than one pass (for triples)
+    for (int pass = 0; pass < 1; pass++)
+    {
+        // Eliminate ONE naked pair/triple/etc
+        for (int a = 1; a <= board->base; a++)
+        {
+            for (int b = a + 1; b <= board->base; b++)
+            {
+                uint16_t bitA = 1 << (a - 1);
+                uint16_t bitB = 1 << (b - 1);
+
+                int rFirstPos[board->size];
+                int rSecondPos[board->size];
+                int cFirstPos[board->size];
+                int cSecondPos[board->size];
+                int boxFirstPos[board->base];
+                int boxSecondPos[board->base];
+
+                for (int i = 0; i < board->size; i++)
+                {
+                    rFirstPos[i] = -1;
+                    rSecondPos[i] = -1;
+                    cFirstPos[i] = -1;
+                    cSecondPos[i] = -1;
+                }
+
+                for (int i = 0; i < board->base; i++)
+                {
+                    boxFirstPos[i] = -1;
+                    boxSecondPos[i] = -1;
+                }
+
+                // start with the pairs
+                if (pass == 0)
+                {
+                    // okay so how do we actually detect a pair
+                    // it's any two digits which, within a given row/col within a box,
+                    //     are only found in those two boxes,
+                    //     meaning we can eliminate all other possibilities in the row/box
+                    for (int pos = 0; pos < board->size * board->size; pos++)
+                    {
+                        int row = pos / board->size;
+                        int col = pos % board->size;
+                        int box = board->boxMap[pos];
+
+                        if (board->grid[pos] != 0)
+                        {
+                            continue;
+                        }
+
+                        if ((notes[pos] & (bitA | bitB)) == (bitA | bitB))
+                        {
+                            if (rFirstPos[row] == -1)
+                            {
+                                rFirstPos[row] = pos;
+                            }
+                            else if (rSecondPos[row] == -1)
+                            {
+                                rSecondPos[row] = pos;
+                            }
+                            else
+                            {
+                                // found more than two, no dice
+                                rFirstPos[row] = -2;
+                                rSecondPos[row] = -2;
+                            }
+
+                            if (cFirstPos[col] == -1)
+                            {
+                                cFirstPos[col] = pos;
+                            }
+                            else if (cSecondPos[col] == -1)
+                            {
+                                cSecondPos[col] = pos;
+                            }
+                            else
+                            {
+                                // nope
+                                cFirstPos[col] = -2;
+                                cSecondPos[col] = -2;
+                            }
+
+                            if (box != BOX_NONE)
+                            {
+                                if (boxFirstPos[box] == -1)
+                                {
+                                    boxFirstPos[box] = pos;
+                                }
+                                else if (boxSecondPos[box] == -1)
+                                {
+                                    boxSecondPos[box] = pos;
+                                }
+                                else
+                                {
+                                    // nope
+                                    boxFirstPos[box] = -2;
+                                    boxSecondPos[box] = -2;
+                                }
+                            }
+                        }
+                        else if ((notes[pos] & bitA) || (notes[pos] & bitB))
+                        {
+                            // only one of the bits was set, won't work!
+                            rFirstPos[row] = -2;
+                            rSecondPos[row] = -2;
+                            cFirstPos[col] = -2;
+                            cSecondPos[col] = -2;
+
+                            if (box != BOX_NONE)
+                            {
+                                boxFirstPos[box] = -2;
+                                boxSecondPos[box] = -2;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // no pairs found, second pass goes with triples
+                    //for (int c = b + 1; c <= board->base; c++)
+                    {
+                        // TODO
+                    }
+                }
+
+                for (int i = 0; i < board->size; i++)
+                {
+                    if (rFirstPos[i] >= 0 && rSecondPos[i] >= 0)
+                    {
+                        bool eliminated = false;
+
+                        // Eliminate across row and return
+                        for (int pos = i * board->size; pos < (i + 1) * board->size; pos++)
+                        {
+                            if (pos != rFirstPos[i] && pos != rSecondPos[i])
+                            {
+                                if (!board->grid[pos] && (notes[pos] & (bitA | bitB)))
+                                {
+                                    notes[pos] &= ~(bitA | bitB);
+                                    eliminated = true;
+                                }
+                            }
+                            else if (notes[pos] & ~(bitA | bitB))
+                            {
+                                // Instead of eliminating the digits here, we eliminate everything else
+                                notes[pos] &= (bitA | bitB);
+                                eliminated = true;
+                            }
+                        }
+                        if (eliminated)
+                        {
+                            ESP_LOGI("Solver", "Eliminated pairs in row %d at %d and %d (%d/%d)", i, rFirstPos[i], rSecondPos[i], a, b);
+                            *pos0 = rFirstPos[i];
+                            *pos1 = rSecondPos[i];
+                            *digits = (bitA | bitB);
+                            return 2;
+                        }
+                    }
+                    else if (cFirstPos[i] >= 0 && cSecondPos[i] >= 0)
+                    {
+                        bool eliminated = false;
+
+                        // Eliminate across col and return
+                        for (int pos = i; pos < board->size * (board->size - 1) + i; pos += board->size)
+                        {
+                            if (pos != cFirstPos[i] && pos != cSecondPos[i])
+                            {
+                                if (!board->grid[pos] && (notes[pos] & (bitA | bitB)))
+                                {
+                                    notes[pos] &= ~(bitA | bitB);
+                                    eliminated = true;
+                                }
+                            }
+                            else if (notes[pos] & ~(bitA | bitB))
+                            {
+                                // Instead of eliminating the digits here, we eliminate everything else
+                                notes[pos] &= (bitA | bitB);
+                                eliminated = true;
+                            }
+                        }
+
+                        if (eliminated)
+                        {
+                            ESP_LOGI("Solver", "Eliminated pairs in col %d at %d and %d (%d/%d)", i, cFirstPos[i], cSecondPos[i], a, b);
+                            *pos0 = cFirstPos[i];
+                            *pos1 = cSecondPos[i];
+                            *digits = (bitA | bitB);
+                            return 2;
+                        }
+                    }
+                }
+
+                for (int i = 0; i < board->base; i++)
+                {
+                    if (boxFirstPos[i] >= 0 && boxSecondPos[i] >= 0)
+                    {
+                        bool eliminated = false;
+
+                        // Eliminate across box
+                        for (int pos = 0; pos < board->size * board->size; pos++)
+                        {
+                            if (board->boxMap[pos] == i)
+                            {
+                                if (pos != boxFirstPos[i] && pos != boxSecondPos[i])
+                                {
+                                    if (!board->grid[pos] && (notes[pos] & (bitA | bitB)))
+                                    {
+                                        notes[pos] &= ~(bitA | bitB);
+                                        eliminated = true;
+                                    }
+                                }
+                                else if (notes[pos] & ~(bitA | bitB))
+                                {
+                                    // Instead of eliminating the digits here, we eliminate everything else
+                                    notes[pos] &= (bitA | bitB);
+                                    eliminated = true;
+                                }
+                            }
+                        }
+
+                        if (eliminated)
+                        {
+                            ESP_LOGI("Solver", "Eliminated pairs in box %d at %d and %d (%d/%d)", i, boxFirstPos[i], boxSecondPos[i], a, b);
+                            *pos0 = boxFirstPos[i];
+                            *pos1 = boxSecondPos[i];
+                            *digits = (bitA | bitB);
+                            return 2;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // return 0, not found
+    return 0;
+}
+
+static void applyCellElimination(const sudokuGrid_t* board, uint16_t* notes, int pos, uint16_t mask, int elimCount, uint8_t* eliminations)
+{
+    // First check if this is one of the eliminated values
+    bool isTarget = false;
+    for (int i = 0; i < elimCount; i++)
+    {
+        if (eliminations[i] == pos)
+        {
+            isTarget = true;
+            break;
+        }
+    }
+
+    if (board->grid[pos] == 0)
+    {
+        if (isTarget)
+        {
+            // Remove other possibilities from this note
+            notes[pos] &= mask;
+        }
+        else
+        {
+            notes[pos] &= ~mask;
+        }
+    }
+}
+
+static void addElimination(sudokuMoveDesc_t* desc, int cellCount, uint16_t digits, sudokuRegionType_t regionType, int regionNum, uint8_t* cellPos)
+{
+    if (desc->stepCount < MAX_ELIMINATION_STEPS)
+    {
+        sudokuMoveElimination_t* elim = &desc->eliminationSteps[desc->stepCount];
+        elim->eliminationCount = cellCount;
+        elim->eliminationMask = digits;
+        elim->eliminationRegionType = regionType;
+        elim->eliminationRegionNum = regionNum;
+        for (int i = 0; i < cellCount; i++)
+        {
+            elim->eliminations[i] = cellPos[i];
+        }
+
+        desc->stepCount++;
+    }
 }
 
 /**
@@ -21,6 +436,7 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
 {
     const size_t boardLen = board->size * board->size;
     uint16_t notes[boardLen];
+    uint16_t prevNotes[boardLen];
     uint16_t rowNotes[board->size];
     uint16_t colNotes[board->size];
     uint16_t boxNotes[board->base];
@@ -28,13 +444,23 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
     int overlayRow = -1;
     int overlayCol = -1;
 
+    uint16_t eliminationDigits = 0;
+    uint8_t eliminationCount = 0;
+    uint8_t eliminationPos[3] = {0};
+
+#define ADD_ELIMINATIONS(regionType, regionNum) addElimination(desc, eliminationCount, eliminationDigits, regionType, regionNum, eliminationPos)
+
     // 0. Copy the board notes
     memcpy(notes, board->notes, sizeof(uint16_t) * boardLen);
+    // Also save a copy
+    memcpy(prevNotes, notes, sizeof(uint16_t) * boardLen);
 
     // 0.5 Get the individual row/col/box notes we can use later
     sudokuGetIndividualNotes(rowNotes, colNotes, boxNotes, board, 0);
 
-    for (int stage = 0; stage < 1; stage++)
+    bool giveUp = false;
+    int stage = 0;
+    while (!giveUp)
     {
         // (In order of digits)
         for (uint8_t digit = 1; digit <= board->base; digit++)
@@ -49,7 +475,6 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
                 // Only check boxes that don't already have this digit in them
                 if (boxNotes[box] & bit)
                 {
-                    ESP_LOGI("Solver", "No %" PRIu8 " in box %d yet", digit, box);
                     // Number of valid spots we've found so far
                     int count = 0;
 
@@ -81,6 +506,7 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
                         desc->digit = digit;
                         desc->message = "This is the only valid position for a%4$s %1$d within the box";
                         desc->detail = NULL;
+                        //ADD_ELIMINATIONS(REGION_BOX, box);
                         overlayBox = box;
                         goto do_overlay;
                     }
@@ -121,6 +547,7 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
                         desc->pos = pos;
                         desc->digit = digit;
                         desc->message = "This is the only valid position for a%4$s %1$d within row %2$d";
+                        //ADD_ELIMINATIONS(REGION_ROW, row);
                         overlayRow = pos / board->size;
                         goto do_overlay;
                     }
@@ -160,6 +587,7 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
                         desc->pos = pos;
                         desc->digit = digit;
                         desc->message = "This is the only valid position for a%4$s %1$d within column %3$d";
+                        //ADD_ELIMINATIONS(REGION_COLUMN, col);
                         overlayCol = pos % board->size;
                         goto do_overlay;
                     }
@@ -177,6 +605,7 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
                 desc->pos = n;
                 desc->digit = __builtin_ctz(notes[n]) + 1;
                 desc->message = "A%4$s %1$d is the only possible digit in this square";
+                //ADD_ELIMINATIONS(REGION_NONE, 0);
                 overlayRow = n / board->size;
                 overlayCol = n % board->size;
                 goto do_overlay;
@@ -189,16 +618,42 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
             {
                 // TODO:
                 // 3. Take into account 'shadow' effects to eliminate possibilities
+                // Save the previous notes
+                ESP_LOGI("Solver", "Didn't find any obvious moves, eliminating pointers...");
+                memcpy(prevNotes, notes, sizeof(uint16_t) * boardLen);
+                if (!eliminateShadows(desc, notes, board))
+                {
+                    // No more shadows to eliminate, try the next stage
+                    stage++;
+                }
 
                 // 4. Repeat step 1
                 // 5. Repeat step 2
-                break;
+
+                stage++;
             }
 
             case 1:
             {
+                memcpy(prevNotes, notes, sizeof(uint16_t) * boardLen);
+
+                // TODO: running this a few times messes stuff up
+                eliminationCount = eliminatePairsTriplesEtc(notes, &eliminationDigits, &eliminationPos[0], &eliminationPos[1], &eliminationPos[2], board);
+                if (0 != eliminationCount)
+                {
+                    ESP_LOGI("Solver", "Eliminated a %s", (eliminationCount == 2) ? "pair" : "triple");
+                    // Go back to the start now that we've eliminated something
+                    stage = 0;
+                    continue;
+                }
+                else
+                {
+                    ESP_LOGI("Solver", "eliminate pairs returned 0, giving up");
+                    giveUp = true;
+                }
                 // 6. Check for naked pairs
                 // 7. Check for naked triples
+                break;
             }
         }
     }
@@ -327,11 +782,79 @@ do_overlay:
         shape->digit.digit = desc->digit;
         shape->digit.pos.x = c * BOX_SIZE_SUBPOS;
         shape->digit.pos.y = r * BOX_SIZE_SUBPOS;
-        getOverlayPos(&shape->circle.pos.x, &shape->circle.pos.y, r, c, SUBPOS_CENTER);
+        getOverlayPos(&shape->digit.pos.x, &shape->digit.pos.y, r, c, SUBPOS_CENTER);
         push(&overlay->shapes, shape);
+
+        for (int stepNum = 0; stepNum < desc->stepCount; stepNum++)
+        {
+            const sudokuMoveElimination_t* elim = &desc->eliminationSteps[stepNum];
+            for (int elimNum = 0; elimNum < elim->eliminationCount; elimNum++)
+            {
+                shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                shape->type = OVERLAY_NOTES_SHAPE;
+                shape->color = c500;
+                shape->tag = ST_HINT;
+                int pos = elim->eliminations[elimNum];
+                int elimR = pos / board->size;
+                int elimC = pos % board->size;
+                getOverlayPos(&shape->digit.pos.x, &shape->digit.pos.y, elimR, elimC, SUBPOS_CENTER);
+                push(&overlay->shapes, shape);
+            }
+        }
 
         overlay->gridOpts[desc->pos] |= OVERLAY_SKIP;
     }
 
     return true;
+}
+
+void sudokuApplyMove(sudokuGrid_t* board, const sudokuMoveDesc_t* desc)
+{
+    if (desc->digit > 0)
+    {
+        setDigit(board, desc->digit, desc->pos % board->size, desc->pos / board->size);
+    }
+
+    for (int i = 0; i < desc->stepCount; i++)
+    {
+        const sudokuMoveElimination_t* step = &desc->eliminationSteps[i];
+        if (step->eliminationCount > 0)
+        {
+            // Apply the mask to the pair/triple
+            for (int i = 0; i < step->eliminationCount; i++)
+            {
+                board->notes[step->eliminations[i]] &= step->eliminationMask;
+            }
+
+            // Apply the mask to the
+            if (step->eliminationRegionType == REGION_BOX)
+            {
+                for (int pos = 0; pos < board->size * board->size; pos++)
+                {
+                    if (board->boxMap[pos] == step->eliminationRegionNum)
+                    {
+                        applyCellElimination(board, board->notes, pos, step->eliminationMask, step->eliminationCount, step->eliminations);
+                    }
+                }
+            }
+            else if (step->eliminationRegionType == REGION_ROW)
+            {
+                for (int col = 0; col < board->size; col++)
+                {
+                    int pos = step->eliminationRegionNum * board->size + col;
+
+                    applyCellElimination(board, board->notes, pos, step->eliminationMask, step->eliminationCount, step->eliminations);
+                }
+            }
+            else if (step->eliminationRegionType == REGION_COLUMN)
+            {
+                for (int row = 0; row < board->size; row++)
+                {
+                    int pos = row * board->size + step->eliminationRegionNum;
+
+                    applyCellElimination(board, board->notes, pos, step->eliminationMask, step->eliminationCount, step->eliminations);
+                }
+            }
+        }
+    }
 }

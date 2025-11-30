@@ -557,7 +557,7 @@ void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, i
             int r = sourceBoxRows[n];
             int c = sourceBoxCols[n];
 
-            ESP_LOGI("Swadgedoku", "Box[r=%d][c=%d] == sourceBox (%" PRIu16 ")", r, c, sourceBox);
+            ESP_LOGD("Swadgedoku", "Box[r=%d][c=%d] == sourceBox (%" PRIu16 ")", r, c, sourceBox);
             notes[r * game->size + c] = (rowNotes[r] & colNotes[c] & sourceBoxNote);
             if (!game->grid[r * game->size + c] && !notes[r * game->size + c])
             {
