@@ -6,25 +6,6 @@
 #include "math.h"
 
 //==============================================================================
-// Const variables
-//==============================================================================
-
-static const char DR_NAMESTRING[] = "Caesar Cipher";
-static const int rotateRPM        = 5;
-static const int64_t UsPerDeg     = (60000000 / (rotateRPM * 360));
-static const vec_t ScreenCenter   = {
-      .x = 140,
-      .y = 135, // 120 is the default center of the screen
-};
-static const char* lettersRace[]
-    = {"M", "4", "R", "H", "N", "Y", "8", "A", "C", "T", "3", "Z", "K", "W", "F", "1", "X", "G",
-       "Q", "E", "O", "J", "L", "D", "9", "B", "V", "S", "5", "7", "I", "P", "2", "0", "6", "U"};
-;
-static const char* numbersRace[]
-    = {"8",  "35", "6", "23", "15", "9", "33", "3",  "20", "11", "36", "27", "14", "25", "19", "32", "2",  "28",
-       "21", "34", "7", "16", "30", "5", "1",  "22", "13", "10", "18", "26", "31", "24", "17", "4",  "29", "12"};
-
-//==============================================================================
 // Structs
 //==============================================================================
 
@@ -58,9 +39,31 @@ typedef struct
 
 static void cipherEnterMode(void);
 static void cipherExitMode(void);
+void cipherBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void cipherMainLoop(int64_t elapsedUs);
 static vec_t RThetaToXY(vec_t, bool);
 static void DrawDividerLine(int, int, int);
+
+//==============================================================================
+// Const variables
+//==============================================================================
+
+static const char DR_NAMESTRING[] = "Caesar Cipher";
+static const int rotateRPM        = 5;
+static const int64_t UsPerDeg     = (60000000 / (rotateRPM * 360));
+
+static const vec_t ScreenCenter = {
+    .x = 140,
+    .y = 135, // 120 is the default center of the screen
+};
+
+static const char* lettersRace[]
+    = {"M", "4", "R", "H", "N", "Y", "8", "A", "C", "T", "3", "Z", "K", "W", "F", "1", "X", "G",
+       "Q", "E", "O", "J", "L", "D", "9", "B", "V", "S", "5", "7", "I", "P", "2", "0", "6", "U"};
+
+static const char* numbersRace[]
+    = {"8",  "35", "6", "23", "15", "9", "33", "3",  "20", "11", "36", "27", "14", "25", "19", "32", "2",  "28",
+       "21", "34", "7", "16", "30", "5", "1",  "22", "13", "10", "18", "26", "31", "24", "17", "4",  "29", "12"};
 
 //==============================================================================
 // Variables
@@ -77,14 +80,14 @@ swadgeMode_t cipherMode = {
     .overrideSelectBtn = false, // The select/Menu button has a default behavior. If you want to override it,
                                 // you can set this to true but you'll need to re-implement the
                                 // 'return to main menu' behavior.
-    .fnEnterMode              = cipherEnterMode, // The enter mode function
-    .fnExitMode               = cipherExitMode,  // The exit mode function
-    .fnMainLoop               = cipherMainLoop,  // The loop function
-    .fnAudioCallback          = NULL,            // If the mode uses the microphone
-    .fnBackgroundDrawCallback = NULL,            // Draws a section of the display
-    .fnEspNowRecvCb           = NULL,            // If using Wifi, add the receive function here
-    .fnEspNowSendCb           = NULL,            // If using Wifi, add the send function here
-    .fnAdvancedUSB            = NULL,            // If using advanced USB things.
+    .fnEnterMode              = cipherEnterMode,              // The enter mode function
+    .fnExitMode               = cipherExitMode,               // The exit mode function
+    .fnMainLoop               = cipherMainLoop,               // The loop function
+    .fnAudioCallback          = NULL,                         // If the mode uses the microphone
+    .fnBackgroundDrawCallback = cipherBackgroundDrawCallback, // Draws a section of the display
+    .fnEspNowRecvCb           = NULL,                         // If using Wifi, add the receive function here
+    .fnEspNowSendCb           = NULL,                         // If using Wifi, add the send function here
+    .fnAdvancedUSB            = NULL,                         // If using advanced USB things.
 };
 
 cipher_t* cipher;
@@ -93,6 +96,13 @@ cipher_t* cipher;
 // Functions
 //==============================================================================
 
+/**
+ * @brief Given text and an angle in degrees around ScreenCenter, calculate where to draw text at in X,Y coordinates
+ *
+ * @param RTheta An angle to draw text at
+ * @param TextBuffer The text to draw
+ * @return The X,Y coordinate to draw the text at for the desired angle
+ */
 static vec_t RThetaToXY(vec_t RTheta, bool TextBuffer)
 {
     // This function uses the global ScreenCenter vec_t object to allow text to be pushed to the corners of the screen
@@ -122,6 +132,13 @@ static vec_t RThetaToXY(vec_t RTheta, bool TextBuffer)
     return mathPos;
 }
 
+/**
+ * @brief Given an angle in degrees around ScreenCenter, and radius start and end, draw a divider line
+ *
+ * @param RStart The radius to start the line at
+ * @param REnd The radius to end the line at
+ * @param ThetaDeg The angle to draw the line at
+ */
 static void DrawDividerLine(int RStart, int REnd, int ThetaDeg)
 {
     vec_t start = RThetaToXY(
@@ -141,6 +158,9 @@ static void DrawDividerLine(int RStart, int REnd, int ThetaDeg)
     drawLine(start.x, start.y, end.x, end.y, cipher->bg, 0);
 }
 
+/**
+ * @brief Enter cipher mode, allocate necessary memory
+ */
 static void cipherEnterMode()
 {
     cipher = heap_caps_calloc(1, sizeof(cipher_t), MALLOC_CAP_8BIT);
@@ -165,6 +185,9 @@ static void cipherEnterMode()
     loadWsg(PROTOMEN_SMALL_WSG, &cipher->logo, true);
 }
 
+/**
+ * @brief Exit cipher mode and free memory
+ */
 static void cipherExitMode()
 {
     heap_caps_free(cipher->innerRace);
@@ -172,10 +195,29 @@ static void cipherExitMode()
     heap_caps_free(cipher);
 }
 
+/**
+ * @brief Background callback which fills a single color
+ *
+ * @param x The X coordinate to start drawing at
+ * @param y The Y coordinate to start drawing at
+ * @param w The width of the section to draw
+ * @param h The height of the section to draw
+ * @param up unused
+ * @param upNum unused
+ */
+void cipherBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
+{
+    // Set background as quickly as possible
+    memset(&getPxTftFramebuffer()[(y * w) + x], cipher->bg, w * h);
+}
+
+/**
+ * @brief The main cipher loop which draws the screen and handles button inputs
+ *
+ * @param elapsedUs The time since this function was last called
+ */
 static void cipherMainLoop(int64_t elapsedUs)
 {
-    clearPxTft();
-
     if (cipher->innerRace->rotating || cipher->innerRace->timeSpinning % (UsPerDeg * 10) > 2)
     {
         cipher->innerRace->timeSpinning
@@ -183,6 +225,7 @@ static void cipherMainLoop(int64_t elapsedUs)
                + (int)fmin(elapsedUs, (UsPerDeg * 10) - (cipher->innerRace->timeSpinning % (UsPerDeg * 10)) + 1))
               % (UsPerDeg * 360);
     }
+
     if (cipher->outerRace->rotating || cipher->outerRace->timeSpinning % (UsPerDeg * 10) > 2)
     {
         cipher->outerRace->timeSpinning
@@ -190,17 +233,16 @@ static void cipherMainLoop(int64_t elapsedUs)
                + (int)fmin(elapsedUs, (UsPerDeg * 10) - (cipher->outerRace->timeSpinning % (UsPerDeg * 10)) + 1))
               % (UsPerDeg * 360);
     }
+
     if (cipher->OffsettingLeft)
     {
         cipher->RaceOffset = (cipher->RaceOffset + elapsedUs * 2) % (UsPerDeg * 360);
     }
+
     if (cipher->OffsettingRight)
     {
         cipher->RaceOffset = ((cipher->RaceOffset - elapsedUs * 2) + (UsPerDeg * 360)) % (UsPerDeg * 360);
     }
-
-    // Draw Background
-    drawRectFilled(0, 0, 280, 240, cipher->bg);
 
     // Draw filled circle for text to live on
     drawCircleFilled(ScreenCenter.x, ScreenCenter.y, cipher->outerRace->raceRad + 10, cipher->shade);
@@ -211,23 +253,23 @@ static void cipherMainLoop(int64_t elapsedUs)
     // Draw Logo
     drawWsg(&cipher->logo, 65, 80, false, false, 0);
 
+    int32_t degPerChar = 360 / ARRAY_SIZE(numbersRace);
+
     // Draw text dividers that do not move when either race is spinning
-    for (int i = 0; i < 36; i++)
-    { // i<36
+    for (int i = 0; i < ARRAY_SIZE(numbersRace); i++)
+    {
         // Draw divider lines
         DrawDividerLine(cipher->innerRace->raceRad - 10, cipher->outerRace->raceRad + 10,
-                        ((cipher->RaceOffset) / UsPerDeg) + 10 * i + 5);
+                        ((cipher->RaceOffset) / UsPerDeg) + degPerChar * i + (degPerChar / 2));
     }
 
     // Draw Text on top
-    for (int i = 0; i < 36; i++)
-    { // i<36
-
+    for (int i = 0; i < ARRAY_SIZE(numbersRace); i++)
+    {
         // Draw inner race
         vec_t inPos = {
             .x = cipher->innerRace->raceRad,
-            .y = ((cipher->innerRace->timeSpinning + cipher->RaceOffset) / UsPerDeg)
-                 + 10 * i, // Hard-coding a 36-part race => 360/36=10 degrees of difference to each text
+            .y = ((cipher->innerRace->timeSpinning + cipher->RaceOffset) / UsPerDeg) + degPerChar * i,
         };
         inPos = RThetaToXY(inPos, false);
         drawText(cipher->ibm, cipher->text, lettersRace[i], inPos.x - 4, inPos.y - 5);
@@ -235,8 +277,7 @@ static void cipherMainLoop(int64_t elapsedUs)
         // draw outer race
         vec_t outPos = {
             .x = cipher->outerRace->raceRad,
-            .y = ((cipher->outerRace->timeSpinning + cipher->RaceOffset) / UsPerDeg)
-                 + 10 * i, // Hard-coding a 36-part race => 360/36=10 degrees of difference to each text
+            .y = ((cipher->outerRace->timeSpinning + cipher->RaceOffset) / UsPerDeg) + degPerChar * i,
         };
         outPos = RThetaToXY(outPos, false);
         drawText(cipher->ibm, cipher->text, numbersRace[i], outPos.x - 7, outPos.y - 5);
@@ -251,40 +292,60 @@ static void cipherMainLoop(int64_t elapsedUs)
             switch (evt.button)
             {
                 case PB_B:
+                {
                     cipher->innerRace->rotating = !cipher->innerRace->rotating;
                     break;
+                }
                 case PB_A:
+                {
                     cipher->outerRace->rotating = !cipher->outerRace->rotating;
                     break;
+                }
                 case PB_LEFT:
+                {
                     cipher->OffsettingLeft = true;
                     break;
+                }
                 case PB_RIGHT:
+                {
                     cipher->OffsettingRight = true;
                     break;
+                }
                 case PB_UP:
+                {
                     cipher->innerRace->timeSpinning += 3;
                     break;
+                }
                 case PB_DOWN:
+                {
                     cipher->outerRace->timeSpinning += 3;
                     break;
-
+                }
                 default:
+                {
                     break;
+                }
             }
         }
         else
-        { // The button is released
+        {
+            // The button is released
             switch (evt.button)
             {
                 case PB_LEFT:
+                {
                     cipher->OffsettingLeft = false;
                     break;
+                }
                 case PB_RIGHT:
+                {
                     cipher->OffsettingRight = false;
                     break;
+                }
                 default:
+                {
                     break;
+                }
             }
         }
     }
