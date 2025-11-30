@@ -1,5 +1,13 @@
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include "cipher.h"
 #include "math.h"
+
+//==============================================================================
+// Const variables
+//==============================================================================
 
 static const char DR_NAMESTRING[] = "Caesar Cipher";
 static const int rotateRPM        = 5;
@@ -16,6 +24,10 @@ static const char* numbersRace[]
     = {"8",  "35", "6", "23", "15", "9", "33", "3",  "20", "11", "36", "27", "14", "25", "19", "32", "2",  "28",
        "21", "34", "7", "16", "30", "5", "1",  "22", "13", "10", "18", "26", "31", "24", "17", "4",  "29", "12"};
 
+//==============================================================================
+// Structs
+//==============================================================================
+
 // Declare struct for spinning races
 typedef struct
 {
@@ -25,14 +37,35 @@ typedef struct
     int64_t timeSpinning;
 } cipherRace_t;
 
+typedef struct
+{
+    font_t* ibm;
+    cipherRace_t* innerRace;
+    cipherRace_t* outerRace;
+    int64_t RaceOffset;
+    bool OffsettingLeft;
+    bool OffsettingRight;
+    wsg_t logo;
+
+    paletteColor_t bg;
+    paletteColor_t shade;
+    paletteColor_t text;
+} cipher_t;
+
+//==============================================================================
 // Function Definitions
+//==============================================================================
+
 static void cipherEnterMode(void);
 static void cipherExitMode(void);
 static void cipherMainLoop(int64_t elapsedUs);
 static vec_t RThetaToXY(vec_t, bool);
 static void DrawDividerLine(int, int, int);
 
-// Boilerplate
+//==============================================================================
+// Variables
+//==============================================================================
+
 swadgeMode_t cipherMode = {
     .modeName = DR_NAMESTRING,  // Assign the name we created here
     .wifiMode = NO_WIFI,        // If we want WiFi. WiFi is expensive computationally/battery-wise, so disable
@@ -54,21 +87,12 @@ swadgeMode_t cipherMode = {
     .fnAdvancedUSB            = NULL,            // If using advanced USB things.
 };
 
-// Declare Variables
-static font_t ibm;
-cipherRace_t* innerRace;
-cipherRace_t* outerRace;
-int64_t RaceOffset   = 0;
-bool OffsettingLeft  = false;
-bool OffsettingRight = false;
-wsg_t logo;
+cipher_t* cipher;
 
-// paletteColor_t bg = c011;paletteColor_t shade = c133;paletteColor_t text = c155;
-paletteColor_t bg    = c311;
-paletteColor_t shade = c431;
-paletteColor_t text  = c101;
+//==============================================================================
+// Functions
+//==============================================================================
 
-// Define functions
 static vec_t RThetaToXY(vec_t RTheta, bool TextBuffer)
 {
     // This function uses the global ScreenCenter vec_t object to allow text to be pushed to the corners of the screen
@@ -114,77 +138,85 @@ static void DrawDividerLine(int RStart, int REnd, int ThetaDeg)
         },
         false);
 
-    drawLine(start.x, start.y, end.x, end.y, bg, 0);
+    drawLine(start.x, start.y, end.x, end.y, cipher->bg, 0);
 }
 
 static void cipherEnterMode()
 {
-    innerRace            = (cipherRace_t*)heap_caps_calloc(1, sizeof(cipherRace_t), MALLOC_CAP_8BIT);
-    innerRace->rotating  = true;
-    innerRace->direction = true;
-    innerRace->raceRad   = 100;
-    outerRace            = (cipherRace_t*)heap_caps_calloc(1, sizeof(cipherRace_t), MALLOC_CAP_8BIT);
-    outerRace->rotating  = true;
-    outerRace->direction = false;
-    outerRace->raceRad   = 125;
+    cipher = heap_caps_calloc(1, sizeof(cipher_t), MALLOC_CAP_8BIT);
 
-    loadFont(IBM_VGA_8_FONT, &ibm, false);
+    cipher->bg    = c311;
+    cipher->shade = c431;
+    cipher->text  = c101;
+
+    cipher->innerRace            = (cipherRace_t*)heap_caps_calloc(1, sizeof(cipherRace_t), MALLOC_CAP_8BIT);
+    cipher->innerRace->rotating  = true;
+    cipher->innerRace->direction = true;
+    cipher->innerRace->raceRad   = 100;
+
+    cipher->outerRace            = (cipherRace_t*)heap_caps_calloc(1, sizeof(cipherRace_t), MALLOC_CAP_8BIT);
+    cipher->outerRace->rotating  = true;
+    cipher->outerRace->direction = false;
+    cipher->outerRace->raceRad   = 125;
+
+    cipher->ibm = getSysFont();
     initShapes();
 
-    loadWsg(PROTOMEN_SMALL_WSG, &logo, true);
+    loadWsg(PROTOMEN_SMALL_WSG, &cipher->logo, true);
 }
 
 static void cipherExitMode()
 {
-    heap_caps_free(innerRace);
-    heap_caps_free(outerRace);
-    freeFont(&ibm);
+    heap_caps_free(cipher->innerRace);
+    heap_caps_free(cipher->outerRace);
+    heap_caps_free(cipher);
 }
 
 static void cipherMainLoop(int64_t elapsedUs)
 {
     clearPxTft();
 
-    if (innerRace->rotating || innerRace->timeSpinning % (UsPerDeg * 10) > 2)
+    if (cipher->innerRace->rotating || cipher->innerRace->timeSpinning % (UsPerDeg * 10) > 2)
     {
-        innerRace->timeSpinning
-            = (innerRace->timeSpinning
-               + (int)fmin(elapsedUs, (UsPerDeg * 10) - (innerRace->timeSpinning % (UsPerDeg * 10)) + 1))
+        cipher->innerRace->timeSpinning
+            = (cipher->innerRace->timeSpinning
+               + (int)fmin(elapsedUs, (UsPerDeg * 10) - (cipher->innerRace->timeSpinning % (UsPerDeg * 10)) + 1))
               % (UsPerDeg * 360);
     }
-    if (outerRace->rotating || outerRace->timeSpinning % (UsPerDeg * 10) > 2)
+    if (cipher->outerRace->rotating || cipher->outerRace->timeSpinning % (UsPerDeg * 10) > 2)
     {
-        outerRace->timeSpinning
-            = (outerRace->timeSpinning
-               + (int)fmin(elapsedUs, (UsPerDeg * 10) - (outerRace->timeSpinning % (UsPerDeg * 10)) + 1))
+        cipher->outerRace->timeSpinning
+            = (cipher->outerRace->timeSpinning
+               + (int)fmin(elapsedUs, (UsPerDeg * 10) - (cipher->outerRace->timeSpinning % (UsPerDeg * 10)) + 1))
               % (UsPerDeg * 360);
     }
-    if (OffsettingLeft)
+    if (cipher->OffsettingLeft)
     {
-        RaceOffset = (RaceOffset + elapsedUs * 2) % (UsPerDeg * 360);
+        cipher->RaceOffset = (cipher->RaceOffset + elapsedUs * 2) % (UsPerDeg * 360);
     }
-    if (OffsettingRight)
+    if (cipher->OffsettingRight)
     {
-        RaceOffset = ((RaceOffset - elapsedUs * 2) + (UsPerDeg * 360)) % (UsPerDeg * 360);
+        cipher->RaceOffset = ((cipher->RaceOffset - elapsedUs * 2) + (UsPerDeg * 360)) % (UsPerDeg * 360);
     }
 
     // Draw Background
-    drawRectFilled(0, 0, 280, 240, bg);
+    drawRectFilled(0, 0, 280, 240, cipher->bg);
 
     // Draw filled circle for text to live on
-    drawCircleFilled(ScreenCenter.x, ScreenCenter.y, outerRace->raceRad + 10, shade);
+    drawCircleFilled(ScreenCenter.x, ScreenCenter.y, cipher->outerRace->raceRad + 10, cipher->shade);
 
     // Draw inner circle "cutout" for logo to sit on
-    drawCircleFilled(ScreenCenter.x, ScreenCenter.y, innerRace->raceRad - 10, bg);
+    drawCircleFilled(ScreenCenter.x, ScreenCenter.y, cipher->innerRace->raceRad - 10, cipher->bg);
 
     // Draw Logo
-    drawWsg(&logo, 65, 80, false, false, 0);
+    drawWsg(&cipher->logo, 65, 80, false, false, 0);
 
     // Draw text dividers that do not move when either race is spinning
     for (int i = 0; i < 36; i++)
     { // i<36
         // Draw divider lines
-        DrawDividerLine(innerRace->raceRad - 10, outerRace->raceRad + 10, ((RaceOffset) / UsPerDeg) + 10 * i + 5);
+        DrawDividerLine(cipher->innerRace->raceRad - 10, cipher->outerRace->raceRad + 10,
+                        ((cipher->RaceOffset) / UsPerDeg) + 10 * i + 5);
     }
 
     // Draw Text on top
@@ -193,21 +225,21 @@ static void cipherMainLoop(int64_t elapsedUs)
 
         // Draw inner race
         vec_t inPos = {
-            .x = innerRace->raceRad,
-            .y = ((innerRace->timeSpinning + RaceOffset) / UsPerDeg)
+            .x = cipher->innerRace->raceRad,
+            .y = ((cipher->innerRace->timeSpinning + cipher->RaceOffset) / UsPerDeg)
                  + 10 * i, // Hard-coding a 36-part race => 360/36=10 degrees of difference to each text
         };
         inPos = RThetaToXY(inPos, false);
-        drawText(&ibm, text, lettersRace[i], inPos.x - 4, inPos.y - 5);
+        drawText(cipher->ibm, cipher->text, lettersRace[i], inPos.x - 4, inPos.y - 5);
 
         // draw outer race
         vec_t outPos = {
-            .x = outerRace->raceRad,
-            .y = ((outerRace->timeSpinning + RaceOffset) / UsPerDeg)
+            .x = cipher->outerRace->raceRad,
+            .y = ((cipher->outerRace->timeSpinning + cipher->RaceOffset) / UsPerDeg)
                  + 10 * i, // Hard-coding a 36-part race => 360/36=10 degrees of difference to each text
         };
         outPos = RThetaToXY(outPos, false);
-        drawText(&ibm, text, numbersRace[i], outPos.x - 7, outPos.y - 5);
+        drawText(cipher->ibm, cipher->text, numbersRace[i], outPos.x - 7, outPos.y - 5);
     }
 
     // handle input
@@ -219,22 +251,22 @@ static void cipherMainLoop(int64_t elapsedUs)
             switch (evt.button)
             {
                 case PB_B:
-                    innerRace->rotating = !innerRace->rotating;
+                    cipher->innerRace->rotating = !cipher->innerRace->rotating;
                     break;
                 case PB_A:
-                    outerRace->rotating = !outerRace->rotating;
+                    cipher->outerRace->rotating = !cipher->outerRace->rotating;
                     break;
                 case PB_LEFT:
-                    OffsettingLeft = true;
+                    cipher->OffsettingLeft = true;
                     break;
                 case PB_RIGHT:
-                    OffsettingRight = true;
+                    cipher->OffsettingRight = true;
                     break;
                 case PB_UP:
-                    innerRace->timeSpinning += 3;
+                    cipher->innerRace->timeSpinning += 3;
                     break;
                 case PB_DOWN:
-                    outerRace->timeSpinning += 3;
+                    cipher->outerRace->timeSpinning += 3;
                     break;
 
                 default:
@@ -246,10 +278,10 @@ static void cipherMainLoop(int64_t elapsedUs)
             switch (evt.button)
             {
                 case PB_LEFT:
-                    OffsettingLeft = false;
+                    cipher->OffsettingLeft = false;
                     break;
                 case PB_RIGHT:
-                    OffsettingRight = false;
+                    cipher->OffsettingRight = false;
                     break;
                 default:
                     break;
