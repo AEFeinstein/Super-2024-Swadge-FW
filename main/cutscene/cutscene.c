@@ -10,6 +10,8 @@
 #include "esp_random.h"
 #include "fs_wsg.h"
 
+//#include "shapes.h"
+
 
 //==============================================================================
 // Function Prototypes
@@ -19,25 +21,38 @@ static uint8_t getRandomVariationFromStyle(cutsceneStyle_t* style);
 static uint8_t getRandomVariationFromStyleIdx(cutscene_t* cutscene, uint8_t styleIdx);
 static cutsceneStyle_t* getCurrentStyle(cutscene_t* cutscene);
 
-cutscene_t* initCutscene(cutsceneCb cbFunc)
+cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx)
 {
     cutscene_t* cutscene = (cutscene_t*)heap_caps_calloc(1, sizeof(cutscene_t), MALLOC_CAP_SPIRAM);
     cutscene->cbFunc = cbFunc;
     cutscene->lines = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
     cutscene->styles = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
     cutscene->sprite = heap_caps_calloc(1, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
-    cutscene->xOffset = 280;
+    cutscene->textBox = heap_caps_calloc(1, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+    for(int i = 0; i < 4; i++)
+    {
+        cutscene->nextIcon[i] = heap_caps_calloc(1, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+        loadWsg(nextIconIdx+i, cutscene->nextIcon[i], true);
+    }
+    cutscene->xOffset = 280; //default start value for antagonists.
     return cutscene;
 }
 
-void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileIdx_t spriteIdx, char* title, uint8_t numSpriteVariations)
+void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numSpriteVariations, bool isProtagonist)
 {
     cutsceneStyle_t* style = (cutsceneStyle_t*)heap_caps_calloc(1, sizeof(cutsceneStyle_t), MALLOC_CAP_SPIRAM);
     style->title = (char*)heap_caps_calloc(strlen(title) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
     strcpy(style->title, title);
     style->textColor = textColor;
     style->spriteIdx = spriteIdx;
+    style->textBoxIdx = textBoxIdx;
     style->numSpriteVariations = numSpriteVariations;
+    style->isProtagonist = isProtagonist;
+
+    if(cutscene->styles->first == NULL && isProtagonist)
+    {
+        cutscene->xOffset *= -1;
+    }
 
     // push to tail
     push(cutscene->styles, (void*)style);
@@ -50,6 +65,14 @@ void addCutsceneLine(cutscene_t* cutscene, char* body, uint8_t styleIdx)
     strcpy(line->body, body);
     line->styleIdx = styleIdx;
     line->spriteVariation = getRandomVariationFromStyleIdx(cutscene, styleIdx);
+
+    if(cutscene->lines->first == NULL)
+    {
+        cutsceneStyle_t* style = ((cutsceneStyle_t*) getAtIndex(cutscene->styles, line->styleIdx));
+        loadWsg(style->spriteIdx + line->spriteVariation,
+        cutscene->sprite, true);
+        loadWsg(style->textBoxIdx, cutscene->textBox, true);
+    }
 
     // push to tail
     push(cutscene->lines, (void*)line);
@@ -77,36 +100,122 @@ static cutsceneStyle_t* getCurrentStyle(cutscene_t* cutscene)
 
 void updateCutscene(cutscene_t* cutscene, int16_t btnState)
 {
-    if(cutscene->xOffset > 0)
+    if(cutscene->lines->first == NULL)
     {
-        cutscene->xOffset-=8;
+        return;
     }
-    cutscene->blinkTimer++;
-    if(cutscene->sprite->w == 0)
+    cutsceneStyle_t* style = getCurrentStyle(cutscene);
+
+    //Extra hold required because sometimes click-unclick-click registers on the hardware from an intended single click.
+    if(!cutscene->isEnding && cutscene->xOffset == 0 && cutscene->listenForPB_A)
     {
-        cutsceneStyle_t* style = getCurrentStyle(cutscene);
-        loadWsg(style->spriteIdx + ((cutsceneLine_t*)cutscene->lines->first->val)->spriteVariation, cutscene->sprite, true);
+        if(btnState & PB_A)
+        {
+            cutscene->PB_A_frameCounter++;
+            if(cutscene->PB_A_frameCounter > 60)
+            {
+                //proceed to next cutscene line.
+                if(cutscene->lines->first != NULL && cutscene->lines->first->next != NULL)//There are at least 2 lines left
+                {
+                    free(((cutsceneLine_t*)shift(cutscene->lines))->body);
+                    cutscene->listenForPB_A = false;
+                    cutscene->PB_A_frameCounter = 0;
+
+                    //load the new character sprite into the existing wsg.
+                    loadWsg(style->spriteIdx + ((cutsceneLine_t*)cutscene->lines->first->val)->spriteVariation,
+                    cutscene->sprite, true);
+                    loadWsg(style->textBoxIdx, cutscene->textBox, true);
+                }
+                else//There's 1 line left
+                {
+                    cutscene->isEnding = true;
+                }
+            }
+        }
+        else
+        {
+            cutscene->PB_A_frameCounter--;
+            if(cutscene->PB_A_frameCounter < 0)
+            {
+                cutscene->PB_A_frameCounter = 0;
+            }
+        }
     }
+    else if(!cutscene->isEnding && !(btnState & PB_A))
+    {
+        cutscene->listenForPB_A = true;
+    }
+
+    if(cutscene->isEnding)
+    {
+        if(cutscene->xOffset < -280 || cutscene->xOffset > 280)
+        {
+            //The cutscene is over
+            free(((cutsceneLine_t*)shift(cutscene->lines))->body);
+            cutscene->cbFunc();
+            return;
+        }
+        if(style->isProtagonist)
+        {
+            cutscene->xOffset-=8;
+        }   
+        else
+        {
+            cutscene->xOffset+=8;
+        }
+    }
+    else if(cutscene->xOffset != 0)
+    {
+        if(style->isProtagonist)
+        {
+            cutscene->xOffset+=8;
+        }
+        else
+        {
+            cutscene->xOffset-=8;
+        }
+    }
+
+    cutscene->blinkTimer+=8;
 }
 
 void drawCutscene(cutscene_t* cutscene, font_t* font)
 {
+    if(cutscene->lines->first == NULL)
+    {
+        return;
+    }
+
     cutsceneLine_t* line = (cutsceneLine_t*)cutscene->lines->first->val;
+    cutsceneStyle_t* style = getAtIndex(cutscene->styles, line->styleIdx);
 
     drawWsgSimple(cutscene->sprite, cutscene->xOffset, 0);
-
-    // if (dData->blinkTimer > 0)
-    // {
-    //     drawWsgSimple(&dData->spriteNext, 254 + (textColor == c525 ? 4 : 0), -dData->offsetY + 186);
-    // }
     if(cutscene->xOffset == 0)
     {
-        cutsceneStyle_t* style = getAtIndex(cutscene->styles, line->styleIdx);
-        drawText(font, style->textColor, style->title, 13, 152);
+        drawWsgSimple(cutscene->textBox, 0, 0);
+        int8_t iconFrame = (cutscene->PB_A_frameCounter / 16);
+        if(iconFrame > 3)
+        {
+            iconFrame = 3;
+        }
+        drawWsgSimple(cutscene->nextIcon[iconFrame], 256, 190);
+        if (cutscene->blinkTimer > 0 && cutscene->PB_A_frameCounter == 0)
+        {
+            //drawWsgSimple(&dData->spriteNext, 254 + (textColor == c525 ? 4 : 0), -dData->offsetY + 186);
+            drawText(font, c253, "A", 260, 190);
+        }
+    }
+
+    if(cutscene->xOffset == 0)
+    {
+        
+        drawText(font, style->textColor, style->title, 20, 145);
 
         int16_t xOff = 13;
-        int16_t yOff = 177;
-        drawTextWordWrap(font, style->textColor, line->body, &xOff, &yOff, 253, 230);
+        int16_t yOff = 169;
+        //drawRect(xOff, yOff, 252, 222, c500);
+        drawTextWordWrap(font, style->textColor, line->body, &xOff, &yOff, 252, 222);
+        
     }
 }
 

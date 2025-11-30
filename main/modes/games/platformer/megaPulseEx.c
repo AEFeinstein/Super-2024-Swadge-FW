@@ -878,10 +878,13 @@ void changeStateGame(platformer_t* self)
     soundStop(true);
 
     //every level starts with a cutscene
-    self->cutscene = initCutscene(goToReadyScreen);
-    addCutsceneStyle(self->cutscene, c555, SAWTOOTH_PORTRAIT_0_WSG, "Sawtooth", 4);
+    self->cutscene = initCutscene(goToReadyScreen, CUTSCENE_NEXT_0_WSG);
+    addCutsceneStyle(self->cutscene, c555, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 4, true);
     addCutsceneLine(self->cutscene, "This is the first test.", 0);
     addCutsceneLine(self->cutscene, "And this is the second test. yo yo yo yo yo yo yo yo yo yo yo yo yo waddup.", 0);
+    addCutsceneLine(self->cutscene, "I'll take one cutscene-a-roni.", 0);
+    addCutsceneLine(self->cutscene, "Another pose for the camera. Maybe.", 0);
+    addCutsceneLine(self->cutscene, "I enter and exit stage left because I'm on the good side.", 0);
 
     self->update = &updateCutsceneScreen;
 }

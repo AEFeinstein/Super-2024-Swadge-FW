@@ -34,7 +34,9 @@ typedef struct
     char* title; ///< The speaker's name displayed on screen.
     paletteColor_t textColor;
     cnfsFileIdx_t spriteIdx;
+    cnfsFileIdx_t textBoxIdx;
     uint8_t numSpriteVariations; ///<A random number in range of this will be rolled and added to the spriteIdx. Provide 1 for no variation;
+    bool isProtagonist; ///<If true, then the sprite enters and leaves the left side of the screen. If false, then the right side.
 } cutsceneStyle_t;
 
 /**
@@ -45,14 +47,19 @@ typedef struct
     cutsceneCb cbFunc;  ///< A callback which is called when this cutscene concludes. Use it to unpause your game loop.
     list_t* styles;     ///< A list_t of lineStyle_t
     list_t* lines;      ///< A list_t of cutsceneLine_t
-    uint8_t blinkTimer; ///< Increments and overflows to make the next graphic blink.
+    int8_t blinkTimer; ///< Increments and overflows to make the next graphic blink.
     bool a_down;        ///< True when the a button is held.
     int16_t xOffset;    ///< Decrements to slide the character portait in from below.
-    wsg_t* sprite;      ///< The sprite rendered behind the text.
+    wsg_t* sprite;      ///< The character sprite.
+    wsg_t* textBox;     ///< The textbox rendered over the character sprite.
+    wsg_t* nextIcon[4]; ///< The nextIcon with a few animation frames.
+    bool listenForPB_A; ///< Used for detecting intentional A presses.
+    int8_t PB_A_frameCounter; ///< Increments while A is held.
+    bool isEnding;      ///< True as the character slides out of frame.
 } cutscene_t;
 
-cutscene_t* initCutscene(cutsceneCb cbFunc) __attribute__((warn_unused_result));
-void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t color, cnfsFileIdx_t spriteIdx, char* title, uint8_t numPoseVariations);
+cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx) __attribute__((warn_unused_result));
+void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t color, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numPoseVariations, bool isProtagonist);
 void addCutsceneLine(cutscene_t* cutscene, char* body, uint8_t styleIdx);
 void updateCutscene(cutscene_t* cutscene, int16_t btnState);
 void drawCutscene(cutscene_t* cutscene, font_t* font);
