@@ -524,7 +524,6 @@ void gamepadMenuLoop(int64_t elapsedUs)
     }
 
     accelIntegrate();
-    DRAW_FPS_COUNTER(gamepad->ibmFont);
 }
 
 /**
