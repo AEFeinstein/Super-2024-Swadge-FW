@@ -81,10 +81,6 @@ typedef struct
     uint8_t previousHat;
     uint8_t bmpSlot;
 
-    uint16_t previousButtons;
-    uint8_t previousHat;
-    uint8_t bmpSlot;
-
     uint8_t gamepadType;
     bool isPluggedIn;
 
@@ -1612,8 +1608,8 @@ void gamepadGenericReportStateToHost(void)
                     gamepad->gpState.x = x;
                     gamepad->gpState.y = y;
                     gamepad->gpState.z = z;
-                    break;
                 }
+                break;
             }
             case GAMEPAD_TOUCH_R_STICK_SETTING:
             {
@@ -1622,8 +1618,8 @@ void gamepadGenericReportStateToHost(void)
                     gamepad->gpState.rx = x;
                     gamepad->gpState.ry = y;
                     gamepad->gpState.rz = z;
-                    break;
                 }
+                break;
             }
         }
 
