@@ -1291,44 +1291,96 @@ void gamepadGenericButtonCb(buttonEvt_t* evt)
     }
 
     // Figure out which way the D-Pad is pointing
-    gamepad->gpState.hat = GAMEPAD_HAT_CENTERED;
-    if (evt->state & PB_UP)
-    {
-        if (evt->state & PB_RIGHT)
-        {
-            gamepad->gpState.hat = GAMEPAD_HAT_UP_RIGHT;
+    switch(getGamepadDpadSetting()){
+        case GAMEPAD_DPAD_NORMAL_SETTING:
+        default: {
+            gamepad->gpState.hat = GAMEPAD_HAT_CENTERED;
+            if (evt->state & PB_UP)
+            {
+                if (evt->state & PB_RIGHT)
+                {
+                    gamepad->gpState.hat = GAMEPAD_HAT_UP_RIGHT;
+                }
+                else if (evt->state & PB_LEFT)
+                {
+                    gamepad->gpState.hat = GAMEPAD_HAT_UP_LEFT;
+                }
+                else
+                {
+                    gamepad->gpState.hat = GAMEPAD_HAT_UP;
+                }
+            }
+            else if (evt->state & PB_DOWN)
+            {
+                if (evt->state & PB_RIGHT)
+                {
+                    gamepad->gpState.hat = GAMEPAD_HAT_DOWN_RIGHT;
+                }
+                else if (evt->state & PB_LEFT)
+                {
+                    gamepad->gpState.hat = GAMEPAD_HAT_DOWN_LEFT;
+                }
+                else
+                {
+                    gamepad->gpState.hat = GAMEPAD_HAT_DOWN;
+                }
+            }
+            else if (evt->state & PB_RIGHT)
+            {
+                gamepad->gpState.hat = GAMEPAD_HAT_RIGHT;
+            }
+            else if (evt->state & PB_LEFT)
+            {
+                gamepad->gpState.hat = GAMEPAD_HAT_LEFT;
+            }
+            break;
         }
-        else if (evt->state & PB_LEFT)
-        {
-            gamepad->gpState.hat = GAMEPAD_HAT_UP_LEFT;
+        case GAMEPAD_DPAD_L_STICK_SETTING: {
+            gamepad->gpState.x = 0;
+            gamepad->gpState.y = 0;
+            int32_t intensity = getGamepadDpadStickIntensitySetting();
+            
+            if (evt->state & PB_UP)
+            {
+                gamepad->gpState.y = -intensity;
+            }
+            if (evt->state & PB_DOWN)
+            {
+                gamepad->gpState.y = intensity;
+            }
+            if (evt->state & PB_RIGHT)
+            {
+                gamepad->gpState.x = intensity;
+            }
+            if (evt->state & PB_LEFT)
+            {
+                gamepad->gpState.x = -intensity;
+            }
+            break;
         }
-        else
-        {
-            gamepad->gpState.hat = GAMEPAD_HAT_UP;
+        case GAMEPAD_DPAD_R_STICK_SETTING: {
+            gamepad->gpState.rx = 0;
+            gamepad->gpState.ry = 0;
+            int32_t intensity = getGamepadDpadStickIntensitySetting();
+            
+            if (evt->state & PB_UP)
+            {
+                gamepad->gpState.ry = -intensity;
+            }
+            if (evt->state & PB_DOWN)
+            {
+                gamepad->gpState.ry = intensity;
+            }
+            if (evt->state & PB_RIGHT)
+            {
+                gamepad->gpState.rx = intensity;
+            }
+            if (evt->state & PB_LEFT)
+            {
+                gamepad->gpState.rx = -intensity;
+            }
+            break;
         }
-    }
-    else if (evt->state & PB_DOWN)
-    {
-        if (evt->state & PB_RIGHT)
-        {
-            gamepad->gpState.hat = GAMEPAD_HAT_DOWN_RIGHT;
-        }
-        else if (evt->state & PB_LEFT)
-        {
-            gamepad->gpState.hat = GAMEPAD_HAT_DOWN_LEFT;
-        }
-        else
-        {
-            gamepad->gpState.hat = GAMEPAD_HAT_DOWN;
-        }
-    }
-    else if (evt->state & PB_RIGHT)
-    {
-        gamepad->gpState.hat = GAMEPAD_HAT_RIGHT;
-    }
-    else if (evt->state & PB_LEFT)
-    {
-        gamepad->gpState.hat = GAMEPAD_HAT_LEFT;
     }
 
     // Send state to host
@@ -1554,17 +1606,23 @@ void gamepadGenericReportStateToHost(void)
             }
             case GAMEPAD_TOUCH_L_STICK_SETTING:
             {
-                gamepad->gpState.x = x;
-                gamepad->gpState.y = y;
-                gamepad->gpState.z = z;
-                break;
+                if(touched || getGamepadTouchStickRecenterSetting())
+                {
+                    gamepad->gpState.x = x;
+                    gamepad->gpState.y = y;
+                    gamepad->gpState.z = z;
+                    break;
+                }
             }
             case GAMEPAD_TOUCH_R_STICK_SETTING:
             {
-                gamepad->gpState.rx = x;
-                gamepad->gpState.ry = y;
-                gamepad->gpState.rz = z;
-                break;
+                if(touched || getGamepadTouchStickRecenterSetting())
+                {
+                    gamepad->gpState.rx = x;
+                    gamepad->gpState.ry = y;
+                    gamepad->gpState.rz = z;
+                    break;
+                }
             }
         }
 
