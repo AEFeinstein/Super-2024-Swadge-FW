@@ -116,9 +116,23 @@ static const char* getButtonName(hid_gamepad_button_bm_t button);
 
 static const char str_pc[]    = "Computer";
 static const char str_ns[]    = "Switch";
-static const char str_accel[] = "Accel (PC only): ";
+static const char str_accel[] = "Accel: ";
 static const char str_touch[] = "Touch: ";
 static const char str_exit[]  = "Exit";
+static const char str_dpad_mapping[] = "D-Pad: ";
+static const char str_continue[] = "Continue";
+static const char str_confirm[] = "Confirm";
+
+static const char* const dpadMappingSettingsOptions[] = {
+    "D-Pad",
+    "Left Stick",
+    "Right Stick"
+};
+
+static const int32_t dpadMappingSettingsValues[]
+    = {GAMEPAD_DPAD_NORMAL_SETTING, GAMEPAD_DPAD_L_STICK_SETTING, GAMEPAD_DPAD_R_STICK_SETTING};
+
+static const char str_stick_intensity[] = "D-Pad Stick Intensity: ";
 
 static const int32_t accelSettingsValues[] = {0, 1};
 
@@ -135,6 +149,15 @@ static const char* const touchSettingsOptions[] = {
     "Stick L",
     "Stick R",
 };
+
+static const char str_stick_recenter[] = "Touch Stick Recenter: ";
+
+static const char* const touchStickRecenterSettingsOptions[] = {
+    "Off",
+    "On"
+};
+
+static const int32_t touchStickRecenterSettingsValues[] = {0,1};
 
 gamepad_t* gamepad;
 
@@ -295,15 +318,41 @@ void gamepadEnterMode(void)
 
     // Initialize menu
     gamepad->menu = initMenu(gamepadMode.modeName, gamepadMainMenuCb);
-    addSingleItemToMenu(gamepad->menu, str_pc);
-    addSingleItemToMenu(gamepad->menu, str_ns);
-    addSettingsOptionsItemToMenu(gamepad->menu, str_accel, accelSettingsOptions, accelSettingsValues,
-                                 ARRAY_SIZE(accelSettingsOptions), getGamepadAccelSettingBounds(),
-                                 getGamepadAccelSetting());
+    
+    gamepad->menu = startSubMenu(gamepad->menu, str_ns);
+    addSingleItemToMenu(gamepad->menu, str_continue);
+    addSettingsOptionsItemToMenu(gamepad->menu, str_dpad_mapping, dpadMappingSettingsOptions, dpadMappingSettingsValues, 
+                                 ARRAY_SIZE(dpadMappingSettingsValues), getGamepadDpadSettingBounds(),
+                                getGamepadDpadSetting());
+    addSettingsItemToMenu(gamepad->menu, str_stick_intensity, getGamepadDpadStickIntensitySettingBounds(), getGamepadDpadStickIntensitySetting());
     addSettingsOptionsItemToMenu(gamepad->menu, str_touch, touchSettingsOptions, touchSettingsValues,
                                  ARRAY_SIZE(touchSettingsOptions), getGamepadTouchSettingBounds(),
                                  getGamepadTouchSetting());
-    addSingleItemToMenu(gamepad->menu, str_exit);
+    addSettingsOptionsItemToMenu(gamepad->menu, str_stick_recenter, touchStickRecenterSettingsOptions, touchStickRecenterSettingsValues,
+                                 ARRAY_SIZE(touchStickRecenterSettingsOptions), getGamepadTouchStickRecenterSettingBounds(),
+                                 getGamepadTouchStickRecenterSetting());
+    gamepad->menu = endSubMenu(gamepad->menu);
+    
+    gamepad->menu = startSubMenu(gamepad->menu, str_pc);
+    addSingleItemToMenu(gamepad->menu, str_continue);
+    addSettingsOptionsItemToMenu(gamepad->menu, str_dpad_mapping, dpadMappingSettingsOptions, dpadMappingSettingsValues, 
+                                 ARRAY_SIZE(dpadMappingSettingsValues), getGamepadDpadSettingBounds(),
+                                getGamepadDpadSetting());
+    addSettingsItemToMenu(gamepad->menu, str_stick_intensity, getGamepadDpadStickIntensitySettingBounds(), getGamepadDpadStickIntensitySetting());
+    addSettingsOptionsItemToMenu(gamepad->menu, str_touch, touchSettingsOptions, touchSettingsValues,
+                                 ARRAY_SIZE(touchSettingsOptions), getGamepadTouchSettingBounds(),
+                                 getGamepadTouchSetting());
+    addSettingsOptionsItemToMenu(gamepad->menu, str_stick_recenter, touchStickRecenterSettingsOptions, touchStickRecenterSettingsValues,
+                                 ARRAY_SIZE(touchStickRecenterSettingsOptions), getGamepadTouchStickRecenterSettingBounds(),
+                                 getGamepadTouchStickRecenterSetting());
+    addSettingsOptionsItemToMenu(gamepad->menu, str_accel, accelSettingsOptions, accelSettingsValues,
+                                 ARRAY_SIZE(accelSettingsOptions), getGamepadAccelSettingBounds(),
+                                 getGamepadAccelSetting());
+    gamepad->menu = endSubMenu(gamepad->menu);
+    
+    gamepad->menu = startSubMenu(gamepad->menu, str_exit);
+    addSingleItemToMenu(gamepad->menu, str_confirm);
+    gamepad->menu = endSubMenu(gamepad->menu);
 
     // Initialize menu renderer
     gamepad->renderer         = initMenuMegaRenderer(NULL, NULL, NULL);
@@ -333,20 +382,32 @@ bool gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
         if (label == str_pc)
         {
             gamepadStart(GAMEPAD_GENERIC);
-            gamepad->screen = GAMEPAD_MAIN_GENERIC;
+            //gamepad->screen = GAMEPAD_MAIN_GENERIC;
             return false;
         }
         else if (label == str_ns)
         {
             gamepadStart(GAMEPAD_NS);
-            gamepad->screen = GAMEPAD_MAIN_NS;
+            //gamepad->screen = GAMEPAD_MAIN_NS;
             return false;
         }
-        else if (label == str_exit)
+        else if (label == str_confirm)
         {
             // Exit to main menu
             switchToSwadgeMode(&mainMenuMode);
             return false;
+        }
+        else if (label == str_continue)
+        {
+            switch(gamepad->gamepadType){
+                case GAMEPAD_NS:
+                    gamepad->screen = GAMEPAD_MAIN_NS;
+                    return false;
+                case GAMEPAD_GENERIC:
+                default:
+                    gamepad->screen = GAMEPAD_MAIN_GENERIC;
+                    return false;
+            }
         }
     }
     else
@@ -358,6 +419,18 @@ bool gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
         if (label == str_touch)
         {
             setGamepadTouchSetting(settingVal);
+        }
+        if (label == str_dpad_mapping)
+        {
+            setGamepadDpadSetting(settingVal);
+        }
+        if (label == str_stick_intensity)
+        {
+            setGamepadDpadStickIntensitySetting(settingVal);
+        }
+        if (label == str_stick_recenter)
+        {
+            setGamepadTouchStickRecenterSetting(settingVal);
         }
     }
     return false;
@@ -429,7 +502,7 @@ void gamepadMenuLoop(int64_t elapsedUs)
 
             if(!eventsProcessed)
             {
-                gamepadReportStateToHost();
+                gamepadGenericReportStateToHost();
             }
 
             gamepadGenericMainLoop(elapsedUs);
@@ -479,7 +552,8 @@ void gamepadNsMainLoop(int64_t elapsedUs __attribute__((unused)))
 
         if (gamepad->exitTimer > EXIT_TIME_US)
         {
-            switchToSwadgeMode(&mainMenuMode);
+            gamepad->screen = GAMEPAD_MENU;
+            gamepad->exitTimer = 0;
         }
     }
 
@@ -749,7 +823,8 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
 
         if (gamepad->exitTimer > EXIT_TIME_US)
         {
-            switchToSwadgeMode(&mainMenuMode);
+            gamepad->screen = GAMEPAD_MENU;
+            gamepad->exitTimer = 0;
         }
     }
 
@@ -1062,45 +1137,98 @@ void gamepadNsButtonCb(buttonEvt_t* evt)
     }
 
     // Figure out which way the D-Pad is pointing
-    gamepad->gpNsState.hat = GAMEPAD_NS_HAT_CENTERED;
-    if (evt->state & PB_UP)
-    {
-        if (evt->state & PB_RIGHT)
-        {
-            gamepad->gpNsState.hat = GAMEPAD_NS_HAT_UP_RIGHT;
+    switch(getGamepadDpadSetting()){
+        case GAMEPAD_DPAD_NORMAL_SETTING:
+        default: {
+            gamepad->gpNsState.hat = GAMEPAD_NS_HAT_CENTERED;
+            if (evt->state & PB_UP)
+            {
+                if (evt->state & PB_RIGHT)
+                {
+                    gamepad->gpNsState.hat = GAMEPAD_NS_HAT_UP_RIGHT;
+                }
+                else if (evt->state & PB_LEFT)
+                {
+                    gamepad->gpNsState.hat = GAMEPAD_NS_HAT_UP_LEFT;
+                }
+                else
+                {
+                    gamepad->gpNsState.hat = GAMEPAD_NS_HAT_UP;
+                }
+            }
+            else if (evt->state & PB_DOWN)
+            {
+                if (evt->state & PB_RIGHT)
+                {
+                    gamepad->gpNsState.hat = GAMEPAD_NS_HAT_DOWN_RIGHT;
+                }
+                else if (evt->state & PB_LEFT)
+                {
+                    gamepad->gpNsState.hat = GAMEPAD_NS_HAT_DOWN_LEFT;
+                }
+                else
+                {
+                    gamepad->gpNsState.hat = GAMEPAD_NS_HAT_DOWN;
+                }
+            }
+            else if (evt->state & PB_RIGHT)
+            {
+                gamepad->gpNsState.hat = GAMEPAD_NS_HAT_RIGHT;
+            }
+            else if (evt->state & PB_LEFT)
+            {
+                gamepad->gpNsState.hat = GAMEPAD_NS_HAT_LEFT;
+            }
+            break;
         }
-        else if (evt->state & PB_LEFT)
-        {
-            gamepad->gpNsState.hat = GAMEPAD_NS_HAT_UP_LEFT;
+        case GAMEPAD_DPAD_L_STICK_SETTING: {
+            gamepad->gpNsState.x = 128;
+            gamepad->gpNsState.y = 128;
+            int32_t intensity = getGamepadDpadStickIntensitySetting();
+            
+            if (evt->state & PB_UP)
+            {
+                gamepad->gpNsState.y = 128 - intensity;
+            }
+            if (evt->state & PB_DOWN)
+            {
+                gamepad->gpNsState.y = 128 + intensity;
+            }
+            if (evt->state & PB_RIGHT)
+            {
+                gamepad->gpNsState.x = 128 + intensity;
+            }
+            if (evt->state & PB_LEFT)
+            {
+                gamepad->gpNsState.x = 128 - intensity;
+            }
+            break;
         }
-        else
-        {
-            gamepad->gpNsState.hat = GAMEPAD_NS_HAT_UP;
+        case GAMEPAD_DPAD_R_STICK_SETTING: {
+            gamepad->gpNsState.rx = 128;
+            gamepad->gpNsState.ry = 128;
+            int32_t intensity = getGamepadDpadStickIntensitySetting();
+            
+            if (evt->state & PB_UP)
+            {
+                gamepad->gpNsState.ry = 128 - intensity;
+            }
+            if (evt->state & PB_DOWN)
+            {
+                gamepad->gpNsState.ry = 128 + intensity;
+            }
+            if (evt->state & PB_RIGHT)
+            {
+                gamepad->gpNsState.rx = 128 + intensity;
+            }
+            if (evt->state & PB_LEFT)
+            {
+                gamepad->gpNsState.rx = 128 - intensity;
+            }
+            break;
         }
     }
-    else if (evt->state & PB_DOWN)
-    {
-        if (evt->state & PB_RIGHT)
-        {
-            gamepad->gpNsState.hat = GAMEPAD_NS_HAT_DOWN_RIGHT;
-        }
-        else if (evt->state & PB_LEFT)
-        {
-            gamepad->gpNsState.hat = GAMEPAD_NS_HAT_DOWN_LEFT;
-        }
-        else
-        {
-            gamepad->gpNsState.hat = GAMEPAD_NS_HAT_DOWN;
-        }
-    }
-    else if (evt->state & PB_RIGHT)
-    {
-        gamepad->gpNsState.hat = GAMEPAD_NS_HAT_RIGHT;
-    }
-    else if (evt->state & PB_LEFT)
-    {
-        gamepad->gpNsState.hat = GAMEPAD_NS_HAT_LEFT;
-    }
+    
 
     // Send state to host
     gamepadNsReportStateToHost();
@@ -1218,6 +1346,7 @@ void gamepadNsReportStateToHost(void)
         bool touched;
         int32_t phi, r, intensity;
         touched = getTouchJoystick(&phi, &r, &intensity);
+        gamepadTouch_t touchSetting = getGamepadTouchSetting();
 
         int32_t x, y, z;
         if (touched)
@@ -1234,7 +1363,7 @@ void gamepadNsReportStateToHost(void)
             z = 0;
         }
 
-        gamepadTouch_t touchSetting = getGamepadTouchSetting();
+        
         switch (touchSetting)
         {
             case GAMEPAD_TOUCH_MORE_BUTTONS_SETTING:
@@ -1302,16 +1431,22 @@ void gamepadNsReportStateToHost(void)
             }
             case GAMEPAD_TOUCH_L_STICK_SETTING:
             {
-                gamepad->gpNsState.x = x;
-                gamepad->gpNsState.y = y;
-                gamepad->gpNsState.z = z;
+                if(touched || getGamepadTouchStickRecenterSetting())
+                {
+                    gamepad->gpNsState.x = x;
+                    gamepad->gpNsState.y = y;
+                    gamepad->gpNsState.z = z;
+                }
                 break;
             }
             case GAMEPAD_TOUCH_R_STICK_SETTING:
             {
-                gamepad->gpNsState.rx = x;
-                gamepad->gpNsState.ry = y;
-                gamepad->gpNsState.rz = z;
+                if(touched || getGamepadTouchStickRecenterSetting())
+                {
+                    gamepad->gpNsState.rx = x;
+                    gamepad->gpNsState.ry = y;
+                    gamepad->gpNsState.rz = z;
+                }
                 break;
             }
         }
