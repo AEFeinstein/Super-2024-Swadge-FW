@@ -299,7 +299,7 @@ void danceMainLoop(int64_t elapsedUs)
 
             // Set the LED eyes. First do a read to nudge it out of deep sleep
             uint32_t var;
-            ch32v003ReadMemory(&var, sizeof(var), 0x08000000);
+            ch32v003ReadMemory((uint8_t*)&var, sizeof(var), 0x08000000);
             // Then reprogram it
             ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
         }
