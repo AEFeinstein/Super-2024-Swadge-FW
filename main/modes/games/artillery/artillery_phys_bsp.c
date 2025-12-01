@@ -1,3 +1,10 @@
+/**
+ * @file artillery_phys_bsp.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief Binary Space Partition creation for Vector Tanks
+ * @date 2025-11-26
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -129,7 +136,7 @@ static vecFl_t findZoneMedian(zone_t* zone)
         cNode = cNode->next;
     }
 
-    // Add line points ot the list
+    // Add line points to the list
     node_t* lNode = zone->lines.first;
     while (lNode)
     {

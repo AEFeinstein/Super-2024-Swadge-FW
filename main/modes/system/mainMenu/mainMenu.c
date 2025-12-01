@@ -127,7 +127,7 @@ const trophyData_t mainMenuTrophies[] = {
         .identifier  = &modePicross,
     },
     {
-        .title       = "First Asteroids, now this",
+        .title       = "What's our vector, Victor?",
         .description = "Played Vector Tanks for the first time",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_TRIGGER,

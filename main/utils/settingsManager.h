@@ -85,6 +85,13 @@ typedef enum
 
 typedef enum
 {
+    GAMEPAD_DPAD_NORMAL_SETTING,
+    GAMEPAD_DPAD_L_STICK_SETTING,
+    GAMEPAD_DPAD_R_STICK_SETTING
+} gamepadDpad_t;
+
+typedef enum
+{
     SHOW_SECRETS,
     HIDE_SECRETS,
 } showSecrets_t;
@@ -150,12 +157,26 @@ bool getTutorialCompletedSetting(void);
 bool setTutorialCompletedSetting(bool status);
 
 bool getGamepadAccelSetting(void);
+bool setGamepadDpadStickIntensitySetting(gamepadDpad_t status);
+bool getGamepadTouchStickRecenterSetting(void);
+const settingParam_t* getGamepadTouchStickRecenterSettingBounds(void);
+bool setGamepadTouchStickRecenterSetting(gamepadDpad_t status);
 const settingParam_t* getGamepadAccelSettingBounds(void);
 bool setGamepadAccelSetting(bool status);
 
 gamepadTouch_t getGamepadTouchSetting(void);
 const settingParam_t* getGamepadTouchSettingBounds(void);
 bool setGamepadTouchSetting(gamepadTouch_t status);
+
+gamepadTouch_t getGamepadDpadSetting(void);
+
+const settingParam_t* getGamepadDpadSettingBounds(void);
+
+bool setGamepadDpadSetting(gamepadDpad_t status);
+
+int32_t getGamepadDpadStickIntensitySetting(void);
+
+const settingParam_t* getGamepadDpadStickIntensitySettingBounds(void);
 
 showSecrets_t getShowSecretsMenuSetting(void);
 const settingParam_t* getShowSecretsMenuSettingBounds(void);

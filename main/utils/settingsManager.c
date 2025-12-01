@@ -61,9 +61,12 @@ DECL_SETTING(led_br, 0, MAX_LED_BRIGHTNESS, 5);
 DECL_SETTING(mic, 0, MAX_MIC_GAIN, MAX_MIC_GAIN);
 DECL_SETTING(cc_mode, ALL_SAME_LEDS, LINEAR_LEDS, ALL_SAME_LEDS);
 DECL_SETTING(scrn_sv, 0, 300, 20);
-DECL_SETTING(gp_accel, 0, 1, 1);
+DECL_SETTING(gp_accel, 0, 1, 0);
 DECL_SETTING(gp_touch, GAMEPAD_TOUCH_MORE_BUTTONS_SETTING, GAMEPAD_TOUCH_R_STICK_SETTING,
              GAMEPAD_TOUCH_MORE_BUTTONS_SETTING);
+DECL_SETTING(gp_dpad, GAMEPAD_DPAD_NORMAL_SETTING, GAMEPAD_DPAD_R_STICK_SETTING, GAMEPAD_DPAD_NORMAL_SETTING);
+DECL_SETTING(gp_dpsti, 15, 127, 127);
+DECL_SETTING(gp_tstir, 0, 1, 1);
 DECL_SETTING(show_secrets, SHOW_SECRETS, HIDE_SECRETS, HIDE_SECRETS);
 
 //==============================================================================
@@ -176,6 +179,12 @@ void readAllSettings(void)
 
     // Read the Gamepad touch setting
     readSetting(&gp_touch_setting);
+
+    // Read the Gamepad dpad setting
+    readSetting(&gp_dpad_setting);
+
+    // Read the Gamepad dpad stick intentsity setting
+    readSetting(&gp_dpsti_setting);
 
     // Read the setting to show Secrets menu on the main menu
     readSetting(&show_secrets_setting);
@@ -581,6 +590,99 @@ const settingParam_t* getGamepadTouchSettingBounds(void)
 bool setGamepadTouchSetting(gamepadTouch_t status)
 {
     return setSetting(&gp_touch_setting, status);
+}
+
+/**
+ * @brief Get the current Gamepad dpad setting
+ *
+ * @return gamepadTouch_t indicating current setting for Gamepad dpad
+ */
+gamepadTouch_t getGamepadDpadSetting(void)
+{
+    return gp_dpad_setting.val;
+}
+
+/**
+ * @brief Get the bounds for the Gamepad dpad setting. Useful for initializing settings items in menus.
+ *
+ * @return the bounds for the Gamepad dpad setting
+ */
+const settingParam_t* getGamepadDpadSettingBounds(void)
+{
+    return &gp_dpad_param;
+}
+
+/**
+ * @brief Set the current Gamepad dpad setting.
+ *
+ * @param status The new Gamepad dpad setting
+ * @return true if the setting was written, false if it wasn't
+ */
+bool setGamepadDpadSetting(gamepadDpad_t status)
+{
+    return setSetting(&gp_dpad_setting, status);
+}
+
+/**
+ * @brief Get the current Gamepad dpad stick intensity setting
+ *
+ * @return Gamepad dpad stick intensity setting value
+ */
+int32_t getGamepadDpadStickIntensitySetting(void)
+{
+    return gp_dpsti_setting.val;
+}
+
+/**
+ * @brief Get the bounds for the Gamepad dpad stick intensity setting. Useful for initializing settings items in menus.
+ *
+ * @return the bounds for the Gamepad dpad stick intensity setting
+ */
+const settingParam_t* getGamepadDpadStickIntensitySettingBounds(void)
+{
+    return &gp_dpsti_param;
+}
+
+/**
+ * @brief Set the current Gamepad dpad stick intensity setting.
+ *
+ * @param status The new Gamepad dpad stick intensity setting
+ * @return true if the setting was written, false if it wasn't
+ */
+bool setGamepadDpadStickIntensitySetting(gamepadDpad_t status)
+{
+    return setSetting(&gp_dpsti_setting, status);
+}
+
+/**
+ * @brief Get the current Gamepad touch stick recenter setting
+ *
+ * @return true if Gamepad touch stick recenter is enabled, false if not
+ */
+bool getGamepadTouchStickRecenterSetting(void)
+{
+    return gp_tstir_setting.val;
+}
+
+/**
+ * @brief Get the bounds for the Gamepad touch stick recenter setting. Useful for initializing settings items in menus.
+ *
+ * @return the bounds for the Gamepad touch stick recenter setting
+ */
+const settingParam_t* getGamepadTouchStickRecenterSettingBounds(void)
+{
+    return &gp_tstir_param;
+}
+
+/**
+ * @brief Set the current Gamepad touch stick recenter setting.
+ *
+ * @param status The new Gamepad touch stick recenter setting
+ * @return true if the setting was written, false if it wasn't
+ */
+bool setGamepadTouchStickRecenterSetting(gamepadDpad_t status)
+{
+    return setSetting(&gp_tstir_setting, status);
 }
 
 /**

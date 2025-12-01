@@ -21,6 +21,10 @@ menu "Swadge Configuration"
 			bool "HARDWARE_HOTDOG_PRODUCTION"
 			help
 				Build for the Production Hotdog Swadge (2025)		
+		config HARDWARE_PULSE
+			bool "HARDWARE_PULSE"
+			help
+				Build for the Pulse Swadge (2026)		
 	endchoice
 	choice DEBUG_OUTPUT_TYPE
 		prompt "Select Debug Output"

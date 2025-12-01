@@ -1,13 +1,20 @@
+/**
+ * @file artillery_phys_objs.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief Physics objects (lines and circles) for Vector Tanks
+ * @date 2025-11-26
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
 
-#include <stddef.h>
 #include "macros.h"
-#include "esp_heap_caps.h"
+
+#include "artillery_phys.h"
 #include "artillery_phys_objs.h"
 
-static void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl);
+void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl);
 static void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc);
 
 //==============================================================================
@@ -92,8 +99,8 @@ void updateLineProperties(physSim_t* phys, physLine_t* pl)
  * @param y1 The Y point of the center of the circle
  * @param r The radius of the circle
  * @param type The type of circle. CT_OBSTACLE is immobile, others are mobile.
- * @param baseColor
- * @param accentColor
+ * @param baseColor The circle's main color
+ * @param accentColor The circle's accent color
  * @return The circle, also saved in the argument phys
  */
 physCirc_t* physAddCircle(physSim_t* phys, uint16_t x1, uint16_t y1, uint16_t r, circType_t type,
@@ -179,7 +186,7 @@ void updateCircleProperties(physSim_t* phys, physCirc_t* pc)
  * @param phys The physics simulation
  * @param pl The line to calculate zones for
  */
-static void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl)
+void physSetZoneMaskLine(physSim_t* phys, physLine_t* pl)
 {
     // Clear the zone mask
     pl->zonemask = 0;
@@ -210,7 +217,7 @@ static void physSetZoneMaskCirc(physSim_t* phys, physCirc_t* pc)
     {
         if (circleRectFlIntersection(pc->c, phys->zones[zIdx], NULL))
         {
-            pc->zonemask |= (1 << zIdx);
+            pc->zonemask |= (1u << zIdx);
         }
     }
 }

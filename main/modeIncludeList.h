@@ -62,6 +62,7 @@
 #include "trophyCase.h"
 #include "trophyTest.h"
 #include "tunernome.h"
+#include "cipher.h"
 
 //==============================================================================
 // Function Prototypes
