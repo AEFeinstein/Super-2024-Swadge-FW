@@ -257,6 +257,15 @@ void platformerEnterMode(void)
     platformer->tilemap.entityManager    = &(platformer->entityManager);
     platformer->tilemap.tileSpawnEnabled = true;
 
+    if(platformer->cutscene == NULL)
+    {
+        platformer->cutscene = initCutscene(goToReadyScreen, CUTSCENE_NEXT_0_WSG);
+        addCutsceneStyle(platformer->cutscene, c530, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 4, true);
+        addCutsceneStyle(platformer->cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 7, false);
+        addCutsceneStyle(platformer->cutscene, c000, PULSE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Pulse", 5, true);
+        addCutsceneStyle(platformer->cutscene, c310, BIGMA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Bigma", 2, false);
+    }
+
     setFrameRateUs(16666);
 
     changeStateMainMenu(platformer);
@@ -878,13 +887,17 @@ void changeStateGame(platformer_t* self)
     soundStop(true);
 
     //every level starts with a cutscene
-    self->cutscene = initCutscene(goToReadyScreen, CUTSCENE_NEXT_0_WSG);
-    addCutsceneStyle(self->cutscene, c555, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 4, true);
-    addCutsceneLine(self->cutscene, "This is the first test.", 0);
-    addCutsceneLine(self->cutscene, "And this is the second test. yo yo yo yo yo yo yo yo yo yo yo yo yo waddup.", 0);
-    addCutsceneLine(self->cutscene, "I'll take one cutscene-a-roni.", 0);
-    addCutsceneLine(self->cutscene, "Another pose for the camera. Maybe.", 0);
-    addCutsceneLine(self->cutscene, "I enter and exit stage left because I'm on the good side.", 0);
+    addCutsceneLine(self->cutscene, "This is the first test.", 0, false);
+    addCutsceneLine(self->cutscene, "And this is the second test. yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo waddup.", 1, false);
+    addCutsceneLine(self->cutscene, "I'll take one cutscene-a-roni.", 2, false);
+    addCutsceneLine(self->cutscene, "I'm saying more stuff.", 2, false);
+    addCutsceneLine(self->cutscene, "blah blah blah blah blah.", 2, false);
+    addCutsceneLine(self->cutscene, "Bunch of poses to see.", 2, false);
+    addCutsceneLine(self->cutscene, "Another pose for the camera.", 3, false);
+    addCutsceneLine(self->cutscene, "I'm eviiiiiil.", 3, false);
+    addCutsceneLine(self->cutscene, "asd asdf asdf asd fa sdfa sdf adf.", 3, false);
+    addCutsceneLine(self->cutscene, "ok.", 0, false);
+    addCutsceneLine(self->cutscene, "I enter and exit stage left because I'm on the good side.", 0, false);
 
     self->update = &updateCutsceneScreen;
 }

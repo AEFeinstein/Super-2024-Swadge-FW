@@ -10,7 +10,7 @@
 #include "esp_random.h"
 #include "fs_wsg.h"
 
-//#include "shapes.h"
+#include "shapes.h"
 
 
 //==============================================================================
@@ -141,9 +141,10 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
             if(cutscene->PB_A_frameCounter > 60)
             {
                 //proceed to next cutscene line.
-                if(cutscene->lines->first != NULL && cutscene->lines->first->next != NULL)//There are at least 2 lines left
+                if(cutscene->lines->first != NULL && cutscene->lines->first->next != NULL)//There is at least one line after this one.
                 {
                     free(((cutsceneLine_t*)shift(cutscene->lines))->body);
+                    style = getCurrentStyle(cutscene);
                     cutscene->listenForPB_A = false;
                     cutscene->PB_A_frameCounter = 0;
 
@@ -152,7 +153,7 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
                     cutscene->sprite, true);
                     loadWsg(style->textBoxIdx, cutscene->textBox, true);
                 }
-                else//There's 1 line left
+                else//This was the last line.
                 {
                     cutscene->isEnding = true;
                 }
@@ -215,7 +216,7 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
     cutsceneLine_t* line = (cutsceneLine_t*)cutscene->lines->first->val;
     cutsceneStyle_t* style = getAtIndex(cutscene->styles, line->styleIdx);
 
-    drawWsgSimple(cutscene->sprite, cutscene->xOffset, 0);
+    drawWsg(cutscene->sprite, cutscene->xOffset, 0, line->flipHorizontal, false, 0);
     if(cutscene->xOffset == 0)
     {
         drawWsgSimple(cutscene->textBox, 0, 0);
@@ -234,14 +235,15 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
 
     if(cutscene->xOffset == 0)
     {
-        
-        drawText(font, style->textColor, style->title, 20, 145);
+        int16_t xOff = 20;
+        int16_t yOff = 150;
+        //drawRect(xOff, yOff, 92, 162, c520);
+        drawText(font, style->textColor, style->title, 20, 150);
 
-        int16_t xOff = 13;
-        int16_t yOff = 169;
-        //drawRect(xOff, yOff, 252, 222, c500);
-        drawTextWordWrap(font, style->textColor, line->body, &xOff, &yOff, 252, 222);
-        
+        xOff = 13;
+        yOff = 174;
+        //drawRect(xOff, yOff, 252, 225, c520);
+        drawTextWordWrap(font, style->textColor, line->body, &xOff, &yOff, 252, 225);
     }
 }
 
