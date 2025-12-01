@@ -23,6 +23,7 @@ typedef struct
     char* body;   ///< The spoken text displayed on screen.
     uint8_t styleIdx;   ///< Index into the list of lineStyle_t.
     uint8_t spriteVariation; ///< A number that is added to the spriteIdx to display various character poses.
+    bool flipHorizontal; ///< Draw the character sprite flipped.
 } cutsceneLine_t;
 
 /**
@@ -59,9 +60,11 @@ typedef struct
 } cutscene_t;
 
 cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx) __attribute__((warn_unused_result));
+void removeAllStyles(cutscene_t* cutscene);
 void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t color, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numPoseVariations, bool isProtagonist);
-void addCutsceneLine(cutscene_t* cutscene, char* body, uint8_t styleIdx);
+void addCutsceneLine(cutscene_t* cutscene, char* body, uint8_t styleIdx, bool flipHorizontal);
 void updateCutscene(cutscene_t* cutscene, int16_t btnState);
 void drawCutscene(cutscene_t* cutscene, font_t* font);
+void deinitCutscene(cutscene_t* cutscene) __attribute__((warn_unused_result));
 
 #endif
