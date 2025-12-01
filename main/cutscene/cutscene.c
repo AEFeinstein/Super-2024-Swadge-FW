@@ -16,6 +16,7 @@
 //==============================================================================
 // Function Prototypes
 //==============================================================================
+static void resetCutscene(cutscene_t* cutscene);
 static int randomInt(int lowerBoundInclusive, int upperBoundInclusive);
 static uint8_t getRandomVariationFromStyle(cutsceneStyle_t* style);
 static uint8_t getRandomVariationFromStyleIdx(cutscene_t* cutscene, uint8_t styleIdx);
@@ -38,6 +39,30 @@ cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx)
     return cutscene;
 }
 
+static void resetCutscene(cutscene_t* cutscene)
+{
+    cutscene->a_down = false;
+    cutscene->blinkTimer = 0;
+    cutscene->isEnding = false;
+    while(cutscene->lines->first != NULL)
+    {
+        cutsceneLine_t* line = (cutsceneLine_t*) shift(cutscene->lines);
+        free(line->body);
+    }
+    cutscene->listenForPB_A = false;
+    cutscene->PB_A_frameCounter = 0;
+    cutscene->xOffset = 280; //default start value for antagonists.
+}
+
+void removeAllStyles(cutscene_t* cutscene)
+{
+    while(cutscene->styles->first != NULL)
+    {
+        cutsceneStyle_t* style = (cutsceneStyle_t*) shift(cutscene->styles);
+        free(style->title);
+    }
+}
+
 void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numSpriteVariations, bool isProtagonist)
 {
     cutsceneStyle_t* style = (cutsceneStyle_t*)heap_caps_calloc(1, sizeof(cutsceneStyle_t), MALLOC_CAP_SPIRAM);
@@ -58,13 +83,14 @@ void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileId
     push(cutscene->styles, (void*)style);
 }
 
-void addCutsceneLine(cutscene_t* cutscene, char* body, uint8_t styleIdx)
+void addCutsceneLine(cutscene_t* cutscene, char* body, uint8_t styleIdx, bool flipHorizontal)
 {
     cutsceneLine_t* line = (cutsceneLine_t*)heap_caps_calloc(1, sizeof(cutsceneLine_t), MALLOC_CAP_SPIRAM);
     line->body = (char*)heap_caps_calloc(strlen(body) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
     strcpy(line->body, body);
     line->styleIdx = styleIdx;
     line->spriteVariation = getRandomVariationFromStyleIdx(cutscene, styleIdx);
+    line->flipHorizontal = flipHorizontal;
 
     if(cutscene->lines->first == NULL)
     {
@@ -151,8 +177,8 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         if(cutscene->xOffset < -280 || cutscene->xOffset > 280)
         {
             //The cutscene is over
-            free(((cutsceneLine_t*)shift(cutscene->lines))->body);
             cutscene->cbFunc();
+            resetCutscene(cutscene);
             return;
         }
         if(style->isProtagonist)
@@ -219,3 +245,17 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
     }
 }
 
+void deinitCutscene(cutscene_t* cutscene)
+{
+    resetCutscene(cutscene);
+    removeAllStyles(cutscene);
+    free(cutscene->lines);
+    free(cutscene->styles);
+    for(int i = 0; i < 3; i++)
+    {
+        freeWsg(cutscene->nextIcon[i]);
+    }
+    freeWsg(cutscene->sprite);
+    freeWsg(cutscene->textBox);
+    free(cutscene);
+}
