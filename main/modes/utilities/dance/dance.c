@@ -296,6 +296,12 @@ void danceMainLoop(int64_t elapsedUs)
             danceState->blankScreen = false;
             // Draw to it
             drawMenuMega(danceState->menu, danceState->menuRenderer, elapsedUs);
+
+            // Set the LED eyes. First do a read to nudge it out of deep sleep
+            uint32_t var;
+            ch32v003ReadMemory(&var, sizeof(var), 0x08000000);
+            // Then reprogram it
+            ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
         }
     }
     else
@@ -306,6 +312,9 @@ void danceMainLoop(int64_t elapsedUs)
         {
             disableTFTBacklight();
             danceState->blankScreen = true;
+
+            // Sleep the ch32
+            ch32v003RunBinaryAsset(DEEP_SLEEP_CFUN_BIN);
         }
         else
         {
