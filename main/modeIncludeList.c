@@ -21,7 +21,7 @@ swadgeMode_t* const allSwadgeModes[] = {
     &keebTestMode,       &mainMenuMode,     &modeCh32v003test,   &modeCredits,     &modeDiceRoller, &modePicross,
     &modePlatformer,     &nameTestMode,     &roboRunnerMode,     &sequencerMode,   &sonaTestMode,   &swadgeItMode,
     &swadgePassTestMode, &swadgedokuMode,   &swadgetamatoneMode, &swsnCreatorMode, &synthMode,      &tCaseMode,
-    &touchTestMode,      &trophyTestMode,   &tunernomeMode,
+    &touchTestMode,      &trophyTestMode,   &tunernomeMode,      &cipherMode,
 };
 
 //==============================================================================
@@ -44,6 +44,7 @@ void modeListSetMenu(menu_t* menu)
     addSingleItemToMenu(menu, danceNetworkMode.modeName);
     addSingleItemToMenu(menu, roboRunnerMode.modeName);
     addSingleItemToMenu(menu, modePicross.modeName);
+
     addSingleItemToMenu(menu, artilleryMode.modeName);
     menu = endSubMenu(menu);
 
@@ -59,6 +60,7 @@ void modeListSetMenu(menu_t* menu)
 
     // Utilities sub menu
     menu = startSubMenu(menu, "Utilities");
+    addSingleItemToMenu(menu, cipherMode.modeName);
     addSingleItemToMenu(menu, gamepadMode.modeName);
     addSingleItemToMenu(menu, danceMode.modeName);
     addSingleItemToMenu(menu, modeDiceRoller.modeName);

@@ -1,3 +1,10 @@
+/**
+ * @file artillery_phys_collisions.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief Physics collisions for Vector Tanks
+ * @date 2025-11-26
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -26,6 +33,7 @@ static bool physCircCircIntersection(physSim_t* phys, physCirc_t* cMoving, circl
  * (circles or lines). This may update the velocity of an object after a collision but will not update the position.
  *
  * @param phys The physics simulation
+ * @return true if an exploding shell caused a change which needs to be transmitted, false otherwise
  */
 bool physCheckCollisions(physSim_t* phys)
 {
@@ -262,7 +270,7 @@ bool physAnyCollision(physSim_t* phys, physCirc_t* c)
 }
 
 /**
- * @param phys The physics simulation
+ * @brief Check if a moving physics circle intersects with a fixed line during this frame
  *
  * @param phys The physics simulation
  * @param pc [IN] the moving circle

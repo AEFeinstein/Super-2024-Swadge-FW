@@ -81,6 +81,10 @@ typedef struct
     uint8_t previousHat;
     uint8_t bmpSlot;
 
+    uint16_t previousButtons;
+    uint8_t previousHat;
+    uint8_t bmpSlot;
+
     uint8_t gamepadType;
     bool isPluggedIn;
 

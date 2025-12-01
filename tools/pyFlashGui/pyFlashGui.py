@@ -54,12 +54,12 @@ class LabelThread(threading.Thread):
                 "--chip", "esp32s2",
                 "-p", str(self.serialPort.device),
                 "-b", "2000000",
-                "--before=default_reset",
-                "--after=no_reset_stub",
-                "write_flash",
-                "--flash_mode", "dio",
-                "--flash_freq", "80m",
-                "--flash_size", "4MB",
+                "--before=default-reset",
+                "--after=no-reset-stub",
+                "write-flash",
+                "--flash-mode", "dio",
+                "--flash-freq", "80m",
+                "--flash-size", "4MB",
                 "0x1000",  "bootloader.bin",
                 "0x8000",  "partition-table.bin",
                 "0x10000", "swadge2024.bin"])
@@ -82,8 +82,8 @@ class LabelThread(threading.Thread):
             # Reboot out of the bootloader
             esptool.main([
                 "-p", str(self.serialPort.device),
-                "--after", "hard_reset",
-                "chip_id"
+                "--after", "hard-reset",
+                "chip-id"
             ])
         except:
             pass

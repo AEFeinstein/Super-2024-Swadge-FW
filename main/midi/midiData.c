@@ -769,7 +769,7 @@ const midiTimbre_t* const mmxTimbres[] = {
 };
 
 const uint8_t mmxTimbreMap[] = {
-    11, 17, 24, 29, 30, 36, 38, 48, 50, 62, 80, 81, 82, 83, 119,
+    11, 17, 24, 29, 30, 36, 38, 48, 55, 62, 80, 81, 82, 83, 119,
 };
 
 const size_t mmxTimbreCount = sizeof(mmxTimbres) / sizeof(*mmxTimbres);

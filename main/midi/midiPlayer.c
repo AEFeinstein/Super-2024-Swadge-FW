@@ -310,7 +310,7 @@ adsrAttack:
     {
         // Set up the timer and rate for moving into sustain after decay time
         voice->stateChangeTick = attackTime;
-        voice->volRate         = (pressureVol << 24) / attackTime;
+        voice->volRate         = (((uint32_t)pressureVol) << 24) / attackTime;
         voice->volAccel        = 0;
         voice->curVol          = 0;
         MIDI_DBG("Moving to attack for %" PRIu32 " ticks", attackTime);
@@ -322,7 +322,7 @@ adsrAttack:
         // Attack time is 0, move directly to the next state: decay or sustain
         voice->volRate  = 0;
         voice->volAccel = 0;
-        voice->curVol   = pressureVol << 24;
+        voice->curVol   = ((uint32_t)pressureVol) << 24;
         MIDI_DBG("Skipping attack: no attack time");
     }
 

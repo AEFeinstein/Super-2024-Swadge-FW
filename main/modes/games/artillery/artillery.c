@@ -1,14 +1,23 @@
+/**
+ * @file artillery.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief The main Swadge Mode for Vector Tanks
+ * @date 2025-11-26
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
 
 #include "artillery.h"
 #include "artillery_game.h"
-#include "artillery_phys_objs.h"
-#include "artillery_p2p.h"
-#include "artillery_paint.h"
 #include "artillery_game_over.h"
 #include "artillery_help.h"
+#include "artillery_p2p.h"
+#include "artillery_paint.h"
+#include "artillery_phys.h"
+#include "artillery_phys_objs.h"
+
 #include "mainMenu.h"
 
 //==============================================================================
@@ -39,8 +48,6 @@ bool artilleryGameMenuCb(const char* label, bool selected, uint32_t value);
 //==============================================================================
 // Const Variables
 //==============================================================================
-
-const char ART_TAG[] = "ART";
 
 const char str_load_ammo[]   = "Load Ammo";
 const char str_drive[]       = "Drive";
@@ -83,6 +90,10 @@ const char str_help[]            = "Help!";
 const char str_exit[]            = "Exit";
 
 const char artilleryModeName[] = "Vector Tanks";
+
+const char str_cpuEasy[]   = "Easy";
+const char str_cpuMedium[] = "Medium";
+const char str_cpuHard[]   = "Hard";
 
 // List of trophies
 const trophyData_t artilleryTrophies[] = {
@@ -134,7 +145,7 @@ const trophyData_t artilleryTrophies[] = {
     {
         // Skynet
         .title       = "Take That Skynet",
-        .description = "You defeated the CPU player",
+        .description = "You defeated the hard CPU player",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_HARD,
@@ -209,7 +220,13 @@ void artilleryEnterMode(void)
     ad->modeMenu = initMenu(artilleryModeName, artilleryModeMenuCb);
     addSingleItemToMenu(ad->modeMenu, str_passAndPlay);
     addSingleItemToMenu(ad->modeMenu, str_wirelessConnect);
-    addSingleItemToMenu(ad->modeMenu, str_cpuPractice);
+
+    ad->modeMenu = startSubMenu(ad->modeMenu, str_cpuPractice);
+    addSingleItemToMenu(ad->modeMenu, str_cpuEasy);
+    addSingleItemToMenu(ad->modeMenu, str_cpuMedium);
+    addSingleItemToMenu(ad->modeMenu, str_cpuHard);
+    ad->modeMenu = endSubMenu(ad->modeMenu);
+
     addSingleItemToMenu(ad->modeMenu, str_paintSelect);
     addSingleItemToMenu(ad->modeMenu, str_help);
     addSingleItemToMenu(ad->modeMenu, str_exit);
@@ -298,21 +315,7 @@ void artilleryEnterMode(void)
     midiGmOn(globalMidiPlayerGet(MIDI_SFX));
     midiPause(globalMidiPlayerGet(MIDI_SFX), false);
 
-    // Write ch32 assets
-    ch32v003WriteBitmapAsset(EYES_CC, EYES_DEFAULT_GS);
-    ch32v003WriteBitmapAsset(EYES_UL, EYES_UL_GS);
-    ch32v003WriteBitmapAsset(EYES_UC, EYES_UC_GS);
-    ch32v003WriteBitmapAsset(EYES_UR, EYES_UR_GS);
-    ch32v003WriteBitmapAsset(EYES_CR, EYES_CR_GS);
-    ch32v003WriteBitmapAsset(EYES_DR, EYES_DR_GS);
-    ch32v003WriteBitmapAsset(EYES_DC, EYES_DC_GS);
-    ch32v003WriteBitmapAsset(EYES_DL, EYES_DL_GS);
-    ch32v003WriteBitmapAsset(EYES_CL, EYES_CL_GS);
-    ch32v003WriteBitmapAsset(EYES_DEAD, EYES_DEAD_GS);
-
-    // Start idle
-    ad->eyeSlot = EYES_CC;
-    ch32v003SelectBitmap(ad->eyeSlot);
+    ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
 }
 
 /**
@@ -322,6 +325,7 @@ void artilleryExitMode(void)
 {
     // Deinit physics
     deinitPhys(ad->phys);
+    ad->phys = NULL;
 
     // Deinit help menu
     artilleryHelpDeinit(ad);
@@ -364,8 +368,8 @@ void artilleryExitMode(void)
  */
 void artilleryMainLoop(int64_t elapsedUs)
 {
-    bool barrelChanged = false;
-    buttonEvt_t evt    = {0};
+    bool stateChanged = false;
+    buttonEvt_t evt   = {0};
     while (checkButtonQueueWrapper(&evt))
     {
         switch (ad->mState)
@@ -378,16 +382,28 @@ void artilleryMainLoop(int64_t elapsedUs)
             }
             case AMS_CONNECTING:
             {
-                if (evt.down && PB_B == evt.button)
+                if (evt.down)
                 {
-                    // Cancel the connection
-                    p2pRestart(&ad->p2p);
+                    // If connection is not active (i.e. showing "Connection Lost"),
+                    // any button returns to the menu
+                    if (!ad->p2p.cnc.isActive)
+                    {
+                        ad->mState = AMS_MENU;
+                    }
+                    // If a connection is active, A and B buttons cancel it
+                    else if (PB_A == evt.button || PB_B == evt.button)
+                    {
+                        // Cancel the connection
+                        p2pRestart(&ad->p2p);
+                        // Go right back to the main menu, don't show "Connection Lost"
+                        ad->mState = AMS_MENU;
+                    }
                 }
                 break;
             }
             case AMS_GAME:
             {
-                barrelChanged = artilleryGameInput(ad, evt);
+                stateChanged = artilleryGameInput(ad, evt);
                 break;
             }
             case AMS_HELP:
@@ -422,10 +438,51 @@ void artilleryMainLoop(int64_t elapsedUs)
             drawMenuMega(ad->blankMenu, ad->mRenderer, elapsedUs);
 
             // Draw connection text
-            font_t* f      = ad->mRenderer->menuFont;
-            int16_t tWidth = textWidth(f, ad->conStr) + 1;
-            drawTextShadow(f, COLOR_TEXT, COLOR_TEXT_SHADOW, ad->conStr, (TFT_WIDTH - tWidth) / 2,
-                           135 - (f->height / 2));
+            font_t* f = ad->mRenderer->menuFont;
+
+            // Shadow first
+            int16_t margin = 20;
+            int16_t xOff   = 20 + margin + 1;
+            int16_t yOff   = 54 + margin + 1;
+            drawTextWordWrapCentered(f, COLOR_TEXT_SHADOW, ad->conStr, &xOff, &yOff, TFT_WIDTH - 20 - margin + 1,
+                                     TFT_HEIGHT - 23 - margin + 1);
+
+            // Then text
+            xOff = 20 + margin;
+            yOff = 54 + margin;
+            drawTextWordWrapCentered(f, COLOR_TEXT, ad->conStr, &xOff, &yOff, TFT_WIDTH - 20 - margin,
+                                     TFT_HEIGHT - 23 - margin);
+
+            // Draw a tank. Get the colors first
+            paletteColor_t base;
+            paletteColor_t accent;
+            artilleryGetTankColors(ad->myColorIdx, &base, &accent);
+
+            // Spin the tank every two seconds
+            RUN_TIMER_EVERY(ad->connSpinTimer, 5555, elapsedUs, {
+                ad->connBarrelAngle += (M_PIf / 180.0f);
+                if (ad->connBarrelAngle > 2 * M_PIf)
+                {
+                    ad->connBarrelAngle -= 2 * M_PIf;
+                }
+            });
+
+            // Wheels spin around
+            vecFl_t wheelOffVert = {
+                .x = sinf(ad->connBarrelAngle),
+                .y = -cosf(ad->connBarrelAngle),
+            };
+
+            // Calculate where the barrel tip is
+            const float radius       = 20;
+            const float barrelOffset = M_PIf + (M_PIf / 4.0f);
+            vecFl_t relBarrelTip     = {
+                    .x = sinf(ad->connBarrelAngle + barrelOffset) * radius * 2,
+                    .y = -cosf(ad->connBarrelAngle + barrelOffset) * radius * 2,
+            };
+
+            // Actually draw the tank
+            drawTank(TFT_WIDTH / 2, TFT_HEIGHT - 54, radius, base, accent, 3, wheelOffVert, relBarrelTip);
 
             // Check for packets to transmit
             artilleryCheckTxQueue(ad);
@@ -433,7 +490,9 @@ void artilleryMainLoop(int64_t elapsedUs)
         }
         case AMS_GAME:
         {
-            artilleryGameLoop(ad, elapsedUs, barrelChanged);
+            artilleryGameLoop(ad, elapsedUs, stateChanged);
+
+            // Check for packets to transmit
             artilleryCheckTxQueue(ad);
             break;
         }
@@ -533,7 +592,6 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
         if (str_passAndPlay == label)
         {
             artilleryInitGame(AG_PASS_AND_PLAY, true);
-            artillerySwitchToGameState(ad, AGS_TOUR);
         }
         else if (str_wirelessConnect == label)
         {
@@ -542,16 +600,23 @@ bool artilleryModeMenuCb(const char* label, bool selected, uint32_t value)
             ad->mState           = AMS_CONNECTING;
             ad->blankMenu->title = str_wirelessConnect;
 
-            ad->p2pSetColorReceived   = false;
-            ad->p2pSetWorldReceived   = false;
-            ad->p2pAddTerrainReceived = false;
-            ad->p2pCloudsReceived     = false;
+            ad->expectedPacket = P2P_SET_COLOR;
         }
-        else if (str_cpuPractice == label)
+        else if ((str_cpuEasy == label) || (str_cpuMedium == label) || (str_cpuHard == label))
         {
-            // TODO implement CPU difficulty
+            if (str_cpuEasy == label)
+            {
+                ad->cpu = CPU_EASY;
+            }
+            else if (str_cpuMedium == label)
+            {
+                ad->cpu = CPU_MEDIUM;
+            }
+            else if (str_cpuHard == label)
+            {
+                ad->cpu = CPU_HARD;
+            }
             artilleryInitGame(AG_CPU_PRACTICE, true);
-            artillerySwitchToGameState(ad, AGS_TOUR);
         }
         else if (str_help == label)
         {
@@ -658,9 +723,7 @@ void setDriveInMenu(bool visible)
 }
 
 /**
- * @brief TODO doc
- *
- * @param ad
+ * @brief Set the available ammo int he menu
  */
 void setAmmoInMenu(void)
 {
@@ -726,6 +789,22 @@ void openAmmoMenu(void)
  */
 void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
 {
+    // Write ch32 assets
+    ch32v003WriteBitmapAsset(EYES_CC, EYES_DEFAULT_GS);
+    ch32v003WriteBitmapAsset(EYES_UL, EYES_UL_GS);
+    ch32v003WriteBitmapAsset(EYES_UC, EYES_UC_GS);
+    ch32v003WriteBitmapAsset(EYES_UR, EYES_UR_GS);
+    ch32v003WriteBitmapAsset(EYES_CR, EYES_CR_GS);
+    ch32v003WriteBitmapAsset(EYES_DR, EYES_DR_GS);
+    ch32v003WriteBitmapAsset(EYES_DC, EYES_DC_GS);
+    ch32v003WriteBitmapAsset(EYES_DL, EYES_DL_GS);
+    ch32v003WriteBitmapAsset(EYES_CL, EYES_CL_GS);
+    ch32v003WriteBitmapAsset(EYES_DEAD, EYES_DEAD_GS);
+
+    // Start idle
+    ad->eyeSlot = EYES_CC;
+    ch32v003SelectBitmap(ad->eyeSlot);
+
     // For non-wireless games, pick a random color that's not the player's
     if (gameType != AG_WIRELESS)
     {
@@ -736,12 +815,16 @@ void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
     ad->gameType = gameType;
 
     // Initialize physics, including terrain
+    if (NULL != ad->phys)
+    {
+        deinitPhys(ad->phys);
+    }
     ad->phys = initPhys(WORLD_WIDTH, WORLD_HEIGHT, GROUND_LEVEL, DEFAULT_GRAV_X, DEFAULT_GRAV_Y, generateTerrain);
 
     if (generateTerrain)
     {
         // Initialize players, including flattening terrain under them
-        paletteColor_t colors[4];
+        paletteColor_t colors[NUM_PLAYERS * 2];
         if (gameType == AG_WIRELESS)
         {
             artilleryGetTankColors(ad->theirColorIdx, &colors[0], &colors[1]);
@@ -756,9 +839,12 @@ void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
 
         // Pick random music here
         ad->bgmIdx = esp_random() % ARRAY_SIZE(ad->bgms);
-        // Start playing music
-        globalMidiPlayerPlaySong(&ad->bgms[ad->bgmIdx], MIDI_BGM);
-        globalMidiPlayerGet(MIDI_BGM)->loop = true;
+        if (AG_WIRELESS != ad->gameType)
+        {
+            // Start playing music
+            globalMidiPlayerPlaySong(&ad->bgms[ad->bgmIdx], MIDI_BGM);
+            globalMidiPlayerGet(MIDI_BGM)->loop = true;
+        }
     }
 
     // Start with a full movement timer
@@ -770,8 +856,15 @@ void artilleryInitGame(artilleryGameType_t gameType, bool generateTerrain)
     // Switch to showing the game
     ad->mState = AMS_GAME;
 
-    // Start the game waiting
-    artillerySwitchToGameState(ad, AGS_WAIT);
+    if (gameType != AG_WIRELESS)
+    {
+        artillerySwitchToGameState(ad, AGS_TOUR);
+    }
+    else
+    {
+        // Start the game waiting
+        artillerySwitchToGameState(ad, AGS_WAIT);
+    }
 }
 
 /**

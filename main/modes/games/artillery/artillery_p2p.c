@@ -1,44 +1,75 @@
+/**
+ * @file artillery_p2p.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief Peer to peer messaging for Vector Tanks
+ * @date 2025-11-26
+ * @startuml{conn_seq.png} "Connection Sequence"
+== Setup ==
+
+"Going First" -> "Going Second": artilleryTxColor(), P2P_SET_COLOR
+note over "Going Second": artilleryInitGame(false)
+"Going Second" -> "Going First": artilleryTxColor(), P2P_SET_COLOR
+note over "Going First": artilleryInitGame(true)
+"Going First" -> "Going Second": artilleryTxWorld(), P2P_SET_WORLD
+note over "Going Second": physRemoveAllObjects()\nphysAddWorldBounds()\nphysAddTerrainPoints()
+"Going First" -> "Going Second": artilleryTxWorld(), P2P_ADD_TERRAIN
+note over "Going Second": physAddTerrainPoints()
+"Going First" -> "Going Second": artilleryTxWorld(), P2P_SET_CLOUDS
+note over "Going Second": Set Clouds
+note over "Going First": artillerySwitchToGameState(AGS_TOUR)
+note over "Going Second": artillerySwitchToGameState(AGS_TOUR)
+
+== Optional ==
+
+note over "Going First", "Going Second": "Either side may send this message end the tour early
+"Going First" -> "Going Second": P2P_FINISH_TOUR
+"Going Second" -> "Going First": P2P_FINISH_TOUR
+
+== Loop for Seven Turns ==
+
+group Optional, Repeated
+    "Going Second" -> "Going First": P2P_SET_STATE
+end
+"Going Second" -> "Going First": P2P_FIRE_SHOT
+group Optional, Repeated
+    "Going First" -> "Going Second": P2P_SET_STATE
+end
+"Going First" -> "Going Second": P2P_FIRE_SHOT
+ * @enduml
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
 
 #include "artillery.h"
+#include "artillery_game.h"
 #include "artillery_p2p.h"
+#include "artillery_paint.h"
+#include "artillery_phys.h"
 #include "artillery_phys_terrain.h"
 #include "artillery_phys_bsp.h"
-#include "artillery_game.h"
-#include "artillery_paint.h"
 
-#define NUM_TERRAIN_POINTS_A (64 + 18)
+#define NUM_TERRAIN_POINTS_A (55)
 #define NUM_TERRAIN_POINTS_B (NUM_TERRAIN_POINTS - NUM_TERRAIN_POINTS_A)
-
-//==============================================================================
-// Enums
-//==============================================================================
-
-typedef enum __attribute__((packed))
-{
-    P2P_SET_COLOR,
-    P2P_SET_WORLD,
-    P2P_ADD_TERRAIN,
-    P2P_SET_CLOUDS,
-    P2P_SET_PLAYERS,
-    P2P_SET_CAMERA,
-    P2P_FIRE_SHOT,
-    P2P_PASS_TURN,
-} artilleryP2pPacketType_t;
 
 //==============================================================================
 // Structs
 //==============================================================================
 
-typedef struct // __attribute__((packed))
+/**
+ * @brief A p2p packet which sends this player's color
+ */
+typedef struct
 {
     uint8_t type;
     uint8_t colorIdx;
 } artPktColor_t;
 
-typedef struct //__attribute__((packed))
+/**
+ * @brief A p2p packet which contains some of the initial game state including music, world size, players
+ */
+typedef struct
 {
     uint8_t type;
     uint8_t bgmIdx;
@@ -54,49 +85,56 @@ typedef struct //__attribute__((packed))
     uint16_t terrainPoints[NUM_TERRAIN_POINTS_A];
 } artPktWorld_t;
 
-typedef struct //__attribute__((packed))
-{
-    uint8_t type;
-    uint16_t terrainPoints[NUM_TERRAIN_POINTS_B];
-    uint8_t numObstacles;
-    struct
-    {
-        uint16_t x;
-        uint16_t y;
-        uint8_t r;
-    } obstacles[MAX_NUM_OBSTACLES];
-
-} artPktTerrain_t;
-
-// This doesn't use structs for better byte packing
+/**
+ * @brief A p2p packet which contains some of the initial game state
+ *
+ */
 typedef struct
 {
     uint8_t type;
+    uint16_t terrainPoints[NUM_TERRAIN_POINTS_B];
+} artPktTerrain_t;
+
+/**
+ * @brief A p2p packet which contains the cloud positions and sizes */
+typedef struct
+{
+    uint8_t type;
+    uint8_t padding;
     uint16_t x[NUM_CLOUDS * CIRC_PER_CLOUD];
     uint16_t y[NUM_CLOUDS * CIRC_PER_CLOUD];
     uint8_t r[NUM_CLOUDS * CIRC_PER_CLOUD];
 } artPktCloud_t;
 
-typedef struct // __attribute__((packed))
+/**
+ * @brief A p2p packet indicating the tour should be immediately finished
+ */
+typedef struct
 {
     uint8_t type;
+} artPktFinishTour_t;
+
+/**
+ * @brief A p2p packet containing updating game state, including camera and player data
+ */
+typedef struct
+{
+    uint8_t type;
+    bool looking;
+    int32_t moveTimeLeftUs;
+    vec_t camera;
     struct
     {
         vecFl_t pos;
         int16_t barrelAngle;
         int32_t score;
     } players[NUM_PLAYERS];
-    int32_t moveTimeLeftUs;
-} artPktPlayers_t;
+} artPktState_t;
 
+/**
+ * @brief A p2p packet indicating a shot was fired by a player
+ */
 typedef struct
-{
-    uint8_t type;
-    vec_t camera;
-    bool looking;
-} artPktCamera_t;
-
-typedef struct // __attribute__((packed))
 {
     uint8_t type;
     uint8_t ammoIdx;
@@ -104,18 +142,12 @@ typedef struct // __attribute__((packed))
     float shotPower;
 } artPktShot_t;
 
-typedef struct // __attribute__((packed))
-{
-    uint8_t type;
-} artPktPassTurn_t;
-
 //==============================================================================
 // Const Variables
 //==============================================================================
 
-const char str_conStarted[]     = "Searching for Swadge";
-const char str_conRxAck[]       = "RX Game Start Ack";
-const char str_conRxMsg[]       = "RX Game Start Msg";
+const char str_conStarted[]     = "Hold close to another Swadge to pair";
+const char str_conProgress[]    = "Connection in Progress";
 const char str_conEstablished[] = "Connection Ready";
 const char str_conLost[]        = "Connection Lost";
 
@@ -130,8 +162,7 @@ static uint8_t getSizeFromType(artilleryP2pPacketType_t type);
 //==============================================================================
 
 /**
- * @brief This typedef is for the function callback which delivers connection statuses to the Swadge mode
- * TODO doc
+ * @brief Receive connection statues for p2p
  *
  * @param p2p The p2pInfo
  * @param evt The connection event
@@ -148,12 +179,12 @@ void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
         }
         case RX_GAME_START_ACK:
         {
-            ad->conStr = str_conRxAck;
+            ad->conStr = str_conProgress;
             break;
         }
         case RX_GAME_START_MSG:
         {
-            ad->conStr = str_conRxMsg;
+            ad->conStr = str_conProgress;
             break;
         }
         case CON_ESTABLISHED:
@@ -171,16 +202,16 @@ void artillery_p2pConCb(p2pInfo* p2p, connectionEvt_t evt)
         case CON_LOST:
         default:
         {
+            // This goes back and displays the connection lost string
             ad->conStr = str_conLost;
-            ad->mState = AMS_MENU;
+            ad->mState = AMS_CONNECTING;
             break;
         }
     }
 }
 
 /**
- * @brief This typedef is for the function callback which delivers received p2p packets to the Swadge mode
- * TODO doc
+ * @brief Receive and process a p2p packet. If the packet is not expected in the current state, it is discarded
  *
  * @param p2p The p2pInfo
  * @param payload The data that was received
@@ -196,13 +227,21 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
     {
         case P2P_SET_COLOR:
         {
-            if (ad->p2pSetColorReceived)
+            if (P2P_SET_COLOR != ad->expectedPacket)
             {
                 return;
             }
             else
             {
-                ad->p2pSetColorReceived  = true;
+                if (GOING_FIRST == p2pGetPlayOrder(&ad->p2p))
+                {
+                    ad->expectedPacket = P2P_SET_STATE;
+                }
+                else
+                {
+                    ad->expectedPacket = P2P_SET_WORLD;
+                }
+
                 const artPktColor_t* pkt = (const artPktColor_t*)payload;
                 ad->theirColorIdx        = pkt->colorIdx;
 
@@ -226,13 +265,13 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
         }
         case P2P_SET_WORLD:
         {
-            if (ad->p2pSetWorldReceived)
+            if (P2P_SET_WORLD != ad->expectedPacket)
             {
                 return;
             }
             else
             {
-                ad->p2pSetWorldReceived = true;
+                ad->expectedPacket = P2P_ADD_TERRAIN;
 
                 const artPktWorld_t* pkt = (const artPktWorld_t*)payload;
 
@@ -272,12 +311,14 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
         }
         case P2P_ADD_TERRAIN:
         {
-            if (ad->p2pAddTerrainReceived)
+            if (P2P_ADD_TERRAIN != ad->expectedPacket)
             {
                 return;
             }
             else
             {
+                ad->expectedPacket = P2P_SET_CLOUDS;
+
                 const artPktTerrain_t* pkt = (const artPktTerrain_t*)payload;
 
                 // Add more lines from packet
@@ -290,12 +331,14 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
         }
         case P2P_SET_CLOUDS:
         {
-            if (ad->p2pCloudsReceived)
+            if (P2P_SET_CLOUDS != ad->expectedPacket)
             {
-                break;
+                return;
             }
             else
             {
+                ad->expectedPacket = P2P_SET_STATE;
+
                 const artPktCloud_t* pkt = (const artPktCloud_t*)payload;
                 // Add clouds from packet
                 for (uint16_t c = 0; c < NUM_CLOUDS * CIRC_PER_CLOUD; c++)
@@ -313,81 +356,93 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
             }
             return;
         }
-        case P2P_SET_PLAYERS:
+        case P2P_FINISH_TOUR:
         {
-            const artPktPlayers_t* pkt = (const artPktPlayers_t*)payload;
-
-            // Update player location and barrel angle
-            for (int32_t pIdx = 0; pIdx < ARRAY_SIZE(pkt->players); pIdx++)
+            // P2P_FINISH_TOUR can also be received while expecting P2P_SET_STATE
+            if (P2P_SET_STATE != ad->expectedPacket)
             {
-                ad->players[pIdx]->c.pos = pkt->players[pIdx].pos;
-                setBarrelAngle(ad->players[pIdx], pkt->players[pIdx].barrelAngle);
-                ad->players[pIdx]->score = pkt->players[pIdx].score;
+                return;
             }
-
-            // Update gas gauge
-            ad->moveTimerUs = pkt->moveTimeLeftUs;
-
+            else if (AGS_TOUR == ad->gState)
+            {
+                artilleryFinishTour(ad);
+            }
             return;
         }
-        case P2P_SET_CAMERA:
+        case P2P_SET_STATE:
         {
-            // Receive and set camera
-            const artPktCamera_t* pkt = (const artPktCamera_t*)payload;
-
-            // Clear all camera targets
-            clear(&ad->phys->cameraTargets);
-
-            // If not looking around, focus on the player
-            if (!pkt->looking)
+            if (P2P_SET_STATE != ad->expectedPacket && !artilleryIsMyTurn(ad))
             {
-                push(&ad->phys->cameraTargets, ad->players[ad->plIdx]);
+                return;
             }
             else
             {
-                // Set the camera
-                ad->phys->camera = pkt->camera;
-            }
+                const artPktState_t* pkt = (const artPktState_t*)payload;
 
+                // Update player location and barrel angle
+                for (int32_t pIdx = 0; pIdx < ARRAY_SIZE(pkt->players); pIdx++)
+                {
+                    ad->players[pIdx]->c.pos = pkt->players[pIdx].pos;
+                    setBarrelAngle(ad->players[pIdx], pkt->players[pIdx].barrelAngle);
+                    ad->players[pIdx]->score = pkt->players[pIdx].score;
+                }
+
+                // Update gas gauge
+                ad->moveTimerUs = pkt->moveTimeLeftUs;
+                // Clear all camera targets
+                clear(&ad->phys->cameraTargets);
+
+                // If not looking around, focus on the player
+                if (!pkt->looking)
+                {
+                    push(&ad->phys->cameraTargets, ad->players[ad->plIdx]);
+                }
+                else
+                {
+                    // Set the camera
+                    ad->phys->camera = pkt->camera;
+                }
+            }
             return;
         }
         case P2P_FIRE_SHOT:
         {
-            if (!ad->phys->shotFired)
+            // P2P_FIRE_SHOT can also be received while expecting P2P_SET_STATE
+            if (P2P_SET_STATE != ad->expectedPacket && !artilleryIsMyTurn(ad))
             {
-                const artPktShot_t* pkt = (const artPktShot_t*)payload;
-
-                // Get player references
-                physCirc_t* player   = ad->players[ad->plIdx];
-                physCirc_t* opponent = ad->players[(ad->plIdx + 1) % NUM_PLAYERS];
-
-                // Set the player's shot
-                player->barrelAngle = pkt->barrelAngle;
-                player->ammoIdx     = pkt->ammoIdx;
-                player->shotPower   = pkt->shotPower;
-
-                // Switch the game to firing
-                artillerySwitchToGameState(ad, AGS_FIRE);
-
-                // Fire the shot from here so that artilleryTxShot() isn't called from artilleryGameLoop()
-                ad->phys->shotFired = true;
-                fireShot(ad->phys, player, opponent, true);
+                return;
             }
-            return;
-        }
-        case P2P_PASS_TURN:
-        {
-            // const artPktPassTurn_t* pkt = (const artPktPassTurn_t*)payload;
-            artilleryPassTurn(ad);
+            else
+            {
+                if (!ad->phys->shotFired)
+                {
+                    const artPktShot_t* pkt = (const artPktShot_t*)payload;
+
+                    // Get player references
+                    physCirc_t* player   = ad->players[ad->plIdx];
+                    physCirc_t* opponent = ad->players[(ad->plIdx + 1) % NUM_PLAYERS];
+
+                    // Set the player's shot
+                    player->barrelAngle = pkt->barrelAngle;
+                    player->ammoIdx     = pkt->ammoIdx;
+                    player->shotPower   = pkt->shotPower;
+
+                    // Switch the game to firing
+                    artillerySwitchToGameState(ad, AGS_FIRE);
+
+                    // Fire the shot from here so that artilleryTxShot() isn't called from artilleryGameLoop()
+                    ad->phys->shotFired = true;
+                    fireShot(ad->phys, player, opponent, true);
+                }
+            }
             return;
         }
     }
 }
 
 /**
- * @brief This typedef is for the function callback which delivers acknowledge status for transmitted messages to the
- * Swadge mode
- * TODO doc
+ * @brief Receive a TX status for a transmitted message.
+ * Start playing music after P2P_SET_WORLD is ACKed.
  *
  * @param p2p The p2pInfo
  * @param status The status of the transmission
@@ -396,12 +451,42 @@ void artillery_p2pMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
  */
 void artillery_p2pMsgTxCb(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
 {
+    if (MSG_ACKED == status)
+    {
+        artilleryData_t* ad = getArtilleryData();
+        switch (ad->lastTxType)
+        {
+            case P2P_SET_WORLD:
+            {
+                // Start playing music
+                globalMidiPlayerPlaySong(&ad->bgms[ad->bgmIdx], MIDI_BGM);
+                globalMidiPlayerGet(MIDI_BGM)->loop = true;
+                break;
+            }
+            case P2P_SET_COLOR:
+            case P2P_ADD_TERRAIN:
+            case P2P_SET_CLOUDS:
+            case P2P_FINISH_TOUR:
+            case P2P_SET_STATE:
+            case P2P_FIRE_SHOT:
+            {
+                break;
+            }
+        }
+    }
+    else
+    {
+        // Message failed to transmit. Exit and display the connection lost string
+        getArtilleryData()->conStr = str_conLost;
+        getArtilleryData()->mState = AMS_CONNECTING;
+    }
 }
 
 /**
- * @brief TODO doc
+ * @brief Enqueue the P2P_SET_COLOR packet to transmit.
+ * This packet will only be sent once.
  *
- * @param ad
+ * @param ad All the artillery mode data
  */
 void artilleryTxColor(artilleryData_t* ad)
 {
@@ -424,7 +509,9 @@ void artilleryTxColor(artilleryData_t* ad)
 }
 
 /**
- * @brief TODO doc
+ * @brief Enqueue the P2P_SET_WORLD, P2P_ADD_TERRAIN, and P2P_SET_CLOUDS packets to transmit
+ * the entire initial game state from one Swadge to another.
+ * These packets will only be sent once
  *
  * @param ad All the artillery mode data
  */
@@ -497,11 +584,36 @@ void artilleryTxWorld(artilleryData_t* ad)
 }
 
 /**
- * @brief TODO doc
+ * @brief Enqueue the P2P_FINISH_TOUR message to finish the tour early.
+ * This may not be used at all, but if it is, it is only sent once.
  *
  * @param ad All the artillery mode data
  */
-void artilleryTxPlayers(artilleryData_t* ad)
+void artilleryTxFinishTour(artilleryData_t* ad)
+{
+    if (AG_WIRELESS != ad->gameType)
+    {
+        return;
+    }
+
+    // Allocate a packet
+    artPktShot_t* pkt = heap_caps_calloc(1, sizeof(artPktFinishTour_t), MALLOC_CAP_8BIT);
+
+    // Write the type
+    pkt->type = P2P_FINISH_TOUR;
+
+    // Push into the queue
+    push(&ad->p2pQueue, pkt);
+}
+
+/**
+ * @brief Enqueue the P2P_SET_STATE message for transmission (camera, players, move timer).
+ * This may be sent multiple times per turn.
+ * This will remove prior enqueued P2P_SET_STATE messages so that only the latest state is transmitted.
+ *
+ * @param ad All the artillery mode data
+ */
+void artilleryTxState(artilleryData_t* ad)
 {
     if (AG_WIRELESS != ad->gameType)
     {
@@ -514,7 +626,7 @@ void artilleryTxPlayers(artilleryData_t* ad)
     {
         node_t* pktNodeNext           = pktNode->next;
         artilleryP2pPacketType_t type = *((uint8_t*)pktNode->val);
-        if (P2P_SET_PLAYERS == type)
+        if (P2P_SET_STATE == type)
         {
             heap_caps_free(removeEntry(&ad->p2pQueue, pktNode));
         }
@@ -522,10 +634,10 @@ void artilleryTxPlayers(artilleryData_t* ad)
     }
 
     // Allocate a packet
-    artPktPlayers_t* pkt = heap_caps_calloc(1, sizeof(artPktPlayers_t), MALLOC_CAP_8BIT);
+    artPktState_t* pkt = heap_caps_calloc(1, sizeof(artPktState_t), MALLOC_CAP_8BIT);
 
     // Write the type
-    pkt->type = P2P_SET_PLAYERS;
+    pkt->type = P2P_SET_STATE;
 
     // Write player location and barrel angle
     for (int32_t pIdx = 0; pIdx < ARRAY_SIZE(pkt->players); pIdx++)
@@ -538,41 +650,6 @@ void artilleryTxPlayers(artilleryData_t* ad)
     // Write gas gauge
     pkt->moveTimeLeftUs = ad->moveTimerUs;
 
-    // Push into the queue
-    push(&ad->p2pQueue, pkt);
-}
-
-/**
- * @brief TODO doc
- *
- * @param ad
- */
-void artilleryTxCamera(artilleryData_t* ad)
-{
-    if (AG_WIRELESS != ad->gameType)
-    {
-        return;
-    }
-
-    // Remove any other enqueued packet of this type first
-    node_t* pktNode = ad->p2pQueue.first;
-    while (pktNode)
-    {
-        node_t* pktNodeNext           = pktNode->next;
-        artilleryP2pPacketType_t type = *((uint8_t*)pktNode->val);
-        if (P2P_SET_CAMERA == type)
-        {
-            heap_caps_free(removeEntry(&ad->p2pQueue, pktNode));
-        }
-        pktNode = pktNodeNext;
-    }
-
-    // Allocate a packet
-    artPktCamera_t* pkt = heap_caps_calloc(1, sizeof(artPktCamera_t), MALLOC_CAP_8BIT);
-
-    // Write the type
-    pkt->type = P2P_SET_CAMERA;
-
     // Write the data
     pkt->camera  = ad->phys->camera;
     pkt->looking = (AGS_LOOK == ad->gState);
@@ -582,10 +659,11 @@ void artilleryTxCamera(artilleryData_t* ad)
 }
 
 /**
- * @brief TODO doc
+ * @brief Enqueue the P2P_FIRE_SHOT message for transmission.
+ * This will only be sent once per turn and the turn will pass after the shot has finished.
  *
- * @param ad
- * @param player
+ * @param ad All the artillery mode data
+ * @param player The player that fired the shot
  */
 void artilleryTxShot(artilleryData_t* ad, physCirc_t* player)
 {
@@ -610,29 +688,8 @@ void artilleryTxShot(artilleryData_t* ad, physCirc_t* player)
 }
 
 /**
- * @brief TODO doc
- *
- * @param ad
- */
-void artilleryTxPassTurn(artilleryData_t* ad)
-{
-    if (AG_WIRELESS != ad->gameType)
-    {
-        return;
-    }
-
-    // Allocate a packet
-    artPktPassTurn_t* pkt = heap_caps_calloc(1, sizeof(artPktPassTurn_t), MALLOC_CAP_8BIT);
-
-    // Write the type
-    pkt->type = P2P_PASS_TURN;
-
-    // Push into the queue
-    push(&ad->p2pQueue, pkt);
-}
-
-/**
- * @brief TODO doc
+ * @brief Check the transmit queue for any p2p packets to send.
+ * Packets are only sent when p2p is idle
  *
  * @param ad All the artillery mode data
  */
@@ -646,16 +703,17 @@ void artilleryCheckTxQueue(artilleryData_t* ad)
 
         // Send over p2p
         p2pSendMsg(&ad->p2p, payload, getSizeFromType(payload[0]), artillery_p2pMsgTxCb);
+        ad->lastTxType = payload[0];
         // Free queued message
         heap_caps_free(payload);
     }
 }
 
 /**
- * @brief TODO doc
+ * @brief Get the size of a p2p packet from the type of the packet
  *
- * @param type
- * @return uint8_t
+ * @param type The type of the packet
+ * @return The size of a packet of the given type
  */
 static uint8_t getSizeFromType(artilleryP2pPacketType_t type)
 {
@@ -677,21 +735,17 @@ static uint8_t getSizeFromType(artilleryP2pPacketType_t type)
         {
             return sizeof(artPktCloud_t);
         }
-        case P2P_SET_PLAYERS:
+        case P2P_FINISH_TOUR:
         {
-            return sizeof(artPktPlayers_t);
+            return sizeof(artPktFinishTour_t);
         }
-        case P2P_SET_CAMERA:
+        case P2P_SET_STATE:
         {
-            return sizeof(artPktCamera_t);
+            return sizeof(artPktState_t);
         }
         case P2P_FIRE_SHOT:
         {
             return sizeof(artPktShot_t);
-        }
-        case P2P_PASS_TURN:
-        {
-            return sizeof(artPktPassTurn_t);
         }
     }
     return 0;

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="48" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="110">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="48" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="118">
  <editorsettings>
   <export target="../../assets/platformer/levels/level02.bin" format="Mega Pulse EX"/>
  </editorsettings>
@@ -58,23 +58,23 @@
 </data>
  </layer>
  <objectgroup id="2" name="entities">
-  <object id="2" template="templates/Player.tx" x="124" y="736"/>
+  <object id="2" template="templates/Player.tx" x="124" y="737"/>
   <object id="15" template="templates/Dust Bunny.tx" gid="2147483857" x="408" y="744"/>
   <object id="16" template="templates/Dust Bunny.tx" gid="2147483857" x="528" y="728"/>
   <object id="18" template="templates/Dust Bunny.tx" gid="2147483857" x="688" y="712"/>
-  <object id="19" template="templates/Chargin' Schmuck.tx" gid="2147483997" x="784" y="736"/>
+  <object id="19" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="784" y="736"/>
   <object id="20" template="templates/Dust Bunny.tx" x="968" y="744"/>
   <object id="21" template="templates/Dust Bunny.tx" x="1064" y="712"/>
   <object id="22" template="templates/Bouncepad (45º).tx" x="1104" y="736"/>
-  <object id="23" template="templates/Chargin' Schmuck.tx" gid="2147483997" x="1200" y="736"/>
+  <object id="23" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="1200" y="736"/>
   <object id="24" template="templates/Bouncepad.tx" x="1424" y="736"/>
   <object id="25" template="templates/Bouncepad (45º).tx" gid="2147483884" x="1424" y="608"/>
-  <object id="28" template="templates/Chargin' Schmuck.tx" x="1296" y="736"/>
+  <object id="28" template="templates/Chargin' Schmuck.tx" gid="351" x="1296" y="736"/>
   <object id="29" template="templates/Dust Bunny.tx" x="1240" y="552"/>
   <object id="30" template="templates/Turret.tx" x="1040" y="448"/>
   <object id="31" template="templates/Bouncepad.tx" x="944" y="480"/>
   <object id="32" template="templates/Bouncepad (45º).tx" x="944" y="352"/>
-  <object id="33" template="templates/Chargin' Schmuck.tx" gid="2147483997" x="1216" y="288"/>
+  <object id="33" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="1216" y="288"/>
   <object id="34" template="templates/Bouncepad.tx" x="1248" y="288"/>
   <object id="35" template="templates/Dust Bunny.tx" x="1280" y="216"/>
   <object id="36" template="templates/Bouncepad.tx" x="1344" y="288"/>
@@ -87,26 +87,24 @@
   <object id="46" template="templates/Bouncepad (45º).tx" gid="1073742060" x="1888" y="96"/>
   <object id="48" template="templates/Chargin' Schmuck.tx" x="1904" y="288"/>
   <object id="49" template="templates/Bouncepad (45º).tx" x="1792" y="432"/>
-  <object id="53" template="templates/Chargin' Schmuck.tx" gid="2147483997" x="1968" y="432"/>
+  <object id="53" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="1968" y="432"/>
   <object id="54" template="templates/Bouncepad (45º).tx" x="1648" y="496"/>
-  <object id="56" template="templates/Chargin' Schmuck.tx" x="1680" y="496"/>
+  <object id="56" template="templates/Chargin' Schmuck.tx" gid="351" x="1680" y="496"/>
   <object id="58" template="templates/Bouncepad (45º).tx" gid="1073742060" x="1584" y="528"/>
   <object id="61" template="templates/Bouncepad (45º).tx" gid="1073742060" x="1488" y="528"/>
   <object id="62" template="templates/Bouncepad (45º).tx" gid="2147483884" x="1616" y="736"/>
   <object id="63" template="templates/Bouncepad (45º).tx" x="1488" y="656"/>
-  <object id="65" template="templates/Chargin' Schmuck.tx" x="1488" y="736"/>
-  <object id="66" template="templates/Chargin' Schmuck.tx" gid="2147483997" x="1728" y="624"/>
+  <object id="65" template="templates/Chargin' Schmuck.tx" gid="351" x="1488" y="736"/>
   <object id="67" template="templates/Turret.tx" x="1920" y="656"/>
   <object id="68" template="templates/Bouncepad.tx" x="2016" y="736"/>
-  <object id="70" template="templates/Chargin' Schmuck.tx" gid="349" x="2116" y="656"/>
   <object id="71" template="templates/Bouncepad.tx" x="2272" y="656"/>
   <object id="72" template="templates/Chargin' Schmuck.tx" x="2208" y="528"/>
   <object id="73" template="templates/Bouncepad.tx" x="2352" y="528"/>
-  <object id="74" template="templates/Chargin' Schmuck.tx" gid="2147483997" x="2448" y="432"/>
+  <object id="74" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="2448" y="432"/>
   <object id="75" template="templates/Bouncepad.tx" x="2416" y="432"/>
   <object id="76" template="templates/Bouncepad.tx" x="2584" y="400"/>
-  <object id="77" template="templates/Chargin' Schmuck.tx" x="2512" y="400"/>
-  <object id="78" template="templates/Chargin' Schmuck.tx" gid="2147483997" x="2656" y="400"/>
+  <object id="77" template="templates/Chargin' Schmuck.tx" gid="351" x="2512" y="400"/>
+  <object id="78" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="2656" y="400"/>
   <object id="79" template="templates/Bouncepad.tx" x="2584" y="272"/>
   <object id="80" template="templates/Turret.tx" x="2512" y="144"/>
   <object id="81" template="templates/Turret.tx" x="2656" y="144"/>
@@ -142,6 +140,9 @@
   </object>
   <object id="108" template="templates/Bouncepad.tx" gid="1073742061" x="2416" y="272"/>
   <object id="109" template="templates/Chargin' Schmuck.tx" x="1076" y="480"/>
+  <object id="110" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="1728" y="624"/>
+  <object id="111" template="templates/Chargin' Schmuck.tx" x="2116" y="656"/>
+  <object id="117" template="templates/Checkpoint.tx" type="SwadgeLandEntity" x="3055.42" y="626.033"/>
  </objectgroup>
  <objectgroup id="3" name="annotations">
   <object id="1" x="3316" y="512" width="280" height="240"/>
