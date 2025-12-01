@@ -558,9 +558,9 @@ void gamepadNsMainLoop(int64_t elapsedUs __attribute__((unused)))
     }
 
     // Always Draw some reminder text, centered
-    const char reminderText[] = "Menu + Pause to Exit";
+    const char reminderText[] = "Menu + Pause for Options";
     int16_t tWidth            = textWidth(&gamepad->ibmFont, reminderText);
-    drawText(&gamepad->ibmFont, c555, reminderText, (TFT_WIDTH - tWidth) / 2, 10);
+    drawText(&gamepad->ibmFont, c555, reminderText, (TFT_WIDTH - tWidth) >> 1, 10);
 
     // Draw button combo text, centered
     const char captureText[] = "Down + Select:  Capture";
@@ -829,9 +829,9 @@ void gamepadGenericMainLoop(int64_t elapsedUs __attribute__((unused)))
     }
 
     // Always Draw some reminder text, centered
-    const char reminderText[] = "Menu + Pause to Exit";
+    const char reminderText[] = "Menu + Pause for Options";
     int16_t tWidth            = textWidth(&gamepad->ibmFont, reminderText);
-    drawText(&gamepad->ibmFont, c555, reminderText, (TFT_WIDTH - tWidth) / 2, 10);
+    drawText(&gamepad->ibmFont, c555, reminderText, (TFT_WIDTH - tWidth) >> 1, 10);
 
     // If it's plugged in, draw buttons
     if (gamepad->isPluggedIn)
