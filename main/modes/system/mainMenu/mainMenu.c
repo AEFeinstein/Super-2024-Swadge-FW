@@ -18,16 +18,15 @@ typedef struct
 {
     menu_t* menu;
     menuMegaRenderer_t* renderer;
-    font_t font_rodin;
     midiFile_t fanfare;
-#ifdef SW_VOL_CONTROL
+#if defined(SW_VOL_CONTROL)
     midiFile_t jingle;
     int32_t lastBgmVol;
     int32_t lastSfxVol;
 #endif
     int32_t cheatCodeIdx;
     bool debugMode;
-#ifdef SW_VOL_CONTROL
+#if defined(SW_VOL_CONTROL)
     bool fanfarePlaying;
 #endif
     int32_t autoLightDanceTimer;
@@ -45,7 +44,9 @@ static void mainMenuExitMode(void);
 static void mainMenuMainLoop(int64_t elapsedUs);
 static bool mainMenuCb(const char* label, bool selected, uint32_t settingVal);
 void addSecretsMenu(void);
+#if defined(CONFIG_FACTORY_TEST_NORMAL)
 static void fanfareFinishedCb(void);
+#endif
 static bool _winTrophy(swadgeMode_t* sm);
 
 //==============================================================================
@@ -278,14 +279,14 @@ mainMenu_t* mainMenu;
 
 static const char tftSettingLabel[] = "TFT";
 static const char ledSettingLabel[] = "LED";
-#ifdef SW_VOL_CONTROL
+#if defined(SW_VOL_CONTROL)
 static const char bgmVolSettingLabel[] = "BGM";
 static const char sfxVolSettingLabel[] = "SFX";
 #endif
 const char micSettingLabel[]                 = "MIC";
 static const char screenSaverSettingsLabel[] = "Screensaver: ";
 
-#ifdef CONFIG_FACTORY_TEST_NORMAL
+#if defined(CONFIG_FACTORY_TEST_NORMAL)
 
 static const char settingsLabel[] = "Settings";
 
@@ -303,11 +304,11 @@ static const char* const screenSaverSettingsOptions[] = {
     "Off", "10s", "20s", "30s", "1m", "2m", "5m",
 };
 
-#endif
-
 static const int16_t cheatCode[] = {
     PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A,
 };
+
+#endif
 
 static const int32_t showSecretsMenuSettingValues[] = {
     SHOW_SECRETS,
@@ -334,11 +335,8 @@ static void mainMenuEnterMode(void)
     // Allocate memory for the mode
     mainMenu = heap_caps_calloc(1, sizeof(mainMenu_t), MALLOC_CAP_8BIT);
 
-    // Load a font
-    loadFont(RODIN_EB_FONT, &mainMenu->font_rodin, false);
-
     // Load a song for when the volume changes
-#ifdef SW_VOL_CONTROL
+#if defined(SW_VOL_CONTROL)
     loadMidiFile(JINGLE_MID, &mainMenu->jingle, false);
 #endif
     loadMidiFile(SECRET_MID, &mainMenu->fanfare, true);
@@ -348,7 +346,7 @@ static void mainMenuEnterMode(void)
     // Allocate the menu
     mainMenu->menu = initMenu(mainMenuTitle, mainMenuCb);
 
-#ifdef CONFIG_FACTORY_TEST_NORMAL
+#if defined(CONFIG_FACTORY_TEST_NORMAL)
     // Initialize all the modes in modeList
     modeListSetMenu(mainMenu->menu);
 
@@ -357,13 +355,13 @@ static void mainMenuEnterMode(void)
     // Get the bounds and current settings to build this menu
     addSettingsItemToMenu(mainMenu->menu, tftSettingLabel, getTftBrightnessSettingBounds(), getTftBrightnessSetting());
     addSettingsItemToMenu(mainMenu->menu, ledSettingLabel, getLedBrightnessSettingBounds(), getLedBrightnessSetting());
-    #ifdef SW_VOL_CONTROL
+    #if defined(SW_VOL_CONTROL)
     addSettingsItemToMenu(mainMenu->menu, bgmVolSettingLabel, getBgmVolumeSettingBounds(), getBgmVolumeSetting());
     addSettingsItemToMenu(mainMenu->menu, sfxVolSettingLabel, getSfxVolumeSettingBounds(), getSfxVolumeSetting());
     #endif
     addSettingsItemToMenu(mainMenu->menu, micSettingLabel, getMicGainSettingBounds(), getMicGainSetting());
 
-    #ifdef SW_VOL_CONTROL
+    #if defined(SW_VOL_CONTROL)
     // These are just used for playing the sound only when the setting changes
     mainMenu->lastBgmVol = getBgmVolumeSetting();
     mainMenu->lastSfxVol = getSfxVolumeSetting();
@@ -400,11 +398,8 @@ static void mainMenuExitMode(void)
     // Deinit renderer
     deinitMenuMegaRenderer(mainMenu->renderer);
 
-    // Free the font
-    freeFont(&mainMenu->font_rodin);
-
     // Free the song
-#ifdef SW_VOL_CONTROL
+#if defined(SW_VOL_CONTROL)
     unloadMidiFile(&mainMenu->jingle);
 #endif
     unloadMidiFile(&mainMenu->fanfare);
@@ -420,6 +415,7 @@ static void mainMenuExitMode(void)
  */
 static void mainMenuMainLoop(int64_t elapsedUs)
 {
+#if defined(CONFIG_FACTORY_TEST_NORMAL)
     // Increment this timer
     mainMenu->autoLightDanceTimer += elapsedUs;
     // If 10s have elapsed with no user input
@@ -448,9 +444,9 @@ static void mainMenuMainLoop(int64_t elapsedUs)
                     mainMenu->cheatCodeIdx = 0;
                     setDacShutdown(false);
                     globalMidiPlayerPlaySongCb(&mainMenu->fanfare, MIDI_BGM, fanfareFinishedCb);
-#ifdef SW_VOL_CONTROL
+    #if defined(SW_VOL_CONTROL)
                     mainMenu->fanfarePlaying = true;
-#endif
+    #endif
                     // Return to the top level menu
                     while (mainMenu->menu->parentMenu)
                     {
@@ -481,8 +477,12 @@ static void mainMenuMainLoop(int64_t elapsedUs)
         }
     }
 
+#endif
+
     // Draw the menu
     drawMenuMega(mainMenu->menu, mainMenu->renderer, elapsedUs);
+
+#if defined(CONFIG_FACTORY_TEST_NORMAL)
 
     // If a trophy was showing, but the animation is done
     if (mainMenu->modeEnterTrophyShowing && !isTrophyDrawing())
@@ -491,14 +491,27 @@ static void mainMenuMainLoop(int64_t elapsedUs)
         switchToSwadgeMode(mainMenu->pendingMode);
     }
 
-#ifdef CONFIG_FACTORY_TEST_WARNING
+#elif defined(CONFIG_FACTORY_TEST_WARNING)
+
+    font_t* font         = mainMenu->renderer->menuFont;
     const char warning[] = "Take me to VR Zone to get flashed please!";
-    int16_t xOff         = 12;
-    int16_t yOff         = (TFT_HEIGHT / 2) - mainMenu->font_rodin.height;
-    drawTextWordWrap(&mainMenu->font_rodin, c000, warning, &xOff, &yOff, TFT_WIDTH - 12, TFT_HEIGHT);
+    #define INNER_MARGIN 16
+    int16_t xOff         = 20 + INNER_MARGIN + 1;
+    int16_t yOff         = 54 + INNER_MARGIN + 32 + 1;
+    drawTextWordWrapCentered(font, c000, warning, &xOff, &yOff, //
+                             TFT_WIDTH - 24 - INNER_MARGIN + 1, //
+                             TFT_HEIGHT - 23 - INNER_MARGIN + 1);
+
+    xOff = 20 + INNER_MARGIN;
+    yOff = 54 + INNER_MARGIN + 32;
+    drawTextWordWrapCentered(font, c555, warning, &xOff, &yOff, //
+                             TFT_WIDTH - 24 - INNER_MARGIN,     //
+                             TFT_HEIGHT - 23 - INNER_MARGIN);
+
 #endif
 }
 
+#if defined(CONFIG_FACTORY_TEST_NORMAL)
 /**
  * @brief Callback after the fanfare is done playing to disable the DAC again
  */
@@ -506,6 +519,7 @@ static void fanfareFinishedCb(void)
 {
     setDacShutdown(true);
 }
+#endif
 
 /**
  * @brief Callback for when menu items are selected
@@ -520,7 +534,7 @@ static bool mainMenuCb(const char* label, bool selected, uint32_t settingVal)
     // Stop the buzzer first no matter what, so that it turns off
     // if we scroll away from the BGM or SFX settings.
 
-#ifdef SW_VOL_CONTROL
+#if defined(SW_VOL_CONTROL)
     // Stop the buzzer when changing volume, not for fanfare
     if (false == mainMenu->fanfarePlaying)
     {
@@ -577,7 +591,7 @@ static bool mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             setLedBrightnessSetting(settingVal);
         }
-#ifdef SW_VOL_CONTROL
+#if defined(SW_VOL_CONTROL)
         else if (bgmVolSettingLabel == label)
         {
             if (settingVal != mainMenu->lastBgmVol)
