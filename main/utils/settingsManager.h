@@ -157,25 +157,32 @@ bool getTutorialCompletedSetting(void);
 bool setTutorialCompletedSetting(bool status);
 
 bool getGamepadPcAccelSetting(void);
+const settingParam_t* getGamepadPcAccelSettingBounds(void);
+bool setGamepadPcAccelSetting(bool status);
+bool setGamepadPcDpadStickIntensitySetting(gamepadDpad_t status);
+bool getGamepadPcTouchStickRecenterSetting(void);
+const settingParam_t* getGamepadPcTouchStickRecenterSettingBounds(void);
+bool setGamepadPcTouchStickRecenterSetting(gamepadDpad_t status);
+gamepadTouch_t getGamepadPcTouchSetting(void);
+const settingParam_t* getGamepadPcTouchSettingBounds(void);
+bool setGamepadPcTouchSetting(gamepadTouch_t status);
+gamepadTouch_t getGamepadPcDpadSetting(void);
+const settingParam_t* getGamepadPcDpadSettingBounds(void);
+bool setGamepadPcDpadSetting(gamepadDpad_t status);
+int32_t getGamepadPcDpadStickIntensitySetting(void);
+const settingParam_t* getGamepadPcDpadStickIntensitySettingBounds(void);
+
 bool setGamepadNsDpadStickIntensitySetting(gamepadDpad_t status);
 bool getGamepadNsTouchStickRecenterSetting(void);
 const settingParam_t* getGamepadNsTouchStickRecenterSettingBounds(void);
 bool setGamepadNsTouchStickRecenterSetting(gamepadDpad_t status);
-const settingParam_t* getGamepadPcAccelSettingBounds(void);
-bool setGamepadPcAccelSetting(bool status);
-
 gamepadTouch_t getGamepadNsTouchSetting(void);
 const settingParam_t* getGamepadNsTouchSettingBounds(void);
 bool setGamepadNsTouchSetting(gamepadTouch_t status);
-
 gamepadTouch_t getGamepadNsDpadSetting(void);
-
 const settingParam_t* getGamepadNsDpadSettingBounds(void);
-
 bool setGamepadNsDpadSetting(gamepadDpad_t status);
-
 int32_t getGamepadNsDpadStickIntensitySetting(void);
-
 const settingParam_t* getGamepadNsDpadStickIntensitySettingBounds(void);
 
 showSecrets_t getShowSecretsMenuSetting(void);

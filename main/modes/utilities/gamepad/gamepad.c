@@ -128,7 +128,7 @@ static const char* const dpadMappingSettingsOptions[] = {"D-Pad", "Left Stick", 
 static const int32_t dpadMappingSettingsValues[]
     = {GAMEPAD_DPAD_NORMAL_SETTING, GAMEPAD_DPAD_L_STICK_SETTING, GAMEPAD_DPAD_R_STICK_SETTING};
 
-static const char str_stick_intensity[] = "D-Pad Stick Intensity: ";
+static const char str_stick_intensity[] = "D-Pad Stick Intensity";
 
 static const int32_t accelSettingsValues[] = {0, 1};
 
@@ -330,16 +330,16 @@ void gamepadEnterMode(void)
     gamepad->menu = startSubMenu(gamepad->menu, str_pc);
     addSingleItemToMenu(gamepad->menu, str_continue);
     addSettingsOptionsItemToMenu(gamepad->menu, str_dpad_mapping, dpadMappingSettingsOptions, dpadMappingSettingsValues,
-                                 ARRAY_SIZE(dpadMappingSettingsValues), getGamepadNsDpadSettingBounds(),
-                                 getGamepadNsDpadSetting());
-    addSettingsItemToMenu(gamepad->menu, str_stick_intensity, getGamepadNsDpadStickIntensitySettingBounds(),
-                          getGamepadNsDpadStickIntensitySetting());
+                                 ARRAY_SIZE(dpadMappingSettingsValues), getGamepadPcDpadSettingBounds(),
+                                 getGamepadPcDpadSetting());
+    addSettingsItemToMenu(gamepad->menu, str_stick_intensity, getGamepadPcDpadStickIntensitySettingBounds(),
+                          getGamepadPcDpadStickIntensitySetting());
     addSettingsOptionsItemToMenu(gamepad->menu, str_touch, touchSettingsOptions, touchSettingsValues,
-                                 ARRAY_SIZE(touchSettingsOptions), getGamepadNsTouchSettingBounds(),
-                                 getGamepadNsTouchSetting());
+                                 ARRAY_SIZE(touchSettingsOptions), getGamepadPcTouchSettingBounds(),
+                                 getGamepadPcTouchSetting());
     addSettingsOptionsItemToMenu(gamepad->menu, str_stick_recenter, touchStickRecenterSettingsOptions,
                                  touchStickRecenterSettingsValues, ARRAY_SIZE(touchStickRecenterSettingsOptions),
-                                 getGamepadNsTouchStickRecenterSettingBounds(), getGamepadNsTouchStickRecenterSetting());
+                                 getGamepadPcTouchStickRecenterSettingBounds(), getGamepadPcTouchStickRecenterSetting());
     addSettingsOptionsItemToMenu(gamepad->menu, str_accel, accelSettingsOptions, accelSettingsValues,
                                  ARRAY_SIZE(accelSettingsOptions), getGamepadPcAccelSettingBounds(),
                                  getGamepadPcAccelSetting());
