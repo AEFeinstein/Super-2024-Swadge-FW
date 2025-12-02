@@ -18,10 +18,13 @@
 #include "shapes.h"
 #include "vector2d.h"
 #include "cutscene.h"
+#include "mgCutscenes.h"
 
 //==============================================================================
 // Constants
 //==============================================================================
+
+static bool cheatMode = false;
 
 static const vec_t mg_sureYouCanVectors[] = {
     // These are in reverse order
@@ -1361,7 +1364,11 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             else */
             if (self->invincibilityFrames <= 0)
             {
-                //self->hp -= 5;
+                if(!cheatMode)
+                {
+                    self->hp -= 5;
+                }
+                
                 self->gameData->comboTimer = 0;
 
                 if (self->shotsFired < 0)
@@ -1543,7 +1550,10 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             // TODO: This is a repeat of above code; move to its own function
             if (self->invincibilityFrames <= 0 && other->scoreValue)
             {
-                //self->hp -= other->scoreValue;
+                if(!cheatMode)
+                {
+                    self->hp -= other->scoreValue;
+                }
                 mg_updateLedsHpMeter(self->entityManager, self->gameData);
                 self->gameData->comboTimer = 0;
 
@@ -2064,15 +2074,7 @@ void updateScrollLockRight(mgEntity_t* self)
 
 
     //Cutscene before the boss fight
-    addCutsceneLine(self->gameData->cutscene, Sawtooth, "Show yourself!", false, -1);
-    addCutsceneLine(self->gameData->cutscene, Bigma, "Still barking orders, I see. Some things never change.", false, -1);
-    addCutsceneLine(self->gameData->cutscene, Pulse, "That voice... no way. That's... BIGMA?!", false, -1);
-    addCutsceneLine(self->gameData->cutscene, Bigma, "You remember me. Good. Saves us time. Let's skip the reunion speech and get to the main event.", false, -1);
-    addCutsceneLine(self->gameData->cutscene, Sawtooth, "What happened to you? You built this place with us!", false, -1);
-    addCutsceneLine(self->gameData->cutscene, Bigma, "Built it. Improved it. Outgrew it. I'm remixing this whole world. But you? You're just stuck on the opening track", false, -1);
-    addCutsceneLine(self->gameData->cutscene, Sawtooth, "You've lost it!", false, -1);
-    addCutsceneLine(self->gameData->cutscene, Bigma, "No. I finally found my groove.", false, -1);
-    self->gameData->changeState = MG_ST_CUTSCENE;
+    bossStartCutscene(self->gameData);
 }
 
 void updateScrollLockUp(mgEntity_t* self)

@@ -992,11 +992,6 @@ typedef enum
     MG_EDGE_TBLR
 } mgEdge_t;
 
-typedef enum
-{
-    Pulse, Sawtooth, Bigma, TrashMan
-} cutsceneCharacters;
-
 /*
 static const int MG_1x2_TILE_COLLISION_OFFSETS_IN_PIXELS[]
     = {0, 8, MG_EDGE_BLR, 0, -8, MG_EDGE_TLR};

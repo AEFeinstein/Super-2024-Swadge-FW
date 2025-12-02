@@ -26,6 +26,7 @@
 #include "mgGameData.h"
 #include "mgEntityManager.h"
 #include "mgLeveldef.h"
+#include "mgCutscenes.h"
 
 #include "hdw-led.h"
 #include "palette.h"
@@ -35,6 +36,7 @@
 #include "mainMenu.h"
 #include "fill.h"
 #include "cutscene.h"
+
 
 //==============================================================================
 // Constants
@@ -1619,11 +1621,7 @@ void updateLevelSelect(platformer_t* self)
 
             changeStateGame(platformer);
             //every level starts with a cutscene
-            addCutsceneLine(platformer->gameData.cutscene, Sawtooth, "We're too late... the MAGiX virus is already spreading.", true, 1);
-            addCutsceneLine(platformer->gameData.cutscene, Pulse, "This is nuts! What even is this place?", false, 0);
-            addCutsceneLine(platformer->gameData.cutscene, Sawtooth, "It used to be our home base... before it was corrupted. We got a ping near the Main Stage. Let's move!", true, 0);
-            addCutsceneLine(platformer->gameData.cutscene, Pulse, "Wait, what am I supposed to do?", false, 4);
-            addCutsceneLine(platformer->gameData.cutscene, Sawtooth, "Use your rhythm-feel it out! You'll learn fast. Just GO!", true, 3);
+            levelStartCutscene(&platformer->gameData);
             changeStateCutscene(platformer);
             return;
         }
