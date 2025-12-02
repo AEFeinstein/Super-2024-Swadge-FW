@@ -78,13 +78,14 @@ void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileId
     push(cutscene->styles, (void*)style);
 }
 
-void addCutsceneLine(cutscene_t* cutscene, char* body, uint8_t styleIdx, bool flipHorizontal)
+void addCutsceneLine(cutscene_t* cutscene, char* body, uint8_t styleIdx, bool flipHorizontal, int8_t spriteVariation)
 {
     cutsceneLine_t* line = (cutsceneLine_t*)heap_caps_calloc(1, sizeof(cutsceneLine_t), MALLOC_CAP_SPIRAM);
     line->body = (char*)heap_caps_calloc(strlen(body) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
     strcpy(line->body, body);
     line->styleIdx = styleIdx;
-    line->spriteVariation = getRandomVariationFromStyleIdx(cutscene, styleIdx);
+    line->spriteVariation = spriteVariation < 0 ? getRandomVariationFromStyleIdx(cutscene, styleIdx) : spriteVariation;
+    
     line->flipHorizontal = flipHorizontal;
 
     if(cutscene->lines->first == NULL)
@@ -217,6 +218,9 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
     cutsceneStyle_t* style = getAtIndex(cutscene->styles, line->styleIdx);
 
     drawWsg(cutscene->sprite, cutscene->xOffset, 0, line->flipHorizontal, false, 0);
+    char variationText[5];
+    snprintf(variationText, sizeof(variationText), "%d", line->spriteVariation);
+    drawText(font, c541, variationText, 10, 10);
     if(cutscene->xOffset == 0)
     {
         drawWsgSimple(cutscene->textBox, 0, 0);

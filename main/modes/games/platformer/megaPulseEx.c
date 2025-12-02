@@ -892,11 +892,11 @@ void changeStateGame(platformer_t* self)
     soundStop(true);
 
     //every level starts with a cutscene
-    addCutsceneLine(self->cutscene, "We're too late... the MAGiX virus is already spreading.", Sawtooth, true);
-    addCutsceneLine(self->cutscene, "This is nuts! What even is this place?", Pulse, false);
-    addCutsceneLine(self->cutscene, "It used to be our home base... before it was corrupted. We got a ping near the Main Stage. Let's move!", Sawtooth, true);
-    addCutsceneLine(self->cutscene, "Wait, what am I supposed to do?", Pulse, false);
-    addCutsceneLine(self->cutscene, "Use your rhythm-feel it out! You'll learn fast. Just GO!", Sawtooth, true);
+    addCutsceneLine(self->cutscene, "We're too late... the MAGiX virus is already spreading.", Sawtooth, true, 1);
+    addCutsceneLine(self->cutscene, "This is nuts! What even is this place?", Pulse, false, 0);
+    addCutsceneLine(self->cutscene, "It used to be our home base... before it was corrupted. We got a ping near the Main Stage. Let's move!", Sawtooth, true, 0);
+    addCutsceneLine(self->cutscene, "Wait, what am I supposed to do?", Pulse, false, 4);
+    addCutsceneLine(self->cutscene, "Use your rhythm-feel it out! You'll learn fast. Just GO!", Sawtooth, true, 3);
 
     self->update = &updateCutsceneScreen;
 }
