@@ -66,7 +66,8 @@ typedef enum
     MG_ST_GAME_OVER,
     MG_ST_HIGH_SCORE_ENTRY,
     MG_ST_HIGH_SCORE_TABLE,
-    MG_ST_PAUSE
+    MG_ST_PAUSE,
+    MG_ST_CUTSCENE,
 } mg_gameStateEnum_t;
 
 typedef enum
@@ -983,6 +984,11 @@ typedef enum
     MG_EDGE_BLR,
     MG_EDGE_TBLR
 } mgEdge_t;
+
+typedef enum
+{
+    Pulse, Sawtooth, Bigma, TrashMan
+} cutsceneCharacters;
 
 /*
 static const int MG_1x2_TILE_COLLISION_OFFSETS_IN_PIXELS[]
