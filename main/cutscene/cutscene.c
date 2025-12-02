@@ -74,11 +74,6 @@ void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileId
     style->numSpriteVariations = numSpriteVariations;
     style->isProtagonist = isProtagonist;
 
-    if(cutscene->styles->first == NULL && isProtagonist)
-    {
-        cutscene->xOffset *= -1;
-    }
-
     // push to tail
     push(cutscene->styles, (void*)style);
 }
@@ -98,6 +93,11 @@ void addCutsceneLine(cutscene_t* cutscene, char* body, uint8_t styleIdx, bool fl
         loadWsg(style->spriteIdx + line->spriteVariation,
         cutscene->sprite, true);
         loadWsg(style->textBoxIdx, cutscene->textBox, true);
+
+        if(style->isProtagonist)
+        {
+            cutscene->xOffset *= -1;
+        }
     }
 
     // push to tail

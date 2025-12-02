@@ -57,6 +57,11 @@ static const paletteColor_t rgbColors[4]    = {c500, c050, c005, c050};
 static const int16_t cheatCode[11]
     = {PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START};
 
+static const enum cutsceneCharacters
+{
+    Pulse, Sawtooth, Bigma, TrashMan
+};
+
 //==============================================================================
 // Functions Prototypes
 //==============================================================================
@@ -260,10 +265,10 @@ void platformerEnterMode(void)
     if(platformer->cutscene == NULL)
     {
         platformer->cutscene = initCutscene(goToReadyScreen, CUTSCENE_NEXT_0_WSG);
-        addCutsceneStyle(platformer->cutscene, c530, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 4, true);
-        addCutsceneStyle(platformer->cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 7, false);
         addCutsceneStyle(platformer->cutscene, c000, PULSE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Pulse", 5, true);
+        addCutsceneStyle(platformer->cutscene, c530, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 4, true);
         addCutsceneStyle(platformer->cutscene, c310, BIGMA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Bigma", 2, false);
+        addCutsceneStyle(platformer->cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 7, false);
     }
 
     setFrameRateUs(16666);
@@ -887,17 +892,11 @@ void changeStateGame(platformer_t* self)
     soundStop(true);
 
     //every level starts with a cutscene
-    addCutsceneLine(self->cutscene, "This is the first test.", 0, false);
-    addCutsceneLine(self->cutscene, "And this is the second test. yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo yo waddup.", 1, false);
-    addCutsceneLine(self->cutscene, "I'll take one cutscene-a-roni.", 2, false);
-    addCutsceneLine(self->cutscene, "I'm saying more stuff.", 2, false);
-    addCutsceneLine(self->cutscene, "blah blah blah blah blah.", 2, false);
-    addCutsceneLine(self->cutscene, "Bunch of poses to see.", 2, false);
-    addCutsceneLine(self->cutscene, "Another pose for the camera.", 3, false);
-    addCutsceneLine(self->cutscene, "I'm eviiiiiil.", 3, false);
-    addCutsceneLine(self->cutscene, "asd asdf asdf asd fa sdfa sdf adf.", 3, false);
-    addCutsceneLine(self->cutscene, "ok.", 0, false);
-    addCutsceneLine(self->cutscene, "I enter and exit stage left because I'm on the good side.", 0, false);
+    addCutsceneLine(self->cutscene, "We're too late... the MAGiX virus is already spreading.", Sawtooth, true);
+    addCutsceneLine(self->cutscene, "This is nuts! What even is this place?", Pulse, false);
+    addCutsceneLine(self->cutscene, "It used to be our home base... before it was corrupted. We got a ping near the Main Stage. Let's move!", Sawtooth, true);
+    addCutsceneLine(self->cutscene, "Wait, what am I supposed to do?", Pulse, false);
+    addCutsceneLine(self->cutscene, "Use your rhythm-feel it out! You'll learn fast. Just GO!", Sawtooth, true);
 
     self->update = &updateCutsceneScreen;
 }
