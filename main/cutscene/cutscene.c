@@ -78,7 +78,7 @@ void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileId
     push(cutscene->styles, (void*)style);
 }
 
-void addCutsceneLine(cutscene_t* cutscene, char* body, uint8_t styleIdx, bool flipHorizontal, int8_t spriteVariation)
+void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation)
 {
     cutsceneLine_t* line = (cutsceneLine_t*)heap_caps_calloc(1, sizeof(cutsceneLine_t), MALLOC_CAP_SPIRAM);
     line->body = (char*)heap_caps_calloc(strlen(body) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
@@ -185,11 +185,11 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         }
         if(style->isProtagonist)
         {
-            cutscene->xOffset-=8;
+            cutscene->xOffset-=4;
         }   
         else
         {
-            cutscene->xOffset+=8;
+            cutscene->xOffset+=4;
         }
     }
     else if(cutscene->xOffset != 0)

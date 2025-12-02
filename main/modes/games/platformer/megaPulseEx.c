@@ -57,11 +57,6 @@ static const paletteColor_t rgbColors[4]    = {c500, c050, c005, c050};
 static const int16_t cheatCode[11]
     = {PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START};
 
-static const enum cutsceneCharacters
-{
-    Pulse, Sawtooth, Bigma, TrashMan
-};
-
 //==============================================================================
 // Functions Prototypes
 //==============================================================================
@@ -103,8 +98,6 @@ struct platformer_t
 
     menuMegaRenderer_t* menuRenderer;
     menu_t* menu;
-
-    cutscene_t* cutscene;
 };
 
 //==============================================================================
@@ -130,6 +123,7 @@ void changeStateLevelClear(platformer_t* self);
 void updateLevelClear(platformer_t* self);
 void drawLevelClear(font_t* font, mgGameData_t* gameData);
 void changeStateGameClear(platformer_t* self);
+void changeStateCutscene(platformer_t* self);
 void updateGameClear(platformer_t* self);
 void drawGameClear(font_t* font, mgGameData_t* gameData);
 void initializePlatformerHighScores(platformer_t* self);
@@ -262,13 +256,13 @@ void platformerEnterMode(void)
     platformer->tilemap.entityManager    = &(platformer->entityManager);
     platformer->tilemap.tileSpawnEnabled = true;
 
-    if(platformer->cutscene == NULL)
+    if(platformer->gameData.cutscene == NULL)
     {
-        platformer->cutscene = initCutscene(goToReadyScreen, CUTSCENE_NEXT_0_WSG);
-        addCutsceneStyle(platformer->cutscene, c000, PULSE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Pulse", 5, true);
-        addCutsceneStyle(platformer->cutscene, c530, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 4, true);
-        addCutsceneStyle(platformer->cutscene, c310, BIGMA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Bigma", 2, false);
-        addCutsceneStyle(platformer->cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 7, false);
+        platformer->gameData.cutscene = initCutscene(goToReadyScreen, CUTSCENE_NEXT_0_WSG);
+        addCutsceneStyle(platformer->gameData.cutscene, c000, PULSE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Pulse", 5, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c530, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 4, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c310, BIGMA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Bigma", 2, false);
+        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 7, false);
     }
 
     setFrameRateUs(16666);
@@ -789,7 +783,7 @@ void changeStateReadyScreen(platformer_t* self)
 
 void updateCutsceneScreen(platformer_t* self)
 {
-    updateCutscene(self->cutscene, self->btnState);
+    updateCutscene(self->gameData.cutscene, self->btnState);
     drawCutsceneScreen(self);
 }
 
@@ -797,7 +791,7 @@ void drawCutsceneScreen(platformer_t* self)
 {
     mg_drawTileMap(&(self->tilemap));
     mg_drawEntities(&(self->entityManager));
-    drawCutscene(self->cutscene, &self->font);
+    drawCutscene(self->gameData.cutscene, &self->font);
 }
 
 void updateReadyScreen(platformer_t* self)
@@ -891,13 +885,11 @@ void changeStateGame(platformer_t* self)
 
     soundStop(true);
 
-    //every level starts with a cutscene
-    addCutsceneLine(self->cutscene, "We're too late... the MAGiX virus is already spreading.", Sawtooth, true, 1);
-    addCutsceneLine(self->cutscene, "This is nuts! What even is this place?", Pulse, false, 0);
-    addCutsceneLine(self->cutscene, "It used to be our home base... before it was corrupted. We got a ping near the Main Stage. Let's move!", Sawtooth, true, 0);
-    addCutsceneLine(self->cutscene, "Wait, what am I supposed to do?", Pulse, false, 4);
-    addCutsceneLine(self->cutscene, "Use your rhythm-feel it out! You'll learn fast. Just GO!", Sawtooth, true, 3);
+    self->update = &updateReadyScreen;
+}
 
+void changeStateCutscene(platformer_t* self)
+{
     self->update = &updateCutsceneScreen;
 }
 
@@ -929,6 +921,10 @@ void detectGameStateChange(platformer_t* self)
 
         case MG_ST_PAUSE:
             changeStatePause(self);
+            break;
+
+        case MG_ST_CUTSCENE:
+            changeStateCutscene(self);
             break;
 
         default:
@@ -1621,7 +1617,14 @@ void updateLevelSelect(platformer_t* self)
             mg_loadWsgSet(&(platformer->wsgManager), leveldef[self->gameData.level].defaultWsgSetIndex);
             mg_loadMapFromFile(&(platformer->tilemap), leveldef[self->gameData.level].filename);
 
-            changeStateGame(self);
+            changeStateGame(platformer);
+            //every level starts with a cutscene
+            addCutsceneLine(platformer->gameData.cutscene, Sawtooth, "We're too late... the MAGiX virus is already spreading.", true, 1);
+            addCutsceneLine(platformer->gameData.cutscene, Pulse, "This is nuts! What even is this place?", false, 0);
+            addCutsceneLine(platformer->gameData.cutscene, Sawtooth, "It used to be our home base... before it was corrupted. We got a ping near the Main Stage. Let's move!", true, 0);
+            addCutsceneLine(platformer->gameData.cutscene, Pulse, "Wait, what am I supposed to do?", false, 4);
+            addCutsceneLine(platformer->gameData.cutscene, Sawtooth, "Use your rhythm-feel it out! You'll learn fast. Just GO!", true, 3);
+            changeStateCutscene(platformer);
             return;
         }
     }
