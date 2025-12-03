@@ -62,19 +62,23 @@ static const char endTitle[] = "Mission Complete!";
 // static const char endDetail[] = "You are now Swadge Certified! Remember, with great power comes great
 // responsibility.";
 
-static const char dpadTitle[]          = "The D-Pad";
-static const char aBtnTitle[]          = "A Button";
-static const char bBtnTitle[]          = "B Button";
-static const char mnuBtnTitle[]        = "Menu Button";
-static const char quickmnuTitle[]      = "Quick Settings";
-static const char pauseBtnTitle[]      = "Pause Button";
-static const char spkTitle[]           = "Speaker";
-static const char micTitle[]           = "Microphone";
-static const char touchpadTitle[]      = "Touchpad";
-static const char imuTitle[]           = "Tilt Controls";
-static const char passTitle[]          = "SwadgePass";
-static const char sonaTitle[]          = "Your Sona";
-static const char exitTitle[]          = "Mission Complete";
+static const char dpadTitle[]     = "The D-Pad";
+static const char aBtnTitle[]     = "A Button";
+static const char bBtnTitle[]     = "B Button";
+static const char mnuBtnTitle[]   = "Menu Button";
+static const char quickmnuTitle[] = "Quick Settings";
+static const char pauseBtnTitle[] = "Pause Button";
+static const char spkTitle[]      = "Speaker";
+static const char micTitle[]      = "Microphone";
+static const char touchpadTitle[] = "Touchpad";
+static const char imuTitle[]      = "Tilt Controls";
+static const char passTitle[]     = "SwadgePass";
+static const char sonaTitle[]     = "Your Sona";
+static const char exitTitle[]     = "Mission Complete";
+
+static const char* suffixes[] = {"\nIf you don't like it, you can adjust it in the next step.",
+                                 "\nIf you don't like it, you can adjust it in the Sona Creator Mode."};
+
 static const cnfsFileIdx_t introwsgs[] = {
 
     MAGCOM_2_WSG,
@@ -226,7 +230,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .buttons = PB_B, 
                     },
         .title = sonaTitle,
-        .detail = "This is a Sona. It's your personal avatar! Make your Sona by pressing B.",
+        .detail = "This is a Sona, your Swadge Avatar! You can make yours in the Sona Creator Mode. Press B to continue.",
         
     },
     {
@@ -270,14 +274,14 @@ static const tutorialStep_t buttonsSteps[] = {
         .backtrackSteps = 3,
 
         .title = exitTitle,
-        .detail = "Transitioning to the Swadgesona Creator...",
+        .detail = "Exiting...",
     },
     {
         .trigger = {
             .type = NO_TRIGGER
         },
         .title = endTitle,
-        .detail = "Transitioning to the Swadgesona Creator...",
+        .detail = "Exiting...",
     },
 };
 
@@ -579,7 +583,7 @@ static void introEnterMode(void)
 #endif
 
     // Load the test MIDI file
-    loadMidiFile(HD_CREDITS_MID, &iv->song, true);
+    loadMidiFile(SPK_TEST_MID, &iv->song, true);
 
     // Init CC
     InitColorChord(&iv->end, &iv->dd);
@@ -870,7 +874,17 @@ static void introMainLoop(int64_t elapsedUs)
         }
         case END:
         {
-            switchToSwadgeMode(&swsnCreatorMode);
+            if (getTutorialCompletedSetting() == 0)
+            {
+                trophyUpdate(&tutorialTrophies[2], 1, 1);
+                setTutorialCompletedSetting(1);
+                switchToSwadgeMode(&swsnCreatorMode);
+            }
+            else
+            {
+                switchToSwadgeMode(&mainMenuMode);
+            }
+
             break;
         }
         case MAGCOM:
@@ -1056,8 +1070,6 @@ static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, 
     }
     else if (next != NULL && next->trigger.type == NO_TRIGGER)
     {
-        setTutorialCompletedSetting(true);
-        switchToSwadgeMode(&mainMenuMode);
         ESP_LOGI(TAG, "Last trigger entered!");
     }
 }
@@ -1345,7 +1357,7 @@ static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, 
 
 static void introSona(int64_t elapsedUs)
 {
-    drawWsgSimpleScaled(&iv->icon.sona, (TFT_WIDTH / 2) - 64, TFT_HEIGHT / 2 - 64 - 10, 2, 2);
+    drawWsgSimpleScaled(&iv->icon.sona, (TFT_WIDTH / 2) - iv->icon.sona.w, TFT_HEIGHT / 2 - 64 - 14, 2, 2);
 }
 
 static void playIntro(int64_t elapsedUs)
@@ -1441,25 +1453,18 @@ static void playIntro(int64_t elapsedUs)
 static void introSwadgePass(int64_t elapsedUs)
 {
     // draw username
-    typedef struct
-    {
-        int16_t x;
-        int16_t y;
-    } locs_t; // this is stupid
-
-    locs_t locs;
-    locs.x = 25;
-    locs.y = 60;
-
     nameData_t username = *getSystemUsername();
-    char prefix[]       = "Your username is \n";
-    char suffix[]       = "\nIf you don't like it, you can adjust it in the next step.";
-    int namelen         = sizeof(username.nameBuffer);
-    int prelen          = sizeof(prefix);
-    int suflen          = sizeof(suffix);
+    const char prefix[] = "Your username is \n";
+    const char* suffix  = suffixes[getTutorialCompletedSetting()];
+
+    int namelen = sizeof(username.nameBuffer);
+    int prelen  = sizeof(prefix);
+    int suflen  = strlen(suffix);
 
     char buf[namelen + prelen + suflen + 2];
     snprintf(buf, sizeof(buf) - 1, "%s%s%s", prefix, username.nameBuffer, suffix);
 
-    drawTextWordWrap(&iv->smallFont, c000, buf, &locs.x, &locs.y, TFT_WIDTH - 25, 140);
+    int16_t x = 25;
+    int16_t y = 60;
+    drawTextWordWrap(&iv->smallFont, c000, buf, &x, &y, TFT_WIDTH - 25, 140);
 }

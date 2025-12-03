@@ -77,10 +77,11 @@ static void saveAllocation(memOp_t op, void* ptr, allocation_t* oldEntry, uint32
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief Print a saved memory operation as a CSV line. Also prints a CSV header only the first time this function is
+ * called
  *
- * @param op
- * @param al
+ * @param op The operation type
+ * @param al The pointer to the allocation metadata
  */
 static void printMemoryOperation(memOp_t op, allocation_t* al)
 {
@@ -147,8 +148,7 @@ static void printMemoryOperation(memOp_t op, allocation_t* al)
 }
 
 /**
- * @brief
- *
+ * @brief Dump the current allocation table to stdout in CSV form.
  */
 void dumpAllocTable(void)
 {
@@ -165,31 +165,39 @@ void dumpAllocTable(void)
 }
 
 /**
- * @brief TODO
+ * @brief Save an allocation operation for later tracking and debugging
  *
- * @param op
- * @param ptr
- * @param oldPtr
- * @param size
- * @param caps
- * @param file
- * @param func
- * @param line
- * @param tag
+ * @param op The operation that occurred (alloc, free, etc.)
+ * @param ptr The pointer used in the operation
+ * @param oldEntry Old metadata associated with this pointer, like metadata for an alloc before a free
+ * @param size Size, in bytes, of the amount of memory to allocate
+ * @param caps  Bitwise OR of MALLOC_CAP_* flags indicating the type of memory to be returned
+ * @param file The file that performed this operation, saved as metadata
+ * @param func The function that performed this operation, saved as metadata
+ * @param line The line that performed this operation, saved as metadata
+ * @param tag A custom tag for this operation, saved as metadata
  */
 static void saveAllocation(memOp_t op, void* ptr, allocation_t* oldEntry, uint32_t size, uint32_t caps,
                            const char* file, const char* func, uint32_t line, const char* tag)
 {
     allocation_t* al = NULL;
-    // Find the old entry in the table. if oldPtr is NULL, then an empty entry will be found
+    // Find the old entry in the table. if oldEntry is NULL, then an empty entry will be found
     if (NULL == oldEntry)
     {
-        int32_t idx = 0;
-        while (idx < A_TABLE_SIZE && NULL != aTable[idx].ptr)
+        if (OP_FREE == op || OP_REALLOC == op)
         {
-            idx++;
+            // If there is no old entry for a free or realloc, something is wrong
+            al = NULL;
         }
-        al = &aTable[idx];
+        else
+        {
+            int32_t idx = 0;
+            while (idx < A_TABLE_SIZE && NULL != aTable[idx].ptr)
+            {
+                idx++;
+            }
+            al = &aTable[idx];
+        }
     }
     else
     {
@@ -283,6 +291,11 @@ static void saveAllocation(memOp_t op, void* ptr, allocation_t* oldEntry, uint32
         // Trying to free an entry not in the table
         fprintf(stderr, "!! Probable double-free at %s:%u (%p)\n", file, line, ptr);
     }
+    else if (OP_REALLOC == op)
+    {
+        // Trying to realloc an entry not in the table
+        fprintf(stderr, "!! Probable realloc without alloc at %s:%u (%p)\n", file, line, ptr);
+    }
     else
     {
         // Trying to add to the table, but there's no space
@@ -295,12 +308,14 @@ static void saveAllocation(memOp_t op, void* ptr, allocation_t* oldEntry, uint32
  *
  * Equivalent semantics to libc malloc(), for capability-aware memory.
  *
- * In IDF, ``malloc(p)`` is equivalent to ``heap_caps_malloc(p, MALLOC_CAP_8BIT)``.
+ * In IDF, `malloc(p)` is equivalent to `heap_caps_malloc(p, MALLOC_CAP_8BIT)`.
  *
  * @param size Size, in bytes, of the amount of memory to allocate
- * @param caps        Bitwise OR of MALLOC_CAP_* flags indicating the type
- *                    of memory to be returned
- *
+ * @param caps Bitwise OR of MALLOC_CAP_* flags indicating the type of memory to be returned
+ * @param file The file that performed this operation, saved as metadata
+ * @param func The function that performed this operation, saved as metadata
+ * @param line The line that performed this operation, saved as metadata
+ * @param tag A custom tag for this operation, saved as metadata
  * @return A pointer to the memory allocated on success, NULL on failure
  */
 void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const char* func, int32_t line,
@@ -321,13 +336,15 @@ void* heap_caps_malloc_dbg(size_t size, uint32_t caps, const char* file, const c
  *
  * Equivalent semantics to libc calloc(), for capability-aware memory.
  *
- * In IDF, ``calloc(p)`` is equivalent to ``heap_caps_calloc(p, MALLOC_CAP_8BIT)``.
+ * In IDF, `calloc(p)` is equivalent to `heap_caps_calloc(p, MALLOC_CAP_8BIT)`.
  *
  * @param n    Number of continuing chunks of memory to allocate
  * @param size Size, in bytes, of a chunk of memory to allocate
- * @param caps        Bitwise OR of MALLOC_CAP_* flags indicating the type
- *                    of memory to be returned
- *
+ * @param caps  Bitwise OR of MALLOC_CAP_* flags indicating the type of memory to be returned
+ * @param file The file that performed this operation, saved as metadata
+ * @param func The function that performed this operation, saved as metadata
+ * @param line The line that performed this operation, saved as metadata
+ * @param tag A custom tag for this operation, saved as metadata
  * @return A pointer to the memory allocated on success, NULL on failure
  */
 void* heap_caps_calloc_dbg(size_t n, size_t size, uint32_t caps, const char* file, const char* func, int32_t line,
@@ -343,31 +360,48 @@ void* heap_caps_calloc_dbg(size_t n, size_t size, uint32_t caps, const char* fil
 }
 
 /**
- * @brief TODO
+ * @brief Reallocate memory previously allocated via heap_caps_malloc() or heap_caps_realloc().
  *
- * @param ptr
- * @param size
- * @param caps
- * @param file
- * @param func
- * @param line
- * @param tag
- * @return void*
+ * Equivalent semantics to libc realloc(), for capability-aware memory.
+ *
+ * In IDF, realloc(p, s) is equivalent to heap_caps_realloc(p, s, MALLOC_CAP_8BIT).
+ *
+ * 'caps' parameter can be different to the capabilities that any original 'ptr' was allocated with. In this way,
+ * realloc can be used to "move" a buffer if necessary to ensure it meets a new set of capabilities.
+ *
+ * @param ptr Pointer to previously allocated memory, or NULL for a new allocation.
+ * @param size Size of the new buffer requested, or 0 to free the buffer.
+ * @param caps Bitwise OR of MALLOC_CAP_* flags indicating the type of memory desired for the new allocation.
+ * @param file The file that performed this operation, saved as metadata
+ * @param func The function that performed this operation, saved as metadata
+ * @param line The line that performed this operation, saved as metadata
+ * @param tag A custom tag for this operation, saved as metadata
+ * @return Pointer to a new buffer of size 'size' with capabilities 'caps', or NULL if allocation failed.
  */
 void* heap_caps_realloc_dbg(void* ptr, size_t size, uint32_t caps, const char* file, const char* func, int32_t line,
                             const char* tag)
 {
 #ifdef MEMORY_DEBUG
 
-    // Find the old entry in the table. if oldPtr is NULL, then an empty entry will be found
-    int32_t idx = 0;
-    while (idx < A_TABLE_SIZE && ptr != aTable[idx].ptr)
+    // Find the old entry in the table.
+    allocation_t* oldEntry = NULL;
+    if (NULL != ptr)
     {
-        idx++;
+        int32_t idx = 0;
+        while (idx < A_TABLE_SIZE && ptr != aTable[idx].ptr)
+        {
+            idx++;
+        }
+
+        // Get the old entry, if it exists
+        if (A_TABLE_SIZE > idx)
+        {
+            oldEntry = &aTable[idx];
+        }
     }
 
     void* newPtr = realloc(ptr, size);
-    saveAllocation(OP_REALLOC, newPtr, &aTable[idx], size, caps, file, func, line, tag);
+    saveAllocation(OP_REALLOC, newPtr, oldEntry, size, caps, file, func, line, tag);
     return newPtr;
 #else
     return realloc(ptr, size);
@@ -375,25 +409,41 @@ void* heap_caps_realloc_dbg(void* ptr, size_t size, uint32_t caps, const char* f
 }
 
 /**
- * @brief TODO
+ * @brief Free memory previously allocated via heap_caps_malloc() or heap_caps_realloc().
  *
- * @param ptr
- * @param file
- * @param func
- * @param line
+ * Equivalent semantics to libc free(), for capability-aware memory.
+ *
+ *  In IDF, `free(p)` is equivalent to `heap_caps_free(p)`.
+ *
+ * @param ptr Pointer to memory previously returned from heap_caps_malloc() or heap_caps_realloc(). Can be NULL.
+ * @param file The file that performed this operation, saved as metadata
+ * @param func The function that performed this operation, saved as metadata
+ * @param line The line that performed this operation, saved as metadata
+ * @param tag A custom tag for this operation, saved as metadata
  */
 void heap_caps_free_dbg(void* ptr, const char* file, const char* func, int32_t line, const char* tag)
 {
 #ifdef MEMORY_DEBUG
 
-    // Find the old entry in the table. if oldPtr is NULL, then an empty entry will be found
-    int32_t idx = 0;
-    while (idx < A_TABLE_SIZE && ptr != aTable[idx].ptr)
+    // Try to find the old entry in the table. Frees should always follow an alloc
+    allocation_t* oldEntry = NULL;
+    if (NULL != ptr)
     {
-        idx++;
+        int32_t idx = 0;
+        while (idx < A_TABLE_SIZE && ptr != aTable[idx].ptr)
+        {
+            idx++;
+        }
+
+        // Get the old entry, if it exists
+        if (A_TABLE_SIZE > idx)
+        {
+            oldEntry = &aTable[idx];
+        }
     }
 
-    saveAllocation(OP_FREE, ptr, &aTable[idx], 0, 0, file, func, line, tag);
+    // If there was a free without a corresponding alloc, oldEntry will be NULL here
+    saveAllocation(OP_FREE, ptr, oldEntry, 0, 0, file, func, line, tag);
 #endif
     free(ptr);
 }

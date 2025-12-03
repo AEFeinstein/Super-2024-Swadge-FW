@@ -1,5 +1,6 @@
 #include "cosCrunch.h"
 
+#include "ccmgBeStrong.h"
 #include "ccmgBreakTime.h"
 #include "ccmgCatch.h"
 #include "ccmgDelivery.h"
@@ -203,7 +204,7 @@ swadgeMode_t cosCrunchMode = {
 // #define DEV_MODE_MICROGAME &ccmgWhatever
 
 const cosCrunchMicrogame_t* const microgames[] = {
-    &ccmgBreakTime, &ccmgCatch, &ccmgDelivery, &ccmgSew, &ccmgSlice, &ccmgSpray, &ccmgThread,
+    &ccmgBeStrong, &ccmgBreakTime, &ccmgCatch, &ccmgDelivery, &ccmgSew, &ccmgSlice, &ccmgSpray, &ccmgThread,
 };
 
 tintColor_t const blueTimerTintColor   = {c013, c125, c235, 0};
@@ -279,7 +280,7 @@ static void cosCrunchEnterMode(void)
     makeOutlineFont(&cc->bigFont, &cc->bigFontOutline, false);
 
     loadMidiFile(HD_CREDITS_MID, &cc->menuBgm, true);
-    loadMidiFile(CHOWA_RACE_MID, &cc->gameBgm, true);
+    loadMidiFile(COSPLAY_CRUNCH_BGM_MID, &cc->gameBgm, true);
     loadMidiFile(FAIRY_FOUNTAIN_MID, &cc->gameOverBgm, true);
 
     cc->bgmPlayer       = globalMidiPlayerGet(MIDI_BGM);
@@ -306,7 +307,7 @@ static void cosCrunchExitMode(void)
 {
     if (cc->activeMicrogame.game != NULL)
     {
-        cc->activeMicrogame.game->fnDestroyMicrogame();
+        cc->activeMicrogame.game->fnDestroyMicrogame(cc->activeMicrogame.state == CC_MG_CELEBRATING);
     }
 
     deinitMenuCosCrunchRenderer(cc->menuRenderer);
@@ -448,7 +449,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             if (cc->activeMicrogame.game != NULL)
             {
                 midiAllSoundOff(cc->sfxPlayer);
-                cc->activeMicrogame.game->fnDestroyMicrogame();
+                cc->activeMicrogame.game->fnDestroyMicrogame(cc->activeMicrogame.state == CC_MG_CELEBRATING);
                 cc->activeMicrogame.game = NULL;
             }
 
@@ -480,7 +481,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         case CC_MICROGAME_PENDING:
             if (cc->activeMicrogame.game != NULL)
             {
-                cc->activeMicrogame.game->fnDestroyMicrogame();
+                cc->activeMicrogame.game->fnDestroyMicrogame(cc->activeMicrogame.state == CC_MG_CELEBRATING);
             }
 
             // Reset anything that the previous microgame might have monkeyed with
@@ -598,7 +599,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                                 {
                                     cc->gameBgmOriginalTempo = cc->bgmPlayer->tempo;
                                 }
-                                cc->bgmPlayer->tempo = cc->gameBgmOriginalTempo / cc->timeScale;
+                                midiSetTempo(cc->bgmPlayer, cc->gameBgmOriginalTempo / cc->timeScale);
                             }
                             else
                             {
@@ -634,7 +635,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         case CC_GAME_OVER_PENDING:
         {
             cc->state = CC_GAME_OVER;
-            cc->activeMicrogame.game->fnDestroyMicrogame();
+            cc->activeMicrogame.game->fnDestroyMicrogame(cc->activeMicrogame.state == CC_MG_CELEBRATING);
             cc->activeMicrogame.game = NULL;
 
             if (cc->playerCount == 1)
@@ -748,11 +749,15 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         }
     }
 
-    // Tempo resets when the BGM loops, so we need to write the tempo every frame while the game is active
+    // Tempo resets when the BGM loops, so re-reset it
     if ((cc->state == CC_MICROGAME_PENDING || cc->state == CC_MICROGAME_RUNNING || cc->state == CC_INTERLUDE)
         && cc->gameBgmOriginalTempo != 0)
     {
-        cc->bgmPlayer->tempo = cc->gameBgmOriginalTempo / cc->timeScale;
+        uint32_t scaledTempo = cc->gameBgmOriginalTempo / cc->timeScale;
+        if (cc->bgmPlayer->tempo != scaledTempo)
+        {
+            midiSetTempo(cc->bgmPlayer, scaledTempo);
+        }
     }
 
 #ifdef DEV_MODE_MICROGAME
