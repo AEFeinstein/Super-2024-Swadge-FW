@@ -191,6 +191,7 @@ int main( int argc, char ** argv )
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-touch/include", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-esp-now/include", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-temperature/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-ch32v003/include", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-imu/include", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-mic/include", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-dac/include", argv[2] ); appendcflag( temp );
