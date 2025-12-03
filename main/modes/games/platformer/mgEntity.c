@@ -2074,7 +2074,7 @@ void updateScrollLockRight(mgEntity_t* self)
 
 
     //Cutscene before the boss fight
-    bossStartCutscene(self->gameData);
+    bossIntroCutscene(self->gameData);
 }
 
 void updateScrollLockUp(mgEntity_t* self)

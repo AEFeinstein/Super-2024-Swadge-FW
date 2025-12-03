@@ -1,13 +1,8 @@
 #include <stdint.h>
 #include "mgGameData.h"
 
-typedef enum
-{
-    Pulse, Sawtooth, Bigma, TrashMan
-} cutsceneCharacters;
+void stageStartCutscene(mgGameData_t* gameData);
 
-void levelStartCutscene(mgGameData_t* gameData);
+void bossIntroCutscene(mgGameData_t* gameData);
 
-void bossStartCutscene(mgGameData_t* gameData);
-
-void bossDeathCutscene(mgGameData_t* gameData);
+void bossOutroCutscene(mgGameData_t* gameData);

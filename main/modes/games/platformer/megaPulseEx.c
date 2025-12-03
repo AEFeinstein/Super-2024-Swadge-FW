@@ -283,6 +283,7 @@ void platformerExitMode(void)
     mg_freeTilemap(&(platformer->tilemap));
     mg_freeSoundManager(&(platformer->soundManager));
     mg_freeEntityManager(&(platformer->entityManager));
+    deinitCutscene(platformer->gameData.cutscene);
     heap_caps_free(platformer);
 }
 
@@ -1621,7 +1622,7 @@ void updateLevelSelect(platformer_t* self)
 
             changeStateGame(platformer);
             //every level starts with a cutscene
-            levelStartCutscene(&platformer->gameData);
+            stageStartCutscene(&platformer->gameData);
             changeStateCutscene(platformer);
             return;
         }
