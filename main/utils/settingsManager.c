@@ -182,7 +182,6 @@ void readAllSettings(void)
     // Read the screensaver setting
     readSetting(&scrn_sv_setting);
 
-
     // Read the Gamepad accelerometer setting
     readSetting(&gp_pc_accel_setting);
 
@@ -192,9 +191,8 @@ void readAllSettings(void)
     // Read the Gamepad dpad setting
     readSetting(&gp_pc_dpad_setting);
 
-    // Read the Gamepad dpad stick intentsity setting
+    // Read the Gamepad dpad stick intensity setting
     readSetting(&gp_pc_dpsti_setting);
-
 
     // Read the Gamepad touch setting
     readSetting(&gp_ns_touch_setting);
@@ -202,10 +200,12 @@ void readAllSettings(void)
     // Read the Gamepad dpad setting
     readSetting(&gp_ns_dpad_setting);
 
-    // Read the Gamepad dpad stick intentsity setting
+    // Read the Gamepad dpad stick intensity setting
     readSetting(&gp_ns_dpsti_setting);
 
-    
+    // Read the Gamepad dpad stick recentering setting
+    readSetting(&gp_ns_tstir_setting);
+
     // Read the setting to show Secrets menu on the main menu
     readSetting(&show_secrets_setting);
 }
