@@ -8,7 +8,6 @@ typedef enum
 
 void stageStartCutscene(mgGameData_t* gameData)
 {
-    gameData->changeState = MG_ST_CUTSCENE;
     switch(gameData->level)
     {
         case 1://Intro Stage
