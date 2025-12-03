@@ -2056,7 +2056,7 @@ void updateScrollLockRight(mgEntity_t* self)
 
 
     //Cutscene before the boss fight
-    bossStartCutscene(self->gameData);
+    bossIntroCutscene(self->gameData);
 }
 
 void updateScrollLockUp(mgEntity_t* self)
@@ -3490,7 +3490,7 @@ void mg_updateBossTest(mgEntity_t* self)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         //Cutscene after the boss fight
-        bossDeathCutscene(self->gameData);
+        bossOutroCutscene(self->gameData);
     }
 }
 

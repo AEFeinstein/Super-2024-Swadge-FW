@@ -139,7 +139,7 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         if(btnState & PB_A)
         {
             cutscene->PB_A_frameCounter++;
-            if(cutscene->PB_A_frameCounter > 60)
+            if(cutscene->PB_A_frameCounter > 30)
             {
                 //proceed to next cutscene line.
                 if(cutscene->lines->first != NULL && cutscene->lines->first->next != NULL)//There is at least one line after this one.
@@ -220,11 +220,11 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
     drawWsg(cutscene->sprite, cutscene->xOffset, 0, line->flipHorizontal, false, 0);
     char variationText[5];
     snprintf(variationText, sizeof(variationText), "%d", line->spriteVariation);
-    drawText(font, c541, variationText, 10, 10);
+    drawText(font, c541, variationText, 14, 14);
     if(cutscene->xOffset == 0)
     {
         drawWsgSimple(cutscene->textBox, 0, 0);
-        int8_t iconFrame = (cutscene->PB_A_frameCounter / 16);
+        int8_t iconFrame = (cutscene->PB_A_frameCounter / 8);
         if(iconFrame > 3)
         {
             iconFrame = 3;
