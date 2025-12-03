@@ -2068,7 +2068,7 @@ mgEntity_t* createBossSmashGorilla(mgEntityManager_t* entityManager, uint16_t x,
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
-    entity->hp                   = 30;
+    entity->hp                   = 54;
 
     entity->type                 = ENTITY_BOSS_SMASH_GORILLA;
     entity->spriteIndex          = MG_SP_BOSS_IDLE;

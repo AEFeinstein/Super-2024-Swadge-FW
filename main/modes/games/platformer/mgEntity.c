@@ -3817,113 +3817,145 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
 {
     switch (self->state)
     {
-        case 65535:
+        case 65535: 
+            //Prefight
             return;
         case 0:
         default:
-            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
-            {
-                self->yspeed -= 4;
-            }
-
-            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
-            {
-                self->xspeed = 64;
-            }
-
-            if (self->stateTimer == 120)
-            {
-                self->jumpPower = 1;
-            }
-
+            //Idle
             self->stateTimer++;
             if (self->stateTimer > 180)
             {
                 self->stateTimer = 0;
-                switch (esp_random() % 3)
+                switch (esp_random() % 2)
                 {
                     case 0:
+                    default:
+                        //To "Traverse - charge across"
                         self->state = 1;
                         break;
                     case 1:
+                        //To "Attack - :arge ground projectiles"
                         self->state = 2;
-                        break;
-                    case 2:
-                        self->state = 3;
                         break;
                 }
             }
             break;
         case 1:
-            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
-            {
-                self->yspeed -= 4;
-            }
+            //"Traverse - charge across"
 
+            //Move to other side of screen
             if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
             {
                 self->xspeed = -64;
-            }
-
-            if (self->stateTimer == 120)
+            } 
+            else 
             {
-                self->jumpPower = 1;
+                self->xspeed = 64;
             }
 
+            //Reached other side of screen...
+            if 
+            (
+                ( self->xspeed < 0 && (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 48 /* adjust this number based on collision box size */) )
+                ||
+                ( self->xspeed > 0 && (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 192 /*240 - 48*/ /* adjust this number based on collision box size */) )
+            )
+            {
+                self->stateTimer = 0;
+                //To "Attack - :arge ground projectiles"
+                self->state = 2;
+            }
+
+            //failsafe
             self->stateTimer++;
             if (self->stateTimer > 180)
             {
                 self->stateTimer = 0;
-                switch (esp_random() % 3)
-                {
-                    case 0:
-                        self->state = 0;
-                        break;
-                    case 1:
-                        self->state = 2;
-                        break;
-                    case 2:
-                        self->state = 3;
-                        break;
-                }
+                //To "Attack - :arge ground projectiles"
+                self->state = 2;
             }
 
             break;
         case 2:
-
-            if (self->stateTimer < 60)
-            {
-                if (self->x < self->entityManager->playerEntity->x)
-                {
-                    self->xspeed = 32;
-                }
-                else
-                {
-                    self->xspeed = -32;
-                }
-            }
-
-            if (!self->falling || self->y > self->entityManager->playerEntity->y)
-            {
-                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
-                self->stateTimer = 0;
-            }
-
+            //"Attack - Large ground projectiles"
             self->stateTimer++;
+            
+            if (!(self->stateTimer % 20))
+            {
+                //TODO: create projectile at feet, firing towards player
+            }
 
+            if (self->stateTimer > 180)
+            {
+                self->stateTimer = 0;
+                switch (esp_random() % 2)
+                {
+                    case 0:
+                    default:
+                        //To Idle
+                        self->state = 0;
+                        break;
+                    case 1:
+                        //To "Traverse - Dig and disappear"
+                        self->state = 3;
+                        break;
+                }
+            }
             break;
         case 3:
+            //"Traverse - Dig and disappear"
             self->stateTimer++;
 
-            if (!(self->stateTimer % 60))
+            if (self->stateTimer > 60)
             {
-                self->jumpPower = 1;
+                self->visible = false;
+                self->stateTimer = 0;
+                //To "Traverse - Dig in from random location, track player"
+                self->state = 4;
+                break;
+            }
+            break;
+        case 4:
+            //"Traverse - Dig in from random location, track player"
+            self->stateTimer++;
+
+            if(self->entityManager->playerEntity == NULL || self->stateTimer > 600)
+            {
+                self->visible = true;
+                self->stateTimer = 0;
+
+                //To "Attack - Emerge, Launch rocks"
+                self->state = 5;
+                break;
             }
 
-            if (self->stateTimer > 239)
+            if (!(self->stateTimer % 30) && (self->x < self->entityManager->playerEntity->x))
             {
-                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->xspeed = 48;
+            }
+            else
+            {
+                self->xspeed = -48;
+            }
+            break;
+
+        case 5:
+            //"Attack - Emerge, launch rocks"
+            self->stateTimer++;
+            self->yspeed = -64;
+
+            if (!(self->stateTimer % 8))
+            {
+                //TODO: Launch rock projectiles
+            }
+
+            if (self->stateTimer > 30)
+            {
                 self->stateTimer = 0;
+                //To Idle
+                self->state = 0;
+                break;
             }
             break;
     }
