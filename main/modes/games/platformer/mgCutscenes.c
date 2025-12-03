@@ -2,7 +2,7 @@
 
 typedef enum
 {
-    Pulse, Sawtooth, Bigma, TrashMan, KineticDonut, JoltLapin, FlareGryffyn, CrashTurtle, QuestionMark, DeadeyeChirpzi,
+    Pulse, Sawtooth, Bigma, TrashMan, AbilityUnlocked, KineticDonut, JoltLapin, FlareGryffyn, CrashTurtle, QuestionMark, DeadeyeChirpzi,
     HankWaddle, GrindPangolin, DrainBat, SmashGorilla, SeverYagata, Jasper, Ember, Cho, Percy, Sunny
 } cutsceneCharacters;
 
@@ -17,6 +17,8 @@ void stageStartCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Sawtooth, "It used to be our home base... before it was corrupted. We got a ping near the Main Stage. Let's move!", true, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "Wait, what am I supposed to do?", false, 4);
             addCutsceneLine(gameData->cutscene, Sawtooth, "Use your rhythm-feel it out! You'll learn fast. Just GO!", true, 3);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Here's example text about how to use some new ability.", false, 0);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... And it can be described with several pages as needed.", false, 0);
             break;
         }
         case 2://The Bouncehaus

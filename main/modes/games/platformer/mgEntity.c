@@ -24,7 +24,7 @@
 // Constants
 //==============================================================================
 
-static bool cheatMode = false;
+static bool cheatMode = true;
 
 static const vec_t mg_sureYouCanVectors[] = {
     // These are in reverse order

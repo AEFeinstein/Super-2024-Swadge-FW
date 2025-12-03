@@ -265,6 +265,7 @@ void platformerEnterMode(void)
         addCutsceneStyle(platformer->gameData.cutscene, c530, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 4, true);
         addCutsceneStyle(platformer->gameData.cutscene, c310, BIGMA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Bigma", 2, false);
         addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 7, false);
+        addCutsceneStyle(platformer->gameData.cutscene, c454, ABILITY_UNLOCKED_WSG, TEXTBOX_ABILITY_UNLOCKED_WSG, "", 1, true);
     }
 
     setFrameRateUs(16666);
