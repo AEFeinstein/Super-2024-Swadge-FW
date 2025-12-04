@@ -54,7 +54,7 @@ static const int64_t UsPerDeg     = (60000000 / (rotateRPM * 360));
 
 static const vec_t ScreenCenter = {
     .x = 140,
-    .y = 140, // 120 is the default center of the screen
+    .y = 135, // 120 is the default center of the screen
 };
 
 static const char* lettersRace[]
