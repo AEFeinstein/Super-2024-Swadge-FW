@@ -54,7 +54,7 @@ static const int64_t UsPerDeg     = (60000000 / (rotateRPM * 360));
 
 static const vec_t ScreenCenter = {
     .x = 140,
-    .y = 135, // 120 is the default center of the screen
+    .y = 140, // 120 is the default center of the screen
 };
 
 static const char* lettersRace[]
@@ -97,11 +97,11 @@ cipher_t* cipher;
 //==============================================================================
 
 /**
- * @brief Given text and an angle in degrees around ScreenCenter, calculate where to draw text at in X,Y coordinates
+ * @brief Using global vec_t ScreenCenter, convert a vec_t RTheta from <radius in pixels, rotation in degrees> to <x coordinate, y coordinate>, optionally ensuring the coordinates are buffered from the edge of the screen
  *
- * @param RTheta An angle to draw text at
- * @param TextBuffer The text to draw
- * @return The X,Y coordinate to draw the text at for the desired angle
+ * @param RTheta A vec_t in the form <radius in pixels, rotation in degrees>
+ * @param TextBuffer A boolean to ensure the coordinates are inside the visible area of the screen
+ * @return The X,Y coordinate to draw the text at for the desired angle from the screen center
  */
 static vec_t RThetaToXY(vec_t RTheta, bool TextBuffer)
 {
