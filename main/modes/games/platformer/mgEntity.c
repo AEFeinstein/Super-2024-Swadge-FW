@@ -3636,6 +3636,8 @@ uint8_t mg_crawlerGettInitialMoveState(int16_t angle, bool clockwise)
 
 void mg_updateBossSeverYagata(mgEntity_t* self)
 {
+    self->spriteIndex = MG_SP_BOSS_0 + (self->stateTimer % 7);
+
     switch (self->state)
     {
         case 65535:

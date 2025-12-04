@@ -121,38 +121,38 @@ static const uint16_t mg_kineticDonutTileset[] = {
 static const mgSprite_t mg_kineticDounutBossSpriteMetadataSet[] = {
     {
         .wsg = NULL,
-        .origin = &origin_15_15,
-        .hitBox = &box_64_16
+        .origin = &origin_sever_yataga,
+        .hitBox = &box_sever_yataga
     },
     {
         .wsg = NULL,
-        .origin = &origin_15_15,
-        .hitBox = &box_64_16
+        .origin = &origin_sever_yataga,
+        .hitBox = &box_sever_yataga
     },
     {
         .wsg = NULL,
-        .origin = &origin_15_15,
-        .hitBox = &box_64_16
+        .origin = &origin_sever_yataga,
+        .hitBox = &box_sever_yataga
     },
     {
         .wsg = NULL,
-        .origin = &origin_15_15,
-        .hitBox = &box_64_16
+        .origin = &origin_sever_yataga,
+        .hitBox = &box_sever_yataga
     },
     {
         .wsg = NULL,
-        .origin = &origin_15_15,
-        .hitBox = &box_64_16
+        .origin = &origin_sever_yataga,
+        .hitBox = &box_sever_yataga
     },
     {
         .wsg = NULL,
-        .origin = &origin_15_15,
-        .hitBox = &box_64_16
+        .origin = &origin_sever_yataga,
+        .hitBox = &box_sever_yataga
     },
     {
         .wsg = NULL,
-        .origin = &origin_15_15,
-        .hitBox = &box_64_16
+        .origin = &origin_sever_yataga,
+        .hitBox = &box_sever_yataga
     },
     {
         .wsg = NULL,

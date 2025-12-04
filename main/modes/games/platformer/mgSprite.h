@@ -64,4 +64,9 @@ static const box_t box_charge_shot_lvl1 = {.x0 = 3, .x1 = 27, .y0 = 6, .y1 = 16}
 
 static const box_t box_charge_shot_max = {.x0 = 0, .x1 = 7, .y0 = 6, .y1 = 25};
 
+static const vec_t origin_sever_yataga = {.x = 49, .y = 35};
+
+static const box_t box_sever_yataga = {.x0 = 32, .x1 = 63, .y0 = 16, .y1 = 70};
+
+
 #endif

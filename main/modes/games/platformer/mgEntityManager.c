@@ -2035,7 +2035,7 @@ mgEntity_t* createBossSeverYagata(mgEntityManager_t* entityManager, uint16_t x, 
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
-    entity->tileCollider         = &entityTileCollider_1x2;
+    entity->tileCollider         = &entityTileCollider_sever_yataga;
 
     entity->drawHandler  = &mg_defaultEntityDrawHandler;
     entity->linkedEntity = NULL;
