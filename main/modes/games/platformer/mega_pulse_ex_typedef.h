@@ -1037,7 +1037,25 @@ static const mg_EntityTileCollider_t entityTileCollider_1x2_dash_slide
        .rightEdge  = &mgTileCollisionOffsets_1x2_rightEdge_dash_slide,
        .leftEdge   = &mgTileCollisionOffsets_1x2_leftEdge_dash_slide};
 
-typedef enum
+
+//sever yataga origin: 49, 35
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_sever_yataga_bottomEdge
+    = {.collisionPoints = {{.x = -17, .y = 35}, {.x = 0, .y = 35}, {.x = 16, .y = 35}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_sever_yataga_topEdge
+    = {.collisionPoints = {{.x = -17, .y = -19}, {.x = 0, .y = -19}, {.x = 16, .y = -19}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_sever_yataga_rightEdge
+    = {.collisionPoints = {{.x = 16, .y = 35}, {.x = 16, .y = 0}, {.x = 16, .y = -19}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_sever_yataga_leftEdge
+    = {.collisionPoints = {{.x = -17, .y = 35}, {.x = -17, .y = 0}, {.x = -17, .y = -19}}, .size = 3};
+
+static const mg_EntityTileCollider_t entityTileCollider_sever_yataga = {.bottomEdge = &mgTileCollisionOffsets_sever_yataga_bottomEdge,
+                                                               .topEdge    = &mgTileCollisionOffsets_sever_yataga_topEdge,
+                                                               .rightEdge  = &mgTileCollisionOffsets_sever_yataga_rightEdge,
+                                                               .leftEdge   = &mgTileCollisionOffsets_sever_yataga_leftEdge};
+    typedef enum
 {
     MG_WSGSET_NULL = -1,
     MG_WSGSET_DEFAULT,
