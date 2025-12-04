@@ -178,10 +178,6 @@ typedef enum
     MG_SP_BOUNCE_PAD,
     MG_SP_BOUNCE_PAD_DIAGONAL,
     MG_SP_MIXTAPE,
-    MG_SP_BOSS_IDLE,
-    MG_SP_BOSS_MOVE_1,
-    MG_SP_BOSS_MOVE_2,
-    MG_SP_BOSS_MOVE_3,
     MG_SP_BOSS_DOOR,
     MG_SP_PLAYER_HURT_2,
     MG_SP_PLAYER_HURT_3,
@@ -199,7 +195,15 @@ typedef enum
     MG_SP_CHARGE_SHOT_LVL1_3,
     MG_SP_CHARGE_SHOT_MAX_1,
     MG_SP_CHARGE_SHOT_MAX_2,
-    MG_SP_CHARGE_SHOT_MAX_3
+    MG_SP_CHARGE_SHOT_MAX_3,
+    MG_SP_BOSS_0,
+    MG_SP_BOSS_1,
+    MG_SP_BOSS_2,
+    MG_SP_BOSS_3,
+    MG_SP_BOSS_4,
+    MG_SP_BOSS_5,
+    MG_SP_BOSS_6,
+    MG_SP_BOSS_7,
 } mg_spriteDef_t;
 
 typedef enum

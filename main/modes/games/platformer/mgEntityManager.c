@@ -2027,7 +2027,7 @@ mgEntity_t* createBossSeverYagata(mgEntityManager_t* entityManager, uint16_t x, 
     entity->hp                   = 30;
 
     entity->type                 = ENTITY_BOSS_SEVER_YAGATA;
-    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->spriteIndex          = MG_SP_BOSS_0;
     entity->state                = -1;
     entity->stateTimer           = 0;
     entity->updateFunction       = &mg_updateBossSeverYagata;
@@ -2071,7 +2071,7 @@ mgEntity_t* createBossSmashGorilla(mgEntityManager_t* entityManager, uint16_t x,
     entity->hp                   = 54;
 
     entity->type                 = ENTITY_BOSS_SMASH_GORILLA;
-    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->spriteIndex          = MG_SP_BOSS_0;
     entity->state                = -1;
     entity->stateTimer           = 0;
     entity->updateFunction       = &mg_updateBossSmashGorilla;
@@ -2115,7 +2115,7 @@ mgEntity_t* createBossGrindPangolin(mgEntityManager_t* entityManager, uint16_t x
     entity->hp                   = 30;
 
     entity->type                 = ENTITY_BOSS_GRIND_PANGOLIN;
-    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->spriteIndex          = MG_SP_BOSS_0;
     entity->state                = -1;
     entity->stateTimer           = 0;
     entity->updateFunction       = &mg_updateBossGrindPangolin;
@@ -2159,7 +2159,7 @@ mgEntity_t* createBossDrainBat(mgEntityManager_t* entityManager, uint16_t x, uin
     entity->hp                   = 30;
 
     entity->type                 = ENTITY_BOSS_DRAIN_BAT;
-    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->spriteIndex          = MG_SP_BOSS_0;
     entity->state                = -1;
     entity->stateTimer           = 0;
     entity->updateFunction       = &mg_updateBossDrainBat;
@@ -2203,7 +2203,7 @@ mgEntity_t* createBossKineticDonut(mgEntityManager_t* entityManager, uint16_t x,
     entity->hp                   = 30;
 
     entity->type                 = ENTITY_BOSS_KINETIC_DONUT;
-    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->spriteIndex          = MG_SP_BOSS_0;
     entity->state                = -1;
     entity->stateTimer           = 0;
     entity->updateFunction       = &mg_updateBossKineticDonut;
@@ -2247,7 +2247,7 @@ mgEntity_t* createBossTrashMan(mgEntityManager_t* entityManager, uint16_t x, uin
     entity->hp                   = 30;
 
     entity->type                 = ENTITY_BOSS_TRASH_MAN;
-    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->spriteIndex          = MG_SP_BOSS_0;
     entity->state                = -1;
     entity->stateTimer           = 0;
     entity->updateFunction       = &mg_updateBossTrashMan;
@@ -2291,7 +2291,7 @@ mgEntity_t* createBossFlareGryffyn(mgEntityManager_t* entityManager, uint16_t x,
     entity->hp                   = 30;
 
     entity->type                 = ENTITY_BOSS_FLARE_GRYFFYN;
-    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->spriteIndex          = MG_SP_BOSS_0;
     entity->state                = -1;
     entity->stateTimer           = 0;
     entity->updateFunction       = &mg_updateBossFlareGryffyn;
@@ -2335,7 +2335,7 @@ mgEntity_t* createBossDeadeyeChirpzi(mgEntityManager_t* entityManager, uint16_t 
     entity->hp                   = 30;
 
     entity->type                 = ENTITY_BOSS_DEADEYE_CHIRPZI;
-    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->spriteIndex          = MG_SP_BOSS_0;
     entity->state                = -1;
     entity->stateTimer           = 0;
     entity->updateFunction       = &mg_updateBossDeadeyeChirpzi;
@@ -2379,7 +2379,7 @@ mgEntity_t* createBossBigma(mgEntityManager_t* entityManager, uint16_t x, uint16
     entity->hp                   = 30;
 
     entity->type                 = ENTITY_BOSS_BIGMA;
-    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->spriteIndex          = MG_SP_BOSS_0;
     entity->state                = -1;
     entity->stateTimer           = 0;
     entity->updateFunction       = &mg_updateBossBigma;
@@ -2423,7 +2423,7 @@ mgEntity_t* createBossHankWaddle(mgEntityManager_t* entityManager, uint16_t x, u
     entity->hp                   = 30;
 
     entity->type                 = ENTITY_BOSS_HANK_WADDLE;
-    entity->spriteIndex          = MG_SP_BOSS_IDLE;
+    entity->spriteIndex          = MG_SP_BOSS_0;
     entity->state                = -1;
     entity->stateTimer           = 0;
     entity->updateFunction       = &mg_updateBossHankWaddle;
