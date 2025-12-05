@@ -1110,6 +1110,24 @@ static const mg_EntityTileCollider_t entityTileCollider_grind_pangolin_rolling =
                                                                .rightEdge  = &mgTileCollisionOffsets_grind_pangolin_rolling_rightEdge,
                                                                .leftEdge   = &mgTileCollisionOffsets_grind_pangolin_rolling_leftEdge};
 
+//drain bat origin: 30, 31
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_drain_bat_bottomEdge
+    = {.collisionPoints = {{.x = -13, .y = 31}, {.x = 0, .y = 31}, {.x = 17, .y = 31}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_drain_bat_topEdge
+    = {.collisionPoints = {{.x = -13, .y = -15}, {.x = 0, .y = -15}, {.x = 17, .y = -15}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_drain_bat_rightEdge
+    = {.collisionPoints = {{.x = 17, .y = 31}, {.x = 17, .y = 0}, {.x = 17, .y = -15}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_drain_bat_leftEdge
+    = {.collisionPoints = {{.x = -13, .y = 31}, {.x = -13, .y = 0}, {.x = -13, .y = -15}}, .size = 3};
+
+static const mg_EntityTileCollider_t entityTileCollider_drain_bat = {.bottomEdge = &mgTileCollisionOffsets_drain_bat_bottomEdge,
+                                                               .topEdge    = &mgTileCollisionOffsets_drain_bat_topEdge,
+                                                               .rightEdge  = &mgTileCollisionOffsets_drain_bat_rightEdge,
+                                                               .leftEdge   = &mgTileCollisionOffsets_drain_bat_leftEdge};
+
     typedef enum
 {
     MG_WSGSET_NULL = -1,
