@@ -295,38 +295,81 @@ static const uint16_t mg_smashGorillaTileset[] = {
 static const mgSprite_t mg_smashGorillaBossSpriteMetadataSet[] = {
     {
         .wsg = NULL,
-        .origin = &origin_sever_yataga,
-        .hitBox = &box_sever_yataga
+        .origin = &origin_smash_gorilla,
+        .hitBox = &box_smash_gorilla
     },
     {
         .wsg = NULL,
-        .origin = &origin_sever_yataga,
-        .hitBox = &box_sever_yataga
+        .origin = &origin_smash_gorilla,
+        .hitBox = &box_smash_gorilla
     },
     {
         .wsg = NULL,
-        .origin = &origin_sever_yataga,
-        .hitBox = &box_sever_yataga
+        .origin = &origin_smash_gorilla,
+        .hitBox = &box_smash_gorilla
     },
     {
         .wsg = NULL,
-        .origin = &origin_sever_yataga,
-        .hitBox = &box_sever_yataga
+        .origin = &origin_smash_gorilla,
+        .hitBox = &box_smash_gorilla
     },
     {
         .wsg = NULL,
-        .origin = &origin_sever_yataga,
-        .hitBox = &box_sever_yataga
+        .origin = &origin_smash_gorilla,
+        .hitBox = &box_smash_gorilla
     },
     {
         .wsg = NULL,
-        .origin = &origin_sever_yataga,
-        .hitBox = &box_sever_yataga
+        .origin = &origin_smash_gorilla,
+        .hitBox = &box_smash_gorilla
     },
     {
         .wsg = NULL,
-        .origin = &origin_sever_yataga,
-        .hitBox = &box_sever_yataga
+        .origin = &origin_8_8,
+        .hitBox = &box_16_16
+    },
+    {
+        .wsg = NULL,
+        .origin = NULL,
+        .hitBox = NULL
+    }
+};
+
+static const mgSprite_t mg_grindPangolinBossSpriteMetadataSet[] = {
+    {
+        .wsg = NULL,
+        .origin = &origin_smash_gorilla,
+        .hitBox = &box_smash_gorilla
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_smash_gorilla,
+        .hitBox = &box_smash_gorilla
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_smash_gorilla,
+        .hitBox = &box_smash_gorilla
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_smash_gorilla,
+        .hitBox = &box_smash_gorilla
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_smash_gorilla,
+        .hitBox = &box_smash_gorilla
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_smash_gorilla,
+        .hitBox = &box_smash_gorilla
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_8_8,
+        .hitBox = &box_16_16
     },
     {
         .wsg = NULL,

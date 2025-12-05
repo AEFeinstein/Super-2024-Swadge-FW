@@ -1055,6 +1055,61 @@ static const mg_EntityTileCollider_t entityTileCollider_sever_yataga = {.bottomE
                                                                .topEdge    = &mgTileCollisionOffsets_sever_yataga_topEdge,
                                                                .rightEdge  = &mgTileCollisionOffsets_sever_yataga_rightEdge,
                                                                .leftEdge   = &mgTileCollisionOffsets_sever_yataga_leftEdge};
+
+//smash gorilla origin: 49, 35
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_smash_gorilla_bottomEdge
+    = {.collisionPoints = {{.x = -15, .y = 34}, {.x = 0, .y = 34}, {.x = 14, .y = 34}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_smash_gorilla_topEdge
+    = {.collisionPoints = {{.x = -15, .y = -25}, {.x = 0, .y = -25}, {.x = 14, .y = -25}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_smash_gorilla_rightEdge
+    = {.collisionPoints = {{.x = 14, .y = 34}, {.x = 14, .y = 0}, {.x = 14, .y = -25}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_smash_gorilla_leftEdge
+    = {.collisionPoints = {{.x = -15, .y = 34}, {.x = -15, .y = 0}, {.x = -15, .y = -25}}, .size = 3};
+
+static const mg_EntityTileCollider_t entityTileCollider_smash_gorilla = {.bottomEdge = &mgTileCollisionOffsets_smash_gorilla_bottomEdge,
+                                                               .topEdge    = &mgTileCollisionOffsets_smash_gorilla_topEdge,
+                                                               .rightEdge  = &mgTileCollisionOffsets_smash_gorilla_rightEdge,
+                                                               .leftEdge   = &mgTileCollisionOffsets_smash_gorilla_leftEdge};
+
+//grind pangolin origin: 33, 28
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_bottomEdge
+    = {.collisionPoints = {{.x = -30, .y = 27}, {.x = 0, .y = 27}, {.x = 30, .y = 27}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_topEdge
+    = {.collisionPoints = {{.x = -30, .y = -11}, {.x = 0, .y = -11}, {.x = 30, .y = -11}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rightEdge
+    = {.collisionPoints = {{.x = 30, .y = 27}, {.x = 30, .y = 0}, {.x = 30, .y = -11}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_leftEdge
+    = {.collisionPoints = {{.x = -30, .y = 27}, {.x = -30, .y = 0}, {.x = -30, .y = -11}}, .size = 3};
+
+static const mg_EntityTileCollider_t entityTileCollider_grind_pangolin = {.bottomEdge = &mgTileCollisionOffsets_grind_pangolin_bottomEdge,
+                                                               .topEdge    = &mgTileCollisionOffsets_grind_pangolin_topEdge,
+                                                               .rightEdge  = &mgTileCollisionOffsets_grind_pangolin_rightEdge,
+                                                               .leftEdge   = &mgTileCollisionOffsets_grind_pangolin_leftEdge};
+
+//grind pangolin rolling origin: 19, 15
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_bottomEdge
+    = {.collisionPoints = {{.x = -10, .y = 15}, {.x = 0, .y = 15}, {.x = 10, .y = 15}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_topEdge
+    = {.collisionPoints = {{.x = -10, .y = -15}, {.x = 0, .y = -15}, {.x = 10, .y = -15}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_rightEdge
+    = {.collisionPoints = {{.x = 10, .y = 15}, {.x = 10, .y = 0}, {.x = 10, .y = -15}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_leftEdge
+    = {.collisionPoints = {{.x = -10, .y = 15}, {.x = -10, .y = 0}, {.x = -10, .y = -15}}, .size = 3};
+
+static const mg_EntityTileCollider_t entityTileCollider_grind_pangolin_rolling = {.bottomEdge = &mgTileCollisionOffsets_grind_pangolin_rolling_bottomEdge,
+                                                               .topEdge    = &mgTileCollisionOffsets_grind_pangolin_rolling_topEdge,
+                                                               .rightEdge  = &mgTileCollisionOffsets_grind_pangolin_rolling_rightEdge,
+                                                               .leftEdge   = &mgTileCollisionOffsets_grind_pangolin_rolling_leftEdge};
+
     typedef enum
 {
     MG_WSGSET_NULL = -1,

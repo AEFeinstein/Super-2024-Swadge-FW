@@ -68,5 +68,24 @@ static const vec_t origin_sever_yataga = {.x = 49, .y = 35};
 
 static const box_t box_sever_yataga = {.x0 = 32, .x1 = 63, .y0 = 16, .y1 = 70};
 
+static const vec_t origin_smash_gorilla = {.x = 35, .y = 35};
+
+static const box_t box_smash_gorilla = {.x0 = 20, .x1 = 49, .y0 = 10, .y1 = 69};
+
+static const vec_t origin_grind_pangolin_standing = {.x = 33, .y = 28};
+
+static const box_t box_smash_gorilla_standing = {.x0 = 3, .x1 = 63, .y0 = 17, .y1 = 55};
+
+static const vec_t origin_grind_pangolin_curled = {.x = 22, .y = 19};
+
+static const box_t box_smash_gorilla_curled = {.x0 = 7, .x1 = 36, .y0 = 9, .y1 = 38};
+
+static const vec_t origin_grind_pangolin_rolling = {.x = 19, .y = 15};
+
+static const box_t box_smash_gorilla_rolling = {.x0 = 9, .x1 = 29, .y0 = 0, .y1 = 30};
+
+static const vec_t origin_grind_pangolin_tail = {.x = 36, .y = 22};
+
+static const box_t box_smash_gorilla_tail = {.x0 = 3, .x1 = 71, .y0 = 16, .y1 = 31};
 
 #endif
