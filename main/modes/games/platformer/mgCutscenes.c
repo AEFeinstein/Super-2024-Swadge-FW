@@ -2,7 +2,7 @@
 
 typedef enum
 {
-    Pulse, Sawtooth, Bigma, TrashMan, AbilityUnlocked, KineticDonut, JoltLapin, FlareGryffyn, CrashTurtle, QuestionMark, DeadeyeChirpzi,
+    Pulse, Sawtooth, Bigma, TrashMan, AbilityUnlocked, SystemText, KineticDonut, JoltLapin, FlareGryffyn, CrashTurtle, QuestionMark, DeadeyeChirpzi,
     HankWaddle, GrindPangolin, DrainBat, SmashGorilla, SeverYagata, Jasper, Ember, Cho, Percy, Sunny
 } cutsceneCharacters;
 
@@ -12,6 +12,7 @@ void stageStartCutscene(mgGameData_t* gameData)
     {
         case 1://Intro Stage
         {
+            addCutsceneLine(gameData->cutscene, SystemText, "PULSE and SAWTOOTH teleport into Omega Harbor's convention center, which looks an awful lot like the Gaylord... The grand atrium is filled with glitching-banners flicker, while pixelated distortion pulses through the walls.", false, 0);
             addCutsceneLine(gameData->cutscene, Sawtooth, "We're too late... the MAGiX virus is already spreading.", true, 1);
             addCutsceneLine(gameData->cutscene, Pulse, "This is nuts! What even is this place?", false, 0);
             addCutsceneLine(gameData->cutscene, Sawtooth, "It used to be our home base... before it was corrupted. We got a ping near the Main Stage. Let's move!", true, 0);
@@ -32,22 +33,24 @@ void stageStartCutscene(mgGameData_t* gameData)
         }
         case 3://The Beat Colosseum
         {
-            addCutsceneLine(gameData->cutscene, Pulse, "Woah... Now this is a party.", false, -1);
-            addCutsceneLine(gameData->cutscene, Sawtooth, "Focus up! This place may look festive, but the hazards here are wired to the rhythm.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "So the party's jumping, but the baddies are ready to rumble?", false, -1);
-            addCutsceneLine(gameData->cutscene, Sawtooth, "That's right.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Or should I say...ready to rumba?", false, -1);
-            addCutsceneLine(gameData->cutscene, Sawtooth, "... ...", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Aw...", false, -1);
+            addCutsceneLine(gameData->cutscene, SystemText, "PULSE and SAWTOOTH teleport into SMASH GORILLA's mindscape, a glowing festival arena filled with thumping salsa music.", false, 0);
+            addCutsceneLine(gameData->cutscene, Pulse, "Woah... Now this is a party.", false, 2);
+            addCutsceneLine(gameData->cutscene, Sawtooth, "Focus up! This place may look festive, but the hazards here are wired to the rhythm.", true, 1);
+            addCutsceneLine(gameData->cutscene, Pulse, "So the party's jumping, but the baddies are ready to rumble?", false, 1);
+            addCutsceneLine(gameData->cutscene, Sawtooth, "That's right.", true, 2);
+            addCutsceneLine(gameData->cutscene, Pulse, "Or should I say...ready to rumba?", false, 2);
+            addCutsceneLine(gameData->cutscene, Sawtooth, "... ...", true, 2);
+            addCutsceneLine(gameData->cutscene, SystemText, "Sawtooth teleports away.", false, 0);
+            addCutsceneLine(gameData->cutscene, Pulse, "Aw...", false, 3);
             break;
         }
         case 4://The Foundry of Echoes
         {
             addCutsceneLine(gameData->cutscene, Pulse, "Hot hot HOT. Why is the foundry ON FIRE?", false, -1);
-            addCutsceneLine(gameData->cutscene, Sawtooth, "This used to be the Sound Vaults – where every MAG set was backed up. But the MAGiX virus triggered a meltdown. Audio data, equipment, even the walls–it's all liquefying.", false, -1);
+            addCutsceneLine(gameData->cutscene, Sawtooth, "This used to be the Sound Vaults - where every MAG set was backed up. But the MAGiX virus triggered a meltdown. Audio data, equipment, even the walls-it's all liquefying.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "So... the floor is literally lava.", false, -1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "Yes. This is not a playground game.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "You're no fun. Anyways – what's with the weird screeching?", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "You're no fun. Anyways - what's with the weird screeching?", false, -1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "Echo Leeches. Parasitic distortions. If they latch onto you, shake them off before they steal your sound signature.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Great, one more thing to worry about... What can you tell me about Deadeye Chirpzi?", false, -1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "She's here. Be sharp. She's a formidable bounty hunter, likely the best in the galaxy. She'll likely have eyes on you already, so be on your toes.", false, -1);
@@ -56,7 +59,7 @@ void stageStartCutscene(mgGameData_t* gameData)
         }
         case 5://The Sunshine Speedway
         {
-            addCutsceneLine(gameData->cutscene, Pulse, "WHOA! Okay – I'm awake now!", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "WHOA! Okay - I'm awake now!", false, -1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "Always tricky teleporting onto a moving target. You got your balance?", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Think so! Is it always this fast!?", false, -1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "Not usually. Someone's pushing the throttle way past safe. You're gonna need something heavy-hitting to stop this runaway.", false, -1);
@@ -69,7 +72,7 @@ void stageStartCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "Wait, I thought you said we were heading to the Underground Stage?", false, -1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "Yep. Welcome to the Lost Ballroom. This is where all the really underground acts go.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Whoa... you really know where all the cool kids hang, huh Sawtooth?", false, -1);
-            addCutsceneLine(gameData->cutscene, Sawtooth, "Cool, cursed, corrupted–take your pick. Just watch your head... those chandeliers are “hanging” too, and they don't look stable at all...", false, -1);
+            addCutsceneLine(gameData->cutscene, Sawtooth, "Cool, cursed, corrupted-take your pick. Just watch your head... those chandeliers are “hanging” too, and they don't look stable at all...", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Great. I'll keep my head down and my playlist loud.", false, -1);
             break;
         }
@@ -78,12 +81,12 @@ void stageStartCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "Woah, this club is nuts! Why are there shrines here?", false, -1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "Welcome to the Twin Peaks - Omega Harbor's highest and loudest floor. It used to be a sacred dance space... now it's Sever Yataga's turf.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "\"Yataga\"? What's that?", false, -1);
-            addCutsceneLine(gameData->cutscene, Sawtooth, "Short for Yatagarasu–a mythical three-legged crow in Shinto lore. A divine guide. It's said to lead people through darkness.", false, -1);
+            addCutsceneLine(gameData->cutscene, Sawtooth, "Short for Yatagarasu-a mythical three-legged crow in Shinto lore. A divine guide. It's said to lead people through darkness.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "So why does this Yataga sound like a boss fight with a cover charge?", false, -1);
-            addCutsceneLine(gameData->cutscene, Sawtooth, "The leaders of the MAGPIE nest – Percy and Jasper – fused to create Sever Yataga. The MAGPIES once stood for unity, guidance, accessibility... until BIGMA got to them.", false, -1);
+            addCutsceneLine(gameData->cutscene, Sawtooth, "The leaders of the MAGPIE nest - Percy and Jasper - fused to create Sever Yataga. The MAGPIES once stood for unity, guidance, accessibility... until BIGMA got to them.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Corrupting a guiding god into a rave god...", false, -1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "Isolation in the name of freedom. A twisted remix of what they stood for.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Then I'm heading in. Time to turn the volume down–with love.", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "Then I'm heading in. Time to turn the volume down-with love.", false, -1);
             break;
         }
         case 8://Arena Hypernova
@@ -114,7 +117,7 @@ void stageStartCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "We've hit every beat, cured every one of the MAGiX Leaders.. We're not backing down now.", false, -1);
             addCutsceneLine(gameData->cutscene, Bigma, "Ahhh, there you are! My two favorite little understudies. Took you long enough to find the green room.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Cut the theatrics, BIGMA! Your show's getting cancelled.", false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma, "Bold words from a backup dancer. Tell–have you actually mastered the skills your little adventure gave you? Or have you just been faking this whole time?", false, -1);
+            addCutsceneLine(gameData->cutscene, Bigma, "Bold words from a backup dancer. Tell-have you actually mastered the skills your little adventure gave you? Or have you just been faking this whole time?", false, -1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "Don't listen to him. He's trying to get in your head.", false, -1);
             addCutsceneLine(gameData->cutscene, Bigma, "Oh, I'm already in his head, SAWTOOTH. In everyone's head. That's the beauty of a truly viral sound.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "I'm not here to audition, BIGMA. I'm here to end this tour.", false, -1);
@@ -130,9 +133,9 @@ void stageStartCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Sawtooth, "Stay sharp. I've got signal distortion across all channels. We're somewhere between systems.", false, -1);
             addCutsceneLine(gameData->cutscene, Bigma, "Welcome to the encore, PULSE. You survived the warm-up. Now it's time for the deep cuts.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Come out and fight me already!", false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma, "Tsk-tsk. You think the headliner performs without openers? No, no, no. First–you'll face your greatest hits.", false, -1);
-            addCutsceneLine(gameData->cutscene, Sawtooth, "Are those...? No, wait–something's off. These aren't the RemiXes. They're... copies.", false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma, "MAGiX backups. Constructed from your past encounters, and turned against you. Every fight, every tactic–you taught me how to defeat you, PULSE. Time to see if you've learned anything new.", false, -1);
+            addCutsceneLine(gameData->cutscene, Bigma, "Tsk-tsk. You think the headliner performs without openers? No, no, no. First-you'll face your greatest hits.", false, -1);
+            addCutsceneLine(gameData->cutscene, Sawtooth, "Are those...? No, wait-something's off. These aren't the RemiXes. They're... copies.", false, -1);
+            addCutsceneLine(gameData->cutscene, Bigma, "MAGiX backups. Constructed from your past encounters, and turned against you. Every fight, every tactic-you taught me how to defeat you, PULSE. Time to see if you've learned anything new.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "UGH. A boss rush? Why is it always a boss rush?!", false, -1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "You've got this. You're faster, smarter, and stronger now. Just keep your cool.", false, -1);
             addCutsceneLine(gameData->cutscene, Bigma, "I'll be watching from the green room. Don't disappoint me.", false, -1);
@@ -182,21 +185,21 @@ void stageStartCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, QuestionMark, "Isn't that right...Deadeye?", false, -1);
             addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "...No. No way... That voice...", false, -1);
             addCutsceneLine(gameData->cutscene, QuestionMark, "Hahaha! YES! Deadeye.... Or should I say... Cho. I knew you'd remember me, even after all these years.", false, -1);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "... No. It can't be. Is that–?", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "... No. It can't be. Is that-?", false, -1);
             addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "...HANK?!", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Who??", false, -1);
             addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "Hank Waddle?? MY OLD LAWYER?!", false, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "HAHAHA! So you DO remember me!!", false, -1);
-            addCutsceneLine(gameData->cutscene, Sawtooth, "Okay–what?! Cho, you seriously need to explain what's happening.", false, -1);
+            addCutsceneLine(gameData->cutscene, Sawtooth, "Okay-what?! Cho, you seriously need to explain what's happening.", false, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "BIGMA, I'm disappointed. You were supposed to be my masterpiece! All that rage! That nostalgia! I practically gift-wrapped your villain arc!!", false, -1);
             addCutsceneLine(gameData->cutscene, Bigma, "You... corrupted me??", false, -1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "Cho...?", false, -1);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "I – I don't know, but... is this... is this about...what happened back 2024?", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "I - I don't know, but... is this... is this about...what happened back 2024?", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "What HAPPENED in 2024?", false, -1);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "I, uh.. partied a LITTLE too hard at MAGFest. Woke up in a space station. Gear missing.. Reality kind of ... bent sideways. It was a whole thing.  And this guy – Hank, my lawyer – was texting me the whole time...", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "I, uh.. partied a LITTLE too hard at MAGFest. Woke up in a space station. Gear missing.. Reality kind of ... bent sideways. It was a whole thing.  And this guy - Hank, my lawyer - was texting me the whole time...", false, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "Do you have ANY IDEA how much damage you caused?! The legal fallout?! The paperwork?! You undermined EVERYTHING I built my career on!", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Wait–so you turned into a villain over PAPERWORK?", false, -1);
-            addCutsceneLine(gameData->cutscene, HankWaddle, "NO! .... Yes. But also–you! All of you! This entire scene is a time bomb of stolen aesthetics, derivative tropes, and flagrant disrespect for artistic integrity! You and your... kind ... are a blight on this world! And with my corruption program, I've shown the world just how destructive you all really are. I, HANK WADDLE, will finally be the one to right this wrong. ONCE AND FOR ALL!", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "Wait-so you turned into a villain over PAPERWORK?", false, -1);
+            addCutsceneLine(gameData->cutscene, HankWaddle, "NO! .... Yes. But also-you! All of you! This entire scene is a time bomb of stolen aesthetics, derivative tropes, and flagrant disrespect for artistic integrity! You and your... kind ... are a blight on this world! And with my corruption program, I've shown the world just how destructive you all really are. I, HANK WADDLE, will finally be the one to right this wrong. ONCE AND FOR ALL!", false, -1);
             addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "... We kinda lost touch after that.", false, -1);
             break;
         }
@@ -231,13 +234,13 @@ void bossIntroCutscene(mgGameData_t* gameData)
         }
         case 3://The Beat Colosseum
         {
-            addCutsceneLine(gameData->cutscene, Pulse, "You there! Cut the music – this whole place is out of control!", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "You there! Cut the music - this whole place is out of control!", false, 4);
             addCutsceneLine(gameData->cutscene, SmashGorilla, "What do YOU want, rookie?", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Uh–were you always this... articulate? I didn't realize you spoke English.", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "Uh-were you always this... articulate? I didn't realize you spoke English.", false, 0);
             addCutsceneLine(gameData->cutscene, SmashGorilla, "No solo ingles, idiota.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Hey! I know enough to know that was rude. Are you asking for a challenge?", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "Hey! I know enough to know that was rude. Are you asking for a challenge?", false, 3);
             addCutsceneLine(gameData->cutscene, SmashGorilla, "Dejalo caer como si estuviera caliente, tonto.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Oh it's ON!", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "Oh it's ON!", false, 4);
             break;
         }
         case 4://The Foundry of Echoes
@@ -245,35 +248,35 @@ void bossIntroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "Hello...?", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "WOAH! Good thing that system text gave me a warning!", false, -1);
             addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "That was a warning shot. Take another step, and Echo here finishes the job..", false, -1);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "Two on one? That's low–even for a bounty hunter.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Then you better aim better–'cause I'm not going down easy!", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "Two on one? That's low-even for a bounty hunter.", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "Then you better aim better-'cause I'm not going down easy!", false, -1);
             break;
         }
         case 5://The Sunshine Speedway
         {
             addCutsceneLine(gameData->cutscene, Pulse, "Hold it, rude boy! This ride's over!", false, -1);
-            addCutsceneLine(gameData->cutscene, GrindPangolin, "Oh noooo, I'm so scared! What are you gonna do–mail me a sternly worded letter?", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Uh–no, I was–wait, how did you...?", false, -1);
+            addCutsceneLine(gameData->cutscene, GrindPangolin, "Oh noooo, I'm so scared! What are you gonna do-mail me a sternly worded letter?", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "Uh-no, I was-wait, how did you...?", false, -1);
             addCutsceneLine(gameData->cutscene, GrindPangolin, "You're slower than a sound check at a basement show! You're off-beat, outclassed, and outta time!", false, -1);
-            addCutsceneLine(gameData->cutscene, GrindPangolin, "C'mon, slowpoke–let's shred!", false, -1);
+            addCutsceneLine(gameData->cutscene, GrindPangolin, "C'mon, slowpoke-let's shred!", false, -1);
             break;
         }
         case 6://The Lost Ballroom
         {
             addCutsceneLine(gameData->cutscene, DrainBat, "B'ohoho!!", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Battrice? You don't belong in this world!", false, -1);
-            addCutsceneLine(gameData->cutscene, DrainBat, "It was not by my hand that I was once again–", false, -1);
+            addCutsceneLine(gameData->cutscene, DrainBat, "It was not by my hand that I was once again-", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Okay. Yeah, Gonna stop you right there.. It was BIGMA. Mind control. Virus. You've been corrupted.", false, -1);
-            addCutsceneLine(gameData->cutscene, DrainBat, "... I was brought here by–what? I had a whole monologue...", false, -1);
+            addCutsceneLine(gameData->cutscene, DrainBat, "... I was brought here by-what? I had a whole monologue...", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Do it later. Right now it's just me, you, and some falling guitars.", false, -1);
-            addCutsceneLine(gameData->cutscene, DrainBat, "...Fine. Enough talk–have at you!", false, -1);
+            addCutsceneLine(gameData->cutscene, DrainBat, "...Fine. Enough talk-have at you!", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Gesundheit!", false, -1);
             break;
         }
         case 7://The Twin Peaks
         {
             addCutsceneLine(gameData->cutscene, SeverYagata, "LEAVE. US. ALONE.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Yataga-san! It's me–Pulse! We need you back in the fight for Omega Harbor!", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "Yataga-san! It's me-Pulse! We need you back in the fight for Omega Harbor!", false, -1);
             addCutsceneLine(gameData->cutscene, SeverYagata, "WE OWE NOTHING TO THE WORLD THAT BROKE US. THIS IS OUR HAVEN. OUR RAVE. OUR RULES.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "That sounds... honestly exhausting. No naps? No snacks?", false, -1);
             addCutsceneLine(gameData->cutscene, SeverYagata, "WE ARE THE SKY'S LAST SCREAM. CHALLENGE US... AND PREPARE TO BE SILENCED.", false, -1);
@@ -303,10 +306,10 @@ void bossIntroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Ember, "It's just Ember, actually. “Baroness” was a phase.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "So... you're not corrupted?", false, -1);
             addCutsceneLine(gameData->cutscene, Ember, "Nah. I'm a demon. I'm already corrupt. That's kinda the brand.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "...Then why are you–", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "...Then why are you-", false, -1);
             addCutsceneLine(gameData->cutscene, Ember, "... Look I made some questionable dating choices, okay?", false, -1);
             addCutsceneLine(gameData->cutscene, QuestionMark, "WHAHAHAHAHAHAH!!!", false, -1);
-            addCutsceneLine(gameData->cutscene, QuestionMark, "IT IS I –DR. GARBOTNIK. THE TRASH MAN!", false, -1);
+            addCutsceneLine(gameData->cutscene, QuestionMark, "IT IS I -DR. GARBOTNIK. THE TRASH MAN!", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Who?", false, -1);
             addCutsceneLine(gameData->cutscene, TrashMan, "THE TRASH MAN!", false, -1);
             addCutsceneLine(gameData->cutscene, Ember, "Yeah, this is on me. Sorry.", false, -1);
@@ -358,7 +361,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
         {
             addCutsceneLine(gameData->cutscene, KineticDonut, "Hnggh... my head's spinning... Did... Did I stage-dive into the fryer?", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Almost. You've been corrupted by MAGiX. It's not your fault.", false, -1);
-            addCutsceneLine(gameData->cutscene, KineticDonut, "I–I couldn't stop bouncing. Everything was loud, and I was starving...", false, -1);
+            addCutsceneLine(gameData->cutscene, KineticDonut, "I-I couldn't stop bouncing. Everything was loud, and I was starving...", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "I get that way too sometimes.", false, -1);
             addCutsceneLine(gameData->cutscene, KineticDonut, "Here. Take this. IIt's a little messy, but it packs a punch.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "You going to be okay, Your Majesty?", false, -1);
@@ -368,13 +371,15 @@ void bossOutroCutscene(mgGameData_t* gameData)
         case 3://The Beat Colosseum
         {
             addCutsceneLine(gameData->cutscene, SmashGorilla, "Oof... rhythm's all outta sync.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Who's tonto now?", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "Who's tonto now?", false, 1);
             addCutsceneLine(gameData->cutscene, SmashGorilla, "Cheerio, old bean. Bit of a kerfuffle, wasn't it?", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "...Huh?", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "...Huh?", false, 0);
             addCutsceneLine(gameData->cutscene, SmashGorilla, "Just messin' with ya. Got glitched pretty bad, huh?", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "The whole place was vibing TOO hard. You back to normal?", false, -1);
-            addCutsceneLine(gameData->cutscene, SmashGorilla, "Yeah. Head's clearer now. Here – take this. Might help you keep the groove tight.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Thanks! Stay safe, and uh... vamanos?", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "The whole place was vibing TOO hard. You back to normal?", false, 1);
+            addCutsceneLine(gameData->cutscene, SmashGorilla, "Yeah. Head's clearer now. Here - take this. Might help you keep the groove tight.", false, -1);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Can of Salsa", false, 0);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... A backup up energy tanks! Fill it up with excess health pickups and it'll kick in automatically when your health drops.", false, 0);
+            addCutsceneLine(gameData->cutscene, Pulse, "Thanks! Stay safe, and uh... vamanos?", false, 2);
             addCutsceneLine(gameData->cutscene, SmashGorilla, "NOW you're getting it.", false, -1);
             break;
         }
@@ -386,11 +391,11 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "Is he... talking to you?", false, -1);
             addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "Not exactly. But I get it.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "He's gone?", false, -1);
-            addCutsceneLine(gameData->cutscene, Cho, "Nah. Just back where he started. Echoes don't disappear–they resonate.", false, -1);
+            addCutsceneLine(gameData->cutscene, Cho, "Nah. Just back where he started. Echoes don't disappear-they resonate.", false, -1);
             addCutsceneLine(gameData->cutscene, Cho, "And now I've got surround sound.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Glad he's still with you", false, -1);
             addCutsceneLine(gameData->cutscene, Cho, "Speaking of, Zip's still got some juice left in him and he's itching for one last solo.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Wait–are you saying I get an encore?", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "Wait-are you saying I get an encore?", false, -1);
             addCutsceneLine(gameData->cutscene, Cho, "More like a beamline direct to the face. You ever feel the need to absolutely delete something?", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, " Frequently.", false, -1);
             addCutsceneLine(gameData->cutscene, Cho, "Then here. Let Zip ride shotgun for a bit.", false, -1);
@@ -407,7 +412,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "Happens to the best of us.", false, -1);
             addCutsceneLine(gameData->cutscene, GrindPangolin, "Here. Should help you keep up when things get too fast.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Now that's what I'm talking about!", false, -1);
-            addCutsceneLine(gameData->cutscene, GrindPangolin, "Give ‘em whiplash for me. And hey–thanks for the brakes.", false, -1);
+            addCutsceneLine(gameData->cutscene, GrindPangolin, "Give 'em whiplash for me. And hey-thanks for the brakes.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "You got it. Enjoy your rest!", false, -1);
             break;
         }
@@ -420,7 +425,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, DrainBat, "Beneath the cliffs of San Simeon. Population: three. We make artisanal jams.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "... Sure.", false, -1);
             addCutsceneLine(gameData->cutscene, DrainBat, "Anyway. You're gonna need this to make it through the next wave.", false, -1);
-            addCutsceneLine(gameData->cutscene, DrainBat, "It's my signature move–Sure, You Can!", false, -1);
+            addCutsceneLine(gameData->cutscene, DrainBat, "It's my signature move-Sure, You Can!", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Sure, I'll allow it. See ya!", false, -1);
             addCutsceneLine(gameData->cutscene, DrainBat, "Ugh... I hope my goat didn't eat the WiFi again.", false, -1);
             break;
@@ -428,8 +433,8 @@ void bossOutroCutscene(mgGameData_t* gameData)
         case 7://The Twin Peaks
         {
             addCutsceneLine(gameData->cutscene, Percy, "Ngh... what happened? Did we... fuse?", false, -1);
-            addCutsceneLine(gameData->cutscene, Jasper, "My feathers are aching in places I didn't know could ache. Also–was I speaking in all caps? That's usually my final form.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "You were caught in BIGMA's virus. But you're back now–and still in one piece... sort of.", false, -1);
+            addCutsceneLine(gameData->cutscene, Jasper, "My feathers are aching in places I didn't know could ache. Also-was I speaking in all caps? That's usually my final form.", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "You were caught in BIGMA's virus. But you're back now-and still in one piece... sort of.", false, -1);
             addCutsceneLine(gameData->cutscene, Percy, "You helped us remember who we are. What we stand for.", false, -1);
             addCutsceneLine(gameData->cutscene, Jasper, "And who we fight with, not just for. Like... the power of nakama, y'know?", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Happy to have you both back.", false, -1);
@@ -438,7 +443,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "This feels... solid. But also, weirdly... ironic?", false, -1);
             addCutsceneLine(gameData->cutscene, Percy, "It's Plot Armor, Pulse. Like a final arc twist, except wearable.", false, -1);
             addCutsceneLine(gameData->cutscene, Jasper, "No main character should be without it. Especially in the final act. Ganbatte, Pulse-san!", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Wait–so am I the main character?", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "Wait-so am I the main character?", false, -1);
             addCutsceneLine(gameData->cutscene, Percy, "In this arc? Looks like it.", false, -1);
             addCutsceneLine(gameData->cutscene, Jasper, "Just remember: believe in the us that believes in you!", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "... Okay. But, thanks.", false, -1);
@@ -449,7 +454,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
         }
         case 8://Arena Hypernova
         {
-            addCutsceneLine(gameData->cutscene, FlareGryffyn, "Not bad, not bad. But I've still got one last trick–HYAHHH!", false, -1);
+            addCutsceneLine(gameData->cutscene, FlareGryffyn, "Not bad, not bad. But I've still got one last trick-HYAHHH!", false, -1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "That oughta shut him up for a while.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "SAWTOOTH! You're OKAY! What happened?!", false, -1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "Sigh... It was a lot, seeing these guys again.", false, -1);
@@ -461,7 +466,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Sunny, "...I was their leader once.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "You're... SUNNY?! Sunny McShreds of the Suncats?!! You've been hiding your identity the whole time?", false, -1);
             addCutsceneLine(gameData->cutscene, Sunny, "I... had a falling out with the rest of the team a few years back. We lost touch. Life happened. I was going to call them, but then BIGMA started targeting all the RemiXes... I thought it was best if I stayed hidden.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "... I'm so sorry, SAWT– I mean, SUNNY. It must have been horrible to see your friends like this.", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "... I'm so sorry, SAWT- I mean, SUNNY. It must have been horrible to see your friends like this.", false, -1);
             addCutsceneLine(gameData->cutscene, Sunny, "...", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "...Will they be OK?", false, -1);
             addCutsceneLine(gameData->cutscene, Sunny, "...I honestly don't know. I hope so. But they're knocked out pretty hard.", false, -1);
@@ -473,7 +478,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
         }
         case 9://The Recycled Pit in the Inferno Arena
         {
-            addCutsceneLine(gameData->cutscene, TrashMan, "NOOO! MY ART!! YOU PHILISTINES! YOU'VE SEEN NEITHER THE LAST–", false, -1);
+            addCutsceneLine(gameData->cutscene, TrashMan, "NOOO! MY ART!! YOU PHILISTINES! YOU'VE SEEN NEITHER THE LAST-", false, -1);
             addCutsceneLine(gameData->cutscene, Ember, "Finally. That jazz solo was cruel and unusual punishment.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Like, literal torture?", false, -1);
             addCutsceneLine(gameData->cutscene, Ember, "Literal. Torture. Zero out of ten. Hell would not recommend.", false, -1);
@@ -510,13 +515,13 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, FlareGryffyn, "And maybe... even mend what was broken along the way.", false, -1);
             addCutsceneLine(gameData->cutscene, Bigma, "You think we're copies, but that's not the point. We're all echoes of what came before.", false, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "What do you mean?", false, -1);
-            addCutsceneLine(gameData->cutscene, Sawtooth, "The ones who inspired us – they were just riffing on the stuff they liked, too.", false, -1);
+            addCutsceneLine(gameData->cutscene, Sawtooth, "The ones who inspired us - they were just riffing on the stuff they liked, too.", false, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "Then what are you?", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "We're something new.", false, -1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "Something that couldn't exist without the past...", false, -1);
             addCutsceneLine(gameData->cutscene, Bigma, "...But doesn't need to live in it.", false, -1);
             addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "So... in other words... HANK, you're fired.", false, -1);
-            addCutsceneLine(gameData->cutscene, HankWaddle, "No! No no no–if I go down, I'll take you with–AAAAUUUGHHHH!!!!", false, -1);
+            addCutsceneLine(gameData->cutscene, HankWaddle, "No! No no no-if I go down, I'll take you with-AAAAUUUGHHHH!!!!", false, -1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "Pulse! We have to get out of here!", false, -1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "Pulse... was he right about us?", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "I... don't know.", false, -1);

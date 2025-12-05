@@ -261,12 +261,50 @@ void platformerEnterMode(void)
     if(platformer->gameData.cutscene == NULL)
     {
         platformer->gameData.cutscene = initCutscene(goToReadyScreen, CUTSCENE_NEXT_0_WSG);
+        //Pulse
         addCutsceneStyle(platformer->gameData.cutscene, c000, PULSE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Pulse", 5, true, true, true);
+        //Sawtooth
         addCutsceneStyle(platformer->gameData.cutscene, c530, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 4, true, true, true);
+        //Bigma
         addCutsceneStyle(platformer->gameData.cutscene, c310, BIGMA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Bigma", 2, false, true, true);
+        //TrashMan
         addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 7, false, true, true);
+        ///AbilityUnlocked
         addCutsceneStyle(platformer->gameData.cutscene, c454, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "", 1, true, true, false);//ability unlocked
-        addCutsceneStyle(platformer->gameData.cutscene, c454, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "System Text", 1, true, false, true);
+        //SystemText
+        addCutsceneStyle(platformer->gameData.cutscene, c000, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "System Text", 1, true, false, true);
+        //KineticDonut
+        addCutsceneStyle(platformer->gameData.cutscene, c310, OVO_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Kinetic Donut", 1, false, true, true);
+        //JoltLapin
+        addCutsceneStyle(platformer->gameData.cutscene, c000, JOLT_LAPIN_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Jolt Lapin", 1, true, true, true);
+        //FlareGryffyn
+        addCutsceneStyle(platformer->gameData.cutscene, c310, FLARE_GRYFFYN_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Flare Gryffyn", 1, false, true, true);
+        //CrashTurtle
+        addCutsceneStyle(platformer->gameData.cutscene, c000, CRASH_TURTLE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Crash Turtle", 1, true, true, true);
+        //QuestionMark
+        addCutsceneStyle(platformer->gameData.cutscene, c000, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "Question Mark", 1, false, true, true);
+        //DeadeyeChirpzi
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_CHIRPZI_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Deadeye Chirpzi", 1, true, true, true);
+        //HankWaddle
+        addCutsceneStyle(platformer->gameData.cutscene, c000, HANK_WADDLE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Hank Waddle", 1, false, true, true);
+        //GrindPangolin
+        addCutsceneStyle(platformer->gameData.cutscene, c310, GRIND_PANGOLIN_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Grind Pangolin", 1, false, true, true);
+        //DrainBat
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Drain Bat", 1, false, true, true);
+        //SmashGorilla
+        addCutsceneStyle(platformer->gameData.cutscene, c310, SMASH_GORILLA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Smash Gorilla", 1, false, true, true);
+        //SeverYagata
+        addCutsceneStyle(platformer->gameData.cutscene, c310, SEVER_YAGATA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Sever Yagata", 1, false, true, true);
+        //Jasper
+        addCutsceneStyle(platformer->gameData.cutscene, c000, JASPER_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Jasper", 1, true, true, true);
+        //Ember
+        addCutsceneStyle(platformer->gameData.cutscene, c000, EMBER_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Ember", 1, true, true, true);
+        //Cho
+        addCutsceneStyle(platformer->gameData.cutscene, c000, CHO_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Cho", 1, true, true, true);
+        //Percy
+        addCutsceneStyle(platformer->gameData.cutscene, c000, PERCY_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Percy", 1, true, true, true);
+        //Sunny
+        addCutsceneStyle(platformer->gameData.cutscene, c000, SUNNY_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Sunny", 1, true, true, true);
     }
 
     setFrameRateUs(16666);
