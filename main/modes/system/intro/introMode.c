@@ -230,7 +230,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .buttons = PB_B, 
                     },
         .title = sonaTitle,
-        .detail = "This is a Sona, your Swadge Avatar! You can make yours in the Sona Creator Mode.",
+        .detail = "This is a Sona, your Swadge Avatar! You can make yours in the Sona Creator Mode. Press B to continue.",
         
     },
     {
@@ -1357,7 +1357,7 @@ static void introDrawSwadgeMicrophone(int64_t elapsedUs, uint16_t* fuzzed_bins, 
 
 static void introSona(int64_t elapsedUs)
 {
-    drawWsgSimpleScaled(&iv->icon.sona, (TFT_WIDTH / 2) - 64, TFT_HEIGHT / 2 - 64 - 10, 2, 2);
+    drawWsgSimpleScaled(&iv->icon.sona, (TFT_WIDTH / 2) - iv->icon.sona.w, TFT_HEIGHT / 2 - 64 - 14, 2, 2);
 }
 
 static void playIntro(int64_t elapsedUs)
@@ -1453,27 +1453,18 @@ static void playIntro(int64_t elapsedUs)
 static void introSwadgePass(int64_t elapsedUs)
 {
     // draw username
-    typedef struct
-    {
-        int16_t x;
-        int16_t y;
-    } locs_t; // this is stupid
-
-    locs_t locs;
-    locs.x = 25;
-    locs.y = 60;
-
     nameData_t username = *getSystemUsername();
-    char prefix[]       = "Your username is \n";
-    char suffix[70];
-    strcpy(suffix, suffixes[getTutorialCompletedSetting()]);
+    const char prefix[] = "Your username is \n";
+    const char* suffix  = suffixes[getTutorialCompletedSetting()];
 
     int namelen = sizeof(username.nameBuffer);
     int prelen  = sizeof(prefix);
-    int suflen  = sizeof(suffix);
+    int suflen  = strlen(suffix);
 
     char buf[namelen + prelen + suflen + 2];
     snprintf(buf, sizeof(buf) - 1, "%s%s%s", prefix, username.nameBuffer, suffix);
 
-    drawTextWordWrap(&iv->smallFont, c000, buf, &locs.x, &locs.y, TFT_WIDTH - 25, 140);
+    int16_t x = 25;
+    int16_t y = 60;
+    drawTextWordWrap(&iv->smallFont, c000, buf, &x, &y, TFT_WIDTH - 25, 140);
 }
