@@ -63,7 +63,7 @@ void removeAllStyles(cutscene_t* cutscene)
     }
 }
 
-void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numSpriteVariations, bool isProtagonist)
+void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numSpriteVariations, bool isProtagonist, bool drawSprite, bool drawTextbox)
 {
     cutsceneStyle_t* style = (cutsceneStyle_t*)heap_caps_calloc(1, sizeof(cutsceneStyle_t), MALLOC_CAP_SPIRAM);
     style->title = (char*)heap_caps_calloc(strlen(title) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
@@ -73,6 +73,8 @@ void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileId
     style->textBoxIdx = textBoxIdx;
     style->numSpriteVariations = numSpriteVariations;
     style->isProtagonist = isProtagonist;
+    style->drawSprite = drawSprite;
+    style->drawTextBox = drawTextbox;
 
     // push to tail
     push(cutscene->styles, (void*)style);
@@ -85,7 +87,6 @@ void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool fl
     strcpy(line->body, body);
     line->styleIdx = styleIdx;
     line->spriteVariation = spriteVariation < 0 ? getRandomVariationFromStyleIdx(cutscene, styleIdx) : spriteVariation;
-    
     line->flipHorizontal = flipHorizontal;
 
     if(cutscene->lines->first == NULL)
@@ -217,13 +218,19 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
     cutsceneLine_t* line = (cutsceneLine_t*)cutscene->lines->first->val;
     cutsceneStyle_t* style = getAtIndex(cutscene->styles, line->styleIdx);
 
-    drawWsg(cutscene->sprite, cutscene->xOffset, 0, line->flipHorizontal, false, 0);
+    if(style->drawSprite)
+    {
+        drawWsg(cutscene->sprite, cutscene->xOffset, 0, line->flipHorizontal, false, 0);
+    }
     char variationText[5];
     snprintf(variationText, sizeof(variationText), "%d", line->spriteVariation);
     drawText(font, c541, variationText, 14, 14);
     if(cutscene->xOffset == 0)
     {
-        drawWsgSimple(cutscene->textBox, 0, 0);
+        if(style->drawTextbox)
+        {
+            drawWsgSimple(cutscene->textBox, 0, 0);
+        }
         int8_t iconFrame = (cutscene->PB_A_frameCounter / 8);
         if(iconFrame > 3)
         {
