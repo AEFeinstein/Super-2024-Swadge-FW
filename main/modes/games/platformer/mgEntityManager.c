@@ -2079,7 +2079,7 @@ mgEntity_t* createBossSmashGorilla(mgEntityManager_t* entityManager, uint16_t x,
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
-    entity->tileCollider         = &entityTileCollider_1x2;
+    entity->tileCollider         = &entityTileCollider_smash_gorilla;
 
     entity->drawHandler  = &mg_defaultEntityDrawHandler;
     entity->linkedEntity = NULL;
@@ -2123,7 +2123,7 @@ mgEntity_t* createBossGrindPangolin(mgEntityManager_t* entityManager, uint16_t x
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
-    entity->tileCollider         = &entityTileCollider_1x2;
+    entity->tileCollider         = &entityTileCollider_grind_pangolin;
 
     entity->drawHandler  = &mg_defaultEntityDrawHandler;
     entity->linkedEntity = NULL;
@@ -2167,7 +2167,7 @@ mgEntity_t* createBossDrainBat(mgEntityManager_t* entityManager, uint16_t x, uin
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
-    entity->tileCollider         = &entityTileCollider_1x2;
+    entity->tileCollider         = &entityTileCollider_drain_bat;
 
     entity->drawHandler  = &mg_defaultEntityDrawHandler;
     entity->linkedEntity = NULL;
