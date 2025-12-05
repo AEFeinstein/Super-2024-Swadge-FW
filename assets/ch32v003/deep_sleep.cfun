@@ -21,7 +21,7 @@ int main()
     // Only power on what's needed.
     RCC->AHBPCENR  = RCC_AHBPeriph_SRAM;
     RCC->APB2PCENR = RCC_APB2Periph_GPIOD | RCC_APB2Periph_AFIO;
-    GPIOD->CFGLR = (GPIO_CFGLR_IN_FLOAT)<<(4 * 1);
+    GPIOD->CFGLR   = (GPIO_CFGLR_IN_FLOAT) << (4 * 1);
     funDigitalWrite(PD1, 1);
 
     RCC->APB2PCENR |= RCC_AFIOEN;
