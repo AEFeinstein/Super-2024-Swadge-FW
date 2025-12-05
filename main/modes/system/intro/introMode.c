@@ -51,6 +51,7 @@ static void introSwadgePass(int64_t elapsedUs);
 static void introSona(int64_t elapsedUs);
 static void playIntro(int64_t elapsedUs);
 
+
 #define ALL_BUTTONS  (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_B | PB_START | PB_SELECT)
 #define DPAD_BUTTONS (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT)
 
@@ -75,6 +76,12 @@ static const char imuTitle[]           = "Tilt Controls";
 static const char passTitle[]          = "SwadgePass";
 static const char sonaTitle[]          = "Your Sona";
 static const char exitTitle[]          = "Mission Complete";
+
+   static const char *suffixes[] = {
+        "\nIf you don't like it, you can adjust it in the next step.",
+        "\nIf you don't like it, you can adjust it in the Sona Creator Mode."
+    };
+
 static const cnfsFileIdx_t introwsgs[] = {
 
     MAGCOM_2_WSG,
@@ -226,7 +233,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .buttons = PB_B, 
                     },
         .title = sonaTitle,
-        .detail = "This is a Sona. It's your personal avatar! Make your Sona by pressing B.",
+        .detail = "This is a Sona, your Swadge Avatar! You can make yours in the Sona Creator Mode.",
         
     },
     {
@@ -270,14 +277,14 @@ static const tutorialStep_t buttonsSteps[] = {
         .backtrackSteps = 3,
 
         .title = exitTitle,
-        .detail = "Transitioning to the Swadgesona Creator...",
+        .detail = "Exiting...",
     },
     {
         .trigger = {
             .type = NO_TRIGGER
         },
         .title = endTitle,
-        .detail = "Transitioning to the Swadgesona Creator...",
+        .detail = "Exiting...",
     },
 };
 
@@ -870,7 +877,17 @@ static void introMainLoop(int64_t elapsedUs)
         }
         case END:
         {
-            switchToSwadgeMode(&swsnCreatorMode);
+            if (getTutorialCompletedSetting()==0)
+            {
+                trophyUpdate(&tutorialTrophies[2], 1, 1);
+                setTutorialCompletedSetting(1);
+               switchToSwadgeMode(&swsnCreatorMode);
+            }
+            else
+            {
+                switchToSwadgeMode(&mainMenuMode);
+            }
+
             break;
         }
         case MAGCOM:
@@ -1056,8 +1073,6 @@ static void introTutorialCb(tutorialState_t* state, const tutorialStep_t* prev, 
     }
     else if (next != NULL && next->trigger.type == NO_TRIGGER)
     {
-        setTutorialCompletedSetting(true);
-        switchToSwadgeMode(&mainMenuMode);
         ESP_LOGI(TAG, "Last trigger entered!");
     }
 }
@@ -1453,7 +1468,9 @@ static void introSwadgePass(int64_t elapsedUs)
 
     nameData_t username = *getSystemUsername();
     char prefix[]       = "Your username is \n";
-    char suffix[]       = "\nIf you don't like it, you can adjust it in the next step.";
+    char suffix[70];
+    strcpy(suffix, suffixes[getTutorialCompletedSetting()]);
+    
     int namelen         = sizeof(username.nameBuffer);
     int prelen          = sizeof(prefix);
     int suflen          = sizeof(suffix);
@@ -1463,3 +1480,5 @@ static void introSwadgePass(int64_t elapsedUs)
 
     drawTextWordWrap(&iv->smallFont, c000, buf, &locs.x, &locs.y, TFT_WIDTH - 25, 140);
 }
+
+
