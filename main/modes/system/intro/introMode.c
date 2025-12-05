@@ -51,7 +51,6 @@ static void introSwadgePass(int64_t elapsedUs);
 static void introSona(int64_t elapsedUs);
 static void playIntro(int64_t elapsedUs);
 
-
 #define ALL_BUTTONS  (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_B | PB_START | PB_SELECT)
 #define DPAD_BUTTONS (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT)
 
@@ -63,24 +62,22 @@ static const char endTitle[] = "Mission Complete!";
 // static const char endDetail[] = "You are now Swadge Certified! Remember, with great power comes great
 // responsibility.";
 
-static const char dpadTitle[]          = "The D-Pad";
-static const char aBtnTitle[]          = "A Button";
-static const char bBtnTitle[]          = "B Button";
-static const char mnuBtnTitle[]        = "Menu Button";
-static const char quickmnuTitle[]      = "Quick Settings";
-static const char pauseBtnTitle[]      = "Pause Button";
-static const char spkTitle[]           = "Speaker";
-static const char micTitle[]           = "Microphone";
-static const char touchpadTitle[]      = "Touchpad";
-static const char imuTitle[]           = "Tilt Controls";
-static const char passTitle[]          = "SwadgePass";
-static const char sonaTitle[]          = "Your Sona";
-static const char exitTitle[]          = "Mission Complete";
+static const char dpadTitle[]     = "The D-Pad";
+static const char aBtnTitle[]     = "A Button";
+static const char bBtnTitle[]     = "B Button";
+static const char mnuBtnTitle[]   = "Menu Button";
+static const char quickmnuTitle[] = "Quick Settings";
+static const char pauseBtnTitle[] = "Pause Button";
+static const char spkTitle[]      = "Speaker";
+static const char micTitle[]      = "Microphone";
+static const char touchpadTitle[] = "Touchpad";
+static const char imuTitle[]      = "Tilt Controls";
+static const char passTitle[]     = "SwadgePass";
+static const char sonaTitle[]     = "Your Sona";
+static const char exitTitle[]     = "Mission Complete";
 
-   static const char *suffixes[] = {
-        "\nIf you don't like it, you can adjust it in the next step.",
-        "\nIf you don't like it, you can adjust it in the Sona Creator Mode."
-    };
+static const char* suffixes[] = {"\nIf you don't like it, you can adjust it in the next step.",
+                                 "\nIf you don't like it, you can adjust it in the Sona Creator Mode."};
 
 static const cnfsFileIdx_t introwsgs[] = {
 
@@ -877,11 +874,11 @@ static void introMainLoop(int64_t elapsedUs)
         }
         case END:
         {
-            if (getTutorialCompletedSetting()==0)
+            if (getTutorialCompletedSetting() == 0)
             {
                 trophyUpdate(&tutorialTrophies[2], 1, 1);
                 setTutorialCompletedSetting(1);
-               switchToSwadgeMode(&swsnCreatorMode);
+                switchToSwadgeMode(&swsnCreatorMode);
             }
             else
             {
@@ -1470,15 +1467,13 @@ static void introSwadgePass(int64_t elapsedUs)
     char prefix[]       = "Your username is \n";
     char suffix[70];
     strcpy(suffix, suffixes[getTutorialCompletedSetting()]);
-    
-    int namelen         = sizeof(username.nameBuffer);
-    int prelen          = sizeof(prefix);
-    int suflen          = sizeof(suffix);
+
+    int namelen = sizeof(username.nameBuffer);
+    int prelen  = sizeof(prefix);
+    int suflen  = sizeof(suffix);
 
     char buf[namelen + prelen + suflen + 2];
     snprintf(buf, sizeof(buf) - 1, "%s%s%s", prefix, username.nameBuffer, suffix);
 
     drawTextWordWrap(&iv->smallFont, c000, buf, &locs.x, &locs.y, TFT_WIDTH - 25, 140);
 }
-
-

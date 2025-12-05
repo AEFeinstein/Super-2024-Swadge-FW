@@ -97,7 +97,8 @@ cipher_t* cipher;
 //==============================================================================
 
 /**
- * @brief Using global vec_t ScreenCenter, convert a vec_t RTheta from <radius in pixels, rotation in degrees> to <x coordinate, y coordinate>, optionally ensuring the coordinates are buffered from the edge of the screen
+ * @brief Using global vec_t ScreenCenter, convert a vec_t RTheta from <radius in pixels, rotation in degrees> to <x
+ * coordinate, y coordinate>, optionally ensuring the coordinates are buffered from the edge of the screen
  *
  * @param RTheta A vec_t in the form <radius in pixels, rotation in degrees>
  * @param TextBuffer A boolean to ensure the coordinates are inside the visible area of the screen
@@ -272,7 +273,8 @@ static void cipherMainLoop(int64_t elapsedUs)
             .y = ((cipher->innerRace->timeSpinning + cipher->RaceOffset) / UsPerDeg) + degPerChar * i,
         };
         inPos = RThetaToXY(inPos, false);
-        drawText(cipher->ibm, cipher->text, lettersRace[i], inPos.x - (textWidth(cipher->ibm, lettersRace[i]) /2), inPos.y - 5);
+        drawText(cipher->ibm, cipher->text, lettersRace[i], inPos.x - (textWidth(cipher->ibm, lettersRace[i]) / 2),
+                 inPos.y - 5);
 
         // draw outer race
         vec_t outPos = {
@@ -280,7 +282,8 @@ static void cipherMainLoop(int64_t elapsedUs)
             .y = ((cipher->outerRace->timeSpinning + cipher->RaceOffset) / UsPerDeg) + degPerChar * i,
         };
         outPos = RThetaToXY(outPos, false);
-        drawText(cipher->ibm, cipher->text, numbersRace[i], outPos.x - (textWidth(cipher->ibm, numbersRace[i]) /2), outPos.y - 5);
+        drawText(cipher->ibm, cipher->text, numbersRace[i], outPos.x - (textWidth(cipher->ibm, numbersRace[i]) / 2),
+                 outPos.y - 5);
     }
 
     // handle input
