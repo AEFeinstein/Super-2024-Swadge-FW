@@ -261,11 +261,12 @@ void platformerEnterMode(void)
     if(platformer->gameData.cutscene == NULL)
     {
         platformer->gameData.cutscene = initCutscene(goToReadyScreen, CUTSCENE_NEXT_0_WSG);
-        addCutsceneStyle(platformer->gameData.cutscene, c000, PULSE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Pulse", 5, true);
-        addCutsceneStyle(platformer->gameData.cutscene, c530, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 4, true);
-        addCutsceneStyle(platformer->gameData.cutscene, c310, BIGMA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Bigma", 2, false);
-        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 7, false);
-        addCutsceneStyle(platformer->gameData.cutscene, c454, ABILITY_UNLOCKED_WSG, TEXTBOX_ABILITY_UNLOCKED_WSG, "", 1, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c000, PULSE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Pulse", 5, true, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c530, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 4, true, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c310, BIGMA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Bigma", 2, false, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 7, false, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c454, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "", 1, true, true, false);//ability unlocked
+        addCutsceneStyle(platformer->gameData.cutscene, c454, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "System Text", 1, true, false, true);
     }
 
     setFrameRateUs(16666);

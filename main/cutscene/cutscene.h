@@ -38,6 +38,8 @@ typedef struct
     cnfsFileIdx_t textBoxIdx;
     uint8_t numSpriteVariations; ///<A random number in range of this will be rolled and added to the spriteIdx. Provide 1 for no variation;
     bool isProtagonist; ///<If true, then the sprite enters and leaves the left side of the screen. If false, then the right side.
+    bool drawSprite;    ///< Set false to draw no sprite.
+    bool drawTextBox;   ///< Set false to draw no textbox.
 } cutsceneStyle_t;
 
 /**
@@ -61,7 +63,7 @@ typedef struct
 
 cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx) __attribute__((warn_unused_result));
 void removeAllStyles(cutscene_t* cutscene);
-void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t color, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numPoseVariations, bool isProtagonist);
+void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t color, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numPoseVariations, bool isProtagonist, bool drawSprite, bool drawTextbox);
 void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation);
 void updateCutscene(cutscene_t* cutscene, int16_t btnState);
 void drawCutscene(cutscene_t* cutscene, font_t* font);
