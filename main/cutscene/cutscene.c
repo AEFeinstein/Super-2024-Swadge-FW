@@ -227,9 +227,9 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
     drawText(font, c541, variationText, 14, 14);
     if(cutscene->xOffset == 0)
     {
-        if(style->drawTextbox)
+        if(style->drawTextBox)
         {
-            drawWsgSimple(cutscene->textBox, 0, 0);
+            drawWsgSimple(cutscene->textBox, 0, 137);
         }
         int8_t iconFrame = (cutscene->PB_A_frameCounter / 8);
         if(iconFrame > 3)
