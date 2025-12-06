@@ -113,7 +113,7 @@ static void ccmgSliceInitMicrogame(void)
     ccmgsl->canvasPos.y  = ccmgsl->targetArea.pos.y + ccmgsl->targetLineY - SPLATTER_AREA_HEIGHT / 2;
 
     ccmgsl->wsg.canvas.px = (paletteColor_t*)heap_caps_malloc_tag(
-        sizeof(paletteColor_t) * ccmgsl->wsg.canvas.w * ccmgsl->wsg.canvas.h, MALLOC_CAP_8BIT, "wsg");
+        sizeof(paletteColor_t) * ccmgsl->wsg.canvas.w * ccmgsl->wsg.canvas.h, MALLOC_CAP_8BIT, "slice_mg");
     for (uint32_t i = 0; i < ccmgsl->wsg.canvas.w * ccmgsl->wsg.canvas.h; i++)
     {
         ccmgsl->wsg.canvas.px[i] = cTransparent;
