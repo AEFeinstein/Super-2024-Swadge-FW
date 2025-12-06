@@ -2,10 +2,54 @@
 #include "sudoku_game.h"
 #include "sudoku_ui.h"
 
+
+// "Hint Buffer" tools
+// A hint buffer is just a simple bytecode stream describing sudoku actions
+// This makes it much easier to deal with move sequences that might require
+// several rounds of elimination before a digit is actually added, or for
+// techniques (such as guess-and-check) that might solve multiple digits all at once
+
+// The buffer always starts with 4 bytes, which represent the length of the buffer in big-endian
+// (excluding the length field itself)
+// Then, it is a stream of step descriptors which always start with an opcode.
+// The opcode is a single byte with
+//    - the high nibble containing a 'count' field, and
+//    - the low nibble containing an opcode for the step descriptor type
+// If the count field is used, the step may have additional data
+// Opcode:   [CCCCNNNN] C: count (4 bits); N: opcode (4 bits, 0-15)
+// Mark step: 0x_0 [type]  --- count is ignored
+// Set digit: 0x_1 [digit] [pos * count]
+// Add notes: 0x_2 [notes-msb] [notes-lsb] [pos * count]
+// Del notes: 0x_3 [notes-msb] [notes-lsb] [pos * count]
+// ====================
+// NOT YET IMPLEMENTED: (and possibly not needed)
+// Highlight: 0x_4 [digit] [box] [row] [col]             --- Highlight cells matching ALL params (not set to 0xFF). Also, `count` used as color
+
+#define OP_STEP 0x0
+#define OP_SET_DIGIT 0x1
+#define OP_ADD_NOTE 0x2
+#define OP_DEL_NOTE 0x3
+#define OP_HIGHLIGHT 0x4
+
+#define OP_MASK_OP 0x0F
+#define OP_MASK_COUNT 0xF0
+#define OP_SHIFT_COUNT 4
+
+#define MAKE_OPCODE(code, count) (((code) & OP_MASK_OP) | (((count) << OP_SHIFT_COUNT) & OP_MASK_COUNT))
+#define GET_LENGTH(buf) (((buf)[0] << 24) | ((buf)[1] << 16) | ((buf)[2] << 8) | (buf)[3])
+#define SET_LENGTH(buf, length) do { buf[0] = ((length) >> 24) & 0xFF; buf[1] = ((length) >> 16) & 0xFF; buf[2] = ((length) >> 8) & 0xFF; buf[3] = (length) & 0xFF; } while (0)
+
 static bool eliminateShadows(sudokuMoveDesc_t* desc, uint16_t* notes, const sudokuGrid_t* board);
 static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* pos0, uint8_t* pos1, uint8_t* pos2, const sudokuGrid_t* board);
 static void applyCellElimination(const sudokuGrid_t* board, uint16_t* notes, int pos, uint16_t mask, int elimCount, uint8_t* eliminations);
 static void addElimination(sudokuMoveDesc_t* desc, int cellCount, uint16_t digits, sudokuRegionType_t regionType, int regionNum, uint8_t* cellPos);
+
+bool hintBufNextStep(uint8_t* buf, size_t maxlen, sudokuTechniqueType_t id);
+bool hintBufSetDigit(uint8_t* buf, size_t maxlen, uint8_t digit, uint8_t pos);
+bool hintBufSetMultiDigit(uint8_t* buf, size_t maxlen, uint8_t digit, int count, const uint8_t* pos);
+bool hintBufAddNote(uint8_t* buf, size_t maxlen, uint16_t notes, uint8_t pos);
+bool hintBufDelNote(uint8_t* buf, size_t maxlen, uint16_t notes, uint8_t pos);
+bool hintBufSetMultiNote(uint8_t* buf, size_t maxlen, bool add, uint16_t notes, int count, const uint8_t* pos);
 
 static bool eliminateShadows(sudokuMoveDesc_t* desc, uint16_t* notes, const sudokuGrid_t* board)
 {
@@ -448,6 +492,9 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
     uint8_t eliminationCount = 0;
     uint8_t eliminationPos[3] = {0};
 
+    uint8_t hintBuf[1024];
+    SET_LENGTH(hintBuf, 0);
+
 #define ADD_ELIMINATIONS(regionType, regionNum) addElimination(desc, eliminationCount, eliminationDigits, regionType, regionNum, eliminationPos)
 
     // 0. Copy the board notes
@@ -857,4 +904,114 @@ void sudokuApplyMove(sudokuGrid_t* board, const sudokuMoveDesc_t* desc)
             }
         }
     }
+}
+
+bool hintBufNextStep(uint8_t* buf, size_t maxlen, sudokuTechniqueType_t id)
+{
+    if (maxlen < 4)
+    {
+        return false;
+    }
+
+    uint32_t len = GET_LENGTH(buf);
+    if (len + 2 > maxlen)
+    {
+        return false;
+    }
+
+    buf[len++] = OP_STEP;
+    buf[len++] = (uint8_t)id;
+
+    SET_LENGTH(buf, len);
+
+    return true;
+}
+
+bool hintBufSetDigit(uint8_t* buf, size_t maxlen, uint8_t digit, uint8_t pos)
+{
+    if (maxlen < 4)
+    {
+        return false;
+    }
+
+    uint32_t len = GET_LENGTH(buf);
+    if (len + 3 > maxlen)
+    {
+        return false;
+    }
+
+    buf[len++] = MAKE_OPCODE(OP_SET_DIGIT, 0);
+    buf[len++] = digit;
+    buf[len++] = pos;
+
+    SET_LENGTH(buf, len);
+
+    return true;
+}
+
+bool hintBufSetMultiDigit(uint8_t* buf, size_t maxlen, uint8_t digit, int count, const uint8_t* pos)
+{
+    if (maxlen < 4 || count < 1)
+    {
+        return false;
+    }
+
+    uint32_t len = GET_LENGTH(buf);
+    if (len + 2 + count > maxlen)
+    {
+        return false;
+    }
+
+    buf[len++] = MAKE_OPCODE(OP_SET_DIGIT, count - 1);
+    buf[len++] = digit;
+
+    for (int  n = 0; n < count; n++)
+    {
+        buf[len++] = pos[n];
+    }
+
+    SET_LENGTH(buf, len);
+
+    return true;
+}
+
+bool hintBufAddNote(uint8_t* buf, size_t maxlen, uint16_t notes, uint8_t pos)
+{
+    return hintBufSetMultiNote(buf, maxlen, true, notes, 1, &pos);
+}
+
+bool hintBufDelNote(uint8_t* buf, size_t maxlen, uint16_t notes, uint8_t pos)
+{
+    return hintBufSetMultiNote(buf, maxlen, false, notes, 1, &pos);
+}
+
+bool hintBufSetMultiNote(uint8_t* buf, size_t maxlen, bool add, uint16_t notes, int count, const uint8_t* pos)
+{
+    if (maxlen < 4 || count < 1)
+    {
+        return false;
+    }
+
+    uint32_t len = GET_LENGTH(buf);
+    if (len + 3 + count > maxlen)
+    {
+        return false;
+    }
+
+    buf[len++] = MAKE_OPCODE(add ? OP_ADD_NOTE : OP_DEL_NOTE, count - 1);
+    buf[len++] = (notes >> 8) & 0xFF;
+    buf[len++] = notes & 0xFF;
+
+    for (int n = 0; n < count; n++)
+    {
+        buf[len++] = pos[n];
+    }
+
+    SET_LENGTH(buf, len);
+
+    return true;
+}
+
+void doThing(void)
+{
 }

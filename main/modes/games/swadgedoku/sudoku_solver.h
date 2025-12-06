@@ -13,6 +13,19 @@ typedef enum
     REGION_COLUMN,
 } sudokuRegionType_t;
 
+typedef enum
+{
+    SINGLE, // only empty square left in row/col/box
+    ONLY_POSSIBLE, // only possibility in the square
+    NAKED_PAIR, // eliminate possibilities
+    HIDDEN_PAIR,
+    NAKED_TRIPLE,
+    HIDDEN_TRIPLE,
+    X_WING,
+    XY_WING,
+    GUESS,
+} sudokuTechniqueType_t;
+
 typedef struct
 {
 } sudokuMoveHighlight_t;
