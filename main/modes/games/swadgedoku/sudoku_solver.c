@@ -39,10 +39,10 @@
 #define GET_LENGTH(buf) (((buf)[0] << 24) | ((buf)[1] << 16) | ((buf)[2] << 8) | (buf)[3])
 #define SET_LENGTH(buf, length) do { buf[0] = ((length) >> 24) & 0xFF; buf[1] = ((length) >> 16) & 0xFF; buf[2] = ((length) >> 8) & 0xFF; buf[3] = (length) & 0xFF; } while (0)
 
-static bool eliminateShadows(sudokuMoveDesc_t* desc, uint16_t* notes, const sudokuGrid_t* board);
+static bool eliminateShadows(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, uint16_t* notes, const sudokuGrid_t* board);
 static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* pos0, uint8_t* pos1, uint8_t* pos2, const sudokuGrid_t* board);
-static void applyCellElimination(const sudokuGrid_t* board, uint16_t* notes, int pos, uint16_t mask, int elimCount, uint8_t* eliminations);
-static void addElimination(sudokuMoveDesc_t* desc, int cellCount, uint16_t digits, sudokuRegionType_t regionType, int regionNum, uint8_t* cellPos);
+static void applyCellElimination(const sudokuGrid_t* board, uint16_t* notes, int pos, uint16_t mask, int elimCount, const uint8_t* eliminations);
+static void addElimination(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, int cellCount, uint16_t digits, sudokuRegionType_t regionType, int regionNum, uint8_t* cellPos);
 
 bool hintBufNextStep(uint8_t* buf, size_t maxlen, sudokuTechniqueType_t id);
 bool hintBufSetDigit(uint8_t* buf, size_t maxlen, uint8_t digit, uint8_t pos);
@@ -50,8 +50,9 @@ bool hintBufSetMultiDigit(uint8_t* buf, size_t maxlen, uint8_t digit, int count,
 bool hintBufAddNote(uint8_t* buf, size_t maxlen, uint16_t notes, uint8_t pos);
 bool hintBufDelNote(uint8_t* buf, size_t maxlen, uint16_t notes, uint8_t pos);
 bool hintBufSetMultiNote(uint8_t* buf, size_t maxlen, bool add, uint16_t notes, int count, const uint8_t* pos);
+bool hintBufAddHighlight(uint8_t* buf, size_t maxlen, int digit, int box, int row, int col);
 
-static bool eliminateShadows(sudokuMoveDesc_t* desc, uint16_t* notes, const sudokuGrid_t* board)
+static bool eliminateShadows(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, uint16_t* notes, const sudokuGrid_t* board)
 {
     // TODO
     // Ok here's the strategy:
@@ -140,7 +141,7 @@ static bool eliminateShadows(sudokuMoveDesc_t* desc, uint16_t* notes, const sudo
 
                 if (eliminated)
                 {
-                    addElimination(desc, cellCount, bit, REGION_ROW, possibleRows[box], cellPos);
+                    addElimination(desc, hintBuf, maxlen, cellCount, bit, REGION_ROW, possibleRows[box], cellPos);
                     return true;
                 }
             }
@@ -171,7 +172,7 @@ static bool eliminateShadows(sudokuMoveDesc_t* desc, uint16_t* notes, const sudo
 
                 if (eliminated)
                 {
-                    addElimination(desc, cellCount, bit, REGION_COLUMN, possibleCols[box], cellPos);
+                    addElimination(desc, hintBuf, maxlen, cellCount, bit, REGION_COLUMN, possibleCols[box], cellPos);
                     return true;
                 }
             }
@@ -421,7 +422,7 @@ static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* 
     return 0;
 }
 
-static void applyCellElimination(const sudokuGrid_t* board, uint16_t* notes, int pos, uint16_t mask, int elimCount, uint8_t* eliminations)
+static void applyCellElimination(const sudokuGrid_t* board, uint16_t* notes, int pos, uint16_t mask, int elimCount, const uint8_t* eliminations)
 {
     // First check if this is one of the eliminated values
     bool isTarget = false;
@@ -448,9 +449,34 @@ static void applyCellElimination(const sudokuGrid_t* board, uint16_t* notes, int
     }
 }
 
-static void addElimination(sudokuMoveDesc_t* desc, int cellCount, uint16_t digits, sudokuRegionType_t regionType, int regionNum, uint8_t* cellPos)
+static void addElimination(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, int cellCount, uint16_t digits, sudokuRegionType_t regionType, int regionNum, uint8_t* cellPos)
 {
-    if (desc->stepCount < MAX_ELIMINATION_STEPS)
+    hintBufSetMultiNote(hintBuf, maxlen, false, digits, cellCount, cellPos);
+
+    switch (regionType)
+    {
+        case REGION_NONE:
+        {
+            break;
+        }
+        case REGION_BOX:
+        {
+            hintBufAddHighlight(hintBuf, maxlen, -1, regionNum, -1, -1);
+            break;
+        }
+        case REGION_ROW:
+        {
+            hintBufAddHighlight(hintBuf, maxlen, -1, -1, regionNum, -1);
+            break;
+        }
+        case REGION_COLUMN:
+        {
+            hintBufAddHighlight(hintBuf, maxlen, -1, -1, -1, regionNum);
+            break;
+        }
+    }
+
+    /*if (desc->stepCount < MAX_ELIMINATION_STEPS)
     {
         sudokuMoveElimination_t* elim = &desc->eliminationSteps[desc->stepCount];
         elim->eliminationCount = cellCount;
@@ -463,7 +489,7 @@ static void addElimination(sudokuMoveDesc_t* desc, int cellCount, uint16_t digit
         }
 
         desc->stepCount++;
-    }
+    }*/
 }
 
 /**
@@ -493,9 +519,10 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
     uint8_t eliminationPos[3] = {0};
 
     uint8_t hintBuf[1024];
+    size_t hintBufLen = sizeof(hintBuf);
     SET_LENGTH(hintBuf, 0);
 
-#define ADD_ELIMINATIONS(regionType, regionNum) addElimination(desc, eliminationCount, eliminationDigits, regionType, regionNum, eliminationPos)
+#define ADD_ELIMINATIONS(regionType, regionNum) addElimination(desc, hintBuf, hintBufLen, eliminationCount, eliminationDigits, regionType, regionNum, eliminationPos)
 
     // 0. Copy the board notes
     memcpy(notes, board->notes, sizeof(uint16_t) * boardLen);
@@ -548,14 +575,19 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
 
                     if (count == 1)
                     {
+                        hintBufSetDigit(hintBuf, hintBufLen, digit, pos);
+                        hintBufAddHighlight(hintBuf, hintBufLen, digit, box, -1, -1);
+                        hintToOverlay(overlay, board, -1, hintBuf, hintBufLen);
+                        return true;
+
                         // Done! We found exactly one valid position for this digit
-                        desc->pos = pos;
+                        /*desc->pos = pos;
                         desc->digit = digit;
                         desc->message = "This is the only valid position for a%4$s %1$d within the box";
                         desc->detail = NULL;
                         //ADD_ELIMINATIONS(REGION_BOX, box);
                         overlayBox = box;
-                        goto do_overlay;
+                        goto do_overlay;*/
                     }
 
                     // No valid position found, continue to the next box
@@ -591,6 +623,11 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
 
                     if (count == 1)
                     {
+                        hintBufSetDigit(hintBuf, hintBufLen, digit, pos);
+                        hintBufAddHighlight(hintBuf, hintBufLen, digit, -1, row, -1);
+                        hintToOverlay(overlay, board, -1, hintBuf, hintBufLen);
+                        return true;
+
                         desc->pos = pos;
                         desc->digit = digit;
                         desc->message = "This is the only valid position for a%4$s %1$d within row %2$d";
@@ -631,12 +668,17 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
 
                     if (count == 1)
                     {
-                        desc->pos = pos;
+                        hintBufSetDigit(hintBuf, hintBufLen, digit, pos);
+                        hintBufAddHighlight(hintBuf, hintBufLen, digit, -1, -1, col);
+                        hintToOverlay(overlay, board, -1, hintBuf, hintBufLen);
+                        return true;
+
+                        /*desc->pos = pos;
                         desc->digit = digit;
                         desc->message = "This is the only valid position for a%4$s %1$d within column %3$d";
                         //ADD_ELIMINATIONS(REGION_COLUMN, col);
                         overlayCol = pos % board->size;
-                        goto do_overlay;
+                        goto do_overlay;*/
                     }
                 }
             }
@@ -649,8 +691,12 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
             if (0 == board->grid[n] && notes[n] && 1 == __builtin_popcount(notes[n]))
             {
                 // only one possibility!
-                desc->pos = n;
-                desc->digit = __builtin_ctz(notes[n]) + 1;
+                uint8_t digit = __builtin_ctz(notes[n]) + 1;
+                hintBufSetDigit(hintBuf, hintBufLen, digit, n);
+                hintBufAddHighlight(hintBuf, hintBufLen, -1, -1, n / board->size, n % board->size);
+                hintToOverlay(overlay, board, -1, hintBuf, hintBufLen);
+                return true;
+
                 desc->message = "A%4$s %1$d is the only possible digit in this square";
                 //ADD_ELIMINATIONS(REGION_NONE, 0);
                 overlayRow = n / board->size;
@@ -668,16 +714,16 @@ bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudo
                 // Save the previous notes
                 ESP_LOGI("Solver", "Didn't find any obvious moves, eliminating pointers...");
                 memcpy(prevNotes, notes, sizeof(uint16_t) * boardLen);
-                if (!eliminateShadows(desc, notes, board))
+                if (!eliminateShadows(desc, hintBuf, hintBufLen, notes, board))
                 {
                     // No more shadows to eliminate, try the next stage
+                    ESP_LOGI("Solver", "Couldn't eliminate any pointers, next stage...");
                     stage++;
                 }
 
                 // 4. Repeat step 1
                 // 5. Repeat step 2
-
-                stage++;
+                break;
             }
 
             case 1:
@@ -868,9 +914,9 @@ void sudokuApplyMove(sudokuGrid_t* board, const sudokuMoveDesc_t* desc)
         if (step->eliminationCount > 0)
         {
             // Apply the mask to the pair/triple
-            for (int i = 0; i < step->eliminationCount; i++)
+            for (int j = 0; j < step->eliminationCount; j++)
             {
-                board->notes[step->eliminations[i]] &= step->eliminationMask;
+                board->notes[step->eliminations[j]] &= step->eliminationMask;
             }
 
             // Apply the mask to the
@@ -901,6 +947,190 @@ void sudokuApplyMove(sudokuGrid_t* board, const sudokuMoveDesc_t* desc)
 
                     applyCellElimination(board, board->notes, pos, step->eliminationMask, step->eliminationCount, step->eliminations);
                 }
+            }
+        }
+    }
+}
+
+void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepNum, const uint8_t* hint, size_t n)
+{
+    size_t boardSize = game->size * game->size;
+
+    // Skip the length header
+    uint32_t idx = 4;
+    uint32_t len = GET_LENGTH(hint);
+
+    sudokuOverlayShape_t* shape;
+
+    int curStep = -1;
+
+    while (idx < n && idx < len + 4)
+    {
+        uint8_t header = hint[idx++];
+        uint8_t op = header & OP_MASK_OP;
+        uint8_t count = (header & OP_MASK_COUNT) >> OP_SHIFT_COUNT;
+
+        switch (op)
+        {
+            case OP_STEP:
+            {
+                if (curStep == -1)
+                {
+                    curStep = 0;
+                }
+                else
+                {
+                    curStep++;
+                }
+
+                sudokuTechniqueType_t type = (sudokuTechniqueType_t)hint[idx++];
+                break;
+            }
+
+            case OP_SET_DIGIT:
+            {
+                uint8_t digit = hint[idx++];
+                for (int digitNum = 0; digitNum < count + 1; digitNum++)
+                {
+                    uint8_t pos = hint[idx++];
+
+                    if (stepNum == -1 || curStep == stepNum)
+                    {
+                        uint8_t r = pos / boardSize;
+                        uint8_t c = pos % boardSize;
+
+                        shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                        shape->type = OVERLAY_DIGIT;
+                        shape->color = c005;
+                        shape->tag = ST_HINT;
+                        shape->digit.digit = digit;
+                        shape->digit.pos.x = c * BOX_SIZE_SUBPOS;
+                        shape->digit.pos.y = r * BOX_SIZE_SUBPOS;
+                        getOverlayPos(&shape->digit.pos.x, &shape->digit.pos.y, r, c, SUBPOS_CENTER);
+                        push(&overlay->shapes, shape);
+
+                        overlay->gridOpts[pos] |= OVERLAY_SKIP;
+                    }
+                }
+                break;
+            }
+
+            case OP_ADD_NOTE:
+            case OP_DEL_NOTE:
+            {
+                uint16_t notes = hint[idx++];
+                notes <<= 8;
+                notes |= hint[idx++];
+                paletteColor_t color = (op == OP_ADD_NOTE) ? c005 : c500;
+
+                for (int posIdx = 0; posIdx < count + 1 && idx < n; posIdx++)
+                {
+                    int pos = hint[idx++];
+
+                    if (stepNum == -1 || curStep == stepNum)
+                    {
+                        shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                        shape->type = OVERLAY_NOTES_SHAPE;
+                        shape->color = color;
+                        shape->tag = ST_HINT;
+                        shape->notes.notes = notes;
+
+                        int elimR = pos / game->size;
+                        int elimC = pos % game->size;
+                        getOverlayPos(&shape->notes.pos.x, &shape->notes.pos.y, elimR, elimC, SUBPOS_CENTER);
+                        push(&overlay->shapes, shape);
+
+                        overlay->gridOpts[pos] |= OVERLAY_SKIP;
+                    }
+                }
+                break;
+            }
+
+            case OP_HIGHLIGHT:
+            {
+                uint8_t targetDigit = hint[idx++];
+                uint8_t targetBox = hint[idx++];
+                uint8_t targetRow = hint[idx++];
+                uint8_t targetCol = hint[idx++];
+
+                bool useDigit = (targetDigit != 0 && targetDigit <= game->base);
+                bool useBox = (targetBox < game->base);
+                bool useRow = (targetRow < game->size);
+                bool useCol = (targetCol < game->size);
+
+                if (stepNum != -1 && curStep != stepNum)
+                {
+                    break;
+                }
+
+                if (useBox && !useDigit && !useRow && !useCol)
+                {
+                    // box the entire... box
+                    addBoxHighlight(overlay, game, targetBox);
+                    break;
+                }
+                else if (useRow && !useDigit && !useBox && !useCol)
+                {
+                    // box the entire row
+                    shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                    shape->type = OVERLAY_RECT;
+                    shape->color = c050;
+                    shape->tag = ST_HINT;
+                    getOverlayPos(&shape->rectangle.pos.x, &shape->rectangle.pos.y, targetRow, 0, SUBPOS_NW);
+                    getOverlayPos(&shape->rectangle.width, &shape->rectangle.height, 1, game->size, SUBPOS_NW);
+                    push(&overlay->shapes, shape);
+                    break;
+                }
+                else if (useCol && !useDigit && !useBox && !useRow)
+                {
+                    // box the entire column
+                    shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                    shape->type = OVERLAY_RECT;
+                    shape->color = c050;
+                    shape->tag = ST_HINT;
+                    getOverlayPos(&shape->rectangle.pos.x, &shape->rectangle.pos.y, 0, targetCol, SUBPOS_NW);
+                    getOverlayPos(&shape->rectangle.width, &shape->rectangle.height, game->size, 1, SUBPOS_NW);
+                    push(&overlay->shapes, shape);
+                    break;
+                }
+
+                for (int pos = 0; pos < boardSize * boardSize; pos++)
+                {
+                    int row = pos / boardSize;
+                    int col = pos % boardSize;
+                    int box = game->boxMap[pos];
+                    int digit = game->grid[pos];
+
+                    if (useDigit && digit != targetDigit)
+                    {
+                        continue;
+                    }
+
+                    if (useBox && box != targetBox)
+                    {
+                        continue;
+                    }
+
+                    if (useRow && row != targetRow)
+                    {
+                        continue;
+                    }
+
+                    if (useCol && col != targetCol)
+                    {
+                        continue;
+                    }
+
+                    // box a single square
+                    shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                    shape->type = OVERLAY_RECT;
+                    shape->color = c050;
+                    shape->tag = ST_HINT;
+                    getOverlayPos(&shape->rectangle.pos.x, &shape->rectangle.pos.y, row, col, SUBPOS_NW);
+                    getOverlayPos(&shape->rectangle.width, &shape->rectangle.height, 1, 1, SUBPOS_NW);
+                    push(&overlay->shapes, shape);
+                }
+                break;
             }
         }
     }
@@ -1006,6 +1236,35 @@ bool hintBufSetMultiNote(uint8_t* buf, size_t maxlen, bool add, uint16_t notes, 
     {
         buf[len++] = pos[n];
     }
+
+    SET_LENGTH(buf, len);
+
+    return true;
+}
+
+bool hintBufAddHighlight(uint8_t* buf, size_t maxlen, int digit, int box, int row, int col)
+{
+    if (maxlen < 4)
+    {
+        return false;
+    }
+
+    uint32_t len = GET_LENGTH(buf);
+    if (len + 5 > maxlen)
+    {
+        return false;
+    }
+
+    uint8_t digitVal = (digit <= 0) ? 255u : digit;
+    uint8_t boxVal = (box < 0) ? 255u : box;
+    uint8_t rowVal = (row < 0) ? 255u : row;
+    uint8_t colVal = (col < 0) ? 255u : col;
+
+    buf[len++] = MAKE_OPCODE(OP_HIGHLIGHT, 0);
+    buf[len++] = digitVal;
+    buf[len++] = boxVal;
+    buf[len++] = rowVal;
+    buf[len++] = colVal;
 
     SET_LENGTH(buf, len);
 

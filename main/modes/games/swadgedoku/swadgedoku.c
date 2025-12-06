@@ -608,11 +608,19 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
                 }
             }
 
-            uint16_t* notes = sd->player.notes;
+            uint16_t fullNotes[sd->game.size * sd->game.size];
             if (sd->settings.autoAnnotate)
             {
-                notes = sd->game.notes;
+                for (int n = 0; n < sd->game.size * sd->game.size; n++)
+                {
+                    fullNotes[n] = sd->game.notes[n] ^ sd->player.notes[n];
+                }
             }
+            else
+            {
+                memcpy(fullNotes, sd->player.notes, sd->game.size * sd->game.size);
+            }
+
             sudokuOverlayOpt_t optMask = OVERLAY_ALL;
             sudokuShapeTag_t tagMask = ST_ALL;
             if (sd->showingHint)
@@ -620,7 +628,7 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
                 tagMask = ST_HINT;
                 optMask &= ~(OVERLAY_QUESTION | OVERLAY_CHECK | OVERLAY_HIGHLIGHT_A | OVERLAY_HIGHLIGHT_B | OVERLAY_HIGHLIGHT_C | OVERLAY_HIGHLIGHT_D);
             }
-            swadgedokuDrawGame(&sd->game, notes, &sd->player.overlay, &lightTheme, &sd->drawCtx, tagMask, optMask);
+            swadgedokuDrawGame(&sd->game, fullNotes, &sd->player.overlay, &lightTheme, &sd->drawCtx, tagMask, optMask);
 
             if (sd->showingHint)
             {
