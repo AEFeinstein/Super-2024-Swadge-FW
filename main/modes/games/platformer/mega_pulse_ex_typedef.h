@@ -1128,6 +1128,25 @@ static const mg_EntityTileCollider_t entityTileCollider_drain_bat = {.bottomEdge
                                                                .rightEdge  = &mgTileCollisionOffsets_drain_bat_rightEdge,
                                                                .leftEdge   = &mgTileCollisionOffsets_drain_bat_leftEdge};
 
+//kinetic donut origin: 21, 25
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_kinetic_donut_bottomEdge
+    = {.collisionPoints = {{.x = -16, .y = 24}, {.x = 0, .y = 24}, {.x = 16, .y = 24}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_kinetic_donut_topEdge
+    = {.collisionPoints = {{.x = -16, .y = -9}, {.x = 0, .y = -9}, {.x = 16, .y = -9}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_kinetic_donut_rightEdge
+    = {.collisionPoints = {{.x = 16, .y = 24}, {.x = 16, .y = 0}, {.x = 16, .y = -9}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_kinetic_donut_leftEdge
+    = {.collisionPoints = {{.x = -16, .y = 24}, {.x = -13, .y = 0}, {.x = -16, .y = -9}}, .size = 3};
+
+static const mg_EntityTileCollider_t entityTileCollider_kinetic_donut = {.bottomEdge = &mgTileCollisionOffsets_kinetic_donut_bottomEdge,
+                                                               .topEdge    = &mgTileCollisionOffsets_kinetic_donut_topEdge,
+                                                               .rightEdge  = &mgTileCollisionOffsets_kinetic_donut_rightEdge,
+                                                               .leftEdge   = &mgTileCollisionOffsets_kinetic_donut_leftEdge};
+
+
     typedef enum
 {
     MG_WSGSET_NULL = -1,

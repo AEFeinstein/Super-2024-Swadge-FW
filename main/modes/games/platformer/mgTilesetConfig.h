@@ -338,43 +338,86 @@ static const mgSprite_t mg_smashGorillaBossSpriteMetadataSet[] = {
 static const mgSprite_t mg_grindPangolinBossSpriteMetadataSet[] = {
     {
         .wsg = NULL,
-        .origin = &origin_smash_gorilla,
-        .hitBox = &box_smash_gorilla
+        .origin = &origin_grind_pangolin_standing,
+        .hitBox = &box_grind_pangolin_standing
     },
     {
         .wsg = NULL,
-        .origin = &origin_smash_gorilla,
-        .hitBox = &box_smash_gorilla
+        .origin = &origin_grind_pangolin_standing,
+        .hitBox = &box_grind_pangolin_standing
     },
     {
         .wsg = NULL,
-        .origin = &origin_smash_gorilla,
-        .hitBox = &box_smash_gorilla
+        .origin = &origin_grind_pangolin_curled,
+        .hitBox = &box_grind_pangolin_curled
     },
     {
         .wsg = NULL,
-        .origin = &origin_smash_gorilla,
-        .hitBox = &box_smash_gorilla
+        .origin = &origin_grind_pangolin_rolling,
+        .hitBox = &box_grind_pangolin_rolling
     },
     {
         .wsg = NULL,
-        .origin = &origin_smash_gorilla,
-        .hitBox = &box_smash_gorilla
+        .origin = &origin_grind_pangolin_rolling,
+        .hitBox = &box_grind_pangolin_rolling
     },
     {
         .wsg = NULL,
-        .origin = &origin_smash_gorilla,
-        .hitBox = &box_smash_gorilla
+        .origin = &origin_grind_pangolin_standing,
+        .hitBox = &box_grind_pangolin_standing
     },
     {
         .wsg = NULL,
-        .origin = &origin_8_8,
-        .hitBox = &box_16_16
+        .origin = &origin_grind_pangolin_standing,
+        .hitBox = &box_grind_pangolin_standing
     },
     {
         .wsg = NULL,
         .origin = NULL,
         .hitBox = NULL
+    }
+};
+
+static const mgSprite_t mg_kineticDonutBossSpriteMetadataSet[] = {
+    {
+        .wsg = NULL,
+        .origin = &origin_kinetic_donut,
+        .hitBox = &box_kinetic_donut
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_kinetic_donut,
+        .hitBox = &box_kinetic_donut
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_kinetic_donut,
+        .hitBox = &box_kinetic_donut
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_kinetic_donut,
+        .hitBox = &box_kinetic_donut
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_kinetic_donut,
+        .hitBox = &box_kinetic_donut
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_kinetic_donut_dashing,
+        .hitBox = &box_kinetic_donut_dashing
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_kinetic_donut_dashing,
+        .hitBox = &box_kinetic_donut_dashing
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_kinetic_donut,
+        .hitBox = &origin_kinetic_donut
     }
 };
 
