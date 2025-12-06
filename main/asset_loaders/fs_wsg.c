@@ -43,9 +43,13 @@ bool loadWsg(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam)
     // Save the decompressed info to the wsg. The first four bytes are dimension
     wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
     wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
-    // The rest of the bytes are pixels
+// The rest of the bytes are pixels
+#ifndef __XTENSA__
+    char tag[32];
+    sprintf(tag, "cnfsIdx %d", fIdx);
+#endif
     wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * wsg->w * wsg->h,
-                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, "wsg");
+                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, tag);
 
     if (NULL != wsg->px)
     {
@@ -88,9 +92,13 @@ bool loadWsgInplace(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam, uint8_t* decomp
     // Save the decompressed info to the wsg. The first four bytes are dimension
     wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
     wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
-    // The rest of the bytes are pixels
+// The rest of the bytes are pixels
+#ifndef __XTENSA__
+    char tag[32];
+    sprintf(tag, "cnfsIdx %d", fIdx);
+#endif
     wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * wsg->w * wsg->h,
-                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, "wsg_inplace");
+                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, tag);
 
     if (NULL != wsg->px)
     {

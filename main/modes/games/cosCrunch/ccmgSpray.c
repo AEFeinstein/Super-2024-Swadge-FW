@@ -108,7 +108,7 @@ static void ccmgSprayInitMicrogame(void)
     ccmgs->canvasPos.y  = ccmgs->sprayCenter.y - ccmgs->wsg.spray.h / 2;
 
     ccmgs->wsg.canvas.px = (paletteColor_t*)heap_caps_malloc_tag(
-        sizeof(paletteColor_t) * ccmgs->wsg.canvas.w * ccmgs->wsg.canvas.h, MALLOC_CAP_8BIT, "wsg");
+        sizeof(paletteColor_t) * ccmgs->wsg.canvas.w * ccmgs->wsg.canvas.h, MALLOC_CAP_8BIT, "spray_mg");
     for (uint32_t i = 0; i < ccmgs->wsg.canvas.w * ccmgs->wsg.canvas.h; i++)
     {
         ccmgs->wsg.canvas.px[i] = cTransparent;

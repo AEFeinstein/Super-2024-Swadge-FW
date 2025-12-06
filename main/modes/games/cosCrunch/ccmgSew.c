@@ -75,7 +75,7 @@ static void ccmgSewInitMicrogame(void)
     ccmgsew->wsg.canvas.w  = MAX(ccmgsew->wsg.threadKnot.w, ccmgsew->wsg.threadKnot.h);
     ccmgsew->wsg.canvas.h  = ccmgsew->wsg.canvas.w;
     ccmgsew->wsg.canvas.px = (paletteColor_t*)heap_caps_malloc_tag(
-        sizeof(paletteColor_t) * ccmgsew->wsg.canvas.w * ccmgsew->wsg.canvas.h, MALLOC_CAP_8BIT, "wsg");
+        sizeof(paletteColor_t) * ccmgsew->wsg.canvas.w * ccmgsew->wsg.canvas.h, MALLOC_CAP_8BIT, "sew_mg");
     for (uint32_t i = 0; i < ccmgsew->wsg.canvas.w * ccmgsew->wsg.canvas.h; i++)
     {
         ccmgsew->wsg.canvas.px[i] = cTransparent;

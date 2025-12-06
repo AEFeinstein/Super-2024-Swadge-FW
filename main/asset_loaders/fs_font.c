@@ -59,8 +59,12 @@ bool loadFont(cnfsFileIdx_t fIdx, font_t* font, bool spiRam)
         int bytes  = (pixels / 8) + ((pixels % 8 == 0) ? 0 : 1);
 
         // Allocate space for this char and copy it over
+#ifndef __XTENSA__
+        char tag[32];
+        sprintf(tag, "cnfsIdx %d", fIdx);
+#endif
         this->bitmap = (uint8_t*)heap_caps_malloc_tag(sizeof(uint8_t) * bytes,
-                                                      spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, "font");
+                                                      spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, tag);
         memcpy(this->bitmap, &buf[bufIdx], bytes);
         bufIdx += bytes;
     }
