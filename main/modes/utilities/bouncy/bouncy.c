@@ -37,6 +37,14 @@ static const cnfsFileIdx_t items[] = {
     MAG_FEST_BOUNCER_WSG,
     BARREL_1_WSG,
     MMX_TROPHY_WSG,
+    HA_BIGMA_CROPPED_WSG,
+    UP_CURSOR_8_WSG,
+    DN_BUCKET_HAT_DOWN_WSG,
+    SI_PULSE_SMOL_WSG,
+    SUDOKU_NOTES_WSG,
+    _6F_MAG_1_SLV_WSG,
+    TONK_WSG,
+    STT_BACKGROUND_SMOL_WSG,
 };
 
 static const char* const warningLabels[] = {
@@ -191,13 +199,45 @@ static void screenEnterMode(void)
 
     // Set active images
     ssd->objs[0].isActive = true; // Always active
-    if (trophyGetPoints(false, roboRunnerMode.trophyData->settings->namespaceKey) == 1000)
+    if (trophyGetPoints(false, roboRunnerMode.trophyData->settings->namespaceKey) >= 500)
     {
         ssd->objs[1].isActive = true;
     }
-    if (trophyGetPoints(false, mainMenuMode.trophyData->settings->namespaceKey) == 1000)
+    if (trophyGetPoints(false, mainMenuMode.trophyData->settings->namespaceKey) >= 500)
     {
         ssd->objs[2].isActive = true;
+    }
+    if (trophyGetPoints(false, swsnCreatorMode.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[3].isActive = true;
+    }
+    if (trophyGetPoints(false, modeDiceRoller.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[4].isActive = true;
+    }
+    if (trophyGetPoints(false, danceNetworkMode.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[5].isActive = true;
+    }
+    if (trophyGetPoints(false, swadgeItMode.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[6].isActive = true;
+    }
+    if (trophyGetPoints(false, swadgedokuMode.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[7].isActive = true;
+    }
+    if (trophyGetPoints(false, modePicross.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[8].isActive = true;
+    }
+    if (trophyGetPoints(false, artilleryMode.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[9].isActive = true;
+    }
+    if (trophyGetPoints(false, swadgetamatoneMode.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[10].isActive = true;
     }
 
     ssd->displayWarning = true;
