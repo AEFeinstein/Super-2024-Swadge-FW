@@ -617,3 +617,72 @@ void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, b
         }
     }
 }
+
+void addBoxHighlight(sudokuOverlay_t* overlay, const sudokuGrid_t* board, int box)
+{
+    sudokuOverlayShape_t* shape;
+
+    // Draw a colored border around this box
+    for (int row = 0; row < board->size; row++)
+    {
+        for (int col = 0; col < board->size; col++)
+        {
+            // The box of the square we're looking at
+            uint16_t thisBox = board->boxMap[row * board->size + col];
+
+            if (thisBox != box)
+            {
+                continue;
+            }
+
+            // north
+            if (row == 0 || board->boxMap[(row - 1) * board->size + col] != thisBox)
+            {
+                // Draw north border
+                shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                shape->type = OVERLAY_LINE;
+                shape->color = c050;
+                shape->tag = ST_HINT;
+                getOverlayPos(&shape->line.p1.x, &shape->line.p1.y, row, col, SUBPOS_NW);
+                getOverlayPos(&shape->line.p2.x, &shape->line.p2.y, row, col, SUBPOS_NE);
+                push(&overlay->shapes, shape);
+            }
+            // east
+            if (col == (board->size - 1) || board->boxMap[row * board->size + col + 1] != thisBox)
+            {
+                // Draw east border
+                shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                shape->type = OVERLAY_LINE;
+                shape->color = c050;
+                shape->tag = ST_HINT;
+                getOverlayPos(&shape->line.p1.x, &shape->line.p1.y, row, col, SUBPOS_NE);
+                getOverlayPos(&shape->line.p2.x, &shape->line.p2.y, row, col, SUBPOS_SE);
+                push(&overlay->shapes, shape);
+            }
+            // south
+            if (row == (board->size - 1) || board->boxMap[(row + 1) * board->size + col] != thisBox)
+            {
+                // Draw south border
+                shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                shape->type = OVERLAY_LINE;
+                shape->color = c050;
+                shape->tag = ST_HINT;
+                getOverlayPos(&shape->line.p1.x, &shape->line.p1.y, row, col, SUBPOS_SW);
+                getOverlayPos(&shape->line.p2.x, &shape->line.p2.y, row, col, SUBPOS_SE);
+                push(&overlay->shapes, shape);
+            }
+            // west
+            if (col == 0 || board->boxMap[row * board->size + col - 1] != thisBox)
+            {
+                // Draw west border
+                shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                shape->type = OVERLAY_LINE;
+                shape->color = c050;
+                shape->tag = ST_HINT;
+                getOverlayPos(&shape->line.p1.x, &shape->line.p1.y, row, col, SUBPOS_NW);
+                getOverlayPos(&shape->line.p2.x, &shape->line.p2.y, row, col, SUBPOS_SW);
+                push(&overlay->shapes, shape);
+            }
+        }
+    }
+}

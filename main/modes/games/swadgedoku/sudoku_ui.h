@@ -114,3 +114,4 @@ void getOverlayPos(int32_t* x, int32_t* y, int r, int c, sudokuSubpos_t subpos);
 void getRealOverlayPos(int16_t* x, int16_t* y, int gridX, int gridY, int squareSize, int xSubPos, int ySubPos);
 void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, bool drawH, bool drawV,
                          sudokuShapeTag_t tag);
+void addBoxHighlight(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int box);
