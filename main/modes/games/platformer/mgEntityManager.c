@@ -1583,7 +1583,7 @@ mgEntity_t* createWarpEntranceWall(mgEntityManager_t* entityManager, uint16_t x,
     entity->y                    = TO_SUBPIXEL_COORDS(y);
     entity->type                 = ENTITY_WARP_ENTRANCE_WALL;
     entity->updateFunction       = &mg_updateDummy;
-    entity->spriteIndex          = MG_SP_INVISIBLE_WARP_FLOOR;
+    entity->spriteIndex          = MG_SP_INVISIBLE_WARP_WALL;
     entity->collisionHandler     = &mg_dummyCollisionHandler;
     entity->tileCollisionHandler = &mg_dummyTileCollisionHandler;
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
