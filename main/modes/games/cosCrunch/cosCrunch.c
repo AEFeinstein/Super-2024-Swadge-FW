@@ -1,5 +1,6 @@
 #include "cosCrunch.h"
 
+#include "ccmgBeStrong.h"
 #include "ccmgBreakTime.h"
 #include "ccmgCatch.h"
 #include "ccmgDelivery.h"
@@ -203,7 +204,7 @@ swadgeMode_t cosCrunchMode = {
 // #define DEV_MODE_MICROGAME &ccmgWhatever
 
 const cosCrunchMicrogame_t* const microgames[] = {
-    &ccmgBreakTime, &ccmgCatch, &ccmgDelivery, &ccmgSew, &ccmgSlice, &ccmgSpray, &ccmgThread,
+    &ccmgBeStrong, &ccmgBreakTime, &ccmgCatch, &ccmgDelivery, &ccmgSew, &ccmgSlice, &ccmgSpray, &ccmgThread,
 };
 
 tintColor_t const blueTimerTintColor   = {c013, c125, c235, 0};
@@ -306,7 +307,7 @@ static void cosCrunchExitMode(void)
 {
     if (cc->activeMicrogame.game != NULL)
     {
-        cc->activeMicrogame.game->fnDestroyMicrogame();
+        cc->activeMicrogame.game->fnDestroyMicrogame(cc->activeMicrogame.state == CC_MG_CELEBRATING);
     }
 
     deinitMenuCosCrunchRenderer(cc->menuRenderer);
@@ -448,7 +449,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             if (cc->activeMicrogame.game != NULL)
             {
                 midiAllSoundOff(cc->sfxPlayer);
-                cc->activeMicrogame.game->fnDestroyMicrogame();
+                cc->activeMicrogame.game->fnDestroyMicrogame(cc->activeMicrogame.state == CC_MG_CELEBRATING);
                 cc->activeMicrogame.game = NULL;
             }
 
@@ -480,7 +481,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         case CC_MICROGAME_PENDING:
             if (cc->activeMicrogame.game != NULL)
             {
-                cc->activeMicrogame.game->fnDestroyMicrogame();
+                cc->activeMicrogame.game->fnDestroyMicrogame(cc->activeMicrogame.state == CC_MG_CELEBRATING);
             }
 
             // Reset anything that the previous microgame might have monkeyed with
@@ -634,7 +635,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
         case CC_GAME_OVER_PENDING:
         {
             cc->state = CC_GAME_OVER;
-            cc->activeMicrogame.game->fnDestroyMicrogame();
+            cc->activeMicrogame.game->fnDestroyMicrogame(cc->activeMicrogame.state == CC_MG_CELEBRATING);
             cc->activeMicrogame.game = NULL;
 
             if (cc->playerCount == 1)

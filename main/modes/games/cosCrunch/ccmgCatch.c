@@ -1,7 +1,7 @@
 #include "ccmgCatch.h"
 
 static void ccmgCatchInitMicrogame(void);
-static void ccmgCatchDestroyMicrogame(void);
+static void ccmgCatchDestroyMicrogame(bool successful);
 static void ccmgCatchMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
                               cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 static void ccmgCatchBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
@@ -117,7 +117,7 @@ static void ccmgCatchInitMicrogame()
     ccmgc->signY         = -ccmgc->wsg.closedSign.h;
 }
 
-static void ccmgCatchDestroyMicrogame()
+static void ccmgCatchDestroyMicrogame(bool successful)
 {
     freeWsg(&ccmgc->wsg.fabric);
     freeWsg(&ccmgc->wsg.shopper);

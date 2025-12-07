@@ -4,7 +4,7 @@
 #include "esp_random.h"
 
 static void ccmgThreadInitMicrogame(void);
-static void ccmgThreadDestroyMicrogame(void);
+static void ccmgThreadDestroyMicrogame(bool successful);
 static void ccmgThreadMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
                                cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 
@@ -72,7 +72,7 @@ typedef struct
 } ccmgThread_t;
 static ccmgThread_t* ccmgt = NULL;
 
-static void ccmgThreadInitMicrogame(void)
+static void ccmgThreadInitMicrogame()
 {
     ccmgt = heap_caps_calloc(1, sizeof(ccmgThread_t), MALLOC_CAP_8BIT);
 
@@ -89,7 +89,7 @@ static void ccmgThreadInitMicrogame(void)
     ccmgt->fingersTintColor = &fingersTintColors[esp_random() % ARRAY_SIZE(fingersTintColors)];
 }
 
-static void ccmgThreadDestroyMicrogame(void)
+static void ccmgThreadDestroyMicrogame(bool successful)
 {
     freeWsg(&ccmgt->wsg.thread);
     freeWsg(&ccmgt->wsg.fingers);

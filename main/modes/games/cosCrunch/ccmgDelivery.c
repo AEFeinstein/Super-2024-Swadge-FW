@@ -1,7 +1,7 @@
 #include "ccmgDelivery.h"
 
 static void ccmgDeliveryInitMicrogame(void);
-static void ccmgDeliveryDestroyMicrogame(void);
+static void ccmgDeliveryDestroyMicrogame(bool successful);
 static void ccmgDeliveryMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
                                  cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 static void ccmgDeliveryBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
@@ -120,7 +120,7 @@ static void ccmgDeliveryInitMicrogame()
     loadMidiFile(CC_PACKAGE_GET_MID, &ccmgd->packageGetSfx, false);
 }
 
-static void ccmgDeliveryDestroyMicrogame()
+static void ccmgDeliveryDestroyMicrogame(bool successful)
 {
     freeWsg(&ccmgd->wsg.grass);
     freeWsg(&ccmgd->wsg.package);
