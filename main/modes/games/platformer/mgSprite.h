@@ -82,7 +82,7 @@ static const vec_t origin_grind_pangolin_tail = {.x = 36, .y = 22};
 static const box_t box_grind_pangolin_tail = {.x0 = 3, .x1 = 71, .y0 = 16, .y1 = 31};
 
 static const vec_t origin_drain_bat = {.x = 30, .y = 31};
-static const box_t box_drain_bat = {.x0 = 16, .x1 = 47, .y0 = 16, .y1 = 62};
+static const box_t box_drain_bat = {.x0 = 13, .x1 = 47, .y0 = 16, .y1 = 47};
 
 static const vec_t origin_kinetic_donut = {.x = 21, .y = 25};
 static const box_t box_kinetic_donut = {.x0 = 5, .x1 = 37, .y0 = 16, .y1 = 45};

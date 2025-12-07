@@ -335,6 +335,49 @@ static const mgSprite_t mg_smashGorillaBossSpriteMetadataSet[] = {
     }
 };
 
+static const mgSprite_t mg_drainBatBossSpriteMetadataSet[] = {
+    {
+        .wsg = NULL,
+        .origin = &origin_drain_bat,
+        .hitBox = &box_drain_bat
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_drain_bat,
+        .hitBox = &box_drain_bat
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_drain_bat,
+        .hitBox = &box_drain_bat
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_drain_bat,
+        .hitBox = &box_drain_bat
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_drain_bat,
+        .hitBox = &box_drain_bat
+    },
+    {
+        .wsg = NULL,
+        .origin = NULL,
+        .hitBox = NULL
+    },
+    {
+        .wsg = NULL,
+        .origin = NULL,
+        .hitBox = NULL
+    },
+    {
+        .wsg = NULL,
+        .origin = NULL,
+        .hitBox = NULL
+    }
+};
+
 static const mgSprite_t mg_grindPangolinBossSpriteMetadataSet[] = {
     {
         .wsg = NULL,
