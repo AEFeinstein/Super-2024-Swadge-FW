@@ -31,6 +31,7 @@
 
 #include "accelTest.h"
 #include "artillery.h"
+#include "audioTest.h"
 #include "bouncy.h"
 #include "canvas.h"
 #include "colorchord.h"
