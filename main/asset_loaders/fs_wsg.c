@@ -41,18 +41,36 @@ bool loadWsg(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam)
     }
 
     // Save the decompressed info to the wsg. The first four bytes are dimension
-    wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
-    wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
+    uint16_t newW = (decompressedBuf[0] << 8) | decompressedBuf[1];
+    uint16_t newH = (decompressedBuf[2] << 8) | decompressedBuf[3];
+
+    // If there is an existing buffer and it doesn't match, free it
+    if(wsg->px && (wsg->h != newH || wsg->w != newW))
+    {
+        heap_caps_free(wsg->px);
+        wsg->px = NULL;
+    }
+
 // The rest of the bytes are pixels
 #ifndef __XTENSA__
     char tag[32];
     sprintf(tag, "cnfsIdx %d", fIdx);
 #endif
-    wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * wsg->w * wsg->h,
-                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, tag);
+    
+    // If there is no pixel buffer
+    if(!wsg->px)
+    {
+        // Allocate it
+        wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * newW * newH,
+                                                        spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, tag);
+    }
 
     if (NULL != wsg->px)
     {
+        // Set the size
+        wsg->w = newW;
+        wsg->h = newH;
+
         memcpy(wsg->px, &decompressedBuf[4], decompressedSize - 4);
         heap_caps_free(decompressedBuf);
         return true;
@@ -206,6 +224,7 @@ void freeWsg(wsg_t* wsg)
     if (wsg->w && wsg->h)
     {
         heap_caps_free(wsg->px);
+        wsg->px = NULL;
         wsg->h = 0;
         wsg->w = 0;
     }

@@ -154,7 +154,7 @@ static void mg_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 void changeStateLevelSelect(platformer_t* self);
 void updateLevelSelect(platformer_t* self);
 void drawLevelSelect(platformer_t* self);
-void goToReadyScreen();
+void goToReadyScreen(void);
 
 //==============================================================================
 // Variables
@@ -845,7 +845,6 @@ void updateReadyScreen(platformer_t* self)
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 60) // 179)
     {
-        soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
         self->update = &updateGame;
     }
 
@@ -1662,6 +1661,7 @@ void updateLevelSelect(platformer_t* self)
 
             changeStateGame(platformer);
             //every level starts with a cutscene
+            soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
             stageStartCutscene(&platformer->gameData);
             changeStateCutscene(platformer);
             return;

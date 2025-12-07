@@ -11,6 +11,7 @@
 #include "fs_wsg.h"
 
 #include "shapes.h"
+#include "midiPlayer.h"
 
 
 //==============================================================================
@@ -22,6 +23,13 @@ static uint8_t getRandomVariationFromStyle(cutsceneStyle_t* style);
 static uint8_t getRandomVariationFromStyleIdx(cutscene_t* cutscene, uint8_t styleIdx);
 static cutsceneStyle_t* getCurrentStyle(cutscene_t* cutscene);
 
+/**
+ * @brief 
+ * 
+ * @param cbFunc 
+ * @param nextIconIdx 
+ * @return cutscene_t* 
+ */
 cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx)
 {
     cutscene_t* cutscene = (cutscene_t*)heap_caps_calloc(1, sizeof(cutscene_t), MALLOC_CAP_SPIRAM);
@@ -36,6 +44,15 @@ cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx)
         loadWsg(nextIconIdx+i, cutscene->nextIcon[i], true);
     }
     cutscene->xOffset = 280; //default start value for antagonists.
+
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_SFX);
+    midiPlayerReset(player);
+    midiPause(player, false);
+    midiGmOn(player);
+    midiSetProgram(player, 13, 90); // talking sound effects arbitrarily go on channel 15 and use midi instrument 90.
+    midiControlChange(player, 13, MCC_SUSTENUTO_PEDAL, 80);
+    midiControlChange(player, 13, MCC_SOUND_RELEASE_TIME, 60);
+
     return cutscene;
 }
 
@@ -139,11 +156,21 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
     {
         if(btnState & PB_A)
         {
+            if(cutscene->PB_A_previousFrame == false)
+            {
+                midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_SFX);
+                // Play a random note within an octave at half velocity on channel 1
+                int deepBlueseyPitches[] = {34, 37, 39, 40, 41, 44, 46, 57, 58};
+                uint8_t pitch            = randomInt(0, 8);
+                midiNoteOn(bgm, 13, deepBlueseyPitches[pitch], 0x40);
+                midiNoteOff(bgm, 13, deepBlueseyPitches[pitch], 0x7F);
+            }
+            cutscene->PB_A_previousFrame = true;
             cutscene->PB_A_frameCounter++;
             if(cutscene->PB_A_frameCounter > 30)
             {
                 //proceed to next cutscene line.
-                if(cutscene->lines->first != NULL && cutscene->lines->first->next != NULL)//There is at least one line after this one.
+                if(cutscene->lines->first != NULL && cutscene->lines->first->next != NULL)//There is at least onle line after this one.
                 {
                     free(((cutsceneLine_t*)shift(cutscene->lines))->body);
                     style = getCurrentStyle(cutscene);
@@ -163,6 +190,7 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         }
         else
         {
+            cutscene->PB_A_previousFrame = false;
             cutscene->PB_A_frameCounter--;
             if(cutscene->PB_A_frameCounter < 0)
             {

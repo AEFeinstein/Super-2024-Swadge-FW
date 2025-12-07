@@ -58,15 +58,16 @@ typedef struct
     wsg_t* nextIcon[4]; ///< The nextIcon with a few animation frames.
     bool listenForPB_A; ///< Used for detecting intentional A presses.
     int8_t PB_A_frameCounter; ///< Increments while A is held.
+    bool PB_A_previousFrame; ///< True if A is held on the previous frame.
     bool isEnding;      ///< True as the character slides out of frame.
 } cutscene_t;
 
-cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx) __attribute__((warn_unused_result));
+cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx);
 void removeAllStyles(cutscene_t* cutscene);
 void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t color, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numPoseVariations, bool isProtagonist, bool drawSprite, bool drawTextbox);
 void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation);
 void updateCutscene(cutscene_t* cutscene, int16_t btnState);
 void drawCutscene(cutscene_t* cutscene, font_t* font);
-void deinitCutscene(cutscene_t* cutscene) __attribute__((warn_unused_result));
+void deinitCutscene(cutscene_t* cutscene);
 
 #endif
