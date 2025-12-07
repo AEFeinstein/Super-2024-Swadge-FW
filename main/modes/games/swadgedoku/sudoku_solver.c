@@ -37,79 +37,47 @@
 #define GET_LENGTH(buf) (((buf)[0] << 24) | ((buf)[1] << 16) | ((buf)[2] << 8) | (buf)[3])
 #define SET_LENGTH(buf, length) do { buf[0] = ((length) >> 24) & 0xFF; buf[1] = ((length) >> 16) & 0xFF; buf[2] = ((length) >> 8) & 0xFF; buf[3] = (length) & 0xFF; } while (0)
 
-bool initSolverCache(solverCache_t* cache, int size, int base)
+typedef enum
 {
-    const size_t defaultLen = 256;
-    uint16_t* notesAlloc = heap_caps_calloc(size * size + base + size * 2, sizeof(uint16_t), MALLOC_CAP_8BIT);
-    if (!notesAlloc)
-    {
-        return false;
-    }
+    SCB_CELL,
+    SCB_REGION,
+} solverCbType_t;
 
-    uint8_t* hintAlloc = heap_caps_malloc(defaultLen, MALLOC_CAP_8BIT);
-    if (!hintAlloc)
-    {
-        free(notesAlloc);
-        return false;
-    }
+typedef bool (*searchCellCb)(solverCache_t* state, const sudokuGrid_t* board, int pos);
+typedef bool (*searchRegionCb)(solverCache_t* state, const sudokuGrid_t* board, sudokuRegionType_t regionType, int region);
+typedef bool (*eliminateCb)(solverCache_t* state, const sudokuGrid_t* board);
 
-    cache->hintBuf = hintAlloc;
-    cache->hintbufLen = defaultLen;
-
-    cache->notes = notesAlloc;
-    cache->boxNotes = notesAlloc + (size * size);
-    cache->rowNotes = notesAlloc + (size * size) + base;
-    cache->colNotes = notesAlloc + (size * size) + base + size;
-
-    cache->size = size;
-    cache->base = base;
-
-    cache->stage = 0;
-    cache->digit = 1;
-    cache->pos = 0;
-
-    return true;
-}
-
-void resetCache(solverCache_t* cache)
+typedef struct
 {
-    memset(cache->hintBuf, 0, cache->hintbufLen);
-    memset(cache->notes, 0, sizeof(uint16_t) * cache->size * cache->size);
-    memset(cache->boxNotes, 0, sizeof(uint16_t) * cache->base);
-    memset(cache->rowNotes, 0, sizeof(uint16_t) * cache->size);
-    memset(cache->colNotes, 0, sizeof(uint16_t) * cache->size);
-
-    cache->stage = 0;
-    cache->digit = 1;
-    cache->pos = 0;
-}
-
-void deinitSolverCache(solverCache_t* cache)
-{
-    if (cache->notes)
+    solverCbType_t type;
+    union
     {
-        free(cache->notes);
-        cache->notes = NULL;
-        cache->boxNotes = NULL;
-        cache->rowNotes = NULL;
-        cache->colNotes = NULL;
-    }
+        searchCellCb cell;
+        searchRegionCb region;
+    };
+} solverCallback_t;
 
-    if (cache->hintBuf)
-    {
-        free(cache->hintBuf);
-        cache->hintBuf = NULL;
-        cache->hintbufLen = 0;
-    }
+// new method for this...
+// - look for 'last-empty-cell' (row/col/box notes have popcount() == base-1)
+// - look for 'only-possibility' (cell notes have popcount() == 1)
+// - look for ''
 
-    cache->size = 0;
-    cache->base = 0;
-}
+static bool findLastEmptyCell(solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region);
+static bool findOnlyPossibility(solverCache_t* cache, const sudokuGrid_t* board, int pos);
+
+static bool eliminatePointers(solverCache_t* cache, const sudokuGrid_t* board);
+static bool eliminateNakedPairs(solverCache_t* cache, const sudokuGrid_t* board);
+static bool eliminateHiddenPairs(solverCache_t* cache, const sudokuGrid_t* board);
+static bool eliminateNakedTriples(solverCache_t* cache, const sudokuGrid_t* board);
+static bool eliminateHiddenTriples(solverCache_t* cache, const sudokuGrid_t* board);
 
 static bool eliminateShadows(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, uint16_t* notes, const sudokuGrid_t* board);
 static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* pos0, uint8_t* pos1, uint8_t* pos2, const sudokuGrid_t* board);
 static void applyCellElimination(const sudokuGrid_t* board, uint16_t* notes, int pos, uint16_t mask, int elimCount, const uint8_t* eliminations);
 static void addElimination(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, int cellCount, uint16_t digits, sudokuRegionType_t regionType, int regionNum, uint8_t* cellPos);
+
+static uint8_t getMemberDigit(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region, int member);
+static uint16_t getMemberNotes(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region, int member);
 
 bool hintBufNextStep(uint8_t* buf, size_t maxlen, sudokuTechniqueType_t id);
 bool hintBufSetDigit(uint8_t* buf, size_t maxlen, uint8_t digit, uint8_t pos);
@@ -118,6 +86,93 @@ bool hintBufAddNote(uint8_t* buf, size_t maxlen, uint16_t notes, uint8_t pos);
 bool hintBufDelNote(uint8_t* buf, size_t maxlen, uint16_t notes, uint8_t pos);
 bool hintBufSetMultiNote(uint8_t* buf, size_t maxlen, bool add, uint16_t notes, int count, const uint8_t* pos);
 bool hintBufAddHighlight(uint8_t* buf, size_t maxlen, int digit, int box, int row, int col);
+
+static const solverCallback_t findOrder[] =
+{
+    { .type = SCB_CELL, .region = findLastEmptyCell },
+    { .type = SCB_REGION, .cell = findOnlyPossibility },
+};
+
+static const eliminateCb eliminateOrder[] =
+{
+    eliminatePointers,
+    eliminateNakedPairs,
+    eliminateHiddenPairs,
+    eliminateNakedTriples,
+    eliminateHiddenTriples,
+};
+
+bool sudokuNextMove2(solverCache_t* cache, sudokuOverlay_t* overlay, const sudokuGrid_t* board)
+{
+    size_t boardSize = board->size * board->size;
+
+    bool giveUp = false;
+    while (!giveUp)
+    {
+        solverCallback_t cb = findOrder[cache->searchIdx];
+        if (cb.type == SCB_CELL)
+        {
+            for (int pos = 0; pos < boardSize; pos++)
+            {
+                if (cb.cell(cache, board, pos))
+                {
+                    return true;
+                }
+            }
+        }
+        else if (cb.type == SCB_REGION)
+        {
+            for (int box = 0; box < board->base; box++)
+            {
+                if (cb.region(cache, board, REGION_BOX, box))
+                {
+                    return true;
+                }
+            }
+
+            for (int row = 0; row < board->size; row++)
+            {
+                if (cb.region(cache, board, REGION_ROW, row))
+                {
+                    return true;
+                }
+            }
+
+            for (int col = 0; col < board->size; col++)
+            {
+                if (cb.region(cache, board, REGION_COLUMN, col))
+                {
+                    return true;
+                }
+            }
+        }
+
+        if (++cache->searchIdx >= ARRAY_SIZE(findOrder))
+        {
+            cache->searchIdx = 0;
+            while (true)
+            {
+                eliminateCb elimCb = eliminateOrder[cache->elimIdx];
+                if (elimCb(cache, board))
+                {
+                    cache->elimIdx = 0;
+                    break;
+                }
+                else
+                {
+                    if (++cache->elimIdx >= ARRAY_SIZE(eliminateOrder))
+                    {
+                        cache->elimIdx = 0;
+                        giveUp = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
+}
 
 static bool eliminateShadows(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, uint16_t* notes, const sudokuGrid_t* board)
 {
@@ -1338,6 +1393,268 @@ bool hintBufAddHighlight(uint8_t* buf, size_t maxlen, int digit, int box, int ro
     return true;
 }
 
-void doThing(void)
+bool initSolverCache(solverCache_t* cache, int size, int base)
 {
+    const size_t defaultLen = 256;
+    uint16_t* notesAlloc = heap_caps_calloc(size * size + base + size * 2, sizeof(uint16_t), MALLOC_CAP_8BIT);
+    if (!notesAlloc)
+    {
+        return false;
+    }
+
+    uint8_t* hintAlloc = heap_caps_malloc(defaultLen, MALLOC_CAP_8BIT);
+    if (!hintAlloc)
+    {
+        free(notesAlloc);
+        return false;
+    }
+
+    uint8_t* boxMapAlloc = heap_caps_malloc(base * base, MALLOC_CAP_8BIT);
+    if (!boxMapAlloc)
+    {
+        free(hintAlloc);
+        free(notesAlloc);
+        return false;
+    }
+
+    cache->hintBuf = hintAlloc;
+    cache->hintbufLen = defaultLen;
+
+    cache->notes = notesAlloc;
+    cache->boxNotes = notesAlloc + (size * size);
+    cache->rowNotes = notesAlloc + (size * size) + base;
+    cache->colNotes = notesAlloc + (size * size) + base + size;
+
+    cache->boxMap = boxMapAlloc;
+
+    cache->size = size;
+    cache->base = base;
+
+    cache->searchIdx = 0;
+    cache->elimIdx = 0;
+    cache->digit = 1;
+    cache->pos = 0;
+
+    return true;
+}
+
+void resetSolverCache(solverCache_t* cache)
+{
+    memset(cache->hintBuf, 0, cache->hintbufLen);
+    memset(cache->notes, 0, sizeof(uint16_t) * cache->size * cache->size);
+    memset(cache->boxNotes, 0, sizeof(uint16_t) * cache->base);
+    memset(cache->rowNotes, 0, sizeof(uint16_t) * cache->size);
+    memset(cache->colNotes, 0, sizeof(uint16_t) * cache->size);
+    memset(cache->boxMap, 0, cache->base * cache->base);
+
+    cache->searchIdx = 0;
+    cache->elimIdx = 0;
+    cache->digit = 1;
+    cache->pos = 0;
+}
+
+void deinitSolverCache(solverCache_t* cache)
+{
+    if (cache->notes)
+    {
+        free(cache->notes);
+        cache->notes = NULL;
+        cache->boxNotes = NULL;
+        cache->rowNotes = NULL;
+        cache->colNotes = NULL;
+    }
+
+    if (cache->hintBuf)
+    {
+        free(cache->hintBuf);
+        cache->hintBuf = NULL;
+        cache->hintbufLen = 0;
+    }
+
+    if (cache->boxMap)
+    {
+        free(cache->boxMap);
+        cache->boxMap = NULL;
+    }
+
+    cache->size = 0;
+    cache->base = 0;
+}
+
+void makeBoxMap(solverCache_t* cache, const sudokuGrid_t* board)
+{
+    uint8_t memberCounts[board->base];
+    memset(memberCounts, 0, board->base);
+
+    for (int pos = 0; pos < board->size * board->size; pos++)
+    {
+        uint8_t box = board->boxMap[pos];
+        if (box < board->base)
+        {
+            cache->boxMap[box * board->base + memberCounts[box]++] = pos;
+        }
+    }
+}
+
+static uint8_t getMemberPos(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region, int member)
+{
+    switch (type)
+    {
+        case REGION_BOX:
+        {
+            return cache->boxMap[region * cache->base + member];
+        }
+
+        case REGION_ROW:
+        {
+            return region * cache->size + member;
+        }
+
+        case REGION_COLUMN:
+        {
+            return member * cache->size + region;
+        }
+    }
+}
+
+static uint8_t getMemberDigit(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region, int member)
+{
+    switch (type)
+    {
+        case REGION_BOX:
+        {
+            return board->grid[cache->boxMap[region * cache->base + member]];
+        }
+
+        case REGION_ROW:
+        {
+            return board->grid[region * cache->size + member];
+        }
+
+        case REGION_COLUMN:
+        {
+            return board->grid[member * cache->size + region];
+        }
+    }
+
+    return 0;
+}
+
+static uint16_t getMemberNotes(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region, int member)
+{
+    switch (type)
+    {
+        case REGION_BOX:
+        {
+            return board->notes[cache->boxMap[region * cache->base + member]];
+        }
+
+        case REGION_ROW:
+        {
+            return board->notes[region * cache->size + member];
+        }
+
+        case REGION_COLUMN:
+        {
+            return board->notes[member * cache->size + region];
+        }
+    }
+
+    return 0;
+}
+
+static bool findLastEmptyCell(solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region)
+{
+    uint16_t* notes = NULL;
+    uint8_t noteCount = 0;
+    switch (type)
+    {
+        case REGION_BOX:
+        {
+            notes = cache->boxNotes;
+            noteCount = cache->base;
+            break;
+        }
+
+        case REGION_ROW:
+        {
+            notes = cache->rowNotes;
+            noteCount = cache->size;
+            break;
+        }
+
+        case REGION_COLUMN:
+        {
+            notes = cache->colNotes;
+            noteCount = cache->size;
+            break;
+        }
+
+        default:
+        {
+            return false;
+        }
+    }
+
+    for (int n = 0; n < noteCount; n++)
+    {
+        // Only a single digit is possible in this region
+        if (__builtin_popcount(notes[n]) == 1)
+        {
+            int missingDigit = __builtin_ctz(notes[n]) + 1;
+            for (int member = 0; member < noteCount; member++)
+            {
+                if (0 == getMemberDigit(cache, board, type, region, member))
+                {
+                    uint8_t pos = getMemberPos(cache, board, type, region, member);
+                    hintBufNextStep(cache->hintBuf, cache->hintbufLen, SINGLE);
+                    hintBufSetDigit(cache->hintBuf, cache->hintbufLen, missingDigit, pos);
+                    hintBufAddHighlight(cache->hintBuf, cache->hintbufLen, -1, -1, pos / cache->size, pos % cache->size);
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+static bool findOnlyPossibility(solverCache_t* cache, const sudokuGrid_t* board, int pos)
+{
+    if (__builtin_popcount(board->notes[pos]) == 1)
+    {
+        int digit = __builtin_ctz(notes[n]) + 1;
+        hintBufNextStep(cache->hintBuf, cache->hintbufLen, ONLY_POSSIBLE);
+        hintBufSetDigit(cache->hintBuf, cache->hintbufLen, digit, pos);
+        hintBufAddHighlight(cache->hintBuf, cache->hintbufLen, -1, -1, pos / cache->size, pos % cache->size);
+
+        return true;
+    }
+
+    return false;
+}
+
+static bool eliminatePointers(solverCache_t* cache, const sudokuGrid_t* board)
+{
+    return false;
+}
+
+static bool eliminateNakedPairs(solverCache_t* cache, const sudokuGrid_t* board)
+{
+    return false;
+}
+
+static bool eliminateHiddenPairs(solverCache_t* cache, const sudokuGrid_t* board)
+{
+    return false;
+}
+
+static bool eliminateNakedTriples(solverCache_t* cache, const sudokuGrid_t* board)
+{
+    return false;
+}
+
+static bool eliminateHiddenTriples(solverCache_t* cache, const sudokuGrid_t* board)
+{
+    return false;
 }

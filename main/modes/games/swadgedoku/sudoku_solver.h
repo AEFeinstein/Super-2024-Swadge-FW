@@ -78,10 +78,13 @@ typedef struct
     uint16_t* rowNotes;
     uint16_t* colNotes;
 
+    uint8_t* boxMap;
+
     int size;
     int base;
 
-    int stage;
+    int searchIdx;
+    int elimIdx;
     int digit;
     int pos;
 } solverCache_t;
@@ -91,4 +94,6 @@ void sudokuApplyMove(sudokuGrid_t* board, const sudokuMoveDesc_t* desc);
 void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepNum, const uint8_t* hint, size_t n);
 
 bool initSolverCache(solverCache_t* cache, int size, int base);
+void resetSolverCache(solverCache_t* cache);
 void deinitSolverCache(solverCache_t* cache);
+void makeBoxMapp(solverCache_t* cache, const sudokuGrid_t* board);
