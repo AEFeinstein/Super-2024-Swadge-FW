@@ -160,17 +160,28 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         {
             if(cutscene->PB_A_previousFrame == false)
             {
+                // Copying and customizing the timbre should really only be done once
+                midiTimbre_t cutsceneTimbre;
+                memcpy(&cutsceneTimbre, getTimbreForProgram(false, 2, 30), sizeof(midiTimbre_t));
+
+                cutsceneTimbre.envelope.attackTime = 0;
+                // Using decay instead of release, with a sustain volume of 0, makes the note behave more like percussion
+                // (no note off is necessary)
+                // The control is set in increments of 10ms, so this is equivalent to setting release CC to 60
+                cutsceneTimbre.envelope.decayTime = MS_TO_SAMPLES(600);
+                // Setting sustain volume to 0 means the note ends on its own after decay
+                cutsceneTimbre.envelope.sustainVol = 0;
+                cutsceneTimbre.envelope.releaseTime = 0;
+                // End timbre initialization stuff
+
                 midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
                 // Play a random note within an octave at half velocity on channel 1
-                int songPitches[] = {58, 61, 63, 64, 65, 68, 70};//1 
+                int songPitches[] = {58, 61, 63, 64, 65, 68, 70};//1
                 //int songPitches[] = {60, 62, 67, 69, 72, 74};//2 bouncehause
                 uint8_t pitch            = randomInt(0, 6);
-                midiControlChange(bgm, 13, MCC_SOUND_RELEASE_TIME, 30);
-                midiControlChange(bgm, 13, MCC_VOLUME_LSB, 50);
-                midiControlChange(bgm, 13, MCC_BANK_LSB, 2);
-                // midiControlChange(bgm, 15, MCC_SOUND_RELEASE_TIME, 60);
-                midiNoteOn(bgm, 13, songPitches[pitch], 0x7F);
-                midiNoteOff(bgm, 13, songPitches[pitch], 0x7F);
+
+                // Setting the channel to something > 15 means the note will not be affected by a song changing MIDI controls.
+                soundNoteOn(bgm, 16, songPitches[pitch], 0x7F, &cutsceneTimbre, false);
             }
             cutscene->PB_A_previousFrame = true;
             cutscene->PB_A_frameCounter++;
