@@ -104,8 +104,10 @@ typedef struct
 
     /**
      * @brief This function is called when the microgame is exited. It should free any allocated memory.
+     *
+     * @param successful Whether the game was completed successfully or failed
      */
-    void (*fnDestroyMicrogame)(void);
+    void (*fnDestroyMicrogame)(bool successful);
 
     /**
      * @brief This function is called from the main loop. The microgame should run its game logic and render like a mode

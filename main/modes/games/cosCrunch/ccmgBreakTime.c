@@ -2,7 +2,7 @@
 #include "cosCrunch.h"
 
 static void ccmgBreakTimeInitMicrogame(void);
-static void ccmgBreakTimeDestroyMicrogame(void);
+static void ccmgBreakTimeDestroyMicrogame(bool successful);
 static void ccmgBreakTimeMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
                                   cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 static bool ccmgBreakTimeTimeout(void);
@@ -90,7 +90,7 @@ static void ccmgBreakTimeInitMicrogame(void)
     tintPalette(&ccmgbt->liquidTintPalette, ccmgbt->liquidTintColor);
 }
 
-static void ccmgBreakTimeDestroyMicrogame(void)
+static void ccmgBreakTimeDestroyMicrogame(bool successful)
 {
     freeWsg(&ccmgbt->wsg.mug);
     freeWsg(&ccmgbt->wsg.mugLiquid);

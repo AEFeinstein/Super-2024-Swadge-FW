@@ -2,7 +2,7 @@
 #include "cosCrunch.h"
 
 static void ccmgSliceInitMicrogame(void);
-static void ccmgSliceDestroyMicrogame(void);
+static void ccmgSliceDestroyMicrogame(bool successful);
 static void ccmgSliceMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
                               cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 static int16_t ccmgSliceGetYIntersect(int16_t angle, int16_t width);
@@ -128,7 +128,7 @@ static void ccmgSliceInitMicrogame(void)
     ccmgsl->knifeAngle   = 0;
 }
 
-static void ccmgSliceDestroyMicrogame(void)
+static void ccmgSliceDestroyMicrogame(bool successful)
 {
     cosCrunchMicrogamePersistSplatter(ccmgsl->wsg.canvas, ccmgsl->canvasPos.x, ccmgsl->canvasPos.y);
 
