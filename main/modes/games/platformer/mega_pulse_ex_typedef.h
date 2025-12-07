@@ -1177,10 +1177,47 @@ static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryf
 static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_jumping_leftEdge
     = {.collisionPoints = {{.x = -19, .y = 41}, {.x = -19, .y = 0}, {.x = -19, .y = -44}}, .size = 3};
 
-static const mg_EntityTileCollider_t entityTileCollider_flare_gryffyn = {.bottomEdge = &mgTileCollisionOffsets_flare_gryffyn_jumping_bottomEdge,
+static const mg_EntityTileCollider_t entityTileCollider_flare_gryffyn_jumping = {.bottomEdge = &mgTileCollisionOffsets_flare_gryffyn_jumping_bottomEdge,
                                                                .topEdge    = &mgTileCollisionOffsets_flare_gryffyn_jumping_topEdge,
                                                                .rightEdge  = &mgTileCollisionOffsets_flare_gryffyn_jumping_rightEdge,
                                                                .leftEdge   = &mgTileCollisionOffsets_flare_gryffyn_jumping_leftEdge};
+
+//deadeye chirpzi origin: 40, 34
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_deadeye_chirpzi_bottomEdge
+    = {.collisionPoints = {{.x = -17, .y = 33}, {.x = 0, .y = 33}, {.x = 16, .y = 33}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_deadeye_chirpzi_topEdge
+    = {.collisionPoints = {{.x = -17, .y = -29}, {.x = 0, .y = -29}, {.x = 16, .y = -29}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_deadeye_chirpzi_rightEdge
+    = {.collisionPoints = {{.x = 16, .y = 33}, {.x = 16, .y = 0}, {.x = 16, .y = -29}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_deadeye_chirpzi_leftEdge
+    = {.collisionPoints = {{.x = -17, .y = 33}, {.x = -17, .y = 0}, {.x = -17, .y = -29}}, .size = 3};
+
+static const mg_EntityTileCollider_t entityTileCollider_deadeye_chirpzi = {.bottomEdge = &mgTileCollisionOffsets_deadeye_chirpzi_bottomEdge,
+                                                               .topEdge    = &mgTileCollisionOffsets_deadeye_chirpzi_topEdge,
+                                                               .rightEdge  = &mgTileCollisionOffsets_deadeye_chirpzi_rightEdge,
+                                                               .leftEdge   = &mgTileCollisionOffsets_deadeye_chirpzi_leftEdge};
+
+//trash man origin: 38, 33
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_trash_man_bottomEdge
+    = {.collisionPoints = {{.x = -30, .y = 32}, {.x = 0, .y = 32}, {.x = 30, .y = 32}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_trash_man_topEdge
+    = {.collisionPoints = {{.x = -30, .y = -29}, {.x = 0, .y = -29}, {.x = 30, .y = -29}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_trash_man_rightEdge
+    = {.collisionPoints = {{.x = 30, .y = 32}, {.x = 30, .y = 0}, {.x = 30, .y = -29}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_trash_man_leftEdge
+    = {.collisionPoints = {{.x = -30, .y = 32}, {.x = -30, .y = 0}, {.x = -30, .y = -29}}, .size = 3};
+
+static const mg_EntityTileCollider_t entityTileCollider_trash_man = {.bottomEdge = &mgTileCollisionOffsets_trash_man_bottomEdge,
+                                                               .topEdge    = &mgTileCollisionOffsets_trash_man_topEdge,
+                                                               .rightEdge  = &mgTileCollisionOffsets_trash_man_rightEdge,
+                                                               .leftEdge   = &mgTileCollisionOffsets_trash_man_leftEdge};
+
     typedef enum
 {
     MG_WSGSET_NULL = -1,

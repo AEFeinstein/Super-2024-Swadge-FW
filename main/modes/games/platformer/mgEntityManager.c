@@ -2255,7 +2255,7 @@ mgEntity_t* createBossTrashMan(mgEntityManager_t* entityManager, uint16_t x, uin
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
-    entity->tileCollider         = &entityTileCollider_1x2;
+    entity->tileCollider         = &entityTileCollider_trash_man;
 
     entity->drawHandler  = &mg_defaultEntityDrawHandler;
     entity->linkedEntity = NULL;
@@ -2343,7 +2343,7 @@ mgEntity_t* createBossDeadeyeChirpzi(mgEntityManager_t* entityManager, uint16_t 
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
-    entity->tileCollider         = &entityTileCollider_1x2;
+    entity->tileCollider         = &entityTileCollider_deadeye_chirpzi;
 
     entity->drawHandler  = &mg_defaultEntityDrawHandler;
     entity->linkedEntity = NULL;

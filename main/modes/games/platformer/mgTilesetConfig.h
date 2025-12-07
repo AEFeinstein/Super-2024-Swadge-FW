@@ -507,4 +507,91 @@ static const mgSprite_t mg_flareGryffynBossSpriteMetadataSet[] = {
     }
 };
 
+static const mgSprite_t mg_deadeyeChirpziBossSpriteMetadataSet[] = {
+    {
+        .wsg = NULL,
+        .origin = &origin_deadeye_chirpzi,
+        .hitBox = &box_deadeye_chirpzi
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_deadeye_chirpzi,
+        .hitBox = &box_deadeye_chirpzi
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_deadeye_chirpzi,
+        .hitBox = &box_deadeye_chirpzi
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_deadeye_chirpzi,
+        .hitBox = &box_deadeye_chirpzi
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_deadeye_chirpzi_screw,
+        .hitBox = &box_deadeye_chirpzi_screw
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_deadeye_chirpzi,
+        .hitBox = &box_deadeye_chirpzi
+    },
+    {
+        .wsg = NULL,
+        .origin = NULL,
+        .hitBox = NULL
+    },
+    {
+        .wsg = NULL,
+        .origin = NULL,
+        .hitBox = NULL
+    }
+};
+
+static const mgSprite_t mg_trashManBossSpriteMetadataSet[] = {
+    {
+        .wsg = NULL,
+        .origin = &origin_trash_man,
+        .hitBox = &box_trash_man
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_trash_man,
+        .hitBox = &box_trash_man
+    },
+    {
+        .wsg = NULL,
+        .origin = NULL,
+        .hitBox = NULL
+    },
+    {
+        .wsg = NULL,
+        .origin = NULL,
+        .hitBox = NULL
+    },
+    {
+        .wsg = NULL,
+        .origin = NULL,
+        .hitBox = NULL
+    },
+    {
+        .wsg = NULL,
+        .origin = NULL,
+        .hitBox = NULL
+    },
+    {
+        .wsg = NULL,
+        .origin = NULL,
+        .hitBox = NULL
+    },
+    {
+        .wsg = NULL,
+        .origin = NULL,
+        .hitBox = NULL
+    }
+};
+
+
 #endif

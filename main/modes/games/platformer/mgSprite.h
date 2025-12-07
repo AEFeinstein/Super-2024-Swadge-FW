@@ -94,4 +94,12 @@ static const box_t box_flare_gryffyn = {.x0 = 16, .x1 = 69, .y0 = 0, .y1 = 62};
 static const vec_t origin_flare_gryffyn_jump = {.x = 48, .y = 44};
 static const box_t box_flare_gryffyn_jump = {.x0 = 29, .x1 = 66, .y0 = 0, .y1 = 85};
 
+static const vec_t origin_deadeye_chirpzi = {.x = 40, .y = 34};
+static const box_t box_deadeye_chirpzi = {.x0 = 23, .x1 = 56, .y0 = 11, .y1 = 67};
+static const vec_t origin_deadeye_chirpzi_screw = {.x = 23, .y = 23};
+static const box_t box_deadeye_chirpzi_screw = {.x0 = 7, .x1 = 40, .y0 = 7, .y1 = 39};
+
+static const vec_t origin_trash_man = {.x = 38, .y = 33};
+static const box_t box_trash_man = {.x0 = 8, .x1 = 68, .y0 = 9, .y1 = 65};
+
 #endif
