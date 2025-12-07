@@ -68,7 +68,7 @@ typedef struct
 } ccmgCatch_t;
 ccmgCatch_t* ccmgc = NULL;
 
-static void ccmgCatchInitMicrogame()
+static void ccmgCatchInitMicrogame(void)
 {
     ccmgc = heap_caps_calloc(1, sizeof(ccmgCatch_t), MALLOC_CAP_8BIT);
 

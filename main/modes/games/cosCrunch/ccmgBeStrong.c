@@ -56,7 +56,7 @@ typedef struct
 } ccmgBeStrong_t;
 ccmgBeStrong_t* ccmgbs = NULL;
 
-static void ccmgBeStrongInitMicrogame()
+static void ccmgBeStrongInitMicrogame(void)
 {
     ccmgbs = heap_caps_calloc(1, sizeof(ccmgBeStrong_t), MALLOC_CAP_8BIT);
     loadWsg(CC_TEAR_SPLAT_WSG, &ccmgbs->wsg.tearSplat, false);

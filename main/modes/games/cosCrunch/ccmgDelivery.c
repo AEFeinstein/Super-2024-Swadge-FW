@@ -99,7 +99,7 @@ typedef struct
 } ccmgDelivery_t;
 ccmgDelivery_t* ccmgd = NULL;
 
-static void ccmgDeliveryInitMicrogame()
+static void ccmgDeliveryInitMicrogame(void)
 {
     ccmgd = heap_caps_calloc(1, sizeof(ccmgDelivery_t), MALLOC_CAP_8BIT);
 

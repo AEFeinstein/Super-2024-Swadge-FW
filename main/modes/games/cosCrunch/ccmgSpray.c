@@ -78,7 +78,7 @@ ccmgSpray_t* ccmgs = NULL;
 /// How much paint needs to be on the targetArea for the player to succeed
 #define COVERAGE_GOAL_PERCENT 90
 
-static void ccmgSprayInitMicrogame()
+static void ccmgSprayInitMicrogame(void)
 {
     ccmgs = heap_caps_calloc(1, sizeof(ccmgSpray_t), MALLOC_CAP_8BIT);
 

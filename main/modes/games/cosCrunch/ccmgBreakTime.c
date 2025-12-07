@@ -63,7 +63,7 @@ typedef struct
 } ccmgBreakTime_t;
 ccmgBreakTime_t* ccmgbt = NULL;
 
-static void ccmgBreakTimeInitMicrogame()
+static void ccmgBreakTimeInitMicrogame(void)
 {
     ccmgbt = heap_caps_calloc(1, sizeof(ccmgBreakTime_t), MALLOC_CAP_8BIT);
 

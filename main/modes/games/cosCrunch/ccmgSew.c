@@ -62,7 +62,7 @@ typedef struct
 } ccmgSew_t;
 ccmgSew_t* ccmgsew = NULL;
 
-static void ccmgSewInitMicrogame()
+static void ccmgSewInitMicrogame(void)
 {
     ccmgsew = heap_caps_calloc(1, sizeof(ccmgSew_t), MALLOC_CAP_8BIT);
 

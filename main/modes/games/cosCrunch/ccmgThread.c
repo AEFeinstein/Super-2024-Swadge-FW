@@ -72,7 +72,7 @@ typedef struct
 } ccmgThread_t;
 static ccmgThread_t* ccmgt = NULL;
 
-static void ccmgThreadInitMicrogame()
+static void ccmgThreadInitMicrogame(void)
 {
     ccmgt = heap_caps_calloc(1, sizeof(ccmgThread_t), MALLOC_CAP_8BIT);
 
