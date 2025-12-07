@@ -24,6 +24,7 @@ void stageStartCutscene(mgGameData_t* gameData)
         }
         case 2://The Bouncehaus
         {
+            addCutsceneLine(gameData->cutscene, SystemText, "PULSE and SAWTOOTH teleport into Omega Harbor's convention center, which looks an awful lot like the Gaylord... The grand atrium is filled with glitching-banners flicker, while pixelated distortion pulses through the walls.", false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "Woah. Did we just land in a fever dream? Or do I smell... chicken tenders?", false, -1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "This is the Bouncehaus. Best food in Omega Harbor. Budget-friendly, energy-rich, low judgement. Until Bigma's virus hit. Now no one's ordering anything sane.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "And the MAGiX leader here is...?", false, -1);
@@ -59,12 +60,15 @@ void stageStartCutscene(mgGameData_t* gameData)
         }
         case 5://The Sunshine Speedway
         {
-            addCutsceneLine(gameData->cutscene, Pulse, "WHOA! Okay - I'm awake now!", false, -1);
-            addCutsceneLine(gameData->cutscene, Sawtooth, "Always tricky teleporting onto a moving target. You got your balance?", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Think so! Is it always this fast!?", false, -1);
-            addCutsceneLine(gameData->cutscene, Sawtooth, "Not usually. Someone's pushing the throttle way past safe. You're gonna need something heavy-hitting to stop this runaway.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Like... a brick wall? Or maybe a sternly worded letter?", false, -1);
-            addCutsceneLine(gameData->cutscene, Sawtooth, "...A sternly worded letter... Sure. I'm out.", false, -1);
+            addCutsceneLine(gameData->cutscene, SystemText, "GRIND PANGOLIN's mindscape looks like the roof of a hurtling train. Wind howls. Signs zip past.", false, 0);
+            addCutsceneLine(gameData->cutscene, Pulse, "WHOA! Okay - I'm awake now!", false, 2);
+            addCutsceneLine(gameData->cutscene, Sawtooth, "Always tricky teleporting onto a moving target. You got your balance?", false, 2);
+            addCutsceneLine(gameData->cutscene, Pulse, "Think so! Is it always this fast!?", false, 1);
+            addCutsceneLine(gameData->cutscene, Sawtooth, "Not usually. Someone's pushing the throttle way past safe. You're gonna need something heavy-hitting to stop this runaway.", false, 3);
+            addCutsceneLine(gameData->cutscene, Pulse, "Like... a brick wall? Or maybe a sternly worded letter?", false, 0);
+            addCutsceneLine(gameData->cutscene, Sawtooth, "...A sternly worded letter... Sure. I'm out.", false, 2);
+            addCutsceneLine(gameData->cutscene, SystemText, "SAWTOOTH teleports away.", false, 0);
+            addCutsceneLine(gameData->cutscene, Pulse, "*shrug*", false, -1);
             break;
         }
         case 6://The Lost Ballroom
@@ -257,8 +261,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "Hold it, rude boy! This ride's over!", false, -1);
             addCutsceneLine(gameData->cutscene, GrindPangolin, "Oh noooo, I'm so scared! What are you gonna do-mail me a sternly worded letter?", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Uh-no, I was-wait, how did you...?", false, -1);
-            addCutsceneLine(gameData->cutscene, GrindPangolin, "You're slower than a sound check at a basement show! You're off-beat, outclassed, and outta time!", false, -1);
-            addCutsceneLine(gameData->cutscene, GrindPangolin, "C'mon, slowpoke-let's shred!", false, -1);
+            addCutsceneLine(gameData->cutscene, GrindPangolin, "You're slower than a sound check at a basement show! You're off-beat, outclassed, and outta time! Let's shred!", false, -1);
             break;
         }
         case 6://The Lost Ballroom
@@ -407,13 +410,15 @@ void bossOutroCutscene(mgGameData_t* gameData)
         case 5://The Sunshine Speedway
         {
             addCutsceneLine(gameData->cutscene, GrindPangolin, "Owwww. Where even is this?  Why do I look like a rejected street team flyer?", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Long story. You got corrupted. Tried to turn this train into a one-way ride to Ska-mageddon.", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "Long story. You got corrupted. Tried to turn this train into a one-way ride to Ska-mageddon.", false, 2);
             addCutsceneLine(gameData->cutscene, GrindPangolin, "Ugghhh. I hate when I go full speed without thinking.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Happens to the best of us.", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "Happens to the best of us.", false, 1);
             addCutsceneLine(gameData->cutscene, GrindPangolin, "Here. Should help you keep up when things get too fast.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Now that's what I'm talking about!", false, -1);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Trombone Slide", false, 0);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Press Down and A to Dash! You'll slide under some attacks!", false, 0);
+            addCutsceneLine(gameData->cutscene, Pulse, "Now that's what I'm talking about!", false, 2);
             addCutsceneLine(gameData->cutscene, GrindPangolin, "Give 'em whiplash for me. And hey-thanks for the brakes.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "You got it. Enjoy your rest!", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "You got it. Enjoy your rest!", false, 1);
             break;
         }
         case 6://The Lost Ballroom

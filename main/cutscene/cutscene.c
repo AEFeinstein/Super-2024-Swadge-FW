@@ -45,13 +45,15 @@ cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx)
     }
     cutscene->xOffset = 280; //default start value for antagonists.
 
-    midiPlayer_t* player = globalMidiPlayerGet(MIDI_SFX);
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     midiPlayerReset(player);
     midiPause(player, false);
-    midiGmOn(player);
-    midiSetProgram(player, 13, 90); // talking sound effects arbitrarily go on channel 15 and use midi instrument 90.
-    midiControlChange(player, 13, MCC_SUSTENUTO_PEDAL, 80);
-    midiControlChange(player, 13, MCC_SOUND_RELEASE_TIME, 60);
+    //midiGmOn(player);
+    midiControlChange(player, 13, MCC_BANK_LSB, 2);
+    //midiSetParameter(player, 13, false, 10, 2);
+    midiSetProgram(player, 13, 30);
+    // midiControlChange(player, 13, MCC_SUSTENUTO_PEDAL, 80);
+    // midiControlChange(player, 13, MCC_SOUND_RELEASE_TIME, 60);
 
     return cutscene;
 }
@@ -158,12 +160,17 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         {
             if(cutscene->PB_A_previousFrame == false)
             {
-                midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_SFX);
+                midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
                 // Play a random note within an octave at half velocity on channel 1
-                int deepBlueseyPitches[] = {34, 37, 39, 40, 41, 44, 46, 57, 58};
-                uint8_t pitch            = randomInt(0, 8);
-                midiNoteOn(bgm, 13, deepBlueseyPitches[pitch], 0x40);
-                midiNoteOff(bgm, 13, deepBlueseyPitches[pitch], 0x7F);
+                int songPitches[] = {58, 61, 63, 64, 65, 68, 70};//1 
+                //int songPitches[] = {60, 62, 67, 69, 72, 74};//2 bouncehause
+                uint8_t pitch            = randomInt(0, 6);
+                midiControlChange(bgm, 13, MCC_SOUND_RELEASE_TIME, 30);
+                midiControlChange(bgm, 13, MCC_VOLUME_LSB, 50);
+                midiControlChange(bgm, 13, MCC_BANK_LSB, 2);
+                // midiControlChange(bgm, 15, MCC_SOUND_RELEASE_TIME, 60);
+                midiNoteOn(bgm, 13, songPitches[pitch], 0x7F);
+                midiNoteOff(bgm, 13, songPitches[pitch], 0x7F);
             }
             cutscene->PB_A_previousFrame = true;
             cutscene->PB_A_frameCounter++;
@@ -264,7 +271,14 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
         {
             iconFrame = 3;
         }
-        drawWsgSimple(cutscene->nextIcon[iconFrame], 256, 190);
+        if(cutscene->PB_A_frameCounter > 0)
+        {
+            drawWsgSimpleScaled(cutscene->nextIcon[iconFrame], 248, 180, 2, 2);
+        }
+        else
+        {
+            drawWsgSimple(cutscene->nextIcon[iconFrame], 256, 190);
+        }
         if (cutscene->blinkTimer > 0 && cutscene->PB_A_frameCounter == 0)
         {
             //drawWsgSimple(&dData->spriteNext, 254 + (textColor == c525 ? 4 : 0), -dData->offsetY + 186);
