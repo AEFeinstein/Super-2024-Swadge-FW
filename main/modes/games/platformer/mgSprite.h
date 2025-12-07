@@ -89,5 +89,9 @@ static const box_t box_kinetic_donut = {.x0 = 5, .x1 = 37, .y0 = 16, .y1 = 45};
 static const vec_t origin_kinetic_donut_dashing = {.x = 27, .y = 21};
 static const box_t box_kinetic_donut_dashing = {.x0 = 4, .x1 = 54, .y0 = 7, .y1 = 42};
 
+static const vec_t origin_flare_gryffyn = {.x = 40, .y = 32};
+static const box_t box_flare_gryffyn = {.x0 = 16, .x1 = 69, .y0 = 0, .y1 = 62};
+static const vec_t origin_flare_gryffyn_jump = {.x = 48, .y = 44};
+static const box_t box_flare_gryffyn_jump = {.x0 = 29, .x1 = 66, .y0 = 0, .y1 = 85};
 
 #endif

@@ -1146,7 +1146,41 @@ static const mg_EntityTileCollider_t entityTileCollider_kinetic_donut = {.bottom
                                                                .rightEdge  = &mgTileCollisionOffsets_kinetic_donut_rightEdge,
                                                                .leftEdge   = &mgTileCollisionOffsets_kinetic_donut_leftEdge};
 
+//flare gryffyn origin: 40, 32
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_bottomEdge
+    = {.collisionPoints = {{.x = -24, .y = 30}, {.x = 0, .y = 30}, {.x = 24, .y = 30}}, .size = 3};
 
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_topEdge
+    = {.collisionPoints = {{.x = -24, .y = -32}, {.x = 0, .y = -32}, {.x = 24, .y = -32}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_rightEdge
+    = {.collisionPoints = {{.x = 24, .y = 30}, {.x = 24, .y = 0}, {.x = 24, .y = -32}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_leftEdge
+    = {.collisionPoints = {{.x = -24, .y = 30}, {.x = -24, .y = 0}, {.x = -24, .y = -32}}, .size = 3};
+
+static const mg_EntityTileCollider_t entityTileCollider_flare_gryffyn = {.bottomEdge = &mgTileCollisionOffsets_flare_gryffyn_bottomEdge,
+                                                               .topEdge    = &mgTileCollisionOffsets_flare_gryffyn_topEdge,
+                                                               .rightEdge  = &mgTileCollisionOffsets_flare_gryffyn_rightEdge,
+                                                               .leftEdge   = &mgTileCollisionOffsets_flare_gryffyn_leftEdge};
+
+//flare gryffyn jumping origin: 48, 44
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_jumping_bottomEdge
+    = {.collisionPoints = {{.x = -19, .y = 41}, {.x = 0, .y = 41}, {.x = 18, .y = 41}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_jumping_topEdge
+    = {.collisionPoints = {{.x = -19, .y = -44}, {.x = 0, .y = -44}, {.x = 18, .y = -44}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_jumping_rightEdge
+    = {.collisionPoints = {{.x = 18, .y = 41}, {.x = 18, .y = 0}, {.x = 18, .y = -44}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_jumping_leftEdge
+    = {.collisionPoints = {{.x = -19, .y = 41}, {.x = -19, .y = 0}, {.x = -19, .y = -44}}, .size = 3};
+
+static const mg_EntityTileCollider_t entityTileCollider_flare_gryffyn = {.bottomEdge = &mgTileCollisionOffsets_flare_gryffyn_jumping_bottomEdge,
+                                                               .topEdge    = &mgTileCollisionOffsets_flare_gryffyn_jumping_topEdge,
+                                                               .rightEdge  = &mgTileCollisionOffsets_flare_gryffyn_jumping_rightEdge,
+                                                               .leftEdge   = &mgTileCollisionOffsets_flare_gryffyn_jumping_leftEdge};
     typedef enum
 {
     MG_WSGSET_NULL = -1,

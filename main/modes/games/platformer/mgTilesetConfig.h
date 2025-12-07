@@ -464,4 +464,47 @@ static const mgSprite_t mg_kineticDonutBossSpriteMetadataSet[] = {
     }
 };
 
+static const mgSprite_t mg_flareGryffynBossSpriteMetadataSet[] = {
+    {
+        .wsg = NULL,
+        .origin = &origin_flare_gryffyn,
+        .hitBox = &box_flare_gryffyn
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_flare_gryffyn_jump,
+        .hitBox = &box_flare_gryffyn_jump
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_flare_gryffyn,
+        .hitBox = &box_flare_gryffyn
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_flare_gryffyn,
+        .hitBox = &box_flare_gryffyn
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_flare_gryffyn,
+        .hitBox = &box_flare_gryffyn
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_flare_gryffyn,
+        .hitBox = &box_flare_gryffyn
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_flare_gryffyn_jump,
+        .hitBox = &box_flare_gryffyn_jump
+    },
+    {
+        .wsg = NULL,
+        .origin = NULL,
+        .hitBox = NULL
+    }
+};
+
 #endif
