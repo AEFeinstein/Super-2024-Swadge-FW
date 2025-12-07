@@ -67,6 +67,9 @@ static void ccmgBeStrongInitMicrogame()
     ccmgbs->fallYShrinkageMultiplier
         = esp_random() % (TEAR_FALL_MAX_Y_SHRINKAGE_MULTIPLIER - TEAR_FALL_MIN_Y_SHRINKAGE_MULTIPLIER + 1)
           + TEAR_FALL_MIN_Y_SHRINKAGE_MULTIPLIER;
+
+    // Vibraphone sounds like sniffling, but it's kind of annoying played repeatedly so drop the volume a bit
+    globalMidiPlayerSetVolume(MIDI_SFX, 12);
 }
 
 static void ccmgBeStrongDestroyMicrogame(bool successful)
@@ -132,6 +135,7 @@ static void ccmgBeStrongMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, fl
                     {
                         ccmgbs->leftTear.radius  = MAX(ccmgbs->leftTear.radius - 3, 0);
                         ccmgbs->rightTear.radius = MAX(ccmgbs->rightTear.radius - 3, 0);
+                        midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, VIBRASLAP, 0x7f);
                     }
                 }
             }
@@ -165,7 +169,12 @@ static void ccmgBeStrongMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, fl
             }
             else
             {
-                ccmgbs->leftTear.radius = 0;
+                if (ccmgbs->leftTear.radius > 0)
+                {
+                    ccmgbs->leftTear.radius = 0;
+                    globalMidiPlayerSetVolume(MIDI_SFX, 13);
+                    midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, MARACAS, 0x7f);
+                }
                 drawWsgSimple(&ccmgbs->wsg.tearSplat, ccmgbs->leftTear.xPos - ccmgbs->wsg.tearSplat.w / 2,
                               ccmgbs->leftTear.yPos - ccmgbs->wsg.tearSplat.h / 2);
             }
@@ -179,7 +188,12 @@ static void ccmgBeStrongMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, fl
                 }
                 else
                 {
-                    ccmgbs->rightTear.radius = 0;
+                    if (ccmgbs->rightTear.radius > 0)
+                    {
+                        ccmgbs->rightTear.radius = 0;
+                        // Volume was already reset when left tear hit
+                        midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, MARACAS, 0x7f);
+                    }
                     drawWsgSimple(&ccmgbs->wsg.tearSplat, ccmgbs->rightTear.xPos - ccmgbs->wsg.tearSplat.w / 2,
                                   ccmgbs->rightTear.yPos - ccmgbs->wsg.tearSplat.h / 2);
                 }
