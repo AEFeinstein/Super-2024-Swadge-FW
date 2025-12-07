@@ -68,6 +68,27 @@ typedef struct
     uint8_t hintBuf[1024];
 } sudokuMoveDesc_t;
 
+typedef struct
+{
+    uint8_t* hintBuf;
+    size_t hintbufLen;
+
+    uint16_t* notes;
+    uint16_t* boxNotes;
+    uint16_t* rowNotes;
+    uint16_t* colNotes;
+
+    int size;
+    int base;
+
+    int stage;
+    int digit;
+    int pos;
+} solverCache_t;
+
 bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudokuGrid_t* board);
 void sudokuApplyMove(sudokuGrid_t* board, const sudokuMoveDesc_t* desc);
 void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepNum, const uint8_t* hint, size_t n);
+
+bool initSolverCache(solverCache_t* cache, int size, int base);
+void deinitSolverCache(solverCache_t* cache);
