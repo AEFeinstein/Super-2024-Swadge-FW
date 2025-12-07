@@ -1,3 +1,10 @@
+/**
+ * @file artillery_phys.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief Physics simulation for Vector Tanks
+ * @date 2025-11-26
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -11,16 +18,18 @@
 #include <hdw-tft.h>
 
 #include "shapes.h"
-#include "artillery.h"
-#include "artillery_phys.h"
 #include "macros.h"
 #include "fill.h"
 
-#include "artillery_phys_objs.h"
+#include "artillery.h"
+#include "artillery_game.h"
+#include "artillery_paint.h"
+#include "artillery_phys.h"
+#include "artillery_phys_bsp.h"
 #include "artillery_phys_camera.h"
 #include "artillery_phys_collisions.h"
+#include "artillery_phys_objs.h"
 #include "artillery_phys_terrain.h"
-#include "artillery_phys_bsp.h"
 
 //==============================================================================
 // Defines
@@ -40,12 +49,13 @@
 #define PLAYER_RADIUS 8
 
 //==============================================================================
-// Function Declarations
+// Const variables
 //==============================================================================
 
 const artilleryAmmoAttrib_t ammoAttributes[] = {
     {
         .name       = "Normal",
+        .help       = "Normal ammo is normal. One shot, 100 points. Simple, elegant, classic.",
         .color      = c315,
         .radius     = 4,
         .numBounces = 1,
@@ -57,33 +67,38 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .effect     = NO_EFFECT,
     },
     {
-        .name       = "Three Shot",
-        .color      = c341,
-        .radius     = 3,
+        .name   = "Big Shot",
+        .help   = "Big shot is a 75 point shot with a huge explosion and a lot of knock-back that leaves a big crater.",
+        .color  = c243,
+        .radius = 6,
         .numBounces = 1,
-        .numSpread  = 3,
+        .numSpread  = 1,
         .numConsec  = 1,
-        .score      = 100,
-        .expVel     = 80,
-        .expRadius  = 15,
+        .score      = 75,
+        .expVel     = 200,
+        .expRadius  = 40,
         .effect     = NO_EFFECT,
     },
     {
-        .name       = "Five Shot",
-        .color      = c314,
-        .radius     = 2,
+        .name   = "Sniper",
+        .help   = "Sniper is a tiny 200 point shot with no explosion. This precision shot has minimum disruption and "
+                  "maximum points.",
+        .color  = c222,
+        .radius = 1,
         .numBounces = 1,
-        .numSpread  = 5,
+        .numSpread  = 1,
         .numConsec  = 1,
-        .score      = 100,
-        .expVel     = 60,
-        .expRadius  = 10,
-        .effect     = NO_EFFECT,
+        .score      = 200,
+        .expVel     = 0,
+        .expRadius  = 1,
+        .effect     = SNIPER,
     },
     {
-        .name       = "Bouncy",
-        .color      = c224,
-        .radius     = 4,
+        .name   = "Bouncy",
+        .help   = "Bouncy is a 75 point shot that bounces up to five times before exploding. Rough terrain makes it a "
+                  "little unpredictable!",
+        .color  = c224,
+        .radius = 4,
         .numBounces = 5,
         .numSpread  = 1,
         .numConsec  = 1,
@@ -93,55 +108,9 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .effect     = NO_EFFECT,
     },
     {
-        .name       = "Sniper",
-        .color      = c222,
-        .radius     = 1,
-        .numBounces = 1,
-        .numSpread  = 1,
-        .numConsec  = 1,
-        .score      = 300,
-        .expVel     = 0,
-        .expRadius  = 1,
-        .effect     = NO_EFFECT,
-    },
-    {
-        .name       = "Big Shot",
-        .color      = c243,
-        .radius     = 6,
-        .numBounces = 1,
-        .numSpread  = 1,
-        .numConsec  = 1,
-        .score      = 40,
-        .expVel     = 200,
-        .expRadius  = 40,
-        .effect     = NO_EFFECT,
-    },
-    {
-        .name       = "Rocket Jump",
-        .color      = c421,
-        .radius     = 12,
-        .numBounces = 1,
-        .numSpread  = 1,
-        .numConsec  = 1,
-        .score      = 0,
-        .expVel     = 200,
-        .expRadius  = 12,
-        .effect     = NO_EFFECT,
-    },
-    {
-        .name       = "Wallmaker",
-        .color      = c242,
-        .radius     = 3,
-        .numBounces = 1,
-        .numSpread  = 1,
-        .numConsec  = 1,
-        .score      = 0,
-        .expVel     = 0,
-        .expRadius  = 20,
-        .effect     = WALL_MAKER,
-    },
-    {
-        .name       = "Laser Bolt",
+        .name = "Laser Bolt",
+        .help
+        = "Laser Bolt is a 150 point shot which always flies in a straight line. Lasers don't care about gravity.",
         .color      = c331,
         .radius     = 2,
         .numBounces = 1,
@@ -153,19 +122,9 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .effect     = LASER,
     },
     {
-        .name       = "Homing Shot",
-        .color      = c223,
-        .radius     = 4,
-        .numBounces = 1,
-        .numSpread  = 1,
-        .numConsec  = 1,
-        .score      = 50,
-        .expVel     = 100,
-        .expRadius  = 20,
-        .effect     = HOMING_MISSILE,
-    },
-    {
         .name       = "Confuser",
+        .help       = "Confuser is a 50 point shot that will also randomize the opponent's shot power and angle. Don't "
+                      "forget your settings!",
         .color      = c244,
         .radius     = 4,
         .numBounces = 1,
@@ -177,41 +136,102 @@ const artilleryAmmoAttrib_t ammoAttributes[] = {
         .effect     = CONFUSION,
     },
     {
-        .name       = "Machine Gun",
-        .color      = c321,
-        .radius     = 2,
+        .name = "Homing Shot",
+        .help
+        = "Homing shot is a 75 point shot that will target an opponent in a straight line if it gets close enough.",
+        .color      = c223,
+        .radius     = 4,
         .numBounces = 1,
         .numSpread  = 1,
-        .numConsec  = 5,
-        .score      = 100,
+        .numConsec  = 1,
+        .score      = 75,
+        .expVel     = 100,
+        .expRadius  = 20,
+        .effect     = HOMING_MISSILE,
+    },
+    {
+        .name = "Three Shot",
+        .help
+        = "Three Shot fires three 50 point shots, each three degrees apart. The small shots are good for aiming later.",
+        .color      = c341,
+        .radius     = 3,
+        .numBounces = 1,
+        .numSpread  = 3,
+        .numConsec  = 1,
+        .score      = 3 * 50,
+        .expVel     = 80,
+        .expRadius  = 15,
+        .effect     = NO_EFFECT,
+    },
+    {
+        .name       = "Five Shot",
+        .help       = "Five Shot fires five 25 point shots, each three degrees apart. Each shot has a small explosion.",
+        .color      = c314,
+        .radius     = 2,
+        .numBounces = 1,
+        .numSpread  = 5,
+        .numConsec  = 1,
+        .score      = 5 * 25,
         .expVel     = 60,
         .expRadius  = 10,
         .effect     = NO_EFFECT,
     },
     {
-        .name       = "Floor is Lava",
-        .color      = c412,
+        .name  = "Machine Gun",
+        .help  = "Machine Gun fires five 30 point shots in a row. Land all the shots for lots of points or use them to "
+                 "dig a hole.",
+        .color = c321,
+        .radius     = 2,
+        .numBounces = 1,
+        .numSpread  = 1,
+        .numConsec  = 5,
+        .score      = 5 * 30,
+        .expVel     = 60,
+        .expRadius  = 10,
+        .effect     = NO_EFFECT,
+    },
+    {
+        .name  = "Wallmaker",
+        .help  = "Wallmaker is a shot which will create a wall wherever it lands. Make a shield or trap your opponent.",
+        .color = c242,
         .radius     = 3,
         .numBounces = 1,
         .numSpread  = 1,
         .numConsec  = 1,
-        .score      = 100,
+        .score      = 0,
+        .expVel     = 0,
+        .expRadius  = 20,
+        .effect     = WALL_MAKER,
+    },
+    {
+        .name   = "Floor is Lava",
+        .help   = "Floor is Lava is a 50 point shot that also turns the floor to lava. Tanks in lava at the start of a "
+                  "turn lose 50 points.",
+        .color  = COLOR_LAVA,
+        .radius = 3,
+        .numBounces = 1,
+        .numSpread  = 1,
+        .numConsec  = 1,
+        .score      = 50,
         .expVel     = 100,
         .expRadius  = 20,
         .effect     = FLOOR_LAVA,
     },
+    {
+        .name   = "Rocket Jump",
+        .help   = "Rocket Jump has no friendly fire. Point your shot down and use it to launch yourself into a better "
+                  "position.",
+        .color  = c421,
+        .radius = 12,
+        .numBounces = 1,
+        .numSpread  = 1,
+        .numConsec  = 1,
+        .score      = 0,
+        .expVel     = 200,
+        .expRadius  = 12,
+        .effect     = ROCKET_JUMP,
+    },
 };
-
-const artilleryAmmoAttrib_t* getAmmoAttributes(uint16_t* numAttributes)
-{
-    *numAttributes = ARRAY_SIZE(ammoAttributes);
-    return ammoAttributes;
-}
-
-const artilleryAmmoAttrib_t* getAmmoAttribute(uint16_t idx)
-{
-    return &ammoAttributes[idx];
-}
 
 //==============================================================================
 // Function Declarations
@@ -226,6 +246,29 @@ static void findSurfacePoints(int x0, int y0, int x1, int y1, int16_t* surfacePo
 //==============================================================================
 // Functions
 //==============================================================================
+
+/**
+ * @brief Get all the ammo attributes
+ *
+ * @param numAttributes [OUT] The number of ammo attributes is written here
+ * @return A pointer to a list of ammo attributes
+ */
+const artilleryAmmoAttrib_t* getAmmoAttributes(uint16_t* numAttributes)
+{
+    *numAttributes = ARRAY_SIZE(ammoAttributes);
+    return ammoAttributes;
+}
+
+/**
+ * @brief Get a specific ammo's attributes
+ *
+ * @param idx The index of the ammo attribute to get
+ * @return A pointer to the ammo's attributes
+ */
+const artilleryAmmoAttrib_t* getAmmoAttribute(uint16_t idx)
+{
+    return &ammoAttributes[idx];
+}
 
 /**
  * @brief Initialize a physics simulation with world bounds and gravity.
@@ -306,7 +349,12 @@ void physRemoveAllObjects(physSim_t* phys)
     // Free all circles
     while (phys->circles.first)
     {
-        heap_caps_free(pop(&phys->circles));
+        physCirc_t* circ = pop(&phys->circles);
+        while (circ->availableAmmo.first)
+        {
+            pop(&circ->availableAmmo);
+        }
+        heap_caps_free(circ);
     }
 
     // Free all explosions
@@ -333,6 +381,12 @@ void deinitPhys(physSim_t* phys)
     {
         physRemoveAllObjects(phys);
 
+        // Deinit tour
+        while (phys->cameraTour.length)
+        {
+            pop(&phys->cameraTour);
+        }
+
         // Free the simulation
         heap_caps_free(phys);
     }
@@ -347,8 +401,8 @@ void physStepBackground(physSim_t* phys)
 {
     if (phys->isReady)
     {
-        // Move the terrain
-        phys->terrainMoving = moveTerrainLines(phys, PHYS_TIME_STEP_US);
+        // Move the terrain every PHYS_TIME_STEP_US
+        phys->terrainMoving = moveTerrainLines(phys);
 
         // Clear surface points
         memset(phys->surfacePoints, 0xFF, sizeof(phys->surfacePoints));
@@ -370,7 +424,11 @@ void physStepBackground(physSim_t* phys)
                 // Assign ground color
                 int16_t minScreenX = CLAMP(pl->l.p1.x - phys->camera.x, 0, TFT_WIDTH);
                 int16_t maxScreenX = CLAMP(pl->l.p2.x - phys->camera.x, 0, TFT_WIDTH);
-                memset(&phys->surfaceColors[minScreenX], pl->isLava ? c200 : c020, maxScreenX - minScreenX);
+                if (maxScreenX - minScreenX)
+                {
+                    memset(&phys->surfaceColors[minScreenX], pl->isLava ? COLOR_LAVA : COLOR_GROUND,
+                           maxScreenX - minScreenX);
+                }
             }
 
             // Iterate
@@ -388,23 +446,26 @@ void physStepBackground(physSim_t* phys)
  *
  * @param phys The physics simulation
  * @param elapsedUs The time elapsed since this was last called
+ * @param menuShowing true if the in-game menu is showing
+ * @param playerMoved [OUT] true if the player moves, false otherwise
+ * @param cameraMoved [OUT] true if the camera moves, false otherwise
  */
-bool physStep(physSim_t* phys, int32_t elapsedUs, bool menuShowing)
+void physStep(physSim_t* phys, int32_t elapsedUs, bool menuShowing, bool* playerMoved, bool* cameraMoved)
 {
-    bool change = false;
+    *playerMoved = false;
+    *cameraMoved = false;
     if (phys->isReady && phys->shouldStepForeground)
     {
         phys->shouldStepForeground = false;
 
         // Calculate physics frames at a very regular PHYS_TIME_STEP
         physFindObjDests(phys, PHYS_TIME_STEP_S);
-        change |= physCheckCollisions(phys);
-        change |= physBinaryMoveObjects(phys);
-        change |= physAdjustCameraTimer(phys, menuShowing);
+        physCheckCollisions(phys);
+        *playerMoved = physBinaryMoveObjects(phys);
+        *cameraMoved = physAdjustCameraTimer(phys, menuShowing);
         physRunAnimateTimers(phys, PHYS_TIME_STEP_US);
         checkTurnOver(phys);
     }
-    return change;
 }
 
 /**
@@ -513,6 +574,7 @@ static void physFindObjDests(physSim_t* phys, float elapsedS)
  * destination.
  *
  * @param phys The physics simulation
+ * @return true if an object moved an integer amount and needs to be transmitted
  */
 static bool physBinaryMoveObjects(physSim_t* phys)
 {
@@ -541,12 +603,10 @@ static bool physBinaryMoveObjects(physSim_t* phys)
                 // If the final destination isn't valid, binary search
                 bool collision = true;
 
-                // TODO pick a better number?
+                // Iterating five times is fine for performance
                 int32_t numIter = 5;
-                while (numIter)
+                while (numIter--)
                 {
-                    numIter--;
-
                     // Set circle to the midpoint of the travel line
                     pc->c.pos = divVecFl2d(addVecFl2d(pc->travelLine.p1, pc->travelLine.p2), 2);
                     updateCircleProperties(phys, pc);
@@ -578,6 +638,12 @@ static bool physBinaryMoveObjects(physSim_t* phys)
             if (CT_TANK == pc->type && ((int)pc->c.pos.x != (int)oldPos.x || (int)pc->c.pos.y != (int)oldPos.y))
             {
                 playerMoved = true;
+            }
+
+            // Check if the tank bounced off the skybox
+            if (CT_TANK == pc->type && pc->c.pos.y <= pc->c.radius + 1)
+            {
+                trophyUpdate(&artilleryTrophies[AT_TO_THE_MOON], true, true);
             }
         }
 
@@ -632,6 +698,10 @@ static void checkTurnOver(physSim_t* phys)
  * @brief Draw the background of the simulation (land, sky, and void)
  *
  * @param phys The physics simulation to draw
+ * @param x0 The X position to start drawing at
+ * @param y0 The Y position to start drawing at
+ * @param w The width of the section to draw
+ * @param h The height of the section to draw
  */
 void drawPhysBackground(physSim_t* phys, int16_t x0, int16_t y0, int16_t w, int16_t h)
 {
@@ -639,7 +709,7 @@ void drawPhysBackground(physSim_t* phys, int16_t x0, int16_t y0, int16_t w, int1
     paletteColor_t* fb = &getPxTftFramebuffer()[y0 * TFT_WIDTH + x0];
 
     // Fill black to start
-    memset(fb, c000, w * h);
+    memset(fb, COLOR_VOID, w * h);
 
     // Find the Y bounds to draw ground and sky between
     int16_t minY = CLAMP(-phys->camera.y, y0, y0 + h);
@@ -664,7 +734,7 @@ void drawPhysBackground(physSim_t* phys, int16_t x0, int16_t y0, int16_t w, int1
             if (y < phys->surfacePoints[x])
             {
                 // Blue for sky
-                *fb = c002;
+                *fb = COLOR_SKY;
             }
             else
             {
@@ -685,11 +755,12 @@ void drawPhysBackground(physSim_t* phys, int16_t x0, int16_t y0, int16_t w, int1
  * @brief Draw the outlines of physics simulation objects
  *
  * @param phys The physics simulation
- * @param players
- * @param font
- * @param moveTimeLeftUs
+ * @param players An array of pointers to the two players
+ * @param font The font to draw the HUD with
+ * @param fontOutline The outline font to draw the HUD with
+ * @param turn The turn to draw on the HUD
  */
-void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_t moveTimeLeftUs, int32_t turn)
+void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, font_t* fontOutline, int32_t turn)
 {
     // Draw zones
     // for (int32_t z = 0; z < NUM_ZONES; z++)
@@ -706,7 +777,7 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
     for (int32_t cIdx = 0; cIdx < ARRAY_SIZE(phys->clouds); cIdx++)
     {
         circle_t* cloud = &phys->clouds[cIdx];
-        drawCircleFilled(cloud->pos.x - phys->camera.x, cloud->pos.y - phys->camera.y, cloud->radius, c555);
+        drawCircleFilled(cloud->pos.x - phys->camera.x, cloud->pos.y - phys->camera.y, cloud->radius, COLOR_CLOUD);
     }
 
     // Draw all circles
@@ -723,67 +794,26 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
         {
             if (pc->lavaAnimTimer % LAVA_ANIM_PERIOD < (LAVA_ANIM_PERIOD / 2))
             {
-                bCol = c200;
-                aCol = c200;
+                bCol = COLOR_LAVA;
+                aCol = COLOR_LAVA;
             }
         }
 
-        // Draw a gun barrel for tanks
         if (CT_TANK == pc->type)
         {
-            vecFl_t absBarrelTip = addVecFl2d(pc->c.pos, pc->relBarrelTip);
-            drawLineFast(pc->c.pos.x - phys->camera.x,    //
-                         pc->c.pos.y - phys->camera.y,    //
-                         absBarrelTip.x - phys->camera.x, //
-                         absBarrelTip.y - phys->camera.y, //
-                         aCol);
-        }
-
-        // Draw main circle
-        drawCircleFilled(pc->c.pos.x - phys->camera.x, //
-                         pc->c.pos.y - phys->camera.y, //
-                         pc->c.radius, bCol);
-
-        // Draw wheels for tanks too
-        if (CT_TANK == pc->type)
-        {
-            // and some wheels too
-            float wheelR = pc->c.radius / 2.0f;
-            float wheelY = pc->c.radius - wheelR;
-
             // Find the vector pointing from the center of the tank to the floor
-            vecFl_t wheelOffVert = mulVecFl2d(normVecFl2d(addVecFl2d(pc->contactNorm, pc->lastContactNorm)), -1);
-
-            // Rotate by 90 deg, doesn't matter which way
-            vecFl_t wheelOffHorz = {
-                .x = wheelOffVert.y,
-                .y = -wheelOffVert.x,
-            };
-
-            // Scale vectors to place the wheels
-            vecFl_t treadOff = mulVecFl2d(wheelOffVert, wheelR);
-            wheelOffVert     = mulVecFl2d(wheelOffVert, wheelY);
-            wheelOffHorz     = mulVecFl2d(wheelOffHorz, pc->c.radius);
-
-            // Draw first wheel
-            vecFl_t w1 = addVecFl2d(pc->c.pos, addVecFl2d(wheelOffVert, wheelOffHorz));
-            drawCircleFilled(w1.x - phys->camera.x, w1.y - phys->camera.y, wheelR, aCol);
-
-            // Draw second wheel
-            vecFl_t w2 = addVecFl2d(pc->c.pos, subVecFl2d(wheelOffVert, wheelOffHorz));
-            drawCircleFilled(w2.x - phys->camera.x, w2.y - phys->camera.y, wheelR, aCol);
-
-            // Draw top tread
-            drawLineFast(w1.x + treadOff.x - phys->camera.x, //
-                         w1.y + treadOff.y - phys->camera.y, //
-                         w2.x + treadOff.x - phys->camera.x, //
-                         w2.y + treadOff.y - phys->camera.y, //
-                         aCol);
-            drawLineFast(w1.x - treadOff.x - phys->camera.x, //
-                         w1.y - treadOff.y - phys->camera.y, //
-                         w2.x - treadOff.x - phys->camera.x, //
-                         w2.y - treadOff.y - phys->camera.y, //
-                         aCol);
+            // Normalize to 1.01 instead of 1.0 to avoid floating floating point 0.99999 weirdness
+            vecFl_t wheelOffVert = mulVecFl2d(normVecFl2d(addVecFl2d(pc->contactNorm, pc->lastContactNorm)), -1.01);
+            // Draw tank
+            drawTank(pc->c.pos.x - phys->camera.x, pc->c.pos.y - phys->camera.y, //
+                     pc->c.radius, bCol, aCol, 1, wheelOffVert, pc->relBarrelTip);
+        }
+        else
+        {
+            // Draw main circle
+            drawCircleFilled(pc->c.pos.x - phys->camera.x, //
+                             pc->c.pos.y - phys->camera.y, //
+                             pc->c.radius, bCol);
         }
 
         // Iterate
@@ -804,27 +834,26 @@ void drawPhysOutline(physSim_t* phys, physCirc_t** players, font_t* font, int32_
         eNode = eNode->next;
     }
 
-#define GAS_GAUGE_HEIGHT 16
-#define TEXT_Y           (GAS_GAUGE_HEIGHT + 4)
-#define TEXT_X_MARGIN    20
-
-    // Draw gas gauge
-    fillDisplayArea(0, 0, (TFT_WIDTH * moveTimeLeftUs) / TANK_MOVE_TIME_US, GAS_GAUGE_HEIGHT, c222);
+#define TEXT_Y        4
+#define TEXT_X_MARGIN 20
 
     // Draw turns
     char turnStr[32] = {0};
-    snprintf(turnStr, sizeof(turnStr) - 1, "Turn %" PRId32, turn);
-    drawTextShadow(font, c555, c000, turnStr, (TFT_WIDTH - textWidth(font, turnStr)) / 2, TEXT_Y);
+    snprintf(turnStr, sizeof(turnStr) - 1, "Turn %" PRId32 "/%d", turn, MAX_TURNS);
+    drawText(font, COLOR_HUD_TEXT, turnStr, (TFT_WIDTH - textWidth(font, turnStr)) / 2, TEXT_Y);
 
     // Draw score if players are set
     if (players[0])
     {
         char scoreStr[32] = {0};
         snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, players[0]->score);
-        drawTextShadow(font, c555, c000, scoreStr, TEXT_X_MARGIN, TEXT_Y);
+        drawText(font, players[0]->baseColor, scoreStr, TEXT_X_MARGIN, TEXT_Y);
+        drawText(fontOutline, players[0]->accentColor, scoreStr, TEXT_X_MARGIN, TEXT_Y);
 
         snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRId32, players[1]->score);
-        drawTextShadow(font, c555, c000, scoreStr, TFT_WIDTH - textWidth(font, scoreStr) - TEXT_X_MARGIN, TEXT_Y);
+        drawText(font, players[1]->baseColor, scoreStr, TFT_WIDTH - textWidth(font, scoreStr) - TEXT_X_MARGIN, TEXT_Y);
+        drawText(fontOutline, players[1]->accentColor, scoreStr, TFT_WIDTH - textWidth(font, scoreStr) - TEXT_X_MARGIN,
+                 TEXT_Y);
     }
 }
 
@@ -928,9 +957,32 @@ void setShotPower(physCirc_t* circ, float power)
  * @param phys The physics simulation
  * @param cpu The CPU firing a shot
  * @param target The target
+ * @param difficulty The CPU's difficulty level
+ * @param turn The current turn
  */
-void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
+void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target, artilleryCpuDifficulty_t difficulty,
+                   int32_t turn)
 {
+    const artilleryAmmoAttrib_t* aa = getAmmoAttribute(cpu->ammoIdx);
+
+    // If this is a laser bolt
+    if (LASER == aa->effect)
+    {
+        // Point it right at the opponent
+        vecFl_t v0 = subVecFl2d(target->c.pos, cpu->c.pos);
+        float tba  = atan2f(v0.x, -v0.y);
+        while (tba < 0)
+        {
+            tba += (2 * M_PIf);
+        }
+        cpu->targetBarrelAngle = ((180 * tba) / M_PIf) + 0.5f;
+
+        setShotPower(cpu, 250);
+
+        // No need to do anything fancy
+        return;
+    }
+
     // Arc the shot between the terrain peak and ceiling
     // First find the terrain peak
     float minY    = phys->bounds.y;
@@ -951,8 +1003,27 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
         }
         lNode = lNode->next;
     }
-    // Scale it closer towards the ceiling
-    minY /= 4.0f;
+
+    // Easier CPUs arc shots higher, which is less accurate because barrel
+    // angle changes are more pronounced with more powerful shots
+    switch (difficulty)
+    {
+        case CPU_EASY:
+        {
+            minY = MIN(minY * 0.25f, minY - 240);
+            break;
+        }
+        case CPU_MEDIUM:
+        {
+            minY = MIN(minY * 0.5f, minY - 240);
+            break;
+        }
+        case CPU_HARD:
+        {
+            minY = MIN(minY * 0.75f, minY - 240);
+            break;
+        }
+    }
 
     // Starting position
     vecFl_t absBarrelTip = addVecFl2d(cpu->c.pos, cpu->relBarrelTip);
@@ -974,12 +1045,45 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
     v0.x = deltaX / tTotal;
 
     // Use the initial velocity to find the barrel angle and magnitude
-    cpu->targetBarrelAngle = atan2f(v0.x, -v0.y);
-    while (cpu->targetBarrelAngle < 0)
+    float tba = atan2f(v0.x, -v0.y);
+    while (tba < 0)
     {
-        cpu->targetBarrelAngle += (2 * M_PIf);
+        tba += (2 * M_PIf);
     }
-    setShotPower(cpu, magVecFl2d(v0));
+    cpu->targetBarrelAngle = ((180 * tba) / M_PIf) + 0.5f;
+
+    // Add some randomness to barrel angle depending on difficulty and turn
+    int32_t randBound = 0;
+    switch (difficulty)
+    {
+        case CPU_EASY:
+        {
+            // Easy gets more accurate every other turn
+            randBound = (MAX_TURNS - turn) / 2;
+            break;
+        }
+        case CPU_MEDIUM:
+        {
+            // Medium gets more accurate every fourth turn
+            randBound = (MAX_TURNS - turn) / 4;
+            break;
+        }
+        case CPU_HARD:
+        {
+            // Hard is always accurate
+            randBound = 0;
+            break;
+        }
+    }
+    cpu->targetBarrelAngle += ((esp_random() % (randBound * 2 + 1)) - randBound);
+
+    float power = magVecFl2d(v0);
+    // Shorten wallmaker shots
+    if (WALL_MAKER == aa->effect)
+    {
+        power -= 3;
+    }
+    setShotPower(cpu, power);
 }
 
 /**
@@ -989,6 +1093,7 @@ void adjustCpuShot(physSim_t* phys, physCirc_t* cpu, physCirc_t* target)
  * @param phys The physics simulation
  * @param player The tank which fired the shot
  * @param opponent The opposing tank
+ * @param firstShot true if this is the first shot, false if it is a consecutive shot (machine gun)
  */
 void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool firstShot)
 {
@@ -1014,11 +1119,20 @@ void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool fi
         clear(&phys->cameraTargets);
     }
 
+    // If there are no more shots
+    if (0 == player->shotsRemaining)
+    {
+        // Remove fired ammo from the available list
+        removeVal(&player->availableAmmo, (void*)((intptr_t)player->ammoIdx));
+        player->ammoIdx = (intptr_t)player->availableAmmo.first->val;
+    }
+
     // Create each shell
     for (int32_t shellCount = 0; shellCount < aa->numSpread; shellCount++)
     {
         // Create the shell at the tip of the barrel
-        physCirc_t* shell = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, aa->radius, CT_SHELL, c440, c000);
+        physCirc_t* shell
+            = physAddCircle(phys, absBarrelTip.x, absBarrelTip.y, aa->radius, CT_SHELL, aa->color, aa->color);
 
         // Set the owner of the shell as the firing tank
         shell->owner = player;
@@ -1031,9 +1145,16 @@ void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool fi
         // Set shell parameters
         shell->bounces         = aa->numBounces;
         shell->explosionRadius = aa->expRadius;
-        shell->explosionVel    = aa->expVel;
-        shell->score           = shellScore;
-        shell->effect          = aa->effect;
+        if (ROCKET_JUMP == aa->effect)
+        {
+            shell->explosionVel = player->shotPower;
+        }
+        else
+        {
+            shell->explosionVel = aa->expVel;
+        }
+        shell->score  = shellScore;
+        shell->effect = aa->effect;
 
         // Negate gravity for the laser and make it faster
         if (LASER == shell->effect)
@@ -1046,22 +1167,21 @@ void fireShot(physSim_t* phys, physCirc_t* player, physCirc_t* opponent, bool fi
             shell->homingTarget = opponent;
         }
 
-        // Set color
-        shell->baseColor   = aa->color;
-        shell->accentColor = c000;
-
         // Camera tracks all shells
         push(&phys->cameraTargets, shell);
     }
+
+    // Play SFX (shot fired)
+    midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, ELECTRIC_SNARE_OR_RIMSHOT, 0x7F);
 }
 
 /**
- * @brief TODO doc
+ * @brief Spawn the players in the physics simulation
  *
- * @param phys
- * @param numPlayers
- * @param players
- * @param colors
+ * @param phys The physics simulation
+ * @param numPlayers The number of players to spawn
+ * @param players [OUT] An array of pointers where pointers to the players are written
+ * @param colors A list of colors base and accent for the players. Length must be 2x the number of players
  */
 void physSpawnPlayers(physSim_t* phys, int32_t numPlayers, physCirc_t* players[], paletteColor_t* colors)
 {
@@ -1098,12 +1218,14 @@ void physSpawnPlayers(physSim_t* phys, int32_t numPlayers, physCirc_t* players[]
 }
 
 /**
- * @brief TODO
+ * @brief Add a single player to the physics simulation. Called when a P2P_SET_WORLD packet is received
  *
- * @param phys
- * @param pos
- * @param barrelAngle
- * @return physCirc_t*
+ * @param phys The physics simulation
+ * @param pos The position to add the player at
+ * @param barrelAngle The player's barrel angle
+ * @param baseColor The player's base color
+ * @param accentColor The player's accent color
+ * @return The added player
  */
 physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, int16_t barrelAngle, paletteColor_t baseColor,
                           paletteColor_t accentColor)
@@ -1114,10 +1236,12 @@ physCirc_t* physAddPlayer(physSim_t* phys, vecFl_t pos, int16_t barrelAngle, pal
 }
 
 /**
- * @brief TODO
+ * @brief Run animation timers for explosions, lava, and LEDs
  *
- * @param phys
- * @param elapsedUs
+ * deadEyeTimer is handled in artilleryMainLoop() because eyes are displayed on non-game screens
+ *
+ * @param phys The physics simulation
+ * @param elapsedUs The time since this function was last called
  */
 static void physRunAnimateTimers(physSim_t* phys, int32_t elapsedUs)
 {

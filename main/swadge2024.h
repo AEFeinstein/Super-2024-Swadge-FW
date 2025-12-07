@@ -224,6 +224,7 @@
 #include "imu_utils.h"
 #include "swadgePass.h"
 #include "trophy.h"
+#include "helpPages.h"
 
 // Sound utilities
 #include "soundFuncs.h"

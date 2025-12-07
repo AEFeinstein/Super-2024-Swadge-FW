@@ -1,3 +1,10 @@
+/**
+ * @file artillery_phys_bsp.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief Binary Space Partition creation for Vector Tanks
+ * @date 2025-11-26
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -65,7 +72,7 @@ static bool aabbIntersect(aabb_t* zone, aabb_t* obj)
 static zone_t* createFirstZone(physSim_t* phys)
 {
     // Create the first zone, which is all objects
-    zone_t* zone  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_SPIRAM);
+    zone_t* zone  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_8BIT);
     zone->aabb.x1 = phys->bounds.x;
     zone->aabb.y1 = phys->bounds.y;
 
@@ -129,7 +136,7 @@ static vecFl_t findZoneMedian(zone_t* zone)
         cNode = cNode->next;
     }
 
-    // Add line points ot the list
+    // Add line points to the list
     node_t* lNode = zone->lines.first;
     while (lNode)
     {
@@ -368,13 +375,13 @@ void createBspZones(physSim_t* phys)
         if (splitHorz)
         {
             // More items are split by the X axis
-            zone_t* nzA  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_SPIRAM);
+            zone_t* nzA  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_8BIT);
             nzA->aabb    = zone->aabb;
             nzA->aabb.x1 = median.x;
             assignObjectsToZone(zone, nzA);
             insertZoneSorted(&zList, nzA);
 
-            zone_t* nzB  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_SPIRAM);
+            zone_t* nzB  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_8BIT);
             nzB->aabb    = zone->aabb;
             nzB->aabb.x0 = median.x;
             assignObjectsToZone(zone, nzB);
@@ -383,13 +390,13 @@ void createBspZones(physSim_t* phys)
         else
         {
             // More items are split by the Y axis
-            zone_t* nzA  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_SPIRAM);
+            zone_t* nzA  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_8BIT);
             nzA->aabb    = zone->aabb;
             nzA->aabb.y1 = median.y;
             assignObjectsToZone(zone, nzA);
             insertZoneSorted(&zList, nzA);
 
-            zone_t* nzB  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_SPIRAM);
+            zone_t* nzB  = heap_caps_calloc(1, sizeof(zone_t), MALLOC_CAP_8BIT);
             nzB->aabb    = zone->aabb;
             nzB->aabb.y0 = median.y;
             assignObjectsToZone(zone, nzB);
@@ -397,6 +404,14 @@ void createBspZones(physSim_t* phys)
         }
 
         // Free the zone that was just split
+        while (zone->circles.length)
+        {
+            pop(&zone->circles);
+        }
+        while (zone->lines.length)
+        {
+            pop(&zone->lines);
+        }
         heap_caps_free(zone);
     }
 
@@ -412,6 +427,14 @@ void createBspZones(physSim_t* phys)
         phys->zones[zIdx].height = zone->aabb.y1 - zone->aabb.y0;
         zIdx++;
 
+        while (zone->circles.length)
+        {
+            pop(&zone->circles);
+        }
+        while (zone->lines.length)
+        {
+            pop(&zone->lines);
+        }
         heap_caps_free(shift(&zList));
     }
 

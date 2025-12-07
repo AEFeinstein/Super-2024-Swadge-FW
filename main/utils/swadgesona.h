@@ -601,7 +601,7 @@ void generateSwadgesonaImage(swadgesona_t* sw, bool drawBody);
  *
  * @param sw Data out. Is set to NULL if nothing is loaded
  */
-void loadSPSona(swadgesona_t* sw);
+void loadSPSona(swadgesonaCore_t* sw);
 
 // Get indexes
 /**

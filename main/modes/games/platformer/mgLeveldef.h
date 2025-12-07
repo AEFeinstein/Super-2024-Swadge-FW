@@ -5,6 +5,7 @@
 // Includes
 //==============================================================================
 #include <stdint.h>
+#include "palette.h"
 
 //==============================================================================
 // Structs
@@ -16,6 +17,7 @@ typedef struct
     uint16_t defaultWsgSetIndex;
     uint8_t mainBgmIndex;
     uint8_t bossBgmIndex;
+    const paletteColor_t* bgColors;
 } mgLeveldef_t;
 
 #endif

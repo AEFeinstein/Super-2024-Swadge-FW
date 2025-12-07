@@ -1,17 +1,19 @@
+/**
+ * @file artillery_phys_terrain.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief Terrain management and deformations for Vector Tanks
+ * @date 2025-11-26
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
 
-#include <math.h>
-#include <esp_heap_caps.h>
-#include <esp_random.h>
-#include "macros.h"
-#include "color_utils.h"
-#include "geometry.h"
-#include "trigonometry.h"
 #include "artillery.h"
-#include "artillery_phys_terrain.h"
+#include "artillery_game.h"
+#include "artillery_phys.h"
 #include "artillery_phys_objs.h"
+#include "artillery_phys_terrain.h"
 
 //==============================================================================
 // Function Declarations
@@ -239,11 +241,10 @@ void flattenTerrainUnderPlayer(physSim_t* phys, physCirc_t* player)
 }
 
 /**
- * @brief TODO doc
+ * @brief Generate random background clouds which are somewhat evenly spaced.
+ * These are non-interactive but are good reference points for when the projectile moves through air.
  *
- * TODO transmit over p2p
- *
- * @param phys
+ * @param phys The physics simulation
  */
 void physGenerateClouds(physSim_t* phys)
 {
@@ -318,8 +319,9 @@ void physGenerateClouds(physSim_t* phys)
  * @brief Explode a shell and deform terrain
  *
  * @param phys The physics simulation
- * @param shell The shell which exploded
+ * @param shellNode The shell which exploded
  * @param hitTank The tank that was hit by the shell, may be NULL
+ * @return true if this shell caused a change that requires a packet transmission
  */
 bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
 {
@@ -383,6 +385,7 @@ bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
             else
             {
                 // Attempt to deform points
+                // TODO this doesn't work great with machine gun b/c it doesn't accumulate deformations
                 line->destination.p1.y
                     = deformTerrainPoint(&line->l.p1, &shell->c.pos, rSq, expMin, expMax, raiseTerrain);
                 line->destination.p2.y
@@ -406,10 +409,29 @@ bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
             if (shell->owner == circ)
             {
                 shell->owner->score -= shell->score;
+
+                if (shell->score && artilleryIsMyTurn(getArtilleryData()))
+                {
+                    trophyUpdate(&artilleryTrophies[AT_HITTING_YOURSELF], true, true);
+                }
             }
             else
             {
                 shell->owner->score += shell->score;
+
+                if ((SNIPER == shell->effect) && artilleryIsMyTurn(getArtilleryData()))
+                {
+                    trophyUpdate(&artilleryTrophies[AT_SNIPER], true, true);
+                }
+            }
+
+            // Set eyes to [X X]
+            artilleryData_t* ad = getArtilleryData();
+            if (EYES_DEAD != ad->eyeSlot)
+            {
+                ad->eyeSlot = EYES_DEAD;
+                ch32v003SelectBitmap(ad->eyeSlot);
+                ad->deadEyeTimer = 3000000;
             }
 
             // Impart force on hit tanks
@@ -433,6 +455,10 @@ bool explodeShell(physSim_t* phys, node_t* shellNode, physCirc_t* hitTank)
     removeVal(&phys->cameraTargets, shell);
 
     phys->terrainMoving = true;
+
+    // Play SFX (explosion)
+    midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, CRASH_CYMBAL_2, 0x7F);
+
     return change;
 }
 
@@ -454,7 +480,7 @@ static float deformTerrainPoint(vecFl_t* p, vecFl_t* expPnt, float rSq, float ex
         if (raiseTerrain)
         {
             // Simply raise terrain, but not out of bounds
-            return MAX(p->y - 40, 0);
+            return MAX(p->y - 80, 0);
         }
 
         // X distance from shell to point to adjust
@@ -518,13 +544,12 @@ static int32_t moveTerrainPoint(vecFl_t* src, vecFl_t* dst)
 /**
  * @brief Move terrain lines a bit towards where they should be after shell explosion
  *
- * TODO use elapsedUs
+ * This is called every PHYS_TIME_STEP_US
  *
  * @param phys The physics simulation
- * @param elapsedUs The time elapsed since this was last called
  * @return true if terrain is actively moving, false otherwise
  */
-bool moveTerrainLines(physSim_t* phys, int32_t elapsedUs)
+bool moveTerrainLines(physSim_t* phys)
 {
     // Keep track if any terrain is moving anywhere
     bool anyTerrainMoving = false;

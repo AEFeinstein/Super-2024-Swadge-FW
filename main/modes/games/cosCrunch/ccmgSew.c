@@ -2,7 +2,7 @@
 #include "cosCrunch.h"
 
 static void ccmgSewInitMicrogame(void);
-static void ccmgSewDestroyMicrogame(void);
+static void ccmgSewDestroyMicrogame(bool successful);
 static void ccmgSewMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale, cosCrunchMicrogameState state,
                             buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 static void ccmgSewDrawThreadBezier(int16_t startX, int16_t startY, int16_t endX, int16_t endY);
@@ -99,9 +99,9 @@ static void ccmgSewInitMicrogame(void)
     }
 }
 
-static void ccmgSewDestroyMicrogame(void)
+static void ccmgSewDestroyMicrogame(bool successful)
 {
-    if (ccmgsew->currentStep < BUTTON_PRESS_COUNT)
+    if (!successful)
     {
         uint16_t rotation = esp_random() % 360;
         drawToCanvasTint(ccmgsew->wsg.canvas, ccmgsew->wsg.threadKnot,

@@ -626,7 +626,7 @@ void picrossExitMode(void)
                               // everything), so lets call it now
     deinitMenu(pm->menu);
     deinitMenuMegaRenderer(pm->renderer);
-    // p2pDeinit(&jm->p2p);
+    // p2pDeinit(&jm->p2p, true);
     freeFont(&(pm->mmFont));
     heap_caps_free(pm);
 }

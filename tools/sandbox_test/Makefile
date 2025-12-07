@@ -41,6 +41,11 @@ monitor : sandbox_interactive
 interactive : sandbox_interactive build
 	./sandbox_interactive sandbox.c sandbox.S $(SYSELF)
 
+udevinstall :
+	echo -ne "KERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", ATTRS{idVendor}==\"1209\", ATTRS{idProduct}==\"4269\", GROUP=\"plugdev\", MODE=\"0660\"\nKERNEL==\"hidraw*\", SUBSYSTEM==\"hidraw\", ATTRS{idVendor}==\"1209\", ATTRS{idProduct}==\"4269\", GROUP=\"dialout\", MODE=\"0660\"" | sudo tee /etc/udev/rules.d/99-swadge.rules
+	sudo udevadm control --reload-rules && sudo udevadm trigger
+
+
 clean :
 	rm -rf *.o *~ buildhelp build/debug_sandbox_s.txt build/debug_sandbox_t.txt build/debug_sandbox_S.txt build/sandbox_inst.bin build/sandbox_data.bin build/buildhelp build/sandbox.o sandbox_upload build/sandbox.lds build/provided.lds build/sandbox_symbols.txt build/system_symbols.txt sandbox_interactive buildhelp.exe sandbox_upload.exe
 

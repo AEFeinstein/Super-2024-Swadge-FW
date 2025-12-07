@@ -23,6 +23,7 @@
 #include "ext_modes.h"
 #include "ext_replay.h"
 #include "ext_tools.h"
+#include "ext_mega_pulse_ex.h"
 
 //==============================================================================
 // Registered Extensions
@@ -32,10 +33,10 @@
 // ADD ALL EXTENSIONS HERE IN ORDER TO REGISTER THEM
 //==============================================================================
 
-static const emuExtension_t* registeredExtensions[] = {
-    &touchEmuCallback,  &ledEmuExtension,   &ledEyesEmuExtension, &fuzzerEmuExtension, &toolsEmuExtension,
-    &keymapEmuCallback, &modesEmuExtension, &gamepadEmuExtension, &replayEmuExtension, &midiEmuExtension,
-};
+static const emuExtension_t* registeredExtensions[]
+    = {&touchEmuCallback,   &ledEmuExtension,   &ledEyesEmuExtension,  &fuzzerEmuExtension,
+       &toolsEmuExtension,  &keymapEmuCallback, &modesEmuExtension,    &gamepadEmuExtension,
+       &replayEmuExtension, &midiEmuExtension,  &megaPulseEmuExtension};
 
 //==============================================================================
 // Macros
@@ -786,7 +787,7 @@ void doExtRenderCb(uint32_t winW, uint32_t winH)
     {
         emuExtInfo_t* info = (emuExtInfo_t*)(node->val);
 
-        if (info && info->enabled && info->extension && info->extension->fnRenderCb)
+        if (info && info->enabled && info->extension && info->extension->fnRenderCb && 0 != info->panes.length)
         {
             emuPane_t panes[info->panes.length];
             uint8_t i        = 0;

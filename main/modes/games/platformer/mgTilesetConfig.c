@@ -9,7 +9,7 @@ bool mg_kineticDonutTileset_needsTransparency(uint8_t tileId)
     {
         case MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20 ... MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E:
             return false;
-        case MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0:
+        case MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0 ... MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6:
             return true;
         case MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0 ... MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C5:
             return true;

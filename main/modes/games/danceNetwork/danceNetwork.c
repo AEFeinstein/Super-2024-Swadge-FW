@@ -641,7 +641,7 @@ void dn_ShowUi(dn_Ui_t ui)
         case UI_RESULT:
         {
             // Game over, deinitialize p2p just in case
-            p2pDeinit(&gameData->p2p);
+            p2pDeinit(&gameData->p2p, true);
 
             // if (TTR_RECORDS == gameData->lastResult)
             // {

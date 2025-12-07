@@ -5,10 +5,12 @@
 #include <math.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 #include "hdw-tft.h"
 #include "shapes.h"
 #include "fill.h"
+#include "macros.h"
 
 //==============================================================================
 // Defines
@@ -800,7 +802,7 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
                 }
 
                 // Draw left line
-                if (x0A >= 0 && x0A < (int)TFT_WIDTH)
+                if (cTransparent != outlineColor && x0A >= 0 && x0A < (int)TFT_WIDTH)
                 {
                     TURBO_SET_PIXEL(x0A, y, outlineColor);
                     x++;
@@ -816,7 +818,7 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
                 }
 
                 // Draw right line
-                if (x0B < (int)TFT_WIDTH && x0B >= 0)
+                if (cTransparent != outlineColor && x0B < (int)TFT_WIDTH && x0B >= 0)
                 {
                     TURBO_SET_PIXEL(x0B, y, outlineColor);
                 }
@@ -829,7 +831,7 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
             {
                 x0A += sdxA;
                 // if( x0A < 0 || x0A > (TFT_WIDTH-1) ) break;
-                if (x0A >= 0 && x0A < (int)TFT_WIDTH && !suppress)
+                if (cTransparent != outlineColor && x0A >= 0 && x0A < (int)TFT_WIDTH && !suppress)
                 {
                     TURBO_SET_PIXEL(x0A, y, outlineColor);
                 }
@@ -839,7 +841,7 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
             {
                 x0B += sdxB;
                 // if( x0B < 0 || x0B > (TFT_WIDTH-1) ) break;
-                if (x0B >= 0 && x0B < (int)TFT_WIDTH && !suppress)
+                if (cTransparent != outlineColor && x0B >= 0 && x0B < (int)TFT_WIDTH && !suppress)
                 {
                     TURBO_SET_PIXEL(x0B, y, outlineColor);
                 }
@@ -907,7 +909,7 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
             }
             if (x0A == x0B)
             {
-                if (x0A >= 0 && x0A < (int)TFT_WIDTH && y >= 0 && y < (int)TFT_HEIGHT)
+                if (cTransparent != outlineColor && x0A >= 0 && x0A < (int)TFT_WIDTH && y >= 0 && y < (int)TFT_HEIGHT)
                 {
                     TURBO_SET_PIXEL(x0A, y, outlineColor);
                 }
@@ -934,7 +936,7 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
                 }
 
                 // Draw left line
-                if (x0A >= 0 && x0A < (int)(TFT_WIDTH))
+                if (cTransparent != outlineColor && x0A >= 0 && x0A < (int)(TFT_WIDTH))
                 {
                     TURBO_SET_PIXEL(x0A, y, outlineColor);
                     x++;
@@ -950,7 +952,7 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
                 }
 
                 // Draw right line
-                if (x0B < (int)(TFT_WIDTH) && x0B >= 0)
+                if (cTransparent != outlineColor && x0B < (int)(TFT_WIDTH) && x0B >= 0)
                 {
                     TURBO_SET_PIXEL(x0B, y, outlineColor);
                 }
@@ -963,7 +965,7 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
             {
                 x0A += sdxA;
                 // if( x0A < 0 || x0A > (TFT_WIDTH-1) ) break;
-                if (x0A >= 0 && x0A < (int)(TFT_WIDTH) && !suppress)
+                if (cTransparent != outlineColor && x0A >= 0 && x0A < (int)(TFT_WIDTH) && !suppress)
                 {
                     TURBO_SET_PIXEL(x0A, y, outlineColor);
                 }
@@ -976,7 +978,7 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
             while (errB >= (1 << FIXEDPOINT))
             {
                 x0B += sdxB;
-                if (x0B >= 0 && x0B < (int)(TFT_WIDTH) && !suppress)
+                if (cTransparent != outlineColor && x0B >= 0 && x0B < (int)(TFT_WIDTH) && !suppress)
                 {
                     TURBO_SET_PIXEL(x0B, y, outlineColor);
                 }
@@ -1399,7 +1401,73 @@ void drawCircleOutline(int xm, int ym, int r, int stroke, paletteColor_t col)
  */
 void drawCircleFilled(int xm, int ym, int r, paletteColor_t col)
 {
-    drawCircleFilledInner(xm, ym, r, col, 0, 0, 1, 1);
+    // Quick bounds check first
+    if (xm + r < 0 || xm - r >= TFT_WIDTH || ym + r < 0 || ym - r >= TFT_HEIGHT)
+    {
+        return;
+    }
+
+    // Get a framebuffer to draw to
+    paletteColor_t* fb = getPxTftFramebuffer();
+
+    // Variables for tracing the circle
+    int x         = -r;
+    int y         = 0;
+    int err       = 2 - 2 * r; /* bottom left to top right */
+    bool skipDraw = false;
+
+    // Loop
+    do
+    {
+        // Only fill a new row when Y changes
+        if (!skipDraw)
+        {
+            // Find where X starts and ends on this row, clamped to the display
+            int xMin   = xm + x;
+            xMin       = CLAMP(xMin, 0, TFT_WIDTH);
+            int xMax   = xm - x + 1;
+            xMax       = CLAMP(xMax, 0, TFT_WIDTH);
+            int xWidth = xMax - xMin;
+
+            // Fill a row of the lower half of the circle, if on screen
+            int ymp = (ym + y);
+            if (0 <= ymp && ymp < TFT_HEIGHT)
+            {
+                memset(&fb[TFT_WIDTH * ymp + xMin], col, xWidth);
+            }
+
+            // Fill a row of the upper half of the circle, if on screen
+            int ymn = (ym - y);
+            if (0 <= ymn && ymn < TFT_HEIGHT)
+            {
+                memset(&fb[TFT_WIDTH * ymn + xMin], col, xWidth);
+            }
+        }
+        else
+        {
+            skipDraw = false;
+        }
+
+        // Circle math
+        r = err;
+        if (r <= y)
+        {
+            /* e_xy + e_y < 0 */
+            err += ++y * 2 + 1;
+        }
+        else
+        {
+            // Y didn't change, and X shrinks, so skip the next fill
+            skipDraw = true;
+        }
+
+        /* e_xy + e_x > 0 or no 2nd y-step */
+        if (r > x || err > y)
+        {
+            /* -> x-step now */
+            err += ++x * 2 + 1;
+        }
+    } while (x < 0);
 }
 
 /**

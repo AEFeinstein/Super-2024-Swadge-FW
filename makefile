@@ -130,10 +130,38 @@ CFLAGS += \
 	-mmacosx-version-min=10.0
 endif
 
+CFLAGS_SANITIZE=
 ifeq ($(HOST_OS),Linux)
-CFLAGS += \
+CFLAGS_SANITIZE += \
 	-fsanitize=address \
-	-fsanitize=bounds-strict
+	-fsanitize=bounds-strict \
+	-fsanitize=leak \
+	-fsanitize=undefined \
+	-fsanitize=pointer-compare \
+	-fsanitize=shift \
+	-fsanitize=shift-exponent \
+	-fsanitize=shift-base \
+	-fsanitize=integer-divide-by-zero \
+	-fsanitize=unreachable \
+	-fsanitize=vla-bound \
+	-fsanitize=null \
+	-fsanitize=return \
+	-fsanitize=signed-integer-overflow \
+	-fsanitize=bounds \
+	-fsanitize=bounds-strict \
+	-fsanitize=alignment \
+	-fsanitize=object-size \
+	-fsanitize=float-divide-by-zero \
+	-fsanitize=float-cast-overflow \
+	-fsanitize=nonnull-attribute \
+	-fsanitize=returns-nonnull-attribute \
+	-fsanitize=bool \
+	-fsanitize=enum \
+	-fsanitize=vptr \
+	-fsanitize=pointer-overflow \
+	-fsanitize=builtin \
+	-fsanitize-address-use-after-scope
+
 ENABLE_GCOV=false
 
 ifeq ($(ENABLE_GCOV),true)
@@ -205,7 +233,7 @@ DEFINES_LIST = \
 	CONFIG_ESP_SYSTEM_PANIC=y\
 	CONFIG_ESP_SYSTEM_GDBSTUB_RUNTIME=y\
 	CONFIG_DEBUG_OUTPUT_USB=y\
-	CONFIG_HARDWARE_HOTDOG_PRODUCTION=y \
+	CONFIG_HARDWARE_PULSE=y \
 	CONFIG_IDF_TARGET_ESP32S2=y \
 	SOC_RMT_CHANNELS_PER_GROUP=4 \
 	SOC_TOUCH_SENSOR_NUM=15 \
@@ -314,8 +342,7 @@ endif
 
 ifeq ($(HOST_OS),Linux)
 LIBRARY_FLAGS += \
-	-fsanitize=address \
-	-fsanitize=bounds-strict \
+	$(CFLAGS_SANITIZE) \
 	-fno-omit-frame-pointer \
 	-static-libasan
 ifeq ($(ENABLE_GCOV),true)
@@ -362,7 +389,7 @@ $(ARGS_WARNINGS_FILE): makefile
 	@echo $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) > $(ARGS_WARNINGS_FILE)
 
 $(ARGS_C_FLAGS):makefile
-	@echo $(CFLAGS) > $(ARGS_C_FLAGS)
+	@echo $(CFLAGS) $(CFLAGS_SANITIZE) > $(ARGS_C_FLAGS)
 
 # Force clean of assets
 preprocess-assets: clean-assets assets

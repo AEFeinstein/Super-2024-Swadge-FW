@@ -477,8 +477,12 @@ int ch32v003SelectBitmap(int slot)
         return -1;
     }
     uint32_t ledPointer = 0x20000200 + slot * 72;
+    uint32_t gpioOff    = 0x00000000;
+    uint32_t gpioOn     = 0x22222222;
     // Overwrite DMA1_Channel5->MADDR, Assume we've been configured.
-    return ch32v003WriteMemory((uint8_t*)&ledPointer, 4, 0x40020064);
+    ch32v003WriteMemory((const uint8_t*)&gpioOff, 4, 0x40011000);
+    ch32v003WriteMemory((uint8_t*)&ledPointer, 4, 0x40020064);
+    return ch32v003WriteMemory((const uint8_t*)&gpioOn, 4, 0x40011000);
 }
 
 static int ch32v003Check()

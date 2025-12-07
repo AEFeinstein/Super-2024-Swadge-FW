@@ -80,9 +80,9 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(PULSE_021_WSG, &self->wsgs[MG_WSG_PLAYER_SHOOT_JUMP3], false);
     loadWsg(PULSE_021_WSG, &self->wsgs[MG_WSG_PLAYER_SHOOT_JUMP4], false);
     loadWsg(PULSE_005_WSG, &self->wsgs[MG_WSG_PLAYER_SLIDE], false);
-    loadWsg(SPRITE_006_WSG, &self->wsgs[MG_WSG_PLAYER_HURT], false);
+    loadWsg(PULSE_DMG_000_WSG, &self->wsgs[MG_WSG_PLAYER_HURT], false);
     loadWsg(SPRITE_007_WSG, &self->wsgs[MG_WSG_PLAYER_CLIMB], false);
-    loadWsg(SPRITE_008_WSG, &self->wsgs[MG_WSG_PLAYER_WIN], false);
+    loadWsg(PULSE_WIN_WSG, &self->wsgs[MG_WSG_PLAYER_WIN], false);
     loadWsg(SPRITE_009_WSG, &self->wsgs[MG_WSG_ENEMY_BASIC], false);
     loadWsg(SPRITE_012_WSG, &self->wsgs[MG_WSG_DUSTBUNNY_IDLE], false);
     loadWsg(SPRITE_013_WSG, &self->wsgs[MG_WSG_DUSTBUNNY_CHARGE], false);
@@ -122,9 +122,8 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(SPRITE_047_WSG, &self->wsgs[MG_WSG_CHECKPOINT_INACTIVE], false);
     loadWsg(SPRITE_048_WSG, &self->wsgs[MG_WSG_CHECKPOINT_ACTIVE_1], false);
     loadWsg(SPRITE_049_WSG, &self->wsgs[MG_WSG_CHECKPOINT_ACTIVE_2], false);
-    loadWsg(TILE_039_WSG, &self->wsgs[MG_WSG_BOUNCE_BLOCK], false);
+    loadWsg(TILE_039_WSG, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1], false);
     loadWsg(TILE_066_WSG, &self->wsgs[MG_WSG_CONTAINER_1], false);
-    loadWsg(TILE_034_WSG, &self->wsgs[MG_WSG_BRICK_BLOCK], false);
     loadWsg(TILE_032_WSG, &self->wsgs[MG_WSG_GRASS], false);
     loadWsg(TILE_033_WSG, &self->wsgs[MG_WSG_GROUND], false);
     loadWsg(TILE_034_WSG, &self->wsgs[MG_WSG_BRICK_BLOCK], false);
@@ -201,18 +200,18 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(HP_BOSS_TOP_4_WSG, &self->wsgs[MG_WSG_HP_BOSS_TOP_4], false);
     loadWsg(HP_BOSS_TOP_5_WSG, &self->wsgs[MG_WSG_HP_BOSS_TOP_5], false);
     loadWsg(HP_BOSS_TOP_6_WSG, &self->wsgs[MG_WSG_HP_BOSS_TOP_6], false);
-    loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_IDLE], false);
-    loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN1], false);
-    loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN2], false);
-    loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_TURRET_HORIZONTAL], false);
-    loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_TURRET_45DEG], false);
-    loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_TURRET_VERTICAL], false);
+    loadWsg(SPIKY_MC_GEE_2_WSG, &self->wsgs[MG_WSG_SPIKY_MCGEE_2], false);
+    loadWsg(CHARGIN_SCHMUCK_3_WSG, &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN1], false);
+    loadWsg(CHARGIN_SCHMUCK_4_WSG, &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN2], false);
+    loadWsg(TURRET_5_WSG, &self->wsgs[MG_WSG_TURRET_HORIZONTAL], false);
+    loadWsg(TURRET_4_WSG, &self->wsgs[MG_WSG_TURRET_45DEG], false);
+    loadWsg(TURRET_3_WSG, &self->wsgs[MG_WSG_TURRET_VERTICAL], false);
     loadWsg(TILE_TBD_WSG, &self->wsgs[MG_WSG_LEMON_SHOT], false);
     loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_SHELDON_SHIELDY_SHIELD], false);
     loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_SHELDON_SHIELDY_WALK1], false);
     loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_SHELDON_SHIELDY_WALK2], false);
     loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_SHELDON_SHIELDY_WALK3], false);
-    loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_SPIKY_MCGEE], false);
+    loadWsg(SPIKY_MC_GEE_1_WSG, &self->wsgs[MG_WSG_SPIKY_MCGEE], false);
     loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_AIR_TURRET], false);
     loadWsg(KD_BURGER_BOUNCE_UPRIGHT_WSG, &self->wsgs[MG_WSG_BOUNCE_PAD], false);
     loadWsg(KD_BURGER_BOUNCE_DIAGONAL_WSG, &self->wsgs[MG_WSG_BOUNCE_PAD_DIAGONAL], false);
@@ -222,6 +221,29 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_BOSS_MOVE_2], false);
     loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_BOSS_MOVE_3], false);
     loadWsg(WARP_WALL_WSG, &self->wsgs[MG_WSG_BOSS_DOOR], false);
+    loadWsg(PULSE_SLIDE_WSG, &self->wsgs[MG_WSG_PLAYER_DASH_SLIDE], false);
+    loadWsg(PULSE_DMG_001_WSG, &self->wsgs[MG_WSG_PLAYER_HURT_2], false);
+    loadWsg(PULSE_DMG_002_WSG, &self->wsgs[MG_WSG_PLAYER_HURT_3], false);
+    loadWsg(PULSE_MIC_DROP_00_WSG, &self->wsgs[MG_WSG_PLAYER_MIC_DROP_1], false);
+    loadWsg(PULSE_MIC_DROP_01_WSG, &self->wsgs[MG_WSG_PLAYER_MIC_DROP_2], false);
+    loadWsg(PULSE_SHIELD_000_WSG, &self->wsgs[MG_WSG_PLAYER_SHIELD_1], false);
+    loadWsg(PULSE_SHIELD_001_WSG, &self->wsgs[MG_WSG_PLAYER_SHIELD_2], false);
+    loadWsg(PULSE_SHIELD_002_WSG, &self->wsgs[MG_WSG_PLAYER_SHIELD_3], false);
+    loadWsg(PULSE_SHIELD_003_WSG, &self->wsgs[MG_WSG_PLAYER_SHIELD_4], false);
+    loadWsg(SPIKE_TILE_TOP_00_WSG, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2], false);
+    loadWsg(SPIKE_TILE_LEFT_00_WSG, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3], false);
+    loadWsg(SPIKE_TILE_BOTTOM_00_WSG, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4], false);
+    loadWsg(SPIKE_TILE_RIGHT_00_WSG, &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5], false);
+    loadWsg(PULSE_SURE_YOU_CAN_000_WSG, &self->wsgs[MG_WSG_PLAYER_SUREYOUCAN_1], false);
+    loadWsg(PULSE_SURE_YOU_CAN_001_WSG, &self->wsgs[MG_WSG_PLAYER_SUREYOUCAN_2], false);
+    loadWsg(CRUMBLE_BLOCK_4_WSG, &self->wsgs[MG_WSG_CRUMBLED_BLOCK], false);
+    loadWsg(SALSA_WSG, &self->wsgs[MG_WSG_SALSA], false);
+    loadWsg(CHARGE_SHOT_LV_1_000_WSG, &self->wsgs[MG_WSG_CHARGE_SHOT_LVL1_1], false);
+    loadWsg(CHARGE_SHOT_LV_1_001_WSG, &self->wsgs[MG_WSG_CHARGE_SHOT_LVL1_2], false);
+    loadWsg(CHARGE_SHOT_LV_1_003_WSG, &self->wsgs[MG_WSG_CHARGE_SHOT_LVL1_3], false);
+    loadWsg(CHARGE_SHOT_MAX_000_WSG, &self->wsgs[MG_WSG_CHARGE_SHOT_MAX_1], false);
+    loadWsg(CHARGE_SHOT_MAX_001_WSG, &self->wsgs[MG_WSG_CHARGE_SHOT_MAX_2], false);
+    loadWsg(CHARGE_SHOT_MAX_002_WSG, &self->wsgs[MG_WSG_CHARGE_SHOT_MAX_3], false);
 }
 
 void mg_initializeSprites(mgWsgManager_t* self)
@@ -294,17 +316,29 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_PLAYER_SLIDE].origin = &origin_15_15;
     self->sprites[MG_SP_PLAYER_SLIDE].hitBox = &box_16_32;
 
+    self->sprites[MG_SP_PLAYER_MIC_DROP_1].wsg    = &self->wsgs[MG_WSG_PLAYER_MIC_DROP_1];
+    self->sprites[MG_SP_PLAYER_MIC_DROP_1].origin = &origin_15_15;
+    self->sprites[MG_SP_PLAYER_MIC_DROP_1].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_MIC_DROP_2].wsg    = &self->wsgs[MG_WSG_PLAYER_MIC_DROP_2];
+    self->sprites[MG_SP_PLAYER_MIC_DROP_2].origin = &origin_15_15;
+    self->sprites[MG_SP_PLAYER_MIC_DROP_2].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_DASH_SLIDE].wsg    = &self->wsgs[MG_WSG_PLAYER_DASH_SLIDE];
+    self->sprites[MG_SP_PLAYER_DASH_SLIDE].origin = &origin_15_9;
+    self->sprites[MG_SP_PLAYER_DASH_SLIDE].hitBox = &box_32_20;
+
     self->sprites[MG_SP_PLAYER_HURT].wsg    = &self->wsgs[MG_WSG_PLAYER_HURT];
-    self->sprites[MG_SP_PLAYER_HURT].origin = &origin_8_8;
-    self->sprites[MG_SP_PLAYER_HURT].hitBox = &box_16_16;
+    self->sprites[MG_SP_PLAYER_HURT].origin = &origin_15_15;
+    self->sprites[MG_SP_PLAYER_HURT].hitBox = &box_16_32;
 
     self->sprites[MG_SP_PLAYER_CLIMB].wsg    = &self->wsgs[MG_WSG_PLAYER_CLIMB];
     self->sprites[MG_SP_PLAYER_CLIMB].origin = &origin_8_8;
     self->sprites[MG_SP_PLAYER_CLIMB].hitBox = &box_16_16;
 
     self->sprites[MG_SP_PLAYER_WIN].wsg    = &self->wsgs[MG_WSG_PLAYER_WIN];
-    self->sprites[MG_SP_PLAYER_WIN].origin = &origin_8_8;
-    self->sprites[MG_SP_PLAYER_WIN].hitBox = &box_16_16;
+    self->sprites[MG_SP_PLAYER_WIN].origin = &origin_15_15;
+    self->sprites[MG_SP_PLAYER_WIN].hitBox = &box_16_32;
 
     self->sprites[MG_SP_ENEMY_BASIC].wsg    = &self->wsgs[MG_WSG_ENEMY_BASIC];
     self->sprites[MG_SP_ENEMY_BASIC].origin = &origin_8_8;
@@ -314,9 +348,13 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_HITBLOCK_CONTAINER].origin = &origin_8_8;
     self->sprites[MG_SP_HITBLOCK_CONTAINER].hitBox = &box_16_16;
 
-    self->sprites[MG_SP_HITBLOCK_BRICKS].wsg    = &self->wsgs[MG_WSG_BRICK_BLOCK];
+    self->sprites[MG_SP_HITBLOCK_BRICKS].wsg    = &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6];
     self->sprites[MG_SP_HITBLOCK_BRICKS].origin = &origin_8_8;
     self->sprites[MG_SP_HITBLOCK_BRICKS].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_CRUMBLED_BLOCK].wsg    = &self->wsgs[MG_WSG_CRUMBLED_BLOCK];
+    self->sprites[MG_SP_CRUMBLED_BLOCK].origin = &origin_8_8;
+    self->sprites[MG_SP_CRUMBLED_BLOCK].hitBox = &box_16_16;
 
     self->sprites[MG_SP_DUSTBUNNY_IDLE].wsg    = &self->wsgs[MG_WSG_DUSTBUNNY_IDLE];
     self->sprites[MG_SP_DUSTBUNNY_IDLE].origin = &origin_8_8;
@@ -459,18 +497,18 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_WASP_L3_DIVE].hitBox = &box_16_16;
 
     self->sprites[MG_SP_CHECKPOINT_INACTIVE].wsg    = &self->wsgs[MG_WSG_CHECKPOINT_INACTIVE];
-    self->sprites[MG_SP_CHECKPOINT_INACTIVE].origin = &origin_8_8;
-    self->sprites[MG_SP_CHECKPOINT_INACTIVE].hitBox = &box_16_16;
+    self->sprites[MG_SP_CHECKPOINT_INACTIVE].origin = &origin_15_15;
+    self->sprites[MG_SP_CHECKPOINT_INACTIVE].hitBox = &box_30_30;
 
     self->sprites[MG_SP_CHECKPOINT_ACTIVE_1].wsg    = &self->wsgs[MG_WSG_CHECKPOINT_ACTIVE_1];
-    self->sprites[MG_SP_CHECKPOINT_ACTIVE_1].origin = &origin_8_8;
-    self->sprites[MG_SP_CHECKPOINT_ACTIVE_1].hitBox = &box_16_16;
+    self->sprites[MG_SP_CHECKPOINT_ACTIVE_1].origin = &origin_15_15;
+    self->sprites[MG_SP_CHECKPOINT_ACTIVE_1].hitBox = &box_30_30;
 
     self->sprites[MG_SP_CHECKPOINT_ACTIVE_2].wsg    = &self->wsgs[MG_WSG_CHECKPOINT_ACTIVE_2];
-    self->sprites[MG_SP_CHECKPOINT_ACTIVE_2].origin = &origin_8_8;
-    self->sprites[MG_SP_CHECKPOINT_ACTIVE_2].hitBox = &box_16_16;
+    self->sprites[MG_SP_CHECKPOINT_ACTIVE_2].origin = &origin_15_15;
+    self->sprites[MG_SP_CHECKPOINT_ACTIVE_2].hitBox = &box_30_30;
 
-    self->sprites[MG_SP_BOUNCE_BLOCK].wsg    = &self->wsgs[MG_WSG_BOUNCE_BLOCK];
+    self->sprites[MG_SP_BOUNCE_BLOCK].wsg    = &self->wsgs[MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1];
     self->sprites[MG_SP_BOUNCE_BLOCK].origin = &origin_8_8;
     self->sprites[MG_SP_BOUNCE_BLOCK].hitBox = &box_16_16;
 
@@ -482,28 +520,28 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_INVISIBLE_WARP_FLOOR].origin = &origin_31_7;
     self->sprites[MG_SP_INVISIBLE_WARP_FLOOR].hitBox = &box_64_16;
 
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_IDLE].wsg    = &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_IDLE];
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_IDLE].origin = &origin_11_11;
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_IDLE].hitBox = &box_24_24;
+    self->sprites[MG_SP_SPIKY_MCGEE_2].wsg    = &self->wsgs[MG_WSG_SPIKY_MCGEE_2];
+    self->sprites[MG_SP_SPIKY_MCGEE_2].origin = &origin_11_11;
+    self->sprites[MG_SP_SPIKY_MCGEE_2].hitBox = &box_24_24;
 
     self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN1].wsg    = &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN1];
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN1].origin = &origin_11_11;
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN1].hitBox = &box_24_24;
+    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN1].origin = &origin_15_15;
+    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN1].hitBox = &box_30_30;
 
     self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN2].wsg    = &self->wsgs[MG_WSG_CHARGIN_SCHMUCK_RUN2];
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN2].origin = &origin_11_11;
-    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN2].hitBox = &box_24_24;
+    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN2].origin = &origin_15_15;
+    self->sprites[MG_SP_CHARGIN_SCHMUCK_RUN2].hitBox = &box_30_30;
 
     self->sprites[MG_SP_TURRET_HORIZONTAL].wsg    = &self->wsgs[MG_WSG_TURRET_HORIZONTAL];
-    self->sprites[MG_SP_TURRET_HORIZONTAL].origin = &origin_11_11;
+    self->sprites[MG_SP_TURRET_HORIZONTAL].origin = &origin_15_15;
     self->sprites[MG_SP_TURRET_HORIZONTAL].hitBox = &box_24_24;
 
     self->sprites[MG_SP_TURRET_45DEG].wsg    = &self->wsgs[MG_WSG_TURRET_45DEG];
-    self->sprites[MG_SP_TURRET_45DEG].origin = &origin_11_11;
+    self->sprites[MG_SP_TURRET_45DEG].origin = &origin_15_15;
     self->sprites[MG_SP_TURRET_45DEG].hitBox = &box_24_24;
 
     self->sprites[MG_SP_TURRET_VERTICAL].wsg    = &self->wsgs[MG_WSG_TURRET_VERTICAL];
-    self->sprites[MG_SP_TURRET_VERTICAL].origin = &origin_11_11;
+    self->sprites[MG_SP_TURRET_VERTICAL].origin = &origin_15_15;
     self->sprites[MG_SP_TURRET_VERTICAL].hitBox = &box_24_24;
 
     self->sprites[MG_SP_LEMON_SHOT].wsg    = &self->wsgs[MG_WSG_LEMON_SHOT];
@@ -565,6 +603,62 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_BOSS_DOOR].wsg    = &self->wsgs[MG_WSG_BOSS_DOOR];
     self->sprites[MG_SP_BOSS_DOOR].origin = &origin_7_31;
     self->sprites[MG_SP_BOSS_DOOR].hitBox = &box_16_64;
+
+    self->sprites[MG_SP_PLAYER_HURT_2].wsg    = &self->wsgs[MG_WSG_PLAYER_HURT_2];
+    self->sprites[MG_SP_PLAYER_HURT_2].origin = &origin_15_15;
+    self->sprites[MG_SP_PLAYER_HURT_2].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_HURT_3].wsg    = &self->wsgs[MG_WSG_PLAYER_HURT_3];
+    self->sprites[MG_SP_PLAYER_HURT_3].origin = &origin_15_15;
+    self->sprites[MG_SP_PLAYER_HURT_3].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_CRAWLER_TOP].wsg    = &self->wsgs[MG_WSG_ENEMY_BUSH_L2];
+    self->sprites[MG_SP_CRAWLER_TOP].origin = &origin_8_8;
+    self->sprites[MG_SP_CRAWLER_TOP].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_CRAWLER_RIGHT].wsg    = &self->wsgs[MG_WSG_ENEMY_BUSH_L2];
+    self->sprites[MG_SP_CRAWLER_RIGHT].origin = &origin_8_8;
+    self->sprites[MG_SP_CRAWLER_RIGHT].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_CRAWLER_BOTTOM].wsg    = &self->wsgs[MG_WSG_ENEMY_BUSH_L2];
+    self->sprites[MG_SP_CRAWLER_BOTTOM].origin = &origin_8_8;
+    self->sprites[MG_SP_CRAWLER_BOTTOM].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_CRAWLER_LEFT].wsg    = &self->wsgs[MG_WSG_ENEMY_BUSH_L2];
+    self->sprites[MG_SP_CRAWLER_LEFT].origin = &origin_8_8;
+    self->sprites[MG_SP_CRAWLER_LEFT].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_PLAYER_SUREYOUCAN_1].wsg    = &self->wsgs[MG_WSG_PLAYER_SUREYOUCAN_1];
+    self->sprites[MG_SP_PLAYER_SUREYOUCAN_1].origin = &origin_15_15;
+    self->sprites[MG_SP_PLAYER_SUREYOUCAN_1].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_SUREYOUCAN_2].wsg    = &self->wsgs[MG_WSG_PLAYER_SUREYOUCAN_2];
+    self->sprites[MG_SP_PLAYER_SUREYOUCAN_2].origin = &origin_15_15;
+    self->sprites[MG_SP_PLAYER_SUREYOUCAN_2].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_CHARGE_SHOT_LVL1_1].wsg    = &self->wsgs[MG_WSG_CHARGE_SHOT_LVL1_1];
+    self->sprites[MG_SP_CHARGE_SHOT_LVL1_1].origin = &origin_15_11;
+    self->sprites[MG_SP_CHARGE_SHOT_LVL1_1].hitBox = &box_charge_shot_lvl1;
+
+    self->sprites[MG_SP_CHARGE_SHOT_LVL1_2].wsg    = &self->wsgs[MG_WSG_CHARGE_SHOT_LVL1_2];
+    self->sprites[MG_SP_CHARGE_SHOT_LVL1_2].origin = &origin_15_11;
+    self->sprites[MG_SP_CHARGE_SHOT_LVL1_2].hitBox = &box_charge_shot_lvl1;
+
+    self->sprites[MG_SP_CHARGE_SHOT_LVL1_3].wsg    = &self->wsgs[MG_WSG_CHARGE_SHOT_LVL1_3];
+    self->sprites[MG_SP_CHARGE_SHOT_LVL1_3].origin = &origin_15_11;
+    self->sprites[MG_SP_CHARGE_SHOT_LVL1_3].hitBox = &box_charge_shot_lvl1;
+
+    self->sprites[MG_SP_CHARGE_SHOT_MAX_1].wsg    = &self->wsgs[MG_WSG_CHARGE_SHOT_MAX_1];
+    self->sprites[MG_SP_CHARGE_SHOT_MAX_1].origin = &origin_26_16;
+    self->sprites[MG_SP_CHARGE_SHOT_MAX_1].hitBox = &box_charge_shot_max;
+
+    self->sprites[MG_SP_CHARGE_SHOT_MAX_2].wsg    = &self->wsgs[MG_WSG_CHARGE_SHOT_MAX_2];
+    self->sprites[MG_SP_CHARGE_SHOT_MAX_2].origin = &origin_26_16;
+    self->sprites[MG_SP_CHARGE_SHOT_MAX_2].hitBox = &box_charge_shot_max;
+
+    self->sprites[MG_SP_CHARGE_SHOT_MAX_3].wsg    = &self->wsgs[MG_WSG_CHARGE_SHOT_MAX_3];
+    self->sprites[MG_SP_CHARGE_SHOT_MAX_3].origin = &origin_26_16;
+    self->sprites[MG_SP_CHARGE_SHOT_MAX_3].hitBox = &box_charge_shot_max;
 }
 
 void mg_initializeTiles(mgWsgManager_t* self)

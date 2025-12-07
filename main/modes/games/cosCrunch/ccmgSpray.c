@@ -3,7 +3,7 @@
 #include "cosCrunchUtil.h"
 
 static void ccmgSprayInitMicrogame(void);
-static void ccmgSprayDestroyMicrogame(void);
+static void ccmgSprayDestroyMicrogame(bool successful);
 static void ccmgSprayMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, float timeScale,
                               cosCrunchMicrogameState state, buttonEvt_t buttonEvts[], uint8_t buttonEvtCount);
 static bool ccmgSprayMicrogameTimeout(void);
@@ -120,7 +120,7 @@ static void ccmgSprayInitMicrogame(void)
     globalMidiPlayerGet(MIDI_SFX)->channels[0].timbre.type = NOISE;
 }
 
-static void ccmgSprayDestroyMicrogame(void)
+static void ccmgSprayDestroyMicrogame(bool successful)
 {
     for (uint16_t x = ccmgs->targetArea.pos.x; x < ccmgs->targetArea.pos.x + ccmgs->targetArea.width; x++)
     {

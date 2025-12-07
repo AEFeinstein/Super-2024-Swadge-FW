@@ -187,16 +187,23 @@ static const char str_pause[]        = "-Pause-";
 static const char KEY_SCORES[]  = "mg_scores";
 static const char KEY_UNLOCKS[] = "mg_unlocks";
 
-static const char mgMenuNewGame[]       = "New Game";
-static const char mgMenuPlaceholder[]   = "-------------";
-static const char mgMenuContinue[]      = "Continue";
-static const char mgMenuHighScores[]    = "High Scores";
-static const char mgMenuResetScores[]   = "Reset Scores";
-static const char mgMenuResetProgress[] = "Reset Progress";
-static const char mgMenuExit[]          = "Exit";
-static const char mgMenuSaveAndExit[]   = "Save & Exit";
-static const char mgMenuStartOver[]     = "Start Over";
-static const char mgMenuConfirm[]       = "Confirm";
+static const char mgMenuNewGame[]            = "New Game";
+static const char mgMenuPlaceholder[]        = "-------------";
+static const char mgMenuContinue[]           = "Continue";
+static const char mgMenuHighScores[]         = "High Scores";
+static const char mgMenuResetScores[]        = "Reset Scores";
+static const char mgMenuResetProgress[]      = "Reset Progress";
+static const char mgMenuExit[]               = "Exit";
+static const char mgMenuSaveAndExit[]        = "Save & Exit";
+static const char mgMenuStartOver[]          = "Start Over";
+static const char mgMenuConfirm[]            = "Confirm";
+static const char mgMenuPlayCustomLevel[]    = "Play Custom Level";
+static const char mgMenuGo[]                 = "Go!!!";
+static const char mgMenuSetGameState[]       = "Set Game State";
+static const char mgMenuSetLevelMetadata[]   = "Set Level Metadata";
+static const char mgMenuAbilityUnlockState[] = "LvlsClear";
+
+static const settingParam_t mgAbilityUnlockStateSettingBounds = {.min = 0, .max = 256, .key = KEY_UNLOCKS};
 
 //==============================================================================
 // Functions
@@ -341,6 +348,20 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             soundPlaySfx(&(platformer->soundManager.sndMenuDeny), MIDI_SFX);
         }
+        else if (label == mgMenuGo)
+        {
+            mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
+            platformer->gameData.customLevel = true;
+            changeStateGame(platformer);
+        }
+        else if (label == mgMenuAbilityUnlockState)
+        {
+            platformer->unlockables.levelsCleared = settingVal;
+        }
+        else if (label == mgMenuSetLevelMetadata)
+        {
+            platformer->gameData.level = settingVal;
+        }
     }
 
     return false;
@@ -387,6 +408,18 @@ void mgBuildMainMenu(platformer_t* self)
     // Initialize the menu
     self->menu = initMenu(platformerName, mgMenuCb);
 
+    size_t size;
+    if (readNvsBlob("user_level", NULL, &size))
+    {
+        self->menu = startSubMenu(self->menu, mgMenuPlayCustomLevel);
+        addSingleItemToMenu(self->menu, mgMenuGo);
+        self->menu = startSubMenu(self->menu, mgMenuSetGameState);
+        addSettingsItemToMenu(self->menu, mgMenuSetLevelMetadata, &mgAbilityUnlockStateSettingBounds, 1);
+        addSettingsItemToMenu(self->menu, mgMenuAbilityUnlockState, &mgAbilityUnlockStateSettingBounds, 255);
+        self->menu = endSubMenu(self->menu);
+        self->menu = endSubMenu(self->menu);
+    }
+
     if (self->unlockables.levelsCleared)
     {
         addSingleItemToMenu(self->menu, mgMenuContinue);
@@ -428,10 +461,11 @@ void updateGame(platformer_t* self)
     mg_updateEntities(&(self->entityManager));
 
     mg_drawTileMap(&(self->tilemap));
+    drawPlatformerHud(&(self->font), &(self->gameData));
     mg_drawEntities(&(self->entityManager));
+    mg_updateLeds(&self->entityManager);
     detectGameStateChange(self);
     detectBgmChange(self);
-    drawPlatformerHud(&(self->font), &(self->gameData));
 
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 59)
@@ -489,6 +523,12 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
 
         int8_t hp = platformer->entityManager.playerEntity->hp;
 
+        if (hp > 30)
+        {
+            drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_SALSA], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 96);
+            hp = 30;
+        }
+
         for (uint8_t i = 0; i < 4; i++)
         {
             if (hp > 6)
@@ -527,6 +567,12 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
         drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOTTOM_BIGMA], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION);
 
         int8_t hp = platformer->entityManager.bossEntity->hp;
+
+        if (hp > 30)
+        {
+            drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_SALSA], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 96);
+            hp = 30;
+        }
 
         for (uint8_t i = 0; i < 4; i++)
         {
@@ -764,21 +810,36 @@ void changeStateGame(platformer_t* self)
 
     mg_deactivateAllEntities(&(self->entityManager), false);
 
+    bool checkpointActive = self->gameData.checkpointLevel && self->gameData.checkpointSpawnIndex;
+    if (checkpointActive)
+    {
+        self->gameData.level = self->gameData.checkpointLevel;
+    }
+
     uint16_t levelIndex = getLevelIndex(1, self->gameData.level) + 1;
 
     mg_loadWsgSet(&(platformer->wsgManager), leveldef[levelIndex].defaultWsgSetIndex);
-    mg_loadMapFromFile(&(platformer->tilemap), leveldef[levelIndex].filename);
+
+    if (self->gameData.customLevel)
+    {
+        mg_loadMapFromFile(&(platformer->tilemap), -69);
+    }
+    else
+    {
+        mg_loadMapFromFile(&(platformer->tilemap), leveldef[levelIndex].filename);
+    }
     self->gameData.countdown = leveldef[levelIndex].timeLimit;
 
     mgEntityManager_t* entityManager = &(self->entityManager);
 
-    if (platformer->tilemap.defaultPlayerSpawn != NULL)
+    mgEntitySpawnData_t* playerSpawn = (checkpointActive)
+                                           ? &(self->tilemap.entitySpawns[self->gameData.checkpointSpawnIndex])
+                                           : self->tilemap.defaultPlayerSpawn;
+
+    if (playerSpawn != NULL)
     {
-        entityManager->viewEntity   = mg_createPlayer(entityManager,
-                                                      entityManager->tilemap->defaultPlayerSpawn->tx * 16
-                                                          + entityManager->tilemap->defaultPlayerSpawn->xOffsetInPixels,
-                                                      entityManager->tilemap->defaultPlayerSpawn->ty * 16
-                                                          + entityManager->tilemap->defaultPlayerSpawn->yOffsetInPixels);
+        entityManager->viewEntity = mg_createPlayer(entityManager, playerSpawn->tx * 16 + playerSpawn->xOffsetInPixels,
+                                                    playerSpawn->ty * 16 + playerSpawn->yOffsetInPixels);
         entityManager->playerEntity = entityManager->viewEntity;
         // entityManager->playerEntity->hp = self->gameData.initialHp;
         mg_viewFollowEntity(&(self->tilemap), entityManager->playerEntity);
@@ -786,13 +847,14 @@ void changeStateGame(platformer_t* self)
 
     entityManager->bossEntity = NULL;
 
-    mg_updateLedsHpMeter(&(self->entityManager), &(self->gameData));
+    // mg_updateLedsHpMeter(&(self->entityManager), &(self->gameData));
 
     self->tilemap.executeTileSpawnAll = true;
 
     // self->gameData.changeBgm = MG_BGM_KINETIC_DONUT;
     mg_setBgm(&self->soundManager, leveldef[self->gameData.level].mainBgmIndex);
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
+    self->gameData.bgColors = leveldef[self->gameData.level].bgColors;
 
     soundStop(true);
 
@@ -801,7 +863,7 @@ void changeStateGame(platformer_t* self)
 
 static void mg_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-    fillDisplayArea(x, y, x + w, y + h, c102 + ((y >> 6) % 6));
+    fillDisplayArea(x, y, x + w, y + h, platformer->gameData.bgColors[((y >> 6) % 4)]);
 }
 
 void detectGameStateChange(platformer_t* self)
@@ -862,6 +924,7 @@ void changeStateDead(platformer_t* self)
     self->gameData.initialHp  = 1;
 
     soundStop(true);
+    mg_resetGameDataLeds(&self->gameData);
     globalMidiPlayerGet(MIDI_BGM)->loop = false;
     soundPlayBgm(&(self->soundManager.sndDie), BZR_STEREO);
     self->entityManager.viewEntity = NULL;
@@ -888,6 +951,7 @@ void updateDead(platformer_t* self)
     mg_drawTileMap(&(self->tilemap));
     mg_drawEntities(&(self->entityManager));
     drawPlatformerHud(&(self->font), &(self->gameData));
+    mg_updateLedsDead(&self->gameData);
 
     if (self->gameData.countdown < 0)
     {
@@ -951,11 +1015,12 @@ void changeStateTitleScreen(platformer_t* self)
 
 void changeStateLevelClear(platformer_t* self)
 {
-    self->gameData.frameCount         = 0;
-    self->gameData.checkpoint         = 0;
-    self->gameData.levelDeaths        = 0;
-    self->gameData.initialHp          = self->entityManager.playerEntity->hp;
-    self->gameData.extraLifeCollected = false;
+    self->gameData.frameCount           = 0;
+    self->gameData.checkpointLevel      = 0;
+    self->gameData.checkpointSpawnIndex = 0;
+    self->gameData.levelDeaths          = 0;
+    self->gameData.initialHp            = self->entityManager.playerEntity->hp;
+    self->gameData.extraLifeCollected   = false;
     mg_resetGameDataLeds(&(self->gameData));
     self->update = &updateLevelClear;
 }
@@ -1461,6 +1526,7 @@ void changeStateLevelSelect(platformer_t* self)
     mg_setBgm(&self->soundManager, MG_BGM_STAGE_SELECT);
     globalMidiPlayerGet(MIDI_BGM)->loop = true;
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
+    self->gameData.bgColors = bgGradientMenu;
 
     self->update = &updateLevelSelect;
 }
