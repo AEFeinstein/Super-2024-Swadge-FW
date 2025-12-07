@@ -112,6 +112,11 @@ void mg_updatePlayer(mgEntity_t* self)
                 && !(self->gameData->prevBtnState & PB_B))
             {
                 self->state      = MG_PL_ST_SHIELD;
+                if(self->yspeed > 0)
+                {
+                    self->yspeed     = -16;
+                }
+                self->jumpPower  = -1;
                 self->stateTimer = 60;
             }
 
@@ -146,6 +151,11 @@ void mg_updatePlayer(mgEntity_t* self)
                 && !(self->gameData->prevBtnState & PB_B))
             {
                 self->state      = MG_PL_ST_SHIELD;
+                if(self->yspeed > 0)
+                {
+                    self->yspeed     = -16;
+                }
+                self->jumpPower  = -1;
                 self->stateTimer = 60;
             }
 
