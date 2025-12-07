@@ -21,8 +21,6 @@
 // Set digit: 0x_1 [digit] [pos * count]
 // Add notes: 0x_2 [notes-msb] [notes-lsb] [pos * count]
 // Del notes: 0x_3 [notes-msb] [notes-lsb] [pos * count]
-// ====================
-// NOT YET IMPLEMENTED: (and possibly not needed)
 // Highlight: 0x_4 [digit] [box] [row] [col]             --- Highlight cells matching ALL params (not set to 0xFF). Also, `count` used as color
 
 #define OP_STEP 0x0
@@ -38,6 +36,75 @@
 #define MAKE_OPCODE(code, count) (((code) & OP_MASK_OP) | (((count) << OP_SHIFT_COUNT) & OP_MASK_COUNT))
 #define GET_LENGTH(buf) (((buf)[0] << 24) | ((buf)[1] << 16) | ((buf)[2] << 8) | (buf)[3])
 #define SET_LENGTH(buf, length) do { buf[0] = ((length) >> 24) & 0xFF; buf[1] = ((length) >> 16) & 0xFF; buf[2] = ((length) >> 8) & 0xFF; buf[3] = (length) & 0xFF; } while (0)
+
+bool initSolverCache(solverCache_t* cache, int size, int base)
+{
+    const size_t defaultLen = 256;
+    uint16_t* notesAlloc = heap_caps_calloc(size * size + base + size * 2, sizeof(uint16_t), MALLOC_CAP_8BIT);
+    if (!notesAlloc)
+    {
+        return false;
+    }
+
+    uint8_t* hintAlloc = heap_caps_malloc(defaultLen, MALLOC_CAP_8BIT);
+    if (!hintAlloc)
+    {
+        free(notesAlloc);
+        return false;
+    }
+
+    cache->hintBuf = hintAlloc;
+    cache->hintbufLen = defaultLen;
+
+    cache->notes = notesAlloc;
+    cache->boxNotes = notesAlloc + (size * size);
+    cache->rowNotes = notesAlloc + (size * size) + base;
+    cache->colNotes = notesAlloc + (size * size) + base + size;
+
+    cache->size = size;
+    cache->base = base;
+
+    cache->stage = 0;
+    cache->digit = 1;
+    cache->pos = 0;
+
+    return true;
+}
+
+void resetCache(solverCache_t* cache)
+{
+    memset(cache->hintBuf, 0, cache->hintbufLen);
+    memset(cache->notes, 0, sizeof(uint16_t) * cache->size * cache->size);
+    memset(cache->boxNotes, 0, sizeof(uint16_t) * cache->base);
+    memset(cache->rowNotes, 0, sizeof(uint16_t) * cache->size);
+    memset(cache->colNotes, 0, sizeof(uint16_t) * cache->size);
+
+    cache->stage = 0;
+    cache->digit = 1;
+    cache->pos = 0;
+}
+
+void deinitSolverCache(solverCache_t* cache)
+{
+    if (cache->notes)
+    {
+        free(cache->notes);
+        cache->notes = NULL;
+        cache->boxNotes = NULL;
+        cache->rowNotes = NULL;
+        cache->colNotes = NULL;
+    }
+
+    if (cache->hintBuf)
+    {
+        free(cache->hintBuf);
+        cache->hintBuf = NULL;
+        cache->hintbufLen = 0;
+    }
+
+    cache->size = 0;
+    cache->base = 0;
+}
 
 static bool eliminateShadows(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, uint16_t* notes, const sudokuGrid_t* board);
 static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* pos0, uint8_t* pos1, uint8_t* pos2, const sudokuGrid_t* board);
