@@ -15,7 +15,7 @@
 #define SONA_PER 4
 #define MAX_SWADGESONA_IDXS (BG_COUNT * SONA_PER)
 #define ANIM_TIMER_MS 16667
-#define LOBBY_ARROW_Y 40
+#define LOBBY_ARROW_Y 200
 #define LOBBY_BORDER_X 20
 
 // Profile
@@ -41,17 +41,19 @@ static const int y_coords[]         = {120, 80}; */
 static const cnfsFileIdx_t sonaBodies[] = {DANCEBODY_1_WSG}; // Sona bodies
 static const cnfsFileIdx_t uiImages[]   = {
     ARROWBUTTON_1_WSG, ARROWBUTTON_2_WSG, ABUTTON_1_WSG,  ABUTTON_2_WSG,
-    BBUTTON_1_WSG,     BBUTTON_2_WSG,     ATRIUMLOGO_WSG, KEEPON_WSG, ATRIUMLOGO_WSG, 
+    BBUTTON_1_WSG,     BBUTTON_2_WSG,     ATRIUMLOGO_WSG, KEEPON_WSG, LOADING_1_WSG, LOADING_2_WSG, LOADING_3_WSG, LOADING_4_WSG, LOADING_5_WSG, LOADING_6_WSG, LOADING_7_WSG, LOADING_8_WSG,
 };
 static const cnfsFileIdx_t bgImages[] = {
-    GAZEBO_WSG, ATRIUMPLANT_1_WSG, ARCADE_1_WSG, ARCADE_2_WSG, CONCERT_1_WSG, CONCERT_2_WSG,
+    GAZEBO_WSG, ATRIUMPLANT_1_WSG, ARCADE_1_WSG, ARCADE_2_WSG, ARCADE_3_WSG, ARCADE_4_WSG, CONCERT_1_WSG, CONCERT_2_WSG,
 }; // Images used for the backgrounds
 static const cnfsFileIdx_t cardImages[]
     = {CARDGEN_WSG, CARDBLOSS_WSG, CARDBUBB_WSG, CARDDINO_WSG, CARDMAGFEST_WSG, CARDMUSIC_WSG, CARDSPACE_WSG};
 static const cnfsFileIdx_t midiBGM[] = {
-    ATRIUM_VIBE_MID,
+    ATRTHEME1_MID, ATRTHEME2_MID,
 };
-static const cnfsFileIdx_t midiSFX[]   = {};
+static const cnfsFileIdx_t midiSFX[]   = {
+    SWSN_CHOOSE_SFX_MID, SWSN_MOVE_SFX_MID,
+};
 static const cnfsFileIdx_t fontsIdxs[] = {
     OXANIUM_13MED_FONT,
 };
@@ -165,9 +167,11 @@ typedef struct
 typedef struct __attribute__((packed))
 {
     swadgesonaCore_t sona;
+    int32_t swadgePassUsername;
     int numPasses       : 13;
     int latestTrophyIdx : 32;
 } profilePacket_t;
+
 
 typedef struct
 {
@@ -186,20 +190,24 @@ typedef struct
     // Main
     atriumState state;
     int8_t numRemoteSwsn;
-    swadgesonaCore_t remoteSonas[MAX_NUM_SWADGE_PASSES];
+    profilePacket_t sonaList[MAX_NUM_SWADGE_PASSES];
+    
 
     // Lobbies
     lobbyState_t lbState;
     uint8_t lobbySwsnIdxs[MAX_SWADGESONA_IDXS];
-    bool left, right;
+    bool left, right, up, down;
     int64_t animTimer;
     int loadAnims;
+    bool fakeLoad;
+    bool shuffle;
 
     // BGM
     midiPlayer_t* player;
 
     //SwadgePass List
     list_t spList;
+    list_t loadedProfilesList; //list of 4 userProfile_t*
 
     /* int selector; // which item is selected in the editor
     bool confirm;
@@ -225,12 +233,12 @@ static void editProfile(buttonEvt_t* evt);
 static void drawAtriumTitle(uint64_t elapsedUs);
 static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs);
 static void shuffleSonas(void);
-static void drawSonas(uint64_t elapsedUs);
+static void drawSonas(buttonEvt_t* evt, uint64_t elapsedUs);
 static void drawArcade(uint64_t elapsedUs);
 static void drawConcert(uint64_t elapsedUs);
 static void drawGazebo(uint64_t elapsedUs);
 static void drawGazeboForeground(uint64_t elapsedUs);
-static void drawArrows(bool, bool);
+static void drawArrows(bool, bool, bool, bool);
 
 // Swadgepass
 static void atriumAddSP(struct swadgePassPacket* packet); 
@@ -336,10 +344,16 @@ static void atriumEnterMode()
 // Swadgepass
     getSwadgePasses(&atr->spList, &atriumMode, true);
     node_t* spNode = atr->spList.first;
+    int i = 0;
+    
     while (spNode)
     {
+        
         // Make a convenience pointer to the data in this node
         swadgePassData_t* spd = (swadgePassData_t*)spNode->val;
+        atr->sonaList[i].swadgePassUsername = spd->data.packet.swadgesona.core.packedName;
+        atr->sonaList[i].sona = spd->data.packet.swadgesona.core;
+        
 
         // If the data hasn't been used yet
         if (!isPacketUsedByMode(spd, &atriumMode))
@@ -352,8 +366,16 @@ static void atriumEnterMode()
         }
 
         // Iterate to the next data
+        i++;
         spNode = spNode->next;
     }
+
+    atr->numRemoteSwsn = i;
+    
+
+
+   
+
 
     /* if (!readNvs32(atriumNVSprofile, &myProfile.created))
     {
@@ -379,7 +401,7 @@ static void atriumEnterMode()
     atr->player       = globalMidiPlayerGet(MIDI_BGM);
     atr->player->loop = true;
     midiGmOn(atr->player);
-    globalMidiPlayerPlaySong(&atr->bgm[0], MIDI_BGM);
+    globalMidiPlayerPlaySong(&atr->bgm[1], MIDI_BGM);
     globalMidiPlayerSetVolume(MIDI_BGM, 10);
 }
 
@@ -450,11 +472,16 @@ static void atriumMainLoop(int64_t elapsedUs)
                 }
             }
             drawAtriumTitle(elapsedUs);
+
+            shuffleSonas();
+
             break;
         }
         case ATR_DISPLAY:
         {
+
             drawLobbies(&evt, elapsedUs);
+            drawSonas(&evt, elapsedUs);
             break;
         }
         case ATR_PROFILE:
@@ -507,25 +534,51 @@ static void drawAtriumTitle(uint64_t elapsedUs)
         atr->loadAnims++;
     }
 
-    //draw and bounce the logo
-    if (atr->loadAnims <= 20)
+    //draw logo
+    if (atr->loadAnims < 20)
     {               
         int offset = 21 - atr->loadAnims;                                    
-        drawWsgSimple(&atr->uiElements[6], 0, offset);  
+        drawWsgSimple(&atr->uiElements[6], 0, offset); 
         
     }
     else
     {                                             
         drawWsgSimple(&atr->uiElements[6], 0, 0); 
+            drawWsgSimpleHalf(&atr->uiElements[2], 50, 160);
+            drawWsgSimpleHalf(&atr->uiElements[4], 50, 180);
+            drawText(&atr->fonts[0],c121, "Enter Atrium", 70, 162);
+            drawText(&atr->fonts[0],c121, "Edit Profile", 70, 182);
         
     }
 }
 
 static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
 {
-    // Shuffle
-    shuffleSonas();
 
+    //fake loading screen to tell them what to do
+    if(atr->loadAnims < 20*8 && atr->fakeLoad == 0)
+    {
+        
+        atr->animTimer += elapsedUs;
+        if (atr->animTimer >= 8*8) //8 loops 
+        {
+            atr->animTimer = 0;
+            atr->loadAnims++;
+        }
+        drawWsgSimple(&atr->uiElements[7], 0, 0);
+        int frame = atr->loadAnims % 8;
+        drawWsgSimpleHalf(&atr->uiElements[8+frame], 180, 200);
+        
+        
+        return;
+    }
+    else 
+    {
+        atr->fakeLoad = 1; //skip this next time
+    }
+    
+    
+    
     // Handle input
     while (checkButtonQueueWrapper(evt))
     {
@@ -533,7 +586,7 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
         {
             if (evt->button & PB_UP)
             {
-                shuffleSonas();
+                atr->up = true;
             }
             else if (evt->button & PB_LEFT)
             {
@@ -543,25 +596,30 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
             {
                 atr->right = true;
             }
+            else if (evt->button & PB_DOWN)
+            {
+                atr->down = true;
+            }
         }
         else
         {
-            if (evt->button & PB_LEFT)
+            if (evt->button & PB_UP)
             {
-                atr->left = false;
+                atr->up = false;
                 if (atr->lbState > 0)
                 {
                     atr->lbState--;
                 }
                 atr->loadAnims = 0;
             }
-            else if (evt->button & PB_RIGHT)
+            else if (evt->button & PB_DOWN)
             {
-                atr->right = false;
-                if (atr->lbState < BG_COUNT - 1)
+                atr->down = false;
+                if (atr->lbState < 2)
                 {
                     atr->lbState++;
                 }
+                
                 atr->loadAnims = 0;
             }
             else if (evt->button & PB_B)
@@ -595,8 +653,6 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
         }
     }
 
-    // Draw the loaded 'sonas
-    drawSonas(elapsedUs);
 
     // Draw foregrounds
     switch (atr->lbState)
@@ -614,8 +670,8 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
     
 
     // UI
-    drawArrows(atr->left, atr->right);
-    drawText(&atr->fonts[0], c000, "Press B to return to menu", 48, 216); // FIXME: Hardcoded
+    drawArrows(atr->left, atr->right, atr->up, atr->down);
+
 
     // Trophy
     
@@ -623,60 +679,57 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
 
 static void shuffleSonas()
 {
-    // TODO: Get all valid swadgesonas
-    int numSwsns = 0;
-    int array[atr->numRemoteSwsn];
-    if (atr->numRemoteSwsn <= 0) // Bail if empty
-    {
+    if( atr->shuffle == 0 ) {
+        
+    printf("Shuffling %d sonas\n", atr->numRemoteSwsn);
+
+    if(atr->numRemoteSwsn <= 0) {
         return;
     }
-    if (atr->numRemoteSwsn >= MAX_SWADGESONA_IDXS)
-    {
-        for (int idx = 0; idx < atr->numRemoteSwsn; idx++)
+    else {
+        
+        int j;
+        for (int i = atr->numRemoteSwsn -1; i >0; i--)
         {
-            array[idx] = idx;
+            j = rand() % (i + 1);
+            // Swap atr->sonaList[i] and atr->sonaList[j]
+            profilePacket_t temp = atr->sonaList[i];
+            atr->sonaList[i] = atr->sonaList[j];
+            atr->sonaList[j] = temp;
         }
-        numSwsns = atr->numRemoteSwsn;
+        
     }
-    else
-    {
-        for (int idx = 0; idx < MAX_SWADGESONA_IDXS; idx++)
-        {
-            array[idx] = idx % atr->numRemoteSwsn;
-        }
-        numSwsns = MAX_SWADGESONA_IDXS;
     }
-    // FISHER YATES
-    // Iterate through the array in reverse order
-    for (int n = numSwsns - 1; n > 0; n--)
-    {
-        // Generate a random index 'k' between 0 and n (inclusive)
-        int32_t k = esp_random() % (n + 1);
-
-        // Swap the elements at indices 'n' and 'k'
-        int32_t temp = array[n];
-        array[n]     = array[k];
-        array[k]     = temp;
-    }
-    // Copy the indexs
-    for (int idx = 0; idx < MAX_SWADGESONA_IDXS; idx++)
-    {
-        atr->lobbySwsnIdxs[idx] = array[idx];
-    }
+    atr->shuffle = 1; //only shuffle once
+    
 }
 
 static void drawArcade(uint64_t elapsedUs)
 {
-    // Draw base BG
-    drawWsgSimple(&atr->backgroundImages[2], 0, 0);
+    atr->animTimer += elapsedUs;
+    if (atr->animTimer >= ANIM_TIMER_MS && atr->loadAnims < 20)
+    {
+        atr->animTimer = 0;
+        atr->loadAnims++;
+    }
 
     // Animations
+    if(atr->loadAnims < 4) {
+    
+        drawWsgSimple(&atr->backgroundImages[2+(atr->loadAnims % 4)], 0, 0);
+        
+        
+    }
+    else {
+        atr->loadAnims = 0;
+    }
+    
 }
 
 static void drawConcert(uint64_t elapsedUs)
 {
     // Draw base BG
-    drawWsgSimple(&atr->backgroundImages[5], 0, 0);
+    drawWsgSimple(&atr->backgroundImages[7], 0, 0);
 
     // Animations
 }
@@ -710,20 +763,32 @@ static void drawGazeboForeground(uint64_t elapsedUs)
     }
 }
 
-static void drawSonas(uint64_t elapsedUs)
+static void drawSonas(buttonEvt_t* evt, uint64_t elapsedUs)
 {
-   
+   while (checkButtonQueueWrapper(evt))
+    {
+        // No input handling for now
+    }
+    //TODO: get move down spList and get number of pages, index accordingly
+    //TODO: get profiles and store into loadedProfilesList
+
+    // Draw sonas
+
+    for(int i = 0; i < 4; i++ ) {
+    generateSwadgesonaImage(atr->loadedProfilesList[i].swsn,false);
+    drawWsgSimple(&atr->loadedProfile.swsn->image, 20 + i * 64, 100); //TODO pick locations that make sense, do not hardoce
+    }
 }
 
-static void drawArrows(bool left, bool right)
-{
+static void drawArrows(bool left, bool right, bool up, bool down)
+{ //TODO: change scale and positions, add left and right
     if (atr->lbState != 0)
     {
-        drawWsg(&atr->uiElements[(left) ? 1 : 0], LOBBY_BORDER_X, LOBBY_ARROW_Y, false, false, 180);
+        drawWsg(&atr->uiElements[(up) ? 1 : 0], LOBBY_BORDER_X, LOBBY_ARROW_Y, false, false, 270);
     }
     if (atr->lbState != BG_COUNT - 1)
     {
-        drawWsg(&atr->uiElements[(right) ? 1 : 0], TFT_WIDTH - (LOBBY_BORDER_X + atr->uiElements[0].w), LOBBY_ARROW_Y, false, false, 0);
+        drawWsg(&atr->uiElements[(down) ? 1 : 0], TFT_WIDTH - (LOBBY_BORDER_X + atr->uiElements[0].w), LOBBY_ARROW_Y, false, false, 90);
     }
     
 }
