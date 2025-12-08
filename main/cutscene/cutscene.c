@@ -46,6 +46,7 @@ cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx, uint8_t s
         loadWsg(nextIconIdx+i, cutscene->nextIcon[i], true);
     }
     cutscene->xOffset = 280; //default start value for antagonists.
+    cutscene->nextIconAnimationTimer = 8;
 
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     midiPlayerReset(player);
@@ -63,7 +64,7 @@ static void resetCutscene(cutscene_t* cutscene)
         cutsceneLine_t* line = (cutsceneLine_t*) shift(cutscene->lines);
         free(line->body);
     }
-    cutscene->nextIconAnimationTimer = 0;
+    cutscene->nextIconAnimationTimer = 8;
     cutscene->xOffset = 280; //default start value for antagonists.
 }
 
