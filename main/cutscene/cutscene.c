@@ -80,13 +80,14 @@ static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutsce
     // (no note off is necessary)
     // The control is set in increments of 10ms, so this is equivalent to setting release CC to 60
     cutscene->timbre.envelope.decayTime = MS_TO_SAMPLES(250);//600
-    cutscene->timbre.envelope.decayTimeVel = (MS_TO_SAMPLES(2000) << 8) / 127;
+    cutscene->timbre.envelope.decayTimeVel = (MS_TO_SAMPLES(500) << 8) / 127;
     // Setting sustain volume to 0 means the note ends on its own after decay
     cutscene->timbre.envelope.sustainVol = 0;
     cutscene->timbre.envelope.releaseTime = 0;
     // End timbre initialization stuff
 
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_SFX);
+    midiPause(player, false);
     
     midiControlChange(player, 13, MCC_BANK_LSB, 2);
 
@@ -98,7 +99,7 @@ static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutsce
     // midiControlChange(player, 13, MCC_SUSTENUTO_PEDAL, 80);
     // midiControlChange(player, 13, MCC_SOUND_RELEASE_TIME, 60);
 
-    player->headroom = 0x8000;//max volume
+    //player->headroom = 0x8000;//max volume
     // Play a random note within an octave at half velocity on channel 1
     //int songPitches[] = {58, 61, 63, 64, 65, 68, 70};//1
     int songPitches[] = {70, 68, 65, 63, 61};//1
@@ -106,7 +107,7 @@ static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutsce
     uint8_t pitch = randomInt(0, 4);
 
     // Setting the channel to something > 15 means the note will not be affected by a song changing MIDI controls.
-    soundNoteOn(player, 13, songPitches[pitch] + 12 * style->octaveOvset, 255, &cutscene->timbre, false);
+    soundNoteOn(player, 13, songPitches[pitch] + 12 * style->octaveOvset, 127, &cutscene->timbre, false);
 }
 
 void removeAllStyles(cutscene_t* cutscene)
