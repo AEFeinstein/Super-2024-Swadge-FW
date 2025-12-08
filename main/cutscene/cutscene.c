@@ -19,6 +19,7 @@
 // Function Prototypes
 //==============================================================================
 static void resetCutscene(cutscene_t* cutscene);
+static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutscene);
 static int randomInt(int lowerBoundInclusive, int upperBoundInclusive);
 static uint8_t getRandomVariationFromStyle(cutsceneStyle_t* style);
 static uint8_t getRandomVariationFromStyleIdx(cutscene_t* cutscene, uint8_t styleIdx);
@@ -48,9 +49,10 @@ cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx, uint8_t s
     cutscene->xOffset = 280; //default start value for antagonists.
     cutscene->nextIconAnimationTimer = 8;
 
-    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_SFX);
     midiPlayerReset(player);
     midiPause(player, false);
+    player->headroom = 0x8000;//max volume
     return cutscene;
 }
 
@@ -66,6 +68,45 @@ static void resetCutscene(cutscene_t* cutscene)
     }
     cutscene->nextIconAnimationTimer = 8;
     cutscene->xOffset = 280; //default start value for antagonists.
+}
+
+static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutscene)
+{
+    // Copying and customizing the timbre should really only be done once
+    memcpy(&cutscene->timbre, getTimbreForProgram(false, 2, style->instrument), sizeof(midiTimbre_t));
+
+    cutscene->timbre.envelope.attackTime = 0;
+    // Using decay instead of release, with a sustain volume of 0, makes the note behave more like percussion
+    // (no note off is necessary)
+    // The control is set in increments of 10ms, so this is equivalent to setting release CC to 60
+    cutscene->timbre.envelope.decayTime = MS_TO_SAMPLES(250);//600
+    cutscene->timbre.envelope.decayTimeVel = (MS_TO_SAMPLES(2000) << 8) / 127;
+    // Setting sustain volume to 0 means the note ends on its own after decay
+    cutscene->timbre.envelope.sustainVol = 0;
+    cutscene->timbre.envelope.releaseTime = 0;
+    // End timbre initialization stuff
+
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_SFX);
+    
+    midiControlChange(player, 13, MCC_BANK_LSB, 2);
+
+    
+    //midiGmOn(player);
+    
+    //midiSetParameter(player, 13, false, 10, 2);
+    midiSetProgram(player, 13, style->instrument);
+    // midiControlChange(player, 13, MCC_SUSTENUTO_PEDAL, 80);
+    // midiControlChange(player, 13, MCC_SOUND_RELEASE_TIME, 60);
+
+    player->headroom = 0x8000;//max volume
+    // Play a random note within an octave at half velocity on channel 1
+    //int songPitches[] = {58, 61, 63, 64, 65, 68, 70};//1
+    int songPitches[] = {70, 68, 65, 63, 61};//1
+    //int songPitches[] = {60, 62, 67, 69, 72, 74};//2 bouncehause
+    uint8_t pitch = randomInt(0, 4);
+
+    // Setting the channel to something > 15 means the note will not be affected by a song changing MIDI controls.
+    soundNoteOn(player, 13, songPitches[pitch] + 12 * style->octaveOvset, 255, &cutscene->timbre, false);
 }
 
 void removeAllStyles(cutscene_t* cutscene)
@@ -124,7 +165,8 @@ void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool fl
         // Using decay instead of release, with a sustain volume of 0, makes the note behave more like percussion
         // (no note off is necessary)
         // The control is set in increments of 10ms, so this is equivalent to setting release CC to 60
-        cutscene->timbre.envelope.decayTime = MS_TO_SAMPLES(600);
+        cutscene->timbre.envelope.decayTime = MS_TO_SAMPLES(250);//600
+        cutscene->timbre.envelope.decayTimeVel = (MS_TO_SAMPLES(2000) << 8) / 127;
         // Setting sustain volume to 0 means the note ends on its own after decay
         cutscene->timbre.envelope.sustainVol = 0;
         cutscene->timbre.envelope.releaseTime = 0;
@@ -185,39 +227,7 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
                     cutscene->sprite, true);
                     loadWsg(style->textBoxIdx, cutscene->textBox, true);
 
-                    // Copying and customizing the timbre should really only be done once
-                    memcpy(&cutscene->timbre, getTimbreForProgram(false, 2, style->instrument), sizeof(midiTimbre_t));
-
-                    cutscene->timbre.envelope.attackTime = 0;
-                    // Using decay instead of release, with a sustain volume of 0, makes the note behave more like percussion
-                    // (no note off is necessary)
-                    // The control is set in increments of 10ms, so this is equivalent to setting release CC to 60
-                    cutscene->timbre.envelope.decayTime = MS_TO_SAMPLES(600);
-                    // Setting sustain volume to 0 means the note ends on its own after decay
-                    cutscene->timbre.envelope.sustainVol = 0;
-                    cutscene->timbre.envelope.releaseTime = 0;
-                    // End timbre initialization stuff
-
-                    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-                    midiControlChange(player, 13, MCC_BANK_LSB, 2);
-
-                    
-                    //midiGmOn(player);
-                    
-                    //midiSetParameter(player, 13, false, 10, 2);
-                    midiSetProgram(player, 13, style->instrument);
-                    // midiControlChange(player, 13, MCC_SUSTENUTO_PEDAL, 80);
-                    // midiControlChange(player, 13, MCC_SOUND_RELEASE_TIME, 60);
-
-                    midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
-                    // Play a random note within an octave at half velocity on channel 1
-                    //int songPitches[] = {58, 61, 63, 64, 65, 68, 70};//1
-                    int songPitches[] = {70, 68, 65, 63, 61};//1
-                    //int songPitches[] = {60, 62, 67, 69, 72, 74};//2 bouncehause
-                    uint8_t pitch = randomInt(0, 4);
-
-                    // Setting the channel to something > 15 means the note will not be affected by a song changing MIDI controls.
-                    soundNoteOn(bgm, 16, songPitches[pitch] + 12 * style->octaveOvset, 0x7F, &cutscene->timbre, false);
+                    loadAndPlayCharacterSound(style, cutscene);
                 }
                 else//This was the last line.
                 {
@@ -262,15 +272,7 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         }
         if(cutscene->xOffset == 0)
         {
-            midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
-            // Play a random note within an octave at half velocity on channel 1
-            //int songPitches[] = {58, 61, 63, 64, 65, 68, 70};//1
-            int songPitches[] = {70, 68, 65, 63, 61};//1
-            //int songPitches[] = {60, 62, 67, 69, 72, 74};//2 bouncehause
-            uint8_t pitch = randomInt(0, 4);
-
-            // Setting the channel to something > 15 means the note will not be affected by a song changing MIDI controls.
-            soundNoteOn(bgm, 16, songPitches[pitch] + 12 * style->octaveOvset, 0x7F, &cutscene->timbre, false);
+            loadAndPlayCharacterSound(style, cutscene);
         }
     }
 

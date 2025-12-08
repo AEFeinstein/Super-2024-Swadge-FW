@@ -12,8 +12,8 @@ void stageStartCutscene(mgGameData_t* gameData)
     {
         case 1://Intro Stage
         {
-            addCutsceneLine(gameData->cutscene, SystemText, "PULSE and SAWTOOTH teleport into Omega Harbor's convention center, which looks an awful lot like the Gaylord...", false, 0);
-            addCutsceneLine(gameData->cutscene, SystemText, "The grand atrium is filled with glitching-banners flicker, while pixelated distortion pulses through the walls.", false, 0);
+            addCutsceneLine(gameData->cutscene, Bigma, "PULSE and SAWTOOTH teleport into Omega Harbor's convention center, which looks an awful lot like the Gaylord...", false, 0);
+            addCutsceneLine(gameData->cutscene, Bigma, "The grand atrium is filled with glitching-banners flicker, while pixelated distortion pulses through the walls.", false, 0);
             addCutsceneLine(gameData->cutscene, Sawtooth, "We're too late... the MAGiX virus is already spreading.", true, 1);
             addCutsceneLine(gameData->cutscene, Pulse, "This is nuts! What even is this place?", false, 1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "It used to be our home base... before it was corrupted. We got a ping near the Main Stage. Let's move!", true, 0);
