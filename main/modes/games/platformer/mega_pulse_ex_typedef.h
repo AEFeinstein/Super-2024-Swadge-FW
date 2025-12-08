@@ -1218,6 +1218,24 @@ static const mg_EntityTileCollider_t entityTileCollider_trash_man = {.bottomEdge
                                                                .rightEdge  = &mgTileCollisionOffsets_trash_man_rightEdge,
                                                                .leftEdge   = &mgTileCollisionOffsets_trash_man_leftEdge};
 
+//bigma origin: 33, 44
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_bigma_bottomEdge
+    = {.collisionPoints = {{.x = -17, .y = 42}, {.x = 0, .y = 42}, {.x = 17, .y = 42}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_bigma_topEdge
+    = {.collisionPoints = {{.x = -17, .y = -44}, {.x = 0, .y = -44}, {.x = 17, .y = -44}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_bigma_rightEdge
+    = {.collisionPoints = {{.x = 17, .y = 42}, {.x = 17, .y = 0}, {.x = 17, .y = -44}}, .size = 3};
+
+static const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_bigma_leftEdge
+    = {.collisionPoints = {{.x = -17, .y = 42}, {.x = -17, .y = 0}, {.x = -17, .y = -44}}, .size = 3};
+
+static const mg_EntityTileCollider_t entityTileCollider_bigma = {.bottomEdge = &mgTileCollisionOffsets_bigma_bottomEdge,
+                                                               .topEdge    = &mgTileCollisionOffsets_bigma_topEdge,
+                                                               .rightEdge  = &mgTileCollisionOffsets_bigma_rightEdge,
+                                                               .leftEdge   = &mgTileCollisionOffsets_bigma_leftEdge};
+
     typedef enum
 {
     MG_WSGSET_NULL = -1,

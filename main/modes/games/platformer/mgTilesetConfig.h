@@ -593,5 +593,47 @@ static const mgSprite_t mg_trashManBossSpriteMetadataSet[] = {
     }
 };
 
+static const mgSprite_t mg_bigmaBossSpriteMetadataSet[] = {
+    {
+        .wsg = NULL,
+        .origin = &origin_bigma,
+        .hitBox = &box_bigma
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_bigma,
+        .hitBox = &box_bigma
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_bigma_punching,
+        .hitBox = &box_bigma_punching
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_bigma_punching,
+        .hitBox = &box_bigma_punching
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_bigma_jump,
+        .hitBox = &box_bigma_jump1
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_bigma_jump,
+        .hitBox = &box_bigma_jump2
+    },
+    {
+        .wsg = NULL,
+        .origin = &origin_bigma,
+        .hitBox = &box_bigma
+    },
+    {
+        .wsg = NULL,
+        .origin = NULL,
+        .hitBox = NULL
+    }
+};
 
 #endif

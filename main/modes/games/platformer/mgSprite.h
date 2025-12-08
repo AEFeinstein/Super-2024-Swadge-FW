@@ -102,4 +102,12 @@ static const box_t box_deadeye_chirpzi_screw = {.x0 = 7, .x1 = 40, .y0 = 7, .y1 
 static const vec_t origin_trash_man = {.x = 38, .y = 33};
 static const box_t box_trash_man = {.x0 = 8, .x1 = 68, .y0 = 9, .y1 = 65};
 
+static const vec_t origin_bigma = {.x = 33, .y = 44};
+static const box_t box_bigma = {.x0 = 16, .x1 = 50, .y0 = 0, .y1 = 86};
+static const vec_t origin_bigma_punching = {.x = 55, .y = 44};
+static const box_t box_bigma_punching = {.x0 = 16, .x1 = 95, .y0 = 9, .y1 = 86};
+static const vec_t origin_bigma_jump = {.x = 58, .y = 49};
+static const box_t box_bigma_jump1 = {.x0 = 32, .x1 = 84, .y0 = 20, .y1 = 97};
+static const box_t box_bigma_jump2 = {.x0 = 32, .x1 = 84, .y0 = 0, .y1 = 97};
+
 #endif
