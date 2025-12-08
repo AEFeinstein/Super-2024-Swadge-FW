@@ -12,14 +12,13 @@ void stageStartCutscene(mgGameData_t* gameData)
     {
         case 1://Intro Stage
         {
-            addCutsceneLine(gameData->cutscene, SystemText, "PULSE and SAWTOOTH teleport into Omega Harbor's convention center, which looks an awful lot like the Gaylord... The grand atrium is filled with glitching-banners flicker, while pixelated distortion pulses through the walls.", false, 0);
+            addCutsceneLine(gameData->cutscene, SystemText, "PULSE and SAWTOOTH teleport into Omega Harbor's convention center, which looks an awful lot like the Gaylord...", false, 0);
+            addCutsceneLine(gameData->cutscene, SystemText, "The grand atrium is filled with glitching-banners flicker, while pixelated distortion pulses through the walls.", false, 0);
             addCutsceneLine(gameData->cutscene, Sawtooth, "We're too late... the MAGiX virus is already spreading.", true, 1);
-            addCutsceneLine(gameData->cutscene, Pulse, "This is nuts! What even is this place?", false, 0);
+            addCutsceneLine(gameData->cutscene, Pulse, "This is nuts! What even is this place?", false, 1);
             addCutsceneLine(gameData->cutscene, Sawtooth, "It used to be our home base... before it was corrupted. We got a ping near the Main Stage. Let's move!", true, 0);
-            addCutsceneLine(gameData->cutscene, Pulse, "Wait, what am I supposed to do?", false, 4);
+            addCutsceneLine(gameData->cutscene, Pulse, "Wait, what am I supposed to do?", false, 0);
             addCutsceneLine(gameData->cutscene, Sawtooth, "Use your rhythm-feel it out! You'll learn fast. Just GO!", true, 3);
-            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Here's example text about how to use some new ability.", false, 0);
-            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... And it can be described with several pages as needed.", false, 0);
             break;
         }
         case 2://The Bouncehaus

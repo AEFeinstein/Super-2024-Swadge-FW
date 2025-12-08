@@ -8,6 +8,7 @@
 #include "font.h"
 #include "cnfs_image.h"
 #include "wsg.h"
+#include "midiPlayer.h"
 
 
 /**
@@ -40,6 +41,8 @@ typedef struct
     bool isProtagonist; ///<If true, then the sprite enters and leaves the left side of the screen. If false, then the right side.
     bool drawSprite;    ///< Set false to draw no sprite.
     bool drawTextBox;   ///< Set false to draw no textbox.
+    uint8_t instrument; ///< Program# of the instrument when A is pressed.
+    int8_t octaveOvset; ///< How many octaves to transpose this character's sound up or down. Zero for no effect.
 } cutsceneStyle_t;
 
 /**
@@ -50,7 +53,7 @@ typedef struct
     cutsceneCb cbFunc;  ///< A callback which is called when this cutscene concludes. Use it to unpause your game loop.
     list_t* styles;     ///< A list_t of lineStyle_t
     list_t* lines;      ///< A list_t of cutsceneLine_t
-    int8_t blinkTimer; ///< Increments and overflows to make the next graphic blink.
+    int8_t blinkTimer;  ///< Increments and overflows to make the next graphic blink.
     bool a_down;        ///< True when the a button is held.
     int16_t xOffset;    ///< Decrements to slide the character portait in from below.
     wsg_t* sprite;      ///< The character sprite.
@@ -60,11 +63,13 @@ typedef struct
     int8_t PB_A_frameCounter; ///< Increments while A is held.
     bool PB_A_previousFrame; ///< True if A is held on the previous frame.
     bool isEnding;      ///< True as the character slides out of frame.
+    uint8_t soundBank;  ///< 2 for mega man sounds. https://adam.feinste.in/Super-2024-Swadge-FW/MIDI.html#general-midi-bank-0
+    midiTimbre_t timbre;
 } cutscene_t;
 
-cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx);
+cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx, uint8_t soundBank);
 void removeAllStyles(cutscene_t* cutscene);
-void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t color, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numPoseVariations, bool isProtagonist, bool drawSprite, bool drawTextbox);
+void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t color, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numPoseVariations, bool stageLeft, bool drawSprite, bool drawTextbox, uint8_t instrument, int8_t octaveOvset);
 void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation);
 void updateCutscene(cutscene_t* cutscene, int16_t btnState);
 void drawCutscene(cutscene_t* cutscene, font_t* font);

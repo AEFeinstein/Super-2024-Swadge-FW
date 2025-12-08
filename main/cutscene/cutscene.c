@@ -11,8 +11,9 @@
 #include "fs_wsg.h"
 
 #include "shapes.h"
-#include "midiPlayer.h"
 
+
+#define INSTRUMENT 17
 
 //==============================================================================
 // Function Prototypes
@@ -30,7 +31,7 @@ static cutsceneStyle_t* getCurrentStyle(cutscene_t* cutscene);
  * @param nextIconIdx 
  * @return cutscene_t* 
  */
-cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx)
+cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx, uint8_t soundBank)
 {
     cutscene_t* cutscene = (cutscene_t*)heap_caps_calloc(1, sizeof(cutscene_t), MALLOC_CAP_SPIRAM);
     cutscene->cbFunc = cbFunc;
@@ -38,6 +39,7 @@ cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx)
     cutscene->styles = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_SPIRAM);
     cutscene->sprite = heap_caps_calloc(1, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
     cutscene->textBox = heap_caps_calloc(1, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
+    cutscene->soundBank = soundBank;
     for(int i = 0; i < 4; i++)
     {
         cutscene->nextIcon[i] = heap_caps_calloc(1, sizeof(wsg_t), MALLOC_CAP_SPIRAM);
@@ -48,13 +50,6 @@ cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx)
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     midiPlayerReset(player);
     midiPause(player, false);
-    //midiGmOn(player);
-    midiControlChange(player, 13, MCC_BANK_LSB, 2);
-    //midiSetParameter(player, 13, false, 10, 2);
-    midiSetProgram(player, 13, 30);
-    // midiControlChange(player, 13, MCC_SUSTENUTO_PEDAL, 80);
-    // midiControlChange(player, 13, MCC_SOUND_RELEASE_TIME, 60);
-
     return cutscene;
 }
 
@@ -82,7 +77,7 @@ void removeAllStyles(cutscene_t* cutscene)
     }
 }
 
-void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numSpriteVariations, bool isProtagonist, bool drawSprite, bool drawTextbox)
+void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numSpriteVariations, bool isProtagonist, bool drawSprite, bool drawTextbox, uint8_t instrument, int8_t octaveOvset)
 {
     cutsceneStyle_t* style = (cutsceneStyle_t*)heap_caps_calloc(1, sizeof(cutsceneStyle_t), MALLOC_CAP_SPIRAM);
     style->title = (char*)heap_caps_calloc(strlen(title) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
@@ -94,6 +89,8 @@ void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileId
     style->isProtagonist = isProtagonist;
     style->drawSprite = drawSprite;
     style->drawTextBox = drawTextbox;
+    style->instrument = instrument;
+    style->octaveOvset = octaveOvset;
 
     // push to tail
     push(cutscene->styles, (void*)style);
@@ -119,6 +116,19 @@ void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool fl
         {
             cutscene->xOffset *= -1;
         }
+
+        // Copying and customizing the timbre should really only be done once
+        memcpy(&cutscene->timbre, getTimbreForProgram(false, 2, style->instrument), sizeof(midiTimbre_t));
+
+        cutscene->timbre.envelope.attackTime = 0;
+        // Using decay instead of release, with a sustain volume of 0, makes the note behave more like percussion
+        // (no note off is necessary)
+        // The control is set in increments of 10ms, so this is equivalent to setting release CC to 60
+        cutscene->timbre.envelope.decayTime = MS_TO_SAMPLES(600);
+        // Setting sustain volume to 0 means the note ends on its own after decay
+        cutscene->timbre.envelope.sustainVol = 0;
+        cutscene->timbre.envelope.releaseTime = 0;
+        // End timbre initialization stuff
     }
 
     // push to tail
@@ -160,28 +170,15 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         {
             if(cutscene->PB_A_previousFrame == false)
             {
-                // Copying and customizing the timbre should really only be done once
-                midiTimbre_t cutsceneTimbre;
-                memcpy(&cutsceneTimbre, getTimbreForProgram(false, 2, 30), sizeof(midiTimbre_t));
-
-                cutsceneTimbre.envelope.attackTime = 0;
-                // Using decay instead of release, with a sustain volume of 0, makes the note behave more like percussion
-                // (no note off is necessary)
-                // The control is set in increments of 10ms, so this is equivalent to setting release CC to 60
-                cutsceneTimbre.envelope.decayTime = MS_TO_SAMPLES(600);
-                // Setting sustain volume to 0 means the note ends on its own after decay
-                cutsceneTimbre.envelope.sustainVol = 0;
-                cutsceneTimbre.envelope.releaseTime = 0;
-                // End timbre initialization stuff
-
                 midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
                 // Play a random note within an octave at half velocity on channel 1
-                int songPitches[] = {58, 61, 63, 64, 65, 68, 70};//1
+                //int songPitches[] = {58, 61, 63, 64, 65, 68, 70};//1
+                int songPitches[] = {70, 68, 65, 63, 61};//1
                 //int songPitches[] = {60, 62, 67, 69, 72, 74};//2 bouncehause
-                uint8_t pitch            = randomInt(0, 6);
+                uint8_t pitch            = randomInt(0, 4);
 
                 // Setting the channel to something > 15 means the note will not be affected by a song changing MIDI controls.
-                soundNoteOn(bgm, 16, songPitches[pitch], 0x7F, &cutsceneTimbre, false);
+                soundNoteOn(bgm, 16, songPitches[pitch] + 12 * style->octaveOvset, 0x7F, &cutscene->timbre, false);
             }
             cutscene->PB_A_previousFrame = true;
             cutscene->PB_A_frameCounter++;
@@ -199,6 +196,30 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
                     loadWsg(style->spriteIdx + ((cutsceneLine_t*)cutscene->lines->first->val)->spriteVariation,
                     cutscene->sprite, true);
                     loadWsg(style->textBoxIdx, cutscene->textBox, true);
+
+                    // Copying and customizing the timbre should really only be done once
+                    memcpy(&cutscene->timbre, getTimbreForProgram(false, 2, style->instrument), sizeof(midiTimbre_t));
+
+                    cutscene->timbre.envelope.attackTime = 0;
+                    // Using decay instead of release, with a sustain volume of 0, makes the note behave more like percussion
+                    // (no note off is necessary)
+                    // The control is set in increments of 10ms, so this is equivalent to setting release CC to 60
+                    cutscene->timbre.envelope.decayTime = MS_TO_SAMPLES(600);
+                    // Setting sustain volume to 0 means the note ends on its own after decay
+                    cutscene->timbre.envelope.sustainVol = 0;
+                    cutscene->timbre.envelope.releaseTime = 0;
+                    // End timbre initialization stuff
+
+                    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+                    midiControlChange(player, 13, MCC_BANK_LSB, 2);
+
+                    
+                    //midiGmOn(player);
+                    
+                    //midiSetParameter(player, 13, false, 10, 2);
+                    midiSetProgram(player, 13, style->instrument);
+                    // midiControlChange(player, 13, MCC_SUSTENUTO_PEDAL, 80);
+                    // midiControlChange(player, 13, MCC_SOUND_RELEASE_TIME, 60);
                 }
                 else//This was the last line.
                 {
