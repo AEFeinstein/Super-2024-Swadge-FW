@@ -1247,7 +1247,9 @@ static const mg_EntityTileCollider_t entityTileCollider_bigma = {.bottomEdge = &
     MG_WSGSET_DEADEYE_CHIRPZI,
     MG_WSGSET_SEVER_YATAGA,
     MG_WSGSET_GRIND_PANGOLIN,
-    MG_WSGSET_FLARE_GRYFFYN
+    MG_WSGSET_FLARE_GRYFFYN,
+    MG_WSGSET_TRASH_MAN,
+    MG_WSGSET_BIGMA
 } mgWsgSetIndex_t;
 
 // Note: none of these names match actual colors
@@ -1272,23 +1274,23 @@ static const mgLeveldef_t leveldef[] = {
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
-     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
+     .bossBgmIndex       = MG_BGM_BOSS_KINETIC_DONUT,
      .bgColors           = bgGradientBlue},
     {.filename           = GRIND_BIN,
      .timeLimit          = 180,
-     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
+     .defaultWsgSetIndex = MG_WSGSET_GRIND_PANGOLIN,
      .mainBgmIndex       = MG_BGM_GRIND_PANGOLIN,
      .bossBgmIndex       = MG_BGM_BOSS_GRIND_PANGOLIN,
      .bgColors           = bgGradientPurple},
     {.filename           = SEVER_BIN,
      .timeLimit          = 180,
-     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
+     .defaultWsgSetIndex = MG_WSGSET_SEVER_YATAGA,
      .mainBgmIndex       = MG_BGM_SEVER_YAGATA,
      .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
      .bgColors           = bgGradientCyan},
     {.filename           = DUMP_BIN,
      .timeLimit          = 180,
-     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
+     .defaultWsgSetIndex = MG_WSGSET_TRASH_MAN,
      .mainBgmIndex       = MG_BGM_RIP_BARONESS,
      .bossBgmIndex       = MG_BGM_BOSS_TRASH_MAN,
      .bgColors           = bgGradientGreen},
