@@ -63,8 +63,7 @@ static void resetCutscene(cutscene_t* cutscene)
         cutsceneLine_t* line = (cutsceneLine_t*) shift(cutscene->lines);
         free(line->body);
     }
-    cutscene->listenForPB_A = false;
-    cutscene->PB_A_frameCounter = 0;
+    cutscene->nextIconAnimationTimer = 0;
     cutscene->xOffset = 280; //default start value for antagonists.
 }
 
@@ -162,35 +161,23 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         return;
     }
     cutsceneStyle_t* style = getCurrentStyle(cutscene);
-
+    if(cutscene->nextIconAnimationTimer <= 30)
+    {
+        cutscene->nextIconAnimationTimer++;
+    }
     //Extra hold required because sometimes click-unclick-click registers on the hardware from an intended single click.
-    if(!cutscene->isEnding && cutscene->xOffset == 0 && cutscene->listenForPB_A)
+    if(!cutscene->isEnding && cutscene->xOffset == 0)
     {
         if(btnState & PB_A)
         {
             if(cutscene->PB_A_previousFrame == false)
-            {
-                midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
-                // Play a random note within an octave at half velocity on channel 1
-                //int songPitches[] = {58, 61, 63, 64, 65, 68, 70};//1
-                int songPitches[] = {70, 68, 65, 63, 61};//1
-                //int songPitches[] = {60, 62, 67, 69, 72, 74};//2 bouncehause
-                uint8_t pitch            = randomInt(0, 4);
-
-                // Setting the channel to something > 15 means the note will not be affected by a song changing MIDI controls.
-                soundNoteOn(bgm, 16, songPitches[pitch] + 12 * style->octaveOvset, 0x7F, &cutscene->timbre, false);
-            }
-            cutscene->PB_A_previousFrame = true;
-            cutscene->PB_A_frameCounter++;
-            if(cutscene->PB_A_frameCounter > 30)
             {
                 //proceed to next cutscene line.
                 if(cutscene->lines->first != NULL && cutscene->lines->first->next != NULL)//There is at least onle line after this one.
                 {
                     free(((cutsceneLine_t*)shift(cutscene->lines))->body);
                     style = getCurrentStyle(cutscene);
-                    cutscene->listenForPB_A = false;
-                    cutscene->PB_A_frameCounter = 0;
+                    cutscene->nextIconAnimationTimer = 0;
 
                     //load the new character sprite into the existing wsg.
                     loadWsg(style->spriteIdx + ((cutsceneLine_t*)cutscene->lines->first->val)->spriteVariation,
@@ -220,26 +207,28 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
                     midiSetProgram(player, 13, style->instrument);
                     // midiControlChange(player, 13, MCC_SUSTENUTO_PEDAL, 80);
                     // midiControlChange(player, 13, MCC_SOUND_RELEASE_TIME, 60);
+
+                    midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
+                    // Play a random note within an octave at half velocity on channel 1
+                    //int songPitches[] = {58, 61, 63, 64, 65, 68, 70};//1
+                    int songPitches[] = {70, 68, 65, 63, 61};//1
+                    //int songPitches[] = {60, 62, 67, 69, 72, 74};//2 bouncehause
+                    uint8_t pitch = randomInt(0, 4);
+
+                    // Setting the channel to something > 15 means the note will not be affected by a song changing MIDI controls.
+                    soundNoteOn(bgm, 16, songPitches[pitch] + 12 * style->octaveOvset, 0x7F, &cutscene->timbre, false);
                 }
                 else//This was the last line.
                 {
                     cutscene->isEnding = true;
                 }
             }
+            cutscene->PB_A_previousFrame = true;
         }
         else
         {
             cutscene->PB_A_previousFrame = false;
-            cutscene->PB_A_frameCounter--;
-            if(cutscene->PB_A_frameCounter < 0)
-            {
-                cutscene->PB_A_frameCounter = 0;
-            }
         }
-    }
-    else if(!cutscene->isEnding && !(btnState & PB_A))
-    {
-        cutscene->listenForPB_A = true;
     }
 
     if(cutscene->isEnding)
@@ -270,6 +259,18 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         {
             cutscene->xOffset-=8;
         }
+        if(cutscene->xOffset == 0)
+        {
+            midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
+            // Play a random note within an octave at half velocity on channel 1
+            //int songPitches[] = {58, 61, 63, 64, 65, 68, 70};//1
+            int songPitches[] = {70, 68, 65, 63, 61};//1
+            //int songPitches[] = {60, 62, 67, 69, 72, 74};//2 bouncehause
+            uint8_t pitch = randomInt(0, 4);
+
+            // Setting the channel to something > 15 means the note will not be affected by a song changing MIDI controls.
+            soundNoteOn(bgm, 16, songPitches[pitch] + 12 * style->octaveOvset, 0x7F, &cutscene->timbre, false);
+        }
     }
 
     cutscene->blinkTimer+=8;
@@ -298,23 +299,22 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
         {
             drawWsgSimple(cutscene->textBox, 0, 137);
         }
-        int8_t iconFrame = (cutscene->PB_A_frameCounter / 8);
-        if(iconFrame > 3)
+        if(cutscene->nextIconAnimationTimer > 30)
         {
-            iconFrame = 3;
-        }
-        if(cutscene->PB_A_frameCounter > 0)
-        {
-            drawWsgSimpleScaled(cutscene->nextIcon[iconFrame], 248, 180, 2, 2);
+            drawWsgSimple(cutscene->nextIcon[0], 256, 190);
+            if (cutscene->blinkTimer > 0)
+            {
+                drawText(font, c253, "A", 260, 190);
+            }
         }
         else
         {
-            drawWsgSimple(cutscene->nextIcon[iconFrame], 256, 190);
-        }
-        if (cutscene->blinkTimer > 0 && cutscene->PB_A_frameCounter == 0)
-        {
-            //drawWsgSimple(&dData->spriteNext, 254 + (textColor == c525 ? 4 : 0), -dData->offsetY + 186);
-            drawText(font, c253, "A", 260, 190);
+            int8_t iconFrame = (cutscene->nextIconAnimationTimer / 8);
+            if(iconFrame > 3)
+                    {
+                        iconFrame = 3;
+                    }
+            drawWsgSimpleScaled(cutscene->nextIcon[iconFrame], 248, 180, 2, 2);
         }
     }
 

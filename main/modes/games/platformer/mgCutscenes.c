@@ -216,14 +216,14 @@ void bossIntroCutscene(mgGameData_t* gameData)
     {
         case 1://Intro Stage
         {
-            addCutsceneLine(gameData->cutscene, Sawtooth, "Show yourself!", false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma, "Still barking orders, I see. Some things never change.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "That voice... no way. That's... BIGMA?!", false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma, "You remember me. Good. Saves us time. Let's skip the reunion speech and get to the main event.", false, -1);
-            addCutsceneLine(gameData->cutscene, Sawtooth, "What happened to you? You built this place with us!", false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma, "Built it. Improved it. Outgrew it. I'm remixing this whole world. But you? You're just stuck on the opening track", false, -1);
-            addCutsceneLine(gameData->cutscene, Sawtooth, "You've lost it!", false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma, "No. I finally found my groove.", false, -1);
+            addCutsceneLine(gameData->cutscene, Sawtooth, "Show yourself!", false, 1);
+            addCutsceneLine(gameData->cutscene, Bigma, "Still barking orders, I see. Some things never change.", false, 1);
+            addCutsceneLine(gameData->cutscene, Pulse, "That voice... no way. That's... BIGMA?!", false, 0);
+            addCutsceneLine(gameData->cutscene, Bigma, "You remember me. Good. Saves us time. Let's skip the reunion speech and get to the main event.", false, 0);
+            addCutsceneLine(gameData->cutscene, Sawtooth, "What happened to you? You built this place with us!", false, 2);
+            addCutsceneLine(gameData->cutscene, Bigma, "Built it. Improved it. Outgrew it. I'm remixing this whole world. But you? You're just stuck on the opening track", false, 1);
+            addCutsceneLine(gameData->cutscene, Sawtooth, "You've lost it!", false, 2);
+            addCutsceneLine(gameData->cutscene, Bigma, "No. I finally found my groove.", false, 0);
             break;
         }
         case 2://The Bouncehaus
@@ -348,15 +348,18 @@ void bossOutroCutscene(mgGameData_t* gameData)
     {
         case 1://Intro Stage
         {
-            addCutsceneLine(gameData->cutscene, Pulse, "Huff... huff... You're fast, but I'm faster. It's over!", false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma, "Is it, now? You're still dancing to someone else's tune.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Let's end this. Come home, Bigma. We can fix this, together..", false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma, "Hmmm... A fresh start sounds nice...", false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma, "... but I work solo.", false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma, "ROOOAAAAAARRRRRRRR!", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Aghh! What... was that!?", false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma, "This was just a warm-up, Pulse! Catch me on the big stage-if you can keep the beat!", false, -1);
-            
+            addCutsceneLine(gameData->cutscene, Pulse, "Huff... huff... You're fast, but I'm faster. It's over!", false, 1);
+            addCutsceneLine(gameData->cutscene, Bigma, "Is it, now? You're still dancing to someone else's tune.", false, 1);
+            addCutsceneLine(gameData->cutscene, Pulse, "Let's end this. Come home, Bigma. We can fix this, together..", false, 2);
+            addCutsceneLine(gameData->cutscene, Bigma, "Hmmm... A fresh start sounds nice...", false, 0);
+            addCutsceneLine(gameData->cutscene, SystemText, "PULSE and BIGMA shake hands.", false, 0);
+            addCutsceneLine(gameData->cutscene, Bigma, "... but I work solo.", false, 1);
+            addCutsceneLine(gameData->cutscene, SystemText, "BIGMA lets out a corrupted Colossus Roar, stunning PULSE and SAWTOOTH.", false, 0);
+            addCutsceneLine(gameData->cutscene, Pulse, "Aghh! What... was that!?", false, 0);
+            addCutsceneLine(gameData->cutscene, SystemText, "BIGMA laughs and escapes in a digital blur.", false, 0);
+            addCutsceneLine(gameData->cutscene, Bigma, "This was just a warm-up, Pulse! Catch me on the big stage-if you can keep the beat", false, 1);
+            addCutsceneLine(gameData->cutscene, Pulse, "...Now what? He's gone...", false, 0);
+            addCutsceneLine(gameData->cutscene, Sawtooth, "Dont worry, while you two were fighting, I was remotely hacking Bigma’s systems to get his encryption key.", false, 2);
             break;
         }
         case 2://The Bouncehaus

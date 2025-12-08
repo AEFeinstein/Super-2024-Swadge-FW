@@ -59,8 +59,7 @@ typedef struct
     wsg_t* sprite;      ///< The character sprite.
     wsg_t* textBox;     ///< The textbox rendered over the character sprite.
     wsg_t* nextIcon[4]; ///< The nextIcon with a few animation frames.
-    bool listenForPB_A; ///< Used for detecting intentional A presses.
-    int8_t PB_A_frameCounter; ///< Increments while A is held.
+    int8_t nextIconAnimationTimer; ///< Increments and controls the next icon frame.
     bool PB_A_previousFrame; ///< True if A is held on the previous frame.
     bool isEnding;      ///< True as the character slides out of frame.
     uint8_t soundBank;  ///< 2 for mega man sounds. https://adam.feinste.in/Super-2024-Swadge-FW/MIDI.html#general-midi-bank-0
