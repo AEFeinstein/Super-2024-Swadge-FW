@@ -269,10 +269,10 @@ void platformerEnterMode(void)
         setMidiParams(platformer->gameData.cutscene, 1, 81, 1, 100, false);
         //Bigma
         addCutsceneStyle(platformer->gameData.cutscene, c310, BIGMA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Bigma", 2, false, true, true);
-        setMidiParams(platformer->gameData.cutscene, 2, 36, -2, 250, true);
+        setMidiParams(platformer->gameData.cutscene, 2, 36, -2, 250, false);
         //TrashMan
         addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 7, false, true, true);
-        setMidiParams(platformer->gameData.cutscene, 3, 36, -3, 2000, true);
+        setMidiParams(platformer->gameData.cutscene, 3, 36, -2, 2000, true);
         ///AbilityUnlocked
         addCutsceneStyle(platformer->gameData.cutscene, c454, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "", 1, true, true, false);
         setMidiParams(platformer->gameData.cutscene, 4, 11, 0, 250, false);
@@ -325,11 +325,17 @@ void platformerEnterMode(void)
         addCutsceneStyle(platformer->gameData.cutscene, c000, PERCY_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Percy", 1, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 20, 38, 1, 250, false);
         //Sunny
-        addCutsceneStyle(platformer->gameData.cutscene, c000, SUNNY_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sunny", 1, true, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c541, SUNNY_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sunny", 1, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 21, 81, 1, 100, true);
         //WarningMessage
         addCutsceneStyle(platformer->gameData.cutscene, c524, WARNING_MESSAGE_PORTRAIT_WSG, TEXTBOX_PULSE_WSG, "", 1, true, true, false);
         setMidiParams(platformer->gameData.cutscene, 22, 55, 0, 100, false);
+        //SawtoothPostReveal
+        addCutsceneStyle(platformer->gameData.cutscene, c541, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 4, true, true, true);
+        setMidiParams(platformer->gameData.cutscene, 21, 81, 1, 100, true);
+        //BlackScreen
+        addCutsceneStyle(platformer->gameData.cutscene, c555, BLACK_PORTRAIT_WSG, TEXTBOX_SAWTOOTH_WSG, "", 1, false, true, false);
+        setMidiParams(platformer->gameData.cutscene, 10, 119, 2, 100, true);
     }
 
     setFrameRateUs(16666);

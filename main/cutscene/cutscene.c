@@ -305,18 +305,18 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
     {
         cutscene->nextIconAnimationTimer++;
 
-        cutscene->bgm_headroom = 0x2000 + (cutscene->nextIconAnimationTimer - 4) * 157;
+        cutscene->bgm_headroom = (cutscene->nextIconAnimationTimer - 4) * 315;
         midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
         player->headroom = cutscene->bgm_headroom;
     }
-    //BGM volume fades to 25% during cutscene, and increases to normal at the end.
+    //BGM volume fades to 50% during cutscene, and increases to normal at the end.
     else
     {
         if(cutscene->isEnding)
         {
             if(cutscene->bgm_headroom < 0x4000)
             {
-                cutscene->bgm_headroom += 0x90;
+                cutscene->bgm_headroom += 0x111;
             }
             else
             {
@@ -325,13 +325,13 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         }
         else if(cutscene->xOffset != 0)
         {
-            if(cutscene->bgm_headroom > 0x3000)
+            if(cutscene->bgm_headroom > 0x2000)
             {
-                cutscene->bgm_headroom -= 0x90;
+                cutscene->bgm_headroom -= 0x111;
             }
             else
             {
-                cutscene->bgm_headroom = 0x3000;
+                cutscene->bgm_headroom = 0x2000;
             }
         }
         midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
