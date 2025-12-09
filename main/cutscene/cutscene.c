@@ -336,7 +336,7 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
     {
         cutscene->nextIconAnimationTimer++;
 
-        cutscene->bgm_headroom = (cutscene->nextIconAnimationTimer - 4) * 315;
+        cutscene->bgm_headroom = 0x1000 + (cutscene->nextIconAnimationTimer - 4) * 153;
         midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
         player->headroom = cutscene->bgm_headroom;
     }
