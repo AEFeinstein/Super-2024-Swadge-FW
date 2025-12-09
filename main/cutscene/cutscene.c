@@ -233,10 +233,7 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         return;
     }
     cutsceneStyle_t* style = getCurrentStyle(cutscene);
-    if(cutscene->nextIconAnimationTimer <= 30)
-    {
-        cutscene->nextIconAnimationTimer++;
-    }
+    cutscene->blinkTimer+=8;
     //Extra hold required because sometimes click-unclick-click registers on the hardware from an intended single click.
     if(!cutscene->isEnding && cutscene->xOffset == 0)
     {
@@ -287,25 +284,9 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         {
             cutscene->xOffset+=4;
         }
-
-        cutscene->bgm_headroom += 0x5B;
-        if(cutscene->bgm_headroom > 0x4000)
-        {
-            cutscene->bgm_headroom = 0x4000;
-        }
-        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-        player->headroom = cutscene->bgm_headroom;
     }
     else if(cutscene->xOffset != 0)
     {
-        cutscene->bgm_headroom -= 0x5B;
-        if(cutscene->bgm_headroom < 0x2AAA)//66% volume target
-        {
-            cutscene->bgm_headroom = 0x2AAA;
-        }
-        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-        player->headroom = cutscene->bgm_headroom;
-
         if(style->isProtagonist)
         {
             cutscene->xOffset+=8;
@@ -316,12 +297,46 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         }
         if(cutscene->xOffset == 0)
         {
-            player->headroom = cutscene->bgm_headroom;
             loadAndPlayCharacterSound(style, cutscene);
         }
     }
+    //Audio ducking BGM during character sound
+    if(cutscene->nextIconAnimationTimer <= 30)
+    {
+        cutscene->nextIconAnimationTimer++;
 
-    cutscene->blinkTimer+=8;
+        cutscene->bgm_headroom = 0x2000 + (cutscene->nextIconAnimationTimer - 4) * 157;
+        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+        player->headroom = cutscene->bgm_headroom;
+    }
+    //BGM volume fades to 25% during cutscene, and increases to normal at the end.
+    else
+    {
+        if(cutscene->isEnding)
+        {
+            if(cutscene->bgm_headroom < 0x4000)
+            {
+                cutscene->bgm_headroom += 0x90;
+            }
+            else
+            {
+                cutscene->bgm_headroom = 0x4000;
+            }
+        }
+        else if(cutscene->xOffset != 0)
+        {
+            if(cutscene->bgm_headroom > 0x3000)
+            {
+                cutscene->bgm_headroom -= 0x90;
+            }
+            else
+            {
+                cutscene->bgm_headroom = 0x3000;
+            }
+        }
+        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+        player->headroom = cutscene->bgm_headroom;
+    }
 }
 
 void drawCutscene(cutscene_t* cutscene, font_t* font)
