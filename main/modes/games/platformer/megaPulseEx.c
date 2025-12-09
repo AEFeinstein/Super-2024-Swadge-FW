@@ -325,7 +325,7 @@ void platformerEnterMode(void)
         addCutsceneStyle(platformer->gameData.cutscene, c000, PERCY_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Percy", 1, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 20, 38, 1, 250, false);
         //Sunny
-        addCutsceneStyle(platformer->gameData.cutscene, c000, SUNNY_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Sunny", 1, true, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c000, SUNNY_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sunny", 1, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 21, 81, 1, 100, true);
         //WarningMessage
         addCutsceneStyle(platformer->gameData.cutscene, c524, WARNING_MESSAGE_PORTRAIT_WSG, TEXTBOX_PULSE_WSG, "", 1, true, true, false);
