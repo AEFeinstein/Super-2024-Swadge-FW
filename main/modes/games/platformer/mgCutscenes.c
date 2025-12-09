@@ -6,8 +6,116 @@ typedef enum
     HankWaddle, GrindPangolin, DrainBat, SmashGorilla, SeverYagata, Jasper, Ember, Cho, Percy, Sunny, WarningMessage, SawtoothPostReveal, BlackScreen
 } cutsceneCharacters;
 
+static void setSongPitchesFromCurrentSong(mgGameData_t* gameData)
+{
+    int8_t bgm = gameData->changeBgm;
+    if(bgm == MG_BGM_NO_CHANGE)
+    {
+        bgm = gameData->currentBgm;
+    }
+    switch(gameData->currentBgm)
+    {
+        case MG_BGM_KINETIC_DONUT:
+        {
+            int16_t songPitches[] = {70, 68, 65, 63, 61, -1, -1, -1};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
+        case MG_BGM_BOSS_SEVER_YAGATA:
+        {
+            int16_t songPitches[] = {63, 68, 70, 73, -1, -1, -1, -1};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
+        case MG_BGM_GRIND_PANGOLIN:
+        {
+            int16_t songPitches[] = {62, 65, 67, 69, 72, 74, -1, -1};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
+        case MG_BGM_BOSS_GRIND_PANGOLIN:
+        {
+            int16_t songPitches[] = {65,67,68,70,72,-1,-1,-1};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
+        case MG_BGM_SEVER_YAGATA:
+        {
+            int16_t songPitches[] = {57,60,64,67,69,-1,-1,-1};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
+        case MG_BGM_RIP_BARONESS:
+        {
+            int16_t songPitches[] = {60, 62, 64, 65, 67, 70, 72, 74, 76};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
+        case MG_BGM_BOSS_TRASH_MAN:
+        {
+            int16_t songPitches[] = {59,62,64,66,65,69,71,-1};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
+        case MG_BGM_BOSS_BIGMA:
+        {
+            int16_t songPitches[] = {57,60,67,65,64,62,-1,-1};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
+        case MG_BGM_SMASH_GORILLA:
+        {
+            int16_t songPitches[] = {57,60,62,65,-1, -1, -1, -1};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
+        case MG_BGM_DEADEYE_CHIRPZI:
+        {
+            int16_t songPitches[] = {55,57,60,62,58,-1,-1,-1};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
+        case MG_BGM_BOSS_DEADEYE_CHIRPZI:
+        {
+            int16_t songPitches[] = {69,76,77,79,65,-1,-1,-1};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
+        case MG_BGM_DRAIN_BAT:
+        {
+            int16_t songPitches[] = {62,63,65,67,-1,-1,-1,-1};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
+        case MG_BGM_BOSS_DRAIN_BAT:
+        {
+            int16_t songPitches[] = {62,67,68,69,65,-1,-1,-1};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
+        case MG_BGM_FLARE_GRYFFYN:
+        {
+            int16_t songPitches[] = {64,67,69,71,-1,-1,-1,-1};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
+        case MG_BGM_BOSS_FLARE_GRYFFYN:
+        {
+            int16_t songPitches[] = {64,71,72,74,69,-1,-1,-1};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+}
+
 void stageStartCutscene(mgGameData_t* gameData)
 {
+    setSongPitchesFromCurrentSong(gameData);
+
     switch(gameData->level)
     {
         case 1://Intro Stage
@@ -178,6 +286,8 @@ void stageStartCutscene(mgGameData_t* gameData)
 
 void bossIntroCutscene(mgGameData_t* gameData)
 {
+    setSongPitchesFromCurrentSong(gameData);
+
     gameData->changeState = MG_ST_CUTSCENE;
     switch(gameData->level)
     {
@@ -328,6 +438,8 @@ void bossIntroCutscene(mgGameData_t* gameData)
 
 void bossOutroCutscene(mgGameData_t* gameData)
 {
+    setSongPitchesFromCurrentSong(gameData);
+
     gameData->changeState = MG_ST_CUTSCENE;
     switch(gameData->level)
     {

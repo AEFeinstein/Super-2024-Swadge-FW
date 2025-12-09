@@ -261,6 +261,7 @@ void platformerEnterMode(void)
     if(platformer->gameData.cutscene == NULL)
     {
         platformer->gameData.cutscene = initCutscene(goToReadyScreen, CUTSCENE_NEXT_0_WSG, 2);
+        
         //Pulse
         addCutsceneStyle(platformer->gameData.cutscene, c000, PULSE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Pulse", 5, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 0, 48, 0, 1000, false);
@@ -269,10 +270,10 @@ void platformerEnterMode(void)
         setMidiParams(platformer->gameData.cutscene, 1, 81, 1, 100, false);
         //Bigma
         addCutsceneStyle(platformer->gameData.cutscene, c310, BIGMA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Bigma", 2, false, true, true);
-        setMidiParams(platformer->gameData.cutscene, 2, 36, -2, 250, false);
+        setMidiParams(platformer->gameData.cutscene, 3, 80, -2, 2000, true);
         //TrashMan
         addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 7, false, true, true);
-        setMidiParams(platformer->gameData.cutscene, 3, 36, -2, 2000, true);
+        setMidiParams(platformer->gameData.cutscene, 2, 36, -2, 250, false);
         ///AbilityUnlocked
         addCutsceneStyle(platformer->gameData.cutscene, c454, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "", 1, true, true, false);
         setMidiParams(platformer->gameData.cutscene, 4, 11, 0, 250, false);

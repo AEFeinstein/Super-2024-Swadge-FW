@@ -47,6 +47,15 @@ cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx, uint8_t s
     cutscene->xOffset = 280; //default start value for antagonists.
     cutscene->nextIconAnimationTimer = 30;
     cutscene->bgm_headroom = 0x4000;
+    //default is C major scale pitches
+    cutscene->songPitches[0] = 60;
+    cutscene->songPitches[1] = 62;
+    cutscene->songPitches[2] = 64;
+    cutscene->songPitches[3] = 65;
+    cutscene->songPitches[4] = 67; 
+    cutscene->songPitches[5] = 69;
+    cutscene->songPitches[6] = 71;
+    cutscene->songPitches[7] = 72;
 
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_SFX);
     midiPlayerReset(player);
@@ -111,16 +120,17 @@ static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutsce
 
     player->headroom = 0x8000;//max volume
 
-    //int songPitches[] = {58, 61, 63, 64, 65, 68, 70};//1
-    int songPitches[] = {70, 68, 65, 63, 61};//1
-    //int songPitches[] = {60, 62, 67, 69, 72, 74};//2 bouncehause
     // Setting the channel to something > 15 means the note will not be affected by a song changing MIDI controls.
-    soundNoteOn(player, 13, songPitches[pitchIdx] + 12 * style->octaveOvset, 127, &cutscene->timbre, false);
+    soundNoteOn(player, 13, cutscene->songPitches[pitchIdx] + 12 * style->octaveOvset, 127, &cutscene->timbre, false);
 }
 
 static void loadAndPlayRandomCharacterSound(cutsceneStyle_t* style, cutscene_t* cutscene)
 {
-    uint8_t pitchIdx = randomInt(0, 4);
+    uint8_t pitchIdx = randomInt(0, 8);
+    while(cutscene->songPitches[pitchIdx] == -1)
+    {
+        pitchIdx = randomInt(0, 8);
+    }
     loadAndPlayCharacterSound(style, cutscene, pitchIdx);
 }
 
@@ -183,6 +193,14 @@ void setMidiParams(cutscene_t* cutscene, uint8_t styleIdx, uint8_t instrument, i
     style->octaveOvset = octaveOvset;
     style->noteLength = noteLength;
     style->slowAttack = slowAttack;
+}
+
+void setSongPitches(cutscene_t* cutscene, int16_t songPitches[8])
+{
+    for(int i = 0; i < 8; i++)
+    {
+        cutscene->songPitches[i] = songPitches[i];
+    }
 }
 
 void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation)

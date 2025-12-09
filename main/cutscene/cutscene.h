@@ -67,12 +67,14 @@ typedef struct
     midiTimbre_t timbre; ///< Lots of midi params for character sound playback.
     int32_t bgm_headroom; ///< The volume of background music. Fades 33% lower during cutscenes.
     int16_t btnState_previousFrame; ///< The btnState of the previous frame.
+    int16_t songPitches[8]; ///< Up to eight pitches and no less than four pitches that harmonize with a song. Any pitches in idx 4 thru 7 may be -1 to be unused.
 } cutscene_t;
 
 cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx, uint8_t soundBank);
 void removeAllStyles(cutscene_t* cutscene);
 void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t color, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numPoseVariations, bool stageLeft, bool drawSprite, bool drawTextbox);
 void setMidiParams(cutscene_t* cutscene, uint8_t styleIdx, uint8_t instrument, int8_t octaveOvset, uint16_t noteLength, bool slowAttack);
+void setSongPitches(cutscene_t* cutscene, int16_t songPitches[8]);
 void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation);
 void updateCutscene(cutscene_t* cutscene, int16_t btnState);
 void drawCutscene(cutscene_t* cutscene, font_t* font);
