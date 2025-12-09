@@ -143,7 +143,298 @@ static const char str_brightness[] = "Touch: LED Brightness:";
 static const char str_stop[]       = ": Stop";
 static const char str_play[]       = ": Play";
 
+static const jukeboxSong_t music_roboRunner[] = {
+    {
+        .fIdx = ROBO_RUNNER_BGM_MID,
+        .name = "Robo Runner BGM",
+    },
+};
+
+static const jukeboxSong_t music_vectorTanks[] = {
+    {
+        .fIdx = VT_FIGHT_ON_MID,
+        .name = "Fight On!",
+    },
+    {
+        .fIdx = VT_FUNK_MID,
+        .name = "Tanks Funk",
+    },
+    {
+        .fIdx = VT_POP_MID,
+        .name = "Tanks Pop",
+    },
+    {
+        .fIdx = VT_READY_AIM_FIRE_MID,
+        .name = "Ready, Aim, Fire!",
+    },
+    {
+        .fIdx = VT_RISK_MID,
+        .name = "Risk",
+    },
+    {
+        .fIdx = VT_VECTOR_TANK_MID,
+        .name = "Vector Tank",
+    },
+};
+
+static const jukeboxSong_t music_cosplayCrunch[] = {
+    {
+        .fIdx = CC_PACKAGE_GET_MID,
+        .name = "Package Get",
+    },
+    {
+        .fIdx = COSPLAY_CRUNCH_BGM_MID,
+        .name = "Cosplay Crunch BGM",
+    },
+    {
+        .fIdx = FAIRY_FOUNTAIN_MID,
+        .name = "Fairy Fountain",
+    },
+    {
+        .fIdx = HD_CREDITS_MID,
+        .name = "Hot Dog Credits",
+    },
+};
+
+static const jukeboxSong_t music_picross[] = {
+    {
+        .fIdx = LULLABY_IN_NUMBERS_MID,
+        .name = "Lullaby in Numbers",
+    },
+};
+
+static const jukeboxSong_t music_megaPulse[] = {
+    {
+        .fIdx = BGM_BOSS_TRASH_MAN_MID,
+        .name = "BGM_BOSS_TRASH_MAN_MID",
+    },
+    {
+        .fIdx = BGM_BOSS_BIGMA_MID,
+        .name = "BGM_BOSS_BIGMA_MID",
+    },
+    {
+        .fIdx = BGM_STAGE_SELECT_MID,
+        .name = "BGM_STAGE_SELECT_MID",
+    },
+    {
+        .fIdx = BGM_NAME_ENTRY_MID,
+        .name = "BGM_NAME_ENTRY_MID",
+    },
+    {
+        .fIdx = BGM_FLARE_GRYFFYN_MID,
+        .name = "BGM_FLARE_GRYFFYN_MID",
+    },
+    {
+        .fIdx = BGM_BOSS_FLARE_GRIFFIN_MID,
+        .name = "BGM_BOSS_FLARE_GRIFFIN_MID",
+    },
+    {
+        .fIdx = BGM_GRIND_PANGOLIN_MID,
+        .name = "BGM_GRIND_PANGOLIN_MID",
+    },
+    {
+        .fIdx = BGM_BOSS_GRIND_PANGOLIN_MID,
+        .name = "BGM_BOSS_GRIND_PANGOLIN_MID",
+    },
+    {
+        .fIdx = BGM_KINETIC_DONUT_MID,
+        .name = "BGM_KINETIC_DONUT_MID",
+    },
+    {
+        .fIdx = BGM_BOSS_KINETIC_DONUT_MID,
+        .name = "BGM_BOSS_KINETIC_DONUT_MID",
+    },
+    {
+        .fIdx = BGM_RIP_BARONESS_MID,
+        .name = "BGM_RIP_BARONESS_MID",
+    },
+    {
+        .fIdx = BGM_BOSS_HANK_WADDLE_MID,
+        .name = "BGM_BOSS_HANK_WADDLE_MID",
+    },
+    {
+        .fIdx = BGM_SEVER_YAGATA_MID,
+        .name = "BGM_SEVER_YAGATA_MID",
+    },
+    {
+        .fIdx = BGM_BOSS_SEVER_YAGATA_MID,
+        .name = "BGM_BOSS_SEVER_YAGATA_MID",
+    },
+    {
+        .fIdx = BGM_SMASH_GORILLA_MID,
+        .name = "BGM_SMASH_GORILLA_MID",
+    },
+    {
+        .fIdx = BGM_BOSS_SMASH_GORILLA_MID,
+        .name = "BGM_BOSS_SMASH_GORILLA_MID",
+    },
+    {
+        .fIdx = BGM_DEADEYE_CHIRPZI_MID,
+        .name = "BGM_DEADEYE_CHIRPZI_MID",
+    },
+    {
+        .fIdx = BGM_BOSS_DEADEYE_CHIRPZI_MID,
+        .name = "BGM_BOSS_DEADEYE_CHIRPZI_MID",
+    },
+    {
+        .fIdx = BGM_DRAIN_BAT_MID,
+        .name = "BGM_DRAIN_BAT_MID",
+    },
+    {
+        .fIdx = BGM_BOSS_DRAIN_BAT_MID,
+        .name = "BGM_BOSS_DRAIN_BAT_MID",
+    },
+    {
+        .fIdx = BGM_GAME_OVER_MID,
+        .name = "BGM_GAME_OVER_MID",
+    },
+    {
+        .fIdx = BGM_INTRO_MID,
+        .name = "BGM_INTRO_MID",
+    },
+    {
+        .fIdx = SND_1UP_MID,
+        .name = "SND_1UP_MID",
+    },
+    {
+        .fIdx = SND_BREAK_MID,
+        .name = "SND_BREAK_MID",
+    },
+    {
+        .fIdx = SND_CHECKPOINT_MID,
+        .name = "SND_CHECKPOINT_MID",
+    },
+    {
+        .fIdx = SND_COIN_MID,
+        .name = "SND_COIN_MID",
+    },
+    {
+        .fIdx = SND_DIE_MID,
+        .name = "SND_DIE_MID",
+    },
+    {
+        .fIdx = SND_HIT_MID,
+        .name = "SND_HIT_MID",
+    },
+    {
+        .fIdx = SND_HURT_MID,
+        .name = "SND_HURT_MID",
+    },
+    {
+        .fIdx = SND_JUMP_1_MID,
+        .name = "SND_JUMP_1_MID",
+    },
+    {
+        .fIdx = SND_JUMP_2_MID,
+        .name = "SND_JUMP_2_MID",
+    },
+    {
+        .fIdx = SND_JUMP_3_MID,
+        .name = "SND_JUMP_3_MID",
+    },
+    {
+        .fIdx = SND_LEVEL_CLEAR_A_MID,
+        .name = "SND_LEVEL_CLEAR_A_MID",
+    },
+    {
+        .fIdx = SND_LEVEL_CLEAR_B_MID,
+        .name = "SND_LEVEL_CLEAR_B_MID",
+    },
+    {
+        .fIdx = SND_LEVEL_CLEAR_C_MID,
+        .name = "SND_LEVEL_CLEAR_C_MID",
+    },
+    {
+        .fIdx = SND_LEVEL_CLEAR_D_MID,
+        .name = "SND_LEVEL_CLEAR_D_MID",
+    },
+    {
+        .fIdx = SND_LEVEL_CLEAR_S_MID,
+        .name = "SND_LEVEL_CLEAR_S_MID",
+    },
+    {
+        .fIdx = SND_MENU_CONFIRM_MID,
+        .name = "SND_MENU_CONFIRM_MID",
+    },
+    {
+        .fIdx = SND_MENU_DENY_MID,
+        .name = "SND_MENU_DENY_MID",
+    },
+    {
+        .fIdx = SND_MENU_SELECT_MID,
+        .name = "SND_MENU_SELECT_MID",
+    },
+    {
+        .fIdx = SND_OUT_OF_TIME_MID,
+        .name = "SND_OUT_OF_TIME_MID",
+    },
+    {
+        .fIdx = SND_PAUSE_MID,
+        .name = "SND_PAUSE_MID",
+    },
+    {
+        .fIdx = SND_POWER_UP_MID,
+        .name = "SND_POWER_UP_MID",
+    },
+    {
+        .fIdx = SND_SQUISH_MID,
+        .name = "SND_SQUISH_MID",
+    },
+    {
+        .fIdx = SND_TALLY_MID,
+        .name = "SND_TALLY_MID",
+    },
+    {
+        .fIdx = SND_WARP_MID,
+        .name = "SND_WARP_MID",
+    },
+    {
+        .fIdx = SND_WAVE_BALL_MID,
+        .name = "SND_WAVE_BALL_MID",
+    },
+};
+
 static const jukeboxSong_t music_credits[] = {
+    {
+        .fIdx = HD_CREDITS_MID,
+        .name = "Hot Dog Credits",
+    },
+};
+
+static const jukeboxSong_t music_tutorial[] = {
+    {
+        .fIdx = INTROJINGLE_MID,
+        .name = "Intro Jingle",
+    },
+    {
+        .fIdx = SPK_TEST_MID,
+        .name = "Speaker Test",
+    },
+};
+
+static const jukeboxSong_t music_mainMenu[] = {
+    {
+        .fIdx = SECRET_MID,
+        .name = "Secret",
+    },
+};
+
+static const jukeboxSong_t music_swadgesona[] = {
+    {
+        .fIdx = SWSN_CHOOSE_SFX_MID,
+        .name = "Choose SFX",
+    },
+    {
+        .fIdx = SWSN_MOVE_SFX_MID,
+        .name = "Choose SFX",
+    },
+    {
+        .fIdx = SWSN_CREATOR_BGM1_MID,
+        .name = "Creator BGM",
+    },
+};
+
+static const jukeboxSong_t music_factoryTest[] = {
     {
         .fIdx = HD_CREDITS_MID,
         .name = "Hot Dog Credits",
@@ -152,9 +443,72 @@ static const jukeboxSong_t music_credits[] = {
 
 static const jukeboxCategory_t bgmCategories[] = {
     {
+        .category    = &roboRunnerMode,
+        .songs       = music_roboRunner,
+        .numSongs    = ARRAY_SIZE(music_roboRunner),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
+        .category    = &artilleryMode,
+        .songs       = music_vectorTanks,
+        .numSongs    = ARRAY_SIZE(music_vectorTanks),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
+        .category    = &cosCrunchMode,
+        .songs       = music_cosplayCrunch,
+        .numSongs    = ARRAY_SIZE(music_cosplayCrunch),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
+        .category    = &modePicross,
+        .songs       = music_picross,
+        .numSongs    = ARRAY_SIZE(music_picross),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
+        .category    = &modePlatformer,
+        .songs       = music_megaPulse,
+        .numSongs    = ARRAY_SIZE(music_megaPulse),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
         .category    = &modeCredits,
         .songs       = music_credits,
         .numSongs    = ARRAY_SIZE(music_credits),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
+        .category    = &introMode,
+        .songs       = music_tutorial,
+        .numSongs    = ARRAY_SIZE(music_tutorial),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
+        .category    = &mainMenuMode,
+        .songs       = music_mainMenu,
+        .numSongs    = ARRAY_SIZE(music_mainMenu),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
+        .category    = &swsnCreatorMode,
+        .songs       = music_swadgesona,
+        .numSongs    = ARRAY_SIZE(music_swadgesona),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
+        .category    = &factoryTestMode,
+        .songs       = music_factoryTest,
+        .numSongs    = ARRAY_SIZE(music_factoryTest),
         .generalMidi = true,
         .shouldLoop  = true,
     },
@@ -744,13 +1098,17 @@ midiFile_t** jukeboxLoadCategories(const jukeboxCategory_t* categoryArray, uint8
     // For each category
     for (int categoryIdx = 0; categoryIdx < numCategories; categoryIdx++)
     {
+        // Convenience
+        const jukeboxCategory_t* category = &categoryArray[categoryIdx];
+
         // Allocate an array of midiFile_t
-        loadedMidis[categoryIdx] = heap_caps_calloc(categoryArray->numSongs, sizeof(midiFile_t), MALLOC_CAP_SPIRAM);
+        loadedMidis[categoryIdx] = heap_caps_calloc(category->numSongs, sizeof(midiFile_t), MALLOC_CAP_SPIRAM);
+
         // For each song
-        for (int songIdx = 0; songIdx < categoryArray[categoryIdx].numSongs; songIdx++)
+        for (int songIdx = 0; songIdx < category->numSongs; songIdx++)
         {
             // Load it
-            loadMidiFile(categoryArray[categoryIdx].songs[songIdx].fIdx, &loadedMidis[categoryIdx][songIdx], true);
+            loadMidiFile(category->songs[songIdx].fIdx, &loadedMidis[categoryIdx][songIdx], true);
         }
     }
     return loadedMidis;
