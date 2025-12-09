@@ -9,12 +9,12 @@
 #include "cutscene.h"
 #include "esp_random.h"
 #include "fs_wsg.h"
-
-#include "shapes.h"
+//#include "shapes.h"//uncomment to draw rects around text for debug
 
 //==============================================================================
 // Function Prototypes
 //==============================================================================
+
 static void resetCutscene(cutscene_t* cutscene);
 static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutscene, uint8_t pitchIdx);
 static void loadAndPlayRandomCharacterSound(cutsceneStyle_t* style, cutscene_t* cutscene);
@@ -23,11 +23,17 @@ static uint8_t getRandomVariationFromStyle(cutsceneStyle_t* style);
 static uint8_t getRandomVariationFromStyleIdx(cutscene_t* cutscene, uint8_t styleIdx);
 static cutsceneStyle_t* getCurrentStyle(cutscene_t* cutscene);
 
+
+//==============================================================================
+// Functions
+//==============================================================================
+
 /**
- * @brief 
+ * @brief Required to begin a cutscene.
  * 
- * @param cbFunc 
- * @param nextIconIdx 
+ * @param cbFunc A callback which is called when this cutscene concludes. Use it to unpause your game loop.
+ * @param nextIconIdx The file index of the first of four frames of the nextIcon graphic.
+ * @param soundBank 0 for general midi, 1 for MAGFest, 2 for MegaManX
  * @return cutscene_t* 
  */
 cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx, uint8_t soundBank)
@@ -64,6 +70,11 @@ cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx, uint8_t s
     return cutscene;
 }
 
+/**
+ * @brief For internal use only as the cutscene is ending. Gets the cutscene object ready to be used again.
+ * 
+ * @param cutscene Pointer to the cutscene_t
+ */
 static void resetCutscene(cutscene_t* cutscene)
 {
     cutscene->a_down = false;
@@ -84,6 +95,13 @@ static void resetCutscene(cutscene_t* cutscene)
     player->headroom = 0x4000;
 }
 
+/**
+ * @brief For internal use only. Plays a character sound.
+ * 
+ * @param style Helps determine the sound with many midi parameters.
+ * @param cutscene Pointer to the cutscene_t
+ * @param pitchIdx An index into the songPitches stored with the cutscene
+ */
 static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutscene, uint8_t pitchIdx)
 {
     cutscene->nextIconAnimationTimer = 4;
@@ -124,6 +142,12 @@ static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutsce
     soundNoteOn(player, 13, cutscene->songPitches[pitchIdx] + 12 * style->octaveOvset, 127, &cutscene->timbre, false);
 }
 
+/**
+ * @brief For internal use only. Plays a pseudo-randomly pitched character sound.
+ * 
+ * @param style Helps determine the sound with many midi parameters.
+ * @param cutscene Pointer to the cutscene_t
+ */
 static void loadAndPlayRandomCharacterSound(cutsceneStyle_t* style, cutscene_t* cutscene)
 {
     uint8_t pitchIdx = randomInt(0, 7);
@@ -134,6 +158,11 @@ static void loadAndPlayRandomCharacterSound(cutsceneStyle_t* style, cutscene_t* 
     loadAndPlayCharacterSound(style, cutscene, pitchIdx);
 }
 
+/**
+ * @brief Removes all styles. Unlikely to be used by anybody else since you add all your styles at the start of the game.
+ * 
+ * @param cutscene Pointer to the cutscene_t
+ */
 void removeAllStyles(cutscene_t* cutscene)
 {
     while(cutscene->styles->first != NULL)
@@ -143,7 +172,20 @@ void removeAllStyles(cutscene_t* cutscene)
     }
 }
 
-void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numSpriteVariations, bool isProtagonist, bool drawSprite, bool drawTextbox)
+/**
+ * @brief Adds a cutscene style to an internally managed list.
+ * 
+ * @param cutscene Pointer to the cutscene_t
+ * @param textColor The color to draw text
+ * @param spriteIdx The file index of the first pose of a character
+ * @param textBoxIdx The file index of the textbox sprite
+ * @param title The text drawn for a character's name
+ * @param numSpriteVariations The number of sprites/poses of this character
+ * @param stageLeft If false then this character will slide on and off the right side of the screen. True for left side.
+ * @param drawSprite If true, then the character pose is drawn. Use false to draw nothing.
+ * @param drawTextbox If true, then the textbox sprite is drawn behind the text. Use false to draw just the text with no textbox.
+ */
+void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numSpriteVariations, bool stageLeft, bool drawSprite, bool drawTextbox)
 {
     cutsceneStyle_t* style = (cutsceneStyle_t*)heap_caps_calloc(1, sizeof(cutsceneStyle_t), MALLOC_CAP_SPIRAM);
     style->title = (char*)heap_caps_calloc(strlen(title) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
@@ -152,7 +194,7 @@ void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileId
     style->spriteIdx = spriteIdx;
     style->textBoxIdx = textBoxIdx;
     style->numSpriteVariations = numSpriteVariations;
-    style->isProtagonist = isProtagonist;
+    style->stageLeft = stageLeft;
     style->drawSprite = drawSprite;
     style->drawTextBox = drawTextbox;
     //Set some default midi value based on the provided bank
@@ -186,6 +228,16 @@ void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileId
     push(cutscene->styles, (void*)style);
 }
 
+/**
+ * @brief Set the Midi Params object
+ * 
+ * @param cutscene Pointer to the cutscene_t
+ * @param styleIdx  An index into the styles list
+ * @param instrument An instrument program #
+ * @param octaveOvset The number of octaves to transpose the sounds up or down. Zero for no transposition.
+ * @param noteLength Vaguely the note length, but not precisely.
+ * @param slowAttack Set to true to make this character sound really loose. Set to false to sound snappy.
+ */
 void setMidiParams(cutscene_t* cutscene, uint8_t styleIdx, uint8_t instrument, int8_t octaveOvset, uint16_t noteLength, bool slowAttack)
 {
     cutsceneStyle_t* style = getAtIndex(cutscene->styles, styleIdx);
@@ -195,6 +247,12 @@ void setMidiParams(cutscene_t* cutscene, uint8_t styleIdx, uint8_t instrument, i
     style->slowAttack = slowAttack;
 }
 
+/**
+ * @brief Set the Song Pitches object
+ * 
+ * @param cutscene Pointer to the cutscene_t
+ * @param songPitches No less than four midi pitches and no more than 8 that may play well against other background music. Any -1's will be ignored in the array.
+ */
 void setSongPitches(cutscene_t* cutscene, int16_t songPitches[8])
 {
     for(int i = 0; i < 8; i++)
@@ -203,6 +261,15 @@ void setSongPitches(cutscene_t* cutscene, int16_t songPitches[8])
     }
 }
 
+/**
+ * @brief Adds a dialogue line to the cutscene
+ * 
+ * @param cutscene Pointer to the cutscene
+ * @param styleIdx Index into the styles list
+ * @param body The dialogue text to draw
+ * @param flipHorizontal true to flip the character pose horizontally
+ * @param spriteVariation The specific pose sprite, counted up from the main pose sprite.
+ */
 void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation)
 {
     cutsceneLine_t* line = (cutsceneLine_t*)heap_caps_calloc(1, sizeof(cutsceneLine_t), MALLOC_CAP_SPIRAM);
@@ -229,26 +296,58 @@ void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool fl
     push(cutscene->lines, (void*)line);
 }
 
+/**
+ * @brief For internal use only. Get a random integer.
+ * 
+ * @param lowerBoundInclusive The lower inclusive bound
+ * @param upperBoundInclusive The upper inclusive bound
+ * @return int 
+ */
 static int randomInt(int lowerBoundInclusive, int upperBoundInclusive)
 {
     return esp_random() % (upperBoundInclusive - lowerBoundInclusive + 1) + lowerBoundInclusive;
 }
 
+/**
+ * @brief For internal use only. Gets a random character pose #
+ * 
+ * @param style Pointer to the cutsceneStyle_t
+ * @return uint8_t 
+ */
 static uint8_t getRandomVariationFromStyle(cutsceneStyle_t* style)
 {
     return randomInt(0,style->numSpriteVariations - 1);
 }
 
+/**
+ * @brief For internal use only. Gets a random character pose #
+ * 
+ * @param cutscene Pointer to the cutscene_t
+ * @param styleIdx Index into the styles list
+ * @return uint8_t 
+ */
 static uint8_t getRandomVariationFromStyleIdx(cutscene_t* cutscene, uint8_t styleIdx)
 {
     return getRandomVariationFromStyle((cutsceneStyle_t*)getAtIndex(cutscene->styles, styleIdx));
 }
 
+/**
+ * @brief For internal use only. Get the Current Style object
+ * 
+ * @param cutscene Pointer to the cutscene_t
+ * @return cutsceneStyle_t* 
+ */
 static cutsceneStyle_t* getCurrentStyle(cutscene_t* cutscene)
 {
     return getAtIndex(cutscene->styles, ((cutsceneLine_t*)cutscene->lines->first->val)->styleIdx);
 }
 
+/**
+ * @brief The update function of the cutscene must be called regularly from your game loop.
+ * 
+ * @param cutscene Pointer to the cutscene_t
+ * @param btnState Button state
+ */
 void updateCutscene(cutscene_t* cutscene, int16_t btnState)
 {
     if(cutscene->lines->first == NULL)
@@ -371,6 +470,12 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
     cutscene->btnState_previousFrame = btnState;
 }
 
+/**
+ * @brief The draw function of the cutscene must be called regularly from your draw loop. Update should typically be called before draw.
+ * 
+ * @param cutscene Pointer to the cutscene_t
+ * @param font Font to draw the character name and dialogue text
+ */
 void drawCutscene(cutscene_t* cutscene, font_t* font)
 {
     if(cutscene->lines->first == NULL)
@@ -427,6 +532,11 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
     }
 }
 
+/**
+ * @brief Frees data. Required to call where your mode exits or when done with cutscene_t. Remember you may recycle one cutscene_t for many cutscenes and deinit during Mode Exit.
+ * 
+ * @param cutscene 
+ */
 void deinitCutscene(cutscene_t* cutscene)
 {
     resetCutscene(cutscene);

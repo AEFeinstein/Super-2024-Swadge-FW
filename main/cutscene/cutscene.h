@@ -1,3 +1,31 @@
+/*! \file cutscene.h
+ *
+ * \section cutscene_design Design Philosophy
+ *
+ * A cutscene takes the data in the cutscene_t data structure and renders it to the display. Using cutscene should feel similar in some ways to using menuMegaRenderer,
+ * and it handles all its own memory management. You shouldn't need to malloc/calloc any of the structs found in cutscene.h.
+ * The cutscenes also make sounds as you press A to progress, or mash the arrow keys to jam out. Many default midi values are internally set up for you to quickly get testing.
+ * Although a musically inclined ear would do well to tactfully assign certain instruments and effects to characters and set pitches that can work nicely with background music.
+ * \section cutscene Usage
+ *
+ * Start with initCutscene(), then add any number of styles with addCutsceneStyle(). Generally think of a style as a character. It has its name, various poses, and a certain sound.
+ * Styles can also be used in other clever ways such as an incoming transmission, or getting a new ability!
+ * 
+ * Consider calling setMidiParams() in a way that meshes with other background music. You can call it again when the BGM changes, and all the parameters will be overwritten.
+ * But this function is completely optional. Midi sounds will be populated with some kind of noise by default.
+ * 
+ * Add any number of dialogue lines with addCutsceneLine(). A list will be internally shifted as each line is disposed with the A press.
+ * At any point later in your game, simply add a bunch of other dialogue lines to do yet another cutscene.
+ * 
+ * Add updateCutscene() to your own update loop. And add drawCutscene() to your own draw loop.
+ * 
+ * When you are all done with cutscenes, typically on Mode Exit, you must call deinitCutscene().
+ *
+ * \section cutscene_example Example
+ *
+ * See megaPulseEx.c and mgCutscenes.c and to see how cutscenes were used in the 2026 Mega Pulse X platformer.
+ */
+
 #ifndef _CUTSCENE_H_
 #define _CUTSCENE_H_
 
@@ -28,17 +56,17 @@ typedef struct
 } cutsceneLine_t;
 
 /**
- * @brief Style specifications for a cutsceneLine such as text color, character sprite, and midi notes
+ * @brief Style specifications to draw, and sound a cutsceneLine such as text color, character sprite, and midi notes.
  * 
  */
 typedef struct
 {
     char* title; ///< The speaker's name displayed on screen.
-    paletteColor_t textColor;
-    cnfsFileIdx_t spriteIdx;
-    cnfsFileIdx_t textBoxIdx;
+    paletteColor_t textColor; ///< The color of the text.
+    cnfsFileIdx_t spriteIdx; ///< The file index of the character sprite.
+    cnfsFileIdx_t textBoxIdx; ///< The file index of the textbox sprite.
     uint8_t numSpriteVariations; ///<A random number in range of this will be rolled and added to the spriteIdx. Provide 1 for no variation;
-    bool isProtagonist; ///<If true, then the sprite enters and leaves the left side of the screen. If false, then the right side.
+    bool stageLeft; ///<If true, then the sprite enters and leaves the left side of the screen. If false, then the right side.
     bool drawSprite;    ///< Set false to draw no sprite.
     bool drawTextBox;   ///< Set false to draw no textbox.
     uint8_t instrument; ///< Program# of the instrument when A is pressed.
@@ -48,7 +76,7 @@ typedef struct
 } cutsceneStyle_t;
 
 /**
- * @brief The underlying data for a cutscene. This fundamentally is a list of cutsceneLine_t
+ * @brief The underlying data for a cutscene. A cutscene is fundamentally made of a list of cutsceneLine_t. With other variables that can be stored in one place here.
  */
 typedef struct
 {
