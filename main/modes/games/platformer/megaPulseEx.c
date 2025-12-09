@@ -870,7 +870,10 @@ void updateReadyScreen(platformer_t* self)
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 60) // 179)
     {
-        soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
+        if(globalMidiPlayerGet(MIDI_BGM)->paused)
+        {
+            soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
+        }
         self->update = &updateGame;
     }
 
