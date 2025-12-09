@@ -126,10 +126,10 @@ static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutsce
 
 static void loadAndPlayRandomCharacterSound(cutsceneStyle_t* style, cutscene_t* cutscene)
 {
-    uint8_t pitchIdx = randomInt(0, 8);
+    uint8_t pitchIdx = randomInt(0, 7);
     while(cutscene->songPitches[pitchIdx] == -1)
     {
-        pitchIdx = randomInt(0, 8);
+        pitchIdx = randomInt(0, 7);
     }
     loadAndPlayCharacterSound(style, cutscene, pitchIdx);
 }
