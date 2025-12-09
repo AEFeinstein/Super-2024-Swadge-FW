@@ -65,7 +65,8 @@ typedef struct
     bool PB_A_previousFrame; ///< True if A is held on the previous frame.
     bool isEnding;      ///< True as the character slides out of frame.
     uint8_t soundBank;  ///< 2 for mega man sounds. https://adam.feinste.in/Super-2024-Swadge-FW/MIDI.html#general-midi-bank-0
-    midiTimbre_t timbre;
+    midiTimbre_t timbre; ///< Lots of midi params for character sound playback.
+    int32_t bgm_headroom; ///< The volume of background music. Fades 33% lower during cutscenes.
 } cutscene_t;
 
 cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx, uint8_t soundBank);

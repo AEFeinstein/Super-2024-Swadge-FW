@@ -289,13 +289,13 @@ void platformerEnterMode(void)
         addCutsceneStyle(platformer->gameData.cutscene, c310, FLARE_GRYFFYN_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Flare Gryffyn", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 8, 24, 1, 250, false);
         //CrashTurtle
-        addCutsceneStyle(platformer->gameData.cutscene, c000, CRASH_TURTLE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Crash Turtle", 1, true, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c000, CRASH_TURTLE_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Crash Turtle", 1, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 9, 119, 1, 250, false);
         //QuestionMark
-        addCutsceneStyle(platformer->gameData.cutscene, c000, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "Question Mark", 1, false, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c000, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "??????", 1, false, false, true);
         setMidiParams(platformer->gameData.cutscene, 10, 119, 1, 100, true);
         //DeadeyeChirpzi
-        addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_CHIRPZI_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Deadeye Chirpzi", 1, true, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_CHIRPZI_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Deadeye Chirpzi", 1, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 11, 30, 1, 80, false);
         //HankWaddle
         addCutsceneStyle(platformer->gameData.cutscene, c000, HANK_WADDLE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Hank Waddle", 1, false, true, true);
@@ -305,7 +305,7 @@ void platformerEnterMode(void)
         setMidiParams(platformer->gameData.cutscene, 13, 62, 1, 250, false);
         //DrainBat
         addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Drain Bat", 1, false, true, true);
-        setMidiParams(platformer->gameData.cutscene, 14, 82, 3, 250, true);
+        setMidiParams(platformer->gameData.cutscene, 14, 82, 3, 250, false);
         //SmashGorilla
         addCutsceneStyle(platformer->gameData.cutscene, c310, SMASH_GORILLA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Smash Gorilla", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 15, 29, -1, 250, false);
@@ -870,6 +870,7 @@ void updateReadyScreen(platformer_t* self)
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 60) // 179)
     {
+        soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
         self->update = &updateGame;
     }
 

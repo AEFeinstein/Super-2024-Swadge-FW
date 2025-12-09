@@ -353,7 +353,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "Almost. You've been corrupted by MAGiX. It's not your fault.", false, -1);
             addCutsceneLine(gameData->cutscene, KineticDonut, "I-I couldn't stop bouncing. Everything was loud, and I was starving...", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "I get that way too sometimes.", false, -1);
-            addCutsceneLine(gameData->cutscene, KineticDonut, "Here. Take this. IIt's a little messy, but it packs a punch.", false, -1);
+            addCutsceneLine(gameData->cutscene, KineticDonut, "Here. Take this. It's a little messy, but it packs a punch.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "You going to be okay, Your Majesty?", false, -1);
             addCutsceneLine(gameData->cutscene, KineticDonut, "Yeah, I'm gonna go find something greasy and lie down.", false, -1);
             break;
@@ -368,7 +368,8 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "The whole place was vibing TOO hard. You back to normal?", false, 1);
             addCutsceneLine(gameData->cutscene, SmashGorilla, "Yeah. Head's clearer now. Here - take this. Might help you keep the groove tight.", false, -1);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Can of Salsa", false, 0);
-            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... A backup up energy tanks! Fill it up with excess health pickups and it'll kick in automatically when your health drops.", false, 0);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... A backup up energy tank!", false, 0);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Fill it up with excess health pickups and it'll kick in automatically when your health drops.", false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "Thanks! Stay safe, and uh... vamanos?", false, 2);
             addCutsceneLine(gameData->cutscene, SmashGorilla, "NOW you're getting it.", false, -1);
             break;

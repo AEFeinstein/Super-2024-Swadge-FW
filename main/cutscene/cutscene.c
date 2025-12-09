@@ -44,7 +44,8 @@ cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx, uint8_t s
         loadWsg(nextIconIdx+i, cutscene->nextIcon[i], true);
     }
     cutscene->xOffset = 280; //default start value for antagonists.
-    cutscene->nextIconAnimationTimer = 8;
+    cutscene->nextIconAnimationTimer = 30;
+    cutscene->bgm_headroom = 0x4000;
 
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_SFX);
     midiPlayerReset(player);
@@ -63,12 +64,19 @@ static void resetCutscene(cutscene_t* cutscene)
         cutsceneLine_t* line = (cutsceneLine_t*) shift(cutscene->lines);
         free(line->body);
     }
-    cutscene->nextIconAnimationTimer = 8;
+    cutscene->nextIconAnimationTimer = 30;
     cutscene->xOffset = 280; //default start value for antagonists.
+    cutscene->bgm_headroom = 0x4000;
+    
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_SFX);
+    player->headroom = 0x4000;
+    player = globalMidiPlayerGet(MIDI_BGM);
+    player->headroom = 0x4000;
 }
 
 static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutscene)
 {
+    cutscene->nextIconAnimationTimer = 4;
     // Copying and customizing the timbre should really only be done once
     memcpy(&cutscene->timbre, getTimbreForProgram(false, 2, style->instrument), sizeof(midiTimbre_t));
 
@@ -241,7 +249,6 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
                 {
                     free(((cutsceneLine_t*)shift(cutscene->lines))->body);
                     style = getCurrentStyle(cutscene);
-                    cutscene->nextIconAnimationTimer = 0;
 
                     //load the new character sprite into the existing wsg.
                     loadWsg(style->spriteIdx + ((cutsceneLine_t*)cutscene->lines->first->val)->spriteVariation,
@@ -280,9 +287,25 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         {
             cutscene->xOffset+=4;
         }
+
+        cutscene->bgm_headroom += 0x5B;
+        if(cutscene->bgm_headroom > 0x4000)
+        {
+            cutscene->bgm_headroom = 0x4000;
+        }
+        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+        player->headroom = cutscene->bgm_headroom;
     }
     else if(cutscene->xOffset != 0)
     {
+        cutscene->bgm_headroom -= 0x5B;
+        if(cutscene->bgm_headroom < 0x2AAA)//66% volume target
+        {
+            cutscene->bgm_headroom = 0x2AAA;
+        }
+        midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+        player->headroom = cutscene->bgm_headroom;
+
         if(style->isProtagonist)
         {
             cutscene->xOffset+=8;
@@ -293,6 +316,7 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         }
         if(cutscene->xOffset == 0)
         {
+            player->headroom = cutscene->bgm_headroom;
             loadAndPlayCharacterSound(style, cutscene);
         }
     }
@@ -333,12 +357,12 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
         }
         else
         {
-            int8_t iconFrame = (cutscene->nextIconAnimationTimer / 8);
+            int8_t iconFrame = (cutscene->nextIconAnimationTimer / 4);
             if(iconFrame > 3)
                     {
                         iconFrame = 3;
                     }
-            drawWsgSimpleScaled(cutscene->nextIcon[iconFrame], 248, 180, 2, 2);
+            drawWsgSimpleScaled(cutscene->nextIcon[iconFrame], 215, 130, 4, 4);
         }
     }
 
