@@ -157,6 +157,7 @@ typedef enum
 
 typedef struct
 {
+    int32_t swadgePassUsername; // SwadgePass username
     int cardSelect;     // Active card
     int facts[3];       // List of facts
     bool local;         // If Local user
@@ -201,6 +202,8 @@ typedef struct
     int loadAnims;
     bool fakeLoad;
     bool shuffle;
+    bool loadedProfs;
+    bool drawnProfs;
 
     // BGM
     midiPlayer_t* player;
@@ -233,7 +236,7 @@ static void editProfile(buttonEvt_t* evt);
 static void drawAtriumTitle(uint64_t elapsedUs);
 static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs);
 static void shuffleSonas(void);
-static void drawSonas(buttonEvt_t* evt, uint64_t elapsedUs);
+static void drawSonas(uint64_t elapsedUs);
 static void drawArcade(uint64_t elapsedUs);
 static void drawConcert(uint64_t elapsedUs);
 static void drawGazebo(uint64_t elapsedUs);
@@ -242,7 +245,7 @@ static void drawArrows(bool, bool, bool, bool);
 
 // Swadgepass
 static void atriumAddSP(struct swadgePassPacket* packet); 
-
+void loadProfiles(list_t* spList, list_t* loadedProfilesList, int maxProfiles, bool local);
 
 //---------------------------------------------------------------------------------//
 // VARIABLES
@@ -481,7 +484,7 @@ static void atriumMainLoop(int64_t elapsedUs)
         {
 
             drawLobbies(&evt, elapsedUs);
-            drawSonas(&evt, elapsedUs);
+            
             break;
         }
         case ATR_PROFILE:
@@ -635,6 +638,7 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
         case BG_GAZEBO:
         {
             drawGazebo(elapsedUs);
+            
             break;
         }
         case BG_ARCADE:
@@ -672,7 +676,8 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
     // UI
     drawArrows(atr->left, atr->right, atr->up, atr->down);
 
-
+    //Sonas
+    drawSonas(elapsedUs);
     // Trophy
     
 }
@@ -763,21 +768,35 @@ static void drawGazeboForeground(uint64_t elapsedUs)
     }
 }
 
-static void drawSonas(buttonEvt_t* evt, uint64_t elapsedUs)
+static void drawSonas(uint64_t elapsedUs)
 {
-   while (checkButtonQueueWrapper(evt))
-    {
-        // No input handling for now
+   
+    //TODO: move down spList and get number of pages, index accordingly
+    
+    if (atr->loadedProfs == 0){
+    loadProfiles(&atr->spList, &atr->loadedProfilesList, 4, 0); //load up to 4 profiles into loadedProfilesList
+    atr->loadedProfs = 1;
+    printf("Loaded profiles into loadedProfilesList\n");
     }
-    //TODO: get move down spList and get number of pages, index accordingly
-    //TODO: get profiles and store into loadedProfilesList
 
     // Draw sonas
 
-    for(int i = 0; i < 4; i++ ) {
-    generateSwadgesonaImage(atr->loadedProfilesList[i].swsn,false);
-    drawWsgSimple(&atr->loadedProfile.swsn->image, 20 + i * 64, 100); //TODO pick locations that make sense, do not hardoce
+    node_t* currentNode = atr->loadedProfilesList.first;
+    for (int i = 0; i < atr->loadedProfilesList.length && currentNode != NULL; i++)
+    {
+        atr->loadedProfile = *(userProfile_t*)currentNode->val;
+    
+    if(atr->loadedProfile.swsn->image.w != 0) {
+        freeWsg(&atr->loadedProfile.swsn->image);
+        printf("Freed previous image\n");
     }
+    
+    generateSwadgesonaImage(atr->loadedProfile.swsn,false); 
+    drawWsgSimple(&atr->loadedProfile.swsn->image, 20 + i * 64, 100);
+        currentNode = currentNode->next;
+    }
+    
+    
 }
 
 static void drawArrows(bool left, bool right, bool up, bool down)
@@ -791,6 +810,64 @@ static void drawArrows(bool left, bool right, bool up, bool down)
         drawWsg(&atr->uiElements[(down) ? 1 : 0], TFT_WIDTH - (LOBBY_BORDER_X + atr->uiElements[0].w), LOBBY_ARROW_Y, false, false, 90);
     }
     
+}
+
+void loadProfiles(list_t* spList, list_t* loadedProfilesList, int maxProfiles, bool remote)
+{
+    // Clear the loadedProfilesList
+    while (loadedProfilesList->first != NULL)
+    {
+        node_t* temp = loadedProfilesList->first;
+        loadedProfilesList->first = loadedProfilesList->first->next;
+        heap_caps_free(temp->val);
+        heap_caps_free(temp);
+    }
+    loadedProfilesList->last   = NULL;
+    loadedProfilesList->length = 0;
+
+    // Load profiles from spList into loadedProfilesList
+    node_t* spNode = spList->first;
+    int count      = 0;
+    while (spNode != NULL && count < maxProfiles)
+    {
+        swadgePassData_t* spd = (swadgePassData_t*)spNode->val;
+
+        // Create a new userProfile_t
+        userProfile_t* profile = (userProfile_t*)heap_caps_calloc(1, sizeof(userProfile_t), MALLOC_CAP_8BIT);
+        profile->swadgePassUsername = spd->data.packet.swadgesona.core.packedName;
+        profile->cardSelect    = spd->data.packet.atrium.cardSelect;
+        for (int i = 0; i < 3; i++)
+        {
+            profile->facts[i] = spd->data.packet.atrium.facts[i];
+        }
+        profile->local   = remote; // Remote profile?
+        profile->numPasses = spd->data.packet.atrium.numPasses;
+
+        // Copy swadgesona data
+        profile->swsn = (swadgesona_t*)heap_caps_calloc(1, sizeof(swadgesona_t), MALLOC_CAP_8BIT);
+        memcpy(&profile->swsn->core, &spd->data.packet.swadgesona.core, sizeof(swadgesonaCore_t));
+        
+
+        // Add to loadedProfilesList
+        node_t* newNode       = (node_t*)heap_caps_calloc(1, sizeof(node_t), MALLOC_CAP_8BIT);
+        newNode->val          = profile;
+        newNode->next         = NULL;
+        if (loadedProfilesList->last == NULL)
+        {
+            loadedProfilesList->first = newNode;
+            loadedProfilesList->last  = newNode;
+        }
+        else
+        {
+            loadedProfilesList->last->next = newNode;
+            loadedProfilesList->last       = newNode;
+        }
+
+        loadedProfilesList->length++;
+        count++;
+        spNode = spNode->next;
+    }
+
 }
 
 /*
