@@ -332,10 +332,10 @@ void platformerEnterMode(void)
         setMidiParams(platformer->gameData.cutscene, 22, 55, 0, 100, false);
         //SawtoothPostReveal
         addCutsceneStyle(platformer->gameData.cutscene, c541, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 4, true, true, true);
-        setMidiParams(platformer->gameData.cutscene, 21, 81, 1, 100, true);
+        setMidiParams(platformer->gameData.cutscene, 23, 81, 1, 100, true);
         //BlackScreen
         addCutsceneStyle(platformer->gameData.cutscene, c555, BLACK_PORTRAIT_WSG, TEXTBOX_SAWTOOTH_WSG, "", 1, false, true, false);
-        setMidiParams(platformer->gameData.cutscene, 10, 11, 0, 100, true);
+        setMidiParams(platformer->gameData.cutscene, 24, 11, 0, 100, true);
     }
 
     setFrameRateUs(16666);
