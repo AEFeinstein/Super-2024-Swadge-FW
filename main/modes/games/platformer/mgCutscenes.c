@@ -8,16 +8,11 @@ typedef enum
 
 static void setSongPitchesFromCurrentSong(mgGameData_t* gameData)
 {
-    int8_t bgm = gameData->changeBgm;
-    if(bgm == MG_BGM_NO_CHANGE)
-    {
-        bgm = gameData->currentBgm;
-    }
-    switch(gameData->currentBgm)
+    switch(gameData->soundManager->currentBgmIndex)
     {
         case MG_BGM_KINETIC_DONUT:
         {
-            int16_t songPitches[] = {70, 68, 65, 63, 61, -1, -1, -1};
+            int16_t songPitches[] = {63, 65, 68, 70, 61, -1, -1, -1};
             setSongPitches(gameData->cutscene, songPitches);
             break;
         }
