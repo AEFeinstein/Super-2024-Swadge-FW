@@ -204,6 +204,7 @@ typedef struct
     bool shuffle;
     bool loadedProfs;
     bool drawnProfs;
+    int8_t page;
 
     // BGM
     midiPlayer_t* player;
@@ -235,8 +236,8 @@ static void editProfile(buttonEvt_t* evt);
 // Draw
 static void drawAtriumTitle(uint64_t elapsedUs);
 static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs);
-static void shuffleSonas(void);
-static void drawSonas(uint64_t elapsedUs);
+void shuffleSonas(void);
+static void drawSonas(int8_t page, uint64_t elapsedUs);
 static void drawArcade(uint64_t elapsedUs);
 static void drawConcert(uint64_t elapsedUs);
 static void drawGazebo(uint64_t elapsedUs);
@@ -594,10 +595,20 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
             else if (evt->button & PB_LEFT)
             {
                 atr->left = true;
+                atr->page--;
+                if (atr->page < 0)
+                {
+                    atr->page = 0;
+                }   
             }
             else if (evt->button & PB_RIGHT)
             {
                 atr->right = true;
+                atr->page++;
+                if (atr->page > (atr->numRemoteSwsn -1)/4 )
+                {
+                    atr->page = (atr->numRemoteSwsn -1)/4 ;
+                }
             }
             else if (evt->button & PB_DOWN)
             {
@@ -677,12 +688,12 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
     drawArrows(atr->left, atr->right, atr->up, atr->down);
 
     //Sonas
-    drawSonas(elapsedUs);
+    drawSonas(atr->page, elapsedUs);
     // Trophy
     
 }
 
-static void shuffleSonas()
+void shuffleSonas()
 {
     if( atr->shuffle == 0 ) {
         
@@ -697,15 +708,14 @@ static void shuffleSonas()
         for (int i = atr->numRemoteSwsn -1; i >0; i--)
         {
             j = rand() % (i + 1);
-            // Swap atr->sonaList[i] and atr->sonaList[j]
-            profilePacket_t temp = atr->sonaList[i];
-            atr->sonaList[i] = atr->sonaList[j];
-            atr->sonaList[j] = temp;
+            // Swap 
+
         }
         
     }
     }
     atr->shuffle = 1; //only shuffle once
+
     
 }
 
@@ -768,11 +778,14 @@ static void drawGazeboForeground(uint64_t elapsedUs)
     }
 }
 
-static void drawSonas(uint64_t elapsedUs)
+static void drawSonas(int8_t page, uint64_t elapsedUs)
 {
    
     //TODO: move down spList and get number of pages, index accordingly
-    
+    for (int i = 0; i < page*4; i++) {
+        printf("we are on page %d, skipping sona %d\n", page, i);
+    }
+
     if (atr->loadedProfs == 0){
     loadProfiles(&atr->spList, &atr->loadedProfilesList, 4, 0); //load up to 4 profiles into loadedProfilesList
     atr->loadedProfs = 1;
