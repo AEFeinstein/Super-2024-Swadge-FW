@@ -63,7 +63,7 @@ void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
     gameData->bgColors             = bgGradientCyan;
     gameData->customLevel          = false;
     int32_t outVal;
-    if(readNvs32("mg_cheatMode", &outVal) == false)
+    if (readNvs32("mg_cheatMode", &outVal) == false)
     {
         gameData->cheatMode = false;
     }

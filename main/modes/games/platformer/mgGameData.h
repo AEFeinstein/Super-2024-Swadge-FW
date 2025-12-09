@@ -71,7 +71,7 @@ typedef struct
 
     cutscene_t* cutscene;
 
-    bool cheatMode;//True to make pulse invincible
+    bool cheatMode; // True to make pulse invincible
 } mgGameData_t;
 
 //==============================================================================

@@ -1362,11 +1362,11 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             else */
             if (self->invincibilityFrames <= 0)
             {
-                if(!self->gameData->cheatMode)
+                if (!self->gameData->cheatMode)
                 {
                     self->hp -= 5;
                 }
-                
+
                 self->gameData->comboTimer = 0;
 
                 if (self->shotsFired < 0)
@@ -1548,7 +1548,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             // TODO: This is a repeat of above code; move to its own function
             if (self->invincibilityFrames <= 0 && other->scoreValue)
             {
-                if(!self->gameData->cheatMode)
+                if (!self->gameData->cheatMode)
                 {
                     self->hp -= other->scoreValue;
                 }
@@ -2070,8 +2070,7 @@ void updateScrollLockRight(mgEntity_t* self)
     mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
     mg_destroyEntity(self, true);
 
-
-    //Cutscene before the boss fight
+    // Cutscene before the boss fight
     bossIntroCutscene(self->gameData);
 }
 

@@ -37,7 +37,6 @@
 #include "fill.h"
 #include "cutscene.h"
 
-
 //==============================================================================
 // Constants
 //==============================================================================
@@ -211,17 +210,16 @@ static const char mgMenuSetGameState[]       = "Set Game State";
 static const char mgMenuSetLevelMetadata[]   = "Set Level Metadata";
 static const char mgMenuAbilityUnlockState[] = "LvlsClear";
 
-//options menu
+// options menu
 static const int32_t trueFalseVals[] = {
     false,
     true,
 };
-static const char str_cheatMode[]    = "Cheat Mode: ";
-static const char str_On[]       = "On";
-static const char str_Off[]      = "Off";
+static const char str_cheatMode[]       = "Cheat Mode: ";
+static const char str_On[]              = "On";
+static const char str_Off[]             = "Off";
 static const char str_cheatModeNVSKey[] = "mg_cheatMode";
-static const char* strs_on_off[] = {str_Off, str_On};
-
+static const char* strs_on_off[]        = {str_Off, str_On};
 
 static const settingParam_t mgAbilityUnlockStateSettingBounds = {.min = 0, .max = 256, .key = KEY_UNLOCKS};
 
@@ -271,84 +269,109 @@ void platformerEnterMode(void)
     platformer->tilemap.entityManager    = &(platformer->entityManager);
     platformer->tilemap.tileSpawnEnabled = true;
 
-    if(platformer->gameData.cutscene == NULL)
+    if (platformer->gameData.cutscene == NULL)
     {
         platformer->gameData.cutscene = initCutscene(goToReadyScreen, CUTSCENE_NEXT_0_WSG, 2);
-        
-        //Pulse
-        addCutsceneStyle(platformer->gameData.cutscene, c000, PULSE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Pulse", 5, true, true, true);
+
+        // Pulse
+        addCutsceneStyle(platformer->gameData.cutscene, c000, PULSE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Pulse", 5, true,
+                         true, true);
         setMidiParams(platformer->gameData.cutscene, 0, 48, 0, 1000, false);
-        //Sawtooth
-        addCutsceneStyle(platformer->gameData.cutscene, c530, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 4, true, true, true);
+        // Sawtooth
+        addCutsceneStyle(platformer->gameData.cutscene, c530, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth",
+                         4, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 1, 81, 1, 100, false);
-        //Bigma
-        addCutsceneStyle(platformer->gameData.cutscene, c310, BIGMA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Bigma", 2, false, true, true);
+        // Bigma
+        addCutsceneStyle(platformer->gameData.cutscene, c310, BIGMA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Bigma", 2,
+                         false, true, true);
         setMidiParams(platformer->gameData.cutscene, 2, 80, -2, 2000, true);
-        //TrashMan
-        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 7, false, true, true);
+        // TrashMan
+        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 7,
+                         false, true, true);
         setMidiParams(platformer->gameData.cutscene, 3, 36, -2, 250, false);
-        ///AbilityUnlocked
-        addCutsceneStyle(platformer->gameData.cutscene, c454, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "", 1, true, true, false);
+        /// AbilityUnlocked
+        addCutsceneStyle(platformer->gameData.cutscene, c454, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "", 1, true,
+                         true, false);
         setMidiParams(platformer->gameData.cutscene, 4, 11, 0, 250, false);
-        //SystemText
-        addCutsceneStyle(platformer->gameData.cutscene, c000, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "System Text", 1, true, false, true);
+        // SystemText
+        addCutsceneStyle(platformer->gameData.cutscene, c000, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "System Text", 1,
+                         true, false, true);
         setMidiParams(platformer->gameData.cutscene, 5, 55, 0, 250, false);
-        //KineticDonut
-        addCutsceneStyle(platformer->gameData.cutscene, c310, OVO_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Kinetic Donut", 1, false, true, true);
+        // KineticDonut
+        addCutsceneStyle(platformer->gameData.cutscene, c310, OVO_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
+                         "Kinetic Donut", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 6, 80, -1, 1000, true);
-        //JoltLapin
-        addCutsceneStyle(platformer->gameData.cutscene, c000, JOLT_LAPIN_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Jolt Lapin", 1, true, true, true);
+        // JoltLapin
+        addCutsceneStyle(platformer->gameData.cutscene, c000, JOLT_LAPIN_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+                         "Jolt Lapin", 1, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 7, 80, 1, 250, false);
-        //FlareGryffyn
-        addCutsceneStyle(platformer->gameData.cutscene, c310, FLARE_GRYFFYN_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Flare Gryffyn", 1, false, true, true);
+        // FlareGryffyn
+        addCutsceneStyle(platformer->gameData.cutscene, c310, FLARE_GRYFFYN_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
+                         "Flare Gryffyn", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 8, 24, 1, 250, false);
-        //CrashTurtle
-        addCutsceneStyle(platformer->gameData.cutscene, c000, CRASH_TURTLE_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Crash Turtle", 1, true, true, true);
+        // CrashTurtle
+        addCutsceneStyle(platformer->gameData.cutscene, c000, CRASH_TURTLE_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
+                         "Crash Turtle", 1, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 9, 119, 1, 250, false);
-        //QuestionMark
-        addCutsceneStyle(platformer->gameData.cutscene, c000, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "??????", 1, false, false, true);
+        // QuestionMark
+        addCutsceneStyle(platformer->gameData.cutscene, c000, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "??????", 1,
+                         false, false, true);
         setMidiParams(platformer->gameData.cutscene, 10, 119, 1, 100, true);
-        //DeadeyeChirpzi
-        addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_CHIRPZI_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Deadeye Chirpzi", 1, true, true, true);
+        // DeadeyeChirpzi
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_CHIRPZI_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
+                         "Deadeye Chirpzi", 1, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 11, 30, 1, 80, false);
-        //HankWaddle
-        addCutsceneStyle(platformer->gameData.cutscene, c000, HANK_WADDLE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Hank Waddle", 1, false, true, true);
+        // HankWaddle
+        addCutsceneStyle(platformer->gameData.cutscene, c000, HANK_WADDLE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+                         "Hank Waddle", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 12, 38, 1, 250, false);
-        //GrindPangolin
-        addCutsceneStyle(platformer->gameData.cutscene, c310, GRIND_PANGOLIN_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Grind Pangolin", 1, false, true, true);
+        // GrindPangolin
+        addCutsceneStyle(platformer->gameData.cutscene, c310, GRIND_PANGOLIN_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
+                         "Grind Pangolin", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 13, 62, 1, 250, false);
-        //DrainBat
-        addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Drain Bat", 1, false, true, true);
+        // DrainBat
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Drain Bat",
+                         1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 14, 82, 3, 250, false);
-        //SmashGorilla
-        addCutsceneStyle(platformer->gameData.cutscene, c310, SMASH_GORILLA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Smash Gorilla", 1, false, true, true);
+        // SmashGorilla
+        addCutsceneStyle(platformer->gameData.cutscene, c310, SMASH_GORILLA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
+                         "Smash Gorilla", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 15, 29, -1, 250, false);
-        //SeverYagata
-        addCutsceneStyle(platformer->gameData.cutscene, c310, SEVER_YAGATA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Sever Yagata", 1, false, true, true);
+        // SeverYagata
+        addCutsceneStyle(platformer->gameData.cutscene, c310, SEVER_YAGATA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
+                         "Sever Yagata", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 16, 24, 1, 250, false);
-        //Jasper
-        addCutsceneStyle(platformer->gameData.cutscene, c000, JASPER_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Jasper", 1, true, true, true);
+        // Jasper
+        addCutsceneStyle(platformer->gameData.cutscene, c000, JASPER_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Jasper", 1,
+                         true, true, true);
         setMidiParams(platformer->gameData.cutscene, 17, 83, 1, 250, false);
-        //Ember
-        addCutsceneStyle(platformer->gameData.cutscene, c000, EMBER_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Ember", 1, true, true, true);
+        // Ember
+        addCutsceneStyle(platformer->gameData.cutscene, c000, EMBER_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Ember", 1, true,
+                         true, true);
         setMidiParams(platformer->gameData.cutscene, 18, 82, 1, 250, false);
-        //Cho
-        addCutsceneStyle(platformer->gameData.cutscene, c000, CHO_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Cho", 1, true, true, true);
+        // Cho
+        addCutsceneStyle(platformer->gameData.cutscene, c000, CHO_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Cho", 1, true,
+                         true, true);
         setMidiParams(platformer->gameData.cutscene, 19, 17, 1, 250, false);
-        //Percy
-        addCutsceneStyle(platformer->gameData.cutscene, c000, PERCY_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Percy", 1, true, true, true);
+        // Percy
+        addCutsceneStyle(platformer->gameData.cutscene, c000, PERCY_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Percy", 1, true,
+                         true, true);
         setMidiParams(platformer->gameData.cutscene, 20, 38, 1, 250, false);
-        //Sunny
-        addCutsceneStyle(platformer->gameData.cutscene, c541, SUNNY_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sunny", 1, true, true, true);
+        // Sunny
+        addCutsceneStyle(platformer->gameData.cutscene, c541, SUNNY_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sunny", 1,
+                         true, true, true);
         setMidiParams(platformer->gameData.cutscene, 21, 81, 1, 100, true);
-        //WarningMessage
-        addCutsceneStyle(platformer->gameData.cutscene, c524, WARNING_MESSAGE_PORTRAIT_WSG, TEXTBOX_PULSE_WSG, "", 1, true, true, false);
+        // WarningMessage
+        addCutsceneStyle(platformer->gameData.cutscene, c524, WARNING_MESSAGE_PORTRAIT_WSG, TEXTBOX_PULSE_WSG, "", 1,
+                         true, true, false);
         setMidiParams(platformer->gameData.cutscene, 22, 55, 0, 100, false);
-        //SawtoothPostReveal
-        addCutsceneStyle(platformer->gameData.cutscene, c541, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 4, true, true, true);
+        // SawtoothPostReveal
+        addCutsceneStyle(platformer->gameData.cutscene, c541, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth",
+                         4, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 23, 81, 1, 100, true);
-        //BlackScreen
-        addCutsceneStyle(platformer->gameData.cutscene, c555, BLACK_PORTRAIT_WSG, TEXTBOX_SAWTOOTH_WSG, "", 1, false, true, false);
+        // BlackScreen
+        addCutsceneStyle(platformer->gameData.cutscene, c555, BLACK_PORTRAIT_WSG, TEXTBOX_SAWTOOTH_WSG, "", 1, false,
+                         true, false);
         setMidiParams(platformer->gameData.cutscene, 24, 11, 0, 100, true);
     }
 
@@ -544,18 +567,19 @@ void mgBuildMainMenu(platformer_t* self)
 
     addSingleItemToMenu(self->menu, mgMenuHighScores);
 
-    self->menu = startSubMenu(self->menu, mgMenuOptions);
-        settingParam_t sp_tf = {
+    self->menu           = startSubMenu(self->menu, mgMenuOptions);
+    settingParam_t sp_tf = {
         .min = trueFalseVals[0],
         .max = trueFalseVals[ARRAY_SIZE(trueFalseVals) - 1],
         .def = trueFalseVals[0],
     };
     int32_t cheatMode = 0;
-    if(readNvs32(str_cheatModeNVSKey, &cheatMode) == false)
+    if (readNvs32(str_cheatModeNVSKey, &cheatMode) == false)
     {
         writeNvs32(str_cheatModeNVSKey, 0);
     }
-    addSettingsOptionsItemToMenu(self->menu, str_cheatMode, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf, cheatMode);
+    addSettingsOptionsItemToMenu(self->menu, str_cheatMode, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
+                                 cheatMode);
     self->menu = endSubMenu(self->menu);
 
     if (self->gameData.debugMode)
@@ -911,7 +935,7 @@ void updateReadyScreen(platformer_t* self)
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 60) // 179)
     {
-        if(globalMidiPlayerGet(MIDI_BGM)->paused)
+        if (globalMidiPlayerGet(MIDI_BGM)->paused)
         {
             soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
         }
@@ -1730,7 +1754,7 @@ void updateLevelSelect(platformer_t* self)
             mg_loadMapFromFile(&(platformer->tilemap), leveldef[self->gameData.level].filename);
 
             changeStateGame(platformer);
-            //every level starts with a cutscene
+            // every level starts with a cutscene
             soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
             stageStartCutscene(&platformer->gameData);
             changeStateCutscene(platformer);

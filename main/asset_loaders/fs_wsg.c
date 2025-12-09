@@ -45,7 +45,7 @@ bool loadWsg(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam)
     uint16_t newH = (decompressedBuf[2] << 8) | decompressedBuf[3];
 
     // If there is an existing buffer and it doesn't match, free it
-    if(wsg->px && (wsg->h != newH || wsg->w != newW))
+    if (wsg->px && (wsg->h != newH || wsg->w != newW))
     {
         heap_caps_free(wsg->px);
         wsg->px = NULL;
@@ -56,9 +56,9 @@ bool loadWsg(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam)
     char tag[32];
     sprintf(tag, "cnfsIdx %d", fIdx);
 #endif
-    
+
     // If there is no pixel buffer
-    if(!wsg->px)
+    if (!wsg->px)
     {
         // Allocate it
         wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * newW * newH,
@@ -225,7 +225,7 @@ void freeWsg(wsg_t* wsg)
     {
         heap_caps_free(wsg->px);
         wsg->px = NULL;
-        wsg->h = 0;
-        wsg->w = 0;
+        wsg->h  = 0;
+        wsg->w  = 0;
     }
 }

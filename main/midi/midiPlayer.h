@@ -1185,7 +1185,8 @@ const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, uint8_t p
  * @param percussion True to assign the note to a percussion voice, false to use a normal voices
  * @return const midiVoice_t* A reference to the voice allocated to this sound, which can be used to turn it off
  */
-const midiVoice_t* soundNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velocity, const midiTimbre_t* timbre, bool percussion);
+const midiVoice_t* soundNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velocity,
+                               const midiTimbre_t* timbre, bool percussion);
 
 /**
  * @brief Stop playing a single note with custom MIDI parameters.

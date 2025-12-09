@@ -179,7 +179,7 @@ static uint32_t allocVoice(const voiceStates_t* states, const midiVoice_t* voice
         {
             uint32_t voiceIdx              = __builtin_ctz(unusedVoices);
             uint32_t ticksUntilStateChange = voices[voiceIdx].stateChangeTick - voices[voiceIdx].voiceTick;
-            bool custom = (voices[voiceIdx].channel >= MIDI_CHANNEL_COUNT);
+            bool custom                    = (voices[voiceIdx].channel >= MIDI_CHANNEL_COUNT);
 
             if (ticksUntilStateChange < soonestReleaseEnd || (stealCustom && !custom))
             {
@@ -679,9 +679,10 @@ int32_t midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t vo
     while (voice->stateChangeTick == voice->voiceTick)
     {
         MIDI_DBG("Voice %" PRIu8 " has reached state change tick %" PRIu32, voiceIdx, voice->stateChangeTick);
-        if (ADSR_OFF == voiceAdvanceAdsr(voice, states, voiceIdx,
-                         (voice->channel < MIDI_CHANNEL_COUNT) ? &channels[voice->channel] : NULL, specialStates,
-                         ADSR_ON))
+        if (ADSR_OFF
+            == voiceAdvanceAdsr(voice, states, voiceIdx,
+                                (voice->channel < MIDI_CHANNEL_COUNT) ? &channels[voice->channel] : NULL, specialStates,
+                                ADSR_ON))
         {
             // Don't continue stepping a turned-off voice!
             return 0;
@@ -713,7 +714,7 @@ int32_t midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t vo
     voice->volRate += voice->volAccel;
     int32_t nextSample     = 0;
     midiChannel_t* channel = (voice->channel < MIDI_CHANNEL_COUNT) ? &channels[voice->channel] : NULL;
-    uint16_t chanVol = channel ? channel->volume : UINT14_MAX;
+    uint16_t chanVol       = channel ? channel->volume : UINT14_MAX;
 
     switch (voice->type)
     {
@@ -1803,7 +1804,8 @@ void midiAllNotesOff(midiPlayer_t* player, uint8_t channel)
     }
 }
 
-const midiVoice_t* soundNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velocity, const midiTimbre_t* timbre, bool percussion)
+const midiVoice_t* soundNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velocity,
+                               const midiTimbre_t* timbre, bool percussion)
 {
     midiChannel_t* chan = (chanId < MIDI_CHANNEL_COUNT) ? &player->channels[chanId] : NULL;
     // Use the appropriate voice pool for the instrument type
@@ -2062,7 +2064,7 @@ void soundNoteOff(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t ve
 
 void soundVoiceOff(midiPlayer_t* player, const midiVoice_t* voice)
 {
-    midiVoice_t* voices = NULL;
+    midiVoice_t* voices   = NULL;
     voiceStates_t* states = NULL;
     if (player->poolVoices <= voice && voice < (player->poolVoices + POOL_VOICE_COUNT))
     {
@@ -2080,14 +2082,14 @@ void soundVoiceOff(midiPlayer_t* player, const midiVoice_t* voice)
         return;
     }
 
-    uint8_t voiceIdx = voice - voices;
+    uint8_t voiceIdx       = voice - voices;
     midiChannel_t* channel = (voice->channel < MIDI_CHANNEL_COUNT) ? &player->channels[voice->channel] : NULL;
     voiceAdvanceAdsr(&voices[voiceIdx], states, voiceIdx, channel, &player->percSpecialStates, ADSR_OFF);
 }
 
 void soundVoiceRelease(midiPlayer_t* player, const midiVoice_t* voice)
 {
-    midiVoice_t* voices = NULL;
+    midiVoice_t* voices   = NULL;
     voiceStates_t* states = NULL;
     if (player->poolVoices <= voice && voice < (player->poolVoices + POOL_VOICE_COUNT))
     {
@@ -2106,7 +2108,7 @@ void soundVoiceRelease(midiPlayer_t* player, const midiVoice_t* voice)
         return;
     }
 
-    uint8_t voiceIdx = voice - voices;
+    uint8_t voiceIdx       = voice - voices;
     midiChannel_t* channel = (voice->channel < MIDI_CHANNEL_COUNT) ? &player->channels[voice->channel] : NULL;
     voiceAdvanceAdsr(&voices[voiceIdx], states, voiceIdx, channel, &player->percSpecialStates, ADSR_RELEASE);
 }
