@@ -16,7 +16,8 @@
 // Function Prototypes
 //==============================================================================
 static void resetCutscene(cutscene_t* cutscene);
-static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutscene);
+static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutscene, uint8_t pitchIdx);
+static void loadAndPlayRandomCharacterSound(cutsceneStyle_t* style, cutscene_t* cutscene);
 static int randomInt(int lowerBoundInclusive, int upperBoundInclusive);
 static uint8_t getRandomVariationFromStyle(cutsceneStyle_t* style);
 static uint8_t getRandomVariationFromStyleIdx(cutscene_t* cutscene, uint8_t styleIdx);
@@ -74,7 +75,7 @@ static void resetCutscene(cutscene_t* cutscene)
     player->headroom = 0x4000;
 }
 
-static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutscene)
+static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutscene, uint8_t pitchIdx)
 {
     cutscene->nextIconAnimationTimer = 4;
     // Copying and customizing the timbre should really only be done once
@@ -109,14 +110,18 @@ static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutsce
     //midiControlChange(player, 13, MCC_BANK_LSB, 2);
 
     player->headroom = 0x8000;//max volume
-    // Play a random note within an octave at half velocity on channel 1
+
     //int songPitches[] = {58, 61, 63, 64, 65, 68, 70};//1
     int songPitches[] = {70, 68, 65, 63, 61};//1
     //int songPitches[] = {60, 62, 67, 69, 72, 74};//2 bouncehause
-    uint8_t pitch = randomInt(0, 4);
-
     // Setting the channel to something > 15 means the note will not be affected by a song changing MIDI controls.
-    soundNoteOn(player, 13, songPitches[pitch] + 12 * style->octaveOvset, 127, &cutscene->timbre, false);
+    soundNoteOn(player, 13, songPitches[pitchIdx] + 12 * style->octaveOvset, 127, &cutscene->timbre, false);
+}
+
+static void loadAndPlayRandomCharacterSound(cutsceneStyle_t* style, cutscene_t* cutscene)
+{
+    uint8_t pitchIdx = randomInt(0, 4);
+    loadAndPlayCharacterSound(style, cutscene, pitchIdx);
 }
 
 void removeAllStyles(cutscene_t* cutscene)
@@ -237,33 +242,41 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
     //Extra hold required because sometimes click-unclick-click registers on the hardware from an intended single click.
     if(!cutscene->isEnding && cutscene->xOffset == 0)
     {
-        if(btnState & PB_A)
+        if(btnState & PB_A && !(cutscene->btnState_previousFrame & PB_A))
         {
-            if(cutscene->PB_A_previousFrame == false)
+            //proceed to next cutscene line.
+            if(cutscene->lines->first != NULL && cutscene->lines->first->next != NULL)//There is at least onle line after this one.
             {
-                //proceed to next cutscene line.
-                if(cutscene->lines->first != NULL && cutscene->lines->first->next != NULL)//There is at least onle line after this one.
-                {
-                    free(((cutsceneLine_t*)shift(cutscene->lines))->body);
-                    style = getCurrentStyle(cutscene);
+                free(((cutsceneLine_t*)shift(cutscene->lines))->body);
+                style = getCurrentStyle(cutscene);
 
-                    //load the new character sprite into the existing wsg.
-                    loadWsg(style->spriteIdx + ((cutsceneLine_t*)cutscene->lines->first->val)->spriteVariation,
-                    cutscene->sprite, true);
-                    loadWsg(style->textBoxIdx, cutscene->textBox, true);
+                //load the new character sprite into the existing wsg.
+                loadWsg(style->spriteIdx + ((cutsceneLine_t*)cutscene->lines->first->val)->spriteVariation,
+                cutscene->sprite, true);
+                loadWsg(style->textBoxIdx, cutscene->textBox, true);
 
-                    loadAndPlayCharacterSound(style, cutscene);
-                }
-                else//This was the last line.
-                {
-                    cutscene->isEnding = true;
-                }
+                loadAndPlayRandomCharacterSound(style, cutscene);
             }
-            cutscene->PB_A_previousFrame = true;
+            else//This was the last line.
+            {
+                cutscene->isEnding = true;
+            }
         }
-        else
+        else if(btnState & PB_DOWN && !(cutscene->btnState_previousFrame & PB_DOWN))
         {
-            cutscene->PB_A_previousFrame = false;
+            loadAndPlayCharacterSound(style, cutscene, 0);
+        }
+        else if(btnState & PB_LEFT && !(cutscene->btnState_previousFrame & PB_LEFT))
+        {
+            loadAndPlayCharacterSound(style, cutscene, 1);
+        }
+        else if(btnState & PB_RIGHT && !(cutscene->btnState_previousFrame & PB_RIGHT))
+        {
+            loadAndPlayCharacterSound(style, cutscene, 2);
+        }
+        else if(btnState & PB_UP && !(cutscene->btnState_previousFrame & PB_UP))
+        {
+            loadAndPlayCharacterSound(style, cutscene, 3);
         }
     }
 
@@ -297,7 +310,7 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         }
         if(cutscene->xOffset == 0)
         {
-            loadAndPlayCharacterSound(style, cutscene);
+            loadAndPlayRandomCharacterSound(style, cutscene);
         }
     }
     //Audio ducking BGM during character sound
@@ -337,6 +350,7 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
         midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
         player->headroom = cutscene->bgm_headroom;
     }
+    cutscene->btnState_previousFrame = btnState;
 }
 
 void drawCutscene(cutscene_t* cutscene, font_t* font)

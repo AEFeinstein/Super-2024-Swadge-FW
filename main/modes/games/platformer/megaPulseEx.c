@@ -335,7 +335,7 @@ void platformerEnterMode(void)
         setMidiParams(platformer->gameData.cutscene, 21, 81, 1, 100, true);
         //BlackScreen
         addCutsceneStyle(platformer->gameData.cutscene, c555, BLACK_PORTRAIT_WSG, TEXTBOX_SAWTOOTH_WSG, "", 1, false, true, false);
-        setMidiParams(platformer->gameData.cutscene, 10, 119, 2, 100, true);
+        setMidiParams(platformer->gameData.cutscene, 10, 11, 0, 100, true);
     }
 
     setFrameRateUs(16666);

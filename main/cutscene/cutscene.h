@@ -62,11 +62,11 @@ typedef struct
     wsg_t* textBox;     ///< The textbox rendered over the character sprite.
     wsg_t* nextIcon[4]; ///< The nextIcon with a few animation frames.
     int8_t nextIconAnimationTimer; ///< Increments and controls the next icon frame.
-    bool PB_A_previousFrame; ///< True if A is held on the previous frame.
     bool isEnding;      ///< True as the character slides out of frame.
     uint8_t soundBank;  ///< 2 for mega man sounds. https://adam.feinste.in/Super-2024-Swadge-FW/MIDI.html#general-midi-bank-0
     midiTimbre_t timbre; ///< Lots of midi params for character sound playback.
     int32_t bgm_headroom; ///< The volume of background music. Fades 33% lower during cutscenes.
+    int16_t btnState_previousFrame; ///< The btnState of the previous frame.
 } cutscene_t;
 
 cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx, uint8_t soundBank);
