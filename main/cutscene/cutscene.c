@@ -286,7 +286,7 @@ void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool fl
         cutscene->sprite, true);
         loadWsg(style->textBoxIdx, cutscene->textBox, true);
 
-        if(style->isProtagonist)
+        if(style->stageLeft)
         {
             cutscene->xOffset *= -1;
         }
@@ -406,7 +406,7 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
             resetCutscene(cutscene);
             return;
         }
-        if(style->isProtagonist)
+        if(style->stageLeft)
         {
             cutscene->xOffset-=4;
         }   
@@ -417,7 +417,7 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
     }
     else if(cutscene->xOffset != 0)
     {
-        if(style->isProtagonist)
+        if(style->stageLeft)
         {
             cutscene->xOffset+=8;
         }
