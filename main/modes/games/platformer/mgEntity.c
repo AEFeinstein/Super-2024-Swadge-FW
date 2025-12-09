@@ -24,8 +24,6 @@
 // Constants
 //==============================================================================
 
-static bool cheatMode = true;
-
 static const vec_t mg_sureYouCanVectors[] = {
     // These are in reverse order
     {.x = 8, .y = 4},     {.x = 8, .y = -2},   {.x = 8, .y = -4},   {.x = 8, .y = -8},
@@ -1364,7 +1362,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             else */
             if (self->invincibilityFrames <= 0)
             {
-                if(!cheatMode)
+                if(!self->gameData->cheatMode)
                 {
                     self->hp -= 5;
                 }
@@ -1550,7 +1548,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             // TODO: This is a repeat of above code; move to its own function
             if (self->invincibilityFrames <= 0 && other->scoreValue)
             {
-                if(!cheatMode)
+                if(!self->gameData->cheatMode)
                 {
                     self->hp -= other->scoreValue;
                 }

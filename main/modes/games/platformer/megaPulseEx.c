@@ -203,12 +203,25 @@ static const char mgMenuResetProgress[]      = "Reset Progress";
 static const char mgMenuExit[]               = "Exit";
 static const char mgMenuSaveAndExit[]        = "Save & Exit";
 static const char mgMenuStartOver[]          = "Start Over";
+static const char mgMenuOptions[]            = "Options";
 static const char mgMenuConfirm[]            = "Confirm";
 static const char mgMenuPlayCustomLevel[]    = "Play Custom Level";
 static const char mgMenuGo[]                 = "Go!!!";
 static const char mgMenuSetGameState[]       = "Set Game State";
 static const char mgMenuSetLevelMetadata[]   = "Set Level Metadata";
 static const char mgMenuAbilityUnlockState[] = "LvlsClear";
+
+//options menu
+static const int32_t trueFalseVals[] = {
+    false,
+    true,
+};
+static const char str_cheatMode[]    = "Cheat Mode: ";
+static const char str_On[]       = "On";
+static const char str_Off[]      = "Off";
+static const char str_cheatModeNVSKey[] = "mg_cheatMode";
+static const char* strs_on_off[] = {str_Off, str_On};
+
 
 static const settingParam_t mgAbilityUnlockStateSettingBounds = {.min = 0, .max = 256, .key = KEY_UNLOCKS};
 
@@ -452,6 +465,13 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
             platformer->gameData.level = settingVal;
         }
     }
+    else
+    {
+        if (label == str_cheatMode)
+        {
+            writeNvs32(str_cheatModeNVSKey, settingVal);
+        }
+    }
 
     return false;
 }
@@ -523,6 +543,20 @@ void mgBuildMainMenu(platformer_t* self)
     }
 
     addSingleItemToMenu(self->menu, mgMenuHighScores);
+
+    self->menu = startSubMenu(self->menu, mgMenuOptions);
+        settingParam_t sp_tf = {
+        .min = trueFalseVals[0],
+        .max = trueFalseVals[ARRAY_SIZE(trueFalseVals) - 1],
+        .def = trueFalseVals[0],
+    };
+    int32_t cheatMode = 0;
+    if(readNvs32(str_cheatModeNVSKey, &cheatMode) == false)
+    {
+        writeNvs32(str_cheatModeNVSKey, 0);
+    }
+    addSettingsOptionsItemToMenu(self->menu, str_cheatMode, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf, cheatMode);
+    self->menu = endSubMenu(self->menu);
 
     if (self->gameData.debugMode)
     {
