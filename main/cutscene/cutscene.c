@@ -12,9 +12,6 @@
 
 #include "shapes.h"
 
-
-#define INSTRUMENT 17
-
 //==============================================================================
 // Function Prototypes
 //==============================================================================
@@ -76,11 +73,23 @@ static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutsce
     memcpy(&cutscene->timbre, getTimbreForProgram(false, 2, style->instrument), sizeof(midiTimbre_t));
 
     cutscene->timbre.envelope.attackTime = 0;
+    
+    if(style->slowAttack)
+    {
+        cutscene->timbre.envelope.attackTime = MS_TO_SAMPLES(250);//600
+        cutscene->timbre.envelope.attackTimeVel = (MS_TO_SAMPLES(500) << 8) / 127;
+    }
+    else
+    {
+        cutscene->timbre.envelope.attackTime = 0;
+        cutscene->timbre.envelope.attackTimeVel = 0;
+    }
+
     // Using decay instead of release, with a sustain volume of 0, makes the note behave more like percussion
     // (no note off is necessary)
     // The control is set in increments of 10ms, so this is equivalent to setting release CC to 60
     cutscene->timbre.envelope.decayTime = MS_TO_SAMPLES(250);//600
-    cutscene->timbre.envelope.decayTimeVel = (MS_TO_SAMPLES(500) << 8) / 127;
+    cutscene->timbre.envelope.decayTimeVel = (MS_TO_SAMPLES(style->noteLength) << 8) / 127;
     // Setting sustain volume to 0 means the note ends on its own after decay
     cutscene->timbre.envelope.sustainVol = 0;
     cutscene->timbre.envelope.releaseTime = 0;
@@ -89,17 +98,9 @@ static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutsce
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_SFX);
     midiPause(player, false);
     
-    midiControlChange(player, 13, MCC_BANK_LSB, 2);
+    //midiControlChange(player, 13, MCC_BANK_LSB, 2);
 
-    
-    //midiGmOn(player);
-    
-    //midiSetParameter(player, 13, false, 10, 2);
-    midiSetProgram(player, 13, style->instrument);
-    // midiControlChange(player, 13, MCC_SUSTENUTO_PEDAL, 80);
-    // midiControlChange(player, 13, MCC_SOUND_RELEASE_TIME, 60);
-
-    //player->headroom = 0x8000;//max volume
+    player->headroom = 0x8000;//max volume
     // Play a random note within an octave at half velocity on channel 1
     //int songPitches[] = {58, 61, 63, 64, 65, 68, 70};//1
     int songPitches[] = {70, 68, 65, 63, 61};//1
@@ -119,7 +120,7 @@ void removeAllStyles(cutscene_t* cutscene)
     }
 }
 
-void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numSpriteVariations, bool isProtagonist, bool drawSprite, bool drawTextbox, uint8_t instrument, int8_t octaveOvset)
+void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numSpriteVariations, bool isProtagonist, bool drawSprite, bool drawTextbox)
 {
     cutsceneStyle_t* style = (cutsceneStyle_t*)heap_caps_calloc(1, sizeof(cutsceneStyle_t), MALLOC_CAP_SPIRAM);
     style->title = (char*)heap_caps_calloc(strlen(title) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
@@ -131,11 +132,44 @@ void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t textColor, cnfsFileId
     style->isProtagonist = isProtagonist;
     style->drawSprite = drawSprite;
     style->drawTextBox = drawTextbox;
-    style->instrument = instrument;
-    style->octaveOvset = octaveOvset;
+    //Set some default midi value based on the provided bank
+    switch(cutscene->soundBank)
+    {
+        case 0://general midi
+        {
+            style->instrument = 1;//grand piano
+            break;
+        }
+        case 1://magfest
+        {
+            style->instrument = 11;//"MAGFest Wave"
+            break;
+        }
+        case 2://Mega Man X
+        {
+            style->instrument = 82;//Synth Lead
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+    style->octaveOvset = 0;
+    style->noteLength = 250;
+    style->slowAttack = false;
 
     // push to tail
     push(cutscene->styles, (void*)style);
+}
+
+void setMidiParams(cutscene_t* cutscene, uint8_t styleIdx, uint8_t instrument, int8_t octaveOvset, uint16_t noteLength, bool slowAttack)
+{
+    cutsceneStyle_t* style = getAtIndex(cutscene->styles, styleIdx);
+    style->instrument = instrument;
+    style->octaveOvset = octaveOvset;
+    style->noteLength = noteLength;
+    style->slowAttack = slowAttack;
 }
 
 void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation)
@@ -158,20 +192,6 @@ void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool fl
         {
             cutscene->xOffset *= -1;
         }
-
-        // Copying and customizing the timbre should really only be done once
-        memcpy(&cutscene->timbre, getTimbreForProgram(false, 2, style->instrument), sizeof(midiTimbre_t));
-
-        cutscene->timbre.envelope.attackTime = 0;
-        // Using decay instead of release, with a sustain volume of 0, makes the note behave more like percussion
-        // (no note off is necessary)
-        // The control is set in increments of 10ms, so this is equivalent to setting release CC to 60
-        cutscene->timbre.envelope.decayTime = MS_TO_SAMPLES(250);//600
-        cutscene->timbre.envelope.decayTimeVel = (MS_TO_SAMPLES(2000) << 8) / 127;
-        // Setting sustain volume to 0 means the note ends on its own after decay
-        cutscene->timbre.envelope.sustainVol = 0;
-        cutscene->timbre.envelope.releaseTime = 0;
-        // End timbre initialization stuff
     }
 
     // push to tail
@@ -331,8 +351,8 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
 
         xOff = 13;
         yOff = 174;
-        //drawRect(xOff, yOff, 252, 225, c520);
-        drawTextWordWrap(font, style->textColor, line->body, &xOff, &yOff, 252, 225);
+        //drawRect(xOff, yOff, 252, 240, c520);
+        drawTextWordWrap(font, style->textColor, line->body, &xOff, &yOff, 252, 240);
     }
 }
 

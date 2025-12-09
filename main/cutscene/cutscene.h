@@ -43,6 +43,8 @@ typedef struct
     bool drawTextBox;   ///< Set false to draw no textbox.
     uint8_t instrument; ///< Program# of the instrument when A is pressed.
     int8_t octaveOvset; ///< How many octaves to transpose this character's sound up or down. Zero for no effect.
+    uint16_t noteLength; ///< Increase to have the note decay slower. 250 sounds fairly natural.
+    bool slowAttack;    ///< True to make the note have a slow attack.
 } cutsceneStyle_t;
 
 /**
@@ -68,7 +70,8 @@ typedef struct
 
 cutscene_t* initCutscene(cutsceneCb cbFunc, cnfsFileIdx_t nextIconIdx, uint8_t soundBank);
 void removeAllStyles(cutscene_t* cutscene);
-void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t color, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numPoseVariations, bool stageLeft, bool drawSprite, bool drawTextbox, uint8_t instrument, int8_t octaveOvset);
+void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t color, cnfsFileIdx_t spriteIdx, cnfsFileIdx_t textBoxIdx, char* title, uint8_t numPoseVariations, bool stageLeft, bool drawSprite, bool drawTextbox);
+void setMidiParams(cutscene_t* cutscene, uint8_t styleIdx, uint8_t instrument, int8_t octaveOvset, uint16_t noteLength, bool slowAttack);
 void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation);
 void updateCutscene(cutscene_t* cutscene, int16_t btnState);
 void drawCutscene(cutscene_t* cutscene, font_t* font);
