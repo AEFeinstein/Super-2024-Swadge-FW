@@ -1227,8 +1227,8 @@ void mg_detectEntityCollisions(mgEntity_t* self)
     selfBox.x1 = (self->x >> SUBPIXEL_RESOLUTION) - selfSprite->origin->x + selfSpriteBox->x1;
     selfBox.y1 = (self->y >> SUBPIXEL_RESOLUTION) - selfSprite->origin->y + selfSpriteBox->y1;
 
-     drawRect(selfBox.x0 - self->tilemap->mapOffsetX, selfBox.y0 - self->tilemap->mapOffsetY, selfBox.x1 -
-         self->tilemap->mapOffsetX, selfBox.y1 - self->tilemap->mapOffsetY, c500);
+    //  drawRect(selfBox.x0 - self->tilemap->mapOffsetX, selfBox.y0 - self->tilemap->mapOffsetY, selfBox.x1 -
+    //      self->tilemap->mapOffsetX, selfBox.y1 - self->tilemap->mapOffsetY, c500);
 
     mgEntity_t* checkEntity;
     mgSprite_t* checkEntitySprite;
@@ -1257,8 +1257,8 @@ void mg_detectEntityCollisions(mgEntity_t* self)
                 self->collisionHandler(self, checkEntity);
             }
 
-                 drawRect(checkEntityBox.x0 - self->tilemap->mapOffsetX, checkEntityBox.y0 - self->tilemap->mapOffsetY, checkEntityBox.x1 -
-         self->tilemap->mapOffsetX, checkEntityBox.y1 - self->tilemap->mapOffsetY, c005);
+        //  drawRect(checkEntityBox.x0 - self->tilemap->mapOffsetX, checkEntityBox.y0 - self->tilemap->mapOffsetY, checkEntityBox.x1 -
+        //  self->tilemap->mapOffsetX, checkEntityBox.y1 - self->tilemap->mapOffsetY, c005);
         }
     }
 }
