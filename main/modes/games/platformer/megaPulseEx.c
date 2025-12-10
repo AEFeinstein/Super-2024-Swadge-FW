@@ -1032,7 +1032,7 @@ void updateLevelClear(platformer_t* self)
 
     self->gameData.frameCount++;
 
-    if (self->gameData.frameCount > 60)
+    if (self->gameData.frameCount > 100)
     {
         if (self->gameData.countdown > 0)
         {

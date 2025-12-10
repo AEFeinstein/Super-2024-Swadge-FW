@@ -1569,10 +1569,13 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         }
         case ENTITY_MIXTAPE:
         {
+            soundStop(true);
             soundPlaySfx(&(self->soundManager->sndLevelClearS), BZR_LEFT);
             self->spriteIndex           = MG_SP_PLAYER_WIN;
             self->updateFunction        = &mg_updateDummy;
             self->gameData->changeState = MG_ST_LEVEL_CLEAR;
+            other->x = (self->spriteFlipHorizontal) ? (self->x - (9 << SUBPIXEL_RESOLUTION)) : (self->x + (9 << SUBPIXEL_RESOLUTION));
+            other->y = (self->y - (12 << SUBPIXEL_RESOLUTION));
             break;
         }
         default:

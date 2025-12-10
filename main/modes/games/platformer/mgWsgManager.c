@@ -215,7 +215,7 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_AIR_TURRET], false);
     loadWsg(KD_BURGER_BOUNCE_UPRIGHT_WSG, &self->wsgs[MG_WSG_BOUNCE_PAD], false);
     loadWsg(KD_BURGER_BOUNCE_DIAGONAL_WSG, &self->wsgs[MG_WSG_BOUNCE_PAD_DIAGONAL], false);
-    loadWsg(TILE_TBD_WSG, &self->wsgs[MG_WSG_MIXTAPE], false);
+    loadWsg(CASSETTE_VERSION_A_WSG, &self->wsgs[MG_WSG_MIXTAPE], false);
     loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_BOSS_IDLE], false);
     loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_BOSS_MOVE_1], false);
     loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_BOSS_MOVE_2], false);

@@ -29,7 +29,7 @@ void mg_initializeSoundManager(mgSoundManager_t* self)
     loadMidiFile(SND_LEVEL_CLEAR_B_MID, &self->sndLevelClearB, true);
     loadMidiFile(SND_LEVEL_CLEAR_C_MID, &self->sndLevelClearC, true);
     loadMidiFile(SND_LEVEL_CLEAR_D_MID, &self->sndLevelClearD, true);
-    loadMidiFile(SND_LEVEL_CLEAR_S_MID, &self->sndLevelClearS, true);
+    loadMidiFile(SND_LEVEL_CLEAR_MID, &self->sndLevelClearS, true);
     loadMidiFile(SWSN_CHOOSE_SFX_MID, &self->sndMenuConfirm, true);
     loadMidiFile(SND_MENU_DENY_MID, &self->sndMenuDeny, true);
     loadMidiFile(SWSN_MOVE_SFX_MID, &self->sndMenuSelect, true);
