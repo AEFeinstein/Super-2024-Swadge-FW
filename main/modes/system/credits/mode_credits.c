@@ -86,7 +86,7 @@ static const creditsEntry_t entries[] = {
  */
 void creditsEnterMode(void)
 {
-    setFrameRateUs(1000000/50);
+    setFrameRateUs(1000000 / 50);
 
     // Allocate memory for this mode
     credits = (credits_t*)heap_caps_calloc(1, sizeof(credits_t), MALLOC_CAP_8BIT);

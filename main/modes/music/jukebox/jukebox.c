@@ -143,14 +143,14 @@ static const char str_brightness[] = "Touch: LED Brightness:";
 static const char str_stop[]       = ": Stop";
 static const char str_play[]       = ": Play";
 
-static const jukeboxSong_t music_roboRunner[] = {
+static const jukeboxSong_t bgm_roboRunner[] = {
     {
         .fIdx = ROBO_RUNNER_BGM_MID,
         .name = "Robo Runner BGM",
     },
 };
 
-static const jukeboxSong_t music_vectorTanks[] = {
+static const jukeboxSong_t bgm_vectorTanks[] = {
     {
         .fIdx = VT_FIGHT_ON_MID,
         .name = "Fight On!",
@@ -177,11 +177,7 @@ static const jukeboxSong_t music_vectorTanks[] = {
     },
 };
 
-static const jukeboxSong_t music_cosplayCrunch[] = {
-    {
-        .fIdx = CC_PACKAGE_GET_MID,
-        .name = "Package Get",
-    },
+static const jukeboxSong_t bgm_cosplayCrunch[] = {
     {
         .fIdx = COSPLAY_CRUNCH_BGM_MID,
         .name = "Cosplay Crunch BGM",
@@ -196,14 +192,21 @@ static const jukeboxSong_t music_cosplayCrunch[] = {
     },
 };
 
-static const jukeboxSong_t music_picross[] = {
+static const jukeboxSong_t sfx_cosplayCrunch[] = {
+    {
+        .fIdx = CC_PACKAGE_GET_MID,
+        .name = "Package Get",
+    },
+};
+
+static const jukeboxSong_t bgm_picross[] = {
     {
         .fIdx = LULLABY_IN_NUMBERS_MID,
         .name = "Lullaby in Numbers",
     },
 };
 
-static const jukeboxSong_t music_megaPulse[] = {
+static const jukeboxSong_t bgm_megaPulse[] = {
     {
         .fIdx = BGM_BOSS_TRASH_MAN_MID,
         .name = "BGM_BOSS_TRASH_MAN_MID",
@@ -292,6 +295,9 @@ static const jukeboxSong_t music_megaPulse[] = {
         .fIdx = BGM_INTRO_MID,
         .name = "BGM_INTRO_MID",
     },
+};
+
+static const jukeboxSong_t sfx_megaPulse[] = {
     {
         .fIdx = SND_1UP_MID,
         .name = "SND_1UP_MID",
@@ -394,139 +400,145 @@ static const jukeboxSong_t music_megaPulse[] = {
     },
 };
 
-static const jukeboxSong_t music_credits[] = {
+static const jukeboxSong_t bgm_credits[] = {
     {
-        .fIdx = HD_CREDITS_MID,
-        .name = "Hot Dog Credits",
+        .fIdx = MAXIMUM_HYPE_CREDITS_MID,
+        .name = "Maximum Hype",
     },
 };
 
-static const jukeboxSong_t music_tutorial[] = {
+static const jukeboxSong_t bgm_tutorial[] = {
+    {
+        .fIdx = MAXIMUM_HYPE_CREDITS_TEASER_MID,
+        .name = "Maximum Hype Teaser",
+    },
+};
+
+static const jukeboxSong_t sfx_tutorial[] = {
     {
         .fIdx = INTROJINGLE_MID,
         .name = "Intro Jingle",
     },
-    {
-        .fIdx = SPK_TEST_MID,
-        .name = "Speaker Test",
-    },
 };
 
-static const jukeboxSong_t music_mainMenu[] = {
+static const jukeboxSong_t sfx_mainMenu[] = {
     {
         .fIdx = SECRET_MID,
         .name = "Secret",
     },
 };
 
-static const jukeboxSong_t music_swadgesona[] = {
-    {
-        .fIdx = SWSN_CHOOSE_SFX_MID,
-        .name = "Choose SFX",
-    },
-    {
-        .fIdx = SWSN_MOVE_SFX_MID,
-        .name = "Choose SFX",
-    },
+static const jukeboxSong_t bgm_swadgesona[] = {
     {
         .fIdx = SWSN_CREATOR_BGM1_MID,
         .name = "Creator BGM",
     },
 };
 
-static const jukeboxSong_t music_factoryTest[] = {
+static const jukeboxSong_t sfx_swadgesona[] = {
     {
-        .fIdx = HD_CREDITS_MID,
-        .name = "Hot Dog Credits",
+        .fIdx = SWSN_CHOOSE_SFX_MID,
+        .name = "Choose SFX",
+    },
+    {
+        .fIdx = SWSN_MOVE_SFX_MID,
+        .name = "Move SFX",
     },
 };
 
 static const jukeboxCategory_t bgmCategories[] = {
     {
         .category    = &roboRunnerMode,
-        .songs       = music_roboRunner,
-        .numSongs    = ARRAY_SIZE(music_roboRunner),
+        .songs       = bgm_roboRunner,
+        .numSongs    = ARRAY_SIZE(bgm_roboRunner),
         .generalMidi = true,
         .shouldLoop  = true,
     },
     {
         .category    = &artilleryMode,
-        .songs       = music_vectorTanks,
-        .numSongs    = ARRAY_SIZE(music_vectorTanks),
+        .songs       = bgm_vectorTanks,
+        .numSongs    = ARRAY_SIZE(bgm_vectorTanks),
         .generalMidi = true,
         .shouldLoop  = true,
     },
     {
         .category    = &cosCrunchMode,
-        .songs       = music_cosplayCrunch,
-        .numSongs    = ARRAY_SIZE(music_cosplayCrunch),
+        .songs       = bgm_cosplayCrunch,
+        .numSongs    = ARRAY_SIZE(bgm_cosplayCrunch),
         .generalMidi = true,
         .shouldLoop  = true,
     },
     {
         .category    = &modePicross,
-        .songs       = music_picross,
-        .numSongs    = ARRAY_SIZE(music_picross),
+        .songs       = bgm_picross,
+        .numSongs    = ARRAY_SIZE(bgm_picross),
         .generalMidi = true,
         .shouldLoop  = true,
     },
     {
         .category    = &modePlatformer,
-        .songs       = music_megaPulse,
-        .numSongs    = ARRAY_SIZE(music_megaPulse),
+        .songs       = bgm_megaPulse,
+        .numSongs    = ARRAY_SIZE(bgm_megaPulse),
         .generalMidi = true,
         .shouldLoop  = true,
     },
     {
         .category    = &modeCredits,
-        .songs       = music_credits,
-        .numSongs    = ARRAY_SIZE(music_credits),
+        .songs       = bgm_credits,
+        .numSongs    = ARRAY_SIZE(bgm_credits),
         .generalMidi = true,
         .shouldLoop  = true,
     },
     {
         .category    = &introMode,
-        .songs       = music_tutorial,
-        .numSongs    = ARRAY_SIZE(music_tutorial),
-        .generalMidi = true,
-        .shouldLoop  = true,
-    },
-    {
-        .category    = &mainMenuMode,
-        .songs       = music_mainMenu,
-        .numSongs    = ARRAY_SIZE(music_mainMenu),
+        .songs       = bgm_tutorial,
+        .numSongs    = ARRAY_SIZE(bgm_tutorial),
         .generalMidi = true,
         .shouldLoop  = true,
     },
     {
         .category    = &swsnCreatorMode,
-        .songs       = music_swadgesona,
-        .numSongs    = ARRAY_SIZE(music_swadgesona),
+        .songs       = bgm_swadgesona,
+        .numSongs    = ARRAY_SIZE(bgm_swadgesona),
         .generalMidi = true,
         .shouldLoop  = true,
-    },
-    {
-        .category    = &factoryTestMode,
-        .songs       = music_factoryTest,
-        .numSongs    = ARRAY_SIZE(music_factoryTest),
-        .generalMidi = true,
-        .shouldLoop  = true,
-    },
-};
-
-static const jukeboxSong_t sfx_factoryTest[] = {
-    {
-        .fIdx = STEREO_TEST_MID,
-        .name = "Stereo Check",
     },
 };
 
 static const jukeboxCategory_t sfxCategories[] = {
     {
-        .category    = &factoryTestMode,
-        .songs       = sfx_factoryTest,
-        .numSongs    = ARRAY_SIZE(sfx_factoryTest),
-        .generalMidi = false,
+        .category    = &cosCrunchMode,
+        .songs       = sfx_cosplayCrunch,
+        .numSongs    = ARRAY_SIZE(sfx_cosplayCrunch),
+        .generalMidi = true,
+        .shouldLoop  = false,
+    },
+    {
+        .category    = &modePlatformer,
+        .songs       = sfx_megaPulse,
+        .numSongs    = ARRAY_SIZE(sfx_megaPulse),
+        .generalMidi = true,
+        .shouldLoop  = false,
+    },
+    {
+        .category    = &introMode,
+        .songs       = sfx_tutorial,
+        .numSongs    = ARRAY_SIZE(sfx_tutorial),
+        .generalMidi = true,
+        .shouldLoop  = false,
+    },
+    {
+        .category    = &mainMenuMode,
+        .songs       = sfx_mainMenu,
+        .numSongs    = ARRAY_SIZE(sfx_mainMenu),
+        .generalMidi = true,
+        .shouldLoop  = false,
+    },
+    {
+        .category    = &swsnCreatorMode,
+        .songs       = sfx_swadgesona,
+        .numSongs    = ARRAY_SIZE(sfx_swadgesona),
+        .generalMidi = true,
         .shouldLoop  = false,
     },
 };
