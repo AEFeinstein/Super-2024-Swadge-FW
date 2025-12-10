@@ -111,6 +111,8 @@ typedef struct
 
     // Settings cache!
     sudokuSettings_t settings;
+
+    solverCache_t solverCache;
 } swadgedoku_t;
 
 typedef struct
@@ -293,25 +295,6 @@ static const char* noYesOptions[] = {
 static int32_t noYesValues[] = {
     0,
     1,
-};
-
-static const char* const aOrAnTable[] = {
-    "", // a 0
-    "", // a 1
-    "", // a 2
-    "", // a 3
-    "", // a 4
-    "", // a 5
-    "", // a 6
-    "", // a 7
-    "n", // an 8
-    "", // a 9
-    "n", // an A
-    "", // a B
-    "", // a C
-    "", // a D
-    "n", // an E
-    "n", // an F
 };
 
 /// @brief A default light-mode display theme
@@ -511,11 +494,14 @@ static void swadgedokuEnterMode(void)
     addSingleItemToMenu(sd->pauseMenu, menuItemAbandonPuzzle);
     addSingleItemToMenu(sd->pauseMenu, menuItemExitPuzzle);
 
+    initSolverCache(&sd->solverCache, 9, 9);
+
     swadgedokuSetupMenu();
 }
 
 static void swadgedokuExitMode(void)
 {
+    deinitSolverCache(&sd->solverCache);
     deinitSudokuGame(&sd->game);
 
     void* val = NULL;
@@ -896,6 +882,7 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                         sudokuGetNotes(sd->game.notes, &sd->game, 0);
                         sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
                         swadgedokuSetupNumberWheel(sd->game.base, 0);
+                        resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
                         sd->screen = SWADGEDOKU_GAME;
                     }
                     else
@@ -938,6 +925,7 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
 
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
             sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
+            resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
 
             swadgedokuSetupNumberWheel(sd->game.base, 0);
 
@@ -966,6 +954,7 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
             sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
+            resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
             swadgedokuSetupNumberWheel(sd->game.base, 0);
             sd->screen = SWADGEDOKU_GAME;
         }
@@ -983,6 +972,7 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
             sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
+            resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
             swadgedokuSetupNumberWheel(sd->game.base, 0);
             sd->screen = SWADGEDOKU_GAME;
         }
@@ -1347,25 +1337,15 @@ static void swadgedokuShowHint(void)
     sudokuOverlayOpt_t opts[sd->game.size * sd->game.size];
     overlay.gridOpts = opts;
 
-    if (sudokuNextMove(&sd->hint, &sd->player.overlay, &sd->game))
+    if (sudokuNextMove2(&sd->solverCache, &sd->game))
     {
-        ESP_LOGI("Swadgedoku", "Got hint!");
-//#pragma clang diagnostic push
-#pragma GCC diagnostic push
-//#pragma clang diagnostic ignored "-Wformat-nonliteral"
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
-        snprintf(sd->hintText, sizeof(sd->hintText), sd->hint.message, (int)sd->hint.digit, (int)(sd->hint.pos / sd->game.size) + 1, (int)(sd->hint.pos % sd->game.size) + 1, aOrAnTable[sd->hint.digit]);
-        if (sd->hint.detail)
-        {
-            snprintf(sd->hintDetailText, sizeof(sd->hintDetailText), sd->hint.detail, (int)sd->hint.digit, (int)(sd->hint.pos / sd->game.size) + 1, (int)(sd->hint.pos % sd->game.size) + 1, aOrAnTable[sd->hint.digit]);
-        }
-        else
-        {
-            *sd->hintDetailText = '\0';
-        }
-//#pragma clang diagnostic pop
-#pragma GCC diagnostic pop
+        hintBufDebug(sd->solverCache.hintBuf, sd->solverCache.hintbufLen);
+        hintToOverlay(&sd->player.overlay, &sd->game, -1, sd->solverCache.hintBuf, sd->solverCache.hintbufLen);
+        writeStepDescription(sd->hintText, sizeof(sd->hintText), sd->solverCache.hintBuf, sd->solverCache.hintbufLen, -1);
+        sd->hintDetailText[0] = 'D';
+        sd->hintDetailText[1] = '\0';
 
+        ESP_LOGI("Swadgedoku", "Got hint!");
         if (sd->hintDialogBox == NULL)
         {
             sd->hintDialogBox = initDialogBox(hintDialogTitle, sd->hintText, NULL, swadgedokuHintDialogCb);
@@ -1561,7 +1541,8 @@ static void swadgedokuHintDialogCb(const char* label)
     {
         // Apply the hint
         sd->hintsUsed++;
-        setDigit(&sd->game, sd->hint.digit, sd->hint.pos % sd->game.size, sd->hint.pos / sd->game.size);
+        //setDigit(&sd->game, sd->hint.digit, sd->hint.pos % sd->game.size, sd->hint.pos / sd->game.size);
+        applyHint(&sd->game, sd->solverCache.hintBuf, sd->solverCache.hintbufLen);
         swadgedokuDoWinCheck();
 
         // Apply the trophy for using a hint
