@@ -47,9 +47,11 @@ swadgeMode_t modeCredits = {
 static const creditsEntry_t entries[] = {
     {.name = "Adam Feinstein\n", .color = c230},
     {.name = "Andy (Illiterate)\n", .color = c520},
+    {.name = "Bryce Browner\n", .color = c315},
     {.name = "crobi\n", .color = c044},
     {.name = "Dac\n", .color = c515},
     {.name = "Emily Anthony\n", .color = c104},
+    {.name = "ErikTronIC3D\n", .color = c055},
     {.name = "Greg Lord\n", .color = c035},
     {.name = "Heather HeathStaa\n", .color = c335},
     {.name = "James Albracht\n", .color = c552},
