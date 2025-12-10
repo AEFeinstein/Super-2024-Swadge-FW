@@ -164,7 +164,7 @@ const trophyData_t platformerTrophies[] = {
     {
         .title       = "Bigma",
         .description = "Favorite genre: Corruption",
-        .image       = NO_IMAGE_SET, //need 36 x 36 boss images later
+        .image       = NO_IMAGE_SET, // need 36 x 36 boss images later
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1, // For trigger type, set to one
@@ -252,20 +252,21 @@ const trophyDataList_t platformerTrophyData = {
 
 platformer_t* platformer = NULL;
 
-swadgeMode_t modePlatformer = {.modeName                 = platformerName,
-                               .wifiMode                 = NO_WIFI,
-                               .overrideUsb              = false,
-                               .usesAccelerometer        = false,
-                               .usesThermometer          = false,
-                               .fnEnterMode              = platformerEnterMode,
-                               .fnExitMode               = platformerExitMode,
-                               .fnMainLoop               = platformerMainLoop,
-                               .fnAudioCallback          = NULL,
-                               .fnBackgroundDrawCallback = mg_backgroundDrawCallback,
-                               .fnEspNowRecvCb           = NULL,
-                               .fnEspNowSendCb           = NULL,
-                               .trophyData               = &platformerTrophyData,               // This line activates the trophy for this mode
-                            };
+swadgeMode_t modePlatformer = {
+    .modeName                 = platformerName,
+    .wifiMode                 = NO_WIFI,
+    .overrideUsb              = false,
+    .usesAccelerometer        = false,
+    .usesThermometer          = false,
+    .fnEnterMode              = platformerEnterMode,
+    .fnExitMode               = platformerExitMode,
+    .fnMainLoop               = platformerMainLoop,
+    .fnAudioCallback          = NULL,
+    .fnBackgroundDrawCallback = mg_backgroundDrawCallback,
+    .fnEspNowRecvCb           = NULL,
+    .fnEspNowSendCb           = NULL,
+    .trophyData               = &platformerTrophyData, // This line activates the trophy for this mode
+};
 
 // #define NUM_LEVELS 16
 

@@ -1414,7 +1414,6 @@ static const mg_spriteDef_t chargeShotAnimFrames[]
 static const mg_spriteDef_t maxChargeShotAnimFrames[]
     = {MG_SP_CHARGE_SHOT_MAX_1, MG_SP_CHARGE_SHOT_MAX_2, MG_SP_CHARGE_SHOT_MAX_3};
 
-
 // platformerTrophies array is defined in megaPulseEx.c to avoid multiple definitions
 extern const trophyData_t platformerTrophies[];
 #endif

@@ -888,13 +888,6 @@ static void initTimbre(midiTimbre_t* dest, const midiTimbre_t* config)
     memcpy(dest, config, sizeof(midiTimbre_t));
 }
 
-/**
- * @brief Return a pointer to the base timbre for the given bank and program definition
- *
- * @param bank The bank to select the instrument from, from 0 to 127 with 0 being the GM instruments
- * @param program The program number, from 0 to 127
- * @return const midiTimbre_t*
- */
 const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, uint8_t program)
 {
     if (percussion)
