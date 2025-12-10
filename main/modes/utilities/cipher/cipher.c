@@ -13,7 +13,7 @@
 typedef struct
 {
     bool rotating;
-    bool direction;
+    int32_t lastSpin;
     int32_t raceRad;
     int64_t timeSpinning;
 } cipherRace_t;
@@ -31,6 +31,10 @@ typedef struct
     paletteColor_t bg;
     paletteColor_t shade;
     paletteColor_t text;
+    paletteColor_t spinning;
+    paletteColor_t notSpinning;
+
+    bool splash;
 } cipher_t;
 
 //==============================================================================
@@ -48,7 +52,7 @@ static void DrawDividerLine(int, int, int);
 // Const variables
 //==============================================================================
 
-static const char DR_NAMESTRING[] = "Caesar Cipher";
+static const char DR_NAMESTRING[] = "Secret Decoder Ring";
 static const int rotateRPM        = 5;
 static const int64_t UsPerDeg     = (60000000 / (rotateRPM * 360));
 
@@ -64,6 +68,11 @@ static const char* lettersRace[]
 static const char* numbersRace[]
     = {"8",  "35", "6", "23", "15", "9", "33", "3",  "20", "11", "36", "27", "14", "25", "19", "32", "2",  "28",
        "21", "34", "7", "16", "30", "5", "1",  "22", "13", "10", "18", "26", "31", "24", "17", "4",  "29", "12"};
+
+static const char* splashInstructions[] 
+    = {
+        "Welcome to the Decoder Ring!\nUse Left/Right to spin the entire decoder ring.\nUp/Down will shift the races one step.\nA/B will toggle free spinning of the races.\nEnjoy your secrets!"
+    };
 
 //==============================================================================
 // Variables
@@ -166,19 +175,23 @@ static void cipherEnterMode()
 {
     cipher = heap_caps_calloc(1, sizeof(cipher_t), MALLOC_CAP_8BIT);
 
-    cipher->bg    = c001;
-    cipher->shade = c112;
-    cipher->text  = c434;
+    cipher->bg          = c001;
+    cipher->shade       = c112;
+    cipher->text        = c434;
+    cipher->spinning    = c555;
+    cipher->notSpinning = c222;
 
     cipher->innerRace            = (cipherRace_t*)heap_caps_calloc(1, sizeof(cipherRace_t), MALLOC_CAP_8BIT);
     cipher->innerRace->rotating  = true;
-    cipher->innerRace->direction = true;
+    cipher->innerRace->lastSpin = 0;
     cipher->innerRace->raceRad   = 100;
 
     cipher->outerRace            = (cipherRace_t*)heap_caps_calloc(1, sizeof(cipherRace_t), MALLOC_CAP_8BIT);
     cipher->outerRace->rotating  = true;
-    cipher->outerRace->direction = false;
+    cipher->outerRace->lastSpin = 0;
     cipher->outerRace->raceRad   = 125;
+
+    cipher->splash = false;
 
     cipher->ibm = getSysFont();
     initShapes();
@@ -219,73 +232,104 @@ void cipherBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, in
  */
 static void cipherMainLoop(int64_t elapsedUs)
 {
-    if (cipher->innerRace->rotating || cipher->innerRace->timeSpinning % (UsPerDeg * 10) > 2)
-    {
-        cipher->innerRace->timeSpinning
-            = (cipher->innerRace->timeSpinning
-               + (int)fmin(elapsedUs, (UsPerDeg * 10) - (cipher->innerRace->timeSpinning % (UsPerDeg * 10)) + 1))
-              % (UsPerDeg * 360);
+    if(cipher->splash){
+        //Draw the splash screen
+    }else{
+
+        if (cipher->OffsettingLeft)
+        {
+            if(cipher->innerRace->rotating){
+                cipher->innerRace->lastSpin = 1;
+                cipher->innerRace->timeSpinning = (cipher->innerRace->timeSpinning+ elapsedUs * 2) % (UsPerDeg * 360);
+            }
+            if(cipher->outerRace->rotating){
+                cipher->outerRace->lastSpin = 1;
+                cipher->outerRace->timeSpinning = (cipher->outerRace->timeSpinning+ elapsedUs * 2) % (UsPerDeg * 360);
+            }
+        }else if (cipher->OffsettingRight)
+        {
+            if(cipher->innerRace->rotating){
+                cipher->innerRace->lastSpin = -1;
+                cipher->innerRace->timeSpinning = ((cipher->innerRace->timeSpinning- elapsedUs * 2)+ (UsPerDeg * 360)) % (UsPerDeg * 360);
+            }
+            if(cipher->outerRace->rotating){
+                cipher->outerRace->lastSpin = -1;
+                cipher->outerRace->timeSpinning = ((cipher->outerRace->timeSpinning- elapsedUs * 2)+ (UsPerDeg * 360)) % (UsPerDeg * 360);
+            }
+        }else{
+            if( (cipher->innerRace->timeSpinning) % (UsPerDeg * 10) > 2){
+                cipher->innerRace->timeSpinning = cipher->innerRace->timeSpinning
+                    + cipher->innerRace->lastSpin * fmin(elapsedUs,fmin(
+                        cipher->innerRace->timeSpinning%(UsPerDeg*10),
+                        (UsPerDeg*10 - (cipher->innerRace->timeSpinning%(UsPerDeg*10)))
+                    ));
+            }
+            if( (cipher->outerRace->timeSpinning) % (UsPerDeg * 10) > 2){
+                cipher->outerRace->timeSpinning = cipher->outerRace->timeSpinning
+                    + cipher->outerRace->lastSpin * fmin(elapsedUs,fmin(
+                        cipher->outerRace->timeSpinning%(UsPerDeg*10),
+                        (UsPerDeg*10 - (cipher->outerRace->timeSpinning%(UsPerDeg*10)))
+                    ));
+            }
+        }
+        //Draw the circle that denotes whether the outer race is spinning or not
+        if(cipher->outerRace->rotating){
+            drawCircleFilled(ScreenCenter.x, ScreenCenter.y, cipher->outerRace->raceRad + 12, cipher->spinning);
+        }else{
+            drawCircleFilled(ScreenCenter.x, ScreenCenter.y, cipher->outerRace->raceRad + 12, cipher->notSpinning);
+        }
+
+        // Draw filled circle for text to live on
+        drawCircleFilled(ScreenCenter.x, ScreenCenter.y, cipher->outerRace->raceRad + 10, cipher->shade);
+
+        // Draw the circle that denotes whether the inner race is spinning or not
+        if(cipher->innerRace->rotating){
+            drawCircleFilled(ScreenCenter.x, ScreenCenter.y, cipher->innerRace->raceRad - 8, cipher->spinning);
+        }else{
+            drawCircleFilled(ScreenCenter.x, ScreenCenter.y, cipher->innerRace->raceRad - 8, cipher->notSpinning);
+        }
+
+        // Draw inner circle "cutout" for logo to sit on
+        drawCircleFilled(ScreenCenter.x, ScreenCenter.y, cipher->innerRace->raceRad - 10, cipher->bg);
+
+        // Draw Logo
+        drawWsg(&cipher->logo, 65, 80, false, false, 0);
+
+        int32_t degPerChar = 360 / ARRAY_SIZE(numbersRace);
+
+        // Draw text dividers that do not move when either race is spinning
+        for (int i = 0; i < ARRAY_SIZE(numbersRace); i++)
+        {
+            // Draw divider lines
+            DrawDividerLine(cipher->innerRace->raceRad - 10, cipher->outerRace->raceRad + 10,
+                            ((cipher->RaceOffset) / UsPerDeg) + degPerChar * i + (degPerChar / 2));
+        }
+
+        // Draw Text on top
+        for (int i = 0; i < ARRAY_SIZE(numbersRace); i++)
+        {
+            // Draw inner race
+            vec_t inPos = {
+                .x = cipher->innerRace->raceRad,
+                .y = ((cipher->innerRace->timeSpinning + cipher->RaceOffset) / UsPerDeg) + degPerChar * i,
+            };
+            inPos = RThetaToXY(inPos, false);
+            drawText(cipher->ibm, cipher->text, lettersRace[i], inPos.x - (textWidth(cipher->ibm, lettersRace[i]) / 2),
+                    inPos.y - 5);
+
+            // draw outer race
+            vec_t outPos = {
+                .x = cipher->outerRace->raceRad,
+                .y = ((cipher->outerRace->timeSpinning + cipher->RaceOffset) / UsPerDeg) + degPerChar * i,
+            };
+            outPos = RThetaToXY(outPos, false);
+            drawText(cipher->ibm, cipher->text, numbersRace[i], outPos.x - (textWidth(cipher->ibm, numbersRace[i]) / 2),
+                    outPos.y - 5);
+        }
+
     }
 
-    if (cipher->outerRace->rotating || cipher->outerRace->timeSpinning % (UsPerDeg * 10) > 2)
-    {
-        cipher->outerRace->timeSpinning
-            = (cipher->outerRace->timeSpinning
-               + (int)fmin(elapsedUs, (UsPerDeg * 10) - (cipher->outerRace->timeSpinning % (UsPerDeg * 10)) + 1))
-              % (UsPerDeg * 360);
-    }
-
-    if (cipher->OffsettingLeft)
-    {
-        cipher->RaceOffset = (cipher->RaceOffset + elapsedUs * 2) % (UsPerDeg * 360);
-    }
-
-    if (cipher->OffsettingRight)
-    {
-        cipher->RaceOffset = ((cipher->RaceOffset - elapsedUs * 2) + (UsPerDeg * 360)) % (UsPerDeg * 360);
-    }
-
-    // Draw filled circle for text to live on
-    drawCircleFilled(ScreenCenter.x, ScreenCenter.y, cipher->outerRace->raceRad + 10, cipher->shade);
-
-    // Draw inner circle "cutout" for logo to sit on
-    drawCircleFilled(ScreenCenter.x, ScreenCenter.y, cipher->innerRace->raceRad - 10, cipher->bg);
-
-    // Draw Logo
-    drawWsg(&cipher->logo, 65, 80, false, false, 0);
-
-    int32_t degPerChar = 360 / ARRAY_SIZE(numbersRace);
-
-    // Draw text dividers that do not move when either race is spinning
-    for (int i = 0; i < ARRAY_SIZE(numbersRace); i++)
-    {
-        // Draw divider lines
-        DrawDividerLine(cipher->innerRace->raceRad - 10, cipher->outerRace->raceRad + 10,
-                        ((cipher->RaceOffset) / UsPerDeg) + degPerChar * i + (degPerChar / 2));
-    }
-
-    // Draw Text on top
-    for (int i = 0; i < ARRAY_SIZE(numbersRace); i++)
-    {
-        // Draw inner race
-        vec_t inPos = {
-            .x = cipher->innerRace->raceRad,
-            .y = ((cipher->innerRace->timeSpinning + cipher->RaceOffset) / UsPerDeg) + degPerChar * i,
-        };
-        inPos = RThetaToXY(inPos, false);
-        drawText(cipher->ibm, cipher->text, lettersRace[i], inPos.x - (textWidth(cipher->ibm, lettersRace[i]) / 2),
-                 inPos.y - 5);
-
-        // draw outer race
-        vec_t outPos = {
-            .x = cipher->outerRace->raceRad,
-            .y = ((cipher->outerRace->timeSpinning + cipher->RaceOffset) / UsPerDeg) + degPerChar * i,
-        };
-        outPos = RThetaToXY(outPos, false);
-        drawText(cipher->ibm, cipher->text, numbersRace[i], outPos.x - (textWidth(cipher->ibm, numbersRace[i]) / 2),
-                 outPos.y - 5);
-    }
-
+    
     // handle input
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
@@ -312,16 +356,6 @@ static void cipherMainLoop(int64_t elapsedUs)
                 case PB_RIGHT:
                 {
                     cipher->OffsettingRight = true;
-                    break;
-                }
-                case PB_UP:
-                {
-                    cipher->innerRace->timeSpinning += 3;
-                    break;
-                }
-                case PB_DOWN:
-                {
-                    cipher->outerRace->timeSpinning += 3;
                     break;
                 }
                 default:
