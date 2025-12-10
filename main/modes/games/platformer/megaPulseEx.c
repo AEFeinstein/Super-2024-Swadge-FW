@@ -159,6 +159,97 @@ void goToReadyScreen(void);
 // Variables
 //==============================================================================
 
+// Trophy definitions for platformer mode
+const trophyData_t platformerTrophies[] = {
+    {
+        .title       = "Bigma",
+        .description = "Favorite genre: Corruption",
+        .image       = KID_0_WSG, //need 36 x 36 boss images later
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Kinetic Donut",
+        .description = "Favorite genre: Funk",
+        .image       = KID_0_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Smash Gorilla",
+        .description = "Favorite genre: Salsa",
+        .image       = KID_0_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Deadeye Chirpzi",
+        .description = "Favorite genre: Metal",
+        .image       = KID_0_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Grind Pangolin",
+        .description = "Favorite genre: Ska",
+        .image       = KID_0_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Drain Bat",
+        .description = "Favorite genre: Classical",
+        .image       = KID_0_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Sever Yataga",
+        .description = "Favorite genre: EDM",
+        .image       = KID_0_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Flare Gryffyn",
+        .description = "Favorite genre: Classic Rock",
+        .image       = KID_0_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Ember Demon (Actually Trash Man)",
+        .description = "Favorite genre: Jazz",
+        .image       = KID_0_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+};
+
+// Individual mode settings
+const trophySettings_t platformerTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 6,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = "Alpha Pulse",
+};
+
+// This is passed to the swadgeMode_t
+const trophyDataList_t platformerTrophyData = {
+    .settings = &platformerTrophySettings,
+    .list     = platformerTrophies,
+    .length   = ARRAY_SIZE(platformerTrophies),
+};
+
 platformer_t* platformer = NULL;
 
 swadgeMode_t modePlatformer = {.modeName                 = platformerName,
@@ -172,7 +263,9 @@ swadgeMode_t modePlatformer = {.modeName                 = platformerName,
                                .fnAudioCallback          = NULL,
                                .fnBackgroundDrawCallback = mg_backgroundDrawCallback,
                                .fnEspNowRecvCb           = NULL,
-                               .fnEspNowSendCb           = NULL};
+                               .fnEspNowSendCb           = NULL,
+                               .trophyData               = &platformerTrophyData,               // This line activates the trophy for this mode
+                            };
 
 // #define NUM_LEVELS 16
 

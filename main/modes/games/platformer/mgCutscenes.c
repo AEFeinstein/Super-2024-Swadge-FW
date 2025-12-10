@@ -714,6 +714,14 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "I get that way too sometimes.", false, -1);
             addCutsceneLine(gameData->cutscene, KineticDonut,
                             "Here. Take this. It's a little messy, but it packs a punch.", false, -1);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked,
+                            "........................................................... PULSE receives: Drop the Mic",
+                            false, 0);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked,
+                            "........................................................... Press down and A in the air.",
+                            false, 0);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked,
+                            "........................................................... Unleash a ground-pound sound attack with a mic drop!",false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "You going to be okay, Your Majesty?", false, -1);
             addCutsceneLine(gameData->cutscene, KineticDonut, "Yeah, I'm gonna go find something greasy and lie down.",
                             false, -1);
