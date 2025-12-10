@@ -1168,8 +1168,8 @@ midiPlayer_t* globalMidiPlayerGet(uint8_t trackType);
  * If no timbre is assigned, the default (Acoustic Grand Piano) will be used
  *
  * @param percussion True to return the percussion timbre for the bank, otherwise a pitched timbre
- * @param bank The bank to select the timbre from
- * @param program The program ID within the bank corresponding to the timbre
+ * @param bank The bank to select the instrument from, from 0 to 127 with 0 being the GM instruments
+ * @param program The program ID within the bank corresponding to the timbre, from 0 to 127
  * @return const midiTimbre_t* A pointer to the timbre that will be used
  */
 const midiTimbre_t* getTimbreForProgram(bool percussion, uint8_t bank, uint8_t program);

@@ -70,8 +70,8 @@ typedef struct
     cnfsFileIdx_t textBoxIdx;    ///< The file index of the textbox sprite.
     uint8_t numSpriteVariations; ///< A random number in range of this will be rolled and added to the spriteIdx.
                                  ///< Provide 1 for no variation;
-    bool stageLeft; ///< If true, then the sprite enters and leaves the left side of the screen. If false, then the
-                    ///< right side.
+    bool stageLeft;      ///< If true, then the sprite enters and leaves the left side of the screen. If false, then the
+                         ///< right side.
     bool drawSprite;     ///< Set false to draw no sprite.
     bool drawTextBox;    ///< Set false to draw no textbox.
     uint8_t instrument;  ///< Program# of the instrument when A is pressed.
