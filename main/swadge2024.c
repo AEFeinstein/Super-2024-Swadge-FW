@@ -160,6 +160,7 @@
  * - coreutil.h: General utilities for system profiling
  * - hdw-usb.h: Learn how to be a USB HID Gamepad
  *     - advanced_usb_control.h: Use USB for application development
+ * - cutscene.h Renders and makes sound effects for character dialogue. Generic enough to use for any game with any yearly theme.
  *
  * \section espressif_doc Espressif Documentation
  *
