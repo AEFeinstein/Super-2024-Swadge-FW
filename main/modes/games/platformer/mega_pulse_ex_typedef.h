@@ -22,7 +22,8 @@ static const cnfsFileIdx_t MG_BGMS[]
        BGM_FLARE_GRYFFYN_MID,   BGM_BOSS_FLARE_GRIFFIN_MID,   BGM_GRIND_PANGOLIN_MID, BGM_BOSS_GRIND_PANGOLIN_MID,
        BGM_KINETIC_DONUT_MID,   BGM_BOSS_KINETIC_DONUT_MID,   BGM_RIP_BARONESS_MID,   BGM_BOSS_HANK_WADDLE_MID,
        BGM_SEVER_YAGATA_MID,    BGM_BOSS_SEVER_YAGATA_MID,    BGM_SMASH_GORILLA_MID,  BGM_BOSS_SMASH_GORILLA_MID,
-       BGM_BOSS_TRASH_MAN_MID,  BGM_BOSS_BIGMA_MID,           BGM_STAGE_SELECT_MID,   BGM_NAME_ENTRY_MID};
+       BGM_BOSS_TRASH_MAN_MID,  BGM_BIGMA_MID,                BGM_BOSS_BIGMA_MID,     BGM_STAGE_SELECT_MID,   
+       BGM_NAME_ENTRY_MID};
 
 //==============================================================================
 // Macros
@@ -90,6 +91,7 @@ typedef enum
     MG_BGM_SMASH_GORILLA,
     MG_BGM_BOSS_SMASH_GORILLA,
     MG_BGM_BOSS_TRASH_MAN,
+    MG_BGM_BIGMA,
     MG_BGM_BOSS_BIGMA,
     MG_BGM_STAGE_SELECT,
     MG_BGM_NAME_ENTRY
@@ -1294,7 +1296,7 @@ static const mgLeveldef_t leveldef[] = {
      .mainBgmIndex       = MG_BGM_RIP_BARONESS,
      .bossBgmIndex       = MG_BGM_BOSS_TRASH_MAN,
      .bgColors           = bgGradientOrange},
-    {.filename           = LEVEL_02_BIN,
+    {.filename           = GAUNTLET_BIN,
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_BIGMA,
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
