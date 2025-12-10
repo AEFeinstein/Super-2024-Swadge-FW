@@ -92,7 +92,7 @@ const trophyData_t mainMenuTrophies[] = {
         .identifier  = &swadgeItMode,
     },
     {
-        .title       = "Swordfish isn't always password",
+        .title       = "Swordfish isn't always the password",
         .description = "Played Swadgedoku for the first time",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_TRIGGER,
