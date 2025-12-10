@@ -15,15 +15,18 @@ typedef enum
 
 typedef enum
 {
-    SINGLE, // only empty square left in row/col/box
-    ONLY_POSSIBLE, // only possibility in the square
-    NAKED_PAIR, // eliminate possibilities
-    HIDDEN_PAIR,
-    NAKED_TRIPLE,
-    HIDDEN_TRIPLE,
-    X_WING,
-    XY_WING,
-    GUESS,
+    SINGLE = 1, // only empty square left in row/col/box
+    ONLY_POSSIBLE = 2, // only possibility in the square
+    HIDDEN_SINGLE = 3,
+    NAKED_PAIR = 4, // eliminate possibilities
+    HIDDEN_PAIR = 5,
+    NAKED_TRIPLE = 6,
+    HIDDEN_TRIPLE = 7,
+    X_WING = 8,
+    XY_WING = 9,
+    GUESS = 10,
+    NOTE_ELIMINATION = 11,
+    TECHNIQUE_TYPE_LAST,
 } sudokuTechniqueType_t;
 
 typedef struct
@@ -89,11 +92,16 @@ typedef struct
     int pos;
 } solverCache_t;
 
+bool sudokuNextMove2(solverCache_t* cache, const sudokuGrid_t* board);
 bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudokuGrid_t* board);
 void sudokuApplyMove(sudokuGrid_t* board, const sudokuMoveDesc_t* desc);
 void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepNum, const uint8_t* hint, size_t n);
 
 bool initSolverCache(solverCache_t* cache, int size, int base);
-void resetSolverCache(solverCache_t* cache);
+void resetSolverCache(solverCache_t* cache, int size, int base);
 void deinitSolverCache(solverCache_t* cache);
 void makeBoxMapp(solverCache_t* cache, const sudokuGrid_t* board);
+
+void writeStepDescription(char* buf, size_t n, const uint8_t* hintBuf, size_t hintbufLen, int step);
+void applyHint(sudokuGrid_t* game, const uint8_t* hintbuf, size_t hintbufLen);
+void hintBufDebug(const uint8_t* hint, size_t hintbufLen);
