@@ -191,7 +191,7 @@ void testEnterMode(void)
     setMicGainSetting(MAX_MIC_GAIN);
 
     // Play a song
-    loadMidiFile(HD_CREDITS_MID, &test->song, true);
+    loadMidiFile(MAXIMUM_HYPE_CREDITS_MID, &test->song, true);
     switchToSpeaker();
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     midiGmOn(player);
