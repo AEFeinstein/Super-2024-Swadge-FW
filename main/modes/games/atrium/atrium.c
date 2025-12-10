@@ -86,7 +86,7 @@ static const char* const editInstructText[] = {
     "Press A to confirm selection",
 }; */
 
-const char atriumNVSprofile[]    = "Atrium";
+const char atriumNVSprofile[]    = "atrium";
 static const char* const fact0[] = {"PB&J", "BLT", "Cheese", "Reuben", "Hoagie", "Ice Cream", "Hot Dog", "Knuckle"};
 static const char* const fact1[]
     = {"Bard", "Superfan", "Pinball Wizard", "Maker", "Sharpshooter", "Trashman", "Speed Runner", "Medic"};
@@ -243,7 +243,7 @@ static void drawConcert(uint64_t elapsedUs);
 static void drawGazebo(uint64_t elapsedUs);
 static void drawGazeboForeground(uint64_t elapsedUs);
 static void drawArrows(bool, bool, bool, bool);
-static void drawCard(void);
+static void drawCard(userProfile_t profile);
 
 void loadProfileFromNVS(userProfile_t* profile);
 
@@ -446,20 +446,7 @@ static void atriumMainLoop(int64_t elapsedUs)
                     else if ((evt.button & PB_B))
                     {
                         atr->state = ATR_PROFILE; // if B is pressed, go to profile view
-                        loadProfiles(&atr->spList, &atr->loadedProfilesList, 1, false);
-                        if (atr->loadedProfilesList.first->val == NULL)
-                        {
-                            printf("FUCK");
-                        }
-                        atr->loadedProfile = *(userProfile_t*)atr->loadedProfilesList.first->val;
-                        size_t len = sizeof(swadgesonaCore_t);
-                        if (!readNvsBlob(spSonaNVSKey, &atr->loadedProfile.swsn, &len))
-                        {
-                            generateRandomSwadgesona(&atr->loadedProfile.swsn);
-                        }
-                        generateRandomSwadgesona(&atr->loadedProfile.swsn);
-                        generateSwadgesonaImage(&atr->loadedProfile.swsn, false);
-                        break;
+
                     }
                 }
             }
@@ -472,12 +459,48 @@ static void atriumMainLoop(int64_t elapsedUs)
         case ATR_DISPLAY:
         {
             drawLobbies(&evt, elapsedUs);
-
+            
             break;
         }
         case ATR_PROFILE:
         {
-            drawCard();
+        if(!atr->loadedProfs){
+        loadProfiles(&atr->spList, &atr->loadedProfilesList, 1, false);
+            if (atr->loadedProfilesList.first == NULL || atr->loadedProfilesList.first->val == NULL)
+                {
+                    loadProfileFromNVS(&atr->loadedProfile);
+                    if (atr->loadedProfile.swsn->image.w != 0)
+                {
+                    freeWsg(&atr->loadedProfile.swsn->image);
+                    printf("Freed previous image\n");
+                }
+                }
+        else
+        {
+            
+        atr->loadedProfile = *(userProfile_t*)atr->loadedProfilesList.first->val;
+        size_t len = sizeof(swadgesonaCore_t);
+        if (!readNvsBlob(spSonaNVSKey, &atr->loadedProfile.swsn, &len))
+        {
+            generateRandomSwadgesona(atr->loadedProfile.swsn);
+        }
+        generateSwadgesonaImage(atr->loadedProfile.swsn, false);
+        }
+
+        printf("Loaded profile. the selections are:\n");
+        printf("Card Select: %d\n", atr->loadedProfile.cardSelect);
+        printf("Fact0: %d\n", atr->loadedProfile.facts[0]);
+        printf("Fact1: %d\n", atr->loadedProfile.facts[1]); 
+        printf("Fact2: %d\n", atr->loadedProfile.facts[2]); 
+        printf("Num Passes: %d\n", atr->loadedProfile.numPasses); 
+        
+        atr->loadedProfs = true;
+        }       
+                        
+                        
+                        
+        drawCard(atr->loadedProfile);
+
             break;
         }
         case ATR_EDIT_PROFILE:
@@ -759,12 +782,12 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
     // TODO: move down spList and get number of pages, index accordingly
     for (int i = 0; i < page * 4; i++)
     {
-        printf("we are on page %d, skipping sona %d\n", page, i);
+        
     }
 
     if (atr->loadedProfs == 0)
     {
-        loadProfiles(&atr->spList, &atr->loadedProfilesList, 4, 0); // load up to 4 profiles into loadedProfilesList
+        loadProfiles(&atr->spList, &atr->loadedProfilesList, 4, 1); // load up to 4 profiles into loadedProfilesList
         atr->loadedProfs = 1;
         printf("Loaded profiles into loadedProfilesList\n");
     }
@@ -801,22 +824,27 @@ static void drawArrows(bool left, bool right, bool up, bool down)
     }
 }
 
-static void drawCard()
+static void drawCard(userProfile_t profile)
 {
     // concat card info
 
     // line 1: fact0
     char factline0[64];
-    snprintf(factline0, sizeof(factline0) - 1, "%s%s", preambles[0], fact0[0]);
+    snprintf(factline0, sizeof(factline0) - 1, "%s%s", preambles[0], fact0[profile.facts[0]]);
     // line 2: fact1
     char factline1[64];
-    snprintf(factline1, sizeof(factline1) - 1, "%s%s", preambles[1], fact1[0]);
+    snprintf(factline1, sizeof(factline1) - 1, "%s%s", preambles[1], fact1[profile.facts[1]]);
     // line 3: fact2
     char factline2[64];
-    snprintf(factline2, sizeof(factline2) - 1, "%s%s", preambles[2], fact2[0]);
+    snprintf(factline2, sizeof(factline2) - 1, "%s%s", preambles[2], fact2[profile.facts[2]]);
     // draw the card info
+    printf("factline0: %s\n", factline0);
+    printf("factline1: %s\n", factline1);
+    printf("factline2: %s\n", factline2);
+
     drawWsgSimple(&atr->backgroundImages[0], 0, 0);
     drawWsgSimple(&atr->cards[atr->loadedProfile.cardSelect], 0, 0 + 12); // draw the card
+    
     drawWsgSimple(&atr->loadedProfile.swsn->image, SONALOC_X, SONALOC_Y); // draw the sona head
 
     // TODO Ensure this is generated
@@ -841,11 +869,20 @@ static void drawCard()
 
 void loadProfiles(list_t* spList, list_t* loadedProfilesList, int maxProfiles, bool remote)
 {
-    if (!remote)
+    if (remote == false)
     {
+        // Clear the loadedProfilesList
+        while (loadedProfilesList->first != NULL)
+        {
+            node_t* temp              = loadedProfilesList->first;
+            loadedProfilesList->first = loadedProfilesList->first->next;
+            heap_caps_free(temp->val);
+            heap_caps_free(temp);
+        }
         // Create a new userProfile_t
         userProfile_t* profile = (userProfile_t*)heap_caps_calloc(1, sizeof(userProfile_t), MALLOC_CAP_8BIT);
         loadProfileFromNVS(profile);
+        
         if (profile == NULL)
         {
             // TODO: Panic
@@ -865,6 +902,7 @@ void loadProfiles(list_t* spList, list_t* loadedProfilesList, int maxProfiles, b
         }
 
         loadedProfilesList->length++;
+
         return;
     }
 
@@ -926,10 +964,27 @@ void loadProfileFromNVS(userProfile_t* profile)
     size_t blobSize = sizeof(userProfile_t);
     if (!readNvsBlob(atriumNVSprofile, &profile, &blobSize))
     {
-        profile = NULL;
-    }
-}
+        profile->cardSelect = rand () % 8;
+        profile->facts[0]   = rand () % 8;
+        profile->facts[1]   = rand () % 8;
+        profile->facts[2]   = rand () % 8;
+        profile->local      = true;
 
+        size_t swsnSize = sizeof(swadgesona_t);
+        readNvsBlob("spSona", &profile->swsn, &swsnSize);
+        generateSwadgesonaImage(profile->swsn, false);
+
+        writeNamespaceNvs32(atriumNVSprofile, "card", profile->cardSelect);
+        writeNamespaceNvs32(atriumNVSprofile, "fact0", profile->facts[0]);
+        writeNamespaceNvs32(atriumNVSprofile, "fact1", profile->facts[1]);
+        writeNamespaceNvs32(atriumNVSprofile, "fact2", profile->facts[2]);
+        writeNamespaceNvs32(atriumNVSprofile, "passes", profile->numPasses);
+    }
+
+    profile->numPasses  = atr->numRemoteSwsn; //update number of passes each time
+    writeNamespaceNvs32(atriumNVSprofile, "passes", profile->numPasses);
+
+}
 /*
 
 uint32_t packProfile(userProfile prof)
