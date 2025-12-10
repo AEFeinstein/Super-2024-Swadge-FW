@@ -38,6 +38,7 @@
 #include "dance.h"
 #include "danceNetwork.h"
 #include "factoryTest.h"
+#include "findingFaces.h"
 #include "gamepad.h"
 #include "introMode.h"
 #include "jukebox.h"
