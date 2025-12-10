@@ -110,7 +110,7 @@ bool loadWsgInplace(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam, uint8_t* decomp
     // Save the decompressed info to the wsg. The first four bytes are dimension
     uint16_t newW = (decompressedBuf[0] << 8) | decompressedBuf[1];
     uint16_t newH = (decompressedBuf[2] << 8) | decompressedBuf[3];
-    
+
     // If there is an existing buffer and it doesn't match, free it
     if (wsg->px && (wsg->h != newH || wsg->w != newW))
     {
@@ -162,7 +162,7 @@ bool loadWsgNvs(const char* namespace, const char* key, wsg_t* wsg, bool spiRam)
     // Save the decompressed info to the wsg. The first four bytes are dimension
     uint16_t newW = (decompressedBuf[0] << 8) | decompressedBuf[1];
     uint16_t newH = (decompressedBuf[2] << 8) | decompressedBuf[3];
-    
+
     ESP_LOGD("WSG", "full WSG is %" PRIu16 " x %" PRIu16 ", or %d pixels", newW, newH, newW * newH);
 
     // If there is an existing buffer and it doesn't match, free it
@@ -175,9 +175,9 @@ bool loadWsgNvs(const char* namespace, const char* key, wsg_t* wsg, bool spiRam)
     // The rest of the bytes are pixels
 #ifndef __XTENSA__
     char tag[32];
-    sprintf(tag, "NVS key: %d", key);
+    sprintf(tag, "NVS key: %s", key);
 #endif
-    
+
     // If there is no pixel buffer
     if (!wsg->px)
     {
@@ -191,7 +191,7 @@ bool loadWsgNvs(const char* namespace, const char* key, wsg_t* wsg, bool spiRam)
         // Set the size
         wsg->w = newW;
         wsg->h = newH;
-        
+
         ESP_LOGD("WSG", "Copying %" PRIu32 " pixels into WSG now", decompressedSize - 4);
         memcpy(wsg->px, &decompressedBuf[4], decompressedSize - 4);
         heap_caps_free(decompressedBuf);
