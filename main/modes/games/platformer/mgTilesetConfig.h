@@ -476,7 +476,7 @@ static const mgSprite_t mg_kineticDonutBossSpriteMetadataSet[] = {
     {
         .wsg    = NULL,
         .origin = &origin_kinetic_donut,
-        .hitBox = &origin_kinetic_donut,
+        .hitBox = &box_kinetic_donut,
     },
 };
 
