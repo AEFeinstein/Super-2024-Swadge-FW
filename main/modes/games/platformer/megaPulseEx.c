@@ -237,7 +237,7 @@ const trophyData_t platformerTrophies[] = {
 // Individual mode settings
 const trophySettings_t platformerTrophySettings = {
     .drawFromBottom   = false,
-    .staticDurationUs = DRAW_STATIC_US * 6,
+    .staticDurationUs = DRAW_STATIC_US * 11,
     .slideDurationUs  = DRAW_SLIDE_US,
     .namespaceKey     = "Alpha Pulse",
 };
