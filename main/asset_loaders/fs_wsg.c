@@ -45,7 +45,7 @@ bool loadWsg(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam)
     uint16_t newH = (decompressedBuf[2] << 8) | decompressedBuf[3];
 
     // If there is an existing buffer and it doesn't match, free it
-    if (wsg->px && (wsg->h != newH || wsg->w != newW))
+    if (wsg->px && (wsg->w * wsg->h != newW * newH))
     {
         heap_caps_free(wsg->px);
         wsg->px = NULL;
@@ -112,7 +112,7 @@ bool loadWsgInplace(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam, uint8_t* decomp
     uint16_t newH = (decompressedBuf[2] << 8) | decompressedBuf[3];
 
     // If there is an existing buffer and it doesn't match, free it
-    if (wsg->px && (wsg->h != newH || wsg->w != newW))
+    if (wsg->px && (wsg->w * wsg->h != newW * newH))
     {
         heap_caps_free(wsg->px);
         wsg->px = NULL;
@@ -166,7 +166,7 @@ bool loadWsgNvs(const char* namespace, const char* key, wsg_t* wsg, bool spiRam)
     ESP_LOGD("WSG", "full WSG is %" PRIu16 " x %" PRIu16 ", or %d pixels", newW, newH, newW * newH);
 
     // If there is an existing buffer and it doesn't match, free it
-    if (wsg->px && (wsg->h != newH || wsg->w != newW))
+    if (wsg->px && (wsg->w * wsg->h != newW * newH))
     {
         heap_caps_free(wsg->px);
         wsg->px = NULL;
