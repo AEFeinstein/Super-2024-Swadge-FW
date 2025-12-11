@@ -69,14 +69,13 @@ static const char* numbersRace[]
     = {"8",  "35", "6", "23", "15", "9", "33", "3",  "20", "11", "36", "27", "14", "25", "19", "32", "2",  "28",
        "21", "34", "7", "16", "30", "5", "1",  "22", "13", "10", "18", "26", "31", "24", "17", "4",  "29", "12"};
 
-static const char* splashInstructions[] 
-    = {
-        "Welcome to the Decoder Ring!",
-        "Left/Right spin unlocked rings.",
-        "A/B lock or unlock a ring.",
-        "Start shows you this again.",
-        "Enjoy your secrets!"
-    };
+static const char* splashInstructions[] = {
+    "Welcome to the Decoder Ring!",    //
+    "Left/Right spin unlocked rings.", //
+    "A/B lock or unlock a ring.",      //
+    "Start shows you this again.",     //
+    "Enjoy your secrets!",
+};
 
 //==============================================================================
 // Variables
@@ -185,15 +184,15 @@ static void cipherEnterMode()
     cipher->spinning    = c555;
     cipher->notSpinning = c222;
 
-    cipher->innerRace            = (cipherRace_t*)heap_caps_calloc(1, sizeof(cipherRace_t), MALLOC_CAP_8BIT);
-    cipher->innerRace->rotating  = true;
+    cipher->innerRace           = (cipherRace_t*)heap_caps_calloc(1, sizeof(cipherRace_t), MALLOC_CAP_8BIT);
+    cipher->innerRace->rotating = true;
     cipher->innerRace->lastSpin = 0;
-    cipher->innerRace->raceRad   = 100;
+    cipher->innerRace->raceRad  = 100;
 
-    cipher->outerRace            = (cipherRace_t*)heap_caps_calloc(1, sizeof(cipherRace_t), MALLOC_CAP_8BIT);
-    cipher->outerRace->rotating  = true;
+    cipher->outerRace           = (cipherRace_t*)heap_caps_calloc(1, sizeof(cipherRace_t), MALLOC_CAP_8BIT);
+    cipher->outerRace->rotating = true;
     cipher->outerRace->lastSpin = 0;
-    cipher->outerRace->raceRad   = 125;
+    cipher->outerRace->raceRad  = 125;
 
     cipher->splash = true;
 
@@ -236,53 +235,72 @@ void cipherBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, in
  */
 static void cipherMainLoop(int64_t elapsedUs)
 {
-    if(cipher->splash){
-        //Draw the splash screen
-        for(int i=0; i<5; i++){
-            drawText(cipher->ibm, cipher->text, splashInstructions[i], 10+15*i, 20+20*i);
+    if (cipher->splash)
+    {
+        // Draw the splash screen
+        for (int i = 0; i < ARRAY_SIZE(splashInstructions); i++)
+        {
+            drawText(cipher->ibm, cipher->text, splashInstructions[i], 10 + 15 * i, 75 + 20 * i);
         }
-    }else{
-
+    }
+    else
+    {
         if (cipher->OffsettingLeft)
         {
-            if(cipher->innerRace->rotating){
-                cipher->innerRace->lastSpin = 1;
-                cipher->innerRace->timeSpinning = (cipher->innerRace->timeSpinning+ elapsedUs * 2) % (UsPerDeg * 360);
+            if (cipher->innerRace->rotating)
+            {
+                cipher->innerRace->lastSpin     = 1;
+                cipher->innerRace->timeSpinning = (cipher->innerRace->timeSpinning + elapsedUs * 2) % (UsPerDeg * 360);
             }
-            if(cipher->outerRace->rotating){
-                cipher->outerRace->lastSpin = 1;
-                cipher->outerRace->timeSpinning = (cipher->outerRace->timeSpinning+ elapsedUs * 2) % (UsPerDeg * 360);
-            }
-        }else if (cipher->OffsettingRight)
-        {
-            if(cipher->innerRace->rotating){
-                cipher->innerRace->lastSpin = -1;
-                cipher->innerRace->timeSpinning = ((cipher->innerRace->timeSpinning- elapsedUs * 2)+ (UsPerDeg * 360)) % (UsPerDeg * 360);
-            }
-            if(cipher->outerRace->rotating){
-                cipher->outerRace->lastSpin = -1;
-                cipher->outerRace->timeSpinning = ((cipher->outerRace->timeSpinning- elapsedUs * 2)+ (UsPerDeg * 360)) % (UsPerDeg * 360);
-            }
-        }else{
-            if( (cipher->innerRace->timeSpinning) % (UsPerDeg * 10) > 2){
-                cipher->innerRace->timeSpinning = cipher->innerRace->timeSpinning
-                    + cipher->innerRace->lastSpin * fmin(elapsedUs,fmin(
-                        cipher->innerRace->timeSpinning%(UsPerDeg*10),
-                        (UsPerDeg*10 - (cipher->innerRace->timeSpinning%(UsPerDeg*10)))
-                    ));
-            }
-            if( (cipher->outerRace->timeSpinning) % (UsPerDeg * 10) > 2){
-                cipher->outerRace->timeSpinning = cipher->outerRace->timeSpinning
-                    + cipher->outerRace->lastSpin * fmin(elapsedUs,fmin(
-                        cipher->outerRace->timeSpinning%(UsPerDeg*10),
-                        (UsPerDeg*10 - (cipher->outerRace->timeSpinning%(UsPerDeg*10)))
-                    ));
+            if (cipher->outerRace->rotating)
+            {
+                cipher->outerRace->lastSpin     = 1;
+                cipher->outerRace->timeSpinning = (cipher->outerRace->timeSpinning + elapsedUs * 2) % (UsPerDeg * 360);
             }
         }
-        //Draw the circle that denotes whether the outer race is spinning or not
-        if(cipher->outerRace->rotating){
+        else if (cipher->OffsettingRight)
+        {
+            if (cipher->innerRace->rotating)
+            {
+                cipher->innerRace->lastSpin = -1;
+                cipher->innerRace->timeSpinning
+                    = ((cipher->innerRace->timeSpinning - elapsedUs * 2) + (UsPerDeg * 360)) % (UsPerDeg * 360);
+            }
+            if (cipher->outerRace->rotating)
+            {
+                cipher->outerRace->lastSpin = -1;
+                cipher->outerRace->timeSpinning
+                    = ((cipher->outerRace->timeSpinning - elapsedUs * 2) + (UsPerDeg * 360)) % (UsPerDeg * 360);
+            }
+        }
+        else
+        {
+            if ((cipher->innerRace->timeSpinning) % (UsPerDeg * 10) > 2)
+            {
+                cipher->innerRace->timeSpinning
+                    = cipher->innerRace->timeSpinning
+                      + cipher->innerRace->lastSpin
+                            * fmin(elapsedUs,
+                                   fmin(cipher->innerRace->timeSpinning % (UsPerDeg * 10),
+                                        (UsPerDeg * 10 - (cipher->innerRace->timeSpinning % (UsPerDeg * 10)))));
+            }
+            if ((cipher->outerRace->timeSpinning) % (UsPerDeg * 10) > 2)
+            {
+                cipher->outerRace->timeSpinning
+                    = cipher->outerRace->timeSpinning
+                      + cipher->outerRace->lastSpin
+                            * fmin(elapsedUs,
+                                   fmin(cipher->outerRace->timeSpinning % (UsPerDeg * 10),
+                                        (UsPerDeg * 10 - (cipher->outerRace->timeSpinning % (UsPerDeg * 10)))));
+            }
+        }
+        // Draw the circle that denotes whether the outer race is spinning or not
+        if (cipher->outerRace->rotating)
+        {
             drawCircleFilled(ScreenCenter.x, ScreenCenter.y, cipher->outerRace->raceRad + 12, cipher->spinning);
-        }else{
+        }
+        else
+        {
             drawCircleFilled(ScreenCenter.x, ScreenCenter.y, cipher->outerRace->raceRad + 12, cipher->notSpinning);
         }
 
@@ -290,9 +308,12 @@ static void cipherMainLoop(int64_t elapsedUs)
         drawCircleFilled(ScreenCenter.x, ScreenCenter.y, cipher->outerRace->raceRad + 10, cipher->shade);
 
         // Draw the circle that denotes whether the inner race is spinning or not
-        if(cipher->innerRace->rotating){
+        if (cipher->innerRace->rotating)
+        {
             drawCircleFilled(ScreenCenter.x, ScreenCenter.y, cipher->innerRace->raceRad - 8, cipher->spinning);
-        }else{
+        }
+        else
+        {
             drawCircleFilled(ScreenCenter.x, ScreenCenter.y, cipher->innerRace->raceRad - 8, cipher->notSpinning);
         }
 
@@ -322,7 +343,7 @@ static void cipherMainLoop(int64_t elapsedUs)
             };
             inPos = RThetaToXY(inPos, false);
             drawText(cipher->ibm, cipher->text, lettersRace[i], inPos.x - (textWidth(cipher->ibm, lettersRace[i]) / 2),
-                    inPos.y - 5);
+                     inPos.y - 5);
 
             // draw outer race
             vec_t outPos = {
@@ -331,17 +352,16 @@ static void cipherMainLoop(int64_t elapsedUs)
             };
             outPos = RThetaToXY(outPos, false);
             drawText(cipher->ibm, cipher->text, numbersRace[i], outPos.x - (textWidth(cipher->ibm, numbersRace[i]) / 2),
-                    outPos.y - 5);
+                     outPos.y - 5);
         }
-
     }
 
-    
     // handle input
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
-        if(cipher->splash){
+        if (cipher->splash)
+        {
             if (evt.down)
             {
                 switch (evt.button)
@@ -351,7 +371,9 @@ static void cipherMainLoop(int64_t elapsedUs)
                         break;
                 }
             }
-        }else{
+        }
+        else
+        {
             if (evt.down)
             {
                 switch (evt.button)
@@ -407,6 +429,5 @@ static void cipherMainLoop(int64_t elapsedUs)
                 }
             }
         }
-        
     }
 }
