@@ -1268,7 +1268,7 @@ void loadPlatformerUnlockables(platformer_t* self)
         initializePlatformerUnlockables(self);
     }
 
-    //self->unlockables.levelsCleared = 0b0111011110;
+    // self->unlockables.levelsCleared = 0b0111011110;
 }
 
 void savePlatformerUnlockables(platformer_t* self)
@@ -1571,11 +1571,8 @@ void updateLevelSelect(platformer_t* self)
     {
         self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
 
-        if (
-            (self->unlockables.levelsCleared & (1 << self->gameData.level))
-            ||
-            (self->gameData.level == 5 && !(self->unlockables.levelsCleared == 0b1111011110))
-           )
+        if ((self->unlockables.levelsCleared & (1 << self->gameData.level))
+            || (self->gameData.level == 5 && !(self->unlockables.levelsCleared == 0b1111011110)))
         {
             soundPlaySfx(&(platformer->soundManager.sndMenuDeny), BZR_STEREO);
         }
@@ -1612,26 +1609,30 @@ void drawLevelSelect(platformer_t* self)
         {
             if (self->unlockables.levelsCleared & (1 << (((j * 3) + i) + 1)))
             {
-                drawWsg(&self->wsgManager.wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_33], (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY, esp_random() % 2, esp_random() % 2, 0);
-            } else {
-                //Special case for Bigma
-                if( (((j * 3) + i) == 4) && (self->unlockables.levelsCleared ^ 0b1111011110))
+                drawWsg(&self->wsgManager.wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_33],
+                        (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY,
+                        esp_random() % 2, esp_random() % 2, 0);
+            }
+            else
+            {
+                // Special case for Bigma
+                if ((((j * 3) + i) == 4) && (self->unlockables.levelsCleared ^ 0b1111011110))
                 {
-                    drawWsg(&self->wsgManager.wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_33], (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY, esp_random() % 2, esp_random() % 2, 0);
-                } 
-                else 
+                    drawWsg(&self->wsgManager.wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_33],
+                            (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY,
+                            esp_random() % 2, esp_random() % 2, 0);
+                }
+                else
                 {
-                    drawWsgTile(&self->wsgManager.wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2A + ((j * 3) + i)], (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY);
+                    drawWsgTile(&self->wsgManager.wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2A + ((j * 3) + i)],
+                                (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY);
                 }
             }
         }
     }
 
-    if (
-        (!(self->unlockables.levelsCleared & (1 << self->gameData.level)))
-        &&
-        !(self->gameData.level == 5 && !(self->unlockables.levelsCleared == 0b1111011110))
-       )
+    if ((!(self->unlockables.levelsCleared & (1 << self->gameData.level)))
+        && !(self->gameData.level == 5 && !(self->unlockables.levelsCleared == 0b1111011110)))
     {
         drawRect(
             (64 + self->menuState * 64) - self->tilemap.mapOffsetX + ((self->gameData.frameCount >> 2) & 0b0111),
@@ -1640,14 +1641,18 @@ void drawLevelSelect(platformer_t* self)
             (48 + 48 + self->menuSelection * 64) - self->tilemap.mapOffsetY
                 - ((self->gameData.frameCount >> 2) & 0b0111),
             highScoreNewEntryColors[self->gameData.frameCount % 4]);
-    } 
-    else 
+    }
+    else
     {
-        drawLine((64 + self->menuState * 64) - self->tilemap.mapOffsetX, (48 + self->menuSelection  * 64) - self->tilemap.mapOffsetY,
-                    (64 + 48 + self->menuState * 64) - self->tilemap.mapOffsetX, (48 + 48 + self->menuSelection  * 64) - self->tilemap.mapOffsetY,
-                    redColors[self->gameData.frameCount % 4], 0);
-        drawLine((64 + self->menuState * 64) - self->tilemap.mapOffsetX, (48 + 48 + self->menuSelection  * 64) - self->tilemap.mapOffsetY,
-                    (64 + 48 + self->menuState * 64) - self->tilemap.mapOffsetX, (48 + self->menuSelection  * 64) - self->tilemap.mapOffsetY,
-                    redColors[self->gameData.frameCount % 4], 0);
+        drawLine((64 + self->menuState * 64) - self->tilemap.mapOffsetX,
+                 (48 + self->menuSelection * 64) - self->tilemap.mapOffsetY,
+                 (64 + 48 + self->menuState * 64) - self->tilemap.mapOffsetX,
+                 (48 + 48 + self->menuSelection * 64) - self->tilemap.mapOffsetY,
+                 redColors[self->gameData.frameCount % 4], 0);
+        drawLine((64 + self->menuState * 64) - self->tilemap.mapOffsetX,
+                 (48 + 48 + self->menuSelection * 64) - self->tilemap.mapOffsetY,
+                 (64 + 48 + self->menuState * 64) - self->tilemap.mapOffsetX,
+                 (48 + self->menuSelection * 64) - self->tilemap.mapOffsetY, redColors[self->gameData.frameCount % 4],
+                 0);
     }
 }

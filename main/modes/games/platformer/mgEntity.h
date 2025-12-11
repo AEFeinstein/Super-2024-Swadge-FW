@@ -170,7 +170,7 @@ struct mgEntity_t
     int16_t hp;
     int8_t invincibilityFrames;
     uint16_t scoreValue;
-    //uint16_t damageValue;
+    // uint16_t damageValue;
 
     mgEntitySpawnData_t* spawnData;
     mgEntity_t* linkedEntity;
