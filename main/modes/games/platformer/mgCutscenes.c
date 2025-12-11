@@ -131,7 +131,7 @@ static void setSongPitchesFromCurrentSong(mgGameData_t* gameData)
         }
         case MG_BGM_POST_FIGHT:
         {
-            int16_t songPitches[] = {50, 53, 55, 57, -1, -1, -1, -1};
+            int16_t songPitches[] = {62, 65, 67, 57, -1, -1, -1, -1};
             setSongPitches(gameData->cutscene, songPitches);
             break;
         }

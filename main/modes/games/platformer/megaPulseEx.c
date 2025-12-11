@@ -877,7 +877,9 @@ void updateTitleScreen(platformer_t* self)
             self->menuSelection      = 0;
             self->menuState          = 1;
             self->gameData.debugMode = true;
-            soundPlaySfx(&(self->soundManager.sndLevelClearS), MIDI_SFX);
+            mg_setBgm(&self->soundManager, MG_BGM_LEVEL_CLEAR_JINGLE);
+            soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
+            globalMidiPlayerGet(MIDI_BGM)->loop = false;
         }
     }
 
@@ -1305,8 +1307,8 @@ void updateLevelClear(platformer_t* self)
 
             if (self->gameData.countdown % 2)
             {
-                globalMidiPlayerGet(MIDI_BGM)->loop = false;
-                soundPlayBgm(&(self->soundManager.sndTally), BZR_STEREO);
+                globalMidiPlayerGet(MIDI_SFX)->loop = false;
+                soundPlaySfx(&(self->soundManager.sndTally), BZR_STEREO);
             }
 
             uint16_t comboPoints = 50 * self->gameData.combo;
@@ -1357,7 +1359,7 @@ void updateLevelClear(platformer_t* self)
 
                 changeStateGameClear(self);
             }
-            else
+            else if (globalMidiPlayerGet(MIDI_BGM)->paused) // also checks the level clear jingle has finished.
             {
                 // Advance to the next level
                 /*self->gameData.level++;
@@ -1926,28 +1928,17 @@ void drawLevelSelect(platformer_t* self)
     }
 }
 
-//forward declared in mega_pulse_ex_typedef.h
+// forward declared in mega_pulse_ex_typedef.h
 void goToReadyScreen(void)
 {
     platformer->update = &updateReadyScreen;
 }
 
-//forward declared in mega_pulse_ex_typedef.h
+// forward declared in mega_pulse_ex_typedef.h
 void initBossFight(void)
 {
     platformer->entityManager.bossEntity->state = 0;
     mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
     platformer->update = &updateReadyScreen;
-}
-
-//forward declared in mega_pulse_ex_typedef.h
-void startBossOutroCutscene(void)
-{
-    mg_setBgm(&platformer->soundManager, MG_BGM_POST_FIGHT);
-    midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
-    bgm->loop = true;
-    bgm->songFinishedCallback = NULL;
-    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
-    bossOutroCutscene(&platformer->gameData);
 }

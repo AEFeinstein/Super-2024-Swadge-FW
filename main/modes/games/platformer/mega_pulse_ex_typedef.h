@@ -1422,5 +1422,4 @@ extern const trophyData_t platformerTrophies[];
 
 extern void goToReadyScreen(void);
 extern void initBossFight(void);
-extern void startBossOutroCutscene(void);
 #endif
