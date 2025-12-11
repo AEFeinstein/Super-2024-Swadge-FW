@@ -604,7 +604,7 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
             }
             else
             {
-                memcpy(fullNotes, sd->player.notes, sd->game.size * sd->game.size);
+                memcpy(fullNotes, sd->player.notes, sd->game.size * sd->game.size * sizeof(uint16_t));
             }
 
             sudokuOverlayOpt_t optMask = OVERLAY_ALL;
