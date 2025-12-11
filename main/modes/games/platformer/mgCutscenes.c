@@ -123,6 +123,18 @@ static void setSongPitchesFromCurrentSong(mgGameData_t* gameData)
             setSongPitches(gameData->cutscene, songPitches);
             break;
         }
+        case MG_BGM_PRE_FIGHT:
+        {
+            int16_t songPitches[] = {62, 64, 65, 68, -1, -1, -1, -1};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
+        case MG_BGM_POST_FIGHT:
+        {
+            int16_t songPitches[] = {50, 53, 55, 57, -1, -1, -1, -1};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
         default:
         {
             break;
@@ -132,6 +144,7 @@ static void setSongPitchesFromCurrentSong(mgGameData_t* gameData)
 
 void stageStartCutscene(mgGameData_t* gameData)
 {
+    gameData->cutscene->cbFunc = goToReadyScreen;
     setSongPitchesFromCurrentSong(gameData);
 
     switch (gameData->level)
@@ -450,6 +463,7 @@ void stageStartCutscene(mgGameData_t* gameData)
 
 void bossIntroCutscene(mgGameData_t* gameData)
 {
+    gameData->cutscene->cbFunc = initBossFight;
     setSongPitchesFromCurrentSong(gameData);
 
     gameData->changeState = MG_ST_CUTSCENE;
@@ -673,6 +687,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
 
 void bossOutroCutscene(mgGameData_t* gameData)
 {
+    gameData->cutscene->cbFunc = goToReadyScreen;
     setSongPitchesFromCurrentSong(gameData);
 
     gameData->changeState = MG_ST_CUTSCENE;

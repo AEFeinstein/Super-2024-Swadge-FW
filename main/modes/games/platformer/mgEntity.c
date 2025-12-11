@@ -2062,16 +2062,14 @@ void updateScrollLockRight(mgEntity_t* self)
     // For this to work, the boss must be placed to the left of the scroll lock.
     if (self->entityManager->bossEntity != NULL)
     {
-        self->entityManager->bossEntity->state = 0;
-        mg_setBgm(self->soundManager, leveldef[self->gameData->level].bossBgmIndex);
+        // Cutscene before the boss fight
+        mg_setBgm(self->soundManager, MG_BGM_PRE_FIGHT);
         soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+        bossIntroCutscene(self->gameData);
     }
 
     mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
     mg_destroyEntity(self, true);
-
-    // Cutscene before the boss fight
-    bossIntroCutscene(self->gameData);
 }
 
 void updateScrollLockUp(mgEntity_t* self)

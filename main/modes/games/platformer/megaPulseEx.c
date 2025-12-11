@@ -153,7 +153,6 @@ static void mg_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 void changeStateLevelSelect(platformer_t* self);
 void updateLevelSelect(platformer_t* self);
 void drawLevelSelect(platformer_t* self);
-void goToReadyScreen(void);
 
 //==============================================================================
 // Variables
@@ -162,15 +161,15 @@ void goToReadyScreen(void);
 // Trophy definitions for platformer mode
 const trophyData_t platformerTrophies[] = {
     {
-        .title       = "Bigma",
-        .description = "Favorite genre: Corruption",
+        .title       = "Defeated Bigma",
+        .description = "Favorite genre: Corruption?",
         .image       = NO_IMAGE_SET, // need 36 x 36 boss images later
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1, // For trigger type, set to one
     },
     {
-        .title       = "Kinetic Donut",
+        .title       = "Defeated Kinetic Donut",
         .description = "Favorite genre: Funk",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -178,7 +177,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Smash Gorilla",
+        .title       = "Defeated Smash Gorilla",
         .description = "Favorite genre: Salsa",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -186,7 +185,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Deadeye Chirpzi",
+        .title       = "Defeated Deadeye Chirpzi",
         .description = "Favorite genre: Metal",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -194,7 +193,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Grind Pangolin",
+        .title       = "Defeated Grind Pangolin",
         .description = "Favorite genre: Ska",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -202,7 +201,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Drain Bat",
+        .title       = "Defeated Drain Bat",
         .description = "Favorite genre: Classical",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -1925,4 +1924,30 @@ void drawLevelSelect(platformer_t* self)
                  (48 + self->menuSelection * 64) - self->tilemap.mapOffsetY, redColors[self->gameData.frameCount % 4],
                  0);
     }
+}
+
+//forward declared in mega_pulse_ex_typedef.h
+void goToReadyScreen(void)
+{
+    platformer->update = &updateReadyScreen;
+}
+
+//forward declared in mega_pulse_ex_typedef.h
+void initBossFight(void)
+{
+    platformer->entityManager.bossEntity->state = 0;
+    mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
+    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+    platformer->update = &updateReadyScreen;
+}
+
+//forward declared in mega_pulse_ex_typedef.h
+void startBossOutroCutscene(void)
+{
+    mg_setBgm(&platformer->soundManager, MG_BGM_POST_FIGHT);
+    midiPlayer_t* bgm = globalMidiPlayerGet(MIDI_BGM);
+    bgm->loop = true;
+    bgm->songFinishedCallback = NULL;
+    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+    bossOutroCutscene(&platformer->gameData);
 }
