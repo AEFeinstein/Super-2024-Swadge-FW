@@ -651,7 +651,7 @@ void mg_initializeSprites(mgWsgManager_t* self)
 
 void mg_initializeTiles(mgWsgManager_t* self)
 {
-    for (uint8_t i = 0; i < MG_TILE_SET_SIZE; i++)
+    for (uint16_t i = 0; i < MG_TILE_SET_SIZE; i++)
     {
         self->tiles[i] = NULL;
     }
