@@ -30,6 +30,12 @@ static const vec_t mg_sureYouCanVectors[] = {
     {.x = 16, .y = -128}, {.x = 16, .y = -64}, {.x = 32, .y = -16}, {.x = 16, .y = -8}};
 
 //==============================================================================
+// Functions Prototypes
+//==============================================================================
+
+void startOutroCutscene(mgEntity_t* self);
+
+//==============================================================================
 // Functions
 //==============================================================================
 void mg_initializeEntity(mgEntity_t* self, mgEntityManager_t* entityManager, mgTilemap_t* tilemap,
@@ -1580,7 +1586,9 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_MIXTAPE:
         {
             soundStop(true);
-            soundPlaySfx(&(self->soundManager->sndLevelClearS), BZR_LEFT);
+            mg_setBgm(self->soundManager, MG_BGM_LEVEL_CLEAR_JINGLE);
+            soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+            globalMidiPlayerGet(MIDI_BGM)->loop = false;
             self->spriteIndex           = MG_SP_PLAYER_WIN;
             self->updateFunction        = &mg_updateDummy;
             self->gameData->changeState = MG_ST_LEVEL_CLEAR;
@@ -3808,6 +3816,7 @@ void mg_updateBossSeverYagata(mgEntity_t* self)
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        startOutroCutscene(self);
     }
 }
 
@@ -4029,6 +4038,7 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        startOutroCutscene(self);
     }
 }
 
@@ -4176,6 +4186,7 @@ void mg_updateBossGrindPangolin(mgEntity_t* self)
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        startOutroCutscene(self);
     }
 }
 
@@ -4323,6 +4334,7 @@ void mg_updateBossDrainBat(mgEntity_t* self)
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        startOutroCutscene(self);
     }
 }
 
@@ -4470,6 +4482,7 @@ void mg_updateBossKineticDonut(mgEntity_t* self)
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        startOutroCutscene(self);
     }
 }
 
@@ -4617,6 +4630,7 @@ void mg_updateBossTrashMan(mgEntity_t* self)
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        startOutroCutscene(self);
     }
 }
 
@@ -4764,6 +4778,7 @@ void mg_updateBossFlareGryffyn(mgEntity_t* self)
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        startOutroCutscene(self);
     }
 }
 
@@ -4911,6 +4926,7 @@ void mg_updateBossDeadeyeChirpzi(mgEntity_t* self)
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        startOutroCutscene(self);
     }
 }
 
@@ -5058,6 +5074,7 @@ void mg_updateBossBigma(mgEntity_t* self)
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        startOutroCutscene(self);
     }
 }
 
@@ -5205,5 +5222,18 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        startOutroCutscene(self);
+    }
+}
+
+void startOutroCutscene(mgEntity_t* self)
+{
+    // Cutscene after the boss fight
+    mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
+    soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+    bossOutroCutscene(self->gameData);
+    if (!self->gameData->cheatMode)
+    {
+        trophyUpdate(&platformerTrophies[self->gameData->level - 1], 1, true);
     }
 }
