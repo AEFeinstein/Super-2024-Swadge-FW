@@ -141,7 +141,9 @@ typedef struct __attribute__((packed)) swadgePassPacket
 
     struct {
         int cardSelect;     // Active card
-        int facts[3];       // List of facts
+        int fact0;       
+        int fact1;
+        int fact2;
         uint16_t numPasses; // Number of other unique passes encountered
     } atrium;
 } swadgePassPacket_t;
