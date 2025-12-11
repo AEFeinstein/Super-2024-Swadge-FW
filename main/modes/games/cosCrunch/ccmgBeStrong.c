@@ -133,8 +133,8 @@ static void ccmgBeStrongMainLoop(int64_t elapsedUs, uint64_t timeRemainingUs, fl
                 {
                     if (buttonEvts[i].button == PB_A && buttonEvts[i].down)
                     {
-                        ccmgbs->leftTear.radius  = MAX(ccmgbs->leftTear.radius - 3, 0);
-                        ccmgbs->rightTear.radius = MAX(ccmgbs->rightTear.radius - 3, 0);
+                        ccmgbs->leftTear.radius  = MAX(ccmgbs->leftTear.radius - 3 * timeScale, 0);
+                        ccmgbs->rightTear.radius = MAX(ccmgbs->rightTear.radius - 3 * timeScale, 0);
                         midiNoteOn(globalMidiPlayerGet(MIDI_SFX), 9, VIBRASLAP, 0x7f);
                     }
                 }
