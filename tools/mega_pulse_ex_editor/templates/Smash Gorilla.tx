@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+ <tileset firstgid="1" source="../mg-entity-tileset.tsx"/>
+ <object name="Smash Gorilla" type="SwadgeLandEntity" gid="2147483811" width="70" height="70">
+  <properties>
+   <property name="type" type="int" propertytype="Swadge Land Entity Index" value="56"/>
+  </properties>
+ </object>
+</template>

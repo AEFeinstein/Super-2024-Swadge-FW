@@ -160,4 +160,31 @@
  <tile id="155">
   <image source="mg-object-tiles/checkpoint30x30.png" width="30" height="30"/>
  </tile>
+ <tile id="156">
+  <image source="mg-object-tiles/sever-yataga-001.png" width="96" height="71"/>
+ </tile>
+  <tile id="157">
+  <image source="mg-object-tiles/grind-pangolin-000.png" width="67" height="56"/>
+ </tile>
+  <tile id="158">
+  <image source="mg-object-tiles/deadeye-chirpzi-000.png" width="80" height="68"/>
+ </tile>
+  <tile id="159">
+  <image source="mg-object-tiles/drain-bat-000.png" width="61" height="63"/>
+ </tile>
+  <tile id="160">
+  <image source="mg-object-tiles/flare-gryffyn-000.png" width="80" height="65"/>
+ </tile>
+  <tile id="161">
+  <image source="mg-object-tiles/ovovoBoss0.png" width="77" height="66"/>
+ </tile>
+  <tile id="162">
+  <image source="mg-object-tiles/smash-gorilla-000.png" width="70" height="70"/>
+ </tile>
+  <tile id="163">
+  <image source="mg-object-tiles/bigma-000.png" width="67" height="88"/>
+ </tile>
+  <tile id="164">
+  <image source="mg-object-tiles/kinetic-donut-000.png" width="96" height="71"/>
+ </tile>
 </tileset>

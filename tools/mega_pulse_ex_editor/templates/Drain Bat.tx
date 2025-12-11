@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+ <tileset firstgid="1" source="../mg-entity-tileset.tsx"/>
+ <object name="Drain Bat" type="SwadgeLandEntity" gid="2147483808" width="61" height="63">
+  <properties>
+   <property name="type" type="int" propertytype="Swadge Land Entity Index" value="58"/>
+  </properties>
+ </object>
+</template>

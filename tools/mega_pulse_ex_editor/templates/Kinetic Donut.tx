@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+ <tileset firstgid="1" source="../mg-entity-tileset.tsx"/>
+ <object name="Kinetic Donut" type="SwadgeLandEntity" gid="2147483813" width="43" height="50">
+  <properties>
+   <property name="type" type="int" propertytype="Swadge Land Entity Index" value="59"/>
+  </properties>
+ </object>
+</template>
