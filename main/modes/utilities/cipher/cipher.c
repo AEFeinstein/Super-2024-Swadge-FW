@@ -71,7 +71,11 @@ static const char* numbersRace[]
 
 static const char* splashInstructions[] 
     = {
-        "Welcome to the Decoder Ring!\nUse Left/Right to spin the entire decoder ring.\nUp/Down will shift the races one step.\nA/B will toggle free spinning of the races.\nEnjoy your secrets!"
+        "Welcome to the Decoder Ring!",
+        "Left/Right spin unlocked rings.",
+        "A/B lock or unlock a ring.",
+        "Start shows you this again.",
+        "Enjoy your secrets!"
     };
 
 //==============================================================================
@@ -191,7 +195,7 @@ static void cipherEnterMode()
     cipher->outerRace->lastSpin = 0;
     cipher->outerRace->raceRad   = 125;
 
-    cipher->splash = false;
+    cipher->splash = true;
 
     cipher->ibm = getSysFont();
     initShapes();
@@ -234,6 +238,9 @@ static void cipherMainLoop(int64_t elapsedUs)
 {
     if(cipher->splash){
         //Draw the splash screen
+        for(int i=0; i<5; i++){
+            drawText(cipher->ibm, cipher->text, splashInstructions[i], 10+15*i, 20+20*i);
+        }
     }else{
 
         if (cipher->OffsettingLeft)
@@ -334,56 +341,72 @@ static void cipherMainLoop(int64_t elapsedUs)
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
-        if (evt.down)
-        {
-            switch (evt.button)
+        if(cipher->splash){
+            if (evt.down)
             {
-                case PB_B:
+                switch (evt.button)
                 {
-                    cipher->innerRace->rotating = !cipher->innerRace->rotating;
-                    break;
+                    default:
+                        cipher->splash = false;
+                        break;
                 }
-                case PB_A:
+            }
+        }else{
+            if (evt.down)
+            {
+                switch (evt.button)
                 {
-                    cipher->outerRace->rotating = !cipher->outerRace->rotating;
-                    break;
+                    case PB_B:
+                    {
+                        cipher->innerRace->rotating = !cipher->innerRace->rotating;
+                        break;
+                    }
+                    case PB_A:
+                    {
+                        cipher->outerRace->rotating = !cipher->outerRace->rotating;
+                        break;
+                    }
+                    case PB_LEFT:
+                    {
+                        cipher->OffsettingLeft = true;
+                        break;
+                    }
+                    case PB_RIGHT:
+                    {
+                        cipher->OffsettingRight = true;
+                        break;
+                    }
+                    case PB_START:
+                        cipher->splash = true;
+                        break;
+                    default:
+                    {
+                        break;
+                    }
                 }
-                case PB_LEFT:
+            }
+            else
+            {
+                // The button is released
+                switch (evt.button)
                 {
-                    cipher->OffsettingLeft = true;
-                    break;
-                }
-                case PB_RIGHT:
-                {
-                    cipher->OffsettingRight = true;
-                    break;
-                }
-                default:
-                {
-                    break;
+                    case PB_LEFT:
+                    {
+                        cipher->OffsettingLeft = false;
+                        break;
+                    }
+                    case PB_RIGHT:
+                    {
+                        cipher->OffsettingRight = false;
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
                 }
             }
         }
-        else
-        {
-            // The button is released
-            switch (evt.button)
-            {
-                case PB_LEFT:
-                {
-                    cipher->OffsettingLeft = false;
-                    break;
-                }
-                case PB_RIGHT:
-                {
-                    cipher->OffsettingRight = false;
-                    break;
-                }
-                default:
-                {
-                    break;
-                }
-            }
-        }
+        
     }
 }
