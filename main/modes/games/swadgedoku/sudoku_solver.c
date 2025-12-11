@@ -1822,6 +1822,11 @@ static uint8_t getMemberPos(const solverCache_t* cache, const sudokuGrid_t* boar
         {
             return member * cache->size + region;
         }
+
+        default:
+        {
+            return 0;
+        }
     }
 
     return 0;
@@ -1844,6 +1849,11 @@ static uint8_t getMemberDigit(const solverCache_t* cache, const sudokuGrid_t* bo
         case REGION_COLUMN:
         {
             return board->grid[member * cache->size + region];
+        }
+
+        default:
+        {
+            return 0;
         }
     }
 
@@ -1868,6 +1878,11 @@ static uint16_t getMemberNotes(const solverCache_t* cache, const sudokuGrid_t* b
         {
             return board->notes[member * cache->size + region];
         }
+
+        default:
+        {
+            return 0;
+        }
     }
 
     return 0;
@@ -1890,6 +1905,11 @@ static uint16_t getRegionNotes(const solverCache_t* cache, const sudokuGrid_t* b
         case REGION_COLUMN:
         {
             return cache->colNotes[region];
+        }
+
+        default:
+        {
+            return 0;
         }
     }
 
