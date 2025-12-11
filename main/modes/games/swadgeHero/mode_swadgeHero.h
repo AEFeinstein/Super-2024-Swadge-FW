@@ -42,7 +42,8 @@ typedef struct
 {
     const char* name;
     const char* artist;
-    const char* fName;
+    cnfsFileIdx_t midi;
+    cnfsFileIdx_t charts[3];
 } shSong_t;
 
 typedef struct

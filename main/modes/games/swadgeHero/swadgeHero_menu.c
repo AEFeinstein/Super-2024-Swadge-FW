@@ -16,7 +16,7 @@
 // Function Declarations
 //==============================================================================
 
-static void shMenuCb(const char*, bool selected, uint32_t settingVal);
+static bool shMenuCb(const char*, bool selected, uint32_t settingVal);
 
 //==============================================================================
 // Const Variables
@@ -24,75 +24,131 @@ static void shMenuCb(const char*, bool selected, uint32_t settingVal);
 
 static const shSong_t shSongList[] = {
     {
-        .name   = "Chowa Grove",
+        .name   = "Deadeye Chirpzi",
         .artist = "Newmajoe",
-        .fName  = "sh_cgrove",
+        .midi   = MPE_CHIRPZI_MID,
+        .charts = {MPE_CHIRPZI_E_CCH, MPE_CHIRPZI_M_CCH, MPE_CHIRPZI_H_CCH},
     },
     {
-        .name   = "Hot Dog Credits",
+        .name   = "Drain Bat",
         .artist = "Newmajoe",
-        .fName  = "sh_credits",
+        .midi   = MPE_BAT_MID,
+        .charts = {MPE_BAT_E_CCH, MPE_BAT_M_CCH, MPE_BAT_H_CCH},
     },
     {
-        .name   = "Chowa Race",
-        .artist = "Tuck",
-        .fName  = "sh_crace",
-    },
-    {
-        .name   = "Pango",
+        .name   = "Flare Griffin",
         .artist = "Newmajoe",
-        .fName  = "sh_pango",
+        .midi   = MPE_GRIFFIN_MID,
+        .charts = {MPE_GRIFFIN_E_CCH, MPE_GRIFFIN_M_CCH, MPE_GRIFFIN_H_CCH},
     },
     {
-        .name   = "The Devil's Lullaby",
-        .artist = "Meldecision",
-        .fName  = "sh_devils",
-    },
-    {
-        .name   = "Starfest Magway",
-        .artist = "Ronin Op F",
-        .fName  = "sh_starfest",
-    },
-    {
-        .name   = "Wake Man Stage",
-        .artist = "JnWake",
-        .fName  = "sh_wakeman",
-    },
-    {
-        .name   = "Ocean City 1989",
-        .artist = "Carrie Wood",
-        .fName  = "sh_ocean",
-    },
-    {
-        .name   = "San Pablo Sunrise",
-        .artist = "Ian Cowell",
-        .fName  = "sh_sunrise",
-    },
-    {
-        .name   = "The Dance of the Cremulons",
-        .artist = "Mattmattat",
-        .fName  = "sh_cremulons",
-    },
-    {
-        .name   = "Let It Bleed",
-        .artist = "TheManPF",
-        .fName  = "sh_bleed",
-    },
-    {
-        .name   = "Revenge",
-        .artist = "Rampey",
-        .fName  = "sh_revenge",
-    },
-    {
-        .name   = "Pain",
-        .artist = "Rampey",
-        .fName  = "sh_pain",
-    },
-    {
-        .name   = "Gunship Credits",
+        .name   = "Grind Pangolin",
         .artist = "Newmajoe",
-        .fName  = "sh_gs_credits",
+        .midi   = MPE_PANGOLIN_MID,
+        .charts = {MPE_PANGOLIN_E_CCH, MPE_PANGOLIN_M_CCH, MPE_PANGOLIN_H_CCH},
     },
+    {
+        .name   = "Kinetic Donut",
+        .artist = "Newmajoe",
+        .midi   = MPE_DONUT_MID,
+        .charts = {MPE_DONUT_E_CCH, MPE_DONUT_M_CCH, MPE_DONUT_H_CCH},
+    },
+    {
+        .name   = "Sever yagata",
+        .artist = "Newmajoe",
+        .midi   = MPE_YAGATA_MID,
+        .charts = {MPE_YAGATA_E_CCH, MPE_YAGATA_M_CCH, MPE_YAGATA_H_CCH},
+    },
+    {
+        .name   = "Smash Gorilla",
+        .artist = "Newmajoe",
+        .midi   = MPE_GORILLA_MID,
+        .charts = {MPE_GORILLA_E_CCH, MPE_GORILLA_M_CCH, MPE_GORILLA_H_CCH},
+    },
+    // {
+    //     .name   = "Chowa Grove",
+    //     .artist = "Newmajoe",
+    //     .midi   = SH_CGROVE_MID,
+    //     .charts = {SH_CGROVE_E_CCH, SH_CGROVE_M_CCH, SH_CGROVE_H_CCH},
+    // },
+    // {
+    //     .name   = "Hot Dog Credits",
+    //     .artist = "Newmajoe",
+    //     .midi   = SH_CREDITS_MID,
+    //     .charts = {SH_CREDITS_E_CCH, SH_CREDITS_M_CCH, SH_CREDITS_H_CCH},
+    // },
+    // {
+    //     .name   = "Chowa Race",
+    //     .artist = "Tuck",
+    //     .midi   = SH_CRACE_MID,
+    //     .charts = {SH_CRACE_E_CCH, SH_CRACE_M_CCH, SH_CRACE_H_CCH},
+    // },
+    // {
+    //     .name   = "Pango",
+    //     .artist = "Newmajoe",
+    //     .midi   = SH_PANGO_MID,
+    //     .charts = {SH_PANGO_E_CCH, SH_PANGO_M_CCH, SH_PANGO_H_CCH},
+    // },
+    // {
+    //     .name   = "The Devil's Lullaby",
+    //     .artist = "Meldecision",
+    //     .midi   = SH_DEVILS_MID,
+    //     .charts = {SH_DEVILS_E_CCH, SH_DEVILS_M_CCH, SH_DEVILS_H_CCH},
+    // },
+    // {
+    //     .name   = "Starfest Magway",
+    //     .artist = "Ronin Op F",
+    //     .midi   = SH_STARFEST_MID,
+    //     .charts = {SH_STARFEST_E_CCH, SH_STARFEST_M_CCH, SH_STARFEST_H_CCH},
+    // },
+    // {
+    //     .name   = "Wake Man Stage",
+    //     .artist = "JnWake",
+    //     .midi   = SH_WAKEMAN_MID,
+    //     .charts = {SH_WAKEMAN_E_CCH, SH_WAKEMAN_M_CCH, SH_WAKEMAN_H_CCH},
+    // },
+    // {
+    //     .name   = "Ocean City 1989",
+    //     .artist = "Carrie Wood",
+    //     .midi   = SH_OCEAN_MID,
+    //     .charts = {SH_OCEAN_E_CCH, SH_OCEAN_M_CCH, SH_OCEAN_H_CCH},
+    // },
+    // {
+    //     .name   = "San Pablo Sunrise",
+    //     .artist = "Ian Cowell",
+    //     .midi   = SH_SUNRISE_MID,
+    //     .charts = {SH_SUNRISE_E_CCH, SH_SUNRISE_M_CCH, SH_SUNRISE_H_CCH},
+    // },
+    // {
+    //     .name   = "The Dance of the Cremulons",
+    //     .artist = "Mattmattat",
+    //     .midi   = SH_CREMULONS_MID,
+    //     .charts = {SH_CREMULONS_E_CCH, SH_CREMULONS_M_CCH, SH_CREMULONS_H_CCH},
+    // },
+    // {
+    //     .name   = "Let It Bleed",
+    //     .artist = "TheManPF",
+    //     .midi   = SH_BLEED_MID,
+    //     .charts = {SH_BLEED_E_CCH, SH_BLEED_M_CCH, SH_BLEED_H_CCH},
+    // },
+    // {
+    //     .name   = "Revenge",
+    //     .artist = "Rampey",
+    //     .midi   = SH_REVENGE_MID,
+    //     .charts = {SH_REVENGE_E_CCH, SH_REVENGE_M_CCH, SH_REVENGE_H_CCH},
+    // },
+    // {
+    //     .name   = "Pain",
+    //     .artist = "Rampey",
+    //     .midi   = SH_PAIN_MID,
+    //     .charts = {SH_PAIN_E_CCH, SH_PAIN_M_CCH, SH_PAIN_H_CCH},
+    // },
+    // {
+    //     .name   = "Gunship Credits",
+    //     .artist = "Newmajoe",
+    //     .midi   = SH_GS_CREDITS_MID,
+    //     .charts = {SH_GS_CREDITS_E_CCH, SH_GS_CREDITS_M_CCH, SH_GS_CREDITS_H_CCH},
+    // },
 };
 
 static const char strSongSelect[] = "Song Select";
@@ -171,7 +227,7 @@ void shSetupMenu(shVars_t* sh)
         {
             // Get the NVS key and try to read the value
             char nvsKey[16];
-            shGetNvsKey(shSongList[sIdx].fName, difficulties[i], nvsKey);
+            shGetNvsKey(shSongList[sIdx].name, difficulties[i], nvsKey);
             int32_t tmpScore;
             if (readNvs32(nvsKey, &tmpScore))
             {
@@ -274,8 +330,9 @@ void shMenuDraw(shVars_t* sh, int32_t elapsedUs)
  * @param label The menu item that was selected or moved to
  * @param selected true if the item was selected, false if it was moved to
  * @param settingVal The value of the setting, if the menu item is a settings item
+ * @return false
  */
-static void shMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool shMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     // Get a reference to the game state because it isn't a callback arg
     shVars_t* sh = getShVars();
@@ -350,6 +407,7 @@ static void shMenuCb(const char* label, bool selected, uint32_t settingVal)
             writeNvs32(shs_speed_key, settingVal);
         }
     }
+    return false;
 }
 
 /**
