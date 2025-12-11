@@ -8,6 +8,7 @@
 #include "esp_random.h"
 #include "hdw-btn.h"
 #include "soundFuncs.h"
+#include "hdw-nvs.h"
 
 //==============================================================================
 // Functions
@@ -61,6 +62,15 @@ void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
     gameData->inGameTimer          = 0;
     gameData->bgColors             = bgGradientCyan;
     gameData->customLevel          = false;
+    int32_t outVal;
+    if (readNvs32("mg_cheatMode", &outVal) == false)
+    {
+        gameData->cheatMode = false;
+    }
+    else
+    {
+        gameData->cheatMode = outVal == 1 ? true : false;
+    }
 
     mg_resetGameDataLeds(gameData);
 }

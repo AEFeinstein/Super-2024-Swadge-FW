@@ -17,6 +17,8 @@
 #include "mega_pulse_ex_typedef.h"
 #include "shapes.h"
 #include "vector2d.h"
+#include "cutscene.h"
+#include "mgCutscenes.h"
 
 //==============================================================================
 // Constants
@@ -1360,7 +1362,11 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             else */
             if (self->invincibilityFrames <= 0)
             {
-                self->hp -= 5;
+                if (!self->gameData->cheatMode)
+                {
+                    self->hp -= 5;
+                }
+
                 self->gameData->comboTimer = 0;
 
                 if (self->shotsFired < 0)
@@ -1542,7 +1548,10 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             // TODO: This is a repeat of above code; move to its own function
             if (self->invincibilityFrames <= 0 && other->scoreValue)
             {
-                self->hp -= other->scoreValue;
+                if (!self->gameData->cheatMode)
+                {
+                    self->hp -= other->scoreValue;
+                }
                 mg_updateLedsHpMeter(self->entityManager, self->gameData);
                 self->gameData->comboTimer = 0;
 
@@ -2053,9 +2062,10 @@ void updateScrollLockRight(mgEntity_t* self)
     // For this to work, the boss must be placed to the left of the scroll lock.
     if (self->entityManager->bossEntity != NULL)
     {
-        self->entityManager->bossEntity->state = 0;
-        mg_setBgm(self->soundManager, leveldef[self->gameData->level].bossBgmIndex);
+        // Cutscene before the boss fight
+        mg_setBgm(self->soundManager, MG_BGM_PRE_FIGHT);
         soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+        bossIntroCutscene(self->gameData);
     }
 
     mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);

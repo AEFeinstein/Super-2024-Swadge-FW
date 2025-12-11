@@ -303,6 +303,38 @@ void addAfter(list_t* list, void* val, node_t* entry)
 }
 
 /**
+ * @brief Get the value at an index in the list
+ *
+ * @param list The list to get from
+ * @param index The index to get the value from
+ * @return The value that was removed. May be NULL if the index was invalid
+ */
+void* getAtIndex(list_t* list, uint16_t index)
+{
+    if (NULL == list || list->length == 0)
+    {
+        return NULL;
+    }
+    if (index == list->length - 1)
+    {
+        return list->last->val;
+    }
+    else if (index < list->length - 1)
+    {
+        node_t* current = list->first;
+        for (uint16_t i = 0; i < index; i++)
+        {
+            current = current->next;
+        }
+        return current->val;
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
+/**
  * @brief Remove at an index in the list
  *
  * @param list The list to remove from

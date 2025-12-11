@@ -5,6 +5,7 @@
 #include "vector2d.h"
 #include "mgLeveldef.h"
 #include "palette.h"
+#include "trophy.h"
 
 //==============================================================================
 // Constants
@@ -68,7 +69,8 @@ typedef enum
     MG_ST_GAME_OVER,
     MG_ST_HIGH_SCORE_ENTRY,
     MG_ST_HIGH_SCORE_TABLE,
-    MG_ST_PAUSE
+    MG_ST_PAUSE,
+    MG_ST_CUTSCENE,
 } mg_gameStateEnum_t;
 
 typedef enum
@@ -94,6 +96,9 @@ typedef enum
     MG_BGM_BOSS_TRASH_MAN,
     MG_BGM_BIGMA,
     MG_BGM_BOSS_BIGMA,
+    MG_BGM_LEVEL_CLEAR_JINGLE,
+    MG_BGM_POST_FIGHT,
+    MG_BGM_PRE_FIGHT,
     MG_BGM_STAGE_SELECT,
     MG_BGM_NAME_ENTRY
 } mg_bgmEnum_t;
@@ -1412,4 +1417,9 @@ static const mg_spriteDef_t chargeShotAnimFrames[]
 static const mg_spriteDef_t maxChargeShotAnimFrames[]
     = {MG_SP_CHARGE_SHOT_MAX_1, MG_SP_CHARGE_SHOT_MAX_2, MG_SP_CHARGE_SHOT_MAX_3};
 
+// platformerTrophies array is defined in megaPulseEx.c to avoid multiple definitions
+extern const trophyData_t platformerTrophies[];
+
+extern void goToReadyScreen(void);
+extern void initBossFight(void);
 #endif
