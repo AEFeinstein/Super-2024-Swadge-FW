@@ -305,6 +305,30 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
         case ENTITY_SHRUBBLE_LV4:
             createdEntity = createShrubbleLv4(entityManager, x, y);
             break;
+        case ENTITY_BOSS_GRIND_PANGOLIN:
+            createdEntity = createBossGrindPangolin(entityManager, x, y);
+            break;
+        case ENTITY_BOSS_KINETIC_DONUT:
+            createdEntity = createBossKineticDonut(entityManager, x, y);
+            break;
+        case ENTITY_BOSS_TRASH_MAN:
+            createdEntity = createBossTrashMan(entityManager, x, y);
+            break;
+        case ENTITY_BOSS_BIGMA:
+            createdEntity = createBossBigma(entityManager, x, y);
+            break;
+        case ENTITY_BOSS_SMASH_GORILLA:
+            createdEntity = createBossSmashGorilla(entityManager, x, y);
+            break;
+        case ENTITY_BOSS_DEADEYE_CHIRPZI:
+            createdEntity = createBossDeadeyeChirpzi(entityManager, x, y);
+            break;
+        case ENTITY_BOSS_DRAIN_BAT:
+            createdEntity = createBossDrainBat(entityManager, x, y);
+            break;
+        case ENTITY_BOSS_FLARE_GRYFFYN:
+            createdEntity = createBossFlareGryffyn(entityManager, x, y);
+            break;
         default:
             createdEntity = NULL;
     }

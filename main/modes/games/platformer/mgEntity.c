@@ -1484,6 +1484,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
 
                 mg_deactivateAllEntities(self->entityManager, true);
                 mg_loadMapFromFile(self->tilemap, leveldef[newLevelIndex].filename);
+                mg_loadWsgSet(self->tilemap->wsgManager, leveldef[newLevelIndex].defaultWsgSetIndex);
 
                 if (self->tilemap->defaultPlayerSpawn != NULL)
                 {
