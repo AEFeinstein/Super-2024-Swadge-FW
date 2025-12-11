@@ -12,6 +12,7 @@
 #define MG_TILESET_MAP_ROW_LENGTH       3
 
 static const uint16_t mg_kineticDonutTileset[] = {
+    // clang-format off
     // CNFS File Index, WSG Index, Tile Index
     KD_TILE_032_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,
     KD_TILE_033_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,
@@ -94,11 +95,11 @@ static const uint16_t mg_kineticDonutTileset[] = {
     KD_TILE_110_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,
     KD_TILE_160_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,
     TILE_039_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,
-    SPIKE_TILE_TOP_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
-    SPIKE_TILE_LEFT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
+    SPIKE_TILE_TOP_00_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
+    SPIKE_TILE_LEFT_00_WSG,   MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
     SPIKE_TILE_BOTTOM_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4,
-    SPIKE_TILE_RIGHT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
-    TILE_034_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
+    SPIKE_TILE_RIGHT_00_WSG,  MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
+    TILE_034_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
     KD_TILE_192_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0,
     KD_TILE_193_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1,
     KD_TILE_194_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2,
@@ -117,49 +118,50 @@ static const uint16_t mg_kineticDonutTileset[] = {
     KINETIC_DONUT_005_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5,
     KINETIC_DONUT_006_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6,
     KINETIC_DONUT_007_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F7, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F7,
+    // clang-format on
 };
 
 static const mgSprite_t mg_severYatagaBossSpriteMetadataSet[] = {
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_sever_yataga,
-        .hitBox = &box_sever_yataga
+        .hitBox = &box_sever_yataga,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_sever_yataga,
-        .hitBox = &box_sever_yataga
+        .hitBox = &box_sever_yataga,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_sever_yataga,
-        .hitBox = &box_sever_yataga
+        .hitBox = &box_sever_yataga,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_sever_yataga,
-        .hitBox = &box_sever_yataga
+        .hitBox = &box_sever_yataga,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_sever_yataga,
-        .hitBox = &box_sever_yataga
+        .hitBox = &box_sever_yataga,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_sever_yataga,
-        .hitBox = &box_sever_yataga
+        .hitBox = &box_sever_yataga,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_sever_yataga,
-        .hitBox = &box_sever_yataga
+        .hitBox = &box_sever_yataga,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = NULL,
-        .hitBox = NULL
-    }
+        .hitBox = NULL,
+    },
 };
 
 bool mg_kineticDonutTileset_needsTransparency(uint8_t tileId);
@@ -168,6 +170,7 @@ void mg_kineticDonutTileset_animateTiles(uint8_t tileId);
 #define MG_LEVEL_SELECT_TILESET_MAP_LENGTH 20
 
 static const uint16_t mg_levelSelectTileset[] = {
+    // clang-format off
     // CNFS File Index, WSG Index, Tile Index
     MG_LEVEL_SELECT_TILE_001_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,
     MG_LEVEL_SELECT_TILE_002_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,
@@ -179,24 +182,25 @@ static const uint16_t mg_levelSelectTileset[] = {
     MG_LEVEL_SELECT_TILE_008_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_27, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_27,
     MG_LEVEL_SELECT_TILE_009_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_28, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_28,
     MG_LEVEL_SELECT_TILE_010_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_29, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_29,
-    KINETIC_DONUT_PORTRAIT_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2A, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2A,
-    GRIND_PANGOLIN_PORTRAIT_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2B, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2B,
-    SEVER_YATAGA_PORTRAIT_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2C, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2C,
-    TRASH_MAN_PORTRAIT_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2D, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2D,
-    BIGMA_SYMBOL_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2E, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2E,
-    SMASH_GORILLA_PORTRAIT_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2F, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2F,
+    KINETIC_DONUT_PORTRAIT_WSG,   MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2A, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2A,
+    GRIND_PANGOLIN_PORTRAIT_WSG,  MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2B, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2B,
+    SEVER_YATAGA_PORTRAIT_WSG,    MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2C, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2C,
+    TRASH_MAN_PORTRAIT_WSG,       MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2D, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2D,
+    BIGMA_SYMBOL_WSG,             MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2E, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2E,
+    SMASH_GORILLA_PORTRAIT_WSG,   MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2F, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2F,
     DEADEYE_CHIRPZI_PORTRAIT_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_30, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_30,
-    DRAIN_BAT_PORTRAIT_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_31, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_31,
-    FLARE_GRYFFYN_PORTRAIT_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_32, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_32,
-    STATIC_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_33, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_33,
+    DRAIN_BAT_PORTRAIT_WSG,       MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_31, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_31,
+    FLARE_GRYFFYN_PORTRAIT_WSG,   MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_32, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_32,
+    STATIC_WSG,                   MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_33, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_33,
+    // clang-format on
 };
 
 bool mg_levelSelectTileset_needsTransparency(uint8_t tileId);
 void mg_levelSelectTileset_animateTiles(uint8_t tileId);
 
-
-//Length, transparency, animate shared with kineticDonutTileset
+// Length, transparency, animate shared with kineticDonutTileset
 static const uint16_t mg_smashGorillaTileset[] = {
+    // clang-format off
     // CNFS File Index, WSG Index, Tile Index
     YE_TILE_032_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,
     YE_TILE_033_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,
@@ -279,11 +283,11 @@ static const uint16_t mg_smashGorillaTileset[] = {
     KD_TILE_110_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,
     KD_TILE_160_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,
     TILE_039_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,
-    SPIKE_TILE_TOP_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
-    SPIKE_TILE_LEFT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
+    SPIKE_TILE_TOP_00_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
+    SPIKE_TILE_LEFT_00_WSG,   MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
     SPIKE_TILE_BOTTOM_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4,
-    SPIKE_TILE_RIGHT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
-    TILE_034_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
+    SPIKE_TILE_RIGHT_00_WSG,  MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
+    TILE_034_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
     KD_TILE_192_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0,
     KD_TILE_193_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1,
     KD_TILE_194_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2,
@@ -301,354 +305,356 @@ static const uint16_t mg_smashGorillaTileset[] = {
     SMASH_GORILLA_004_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F4, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F4,
     SMASH_GORILLA_005_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5,
     SMASH_GORILLA_006_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6,
+    // clang-format on
 };
 
 static const mgSprite_t mg_smashGorillaBossSpriteMetadataSet[] = {
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_smash_gorilla,
-        .hitBox = &box_smash_gorilla
+        .hitBox = &box_smash_gorilla,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_smash_gorilla,
-        .hitBox = &box_smash_gorilla
+        .hitBox = &box_smash_gorilla,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_smash_gorilla,
-        .hitBox = &box_smash_gorilla
+        .hitBox = &box_smash_gorilla,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_smash_gorilla,
-        .hitBox = &box_smash_gorilla
+        .hitBox = &box_smash_gorilla,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_smash_gorilla,
-        .hitBox = &box_smash_gorilla
+        .hitBox = &box_smash_gorilla,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_smash_gorilla,
-        .hitBox = &box_smash_gorilla
+        .hitBox = &box_smash_gorilla,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_8_8,
-        .hitBox = &box_16_16
+        .hitBox = &box_16_16,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = NULL,
-        .hitBox = NULL
-    }
+        .hitBox = NULL,
+    },
 };
 
 static const mgSprite_t mg_drainBatBossSpriteMetadataSet[] = {
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_drain_bat,
-        .hitBox = &box_drain_bat
+        .hitBox = &box_drain_bat,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_drain_bat,
-        .hitBox = &box_drain_bat
+        .hitBox = &box_drain_bat,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_drain_bat,
-        .hitBox = &box_drain_bat
+        .hitBox = &box_drain_bat,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_drain_bat,
-        .hitBox = &box_drain_bat
+        .hitBox = &box_drain_bat,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_drain_bat,
-        .hitBox = &box_drain_bat
+        .hitBox = &box_drain_bat,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = NULL,
-        .hitBox = NULL
+        .hitBox = NULL,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = NULL,
-        .hitBox = NULL
+        .hitBox = NULL,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = NULL,
-        .hitBox = NULL
-    }
+        .hitBox = NULL,
+    },
 };
 
 static const mgSprite_t mg_grindPangolinBossSpriteMetadataSet[] = {
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_grind_pangolin_standing,
-        .hitBox = &box_grind_pangolin_standing
+        .hitBox = &box_grind_pangolin_standing,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_grind_pangolin_standing,
-        .hitBox = &box_grind_pangolin_standing
+        .hitBox = &box_grind_pangolin_standing,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_grind_pangolin_curled,
-        .hitBox = &box_grind_pangolin_curled
+        .hitBox = &box_grind_pangolin_curled,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_grind_pangolin_rolling,
-        .hitBox = &box_grind_pangolin_rolling
+        .hitBox = &box_grind_pangolin_rolling,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_grind_pangolin_rolling,
-        .hitBox = &box_grind_pangolin_rolling
+        .hitBox = &box_grind_pangolin_rolling,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_grind_pangolin_standing,
-        .hitBox = &box_grind_pangolin_standing
+        .hitBox = &box_grind_pangolin_standing,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_grind_pangolin_standing,
-        .hitBox = &box_grind_pangolin_standing
+        .hitBox = &box_grind_pangolin_standing,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = NULL,
-        .hitBox = NULL
-    }
+        .hitBox = NULL,
+    },
 };
 
 static const mgSprite_t mg_kineticDonutBossSpriteMetadataSet[] = {
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_kinetic_donut,
-        .hitBox = &box_kinetic_donut
+        .hitBox = &box_kinetic_donut,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_kinetic_donut,
-        .hitBox = &box_kinetic_donut
+        .hitBox = &box_kinetic_donut,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_kinetic_donut,
-        .hitBox = &box_kinetic_donut
+        .hitBox = &box_kinetic_donut,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_kinetic_donut,
-        .hitBox = &box_kinetic_donut
+        .hitBox = &box_kinetic_donut,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_kinetic_donut,
-        .hitBox = &box_kinetic_donut
+        .hitBox = &box_kinetic_donut,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_kinetic_donut_dashing,
-        .hitBox = &box_kinetic_donut_dashing
+        .hitBox = &box_kinetic_donut_dashing,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_kinetic_donut_dashing,
-        .hitBox = &box_kinetic_donut_dashing
+        .hitBox = &box_kinetic_donut_dashing,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_kinetic_donut,
-        .hitBox = &origin_kinetic_donut
-    }
+        .hitBox = &origin_kinetic_donut,
+    },
 };
 
 static const mgSprite_t mg_flareGryffynBossSpriteMetadataSet[] = {
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_flare_gryffyn,
-        .hitBox = &box_flare_gryffyn
+        .hitBox = &box_flare_gryffyn,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_flare_gryffyn_jump,
-        .hitBox = &box_flare_gryffyn_jump
+        .hitBox = &box_flare_gryffyn_jump,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_flare_gryffyn,
-        .hitBox = &box_flare_gryffyn
+        .hitBox = &box_flare_gryffyn,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_flare_gryffyn,
-        .hitBox = &box_flare_gryffyn
+        .hitBox = &box_flare_gryffyn,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_flare_gryffyn,
-        .hitBox = &box_flare_gryffyn
+        .hitBox = &box_flare_gryffyn,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_flare_gryffyn,
-        .hitBox = &box_flare_gryffyn
+        .hitBox = &box_flare_gryffyn,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_flare_gryffyn_jump,
-        .hitBox = &box_flare_gryffyn_jump
+        .hitBox = &box_flare_gryffyn_jump,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = NULL,
-        .hitBox = NULL
-    }
+        .hitBox = NULL,
+    },
 };
 
 static const mgSprite_t mg_deadeyeChirpziBossSpriteMetadataSet[] = {
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_deadeye_chirpzi,
-        .hitBox = &box_deadeye_chirpzi
+        .hitBox = &box_deadeye_chirpzi,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_deadeye_chirpzi,
-        .hitBox = &box_deadeye_chirpzi
+        .hitBox = &box_deadeye_chirpzi,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_deadeye_chirpzi,
-        .hitBox = &box_deadeye_chirpzi
+        .hitBox = &box_deadeye_chirpzi,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_deadeye_chirpzi,
-        .hitBox = &box_deadeye_chirpzi
+        .hitBox = &box_deadeye_chirpzi,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_deadeye_chirpzi_screw,
-        .hitBox = &box_deadeye_chirpzi_screw
+        .hitBox = &box_deadeye_chirpzi_screw,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_deadeye_chirpzi,
-        .hitBox = &box_deadeye_chirpzi
+        .hitBox = &box_deadeye_chirpzi,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = NULL,
-        .hitBox = NULL
+        .hitBox = NULL,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = NULL,
-        .hitBox = NULL
-    }
+        .hitBox = NULL,
+    },
 };
 
 static const mgSprite_t mg_trashManBossSpriteMetadataSet[] = {
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_trash_man,
-        .hitBox = &box_trash_man
+        .hitBox = &box_trash_man,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_trash_man,
-        .hitBox = &box_trash_man
+        .hitBox = &box_trash_man,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = NULL,
-        .hitBox = NULL
+        .hitBox = NULL,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = NULL,
-        .hitBox = NULL
+        .hitBox = NULL,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = NULL,
-        .hitBox = NULL
+        .hitBox = NULL,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = NULL,
-        .hitBox = NULL
+        .hitBox = NULL,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = NULL,
-        .hitBox = NULL
+        .hitBox = NULL,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = NULL,
-        .hitBox = NULL
-    }
+        .hitBox = NULL,
+    },
 };
 
 static const mgSprite_t mg_bigmaBossSpriteMetadataSet[] = {
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_bigma,
-        .hitBox = &box_bigma
+        .hitBox = &box_bigma,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_bigma,
-        .hitBox = &box_bigma
+        .hitBox = &box_bigma,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_bigma_punching,
-        .hitBox = &box_bigma_punching
+        .hitBox = &box_bigma_punching,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_bigma_punching,
-        .hitBox = &box_bigma_punching
+        .hitBox = &box_bigma_punching,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_bigma_jump,
-        .hitBox = &box_bigma_jump1
+        .hitBox = &box_bigma_jump1,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_bigma_jump,
-        .hitBox = &box_bigma_jump2
+        .hitBox = &box_bigma_jump2,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = &origin_bigma,
-        .hitBox = &box_bigma
+        .hitBox = &box_bigma,
     },
     {
-        .wsg = NULL,
+        .wsg    = NULL,
         .origin = NULL,
-        .hitBox = NULL
-    }
+        .hitBox = NULL,
+    },
 };
 
-//Length, transparency, animate shared with kineticDonutTileset
+// Length, transparency, animate shared with kineticDonutTileset
 static const uint16_t mg_severYatagaTileset[] = {
+    // clang-format off
     // CNFS File Index, WSG Index, Tile Index
     GG_TILE_032_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,
     GG_TILE_033_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,
@@ -731,11 +737,11 @@ static const uint16_t mg_severYatagaTileset[] = {
     KD_TILE_110_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,
     KD_TILE_160_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,
     TILE_039_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,
-    SPIKE_TILE_TOP_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
-    SPIKE_TILE_LEFT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
+    SPIKE_TILE_TOP_00_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
+    SPIKE_TILE_LEFT_00_WSG,   MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
     SPIKE_TILE_BOTTOM_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4,
-    SPIKE_TILE_RIGHT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
-    TILE_034_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
+    SPIKE_TILE_RIGHT_00_WSG,  MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
+    TILE_034_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
     KD_TILE_192_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0,
     KD_TILE_193_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1,
     KD_TILE_194_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2,
@@ -753,10 +759,12 @@ static const uint16_t mg_severYatagaTileset[] = {
     SEVER_YATAGA_004_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F4, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F4,
     SEVER_YATAGA_005_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5,
     SEVER_YATAGA_006_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6,
+    // clang-format on
 };
 
-//Length, transparency, animate shared with kineticDonutTileset
+// Length, transparency, animate shared with kineticDonutTileset
 static const uint16_t mg_trashManTileset[] = {
+    // clang-format off
     // CNFS File Index, WSG Index, Tile Index
     BR_TILE_032_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,
     BR_TILE_033_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,
@@ -839,11 +847,11 @@ static const uint16_t mg_trashManTileset[] = {
     KD_TILE_110_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,
     KD_TILE_160_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,
     TILE_039_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,
-    SPIKE_TILE_TOP_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
-    SPIKE_TILE_LEFT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
+    SPIKE_TILE_TOP_00_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
+    SPIKE_TILE_LEFT_00_WSG,   MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
     SPIKE_TILE_BOTTOM_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4,
-    SPIKE_TILE_RIGHT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
-    TILE_034_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
+    SPIKE_TILE_RIGHT_00_WSG,  MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
+    TILE_034_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
     KD_TILE_192_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0,
     KD_TILE_193_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1,
     KD_TILE_194_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2,
@@ -854,17 +862,19 @@ static const uint16_t mg_trashManTileset[] = {
     //Space reserved for tile animation frames
 
     //Boss sprites are part of level tileset
-    OVOVO_BOSS_0_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F0, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F0,
-    OVOVO_BOSS_6_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F1, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F1,
+    OVOVO_BOSS_0_WSG,     MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F0, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F0,
+    OVOVO_BOSS_6_WSG,     MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F1, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F1,
     SEVER_YATAGA_002_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F2, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F2,
     SEVER_YATAGA_003_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F3, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F3,
     SEVER_YATAGA_004_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F4, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F4,
     SEVER_YATAGA_005_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5,
     SEVER_YATAGA_006_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6,
+    // clang-format on
 };
 
-//Length, transparency, animate shared with kineticDonutTileset
+// Length, transparency, animate shared with kineticDonutTileset
 static const uint16_t mg_grindPangolinTileset[] = {
+    // clang-format off
     // CNFS File Index, WSG Index, Tile Index
     GR_TILE_032_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,
     GR_TILE_033_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,
@@ -947,11 +957,11 @@ static const uint16_t mg_grindPangolinTileset[] = {
     KD_TILE_110_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,
     KD_TILE_160_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,
     TILE_039_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,
-    SPIKE_TILE_TOP_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
-    SPIKE_TILE_LEFT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
+    SPIKE_TILE_TOP_00_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
+    SPIKE_TILE_LEFT_00_WSG,   MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
     SPIKE_TILE_BOTTOM_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4,
-    SPIKE_TILE_RIGHT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
-    TILE_034_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
+    SPIKE_TILE_RIGHT_00_WSG,  MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
+    TILE_034_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
     KD_TILE_192_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0,
     KD_TILE_193_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1,
     KD_TILE_194_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2,
@@ -970,10 +980,12 @@ static const uint16_t mg_grindPangolinTileset[] = {
     GRIND_PANGOLIN_005_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5,
     GRIND_PANGOLIN_006_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6,
     GRIND_PANGOLIN_007_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F7, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F7,
+    // clang-format on
 };
 
-//Length, transparency, animate shared with kineticDonutTileset
+// Length, transparency, animate shared with kineticDonutTileset
 static const uint16_t mg_deadeyeChirpziTileset[] = {
+    // clang-format off
     // CNFS File Index, WSG Index, Tile Index
     GN_TILE_032_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,
     GN_TILE_033_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,
@@ -1056,11 +1068,11 @@ static const uint16_t mg_deadeyeChirpziTileset[] = {
     KD_TILE_110_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,
     KD_TILE_160_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,
     TILE_039_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,
-    SPIKE_TILE_TOP_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
-    SPIKE_TILE_LEFT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
+    SPIKE_TILE_TOP_00_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
+    SPIKE_TILE_LEFT_00_WSG,   MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
     SPIKE_TILE_BOTTOM_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4,
-    SPIKE_TILE_RIGHT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
-    TILE_034_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
+    SPIKE_TILE_RIGHT_00_WSG,  MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
+    TILE_034_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
     KD_TILE_192_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0,
     KD_TILE_193_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1,
     KD_TILE_194_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2,
@@ -1077,11 +1089,13 @@ static const uint16_t mg_deadeyeChirpziTileset[] = {
     DEADEYE_CHIRPZI_003_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F3, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F3,
     DEADEYE_CHIRPZI_004_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F4, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F4,
     DEADEYE_CHIRPZI_005_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5,
-    TILE_032_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6,
+    TILE_032_WSG,            MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6,
+    // clang-format on
 };
 
-//Length, transparency, animate shared with kineticDonutTileset
+// Length, transparency, animate shared with kineticDonutTileset
 static const uint16_t mg_drainBatTileset[] = {
+    // clang-format off
     // CNFS File Index, WSG Index, Tile Index
     PL_TILE_032_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,
     PL_TILE_033_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,
@@ -1164,11 +1178,11 @@ static const uint16_t mg_drainBatTileset[] = {
     KD_TILE_110_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,
     KD_TILE_160_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,
     TILE_039_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,
-    SPIKE_TILE_TOP_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
-    SPIKE_TILE_LEFT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
+    SPIKE_TILE_TOP_00_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
+    SPIKE_TILE_LEFT_00_WSG,   MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
     SPIKE_TILE_BOTTOM_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4,
-    SPIKE_TILE_RIGHT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
-    TILE_034_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
+    SPIKE_TILE_RIGHT_00_WSG,  MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
+    TILE_034_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
     KD_TILE_192_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0,
     KD_TILE_193_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1,
     KD_TILE_194_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2,
@@ -1186,10 +1200,12 @@ static const uint16_t mg_drainBatTileset[] = {
     DRAIN_BAT_004_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F4, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F4,
     DRAIN_BAT_005_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5,
     DRAIN_BAT_000_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6,
+    // clang-format on
 };
 
-//Length, transparency, animate shared with kineticDonutTileset
+// Length, transparency, animate shared with kineticDonutTileset
 static const uint16_t mg_flareGryffynTileset[] = {
+    // clang-format off
     // CNFS File Index, WSG Index, Tile Index
     RD_TILE_032_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,
     RD_TILE_033_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,
@@ -1272,11 +1288,11 @@ static const uint16_t mg_flareGryffynTileset[] = {
     KD_TILE_110_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,
     KD_TILE_160_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,
     TILE_039_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,
-    SPIKE_TILE_TOP_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
-    SPIKE_TILE_LEFT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
+    SPIKE_TILE_TOP_00_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
+    SPIKE_TILE_LEFT_00_WSG,   MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
     SPIKE_TILE_BOTTOM_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4,
-    SPIKE_TILE_RIGHT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
-    TILE_034_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
+    SPIKE_TILE_RIGHT_00_WSG,  MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
+    TILE_034_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
     KD_TILE_192_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0,
     KD_TILE_193_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1,
     KD_TILE_194_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2,
@@ -1294,10 +1310,12 @@ static const uint16_t mg_flareGryffynTileset[] = {
     FLARE_GRYFFYN_004_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F4, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F4,
     FLARE_GRYFFYN_005_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5,
     FLARE_GRYFFYN_006_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6,
+    // clang-format on
 };
 
-//Length, transparency, animate shared with kineticDonutTileset
+// Length, transparency, animate shared with kineticDonutTileset
 static const uint16_t mg_bigmaTileset[] = {
+    // clang-format off
     // CNFS File Index, WSG Index, Tile Index
     BK_TILE_032_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_20,
     BK_TILE_033_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_21,
@@ -1380,11 +1398,11 @@ static const uint16_t mg_bigmaTileset[] = {
     KD_TILE_110_WSG, MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,    MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_6E,
     KD_TILE_160_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A0,
     TILE_039_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A1,
-    SPIKE_TILE_TOP_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
-    SPIKE_TILE_LEFT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
+    SPIKE_TILE_TOP_00_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A2,
+    SPIKE_TILE_LEFT_00_WSG,   MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A3,
     SPIKE_TILE_BOTTOM_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A4,
-    SPIKE_TILE_RIGHT_00_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
-    TILE_034_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
+    SPIKE_TILE_RIGHT_00_WSG,  MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5, MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A5,
+    TILE_034_WSG,    MG_WSG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,    MG_TILE_NONSOLID_VISIBLE_INTERACTIVE_A6,
     KD_TILE_192_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C0,
     KD_TILE_193_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C1,
     KD_TILE_194_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_C2,
@@ -1402,5 +1420,7 @@ static const uint16_t mg_bigmaTileset[] = {
     BIGMA_004_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F4, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F4,
     BIGMA_005_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F5,
     BIGMA_006_WSG, MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6, MG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F6,
+    // clang-format on
 };
+
 #endif
