@@ -160,15 +160,15 @@ void stageStartCutscene(mgGameData_t* gameData)
                             "through the walls.",
                             false, 0);
             addCutsceneLine(gameData->cutscene, Sawtooth, "We're too late... the MAGiX virus is already spreading.",
-                            false, 1);
+                            true, 1);
             addCutsceneLine(gameData->cutscene, Pulse, "This is nuts! What even is this place?", true, 1);
             addCutsceneLine(gameData->cutscene, Sawtooth,
                             "It used to be our home base... before it was corrupted. We got a ping near the Main "
                             "Stage. Let's move!",
-                            false, 0);
+                            true, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "Wait, what am I supposed to do?", true, 0);
             addCutsceneLine(gameData->cutscene, Sawtooth, "Use your rhythm-feel it out! You'll learn fast. Just GO!",
-                            false, 3);
+                            true, 3);
             break;
         }
         case 2: // The Bouncehaus
@@ -186,7 +186,7 @@ void stageStartCutscene(mgGameData_t* gameData)
                 "This is the Bouncehaus. Best food in Omega Harbor. Budget-friendly, energy-rich, low judgement.", true,
                 3);
             addCutsceneLine(gameData->cutscene, Sawtooth,
-                            " Until Bigma's virus hit. Now no one's ordering anything sane.", false, 3);
+                            " Until Bigma's virus hit. Now no one's ordering anything sane.", true, 3);
             addCutsceneLine(gameData->cutscene, Pulse, "And the RemiX leader here is...?", false, -1);
             addCutsceneLine(
                 gameData->cutscene, Sawtooth,
@@ -353,7 +353,7 @@ void stageStartCutscene(mgGameData_t* gameData)
                             "It says this is the right place... but it looks like a landfill.", false, -1);
             addCutsceneLine(
                 gameData->cutscene, SawtoothPostReveal,
-                "This is supposed to be  RIP BARONESS's mindscape, but this doesn't look like a demon's lair...", true,
+                "This is supposed to be RIP BARONESS's mindscape, but this doesn't look like a demon's lair...", true,
                 -1);
             addCutsceneLine(gameData->cutscene, Pulse,
                             "It smells more like the green room of MAGWest after a band trip to Taco Bravo. eugh..",
