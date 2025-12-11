@@ -18,6 +18,7 @@
 #define DESPAWN_THRESHOLD                   64
 #define MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION 148
 
+// Note, must match order and size of mg_bgmEnum_t
 static const cnfsFileIdx_t MG_BGMS[]
     = {BGM_DEADEYE_CHIRPZI_MID,    BGM_BOSS_DEADEYE_CHIRPZI_MID, BGM_DRAIN_BAT_MID,
        BGM_BOSS_DRAIN_BAT_MID,     BGM_FLARE_GRYFFYN_MID,        BGM_BOSS_FLARE_GRIFFIN_MID,
@@ -25,7 +26,8 @@ static const cnfsFileIdx_t MG_BGMS[]
        BGM_BOSS_KINETIC_DONUT_MID, BGM_RIP_BARONESS_MID,         BGM_BOSS_HANK_WADDLE_MID,
        BGM_SEVER_YAGATA_MID,       BGM_BOSS_SEVER_YAGATA_MID,    BGM_SMASH_GORILLA_MID,
        BGM_BOSS_SMASH_GORILLA_MID, BGM_BOSS_TRASH_MAN_MID,       BGM_BIGMA_MID,
-       BGM_BOSS_BIGMA_MID,         BGM_STAGE_SELECT_MID,         BGM_NAME_ENTRY_MID};
+       BGM_BOSS_BIGMA_MID,         BGM_LEVEL_CLEAR_JINGLE_MID,   BGM_POST_FIGHT_MID,
+       BGM_PRE_FIGHT_MID,          BGM_STAGE_SELECT_MID,         BGM_NAME_ENTRY_MID};
 
 //==============================================================================
 // Macros
