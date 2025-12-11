@@ -920,19 +920,12 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             sd->currentDifficulty   = getLevelDifficulty(value);
 
             setupSudokuPlayer(&sd->player, &sd->game);
-            // sd->game.grid[0] = 9;
-            // sd->game.flags[0] = SF_LOCKED;
 
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
             sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
             resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
 
             swadgedokuSetupNumberWheel(sd->game.base, 0);
-
-            // sd->player.notes[1] = 127;
-            // sd->game.flags[8] = SF_VOID;
-            // sd->game.grid[2] = 8;
-            // setDigit(&sd->game, 8, 2, 0);
             sd->screen = SWADGEDOKU_GAME;
         }
         else if (menuItemStartCustom == label)
