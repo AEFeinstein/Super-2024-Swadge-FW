@@ -215,7 +215,7 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(PLACEHOLDER_24X_24_WSG, &self->wsgs[MG_WSG_AIR_TURRET], false);
     loadWsg(KD_BURGER_BOUNCE_UPRIGHT_WSG, &self->wsgs[MG_WSG_BOUNCE_PAD], false);
     loadWsg(KD_BURGER_BOUNCE_DIAGONAL_WSG, &self->wsgs[MG_WSG_BOUNCE_PAD_DIAGONAL], false);
-    loadWsg(TILE_TBD_WSG, &self->wsgs[MG_WSG_MIXTAPE], false);
+    loadWsg(CASSETTE_VERSION_A_WSG, &self->wsgs[MG_WSG_MIXTAPE], false);
     loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_BOSS_IDLE], false);
     loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_BOSS_MOVE_1], false);
     loadWsg(PLACEHOLDER_30X_30_WSG, &self->wsgs[MG_WSG_BOSS_MOVE_2], false);
@@ -584,21 +584,9 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_MIXTAPE].origin = &origin_8_8;
     self->sprites[MG_SP_MIXTAPE].hitBox = &box_16_16;
 
-    self->sprites[MG_SP_BOSS_IDLE].wsg    = &self->wsgs[MG_WSG_BOSS_IDLE];
-    self->sprites[MG_SP_BOSS_IDLE].origin = &origin_15_15;
-    self->sprites[MG_SP_BOSS_IDLE].hitBox = &box_16_32;
-
-    self->sprites[MG_SP_BOSS_MOVE_1].wsg    = &self->wsgs[MG_WSG_BOSS_MOVE_1];
-    self->sprites[MG_SP_BOSS_MOVE_1].origin = &origin_15_15;
-    self->sprites[MG_SP_BOSS_MOVE_1].hitBox = &box_16_32;
-
-    self->sprites[MG_SP_BOSS_MOVE_2].wsg    = &self->wsgs[MG_WSG_BOSS_MOVE_2];
-    self->sprites[MG_SP_BOSS_MOVE_2].origin = &origin_15_15;
-    self->sprites[MG_SP_BOSS_MOVE_2].hitBox = &box_16_32;
-
-    self->sprites[MG_SP_BOSS_MOVE_3].wsg    = &self->wsgs[MG_WSG_BOSS_MOVE_3];
-    self->sprites[MG_SP_BOSS_MOVE_3].origin = &origin_15_15;
-    self->sprites[MG_SP_BOSS_MOVE_3].hitBox = &box_16_32;
+    self->sprites[MG_SP_BOSS_0].wsg    = &self->wsgs[MG_WSG_BOSS_IDLE];
+    self->sprites[MG_SP_BOSS_0].origin = &origin_15_15;
+    self->sprites[MG_SP_BOSS_0].hitBox = &box_16_32;
 
     self->sprites[MG_SP_BOSS_DOOR].wsg    = &self->wsgs[MG_WSG_BOSS_DOOR];
     self->sprites[MG_SP_BOSS_DOOR].origin = &origin_7_31;
@@ -663,7 +651,7 @@ void mg_initializeSprites(mgWsgManager_t* self)
 
 void mg_initializeTiles(mgWsgManager_t* self)
 {
-    for (uint8_t i = 0; i < MG_TILE_SET_SIZE; i++)
+    for (uint16_t i = 0; i < MG_TILE_SET_SIZE; i++)
     {
         self->tiles[i] = NULL;
     }
@@ -844,6 +832,261 @@ void mg_loadWsgSet(mgWsgManager_t* self, mgWsgSetIndex_t index)
                 self->tiles[mg_kineticDonutTileset[(i * MG_TILESET_MAP_ROW_LENGTH + MG_TILE_INDEX_LOOKUP_OFFSET)] - 32]
                     = &self->wsgs[wsgIndex];
                 self->transparencyFunction = &mg_kineticDonutTileset_needsTransparency;
+            }
+
+            for (uint16_t i = 0; i < 8; i++)
+            {
+                uint16_t wsgIndex = MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F0 + i;
+                if (!(self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h))
+                {
+                    continue;
+                }
+
+                self->sprites[MG_SP_BOSS_0 + i].wsg    = &self->wsgs[wsgIndex];
+                self->sprites[MG_SP_BOSS_0 + i].origin = mg_kineticDonutBossSpriteMetadataSet[i].origin;
+                self->sprites[MG_SP_BOSS_0 + i].hitBox = mg_kineticDonutBossSpriteMetadataSet[i].hitBox;
+            }
+            break;
+        case MG_WSGSET_SMASH_GORILLA:
+            for (uint16_t i = 0; i < MG_KINETIC_DONUT_TILESET_MAP_LENGTH; i++)
+            {
+                uint16_t wsgIndex = mg_smashGorillaTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_WSG_INDEX_LOOKUP_OFFSET];
+
+                if (self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h)
+                {
+                    freeWsg(&self->wsgs[wsgIndex]);
+                }
+
+                loadWsg(mg_smashGorillaTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_IMAGE_FILENAME_LOOKUP_OFFSET],
+                        &self->wsgs[wsgIndex], false);
+                self->tiles[mg_smashGorillaTileset[(i * MG_TILESET_MAP_ROW_LENGTH + MG_TILE_INDEX_LOOKUP_OFFSET)] - 32]
+                    = &self->wsgs[wsgIndex];
+                self->transparencyFunction = &mg_kineticDonutTileset_needsTransparency;
+            }
+
+            for (uint16_t i = 0; i < 8; i++)
+            {
+                uint16_t wsgIndex = MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F0 + i;
+                if (!(self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h))
+                {
+                    continue;
+                }
+
+                self->sprites[MG_SP_BOSS_0 + i].wsg    = &self->wsgs[wsgIndex];
+                self->sprites[MG_SP_BOSS_0 + i].origin = mg_smashGorillaBossSpriteMetadataSet[i].origin;
+                self->sprites[MG_SP_BOSS_0 + i].hitBox = mg_smashGorillaBossSpriteMetadataSet[i].hitBox;
+            }
+            break;
+        case MG_WSGSET_SEVER_YATAGA:
+            for (uint16_t i = 0; i < MG_KINETIC_DONUT_TILESET_MAP_LENGTH; i++)
+            {
+                uint16_t wsgIndex = mg_severYatagaTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_WSG_INDEX_LOOKUP_OFFSET];
+
+                if (self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h)
+                {
+                    freeWsg(&self->wsgs[wsgIndex]);
+                }
+
+                loadWsg(mg_severYatagaTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_IMAGE_FILENAME_LOOKUP_OFFSET],
+                        &self->wsgs[wsgIndex], false);
+                self->tiles[mg_severYatagaTileset[(i * MG_TILESET_MAP_ROW_LENGTH + MG_TILE_INDEX_LOOKUP_OFFSET)] - 32]
+                    = &self->wsgs[wsgIndex];
+                self->transparencyFunction = &mg_kineticDonutTileset_needsTransparency;
+            }
+
+            for (uint16_t i = 0; i < 8; i++)
+            {
+                uint16_t wsgIndex = MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F0 + i;
+                if (!(self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h))
+                {
+                    continue;
+                }
+
+                self->sprites[MG_SP_BOSS_0 + i].wsg    = &self->wsgs[wsgIndex];
+                self->sprites[MG_SP_BOSS_0 + i].origin = mg_severYatagaBossSpriteMetadataSet[i].origin;
+                self->sprites[MG_SP_BOSS_0 + i].hitBox = mg_severYatagaBossSpriteMetadataSet[i].hitBox;
+            }
+            break;
+        case MG_WSGSET_TRASH_MAN:
+            for (uint16_t i = 0; i < MG_KINETIC_DONUT_TILESET_MAP_LENGTH; i++)
+            {
+                uint16_t wsgIndex = mg_trashManTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_WSG_INDEX_LOOKUP_OFFSET];
+
+                if (self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h)
+                {
+                    freeWsg(&self->wsgs[wsgIndex]);
+                }
+
+                loadWsg(mg_trashManTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_IMAGE_FILENAME_LOOKUP_OFFSET],
+                        &self->wsgs[wsgIndex], false);
+                self->tiles[mg_trashManTileset[(i * MG_TILESET_MAP_ROW_LENGTH + MG_TILE_INDEX_LOOKUP_OFFSET)] - 32]
+                    = &self->wsgs[wsgIndex];
+                self->transparencyFunction = &mg_kineticDonutTileset_needsTransparency;
+            }
+
+            for (uint16_t i = 0; i < 8; i++)
+            {
+                uint16_t wsgIndex = MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F0 + i;
+                if (!(self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h))
+                {
+                    continue;
+                }
+
+                self->sprites[MG_SP_BOSS_0 + i].wsg    = &self->wsgs[wsgIndex];
+                self->sprites[MG_SP_BOSS_0 + i].origin = mg_trashManBossSpriteMetadataSet[i].origin;
+                self->sprites[MG_SP_BOSS_0 + i].hitBox = mg_trashManBossSpriteMetadataSet[i].hitBox;
+            }
+            break;
+        case MG_WSGSET_GRIND_PANGOLIN:
+            for (uint16_t i = 0; i < MG_KINETIC_DONUT_TILESET_MAP_LENGTH; i++)
+            {
+                uint16_t wsgIndex = mg_grindPangolinTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_WSG_INDEX_LOOKUP_OFFSET];
+
+                if (self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h)
+                {
+                    freeWsg(&self->wsgs[wsgIndex]);
+                }
+
+                loadWsg(mg_grindPangolinTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_IMAGE_FILENAME_LOOKUP_OFFSET],
+                        &self->wsgs[wsgIndex], false);
+                self->tiles[mg_grindPangolinTileset[(i * MG_TILESET_MAP_ROW_LENGTH + MG_TILE_INDEX_LOOKUP_OFFSET)] - 32]
+                    = &self->wsgs[wsgIndex];
+                self->transparencyFunction = &mg_kineticDonutTileset_needsTransparency;
+            }
+
+            for (uint16_t i = 0; i < 8; i++)
+            {
+                uint16_t wsgIndex = MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F0 + i;
+                if (!(self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h))
+                {
+                    continue;
+                }
+
+                self->sprites[MG_SP_BOSS_0 + i].wsg    = &self->wsgs[wsgIndex];
+                self->sprites[MG_SP_BOSS_0 + i].origin = mg_grindPangolinBossSpriteMetadataSet[i].origin;
+                self->sprites[MG_SP_BOSS_0 + i].hitBox = mg_grindPangolinBossSpriteMetadataSet[i].hitBox;
+            }
+            break;
+        case MG_WSGSET_DEADEYE_CHIRPZI:
+            for (uint16_t i = 0; i < MG_KINETIC_DONUT_TILESET_MAP_LENGTH; i++)
+            {
+                uint16_t wsgIndex
+                    = mg_deadeyeChirpziTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_WSG_INDEX_LOOKUP_OFFSET];
+
+                if (self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h)
+                {
+                    freeWsg(&self->wsgs[wsgIndex]);
+                }
+
+                loadWsg(mg_deadeyeChirpziTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_IMAGE_FILENAME_LOOKUP_OFFSET],
+                        &self->wsgs[wsgIndex], false);
+                self->tiles[mg_deadeyeChirpziTileset[(i * MG_TILESET_MAP_ROW_LENGTH + MG_TILE_INDEX_LOOKUP_OFFSET)]
+                            - 32]
+                    = &self->wsgs[wsgIndex];
+                self->transparencyFunction = &mg_kineticDonutTileset_needsTransparency;
+            }
+
+            for (uint16_t i = 0; i < 8; i++)
+            {
+                uint16_t wsgIndex = MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F0 + i;
+                if (!(self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h))
+                {
+                    continue;
+                }
+
+                self->sprites[MG_SP_BOSS_0 + i].wsg    = &self->wsgs[wsgIndex];
+                self->sprites[MG_SP_BOSS_0 + i].origin = mg_deadeyeChirpziBossSpriteMetadataSet[i].origin;
+                self->sprites[MG_SP_BOSS_0 + i].hitBox = mg_deadeyeChirpziBossSpriteMetadataSet[i].hitBox;
+            }
+            break;
+        case MG_WSGSET_DRAIN_BAT:
+            for (uint16_t i = 0; i < MG_KINETIC_DONUT_TILESET_MAP_LENGTH; i++)
+            {
+                uint16_t wsgIndex = mg_drainBatTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_WSG_INDEX_LOOKUP_OFFSET];
+
+                if (self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h)
+                {
+                    freeWsg(&self->wsgs[wsgIndex]);
+                }
+
+                loadWsg(mg_drainBatTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_IMAGE_FILENAME_LOOKUP_OFFSET],
+                        &self->wsgs[wsgIndex], false);
+                self->tiles[mg_drainBatTileset[(i * MG_TILESET_MAP_ROW_LENGTH + MG_TILE_INDEX_LOOKUP_OFFSET)] - 32]
+                    = &self->wsgs[wsgIndex];
+                self->transparencyFunction = &mg_kineticDonutTileset_needsTransparency;
+            }
+
+            for (uint16_t i = 0; i < 8; i++)
+            {
+                uint16_t wsgIndex = MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F0 + i;
+                if (!(self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h))
+                {
+                    continue;
+                }
+
+                self->sprites[MG_SP_BOSS_0 + i].wsg    = &self->wsgs[wsgIndex];
+                self->sprites[MG_SP_BOSS_0 + i].origin = mg_drainBatBossSpriteMetadataSet[i].origin;
+                self->sprites[MG_SP_BOSS_0 + i].hitBox = mg_drainBatBossSpriteMetadataSet[i].hitBox;
+            }
+            break;
+        case MG_WSGSET_FLARE_GRYFFYN:
+            for (uint16_t i = 0; i < MG_KINETIC_DONUT_TILESET_MAP_LENGTH; i++)
+            {
+                uint16_t wsgIndex = mg_flareGryffynTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_WSG_INDEX_LOOKUP_OFFSET];
+
+                if (self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h)
+                {
+                    freeWsg(&self->wsgs[wsgIndex]);
+                }
+
+                loadWsg(mg_flareGryffynTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_IMAGE_FILENAME_LOOKUP_OFFSET],
+                        &self->wsgs[wsgIndex], false);
+                self->tiles[mg_flareGryffynTileset[(i * MG_TILESET_MAP_ROW_LENGTH + MG_TILE_INDEX_LOOKUP_OFFSET)] - 32]
+                    = &self->wsgs[wsgIndex];
+                self->transparencyFunction = &mg_kineticDonutTileset_needsTransparency;
+            }
+
+            for (uint16_t i = 0; i < 8; i++)
+            {
+                uint16_t wsgIndex = MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F0 + i;
+                if (!(self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h))
+                {
+                    continue;
+                }
+
+                self->sprites[MG_SP_BOSS_0 + i].wsg    = &self->wsgs[wsgIndex];
+                self->sprites[MG_SP_BOSS_0 + i].origin = mg_flareGryffynBossSpriteMetadataSet[i].origin;
+                self->sprites[MG_SP_BOSS_0 + i].hitBox = mg_flareGryffynBossSpriteMetadataSet[i].hitBox;
+            }
+            break;
+        case MG_WSGSET_BIGMA:
+            for (uint16_t i = 0; i < MG_KINETIC_DONUT_TILESET_MAP_LENGTH; i++)
+            {
+                uint16_t wsgIndex = mg_bigmaTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_WSG_INDEX_LOOKUP_OFFSET];
+
+                if (self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h)
+                {
+                    freeWsg(&self->wsgs[wsgIndex]);
+                }
+
+                loadWsg(mg_bigmaTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_IMAGE_FILENAME_LOOKUP_OFFSET],
+                        &self->wsgs[wsgIndex], false);
+                self->tiles[mg_bigmaTileset[(i * MG_TILESET_MAP_ROW_LENGTH + MG_TILE_INDEX_LOOKUP_OFFSET)] - 32]
+                    = &self->wsgs[wsgIndex];
+                self->transparencyFunction = &mg_kineticDonutTileset_needsTransparency;
+            }
+
+            for (uint16_t i = 0; i < 8; i++)
+            {
+                uint16_t wsgIndex = MG_WSG_TILE_NONSOLID_VISIBLE_NONINTERACTIVE_F0 + i;
+                if (!(self->wsgs[wsgIndex].w && self->wsgs[wsgIndex].h))
+                {
+                    continue;
+                }
+
+                self->sprites[MG_SP_BOSS_0 + i].wsg    = &self->wsgs[wsgIndex];
+                self->sprites[MG_SP_BOSS_0 + i].origin = mg_bigmaBossSpriteMetadataSet[i].origin;
+                self->sprites[MG_SP_BOSS_0 + i].hitBox = mg_bigmaBossSpriteMetadataSet[i].hitBox;
             }
             break;
     }
