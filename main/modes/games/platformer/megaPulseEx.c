@@ -36,6 +36,7 @@
 #include "mainMenu.h"
 #include "fill.h"
 #include "cutscene.h"
+#include "swadgeHero_game.h"
 
 //==============================================================================
 // Constants
@@ -99,6 +100,8 @@ struct platformer_t
 
     menuMegaRenderer_t* menuRenderer;
     menu_t* menu;
+
+    shVars_t shVars;
 };
 
 //==============================================================================
@@ -153,6 +156,7 @@ static void mg_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 void changeStateLevelSelect(platformer_t* self);
 void updateLevelSelect(platformer_t* self);
 void drawLevelSelect(platformer_t* self);
+void mgDanceOffUpdate(platformer_t* self);
 
 //==============================================================================
 // Variables
@@ -664,6 +668,10 @@ void platformerMainLoop(int64_t elapsedUs)
         {
             // Pass button events to the menu
             platformer->menu = menuButton(platformer->menu, evt);
+        }
+        else if (&mgDanceOffUpdate == platformer->update)
+        {
+            shGameInput(&platformer->shVars, &evt);
         }
     }
 
@@ -2009,8 +2017,23 @@ void goToReadyScreen(void)
 // forward declared in mega_pulse_ex_typedef.h
 void initBossFight(void)
 {
-    platformer->entityManager.bossEntity->state = 0;
-    mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
-    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
-    platformer->update = &updateReadyScreen;
+    // platformer->entityManager.bossEntity->state = 0;
+    // mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
+    // soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+    // platformer->update = &updateReadyScreen;
+    platformer->update = &mgDanceOffUpdate;
+}
+
+void mgDanceOffUpdate(platformer_t* self)
+{
+    static uint32_t tLastLoopUs = 0;
+    int64_t tNowUs              = esp_timer_get_time();
+    if (0 != tLastLoopUs)
+    {
+        if (shRunTimers(&self->shVars, tNowUs - tLastLoopUs))
+        {
+            shDrawGame(&self->shVars);
+        }
+    }
+    tLastLoopUs = tNowUs;
 }

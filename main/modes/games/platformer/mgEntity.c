@@ -44,12 +44,6 @@ const mg_spriteDef_t maxChargeShotAnimFrames[]
     = {MG_SP_CHARGE_SHOT_MAX_1, MG_SP_CHARGE_SHOT_MAX_2, MG_SP_CHARGE_SHOT_MAX_3};
 
 //==============================================================================
-// Functions Prototypes
-//==============================================================================
-
-void startOutroCutscene(mgEntity_t* self);
-
-//==============================================================================
 // Functions
 //==============================================================================
 void mg_initializeEntity(mgEntity_t* self, mgEntityManager_t* entityManager, mgTilemap_t* tilemap,
