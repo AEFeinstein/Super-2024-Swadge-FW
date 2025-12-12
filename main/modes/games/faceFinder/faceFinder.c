@@ -13,8 +13,9 @@
 typedef struct
 {
     int32_t faceNum;
+    int32_t danceDuration; //Milliseconds that the face will be moving in the current direction before moving in a new direction
     vec_t pos;
-    vec_t movementSpeed; //.x and .y denote how many pixels the face will move in 1000 seconds, using MillisPerPixel to move
+    vec_t movementSpeed; //.x and .y denote what signed percent of elapsedUs to apply to their position, using millisPerPixel to move at a rate scaled to the pointer
 } face_t;
 
 typedef struct
@@ -59,6 +60,7 @@ static void findingExitMode(void);
 static void findingMainLoop(int64_t elapsedUs);
 static void randomizeFaces(finder_t*);
 static void addNewFace(finder_t*);
+static vec_t faceDance(void);
 
 //==============================================================================
 // Variables
@@ -89,19 +91,63 @@ static void randomizeFaces(finder_t* myfind){
         myfind->faces[j] = hold;
     }
 
+
     node_t* currentNode = myfind->faceList->first;
-    while (currentNode != NULL)
-    {   
-        face_t* foo = (face_t*)currentNode->val;
-        foo->pos.x = rand() % 280;
-        foo->pos.y = rand() % 240;
-        foo->faceNum = rand() % 7;
+    face_t* foo = (face_t*)currentNode->val;
+    if(myfind->stage%2){
+        //Movement stage
+        foo->pos.x = rand() % 240;
+        foo->pos.y = rand() % 200;
+        foo->danceDuration = rand() * 50;
+        foo->movementSpeed = faceDance();
+        foo->faceNum = 0;
         currentNode = currentNode->next;
+
+        while (currentNode != NULL)
+        {   
+            foo = (face_t*)currentNode->val;
+            foo->pos.x = rand() % 240;
+            foo->pos.y = rand() % 200;
+            foo->faceNum = (rand() % 6)+1; //Ensures there is only one face[0]
+            currentNode = currentNode->next;
+        }
+
+    }else{
+        //Static Grid Stage
+        foo->pos.x = (rand() % 5)*56;
+        foo->pos.y = (rand() % 5)*44;
+        foo->danceDuration = myfind->timer;
+        foo->movementSpeed = (vec_t){
+            .x=0,
+            .y=0,
+        };
+        foo->faceNum = 0;
+        currentNode = currentNode->next;
+
+        while (currentNode != NULL)
+        {   
+            foo = (face_t*)currentNode->val;
+            foo->pos.x = (rand() % 5)*56;
+            foo->pos.y = (rand() % 5)*44;
+            foo->danceDuration = myfind->timer;
+            foo->movementSpeed = (vec_t){
+                .x=0,
+                .y=0,
+            };
+            foo->faceNum = (rand() % 6)+1; //Ensures there is only one face[0]
+            currentNode = currentNode->next;
+        }
     }
 }
 static void addNewFace(finder_t* myfind){
     face_t *curFace = heap_caps_calloc(1, sizeof(face_t), MALLOC_CAP_8BIT);
     push(myfind->faceList, (void*)curFace);
+}
+static vec_t faceDance(){
+    return (vec_t) {
+        .x = (200 - (rand() % 200))*MillisPerPixel,
+        .y = (200 - (rand() % 200))*MillisPerPixel,
+    };
 }
 
 static void findingEnterMode(void)
@@ -186,26 +232,7 @@ static void findingMainLoop(int64_t elapsedUs)
         drawRectFilled(0,0,280,240,c234); //background
 
         node_t* currentNode = finder->faceList->first;
-        for(int i=finder->drawOffset; i>0;i--){
-            currentNode = currentNode->next;
-        }
-        if(currentNode == NULL){finder->drawOffset = 0;}
-
-        currentNode = finder->faceList->first;
-        for(int i=0; i<finder->drawOffset; i++){
-            currentNode = currentNode->next;
-        }
-
         while (currentNode != NULL)
-        {
-            // Print the nodes
-            face_t* currentFace = (face_t*)currentNode->val;
-            drawWsg(&finder->faces[currentFace->faceNum], currentFace->pos.x, currentFace->pos.y, false,false,0);
-            
-            currentNode = currentNode->next;
-        }
-        currentNode = finder->faceList->first;
-        for(int i=0;i<finder->drawOffset;i++)
         {
             // Print the nodes
             face_t* currentFace = (face_t*)currentNode->val;
@@ -248,9 +275,13 @@ static void findingMainLoop(int64_t elapsedUs)
                 }
                 case PB_A:
                 {
-                    if(finder->millisInstructing>0){finder->millisInstructing=0;}
-                    finder->stage = (finder->stage + 1) % 7;
-                    finder->drawOffset++;
+                    if(finder->millisInstructing>0){
+                        finder->millisInstructing=0;
+                    }else{
+                        finder->stage++;
+                        randomizeFaces(finder);
+                    }
+                    
                     break;
                 }
                 case PB_B:
@@ -295,7 +326,7 @@ static void findingMainLoop(int64_t elapsedUs)
 static void findingExitMode(void)
 {
     clear(finder->faceList);
-    heap_caps_free(finder->faceList);
-    heap_caps_free(finder->ibm);
+    //heap_caps_free(finder->faceList);
+    //heap_caps_free(finder->ibm);
     heap_caps_free(finder);
 }
