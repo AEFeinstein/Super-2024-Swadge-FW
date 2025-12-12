@@ -2820,7 +2820,7 @@ void dn_initializeSecondUpgradeOption(dn_entity_t* self)
     // shuffle
     for (int8_t i = sizeof(umData->track) / sizeof(umData->track[0]) - 2; i > 0; i--)
     {
-        int8_t j           = (int8_t)(dn_randomInt(0, INT_MAX) % (i + 1));
+        int8_t j           = (int8_t)(dn_randomInt(0, INT_MAX - 1) % (i + 1));
         dn_boardPos_t temp = umData->track[i];
         umData->track[i]   = umData->track[j];
         umData->track[j]   = temp;
@@ -3253,6 +3253,10 @@ void dn_updateBullet(dn_entity_t* self)
                 dn_entity_t* owner                    = bData->tiles[buData->ownerToMove.y][buData->ownerToMove.x].unit;
                 ((dn_unitData_t*)owner->data)->moveTo = buData->firstTarget;
                 owner->updateFunction                 = dn_moveUnit;
+                if(owner->assetIndex == DN_BUCKET_HAT_UP_ASSET || owner->assetIndex == DN_BUCKET_HAT_DOWN_ASSET)
+                { 
+                    owner->currentAnimationFrame = 7;
+                }
             }
         }
         if (self->gameData->resolvingRemix && buData->secondTarget.x == -1)
@@ -3260,6 +3264,10 @@ void dn_updateBullet(dn_entity_t* self)
             dn_entity_t* owner                    = bData->tiles[buData->ownerToMove.y][buData->ownerToMove.x].unit;
             ((dn_unitData_t*)owner->data)->moveTo = buData->firstTarget;
             owner->updateFunction                 = dn_moveUnit;
+            if(owner->assetIndex == DN_BUCKET_HAT_UP_ASSET || owner->assetIndex == DN_BUCKET_HAT_DOWN_ASSET)
+            { 
+                owner->currentAnimationFrame = 7;
+            }
         }
         self->destroyFlag = true;
     }
