@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 #include "faceFinder.h"
+#include <time.h>
 //#include "mainMenu.h"
 //#include "settingsManager.h"
 //#include "textEntry.h"
@@ -9,29 +10,46 @@
 //==============================================================================
 // Structs
 //==============================================================================
+typedef struct
+{
+    int32_t faceNum;
+    vec_t pos;
+    vec_t movementSpeed; //.x and .y denote how many pixels the face will move in 1000 seconds, using MillisPerPixel to move
+} face_t;
 
 typedef struct
 {
     font_t* ibm;
+    paletteColor_t text;
     wsg_t pointer;
 
     wsg_t faces[7];
     int64_t timer;
+    int64_t score;
     int32_t stage;
+    int32_t drawOffset;
+
+    list_t* faceList;
 
     vec_t pointerCoords; //x and y are int32 allowing us to turn 2billies into 280 X_pixels
     bool pointingRight;
     bool pointingLeft;
     bool pointingUp;
     bool pointingDown;
+
+    int32_t millisInstructing;
 } finder_t;
 
 //==============================================================================
 // Const variables
 //==============================================================================
 
-static const char findingFacesModeName[] = "Finding Faces";
+static const char findingFacesModeName[] = "Mascot Madness";
 static const int32_t TimePerLevel = 20000000; //20 seconds per stage, additive
+static const int32_t TimePerInstruction = 100000; //How long is each instruction page, with ability to be skipped
+static const int32_t MillisPerPixel = 7500; //How many milliseconds of "moving right" to move one pixel to the right
+//static const int32_t PenaltyMillis = 1000000; //Milliseconds penalized from the timer on a wrong click
+//static const int32_t ClickAllowance = 3; //Number of pixels of margin to still allow you to click a face
 
 //==============================================================================
 // Function Definitions
@@ -39,7 +57,8 @@ static const int32_t TimePerLevel = 20000000; //20 seconds per stage, additive
 static void findingEnterMode(void);
 static void findingExitMode(void);
 static void findingMainLoop(int64_t elapsedUs);
-
+static void randomizeFaces(finder_t*);
+static void addNewFace(finder_t*);
 
 //==============================================================================
 // Variables
@@ -62,20 +81,46 @@ finder_t* finder;
 //==============================================================================
 // Functions
 //==============================================================================
+static void randomizeFaces(finder_t* myfind){
+    for(int i=6;i>0;i--){
+        int j = rand() % (i+1);
+        wsg_t hold = myfind->faces[i];
+        myfind->faces[i] = myfind->faces[j];
+        myfind->faces[j] = hold;
+    }
+
+    node_t* currentNode = myfind->faceList->first;
+    while (currentNode != NULL)
+    {   
+        face_t* foo = (face_t*)currentNode->val;
+        foo->pos.x = rand() % 280;
+        foo->pos.y = rand() % 240;
+        foo->faceNum = rand() % 7;
+        currentNode = currentNode->next;
+    }
+}
+static void addNewFace(finder_t* myfind){
+    face_t *curFace = heap_caps_calloc(1, sizeof(face_t), MALLOC_CAP_8BIT);
+    push(myfind->faceList, (void*)curFace);
+}
 
 static void findingEnterMode(void)
 {
+    srand(time(NULL));
     finder = heap_caps_calloc(1, sizeof(finder_t), MALLOC_CAP_8BIT);
     finder->ibm = getSysFont();
+    finder->text = c432;
     finder->stage=0;
+    finder->score = 0;
+    finder->drawOffset = 0;
     finder->timer = TimePerLevel;
     finder->pointingDown=false;
     finder->pointingUp=false;
     finder->pointingLeft=false;
     finder->pointingRight=false;
-    finder->pointerCoords = {
+    finder->pointerCoords = (vec_t) {
         .x = 0,
-        .y=0,
+        .y = 0,
     };
 
     initShapes();
@@ -88,12 +133,91 @@ static void findingEnterMode(void)
     loadWsg(FINDER_KINETIC_DONUT_WSG, &finder->faces[4], true);
     loadWsg(FINDER_PULSE_WSG, &finder->faces[5], true);
     loadWsg(FINDER_SAWTOOTH_WSG, &finder->faces[6], true);
+
+    //Load all faces
+    finder->faceList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
+
+    for(int i=0;i<10;i++){
+        addNewFace(finder);
+    }
+    
+    randomizeFaces(finder);
+
+    finder->millisInstructing = TimePerInstruction;
 }
 static void findingMainLoop(int64_t elapsedUs)
 {
-    drawRectFilled(0,0,280,240,c234);
-    drawWsgSimpleScaled(&finder->faces[finder->stage], 65, 80, 2,2);
+    finder->drawOffset++;
+    if(finder->millisInstructing > 0){
+        //Draw an instruction screen
+        drawText(finder->ibm, finder->text, "Find this face!", 20, 30);
 
+        drawWsgSimpleScaled(&finder->faces[0], 40,60, 3,3);
+        finder->millisInstructing -= elapsedUs;
+    }else{
+        //Move the pointer
+        if(finder->pointingUp)
+        {
+            finder->pointerCoords.y -= elapsedUs;
+            if(finder->pointerCoords.y < 0){
+                finder->pointerCoords.y = 239*MillisPerPixel; //Wrap around to not quite the bottom pixel
+            }
+        }
+        if(finder->pointingDown){
+            finder->pointerCoords.y += elapsedUs;
+            if(finder->pointerCoords.y > 240 * MillisPerPixel){
+                finder->pointerCoords.y = MillisPerPixel; //Wrap around to not quite the top pixel
+            }
+        }
+        if(finder->pointingLeft){
+            finder->pointerCoords.x -= elapsedUs;
+            if(finder->pointerCoords.x < 0){
+                finder->pointerCoords.x = 279*MillisPerPixel; //Wrap around to not quite the rightmost pixel
+            }
+        }
+        if(finder->pointingRight){
+            finder->pointerCoords.x += elapsedUs;
+            if(finder->pointerCoords.x > 280*MillisPerPixel){
+                finder->pointerCoords.x = MillisPerPixel; //Wrap around to not quite the rightmost pixel
+            }
+        }
+
+        //Draw the screen
+        drawRectFilled(0,0,280,240,c234); //background
+
+        node_t* currentNode = finder->faceList->first;
+        for(int i=finder->drawOffset; i>0;i--){
+            currentNode = currentNode->next;
+        }
+        if(currentNode == NULL){finder->drawOffset = 0;}
+
+        currentNode = finder->faceList->first;
+        for(int i=0; i<finder->drawOffset; i++){
+            currentNode = currentNode->next;
+        }
+
+        while (currentNode != NULL)
+        {
+            // Print the nodes
+            face_t* currentFace = (face_t*)currentNode->val;
+            drawWsg(&finder->faces[currentFace->faceNum], currentFace->pos.x, currentFace->pos.y, false,false,0);
+            
+            currentNode = currentNode->next;
+        }
+        currentNode = finder->faceList->first;
+        for(int i=0;i<finder->drawOffset;i++)
+        {
+            // Print the nodes
+            face_t* currentFace = (face_t*)currentNode->val;
+            drawWsg(&finder->faces[currentFace->faceNum], currentFace->pos.x, currentFace->pos.y, false,false,0);
+            
+            currentNode = currentNode->next;
+        }
+
+        //Draw pointer. This should always be last so we don't get lost in the shuffle
+        drawWsgSimpleScaled(&finder->pointer, finder->pointerCoords.x/MillisPerPixel, finder->pointerCoords.y/MillisPerPixel, 2,2);
+        
+    }
 
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
@@ -102,9 +226,66 @@ static void findingMainLoop(int64_t elapsedUs)
         {
             switch (evt.button)
             {
+                case PB_LEFT:
+                {
+                    finder->pointingLeft = true;
+                    break;
+                }
+                case PB_UP:
+                {
+                    finder->pointingUp = true;
+                    break;
+                }
+                case PB_RIGHT:
+                {
+                    finder->pointingRight = true;
+                    break;
+                }
+                case PB_DOWN:
+                {
+                    finder->pointingDown = true;
+                    break;
+                }
                 case PB_A:
                 {
+                    if(finder->millisInstructing>0){finder->millisInstructing=0;}
                     finder->stage = (finder->stage + 1) % 7;
+                    finder->drawOffset++;
+                    break;
+                }
+                case PB_B:
+                {
+                    randomizeFaces(finder);
+                    break;
+                }
+                case PB_START:
+                {
+                    addNewFace(finder);
+                    break;
+                }
+            }
+        }else{
+            //stop moving the pointer
+            switch (evt.button)
+            {
+                case PB_LEFT:
+                {
+                    finder->pointingLeft = false;
+                    break;
+                }
+                case PB_UP:
+                {
+                    finder->pointingUp = false;
+                    break;
+                }
+                case PB_RIGHT:
+                {
+                    finder->pointingRight = false;
+                    break;
+                }
+                case PB_DOWN:
+                {
+                    finder->pointingDown = false;
                     break;
                 }
             }
@@ -113,5 +294,8 @@ static void findingMainLoop(int64_t elapsedUs)
 }
 static void findingExitMode(void)
 {
+    clear(finder->faceList);
+    heap_caps_free(finder->faceList);
+    heap_caps_free(finder->ibm);
     heap_caps_free(finder);
 }
