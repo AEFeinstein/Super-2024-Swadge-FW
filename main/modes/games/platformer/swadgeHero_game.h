@@ -78,6 +78,8 @@ typedef struct
 
 typedef struct
 {
+    uint32_t tLastLoopUs;
+
     // Font and menu
     font_t ibm;
     font_t righteous;
@@ -112,8 +114,8 @@ typedef struct
 
     // Fail meter tracking
     int32_t failMeter;
-    int32_t failSampleInterval;
-    list_t failSamples;
+    // int32_t failSampleInterval;
+    // list_t failSamples;
 
     // Setting data
     bool failOn;

@@ -224,11 +224,15 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
     // Save song name
     sh->songName = song->name;
 
-    // Pick variables based on difficulty
-    switch (difficulty)
+    // Load chart data
+    size_t sz    = 0;
+    sh->numFrets = 1 + shLoadChartData(sh, cnfsGetFile(song->charts[difficulty], &sz), sz);
+
+    // Pick variables based on frets
+    switch (sh->numFrets)
     {
         default:
-        case SH_EASY:
+        case 4:
         {
             sh->btnToNote  = btnToNote_e;
             sh->noteToBtn  = noteToBtn_e;
@@ -236,7 +240,7 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
             sh->noteToIcon = noteToIcon_e;
             break;
         }
-        case SH_MEDIUM:
+        case 5:
         {
             sh->btnToNote  = btnToNote_m;
             sh->noteToBtn  = noteToBtn_m;
@@ -244,7 +248,7 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
             sh->noteToIcon = noteToIcon_m;
             break;
         }
-        case SH_HARD:
+        case 6:
         {
             sh->btnToNote  = btnToNote_h;
             sh->noteToBtn  = noteToBtn_h;
@@ -253,10 +257,6 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
             break;
         }
     }
-
-    // Load chart data
-    size_t sz    = 0;
-    sh->numFrets = 1 + shLoadChartData(sh, cnfsGetFile(song->charts[difficulty], &sz), sz);
 
     // Save the key for the score
     // shGetNvsKey(song->name, difficulty, sh->hsKey);
@@ -301,8 +301,8 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
     sh->grade    = grades[ARRAY_SIZE(grades) - 1].letter;
 
     // Figure out how often to sample the fail meter for the chart after the song
-    sh->failSampleInterval = songLenUs / NUM_FAIL_METER_SAMPLES;
-    clear(&sh->failSamples);
+    // sh->failSampleInterval = songLenUs / NUM_FAIL_METER_SAMPLES;
+    // clear(&sh->failSamples);
     sh->failMeter = 50;
 
     // Clear histogram
@@ -495,7 +495,6 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
 
         // Switch to the game end screen
         // shChangeScreen(sh, SH_GAME_END);
-        startOutroCutscene(NULL);
 
         // Return and indicate the game is over
         return false;
@@ -564,15 +563,15 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
     }
 
     // If failure is on and the song is playing
-    if (sh->failOn && (songUs >= 0) && (NUM_FAIL_METER_SAMPLES > sh->failSamples.length))
-    {
-        // Run a timer to sample the fail meter for a chart
-        while (sh->failSampleInterval * sh->failSamples.length <= songUs)
-        {
-            // Save the sample to display on the game over screen
-            push(&sh->failSamples, (void*)((intptr_t)sh->failMeter));
-        }
-    }
+    // if (sh->failOn && (songUs >= 0) && (NUM_FAIL_METER_SAMPLES > sh->failSamples.length))
+    // {
+    //     // Run a timer to sample the fail meter for a chart
+    //     while (sh->failSampleInterval * sh->failSamples.length <= songUs)
+    //     {
+    //         // Save the sample to display on the game over screen
+    //         push(&sh->failSamples, (void*)((intptr_t)sh->failMeter));
+    //     }
+    // }
 
     // Generate fret lines based on tempo
     int32_t nextFretLineUs = sh->lastFretLineUs + sh->tempo;
@@ -815,6 +814,8 @@ void shDrawGame(shVars_t* sh)
 {
     // Display cleared in background callback
 
+    // TODO draw any dancing background characters here or whatever
+
     // Draw fret lines first
     node_t* fretLineNode = sh->fretLines.first;
     while (fretLineNode)
@@ -910,9 +911,9 @@ void shDrawGame(shVars_t* sh)
     }
 
     // Always draw score
-    char scoreText[32] = {0};
-    snprintf(scoreText, sizeof(scoreText) - 1, "%" PRId32, sh->score);
-    drawText(&sh->rodin, c555, scoreText, textMargin, TFT_HEIGHT - failBarHeight - sh->rodin.height);
+    // char scoreText[32] = {0};
+    // snprintf(scoreText, sizeof(scoreText) - 1, "%" PRId32, sh->score);
+    // drawText(&sh->rodin, c555, scoreText, textMargin, TFT_HEIGHT - failBarHeight - sh->rodin.height);
 
     // If fail is on
     if (sh->failOn)
@@ -1185,6 +1186,8 @@ static void shSongOver(void)
  */
 static void shHitNote(shVars_t* sh, int32_t baseScore)
 {
+    // TODO animate something good when a note is missed
+
     // Save this note in the histogram
     sh->noteHistogram[ARRAY_SIZE(timings) - 1 - baseScore]++;
 
@@ -1215,6 +1218,8 @@ static void shHitNote(shVars_t* sh, int32_t baseScore)
  */
 static void shMissNote(shVars_t* sh)
 {
+    // TODO animate something bad when a note is missed
+
     // Note that it was missed
     sh->hitText      = timings[ARRAY_SIZE(timings) - 1].label;
     sh->hitTextColor = c500;

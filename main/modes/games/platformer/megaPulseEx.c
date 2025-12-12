@@ -371,6 +371,9 @@ void platformerEnterMode(void)
     mg_initializeEntityManager(&(platformer->entityManager), &(platformer->wsgManager), &(platformer->tilemap),
                                &(platformer->gameData), &(platformer->soundManager));
 
+    // Set up dance battles
+    shEnterMode(&platformer->shVars);
+
     platformer->tilemap.entityManager    = &(platformer->entityManager);
     platformer->tilemap.tileSpawnEnabled = true;
 
@@ -491,6 +494,7 @@ void platformerEnterMode(void)
  */
 void platformerExitMode(void)
 {
+    shExitMode(&platformer->shVars);
     freeFont(&platformer->font);
     mg_freeWsgManager(&(platformer->wsgManager));
     mg_freeTilemap(&(platformer->tilemap));
@@ -2012,82 +2016,151 @@ void drawLevelSelect(platformer_t* self)
 void goToReadyScreen(void)
 {
     platformer->update = &updateReadyScreen;
-    // TODO remove this after testing
-    initBossFight();
 }
 
 // forward declared in mega_pulse_ex_typedef.h
 void initBossFight(void)
 {
-    // platformer->entityManager.bossEntity->state = 0;
-    // mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
-    // soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
-    // platformer->update = &updateReadyScreen;
+    platformer->entityManager.bossEntity->state = 0;
+    mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
+    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+    platformer->update = &updateReadyScreen;
+}
 
-    // TODO only load this once, and free it somewhere too
-    shEnterMode(&platformer->shVars);
+// forward declared in mega_pulse_ex_typedef.h
+void initBossDanceFight(void)
+{
+    switch (platformer->gameData.level)
+    {
+        case 1:  // Intro Stage (Bigma)
+        case 9:  // The Recycled Pit in the Inferno Arena (TrashMan)
+        case 10: // The Overture Terminal (No Boss)
+        case 11: // Bigma Stage 2
+        default: // Bigma Final Battle (HankWaddle)
+        // No dance battle for these any of the above, but default to Kinetic Donut for safety and testing
+        case 2: // The Bouncehaus
+        {
+            // KineticDonut
+            static const shSong_t kd = {
+                .name   = "Dance Off!",
+                .artist = "Kinetic Donut",
+                .midi   = MPE_DONUT_MID,
+                .charts = {MPE_DONUT_E_CCH, MPE_DONUT_M_CCH, MPE_DONUT_H_CCH},
+            };
+            platformer->shVars.menuSong = &kd;
+            break;
+        }
+        case 3: // The Beat Colosseum
+        {
+            // SmashGorilla
+            static const shSong_t sg = {
+                .name   = "Dance Off!",
+                .artist = "Smash Gorilla",
+                .midi   = MPE_GORILLA_MID,
+                .charts = {MPE_GORILLA_E_CCH, MPE_GORILLA_M_CCH, MPE_GORILLA_H_CCH},
+            };
+            platformer->shVars.menuSong = &sg;
+            break;
+        }
+        case 4: // The Foundry of Echoes
+        {
+            // DeadeyeChirpzi
+            static const shSong_t dc = {
+                .name   = "Dance Off!",
+                .artist = "Deadeye Chirpzi",
+                .midi   = MPE_CHIRPZI_MID,
+                .charts = {MPE_CHIRPZI_E_CCH, MPE_CHIRPZI_M_CCH, MPE_CHIRPZI_H_CCH},
+            };
+            platformer->shVars.menuSong = &dc;
+            break;
+        }
+        case 5: // The Sunshine Speedway
+        {
+            // GrindPangolin
+            static const shSong_t gp = {
+                .name   = "Dance Off!",
+                .artist = "Grind Pangolin",
+                .midi   = MPE_PANGOLIN_MID,
+                .charts = {MPE_PANGOLIN_E_CCH, MPE_PANGOLIN_M_CCH, MPE_PANGOLIN_H_CCH},
+            };
+            platformer->shVars.menuSong = &gp;
+            break;
+        }
+        case 6: // The Lost Ballroom
+        {
+            // DrainBat
+            static const shSong_t db = {
+                .name   = "Dance Off!",
+                .artist = "Drain Bat",
+                .midi   = MPE_BAT_MID,
+                .charts = {MPE_BAT_E_CCH, MPE_BAT_M_CCH, MPE_BAT_H_CCH},
+            };
+            platformer->shVars.menuSong = &db;
+            break;
+        }
+        case 7: // The Twin Peaks
+        {
+            // SeverYagata
+            static const shSong_t sy = {
+                .name   = "Dance Off!",
+                .artist = "Sever Yagata",
+                .midi   = MPE_YAGATA_MID,
+                .charts = {MPE_YAGATA_E_CCH, MPE_YAGATA_M_CCH, MPE_YAGATA_H_CCH},
+            };
+            platformer->shVars.menuSong = &sy;
+            break;
+        }
+        case 8: // Arena Hypernova
+        {
+            // FlareGryffyn
+            static const shSong_t fg = {
+                .name   = "Dance Off!",
+                .artist = "Flare Griffin",
+                .midi   = MPE_GRIFFIN_MID,
+                .charts = {MPE_GRIFFIN_E_CCH, MPE_GRIFFIN_M_CCH, MPE_GRIFFIN_H_CCH},
+            };
+            platformer->shVars.menuSong = &fg;
+            break;
+        }
+    }
 
-    static const shSong_t shSongList[] = {
-        {
-            .name   = "Deadeye Chirpzi",
-            .artist = "Newmajoe",
-            .midi   = MPE_CHIRPZI_MID,
-            .charts = {MPE_CHIRPZI_E_CCH, MPE_CHIRPZI_M_CCH, MPE_CHIRPZI_H_CCH},
-        },
-        {
-            .name   = "Drain Bat",
-            .artist = "Newmajoe",
-            .midi   = MPE_BAT_MID,
-            .charts = {MPE_BAT_E_CCH, MPE_BAT_M_CCH, MPE_BAT_H_CCH},
-        },
-        {
-            .name   = "Flare Griffin",
-            .artist = "Newmajoe",
-            .midi   = MPE_GRIFFIN_MID,
-            .charts = {MPE_GRIFFIN_E_CCH, MPE_GRIFFIN_M_CCH, MPE_GRIFFIN_H_CCH},
-        },
-        {
-            .name   = "Grind Pangolin",
-            .artist = "Newmajoe",
-            .midi   = MPE_PANGOLIN_MID,
-            .charts = {MPE_PANGOLIN_E_CCH, MPE_PANGOLIN_M_CCH, MPE_PANGOLIN_H_CCH},
-        },
-        {
-            .name   = "Kinetic Donut",
-            .artist = "Newmajoe",
-            .midi   = MPE_DONUT_MID,
-            .charts = {MPE_DONUT_E_CCH, MPE_DONUT_M_CCH, MPE_DONUT_H_CCH},
-        },
-        {
-            .name   = "Sever yagata",
-            .artist = "Newmajoe",
-            .midi   = MPE_YAGATA_MID,
-            .charts = {MPE_YAGATA_E_CCH, MPE_YAGATA_M_CCH, MPE_YAGATA_H_CCH},
-        },
-        {
-            .name   = "Smash Gorilla",
-            .artist = "Newmajoe",
-            .midi   = MPE_GORILLA_MID,
-            .charts = {MPE_GORILLA_E_CCH, MPE_GORILLA_M_CCH, MPE_GORILLA_H_CCH},
-        },
-    };
-
-    platformer->shVars.menuSong = &shSongList[0];
+    // platformer->shVars.menuSong = &shSongList[0];
     shLoadSong(&platformer->shVars, platformer->shVars.menuSong, SH_HARD);
+    platformer->shVars.tLastLoopUs = 0;
 
     platformer->update = &mgDanceOffUpdate;
 }
 
 void mgDanceOffUpdate(platformer_t* self)
 {
-    static uint32_t tLastLoopUs = 0;
-    int64_t tNowUs              = esp_timer_get_time();
-    if (0 != tLastLoopUs)
+    int64_t tNowUs = esp_timer_get_time();
+    if (0 != self->shVars.tLastLoopUs)
     {
-        if (shRunTimers(&self->shVars, tNowUs - tLastLoopUs))
+        if (shRunTimers(&self->shVars, tNowUs - self->shVars.tLastLoopUs))
         {
             shDrawGame(&self->shVars);
         }
+        else
+        {
+            // Cutscene after the boss fight
+            mg_setBgm(&self->soundManager, MG_BGM_POST_FIGHT);
+            soundPlayBgm(&(self->soundManager.currentBgm), BZR_STEREO);
+            if (0 != self->shVars.failMeter)
+            {
+                bossOutroCutscene(&platformer->gameData);
+                if (!platformer->gameData.cheatMode)
+                {
+                    trophyUpdate(&platformerTrophies[platformer->gameData.level - 1], 1, true);
+                }
+            }
+            else
+            {
+                // Game over
+                killPlayer(platformer->entityManager.playerEntity);
+            }
+        }
     }
-    tLastLoopUs = tNowUs;
+    self->shVars.tLastLoopUs = tNowUs;
+
+    detectGameStateChange(self);
 }

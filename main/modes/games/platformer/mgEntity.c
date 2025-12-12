@@ -2136,7 +2136,10 @@ void updateScrollLockDown(mgEntity_t* self)
 void updateScrollUnlock(mgEntity_t* self)
 {
     mg_unlockScrolling(self->tilemap);
-    mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
+    if (self->entityManager->viewEntity)
+    {
+        mg_viewFollowEntity(self->entityManager->tilemap, self->entityManager->viewEntity);
+    }
     mg_destroyEntity(self, true);
 }
 
