@@ -48,7 +48,6 @@ static const dn_tutorialPage_t advancedTips[17] = {
             "outdance the enemy."},
 };
 
-
 static const dn_tutorialPage_t* tutorials[] = {textTutorial, advancedTips};
 uint8_t tutorialSizes[]
     = {sizeof(textTutorial) / sizeof(textTutorial[0]), sizeof(advancedTips) / sizeof(advancedTips[0])};
@@ -2038,6 +2037,7 @@ void dn_startTurn(dn_entity_t* self)
     promptToStart->dataType       = DN_PROMPT_DATA;
     promptToStart->updateFunction = dn_updatePrompt;
     promptToStart->drawFunction   = dn_drawPrompt;
+    dn_calculateSong(self);
 }
 
 void dn_gainReroll(dn_entity_t* self)
@@ -3275,11 +3275,11 @@ void dn_updateBullet(dn_entity_t* self)
         dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
         for (int i = 0; i < 5; i++)
         {
-            if(bData->p1Units[i]!=NULL)
+            if (bData->p1Units[i] != NULL)
             {
                 ((dn_unitData_t*)bData->p1Units[i]->data)->animation = DN_UNIT_STILL;
             }
-            if(bData->p2Units[i]!=NULL)
+            if (bData->p2Units[i] != NULL)
             {
                 ((dn_unitData_t*)bData->p2Units[i]->data)->animation = DN_UNIT_STILL;
             }
@@ -3397,7 +3397,8 @@ void dn_moveUnit(dn_entity_t* self)
         // Make the prompt Game Over //
         ///////////////////////////////
         trophyUpdate(&(*self->gameData->trophyData)[3], 1, true);
-        trophyUpdate(&(*self->gameData->trophyData)[7], trophyGetSavedValue(&(*self->gameData->trophyData)[7]) + 1, true);
+        trophyUpdate(&(*self->gameData->trophyData)[7], trophyGetSavedValue(&(*self->gameData->trophyData)[7]) + 1,
+                     true);
         dn_entity_t* promptGameOver
             = dn_createPrompt(&self->gameData->entityManager, (vec_t){0xffff, 0xffff}, self->gameData);
         dn_promptData_t* promptData = (dn_promptData_t*)promptGameOver->data;
@@ -4109,28 +4110,28 @@ void dn_setEyes(dn_entity_t* self)
 
 void dn_calculateSong(dn_entity_t* self)
 {
-    //Rework so percussion headroom is boosted for winning and reduced for losing.
-    
-
+    // Rework so percussion headroom is boosted for winning and reduced for losing.
 
     uint8_t p1PiecesCount = 0;
     uint8_t p2PiecesCount = 0;
     dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
-    for(int i = 0; i < 5; i++)
+    for (int i = 0; i < 5; i++)
     {
         p1PiecesCount += bData->p1Units[i] != NULL;
         p2PiecesCount += bData->p2Units[i] != NULL;
     }
-    if(p1PiecesCount == p2PiecesCount)//balanced
+    if (p1PiecesCount == p2PiecesCount) // balanced
     {
-        globalMidiPlayerGet(MIDI_BGM)->channels[9].volume = 0x3FFF / 2;  //Balanced has percussion at half volume.
+        //full volume is 0x3FFF
+        globalMidiPlayerGet(MIDI_BGM)->channels[9].volume = 0x2FFD; // Balanced has percussion at 3/4 volume.
     }
-    else if((self->gameData->phase < DN_P2_DANCE_PHASE && p1PiecesCount > p2PiecesCount) || (self->gameData->phase >= DN_P2_DANCE_PHASE && p2PiecesCount > p1PiecesCount))//winning
+    else if ((self->gameData->phase < DN_P2_DANCE_PHASE && p1PiecesCount > p2PiecesCount)
+             || (self->gameData->phase >= DN_P2_DANCE_PHASE && p2PiecesCount > p1PiecesCount)) // winning
     {
-        globalMidiPlayerGet(MIDI_BGM)->channels[9].volume = 0x3FFF;  //Winning has percussion maxed.
+        globalMidiPlayerGet(MIDI_BGM)->channels[9].volume = 0x5FFD; // Winning has percussion at 1.5x full volume.
     }
-    else//losing
+    else // losing
     {
-        globalMidiPlayerGet(MIDI_BGM)->channels[9].volume = 0;  //Losing has percussion muted.
+        globalMidiPlayerGet(MIDI_BGM)->channels[9].volume = 0; // Losing has percussion muted.
     }
 }

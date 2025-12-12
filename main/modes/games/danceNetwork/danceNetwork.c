@@ -10,7 +10,7 @@
 #include "dn_utility.h"
 #include "hdw-ch32v003.h"
 
-const char danceNetworkName[] = "Alpha Pulse: Dance Network";
+const char danceNetworkName[]      = "Alpha Pulse: Dance Network";
 const char danceNetworkTrophyNVS[] = "DanceNetTroph";
 
 //==============================================================================
@@ -210,8 +210,6 @@ const char dnP2TroupeKey[] = "dn_P2_Troupe";
 
 dn_gameData_t* gameData;
 
-
-
 static void dn_EnterMode(void)
 {
     gameData = (dn_gameData_t*)heap_caps_calloc(1, sizeof(dn_gameData_t), MALLOC_CAP_8BIT);
@@ -323,24 +321,24 @@ static void dn_EnterMode(void)
         }
     }
 
-    gameData->songs[0] = AP_PAWNS_GAMBIT_MID;//root of 1
-    gameData->songs[1] = AP_TEN_STEPS_AHEAD_MID;//root of 1
-    gameData->songs[2] = AP_THE_WILL_TO_WIN_MID;//root of 1
-    gameData->songs[3] = AP_FINAL_PATH_MID;//root of 5
-    gameData->songs[4] = AP_RETURN_OF_THE_VALIANT_MID;//root of 4
-    gameData->songs[5] = AP_NEXT_MOVE_MID;//root of 2
-    gameData->headroom = 0x4000;
+    gameData->songs[0]       = AP_PAWNS_GAMBIT_MID;          // root of 1
+    gameData->songs[1]       = AP_TEN_STEPS_AHEAD_MID;       // root of 1
+    gameData->songs[2]       = AP_THE_WILL_TO_WIN_MID;       // root of 1
+    gameData->songs[3]       = AP_FINAL_PATH_MID;            // root of 5
+    gameData->songs[4]       = AP_RETURN_OF_THE_VALIANT_MID; // root of 4
+    gameData->songs[5]       = AP_NEXT_MOVE_MID;             // root of 2
+    gameData->headroom       = 0x4000;
     gameData->currentSongIdx = 0;
-    gameData->currentSong = gameData->songs[gameData->currentSongIdx];
+    gameData->currentSong    = gameData->songs[gameData->currentSongIdx];
     loadMidiFile(gameData->currentSong, &gameData->songMidi, true);
     globalMidiPlayerPlaySongCb(&gameData->songMidi, MIDI_BGM, dn_songFinishedCb);
-    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    player->loop = true;
-    player->channels[9].volume = 0x3FFF / 2;  //Balanced start has percussion at half volume.
+    midiPlayer_t* player       = globalMidiPlayerGet(MIDI_BGM);
+    player->loop               = true;
+    player->channels[9].volume = 0x2FFD; // Balanced has percussion at 3/4 volume.
 }
 
 void dn_setAssetMetaData(void)
-    {
+{
     gameData->assets[DN_ALPHA_DOWN_ASSET].originX   = 18;
     gameData->assets[DN_ALPHA_DOWN_ASSET].originY   = 82;
     gameData->assets[DN_ALPHA_DOWN_ASSET].numFrames = 17;
@@ -454,21 +452,21 @@ static void dn_MainLoop(int64_t elapsedUs)
         }
     }
 
-    if(gameData->songFading)
+    if (gameData->songFading)
     {
-        gameData->headroom -= elapsedUs>>9;
-        if(gameData->headroom < 0)
+        gameData->headroom -= elapsedUs >> 9;
+        if (gameData->headroom < 0)
         {
             gameData->songLoopCount = 0;
-            gameData->headroom = 0;
-            gameData->songFading = false;
+            gameData->headroom      = 0;
+            gameData->songFading    = false;
         }
         globalMidiPlayerGet(MIDI_BGM)->headroom = gameData->headroom;
     }
-    else if(gameData->headroom < 0x4000)
+    else if (gameData->headroom < 0x4000)
     {
-        gameData->headroom += elapsedUs>>11;//Just use headroom as a timer here during silence.
-        if(gameData->headroom >= 0x4000)
+        gameData->headroom += elapsedUs >> 11; // Just use headroom as a timer here during silence.
+        if (gameData->headroom >= 0x4000)
         {
             gameData->headroom = 0x4000;
             gameData->currentSongIdx++;
@@ -476,17 +474,19 @@ static void dn_MainLoop(int64_t elapsedUs)
             {
                 gameData->currentSongIdx = 0;
             }
-            gameData->currentSong = gameData->songs[gameData->currentSongIdx];
-            midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-            uint16_t percussionVolume = player->channels[9].volume;
+            gameData->currentSong     = gameData->songs[gameData->currentSongIdx];
+            midiPlayer_t* player      = globalMidiPlayerGet(MIDI_BGM);
             midiPlayerResetNewSong(player);
-            
+
             unloadMidiFile(&gameData->songMidi);
             loadMidiFile(gameData->currentSong, &gameData->songMidi, true);
             globalMidiPlayerPlaySongCb(&gameData->songMidi, MIDI_BGM, dn_songFinishedCb);
-            player->headroom = gameData->headroom;
-            player->loop = true;
-            player->channels[9].volume = percussionVolume;
+            player->headroom           = gameData->headroom;
+            player->loop               = true;
+            if(gameData->entityManager.board)
+            {
+                dn_calculateSong(gameData->entityManager.board);
+            }
         }
     }
 
@@ -735,7 +735,7 @@ void dn_ShowUi(dn_Ui_t ui)
 static void dn_songFinishedCb(void)
 {
     gameData->songLoopCount++;
-    if(gameData->songLoopCount >= 1 && !gameData->songFading)
+    if (gameData->songLoopCount >= 2 && !gameData->songFading)
     {
         gameData->songFading = true;
     }
@@ -782,11 +782,11 @@ static void dn_initializeVideoTutorial(void)
 
 static void dn_initializeGame(void)
 {
-    gameData->headroom = 0x4000;//Force a song to play at this moment if it was currently silence.
+    gameData->headroom = 0x4000; // Force a song to play at this moment if it was currently silence.
     // Loading images will disable the default blink animation
-    for(int i = 0; i < 10; i++)
+    for (int i = 0; i < 10; i++)
     {
-        ch32v003WriteBitmapAsset(i+3, DICE_0_GS+i);
+        ch32v003WriteBitmapAsset(i + 3, DICE_0_GS + i);
     }
     ch32v003SelectBitmap(3);
 
@@ -823,7 +823,7 @@ static void dn_initializeGame(void)
 
     dn_loadAsset(DN_REROLL_WSG, 1, &gameData->assets[DN_REROLL_ASSET]);
 
-    //dn_loadAsset(DN_NUMBER_0_WSG, 10, &gameData->assets[DN_NUMBER_ASSET]);
+    // dn_loadAsset(DN_NUMBER_0_WSG, 10, &gameData->assets[DN_NUMBER_ASSET]);
 
     dn_loadAsset(DN_ALBUM_EXPLOSION_0_WSG, 7, &gameData->assets[DN_ALBUM_EXPLOSION_ASSET]);
 
