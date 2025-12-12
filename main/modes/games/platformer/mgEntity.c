@@ -30,12 +30,6 @@ static const vec_t mg_sureYouCanVectors[] = {
     {.x = 16, .y = -128}, {.x = 16, .y = -64}, {.x = 32, .y = -16}, {.x = 16, .y = -8}};
 
 //==============================================================================
-// Functions Prototypes
-//==============================================================================
-
-void startOutroCutscene(mgEntity_t* self);
-
-//==============================================================================
 // Functions
 //==============================================================================
 void mg_initializeEntity(mgEntity_t* self, mgEntityManager_t* entityManager, mgTilemap_t* tilemap,

@@ -319,4 +319,6 @@ void crawlerSetMoveState(mgEntity_t* self, uint8_t state);
 
 uint8_t mg_crawlerGettInitialMoveState(int16_t angle, bool counterclockwise);
 
+void startOutroCutscene(mgEntity_t* self);
+
 #endif
