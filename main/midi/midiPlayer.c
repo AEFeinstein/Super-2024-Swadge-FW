@@ -741,6 +741,13 @@ int32_t midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t vo
     nextSample /= UINT14_MAX;
 
     voice->voiceTick++;
+
+    // Apply channel volume if channel is valid, and if channel volume is less than maximum value
+    if (channel != NULL && channel->volume < UINT14_MAX && nextSample != 0)
+    {
+        nextSample = nextSample * (int32_t)channel->volume / UINT14_MAX;
+    }
+
     return nextSample;
 }
 

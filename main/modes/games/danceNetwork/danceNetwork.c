@@ -334,7 +334,9 @@ static void dn_EnterMode(void)
     gameData->currentSong = gameData->songs[gameData->currentSongIdx];
     loadMidiFile(gameData->currentSong, &gameData->songMidi, true);
     globalMidiPlayerPlaySongCb(&gameData->songMidi, MIDI_BGM, dn_songFinishedCb);
-    globalMidiPlayerGet(MIDI_BGM)->loop = true;
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    player->loop = true;
+    player->channels[9].volume = 0x3FFF / 2;  //Balanced start has percussion at half volume.
 }
 
 void dn_setAssetMetaData(void)
@@ -475,12 +477,16 @@ static void dn_MainLoop(int64_t elapsedUs)
                 gameData->currentSongIdx = 0;
             }
             gameData->currentSong = gameData->songs[gameData->currentSongIdx];
-            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
-            globalMidiPlayerGet(MIDI_BGM)->headroom = gameData->headroom;
+            midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+            uint16_t percussionVolume = player->channels[9].volume;
+            midiPlayerResetNewSong(player);
+            
             unloadMidiFile(&gameData->songMidi);
             loadMidiFile(gameData->currentSong, &gameData->songMidi, true);
             globalMidiPlayerPlaySongCb(&gameData->songMidi, MIDI_BGM, dn_songFinishedCb);
-            globalMidiPlayerGet(MIDI_BGM)->loop = true;
+            player->headroom = gameData->headroom;
+            player->loop = true;
+            player->channels[9].volume = percussionVolume;
         }
     }
 

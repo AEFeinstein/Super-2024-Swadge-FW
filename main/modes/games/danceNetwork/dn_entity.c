@@ -4110,37 +4110,27 @@ void dn_setEyes(dn_entity_t* self)
 void dn_calculateSong(dn_entity_t* self)
 {
     //Rework so percussion headroom is boosted for winning and reduced for losing.
+    
 
-    // uint8_t calculatedSong = 0;
-    // uint8_t p1PiecesCount = 0;
-    // uint8_t p2PiecesCount = 0;
-    // dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
-    // for(int i = 0; i < 5; i++)
-    // {
-    //     p1PiecesCount += bData->p1Units[i] != NULL;
-    //     p2PiecesCount += bData->p2Units[i] != NULL;
-    // }
-    // if(p1PiecesCount == p2PiecesCount)//balanced
-    // {
-    //     calculatedSong = 0;
-    // }
-    // else if((self->gameData->phase < DN_P2_DANCE_PHASE && p1PiecesCount > p2PiecesCount) || (self->gameData->phase >= DN_P2_DANCE_PHASE && p2PiecesCount > p1PiecesCount))//winning
-    // {
-    //     calculatedSong = 1;
-    // }
-    // else//losing
-    // {
-    //     calculatedSong = 2;
-    // }
 
-    // if(self->gameData->currentSong != calculatedSong)
-    // {
-    //     self->gameData->currentSong = calculatedSong;
-    //     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
-    //     uint32_t curTick = SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division);
-    //     midiPlayerResetNewSong(player);
-    //     globalMidiPlayerPlaySong(&self->gameData->songs[calculatedSong], MIDI_BGM);
-    //     player->loop = true;
-    //     midiSeek(player, curTick);
-    // }
+    uint8_t p1PiecesCount = 0;
+    uint8_t p2PiecesCount = 0;
+    dn_boardData_t* bData = (dn_boardData_t*)self->gameData->entityManager.board->data;
+    for(int i = 0; i < 5; i++)
+    {
+        p1PiecesCount += bData->p1Units[i] != NULL;
+        p2PiecesCount += bData->p2Units[i] != NULL;
+    }
+    if(p1PiecesCount == p2PiecesCount)//balanced
+    {
+        globalMidiPlayerGet(MIDI_BGM)->channels[9].volume = 0x3FFF / 2;  //Balanced has percussion at half volume.
+    }
+    else if((self->gameData->phase < DN_P2_DANCE_PHASE && p1PiecesCount > p2PiecesCount) || (self->gameData->phase >= DN_P2_DANCE_PHASE && p2PiecesCount > p1PiecesCount))//winning
+    {
+        globalMidiPlayerGet(MIDI_BGM)->channels[9].volume = 0x3FFF;  //Winning has percussion maxed.
+    }
+    else//losing
+    {
+        globalMidiPlayerGet(MIDI_BGM)->channels[9].volume = 0;  //Losing has percussion muted.
+    }
 }
