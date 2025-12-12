@@ -460,12 +460,12 @@ static void dn_MainLoop(int64_t elapsedUs)
             gameData->songLoopCount = 0;
             gameData->headroom      = 0;
             gameData->songFading    = false;
-            //pause the stage speakers animation
+            // pause the stage speakers animation
             node_t* cur = gameData->entityManager.entities->first;
-            while(cur != NULL)
+            while (cur != NULL)
             {
                 dn_entity_t* entity = (dn_entity_t*)cur->val;
-                if(entity->assetIndex == DN_SPEAKER_ASSET)
+                if (entity->assetIndex == DN_SPEAKER_ASSET)
                 {
                     entity->paused = true;
                 }
@@ -484,26 +484,26 @@ static void dn_MainLoop(int64_t elapsedUs)
             {
                 gameData->currentSongIdx = 0;
             }
-            gameData->currentSong     = gameData->songs[gameData->currentSongIdx];
-            midiPlayer_t* player      = globalMidiPlayerGet(MIDI_BGM);
+            gameData->currentSong = gameData->songs[gameData->currentSongIdx];
+            midiPlayer_t* player  = globalMidiPlayerGet(MIDI_BGM);
             midiPlayerResetNewSong(player);
 
             unloadMidiFile(&gameData->songMidi);
             loadMidiFile(gameData->currentSong, &gameData->songMidi, true);
             globalMidiPlayerPlaySongCb(&gameData->songMidi, MIDI_BGM, dn_songFinishedCb);
-            player->headroom           = gameData->headroom;
-            player->loop               = true;
-            if(gameData->entityManager.board)
+            player->headroom = gameData->headroom;
+            player->loop     = true;
+            if (gameData->entityManager.board)
             {
                 dn_calculatePercussion(gameData->entityManager.board);
             }
 
-            //unpause the stage speakers animation
+            // unpause the stage speakers animation
             node_t* cur = gameData->entityManager.entities->first;
-            while(cur != NULL)
+            while (cur != NULL)
             {
                 dn_entity_t* entity = (dn_entity_t*)cur->val;
-                if(entity->assetIndex == DN_SPEAKER_ASSET)
+                if (entity->assetIndex == DN_SPEAKER_ASSET)
                 {
                     entity->paused = false;
                 }

@@ -160,7 +160,7 @@ void dn_updateBoard(dn_entity_t* self)
                 if (tileData->timeoutOffset > 35)
                 {
                     tileData->timeoutOffset = 35;
-                    if (tileData->unit)
+                    if (tileData->unit && tileData->unit->pos.y <= 0)
                     {
                         // A unit dies
                         if (tileData->unit == ((dn_boardData_t*)self->gameData->entityManager.board->data)->p1Units[0]
@@ -440,7 +440,7 @@ void dn_drawBoard(dn_entity_t* self)
                     drawWsgPaletteSimple(
                         &self->gameData->assets[unit->assetIndex].frames[unit->currentAnimationFrame],
                         drawX - self->gameData->assets[unit->assetIndex].originX,
-                        drawY - self->gameData->assets[unit->assetIndex].originY,
+                        drawY - self->gameData->assets[unit->assetIndex].originY - unit->pos.y / 39375,
                         &self->gameData->entityManager
                              .palettes[unit->gray ? DN_SUPERBRIGHT_GRAYSCALE_PALETTE : DN_WHITE_CHESS_PALETTE]);
 
@@ -448,13 +448,13 @@ void dn_drawBoard(dn_entity_t* self)
                 {
                     drawWsgPaletteSimple(&self->gameData->assets[unit->assetIndex].frames[unit->currentAnimationFrame],
                                          drawX - self->gameData->assets[unit->assetIndex].originX,
-                                         drawY - self->gameData->assets[unit->assetIndex].originY,
+                                         drawY - self->gameData->assets[unit->assetIndex].originY - unit->pos.y / 39375,
                                          &self->gameData->entityManager.palettes[DN_GRAYSCALE_PALETTE]);
                 }
                 else
                 {
                     drawWsgSimple(&self->gameData->assets[unit->assetIndex].frames[unit->currentAnimationFrame],
-                                  drawX - self->gameData->assets[unit->assetIndex].originX,
+                                  drawX - self->gameData->assets[unit->assetIndex].originX - unit->pos.y / 39375,
                                   drawY - self->gameData->assets[unit->assetIndex].originY);
                 }
                 // draw mini chess unit
@@ -3253,8 +3253,8 @@ void dn_updateBullet(dn_entity_t* self)
                 dn_entity_t* owner                    = bData->tiles[buData->ownerToMove.y][buData->ownerToMove.x].unit;
                 ((dn_unitData_t*)owner->data)->moveTo = buData->firstTarget;
                 owner->updateFunction                 = dn_moveUnit;
-                if(owner->assetIndex == DN_BUCKET_HAT_UP_ASSET || owner->assetIndex == DN_BUCKET_HAT_DOWN_ASSET)
-                { 
+                if (owner->assetIndex == DN_BUCKET_HAT_UP_ASSET || owner->assetIndex == DN_BUCKET_HAT_DOWN_ASSET)
+                {
                     owner->currentAnimationFrame = 7;
                 }
             }
@@ -3264,8 +3264,8 @@ void dn_updateBullet(dn_entity_t* self)
             dn_entity_t* owner                    = bData->tiles[buData->ownerToMove.y][buData->ownerToMove.x].unit;
             ((dn_unitData_t*)owner->data)->moveTo = buData->firstTarget;
             owner->updateFunction                 = dn_moveUnit;
-            if(owner->assetIndex == DN_BUCKET_HAT_UP_ASSET || owner->assetIndex == DN_BUCKET_HAT_DOWN_ASSET)
-            { 
+            if (owner->assetIndex == DN_BUCKET_HAT_UP_ASSET || owner->assetIndex == DN_BUCKET_HAT_DOWN_ASSET)
+            {
                 owner->currentAnimationFrame = 7;
             }
         }
@@ -3364,8 +3364,12 @@ void dn_moveUnit(dn_entity_t* self)
                 if (bData->tiles[y][x].unit == self && (y != uData->moveTo.y || x != uData->moveTo.x))
                 {
                     bData->tiles[uData->moveTo.y][uData->moveTo.x].unit = self;
-                    bData->tiles[y][x].unit                             = NULL;
-                    self->gray                                          = false;
+                    if (bData->tiles[uData->moveTo.y][uData->moveTo.x].timeout)
+                    {
+                        self->pos.y = 1260000; // It will take one second to fall in the pit. Roughly.
+                    }
+                    bData->tiles[y][x].unit = NULL;
+                    self->gray              = false;
                     if (y != 0 && y != 4
                         && ((self->gameData->phase < DN_P2_DANCE_PHASE && uData->moveTo.y == 0)
                             || (self->gameData->phase >= DN_P2_DANCE_PHASE && uData->moveTo.y == 4)))
@@ -3935,6 +3939,14 @@ void dn_updateAlphaAnimation(dn_entity_t* self)
                 self->animationTimer = 0;
                 self->currentAnimationFrame--;
             }
+            if (self->pos.y > 0)
+            {
+                self->pos.y -= self->gameData->elapsedUs << 1;
+                if (self->pos.y < 0)
+                {
+                    self->pos.y = 0;
+                }
+            }
             break;
         }
     }
@@ -3970,6 +3982,14 @@ void dn_updateBucketHatAnimation(dn_entity_t* self)
             {
                 self->animationTimer = 0;
                 self->currentAnimationFrame--;
+            }
+            if (self->pos.y > 0)
+            {
+                self->pos.y -= self->gameData->elapsedUs << 1;
+                if (self->pos.y < 0)
+                {
+                    self->pos.y = 0;
+                }
             }
             break;
         }
@@ -4031,6 +4051,14 @@ void dn_updateChessKingAnimation(dn_entity_t* self)
                 self->currentAnimationFrame = 0;
                 self->paused                = true;
             }
+            if (self->pos.y > 0)
+            {
+                self->pos.y -= self->gameData->elapsedUs << 1;
+                if (self->pos.y < 0)
+                {
+                    self->pos.y = 0;
+                }
+            }
             break;
         }
     }
@@ -4091,6 +4119,14 @@ void dn_updateChessPawnAnimation(dn_entity_t* self)
                 self->currentAnimationFrame = 0;
                 self->paused                = true;
             }
+            if (self->pos.y > 0)
+            {
+                self->pos.y -= self->gameData->elapsedUs << 1;
+                if (self->pos.y < 0)
+                {
+                    self->pos.y = 0;
+                }
+            }
             break;
         }
     }
@@ -4130,7 +4166,7 @@ void dn_calculatePercussion(dn_entity_t* self)
     }
     if (p1PiecesCount == p2PiecesCount) // balanced
     {
-        //full volume is 0x3FFF
+        // full volume is 0x3FFF
         globalMidiPlayerGet(MIDI_BGM)->channels[9].volume = 0x2FFD; // Balanced has percussion at 3/4 volume.
     }
     else if ((self->gameData->phase < DN_P2_DANCE_PHASE && p1PiecesCount > p2PiecesCount)
