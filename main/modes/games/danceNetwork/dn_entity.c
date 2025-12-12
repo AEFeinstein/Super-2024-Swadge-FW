@@ -241,7 +241,7 @@ void dn_updateBoard(dn_entity_t* self)
                             }
                         }
                         tileData->unit = NULL;
-                        dn_calculateSong(self);
+                        dn_calculatePercussion(self);
                     }
                 }
             }
@@ -2037,7 +2037,7 @@ void dn_startTurn(dn_entity_t* self)
     promptToStart->dataType       = DN_PROMPT_DATA;
     promptToStart->updateFunction = dn_updatePrompt;
     promptToStart->drawFunction   = dn_drawPrompt;
-    dn_calculateSong(self);
+    dn_calculatePercussion(self);
 }
 
 void dn_gainReroll(dn_entity_t* self)
@@ -2059,7 +2059,7 @@ void dn_gainRerollAndSetupDancePhase(dn_entity_t* self)
 void dn_setupDancePhase(dn_entity_t* self) // used to be dn_startMovePhase
 {
     dn_setEyes(self);
-    dn_calculateSong(self);
+    dn_calculatePercussion(self);
     dn_boardData_t* bData         = (dn_boardData_t*)self->gameData->entityManager.board->data;
     dn_entity_t* existingSelector = dn_findLastEntityOfType(self, DN_TILE_SELECTOR_DATA);
     if (existingSelector)
@@ -3210,7 +3210,7 @@ void dn_updateBullet(dn_entity_t* self)
                 }
             }
             targetTile->unit = NULL;
-            dn_calculateSong(self);
+            dn_calculatePercussion(self);
         }
         else
         {
@@ -4108,7 +4108,7 @@ void dn_setEyes(dn_entity_t* self)
     ch32v003SelectBitmap(3);
 }
 
-void dn_calculateSong(dn_entity_t* self)
+void dn_calculatePercussion(dn_entity_t* self)
 {
     // Rework so percussion headroom is boosted for winning and reduced for losing.
 

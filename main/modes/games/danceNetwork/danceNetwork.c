@@ -460,6 +460,16 @@ static void dn_MainLoop(int64_t elapsedUs)
             gameData->songLoopCount = 0;
             gameData->headroom      = 0;
             gameData->songFading    = false;
+            //pause the stage speakers animation
+            node_t* cur = gameData->entityManager.entities->first;
+            while(cur != NULL)
+            {
+                dn_entity_t* entity = (dn_entity_t*)cur->val;
+                if(entity->assetIndex == DN_SPEAKER_ASSET)
+                {
+                    entity->paused = true;
+                }
+            }
         }
         globalMidiPlayerGet(MIDI_BGM)->headroom = gameData->headroom;
     }
@@ -485,7 +495,18 @@ static void dn_MainLoop(int64_t elapsedUs)
             player->loop               = true;
             if(gameData->entityManager.board)
             {
-                dn_calculateSong(gameData->entityManager.board);
+                dn_calculatePercussion(gameData->entityManager.board);
+            }
+
+            //unpause the stage speakers animation
+            node_t* cur = gameData->entityManager.entities->first;
+            while(cur != NULL)
+            {
+                dn_entity_t* entity = (dn_entity_t*)cur->val;
+                if(entity->assetIndex == DN_SPEAKER_ASSET)
+                {
+                    entity->paused = false;
+                }
             }
         }
     }
@@ -851,20 +872,20 @@ static void dn_initializeGame(void)
     ///////////////////////////
     // Make the left speaker //
     ///////////////////////////
-    // dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0,
-    //                        (vec_t){0xFFFF - (123 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
-    // dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 3,
-    //                        (vec_t){0xFFFF - (123 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0,
+                           (vec_t){0xFFFF - (123 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 3,
+                           (vec_t){0xFFFF - (123 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
 
     ////////////////////////////
     // Make the right speaker //
     ////////////////////////////
-    // dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0,
-    //                        (vec_t){0xFFFF + (122 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
-    // dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 4,
-    //                        (vec_t){0xFFFF + (124 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData)
-    //     ->flipped
-    //     = true;
+    dn_createEntitySpecial(&gameData->entityManager, 1, DN_LOOPING_ANIMATION, false, DN_SPEAKER_STAND_ASSET, 0,
+                           (vec_t){0xFFFF + (122 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData);
+    dn_createEntitySpecial(&gameData->entityManager, 6, DN_LOOPING_ANIMATION, false, DN_SPEAKER_ASSET, 4,
+                           (vec_t){0xFFFF + (124 << DN_DECIMAL_BITS), 0xFFFF - (20 << DN_DECIMAL_BITS)}, gameData)
+        ->flipped
+        = true;
 
     ///////////////////
     // Make the board//
