@@ -82,20 +82,20 @@ typedef struct
     font_t ibm;
     font_t righteous;
     font_t rodin;
-    menu_t* menu;
-    menuManiaRenderer_t* renderer;
-    const char* submenu;
+    // menu_t* menu;
+    // menuManiaRenderer_t* renderer;
+    // const char* submenu;
     const shSong_t* menuSong;
     shDifficulty_t difficulty;
 
     // Currently shown screen
-    shScreen_t screen;
+    // shScreen_t screen;
 
     // Song being played
     midiFile_t midiSong;
     int32_t leadInUs;
     int32_t leadOutUs;
-    char hsKey[16];
+    // char hsKey[16];
     const char* songName;
     uint32_t songTimeUs;
     bool paused;
@@ -157,11 +157,11 @@ typedef struct
     list_t starList;
 
     // High score display
-    list_t hsStrs;
+    // list_t hsStrs;
 } shVars_t;
 
-extern const shTimingGrade_t timings[NUM_NOTE_TIMINGS];
-
+void shEnterMode(shVars_t* sh);
+void shExitMode(shVars_t* sh);
 void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty);
 uint32_t shLoadChartData(shVars_t* sh, const uint8_t* data, size_t size);
 void shTeardownGame(shVars_t* sv);
