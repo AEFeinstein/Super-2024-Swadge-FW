@@ -468,11 +468,16 @@ static void dn_MainLoop(int64_t elapsedUs)
                 if (entity->assetIndex == DN_SPEAKER_ASSET)
                 {
                     entity->paused = true;
+                    entity->currentAnimationFrame = 1;
                 }
                 cur = cur->next;
             }
         }
         globalMidiPlayerGet(MIDI_BGM)->headroom = gameData->headroom;
+        if(gameData->headroom == 0)
+        {
+            globalMidiPlayerStop(true);
+        }
     }
     else if (gameData->headroom < 0x4000)
     {
@@ -508,6 +513,7 @@ static void dn_MainLoop(int64_t elapsedUs)
                 {
                     entity->paused = false;
                 }
+                cur = cur->next;
             }
         }
     }
