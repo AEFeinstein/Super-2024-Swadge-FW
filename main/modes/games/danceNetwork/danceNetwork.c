@@ -469,6 +469,7 @@ static void dn_MainLoop(int64_t elapsedUs)
                 {
                     entity->paused = true;
                 }
+                cur = cur->next;
             }
         }
         globalMidiPlayerGet(MIDI_BGM)->headroom = gameData->headroom;
