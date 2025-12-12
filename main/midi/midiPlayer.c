@@ -2834,7 +2834,7 @@ void midiSeek(midiPlayer_t* player, uint32_t ticks)
                 {
                     curTick = player->pendingEvent.absTime;
                 }
-                else
+                else if (((uint32_t)-1) != ticks)
                 {
                     curTick = ticks;
                 }

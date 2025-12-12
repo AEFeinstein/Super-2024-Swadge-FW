@@ -2012,6 +2012,8 @@ void drawLevelSelect(platformer_t* self)
 void goToReadyScreen(void)
 {
     platformer->update = &updateReadyScreen;
+    // TODO remove this after testing
+    initBossFight();
 }
 
 // forward declared in mega_pulse_ex_typedef.h
@@ -2021,6 +2023,58 @@ void initBossFight(void)
     // mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
     // soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
     // platformer->update = &updateReadyScreen;
+
+    // TODO only load this once, and free it somewhere too
+    shEnterMode(&platformer->shVars);
+
+    static const shSong_t shSongList[] = {
+        {
+            .name   = "Deadeye Chirpzi",
+            .artist = "Newmajoe",
+            .midi   = MPE_CHIRPZI_MID,
+            .charts = {MPE_CHIRPZI_E_CCH, MPE_CHIRPZI_M_CCH, MPE_CHIRPZI_H_CCH},
+        },
+        {
+            .name   = "Drain Bat",
+            .artist = "Newmajoe",
+            .midi   = MPE_BAT_MID,
+            .charts = {MPE_BAT_E_CCH, MPE_BAT_M_CCH, MPE_BAT_H_CCH},
+        },
+        {
+            .name   = "Flare Griffin",
+            .artist = "Newmajoe",
+            .midi   = MPE_GRIFFIN_MID,
+            .charts = {MPE_GRIFFIN_E_CCH, MPE_GRIFFIN_M_CCH, MPE_GRIFFIN_H_CCH},
+        },
+        {
+            .name   = "Grind Pangolin",
+            .artist = "Newmajoe",
+            .midi   = MPE_PANGOLIN_MID,
+            .charts = {MPE_PANGOLIN_E_CCH, MPE_PANGOLIN_M_CCH, MPE_PANGOLIN_H_CCH},
+        },
+        {
+            .name   = "Kinetic Donut",
+            .artist = "Newmajoe",
+            .midi   = MPE_DONUT_MID,
+            .charts = {MPE_DONUT_E_CCH, MPE_DONUT_M_CCH, MPE_DONUT_H_CCH},
+        },
+        {
+            .name   = "Sever yagata",
+            .artist = "Newmajoe",
+            .midi   = MPE_YAGATA_MID,
+            .charts = {MPE_YAGATA_E_CCH, MPE_YAGATA_M_CCH, MPE_YAGATA_H_CCH},
+        },
+        {
+            .name   = "Smash Gorilla",
+            .artist = "Newmajoe",
+            .midi   = MPE_GORILLA_MID,
+            .charts = {MPE_GORILLA_E_CCH, MPE_GORILLA_M_CCH, MPE_GORILLA_H_CCH},
+        },
+    };
+
+    platformer->shVars.menuSong = &shSongList[0];
+    shLoadSong(&platformer->shVars, platformer->shVars.menuSong, SH_HARD);
+
     platformer->update = &mgDanceOffUpdate;
 }
 

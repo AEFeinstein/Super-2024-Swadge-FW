@@ -72,6 +72,12 @@ const shTimingGrade_t timings[NUM_NOTE_TIMINGS] = {
 };
 
 //==============================================================================
+// Variables
+//==============================================================================
+
+shVars_t* shVars;
+
+//==============================================================================
 // Function Declarations
 //==============================================================================
 
@@ -80,11 +86,124 @@ static void shSongOver(void);
 static void shMissNote(shVars_t* sh);
 static void shHitNote(shVars_t* sh, int32_t baseScore);
 static int32_t getXOffset(shVars_t* sh, int32_t note);
-static shVars_t* getShVars(void);
 
 //==============================================================================
 // Functions
 //==============================================================================
+
+/**
+ * This function is called when this mode is started. It should initialize
+ * variables and start the mode.
+ */
+void shEnterMode(shVars_t* sh)
+{
+    shVars = sh;
+
+    // Load fonts
+    loadFont(IBM_VGA_8_FONT, &sh->ibm, true);
+    loadFont(RIGHTEOUS_150_FONT, &sh->righteous, true);
+    loadFont(RODIN_EB_FONT, &sh->rodin, true);
+
+    struct
+    {
+        cnfsFileIdx_t f1;
+        cnfsFileIdx_t f2;
+        cnfsFileIdx_t outline;
+        cnfsFileIdx_t pressed;
+    } wsgFiles[] = {
+        {
+            .f1      = SH_L_1_WSG,
+            .f2      = SH_L_2_WSG,
+            .outline = SH_LO_WSG,
+            .pressed = SH_LP_WSG,
+        },
+        {
+            .f1      = SH_D_1_WSG,
+            .f2      = SH_D_2_WSG,
+            .outline = SH_DO_WSG,
+            .pressed = SH_DP_WSG,
+        },
+        {
+            .f1      = SH_U_1_WSG,
+            .f2      = SH_U_2_WSG,
+            .outline = SH_UO_WSG,
+            .pressed = SH_UP_WSG,
+        },
+        {
+            .f1      = SH_R_1_WSG,
+            .f2      = SH_R_2_WSG,
+            .outline = SH_RO_WSG,
+            .pressed = SH_RP_WSG,
+        },
+        {
+            .f1      = SH_B_1_WSG,
+            .f2      = SH_B_2_WSG,
+            .outline = SH_BO_WSG,
+            .pressed = SH_BP_WSG,
+        },
+        {
+            .f1      = SH_A_1_WSG,
+            .f2      = SH_A_2_WSG,
+            .outline = SH_AO_WSG,
+            .pressed = SH_AP_WSG,
+        },
+    };
+
+    for (int i = 0; i < ARRAY_SIZE(wsgFiles); i++)
+    {
+        loadWsg(wsgFiles[i].f1, &sh->icons[i][0], true);
+        loadWsg(wsgFiles[i].f2, &sh->icons[i][1], true);
+        loadWsg(wsgFiles[i].outline, &sh->outlines[i], true);
+        loadWsg(wsgFiles[i].pressed, &sh->pressed[i], true);
+    }
+
+    loadWsg(STAR_WSG, &sh->star, true);
+}
+
+/**
+ * This function is called when the mode is exited. It should free any allocated memory.
+ */
+void shExitMode(shVars_t* sh)
+{
+    // Free MIDI data
+    globalMidiPlayerStop(true);
+    unloadMidiFile(&sh->midiSong);
+
+    // Free chart data
+    heap_caps_free(sh->chartNotes);
+
+    // Free game UI data
+    void* val;
+    while ((val = pop(&sh->gameNotes)))
+    {
+        heap_caps_free(val);
+    }
+    while ((val = pop(&sh->fretLines)))
+    {
+        heap_caps_free(val);
+    }
+    while ((val = pop(&sh->starList)))
+    {
+        heap_caps_free(val);
+    }
+
+    // Free the fonts
+    freeFont(&sh->ibm);
+    freeFont(&sh->rodin);
+    freeFont(&sh->righteous);
+
+    // Free all icons
+    for (int32_t i = 0; i < ARRAY_SIZE(sh->icons); i++)
+    {
+        for (int32_t fIdx = 0; fIdx < NUM_NOTE_FRAMES; fIdx++)
+        {
+            freeWsg(&sh->icons[i][fIdx]);
+        }
+        freeWsg(&sh->outlines[i]);
+        freeWsg(&sh->pressed[i]);
+    }
+    freeWsg(&sh->star);
+}
 
 /**
  * @brief Load a song to play
@@ -159,8 +278,8 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
 
     // Seek to load the tempo and length, then reset
     midiSeek(player, -1);
-    sh->tempo         = player->tempo;
-    int32_t songLenUs = SAMPLES_TO_US(player->sampleCount);
+    sh->tempo          = player->tempo;
+    uint64_t songLenUs = SAMPLES_TO_US(player->sampleCount);
     globalMidiPlayerStop(true);
 
     // Set the lead-in timer
@@ -358,21 +477,21 @@ bool shRunTimers(shVars_t* sh, uint32_t elapsedUs)
             }
         }
 
-        // Read old high score from NVS
-        int32_t oldHs = 0;
-        if (!readNvs32(sh->hsKey, &oldHs))
-        {
-            // No score saved yet, assume 0
-            oldHs = 0;
-        }
+        // // Read old high score from NVS
+        // int32_t oldHs = 0;
+        // if (!readNvs32(sh->hsKey, &oldHs))
+        // {
+        //     // No score saved yet, assume 0
+        //     oldHs = 0;
+        // }
 
-        // Write the new high score to NVS if it's larger
-        if (sh->score > (oldHs & 0x0FFFFFFF))
-        {
-            // four top bits are letter, bottom 28 bits are score
-            int32_t nvsScore = ((gradeIdx & 0x0F) << 28) | (sh->score & 0x0FFFFFFF);
-            writeNvs32(sh->hsKey, nvsScore);
-        }
+        // // Write the new high score to NVS if it's larger
+        // if (sh->score > (oldHs & 0x0FFFFFFF))
+        // {
+        //     // four top bits are letter, bottom 28 bits are score
+        //     int32_t nvsScore = ((gradeIdx & 0x0F) << 28) | (sh->score & 0x0FFFFFFF);
+        //     writeNvs32(sh->hsKey, nvsScore);
+        // }
 
         // Switch to the game end screen
         // shChangeScreen(sh, SH_GAME_END);
@@ -1050,22 +1169,12 @@ static int32_t getMultiplier(shVars_t* sh)
 }
 
 /**
- * @brief TODO
- *
- * @return shVars_t*
- */
-static shVars_t* getShVars(void)
-{
-    return NULL;
-}
-
-/**
  * @brief Set a flag that the game is over and should be cleaned up next loop
  */
 static void shSongOver(void)
 {
     // Start a lead-out timer
-    getShVars()->leadOutUs = 1000000;
+    shVars->leadOutUs = 1000000;
 }
 
 /**
