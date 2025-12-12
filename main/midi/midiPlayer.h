@@ -1101,7 +1101,7 @@ void globalMidiPlayerFillBuffer(uint8_t* samples, int16_t len);
 void globalMidiPlayerPlaySong(midiFile_t* song, uint8_t trackType);
 
 /**
- * @brief Play a song on noe of the system-wide MIDI players, with a callback once the song finishes
+ * @brief Play a song on one of the system-wide MIDI players, with a callback once the song finishes
  *
  * @param song A pointer to the song to play
  * @param trackType The player to use, either MIDI_SFX or MIDI_BGM

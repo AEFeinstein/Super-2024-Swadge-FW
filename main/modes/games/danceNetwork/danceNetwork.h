@@ -91,9 +91,13 @@ typedef struct dn_gameData_t
     
     eyeDigit_t eyeDigits[10];
     
-    midiFile_t songs[4];
-    uint8_t currentSong;
-    
+    cnfsFileIdx_t songs[6];
+    cnfsFileIdx_t currentSong;
+    int8_t currentSongIdx;
+    midiFile_t songMidi;
+    uint8_t songLoopCount;
+    int32_t headroom;//volume fade from 0x4000 to 0x0
+    bool songFading;
 } dn_gameData_t;
 
 //==============================================================================

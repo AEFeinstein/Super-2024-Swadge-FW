@@ -28,6 +28,7 @@ static void dn_MainLoop(int64_t elapsedUs);
 bool dn_MenuCb(const char* label, bool selected, uint32_t value);
 static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
+static void dn_songFinishedCb(void);
 static void dn_initializeTutorial(bool advanced);
 static void dn_initializeVideoTutorial(void);
 static void dn_initializeGame(void);
@@ -322,11 +323,17 @@ static void dn_EnterMode(void)
         }
     }
 
-    loadMidiFile(PAWNS_GAMBIT_MID, &gameData->songs[0], true);//balanced
-    loadMidiFile(THE_WILL_TO_WIN_MID, &gameData->songs[1], true);//winning
-    loadMidiFile(NEXT_MOVE_MID, &gameData->songs[2], true);//losing
-    loadMidiFile(RETURN_OF_THE_VALIANT_MID, &gameData->songs[3], true);//won
-    globalMidiPlayerPlaySong(&gameData->songs[0], MIDI_BGM);
+    gameData->songs[0] = AP_PAWNS_GAMBIT_MID;//root of 1
+    gameData->songs[1] = AP_TEN_STEPS_AHEAD_MID;//root of 1
+    gameData->songs[2] = AP_THE_WILL_TO_WIN_MID;//root of 1
+    gameData->songs[3] = AP_FINAL_PATH_MID;//root of 5
+    gameData->songs[4] = AP_RETURN_OF_THE_VALIANT_MID;//root of 4
+    gameData->songs[5] = AP_NEXT_MOVE_MID;//root of 2
+    gameData->headroom = 0x4000;
+    gameData->currentSongIdx = 0;
+    gameData->currentSong = gameData->songs[gameData->currentSongIdx];
+    loadMidiFile(gameData->currentSong, &gameData->songMidi, true);
+    globalMidiPlayerPlaySongCb(&gameData->songMidi, MIDI_BGM, dn_songFinishedCb);
     globalMidiPlayerGet(MIDI_BGM)->loop = true;
 }
 
@@ -400,6 +407,7 @@ static void dn_ExitMode(void)
     freeFont(&gameData->font_ibm);
     freeFont(&gameData->font_righteous);
     freeFont(&gameData->outline_righteous);
+    unloadMidiFile(&gameData->songMidi);
     heap_caps_free(gameData);
 }
 
@@ -441,6 +449,38 @@ static void dn_MainLoop(int64_t elapsedUs)
             {
                 break;
             }
+        }
+    }
+
+    if(gameData->songFading)
+    {
+        gameData->headroom -= elapsedUs>>9;
+        if(gameData->headroom < 0)
+        {
+            gameData->songLoopCount = 0;
+            gameData->headroom = 0;
+            gameData->songFading = false;
+        }
+        globalMidiPlayerGet(MIDI_BGM)->headroom = gameData->headroom;
+    }
+    else if(gameData->headroom < 0x4000)
+    {
+        gameData->headroom += elapsedUs>>11;//Just use headroom as a timer here during silence.
+        if(gameData->headroom >= 0x4000)
+        {
+            gameData->headroom = 0x4000;
+            gameData->currentSongIdx++;
+            if (gameData->currentSongIdx >= (sizeof(gameData->songs) / sizeof(gameData->songs[0])))
+            {
+                gameData->currentSongIdx = 0;
+            }
+            gameData->currentSong = gameData->songs[gameData->currentSongIdx];
+            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+            globalMidiPlayerGet(MIDI_BGM)->headroom = gameData->headroom;
+            unloadMidiFile(&gameData->songMidi);
+            loadMidiFile(gameData->currentSong, &gameData->songMidi, true);
+            globalMidiPlayerPlaySongCb(&gameData->songMidi, MIDI_BGM, dn_songFinishedCb);
+            globalMidiPlayerGet(MIDI_BGM)->loop = true;
         }
     }
 
@@ -686,6 +726,15 @@ void dn_ShowUi(dn_Ui_t ui)
     }
 }
 
+static void dn_songFinishedCb(void)
+{
+    gameData->songLoopCount++;
+    if(gameData->songLoopCount >= 1 && !gameData->songFading)
+    {
+        gameData->songFading = true;
+    }
+}
+
 static void dn_initializeTutorial(bool advanced)
 {
     setMegaLedsOn(gameData->menuRenderer, false);
@@ -727,6 +776,7 @@ static void dn_initializeVideoTutorial(void)
 
 static void dn_initializeGame(void)
 {
+    gameData->headroom = 0x4000;//Force a song to play at this moment if it was currently silence.
     // Loading images will disable the default blink animation
     for(int i = 0; i < 10; i++)
     {
