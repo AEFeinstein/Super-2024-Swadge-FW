@@ -346,7 +346,6 @@ static void dn_EnterMode(void)
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
     player->loop         = true;
     player               = globalMidiPlayerGet(MIDI_SFX);
-    player->loop         = true;
     player->volume       = 0x2FFD; // Balanced has percussion at 3/4 volume.
 }
 
@@ -487,6 +486,7 @@ static void dn_MainLoop(int64_t elapsedUs)
             }
         }
         globalMidiPlayerGet(MIDI_BGM)->headroom = gameData->headroom;
+        globalMidiPlayerGet(MIDI_SFX)->headroom = gameData->headroom;
         if (gameData->headroom == 0)
         {
             globalMidiPlayerStop(true);
@@ -504,6 +504,7 @@ static void dn_MainLoop(int64_t elapsedUs)
                 gameData->currentSongIdx = 0;
             }
             gameData->currentSong = gameData->songs[gameData->currentSongIdx];
+            gameData->currentPercussionTrack = gameData->percussionTracks[gameData->currentSongIdx];
             midiPlayer_t* BGM_player  = globalMidiPlayerGet(MIDI_BGM);
             midiPlayerResetNewSong(BGM_player);
             midiPlayer_t* SFX_player = globalMidiPlayerGet(MIDI_SFX);
@@ -519,7 +520,6 @@ static void dn_MainLoop(int64_t elapsedUs)
             BGM_player->headroom = gameData->headroom;
             SFX_player->headroom = gameData->headroom;
             BGM_player->loop     = true;
-            SFX_player->loop     = true;
             if (gameData->entityManager.board)
             {
                 dn_calculatePercussion(gameData->entityManager.board);
@@ -784,6 +784,10 @@ void dn_ShowUi(dn_Ui_t ui)
 static void dn_songFinishedCb(void)
 {
     gameData->songLoopCount++;
+    // Re-sync the percussion SFX with BGM when the BGM loops so they remain in phase
+    midiPlayer_t* SFX_player = globalMidiPlayerGet(MIDI_SFX);
+    midiPlayerResetNewSong(SFX_player);
+    globalMidiPlayerPlaySong(&gameData->percussionMidi, MIDI_SFX);
     if (gameData->songLoopCount >= 2 && !gameData->songFading)
     {
         gameData->songFading = true;
