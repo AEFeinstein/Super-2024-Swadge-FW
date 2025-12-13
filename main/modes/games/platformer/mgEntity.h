@@ -224,6 +224,7 @@ void mg_dummyCollisionHandler(mgEntity_t* self, mgEntity_t* other);
 
 bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 bool mg_enemyTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
+bool mg_trashManTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 bool mg_dummyTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 
 void dieWhenFallingOffScreen(mgEntity_t* self);

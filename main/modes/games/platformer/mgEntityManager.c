@@ -2283,13 +2283,13 @@ mgEntity_t* createBossTrashMan(mgEntityManager_t* entityManager, uint16_t x, uin
     entity->yspeed               = 0;
     entity->xMaxSpeed            = 132;
     entity->yMaxSpeed            = 132;
-    entity->gravityEnabled       = true;
+    entity->gravityEnabled       = false;
     entity->gravity              = 1;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
-    entity->hp                   = 30;
+    entity->hp                   = 48;
 
     entity->type                 = ENTITY_BOSS_TRASH_MAN;
     entity->spriteIndex          = MG_SP_BOSS_0;
@@ -2297,7 +2297,7 @@ mgEntity_t* createBossTrashMan(mgEntityManager_t* entityManager, uint16_t x, uin
     entity->stateTimer           = 0;
     entity->updateFunction       = &mg_updateBossTrashMan;
     entity->collisionHandler     = &mg_enemyCollisionHandler;
-    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->tileCollisionHandler = &mg_trashManTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
     entity->tileCollider         = &entityTileCollider_trash_man;
