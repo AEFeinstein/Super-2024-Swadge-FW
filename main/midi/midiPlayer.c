@@ -742,13 +742,6 @@ int32_t midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t vo
 
     voice->voiceTick++;
 
-    // Apply channel volume if channel is valid, and if channel volume is not mute or max for micro-optimization to skip
-    // division for a vast majority of samples.
-    if (channel != NULL && channel->volume != UINT14_MAX && nextSample != 0)
-    {
-        nextSample = nextSample * (int32_t)channel->volume / UINT14_MAX;
-    }
-
     return nextSample;
 }
 
