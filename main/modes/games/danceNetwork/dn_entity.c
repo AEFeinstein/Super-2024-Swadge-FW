@@ -454,8 +454,8 @@ void dn_drawBoard(dn_entity_t* self)
                 else
                 {
                     drawWsgSimple(&self->gameData->assets[unit->assetIndex].frames[unit->currentAnimationFrame],
-                                  drawX - self->gameData->assets[unit->assetIndex].originX - unit->pos.y / 39375,
-                                  drawY - self->gameData->assets[unit->assetIndex].originY);
+                                  drawX - self->gameData->assets[unit->assetIndex].originX,
+                                  drawY - self->gameData->assets[unit->assetIndex].originY - unit->pos.y / 39375);
                 }
                 // draw mini chess unit
                 if (belongsToP1)
