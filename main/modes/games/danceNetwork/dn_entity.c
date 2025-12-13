@@ -4167,15 +4167,15 @@ void dn_calculatePercussion(dn_entity_t* self)
     if (p1PiecesCount == p2PiecesCount) // balanced
     {
         // full volume is 0x3FFF
-        globalMidiPlayerGet(MIDI_BGM)->channels[9].volume = 0x2FFD; // Balanced has percussion at 3/4 volume.
+        globalMidiPlayerGet(MIDI_SFX)->volume = 0x2FFD; // Balanced has percussion at 3/4 volume.
     }
     else if ((self->gameData->phase < DN_P2_DANCE_PHASE && p1PiecesCount > p2PiecesCount)
              || (self->gameData->phase >= DN_P2_DANCE_PHASE && p2PiecesCount > p1PiecesCount)) // winning
     {
-        globalMidiPlayerGet(MIDI_BGM)->channels[9].volume = 0x5FFD; // Winning has percussion at 1.5x full volume.
+        globalMidiPlayerGet(MIDI_SFX)->volume = 0x5FFD; // Winning has percussion at 1.5x full volume.
     }
     else // losing
     {
-        globalMidiPlayerGet(MIDI_BGM)->channels[9].volume = 0; // Losing has percussion muted.
+        globalMidiPlayerGet(MIDI_SFX)->volume = 0; // Losing has percussion muted.
     }
 }

@@ -92,9 +92,12 @@ typedef struct dn_gameData_t
     eyeDigit_t eyeDigits[10];
 
     cnfsFileIdx_t songs[6];
+    cnfsFileIdx_t percussionTracks[6];
     cnfsFileIdx_t currentSong;
+    cnfsFileIdx_t currentPercussionTrack;
     int8_t currentSongIdx;
     midiFile_t songMidi;
+    midiFile_t percussionMidi;
     uint8_t songLoopCount;
     int32_t headroom; // volume fade from 0x4000 to 0x0
     bool songFading;

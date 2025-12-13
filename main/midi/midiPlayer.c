@@ -741,7 +741,6 @@ int32_t midiStepVoice(midiChannel_t* channels, voiceStates_t* states, uint8_t vo
     nextSample /= UINT14_MAX;
 
     voice->voiceTick++;
-
     return nextSample;
 }
 

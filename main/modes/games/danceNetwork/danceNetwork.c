@@ -321,20 +321,33 @@ static void dn_EnterMode(void)
         }
     }
 
-    gameData->songs[0]       = AP_PAWNS_GAMBIT_MID;          // root of 1
-    gameData->songs[1]       = AP_TEN_STEPS_AHEAD_MID;       // root of 1
-    gameData->songs[2]       = AP_THE_WILL_TO_WIN_MID;       // root of 1
-    gameData->songs[3]       = AP_FINAL_PATH_MID;            // root of 5
-    gameData->songs[4]       = AP_RETURN_OF_THE_VALIANT_MID; // root of 4
-    gameData->songs[5]       = AP_NEXT_MOVE_MID;             // root of 2
-    gameData->headroom       = 0x4000;
-    gameData->currentSongIdx = 0;
-    gameData->currentSong    = gameData->songs[gameData->currentSongIdx];
+    gameData->songs[0] = AP_PAWNS_GAMBIT_BGM_MID;          // root of 1
+    gameData->songs[1] = AP_TEN_STEPS_AHEAD_BGM_MID;       // root of 1
+    gameData->songs[2] = AP_THE_WILL_TO_WIN_BGM_MID;       // root of 1
+    gameData->songs[3] = AP_FINAL_PATH_BGM_MID;            // root of 5
+    gameData->songs[4] = AP_RETURN_OF_THE_VALIANT_BGM_MID; // root of 4
+    gameData->songs[5] = AP_NEXT_MOVE_BGM_MID;             // root of 2
+
+    gameData->percussionTracks[0] = AP_PAWNS_GAMBIT_PERCUSSION_MID;
+    gameData->percussionTracks[1] = AP_TEN_STEPS_AHEAD_PERCUSSION_MID;
+    gameData->percussionTracks[2] = AP_THE_WILL_TO_WIN_PERCUSSION_MID;
+    gameData->percussionTracks[3] = AP_FINAL_PATH_PERCUSSION_MID;
+    gameData->percussionTracks[4] = AP_RETURN_OF_THE_VALIANT_PERCUSSION_MID;
+    gameData->percussionTracks[5] = AP_NEXT_MOVE_PERCUSSION_MID;
+
+    gameData->headroom               = 0x4000;
+    gameData->currentSongIdx         = 0;
+    gameData->currentSong            = gameData->songs[gameData->currentSongIdx];
+    gameData->currentPercussionTrack = gameData->percussionTracks[gameData->currentSongIdx];
     loadMidiFile(gameData->currentSong, &gameData->songMidi, true);
+    loadMidiFile(gameData->currentPercussionTrack, &gameData->percussionMidi, true);
     globalMidiPlayerPlaySongCb(&gameData->songMidi, MIDI_BGM, dn_songFinishedCb);
-    midiPlayer_t* player       = globalMidiPlayerGet(MIDI_BGM);
-    player->loop               = true;
-    player->channels[9].volume = 0x2FFD; // Balanced has percussion at 3/4 volume.
+    globalMidiPlayerPlaySong(&gameData->percussionMidi, MIDI_SFX);
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    player->loop         = true;
+    player               = globalMidiPlayerGet(MIDI_SFX);
+    player->loop         = true;
+    player->volume       = 0x2FFD; // Balanced has percussion at 3/4 volume.
 }
 
 void dn_setAssetMetaData(void)
@@ -495,9 +508,15 @@ static void dn_MainLoop(int64_t elapsedUs)
             midiPlayerResetNewSong(player);
 
             unloadMidiFile(&gameData->songMidi);
+            unloadMidiFile(&gameData->percussionMidi);
             loadMidiFile(gameData->currentSong, &gameData->songMidi, true);
+            loadMidiFile(gameData->currentPercussionTrack, &gameData->percussionMidi, true);
             globalMidiPlayerPlaySongCb(&gameData->songMidi, MIDI_BGM, dn_songFinishedCb);
+            globalMidiPlayerPlaySong(&gameData->percussionMidi, MIDI_SFX);
+
             player->headroom = gameData->headroom;
+            player->loop     = true;
+            player           = globalMidiPlayerGet(MIDI_SFX);
             player->loop     = true;
             if (gameData->entityManager.board)
             {
