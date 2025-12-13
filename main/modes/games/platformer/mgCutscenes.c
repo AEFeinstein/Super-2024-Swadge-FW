@@ -149,7 +149,7 @@ void stageStartCutscene(mgGameData_t* gameData)
 
     switch (gameData->level)
     {
-        case 1: // Intro Stage
+        case 11: // Intro Stage
         {
             addCutsceneLine(gameData->cutscene, SystemText,
                             "PULSE and SAWTOOTH teleport into Omega Harbor's convention center, which looks an awful "
@@ -160,18 +160,18 @@ void stageStartCutscene(mgGameData_t* gameData)
                             "through the walls.",
                             false, 0);
             addCutsceneLine(gameData->cutscene, Sawtooth, "We're too late... the MAGiX virus is already spreading.",
-                            true, 1);
+                            false, 1);
             addCutsceneLine(gameData->cutscene, Pulse, "This is nuts! What even is this place?", true, 1);
             addCutsceneLine(gameData->cutscene, Sawtooth,
                             "It used to be our home base... before it was corrupted. We got a ping near the Main "
                             "Stage. Let's move!",
-                            true, 0);
+                            false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "Wait, what am I supposed to do?", true, 0);
             addCutsceneLine(gameData->cutscene, Sawtooth, "Use your rhythm-feel it out! You'll learn fast. Just GO!",
-                            true, 3);
+                            false, 3);
             break;
         }
-        case 2: // The Bouncehaus
+        case 1: // The Bouncehaus (Kinetic Donut)
         {
             addCutsceneLine(gameData->cutscene, SystemText,
                             "KINETIC DONUT's mindspace looks like a garishly lit, neon food court. Everything bounces "
@@ -195,7 +195,7 @@ void stageStartCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "Great. I haven't even had lunch.", false, -1);
             break;
         }
-        case 3: // The Beat Colosseum
+        case 6: // The Beat Colosseum (Smash Gorilla)
         {
             addCutsceneLine(gameData->cutscene, SystemText,
                             "PULSE and SAWTOOTH teleport into SMASH GORILLA's mindscape, a glowing festival arena "
@@ -214,7 +214,7 @@ void stageStartCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "Aw...", false, 3);
             break;
         }
-        case 4: // The Foundry of Echoes
+        case 7: // The Foundry of Echoes (Deadeye Chirpzi)
         {
             addCutsceneLine(gameData->cutscene, SystemText,
                             "PULSE and SAWTOOTH teleport into DEADEYE CHIRPZI's mindscape...", false, 0);
@@ -240,7 +240,7 @@ void stageStartCutscene(mgGameData_t* gameData)
                             -1);
             break;
         }
-        case 5: // The Sunshine Speedway
+        case 2: // The Sunshine Speedway (Grind Pangolin)
         {
             addCutsceneLine(
                 gameData->cutscene, SystemText,
@@ -261,7 +261,7 @@ void stageStartCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "*shrug*", false, -1);
             break;
         }
-        case 6: // The Lost Ballroom
+        case 8: // The Lost Ballroom (Drain Bat)
         {
             addCutsceneLine(
                 gameData->cutscene, SystemText,
@@ -280,7 +280,7 @@ void stageStartCutscene(mgGameData_t* gameData)
                             -1);
             break;
         }
-        case 7: // The Twin Peaks
+        case 3: // The Twin Peaks (Sever Yataga)
         {
             addCutsceneLine(
                 gameData->cutscene, SystemText,
@@ -313,7 +313,7 @@ void stageStartCutscene(mgGameData_t* gameData)
                             false, -1);
             break;
         }
-        case 8: // Arena Hypernova
+        case 9: // Arena Hypernova (Flare Gryffyn and Jolt Lapin and Crash Turtle)
         {
             addCutsceneLine(gameData->cutscene, SystemText,
                             "PULSE teleports into Arena Hypernova, an open-air concert venue.", false, 0);
@@ -342,7 +342,7 @@ void stageStartCutscene(mgGameData_t* gameData)
                 -1);
             break;
         }
-        case 9: // The Recycled Pit in the Inferno Arena
+        case 4: // The Recycled Pit in the Inferno Arena (Trash Man fake our for Ember)
         {
             addCutsceneLine(gameData->cutscene, SystemText,
                             "PULSE and SAWTOOTH teleport in. The air ripples with heatwaves and flies buzz.", false, 0);
@@ -360,7 +360,7 @@ void stageStartCutscene(mgGameData_t* gameData)
                             false, -1);
             break;
         }
-        case 10: // The Overture Terminal
+        case 5: // The Overture Terminal
         {
             addCutsceneLine(gameData->cutscene, SystemText,
                             "SAWTOOTH and PULSE teleport onto a shattered platform in front of an enormous LED screen.",
@@ -399,7 +399,7 @@ void stageStartCutscene(mgGameData_t* gameData)
 
             break;
         }
-        case 11: // Bigma Stage 2
+        case 10: // Bigma Stage 2
         {
             addCutsceneLine(gameData->cutscene, SystemText,
                             "PULSE and SAWTOOTH teleport into a darkened void of a room.", false, 0);
@@ -469,7 +469,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
     gameData->changeState = MG_ST_CUTSCENE;
     switch (gameData->level)
     {
-        case 1: // Intro Stage
+        case 11: // Intro Stage
         {
             addCutsceneLine(gameData->cutscene, Sawtooth, "Show yourself!", false, 1);
             addCutsceneLine(gameData->cutscene, Bigma, "Still barking orders, I see. Some things never change.", false,
@@ -489,7 +489,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Bigma, "No. I finally found my groove.", false, 0);
             break;
         }
-        case 2: // The Bouncehaus
+        case 1: // The Bouncehaus (Kinetic Donut)
         {
             addCutsceneLine(gameData->cutscene, Pulse, "You there! Step away from the deep fryer!!", false, -1);
             addCutsceneLine(gameData->cutscene, KineticDonut,
@@ -503,7 +503,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
                             "Welcome to the nosh pit, baby! Hope you brought antacids!", false, -1);
             break;
         }
-        case 3: // The Beat Colosseum
+        case 6: // The Beat Colosseum (Smash Gorilla)
         {
             addCutsceneLine(gameData->cutscene, Pulse, "You there! Cut the music - this whole place is out of control!",
                             false, 4);
@@ -518,7 +518,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "Oh it's ON!", false, 4);
             break;
         }
-        case 4: // The Foundry of Echoes
+        case 7: // The Foundry of Echoes (Deadeye Chirpzi)
         {
             addCutsceneLine(gameData->cutscene, Pulse, "Hello...?", false, -1);
             addCutsceneLine(gameData->cutscene, SystemText,
@@ -534,7 +534,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
                             false, -1);
             break;
         }
-        case 5: // The Sunshine Speedway
+        case 2: // The Sunshine Speedway (Grind Pangolin)
         {
             addCutsceneLine(gameData->cutscene, Pulse, "Hold it, rude boy! This ride's over!", false, -1);
             addCutsceneLine(gameData->cutscene, GrindPangolin,
@@ -547,7 +547,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
                             false, -1);
             break;
         }
-        case 6: // The Lost Ballroom
+        case 8: // The Lost Ballroom (Drain Bat)
         {
             addCutsceneLine(gameData->cutscene, DrainBat, "B'ohoho!!", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Battrice? You don't belong in this world!", false, -1);
@@ -563,7 +563,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "Gesundheit!", false, -1);
             break;
         }
-        case 7: // The Twin Peaks
+        case 3: // The Twin Peaks (Sever Yataga)
         {
             addCutsceneLine(gameData->cutscene, SeverYagata, "LEAVE. US. ALONE.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse,
@@ -579,7 +579,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
                             false, -1);
             break;
         }
-        case 8: // Arena Hypernova
+        case 9: // Arena Hypernova (Flare Gryffyn and Jolt Lapin and Crash Turtle)
         {
             addCutsceneLine(gameData->cutscene, Sawtooth, "PULSE! I told you to back off!", true, -1);
             addCutsceneLine(gameData->cutscene, Pulse,
@@ -610,7 +610,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "You better not have hurt her!", false, -1);
             break;
         }
-        case 9: // The Recycled Pit in the Inferno Arena
+        case 4: // The Recycled Pit in the Inferno Arena (Trash Man fake our for Ember)
         {
             addCutsceneLine(gameData->cutscene, Pulse, "RIP BARONESS! Are you okay? Why are you in a cage?!", false,
                             -1);
@@ -642,12 +642,12 @@ void bossIntroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Ember, "Aaaaand there it is.", false, -1);
             break;
         }
-        case 10: // The Overture Terminal
+        case 5: // The Overture Terminal
         {
             addCutsceneLine(gameData->cutscene, Pulse, "No boss fight here.", false, -1);
             break;
         }
-        case 11: // Bigma Stage 2
+        case 10: // Bigma Stage 2
         {
             addCutsceneLine(gameData->cutscene, Bigma, "So. You've finally made it.", false, -1);
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "It's been a long time.", false, -1);
@@ -693,7 +693,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
     gameData->changeState = MG_ST_CUTSCENE;
     switch (gameData->level)
     {
-        case 1: // Intro Stage
+        case 11: // Intro Stage
         {
             addCutsceneLine(gameData->cutscene, Pulse, "Huff... huff... You're fast, but I'm faster. It's over!", false,
                             1);
@@ -718,7 +718,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
                             true, 2);
             break;
         }
-        case 2: // The Bouncehaus
+        case 1: // The Bouncehaus (Kinetic Donut)
         {
             addCutsceneLine(gameData->cutscene, KineticDonut,
                             "Hnggh... my head's spinning... Did... Did I stage-dive into the fryer?", false, -1);
@@ -744,7 +744,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
                             false, -1);
             break;
         }
-        case 3: // The Beat Colosseum
+        case 6: // The Beat Colosseum (Smash Gorilla)
         {
             addCutsceneLine(gameData->cutscene, SmashGorilla, "Oof... rhythm's all outta sync.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Who's tonto now?", false, 1);
@@ -772,7 +772,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, SmashGorilla, "NOW you're getting it.", false, -1);
             break;
         }
-        case 4: // The Foundry of Echoes
+        case 7: // The Foundry of Echoes (Deadeye Chirpzi)
         {
             addCutsceneLine(gameData->cutscene, DeadeyeChirpzi,
                             "Urgghh... My head....I haven't blacked out like that since the afterparty in 2016...",
@@ -802,7 +802,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "I love it already.", false, -1);
             break;
         }
-        case 5: // The Sunshine Speedway
+        case 2: // The Sunshine Speedway (Grind Pangolin)
         {
             addCutsceneLine(gameData->cutscene, GrindPangolin,
                             "Owwww. Where even is this?  Why do I look like a rejected street team flyer?", false, -1);
@@ -828,7 +828,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "You got it. Enjoy your rest!", false, 1);
             break;
         }
-        case 6: // The Lost Ballroom
+        case 8: // The Lost Ballroom (Drain Bat)
         {
             addCutsceneLine(gameData->cutscene, DrainBat,
                             "Ughhh..my head. What happened? Did the rave go fully gothic... or did I?", false, -1);
@@ -848,7 +848,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
                             -1);
             break;
         }
-        case 7: // The Twin Peaks
+        case 3: // The Twin Peaks (Sever Yataga)
         {
             addCutsceneLine(gameData->cutscene, Percy, "Ngh... what happened? Did we... fuse?", false, -1);
             addCutsceneLine(gameData->cutscene, Jasper,
@@ -882,7 +882,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "Noted. See ya!", false, -1);
             break;
         }
-        case 8: // Arena Hypernova
+        case 9: // Arena Hypernova (Flare Gryffyn and Jolt Lapin and Crash Turtle)
         {
             addCutsceneLine(gameData->cutscene, FlareGryffyn,
                             "Not bad, not bad. But I've still got one last trick-HYAHHH!", false, -1);
@@ -933,7 +933,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
                             "Once we put a stop to BIGMA, I'm sure he'll forgive you.", true, -1);
             break;
         }
-        case 9: // The Recycled Pit in the Inferno Arena
+        case 4: // The Recycled Pit in the Inferno Arena (Trash Man fake our for Ember)
         {
             addCutsceneLine(gameData->cutscene, TrashMan,
                             "NOOO! MY ART!! YOU PHILISTINES! YOU'VE SEEN NEITHER THE LAST-", false, -1);
@@ -956,12 +956,12 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Ember, "You're welcome. I guess.", false, -1);
             break;
         }
-        case 10: // The Overture Terminal
+        case 5: // The Overture Terminal
         {
             addCutsceneLine(gameData->cutscene, Pulse, "There was no boss fight.", false, -1);
             break;
         }
-        case 11: // Bigma Stage 2
+        case 10: // Bigma Stage 2
         {
             addCutsceneLine(gameData->cutscene, Bigma, "Nngh... urrgh...", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "BIGMA... I'm sorry.", false, -1);

@@ -171,7 +171,7 @@ const trophyData_t platformerTrophies[] = {
     {
         .title       = "Defeated Kinetic Donut",
         .description = "Favorite genre: Funk",
-        .image       = NO_IMAGE_SET,
+        .image       = TROPHY_KINETIC_DONUT_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1,
@@ -187,7 +187,7 @@ const trophyData_t platformerTrophies[] = {
     {
         .title       = "Defeated Deadeye Chirpzi",
         .description = "Favorite genre: Metal",
-        .image       = NO_IMAGE_SET,
+        .image       = TROPHY_DEADEYE_CHIRPZI_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1,
@@ -203,7 +203,7 @@ const trophyData_t platformerTrophies[] = {
     {
         .title       = "Defeated Drain Bat",
         .description = "Favorite genre: Classical",
-        .image       = NO_IMAGE_SET,
+        .image       = TROPHY_DRAIN_BAT_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1,
@@ -461,7 +461,7 @@ void platformerEnterMode(void)
         // SawtoothPostReveal
         addCutsceneStyle(platformer->gameData.cutscene, c541, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth",
                          4, true, true, true);
-        setMidiParams(platformer->gameData.cutscene, 23, 81, 2, 100, true);
+        setMidiParams(platformer->gameData.cutscene, 23, 81, 1, 100, true);
         // BlackScreen
         addCutsceneStyle(platformer->gameData.cutscene, c555, BLACK_PORTRAIT_WSG, TEXTBOX_SAWTOOTH_WSG, "", 1, false,
                          true, false);
