@@ -39,7 +39,7 @@ typedef enum __attribute__((packed))
     DN_PIT_ASSET,
     DN_MINI_TILE_ASSET,
     DN_REROLL_ASSET,
-    DN_NUMBER_ASSET,
+    // DN_NUMBER_ASSET,
     DN_ALBUM_EXPLOSION_ASSET,
     DN_MMM_UP_ASSET,
     DN_SWAP_ASSET,
@@ -151,6 +151,13 @@ typedef enum __attribute__((packed))
     DN_UNIT_SELECTION,
 } dn_track_t;
 
+typedef enum __attribute__((packed))
+{
+    DN_UNIT_STILL,
+    DN_UNIT_SELECTED,
+    DN_UNIT_TELEPORT,
+} dn_animation_t;
+
 typedef struct __attribute__((packed))
 {
     dn_boardPos_t pos;
@@ -163,3 +170,8 @@ typedef struct __attribute__((packed))
     char title[31];
     char body[170];
 } dn_tutorialPage_t;
+
+typedef struct
+{
+    uint8_t pixels[12 * 6];
+} eyeDigit_t;
