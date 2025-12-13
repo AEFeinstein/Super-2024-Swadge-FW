@@ -102,6 +102,7 @@ typedef enum
     MG_BGM_LEVEL_CLEAR_JINGLE,
     MG_BGM_POST_FIGHT,
     MG_BGM_PRE_FIGHT,
+    MG_INTRO_STAGE,
     MG_BGM_STAGE_SELECT,
     MG_BGM_NAME_ENTRY
 } mg_bgmEnum_t;

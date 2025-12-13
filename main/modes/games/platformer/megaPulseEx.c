@@ -515,7 +515,24 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
             }*/
 
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
-            changeStateLevelSelect(platformer);
+
+            //if the 11th level (intro level) isn't cleared
+            if (!(platformer->unlockables.levelsCleared & (1 << 11)))
+            {
+                platformer->gameData.level = 11;
+                mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
+                mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename);
+
+                changeStateGame(platformer);
+                // every level starts with a cutscene
+                soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+                stageStartCutscene(&platformer->gameData);
+                changeStateCutscene(platformer);
+            }
+            else
+            {
+                changeStateLevelSelect(platformer);
+            }
         }
         else if (label == mgMenuContinue)
         {
@@ -530,8 +547,26 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
 
             changeStateReadyScreen(pango);
             deinitMenu(pango->menu);*/
+            
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
-            changeStateLevelSelect(platformer);
+
+            //if the 11th level (intro level) isn't cleared
+            if (!(platformer->unlockables.levelsCleared & (1 << 11)))
+            {
+                platformer->gameData.level = 11;
+                mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
+                mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename);
+
+                changeStateGame(platformer);
+                // every level starts with a cutscene
+                soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+                stageStartCutscene(&platformer->gameData);
+                changeStateCutscene(platformer);
+            }
+            else
+            {
+                changeStateLevelSelect(platformer);
+            }
         }
         else if (label == mgMenuHighScores)
         {
