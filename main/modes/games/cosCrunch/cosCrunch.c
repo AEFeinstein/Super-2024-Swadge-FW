@@ -38,6 +38,10 @@ static const char* cosCrunchHowToPlayText[]
        "See how many crafts you can complete before MAGFest arrives. Your score depends on it! You'll never really be "
        "done, but maybe you can get close enough."};
 
+const cosCrunchMicrogame_t* const microgames[] = {
+    &ccmgBeStrong, &ccmgBreakTime, &ccmgCatch, &ccmgDelivery, &ccmgSew, &ccmgSlice, &ccmgSpray, &ccmgThread,
+};
+
 #define CC_NVS_NAMESPACE      "cc"
 #define NVS_KEY_TUTORIAL_SEEN "tutorialSeen"
 
@@ -127,6 +131,15 @@ typedef struct
         uint64_t stateElapsedUs;
     } activeMicrogame;
 
+    struct
+    {
+        const cosCrunchMicrogame_t* game;
+        bool successful;
+    } previousMicrogame;
+
+    /// Record of microgames completed in the current game. Used for trophy purposes.
+    bool successfulMicrogames[ARRAY_SIZE(microgames)];
+
     /// Used to tint grayscale images (c111, c222, c333, c444). See PALETTE_* defines
     wsgPalette_t tintPalette;
 
@@ -180,6 +193,96 @@ static void cosCrunchAddToSwadgePassPacket(swadgePassPacket_t* packet);
 static int32_t cosCrunchGetSwadgePassHighScore(const swadgePassPacket_t* packet);
 static void cosCrunchSetSwadgePassHighScore(swadgePassPacket_t* packet, int32_t highScore);
 
+/// This enum's order must match the trophy data order
+typedef enum
+{
+    STORES_CLOSED = 0,
+    SCORE_10,
+    SCORE_25,
+    SCORE_50,
+    UNBOTHERED,
+    COMPLETE_EVERY_MICROGAME,
+    COMPLETE_MULTIPLAYER_GAME,
+    BEAT_SP_SCORE,
+} ccTrophyIdx;
+const trophyData_t ccTrophies[] = {
+    {
+        .title       = "Store's Closed",
+        .description = "Miss out on a clearance bargain",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "10-Foot Rule",
+        .description = "Score 10 or more in single player mode",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 10,
+    },
+    {
+        .title       = "Finished Seams",
+        .description = "Score 25 or more in single player mode",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 25,
+    },
+    {
+        .title       = "A Costume For Every Day",
+        .description = "Score 50 or more in single player mode",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 50,
+    },
+    {
+        .title       = "Unbothered. Moisturized. In My Lane.",
+        .description = "Beat \"Break Time\" and \"Be Strong\" back-to-back",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Mixed Media",
+        .description = "Complete every microgame in one session",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Group Cosplay",
+        .description = "Play a multiplayer game",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Hallway Photo",
+        .description = "Beat a SwadgePass score",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+};
+const trophySettings_t ccTrophySettings = {
+    .drawFromBottom   = true,
+    .staticDurationUs = DRAW_STATIC_US * 2,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = "ccTrophies",
+};
+const trophyDataList_t ccTrophyData = {
+    .settings = &ccTrophySettings,
+    .list     = ccTrophies,
+    .length   = ARRAY_SIZE(ccTrophies),
+};
+
 swadgeMode_t cosCrunchMode = {
     .modeName                 = cosCrunchName,
     .wifiMode                 = NO_WIFI,
@@ -197,15 +300,12 @@ swadgeMode_t cosCrunchMode = {
     .fnAdvancedUSB            = NULL,
     .fnDacCb                  = NULL,
     .fnAddToSwadgePassPacket  = cosCrunchAddToSwadgePassPacket,
+    .trophyData               = &ccTrophyData,
 };
 
 /// Uncomment this to play the specified game repeatedly instead of randomizing.
 /// Also enables the FPS counter.
 // #define DEV_MODE_MICROGAME &ccmgWhatever
-
-const cosCrunchMicrogame_t* const microgames[] = {
-    &ccmgBeStrong, &ccmgBreakTime, &ccmgCatch, &ccmgDelivery, &ccmgSew, &ccmgSlice, &ccmgSpray, &ccmgThread,
-};
 
 tintColor_t const blueTimerTintColor   = {c013, c125, c235, 0};
 tintColor_t const yellowTimerTintColor = {c430, c540, c554, 0};
@@ -356,6 +456,14 @@ static bool cosCrunchMenu(const char* label, bool selected, uint32_t value)
             // Reset the background splatter for the next game
             cosCrunchResetBackground();
 
+            // Reset per-game trophy tracking
+            cc->previousMicrogame.game       = NULL;
+            cc->previousMicrogame.successful = false;
+            for (int i = 0; i < ARRAY_SIZE(microgames); i++)
+            {
+                cc->successfulMicrogames[i] = false;
+            }
+
             globalMidiPlayerPlaySong(&cc->gameBgm, MIDI_BGM);
 
             // Loading images will disable the default blink animation
@@ -497,7 +605,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
             do
             {
                 newMicrogame = microgames[esp_random() % ARRAY_SIZE(microgames)];
-            } while (cc->activeMicrogame.game != NULL && cc->activeMicrogame.game == newMicrogame);
+            } while (cc->previousMicrogame.game != NULL && cc->previousMicrogame.game == newMicrogame);
             cc->activeMicrogame.game = newMicrogame;
 #endif
             cc->activeMicrogame.game->fnInitMicrogame();
@@ -640,13 +748,33 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
 
             if (cc->playerCount == 1)
             {
+                int32_t lowestSwadgePassScore = INT32_MAX;
+                for (int i = 0; i < HIGH_SCORE_COUNT; i++)
+                {
+                    int32_t score = cc->highScores.highScores[i].score;
+                    if (cc->highScores.highScores[i].swadgesona.packedName != 0 && score > 0)
+                    {
+                        lowestSwadgePassScore = MIN(lowestSwadgePassScore, score);
+                    }
+                }
+
                 cc->personalBestAchieved = cc->players[0].score > cc->highScores.userHighScore;
                 score_t scores[]         = {{.score = cc->players[0].score, .spKey = {0}, .swadgesona = {0}}};
                 updateHighScores(&cc->highScores, CC_NVS_NAMESPACE, scores, ARRAY_SIZE(scores));
+
+                trophyUpdateMilestone(&ccTrophies[SCORE_10], cc->players[0].score, 50);
+                trophyUpdateMilestone(&ccTrophies[SCORE_25], cc->players[0].score, 20);
+                trophyUpdateMilestone(&ccTrophies[SCORE_50], cc->players[0].score, 20);
+
+                if (cc->players[0].score > lowestSwadgePassScore)
+                {
+                    trophyUpdate(&ccTrophies[BEAT_SP_SCORE], 1, true);
+                }
             }
             else
             {
                 cc->personalBestAchieved = false;
+                trophyUpdate(&ccTrophies[COMPLETE_MULTIPLAYER_GAME], 1, true);
             }
 
             cosCrunchClearLeds();
@@ -982,5 +1110,38 @@ void cosCrunchMicrogameResult(bool successful)
             ch32v003SelectBitmap(EYES_SLOT_SAD);
         }
         cc->activeMicrogame.stateElapsedUs = 0;
+
+        if (!successful && cc->activeMicrogame.game == &ccmgCatch)
+        {
+            trophyUpdate(&ccTrophies[STORES_CLOSED], 1, true);
+        }
+
+        if (successful && cc->previousMicrogame.successful
+            && ((cc->activeMicrogame.game == &ccmgBeStrong && cc->previousMicrogame.game == &ccmgBreakTime)
+                || (cc->activeMicrogame.game == &ccmgBreakTime && cc->previousMicrogame.game == &ccmgBeStrong)))
+        {
+            trophyUpdate(&ccTrophies[UNBOTHERED], 1, true);
+        }
+
+        if (successful)
+        {
+            bool allSuccessful = true;
+            for (int i = 0; i < ARRAY_SIZE(microgames); i++)
+            {
+                if (microgames[i] == cc->activeMicrogame.game)
+                {
+                    cc->successfulMicrogames[i] = true;
+                }
+                allSuccessful &= cc->successfulMicrogames[i];
+            }
+
+            if (allSuccessful)
+            {
+                trophyUpdate(&ccTrophies[COMPLETE_EVERY_MICROGAME], 1, true);
+            }
+        }
+
+        cc->previousMicrogame.game       = cc->activeMicrogame.game;
+        cc->previousMicrogame.successful = successful;
     }
 }

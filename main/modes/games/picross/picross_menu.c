@@ -481,14 +481,81 @@ struct
     },
 };
 
-const trophyData_t trophyPicrossModeTrophies[] = {{
-    .title       = "I missed my flight home",
-    .description = "solved all picross puzzles",
-    .image       = NO_IMAGE_SET,
-    .type        = TROPHY_TYPE_TRIGGER,
-    .difficulty  = TROPHY_DIFF_EXTREME,
-    .maxVal      = 1, // For trigger type, set to one
-}};
+const trophyData_t trophyPicrossModeTrophies[] = {
+    {
+        .title       = "I missed my flight home",
+        .description = "Solved all picross puzzles",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Understood the puzzle mechanics",
+        .description = "Solved all 5x5 Puzzles",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "A slim margin",
+        .description = "Solved all 15x6 Puzzles",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "1.875 : 1",
+        .description = "Solved all 15x8 Puzzles",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "1 hectoblocks",
+        .description = "Solved all 10x10 Puzzles",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "This is getting ridiculous",
+        .description = "Solved all 15x10 Puzzles",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+
+    {
+        .title       = "Puzzles for ants",
+        .description = "Solved all 15x12 Puzzles",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Slightly assymetrical",
+        .description = "Solved all 15x14 Puzzles",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Impromptu eye exam",
+        .description = "Solved all 15x15 Puzzles",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+};
 
 const trophySettings_t trophyPicrossModeTrophySettings = {
     .drawFromBottom   = false,

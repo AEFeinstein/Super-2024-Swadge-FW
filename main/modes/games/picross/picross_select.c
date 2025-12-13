@@ -28,6 +28,8 @@ void drawLevelActionScreen(font_t* font);
 void drawLevelInfo(font_t* font);
 void drawPicrossLevelWSG(wsg_t* wsg, int16_t xOff, int16_t yOff, bool highlight);
 void drawPicrossPreviewWindow(wsg_t* wsg);
+
+void checkForTrophyRange(picrossLevelDef_t levels[], int start, int end, int trophyIdx);
 //====
 // Functions
 //====
@@ -63,6 +65,16 @@ void picrossStartLevelSelect(font_t* bigFont, picrossLevelDef_t levels[])
 
         ls->levels[i] = levels[i];
     }
+
+    // Trophies
+    checkForTrophyRange(levels, 0, 9, 1);   // 10 5x5
+    checkForTrophyRange(levels, 10, 14, 2); // 5 15x6
+    checkForTrophyRange(levels, 15, 19, 3); // 5 15x8
+    checkForTrophyRange(levels, 20, 29, 4); // 10 10x10
+    checkForTrophyRange(levels, 30, 34, 5); // 5 15x10
+    checkForTrophyRange(levels, 35, 38, 6); // 4 15x12
+    checkForTrophyRange(levels, 39, 45, 7); // 7 15x14
+    checkForTrophyRange(levels, 46, 55, 8); // 10 15x15
 
     if (ls->allLevelsComplete)
     {
@@ -599,5 +611,21 @@ void drawPicrossPreviewWindow(wsg_t* wsg)
             };
             drawBox(box, wsg->px[(j * wsg->w) + i], true, 0);
         }
+    }
+}
+
+void checkForTrophyRange(picrossLevelDef_t levels[], int start, int end, int trophyIdx)
+{
+    bool trigger = true;
+    for (int idx = start; idx < end + 1; idx++)
+    {
+        if (!levels[idx].completed)
+        {
+            trigger = false;
+        }
+    }
+    if (trigger)
+    {
+        trophyUpdate(&trophyPicrossModeTrophies[trophyIdx], 1, true);
     }
 }
