@@ -504,8 +504,10 @@ static void dn_MainLoop(int64_t elapsedUs)
                 gameData->currentSongIdx = 0;
             }
             gameData->currentSong = gameData->songs[gameData->currentSongIdx];
-            midiPlayer_t* player  = globalMidiPlayerGet(MIDI_BGM);
-            midiPlayerResetNewSong(player);
+            midiPlayer_t* BGM_player  = globalMidiPlayerGet(MIDI_BGM);
+            midiPlayerResetNewSong(BGM_player);
+            midiPlayer_t* SFX_player = globalMidiPlayerGet(MIDI_SFX);
+            midiPlayerResetNewSong(SFX_player);
 
             unloadMidiFile(&gameData->songMidi);
             unloadMidiFile(&gameData->percussionMidi);
@@ -514,10 +516,10 @@ static void dn_MainLoop(int64_t elapsedUs)
             globalMidiPlayerPlaySongCb(&gameData->songMidi, MIDI_BGM, dn_songFinishedCb);
             globalMidiPlayerPlaySong(&gameData->percussionMidi, MIDI_SFX);
 
-            player->headroom = gameData->headroom;
-            player->loop     = true;
-            player           = globalMidiPlayerGet(MIDI_SFX);
-            player->loop     = true;
+            BGM_player->headroom = gameData->headroom;
+            SFX_player->headroom = gameData->headroom;
+            BGM_player->loop     = true;
+            SFX_player->loop     = true;
             if (gameData->entityManager.board)
             {
                 dn_calculatePercussion(gameData->entityManager.board);
