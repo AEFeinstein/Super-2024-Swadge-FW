@@ -25,13 +25,12 @@
 #define SONALOC_X 24
 #define SONALOC_Y 36
 
-// Coordinates
-/* static const int textboxcoords_x[]  = {99, 24};             // x coords for the two textboxes
-static const int textbox1coords_y[] = {39, 51, 63, 75};     // y coords for the first textbox lines
-static const int textbox2coords_y[] = {124, 136, 148, 160}; // y coords for the second textbox lines
-static const int buttoncoord_x[]    = {99, 24};             // x coord for the button columns
-static const int x_coords[]         = {5, 74, 143, 212};
-static const int y_coords[]         = {120, 80}; */
+#define ATRIUM_PROFILE_NVS_NAMESPACE "atrium"
+#define SPSONA_NVS_KEY               "spSona"
+#define TROPHY_NVS_NAMESPACE         "trophy"
+#define TROPHY_POINTS_NVS_KEY        "points"
+
+
 
 //---------------------------------------------------------------------------------//
 // CONSTS
@@ -42,7 +41,7 @@ static const cnfsFileIdx_t sonaBodies[] = {DANCEBODY_1_WSG}; // Sona bodies
 static const cnfsFileIdx_t uiImages[]   = {
     ARROWBUTTON_1_WSG, ARROWBUTTON_2_WSG, ABUTTON_1_WSG, ABUTTON_2_WSG, BBUTTON_1_WSG,   BBUTTON_2_WSG,
     ATRIUMLOGO_WSG,    KEEPON_WSG,        LOADING_1_WSG, LOADING_2_WSG, LOADING_3_WSG,   LOADING_4_WSG,
-    LOADING_5_WSG,     LOADING_6_WSG,     LOADING_7_WSG, LOADING_8_WSG, GOLD_TROPHY_WSG,
+    LOADING_5_WSG,     LOADING_6_WSG,     LOADING_7_WSG, LOADING_8_WSG, GOLD_TROPHY_WSG, ARROW_WSG
 };
 static const cnfsFileIdx_t bgImages[] = {
     GAZEBO_WSG, ATRIUMPLANT_1_WSG, ARCADE_1_WSG, ARCADE_2_WSG, ARCADE_3_WSG, ARCADE_4_WSG, CONCERT_1_WSG, CONCERT_2_WSG,
@@ -93,6 +92,13 @@ static const char* const fact1[]
 static const char* const fact2[]
     = {"Arena", "Arcade", "Gazebo", "Soapbox", "Marketplace", "Panels", "Main Stage", "Tabletop"};
 static const char* const preambles[] = {"Fave Sandwich: ", "I am a: ", "Find me at: "};
+
+// // Coordinates
+// static const int textboxcoords_x[]  = {99, 24};             // x coords for the two textboxes
+// static const int textbox1coords_y[] = {39, 51, 63, 75};     // y coords for the first textbox lines
+// static const int textbox2coords_y[] = {124, 136, 148, 160}; // y coords for the second textbox lines
+// static const int buttoncoord_x[]    = {99, 24};             // x coord for the button columns
+
 
 // static const char* const buttontext[] = {"CANCEL", "SAVE"};
 // static const char* const prompttext[] = {"Choose Card", "Edit Sona", "Pick Sandwich", "Choose Identity", "Choose
@@ -157,8 +163,8 @@ typedef enum
 
 typedef struct __attribute__((packed))
 {
-    int cardSelect;     // Active card
-    int fact0;          
+    int cardSelect; // Active card
+    int fact0;
     int fact1;
     int fact2;
     bool local;         // If Local user
@@ -185,6 +191,7 @@ typedef struct
     midiFile_t* sfx;
 
     // Profile data
+    profilePacket_t packedProfile;
     userProfile_t loadedProfile; // Loaded profile for drawing
 
     // Main
@@ -213,7 +220,12 @@ typedef struct
 
     // Profile viewer/editor
     int selection;
+    int xloc;
+    int yloc;
 
+    // trophy data
+    trophyData_t* latestTrophy;
+    int points;
     /* int selector; // which item is selected in the editor
     bool confirm;
     int x; // x position in editor select
@@ -247,7 +259,8 @@ static void drawGazeboForeground(uint64_t elapsedUs);
 static void drawArrows(bool, bool, bool, bool);
 static void drawCard(userProfile_t profile);
 
-void loadProfileFromNVS(userProfile_t* profile);
+profilePacket_t loadProfileFromNVS();
+trophyData_t* getTrophy();
 
 // Swadgepass
 static void atriumAddSP(struct swadgePassPacket* packet);
@@ -384,6 +397,19 @@ static void atriumEnterMode()
     midiGmOn(atr->player);
     globalMidiPlayerPlaySong(&atr->bgm[1], MIDI_BGM);
     globalMidiPlayerSetVolume(MIDI_BGM, 13);
+
+    // profile created yet?
+    if (!readNvs32("numPasses", &atr->loadedProfile.numPasses))
+    {
+        atr->state = ATR_EDIT_PROFILE; // go to profile edit if no profile yet
+    }
+    else
+    {
+        atr->state = ATR_TITLE; // else go to title screen
+    }
+
+ 
+    
 }
 
 static void atriumExitMode()
@@ -447,8 +473,7 @@ static void atriumMainLoop(int64_t elapsedUs)
                     }
                     else if ((evt.button & PB_B))
                     {
-                        atr->state = ATR_PROFILE; // if B is pressed, go to profile view
-
+                        atr->state = ATR_EDIT_PROFILE; // if B is pressed, go to profile view
                     }
                 }
             }
@@ -461,20 +486,21 @@ static void atriumMainLoop(int64_t elapsedUs)
         case ATR_DISPLAY:
         {
             drawLobbies(&evt, elapsedUs);
-            
+
             break;
         }
         case ATR_PROFILE:
         {
-            viewProfile(&evt); 
-         
+            viewProfile(&evt);
 
             break;
         }
         case ATR_EDIT_PROFILE:
         {
             // TODO: Load Profile before editing (should be handled before this point)
-            // editProfile(&evt);
+
+            editProfile(&evt);
+
             // Draw the panel as it is
 
             // Draw the selection boxes
@@ -498,31 +524,66 @@ void atriumAddSP(struct swadgePassPacket* packet)
 // States
 static void editProfile(buttonEvt_t* evt)
 {
-    while (checkButtonQueueWrapper(evt))
+    if (atr->loadedProfs == false)
     {
+        atr->latestTrophy  = getTrophy(); // get latest trophy
+        atr->packedProfile = loadProfileFromNVS();
+        atr->loadedProfs   = true;
+        printf("Loaded profile with %d card\n", atr->loadedProfile.cardSelect); 
     }
+    
+    drawCard(atr->loadedProfile);
+    while(checkButtonQueueWrapper(evt))
+    {
+        if (evt->down)
+        {
+            if (evt->button & PB_B)
+            {
+                atr->state = ATR_TITLE;
+            }
+            if(evt->button & PB_A)
+            {
+                drawWsgSimpleHalf(&atr->uiElements[17], 63, 46); // draw confirm box
+            }
+            if(evt->button & PB_UP)
+            {
+                atr->yloc--;
+                if(atr->yloc < 0)
+                {
+                    atr->yloc = 0;
+                }
+            }
+            if(evt->button & PB_DOWN)
+            {
+                atr->yloc++;
+                if(atr->yloc > 3)
+                {
+                    atr->yloc = 3;
+                }
+
+            }
+            if(evt->button & PB_LEFT)
+            {
+                atr->xloc--;
+                if(atr->xloc < 0)
+                {
+                    atr->xloc = 0;
+                }
+            }
+            if(evt->button & PB_RIGHT)
+            {
+                atr->xloc++;
+                if(atr->xloc > 1)
+                {
+                    atr->xloc = 1;
+                }
+            }
+    }
+}
 }
 
 static void viewProfile(buttonEvt_t* evt)
 {
-    loadProfiles(&atr->spList, &atr->loadedProfilesList, 1, false);
-        printf("Loaded profiles from nvs to loadedProfilesList\n");
-        node_t* currentNode = atr->loadedProfilesList.first;
-        printf("length of loadedProfilesList: %d\n", atr->loadedProfilesList.length);
-    for (int i = 0; i <= atr->loadedProfilesList.length && currentNode != NULL; i++)
-    {
-        atr->loadedProfile = *(userProfile_t*)currentNode->val;
-
-          
-        printf("Card Select: %d\n", atr->loadedProfile.cardSelect);
-        printf("Fact0: %d\n", atr->loadedProfile.fact0);
-        printf("Fact1: %d\n", atr->loadedProfile.fact1); 
-        printf("Fact2: %d\n", atr->loadedProfile.fact2); 
-        printf("Num Passes: %d\n", atr->loadedProfile.numPasses); 
-        drawCard(atr->loadedProfile);
-        atr->loadedProfs = true;
-        currentNode = currentNode->next;
-    }
 }
 
 // Draw
@@ -768,7 +829,6 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
     // TODO: move down spList and get number of pages, index accordingly
     for (int i = 0; i < page * 4; i++)
     {
-        
     }
 
     if (atr->loadedProfs == 0)
@@ -823,77 +883,36 @@ static void drawCard(userProfile_t profile)
     // line 3: fact2
     char factline2[64];
     snprintf(factline2, sizeof(factline2) - 1, "%s%s", preambles[2], fact2[profile.fact2]);
-    // draw the card info
-    printf("factline0: %s\n", factline0);
-    printf("factline1: %s\n", factline1);
-    printf("factline2: %s\n", factline2);
 
     drawWsgSimple(&atr->backgroundImages[0], 0, 0);
-    drawWsgSimple(&atr->cards[atr->loadedProfile.cardSelect], 0, 0 + 12); // draw the card
-    
-    drawWsgSimple(&atr->loadedProfile.swsn->image, SONALOC_X, SONALOC_Y); // draw the sona head
+    drawWsgSimple(&atr->cards[profile.cardSelect], 0, 0 + 12); // draw the card
+
+    nameData_t username = *getSystemUsername();
+
+    // loadSPSona(&profile.swsn->core);
+    // drawWsgSimple(&profile.swsn->image, SONALOC_X, SONALOC_Y); // draw the swadgesona image
 
     // TODO Ensure this is generated
-    drawText(&atr->fonts[0], c000, atr->loadedProfile.swsn->name.nameBuffer, 74 + CARDTEXTPAD,
+    drawText(&atr->fonts[0], c000, username.nameBuffer, 99 + CARDTEXTPAD,
              SONALOC_Y + CARDTEXTPAD); // draw the name
-    drawText(&atr->fonts[0], c000, factline0, 74 + CARDTEXTPAD,
+    drawText(&atr->fonts[0], c000, factline0, 99 + CARDTEXTPAD,
              SONALOC_Y + CARDTEXTPAD + 13 + CARDTEXTPAD); // draw the sandwich info
-    drawText(&atr->fonts[0], c000, factline1, 74 + CARDTEXTPAD,
+    drawText(&atr->fonts[0], c000, factline1, 99 + CARDTEXTPAD,
              SONALOC_Y + CARDTEXTPAD + 26 + CARDTEXTPAD); // draw the identity
-    drawText(&atr->fonts[0], c000, factline2, 74 + CARDTEXTPAD,
+    drawText(&atr->fonts[0], c000, factline2, 99 + CARDTEXTPAD,
              SONALOC_Y + CARDTEXTPAD + 39 + CARDTEXTPAD); // draw the identity info
 
-    /* drawText(&atr->fonts[0], c000, "Hello World!", card_coords_x[0] + CARDTEXTPAD,
-             card_coords_y[1] + CARDTEXTPAD); // draw the second text box info
-    drawText(&atr->fonts[0], c000, "This is 22 characters.", card_coords_x[0] + CARDTEXTPAD,
-             card_coords_y[1] + CARDTEXTPAD + 12); // draw the second text box info
-    drawText(&atr->fonts[0], c000, "Magfest is a: Donut", card_coords_x[0] + CARDTEXTPAD,
-             card_coords_y[1] + CARDTEXTPAD + 24); // draw the second text box info
-    drawWsgSimpleScaled(&atr->uiElements[16], card_coords_x[2] + 7, card_coords_y[1] + 3, 1,
-                        1);       */                                // draw the trophy to fill in the small box for testing
+    drawText(&atr->fonts[0], c000, "Latest Trophy:", 24 + CARDTEXTPAD, 126);         // draw latest trophy title
+    drawText(&atr->fonts[0], c000, atr->latestTrophy->title, 24 + CARDTEXTPAD, 138); // draw latest trophy title
+    drawText(&atr->fonts[0], c000, "Points:", 24 + CARDTEXTPAD, 150);                // draw latest trophy desc
+    char buf[sizeof(&atr->points) + 1];
+    snprintf(buf, sizeof(buf), "%d", atr->points);
+    drawText(&atr->fonts[0], c000, buf, 65 + CARDTEXTPAD, 150);  // draw latest trophy desc
+    drawWsgSimple(&atr->uiElements[16], 212, 124 + CARDTEXTPAD); // draw trophy image
 }
 
 void loadProfiles(list_t* spList, list_t* loadedProfilesList, int maxProfiles, bool remote)
 {
-    if (remote == false)
-    {
-        // Clear the loadedProfilesList
-        while (loadedProfilesList->first != NULL)
-        {
-            node_t* temp              = loadedProfilesList->first;
-            loadedProfilesList->first = loadedProfilesList->first->next;
-            heap_caps_free(temp->val);
-            heap_caps_free(temp);
-        
-        }
-        // Create a new userProfile_t
-        userProfile_t* profile = (userProfile_t*)heap_caps_calloc(1, sizeof(userProfile_t), MALLOC_CAP_8BIT);
-        loadProfileFromNVS(&atr->loadedProfile);
-        
-        if (profile == NULL)
-        {
-            // TODO: Panic
-        }
-        node_t* newNode = (node_t*)heap_caps_calloc(1, sizeof(node_t), MALLOC_CAP_8BIT);
-        newNode->val    = profile;
-        newNode->next   = NULL;
-        if (loadedProfilesList->last == NULL)
-        {
-            loadedProfilesList->first = newNode;
-            loadedProfilesList->last  = newNode;
-        }
-        else
-        {
-            loadedProfilesList->last->next = newNode;
-            loadedProfilesList->last       = newNode;
-        }
-
-        loadedProfilesList->length++;
-        atr->loadedProfs = true;
-        
-        return;
-    }
-
     // Clear the loadedProfilesList
     while (loadedProfilesList->first != NULL)
     {
@@ -905,82 +924,105 @@ void loadProfiles(list_t* spList, list_t* loadedProfilesList, int maxProfiles, b
     loadedProfilesList->last   = NULL;
     loadedProfilesList->length = 0;
 
-    // Load profiles from spList into loadedProfilesList
-    node_t* spNode = spList->first;
-    int count      = 0;
-    while (spNode != NULL && count < maxProfiles)
+    if (remote == true)
     {
-        swadgePassData_t* spd = (swadgePassData_t*)spNode->val;
-
-        // Create a new userProfile_t
-        userProfile_t* profile = (userProfile_t*)heap_caps_calloc(1, sizeof(userProfile_t), MALLOC_CAP_8BIT);
-        profile->cardSelect    = spd->data.packet.atrium.cardSelect;
-        profile->fact0 = spd->data.packet.atrium.fact0;
-        profile->fact1 = spd->data.packet.atrium.fact1;
-        profile->fact2 = spd->data.packet.atrium.fact2;
-        
-        profile->local     = remote; // Remote profile?
-        profile->numPasses = spd->data.packet.atrium.numPasses;
-
-        // Copy swadgesona data
-        profile->swsn = (swadgesona_t*)heap_caps_calloc(1, sizeof(swadgesona_t), MALLOC_CAP_8BIT);
-        memcpy(&profile->swsn->core, &spd->data.packet.swadgesona.core, sizeof(swadgesonaCore_t));
-
-        // Add to loadedProfilesList
-        node_t* newNode = (node_t*)heap_caps_calloc(1, sizeof(node_t), MALLOC_CAP_8BIT);
-        newNode->val    = profile;
-        newNode->next   = NULL;
-        if (loadedProfilesList->last == NULL)
+        // Load profiles from spList into loadedProfilesList
+        node_t* spNode = spList->first;
+        int count      = 0;
+        while (spNode != NULL && count < maxProfiles)
         {
-            loadedProfilesList->first = newNode;
-            loadedProfilesList->last  = newNode;
-        }
-        else
-        {
-            loadedProfilesList->last->next = newNode;
-            loadedProfilesList->last       = newNode;
-        }
+            swadgePassData_t* spd = (swadgePassData_t*)spNode->val;
 
-        loadedProfilesList->length++;
-        count++;
-        spNode = spNode->next;
+            // Create a new userProfile_t
+            userProfile_t* profile = (userProfile_t*)heap_caps_calloc(1, sizeof(userProfile_t), MALLOC_CAP_8BIT);
+            profile->cardSelect    = spd->data.packet.atrium.cardSelect;
+            profile->fact0         = spd->data.packet.atrium.fact0;
+            profile->fact1         = spd->data.packet.atrium.fact1;
+            profile->fact2         = spd->data.packet.atrium.fact2;
+
+            profile->local     = remote; // Remote profile?
+            profile->numPasses = spd->data.packet.atrium.numPasses;
+
+            // Copy swadgesona data
+            profile->swsn = (swadgesona_t*)heap_caps_calloc(1, sizeof(swadgesona_t), MALLOC_CAP_8BIT);
+            memcpy(&profile->swsn->core, &spd->data.packet.swadgesona.core, sizeof(swadgesonaCore_t));
+
+            // Add to loadedProfilesList
+            node_t* newNode = (node_t*)heap_caps_calloc(1, sizeof(node_t), MALLOC_CAP_8BIT);
+            newNode->val    = profile;
+            newNode->next   = NULL;
+            if (loadedProfilesList->last == NULL)
+            {
+                loadedProfilesList->first = newNode;
+                loadedProfilesList->last  = newNode;
+            }
+            else
+            {
+                loadedProfilesList->last->next = newNode;
+                loadedProfilesList->last       = newNode;
+            }
+
+            loadedProfilesList->length++;
+            count++;
+            spNode = spNode->next;
+        }
+    }
+    else
+    {
     }
 }
 
-void loadProfileFromNVS(userProfile_t* profile)
+trophyData_t* getTrophy()
+{
+    trophyData_t* tempTrophy;
+    tempTrophy = trophyGetLatest();
+    // load points from NVS
+    readNamespaceNvs32(TROPHY_NVS_NAMESPACE, TROPHY_POINTS_NVS_KEY, &atr->points);
+    return tempTrophy;
+}
+
+profilePacket_t loadProfileFromNVS()
 {
     printf("Loading profile from NVS\n");
-    size_t blobSize = sizeof(userProfile_t);
-    printf("Blob size is %d\n", (int)blobSize);
-    profile = (userProfile_t*)heap_caps_calloc(1, sizeof(userProfile_t), MALLOC_CAP_8BIT);
-    printf("Allocated profile at %p\n", profile);
-    if (!readNvsBlob(atriumNVSprofile, profile, NULL))
+
+    profilePacket_t packedProfile;
+
+    if (!readNvs32("cardSelect", &packedProfile.profile.cardSelect))
     {
-        profile->cardSelect = rand () % 8;
-        profile->fact0   = rand () % 8;
-        profile->fact1   = rand () % 8;
-        profile->fact2   = rand () % 8;
-        profile->local      = true;
+        packedProfile.profile.cardSelect = rand() % 8;
+        packedProfile.profile.fact0      = rand() % 8;
+        packedProfile.profile.fact1      = rand() % 8;
+        packedProfile.profile.fact2      = rand() % 8;
+        packedProfile.profile.local      = true;
+        packedProfile.profile.numPasses  = 0;
 
-        
-        
-        
-        writeNamespaceNvs32(atriumNVSprofile, "cardSelect", profile->cardSelect);
-        writeNamespaceNvs32(atriumNVSprofile, "fact0", profile->fact0);
-        writeNamespaceNvs32(atriumNVSprofile, "fact1", profile->fact1);
-        writeNamespaceNvs32(atriumNVSprofile, "fact2", profile->fact2); 
-        writeNamespaceNvs32(atriumNVSprofile, "numPasses", profile->numPasses);
-        
+        writeNvs32("cardSelect", packedProfile.profile.cardSelect);
+        writeNvs32("fact0", packedProfile.profile.fact0);
+        writeNvs32("fact1", packedProfile.profile.fact1);
+        writeNvs32("fact2", packedProfile.profile.fact2);
+        writeNvs32("numPasses", packedProfile.profile.numPasses);
+        printf("Wrote random profile to NVS\n");
     }
-    else{
-        printf("returning true");
-    }
-    readNvsBlob(atriumNVSprofile, &profile, &blobSize);
-    loadSPSona(&profile->swsn->core);
+
+    readNvs32("cardSelect", &packedProfile.profile.cardSelect);
+    readNvs32("fact0", &packedProfile.profile.fact0);
+    readNvs32("fact1", &packedProfile.profile.fact1);
+    readNvs32("fact2", &packedProfile.profile.fact2);
+
+    // loadSPSona(&packedProfile.sona); //TODO: why doesn't this work?
+    // memcpy(&packedProfile.profile.swsn->core, &packedProfile.sona, sizeof(swadgesonaCore_t));
+    // generateSwadgesonaImage(packedProfile.profile.swsn, false);
+
     printf("Loaded local swadgesona data\n");
-    profile->numPasses  = atr->numRemoteSwsn; //update number of passes each time
-    writeNamespaceNvs32(atriumNVSprofile, "numPasses", profile->numPasses);
-
+    packedProfile.profile.numPasses = atr->numRemoteSwsn; // update number of passes each time
+    writeNvs32("numPasses", packedProfile.profile.numPasses);
+    printf("Profile loaded from NVS: cardSelect=%d, fact0=%d, fact1=%d, fact2=%d, numPasses=%d\n",
+           packedProfile.profile.cardSelect, packedProfile.profile.fact0, packedProfile.profile.fact1,
+           packedProfile.profile.fact2, packedProfile.profile.numPasses);
+    
+           atr->loadedProfile = packedProfile.profile; // update loaded profile
+    
+    return atr->packedProfile;
 }
 /*
 
