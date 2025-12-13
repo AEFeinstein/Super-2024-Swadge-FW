@@ -13,7 +13,7 @@
 
 // Lobby
 #define SONA_PER            4
-#define MAX_SWADGESONA_IDXS (BG_COUNT * SONA_PER)
+#define MAX_SWADGESONA_IDXS (MAX_NUM_SWADGE_PASSES / SONA_PER) - (MAX_NUM_SWADGE_PASSES % SONA_PER) / SONA_PER
 #define ANIM_TIMER_MS       16667
 #define LOBBY_ARROW_Y       200
 #define LOBBY_BORDER_X      20
@@ -30,19 +30,16 @@
 #define TROPHY_NVS_NAMESPACE         "trophy"
 #define TROPHY_POINTS_NVS_KEY        "points"
 
-
-
 //---------------------------------------------------------------------------------//
 // CONSTS
 //---------------------------------------------------------------------------------//
 
 // CNFS index lists
 static const cnfsFileIdx_t sonaBodies[] = {DANCEBODY_1_WSG}; // Sona bodies
-static const cnfsFileIdx_t uiImages[]   = {
-    ARROWBUTTON_1_WSG, ARROWBUTTON_2_WSG, ABUTTON_1_WSG, ABUTTON_2_WSG, BBUTTON_1_WSG,   BBUTTON_2_WSG,
-    ATRIUMLOGO_WSG,    KEEPON_WSG,        LOADING_1_WSG, LOADING_2_WSG, LOADING_3_WSG,   LOADING_4_WSG,
-    LOADING_5_WSG,     LOADING_6_WSG,     LOADING_7_WSG, LOADING_8_WSG, GOLD_TROPHY_WSG, ARROW_WSG
-};
+static const cnfsFileIdx_t uiImages[]
+    = {ARROWBUTTON_1_WSG, ARROWBUTTON_2_WSG, ABUTTON_1_WSG, ABUTTON_2_WSG, BBUTTON_1_WSG,   BBUTTON_2_WSG,
+       ATRIUMLOGO_WSG,    KEEPON_WSG,        LOADING_1_WSG, LOADING_2_WSG, LOADING_3_WSG,   LOADING_4_WSG,
+       LOADING_5_WSG,     LOADING_6_WSG,     LOADING_7_WSG, LOADING_8_WSG, GOLD_TROPHY_WSG, ARROW_WSG};
 static const cnfsFileIdx_t bgImages[] = {
     GAZEBO_WSG, ATRIUMPLANT_1_WSG, ARCADE_1_WSG, ARCADE_2_WSG, ARCADE_3_WSG, ARCADE_4_WSG, CONCERT_1_WSG, CONCERT_2_WSG,
 }; // Images used for the backgrounds
@@ -85,7 +82,6 @@ static const char* const editInstructText[] = {
     "Press A to confirm selection",
 }; */
 
-const char atriumNVSprofile[]    = "atrium";
 static const char* const fact0[] = {"PB&J", "BLT", "Cheese", "Reuben", "Hoagie", "Ice Cream", "Hot Dog", "Knuckle"};
 static const char* const fact1[]
     = {"Bard", "Superfan", "Pinball Wizard", "Maker", "Sharpshooter", "Trashman", "Speed Runner", "Medic"};
@@ -98,7 +94,6 @@ static const char* const preambles[] = {"Fave Sandwich: ", "I am a: ", "Find me 
 // static const int textbox1coords_y[] = {39, 51, 63, 75};     // y coords for the first textbox lines
 // static const int textbox2coords_y[] = {124, 136, 148, 160}; // y coords for the second textbox lines
 // static const int buttoncoord_x[]    = {99, 24};             // x coord for the button columns
-
 
 // static const char* const buttontext[] = {"CANCEL", "SAVE"};
 // static const char* const prompttext[] = {"Choose Card", "Edit Sona", "Pick Sandwich", "Choose Identity", "Choose
@@ -210,6 +205,7 @@ typedef struct
     bool loadedProfs;
     bool drawnProfs;
     int8_t page;
+    int8_t lastPage;
 
     // BGM
     midiPlayer_t* player;
@@ -264,7 +260,7 @@ trophyData_t* getTrophy();
 
 // Swadgepass
 static void atriumAddSP(struct swadgePassPacket* packet);
-void loadProfiles(list_t* spList, list_t* loadedProfilesList, int maxProfiles, bool local);
+void loadProfiles(list_t* spList, list_t* loadedProfilesList, int maxProfiles, bool local, int page);
 
 //---------------------------------------------------------------------------------//
 // VARIABLES
@@ -407,9 +403,6 @@ static void atriumEnterMode()
     {
         atr->state = ATR_TITLE; // else go to title screen
     }
-
- 
-    
 }
 
 static void atriumExitMode()
@@ -497,11 +490,8 @@ static void atriumMainLoop(int64_t elapsedUs)
         }
         case ATR_EDIT_PROFILE:
         {
-            // TODO: Load Profile before editing (should be handled before this point)
-
-            editProfile(&evt);
-
             // Draw the panel as it is
+            editProfile(&evt);
 
             // Draw the selection boxes
 
@@ -526,14 +516,15 @@ static void editProfile(buttonEvt_t* evt)
 {
     if (atr->loadedProfs == false)
     {
-        atr->latestTrophy  = getTrophy(); // get latest trophy
-        atr->packedProfile = loadProfileFromNVS();
-        atr->loadedProfs   = true;
-        printf("Loaded profile with %d card\n", atr->loadedProfile.cardSelect); 
+        atr->latestTrophy        = getTrophy(); // get latest trophy
+        atr->packedProfile       = loadProfileFromNVS();
+        atr->loadedProfile.local = true; // local profile
+        atr->loadedProfs         = true;
+        printf("Loaded profile with %d card\n", atr->loadedProfile.cardSelect);
     }
-    
+
     drawCard(atr->loadedProfile);
-    while(checkButtonQueueWrapper(evt))
+    while (checkButtonQueueWrapper(evt))
     {
         if (evt->down)
         {
@@ -541,45 +532,44 @@ static void editProfile(buttonEvt_t* evt)
             {
                 atr->state = ATR_TITLE;
             }
-            if(evt->button & PB_A)
+            if (evt->button & PB_A)
             {
-                drawWsgSimpleHalf(&atr->uiElements[17], 63, 46); // draw confirm box
+                drawWsgSimpleHalf(&atr->uiElements[17], 63, 46); // draw arrow
             }
-            if(evt->button & PB_UP)
+            if (evt->button & PB_UP)
             {
                 atr->yloc--;
-                if(atr->yloc < 0)
+                if (atr->yloc < 0)
                 {
                     atr->yloc = 0;
                 }
             }
-            if(evt->button & PB_DOWN)
+            if (evt->button & PB_DOWN)
             {
                 atr->yloc++;
-                if(atr->yloc > 3)
+                if (atr->yloc > 3)
                 {
                     atr->yloc = 3;
                 }
-
             }
-            if(evt->button & PB_LEFT)
+            if (evt->button & PB_LEFT)
             {
                 atr->xloc--;
-                if(atr->xloc < 0)
+                if (atr->xloc < 0)
                 {
                     atr->xloc = 0;
                 }
             }
-            if(evt->button & PB_RIGHT)
+            if (evt->button & PB_RIGHT)
             {
                 atr->xloc++;
-                if(atr->xloc > 1)
+                if (atr->xloc > 1)
                 {
                     atr->xloc = 1;
                 }
             }
+        }
     }
-}
 }
 
 static void viewProfile(buttonEvt_t* evt)
@@ -639,6 +629,7 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
     // Handle input
     while (checkButtonQueueWrapper(evt))
     {
+        atr->lastPage = atr->page;
         if (evt->down)
         {
             if (evt->button & PB_UP)
@@ -826,20 +817,31 @@ static void drawGazeboForeground(uint64_t elapsedUs)
 
 static void drawSonas(int8_t page, uint64_t elapsedUs)
 {
-    // TODO: move down spList and get number of pages, index accordingly
-    for (int i = 0; i < page * 4; i++)
+    // move down spList past the pages i don't want to draw
+    if (atr->lastPage != page)
     {
+        for (int i = 0; i < page * 4; i++)
+        {
+            if ((i == page * 4 - 1 && atr->loadedProfs == true))
+            {
+                atr->loadedProfs = false; // reset loaded profiles to load new ones
+            }
+            printf("Skipping profile %d because I want page %d\n", i, page);
+        }
+        atr->loadedProfs = false; // reset loaded profiles to load new ones
+        printf("Page changed from %d to %d, resetting loadedProfs\n", atr->lastPage, page);
     }
 
-    if (atr->loadedProfs == 0)
+    if (atr->loadedProfs == false)
     {
-        loadProfiles(&atr->spList, &atr->loadedProfilesList, 4, 1); // load up to 4 profiles into loadedProfilesList
+        loadProfiles(&atr->spList, &atr->loadedProfilesList, 4, 1,
+                     page); // load up to 4 profiles into loadedProfilesList
         atr->loadedProfs = true;
-        printf("Loaded profiles into loadedProfilesList\n");
+        printf("Loaded profiles into loadedProfilesList and the length is %d\n", atr->loadedProfilesList.length);
     }
 
     // Draw sonas
-
+    printf("Drawing sonas for page %d\n", page);
     node_t* currentNode = atr->loadedProfilesList.first;
     for (int i = 0; i < atr->loadedProfilesList.length && currentNode != NULL; i++)
     {
@@ -887,7 +889,15 @@ static void drawCard(userProfile_t profile)
     drawWsgSimple(&atr->backgroundImages[0], 0, 0);
     drawWsgSimple(&atr->cards[profile.cardSelect], 0, 0 + 12); // draw the card
 
-    nameData_t username = *getSystemUsername();
+    nameData_t username;
+    if (profile.local == true)
+    {
+        username = *getSystemUsername();
+    }
+    else
+    {
+        username = profile.swsn->name;
+    }
 
     // loadSPSona(&profile.swsn->core);
     // drawWsgSimple(&profile.swsn->image, SONALOC_X, SONALOC_Y); // draw the swadgesona image
@@ -911,8 +921,9 @@ static void drawCard(userProfile_t profile)
     drawWsgSimple(&atr->uiElements[16], 212, 124 + CARDTEXTPAD); // draw trophy image
 }
 
-void loadProfiles(list_t* spList, list_t* loadedProfilesList, int maxProfiles, bool remote)
+void loadProfiles(list_t* spList, list_t* loadedProfilesList, int maxProfiles, bool remote, int page)
 {
+    printf("Loading profiles: maxProfiles=%d, remote=%d, page=%d\n", maxProfiles, remote, page);
     // Clear the loadedProfilesList
     while (loadedProfilesList->first != NULL)
     {
@@ -929,6 +940,17 @@ void loadProfiles(list_t* spList, list_t* loadedProfilesList, int maxProfiles, b
         // Load profiles from spList into loadedProfilesList
         node_t* spNode = spList->first;
         int count      = 0;
+        for (int i = 0; i < page * maxProfiles; i++) // skip pages
+        {
+            if (spNode != NULL)
+            {
+                spNode = spNode->next;
+            }
+            if (i == page * maxProfiles - 1)
+            {
+                printf("Skipped to page %d, node %d\n", page, i + 1);
+            }
+        }
         while (spNode != NULL && count < maxProfiles)
         {
             swadgePassData_t* spd = (swadgePassData_t*)spNode->val;
@@ -1019,9 +1041,9 @@ profilePacket_t loadProfileFromNVS()
     printf("Profile loaded from NVS: cardSelect=%d, fact0=%d, fact1=%d, fact2=%d, numPasses=%d\n",
            packedProfile.profile.cardSelect, packedProfile.profile.fact0, packedProfile.profile.fact1,
            packedProfile.profile.fact2, packedProfile.profile.numPasses);
-    
-           atr->loadedProfile = packedProfile.profile; // update loaded profile
-    
+
+    atr->loadedProfile = packedProfile.profile; // update loaded profile
+
     return atr->packedProfile;
 }
 /*
