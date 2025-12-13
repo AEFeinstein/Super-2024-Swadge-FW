@@ -33,11 +33,10 @@
 const char modeName[] = "Bouncy Items";
 
 /// @brief Contains a sprite for each major mode
-static const cnfsFileIdx_t items[] = {
-    MAG_FEST_BOUNCER_WSG,    BARREL_1_WSG,      MMX_TROPHY_WSG,   HA_BIGMA_CROPPED_WSG, UP_CURSOR_8_WSG,
-    DN_BUCKET_HAT_DOWN_WSG,  SI_PULSE_SMOL_WSG, SUDOKU_NOTES_WSG, _6F_MAG_1_SLV_WSG,    TONK_WSG,
-    STT_BACKGROUND_SMOL_WSG,
-};
+static const cnfsFileIdx_t items[]
+    = {MAG_FEST_BOUNCER_WSG,    BARREL_1_WSG,      MMX_TROPHY_WSG,   HA_BIGMA_CROPPED_WSG, UP_CURSOR_8_WSG,
+       DN_BUCKET_HAT_DOWN_WSG,  SI_PULSE_SMOL_WSG, SUDOKU_NOTES_WSG, _6F_MAG_1_SLV_WSG,    TONK_WSG,
+       STT_BACKGROUND_SMOL_WSG, CC_TUMBLEWEED_WSG};
 
 static const char* const warningLabels[] = {
     "WARNING!",
@@ -230,6 +229,10 @@ static void screenEnterMode(void)
     if (trophyGetPoints(false, swadgetamatoneMode.trophyData->settings->namespaceKey) >= 500)
     {
         ssd->objs[10].isActive = true;
+    }
+    if (trophyGetPoints(false, cosCrunchMode.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[11].isActive = true;
     }
 
     ssd->displayWarning = true;
