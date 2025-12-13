@@ -785,9 +785,6 @@ typedef struct
     /// @brief The number of microseconds per quarter note
     uint32_t tempo;
 
-    /// @brief The number of audio samples per MIDI tick
-    uint32_t samplesPerTick;
-
     /// @brief True when playback of the current file is paused
     bool paused;
 
