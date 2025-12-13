@@ -12,7 +12,7 @@ const cnfsFileIdx_t MG_BGMS[] = {BGM_DEADEYE_CHIRPZI_MID,    BGM_BOSS_DEADEYE_CH
                                  BGM_SEVER_YAGATA_MID,       BGM_BOSS_SEVER_YAGATA_MID,    BGM_SMASH_GORILLA_MID,
                                  BGM_BOSS_SMASH_GORILLA_MID, BGM_BOSS_TRASH_MAN_MID,       BGM_BIGMA_MID,
                                  BGM_BOSS_BIGMA_MID,         BGM_LEVEL_CLEAR_JINGLE_MID,   BGM_POST_FIGHT_MID,
-                                 BGM_PRE_FIGHT_MID,          BGM_STAGE_SELECT_MID,         BGM_NAME_ENTRY_MID};
+                                 BGM_PRE_FIGHT_MID,          BGM_INTRO_STAGE_MID, BGM_STAGE_SELECT_MID,         BGM_NAME_ENTRY_MID};
 
 /*
 const int MG_1x2_TILE_COLLISION_OFFSETS_IN_PIXELS[]
@@ -343,12 +343,12 @@ const mgLeveldef_t leveldef[] = {
      .mainBgmIndex       = MG_BGM_FLARE_GRYFFYN,
      .bossBgmIndex       = MG_BGM_BOSS_FLARE_GRYFFYN,
      .bgColors           = bgGradientRed},
-    {.filename           = BOSS_TEST_ROOM_BIN,
+    {.filename           = INTRO_BIN,
      .timeLimit          = 180,
-     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
-     .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
-     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
-     .bgColors           = bgGradientPurple},
+     .defaultWsgSetIndex = MG_WSGSET_FLARE_GRYFFYN,
+     .mainBgmIndex       = MG_INTRO_STAGE,
+     .bossBgmIndex       = MG_BGM_BOSS_FLARE_GRYFFYN,
+     .bgColors           = bgGradientBlue},
     {.filename           = BOSS_TEST_DONUT_BIN,
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
@@ -403,6 +403,12 @@ const mgLeveldef_t leveldef[] = {
      .mainBgmIndex       = MG_BGM_FLARE_GRYFFYN,
      .bossBgmIndex       = MG_BGM_BOSS_FLARE_GRYFFYN,
      .bgColors           = bgGradientRed},
+    {.filename           = BOSS_TEST_ROOM_BIN,
+     .timeLimit          = 180,
+     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
+     .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
+     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
+     .bgColors           = bgGradientPurple},
 };
 
 const mg_spriteDef_t playerDamageAnimFrames[]
