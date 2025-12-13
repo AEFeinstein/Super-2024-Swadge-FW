@@ -11,6 +11,7 @@
 // #include "swadge2024.h"
 #include "palette.h"
 #include "mgSoundManager.h"
+#include "cutscene.h"
 
 //==============================================================================
 // Constants
@@ -67,6 +68,10 @@ typedef struct
     uint32_t inGameTimer;
 
     mgSoundManager_t* soundManager;
+
+    cutscene_t* cutscene;
+
+    bool cheatMode; // True to make pulse invincible
 } mgGameData_t;
 
 //==============================================================================

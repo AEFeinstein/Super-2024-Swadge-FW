@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="255" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="499">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="255" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="500">
  <editorsettings>
   <export target="../../../../../Downloads/Smash.bin" format="Mega Pulse EX"/>
  </editorsettings>
@@ -323,11 +323,6 @@
   <object id="458" template="templates/Dust Bunny.tx" x="3981.13" y="3494.43"/>
   <object id="459" template="templates/Dust Bunny.tx" gid="2147483857" x="3905.94" y="3604.48" rotation="0"/>
   <object id="460" template="templates/Dust Bunny.tx" x="3977.03" y="3717.96"/>
-  <object id="461" template="templates/Chargin' Schmuck.tx" name="Boss Test" gid="2147483997" x="3616" y="1232">
-   <properties>
-    <property name="type" type="int" propertytype="Swadge Land Entity Index" value="52"/>
-   </properties>
-  </object>
   <object id="462" template="templates/Scroll Lock (Up).tx" x="3016" y="1032"/>
   <object id="463" template="templates/Scroll Lock (Right).tx" x="3652" y="1144"/>
   <object id="464" template="templates/Scroll Lock (Down).tx" x="3048" y="1256"/>
@@ -368,6 +363,7 @@
   <object id="495" template="templates/Spiky McGee.tx" x="1278.54" y="763.881"/>
   <object id="497" template="templates/Checkpoint.tx" x="1744" y="2512"/>
   <object id="498" template="templates/Checkpoint.tx" x="3152" y="1137"/>
+  <object id="499" template="templates/Smash Gorilla.tx" type="SwadgeLandEntity" x="3604" y="1212"/>
  </objectgroup>
  <objectgroup id="3" name="Annotations">
   <object id="43" x="-31.6483" y="736.825" width="296" height="256"/>

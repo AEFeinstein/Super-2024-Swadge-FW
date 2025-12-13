@@ -170,6 +170,7 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
     if (tilemap->entitySpawns != NULL)
     {
         heap_caps_free(tilemap->entitySpawns);
+        tilemap->entitySpawns = NULL;
     }
 
     if (tilemap->entitySpawnMap.count > 0)
@@ -180,6 +181,7 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
     if (tilemap->map != NULL)
     {
         heap_caps_free(tilemap->map);
+        tilemap->map = NULL;
     }
 
     size_t sz;
@@ -442,4 +444,5 @@ bool mg_needsTransparency(uint8_t tileId)
 void mg_freeTilemap(mgTilemap_t* tilemap)
 {
     heap_caps_free(tilemap->map);
+    tilemap->map = NULL;
 }

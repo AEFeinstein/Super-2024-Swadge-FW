@@ -835,8 +835,11 @@ bool loadMidiFile(cnfsFileIdx_t fIdx, midiFile_t* file, bool spiRam)
             if (heatshrinkDecompress(NULL, &size, data, (uint32_t)raw_size))
             {
                 // Size was read successfully, allocate the non-compressed buffer
-                uint8_t* decompressed
-                    = heap_caps_malloc_tag(size, spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, "midi");
+#ifndef __XTENSA__
+                char tag[32];
+                sprintf(tag, "cnfsIdx %d", fIdx);
+#endif
+                uint8_t* decompressed = heap_caps_malloc_tag(size, spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, tag);
                 if (decompressed && heatshrinkDecompress(decompressed, &size, data, (uint32_t)raw_size))
                 {
                     // Success, free the raw data
@@ -885,8 +888,14 @@ bool loadMidiFile(cnfsFileIdx_t fIdx, midiFile_t* file, bool spiRam)
 
 void unloadMidiFile(midiFile_t* file)
 {
-    heap_caps_free(file->tracks);
-    heap_caps_free(file->data);
+    if (file->tracks)
+    {
+        heap_caps_free(file->tracks);
+    }
+    if (file->data)
+    {
+        heap_caps_free(file->data);
+    }
     memset(file, 0, sizeof(midiFile_t));
 }
 
