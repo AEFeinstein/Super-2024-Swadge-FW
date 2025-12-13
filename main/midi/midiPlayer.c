@@ -1449,7 +1449,6 @@ void midiPlayerReset(midiPlayer_t* player)
     // 120 BPM == 500,000 microseconds per quarter note
     player->tempo            = 500000;
     player->tick             = 0;
-    player->samplesPerTick   = 0;
     player->forceCheckEvents = true;
 
     // Set all the relevant bits to 1, meaning not in use
@@ -1553,9 +1552,10 @@ int32_t midiPlayerStep(midiPlayer_t* player)
     }
 
     player->sampleCount++;
-    if (player->samplesPerTick && 0 == player->sampleCount % player->samplesPerTick)
+    uint32_t newTick = SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division);
+    if (newTick != player->tick)
     {
-        player->tick++;
+        player->tick             = newTick;
         player->forceCheckEvents = true;
     }
 
@@ -2752,7 +2752,6 @@ void midiSetTempo(midiPlayer_t* player, uint32_t tempo)
     player->sampleCount = 0;
     if (player->mode == MIDI_FILE)
     {
-        player->samplesPerTick   = SAMPLES_PER_TICK(player->tempo, player->reader.division);
         player->forceCheckEvents = true;
     }
 }
@@ -2775,7 +2774,6 @@ void midiSetFile(midiPlayer_t* player, const midiFile_t* song)
     {
         midiParserSetFile(&player->reader, song);
     }
-    player->samplesPerTick = SAMPLES_PER_TICK(player->tempo, player->reader.division);
 }
 
 void midiPause(midiPlayer_t* player, bool pause)
@@ -2797,7 +2795,7 @@ void midiSeek(midiPlayer_t* player, uint32_t ticks)
         player->songFinishedCallback = NULL;
         bool loop                    = player->loop;
 
-        if (player->tick > ticks)
+        if (SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division) > ticks)
         {
             // We have to go back
             midiPlayerReset(player);
@@ -2819,7 +2817,7 @@ void midiSeek(midiPlayer_t* player, uint32_t ticks)
 
         ESP_LOGD("MIDI", "Seeking to %" PRIu32, ticks);
 
-        uint32_t curTick = player->tick;
+        uint32_t curTick = SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division);
         ESP_LOGD("MIDI", "Current tick is %" PRIu32, curTick);
 
         while (curTick < ticks)
