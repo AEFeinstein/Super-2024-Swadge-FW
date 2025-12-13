@@ -275,11 +275,11 @@ void shLoadSong(shVars_t* sh, const shSong_t* song, shDifficulty_t difficulty)
     midiPause(player, true);
     player->sampleCount = 0;
     midiSetFile(player, &sh->midiSong);
+    globalMidiPlayerGet(MIDI_BGM)->loop = false;
 
     // Seek to load the tempo and length, then reset
     midiSeek(player, -1);
-    sh->tempo          = player->tempo;
-    uint64_t songLenUs = SAMPLES_TO_US(player->sampleCount);
+    sh->tempo = player->tempo;
     globalMidiPlayerStop(true);
 
     // Set the lead-in timer
