@@ -888,8 +888,14 @@ bool loadMidiFile(cnfsFileIdx_t fIdx, midiFile_t* file, bool spiRam)
 
 void unloadMidiFile(midiFile_t* file)
 {
-    heap_caps_free(file->tracks);
-    heap_caps_free(file->data);
+    if (file->tracks)
+    {
+        heap_caps_free(file->tracks);
+    }
+    if (file->data)
+    {
+        heap_caps_free(file->data);
+    }
     memset(file, 0, sizeof(midiFile_t));
 }
 
