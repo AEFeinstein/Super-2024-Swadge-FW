@@ -117,7 +117,8 @@ void mg_updatePlayer(mgEntity_t* self)
             }
 
             if ((self->gameData->btnState & PB_DOWN) && (self->gameData->btnState & PB_B)
-                && !(self->gameData->prevBtnState & PB_B))
+                && !(self->gameData->prevBtnState & PB_B)
+                && (self->gameData->abilities & (1U << MG_REFLECTOR_SHIELD_ABILITY)))
             {
                 self->state = MG_PL_ST_SHIELD;
                 if (self->yspeed > 0)
@@ -156,7 +157,8 @@ void mg_updatePlayer(mgEntity_t* self)
 
             // Ugh... this is repeated here unfortunately
             if ((self->gameData->btnState & PB_DOWN) && (self->gameData->btnState & PB_B)
-                && !(self->gameData->prevBtnState & PB_B))
+                && !(self->gameData->prevBtnState & PB_B)
+                && (self->gameData->abilities & (1U << MG_REFLECTOR_SHIELD_ABILITY)))
             {
                 self->state = MG_PL_ST_SHIELD;
                 if (self->yspeed > 0)
@@ -254,7 +256,8 @@ void mg_updatePlayer(mgEntity_t* self)
         {
             if (!self->falling)
             {
-                if (self->gameData->btnState & PB_DOWN)
+                if ((self->gameData->btnState & PB_DOWN)
+                    && (self->gameData->abilities & (1U << MG_TROMBONE_SLIDE_ABILITY)))
                 {
                     // initiate dash slide
                     self->state        = MG_PL_ST_DASHING;
@@ -288,7 +291,8 @@ void mg_updatePlayer(mgEntity_t* self)
                     soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
                 }
             }
-            else if (self->state != MG_PL_ST_MIC_DROP && self->gameData->btnState & PB_DOWN)
+            else if (self->state != MG_PL_ST_MIC_DROP && (self->gameData->btnState & PB_DOWN)
+                     && (self->gameData->abilities & (1U << MG_DROP_THE_MIC_ABILITY)))
             {
                 self->xspeed       = 0;
                 self->yspeed       = -32;
@@ -316,7 +320,7 @@ void mg_updatePlayer(mgEntity_t* self)
                 self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
                 // soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
             }
-            else if (self->canDash)
+            else if (self->canDash && (self->gameData->abilities & (1U << MG_OBNOXIOUS_NOODLING_ABILITY)))
             {
                 // initiate double jump
                 self->jumpPower = 60;
@@ -373,7 +377,8 @@ void mg_updatePlayer(mgEntity_t* self)
         {
             case MG_PL_ST_NORMAL:
             case MG_PL_ST_DASHING:
-                if (self->gameData->btnState & PB_UP && ((self->jumpPower >= 0) || (!self->falling)))
+                if ((self->gameData->btnState & PB_UP) && ((self->jumpPower >= 0) || (!self->falling))
+                    && (self->gameData->abilities & (1U << MG_SURE_YOU_CAN_ABILITY)))
                 {
                     self->state      = MG_PL_ST_UPPERCUT;
                     self->yspeed     = 0;
@@ -394,12 +399,13 @@ void mg_updatePlayer(mgEntity_t* self)
                         createdEntity->homeTileY    = 0;
                         createdEntity->linkedEntity = self;
 
-                        if (self->shotsFired <= -63)
+                        if (self->shotsFired <= -63 && (self->gameData->abilities & (1U << MG_SHOOP_DA_WOOP_ABILITY)))
                         {
                             createdEntity->state       = 2;
                             createdEntity->spriteIndex = MG_SP_CHARGE_SHOT_MAX_1;
                         }
-                        else if (self->shotsFired <= -31)
+                        else if (self->shotsFired <= -31
+                                 && (self->gameData->abilities & (1U << MG_SHOOP_DA_WOOP_ABILITY)))
                         {
                             createdEntity->state       = 1;
                             createdEntity->spriteIndex = MG_SP_CHARGE_SHOT_LVL1_1;
@@ -1370,7 +1376,15 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             {
                 if (!self->gameData->cheatMode)
                 {
-                    self->hp -= 5;
+                    // pulse takes damage
+                    if (self->gameData->abilities & (1U << MG_PLOT_ARMOR_ABILITY))
+                    {
+                        self->hp -= 3;
+                    }
+                    else
+                    {
+                        self->hp -= 5;
+                    }
                 }
 
                 self->gameData->comboTimer = 0;
@@ -1556,7 +1570,15 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             {
                 if (!self->gameData->cheatMode)
                 {
-                    self->hp -= other->scoreValue;
+                    // pulse takes damage
+                    if (self->gameData->abilities & (1U << MG_PLOT_ARMOR_ABILITY))
+                    {
+                        self->hp -= (other->scoreValue * 3) / 5;
+                    }
+                    else
+                    {
+                        self->hp -= other->scoreValue;
+                    }
                 }
                 mg_updateLedsHpMeter(self->entityManager, self->gameData);
                 self->gameData->comboTimer = 0;
@@ -3815,6 +3837,7 @@ void mg_updateBossSeverYagata(mgEntity_t* self)
 
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
     {
+        self->gameData->pauseCountdown = true;
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
     }

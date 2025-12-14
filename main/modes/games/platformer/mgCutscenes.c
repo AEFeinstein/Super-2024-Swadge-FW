@@ -291,7 +291,7 @@ void stageStartCutscene(mgGameData_t* gameData)
         {
             addCutsceneLine(
                 gameData->cutscene, SystemText,
-                "SEVER YAGATA's mindscape is a massive EDM rave. Massive glowing torii arches frame the neon skyline.",
+                "SEVER YATAGA's mindscape is a massive EDM rave. Massive glowing torii arches frame the neon skyline.",
                 false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "Woah, this club is nuts! Why are there shrines here?", false,
                             -1);
@@ -752,7 +752,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Jasper, "It's not a weapon. But you'll know when it saves your life.", false, -1);
             unlockAbility(gameData, MG_PLOT_ARMOR_ABILITY);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Plot Armor", false, 0);
-            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Reduces damage taken by half!", false, 0);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Greatly reduces damage taken!", false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "This feels... solid. But also, weirdly... ironic?", false, -1);
             addCutsceneLine(gameData->cutscene, Percy, "It's Plot Armor, Pulse. Like a final arc twist, except wearable.", false, -1);
             addCutsceneLine(gameData->cutscene, Jasper, "No main character should be without it. Especially in the final act. Ganbatte, Pulse-san!", false, -1);

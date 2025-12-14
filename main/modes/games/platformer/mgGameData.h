@@ -37,6 +37,8 @@ typedef struct
     uint8_t lives;
     uint8_t coins;
     int16_t countdown;
+    bool pauseCountdown; // Pause the countdown after boss is defeated to allow breathing room to try newly unlocked
+                         // ability, and to avoid failure after winning the fight.
     uint16_t frameCount;
 
     uint8_t level;
@@ -73,7 +75,7 @@ typedef struct
 
     bool cheatMode; // True to make pulse invincible
 
-    uint8_t abilities;//Each bit may be 1 for an unlocked ability.
+    uint8_t abilities; // Each bit may be 1 for an unlocked ability.
 } mgGameData_t;
 
 //==============================================================================

@@ -47,6 +47,7 @@ void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
     gameData->score                = 0;
     gameData->lives                = 3;
     gameData->countdown            = 000;
+    gameData->pauseCountdown       = false;
     gameData->frameCount           = 0;
     gameData->coins                = 0;
     gameData->combo                = 0;
@@ -62,10 +63,10 @@ void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
     gameData->inGameTimer          = 0;
     gameData->bgColors             = bgGradientCyan;
     gameData->customLevel          = false;
-    int32_t outVal = 0;
+    int32_t outVal                 = 0;
     readNvs32(MG_cheatModeNVSKey, &outVal);
     gameData->cheatMode = outVal;
-    outVal = 0;
+    outVal              = 0;
     readNvs32(MG_abilitiesNVSKey, &outVal);
     gameData->abilities = outVal;
 

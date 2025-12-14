@@ -308,10 +308,11 @@ static const int32_t trueFalseVals[] = {
     false,
     true,
 };
-static const char str_cheatMode[]       = "Cheat Mode: ";
-static const char str_On[]              = "On";
-static const char str_Off[]             = "Off";
-static const char* strs_on_off[]        = {str_Off, str_On};
+static const char str_cheatMode[] = "Cheat Mode: ";
+static const char str_On[]        = "On";
+static const char str_Off[]       = "Off";
+static const char* strs_on_off[]  = {str_Off, str_On};
+static const char str_giveAbilities[] = "Click to unlock all abilities.";
 
 static const settingParam_t mgAbilityUnlockStateSettingBounds = {.min = 0, .max = 256, .key = KEY_UNLOCKS};
 
@@ -582,6 +583,8 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             initializePlatformerUnlockables(platformer);
             savePlatformerUnlockables(platformer);
+            platformer->gameData.abilities = 0b00000000;
+            writeNvs32(MG_abilitiesNVSKey, platformer->gameData.abilities);
             soundPlaySfx(&(platformer->soundManager.sndDie), MIDI_SFX);
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
             changeStateLevelSelect(platformer);
@@ -613,6 +616,11 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == mgMenuSetLevelMetadata)
         {
             platformer->gameData.level = settingVal;
+        }
+        else if (label == str_giveAbilities)
+        {
+            platformer->gameData.abilities = 0b11111111;
+            writeNvs32(MG_abilitiesNVSKey, platformer->gameData.abilities);
         }
     }
     else
@@ -707,6 +715,7 @@ void mgBuildMainMenu(platformer_t* self)
     }
     addSettingsOptionsItemToMenu(self->menu, str_cheatMode, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
                                  cheatMode);
+    addSingleItemToMenu(self->menu, str_giveAbilities);
     self->menu = endSubMenu(self->menu);
 
     if (self->gameData.debugMode)
@@ -735,8 +744,8 @@ void updateGame(platformer_t* self)
     mg_updateEntities(&(self->entityManager));
 
     mg_drawTileMap(&(self->tilemap));
-    drawPlatformerHud(&(self->font), &(self->gameData));
     mg_drawEntities(&(self->entityManager));
+    drawPlatformerHud(&(self->font), &(self->gameData));
     mg_updateLeds(&self->entityManager);
     detectGameStateChange(self);
     detectBgmChange(self);
@@ -745,7 +754,10 @@ void updateGame(platformer_t* self)
     if (self->gameData.frameCount > 59)
     {
         self->gameData.frameCount = 0;
-        self->gameData.countdown--;
+        if(!self->gameData.pauseCountdown)
+        {
+            self->gameData.countdown--;
+        }
         self->gameData.inGameTimer++;
 
         if (self->gameData.countdown < 10)
@@ -1121,6 +1133,7 @@ void changeStateGame(platformer_t* self)
         mg_loadMapFromFile(&(platformer->tilemap), leveldef[levelIndex].filename);
     }
     self->gameData.countdown = leveldef[levelIndex].timeLimit;
+    self->gameData.pauseCountdown = false;
 
     mgEntityManager_t* entityManager = &(self->entityManager);
 
