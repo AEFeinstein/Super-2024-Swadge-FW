@@ -12,7 +12,7 @@
 typedef struct
 {
     menu_t* menu;
-    menuManiaRenderer_t* renderer;
+    menuMegaRenderer_t* renderer;
     list_t swadgePasses;
     swadgePassData_t* currSpd;
 } swadgePassTest_t;
@@ -24,13 +24,14 @@ typedef struct
 static void swadgePassTestMainLoop(int64_t elapsedUs);
 static void swadgePassTestEnterMode(void);
 static void swadgePassTestExitMode(void);
-void swadgePassTestMenuCb(const char* label, bool selected, uint32_t value);
+bool swadgePassTestMenuCb(const char* label, bool selected, uint32_t value);
 
 //==============================================================================
 // Strings
 //==============================================================================
 
 static const char swadgePassTestName[] = "SwadgePass Test";
+static const char noSwadgePass[]       = "No SwadgePass RX";
 
 //==============================================================================
 // Variables
@@ -75,17 +76,24 @@ static void swadgePassTestEnterMode(void)
     // Initialize menu
     spt->menu = initMenu(swadgePassTestName, swadgePassTestMenuCb);
 
-    // Add all keys to the menu
-    node_t* passNode = spt->swadgePasses.first;
-    while (passNode)
+    if (0 == spt->swadgePasses.length)
     {
-        swadgePassData_t* spd = (swadgePassData_t*)passNode->val;
-        addSingleItemToMenu(spt->menu, spd->key);
-        passNode = passNode->next;
+        addSingleItemToMenu(spt->menu, noSwadgePass);
+    }
+    else
+    {
+        // Add all keys to the menu
+        node_t* passNode = spt->swadgePasses.first;
+        while (passNode)
+        {
+            swadgePassData_t* spd = (swadgePassData_t*)passNode->val;
+            addSingleItemToMenu(spt->menu, spd->key);
+            passNode = passNode->next;
+        }
     }
 
     // Initialize renderer
-    spt->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    spt->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
 }
 
 /**
@@ -95,7 +103,7 @@ static void swadgePassTestExitMode(void)
 {
     // Free the menu
     deinitMenu(spt->menu);
-    deinitMenuManiaRenderer(spt->renderer);
+    deinitMenuMegaRenderer(spt->renderer);
 
     // Free the swadgePasses
     freeSwadgePasses(&spt->swadgePasses);
@@ -143,7 +151,7 @@ static void swadgePassTestMainLoop(int64_t elapsedUs)
     if (NULL == spt->currSpd)
     {
         // Draw menu
-        drawMenuMania(spt->menu, spt->renderer, elapsedUs);
+        drawMenuMega(spt->menu, spt->renderer, elapsedUs);
     }
     else
     {
@@ -182,8 +190,9 @@ static void swadgePassTestMainLoop(int64_t elapsedUs)
  * @param label A pointer to the label which was selected or scrolled to
  * @param selected true if the item was selected with the A button, false if it was scrolled to
  * @param value If a settings item was selected or scrolled, this is the new value for the setting
+ * @return true to go up a menu level, false to remain here
  */
-void swadgePassTestMenuCb(const char* label, bool selected, uint32_t value)
+bool swadgePassTestMenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
@@ -196,7 +205,7 @@ void swadgePassTestMenuCb(const char* label, bool selected, uint32_t value)
             if (!strcmp(label, spd->key))
             {
                 spt->currSpd = spd;
-                return;
+                return false;
             }
             else
             {
@@ -205,4 +214,5 @@ void swadgePassTestMenuCb(const char* label, bool selected, uint32_t value)
             }
         }
     }
+    return false;
 }

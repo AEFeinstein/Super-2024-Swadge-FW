@@ -17,17 +17,16 @@
 typedef struct
 {
     menu_t* menu;
-    menuManiaRenderer_t* renderer;
-    font_t font_rodin;
+    menuMegaRenderer_t* renderer;
     midiFile_t fanfare;
-#ifdef SW_VOL_CONTROL
+#if defined(SW_VOL_CONTROL)
     midiFile_t jingle;
     int32_t lastBgmVol;
     int32_t lastSfxVol;
 #endif
     int32_t cheatCodeIdx;
     bool debugMode;
-#ifdef SW_VOL_CONTROL
+#if defined(SW_VOL_CONTROL)
     bool fanfarePlaying;
 #endif
     int32_t autoLightDanceTimer;
@@ -43,9 +42,11 @@ typedef struct
 static void mainMenuEnterMode(void);
 static void mainMenuExitMode(void);
 static void mainMenuMainLoop(int64_t elapsedUs);
-static void mainMenuCb(const char* label, bool selected, uint32_t settingVal);
+static bool mainMenuCb(const char* label, bool selected, uint32_t settingVal);
 void addSecretsMenu(void);
+#if defined(CONFIG_FACTORY_TEST_NORMAL)
 static void fanfareFinishedCb(void);
+#endif
 static bool _winTrophy(swadgeMode_t* sm);
 
 //==============================================================================
@@ -62,6 +63,15 @@ const trophyData_t mainMenuTrophies[] = {
         .maxVal      = 1,
         .hidden      = true,
         .identifier  = NULL,
+    },
+    {
+        .title       = "LEMONS!",
+        .description = "Played Mega Pulse EX for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &modePlatformer,
     },
     {
         .title       = "Day -1",
@@ -82,6 +92,24 @@ const trophyData_t mainMenuTrophies[] = {
         .identifier  = &swadgeItMode,
     },
     {
+        .title       = "Swordfish isn't always password",
+        .description = "Played Swadgedoku for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &swadgedokuMode,
+    },
+    {
+        .title       = "PulseMan and the King... Man",
+        .description = "Played Alpha Pulse for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &danceNetworkMode,
+    },
+    {
         .title       = "Runnin' and runnin'",
         .description = "Played Robo Runner for the first time",
         .image       = NO_IMAGE_SET,
@@ -89,6 +117,24 @@ const trophyData_t mainMenuTrophies[] = {
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
         .identifier  = &roboRunnerMode,
+    },
+    {
+        .title       = "It's pronounced 'Pie-Cross'",
+        .description = "Played Picross for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &modePicross,
+    },
+    {
+        .title       = "What's our vector, Victor?",
+        .description = "Played Vector Tanks for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &artilleryMode,
     },
     {
         .title       = "Daft Punk would be proud",
@@ -109,7 +155,7 @@ const trophyData_t mainMenuTrophies[] = {
         .identifier  = &jukeboxMode,
     },
     {
-        .title       = "Make some tunes",
+        .title       = "mm2wood.mid",
         .description = "Opened the Sequencer for the first time",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -136,6 +182,15 @@ const trophyData_t mainMenuTrophies[] = {
         .identifier  = &synthMode,
     },
     {
+        .title       = "The song of my people",
+        .description = "Opened Swadgetamatone for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &swadgetamatoneMode,
+    },
+    {
         .title       = "Blinded by the lights",
         .description = "Opened Light dances on purpose for the first time",
         .image       = NO_IMAGE_SET,
@@ -154,6 +209,24 @@ const trophyData_t mainMenuTrophies[] = {
         .identifier  = &modeDiceRoller,
     },
     {
+        .title       = "It can't hit the corner",
+        .description = "Opened Bouncy items for the first time",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &bouncyMode,
+    },
+    {
+        .title       = "...Was once not enough?",
+        .description = "Opened the intro again for some reason",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1,
+        .identifier  = &introMode,
+    },
+    {
         .title       = "Switch Amateur Controller",
         .description = "Opened Gamepad for the first time",
         .image       = NO_IMAGE_SET,
@@ -164,13 +237,14 @@ const trophyData_t mainMenuTrophies[] = {
     },
 };
 
-trophySettings_t menuTrophySettings = {
+const trophySettings_t menuTrophySettings = {
     .drawFromBottom   = false,
     .staticDurationUs = DRAW_STATIC_US * 2,
     .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = mainMenuName,
 };
 
-trophyDataList_t menuTrophyData = {
+const trophyDataList_t menuTrophyData = {
     .settings = &menuTrophySettings,
     .list     = mainMenuTrophies,
     .length   = ARRAY_SIZE(mainMenuTrophies),
@@ -205,14 +279,14 @@ mainMenu_t* mainMenu;
 
 static const char tftSettingLabel[] = "TFT";
 static const char ledSettingLabel[] = "LED";
-#ifdef SW_VOL_CONTROL
+#if defined(SW_VOL_CONTROL)
 static const char bgmVolSettingLabel[] = "BGM";
 static const char sfxVolSettingLabel[] = "SFX";
 #endif
 const char micSettingLabel[]                 = "MIC";
 static const char screenSaverSettingsLabel[] = "Screensaver: ";
 
-#ifdef CONFIG_FACTORY_TEST_NORMAL
+#if defined(CONFIG_FACTORY_TEST_NORMAL)
 
 static const char settingsLabel[] = "Settings";
 
@@ -230,11 +304,11 @@ static const char* const screenSaverSettingsOptions[] = {
     "Off", "10s", "20s", "30s", "1m", "2m", "5m",
 };
 
-#endif
-
 static const int16_t cheatCode[] = {
     PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A,
 };
+
+#endif
 
 static const int32_t showSecretsMenuSettingValues[] = {
     SHOW_SECRETS,
@@ -261,11 +335,8 @@ static void mainMenuEnterMode(void)
     // Allocate memory for the mode
     mainMenu = heap_caps_calloc(1, sizeof(mainMenu_t), MALLOC_CAP_8BIT);
 
-    // Load a font
-    loadFont(RODIN_EB_FONT, &mainMenu->font_rodin, false);
-
     // Load a song for when the volume changes
-#ifdef SW_VOL_CONTROL
+#if defined(SW_VOL_CONTROL)
     loadMidiFile(JINGLE_MID, &mainMenu->jingle, false);
 #endif
     loadMidiFile(SECRET_MID, &mainMenu->fanfare, true);
@@ -275,7 +346,7 @@ static void mainMenuEnterMode(void)
     // Allocate the menu
     mainMenu->menu = initMenu(mainMenuTitle, mainMenuCb);
 
-#ifdef CONFIG_FACTORY_TEST_NORMAL
+#if defined(CONFIG_FACTORY_TEST_NORMAL)
     // Initialize all the modes in modeList
     modeListSetMenu(mainMenu->menu);
 
@@ -284,13 +355,13 @@ static void mainMenuEnterMode(void)
     // Get the bounds and current settings to build this menu
     addSettingsItemToMenu(mainMenu->menu, tftSettingLabel, getTftBrightnessSettingBounds(), getTftBrightnessSetting());
     addSettingsItemToMenu(mainMenu->menu, ledSettingLabel, getLedBrightnessSettingBounds(), getLedBrightnessSetting());
-    #ifdef SW_VOL_CONTROL
+    #if defined(SW_VOL_CONTROL)
     addSettingsItemToMenu(mainMenu->menu, bgmVolSettingLabel, getBgmVolumeSettingBounds(), getBgmVolumeSetting());
     addSettingsItemToMenu(mainMenu->menu, sfxVolSettingLabel, getSfxVolumeSettingBounds(), getSfxVolumeSetting());
     #endif
     addSettingsItemToMenu(mainMenu->menu, micSettingLabel, getMicGainSettingBounds(), getMicGainSetting());
 
-    #ifdef SW_VOL_CONTROL
+    #if defined(SW_VOL_CONTROL)
     // These are just used for playing the sound only when the setting changes
     mainMenu->lastBgmVol = getBgmVolumeSetting();
     mainMenu->lastSfxVol = getSfxVolumeSetting();
@@ -313,7 +384,7 @@ static void mainMenuEnterMode(void)
     setShowBattery(mainMenu->menu, true);
 
     // Initialize menu renderer
-    mainMenu->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
+    mainMenu->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
 }
 
 /**
@@ -325,13 +396,10 @@ static void mainMenuExitMode(void)
     deinitMenu(mainMenu->menu);
 
     // Deinit renderer
-    deinitMenuManiaRenderer(mainMenu->renderer);
-
-    // Free the font
-    freeFont(&mainMenu->font_rodin);
+    deinitMenuMegaRenderer(mainMenu->renderer);
 
     // Free the song
-#ifdef SW_VOL_CONTROL
+#if defined(SW_VOL_CONTROL)
     unloadMidiFile(&mainMenu->jingle);
 #endif
     unloadMidiFile(&mainMenu->fanfare);
@@ -347,6 +415,7 @@ static void mainMenuExitMode(void)
  */
 static void mainMenuMainLoop(int64_t elapsedUs)
 {
+#if defined(CONFIG_FACTORY_TEST_NORMAL)
     // Increment this timer
     mainMenu->autoLightDanceTimer += elapsedUs;
     // If 10s have elapsed with no user input
@@ -375,9 +444,9 @@ static void mainMenuMainLoop(int64_t elapsedUs)
                     mainMenu->cheatCodeIdx = 0;
                     setDacShutdown(false);
                     globalMidiPlayerPlaySongCb(&mainMenu->fanfare, MIDI_BGM, fanfareFinishedCb);
-#ifdef SW_VOL_CONTROL
+    #if defined(SW_VOL_CONTROL)
                     mainMenu->fanfarePlaying = true;
-#endif
+    #endif
                     // Return to the top level menu
                     while (mainMenu->menu->parentMenu)
                     {
@@ -408,8 +477,12 @@ static void mainMenuMainLoop(int64_t elapsedUs)
         }
     }
 
+#endif
+
     // Draw the menu
-    drawMenuMania(mainMenu->menu, mainMenu->renderer, elapsedUs);
+    drawMenuMega(mainMenu->menu, mainMenu->renderer, elapsedUs);
+
+#if defined(CONFIG_FACTORY_TEST_NORMAL)
 
     // If a trophy was showing, but the animation is done
     if (mainMenu->modeEnterTrophyShowing && !isTrophyDrawing())
@@ -418,14 +491,27 @@ static void mainMenuMainLoop(int64_t elapsedUs)
         switchToSwadgeMode(mainMenu->pendingMode);
     }
 
-#ifdef CONFIG_FACTORY_TEST_WARNING
+#elif defined(CONFIG_FACTORY_TEST_WARNING)
+
+    font_t* font         = mainMenu->renderer->menuFont;
     const char warning[] = "Take me to VR Zone to get flashed please!";
-    int16_t xOff         = 12;
-    int16_t yOff         = (TFT_HEIGHT / 2) - mainMenu->font_rodin.height;
-    drawTextWordWrap(&mainMenu->font_rodin, c000, warning, &xOff, &yOff, TFT_WIDTH - 12, TFT_HEIGHT);
+    #define INNER_MARGIN 16
+    int16_t xOff         = 20 + INNER_MARGIN + 1;
+    int16_t yOff         = 54 + INNER_MARGIN + 32 + 1;
+    drawTextWordWrapCentered(font, c000, warning, &xOff, &yOff, //
+                             TFT_WIDTH - 24 - INNER_MARGIN + 1, //
+                             TFT_HEIGHT - 23 - INNER_MARGIN + 1);
+
+    xOff = 20 + INNER_MARGIN;
+    yOff = 54 + INNER_MARGIN + 32;
+    drawTextWordWrapCentered(font, c555, warning, &xOff, &yOff, //
+                             TFT_WIDTH - 24 - INNER_MARGIN,     //
+                             TFT_HEIGHT - 23 - INNER_MARGIN);
+
 #endif
 }
 
+#if defined(CONFIG_FACTORY_TEST_NORMAL)
 /**
  * @brief Callback after the fanfare is done playing to disable the DAC again
  */
@@ -433,6 +519,7 @@ static void fanfareFinishedCb(void)
 {
     setDacShutdown(true);
 }
+#endif
 
 /**
  * @brief Callback for when menu items are selected
@@ -440,13 +527,14 @@ static void fanfareFinishedCb(void)
  * @param label The menu item that was selected or moved to
  * @param selected true if the item was selected, false if it was moved to
  * @param settingVal The value of the setting, if the menu item is a settings item
+ * @return true to go up a menu level, false to remain here
  */
-static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
+static bool mainMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     // Stop the buzzer first no matter what, so that it turns off
     // if we scroll away from the BGM or SFX settings.
 
-#ifdef SW_VOL_CONTROL
+#if defined(SW_VOL_CONTROL)
     // Stop the buzzer when changing volume, not for fanfare
     if (false == mainMenu->fanfarePlaying)
     {
@@ -503,7 +591,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             setLedBrightnessSetting(settingVal);
         }
-#ifdef SW_VOL_CONTROL
+#if defined(SW_VOL_CONTROL)
         else if (bgmVolSettingLabel == label)
         {
             if (settingVal != mainMenu->lastBgmVol)
@@ -538,6 +626,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
             setShowSecretsMenuSetting(settingVal);
         }
     }
+    return false;
 }
 
 void addSecretsMenu(void)
@@ -558,13 +647,7 @@ void addSecretsMenu(void)
                                  showSecretsMenuSettingValues, ARRAY_SIZE(showSecretsMenuSettingOptions),
                                  getShowSecretsMenuSettingBounds(), getShowSecretsMenuSetting());
 
-    addSingleItemToMenu(mainMenu->menu, keebTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, swadgePassTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, trophyTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, nameTestMode.modeName);
+    modeListAddSecretMenuModes(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, factoryResetName);
     addSingleItemToMenu(mainMenu->menu, confirmResetName);
@@ -584,7 +667,7 @@ static bool _winTrophy(swadgeMode_t* sm)
     {
         if (mainMenuTrophies[idx].identifier == sm)
         {
-            return trophyUpdate(mainMenuTrophies[idx], 1, true);
+            return trophyUpdate(&mainMenuTrophies[idx], 1, true);
         }
     }
     return false;

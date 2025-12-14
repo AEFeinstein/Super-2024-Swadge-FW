@@ -606,6 +606,7 @@ static bool parseMidiHeader(midiFile_t* file)
     if (file->length < (8 + 6))
     {
         ESP_LOGE("MIDIParser", "Not a MIDI file! Length insufficient for header");
+        return false;
     }
 
     // I mean, offset should be 0
@@ -622,6 +623,9 @@ static bool parseMidiHeader(midiFile_t* file)
                         | file->data[offset + 3];
 
     offset += 4;
+
+    // Save the start of the header chunk data
+    uint8_t* ptr = file->data + offset;
 
     uint16_t format = (file->data[offset] << 8) | file->data[offset + 1];
     offset += 2;
@@ -683,12 +687,11 @@ static bool parseMidiHeader(midiFile_t* file)
         file->timeDivision           = ticksPerQuarterNote;
     }
 
-    // TODO: Actually do something with the timing info
-
     // Skip anything extra that might be in the header
-    if (offset < chunkLen)
+    if (offset < (ptr - file->data) + chunkLen)
     {
-        offset = chunkLen - (sizeof(midiHeader) + 4);
+        ESP_LOGW("MIDIParser", "Improper MIDI file header; length is %" PRIu32 " when it should be 6", chunkLen);
+        offset = (ptr - file->data) + chunkLen;
         if (offset >= file->length)
         {
             ESP_LOGE("MIDIParser", "Header length exceeds data length");
@@ -703,7 +706,7 @@ static bool parseMidiHeader(midiFile_t* file)
     }
 
     // Current offset should be at the next track
-    uint8_t* ptr = file->data + offset;
+    ptr = file->data + offset;
 
     // Regardless, if there are multiple tracks we want to grab pointers to them all
     int i = 0;
@@ -832,8 +835,11 @@ bool loadMidiFile(cnfsFileIdx_t fIdx, midiFile_t* file, bool spiRam)
             if (heatshrinkDecompress(NULL, &size, data, (uint32_t)raw_size))
             {
                 // Size was read successfully, allocate the non-compressed buffer
-                uint8_t* decompressed
-                    = heap_caps_malloc_tag(size, spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, "midi");
+#ifndef __XTENSA__
+                char tag[32];
+                sprintf(tag, "cnfsIdx %d", fIdx);
+#endif
+                uint8_t* decompressed = heap_caps_malloc_tag(size, spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, tag);
                 if (decompressed && heatshrinkDecompress(decompressed, &size, data, (uint32_t)raw_size))
                 {
                     // Success, free the raw data
@@ -882,8 +888,14 @@ bool loadMidiFile(cnfsFileIdx_t fIdx, midiFile_t* file, bool spiRam)
 
 void unloadMidiFile(midiFile_t* file)
 {
-    heap_caps_free(file->tracks);
-    heap_caps_free(file->data);
+    if (file->tracks)
+    {
+        heap_caps_free(file->tracks);
+    }
+    if (file->data)
+    {
+        heap_caps_free(file->data);
+    }
     memset(file, 0, sizeof(midiFile_t));
 }
 
@@ -984,40 +996,41 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
     {
         midiTrackState_t* info = &reader->states[i];
 
-        if (!info->eventParsed && info->nextEvent.deltaTime != UINT32_MAX)
+        // WE ARE ASSERTING NOW
+        // The events are ALWAYS parsed!
+        // If there is no event parsed, we are done!
+        if (info->done)
         {
-            // Avoid trying and failing to parse a track we've already finished
-            if (info->done)
-            {
-                continue;
-            }
-            info->eventParsed = trackParseNext(reader, info);
+            continue;
+        }
+
+        if (!info->eventParsed)
+        {
+            info->done = true;
+            continue;
         }
 
         // Check if we either already have a parsed event waiting, or are able to parse one now
         // Short-circuiting will make sure we only parse another event when needed and permitted
         // TODO doesn't this basically do the same thing as the block above?
-        if (info->eventParsed || (info->nextEvent.deltaTime != UINT32_MAX && trackParseNext(reader, info)))
+        // info->nextEvent has now been set by trackParseNext()
+        if (!info->nextEvent.deltaTime || (reader && reader->file && reader->file->format == MIDI_FORMAT_2))
         {
-            // info->nextEvent has now been set by trackParseNext()
-            if (!info->nextEvent.deltaTime || (reader && reader->file && reader->file->format == MIDI_FORMAT_2))
-            {
-                // The delta-time is 0! Just return this event immediately
-                *event = info->nextEvent;
+            // The delta-time is 0! Just return this event immediately
+            *event = info->nextEvent;
 
-                // Consume the event!
-                info->eventParsed = false;
+            // Add to the time still, since deltaTime could be non-zero
+            info->time += info->nextEvent.deltaTime;
 
-                // Add to the time still, since deltaTime could be non-zero
-                info->time += info->nextEvent.deltaTime;
-                return true;
-            }
-            else if (info->time + info->nextEvent.deltaTime < minTime)
-            {
-                // This is the most-next event, so set minTime to its time
-                minTime   = info->time + info->nextEvent.deltaTime;
-                nextTrack = info;
-            }
+            // Consume the event!
+            info->eventParsed = trackParseNext(reader, info);
+            return true;
+        }
+        else if (info->time + info->nextEvent.deltaTime < minTime)
+        {
+            // This is the most-next event, so set minTime to its time
+            minTime   = info->time + info->nextEvent.deltaTime;
+            nextTrack = info;
         }
     }
 
@@ -1027,9 +1040,9 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
         return false;
     }
 
-    *event                 = nextTrack->nextEvent;
-    nextTrack->eventParsed = false;
+    *event = nextTrack->nextEvent;
     nextTrack->time += event->deltaTime;
+    nextTrack->eventParsed = trackParseNext(reader, nextTrack);
     return true;
 }
 

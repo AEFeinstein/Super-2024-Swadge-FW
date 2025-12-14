@@ -21,6 +21,13 @@
 
 #if defined(USING_WINDOWS)
     #include <WinSock2.h>
+
+    #ifdef __LP64__
+        #pragma push_macro("u_long")
+        #undef u_long
+        #define u_long __ms_u_long
+    #endif
+
 #elif defined(USING_LINUX) || defined(USING_MAC)
     #include <sys/socket.h> // for socket(), connect(), sendto(), and recvfrom()
     #include <arpa/inet.h>  // for sockaddr_in and inet_addr()
@@ -35,6 +42,8 @@
 #include "esp_wifi.h"
 #include "esp_log.h"
 #include "emu_main.h"
+
+#include "p2pConnection.h"
 
 //==============================================================================
 // Defines
@@ -228,7 +237,7 @@ void checkEspNowRxQueue(void)
         {
             // Make sure the MAC differs from our own
             uint8_t ourMac[6] = {0};
-            esp_wifi_get_mac(WIFI_IF_STA, ourMac);
+            getMacAddrNvs(ourMac);
             if (0 != memcmp(recvMac, ourMac, sizeof(ourMac)))
             {
                 // Set up the receive info
@@ -267,7 +276,7 @@ void espNowSend(const char* data, uint8_t dataLen)
     // Tack on ESP-NOW header and randomized MAC address
     char espNowPacket[dataLen + 24];
     uint8_t mac[6] = {0};
-    esp_wifi_get_mac(WIFI_IF_STA, mac);
+    getMacAddrNvs(mac);
     sprintf(espNowPacket, "ESP_NOW-%02X%02X%02X%02X%02X%02X-", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     int hdrLen = strlen(espNowPacket);
     memcpy(&espNowPacket[hdrLen], data, dataLen);

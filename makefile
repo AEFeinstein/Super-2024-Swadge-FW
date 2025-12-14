@@ -53,9 +53,16 @@ endif
 # Source Files
 ################################################################################
 
-ASSET_FILES = $(shell $(FIND) assets -type f)
+ASSETS_IN = ./assets
+ASSETS_OUT = ./assets_image
+ASSET_FILES = $(shell $(FIND) $(ASSETS_IN) -type f)
 CNFS_FILE   = main/utils/cnfs_image.c
 CNFS_FILE_H = main/utils/cnfs_image.h
+ASSETS_TIMESTAMP_FILE = ./.assets_ts
+ASSETS_CONF_FILE = ./assets.conf
+
+ASSETS_PROJ_FOLDER = ./tools/assets_preprocessor
+ASSETS_PREPROCESSOR = $(ASSETS_PROJ_FOLDER)/assets_preprocessor
 
 # This is a list of directories to scan for c files recursively
 SRC_DIRS_RECURSIVE = emulator/src main
@@ -72,7 +79,7 @@ SOURCES   = $(sort $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC
 SOURCES   := $(filter-out main/utils/cnfs.c, $(SOURCES))
 
 # The emulator doesn't build components, but there is a target for formatting them
-ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]")
+ALL_FILES = $(shell $(FIND) components assets $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]" -or -iname "*.cfun")
 
 SUBMODULES = $(shell git config --file .gitmodules --name-only --get-regexp path | sed -nr 's/submodule.(.*).path/\1/p')
 
@@ -123,10 +130,38 @@ CFLAGS += \
 	-mmacosx-version-min=10.0
 endif
 
+CFLAGS_SANITIZE=
 ifeq ($(HOST_OS),Linux)
-CFLAGS += \
+CFLAGS_SANITIZE += \
 	-fsanitize=address \
-	-fsanitize=bounds-strict
+	-fsanitize=bounds-strict \
+	-fsanitize=leak \
+	-fsanitize=undefined \
+	-fsanitize=pointer-compare \
+	-fsanitize=shift \
+	-fsanitize=shift-exponent \
+	-fsanitize=shift-base \
+	-fsanitize=integer-divide-by-zero \
+	-fsanitize=unreachable \
+	-fsanitize=vla-bound \
+	-fsanitize=null \
+	-fsanitize=return \
+	-fsanitize=signed-integer-overflow \
+	-fsanitize=bounds \
+	-fsanitize=bounds-strict \
+	-fsanitize=alignment \
+	-fsanitize=object-size \
+	-fsanitize=float-divide-by-zero \
+	-fsanitize=float-cast-overflow \
+	-fsanitize=nonnull-attribute \
+	-fsanitize=returns-nonnull-attribute \
+	-fsanitize=bool \
+	-fsanitize=enum \
+	-fsanitize=vptr \
+	-fsanitize=pointer-overflow \
+	-fsanitize=builtin \
+	-fsanitize-address-use-after-scope
+
 ENABLE_GCOV=false
 
 ifeq ($(ENABLE_GCOV),true)
@@ -158,7 +193,6 @@ CFLAGS_WARNINGS_EXTRA = \
 	-Wunused-local-typedefs \
 	-Wuninitialized \
 	-Wshadow \
-	-Wredundant-decls \
 	-Wswitch \
 	-Wcast-align \
 	-Wformat-nonliteral \
@@ -174,6 +208,7 @@ CFLAGS_WARNINGS_EXTRA = \
 #	-Wpedantic \
 #	-Wconversion \
 #	-Wsign-conversion \
+#	-Wredundant-decls \
 #	-Wdouble-promotion
 
 ifneq ($(HOST_OS),Darwin)
@@ -191,14 +226,14 @@ endif
 ################################################################################
 
 # Create a variable with the git hash and branch name
-GIT_HASH  = \"$(shell git rev-parse --short=7 HEAD)\"
+GIT_HASH  = $(shell git rev-parse --short=7 HEAD)
 
 # Used by the ESP SDK
 DEFINES_LIST = \
 	CONFIG_ESP_SYSTEM_PANIC=y\
 	CONFIG_ESP_SYSTEM_GDBSTUB_RUNTIME=y\
 	CONFIG_DEBUG_OUTPUT_USB=y\
-	CONFIG_HARDWARE_HOTDOG_PRODUCTION=y \
+	CONFIG_HARDWARE_PULSE=y \
 	CONFIG_IDF_TARGET_ESP32S2=y \
 	SOC_RMT_CHANNELS_PER_GROUP=4 \
 	SOC_TOUCH_SENSOR_NUM=15 \
@@ -217,7 +252,7 @@ DEFINES_LIST = \
 	CONFIG_GC9307_240x280=y \
 	CONFIG_TFT_MAX_BRIGHTNESS=200 \
 	CONFIG_TFT_MIN_BRIGHTNESS=10 \
-	CONFIG_NUM_LEDS=9 \
+	CONFIG_NUM_LEDS=6 \
 	configENABLE_FREERTOS_DEBUG_OCDAWARE=1 \
 	_GNU_SOURCE \
 	IDF_VER="v5.2.5" \
@@ -228,18 +263,30 @@ DEFINES_LIST = \
 	CONFIG_FACTORY_TEST_NORMAL=y \
 	SOC_TOUCH_PAD_THRESHOLD_MAX=0x1FFFFF
 
-# If this is not WSL, use OpenGL for rawdraw
+# If this is not WSL
 ifeq ($(IS_WSL),0)
-	DEFINES_LIST += CNFGOGL
+# And this is not MacOS
+ifneq ($(HOST_OS),Darwin)
+# Use OpenGL for rawdraw
+DEFINES_LIST += CNFGOGL
+endif
 endif
 
 # Extra defines
 DEFINES_LIST += \
-	GIT_SHA1=${GIT_HASH} \
+	GIT_SHA1=\\\"${GIT_HASH}\\\" \
 	HAS_XINERAMA=1 \
 	FULL_SCREEN_STEAL_FOCUS=1
 
 DEFINES = $(patsubst %, -D%, $(DEFINES_LIST))
+
+################################################################################
+# Files to write compiler arguments to (workaround for Windows line limits)
+################################################################################
+
+ARGS_DEFINES_FILE       = args_defines.txt
+ARGS_WARNINGS_FILE      = args_warnings.txt
+ARGS_C_FLAGS            = args_c_flags.txt
 
 ################################################################################
 # Output Objects
@@ -295,8 +342,7 @@ endif
 
 ifeq ($(HOST_OS),Linux)
 LIBRARY_FLAGS += \
-	-fsanitize=address \
-	-fsanitize=bounds-strict \
+	$(CFLAGS_SANITIZE) \
 	-fno-omit-frame-pointer \
 	-static-libasan
 ifeq ($(ENABLE_GCOV),true)
@@ -325,35 +371,55 @@ MACOS_PLIST   = emulator/resources/Info.plist
 ################################################################################
 
 # This list of targets do not build files which match their name
-.PHONY: all assets firmware bundle \
+.PHONY: all assets preprocess-assets firmware bundle \
 	clean clean-firmware clean-docs clean-assets clean-git clean-utils fullclean \
 	docs format gen-coverage update-dependencies cppcheck \
 	usbflash monitor installudev \
 	print-%
-	
+
 # Build the executable
 all: $(EXECUTABLE)
 
+# Recipes to save gcc arguments to files, dependent on the makefile itself
+# This is a workaround for Windows, which has an 8192 char limit for commands
+$(ARGS_DEFINES_FILE): makefile
+	@echo $(DEFINES) > $(ARGS_DEFINES_FILE)
+
+$(ARGS_WARNINGS_FILE): makefile
+	@echo $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) > $(ARGS_WARNINGS_FILE)
+
+$(ARGS_C_FLAGS):makefile
+	@echo $(CFLAGS) $(CFLAGS_SANITIZE) > $(ARGS_C_FLAGS)
+
+# Force clean of assets
+preprocess-assets: clean-assets assets
+
+# Asset processing prereqs
+$(ASSETS_PREPROCESSOR):
+	$(MAKE) -C $(ASSETS_PROJ_FOLDER)
+
+./tools/cnfs/cnfs_gen:
+	$(MAKE) -C ./tools/cnfs
+
+# The "assets" target is dependent on all the asset files
+assets $(ASSETS_TIMESTAMP_FILE) &: $(ASSETS_CONF_FILE) $(ASSET_FILES)
+	$(MAKE) -C $(ASSETS_PROJ_FOLDER)
+	$(ASSETS_PREPROCESSOR) -c $(ASSETS_CONF_FILE) -i $(ASSETS_IN)/ -o $(ASSETS_OUT)/ -t $(ASSETS_TIMESTAMP_FILE)
+
+# To create CNFS_FILE, first the assets must be processed
+$(CNFS_FILE) $(CNFS_FILE_H) &: $(ASSETS_TIMESTAMP_FILE) | ./tools/cnfs/cnfs_gen assets
+	./tools/cnfs/cnfs_gen $(ASSETS_OUT)/ $(CNFS_FILE) $(CNFS_FILE_H)
+
 # To build the main file, you have to compile the objects
-$(EXECUTABLE): $(OBJECTS)
+$(EXECUTABLE): $(CNFS_FILE) $(OBJECTS)
 	$(CC) $(OBJECTS) $(LIBRARY_FLAGS) -o $@
 
 # This compiles each c file into an o file
 # $(CNFS_FILE) is a dependency of all objects because some C files include "cnfs_image.h"
 # $(CNFS_FILE) is not a phony target, so it should only be called if the file doesn't exist
-./$(OBJ_DIR)/%.o: ./%.c $(CNFS_FILE)
+./$(OBJ_DIR)/%.o: ./%.c $(CNFS_FILE) $(ARGS_DEFINES_FILE) $(ARGS_WARNINGS_FILE) $(ARGS_C_FLAGS)
 	@mkdir -p $(@D) # This creates a directory before building an object in it.
-	$(CC) $(CFLAGS) $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) $(DEFINES) $(INC) $< -o $@
-
-# To create CNFS_FILE, first the assets must be processed
-$(CNFS_FILE): assets
-	$(MAKE) -C ./tools/cnfs/
-	./tools/cnfs/cnfs_gen assets_image/ $(CNFS_FILE) $(CNFS_FILE_H)
-
-# The "assets" target is dependent on all the asset files
-assets: ./assets.conf $(ASSET_FILES)
-	$(MAKE) -C ./tools/assets_preprocessor/
-	./tools/assets_preprocessor/assets_preprocessor -c ./assets.conf -i ./assets/ -o ./assets_image/
+	$(CC) @$(ARGS_C_FLAGS) @$(ARGS_WARNINGS_FILE) @$(ARGS_DEFINES_FILE) $(INC) $< -o $@
 
 # Build the firmware. Cmake will take care of generating the CNFS files
 firmware:
@@ -396,6 +462,7 @@ $(MACOS_ICON): emulator/resources/icon.png
 # Clean emulator files, depends on cleaning assets too
 clean: clean-assets
 	-@rm -f $(OBJECTS) $(EXECUTABLE)
+	-@rm -f $(ARGS_DEFINES_FILE) $(ARGS_WARNINGS_FILE) $(ARGS_C_FLAGS)
 
 # Clean firmware files, depends on cleaning assets too
 clean-firmware: clean-assets
@@ -407,10 +474,10 @@ clean-docs:
 
 # Clean assets
 clean-assets:
-	$(MAKE) -C ./tools/assets_preprocessor/ clean
+	$(MAKE) -C $(ASSETS_PROJ_FOLDER) clean
 	$(MAKE) -C ./tools/cnfs clean
 	-@rm -rf $(CNFS_FILE) $(CNFS_FILE_H)
-	-@rm -rf ./assets_image/*
+	-@rm -rf $(ASSETS_OUT)/* $(ASSETS_TIMESTAMP_FILE)
 
 # Clean git. Be careful, since this will wipe uncommitted changes
 clean-git:
@@ -466,10 +533,10 @@ update-dependencies:
 
 # Target to flash over USB. 
 ifeq ($(HOST_OS),Windows)
-usbflash :
+usbflash : assets $(CNFS_FILE) firmware
 	tools/reflash_and_monitor.bat
 else
-usbflash :
+usbflash : assets $(CNFS_FILE) firmware
 	# In case we are already in the bootloader...
 	($(MAKE) -C tools/bootload_reboot_stub reboot)||(true)
 	# Command reboot out of game into bootloader.

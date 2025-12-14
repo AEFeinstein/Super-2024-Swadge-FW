@@ -19,7 +19,7 @@
 
 #define DANCE_IMPLEMENTATION
 #include "dance_Comet.h"
-#include "dance_Condiment.h"
+// #include "dance_Condiment.h"
 #include "dance_SharpRainbow.h"
 #include "dance_SmoothRainbow.h"
 #include "dance_RainbowSolid.h"
@@ -34,12 +34,11 @@
 #include "dance_Flashlight.h"
 #include "dance_None.h"
 #include "dance_RandomDance.h"
+#include "portableDance.h"
 
 //==============================================================================
 // Defines
 //==============================================================================
-
-#define DANCE_SPEED_MULT 8
 
 // Sleep the TFT after 5s
 #define TFT_TIMEOUT_US 5000000
@@ -50,16 +49,14 @@
 
 typedef struct
 {
-    uint32_t danceIdx;
-    uint32_t danceSpeed;
+    portableDance_t* dance;
 
-    bool resetDance;
     bool blankScreen;
 
     uint32_t buttonPressedTimer;
 
     menu_t* menu;
-    menuManiaRenderer_t* menuRenderer;
+    menuMegaRenderer_t* menuRenderer;
 
     const char** danceNames;
     int32_t* danceVals;
@@ -79,7 +76,7 @@ typedef struct
 static void danceEnterMode(void);
 static void danceExitMode(void);
 static void danceMainLoop(int64_t elapsedUs);
-static void danceMenuCb(const char* label, bool selected, uint32_t value);
+static bool danceMenuCb(const char* label, bool selected, uint32_t value);
 
 static void danceEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 static void danceEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
@@ -107,16 +104,17 @@ static const int32_t speedVals[] = {
     4,  // 2x
     2,  // 4x
 };
+static const char nvsNs[] = "light_dances";
 
 const ledDance_t ledDances[] = {
     {.func = danceComet, .arg = RGB_2_ARG(0, 0, 0), .name = "Comet RGB"},
     {.func = danceComet, .arg = RGB_2_ARG(0xFF, 0, 0), .name = "Comet R"},
     {.func = danceComet, .arg = RGB_2_ARG(0, 0xFF, 0), .name = "Comet G"},
     {.func = danceComet, .arg = RGB_2_ARG(0, 0, 0xFF), .name = "Comet B"},
-    {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0x00, 0x00), .name = "Ketchup"},
-    {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0xFF, 0x00), .name = "Mustard"},
-    {.func = danceCondiment, .arg = RGB_2_ARG(0x00, 0xFF, 0x00), .name = "Relish"},
-    {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0xFF, 0xFF), .name = "Mayo"},
+    // {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0x00, 0x00), .name = "Ketchup"},
+    // {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0xFF, 0x00), .name = "Mustard"},
+    // {.func = danceCondiment, .arg = RGB_2_ARG(0x00, 0xFF, 0x00), .name = "Relish"},
+    // {.func = danceCondiment, .arg = RGB_2_ARG(0xFF, 0xFF, 0xFF), .name = "Mayo"},
     {.func = danceSharpRainbow, .arg = 0, .name = "Rainbow Sharp"},
     {.func = danceSmoothRainbow, .arg = 20000, .name = "Rainbow Slow"},
     {.func = danceSmoothRainbow, .arg = 4000, .name = "Rainbow Fast"},
@@ -178,10 +176,8 @@ void danceEnterMode(void)
 
     danceState = heap_caps_calloc(1, sizeof(danceMode_t), MALLOC_CAP_8BIT);
 
-    danceState->danceIdx   = 0;
-    danceState->danceSpeed = DANCE_SPEED_MULT;
+    danceState->dance = initPortableDance(nvsNs);
 
-    danceState->resetDance  = true;
     danceState->blankScreen = false;
 
     danceState->buttonPressedTimer = 0;
@@ -190,18 +186,18 @@ void danceEnterMode(void)
     espNowPreLightSleep();
 
     danceState->menu         = initMenu(danceName, danceMenuCb);
-    danceState->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
-    setManiaLedsOn(danceState->menuRenderer, false);
-    static const paletteColor_t shadowColors[] = {
-        c430, c431, c442, c543, c554, c555, c554, c543, c442, c431,
-    };
-    led_t offLed = {0};
-    recolorMenuManiaRenderer(danceState->menuRenderer, // Pango palette!
-                             c320, c542, c111,         // titleBgColor, titleTextColor, textOutlineColor
-                             c045,                     // bgColor
-                             c542, c541,               // outerRingColor, innerRingColor
-                             c111, c455,               // rowColor, rowTextColor
-                             shadowColors, ARRAY_SIZE(shadowColors), offLed);
+    danceState->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    setMegaLedsOn(danceState->menuRenderer, false);
+    // static const paletteColor_t shadowColors[] = {
+    //     c430, c431, c442, c543, c554, c555, c554, c543, c442, c431,
+    // };
+    // led_t offLed = {0};
+    // recolorMenuManiaRenderer(danceState->menuRenderer, // Pango palette!
+    //                          c320, c542, c111,         // titleBgColor, titleTextColor, textOutlineColor
+    //                          c045,                     // bgColor
+    //                          c542, c541,               // outerRingColor, innerRingColor
+    //                          c111, c455,               // rowColor, rowTextColor
+    //                          shadowColors, ARRAY_SIZE(shadowColors), offLed);
 
     // Add dances to the menu
     danceState->danceNames = heap_caps_calloc(ARRAY_SIZE(ledDances), sizeof(char*), MALLOC_CAP_SPIRAM);
@@ -216,7 +212,7 @@ void danceEnterMode(void)
         .max = ARRAY_SIZE(ledDances) - 1,
     };
     addSettingsOptionsItemToMenu(danceState->menu, NULL, danceState->danceNames, danceState->danceVals,
-                                 ARRAY_SIZE(ledDances), &danceParam, 0);
+                                 ARRAY_SIZE(ledDances), &danceParam, danceState->dance->danceIndex);
 
     // Add brightness to the menu
     addSettingsItemToMenu(danceState->menu, str_brightness, getLedBrightnessSettingBounds(), getLedBrightnessSetting());
@@ -227,7 +223,7 @@ void danceEnterMode(void)
         .max = speedVals[ARRAY_SIZE(speedVals) - 1],
     };
     addSettingsOptionsItemToMenu(danceState->menu, str_speed, speedLabels, speedVals, ARRAY_SIZE(speedVals),
-                                 &speedParam, speedVals[5]);
+                                 &speedParam, danceState->dance->speed);
 
     // Add exit to the menu
     addSingleItemToMenu(danceState->menu, str_exit);
@@ -249,10 +245,12 @@ void danceExitMode(void)
         enableTFTBacklight();
         setTFTBacklightBrightness(getTftBrightnessSetting());
     }
-    deinitMenuManiaRenderer(danceState->menuRenderer);
+    deinitMenuMegaRenderer(danceState->menuRenderer);
     deinitMenu(danceState->menu);
 
     deinitSwadgePassReceiver();
+
+    freePortableDance(danceState->dance);
 
     heap_caps_free(danceState->danceNames);
     heap_caps_free(danceState->danceVals);
@@ -284,9 +282,7 @@ void danceMainLoop(int64_t elapsedUs)
     }
 
     // Light the LEDs!
-    ledDances[danceState->danceIdx].func(elapsedUs * DANCE_SPEED_MULT / danceState->danceSpeed,
-                                         ledDances[danceState->danceIdx].arg, danceState->resetDance);
-    danceState->resetDance = false;
+    portableDanceMainLoop(danceState->dance, elapsedUs);
 
     // If the screen is blank
     if (danceState->blankScreen)
@@ -299,7 +295,13 @@ void danceMainLoop(int64_t elapsedUs)
             setTFTBacklightBrightness(getTftBrightnessSetting());
             danceState->blankScreen = false;
             // Draw to it
-            drawMenuMania(danceState->menu, danceState->menuRenderer, elapsedUs);
+            drawMenuMega(danceState->menu, danceState->menuRenderer, elapsedUs);
+
+            // Set the LED eyes. First do a read to nudge it out of deep sleep
+            uint32_t var;
+            ch32v003ReadMemory((uint8_t*)&var, sizeof(var), 0x08000000);
+            // Then reprogram it
+            ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
         }
     }
     else
@@ -310,11 +312,14 @@ void danceMainLoop(int64_t elapsedUs)
         {
             disableTFTBacklight();
             danceState->blankScreen = true;
+
+            // Sleep the ch32
+            ch32v003RunBinaryAsset(DEEP_SLEEP_CFUN_BIN);
         }
         else
         {
             // Screen is not blank, draw to it
-            drawMenuMania(danceState->menu, danceState->menuRenderer, elapsedUs);
+            drawMenuMega(danceState->menu, danceState->menuRenderer, elapsedUs);
 
             // Uncomment to draw a count of SwadgePasses received this session
             // font_t* f = danceState->menuRenderer->menuFont;
@@ -371,8 +376,9 @@ void danceMainLoop(int64_t elapsedUs)
  * @param label The menu option that was selected or changed
  * @param selected True if the option was selected, false if it was only changed
  * @param value The setting value for this operation
+ * @return true to go up a menu level, false to remain here
  */
-void danceMenuCb(const char* label, bool selected, uint32_t value)
+bool danceMenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected && str_exit == label)
     {
@@ -385,16 +391,16 @@ void danceMenuCb(const char* label, bool selected, uint32_t value)
     }
     else if (str_speed == label)
     {
-        danceState->danceSpeed = value;
+        portableDanceSetSpeed(danceState->dance, (int32_t)value);
     }
     else if (NULL == label) // Dance names are label-less
     {
-        if (danceState->danceIdx != value)
+        if (danceState->dance->danceIndex != value)
         {
-            danceState->danceIdx   = value;
-            danceState->resetDance = true;
+            portableDanceSetByIndex(danceState->dance, value);
         }
     }
+    return false;
 }
 
 /**

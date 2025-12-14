@@ -11,6 +11,7 @@ on:
 
 env:
   FIRMWARE_ARTIFACT: swadge2024-firmware
+  FIRMWARE_ARTIFACT_PATH: fw-artifact
   EMULATOR_ARTIFACT: swadge2024-emulator
 
 jobs:
@@ -27,8 +28,11 @@ jobs:
             emu_artifacts:
               - swadge_emulator.exe
               - version.txt
+              - nvs.json
             # TODO: What variable can we use to not hardcode this???
             idf_install: C:\Users\runneradmin\.espressif
+            shell: 'msys2 {0}'
+            env: x86_64
           - os: osx-arm
             runner: macos-latest
             family: osx
@@ -37,15 +41,17 @@ jobs:
             emu_artifacts:
               - SwadgeEmulator.app
               - version.txt
+              - nvs.json
             idf_install: ~/.espressif
           - os: osx-intel
-            runner: macos-13
+            runner: macos-15-intel
             family: osx
             emulator: true
             firmware: false
             emu_artifacts:
               - SwadgeEmulator.app
               - version.txt
+              - nvs.json
             idf_install: ~/.espressif
           - os: linux
             runner: ubuntu-latest
@@ -58,6 +64,7 @@ jobs:
               - install.sh
               - icon.png
               - SwadgeEmulator.desktop
+              - nvs.json
             idf_install: ~/.espressif
 
     runs-on: ${{ matrix.runner }}
@@ -68,7 +75,7 @@ jobs:
 
     #### Basic Steps
     - name: Check out repository code
-      uses: actions/checkout@v4.1.4
+      uses: actions/checkout@v5.0.0
       with:
         submodules: recursive
 
@@ -80,8 +87,9 @@ jobs:
     - name: Install homebrew packages
       if: matrix.family == 'osx'
       run: |
-        # Not installing graphviz here because we don't actually build the docs and brew has trouble with its dependnencies
-        brew install xquartz libxinerama clang-format cppcheck wget doxygen cmake dylibbundler
+        # Not installing graphviz here because we don't actually build the docs and brew has trouble with its dependencies
+        # Not installing cmake either because it seems to be already installed from another source and brew can't handle that
+        brew install xquartz libxinerama clang-format cppcheck wget doxygen dylibbundler
 
     - name: Install apt packages
       if: matrix.family == 'linux'
@@ -93,7 +101,7 @@ jobs:
     - name: Restore IDF Cache
       id: cache-esp-idf
       if: matrix.firmware
-      uses: actions/cache@v3
+      uses: actions/cache@v4.3.0
       with:
         path: |
           ${{ matrix.idf_install }}
@@ -125,28 +133,36 @@ jobs:
         ${{ runner.temp }}/esp-idf/export.sh
         idf.py build dfu
 
-    - name: Add firmware, bootloader, partition table, version, and flasher files to firmware artifact
+    - name: Consolidate firmware files
       if: matrix.firmware
-      uses: actions/upload-artifact@v4.3.3
+      run: |
+        mkdir -p ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/swadge2024.elf ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/swadge2024.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/dfu.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/bootloader/bootloader.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp build/partition_table/partition-table.bin ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp version.txt ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp tools/pyFlashGui/pyFlashGui.py ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+        cp tools/pyFlashGui/requirements.txt ${{ env.FIRMWARE_ARTIFACT_PATH }}/
+
+    - name: Add files to firmware artifact
+      if: matrix.firmware
+      uses: actions/upload-artifact@v4.6.2
       with:
         name: ${{ env.FIRMWARE_ARTIFACT }}
-        path: |
-          build/swadge2024.elf
-          build/swadge2024.bin
-          build/dfu.bin
-          build/bootloader/bootloader.bin
-          build/partition_table/partition-table.bin
-          version.txt
-          tools/pyFlashGui/pyFlashGui.py
-          tools/pyFlashGui/requirements.txt
+        path: ${{ env.FIRMWARE_ARTIFACT_PATH }}
 
     #### Platform-specific Emulator Builds
     - name: Install msys64 packages
       id: install-msys64
       if: matrix.emulator && matrix.family == 'windows'
-      uses: msys2/setup-msys2@v2
+      uses: msys2/setup-msys2@v2.29.0
       with:
         msystem: MINGW64
+        update: true
+        cache: true
+        release: true
         location: C:\msys64
         install: >-
           base-devel
@@ -173,7 +189,12 @@ jobs:
       run: |
         make SwadgeEmulator.app
 
-    - name: Create Linux FreeDesktop files
+    - name: Copy default NVS file
+      if: matrix.emulator
+      run: |
+        cp emulator/resources/nvs.json .
+
+    - name: Copy Linux FreeDesktop files
       if: matrix.emulator && matrix.family == 'linux'
       run: |
         cp emulator/resources/install.sh .
@@ -193,7 +214,7 @@ jobs:
     #### Generic Emulator Upload
     - name: Upload Emulator Binary
       if: matrix.emulator
-      uses: actions/upload-artifact@v4.3.3
+      uses: actions/upload-artifact@v4.6.2
       with:
         name: ${{ env.EMULATOR_ARTIFACT }}-${{ matrix.os }}
         path: SwadgeEmulator.zip
@@ -206,7 +227,7 @@ jobs:
     steps:
     - name: Download all previous build artifacts
       if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5.0.0
       with:
         merge-multiple: false
 
@@ -223,7 +244,7 @@ jobs:
 
     - name: Create release for latest artifacts
       if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
-      uses: ncipollo/release-action@v1
+      uses: ncipollo/release-action@v1.20.0
       with:
         # Allow the release to be updated, since it's not a "final" release
         prerelease: true

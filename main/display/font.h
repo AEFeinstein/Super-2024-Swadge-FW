@@ -70,10 +70,20 @@ typedef struct
 
 void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff);
 int16_t drawText(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff);
+int16_t drawShinyText(const font_t* font, paletteColor_t outerColor, paletteColor_t middleColor,
+                      paletteColor_t innerColor, const char* text, int16_t xOff, int16_t yOff);
 void drawCharBounds(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff, int16_t xMin,
                     int16_t yMin, int16_t xMax, int16_t yMax);
+void drawShinyCharBounds(paletteColor_t outerColor, paletteColor_t middleColor, paletteColor_t innerColor, int h,
+                         const font_ch_t* ch, int16_t xOff, int16_t yOff, int16_t xMin, int16_t yMin, int16_t xMax,
+                         int16_t yMax);
 int16_t drawTextBounds(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff,
                        int16_t xMin, int16_t yMin, int16_t xMax, int16_t yMax);
+int16_t drawShinyTextBounds(const font_t* font, paletteColor_t outerColor, paletteColor_t middleColor,
+                            paletteColor_t innerColor, const char* text, int16_t xOff, int16_t yOff, int16_t xMin,
+                            int16_t yMin, int16_t xMax, int16_t yMax);
+int16_t drawTextShadow(const font_t* font, paletteColor_t color, paletteColor_t shadowColor, const char* text,
+                       int16_t xOff, int16_t yOff);
 
 const char* drawTextWordWrap(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff, int16_t* yOff,
                              int16_t xMax, int16_t yMax);
@@ -92,5 +102,6 @@ bool drawTextEllipsize(const font_t* font, paletteColor_t color, const char* tex
 
 int16_t drawTextMulticolored(const font_t* font, const char* text, int16_t xOff, int16_t yOff,
                              const paletteColor_t* colors, uint32_t colorCount, uint32_t segmentCount);
+void setGlobalCharSpacing(int32_t spacing);
 
 #endif

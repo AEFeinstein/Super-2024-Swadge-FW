@@ -110,8 +110,8 @@ typedef enum
 
 typedef enum
 {
-    EMU_MOD_NONE  = 0x00,
-    EMU_MOD_ALT   = 0x01,
+    EMU_MOD_NONE = 0x00,
+    // EMU_MOD_ALT   = 0x01,
     EMU_MOD_CTRL  = 0x02,
     EMU_MOD_SHIFT = 0x04,
     EMU_MOD_SUPER = 0x08,

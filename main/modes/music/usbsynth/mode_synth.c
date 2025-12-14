@@ -76,6 +76,7 @@ typedef enum
     VM_VIZ     = 8,
     VM_LYRICS  = 16,
     VM_TIMING  = 32,
+    VM_DEBUG   = 64,
 } synthViewMode_t;
 
 typedef enum
@@ -309,7 +310,7 @@ typedef struct
     list_t customFiles;
 
     menu_t* menu;
-    menuManiaRenderer_t* renderer;
+    menuMegaRenderer_t* renderer;
     wheelMenuRenderer_t* wheelMenu;
     rectangle_t wheelTextArea;
     bool updateMenu;
@@ -375,7 +376,7 @@ static void drawSampleGraphCircular(void);
 static void drawKaraokeLyrics(uint32_t ticks, karaokeInfo_t* karInfo);
 static int writeMidiText(char* dest, size_t n, midiTextInfo_t* text, bool kar);
 static void midiTextCallback(metaEventType_t type, const char* text, uint32_t length);
-static void synthMenuCb(const char* label, bool selected, uint32_t value);
+static bool synthMenuCb(const char* label, bool selected, uint32_t value);
 static void songEndCb(void);
 static void setupShuffle(int numSongs);
 static void prevSong(void);
@@ -392,6 +393,13 @@ static uint32_t lfsrCur(const lfsrState_t* state);
 //==============================================================================
 // Variabes
 //==============================================================================
+
+static const textEntrySettings_t tes = {
+    .shadowboxColor = c000,
+    .bgColor        = cTransparent,
+    .maxLen         = 128,
+    .startKMod      = TE_PROPER_NOUN,
+};
 
 static const char readyStr[] = "Ready!";
 
@@ -1071,8 +1079,8 @@ static const char* const menuItemModeOptions[] = {
 };
 
 static const char* const menuItemViewOptions[] = {
-    "Pretty", "Visualizer", "Lyrics",         "Lyrics+Visualizer", "Waveform",
-    "Table",  "Packets",    "Waveform+Table", "Waveform+Packets",  "Timing",
+    "Pretty",           "Visualizer", "Lyrics", "Lyrics+Visualizer", "Waveform", "Table", "Packets", "Waveform+Table",
+    "Waveform+Packets", "Timing",     "Debug",  "Debug+Table",
 };
 
 static const char* const menuItemButtonOptions[] = {
@@ -1103,6 +1111,7 @@ static const char* const menuItemNoYesOptions[] = {
 static const char* const menuItemBankOptions[] = {
     "General MIDI",
     "MAGFest",
+    "MMX",
 };
 
 static const char* const menuItemHeadroomOptions[] = {
@@ -1131,6 +1140,8 @@ static const int32_t menuItemViewValues[] = {
     (int32_t)(VM_GRAPH | VM_TEXT),
     (int32_t)(VM_GRAPH | VM_PACKETS),
     (int32_t)VM_TIMING,
+    (int32_t)VM_DEBUG,
+    (int32_t)(VM_DEBUG | VM_TEXT),
 };
 
 static const int32_t menuItemButtonValues[] = {
@@ -1161,6 +1172,7 @@ static const int32_t menuItemAutoplayValues[] = {
 static const int32_t menuItemBankValues[] = {
     0,
     1,
+    2,
 };
 
 static const int32_t menuItemControlSwitchValues[] = {
@@ -1213,7 +1225,7 @@ static settingParam_t menuItemModeBounds = {
 static settingParam_t menuItemViewBounds = {
     .def = VM_PRETTY,
     .min = VM_PRETTY,
-    .max = (VM_TIMING << 1) - 1,
+    .max = (VM_DEBUG << 1) - 1,
     .key = nvsKeyViewMode,
 };
 
@@ -1276,7 +1288,7 @@ static settingParam_t menuItemPercussionBounds = {
 static settingParam_t menuItemBankBounds = {
     .def = 0,
     .min = 0,
-    .max = 1,
+    .max = 2,
     .key = NULL,
 };
 
@@ -1543,24 +1555,6 @@ static void synthEnterMode(void)
         }
     }
 
-    if (sd->nvsMode)
-    {
-        synthSetFile(CNFS_NUM_FILES);
-    }
-    else if (sd->fileMode)
-    {
-        int32_t fIdx;
-        if (readNvs32(nvsKeyLastSong, &fIdx))
-        {
-            sd->customFile = true;
-            synthSetFile(fIdx);
-        }
-        else
-        {
-            ESP_LOGI("Synth", "No filename saved");
-        }
-    }
-
     sd->screen = SS_VIEW;
 
     sd->wheelTextArea.pos.x  = 15;
@@ -1569,7 +1563,7 @@ static void synthEnterMode(void)
     sd->wheelTextArea.height = sd->betterFont.height + 2;
 
     // Use smol font for menu items, there might be a lot
-    sd->renderer          = initMenuManiaRenderer(NULL, NULL, &sd->font);
+    sd->renderer          = initMenuMegaRenderer(NULL, NULL, NULL);
     sd->wheelMenu         = initWheelMenu(&sd->betterFont, 90, &sd->wheelTextArea);
     sd->wheelMenu->unselR = 16;
 
@@ -1629,6 +1623,24 @@ static void synthEnterMode(void)
     setupShuffle(sd->customFiles.length);
     synthSetupPlayer();
 
+    if (sd->nvsMode)
+    {
+        synthSetFile(CNFS_NUM_FILES);
+    }
+    else if (sd->fileMode)
+    {
+        int32_t fIdx;
+        if (readNvs32(nvsKeyLastSong, &fIdx))
+        {
+            sd->customFile = true;
+            synthSetFile(fIdx);
+        }
+        else
+        {
+            ESP_LOGI("Synth", "No filename saved");
+        }
+    }
+
     sd->startupSeqComplete = true;
     sd->startupNote        = 60;
 
@@ -1676,7 +1688,7 @@ static void synthExitMode(void)
     }
 
     deinitWheelMenu(sd->wheelMenu);
-    deinitMenuManiaRenderer(sd->renderer);
+    deinitMenuMegaRenderer(sd->renderer);
     deinitMenu(sd->menu);
 
     // Clean up dynamic strings allocated for the controllers
@@ -1820,7 +1832,7 @@ static void synthMainLoop(int64_t elapsedUs)
 
     if (sd->screen == SS_MENU)
     {
-        drawMenuMania(sd->menu, sd->renderer, elapsedUs);
+        drawMenuMega(sd->menu, sd->renderer, elapsedUs);
     }
     else if (sd->screen == SS_FILE_SELECT)
     {
@@ -1829,6 +1841,7 @@ static void synthMainLoop(int64_t elapsedUs)
 
         if (!textEntryDraw(elapsedUs))
         {
+            textEntryDeinit();
             // Entry is finished
             if (sd->filenameBuf && *sd->filenameBuf)
             {
@@ -2172,6 +2185,22 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
         hashPut(&sd->menuMap, itemInfo->label, itemInfo);
     }
 
+    for (int mmxIdx = 0; mmxIdx < mmxTimbreCount; mmxIdx++)
+    {
+        midiMenuItemInfo_t* itemInfo = &sd->itemInfos[sd->itemInfoCount++];
+        int mmxProg                  = mmxTimbreMap[mmxIdx];
+        itemInfo->type               = SMT_PROGRAM;
+        itemInfo->bank               = 2;
+        itemInfo->program            = mmxProg;
+        itemInfo->label              = mmxTimbres[mmxIdx]->name;
+        writeShortName(itemInfo->shortLabel, sizeof(itemInfo->shortLabel), itemInfo->label);
+        wheelMenuSetItemInfo(sd->wheelMenu, itemInfo->label, NULL, mmxIdx, NO_SCROLL);
+        wheelMenuSetItemTextIcon(sd->wheelMenu, itemInfo->label, itemInfo->shortLabel);
+        wheelMenuSetItemSize(sd->wheelMenu, itemInfo->label, -1, -1, WM_SHAPE_ROUNDED_RECT);
+
+        hashPut(&sd->menuMap, itemInfo->label, itemInfo);
+    }
+
     // Controllers are pretty complicated so just do those the first time with the rest of their logic
     int totalControls = 0;
 
@@ -2232,6 +2261,10 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
     // "MAGFest" bank option
     wheelMenuSetItemInfo(sd->wheelMenu, menuItemBankOptions[1], &sd->magfestBankImage, 1, NO_SCROLL);
     wheelMenuSetItemSize(sd->wheelMenu, menuItemBankOptions[1], -1, -1, WM_SHAPE_DEFAULT);
+    // "MMX" bank option
+    // TODO change icon
+    wheelMenuSetItemInfo(sd->wheelMenu, menuItemBankOptions[2], &sd->magfestBankImage, 2, NO_SCROLL);
+    wheelMenuSetItemSize(sd->wheelMenu, menuItemBankOptions[2], -1, -1, WM_SHAPE_DEFAULT);
 
     if (0 == (config->percChannelMask & (1 << chIdx)))
     {
@@ -2262,7 +2295,7 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
             // End instruments submenu
             menu = endSubMenu(menu);
         }
-        else
+        else if (config->banks[chIdx] == 1)
         {
             uint8_t program = config->programs[chIdx];
             if (program >= magfestTimbreCount)
@@ -2279,6 +2312,40 @@ static void addChannelsMenu(menu_t* menu, const synthConfig_t* config)
             for (int instrument = 0; instrument < magfestTimbreCount; instrument++)
             {
                 addSingleItemToMenu(menu, magfestTimbres[instrument]->name);
+            }
+            menu = endSubMenu(menu);
+        }
+        else if (config->banks[chIdx] == 2)
+        {
+            uint8_t program  = config->programs[chIdx];
+            int mmxTimbreIdx = -1;
+            for (int i = 0; i < mmxTimbreCount; i++)
+            {
+                if (program == mmxTimbreMap[i])
+                {
+                    mmxTimbreIdx = i;
+                    break;
+                }
+            }
+
+            // TODO: change icon
+            chanInstrumentIcon = &sd->magfestBankImage;
+
+            if (mmxTimbreIdx >= 0)
+            {
+                snprintf(nameBuffer, 64, "%s%s", menuItemInstrument, mmxTimbres[mmxTimbreIdx]->name);
+            }
+            else
+            {
+                snprintf(nameBuffer, 64, "%s#%" PRIu8, menuItemInstrument, program);
+                mmxTimbreIdx = 0;
+            }
+
+            menu = startSubMenu(menu, nameBuffer);
+
+            for (int i = 0; i < mmxTimbreCount; i++)
+            {
+                addSingleItemToMenu(menu, mmxTimbres[i]->name);
             }
             menu = endSubMenu(menu);
         }
@@ -2949,6 +3016,83 @@ static void drawSynthMode(int64_t elapsedUs)
 
             // Draw a mini metronome
             drawBeatsMetronome(true, 190, true, TFT_WIDTH / 2, TFT_HEIGHT - 25, 20);
+        }
+    }
+
+    if (sd->viewMode & VM_DEBUG)
+    {
+        // ok how is this gonna work
+        // basically make a grid of squares
+        // each column represents a voice (half column?)
+        // each row represents a particular state
+        // also we should somehow show envelope transition state
+
+        const voiceStates_t* states = &sd->midiPlayer.poolVoiceStates;
+        const midiVoice_t* voices   = sd->midiPlayer.poolVoices;
+        int numVoices               = POOL_VOICE_COUNT;
+        int xOffset                 = 0;
+        int yOffset                 = 0 + 10;
+        int w                       = TFT_WIDTH;
+        int h                       = TFT_HEIGHT / 2 - 10;
+
+        for (int step = 0; step < 2; step++)
+        {
+            for (int vIdx = 0; vIdx < numVoices; vIdx++)
+            {
+                const midiVoice_t* voice = &voices[vIdx];
+                int mask                 = 1 << (vIdx);
+
+                int x0 = xOffset + vIdx * w / numVoices;
+                int x1 = x0 + w / numVoices;
+                int y0 = yOffset;
+                int y1 = yOffset + h;
+
+                const paletteColor_t rowColors[] = {
+                    c500, c550, c050, c055, c005, c505,
+                };
+
+                const char rowLabels[] = "ADHSRU";
+
+                bool stateMap[] = {
+                    states->attack & mask,  states->decay & mask,   states->held & mask,
+                    states->sustain & mask, states->release & mask, states->sustenuto & mask,
+                };
+
+                for (int row = 0; row < ARRAY_SIZE(stateMap); row++)
+                {
+                    int ry0 = y0 + row * (y1 - y0) / ARRAY_SIZE(stateMap);
+                    int ry1 = ry0 + (y1 - y0) / ARRAY_SIZE(stateMap);
+
+                    if (stateMap[row])
+                    {
+                        char label = rowLabels[row];
+                        drawRectFilled(x0, ry0, x1, ry1, rowColors[row]);
+                        drawChar(c555, sd->font.height, &sd->font.chars[label - ' '],
+                                 x0 + (x1 - x0 - sd->font.chars[label - ' '].width) / 2,
+                                 ry0 + (ry1 - ry0 - sd->font.height) / 2);
+                    }
+                }
+
+                if (states->on & mask)
+                {
+                    drawRect(x0, y0, x1, y1, c555);
+                    if (voice->stateChangeTick == UINT32_MAX)
+                    {
+                        drawLineFast(x0, y1, x1, y0, c505);
+                    }
+                    else if (voice->stateChangeTick > 0)
+                    {
+                        // there's no way to tell when the note started this state...
+                        int lineX
+                            = x0 + (x1 - x0) * (voice->stateChangeTick - voice->voiceTick) / voice->stateChangeTick;
+                        drawLineFast(lineX, y0, lineX, y1, c505);
+                    }
+                }
+            }
+            states    = &sd->midiPlayer.percVoiceStates;
+            voices    = sd->midiPlayer.percVoices;
+            numVoices = PERCUSSION_VOICES;
+            yOffset   = TFT_HEIGHT / 2;
         }
     }
 
@@ -3768,7 +3912,7 @@ static void synthHandleInput(int64_t elapsedUs)
                     {
                         if (evt.down)
                         {
-                            textEntryInput(evt.down, evt.button);
+                            textEntryInput(evt);
                         }
                     }
                 }
@@ -3876,12 +4020,9 @@ static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x
         int16_t x0       = x + ((chan->percussion ? voiceIdx : i++) * (BAR_WIDTH + BAR_SPACING));
         int16_t x1       = x0 + BAR_WIDTH;
 
-        if (chan->percussion || voices[voiceIdx].oscillators[0].cVol > 0 || voices[voiceIdx].oscillators[0].tVol > 0)
+        if (voices[voiceIdx].curVol > 0)
         {
-            int16_t barH
-                = MAX((chan->percussion ? (voices[voiceIdx].velocity << 1 | 1) : voices[voiceIdx].oscillators[0].cVol)
-                          * BAR_HEIGHT / 255,
-                      1);
+            int16_t barH = MAX((voices[voiceIdx].curVol >> 24) * BAR_HEIGHT / 255, 1);
 
             fillDisplayArea(x0, y + (BAR_HEIGHT - barH), x1, y + BAR_HEIGHT, noteToColor(voices[voiceIdx].note));
         }
@@ -4037,7 +4178,7 @@ static void midiTextCallback(metaEventType_t type, const char* text, uint32_t le
     }
 }
 
-static void synthMenuCb(const char* label, bool selected, uint32_t value)
+static bool synthMenuCb(const char* label, bool selected, uint32_t value)
 {
     // printf("synthMenuCb(%s, %s, %" PRIu32 ")\n", label, selected ? "true" : "false", value);
     if (NULL == label)
@@ -4200,9 +4341,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
             }
             else
             {
-                textEntryInit(&sd->font, 128, sd->filenameBuf);
-                textEntrySetBGTransparent();
-                textEntrySetShadowboxColor(true, c000);
+                textEntryInit(&tes, sd->filenameBuf, getSysFont());
             }
         }
     }
@@ -4418,6 +4557,7 @@ static void synthMenuCb(const char* label, bool selected, uint32_t value)
             }
         }
     }
+    return false;
 }
 
 static void songEndCb(void)

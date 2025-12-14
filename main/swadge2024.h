@@ -180,6 +180,7 @@
 #include "hdw-imu.h"
 #include "hdw-battmon.h"
 #include "hdw-btn.h"
+#include "hdw-ch32v003.h"
 #include "hdw-dac.h"
 #include "hdw-esp-now.h"
 #include "hdw-led.h"
@@ -198,6 +199,7 @@
 #include "fill.h"
 #include "menu.h"
 #include "menuManiaRenderer.h"
+#include "menuMegaRenderer.h"
 
 // Asset loaders
 #include "cnfs.h"
@@ -222,6 +224,7 @@
 #include "imu_utils.h"
 #include "swadgePass.h"
 #include "trophy.h"
+#include "helpPages.h"
 
 // Sound utilities
 #include "soundFuncs.h"
@@ -369,7 +372,7 @@ typedef struct swadgeMode
     /**
      * @brief A struct with the settings and data required for trophy behavior. Set to NULL for no trophies
      */
-    trophyDataList_t* trophyData;
+    const trophyDataList_t* trophyData;
 } swadgeMode_t;
 
 bool checkButtonQueueWrapper(buttonEvt_t* evt);

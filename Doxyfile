@@ -951,6 +951,7 @@ WARN_LOGFILE           = doxy_warnings.txt
 
 INPUT                  = ./main \
                          ./main/modes/games/cosCrunch/cosCrunch.h \
+                         ./main/modes/games/cosCrunch/cosCrunchUtil.h \
                          ./main/asset_loaders/heatshrink_helper.h \
                          ./main/asset_loaders/heatshrink_helper.c \
                          ./tools/assets_preprocessor/src \
@@ -1120,7 +1121,7 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             = ./docs/
+IMAGE_PATH             = ./docs/images
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program

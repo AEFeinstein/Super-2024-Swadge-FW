@@ -11,7 +11,7 @@ Espressif's installation guide notes limitations for the ESP-IDF's path:
 >
 > The installation path of Python or ESP-IDF must not contain white spaces or parentheses.
 >
-> The installation path of Python or ESP-IDF should not contain special characters (non-ASCII) unless the operating system is configured with “Unicode UTF-8” support.
+> The installation path of Python or ESP-IDF should not contain special characters (non-ASCII) unless the operating system is configured with "Unicode UTF-8" support.
 
 If the path to your home directory has spaces in it, then installation paths should be changed to something without a space, like `c:\esp\`. Also note that `ccache` uses a temporary directory in your home directory, and spaces in that path cause issues. `ccache` is enabled by default when running `export.ps1`, but it can be disabled by removing the following from `esp-idf/tools/tools.json`:
 ```
@@ -42,11 +42,11 @@ The continuous integration for this project runs on a Windows instance. This mea
 
     You must add the `msys2` paths **after** the `python` paths and **before** `C:\Windows\System32`. This is because the build uses Windows `python`, not msys2's, and it uses msys2 `find.exe`, not System32's. When it's all set up, it should look something like this:
     
-    <img src="./win_path.png">
+    <img src="./images/win_path.png">
 
     If the above doesn't work try adding `C:\msys64\mingw64\bin` and `C:\msys64\usr\bin` to the system path instead of the user path. The System path is highlighted in red, and the user path in purple. 
 
-    <img src="./Correct_path.jpg">
+    <img src="./images/Correct_path.jpg">
 
 6. Clone the ESP-IDF v5.2.5 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
 Note: Some installs of Python will have py.exe instead of python.exe - If this is the case, you can edit install.ps1 to replace all instances of python.exe to py.exe OR rename your locally installed py.exe file to python.exe
@@ -64,7 +64,7 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
 1. Run the following commands, depending on your package manager, to install all necessary packages:
     * `apt`:
         ```bash
-        sudo apt install build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev git libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov gdb graphviz
+        sudo apt install build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev git libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov gdb graphviz libudev-dev
         ```
     * `dnf`:
         ```bash

@@ -24,6 +24,7 @@
 
 #define SUBPIXEL_COUNT 256
 #define MAX_VELOCITY   (8 * SUBPIXEL_COUNT)
+#define SAVED_TIME_INC (1000 * 1000 * 60) // One minute
 
 //==============================================================================
 // Consts
@@ -32,11 +33,10 @@
 const char modeName[] = "Bouncy Items";
 
 /// @brief Contains a sprite for each major mode
-static const cnfsFileIdx_t items[] = {
-    MAG_FEST_BOUNCER_WSG,
-    BARREL_1_WSG,
-    MMX_TROPHY_WSG,
-};
+static const cnfsFileIdx_t items[]
+    = {MAG_FEST_BOUNCER_WSG,     BARREL_1_WSG,      MMX_TROPHY_WSG,   HA_BIGMA_CROPPED_WSG, UP_CURSOR_8_WSG,
+       DN_BUCKET_HAT_DOWN_0_WSG, SI_PULSE_SMOL_WSG, SUDOKU_NOTES_WSG, _6F_MAG_1_SLV_WSG,    TONK_WSG,
+       STT_BACKGROUND_SMOL_WSG,  CC_TUMBLEWEED_WSG};
 
 static const char* const warningLabels[] = {
     "WARNING!",
@@ -90,11 +90,56 @@ typedef struct
     int64_t explosionTimer;
     bool displayWarning;
     wsg_t batteryImage;
+    uint64_t activeTimer;
+    uint16_t minutes;
 } bouncyData_t;
 
 //==============================================================================
 // Variables
 //==============================================================================
+
+const trophyData_t bounceTrophyData[] = {
+    {
+        .title       = "MOM GET THE CAMERA!",
+        .description = "Hit both corners at once",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1,
+        .hidden      = false,
+    },
+    {
+        .title       = "...Why though?",
+        .description = "Run the bounce mode for an hour total",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_ADDITIVE,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 60,
+        .hidden      = false,
+    },
+    {
+        .title       = "I hope you're on USB power",
+        .description = "Run the bounce mode for ten minutes straight",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 10,
+        .hidden      = false,
+    },
+};
+
+const trophySettings_t bounceTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 3,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = modeName,
+};
+
+const trophyDataList_t bounceTrophyList = {
+    .settings = &bounceTrophySettings,
+    .list     = bounceTrophyData,
+    .length   = ARRAY_SIZE(bounceTrophyData),
+};
 
 swadgeMode_t bouncyMode = {
     .modeName          = modeName,
@@ -105,6 +150,7 @@ swadgeMode_t bouncyMode = {
     .fnEnterMode       = screenEnterMode,
     .fnExitMode        = screenExitMode,
     .fnMainLoop        = screenMainLoop,
+    .trophyData        = &bounceTrophyList,
 };
 
 bouncyData_t* ssd;
@@ -144,13 +190,49 @@ static void screenEnterMode(void)
 
     // Set active images
     ssd->objs[0].isActive = true; // Always active
-    if (trophyGetPoints(false, roboRunnerMode.modeName) == 1000)
+    if (trophyGetPoints(false, roboRunnerMode.trophyData->settings->namespaceKey) >= 500)
     {
         ssd->objs[1].isActive = true;
     }
-    if (trophyGetPoints(false, mainMenuMode.modeName) == 1000)
+    if (trophyGetPoints(false, mainMenuMode.trophyData->settings->namespaceKey) >= 500)
     {
         ssd->objs[2].isActive = true;
+    }
+    if (trophyGetPoints(false, swsnCreatorMode.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[3].isActive = true;
+    }
+    if (trophyGetPoints(false, modeDiceRoller.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[4].isActive = true;
+    }
+    if (trophyGetPoints(false, danceNetworkMode.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[5].isActive = true;
+    }
+    if (trophyGetPoints(false, swadgeItMode.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[6].isActive = true;
+    }
+    if (trophyGetPoints(false, swadgedokuMode.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[7].isActive = true;
+    }
+    if (trophyGetPoints(false, modePicross.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[8].isActive = true;
+    }
+    if (trophyGetPoints(false, artilleryMode.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[9].isActive = true;
+    }
+    if (trophyGetPoints(false, swadgetamatoneMode.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[10].isActive = true;
+    }
+    if (trophyGetPoints(false, cosCrunchMode.trophyData->settings->namespaceKey) >= 500)
+    {
+        ssd->objs[11].isActive = true;
     }
 
     ssd->displayWarning = true;
@@ -208,6 +290,12 @@ static void screenMainLoop(int64_t elapsedUs)
     {
         drawWarning();
     }
+
+    // Timer
+    RUN_TIMER_EVERY(ssd->activeTimer, SAVED_TIME_INC, elapsedUs, ssd->minutes++;
+                    int totalTicks = trophyGetSavedValue(&bounceTrophyData[1]); totalTicks += 1;
+                    trophyUpdateMilestone(&bounceTrophyData[1], totalTicks, 10);
+                    trophyUpdateMilestone(&bounceTrophyData[2], ssd->minutes, 100););
 }
 
 static void updateObjects()
@@ -294,6 +382,7 @@ static void updateObjects()
         {
             ssd->explosion      = true;
             ssd->explosionTimer = 0;
+            trophyUpdate(&bounceTrophyData[0], 1, true);
         }
     }
 }
@@ -309,31 +398,28 @@ static void lightLEDs(LEDDirections_t dir)
     {
         case LED_NORTH:
         {
-            ssd->leds[1] = randColors;
-            ssd->leds[2] = randColors;
-            ssd->leds[3] = randColors;
+            ssd->leds[0] = randColors;
+            ssd->leds[5] = randColors;
             break;
         }
         case LED_SOUTH:
         {
-            ssd->leds[0] = randColors;
+            ssd->leds[1] = randColors;
             ssd->leds[4] = randColors;
-            ssd->leds[6] = randColors;
-            ssd->leds[7] = randColors;
             break;
         }
         case LED_EAST:
         {
             ssd->leds[0] = randColors;
             ssd->leds[1] = randColors;
-            ssd->leds[8] = randColors;
+            ssd->leds[2] = randColors;
             break;
         }
         case LED_WEST:
         {
             ssd->leds[3] = randColors;
+            ssd->leds[4] = randColors;
             ssd->leds[5] = randColors;
-            ssd->leds[6] = randColors;
             break;
         }
         default:
@@ -365,7 +451,7 @@ static void fadeLEDs()
 
 static void drawBouncy()
 {
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+    clearPxTft();
     for (int idx = 0; idx < ARRAY_SIZE(items); idx++)
     {
         if (ssd->objs[idx].isActive)
@@ -377,6 +463,7 @@ static void drawBouncy()
 
 static void drawWarning()
 {
+    clearPxTft();
     drawText(getSysFont(), c500, warningLabels[0], (TFT_WIDTH - textWidth(getSysFont(), warningLabels[0])) >> 1, 60);
     int16_t xCoord = 8;
     int16_t yCoord = 120;

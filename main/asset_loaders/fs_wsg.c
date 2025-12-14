@@ -41,14 +41,36 @@ bool loadWsg(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam)
     }
 
     // Save the decompressed info to the wsg. The first four bytes are dimension
-    wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
-    wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
-    // The rest of the bytes are pixels
-    wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * wsg->w * wsg->h,
-                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, "wsg");
+    uint16_t newW = (decompressedBuf[0] << 8) | decompressedBuf[1];
+    uint16_t newH = (decompressedBuf[2] << 8) | decompressedBuf[3];
+
+    // If there is an existing buffer and it doesn't match, free it
+    if (wsg->px && (wsg->w * wsg->h != newW * newH))
+    {
+        heap_caps_free(wsg->px);
+        wsg->px = NULL;
+    }
+
+// The rest of the bytes are pixels
+#ifndef __XTENSA__
+    char tag[32];
+    sprintf(tag, "cnfsIdx %d", fIdx);
+#endif
+
+    // If there is no pixel buffer
+    if (!wsg->px)
+    {
+        // Allocate it
+        wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * newW * newH,
+                                                        spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, tag);
+    }
 
     if (NULL != wsg->px)
     {
+        // Set the size
+        wsg->w = newW;
+        wsg->h = newH;
+
         memcpy(wsg->px, &decompressedBuf[4], decompressedSize - 4);
         heap_caps_free(decompressedBuf);
         return true;
@@ -86,14 +108,36 @@ bool loadWsgInplace(cnfsFileIdx_t fIdx, wsg_t* wsg, bool spiRam, uint8_t* decomp
     }
 
     // Save the decompressed info to the wsg. The first four bytes are dimension
-    wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
-    wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
-    // The rest of the bytes are pixels
-    wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * wsg->w * wsg->h,
-                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, "wsg_inplace");
+    uint16_t newW = (decompressedBuf[0] << 8) | decompressedBuf[1];
+    uint16_t newH = (decompressedBuf[2] << 8) | decompressedBuf[3];
+
+    // If there is an existing buffer and it doesn't match, free it
+    if (wsg->px && (wsg->w * wsg->h != newW * newH))
+    {
+        heap_caps_free(wsg->px);
+        wsg->px = NULL;
+    }
+
+// The rest of the bytes are pixels
+#ifndef __XTENSA__
+    char tag[32];
+    sprintf(tag, "cnfsIdx %d", fIdx);
+#endif
+
+    // If there is no pixel buffer
+    if (!wsg->px)
+    {
+        // Allocate it
+        wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * newW * newH,
+                                                        spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, tag);
+    }
 
     if (NULL != wsg->px)
     {
+        // Set the size
+        wsg->w = newW;
+        wsg->h = newH;
+
         memcpy(wsg->px, &decompressedBuf[4], decompressedSize - 4);
         return true;
     }
@@ -116,17 +160,38 @@ bool loadWsgNvs(const char* namespace, const char* key, wsg_t* wsg, bool spiRam)
     ESP_LOGD("WSG", "decompressedBuf size is %" PRIu32, decompressedSize);
 
     // Save the decompressed info to the wsg. The first four bytes are dimension
-    wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
-    wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
+    uint16_t newW = (decompressedBuf[0] << 8) | decompressedBuf[1];
+    uint16_t newH = (decompressedBuf[2] << 8) | decompressedBuf[3];
 
-    ESP_LOGD("WSG", "full WSG is %" PRIu16 " x %" PRIu16 ", or %d pixels", wsg->w, wsg->h, wsg->w * wsg->h);
+    ESP_LOGD("WSG", "full WSG is %" PRIu16 " x %" PRIu16 ", or %d pixels", newW, newH, newW * newH);
+
+    // If there is an existing buffer and it doesn't match, free it
+    if (wsg->px && (wsg->w * wsg->h != newW * newH))
+    {
+        heap_caps_free(wsg->px);
+        wsg->px = NULL;
+    }
 
     // The rest of the bytes are pixels
-    wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * wsg->w * wsg->h,
-                                                    spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, key);
+#ifndef __XTENSA__
+    char tag[32];
+    sprintf(tag, "NVS key: %s", key);
+#endif
+
+    // If there is no pixel buffer
+    if (!wsg->px)
+    {
+        // Allocate it
+        wsg->px = (paletteColor_t*)heap_caps_malloc_tag(sizeof(paletteColor_t) * newW * newH,
+                                                        spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_8BIT, key);
+    }
 
     if (NULL != wsg->px)
     {
+        // Set the size
+        wsg->w = newW;
+        wsg->h = newH;
+
         ESP_LOGD("WSG", "Copying %" PRIu32 " pixels into WSG now", decompressedSize - 4);
         memcpy(wsg->px, &decompressedBuf[4], decompressedSize - 4);
         heap_caps_free(decompressedBuf);
@@ -198,7 +263,8 @@ void freeWsg(wsg_t* wsg)
     if (wsg->w && wsg->h)
     {
         heap_caps_free(wsg->px);
-        wsg->h = 0;
-        wsg->w = 0;
+        wsg->px = NULL;
+        wsg->h  = 0;
+        wsg->w  = 0;
     }
 }

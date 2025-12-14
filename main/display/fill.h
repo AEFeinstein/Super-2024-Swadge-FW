@@ -12,7 +12,7 @@
  * shadeDisplayArea() is used to shade a rectangular area using
  *
  * oddEvenFill() is an efficient way to fill areas using the <a
- * href="https://en.wikipedia.org/wiki/Even%E2%80%93odd_rule">Even–odd rule</a>. It may not work in all cases, but if it
+ * href="https://en.wikipedia.org/wiki/Even%E2%80%93odd_rule">Even-odd rule</a>. It may not work in all cases, but if it
  * does work, it is preferrable to use.
  *
  * floodFill() is a less efficient way to fill areas using the <a href="https://en.wikipedia.org/wiki/Flood_fill">Flood
