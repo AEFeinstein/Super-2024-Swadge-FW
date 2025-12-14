@@ -516,7 +516,7 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
 
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
 
-            //if the 11th level (intro level) isn't cleared
+            // if the 11th level (intro level) isn't cleared
             if (!(platformer->unlockables.levelsCleared & (1 << 11)))
             {
                 platformer->gameData.level = 11;
@@ -547,10 +547,10 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
 
             changeStateReadyScreen(pango);
             deinitMenu(pango->menu);*/
-            
+
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
 
-            //if the 11th level (intro level) isn't cleared
+            // if the 11th level (intro level) isn't cleared
             if (!(platformer->unlockables.levelsCleared & (1 << 11)))
             {
                 platformer->gameData.level = 11;

@@ -12,7 +12,8 @@ const cnfsFileIdx_t MG_BGMS[] = {BGM_DEADEYE_CHIRPZI_MID,    BGM_BOSS_DEADEYE_CH
                                  BGM_SEVER_YAGATA_MID,       BGM_BOSS_SEVER_YAGATA_MID,    BGM_SMASH_GORILLA_MID,
                                  BGM_BOSS_SMASH_GORILLA_MID, BGM_BOSS_TRASH_MAN_MID,       BGM_BIGMA_MID,
                                  BGM_BOSS_BIGMA_MID,         BGM_LEVEL_CLEAR_JINGLE_MID,   BGM_POST_FIGHT_MID,
-                                 BGM_PRE_FIGHT_MID,          BGM_INTRO_STAGE_MID, BGM_STAGE_SELECT_MID,         BGM_NAME_ENTRY_MID};
+                                 BGM_PRE_FIGHT_MID,          BGM_INTRO_STAGE_MID,          BGM_STAGE_SELECT_MID,
+                                 BGM_NAME_ENTRY_MID};
 
 /*
 const int MG_1x2_TILE_COLLISION_OFFSETS_IN_PIXELS[]
@@ -272,15 +273,16 @@ const mg_EntityTileCollider_t entityTileCollider_bigma = {.bottomEdge = &mgTileC
                                                           .leftEdge   = &mgTileCollisionOffsets_bigma_leftEdge};
 
 // Note: none of these names match actual colors
-const paletteColor_t bgGradientGray[]   = {c001, c112, c223, c334};
-const paletteColor_t bgGradientPurple[] = {c202, c203, c204, c205};
-const paletteColor_t bgGradientBlue[]   = {c102, c103, c104, c105};
-const paletteColor_t bgGradientCyan[]   = {c003, c013, c023, c033};
-const paletteColor_t bgGradientGreen[]  = {c001, c111, c221, c331};
-const paletteColor_t bgGradientYellow[] = {c202, c312, c422, c532};
-const paletteColor_t bgGradientOrange[] = {c040, c230, c220, c210};
-const paletteColor_t bgGradientRed[]    = {c101, c201, c301, c411};
-const paletteColor_t bgGradientMenu[]   = {c001, c012, c123, c234};
+const paletteColor_t bgGradientGray[]             = {c001, c112, c223, c334};
+const paletteColor_t bgGradientPurple[]           = {c202, c203, c204, c205};
+const paletteColor_t bgGradientBlue[]             = {c102, c103, c104, c105};
+const paletteColor_t bgGradientCyan[]             = {c003, c013, c023, c033};
+const paletteColor_t bgGradientGreen[]            = {c001, c111, c221, c331};
+const paletteColor_t bgGradientYellow[]           = {c202, c312, c422, c532};
+const paletteColor_t bgGradientOrange[]           = {c040, c230, c220, c210};
+const paletteColor_t bgGradientRed[]              = {c101, c201, c301, c411};
+const paletteColor_t bgGradientRedFinalShowdown[] = {c401, c301, c201, c101};
+const paletteColor_t bgGradientMenu[]             = {c001, c012, c123, c234};
 
 const mgLeveldef_t leveldef[] = {
     {.filename           = LEVEL_SELECT_BIN,
@@ -347,7 +349,7 @@ const mgLeveldef_t leveldef[] = {
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_FLARE_GRYFFYN,
      .mainBgmIndex       = MG_INTRO_STAGE,
-     .bossBgmIndex       = MG_BGM_BOSS_FLARE_GRYFFYN,
+     .bossBgmIndex       = MG_BGM_BOSS_BIGMA,
      .bgColors           = bgGradientBlue},
     {.filename           = BOSS_TEST_DONUT_BIN,
      .timeLimit          = 180,
@@ -409,6 +411,12 @@ const mgLeveldef_t leveldef[] = {
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
      .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
      .bgColors           = bgGradientPurple},
+    {.filename           = SHOWDOWN_BIN, // Bigma2 & Hank fight
+     .timeLimit          = 180,
+     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
+     .mainBgmIndex       = MG_BGM_PRE_FIGHT,
+     .bossBgmIndex       = MG_BGM_BOSS_BIGMA,
+     .bgColors           = bgGradientRedFinalShowdown},
 };
 
 const mg_spriteDef_t playerDamageAnimFrames[]
