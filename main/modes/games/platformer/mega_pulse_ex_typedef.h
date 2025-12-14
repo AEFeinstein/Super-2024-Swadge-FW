@@ -1033,9 +1033,9 @@ typedef enum
     MG_PLOT_ARMOR_ABILITY,
     MG_OBNOXIOUS_NOODLING_ABILITY,//double jump
     MG_CAN_OF_SALSA_ABILITY,
-    MG_CHARGE_SHOT_ABILITY,
+    MG_SHOOP_DA_WOOP_ABILITY,//charge shot
     MG_SURE_YOU_CAN_ABILITY,//uppercut
-    MG_REFLECTOR_ABILITY,
+    MG_REFLECTOR_SHIELD_ABILITY,
 } mgAbilities_t;
 
 //==============================================================================
@@ -1048,6 +1048,8 @@ extern const int MG_TILE_COLLISION_OFFSETS_1x2_BOTTOM_EDGE[];
 extern const int MG_TILE_COLLISION_OFFSETS_1x2_TOP_EDGE[];
 extern const int MG_TILE_COLLISION_OFFSETS_1x2_RIGHT_EDGE[];
 extern const int MG_TILE_COLLISION_OFFSETS_1x2_LEFT_EDGE[];
+extern const char MG_cheatModeNVSKey[];
+extern const char MG_abilitiesNVSKey[];
 extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_bottomEdge;
 extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_topEdge;
 extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_rightEdge;

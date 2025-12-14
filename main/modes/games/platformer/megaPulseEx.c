@@ -311,7 +311,6 @@ static const int32_t trueFalseVals[] = {
 static const char str_cheatMode[]       = "Cheat Mode: ";
 static const char str_On[]              = "On";
 static const char str_Off[]             = "Off";
-static const char str_cheatModeNVSKey[] = "mg_cheatMode";
 static const char* strs_on_off[]        = {str_Off, str_On};
 
 static const settingParam_t mgAbilityUnlockStateSettingBounds = {.min = 0, .max = 256, .key = KEY_UNLOCKS};
@@ -620,7 +619,7 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
     {
         if (label == str_cheatMode)
         {
-            writeNvs32(str_cheatModeNVSKey, settingVal);
+            writeNvs32(MG_cheatModeNVSKey, settingVal);
         }
     }
 
@@ -702,9 +701,9 @@ void mgBuildMainMenu(platformer_t* self)
         .def = trueFalseVals[0],
     };
     int32_t cheatMode = 0;
-    if (readNvs32(str_cheatModeNVSKey, &cheatMode) == false)
+    if (readNvs32(MG_cheatModeNVSKey, &cheatMode) == false)
     {
-        writeNvs32(str_cheatModeNVSKey, 0);
+        writeNvs32(MG_cheatModeNVSKey, 0);
     }
     addSettingsOptionsItemToMenu(self->menu, str_cheatMode, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
                                  cheatMode);

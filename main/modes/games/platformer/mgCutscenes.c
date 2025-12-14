@@ -142,6 +142,12 @@ static void setSongPitchesFromCurrentSong(mgGameData_t* gameData)
     }
 }
 
+static void unlockAbility(mgGameData_t* gameData, mgAbilities_t ability)
+{
+    gameData->abilities |= (1U << ability);
+    writeNvs32(MG_abilitiesNVSKey, gameData->abilities);
+}
+
 void stageStartCutscene(mgGameData_t* gameData)
 {
     gameData->cutscene->cbFunc = goToReadyScreen;
@@ -650,6 +656,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, KineticDonut, "I-I couldn't stop bouncing. Everything was loud, and I was starving...", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "I get that way too sometimes.", false, -1);
             addCutsceneLine(gameData->cutscene, KineticDonut, "Here. Take this. It's a little messy, but it packs a punch.", false, -1);
+            unlockAbility(gameData, MG_DROP_THE_MIC_ABILITY);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Drop the Mic", false, 0);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Press down and A in the air.", false, 0);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Unleash a ground-pound sound attack with a mic drop!", false, 0);
@@ -666,6 +673,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, SmashGorilla, "Just messin' with ya. Got glitched pretty bad, huh?", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "The whole place was vibing TOO hard. You back to normal?", false, 1);
             addCutsceneLine(gameData->cutscene, SmashGorilla, "Yeah. Head's clearer now. Here - take this. Might help you keep the groove tight.", false, -1);
+            unlockAbility(gameData, MG_CAN_OF_SALSA_ABILITY);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Can of Salsa", false, 0);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... A backup up energy tank!", false, 0);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Fill it up with excess health pickups and it'll kick in automatically when your health drops.", false, 0);
@@ -676,7 +684,8 @@ void bossOutroCutscene(mgGameData_t* gameData)
         case 7: // The Foundry of Echoes (Deadeye Chirpzi)
         {
             addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "Urgghh... My head....I haven't blacked out like that since the afterparty in 2016...", false, -1);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "Zip... buddy?", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "Zip, you there, bud?", false, -1);
+            addCutsceneLine(gameData->cutscene, SystemText, "Zip glitches out, sparks shooting outward, and lets out a chirping noise.", false,-1);
             addCutsceneLine(gameData->cutscene, Cho, "Hey, it's okay. You're safe now. It's over.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Is he... talking to you?", false, -1);
             addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "Not exactly. But I get it.", false, -1);
@@ -689,6 +698,10 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Cho, "More like a beamline direct to the face. You ever feel the need to absolutely delete something?", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, " Frequently.", false, -1);
             addCutsceneLine(gameData->cutscene, Cho, "Then here. Let Zip ride shotgun for a bit.", false, -1);
+            unlockAbility(gameData, MG_SHOOP_DA_WOOP_ABILITY);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Shoop Da Whoop", false, 0);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Wait a bit, then fire for a charged shot!", false, 0);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... The swadge LED lights show when it's ready.", false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "... Did I just get possessed by a chorus?", false, -1);
             addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "Nah. Just one very passionate synth creature with volume issues.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "I love it already.", false, -1);
@@ -701,6 +714,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, GrindPangolin, "Ugghhh. I hate when I go full speed without thinking.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Happens to the best of us.", false, 1);
             addCutsceneLine(gameData->cutscene, GrindPangolin, "Here. Should help you keep up when things get too fast.", false, -1);
+            unlockAbility(gameData, MG_TROMBONE_SLIDE_ABILITY);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Trombone Slide", false, 0);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Press Down and A to Dash! You'll slide under some attacks!", false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "Now that's what I'm talking about!", false, 2);
@@ -717,6 +731,10 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, DrainBat, "Beneath the cliffs of San Simeon. Population: three. We make artisanal jams.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "... Sure.", false, -1);
             addCutsceneLine(gameData->cutscene, DrainBat, "Anyway. You're gonna need this to make it through the next wave.", false, -1);
+            unlockAbility(gameData, MG_SURE_YOU_CAN_ABILITY);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE Receives: Sure, You Can!", false, 0);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Press up and B for a rising uppercut!", false, 0);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Also works in the air!", false, 0);
             addCutsceneLine(gameData->cutscene, DrainBat, "It's my signature move-Sure, You Can!", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Sure, I'll allow it. See ya!", false, -1);
             addCutsceneLine(gameData->cutscene, DrainBat, "Ugh... I hope my goat didn't eat the WiFi again.", false, -1);
@@ -732,6 +750,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "Happy to have you both back.", false, -1);
             addCutsceneLine(gameData->cutscene, Percy, "There's one more thing we can offer.", false, -1);
             addCutsceneLine(gameData->cutscene, Jasper, "It's not a weapon. But you'll know when it saves your life.", false, -1);
+            unlockAbility(gameData, MG_PLOT_ARMOR_ABILITY);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Plot Armor", false, 0);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Reduces damage taken by half!", false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "This feels... solid. But also, weirdly... ironic?", false, -1);
@@ -769,6 +788,9 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "...", false, -1);
             addCutsceneLine(gameData->cutscene, Sunny, "Here. Take Gryffyn's Reflector Shield. You can use it to bounce back energy-based attacks.", false, -1);
             addCutsceneLine(gameData->cutscene, Sunny, "Might give you an edge against BIGMA's flashier tricks.", false, -1);
+            unlockAbility(gameData, MG_REFLECTOR_SHIELD_ABILITY);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Reflector Shield", false, 0);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Press down and B to bounce back energy-based attacks!", false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "Are you sure Gryffyn won't mind?", false, -1);
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "Once we put a stop to BIGMA, I'm sure he'll forgive you.", true, -1);
             break;
@@ -784,6 +806,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Ember, "Been worse. Thanks for the assist.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Do you want to, like, repay me with a power-up or something?", false, -1);
             addCutsceneLine(gameData->cutscene, Ember, "Pfft. I'm not a vending machine. But take that. Maybe you can weaponize jazz.", false, -1);
+            unlockAbility(gameData, MG_OBNOXIOUS_NOODLING_ABILITY);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Obnoxious Noodling", false, 0);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Tap A in the air to double-jump on a cloud of bad lyrics.", false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "... It honks with emotion.", false, -1);

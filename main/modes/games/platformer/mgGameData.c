@@ -63,10 +63,10 @@ void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
     gameData->bgColors             = bgGradientCyan;
     gameData->customLevel          = false;
     int32_t outVal = 0;
-    readNvs32("mg_cheatMode", &outVal);
+    readNvs32(MG_cheatModeNVSKey, &outVal);
     gameData->cheatMode = outVal;
     outVal = 0;
-    readNvs32("mg_abilities", &outVal);
+    readNvs32(MG_abilitiesNVSKey, &outVal);
     gameData->abilities = outVal;
 
     mg_resetGameDataLeds(gameData);

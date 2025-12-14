@@ -32,6 +32,9 @@ const int MG_TILE_COLLISION_OFFSETS_1x2_LEFT_EDGE[]
     = {-7, 14, -7, 0, -7, -14};
 */
 
+const char MG_cheatModeNVSKey[] = "mg_cheatMode";
+const char MG_abilitiesNVSKey[] = "mg_abilities";
+
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_bottomEdge
     = {.collisionPoints = {{.x = -7, .y = 15}, {.x = 0, .y = 15}, {.x = 6, .y = 15}}, .size = 3};
 
