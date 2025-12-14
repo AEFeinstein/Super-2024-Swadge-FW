@@ -79,7 +79,7 @@ void mg_initializeTileMap(mgTilemap_t* tilemap, mgWsgManager_t* wsgManager);
 void mg_drawTileMap(mgTilemap_t* tilemap);
 void mg_scrollTileMap(mgTilemap_t* tilemap, int16_t x, int16_t y);
 void mg_drawTile(mgTilemap_t* tilemap, uint8_t tileId, int16_t x, int16_t y);
-bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name);
+bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name, mgEntityManager_t* entityManager);
 void mg_tileSpawnEntity(mgTilemap_t* tilemap, uint8_t objectIndex, uint8_t tx, uint8_t ty);
 void mg_hashSpawnEntity(mgEntityManager_t* entityManager, mgEntitySpawnData_t* entitySpawnData);
 uint8_t mg_getTile(mgTilemap_t* tilemap, uint8_t tx, uint8_t ty);

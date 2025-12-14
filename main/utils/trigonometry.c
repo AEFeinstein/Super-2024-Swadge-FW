@@ -41,7 +41,7 @@ const uint16_t tan1024[91] = {
 // Static Function Prototypes
 //==============================================================================
 
-static int16_t innerAtan2(int32_t y, int32_t x);
+static int32_t innerAtan2(int32_t y, int32_t x);
 
 //==============================================================================
 // Functions
@@ -253,7 +253,7 @@ int32_t cordicAtan2(int32_t x, int32_t y)
  * @brief Static helper function to make sure the ::ARCTAN_APPROX macro
  * is only called with parameters inside its domain.
  */
-static int16_t innerAtan2(int32_t y, int32_t x)
+static int32_t innerAtan2(int32_t y, int32_t x)
 {
     int8_t sig = 1;
 

@@ -29,6 +29,20 @@ static const vec_t mg_sureYouCanVectors[] = {
     {.x = 8, .y = 4},     {.x = 8, .y = -2},   {.x = 8, .y = -4},   {.x = 8, .y = -8},
     {.x = 16, .y = -128}, {.x = 16, .y = -64}, {.x = 32, .y = -16}, {.x = 16, .y = -8}};
 
+const mg_spriteDef_t playerDamageAnimFrames[]
+    = {MG_SP_PLAYER_HURT, MG_SP_PLAYER_HURT_2, MG_SP_PLAYER_HURT, MG_SP_PLAYER_HURT_3};
+const mg_spriteDef_t playerMicDropAnimFrames[]     = {MG_SP_PLAYER_MIC_DROP_1, MG_SP_PLAYER_MIC_DROP_2};
+const mg_spriteDef_t playerSureYouCanAnimnFrames[] = {
+    // These are in reverse order
+    MG_SP_PLAYER_SUREYOUCAN_2, MG_SP_PLAYER_SUREYOUCAN_2, MG_SP_PLAYER_SUREYOUCAN_2, MG_SP_PLAYER_SUREYOUCAN_1,
+    MG_SP_PLAYER_SUREYOUCAN_1, MG_SP_PLAYER_JUMP,         MG_WSG_PLAYER_WALK5,       MG_WSG_PLAYER_WALK6};
+
+const mg_spriteDef_t normalShotAnimFrames[] = {MG_SP_WAVEBALL_1, MG_SP_WAVEBALL_2, MG_SP_WAVEBALL_3};
+const mg_spriteDef_t chargeShotAnimFrames[]
+    = {MG_SP_CHARGE_SHOT_LVL1_1, MG_SP_CHARGE_SHOT_LVL1_2, MG_SP_CHARGE_SHOT_LVL1_3};
+const mg_spriteDef_t maxChargeShotAnimFrames[]
+    = {MG_SP_CHARGE_SHOT_MAX_1, MG_SP_CHARGE_SHOT_MAX_2, MG_SP_CHARGE_SHOT_MAX_3};
+
 //==============================================================================
 // Functions Prototypes
 //==============================================================================
@@ -117,7 +131,8 @@ void mg_updatePlayer(mgEntity_t* self)
             }
 
             if ((self->gameData->btnState & PB_DOWN) && (self->gameData->btnState & PB_B)
-                && !(self->gameData->prevBtnState & PB_B))
+                && !(self->gameData->prevBtnState & PB_B)
+                && (self->gameData->abilities & (1U << MG_REFLECTOR_SHIELD_ABILITY)))
             {
                 self->state = MG_PL_ST_SHIELD;
                 if (self->yspeed > 0)
@@ -156,7 +171,8 @@ void mg_updatePlayer(mgEntity_t* self)
 
             // Ugh... this is repeated here unfortunately
             if ((self->gameData->btnState & PB_DOWN) && (self->gameData->btnState & PB_B)
-                && !(self->gameData->prevBtnState & PB_B))
+                && !(self->gameData->prevBtnState & PB_B)
+                && (self->gameData->abilities & (1U << MG_REFLECTOR_SHIELD_ABILITY)))
             {
                 self->state = MG_PL_ST_SHIELD;
                 if (self->yspeed > 0)
@@ -254,7 +270,8 @@ void mg_updatePlayer(mgEntity_t* self)
         {
             if (!self->falling)
             {
-                if (self->gameData->btnState & PB_DOWN)
+                if ((self->gameData->btnState & PB_DOWN)
+                    && (self->gameData->abilities & (1U << MG_TROMBONE_SLIDE_ABILITY)))
                 {
                     // initiate dash slide
                     self->state        = MG_PL_ST_DASHING;
@@ -288,7 +305,8 @@ void mg_updatePlayer(mgEntity_t* self)
                     soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
                 }
             }
-            else if (self->state != MG_PL_ST_MIC_DROP && self->gameData->btnState & PB_DOWN)
+            else if (self->state != MG_PL_ST_MIC_DROP && (self->gameData->btnState & PB_DOWN)
+                     && (self->gameData->abilities & (1U << MG_DROP_THE_MIC_ABILITY)))
             {
                 self->xspeed       = 0;
                 self->yspeed       = -32;
@@ -316,7 +334,7 @@ void mg_updatePlayer(mgEntity_t* self)
                 self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
                 // soundPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
             }
-            else if (self->canDash)
+            else if (self->canDash && (self->gameData->abilities & (1U << MG_OBNOXIOUS_NOODLING_ABILITY)))
             {
                 // initiate double jump
                 self->jumpPower = 60;
@@ -373,7 +391,8 @@ void mg_updatePlayer(mgEntity_t* self)
         {
             case MG_PL_ST_NORMAL:
             case MG_PL_ST_DASHING:
-                if (self->gameData->btnState & PB_UP && ((self->jumpPower >= 0) || (!self->falling)))
+                if ((self->gameData->btnState & PB_UP) && ((self->jumpPower >= 0) || (!self->falling))
+                    && (self->gameData->abilities & (1U << MG_SURE_YOU_CAN_ABILITY)))
                 {
                     self->state      = MG_PL_ST_UPPERCUT;
                     self->yspeed     = 0;
@@ -394,12 +413,13 @@ void mg_updatePlayer(mgEntity_t* self)
                         createdEntity->homeTileY    = 0;
                         createdEntity->linkedEntity = self;
 
-                        if (self->shotsFired <= -63)
+                        if (self->shotsFired <= -63 && (self->gameData->abilities & (1U << MG_SHOOP_DA_WOOP_ABILITY)))
                         {
                             createdEntity->state       = 2;
                             createdEntity->spriteIndex = MG_SP_CHARGE_SHOT_MAX_1;
                         }
-                        else if (self->shotsFired <= -31)
+                        else if (self->shotsFired <= -31
+                                 && (self->gameData->abilities & (1U << MG_SHOOP_DA_WOOP_ABILITY)))
                         {
                             createdEntity->state       = 1;
                             createdEntity->spriteIndex = MG_SP_CHARGE_SHOT_LVL1_1;
@@ -1107,18 +1127,20 @@ void animatePlayer(mgEntity_t* self)
 
     if (self->state == MG_PL_ST_HURT)
     {
-        self->spriteIndex = playerDamageAnimFrames[((self->stateTimer + self->visible) >> 2) & 0b11];
+        self->spriteIndex
+            = playerDamageAnimFrames[((self->stateTimer + self->visible) >> 2) % ARRAY_SIZE(playerDamageAnimFrames)];
         return;
     }
     else if (self->state == MG_PL_ST_MIC_DROP)
     {
-        self->spriteIndex       = playerMicDropAnimFrames[(self->stateTimer >> 2) & 0b1];
+        self->spriteIndex = playerMicDropAnimFrames[(self->stateTimer >> 2) % ARRAY_SIZE(playerMicDropAnimFrames)];
         self->spriteRotateAngle = getAtan2(self->yspeed, self->xspeed) - 90;
         return;
     }
     else if (self->state == MG_PL_ST_UPPERCUT)
     {
-        self->spriteIndex = playerSureYouCanAnimnFrames[(self->stateTimer >> 2)];
+        self->spriteIndex
+            = playerSureYouCanAnimnFrames[(self->stateTimer >> 2) % ARRAY_SIZE(playerSureYouCanAnimnFrames)];
         if (self->stateTimer == 4)
         {
             self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
@@ -1370,7 +1392,15 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             {
                 if (!self->gameData->cheatMode)
                 {
-                    self->hp -= 5;
+                    // pulse takes damage
+                    if (self->gameData->abilities & (1U << MG_PLOT_ARMOR_ABILITY))
+                    {
+                        self->hp -= 3;
+                    }
+                    else
+                    {
+                        self->hp -= 5;
+                    }
                 }
 
                 self->gameData->comboTimer = 0;
@@ -1423,7 +1453,14 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_POWERUP:
         {
             self->hp += 6;
-            if (self->hp > 30)
+            if ((self->gameData->abilities & (1U << MG_CAN_OF_SALSA_ABILITY)))
+            {
+                if (self->hp > 36)
+                {
+                    self->hp = 36;
+                }
+            }
+            else if (self->hp > 30)
             {
                 self->hp = 30;
             }
@@ -1495,7 +1532,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 self->gameData->level = newLevelIndex;
 
                 mg_deactivateAllEntities(self->entityManager, true);
-                mg_loadMapFromFile(self->tilemap, leveldef[newLevelIndex].filename);
+                mg_loadMapFromFile(self->tilemap, leveldef[newLevelIndex].filename, self->entityManager);
                 mg_loadWsgSet(self->tilemap->wsgManager, leveldef[newLevelIndex].defaultWsgSetIndex);
 
                 if (self->tilemap->defaultPlayerSpawn != NULL)
@@ -1556,7 +1593,15 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             {
                 if (!self->gameData->cheatMode)
                 {
-                    self->hp -= other->scoreValue;
+                    // pulse takes damage
+                    if (self->gameData->abilities & (1U << MG_PLOT_ARMOR_ABILITY))
+                    {
+                        self->hp -= (other->scoreValue * 3) / 5;
+                    }
+                    else
+                    {
+                        self->hp -= other->scoreValue;
+                    }
                 }
                 mg_updateLedsHpMeter(self->entityManager, self->gameData);
                 self->gameData->comboTimer = 0;
@@ -2934,13 +2979,14 @@ void updateWaveBall(mgEntity_t* self)
         {
             case 0:
             default:
-                self->spriteIndex = normalShotAnimFrames[(self->animationTimer % 3)];
+                self->spriteIndex = normalShotAnimFrames[(self->animationTimer % ARRAY_SIZE(normalShotAnimFrames))];
                 break;
             case 1:
-                self->spriteIndex = chargeShotAnimFrames[(self->animationTimer % 3)];
+                self->spriteIndex = chargeShotAnimFrames[(self->animationTimer % ARRAY_SIZE(chargeShotAnimFrames))];
                 break;
             case 2:
-                self->spriteIndex = maxChargeShotAnimFrames[(self->animationTimer % 3)];
+                self->spriteIndex
+                    = maxChargeShotAnimFrames[(self->animationTimer % ARRAY_SIZE(maxChargeShotAnimFrames))];
                 break;
         }
     }
@@ -3815,7 +3861,19 @@ void mg_updateBossSeverYagata(mgEntity_t* self)
 
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
     {
+        self->gameData->pauseCountdown = true;
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        if (self->gameData->level == 6)
+        {
+            // after defeating smash gorilla (level 6) create a bunch of power ups to try out can of salsa.
+            for (int i = 1; i < 5; i++)
+            {
+                createPowerUp(self->entityManager, TO_PIXEL_COORDS(self->x) - 25 * i, TO_PIXEL_COORDS(self->y));
+                createPowerUp(self->entityManager, TO_PIXEL_COORDS(self->x) + 25 * i, TO_PIXEL_COORDS(self->y));
+            }
+        }
+        mg_deactivateAllBullets(self->entityManager); // so the player doesn't get hurt right after the winning
+                                                      // cutscene.
         startOutroCutscene(self);
     }
 }
@@ -5234,6 +5292,12 @@ void startOutroCutscene(mgEntity_t* self)
     bossOutroCutscene(self->gameData);
     if (!self->gameData->cheatMode)
     {
-        trophyUpdate(&platformerTrophies[self->gameData->level - 1], 1, true);
+        uint8_t trophy = self->gameData->level;
+        if (trophy == 11)
+        {
+            // The 11th level is the intro level with bigma.
+            trophy = 0;
+        }
+        trophyUpdate(&platformerTrophies[trophy], 1, true);
     }
 }
