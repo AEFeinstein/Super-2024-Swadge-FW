@@ -48,6 +48,7 @@ typedef struct
 
 typedef struct dn_gameData_t
 {
+    const trophyData_t (*trophyData)[9];
     p2pInfo p2p;
     // Current UI being shown
     dn_Ui_t ui;
@@ -87,6 +88,19 @@ typedef struct dn_gameData_t
     bool pawnPlunging;
     dn_boardPos_t selectorPos;
     dn_entity_t* selectedUnit;
+
+    eyeDigit_t eyeDigits[10];
+
+    cnfsFileIdx_t songs[6];
+    cnfsFileIdx_t percussionTracks[6];
+    cnfsFileIdx_t currentSong;
+    cnfsFileIdx_t currentPercussionTrack;
+    int8_t currentSongIdx;
+    midiFile_t songMidi;
+    midiFile_t percussionMidi;
+    uint8_t songLoopCount;
+    int32_t headroom; // volume fade from 0x4000 to 0x0
+    bool songFading;
 } dn_gameData_t;
 
 //==============================================================================
@@ -95,6 +109,7 @@ typedef struct dn_gameData_t
 
 void dn_MsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 void dn_ShowUi(dn_Ui_t ui);
+void dn_setAssetMetaData(void);
 
 //==============================================================================
 // Externs

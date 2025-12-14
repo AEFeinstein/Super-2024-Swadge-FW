@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="112" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="312">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="112" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="313">
  <editorsettings>
   <export target="../../../../../Downloads/Drain.bin" format="Mega Pulse EX"/>
  </editorsettings>
@@ -151,16 +151,12 @@
   <object id="302" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="3363.25" y="1587.13" rotation="0"/>
   <object id="303" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="3570.52" y="1585.54" rotation="0"/>
   <object id="304" template="templates/Scroll Lock (Up).tx" x="64.8298" y="166.303"/>
-  <object id="306" template="templates/Chargin' Schmuck.tx" name="Boss Test" gid="2147483997" x="4020.59" y="1680.19">
-   <properties>
-    <property name="type" type="int" propertytype="Swadge Land Entity Index" value="52"/>
-   </properties>
-  </object>
   <object id="307" template="templates/Scroll Lock (Up).tx" x="3876.17" y="1466.37"/>
   <object id="308" template="templates/Scroll Lock (Right).tx" x="4056.59" y="1592.19"/>
   <object id="309" template="templates/Scroll Lock (Down).tx" x="2978.37" y="1717.52"/>
   <object id="310" template="templates/Checkpoint.tx" x="3623" y="1586"/>
   <object id="311" template="templates/Checkpoint.tx" x="1840" y="1392"/>
+  <object id="312" template="templates/Drain Bat.tx" type="SwadgeLandEntity" x="4008" y="1664"/>
  </objectgroup>
  <objectgroup id="3" name="Annotations">
   <object id="43" x="6.27241" y="357.905" width="296" height="256"/>

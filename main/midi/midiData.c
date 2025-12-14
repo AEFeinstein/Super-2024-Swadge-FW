@@ -666,7 +666,7 @@ const noteSampleMap_t mmxDrumSampleMap[] = {
             .attackTime = SECONDS_CONV(0, 1000),
             .decayTime = SECONDS_CONV(0, 771105u),
             .sustainVol = 0,
-            .releaseTime = SECONDS_CONV(0, 771105u),
+            .releaseTime = 0,
             // TODO: implement hold
             //.holdTime = SECONDS_CONV(0, 84008)
         },
@@ -687,7 +687,7 @@ const noteSampleMap_t mmxDrumSampleMap[] = {
             .attackTime = SECONDS_CONV(0, 1000),
             .decayTime = SECONDS_CONV(2, 64500u),
             .sustainVol = 0,
-            .releaseTime = SECONDS_CONV(0, 66125u),
+            .releaseTime = SECONDS_CONV(0, 1625u),
             // no hold here
         },
     },
@@ -705,9 +705,8 @@ const noteSampleMap_t mmxDrumSampleMap[] = {
         },
         {
             .attackTime = SECONDS_CONV(0, 1000),
-            .decayTime = SECONDS_CONV(1, 224170),
-            // release is 1/2 of decay
-            .releaseTime = SECONDS_CONV(0, 612085),
+            .decayTime = SECONDS_CONV(1, 224170u),
+            .releaseTime = SECONDS_CONV(0, 28021u),
             .sustainVol = 0,
         },
     },

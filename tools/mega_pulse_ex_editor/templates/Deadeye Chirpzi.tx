@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+ <tileset firstgid="1" source="../mg-entity-tileset.tsx"/>
+ <object name="Deadeye Chirpzi" type="SwadgeLandEntity" gid="2147483807" width="80" height="68">
+  <properties>
+   <property name="type" type="int" propertytype="Swadge Land Entity Index" value="62"/>
+  </properties>
+ </object>
+</template>

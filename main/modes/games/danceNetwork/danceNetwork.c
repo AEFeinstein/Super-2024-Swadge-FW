@@ -10,7 +10,8 @@
 #include "dn_utility.h"
 #include "hdw-ch32v003.h"
 
-const char danceNetworkName[] = "Alpha Pulse: Dance Network";
+const char danceNetworkName[]      = "Alpha Pulse: Dance Network";
+const char danceNetworkTrophyNVS[] = "DanceNetTroph";
 
 //==============================================================================
 // Function Prototypes
@@ -24,9 +25,10 @@ static void dn_MsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 static void dn_EnterMode(void);
 static void dn_ExitMode(void);
 static void dn_MainLoop(int64_t elapsedUs);
-static bool dn_MenuCb(const char* label, bool selected, uint32_t value);
+bool dn_MenuCb(const char* label, bool selected, uint32_t value);
 static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
+static void dn_songFinishedCb(void);
 static void dn_initializeTutorial(bool advanced);
 static void dn_initializeVideoTutorial(void);
 static void dn_initializeGame(void);
@@ -38,104 +40,101 @@ static void dn_freeAssets(void);
 //==============================================================================
 
 // Modify the following with your trophies
-const trophyData_t danceNetworkTrophies[] = {
-    {
-        // 0
-        .title       = "Dance 101",
-        .description = "Worth 3 credit hours at Dance University.",
-        .image       = NO_IMAGE_SET, // If set like this, it will draw a default trophy based on difficulty
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1, // For trigger type, set to one
-    },
-    {
-        // 1
-        .title       = "Dance 200",
-        .description = "Also worth 3 credit hours at Dance University.",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1,
-    },
-    {
-        // 2
-        .title       = "Certified Dance Freak",
-        .description = "Viewed the video tutorial, passed Dance 101, and passed Dance 200.",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_CHECKLIST,
-        .difficulty  = TROPHY_DIFF_EXTREME,
-        .maxVal      = 0x7, // Three tasks, 0x01, 0x02, and 0x04
-    },
-    {
-        // 3
-        .title       = "Boogie Omnipotence",
-        .description = "Finished a match of Dance Network.",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1,
-    },
-    {
-        // 4
-        .title       = "Full Discography",
-        .description = "Completely filled an album with tracks.",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EXTREME,
-        .maxVal      = 1,
-    },
-    {
-        // 5
-        .title       = "Utterly Confusing",
-        .description = "Played a game with white chess pieces for player 2 or black chess pieces for player 1.",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {
-        // 6
-        .title       = "My People Need Me",
-        .description = "Jumped into the garbage pit.",
-        .image       = EF_BIGBUG_SLV_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-    },
-    {
-        // 7
-        .title       = "Dance Veteran",
-        .description = "Completed 10 Dance Network matches. Puts DanceNoNighta to shame.",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_ADDITIVE,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 10,
-    },
-    {
-        // 8
-        .title       = "No Respect These Days",
-        .description = "Angered DanceNoNighta during the moment of silence.",
-        .image       = EF_BIGBUG_SLV_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1,
-    },
-};
+const trophyData_t danceNetworkTrophies[]
+    = {{
+           // 0
+           .title       = "Dance 101",
+           .description = "Worth 3 credit hours at Dance University.",
+           .image       = NO_IMAGE_SET, // If set like this, it will draw a default trophy based on difficulty
+           .type        = TROPHY_TYPE_TRIGGER,
+           .difficulty  = TROPHY_DIFF_EASY,
+           .maxVal      = 1, // For trigger type, set to one
+       },
+       {
+           // 1
+           .title       = "Dance 200",
+           .description = "Also worth 3 credit hours at Dance University.",
+           .image       = NO_IMAGE_SET,
+           .type        = TROPHY_TYPE_TRIGGER,
+           .difficulty  = TROPHY_DIFF_HARD,
+           .maxVal      = 1,
+       },
+       {
+           // 2
+           .title       = "Certified Dance Freak",
+           .description = "Viewed the video tutorial, passed Dance 101, and passed Dance 200.",
+           .image       = NO_IMAGE_SET,
+           .type        = TROPHY_TYPE_CHECKLIST,
+           .difficulty  = TROPHY_DIFF_EXTREME,
+           .maxVal      = 0x7, // Three tasks, 0x01, 0x02, and 0x04
+       },
+       {
+           // 3
+           .title       = "Boogie Omnipotence",
+           .description = "Finished a match of Dance Network.",
+           .image       = NO_IMAGE_SET,
+           .type        = TROPHY_TYPE_TRIGGER,
+           .difficulty  = TROPHY_DIFF_HARD,
+           .maxVal      = 1,
+       },
+       {
+           // 4
+           .title       = "Full Discography",
+           .description = "Completely filled an album with tracks.",
+           .image       = NO_IMAGE_SET,
+           .type        = TROPHY_TYPE_TRIGGER,
+           .difficulty  = TROPHY_DIFF_EXTREME,
+           .maxVal      = 1,
+       },
+       {
+           // 5
+           .title       = "Utterly Confusing",
+           .description = "Played a game with white chess pieces for player 2 or black chess pieces for player 1.",
+           .image       = NO_IMAGE_SET,
+           .type        = TROPHY_TYPE_TRIGGER,
+           .difficulty  = TROPHY_DIFF_MEDIUM,
+           .maxVal      = 1,
+       },
+       {
+           // 6
+           .title       = "My People Need Me",
+           .description = "Jumped into the garbage pit.",
+           .image       = EF_BIGBUG_SLV_WSG,
+           .type        = TROPHY_TYPE_TRIGGER,
+           .difficulty  = TROPHY_DIFF_EASY,
+           .maxVal      = 1,
+       },
+       {
+           // 7
+           .title       = "Dance Veteran",
+           .description = "Completed 10 Dance Network matches. Puts DanceNoNighta to shame.",
+           .image       = NO_IMAGE_SET,
+           .type        = TROPHY_TYPE_ADDITIVE,
+           .difficulty  = TROPHY_DIFF_EASY,
+           .maxVal      = 10,
+       },
+       {
+           // 8
+           .title       = "No Respect These Days",
+           .description = "Angered DanceNoNighta during the moment of silence.",
+           .image       = EF_BIGBUG_SLV_WSG,
+           .type        = TROPHY_TYPE_TRIGGER,
+           .difficulty  = TROPHY_DIFF_EASY,
+           .maxVal      = 1,
+       }};
 
 // Individual mode settings
-const trophySettings_t danceNetworkTrophySettings = {
+trophySettings_t danceNetworkTrophySettings = {
     .drawFromBottom   = false,
     .staticDurationUs = DRAW_STATIC_US * 6,
     .slideDurationUs  = DRAW_SLIDE_US,
-    .namespaceKey     = "Alpha Pulse",
+    .namespaceKey     = danceNetworkTrophyNVS,
 };
 
 // This is passed to the swadgeMode_t
-const trophyDataList_t trophyData = {
-    .settings = &danceNetworkTrophySettings,
-    .list     = danceNetworkTrophies,
-    .length   = ARRAY_SIZE(danceNetworkTrophies),
-};
+trophyDataList_t trophyData = {.settings = &danceNetworkTrophySettings,
+                               .list     = danceNetworkTrophies,
+                               .length   = ARRAY_SIZE(danceNetworkTrophies)};
 
 swadgeMode_t danceNetworkMode = {
     .modeName          = danceNetworkName, // Assign the name we created here
@@ -202,8 +201,8 @@ uint8_t* dn_decodeSpace;
 
 // This is in order such that index is the assetIdx.
 static const cnfsFileIdx_t dn_assetToWsgLookup[]
-    = {DN_ALPHA_DOWN_WSG, DN_ALPHA_ORTHO_WSG,  DN_ALPHA_UP_WSG,        DN_KING_WSG,         DN_KING_SMALL_0_WSG,
-       DN_PAWN_WSG,       DN_PAWN_SMALL_0_WSG, DN_BUCKET_HAT_DOWN_WSG, DN_BUCKET_HAT_UP_WSG};
+    = {DN_ALPHA_DOWN_0_WSG, DN_ALPHA_ORTHO_WSG,  DN_ALPHA_UP_0_WSG,        DN_KING_0_WSG,         DN_KING_SMALL_0_WSG,
+       DN_PAWN_0_WSG,       DN_PAWN_SMALL_0_WSG, DN_BUCKET_HAT_DOWN_0_WSG, DN_BUCKET_HAT_UP_0_WSG};
 
 // NVS keys
 const char dnP1TroupeKey[] = "dn_P1_Troupe";
@@ -215,6 +214,8 @@ static void dn_EnterMode(void)
 {
     gameData = (dn_gameData_t*)heap_caps_calloc(1, sizeof(dn_gameData_t), MALLOC_CAP_8BIT);
     memset(gameData, 0, sizeof(dn_gameData_t));
+
+    gameData->trophyData = &danceNetworkTrophies;
 
     int32_t outVal;
     readNvs32(dnP1TroupeKey, &outVal);
@@ -249,65 +250,7 @@ static void dn_EnterMode(void)
     gameData->camera.pos.y -= (57 << DN_DECIMAL_BITS); // Move the camera a bit.
     dn_initializeEntityManager(&gameData->entityManager, gameData);
 
-    gameData->assets[DN_ALPHA_DOWN_ASSET].originX   = 9;
-    gameData->assets[DN_ALPHA_DOWN_ASSET].originY   = 54;
-    gameData->assets[DN_ALPHA_DOWN_ASSET].numFrames = 1;
-
-    gameData->assets[DN_ALPHA_ORTHO_ASSET].originX   = 10;
-    gameData->assets[DN_ALPHA_ORTHO_ASSET].originY   = 10;
-    gameData->assets[DN_ALPHA_ORTHO_ASSET].numFrames = 1;
-
-    gameData->assets[DN_ALPHA_UP_ASSET].originX   = 14;
-    gameData->assets[DN_ALPHA_UP_ASSET].originY   = 53;
-    gameData->assets[DN_ALPHA_UP_ASSET].numFrames = 1;
-
-    gameData->assets[DN_KING_ASSET].originX   = 10;
-    gameData->assets[DN_KING_ASSET].originY   = 54;
-    gameData->assets[DN_KING_ASSET].numFrames = 1;
-
-    gameData->assets[DN_KING_SMALL_ASSET].originX   = 4;
-    gameData->assets[DN_KING_SMALL_ASSET].originY   = 19;
-    gameData->assets[DN_KING_SMALL_ASSET].numFrames = 1;
-
-    gameData->assets[DN_PAWN_ASSET].originX   = 10;
-    gameData->assets[DN_PAWN_ASSET].originY   = 44;
-    gameData->assets[DN_PAWN_ASSET].numFrames = 1;
-
-    gameData->assets[DN_PAWN_SMALL_ASSET].originX   = 4;
-    gameData->assets[DN_PAWN_SMALL_ASSET].originY   = 14;
-    gameData->assets[DN_PAWN_SMALL_ASSET].numFrames = 1;
-
-    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originX   = 10;
-    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originY   = 33;
-    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].numFrames = 1;
-
-    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originX   = 14;
-    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originY   = 30;
-    gameData->assets[DN_BUCKET_HAT_UP_ASSET].numFrames = 1;
-
-    gameData->assets[DN_GROUND_TILE_ASSET].originX   = 25;
-    gameData->assets[DN_GROUND_TILE_ASSET].originY   = 13;
-    gameData->assets[DN_GROUND_TILE_ASSET].numFrames = 1;
-
-    gameData->assets[DN_CURTAIN_ASSET].numFrames = 1;
-
-    gameData->assets[DN_ALBUM_ASSET].originX = 31;
-    gameData->assets[DN_ALBUM_ASSET].originY = 34;
-
-    gameData->assets[DN_SPEAKER_ASSET].originX = 12;
-    gameData->assets[DN_SPEAKER_ASSET].originY = 44;
-
-    gameData->assets[DN_SPEAKER_STAND_ASSET].originX = 6;
-    gameData->assets[DN_SPEAKER_STAND_ASSET].originY = 8;
-
-    gameData->assets[DN_PIT_ASSET].originX = 126;
-    gameData->assets[DN_PIT_ASSET].originY = 0;
-
-    gameData->assets[DN_MINI_TILE_ASSET].originX = 10;
-    gameData->assets[DN_MINI_TILE_ASSET].originY = 5;
-
-    gameData->assets[DN_MMM_UP_ASSET].originX = 17 / 2;
-    gameData->assets[DN_MMM_UP_ASSET].originY = 12 / 2;
+    dn_setAssetMetaData();
 
     // Allocate WSG loading helpers
     dn_hsd = heatshrink_decoder_alloc(256, 8, 4);
@@ -360,6 +303,113 @@ static void dn_EnterMode(void)
 
     // Initialize a menu with no entries to be used as a background
     gameData->bgMenu = initMenu(dn_CharacterSelStr, NULL);
+
+    cnfsFileIdx_t digitGsFiles[] = {DN_NUMBER_0_GS, DN_NUMBER_1_GS, DN_NUMBER_2_GS, DN_NUMBER_3_GS, DN_NUMBER_4_GS,
+                                    DN_NUMBER_5_GS, DN_NUMBER_6_GS, DN_NUMBER_7_GS, DN_NUMBER_8_GS, DN_NUMBER_9_GS};
+
+    for (int i = 0; i < 10; i++)
+    {
+        size_t size        = 0;
+        const uint8_t* buf = cnfsGetFile(digitGsFiles[i], &size);
+        if (size != 40) // 4-byte header + 6x6
+        {
+            ESP_LOGW("DICE", "Eye digit asset %d wrong size (%d) bytes.\n", i, (int)size);
+        }
+        else
+        {
+            memcpy(&gameData->eyeDigits[i], buf + 4, ARRAY_SIZE(gameData->eyeDigits[i].pixels));
+        }
+    }
+
+    gameData->songs[0] = AP_PAWNS_GAMBIT_BGM_MID;          // root of 1
+    gameData->songs[1] = AP_TEN_STEPS_AHEAD_BGM_MID;       // root of 1
+    gameData->songs[2] = AP_THE_WILL_TO_WIN_BGM_MID;       // root of 1
+    gameData->songs[3] = AP_FINAL_PATH_BGM_MID;            // root of 5
+    gameData->songs[4] = AP_RETURN_OF_THE_VALIANT_BGM_MID; // root of 4
+    gameData->songs[5] = AP_NEXT_MOVE_BGM_MID;             // root of 2
+
+    gameData->percussionTracks[0] = AP_PAWNS_GAMBIT_PERCUSSION_MID;
+    gameData->percussionTracks[1] = AP_TEN_STEPS_AHEAD_PERCUSSION_MID;
+    gameData->percussionTracks[2] = AP_THE_WILL_TO_WIN_PERCUSSION_MID;
+    gameData->percussionTracks[3] = AP_FINAL_PATH_PERCUSSION_MID;
+    gameData->percussionTracks[4] = AP_RETURN_OF_THE_VALIANT_PERCUSSION_MID;
+    gameData->percussionTracks[5] = AP_NEXT_MOVE_PERCUSSION_MID;
+
+    gameData->headroom               = 0x4000;
+    gameData->currentSongIdx         = 0;
+    gameData->currentSong            = gameData->songs[gameData->currentSongIdx];
+    gameData->currentPercussionTrack = gameData->percussionTracks[gameData->currentSongIdx];
+    loadMidiFile(gameData->currentSong, &gameData->songMidi, true);
+    loadMidiFile(gameData->currentPercussionTrack, &gameData->percussionMidi, true);
+    globalMidiPlayerPlaySongCb(&gameData->songMidi, MIDI_BGM, dn_songFinishedCb);
+    globalMidiPlayerPlaySong(&gameData->percussionMidi, MIDI_SFX);
+    midiPlayer_t* player = globalMidiPlayerGet(MIDI_BGM);
+    player->loop         = true;
+    player               = globalMidiPlayerGet(MIDI_SFX);
+    player->volume       = 0x2FFD; // Balanced has percussion at 3/4 volume.
+}
+
+void dn_setAssetMetaData(void)
+{
+    gameData->assets[DN_ALPHA_DOWN_ASSET].originX   = 18;
+    gameData->assets[DN_ALPHA_DOWN_ASSET].originY   = 82;
+    gameData->assets[DN_ALPHA_DOWN_ASSET].numFrames = 17;
+
+    gameData->assets[DN_ALPHA_ORTHO_ASSET].originX   = 10;
+    gameData->assets[DN_ALPHA_ORTHO_ASSET].originY   = 10;
+    gameData->assets[DN_ALPHA_ORTHO_ASSET].numFrames = 1;
+
+    gameData->assets[DN_ALPHA_UP_ASSET].originX   = 16;
+    gameData->assets[DN_ALPHA_UP_ASSET].originY   = 82;
+    gameData->assets[DN_ALPHA_UP_ASSET].numFrames = 17;
+
+    gameData->assets[DN_KING_ASSET].originX   = 19;
+    gameData->assets[DN_KING_ASSET].originY   = 83;
+    gameData->assets[DN_KING_ASSET].numFrames = 13;
+
+    gameData->assets[DN_KING_SMALL_ASSET].originX   = 4;
+    gameData->assets[DN_KING_SMALL_ASSET].originY   = 19;
+    gameData->assets[DN_KING_SMALL_ASSET].numFrames = 1;
+
+    gameData->assets[DN_PAWN_ASSET].originX   = 21;
+    gameData->assets[DN_PAWN_ASSET].originY   = 83;
+    gameData->assets[DN_PAWN_ASSET].numFrames = 16;
+
+    gameData->assets[DN_PAWN_SMALL_ASSET].originX   = 4;
+    gameData->assets[DN_PAWN_SMALL_ASSET].originY   = 14;
+    gameData->assets[DN_PAWN_SMALL_ASSET].numFrames = 1;
+
+    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originX   = 10;
+    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].originY   = 75;
+    gameData->assets[DN_BUCKET_HAT_DOWN_ASSET].numFrames = 27;
+
+    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originX   = 18;
+    gameData->assets[DN_BUCKET_HAT_UP_ASSET].originY   = 73;
+    gameData->assets[DN_BUCKET_HAT_UP_ASSET].numFrames = 27;
+
+    gameData->assets[DN_GROUND_TILE_ASSET].originX   = 25;
+    gameData->assets[DN_GROUND_TILE_ASSET].originY   = 13;
+    gameData->assets[DN_GROUND_TILE_ASSET].numFrames = 1;
+
+    gameData->assets[DN_CURTAIN_ASSET].numFrames = 1;
+
+    gameData->assets[DN_ALBUM_ASSET].originX = 31;
+    gameData->assets[DN_ALBUM_ASSET].originY = 34;
+
+    gameData->assets[DN_SPEAKER_ASSET].originX = 12;
+    gameData->assets[DN_SPEAKER_ASSET].originY = 44;
+
+    gameData->assets[DN_SPEAKER_STAND_ASSET].originX = 6;
+    gameData->assets[DN_SPEAKER_STAND_ASSET].originY = 8;
+
+    gameData->assets[DN_PIT_ASSET].originX = 126;
+    gameData->assets[DN_PIT_ASSET].originY = 0;
+
+    gameData->assets[DN_MINI_TILE_ASSET].originX = 10;
+    gameData->assets[DN_MINI_TILE_ASSET].originY = 5;
+
+    gameData->assets[DN_MMM_UP_ASSET].originX = 17 / 2;
+    gameData->assets[DN_MMM_UP_ASSET].originY = 12 / 2;
 }
 
 static void dn_ExitMode(void)
@@ -369,6 +419,7 @@ static void dn_ExitMode(void)
     freeFont(&gameData->font_ibm);
     freeFont(&gameData->font_righteous);
     freeFont(&gameData->outline_righteous);
+    unloadMidiFile(&gameData->songMidi);
     heap_caps_free(gameData);
 }
 
@@ -409,6 +460,81 @@ static void dn_MainLoop(int64_t elapsedUs)
             default:
             {
                 break;
+            }
+        }
+    }
+
+    if (gameData->songFading)
+    {
+        gameData->headroom -= elapsedUs >> 9;
+        if (gameData->headroom < 0)
+        {
+            gameData->songLoopCount = 0;
+            gameData->headroom      = 0;
+            gameData->songFading    = false;
+            // pause the stage speakers animation
+            node_t* cur = gameData->entityManager.entities->first;
+            while (cur != NULL)
+            {
+                dn_entity_t* entity = (dn_entity_t*)cur->val;
+                if (entity->assetIndex == DN_SPEAKER_ASSET)
+                {
+                    entity->paused                = true;
+                    entity->currentAnimationFrame = 1;
+                }
+                cur = cur->next;
+            }
+        }
+        globalMidiPlayerGet(MIDI_BGM)->headroom = gameData->headroom;
+        globalMidiPlayerGet(MIDI_SFX)->headroom = gameData->headroom;
+        if (gameData->headroom == 0)
+        {
+            globalMidiPlayerStop(true);
+        }
+    }
+    else if (gameData->headroom < 0x4000)
+    {
+        gameData->headroom += elapsedUs >> 11; // Just use headroom as a timer here during silence.
+        if (gameData->headroom >= 0x4000)
+        {
+            gameData->headroom = 0x4000;
+            gameData->currentSongIdx++;
+            if (gameData->currentSongIdx >= (sizeof(gameData->songs) / sizeof(gameData->songs[0])))
+            {
+                gameData->currentSongIdx = 0;
+            }
+            gameData->currentSong = gameData->songs[gameData->currentSongIdx];
+            gameData->currentPercussionTrack = gameData->percussionTracks[gameData->currentSongIdx];
+            midiPlayer_t* BGM_player  = globalMidiPlayerGet(MIDI_BGM);
+            midiPlayerResetNewSong(BGM_player);
+            midiPlayer_t* SFX_player = globalMidiPlayerGet(MIDI_SFX);
+            midiPlayerResetNewSong(SFX_player);
+
+            unloadMidiFile(&gameData->songMidi);
+            unloadMidiFile(&gameData->percussionMidi);
+            loadMidiFile(gameData->currentSong, &gameData->songMidi, true);
+            loadMidiFile(gameData->currentPercussionTrack, &gameData->percussionMidi, true);
+            globalMidiPlayerPlaySongCb(&gameData->songMidi, MIDI_BGM, dn_songFinishedCb);
+            globalMidiPlayerPlaySong(&gameData->percussionMidi, MIDI_SFX);
+
+            BGM_player->headroom = gameData->headroom;
+            SFX_player->headroom = gameData->headroom;
+            BGM_player->loop     = true;
+            if (gameData->entityManager.board)
+            {
+                dn_calculatePercussion(gameData->entityManager.board);
+            }
+
+            // unpause the stage speakers animation
+            node_t* cur = gameData->entityManager.entities->first;
+            while (cur != NULL)
+            {
+                dn_entity_t* entity = (dn_entity_t*)cur->val;
+                if (entity->assetIndex == DN_SPEAKER_ASSET)
+                {
+                    entity->paused = false;
+                }
+                cur = cur->next;
             }
         }
     }
@@ -459,9 +585,8 @@ static void dn_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
  * @param label The string label of the menu item selected
  * @param selected true if this was selected, false if it was moved to
  * @param value The value for settings, unused.
- * @return true if the submenu should be exited, false to stay on it
  */
-static bool dn_MenuCb(const char* label, bool selected, uint32_t value)
+bool dn_MenuCb(const char* label, bool selected, uint32_t value)
 {
     if (selected)
     {
@@ -656,6 +781,19 @@ void dn_ShowUi(dn_Ui_t ui)
     }
 }
 
+static void dn_songFinishedCb(void)
+{
+    gameData->songLoopCount++;
+    // Re-sync the percussion SFX with BGM when the BGM loops so they remain in phase
+    midiPlayer_t* SFX_player = globalMidiPlayerGet(MIDI_SFX);
+    midiPlayerResetNewSong(SFX_player);
+    globalMidiPlayerPlaySong(&gameData->percussionMidi, MIDI_SFX);
+    if (gameData->songLoopCount >= 2 && !gameData->songFading)
+    {
+        gameData->songFading = true;
+    }
+}
+
 static void dn_initializeTutorial(bool advanced)
 {
     setMegaLedsOn(gameData->menuRenderer, false);
@@ -688,7 +826,7 @@ static void dn_initializeVideoTutorial(void)
     ////////////////////
     // Make the qr code//
     ////////////////////
-    trophySetChecklistTask(&danceNetworkTrophies[2], 0x4, true, true);
+    trophySetChecklistTask(&(*gameData->trophyData)[2], 0x4, true, true);
     dn_entity_t* qr    = dn_createEntitySpecial(&gameData->entityManager, 1, DN_NO_ANIMATION, true, DN_NO_ASSET, 0,
                                                 (vec_t){0, 0}, gameData);
     qr->updateFunction = dn_updateQr;
@@ -697,6 +835,14 @@ static void dn_initializeVideoTutorial(void)
 
 static void dn_initializeGame(void)
 {
+    gameData->headroom = 0x4000; // Force a song to play at this moment if it was currently silence.
+    // Loading images will disable the default blink animation
+    for (int i = 0; i < 10; i++)
+    {
+        ch32v003WriteBitmapAsset(i + 3, DICE_0_GS + i);
+    }
+    ch32v003SelectBitmap(3);
+
     setMegaLedsOn(gameData->menuRenderer, false);
 
     ////////////////////
@@ -730,7 +876,7 @@ static void dn_initializeGame(void)
 
     dn_loadAsset(DN_REROLL_WSG, 1, &gameData->assets[DN_REROLL_ASSET]);
 
-    dn_loadAsset(DN_NUMBER_0_WSG, 10, &gameData->assets[DN_NUMBER_ASSET]);
+    // dn_loadAsset(DN_NUMBER_0_WSG, 10, &gameData->assets[DN_NUMBER_ASSET]);
 
     dn_loadAsset(DN_ALBUM_EXPLOSION_0_WSG, 7, &gameData->assets[DN_ALBUM_EXPLOSION_ASSET]);
 
@@ -849,24 +995,31 @@ static void dn_initializeGame(void)
     boardData->p1Units[0]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[0]; // Set the unit on the tile
-    boardData->p1Units[0]->paused                 = false;
+
     // p1 pawns
     assetIdx = dn_getAssetIdx(gameData->characterSets[0], DN_PAWN, DN_UP);
     boardPos = (dn_boardPos_t){0, 4};
     boardData->p1Units[1]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p1Units[1]->gray                   = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[1]; // Set the unit on the tile
-    boardPos                                      = (dn_boardPos_t){1, 4};
+
+    boardPos = (dn_boardPos_t){1, 4};
     boardData->p1Units[2]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p1Units[2]->gray                   = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[2]; // Set the unit on the tile
-    boardPos                                      = (dn_boardPos_t){3, 4};
+
+    boardPos = (dn_boardPos_t){3, 4};
     boardData->p1Units[3]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p1Units[3]->gray                   = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[3]; // Set the unit on the tile
-    boardPos                                      = (dn_boardPos_t){4, 4};
+
+    boardPos = (dn_boardPos_t){4, 4};
     boardData->p1Units[4]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p1Units[4]->gray                   = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p1Units[4]; // Set the unit on the tile
 
     // p2 king
@@ -875,24 +1028,31 @@ static void dn_initializeGame(void)
     boardData->p2Units[0]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[0]; // Set the unit on the tile
-    boardData->p2Units[0]->paused                 = false;
+
     // p2 pawns
     assetIdx = dn_getAssetIdx(gameData->characterSets[1], DN_PAWN, DN_DOWN);
     boardPos = (dn_boardPos_t){0, 0};
     boardData->p2Units[1]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p2Units[1]->gray                   = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[1]; // Set the unit on the tile
-    boardPos                                      = (dn_boardPos_t){1, 0};
+
+    boardPos = (dn_boardPos_t){1, 0};
     boardData->p2Units[2]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p2Units[2]->gray                   = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[2]; // Set the unit on the tile
-    boardPos                                      = (dn_boardPos_t){3, 0};
+
+    boardPos = (dn_boardPos_t){3, 0};
     boardData->p2Units[3]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p2Units[3]->gray                   = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[3]; // Set the unit on the tile
-    boardPos                                      = (dn_boardPos_t){4, 0};
+
+    boardPos = (dn_boardPos_t){4, 0};
     boardData->p2Units[4]
         = dn_createEntitySimple(&gameData->entityManager, assetIdx, dn_boardToWorldPos(boardPos), gameData);
+    boardData->p2Units[4]->gray                   = true;
     boardData->tiles[boardPos.y][boardPos.x].unit = boardData->p2Units[4]; // Set the unit on the tile
 
     /////////////////////////////
@@ -911,6 +1071,7 @@ static void dn_initializeGame(void)
     swapButton->updateFunction = dn_updateSwapButton;
     swapButton->drawFunction   = dn_drawSwapButton;
     swapButton->dataType       = DN_SWAPBUTTON_DATA;
+    swapButton->gray           = true;
 
     //////////////////////////
     // Make the skip button //
@@ -921,6 +1082,7 @@ static void dn_initializeGame(void)
     skipButton->updateFunction = dn_updateSkipButton;
     skipButton->drawFunction   = dn_drawSkipButton;
     skipButton->dataType       = DN_SKIPBUTTON_DATA;
+    skipButton->gray           = true;
 
     /////////////////////////
     // Make the playerTurn //
@@ -942,12 +1104,12 @@ static void dn_initializeGame(void)
  */
 static void dn_initializeCharacterSelect(void)
 {
-    dn_loadAsset(DN_ALPHA_DOWN_WSG, 1, &gameData->assets[DN_ALPHA_DOWN_ASSET]);
-    dn_loadAsset(DN_ALPHA_UP_WSG, 1, &gameData->assets[DN_ALPHA_UP_ASSET]);
-    dn_loadAsset(DN_BUCKET_HAT_DOWN_WSG, 1, &gameData->assets[DN_BUCKET_HAT_DOWN_ASSET]);
-    dn_loadAsset(DN_BUCKET_HAT_UP_WSG, 1, &gameData->assets[DN_BUCKET_HAT_UP_ASSET]);
-    dn_loadAsset(DN_KING_WSG, 1, &gameData->assets[DN_KING_ASSET]);
-    dn_loadAsset(DN_PAWN_WSG, 1, &gameData->assets[DN_PAWN_ASSET]);
+    dn_loadAsset(DN_ALPHA_DOWN_0_WSG, 1, &gameData->assets[DN_ALPHA_DOWN_ASSET]);
+    dn_loadAsset(DN_ALPHA_UP_0_WSG, 1, &gameData->assets[DN_ALPHA_UP_ASSET]);
+    dn_loadAsset(DN_BUCKET_HAT_DOWN_0_WSG, 1, &gameData->assets[DN_BUCKET_HAT_DOWN_ASSET]);
+    dn_loadAsset(DN_BUCKET_HAT_UP_0_WSG, 1, &gameData->assets[DN_BUCKET_HAT_UP_ASSET]);
+    dn_loadAsset(DN_KING_0_WSG, 1, &gameData->assets[DN_KING_ASSET]);
+    dn_loadAsset(DN_PAWN_0_WSG, 1, &gameData->assets[DN_PAWN_ASSET]);
     dn_loadAsset(DN_GROUND_TILE_0_WSG, 3, &gameData->assets[DN_GROUND_TILE_ASSET]);
     ///////////////////////////////
     // Make the character select //

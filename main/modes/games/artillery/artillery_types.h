@@ -383,7 +383,7 @@ typedef struct
     artilleryGameOverData_t gameOverData[NUM_PLAYERS];
 
     // Audio
-    midiFile_t bgms[4];
+    midiFile_t bgms[6];
     uint32_t bgmIdx;
 
     // Eye LEDs

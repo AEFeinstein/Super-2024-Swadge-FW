@@ -307,6 +307,8 @@ void artilleryEnterMode(void)
     loadMidiFile(VT_FUNK_MID, &ad->bgms[1], false);
     loadMidiFile(VT_RISK_MID, &ad->bgms[2], false);
     loadMidiFile(VT_POP_MID, &ad->bgms[3], false);
+    loadMidiFile(VT_VECTOR_TANK_MID, &ad->bgms[4], false);
+    loadMidiFile(VT_READY_AIM_FIRE_MID, &ad->bgms[5], false);
     globalMidiPlayerGet(MIDI_BGM)->loop = true;
     midiGmOn(globalMidiPlayerGet(MIDI_BGM));
     midiPause(globalMidiPlayerGet(MIDI_BGM), true);
