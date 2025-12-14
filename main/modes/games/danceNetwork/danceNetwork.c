@@ -503,9 +503,9 @@ static void dn_MainLoop(int64_t elapsedUs)
             {
                 gameData->currentSongIdx = 0;
             }
-            gameData->currentSong = gameData->songs[gameData->currentSongIdx];
+            gameData->currentSong            = gameData->songs[gameData->currentSongIdx];
             gameData->currentPercussionTrack = gameData->percussionTracks[gameData->currentSongIdx];
-            midiPlayer_t* BGM_player  = globalMidiPlayerGet(MIDI_BGM);
+            midiPlayer_t* BGM_player         = globalMidiPlayerGet(MIDI_BGM);
             midiPlayerResetNewSong(BGM_player);
             midiPlayer_t* SFX_player = globalMidiPlayerGet(MIDI_SFX);
             midiPlayerResetNewSong(SFX_player);
