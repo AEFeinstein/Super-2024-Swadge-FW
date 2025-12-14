@@ -359,7 +359,7 @@ void platformerEnterMode(void)
     mg_initializeTileMap(&(platformer->tilemap), &(platformer->wsgManager));
 
     mg_loadWsgSet(&(platformer->wsgManager), leveldef[1].defaultWsgSetIndex);
-    mg_loadMapFromFile(&(platformer->tilemap), leveldef[1].filename);
+    mg_loadMapFromFile(&(platformer->tilemap), leveldef[1].filename, &platformer->entityManager);
 
     mg_initializeSoundManager(&(platformer->soundManager));
 
@@ -526,7 +526,8 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
 
             platformer->gameData.level = 11;
             mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
-            mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename);
+            mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename,
+                               &platformer->entityManager);
 
             changeStateGame(platformer);
             // every level starts with a cutscene
@@ -555,7 +556,8 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
             {
                 platformer->gameData.level = 11;
                 mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
-                mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename);
+                mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename,
+                                   &platformer->entityManager);
 
                 changeStateGame(platformer);
                 // every level starts with a cutscene
@@ -589,7 +591,8 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
             platformer->gameData.level = 11;
             mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
-            mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename);
+            mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename,
+                               &platformer->entityManager);
 
             changeStateGame(platformer);
             // every level starts with a cutscene
@@ -1147,11 +1150,11 @@ void changeStateGame(platformer_t* self)
 
     if (self->gameData.customLevel)
     {
-        mg_loadMapFromFile(&(platformer->tilemap), -69);
+        mg_loadMapFromFile(&(platformer->tilemap), -69, &platformer->entityManager);
     }
     else
     {
-        mg_loadMapFromFile(&(platformer->tilemap), leveldef[levelIndex].filename);
+        mg_loadMapFromFile(&(platformer->tilemap), leveldef[levelIndex].filename, &platformer->entityManager);
     }
     self->gameData.countdown      = leveldef[levelIndex].timeLimit;
     self->gameData.pauseCountdown = false;
@@ -1855,7 +1858,7 @@ void changeStateLevelSelect(platformer_t* self)
     self->gameData.prevBtnState = 0;
 
     mg_loadWsgSet(&(platformer->wsgManager), leveldef[0].defaultWsgSetIndex);
-    mg_loadMapFromFile(&(platformer->tilemap), leveldef[0].filename);
+    mg_loadMapFromFile(&(platformer->tilemap), leveldef[0].filename, &platformer->entityManager);
     self->tilemap.mapOffsetX       = 12;
     self->tilemap.mapOffsetY       = 0;
     self->entityManager.viewEntity = NULL;
@@ -1914,7 +1917,8 @@ void updateLevelSelect(platformer_t* self)
         else
         {
             mg_loadWsgSet(&(platformer->wsgManager), leveldef[self->gameData.level].defaultWsgSetIndex);
-            mg_loadMapFromFile(&(platformer->tilemap), leveldef[self->gameData.level].filename);
+            mg_loadMapFromFile(&(platformer->tilemap), leveldef[self->gameData.level].filename,
+                               &platformer->entityManager);
 
             changeStateGame(platformer);
             // every level starts with a cutscene

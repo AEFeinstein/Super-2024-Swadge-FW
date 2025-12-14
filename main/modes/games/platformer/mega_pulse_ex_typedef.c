@@ -421,17 +421,3 @@ const mgLeveldef_t leveldef[] = {
      .bossBgmIndex       = MG_BGM_BOSS_BIGMA,
      .bgColors           = bgGradientRedFinalShowdown},
 };
-
-const mg_spriteDef_t playerDamageAnimFrames[]
-    = {MG_SP_PLAYER_HURT, MG_SP_PLAYER_HURT_2, MG_SP_PLAYER_HURT, MG_SP_PLAYER_HURT_3};
-const mg_spriteDef_t playerMicDropAnimFrames[]     = {MG_SP_PLAYER_MIC_DROP_1, MG_SP_PLAYER_MIC_DROP_2};
-const mg_spriteDef_t playerSureYouCanAnimnFrames[] = {
-    // These are in reverse order
-    MG_SP_PLAYER_SUREYOUCAN_2, MG_SP_PLAYER_SUREYOUCAN_2, MG_SP_PLAYER_SUREYOUCAN_2, MG_SP_PLAYER_SUREYOUCAN_1,
-    MG_SP_PLAYER_SUREYOUCAN_1, MG_SP_PLAYER_JUMP,         MG_WSG_PLAYER_WALK5,       MG_WSG_PLAYER_WALK6};
-
-const mg_spriteDef_t normalShotAnimFrames[] = {MG_SP_WAVEBALL_1, MG_SP_WAVEBALL_2, MG_SP_WAVEBALL_3};
-const mg_spriteDef_t chargeShotAnimFrames[]
-    = {MG_SP_CHARGE_SHOT_LVL1_1, MG_SP_CHARGE_SHOT_LVL1_2, MG_SP_CHARGE_SHOT_LVL1_3};
-const mg_spriteDef_t maxChargeShotAnimFrames[]
-    = {MG_SP_CHARGE_SHOT_MAX_1, MG_SP_CHARGE_SHOT_MAX_2, MG_SP_CHARGE_SHOT_MAX_3};

@@ -29,6 +29,20 @@ static const vec_t mg_sureYouCanVectors[] = {
     {.x = 8, .y = 4},     {.x = 8, .y = -2},   {.x = 8, .y = -4},   {.x = 8, .y = -8},
     {.x = 16, .y = -128}, {.x = 16, .y = -64}, {.x = 32, .y = -16}, {.x = 16, .y = -8}};
 
+const mg_spriteDef_t playerDamageAnimFrames[]
+    = {MG_SP_PLAYER_HURT, MG_SP_PLAYER_HURT_2, MG_SP_PLAYER_HURT, MG_SP_PLAYER_HURT_3};
+const mg_spriteDef_t playerMicDropAnimFrames[]     = {MG_SP_PLAYER_MIC_DROP_1, MG_SP_PLAYER_MIC_DROP_2};
+const mg_spriteDef_t playerSureYouCanAnimnFrames[] = {
+    // These are in reverse order
+    MG_SP_PLAYER_SUREYOUCAN_2, MG_SP_PLAYER_SUREYOUCAN_2, MG_SP_PLAYER_SUREYOUCAN_2, MG_SP_PLAYER_SUREYOUCAN_1,
+    MG_SP_PLAYER_SUREYOUCAN_1, MG_SP_PLAYER_JUMP,         MG_WSG_PLAYER_WALK5,       MG_WSG_PLAYER_WALK6};
+
+const mg_spriteDef_t normalShotAnimFrames[] = {MG_SP_WAVEBALL_1, MG_SP_WAVEBALL_2, MG_SP_WAVEBALL_3};
+const mg_spriteDef_t chargeShotAnimFrames[]
+    = {MG_SP_CHARGE_SHOT_LVL1_1, MG_SP_CHARGE_SHOT_LVL1_2, MG_SP_CHARGE_SHOT_LVL1_3};
+const mg_spriteDef_t maxChargeShotAnimFrames[]
+    = {MG_SP_CHARGE_SHOT_MAX_1, MG_SP_CHARGE_SHOT_MAX_2, MG_SP_CHARGE_SHOT_MAX_3};
+
 //==============================================================================
 // Functions Prototypes
 //==============================================================================
@@ -1113,18 +1127,20 @@ void animatePlayer(mgEntity_t* self)
 
     if (self->state == MG_PL_ST_HURT)
     {
-        self->spriteIndex = playerDamageAnimFrames[((self->stateTimer + self->visible) >> 2) & 0b11];
+        self->spriteIndex
+            = playerDamageAnimFrames[((self->stateTimer + self->visible) >> 2) % ARRAY_SIZE(playerDamageAnimFrames)];
         return;
     }
     else if (self->state == MG_PL_ST_MIC_DROP)
     {
-        self->spriteIndex       = playerMicDropAnimFrames[(self->stateTimer >> 2) & 0b1];
+        self->spriteIndex = playerMicDropAnimFrames[(self->stateTimer >> 2) % ARRAY_SIZE(playerMicDropAnimFrames)];
         self->spriteRotateAngle = getAtan2(self->yspeed, self->xspeed) - 90;
         return;
     }
     else if (self->state == MG_PL_ST_UPPERCUT)
     {
-        self->spriteIndex = playerSureYouCanAnimnFrames[(self->stateTimer >> 2)];
+        self->spriteIndex
+            = playerSureYouCanAnimnFrames[(self->stateTimer >> 2) % ARRAY_SIZE(playerSureYouCanAnimnFrames)];
         if (self->stateTimer == 4)
         {
             self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
@@ -1516,7 +1532,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 self->gameData->level = newLevelIndex;
 
                 mg_deactivateAllEntities(self->entityManager, true);
-                mg_loadMapFromFile(self->tilemap, leveldef[newLevelIndex].filename);
+                mg_loadMapFromFile(self->tilemap, leveldef[newLevelIndex].filename, self->entityManager);
                 mg_loadWsgSet(self->tilemap->wsgManager, leveldef[newLevelIndex].defaultWsgSetIndex);
 
                 if (self->tilemap->defaultPlayerSpawn != NULL)
@@ -2963,13 +2979,14 @@ void updateWaveBall(mgEntity_t* self)
         {
             case 0:
             default:
-                self->spriteIndex = normalShotAnimFrames[(self->animationTimer % 3)];
+                self->spriteIndex = normalShotAnimFrames[(self->animationTimer % ARRAY_SIZE(normalShotAnimFrames))];
                 break;
             case 1:
-                self->spriteIndex = chargeShotAnimFrames[(self->animationTimer % 3)];
+                self->spriteIndex = chargeShotAnimFrames[(self->animationTimer % ARRAY_SIZE(chargeShotAnimFrames))];
                 break;
             case 2:
-                self->spriteIndex = maxChargeShotAnimFrames[(self->animationTimer % 3)];
+                self->spriteIndex
+                    = maxChargeShotAnimFrames[(self->animationTimer % ARRAY_SIZE(maxChargeShotAnimFrames))];
                 break;
         }
     }
@@ -5281,6 +5298,6 @@ void startOutroCutscene(mgEntity_t* self)
             // The 11th level is the intro level with bigma.
             trophy = 0;
         }
-        trophyUpdate(&platformerTrophies[self->gameData->level], 1, true);
+        trophyUpdate(&platformerTrophies[trophy], 1, true);
     }
 }

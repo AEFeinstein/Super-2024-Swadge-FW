@@ -1131,12 +1131,6 @@ extern const paletteColor_t bgGradientOrange[];
 extern const paletteColor_t bgGradientRed[];
 extern const paletteColor_t bgGradientMenu[];
 extern const mgLeveldef_t leveldef[];
-extern const mg_spriteDef_t playerDamageAnimFrames[];
-extern const mg_spriteDef_t playerMicDropAnimFrames[];
-extern const mg_spriteDef_t playerSureYouCanAnimnFrames[];
-extern const mg_spriteDef_t normalShotAnimFrames[];
-extern const mg_spriteDef_t chargeShotAnimFrames[];
-extern const mg_spriteDef_t maxChargeShotAnimFrames[];
 
 // platformerTrophies array is defined in megaPulseEx.c to avoid multiple definitions
 extern const trophyData_t platformerTrophies[];
