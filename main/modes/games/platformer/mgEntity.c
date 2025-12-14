@@ -3846,6 +3846,13 @@ void mg_updateBossSeverYagata(mgEntity_t* self)
     {
         self->gameData->pauseCountdown = true;
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        if (self->gameData->level == 6)
+        {
+            // after defeating server yataga (level 6) create a power up between pulse and the mixtape for the player to
+            // try out can of salsa.
+            createPowerUp(self->entityManager, (self->x + self->entityManager->playerEntity->x) / 2,
+                          TO_PIXEL_COORDS(self->y));
+        }
         startOutroCutscene(self);
     }
 }
