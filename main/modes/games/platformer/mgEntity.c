@@ -1437,7 +1437,14 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_POWERUP:
         {
             self->hp += 6;
-            if (self->hp > 30)
+            if ((self->gameData->abilities & (1U << MG_CAN_OF_SALSA_ABILITY)))
+            {
+                if (self->hp > 36)
+                {
+                    self->hp = 36;
+                }
+            }
+            else if (self->hp > 30)
             {
                 self->hp = 30;
             }

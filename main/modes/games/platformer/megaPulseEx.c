@@ -308,10 +308,10 @@ static const int32_t trueFalseVals[] = {
     false,
     true,
 };
-static const char str_cheatMode[] = "Cheat Mode: ";
-static const char str_On[]        = "On";
-static const char str_Off[]       = "Off";
-static const char* strs_on_off[]  = {str_Off, str_On};
+static const char str_cheatMode[]     = "Cheat Mode: ";
+static const char str_On[]            = "On";
+static const char str_Off[]           = "Off";
+static const char* strs_on_off[]      = {str_Off, str_On};
 static const char str_giveAbilities[] = "Click to unlock all abilities.";
 
 static const settingParam_t mgAbilityUnlockStateSettingBounds = {.min = 0, .max = 256, .key = KEY_UNLOCKS};
@@ -754,7 +754,7 @@ void updateGame(platformer_t* self)
     if (self->gameData.frameCount > 59)
     {
         self->gameData.frameCount = 0;
-        if(!self->gameData.pauseCountdown)
+        if (!self->gameData.pauseCountdown)
         {
             self->gameData.countdown--;
         }
@@ -811,7 +811,6 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
 
         if (hp > 30)
         {
-            drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_SALSA], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 96);
             hp = 30;
         }
 
@@ -846,6 +845,21 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
             drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_0 + hp], 8,
                         MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4 * 16));
         }
+
+        if ((platformer->gameData.abilities & (1U << MG_CAN_OF_SALSA_ABILITY)))
+        {
+            if (platformer->entityManager.playerEntity->hp < 31)
+            {
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_CAN_OF_SALSA_0], 4,
+                            MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - (5 * 16));
+            }
+            else
+            {
+                drawWsgTile(&platformer->wsgManager
+                                 .wsgs[MG_WSG_HP_CAN_OF_SALSA_0 + platformer->entityManager.playerEntity->hp - 30],
+                            4, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - (5 * 16));
+            }
+        }
     }
 
     if (platformer->entityManager.bossEntity != NULL)
@@ -856,7 +870,6 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
 
         if (hp > 30)
         {
-            drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_SALSA], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 96);
             hp = 30;
         }
 
@@ -1132,7 +1145,7 @@ void changeStateGame(platformer_t* self)
     {
         mg_loadMapFromFile(&(platformer->tilemap), leveldef[levelIndex].filename);
     }
-    self->gameData.countdown = leveldef[levelIndex].timeLimit;
+    self->gameData.countdown      = leveldef[levelIndex].timeLimit;
     self->gameData.pauseCountdown = false;
 
     mgEntityManager_t* entityManager = &(self->entityManager);
