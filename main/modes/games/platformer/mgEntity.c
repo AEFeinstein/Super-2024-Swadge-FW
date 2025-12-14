@@ -2144,11 +2144,12 @@ bool mg_trashManTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t t
 
         if(!(self->shotsFired % 3))
         {
-            mgEntity_t* createdEntity = createDustBunnyL2(self->entityManager, ((tx + createShrubbleTxOffset) << 4) + 7, (ty + createShrubbleTyOffset) << 4) + 7;
+            mgEntity_t* createdEntity = createDustBunnyL2(self->entityManager, ((tx + createShrubbleTxOffset) << 4) + 7, (ty + createShrubbleTyOffset) << 4);
             if(createdEntity != NULL)
             {
                 self->linkedEntity = createdEntity;
                 createdEntity->scoreValue = 0;
+                createdEntity->hp = 2;
             } else if (self->linkedEntity != NULL)
             {
                 killEnemy(self->linkedEntity);
