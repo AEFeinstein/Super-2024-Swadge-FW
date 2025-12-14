@@ -530,7 +530,7 @@ const trophyData_t trophyPicrossModeTrophies[] = {
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1, // For trigger type, set to one
     },
-    
+
     {
         .title       = "Puzzles for ants",
         .description = "Solved all 15x12 Puzzles",
