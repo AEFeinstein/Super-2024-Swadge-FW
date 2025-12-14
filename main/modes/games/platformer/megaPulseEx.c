@@ -163,7 +163,7 @@ const trophyData_t platformerTrophies[] = {
     {
         .title       = "Defeated Bigma",
         .description = "Favorite genre: Corruption?",
-        .image       = NO_IMAGE_SET, // need 36 x 36 boss images later
+        .image       = TROPHY_BIGMA_WSG, // need 36 x 36 boss images later
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1, // For trigger type, set to one
@@ -179,7 +179,7 @@ const trophyData_t platformerTrophies[] = {
     {
         .title       = "Defeated Grind Pangolin",
         .description = "Favorite genre: Ska",
-        .image       = NO_IMAGE_SET,
+        .image       = TROPHY_GRIND_PANGOLIN_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1,
@@ -187,7 +187,7 @@ const trophyData_t platformerTrophies[] = {
     {
         .title       = "Sever Yataga",
         .description = "Favorite genre: EDM",
-        .image       = NO_IMAGE_SET,
+        .image       = TROPHY_SEVER_YATAGA_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1,
@@ -195,7 +195,7 @@ const trophyData_t platformerTrophies[] = {
     {
         .title       = "Ember Demon (Actually Trash Man)",
         .description = "Favorite genre: Jazz",
-        .image       = NO_IMAGE_SET,
+        .image       = TROPHY_EMBER_DEMON_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1,
@@ -203,7 +203,7 @@ const trophyData_t platformerTrophies[] = {
     {
         .title       = "Hank Waddle",
         .description = "Favorite genre: Silence",
-        .image       = NO_IMAGE_SET,
+        .image       = TROPHY_HANK_WADDLE_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EXTREME,
         .maxVal      = 1,
@@ -211,7 +211,7 @@ const trophyData_t platformerTrophies[] = {
     {
         .title       = "Defeated Smash Gorilla",
         .description = "Favorite genre: Salsa",
-        .image       = NO_IMAGE_SET,
+        .image       = TROPHY_SMASH_GORILLA_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1,
@@ -219,7 +219,7 @@ const trophyData_t platformerTrophies[] = {
     {
         .title       = "Defeated Deadeye Chirpzi",
         .description = "Favorite genre: Metal",
-        .image       = TROPHY_DEADEYE_CHIRPZI_WSG,
+        .image       = TROPHY_DEADEY_CHIRPZI_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1,
@@ -235,7 +235,7 @@ const trophyData_t platformerTrophies[] = {
     {
         .title       = "Flare Gryffyn",
         .description = "Favorite genre: Classic Rock",
-        .image       = NO_IMAGE_SET,
+        .image       = TROPHY_FLARE_GRYFFYN_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1,
