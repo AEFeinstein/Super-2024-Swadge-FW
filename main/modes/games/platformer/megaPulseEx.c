@@ -846,18 +846,18 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
                         MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4 * 16));
         }
 
-        if ((platformer->gameData.abilities & (1U << MG_CAN_OF_SALSA_ABILITY)))
+        if (platformer->gameData.abilities & (1U << MG_CAN_OF_SALSA_ABILITY))
         {
             if (platformer->entityManager.playerEntity->hp < 31)
             {
-                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_CAN_OF_SALSA_0], 4,
-                            MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - (5 * 16));
+                drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_HP_CAN_OF_SALSA_0], 4,
+                              MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - (5 * 16));
             }
             else
             {
-                drawWsgTile(&platformer->wsgManager
-                                 .wsgs[MG_WSG_HP_CAN_OF_SALSA_0 + platformer->entityManager.playerEntity->hp - 30],
-                            4, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - (5 * 16));
+                drawWsgSimple(&platformer->wsgManager
+                                   .wsgs[MG_WSG_HP_CAN_OF_SALSA_0 + platformer->entityManager.playerEntity->hp - 30],
+                              4, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - (5 * 16));
             }
         }
     }

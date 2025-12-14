@@ -244,6 +244,13 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(CHARGE_SHOT_MAX_000_WSG, &self->wsgs[MG_WSG_CHARGE_SHOT_MAX_1], false);
     loadWsg(CHARGE_SHOT_MAX_001_WSG, &self->wsgs[MG_WSG_CHARGE_SHOT_MAX_2], false);
     loadWsg(CHARGE_SHOT_MAX_002_WSG, &self->wsgs[MG_WSG_CHARGE_SHOT_MAX_3], false);
+    loadWsg(HP_CAN_OF_SALSA_0_WSG, &self->wsgs[MG_WSG_HP_CAN_OF_SALSA_0], false);
+    loadWsg(HP_CAN_OF_SALSA_1_WSG, &self->wsgs[MG_WSG_HP_CAN_OF_SALSA_1], false);
+    loadWsg(HP_CAN_OF_SALSA_2_WSG, &self->wsgs[MG_WSG_HP_CAN_OF_SALSA_2], false);
+    loadWsg(HP_CAN_OF_SALSA_3_WSG, &self->wsgs[MG_WSG_HP_CAN_OF_SALSA_3], false);
+    loadWsg(HP_CAN_OF_SALSA_4_WSG, &self->wsgs[MG_WSG_HP_CAN_OF_SALSA_4], false);
+    loadWsg(HP_CAN_OF_SALSA_5_WSG, &self->wsgs[MG_WSG_HP_CAN_OF_SALSA_5], false);
+    loadWsg(HP_CAN_OF_SALSA_6_WSG, &self->wsgs[MG_WSG_HP_CAN_OF_SALSA_6], false);
 }
 
 void mg_initializeSprites(mgWsgManager_t* self)

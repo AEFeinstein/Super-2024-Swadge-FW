@@ -676,7 +676,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             unlockAbility(gameData, MG_CAN_OF_SALSA_ABILITY);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Can of Salsa", false, 0);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... A backup up energy tank!", false, 0);
-            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Fill it up with excess health pickups and it'll kick in automatically when your health drops.", false, 0);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Fill it up with excess health pickups.", false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "Thanks! Stay safe, and uh... vamanos?", false, 2);
             addCutsceneLine(gameData->cutscene, SmashGorilla, "NOW you're getting it.", false, -1);
             break;
