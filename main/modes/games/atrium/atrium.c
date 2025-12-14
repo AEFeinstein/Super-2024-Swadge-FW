@@ -39,7 +39,7 @@ static const cnfsFileIdx_t sonaBodies[] = {DANCEBODY_1_WSG}; // Sona bodies
 static const cnfsFileIdx_t uiImages[]
     = {ARROWBUTTON_1_WSG, ARROWBUTTON_2_WSG, ABUTTON_1_WSG, ABUTTON_2_WSG, BBUTTON_1_WSG,   BBUTTON_2_WSG,
        ATRIUMLOGO_WSG,    KEEPON_WSG,        LOADING_1_WSG, LOADING_2_WSG, LOADING_3_WSG,   LOADING_4_WSG,
-       LOADING_5_WSG,     LOADING_6_WSG,     LOADING_7_WSG, LOADING_8_WSG, GOLD_TROPHY_WSG, ARROW_WSG};
+       LOADING_5_WSG,     LOADING_6_WSG,     LOADING_7_WSG, LOADING_8_WSG, GOLD_TROPHY_WSG, ARROW_WSG, CARDSELECT_WSG};
 static const cnfsFileIdx_t bgImages[] = {
     GAZEBO_WSG, ATRIUMPLANT_1_WSG, ARCADE_1_WSG, ARCADE_2_WSG, ARCADE_3_WSG, ARCADE_4_WSG, CONCERT_1_WSG, CONCERT_2_WSG,
 }; // Images used for the backgrounds
@@ -60,19 +60,12 @@ static const cnfsFileIdx_t fontsIdxs[] = {
 const char atriumModeName[] = "Atrium";
 
 // Strings
-/*static const char* const titleScreenText[] = {
-    "SwadgePass",
-    "Atrium",
-    "Press A to Enter the Atrium",
-    "Press B to View/Edit Your Profile",
-};
+/*
  static const char* const editButtonText[] = {
     "CANCEL",
     "SAVE",
 };
-static const char* const editPromptText[] = {
-    "Choose Card", "Edit Sona", "Choose Identity", "Choose Location",
-};
+
 static const char* const editConfirmText[] = {
     "Are you sure?",
     "This will overwrite your profile.",
@@ -87,7 +80,10 @@ static const char* const fact1[]
     = {"Bard", "Superfan", "Pinball Wizard", "Maker", "Sharpshooter", "Trashman", "Speed Runner", "Medic"};
 static const char* const fact2[]
     = {"Arena", "Arcade", "Gazebo", "Soapbox", "Marketplace", "Panels", "Main Stage", "Tabletop"};
-static const char* const preambles[] = {"Fave Sandwich: ", "I am a: ", "Find me at: "};
+static const char* const preambles[] = {"Fave Sandwich: ", "I am a: ", "Fave place: "};
+static const char* const editPromptText[] = {
+    "Choose Card", "Choose Identity", "Choose Location", "Pick Sandwich"
+};
 
 // // Coordinates
 // static const int textboxcoords_x[]  = {99, 24};             // x coords for the two textboxes
@@ -254,6 +250,8 @@ static void drawGazebo(uint64_t elapsedUs);
 static void drawGazeboForeground(uint64_t elapsedUs);
 static void drawArrows(bool, bool, bool, bool);
 static void drawCard(userProfile_t profile);
+void drawEditSelection(int yloc);
+void drawEditUI(int yloc);
 
 profilePacket_t loadProfileFromNVS();
 trophyData_t* getTrophy();
@@ -363,6 +361,7 @@ static void atriumEnterMode()
     getSwadgePasses(&atr->spList, &atriumMode, true);
     node_t* spNode = atr->spList.first;
     int i          = 0;
+    atr->loadAnims = 0;
 
     while (spNode)
     {
@@ -466,7 +465,7 @@ static void atriumMainLoop(int64_t elapsedUs)
                     }
                     else if ((evt.button & PB_B))
                     {
-                        atr->state = ATR_EDIT_PROFILE; // if B is pressed, go to profile view
+                        atr->state = ATR_EDIT_PROFILE; // if B is pressed, go to edit profile view
                     }
                 }
             }
@@ -507,8 +506,7 @@ static void atriumMainLoop(int64_t elapsedUs)
 void atriumAddSP(struct swadgePassPacket* packet)
 {
     // FIXME: Load the appropriate mode
-    // packet->atriumMode.numPasses         = atr->loadedProfile.numPasses;
-    // packet->atriumMode.latestTrophyIdx   = trophyGetLatest();
+  
 }
 
 // States
@@ -534,7 +532,7 @@ static void editProfile(buttonEvt_t* evt)
             }
             if (evt->button & PB_A)
             {
-                drawWsgSimpleHalf(&atr->uiElements[17], 63, 46); // draw arrow
+                //drawEditUI(atr->yloc);
             }
             if (evt->button & PB_UP)
             {
@@ -554,22 +552,15 @@ static void editProfile(buttonEvt_t* evt)
             }
             if (evt->button & PB_LEFT)
             {
-                atr->xloc--;
-                if (atr->xloc < 0)
-                {
-                    atr->xloc = 0;
-                }
+                
             }
             if (evt->button & PB_RIGHT)
             {
-                atr->xloc++;
-                if (atr->xloc > 1)
-                {
-                    atr->xloc = 1;
-                }
+               
             }
         }
     }
+    drawEditSelection(atr->yloc);
 }
 
 static void viewProfile(buttonEvt_t* evt)
@@ -738,8 +729,6 @@ void shuffleSonas()
 {
     if (atr->shuffle == 0)
     {
-        printf("Shuffling %d sonas\n", atr->numRemoteSwsn);
-
         if (atr->numRemoteSwsn <= 0)
         {
             return;
@@ -826,7 +815,7 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
             {
                 atr->loadedProfs = false; // reset loaded profiles to load new ones
             }
-            printf("Skipping profile %d because I want page %d\n", i, page);
+            
         }
         atr->loadedProfs = false; // reset loaded profiles to load new ones
         printf("Page changed from %d to %d, resetting loadedProfs\n", atr->lastPage, page);
@@ -837,7 +826,7 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
         loadProfiles(&atr->spList, &atr->loadedProfilesList, 4, 1,
                      page); // load up to 4 profiles into loadedProfilesList
         atr->loadedProfs = true;
-        printf("Loaded profiles into loadedProfilesList and the length is %d\n", atr->loadedProfilesList.length);
+        
     }
 
     // Draw sonas
@@ -850,7 +839,7 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
         if (atr->loadedProfile.swsn->image.w != 0)
         {
             freeWsg(&atr->loadedProfile.swsn->image);
-            printf("Freed previous image\n");
+            
         }
 
         generateSwadgesonaImage(atr->loadedProfile.swsn, false);
@@ -860,7 +849,7 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
 }
 
 static void drawArrows(bool left, bool right, bool up, bool down)
-{ // TODO: change scale and positions, add left and right
+{ // TODO: change scale and positions
     if (atr->lbState != 0)
     {
         drawWsg(&atr->uiElements[(up) ? 1 : 0], LOBBY_BORDER_X, LOBBY_ARROW_Y, false, false, 270);
@@ -921,6 +910,30 @@ static void drawCard(userProfile_t profile)
     drawWsgSimple(&atr->uiElements[16], 212, 124 + CARDTEXTPAD); // draw trophy image
 }
 
+void drawEditSelection(int yloc)
+{
+    switch (yloc)
+    {
+        case 0:
+            drawWsgSimple(&atr->uiElements[18], 0, 12); // card select
+            drawText(&atr->fonts[0], c000, editPromptText[0], 25, 200);
+            break;
+        case 1:
+            drawWsg(&atr->uiElements[17], 90-CARDTEXTPAD, 55, false, false, 270); // fact0
+            drawText(&atr->fonts[0], c000, editPromptText[1], 25, 200);
+            break;
+        case 2:
+            drawWsg(&atr->uiElements[17], 90-CARDTEXTPAD, 68, false, false, 270); // fact1
+            drawText( &atr->fonts[0], c000, editPromptText[2], 25, 200);
+            break;
+        case 3:
+            drawWsg(&atr->uiElements[17], 90-CARDTEXTPAD, 81, false, false, 270); // fact2
+            drawText( &atr->fonts[0], c000, editPromptText[3], 25, 200);
+            break;
+        default:
+            break;
+    }
+}
 void loadProfiles(list_t* spList, list_t* loadedProfilesList, int maxProfiles, bool remote, int page)
 {
     printf("Loading profiles: maxProfiles=%d, remote=%d, page=%d\n", maxProfiles, remote, page);
@@ -1031,9 +1044,8 @@ profilePacket_t loadProfileFromNVS()
     readNvs32("fact1", &packedProfile.profile.fact1);
     readNvs32("fact2", &packedProfile.profile.fact2);
 
-    // loadSPSona(&packedProfile.sona); //TODO: why doesn't this work?
-    // memcpy(&packedProfile.profile.swsn->core, &packedProfile.sona, sizeof(swadgesonaCore_t));
-    // generateSwadgesonaImage(packedProfile.profile.swsn, false);
+    //loadSPSona(&packedProfile.sona); //TODO: why doesn't this work?
+    //generateSwadgesonaImage(packedProfile.profile.swsn, false);
 
     printf("Loaded local swadgesona data\n");
     packedProfile.profile.numPasses = atr->numRemoteSwsn; // update number of passes each time
@@ -1046,38 +1058,3 @@ profilePacket_t loadProfileFromNVS()
 
     return atr->packedProfile;
 }
-/*
-
-uint32_t packProfile(userProfile prof)
-{
-    packedUserProfile_t ret = {
-        .profile.cardselect = prof.cardselect,
-        .profile.fact0      = prof.fact0,
-        .profile.fact1      = prof.fact1,
-        .profile.fact2      = prof.fact2,
-        .profile.sona       = prof.sona,
-        .profile.mine       = prof.mine,
-    };
-    return ret.data;
-}
-
-userProfile unpackProfile(uint32_t packedProfile)
-{
-    packedUserProfile_t pp      = {.data = packedProfile};
-    userProfile unpackedprofile = {.cardselect = pp.profile.cardselect,
-                                   .fact0      = pp.profile.fact0,
-                                   .fact1      = pp.profile.fact1,
-                                   .fact2      = pp.profile.fact2,
-                                   .sona       = pp.profile.sona,
-                                   .mine       = pp.profile.mine};
-
-    printf("unpacked cardselect is %" PRId32 "\n", unpackedprofile.cardselect);
-    printf("unpacked fact0 is %" PRId32 "\n", unpackedprofile.fact0);
-    printf("unpacked fact1 is %" PRId32 "\n", unpackedprofile.fact1);
-    printf("unpacked fact2 is %" PRId32 "\n", unpackedprofile.fact2);
-    printf("unpacked sona is %" PRId32 "\n", unpackedprofile.sona);
-    printf("unpacked mine is %" PRId32 "\n", unpackedprofile.mine);
-
-    return unpackedprofile;
-}
- */
