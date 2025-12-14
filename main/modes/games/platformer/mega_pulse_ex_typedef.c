@@ -113,10 +113,10 @@ const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_to
     = {.collisionPoints = {{.x = -30, .y = -11}, {.x = 0, .y = -11}, {.x = 30, .y = -11}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rightEdge
-    = {.collisionPoints = {{.x = 30, .y = 27}, {.x = 30, .y = 0}, {.x = 30, .y = -11}}, .size = 3};
+    = {.collisionPoints = {{.x = 30, .y = 25}, {.x = 30, .y = 0}, {.x = 30, .y = -11}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_leftEdge
-    = {.collisionPoints = {{.x = -30, .y = 27}, {.x = -30, .y = 0}, {.x = -30, .y = -11}}, .size = 3};
+    = {.collisionPoints = {{.x = -30, .y = 25}, {.x = -30, .y = 0}, {.x = -30, .y = -11}}, .size = 3};
 
 const mg_EntityTileCollider_t entityTileCollider_grind_pangolin
     = {.bottomEdge = &mgTileCollisionOffsets_grind_pangolin_bottomEdge,
@@ -132,10 +132,10 @@ const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_ro
     = {.collisionPoints = {{.x = -10, .y = -15}, {.x = 0, .y = -15}, {.x = 10, .y = -15}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_rightEdge
-    = {.collisionPoints = {{.x = 10, .y = 15}, {.x = 10, .y = 0}, {.x = 10, .y = -15}}, .size = 3};
+    = {.collisionPoints = {{.x = 10, .y = 14}, {.x = 10, .y = 0}, {.x = 10, .y = -15}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_leftEdge
-    = {.collisionPoints = {{.x = -10, .y = 15}, {.x = -10, .y = 0}, {.x = -10, .y = -15}}, .size = 3};
+    = {.collisionPoints = {{.x = -10, .y = 14}, {.x = -10, .y = 0}, {.x = -10, .y = -15}}, .size = 3};
 
 const mg_EntityTileCollider_t entityTileCollider_grind_pangolin_rolling
     = {.bottomEdge = &mgTileCollisionOffsets_grind_pangolin_rolling_bottomEdge,
