@@ -177,6 +177,38 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
+        .title       = "Defeated Grind Pangolin",
+        .description = "Favorite genre: Ska",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Sever Yataga",
+        .description = "Favorite genre: EDM",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Ember Demon (Actually Trash Man)",
+        .description = "Favorite genre: Jazz",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Hank Waddle",
+        .description = "Favorite genre: Silence",
+        .image       = NO_IMAGE_SET,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1,
+    },
+    {
         .title       = "Defeated Smash Gorilla",
         .description = "Favorite genre: Salsa",
         .image       = NO_IMAGE_SET,
@@ -193,14 +225,6 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Defeated Grind Pangolin",
-        .description = "Favorite genre: Ska",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {
         .title       = "Defeated Drain Bat",
         .description = "Favorite genre: Classical",
         .image       = TROPHY_DRAIN_BAT_WSG,
@@ -209,24 +233,8 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Sever Yataga",
-        .description = "Favorite genre: EDM",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {
         .title       = "Flare Gryffyn",
         .description = "Favorite genre: Classic Rock",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Ember Demon (Actually Trash Man)",
-        .description = "Favorite genre: Jazz",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
@@ -455,7 +463,7 @@ void platformerEnterMode(void)
                          true, true, true);
         setMidiParams(platformer->gameData.cutscene, 21, 81, 1, 100, true);
         // WarningMessage
-        addCutsceneStyle(platformer->gameData.cutscene, c524, WARNING_MESSAGE_PORTRAIT_WSG, TEXTBOX_PULSE_WSG, "", 1,
+        addCutsceneStyle(platformer->gameData.cutscene, c254, WARNING_MESSAGE_PORTRAIT_WSG, TEXTBOX_PULSE_WSG, "", 1,
                          true, true, false);
         setMidiParams(platformer->gameData.cutscene, 22, 55, 0, 100, false);
         // SawtoothPostReveal
@@ -1816,7 +1824,7 @@ void updatePause(platformer_t* self)
 {
     if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START)))
     {
-        // soundResume();
+        soundResume();
         soundPlaySfx(&(self->soundManager.sndPause), BZR_STEREO);
         self->update = &updateGame;
     }

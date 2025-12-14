@@ -79,6 +79,27 @@ void mg_deactivateAllEntities(mgEntityManager_t* entityManager, bool excludePlay
     }
 }
 
+void mg_deactivateAllBullets(mgEntityManager_t* entityManager)
+{
+    for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+    {
+        mgEntity_t* currentEntity = &(entityManager->entities[i]);
+
+        if (currentEntity->updateFunction != updateWaveBall)
+        {
+            continue;
+        }
+
+        currentEntity->active = false;
+
+        if (currentEntity->spawnData != NULL)
+        {
+            currentEntity->spawnData->spawnedEntity = NULL;
+            currentEntity->spawnData->spawnable     = currentEntity->spawnData->respawnable;
+        }
+    }
+}
+
 void mg_drawEntities(mgEntityManager_t* entityManager)
 {
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)

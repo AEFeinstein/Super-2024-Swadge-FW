@@ -3848,11 +3848,15 @@ void mg_updateBossSeverYagata(mgEntity_t* self)
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         if (self->gameData->level == 6)
         {
-            // after defeating server yataga (level 6) create a power up between pulse and the mixtape for the player to
-            // try out can of salsa.
-            createPowerUp(self->entityManager, (self->x + self->entityManager->playerEntity->x) / 2,
-                          TO_PIXEL_COORDS(self->y));
+            // after defeating smash gorilla (level 6) create a bunch of power ups to try out can of salsa.
+            for (int i = 1; i < 5; i++)
+            {
+                createPowerUp(self->entityManager, TO_PIXEL_COORDS(self->x) - 25 * i, TO_PIXEL_COORDS(self->y));
+                createPowerUp(self->entityManager, TO_PIXEL_COORDS(self->x) + 25 * i, TO_PIXEL_COORDS(self->y));
+            }
         }
+        mg_deactivateAllBullets(self->entityManager); // so the player doesn't get hurt right after the winning
+                                                      // cutscene.
         startOutroCutscene(self);
     }
 }
@@ -5271,6 +5275,12 @@ void startOutroCutscene(mgEntity_t* self)
     bossOutroCutscene(self->gameData);
     if (!self->gameData->cheatMode)
     {
-        trophyUpdate(&platformerTrophies[self->gameData->level - 1], 1, true);
+        uint8_t trophy = self->gameData->level;
+        if (trophy == 11)
+        {
+            // The 11th level is the intro level with bigma.
+            trophy = 0;
+        }
+        trophyUpdate(&platformerTrophies[self->gameData->level], 1, true);
     }
 }
