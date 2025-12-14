@@ -1016,6 +1016,28 @@ typedef enum
     MG_WSGSET_BIGMA
 } mgWsgSetIndex_t;
 
+/*
+intro gives you nothing
+Kinetic Donut gives you Mic Drop
+Grind Pangolin gives you slide
+Sever Yataga gives you the Plot Armor (increased iframes/damage reduction)
+Trash Man gives you the double jump
+Smash Gorilla gives you the can of salsa/e-tank
+Deadeye Chirpzi gives you charge shot
+Drain Bat gives you the Sure, You Can (uppercut)
+Flare Gryffyn gives you the Reflector*/
+typedef enum
+{
+    MG_DROP_THE_MIC_ABILITY,
+    MG_TROMBONE_SLIDE_ABILITY,
+    MG_PLOT_ARMOR_ABILITY,
+    MG_OBNOXIOUS_NOODLING_ABILITY,//double jump
+    MG_CAN_OF_SALSA_ABILITY,
+    MG_CHARGE_SHOT_ABILITY,
+    MG_SURE_YOU_CAN_ABILITY,//uppercut
+    MG_REFLECTOR_ABILITY,
+} mgAbilities_t;
+
 //==============================================================================
 // Extern Variables
 //==============================================================================
