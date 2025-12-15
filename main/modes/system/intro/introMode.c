@@ -583,7 +583,7 @@ static void introEnterMode(void)
 #endif
 
     // Load the test MIDI file
-    loadMidiFile(SPK_TEST_MID, &iv->song, true);
+    loadMidiFile(MAXIMUM_HYPE_CREDITS_TEASER_MID, &iv->song, true);
 
     // Init CC
     InitColorChord(&iv->end, &iv->dd);
