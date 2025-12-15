@@ -208,195 +208,266 @@ static const jukeboxSong_t bgm_picross[] = {
 
 static const jukeboxSong_t bgm_megaPulse[] = {
     {
-        .fIdx = BGM_BOSS_TRASH_MAN_MID,
-        .name = "BGM_BOSS_TRASH_MAN_MID",
+        .name = "INTRO STAGE",
+        .fIdx = BGM_INTRO_STAGE_MID,
     },
     {
-        .fIdx = BGM_BOSS_BIGMA_MID,
-        .name = "BGM_BOSS_BIGMA_MID",
+        .name = "PRE FIGHT",
+        .fIdx = BGM_PRE_FIGHT_MID,
     },
     {
-        .fIdx = BGM_STAGE_SELECT_MID,
-        .name = "BGM_STAGE_SELECT_MID",
+        .name = "POST FIGHT",
+        .fIdx = BGM_POST_FIGHT_MID,
     },
     {
-        .fIdx = BGM_NAME_ENTRY_MID,
-        .name = "BGM_NAME_ENTRY_MID",
-    },
-    {
-        .fIdx = BGM_FLARE_GRYFFYN_MID,
-        .name = "BGM_FLARE_GRYFFYN_MID",
-    },
-    {
-        .fIdx = BGM_BOSS_FLARE_GRIFFIN_MID,
-        .name = "BGM_BOSS_FLARE_GRIFFIN_MID",
-    },
-    {
-        .fIdx = BGM_GRIND_PANGOLIN_MID,
-        .name = "BGM_GRIND_PANGOLIN_MID",
-    },
-    {
-        .fIdx = BGM_BOSS_GRIND_PANGOLIN_MID,
-        .name = "BGM_BOSS_GRIND_PANGOLIN_MID",
-    },
-    {
-        .fIdx = BGM_KINETIC_DONUT_MID,
-        .name = "BGM_KINETIC_DONUT_MID",
-    },
-    {
-        .fIdx = BGM_BOSS_KINETIC_DONUT_MID,
-        .name = "BGM_BOSS_KINETIC_DONUT_MID",
-    },
-    {
-        .fIdx = BGM_RIP_BARONESS_MID,
-        .name = "BGM_RIP_BARONESS_MID",
-    },
-    {
-        .fIdx = BGM_BOSS_HANK_WADDLE_MID,
-        .name = "BGM_BOSS_HANK_WADDLE_MID",
-    },
-    {
-        .fIdx = BGM_SEVER_YAGATA_MID,
-        .name = "BGM_SEVER_YAGATA_MID",
-    },
-    {
-        .fIdx = BGM_BOSS_SEVER_YAGATA_MID,
-        .name = "BGM_BOSS_SEVER_YAGATA_MID",
-    },
-    {
-        .fIdx = BGM_SMASH_GORILLA_MID,
-        .name = "BGM_SMASH_GORILLA_MID",
-    },
-    {
-        .fIdx = BGM_BOSS_SMASH_GORILLA_MID,
-        .name = "BGM_BOSS_SMASH_GORILLA_MID",
-    },
-    {
+        .name = "DEADEYE CHIRPZI",
         .fIdx = BGM_DEADEYE_CHIRPZI_MID,
-        .name = "BGM_DEADEYE_CHIRPZI_MID",
     },
     {
+        .name = "BOSS DEADEYE CHIRPZI",
         .fIdx = BGM_BOSS_DEADEYE_CHIRPZI_MID,
-        .name = "BGM_BOSS_DEADEYE_CHIRPZI_MID",
     },
     {
+        .name = "DRAIN BAT",
         .fIdx = BGM_DRAIN_BAT_MID,
-        .name = "BGM_DRAIN_BAT_MID",
     },
     {
+        .name = "BOSS DRAIN BAT",
         .fIdx = BGM_BOSS_DRAIN_BAT_MID,
-        .name = "BGM_BOSS_DRAIN_BAT_MID",
     },
     {
-        .fIdx = BGM_GAME_OVER_MID,
-        .name = "BGM_GAME_OVER_MID",
+        .name = "FLARE GRYFFYN",
+        .fIdx = BGM_FLARE_GRYFFYN_MID,
     },
     {
-        .fIdx = BGM_INTRO_MID,
-        .name = "BGM_INTRO_MID",
+        .name = "BOSS FLARE GRIFFIN",
+        .fIdx = BGM_BOSS_FLARE_GRIFFIN_MID,
+    },
+    {
+        .name = "GRIND PANGOLIN",
+        .fIdx = BGM_GRIND_PANGOLIN_MID,
+    },
+    {
+        .name = "BOSS GRIND PANGOLIN",
+        .fIdx = BGM_BOSS_GRIND_PANGOLIN_MID,
+    },
+    {
+        .name = "KINETIC DONUT",
+        .fIdx = BGM_KINETIC_DONUT_MID,
+    },
+    {
+        .name = "BOSS KINETIC DONUT",
+        .fIdx = BGM_BOSS_KINETIC_DONUT_MID,
+    },
+    {
+        .name = "SEVER YAGATA",
+        .fIdx = BGM_SEVER_YAGATA_MID,
+    },
+    {
+        .name = "BOSS SEVER YAGATA",
+        .fIdx = BGM_BOSS_SEVER_YAGATA_MID,
+    },
+    {
+        .name = "SMASH GORILLA",
+        .fIdx = BGM_SMASH_GORILLA_MID,
+    },
+    {
+        .name = "BOSS SMASH GORILLA",
+        .fIdx = BGM_BOSS_SMASH_GORILLA_MID,
+    },
+    {
+        .name = "BOSS TRASH MAN",
+        .fIdx = BGM_BOSS_TRASH_MAN_MID,
+    },
+    {
+        .name = "BIGMA",
+        .fIdx = BGM_BIGMA_MID,
+    },
+    {
+        .name = "BOSS BIGMA",
+        .fIdx = BGM_BOSS_BIGMA_MID,
+    },
+    {
+        .name = "BOSS HANK WADDLE",
+        .fIdx = BGM_BOSS_HANK_WADDLE_MID,
+    },
+    {
+        .name = "RIP BARONESS",
+        .fIdx = BGM_RIP_BARONESS_MID,
+    },
+    {
+        .name = "STAGE SELECT",
+        .fIdx = BGM_STAGE_SELECT_MID,
+    },
+    {
+        .name = "NAME ENTRY",
+        .fIdx = BGM_NAME_ENTRY_MID,
     },
 };
 
 static const jukeboxSong_t sfx_megaPulse[] = {
     {
+        .name = "INTRO",
+        .fIdx = BGM_INTRO_MID,
+    },
+    {
+        .name = "GAME OVER",
+        .fIdx = BGM_GAME_OVER_MID,
+    },
+    {
+        .name = "1UP",
         .fIdx = SND_1UP_MID,
-        .name = "SND_1UP_MID",
     },
     {
+        .name = "BREAK",
         .fIdx = SND_BREAK_MID,
-        .name = "SND_BREAK_MID",
     },
     {
+        .name = "CHECKPOINT",
         .fIdx = SND_CHECKPOINT_MID,
-        .name = "SND_CHECKPOINT_MID",
     },
     {
+        .name = "COIN",
         .fIdx = SND_COIN_MID,
-        .name = "SND_COIN_MID",
     },
     {
+        .name = "DIE",
         .fIdx = SND_DIE_MID,
-        .name = "SND_DIE_MID",
     },
     {
+        .name = "HIT",
         .fIdx = SND_HIT_MID,
-        .name = "SND_HIT_MID",
     },
     {
+        .name = "HURT",
         .fIdx = SND_HURT_MID,
-        .name = "SND_HURT_MID",
     },
     {
+        .name = "JUMP 1",
         .fIdx = SND_JUMP_1_MID,
-        .name = "SND_JUMP_1_MID",
     },
     {
+        .name = "JUMP 2",
         .fIdx = SND_JUMP_2_MID,
-        .name = "SND_JUMP_2_MID",
     },
     {
+        .name = "JUMP 3",
         .fIdx = SND_JUMP_3_MID,
-        .name = "SND_JUMP_3_MID",
     },
     {
+        .name = "LEVEL CLEAR JINGLE",
+        .fIdx = BGM_LEVEL_CLEAR_JINGLE_MID,
+    },
+    {
+        .name = "LEVEL CLEAR A",
         .fIdx = SND_LEVEL_CLEAR_A_MID,
-        .name = "SND_LEVEL_CLEAR_A_MID",
     },
     {
+        .name = "LEVEL CLEAR B",
         .fIdx = SND_LEVEL_CLEAR_B_MID,
-        .name = "SND_LEVEL_CLEAR_B_MID",
     },
     {
+        .name = "LEVEL CLEAR C",
         .fIdx = SND_LEVEL_CLEAR_C_MID,
-        .name = "SND_LEVEL_CLEAR_C_MID",
     },
     {
+        .name = "LEVEL CLEAR D",
         .fIdx = SND_LEVEL_CLEAR_D_MID,
-        .name = "SND_LEVEL_CLEAR_D_MID",
     },
     {
-        .fIdx = SND_LEVEL_CLEAR_S_MID,
-        .name = "SND_LEVEL_CLEAR_S_MID",
+        .name = "LEVEL CLEAR",
+        .fIdx = SND_LEVEL_CLEAR_MID,
     },
     {
-        .fIdx = SND_MENU_CONFIRM_MID,
-        .name = "SND_MENU_CONFIRM_MID",
+        .name = "SWSN CHOOSE SFX MID",
+        .fIdx = SWSN_CHOOSE_SFX_MID,
     },
     {
+        .name = "MENU DENY",
         .fIdx = SND_MENU_DENY_MID,
-        .name = "SND_MENU_DENY_MID",
     },
     {
-        .fIdx = SND_MENU_SELECT_MID,
-        .name = "SND_MENU_SELECT_MID",
+        .name = "SWSN MOVE SFX MID",
+        .fIdx = SWSN_MOVE_SFX_MID,
     },
     {
+        .name = "OUT OF TIME",
         .fIdx = SND_OUT_OF_TIME_MID,
-        .name = "SND_OUT_OF_TIME_MID",
     },
     {
+        .name = "PAUSE",
         .fIdx = SND_PAUSE_MID,
-        .name = "SND_PAUSE_MID",
     },
     {
+        .name = "POWER UP",
         .fIdx = SND_POWER_UP_MID,
-        .name = "SND_POWER_UP_MID",
     },
     {
+        .name = "SQUISH",
         .fIdx = SND_SQUISH_MID,
-        .name = "SND_SQUISH_MID",
     },
     {
+        .name = "TALLY",
         .fIdx = SND_TALLY_MID,
-        .name = "SND_TALLY_MID",
     },
     {
+        .name = "WARP",
         .fIdx = SND_WARP_MID,
-        .name = "SND_WARP_MID",
     },
     {
+        .name = "WAVE BALL",
         .fIdx = SND_WAVE_BALL_MID,
-        .name = "SND_WAVE_BALL_MID",
+    },
+};
+
+static const jukeboxSong_t bgm_danceNetwork[] = {
+    {
+        .name = "Pawn's Gambit",
+        .fIdx = AP_PAWNS_GAMBIT_BGM_MID,
+    },
+    {
+        .name = "Pawn's Gambit Percussion",
+        .fIdx = AP_PAWNS_GAMBIT_PERCUSSION_MID,
+    },
+    {
+        .name = "Ten Steps Ahead",
+        .fIdx = AP_TEN_STEPS_AHEAD_BGM_MID,
+    },
+    {
+        .name = "Ten Steps Ahead Percussion",
+        .fIdx = AP_TEN_STEPS_AHEAD_PERCUSSION_MID,
+    },
+    {
+        .name = "The Will to Win",
+        .fIdx = AP_THE_WILL_TO_WIN_BGM_MID,
+    },
+    {
+        .name = "The Will to Win Percussion",
+        .fIdx = AP_THE_WILL_TO_WIN_PERCUSSION_MID,
+    },
+    {
+        .name = "Final Path",
+        .fIdx = AP_FINAL_PATH_BGM_MID,
+    },
+    {
+        .name = "Final Path Percussion",
+        .fIdx = AP_FINAL_PATH_PERCUSSION_MID,
+    },
+    {
+        .name = "Return of the Valiant",
+        .fIdx = AP_RETURN_OF_THE_VALIANT_BGM_MID,
+    },
+    {
+        .name = "Return of the Valiant Percussion",
+        .fIdx = AP_RETURN_OF_THE_VALIANT_PERCUSSION_MID,
+    },
+    {
+        .name = "Next Move",
+        .fIdx = AP_NEXT_MOVE_BGM_MID,
+    },
+    {
+        .name = "Next Move Percussion",
+        .fIdx = AP_NEXT_MOVE_PERCUSSION_MID,
     },
 };
 
@@ -448,16 +519,9 @@ static const jukeboxSong_t sfx_swadgesona[] = {
 
 static const jukeboxCategory_t bgmCategories[] = {
     {
-        .category    = &roboRunnerMode,
-        .songs       = bgm_roboRunner,
-        .numSongs    = ARRAY_SIZE(bgm_roboRunner),
-        .generalMidi = true,
-        .shouldLoop  = true,
-    },
-    {
-        .category    = &artilleryMode,
-        .songs       = bgm_vectorTanks,
-        .numSongs    = ARRAY_SIZE(bgm_vectorTanks),
+        .category    = &modePlatformer,
+        .songs       = bgm_megaPulse,
+        .numSongs    = ARRAY_SIZE(bgm_megaPulse),
         .generalMidi = true,
         .shouldLoop  = true,
     },
@@ -469,6 +533,27 @@ static const jukeboxCategory_t bgmCategories[] = {
         .shouldLoop  = true,
     },
     {
+        .category    = &artilleryMode,
+        .songs       = bgm_vectorTanks,
+        .numSongs    = ARRAY_SIZE(bgm_vectorTanks),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
+        .category    = &danceNetworkMode,
+        .songs       = bgm_danceNetwork,
+        .numSongs    = ARRAY_SIZE(bgm_danceNetwork),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
+        .category    = &roboRunnerMode,
+        .songs       = bgm_roboRunner,
+        .numSongs    = ARRAY_SIZE(bgm_roboRunner),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
         .category    = &modePicross,
         .songs       = bgm_picross,
         .numSongs    = ARRAY_SIZE(bgm_picross),
@@ -476,16 +561,9 @@ static const jukeboxCategory_t bgmCategories[] = {
         .shouldLoop  = true,
     },
     {
-        .category    = &modePlatformer,
-        .songs       = bgm_megaPulse,
-        .numSongs    = ARRAY_SIZE(bgm_megaPulse),
-        .generalMidi = true,
-        .shouldLoop  = true,
-    },
-    {
-        .category    = &modeCredits,
-        .songs       = bgm_credits,
-        .numSongs    = ARRAY_SIZE(bgm_credits),
+        .category    = &swsnCreatorMode,
+        .songs       = bgm_swadgesona,
+        .numSongs    = ARRAY_SIZE(bgm_swadgesona),
         .generalMidi = true,
         .shouldLoop  = true,
     },
@@ -497,15 +575,22 @@ static const jukeboxCategory_t bgmCategories[] = {
         .shouldLoop  = true,
     },
     {
-        .category    = &swsnCreatorMode,
-        .songs       = bgm_swadgesona,
-        .numSongs    = ARRAY_SIZE(bgm_swadgesona),
+        .category    = &modeCredits,
+        .songs       = bgm_credits,
+        .numSongs    = ARRAY_SIZE(bgm_credits),
         .generalMidi = true,
         .shouldLoop  = true,
     },
 };
 
 static const jukeboxCategory_t sfxCategories[] = {
+    {
+        .category    = &modePlatformer,
+        .songs       = sfx_megaPulse,
+        .numSongs    = ARRAY_SIZE(sfx_megaPulse),
+        .generalMidi = true,
+        .shouldLoop  = false,
+    },
     {
         .category    = &cosCrunchMode,
         .songs       = sfx_cosplayCrunch,
@@ -514,9 +599,9 @@ static const jukeboxCategory_t sfxCategories[] = {
         .shouldLoop  = false,
     },
     {
-        .category    = &modePlatformer,
-        .songs       = sfx_megaPulse,
-        .numSongs    = ARRAY_SIZE(sfx_megaPulse),
+        .category    = &swsnCreatorMode,
+        .songs       = sfx_swadgesona,
+        .numSongs    = ARRAY_SIZE(sfx_swadgesona),
         .generalMidi = true,
         .shouldLoop  = false,
     },
@@ -531,13 +616,6 @@ static const jukeboxCategory_t sfxCategories[] = {
         .category    = &mainMenuMode,
         .songs       = sfx_mainMenu,
         .numSongs    = ARRAY_SIZE(sfx_mainMenu),
-        .generalMidi = true,
-        .shouldLoop  = false,
-    },
-    {
-        .category    = &swsnCreatorMode,
-        .songs       = sfx_swadgesona,
-        .numSongs    = ARRAY_SIZE(sfx_swadgesona),
         .generalMidi = true,
         .shouldLoop  = false,
     },
