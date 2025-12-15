@@ -82,7 +82,7 @@ static const char* const fact2[]
     = {"Arena", "Arcade", "Gazebo", "Soapbox", "Marketplace", "Panels", "Main Stage", "Tabletop"};
 static const char* const preambles[] = {"Fave Sandwich: ", "I am a: ", "Fave place: "};
 static const char* const editPromptText[] = {
-    "Choose Card", "Choose Identity", "Choose Location", "Pick Sandwich"
+    "Choose Card", "Choose Identity", "Choose Location", "Pick Sandwich", "Save Profile"
 };
 
 // // Coordinates
@@ -250,8 +250,8 @@ static void drawGazebo(uint64_t elapsedUs);
 static void drawGazeboForeground(uint64_t elapsedUs);
 static void drawArrows(bool, bool, bool, bool);
 static void drawCard(userProfile_t profile);
-void drawEditSelection(int yloc);
-void drawEditUI(int yloc);
+void drawEditSelection(buttonEvt_t* evt, int yloc);
+void drawEditUI(buttonEvt_t* evt, int yloc, bool direction);
 
 profilePacket_t loadProfileFromNVS();
 trophyData_t* getTrophy();
@@ -259,6 +259,7 @@ trophyData_t* getTrophy();
 // Swadgepass
 static void atriumAddSP(struct swadgePassPacket* packet);
 void loadProfiles(list_t* spList, list_t* loadedProfilesList, int maxProfiles, bool local, int page);
+
 
 //---------------------------------------------------------------------------------//
 // VARIABLES
@@ -505,7 +506,7 @@ static void atriumMainLoop(int64_t elapsedUs)
 
 void atriumAddSP(struct swadgePassPacket* packet)
 {
-    // FIXME: Load the appropriate mode
+    
   
 }
 
@@ -532,7 +533,16 @@ static void editProfile(buttonEvt_t* evt)
             }
             if (evt->button & PB_A)
             {
-                //drawEditUI(atr->yloc);
+                if(atr->yloc == 4) // save profile
+                {
+                    // save to NVS
+                    writeNvs32("cardSelect", atr->loadedProfile.cardSelect);
+                    writeNvs32("fact0", atr->loadedProfile.fact0);
+                    writeNvs32("fact1", atr->loadedProfile.fact1);
+                    writeNvs32("fact2", atr->loadedProfile.fact2);
+                    writeNvs32("numPasses", atr->loadedProfile.numPasses);
+                                        
+                }
             }
             if (evt->button & PB_UP)
             {
@@ -545,22 +555,22 @@ static void editProfile(buttonEvt_t* evt)
             if (evt->button & PB_DOWN)
             {
                 atr->yloc++;
-                if (atr->yloc > 3)
+                if (atr->yloc > 4)
                 {
-                    atr->yloc = 3;
+                    atr->yloc = 4;
                 }
             }
             if (evt->button & PB_LEFT)
             {
-                
+                drawEditUI(evt, atr->yloc, 1);
             }
             if (evt->button & PB_RIGHT)
             {
-               
+               drawEditUI(evt, atr->yloc, 0);
             }
         }
     }
-    drawEditSelection(atr->yloc);
+    drawEditSelection(evt, atr->yloc);
 }
 
 static void viewProfile(buttonEvt_t* evt)
@@ -727,6 +737,7 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
 
 void shuffleSonas()
 {
+    
     if (atr->shuffle == 0)
     {
         if (atr->numRemoteSwsn <= 0)
@@ -740,6 +751,11 @@ void shuffleSonas()
             {
                 j = rand() % (i + 1);
                 // Swap
+                profilePacket_t temp = atr->sonaList[i];
+                atr->sonaList[i]    = atr->sonaList[j];
+                atr->sonaList[j]    = temp;
+                
+                
             }
         }
     }
@@ -821,30 +837,13 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
         printf("Page changed from %d to %d, resetting loadedProfs\n", atr->lastPage, page);
     }
 
-    if (atr->loadedProfs == false)
-    {
-        loadProfiles(&atr->spList, &atr->loadedProfilesList, 4, 1,
-                     page); // load up to 4 profiles into loadedProfilesList
-        atr->loadedProfs = true;
-        
-    }
-
     // Draw sonas
     printf("Drawing sonas for page %d\n", page);
-    node_t* currentNode = atr->loadedProfilesList.first;
-    for (int i = 0; i < atr->loadedProfilesList.length && currentNode != NULL; i++)
+    
+    for (int i = 0; i < 3; i++)
     {
-        atr->loadedProfile = *(userProfile_t*)currentNode->val;
+        
 
-        if (atr->loadedProfile.swsn->image.w != 0)
-        {
-            freeWsg(&atr->loadedProfile.swsn->image);
-            
-        }
-
-        generateSwadgesonaImage(atr->loadedProfile.swsn, false);
-        drawWsgSimple(&atr->loadedProfile.swsn->image, 20 + i * 64, 100);
-        currentNode = currentNode->next;
     }
 }
 
@@ -910,7 +909,7 @@ static void drawCard(userProfile_t profile)
     drawWsgSimple(&atr->uiElements[16], 212, 124 + CARDTEXTPAD); // draw trophy image
 }
 
-void drawEditSelection(int yloc)
+void drawEditSelection(buttonEvt_t* evt, int yloc)
 {
     switch (yloc)
     {
@@ -930,81 +929,115 @@ void drawEditSelection(int yloc)
             drawWsg(&atr->uiElements[17], 90-CARDTEXTPAD, 81, false, false, 270); // fact2
             drawText( &atr->fonts[0], c000, editPromptText[3], 25, 200);
             break;
+        case 4:
+        drawText(&atr->fonts[0], c000, editPromptText[4], 25, 200);
+
+            break;
         default:
             break;
     }
 }
+
+void drawEditUI(buttonEvt_t* evt, int yloc, bool direction)
+{
+    if(direction == 0) 
+    {
+    switch (yloc)
+    {
+        case 0:
+            atr->loadedProfile.cardSelect++;
+            if (atr->loadedProfile.cardSelect >= ARRAY_SIZE(cardImages))
+            {
+                atr->loadedProfile.cardSelect = 0;
+            }
+            break;
+        case 1:
+            atr->loadedProfile.fact0++;
+            if (atr->loadedProfile.fact0 >= ARRAY_SIZE(fact0))
+            {
+                atr->loadedProfile.fact0 = 0;
+            }
+            break;
+        case 2:
+            atr->loadedProfile.fact1++;
+            if (atr->loadedProfile.fact1 >= ARRAY_SIZE(fact1))
+            {
+                atr->loadedProfile.fact1 = 0;
+            }
+            break;
+        case 3:
+            atr->loadedProfile.fact2++;
+            if (atr->loadedProfile.fact2 >= ARRAY_SIZE(fact2))
+            {
+                atr->loadedProfile.fact2 = 0;
+            }
+            break;
+        case 4:
+                
+            break;
+        default:
+            break;
+    }
+}
+else 
+{
+    switch (yloc)
+    {
+        case 0:
+            atr->loadedProfile.cardSelect--;
+            if (atr->loadedProfile.cardSelect <= 0)
+            {
+                atr->loadedProfile.cardSelect = ARRAY_SIZE(cardImages);
+            }
+            break;
+        case 1:
+            atr->loadedProfile.fact0--;
+            if (atr->loadedProfile.fact0 <= 0)
+            {
+                atr->loadedProfile.fact0 = ARRAY_SIZE(fact0);
+            }
+            break;
+        case 2:
+            atr->loadedProfile.fact1--;
+            if (atr->loadedProfile.fact1 <= 0)
+            {
+                atr->loadedProfile.fact1 = ARRAY_SIZE(fact1);
+            }
+            break;
+        case 3:
+            atr->loadedProfile.fact2--;
+            if (atr->loadedProfile.fact2 <= 0)
+            {
+                atr->loadedProfile.fact2 = ARRAY_SIZE(fact2);
+            }
+            break;
+        case 4:
+            
+            break;
+        default:
+            break;
+    }
+}
+}
+
 void loadProfiles(list_t* spList, list_t* loadedProfilesList, int maxProfiles, bool remote, int page)
 {
     printf("Loading profiles: maxProfiles=%d, remote=%d, page=%d\n", maxProfiles, remote, page);
-    // Clear the loadedProfilesList
-    while (loadedProfilesList->first != NULL)
-    {
-        node_t* temp              = loadedProfilesList->first;
-        loadedProfilesList->first = loadedProfilesList->first->next;
-        heap_caps_free(temp->val);
-        heap_caps_free(temp);
-    }
-    loadedProfilesList->last   = NULL;
-    loadedProfilesList->length = 0;
-
-    if (remote == true)
-    {
-        // Load profiles from spList into loadedProfilesList
-        node_t* spNode = spList->first;
-        int count      = 0;
-        for (int i = 0; i < page * maxProfiles; i++) // skip pages
-        {
-            if (spNode != NULL)
+    
+    
+    if(remote == true){
+        for (int i=0; i<maxProfiles; i++){
+            if (atr->sonaList[page * 4 + i].profile.swsn->image.w != 0)
             {
-                spNode = spNode->next;
-            }
-            if (i == page * maxProfiles - 1)
-            {
-                printf("Skipped to page %d, node %d\n", page, i + 1);
+                freeWsg(&atr->sonaList[page * 4 + i].profile.swsn->image);
             }
         }
-        while (spNode != NULL && count < maxProfiles)
-        {
-            swadgePassData_t* spd = (swadgePassData_t*)spNode->val;
-
-            // Create a new userProfile_t
-            userProfile_t* profile = (userProfile_t*)heap_caps_calloc(1, sizeof(userProfile_t), MALLOC_CAP_8BIT);
-            profile->cardSelect    = spd->data.packet.atrium.cardSelect;
-            profile->fact0         = spd->data.packet.atrium.fact0;
-            profile->fact1         = spd->data.packet.atrium.fact1;
-            profile->fact2         = spd->data.packet.atrium.fact2;
-
-            profile->local     = remote; // Remote profile?
-            profile->numPasses = spd->data.packet.atrium.numPasses;
-
-            // Copy swadgesona data
-            profile->swsn = (swadgesona_t*)heap_caps_calloc(1, sizeof(swadgesona_t), MALLOC_CAP_8BIT);
-            memcpy(&profile->swsn->core, &spd->data.packet.swadgesona.core, sizeof(swadgesonaCore_t));
-
-            // Add to loadedProfilesList
-            node_t* newNode = (node_t*)heap_caps_calloc(1, sizeof(node_t), MALLOC_CAP_8BIT);
-            newNode->val    = profile;
-            newNode->next   = NULL;
-            if (loadedProfilesList->last == NULL)
-            {
-                loadedProfilesList->first = newNode;
-                loadedProfilesList->last  = newNode;
-            }
-            else
-            {
-                loadedProfilesList->last->next = newNode;
-                loadedProfilesList->last       = newNode;
-            }
-
-            loadedProfilesList->length++;
-            count++;
-            spNode = spNode->next;
-        }
     }
+
     else
     {
     }
+    
 }
 
 trophyData_t* getTrophy()
