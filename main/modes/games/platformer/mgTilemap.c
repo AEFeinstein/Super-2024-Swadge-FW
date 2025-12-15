@@ -165,12 +165,21 @@ void mg_scrollTileMap(mgTilemap_t* tilemap, int16_t x, int16_t y)
     }
 }
 
-bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name)
+bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name, mgEntityManager_t* entityManager)
 {
     if (tilemap->entitySpawns != NULL)
     {
         heap_caps_free(tilemap->entitySpawns);
         tilemap->entitySpawns = NULL;
+    }
+
+    // Unlink all entity spawnData after entitySpawns is free'd
+    if (entityManager->entities)
+    {
+        for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+        {
+            entityManager->entities[i].spawnData = NULL;
+        }
     }
 
     if (tilemap->entitySpawnMap.count > 0)

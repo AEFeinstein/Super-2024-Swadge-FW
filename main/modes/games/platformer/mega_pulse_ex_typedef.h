@@ -102,6 +102,7 @@ typedef enum
     MG_BGM_LEVEL_CLEAR_JINGLE,
     MG_BGM_POST_FIGHT,
     MG_BGM_PRE_FIGHT,
+    MG_INTRO_STAGE,
     MG_BGM_STAGE_SELECT,
     MG_BGM_NAME_ENTRY
 } mg_bgmEnum_t;
@@ -748,7 +749,14 @@ typedef enum
     MG_WSG_CHARGE_SHOT_LVL1_3,
     MG_WSG_CHARGE_SHOT_MAX_1,
     MG_WSG_CHARGE_SHOT_MAX_2,
-    MG_WSG_CHARGE_SHOT_MAX_3
+    MG_WSG_CHARGE_SHOT_MAX_3,
+    MG_WSG_HP_CAN_OF_SALSA_0,
+    MG_WSG_HP_CAN_OF_SALSA_1,
+    MG_WSG_HP_CAN_OF_SALSA_2,
+    MG_WSG_HP_CAN_OF_SALSA_3,
+    MG_WSG_HP_CAN_OF_SALSA_4,
+    MG_WSG_HP_CAN_OF_SALSA_5,
+    MG_WSG_HP_CAN_OF_SALSA_6,
 } mg_wsgIndex_t;
 
 typedef enum
@@ -1015,6 +1023,28 @@ typedef enum
     MG_WSGSET_BIGMA
 } mgWsgSetIndex_t;
 
+/*
+intro gives you nothing
+Kinetic Donut gives you Mic Drop
+Grind Pangolin gives you slide
+Sever Yataga gives you the Plot Armor (increased iframes/damage reduction)
+Trash Man gives you the double jump
+Smash Gorilla gives you the can of salsa/e-tank
+Deadeye Chirpzi gives you charge shot
+Drain Bat gives you the Sure, You Can (uppercut)
+Flare Gryffyn gives you the Reflector*/
+typedef enum
+{
+    MG_DROP_THE_MIC_ABILITY,
+    MG_TROMBONE_SLIDE_ABILITY,
+    MG_PLOT_ARMOR_ABILITY,
+    MG_OBNOXIOUS_NOODLING_ABILITY, // double jump
+    MG_CAN_OF_SALSA_ABILITY,
+    MG_SHOOP_DA_WOOP_ABILITY, // charge shot
+    MG_SURE_YOU_CAN_ABILITY,  // uppercut
+    MG_REFLECTOR_SHIELD_ABILITY,
+} mgAbilities_t;
+
 //==============================================================================
 // Extern Variables
 //==============================================================================
@@ -1025,6 +1055,8 @@ extern const int MG_TILE_COLLISION_OFFSETS_1x2_BOTTOM_EDGE[];
 extern const int MG_TILE_COLLISION_OFFSETS_1x2_TOP_EDGE[];
 extern const int MG_TILE_COLLISION_OFFSETS_1x2_RIGHT_EDGE[];
 extern const int MG_TILE_COLLISION_OFFSETS_1x2_LEFT_EDGE[];
+extern const char MG_cheatModeNVSKey[];
+extern const char MG_abilitiesNVSKey[];
 extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_bottomEdge;
 extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_topEdge;
 extern const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_1x2_rightEdge;
@@ -1099,12 +1131,6 @@ extern const paletteColor_t bgGradientOrange[];
 extern const paletteColor_t bgGradientRed[];
 extern const paletteColor_t bgGradientMenu[];
 extern const mgLeveldef_t leveldef[];
-extern const mg_spriteDef_t playerDamageAnimFrames[];
-extern const mg_spriteDef_t playerMicDropAnimFrames[];
-extern const mg_spriteDef_t playerSureYouCanAnimnFrames[];
-extern const mg_spriteDef_t normalShotAnimFrames[];
-extern const mg_spriteDef_t chargeShotAnimFrames[];
-extern const mg_spriteDef_t maxChargeShotAnimFrames[];
 
 // platformerTrophies array is defined in megaPulseEx.c to avoid multiple definitions
 extern const trophyData_t platformerTrophies[];

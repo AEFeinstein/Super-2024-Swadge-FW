@@ -47,6 +47,7 @@ void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
     gameData->score                = 0;
     gameData->lives                = 3;
     gameData->countdown            = 000;
+    gameData->pauseCountdown       = false;
     gameData->frameCount           = 0;
     gameData->coins                = 0;
     gameData->combo                = 0;
@@ -62,15 +63,12 @@ void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
     gameData->inGameTimer          = 0;
     gameData->bgColors             = bgGradientCyan;
     gameData->customLevel          = false;
-    int32_t outVal;
-    if (readNvs32("mg_cheatMode", &outVal) == false)
-    {
-        gameData->cheatMode = false;
-    }
-    else
-    {
-        gameData->cheatMode = outVal == 1 ? true : false;
-    }
+    int32_t outVal                 = 0;
+    readNvs32(MG_cheatModeNVSKey, &outVal);
+    gameData->cheatMode = outVal;
+    outVal              = 0;
+    readNvs32(MG_abilitiesNVSKey, &outVal);
+    gameData->abilities = outVal;
 
     mg_resetGameDataLeds(gameData);
 }
@@ -104,8 +102,8 @@ void mg_updateLedsHpMeter(mgEntityManager_t* entityManager, mgGameData_t* gameDa
         gameData->leds[i].r = 0x00;
         gameData->leds[i].g = 0x80;
 
-        gameData->leds[7 - i].r = 0x00;
-        gameData->leds[7 - i].g = 0x80;
+        gameData->leds[CONFIG_NUM_LEDS - i].r = 0x00;
+        gameData->leds[CONFIG_NUM_LEDS - i].g = 0x80;
     }
 
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
@@ -289,15 +287,18 @@ void mg_updateLeds(mgEntityManager_t* entityManager)
 
     for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
     {
-        gameData->leds[i].b = 0x20 + abs(playerEntity->shotsFired << 1);
+        if (playerEntity->shotsFired >= 0)
+        {
+            gameData->leds[i].b = 0x20 + abs(playerEntity->shotsFired << 1);
 
-        if ((playerEntity->shotsFired <= -63) && (((gameData->frameCount >> 3) % 7) == i))
-        {
-            gameData->leds[i].g = 0xFF;
-        }
-        else
-        {
-            gameData->leds[i].g = 0x30 + abs(playerEntity->shotsFired << 1);
+            if ((playerEntity->shotsFired <= -63) && (((gameData->frameCount >> 3) % 7) == i))
+            {
+                gameData->leds[i].g = 0xFF;
+            }
+            else
+            {
+                gameData->leds[i].g = 0x30 + abs(playerEntity->shotsFired << 1);
+            }
         }
 
         if (playerEntity->hp < 7)

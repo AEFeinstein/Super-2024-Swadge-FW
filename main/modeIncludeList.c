@@ -45,27 +45,33 @@ void modeListSetMenu(menu_t* menu)
     addSingleItemToMenu(menu, roboRunnerMode.modeName);
     addSingleItemToMenu(menu, modePicross.modeName);
     addSingleItemToMenu(menu, artilleryMode.modeName);
+    addSingleItemToMenu(menu, danceNetworkMode.modeName);
+    addSingleItemToMenu(menu, modePicross.modeName);
+    addSingleItemToMenu(menu, swadgedokuMode.modeName);
+    addSingleItemToMenu(menu, roboRunnerMode.modeName);
+    addSingleItemToMenu(menu, swadgeItMode.modeName);
     menu = endSubMenu(menu);
 
     // Music sub menu
     menu = startSubMenu(menu, "Music");
     addSingleItemToMenu(menu, swadgetamatoneMode.modeName);
-    addSingleItemToMenu(menu, sequencerMode.modeName);
     addSingleItemToMenu(menu, colorchordMode.modeName);
-    addSingleItemToMenu(menu, tunernomeMode.modeName);
+    addSingleItemToMenu(menu, sequencerMode.modeName);
     addSingleItemToMenu(menu, jukeboxMode.modeName);
-    addSingleItemToMenu(menu, synthMode.modeName);
+    addSingleItemToMenu(menu, tunernomeMode.modeName);
     menu = endSubMenu(menu);
 
     // Utilities sub menu
     menu = startSubMenu(menu, "Utilities");
     addSingleItemToMenu(menu, gamepadMode.modeName);
+    addSingleItemToMenu(menu, tCaseMode.modeName);
     addSingleItemToMenu(menu, danceMode.modeName);
     addSingleItemToMenu(menu, modeDiceRoller.modeName);
+    addSingleItemToMenu(menu, cipherMode.modeName);
+    addSingleItemToMenu(menu, gamepadMode.modeName);
     addSingleItemToMenu(menu, bouncyMode.modeName);
-    addSingleItemToMenu(menu, tCaseMode.modeName);
-    addSingleItemToMenu(menu, introMode.modeName);
     addSingleItemToMenu(menu, modeCredits.modeName);
+    addSingleItemToMenu(menu, introMode.modeName);
     menu = endSubMenu(menu);
 
     // Swadgepass
@@ -77,10 +83,11 @@ void modeListSetMenu(menu_t* menu)
 
 void modeListAddSecretMenuModes(menu_t* menu)
 {
+    addSingleItemToMenu(menu, synthMode.modeName);
+    addSingleItemToMenu(menu, factoryTestMode.modeName);
     addSingleItemToMenu(menu, keebTestMode.modeName);
     addSingleItemToMenu(menu, accelTestMode.modeName);
     addSingleItemToMenu(menu, touchTestMode.modeName);
-    addSingleItemToMenu(menu, factoryTestMode.modeName);
     addSingleItemToMenu(menu, swadgePassTestMode.modeName);
     addSingleItemToMenu(menu, trophyTestMode.modeName);
     addSingleItemToMenu(menu, nameTestMode.modeName);

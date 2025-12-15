@@ -163,7 +163,7 @@ const trophyData_t platformerTrophies[] = {
     {
         .title       = "Defeated Bigma",
         .description = "Favorite genre: Corruption?",
-        .image       = NO_IMAGE_SET, // need 36 x 36 boss images later
+        .image       = TROPHY_BIGMA_WSG, // need 36 x 36 boss images later
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1, // For trigger type, set to one
@@ -171,23 +171,7 @@ const trophyData_t platformerTrophies[] = {
     {
         .title       = "Defeated Kinetic Donut",
         .description = "Favorite genre: Funk",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Defeated Smash Gorilla",
-        .description = "Favorite genre: Salsa",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Defeated Deadeye Chirpzi",
-        .description = "Favorite genre: Metal",
-        .image       = NO_IMAGE_SET,
+        .image       = TROPHY_KINETIC_DONUT_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1,
@@ -195,15 +179,7 @@ const trophyData_t platformerTrophies[] = {
     {
         .title       = "Defeated Grind Pangolin",
         .description = "Favorite genre: Ska",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Defeated Drain Bat",
-        .description = "Favorite genre: Classical",
-        .image       = NO_IMAGE_SET,
+        .image       = TROPHY_GRIND_PANGOLIN_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1,
@@ -211,15 +187,7 @@ const trophyData_t platformerTrophies[] = {
     {
         .title       = "Sever Yataga",
         .description = "Favorite genre: EDM",
-        .image       = NO_IMAGE_SET,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Flare Gryffyn",
-        .description = "Favorite genre: Classic Rock",
-        .image       = NO_IMAGE_SET,
+        .image       = TROPHY_SEVER_YATAGA_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1,
@@ -227,7 +195,47 @@ const trophyData_t platformerTrophies[] = {
     {
         .title       = "Ember Demon (Actually Trash Man)",
         .description = "Favorite genre: Jazz",
-        .image       = NO_IMAGE_SET,
+        .image       = TROPHY_EMBER_DEMON_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Hank Waddle",
+        .description = "Favorite genre: Silence",
+        .image       = TROPHY_HANK_WADDLE_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Defeated Smash Gorilla",
+        .description = "Favorite genre: Salsa",
+        .image       = TROPHY_SMASH_GORILLA_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Defeated Deadeye Chirpzi",
+        .description = "Favorite genre: Metal",
+        .image       = TROPHY_DEADEY_CHIRPZI_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Defeated Drain Bat",
+        .description = "Favorite genre: Classical",
+        .image       = TROPHY_DRAIN_BAT_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Flare Gryffyn",
+        .description = "Favorite genre: Classic Rock",
+        .image       = TROPHY_FLARE_GRYFFYN_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1,
@@ -308,11 +316,11 @@ static const int32_t trueFalseVals[] = {
     false,
     true,
 };
-static const char str_cheatMode[]       = "Cheat Mode: ";
-static const char str_On[]              = "On";
-static const char str_Off[]             = "Off";
-static const char str_cheatModeNVSKey[] = "mg_cheatMode";
-static const char* strs_on_off[]        = {str_Off, str_On};
+static const char str_cheatMode[]     = "Cheat Mode: ";
+static const char str_On[]            = "On";
+static const char str_Off[]           = "Off";
+static const char* strs_on_off[]      = {str_Off, str_On};
+static const char str_giveAbilities[] = "Click to unlock all abilities.";
 
 static const settingParam_t mgAbilityUnlockStateSettingBounds = {.min = 0, .max = 256, .key = KEY_UNLOCKS};
 
@@ -351,7 +359,7 @@ void platformerEnterMode(void)
     mg_initializeTileMap(&(platformer->tilemap), &(platformer->wsgManager));
 
     mg_loadWsgSet(&(platformer->wsgManager), leveldef[1].defaultWsgSetIndex);
-    mg_loadMapFromFile(&(platformer->tilemap), leveldef[1].filename);
+    mg_loadMapFromFile(&(platformer->tilemap), leveldef[1].filename, &platformer->entityManager);
 
     mg_initializeSoundManager(&(platformer->soundManager));
 
@@ -455,13 +463,13 @@ void platformerEnterMode(void)
                          true, true, true);
         setMidiParams(platformer->gameData.cutscene, 21, 81, 1, 100, true);
         // WarningMessage
-        addCutsceneStyle(platformer->gameData.cutscene, c524, WARNING_MESSAGE_PORTRAIT_WSG, TEXTBOX_PULSE_WSG, "", 1,
+        addCutsceneStyle(platformer->gameData.cutscene, c254, WARNING_MESSAGE_PORTRAIT_WSG, TEXTBOX_PULSE_WSG, "", 1,
                          true, true, false);
         setMidiParams(platformer->gameData.cutscene, 22, 55, 0, 100, false);
         // SawtoothPostReveal
         addCutsceneStyle(platformer->gameData.cutscene, c541, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth",
                          4, true, true, true);
-        setMidiParams(platformer->gameData.cutscene, 23, 81, 2, 100, true);
+        setMidiParams(platformer->gameData.cutscene, 23, 81, 1, 100, true);
         // BlackScreen
         addCutsceneStyle(platformer->gameData.cutscene, c555, BLACK_PORTRAIT_WSG, TEXTBOX_SAWTOOTH_WSG, "", 1, false,
                          true, false);
@@ -515,7 +523,17 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
             }*/
 
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
-            changeStateLevelSelect(platformer);
+
+            platformer->gameData.level = 11;
+            mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
+            mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename,
+                               &platformer->entityManager);
+
+            changeStateGame(platformer);
+            // every level starts with a cutscene
+            soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+            stageStartCutscene(&platformer->gameData);
+            changeStateCutscene(platformer);
         }
         else if (label == mgMenuContinue)
         {
@@ -530,8 +548,27 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
 
             changeStateReadyScreen(pango);
             deinitMenu(pango->menu);*/
+
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
-            changeStateLevelSelect(platformer);
+
+            // if the 11th level (intro level) isn't cleared
+            if (!(platformer->unlockables.levelsCleared & (1 << 11)))
+            {
+                platformer->gameData.level = 11;
+                mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
+                mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename,
+                                   &platformer->entityManager);
+
+                changeStateGame(platformer);
+                // every level starts with a cutscene
+                soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+                stageStartCutscene(&platformer->gameData);
+                changeStateCutscene(platformer);
+            }
+            else
+            {
+                changeStateLevelSelect(platformer);
+            }
         }
         else if (label == mgMenuHighScores)
         {
@@ -548,9 +585,20 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             initializePlatformerUnlockables(platformer);
             savePlatformerUnlockables(platformer);
+            platformer->gameData.abilities = 0b00000000;
+            writeNvs32(MG_abilitiesNVSKey, platformer->gameData.abilities);
             soundPlaySfx(&(platformer->soundManager.sndDie), MIDI_SFX);
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
-            changeStateLevelSelect(platformer);
+            platformer->gameData.level = 11;
+            mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
+            mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename,
+                               &platformer->entityManager);
+
+            changeStateGame(platformer);
+            // every level starts with a cutscene
+            soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+            stageStartCutscene(&platformer->gameData);
+            changeStateCutscene(platformer);
         }
         else if (label == mgMenuSaveAndExit)
         {
@@ -580,12 +628,17 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             platformer->gameData.level = settingVal;
         }
+        else if (label == str_giveAbilities)
+        {
+            platformer->gameData.abilities = 0b11111111;
+            writeNvs32(MG_abilitiesNVSKey, platformer->gameData.abilities);
+        }
     }
     else
     {
         if (label == str_cheatMode)
         {
-            writeNvs32(str_cheatModeNVSKey, settingVal);
+            writeNvs32(MG_cheatModeNVSKey, settingVal);
         }
     }
 
@@ -667,12 +720,13 @@ void mgBuildMainMenu(platformer_t* self)
         .def = trueFalseVals[0],
     };
     int32_t cheatMode = 0;
-    if (readNvs32(str_cheatModeNVSKey, &cheatMode) == false)
+    if (readNvs32(MG_cheatModeNVSKey, &cheatMode) == false)
     {
-        writeNvs32(str_cheatModeNVSKey, 0);
+        writeNvs32(MG_cheatModeNVSKey, 0);
     }
     addSettingsOptionsItemToMenu(self->menu, str_cheatMode, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
                                  cheatMode);
+    addSingleItemToMenu(self->menu, str_giveAbilities);
     self->menu = endSubMenu(self->menu);
 
     if (self->gameData.debugMode)
@@ -701,8 +755,8 @@ void updateGame(platformer_t* self)
     mg_updateEntities(&(self->entityManager));
 
     mg_drawTileMap(&(self->tilemap));
-    drawPlatformerHud(&(self->font), &(self->gameData));
     mg_drawEntities(&(self->entityManager));
+    drawPlatformerHud(&(self->font), &(self->gameData));
     mg_updateLeds(&self->entityManager);
     detectGameStateChange(self);
     detectBgmChange(self);
@@ -711,7 +765,10 @@ void updateGame(platformer_t* self)
     if (self->gameData.frameCount > 59)
     {
         self->gameData.frameCount = 0;
-        self->gameData.countdown--;
+        if (!self->gameData.pauseCountdown)
+        {
+            self->gameData.countdown--;
+        }
         self->gameData.inGameTimer++;
 
         if (self->gameData.countdown < 10)
@@ -765,7 +822,6 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
 
         if (hp > 30)
         {
-            drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_SALSA], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 96);
             hp = 30;
         }
 
@@ -800,6 +856,21 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
             drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_0 + hp], 8,
                         MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4 * 16));
         }
+
+        if (platformer->gameData.abilities & (1U << MG_CAN_OF_SALSA_ABILITY))
+        {
+            if (platformer->entityManager.playerEntity->hp < 31)
+            {
+                drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_HP_CAN_OF_SALSA_0], 4,
+                              MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - (5 * 16));
+            }
+            else
+            {
+                drawWsgSimple(&platformer->wsgManager
+                                   .wsgs[MG_WSG_HP_CAN_OF_SALSA_0 + platformer->entityManager.playerEntity->hp - 30],
+                              4, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - (5 * 16));
+            }
+        }
     }
 
     if (platformer->entityManager.bossEntity != NULL)
@@ -810,7 +881,6 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
 
         if (hp > 30)
         {
-            drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_SALSA], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 96);
             hp = 30;
         }
 
@@ -1080,13 +1150,14 @@ void changeStateGame(platformer_t* self)
 
     if (self->gameData.customLevel)
     {
-        mg_loadMapFromFile(&(platformer->tilemap), -69);
+        mg_loadMapFromFile(&(platformer->tilemap), -69, &platformer->entityManager);
     }
     else
     {
-        mg_loadMapFromFile(&(platformer->tilemap), leveldef[levelIndex].filename);
+        mg_loadMapFromFile(&(platformer->tilemap), leveldef[levelIndex].filename, &platformer->entityManager);
     }
-    self->gameData.countdown = leveldef[levelIndex].timeLimit;
+    self->gameData.countdown      = leveldef[levelIndex].timeLimit;
+    self->gameData.pauseCountdown = false;
 
     mgEntityManager_t* entityManager = &(self->entityManager);
 
@@ -1756,7 +1827,7 @@ void updatePause(platformer_t* self)
 {
     if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START)))
     {
-        // soundResume();
+        soundResume();
         soundPlaySfx(&(self->soundManager.sndPause), BZR_STEREO);
         self->update = &updateGame;
     }
@@ -1787,7 +1858,7 @@ void changeStateLevelSelect(platformer_t* self)
     self->gameData.prevBtnState = 0;
 
     mg_loadWsgSet(&(platformer->wsgManager), leveldef[0].defaultWsgSetIndex);
-    mg_loadMapFromFile(&(platformer->tilemap), leveldef[0].filename);
+    mg_loadMapFromFile(&(platformer->tilemap), leveldef[0].filename, &platformer->entityManager);
     self->tilemap.mapOffsetX       = 12;
     self->tilemap.mapOffsetY       = 0;
     self->entityManager.viewEntity = NULL;
@@ -1846,7 +1917,8 @@ void updateLevelSelect(platformer_t* self)
         else
         {
             mg_loadWsgSet(&(platformer->wsgManager), leveldef[self->gameData.level].defaultWsgSetIndex);
-            mg_loadMapFromFile(&(platformer->tilemap), leveldef[self->gameData.level].filename);
+            mg_loadMapFromFile(&(platformer->tilemap), leveldef[self->gameData.level].filename,
+                               &platformer->entityManager);
 
             changeStateGame(platformer);
             // every level starts with a cutscene
