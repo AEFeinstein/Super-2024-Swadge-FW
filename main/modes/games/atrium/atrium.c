@@ -169,6 +169,11 @@ typedef struct
     uint32_t points;
 } userProfile_t;
 
+typedef struct __attribute__((packed))
+{
+    userProfile_t packedProfile;
+} packedProfile_t;
+
 typedef struct
 {
     // Data
@@ -182,6 +187,7 @@ typedef struct
 
     // Profile data
     userProfile_t loadedProfile; // Loaded profile for drawing
+    wsg_t* profileSonaImage;  // Rendered sona image for profile viewing/editing
 
     // Main
     atriumState state;
@@ -352,6 +358,8 @@ static void atriumEnterMode()
         loadFont(fontsIdxs[idx], &atr->fonts[idx], true);
     }
 
+    atr->profileSonaImage = heap_caps_calloc(1, sizeof(wsg_t), MALLOC_CAP_8BIT);
+
     // Swadgepass
     getSwadgePasses(&atr->spList, &atriumMode, true);
     node_t* spNode = atr->spList.first;
@@ -363,13 +371,13 @@ static void atriumEnterMode()
         // Make a convenience pointer to the data in this node
         swadgePassData_t* spd = (swadgePassData_t*)spNode->val;
         atr->sonaList[i].swsn.core = spd->data.packet.swadgesona.core;
-        atr->sonaList[i].cardSelect = spd->data.packet.atrium.cardSelect;
-        atr->sonaList[i].fact0 = spd->data.packet.atrium.fact0;
-        atr->sonaList[i].fact1 = spd->data.packet.atrium.fact1;
-        atr->sonaList[i].fact2 = spd->data.packet.atrium.fact2;
-        atr->sonaList[i].numPasses = spd->data.packet.atrium.numPasses;
-        atr->sonaList[i].latestTrophyIdx = spd->data.packet.atrium.latestTrophyIdx;
-        atr->sonaList[i].points = spd->data.packet.atrium.points;
+        atr->sonaList[i].cardSelect = spd->data.packet.atrium.profile.cardSelect;
+        atr->sonaList[i].fact0 = spd->data.packet.atrium.profile.fact0;
+        atr->sonaList[i].fact1 = spd->data.packet.atrium.profile.fact1;
+        atr->sonaList[i].fact2 = spd->data.packet.atrium.profile.fact2;
+        atr->sonaList[i].numPasses = spd->data.packet.atrium.profile.numPasses;
+        atr->sonaList[i].latestTrophyIdx = spd->data.packet.atrium.profile.latestTrophyIdx;
+        atr->sonaList[i].points = spd->data.packet.atrium.profile.points;
 
         // If the data hasn't been used yet
         if (!isPacketUsedByMode(spd, &atriumMode))
@@ -508,12 +516,6 @@ static void atriumMainLoop(int64_t elapsedUs)
             break;
         }
     }
-}
-
-void atriumAddSP(struct swadgePassPacket* packet)
-{
-    
-  
 }
 
 // States
@@ -889,7 +891,8 @@ static void drawCard(userProfile_t profile, bool local)
     drawWsgSimple(&atr->cards[profile.cardSelect], 0, 0 + 12); // draw the card
 
     loadSPSona(&profile.swsn.core);
-    drawWsgSimple(&profile.swsn.image, SONALOC_X, SONALOC_Y); // draw the swadgesona image
+    memcpy(&profile.swsn.image, atr->profileSonaImage, sizeof(wsg_t)); // copy rendered sona image
+    drawWsgSimple(atr->profileSonaImage, SONALOC_X, SONALOC_Y); // draw the swadgesona image
     nameData_t username;
 
     if(local == true){ 
@@ -1059,13 +1062,14 @@ trophyData_t* getTrophy()
 }
 
 userProfile_t loadProfileFromNVS()
+
 {
     printf("Loading profile from NVS\n");
 
     userProfile_t loadedProfile;
     if (!readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_CARDKEY, &loadedProfile.cardSelect))
     {
-        loadedProfile.cardSelect = rand() % 7;
+        loadedProfile.cardSelect = rand() % 8;
         loadedProfile.fact0      = rand() % 8;
         loadedProfile.fact1      = rand() % 8;
         loadedProfile.fact2      = rand() % 8;
@@ -1085,7 +1089,6 @@ userProfile_t loadProfileFromNVS()
     readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_FACT1KEY, &loadedProfile.fact1);
     readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_FACT2KEY, &loadedProfile.fact2);
 
-    
     printf("Loaded local swadgesona data\n");
     loadedProfile.numPasses = atr->numRemoteSwsn; // update number of passes each time
     writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_NUMPASSESKEY, loadedProfile.numPasses);
@@ -1096,4 +1099,15 @@ userProfile_t loadProfileFromNVS()
     atr->loadedProfile = loadedProfile; // update loaded profile
 
     return atr->loadedProfile;
+}
+
+static void atriumAddSP(struct swadgePassPacket* packet) {
+    // Add our profile data to the swadge pass packet
+    packet->atrium.profile.cardSelect       = atr->loadedProfile.cardSelect;
+    packet->atrium.profile.fact0            = atr->loadedProfile.fact0;
+    packet->atrium.profile.fact1            = atr->loadedProfile.fact1;
+    packet->atrium.profile.fact2            = atr->loadedProfile.fact2;
+    packet->atrium.profile.numPasses        = atr->loadedProfile.numPasses;
+    packet->atrium.profile.latestTrophyIdx  = atr->latestTrophy; // index of latest trophy
+    packet->atrium.profile.points           = atr->points;
 }

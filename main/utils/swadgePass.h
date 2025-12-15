@@ -109,6 +109,7 @@
 
 #include "swadge2024.h"
 #include "swadgesona.h"
+#include "atrium.h"
 
 //==============================================================================
 // Structs
@@ -140,13 +141,7 @@ typedef struct __attribute__((packed)) swadgePassPacket
     } swadgesona;
 
     struct {
-        int cardSelect;     // Active card
-        int fact0;       
-        int fact1;
-        int fact2;
-        uint16_t numPasses; // Number of other unique passes encountered
-        uint32_t latestTrophyIdx;
-        uint32_t points;
+        packedProfile_t profile;
     } atrium;
 } swadgePassPacket_t;
 
