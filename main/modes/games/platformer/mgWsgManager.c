@@ -825,7 +825,7 @@ void mg_loadWsgSet(mgWsgManager_t* self, mgWsgSetIndex_t index)
             break;
         case MG_WSGSET_KINETIC_DONUT:
         default:
-            for (uint16_t i = 0; i < MG_KINETIC_DONUT_TILESET_MAP_LENGTH; i++)
+            for (uint16_t i = 0; i < MG_KINETIC_DONUT_TILESET_MAP_LENGTH+1; i++)
             {
                 uint16_t wsgIndex = mg_kineticDonutTileset[i * MG_TILESET_MAP_ROW_LENGTH + MG_WSG_INDEX_LOOKUP_OFFSET];
 

@@ -4519,144 +4519,153 @@ void mg_updateBossKineticDonut(mgEntity_t* self)
     switch (self->state)
     {
         case 65535:
+            //Prefight
             return;
         case 0:
         default:
-            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
-            {
-                self->yspeed -= 4;
-            }
-
-            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
-            {
-                self->xspeed = 64;
-            }
-
-            if (self->stateTimer == 120)
-            {
-                self->jumpPower = 1;
-            }
+            //Idle
+            applyDamping(self);
+            self->spriteFlipHorizontal = (self->entityManager->playerEntity->x > self->x) ? false : true;
 
             self->stateTimer++;
-            if (self->stateTimer > 180)
+            if (self->stateTimer > 60)
             {
                 self->stateTimer = 0;
-                switch (esp_random() % 3)
+                switch (esp_random() % 2)
                 {
-                    case 0:
-                        self->state = 1;
-                        break;
+                    // case 0:
+                    // default:
+                    //     self->state = 1; //To "Charge"
+                    //     break;
                     case 1:
-                        self->state = 2;
-                        break;
-                    case 2:
-                        self->state = 3;
+                    default:
+                        self->xspeed = SIGNOF(self->entityManager->playerEntity->x - self->x) * (abs(self->entityManager->playerEntity->x - self->x) >> 5);
+                        self->yspeed = -128;
+                        self->falling = true;
+                        self->spriteIndex = MG_SP_BOSS_1;
+                        self->state = 3; //To "Traverse - Jump towards player"
                         break;
                 }
             }
             break;
         case 1:
-            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
-            {
-                self->yspeed -= 4;
-            }
+            //Charge
 
-            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
+            if(self->spriteIndex < MG_SP_BOSS_3)
             {
-                self->xspeed = -64;
+                if(!(self->stateTimer % 7) )
+                {
+                    self->spriteIndex++;
+                }
             }
-
-            if (self->stateTimer == 120)
+            else
             {
-                self->jumpPower = 1;
+                self->spriteIndex = grindPangolinRollingFrames[(self->stateTimer >> ((self->stateTimer > 120) ? 1 : 2)) % 2];
+                self->tileCollider = &entityTileCollider_grind_pangolin_rolling;
             }
 
             self->stateTimer++;
             if (self->stateTimer > 180)
             {
                 self->stateTimer = 0;
-                switch (esp_random() % 3)
-                {
-                    case 0:
-                        self->state = 0;
-                        break;
-                    case 1:
-                        self->state = 2;
-                        break;
-                    case 2:
-                        self->state = 3;
-                        break;
-                }
+                self->xspeed = ((self->spriteFlipHorizontal) ? -96 : 96);
+                self->state = 2; //To "Roll"
             }
 
             break;
         case 2:
+            //Roll
 
-            if (self->stateTimer < 60)
+            self->spriteIndex = grindPangolinRollingFrames[(self->stateTimer) % 2];
+            self->spriteFlipHorizontal = (self->xspeed > 0) ? false : true;
+
+            if(self->stateTimer > 120)
             {
-                if (self->x < self->entityManager->playerEntity->x)
-                {
-                    self->xspeed = 32;
-                }
-                else
-                {
-                    self->xspeed = -32;
-                }
+                applyDamping(self);
             }
 
-            if (!self->falling || self->y > self->entityManager->playerEntity->y)
+            if (self->stateTimer > 180)
             {
-                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
-                self->stateTimer = 0;
+                self->tileCollider = &entityTileCollider_grind_pangolin;
+                self->y -= 384;
+                self->xspeed = SIGNOF(self->entityManager->playerEntity->x - self->x) * (abs(self->x - self->entityManager->playerEntity->x) >> 6);
+                self->yspeed = -96;
+                self->falling = true;
+                self->spriteIndex = MG_SP_BOSS_1;
+                self->state = 3; //To "Traverse - Jump towards player"
             }
 
             self->stateTimer++;
 
             break;
         case 3:
-            self->stateTimer++;
-
-            if (!(self->stateTimer % 60))
+            //Jump towards player
+            if(self->yspeed > 0)
             {
-                self->jumpPower = 1;
+                // self->spriteIndex = MG_SP_BOSS_5;
+                self->xspeed = 0;
+                self->yspeed = 0;
+                self->gravityEnabled = false;
+                self->state = 4; //TO "Attack - Tailwhip"
+                self->spriteFlipHorizontal = (self->entityManager->playerEntity->x > self->x) ? false : true;
+                self->stateTimer = 0;
             }
 
+            self->stateTimer++;
+
+            //failsafe
             if (self->stateTimer > 239)
             {
-                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
+                self->state      = 0;
+                self->spriteIndex = MG_SP_BOSS_0;
+                self->stateTimer = 0;
+            }
+            break;
+        case 4:
+            applyDamping(self);
+            self->stateTimer++;
+
+            //failsafe
+            if (self->stateTimer > 60)
+            {
+                self->state      = 5;
+                self->spriteIndex = MG_SP_BOSS_0;
+                self->gravityEnabled = true;
+                self->falling = true;
+                self->yspeed = 96;
+                self->stateTimer = 0;
+            }
+
+            break;
+        case 5:
+            if(!self->falling)
+            {
+                //self->y += 64;
+                self->spriteIndex = MG_SP_BOSS_5;
+                self->state = 0; //TO "Attack - Tailwhip"
+                self->spriteFlipHorizontal = (self->entityManager->playerEntity->x > self->x) ? false : true;
+                self->stateTimer = 0;
+            }
+
+            //failsafe
+            if (self->stateTimer > 239)
+            {
+                self->state      = 0;
+                self->spriteIndex = MG_SP_BOSS_0;
                 self->stateTimer = 0;
             }
             break;
     }
 
-    if (self->jumpPower > 0)
-    {
-        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
-                                                    TO_PIXEL_COORDS(self->y));
-        if (createdEntity != NULL)
-        {
-            int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->y,
-                                     self->entityManager->playerEntity->x - self->x);
-            int16_t sin   = getSin1024(angle);
-            int16_t cos   = getCos1024(angle);
-
-            createdEntity->xspeed = (80 * cos) / 1024;
-            createdEntity->yspeed = (80 * sin) / 1024;
-
-            createdEntity->linkedEntity = self;
-            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
-            self->jumpPower = 0;
-        }
-    }
-
     mg_updateInvincibilityFrames(self);
     mg_moveEntityWithTileCollisions3(self);
-    applyDamping(self);
+    //applyDamping(self);
     applyGravity(self);
     mg_detectEntityCollisions(self);
 
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
     {
+        self->spriteIndex = MG_SP_BOSS_7;
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
     }

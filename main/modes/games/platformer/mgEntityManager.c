@@ -2240,7 +2240,7 @@ mgEntity_t* createBossKineticDonut(mgEntityManager_t* entityManager, uint16_t x,
     entity->xMaxSpeed            = 132;
     entity->yMaxSpeed            = 132;
     entity->gravityEnabled       = true;
-    entity->gravity              = 1;
+    entity->gravity              = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
