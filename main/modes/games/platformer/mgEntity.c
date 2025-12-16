@@ -1106,76 +1106,79 @@ void despawnWhenOffscreen(mgEntity_t* self)
     }
 
     //boss rush logic
-    if(self->gameData->level == 11 || self->gameData->level == 69)
+    if(self->gameData->level == 11)
     {
         bool isABoss = false;
-        uint8_t nextBoss = -1;
+        uint8_t nextBoss = 0;
+        uint8_t nextLevel = 0;
         
         if(self->type == ENTITY_BOSS_KINETIC_DONUT)
         {
             isABoss = true;
             nextBoss = ENTITY_BOSS_GRIND_PANGOLIN;
-            self->gameData->level = 2;
-
+            nextLevel = 2;
         }
         else if(self->type == ENTITY_BOSS_GRIND_PANGOLIN)
         {
             isABoss = true;
             nextBoss = ENTITY_BOSS_SEVER_YAGATA;
-            self->gameData->level = 3;
+            nextLevel = 3;
         }
         else if(self->type == ENTITY_BOSS_SEVER_YAGATA)
         {
             isABoss = true;
             nextBoss = ENTITY_BOSS_TRASH_MAN;
-            self->gameData->level = 4;
+            nextLevel = 4;
         }
         else if(self->type == ENTITY_BOSS_TRASH_MAN)
         {
             isABoss = true;
             nextBoss = ENTITY_BOSS_SMASH_GORILLA;
-            self->gameData->level = 6;
+            nextLevel = 6;
         }
         else if(self->type == ENTITY_BOSS_SMASH_GORILLA)
         {
             isABoss = true;
             nextBoss = ENTITY_BOSS_DEADEYE_CHIRPZI;
-            self->gameData->level = 7;
+            nextLevel = 7;
         }
         else if(self->type == ENTITY_BOSS_DEADEYE_CHIRPZI)
         {
             isABoss = true;
             nextBoss = ENTITY_BOSS_DRAIN_BAT;
-            self->gameData->level = 8;
+            nextLevel = 8;
         }
         else if(self->type == ENTITY_BOSS_DRAIN_BAT)
         {
             isABoss = true;
             nextBoss = ENTITY_BOSS_FLARE_GRYFFYN;
-            self->gameData->level = 9;
+            nextLevel = 9;
         }
         else if(self->type == ENTITY_BOSS_FLARE_GRYFFYN)
         {
+            isABoss = true;
             nextBoss = 0;
+            nextLevel = 0;
         }
         
-        mg_loadWsgSet(&(platformer->wsgManager), leveldef[self->gameData->level].defaultWsgSetIndex);
-        mg_loadMapFromFile(&(platformer->tilemap), leveldef[self->gameData->level].filename,
-                            &platformer->entityManager);
-
-        if(nextBoss > 0)
+        if(isABoss)
         {
-            mg_setBgm(self->soundManager, leveldef[self->gameData->level].bossBgmIndex);
-            soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
-            mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX, self->entityManager->bossSpawnY);
-        }
-        else
-        {
-            self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
-            mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
-            soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
-        }
-        
+            mg_loadWsgSet((self->entityManager->wsgManager), leveldef[nextLevel].defaultWsgSetIndex);
+            mg_loadMapFromFile((self->entityManager->tilemap), leveldef[nextLevel].filename,
+                            self->entityManager);
+            if(nextBoss > 0)
+            {
+                mg_setBgm(self->soundManager, leveldef[nextLevel].bossBgmIndex);
+                soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+                mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX, self->entityManager->bossSpawnY);
+            }
+            else
+            {
+                self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+                mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
+                soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+            }
+        }   
     }
 }
 
@@ -4047,7 +4050,7 @@ void mg_updateBossSeverYagata(mgEntity_t* self)
     applyGravity(self);
     mg_detectEntityCollisions(self);
 
-    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
         if(self->gameData->level != 11)
         {
@@ -4273,7 +4276,7 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
     applyGravity(self);
     mg_detectEntityCollisions(self);
 
-    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         // after defeating smash gorilla (level 6) create a bunch of power ups to try out can of salsa.
@@ -4420,7 +4423,7 @@ void mg_updateBossGrindPangolin(mgEntity_t* self)
     applyGravity(self);
     mg_detectEntityCollisions(self);
 
-    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
         self->spriteIndex  = MG_SP_BOSS_7;
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
@@ -4569,7 +4572,7 @@ void mg_updateBossDrainBat(mgEntity_t* self)
     applyGravity(self);
     mg_detectEntityCollisions(self);
 
-    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
@@ -4728,7 +4731,7 @@ void mg_updateBossKineticDonut(mgEntity_t* self)
     applyGravity(self);
     mg_detectEntityCollisions(self);
 
-    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
         self->spriteIndex  = MG_SP_BOSS_7;
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
@@ -4798,7 +4801,7 @@ void mg_updateBossTrashMan(mgEntity_t* self)
             self->linkedEntity = NULL;
         }
 
-        if (self->linkedEntity == NULL)
+        if (self->linkedEntity == NULL && self->gameData->level != 11)
         {
             self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
             startOutroCutscene(self);
@@ -4947,7 +4950,7 @@ void mg_updateBossFlareGryffyn(mgEntity_t* self)
     applyGravity(self);
     mg_detectEntityCollisions(self);
 
-    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
@@ -5095,7 +5098,7 @@ void mg_updateBossDeadeyeChirpzi(mgEntity_t* self)
     applyGravity(self);
     mg_detectEntityCollisions(self);
 
-    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
@@ -5243,7 +5246,7 @@ void mg_updateBossBigma(mgEntity_t* self)
     applyGravity(self);
     mg_detectEntityCollisions(self);
 
-    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
@@ -5391,7 +5394,7 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
     applyGravity(self);
     mg_detectEntityCollisions(self);
 
-    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
