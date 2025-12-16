@@ -316,39 +316,59 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
             break;
         case ENTITY_BOSS_SEVER_YAGATA:
             createdEntity = createBossSeverYagata(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_MIXTAPE:
             createdEntity = createMixtape(entityManager, x, y);
             break;
         case ENTITY_BOSS_DOOR:
             createdEntity = createBossDoor(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_SHRUBBLE_LV4:
             createdEntity = createShrubbleLv4(entityManager, x, y);
             break;
         case ENTITY_BOSS_GRIND_PANGOLIN:
             createdEntity = createBossGrindPangolin(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_KINETIC_DONUT:
             createdEntity = createBossKineticDonut(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_TRASH_MAN:
             createdEntity = createBossTrashMan(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_BIGMA:
             createdEntity = createBossBigma(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_SMASH_GORILLA:
             createdEntity = createBossSmashGorilla(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_DEADEYE_CHIRPZI:
             createdEntity = createBossDeadeyeChirpzi(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_DRAIN_BAT:
             createdEntity = createBossDrainBat(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_FLARE_GRYFFYN:
             createdEntity = createBossFlareGryffyn(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         default:
             createdEntity = NULL;
