@@ -53,6 +53,7 @@ struct dn_entity_t
     vec_t pos;
     dn_animationType_t type;
     bool paused;
+    bool gray;
     dn_assetIdx_t assetIndex;
 
     uint16_t animationTimer;
@@ -75,7 +76,8 @@ typedef struct
 
 typedef struct
 {
-    dn_boardPos_t moveTo; // Coordinates the unit is moving to.
+    dn_boardPos_t moveTo;     // Coordinates the unit is moving to.
+    dn_animation_t animation; // The current animation (still, selected, teleporting, etc...)
 } dn_unitData_t;
 
 typedef struct
@@ -194,6 +196,7 @@ typedef struct
     vec_t start;
     vec_t end;
     int8_t yOffset;
+    int8_t secondYOffset;
     int16_t lerpAmount;
     dn_boardPos_t firstTarget;
     dn_boardPos_t secondTarget;
@@ -323,3 +326,14 @@ void dn_drawQr(dn_entity_t* self);
 
 void dn_updateMemorial(dn_entity_t* self);
 void dn_drawMemorial(dn_entity_t* self);
+
+dn_drawFunction_t getAnimFunctionForAsset(dn_assetIdx_t idx);
+
+void dn_updateAlphaAnimation(dn_entity_t* self);
+void dn_updateBucketHatAnimation(dn_entity_t* self);
+void dn_updateChessKingAnimation(dn_entity_t* self);
+void dn_updateChessPawnAnimation(dn_entity_t* self);
+
+void dn_setEyes(dn_entity_t* self);
+
+void dn_calculatePercussion(dn_entity_t* self);

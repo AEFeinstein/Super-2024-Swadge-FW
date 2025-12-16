@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+ <tileset firstgid="1" source="../mg-entity-tileset.tsx"/>
+ <object name="Grind Pangolin" type="SwadgeLandEntity" gid="2147483806" width="67" height="56">
+  <properties>
+   <property name="type" type="int" propertytype="Swadge Land Entity Index" value="57"/>
+  </properties>
+ </object>
+</template>

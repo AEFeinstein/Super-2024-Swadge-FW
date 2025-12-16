@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="70" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="565">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="255" height="70" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="568">
  <editorsettings>
   <export target="../../../../../Downloads/Donut.bin" format="Mega Pulse EX"/>
  </editorsettings>
@@ -278,11 +278,6 @@
     <property name="linkedEntitySpawn" type="object" value="418"/>
    </properties>
   </object>
-  <object id="413" template="templates/Chargin' Schmuck.tx" name="Boss Test" gid="2147483997" x="3984.71" y="1056.6">
-   <properties>
-    <property name="type" type="int" propertytype="Swadge Land Entity Index" value="52"/>
-   </properties>
-  </object>
   <object id="415" template="templates/Scroll Lock (Right).tx" x="4020.71" y="968.602"/>
   <object id="416" template="templates/Scroll Lock (Down).tx" x="3416.71" y="1080.6"/>
   <object id="417" template="templates/Warp Exit (Wall) .tx" x="3350.5" y="944.033"/>
@@ -418,6 +413,7 @@
   <object id="562" template="templates/Bouncepad (45º).tx" gid="2147483884" x="3392.81" y="848.297" rotation="0"/>
   <object id="563" template="templates/Checkpoint.tx" x="3575" y="962"/>
   <object id="564" template="templates/Checkpoint.tx" x="1540" y="930"/>
+  <object id="565" template="templates/Kinetic Donut.tx" type="SwadgeLandEntity" x="3980" y="1048"/>
  </objectgroup>
  <objectgroup id="3" name="Annotations">
   <object id="43" x="404.08" y="846.867" width="296" height="256"/>
