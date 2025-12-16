@@ -26,7 +26,7 @@
 #define SONALOC_Y 36
 
 #define ATRIUM_PROFILE_NVS_NAMESPACE "atrium"
-#define SPSONA_NVS_KEY               "spSona"
+// #define SPSONA_NVS_KEY               "spSona"
 #define TROPHY_NVS_NAMESPACE         "trophy"
 #define TROPHY_POINTS_NVS_KEY        "points"
 #define ATRIUM_CARDKEY         "cardSelect"
@@ -221,7 +221,7 @@ typedef struct
     int yloc;
 
     // trophy data
-    trophyData_t* latestTrophy;
+    const trophyData_t* latestTrophy;
     int points;
 
 } atrium_t;
@@ -253,8 +253,8 @@ static void drawCard(userProfile_t profile, bool local);
 void drawEditSelection(buttonEvt_t* evt, int yloc);
 void drawEditUI(buttonEvt_t* evt, int yloc, bool direction);
 
-userProfile_t loadProfileFromNVS();
-trophyData_t* getTrophy();
+userProfile_t loadProfileFromNVS(void);
+const trophyData_t* getTrophy(void);
 
 // Swadgepass
 static void atriumAddSP(struct swadgePassPacket* packet);
@@ -318,7 +318,7 @@ atrium_t* atr;
 // FUNCTIONS
 //---------------------------------------------------------------------------------//
 
-static void atriumEnterMode()
+static void atriumEnterMode(void)
 {
     // Initialize memory
     atr         = (atrium_t*)heap_caps_calloc(1, sizeof(atrium_t), MALLOC_CAP_8BIT);
@@ -419,7 +419,7 @@ static void atriumEnterMode()
     }
 }
 
-static void atriumExitMode()
+static void atriumExitMode(void)
 {
     // Turn off BGM
     midiGmOff(atr->player);
@@ -743,7 +743,7 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
     // Trophy
 }
 
-void shuffleSonas()
+void shuffleSonas(void)
 {
     
     if (atr->shuffle == 0)
@@ -1044,7 +1044,7 @@ void loadProfiles(int maxProfiles, int page)
             {
                 freeWsg(&atr->sonaList[page * 4 + i].swsn.image);
             }
-            generateSwadgesonaImage(&atr->sonaList[page * 4 + i].swsn.core,false);
+            generateSwadgesonaImage(&atr->sonaList[page * 4 + i].swsn,false);
             printf("Loaded profile %d for page %d\n", page * 4 + i, page);
         }
         atr->loadedProfs = true; // mark as loaded
@@ -1052,17 +1052,15 @@ void loadProfiles(int maxProfiles, int page)
     
 }
 
-trophyData_t* getTrophy()
+const trophyData_t* getTrophy(void)
 {
-    trophyData_t* tempTrophy;
-    tempTrophy = trophyGetLatest();
+    const trophyData_t* tempTrophy = trophyGetLatest();
     // load points from NVS
     readNamespaceNvs32(TROPHY_NVS_NAMESPACE, TROPHY_POINTS_NVS_KEY, &atr->points);
     return tempTrophy;
 }
 
-userProfile_t loadProfileFromNVS()
-
+userProfile_t loadProfileFromNVS(void)
 {
     printf("Loading profile from NVS\n");
 

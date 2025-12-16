@@ -92,6 +92,13 @@ void modeListSetMenu(menu_t* menu);
  */
 int32_t getModeIdx(const swadgeMode_t* mode);
 
+/**
+ * @brief Add secret options to a menu
+ * 
+ * @param menu The menu to add secret options to
+ */
+void modeListAddSecretMenuModes(menu_t* menu);
+
 //==============================================================================
 // Externs
 //==============================================================================

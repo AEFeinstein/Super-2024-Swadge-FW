@@ -647,7 +647,7 @@ void addSecretsMenu(void)
                                  showSecretsMenuSettingValues, ARRAY_SIZE(showSecretsMenuSettingOptions),
                                  getShowSecretsMenuSettingBounds(), getShowSecretsMenuSetting());
 
-    //modeListAddSecretMenuModes(mainMenu->menu);
+    modeListAddSecretMenuModes(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, factoryResetName);
     addSingleItemToMenu(mainMenu->menu, confirmResetName);
