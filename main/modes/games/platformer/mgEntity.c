@@ -1104,6 +1104,79 @@ void despawnWhenOffscreen(mgEntity_t* self)
     {
         mg_destroyEntity(self, true);
     }
+
+    //boss rush logic
+    if(self->gameData->level == 11 || self->gameData->level == 69)
+    {
+        bool isABoss = false;
+        uint8_t nextBoss = -1;
+        
+        if(self->type == ENTITY_BOSS_KINETIC_DONUT)
+        {
+            isABoss = true;
+            nextBoss = ENTITY_BOSS_GRIND_PANGOLIN;
+            self->gameData->level = 2;
+
+        }
+        else if(self->type == ENTITY_BOSS_GRIND_PANGOLIN)
+        {
+            isABoss = true;
+            nextBoss = ENTITY_BOSS_SEVER_YAGATA;
+            self->gameData->level = 3;
+        }
+        else if(self->type == ENTITY_BOSS_SEVER_YAGATA)
+        {
+            isABoss = true;
+            nextBoss = ENTITY_BOSS_TRASH_MAN;
+            self->gameData->level = 4;
+        }
+        else if(self->type == ENTITY_BOSS_TRASH_MAN)
+        {
+            isABoss = true;
+            nextBoss = ENTITY_BOSS_SMASH_GORILLA;
+            self->gameData->level = 6;
+        }
+        else if(self->type == ENTITY_BOSS_SMASH_GORILLA)
+        {
+            isABoss = true;
+            nextBoss = ENTITY_BOSS_DEADEYE_CHIRPZI;
+            self->gameData->level = 7;
+        }
+        else if(self->type == ENTITY_BOSS_DEADEYE_CHIRPZI)
+        {
+            isABoss = true;
+            nextBoss = ENTITY_BOSS_DRAIN_BAT;
+            self->gameData->level = 8;
+        }
+        else if(self->type == ENTITY_BOSS_DRAIN_BAT)
+        {
+            isABoss = true;
+            nextBoss = ENTITY_BOSS_FLARE_GRYFFYN;
+            self->gameData->level = 9;
+        }
+        else if(self->type == ENTITY_BOSS_FLARE_GRYFFYN)
+        {
+            nextBoss = 0;
+        }
+        
+        mg_loadWsgSet(&(platformer->wsgManager), leveldef[self->gameData->level].defaultWsgSetIndex);
+        mg_loadMapFromFile(&(platformer->tilemap), leveldef[self->gameData->level].filename,
+                            &platformer->entityManager);
+
+        if(nextBoss > 0)
+        {
+            mg_setBgm(self->soundManager, leveldef[self->gameData->level].bossBgmIndex);
+            soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
+            mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX, self->entityManager->bossSpawnY);
+        }
+        else
+        {
+            self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+            mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
+            soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
+        }
+        
+    }
 }
 
 void mg_destroyEntity(mgEntity_t* self, bool respawn)
@@ -3976,9 +4049,12 @@ void mg_updateBossSeverYagata(mgEntity_t* self)
 
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
     {
-        self->gameData->pauseCountdown = true;
-        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
-        startOutroCutscene(self);
+        if(self->gameData->level != 11)
+        {
+            self->gameData->pauseCountdown = true;
+            self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+            startOutroCutscene(self);
+        }
     }
 }
 
