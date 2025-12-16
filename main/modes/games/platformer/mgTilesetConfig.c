@@ -414,11 +414,7 @@ const mgSprite_t mg_grindPangolinBossSpriteMetadataSet[] = {
         .origin = &origin_grind_pangolin_tail,
         .hitBox = &box_grind_pangolin_tail,
     },
-    {
-        .wsg    = NULL,
-        .origin = &origin_grind_pangolin_standing,
-        .hitBox = &box_grind_pangolin_standing
-    },
+    {.wsg = NULL, .origin = &origin_grind_pangolin_standing, .hitBox = &box_grind_pangolin_standing},
 };
 
 const mgSprite_t mg_kineticDonutBossSpriteMetadataSet[] = {
