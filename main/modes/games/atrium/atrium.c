@@ -110,6 +110,7 @@ typedef enum
 {
     ATR_TITLE,        /// TITLE SCREEN
     ATR_DISPLAY,      /// GAZEBO ETC
+    ATR_SELECT,       /// PICKING A SONA TO LOOK AT
     ATR_PROFILE,      /// LOOKING AT A PROFILE
     ATR_EDIT_PROFILE, /// EDITING MY PROFILE
 } atriumState;
@@ -224,6 +225,9 @@ typedef struct
     const trophyData_t* latestTrophy;
     int points;
 
+    // SwadgePass Profile
+    userProfile_t spProfile;
+
 } atrium_t;
 
 //---------------------------------------------------------------------------------//
@@ -252,6 +256,7 @@ static void drawArrows(bool, bool, bool, bool);
 static void drawCard(userProfile_t profile, bool local);
 void drawEditSelection(buttonEvt_t* evt, int yloc);
 void drawEditUI(buttonEvt_t* evt, int yloc, bool direction);
+void drawSonaSelector(buttonEvt_t evt, int selection);
 
 userProfile_t loadProfileFromNVS(void);
 const trophyData_t* getTrophy(void);
@@ -371,13 +376,14 @@ static void atriumEnterMode(void)
         // Make a convenience pointer to the data in this node
         swadgePassData_t* spd = (swadgePassData_t*)spNode->val;
         atr->sonaList[i].swsn.core = spd->data.packet.swadgesona.core;
-        atr->sonaList[i].cardSelect = spd->data.packet.atrium.profile.cardSelect;
-        atr->sonaList[i].fact0 = spd->data.packet.atrium.profile.fact0;
-        atr->sonaList[i].fact1 = spd->data.packet.atrium.profile.fact1;
-        atr->sonaList[i].fact2 = spd->data.packet.atrium.profile.fact2;
-        atr->sonaList[i].numPasses = spd->data.packet.atrium.profile.numPasses;
-        atr->sonaList[i].latestTrophyIdx = spd->data.packet.atrium.profile.latestTrophyIdx;
-        atr->sonaList[i].points = spd->data.packet.atrium.profile.points;
+        setUsernameFrom32(&atr->sonaList[i].swsn.name, spd->data.packet.swadgesona.core.packedName);
+        atr->sonaList[i].cardSelect = spd->data.packet.atrium.cardSelect;
+        atr->sonaList[i].fact0 = spd->data.packet.atrium.fact0;
+        atr->sonaList[i].fact1 = spd->data.packet.atrium.fact1;
+        atr->sonaList[i].fact2 = spd->data.packet.atrium.fact2;
+        atr->sonaList[i].numPasses = spd->data.packet.atrium.numPasses;
+        atr->sonaList[i].latestTrophyIdx = spd->data.packet.atrium.latestTrophyIdx;
+        atr->sonaList[i].points = spd->data.packet.atrium.points;
 
         // If the data hasn't been used yet
         if (!isPacketUsedByMode(spd, &atriumMode))
@@ -492,7 +498,110 @@ static void atriumMainLoop(int64_t elapsedUs)
         }
         case ATR_DISPLAY:
         {
+                // Handle input
+            while (checkButtonQueueWrapper(&evt))
+            {
+                atr->lastPage = atr->page;
+                
+                if (evt.down)
+                {
+                    if (evt.button & PB_UP)
+                    {
+                        atr->up = true;
+                    }
+                    else if (evt.button & PB_LEFT)
+                    {
+                        atr->left = true;
+                        atr->page--;
+                        if (atr->page < 0)
+                        {
+                            atr->page = 0;
+                        }
+                    }
+                    else if (evt.button & PB_RIGHT)
+                    {
+                        atr->right = true;
+                        atr->page++;
+                        if (atr->page > (atr->numRemoteSwsn - 1) / 4)
+                        {
+                            atr->page = (atr->numRemoteSwsn - 1) / 4;
+                        }
+                    }
+                    else if (evt.button & PB_DOWN)
+                    {
+                        atr->down = true;
+                    }
+                if (evt.button & PB_UP)
+                    {
+                        atr->up = false;
+                        if (atr->lbState > 0)
+                        {
+                            atr->lbState--;
+                        }
+                        atr->loadAnims = 0;
+                    }
+                    else if (evt.button & PB_DOWN)
+                    {
+                        atr->down = false;
+                        if (atr->lbState < 2)
+                        {
+                            atr->lbState++;
+                        }
+
+                        atr->loadAnims = 0;
+                    }
+                    else if (evt.button & PB_A)
+                    {
+                        atr->state = ATR_SELECT;
+                        atr->selection = 0;
+                    }
+                    else if (evt.button & PB_B)
+                    {
+                        atr->state = ATR_TITLE;
+                    }
+                }
+            }
             drawLobbies(&evt, elapsedUs);
+
+            break;
+        }
+        case ATR_SELECT:
+        {   
+            
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down) // if the button is pressed down on the title screen
+                {
+                    if ((evt.button & PB_A))
+                    {
+                        atr->state = ATR_PROFILE;
+                        // Changer
+                    }
+                    if ((evt.button & PB_LEFT))
+                    {
+                        atr->selection--;
+                        if (atr->selection < 0)
+                        {
+                            atr->selection = SONA_PER - 1;
+                        }
+                    }
+                    else if ((evt.button & PB_RIGHT))
+                    {
+                        atr->selection++;
+                        if (atr->selection > SONA_PER - 1)
+                        {
+                            atr->selection = 0;
+                        }
+                    }
+                    else if ((evt.button & PB_B))
+                    {
+                        atr->state = ATR_DISPLAY; // if B is pressed, go to display view
+                    }
+                }
+            }
+            drawLobbies(&evt, elapsedUs);
+            drawSonaSelector(evt, atr->selection);
+            
 
             break;
         }
@@ -547,7 +656,15 @@ static void editProfile(buttonEvt_t* evt)
                     writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE,ATRIUM_FACT1KEY, atr->loadedProfile.fact1);
                     writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE,ATRIUM_FACT2KEY, atr->loadedProfile.fact2);
                     writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE,ATRIUM_NUMPASSESKEY, atr->loadedProfile.numPasses);
-                                        
+                    
+                    //save to swadgepass data
+                    atr->spProfile.cardSelect = atr->loadedProfile.cardSelect;
+                    atr->spProfile.fact0 = atr->loadedProfile.fact0;
+                    atr->spProfile.fact1 = atr->loadedProfile.fact1;
+                    atr->spProfile.fact2 = atr->loadedProfile.fact2;
+                    atr->spProfile.numPasses = atr->loadedProfile.numPasses;
+                    //atr->spProfile.latestTrophyIdx = atr->latestTrophy->identifier;
+                    atr->spProfile.points = atr->points;
                 }
             }
             if (evt->button & PB_UP)
@@ -581,6 +698,20 @@ static void editProfile(buttonEvt_t* evt)
 
 static void viewProfile(buttonEvt_t* evt)
 {
+    printf("Viewing profile %d on page %d\n", atr->selection, atr->page);
+    printf("sonas name is %s\n", atr->sonaList[atr->page * SONA_PER + atr->selection].swsn.name.nameBuffer);
+    drawCard(atr->sonaList[atr->page * SONA_PER + atr->selection], false); // draw selected profile
+
+    while (checkButtonQueueWrapper(evt))
+    {
+        if (evt->down)
+        {
+            if (evt->button & PB_B)
+            {
+                atr->state = ATR_DISPLAY;
+            }
+        }
+    }
 }
 
 // Draw
@@ -633,68 +764,6 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
         atr->fakeLoad = 1; // skip this next time
     }
 
-    // Handle input
-    while (checkButtonQueueWrapper(evt))
-    {
-        atr->lastPage = atr->page;
-        
-        if (evt->down)
-        {
-            if (evt->button & PB_UP)
-            {
-                atr->up = true;
-            }
-            else if (evt->button & PB_LEFT)
-            {
-                atr->left = true;
-                atr->page--;
-                if (atr->page < 0)
-                {
-                    atr->page = 0;
-                }
-            }
-            else if (evt->button & PB_RIGHT)
-            {
-                atr->right = true;
-                atr->page++;
-                if (atr->page > (atr->numRemoteSwsn - 1) / 4)
-                {
-                    atr->page = (atr->numRemoteSwsn - 1) / 4;
-                }
-            }
-            else if (evt->button & PB_DOWN)
-            {
-                atr->down = true;
-            }
-        }
-        else
-        {
-            if (evt->button & PB_UP)
-            {
-                atr->up = false;
-                if (atr->lbState > 0)
-                {
-                    atr->lbState--;
-                }
-                atr->loadAnims = 0;
-            }
-            else if (evt->button & PB_DOWN)
-            {
-                atr->down = false;
-                if (atr->lbState < 2)
-                {
-                    atr->lbState++;
-                }
-
-                atr->loadAnims = 0;
-            }
-            else if (evt->button & PB_B)
-            {
-                atr->state = ATR_TITLE;
-            }
-        }
-    }
-
     // Draw
     switch (atr->lbState)
     {
@@ -740,7 +809,7 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
     // Sonas
     loadProfiles(SONA_PER, atr->page);
     drawSonas(atr->page, elapsedUs);
-    // Trophy
+    
 }
 
 void shuffleSonas(void)
@@ -875,8 +944,16 @@ static void drawArrows(bool left, bool right, bool up, bool down)
 
 static void drawCard(userProfile_t profile, bool local)
 {
+        if(!profile.cardSelect){
+        printf("No profile found, using default\n");
+        profile.cardSelect = 0;
+        profile.fact0 = 0;
+        profile.fact1 = 0;
+        profile.fact2 = 0;
+    }
+        printf("Drawing card with cardSelect %d, fact0 %d, fact1 %d, fact2 %d\n", profile.cardSelect,
+           profile.fact0, profile.fact1, profile.fact2);
     // concat card info
-
     // line 1: fact0
     char factline0[64];
     snprintf(factline0, sizeof(factline0) - 1, "%s%s", preambles[0], fact0[profile.fact0]);
@@ -890,9 +967,15 @@ static void drawCard(userProfile_t profile, bool local)
     drawWsgSimple(&atr->backgroundImages[0], 0, 0);
     drawWsgSimple(&atr->cards[profile.cardSelect], 0, 0 + 12); // draw the card
 
+    if (local == true){
     loadSPSona(&profile.swsn.core);
-    memcpy(&profile.swsn.image, atr->profileSonaImage, sizeof(wsg_t)); // copy rendered sona image
-    drawWsgSimple(atr->profileSonaImage, SONALOC_X, SONALOC_Y); // draw the swadgesona image
+    //generateSwadgesonaImage(&profile.swsn,true); TODO: fix
+    }
+    else{
+        //generateSwadgesonaImage(&profile.swsn,false); TODO: fix
+    }
+    
+    //drawWsgSimple(&profile.swsn.image, SONALOC_X, SONALOC_Y); // draw the swadgesona image TODO: fix
     nameData_t username;
 
     if(local == true){ 
@@ -909,10 +992,16 @@ static void drawCard(userProfile_t profile, bool local)
              SONALOC_Y + CARDTEXTPAD + 26 + CARDTEXTPAD); // draw the identity
     drawText(&atr->fonts[0], c000, factline2, 99 + CARDTEXTPAD,
              SONALOC_Y + CARDTEXTPAD + 39 + CARDTEXTPAD); // draw the identity info
-
+    
+       if( local == true){ 
+        atr->latestTrophy = getTrophy(); // get latest trophy
+       }
+       else {
+        //TODO: get trophy from profile data
+       }
     drawText(&atr->fonts[0], c000, "Latest Trophy:", 24 + CARDTEXTPAD, 126);         // draw latest trophy title
-    drawText(&atr->fonts[0], c000, atr->latestTrophy->title, 24 + CARDTEXTPAD, 138); // draw latest trophy title
-    drawText(&atr->fonts[0], c000, "Points:", 24 + CARDTEXTPAD, 150);                // draw latest trophy desc
+    drawText(&atr->fonts[0], c000, atr->latestTrophy->title, 24 + CARDTEXTPAD, 138); // draw latest trophy title TODO: marquee
+    drawText(&atr->fonts[0], c000, "Points:", 24 + CARDTEXTPAD, 150);                
     char buf[sizeof(&atr->points) + 1];
     snprintf(buf, sizeof(buf), "%d", atr->points);
     drawText(&atr->fonts[0], c000, buf, 65 + CARDTEXTPAD, 150);  // draw latest trophy desc
@@ -1030,6 +1119,11 @@ else
 }
 }
 
+void drawSonaSelector(buttonEvt_t evt, int selection)
+{
+    drawWsg(&atr->uiElements[17], 20 + (selection * 60)+24, 66, false, false, 270); // draw selector over sona
+}
+
 void loadProfiles(int maxProfiles, int page)
 {
     if(atr->loadedProfs == true)
@@ -1101,11 +1195,11 @@ userProfile_t loadProfileFromNVS(void)
 
 static void atriumAddSP(struct swadgePassPacket* packet) {
     // Add our profile data to the swadge pass packet
-    packet->atrium.profile.cardSelect       = atr->loadedProfile.cardSelect;
-    packet->atrium.profile.fact0            = atr->loadedProfile.fact0;
-    packet->atrium.profile.fact1            = atr->loadedProfile.fact1;
-    packet->atrium.profile.fact2            = atr->loadedProfile.fact2;
-    packet->atrium.profile.numPasses        = atr->loadedProfile.numPasses;
-    packet->atrium.profile.latestTrophyIdx  = atr->latestTrophy; // index of latest trophy
-    packet->atrium.profile.points           = atr->points;
+    packet->atrium.cardSelect       = atr->spProfile.cardSelect;
+    packet->atrium.fact0            = atr->spProfile.fact0;
+    packet->atrium.fact1            = atr->spProfile.fact1;
+    packet->atrium.fact2            = atr->spProfile.fact2;
+    packet->atrium.numPasses        = atr->spProfile.numPasses;
+    //packet->atrium.latestTrophyIdx  = atr->latestTrophy->identifier; // index of latest trophy
+    packet->atrium.points           = atr->spProfile.points;
 }
