@@ -388,7 +388,7 @@ mgEntity_t* mg_createPlayer(mgEntityManager_t* entityManager, uint16_t x, uint16
     entity->canDash            = true;
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle  = 0;
-    entity->hp                 = 30;
+    entity->hp                 = 60; // It got doubled as well as all damage taken doubled, until Plot Armor is obtained. Health from power up is now also doubled.
     entity->animationTimer     = 0; // Used as a cooldown for shooting square wave balls
     entity->shotsFired         = 0;
     entity->shotLimit          = 3;
@@ -2245,7 +2245,7 @@ mgEntity_t* createBossKineticDonut(mgEntityManager_t* entityManager, uint16_t x,
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
-    entity->hp                   = 30;
+    entity->hp                   = 60;
 
     entity->type                 = ENTITY_BOSS_KINETIC_DONUT;
     entity->spriteIndex          = MG_SP_BOSS_0;
