@@ -1401,15 +1401,8 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             {
                 if (!self->gameData->cheatMode)
                 {
-                    // pulse takes damage
-                    if (self->gameData->abilities & (1U << MG_PLOT_ARMOR_ABILITY))
-                    {
-                        self->hp -= 3;
-                    }
-                    else
-                    {
-                        self->hp -= 5;
-                    }
+                    // pulse takes damage (doubled if no plot armor)
+                    self->hp -= 5 + (5 * !(self->gameData->abilities & (1U << MG_PLOT_ARMOR_ABILITY)));
                 }
 
                 self->gameData->comboTimer = 0;
@@ -1461,17 +1454,17 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         }
         case ENTITY_POWERUP:
         {
-            self->hp += 6;
+            self->hp += 12; //Previously 6, doubled to keep the same amount since PULSE went from 30 to 60 health.
             if ((self->gameData->abilities & (1U << MG_CAN_OF_SALSA_ABILITY)))
             {
-                if (self->hp > 36)
+                if (self->hp > 72)
                 {
-                    self->hp = 36;
+                    self->hp = 72;
                 }
             }
-            else if (self->hp > 30)
+            else if (self->hp > 60)
             {
-                self->hp = 30;
+                self->hp = 60;
             }
             mg_scorePoints(self->gameData, 1000);
             soundPlaySfx(&(self->soundManager->sndPowerUp), BZR_LEFT);
@@ -1602,15 +1595,8 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             {
                 if (!self->gameData->cheatMode)
                 {
-                    // pulse takes damage
-                    if (self->gameData->abilities & (1U << MG_PLOT_ARMOR_ABILITY))
-                    {
-                        self->hp -= (other->scoreValue * 3) / 5;
-                    }
-                    else
-                    {
-                        self->hp -= other->scoreValue;
-                    }
+                    // pulse takes damage (doubled if no plot armor)
+                    self->hp -= other->scoreValue + (other->scoreValue * !(self->gameData->abilities & (1U << MG_PLOT_ARMOR_ABILITY)));
                 }
                 mg_updateLedsHpMeter(self->entityManager, self->gameData);
                 self->gameData->comboTimer = 0;
