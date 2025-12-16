@@ -146,7 +146,7 @@ typedef struct __attribute__((packed)) swadgePassPacket
         int8_t fact1;
         int8_t fact2;
         uint8_t numPasses;
-        //uint32_t latestTrophyIdx;
+        // uint32_t latestTrophyIdx;
         uint32_t points;
     } atrium;
 } swadgePassPacket_t;

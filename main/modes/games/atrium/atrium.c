@@ -47,7 +47,9 @@
 
 // Sona bodies
 static const cnfsFileIdx_t sonaBodies[] = {
-    BODY_1_WSG, BODY_2_WSG, DAISY_WSG, FALLOUT_WSG, HANDSOME_WSG, KIRBY_WSG, LINK_WSG, MARIO_WSG, PACMAN_WSG, PEACH_WSG,RAYMAN_WSG, SANIC_WSG, SORA_WSG, STAFF_WSG, STEVE_WSG, STEVEN_WSG, WALDO_WSG, ZELDA_WSG,};
+    BODY_1_WSG, BODY_2_WSG, DAISY_WSG, FALLOUT_WSG, HANDSOME_WSG, KIRBY_WSG, LINK_WSG,   MARIO_WSG, PACMAN_WSG,
+    PEACH_WSG,  RAYMAN_WSG, SANIC_WSG, SORA_WSG,    STAFF_WSG,    STEVE_WSG, STEVEN_WSG, WALDO_WSG, ZELDA_WSG,
+};
 
 static const cnfsFileIdx_t uiImages[] = {
     ARROWBUTTON_1_WSG, ARROWBUTTON_2_WSG, ABUTTON_1_WSG,   ABUTTON_2_WSG, BBUTTON_1_WSG,  BBUTTON_2_WSG, ATRIUMLOGO_WSG,
@@ -224,7 +226,7 @@ typedef struct
     int32_t fact2;
     int32_t numPasses; // Number of other unique passes encountered
     swadgesona_t swsn; // Swadgesona data
-    //uint32_t latestTrophyIdx;
+    // uint32_t latestTrophyIdx;
     int32_t points;
 } userProfile_t;
 
@@ -232,7 +234,6 @@ typedef struct __attribute__((packed))
 {
     userProfile_t packedProfile;
 } packedProfile_t;
-
 
 typedef struct
 {
@@ -407,14 +408,14 @@ static void atriumEnterMode(void)
         swadgePassData_t* spd      = (swadgePassData_t*)spNode->val;
         atr->sonaList[i].swsn.core = spd->data.packet.swadgesona.core;
         setUsernameFrom32(&atr->sonaList[i].swsn.name, spd->data.packet.swadgesona.core.packedName);
-        
-        atr->sonaList[i].cardSelect      = spd->data.packet.atrium.cardSelect;
-        atr->sonaList[i].fact0           = spd->data.packet.atrium.fact0;
-        atr->sonaList[i].fact1           = spd->data.packet.atrium.fact1;
-        atr->sonaList[i].fact2           = spd->data.packet.atrium.fact2;
-        atr->sonaList[i].numPasses       = spd->data.packet.atrium.numPasses;
-        //atr->sonaList[i].latestTrophyIdx = spd->data.packet.atrium.latestTrophyIdx;
-        atr->sonaList[i].points          = spd->data.packet.atrium.points;
+
+        atr->sonaList[i].cardSelect = spd->data.packet.atrium.cardSelect;
+        atr->sonaList[i].fact0      = spd->data.packet.atrium.fact0;
+        atr->sonaList[i].fact1      = spd->data.packet.atrium.fact1;
+        atr->sonaList[i].fact2      = spd->data.packet.atrium.fact2;
+        atr->sonaList[i].numPasses  = spd->data.packet.atrium.numPasses;
+        // atr->sonaList[i].latestTrophyIdx = spd->data.packet.atrium.latestTrophyIdx;
+        atr->sonaList[i].points = spd->data.packet.atrium.points;
 
         // If the data hasn't been used yet
         if (!isPacketUsedByMode(spd, &atriumMode))
@@ -513,7 +514,6 @@ static void atriumMainLoop(int64_t elapsedUs)
                     if ((evt.button & PB_A))
                     {
                         atr->state = ATR_DISPLAY;
-                        
                     }
                     else if ((evt.button & PB_B))
                     {
@@ -605,7 +605,6 @@ static void atriumMainLoop(int64_t elapsedUs)
                     if ((evt.button & PB_A))
                     {
                         atr->state = ATR_PROFILE;
-                        
                     }
                     if ((evt.button & PB_LEFT))
                     {
@@ -645,8 +644,6 @@ static void atriumMainLoop(int64_t elapsedUs)
             // Draw the panel as it is
             editProfile(&evt);
 
-           
-
             break;
         }
         default:
@@ -661,7 +658,6 @@ static void editProfile(buttonEvt_t* evt)
 {
     if (atr->loadedProfs == false)
     {
-        
         atr->loadedProfile = loadProfileFromNVS();
         atr->loadedProfs   = true;
     }
@@ -687,19 +683,17 @@ static void editProfile(buttonEvt_t* evt)
                     writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_NUMPASSESKEY,
                                         atr->loadedProfile.numPasses);
 
-                    
-
                     // save to swadgepass data
                     atr->spProfile.cardSelect = atr->loadedProfile.cardSelect;
                     atr->spProfile.fact0      = atr->loadedProfile.fact0;
                     atr->spProfile.fact1      = atr->loadedProfile.fact1;
                     atr->spProfile.fact2      = atr->loadedProfile.fact2;
                     atr->spProfile.numPasses  = atr->loadedProfile.numPasses;
-                    //atr->spProfile.latestTrophyIdx = atr->latestTrophyIdx;
+                    // atr->spProfile.latestTrophyIdx = atr->latestTrophyIdx;
                     atr->spProfile.points = atr->loadedProfile.points;
                     ESP_LOGI(ATR_TAG, "swadgepass profile saved: card %d, fact0 %d, fact1 %d, fact2 %d, numPasses %d",
-                           atr->spProfile.cardSelect, atr->spProfile.fact0, atr->spProfile.fact1,
-                           atr->spProfile.fact2, atr->spProfile.numPasses);
+                             atr->spProfile.cardSelect, atr->spProfile.fact0, atr->spProfile.fact1,
+                             atr->spProfile.fact2, atr->spProfile.numPasses);
                     ESP_LOGI(ATR_TAG, "latest points: %d", atr->spProfile.points);
                 }
             }
@@ -750,7 +744,6 @@ static void viewProfile(buttonEvt_t* evt)
     }
 }
 
-
 static void drawAtriumTitle(uint64_t elapsedUs)
 {
     // draw the title screen for the atrium mode
@@ -792,7 +785,7 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
         drawWsgSimple(&atr->uiElements[7], 0, 0);
         int frame = atr->loadAnims % 8;
         drawWsgSimpleHalf(&atr->uiElements[8 + frame], 180, 200);
-        
+
         return;
     }
     else
@@ -911,12 +904,11 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
             if ((i == page * 4 - 1 && atr->loadedProfs == true))
             {
                 atr->loadedProfs = false; // reset loaded profiles to load new ones
-                
             }
-            atr-> bodyIdx[i] = rand() % ARRAY_SIZE(sonaBodies);
+            atr->bodyIdx[i] = rand() % ARRAY_SIZE(sonaBodies);
         }
         atr->loadedProfs = false; // reset loaded profiles to load new ones
-        
+
         ESP_LOGI(ATR_TAG, "Page changed from %d to %d, resetting loadedProfs", atr->lastPage, page);
     }
 
@@ -938,12 +930,11 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
     for (int i = 0; i < sonas; i++)
     {
         drawWsgSimple(&atr->sonaList[i + (page * 4)].swsn.image, 20 + (i * 60), 80); // draw the head
-        
+
         switch (atr->lbState)
         {
             case BG_GAZEBO:
             {
-                
                 drawWsgSimple(&atr->bodies[atr->bodyIdx[i]], 20 + (i * 60),
                               128); // draw the body
                 break;
@@ -956,7 +947,7 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
             }
             case BG_CONCERT:
             {
-                //TODO: instrument animations
+                // TODO: instrument animations
                 drawWsgSimple(&atr->bodies[0], 20 + (i * 60),
                               128); // draw the body
                 break;
@@ -966,7 +957,6 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
                 break;
             }
         }
-
     }
 }
 
@@ -985,9 +975,7 @@ static void drawArrows(bool left, bool right, bool up, bool down)
 
 static void drawCard(userProfile_t profile, bool local)
 {
-    
-    ESP_LOGI(ATR_TAG,
-             "Drawing card with cardSelect %" PRId32 ", fact0 %" PRId32 ", fact1 %" PRId32 ", fact2 %" PRId32,
+    ESP_LOGI(ATR_TAG, "Drawing card with cardSelect %" PRId32 ", fact0 %" PRId32 ", fact1 %" PRId32 ", fact2 %" PRId32,
              profile.cardSelect, profile.fact0, profile.fact1, profile.fact2);
     // concat card info
     // line 1: fact0
@@ -1006,14 +994,14 @@ static void drawCard(userProfile_t profile, bool local)
     if (local == true)
     {
         loadSPSona(&profile.swsn.core);
-        //generateSwadgesonaImage(&profile.swsn,true); TODO: fix
+        // generateSwadgesonaImage(&profile.swsn,true); TODO: fix
     }
     else
     {
-        //do nothing, swsn image was already loaded
+        // do nothing, swsn image was already loaded
     }
 
-    //drawWsgSimple(&profile.swsn.image, SONALOC_X, SONALOC_Y); // draw the swadgesona image TODO: fix
+    // drawWsgSimple(&profile.swsn.image, SONALOC_X, SONALOC_Y); // draw the swadgesona image TODO: fix
     nameData_t username;
 
     if (local == true)
@@ -1034,17 +1022,16 @@ static void drawCard(userProfile_t profile, bool local)
     drawText(&atr->fonts[0], c000, factline2, 99 + CARDTEXTPAD,
              SONALOC_Y + CARDTEXTPAD + 39 + CARDTEXTPAD); // draw the identity info
 
-    
     drawText(&atr->fonts[0], c000, "Swadge Points:", 24 + CARDTEXTPAD, 126);
     char buf[sizeof(profile.points) + 1];
     snprintf(buf, sizeof(buf), "%" PRId32, profile.points);
-    drawText(&atr->fonts[0], c000, buf, 120 + CARDTEXTPAD, 126); // draw points
+    drawText(&atr->fonts[0], c000, buf, 120 + CARDTEXTPAD, 126);                  // draw points
     drawText(&atr->fonts[0], c000, "Swadgepasses Found:", 24 + CARDTEXTPAD, 150); // draw points
     char buf1[5];
     snprintf(buf1, sizeof(buf1), "%" PRId8, profile.numPasses);
     drawText(&atr->fonts[0], c000, buf1, 155 + CARDTEXTPAD, 150); // draw numpasses
-   
-    //drawWsgSimple(&atr->uiElements[16], 212, 124 + CARDTEXTPAD); // draw trophy image  TODO:something else here?
+
+    // drawWsgSimple(&atr->uiElements[16], 212, 124 + CARDTEXTPAD); // draw trophy image  TODO:something else here?
 }
 
 void drawEditSelection(buttonEvt_t* evt, int yloc)
@@ -1190,7 +1177,7 @@ void drawSonaSelector(buttonEvt_t evt, int selection)
     drawWsg(&atr->uiElements[17], 20 + (selection * 60) + 24, 66, false, false, 0); // draw selector over sona
 }
 
-//utilities
+// utilities
 
 void shuffleSonas(void)
 {
@@ -1216,7 +1203,6 @@ void shuffleSonas(void)
     atr->shuffle = 1; // only shuffle once
 }
 
-
 void loadProfiles(int maxProfiles, int page)
 {
     if (atr->loadedProfs == true)
@@ -1235,7 +1221,7 @@ void loadProfiles(int maxProfiles, int page)
             }
             generateSwadgesonaImage(&atr->sonaList[page * 4 + i].swsn, false);
             ESP_LOGI(ATR_TAG, "Loaded profile %d for page %d", page * 4 + i, page);
-            atr-> bodyIdx[i] = rand() % ARRAY_SIZE(sonaBodies);
+            atr->bodyIdx[i] = rand() % ARRAY_SIZE(sonaBodies);
         }
         atr->loadedProfs = true; // mark as loaded
     }
@@ -1246,7 +1232,8 @@ userProfile_t loadProfileFromNVS(void)
     ESP_LOGI(ATR_TAG, "Loading profile from NVS");
 
     userProfile_t loadedProfile;
-    if (!readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_NUMPASSESKEY, &atr->loadedProfile.numPasses))  // check if profile created
+    if (!readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_NUMPASSESKEY,
+                            &atr->loadedProfile.numPasses)) // check if profile created
     {
         loadedProfile.cardSelect = rand() % 8;
         loadedProfile.fact0      = rand() % 8;
@@ -1260,7 +1247,7 @@ userProfile_t loadProfileFromNVS(void)
         writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_FACT1KEY, loadedProfile.fact1);
         writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_FACT2KEY, loadedProfile.fact2);
         writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_NUMPASSESKEY, loadedProfile.numPasses);
-        
+
         ESP_LOGI(ATR_TAG, "Wrote random profile to NVS");
     }
 
@@ -1287,10 +1274,9 @@ static void atriumAddSP(struct swadgePassPacket* packet)
 {
     // Add our profile data to the swadge pass packet
     packet->atrium.cardSelect = atr->spProfile.cardSelect;
-    packet->atrium.fact0 = atr->spProfile.fact0;
-    packet->atrium.fact1 = atr->spProfile.fact1;
-    packet->atrium.fact2 = atr->spProfile.fact2;
-    packet->atrium.numPasses = atr->spProfile.numPasses;
-    packet->atrium.points = atr->spProfile.points;
+    packet->atrium.fact0      = atr->spProfile.fact0;
+    packet->atrium.fact1      = atr->spProfile.fact1;
+    packet->atrium.fact2      = atr->spProfile.fact2;
+    packet->atrium.numPasses  = atr->spProfile.numPasses;
+    packet->atrium.points     = atr->spProfile.points;
 }
-
