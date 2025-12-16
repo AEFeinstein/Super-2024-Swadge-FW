@@ -110,7 +110,6 @@
 #include "swadge2024.h"
 #include "swadgesona.h"
 
-
 //==============================================================================
 // Structs
 //==============================================================================
@@ -140,7 +139,8 @@ typedef struct __attribute__((packed)) swadgePassPacket
         swadgesonaCore_t core;
     } swadgesona;
 
-    struct {
+    struct
+    {
         uint8_t cardSelect;
         uint8_t fact0;
         uint8_t fact1;
