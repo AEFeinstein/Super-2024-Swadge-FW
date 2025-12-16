@@ -140,7 +140,8 @@ typedef struct __attribute__((packed)) swadgePassPacket
         swadgesonaCore_t core;
     } swadgesona;
 
-    struct {
+    struct
+    {
         packedProfile_t profile;
     } atrium;
 } swadgePassPacket_t;
