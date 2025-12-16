@@ -55,6 +55,9 @@ const mg_spriteDef_t kineticDonutChargeFrames[]
 const mg_spriteDef_t kineticDonutTeleportFrames[]
     = {MG_SP_BOSS_5, MG_SP_BOSS_6};
 
+const mg_spriteDef_t severYatagaFlyingFrames[]
+    = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG_SP_BOSS_2, MG_SP_BOSS_1};
+
 //==============================================================================
 // Functions Prototypes
 //==============================================================================
@@ -3862,14 +3865,15 @@ uint8_t mg_crawlerGettInitialMoveState(int16_t angle, bool clockwise)
 
 void mg_updateBossSeverYagata(mgEntity_t* self)
 {
-    self->spriteIndex = MG_SP_BOSS_0 + (self->stateTimer % 7);
-
     switch (self->state)
     {
         case 65535:
             return;
         case 0:
         default:
+            self->spriteIndex = severYatagaFlyingFrames[(self->stateTimer >> 2) % 4];
+            self->spriteFlipHorizontal = (self->entityManager->playerEntity->x > self->x) ? false : true;
+
             if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
             {
                 self->yspeed -= 4;
@@ -3904,6 +3908,9 @@ void mg_updateBossSeverYagata(mgEntity_t* self)
             }
             break;
         case 1:
+            self->spriteIndex = severYatagaFlyingFrames[(self->stateTimer >> 2) % 4];
+            self->spriteFlipHorizontal = (self->entityManager->playerEntity->x > self->x) ? false : true;
+
             if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
             {
                 self->yspeed -= 4;
@@ -3939,6 +3946,8 @@ void mg_updateBossSeverYagata(mgEntity_t* self)
 
             break;
         case 2:
+            self->spriteIndex = severYatagaFlyingFrames[(self->stateTimer >> 1) % 4];
+            self->spriteFlipHorizontal = (self->entityManager->playerEntity->x > self->x) ? false : true;
 
             if (self->stateTimer < 60)
             {
@@ -3964,9 +3973,26 @@ void mg_updateBossSeverYagata(mgEntity_t* self)
         case 3:
             self->stateTimer++;
 
-            if (!(self->stateTimer % 60))
+            if (!((self->stateTimer + 8) % 60))
             {
+                self->spriteIndex = MG_SP_BOSS_2;
+            }
+            else if (!((self->stateTimer + 4) % 60))
+            {
+                self->spriteIndex = MG_SP_BOSS_3;
+            }
+            else if (!(self->stateTimer % 60))
+            {
+                self->spriteIndex = MG_SP_BOSS_4;
                 self->jumpPower = 1;
+            }
+            else if (!((self->stateTimer - 8) % 60))
+            {
+                self->spriteIndex = MG_SP_BOSS_5;
+            } 
+            else if (!((self->stateTimer - 16) % 60))
+            {
+                self->spriteIndex = MG_SP_BOSS_3;
             }
 
             if (self->stateTimer > 239)
@@ -4006,6 +4032,7 @@ void mg_updateBossSeverYagata(mgEntity_t* self)
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
     {
         self->gameData->pauseCountdown = true;
+        self->spriteIndex = MG_SP_BOSS_6;
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         if (self->gameData->level == 6)
         {
