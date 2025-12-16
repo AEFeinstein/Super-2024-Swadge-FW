@@ -878,26 +878,32 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
         drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOTTOM_BIGMA], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION);
 
         int8_t hp = platformer->entityManager.bossEntity->hp;
+        bool isOdd = hp % 2;
 
-        if (hp > 30)
+        if (hp > 60)
         {
-            hp = 30;
+            hp = 60;
         }
 
         for (uint8_t i = 0; i < 4; i++)
         {
-            if (hp > 6)
+            if (hp > 12)
             {
                 drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_6], 256,
                             MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i * 16));
             }
             else
             {
-                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_0 + hp], 256,
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_0 + hp/2], 256,
                             MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i * 16));
+                if(isOdd && platformer->entityManager.bossEntity->hp > i * 12 && platformer->entityManager.bossEntity->hp < (i+1) * 12)
+                {
+                    drawLineFast(261, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - ((i-1) * 16) - ((hp/2)%6)*2, 266, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - ((i-1) * 16) - ((hp/2)%6)*2, c500);
+                    drawLineFast(263, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - ((i-1) * 16) - ((hp/2)%6)*2, 264, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - ((i-1) * 16) - ((hp/2)%6)*2, c534);
+                }
             }
 
-            hp -= 6;
+            hp -= 12;
 
             if (hp < 0)
             {
@@ -905,15 +911,20 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
             }
         }
 
-        if (hp == 6)
+        if (hp == 12)
         {
             drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_6], 256,
                         MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4 * 16));
         }
         else
         {
-            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_0 + hp], 256,
+            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_0 + hp/2], 256,
                         MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4 * 16));
+            if(isOdd && platformer->entityManager.bossEntity->hp > 4*12)
+            {
+                drawLineFast(261, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - (6 * 16) - ((hp/2)%6)*2, 266, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - (3 * 16) - ((hp/2)%6)*2, c500);
+                drawLineFast(263, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - (6 * 16) - ((hp/2)%6)*2, 264, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - (3 * 16) - ((hp/2)%6)*2, c534);
+            }
         }
     }
 
