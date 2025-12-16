@@ -140,11 +140,6 @@ typedef struct __attribute__((packed)) swadgePassPacket
         swadgesonaCore_t core;
     } swadgesona;
 
-<<<<<<< Updated upstream
-    struct
-    {
-        packedProfile_t profile;
-=======
     struct {
         uint8_t cardSelect;
         uint8_t fact0;
@@ -153,7 +148,6 @@ typedef struct __attribute__((packed)) swadgePassPacket
         uint8_t numPasses;
         uint32_t latestTrophyIdx;
         uint16_t points;
->>>>>>> Stashed changes
     } atrium;
 } swadgePassPacket_t;
 

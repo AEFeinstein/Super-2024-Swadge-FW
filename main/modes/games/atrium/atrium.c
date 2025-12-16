@@ -22,7 +22,7 @@
 #define CARDTEXTPAD 4
 /* #define TEXTBOX1WIDTH 156
 #define TEXTBOX2WIDTH 172 */
-#define SONALOC_X 24
+// #define SONALOC_X 24
 #define SONALOC_Y 36
 
 #define ATRIUM_PROFILE_NVS_NAMESPACE "atrium"
@@ -63,6 +63,8 @@ static const cnfsFileIdx_t fontsIdxs[] = {
 };
 
 const char atriumModeName[] = "Atrium";
+
+const char ATR_TAG[] = "ATR";
 
 // Strings
 /*
@@ -160,11 +162,11 @@ typedef enum
 
 typedef struct
 {
-    int cardSelect; 
-    int fact0;
-    int fact1;
-    int fact2;
-    int numPasses;      // Number of other unique passes encountered
+    int32_t cardSelect; 
+    int32_t fact0;
+    int32_t fact1;
+    int32_t fact2;
+    int32_t numPasses;      // Number of other unique passes encountered
     swadgesona_t swsn; // Swadgesona data
     uint32_t latestTrophyIdx;
     uint32_t points;
@@ -223,7 +225,7 @@ typedef struct
 
     // trophy data
     const trophyData_t* latestTrophy;
-    int points;
+    int32_t points;
 
     // SwadgePass Profile
     userProfile_t spProfile;
@@ -405,7 +407,7 @@ static void atriumEnterMode(void)
     atr->totalPages    = (atr->numRemoteSwsn / SONA_PER) + ((atr->numRemoteSwsn % SONA_PER) ? 1 : 0);
     atr->remSwsn = atr->numRemoteSwsn % SONA_PER;
 
-    printf("Num remote swsn: %d, total pages: %d\n", atr->numRemoteSwsn, atr->totalPages);
+    ESP_LOGI(ATR_TAG, "Num remote swsn: %d, total pages: %d\n", atr->numRemoteSwsn, atr->totalPages);
 
     // BGM
     atr->player       = globalMidiPlayerGet(MIDI_BGM);
@@ -698,8 +700,8 @@ static void editProfile(buttonEvt_t* evt)
 
 static void viewProfile(buttonEvt_t* evt)
 {
-    printf("Viewing profile %d on page %d\n", atr->selection, atr->page);
-    printf("sonas name is %s\n", atr->sonaList[atr->page * SONA_PER + atr->selection].swsn.name.nameBuffer);
+    ESP_LOGI(ATR_TAG, "Viewing profile %d on page %d\n", atr->selection, atr->page);
+    ESP_LOGI(ATR_TAG, "sonas name is %s\n", atr->sonaList[atr->page * SONA_PER + atr->selection].swsn.name.nameBuffer);
     drawCard(atr->sonaList[atr->page * SONA_PER + atr->selection], false); // draw selected profile
 
     while (checkButtonQueueWrapper(evt))
@@ -907,12 +909,12 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
             
         }
         atr->loadedProfs = false; // reset loaded profiles to load new ones
-        printf("Page changed from %d to %d, resetting loadedProfs\n", atr->lastPage, page);
+        ESP_LOGI(ATR_TAG, "Page changed from %d to %d, resetting loadedProfs\n", atr->lastPage, page);
     }
 
     // Draw sonas
-    printf("Drawing sonas for page %d and the remainder is %d\n", page, atr->remSwsn);
-    printf("Total pages: %d\n", atr->totalPages);
+    ESP_LOGI(ATR_TAG, "Drawing sonas for page %d and the remainder is %d\n", page, atr->remSwsn);
+    ESP_LOGI(ATR_TAG, "Total pages: %d\n", atr->totalPages);
     
     int sonas;
 
@@ -945,13 +947,13 @@ static void drawArrows(bool left, bool right, bool up, bool down)
 static void drawCard(userProfile_t profile, bool local)
 {
         if(!profile.cardSelect){
-        printf("No profile found, using default\n");
+        ESP_LOGI(ATR_TAG, "No profile found, using default\n");
         profile.cardSelect = 0;
         profile.fact0 = 0;
         profile.fact1 = 0;
         profile.fact2 = 0;
     }
-        printf("Drawing card with cardSelect %d, fact0 %d, fact1 %d, fact2 %d\n", profile.cardSelect,
+        ESP_LOGI(ATR_TAG, "Drawing card with cardSelect %"PRId32", fact0 %"PRId32", fact1 %"PRId32", fact2 %"PRId32"\n", profile.cardSelect,
            profile.fact0, profile.fact1, profile.fact2);
     // concat card info
     // line 1: fact0
@@ -1003,7 +1005,7 @@ static void drawCard(userProfile_t profile, bool local)
     drawText(&atr->fonts[0], c000, atr->latestTrophy->title, 24 + CARDTEXTPAD, 138); // draw latest trophy title TODO: marquee
     drawText(&atr->fonts[0], c000, "Points:", 24 + CARDTEXTPAD, 150);                
     char buf[sizeof(&atr->points) + 1];
-    snprintf(buf, sizeof(buf), "%d", atr->points);
+    snprintf(buf, sizeof(buf), "%"PRId32, atr->points);
     drawText(&atr->fonts[0], c000, buf, 65 + CARDTEXTPAD, 150);  // draw latest trophy desc
     drawWsgSimple(&atr->uiElements[16], 212, 124 + CARDTEXTPAD); // draw trophy image
 }
@@ -1132,14 +1134,14 @@ void loadProfiles(int maxProfiles, int page)
     }
     
     else {
-        printf("Loading profiles: maxProfiles=%d, page=%d\n", maxProfiles, page);
+        ESP_LOGI(ATR_TAG, "Loading profiles: maxProfiles=%d, page=%d\n", maxProfiles, page);
         for (int i=0; i<maxProfiles; i++){
             if (atr->sonaList[page * 4 + i].swsn.image.w != 0)
             {
                 freeWsg(&atr->sonaList[page * 4 + i].swsn.image);
             }
             generateSwadgesonaImage(&atr->sonaList[page * 4 + i].swsn,false);
-            printf("Loaded profile %d for page %d\n", page * 4 + i, page);
+            ESP_LOGI(ATR_TAG, "Loaded profile %d for page %d\n", page * 4 + i, page);
         }
         atr->loadedProfs = true; // mark as loaded
     }
@@ -1156,7 +1158,7 @@ const trophyData_t* getTrophy(void)
 
 userProfile_t loadProfileFromNVS(void)
 {
-    printf("Loading profile from NVS\n");
+    ESP_LOGI(ATR_TAG, "Loading profile from NVS\n");
 
     userProfile_t loadedProfile;
     if (!readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_CARDKEY, &loadedProfile.cardSelect))
@@ -1172,7 +1174,7 @@ userProfile_t loadProfileFromNVS(void)
         writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_FACT1KEY, loadedProfile.fact1);
         writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_FACT2KEY, loadedProfile.fact2);
         writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_NUMPASSESKEY, loadedProfile.numPasses);
-        printf("Wrote random profile to NVS\n");
+        ESP_LOGI(ATR_TAG, "Wrote random profile to NVS\n");
     }
 
     
@@ -1181,10 +1183,10 @@ userProfile_t loadProfileFromNVS(void)
     readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_FACT1KEY, &loadedProfile.fact1);
     readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_FACT2KEY, &loadedProfile.fact2);
 
-    printf("Loaded local swadgesona data\n");
+    ESP_LOGI(ATR_TAG, "Loaded local swadgesona data\n");
     loadedProfile.numPasses = atr->numRemoteSwsn; // update number of passes each time
     writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_NUMPASSESKEY, loadedProfile.numPasses);
-    printf("Profile loaded from NVS: cardSelect=%d, fact0=%d, fact1=%d, fact2=%d, numPasses=%d\n",
+    ESP_LOGI(ATR_TAG, "Profile loaded from NVS: cardSelect=%"PRId32", fact0=%"PRId32", fact1=%"PRId32", fact2=%"PRId32", numPasses=%"PRId32"\n",
            loadedProfile.cardSelect, loadedProfile.fact0, loadedProfile.fact1,
            loadedProfile.fact2, loadedProfile.numPasses);
 
