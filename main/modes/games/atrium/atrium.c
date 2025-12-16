@@ -24,14 +24,14 @@
 #define CARDTEXTPAD 4
 /* #define TEXTBOX1WIDTH 156
 #define TEXTBOX2WIDTH 172 */
-#define SONALOC_X 24
+// #define SONALOC_X 24
 #define SONALOC_Y 36
 
 #define ATRIUM_PROFILE_NVS_NAMESPACE "atrium"
-#define PROFKEY                      "atrprof"
+// #define PROFKEY                      "atrprof"
 // #define SPSONA_NVS_KEY               "spSona"
-#define TROPHY_NVS_NAMESPACE  "trophy"
-#define TROPHY_LATEST_NVS_KEY "latest"
+#define TROPHY_NVS_NAMESPACE "trophy"
+// #define TROPHY_LATEST_NVS_KEY "latest"
 #define TROPHY_POINTS_NVS_KEY "points"
 #define ATRIUM_CARDKEY        "cardSelect"
 #define ATRIUM_FACT0KEY       "fact0"
@@ -421,7 +421,7 @@ static void atriumEnterMode(void)
         if (!isPacketUsedByMode(spd, &atriumMode))
         {
             // Print some packet data
-            ESP_LOGI("SP", "Receive from %s. Preamble is %d", spd->key, spd->data.packet.preamble);
+            ESP_LOGI("SP", "Receive from %s. Preamble is %" PRIu16, spd->key, spd->data.packet.preamble);
 
             // Mark the packet as used
             setPacketUsedByMode(spd, &atriumMode, true);
@@ -691,10 +691,12 @@ static void editProfile(buttonEvt_t* evt)
                     atr->spProfile.numPasses  = atr->loadedProfile.numPasses;
                     // atr->spProfile.latestTrophyIdx = atr->latestTrophyIdx;
                     atr->spProfile.points = atr->loadedProfile.points;
-                    ESP_LOGI(ATR_TAG, "swadgepass profile saved: card %d, fact0 %d, fact1 %d, fact2 %d, numPasses %d",
+                    ESP_LOGI(ATR_TAG,
+                             "swadgepass profile saved: card %" PRId32 ", fact0 %" PRId32 ", fact1 %" PRId32
+                             ", fact2 %" PRId32 ", numPasses %" PRId32 "",
                              atr->spProfile.cardSelect, atr->spProfile.fact0, atr->spProfile.fact1,
                              atr->spProfile.fact2, atr->spProfile.numPasses);
-                    ESP_LOGI(ATR_TAG, "latest points: %d", atr->spProfile.points);
+                    ESP_LOGI(ATR_TAG, "latest points: %" PRId32 "", atr->spProfile.points);
                 }
             }
             if (evt->button & PB_UP)
@@ -728,7 +730,7 @@ static void editProfile(buttonEvt_t* evt)
 
 static void viewProfile(buttonEvt_t* evt)
 {
-    ESP_LOGI(ATR_TAG, "Viewing profile %d on page %d", atr->selection, atr->page);
+    ESP_LOGI(ATR_TAG, "Viewing profile %d on page %" PRId8, atr->selection, atr->page);
     ESP_LOGI(ATR_TAG, "sonas name is %s", atr->sonaList[atr->page * SONA_PER + atr->selection].swsn.name.nameBuffer);
     drawCard(atr->sonaList[atr->page * SONA_PER + atr->selection], false); // draw selected profile
 
@@ -909,12 +911,12 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
         }
         atr->loadedProfs = false; // reset loaded profiles to load new ones
 
-        ESP_LOGI(ATR_TAG, "Page changed from %d to %d, resetting loadedProfs", atr->lastPage, page);
+        ESP_LOGI(ATR_TAG, "Page changed from %" PRId8 " to %" PRId8 ", resetting loadedProfs", atr->lastPage, page);
     }
 
     // Draw sonas
-    ESP_LOGI(ATR_TAG, "Drawing sonas for page %d and the remainder is %d", page, atr->remSwsn);
-    ESP_LOGI(ATR_TAG, "Total pages: %d", atr->totalPages);
+    ESP_LOGI(ATR_TAG, "Drawing sonas for page %" PRId8 " and the remainder is %" PRId8, page, atr->remSwsn);
+    ESP_LOGI(ATR_TAG, "Total pages: %" PRId8, atr->totalPages);
 
     int sonas;
 
@@ -1028,7 +1030,7 @@ static void drawCard(userProfile_t profile, bool local)
     drawText(&atr->fonts[0], c000, buf, 120 + CARDTEXTPAD, 126);                  // draw points
     drawText(&atr->fonts[0], c000, "Swadgepasses Found:", 24 + CARDTEXTPAD, 150); // draw points
     char buf1[5];
-    snprintf(buf1, sizeof(buf1), "%" PRId8, profile.numPasses);
+    snprintf(buf1, sizeof(buf1), "%" PRId32, profile.numPasses);
     drawText(&atr->fonts[0], c000, buf1, 155 + CARDTEXTPAD, 150); // draw numpasses
 
     // drawWsgSimple(&atr->uiElements[16], 212, 124 + CARDTEXTPAD); // draw trophy image  TODO:something else here?
