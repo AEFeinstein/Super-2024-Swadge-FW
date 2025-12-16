@@ -27,6 +27,14 @@ typedef struct
     paletteColor_t background;
     wsg_t pointer;
 
+    midiFile_t bgm_fast;
+    midiFile_t bgm_med;
+    midiFile_t bgm_slow;
+    midiFile_t bgm_zen;
+    midiFile_t right;
+    midiFile_t wrong;
+    midiFile_t die;
+
     wsg_t faces[7];
     int64_t timer;
     int64_t score;
@@ -39,6 +47,8 @@ typedef struct
     bool pointingLeft;
     bool pointingUp;
     bool pointingDown;
+
+    bool ZenMode;
 
     int32_t millisInstructing;
     bool displayingScore;
@@ -192,6 +202,18 @@ static void findingEnterMode(void)
     loadWsg(FINDER_PULSE_WSG, &finder->faces[5], true);
     loadWsg(FINDER_SAWTOOTH_WSG, &finder->faces[6], true);
 
+    initGlobalMidiPlayer();
+    loadMidiFile(FINDER_BGM_FAST_MID, &finder->bgm_fast, true);
+    loadMidiFile(FINDER_BGM_MED_MID, &finder->bgm_med, true);
+    loadMidiFile(FINDER_BGM_SLOW_MID, &finder->bgm_slow, true);
+    loadMidiFile(FINDER_BGM_ZEN_MID, &finder->bgm_zen, true);
+    loadMidiFile(FINDER_RIGHT_MID, &finder->right, true);
+    loadMidiFile(FINDER_WRONGER_MID, &finder->wrong, true);
+    loadMidiFile(FINDER_DIE_MID, &finder->die, true);
+    globalMidiPlayerPlaySong(&finder->bgm_med, MIDI_BGM);
+    globalMidiPlayerGet(MIDI_BGM)->loop = true;
+    
+
     //Load all faces
     finder->faceList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
 
@@ -224,6 +246,7 @@ static void findingMainLoop(int64_t elapsedUs)
         finder->timer -= elapsedUs;
         if(finder->timer < 0){
             finder->displayingScore = true;
+            globalMidiPlayerPlaySong(&finder->bgm_zen, MIDI_BGM);
         }
         //Move the pointer
         if(finder->pointingUp)
@@ -323,9 +346,11 @@ static void findingMainLoop(int64_t elapsedUs)
                 }
                 case PB_A:
                 {
+                    //change music track
                     if(finder->millisInstructing>0){
                         finder->millisInstructing=0;
                     }else if(finder->displayingScore){
+                        globalMidiPlayerPlaySong(&finder->bgm_fast, MIDI_BGM);
                         finder->displayingScore = false;
                         finder->score = 0;
                         finder->timer = StartTime;
@@ -341,19 +366,33 @@ static void findingMainLoop(int64_t elapsedUs)
                         node_t* firstNode = finder->faceList->first;
                         face_t* firstFace = (face_t*)firstNode->val;
                         //The pointer coords should be as close to the face coords + [32,32] as possible
-                        if(  abs( firstFace->pos.x/MillisPerPixel +32 - finder->pointerCoords.x/MillisPerPixel) < 30
-                          && abs( firstFace->pos.y/MillisPerPixel +32 - finder->pointerCoords.y/MillisPerPixel) < 30){
+                        if(  abs( firstFace->pos.x/MillisPerPixel +32 - finder->pointerCoords.x/MillisPerPixel) < 22
+                          && abs( firstFace->pos.y/MillisPerPixel +32 - finder->pointerCoords.y/MillisPerPixel) < 22){
                             //We have found the face!
+                            globalMidiPlayerPlaySong(&finder->right, MIDI_SFX);
                             finder->stage++;
+                            
+                            finder->score += finder->timer;
+                            finder->timer += TimePerLevel;
+                            finder->millisInstructing = TimePerInstruction;
                             for(int i=0; i<facesPerLevel; i++){
                                 addNewFace(finder);
                             }
                             
                             randomizeFaces(finder);
-                            finder->score += finder->timer;
-                            finder->timer += TimePerLevel;
-                            finder->millisInstructing = TimePerInstruction;
+
+                            if(finder->timer > 1000){
+                                globalMidiPlayerPlaySong(&finder->bgm_zen, MIDI_SFX);
+                            }else if(finder->timer > 150){
+                                globalMidiPlayerPlaySong(&finder->bgm_slow, MIDI_SFX);
+                            }else if(finder->timer > 30){
+                                globalMidiPlayerPlaySong(&finder->bgm_med, MIDI_SFX);
+                            }else{
+                                globalMidiPlayerPlaySong(&finder->bgm_fast, MIDI_SFX);
+                            }
                         }else{
+                            //This was the wrong face
+                            globalMidiPlayerPlaySong(&finder->wrong, MIDI_SFX);
                             finder->timer -= PenaltyMillis;
                         }
                     }
@@ -362,7 +401,11 @@ static void findingMainLoop(int64_t elapsedUs)
                 }
                 case PB_START:
                 {
-                    finder->millisInstructing = 1000000000; //Lets you pause for 1000 seconds to refresh your memory on who you're finding
+                    if(finder->millisInstructing <= 0){
+                        finder->millisInstructing = 1000000000; //Lets you pause for 1000 seconds to refresh your memory on who you're finding
+                    }else{
+                        finder->timer += 10000000;
+                    }
                 }
             }
         }else{
