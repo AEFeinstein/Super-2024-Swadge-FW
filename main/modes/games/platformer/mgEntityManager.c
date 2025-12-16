@@ -2266,7 +2266,7 @@ mgEntity_t* createBossKineticDonut(mgEntityManager_t* entityManager, uint16_t x,
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
-    entity->hp                   = 60;
+    entity->hp                   = 30;
 
     entity->type                 = ENTITY_BOSS_KINETIC_DONUT;
     entity->spriteIndex          = MG_SP_BOSS_0;
