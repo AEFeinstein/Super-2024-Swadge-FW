@@ -1090,6 +1090,7 @@ void despawnWhenOffscreen(mgEntity_t* self)
     if (TO_PIXEL_COORDS(self->x) < (self->tilemap->mapOffsetX - DESPAWN_THRESHOLD)
         || TO_PIXEL_COORDS(self->x) > (self->tilemap->mapOffsetX + MG_TILEMAP_DISPLAY_WIDTH_PIXELS + DESPAWN_THRESHOLD))
     {
+        mg_bossRushLogic(self);
         mg_destroyEntity(self, true);
     }
 
@@ -1102,84 +1103,83 @@ void despawnWhenOffscreen(mgEntity_t* self)
         || TO_PIXEL_COORDS(self->y)
                > (self->tilemap->mapOffsetY + MG_TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD))
     {
+        mg_bossRushLogic(self);
         mg_destroyEntity(self, true);
     }
+}
 
+void mg_bossRushLogic(mgEntity_t* self)
+{
     //boss rush logic
-    if(self->gameData->level == 11)
+    if(self->gameData->level != 11)
     {
-        bool isABoss = false;
-        uint8_t nextBoss = 0;
-        uint8_t nextLevel = 0;
-        
-        if(self->type == ENTITY_BOSS_KINETIC_DONUT)
-        {
-            isABoss = true;
-            nextBoss = ENTITY_BOSS_GRIND_PANGOLIN;
-            nextLevel = 2;
-        }
-        else if(self->type == ENTITY_BOSS_GRIND_PANGOLIN)
-        {
-            isABoss = true;
-            nextBoss = ENTITY_BOSS_SEVER_YAGATA;
-            nextLevel = 3;
-        }
-        else if(self->type == ENTITY_BOSS_SEVER_YAGATA)
-        {
-            isABoss = true;
-            nextBoss = ENTITY_BOSS_TRASH_MAN;
-            nextLevel = 4;
-        }
-        else if(self->type == ENTITY_BOSS_TRASH_MAN)
-        {
-            isABoss = true;
-            nextBoss = ENTITY_BOSS_SMASH_GORILLA;
-            nextLevel = 6;
-        }
-        else if(self->type == ENTITY_BOSS_SMASH_GORILLA)
-        {
-            isABoss = true;
-            nextBoss = ENTITY_BOSS_DEADEYE_CHIRPZI;
-            nextLevel = 7;
-        }
-        else if(self->type == ENTITY_BOSS_DEADEYE_CHIRPZI)
-        {
-            isABoss = true;
-            nextBoss = ENTITY_BOSS_DRAIN_BAT;
-            nextLevel = 8;
-        }
-        else if(self->type == ENTITY_BOSS_DRAIN_BAT)
-        {
-            isABoss = true;
-            nextBoss = ENTITY_BOSS_FLARE_GRYFFYN;
-            nextLevel = 9;
-        }
-        else if(self->type == ENTITY_BOSS_FLARE_GRYFFYN)
-        {
-            isABoss = true;
-            nextBoss = 0;
-            nextLevel = 0;
-        }
-        
-        if(isABoss)
-        {
-            mg_loadWsgSet((self->entityManager->wsgManager), leveldef[nextLevel].defaultWsgSetIndex);
-            mg_loadMapFromFile((self->entityManager->tilemap), leveldef[nextLevel].filename,
-                            self->entityManager);
-            if(nextBoss > 0)
-            {
-                mg_setBgm(self->soundManager, leveldef[nextLevel].bossBgmIndex);
-                soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
-                mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX, self->entityManager->bossSpawnY);
-            }
-            else
-            {
-                self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
-                mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
-                soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
-            }
-        }   
+        return;
     }
+    bool isABoss = false;
+    uint8_t nextBoss = 0;
+    uint8_t nextLevel = 0;
+
+    isABoss = self->spriteFlipVertical;
+    
+    if(leveldef[self->gameData->level].defaultWsgSetIndex == MG_WSGSET_KINETIC_DONUT)
+    {
+        nextBoss = ENTITY_BOSS_GRIND_PANGOLIN;
+        nextLevel = 2;
+    }
+    else if(leveldef[self->gameData->level].defaultWsgSetIndex == MG_WSGSET_GRIND_PANGOLIN)
+    {
+        nextBoss = ENTITY_BOSS_SEVER_YAGATA;
+        nextLevel = 3;
+    }
+    else if(leveldef[self->gameData->level].defaultWsgSetIndex == MG_WSGSET_SEVER_YATAGA)
+    {
+        nextBoss = ENTITY_BOSS_TRASH_MAN;
+        nextLevel = 4;
+    }
+    else if(leveldef[self->gameData->level].defaultWsgSetIndex == MG_WSGSET_TRASH_MAN)
+    {
+        nextBoss = ENTITY_BOSS_SMASH_GORILLA;
+        nextLevel = 6;
+    }
+    else if(leveldef[self->gameData->level].defaultWsgSetIndex == MG_WSGSET_SMASH_GORILLA)
+    {
+        nextBoss = ENTITY_BOSS_DEADEYE_CHIRPZI;
+        nextLevel = 7;
+    }
+    else if(leveldef[self->gameData->level].defaultWsgSetIndex == MG_WSGSET_DEADEYE_CHIRPZI)
+    {
+        nextBoss = ENTITY_BOSS_DRAIN_BAT;
+        nextLevel = 8;
+    }
+    else if(leveldef[self->gameData->level].defaultWsgSetIndex == MG_WSGSET_DRAIN_BAT)
+    {
+        nextBoss = ENTITY_BOSS_FLARE_GRYFFYN;
+        nextLevel = 9;
+    }
+    else if(leveldef[self->gameData->level].defaultWsgSetIndex == MG_WSGSET_FLARE_GRYFFYN)
+    {
+        nextBoss = 0;
+        nextLevel = 0;
+    }
+    
+    if(isABoss)
+    {
+        mg_loadWsgSet((self->entityManager->wsgManager), leveldef[nextLevel].defaultWsgSetIndex);
+        mg_loadMapFromFile((self->entityManager->tilemap), leveldef[11].filename,
+                        self->entityManager);
+        if(nextBoss > 0)
+        {
+            mg_setBgm(self->soundManager, leveldef[nextLevel].bossBgmIndex);
+            soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+            mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX, self->entityManager->bossSpawnY);
+        }
+        else
+        {
+            self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+            mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
+            soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+        }
+    }   
 }
 
 void mg_destroyEntity(mgEntity_t* self, bool respawn)
@@ -4059,6 +4059,7 @@ void mg_updateBossSeverYagata(mgEntity_t* self)
             startOutroCutscene(self);
         }
     }
+    despawnWhenOffscreen(self);
 }
 
 void mg_updateBossSmashGorilla(mgEntity_t* self)
@@ -4287,6 +4288,7 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
         }
         startOutroCutscene(self);
     }
+    despawnWhenOffscreen(self);
 }
 
 void mg_updateBossGrindPangolin(mgEntity_t* self)
@@ -4429,6 +4431,7 @@ void mg_updateBossGrindPangolin(mgEntity_t* self)
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
     }
+    despawnWhenOffscreen(self);
 }
 
 void mg_updateBossDrainBat(mgEntity_t* self)
@@ -4577,6 +4580,7 @@ void mg_updateBossDrainBat(mgEntity_t* self)
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
     }
+    despawnWhenOffscreen(self);
 }
 
 void mg_updateBossKineticDonut(mgEntity_t* self)
@@ -4737,6 +4741,7 @@ void mg_updateBossKineticDonut(mgEntity_t* self)
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
     }
+    despawnWhenOffscreen(self);
 }
 
 void mg_updateBossTrashMan(mgEntity_t* self)
@@ -4807,6 +4812,7 @@ void mg_updateBossTrashMan(mgEntity_t* self)
             startOutroCutscene(self);
         }
     }
+    despawnWhenOffscreen(self);
 }
 
 void mg_updateBossFlareGryffyn(mgEntity_t* self)
@@ -4955,6 +4961,7 @@ void mg_updateBossFlareGryffyn(mgEntity_t* self)
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
     }
+    despawnWhenOffscreen(self);
 }
 
 void mg_updateBossDeadeyeChirpzi(mgEntity_t* self)
@@ -5103,6 +5110,7 @@ void mg_updateBossDeadeyeChirpzi(mgEntity_t* self)
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
     }
+    despawnWhenOffscreen(self);
 }
 
 void mg_updateBossBigma(mgEntity_t* self)
@@ -5251,6 +5259,7 @@ void mg_updateBossBigma(mgEntity_t* self)
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
     }
+    despawnWhenOffscreen(self);
 }
 
 void mg_updateBossHankWaddle(mgEntity_t* self)
@@ -5399,6 +5408,7 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
     }
+    despawnWhenOffscreen(self);
 }
 
 void startOutroCutscene(mgEntity_t* self)

@@ -208,6 +208,8 @@ void mg_playerFallOffTileHandler(mgEntity_t* self);
 
 void despawnWhenOffscreen(mgEntity_t* self);
 
+void mg_bossRushLogic(mgEntity_t* self);
+
 void mg_destroyEntity(mgEntity_t* self, bool respawn);
 
 void applyDamping(mgEntity_t* self);
