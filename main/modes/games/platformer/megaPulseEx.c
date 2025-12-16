@@ -524,7 +524,7 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
 
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
 
-            platformer->gameData.level = 11;
+            platformer->gameData.level = 10;
             mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
             mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename,
                                &platformer->entityManager);
@@ -551,10 +551,10 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
 
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
 
-            // if the 11th level (intro level) isn't cleared
-            if (!(platformer->unlockables.levelsCleared & (1 << 11)))
+            // if the 10th level (intro level) isn't cleared
+            if (!(platformer->unlockables.levelsCleared & (1 << 10)))
             {
-                platformer->gameData.level = 11;
+                platformer->gameData.level = 10;
                 mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
                 mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename,
                                    &platformer->entityManager);
@@ -589,7 +589,7 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
             writeNvs32(MG_abilitiesNVSKey, platformer->gameData.abilities);
             soundPlaySfx(&(platformer->soundManager.sndDie), MIDI_SFX);
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
-            platformer->gameData.level = 11;
+            platformer->gameData.level = 10;
             mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
             mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename,
                                &platformer->entityManager);
