@@ -66,7 +66,7 @@ const box_t box_drain_bat    = {.x0 = 13, .x1 = 47, .y0 = 16, .y1 = 47};
 
 const vec_t origin_kinetic_donut         = {.x = 21, .y = 25};
 const box_t box_kinetic_donut            = {.x0 = 5, .x1 = 37, .y0 = 16, .y1 = 45};
-const vec_t origin_kinetic_donut_dashing = {.x = 27, .y = 21};
+const vec_t origin_kinetic_donut_dashing = {.x = 27, .y = 17};
 const box_t box_kinetic_donut_dashing    = {.x0 = 4, .x1 = 54, .y0 = 7, .y1 = 42};
 
 const vec_t origin_flare_gryffyn      = {.x = 40, .y = 32};

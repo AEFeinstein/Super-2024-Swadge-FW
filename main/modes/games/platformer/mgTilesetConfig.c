@@ -450,12 +450,12 @@ const mgSprite_t mg_kineticDonutBossSpriteMetadataSet[] = {
     {
         .wsg    = NULL,
         .origin = &origin_kinetic_donut_dashing,
-        .hitBox = &box_kinetic_donut_dashing,
+        .hitBox = NULL,
     },
     {
         .wsg    = NULL,
         .origin = &origin_kinetic_donut_dashing,
-        .hitBox = &box_kinetic_donut_dashing,
+        .hitBox = NULL,
     },
     {
         .wsg    = NULL,
