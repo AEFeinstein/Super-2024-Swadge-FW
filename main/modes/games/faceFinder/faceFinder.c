@@ -4,7 +4,7 @@
 #include "faceFinder.h"
 #include <time.h>
 #include <math.h>
-// #include "mainMenu.h"
+#include "mainMenu.h"
 // #include "settingsManager.h"
 // #include "textEntry.h"
 
@@ -28,11 +28,14 @@ typedef struct
     paletteColor_t text;
     paletteColor_t background;
     wsg_t pointer;
+    menu_t* mainMenu;
+    menuMegaRenderer_t* renderer;
 
     midiFile_t bgm_fast;
     midiFile_t bgm_med;
     midiFile_t bgm_slow;
     midiFile_t bgm_zen;
+    int musicNum; //0=zen, 1=slow, 2=med, 3=fast
     midiFile_t right;
     midiFile_t wrong;
     midiFile_t die;
@@ -51,6 +54,8 @@ typedef struct
     bool pointingDown;
 
     bool ZenMode;
+    bool ShowMenu;
+    bool newGame;
 
     int32_t millisInstructing;
     bool displayingScore;
@@ -62,25 +67,31 @@ typedef struct
 
 static const char findingFacesModeName[] = "Mascot Madness";
 static const char GameOverText[]         = "Game over!";
+static const char TimeText[]             = "Time Attack Mode!";
+static const char ZenText[]              = "Zen Mode!";
+static const char ExitText[]              = "Exit!";
+static const char ZenScore[]             = "Zen :)";
 static const int32_t startingFaces       = 4;
 static const int32_t facesPerLevel       = 2;
-static const int32_t MaxStaticFaces      = 40;
+static const int32_t MaxStaticFaces      = 42;
 static const int32_t StartTime           = 10000000;
 static const int32_t TimePerLevel        = 5000000; // 20 seconds per stage, additive
 static const int32_t TimePerInstruction  = 4000000; // How long is each instruction page, with ability to be skipped
-static const int32_t MillisPerPixel = 7500; // How many milliseconds of "moving right" to move one pixel to the right
-static const int32_t DanceDurationMult = 200;
-static const int32_t PenaltyMillis     = 3000000; // Milliseconds penalized from the timer on a wrong click
+static const int32_t MillisPerPixel      = 6900; // How many milliseconds of "moving right" to move one pixel to the right
+static const int32_t DanceDurationMult   = 200;
+static const int32_t PenaltyMillis       = 3000000; // Milliseconds penalized from the timer on a wrong click
 
 //==============================================================================
 // Function Definitions
 //==============================================================================
 static void findingEnterMode(void);
 static void findingExitMode(void);
-static void findingMainLoop(int64_t elapsedUs);
+static void findingMainLoop(int64_t);
 static void randomizeFaces(finder_t*);
 static void addNewFace(finder_t*);
+static void startNewGame(finder_t*);
 static vec_t faceDance(void);
+bool finderMainMenuCb(const char*, bool, uint32_t);
 
 //==============================================================================
 // Variables
@@ -182,7 +193,55 @@ static vec_t faceDance()
         .y = 75 - (rand() % 150),
     };
 }
-
+static void startNewGame(finder_t* myFind){
+    if(myFind->ZenMode){
+        globalMidiPlayerPlaySong(&myFind->bgm_zen, MIDI_BGM);
+        myFind->musicNum = 0;
+    }else{
+        globalMidiPlayerPlaySong(&myFind->bgm_fast, MIDI_BGM);
+        myFind->musicNum = 3;
+    }
+    
+    myFind->displayingScore = false;
+    myFind->score           = 0;
+    myFind->timer           = StartTime;
+    myFind->stage           = 0;
+    clear(myFind->faceList);
+    for (int i = 0; i < startingFaces; i++)
+    {
+        addNewFace(myFind);
+    }
+    randomizeFaces(myFind);
+    myFind->millisInstructing = TimePerInstruction;
+}
+bool finderMainMenuCb(const char* label, bool selected, uint32_t value)
+{
+    if (selected)
+    {
+        if (label == TimeText)
+        {
+            if(finder->ZenMode){
+                finder->ZenMode = false;
+                startNewGame(finder);
+            }
+            
+        }else if (label == ZenText)
+        {
+            if(!finder->ZenMode){
+                finder->ZenMode = true;
+                startNewGame(finder);
+            }
+            
+        }else if (label == ExitText)
+        {
+            switchToSwadgeMode(&mainMenuMode);
+        }
+        finder->ShowMenu = false;
+        return true;
+    }else{
+        return false;
+    }
+}
 static void findingEnterMode(void)
 {
     srand(time(NULL));
@@ -202,8 +261,6 @@ static void findingEnterMode(void)
         .y = 0,
     };
 
-    initShapes();
-
     loadWsg(SWSN_POINTER_NO_GLOVE_NO_LOVE_WSG, &finder->pointer, true);
     loadWsg(FINDER_BATTRICE_WSG, &finder->faces[0], true);
     loadWsg(FINDER_BIGMA_WSG, &finder->faces[1], true);
@@ -213,7 +270,9 @@ static void findingEnterMode(void)
     loadWsg(FINDER_PULSE_WSG, &finder->faces[5], true);
     loadWsg(FINDER_SAWTOOTH_WSG, &finder->faces[6], true);
 
+    //Music things
     initGlobalMidiPlayer();
+
     loadMidiFile(FINDER_BGM_FAST_MID, &finder->bgm_fast, true);
     loadMidiFile(FINDER_BGM_MED_MID, &finder->bgm_med, true);
     loadMidiFile(FINDER_BGM_SLOW_MID, &finder->bgm_slow, true);
@@ -221,38 +280,148 @@ static void findingEnterMode(void)
     loadMidiFile(FINDER_RIGHT_MID, &finder->right, true);
     loadMidiFile(FINDER_WRONGER_MID, &finder->wrong, true);
     loadMidiFile(FINDER_DIE_MID, &finder->die, true);
-    globalMidiPlayerPlaySong(&finder->bgm_med, MIDI_BGM);
-    globalMidiPlayerGet(MIDI_BGM)->loop = true;
+
+    finder->mainMenu = initMenu(findingFacesModeName, finderMainMenuCb);
+    finder->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
+    addSingleItemToMenu(finder->mainMenu, TimeText);
+    addSingleItemToMenu(finder->mainMenu, ZenText);
+    addSingleItemToMenu(finder->mainMenu, ExitText);
+    finder->ShowMenu = true;
     
 
-    initGlobalMidiPlayer();
-    loadMidiFile(FINDER_BGM_FAST_MID, &finder->bgm_fast, true);
-    loadMidiFile(FINDER_BGM_MED_MID, &finder->bgm_med, true);
-    loadMidiFile(FINDER_BGM_SLOW_MID, &finder->bgm_slow, true);
-    loadMidiFile(FINDER_BGM_ZEN_MID, &finder->bgm_zen, true);
-    loadMidiFile(FINDER_RIGHT_MID, &finder->right, true);
-    loadMidiFile(FINDER_WRONGER_MID, &finder->wrong, true);
-    loadMidiFile(FINDER_DIE_MID, &finder->die, true);
-    globalMidiPlayerPlaySong(&finder->bgm_med, MIDI_BGM);
+    globalMidiPlayerPlaySong(&finder->bgm_fast, MIDI_BGM);
     globalMidiPlayerGet(MIDI_BGM)->loop = true;
+    finder->musicNum = 3;
     
     // Load all faces
     finder->faceList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
-
-    for (int i = 0; i < startingFaces; i++)
-    {
-        addNewFace(finder);
-    }
-
-    randomizeFaces(finder);
-
-    finder->millisInstructing = TimePerInstruction;
-    finder->displayingScore   = false;
+    startNewGame(finder);
 }
 static void findingMainLoop(int64_t elapsedUs)
 {
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down && !finder->ShowMenu)
+        {
+            switch (evt.button)
+            {
+                case PB_LEFT:
+                {
+                    finder->pointingLeft = true;
+                    break;
+                }
+                case PB_UP:
+                {
+                    finder->pointingUp = true;
+                    break;
+                }
+                case PB_RIGHT:
+                {
+                    finder->pointingRight = true;
+                    break;
+                }
+                case PB_DOWN:
+                {
+                    finder->pointingDown = true;
+                    break;
+                }
+                case PB_A:
+                {
+                    if(finder->millisInstructing > 0)
+                    {
+                        finder->millisInstructing = 0;
+                    }else if (finder->displayingScore)
+                    {
+                        finder->ShowMenu = true;
+                    }else
+                    {
+                        // Check if the pointer is on the first face
+                        node_t* firstNode = finder->faceList->first;
+                        face_t* firstFace = (face_t*)firstNode->val;
+                        //The pointer coords should be as close to the face coords + [32,32] as possible
+                        if(  abs( firstFace->pos.x/MillisPerPixel +32 - finder->pointerCoords.x/MillisPerPixel) < 22
+                          && abs( firstFace->pos.y/MillisPerPixel +32 - finder->pointerCoords.y/MillisPerPixel) < 22){
+                            //We have found the face!
+                            globalMidiPlayerPlaySong(&finder->right, MIDI_SFX);
+                            finder->stage++;
+                            
+                            if(!finder->ZenMode)
+                            {
+                                finder->score += finder->timer/1000000;
+                                finder->timer += TimePerLevel;
+                            }else{
+                                finder->score++;
+                            }
+                            finder->millisInstructing = TimePerInstruction;
+                            for(int i=0; i<facesPerLevel; i++){
+                                addNewFace(finder);
+                            }
+                            randomizeFaces(finder);
+                        }else{
+                            //This was the wrong face
+                            globalMidiPlayerPlaySong(&finder->wrong, MIDI_SFX);
+                            finder->timer -= PenaltyMillis;
+                        }
+                    }
+
+                    break;
+                }
+                case PB_B:
+                    finder->ShowMenu = true;
+                    break;
+                case PB_START:
+                {
+                    if(finder->millisInstructing <= 0){
+                        finder->millisInstructing = 1000000000; //Lets you pause for 1000 seconds to refresh your memory on who you're finding
+                    }else{
+                        finder->timer += 10000000;
+                    }
+                }
+            }
+        }
+        else if(evt.down && finder->ShowMenu){
+            finder->mainMenu = menuButton(finder->mainMenu, evt);
+        }else
+        {
+            // stop moving the pointer
+            switch (evt.button)
+            {
+                case PB_LEFT:
+                {
+                    finder->pointingLeft = false;
+                    break;
+                }
+                case PB_UP:
+                {
+                    finder->pointingUp = false;
+                    break;
+                }
+                case PB_RIGHT:
+                {
+                    finder->pointingRight = false;
+                    break;
+                }
+                case PB_DOWN:
+                {
+                    finder->pointingDown = false;
+                    break;
+                }
+            }
+        }
+    } // End button checking
+
     char outNums[32] = {0};
-    if (finder->millisInstructing > 0)
+    if (finder->ShowMenu){
+        drawMenuMega(finder->mainMenu, finder->renderer, elapsedUs);
+    }
+    else if (finder->displayingScore)
+    {
+        drawRectFilled(0, 0, 280, 240, c000);
+        drawText(finder->ibm, finder->text, GameOverText, 140 - textWidth(finder->ibm, GameOverText) / 2, 55);
+        snprintf(outNums, sizeof(outNums) - 1, "Final Score: %d", (int)finder->score);
+        drawText(finder->ibm, finder->text, outNums, 140 - textWidth(finder->ibm, outNums) / 2, 90);
+    }else if (finder->millisInstructing > 0)
     {
         // Draw an instruction screen
         drawRectFilled(0, 0, 280, 240, c000);
@@ -260,23 +429,55 @@ static void findingMainLoop(int64_t elapsedUs)
 
         drawWsgSimpleScaled(&finder->faces[0], 40, 60, 3, 3);
         finder->millisInstructing -= elapsedUs;
-    }
-    else if (finder->displayingScore)
-    {
-        drawRectFilled(0, 0, 280, 240, c000);
-        drawText(finder->ibm, finder->text, GameOverText, 140 - textWidth(finder->ibm, GameOverText) / 2, 55);
-        snprintf(outNums, sizeof(outNums) - 1, "Final Score: %d", (int)finder->score / 1000000);
-        drawText(finder->ibm, finder->text, outNums, 140 - textWidth(finder->ibm, outNums) / 2, 90);
-    }
-    else
+    }else
     {
         // Decrement the timer by the elapsed us
         finder->timer -= elapsedUs;
         if (finder->timer < 0)
         {
+            //check for game over, setting the music to zen mode if it is a game over
             finder->displayingScore = true;
+            finder->musicNum = 0;
             globalMidiPlayerPlaySong(&finder->bgm_zen, MIDI_BGM);
         }
+
+        //Change the music based on the current timer, ignoring tempo changes if we're already playing the current "correct" tempo
+        if(!finder->ZenMode){
+            switch (finder->musicNum)
+            {
+            case 1:
+                if(finder->timer < 150000000){
+                    finder->musicNum = 2;
+                    globalMidiPlayerPlaySong(&finder->bgm_med, MIDI_BGM);
+                }
+                break;
+            case 2:
+                if(finder->timer < 30000000){
+                    finder->musicNum = 3;
+                    globalMidiPlayerPlaySong(&finder->bgm_fast, MIDI_BGM);
+                }else if(finder->timer > 150000000){
+                    finder->musicNum = 1;
+                    globalMidiPlayerPlaySong(&finder->bgm_slow, MIDI_BGM);
+                }
+                break;
+            case 3:
+                if(finder->timer > 30000000){
+                    finder->musicNum = 2;
+                    globalMidiPlayerPlaySong(&finder->bgm_med, MIDI_BGM);
+                }
+                break;
+            
+            default:
+                break;
+            }
+        }else{
+            if(finder->musicNum != 0){
+                finder->musicNum = 0;
+                globalMidiPlayerPlaySong(&finder->bgm_zen, MIDI_BGM);
+            }
+            finder->timer = 1000000000; //Also make sure the player has 1000 seconds every frame, so they never ever die
+        }
+
         // Move the pointer
         if (finder->pointingUp)
         {
@@ -312,7 +513,7 @@ static void findingMainLoop(int64_t elapsedUs)
         }
 
         // Draw the screen
-        drawRectFilled(0, 0, 280, 240, c234); // background
+        drawRectFilled(0, 0, 280, 240, finder->background); // background
 
         node_t* currentNode = finder->faceList->first;
         int drawnFaces      = 0;
@@ -329,21 +530,26 @@ static void findingMainLoop(int64_t elapsedUs)
                 currentFace->movementSpeed = faceDance();
                 currentFace->danceDuration = (rand() % 32767) * DanceDurationMult;
             }
+            //If the current face is too far off the screen, turn them around and make sure they come back
             if (currentFace->pos.x < -60 * MillisPerPixel)
             {
-                currentFace->pos.x = 339 * MillisPerPixel;
+                currentFace->movementSpeed.x = -1 * currentFace->movementSpeed.x;
+                currentFace->danceDuration += 15000 * MillisPerPixel / currentFace->movementSpeed.x;
             }
             if (currentFace->pos.y < -60 * MillisPerPixel)
             {
-                currentFace->pos.y = 309 * MillisPerPixel;
+                currentFace->movementSpeed.y = -1 * currentFace->movementSpeed.y;
+                currentFace->danceDuration += 15000 * MillisPerPixel / currentFace->movementSpeed.y;
             }
             if (currentFace->pos.x > 339 * MillisPerPixel)
             {
-                currentFace->pos.x = -60 * MillisPerPixel;
+                currentFace->movementSpeed.x = -1 * currentFace->movementSpeed.x;
+                currentFace->danceDuration += 15000 * MillisPerPixel / currentFace->movementSpeed.x;
             }
             if (currentFace->pos.y > 309 * MillisPerPixel)
             {
-                currentFace->pos.y = -60 * MillisPerPixel;
+                currentFace->movementSpeed.y = -1 * currentFace->movementSpeed.y;
+                currentFace->danceDuration += 15000 * MillisPerPixel / currentFace->movementSpeed.y;
             }
 
             drawWsg(&finder->faces[currentFace->faceNum], currentFace->pos.x / MillisPerPixel,
@@ -357,146 +563,30 @@ static void findingMainLoop(int64_t elapsedUs)
             }
         }
 
-        // Draw current score and timer
-
-        snprintf(outNums, sizeof(outNums) - 1, "%d", (int)finder->score / 1000000);
+        //Check for zen mode before drawing score and timer
+        if(finder->ZenMode){
+            drawText(finder->ibm, finder->text, ZenScore, 140 - textWidth(finder->ibm, ZenScore) / 2, 8);
+        }else{
+            // Draw current score and timer
+            snprintf(outNums, sizeof(outNums) - 1, "%d", (int)finder->timer / 1000000);
+            drawText(finder->ibm, finder->text, outNums, 140 - textWidth(finder->ibm, outNums) / 2, 8);
+        }
+        snprintf(outNums, sizeof(outNums) - 1, "%d", (int)finder->score);
         drawText(finder->ibm, finder->text, outNums, 260 - textWidth(finder->ibm, outNums), 220);
-        snprintf(outNums, sizeof(outNums) - 1, "%d", (int)finder->timer / 1000000);
-        drawText(finder->ibm, finder->text, outNums, 140 - textWidth(finder->ibm, outNums) / 2, 8);
+        
 
         // Draw pointer. This should always be last so we don't get lost in the shuffle
         drawWsgSimpleScaled(&finder->pointer, finder->pointerCoords.x / MillisPerPixel,
                             finder->pointerCoords.y / MillisPerPixel, 2, 2);
     }
-
-    buttonEvt_t evt;
-    while (checkButtonQueueWrapper(&evt))
-    {
-        if (evt.down)
-        {
-            switch (evt.button)
-            {
-                case PB_LEFT:
-                {
-                    finder->pointingLeft = true;
-                    break;
-                }
-                case PB_UP:
-                {
-                    finder->pointingUp = true;
-                    break;
-                }
-                case PB_RIGHT:
-                {
-                    finder->pointingRight = true;
-                    break;
-                }
-                case PB_DOWN:
-                {
-                    finder->pointingDown = true;
-                    break;
-                }
-                case PB_A:
-                {
-                    if(finder->millisInstructing > 0)
-                    {
-                        finder->millisInstructing = 0;
-                    }else if (finder->displayingScore)
-                    {
-                        globalMidiPlayerPlaySong(&finder->bgm_fast, MIDI_BGM);
-                        finder->displayingScore = false;
-                        finder->score           = 0;
-                        finder->timer           = StartTime;
-                        finder->stage           = 0;
-                        clear(finder->faceList);
-                        for (int i = 0; i < startingFaces; i++)
-                        {
-                            addNewFace(finder);
-                        }
-                        randomizeFaces(finder);
-                        finder->millisInstructing = TimePerInstruction;
-                    }
-                    else
-                    {
-                        // Check if the pointer is on the first face
-                        node_t* firstNode = finder->faceList->first;
-                        face_t* firstFace = (face_t*)firstNode->val;
-                        //The pointer coords should be as close to the face coords + [32,32] as possible
-                        if(  abs( firstFace->pos.x/MillisPerPixel +32 - finder->pointerCoords.x/MillisPerPixel) < 22
-                          && abs( firstFace->pos.y/MillisPerPixel +32 - finder->pointerCoords.y/MillisPerPixel) < 22){
-                            //We have found the face!
-                            finder->stage++;
-                            
-                            finder->score += finder->timer;
-                            finder->timer += TimePerLevel;
-                            finder->millisInstructing = TimePerInstruction;
-                            for(int i=0; i<facesPerLevel; i++){
-                                addNewFace(finder);
-                            }
-
-                            randomizeFaces(finder);
-
-                            if(finder->timer > 1000){
-                                globalMidiPlayerPlaySong(&finder->bgm_zen, MIDI_SFX);
-                            }else if(finder->timer > 150){
-                                globalMidiPlayerPlaySong(&finder->bgm_slow, MIDI_SFX);
-                            }else if(finder->timer > 30){
-                                globalMidiPlayerPlaySong(&finder->bgm_med, MIDI_SFX);
-                            }else{
-                                globalMidiPlayerPlaySong(&finder->bgm_fast, MIDI_SFX);
-                            }
-                        }else{
-                            //This was the wrong face
-                            globalMidiPlayerPlaySong(&finder->wrong, MIDI_SFX);
-                            finder->timer -= PenaltyMillis;
-                        }
-                    }
-
-                    break;
-                }
-                case PB_START:
-                {
-                    if(finder->millisInstructing <= 0){
-                        finder->millisInstructing = 1000000000; //Lets you pause for 1000 seconds to refresh your memory on who you're finding
-                    }else{
-                        finder->timer += 10000000;
-                    }
-                }
-            }
-        }
-        else
-        {
-            // stop moving the pointer
-            switch (evt.button)
-            {
-                case PB_LEFT:
-                {
-                    finder->pointingLeft = false;
-                    break;
-                }
-                case PB_UP:
-                {
-                    finder->pointingUp = false;
-                    break;
-                }
-                case PB_RIGHT:
-                {
-                    finder->pointingRight = false;
-                    break;
-                }
-                case PB_DOWN:
-                {
-                    finder->pointingDown = false;
-                    break;
-                }
-            }
-        }
-    } // End button checking
+ 
 }
 static void findingExitMode(void)
 {
+    // Free the menu
+    deinitMenu(finder->mainMenu);
+    // Free the renderer
+    deinitMenuMegaRenderer(finder->renderer);
     clear(finder->faceList);
-    // heap_caps_free(finder->faceList);
-    // heap_caps_free(finder->ibm);
     heap_caps_free(finder);
 }
