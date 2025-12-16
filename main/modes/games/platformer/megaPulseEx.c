@@ -818,7 +818,7 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
     {
         drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOTTOM_ALPHA], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION);
 
-        int8_t hp = platformer->entityManager.playerEntity->hp;
+        int8_t hp  = platformer->entityManager.playerEntity->hp;
         bool isOdd = hp % 2;
 
         if (hp > 60)
@@ -826,27 +826,25 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
             hp = 60;
         }
 
-        int16_t draw_y;//y location used to draw health tiles.
-        int16_t pip_y;//y location used to draw half pips of health (at the top).
+        int16_t draw_y; // y location used to draw health tiles.
+        int16_t pip_y;  // y location used to draw half pips of health (at the top).
         for (uint8_t i = 0; i < 4; i++)
         {
             draw_y = MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i * 16);
             if (hp > 12)
             {
-                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_MIDDLE_6], 8,
-                            draw_y);
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_MIDDLE_6], 8, draw_y);
             }
             else
             {
-                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_MIDDLE_0 + hp/2], 8,
-                            draw_y);
-                if (isOdd && platformer->entityManager.playerEntity->hp > i * 12 && platformer->entityManager.playerEntity->hp < (i+1) * 12)
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_MIDDLE_0 + hp / 2], 8, draw_y);
+                if (isOdd && platformer->entityManager.playerEntity->hp > i * 12
+                    && platformer->entityManager.playerEntity->hp < (i + 1) * 12)
                 {
-                    pip_y = draw_y + 15 - ((hp/2)%6)*2;
+                    pip_y = draw_y + 15 - ((hp / 2) % 6) * 2;
                     drawLineFast(14, pip_y, 17, pip_y, c133);
                     drawLineFast(15, pip_y, 16, pip_y, c143);
                 }
-                            
             }
 
             hp -= 12;
@@ -857,19 +855,17 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
             }
         }
 
-        draw_y = MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 80; //same as MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4*16);
+        draw_y = MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 80; // same as MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4*16);
         if (hp == 12)
         {
-            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_6], 8,
-                        draw_y);
+            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_6], 8, draw_y);
         }
         else
         {
-            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_0 + hp/2], 8,
-                        draw_y);
-            if(isOdd && platformer->entityManager.playerEntity->hp > 48)//same as > 4 * 12
+            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_0 + hp / 2], 8, draw_y);
+            if (isOdd && platformer->entityManager.playerEntity->hp > 48) // same as > 4 * 12
             {
-                pip_y = draw_y + 15 - ((hp/2)%6)*2;
+                pip_y = draw_y + 15 - ((hp / 2) % 6) * 2;
                 drawLineFast(14, pip_y, 17, pip_y, c133);
                 drawLineFast(15, pip_y, 16, pip_y, c143);
             }
@@ -877,20 +873,20 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
 
         if (platformer->gameData.abilities & (1U << MG_CAN_OF_SALSA_ABILITY))
         {
-            draw_y = MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 97;//same as MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 1 - (6 * 16);
+            draw_y = MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION
+                     - 97; // same as MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 1 - (6 * 16);
             if (platformer->entityManager.playerEntity->hp < 61)
             {
-                drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_HP_CAN_OF_SALSA_0], 4,
-                              draw_y);
+                drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_HP_CAN_OF_SALSA_0], 4, draw_y);
             }
             else
             {
-                drawWsgSimple(&platformer->wsgManager
-                                   .wsgs[MG_WSG_HP_CAN_OF_SALSA_0 + (platformer->entityManager.playerEntity->hp - 60)/2],
+                drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_HP_CAN_OF_SALSA_0
+                                                           + (platformer->entityManager.playerEntity->hp - 60) / 2],
                               4, draw_y);
-                if(isOdd && platformer->entityManager.playerEntity->hp > 60)
+                if (isOdd && platformer->entityManager.playerEntity->hp > 60)
                 {
-                    pip_y = draw_y + 13 - ((platformer->entityManager.playerEntity->hp/2)%6)*2;
+                    pip_y = draw_y + 13 - ((platformer->entityManager.playerEntity->hp / 2) % 6) * 2;
                     drawLineFast(14, pip_y, 17, pip_y, c133);
                     drawLineFast(15, pip_y, 16, pip_y, c143);
                 }
@@ -902,7 +898,7 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
     {
         drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOTTOM_BIGMA], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION);
 
-        int8_t hp = platformer->entityManager.bossEntity->hp;
+        int8_t hp  = platformer->entityManager.bossEntity->hp;
         bool isOdd = hp % 2;
 
         if (hp > 60)
@@ -910,23 +906,22 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
             hp = 60;
         }
 
-        int16_t draw_y;//y location used to draw health tiles.
-        int16_t pip_y;//y location used to draw half pips of health (at the top).
+        int16_t draw_y; // y location used to draw health tiles.
+        int16_t pip_y;  // y location used to draw half pips of health (at the top).
         for (uint8_t i = 0; i < 4; i++)
         {
             draw_y = MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i * 16);
             if (hp > 12)
             {
-                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_6], 256,
-                            draw_y);
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_6], 256, draw_y);
             }
             else
             {
-                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_0 + hp/2], 256,
-                            draw_y);
-                if(isOdd && platformer->entityManager.bossEntity->hp > i * 12 && platformer->entityManager.bossEntity->hp < (i+1) * 12)
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_0 + hp / 2], 256, draw_y);
+                if (isOdd && platformer->entityManager.bossEntity->hp > i * 12
+                    && platformer->entityManager.bossEntity->hp < (i + 1) * 12)
                 {
-                    pip_y = draw_y + 15 - ((hp/2)%6)*2;
+                    pip_y = draw_y + 15 - ((hp / 2) % 6) * 2;
                     drawLineFast(262, pip_y, 265, pip_y, c321);
                     drawLineFast(263, pip_y, 264, pip_y, c441);
                 }
@@ -943,16 +938,14 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
         draw_y = MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4 * 16);
         if (hp == 12)
         {
-            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_6], 256,
-                        draw_y);
+            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_6], 256, draw_y);
         }
         else
         {
-            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_0 + hp/2], 256,
-                        draw_y);
-            if(isOdd && platformer->entityManager.bossEntity->hp > 4*12)
+            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_0 + hp / 2], 256, draw_y);
+            if (isOdd && platformer->entityManager.bossEntity->hp > 4 * 12)
             {
-                pip_y = draw_y + 15 - ((hp/2)%6)*2;
+                pip_y = draw_y + 15 - ((hp / 2) % 6) * 2;
                 drawLineFast(262, pip_y, 265, pip_y, c321);
                 drawLineFast(263, pip_y, 264, pip_y, c441);
             }
@@ -1214,6 +1207,15 @@ void changeStateGame(platformer_t* self)
         entityManager->playerEntity = entityManager->viewEntity;
         // entityManager->playerEntity->hp = self->gameData.initialHp;
         mg_viewFollowEntity(&(self->tilemap), entityManager->playerEntity);
+    }
+
+    // Tiled wouldn't let me export with a power-up so I'm doing this here to top off can of salsa at the start of boss
+    // rush and hank waddle
+    if (self->gameData.level == 11 || self->gameData.level == 21)
+    {
+        // Creates a power up just right of the player spawn
+        mg_createEntity(entityManager, ENTITY_POWERUP, playerSpawn->tx * 16 + playerSpawn->xOffsetInPixels + 50,
+                        playerSpawn->ty * 16 + playerSpawn->yOffsetInPixels + 8);
     }
 
     entityManager->bossEntity = NULL;

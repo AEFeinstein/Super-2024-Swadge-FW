@@ -79,13 +79,13 @@ void mg_deactivateAllEntities(mgEntityManager_t* entityManager, bool excludePlay
     }
 }
 
-void mg_deactivateAllBullets(mgEntityManager_t* entityManager)
+void mg_deactivateAllEntitiesOfType(mgEntityManager_t* entityManager, uint8_t type)
 {
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
         mgEntity_t* currentEntity = &(entityManager->entities[i]);
 
-        if (currentEntity->updateFunction != updateWaveBall)
+        if (currentEntity->type != type)
         {
             continue;
         }
@@ -388,10 +388,11 @@ mgEntity_t* mg_createPlayer(mgEntityManager_t* entityManager, uint16_t x, uint16
     entity->canDash            = true;
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle  = 0;
-    entity->hp                 = 60; // It got doubled as well as all damage taken doubled, until Plot Armor is obtained. Health from power up is now also doubled.
-    entity->animationTimer     = 0; // Used as a cooldown for shooting square wave balls
-    entity->shotsFired         = 0;
-    entity->shotLimit          = 3;
+    entity->hp = 60; // It got doubled as well as all damage taken doubled, until Plot Armor is obtained. Health from
+                     // power up is now also doubled.
+    entity->animationTimer = 0; // Used as a cooldown for shooting square wave balls
+    entity->shotsFired     = 0;
+    entity->shotLimit      = 3;
 
     entity->type                 = ENTITY_PLAYER;
     entity->spriteIndex          = MG_SP_PLAYER_IDLE;
