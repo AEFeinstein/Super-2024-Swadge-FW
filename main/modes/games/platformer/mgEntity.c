@@ -1119,44 +1119,45 @@ void mg_bossRushLogic(mgEntity_t* self)
     uint8_t nextBoss = 0;
     uint8_t nextLevel = 0;
 
-    isABoss = self->spriteFlipVertical;
+    isABoss = self->spriteFlipVertical && self->entityManager->wsgManager->sprites[self->spriteIndex].wsg->w > 30 && self->entityManager->wsgManager->sprites[self->spriteIndex].wsg->h > 30;
     
-    if(leveldef[self->gameData->level].defaultWsgSetIndex == MG_WSGSET_KINETIC_DONUT)
+    
+    if(self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_KINETIC_DONUT)
     {
         nextBoss = ENTITY_BOSS_GRIND_PANGOLIN;
         nextLevel = 2;
     }
-    else if(leveldef[self->gameData->level].defaultWsgSetIndex == MG_WSGSET_GRIND_PANGOLIN)
+    else if(self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_GRIND_PANGOLIN)
     {
         nextBoss = ENTITY_BOSS_SEVER_YAGATA;
         nextLevel = 3;
     }
-    else if(leveldef[self->gameData->level].defaultWsgSetIndex == MG_WSGSET_SEVER_YATAGA)
+    else if(self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_SEVER_YATAGA)
     {
         nextBoss = ENTITY_BOSS_TRASH_MAN;
         nextLevel = 4;
     }
-    else if(leveldef[self->gameData->level].defaultWsgSetIndex == MG_WSGSET_TRASH_MAN)
+    else if(self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_TRASH_MAN)
     {
         nextBoss = ENTITY_BOSS_SMASH_GORILLA;
         nextLevel = 6;
     }
-    else if(leveldef[self->gameData->level].defaultWsgSetIndex == MG_WSGSET_SMASH_GORILLA)
+    else if(self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_SMASH_GORILLA)
     {
         nextBoss = ENTITY_BOSS_DEADEYE_CHIRPZI;
         nextLevel = 7;
     }
-    else if(leveldef[self->gameData->level].defaultWsgSetIndex == MG_WSGSET_DEADEYE_CHIRPZI)
+    else if(self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_DEADEYE_CHIRPZI)
     {
         nextBoss = ENTITY_BOSS_DRAIN_BAT;
         nextLevel = 8;
     }
-    else if(leveldef[self->gameData->level].defaultWsgSetIndex == MG_WSGSET_DRAIN_BAT)
+    else if(self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_DRAIN_BAT)
     {
         nextBoss = ENTITY_BOSS_FLARE_GRYFFYN;
         nextLevel = 9;
     }
-    else if(leveldef[self->gameData->level].defaultWsgSetIndex == MG_WSGSET_FLARE_GRYFFYN)
+    else if(self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_FLARE_GRYFFYN)
     {
         nextBoss = 0;
         nextLevel = 0;
@@ -1164,14 +1165,14 @@ void mg_bossRushLogic(mgEntity_t* self)
     
     if(isABoss)
     {
-        mg_loadWsgSet((self->entityManager->wsgManager), leveldef[nextLevel].defaultWsgSetIndex);
-        mg_loadMapFromFile((self->entityManager->tilemap), leveldef[11].filename,
-                        self->entityManager);
+        mg_loadWsgSet(self->entityManager->wsgManager, leveldef[nextLevel].defaultWsgSetIndex);
+        // mg_loadMapFromFile((self->entityManager->tilemap), leveldef[11].filename,
+        //                 self->entityManager);
         if(nextBoss > 0)
         {
             mg_setBgm(self->soundManager, leveldef[nextLevel].bossBgmIndex);
             soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
-            mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX, self->entityManager->bossSpawnY);
+            mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX, self->entityManager->bossSpawnY)->state = 0;
         }
         else
         {
