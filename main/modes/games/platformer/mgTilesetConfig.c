@@ -179,9 +179,9 @@ const uint16_t mg_levelSelectTileset[] = {
     DRAIN_BAT_PORTRAIT_WSG,       MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_31, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_31,
     FLARE_GRYFFYN_PORTRAIT_WSG,   MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_32, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_32,
     STATIC_WSG,                   MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_33, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_33,
-    BOSS_RUSH_SYMBOL_WSG,         MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_34, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_34,
-    HANK_SYMBOL_WSG,              MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_35, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_35,
-    NEW_GAME_SYMBOL_WSG,          MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_36, MG_TILE_SOLID_VISIBLE_NONINTERACTIVE_36,
+    BOSS_RUSH_SYMBOL_WSG,         MG_WSG_BOSS_RUSH_SYMBOL, MG_WSG_BOSS_RUSH_SYMBOL,
+    HANK_SYMBOL_WSG,              MG_WSG_HANK_SYMBOL, MG_WSG_HANK_SYMBOL,
+    NEW_GAME_SYMBOL_WSG,          MG_WSG_NEW_GAME_PLUS_SYMBOL, MG_WSG_NEW_GAME_PLUS_SYMBOL,
     // clang-format on
 };
 
@@ -366,13 +366,13 @@ const mgSprite_t mg_drainBatBossSpriteMetadataSet[] = {
     },
     {
         .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
+        .origin = &origin_drain_bat,
+        .hitBox = &box_drain_bat,
     },
     {
         .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
+        .origin = &origin_drain_bat,
+        .hitBox = &box_drain_bat,
     },
     {
         .wsg    = NULL,
@@ -539,13 +539,13 @@ const mgSprite_t mg_deadeyeChirpziBossSpriteMetadataSet[] = {
     },
     {
         .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
+        .origin = &origin_deadeye_chirpzi,
+        .hitBox = &box_deadeye_chirpzi,
     },
     {
         .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
+        .origin = &origin_deadeye_chirpzi,
+        .hitBox = &box_deadeye_chirpzi,
     },
 };
 
@@ -562,28 +562,28 @@ const mgSprite_t mg_trashManBossSpriteMetadataSet[] = {
     },
     {
         .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
+        .origin = &origin_trash_man,
+        .hitBox = &box_trash_man,
     },
     {
         .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
+        .origin = &origin_trash_man,
+        .hitBox = &box_trash_man,
     },
     {
         .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
+        .origin = &origin_trash_man,
+        .hitBox = &box_trash_man,
     },
     {
         .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
+        .origin = &origin_trash_man,
+        .hitBox = &box_trash_man,
     },
     {
         .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
+        .origin = &origin_trash_man,
+        .hitBox = &box_trash_man,
     },
     {
         .wsg    = NULL,
@@ -648,8 +648,8 @@ const mgSprite_t mg_hankBossSpriteMetadataSet[] = {
     },
     {
         .wsg    = NULL,
-        .origin = &origin_trash_man,
-        .hitBox = &box_trash_man,
+        .origin = &origin_hank,
+        .hitBox = &box_hank,
     },
     {
         .wsg    = NULL,

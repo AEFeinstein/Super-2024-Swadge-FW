@@ -757,6 +757,9 @@ typedef enum
     MG_WSG_HP_CAN_OF_SALSA_4,
     MG_WSG_HP_CAN_OF_SALSA_5,
     MG_WSG_HP_CAN_OF_SALSA_6,
+    MG_WSG_BOSS_RUSH_SYMBOL,
+    MG_WSG_HANK_SYMBOL,
+    MG_WSG_NEW_GAME_PLUS_SYMBOL,
 } mg_wsgIndex_t;
 
 typedef enum

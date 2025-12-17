@@ -251,6 +251,10 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(HP_CAN_OF_SALSA_4_WSG, &self->wsgs[MG_WSG_HP_CAN_OF_SALSA_4], false);
     loadWsg(HP_CAN_OF_SALSA_5_WSG, &self->wsgs[MG_WSG_HP_CAN_OF_SALSA_5], false);
     loadWsg(HP_CAN_OF_SALSA_6_WSG, &self->wsgs[MG_WSG_HP_CAN_OF_SALSA_6], false);
+    loadWsg(BOSS_RUSH_SYMBOL_WSG, &self->wsgs[MG_WSG_BOSS_RUSH_SYMBOL], false);
+    loadWsg(HANK_SYMBOL_WSG, &self->wsgs[MG_WSG_HANK_SYMBOL], false);
+    loadWsg(NEW_GAME_SYMBOL_WSG, &self->wsgs[MG_WSG_NEW_GAME_PLUS_SYMBOL], false);
+
 }
 
 void mg_initializeSprites(mgWsgManager_t* self)
