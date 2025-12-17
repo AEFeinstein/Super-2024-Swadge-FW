@@ -141,12 +141,8 @@ typedef struct __attribute__((packed)) swadgePassPacket
 
     struct
     {
-        int8_t cardSelect;
-        int8_t fact0;
-        int8_t fact1;
-        int8_t fact2;
+        uint16_t packedProfile; //card select 0-3, fact0 4-7, fact1 8-11, fact2 12-15
         uint8_t numPasses;
-        // uint32_t latestTrophyIdx;
         uint32_t points;
     } atrium;
 } swadgePassPacket_t;

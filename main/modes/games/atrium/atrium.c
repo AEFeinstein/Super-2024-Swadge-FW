@@ -33,10 +33,7 @@
 #define TROPHY_NVS_NAMESPACE "trophy"
 // #define TROPHY_LATEST_NVS_KEY "latest"
 #define TROPHY_POINTS_NVS_KEY "points"
-#define ATRIUM_CARDKEY        "cardSelect"
-#define ATRIUM_FACT0KEY       "fact0"
-#define ATRIUM_FACT1KEY       "fact1"
-#define ATRIUM_FACT2KEY       "fact2"
+#define ATRIUM_PACKEDKEY        "packedProfile"
 #define ATRIUM_NUMPASSESKEY   "numPasses"
 
 //---------------------------------------------------------------------------------//
@@ -220,20 +217,15 @@ typedef enum
 
 typedef struct
 {
-    int32_t cardSelect;
-    int32_t fact0;
-    int32_t fact1;
-    int32_t fact2;
-    int32_t numPasses; // Number of other unique passes encountered
+    int8_t cardSelect;
+    int8_t fact0;
+    int8_t fact1;
+    int8_t fact2;
+    uint16_t packedProfile; //card select 0-3, fact0 4-7, fact1 8-11, fact2 12-15
+    int8_t numPasses; // Number of other unique passes encountered
     swadgesona_t swsn; // Swadgesona data
-    // uint32_t latestTrophyIdx;
     int32_t points;
 } userProfile_t;
-
-typedef struct __attribute__((packed))
-{
-    userProfile_t packedProfile;
-} packedProfile_t;
 
 typedef struct
 {
@@ -317,11 +309,13 @@ void drawEditSelection(buttonEvt_t* evt, int yloc);
 void drawEditUI(buttonEvt_t* evt, int yloc, bool direction);
 void drawSonaSelector(buttonEvt_t evt, int selection);
 
-userProfile_t loadProfileFromNVS(void);
 
 // Swadgepass
 static void atriumAddSP(struct swadgePassPacket* packet);
 void loadProfiles(int maxProfiles, int page);
+userProfile_t loadProfileFromNVS(void);
+void packProfileData(userProfile_t* profile);
+void unpackProfileData(userProfile_t* profile);
 
 //---------------------------------------------------------------------------------//
 // VARIABLES
@@ -408,13 +402,9 @@ static void atriumEnterMode(void)
         swadgePassData_t* spd      = (swadgePassData_t*)spNode->val;
         atr->sonaList[i].swsn.core = spd->data.packet.swadgesona.core;
         setUsernameFrom32(&atr->sonaList[i].swsn.name, spd->data.packet.swadgesona.core.packedName);
-
-        atr->sonaList[i].cardSelect = spd->data.packet.atrium.cardSelect;
-        atr->sonaList[i].fact0      = spd->data.packet.atrium.fact0;
-        atr->sonaList[i].fact1      = spd->data.packet.atrium.fact1;
-        atr->sonaList[i].fact2      = spd->data.packet.atrium.fact2;
+        
+        atr->sonaList[i].packedProfile = spd->data.packet.atrium.packedProfile;
         atr->sonaList[i].numPasses  = spd->data.packet.atrium.numPasses;
-        // atr->sonaList[i].latestTrophyIdx = spd->data.packet.atrium.latestTrophyIdx;
         atr->sonaList[i].points = spd->data.packet.atrium.points;
 
         // If the data hasn't been used yet
@@ -447,7 +437,8 @@ static void atriumEnterMode(void)
     globalMidiPlayerSetVolume(MIDI_BGM, 13);
 
     // profile created yet?
-    if (!readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_NUMPASSESKEY, &atr->loadedProfile.numPasses))
+    size_t len = sizeof(atr->loadedProfile.numPasses);
+    if (!readNamespaceNvsBlob(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_NUMPASSESKEY, &atr->loadedProfile.numPasses, &len))
     {
         atr->state = ATR_EDIT_PROFILE; // go to profile edit if no profile yet
     }
@@ -675,27 +666,21 @@ static void editProfile(buttonEvt_t* evt)
             {
                 if (atr->yloc == 4) // save profile
                 {
+                    packProfileData(&atr->loadedProfile);
                     // save to NVS
-                    writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_CARDKEY, atr->loadedProfile.cardSelect);
-                    writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_FACT0KEY, atr->loadedProfile.fact0);
-                    writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_FACT1KEY, atr->loadedProfile.fact1);
-                    writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_FACT2KEY, atr->loadedProfile.fact2);
+                    size_t len16 = sizeof(uint16_t);
+                    writeNamespaceNvsBlob(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_PACKEDKEY, &atr->loadedProfile.packedProfile, len16);
                     writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_NUMPASSESKEY,
                                         atr->loadedProfile.numPasses);
 
                     // save to swadgepass data
-                    atr->spProfile.cardSelect = atr->loadedProfile.cardSelect;
-                    atr->spProfile.fact0      = atr->loadedProfile.fact0;
-                    atr->spProfile.fact1      = atr->loadedProfile.fact1;
-                    atr->spProfile.fact2      = atr->loadedProfile.fact2;
+                    atr->spProfile.packedProfile = atr->loadedProfile.packedProfile;
                     atr->spProfile.numPasses  = atr->loadedProfile.numPasses;
-                    // atr->spProfile.latestTrophyIdx = atr->latestTrophyIdx;
                     atr->spProfile.points = atr->loadedProfile.points;
                     ESP_LOGI(ATR_TAG,
-                             "swadgepass profile saved: card %" PRId32 ", fact0 %" PRId32 ", fact1 %" PRId32
-                             ", fact2 %" PRId32 ", numPasses %" PRId32 "",
-                             atr->spProfile.cardSelect, atr->spProfile.fact0, atr->spProfile.fact1,
-                             atr->spProfile.fact2, atr->spProfile.numPasses);
+                             "swadgepass profile saved: packedProfile %" PRId16 ", numPasses %" PRId8 ", points %" PRId32 "",
+                             atr->spProfile.packedProfile, atr->spProfile.numPasses, atr->spProfile.points);
+                             
                     ESP_LOGI(ATR_TAG, "latest points: %" PRId32 "", atr->spProfile.points);
                 }
             }
@@ -977,7 +962,7 @@ static void drawArrows(bool left, bool right, bool up, bool down)
 
 static void drawCard(userProfile_t profile, bool local)
 {
-    ESP_LOGI(ATR_TAG, "Drawing card with cardSelect %" PRId32 ", fact0 %" PRId32 ", fact1 %" PRId32 ", fact2 %" PRId32,
+    ESP_LOGI(ATR_TAG, "Drawing card with cardSelect %" PRId8 ", fact0 %" PRId8 ", fact1 %" PRId8 ", fact2 %" PRId8,
              profile.cardSelect, profile.fact0, profile.fact1, profile.fact2);
     // concat card info
     // line 1: fact0
@@ -1030,7 +1015,7 @@ static void drawCard(userProfile_t profile, bool local)
     drawText(&atr->fonts[0], c000, buf, 120 + CARDTEXTPAD, 126);                  // draw points
     drawText(&atr->fonts[0], c000, "Swadgepasses Found:", 24 + CARDTEXTPAD, 150); // draw points
     char buf1[5];
-    snprintf(buf1, sizeof(buf1), "%" PRId32, profile.numPasses);
+    snprintf(buf1, sizeof(buf1), "%" PRId8, profile.numPasses);
     drawText(&atr->fonts[0], c000, buf1, 155 + CARDTEXTPAD, 150); // draw numpasses
 
     // drawWsgSimple(&atr->uiElements[16], 212, 124 + CARDTEXTPAD); // draw trophy image  TODO:something else here?
@@ -1221,6 +1206,7 @@ void loadProfiles(int maxProfiles, int page)
             {
                 freeWsg(&atr->sonaList[page * 4 + i].swsn.image);
             }
+            unpackProfileData(&atr->sonaList[page * 4 + i]);
             generateSwadgesonaImage(&atr->sonaList[page * 4 + i].swsn, false);
             ESP_LOGI(ATR_TAG, "Loaded profile %d for page %d", page * 4 + i, page);
             atr->bodyIdx[i] = rand() % ARRAY_SIZE(sonaBodies);
@@ -1234,8 +1220,10 @@ userProfile_t loadProfileFromNVS(void)
     ESP_LOGI(ATR_TAG, "Loading profile from NVS");
 
     userProfile_t loadedProfile;
-    if (!readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_NUMPASSESKEY,
-                            &atr->loadedProfile.numPasses)) // check if profile created
+    size_t len = sizeof(uint8_t);
+    size_t len16 = sizeof(uint16_t);
+    if (!readNamespaceNvsBlob(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_NUMPASSESKEY,
+                            &atr->loadedProfile.numPasses, &len)) // check if profile created
     {
         loadedProfile.cardSelect = rand() % 8;
         loadedProfile.fact0      = rand() % 8;
@@ -1244,28 +1232,22 @@ userProfile_t loadProfileFromNVS(void)
         loadedProfile.numPasses  = 0;
         loadedProfile.points     = 0;
 
-        writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_CARDKEY, loadedProfile.cardSelect);
-        writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_FACT0KEY, loadedProfile.fact0);
-        writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_FACT1KEY, loadedProfile.fact1);
-        writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_FACT2KEY, loadedProfile.fact2);
-        writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_NUMPASSESKEY, loadedProfile.numPasses);
+        packProfileData(&loadedProfile);
+
+        writeNamespaceNvsBlob(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_PACKEDKEY, &loadedProfile.packedProfile, len16);
+        writeNamespaceNvsBlob(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_NUMPASSESKEY, &loadedProfile.numPasses, len);
 
         ESP_LOGI(ATR_TAG, "Wrote random profile to NVS");
     }
 
-    readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_CARDKEY, &loadedProfile.cardSelect);
-    readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_FACT0KEY, &loadedProfile.fact0);
-    readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_FACT1KEY, &loadedProfile.fact1);
-    readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_FACT2KEY, &loadedProfile.fact2);
+    readNamespaceNvsBlob(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_PACKEDKEY, &loadedProfile.packedProfile, &len16);
     readNamespaceNvs32(TROPHY_NVS_NAMESPACE, TROPHY_POINTS_NVS_KEY, &loadedProfile.points);
     ESP_LOGI(ATR_TAG, "Loaded local swadgesona data");
     loadedProfile.numPasses = atr->numRemoteSwsn; // update number of passes each time
-    writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_NUMPASSESKEY, loadedProfile.numPasses);
+    writeNamespaceNvsBlob(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_NUMPASSESKEY, &loadedProfile.numPasses, len);
     ESP_LOGI(ATR_TAG,
-             "Profile loaded from NVS: cardSelect=%" PRId32 ", fact0=%" PRId32 ", fact1=%" PRId32 ", fact2=%" PRId32
-             ", numPasses=%" PRId32,
-             loadedProfile.cardSelect, loadedProfile.fact0, loadedProfile.fact1, loadedProfile.fact2,
-             loadedProfile.numPasses);
+             "Profile loaded from NVS: packedProfile=%" PRId16 ", numPasses=%" PRId8 ", points=%" PRId32,
+             loadedProfile.packedProfile, loadedProfile.numPasses, loadedProfile.points);
 
     atr->loadedProfile = loadedProfile; // update loaded profile
 
@@ -1275,10 +1257,30 @@ userProfile_t loadProfileFromNVS(void)
 static void atriumAddSP(struct swadgePassPacket* packet)
 {
     // Add our profile data to the swadge pass packet
-    packet->atrium.cardSelect = atr->spProfile.cardSelect;
-    packet->atrium.fact0      = atr->spProfile.fact0;
-    packet->atrium.fact1      = atr->spProfile.fact1;
-    packet->atrium.fact2      = atr->spProfile.fact2;
+    packet->atrium.packedProfile = atr->spProfile.packedProfile;
     packet->atrium.numPasses  = atr->spProfile.numPasses;
     packet->atrium.points     = atr->spProfile.points;
+}
+
+void packProfileData(userProfile_t* profile){
+
+    profile->packedProfile = atr->loadedProfile.cardSelect; //cardselect cannot go over 15 ever emily
+    profile->packedProfile+= atr->loadedProfile.fact0<<4;
+    profile->packedProfile+= atr->loadedProfile.fact1<<8;
+    profile->packedProfile+= atr->loadedProfile.fact2<<12;
+    printf("profile packed is %d", profile->packedProfile);
+
+}
+
+
+void unpackProfileData(userProfile_t* profile){
+    /* clang-format off */
+    profile->cardSelect = profile->packedProfile  &0b0000000000001111;
+    profile->fact0 = (profile->packedProfile      &0b0000000011110000) >>4;
+    profile->fact1 = (profile->packedProfile      &0b0000111100000000) >>8;
+    profile->fact2 = (profile->packedProfile      &0b1111000000000000) >>12;
+    printf("unpacked profile is cardselect %" PRId8 ", fact0 %" PRId8 ", fact1 %" PRId8 ", fact2 %" PRId8 "",
+           profile->cardSelect, profile->fact0, profile->fact1,
+           profile->fact2);
+    /* clang-format on */
 }
