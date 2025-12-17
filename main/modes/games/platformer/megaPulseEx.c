@@ -525,7 +525,7 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
 
             //change this back to 10 (intro)
-            platformer->gameData.level = 20;
+            platformer->gameData.level = 21;
             mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
             mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename,
                                &platformer->entityManager);

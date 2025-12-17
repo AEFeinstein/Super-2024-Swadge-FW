@@ -315,7 +315,16 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
             createdEntity = createLifeRefillLarge(entityManager, x, y);
             break;
         case ENTITY_BOSS_SEVER_YAGATA:
-            createdEntity = createBossSeverYagata(entityManager, x, y);
+                //if it's greater than 11 (i.e.) final showdown just spawn something else instead
+            //because I can't learn Tiled in two days.
+            if(entityManager->playerEntity != NULL && entityManager->playerEntity->gameData->level > 11)
+            {
+                createdEntity = createBossHankWaddle(entityManager, x, y);
+            }
+            else
+            {
+                createdEntity = createBossSeverYagata(entityManager, x, y);
+            }
             entityManager->bossSpawnX = x;
             entityManager->bossSpawnY = y;
             break;
@@ -337,8 +346,6 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
             break;
         case ENTITY_BOSS_KINETIC_DONUT:
             createdEntity = createBossKineticDonut(entityManager, x, y);
-            entityManager->bossSpawnX = x;
-            entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_TRASH_MAN:
             createdEntity = createBossTrashMan(entityManager, x, y);
@@ -367,6 +374,11 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
             break;
         case ENTITY_BOSS_FLARE_GRYFFYN:
             createdEntity = createBossFlareGryffyn(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
+            break;
+        case ENTITY_BOSS_HANK_WADDLE:
+            createdEntity = createBossHankWaddle(entityManager, x, y);
             entityManager->bossSpawnX = x;
             entityManager->bossSpawnY = y;
             break;

@@ -284,7 +284,7 @@ const paletteColor_t bgGradientGreen[]            = {c001, c111, c221, c331};
 const paletteColor_t bgGradientYellow[]           = {c202, c312, c422, c532};
 const paletteColor_t bgGradientOrange[]           = {c040, c230, c220, c210};
 const paletteColor_t bgGradientRed[]              = {c101, c201, c301, c411};
-const paletteColor_t bgGradientRedFinalShowdown[] = {c401, c301, c201, c101};
+const paletteColor_t bgGradientFinalShowdown[]    = {c000, c000, c000, c000};
 const paletteColor_t bgGradientMenu[]             = {c001, c012, c123, c234};
 
 const mgLeveldef_t leveldef[] = {
@@ -414,10 +414,10 @@ const mgLeveldef_t leveldef[] = {
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
      .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
      .bgColors           = bgGradientPurple},
-    {.filename           = SHOWDOWN_RAW, // Bigma2 & Hank fight
+    {.filename           = SHOWDOWN_BIN, // Bigma2 & Hank fight (21)
      .timeLimit          = 180,
-     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
+     .defaultWsgSetIndex = MG_WSGSET_HANK_WADDLE,
      .mainBgmIndex       = MG_BGM_PRE_FIGHT,
      .bossBgmIndex       = MG_BGM_BOSS_BIGMA,
-     .bgColors           = bgGradientRedFinalShowdown},
+     .bgColors           = bgGradientFinalShowdown},
 };

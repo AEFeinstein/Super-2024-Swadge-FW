@@ -632,6 +632,54 @@ const mgSprite_t mg_bigmaBossSpriteMetadataSet[] = {
     },
 };
 
+const mgSprite_t mg_hankBossSpriteMetadataSet[] = {
+    {
+        .wsg    = NULL,
+        .origin = &origin_hank,
+        .hitBox = &box_hank,
+    },
+    {
+        .wsg    = NULL,
+        .origin = &origin_hank,
+        .hitBox = &box_hank,
+    },
+    {
+        .wsg    = NULL,
+        .origin = &origin_trash_man,
+        .hitBox = &box_trash_man,
+    },
+    {
+        .wsg    = NULL,
+        .origin = NULL,
+        .hitBox = NULL,
+    },
+    {
+        .wsg    = NULL,
+        .origin = NULL,
+        .hitBox = NULL,
+    },
+    {
+        .wsg    = NULL,
+        .origin = NULL,
+        .hitBox = NULL,
+    },
+    {
+        .wsg    = NULL,
+        .origin = NULL,
+        .hitBox = NULL,
+    },
+    {
+        .wsg    = NULL,
+        .origin = NULL,
+        .hitBox = NULL,
+    },
+    {
+        .wsg    = NULL,
+        .origin = NULL,
+        .hitBox = NULL,
+    },
+};
+
 // Length, transparency, animate shared with kineticDonutTileset
 const uint16_t mg_severYatagaTileset[] = {
     // clang-format off
