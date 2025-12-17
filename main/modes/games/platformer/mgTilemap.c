@@ -193,12 +193,12 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name, mgEntityManage
         tilemap->map = NULL;
     }
 
-    size_t sz;
     uint8_t* buf = NULL;
     ESP_LOGE("MAP", "Loading %i", name);
 
     if (name == -69)
     {
+        size_t sz;
         if (readNvsBlob("user_level", NULL, &sz))
         {
             buf = heap_caps_malloc(sz, MALLOC_CAP_8BIT);
@@ -214,7 +214,8 @@ bool mg_loadMapFromFile(mgTilemap_t* tilemap, cnfsFileIdx_t name, mgEntityManage
     }
     else
     {
-        buf = cnfsReadFile(name, &sz, false);
+        uint32_t sz;
+        buf = readHeatshrinkFile(name, &sz, false);
     }
 
     if (NULL == buf)
