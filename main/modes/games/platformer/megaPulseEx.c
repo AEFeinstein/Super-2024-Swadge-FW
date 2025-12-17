@@ -1519,8 +1519,8 @@ void updateLevelClear(platformer_t* self)
 
                 changeStateGameClear(self);
             }
-
-            else if (globalMidiPlayerGet(MIDI_BGM)->paused) // also checks the level clear jingle has finished.
+            // YOOOOOOOO DON'T COMMIT THIS 1
+            else if (true) // globalMidiPlayerGet(MIDI_BGM)->paused) // also checks the level clear jingle has finished.
             {
                 // Advance to the next level
                 /*self->gameData.level++;
@@ -2005,23 +2005,23 @@ void updateLevelSelect(platformer_t* self)
             if(self->unlockables.levelsCleared & (1 << 5))//if gauntlet was complete
             {
                 actualLevel = 11;//about to start boss rush
-                actualLevel += self->unlockables.levelsCleared & (1<<11);//make it final showdown (12) if 11 was complete.
-                actualLevel += self->unlockables.levelsCleared & (1<<12);//make it 13 if 12 was complete.
+                actualLevel += (self->unlockables.levelsCleared & (1<<11)) ? 1 : 0;//make it final showdown (12) if 11 was complete.
+                actualLevel += (self->unlockables.levelsCleared & (1<<12)) ? 1 : 0;//make it 13 if 12 was complete.
             }
         }
+        self->gameData.level = actualLevel;
 
-        if ((self->unlockables.levelsCleared & (1 << self->gameData.level))
-            || (self->gameData.level == 5 && !(self->unlockables.levelsCleared == 0b1111011110)))
+        if (self->gameData.level < 11 && (self->unlockables.levelsCleared & (1 << self->gameData.level)))
         {
             soundPlaySfx(&(platformer->soundManager.sndMenuDeny), BZR_STEREO);
         }
-        else if(actualLevel == 13)//new game +
+        else if(self->gameData.level == 13)//new game +
         {
             //Undo all level progress, but keep abilities.
             self->unlockables.levelsCleared = 0;
             savePlatformerUnlockables(self);
-            //back to the title screen, hooray!
-            changeStateTitleScreen(self);
+            // Exit to the main menu
+            switchToSwadgeMode(&mainMenuMode);
         }
         else
         {
@@ -2059,7 +2059,8 @@ void drawLevelSelect(platformer_t* self)
     {
         for (uint8_t i = 0; i < 3; i++)
         {
-            if (self->unlockables.levelsCleared & (1 << (((j * 3) + i) + 1)))
+            uint8_t idx = (((j * 3) + i) + 1);
+            if (self->unlockables.levelsCleared & (1 << idx) && (idx != 5))
             {
                 drawWsg(&self->wsgManager.wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_33],
                         (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY,
@@ -2068,7 +2069,7 @@ void drawLevelSelect(platformer_t* self)
             else
             {
                 // Special case for Bigma
-                if ((((j * 3) + i) == 4) && (self->unlockables.levelsCleared ^ 0b1111011110))
+                if (idx == 5 && (self->unlockables.levelsCleared ^ 0b11111011110) && (self->unlockables.levelsCleared ^ 0b11111111110) && (self->unlockables.levelsCleared ^ 0b111111111110) && (self->unlockables.levelsCleared ^ 0b1111111111110))
                 {
                     drawWsg(&self->wsgManager.wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_33],
                             (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY,
@@ -2077,11 +2078,11 @@ void drawLevelSelect(platformer_t* self)
                 else
                 {
                     //check if the 5th bit is set
-                    if(((((j * 3))) == 4) && (self->unlockables.levelsCleared & (1 << 5)))//if (5 gauntlet) was complete.
+                    if((idx == 5) && (self->unlockables.levelsCleared & (1 << 5)))//if (5 gauntlet) was complete.
                     {
-                        uint16_t drawSymbol = MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_34;
-                        drawSymbol += self->unlockables.levelsCleared & (1 << 11); //35 if (11 boss rush) was complete.
-                        drawSymbol += self->unlockables.levelsCleared & (1 << 12); //36 if (12 final showdown) was complete
+                        uint16_t drawSymbol = MG_WSG_BOSS_RUSH_SYMBOL;
+                        drawSymbol += (self->unlockables.levelsCleared & (1<<11)) ? 1 : 0; //35 if (11 boss rush) was complete.
+                        drawSymbol += (self->unlockables.levelsCleared & (1<<12)) ? 1 : 0; //36 if (12 final showdown) was complete
                         drawWsgTile(&self->wsgManager.wsgs[drawSymbol],
                                 (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY);
                     }
@@ -2097,7 +2098,7 @@ void drawLevelSelect(platformer_t* self)
     }
 
     if ((!(self->unlockables.levelsCleared & (1 << self->gameData.level)))
-        && !(self->gameData.level == 5 && !(self->unlockables.levelsCleared == 0b1111011110)))
+        || (self->gameData.level == 5 && (self->unlockables.levelsCleared == 0b11111011110 || self->unlockables.levelsCleared == 0b11111111110 || self->unlockables.levelsCleared == 0b111111111110 || self->unlockables.levelsCleared == 0b1111111111110)))
     {
         drawRect(
             (64 + self->menuState * 64) - self->tilemap.mapOffsetX + ((self->gameData.frameCount >> 2) & 0b0111),
@@ -2131,8 +2132,11 @@ void goToReadyScreen(void)
 // forward declared in mega_pulse_ex_typedef.h
 void initBossFight(void)
 {
-    platformer->entityManager.bossEntity->state = 0;
-    mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
-    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+    if(platformer->gameData.level != 5)
+    {
+        platformer->entityManager.bossEntity->state = 0;
+        mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
+        soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+    }
     platformer->update = &updateReadyScreen;
 }

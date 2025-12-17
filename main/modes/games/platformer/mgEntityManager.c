@@ -371,6 +371,8 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
             break;
         case ENTITY_BOSS_KINETIC_DONUT:
             createdEntity = createBossKineticDonut(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_TRASH_MAN:
             createdEntity = createBossTrashMan(entityManager, x, y);

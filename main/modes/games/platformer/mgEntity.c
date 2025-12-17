@@ -232,8 +232,9 @@ void mg_updatePlayer(mgEntity_t* self)
             }
             break;
         case MG_PL_ST_UPPERCUT:
-            self->xspeed = mg_sureYouCanVectors[(self->stateTimer >> 2)].x * (self->spriteFlipHorizontal ? -1 : 1);
-            self->yspeed = mg_sureYouCanVectors[(self->stateTimer >> 2)].y;
+            int16_t stupidVectorThing = CLAMP((self->stateTimer >> 2), 0, 7);
+            self->xspeed = mg_sureYouCanVectors[stupidVectorThing].x * (self->spriteFlipHorizontal ? -1 : 1);
+            self->yspeed = mg_sureYouCanVectors[stupidVectorThing].y;
             self->stateTimer--;
             if (self->stateTimer <= 0)
             {
@@ -1191,7 +1192,8 @@ void mg_bossRushLogic(mgEntity_t* self)
         else
         {
             mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
-            soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);        }
+            soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+        }
     }   
 }
 
@@ -2342,6 +2344,10 @@ void updateScrollLockRight(mgEntity_t* self)
         // Cutscene before the boss fight
         mg_setBgm(self->soundManager, MG_BGM_PRE_FIGHT);
         soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+        bossIntroCutscene(self->gameData);
+    }
+    else if(self->gameData->level == 5)
+    {
         bossIntroCutscene(self->gameData);
     }
 
@@ -5510,6 +5516,11 @@ void startOutroCutscene(mgEntity_t* self)
     if (!self->gameData->cheatMode)
     {
         uint8_t trophy = self->gameData->level;
+        if(trophy == 5 || trophy == 11)
+        {
+            //it's just the gauntlet. or boss rush.
+            return;
+        }
         if (trophy == 10)
         {
             // The 10th level is the intro level with bigma.

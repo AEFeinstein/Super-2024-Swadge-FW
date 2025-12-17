@@ -349,7 +349,7 @@ void stageStartCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Sawtooth,
                             "PULSE... you should listen to them. Stay out of this. I'll take care of these guys. Head "
                             "back to base.",
-                            false, -1);
+                            true, -1);
             addCutsceneLine(gameData->cutscene, WarningMessage, "TRANSMISSION LOST", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "...SAWTOOTH?! ...", false, -1);
             addCutsceneLine(
@@ -772,7 +772,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Jasper, "It's not a weapon. But you'll know when it saves your life.", false, -1);
             unlockAbility(gameData, MG_PLOT_ARMOR_ABILITY);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Plot Armor", false, 0);
-            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Greatly reduces damage taken!", false, 0);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Reduces damage taken by half!", false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "This feels... solid. But also, weirdly... ironic?", false, -1);
             addCutsceneLine(gameData->cutscene, Percy, "It's Plot Armor, Pulse. Like a final arc twist, except wearable.", false, -1);
             addCutsceneLine(gameData->cutscene, Jasper, "No main character should be without it. Especially in the final act. Ganbatte, Pulse-san!", false, -1);
@@ -853,7 +853,6 @@ void bossOutroCutscene(mgGameData_t* gameData)
             // addCutsceneLine(gameData->cutscene, Bigma, "Curtain's rising, PULSE. Don't keep me waiting.", false, -1);
 
             addCutsceneLine(gameData->cutscene, Bigma, "ROOOOOAAAAARR... WHY won't you JUST QUIT!", false, 1);
-            addCutsceneLine(gameData->cutscene, Bigma, "NO REMIX TECH IS BETTER THAN MY MAGIX!", false, 1);
             addCutsceneLine(gameData->cutscene, Pulse, "BIGMA... I'm sorry.", false, -1);
             addCutsceneLine(gameData->cutscene, Bigma, "Urggghhhh....", false, 0);
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "I miss the old days too sometimes...", false, -1);
