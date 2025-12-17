@@ -24,7 +24,7 @@
 #define CARDTEXTPAD 4
 /* #define TEXTBOX1WIDTH 156
 #define TEXTBOX2WIDTH 172 */
-// #define SONALOC_X 24
+#define SONALOC_X 24
 #define SONALOC_Y 36
 
 #define ATRIUM_PROFILE_NVS_NAMESPACE "atrium"
@@ -241,7 +241,7 @@ typedef struct
 
     // Profile data
     userProfile_t loadedProfile; // Loaded profile for drawing
-    wsg_t* profileSonaImage;     // Rendered sona image for profile viewing/editing
+    swadgesona_t* profileSona;
 
     // Main
     atriumState state;
@@ -353,6 +353,7 @@ static void atriumEnterMode(void)
 {
     // Initialize memory
     atr         = (atrium_t*)heap_caps_calloc(1, sizeof(atrium_t), MALLOC_CAP_8BIT);
+    
     atr->bodies = heap_caps_calloc(ARRAY_SIZE(sonaBodies), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(sonaBodies); idx++)
     {
@@ -389,7 +390,8 @@ static void atriumEnterMode(void)
         loadFont(fontsIdxs[idx], &atr->fonts[idx], true);
     }
 
-    atr->profileSonaImage = heap_caps_calloc(1, sizeof(wsg_t), MALLOC_CAP_8BIT);
+    
+    
 
     // Swadgepass
     getSwadgePasses(&atr->spList, &atriumMode, true);
@@ -975,18 +977,8 @@ static void drawCard(userProfile_t profile, bool local)
 
     drawWsgSimple(&atr->backgroundImages[0], 0, 0);
     drawWsgSimple(&atr->cards[profile.cardSelect], 0, 0 + 12); // draw the card
+    drawWsgSimple(&profile.swsn.image,SONALOC_X, SONALOC_Y);            // draw the sona image
 
-    if (local == true)
-    {
-        loadSPSona(&profile.swsn.core);
-        generateSwadgesonaImage(&profile.swsn,true);
-    }
-    else
-    {
-        // do nothing, swsn image was already loaded
-    }
-
-    // drawWsgSimple(&profile.swsn.image, SONALOC_X, SONALOC_Y); // draw the swadgesona image TODO: fix
     nameData_t username;
 
     if (local == true)
@@ -1200,10 +1192,7 @@ void loadProfiles(int maxProfiles, int page)
         ESP_LOGI(ATR_TAG, "Loading profiles: maxProfiles=%d, page=%d", maxProfiles, page);
         for (int i = 0; i < maxProfiles; i++)
         {
-            if (atr->sonaList[page * 4 + i].swsn.image.w != 0)
-            {
-                freeWsg(&atr->sonaList[page * 4 + i].swsn.image);
-            }
+            
             unpackProfileData(&atr->sonaList[page * 4 + i]);
             generateSwadgesonaImage(&atr->sonaList[page * 4 + i].swsn, false);
             ESP_LOGI(ATR_TAG, "Loaded profile %d for page %d", page * 4 + i, page);
@@ -1244,6 +1233,16 @@ userProfile_t loadProfileFromNVS(void)
     ESP_LOGI(ATR_TAG, "Loaded local swadgesona data");
     loadedProfile.numPasses = atr->numRemoteSwsn; // update number of passes each time
     
+    loadSPSona(&loadedProfile.swsn.core); // load the sona image from swadgepass data
+
+    printf("loaded profile core hair is %d\n", loadedProfile.swsn.core.hairColor);
+
+    
+    
+    ESP_LOGI(ATR_TAG, "Generating swadgesona image");
+    memcpy(&loadedProfile.swsn.image, &atr->uiElements[0], sizeof(wsg_t)); // idk bandaid????
+    generateSwadgesonaImage(&loadedProfile.swsn, false);
+
     ESP_LOGI(ATR_TAG,
              "Profile loaded from NVS: packedProfile=%" PRId32 ", numPasses=%" PRId8 ", points=%" PRId32,
              loadedProfile.packedProfile, loadedProfile.numPasses, loadedProfile.points);
