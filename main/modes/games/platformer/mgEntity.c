@@ -5326,6 +5326,8 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
     self->xspeed = 0;
     self->yspeed = 0;
 
+    self->gameData->bgColors = leveldef[self->gameData->level].bgColors;
+
     /* Shooting: either periodic random downward shots, or a dense bottom-to-top wave when special1 is set */
     if (self->special1)
     {
@@ -5435,7 +5437,7 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
             /* After a shorter vulnerable window, occasionally close again; start a closing animation
              * that goes 2 -> 1 -> 0 so the visor animates backward when closing.
              */
-            if (self->stateTimer > 120 && (esp_random() % 100) > 70)
+            if (self->stateTimer > 120 && (esp_random() % 100) > 95)
             {
                 self->state = 5; /* begin closing at frame 2 */
                 self->stateTimer = 0;
@@ -5461,8 +5463,9 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
             break;
         case 4: /* damage flash */
             self->spriteIndex = MG_SP_BOSS_4;
+            self->gameData->bgColors = leveldef[esp_random() % 10].bgColors;
             self->stateTimer++;
-            if (self->stateTimer > 120 && (esp_random() % 100) > 70)
+            if (self->stateTimer > 120 && (esp_random() % 100) > 95)
             {
                 self->state = 5; /* begin closing at frame 2 */
                 self->stateTimer = 0;

@@ -320,7 +320,7 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
             if(entityManager->playerEntity != NULL && entityManager->playerEntity->gameData->level > 11)
             {
                 x -= 105;
-                y -= 147;
+                y -= 149;
                 createdEntity = createBossHankWaddle(entityManager, x, y);
                 //Swap player entity with the boss entity so player draws on top of the boss.
                 uint8_t bossIdx = 0;
@@ -378,9 +378,19 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
             entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_BIGMA:
-            createdEntity = createBossBigma(entityManager, x, y);
-            entityManager->bossSpawnX = x;
-            entityManager->bossSpawnY = y;
+            //The end of the gauntlet gets an end, not a bigma fight according to the script.
+            if(entityManager->playerEntity != NULL && entityManager->playerEntity->gameData->level == 5)
+            {
+                createdEntity = createMixtape(entityManager, x, y);
+                entityManager->bossSpawnX = x;
+                entityManager->bossSpawnY = y;
+            }
+            else
+            {
+                createdEntity = createBossBigma(entityManager, x, y);
+                entityManager->bossSpawnX = x;
+                entityManager->bossSpawnY = y;
+            }
             break;
         case ENTITY_BOSS_SMASH_GORILLA:
             createdEntity = createBossSmashGorilla(entityManager, x, y);
