@@ -1497,7 +1497,7 @@ int32_t midiPlayerStep(midiPlayer_t* player)
 
         if (!player->eventAvailable)
         {
-            ESP_LOGI("MIDI", "Done playing file!");
+            ESP_LOGD("MIDI", "Done playing file!");
             player->songEnding = true;
             checkEvents        = false;
         }

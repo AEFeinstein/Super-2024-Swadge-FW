@@ -382,7 +382,7 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
                     {
                         track->nextEvent.meta.type = END_OF_TRACK;
                         track->done                = true;
-                        ESP_LOGI("MIDIParser", "End of track #%" PRIdPTR, track - reader->states);
+                        ESP_LOGD("MIDIParser", "End of track #%" PRIdPTR, track - reader->states);
                         break;
                     }
 
