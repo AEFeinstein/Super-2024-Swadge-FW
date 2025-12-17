@@ -619,7 +619,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "Okay-what?! Cho, you seriously need to explain what's happening.", false, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "BIGMA, I'm disappointed. You were supposed to be my masterpiece! All that rage! That nostalgia!", false, 0);
             addCutsceneLine(gameData->cutscene, HankWaddle, "I practically gift-wrapped your villain arc!!", false, 0);
-            addCutsceneLine(gameData->cutscene, Bigma, "You... corrupted me??", false, -1);
+            addCutsceneLine(gameData->cutscene, Bigma, "You... corrupted me??", true, -1);
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "Cho...?", false, -1);
             addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "I - I don't know, but... is this... is this about...what happened back 2024?", true, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "What HAPPENED in 2024?", false, -1);
@@ -637,7 +637,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "... We kinda lost touch after that.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "We'll stop you just like we stopped BIGMA!", false, -1);
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "Oh... I was SO hoping you'd say that. Cue FINAL BATTLE MUSIC!", false, -1);
-            addCutsceneLine(gameData->cutscene, HankWaddle, "IT. IS. SO. ON!!", false, -1);
+            addCutsceneLine(gameData->cutscene, HankWaddle, "IT. IS. SO. ON!!", false, 0);
             break;
         }
     }
