@@ -1165,21 +1165,33 @@ void mg_bossRushLogic(mgEntity_t* self)
     
     if(isABoss)
     {
-        mg_loadWsgSet(self->entityManager->wsgManager, leveldef[nextLevel].defaultWsgSetIndex);
         // mg_loadMapFromFile((self->entityManager->tilemap), leveldef[11].filename,
         //                 self->entityManager);
         if(nextBoss > 0)
         {
+            mg_loadWsgSet(self->entityManager->wsgManager, leveldef[nextLevel].defaultWsgSetIndex);
+            self->gameData->bgColors = leveldef[nextLevel].bgColors;
             mg_setBgm(self->soundManager, leveldef[nextLevel].bossBgmIndex);
             soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
-            mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX, self->entityManager->bossSpawnY)->state = 0;
+            mgEntity_t* boss = mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX, self->entityManager->bossSpawnY);
+            boss->state = 0;
+            if(nextBoss == ENTITY_BOSS_TRASH_MAN)
+            {
+                boss->y -= 100<<SUBPIXEL_RESOLUTION;
+            }
+            else if (nextBoss == ENTITY_BOSS_SMASH_GORILLA || nextBoss == ENTITY_BOSS_SEVER_YAGATA)
+            {
+                boss->y -= 10<<SUBPIXEL_RESOLUTION;
+            }
+            else if(nextBoss == ENTITY_BOSS_GRIND_PANGOLIN)
+            {
+                boss->y -= 4<<SUBPIXEL_RESOLUTION;
+            }
         }
         else
         {
-            self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
             mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
-            soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
-        }
+            soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);        }
     }   
 }
 
@@ -1625,6 +1637,11 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 self->y = TO_SUBPIXEL_COORDS((modifiedPlayerSpawn_ty * 16) + modifiedPlayerSpawn_yOffset);
 
                 self->tilemap->executeTileSpawnAll = true;
+
+                self->gameData->countdown = leveldef[newLevelIndex].timeLimit;
+
+                stageStartCutscene(self->gameData);
+                self->gameData->changeState = MG_ST_CUTSCENE;
             }
 
             break;
@@ -4957,7 +4974,7 @@ void mg_updateBossFlareGryffyn(mgEntity_t* self)
     applyGravity(self);
     mg_detectEntityCollisions(self);
 
-    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
+    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)//Flare gryffyn ALWAYS spawns mixtape because he's the end of the boss rush.
     {
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
