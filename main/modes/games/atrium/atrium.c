@@ -231,13 +231,13 @@ typedef struct
 typedef struct
 {
     // Data
-    wsg_t* bodies;
-    wsg_t* backgroundImages;
-    wsg_t* uiElements;
-    wsg_t* cards;
-    font_t* fonts;
-    midiFile_t* bgm;
-    midiFile_t* sfx;
+    wsg_t bodies[ARRAY_SIZE(sonaBodies)];
+    wsg_t backgroundImages[ARRAY_SIZE(bgImages)];
+    wsg_t uiElements[ARRAY_SIZE(uiImages)];
+    wsg_t cards[ARRAY_SIZE(cardImages)];
+    font_t fonts[ARRAY_SIZE(fontsIdxs)];
+    midiFile_t bgm[ARRAY_SIZE(midiBGM)];
+    midiFile_t sfx[ARRAY_SIZE(midiSFX)];
 
     // Profile data
     userProfile_t loadedProfile; // Loaded profile for drawing
@@ -353,37 +353,36 @@ static void atriumEnterMode(void)
     // Initialize memory
     atr = (atrium_t*)heap_caps_calloc(1, sizeof(atrium_t), MALLOC_CAP_8BIT);
 
-    atr->bodies = heap_caps_calloc(ARRAY_SIZE(sonaBodies), sizeof(wsg_t), MALLOC_CAP_8BIT);
     for (int idx = 0; idx < ARRAY_SIZE(sonaBodies); idx++)
     {
         loadWsg(sonaBodies[idx], &atr->bodies[idx], true);
     }
-    atr->uiElements = heap_caps_calloc(ARRAY_SIZE(uiImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
+
     for (int idx = 0; idx < ARRAY_SIZE(uiImages); idx++)
     {
         loadWsg(uiImages[idx], &atr->uiElements[idx], true);
     }
-    atr->backgroundImages = heap_caps_calloc(ARRAY_SIZE(bgImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
+
     for (int idx = 0; idx < ARRAY_SIZE(bgImages); idx++)
     {
         loadWsg(bgImages[idx], &atr->backgroundImages[idx], true);
     }
-    atr->cards = heap_caps_calloc(ARRAY_SIZE(cardImages), sizeof(wsg_t), MALLOC_CAP_8BIT);
+
     for (int idx = 0; idx < ARRAY_SIZE(cardImages); idx++)
     {
         loadWsg(cardImages[idx], &atr->cards[idx], true);
     }
-    atr->bgm = heap_caps_calloc(ARRAY_SIZE(midiBGM), sizeof(midiFile_t), MALLOC_CAP_8BIT);
+
     for (int idx = 0; idx < ARRAY_SIZE(midiBGM); idx++)
     {
         loadMidiFile(midiBGM[idx], &atr->bgm[idx], true);
     }
-    atr->sfx = heap_caps_calloc(ARRAY_SIZE(midiSFX), sizeof(midiFile_t), MALLOC_CAP_8BIT);
+
     for (int idx = 0; idx < ARRAY_SIZE(midiSFX); idx++)
     {
         loadMidiFile(midiSFX[idx], &atr->sfx[idx], true);
     }
-    atr->fonts = heap_caps_calloc(ARRAY_SIZE(fontsIdxs), sizeof(font_t), MALLOC_CAP_8BIT);
+
     for (int idx = 0; idx < ARRAY_SIZE(fontsIdxs); idx++)
     {
         loadFont(fontsIdxs[idx], &atr->fonts[idx], true);
@@ -449,42 +448,43 @@ static void atriumExitMode(void)
 {
     // Turn off BGM
     midiGmOff(atr->player);
+
     // Unload
     for (int idx = 0; idx < ARRAY_SIZE(fontsIdxs); idx++)
     {
         freeFont(&atr->fonts[idx]);
     }
-    heap_caps_free(atr->fonts);
+
     for (int idx = 0; idx < ARRAY_SIZE(midiSFX); idx++)
     {
         unloadMidiFile(&atr->sfx[idx]);
     }
-    heap_caps_free(atr->sfx);
+
     for (int idx = 0; idx < ARRAY_SIZE(midiBGM); idx++)
     {
         unloadMidiFile(&atr->bgm[idx]);
     }
-    heap_caps_free(atr->bgm);
+
     for (int idx = 0; idx < ARRAY_SIZE(cardImages); idx++)
     {
         freeWsg(&atr->cards[idx]);
     }
-    heap_caps_free(atr->cards);
+
     for (int idx = 0; idx < ARRAY_SIZE(bgImages); idx++)
     {
         freeWsg(&atr->backgroundImages[idx]);
     }
-    heap_caps_free(atr->backgroundImages);
+
     for (int idx = 0; idx < ARRAY_SIZE(uiImages); idx++)
     {
         freeWsg(&atr->uiElements[idx]);
     }
-    heap_caps_free(atr->uiElements);
+
     for (int idx = 0; idx < ARRAY_SIZE(sonaBodies); idx++)
     {
         freeWsg(&atr->bodies[idx]);
     }
-    heap_caps_free(atr->bodies);
+
     heap_caps_free(atr);
 }
 
@@ -550,6 +550,8 @@ static void atriumMainLoop(int64_t elapsedUs)
                     {
                         atr->down = true;
                     }
+
+                    // TODO this overwrites PB_UP and PB_DOWN from above
                     if (evt.button & PB_UP)
                     {
                         atr->up = false;
@@ -594,7 +596,7 @@ static void atriumMainLoop(int64_t elapsedUs)
                     {
                         atr->state = ATR_PROFILE;
                     }
-                    if ((evt.button & PB_LEFT))
+                    else if ((evt.button & PB_LEFT))
                     {
                         atr->selection--;
                         if (atr->selection < 0)
@@ -673,7 +675,7 @@ static void editProfile(buttonEvt_t* evt)
             {
                 atr->state = ATR_TITLE;
             }
-            if (evt->button & PB_A)
+            else if (evt->button & PB_A)
             {
                 if (atr->yloc == 4) // save profile
                 {
@@ -695,7 +697,7 @@ static void editProfile(buttonEvt_t* evt)
                     ESP_LOGI(ATR_TAG, "latest points: %" PRId32 "", atr->spProfile.points);
                 }
             }
-            if (evt->button & PB_UP)
+            else if (evt->button & PB_UP)
             {
                 atr->yloc--;
                 if (atr->yloc < 0)
@@ -703,7 +705,7 @@ static void editProfile(buttonEvt_t* evt)
                     atr->yloc = 0;
                 }
             }
-            if (evt->button & PB_DOWN)
+            else if (evt->button & PB_DOWN)
             {
                 atr->yloc++;
                 if (atr->yloc > 4)
@@ -711,11 +713,11 @@ static void editProfile(buttonEvt_t* evt)
                     atr->yloc = 4;
                 }
             }
-            if (evt->button & PB_LEFT)
+            else if (evt->button & PB_LEFT)
             {
                 drawEditUI(evt, atr->yloc, 1);
             }
-            if (evt->button & PB_RIGHT)
+            else if (evt->button & PB_RIGHT)
             {
                 drawEditUI(evt, atr->yloc, 0);
             }
@@ -726,8 +728,8 @@ static void editProfile(buttonEvt_t* evt)
 
 static void viewProfile(buttonEvt_t* evt)
 {
-    ESP_LOGI(ATR_TAG, "Viewing profile %d on page %" PRId8, atr->selection, atr->page);
-    ESP_LOGI(ATR_TAG, "sonas name is %s", atr->sonaList[atr->page * SONA_PER + atr->selection].swsn.name.nameBuffer);
+    ESP_LOGD(ATR_TAG, "Viewing profile %d on page %" PRId8, atr->selection, atr->page);
+    ESP_LOGD(ATR_TAG, "sonas name is %s", atr->sonaList[atr->page * SONA_PER + atr->selection].swsn.name.nameBuffer);
     drawCard(atr->sonaList[atr->page * SONA_PER + atr->selection], false); // draw selected profile
 
     while (checkButtonQueueWrapper(evt))
@@ -911,8 +913,8 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
     }
 
     // Draw sonas
-    ESP_LOGI(ATR_TAG, "Drawing sonas for page %" PRId8 " and the remainder is %" PRId8, page, atr->remSwsn);
-    ESP_LOGI(ATR_TAG, "Total pages: %" PRId8, atr->totalPages);
+    ESP_LOGD(ATR_TAG, "Drawing sonas for page %" PRId8 " and the remainder is %" PRId8, page, atr->remSwsn);
+    ESP_LOGD(ATR_TAG, "Total pages: %" PRId8, atr->totalPages);
 
     int sonas;
 
@@ -973,7 +975,7 @@ static void drawArrows(bool left, bool right, bool up, bool down)
 
 static void drawCard(userProfile_t profile, bool local)
 {
-    ESP_LOGI(ATR_TAG, "Drawing card with cardSelect %" PRId8 ", fact0 %" PRId8 ", fact1 %" PRId8 ", fact2 %" PRId8,
+    ESP_LOGD(ATR_TAG, "Drawing card with cardSelect %" PRId8 ", fact0 %" PRId8 ", fact1 %" PRId8 ", fact2 %" PRId8,
              profile.cardSelect, profile.fact0, profile.fact1, profile.fact2);
     // concat card info
     // line 1: fact0
