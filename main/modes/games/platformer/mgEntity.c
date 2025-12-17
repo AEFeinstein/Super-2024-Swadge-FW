@@ -1786,8 +1786,9 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             /* Hank is invincible while his visor is closed (state 0). Use state check instead
              * of invincibilityFrames to avoid blinking visibility toggles.
              */
-            if (self->type == ENTITY_BOSS_HANK_WADDLE && self->state == 0)
+            if (self->type == ENTITY_BOSS_HANK_WADDLE && (self->state == 0 || self->state == 7))
             {
+                mg_destroyShot(other);
                 break;
             }
 
@@ -5473,6 +5474,13 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
             else if (self->stateTimer > 12)
             {
                 self->state = 3;
+            }
+            break;
+        case 7: /*pre fight, idle*/
+            self->visible = true;
+            if(self->entityManager->playerEntity->x > self->x)
+            {
+                self->state = 0;
             }
             break;
         default:
