@@ -37,6 +37,13 @@ const mg_spriteDef_t playerSureYouCanAnimnFrames[] = {
     MG_SP_PLAYER_SUREYOUCAN_2, MG_SP_PLAYER_SUREYOUCAN_2, MG_SP_PLAYER_SUREYOUCAN_2, MG_SP_PLAYER_SUREYOUCAN_1,
     MG_SP_PLAYER_SUREYOUCAN_1, MG_SP_PLAYER_JUMP,         MG_WSG_PLAYER_WALK5,       MG_WSG_PLAYER_WALK6};
 
+const mg_spriteDef_t playerDoubleJumpAnimFrames[] = {MG_SP_PLAYER_DOUBLE_JUMP_0,
+                                                     MG_SP_PLAYER_DOUBLE_JUMP_1,
+                                                     MG_SP_PLAYER_DOUBLE_JUMP_2,
+                                                     MG_SP_PLAYER_DOUBLE_JUMP_3,
+                                                     MG_SP_PLAYER_DOUBLE_JUMP_4,
+                                                     MG_SP_PLAYER_DOUBLE_JUMP_5};
+
 const mg_spriteDef_t normalShotAnimFrames[] = {MG_SP_WAVEBALL_1, MG_SP_WAVEBALL_2, MG_SP_WAVEBALL_3};
 const mg_spriteDef_t chargeShotAnimFrames[]
     = {MG_SP_CHARGE_SHOT_LVL1_1, MG_SP_CHARGE_SHOT_LVL1_2, MG_SP_CHARGE_SHOT_LVL1_3};
@@ -87,6 +94,7 @@ void mg_initializeEntity(mgEntity_t* self, mgEntityManager_t* entityManager, mgT
     // self->gravityEnabled = false;
     // self->spriteIndex = 0;
     // self->animationTimer = 0;
+    self->doubleJumpAnimTimer = 0;
     // self->jumpPower = 0;
     // self->visible = false;
     // self->hp = 0;
@@ -345,6 +353,9 @@ void mg_updatePlayer(mgEntity_t* self)
                 self->yspeed    = -self->jumpPower;
                 self->falling   = true;
                 self->canDash   = false;
+                /* play the six-frame double-jump animation */
+                self->doubleJumpAnimTimer = 6 * 4; /* 6 frames, 4 ticks each */
+                self->spriteIndex = MG_SP_PLAYER_DOUBLE_JUMP_0;
             }
         }
         else if (self->jumpPower > 0 && self->yspeed < 0)
@@ -386,6 +397,11 @@ void mg_updatePlayer(mgEntity_t* self)
         {
             mg_remapPlayerNotShootWsg(self->tilemap->wsgManager);
         }
+    }
+
+    if (self->doubleJumpAnimTimer > 0)
+    {
+        self->doubleJumpAnimTimer--;
     }
 
     if (self->gameData->btnState & PB_B && !(self->gameData->prevBtnState & PB_B) && self->shotsFired < self->shotLimit)
@@ -1243,6 +1259,19 @@ void animatePlayer(mgEntity_t* self)
             self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
             self->falling              = true;
         }
+        return;
+    }
+
+    /* Double-jump animation has priority over normal jump/fall sprites */
+    if (self->doubleJumpAnimTimer > 0)
+    {
+        const uint8_t total = ARRAY_SIZE(playerDoubleJumpAnimFrames);
+        uint8_t idx = (total - 1) - ((self->doubleJumpAnimTimer - 1) / 4);
+        if (idx >= total)
+        {
+            idx = 0;
+        }
+        self->spriteIndex = playerDoubleJumpAnimFrames[idx];
         return;
     }
 

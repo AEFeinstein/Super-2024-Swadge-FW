@@ -155,6 +155,7 @@ struct mgEntity_t
     bool spriteFlipVertical;
     int16_t spriteRotateAngle;
     uint8_t animationTimer;
+    uint8_t doubleJumpAnimTimer; /* counts down frames for the double-jump animation */
 
     mgTilemap_t* tilemap;
     mgGameData_t* gameData;

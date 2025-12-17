@@ -664,27 +664,27 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_CHARGE_SHOT_MAX_3].origin = &origin_26_16;
     self->sprites[MG_SP_CHARGE_SHOT_MAX_3].hitBox = &box_charge_shot_max;
 
-    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_0].wsg    = &self->wsgs[MG_SP_PLAYER_DOUBLE_JUMP_0];
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_0].wsg    = &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_0];
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_0].origin = &origin_16_16;
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_0].hitBox = &box_16_32;
 
-    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_1].wsg    = &self->wsgs[MG_SP_PLAYER_DOUBLE_JUMP_1];
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_1].wsg    = &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_1];
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_1].origin = &origin_16_16;
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_1].hitBox = &box_16_32;
 
-    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_2].wsg    = &self->wsgs[MG_SP_PLAYER_DOUBLE_JUMP_2];
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_2].wsg    = &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_2];
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_2].origin = &origin_16_16;
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_2].hitBox = &box_16_32;
 
-    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_3].wsg    = &self->wsgs[MG_SP_PLAYER_DOUBLE_JUMP_3];
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_3].wsg    = &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_3];
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_3].origin = &origin_16_16;
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_3].hitBox = &box_16_32;
 
-    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_4].wsg    = &self->wsgs[MG_SP_PLAYER_DOUBLE_JUMP_4];
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_4].wsg    = &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_4];
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_4].origin = &origin_16_16;
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_4].hitBox = &box_16_32;
 
-    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_5].wsg    = &self->wsgs[MG_SP_PLAYER_DOUBLE_JUMP_5];
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_5].wsg    = &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_5];
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_5].origin = &origin_16_16;
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_5].hitBox = &box_16_32;
 }
