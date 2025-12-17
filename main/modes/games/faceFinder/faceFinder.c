@@ -332,11 +332,9 @@ bool finderMainMenuCb(const char* label, bool selected, uint32_t value)
                 globalMidiPlayerPlaySong(&finder->bgm_zen, MIDI_BGM);
                 finder->musicNum = 0;
                 startNewGame(finder);
-            }else{
-                startNewGame(finder);
             }
-            
-        }else if (label == ExitText)
+        }
+        else if (label == ExitText)
         {
             switchToSwadgeMode(&mainMenuMode);
         }
@@ -524,6 +522,10 @@ static void findingMainLoop(int64_t elapsedUs)
                         finder->timer += 10000000;
                     }
                 }
+                default:
+                {
+                    break;
+                }
             }
         }
         else if(evt.down && finder->ShowMenu){
@@ -551,6 +553,10 @@ static void findingMainLoop(int64_t elapsedUs)
                 case PB_DOWN:
                 {
                     finder->pointingDown = false;
+                    break;
+                }
+                default:
+                {
                     break;
                 }
             }
