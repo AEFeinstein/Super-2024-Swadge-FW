@@ -37,7 +37,6 @@ void modeListSetMenu(menu_t* menu)
 {
     // Games sub menu
     menu = startSubMenu(menu, "Games");
-    addSingleItemToMenu(menu, findingFacesMode.modeName);
     addSingleItemToMenu(menu, modePlatformer.modeName);
     addSingleItemToMenu(menu, cosCrunchMode.modeName);
     addSingleItemToMenu(menu, artilleryMode.modeName);
@@ -46,6 +45,7 @@ void modeListSetMenu(menu_t* menu)
     addSingleItemToMenu(menu, swadgedokuMode.modeName);
     addSingleItemToMenu(menu, roboRunnerMode.modeName);
     addSingleItemToMenu(menu, swadgeItMode.modeName);
+    addSingleItemToMenu(menu, findingFacesMode.modeName);
     menu = endSubMenu(menu);
 
     // Music sub menu
