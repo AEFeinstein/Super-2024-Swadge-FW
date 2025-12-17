@@ -254,7 +254,12 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(BOSS_RUSH_SYMBOL_WSG, &self->wsgs[MG_WSG_BOSS_RUSH_SYMBOL], false);
     loadWsg(HANK_SYMBOL_WSG, &self->wsgs[MG_WSG_HANK_SYMBOL], false);
     loadWsg(NEW_GAME_SYMBOL_WSG, &self->wsgs[MG_WSG_NEW_GAME_PLUS_SYMBOL], false);
-
+    loadWsg(PULSE_DOUBLE_JUMP_0_WSG, &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_0], false);
+    loadWsg(PULSE_DOUBLE_JUMP_1_WSG, &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_1], false);
+    loadWsg(PULSE_DOUBLE_JUMP_2_WSG, &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_2], false);
+    loadWsg(PULSE_DOUBLE_JUMP_3_WSG, &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_3], false);
+    loadWsg(PULSE_DOUBLE_JUMP_4_WSG, &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_4], false);
+    loadWsg(PULSE_DOUBLE_JUMP_5_WSG, &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_5], false);
 }
 
 void mg_initializeSprites(mgWsgManager_t* self)
@@ -658,6 +663,30 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_CHARGE_SHOT_MAX_3].wsg    = &self->wsgs[MG_WSG_CHARGE_SHOT_MAX_3];
     self->sprites[MG_SP_CHARGE_SHOT_MAX_3].origin = &origin_26_16;
     self->sprites[MG_SP_CHARGE_SHOT_MAX_3].hitBox = &box_charge_shot_max;
+
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_0].wsg    = &self->wsgs[MG_SP_PLAYER_DOUBLE_JUMP_0];
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_0].origin = &origin_16_16;
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_0].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_1].wsg    = &self->wsgs[MG_SP_PLAYER_DOUBLE_JUMP_1];
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_1].origin = &origin_16_16;
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_1].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_2].wsg    = &self->wsgs[MG_SP_PLAYER_DOUBLE_JUMP_2];
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_2].origin = &origin_16_16;
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_2].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_3].wsg    = &self->wsgs[MG_SP_PLAYER_DOUBLE_JUMP_3];
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_3].origin = &origin_16_16;
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_3].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_4].wsg    = &self->wsgs[MG_SP_PLAYER_DOUBLE_JUMP_4];
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_4].origin = &origin_16_16;
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_4].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_5].wsg    = &self->wsgs[MG_SP_PLAYER_DOUBLE_JUMP_5];
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_5].origin = &origin_16_16;
+    self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_5].hitBox = &box_16_32;
 }
 
 void mg_initializeTiles(mgWsgManager_t* self)
