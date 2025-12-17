@@ -473,6 +473,39 @@ void platformerEnterMode(void)
         // BlackScreen
         addCutsceneStyle(platformer->gameData.cutscene, c555, BLACK_PORTRAIT_WSG, TEXTBOX_SAWTOOTH_WSG, "", 1, false,
                          true, false);
+
+        //uncorrupted Versions.....
+        // TrashMan
+        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 2,
+                         false, true, true);
+        // KineticDonut
+        addCutsceneStyle(platformer->gameData.cutscene, c310, KINETIC_DONUT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Kinetic Donut",
+                         1, false, true, true);
+        setMidiParams(platformer->gameData.cutscene, 6, 80, -1, 1000, false);
+        // JoltLapin
+        addCutsceneStyle(platformer->gameData.cutscene, c000, JOLT_LAPIN_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+                         "Jolt Lapin", 1, true, true, true);
+        setMidiParams(platformer->gameData.cutscene, 7, 80, 1, 250, false);
+        // FlareGryffyn
+        addCutsceneStyle(platformer->gameData.cutscene, c310, FLARE_GRYFFYN_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+                         "Flare Gryffyn", 1, false, true, true);
+        setMidiParams(platformer->gameData.cutscene, 8, 24, 1, 250, false);
+        // CrashTurtle
+        addCutsceneStyle(platformer->gameData.cutscene, c000, CRASH_TURTLE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+                         "Crash Turtle", 1, true, true, true);
+        // DeadeyeChirpzi
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_CHIRPZI_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+                         "Deadeye Chirpzi", 1, true, true, true);
+        // GrindPangolin
+        addCutsceneStyle(platformer->gameData.cutscene, c310, GRIND_PANGOLIN_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+                         "Grind Pangolin", 1, false, true, true);
+        // SmashGorilla
+        addCutsceneStyle(platformer->gameData.cutscene, c310, SMASH_GORILLA_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+                         "Smash Gorilla", 1, false, true, true);
+        setMidiParams(platformer->gameData.cutscene, 15, 29, -1, 250, false);
+        // SeverYagata
+        addCutsceneStyle(platformer->gameData.cutscene, c310, SEVER_YAGATA_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+                         "Sever Yagata", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 24, 11, 0, 100, true);
     }
 
@@ -1486,7 +1519,8 @@ void updateLevelClear(platformer_t* self)
 
                 changeStateGameClear(self);
             }
-            else if (globalMidiPlayerGet(MIDI_BGM)->paused) // also checks the level clear jingle has finished.
+            // YOOOOOOOO DON'T COMMIT THIS 1
+            else if (true) // globalMidiPlayerGet(MIDI_BGM)->paused) // also checks the level clear jingle has finished.
             {
                 // Advance to the next level
                 /*self->gameData.level++;

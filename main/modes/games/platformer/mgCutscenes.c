@@ -26,7 +26,16 @@ typedef enum
     Sunny,
     WarningMessage,
     SawtoothPostReveal,
-    BlackScreen
+    BlackScreen,
+    TrashManUncorrupted,
+    KineticDonutUncorrupted,
+    JoltLapinUncorrupted,
+    FlareGryffynUncorrupted,
+    CrashTurtleUncorrupted,
+    DeadeyeChirpziUncorrupted,
+    GrindPangolinUncorrupted,
+    SmashGorillaUncorrupted,
+    SeverYagataUncorrupted,
 } cutsceneCharacters;
 
 static void setSongPitchesFromCurrentSong(mgGameData_t* gameData)
@@ -437,9 +446,9 @@ void stageStartCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, QuestionMark, "I wasn't talking to you, kid. I was talking to them.", false, -1);
             addCutsceneLine(gameData->cutscene, QuestionMark, "Isn't that right...Deadeye?", false, -1);
             addCutsceneLine(gameData->cutscene, SystemText, "The other RemiXs are all revealed in the shadows, in chains. A spotlight falls on DEADEYE CHIRPZI.", false, -1);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "Me? ...No. No way... That voice...", true, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Me? ...No. No way... That voice...", true, -1);
             addCutsceneLine(gameData->cutscene, QuestionMark, "Hahaha! YES! Deadeye.... Or should I say... Cho. I knew you'd remember me, even after all these years.", false, -1);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "... No. It can't be. Is that- HANK?", true, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "... No. It can't be. Is that- HANK?", true, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Who??", false, 0);
             break;
         }
@@ -605,18 +614,18 @@ void bossIntroCutscene(mgGameData_t* gameData)
         }
         default: // Hank Final Battle
         {
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "Hank Waddle?? MY OLD LAWYER?!", true, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Hank Waddle?? MY OLD LAWYER?!", true, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "HAHAHA! So you DO remember me!!", false, 0);
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "Okay-what?! Cho, you seriously need to explain what's happening.", false, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "BIGMA, I'm disappointed. You were supposed to be my masterpiece! All that rage! That nostalgia!", false, 0);
             addCutsceneLine(gameData->cutscene, HankWaddle, "I practically gift-wrapped your villain arc!!", false, 0);
             addCutsceneLine(gameData->cutscene, Bigma, "You... corrupted me??", false, -1);
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "Cho...?", false, -1);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "I - I don't know, but... is this... is this about...what happened back 2024?", true, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "I - I don't know, but... is this... is this about...what happened back 2024?", true, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "What HAPPENED in 2024?", false, -1);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "I, uh.. partied a LITTLE too hard at MAGFest. Woke up in a space station.", false, -1);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "Gear missing.. Reality kind of ... bent sideways. It was a whole thing.", false, -1);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "And this guy - Hank, my lawyer - was texting me the whole time...", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "I, uh.. partied a LITTLE too hard at MAGFest. Woke up in a space station.", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Gear missing.. Reality kind of ... bent sideways. It was a whole thing.", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "And this guy - Hank, my lawyer - was texting me the whole time...", false, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "Do you have ANY IDEA how much damage you caused?! The legal fallout?! The paperwork?!", false, 0);
             addCutsceneLine(gameData->cutscene, HankWaddle, "You undermined EVERYTHING I built my career on!", false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "Wait-so you turned into a villain over PAPERWORK?", false, -1);
@@ -625,7 +634,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, HankWaddle, "You and your... kind ... are a blight on this world!", false, 0);
             addCutsceneLine(gameData->cutscene, HankWaddle, "And with my corruption program, I've shown the world just how destructive you all really are.", false, 0);
             addCutsceneLine(gameData->cutscene, HankWaddle, "I, HANK WADDLE, will finally be the one to right this wrong. ONCE AND FOR ALL!", false, 0);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "... We kinda lost touch after that.", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "... We kinda lost touch after that.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "We'll stop you just like we stopped BIGMA!", false, -1);
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "Oh... I was SO hoping you'd say that. Cue FINAL BATTLE MUSIC!", false, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "IT. IS. SO. ON!!", false, -1);
@@ -859,16 +868,16 @@ void bossOutroCutscene(mgGameData_t* gameData)
         default: // Hank Final Battle
         {
             addCutsceneLine(gameData->cutscene, HankWaddle, "NOOO! NO!! I can't lose to YOU! You're .... A bunch of fakes! Cheap knock-offs!", false, 1);
-            addCutsceneLine(gameData->cutscene, KineticDonut, "Well, duh.", false, -1);
+            addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Well, duh.", false, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "WHAT?!", false, 1);
-            addCutsceneLine(gameData->cutscene, GrindPangolin, "You think we don't know that, ya dingus?", false, -1);
+            addCutsceneLine(gameData->cutscene, GrindPangolinUncorrupted, "You think we don't know that, ya dingus?", false, -1);
             addCutsceneLine(gameData->cutscene, DrainBat, "We were born... out of love!", true, -1);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "...For everything that came before us!", true, -1);
-            addCutsceneLine(gameData->cutscene, SmashGorilla, "And everything that shaped us.", true, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "...For everything that came before us!", true, -1);
+            addCutsceneLine(gameData->cutscene, SmashGorillaUncorrupted, "And everything that shaped us.", true, -1);
             addCutsceneLine(gameData->cutscene, Ember, "Flaws and all, baby.", true, -1);
-            addCutsceneLine(gameData->cutscene, SeverYagata, "We're not afraid to carry the torch...", true, -1);
+            addCutsceneLine(gameData->cutscene, SeverYagataUncorrupted, "We're not afraid to carry the torch...", true, -1);
             addCutsceneLine(gameData->cutscene, Jasper, "Or light new ones.", true, -1);
-            addCutsceneLine(gameData->cutscene, FlareGryffyn, "And maybe... even mend what was broken along the way.", true, -1);
+            addCutsceneLine(gameData->cutscene, FlareGryffynUncorrupted, "And maybe... even mend what was broken along the way.", true, -1);
             addCutsceneLine(gameData->cutscene, SystemText, "HANK WADDLE's subsystems start exploding.", false, -1);
             addCutsceneLine(gameData->cutscene, Bigma, "You think we're copies, but that's not the point. We're all echoes of what came before.", true, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "What do you mean?", false, 1);
@@ -877,7 +886,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "We're something new.", false, 1);
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "Something that couldn't exist without the past...", false, -1);
             addCutsceneLine(gameData->cutscene, Bigma, "...But doesn't need to live in it.", true, -1);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "So... in other words... HANK, you're fired.", true, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "So... in other words... HANK, you're fired.", true, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "No! No no no-if I go down, I'll take you with-AAAAUUUGHHHH!!!!", false, 1);
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "Pulse! We have to get out of here!", true, -1);
             addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0);
@@ -888,10 +897,10 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "...LET'S FREAKIN' PARTY!!", false, -1);
             addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0);
             addCutsceneLine(gameData->cutscene, SystemText, "Starfield. Quiet. Peaceful. Suddenly-a Garbotnik industries craft hurtles past the camera, sparking and trailing smoke.", false, -1);
-            addCutsceneLine(gameData->cutscene, TrashMan, "WHA-HAHA... I regret nothing...", false, -1);
-            addCutsceneLine(gameData->cutscene, TrashMan, "Note to self: recalibrate escape trajectory before launching dramatic exit.", false, -1);
+            addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "WHA-HAHA... I regret nothing...", false, -1);
+            addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "Note to self: recalibrate escape trajectory before launching dramatic exit.", false, -1);
             addCutsceneLine(gameData->cutscene, SystemText, "Suddenly, a floating burrito wrapper hits him in the face.", false, -1);
-            addCutsceneLine(gameData->cutscene, TrashMan, "... Is that my lunch?", false, -1);
+            addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "... Is that my lunch?", false, -1);
             addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0);
             addCutsceneLine(gameData->cutscene, SystemText, "TRASH MAN WILL RETURN... In whatever sequel he can crash into.", false, -1);
             addCutsceneLine(gameData->cutscene, SystemText, "THANK YOU FOR PLAYING PULSE 20x6!", false, -1);

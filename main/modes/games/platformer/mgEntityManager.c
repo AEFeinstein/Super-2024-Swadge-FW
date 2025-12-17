@@ -2537,7 +2537,7 @@ mgEntity_t* createBossHankWaddle(mgEntityManager_t* entityManager, uint16_t x, u
 
     entity->type                 = ENTITY_BOSS_HANK_WADDLE;
     entity->spriteIndex          = MG_SP_BOSS_0;
-    entity->state                = -1;
+    entity->state                = 7;//pre-fight state
     entity->stateTimer           = 0;
     entity->special1             = 0;
     entity->specialX             = 0;
