@@ -48,7 +48,7 @@ typedef struct
     int64_t score;
     int32_t stage;
 
-    list_t* faceList;
+    list_t faceList;
 
     vec_t pointerCoords; // x and y are int32 allowing us to turn 2billies into 280 X_pixels
     bool pointingRight;
@@ -225,7 +225,7 @@ static void randomizeFaces(finder_t* myfind)
         myfind->faces[j] = hold;
     }
 
-    node_t* currentNode = myfind->faceList->first;
+    node_t* currentNode = myfind->faceList.first;
     face_t* foo         = (face_t*)currentNode->val;
     if (myfind->stage % 2 && myfind->stage > 4)
     {
@@ -244,8 +244,8 @@ static void randomizeFaces(finder_t* myfind)
             foo->pos.y         = (esp_random() % 200) * MillisPerPixel;
             foo->danceDuration = (esp_random() % 32767) * DanceDurationMult;
             foo->movementSpeed = faceDance();
-            foo->faceNum       = (esp_random() % 6) + 1; // Ensures there is only one face[0]
-            currentNode        = currentNode->next;
+            foo->faceNum = (esp_random() % (ARRAY_SIZE(myfind->faces) - 1)) + 1; // Ensures there is only one face[0]
+            currentNode  = currentNode->next;
         }
     }
     else
@@ -269,13 +269,13 @@ static void randomizeFaces(finder_t* myfind)
             };
 
             // Ensures there is only one face[0]
-            if (currentNode == myfind->faceList->first)
+            if (currentNode == myfind->faceList.first)
             {
                 foo->faceNum = 0;
             }
             else
             {
-                foo->faceNum = (esp_random() % 6) + 1;
+                foo->faceNum = (esp_random() % (ARRAY_SIZE(myfind->faces) - 1)) + 1;
             }
             curInd      = (curInd + 1) % numFaces;
             currentNode = currentNode->next;
@@ -285,7 +285,7 @@ static void randomizeFaces(finder_t* myfind)
 static void addNewFace(finder_t* myfind)
 {
     face_t* curFace = heap_caps_calloc(1, sizeof(face_t), MALLOC_CAP_8BIT);
-    push(myfind->faceList, (void*)curFace);
+    push(&myfind->faceList, (void*)curFace);
 }
 static vec_t faceDance()
 {
@@ -300,7 +300,12 @@ static void startNewGame(finder_t* myFind)
     myFind->score           = 0;
     myFind->timer           = StartTime;
     myFind->stage           = 0;
-    clear(myFind->faceList);
+
+    while (myFind->faceList.first)
+    {
+        heap_caps_free(pop(&myFind->faceList));
+    }
+
     for (int i = 0; i < startingFaces; i++)
     {
         addNewFace(myFind);
@@ -407,7 +412,6 @@ static void findingEnterMode(void)
     finder->ShowMenu                    = true;
 
     // Load all faces
-    finder->faceList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
     startNewGame(finder);
 }
 static void findingMainLoop(int64_t elapsedUs)
@@ -453,7 +457,7 @@ static void findingMainLoop(int64_t elapsedUs)
                     else
                     {
                         // Check if the pointer is on the first face
-                        node_t* firstNode = finder->faceList->first;
+                        node_t* firstNode = finder->faceList.first;
                         face_t* firstFace = (face_t*)firstNode->val;
                         // The pointer coords should be as close to the face coords + [32,32] as possible
                         if (abs(firstFace->pos.x / MillisPerPixel + 32 - finder->pointerCoords.x / MillisPerPixel) < 22
@@ -532,9 +536,10 @@ static void findingMainLoop(int64_t elapsedUs)
                     break;
                 }
                 case PB_START:
-
+                {
                     finder->ShowMenu = true;
                     break;
+                }
                 case PB_B:
                 {
                     if (finder->millisInstructing <= 0)
@@ -709,7 +714,7 @@ static void findingMainLoop(int64_t elapsedUs)
         // Draw the screen
         drawRectFilled(0, 0, 280, 240, finder->background); // background
 
-        node_t* currentNode = finder->faceList->first;
+        node_t* currentNode = finder->faceList.first;
         int drawnFaces      = 0;
         bool keepDrawing    = true;
         while (currentNode != NULL && keepDrawing)
@@ -787,6 +792,9 @@ static void findingExitMode(void)
     deinitMenu(finder->mainMenu);
     // Free the renderer
     deinitMenuMegaRenderer(finder->renderer);
-    clear(finder->faceList);
+    while (finder->faceList.first)
+    {
+        heap_caps_free(pop(&finder->faceList));
+    }
     heap_caps_free(finder);
 }
