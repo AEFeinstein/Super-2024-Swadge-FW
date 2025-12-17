@@ -531,11 +531,11 @@ static void findingMainLoop(int64_t elapsedUs)
 
                     break;
                 }
-                case PB_B:
+                case PB_START:
 
                     finder->ShowMenu = true;
                     break;
-                case PB_START:
+                case PB_B:
                 {
                     if (finder->millisInstructing <= 0)
                     {
