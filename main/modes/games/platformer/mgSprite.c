@@ -22,6 +22,8 @@ const vec_t origin_15_9 = {.x = 15, .y = 3};
 
 const vec_t origin_15_11 = {.x = 15, .y = 11};
 
+const vec_t origin_16_16 = {.x = 16, .y = 16};
+
 const vec_t origin_26_16 = {.x = 26, .y = 16};
 
 const box_t box_16_16 = {.x0 = 0, .x1 = 15, .y0 = 0, .y1 = 15};

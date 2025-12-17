@@ -43,6 +43,8 @@ extern const vec_t origin_15_9;
 
 extern const vec_t origin_15_11;
 
+extern const vec_t origin_16_16;
+
 extern const vec_t origin_26_16;
 
 extern const box_t box_16_16;
