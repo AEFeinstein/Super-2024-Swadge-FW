@@ -340,6 +340,8 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
                         entityManager->entities[bossIdx] = *entityManager->playerEntity;
                         entityManager->entities[entityIdx] = boss;
                         entityManager->playerEntity = &entityManager->entities[bossIdx];
+                        entityManager->viewEntity = entityManager->playerEntity;
+                        entityManager->bossEntity = &entityManager->entities[entityIdx];
                         break;
                     }
                 }
