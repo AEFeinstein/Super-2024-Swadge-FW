@@ -75,13 +75,110 @@ static const char ZenScore[]             = "Zen :)";
 static const int32_t startingFaces       = 4;
 static const int32_t facesPerLevel       = 2;
 static const int32_t MaxStaticFaces      = 42;
-static const int32_t MaxDynamicFaces     = 80;
+static const int32_t MaxDynamicFaces     = 60;
 static const int32_t StartTime           = 10000000;
 static const int32_t TimePerLevel        = 5000000; // 20 seconds per stage, additive
 static const int32_t TimePerInstruction  = 4000000; // How long is each instruction page, with ability to be skipped
 static const int32_t MillisPerPixel      = 5000; // How many milliseconds of "moving right" to move one pixel to the right
 static const int32_t DanceDurationMult   = 200;
 static const int32_t PenaltyMillis       = 3000000; // Milliseconds penalized from the timer on a wrong click
+const trophyData_t findingFacesModeTrophies[] = {
+    {
+        .title       = "MANHUNT!",
+        .description = "Opened Mascot Madness for the first time.",
+        .image       = FINDER_SAWTOOTH_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Minute to Win It!",
+        .description = "Have more than 60 seconds banked in time attack.",
+        .image       = FINDER_SAWTOOTH_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Gone in 60- wait...",
+        .description = "Have more than 120 seconds banked in time attack.",
+        .image       = FINDER_SAWTOOTH_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Newb",
+        .description = "Have more than 1500 score in time attack.",
+        .image       = FINDER_SAWTOOTH_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Apprentice",
+        .description = "Have more than 3000 score in time attack.",
+        .image       = FINDER_SAWTOOTH_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Expert",
+        .description = "Have more than 6000 score in time attack.",
+        .image       = FINDER_SAWTOOTH_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Mastery",
+        .description = "Have more than 12000 score in time attack.",
+        .image       = FINDER_SAWTOOTH_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Beginner Zen",
+        .description = "Get to stage 50 in Zen Mode.",
+        .image       = FINDER_SAWTOOTH_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Nice ;)",
+        .description = "Get to stage 69 in Zen Mode.",
+        .image       = FINDER_SAWTOOTH_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "One With Everything",
+        .description = "Get to stage 100 in Zen Mode.",
+        .image       = FINDER_SAWTOOTH_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EASY,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+};
+ 
+// Individual mode settings
+const trophySettings_t findingFacesModeTrophySettings = {
+    .drawFromBottom   = false,
+    .staticDurationUs = DRAW_STATIC_US * 2,
+    .slideDurationUs  = DRAW_SLIDE_US,
+    .namespaceKey     = findingFacesModeName,
+};
+ 
+// This is passed to the swadgeMode_t
+const trophyDataList_t findingFacesModeTrophyData = {
+    .settings = &findingFacesModeTrophySettings,
+    .list     = findingFacesModeTrophies,
+    .length   = ARRAY_SIZE(findingFacesModeTrophies),
+};
 
 //==============================================================================
 // Function Definitions
@@ -108,7 +205,7 @@ swadgeMode_t findingFacesMode = {
     .fnEnterMode       = findingEnterMode,
     .fnExitMode        = findingExitMode,
     .fnMainLoop        = findingMainLoop,
-    //.trophyData              = &findingTrophyData,
+    .trophyData               = &findingFacesModeTrophyData,
     .fnBackgroundDrawCallback = NULL,
 };
 finder_t* finder;
@@ -120,7 +217,7 @@ static void randomizeFaces(finder_t* myfind)
 {
     for (int i = 7; i > 0; i--)
     {
-        int j            = rand() % (i + 1);
+        int j            = esp_random() % (i + 1);
         wsg_t hold       = myfind->faces[i];
         myfind->faces[i] = myfind->faces[j];
         myfind->faces[j] = hold;
@@ -131,9 +228,9 @@ static void randomizeFaces(finder_t* myfind)
     if (myfind->stage % 2 && myfind->stage > 4)
     {
         // Movement stage
-        foo->pos.x         = (rand() % 240) * MillisPerPixel;
-        foo->pos.y         = (rand() % 200) * MillisPerPixel;
-        foo->danceDuration = (rand() % 32767) * DanceDurationMult;
+        foo->pos.x         = (esp_random() % 240) * MillisPerPixel;
+        foo->pos.y         = (esp_random() % 200) * MillisPerPixel;
+        foo->danceDuration = (esp_random() % 32767) * DanceDurationMult;
         foo->movementSpeed = faceDance();
         foo->faceNum       = 0;
         currentNode        = currentNode->next;
@@ -141,11 +238,11 @@ static void randomizeFaces(finder_t* myfind)
         while (currentNode != NULL)
         {
             foo                = (face_t*)currentNode->val;
-            foo->pos.x         = (rand() % 240) * MillisPerPixel;
-            foo->pos.y         = (rand() % 200) * MillisPerPixel;
-            foo->danceDuration = (rand() % 32767) * DanceDurationMult;
+            foo->pos.x         = (esp_random() % 240) * MillisPerPixel;
+            foo->pos.y         = (esp_random() % 200) * MillisPerPixel;
+            foo->danceDuration = (esp_random() % 32767) * DanceDurationMult;
             foo->movementSpeed = faceDance();
-            foo->faceNum       = (rand() % 6) + 1; // Ensures there is only one face[0]
+            foo->faceNum       = (esp_random() % 6) + 1; // Ensures there is only one face[0]
             currentNode        = currentNode->next;
         }
     }
@@ -154,7 +251,7 @@ static void randomizeFaces(finder_t* myfind)
         // Static Grid Stage
         int numFaces = fmin(startingFaces + (facesPerLevel * finder->stage), MaxStaticFaces);
         int curInd
-            = rand() % numFaces; // The face we want will be at a random position, and the rest will fill in around
+            = esp_random() % numFaces; // The face we want will be at a random position, and the rest will fill in around
         int numRows = floor(sqrt(numFaces));
         int numCols = ceil(numFaces / numRows);
 
@@ -176,7 +273,7 @@ static void randomizeFaces(finder_t* myfind)
             }
             else
             {
-                foo->faceNum = (rand() % 6) + 1;
+                foo->faceNum = (esp_random() % 6) + 1;
             }
             curInd      = (curInd + 1) % numFaces;
             currentNode = currentNode->next;
@@ -191,8 +288,8 @@ static void addNewFace(finder_t* myfind)
 static vec_t faceDance()
 {
     return (vec_t){
-        .x = 75 - (rand() % 150),
-        .y = 75 - (rand() % 150),
+        .x = 75 - (esp_random() % 150),
+        .y = 75 - (esp_random() % 150),
     };
 }
 static void startNewGame(finder_t* myFind){
@@ -225,7 +322,7 @@ bool finderMainMenuCb(const char* label, bool selected, uint32_t value)
             if(finder->ZenMode){
                 finder->ZenMode = false;
                 startNewGame(finder);
-            }else{
+            }else if (finder->displayingScore){
                 startNewGame(finder);
             }
             
@@ -250,7 +347,7 @@ bool finderMainMenuCb(const char* label, bool selected, uint32_t value)
 }
 static void findingEnterMode(void)
 {
-    srand(time(NULL));
+    trophyUpdate(&findingFacesModeTrophies[0], 1, true);
     finder                = heap_caps_calloc(1, sizeof(finder_t), MALLOC_CAP_8BIT);
     finder->ibm           = getSysFont();
     finder->text          = c153;
@@ -344,7 +441,6 @@ static void findingMainLoop(int64_t elapsedUs)
                         finder->millisInstructing = 0;
                     }else if (finder->displayingScore)
                     {
-                        finder->displayingScore = false;
                         finder->ShowMenu = true;
                     }else
                     {
@@ -362,8 +458,42 @@ static void findingMainLoop(int64_t elapsedUs)
                             {
                                 finder->score += finder->timer/1000000;
                                 finder->timer += TimePerLevel;
+
+                                //Time attack time trophies: 60, 120 seconds
+                                //Time attack score trophies: 1500, 3000, 6000, 12000 score
+                                if(finder->timer > 60000000){
+                                    trophyUpdate(&findingFacesModeTrophies[1], 1, true);
+                                }
+                                if(finder->timer > 120000000){
+                                    trophyUpdate(&findingFacesModeTrophies[2], 1, true);
+                                }
+                                if(finder->score >= 1500){
+                                    trophyUpdate(&findingFacesModeTrophies[3], 1, true);
+                                }
+                                if(finder->score >= 3000){
+                                    trophyUpdate(&findingFacesModeTrophies[4], 1, true);
+                                }
+                                if(finder->score >= 6000){
+                                    trophyUpdate(&findingFacesModeTrophies[5], 1, true);
+                                }
+                                if(finder->score >= 12000){
+                                    trophyUpdate(&findingFacesModeTrophies[6], 1, true);
+                                }
+                                
+                                
                             }else{
                                 finder->score++;
+                                //check for zen score trophies
+                                //Zen mode trophies: 50, 69, 100 rounds
+                                if(finder->score >= 50){
+                                    trophyUpdate(&findingFacesModeTrophies[7], 1, true);
+                                }
+                                if(finder->score >= 69){
+                                    trophyUpdate(&findingFacesModeTrophies[8], 1, true);
+                                }
+                                if(finder->score >= 100){
+                                    trophyUpdate(&findingFacesModeTrophies[9], 1, true);
+                                }
                             }
                             finder->millisInstructing = TimePerInstruction;
                             for(int i=0; i<facesPerLevel; i++){
@@ -540,27 +670,31 @@ static void findingMainLoop(int64_t elapsedUs)
             if (currentFace->danceDuration < 0)
             {
                 currentFace->movementSpeed = faceDance();
-                currentFace->danceDuration = (rand() % 32767) * DanceDurationMult;
+                currentFace->danceDuration = (esp_random() % 32767) * DanceDurationMult;
             }
             //If the current face is too far off the screen, turn them around and make sure they come back
             if (currentFace->pos.x < -30 * MillisPerPixel)
             {
                 currentFace->movementSpeed.x = -1 * currentFace->movementSpeed.x;
+                currentFace->pos.x += 4*MillisPerPixel;
                 currentFace->danceDuration += 15000 * MillisPerPixel / currentFace->movementSpeed.x;
             }
             if (currentFace->pos.y < -30 * MillisPerPixel)
             {
                 currentFace->movementSpeed.y = -1 * currentFace->movementSpeed.y;
+                currentFace->pos.y += 4*MillisPerPixel;
                 currentFace->danceDuration += 15000 * MillisPerPixel / currentFace->movementSpeed.y;
             }
             if (currentFace->pos.x > 270 * MillisPerPixel)
             {
                 currentFace->movementSpeed.x = -1 * currentFace->movementSpeed.x;
+                currentFace->pos.x -= 4*MillisPerPixel;
                 currentFace->danceDuration += 15000 * MillisPerPixel / currentFace->movementSpeed.x;
             }
             if (currentFace->pos.y > 230 * MillisPerPixel)
             {
                 currentFace->movementSpeed.y = -1 * currentFace->movementSpeed.y;
+                currentFace->pos.y -= 4*MillisPerPixel;
                 currentFace->danceDuration += 15000 * MillisPerPixel / currentFace->movementSpeed.y;
             }
 
