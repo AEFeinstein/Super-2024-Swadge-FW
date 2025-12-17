@@ -2195,7 +2195,7 @@ mgEntity_t* createBossDrainBat(mgEntityManager_t* entityManager, uint16_t x, uin
     entity->yspeed               = 0;
     entity->xMaxSpeed            = 132;
     entity->yMaxSpeed            = 132;
-    entity->gravityEnabled       = true;
+    entity->gravityEnabled       = false;
     entity->gravity              = 1;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;

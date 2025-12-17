@@ -145,16 +145,16 @@ const mg_EntityTileCollider_t entityTileCollider_grind_pangolin_rolling
 
 // drain bat origin: 30, 31
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_drain_bat_bottomEdge
-    = {.collisionPoints = {{.x = -17, .y = 63}, {.x = 0, .y = 63}, {.x = 17, .y = 63}}, .size = 3};
+    = {.collisionPoints = {{.x = -17, .y = 31}, {.x = 0, .y = 31}, {.x = 17, .y = 31}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_drain_bat_topEdge
     = {.collisionPoints = {{.x = -17, .y = -15}, {.x = 0, .y = -15}, {.x = 17, .y = -15}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_drain_bat_rightEdge
-    = {.collisionPoints = {{.x = 17, .y = 63}, {.x = 17, .y = 0}, {.x = 17, .y = -15}}, .size = 3};
+    = {.collisionPoints = {{.x = 17, .y = 31}, {.x = 17, .y = 0}, {.x = 17, .y = -15}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_drain_bat_leftEdge
-    = {.collisionPoints = {{.x = -17, .y = 63}, {.x = -17, .y = 0}, {.x = -17, .y = -15}}, .size = 3};
+    = {.collisionPoints = {{.x = -17, .y = 31}, {.x = -17, .y = 0}, {.x = -17, .y = -15}}, .size = 3};
 
 const mg_EntityTileCollider_t entityTileCollider_drain_bat
     = {.bottomEdge = &mgTileCollisionOffsets_drain_bat_bottomEdge,
