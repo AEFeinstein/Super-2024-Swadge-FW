@@ -34,7 +34,7 @@
 // #define TROPHY_LATEST_NVS_KEY "latest"
 #define TROPHY_POINTS_NVS_KEY "points"
 #define ATRIUM_PACKEDKEY      "packedProfile"
-#define ATRIUM_NUMPASSESKEY   "numPasses"
+// #define ATRIUM_NUMPASSESKEY   "numPasses"
 
 //---------------------------------------------------------------------------------//
 // CONSTS
@@ -1274,7 +1274,7 @@ void packProfileData(userProfile_t* profile)
     profile->packedProfile += atr->loadedProfile.fact1 << 8;
     profile->packedProfile += atr->loadedProfile.fact2 << 12;
     profile->packedProfile += atr->loadedProfile.numPasses << 16;
-    printf("profile packed is %d", profile->packedProfile);
+    printf("profile packed is %" PRId32, profile->packedProfile);
 }
 
 void unpackProfileData(userProfile_t* profile)
