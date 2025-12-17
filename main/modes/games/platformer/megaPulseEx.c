@@ -1519,8 +1519,8 @@ void updateLevelClear(platformer_t* self)
 
                 changeStateGameClear(self);
             }
-            // YOOOOOOOO DON'T COMMIT THIS 1
-            else if (true) // globalMidiPlayerGet(MIDI_BGM)->paused) // also checks the level clear jingle has finished.
+
+            else if (globalMidiPlayerGet(MIDI_BGM)->paused) // also checks the level clear jingle has finished.
             {
                 // Advance to the next level
                 /*self->gameData.level++;
