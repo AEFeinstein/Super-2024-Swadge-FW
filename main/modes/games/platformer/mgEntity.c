@@ -5510,10 +5510,15 @@ void startOutroCutscene(mgEntity_t* self)
     if (!self->gameData->cheatMode)
     {
         uint8_t trophy = self->gameData->level;
-        if (trophy == 11)
+        if (trophy == 10)
         {
-            // The 11th level is the intro level with bigma.
+            // The 10th level is the intro level with bigma.
             trophy = 0;
+        }
+        if(trophy == 12)
+        {
+            // The 12th level is the final hank showdown
+            trophy = 5;
         }
         trophyUpdate(&platformerTrophies[trophy], 1, true);
     }
