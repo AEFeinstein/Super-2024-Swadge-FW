@@ -111,4 +111,7 @@ extern const vec_t origin_bigma_jump;
 extern const box_t box_bigma_jump1;
 extern const box_t box_bigma_jump2;
 
+extern const vec_t origin_hank;
+extern const box_t box_hank;
+
 #endif

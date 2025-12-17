@@ -89,3 +89,6 @@ const box_t box_bigma_punching    = {.x0 = 16, .x1 = 95, .y0 = 9, .y1 = 86};
 const vec_t origin_bigma_jump     = {.x = 58, .y = 49};
 const box_t box_bigma_jump1       = {.x0 = 32, .x1 = 84, .y0 = 20, .y1 = 97};
 const box_t box_bigma_jump2       = {.x0 = 32, .x1 = 84, .y0 = 0, .y1 = 97};
+
+const vec_t origin_hank = {.x  = 40, .y  = 34};
+const box_t box_hank =    {.x0 = 16, .x1 = 63, .y0 = 16, .y1 = 51};
