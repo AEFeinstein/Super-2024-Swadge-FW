@@ -48,6 +48,13 @@ typedef enum
     SD_HARDEST  = 5,
 } sudokuDifficulty_t;
 
+typedef enum
+{
+    HINT_POS_TOP,
+    HINT_POS_CENTER,
+    HINT_POS_BOTTOM,
+} hintPosition_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -106,6 +113,7 @@ typedef struct
     dialogBoxOption_t* hintMoreLessOption;
     char hintText[256];
     char hintDetailText[1024];
+    hintPosition_t hintPos;
 
     menu_t* pauseMenu;
 
@@ -619,22 +627,29 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
             if (sd->showingHint)
             {
                 // Calculate where on the screen the hint square is, so we can avoid covering it with the dialog box
-                int16_t hintX, hintY;
-                int gridX, gridY;
-                int32_t overlayX, overlayY;
-
-                swadgedokuGetGridPos(&gridX, &gridY, &sd->game);
-                getOverlayPos(&overlayX, &overlayY, sd->hint.pos / sd->game.size, sd->hint.pos % sd->game.size, SUBPOS_CENTER);
-                getRealOverlayPos(&hintX, &hintY, gridX, gridY, swadgedokuGetSquareSize(&sd->game), overlayX, overlayY);
-
                 uint16_t dialogY = DIALOG_CENTER;
 
-                if (hintY >= TFT_HEIGHT / 3 || sd->hintDialogBox->title == detailDialogTitle)
+                switch (sd->hintPos)
                 {
-                    // Middle or bottom of the screen, put the dialog at the top
-                    // Also always put the full-explanation dialog at the top, it can overlap the hint cell
-                    dialogY = 0;
+                    case HINT_POS_TOP:
+                    {
+                        dialogY = 0;
+                        break;
+                    }
+
+                    case HINT_POS_CENTER:
+                    {
+                        dialogY = DIALOG_CENTER;
+                        break;
+                    }
+
+                    case HINT_POS_BOTTOM:
+                    {
+                        dialogY = TFT_HEIGHT * 2 / 3;
+                        break;
+                    }
                 }
+
                 drawDialogBox(sd->hintDialogBox, getSysFont(), getSysFont(), DIALOG_CENTER, dialogY, DIALOG_AUTO, DIALOG_AUTO, 3);
             }
             else
@@ -1376,7 +1391,34 @@ static void swadgedokuGameButton(buttonEvt_t evt)
 {
     if (sd->showingHint)
     {
-        dialogBoxButton(sd->hintDialogBox, &evt);
+        if (evt.down && (evt.button == PB_UP || evt.button == PB_DOWN))
+        {
+            bool up = (evt.button == PB_UP);
+            switch (sd->hintPos)
+            {
+                case HINT_POS_TOP:
+                {
+                    sd->hintPos = up ? HINT_POS_BOTTOM : HINT_POS_CENTER;
+                    break;
+                }
+
+                case HINT_POS_CENTER:
+                {
+                    sd->hintPos = up ? HINT_POS_TOP : HINT_POS_BOTTOM;
+                    break;
+                }
+
+                case HINT_POS_BOTTOM:
+                {
+                    sd->hintPos = up ? HINT_POS_CENTER : HINT_POS_TOP;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            dialogBoxButton(sd->hintDialogBox, &evt);
+        }
         return;
     }
 
@@ -1535,8 +1577,9 @@ static void swadgedokuHintDialogCb(const char* label)
         // Apply the hint
         sd->hintsUsed++;
         //setDigit(&sd->game, sd->hint.digit, sd->hint.pos % sd->game.size, sd->hint.pos / sd->game.size);
-        applyHint(&sd->game, sd->solverCache.hintBuf, sd->solverCache.hintbufLen);
+        applyHint(&sd->game, sd->player.notes, sd->solverCache.hintBuf, sd->solverCache.hintbufLen);
         swadgedokuDoWinCheck();
+        resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
 
         // Apply the trophy for using a hint
         trophyUpdate(trophyUseHint, 1, true);
@@ -1560,6 +1603,7 @@ static void swadgedokuHintDialogCb(const char* label)
     else if (label == dialogOptionCancel)
     {
         sd->showingHint = false;
+        resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
     }
 
     node_t* node = sd->player.overlay.shapes.first;

@@ -103,5 +103,5 @@ void deinitSolverCache(solverCache_t* cache);
 void makeBoxMapp(solverCache_t* cache, const sudokuGrid_t* board);
 
 void writeStepDescription(char* buf, size_t n, const uint8_t* hintBuf, size_t hintbufLen, int step);
-void applyHint(sudokuGrid_t* game, const uint8_t* hintbuf, size_t hintbufLen);
+void applyHint(sudokuGrid_t* game, uint16_t* notes, const uint8_t* hintbuf, size_t hintbufLen);
 void hintBufDebug(const uint8_t* hint, size_t hintbufLen);

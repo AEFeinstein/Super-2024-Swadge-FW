@@ -134,6 +134,7 @@ bool hintBufAddNote(uint8_t* buf, size_t maxlen, uint16_t notes, uint8_t pos);
 bool hintBufDelNote(uint8_t* buf, size_t maxlen, uint16_t notes, uint8_t pos);
 bool hintBufSetMultiNote(uint8_t* buf, size_t maxlen, bool add, uint16_t notes, int count, const uint8_t* pos);
 bool hintBufAddHighlight(uint8_t* buf, size_t maxlen, int digit, int box, int row, int col);
+bool hintBufHighlightRegion(uint8_t* buf, size_t maxlen, sudokuRegionType_t type, int region);
 size_t hintBufRead(hintOperation_t* op, const uint8_t* hint, size_t hintlen, size_t offset);
 
 static const char* const aOrAnTable[] = {
@@ -180,7 +181,7 @@ static const eliminateCallback_t eliminateOrder[] =
 // %6$d: row/column/box id
 static const techniqueDesc_t techniqueDescriptions[] =
 {
-    { .technique = SINGLE, .format = "This is the only valid position for a%4$s %1$d within row %2$d" },
+    { .technique = SINGLE, .format = "This is the only valid position for a%4$s %1$d within the %5$s" },
     { .technique = ONLY_POSSIBLE, .format = "%1$d is the only possible digit in this cell" },
     { .technique = HIDDEN_SINGLE, .format = "Hidden Single", },
     { .technique = NAKED_PAIR, .format = "Naked Pair", },
@@ -1221,8 +1222,8 @@ void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepN
 
                     if (stepNum == -1 || curStep == stepNum)
                     {
-                        uint8_t r = pos / boardSize;
-                        uint8_t c = pos % boardSize;
+                        uint8_t r = pos / game->size;
+                        uint8_t c = pos % game->size;
 
                         shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
                         shape->type = OVERLAY_DIGIT;
@@ -1283,6 +1284,8 @@ void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepN
                 bool useRow = (targetRow < game->size);
                 bool useCol = (targetCol < game->size);
 
+                ESP_LOGI("Solver", "Digit / Box / Row / Col: %s / %s / %s / %s", useDigit ? "yes" : "no", useBox ? "yes" : "no", useRow ? "yes" : "no", useCol ? "yes" : "no");
+
                 if (stepNum != -1 && curStep != stepNum)
                 {
                     break;
@@ -1321,8 +1324,8 @@ void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepN
 
                 for (int pos = 0; pos < boardSize; pos++)
                 {
-                    int row = pos / boardSize;
-                    int col = pos % boardSize;
+                    int row = pos / game->size;
+                    int col = pos % game->size;
                     int box = game->boxMap[pos];
                     int digit = game->grid[pos];
 
@@ -1504,6 +1507,31 @@ bool hintBufAddHighlight(uint8_t* buf, size_t maxlen, int digit, int box, int ro
     return true;
 }
 
+bool hintBufHighlightRegion(uint8_t* buf, size_t maxlen, sudokuRegionType_t type, int region)
+{
+    switch (type)
+    {
+        case REGION_ROW:
+        {
+            return hintBufAddHighlight(buf, maxlen, -1, -1, region, -1);
+        }
+
+        case REGION_COLUMN:
+        {
+            return hintBufAddHighlight(buf, maxlen, -1, -1, -1, region);
+            break;
+        }
+
+        case REGION_BOX:
+        {
+
+            return hintBufAddHighlight(buf, maxlen, -1, region, -1, -1);
+        }
+    }
+
+    return false;
+}
+
 size_t hintBufRead(hintOperation_t* op, const uint8_t* hint, size_t maxlen, size_t offset)
 {
     if (!op || !hint || maxlen < 4)
@@ -1677,7 +1705,7 @@ void hintBufDebug(const uint8_t* hint, size_t hintbufLen)
 
             case OP_HIGHLIGHT:
             {
-                ESP_LOGI("hintbuf", "Step %d: [HILIGHT ] ...", curStep);
+                ESP_LOGI("hintbuf", "Step %d: [HIGHLITE] ...", curStep);
                 break;
             }
 
@@ -1689,9 +1717,70 @@ void hintBufDebug(const uint8_t* hint, size_t hintbufLen)
     }
 }
 
-void applyHint(sudokuGrid_t* game, const uint8_t* hintbuf, size_t hintbufLen)
+void applyHint(sudokuGrid_t* game, uint16_t* notes, const uint8_t* hint, size_t hintbufLen)
 {
-    // TODO
+    size_t read = 0;
+    size_t offset = 0;
+    hintOperation_t opInfo = {0};
+    int curStep = -1;
+
+    while (0 != (read = hintBufRead(&opInfo, hint, hintbufLen, offset)))
+    {
+        offset += read;
+
+        switch (opInfo.type)
+        {
+            case OP_STEP:
+            {
+                break;
+            }
+
+            case OP_SET_DIGIT:
+            {
+                for (int i = 0; i < opInfo.setDigit.positionCount; i++)
+                {
+                    setDigit(game, opInfo.setDigit.digit, opInfo.setDigit.positions[i] % game->size, opInfo.setDigit.positions[i] / game->size);
+                }
+                break;
+            }
+
+            case OP_ADD_NOTE:
+            {
+                for (int i = 0; i < opInfo.note.positionCount; i++)
+                {
+                    game->notes[opInfo.note.positions[i]] |= opInfo.note.notes;
+                    if (notes)
+                    {
+                        notes[opInfo.note.positions[i]] |= opInfo.note.notes;
+                    }
+                }
+                break;
+            }
+
+            case OP_DEL_NOTE:
+            {
+                for (int i = 0; i < opInfo.note.positionCount; i++)
+                {
+                    game->notes[opInfo.note.positions[i]] &= ~opInfo.note.notes;
+                    if (notes)
+                    {
+                        notes[opInfo.note.positions[i]] &= ~opInfo.note.notes;
+                    }
+                }
+                break;
+            }
+
+            case OP_HIGHLIGHT:
+            {
+                break;
+            }
+
+            default:
+            {
+                ESP_LOGE("Sudoku", "Unknown opcode: %" PRIu8, opInfo.type);
+            }
+        }
+    }
 }
 
 bool initSolverCache(solverCache_t* cache, int size, int base)
@@ -1928,20 +2017,16 @@ static bool findLastEmptyCell(solverCache_t* cache, const sudokuGrid_t* board, s
     {
         uint16_t notes = getMemberNotes(cache, board, type, region, member);
         // Only a single digit is possible in this region
-        if (__builtin_popcount(notes) == 1)
+        if (notes != 0 && __builtin_popcount(notes) == 1 && 0 == getMemberDigit(cache, board, type, region, member))
         {
+            ESP_LOGI("Solver", "Region has only one possibility left: %d, %" PRIb16 " (popcount=%d)\n", region, notes, __builtin_popcount(notes));
             int missingDigit = __builtin_ctz(notes) + 1;
-            for (int member = 0; member < memberCount; member++)
-            {
-                if (0 == getMemberDigit(cache, board, type, region, member))
-                {
-                    uint8_t pos = getMemberPos(cache, board, type, region, member);
-                    hintBufNextStep(cache->hintBuf, cache->hintbufLen, SINGLE);
-                    hintBufSetDigit(cache->hintBuf, cache->hintbufLen, missingDigit, pos);
-                    hintBufAddHighlight(cache->hintBuf, cache->hintbufLen, -1, -1, pos / cache->size, pos % cache->size);
-                    return true;
-                }
-            }
+            uint8_t pos = getMemberPos(cache, board, type, region, member);
+            hintBufNextStep(cache->hintBuf, cache->hintbufLen, SINGLE);
+            hintBufSetDigit(cache->hintBuf, cache->hintbufLen, missingDigit, pos);
+            hintBufAddHighlight(cache->hintBuf, cache->hintbufLen, -1, -1, pos / cache->size, pos % cache->size);
+            hintBufHighlightRegion(cache->hintBuf, cache->hintbufLen, type, region);
+            return true;
         }
     }
 
@@ -1950,7 +2035,7 @@ static bool findLastEmptyCell(solverCache_t* cache, const sudokuGrid_t* board, s
 
 static bool findOnlyPossibility(solverCache_t* cache, const sudokuGrid_t* board, int pos)
 {
-    if (__builtin_popcount(board->notes[pos]) == 1)
+    if (__builtin_popcount(cache->notes[pos]) == 1 && cache->notes[pos] != 0)
     {
         int digit = __builtin_ctz(cache->notes[pos]) + 1;
         hintBufNextStep(cache->hintBuf, cache->hintbufLen, ONLY_POSSIBLE);
@@ -1979,7 +2064,8 @@ static bool findHiddenSingle(solverCache_t* cache, const sudokuGrid_t* board, su
             // this digit can go here
             for (int member = 0; member < memberCount; member++)
             {
-                if (bit & getMemberNotes(cache, board, type, region, member))
+                if (0 == getMemberDigit(cache, board, type, region, member)
+                    && (bit & getMemberNotes(cache, board, type, region, member)))
                 {
                     if (++count > 1)
                     {
@@ -2164,7 +2250,7 @@ void writeStepDescription(char* buf, size_t n, const uint8_t* hint, size_t hintb
             stepDigit, // %1$s: Digit
             stepDigitRow + 1, // %2$d: Row
             stepDigitColumn + 1, // %3$d: Col
-            stepDigit >= 0 ? aOrAnTable[stepDigit] : "", // %4$s: A/An
+            (stepDigit >= 0) ? aOrAnTable[stepDigit] : "", // %4$s: A/An
             regionTypeName, // %5$s: row/column/box
             stepRegion + 1 // %6$s: row/col/box ID
         );
