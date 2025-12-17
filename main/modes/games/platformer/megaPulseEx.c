@@ -383,11 +383,11 @@ void platformerEnterMode(void)
                          4, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 1, 81, 1, 100, false);
         // Bigma
-        addCutsceneStyle(platformer->gameData.cutscene, c544, BIGMA_PORTRAIT_0_WSG, TEXTBOX_BIGMA_WSG, "Bigma", 2,
+        addCutsceneStyle(platformer->gameData.cutscene, c544, BIGMA_PORTRAIT_0_WSG, TEXTBOX_BIGMA_WSG, "Bigma", 4,
                          false, true, true);
         setMidiParams(platformer->gameData.cutscene, 2, 80, -2, 2000, true);
         // TrashMan
-        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Trash Man", 7,
+        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Trash Man", 2,
                          false, true, true);
         setMidiParams(platformer->gameData.cutscene, 3, 36, -2, 250, false);
         /// AbilityUnlocked
@@ -399,7 +399,7 @@ void platformerEnterMode(void)
                          true, false, true);
         setMidiParams(platformer->gameData.cutscene, 5, 55, 0, 250, false);
         // KineticDonut
-        addCutsceneStyle(platformer->gameData.cutscene, c310, KINETIC_DONUT_WSG, TEXTBOX_CORRUPTED_WSG, "Kinetic Donut",
+        addCutsceneStyle(platformer->gameData.cutscene, c310, KINETIC_DONUT_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Kinetic Donut",
                          1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 6, 80, -1, 1000, false);
         // JoltLapin
@@ -424,7 +424,7 @@ void platformerEnterMode(void)
         setMidiParams(platformer->gameData.cutscene, 11, 30, 1, 80, false);
         // HankWaddle
         addCutsceneStyle(platformer->gameData.cutscene, c000, HANK_WADDLE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
-                         "Hank Waddle", 1, false, true, true);
+                         "Hank Waddle", 2, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 12, 38, 1, 250, false);
         // GrindPangolin
         addCutsceneStyle(platformer->gameData.cutscene, c310, GRIND_PANGOLIN_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
