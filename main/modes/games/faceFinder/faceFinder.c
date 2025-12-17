@@ -31,6 +31,8 @@ typedef struct
     menu_t* mainMenu;
     menuMegaRenderer_t* renderer;
 
+    midiFile_t bgm_menu;
+    midiFile_t bgm_dead;
     midiFile_t bgm_fast;
     midiFile_t bgm_med;
     midiFile_t bgm_slow;
@@ -94,7 +96,7 @@ const trophyData_t findingFacesModeTrophies[] = {
     {
         .title       = "Minute to Win It!",
         .description = "Have more than 60 seconds banked in time attack.",
-        .image       = FINDER_SAWTOOTH_WSG,
+        .image       = FINDER_TROPHY_TIME_60_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1, // For trigger type, set to one
@@ -102,7 +104,7 @@ const trophyData_t findingFacesModeTrophies[] = {
     {
         .title       = "Gone in 60- wait...",
         .description = "Have more than 120 seconds banked in time attack.",
-        .image       = FINDER_SAWTOOTH_WSG,
+        .image       = FINDER_TROPHY_TIME_120_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1, // For trigger type, set to one
@@ -110,7 +112,7 @@ const trophyData_t findingFacesModeTrophies[] = {
     {
         .title       = "Newb",
         .description = "Have more than 1500 score in time attack.",
-        .image       = FINDER_SAWTOOTH_WSG,
+        .image       = FINDER_TROPHY_SCORE_1500_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1, // For trigger type, set to one
@@ -118,7 +120,7 @@ const trophyData_t findingFacesModeTrophies[] = {
     {
         .title       = "Apprentice",
         .description = "Have more than 3000 score in time attack.",
-        .image       = FINDER_SAWTOOTH_WSG,
+        .image       = FINDER_TROPHY_SCORE_3000_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1, // For trigger type, set to one
@@ -126,7 +128,7 @@ const trophyData_t findingFacesModeTrophies[] = {
     {
         .title       = "Expert",
         .description = "Have more than 6000 score in time attack.",
-        .image       = FINDER_SAWTOOTH_WSG,
+        .image       = FINDER_TROPHY_SCORE_6000_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1, // For trigger type, set to one
@@ -134,7 +136,7 @@ const trophyData_t findingFacesModeTrophies[] = {
     {
         .title       = "Mastery",
         .description = "Have more than 12000 score in time attack.",
-        .image       = FINDER_SAWTOOTH_WSG,
+        .image       = FINDER_TROPHY_SCORE_12000_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1, // For trigger type, set to one
@@ -142,7 +144,7 @@ const trophyData_t findingFacesModeTrophies[] = {
     {
         .title       = "Beginner Zen",
         .description = "Get to stage 50 in Zen Mode.",
-        .image       = FINDER_SAWTOOTH_WSG,
+        .image       = FINDER_TROPHY_ZEN_50_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1, // For trigger type, set to one
@@ -150,7 +152,7 @@ const trophyData_t findingFacesModeTrophies[] = {
     {
         .title       = "Nice ;)",
         .description = "Get to stage 69 in Zen Mode.",
-        .image       = FINDER_SAWTOOTH_WSG,
+        .image       = FINDER_TROPHY_ZEN_69_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1, // For trigger type, set to one
@@ -158,7 +160,7 @@ const trophyData_t findingFacesModeTrophies[] = {
     {
         .title       = "One With Everything",
         .description = "Get to stage 100 in Zen Mode.",
-        .image       = FINDER_SAWTOOTH_WSG,
+        .image       = FINDER_TROPHY_ZEN_100_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1, // For trigger type, set to one
@@ -293,14 +295,6 @@ static vec_t faceDance()
     };
 }
 static void startNewGame(finder_t* myFind){
-    if(myFind->ZenMode){
-        globalMidiPlayerPlaySong(&myFind->bgm_zen, MIDI_BGM);
-        myFind->musicNum = 0;
-    }else{
-        globalMidiPlayerPlaySong(&myFind->bgm_fast, MIDI_BGM);
-        myFind->musicNum = 3;
-    }
-    
     myFind->displayingScore = false;
     myFind->score           = 0;
     myFind->timer           = StartTime;
@@ -319,7 +313,12 @@ bool finderMainMenuCb(const char* label, bool selected, uint32_t value)
     {
         if (label == TimeText)
         {
-            if(finder->ZenMode){
+            if(finder->musicNum != 3){
+                globalMidiPlayerPlaySong(&finder->bgm_fast, MIDI_BGM);
+                finder->musicNum = 3;
+            }
+            
+            if(finder->ZenMode || finder->timer == 0){
                 finder->ZenMode = false;
                 startNewGame(finder);
             }else if (finder->displayingScore){
@@ -330,6 +329,8 @@ bool finderMainMenuCb(const char* label, bool selected, uint32_t value)
         {
             if(!finder->ZenMode){
                 finder->ZenMode = true;
+                globalMidiPlayerPlaySong(&finder->bgm_zen, MIDI_BGM);
+                finder->musicNum = 0;
                 startNewGame(finder);
             }else{
                 startNewGame(finder);
@@ -388,18 +389,18 @@ static void findingEnterMode(void)
     loadMidiFile(FINDER_RIGHT_MID, &finder->right, true);
     loadMidiFile(FINDER_WRONGER_MID, &finder->wrong, true);
     loadMidiFile(FINDER_DIE_MID, &finder->die, true);
+    loadMidiFile(FINDER_BGM_MENU_MID, &finder->bgm_menu, true);
+    loadMidiFile(FINDER_BGM_DEATH_MID, &finder->bgm_dead, true);
 
     finder->mainMenu = initMenu(findingFacesModeName, finderMainMenuCb);
     finder->renderer = initMenuMegaRenderer(NULL, NULL, NULL);
     addSingleItemToMenu(finder->mainMenu, TimeText);
     addSingleItemToMenu(finder->mainMenu, ZenText);
     addSingleItemToMenu(finder->mainMenu, ExitText);
-    finder->ShowMenu = true;
-    
 
-    globalMidiPlayerPlaySong(&finder->bgm_fast, MIDI_BGM);
+    globalMidiPlayerPlaySong(&finder->bgm_menu, MIDI_BGM);
     globalMidiPlayerGet(MIDI_BGM)->loop = true;
-    finder->musicNum = 3;
+    finder->ShowMenu = true;
     
     // Load all faces
     finder->faceList = heap_caps_calloc(1, sizeof(list_t), MALLOC_CAP_8BIT);
@@ -441,6 +442,7 @@ static void findingMainLoop(int64_t elapsedUs)
                         finder->millisInstructing = 0;
                     }else if (finder->displayingScore)
                     {
+                        globalMidiPlayerPlaySong(&finder->bgm_menu, MIDI_BGM);
                         finder->ShowMenu = true;
                     }else
                     {
@@ -510,6 +512,7 @@ static void findingMainLoop(int64_t elapsedUs)
                     break;
                 }
                 case PB_B:
+
                     finder->ShowMenu = true;
                     break;
                 case PB_START:
@@ -517,6 +520,7 @@ static void findingMainLoop(int64_t elapsedUs)
                     if(finder->millisInstructing <= 0){
                         finder->millisInstructing = 1000000000; //Lets you pause for 1000 seconds to refresh your memory on who you're finding
                     }else{
+                        //finder->timer = 0; //uncomment me for final release
                         finder->timer += 10000000;
                     }
                 }
@@ -580,7 +584,7 @@ static void findingMainLoop(int64_t elapsedUs)
             //check for game over, setting the music to zen mode if it is a game over
             finder->displayingScore = true;
             finder->musicNum = 0;
-            globalMidiPlayerPlaySong(&finder->bgm_zen, MIDI_BGM);
+            globalMidiPlayerPlaySong(&finder->bgm_dead, MIDI_BGM);
         }
 
         //Change the music based on the current timer, ignoring tempo changes if we're already playing the current "correct" tempo
