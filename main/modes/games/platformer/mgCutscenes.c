@@ -885,6 +885,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, SeverYagata, "We're not afraid to carry the torch...", true, -1);
             addCutsceneLine(gameData->cutscene, Jasper, "Or light new ones.", true, -1);
             addCutsceneLine(gameData->cutscene, FlareGryffyn, "And maybe... even mend what was broken along the way.", true, -1);
+            addCutsceneLine(gameData->cutscene, SystemText, "HANK WADDLE's subsystems start exploding.", false, -1);
             addCutsceneLine(gameData->cutscene, Bigma, "You think we're copies, but that's not the point. We're all echoes of what came before.", true, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "What do you mean?", false, -1);
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "The ones who inspired us - they were just riffing on the stuff they liked, too.", false, -1);
@@ -901,9 +902,15 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "I... don't know.", false, -1);
             addCutsceneLine(gameData->cutscene, Bigma, "Maybe you'll find out someday. But until then...", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "...LET'S FREAKIN' PARTY!!", false, -1);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0);
+            addCutsceneLine(gameData->cutscene, SystemText, "Starfield. Quiet. Peaceful. Suddenly-a Garbotnik industries craft hurtles past the camera, sparking and trailing smoke.", false, -1);
             addCutsceneLine(gameData->cutscene, TrashMan, "WHA-HAHA... I regret nothing...", false, -1);
             addCutsceneLine(gameData->cutscene, TrashMan, "Note to self: recalibrate escape trajectory before launching dramatic exit.", false, -1);
+            addCutsceneLine(gameData->cutscene, SystemText, "Suddenly, a floating burrito wrapper hits him in the face.", false, -1);
             addCutsceneLine(gameData->cutscene, TrashMan, "... Is that my lunch?", false, -1);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0);
+            addCutsceneLine(gameData->cutscene, SystemText, "TRASH MAN WILL RETURN... In whatever sequel he can crash into.", false, -1);
+            addCutsceneLine(gameData->cutscene, SystemText, "THANK YOU FOR PLAYING PULSE 20x6!", false, -1);
             break;
         }
     }

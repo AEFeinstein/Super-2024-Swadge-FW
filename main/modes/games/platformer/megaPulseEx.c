@@ -756,8 +756,9 @@ void updateGame(platformer_t* self)
     mg_updateEntities(&(self->entityManager));
 
     mg_drawTileMap(&(self->tilemap));
-    mg_drawEntities(&(self->entityManager));
+    //JVeg wants the hud drawn behind entities.
     drawPlatformerHud(&(self->font), &(self->gameData));
+    mg_drawEntities(&(self->entityManager));
     mg_updateLeds(&self->entityManager);
     detectGameStateChange(self);
     detectBgmChange(self);
