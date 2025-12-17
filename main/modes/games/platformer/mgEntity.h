@@ -141,6 +141,11 @@ struct mgEntity_t
     int16_t xDamping;
     int16_t yDamping;
 
+    /* Generic special purpose fields used by some entities for boss waves etc. */
+    uint8_t special1;
+    int16_t specialX;
+    int16_t specialN;
+
     bool gravityEnabled;
     int16_t gravity;
     bool falling;

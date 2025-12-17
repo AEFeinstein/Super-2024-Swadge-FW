@@ -2529,6 +2529,9 @@ mgEntity_t* createBossHankWaddle(mgEntityManager_t* entityManager, uint16_t x, u
     entity->spriteIndex          = MG_SP_BOSS_0;
     entity->state                = -1;
     entity->stateTimer           = 0;
+    entity->special1             = 0;
+    entity->specialX             = 0;
+    entity->specialN             = 0;
     entity->updateFunction       = &mg_updateBossHankWaddle;
     entity->collisionHandler     = &mg_enemyCollisionHandler;
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
