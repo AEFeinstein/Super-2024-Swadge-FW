@@ -353,24 +353,35 @@ static void atriumEnterMode(void)
     // Initialize memory
     atr = (atrium_t*)heap_caps_calloc(1, sizeof(atrium_t), MALLOC_CAP_8BIT);
 
-    for (int idx = 0; idx < ARRAY_SIZE(sonaBodies); idx++)
+    // Load images with a common decoder and decode space
     {
-        loadWsg(sonaBodies[idx], &atr->bodies[idx], true);
-    }
+        // Initialize memory for a lot of big image loads
+        heatshrink_decoder* hsd = heatshrink_decoder_alloc(256, 8, 4);
+        uint8_t* decodeSpace
+            = heap_caps_calloc(1, 4 + sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH, MALLOC_CAP_SPIRAM);
 
-    for (int idx = 0; idx < ARRAY_SIZE(uiImages); idx++)
-    {
-        loadWsg(uiImages[idx], &atr->uiElements[idx], true);
-    }
+        for (int idx = 0; idx < ARRAY_SIZE(sonaBodies); idx++)
+        {
+            loadWsgInplace(sonaBodies[idx], &atr->bodies[idx], true, decodeSpace, hsd);
+        }
 
-    for (int idx = 0; idx < ARRAY_SIZE(bgImages); idx++)
-    {
-        loadWsg(bgImages[idx], &atr->backgroundImages[idx], true);
-    }
+        for (int idx = 0; idx < ARRAY_SIZE(uiImages); idx++)
+        {
+            loadWsgInplace(uiImages[idx], &atr->uiElements[idx], true, decodeSpace, hsd);
+        }
 
-    for (int idx = 0; idx < ARRAY_SIZE(cardImages); idx++)
-    {
-        loadWsg(cardImages[idx], &atr->cards[idx], true);
+        for (int idx = 0; idx < ARRAY_SIZE(bgImages); idx++)
+        {
+            loadWsgInplace(bgImages[idx], &atr->backgroundImages[idx], true, decodeSpace, hsd);
+        }
+
+        for (int idx = 0; idx < ARRAY_SIZE(cardImages); idx++)
+        {
+            loadWsgInplace(cardImages[idx], &atr->cards[idx], true, decodeSpace, hsd);
+        }
+
+        heap_caps_free(decodeSpace);
+        heatshrink_decoder_free(hsd);
     }
 
     for (int idx = 0; idx < ARRAY_SIZE(midiBGM); idx++)
