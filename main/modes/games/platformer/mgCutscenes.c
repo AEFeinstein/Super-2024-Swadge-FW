@@ -896,7 +896,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, HankWaddle, "No! No no no-if I go down, I'll take you with-AAAAUUUGHHHH!!!!", false, -1);
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "Pulse! We have to get out of here!", true, -1);
             addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "After teleporting to safety, PULSE, SAWTOOTH, BIGMA, and the freed RemiXs watch HANK WADDLE's exploding facility from a distant           cliffside.", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "After teleporting to safety, PULSE, SAWTOOTH, BIGMA, and the freed RemiXes watch HANK WADDLE's exploding facility from a distant           .    cliffside.", false, 0);
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "Pulse... was he right about us?", true, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "I... don't know.", false, -1);
             addCutsceneLine(gameData->cutscene, Bigma, "Maybe you'll find out someday. But until then...", false, -1);
