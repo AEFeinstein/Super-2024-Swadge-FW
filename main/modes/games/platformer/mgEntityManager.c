@@ -319,7 +319,30 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
             //because I can't learn Tiled in two days.
             if(entityManager->playerEntity != NULL && entityManager->playerEntity->gameData->level > 11)
             {
+                x -= 105;
+                y -= 147;
                 createdEntity = createBossHankWaddle(entityManager, x, y);
+                //Swap player entity with the boss entity so player draws on top of the boss.
+                uint8_t bossIdx = 0;
+                for(int entityIdx = MAX_ENTITIES - 1; entityIdx >= 0; entityIdx--)
+                {
+                    if(entityManager->entities[entityIdx].active)
+                    {
+                        bossIdx = entityIdx;
+                        break;
+                    }
+                }
+                for(int entityIdx = MAX_ENTITIES - 1; entityIdx >= 0; entityIdx--)
+                {
+                    if(entityManager->entities[entityIdx].active && entityManager->entities[entityIdx].type == ENTITY_PLAYER)
+                    {
+                        mgEntity_t boss = entityManager->entities[bossIdx];
+                        entityManager->entities[bossIdx] = *entityManager->playerEntity;
+                        entityManager->entities[entityIdx] = boss;
+                        entityManager->playerEntity = &entityManager->entities[bossIdx];
+                        break;
+                    }
+                }
             }
             else
             {
