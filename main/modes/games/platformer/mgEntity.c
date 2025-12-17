@@ -1783,6 +1783,14 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 break;
             }
 
+            /* Hank is invincible while his visor is closed (state 0). Use state check instead
+             * of invincibilityFrames to avoid blinking visibility toggles.
+             */
+            if (self->type == ENTITY_BOSS_HANK_WADDLE && self->state == 0)
+            {
+                break;
+            }
+
             if (self->type == ENTITY_BOSS_GRIND_PANGOLIN && (self->state == 1 || self->state == 2 || self->state == 4))
             {
                 other->xspeed = -other->xspeed;
@@ -1805,6 +1813,15 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 case 2:
                     self->hp -= 8;
                     break;
+            }
+
+            /* If Hank Waddle was hit, flash damage and enter damage state */
+            if (self->type == ENTITY_BOSS_HANK_WADDLE)
+            {
+                self->state = 4; /* damage flash */
+                self->stateTimer = 0;
+                self->spriteIndex = MG_SP_BOSS_4;
+                soundPlaySfx(&(self->soundManager->sndHurt), BZR_LEFT);
             }
 
             if (self->hp <= 0)
@@ -3305,6 +3322,15 @@ void mg_defaultEntityDrawHandler(mgEntity_t* self)
                 - self->entityManager->tilemap->mapOffsetX,
             (self->y >> SUBPIXEL_RESOLUTION) - self->entityManager->tilemap->mapOffsetY
                 - self->entityManager->wsgManager->sprites[self->spriteIndex].origin->y,
+            self->spriteFlipHorizontal, self->spriteFlipVertical, self->spriteRotateAngle);
+}
+
+void mg_hankDrawHandler(mgEntity_t* self)
+{
+    /* Force Hank to draw using the fixed Hank origin so frame changes don't shift position */
+    drawWsg(self->entityManager->wsgManager->sprites[self->spriteIndex].wsg,
+            (self->x >> SUBPIXEL_RESOLUTION) - origin_hank.x - self->entityManager->tilemap->mapOffsetX,
+            (self->y >> SUBPIXEL_RESOLUTION) - self->entityManager->tilemap->mapOffsetY - origin_hank.y,
             self->spriteFlipHorizontal, self->spriteFlipVertical, self->spriteRotateAngle);
 }
 
@@ -5282,143 +5308,134 @@ void mg_updateBossBigma(mgEntity_t* self)
 
 void mg_updateBossHankWaddle(mgEntity_t* self)
 {
-    // switch (self->state)
-    // {
-    //     case 65535:
-    //         return;
-    //     case 0:
-    //     default:
-    //         if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
-    //         {
-    //             self->yspeed -= 4;
-    //         }
-
-    //         if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
-    //         {
-    //             self->xspeed = 64;
-    //         }
-
-    //         if (self->stateTimer == 120)
-    //         {
-    //             self->jumpPower = 1;
-    //         }
-
-    //         self->stateTimer++;
-    //         if (self->stateTimer > 180)
-    //         {
-    //             self->stateTimer = 0;
-    //             switch (esp_random() % 3)
-    //             {
-    //                 case 0:
-    //                     self->state = 1;
-    //                     break;
-    //                 case 1:
-    //                     self->state = 2;
-    //                     break;
-    //                 case 2:
-    //                     self->state = 3;
-    //                     break;
-    //             }
-    //         }
-    //         break;
-    //     case 1:
-    //         if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
-    //         {
-    //             self->yspeed -= 4;
-    //         }
-
-    //         if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
-    //         {
-    //             self->xspeed = -64;
-    //         }
-
-    //         if (self->stateTimer == 120)
-    //         {
-    //             self->jumpPower = 1;
-    //         }
-
-    //         self->stateTimer++;
-    //         if (self->stateTimer > 180)
-    //         {
-    //             self->stateTimer = 0;
-    //             switch (esp_random() % 3)
-    //             {
-    //                 case 0:
-    //                     self->state = 0;
-    //                     break;
-    //                 case 1:
-    //                     self->state = 2;
-    //                     break;
-    //                 case 2:
-    //                     self->state = 3;
-    //                     break;
-    //             }
-    //         }
-
-    //         break;
-    //     case 2:
-
-    //         if (self->stateTimer < 60)
-    //         {
-    //             if (self->x < self->entityManager->playerEntity->x)
-    //             {
-    //                 self->xspeed = 32;
-    //             }
-    //             else
-    //             {
-    //                 self->xspeed = -32;
-    //             }
-    //         }
-
-    //         if (!self->falling || self->y > self->entityManager->playerEntity->y)
-    //         {
-    //             self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
-    //             self->stateTimer = 0;
-    //         }
-
-    //         self->stateTimer++;
-
-    //         break;
-    //     case 3:
-    //         self->stateTimer++;
-
-    //         if (!(self->stateTimer % 60))
-    //         {
-    //             self->jumpPower = 1;
-    //         }
-
-    //         if (self->stateTimer > 239)
-    //         {
-    //             self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
-    //             self->stateTimer = 0;
-    //         }
-    //         break;
-    // }
-
-    // if (self->jumpPower > 0)
-    // {
-    //     mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
-    //                                                 TO_PIXEL_COORDS(self->y));
-    //     if (createdEntity != NULL)
-    //     {
-    //         int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->y,
-    //                                  self->entityManager->playerEntity->x - self->x);
-    //         int16_t sin   = getSin1024(angle);
-    //         int16_t cos   = getCos1024(angle);
-
-    //         createdEntity->xspeed = (80 * cos) / 1024;
-    //         createdEntity->yspeed = (80 * sin) / 1024;
-
-    //         createdEntity->linkedEntity = self;
-    //         soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
-    //         self->jumpPower = 0;
-    //     }
-    // }
+    /*
+     * Hank Waddle behavior:
+     * - Stationary (no gravity/movement)
+     * - State machine for visor / vulnerability:
+     *   state -1 : init -> go to 0
+     *   state 0    : visor down (invincible)
+     *   state 1-2  : opening / closing frames
+     *   state 3    : vulnerable (can be damaged)
+     *   state 4    : damage flash -> returns to 3
+     * - Fires random downward projectiles periodically
+     */
 
     mg_updateInvincibilityFrames(self);
+    /* Keep Hank from being affected by gravity so he stays stationary */
+    self->gravityEnabled = false;
+    self->xspeed = 0;
+    self->yspeed = 0;
+
+    /* Initialize state */
+    if (self->state == -1)
+    {
+        self->state = 0;
+        self->stateTimer = 0;
+        self->animationTimer = 0;
+        self->spriteIndex = MG_SP_BOSS_0; /* visor down */
+    }
+
+    /* Shooting: periodic random downward shots */
+    self->animationTimer++;
+    if (self->animationTimer >= 30)
+    {
+        self->animationTimer = esp_random() % 10; /* small jitter */
+        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
+                                                    TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        if (createdEntity != NULL)
+        {
+            int16_t angle = getAtan2(esp_random() % 101,
+                                        esp_random() % 101 -50);
+            int16_t sin = getSin1024(angle);
+            int16_t cos = getCos1024(angle);
+
+            createdEntity->xspeed = (72 * cos) / 1024;
+            createdEntity->yspeed = (72 * sin) / 1024;
+            createdEntity->linkedEntity = self;
+            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+        }
+    }
+
+    /* State machine */
+    switch (self->state)
+    {
+        case 0: /* visor down - invincible */
+            self->spriteIndex = MG_SP_BOSS_0;
+            /* keep visible and invincible via state check (avoid invincibilityFrames blinking)
+             * visible must be true so Hank draws consistently while visor is closed
+             */
+            self->visible = true;
+            self->stateTimer++;
+            if (self->stateTimer > 800) /* time before opening */
+            {
+                self->state = 1;
+                self->stateTimer = 0;
+            }
+            break;
+        case 1: /* opening */
+            self->spriteIndex = MG_SP_BOSS_1;
+            self->stateTimer++;
+            if (self->stateTimer > 20)
+            {
+                self->state = 2;
+                self->stateTimer = 0;
+            }
+            break;
+        case 2: /* open further */
+            self->spriteIndex = MG_SP_BOSS_2;
+            self->stateTimer++;
+            if (self->stateTimer > 20)
+            {
+                self->state = 3;
+                self->stateTimer = 0;
+            }
+            break;
+        case 3: /* vulnerable */
+            self->spriteIndex = MG_SP_BOSS_3;
+            /* normal behavior while vulnerable */
+            self->stateTimer++;
+            /* After a shorter vulnerable window, occasionally close again; start a closing animation
+             * that goes 2 -> 1 -> 0 so the visor animates backward when closing.
+             */
+            if (self->stateTimer > 120 && (esp_random() % 100) > 70)
+            {
+                self->state = 5; /* begin closing at frame 2 */
+                self->stateTimer = 0;
+            }
+            break;
+        case 5: /* closing: frame 2 -> 1 */
+            self->spriteIndex = MG_SP_BOSS_2;
+            self->stateTimer++;
+            if (self->stateTimer > 8)
+            {
+                self->state = 6; /* next closing frame */
+                self->stateTimer = 0;
+            }
+            break;
+        case 6: /* closing: frame 1 -> 0 */
+            self->spriteIndex = MG_SP_BOSS_1;
+            self->stateTimer++;
+            if (self->stateTimer > 8)
+            {
+                self->state = 0; /* visor closed */
+                self->stateTimer = 0;
+            }
+            break;
+        case 4: /* damage flash */
+            self->spriteIndex = MG_SP_BOSS_4;
+            self->stateTimer++;
+            if (self->stateTimer > 12)
+            {
+                self->state = 3;
+                self->stateTimer = 0;
+            }
+            break;
+        default:
+            break;
+    }
+
     mg_moveEntityWithTileCollisions3(self);
     applyDamping(self);
-    //applyGravity(self);
     mg_detectEntityCollisions(self);
 
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
