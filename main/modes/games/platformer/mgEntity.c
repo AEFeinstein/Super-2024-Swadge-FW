@@ -58,6 +58,9 @@ const mg_spriteDef_t kineticDonutTeleportFrames[]
 const mg_spriteDef_t severYatagaFlyingFrames[]
     = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG_SP_BOSS_2, MG_SP_BOSS_1};
 
+const mg_spriteDef_t drainBatAnimFrames[]
+    = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG_SP_BOSS_2, MG_SP_BOSS_3, MG_SP_BOSS_4};
+
 //==============================================================================
 // Functions Prototypes
 //==============================================================================
@@ -4420,6 +4423,11 @@ void mg_updateBossDrainBat(mgEntity_t* self)
         default:
             self->stateTimer++;
 
+            //if(!self->invincibilityFrames)
+            {
+                self->spriteIndex = drainBatAnimFrames[(self->stateTimer >> 3) % 5];
+            }
+
             if(self->stateTimer == 30)
             {
                 self->invincibilityFrames = 60;
@@ -4568,6 +4576,7 @@ void mg_updateBossDrainBat(mgEntity_t* self)
 
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL)
     {
+        self->spriteIndex = MG_SP_BOSS_5;
         mg_deactivateAllEntities(self->entityManager, true);
         self->active = true;
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
