@@ -156,7 +156,7 @@ void stageStartCutscene(mgGameData_t* gameData)
     /* clang-format off */
     switch (gameData->level)
     {
-        case 11: // Intro Stage
+        case 10: // Intro Stage
         {
             addCutsceneLine(gameData->cutscene, SystemText,
                             "PULSE and SAWTOOTH teleport into Omega Harbor's convention center, which looks an awful "
@@ -406,7 +406,7 @@ void stageStartCutscene(mgGameData_t* gameData)
 
             break;
         }
-        case 10: // Bigma Stage 2
+        case 11: // Bigma Stage 2 (BOSS RUSH)
         {
             addCutsceneLine(gameData->cutscene, SystemText,
                             "PULSE and SAWTOOTH teleport into a darkened void of a room.", false, 0);
@@ -425,36 +425,6 @@ void stageStartCutscene(mgGameData_t* gameData)
                             "Welcome to the encore, PULSE. You survived the warm-up. Now it's time for the deep cuts.",
                             false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Come out and fight me already!", false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma,
-                            "Tsk-tsk. You think the headliner performs without openers? No, no, no. First-you'll face "
-                            "your greatest hits.",
-                            false, -1);
-            addCutsceneLine(gameData->cutscene, SawtoothPostReveal,
-                            "Are those...? No, wait-something's off. These aren't the RemiXes. They're... copies.",
-                            true, -1);
-            addCutsceneLine(gameData->cutscene, Bigma,
-                            "MAGiX backups. Constructed from your past encounters, and turned against you.", false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma,
-                            "Every fight, every tactic-you taught me how to defeat you, PULSE. Time to see if you've "
-                            "learned anything new.",
-                            false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "UGH. A boss rush? Why is it always a boss rush?!", false, -1);
-            addCutsceneLine(gameData->cutscene, SawtoothPostReveal,
-                            "You've got this. You're faster, smarter, and stronger now. Just keep your cool.", true,
-                            -1);
-            addCutsceneLine(gameData->cutscene, Bigma, "I'll be watching from the green room. Don't disappoint me.",
-                            false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma,
-                            "Well done. The understudy outlasts the entire cast. You should be proud.", false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "Enough games! You're the only one left!", false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma,
-                            "And you're still just a fan trying to improvise your way through the finale.", false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma,
-                            "It's time to return to the Main Stage. The place where all this began. Where I first "
-                            "heard your signal.",
-                            false, -1);
-            addCutsceneLine(gameData->cutscene, Pulse, "... Main Stage.", false, -1);
-            addCutsceneLine(gameData->cutscene, Bigma, "Curtain's rising, PULSE. Don't keep me waiting.", false, -1);
             break;
         }
         default: // Bigma Final Battle
@@ -478,7 +448,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
     /* clang-format off */
     switch (gameData->level)
     {
-        case 11: // Intro Stage
+        case 10: // Intro Stage
         {
             addCutsceneLine(gameData->cutscene, Sawtooth, "Show yourself!", false, 1);
             addCutsceneLine(gameData->cutscene, Bigma, "Still barking orders, I see. Some things never change.", false, 1);
@@ -598,7 +568,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "No boss fight here.", false, -1);
             break;
         }
-        case 10: // Bigma Stage 2
+        case 69: // huuuuuh
         {
             addCutsceneLine(gameData->cutscene, Bigma, "So. You've finally made it.", false, -1);
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "It's been a long time.", false, -1);
@@ -611,6 +581,29 @@ void bossIntroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, SystemText, "BIGMA throws his head back and lets out a colossus roar.", false, 0);
             addCutsceneLine(gameData->cutscene, Bigma, "I just want things to go back the way they were! And if that means taking you down to do it...", false, -1);
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "... Then bring it.", false, -1);
+            break;
+        }       
+        case 11: // Bigma stage 2 (BOSS RUSH)
+        {
+            addCutsceneLine(gameData->cutscene, Bigma,
+                            "Tsk-tsk. You think the headliner performs without openers? No, no, no. First-you'll face "
+                            "your greatest hits.",
+                            false, -1);
+            addCutsceneLine(gameData->cutscene, SawtoothPostReveal,
+                            "Are those...? No, wait-something's off. These aren't the RemiXes. They're... copies.",
+                            true, -1);
+            addCutsceneLine(gameData->cutscene, Bigma,
+                            "MAGiX backups. Constructed from your past encounters, and turned against you.", false, -1);
+            addCutsceneLine(gameData->cutscene, Bigma,
+                            "Every fight, every tactic-you taught me how to defeat you, PULSE. Time to see if you've "
+                            "learned anything new.",
+                            false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "UGH. A boss rush? Why is it always a boss rush?!", false, -1);
+            addCutsceneLine(gameData->cutscene, SawtoothPostReveal,
+                            "You've got this. You're faster, smarter, and stronger now. Just keep your cool.", true,
+                            -1);
+            addCutsceneLine(gameData->cutscene, Bigma, "I'll be watching from the green room. Don't disappoint me.",
+                            false, -1);
             break;
         }
         default: // Bigma Final Battle
@@ -633,7 +626,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
     /* clang-format off */
     switch (gameData->level)
     {
-        case 11: // Intro Stage
+        case 10: // Intro Stage
         {
             addCutsceneLine(gameData->cutscene, Pulse, "Huff... huff... You're fast, but I'm faster. It's over!", false, 1);
             addCutsceneLine(gameData->cutscene, Bigma, "Is it, now? You're still dancing to someone else's tune.", false, 1);
@@ -818,7 +811,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "There was no boss fight.", false, -1);
             break;
         }
-        case 10: // Bigma Stage 2
+        case 69: // Bigma FINAL BATTLE
         {
             addCutsceneLine(gameData->cutscene, Bigma, "Nngh... urrgh...", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "BIGMA... I'm sorry.", false, -1);
@@ -862,6 +855,21 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, HankWaddle, "And with my corruption program, I've shown the world just how destructive you all really are.", false, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "I, HANK WADDLE, will finally be the one to right this wrong. ONCE AND FOR ALL!", false, -1);
             addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "... We kinda lost touch after that.", false, -1);
+            break;
+        }
+        case 11: // Bigma stage 2 (BOSS RUSH)
+        {
+            addCutsceneLine(gameData->cutscene, Bigma,
+                            "Well done. The understudy outlasts the entire cast. You should be proud.", false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "Enough games! You're the only one left!", false, -1);
+            addCutsceneLine(gameData->cutscene, Bigma,
+                            "And you're still just a fan trying to improvise your way through the finale.", false, -1);
+            addCutsceneLine(gameData->cutscene, Bigma,
+                            "It's time to return to the Main Stage. The place where all this began. Where I first "
+                            "heard your signal.",
+                            false, -1);
+            addCutsceneLine(gameData->cutscene, Pulse, "... Main Stage.", false, -1);
+            addCutsceneLine(gameData->cutscene, Bigma, "Curtain's rising, PULSE. Don't keep me waiting.", false, -1);
             break;
         }
         default: // Bigma Final Battle

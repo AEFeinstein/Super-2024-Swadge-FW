@@ -819,7 +819,12 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
     {
         drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOTTOM_ALPHA], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION);
 
-        int8_t hp  = platformer->entityManager.playerEntity->hp;
+        int8_t originalHp = platformer->entityManager.playerEntity->hp;
+        if(originalHp < 0)
+        {
+            originalHp = 0;
+        }
+        int8_t hp  = originalHp;
         bool isOdd = hp % 2;
 
         if (hp > 60)
@@ -839,8 +844,8 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
             else
             {
                 drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_MIDDLE_0 + hp / 2], 8, draw_y);
-                if (isOdd && platformer->entityManager.playerEntity->hp > i * 12
-                    && platformer->entityManager.playerEntity->hp < (i + 1) * 12)
+                if (isOdd && originalHp > i * 12
+                    && originalHp < (i + 1) * 12)
                 {
                     pip_y = draw_y + 15 - ((hp / 2) % 6) * 2;
                     drawLineFast(14, pip_y, 17, pip_y, c133);
@@ -864,7 +869,7 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
         else
         {
             drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_0 + hp / 2], 8, draw_y);
-            if (isOdd && platformer->entityManager.playerEntity->hp > 48) // same as > 4 * 12
+            if (isOdd && originalHp > 48) // same as > 4 * 12
             {
                 pip_y = draw_y + 15 - ((hp / 2) % 6) * 2;
                 drawLineFast(14, pip_y, 17, pip_y, c133);
@@ -876,18 +881,18 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
         {
             draw_y = MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION
                      - 97; // same as MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 1 - (6 * 16);
-            if (platformer->entityManager.playerEntity->hp < 61)
+            if (originalHp < 61)
             {
                 drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_HP_CAN_OF_SALSA_0], 4, draw_y);
             }
             else
             {
                 drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_HP_CAN_OF_SALSA_0
-                                                           + (platformer->entityManager.playerEntity->hp - 60) / 2],
+                                                           + (originalHp - 60) / 2],
                               4, draw_y);
-                if (isOdd && platformer->entityManager.playerEntity->hp > 60)
+                if (isOdd && originalHp > 60)
                 {
-                    pip_y = draw_y + 13 - ((platformer->entityManager.playerEntity->hp / 2) % 6) * 2;
+                    pip_y = draw_y + 13 - ((originalHp / 2) % 6) * 2;
                     drawLineFast(14, pip_y, 17, pip_y, c133);
                     drawLineFast(15, pip_y, 16, pip_y, c143);
                 }
@@ -899,7 +904,12 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
     {
         drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOTTOM_BIGMA], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION);
 
-        int8_t hp  = platformer->entityManager.bossEntity->hp;
+        int8_t originalHp = platformer->entityManager.bossEntity->hp;
+        if(originalHp < 0)
+        {
+            originalHp = 0;
+        }
+        int8_t hp  = originalHp;
         bool isOdd = hp % 2;
 
         if (hp > 60)
@@ -919,8 +929,8 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
             else
             {
                 drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_0 + hp / 2], 256, draw_y);
-                if (isOdd && platformer->entityManager.bossEntity->hp > i * 12
-                    && platformer->entityManager.bossEntity->hp < (i + 1) * 12)
+                if (isOdd && originalHp > i * 12
+                    && originalHp < (i + 1) * 12)
                 {
                     pip_y = draw_y + 15 - ((hp / 2) % 6) * 2;
                     drawLineFast(262, pip_y, 265, pip_y, c321);
@@ -944,7 +954,7 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
         else
         {
             drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_0 + hp / 2], 256, draw_y);
-            if (isOdd && platformer->entityManager.bossEntity->hp > 4 * 12)
+            if (isOdd && originalHp > 4 * 12)
             {
                 pip_y = draw_y + 15 - ((hp / 2) % 6) * 2;
                 drawLineFast(262, pip_y, 265, pip_y, c321);
