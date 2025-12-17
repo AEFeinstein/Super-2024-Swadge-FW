@@ -5326,33 +5326,55 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
     self->xspeed = 0;
     self->yspeed = 0;
 
-    /* Initialize state */
-    if (self->state == -1)
+    /* Shooting: either periodic random downward shots, or a dense bottom-to-top wave when special1 is set */
+    if (self->special1)
     {
-        self->state = 0;
-        self->stateTimer = 0;
-        self->animationTimer = 0;
-        self->spriteIndex = MG_SP_BOSS_0; /* visor down */
-    }
-
-    /* Shooting: periodic random downward shots */
-    self->animationTimer++;
-    if (self->animationTimer >= 30)
-    {
-        self->animationTimer = esp_random() % 10; /* small jitter */
-        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
-                                                    TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
-        if (createdEntity != NULL)
+        /* Bottom wave in progress */
+        self->animationTimer++;
+        if (self->animationTimer >= 3 && self->specialN > 0)
         {
-            int16_t angle = getAtan2(esp_random() % 101,
-                                        esp_random() % 101 -50);
-            int16_t sin = getSin1024(angle);
-            int16_t cos = getCos1024(angle);
+            self->animationTimer = 0;
+            int16_t spawnXpix = self->specialX;
+            int16_t spawnYpix = self->tilemap->mapOffsetY + MG_TILEMAP_DISPLAY_HEIGHT_PIXELS - 8;
+            mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, spawnXpix, spawnYpix);
+            if (createdEntity != NULL)
+            {
+                createdEntity->xspeed = 0;
+                createdEntity->yspeed = -160; /* fire straight up */
+                createdEntity->linkedEntity = self;
+                soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+            }
+            self->specialX -= 8; /* slide left */
+            self->specialN--;
+        }
 
-            createdEntity->xspeed = (72 * cos) / 1024;
-            createdEntity->yspeed = (72 * sin) / 1024;
-            createdEntity->linkedEntity = self;
-            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+        if (self->specialN <= 0)
+        {
+            self->special1 = 0; /* wave finished */
+            self->animationTimer = esp_random() % 10;
+        }
+    }
+    else
+    {
+        /* Normal conical downward fire */
+        self->animationTimer++;
+        if (self->animationTimer >= 30)
+        {
+            self->animationTimer = esp_random() % 10; /* small jitter */
+            mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
+                                                        TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+            if (createdEntity != NULL)
+            {
+                int16_t angle = getAtan2(esp_random() % 101,
+                                            esp_random() % 101 - 50);
+                int16_t sin = getSin1024(angle);
+                int16_t cos = getCos1024(angle);
+
+                createdEntity->xspeed = (72 * cos) / 1024;
+                createdEntity->yspeed = (72 * sin) / 1024;
+                createdEntity->linkedEntity = self;
+                soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+            }
         }
     }
 
@@ -5388,6 +5410,14 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
             {
                 self->state = 3;
                 self->stateTimer = 0;
+
+                /* When the visor opens (entering vulnerable state), start a dense bottom-to-top
+                 * bullet wave that spawns from the bottom-right and slides to the bottom-left.
+                 */
+                self->special1 = 1;
+                self->animationTimer = 0;
+                self->specialX = self->tilemap->mapOffsetX + MG_TILEMAP_DISPLAY_WIDTH_PIXELS - 8;
+                self->specialN = (MG_TILEMAP_DISPLAY_WIDTH_PIXELS / 8) + 4; /* cover the room bottom */
             }
             break;
         case 3: /* vulnerable */
@@ -5424,7 +5454,12 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
         case 4: /* damage flash */
             self->spriteIndex = MG_SP_BOSS_4;
             self->stateTimer++;
-            if (self->stateTimer > 12)
+            if (self->stateTimer > 120 && (esp_random() % 100) > 70)
+            {
+                self->state = 5; /* begin closing at frame 2 */
+                self->stateTimer = 0;
+            }
+            else if (self->stateTimer > 12)
             {
                 self->state = 3;
                 self->stateTimer = 0;
