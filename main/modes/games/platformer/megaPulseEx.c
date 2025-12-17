@@ -525,7 +525,7 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
 
             //change this back to 10 (intro)
-            platformer->gameData.level = 21;
+            platformer->gameData.level = 12;
             mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
             mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename,
                                &platformer->entityManager);
@@ -1966,10 +1966,29 @@ void updateLevelSelect(platformer_t* self)
     {
         self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
 
+        uint8_t actualLevel = self->gameData.level;
+        if(self->gameData.level == 5)
+        {
+            if(self->unlockables.levelsCleared & (1 << 5))//if gauntlet was complete
+            {
+                actualLevel = 11;//about to start boss rush
+                actualLevel += self->unlockables.levelsCleared & (1<<11);//make it final showdown (12) if 11 was complete.
+                actualLevel += self->unlockables.levelsCleared & (1<<12);//make it 13 if 12 was complete.
+            }
+        }
+
         if ((self->unlockables.levelsCleared & (1 << self->gameData.level))
             || (self->gameData.level == 5 && !(self->unlockables.levelsCleared == 0b1111011110)))
         {
             soundPlaySfx(&(platformer->soundManager.sndMenuDeny), BZR_STEREO);
+        }
+        else if(actualLevel == 13)//new game +
+        {
+            //Undo all level progress, but keep abilities.
+            self->unlockables.levelsCleared = 0;
+            savePlatformerUnlockables(self);
+            //back to the title screen, hooray!
+            changeStateTitleScreen(self);
         }
         else
         {
@@ -2024,8 +2043,21 @@ void drawLevelSelect(platformer_t* self)
                 }
                 else
                 {
-                    drawWsgTile(&self->wsgManager.wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2A + ((j * 3) + i)],
+                    //check if the 5th bit is set
+                    if(((((j * 3))) == 4) && (self->unlockables.levelsCleared & (1 << 5)))//if (5 gauntlet) was complete.
+                    {
+                        uint16_t drawSymbol = MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_34;
+                        drawSymbol += self->unlockables.levelsCleared & (1 << 11); //35 if (11 boss rush) was complete.
+                        drawSymbol += self->unlockables.levelsCleared & (1 << 12); //36 if (12 final showdown) was complete
+                        drawWsgTile(&self->wsgManager.wsgs[drawSymbol],
                                 (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY);
+                    }
+                    else
+                    {
+                        drawWsgTile(&self->wsgManager.wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2A + ((j * 3) + i)],
+                                (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY);
+                    }
+                    
                 }
             }
         }
