@@ -1816,7 +1816,7 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             }
 
             /* If Hank Waddle was hit, flash damage and enter damage state */
-            if (self->type == ENTITY_BOSS_HANK_WADDLE)
+            if (self->type == ENTITY_BOSS_HANK_WADDLE && self->state == 3)
             {
                 self->state = 4; /* damage flash */
                 self->stateTimer = 0;
@@ -5365,7 +5365,7 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
                                                         TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
             if (createdEntity != NULL)
             {
-                int16_t angle = getAtan2(esp_random() % 101,
+                int16_t angle = getAtan2(esp_random() % 101 - 5,
                                             esp_random() % 101 - 50);
                 int16_t sin = getSin1024(angle);
                 int16_t cos = getCos1024(angle);
@@ -5376,6 +5376,14 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
                 soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
             }
         }
+    }
+    //.1% chance to start a bullet wave
+    if ((esp_random() % 1000) < 2)
+    {
+        self->special1 = 1;
+        self->animationTimer = 0;
+        self->specialX = self->tilemap->mapOffsetX + MG_TILEMAP_DISPLAY_WIDTH_PIXELS - 8;
+        self->specialN = (MG_TILEMAP_DISPLAY_WIDTH_PIXELS / 8) + 4; /* cover the room bottom */
     }
 
     /* State machine */
@@ -5388,7 +5396,7 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
              */
             self->visible = true;
             self->stateTimer++;
-            if (self->stateTimer > 800) /* time before opening */
+            if (self->stateTimer > 600) /* time before opening */
             {
                 self->state = 1;
                 self->stateTimer = 0;
@@ -5462,7 +5470,6 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
             else if (self->stateTimer > 12)
             {
                 self->state = 3;
-                self->stateTimer = 0;
             }
             break;
         default:
