@@ -439,7 +439,7 @@ void platformerEnterMode(void)
                          "Smash Gorilla", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 15, 29, -1, 250, false);
         // SeverYagata
-        addCutsceneStyle(platformer->gameData.cutscene, c310, SEVER_YAGATA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
+        addCutsceneStyle(platformer->gameData.cutscene, c310, SEVER_YATAGA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
                          "Sever Yagata", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 16, 24, 1, 250, false);
         // Jasper
@@ -504,7 +504,7 @@ void platformerEnterMode(void)
                          "Smash Gorilla", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 15, 29, -1, 250, false);
         // SeverYagata
-        addCutsceneStyle(platformer->gameData.cutscene, c310, SEVER_YAGATA_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+        addCutsceneStyle(platformer->gameData.cutscene, c310, SEVER_YATAGA_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
                          "Sever Yagata", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 24, 11, 0, 100, true);
     }
@@ -760,7 +760,8 @@ void mgBuildMainMenu(platformer_t* self)
     }
     addSettingsOptionsItemToMenu(self->menu, str_cheatMode, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
                                  cheatMode);
-    addSingleItemToMenu(self->menu, str_giveAbilities);
+    //We're not shipping that button
+    //addSingleItemToMenu(self->menu, str_giveAbilities);
     self->menu = endSubMenu(self->menu);
 
     if (self->gameData.debugMode)
