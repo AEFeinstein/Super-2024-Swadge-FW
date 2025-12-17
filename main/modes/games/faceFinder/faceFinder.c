@@ -40,7 +40,8 @@ typedef struct
     midiFile_t wrong;
     midiFile_t die;
 
-    wsg_t faces[7];
+    wsg_t faces[8];
+    swadgesona_t swadgesona;
     int64_t timer;
     int64_t score;
     int32_t stage;
@@ -117,7 +118,7 @@ finder_t* finder;
 //==============================================================================
 static void randomizeFaces(finder_t* myfind)
 {
-    for (int i = 6; i > 0; i--)
+    for (int i = 7; i > 0; i--)
     {
         int j            = rand() % (i + 1);
         wsg_t hold       = myfind->faces[i];
@@ -274,13 +275,18 @@ static void findingEnterMode(void)
     loadWsg(FINDER_KINETIC_DONUT_WSG, &finder->faces[4], true);
     loadWsg(FINDER_PULSE_WSG, &finder->faces[5], true);
     loadWsg(FINDER_SAWTOOTH_WSG, &finder->faces[6], true);
+    loadSPSona(&finder->swadgesona.core);
+    generateSwadgesonaImage(&finder->swadgesona, false);
+    memcpy(&finder->faces[7], &finder->swadgesona.image, sizeof(wsg_t));
+    
+    
 
     //Music things
     initGlobalMidiPlayer();
 
     loadMidiFile(FINDER_BGM_FAST_MID, &finder->bgm_fast, true);
     loadMidiFile(FINDER_BGM_MED_MID, &finder->bgm_med, true);
-    loadMidiFile(FINDER_BGM_SLOW_MID, &finder->bgm_slow, true);
+    loadMidiFile(FINDER_BGM_MED_MID, &finder->bgm_slow, true);
     loadMidiFile(FINDER_BGM_ZEN_MID, &finder->bgm_zen, true);
     loadMidiFile(FINDER_RIGHT_MID, &finder->right, true);
     loadMidiFile(FINDER_WRONGER_MID, &finder->wrong, true);
