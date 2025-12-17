@@ -517,6 +517,21 @@ static const jukeboxSong_t sfx_swadgesona[] = {
     },
 };
 
+static const jukeboxSong_t bgm_atrium[] = {
+    {
+        .fIdx = ATRTHEME1_MID,
+        .name = "Atrium Theme 1",
+    },
+    {
+        .fIdx = ATRTHEME2_MID,
+        .name = "Atrium Theme 2",
+    },
+    {
+        .fIdx = ATRVIBE_MID,
+        .name = "Atrium Vibe",
+    },
+};
+
 static const jukeboxCategory_t bgmCategories[] = {
     {
         .category    = &modePlatformer,
@@ -564,6 +579,13 @@ static const jukeboxCategory_t bgmCategories[] = {
         .category    = &swsnCreatorMode,
         .songs       = bgm_swadgesona,
         .numSongs    = ARRAY_SIZE(bgm_swadgesona),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
+        .category    = &atriumMode,
+        .songs       = bgm_atrium,
+        .numSongs    = ARRAY_SIZE(bgm_atrium),
         .generalMidi = true,
         .shouldLoop  = true,
     },
