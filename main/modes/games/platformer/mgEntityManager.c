@@ -2523,7 +2523,7 @@ mgEntity_t* createBossHankWaddle(mgEntityManager_t* entityManager, uint16_t x, u
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
-    entity->hp                   = 30;
+    entity->hp                   = 60;
 
     entity->type                 = ENTITY_BOSS_HANK_WADDLE;
     entity->spriteIndex          = MG_SP_BOSS_0;
@@ -2536,7 +2536,7 @@ mgEntity_t* createBossHankWaddle(mgEntityManager_t* entityManager, uint16_t x, u
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
     entity->tileCollider         = &entityTileCollider_1x2;
 
-    entity->drawHandler  = &mg_defaultEntityDrawHandler;
+    entity->drawHandler  = &mg_hankDrawHandler;
     entity->linkedEntity = NULL;
 
     entityManager->bossEntity = entity;

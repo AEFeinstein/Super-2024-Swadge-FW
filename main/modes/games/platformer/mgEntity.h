@@ -279,6 +279,7 @@ void waveBallOverlapTileHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, ui
 void powerUpCollisionHandler(mgEntity_t* self, mgEntity_t* other);
 void killPlayer(mgEntity_t* self);
 void mg_defaultEntityDrawHandler(mgEntity_t* self);
+void mg_hankDrawHandler(mgEntity_t* self);
 
 void mg_playerDrawHandler(mgEntity_t* self);
 
