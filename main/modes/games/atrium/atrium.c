@@ -18,7 +18,7 @@
 #define MAX_SWADGESONA_IDXS (MAX_NUM_SWADGE_PASSES / SONA_PER) - (MAX_NUM_SWADGE_PASSES % SONA_PER) / SONA_PER
 #define ANIM_TIMER_MS       16667
 #define LOBBY_ARROW_Y       200
-#define LOBBY_BORDER_X      20
+// #define LOBBY_BORDER_X      20
 
 // Profile
 #define CARDTEXTPAD 4
@@ -118,7 +118,7 @@ static const char* const preambles[] = {
 };
 
 static const char* const editPromptText[] = {
-    "Choose Card", "Choose Identity", "Choose Location", "Pick Sandwich", "Save Profile",
+    "Choose Card", "Choose Identity", "Choose Location", "Pick Sandwich", "Save Profile", "Saved!",
 };
 
 // // Coordinates
@@ -251,7 +251,6 @@ typedef struct
     // Lobbies
     lobbyState_t lbState;
     uint8_t lobbySwsnIdxs[MAX_SWADGESONA_IDXS];
-    bool left, right, up, down;
     int64_t animTimer;
     int loadAnims;
     bool fakeLoad;
@@ -274,6 +273,7 @@ typedef struct
     int selection;
     int xloc;
     int yloc;
+    bool drawSaved;
 
     int32_t points;
 
@@ -304,7 +304,7 @@ static void drawArcade(uint64_t elapsedUs);
 static void drawConcert(uint64_t elapsedUs);
 static void drawGazebo(uint64_t elapsedUs);
 static void drawGazeboForeground(uint64_t elapsedUs);
-static void drawArrows(bool, bool, bool, bool);
+static void drawLobbyArrows(void);
 static void drawCard(userProfile_t profile, bool local);
 void drawEditSelection(buttonEvt_t* evt, int yloc);
 void drawEditUI(buttonEvt_t* evt, int yloc, bool direction);
@@ -501,7 +501,8 @@ static void atriumMainLoop(int64_t elapsedUs)
                 {
                     if ((evt.button & PB_A))
                     {
-                        atr->state = ATR_DISPLAY;
+                        atr->state     = ATR_DISPLAY;
+                        atr->loadAnims = 0;
                     }
                     else if ((evt.button & PB_B))
                     {
@@ -520,17 +521,18 @@ static void atriumMainLoop(int64_t elapsedUs)
             // Handle input
             while (checkButtonQueueWrapper(&evt))
             {
+                // Don't accept button input while the fake loading screen is shown
+                if (0 == atr->fakeLoad)
+                {
+                    continue;
+                }
+
                 atr->lastPage = atr->page;
 
                 if (evt.down)
                 {
-                    if (evt.button & PB_UP)
+                    if (evt.button & PB_LEFT)
                     {
-                        atr->up = true;
-                    }
-                    else if (evt.button & PB_LEFT)
-                    {
-                        atr->left = true;
                         atr->page--;
                         if (atr->page < 0)
                         {
@@ -539,37 +541,27 @@ static void atriumMainLoop(int64_t elapsedUs)
                     }
                     else if (evt.button & PB_RIGHT)
                     {
-                        atr->right = true;
                         atr->page++;
                         if (atr->page > (atr->numRemoteSwsn - 1) / 4)
                         {
                             atr->page = (atr->numRemoteSwsn - 1) / 4;
                         }
                     }
-                    else if (evt.button & PB_DOWN)
+                    else if (evt.button & PB_UP)
                     {
-                        atr->down = true;
-                    }
-
-                    // TODO this overwrites PB_UP and PB_DOWN from above
-                    if (evt.button & PB_UP)
-                    {
-                        atr->up = false;
                         if (atr->lbState > 0)
                         {
                             atr->lbState--;
+                            atr->loadAnims = 0;
                         }
-                        atr->loadAnims = 0;
                     }
                     else if (evt.button & PB_DOWN)
                     {
-                        atr->down = false;
                         if (atr->lbState < 2)
                         {
                             atr->lbState++;
+                            atr->loadAnims = 0;
                         }
-
-                        atr->loadAnims = 0;
                     }
                     else if (evt.button & PB_A)
                     {
@@ -628,7 +620,8 @@ static void atriumMainLoop(int64_t elapsedUs)
                     }
                     else if ((evt.button & PB_B))
                     {
-                        atr->state = ATR_DISPLAY; // if B is pressed, go to display view
+                        atr->state     = ATR_DISPLAY; // if B is pressed, go to display view
+                        atr->loadAnims = 0;
                     }
                 }
             }
@@ -671,6 +664,8 @@ static void editProfile(buttonEvt_t* evt)
     {
         if (evt->down)
         {
+            atr->drawSaved = false;
+
             if (evt->button & PB_B)
             {
                 atr->state = ATR_TITLE;
@@ -695,6 +690,8 @@ static void editProfile(buttonEvt_t* evt)
                              atr->spProfile.packedProfile, atr->spProfile.numPasses, atr->spProfile.points);
 
                     ESP_LOGI(ATR_TAG, "latest points: %" PRId32 "", atr->spProfile.points);
+
+                    atr->drawSaved = true;
                 }
             }
             else if (evt->button & PB_UP)
@@ -738,7 +735,8 @@ static void viewProfile(buttonEvt_t* evt)
         {
             if (evt->button & PB_B)
             {
-                atr->state = ATR_DISPLAY;
+                atr->state     = ATR_DISPLAY;
+                atr->loadAnims = 0;
             }
         }
     }
@@ -788,9 +786,10 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
 
         return;
     }
-    else
+    else if (0 == atr->fakeLoad)
     {
-        atr->fakeLoad = 1; // skip this next time
+        atr->fakeLoad  = 1; // skip this next time
+        atr->loadAnims = 0;
     }
 
     // Draw
@@ -832,7 +831,7 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
     }
 
     // UI
-    drawArrows(atr->left, atr->right, atr->up, atr->down);
+    drawLobbyArrows();
 
     // Sonas
     loadProfiles(SONA_PER, atr->page);
@@ -960,16 +959,42 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
     }
 }
 
-static void drawArrows(bool left, bool right, bool up, bool down)
-{ // TODO: change scale and positions
-    if (atr->lbState != 0)
+static void drawLobbyArrows(void)
+{
+    // Left, down, up, right
+    const int16_t angles[] = {180, 90, 270, 0};
+    bool arrowEnabled[4]   = {true, true, true, true};
+    int16_t xloc           = TFT_WIDTH / 5 - atr->uiElements[0].w / 2;
+
+    // TODO: change scale and positions
+    if (ATR_DISPLAY == atr->state)
     {
-        drawWsg(&atr->uiElements[(up) ? 1 : 0], LOBBY_BORDER_X, LOBBY_ARROW_Y, false, false, 270);
+        // Disable left and right
+        arrowEnabled[0] = false;
+        arrowEnabled[3] = false;
+
+        if (atr->lbState == 0)
+        {
+            // Disable up
+            arrowEnabled[2] = false;
+        }
+        if (atr->lbState == BG_COUNT - 1)
+        {
+            // Disable down
+            arrowEnabled[1] = false;
+        }
     }
-    if (atr->lbState != BG_COUNT - 1)
+    else if (ATR_SELECT == atr->state)
     {
-        drawWsg(&atr->uiElements[(down) ? 1 : 0], TFT_WIDTH - (LOBBY_BORDER_X + atr->uiElements[0].w), LOBBY_ARROW_Y,
-                false, false, 90);
+        // Disable up and down
+        arrowEnabled[1] = false;
+        arrowEnabled[2] = false;
+    }
+
+    for (int16_t aIdx = 0; aIdx < ARRAY_SIZE(angles); aIdx++)
+    {
+        drawWsg(&atr->uiElements[arrowEnabled[aIdx] ? 0 : 1], xloc, LOBBY_ARROW_Y, 0, 0, angles[aIdx]);
+        xloc += (TFT_WIDTH / 5);
     }
 }
 
@@ -1026,41 +1051,69 @@ static void drawCard(userProfile_t profile, bool local)
 
 void drawEditSelection(buttonEvt_t* evt, int yloc)
 {
+    const int16_t text_yloc = 200;
+    bool arrowEnabled[4]    = {true, true, true, true};
+    bool drawA              = false;
     switch (yloc)
     {
         case 0:
         {
             drawWsgSimple(&atr->uiElements[18], 0, 12); // card select
-            drawText(&atr->fonts[0], c000, editPromptText[0], 25, 200);
+            drawText(&atr->fonts[0], c000, editPromptText[0], 25, text_yloc);
+            arrowEnabled[2] = false;
             break;
         }
         case 1:
         {
             drawWsg(&atr->uiElements[17], 90 - CARDTEXTPAD, 55, false, false, 270); // fact0
-            drawText(&atr->fonts[0], c000, editPromptText[1], 25, 200);
+            drawText(&atr->fonts[0], c000, editPromptText[1], 25, text_yloc);
             break;
         }
         case 2:
         {
             drawWsg(&atr->uiElements[17], 90 - CARDTEXTPAD, 68, false, false, 270); // fact1
-            drawText(&atr->fonts[0], c000, editPromptText[2], 25, 200);
+            drawText(&atr->fonts[0], c000, editPromptText[2], 25, text_yloc);
             break;
         }
         case 3:
         {
             drawWsg(&atr->uiElements[17], 90 - CARDTEXTPAD, 81, false, false, 270); // fact2
-            drawText(&atr->fonts[0], c000, editPromptText[3], 25, 200);
+            drawText(&atr->fonts[0], c000, editPromptText[3], 25, text_yloc);
             break;
         }
         case 4:
         {
-            drawText(&atr->fonts[0], c000, editPromptText[4], 25, 200);
+            arrowEnabled[0] = false;
+            arrowEnabled[1] = false;
+            arrowEnabled[3] = false;
+            drawA           = true;
+            drawText(&atr->fonts[0], c000, editPromptText[4], 25, text_yloc);
+
+            if (atr->drawSaved)
+            {
+                drawText(&atr->fonts[0], c000, editPromptText[5], 25, text_yloc + atr->fonts[0].height + 2);
+            }
             break;
         }
         default:
         {
             break;
         }
+    }
+
+    const int16_t angles[] = {180, 90, 270, 0};
+    int16_t xloc           = 140;
+    int16_t arr_yloc       = text_yloc + (atr->fonts[0].height - atr->uiElements[0].h) / 2;
+
+    if (drawA)
+    {
+        drawWsgSimple(&atr->uiElements[2], xloc - atr->uiElements[2].w, arr_yloc);
+    }
+
+    for (int16_t aIdx = 0; aIdx < ARRAY_SIZE(angles); aIdx++)
+    {
+        drawWsg(arrowEnabled[aIdx] ? &atr->uiElements[0] : &atr->uiElements[1], xloc, arr_yloc, 0, 0, angles[aIdx]);
+        xloc += atr->uiElements[0].w;
     }
 }
 
@@ -1276,7 +1329,7 @@ void packProfileData(userProfile_t* profile)
     profile->packedProfile += atr->loadedProfile.fact1 << 8;
     profile->packedProfile += atr->loadedProfile.fact2 << 12;
     profile->packedProfile += atr->loadedProfile.numPasses << 16;
-    printf("profile packed is %" PRId32, profile->packedProfile);
+    ESP_LOGI(ATR_TAG, "profile packed is %" PRId32, profile->packedProfile);
 }
 
 void unpackProfileData(userProfile_t* profile)
@@ -1287,7 +1340,7 @@ void unpackProfileData(userProfile_t* profile)
     profile->fact1 = (profile->packedProfile      &0b00000000000000000000111100000000) >>8;
     profile->fact2 = (profile->packedProfile      &0b00000000000000001111000000000000) >>12;
     profile->numPasses = (profile->packedProfile  &0b00000000111111110000000000000000) >>16;
-    printf("unpacked profile is cardselect %" PRId8 ", fact0 %" PRId8 ", fact1 %" PRId8 ", fact2 %" PRId8 "",
+    ESP_LOGI(ATR_TAG, "unpacked profile is cardselect %" PRId8 ", fact0 %" PRId8 ", fact1 %" PRId8 ", fact2 %" PRId8 "",
            profile->cardSelect, profile->fact0, profile->fact1,
            profile->fact2);
     /* clang-format on */
