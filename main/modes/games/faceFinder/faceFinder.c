@@ -74,10 +74,11 @@ static const char ZenScore[]             = "Zen :)";
 static const int32_t startingFaces       = 4;
 static const int32_t facesPerLevel       = 2;
 static const int32_t MaxStaticFaces      = 42;
+static const int32_t MaxDynamicFaces     = 80;
 static const int32_t StartTime           = 10000000;
 static const int32_t TimePerLevel        = 5000000; // 20 seconds per stage, additive
 static const int32_t TimePerInstruction  = 4000000; // How long is each instruction page, with ability to be skipped
-static const int32_t MillisPerPixel      = 6900; // How many milliseconds of "moving right" to move one pixel to the right
+static const int32_t MillisPerPixel      = 5000; // How many milliseconds of "moving right" to move one pixel to the right
 static const int32_t DanceDurationMult   = 200;
 static const int32_t PenaltyMillis       = 3000000; // Milliseconds penalized from the timer on a wrong click
 
@@ -223,12 +224,16 @@ bool finderMainMenuCb(const char* label, bool selected, uint32_t value)
             if(finder->ZenMode){
                 finder->ZenMode = false;
                 startNewGame(finder);
+            }else{
+                startNewGame(finder);
             }
             
         }else if (label == ZenText)
         {
             if(!finder->ZenMode){
                 finder->ZenMode = true;
+                startNewGame(finder);
+            }else{
                 startNewGame(finder);
             }
             
@@ -333,6 +338,7 @@ static void findingMainLoop(int64_t elapsedUs)
                         finder->millisInstructing = 0;
                     }else if (finder->displayingScore)
                     {
+                        finder->displayingScore = false;
                         finder->ShowMenu = true;
                     }else
                     {
@@ -531,22 +537,22 @@ static void findingMainLoop(int64_t elapsedUs)
                 currentFace->danceDuration = (rand() % 32767) * DanceDurationMult;
             }
             //If the current face is too far off the screen, turn them around and make sure they come back
-            if (currentFace->pos.x < -60 * MillisPerPixel)
+            if (currentFace->pos.x < -30 * MillisPerPixel)
             {
                 currentFace->movementSpeed.x = -1 * currentFace->movementSpeed.x;
                 currentFace->danceDuration += 15000 * MillisPerPixel / currentFace->movementSpeed.x;
             }
-            if (currentFace->pos.y < -60 * MillisPerPixel)
+            if (currentFace->pos.y < -30 * MillisPerPixel)
             {
                 currentFace->movementSpeed.y = -1 * currentFace->movementSpeed.y;
                 currentFace->danceDuration += 15000 * MillisPerPixel / currentFace->movementSpeed.y;
             }
-            if (currentFace->pos.x > 339 * MillisPerPixel)
+            if (currentFace->pos.x > 270 * MillisPerPixel)
             {
                 currentFace->movementSpeed.x = -1 * currentFace->movementSpeed.x;
                 currentFace->danceDuration += 15000 * MillisPerPixel / currentFace->movementSpeed.x;
             }
-            if (currentFace->pos.y > 309 * MillisPerPixel)
+            if (currentFace->pos.y > 230 * MillisPerPixel)
             {
                 currentFace->movementSpeed.y = -1 * currentFace->movementSpeed.y;
                 currentFace->danceDuration += 15000 * MillisPerPixel / currentFace->movementSpeed.y;
@@ -557,7 +563,7 @@ static void findingMainLoop(int64_t elapsedUs)
 
             currentNode = currentNode->next;
             drawnFaces++;
-            if (drawnFaces >= MaxStaticFaces && (finder->stage < 5 || finder->stage % 2 == 0))
+            if ( (drawnFaces >= MaxStaticFaces && (finder->stage < 5 || finder->stage % 2 == 0)) ||  (drawnFaces >= MaxDynamicFaces && (finder->stage > 5 && finder->stage % 2 == 1))   )
             {
                 keepDrawing = false;
             }
