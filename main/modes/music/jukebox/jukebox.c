@@ -532,6 +532,52 @@ static const jukeboxSong_t bgm_atrium[] = {
     },
 };
 
+static const jukeboxSong_t bgm_findingFaces[] = {
+    {
+        .fIdx = FINDER_BGM_MENU_MID,
+        .name = "Menu",
+    },
+    {
+        .fIdx = FINDER_BGM_ZEN_MID,
+        .name = "Zen",
+    },
+    {
+        .fIdx = FINDER_BGM_SLOW_MID,
+        .name = "Slow",
+    },
+    {
+        .fIdx = FINDER_BGM_MED_MID,
+        .name = "Med",
+    },
+    {
+        .fIdx = FINDER_BGM_FAST_MID,
+        .name = "Fast",
+    },
+    {
+        .fIdx = FINDER_BGM_DEATH_MID,
+        .name = "Death",
+    },
+};
+
+static const jukeboxSong_t sfx_findingFaces[] = {
+    {
+        .fIdx = FINDER_RIGHT_MID,
+        .name = "Right",
+    },
+    {
+        .fIdx = FINDER_WRONG_MID,
+        .name = "Wrong",
+    },
+    {
+        .fIdx = FINDER_WRONGER_MID,
+        .name = "Wronger",
+    },
+    {
+        .fIdx = FINDER_DIE_MID,
+        .name = "Die",
+    },
+};
+
 static const jukeboxCategory_t bgmCategories[] = {
     {
         .category    = &modePlatformer,
@@ -565,6 +611,13 @@ static const jukeboxCategory_t bgmCategories[] = {
         .category    = &roboRunnerMode,
         .songs       = bgm_roboRunner,
         .numSongs    = ARRAY_SIZE(bgm_roboRunner),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
+        .category    = &findingFacesMode,
+        .songs       = bgm_findingFaces,
+        .numSongs    = ARRAY_SIZE(bgm_findingFaces),
         .generalMidi = true,
         .shouldLoop  = true,
     },
@@ -617,6 +670,13 @@ static const jukeboxCategory_t sfxCategories[] = {
         .category    = &cosCrunchMode,
         .songs       = sfx_cosplayCrunch,
         .numSongs    = ARRAY_SIZE(sfx_cosplayCrunch),
+        .generalMidi = true,
+        .shouldLoop  = false,
+    },
+    {
+        .category    = &findingFacesMode,
+        .songs       = sfx_findingFaces,
+        .numSongs    = ARRAY_SIZE(sfx_findingFaces),
         .generalMidi = true,
         .shouldLoop  = false,
     },
