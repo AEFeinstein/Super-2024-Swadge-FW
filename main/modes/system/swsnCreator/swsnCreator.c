@@ -7,6 +7,7 @@
 #include "swadgesona.h"
 #include "settingsManager.h"
 #include "textEntry.h"
+#include "atrium.h"
 
 //==============================================================================
 // Define
@@ -911,7 +912,7 @@ static void swsnLoop(int64_t elapsedUs)
                         if (!scd->shouldQuit)
                         {
                             freeWsg(&scd->cursorImage);
-                            // switchToSwadgeMode(&); TODO Atrium
+                            switchToSwadgeMode(&atriumMode);
                         }
                         else
                         {
