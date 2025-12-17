@@ -332,8 +332,6 @@ bool finderMainMenuCb(const char* label, bool selected, uint32_t value)
                 globalMidiPlayerPlaySong(&finder->bgm_zen, MIDI_BGM);
                 finder->musicNum = 0;
                 startNewGame(finder);
-            }else{
-                startNewGame(finder);
             }
             
         }else if (label == ExitText)
