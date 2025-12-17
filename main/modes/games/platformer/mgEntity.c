@@ -5357,7 +5357,7 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
             self->animationTimer = esp_random() % 10;
         }
     }
-    else
+    else if(self->state != 7)
     {
         /* Normal conical downward fire */
         self->animationTimer++;
@@ -5381,7 +5381,7 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
         }
     }
     //.1% chance to start a bullet wave
-    if ((esp_random() % 1000) < 2)
+    if (self->state != 7 && (esp_random() % 1000) < 2)
     {
         self->special1 = 1;
         self->animationTimer = 0;
