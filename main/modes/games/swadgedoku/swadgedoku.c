@@ -778,6 +778,10 @@ static void swadgedokuSetupMenu(void)
         addSingleItemToMenu(sd->menu, menuItemContinue);
     }
     ESP_LOGE("Swadgedoku", "Last level is %d", sd->lastLevel);
+    if (sd->lastLevel > sd->maxLevel)
+    {
+        sd->lastLevel = sd->maxLevel;
+    }
 
     // Kinda clunky...
     settingParam_t constrainedLevelSelectBounds = {
@@ -1287,7 +1291,7 @@ static void swadgedokuDoWinCheck(void)
                     }
                 }
 
-                if (sd->lastLevel < sd->maxLevel)
+                if (sd->lastLevel < sd->maxLevel && sd->currentLevelNumber < sd->maxLevel)
                 {
                     ESP_LOGI("Swadgedoku", "Updating last completed level from %d to %d", sd->lastLevel,
                                 sd->currentLevelNumber + 1);
@@ -1719,6 +1723,7 @@ static void swadgedokuHintDialogCb(const char* label)
         applyHint(&sd->game, sd->player.notes, sd->solverCache.hintBuf, sd->solverCache.hintbufLen);
         swadgedokuDoWinCheck();
         resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
+        sd->solverCache.solution = sd->useSolution ? sd->solution.grid : NULL;
 
         // Apply the trophy for using a hint
         trophyUpdate(trophyUseHint, 1, true);
@@ -1743,6 +1748,7 @@ static void swadgedokuHintDialogCb(const char* label)
     {
         sd->showingHint = false;
         resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
+        sd->solverCache.solution = sd->useSolution ? sd->solution.grid : NULL;
     }
 
     node_t* node = sd->player.overlay.shapes.first;
