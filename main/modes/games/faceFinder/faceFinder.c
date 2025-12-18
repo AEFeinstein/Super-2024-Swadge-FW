@@ -394,7 +394,7 @@ static void findingEnterMode(void)
     loadMidiFile(FINDER_BGM_FAST_MID, &finder->bgm_fast, true);
     loadMidiFile(FINDER_BGM_MED_MID, &finder->bgm_med, true);
     loadMidiFile(FINDER_BGM_SLOW_MID, &finder->bgm_slow, true);
-    loadMidiFile(LULLABY_IN_NUMBERS_MID, &finder->bgm_zen, true);
+    loadMidiFile(FINDER_BGM_ZEN_MID, &finder->bgm_zen, true);
     loadMidiFile(FINDER_RIGHT_MID, &finder->right, true);
     loadMidiFile(FINDER_WRONGER_MID, &finder->wrong, true);
     loadMidiFile(FINDER_DIE_MID, &finder->die, true);
@@ -626,6 +626,7 @@ static void findingMainLoop(int64_t elapsedUs)
             // check for game over, setting the music to zen mode if it is a game over
             finder->displayingScore = true;
             finder->musicNum        = 0;
+            globalMidiPlayerPlaySong(&finder->die, MIDI_SFX);
             globalMidiPlayerPlaySong(&finder->bgm_dead, MIDI_BGM);
         }
 
