@@ -281,13 +281,13 @@ void mg_updateLedsShoopDaWoopStatus(mgEntityManager_t* entityManager)
     mgGameData_t* gameData   = playerEntity->gameData;
     for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
     {
-        if (entityManager->playerEntity->shotsFired <= -31)
-        {
-            gameData->leds[i] = (led_t){.r = 0, .g = 204, .b = 153};
-        }
-        else if (entityManager->playerEntity->shotsFired <= -63)
+        if (entityManager->playerEntity->shotsFired <= -63)
         {
             gameData->leds[i] = (led_t){.r = 0, .g = 255, .b = 102};
+        }
+        else if (entityManager->playerEntity->shotsFired <= -31)
+        {
+            gameData->leds[i] = (led_t){.r = 0, .g = 204, .b = 153};
         }
         else
         {
