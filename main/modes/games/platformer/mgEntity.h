@@ -141,6 +141,11 @@ struct mgEntity_t
     int16_t xDamping;
     int16_t yDamping;
 
+    /* Generic special purpose fields used by some entities for boss waves etc. */
+    uint8_t special1;
+    int16_t specialX;
+    int16_t specialN;
+
     bool gravityEnabled;
     int16_t gravity;
     bool falling;
@@ -150,6 +155,7 @@ struct mgEntity_t
     bool spriteFlipVertical;
     int16_t spriteRotateAngle;
     uint8_t animationTimer;
+    uint8_t doubleJumpAnimTimer; /* counts down frames for the double-jump animation */
 
     mgTilemap_t* tilemap;
     mgGameData_t* gameData;
@@ -208,6 +214,8 @@ void mg_playerFallOffTileHandler(mgEntity_t* self);
 
 void despawnWhenOffscreen(mgEntity_t* self);
 
+void mg_bossRushLogic(mgEntity_t* self);
+
 void mg_destroyEntity(mgEntity_t* self, bool respawn);
 
 void applyDamping(mgEntity_t* self);
@@ -224,6 +232,7 @@ void mg_dummyCollisionHandler(mgEntity_t* self, mgEntity_t* other);
 
 bool mg_playerTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 bool mg_enemyTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
+bool mg_trashManTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 bool mg_dummyTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 
 void dieWhenFallingOffScreen(mgEntity_t* self);
@@ -276,6 +285,7 @@ void waveBallOverlapTileHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, ui
 void powerUpCollisionHandler(mgEntity_t* self, mgEntity_t* other);
 void killPlayer(mgEntity_t* self);
 void mg_defaultEntityDrawHandler(mgEntity_t* self);
+void mg_hankDrawHandler(mgEntity_t* self);
 
 void mg_playerDrawHandler(mgEntity_t* self);
 

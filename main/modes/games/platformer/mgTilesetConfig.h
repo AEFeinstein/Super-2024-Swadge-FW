@@ -53,5 +53,6 @@ extern const uint16_t mg_deadeyeChirpziTileset[];
 extern const uint16_t mg_drainBatTileset[];
 extern const uint16_t mg_flareGryffynTileset[];
 extern const uint16_t mg_bigmaTileset[];
+extern const uint16_t mg_hankTileset[];
 
 #endif

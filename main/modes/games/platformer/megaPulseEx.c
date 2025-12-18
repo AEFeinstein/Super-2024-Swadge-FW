@@ -383,11 +383,11 @@ void platformerEnterMode(void)
                          4, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 1, 81, 1, 100, false);
         // Bigma
-        addCutsceneStyle(platformer->gameData.cutscene, c544, BIGMA_PORTRAIT_0_WSG, TEXTBOX_BIGMA_WSG, "Bigma", 2,
+        addCutsceneStyle(platformer->gameData.cutscene, c544, BIGMA_PORTRAIT_0_WSG, TEXTBOX_BIGMA_WSG, "Bigma", 4,
                          false, true, true);
         setMidiParams(platformer->gameData.cutscene, 2, 80, -2, 2000, true);
         // TrashMan
-        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Trash Man", 7,
+        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Trash Man", 2,
                          false, true, true);
         setMidiParams(platformer->gameData.cutscene, 3, 36, -2, 250, false);
         /// AbilityUnlocked
@@ -399,8 +399,8 @@ void platformerEnterMode(void)
                          true, false, true);
         setMidiParams(platformer->gameData.cutscene, 5, 55, 0, 250, false);
         // KineticDonut
-        addCutsceneStyle(platformer->gameData.cutscene, c310, KINETIC_DONUT_WSG, TEXTBOX_CORRUPTED_WSG, "Kinetic Donut",
-                         1, false, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c310, KINETIC_DONUT_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
+                         "Kinetic Donut", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 6, 80, -1, 1000, false);
         // JoltLapin
         addCutsceneStyle(platformer->gameData.cutscene, c000, JOLT_LAPIN_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
@@ -424,22 +424,22 @@ void platformerEnterMode(void)
         setMidiParams(platformer->gameData.cutscene, 11, 30, 1, 80, false);
         // HankWaddle
         addCutsceneStyle(platformer->gameData.cutscene, c000, HANK_WADDLE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
-                         "Hank Waddle", 1, false, true, true);
+                         "Hank Waddle", 2, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 12, 38, 1, 250, false);
         // GrindPangolin
         addCutsceneStyle(platformer->gameData.cutscene, c310, GRIND_PANGOLIN_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
                          "Grind Pangolin", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 13, 62, 1, 250, false);
         // DrainBat
-        addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Drain Bat",
-                         1, false, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
+                         "Drain Bat", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 14, 82, 2, 250, false);
         // SmashGorilla
         addCutsceneStyle(platformer->gameData.cutscene, c310, SMASH_GORILLA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
                          "Smash Gorilla", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 15, 29, -1, 250, false);
         // SeverYagata
-        addCutsceneStyle(platformer->gameData.cutscene, c310, SEVER_YAGATA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
+        addCutsceneStyle(platformer->gameData.cutscene, c310, SEVER_YATAGA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
                          "Sever Yagata", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 16, 24, 1, 250, false);
         // Jasper
@@ -450,30 +450,70 @@ void platformerEnterMode(void)
         addCutsceneStyle(platformer->gameData.cutscene, c000, EMBER_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Ember", 1, true,
                          true, true);
         setMidiParams(platformer->gameData.cutscene, 18, 82, 1, 250, false);
-        // Cho
-        addCutsceneStyle(platformer->gameData.cutscene, c000, CHO_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Cho", 1, true,
-                         true, true);
-        setMidiParams(platformer->gameData.cutscene, 19, 17, 1, 250, false);
         // Percy
         addCutsceneStyle(platformer->gameData.cutscene, c000, PERCY_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Percy", 1, true,
                          true, true);
-        setMidiParams(platformer->gameData.cutscene, 20, 38, 1, 250, false);
+        setMidiParams(platformer->gameData.cutscene, 19, 38, 1, 250, false);
         // Sunny
         addCutsceneStyle(platformer->gameData.cutscene, c541, SUNNY_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sunny", 1,
                          true, true, true);
-        setMidiParams(platformer->gameData.cutscene, 21, 81, 1, 100, true);
+        setMidiParams(platformer->gameData.cutscene, 20, 81, 1, 100, true);
         // WarningMessage
         addCutsceneStyle(platformer->gameData.cutscene, c254, WARNING_MESSAGE_PORTRAIT_WSG, TEXTBOX_PULSE_WSG, "", 1,
                          true, true, false);
-        setMidiParams(platformer->gameData.cutscene, 22, 55, 0, 100, false);
+        setMidiParams(platformer->gameData.cutscene, 21, 55, 0, 100, false);
         // SawtoothPostReveal
         addCutsceneStyle(platformer->gameData.cutscene, c541, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth",
                          4, true, true, true);
-        setMidiParams(platformer->gameData.cutscene, 23, 81, 1, 100, true);
+        setMidiParams(platformer->gameData.cutscene, 22, 81, 1, 100, true);
         // BlackScreen
         addCutsceneStyle(platformer->gameData.cutscene, c555, BLACK_PORTRAIT_WSG, TEXTBOX_SAWTOOTH_WSG, "", 1, false,
                          true, false);
-        setMidiParams(platformer->gameData.cutscene, 24, 11, 0, 100, true);
+        setMidiParams(platformer->gameData.cutscene, 23, 11, 0, 100, true);
+
+        /////////////////////////
+        // UNCORRUPTED VERSIONS//
+        /////////////////////////
+        //  TrashMan
+        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 2,
+                         false, true, true);
+        setMidiParams(platformer->gameData.cutscene, 24, 36, -2, 250, false);
+        // KineticDonut
+        addCutsceneStyle(platformer->gameData.cutscene, c310, KINETIC_DONUT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+                         "Kinetic Donut", 1, false, true, true);
+        setMidiParams(platformer->gameData.cutscene, 25, 80, -1, 1000, false);
+        // JoltLapin
+        addCutsceneStyle(platformer->gameData.cutscene, c000, JOLT_LAPIN_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+                         "Jolt Lapin", 1, true, true, true);
+        setMidiParams(platformer->gameData.cutscene, 26, 80, 1, 250, false);
+        // FlareGryffyn
+        addCutsceneStyle(platformer->gameData.cutscene, c310, FLARE_GRYFFYN_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+                         "Flare Gryffyn", 1, false, true, true);
+        setMidiParams(platformer->gameData.cutscene, 27, 24, 1, 250, false);
+        // CrashTurtle
+        addCutsceneStyle(platformer->gameData.cutscene, c000, CRASH_TURTLE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+                         "Crash Turtle", 1, true, true, true);
+        setMidiParams(platformer->gameData.cutscene, 28, 119, 1, 250, false);
+        // DeadeyeChirpzi
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_CHIRPZI_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Cho",
+                         1, true, true, true);
+        setMidiParams(platformer->gameData.cutscene, 29, 17, 1, 250, false);
+        // GrindPangolin
+        addCutsceneStyle(platformer->gameData.cutscene, c310, GRIND_PANGOLIN_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+                         "Grind Pangolin", 1, false, true, true);
+        setMidiParams(platformer->gameData.cutscene, 30, 62, 1, 250, false);
+        // SmashGorilla
+        addCutsceneStyle(platformer->gameData.cutscene, c310, SMASH_GORILLA_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+                         "Smash Gorilla", 1, false, true, true);
+        setMidiParams(platformer->gameData.cutscene, 31, 29, -1, 250, false);
+        // SeverYagata
+        addCutsceneStyle(platformer->gameData.cutscene, c310, SEVER_YATAGA_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+                         "Sever Yagata", 1, false, true, true);
+        setMidiParams(platformer->gameData.cutscene, 32, 11, 0, 100, true);
+        // DrainBat
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Drain Bat",
+                         1, false, true, true);
+        setMidiParams(platformer->gameData.cutscene, 33, 82, 2, 250, false);
     }
 
     setFrameRateUs(16666);
@@ -524,7 +564,8 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
 
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
 
-            platformer->gameData.level = 11;
+            // change this back to 10 (intro level) before shipping
+            platformer->gameData.level = 10;
             mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
             mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename,
                                &platformer->entityManager);
@@ -551,10 +592,10 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
 
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
 
-            // if the 11th level (intro level) isn't cleared
-            if (!(platformer->unlockables.levelsCleared & (1 << 11)))
+            // if the 10th level (intro level) isn't cleared
+            if (!(platformer->unlockables.levelsCleared & (1 << 10)))
             {
-                platformer->gameData.level = 11;
+                platformer->gameData.level = 10;
                 mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
                 mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename,
                                    &platformer->entityManager);
@@ -589,7 +630,7 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
             writeNvs32(MG_abilitiesNVSKey, platformer->gameData.abilities);
             soundPlaySfx(&(platformer->soundManager.sndDie), MIDI_SFX);
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
-            platformer->gameData.level = 11;
+            platformer->gameData.level = 10;
             mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
             mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename,
                                &platformer->entityManager);
@@ -726,7 +767,8 @@ void mgBuildMainMenu(platformer_t* self)
     }
     addSettingsOptionsItemToMenu(self->menu, str_cheatMode, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
                                  cheatMode);
-    addSingleItemToMenu(self->menu, str_giveAbilities);
+    // We're not shipping that button
+    // addSingleItemToMenu(self->menu, str_giveAbilities);
     self->menu = endSubMenu(self->menu);
 
     if (self->gameData.debugMode)
@@ -755,8 +797,9 @@ void updateGame(platformer_t* self)
     mg_updateEntities(&(self->entityManager));
 
     mg_drawTileMap(&(self->tilemap));
-    mg_drawEntities(&(self->entityManager));
+    // JVeg wants the hud drawn behind entities.
     drawPlatformerHud(&(self->font), &(self->gameData));
+    mg_drawEntities(&(self->entityManager));
     mg_updateLeds(&self->entityManager);
     detectGameStateChange(self);
     detectBgmChange(self);
@@ -818,27 +861,40 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
     {
         drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOTTOM_ALPHA], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION);
 
-        int8_t hp = platformer->entityManager.playerEntity->hp;
-
-        if (hp > 30)
+        int8_t originalHp = platformer->entityManager.playerEntity->hp;
+        if (originalHp < 0)
         {
-            hp = 30;
+            originalHp = 0;
+        }
+        int8_t hp  = originalHp;
+        bool isOdd = hp % 2;
+
+        if (hp > 60)
+        {
+            hp = 60;
         }
 
+        int16_t draw_y; // y location used to draw health tiles.
+        int16_t pip_y;  // y location used to draw half pips of health (at the top).
         for (uint8_t i = 0; i < 4; i++)
         {
-            if (hp > 6)
+            draw_y = MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i * 16);
+            if (hp > 12)
             {
-                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_MIDDLE_6], 8,
-                            MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i * 16));
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_MIDDLE_6], 8, draw_y);
             }
             else
             {
-                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_MIDDLE_0 + hp], 8,
-                            MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i * 16));
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_MIDDLE_0 + hp / 2], 8, draw_y);
+                if (isOdd && originalHp > i * 12 && originalHp < (i + 1) * 12)
+                {
+                    pip_y = draw_y + 15 - ((hp / 2) % 6) * 2;
+                    drawLineFast(14, pip_y, 17, pip_y, c133);
+                    drawLineFast(15, pip_y, 16, pip_y, c143);
+                }
             }
 
-            hp -= 6;
+            hp -= 12;
 
             if (hp < 0)
             {
@@ -846,29 +902,40 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
             }
         }
 
-        if (hp == 6)
+        draw_y = MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 80; // same as MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4*16);
+        if (hp == 12)
         {
-            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_6], 8,
-                        MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4 * 16));
+            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_6], 8, draw_y);
         }
         else
         {
-            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_0 + hp], 8,
-                        MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4 * 16));
+            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_TOP_0 + hp / 2], 8, draw_y);
+            if (isOdd && originalHp > 48) // same as > 4 * 12
+            {
+                pip_y = draw_y + 15 - ((hp / 2) % 6) * 2;
+                drawLineFast(14, pip_y, 17, pip_y, c133);
+                drawLineFast(15, pip_y, 16, pip_y, c143);
+            }
         }
 
         if (platformer->gameData.abilities & (1U << MG_CAN_OF_SALSA_ABILITY))
         {
-            if (platformer->entityManager.playerEntity->hp < 31)
+            draw_y = MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION
+                     - 97; // same as MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 1 - (6 * 16);
+            if (originalHp < 61)
             {
-                drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_HP_CAN_OF_SALSA_0], 4,
-                              MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - (5 * 16));
+                drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_HP_CAN_OF_SALSA_0], 4, draw_y);
             }
             else
             {
-                drawWsgSimple(&platformer->wsgManager
-                                   .wsgs[MG_WSG_HP_CAN_OF_SALSA_0 + platformer->entityManager.playerEntity->hp - 30],
-                              4, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 17 - (5 * 16));
+                drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_HP_CAN_OF_SALSA_0 + (originalHp - 60) / 2], 4,
+                              draw_y);
+                if (isOdd && originalHp > 60)
+                {
+                    pip_y = draw_y + 13 - ((originalHp / 2) % 6) * 2;
+                    drawLineFast(14, pip_y, 17, pip_y, c133);
+                    drawLineFast(15, pip_y, 16, pip_y, c143);
+                }
             }
         }
     }
@@ -877,27 +944,40 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
     {
         drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOTTOM_BIGMA], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION);
 
-        int8_t hp = platformer->entityManager.bossEntity->hp;
-
-        if (hp > 30)
+        int8_t originalHp = platformer->entityManager.bossEntity->hp;
+        if (originalHp < 0)
         {
-            hp = 30;
+            originalHp = 0;
+        }
+        int8_t hp  = originalHp;
+        bool isOdd = hp % 2;
+
+        if (hp > 60)
+        {
+            hp = 60;
         }
 
+        int16_t draw_y; // y location used to draw health tiles.
+        int16_t pip_y;  // y location used to draw half pips of health (at the top).
         for (uint8_t i = 0; i < 4; i++)
         {
-            if (hp > 6)
+            draw_y = MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i * 16);
+            if (hp > 12)
             {
-                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_6], 256,
-                            MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i * 16));
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_6], 256, draw_y);
             }
             else
             {
-                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_0 + hp], 256,
-                            MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (i * 16));
+                drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_0 + hp / 2], 256, draw_y);
+                if (isOdd && originalHp > i * 12 && originalHp < (i + 1) * 12)
+                {
+                    pip_y = draw_y + 15 - ((hp / 2) % 6) * 2;
+                    drawLineFast(262, pip_y, 265, pip_y, c321);
+                    drawLineFast(263, pip_y, 264, pip_y, c441);
+                }
             }
 
-            hp -= 6;
+            hp -= 12;
 
             if (hp < 0)
             {
@@ -905,15 +985,20 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
             }
         }
 
-        if (hp == 6)
+        draw_y = MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4 * 16);
+        if (hp == 12)
         {
-            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_6], 256,
-                        MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4 * 16));
+            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_6], 256, draw_y);
         }
         else
         {
-            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_0 + hp], 256,
-                        MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION - 16 - (4 * 16));
+            drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_TOP_0 + hp / 2], 256, draw_y);
+            if (isOdd && originalHp > 4 * 12)
+            {
+                pip_y = draw_y + 15 - ((hp / 2) % 6) * 2;
+                drawLineFast(262, pip_y, 265, pip_y, c321);
+                drawLineFast(263, pip_y, 264, pip_y, c441);
+            }
         }
     }
 
@@ -1172,6 +1257,15 @@ void changeStateGame(platformer_t* self)
         entityManager->playerEntity = entityManager->viewEntity;
         // entityManager->playerEntity->hp = self->gameData.initialHp;
         mg_viewFollowEntity(&(self->tilemap), entityManager->playerEntity);
+    }
+
+    // Tiled wouldn't let me export with a power-up so I'm doing this here to top off can of salsa at the start of boss
+    // rush and hank waddle
+    if (self->gameData.level == 11 || self->gameData.level == 21)
+    {
+        // Creates a power up just right of the player spawn
+        mg_createEntity(entityManager, ENTITY_POWERUP, playerSpawn->tx * 16 + playerSpawn->xOffsetInPixels + 50,
+                        playerSpawn->ty * 16 + playerSpawn->yOffsetInPixels + 8);
     }
 
     entityManager->bossEntity = NULL;
@@ -1909,10 +2003,39 @@ void updateLevelSelect(platformer_t* self)
     {
         self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
 
-        if ((self->unlockables.levelsCleared & (1 << self->gameData.level))
-            || (self->gameData.level == 5 && !(self->unlockables.levelsCleared == 0b1111011110)))
+        uint8_t actualLevel = self->gameData.level;
+        if (self->gameData.level == 5)
+        {
+            if (self->unlockables.levelsCleared & (1 << 5)) // if gauntlet was complete
+            {
+                actualLevel = 11; // about to start boss rush
+                actualLevel += (self->unlockables.levelsCleared & (1 << 11))
+                                   ? 1
+                                   : 0; // make it final showdown (12) if 11 was complete.
+                actualLevel += (self->unlockables.levelsCleared & (1 << 12)) ? 1 : 0; // make it 13 if 12 was complete.
+            }
+        }
+        self->gameData.level = actualLevel;
+
+        bool levelAvailable = !(self->unlockables.levelsCleared & (1 << self->gameData.level));
+        if (self->gameData.level == 5)
+        {
+            levelAvailable = self->unlockables.levelsCleared == 0b11111011110
+                             || self->unlockables.levelsCleared == 0b11111111110
+                             || self->unlockables.levelsCleared == 0b111111111110
+                             || self->unlockables.levelsCleared == 0b1111111111110;
+        }
+        if (self->gameData.level < 11 && !levelAvailable)
         {
             soundPlaySfx(&(platformer->soundManager.sndMenuDeny), BZR_STEREO);
+        }
+        else if (self->gameData.level == 13) // new game +
+        {
+            // Undo all level progress, but keep abilities.
+            self->unlockables.levelsCleared = 0;
+            savePlatformerUnlockables(self);
+            // Exit to the main menu
+            switchToSwadgeMode(&mainMenuMode);
         }
         else
         {
@@ -1936,13 +2059,21 @@ void drawLevelSelect(platformer_t* self)
 {
     drawText(&self->font, c555, "STAGE SELECT", 90, 8);
 
+    bool levelAvailable = !(self->unlockables.levelsCleared & (1 << self->gameData.level));
+    if (self->gameData.level == 5)
+    {
+        levelAvailable = self->unlockables.levelsCleared == 0b11111011110
+                         || self->unlockables.levelsCleared == 0b11111111110
+                         || self->unlockables.levelsCleared == 0b111111111110
+                         || self->unlockables.levelsCleared == 0b1111111111110;
+    }
+
     drawRectFilled((55 + self->menuState * 64) - self->tilemap.mapOffsetX,
                    (39 + self->menuSelection * 64) - self->tilemap.mapOffsetY,
                    (55 + 66 + self->menuState * 64) - self->tilemap.mapOffsetX,
                    (39 + 66 + self->menuSelection * 64) - self->tilemap.mapOffsetY,
-                   (self->unlockables.levelsCleared & (1 << self->gameData.level))
-                       ? greenColors[(self->gameData.frameCount >> 3) % 4]
-                       : redColors[(self->gameData.frameCount >> 3) % 4]);
+                   levelAvailable ? greenColors[(self->gameData.frameCount >> 3) % 4]
+                                  : redColors[(self->gameData.frameCount >> 3) % 4]);
 
     mg_drawTileMap(&(self->tilemap));
 
@@ -1950,7 +2081,8 @@ void drawLevelSelect(platformer_t* self)
     {
         for (uint8_t i = 0; i < 3; i++)
         {
-            if (self->unlockables.levelsCleared & (1 << (((j * 3) + i) + 1)))
+            uint8_t idx = (((j * 3) + i) + 1);
+            if (self->unlockables.levelsCleared & (1 << idx) && (idx != 5))
             {
                 drawWsg(&self->wsgManager.wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_33],
                         (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY,
@@ -1959,7 +2091,10 @@ void drawLevelSelect(platformer_t* self)
             else
             {
                 // Special case for Bigma
-                if ((((j * 3) + i) == 4) && (self->unlockables.levelsCleared ^ 0b1111011110))
+                if (idx == 5 && (self->unlockables.levelsCleared ^ 0b11111011110)
+                    && (self->unlockables.levelsCleared ^ 0b11111111110)
+                    && (self->unlockables.levelsCleared ^ 0b111111111110)
+                    && (self->unlockables.levelsCleared ^ 0b1111111111110))
                 {
                     drawWsg(&self->wsgManager.wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_33],
                             (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY,
@@ -1967,15 +2102,30 @@ void drawLevelSelect(platformer_t* self)
                 }
                 else
                 {
-                    drawWsgTile(&self->wsgManager.wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2A + ((j * 3) + i)],
-                                (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY);
+                    // check if the 5th bit is set
+                    if ((idx == 5) && (self->unlockables.levelsCleared & (1 << 5))) // if (5 gauntlet) was complete.
+                    {
+                        uint16_t drawSymbol = MG_WSG_BOSS_RUSH_SYMBOL;
+                        drawSymbol += (self->unlockables.levelsCleared & (1 << 11))
+                                          ? 1
+                                          : 0; // 35 if (11 boss rush) was complete.
+                        drawSymbol += (self->unlockables.levelsCleared & (1 << 12))
+                                          ? 1
+                                          : 0; // 36 if (12 final showdown) was complete
+                        drawWsgTile(&self->wsgManager.wsgs[drawSymbol], (64 + i * 64) - self->tilemap.mapOffsetX,
+                                    (48 + j * 64) - self->tilemap.mapOffsetY);
+                    }
+                    else
+                    {
+                        drawWsgTile(&self->wsgManager.wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2A + ((j * 3) + i)],
+                                    (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY);
+                    }
                 }
             }
         }
     }
 
-    if ((!(self->unlockables.levelsCleared & (1 << self->gameData.level)))
-        && !(self->gameData.level == 5 && !(self->unlockables.levelsCleared == 0b1111011110)))
+    if (levelAvailable)
     {
         drawRect(
             (64 + self->menuState * 64) - self->tilemap.mapOffsetX + ((self->gameData.frameCount >> 2) & 0b0111),
@@ -2009,8 +2159,11 @@ void goToReadyScreen(void)
 // forward declared in mega_pulse_ex_typedef.h
 void initBossFight(void)
 {
-    platformer->entityManager.bossEntity->state = 0;
-    mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
-    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+    if (platformer->gameData.level != 5)
+    {
+        platformer->entityManager.bossEntity->state = 0;
+        mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
+        soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+    }
     platformer->update = &updateReadyScreen;
 }

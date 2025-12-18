@@ -91,6 +91,7 @@ void mg_resetGameDataLeds(mgGameData_t* gameData);
 void mg_updateLedsShowHighScores(mgGameData_t* gameData);
 void mg_updateLedsLevelClear(mgGameData_t* gameData);
 void mg_updateLedsGameClear(mgGameData_t* gameData);
+void mg_updateLedsShoopDaWoopStatus(mgEntityManager_t* entityManager);
 void mg_updateLeds(mgEntityManager_t* entityManager);
 void mg_updateLedsDead(mgGameData_t* gameData);
 void mg_updateLedsGameOver(mgGameData_t* gameData);

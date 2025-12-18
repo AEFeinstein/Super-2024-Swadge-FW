@@ -79,13 +79,13 @@ void mg_deactivateAllEntities(mgEntityManager_t* entityManager, bool excludePlay
     }
 }
 
-void mg_deactivateAllBullets(mgEntityManager_t* entityManager)
+void mg_deactivateAllEntitiesOfType(mgEntityManager_t* entityManager, uint8_t type)
 {
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
         mgEntity_t* currentEntity = &(entityManager->entities[i]);
 
-        if (currentEntity->updateFunction != updateWaveBall)
+        if (currentEntity->type != type)
         {
             continue;
         }
@@ -315,40 +315,110 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
             createdEntity = createLifeRefillLarge(entityManager, x, y);
             break;
         case ENTITY_BOSS_SEVER_YAGATA:
-            createdEntity = createBossSeverYagata(entityManager, x, y);
+            // if it's greater than 11 (i.e.) final showdown just spawn something else instead
+            // because I can't learn Tiled in two days.
+            if (entityManager->playerEntity != NULL && entityManager->playerEntity->gameData->level > 11)
+            {
+                x -= 105;
+                y -= 149;
+                createdEntity = createBossHankWaddle(entityManager, x, y);
+                // Swap player entity with the boss entity so player draws on top of the boss.
+                uint8_t bossIdx = 0;
+                for (int entityIdx = MAX_ENTITIES - 1; entityIdx >= 0; entityIdx--)
+                {
+                    if (entityManager->entities[entityIdx].active)
+                    {
+                        bossIdx = entityIdx;
+                        break;
+                    }
+                }
+                for (int entityIdx = MAX_ENTITIES - 1; entityIdx >= 0; entityIdx--)
+                {
+                    if (entityManager->entities[entityIdx].active
+                        && entityManager->entities[entityIdx].type == ENTITY_PLAYER)
+                    {
+                        mgEntity_t boss                    = entityManager->entities[bossIdx];
+                        entityManager->entities[bossIdx]   = *entityManager->playerEntity;
+                        entityManager->entities[entityIdx] = boss;
+                        entityManager->playerEntity        = &entityManager->entities[bossIdx];
+                        entityManager->viewEntity          = entityManager->playerEntity;
+                        entityManager->bossEntity          = &entityManager->entities[entityIdx];
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                createdEntity = createBossSeverYagata(entityManager, x, y);
+            }
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_MIXTAPE:
             createdEntity = createMixtape(entityManager, x, y);
             break;
         case ENTITY_BOSS_DOOR:
-            createdEntity = createBossDoor(entityManager, x, y);
+            createdEntity             = createBossDoor(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_SHRUBBLE_LV4:
             createdEntity = createShrubbleLv4(entityManager, x, y);
             break;
         case ENTITY_BOSS_GRIND_PANGOLIN:
-            createdEntity = createBossGrindPangolin(entityManager, x, y);
+            createdEntity             = createBossGrindPangolin(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_KINETIC_DONUT:
-            createdEntity = createBossKineticDonut(entityManager, x, y);
+            createdEntity             = createBossKineticDonut(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_TRASH_MAN:
-            createdEntity = createBossTrashMan(entityManager, x, y);
+            createdEntity             = createBossTrashMan(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_BIGMA:
-            createdEntity = createBossBigma(entityManager, x, y);
+            // The end of the gauntlet gets an end, not a bigma fight according to the script.
+            if (entityManager->playerEntity != NULL && entityManager->playerEntity->gameData->level == 5)
+            {
+                createdEntity             = createMixtape(entityManager, x, y);
+                entityManager->bossSpawnX = x;
+                entityManager->bossSpawnY = y;
+            }
+            else
+            {
+                createdEntity             = createBossBigma(entityManager, x, y);
+                entityManager->bossSpawnX = x;
+                entityManager->bossSpawnY = y;
+            }
             break;
         case ENTITY_BOSS_SMASH_GORILLA:
-            createdEntity = createBossSmashGorilla(entityManager, x, y);
+            createdEntity             = createBossSmashGorilla(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_DEADEYE_CHIRPZI:
-            createdEntity = createBossDeadeyeChirpzi(entityManager, x, y);
+            createdEntity             = createBossDeadeyeChirpzi(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_DRAIN_BAT:
-            createdEntity = createBossDrainBat(entityManager, x, y);
+            createdEntity             = createBossDrainBat(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_FLARE_GRYFFYN:
-            createdEntity = createBossFlareGryffyn(entityManager, x, y);
+            createdEntity             = createBossFlareGryffyn(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
+            break;
+        case ENTITY_BOSS_HANK_WADDLE:
+            createdEntity             = createBossHankWaddle(entityManager, x, y);
+            entityManager->bossSpawnX = x;
+            entityManager->bossSpawnY = y;
             break;
         default:
             createdEntity = NULL;
@@ -388,10 +458,11 @@ mgEntity_t* mg_createPlayer(mgEntityManager_t* entityManager, uint16_t x, uint16
     entity->canDash            = true;
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle  = 0;
-    entity->hp                 = 30;
-    entity->animationTimer     = 0; // Used as a cooldown for shooting square wave balls
-    entity->shotsFired         = 0;
-    entity->shotLimit          = 3;
+    entity->hp = 60; // It got doubled as well as all damage taken doubled, until Plot Armor is obtained. Health from
+                     // power up is now also doubled.
+    entity->animationTimer = 0; // Used as a cooldown for shooting square wave balls
+    entity->shotsFired     = 0;
+    entity->shotLimit      = 3;
 
     entity->type                 = ENTITY_PLAYER;
     entity->spriteIndex          = MG_SP_PLAYER_IDLE;
@@ -2152,7 +2223,7 @@ mgEntity_t* createBossGrindPangolin(mgEntityManager_t* entityManager, uint16_t x
     entity->xMaxSpeed            = 132;
     entity->yMaxSpeed            = 132;
     entity->gravityEnabled       = true;
-    entity->gravity              = 1;
+    entity->gravity              = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
@@ -2195,7 +2266,7 @@ mgEntity_t* createBossDrainBat(mgEntityManager_t* entityManager, uint16_t x, uin
     entity->yspeed               = 0;
     entity->xMaxSpeed            = 132;
     entity->yMaxSpeed            = 132;
-    entity->gravityEnabled       = true;
+    entity->gravityEnabled       = false;
     entity->gravity              = 1;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
@@ -2240,7 +2311,7 @@ mgEntity_t* createBossKineticDonut(mgEntityManager_t* entityManager, uint16_t x,
     entity->xMaxSpeed            = 132;
     entity->yMaxSpeed            = 132;
     entity->gravityEnabled       = true;
-    entity->gravity              = 1;
+    entity->gravity              = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
@@ -2283,13 +2354,13 @@ mgEntity_t* createBossTrashMan(mgEntityManager_t* entityManager, uint16_t x, uin
     entity->yspeed               = 0;
     entity->xMaxSpeed            = 132;
     entity->yMaxSpeed            = 132;
-    entity->gravityEnabled       = true;
+    entity->gravityEnabled       = false;
     entity->gravity              = 1;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
-    entity->hp                   = 30;
+    entity->hp                   = 48;
 
     entity->type                 = ENTITY_BOSS_TRASH_MAN;
     entity->spriteIndex          = MG_SP_BOSS_0;
@@ -2297,7 +2368,7 @@ mgEntity_t* createBossTrashMan(mgEntityManager_t* entityManager, uint16_t x, uin
     entity->stateTimer           = 0;
     entity->updateFunction       = &mg_updateBossTrashMan;
     entity->collisionHandler     = &mg_enemyCollisionHandler;
-    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->tileCollisionHandler = &mg_trashManTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
     entity->tileCollider         = &entityTileCollider_trash_man;
@@ -2465,12 +2536,15 @@ mgEntity_t* createBossHankWaddle(mgEntityManager_t* entityManager, uint16_t x, u
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
-    entity->hp                   = 30;
+    entity->hp                   = 60;
 
     entity->type                 = ENTITY_BOSS_HANK_WADDLE;
     entity->spriteIndex          = MG_SP_BOSS_0;
-    entity->state                = -1;
+    entity->state                = 7; // pre-fight state
     entity->stateTimer           = 0;
+    entity->special1             = 0;
+    entity->specialX             = 0;
+    entity->specialN             = 0;
     entity->updateFunction       = &mg_updateBossHankWaddle;
     entity->collisionHandler     = &mg_enemyCollisionHandler;
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
@@ -2478,7 +2552,7 @@ mgEntity_t* createBossHankWaddle(mgEntityManager_t* entityManager, uint16_t x, u
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
     entity->tileCollider         = &entityTileCollider_1x2;
 
-    entity->drawHandler  = &mg_defaultEntityDrawHandler;
+    entity->drawHandler  = &mg_hankDrawHandler;
     entity->linkedEntity = NULL;
 
     entityManager->bossEntity = entity;
