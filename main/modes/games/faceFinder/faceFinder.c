@@ -396,7 +396,6 @@ static void findingEnterMode(void)
     loadMidiFile(FINDER_BGM_SLOW_MID, &finder->bgm_slow, true);
     loadMidiFile(FINDER_BGM_ZEN_MID, &finder->bgm_zen, true);
     loadMidiFile(FINDER_RIGHT_MID, &finder->right, true);
-    loadMidiFile(FINDER_WRONGER_MID, &finder->wrong, true);
     loadMidiFile(FINDER_BGM_MENU_MID, &finder->bgm_menu, true);
     loadMidiFile(FINDER_BGM_DEATH_MID, &finder->bgm_dead, true);
 
