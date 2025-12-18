@@ -27,7 +27,7 @@
 #define TROPHY_NVS_NAMESPACE         "trophy"
 #define TROPHY_POINTS_NVS_KEY        "points"
 #define ATRIUM_PACKEDKEY             "packedProfile"
-#define ATRIUM_CREATEDKEY           "profileCreated"
+#define ATRIUM_CREATEDKEY            "profileCreated"
 #define TEAMKEY                      "team"
 
 //---------------------------------------------------------------------------------//
@@ -122,7 +122,7 @@ const trophyData_t atriumTrophies[] = {
     {
         .title       = "Join the Red Cats",
         .description = "Red Team is the best team",
-        .image       = NO_IMAGE_SET,
+        .image       = TEAMRED_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
@@ -132,7 +132,7 @@ const trophyData_t atriumTrophies[] = {
     {
         .title       = "Join the Blue Bots",
         .description = "Blue Team is the best team",
-        .image       = NO_IMAGE_SET,
+        .image       = TEAMBLUE_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
@@ -143,7 +143,7 @@ const trophyData_t atriumTrophies[] = {
     {
         .title       = "Join the Big Yellows",
         .description = "Yellow Team is the best team",
-        .image       = NO_IMAGE_SET,
+        .image       = TEAMYELLOW_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1,
@@ -185,7 +185,7 @@ const trophyData_t atriumTrophies[] = {
     {
         .title       = "Red Team's Score",
         .description = "Which team will win MAGFest?",
-        .image       = NO_IMAGE_SET,
+        .image       = TEAMRED_WSG,
         .type        = TROPHY_TYPE_PROGRESS,
         .difficulty  = TROPHY_DIFF_EXTREME,
         .maxVal      = 999999,
@@ -193,24 +193,24 @@ const trophyData_t atriumTrophies[] = {
         .identifier  = NULL,
     },
     {
-        .title = "Blue Team's Score",
+        .title       = "Blue Team's Score",
         .description = "Which team will win MAGFest?",
-        .image = NO_IMAGE_SET,
-        .type = TROPHY_TYPE_PROGRESS,
-        .difficulty = TROPHY_DIFF_EXTREME,
-        .maxVal = 999999,
-        .hidden = false,
-        .identifier = NULL,
+        .image       = TEAMBLUE_WSG,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 999999,
+        .hidden      = false,
+        .identifier  = NULL,
     },
     {
-        .title = "Yellow Team's Score",
+        .title       = "Yellow Team's Score",
         .description = "Which team will win MAGFest?",
-        .image = NO_IMAGE_SET,
-        .type = TROPHY_TYPE_PROGRESS,
-        .difficulty = TROPHY_DIFF_EXTREME,
-        .maxVal = 999999,
-        .hidden = false,
-        .identifier = NULL,
+        .image       = TEAMYELLOW_WSG,
+        .type        = TROPHY_TYPE_PROGRESS,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 999999,
+        .hidden      = false,
+        .identifier  = NULL,
     },
 
 };
@@ -219,7 +219,7 @@ const trophySettings_t atriumTrophySettings = {
     .drawFromBottom   = false,
     .staticDurationUs = DRAW_STATIC_US * 4,
     .slideDurationUs  = DRAW_SLIDE_US,
-    .namespaceKey   = "atriumTrophies",
+    .namespaceKey     = "atriumTrophies",
 };
 
 const trophyDataList_t atriumTrophyData = {
@@ -309,7 +309,6 @@ typedef struct
     // SwadgePass List
     list_t spList;
 
-
     // Profile viewer/editor
     int selection;
     int xloc;
@@ -358,6 +357,7 @@ void loadProfiles(int maxProfiles, int page);
 userProfile_t loadProfileFromNVS(void);
 void packProfileData(userProfile_t* profile);
 void unpackProfileData(userProfile_t* profile);
+void updateTeamScores(void);
 
 //---------------------------------------------------------------------------------//
 // VARIABLES
@@ -469,11 +469,21 @@ static void atriumEnterMode(void)
     }
 
     atr->numRemoteSwsn = i;
-    atr->page          = 0;
-    atr->totalPages    = (atr->numRemoteSwsn / SONA_PER) + ((atr->numRemoteSwsn % SONA_PER) ? 1 : 0);
-    atr->remSwsn       = atr->numRemoteSwsn % SONA_PER;
-
-    
+    if (atr->numRemoteSwsn < 30)
+    {
+        trophyUpdate(&atriumTrophyData.list[4], atr->numRemoteSwsn, true); // award trophy for loading 10 profiles
+    }
+    if (atr->numRemoteSwsn > 29 && atr->numRemoteSwsn < 50)
+    {
+        trophyUpdate(&atriumTrophyData.list[5], atr->numRemoteSwsn, true); // award trophy for loading 30 profiles
+    }
+    if (atr->numRemoteSwsn > 49)
+    {
+        trophyUpdate(&atriumTrophyData.list[6], atr->numRemoteSwsn, true); // award trophy for loading 50 profiles
+    }
+    atr->page       = 0;
+    atr->totalPages = (atr->numRemoteSwsn / SONA_PER) + ((atr->numRemoteSwsn % SONA_PER) ? 1 : 0);
+    atr->remSwsn    = atr->numRemoteSwsn % SONA_PER;
 
     ESP_LOGI(ATR_TAG, "Num remote swsn: %d, total pages: %d", atr->numRemoteSwsn, atr->totalPages);
 
@@ -485,75 +495,18 @@ static void atriumEnterMode(void)
     globalMidiPlayerSetVolume(MIDI_BGM, 13);
 
     // profile created yet?
-     if (!readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_CREATEDKEY, &atr->created))
+    if (!readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_CREATEDKEY, &atr->created))
     {
         ESP_LOGI(ATR_TAG, "No profile found in NVS, generating random profile");
         atr->created = 0;
-        int team = rand() % 3;
+        int team     = rand() % 3;
         writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, TEAMKEY, team);
         atr->state = ATR_EDIT_PROFILE; // go to profile edit if no profile yet
     }
     else
     {
         atr->created = 1;
-        atr->state = ATR_TITLE; // else go to title screen
-        if(atr->loadedTeams == false){
-        
-            int myteam;
-            readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, TEAMKEY, &myteam);
-            ESP_LOGI(ATR_TAG, "Loaded profile with team %d", myteam);
-
-            int redscore = 0;
-            int bluescore = 0;
-            int yellowscore = 0;
-            for (int idx = 0; idx < atr->numRemoteSwsn; idx++)
-            {
-                unpackProfileData(&atr->sonaList[idx]);
-                switch(atr->sonaList[idx].team)
-                {
-                    case 0:
-                        redscore += atr->sonaList[idx].points;
-                        break;
-                    case 1:
-                        bluescore += atr->sonaList[idx].points;
-                        break;
-                    case 2:
-                        yellowscore += atr->sonaList[idx].points;
-                        break;
-                    default:
-                        break;
-                }
-            }
-            ESP_LOGI(ATR_TAG, "Red Team Score: %d", redscore);
-            ESP_LOGI(ATR_TAG, "Blue Team Score: %d", bluescore);
-            ESP_LOGI(ATR_TAG, "Yellow Team Score: %d", yellowscore);
-
-        switch (myteam)
-        {
-            case 0:
-                redscore += atr->loadedProfile.points;
-                trophyUpdate(&atriumTrophyData.list[8], redscore, true);  // Red Team's Score
-                trophyUpdate(&atriumTrophyData.list[9], bluescore, false); // Blue Team's Score
-                trophyUpdate(&atriumTrophyData.list[10], yellowscore, false); // Yellow Team's Score
-                break;
-            case 1:
-                bluescore += atr->loadedProfile.points;
-                trophyUpdate(&atriumTrophyData.list[8], redscore, false);  // Red Team's Score
-                trophyUpdate(&atriumTrophyData.list[9], bluescore, true); // Blue Team's Score
-                trophyUpdate(&atriumTrophyData.list[10], yellowscore, false); // Yellow Team's Score
-                break;
-            case 2:
-                yellowscore += atr->loadedProfile.points;
-                trophyUpdate(&atriumTrophyData.list[8], redscore, false);  // Red Team's Score
-                trophyUpdate(&atriumTrophyData.list[9], bluescore, false); // Blue Team's Score
-                trophyUpdate(&atriumTrophyData.list[10], yellowscore, true); // Yellow Team's Score
-                break;
-            default:
-                break;
-        }
-        //intention here is to only show the users team score trophy update
-        atr->loadedTeams = true;
-    }
+        atr->state   = ATR_TITLE; // else go to title screen
     }
 }
 
@@ -626,9 +579,11 @@ static void atriumMainLoop(int64_t elapsedUs)
             drawAtriumTitle(elapsedUs);
             atr->loadedProfs = false;
             shuffleSonas();
+            updateTeamScores();
 
             break;
         }
+
         case ATR_DISPLAY:
         {
             // Handle input
@@ -781,14 +736,14 @@ static void editProfile(buttonEvt_t* evt)
 
             if (evt->button & PB_B)
             {
-                if(atr->created == 0){
+                if (atr->created == 0)
+                {
                     // mark profile as created
-
                 }
-                else{
-                atr->state = ATR_TITLE;
+                else
+                {
+                    atr->state = ATR_TITLE;
                 }
-
             }
             else if (evt->button & PB_A)
             {
@@ -812,8 +767,7 @@ static void editProfile(buttonEvt_t* evt)
                     ESP_LOGI(ATR_TAG, "latest points: %" PRId32 "", atr->spProfile.points);
 
                     atr->drawSaved = true;
-                    atr->created  = 1;
-                    
+                    atr->created   = 1;
                 }
             }
             else if (evt->button & PB_UP)
@@ -952,12 +906,23 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
         }
     }
 
-    // UI
-    drawLobbyArrows();
-
     // Sonas
-    loadProfiles(SONA_PER, atr->page);
-    drawSonas(atr->page, elapsedUs);
+    if (atr->numRemoteSwsn == 0)
+    {
+        drawRectFilled(30, TFT_HEIGHT / 2 - 50, TFT_WIDTH - 30, TFT_HEIGHT / 2 + 50, c555);
+        drawText(&atr->fonts[0], c000, "No SwadgePass profiles found yet!", 40, TFT_HEIGHT / 2 - 45);
+        drawText(&atr->fonts[0], c000, "Carry your Swadge during the fest", 39, TFT_HEIGHT / 2 + 15 - 45);
+        drawText(&atr->fonts[0], c000, "and leave it turned ON to find 'em.", 38, TFT_HEIGHT / 2 + 30 - 45);
+        drawText(&atr->fonts[0], c000, "Then, come back here to browse.", 39, TFT_HEIGHT / 2 + 45 - 45);
+        drawText(&atr->fonts[0], c000, "Press B to Return to Title", 65, TFT_HEIGHT / 2 + 60 - 25);
+    }
+    else
+    {
+        // UI
+        drawLobbyArrows();
+        loadProfiles(SONA_PER, atr->page);
+        drawSonas(atr->page, elapsedUs);
+    }
 }
 
 // Draw
@@ -1167,7 +1132,7 @@ static void drawCard(userProfile_t profile, bool local)
     char buf1[5];
     snprintf(buf1, sizeof(buf1), "%" PRId8, profile.numPasses);
     drawText(&atr->fonts[0], c000, buf1, 155 + CARDTEXTPAD, 150); // draw numpasses
-        
+
     drawWsgSimple(&atr->teamElements[profile.team], 208, 124); // draw team image
 }
 
@@ -1392,32 +1357,47 @@ void loadProfiles(int maxProfiles, int page)
 userProfile_t loadProfileFromNVS(void)
 {
     userProfile_t loadedProfile = {0};
-
+    int8_t team                 = 0;
     if (!readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_CREATEDKEY,
                             &atr->created)) // check if profile created
 
-    {   
+    {
         ESP_LOGI(ATR_TAG, "No existing profile found, creating new profile");
-        loadedProfile.cardSelect = 1;
-        loadedProfile.fact0      = 0;
-        loadedProfile.fact1      = 0;
-        loadedProfile.fact2      = 0; 
+        loadedProfile.cardSelect = esp_random() % 12;
+        loadedProfile.fact0      = esp_random() % 8;
+        loadedProfile.fact1      = esp_random() % 8;
+        loadedProfile.fact2      = esp_random() % 8;
         loadedProfile.numPasses  = 0;
         loadedProfile.points     = 0;
-        loadedProfile.team       = 2;
+
+        team = esp_random() % 3; // assign random team 0,1,2
+        ESP_LOGI(ATR_TAG, "team rng is %d", team);
+
+        loadedProfile.team = team;
+        ESP_LOGI(ATR_TAG, "assigned team is %d", loadedProfile.team);
 
         packProfileData(&loadedProfile);
         writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_PACKEDKEY, loadedProfile.packedProfile);
+        writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, TEAMKEY, loadedProfile.team);
         writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_CREATEDKEY, 1); // mark profile as created
-        
+
         printf("New profile created with packedProfile=%" PRId32 "\n", loadedProfile.packedProfile);
+        trophyUpdate(&atriumTrophyData.list[1 + team], 1, true); // award trophy for creating profile
         return loadedProfile;
     }
-    
+
     readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_PACKEDKEY, &loadedProfile.packedProfile);
-    
     readNamespaceNvs32(TROPHY_NVS_NAMESPACE, TROPHY_POINTS_NVS_KEY, &loadedProfile.points);
+    int teamchecker = 0;
+    readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, TEAMKEY, &teamchecker);
     unpackProfileData(&loadedProfile);
+    ESP_LOGI(ATR_TAG, "Team from NVS is %d and team from packedProfile is %d", teamchecker, loadedProfile.team);
+    if (teamchecker != loadedProfile.team)
+    {
+        ESP_LOGW(ATR_TAG, "Team mismatch! Using team from NVS");
+        loadedProfile.team = teamchecker;
+        ESP_LOGI(ATR_TAG, "Updated team to %d", loadedProfile.team);
+    }
     ESP_LOGI(ATR_TAG, "Loaded local swadgesona data");
     loadedProfile.numPasses = atr->numRemoteSwsn; // update number of passes each time
 
@@ -1437,6 +1417,77 @@ userProfile_t loadProfileFromNVS(void)
     return atr->loadedProfile;
 }
 
+void updateTeamScores(void)
+{
+    if (atr->loadedTeams == false)
+    {
+        int myteam;
+        int myPoints;
+        readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, TEAMKEY, &myteam);
+        readNamespaceNvs32(TROPHY_NVS_NAMESPACE, TROPHY_POINTS_NVS_KEY, &myPoints);
+
+        ESP_LOGI(ATR_TAG, "Loaded profile with team %d", myteam);
+
+        int redscore    = 0;
+        int bluescore   = 0;
+        int yellowscore = 0;
+        for (int idx = 0; idx < atr->numRemoteSwsn; idx++)
+        {
+            unpackProfileData(&atr->sonaList[idx]);
+            switch (atr->sonaList[idx].team)
+            {
+                case 0:
+                    redscore += atr->sonaList[idx].points;
+                    break;
+                case 1:
+                    bluescore += atr->sonaList[idx].points;
+                    break;
+                case 2:
+                    yellowscore += atr->sonaList[idx].points;
+                    break;
+                default:
+                    break;
+            }
+            trophyUpdate(&atriumTrophyData.list[8], redscore, false);     // update trophy for red team
+            trophyUpdate(&atriumTrophyData.list[9], bluescore, false);    // update trophy for blue team
+            trophyUpdate(&atriumTrophyData.list[10], yellowscore, false); // update trophy for yellow team
+        }
+
+        int myteamscore = 0;
+        switch (myteam)
+        {
+            case 0:
+            {
+                myteamscore = redscore + myPoints;
+                ESP_LOGI(ATR_TAG, "My team score for red team is %d", myteamscore);
+                break;
+            }
+            case 1:
+            {
+                myteamscore = bluescore + myPoints;
+                ESP_LOGI(ATR_TAG, "My team score for blue team is %d", myteamscore);
+                break;
+            }
+            case 2:
+            {
+                myteamscore = yellowscore + myPoints;
+                ESP_LOGI(ATR_TAG, "My team score for yellow team is %d", myteamscore);
+                break;
+            }
+            default:
+                break;
+        }
+        trophyUpdate(&atriumTrophyData.list[7], redscore, false);    // update trophy for red team
+        trophyUpdate(&atriumTrophyData.list[8], bluescore, false);   // update trophy for blue team
+        trophyUpdate(&atriumTrophyData.list[9], yellowscore, false); // update trophy for yellow team
+
+        trophyUpdate(&atriumTrophyData.list[7 + myteam], myteamscore, true); // update and draw the player's team only
+        printf("Team scores updated: Red=%d, Blue=%d, Yellow=%d, MyTeam=%d Score=%d\n", redscore, bluescore,
+               yellowscore, myteam, myteamscore);
+    }
+    atr->loadedTeams = true;
+}
+
 static void atriumAddSP(struct swadgePassPacket* packet)
 {
     // Add our profile data to the swadge pass packet
@@ -1451,18 +1502,16 @@ static void atriumAddSP(struct swadgePassPacket* packet)
 
 void packProfileData(userProfile_t* profile)
 {
-    ESP_LOGI(ATR_TAG, "Packing profile data: cardSelect %" PRId8 ", fact0 %" PRId8 ", fact1 %" PRId8 ", fact2 %" PRId8
-                         ", numPasses %" PRId8 ", team %" PRId8 "",
-             profile->cardSelect, profile->fact0, profile->fact1,
-             profile->fact2, profile->numPasses, profile->team);
-    profile->packedProfile = atr->loadedProfile.cardSelect; 
+    ESP_LOGI(ATR_TAG,
+             "Packing profile data: cardSelect %" PRId8 ", fact0 %" PRId8 ", fact1 %" PRId8 ", fact2 %" PRId8
+             ", numPasses %" PRId8 ", team %" PRId8 "",
+             profile->cardSelect, profile->fact0, profile->fact1, profile->fact2, profile->numPasses, profile->team);
+    profile->packedProfile = atr->loadedProfile.cardSelect;
     profile->packedProfile += atr->loadedProfile.fact0 << 4;
     profile->packedProfile += atr->loadedProfile.fact1 << 8;
     profile->packedProfile += atr->loadedProfile.fact2 << 12;
     profile->packedProfile += atr->loadedProfile.team << 16;
     profile->packedProfile += atr->loadedProfile.numPasses << 20;
-   
-
 }
 
 void unpackProfileData(userProfile_t* profile)
