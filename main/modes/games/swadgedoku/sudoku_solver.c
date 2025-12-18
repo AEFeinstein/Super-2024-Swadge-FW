@@ -217,10 +217,10 @@ static const eliminateCallback_t eliminateOrder[] = {
 // %6$d: row/column/box id
 static const techniqueDesc_t techniqueDescriptions[] = {
     {.technique = SINGLE, .format = "This is the only valid position for a%4$s %1$d within the %5$s"},
-    {.technique = ONLY_POSSIBLE, .format = "%1$d is the only possible digit in this cell"},
+    {.technique = ONLY_POSSIBLE, .format = "%1$d is the only possible value in this cell"},
     {
         .technique = HIDDEN_SINGLE,
-        .format    = "Hidden Single",
+        .format    = "%1$d is the only valid position for a%4$s %1$d within the %5$s",
     },
     {
         .technique = NAKED_PAIR,
