@@ -113,9 +113,7 @@ typedef struct
     bool showingHint;
     sudokuMoveDesc_t hint;
     dialogBox_t* hintDialogBox;
-    dialogBoxOption_t* hintMoreLessOption;
     char hintText[256];
-    char hintDetailText[1024];
     hintPosition_t hintPos;
 
     menu_t* pauseMenu;
@@ -200,10 +198,7 @@ static const char menuItemAbandonPuzzle[] = "Abandon Puzzle";
 
 // Dialog box
 static const char hintDialogTitle[]    = "Hint";
-static const char detailDialogTitle[]  = "Details";
 static const char dialogOptionOk[]     = "OK";
-static const char dialogOptionMore[]   = "Why though?";
-static const char dialogOptionLess[]   = "Makes sense";
 static const char dialogOptionCancel[] = "Cancel";
 
 // Number wheel title
@@ -1420,16 +1415,12 @@ static void swadgedokuShowHint(void)
         hintToOverlay(&sd->player.overlay, &sd->game, -1, sd->solverCache.hintBuf, sd->solverCache.hintbufLen);
         writeStepDescription(sd->hintText, sizeof(sd->hintText), sd->solverCache.hintBuf, sd->solverCache.hintbufLen,
                              -1);
-        sd->hintDetailText[0] = 'D';
-        sd->hintDetailText[1] = '\0';
 
         ESP_LOGI("Swadgedoku", "Got hint!");
         if (sd->hintDialogBox == NULL)
         {
             sd->hintDialogBox = initDialogBox(hintDialogTitle, sd->hintText, NULL, swadgedokuHintDialogCb);
             dialogBoxAddOption(sd->hintDialogBox, dialogOptionOk, NULL, OPTHINT_OK | OPTHINT_DEFAULT);
-            dialogBoxAddOption(sd->hintDialogBox, dialogOptionMore, NULL, OPTHINT_NORMAL);
-            sd->hintMoreLessOption = (dialogBoxOption_t*)sd->hintDialogBox->options.last->val;
             dialogBoxAddOption(sd->hintDialogBox, dialogOptionCancel, NULL, OPTHINT_CANCEL);
         }
         else
@@ -1437,7 +1428,6 @@ static void swadgedokuShowHint(void)
             sd->hintDialogBox->title          = hintDialogTitle;
             sd->hintDialogBox->detail         = sd->hintText;
             sd->hintDialogBox->selectedOption = sd->hintDialogBox->options.first;
-            sd->hintMoreLessOption->label     = dialogOptionMore;
         }
 
         ESP_LOGI("Swadgedoku", "Move: %s", sd->hintText);
@@ -1739,22 +1729,6 @@ static void swadgedokuHintDialogCb(const char* label)
 
         // Apply the trophy for using a hint
         trophyUpdate(trophyUseHint, 1, true);
-    }
-    else if (label == dialogOptionMore)
-    {
-        sd->hintDialogBox->title      = detailDialogTitle;
-        sd->hintDialogBox->detail     = sd->hintDetailText;
-        sd->hintMoreLessOption->label = dialogOptionLess;
-        // Early return; don't stop showing the hint dialog
-        return;
-    }
-    else if (label == dialogOptionLess)
-    {
-        sd->hintDialogBox->title      = hintDialogTitle;
-        sd->hintDialogBox->detail     = sd->hintText;
-        sd->hintMoreLessOption->label = dialogOptionMore;
-        // Early return; don't stop showing the hint dialog
-        return;
     }
     else if (label == dialogOptionCancel)
     {

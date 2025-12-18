@@ -279,11 +279,13 @@ bool sudokuNextMove(solverCache_t* cache, const sudokuGrid_t* board)
 
     if (cache->solution)
     {
+        // Check to see if there are any mistakes
         for (int pos = 0; pos < boardSize; pos++)
         {
             if (board->grid[pos] && board->grid[pos] != cache->solution[pos])
             {
-                // Empty cell found
+                // This cell is set but does not match the solution
+                // Tell them it's a mistake before giving any other advice!
                 hintBufNextStep(cache->hintBuf, cache->hintbufLen, FOUND_MISTAKE);
                 hintBufSetDigit(cache->hintBuf, cache->hintbufLen, 0, pos);
                 hintBufAddHighlight(cache->hintBuf, cache->hintbufLen, -1, -1, pos / cache->size, pos % cache->size);
@@ -374,7 +376,7 @@ bool sudokuNextMove(solverCache_t* cache, const sudokuGrid_t* board)
         {
             if (!board->grid[pos])
             {
-                // Empty cell found
+                // Empty cell found, give its solution
                 hintBufNextStep(cache->hintBuf, cache->hintbufLen, KNOWN_SOLUTION);
                 hintBufSetDigit(cache->hintBuf, cache->hintbufLen, cache->solution[pos], pos);
                 hintBufAddHighlight(cache->hintBuf, cache->hintbufLen, -1, -1, pos / cache->size, pos % cache->size);
