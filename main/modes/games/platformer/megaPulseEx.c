@@ -431,8 +431,8 @@ void platformerEnterMode(void)
                          "Grind Pangolin", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 13, 62, 1, 250, false);
         // DrainBat
-        addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Drain Bat",
-                         1, false, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
+                         "Drain Bat", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 14, 82, 2, 250, false);
         // SmashGorilla
         addCutsceneStyle(platformer->gameData.cutscene, c310, SMASH_GORILLA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
@@ -495,8 +495,8 @@ void platformerEnterMode(void)
                          "Crash Turtle", 1, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 28, 119, 1, 250, false);
         // DeadeyeChirpzi
-        addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_CHIRPZI_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
-                         "Cho", 1, true, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_CHIRPZI_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Cho",
+                         1, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 29, 17, 1, 250, false);
         // GrindPangolin
         addCutsceneStyle(platformer->gameData.cutscene, c310, GRIND_PANGOLIN_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
@@ -2018,11 +2018,12 @@ void updateLevelSelect(platformer_t* self)
         self->gameData.level = actualLevel;
 
         bool levelAvailable = !(self->unlockables.levelsCleared & (1 << self->gameData.level));
-        if(self->gameData.level == 5)
+        if (self->gameData.level == 5)
         {
-            levelAvailable = self->unlockables.levelsCleared == 0b11111011110 || self->unlockables.levelsCleared == 0b11111111110
-                    || self->unlockables.levelsCleared == 0b111111111110
-                    || self->unlockables.levelsCleared == 0b1111111111110;
+            levelAvailable = self->unlockables.levelsCleared == 0b11111011110
+                             || self->unlockables.levelsCleared == 0b11111111110
+                             || self->unlockables.levelsCleared == 0b111111111110
+                             || self->unlockables.levelsCleared == 0b1111111111110;
         }
         if (self->gameData.level < 11 && !levelAvailable)
         {
@@ -2059,20 +2060,20 @@ void drawLevelSelect(platformer_t* self)
     drawText(&self->font, c555, "STAGE SELECT", 90, 8);
 
     bool levelAvailable = !(self->unlockables.levelsCleared & (1 << self->gameData.level));
-    if(self->gameData.level == 5)
+    if (self->gameData.level == 5)
     {
-        levelAvailable = self->unlockables.levelsCleared == 0b11111011110 || self->unlockables.levelsCleared == 0b11111111110
-                || self->unlockables.levelsCleared == 0b111111111110
-                || self->unlockables.levelsCleared == 0b1111111111110;
+        levelAvailable = self->unlockables.levelsCleared == 0b11111011110
+                         || self->unlockables.levelsCleared == 0b11111111110
+                         || self->unlockables.levelsCleared == 0b111111111110
+                         || self->unlockables.levelsCleared == 0b1111111111110;
     }
 
     drawRectFilled((55 + self->menuState * 64) - self->tilemap.mapOffsetX,
                    (39 + self->menuSelection * 64) - self->tilemap.mapOffsetY,
                    (55 + 66 + self->menuState * 64) - self->tilemap.mapOffsetX,
                    (39 + 66 + self->menuSelection * 64) - self->tilemap.mapOffsetY,
-                   levelAvailable
-                       ? greenColors[(self->gameData.frameCount >> 3) % 4]
-                       : redColors[(self->gameData.frameCount >> 3) % 4]);
+                   levelAvailable ? greenColors[(self->gameData.frameCount >> 3) % 4]
+                                  : redColors[(self->gameData.frameCount >> 3) % 4]);
 
     mg_drawTileMap(&(self->tilemap));
 

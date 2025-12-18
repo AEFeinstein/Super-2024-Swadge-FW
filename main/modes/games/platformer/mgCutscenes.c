@@ -265,7 +265,7 @@ void stageStartCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "WHOA! Okay - I'm awake now!", false, 2);
             addCutsceneLine(gameData->cutscene, Sawtooth,
                             "Always tricky teleporting onto a moving target. You got your balance?", true, 2);
-            addCutsceneLine(gameData->cutscene, Pulse, "Think so! Is it always this fast!?", false, 1);
+            addCutsceneLine(gameData->cutscene, Pulse, "Think so! Is it always this fast?!", false, 1);
             addCutsceneLine(gameData->cutscene, Sawtooth,
                             "Not usually. Someone's pushing the throttle way past safe. You're gonna need something "
                             "heavy-hitting to stop this runaway.",
@@ -662,7 +662,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, SystemText, "PULSE and BIGMA shake hands.", false, 0);
             addCutsceneLine(gameData->cutscene, Bigma, "... but I work solo.", false, 1);
             addCutsceneLine(gameData->cutscene, SystemText, "BIGMA lets out a corrupted Colossus Roar, stunning PULSE and SAWTOOTH.", false, 0);
-            addCutsceneLine(gameData->cutscene, Pulse, "Aghh! What... was that!?", false, 0);
+            addCutsceneLine(gameData->cutscene, Pulse, "Aghh! What... was that?!", false, 0);
             addCutsceneLine(gameData->cutscene, SystemText, "BIGMA laughs and escapes in a digital blur.", false, 0);
             addCutsceneLine(gameData->cutscene, Bigma, "This was just a warm-up, Pulse! Catch me on the big stage-if you can keep the beat.", false, 1);
             addCutsceneLine(gameData->cutscene, Pulse, "...Now what? He's gone...", false, 0);
