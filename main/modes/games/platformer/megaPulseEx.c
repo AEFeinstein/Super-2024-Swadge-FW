@@ -438,9 +438,9 @@ void platformerEnterMode(void)
         addCutsceneStyle(platformer->gameData.cutscene, c310, SMASH_GORILLA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
                          "Smash Gorilla", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 15, 29, -1, 250, false);
-        // SeverYagata
+        // SeverYataga
         addCutsceneStyle(platformer->gameData.cutscene, c310, SEVER_YATAGA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
-                         "Sever Yagata", 1, false, true, true);
+                         "Sever Yataga", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 16, 24, 1, 250, false);
         // Jasper
         addCutsceneStyle(platformer->gameData.cutscene, c000, JASPER_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Jasper", 1,
@@ -506,9 +506,9 @@ void platformerEnterMode(void)
         addCutsceneStyle(platformer->gameData.cutscene, c310, SMASH_GORILLA_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
                          "Smash Gorilla", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 31, 29, -1, 250, false);
-        // SeverYagata
+        // SeverYataga
         addCutsceneStyle(platformer->gameData.cutscene, c310, SEVER_YATAGA_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
-                         "Sever Yagata", 1, false, true, true);
+                         "Sever Yataga", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 32, 11, 0, 100, true);
         // DrainBat
         addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Drain Bat",
