@@ -125,9 +125,6 @@ static bool eliminateHiddenPairs(solverCache_t* cache, const sudokuGrid_t* board
 static bool eliminateNakedTriples(solverCache_t* cache, const sudokuGrid_t* board);
 static bool eliminateHiddenTriples(solverCache_t* cache, const sudokuGrid_t* board);
 
-static void addElimination(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, int cellCount, uint16_t digits,
-                           sudokuRegionType_t regionType, int regionNum, uint8_t* cellPos);
-
 static uint8_t getMemberPos(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region,
                             int member);
 static uint8_t getMemberDigit(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type,
@@ -420,51 +417,6 @@ static void applyCellElimination(const sudokuGrid_t* board, uint16_t* notes, int
     }
 }
 
-static void addElimination(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, int cellCount, uint16_t digits,
-                           sudokuRegionType_t regionType, int regionNum, uint8_t* cellPos)
-{
-    hintBufNextStep(hintBuf, maxlen, NOTE_ELIMINATION);
-    hintBufSetMultiNote(hintBuf, maxlen, false, digits, cellCount, cellPos);
-
-    switch (regionType)
-    {
-        case REGION_NONE:
-        {
-            break;
-        }
-        case REGION_BOX:
-        {
-            hintBufAddHighlight(hintBuf, maxlen, -1, regionNum, -1, -1);
-            break;
-        }
-        case REGION_ROW:
-        {
-            hintBufAddHighlight(hintBuf, maxlen, -1, -1, regionNum, -1);
-            break;
-        }
-        case REGION_COLUMN:
-        {
-            hintBufAddHighlight(hintBuf, maxlen, -1, -1, -1, regionNum);
-            break;
-        }
-    }
-
-    /*if (desc->stepCount < MAX_ELIMINATION_STEPS)
-    {
-        sudokuMoveElimination_t* elim = &desc->eliminationSteps[desc->stepCount];
-        elim->eliminationCount = cellCount;
-        elim->eliminationMask = digits;
-        elim->eliminationRegionType = regionType;
-        elim->eliminationRegionNum = regionNum;
-        for (int i = 0; i < cellCount; i++)
-        {
-            elim->eliminations[i] = cellPos[i];
-        }
-
-        desc->stepCount++;
-    }*/
-}
-
 void sudokuApplyMove(sudokuGrid_t* board, const sudokuMoveDesc_t* desc)
 {
     if (desc->digit > 0)
@@ -550,7 +502,8 @@ void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepN
                     curStep++;
                 }
 
-                sudokuTechniqueType_t type = (sudokuTechniqueType_t)hint[idx++];
+                // Skip over the 'type' field
+                idx++;
                 break;
             }
 
@@ -885,8 +838,6 @@ size_t hintBufRead(hintOperation_t* op, const uint8_t* hint, size_t maxlen, size
     size_t idx = offset + 4;
     size_t len = GET_LENGTH(hint);
 
-    sudokuOverlayShape_t* shape;
-
     while (idx < maxlen && idx < len + 4)
     {
         uint8_t header = hint[idx++];
@@ -961,10 +912,9 @@ size_t hintBufRead(hintOperation_t* op, const uint8_t* hint, size_t maxlen, size
                 uint8_t targetRow   = hint[idx++];
                 uint8_t targetCol   = hint[idx++];
 
-                bool useDigit = (targetDigit != 0 && targetDigit != 255);
-                bool useBox   = (targetBox != 255);
-                bool useRow   = (targetRow != 255);
-                bool useCol   = (targetCol != 255);
+                bool useBox = (targetBox != 255);
+                bool useRow = (targetRow != 255);
+                bool useCol = (targetCol != 255);
 
                 op->type            = opcode;
                 op->highlight.digit = targetDigit;
@@ -1064,7 +1014,6 @@ void applyHint(sudokuGrid_t* game, uint16_t* notes, const uint8_t* hint, size_t 
     size_t read            = 0;
     size_t offset          = 0;
     hintOperation_t opInfo = {0};
-    int curStep            = -1;
 
     while (0 != (read = hintBufRead(&opInfo, hint, hintbufLen, offset)))
     {
@@ -1370,8 +1319,6 @@ static bool findLastEmptyCell(solverCache_t* cache, const sudokuGrid_t* board, s
         // Only a single digit is possible in this region
         if (notes != 0 && __builtin_popcount(notes) == 1 && 0 == getMemberDigit(cache, board, type, region, member))
         {
-            ESP_LOGI("Solver", "Region has only one possibility left: %d, %" PRIb16 " (popcount=%d)\n", region, notes,
-                     __builtin_popcount(notes));
             int missingDigit = __builtin_ctz(notes) + 1;
             uint8_t pos      = getMemberPos(cache, board, type, region, member);
             hintBufNextStep(cache->hintBuf, cache->hintbufLen, SINGLE);
@@ -1469,19 +1416,12 @@ static bool eliminateHiddenTriples(solverCache_t* cache, const sudokuGrid_t* boa
 
 void writeStepDescription(char* buf, size_t n, const uint8_t* hint, size_t hintbufLen, int stepNum)
 {
-    sudokuOverlayShape_t* shape;
-
     int curStep = -1;
-
-    char* out       = buf;
-    const char* end = buf + n;
 
     sudokuTechniqueType_t stepType = TECHNIQUE_TYPE_LAST;
     int stepDigit                  = -1;
     int stepDigitRow               = -1;
     int stepDigitColumn            = -1;
-    int stepDigitBox               = -1;
-    int stepPos                    = -1;
     int stepRegion                 = -1;
     const char* regionTypeName     = "?";
 
@@ -1515,7 +1455,6 @@ void writeStepDescription(char* buf, size_t n, const uint8_t* hint, size_t hintb
                 if (stepNum == -1 || curStep == stepNum)
                 {
                     stepDigit = opInfo.setDigit.digit;
-                    stepPos   = opInfo.setDigit.positions[0];
                 }
                 break;
             }
@@ -1548,7 +1487,6 @@ void writeStepDescription(char* buf, size_t n, const uint8_t* hint, size_t hintb
                 if (opInfo.highlight.box >= 0)
                 {
                     regionTypeName = "box";
-                    stepDigitBox   = opInfo.highlight.box;
                     stepRegion     = opInfo.highlight.col;
                 }
                 else if (opInfo.highlight.row >= 0 && opInfo.highlight.col >= 0)

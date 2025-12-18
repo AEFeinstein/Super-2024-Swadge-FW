@@ -103,7 +103,7 @@ void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepN
 bool initSolverCache(solverCache_t* cache, int size, int base);
 void resetSolverCache(solverCache_t* cache, int size, int base);
 void deinitSolverCache(solverCache_t* cache);
-void makeBoxMapp(solverCache_t* cache, const sudokuGrid_t* board);
+void makeBoxMap(solverCache_t* cache, const sudokuGrid_t* board);
 
 void writeStepDescription(char* buf, size_t n, const uint8_t* hintBuf, size_t hintbufLen, int step);
 void applyHint(sudokuGrid_t* game, uint16_t* notes, const uint8_t* hintbuf, size_t hintbufLen);

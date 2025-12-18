@@ -1405,10 +1405,6 @@ static void swadgedokuPlayerSetDigit(uint8_t digit, bool isForce, bool forceSet)
 
 static void swadgedokuShowHint(void)
 {
-    sudokuOverlay_t overlay;
-    sudokuOverlayOpt_t opts[sd->game.size * sd->game.size];
-    overlay.gridOpts = opts;
-
     if (sudokuNextMove(&sd->solverCache, &sd->game))
     {
         hintBufDebug(sd->solverCache.hintBuf, sd->solverCache.hintbufLen);
@@ -1515,7 +1511,7 @@ static void swadgedokuGameButton(buttonEvt_t evt)
                             {
                                 sd->dragSet
                                     = 0
-                                      == ((1 << (digit - 1))
+                                      == (bit
                                           & (sd->game.notes[sd->player.curY * sd->game.size + sd->player.curX]
                                              ^ sd->player.notes[sd->player.curY * sd->game.size + sd->player.curX]));
                                 sd->dragging = true;
