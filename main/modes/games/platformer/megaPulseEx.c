@@ -2010,7 +2010,14 @@ void updateLevelSelect(platformer_t* self)
         }
         self->gameData.level = actualLevel;
 
-        if (self->gameData.level < 11 && (self->unlockables.levelsCleared & (1 << self->gameData.level)))
+        bool levelAvailable = !(self->unlockables.levelsCleared & (1 << self->gameData.level));
+        if(self->gameData.level == 5)
+        {
+            levelAvailable = self->unlockables.levelsCleared == 0b11111011110 || self->unlockables.levelsCleared == 0b11111111110
+                    || self->unlockables.levelsCleared == 0b111111111110
+                    || self->unlockables.levelsCleared == 0b1111111111110;
+        }
+        if (self->gameData.level < 11 && !levelAvailable)
         {
             soundPlaySfx(&(platformer->soundManager.sndMenuDeny), BZR_STEREO);
         }
@@ -2044,11 +2051,19 @@ void drawLevelSelect(platformer_t* self)
 {
     drawText(&self->font, c555, "STAGE SELECT", 90, 8);
 
+    bool levelAvailable = !(self->unlockables.levelsCleared & (1 << self->gameData.level));
+    if(self->gameData.level == 5)
+    {
+        levelAvailable = self->unlockables.levelsCleared == 0b11111011110 || self->unlockables.levelsCleared == 0b11111111110
+                || self->unlockables.levelsCleared == 0b111111111110
+                || self->unlockables.levelsCleared == 0b1111111111110;
+    }
+
     drawRectFilled((55 + self->menuState * 64) - self->tilemap.mapOffsetX,
                    (39 + self->menuSelection * 64) - self->tilemap.mapOffsetY,
                    (55 + 66 + self->menuState * 64) - self->tilemap.mapOffsetX,
                    (39 + 66 + self->menuSelection * 64) - self->tilemap.mapOffsetY,
-                   (self->unlockables.levelsCleared & (1 << self->gameData.level))
+                   levelAvailable
                        ? greenColors[(self->gameData.frameCount >> 3) % 4]
                        : redColors[(self->gameData.frameCount >> 3) % 4]);
 
@@ -2102,11 +2117,7 @@ void drawLevelSelect(platformer_t* self)
         }
     }
 
-    if ((!(self->unlockables.levelsCleared & (1 << self->gameData.level)))
-        || (self->gameData.level == 5
-            && (self->unlockables.levelsCleared == 0b11111011110 || self->unlockables.levelsCleared == 0b11111111110
-                || self->unlockables.levelsCleared == 0b111111111110
-                || self->unlockables.levelsCleared == 0b1111111111110)))
+    if (levelAvailable)
     {
         drawRect(
             (64 + self->menuState * 64) - self->tilemap.mapOffsetX + ((self->gameData.frameCount >> 2) & 0b0111),
