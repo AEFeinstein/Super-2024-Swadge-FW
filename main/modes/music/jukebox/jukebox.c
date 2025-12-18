@@ -179,16 +179,16 @@ static const jukeboxSong_t bgm_vectorTanks[] = {
 
 static const jukeboxSong_t bgm_cosplayCrunch[] = {
     {
+        .fIdx = COSPLAY_CRUNCH_MENU_MID,
+        .name = "Menu BGM",
+    },
+    {
         .fIdx = COSPLAY_CRUNCH_BGM_MID,
         .name = "Cosplay Crunch BGM",
     },
     {
-        .fIdx = FAIRY_FOUNTAIN_MID,
-        .name = "Fairy Fountain",
-    },
-    {
-        .fIdx = HD_CREDITS_MID,
-        .name = "Hot Dog Credits",
+        .fIdx = COSPLAY_CRUNCH_GAME_OVER_MID,
+        .name = "Game Over",
     },
 };
 
@@ -212,12 +212,60 @@ static const jukeboxSong_t bgm_megaPulse[] = {
         .fIdx = BGM_INTRO_STAGE_MID,
     },
     {
-        .name = "PRE FIGHT",
-        .fIdx = BGM_PRE_FIGHT_MID,
+        .name = "BOSS BIGMA",
+        .fIdx = BGM_BOSS_BIGMA_MID,
     },
     {
         .name = "POST FIGHT",
         .fIdx = BGM_POST_FIGHT_MID,
+    },
+    {
+        .name = "Level Clear JINGLE",
+        .fIdx = BGM_LEVEL_CLEAR_JINGLE_MID,
+    },
+    {
+        .name = "STAGE SELECT",
+        .fIdx = BGM_STAGE_SELECT_MID,
+    },
+    {
+        .name = "KINETIC DONUT",
+        .fIdx = BGM_KINETIC_DONUT_MID,
+    },
+    {
+        .name = "BOSS KINETIC DONUT",
+        .fIdx = BGM_BOSS_KINETIC_DONUT_MID,
+    },
+    {
+        .name = "GRIND PANGOLIN",
+        .fIdx = BGM_GRIND_PANGOLIN_MID,
+    },
+    {
+        .name = "BOSS GRIND PANGOLIN",
+        .fIdx = BGM_BOSS_GRIND_PANGOLIN_MID,
+    },
+    {
+        .name = "SEVER YATAGA",
+        .fIdx = BGM_SEVER_YATAGA_MID,
+    },
+    {
+        .name = "BOSS SEVER YATAGA",
+        .fIdx = BGM_BOSS_SEVER_YATAGA_MID,
+    },
+    {
+        .name = "RIP BARONESS",
+        .fIdx = BGM_RIP_BARONESS_MID,
+    },
+    {
+        .name = "BOSS TRASH MAN",
+        .fIdx = BGM_BOSS_TRASH_MAN_MID,
+    },
+    {
+        .name = "SMASH GORILLA",
+        .fIdx = BGM_SMASH_GORILLA_MID,
+    },
+    {
+        .name = "BOSS SMASH GORILLA",
+        .fIdx = BGM_BOSS_SMASH_GORILLA_MID,
     },
     {
         .name = "DEADEYE CHIRPZI",
@@ -244,60 +292,32 @@ static const jukeboxSong_t bgm_megaPulse[] = {
         .fIdx = BGM_BOSS_FLARE_GRIFFIN_MID,
     },
     {
-        .name = "GRIND PANGOLIN",
-        .fIdx = BGM_GRIND_PANGOLIN_MID,
+        .name = "THE GAUNTLET",
+        .fIdx = BGM_THE_GAUNTLET_MID,
     },
     {
-        .name = "BOSS GRIND PANGOLIN",
-        .fIdx = BGM_BOSS_GRIND_PANGOLIN_MID,
+        .name = "THE FINAL MEGAJAM",
+        .fIdx = BGM_THE_FINAL_MEGAJAM_MID,
     },
     {
-        .name = "KINETIC DONUT",
-        .fIdx = BGM_KINETIC_DONUT_MID,
-    },
-    {
-        .name = "BOSS KINETIC DONUT",
-        .fIdx = BGM_BOSS_KINETIC_DONUT_MID,
-    },
-    {
-        .name = "SEVER YAGATA",
-        .fIdx = BGM_SEVER_YAGATA_MID,
-    },
-    {
-        .name = "BOSS SEVER YAGATA",
-        .fIdx = BGM_BOSS_SEVER_YAGATA_MID,
-    },
-    {
-        .name = "SMASH GORILLA",
-        .fIdx = BGM_SMASH_GORILLA_MID,
-    },
-    {
-        .name = "BOSS SMASH GORILLA",
-        .fIdx = BGM_BOSS_SMASH_GORILLA_MID,
-    },
-    {
-        .name = "BOSS TRASH MAN",
-        .fIdx = BGM_BOSS_TRASH_MAN_MID,
-    },
-    {
-        .name = "BIGMA",
-        .fIdx = BGM_BIGMA_MID,
-    },
-    {
-        .name = "BOSS BIGMA",
-        .fIdx = BGM_BOSS_BIGMA_MID,
+        .name = "PRE FIGHT",
+        .fIdx = BGM_PRE_FIGHT_MID,
     },
     {
         .name = "BOSS HANK WADDLE",
         .fIdx = BGM_BOSS_HANK_WADDLE_MID,
     },
     {
-        .name = "RIP BARONESS",
-        .fIdx = BGM_RIP_BARONESS_MID,
+        .name = "MAXIMUM HYPE CREDITS",
+        .fIdx = MAXIMUM_HYPE_CREDITS_MID,
     },
     {
-        .name = "STAGE SELECT",
-        .fIdx = BGM_STAGE_SELECT_MID,
+        .name = "OVO LIVES!",
+        .fIdx = BGM_OVO_LIVES_MID,
+    },
+    {
+        .name = "LOOKS LIKE WE MADE IT",
+        .fIdx = BGM_LOOKS_LIKE_WE_MADE_IT_MID,
     },
     {
         .name = "NAME ENTRY",
@@ -517,6 +537,59 @@ static const jukeboxSong_t sfx_swadgesona[] = {
     },
 };
 
+static const jukeboxSong_t bgm_atrium[] = {
+    {
+        .fIdx = ATRTHEME1_MID,
+        .name = "Atrium Theme 1",
+    },
+    {
+        .fIdx = ATRTHEME2_MID,
+        .name = "Atrium Theme 2",
+    },
+    {
+        .fIdx = ATRVIBE_MID,
+        .name = "Atrium Vibe",
+    },
+};
+
+static const jukeboxSong_t bgm_findingFaces[] = {
+    {
+        .fIdx = FINDER_BGM_MENU_MID,
+        .name = "Menu",
+    },
+    {
+        .fIdx = FINDER_BGM_ZEN_MID,
+        .name = "Zen Mode Theme",
+    },
+    {
+        .fIdx = FINDER_BGM_SLOW_MID,
+        .name = "Slow",
+    },
+    {
+        .fIdx = FINDER_BGM_MED_MID,
+        .name = "Med",
+    },
+    {
+        .fIdx = FINDER_BGM_FAST_MID,
+        .name = "Fast",
+    },
+    {
+        .fIdx = FINDER_BGM_DEATH_MID,
+        .name = "Death",
+    },
+};
+
+static const jukeboxSong_t sfx_findingFaces[] = {
+    {
+        .fIdx = FINDER_RIGHT_MID,
+        .name = "Right",
+    },
+    {
+        .fIdx = FINDER_WRONG_MID,
+        .name = "Wrong",
+    },
+};
+
 static const jukeboxCategory_t bgmCategories[] = {
     {
         .category    = &modePlatformer,
@@ -554,6 +627,13 @@ static const jukeboxCategory_t bgmCategories[] = {
         .shouldLoop  = true,
     },
     {
+        .category    = &findingFacesMode,
+        .songs       = bgm_findingFaces,
+        .numSongs    = ARRAY_SIZE(bgm_findingFaces),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
         .category    = &modePicross,
         .songs       = bgm_picross,
         .numSongs    = ARRAY_SIZE(bgm_picross),
@@ -564,6 +644,13 @@ static const jukeboxCategory_t bgmCategories[] = {
         .category    = &swsnCreatorMode,
         .songs       = bgm_swadgesona,
         .numSongs    = ARRAY_SIZE(bgm_swadgesona),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
+        .category    = &atriumMode,
+        .songs       = bgm_atrium,
+        .numSongs    = ARRAY_SIZE(bgm_atrium),
         .generalMidi = true,
         .shouldLoop  = true,
     },
@@ -595,6 +682,13 @@ static const jukeboxCategory_t sfxCategories[] = {
         .category    = &cosCrunchMode,
         .songs       = sfx_cosplayCrunch,
         .numSongs    = ARRAY_SIZE(sfx_cosplayCrunch),
+        .generalMidi = true,
+        .shouldLoop  = false,
+    },
+    {
+        .category    = &findingFacesMode,
+        .songs       = sfx_findingFaces,
+        .numSongs    = ARRAY_SIZE(sfx_findingFaces),
         .generalMidi = true,
         .shouldLoop  = false,
     },

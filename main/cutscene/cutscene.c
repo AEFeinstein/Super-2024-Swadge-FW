@@ -273,8 +273,10 @@ void setSongPitches(cutscene_t* cutscene, int16_t songPitches[8])
  * @param body The dialogue text to draw
  * @param flipHorizontal true to flip the character pose horizontally
  * @param spriteVariation The specific pose sprite, counted up from the main pose sprite.
+ * @param cbFunc A callback function to fire when A is pressed on this line. Leave NULL to fire nothing.
  */
-void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation)
+void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation,
+                     cutsceneCb cbFunc)
 {
     cutsceneLine_t* line = (cutsceneLine_t*)heap_caps_calloc(1, sizeof(cutsceneLine_t), MALLOC_CAP_SPIRAM);
     line->body           = (char*)heap_caps_calloc(strlen(body) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
@@ -282,6 +284,7 @@ void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool fl
     line->styleIdx        = styleIdx;
     line->spriteVariation = spriteVariation < 0 ? getRandomVariationFromStyleIdx(cutscene, styleIdx) : spriteVariation;
     line->flipHorizontal  = flipHorizontal;
+    line->cbFunc          = cbFunc;
 
     if (cutscene->lines->first == NULL)
     {
@@ -365,6 +368,10 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
     {
         if (btnState & PB_A && !(cutscene->btnState_previousFrame & PB_A))
         {
+            if (((cutsceneLine_t*)(cutscene->lines->first->val))->cbFunc != NULL)
+            {
+                ((cutsceneLine_t*)(cutscene->lines->first->val))->cbFunc();
+            }
             // proceed to next cutscene line.
             if (cutscene->lines->first != NULL
                 && cutscene->lines->first->next != NULL) // There is at least onle line after this one.
@@ -498,7 +505,7 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
     }
     char variationText[5];
     snprintf(variationText, sizeof(variationText), "%d", line->spriteVariation);
-    drawText(font, c541, variationText, 14, 14);
+    // drawText(font, c541, variationText, 14, 14);
     if (cutscene->xOffset == 0)
     {
         if (style->drawTextBox)

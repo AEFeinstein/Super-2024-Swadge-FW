@@ -342,10 +342,71 @@ void mg_tileSpawnEntity(mgTilemap_t* tilemap, uint8_t objectIndex, uint8_t tx, u
 
 void mg_hashSpawnEntity(mgEntityManager_t* entityManager, mgEntitySpawnData_t* entitySpawnData)
 {
-    mgEntity_t* entityCreated
-        = mg_createEntity(entityManager, entitySpawnData->type,
-                          (entitySpawnData->tx << MG_TILESIZE_IN_POWERS_OF_2) + entitySpawnData->xOffsetInPixels,
-                          (entitySpawnData->ty << MG_TILESIZE_IN_POWERS_OF_2) + entitySpawnData->yOffsetInPixels);
+    // That's dumb, the other offset is unsinged.
+    int16_t actualXOffset = 0;
+    int16_t actualYOffset = 0;
+    if (entityManager->playerEntity != NULL && entitySpawnData->type == ENTITY_BOSS_SEVER_YATAGA)
+    {
+        switch (entityManager->playerEntity->gameData->level)
+        {
+            case 1:
+            {
+                entitySpawnData->type = ENTITY_BOSS_KINETIC_DONUT;
+                actualYOffset         = -5;
+                break;
+            }
+            case 2:
+            {
+                entitySpawnData->type = ENTITY_BOSS_GRIND_PANGOLIN;
+                actualYOffset         = -10;
+                break;
+            }
+            case 4:
+            {
+                entitySpawnData->type = ENTITY_BOSS_TRASH_MAN;
+                actualYOffset -= 100;
+                break;
+            }
+            case 5:
+            {
+                entitySpawnData->type = ENTITY_BOSS_BIGMA;
+                actualYOffset         = -20;
+                break;
+            }
+            case 6:
+            {
+                entitySpawnData->type = ENTITY_BOSS_SMASH_GORILLA;
+                actualYOffset         = -10;
+                break;
+            }
+            case 7:
+            {
+                entitySpawnData->type = ENTITY_BOSS_DEADEYE_CHIRPZI;
+                actualYOffset         = -10;
+                break;
+            }
+            case 8:
+            {
+                entitySpawnData->type = ENTITY_BOSS_DRAIN_BAT;
+                actualYOffset         = -10;
+                break;
+            }
+            case 9:
+            {
+                entitySpawnData->type = ENTITY_BOSS_FLARE_GRYFFYN;
+                actualYOffset         = -10;
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+    }
+    mgEntity_t* entityCreated = mg_createEntity(
+        entityManager, entitySpawnData->type,
+        (entitySpawnData->tx << MG_TILESIZE_IN_POWERS_OF_2) + entitySpawnData->xOffsetInPixels + actualXOffset,
+        (entitySpawnData->ty << MG_TILESIZE_IN_POWERS_OF_2) + entitySpawnData->yOffsetInPixels + actualYOffset);
 
     if (entityCreated != NULL)
     {

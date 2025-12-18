@@ -22,6 +22,8 @@ const vec_t origin_15_9 = {.x = 15, .y = 3};
 
 const vec_t origin_15_11 = {.x = 15, .y = 11};
 
+const vec_t origin_16_16 = {.x = 16, .y = 16};
+
 const vec_t origin_26_16 = {.x = 26, .y = 16};
 
 const box_t box_16_16 = {.x0 = 0, .x1 = 15, .y0 = 0, .y1 = 15};
@@ -58,7 +60,7 @@ const vec_t origin_grind_pangolin_curled   = {.x = 22, .y = 19};
 const box_t box_grind_pangolin_curled      = {.x0 = 7, .x1 = 36, .y0 = 9, .y1 = 38};
 const vec_t origin_grind_pangolin_rolling  = {.x = 19, .y = 15};
 const box_t box_grind_pangolin_rolling     = {.x0 = 9, .x1 = 29, .y0 = 0, .y1 = 30};
-const vec_t origin_grind_pangolin_tail     = {.x = 36, .y = 22};
+const vec_t origin_grind_pangolin_tail     = {.x = 37, .y = 17};
 const box_t box_grind_pangolin_tail        = {.x0 = 3, .x1 = 71, .y0 = 16, .y1 = 31};
 
 const vec_t origin_drain_bat = {.x = 30, .y = 31};
@@ -66,7 +68,7 @@ const box_t box_drain_bat    = {.x0 = 13, .x1 = 47, .y0 = 16, .y1 = 47};
 
 const vec_t origin_kinetic_donut         = {.x = 21, .y = 25};
 const box_t box_kinetic_donut            = {.x0 = 5, .x1 = 37, .y0 = 16, .y1 = 45};
-const vec_t origin_kinetic_donut_dashing = {.x = 27, .y = 21};
+const vec_t origin_kinetic_donut_dashing = {.x = 27, .y = 17};
 const box_t box_kinetic_donut_dashing    = {.x0 = 4, .x1 = 54, .y0 = 7, .y1 = 42};
 
 const vec_t origin_flare_gryffyn      = {.x = 40, .y = 32};
@@ -89,3 +91,6 @@ const box_t box_bigma_punching    = {.x0 = 16, .x1 = 95, .y0 = 9, .y1 = 86};
 const vec_t origin_bigma_jump     = {.x = 58, .y = 49};
 const box_t box_bigma_jump1       = {.x0 = 32, .x1 = 84, .y0 = 20, .y1 = 97};
 const box_t box_bigma_jump2       = {.x0 = 32, .x1 = 84, .y0 = 0, .y1 = 97};
+
+const vec_t origin_hank = {.x = 40, .y = 34};
+const box_t box_hank    = {.x0 = 16, .x1 = 63, .y0 = 16, .y1 = 51};

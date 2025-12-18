@@ -91,20 +91,27 @@ typedef enum
     MG_BGM_KINETIC_DONUT,
     MG_BGM_BOSS_KINETIC_DONUT,
     MG_BGM_RIP_BARONESS,
+
     MG_BGM_BOSS_HANK_WADDLE,
-    MG_BGM_SEVER_YAGATA,
-    MG_BGM_BOSS_SEVER_YAGATA,
+    MG_BGM_SEVER_YATAGA,
+    MG_BGM_BOSS_SEVER_YATAGA,
     MG_BGM_SMASH_GORILLA,
     MG_BGM_BOSS_SMASH_GORILLA,
     MG_BGM_BOSS_TRASH_MAN,
+
     MG_BGM_BIGMA,
     MG_BGM_BOSS_BIGMA,
     MG_BGM_LEVEL_CLEAR_JINGLE,
     MG_BGM_POST_FIGHT,
     MG_BGM_PRE_FIGHT,
-    MG_INTRO_STAGE,
+    MG_BGM_INTRO_STAGE,
     MG_BGM_STAGE_SELECT,
-    MG_BGM_NAME_ENTRY
+    MG_BGM_NAME_ENTRY,
+    MG_BGM_MAXIMUM_HYPE_CREDITS,
+    MG_BGM_OVO_LIVES,
+    MG_BGM_THE_GAUNTLET,
+    MG_BGM_THE_FINAL_MEGAJAM,
+    MG_BGM_LOOKS_LIKE_WE_MADE_IT,
 } mg_bgmEnum_t;
 
 typedef enum
@@ -216,6 +223,12 @@ typedef enum
     MG_SP_BOSS_5,
     MG_SP_BOSS_6,
     MG_SP_BOSS_7,
+    MG_SP_PLAYER_DOUBLE_JUMP_0,
+    MG_SP_PLAYER_DOUBLE_JUMP_1,
+    MG_SP_PLAYER_DOUBLE_JUMP_2,
+    MG_SP_PLAYER_DOUBLE_JUMP_3,
+    MG_SP_PLAYER_DOUBLE_JUMP_4,
+    MG_SP_PLAYER_DOUBLE_JUMP_5,
 } mg_spriteDef_t;
 
 typedef enum
@@ -757,6 +770,15 @@ typedef enum
     MG_WSG_HP_CAN_OF_SALSA_4,
     MG_WSG_HP_CAN_OF_SALSA_5,
     MG_WSG_HP_CAN_OF_SALSA_6,
+    MG_WSG_BOSS_RUSH_SYMBOL,
+    MG_WSG_HANK_SYMBOL,
+    MG_WSG_NEW_GAME_PLUS_SYMBOL,
+    MG_WSG_PLAYER_DOUBLE_JUMP_0,
+    MG_WSG_PLAYER_DOUBLE_JUMP_1,
+    MG_WSG_PLAYER_DOUBLE_JUMP_2,
+    MG_WSG_PLAYER_DOUBLE_JUMP_3,
+    MG_WSG_PLAYER_DOUBLE_JUMP_4,
+    MG_WSG_PLAYER_DOUBLE_JUMP_5,
 } mg_wsgIndex_t;
 
 typedef enum
@@ -1020,7 +1042,8 @@ typedef enum
     MG_WSGSET_GRIND_PANGOLIN,
     MG_WSGSET_FLARE_GRYFFYN,
     MG_WSGSET_TRASH_MAN,
-    MG_WSGSET_BIGMA
+    MG_WSGSET_BIGMA,
+    MG_WSGSET_HANK_WADDLE,
 } mgWsgSetIndex_t;
 
 /*
@@ -1140,6 +1163,13 @@ extern const trophyData_t platformerTrophies[];
 //==============================================================================
 
 extern void goToReadyScreen(void);
+extern void startCreditMusic(void);
+extern void startPostFightMusic(void);
+extern void startHankMusic(void);
+extern void startTrashManMusic(void);
 extern void initBossFight(void);
+extern void startMegajamMusic(void);
+extern void stopMusic(void);
+extern void loseCanOfSalsa(void);
 
 #endif

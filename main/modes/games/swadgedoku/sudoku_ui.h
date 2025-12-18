@@ -19,6 +19,8 @@
  */
 #define SUBPOS_XY(x, y) (((y) * BOX_SIZE_SUBPOS) + (x))
 
+#define GRID_MARGIN 1
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -103,9 +105,13 @@ typedef struct
 // Function Declarations
 //==============================================================================
 
+int swadgedokuGetSquareSize(const sudokuGrid_t* game);
+void swadgedokuGetGridPos(int* gridX, int* gridY, const sudokuGrid_t* game);
 void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay,
-                        const sudokuTheme_t* theme, const sudokuDrawContext_t* context);
+                        const sudokuTheme_t* theme, const sudokuDrawContext_t* context, sudokuShapeTag_t tagMask,
+                        sudokuOverlayOpt_t overlayMask);
 void getOverlayPos(int32_t* x, int32_t* y, int r, int c, sudokuSubpos_t subpos);
 void getRealOverlayPos(int16_t* x, int16_t* y, int gridX, int gridY, int squareSize, int xSubPos, int ySubPos);
 void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, bool drawH, bool drawV,
                          sudokuShapeTag_t tag);
+void addBoxHighlight(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int box);

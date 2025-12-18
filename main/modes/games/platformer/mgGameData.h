@@ -76,6 +76,8 @@ typedef struct
     bool cheatMode; // True to make pulse invincible
 
     uint8_t abilities; // Each bit may be 1 for an unlocked ability.
+
+    bool kineticSkipped;
 } mgGameData_t;
 
 //==============================================================================
@@ -91,6 +93,7 @@ void mg_resetGameDataLeds(mgGameData_t* gameData);
 void mg_updateLedsShowHighScores(mgGameData_t* gameData);
 void mg_updateLedsLevelClear(mgGameData_t* gameData);
 void mg_updateLedsGameClear(mgGameData_t* gameData);
+void mg_updateLedsShoopDaWoopStatus(mgEntityManager_t* entityManager);
 void mg_updateLeds(mgEntityManager_t* entityManager);
 void mg_updateLedsDead(mgGameData_t* gameData);
 void mg_updateLedsGameOver(mgGameData_t* gameData);
