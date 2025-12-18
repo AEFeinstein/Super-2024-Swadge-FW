@@ -121,6 +121,10 @@ typedef struct
     sudokuSettings_t settings;
 
     solverCache_t solverCache;
+
+    // whether or not the cursor is being dragged
+    bool dragging;
+    bool dragSet;
 } swadgedoku_t;
 
 typedef struct
@@ -147,7 +151,7 @@ static bool numberWheelCb(const char* label, bool selected, uint32_t value);
 
 static void swadgedokuDoWinCheck(void);
 static void swadgedokuCheckTrophyTriggers(void);
-static void swadgedokuPlayerSetDigit(uint8_t digit);
+static void swadgedokuPlayerSetDigit(uint8_t digit, bool isForce, bool forceSet);
 static void swadgedokuShowHint(void);
 static void swadgedokuGameButton(buttonEvt_t evt);
 static void swadgedokuHintDialogCb(const char* label);
@@ -1179,7 +1183,7 @@ static bool numberWheelCb(const char* label, bool selected, uint32_t value)
                 sd->player.selectedDigit = i + 1;
                 if (sd->settings.writeOnSelect)
                 {
-                    swadgedokuPlayerSetDigit(sd->player.selectedDigit);
+                    swadgedokuPlayerSetDigit(sd->player.selectedDigit, false, false);
                     sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
                 }
             }
@@ -1311,7 +1315,7 @@ static void swadgedokuCheckTrophyTriggers(void)
     }
 }
 
-static void swadgedokuPlayerSetDigit(uint8_t digit)
+static void swadgedokuPlayerSetDigit(uint8_t digit, bool isForce, bool forceSet)
 {
     if (sd->player.noteTaking)
     {
@@ -1320,7 +1324,14 @@ static void swadgedokuPlayerSetDigit(uint8_t digit)
             uint16_t bit   = 1 << (digit - 1);
             uint16_t* note = &sd->player.notes[sd->player.curY * sd->game.size + sd->player.curX];
 
-            if (*note & bit)
+            bool unset = (*note & bit);
+
+            if (isForce)
+            {
+                unset = !forceSet;
+            }
+
+            if (unset)
             {
                 *note &= (~bit);
             }
@@ -1426,6 +1437,7 @@ static void swadgedokuGameButton(buttonEvt_t evt)
     {
         bool moved      = false;
         bool reAnnotate = false;
+        bool drag       = false;
         switch (evt.button)
         {
             case PB_A:
@@ -1440,15 +1452,36 @@ static void swadgedokuGameButton(buttonEvt_t evt)
                     {
                         // Unset number
                         setDigit(&sd->game, 0, sd->player.curX, sd->player.curY);
+                        sd->dragSet = false;
+                        sd->dragging = true;
+                        ESP_LOGI("Sudoku", "Drag - first digit was unset! (!digit)");
                     }
                     else
                     {
-                        // Set number
-                        swadgedokuPlayerSetDigit(sd->player.selectedDigit);
+                        // Set number, might toggle
+                        if (sd->player.noteTaking)
+                        {
+                            uint16_t bit = (1 << (digit - 1));
+                            if (!sd->game.grid[sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX]])
+                            {
+                                sd->dragSet = 0 == ((1 << (digit - 1)) & (sd->game.notes[sd->player.curY * sd->game.size + sd->player.curX] ^ sd->player.notes[sd->player.curY * sd->game.size + sd->player.curX]));
+                                sd->dragging = true;
+                            }
+                            ESP_LOGI("Sudoku", "Drag - first digit was %sset! (noteTaking)", sd->dragSet ? "" : "un");
+
+                        }
+                        else
+                        {
+                            sd->dragSet = true;
+                            sd->dragging = true;
+                            ESP_LOGI("Sudoku", "Drag - first digit was set! (else)");
+                        }
+                        swadgedokuPlayerSetDigit(sd->player.selectedDigit, false, false);
                     }
 
                     reAnnotate = true;
                 }
+
                 break;
             }
 
@@ -1472,6 +1505,7 @@ static void swadgedokuGameButton(buttonEvt_t evt)
             case PB_UP:
             {
                 moved = true;
+                int skips = 0;
                 do
                 {
                     if (sd->player.curY == 0)
@@ -1482,13 +1516,21 @@ static void swadgedokuGameButton(buttonEvt_t evt)
                     {
                         sd->player.curY--;
                     }
-                } while (SF_VOID & (sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]));
+                } while (((SF_VOID & (sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]))
+                        || (sd->dragging && sd->player.noteTaking && sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX]))
+                        && skips++ < sd->game.size);
+
+                if (sd->dragging)
+                {
+                    drag = true;
+                }
                 break;
             }
 
             case PB_DOWN:
             {
                 moved = true;
+                int skips = 0;
                 do
                 {
                     if (sd->player.curY >= sd->game.size - 1)
@@ -1499,13 +1541,21 @@ static void swadgedokuGameButton(buttonEvt_t evt)
                     {
                         sd->player.curY++;
                     }
-                } while (SF_VOID & (sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]));
+                } while (((SF_VOID & (sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]))
+                        || (sd->dragging && sd->player.noteTaking && sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX]))
+                        && skips++ < sd->game.size);
+
+                if (sd->dragging)
+                {
+                    drag = true;
+                }
                 break;
             }
 
             case PB_LEFT:
             {
                 moved = true;
+                int skips = 0;
                 do
                 {
                     if (sd->player.curX == 0)
@@ -1516,13 +1566,21 @@ static void swadgedokuGameButton(buttonEvt_t evt)
                     {
                         sd->player.curX--;
                     }
-                } while (SF_VOID & (sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]));
+                } while (((SF_VOID & (sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]))
+                        || (sd->dragging && sd->player.noteTaking && sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX]))
+                        && skips++ < sd->game.size);
+
+                if (sd->dragging)
+                {
+                    drag = true;
+                }
                 break;
             }
 
             case PB_RIGHT:
             {
                 moved = true;
+                int skips = 0;
                 do
                 {
                     if (sd->player.curX >= sd->game.size - 1)
@@ -1533,8 +1591,34 @@ static void swadgedokuGameButton(buttonEvt_t evt)
                     {
                         sd->player.curX++;
                     }
-                } while (SF_VOID & (sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]));
+                } while (((SF_VOID & (sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]))
+                        || (sd->dragging && sd->player.noteTaking && sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX]))
+                        && skips++ < sd->game.size);
+
+                if (sd->dragging)
+                {
+                    drag = true;
+                }
                 break;
+            }
+        }
+
+        if (drag)
+        {
+            int digit = sd->player.selectedDigit;
+
+            if (!((SF_LOCKED | SF_VOID) & sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]))
+            {
+                if (digit)
+                {
+                    ESP_LOGI("Sudoku", "Dragging to %sset", sd->dragSet ? "" : "un");
+                    swadgedokuPlayerSetDigit(digit, true, sd->dragSet);
+                }
+                else
+                {
+                    setDigit(&sd->game, 0, sd->player.curX, sd->player.curY);
+                }
+                reAnnotate = true;
             }
         }
 
@@ -1567,6 +1651,10 @@ static void swadgedokuGameButton(buttonEvt_t evt)
         {
             sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
         }
+    }
+    else if (evt.button & PB_A)
+    {
+        sd->dragging = false;
     }
 }
 
