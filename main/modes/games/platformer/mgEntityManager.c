@@ -315,33 +315,34 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
             createdEntity = createLifeRefillLarge(entityManager, x, y);
             break;
         case ENTITY_BOSS_SEVER_YAGATA:
-                //if it's greater than 11 (i.e.) final showdown just spawn something else instead
-            //because I can't learn Tiled in two days.
-            if(entityManager->playerEntity != NULL && entityManager->playerEntity->gameData->level > 11)
+            // if it's greater than 11 (i.e.) final showdown just spawn something else instead
+            // because I can't learn Tiled in two days.
+            if (entityManager->playerEntity != NULL && entityManager->playerEntity->gameData->level > 11)
             {
                 x -= 105;
                 y -= 149;
                 createdEntity = createBossHankWaddle(entityManager, x, y);
-                //Swap player entity with the boss entity so player draws on top of the boss.
+                // Swap player entity with the boss entity so player draws on top of the boss.
                 uint8_t bossIdx = 0;
-                for(int entityIdx = MAX_ENTITIES - 1; entityIdx >= 0; entityIdx--)
+                for (int entityIdx = MAX_ENTITIES - 1; entityIdx >= 0; entityIdx--)
                 {
-                    if(entityManager->entities[entityIdx].active)
+                    if (entityManager->entities[entityIdx].active)
                     {
                         bossIdx = entityIdx;
                         break;
                     }
                 }
-                for(int entityIdx = MAX_ENTITIES - 1; entityIdx >= 0; entityIdx--)
+                for (int entityIdx = MAX_ENTITIES - 1; entityIdx >= 0; entityIdx--)
                 {
-                    if(entityManager->entities[entityIdx].active && entityManager->entities[entityIdx].type == ENTITY_PLAYER)
+                    if (entityManager->entities[entityIdx].active
+                        && entityManager->entities[entityIdx].type == ENTITY_PLAYER)
                     {
-                        mgEntity_t boss = entityManager->entities[bossIdx];
-                        entityManager->entities[bossIdx] = *entityManager->playerEntity;
+                        mgEntity_t boss                    = entityManager->entities[bossIdx];
+                        entityManager->entities[bossIdx]   = *entityManager->playerEntity;
                         entityManager->entities[entityIdx] = boss;
-                        entityManager->playerEntity = &entityManager->entities[bossIdx];
-                        entityManager->viewEntity = entityManager->playerEntity;
-                        entityManager->bossEntity = &entityManager->entities[entityIdx];
+                        entityManager->playerEntity        = &entityManager->entities[bossIdx];
+                        entityManager->viewEntity          = entityManager->playerEntity;
+                        entityManager->bossEntity          = &entityManager->entities[entityIdx];
                         break;
                     }
                 }
@@ -357,7 +358,7 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
             createdEntity = createMixtape(entityManager, x, y);
             break;
         case ENTITY_BOSS_DOOR:
-            createdEntity = createBossDoor(entityManager, x, y);
+            createdEntity             = createBossDoor(entityManager, x, y);
             entityManager->bossSpawnX = x;
             entityManager->bossSpawnY = y;
             break;
@@ -365,57 +366,57 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
             createdEntity = createShrubbleLv4(entityManager, x, y);
             break;
         case ENTITY_BOSS_GRIND_PANGOLIN:
-            createdEntity = createBossGrindPangolin(entityManager, x, y);
+            createdEntity             = createBossGrindPangolin(entityManager, x, y);
             entityManager->bossSpawnX = x;
             entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_KINETIC_DONUT:
-            createdEntity = createBossKineticDonut(entityManager, x, y);
+            createdEntity             = createBossKineticDonut(entityManager, x, y);
             entityManager->bossSpawnX = x;
             entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_TRASH_MAN:
-            createdEntity = createBossTrashMan(entityManager, x, y);
+            createdEntity             = createBossTrashMan(entityManager, x, y);
             entityManager->bossSpawnX = x;
             entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_BIGMA:
-            //The end of the gauntlet gets an end, not a bigma fight according to the script.
-            if(entityManager->playerEntity != NULL && entityManager->playerEntity->gameData->level == 5)
+            // The end of the gauntlet gets an end, not a bigma fight according to the script.
+            if (entityManager->playerEntity != NULL && entityManager->playerEntity->gameData->level == 5)
             {
-                createdEntity = createMixtape(entityManager, x, y);
+                createdEntity             = createMixtape(entityManager, x, y);
                 entityManager->bossSpawnX = x;
                 entityManager->bossSpawnY = y;
             }
             else
             {
-                createdEntity = createBossBigma(entityManager, x, y);
+                createdEntity             = createBossBigma(entityManager, x, y);
                 entityManager->bossSpawnX = x;
                 entityManager->bossSpawnY = y;
             }
             break;
         case ENTITY_BOSS_SMASH_GORILLA:
-            createdEntity = createBossSmashGorilla(entityManager, x, y);
+            createdEntity             = createBossSmashGorilla(entityManager, x, y);
             entityManager->bossSpawnX = x;
             entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_DEADEYE_CHIRPZI:
-            createdEntity = createBossDeadeyeChirpzi(entityManager, x, y);
+            createdEntity             = createBossDeadeyeChirpzi(entityManager, x, y);
             entityManager->bossSpawnX = x;
             entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_DRAIN_BAT:
-            createdEntity = createBossDrainBat(entityManager, x, y);
+            createdEntity             = createBossDrainBat(entityManager, x, y);
             entityManager->bossSpawnX = x;
             entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_FLARE_GRYFFYN:
-            createdEntity = createBossFlareGryffyn(entityManager, x, y);
+            createdEntity             = createBossFlareGryffyn(entityManager, x, y);
             entityManager->bossSpawnX = x;
             entityManager->bossSpawnY = y;
             break;
         case ENTITY_BOSS_HANK_WADDLE:
-            createdEntity = createBossHankWaddle(entityManager, x, y);
+            createdEntity             = createBossHankWaddle(entityManager, x, y);
             entityManager->bossSpawnX = x;
             entityManager->bossSpawnY = y;
             break;
@@ -2539,7 +2540,7 @@ mgEntity_t* createBossHankWaddle(mgEntityManager_t* entityManager, uint16_t x, u
 
     entity->type                 = ENTITY_BOSS_HANK_WADDLE;
     entity->spriteIndex          = MG_SP_BOSS_0;
-    entity->state                = 7;//pre-fight state
+    entity->state                = 7; // pre-fight state
     entity->stateTimer           = 0;
     entity->special1             = 0;
     entity->specialX             = 0;

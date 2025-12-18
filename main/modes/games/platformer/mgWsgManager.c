@@ -1159,7 +1159,6 @@ void mg_loadWsgSet(mgWsgManager_t* self, mgWsgSetIndex_t index)
                 self->sprites[MG_SP_BOSS_0 + i].hitBox = mg_bigmaBossSpriteMetadataSet[i].hitBox;
             }
             break;
-        
     }
 
     self->wsgSetIndex = index;
