@@ -399,8 +399,8 @@ void platformerEnterMode(void)
                          true, false, true);
         setMidiParams(platformer->gameData.cutscene, 5, 55, 0, 250, false);
         // KineticDonut
-        addCutsceneStyle(platformer->gameData.cutscene, c310, KINETIC_DONUT_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Kinetic Donut",
-                         1, false, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c310, KINETIC_DONUT_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
+                         "Kinetic Donut", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 6, 80, -1, 1000, false);
         // JoltLapin
         addCutsceneStyle(platformer->gameData.cutscene, c000, JOLT_LAPIN_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
@@ -474,13 +474,13 @@ void platformerEnterMode(void)
         addCutsceneStyle(platformer->gameData.cutscene, c555, BLACK_PORTRAIT_WSG, TEXTBOX_SAWTOOTH_WSG, "", 1, false,
                          true, false);
 
-        //uncorrupted Versions.....
-        // TrashMan
+        // uncorrupted Versions.....
+        //  TrashMan
         addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 2,
                          false, true, true);
         // KineticDonut
-        addCutsceneStyle(platformer->gameData.cutscene, c310, KINETIC_DONUT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Kinetic Donut",
-                         1, false, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c310, KINETIC_DONUT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
+                         "Kinetic Donut", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 6, 80, -1, 1000, false);
         // JoltLapin
         addCutsceneStyle(platformer->gameData.cutscene, c000, JOLT_LAPIN_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
@@ -557,7 +557,7 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
 
             mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
 
-            //change this back to 10 (intro level) before shipping
+            // change this back to 10 (intro level) before shipping
             platformer->gameData.level = 10;
             mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
             mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename,
@@ -760,8 +760,8 @@ void mgBuildMainMenu(platformer_t* self)
     }
     addSettingsOptionsItemToMenu(self->menu, str_cheatMode, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
                                  cheatMode);
-    //We're not shipping that button
-    //addSingleItemToMenu(self->menu, str_giveAbilities);
+    // We're not shipping that button
+    // addSingleItemToMenu(self->menu, str_giveAbilities);
     self->menu = endSubMenu(self->menu);
 
     if (self->gameData.debugMode)
@@ -790,7 +790,7 @@ void updateGame(platformer_t* self)
     mg_updateEntities(&(self->entityManager));
 
     mg_drawTileMap(&(self->tilemap));
-    //JVeg wants the hud drawn behind entities.
+    // JVeg wants the hud drawn behind entities.
     drawPlatformerHud(&(self->font), &(self->gameData));
     mg_drawEntities(&(self->entityManager));
     mg_updateLeds(&self->entityManager);
@@ -855,7 +855,7 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
         drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOTTOM_ALPHA], 8, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION);
 
         int8_t originalHp = platformer->entityManager.playerEntity->hp;
-        if(originalHp < 0)
+        if (originalHp < 0)
         {
             originalHp = 0;
         }
@@ -879,8 +879,7 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
             else
             {
                 drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_MIDDLE_0 + hp / 2], 8, draw_y);
-                if (isOdd && originalHp > i * 12
-                    && originalHp < (i + 1) * 12)
+                if (isOdd && originalHp > i * 12 && originalHp < (i + 1) * 12)
                 {
                     pip_y = draw_y + 15 - ((hp / 2) % 6) * 2;
                     drawLineFast(14, pip_y, 17, pip_y, c133);
@@ -922,9 +921,8 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
             }
             else
             {
-                drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_HP_CAN_OF_SALSA_0
-                                                           + (originalHp - 60) / 2],
-                              4, draw_y);
+                drawWsgSimple(&platformer->wsgManager.wsgs[MG_WSG_HP_CAN_OF_SALSA_0 + (originalHp - 60) / 2], 4,
+                              draw_y);
                 if (isOdd && originalHp > 60)
                 {
                     pip_y = draw_y + 13 - ((originalHp / 2) % 6) * 2;
@@ -940,7 +938,7 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
         drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOTTOM_BIGMA], 256, MG_PLAYER_LIFEBAR_Y_BOTTOM_LOCATION);
 
         int8_t originalHp = platformer->entityManager.bossEntity->hp;
-        if(originalHp < 0)
+        if (originalHp < 0)
         {
             originalHp = 0;
         }
@@ -964,8 +962,7 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
             else
             {
                 drawWsgTile(&platformer->wsgManager.wsgs[MG_WSG_HP_BOSS_MIDDLE_0 + hp / 2], 256, draw_y);
-                if (isOdd && originalHp > i * 12
-                    && originalHp < (i + 1) * 12)
+                if (isOdd && originalHp > i * 12 && originalHp < (i + 1) * 12)
                 {
                     pip_y = draw_y + 15 - ((hp / 2) % 6) * 2;
                     drawLineFast(262, pip_y, 265, pip_y, c321);
@@ -2000,13 +1997,15 @@ void updateLevelSelect(platformer_t* self)
         self->gameData.level = (self->menuState + self->menuSelection * 3) + 1;
 
         uint8_t actualLevel = self->gameData.level;
-        if(self->gameData.level == 5)
+        if (self->gameData.level == 5)
         {
-            if(self->unlockables.levelsCleared & (1 << 5))//if gauntlet was complete
+            if (self->unlockables.levelsCleared & (1 << 5)) // if gauntlet was complete
             {
-                actualLevel = 11;//about to start boss rush
-                actualLevel += (self->unlockables.levelsCleared & (1<<11)) ? 1 : 0;//make it final showdown (12) if 11 was complete.
-                actualLevel += (self->unlockables.levelsCleared & (1<<12)) ? 1 : 0;//make it 13 if 12 was complete.
+                actualLevel = 11; // about to start boss rush
+                actualLevel += (self->unlockables.levelsCleared & (1 << 11))
+                                   ? 1
+                                   : 0; // make it final showdown (12) if 11 was complete.
+                actualLevel += (self->unlockables.levelsCleared & (1 << 12)) ? 1 : 0; // make it 13 if 12 was complete.
             }
         }
         self->gameData.level = actualLevel;
@@ -2015,9 +2014,9 @@ void updateLevelSelect(platformer_t* self)
         {
             soundPlaySfx(&(platformer->soundManager.sndMenuDeny), BZR_STEREO);
         }
-        else if(self->gameData.level == 13)//new game +
+        else if (self->gameData.level == 13) // new game +
         {
-            //Undo all level progress, but keep abilities.
+            // Undo all level progress, but keep abilities.
             self->unlockables.levelsCleared = 0;
             savePlatformerUnlockables(self);
             // Exit to the main menu
@@ -2069,7 +2068,10 @@ void drawLevelSelect(platformer_t* self)
             else
             {
                 // Special case for Bigma
-                if (idx == 5 && (self->unlockables.levelsCleared ^ 0b11111011110) && (self->unlockables.levelsCleared ^ 0b11111111110) && (self->unlockables.levelsCleared ^ 0b111111111110) && (self->unlockables.levelsCleared ^ 0b1111111111110))
+                if (idx == 5 && (self->unlockables.levelsCleared ^ 0b11111011110)
+                    && (self->unlockables.levelsCleared ^ 0b11111111110)
+                    && (self->unlockables.levelsCleared ^ 0b111111111110)
+                    && (self->unlockables.levelsCleared ^ 0b1111111111110))
                 {
                     drawWsg(&self->wsgManager.wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_33],
                             (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY,
@@ -2077,28 +2079,34 @@ void drawLevelSelect(platformer_t* self)
                 }
                 else
                 {
-                    //check if the 5th bit is set
-                    if((idx == 5) && (self->unlockables.levelsCleared & (1 << 5)))//if (5 gauntlet) was complete.
+                    // check if the 5th bit is set
+                    if ((idx == 5) && (self->unlockables.levelsCleared & (1 << 5))) // if (5 gauntlet) was complete.
                     {
                         uint16_t drawSymbol = MG_WSG_BOSS_RUSH_SYMBOL;
-                        drawSymbol += (self->unlockables.levelsCleared & (1<<11)) ? 1 : 0; //35 if (11 boss rush) was complete.
-                        drawSymbol += (self->unlockables.levelsCleared & (1<<12)) ? 1 : 0; //36 if (12 final showdown) was complete
-                        drawWsgTile(&self->wsgManager.wsgs[drawSymbol],
-                                (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY);
+                        drawSymbol += (self->unlockables.levelsCleared & (1 << 11))
+                                          ? 1
+                                          : 0; // 35 if (11 boss rush) was complete.
+                        drawSymbol += (self->unlockables.levelsCleared & (1 << 12))
+                                          ? 1
+                                          : 0; // 36 if (12 final showdown) was complete
+                        drawWsgTile(&self->wsgManager.wsgs[drawSymbol], (64 + i * 64) - self->tilemap.mapOffsetX,
+                                    (48 + j * 64) - self->tilemap.mapOffsetY);
                     }
                     else
                     {
                         drawWsgTile(&self->wsgManager.wsgs[MG_WSG_TILE_SOLID_VISIBLE_NONINTERACTIVE_2A + ((j * 3) + i)],
-                                (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY);
+                                    (64 + i * 64) - self->tilemap.mapOffsetX, (48 + j * 64) - self->tilemap.mapOffsetY);
                     }
-                    
                 }
             }
         }
     }
 
     if ((!(self->unlockables.levelsCleared & (1 << self->gameData.level)))
-        || (self->gameData.level == 5 && (self->unlockables.levelsCleared == 0b11111011110 || self->unlockables.levelsCleared == 0b11111111110 || self->unlockables.levelsCleared == 0b111111111110 || self->unlockables.levelsCleared == 0b1111111111110)))
+        || (self->gameData.level == 5
+            && (self->unlockables.levelsCleared == 0b11111011110 || self->unlockables.levelsCleared == 0b11111111110
+                || self->unlockables.levelsCleared == 0b111111111110
+                || self->unlockables.levelsCleared == 0b1111111111110)))
     {
         drawRect(
             (64 + self->menuState * 64) - self->tilemap.mapOffsetX + ((self->gameData.frameCount >> 2) & 0b0111),
@@ -2132,7 +2140,7 @@ void goToReadyScreen(void)
 // forward declared in mega_pulse_ex_typedef.h
 void initBossFight(void)
 {
-    if(platformer->gameData.level != 5)
+    if (platformer->gameData.level != 5)
     {
         platformer->entityManager.bossEntity->state = 0;
         mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
