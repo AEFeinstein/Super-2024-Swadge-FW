@@ -179,16 +179,16 @@ static const jukeboxSong_t bgm_vectorTanks[] = {
 
 static const jukeboxSong_t bgm_cosplayCrunch[] = {
     {
+        .fIdx = COSPLAY_CRUNCH_MENU_MID,
+        .name = "Menu BGM",
+    },
+    {
         .fIdx = COSPLAY_CRUNCH_BGM_MID,
         .name = "Cosplay Crunch BGM",
     },
     {
-        .fIdx = FAIRY_FOUNTAIN_MID,
-        .name = "Fairy Fountain",
-    },
-    {
-        .fIdx = HD_CREDITS_MID,
-        .name = "Hot Dog Credits",
+        .fIdx = COSPLAY_CRUNCH_GAME_OVER_MID,
+        .name = "Game Over",
     },
 };
 
