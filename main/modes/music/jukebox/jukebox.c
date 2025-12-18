@@ -538,8 +538,8 @@ static const jukeboxSong_t bgm_findingFaces[] = {
         .name = "Menu",
     },
     {
-        .fIdx = FINDER_BGM_ZEN_MID,
-        .name = "Zen",
+        .fIdx = LULLABY_IN_NUMBERS_MID,
+        .name = "Lullaby in Numbers",
     },
     {
         .fIdx = FINDER_BGM_SLOW_MID,
