@@ -275,6 +275,28 @@ void mg_updateLedsGameClear(mgGameData_t* gameData)
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
 }
 
+void mg_updateLedsShoopDaWoopStatus(mgEntityManager_t* entityManager)
+{
+    mgEntity_t* playerEntity = entityManager->playerEntity;
+    mgGameData_t* gameData   = playerEntity->gameData;
+    for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
+    {
+        if (entityManager->playerEntity->shotsFired <= -63)
+        {
+            gameData->leds[i] = (led_t){.r = 0, .g = 255, .b = 102};
+        }
+        else if (entityManager->playerEntity->shotsFired <= -31)
+        {
+            gameData->leds[i] = (led_t){.r = 0, .g = 204, .b = 153};
+        }
+        else
+        {
+            gameData->leds[i] = (led_t){.r = 0, .g = 153, .b = 204};
+        }
+    }
+    setLeds(gameData->leds, CONFIG_NUM_LEDS);
+}
+
 void mg_updateLeds(mgEntityManager_t* entityManager)
 {
     if (entityManager->playerEntity == NULL)
@@ -284,6 +306,13 @@ void mg_updateLeds(mgEntityManager_t* entityManager)
 
     mgEntity_t* playerEntity = entityManager->playerEntity;
     mgGameData_t* gameData   = playerEntity->gameData;
+
+    if (gameData->abilities & (1U << MG_SHOOP_DA_WOOP_ABILITY))
+    {
+        // if the player has shoop da woop unlocked, then show charge shot readiness
+        mg_updateLedsShoopDaWoopStatus(entityManager);
+        return;
+    }
 
     for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
     {

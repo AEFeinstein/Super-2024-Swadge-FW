@@ -113,10 +113,10 @@ const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_to
     = {.collisionPoints = {{.x = -30, .y = -11}, {.x = 0, .y = -11}, {.x = 30, .y = -11}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rightEdge
-    = {.collisionPoints = {{.x = 30, .y = 27}, {.x = 30, .y = 0}, {.x = 30, .y = -11}}, .size = 3};
+    = {.collisionPoints = {{.x = 30, .y = 25}, {.x = 30, .y = 0}, {.x = 30, .y = -11}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_leftEdge
-    = {.collisionPoints = {{.x = -30, .y = 27}, {.x = -30, .y = 0}, {.x = -30, .y = -11}}, .size = 3};
+    = {.collisionPoints = {{.x = -30, .y = 25}, {.x = -30, .y = 0}, {.x = -30, .y = -11}}, .size = 3};
 
 const mg_EntityTileCollider_t entityTileCollider_grind_pangolin
     = {.bottomEdge = &mgTileCollisionOffsets_grind_pangolin_bottomEdge,
@@ -132,10 +132,10 @@ const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_ro
     = {.collisionPoints = {{.x = -10, .y = -15}, {.x = 0, .y = -15}, {.x = 10, .y = -15}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_rightEdge
-    = {.collisionPoints = {{.x = 10, .y = 15}, {.x = 10, .y = 0}, {.x = 10, .y = -15}}, .size = 3};
+    = {.collisionPoints = {{.x = 10, .y = 14}, {.x = 10, .y = 0}, {.x = 10, .y = -15}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_leftEdge
-    = {.collisionPoints = {{.x = -10, .y = 15}, {.x = -10, .y = 0}, {.x = -10, .y = -15}}, .size = 3};
+    = {.collisionPoints = {{.x = -10, .y = 14}, {.x = -10, .y = 0}, {.x = -10, .y = -15}}, .size = 3};
 
 const mg_EntityTileCollider_t entityTileCollider_grind_pangolin_rolling
     = {.bottomEdge = &mgTileCollisionOffsets_grind_pangolin_rolling_bottomEdge,
@@ -145,16 +145,16 @@ const mg_EntityTileCollider_t entityTileCollider_grind_pangolin_rolling
 
 // drain bat origin: 30, 31
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_drain_bat_bottomEdge
-    = {.collisionPoints = {{.x = -17, .y = 63}, {.x = 0, .y = 63}, {.x = 17, .y = 63}}, .size = 3};
+    = {.collisionPoints = {{.x = -17, .y = 31}, {.x = 0, .y = 31}, {.x = 17, .y = 31}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_drain_bat_topEdge
     = {.collisionPoints = {{.x = -17, .y = -15}, {.x = 0, .y = -15}, {.x = 17, .y = -15}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_drain_bat_rightEdge
-    = {.collisionPoints = {{.x = 17, .y = 63}, {.x = 17, .y = 0}, {.x = 17, .y = -15}}, .size = 3};
+    = {.collisionPoints = {{.x = 17, .y = 31}, {.x = 17, .y = 0}, {.x = 17, .y = -15}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_drain_bat_leftEdge
-    = {.collisionPoints = {{.x = -17, .y = 63}, {.x = -17, .y = 0}, {.x = -17, .y = -15}}, .size = 3};
+    = {.collisionPoints = {{.x = -17, .y = 31}, {.x = -17, .y = 0}, {.x = -17, .y = -15}}, .size = 3};
 
 const mg_EntityTileCollider_t entityTileCollider_drain_bat
     = {.bottomEdge = &mgTileCollisionOffsets_drain_bat_bottomEdge,
@@ -164,16 +164,16 @@ const mg_EntityTileCollider_t entityTileCollider_drain_bat
 
 // kinetic donut origin: 21, 25
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_kinetic_donut_bottomEdge
-    = {.collisionPoints = {{.x = -16, .y = 24}, {.x = 0, .y = 24}, {.x = 16, .y = 24}}, .size = 3};
+    = {.collisionPoints = {{.x = -15, .y = 24}, {.x = 0, .y = 24}, {.x = 15, .y = 24}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_kinetic_donut_topEdge
-    = {.collisionPoints = {{.x = -16, .y = -9}, {.x = 0, .y = -9}, {.x = 16, .y = -9}}, .size = 3};
+    = {.collisionPoints = {{.x = -15, .y = -9}, {.x = 0, .y = -9}, {.x = 15, .y = -9}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_kinetic_donut_rightEdge
-    = {.collisionPoints = {{.x = 16, .y = 24}, {.x = 16, .y = 0}, {.x = 16, .y = -9}}, .size = 3};
+    = {.collisionPoints = {{.x = 16, .y = 23}, {.x = 16, .y = 0}, {.x = 16, .y = -9}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_kinetic_donut_leftEdge
-    = {.collisionPoints = {{.x = -16, .y = 24}, {.x = -13, .y = 0}, {.x = -16, .y = -9}}, .size = 3};
+    = {.collisionPoints = {{.x = -16, .y = 23}, {.x = -13, .y = 0}, {.x = -16, .y = -9}}, .size = 3};
 
 const mg_EntityTileCollider_t entityTileCollider_kinetic_donut
     = {.bottomEdge = &mgTileCollisionOffsets_kinetic_donut_bottomEdge,
@@ -240,16 +240,16 @@ const mg_EntityTileCollider_t entityTileCollider_deadeye_chirpzi
 
 // trash man origin: 38, 33
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_trash_man_bottomEdge
-    = {.collisionPoints = {{.x = -30, .y = 32}, {.x = 0, .y = 32}, {.x = 30, .y = 32}}, .size = 3};
+    = {.collisionPoints = {{.x = -30, .y = 32}, {.x = 0, .y = 32}, {.x = 29, .y = 32}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_trash_man_topEdge
-    = {.collisionPoints = {{.x = -30, .y = -29}, {.x = 0, .y = -29}, {.x = 30, .y = -29}}, .size = 3};
+    = {.collisionPoints = {{.x = -30, .y = -29}, {.x = 0, .y = -29}, {.x = 29, .y = -29}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_trash_man_rightEdge
-    = {.collisionPoints = {{.x = 30, .y = 32}, {.x = 30, .y = 0}, {.x = 30, .y = -29}}, .size = 3};
+    = {.collisionPoints = {{.x = 30, .y = 31}, {.x = 30, .y = 0}, {.x = 30, .y = -29}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_trash_man_leftEdge
-    = {.collisionPoints = {{.x = -30, .y = 32}, {.x = -30, .y = 0}, {.x = -30, .y = -29}}, .size = 3};
+    = {.collisionPoints = {{.x = -30, .y = 31}, {.x = -30, .y = 0}, {.x = -30, .y = -29}}, .size = 3};
 
 const mg_EntityTileCollider_t entityTileCollider_trash_man
     = {.bottomEdge = &mgTileCollisionOffsets_trash_man_bottomEdge,
@@ -276,16 +276,16 @@ const mg_EntityTileCollider_t entityTileCollider_bigma = {.bottomEdge = &mgTileC
                                                           .leftEdge   = &mgTileCollisionOffsets_bigma_leftEdge};
 
 // Note: none of these names match actual colors
-const paletteColor_t bgGradientGray[]             = {c001, c112, c223, c334};
-const paletteColor_t bgGradientPurple[]           = {c202, c203, c204, c205};
-const paletteColor_t bgGradientBlue[]             = {c102, c103, c104, c105};
-const paletteColor_t bgGradientCyan[]             = {c003, c013, c023, c033};
-const paletteColor_t bgGradientGreen[]            = {c001, c111, c221, c331};
-const paletteColor_t bgGradientYellow[]           = {c202, c312, c422, c532};
-const paletteColor_t bgGradientOrange[]           = {c040, c230, c220, c210};
-const paletteColor_t bgGradientRed[]              = {c101, c201, c301, c411};
-const paletteColor_t bgGradientRedFinalShowdown[] = {c401, c301, c201, c101};
-const paletteColor_t bgGradientMenu[]             = {c001, c012, c123, c234};
+const paletteColor_t bgGradientGray[]          = {c001, c112, c223, c334};
+const paletteColor_t bgGradientPurple[]        = {c202, c203, c204, c205};
+const paletteColor_t bgGradientBlue[]          = {c102, c103, c104, c105};
+const paletteColor_t bgGradientCyan[]          = {c003, c013, c023, c033};
+const paletteColor_t bgGradientGreen[]         = {c001, c111, c221, c331};
+const paletteColor_t bgGradientYellow[]        = {c202, c312, c422, c532};
+const paletteColor_t bgGradientOrange[]        = {c040, c230, c220, c210};
+const paletteColor_t bgGradientRed[]           = {c101, c201, c301, c411};
+const paletteColor_t bgGradientFinalShowdown[] = {c000, c000, c000, c000};
+const paletteColor_t bgGradientMenu[]          = {c001, c012, c123, c234};
 
 const mgLeveldef_t leveldef[] = {
     {.filename           = LEVEL_SELECT_RAW,
@@ -319,7 +319,7 @@ const mgLeveldef_t leveldef[] = {
      .bossBgmIndex       = MG_BGM_BOSS_TRASH_MAN,
      .bgColors           = bgGradientOrange},
     {.filename           = GAUNTLET_RAW,
-     .timeLimit          = 180,
+     .timeLimit          = 240,
      .defaultWsgSetIndex = MG_WSGSET_BIGMA,
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
      .bossBgmIndex       = MG_BGM_BOSS_BIGMA,
@@ -348,76 +348,28 @@ const mgLeveldef_t leveldef[] = {
      .mainBgmIndex       = MG_BGM_FLARE_GRYFFYN,
      .bossBgmIndex       = MG_BGM_BOSS_FLARE_GRYFFYN,
      .bgColors           = bgGradientRed},
-    {.filename           = INTRO_RAW,
+    {.filename           = INTRO_RAW, // 10
      .timeLimit          = 180,
-     .defaultWsgSetIndex = MG_WSGSET_FLARE_GRYFFYN,
+     .defaultWsgSetIndex = MG_WSGSET_BIGMA,
      .mainBgmIndex       = MG_INTRO_STAGE,
      .bossBgmIndex       = MG_BGM_BOSS_BIGMA,
      .bgColors           = bgGradientBlue},
-    {.filename           = BOSS_TEST_DONUT_RAW,
-     .timeLimit          = 180,
+    {.filename           = BOSS_TEST_DONUT_RAW, // 11 This is actually used for the boss rush. DO NOT DELETE!
+     .timeLimit          = 500,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
      .bossBgmIndex       = MG_BGM_BOSS_KINETIC_DONUT,
-     .bgColors           = bgGradientBlue},
-    {.filename           = BOSS_TEST_GRIND_RAW,
-     .timeLimit          = 180,
-     .defaultWsgSetIndex = MG_WSGSET_GRIND_PANGOLIN,
-     .mainBgmIndex       = MG_BGM_GRIND_PANGOLIN,
-     .bossBgmIndex       = MG_BGM_BOSS_GRIND_PANGOLIN,
-     .bgColors           = bgGradientPurple},
-    {.filename           = BOSS_TEST_SEVER_RAW,
-     .timeLimit          = 180,
-     .defaultWsgSetIndex = MG_WSGSET_SEVER_YATAGA,
-     .mainBgmIndex       = MG_BGM_SEVER_YAGATA,
-     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
-     .bgColors           = bgGradientCyan},
-    {.filename           = BOSS_TEST_TRASH_RAW,
-     .timeLimit          = 180,
-     .defaultWsgSetIndex = MG_WSGSET_TRASH_MAN,
-     .mainBgmIndex       = MG_BGM_RIP_BARONESS,
-     .bossBgmIndex       = MG_BGM_BOSS_TRASH_MAN,
-     .bgColors           = bgGradientOrange},
-    {.filename           = BOSS_TEST_BIGMA_RAW,
-     .timeLimit          = 180,
-     .defaultWsgSetIndex = MG_WSGSET_BIGMA,
-     .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
+     .bgColors = bgGradientFinalShowdown}, // starts black to fit the script, then becomes colored with each boss.
+    {.filename           = SHOWDOWN_RAW,   // Bigma2 & Hank fight (12)
+     .timeLimit          = 200,
+     .defaultWsgSetIndex = MG_WSGSET_HANK_WADDLE,
+     .mainBgmIndex       = MG_BGM_PRE_FIGHT,
      .bossBgmIndex       = MG_BGM_BOSS_BIGMA,
-     .bgColors           = bgGradientMenu},
-    {.filename           = BOSS_TEST_SMASH_GORILLA_RAW,
-     .timeLimit          = 180,
-     .defaultWsgSetIndex = MG_WSGSET_SMASH_GORILLA,
-     .mainBgmIndex       = MG_BGM_SMASH_GORILLA,
-     .bossBgmIndex       = MG_BGM_BOSS_SMASH_GORILLA,
-     .bgColors           = bgGradientYellow},
-    {.filename           = BOSS_TEST_DEADEYE_RAW,
-     .timeLimit          = 180,
-     .defaultWsgSetIndex = MG_WSGSET_DEADEYE_CHIRPZI,
-     .mainBgmIndex       = MG_BGM_DEADEYE_CHIRPZI,
-     .bossBgmIndex       = MG_BGM_BOSS_DEADEYE_CHIRPZI,
-     .bgColors           = bgGradientGreen},
-    {.filename           = BOSS_TEST_DRAIN_RAW,
-     .timeLimit          = 180,
-     .defaultWsgSetIndex = MG_WSGSET_DRAIN_BAT,
-     .mainBgmIndex       = MG_BGM_DRAIN_BAT,
-     .bossBgmIndex       = MG_BGM_BOSS_DRAIN_BAT,
-     .bgColors           = bgGradientGray},
-    {.filename           = BOSS_TEST_FLARE_RAW,
-     .timeLimit          = 180,
-     .defaultWsgSetIndex = MG_WSGSET_FLARE_GRYFFYN,
-     .mainBgmIndex       = MG_BGM_FLARE_GRYFFYN,
-     .bossBgmIndex       = MG_BGM_BOSS_FLARE_GRYFFYN,
-     .bgColors           = bgGradientRed},
+     .bgColors           = bgGradientFinalShowdown},
     {.filename           = BOSS_TEST_ROOM_RAW,
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
      .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
      .bgColors           = bgGradientPurple},
-    {.filename           = SHOWDOWN_RAW, // Bigma2 & Hank fight
-     .timeLimit          = 180,
-     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
-     .mainBgmIndex       = MG_BGM_PRE_FIGHT,
-     .bossBgmIndex       = MG_BGM_BOSS_BIGMA,
-     .bgColors           = bgGradientRedFinalShowdown},
 };

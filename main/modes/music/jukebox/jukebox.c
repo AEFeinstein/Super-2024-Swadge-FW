@@ -179,16 +179,16 @@ static const jukeboxSong_t bgm_vectorTanks[] = {
 
 static const jukeboxSong_t bgm_cosplayCrunch[] = {
     {
+        .fIdx = COSPLAY_CRUNCH_MENU_MID,
+        .name = "Menu BGM",
+    },
+    {
         .fIdx = COSPLAY_CRUNCH_BGM_MID,
         .name = "Cosplay Crunch BGM",
     },
     {
-        .fIdx = FAIRY_FOUNTAIN_MID,
-        .name = "Fairy Fountain",
-    },
-    {
-        .fIdx = HD_CREDITS_MID,
-        .name = "Hot Dog Credits",
+        .fIdx = COSPLAY_CRUNCH_GAME_OVER_MID,
+        .name = "Game Over",
     },
 };
 
@@ -517,6 +517,67 @@ static const jukeboxSong_t sfx_swadgesona[] = {
     },
 };
 
+static const jukeboxSong_t bgm_atrium[] = {
+    {
+        .fIdx = ATRTHEME1_MID,
+        .name = "Atrium Theme 1",
+    },
+    {
+        .fIdx = ATRTHEME2_MID,
+        .name = "Atrium Theme 2",
+    },
+    {
+        .fIdx = ATRVIBE_MID,
+        .name = "Atrium Vibe",
+    },
+};
+
+static const jukeboxSong_t bgm_findingFaces[] = {
+    {
+        .fIdx = FINDER_BGM_MENU_MID,
+        .name = "Menu",
+    },
+    {
+        .fIdx = LULLABY_IN_NUMBERS_MID,
+        .name = "Lullaby in Numbers",
+    },
+    {
+        .fIdx = FINDER_BGM_SLOW_MID,
+        .name = "Slow",
+    },
+    {
+        .fIdx = FINDER_BGM_MED_MID,
+        .name = "Med",
+    },
+    {
+        .fIdx = FINDER_BGM_FAST_MID,
+        .name = "Fast",
+    },
+    {
+        .fIdx = FINDER_BGM_DEATH_MID,
+        .name = "Death",
+    },
+};
+
+static const jukeboxSong_t sfx_findingFaces[] = {
+    {
+        .fIdx = FINDER_RIGHT_MID,
+        .name = "Right",
+    },
+    {
+        .fIdx = FINDER_WRONG_MID,
+        .name = "Wrong",
+    },
+    {
+        .fIdx = FINDER_WRONGER_MID,
+        .name = "Wronger",
+    },
+    {
+        .fIdx = FINDER_DIE_MID,
+        .name = "Die",
+    },
+};
+
 static const jukeboxCategory_t bgmCategories[] = {
     {
         .category    = &modePlatformer,
@@ -554,6 +615,13 @@ static const jukeboxCategory_t bgmCategories[] = {
         .shouldLoop  = true,
     },
     {
+        .category    = &findingFacesMode,
+        .songs       = bgm_findingFaces,
+        .numSongs    = ARRAY_SIZE(bgm_findingFaces),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
         .category    = &modePicross,
         .songs       = bgm_picross,
         .numSongs    = ARRAY_SIZE(bgm_picross),
@@ -564,6 +632,13 @@ static const jukeboxCategory_t bgmCategories[] = {
         .category    = &swsnCreatorMode,
         .songs       = bgm_swadgesona,
         .numSongs    = ARRAY_SIZE(bgm_swadgesona),
+        .generalMidi = true,
+        .shouldLoop  = true,
+    },
+    {
+        .category    = &atriumMode,
+        .songs       = bgm_atrium,
+        .numSongs    = ARRAY_SIZE(bgm_atrium),
         .generalMidi = true,
         .shouldLoop  = true,
     },
@@ -595,6 +670,13 @@ static const jukeboxCategory_t sfxCategories[] = {
         .category    = &cosCrunchMode,
         .songs       = sfx_cosplayCrunch,
         .numSongs    = ARRAY_SIZE(sfx_cosplayCrunch),
+        .generalMidi = true,
+        .shouldLoop  = false,
+    },
+    {
+        .category    = &findingFacesMode,
+        .songs       = sfx_findingFaces,
+        .numSongs    = ARRAY_SIZE(sfx_findingFaces),
         .generalMidi = true,
         .shouldLoop  = false,
     },

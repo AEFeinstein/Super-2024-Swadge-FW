@@ -63,6 +63,7 @@ static const creditsEntry_t entries[] = {
     {.name = "Livingston Rampey\n", .color = c215},
     {.name = "Logan Tucker\n", .color = c450},
     {.name = "Luna Toon\n", .color = c445},
+    {.name = "Mattmatatt\n", .color = c523},
     {.name = "Nick. Harman\n", .color = c305},
     {.name = "objet discret\n", .color = c345},
     {.name = "Swadgeman (jfrye)\n", .color = c505},
