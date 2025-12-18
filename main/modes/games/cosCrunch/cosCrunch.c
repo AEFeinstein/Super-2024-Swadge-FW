@@ -379,14 +379,13 @@ static void cosCrunchEnterMode(void)
     loadFont(RIGHTEOUS_150_FONT, &cc->bigFont, false);
     makeOutlineFont(&cc->bigFont, &cc->bigFontOutline, false);
 
-    loadMidiFile(HD_CREDITS_MID, &cc->menuBgm, true);
+    loadMidiFile(COSPLAY_CRUNCH_MENU_MID, &cc->menuBgm, true);
     loadMidiFile(COSPLAY_CRUNCH_BGM_MID, &cc->gameBgm, true);
-    loadMidiFile(FAIRY_FOUNTAIN_MID, &cc->gameOverBgm, true);
+    loadMidiFile(COSPLAY_CRUNCH_GAME_OVER_MID, &cc->gameOverBgm, true);
 
     cc->bgmPlayer       = globalMidiPlayerGet(MIDI_BGM);
     cc->bgmPlayer->loop = true;
     midiGmOn(cc->bgmPlayer);
-    globalMidiPlayerSetVolume(MIDI_BGM, 12);
     globalMidiPlayerPlaySong(&cc->menuBgm, MIDI_BGM);
 
     cc->sfxPlayer = globalMidiPlayerGet(MIDI_SFX);
@@ -522,15 +521,22 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
                 cc->tutorialPage = MAX(cc->tutorialPage - 1, 0);
             }
         }
-        else if ((cc->state == CC_GAME_OVER || cc->state == CC_HIGH_SCORES)
-                 && (evt.button == PB_A || evt.button == PB_B || evt.button == PB_START) && evt.down)
+        else if (cc->state == CC_GAME_OVER && (evt.button == PB_A || evt.button == PB_B) && evt.down)
         {
-            if (cc->state == CC_GAME_OVER)
+            // Loading the cfun makes the midi player stutter, so don't let them continue during the game over song
+            if (cc->bgmPlayer->paused)
             {
-                globalMidiPlayerPlaySong(&cc->menuBgm, MIDI_BGM);
                 // Resume default blink animations while in menu/high scores/tutorial
                 ch32v003RunBinaryAsset(MATRIX_BLINKS_CFUN_BIN);
+
+                cc->bgmPlayer->loop = true;
+                globalMidiPlayerPlaySong(&cc->menuBgm, MIDI_BGM);
+
+                cc->state = CC_MENU;
             }
+        }
+        else if (cc->state == CC_HIGH_SCORES && (evt.button == PB_A || evt.button == PB_B) && evt.down)
+        {
             cc->state = CC_MENU;
         }
     }
@@ -779,6 +785,7 @@ static void cosCrunchMainLoop(int64_t elapsedUs)
 
             cosCrunchClearLeds();
 
+            cc->bgmPlayer->loop = false;
             globalMidiPlayerPlaySong(&cc->gameOverBgm, MIDI_BGM);
             break;
         }
