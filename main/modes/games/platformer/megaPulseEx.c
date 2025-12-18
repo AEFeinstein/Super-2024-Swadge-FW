@@ -496,7 +496,7 @@ void platformerEnterMode(void)
         setMidiParams(platformer->gameData.cutscene, 28, 119, 1, 250, false);
         // DeadeyeChirpzi
         addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_CHIRPZI_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
-                         "Deadeye Chirpzi", 1, true, true, true);
+                         "Cho", 1, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 29, 17, 1, 250, false);
         // GrindPangolin
         addCutsceneStyle(platformer->gameData.cutscene, c310, GRIND_PANGOLIN_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
