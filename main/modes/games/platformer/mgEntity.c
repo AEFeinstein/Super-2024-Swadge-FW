@@ -5681,8 +5681,16 @@ void startOutroCutscene(mgEntity_t* self)
     mg_deactivateAllEntitiesOfType(self->entityManager, ENTITY_WAVE_BALL); // so the player doesn't get hurt right after
                                                                            // the winning cutscene.
     // Cutscene after the boss fight
-    mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
-    soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+    if (self->gameData->level == 9) // I really liked this song earlier in development for sunny's reveal.
+    {
+        mg_setBgm(self->soundManager, MG_BGM_BOSS_DRAIN_BAT);
+        soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+    }
+    else
+    {
+        mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
+        soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+    }
     bossOutroCutscene(self->gameData);
     if (!self->gameData->cheatMode)
     {

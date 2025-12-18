@@ -425,7 +425,7 @@ void platformerEnterMode(void)
         // HankWaddle
         addCutsceneStyle(platformer->gameData.cutscene, c000, HANK_WADDLE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
                          "Hank Waddle", 2, false, true, true);
-        setMidiParams(platformer->gameData.cutscene, 12, 38, 1, 250, false);
+        setMidiParams(platformer->gameData.cutscene, 12, 38, 1, 250, true);
         // GrindPangolin
         addCutsceneStyle(platformer->gameData.cutscene, c310, GRIND_PANGOLIN_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
                          "Grind Pangolin", 1, false, true, true);

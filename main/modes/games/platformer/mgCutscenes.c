@@ -144,6 +144,13 @@ static void setSongPitchesFromCurrentSong(mgGameData_t* gameData)
             setSongPitches(gameData->cutscene, songPitches);
             break;
         }
+        case MG_BGM_INTRO_STAGE:
+        {
+            int16_t songPitches[]
+                = {62, 61, 60, 69, 62, 60, -1, -1}; // have 62 and 60 duplicated for some statistical weighting.
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
         default:
         {
             break;
@@ -363,12 +370,12 @@ void stageStartCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, SystemText,
                             "PULSE and SAWTOOTH teleport in. The air ripples with heatwaves and flies buzz.", false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "Ughh... what's that awful smell?", false, -1);
-            addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "Check your coordinates. Something's not right.",
+            addCutsceneLine(gameData->cutscene, Sawtooth, "Check your coordinates. Something's not right.",
                             true, -1);
             addCutsceneLine(gameData->cutscene, Pulse,
                             "It says this is the right place... but it looks like a landfill.", false, -1);
             addCutsceneLine(
-                gameData->cutscene, SawtoothPostReveal,
+                gameData->cutscene, Sawtooth,
                 "This is supposed to be RIP BARONESS's mindscape, but this doesn't look like a demon's lair...", true,
                 -1);
             addCutsceneLine(gameData->cutscene, Pulse,
