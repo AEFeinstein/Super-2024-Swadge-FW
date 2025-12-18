@@ -21,6 +21,9 @@
 #define SUDOKU_PUZ_MIN SUDOKU_PUZ_000_BSP
 #define SUDOKU_PUZ_MAX SUDOKU_PUZ_049_BSP
 
+#define SUDOKU_SLN_MIN SUDOKU_SLN_000_BSP
+#define SUDOKU_SLN_MAX SUDOKU_SLN_049_BSP
+
 #define ENABLE_CUSTOM false
 #define ENABLE_JIGSAW false
 
@@ -120,7 +123,10 @@ typedef struct
     // Settings cache!
     sudokuSettings_t settings;
 
-    solverCache_t solverCache;
+    solverCache_t solverCache;;
+
+    sudokuGrid_t solution;
+    bool useSolution;
 
     // whether or not the cursor is being dragged
     bool dragging;
@@ -168,7 +174,6 @@ static const char swadgedokuModeName[] = "Swadgedoku";
 // Main menu
 static const char menuItemContinue[]    = "Continue";
 static const char menuItemLevelSelect[] = "Select Puzzle";
-static const char menuItemPlaySudoku[]  = "Classic";
 static const char menuItemPlayJigsaw[]  = "Jigsaw";
 static const char menuItemPlayCustom[]  = "Infinite";
 static const char menuItemStartCustom[] = "Start";
@@ -182,6 +187,7 @@ static const char menuItemWriteOnSelect[]          = "Write Number on Selection:
 static const char menuItemAutoAnnotate[]           = "Auto-Annotate: ";
 static const char menuItemHighlightPossibilities[] = "Highlight Possibilities: ";
 static const char menuItemHighlightOnlyOptions[]   = "Highlight Only-Possible: ";
+static const char menuItemMarkMistakes[]           = "Mark Mistakes: ";
 
 // Pause menu
 static const char strPaused[]             = "Paused";
@@ -515,6 +521,7 @@ static void swadgedokuExitMode(void)
 {
     deinitSolverCache(&sd->solverCache);
     deinitSudokuGame(&sd->game);
+    deinitSudokuGame(&sd->solution);
 
     void* val = NULL;
     while (NULL != (val = pop(&sd->player.overlay.shapes)))
@@ -779,9 +786,7 @@ static void swadgedokuSetupMenu(void)
         .max = sd->maxLevel,
     };
 
-    sd->menu = startSubMenu(sd->menu, menuItemPlaySudoku);
     addSettingsItemToMenu(sd->menu, menuItemLevelSelect, &constrainedLevelSelectBounds, sd->lastLevel);
-    sd->menu = endSubMenu(sd->menu);
 
     if (ENABLE_JIGSAW)
     {
@@ -894,6 +899,26 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                             sd->playTimer = 0;
                         }
 
+                        if (sd->currentLevelNumber >= 0)
+                        {
+                            ESP_LOGI("Swadgedoku", "Loading level %d", sd->currentLevelNumber);
+                            cnfsFileIdx_t solutionFile = sd->currentLevelNumber - 1 + SUDOKU_SLN_MIN;
+                            if (SUDOKU_SLN_MIN <= solutionFile && solutionFile <= SUDOKU_SLN_MAX)
+                            {
+                                size_t solutionLen;
+                                const uint8_t* solutionData = cnfsGetFile(solutionFile, &solutionLen);
+                                sd->useSolution = loadSudokuData(solutionData, solutionLen, &sd->solution);
+                                if (sd->useSolution)
+                                {
+                                    ESP_LOGI("Swadgedoku", "Successfully loaded solution");
+                                }
+                                else
+                                {
+                                    ESP_LOGI("Swadgedoku", "Solution loading failed");
+                                }
+                            }
+                        }
+
                         sd->hintsUsed = 0;
                         sd->playingContinuation = true;
                         setupSudokuPlayer(&sd->player, &sd->game);
@@ -902,6 +927,7 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                         sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
                         swadgedokuSetupNumberWheel(sd->game.base, 0);
                         resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
+                        sd->solverCache.solution = sd->useSolution ? sd->solution.grid : NULL;
                         sd->screen = SWADGEDOKU_GAME;
                     }
                     else
@@ -938,11 +964,20 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             sd->currentLevelNumber  = value;
             sd->currentDifficulty   = getLevelDifficulty(value);
 
+            cnfsFileIdx_t solutionFile = value - 1 + SUDOKU_SLN_MIN;
+            if (SUDOKU_SLN_MIN <= solutionFile && solutionFile <= SUDOKU_SLN_MAX)
+            {
+                size_t solutionLen;
+                const uint8_t* solutionData = cnfsGetFile(solutionFile, &solutionLen);
+                sd->useSolution = loadSudokuData(solutionData, solutionLen, &sd->solution);
+            }
+
             setupSudokuPlayer(&sd->player, &sd->game);
 
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
             sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
             resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
+            sd->solverCache.solution = sd->useSolution ? sd->solution.grid : NULL;
 
             swadgedokuSetupNumberWheel(sd->game.base, 0);
             sd->screen = SWADGEDOKU_GAME;

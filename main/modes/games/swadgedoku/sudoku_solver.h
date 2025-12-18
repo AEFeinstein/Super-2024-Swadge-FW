@@ -26,6 +26,7 @@ typedef enum
     XY_WING = 9,
     GUESS = 10,
     NOTE_ELIMINATION = 11,
+    KNOWN_SOLUTION = 12, // use the known solution instead of calculating it
     TECHNIQUE_TYPE_LAST,
 } sudokuTechniqueType_t;
 
@@ -82,6 +83,8 @@ typedef struct
     uint16_t* colNotes;
 
     uint8_t* boxMap;
+
+    const uint8_t* solution;
 
     int size;
     int base;
