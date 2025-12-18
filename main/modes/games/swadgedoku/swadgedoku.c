@@ -821,6 +821,9 @@ static void swadgedokuSetupMenu(void)
     addSettingsOptionsItemToMenu(sd->menu, menuItemHighlightOnlyOptions, noYesOptions, noYesValues,
                                  ARRAY_SIZE(noYesOptions), &settingBoolDefaultOffBounds,
                                  sd->settings.highlightPossibilities ? 1 : 0);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemMarkMistakes, noYesOptions, noYesValues,
+                                 ARRAY_SIZE(noYesOptions), &settingBoolDefaultOffBounds,
+                                 sd->settings.markMistakes ? 1 : 0);
     sd->menu = endSubMenu(sd->menu);
 }
 
@@ -1129,6 +1132,15 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                 swadgedokuSaveSettings(&sd->settings);
             }
         }
+        else if (menuItemMarkMistakes == label)
+        {
+            bool newVal = value ? true : false;
+            if (newVal != sd->settings.markMistakes)
+            {
+                sd->settings.markMistakes = newVal;
+                swadgedokuSaveSettings(&sd->settings);
+            }
+        }
     }
     return false;
 }
@@ -1381,6 +1393,10 @@ static void swadgedokuPlayerSetDigit(uint8_t digit, bool isForce, bool forceSet)
         if (setDigit(&sd->game, digit, sd->player.curX, sd->player.curY))
         {
             swadgedokuDoWinCheck();
+            if (sd->settings.markMistakes && sd->useSolution)
+            {
+                swadgedokuAnnotateMistakes(&sd->player.overlay, &sd->game, &sd->solution);
+            }
         }
     }
 }

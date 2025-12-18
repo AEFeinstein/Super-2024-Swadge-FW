@@ -104,6 +104,7 @@ typedef enum
     SSB_AUTO_ANNOTATE           = 2,
     SSB_HIGHLIGHT_POSSIBILITIES = 4,
     SSB_HIGHLIGHT_ONLY_OPTIONS  = 8,
+    SSB_MARK_MISTAKES           = 16,
 } sudokuSettingBit_t;
 
 //==============================================================================
@@ -223,6 +224,9 @@ typedef struct
 
     /// @brief Highlights places where the selected digit is the only possibility
     bool highlightOnlyOptions;
+
+    /// @brief Automatically highlights places where a mistake has been made
+    bool markMistakes;
 } sudokuSettings_t;
 
 //==============================================================================

@@ -856,6 +856,20 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
     }
 }
 
+void swadgedokuAnnotateMistakes(sudokuOverlay_t* overlay, const sudokuGrid_t* game, const sudokuGrid_t* solution)
+{
+    if (solution && game && overlay)
+    {
+        for (int pos = 0; pos < game->size * game->size; pos++)
+        {
+            if (game->grid[pos] && game->grid[pos] != solution->grid[pos])
+            {
+                overlay->gridOpts[pos] |= OVERLAY_ERROR;
+            }
+        }
+    }
+}
+
 /**
  * @brief Checks whether the puzzle is valid, in error, or complete. Returns 0 if valid
  * but incomplete, 1 if complete, and -1 if incorrect

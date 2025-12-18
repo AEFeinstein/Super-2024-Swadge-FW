@@ -30,6 +30,7 @@ void sudokuGetIndividualNotes(uint16_t* rowNotes, uint16_t* colNotes, uint16_t* 
 void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags);
 void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, const sudokuGrid_t* game,
                     const sudokuSettings_t* settings);
+void swadgedokuAnnotateMistakes(sudokuOverlay_t* overlay, const sudokuGrid_t* game, const sudokuGrid_t* solution);
 sudokuWinState_t swadgedokuCheckWin(const sudokuGrid_t* game);
 
 int swadgedokuRand(int* seed);

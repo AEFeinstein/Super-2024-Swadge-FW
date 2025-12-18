@@ -640,6 +640,7 @@ void swadgedokuLoadSettings(sudokuSettings_t* settings)
     settings->autoAnnotate           = (allSettings & SSB_AUTO_ANNOTATE) ? true : false;
     settings->highlightPossibilities = (allSettings & SSB_HIGHLIGHT_POSSIBILITIES) ? true : false;
     settings->highlightOnlyOptions   = (allSettings & SSB_HIGHLIGHT_ONLY_OPTIONS) ? true : false;
+    settings->markMistakes           = (allSettings & SSB_MARK_MISTAKES) ? true : false;
 }
 
 void swadgedokuSaveSettings(const sudokuSettings_t* settings)
