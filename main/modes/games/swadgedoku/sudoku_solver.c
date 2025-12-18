@@ -821,6 +821,11 @@ bool hintBufHighlightRegion(uint8_t* buf, size_t maxlen, sudokuRegionType_t type
         {
             return hintBufAddHighlight(buf, maxlen, -1, region, -1, -1);
         }
+
+        default:
+        {
+            return false;
+        }
     }
 
     return false;
