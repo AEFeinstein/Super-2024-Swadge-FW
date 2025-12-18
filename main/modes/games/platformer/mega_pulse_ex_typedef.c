@@ -114,11 +114,11 @@ const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_to
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rightEdge
     = {.collisionPoints = {{.x = 30, .y = 25}, {.x = 30, .y = 0}, {.x = 30, .y = -11}}, .size = 3};
-    = {.collisionPoints = {{.x = 30, .y = 25}, {.x = 30, .y = 0}, {.x = 30, .y = -11}}, .size = 3};
+= {.collisionPoints = {{.x = 30, .y = 25}, {.x = 30, .y = 0}, {.x = 30, .y = -11}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_leftEdge
     = {.collisionPoints = {{.x = -30, .y = 25}, {.x = -30, .y = 0}, {.x = -30, .y = -11}}, .size = 3};
-    = {.collisionPoints = {{.x = -30, .y = 25}, {.x = -30, .y = 0}, {.x = -30, .y = -11}}, .size = 3};
+= {.collisionPoints = {{.x = -30, .y = 25}, {.x = -30, .y = 0}, {.x = -30, .y = -11}}, .size = 3};
 
 const mg_EntityTileCollider_t entityTileCollider_grind_pangolin
     = {.bottomEdge = &mgTileCollisionOffsets_grind_pangolin_bottomEdge,

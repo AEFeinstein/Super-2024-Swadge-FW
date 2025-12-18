@@ -4184,7 +4184,7 @@ void mg_updateBossSeverYagata(mgEntity_t* self)
     {
         if (self->gameData->level != 11)
         {
-            self->spriteIndex              = MG_SP_BOSS_6;
+            self->spriteIndex  = MG_SP_BOSS_6;
             self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
             startOutroCutscene(self);
         }
@@ -5679,9 +5679,9 @@ void startOutroCutscene(mgEntity_t* self)
 {
     mg_deactivateAllEntitiesOfType(self->entityManager, ENTITY_WAVE_BALL); // so the player doesn't get hurt right after
                                                                            // the winning cutscene.
-    if(self->gameData->level != 7)
+    if (self->gameData->level != 7)
     {
-        //just don't pause the countdown on level 7 because then you can't try out the newly acquired Shoop Da Woop.
+        // just don't pause the countdown on level 7 because then you can't try out the newly acquired Shoop Da Woop.
         self->gameData->pauseCountdown = true;
     }
     // Cutscene after the boss fight
