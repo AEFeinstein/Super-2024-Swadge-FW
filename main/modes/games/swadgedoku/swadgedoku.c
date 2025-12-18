@@ -931,7 +931,7 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                         setupSudokuPlayer(&sd->player, &sd->game);
                         memcpy(sd->player.notes, sd->game.notes, sd->game.size * sizeof(uint16_t));
                         sudokuGetNotes(sd->game.notes, &sd->game, 0);
-                        sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
+                        sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings, sd->useSolution ? &sd->solution : NULL);
                         swadgedokuSetupNumberWheel(sd->game.base, 0);
                         resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
                         sd->solverCache.solution = sd->useSolution ? sd->solution.grid : NULL;
@@ -982,7 +982,7 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             setupSudokuPlayer(&sd->player, &sd->game);
 
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
-            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
+            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings, sd->useSolution ? &sd->solution : NULL);
             resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
             sd->solverCache.solution = sd->useSolution ? sd->solution.grid : NULL;
 
@@ -1007,7 +1007,7 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             sd->currentLevelNumber  = -1;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
-            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
+            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings, sd->useSolution ? &sd->solution : NULL);
             resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
             swadgedokuSetupNumberWheel(sd->game.base, 0);
             sd->screen = SWADGEDOKU_GAME;
@@ -1025,7 +1025,7 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             sd->currentLevelNumber  = -1;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
-            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
+            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings, sd->useSolution ? &sd->solution : NULL);
             resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
             swadgedokuSetupNumberWheel(sd->game.base, 0);
             sd->screen = SWADGEDOKU_GAME;
@@ -1235,7 +1235,7 @@ static bool numberWheelCb(const char* label, bool selected, uint32_t value)
                 if (sd->settings.writeOnSelect)
                 {
                     swadgedokuPlayerSetDigit(sd->player.selectedDigit, false, false);
-                    sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
+                    sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings, sd->useSolution ? &sd->solution : NULL);
                 }
             }
         }
@@ -1397,10 +1397,6 @@ static void swadgedokuPlayerSetDigit(uint8_t digit, bool isForce, bool forceSet)
         if (setDigit(&sd->game, digit, sd->player.curX, sd->player.curY))
         {
             swadgedokuDoWinCheck();
-            if (sd->settings.markMistakes && sd->useSolution)
-            {
-                swadgedokuAnnotateMistakes(&sd->player.overlay, &sd->game, &sd->solution);
-            }
         }
     }
 }
@@ -1704,7 +1700,7 @@ static void swadgedokuGameButton(buttonEvt_t evt)
 
         if (moved || reAnnotate)
         {
-            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings);
+            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings, sd->useSolution ? &sd->solution : NULL);
         }
     }
     else if (evt.button & PB_A)

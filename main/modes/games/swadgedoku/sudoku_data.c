@@ -13,7 +13,7 @@
 static const char settingKeyOptionBits[] = "sdku_settings";
 
 /// @brief The default settings bitmap
-static const sudokuSettingBit_t defaultSettings = SSB_WRITE_ON_SELECT | SSB_HIGHLIGHT_POSSIBILITIES;
+static const sudokuSettingBit_t defaultSettings = SSB_WRITE_ON_SELECT | SSB_HIGHLIGHT_POSSIBILITIES | SSB_MARK_MISTAKES;
 
 //==============================================================================
 // Functions
@@ -650,6 +650,7 @@ void swadgedokuSaveSettings(const sudokuSettings_t* settings)
     allSettings |= settings->autoAnnotate ? SSB_AUTO_ANNOTATE : 0;
     allSettings |= settings->highlightPossibilities ? SSB_HIGHLIGHT_POSSIBILITIES : 0;
     allSettings |= settings->highlightOnlyOptions ? SSB_HIGHLIGHT_ONLY_OPTIONS : 0;
+    allSettings |= settings->markMistakes ? SSB_MARK_MISTAKES : 0;
 
     if (!writeNvs32(settingKeyOptionBits, allSettings))
     {

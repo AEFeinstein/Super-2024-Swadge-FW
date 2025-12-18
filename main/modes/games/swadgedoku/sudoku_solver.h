@@ -26,7 +26,8 @@ typedef enum
     XY_WING = 9,
     GUESS = 10,
     NOTE_ELIMINATION = 11,
-    KNOWN_SOLUTION = 12, // use the known solution instead of calculating it
+    FOUND_MISTAKE = 12, // we found a mistake, be nice and tell the player
+    KNOWN_SOLUTION = 13, // use the known solution instead of calculating it
     TECHNIQUE_TYPE_LAST,
 } sudokuTechniqueType_t;
 

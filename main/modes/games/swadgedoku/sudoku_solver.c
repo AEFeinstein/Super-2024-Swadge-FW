@@ -192,6 +192,7 @@ static const techniqueDesc_t techniqueDescriptions[] =
     { .technique = XY_WING, .format = "XY-Wing", },
     { .technique = GUESS, .format = "Guess", },
     { .technique = KNOWN_SOLUTION, .format = "Solution", },
+    { .technique = FOUND_MISTAKE, .format = "This cell has a mistake!", },
 };
 
 
@@ -211,6 +212,21 @@ bool sudokuNextMove2(solverCache_t* cache, const sudokuGrid_t* board)
 
     sudokuGetNotes(cache->notes, board, 0);
     sudokuGetIndividualNotes(cache->rowNotes, cache->colNotes, cache->boxNotes, board, 0);
+
+    if (cache->solution)
+    {
+        for (int pos = 0; pos < boardSize; pos++)
+        {
+            if (board->grid[pos] && board->grid[pos] != cache->solution[pos])
+            {
+                // Empty cell found
+                hintBufNextStep(cache->hintBuf, cache->hintbufLen, FOUND_MISTAKE);
+                hintBufSetDigit(cache->hintBuf, cache->hintbufLen, 0, pos);
+                hintBufAddHighlight(cache->hintBuf, cache->hintbufLen, -1, -1, pos / cache->size, pos % cache->size);
+                return true;
+            }
+        }
+    }
 
     bool giveUp = false;
     while (!giveUp)
@@ -297,6 +313,7 @@ bool sudokuNextMove2(solverCache_t* cache, const sudokuGrid_t* board)
                 // Empty cell found
                 hintBufNextStep(cache->hintBuf, cache->hintbufLen, KNOWN_SOLUTION);
                 hintBufSetDigit(cache->hintBuf, cache->hintbufLen, cache->solution[pos], pos);
+                hintBufAddHighlight(cache->hintBuf, cache->hintbufLen, -1, -1, pos / cache->size, pos % cache->size);
                 return true;
             }
         }

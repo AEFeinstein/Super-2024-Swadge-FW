@@ -430,7 +430,15 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
 
                     // Draw number
                     char buf[16];
-                    snprintf(buf, sizeof(buf), "%X", shape->digit.digit);
+                    if (shape->digit.digit)
+                    {
+                        snprintf(buf, sizeof(buf), "%X", shape->digit.digit);
+                    }
+                    else
+                    {
+                        buf[0] = 'X';
+                        buf[1] = '\0';
+                    }
 
                     int textX = x + (maxSquareSize - textWidth(&context->gridFont, buf)) / 2;
                     int textY = y + (maxSquareSize - context->gridFont.height) / 2;

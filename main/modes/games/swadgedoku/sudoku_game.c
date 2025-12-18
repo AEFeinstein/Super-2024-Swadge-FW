@@ -654,7 +654,7 @@ void sudokuGetNotes(uint16_t* notes, const sudokuGrid_t* game, int flags)
  * @param settings Global sudoku settings to control which annotations are set and how
  */
 void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, const sudokuGrid_t* game,
-                    const sudokuSettings_t* settings)
+                    const sudokuSettings_t* settings, const sudokuGrid_t* solution)
 {
     // 1. Remove all the existing annotations placed by us
     node_t* next = NULL;
@@ -851,20 +851,10 @@ void sudokuAnnotate(sudokuOverlay_t* overlay, const sudokuPlayer_t* player, cons
                 {
                     overlay->gridOpts[n] |= OVERLAY_ERROR;
                 }
-            }
-        }
-    }
-}
-
-void swadgedokuAnnotateMistakes(sudokuOverlay_t* overlay, const sudokuGrid_t* game, const sudokuGrid_t* solution)
-{
-    if (solution && game && overlay)
-    {
-        for (int pos = 0; pos < game->size * game->size; pos++)
-        {
-            if (game->grid[pos] && game->grid[pos] != solution->grid[pos])
-            {
-                overlay->gridOpts[pos] |= OVERLAY_ERROR;
+                else if (solution && settings->markMistakes && game->grid[n] != solution->grid[n])
+                {
+                    overlay->gridOpts[n] |= OVERLAY_ERROR;
+                }
             }
         }
     }
