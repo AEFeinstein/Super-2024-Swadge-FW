@@ -567,7 +567,8 @@ void sudokuReevaluatePeers(uint16_t* notes, const sudokuGrid_t* game, int row, i
     }
 }
 
-void sudokuGetIndividualNotes(uint16_t* rowNotes, uint16_t* colNotes, uint16_t* boxNotes, const sudokuGrid_t* game, int flags)
+void sudokuGetIndividualNotes(uint16_t* rowNotes, uint16_t* colNotes, uint16_t* boxNotes, const sudokuGrid_t* game,
+                              int flags)
 {
     // This means 'all values are possible in this row/cell'
     const uint16_t allNotes = (1 << game->base) - 1;

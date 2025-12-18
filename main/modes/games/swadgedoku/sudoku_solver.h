@@ -15,19 +15,19 @@ typedef enum
 
 typedef enum
 {
-    SINGLE = 1, // only empty square left in row/col/box
-    ONLY_POSSIBLE = 2, // only possibility in the square
-    HIDDEN_SINGLE = 3,
-    NAKED_PAIR = 4, // eliminate possibilities
-    HIDDEN_PAIR = 5,
-    NAKED_TRIPLE = 6,
-    HIDDEN_TRIPLE = 7,
-    X_WING = 8,
-    XY_WING = 9,
-    GUESS = 10,
+    SINGLE           = 1, // only empty square left in row/col/box
+    ONLY_POSSIBLE    = 2, // only possibility in the square
+    HIDDEN_SINGLE    = 3,
+    NAKED_PAIR       = 4, // eliminate possibilities
+    HIDDEN_PAIR      = 5,
+    NAKED_TRIPLE     = 6,
+    HIDDEN_TRIPLE    = 7,
+    X_WING           = 8,
+    XY_WING          = 9,
+    GUESS            = 10,
     NOTE_ELIMINATION = 11,
-    FOUND_MISTAKE = 12, // we found a mistake, be nice and tell the player
-    KNOWN_SOLUTION = 13, // use the known solution instead of calculating it
+    FOUND_MISTAKE    = 12, // we found a mistake, be nice and tell the player
+    KNOWN_SOLUTION   = 13, // use the known solution instead of calculating it
     TECHNIQUE_TYPE_LAST,
 } sudokuTechniqueType_t;
 

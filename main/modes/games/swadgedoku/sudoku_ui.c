@@ -36,8 +36,8 @@ void swadgedokuGetGridPos(int* gridX, int* gridY, const sudokuGrid_t* game)
 }
 
 void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay,
-                        const sudokuTheme_t* theme, const sudokuDrawContext_t* context,
-                        sudokuShapeTag_t tagMask, sudokuOverlayOpt_t overlayMask)
+                        const sudokuTheme_t* theme, const sudokuDrawContext_t* context, sudokuShapeTag_t tagMask,
+                        sudokuOverlayOpt_t overlayMask)
 {
     // Max size of individual square
     int maxSquareSize = swadgedokuGetSquareSize(game);
@@ -451,7 +451,7 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                 {
                     char buf[16];
                     uint16_t squareNote = shape->notes.notes;
-                    int baseRoot = 3;
+                    int baseRoot        = 3;
                     switch (game->base)
                     {
                         case 1:
@@ -647,10 +647,10 @@ void addBoxHighlight(sudokuOverlay_t* overlay, const sudokuGrid_t* board, int bo
             if (row == 0 || board->boxMap[(row - 1) * board->size + col] != thisBox)
             {
                 // Draw north border
-                shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
-                shape->type = OVERLAY_LINE;
+                shape        = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                shape->type  = OVERLAY_LINE;
                 shape->color = c050;
-                shape->tag = ST_HINT;
+                shape->tag   = ST_HINT;
                 getOverlayPos(&shape->line.p1.x, &shape->line.p1.y, row, col, SUBPOS_NW);
                 getOverlayPos(&shape->line.p2.x, &shape->line.p2.y, row, col, SUBPOS_NE);
                 push(&overlay->shapes, shape);
@@ -659,10 +659,10 @@ void addBoxHighlight(sudokuOverlay_t* overlay, const sudokuGrid_t* board, int bo
             if (col == (board->size - 1) || board->boxMap[row * board->size + col + 1] != thisBox)
             {
                 // Draw east border
-                shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
-                shape->type = OVERLAY_LINE;
+                shape        = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                shape->type  = OVERLAY_LINE;
                 shape->color = c050;
-                shape->tag = ST_HINT;
+                shape->tag   = ST_HINT;
                 getOverlayPos(&shape->line.p1.x, &shape->line.p1.y, row, col, SUBPOS_NE);
                 getOverlayPos(&shape->line.p2.x, &shape->line.p2.y, row, col, SUBPOS_SE);
                 push(&overlay->shapes, shape);
@@ -671,10 +671,10 @@ void addBoxHighlight(sudokuOverlay_t* overlay, const sudokuGrid_t* board, int bo
             if (row == (board->size - 1) || board->boxMap[(row + 1) * board->size + col] != thisBox)
             {
                 // Draw south border
-                shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
-                shape->type = OVERLAY_LINE;
+                shape        = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                shape->type  = OVERLAY_LINE;
                 shape->color = c050;
-                shape->tag = ST_HINT;
+                shape->tag   = ST_HINT;
                 getOverlayPos(&shape->line.p1.x, &shape->line.p1.y, row, col, SUBPOS_SW);
                 getOverlayPos(&shape->line.p2.x, &shape->line.p2.y, row, col, SUBPOS_SE);
                 push(&overlay->shapes, shape);
@@ -683,10 +683,10 @@ void addBoxHighlight(sudokuOverlay_t* overlay, const sudokuGrid_t* board, int bo
             if (col == 0 || board->boxMap[row * board->size + col - 1] != thisBox)
             {
                 // Draw west border
-                shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
-                shape->type = OVERLAY_LINE;
+                shape        = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                shape->type  = OVERLAY_LINE;
                 shape->color = c050;
-                shape->tag = ST_HINT;
+                shape->tag   = ST_HINT;
                 getOverlayPos(&shape->line.p1.x, &shape->line.p1.y, row, col, SUBPOS_NW);
                 getOverlayPos(&shape->line.p2.x, &shape->line.p2.y, row, col, SUBPOS_SW);
                 push(&overlay->shapes, shape);

@@ -123,7 +123,8 @@ typedef struct
     // Settings cache!
     sudokuSettings_t settings;
 
-    solverCache_t solverCache;;
+    solverCache_t solverCache;
+    ;
 
     sudokuGrid_t solution;
     bool useSolution;
@@ -399,22 +400,22 @@ const trophyData_t swadgedokuTrophies[] = {{
                                                .identifier  = &anyPuzzleTrigger,
                                            },
                                            {
-                                               .title = "A little help",
+                                               .title       = "A little help",
                                                .description = "Use a hint",
-                                               .image = NO_IMAGE_SET,
-                                               .type = TROPHY_TYPE_TRIGGER,
-                                               .difficulty = TROPHY_DIFF_EASY,
-                                               .maxVal = 1,
-                                               .identifier = NULL,
+                                               .image       = NO_IMAGE_SET,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_EASY,
+                                               .maxVal      = 1,
+                                               .identifier  = NULL,
                                            },
                                            {
-                                               .title = "All by myself",
+                                               .title       = "All by myself",
                                                .description = "Solve a puzzle without any hints",
-                                               .image = NO_IMAGE_SET,
-                                               .type = TROPHY_TYPE_TRIGGER,
-                                               .difficulty = TROPHY_DIFF_MEDIUM,
-                                               .maxVal = 1,
-                                               .identifier = NULL,
+                                               .image       = NO_IMAGE_SET,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_MEDIUM,
+                                               .maxVal      = 1,
+                                               .identifier  = NULL,
                                            }};
 
 // Individual mode settings
@@ -627,11 +628,12 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
             }
 
             sudokuOverlayOpt_t optMask = OVERLAY_ALL;
-            sudokuShapeTag_t tagMask = ST_ALL;
+            sudokuShapeTag_t tagMask   = ST_ALL;
             if (sd->showingHint)
             {
                 tagMask = ST_HINT;
-                optMask &= ~(OVERLAY_QUESTION | OVERLAY_CHECK | OVERLAY_HIGHLIGHT_A | OVERLAY_HIGHLIGHT_B | OVERLAY_HIGHLIGHT_C | OVERLAY_HIGHLIGHT_D);
+                optMask &= ~(OVERLAY_QUESTION | OVERLAY_CHECK | OVERLAY_HIGHLIGHT_A | OVERLAY_HIGHLIGHT_B
+                             | OVERLAY_HIGHLIGHT_C | OVERLAY_HIGHLIGHT_D);
             }
             swadgedokuDrawGame(&sd->game, fullNotes, &sd->player.overlay, &lightTheme, &sd->drawCtx, tagMask, optMask);
 
@@ -661,7 +663,8 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
                     }
                 }
 
-                drawDialogBox(sd->hintDialogBox, getSysFont(), getSysFont(), DIALOG_CENTER, dialogY, DIALOG_AUTO, DIALOG_AUTO, 3);
+                drawDialogBox(sd->hintDialogBox, getSysFont(), getSysFont(), DIALOG_CENTER, dialogY, DIALOG_AUTO,
+                              DIALOG_AUTO, 3);
             }
             else
             {
@@ -669,7 +672,7 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
                 {
                     // draw like, a pencil
                     drawWsgSimple(&sd->drawCtx.noteTakingIcon, TFT_WIDTH - 5 - sd->drawCtx.noteTakingIcon.w,
-                                (TFT_HEIGHT - sd->drawCtx.gridFont.height) / 2 - 5 - sd->drawCtx.noteTakingIcon.h);
+                                  (TFT_HEIGHT - sd->drawCtx.gridFont.height) / 2 - 5 - sd->drawCtx.noteTakingIcon.h);
                 }
 
                 if (sd->player.selectedDigit)
@@ -679,7 +682,7 @@ static void swadgedokuMainLoop(int64_t elapsedUs)
                     int textW = textWidth(&sd->drawCtx.gridFont, curDigitStr);
 
                     drawText(&sd->drawCtx.gridFont, lightTheme.uiTextColor, curDigitStr, TFT_WIDTH - 5 - textW,
-                            (TFT_HEIGHT - sd->drawCtx.gridFont.height) / 2);
+                             (TFT_HEIGHT - sd->drawCtx.gridFont.height) / 2);
                 }
 
                 if (inWheelMenu)
@@ -825,9 +828,8 @@ static void swadgedokuSetupMenu(void)
     addSettingsOptionsItemToMenu(sd->menu, menuItemHighlightOnlyOptions, noYesOptions, noYesValues,
                                  ARRAY_SIZE(noYesOptions), &settingBoolDefaultOffBounds,
                                  sd->settings.highlightPossibilities ? 1 : 0);
-    addSettingsOptionsItemToMenu(sd->menu, menuItemMarkMistakes, noYesOptions, noYesValues,
-                                 ARRAY_SIZE(noYesOptions), &settingBoolDefaultOffBounds,
-                                 sd->settings.markMistakes ? 1 : 0);
+    addSettingsOptionsItemToMenu(sd->menu, menuItemMarkMistakes, noYesOptions, noYesValues, ARRAY_SIZE(noYesOptions),
+                                 &settingBoolDefaultOffBounds, sd->settings.markMistakes ? 1 : 0);
     sd->menu = endSubMenu(sd->menu);
 }
 
@@ -914,7 +916,7 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                             {
                                 size_t solutionLen;
                                 const uint8_t* solutionData = cnfsGetFile(solutionFile, &solutionLen);
-                                sd->useSolution = loadSudokuData(solutionData, solutionLen, &sd->solution);
+                                sd->useSolution             = loadSudokuData(solutionData, solutionLen, &sd->solution);
                                 if (sd->useSolution)
                                 {
                                     ESP_LOGI("Swadgedoku", "Successfully loaded solution");
@@ -926,16 +928,17 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
                             }
                         }
 
-                        sd->hintsUsed = 0;
+                        sd->hintsUsed           = 0;
                         sd->playingContinuation = true;
                         setupSudokuPlayer(&sd->player, &sd->game);
                         memcpy(sd->player.notes, sd->game.notes, sd->game.size * sizeof(uint16_t));
                         sudokuGetNotes(sd->game.notes, &sd->game, 0);
-                        sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings, sd->useSolution ? &sd->solution : NULL);
+                        sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings,
+                                       sd->useSolution ? &sd->solution : NULL);
                         swadgedokuSetupNumberWheel(sd->game.base, 0);
                         resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
                         sd->solverCache.solution = sd->useSolution ? sd->solution.grid : NULL;
-                        sd->screen = SWADGEDOKU_GAME;
+                        sd->screen               = SWADGEDOKU_GAME;
                     }
                     else
                     {
@@ -976,13 +979,14 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             {
                 size_t solutionLen;
                 const uint8_t* solutionData = cnfsGetFile(solutionFile, &solutionLen);
-                sd->useSolution = loadSudokuData(solutionData, solutionLen, &sd->solution);
+                sd->useSolution             = loadSudokuData(solutionData, solutionLen, &sd->solution);
             }
 
             setupSudokuPlayer(&sd->player, &sd->game);
 
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
-            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings, sd->useSolution ? &sd->solution : NULL);
+            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings,
+                           sd->useSolution ? &sd->solution : NULL);
             resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
             sd->solverCache.solution = sd->useSolution ? sd->solution.grid : NULL;
 
@@ -1007,7 +1011,8 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             sd->currentLevelNumber  = -1;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
-            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings, sd->useSolution ? &sd->solution : NULL);
+            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings,
+                           sd->useSolution ? &sd->solution : NULL);
             resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
             swadgedokuSetupNumberWheel(sd->game.base, 0);
             sd->screen = SWADGEDOKU_GAME;
@@ -1025,7 +1030,8 @@ static bool swadgedokuMainMenuCb(const char* label, bool selected, uint32_t valu
             sd->currentLevelNumber  = -1;
             setupSudokuPlayer(&sd->player, &sd->game);
             sudokuGetNotes(sd->game.notes, &sd->game, 0);
-            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings, sd->useSolution ? &sd->solution : NULL);
+            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings,
+                           sd->useSolution ? &sd->solution : NULL);
             resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
             swadgedokuSetupNumberWheel(sd->game.base, 0);
             sd->screen = SWADGEDOKU_GAME;
@@ -1235,7 +1241,8 @@ static bool numberWheelCb(const char* label, bool selected, uint32_t value)
                 if (sd->settings.writeOnSelect)
                 {
                     swadgedokuPlayerSetDigit(sd->player.selectedDigit, false, false);
-                    sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings, sd->useSolution ? &sd->solution : NULL);
+                    sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings,
+                                   sd->useSolution ? &sd->solution : NULL);
                 }
             }
         }
@@ -1283,7 +1290,7 @@ static void swadgedokuDoWinCheck(void)
                 if (sd->currentLevelNumber >= sd->maxLevel && sd->maxLevel < settingLevelSelectBounds.max)
                 {
                     ESP_LOGI("Swadgedoku", "Updating max completed level from %d to %d", sd->maxLevel,
-                                sd->currentLevelNumber + 1);
+                             sd->currentLevelNumber + 1);
                     sd->maxLevel = sd->currentLevelNumber + 1;
                     if (!writeNvs32(settingKeyMaxLevel, sd->maxLevel))
                     {
@@ -1294,7 +1301,7 @@ static void swadgedokuDoWinCheck(void)
                 if (sd->lastLevel < sd->maxLevel && sd->currentLevelNumber < sd->maxLevel)
                 {
                     ESP_LOGI("Swadgedoku", "Updating last completed level from %d to %d", sd->lastLevel,
-                                sd->currentLevelNumber + 1);
+                             sd->currentLevelNumber + 1);
                     sd->lastLevel = sd->currentLevelNumber + 1;
                     if (!writeNvs32(settingKeyLastLevel, sd->lastLevel))
                     {
@@ -1411,7 +1418,8 @@ static void swadgedokuShowHint(void)
     {
         hintBufDebug(sd->solverCache.hintBuf, sd->solverCache.hintbufLen);
         hintToOverlay(&sd->player.overlay, &sd->game, -1, sd->solverCache.hintBuf, sd->solverCache.hintbufLen);
-        writeStepDescription(sd->hintText, sizeof(sd->hintText), sd->solverCache.hintBuf, sd->solverCache.hintbufLen, -1);
+        writeStepDescription(sd->hintText, sizeof(sd->hintText), sd->solverCache.hintBuf, sd->solverCache.hintbufLen,
+                             -1);
         sd->hintDetailText[0] = 'D';
         sd->hintDetailText[1] = '\0';
 
@@ -1426,10 +1434,10 @@ static void swadgedokuShowHint(void)
         }
         else
         {
-            sd->hintDialogBox->title = hintDialogTitle;
-            sd->hintDialogBox->detail = sd->hintText;
+            sd->hintDialogBox->title          = hintDialogTitle;
+            sd->hintDialogBox->detail         = sd->hintText;
             sd->hintDialogBox->selectedOption = sd->hintDialogBox->options.first;
-            sd->hintMoreLessOption->label = dialogOptionMore;
+            sd->hintMoreLessOption->label     = dialogOptionMore;
         }
 
         ESP_LOGI("Swadgedoku", "Move: %s", sd->hintText);
@@ -1503,7 +1511,7 @@ static void swadgedokuGameButton(buttonEvt_t evt)
                     {
                         // Unset number
                         setDigit(&sd->game, 0, sd->player.curX, sd->player.curY);
-                        sd->dragSet = false;
+                        sd->dragSet  = false;
                         sd->dragging = true;
                         ESP_LOGI("Sudoku", "Drag - first digit was unset! (!digit)");
                     }
@@ -1515,15 +1523,18 @@ static void swadgedokuGameButton(buttonEvt_t evt)
                             uint16_t bit = (1 << (digit - 1));
                             if (!sd->game.grid[sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX]])
                             {
-                                sd->dragSet = 0 == ((1 << (digit - 1)) & (sd->game.notes[sd->player.curY * sd->game.size + sd->player.curX] ^ sd->player.notes[sd->player.curY * sd->game.size + sd->player.curX]));
+                                sd->dragSet
+                                    = 0
+                                      == ((1 << (digit - 1))
+                                          & (sd->game.notes[sd->player.curY * sd->game.size + sd->player.curX]
+                                             ^ sd->player.notes[sd->player.curY * sd->game.size + sd->player.curX]));
                                 sd->dragging = true;
                             }
                             ESP_LOGI("Sudoku", "Drag - first digit was %sset! (noteTaking)", sd->dragSet ? "" : "un");
-
                         }
                         else
                         {
-                            sd->dragSet = true;
+                            sd->dragSet  = true;
                             sd->dragging = true;
                             ESP_LOGI("Sudoku", "Drag - first digit was set! (else)");
                         }
@@ -1555,7 +1566,7 @@ static void swadgedokuGameButton(buttonEvt_t evt)
 
             case PB_UP:
             {
-                moved = true;
+                moved     = true;
                 int skips = 0;
                 do
                 {
@@ -1568,8 +1579,9 @@ static void swadgedokuGameButton(buttonEvt_t evt)
                         sd->player.curY--;
                     }
                 } while (((SF_VOID & (sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]))
-                        || (sd->dragging && sd->player.noteTaking && sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX]))
-                        && skips++ < sd->game.size);
+                          || (sd->dragging && sd->player.noteTaking
+                              && sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX]))
+                         && skips++ < sd->game.size);
 
                 if (sd->dragging)
                 {
@@ -1580,7 +1592,7 @@ static void swadgedokuGameButton(buttonEvt_t evt)
 
             case PB_DOWN:
             {
-                moved = true;
+                moved     = true;
                 int skips = 0;
                 do
                 {
@@ -1593,8 +1605,9 @@ static void swadgedokuGameButton(buttonEvt_t evt)
                         sd->player.curY++;
                     }
                 } while (((SF_VOID & (sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]))
-                        || (sd->dragging && sd->player.noteTaking && sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX]))
-                        && skips++ < sd->game.size);
+                          || (sd->dragging && sd->player.noteTaking
+                              && sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX]))
+                         && skips++ < sd->game.size);
 
                 if (sd->dragging)
                 {
@@ -1605,7 +1618,7 @@ static void swadgedokuGameButton(buttonEvt_t evt)
 
             case PB_LEFT:
             {
-                moved = true;
+                moved     = true;
                 int skips = 0;
                 do
                 {
@@ -1618,8 +1631,9 @@ static void swadgedokuGameButton(buttonEvt_t evt)
                         sd->player.curX--;
                     }
                 } while (((SF_VOID & (sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]))
-                        || (sd->dragging && sd->player.noteTaking && sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX]))
-                        && skips++ < sd->game.size);
+                          || (sd->dragging && sd->player.noteTaking
+                              && sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX]))
+                         && skips++ < sd->game.size);
 
                 if (sd->dragging)
                 {
@@ -1630,7 +1644,7 @@ static void swadgedokuGameButton(buttonEvt_t evt)
 
             case PB_RIGHT:
             {
-                moved = true;
+                moved     = true;
                 int skips = 0;
                 do
                 {
@@ -1643,8 +1657,9 @@ static void swadgedokuGameButton(buttonEvt_t evt)
                         sd->player.curX++;
                     }
                 } while (((SF_VOID & (sd->game.flags[sd->player.curY * sd->game.size + sd->player.curX]))
-                        || (sd->dragging && sd->player.noteTaking && sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX]))
-                        && skips++ < sd->game.size);
+                          || (sd->dragging && sd->player.noteTaking
+                              && sd->game.grid[sd->player.curY * sd->game.size + sd->player.curX]))
+                         && skips++ < sd->game.size);
 
                 if (sd->dragging)
                 {
@@ -1700,7 +1715,8 @@ static void swadgedokuGameButton(buttonEvt_t evt)
 
         if (moved || reAnnotate)
         {
-            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings, sd->useSolution ? &sd->solution : NULL);
+            sudokuAnnotate(&sd->player.overlay, &sd->player, &sd->game, &sd->settings,
+                           sd->useSolution ? &sd->solution : NULL);
         }
     }
     else if (evt.button & PB_A)
@@ -1715,7 +1731,7 @@ static void swadgedokuHintDialogCb(const char* label)
     {
         // Apply the hint
         sd->hintsUsed++;
-        //setDigit(&sd->game, sd->hint.digit, sd->hint.pos % sd->game.size, sd->hint.pos / sd->game.size);
+        // setDigit(&sd->game, sd->hint.digit, sd->hint.pos % sd->game.size, sd->hint.pos / sd->game.size);
         applyHint(&sd->game, sd->player.notes, sd->solverCache.hintBuf, sd->solverCache.hintbufLen);
         swadgedokuDoWinCheck();
         resetSolverCache(&sd->solverCache, sd->game.size, sd->game.base);
@@ -1726,16 +1742,16 @@ static void swadgedokuHintDialogCb(const char* label)
     }
     else if (label == dialogOptionMore)
     {
-        sd->hintDialogBox->title = detailDialogTitle;
-        sd->hintDialogBox->detail = sd->hintDetailText;
+        sd->hintDialogBox->title      = detailDialogTitle;
+        sd->hintDialogBox->detail     = sd->hintDetailText;
         sd->hintMoreLessOption->label = dialogOptionLess;
         // Early return; don't stop showing the hint dialog
         return;
     }
     else if (label == dialogOptionLess)
     {
-        sd->hintDialogBox->title = hintDialogTitle;
-        sd->hintDialogBox->detail = sd->hintText;
+        sd->hintDialogBox->title      = hintDialogTitle;
+        sd->hintDialogBox->detail     = sd->hintText;
         sd->hintMoreLessOption->label = dialogOptionMore;
         // Early return; don't stop showing the hint dialog
         return;
@@ -1754,7 +1770,7 @@ static void swadgedokuHintDialogCb(const char* label)
         if (shape->tag == ST_HINT)
         {
             node_t* tmp = node;
-            node = node->next;
+            node        = node->next;
             removeEntry(&sd->player.overlay.shapes, tmp);
             free(shape);
         }

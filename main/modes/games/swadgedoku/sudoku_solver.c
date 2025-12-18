@@ -4,7 +4,6 @@
 
 #include <stddef.h>
 
-
 // "Hint Buffer" tools
 // A hint buffer is just a simple bytecode stream describing sudoku actions
 // This makes it much easier to deal with move sequences that might require
@@ -23,21 +22,29 @@
 // Set digit: 0x_1 [digit] [pos * count]
 // Add notes: 0x_2 [notes-msb] [notes-lsb] [pos * count]
 // Del notes: 0x_3 [notes-msb] [notes-lsb] [pos * count]
-// Highlight: 0x_4 [digit] [box] [row] [col]             --- Highlight cells matching ALL params (not set to 0xFF). Also, `count` used as color
+// Highlight: 0x_4 [digit] [box] [row] [col]             --- Highlight cells matching ALL params (not set to 0xFF).
+// Also, `count` used as color
 
-#define OP_STEP 0x0
+#define OP_STEP      0x0
 #define OP_SET_DIGIT 0x1
-#define OP_ADD_NOTE 0x2
-#define OP_DEL_NOTE 0x3
+#define OP_ADD_NOTE  0x2
+#define OP_DEL_NOTE  0x3
 #define OP_HIGHLIGHT 0x4
 
-#define OP_MASK_OP 0x0F
-#define OP_MASK_COUNT 0xF0
+#define OP_MASK_OP     0x0F
+#define OP_MASK_COUNT  0xF0
 #define OP_SHIFT_COUNT 4
 
 #define MAKE_OPCODE(code, count) (((code) & OP_MASK_OP) | (((count) << OP_SHIFT_COUNT) & OP_MASK_COUNT))
-#define GET_LENGTH(buf) (((buf)[0] << 24) | ((buf)[1] << 16) | ((buf)[2] << 8) | (buf)[3])
-#define SET_LENGTH(buf, length) do { buf[0] = ((length) >> 24) & 0xFF; buf[1] = ((length) >> 16) & 0xFF; buf[2] = ((length) >> 8) & 0xFF; buf[3] = (length) & 0xFF; } while (0)
+#define GET_LENGTH(buf)          (((buf)[0] << 24) | ((buf)[1] << 16) | ((buf)[2] << 8) | (buf)[3])
+#define SET_LENGTH(buf, length)           \
+    do                                    \
+    {                                     \
+        buf[0] = ((length) >> 24) & 0xFF; \
+        buf[1] = ((length) >> 16) & 0xFF; \
+        buf[2] = ((length) >> 8) & 0xFF;  \
+        buf[3] = (length) & 0xFF;         \
+    } while (0)
 
 typedef enum
 {
@@ -46,7 +53,8 @@ typedef enum
 } solverCbType_t;
 
 typedef bool (*searchCellCb)(solverCache_t* state, const sudokuGrid_t* board, int pos);
-typedef bool (*searchRegionCb)(solverCache_t* state, const sudokuGrid_t* board, sudokuRegionType_t regionType, int region);
+typedef bool (*searchRegionCb)(solverCache_t* state, const sudokuGrid_t* board, sudokuRegionType_t regionType,
+                               int region);
 typedef bool (*eliminateCb)(solverCache_t* state, const sudokuGrid_t* board);
 
 typedef struct
@@ -75,7 +83,8 @@ typedef struct
 typedef struct
 {
     uint8_t type;
-    union {
+    union
+    {
         struct
         {
             sudokuTechniqueType_t technique;
@@ -116,15 +125,23 @@ static bool eliminateHiddenPairs(solverCache_t* cache, const sudokuGrid_t* board
 static bool eliminateNakedTriples(solverCache_t* cache, const sudokuGrid_t* board);
 static bool eliminateHiddenTriples(solverCache_t* cache, const sudokuGrid_t* board);
 
-static bool eliminateShadows(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, uint16_t* notes, const sudokuGrid_t* board);
-static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* pos0, uint8_t* pos1, uint8_t* pos2, const sudokuGrid_t* board);
-static void applyCellElimination(const sudokuGrid_t* board, uint16_t* notes, int pos, uint16_t mask, int elimCount, const uint8_t* eliminations);
-static void addElimination(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, int cellCount, uint16_t digits, sudokuRegionType_t regionType, int regionNum, uint8_t* cellPos);
+static bool eliminateShadows(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, uint16_t* notes,
+                             const sudokuGrid_t* board);
+static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* pos0, uint8_t* pos1, uint8_t* pos2,
+                                    const sudokuGrid_t* board);
+static void applyCellElimination(const sudokuGrid_t* board, uint16_t* notes, int pos, uint16_t mask, int elimCount,
+                                 const uint8_t* eliminations);
+static void addElimination(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, int cellCount, uint16_t digits,
+                           sudokuRegionType_t regionType, int regionNum, uint8_t* cellPos);
 
-static uint8_t getMemberPos(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region, int member);
-static uint8_t getMemberDigit(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region, int member);
-static uint16_t getMemberNotes(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region, int member);
-static uint16_t getRegionNotes(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region);
+static uint8_t getMemberPos(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region,
+                            int member);
+static uint8_t getMemberDigit(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type,
+                              int region, int member);
+static uint16_t getMemberNotes(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type,
+                               int region, int member);
+static uint16_t getRegionNotes(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type,
+                               int region);
 static uint8_t getRegionSize(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type);
 
 bool hintBufNextStep(uint8_t* buf, size_t maxlen, sudokuTechniqueType_t id);
@@ -138,38 +155,63 @@ bool hintBufHighlightRegion(uint8_t* buf, size_t maxlen, sudokuRegionType_t type
 size_t hintBufRead(hintOperation_t* op, const uint8_t* hint, size_t hintlen, size_t offset);
 
 static const char* const aOrAnTable[] = {
-    "", // a 0
-    "", // a 1
-    "", // a 2
-    "", // a 3
-    "", // a 4
-    "", // a 5
-    "", // a 6
-    "", // a 7
+    "",  // a 0
+    "",  // a 1
+    "",  // a 2
+    "",  // a 3
+    "",  // a 4
+    "",  // a 5
+    "",  // a 6
+    "",  // a 7
     "n", // an 8
-    "", // a 9
+    "",  // a 9
     "n", // an A
-    "", // a B
-    "", // a C
-    "", // a D
+    "",  // a B
+    "",  // a C
+    "",  // a D
     "n", // an E
     "n", // an F
 };
 
-static const solverCallback_t findOrder[] =
-{
-    { .type = SCB_REGION, .region = findLastEmptyCell, .name = "Last Empty Cell", },
-    { .type = SCB_CELL, .cell = findOnlyPossibility, .name = "Only Possibiliy", },
-    { .type = SCB_REGION, .region = findHiddenSingle, .name = "Hidden Single", },
+static const solverCallback_t findOrder[] = {
+    {
+        .type   = SCB_REGION,
+        .region = findLastEmptyCell,
+        .name   = "Last Empty Cell",
+    },
+    {
+        .type = SCB_CELL,
+        .cell = findOnlyPossibility,
+        .name = "Only Possibiliy",
+    },
+    {
+        .type   = SCB_REGION,
+        .region = findHiddenSingle,
+        .name   = "Hidden Single",
+    },
 };
 
-static const eliminateCallback_t eliminateOrder[] =
-{
-    { .func = eliminatePointers, .name = "Pointers", },
-    { .func = eliminateNakedPairs, .name = "Naked Pairs", },
-    { .func = eliminateHiddenPairs, .name = "Hidden Pairs", },
-    { .func = eliminateNakedTriples, .name = "Naked Triples", },
-    { .func = eliminateHiddenTriples, .name = "Hidden Triples", },
+static const eliminateCallback_t eliminateOrder[] = {
+    {
+        .func = eliminatePointers,
+        .name = "Pointers",
+    },
+    {
+        .func = eliminateNakedPairs,
+        .name = "Naked Pairs",
+    },
+    {
+        .func = eliminateHiddenPairs,
+        .name = "Hidden Pairs",
+    },
+    {
+        .func = eliminateNakedTriples,
+        .name = "Naked Triples",
+    },
+    {
+        .func = eliminateHiddenTriples,
+        .name = "Hidden Triples",
+    },
 };
 
 // Arguments:
@@ -179,22 +221,50 @@ static const eliminateCallback_t eliminateOrder[] =
 // %4$s: aOrAnTable[sd->hint.digit] ('' or 'n')
 // %5$s: "row"/"column"/"box" (region type name)
 // %6$d: row/column/box id
-static const techniqueDesc_t techniqueDescriptions[] =
-{
-    { .technique = SINGLE, .format = "This is the only valid position for a%4$s %1$d within the %5$s" },
-    { .technique = ONLY_POSSIBLE, .format = "%1$d is the only possible digit in this cell" },
-    { .technique = HIDDEN_SINGLE, .format = "Hidden Single", },
-    { .technique = NAKED_PAIR, .format = "Naked Pair", },
-    { .technique = HIDDEN_PAIR, .format = "Hidden Pair", },
-    { .technique = NAKED_TRIPLE, .format = "Naked Triple", },
-    { .technique = HIDDEN_TRIPLE, .format = "Hidden Triple", },
-    { .technique = X_WING, .format = "X-wing", },
-    { .technique = XY_WING, .format = "XY-Wing", },
-    { .technique = GUESS, .format = "Guess", },
-    { .technique = KNOWN_SOLUTION, .format = "Solution", },
-    { .technique = FOUND_MISTAKE, .format = "This cell has a mistake!", },
+static const techniqueDesc_t techniqueDescriptions[] = {
+    {.technique = SINGLE, .format = "This is the only valid position for a%4$s %1$d within the %5$s"},
+    {.technique = ONLY_POSSIBLE, .format = "%1$d is the only possible digit in this cell"},
+    {
+        .technique = HIDDEN_SINGLE,
+        .format    = "Hidden Single",
+    },
+    {
+        .technique = NAKED_PAIR,
+        .format    = "Naked Pair",
+    },
+    {
+        .technique = HIDDEN_PAIR,
+        .format    = "Hidden Pair",
+    },
+    {
+        .technique = NAKED_TRIPLE,
+        .format    = "Naked Triple",
+    },
+    {
+        .technique = HIDDEN_TRIPLE,
+        .format    = "Hidden Triple",
+    },
+    {
+        .technique = X_WING,
+        .format    = "X-wing",
+    },
+    {
+        .technique = XY_WING,
+        .format    = "XY-Wing",
+    },
+    {
+        .technique = GUESS,
+        .format    = "Guess",
+    },
+    {
+        .technique = KNOWN_SOLUTION,
+        .format    = "Solution",
+    },
+    {
+        .technique = FOUND_MISTAKE,
+        .format    = "This cell has a mistake!",
+    },
 };
-
 
 /**
  * @brief Determine the next simplest move needed to solve the puzzle
@@ -294,7 +364,7 @@ bool sudokuNextMove(solverCache_t* cache, const sudokuGrid_t* board)
                     {
                         ESP_LOGI("Sudoku", "Last elimination failed, giving up!");
                         cache->elimIdx = 0;
-                        giveUp = true;
+                        giveUp         = true;
                         break;
                     }
                 }
@@ -326,7 +396,8 @@ bool sudokuNextMove(solverCache_t* cache, const sudokuGrid_t* board)
     return false;
 }
 
-static bool eliminateShadows(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, uint16_t* notes, const sudokuGrid_t* board)
+static bool eliminateShadows(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, uint16_t* notes,
+                             const sudokuGrid_t* board)
 {
     // TODO
     // Ok here's the strategy:
@@ -456,7 +527,8 @@ static bool eliminateShadows(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t ma
     return false;
 }
 
-static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* pos0, uint8_t* pos1, uint8_t* pos2, const sudokuGrid_t* board)
+static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* pos0, uint8_t* pos1, uint8_t* pos2,
+                                    const sudokuGrid_t* board)
 {
     // TODO: more than one pass (for triples)
     for (int pass = 0; pass < 1; pass++)
@@ -478,15 +550,15 @@ static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* 
 
                 for (int i = 0; i < board->size; i++)
                 {
-                    rFirstPos[i] = -1;
+                    rFirstPos[i]  = -1;
                     rSecondPos[i] = -1;
-                    cFirstPos[i] = -1;
+                    cFirstPos[i]  = -1;
                     cSecondPos[i] = -1;
                 }
 
                 for (int i = 0; i < board->base; i++)
                 {
-                    boxFirstPos[i] = -1;
+                    boxFirstPos[i]  = -1;
                     boxSecondPos[i] = -1;
                 }
 
@@ -521,7 +593,7 @@ static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* 
                             else
                             {
                                 // found more than two, no dice
-                                rFirstPos[row] = -2;
+                                rFirstPos[row]  = -2;
                                 rSecondPos[row] = -2;
                             }
 
@@ -536,7 +608,7 @@ static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* 
                             else
                             {
                                 // nope
-                                cFirstPos[col] = -2;
+                                cFirstPos[col]  = -2;
                                 cSecondPos[col] = -2;
                             }
 
@@ -553,7 +625,7 @@ static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* 
                                 else
                                 {
                                     // nope
-                                    boxFirstPos[box] = -2;
+                                    boxFirstPos[box]  = -2;
                                     boxSecondPos[box] = -2;
                                 }
                             }
@@ -561,14 +633,14 @@ static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* 
                         else if ((notes[pos] & bitA) || (notes[pos] & bitB))
                         {
                             // only one of the bits was set, won't work!
-                            rFirstPos[row] = -2;
+                            rFirstPos[row]  = -2;
                             rSecondPos[row] = -2;
-                            cFirstPos[col] = -2;
+                            cFirstPos[col]  = -2;
                             cSecondPos[col] = -2;
 
                             if (box != BOX_NONE)
                             {
-                                boxFirstPos[box] = -2;
+                                boxFirstPos[box]  = -2;
                                 boxSecondPos[box] = -2;
                             }
                         }
@@ -577,7 +649,7 @@ static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* 
                 else
                 {
                     // no pairs found, second pass goes with triples
-                    //for (int c = b + 1; c <= board->base; c++)
+                    // for (int c = b + 1; c <= board->base; c++)
                     {
                         // TODO
                     }
@@ -609,9 +681,10 @@ static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* 
                         }
                         if (eliminated)
                         {
-                            ESP_LOGI("Solver", "Eliminated pairs in row %d at %d and %d (%d/%d)", i, rFirstPos[i], rSecondPos[i], a, b);
-                            *pos0 = rFirstPos[i];
-                            *pos1 = rSecondPos[i];
+                            ESP_LOGI("Solver", "Eliminated pairs in row %d at %d and %d (%d/%d)", i, rFirstPos[i],
+                                     rSecondPos[i], a, b);
+                            *pos0   = rFirstPos[i];
+                            *pos1   = rSecondPos[i];
                             *digits = (bitA | bitB);
                             return 2;
                         }
@@ -641,9 +714,10 @@ static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* 
 
                         if (eliminated)
                         {
-                            ESP_LOGI("Solver", "Eliminated pairs in col %d at %d and %d (%d/%d)", i, cFirstPos[i], cSecondPos[i], a, b);
-                            *pos0 = cFirstPos[i];
-                            *pos1 = cSecondPos[i];
+                            ESP_LOGI("Solver", "Eliminated pairs in col %d at %d and %d (%d/%d)", i, cFirstPos[i],
+                                     cSecondPos[i], a, b);
+                            *pos0   = cFirstPos[i];
+                            *pos1   = cSecondPos[i];
                             *digits = (bitA | bitB);
                             return 2;
                         }
@@ -680,9 +754,10 @@ static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* 
 
                         if (eliminated)
                         {
-                            ESP_LOGI("Solver", "Eliminated pairs in box %d at %d and %d (%d/%d)", i, boxFirstPos[i], boxSecondPos[i], a, b);
-                            *pos0 = boxFirstPos[i];
-                            *pos1 = boxSecondPos[i];
+                            ESP_LOGI("Solver", "Eliminated pairs in box %d at %d and %d (%d/%d)", i, boxFirstPos[i],
+                                     boxSecondPos[i], a, b);
+                            *pos0   = boxFirstPos[i];
+                            *pos1   = boxSecondPos[i];
                             *digits = (bitA | bitB);
                             return 2;
                         }
@@ -696,7 +771,8 @@ static int eliminatePairsTriplesEtc(uint16_t* notes, uint16_t* digits, uint8_t* 
     return 0;
 }
 
-static void applyCellElimination(const sudokuGrid_t* board, uint16_t* notes, int pos, uint16_t mask, int elimCount, const uint8_t* eliminations)
+static void applyCellElimination(const sudokuGrid_t* board, uint16_t* notes, int pos, uint16_t mask, int elimCount,
+                                 const uint8_t* eliminations)
 {
     // First check if this is one of the eliminated values
     bool isTarget = false;
@@ -723,7 +799,8 @@ static void applyCellElimination(const sudokuGrid_t* board, uint16_t* notes, int
     }
 }
 
-static void addElimination(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, int cellCount, uint16_t digits, sudokuRegionType_t regionType, int regionNum, uint8_t* cellPos)
+static void addElimination(sudokuMoveDesc_t* desc, uint8_t* hintBuf, size_t maxlen, int cellCount, uint16_t digits,
+                           sudokuRegionType_t regionType, int regionNum, uint8_t* cellPos)
 {
     hintBufNextStep(hintBuf, maxlen, NOTE_ELIMINATION);
     hintBufSetMultiNote(hintBuf, maxlen, false, digits, cellCount, cellPos);
@@ -792,7 +869,8 @@ void sudokuApplyMove(sudokuGrid_t* board, const sudokuMoveDesc_t* desc)
                 {
                     if (board->boxMap[pos] == step->eliminationRegionNum)
                     {
-                        applyCellElimination(board, board->notes, pos, step->eliminationMask, step->eliminationCount, step->eliminations);
+                        applyCellElimination(board, board->notes, pos, step->eliminationMask, step->eliminationCount,
+                                             step->eliminations);
                     }
                 }
             }
@@ -802,7 +880,8 @@ void sudokuApplyMove(sudokuGrid_t* board, const sudokuMoveDesc_t* desc)
                 {
                     int pos = step->eliminationRegionNum * board->size + col;
 
-                    applyCellElimination(board, board->notes, pos, step->eliminationMask, step->eliminationCount, step->eliminations);
+                    applyCellElimination(board, board->notes, pos, step->eliminationMask, step->eliminationCount,
+                                         step->eliminations);
                 }
             }
             else if (step->eliminationRegionType == REGION_COLUMN)
@@ -811,7 +890,8 @@ void sudokuApplyMove(sudokuGrid_t* board, const sudokuMoveDesc_t* desc)
                 {
                     int pos = row * board->size + step->eliminationRegionNum;
 
-                    applyCellElimination(board, board->notes, pos, step->eliminationMask, step->eliminationCount, step->eliminations);
+                    applyCellElimination(board, board->notes, pos, step->eliminationMask, step->eliminationCount,
+                                         step->eliminations);
                 }
             }
         }
@@ -833,8 +913,8 @@ void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepN
     while (idx < n && idx < len + 4)
     {
         uint8_t header = hint[idx++];
-        uint8_t op = header & OP_MASK_OP;
-        uint8_t count = (header & OP_MASK_COUNT) >> OP_SHIFT_COUNT;
+        uint8_t op     = header & OP_MASK_OP;
+        uint8_t count  = (header & OP_MASK_COUNT) >> OP_SHIFT_COUNT;
 
         switch (op)
         {
@@ -865,10 +945,10 @@ void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepN
                         uint8_t r = pos / game->size;
                         uint8_t c = pos % game->size;
 
-                        shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
-                        shape->type = OVERLAY_DIGIT;
-                        shape->color = c005;
-                        shape->tag = ST_HINT;
+                        shape              = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                        shape->type        = OVERLAY_DIGIT;
+                        shape->color       = c005;
+                        shape->tag         = ST_HINT;
                         shape->digit.digit = digit;
                         shape->digit.pos.x = c * BOX_SIZE_SUBPOS;
                         shape->digit.pos.y = r * BOX_SIZE_SUBPOS;
@@ -895,10 +975,10 @@ void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepN
 
                     if (stepNum == -1 || curStep == stepNum)
                     {
-                        shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
-                        shape->type = OVERLAY_NOTES_SHAPE;
-                        shape->color = color;
-                        shape->tag = ST_HINT;
+                        shape              = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                        shape->type        = OVERLAY_NOTES_SHAPE;
+                        shape->color       = color;
+                        shape->tag         = ST_HINT;
                         shape->notes.notes = notes;
 
                         int elimR = pos / game->size;
@@ -915,16 +995,17 @@ void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepN
             case OP_HIGHLIGHT:
             {
                 uint8_t targetDigit = hint[idx++];
-                uint8_t targetBox = hint[idx++];
-                uint8_t targetRow = hint[idx++];
-                uint8_t targetCol = hint[idx++];
+                uint8_t targetBox   = hint[idx++];
+                uint8_t targetRow   = hint[idx++];
+                uint8_t targetCol   = hint[idx++];
 
                 bool useDigit = (targetDigit != 0 && targetDigit <= game->base);
-                bool useBox = (targetBox < game->base);
-                bool useRow = (targetRow < game->size);
-                bool useCol = (targetCol < game->size);
+                bool useBox   = (targetBox < game->base);
+                bool useRow   = (targetRow < game->size);
+                bool useCol   = (targetCol < game->size);
 
-                ESP_LOGI("Solver", "Digit / Box / Row / Col: %s / %s / %s / %s", useDigit ? "yes" : "no", useBox ? "yes" : "no", useRow ? "yes" : "no", useCol ? "yes" : "no");
+                ESP_LOGI("Solver", "Digit / Box / Row / Col: %s / %s / %s / %s", useDigit ? "yes" : "no",
+                         useBox ? "yes" : "no", useRow ? "yes" : "no", useCol ? "yes" : "no");
 
                 if (stepNum != -1 && curStep != stepNum)
                 {
@@ -940,10 +1021,10 @@ void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepN
                 else if (useRow && !useDigit && !useBox && !useCol)
                 {
                     // box the entire row
-                    shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
-                    shape->type = OVERLAY_RECT;
+                    shape        = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                    shape->type  = OVERLAY_RECT;
                     shape->color = c050;
-                    shape->tag = ST_HINT;
+                    shape->tag   = ST_HINT;
                     getOverlayPos(&shape->rectangle.pos.x, &shape->rectangle.pos.y, targetRow, 0, SUBPOS_NW);
                     getOverlayPos(&shape->rectangle.width, &shape->rectangle.height, 1, game->size, SUBPOS_NW);
                     push(&overlay->shapes, shape);
@@ -952,10 +1033,10 @@ void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepN
                 else if (useCol && !useDigit && !useBox && !useRow)
                 {
                     // box the entire column
-                    shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
-                    shape->type = OVERLAY_RECT;
+                    shape        = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                    shape->type  = OVERLAY_RECT;
                     shape->color = c050;
-                    shape->tag = ST_HINT;
+                    shape->tag   = ST_HINT;
                     getOverlayPos(&shape->rectangle.pos.x, &shape->rectangle.pos.y, 0, targetCol, SUBPOS_NW);
                     getOverlayPos(&shape->rectangle.width, &shape->rectangle.height, game->size, 1, SUBPOS_NW);
                     push(&overlay->shapes, shape);
@@ -964,9 +1045,9 @@ void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepN
 
                 for (int pos = 0; pos < boardSize; pos++)
                 {
-                    int row = pos / game->size;
-                    int col = pos % game->size;
-                    int box = game->boxMap[pos];
+                    int row   = pos / game->size;
+                    int col   = pos % game->size;
+                    int box   = game->boxMap[pos];
                     int digit = game->grid[pos];
 
                     if (useDigit && digit != targetDigit)
@@ -990,10 +1071,10 @@ void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepN
                     }
 
                     // box a single square
-                    shape = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
-                    shape->type = OVERLAY_CIRCLE;
+                    shape        = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                    shape->type  = OVERLAY_CIRCLE;
                     shape->color = c035;
-                    shape->tag = ST_HINT;
+                    shape->tag   = ST_HINT;
                     getOverlayPos(&shape->circle.pos.x, &shape->circle.pos.y, row, col, SUBPOS_CENTER);
                     shape->circle.radius = BOX_SIZE_SUBPOS * 7 / 10;
                     push(&overlay->shapes, shape);
@@ -1018,8 +1099,8 @@ bool hintBufNextStep(uint8_t* buf, size_t maxlen, sudokuTechniqueType_t id)
     }
 
     uint32_t off = len + 4;
-    buf[off++] = OP_STEP;
-    buf[off++] = (uint8_t)id;
+    buf[off++]   = OP_STEP;
+    buf[off++]   = (uint8_t)id;
 
     SET_LENGTH(buf, off - 4);
 
@@ -1040,9 +1121,9 @@ bool hintBufSetDigit(uint8_t* buf, size_t maxlen, uint8_t digit, uint8_t pos)
     }
 
     uint32_t off = len + 4;
-    buf[off++] = MAKE_OPCODE(OP_SET_DIGIT, 0);
-    buf[off++] = digit;
-    buf[off++] = pos;
+    buf[off++]   = MAKE_OPCODE(OP_SET_DIGIT, 0);
+    buf[off++]   = digit;
+    buf[off++]   = pos;
 
     SET_LENGTH(buf, off - 4);
 
@@ -1067,7 +1148,7 @@ bool hintBufSetMultiDigit(uint8_t* buf, size_t maxlen, uint8_t digit, int count,
     buf[off++] = MAKE_OPCODE(OP_SET_DIGIT, count - 1);
     buf[off++] = digit;
 
-    for (int  n = 0; n < count; n++)
+    for (int n = 0; n < count; n++)
     {
         buf[off++] = pos[n];
     }
@@ -1132,9 +1213,9 @@ bool hintBufAddHighlight(uint8_t* buf, size_t maxlen, int digit, int box, int ro
     uint32_t off = len + 4;
 
     uint8_t digitVal = (digit <= 0) ? 255u : digit;
-    uint8_t boxVal = (box < 0) ? 255u : box;
-    uint8_t rowVal = (row < 0) ? 255u : row;
-    uint8_t colVal = (col < 0) ? 255u : col;
+    uint8_t boxVal   = (box < 0) ? 255u : box;
+    uint8_t rowVal   = (row < 0) ? 255u : row;
+    uint8_t colVal   = (col < 0) ? 255u : col;
 
     buf[off++] = MAKE_OPCODE(OP_HIGHLIGHT, 0);
     buf[off++] = digitVal;
@@ -1164,7 +1245,6 @@ bool hintBufHighlightRegion(uint8_t* buf, size_t maxlen, sudokuRegionType_t type
 
         case REGION_BOX:
         {
-
             return hintBufAddHighlight(buf, maxlen, -1, region, -1, -1);
         }
     }
@@ -1190,7 +1270,7 @@ size_t hintBufRead(hintOperation_t* op, const uint8_t* hint, size_t maxlen, size
     {
         uint8_t header = hint[idx++];
         uint8_t opcode = header & OP_MASK_OP;
-        uint8_t count = (header & OP_MASK_COUNT) >> OP_SHIFT_COUNT;
+        uint8_t count  = (header & OP_MASK_COUNT) >> OP_SHIFT_COUNT;
 
         switch (opcode)
         {
@@ -1202,7 +1282,7 @@ size_t hintBufRead(hintOperation_t* op, const uint8_t* hint, size_t maxlen, size
                     return 0;
                 }
 
-                op->type = opcode;
+                op->type           = opcode;
                 op->step.technique = (sudokuTechniqueType_t)type;
 
                 return idx - offset - 4;
@@ -1217,12 +1297,12 @@ size_t hintBufRead(hintOperation_t* op, const uint8_t* hint, size_t maxlen, size
 
                 for (int digitNum = 0; digitNum < count + 1 && idx < maxlen && idx < len + 4; digitNum++)
                 {
-                    uint8_t pos = hint[idx++];
+                    uint8_t pos                = hint[idx++];
                     positions[positionCount++] = pos;
                 }
 
-                op->type = opcode;
-                op->setDigit.digit = digit;
+                op->type                   = opcode;
+                op->setDigit.digit         = digit;
                 op->setDigit.positionCount = positionCount;
                 memcpy(&op->setDigit.positions, positions, sizeof(positions));
 
@@ -1241,12 +1321,12 @@ size_t hintBufRead(hintOperation_t* op, const uint8_t* hint, size_t maxlen, size
 
                 for (int posIdx = 0; posIdx < count + 1 && idx < maxlen && idx < len + 4; posIdx++)
                 {
-                    uint8_t pos = hint[idx++];
+                    uint8_t pos                = hint[idx++];
                     positions[positionCount++] = pos;
                 }
 
-                op->type = opcode;
-                op->note.notes = notes;
+                op->type               = opcode;
+                op->note.notes         = notes;
                 op->note.positionCount = positionCount;
                 memcpy(&op->setDigit.positions, positions, sizeof(positions));
 
@@ -1256,20 +1336,20 @@ size_t hintBufRead(hintOperation_t* op, const uint8_t* hint, size_t maxlen, size
             case OP_HIGHLIGHT:
             {
                 uint8_t targetDigit = hint[idx++];
-                uint8_t targetBox = hint[idx++];
-                uint8_t targetRow = hint[idx++];
-                uint8_t targetCol = hint[idx++];
+                uint8_t targetBox   = hint[idx++];
+                uint8_t targetRow   = hint[idx++];
+                uint8_t targetCol   = hint[idx++];
 
                 bool useDigit = (targetDigit != 0 && targetDigit != 255);
-                bool useBox = (targetBox != 255);
-                bool useRow = (targetRow != 255);
-                bool useCol = (targetCol != 255);
+                bool useBox   = (targetBox != 255);
+                bool useRow   = (targetRow != 255);
+                bool useCol   = (targetCol != 255);
 
-                op->type = opcode;
+                op->type            = opcode;
                 op->highlight.digit = targetDigit;
-                op->highlight.box = useBox ? targetBox : -1;
-                op->highlight.row = useRow ? targetRow : -1;
-                op->highlight.col = useCol ? targetCol : -1;
+                op->highlight.box   = useBox ? targetBox : -1;
+                op->highlight.row   = useRow ? targetRow : -1;
+                op->highlight.col   = useCol ? targetCol : -1;
                 op->highlight.color = count;
 
                 return idx - offset - 4;
@@ -1288,7 +1368,7 @@ size_t hintBufRead(hintOperation_t* op, const uint8_t* hint, size_t maxlen, size
 void hintBufDebug(const uint8_t* hint, size_t hintbufLen)
 {
     size_t offset = 0;
-    size_t read = 0;
+    size_t read   = 0;
 
     hintOperation_t opInfo = {0};
 
@@ -1311,8 +1391,9 @@ void hintBufDebug(const uint8_t* hint, size_t hintbufLen)
             {
                 char buf[128];
                 const char* end = buf + sizeof(buf);
-                char* cur = buf;
-                cur += snprintf(buf, sizeof(buf), "Step %d: [SETDIGIT] %2d x %2d @ [", curStep, opInfo.setDigit.digit, opInfo.setDigit.positionCount);
+                char* cur       = buf;
+                cur += snprintf(buf, sizeof(buf), "Step %d: [SETDIGIT] %2d x %2d @ [", curStep, opInfo.setDigit.digit,
+                                opInfo.setDigit.positionCount);
 
                 for (int n = 0; n < opInfo.setDigit.positionCount; n++)
                 {
@@ -1359,10 +1440,10 @@ void hintBufDebug(const uint8_t* hint, size_t hintbufLen)
 
 void applyHint(sudokuGrid_t* game, uint16_t* notes, const uint8_t* hint, size_t hintbufLen)
 {
-    size_t read = 0;
-    size_t offset = 0;
+    size_t read            = 0;
+    size_t offset          = 0;
     hintOperation_t opInfo = {0};
-    int curStep = -1;
+    int curStep            = -1;
 
     while (0 != (read = hintBufRead(&opInfo, hint, hintbufLen, offset)))
     {
@@ -1379,7 +1460,8 @@ void applyHint(sudokuGrid_t* game, uint16_t* notes, const uint8_t* hint, size_t 
             {
                 for (int i = 0; i < opInfo.setDigit.positionCount; i++)
                 {
-                    setDigit(game, opInfo.setDigit.digit, opInfo.setDigit.positions[i] % game->size, opInfo.setDigit.positions[i] / game->size);
+                    setDigit(game, opInfo.setDigit.digit, opInfo.setDigit.positions[i] % game->size,
+                             opInfo.setDigit.positions[i] / game->size);
                 }
                 break;
             }
@@ -1426,7 +1508,7 @@ void applyHint(sudokuGrid_t* game, uint16_t* notes, const uint8_t* hint, size_t 
 bool initSolverCache(solverCache_t* cache, int size, int base)
 {
     const size_t defaultLen = 256;
-    uint16_t* notesAlloc = heap_caps_calloc(size * size + base + size * 2, sizeof(uint16_t), MALLOC_CAP_8BIT);
+    uint16_t* notesAlloc    = heap_caps_calloc(size * size + base + size * 2, sizeof(uint16_t), MALLOC_CAP_8BIT);
     if (!notesAlloc)
     {
         return false;
@@ -1447,10 +1529,10 @@ bool initSolverCache(solverCache_t* cache, int size, int base)
         return false;
     }
 
-    cache->hintBuf = hintAlloc;
+    cache->hintBuf    = hintAlloc;
     cache->hintbufLen = defaultLen;
 
-    cache->notes = notesAlloc;
+    cache->notes    = notesAlloc;
     cache->boxNotes = notesAlloc + (size * size);
     cache->rowNotes = notesAlloc + (size * size) + base;
     cache->colNotes = notesAlloc + (size * size) + base + size;
@@ -1463,9 +1545,9 @@ bool initSolverCache(solverCache_t* cache, int size, int base)
     cache->base = base;
 
     cache->searchIdx = 0;
-    cache->elimIdx = 0;
-    cache->digit = 1;
-    cache->pos = 0;
+    cache->elimIdx   = 0;
+    cache->digit     = 1;
+    cache->pos       = 0;
 
     return true;
 }
@@ -1489,9 +1571,9 @@ void resetSolverCache(solverCache_t* cache, int size, int base)
     cache->solution = NULL;
 
     cache->searchIdx = 0;
-    cache->elimIdx = 0;
-    cache->digit = 1;
-    cache->pos = 0;
+    cache->elimIdx   = 0;
+    cache->digit     = 1;
+    cache->pos       = 0;
 }
 
 void deinitSolverCache(solverCache_t* cache)
@@ -1499,7 +1581,7 @@ void deinitSolverCache(solverCache_t* cache)
     if (cache->notes)
     {
         free(cache->notes);
-        cache->notes = NULL;
+        cache->notes    = NULL;
         cache->boxNotes = NULL;
         cache->rowNotes = NULL;
         cache->colNotes = NULL;
@@ -1508,7 +1590,7 @@ void deinitSolverCache(solverCache_t* cache)
     if (cache->hintBuf)
     {
         free(cache->hintBuf);
-        cache->hintBuf = NULL;
+        cache->hintBuf    = NULL;
         cache->hintbufLen = 0;
     }
 
@@ -1537,7 +1619,8 @@ void makeBoxMap(solverCache_t* cache, const sudokuGrid_t* board)
     }
 }
 
-static uint8_t getMemberPos(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region, int member)
+static uint8_t getMemberPos(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region,
+                            int member)
 {
     switch (type)
     {
@@ -1565,7 +1648,8 @@ static uint8_t getMemberPos(const solverCache_t* cache, const sudokuGrid_t* boar
     return 0;
 }
 
-static uint8_t getMemberDigit(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region, int member)
+static uint8_t getMemberDigit(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type,
+                              int region, int member)
 {
     switch (type)
     {
@@ -1593,7 +1677,8 @@ static uint8_t getMemberDigit(const solverCache_t* cache, const sudokuGrid_t* bo
     return 0;
 }
 
-static uint16_t getMemberNotes(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region, int member)
+static uint16_t getMemberNotes(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type,
+                               int region, int member)
 {
     switch (type)
     {
@@ -1621,7 +1706,8 @@ static uint16_t getMemberNotes(const solverCache_t* cache, const sudokuGrid_t* b
     return 0;
 }
 
-static uint16_t getRegionNotes(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region)
+static uint16_t getRegionNotes(const solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type,
+                               int region)
 {
     switch (type)
     {
@@ -1663,9 +1749,10 @@ static bool findLastEmptyCell(solverCache_t* cache, const sudokuGrid_t* board, s
         // Only a single digit is possible in this region
         if (notes != 0 && __builtin_popcount(notes) == 1 && 0 == getMemberDigit(cache, board, type, region, member))
         {
-            ESP_LOGI("Solver", "Region has only one possibility left: %d, %" PRIb16 " (popcount=%d)\n", region, notes, __builtin_popcount(notes));
+            ESP_LOGI("Solver", "Region has only one possibility left: %d, %" PRIb16 " (popcount=%d)\n", region, notes,
+                     __builtin_popcount(notes));
             int missingDigit = __builtin_ctz(notes) + 1;
-            uint8_t pos = getMemberPos(cache, board, type, region, member);
+            uint8_t pos      = getMemberPos(cache, board, type, region, member);
             hintBufNextStep(cache->hintBuf, cache->hintbufLen, SINGLE);
             hintBufSetDigit(cache->hintBuf, cache->hintbufLen, missingDigit, pos);
             hintBufAddHighlight(cache->hintBuf, cache->hintbufLen, -1, -1, pos / cache->size, pos % cache->size);
@@ -1695,14 +1782,14 @@ static bool findOnlyPossibility(solverCache_t* cache, const sudokuGrid_t* board,
 static bool findHiddenSingle(solverCache_t* cache, const sudokuGrid_t* board, sudokuRegionType_t type, int region)
 {
     uint16_t regionNotes = getRegionNotes(cache, board, type, region);
-    uint8_t memberCount = getRegionSize(cache, board, type);
+    uint8_t memberCount  = getRegionSize(cache, board, type);
 
     for (int digit = 1; digit <= board->base; digit++)
     {
         uint16_t bit = 1 << (digit - 1);
         if (bit & regionNotes)
         {
-            int count = 0;
+            int count      = 0;
             int onlyMember = 0;
 
             // this digit can go here
@@ -1765,22 +1852,22 @@ void writeStepDescription(char* buf, size_t n, const uint8_t* hint, size_t hintb
 
     int curStep = -1;
 
-    char* out = buf;
+    char* out       = buf;
     const char* end = buf + n;
 
     sudokuTechniqueType_t stepType = TECHNIQUE_TYPE_LAST;
-    int stepDigit = -1;
-    int stepDigitRow = -1;
-    int stepDigitColumn = -1;
-    int stepDigitBox = -1;
-    int stepPos = -1;
-    int stepRegion = -1;
-    const char* regionTypeName = "?";
+    int stepDigit                  = -1;
+    int stepDigitRow               = -1;
+    int stepDigitColumn            = -1;
+    int stepDigitBox               = -1;
+    int stepPos                    = -1;
+    int stepRegion                 = -1;
+    const char* regionTypeName     = "?";
 
     hintOperation_t opInfo = {0};
 
     size_t offset = 0;
-    size_t read = 0;
+    size_t read   = 0;
 
     hintBufDebug(hint, hintbufLen);
 
@@ -1807,7 +1894,7 @@ void writeStepDescription(char* buf, size_t n, const uint8_t* hint, size_t hintb
                 if (stepNum == -1 || curStep == stepNum)
                 {
                     stepDigit = opInfo.setDigit.digit;
-                    stepPos = opInfo.setDigit.positions[0];
+                    stepPos   = opInfo.setDigit.positions[0];
                 }
                 break;
             }
@@ -1840,27 +1927,27 @@ void writeStepDescription(char* buf, size_t n, const uint8_t* hint, size_t hintb
                 if (opInfo.highlight.box >= 0)
                 {
                     regionTypeName = "box";
-                    stepDigitBox = opInfo.highlight.box;
-                    stepRegion = opInfo.highlight.col;
+                    stepDigitBox   = opInfo.highlight.box;
+                    stepRegion     = opInfo.highlight.col;
                 }
                 else if (opInfo.highlight.row >= 0 && opInfo.highlight.col >= 0)
                 {
-                    regionTypeName = "cell";
-                    stepDigitRow = opInfo.highlight.row;
+                    regionTypeName  = "cell";
+                    stepDigitRow    = opInfo.highlight.row;
                     stepDigitColumn = opInfo.highlight.col;
-                    stepRegion = opInfo.highlight.col;
+                    stepRegion      = opInfo.highlight.col;
                 }
                 else if (opInfo.highlight.row >= 0)
                 {
                     regionTypeName = "row";
-                    stepDigitRow = opInfo.highlight.row;
-                    stepRegion = opInfo.highlight.row;
+                    stepDigitRow   = opInfo.highlight.row;
+                    stepRegion     = opInfo.highlight.row;
                 }
                 else if (opInfo.highlight.col >= 0)
                 {
-                    regionTypeName = "column";
+                    regionTypeName  = "column";
                     stepDigitColumn = opInfo.highlight.col;
-                    stepRegion = opInfo.highlight.col;
+                    stepRegion      = opInfo.highlight.col;
                 }
                 break;
             }
@@ -1888,15 +1975,14 @@ void writeStepDescription(char* buf, size_t n, const uint8_t* hint, size_t hintb
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
-        snprintf(
-            buf, n, format,
-            /////////
-            stepDigit, // %1$s: Digit
-            stepDigitRow + 1, // %2$d: Row
-            stepDigitColumn + 1, // %3$d: Col
-            (stepDigit >= 0) ? aOrAnTable[stepDigit] : "", // %4$s: A/An
-            regionTypeName, // %5$s: row/column/box
-            stepRegion + 1 // %6$s: row/col/box ID
+        snprintf(buf, n, format,
+                 /////////
+                 stepDigit,                                     // %1$s: Digit
+                 stepDigitRow + 1,                              // %2$d: Row
+                 stepDigitColumn + 1,                           // %3$d: Col
+                 (stepDigit >= 0) ? aOrAnTable[stepDigit] : "", // %4$s: A/An
+                 regionTypeName,                                // %5$s: row/column/box
+                 stepRegion + 1                                 // %6$s: row/col/box ID
         );
 #pragma GCC diagnostic pop
     }
