@@ -431,7 +431,7 @@ void platformerEnterMode(void)
                          "Grind Pangolin", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 13, 62, 1, 250, false);
         // DrainBat
-        addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Drain Bat",
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Drain Bat",
                          1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 14, 82, 2, 250, false);
         // SmashGorilla
@@ -450,63 +450,70 @@ void platformerEnterMode(void)
         addCutsceneStyle(platformer->gameData.cutscene, c000, EMBER_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Ember", 1, true,
                          true, true);
         setMidiParams(platformer->gameData.cutscene, 18, 82, 1, 250, false);
-        // Cho
-        addCutsceneStyle(platformer->gameData.cutscene, c000, CHO_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Cho", 1, true,
-                         true, true);
-        setMidiParams(platformer->gameData.cutscene, 19, 17, 1, 250, false);
         // Percy
         addCutsceneStyle(platformer->gameData.cutscene, c000, PERCY_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Percy", 1, true,
                          true, true);
-        setMidiParams(platformer->gameData.cutscene, 20, 38, 1, 250, false);
+        setMidiParams(platformer->gameData.cutscene, 19, 38, 1, 250, false);
         // Sunny
         addCutsceneStyle(platformer->gameData.cutscene, c541, SUNNY_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sunny", 1,
                          true, true, true);
-        setMidiParams(platformer->gameData.cutscene, 21, 81, 1, 100, true);
+        setMidiParams(platformer->gameData.cutscene, 20, 81, 1, 100, true);
         // WarningMessage
         addCutsceneStyle(platformer->gameData.cutscene, c254, WARNING_MESSAGE_PORTRAIT_WSG, TEXTBOX_PULSE_WSG, "", 1,
                          true, true, false);
-        setMidiParams(platformer->gameData.cutscene, 22, 55, 0, 100, false);
+        setMidiParams(platformer->gameData.cutscene, 21, 55, 0, 100, false);
         // SawtoothPostReveal
         addCutsceneStyle(platformer->gameData.cutscene, c541, SAWTOOTH_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth",
                          4, true, true, true);
-        setMidiParams(platformer->gameData.cutscene, 23, 81, 1, 100, true);
+        setMidiParams(platformer->gameData.cutscene, 22, 81, 1, 100, true);
         // BlackScreen
         addCutsceneStyle(platformer->gameData.cutscene, c555, BLACK_PORTRAIT_WSG, TEXTBOX_SAWTOOTH_WSG, "", 1, false,
                          true, false);
+        setMidiParams(platformer->gameData.cutscene, 23, 11, 0, 100, true);
 
-        // uncorrupted Versions.....
+        /////////////////////////
+        // UNCORRUPTED VERSIONS//
+        /////////////////////////
         //  TrashMan
         addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 2,
                          false, true, true);
+        setMidiParams(platformer->gameData.cutscene, 24, 36, -2, 250, false);
         // KineticDonut
         addCutsceneStyle(platformer->gameData.cutscene, c310, KINETIC_DONUT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
                          "Kinetic Donut", 1, false, true, true);
-        setMidiParams(platformer->gameData.cutscene, 6, 80, -1, 1000, false);
+        setMidiParams(platformer->gameData.cutscene, 25, 80, -1, 1000, false);
         // JoltLapin
         addCutsceneStyle(platformer->gameData.cutscene, c000, JOLT_LAPIN_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
                          "Jolt Lapin", 1, true, true, true);
-        setMidiParams(platformer->gameData.cutscene, 7, 80, 1, 250, false);
+        setMidiParams(platformer->gameData.cutscene, 26, 80, 1, 250, false);
         // FlareGryffyn
         addCutsceneStyle(platformer->gameData.cutscene, c310, FLARE_GRYFFYN_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
                          "Flare Gryffyn", 1, false, true, true);
-        setMidiParams(platformer->gameData.cutscene, 8, 24, 1, 250, false);
+        setMidiParams(platformer->gameData.cutscene, 27, 24, 1, 250, false);
         // CrashTurtle
         addCutsceneStyle(platformer->gameData.cutscene, c000, CRASH_TURTLE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
                          "Crash Turtle", 1, true, true, true);
+        setMidiParams(platformer->gameData.cutscene, 28, 119, 1, 250, false);
         // DeadeyeChirpzi
         addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_CHIRPZI_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
                          "Deadeye Chirpzi", 1, true, true, true);
+        setMidiParams(platformer->gameData.cutscene, 29, 17, 1, 250, false);
         // GrindPangolin
         addCutsceneStyle(platformer->gameData.cutscene, c310, GRIND_PANGOLIN_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
                          "Grind Pangolin", 1, false, true, true);
+        setMidiParams(platformer->gameData.cutscene, 30, 62, 1, 250, false);
         // SmashGorilla
         addCutsceneStyle(platformer->gameData.cutscene, c310, SMASH_GORILLA_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
                          "Smash Gorilla", 1, false, true, true);
-        setMidiParams(platformer->gameData.cutscene, 15, 29, -1, 250, false);
+        setMidiParams(platformer->gameData.cutscene, 31, 29, -1, 250, false);
         // SeverYagata
         addCutsceneStyle(platformer->gameData.cutscene, c310, SEVER_YATAGA_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
                          "Sever Yagata", 1, false, true, true);
-        setMidiParams(platformer->gameData.cutscene, 24, 11, 0, 100, true);
+        setMidiParams(platformer->gameData.cutscene, 32, 11, 0, 100, true);
+        // DrainBat
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Drain Bat",
+                         1, false, true, true);
+        setMidiParams(platformer->gameData.cutscene, 33, 82, 2, 250, false);
     }
 
     setFrameRateUs(16666);

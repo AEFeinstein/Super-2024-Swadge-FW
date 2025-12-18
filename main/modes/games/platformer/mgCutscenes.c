@@ -21,7 +21,6 @@ typedef enum
     SeverYagata,
     Jasper,
     Ember,
-    Cho,
     Percy,
     Sunny,
     WarningMessage,
@@ -36,6 +35,7 @@ typedef enum
     GrindPangolinUncorrupted,
     SmashGorillaUncorrupted,
     SeverYagataUncorrupted,
+    DrainBatUncorrupted,
 } cutsceneCharacters;
 
 static void setSongPitchesFromCurrentSong(mgGameData_t* gameData)
@@ -673,112 +673,112 @@ void bossOutroCutscene(mgGameData_t* gameData)
         {
             if(gameData->abilities & (1U << MG_CAN_OF_SALSA_ABILITY))
             {
-                addCutsceneLine(gameData->cutscene, KineticDonut, "Ugh... so hungry...", false, -1);
-                addCutsceneLine(gameData->cutscene, KineticDonut, "WAIT - Is that a CAN OF SALSA you've got there? Is it chunky? Spicy? ZESTY CHIPOTLE?", false, -1);
+                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Ugh... so hungry...", false, -1);
+                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "WAIT - Is that a CAN OF SALSA you've got there? Is it chunky? Spicy? ZESTY CHIPOTLE?", false, -1);
                 addCutsceneLine(gameData->cutscene, Pulse, "Uh, yeah?", false, 0);
-                addCutsceneLine(gameData->cutscene, KineticDonut, "GIMMIE.", false, -1);
+                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "GIMMIE.", false, -1);
                 addCutsceneLine(gameData->cutscene, Pulse, "Umm... sure?", false, 0);
                 addCutsceneLine(gameData->cutscene, SystemText, "PULSE tosses KINETIC DONUT the can. He rips it open and drinks it like a sports drink.", false, 0);
-                addCutsceneLine(gameData->cutscene, KineticDonut, "OHHH you're a LIFESAVER! I think I was just hangry. My brain was stuck in \"party mode.\"", false, -1);
+                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "OHHH you're a LIFESAVER! I think I was just hangry. My brain was stuck in \"party mode.\"", false, -1);
                 addCutsceneLine(gameData->cutscene, Pulse, "So... we're good?", false, 2);
-                addCutsceneLine(gameData->cutscene, KineticDonut, "More than good. You fixed my vibe.. Here - take this. Now go stick it to whoever cancelled lunch!", false, -1);
+                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "More than good. You fixed my vibe.. Here - take this. Now go stick it to whoever cancelled lunch!", false, -1);
                 unlockAbility(gameData, MG_DROP_THE_MIC_ABILITY);
                 addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Drop the Mic", false, 0);
                 addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Press down and A in the air.", false, 0);
                 addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Unleash a ground-pound sound attack with a mic drop!", false, 0);
                 addCutsceneLine(gameData->cutscene, Pulse, "Thanks! Hope you, uh... get a real meal.", false, 2);
-                addCutsceneLine(gameData->cutscene, KineticDonut, "Oh, I will. Tacos first, existential crisis later!", false, -1);
+                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Oh, I will. Tacos first, existential crisis later!", false, -1);
             }
             else
             {
-                addCutsceneLine(gameData->cutscene, KineticDonut, "Hnggh... my head's spinning... Did... Did I stage-dive into the fryer?", false, -1);
+                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Hnggh... my head's spinning... Did... Did I stage-dive into the fryer?", false, -1);
                 addCutsceneLine(gameData->cutscene, Pulse, "Almost. You've been corrupted by MAGiX. It's not your fault.", false, -1);
-                addCutsceneLine(gameData->cutscene, KineticDonut, "I-I couldn't stop bouncing. Everything was loud, and I was starving...", false, -1);
+                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "I-I couldn't stop bouncing. Everything was loud, and I was starving...", false, -1);
                 addCutsceneLine(gameData->cutscene, Pulse, "I get that way too sometimes.", false, -1);
-                addCutsceneLine(gameData->cutscene, KineticDonut, "Here. Take this. It's a little messy, but it packs a punch.", false, -1);
+                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Here. Take this. It's a little messy, but it packs a punch.", false, -1);
                 unlockAbility(gameData, MG_DROP_THE_MIC_ABILITY);
                 addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Drop the Mic", false, 0);
                 addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Press down and A in the air.", false, 0);
                 addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Unleash a ground-pound sound attack with a mic drop!", false, 0);
                 addCutsceneLine(gameData->cutscene, Pulse, "You going to be okay, Your Majesty?", false, -1);
-                addCutsceneLine(gameData->cutscene, KineticDonut, "Yeah, I'm gonna go find something greasy and lie down.", false, -1);
+                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Yeah, I'm gonna go find something greasy and lie down.", false, -1);
             }
             break;
         }
         case 6: // The Beat Colosseum (Smash Gorilla)
         {
-            addCutsceneLine(gameData->cutscene, SmashGorilla, "Oof... rhythm's all outta sync.", false, -1);
+            addCutsceneLine(gameData->cutscene, SmashGorillaUncorrupted, "Oof... rhythm's all outta sync.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Who's tonto now?", false, 1);
-            addCutsceneLine(gameData->cutscene, SmashGorilla, "Cheerio, old bean. Bit of a kerfuffle, wasn't it?", false, -1);
+            addCutsceneLine(gameData->cutscene, SmashGorillaUncorrupted, "Cheerio, old bean. Bit of a kerfuffle, wasn't it?", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "...Huh?", false, 0);
-            addCutsceneLine(gameData->cutscene, SmashGorilla, "Just messin' with ya. Got glitched pretty bad, huh?", false, -1);
+            addCutsceneLine(gameData->cutscene, SmashGorillaUncorrupted, "Just messin' with ya. Got glitched pretty bad, huh?", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "The whole place was vibing TOO hard. You back to normal?", false, 1);
-            addCutsceneLine(gameData->cutscene, SmashGorilla, "Yeah. Head's clearer now. Here - take this. Might help you keep the groove tight.", false, -1);
+            addCutsceneLine(gameData->cutscene, SmashGorillaUncorrupted, "Yeah. Head's clearer now. Here - take this. Might help you keep the groove tight.", false, -1);
             unlockAbility(gameData, MG_CAN_OF_SALSA_ABILITY);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Can of Salsa", false, 0);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... A backup up energy tank!", false, 0);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Fill it up with excess health pickups.", false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "Thanks! Stay safe, and uh... vamanos?", false, 2);
-            addCutsceneLine(gameData->cutscene, SmashGorilla, "NOW you're getting it.", false, -1);
+            addCutsceneLine(gameData->cutscene, SmashGorillaUncorrupted, "NOW you're getting it.", false, -1);
             break;
         }
         case 7: // The Foundry of Echoes (Deadeye Chirpzi)
         {
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "Urgghh... My head....I haven't blacked out like that since the afterparty in 2016...", false, -1);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "Zip, you there, bud?", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Urgghh... My head....I haven't blacked out like that since the afterparty in 2016...", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Zip, you there, bud?", false, -1);
             addCutsceneLine(gameData->cutscene, SystemText, "Zip glitches out, sparks shooting outward, and lets out a chirping noise.", false,-1);
-            addCutsceneLine(gameData->cutscene, Cho, "Hey, it's okay. You're safe now. It's over.", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Hey, it's okay. You're safe now. It's over.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Is he... talking to you?", false, -1);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "Not exactly. But I get it.", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Not exactly. But I get it.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "He's gone?", false, -1);
-            addCutsceneLine(gameData->cutscene, Cho, "Nah. Just back where he started. Echoes don't disappear-they resonate.", false, -1);
-            addCutsceneLine(gameData->cutscene, Cho, "And now I've got surround sound.", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Nah. Just back where he started. Echoes don't disappear-they resonate.", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "And now I've got surround sound.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Glad he's still with you", false, -1);
-            addCutsceneLine(gameData->cutscene, Cho, "Speaking of, Zip's still got some juice left in him and he's itching for one last solo.", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Speaking of, Zip's still got some juice left in him and he's itching for one last solo.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Wait-are you saying I get an encore?", false, -1);
-            addCutsceneLine(gameData->cutscene, Cho, "More like a beamline direct to the face. You ever feel the need to absolutely delete something?", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "More like a beamline direct to the face. You ever feel the need to absolutely delete something?", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, " Frequently.", false, -1);
-            addCutsceneLine(gameData->cutscene, Cho, "Then here. Let Zip ride shotgun for a bit.", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Then here. Let Zip ride shotgun for a bit.", false, -1);
             unlockAbility(gameData, MG_SHOOP_DA_WOOP_ABILITY);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Shoop Da Whoop", false, 0);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Wait a bit, then fire for a charged shot!", false, 0);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... The swadge LED lights show when it's ready.", false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "... Did I just get possessed by a chorus?", false, -1);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpzi, "Nah. Just one very passionate synth creature with volume issues.", false, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Nah. Just one very passionate synth creature with volume issues.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "I love it already.", false, -1);
             break;
         }
         case 2: // The Sunshine Speedway (Grind Pangolin)
         {
-            addCutsceneLine(gameData->cutscene, GrindPangolin, "Owwww. Where even is this?  Why do I look like a rejected street team flyer?", false, -1);
+            addCutsceneLine(gameData->cutscene, GrindPangolinUncorrupted, "Owwww. Where even is this?  Why do I look like a rejected street team flyer?", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Long story. You got corrupted. Tried to turn this train into a one-way ride to Ska-mageddon.", false, 2);
-            addCutsceneLine(gameData->cutscene, GrindPangolin, "Ugghhh. I hate when I go full speed without thinking.", false, -1);
+            addCutsceneLine(gameData->cutscene, GrindPangolinUncorrupted, "Ugghhh. I hate when I go full speed without thinking.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Happens to the best of us.", false, 1);
-            addCutsceneLine(gameData->cutscene, GrindPangolin, "Here. Should help you keep up when things get too fast.", false, -1);
+            addCutsceneLine(gameData->cutscene, GrindPangolinUncorrupted, "Here. Should help you keep up when things get too fast.", false, -1);
             unlockAbility(gameData, MG_TROMBONE_SLIDE_ABILITY);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Trombone Slide", false, 0);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Press Down and A to Dash! You'll slide under some attacks!", false, 0);
             addCutsceneLine(gameData->cutscene, Pulse, "Now that's what I'm talking about!", false, 2);
-            addCutsceneLine(gameData->cutscene, GrindPangolin, "Give 'em whiplash for me. And hey-thanks for the brakes.", false, -1);
+            addCutsceneLine(gameData->cutscene, GrindPangolinUncorrupted, "Give 'em whiplash for me. And hey-thanks for the brakes.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "You got it. Enjoy your rest!", false, 1);
             break;
         }
         case 8: // The Lost Ballroom (Drain Bat)
         {
-            addCutsceneLine(gameData->cutscene, DrainBat, "Ughhh..my head. What happened? Did the rave go fully gothic... or did I?", false, -1);
+            addCutsceneLine(gameData->cutscene, DrainBatUncorrupted, "Ughhh..my head. What happened? Did the rave go fully gothic... or did I?", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "You were mind-controlled, Battrice. BIGMA's been messing with everyone.", false, -1);
-            addCutsceneLine(gameData->cutscene, DrainBat, "Guh... Figures. I gotta get back to my village in California.", false, -1);
+            addCutsceneLine(gameData->cutscene, DrainBatUncorrupted, "Guh... Figures. I gotta get back to my village in California.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Yeah, uh... where is that exactly?", false, -1);
-            addCutsceneLine(gameData->cutscene, DrainBat, "Beneath the cliffs of San Simeon. Population: three. We make artisanal jams.", false, -1);
+            addCutsceneLine(gameData->cutscene, DrainBatUncorrupted, "Beneath the cliffs of San Simeon. Population: three. We make artisanal jams.", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "... Sure.", false, -1);
-            addCutsceneLine(gameData->cutscene, DrainBat, "Anyway. You're gonna need this to make it through the next wave.", false, -1);
+            addCutsceneLine(gameData->cutscene, DrainBatUncorrupted, "Anyway. You're gonna need this to make it through the next wave.", false, -1);
             unlockAbility(gameData, MG_SURE_YOU_CAN_ABILITY);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE Receives: Sure, You Can!", false, 0);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Press up and B for a rising uppercut!", false, 0);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Also works in the air!", false, 0);
-            addCutsceneLine(gameData->cutscene, DrainBat, "It's my signature move-Sure, You Can!", false, -1);
+            addCutsceneLine(gameData->cutscene, DrainBatUncorrupted, "It's my signature move-Sure, You Can!", false, -1);
             addCutsceneLine(gameData->cutscene, Pulse, "Sure, I'll allow it. See ya!", false, -1);
-            addCutsceneLine(gameData->cutscene, DrainBat, "Ugh... I hope my goat didn't eat the WiFi again.", false, -1);
+            addCutsceneLine(gameData->cutscene, DrainBatUncorrupted, "Ugh... I hope my goat didn't eat the WiFi again.", false, -1);
             break;
         }
         case 3: // The Twin Peaks (Sever Yataga)
@@ -891,7 +891,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Well, duh.", false, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "WHAT?!", false, 1);
             addCutsceneLine(gameData->cutscene, GrindPangolinUncorrupted, "You think we don't know that, ya dingus?", false, -1);
-            addCutsceneLine(gameData->cutscene, DrainBat, "We were born... out of love!", true, -1);
+            addCutsceneLine(gameData->cutscene, DrainBatUncorrupted, "We were born... out of love!", true, -1);
             addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "...For everything that came before us!", true, -1);
             addCutsceneLine(gameData->cutscene, SmashGorillaUncorrupted, "And everything that shaped us.", true, -1);
             addCutsceneLine(gameData->cutscene, Ember, "Flaws and all, baby.", true, -1);
