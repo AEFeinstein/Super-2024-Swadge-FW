@@ -1407,7 +1407,7 @@ static void swadgedokuShowHint(void)
     sudokuOverlayOpt_t opts[sd->game.size * sd->game.size];
     overlay.gridOpts = opts;
 
-    if (sudokuNextMove2(&sd->solverCache, &sd->game))
+    if (sudokuNextMove(&sd->solverCache, &sd->game))
     {
         hintBufDebug(sd->solverCache.hintBuf, sd->solverCache.hintbufLen);
         hintToOverlay(&sd->player.overlay, &sd->game, -1, sd->solverCache.hintBuf, sd->solverCache.hintbufLen);

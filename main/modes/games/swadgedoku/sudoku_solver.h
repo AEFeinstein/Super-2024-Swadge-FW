@@ -96,8 +96,7 @@ typedef struct
     int pos;
 } solverCache_t;
 
-bool sudokuNextMove2(solverCache_t* cache, const sudokuGrid_t* board);
-bool sudokuNextMove(sudokuMoveDesc_t* desc, sudokuOverlay_t* overlay, const sudokuGrid_t* board);
+bool sudokuNextMove(solverCache_t* cache, const sudokuGrid_t* board);
 void sudokuApplyMove(sudokuGrid_t* board, const sudokuMoveDesc_t* desc);
 void hintToOverlay(sudokuOverlay_t* overlay, const sudokuGrid_t* game, int stepNum, const uint8_t* hint, size_t n);
 

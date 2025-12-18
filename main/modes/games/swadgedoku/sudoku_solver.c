@@ -206,7 +206,7 @@ static const techniqueDesc_t techniqueDescriptions[] =
  * @return true when a move was found and written to desc
  * @return false when no move was found because the board is in an illegal or unsolvable state
  */
-bool sudokuNextMove2(solverCache_t* cache, const sudokuGrid_t* board)
+bool sudokuNextMove(solverCache_t* cache, const sudokuGrid_t* board)
 {
     size_t boardSize = board->size * board->size;
 
