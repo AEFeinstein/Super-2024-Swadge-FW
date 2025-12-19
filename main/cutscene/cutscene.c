@@ -273,6 +273,7 @@ void setSongPitches(cutscene_t* cutscene, int16_t songPitches[8])
  * @param body The dialogue text to draw
  * @param flipHorizontal true to flip the character pose horizontally
  * @param spriteVariation The specific pose sprite, counted up from the main pose sprite.
+ * @param cbFunc A callback function to fire when A is pressed on this line. Leave NULL to fire nothing.
  */
 void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation,
                      cutsceneCb cbFunc)
@@ -367,14 +368,14 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
     {
         if (btnState & PB_A && !(cutscene->btnState_previousFrame & PB_A))
         {
+            if (((cutsceneLine_t*)(cutscene->lines->first->val))->cbFunc != NULL)
+            {
+                ((cutsceneLine_t*)(cutscene->lines->first->val))->cbFunc();
+            }
             // proceed to next cutscene line.
             if (cutscene->lines->first != NULL
                 && cutscene->lines->first->next != NULL) // There is at least onle line after this one.
             {
-                if (((cutsceneLine_t*)(cutscene->lines->first->val))->cbFunc != NULL)
-                {
-                    ((cutsceneLine_t*)(cutscene->lines->first->val))->cbFunc();
-                }
                 free(((cutsceneLine_t*)shift(cutscene->lines))->body);
                 style = getCurrentStyle(cutscene);
 
