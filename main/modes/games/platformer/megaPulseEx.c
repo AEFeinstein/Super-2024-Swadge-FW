@@ -455,7 +455,7 @@ void platformerEnterMode(void)
                          true, true);
         setMidiParams(platformer->gameData.cutscene, 19, 38, 1, 250, false);
         // Sunny
-        addCutsceneStyle(platformer->gameData.cutscene, c541, SUNNY_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sunny", 1,
+        addCutsceneStyle(platformer->gameData.cutscene, c541, SUNNY_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sunny", 2,
                          true, true, true);
         setMidiParams(platformer->gameData.cutscene, 20, 81, 1, 100, true);
         // WarningMessage
@@ -511,7 +511,7 @@ void platformerEnterMode(void)
                          "Sever Yataga", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 32, 11, 0, 100, true);
         // DrainBat
-        addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Drain Bat",
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Battrice",
                          1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 33, 82, 2, 250, false);
     }

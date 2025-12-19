@@ -104,7 +104,8 @@ typedef enum
     MG_BGM_PRE_FIGHT,
     MG_BGM_INTRO_STAGE,
     MG_BGM_STAGE_SELECT,
-    MG_BGM_NAME_ENTRY
+    MG_BGM_NAME_ENTRY,
+    MG_BGM_MAXIMUM_HYPE_CREDITS,
 } mg_bgmEnum_t;
 
 typedef enum

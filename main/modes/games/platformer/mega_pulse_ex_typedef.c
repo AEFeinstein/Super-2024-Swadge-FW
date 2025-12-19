@@ -13,7 +13,7 @@ const cnfsFileIdx_t MG_BGMS[] = {BGM_DEADEYE_CHIRPZI_MID,    BGM_BOSS_DEADEYE_CH
                                  BGM_BOSS_SMASH_GORILLA_MID, BGM_BOSS_TRASH_MAN_MID,       BGM_BIGMA_MID,
                                  BGM_BOSS_BIGMA_MID,         BGM_LEVEL_CLEAR_JINGLE_MID,   BGM_POST_FIGHT_MID,
                                  BGM_PRE_FIGHT_MID,          BGM_INTRO_STAGE_MID,          BGM_STAGE_SELECT_MID,
-                                 BGM_NAME_ENTRY_MID};
+                                 BGM_NAME_ENTRY_MID, BGM_MAXIMUM_HYPE_CREDITS_MID};
 
 /*
 const int MG_1x2_TILE_COLLISION_OFFSETS_IN_PIXELS[]
@@ -370,6 +370,12 @@ const mgLeveldef_t leveldef[] = {
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
+     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
+     .bgColors           = bgGradientPurple},
+     {.filename           = BOSS_TEST_ROOM_RAW,//14, placeholder just to have credits music at hand
+     .timeLimit          = 180,
+     .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
+     .mainBgmIndex       = MG_BGM_MAXIMUM_HYPE_CREDITS,
      .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
      .bgColors           = bgGradientPurple},
 };
