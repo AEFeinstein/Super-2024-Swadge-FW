@@ -303,6 +303,18 @@ static const jukeboxSong_t bgm_megaPulse[] = {
         .name = "NAME ENTRY",
         .fIdx = BGM_NAME_ENTRY_MID,
     },
+    {
+        .name = "OVO LIVES",
+        .fIdx = BGM_OVO_LIVES_MID,
+    },
+    {
+        .name = "THE GAUNTLET",
+        .fIdx = BGM_THE_GAUNTLET_MID,
+    },
+    {
+        .name = "THE FINAL MEGAJAM",
+        .fIdx = BGM_THE_FINAL_MEGAJAM_MID,
+    },
 };
 
 static const jukeboxSong_t sfx_megaPulse[] = {
