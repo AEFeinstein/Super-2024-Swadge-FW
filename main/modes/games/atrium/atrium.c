@@ -496,7 +496,7 @@ static void atriumEnterMode(void)
     atr->totalPages = (atr->numRemoteSwsn / SONA_PER) + ((atr->numRemoteSwsn % SONA_PER) ? 1 : 0);
     atr->remSwsn    = atr->numRemoteSwsn % SONA_PER;
 
-    ESP_LOGI(ATR_TAG, "Num remote swsn: %d, total pages: %d", atr->numRemoteSwsn, atr->totalPages);
+    ESP_LOGI(ATR_TAG, "Num remote swsn: %" PRId8 ", total pages: %" PRId8, atr->numRemoteSwsn, atr->totalPages);
 
     // BGM
     atr->player       = globalMidiPlayerGet(MIDI_BGM);
@@ -1382,10 +1382,10 @@ userProfile_t loadProfileFromNVS(void)
         loadedProfile.points     = 0;
 
         team = esp_random() % 3; // assign random team 0,1,2
-        ESP_LOGI(ATR_TAG, "team rng is %d", team);
+        ESP_LOGI(ATR_TAG, "team rng is %" PRId8, team);
 
         loadedProfile.team = team;
-        ESP_LOGI(ATR_TAG, "assigned team is %d", loadedProfile.team);
+        ESP_LOGI(ATR_TAG, "assigned team is %" PRId8, loadedProfile.team);
 
         packProfileData(&loadedProfile);
         writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_PACKEDKEY, loadedProfile.packedProfile);
@@ -1399,15 +1399,16 @@ userProfile_t loadProfileFromNVS(void)
 
     readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_PACKEDKEY, &loadedProfile.packedProfile);
     readNamespaceNvs32(TROPHY_NVS_NAMESPACE, TROPHY_POINTS_NVS_KEY, &loadedProfile.points);
-    int teamchecker = 0;
+    int32_t teamchecker = 0;
     readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, TEAMKEY, &teamchecker);
     unpackProfileData(&loadedProfile);
-    ESP_LOGI(ATR_TAG, "Team from NVS is %d and team from packedProfile is %d", teamchecker, loadedProfile.team);
+    ESP_LOGI(ATR_TAG, "Team from NVS is %" PRId32 " and team from packedProfile is %" PRId8, teamchecker,
+             loadedProfile.team);
     if (teamchecker != loadedProfile.team)
     {
         ESP_LOGW(ATR_TAG, "Team mismatch! Using team from NVS");
         loadedProfile.team = teamchecker;
-        ESP_LOGI(ATR_TAG, "Updated team to %d", loadedProfile.team);
+        ESP_LOGI(ATR_TAG, "Updated team to %" PRId8, loadedProfile.team);
     }
     ESP_LOGI(ATR_TAG, "Loaded local swadgesona data");
     loadedProfile.numPasses = atr->numRemoteSwsn; // update number of passes each time
@@ -1432,12 +1433,12 @@ void updateTeamScores(void)
 {
     if (atr->loadedTeams == false)
     {
-        int myteam;
-        int myPoints;
+        int32_t myteam;
+        int32_t myPoints;
         readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, TEAMKEY, &myteam);
         readNamespaceNvs32(TROPHY_NVS_NAMESPACE, TROPHY_POINTS_NVS_KEY, &myPoints);
 
-        ESP_LOGI(ATR_TAG, "Loaded profile with team %d", myteam);
+        ESP_LOGI(ATR_TAG, "Loaded profile with team %" PRId32, myteam);
 
         int redscore    = 0;
         int bluescore   = 0;
@@ -1493,7 +1494,7 @@ void updateTeamScores(void)
         trophyUpdate(&atriumTrophyData.list[9], yellowscore, false); // update trophy for yellow team
 
         trophyUpdate(&atriumTrophyData.list[7 + myteam], myteamscore, true); // update and draw the player's team only
-        printf("Team scores updated: Red=%d, Blue=%d, Yellow=%d, MyTeam=%d Score=%d\n", redscore, bluescore,
+        printf("Team scores updated: Red=%d, Blue=%d, Yellow=%d, MyTeam=%" PRId32 " Score=%d\n", redscore, bluescore,
                yellowscore, myteam, myteamscore);
     }
     atr->loadedTeams = true;
