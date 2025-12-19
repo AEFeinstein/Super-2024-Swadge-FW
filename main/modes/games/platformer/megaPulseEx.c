@@ -387,7 +387,7 @@ void platformerEnterMode(void)
                          false, true, true);
         setMidiParams(platformer->gameData.cutscene, 2, 80, -2, 2000, true);
         // TrashMan
-        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Trash Man", 2,
+        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Trash Man", 3,
                          false, true, true);
         setMidiParams(platformer->gameData.cutscene, 3, 36, -2, 250, false);
         /// AbilityUnlocked
@@ -475,7 +475,7 @@ void platformerEnterMode(void)
         // UNCORRUPTED VERSIONS//
         /////////////////////////
         //  TrashMan
-        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 2,
+        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 3,
                          false, true, true);
         setMidiParams(platformer->gameData.cutscene, 24, 36, -2, 250, false);
         // KineticDonut
@@ -516,7 +516,7 @@ void platformerEnterMode(void)
         setMidiParams(platformer->gameData.cutscene, 33, 82, 2, 250, false);
         // DeadeyeWithoutZip
         addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_CHIRPZI_WITHOUT_ZIP_PORTRAIT_0_WSG,
-                         TEXTBOX_PULSE_WSG, "Cho", 1, false, true, true);
+                         TEXTBOX_PULSE_WSG, "Cho", 1, true, true, true);
         // reduce note length, because she just lost Zip.
         setMidiParams(platformer->gameData.cutscene, 34, 17, 1, 100, false);
 
@@ -789,7 +789,7 @@ void mgBuildMainMenu(platformer_t* self)
     addSettingsOptionsItemToMenu(self->menu, str_cheatMode, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
                                  cheatMode);
     // We're not shipping that button
-    // addSingleItemToMenu(self->menu, str_giveAbilities);
+    //addSingleItemToMenu(self->menu, str_giveAbilities);
     self->menu = endSubMenu(self->menu);
 
     if (self->gameData.debugMode)
@@ -2046,6 +2046,10 @@ void updateLevelSelect(platformer_t* self)
                              || self->unlockables.levelsCleared == 0b111111111110
                              || self->unlockables.levelsCleared == 0b1111111111110;
         }
+        if (self->gameData.level == 1)
+        {
+            self->gameData.kineticSkipped = false;
+        }
         if (self->gameData.level < 11 && !levelAvailable)
         {
             soundPlaySfx(&(platformer->soundManager.sndMenuDeny), BZR_STEREO);
@@ -2215,16 +2219,22 @@ void startMegajamMusic(void)
 // forward declared in mega_pulse_ex_typedef.h
 void initBossFight(void)
 {
+    if (platformer->gameData.level == 1 && platformer->gameData.kineticSkipped)
+    {
+        platformer->update = &updateReadyScreen;
+        return;
+    }
     if (platformer->gameData.level != 5)
     {
+        if (platformer->gameData.level == 11)
+        {
+            // make stage lights blue for kinetic donut at start of the boss rush
+            platformer->gameData.bgColors = leveldef[platformer->gameData.level].bgColors;
+        }
         platformer->entityManager.bossEntity->state = 0;
         mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
         soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
     }
-    else
-    {
-        // make stage lights blue for kinetic donut at start of the boss rush
-        platformer->gameData.bgColors = leveldef[platformer->gameData.level].bgColors;
-    }
+
     platformer->update = &updateReadyScreen;
 }

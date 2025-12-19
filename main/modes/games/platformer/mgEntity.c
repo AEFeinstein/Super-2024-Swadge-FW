@@ -114,6 +114,11 @@ void mg_initializeEntity(mgEntity_t* self, mgEntityManager_t* entityManager, mgT
 
 void mg_updatePlayer(mgEntity_t* self)
 {
+    if (self->gameData->level == 1 && !self->gameData->kineticSkipped && self->x > 59770 && self->y < 15400)
+    {
+        self->gameData->kineticSkipped = true;
+        bossIntroCutscene(self->gameData);
+    }
     switch (self->state)
     {
         case MG_PL_ST_NORMAL:

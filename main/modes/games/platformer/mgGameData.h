@@ -76,6 +76,8 @@ typedef struct
     bool cheatMode; // True to make pulse invincible
 
     uint8_t abilities; // Each bit may be 1 for an unlocked ability.
+
+    bool kineticSkipped;
 } mgGameData_t;
 
 //==============================================================================

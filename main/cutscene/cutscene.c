@@ -504,7 +504,7 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
     }
     char variationText[5];
     snprintf(variationText, sizeof(variationText), "%d", line->spriteVariation);
-    drawText(font, c541, variationText, 14, 14);
+    // drawText(font, c541, variationText, 14, 14);
     if (cutscene->xOffset == 0)
     {
         if (style->drawTextBox)

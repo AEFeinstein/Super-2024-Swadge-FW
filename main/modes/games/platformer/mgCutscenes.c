@@ -766,30 +766,30 @@ void bossOutroCutscene(mgGameData_t* gameData)
         }
         case 7: // The Foundry of Echoes (Deadeye Chirpzi)
         {
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Urgghh... My head....I haven't blacked out like that since the afterparty in 2024...", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Zip, you there, bud?", false, -1, NULL);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Urgghh... My head....I haven't blacked out like that since the afterparty in 2024...", true, -1, NULL);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Zip, you there, bud?", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, SystemText, "Zip glitches out, sparks shooting outward, and lets out a chirping noise.", false,-1, NULL);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Hey, it's okay. You're safe now. It's over.", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, Pulse, "Is he... talking to you?", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Not exactly. But I get it.", false, -1, NULL);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Hey, it's okay. You're safe now. It's over.", true, -1, NULL);
+            addCutsceneLine(gameData->cutscene, Pulse, "Is he... talking to you?", true, 0, NULL);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Not exactly. But I get it.", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, SystemText, "Zip pulses again, and then dissolves into digital motes that spiral around Cho. They settle into Cho's rig.", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, Pulse, "Is he gone?", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, Pulse, "Is he gone?", true, 0, NULL);
             //TO DO MAKE DEADEYE ART WITHOUT ZIP, use every where after this.
-            addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "Nah. Just back where he started. Echoes don't disappear-they resonate.", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "And now I've got surround sound.", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, Pulse, "Glad he's still with you", false, 2, NULL);
-            addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "Speaking of, Zip's still got some juice left in him and he's itching for one last solo.", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, Pulse, "Wait-are you saying I get an encore?", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "More like a beamline direct to the face. You ever feel the need to absolutely delete something?", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, Sawtooth, "Frequently.", false, 2, NULL);
-            addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "Then here. Let Zip ride shotgun for a bit.", false, -1, startPostFightMusic);
+            addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "Nah. Just back where he started. Echoes don't disappear-they resonate.", true, -1, NULL);
+            addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "And now I've got surround sound.", true, -1, NULL);
+            addCutsceneLine(gameData->cutscene, Pulse, "Glad he's still with you.", true, 2, NULL);
+            addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "Speaking of, Zip's still got some juice left in him and he's itching for one last solo.", true, -1, NULL);
+            addCutsceneLine(gameData->cutscene, Pulse, "Wait-are you saying I get an encore?", true, 0, NULL);
+            addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "More like a beamline direct to the face. You ever feel the need to absolutely delete something?", true, -1, NULL);
+            addCutsceneLine(gameData->cutscene, SawtoothFlipped, "Frequently.", false, 2, NULL);
+            addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "Then here. Let Zip ride shotgun for a bit.", true, -1, startPostFightMusic);
             unlockAbility(gameData, MG_SHOOP_DA_WOOP_ABILITY);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Shoop Da Whoop", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Wait a bit, then fire for a charged shot!", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... The swadge LED lights show when it's ready.", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, Pulse, "... Did I just get possessed by a chorus?", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "Nah. Just one very passionate synth creature with volume issues.", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, Pulse, "I love it already.", false, 1, NULL);
+            addCutsceneLine(gameData->cutscene, Pulse, "... Did I just get possessed by a chorus?", true, 0, NULL);
+            addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "Nah. Just one very passionate synth creature with volume issues.", true, -1, NULL);
+            addCutsceneLine(gameData->cutscene, Pulse, "I love it already.", true, 1, NULL);
             break;
         }
         case 2: // The Sunshine Speedway (Grind Pangolin)
@@ -951,7 +951,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "For those that come after!", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, SmashGorillaUncorrupted, "And everything that shaped us.", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, Ember, "Flaws and all, baby.", true, -1, NULL);
-            addCutsceneLine(gameData->cutscene, Jasper, "We're not afraid to carry the torch...", true, -1, NULL);
+            addCutsceneLine(gameData->cutscene, Jasper, "We're not afraid to carry the torch...", false, -1, NULL);
             addCutsceneLine(gameData->cutscene, Percy, "Or light new ones.", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, FlareGryffynUncorrupted, "And maybe... even mend what was broken along the way.", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, SystemText, "HANK WADDLE's subsystems start exploding.", false, -1, NULL);
@@ -960,7 +960,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "The ones who inspired us - they were just riffing on the stuff they liked, too.", false, 3, NULL);
             addCutsceneLine(gameData->cutscene, HankWaddle, "Then what are you?", false, 1, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "We're something new.", false, 2, NULL);
-            addCutsceneLine(gameData->cutscene, Bigma, "Something that couldn't exist without the past...", false, 1, NULL);
+            addCutsceneLine(gameData->cutscene, Bigma, "Something that couldn't exist without the past...", true, 1, NULL);
             addCutsceneLine(gameData->cutscene, Sunny, "...But doesn't need to live in it.", true, 1, NULL);
             addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "So... in other words...", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "HANK, you're fired!!!!!!", true, -1, NULL);
@@ -972,7 +972,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, BlackScreen, "The following day, PULSE and friends return to Hank's Lair to reflect on their adventure.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "Sunny... was he right about us?", true, 0, NULL);
             addCutsceneLine(gameData->cutscene, Sunny, "I... don't know.", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, Bigma, "Maybe you'll find out someday. But until then...", false, 2, NULL);
+            addCutsceneLine(gameData->cutscene, Bigma, "Maybe you'll find out someday. But until then...", true, 2, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "...LET'S FREAKIN' PARTY!!", false, 2, startCreditMusic);
             //cutscenes play BGM
             addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0, NULL);
@@ -982,12 +982,8 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, BlackScreen, "Hardware Leader: Emily Anthony", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Lead Programmer, Gameplay Designer, Enemy Artist, Boss Designer: Jon Vega", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Programmer, Quality Assurance, Gameplay Designer, Enemy Artist, Script Writer, Boss Designer: James Albracht", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Reach out to james.albracht@magfest.org with LEGIT game job offers, plz.", false, 0, NULL);
-            //I feel that this is in an appropriate theme for anybody who got past the guantlet.
-            addCutsceneLine(gameData->cutscene, BlackScreen, "I lost my Mother to Schizophrenia a year ago.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "May Virginia Lynn Albracht rest in peace and never be forgotten.", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "And I am grateful for the creative outlet swadge has served for me in this time.", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Checkout wplace coordinates lat:36.34, long:82.68", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Reach out to james.albracht@magfest.org with LEGIT game job offers, plz.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Music Composer, Lead Script Writer, Level Designer, Gameplay Designer: Joe Newman", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Midi Engineer: Dylan Whichard", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Cutscene Artist, Script Writer, Character Designer: Kaitie Lawson", false, 0, NULL);
@@ -999,12 +995,13 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, BlackScreen, "\"Ovo Lives!\" Composer: Livingston Rampey", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Special thanks to you: THE STONE who SPLIT the future of MAGFest in two!", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Notify circuitboards@magfest.org if you want to volunteer on the swadge for next year!", false, 0, startTrashManMusic);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Checkout coordinates on wplace.live lat:36.34, long:82.68", false, 0, NULL);
 
             addCutsceneLine(gameData->cutscene, BlackScreen, "Starfield. Quiet. Peaceful. Suddenly - a Garbotnik industries craft hurtles past the camera, sparking and trailing smoke.", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "WHA-HAHA... I regret nothing...", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "Note to self: recalibrate escape trajectory BEFORE launching dramatic exit.", false, -1, NULL);
+            addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "WHA-HAHA... I regret nothing...", false, 1, NULL);
+            addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "Note to self: recalibrate escape trajectory BEFORE launching dramatic exit.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, SystemText, "Suddenly, a floating burrito wrapper hits him in the face.", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "... Is that my lunch?", false, -1, NULL);
+            addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "... Is that my lunch?", false, 2, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, SystemText, "TRASH MAN WILL RETURN... In whatever sequel he can crash into.", false, -1, NULL);
             addCutsceneLine(gameData->cutscene, SystemText, "Select New Game+ then play again with all your abilities!", false, -1, NULL);
