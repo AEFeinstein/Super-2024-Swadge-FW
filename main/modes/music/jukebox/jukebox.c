@@ -260,12 +260,12 @@ static const jukeboxSong_t bgm_megaPulse[] = {
         .fIdx = BGM_BOSS_KINETIC_DONUT_MID,
     },
     {
-        .name = "SEVER YAGATA",
-        .fIdx = BGM_SEVER_YAGATA_MID,
+        .name = "SEVER YATAGA",
+        .fIdx = BGM_SEVER_YATAGA_MID,
     },
     {
-        .name = "BOSS SEVER YAGATA",
-        .fIdx = BGM_BOSS_SEVER_YAGATA_MID,
+        .name = "BOSS SEVER YATAGA",
+        .fIdx = BGM_BOSS_SEVER_YATAGA_MID,
     },
     {
         .name = "SMASH GORILLA",
