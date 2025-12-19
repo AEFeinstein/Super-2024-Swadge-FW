@@ -38,6 +38,9 @@ typedef enum
     SeverYatagaUncorrupted,
     DrainBatUncorrupted,
     DeadeyeWithoutZip,
+    SunnyFlipeed,
+    SawtoothRevealedFlipped,
+    SawtoothFlipped,
 } cutsceneCharacters;
 
 static void setSongPitchesFromCurrentSong(mgGameData_t* gameData)
@@ -911,13 +914,14 @@ void bossOutroCutscene(mgGameData_t* gameData)
         default: // Hank Final Battle
         {
             //cut the music
-            globalMidiPauseAll();
+            //globalMidiPauseAll();
             addCutsceneLine(gameData->cutscene, HankWaddle, "NOOO! NO!! I can't lose to YOU! You're .... A bunch of fakes! Cheap knock-offs!", false, 1);
             addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Well, duh.", false, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "WHAT?!", false, 1);
             addCutsceneLine(gameData->cutscene, GrindPangolinUncorrupted, "You think we don't know that, ya dingus?", false, -1);
             addCutsceneLine(gameData->cutscene, DrainBatUncorrupted, "We were born... out of love!", true, -1);
-            addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "...For everything that came before us!", true, -1);
+            //Expedition 33 reference, a message of grief and moving on.
+            addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "For those that come after!", true, -1);
             addCutsceneLine(gameData->cutscene, SmashGorillaUncorrupted, "And everything that shaped us.", true, -1);
             addCutsceneLine(gameData->cutscene, Ember, "Flaws and all, baby.", true, -1);
             addCutsceneLine(gameData->cutscene, Jasper, "We're not afraid to carry the torch...", true, -1);
@@ -944,7 +948,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "...LET'S FREAKIN' PARTY!!", false, 2);
             addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0);
             //cutscenes play BGM
-            globalMidiUnpauseAll();
+            //globalMidiUnpauseAll();
             mg_setBgm(gameData->soundManager, leveldef[14].mainBgmIndex);
             addCutsceneLine(gameData->cutscene, BlackScreen, "THANK YOU FOR PLAYING PULSE 20X6!", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Producer, Boss Designer: Dac", false, 0);
@@ -957,6 +961,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, BlackScreen, "I lost my Mother to Schizophrenia a year ago.", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "May Virginia Lynn Albracht rest in peace and never be forgotten.", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "And I am grateful for the creative outlet swadge has served for me in this time.", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Checkout wplace coordinates lat:36.34, long:82.68", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Music Composer, Lead Script Writer, Level Designer, Gameplay Designer: Joe Newman", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Midi Engineer: Dylan Whichard", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Cutscene Artist, Script Writer, Character Designer: Kaitie Lawson", false, 0);
@@ -979,7 +984,8 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0);
             addCutsceneLine(gameData->cutscene, SystemText, "TRASH MAN WILL RETURN... In whatever sequel he can crash into.", false, -1);
             addCutsceneLine(gameData->cutscene, SystemText, "Select New Game+ then play again with all your abilities!", false, -1);
-            globalMidiUnpauseAll();
+            addCutsceneLine(gameData->cutscene, SystemText, "And every cutscene becomes unhinged with random character portraits.", false, -1); 
+            //globalMidiUnpauseAll();
             break;
         }
     }

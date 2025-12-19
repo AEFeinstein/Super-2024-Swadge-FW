@@ -471,6 +471,10 @@ void platformerEnterMode(void)
                          true, false);
         setMidiParams(platformer->gameData.cutscene, 23, 11, 0, 100, true);
 
+
+
+
+
         /////////////////////////
         // UNCORRUPTED VERSIONS//
         /////////////////////////
@@ -515,10 +519,27 @@ void platformerEnterMode(void)
                          1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 33, 82, 2, 250, false);
         // DeadeyeWithoutZip
-        addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_WITHOUT_ZIP_0_WSG, TEXTBOX_PULSE_WSG, "Cho",
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_CHIRPZI_WITHOUT_ZIP_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Cho",
                          1, false, true, true);
         // reduce note length, because she just lost Zip.
         setMidiParams(platformer->gameData.cutscene, 34, 17, 1, 100, false);
+
+        /////////////////////
+        //Random Schizz idk//
+        /////////////////////
+        // Sunny Flipped
+        addCutsceneStyle(platformer->gameData.cutscene, c541, SUNNY_FLIPPED_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sunny", 2,
+                         true, true, true);
+        setMidiParams(platformer->gameData.cutscene, 35, 81, 1, 100, true);
+        // SawtoothRevealed Flipped
+        addCutsceneStyle(platformer->gameData.cutscene, c541, SAWTOOTH_FLIPPED_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 2,
+                         true, true, true);
+        setMidiParams(platformer->gameData.cutscene, 36, 81, 1, 100, true);
+        // Sawtooth Flipped
+        addCutsceneStyle(platformer->gameData.cutscene, c541, SAWTOOTH_FLIPPED_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 2,
+                         true, true, true);
+        setMidiParams(platformer->gameData.cutscene, 37, 81, 1, 100, false);
+
     }
 
     setFrameRateUs(16666);
