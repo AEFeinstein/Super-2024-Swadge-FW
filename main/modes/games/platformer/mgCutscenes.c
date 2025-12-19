@@ -947,7 +947,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             mg_setBgm(gameData->soundManager, leveldef[14].mainBgmIndex);
             addCutsceneLine(gameData->cutscene, BlackScreen, "THANK YOU FOR PLAYING PULSE 20X6!", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Producer, Boss Designer: Dac", false, 0);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Technical Overlord: Adam Feinstein", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Firmware Leader: Adam Feinstein", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Hardware Leader: Emily Anthony", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Lead Programmer, Gameplay Designer, Enemy Artist, Boss Designer: Jon Vega", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Programmer, Quality Assurance, Gameplay Designer, Enemy Artist, Script Writer, Boss Designer: James Albracht", false, 0);
@@ -955,16 +955,17 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, BlackScreen, "I lost my Mother to Schizophrenia a year ago.", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "May Virginia Lynn Albracht rest in peace and never be forgotten.", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "And I am grateful for the creative outlet swadge has served for me in this time.", false, 0);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Music Composer, Primary Script Writer, Level Designer, Gameplay Designer: Joe Newman", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Music Composer, Lead Script Writer, Level Designer, Gameplay Designer: Joe Newman", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Midi Engineer: Dylan Whichard", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Cutscene Artist, Script Writer, Character Designer: Kaitie Lawson", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Player and Boss and Trophy Artist: Richard Lambert @azureine-edge.bsky.social", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Environment and Enemy Artist: Emma @objetdiscret.itch.io", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Boss Artist, Character Designer: Greg Lord", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Swadgeman (MAG-TV Trailer): JFrye and Producer Scott", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Trophy Engineer: Jeremy Stintzcum", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "\"Ovo Lives!\" Composer: Livingston Rampey", false, 0);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Special thanks to you: THE STONE who has saved the future of MAGFest!", false, 0);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Notify circuitboards@magfest.org if you want to volunteer next year!", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Special thanks to you: THE STONE who has SPLIT the future of MAGFest in two!", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Notify circuitboards@magfest.org if you want to volunteer for next year!", false, 0);
 
             //play Garbotnik's Home 2 (i.e. Ovo lives)
             mg_setBgm(gameData->soundManager, leveldef[14].mainBgmIndex);
