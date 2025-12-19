@@ -88,7 +88,7 @@ const trophyData_t findingFacesModeTrophies[] = {
     {
         .title       = "MANHUNT!",
         .description = "Opened Mascot Madness for the first time.",
-        .image       = FINDER_SAWTOOTH_WSG,
+        .image       = MMX_TROPHY_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_EASY,
         .maxVal      = 1, // For trigger type, set to one
@@ -106,7 +106,7 @@ const trophyData_t findingFacesModeTrophies[] = {
         .description = "Have more than 120 seconds banked in time attack.",
         .image       = FINDER_TROPHY_TIME_120_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1, // For trigger type, set to one
     },
     {
@@ -122,7 +122,7 @@ const trophyData_t findingFacesModeTrophies[] = {
         .description = "Have more than 3000 score in time attack.",
         .image       = FINDER_TROPHY_SCORE_3000_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1, // For trigger type, set to one
     },
     {
@@ -130,7 +130,7 @@ const trophyData_t findingFacesModeTrophies[] = {
         .description = "Have more than 6000 score in time attack.",
         .image       = FINDER_TROPHY_SCORE_6000_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
+        .difficulty  = TROPHY_DIFF_HARD,
         .maxVal      = 1, // For trigger type, set to one
     },
     {
@@ -138,7 +138,7 @@ const trophyData_t findingFacesModeTrophies[] = {
         .description = "Have more than 12000 score in time attack.",
         .image       = FINDER_TROPHY_SCORE_12000_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
+        .difficulty  = TROPHY_DIFF_EXTREME,
         .maxVal      = 1, // For trigger type, set to one
     },
     {
@@ -154,7 +154,7 @@ const trophyData_t findingFacesModeTrophies[] = {
         .description = "Get to stage 69 in Zen Mode.",
         .image       = FINDER_TROPHY_ZEN_69_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1, // For trigger type, set to one
     },
     {
@@ -162,7 +162,7 @@ const trophyData_t findingFacesModeTrophies[] = {
         .description = "Get to stage 100 in Zen Mode.",
         .image       = FINDER_TROPHY_ZEN_100_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1, // For trigger type, set to one
     },
 };
