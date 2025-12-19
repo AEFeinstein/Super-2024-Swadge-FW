@@ -1184,17 +1184,17 @@ void mg_bossRushLogic(mgEntity_t* self)
     else if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_FLARE_GRYFFYN)
     {
         nextBoss  = 0;
-        nextLevel = 0;
+        nextLevel = 12;
     }
 
     if (isABoss)
     {
         // mg_loadMapFromFile((self->entityManager->tilemap), leveldef[11].filename,
         //                 self->entityManager);
+        self->gameData->bgColors = leveldef[nextLevel].bgColors;
         if (nextBoss > 0)
         {
             mg_loadWsgSet(self->entityManager->wsgManager, leveldef[nextLevel].defaultWsgSetIndex);
-            self->gameData->bgColors = leveldef[nextLevel].bgColors;
             mg_setBgm(self->soundManager, leveldef[nextLevel].bossBgmIndex);
             soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
             mgEntity_t* boss = mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX,

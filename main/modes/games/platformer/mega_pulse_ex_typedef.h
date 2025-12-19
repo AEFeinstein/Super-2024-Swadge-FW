@@ -108,6 +108,8 @@ typedef enum
     MG_BGM_STAGE_SELECT,
     MG_BGM_NAME_ENTRY,
     MG_BGM_MAXIMUM_HYPE_CREDITS,
+
+    MG_BGM_BOSS_HANK,
 } mg_bgmEnum_t;
 
 typedef enum
