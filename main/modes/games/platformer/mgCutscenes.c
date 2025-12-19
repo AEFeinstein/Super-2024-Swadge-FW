@@ -711,7 +711,8 @@ void bossOutroCutscene(mgGameData_t* gameData)
     gameData->changeState = MG_ST_CUTSCENE;
 
     // cut the music
-    globalMidiPlayerGet(MIDI_BGM)->paused = true;
+    // mmm I don't like cutting the music.
+    // globalMidiPlayerGet(MIDI_BGM)->paused = true;
 
     /* clang-format off */
     switch (gameData->level)
@@ -966,7 +967,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "HANK, you're fired!!!!!!", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, HankWaddle, "No! No no no-if I go down, I'll take you with-AAAAUUUGHHHH!!!!", false, 1, NULL);
             //Sawtooth reverts to her masked voice (non-meow) to get s*&!t done
-            addCutsceneLine(gameData->cutscene, SawtoothFlipped, "EVERYBODY! We have to get out of here!", false, 3, NULL);
+            addCutsceneLine(gameData->cutscene, SawtoothFlipped, "EVERYBODY! We have to get out of here!", false, 3, stopMusic);
             addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "After teleporting to safety, PULSE, SAWTOOTH, BIGMA, and the freed RemiXes watch HANK WADDLE's exploding facility from a distant           .    cliffside.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "The following day, PULSE and friends return to Hank's Lair to reflect on their adventure.", false, 0, NULL);
@@ -975,7 +976,6 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Bigma, "Maybe you'll find out someday. But until then...", true, 2, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "...LET'S FREAKIN' PARTY!!", false, 2, startCreditMusic);
             //cutscenes play BGM
-            addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "THANK YOU FOR PLAYING PULSE 20X6!", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Producer, Boss Designer: Dac", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Firmware Leader: Adam Feinstein", false, 0, NULL);
@@ -994,8 +994,8 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, BlackScreen, "Trophy Engineer: Jeremy Stintzcum", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "\"Ovo Lives!\" Composer: Livingston Rampey", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Special thanks to you: THE STONE who SPLIT the future of MAGFest in two!", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Notify circuitboards@magfest.org if you want to volunteer on the swadge for next year!", false, 0, startTrashManMusic);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Checkout coordinates on wplace.live lat:36.34, long:82.68", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Notify circuitboards@magfest.org if you want to volunteer on the swadge for next year!", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Checkout coordinates on wplace.live lat:36.34, long:82.68", false, 0, startTrashManMusic);
 
             addCutsceneLine(gameData->cutscene, BlackScreen, "Starfield. Quiet. Peaceful. Suddenly - a Garbotnik industries craft hurtles past the camera, sparking and trailing smoke.", false, -1, NULL);
             addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "WHA-HAHA... I regret nothing...", false, 1, NULL);

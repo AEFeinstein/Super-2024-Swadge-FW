@@ -101,7 +101,7 @@ bool mg_setBgm(mgSoundManager_t* self, uint16_t newBgmIndex)
     {
         loadMidiFile(MG_BGMS[newBgmIndex - 1], &self->currentBgm, true);
     }
-
     self->currentBgmIndex = newBgmIndex;
+    midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     return true;
 }

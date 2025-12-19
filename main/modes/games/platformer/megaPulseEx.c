@@ -469,7 +469,7 @@ void platformerEnterMode(void)
         // BlackScreen
         addCutsceneStyle(platformer->gameData.cutscene, c555, BLACK_PORTRAIT_WSG, TEXTBOX_SAWTOOTH_WSG, "", 1, false,
                          true, false);
-        setMidiParams(platformer->gameData.cutscene, 23, 11, 0, 100, true);
+        setMidiParams(platformer->gameData.cutscene, 23, 11, -1, 100, false);
 
         /////////////////////////
         // UNCORRUPTED VERSIONS//
@@ -2190,6 +2190,26 @@ void startCreditMusic(void)
 
 void startPostFightMusic(void)
 {
+    if (!platformer->gameData.cheatMode)
+    {
+        uint8_t trophy = platformer->gameData.level;
+        if (trophy == 5 || trophy == 11)
+        {
+            // it's just the gauntlet. or boss rush.
+            return;
+        }
+        if (trophy == 10)
+        {
+            // The 10th level is the intro level with bigma.
+            trophy = 0;
+        }
+        if (trophy == 12)
+        {
+            // The 12th level is the final hank showdown
+            trophy = 5;
+        }
+        trophyUpdate(&platformerTrophies[trophy], 1, true);
+    }
     globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_POST_FIGHT);
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
@@ -2214,6 +2234,11 @@ void startMegajamMusic(void)
     globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_THE_FINAL_MEGAJAM);
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+}
+
+void stopMusic(void)
+{
+    globalMidiPlayerGet(MIDI_BGM)->paused = true;
 }
 
 // forward declared in mega_pulse_ex_typedef.h

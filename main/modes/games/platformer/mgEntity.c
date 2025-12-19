@@ -5695,30 +5695,5 @@ void startOutroCutscene(mgEntity_t* self)
         mg_setBgm(self->soundManager, MG_BGM_BOSS_DRAIN_BAT);
         soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
     }
-    else
-    {
-        mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
-        soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
-    }
     bossOutroCutscene(self->gameData);
-    if (!self->gameData->cheatMode)
-    {
-        uint8_t trophy = self->gameData->level;
-        if (trophy == 5 || trophy == 11)
-        {
-            // it's just the gauntlet. or boss rush.
-            return;
-        }
-        if (trophy == 10)
-        {
-            // The 10th level is the intro level with bigma.
-            trophy = 0;
-        }
-        if (trophy == 12)
-        {
-            // The 12th level is the final hank showdown
-            trophy = 5;
-        }
-        trophyUpdate(&platformerTrophies[trophy], 1, true);
-    }
 }
