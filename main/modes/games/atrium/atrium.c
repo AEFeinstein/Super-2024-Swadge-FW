@@ -1392,7 +1392,7 @@ userProfile_t loadProfileFromNVS(void)
         writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, TEAMKEY, loadedProfile.team);
         writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_CREATEDKEY, 1); // mark profile as created
 
-        printf("New profile created with packedProfile=%" PRId32 "\n", loadedProfile.packedProfile);
+        ESP_LOGI(ATR_TAG, "New profile created with packedProfile=%" PRId32 "\n", loadedProfile.packedProfile);
         trophyUpdate(&atriumTrophyData.list[1 + team], 1, true); // award trophy for creating profile
         return loadedProfile;
     }
@@ -1494,7 +1494,7 @@ void updateTeamScores(void)
         trophyUpdate(&atriumTrophyData.list[9], yellowscore, false); // update trophy for yellow team
 
         trophyUpdate(&atriumTrophyData.list[7 + myteam], myteamscore, true); // update and draw the player's team only
-        printf("Team scores updated: Red=%d, Blue=%d, Yellow=%d, MyTeam=%" PRId32 " Score=%d\n", redscore, bluescore,
+        ESP_LOGI(ATR_TAG, "Team scores updated: Red=%d, Blue=%d, Yellow=%d, MyTeam=%" PRId32 " Score=%d\n", redscore, bluescore,
                yellowscore, myteam, myteamscore);
     }
     atr->loadedTeams = true;
