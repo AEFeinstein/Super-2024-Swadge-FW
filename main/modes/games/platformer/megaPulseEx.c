@@ -514,6 +514,11 @@ void platformerEnterMode(void)
         addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Battrice",
                          1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 33, 82, 2, 250, false);
+        // DeadeyeWithoutZip
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_WITHOUT_ZIP_0_WSG, TEXTBOX_PULSE_WSG, "Cho",
+                         1, false, true, true);
+        // reduce note length, because she just lost Zip.
+        setMidiParams(platformer->gameData.cutscene, 34, 17, 1, 100, false);
     }
 
     setFrameRateUs(16666);
