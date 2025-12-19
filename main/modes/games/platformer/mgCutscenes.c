@@ -893,7 +893,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Bigma, "We used to be underground! We were weird! We made art! But now? Look around you!", false, 1);
             addCutsceneLine(gameData->cutscene, Pulse, "Huh?", false, 0);
             addCutsceneLine(gameData->cutscene, Bigma, "It's all so BIG. And LOUD. There are too many people. Too many crowds. Things are just too... ...mainstream!", false, 1);
-            addCutsceneLine(gameData->cutscene, SystemText,"BIGMA throws his head back and lets out a colossus roar.", false, -1);
+            addCutsceneLine(gameData->cutscene, SystemText,"BIGMA throws his head back and lets out another colossus roar.", false, -1);
             addCutsceneLine(gameData->cutscene, Bigma, "I just want things to go back the way they were!", false, 2);
 
             addCutsceneLine(gameData->cutscene, Pulse, "BIGMA... I'm sorry.", false, 1);
@@ -930,9 +930,10 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "We're something new.", false, 2);
             addCutsceneLine(gameData->cutscene, Bigma, "Something that couldn't exist without the past...", false, 1);
             addCutsceneLine(gameData->cutscene, Sunny, "...But doesn't need to live in it.", true, 1);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "So... in other words... HANK, you're fired.", true, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "So... in other words...", true, -1);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "HANK, you're fired!!!!!!", true, -1);
             addCutsceneLine(gameData->cutscene, HankWaddle, "No! No no no-if I go down, I'll take you with-AAAAUUUGHHHH!!!!", false, 1);
-            addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "Pulse! We have to get out of here!", true, 3);
+            addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "EVERYBODY! We have to get out of here!", true, 3);
             addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "After teleporting to safety, PULSE, SAWTOOTH, BIGMA, and the freed RemiXes watch HANK WADDLE's exploding facility from a distant           .    cliffside.", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "The following day, PULSE and friends return to Hank's Lair to reflect on their adventure.", false, 0);
@@ -945,24 +946,31 @@ void bossOutroCutscene(mgGameData_t* gameData)
             globalMidiUnpauseAll();
             mg_setBgm(gameData->soundManager, leveldef[14].mainBgmIndex);
             addCutsceneLine(gameData->cutscene, BlackScreen, "THANK YOU FOR PLAYING PULSE 20x6!", false, 0);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Programmer, Artist, Boss Designer: Jon Vega", false, 0);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Programmer, Artist, Boss Designer: James Albracht", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Producer, Boss Designer: Dac", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Technical Overlord: Adam Feinstein", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Hardware Leader: Emily Anthony", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Lead Programmer, Gameplay Designer, Enemy Artist, Boss Designer: Jon Vega", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "god of the 20X6 UNIVERSE, Programmer, Enemy Artist, Quality Assurance, Gameplay Designer, Boss Designer: James Albracht", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Reach out to james.albracht@magfest.org with LEGIT game job offers, plz.", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "I am jobless and lost my Mother to Schizophrenia a year ago.", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "May Virginia Lynn Albracht rest in peace and never be forgotten.", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "And I am grateful for the creative outlet swadge has served for me.", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Script Writer, Music Composer, Level Designer, Gameplay Designer: Joe Newman", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Script Writer, Character Designer, Cutscene Artist: Kaitie Lawson", false, 0);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Boss and Trophy Artist: Bloo", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Player and Boss and Trophy Artist: Bloo", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Environment and Enemy Artist: Emma (Objet Discret)", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Midi Engineer: Dylan Whichard", false, 0);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Technical Overlord: Adam Feinstein", false, 0);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Producer and Boss Designer: Dac", false, 0);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Hardware Leader: Emily Anthony", false, 0);
             addCutsceneLine(gameData->cutscene, BlackScreen, "Boss Artist, Character Designer: Greg Lord", false, 0);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Swadgeman: JFrye", false, 0);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Special thanks to you, the player!", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Swadgeman (MAG-TV Trailer): JFrye", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "\"Ovo Lives!\" Composer: Livingston Rampey", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Special thanks to you: THE STONE who has saved the future of MAGFest!", false, 0);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Notify circuitboards@magfest.org if you want to volunteer next year!", false, 0);
 
-            globalMidiPauseAll();
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Starfield. Quiet. Peaceful. Suddenly-a Garbotnik industries craft hurtles past the camera, sparking and trailing smoke.", false, -1);
+            //play Garbotnik's Home 2 (i.e. Ovo lives)
+            mg_setBgm(gameData->soundManager, leveldef[14].mainBgmIndex);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "Starfield. Quiet. Peaceful. Suddenly - a Garbotnik industries craft hurtles past the camera, sparking and trailing smoke.", false, -1);
             addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "WHA-HAHA... I regret nothing...", false, -1);
-            addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "Note to self: recalibrate escape trajectory before launching dramatic exit.", false, -1);
+            addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "Note to self: recalibrate escape trajectory BEFORE launching dramatic exit.", false, -1);
             addCutsceneLine(gameData->cutscene, SystemText, "Suddenly, a floating burrito wrapper hits him in the face.", false, -1);
             addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "... Is that my lunch?", false, -1);
             addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0);
