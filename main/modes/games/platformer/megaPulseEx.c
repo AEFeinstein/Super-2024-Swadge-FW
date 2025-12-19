@@ -789,7 +789,7 @@ void mgBuildMainMenu(platformer_t* self)
     addSettingsOptionsItemToMenu(self->menu, str_cheatMode, strs_on_off, trueFalseVals, ARRAY_SIZE(strs_on_off), &sp_tf,
                                  cheatMode);
     // We're not shipping that button
-    //addSingleItemToMenu(self->menu, str_giveAbilities);
+    // addSingleItemToMenu(self->menu, str_giveAbilities);
     self->menu = endSubMenu(self->menu);
 
     if (self->gameData.debugMode)

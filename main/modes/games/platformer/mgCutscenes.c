@@ -1005,7 +1005,6 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, SystemText, "TRASH MAN WILL RETURN... In whatever sequel he can crash into.", false, -1, NULL);
             addCutsceneLine(gameData->cutscene, SystemText, "Select New Game+ then play again with all your abilities!", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, SystemText, "And every cutscene becomes unhinged with random character portraits.", false, -1, NULL); 
             //globalMidiUnpauseAll();
             break;
         }
