@@ -159,33 +159,25 @@ static void setSongPitchesFromCurrentSong(mgGameData_t* gameData)
         }
         case MG_BGM_BOSS_HANK_WADDLE:
         {
-            int16_t songPitches[]
-                = 
-            {67, 67, 67, 67, 67, 67, 67, 67};
+            int16_t songPitches[] = {67, 67, 67, 67, 67, 67, 67, 67};
             setSongPitches(gameData->cutscene, songPitches);
             break;
         }
         case MG_BGM_OVO_LIVES:
         {
-            int16_t songPitches[]
-                = 
-            {31, 34, 36, 37, 38, 41, 43, 54};
+            int16_t songPitches[] = {31, 34, 36, 37, 38, 41, 43, 54};
             setSongPitches(gameData->cutscene, songPitches);
             break;
         }
         case MG_BGM_THE_GAUNTLET:
         {
-            int16_t songPitches[]
-                = 
-            {57, 59, 64, 66, -1, -1, -1, -1};
+            int16_t songPitches[] = {57, 59, 64, 66, -1, -1, -1, -1};
             setSongPitches(gameData->cutscene, songPitches);
             break;
         }
         case MG_BGM_THE_FINAL_MEGAJAM:
         {
-                        int16_t songPitches[]
-                = 
-            {62, 62, 62, 62, 62, 62, 62, 62};
+            int16_t songPitches[] = {62, 62, 62, 62, 62, 62, 62, 62};
             setSongPitches(gameData->cutscene, songPitches);
             break;
         }
@@ -524,13 +516,34 @@ void bossIntroCutscene(mgGameData_t* gameData)
         }
         case 1: // The Bouncehaus (Kinetic Donut)
         {
-            addCutsceneLine(gameData->cutscene, Pulse, "You there! Step away from the deep fryer!!", false, 4, NULL);
-            addCutsceneLine(gameData->cutscene, KineticDonut, "Oooooh-did my tacos get here early?! Love when that happens!", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, Pulse, "I'm not your delivery driver!", false, 3, NULL);
-            addCutsceneLine(gameData->cutscene, Pulse, "Though I AM about to serve you a beatdown.", false, 1, NULL);
-            addCutsceneLine(gameData->cutscene, KineticDonut, "Wait... no tacos? UGH. That makes me... really MAD!", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, SystemText, "The arena begins bouncing erratically.", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, KineticDonut, "Welcome to the nosh pit, baby! Hope you brought antacids!", false, -1, NULL);
+            if(gameData->abilities & (1U << MG_CAN_OF_SALSA_ABILITY))
+            {
+                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Ugh... so hungry...", false, -1, NULL);
+                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "WAIT - Is that a CAN OF SALSA you've got there? Is it chunky? Spicy? ZESTY CHIPOTLE?", false, -1, NULL);
+                addCutsceneLine(gameData->cutscene, Pulse, "Uh, yeah?", false, 0, NULL);
+                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "GIMMIE.", false, -1, NULL);
+                addCutsceneLine(gameData->cutscene, Pulse, "Umm... sure?", false, 0, NULL);
+                addCutsceneLine(gameData->cutscene, SystemText, "PULSE tosses KINETIC DONUT the can. He rips it open and drinks it like a sports drink.", false, 0, NULL);
+                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "OHHH you're a LIFESAVER! I think I was just hangry. My brain was stuck in \"party mode.\"", false, -1, NULL);
+                addCutsceneLine(gameData->cutscene, Pulse, "So... we're good?", false, 2, NULL);
+                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "More than good. You fixed my vibe... Here - take this. Now go stick it to whoever cancelled lunch!", false, -1, startPostFightMusic);
+                unlockAbility(gameData, MG_DROP_THE_MIC_ABILITY);
+                addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Drop the Mic", false, 0, NULL);
+                addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Press down and A in the air.", false, 0, NULL);
+                addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Unleash a ground-pound sound attack with a mic drop!", false, 0, NULL);
+                addCutsceneLine(gameData->cutscene, Pulse, "Thanks! Hope you, uh... get a real meal.", false, 2, NULL);
+                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Oh, I will. Tacos first, existential crisis later!", false, -1, NULL);
+            }
+            else
+            {
+                addCutsceneLine(gameData->cutscene, Pulse, "You there! Step away from the deep fryer!!", false, 4, NULL);
+                addCutsceneLine(gameData->cutscene, KineticDonut, "Oooooh-did my tacos get here early?! Love when that happens!", false, -1, NULL);
+                addCutsceneLine(gameData->cutscene, Pulse, "I'm not your delivery driver!", false, 3, NULL);
+                addCutsceneLine(gameData->cutscene, Pulse, "Though I AM about to serve you a beatdown.", false, 1, NULL);
+                addCutsceneLine(gameData->cutscene, KineticDonut, "Wait... no tacos? UGH. That makes me... really MAD!", false, -1, NULL);
+                addCutsceneLine(gameData->cutscene, SystemText, "The arena begins bouncing erratically.", false, 0, NULL);
+                addCutsceneLine(gameData->cutscene, KineticDonut, "Welcome to the nosh pit, baby! Hope you brought antacids!", false, -1, NULL);
+            }
             break;
         }
         case 6: // The Beat Colosseum (Smash Gorilla)
@@ -697,10 +710,9 @@ void bossOutroCutscene(mgGameData_t* gameData)
 
     gameData->changeState = MG_ST_CUTSCENE;
 
-    
-    //cut the music
-    globalMidiPauseAll();
-    
+    // cut the music
+    globalMidiPlayerGet(MIDI_BGM)->paused = true;
+
     /* clang-format off */
     switch (gameData->level)
     {
@@ -722,38 +734,17 @@ void bossOutroCutscene(mgGameData_t* gameData)
         }
         case 1: // The Bouncehaus (Kinetic Donut)
         {
-            if(gameData->abilities & (1U << MG_CAN_OF_SALSA_ABILITY))
-            {
-                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Ugh... so hungry...", false, -1, NULL);
-                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "WAIT - Is that a CAN OF SALSA you've got there? Is it chunky? Spicy? ZESTY CHIPOTLE?", false, -1, NULL);
-                addCutsceneLine(gameData->cutscene, Pulse, "Uh, yeah?", false, 0, NULL);
-                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "GIMMIE.", false, -1, NULL);
-                addCutsceneLine(gameData->cutscene, Pulse, "Umm... sure?", false, 0, NULL);
-                addCutsceneLine(gameData->cutscene, SystemText, "PULSE tosses KINETIC DONUT the can. He rips it open and drinks it like a sports drink.", false, 0, NULL);
-                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "OHHH you're a LIFESAVER! I think I was just hangry. My brain was stuck in \"party mode.\"", false, -1, NULL);
-                addCutsceneLine(gameData->cutscene, Pulse, "So... we're good?", false, 2, NULL);
-                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "More than good. You fixed my vibe... Here - take this. Now go stick it to whoever cancelled lunch!", false, -1, startPostFightMusic);
-                unlockAbility(gameData, MG_DROP_THE_MIC_ABILITY);
-                addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Drop the Mic", false, 0, NULL);
-                addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Press down and A in the air.", false, 0, NULL);
-                addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Unleash a ground-pound sound attack with a mic drop!", false, 0, NULL);
-                addCutsceneLine(gameData->cutscene, Pulse, "Thanks! Hope you, uh... get a real meal.", false, 2, NULL);
-                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Oh, I will. Tacos first, existential crisis later!", false, -1, NULL);
-            }
-            else
-            {
-                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Hnggh... my head's spinning... Did... Did I stage-dive into the fryer?", false, -1, NULL);
-                addCutsceneLine(gameData->cutscene, Pulse, "Almost. You've been corrupted by MAGiX. It's not your fault.", false, 1, NULL);
-                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "I-I couldn't stop bouncing. Everything was loud, and I was starving...", false, -1, NULL);
-                addCutsceneLine(gameData->cutscene, Pulse, "I get that way too sometimes.", false, 2, NULL);
-                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Here. Take this. It's a little messy, but it packs a punch.", false, -1, startPostFightMusic);
-                unlockAbility(gameData, MG_DROP_THE_MIC_ABILITY);
-                addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Drop the Mic", false, 0, NULL);
-                addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Press down and A in the air.", false, 0, NULL);
-                addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Unleash a ground-pound sound attack with a mic drop!", false, 0, NULL);
-                addCutsceneLine(gameData->cutscene, Pulse, "You going to be okay, Your Majesty?", false, 2, NULL);
-                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Yeah, I'm gonna go find something greasy and lie down.", false, -1, NULL);
-            }
+            addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Hnggh... my head's spinning... Did... Did I stage-dive into the fryer?", false, -1, NULL);
+            addCutsceneLine(gameData->cutscene, Pulse, "Almost. You've been corrupted by MAGiX. It's not your fault.", false, 1, NULL);
+            addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "I-I couldn't stop bouncing. Everything was loud, and I was starving...", false, -1, NULL);
+            addCutsceneLine(gameData->cutscene, Pulse, "I get that way too sometimes.", false, 2, NULL);
+            addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Here. Take this. It's a little messy, but it packs a punch.", false, -1, startPostFightMusic);
+            unlockAbility(gameData, MG_DROP_THE_MIC_ABILITY);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Drop the Mic", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Press down and A in the air.", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Unleash a ground-pound sound attack with a mic drop!", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, Pulse, "You going to be okay, Your Majesty?", false, 2, NULL);
+            addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Yeah, I'm gonna go find something greasy and lie down.", false, -1, NULL);
             break;
         }
         case 6: // The Beat Colosseum (Smash Gorilla)

@@ -471,10 +471,6 @@ void platformerEnterMode(void)
                          true, false);
         setMidiParams(platformer->gameData.cutscene, 23, 11, 0, 100, true);
 
-
-
-
-
         /////////////////////////
         // UNCORRUPTED VERSIONS//
         /////////////////////////
@@ -519,27 +515,26 @@ void platformerEnterMode(void)
                          1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 33, 82, 2, 250, false);
         // DeadeyeWithoutZip
-        addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_CHIRPZI_WITHOUT_ZIP_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Cho",
-                         1, false, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_CHIRPZI_WITHOUT_ZIP_PORTRAIT_0_WSG,
+                         TEXTBOX_PULSE_WSG, "Cho", 1, false, true, true);
         // reduce note length, because she just lost Zip.
         setMidiParams(platformer->gameData.cutscene, 34, 17, 1, 100, false);
 
         /////////////////////
-        //Random Schizz idk//
+        // Random Schizz idk//
         /////////////////////
         // Sunny Flipped
-        addCutsceneStyle(platformer->gameData.cutscene, c541, SUNNY_FLIPPED_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sunny", 2,
-                         true, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c541, SUNNY_FLIPPED_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG,
+                         "Sunny", 2, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 35, 81, 1, 100, true);
         // SawtoothRevealed Flipped
-        addCutsceneStyle(platformer->gameData.cutscene, c541, SAWTOOTH_FLIPPED_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 2,
-                         true, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c541, SAWTOOTH_FLIPPED_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG,
+                         "Sawtooth", 2, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 36, 81, 1, 100, true);
         // Sawtooth Flipped
-        addCutsceneStyle(platformer->gameData.cutscene, c541, SAWTOOTH_FLIPPED_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sawtooth", 2,
-                         true, true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c541, SAWTOOTH_FLIPPED_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG,
+                         "Sawtooth", 2, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 37, 81, 1, 100, false);
-
     }
 
     setFrameRateUs(16666);
@@ -2184,35 +2179,35 @@ void goToReadyScreen(void)
 
 void startCreditMusic(void)
 {
-    globalMidiUnpauseAll();
+    globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_MAXIMUM_HYPE_CREDITS);
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
 
 void startPostFightMusic(void)
 {
-    globalMidiUnpauseAll();
+    globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_POST_FIGHT);
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
 
 void startHankMusic(void)
 {
-    globalMidiUnpauseAll();
+    globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_BOSS_HANK_WADDLE);
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
 
 void startTrashManMusic(void)
 {
-    globalMidiUnpauseAll();
+    globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_OVO_LIVES);
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
 
 void startMegajamMusic(void)
 {
-    globalMidiUnpauseAll();
+    globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_THE_FINAL_MEGAJAM);
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
@@ -2228,7 +2223,7 @@ void initBossFight(void)
     }
     else
     {
-        //make stage lights blue for kinetic donut at start of the boss rush
+        // make stage lights blue for kinetic donut at start of the boss rush
         platformer->gameData.bgColors = leveldef[platformer->gameData.level].bgColors;
     }
     platformer->update = &updateReadyScreen;

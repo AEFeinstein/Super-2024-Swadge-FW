@@ -5,15 +5,17 @@
 //==============================================================================
 
 // Note, must match order and size of mg_bgmEnum_t
-const cnfsFileIdx_t MG_BGMS[] = {BGM_DEADEYE_CHIRPZI_MID,    BGM_BOSS_DEADEYE_CHIRPZI_MID, BGM_DRAIN_BAT_MID,
-                                 BGM_BOSS_DRAIN_BAT_MID,     BGM_FLARE_GRYFFYN_MID,        BGM_BOSS_FLARE_GRIFFIN_MID,
-                                 BGM_GRIND_PANGOLIN_MID,     BGM_BOSS_GRIND_PANGOLIN_MID,  BGM_KINETIC_DONUT_MID,
-                                 BGM_BOSS_KINETIC_DONUT_MID, BGM_RIP_BARONESS_MID,         BGM_BOSS_HANK_WADDLE_MID,
-                                 BGM_SEVER_YAGATA_MID,       BGM_BOSS_SEVER_YAGATA_MID,    BGM_SMASH_GORILLA_MID,
-                                 BGM_BOSS_SMASH_GORILLA_MID, BGM_BOSS_TRASH_MAN_MID,       BGM_BIGMA_MID,
-                                 BGM_BOSS_BIGMA_MID,         BGM_LEVEL_CLEAR_JINGLE_MID,   BGM_POST_FIGHT_MID,
-                                 BGM_PRE_FIGHT_MID,          BGM_INTRO_STAGE_MID,          BGM_STAGE_SELECT_MID,
-                                 BGM_NAME_ENTRY_MID,         MAXIMUM_HYPE_CREDITS_MID,     BGM_OVO_LIVES_MID,};
+const cnfsFileIdx_t MG_BGMS[] = {
+    BGM_DEADEYE_CHIRPZI_MID,    BGM_BOSS_DEADEYE_CHIRPZI_MID, BGM_DRAIN_BAT_MID,
+    BGM_BOSS_DRAIN_BAT_MID,     BGM_FLARE_GRYFFYN_MID,        BGM_BOSS_FLARE_GRIFFIN_MID,
+    BGM_GRIND_PANGOLIN_MID,     BGM_BOSS_GRIND_PANGOLIN_MID,  BGM_KINETIC_DONUT_MID,
+    BGM_BOSS_KINETIC_DONUT_MID, BGM_RIP_BARONESS_MID,         BGM_BOSS_HANK_WADDLE_MID,
+    BGM_SEVER_YAGATA_MID,       BGM_BOSS_SEVER_YAGATA_MID,    BGM_SMASH_GORILLA_MID,
+    BGM_BOSS_SMASH_GORILLA_MID, BGM_BOSS_TRASH_MAN_MID,       BGM_BIGMA_MID,
+    BGM_BOSS_BIGMA_MID,         BGM_LEVEL_CLEAR_JINGLE_MID,   BGM_POST_FIGHT_MID,
+    BGM_PRE_FIGHT_MID,          BGM_INTRO_STAGE_MID,          BGM_STAGE_SELECT_MID,
+    BGM_NAME_ENTRY_MID,         MAXIMUM_HYPE_CREDITS_MID,     BGM_OVO_LIVES_MID,
+};
 
 /*
 const int MG_1x2_TILE_COLLISION_OFFSETS_IN_PIXELS[]
@@ -357,22 +359,23 @@ const mgLeveldef_t leveldef[] = {
     {.filename           = BOSS_TEST_DONUT_RAW, // 11 This is actually used for the boss rush. DO NOT DELETE!
      .timeLimit          = 500,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
-     .mainBgmIndex       = MG_BGM_FINAL_MEGAJAM,
+     .mainBgmIndex       = MG_BGM_THE_FINAL_MEGAJAM,
      .bossBgmIndex       = MG_BGM_BOSS_KINETIC_DONUT,
      .bgColors = bgGradientFinalShowdown}, // starts black to fit the script, then becomes colored with each boss.
     {.filename           = SHOWDOWN_RAW,   // Bigma2 & Hank fight (12)
      .timeLimit          = 200,
      .defaultWsgSetIndex = MG_WSGSET_HANK_WADDLE,
      .mainBgmIndex       = MG_BGM_PRE_FIGHT,
-     .bossBgmIndex       = MG_BGM_BOSS_HANK_WADDLE,//use this for final showdown
+     .bossBgmIndex       = MG_BGM_BOSS_HANK_WADDLE, // use this for final showdown
      .bgColors           = bgGradientFinalShowdown},
-    {.filename           = BOSS_TEST_ROOM_RAW,//13 It's just here for JVeg
+    {.filename           = BOSS_TEST_ROOM_RAW, // 13 It's just here for JVeg
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
      .bossBgmIndex       = MG_BGM_BOSS_SEVER_YATAGA,
      .bgColors           = bgGradientPurple},
-     {.filename          = BOSS_TEST_ROOM_RAW,//14, PLACEHOLDER just to have credits music and 'Ovo Lives'! (garbotnik home 2 from attic)
+    {.filename
+     = BOSS_TEST_ROOM_RAW, // 14, PLACEHOLDER just to have credits music and 'Ovo Lives'! (garbotnik home 2 from attic)
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
      .mainBgmIndex       = MG_BGM_MAXIMUM_HYPE_CREDITS,

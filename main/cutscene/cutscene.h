@@ -114,7 +114,8 @@ void addCutsceneStyle(cutscene_t* cutscene, paletteColor_t color, cnfsFileIdx_t 
 void setMidiParams(cutscene_t* cutscene, uint8_t styleIdx, uint8_t instrument, int8_t octaveOvset, uint16_t noteLength,
                    bool slowAttack);
 void setSongPitches(cutscene_t* cutscene, int16_t songPitches[8]);
-void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation, cutsceneCb cbFunc);
+void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation,
+                     cutsceneCb cbFunc);
 void updateCutscene(cutscene_t* cutscene, int16_t btnState);
 void drawCutscene(cutscene_t* cutscene, font_t* font);
 void deinitCutscene(cutscene_t* cutscene);
