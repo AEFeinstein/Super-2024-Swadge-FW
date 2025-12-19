@@ -108,8 +108,9 @@ typedef enum
     MG_BGM_STAGE_SELECT,
     MG_BGM_NAME_ENTRY,
     MG_BGM_MAXIMUM_HYPE_CREDITS,
-
-    MG_BGM_BOSS_HANK,
+    MG_BGM_OVO_LIVES,
+    MG_BGM_THE_GAUNTLET,
+    MG_BGM_THE_FINAL_MEGAJAM,
 } mg_bgmEnum_t;
 
 typedef enum
@@ -1161,6 +1162,11 @@ extern const trophyData_t platformerTrophies[];
 //==============================================================================
 
 extern void goToReadyScreen(void);
+extern void startCreditMusic(void);
+extern void startPostFightMusic(void);
+extern void startHankMusic(void);
+extern void startTrashManMusic(void);
 extern void initBossFight(void);
+extern void startMegajamMusic(void);
 
 #endif

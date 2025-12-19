@@ -185,7 +185,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Sever Yataga",
+        .title       = "Defeated Sever Yataga",
         .description = "Favorite genre: EDM",
         .image       = TROPHY_SEVER_YATAGA_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -201,7 +201,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Hank Waddle",
+        .title       = "Defeated Hank Waddle",
         .description = "Favorite genre: Silence",
         .image       = TROPHY_HANK_WADDLE_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -233,7 +233,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Flare Gryffyn",
+        .title       = "Defeated Flare Gryffyn",
         .description = "Favorite genre: Classic Rock",
         .image       = TROPHY_FLARE_GRYFFYN_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -2180,6 +2180,41 @@ void drawLevelSelect(platformer_t* self)
 void goToReadyScreen(void)
 {
     platformer->update = &updateReadyScreen;
+}
+
+void startCreditMusic(void)
+{
+    globalMidiUnpauseAll();
+    mg_setBgm(&platformer->soundManager, MG_BGM_MAXIMUM_HYPE_CREDITS);
+    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+}
+
+void startPostFightMusic(void)
+{
+    globalMidiUnpauseAll();
+    mg_setBgm(&platformer->soundManager, MG_BGM_POST_FIGHT);
+    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+}
+
+void startHankMusic(void)
+{
+    globalMidiUnpauseAll();
+    mg_setBgm(&platformer->soundManager, MG_BGM_BOSS_HANK_WADDLE);
+    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+}
+
+void startTrashManMusic(void)
+{
+    globalMidiUnpauseAll();
+    mg_setBgm(&platformer->soundManager, MG_BGM_OVO_LIVES);
+    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+}
+
+void startMegajamMusic(void)
+{
+    globalMidiUnpauseAll();
+    mg_setBgm(&platformer->soundManager, MG_BGM_THE_FINAL_MEGAJAM);
+    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
 
 // forward declared in mega_pulse_ex_typedef.h

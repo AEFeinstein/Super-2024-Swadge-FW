@@ -274,7 +274,7 @@ void setSongPitches(cutscene_t* cutscene, int16_t songPitches[8])
  * @param flipHorizontal true to flip the character pose horizontally
  * @param spriteVariation The specific pose sprite, counted up from the main pose sprite.
  */
-void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation)
+void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool flipHorizontal, int8_t spriteVariation, cutsceneCb cbFunc)
 {
     cutsceneLine_t* line = (cutsceneLine_t*)heap_caps_calloc(1, sizeof(cutsceneLine_t), MALLOC_CAP_SPIRAM);
     line->body           = (char*)heap_caps_calloc(strlen(body) + 1, sizeof(char), MALLOC_CAP_SPIRAM);
@@ -282,6 +282,7 @@ void addCutsceneLine(cutscene_t* cutscene, uint8_t styleIdx, char* body, bool fl
     line->styleIdx        = styleIdx;
     line->spriteVariation = spriteVariation < 0 ? getRandomVariationFromStyleIdx(cutscene, styleIdx) : spriteVariation;
     line->flipHorizontal  = flipHorizontal;
+    line->cbFunc = cbFunc;
 
     if (cutscene->lines->first == NULL)
     {
@@ -369,6 +370,10 @@ void updateCutscene(cutscene_t* cutscene, int16_t btnState)
             if (cutscene->lines->first != NULL
                 && cutscene->lines->first->next != NULL) // There is at least onle line after this one.
             {
+                if(((cutsceneLine_t*)(cutscene->lines->first->val))->cbFunc != NULL)
+                {
+                    ((cutsceneLine_t*)(cutscene->lines->first->val))->cbFunc();
+                }
                 free(((cutsceneLine_t*)shift(cutscene->lines))->body);
                 style = getCurrentStyle(cutscene);
 
