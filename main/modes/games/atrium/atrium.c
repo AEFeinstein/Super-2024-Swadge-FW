@@ -10,7 +10,7 @@
 
 #define TFT_WIDTH             280
 #define TFT_HEIGHT            240
-#define MAX_NUM_SWADGE_PASSES 50
+
 
 // Lobby
 #define SONA_PER            4
@@ -1459,9 +1459,7 @@ void updateTeamScores(void)
                 default:
                     break;
             }
-            trophyUpdate(&atriumTrophyData.list[8], redscore, false);     // update trophy for red team
-            trophyUpdate(&atriumTrophyData.list[9], bluescore, false);    // update trophy for blue team
-            trophyUpdate(&atriumTrophyData.list[10], yellowscore, false); // update trophy for yellow team
+            
         }
 
         int myteamscore = 0;
