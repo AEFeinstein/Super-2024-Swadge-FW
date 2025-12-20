@@ -1000,7 +1000,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, CreditStyle, "\"Ovo Lives!\" Composer: Livingston Rampey", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Special thanks to you: THE STONE who SPLIT the future of MAGFest in two!", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Notify circuitboards@magfest.org if you want to volunteer on the swadge for next year!", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, CreditStyle, "Checkout coordinates on wplace.live lat:36.34, long:82.68", false, 0, startTrashManMusic);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Checkout coordinates on wplace.live lat:36.34, long:-82.68", false, 0, startTrashManMusic);
 
             addCutsceneLine(gameData->cutscene, BlackScreen, "Starfield. Quiet. Peaceful. Suddenly - a Garbotnik industries craft hurtles past the camera, sparking and trailing smoke.", false, -1, NULL);
             addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "WHA-HAHA... I regret nothing...", false, 1, NULL);
