@@ -525,7 +525,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
                 addCutsceneLine(gameData->cutscene, Pulse, "Uh, yeah?", false, 0, NULL);
                 addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "GIMMIE.", false, -1, NULL);
                 addCutsceneLine(gameData->cutscene, Pulse, "Umm... sure?", false, 0, NULL);
-                addCutsceneLine(gameData->cutscene, SystemText, "PULSE tosses KINETIC DONUT the can. He rips it open and drinks it like a sports drink.", false, 0, NULL);
+                addCutsceneLine(gameData->cutscene, SystemText, "PULSE tosses KINETIC DONUT the can. He rips it open and drinks it like a sports drink.", false, 0, loseCanOfSalsa);
                 addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "OHHH you're a LIFESAVER! I think I was just hangry. My brain was stuck in \"party mode.\"", false, -1, NULL);
                 addCutsceneLine(gameData->cutscene, Pulse, "So... we're good?", false, 2, NULL);
                 addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "More than good. You fixed my vibe... Here - take this. Now go stick it to whoever cancelled lunch!", false, -1, startPostFightMusic);
@@ -1000,7 +1000,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, CreditStyle, "\"Ovo Lives!\" Composer: Livingston Rampey", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Special thanks to you: THE STONE who SPLIT the future of MAGFest in two!", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Notify circuitboards@magfest.org if you want to volunteer on the swadge for next year!", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, CreditStyle, "Checkout coordinates on wplace.live lat:36.34, long:82.68", false, 0, startTrashManMusic);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Checkout coordinates on wplace.live lat:36.34, long:-82.68", false, 0, startTrashManMusic);
 
             addCutsceneLine(gameData->cutscene, BlackScreen, "Starfield. Quiet. Peaceful. Suddenly - a Garbotnik industries craft hurtles past the camera, sparking and trailing smoke.", false, -1, NULL);
             addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "WHA-HAHA... I regret nothing...", false, 1, NULL);
