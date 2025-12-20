@@ -224,16 +224,16 @@ const mg_EntityTileCollider_t entityTileCollider_flare_gryffyn_jumping
 
 // deadeye chirpzi origin: 40, 34
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_deadeye_chirpzi_bottomEdge
-    = {.collisionPoints = {{.x = -17, .y = 33}, {.x = 0, .y = 33}, {.x = 16, .y = 33}}, .size = 3};
+    = {.collisionPoints = {{.x = -16, .y = 33}, {.x = 0, .y = 33}, {.x = 15, .y = 33}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_deadeye_chirpzi_topEdge
-    = {.collisionPoints = {{.x = -17, .y = -29}, {.x = 0, .y = -29}, {.x = 16, .y = -29}}, .size = 3};
+    = {.collisionPoints = {{.x = -16, .y = -29}, {.x = 0, .y = -29}, {.x = 15, .y = -29}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_deadeye_chirpzi_rightEdge
-    = {.collisionPoints = {{.x = 16, .y = 33}, {.x = 16, .y = 0}, {.x = 16, .y = -29}}, .size = 3};
+    = {.collisionPoints = {{.x = 16, .y = 32}, {.x = 16, .y = 0}, {.x = 16, .y = -29}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_deadeye_chirpzi_leftEdge
-    = {.collisionPoints = {{.x = -17, .y = 33}, {.x = -17, .y = 0}, {.x = -17, .y = -29}}, .size = 3};
+    = {.collisionPoints = {{.x = -17, .y = 32}, {.x = -17, .y = 0}, {.x = -17, .y = -29}}, .size = 3};
 
 const mg_EntityTileCollider_t entityTileCollider_deadeye_chirpzi
     = {.bottomEdge = &mgTileCollisionOffsets_deadeye_chirpzi_bottomEdge,
