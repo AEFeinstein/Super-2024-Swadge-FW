@@ -2748,8 +2748,8 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
 
 void midiSetTempo(midiPlayer_t* player, uint32_t tempo)
 {
+    player->sampleCount = player->sampleCount * tempo / player->tempo;
     player->tempo       = tempo;
-    player->sampleCount = 0;
     if (player->mode == MIDI_FILE)
     {
         player->forceCheckEvents = true;

@@ -179,16 +179,16 @@ static const jukeboxSong_t bgm_vectorTanks[] = {
 
 static const jukeboxSong_t bgm_cosplayCrunch[] = {
     {
+        .fIdx = COSPLAY_CRUNCH_MENU_MID,
+        .name = "Menu BGM",
+    },
+    {
         .fIdx = COSPLAY_CRUNCH_BGM_MID,
         .name = "Cosplay Crunch BGM",
     },
     {
-        .fIdx = FAIRY_FOUNTAIN_MID,
-        .name = "Fairy Fountain",
-    },
-    {
-        .fIdx = HD_CREDITS_MID,
-        .name = "Hot Dog Credits",
+        .fIdx = COSPLAY_CRUNCH_GAME_OVER_MID,
+        .name = "Game Over",
     },
 };
 
@@ -558,8 +558,8 @@ static const jukeboxSong_t bgm_findingFaces[] = {
         .name = "Menu",
     },
     {
-        .fIdx = LULLABY_IN_NUMBERS_MID,
-        .name = "Lullaby in Numbers",
+        .fIdx = FINDER_BGM_ZEN_MID,
+        .name = "Zen Mode Theme",
     },
     {
         .fIdx = FINDER_BGM_SLOW_MID,
@@ -587,14 +587,6 @@ static const jukeboxSong_t sfx_findingFaces[] = {
     {
         .fIdx = FINDER_WRONG_MID,
         .name = "Wrong",
-    },
-    {
-        .fIdx = FINDER_WRONGER_MID,
-        .name = "Wronger",
-    },
-    {
-        .fIdx = FINDER_DIE_MID,
-        .name = "Die",
     },
 };
 
