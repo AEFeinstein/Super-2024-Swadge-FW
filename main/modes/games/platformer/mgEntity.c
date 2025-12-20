@@ -59,6 +59,9 @@ const mg_spriteDef_t severYatagaFlyingFrames[] = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG
 
 const mg_spriteDef_t drainBatAnimFrames[] = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG_SP_BOSS_2, MG_SP_BOSS_3, MG_SP_BOSS_4};
 
+const mg_spriteDef_t flareGryffynGuitarSpinFrames[]
+    = {MG_SP_BOSS_2, MG_SP_BOSS_3, MG_SP_BOSS_4, MG_SP_BOSS_5};
+
 //==============================================================================
 // Functions Prototypes
 //==============================================================================
@@ -5061,131 +5064,152 @@ void mg_updateBossFlareGryffyn(mgEntity_t* self)
             return;
         case 0:
         default:
-            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
-            {
-                self->yspeed -= 4;
-            }
-
-            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 160)
-            {
-                self->xspeed = 64;
-            }
-
-            if (self->stateTimer == 120)
-            {
-                self->jumpPower = 1;
-            }
-
             self->stateTimer++;
-            if (self->stateTimer > 180)
+            if(self->stateTimer > 29)
             {
                 self->stateTimer = 0;
-                switch (esp_random() % 3)
-                {
-                    case 0:
-                        self->state = 1;
-                        break;
-                    case 1:
-                        self->state = 2;
-                        break;
-                    case 2:
-                        self->state = 3;
-                        break;
-                }
+                self->state = 1;
             }
             break;
         case 1:
-            if (TO_PIXEL_COORDS(self->y) > self->tilemap->mapOffsetY + 64)
-            {
-                self->yspeed -= 4;
-            }
-
-            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
-            {
-                self->xspeed = -64;
-            }
-
-            if (self->stateTimer == 120)
-            {
-                self->jumpPower = 1;
-            }
-
             self->stateTimer++;
-            if (self->stateTimer > 180)
+
+            self->spriteIndex = flareGryffynGuitarSpinFrames[(self->stateTimer >> 2) % 4];
+            self->spriteFlipHorizontal = (self->entityManager->playerEntity->x > self->x) ? false : true;
+
+            if(!(self->stateTimer % 30))
             {
-                self->stateTimer = 0;
-                switch (esp_random() % 3)
+                mgEntity_t* createdEntity;
+
+                switch(self->jumpPower)
                 {
                     case 0:
-                        self->state = 0;
-                        break;
+                    default:
+                        createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                            TO_PIXEL_COORDS(self->y));
+                        if (createdEntity != NULL)
+                        {
+                            createdEntity->xspeed = (self->entityManager->playerEntity->x > self->x) ? 80: -80;
+                            createdEntity->linkedEntity = self;
+                            //soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                        }
+                        createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                            TO_PIXEL_COORDS(self->y) + 16);
+                        if (createdEntity != NULL)
+                        {
+                            createdEntity->xspeed = (self->entityManager->playerEntity->x > self->x) ? 80: -80;
+                            createdEntity->linkedEntity = self;
+                            //soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                        }
+                        createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                            TO_PIXEL_COORDS(self->y) + 32);
+                        if (createdEntity != NULL)
+                        {
+                            createdEntity->xspeed = (self->entityManager->playerEntity->x > self->x) ? 80: -80;
+                            createdEntity->linkedEntity = self;
+                            //soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                        }
+
+                        self->jumpPower = 1;
+
+                    break;
                     case 1:
-                        self->state = 2;
-                        break;
-                    case 2:
-                        self->state = 3;
-                        break;
+                        createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                            TO_PIXEL_COORDS(self->y) - 16);
+                        if (createdEntity != NULL)
+                        {
+                            createdEntity->xspeed = (self->entityManager->playerEntity->x > self->x) ? 80: -80;
+                            createdEntity->linkedEntity = self;
+                            //soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                        }
+                        createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                            TO_PIXEL_COORDS(self->y) - 32);
+                        if (createdEntity != NULL)
+                        {
+                            createdEntity->xspeed = (self->entityManager->playerEntity->x > self->x) ? 80: -80;
+                            createdEntity->linkedEntity = self;
+                            //soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                        }
+                        createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
+                                                            TO_PIXEL_COORDS(self->y) - 48);
+                        if (createdEntity != NULL)
+                        {
+                            createdEntity->xspeed = (self->entityManager->playerEntity->x > self->x) ? 80: -80;
+                            createdEntity->linkedEntity = self;
+                            //soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                        }
+
+                        self->jumpPower = 0;
+                    break;
                 }
+            
+            }
+                
+
+            if(self->stateTimer > 300)
+            {
+                self->stateTimer = 0;
+                self->state = (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120) ? 2 : 3;
+                self->spriteIndex = MG_SP_BOSS_0;
+
+                self->jumpPower = (esp_random() % 2);
             }
 
             break;
         case 2:
+            self->stateTimer ++;
+            self->spriteIndex = flareGryffynGuitarSpinFrames[(self->stateTimer) % 4];
+            self->spriteFlipHorizontal = true;
+            
 
-            if (self->stateTimer < 60)
+            //Traverse from left side to right
+            if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 48)
             {
-                if (self->x < self->entityManager->playerEntity->x)
-                {
-                    self->xspeed = 32;
-                }
-                else
-                {
-                    self->xspeed = -32;
-                }
+                self->xspeed = -64;
             }
-
-            if (!self->falling || self->y > self->entityManager->playerEntity->y)
+            else
             {
-                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
                 self->stateTimer = 0;
+                self->state = 0;
+                self->spriteIndex = MG_SP_BOSS_0;
             }
 
-            self->stateTimer++;
+            //failsafe
+            if (self->stateTimer > 300)
+            {
+                self->stateTimer = 0;
+                self->state = 0;
+                self->spriteIndex = MG_SP_BOSS_0;
+            }
 
             break;
         case 3:
-            self->stateTimer++;
+            self->stateTimer ++;
+            self->spriteIndex = flareGryffynGuitarSpinFrames[(self->stateTimer) % 4];
+            self->spriteFlipHorizontal = false;
 
-            if (!(self->stateTimer % 60))
+            //Traverse from right side to left
+            if (TO_PIXEL_COORDS(self->x) < self->tilemap->mapOffsetX + 232)
             {
-                self->jumpPower = 1;
+                self->xspeed = 64;
             }
-
-            if (self->stateTimer > 239)
+            else
             {
-                self->state      = ((esp_random() % 100) > 50) ? 0 : 1;
                 self->stateTimer = 0;
+                self->state = 0;
+                self->spriteIndex = MG_SP_BOSS_0;
             }
+
+            //failsafe
+            if (self->stateTimer > 300)
+            {
+                self->stateTimer = 0;
+                self->state = 0;
+                self->spriteIndex = MG_SP_BOSS_0;
+            }
+
             break;
-    }
 
-    if (self->jumpPower > 0)
-    {
-        mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL, TO_PIXEL_COORDS(self->x),
-                                                    TO_PIXEL_COORDS(self->y));
-        if (createdEntity != NULL)
-        {
-            int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->y,
-                                     self->entityManager->playerEntity->x - self->x);
-            int16_t sin   = getSin1024(angle);
-            int16_t cos   = getCos1024(angle);
-
-            createdEntity->xspeed = (80 * cos) / 1024;
-            createdEntity->yspeed = (80 * sin) / 1024;
-
-            createdEntity->linkedEntity = self;
-            soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
-            self->jumpPower = 0;
-        }
     }
 
     mg_updateInvincibilityFrames(self);

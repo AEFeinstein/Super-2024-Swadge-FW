@@ -192,10 +192,10 @@ const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_top
     = {.collisionPoints = {{.x = -24, .y = -32}, {.x = 0, .y = -32}, {.x = 24, .y = -32}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_rightEdge
-    = {.collisionPoints = {{.x = 24, .y = 30}, {.x = 24, .y = 0}, {.x = 24, .y = -32}}, .size = 3};
+    = {.collisionPoints = {{.x = 24, .y = 29}, {.x = 24, .y = 0}, {.x = 24, .y = -32}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_leftEdge
-    = {.collisionPoints = {{.x = -24, .y = 30}, {.x = -24, .y = 0}, {.x = -24, .y = -32}}, .size = 3};
+    = {.collisionPoints = {{.x = -24, .y = 29}, {.x = -24, .y = 0}, {.x = -24, .y = -32}}, .size = 3};
 
 const mg_EntityTileCollider_t entityTileCollider_flare_gryffyn
     = {.bottomEdge = &mgTileCollisionOffsets_flare_gryffyn_bottomEdge,
