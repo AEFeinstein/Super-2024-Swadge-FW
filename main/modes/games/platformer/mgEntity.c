@@ -2393,8 +2393,11 @@ void updateScrollLockRight(mgEntity_t* self)
     if (self->entityManager->bossEntity != NULL)
     {
         // Cutscene before the boss fight
-        mg_setBgm(self->soundManager, MG_BGM_PRE_FIGHT);
-        soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+        if (self->gameData->level != 11) // keep the megajam music rolling in the rush stage intro talk.
+        {
+            mg_setBgm(self->soundManager, MG_BGM_PRE_FIGHT);
+            soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+        }
         bossIntroCutscene(self->gameData);
     }
     else if (self->gameData->level == 5)
@@ -3141,7 +3144,11 @@ void killEnemy(mgEntity_t* target)
         if (target->gameData->level == 11)
         {
             // give some freaking help on boss rush, geeze
-            createPowerUp(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
+            // 50% chance
+            if ((esp_random() % 100) < 50)
+            {
+                createPowerUp(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
+            }
         }
     }
     else if ((esp_random() % 100) > 90)

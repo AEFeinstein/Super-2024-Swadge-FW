@@ -41,6 +41,7 @@ typedef enum
     SunnyFlipped,
     SawtoothPostRevealFlipped,
     SawtoothFlipped,
+    HankUnrevealed,
 } cutsceneCharacters;
 
 static void setSongPitchesFromCurrentSong(mgGameData_t* gameData)
@@ -475,17 +476,17 @@ void stageStartCutscene(mgGameData_t* gameData)
         }
         default: // Hank Final Battle
         {
-            addCutsceneLine(gameData->cutscene, QuestionMark, "Oh, COME ON!", false, -1, NULL);
+            addCutsceneLine(gameData->cutscene, HankUnrevealed, "Oh, COME ON!", false, -1, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "Huh-?", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "Who's there?!", false, 1, NULL);
-            addCutsceneLine(gameData->cutscene, QuestionMark, "You didn't think it would wrap up THAT easily, did you?!", false, -1, NULL);
+            addCutsceneLine(gameData->cutscene, HankUnrevealed, "You didn't think it would wrap up THAT easily, did you?!", false, -1, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "Do you recognize that voice?", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, QuestionMark, "I wasn't talking to you, kid. I was talking to her.", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, QuestionMark, "Isn't that right...Deadeye?", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, SystemText, "The other RemiXes are all revealed in the shadows, in chains. A spotlight falls on DEADEYE CHIRPZI.", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Me? ...No. No way... That voice...", true, -1, NULL);
-            addCutsceneLine(gameData->cutscene, QuestionMark, "Hahaha! YES! Deadeye.... Or should I say... Cho. I knew you'd remember me, even after all these years.", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "... No. It can't be. Is that-", true, -1, NULL);
+            addCutsceneLine(gameData->cutscene, HankUnrevealed, "I wasn't talking to you, kid. I was talking to her.", false, -1, NULL);
+            addCutsceneLine(gameData->cutscene, HankUnrevealed, "Isn't that right...Deadeye?", false, -1, NULL);
+            addCutsceneLine(gameData->cutscene, SystemText, "The other RemiXes are all revealed in the shadows, in chains. A spotlight falls on CHO.", false, -1, NULL);
+            addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "Me? ...No. No way... That voice...", true, -1, NULL);
+            addCutsceneLine(gameData->cutscene, HankUnrevealed, "Hahaha! YES! Deadeye.... Or should I say... Cho. I knew you'd remember me, even after all these years.", false, -1, NULL);
+            addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "... No. It can't be. Is that-", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "Who??", false, 0, NULL);
             break;
         }
@@ -724,7 +725,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "Let's end this. Come home, Bigma. We can fix this, together...", false, 2, NULL);
             addCutsceneLine(gameData->cutscene, Bigma, "Hmmm... A fresh start sounds nice...", false, 2, NULL);
             addCutsceneLine(gameData->cutscene, SystemText, "PULSE and BIGMA shake hands.", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, Bigma, "... but I work solo.", false, 3, NULL);
+            addCutsceneLine(gameData->cutscene, Bigma, "... but I work solo.", false, 3, stopMusic);
             addCutsceneLine(gameData->cutscene, SystemText, "BIGMA lets out a corrupted Colossus Roar, stunning PULSE and SAWTOOTH.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "Aghh! What... was that?!", false, 4, NULL);
             addCutsceneLine(gameData->cutscene, SystemText, "BIGMA laughs and escapes in a digital blur.", false, 0, NULL);
@@ -929,7 +930,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "What?", false, 3, NULL);
             addCutsceneLine(gameData->cutscene, Bigma, "We used to be underground! We were weird! We made art! But now? Look around you!", false, 1, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "Huh?", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, Bigma, "It's all so BIG. And LOUD. There are too many people. Too many crowds. Things are just too... ...mainstream!", false, 1, NULL);
+            addCutsceneLine(gameData->cutscene, Bigma, "It's all so BIG. And LOUD. There are too many people. Too many crowds. Things are just too... ...mainstream!", false, 1, stopMusic);
             addCutsceneLine(gameData->cutscene, SystemText,"BIGMA throws his head back and lets out another colossus roar.", false, -1, NULL);
             addCutsceneLine(gameData->cutscene, Bigma, "I just want things to go back the way they were!", false, 2, NULL);
 
@@ -951,7 +952,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, HankWaddle, "WHAT?!", false, 1, NULL);
             addCutsceneLine(gameData->cutscene, GrindPangolinUncorrupted, "You think we don't know that, ya dingus?", false, -1, NULL);
             addCutsceneLine(gameData->cutscene, DrainBatUncorrupted, "We were born... out of love!", true, -1, NULL);
-            //Expedition 33 reference, a message of grief and moving on.
+            //Expedition 33 reference
             addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "For those that come after!", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, SmashGorillaUncorrupted, "And everything that shaped us.", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, Ember, "Flaws and all, baby.", true, -1, NULL);
@@ -973,7 +974,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, SawtoothFlipped, "EVERYBODY! We have to get out of here!", false, 3, stopMusic);
             addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "After teleporting to safety, PULSE, SAWTOOTH, BIGMA, and the freed RemiXes watch HANK WADDLE's exploding facility from a distant           .    cliffside.", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "The following day, PULSE and friends return to Hank's Lair to reflect on their adventure.", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, BlackScreen, "The following day, PULSE and friends return to the wreckage to reflect on their adventure.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "Sunny... was he right about us?", true, 0, NULL);
             addCutsceneLine(gameData->cutscene, Sunny, "I... don't know.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, Bigma, "Maybe you'll find out someday. But until then...", true, 2, NULL);

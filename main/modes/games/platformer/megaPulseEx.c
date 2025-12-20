@@ -520,9 +520,9 @@ void platformerEnterMode(void)
         // reduce note length, because she just lost Zip.
         setMidiParams(platformer->gameData.cutscene, 34, 17, 1, 100, false);
 
-        /////////////////////
+        //////////////////////
         // Random Schizz idk//
-        /////////////////////
+        //////////////////////
         // Sunny Flipped
         addCutsceneStyle(platformer->gameData.cutscene, c541, SUNNY_FLIPPED_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG,
                          "Sunny", 2, true, true, true);
@@ -535,6 +535,10 @@ void platformerEnterMode(void)
         addCutsceneStyle(platformer->gameData.cutscene, c541, SAWTOOTH_FLIPPED_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG,
                          "Sawtooth", 2, true, true, true);
         setMidiParams(platformer->gameData.cutscene, 37, 81, 1, 100, false);
+        // Hank Unrevealed
+        addCutsceneStyle(platformer->gameData.cutscene, c000, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "??????", 1,
+                         false, false, true);
+        setMidiParams(platformer->gameData.cutscene, 38, 38, 1, 250, true);
     }
 
     setFrameRateUs(16666);
@@ -2254,7 +2258,7 @@ void initBossFight(void)
         if (platformer->gameData.level == 11)
         {
             // make stage lights blue for kinetic donut at start of the boss rush
-            platformer->gameData.bgColors = leveldef[platformer->gameData.level].bgColors;
+            platformer->gameData.bgColors = leveldef[1].bgColors;
         }
         platformer->entityManager.bossEntity->state = 0;
         mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
