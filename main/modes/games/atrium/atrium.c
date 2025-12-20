@@ -49,10 +49,10 @@ static const cnfsFileIdx_t uiImages[] = {
 };
 
 static const cnfsFileIdx_t bgImages[] = {
-    GAZEBO_WSG, ATRIUMPLANT_1_WSG, ARCADE_1_WSG, ARCADE_2_WSG, ARCADE_3_WSG, ARCADE_4_WSG, CONCERT_1_WSG, CONCERT_2_WSG,
+    GAZEBO_WSG, ATRIUMPLANT_1_WSG, ARCADE_0_WSG, ARCADE_2_WSG, ARCADE_4_WSG, ARCADE_6_WSG, CONCERT_1_WSG, CONCERT_2_WSG,
 };
 
-// Images used for the backgrounds
+
 static const cnfsFileIdx_t cardImages[] = {
     CARDSTAFF_WSG, CARDGEN_WSG,    CARDBLOSS_WSG, CARDBUBB_WSG,   CARDDINO_WSG, CARDMAGFEST_WSG, CARDMUSIC_WSG,
     CARDSPACE_WSG, CARDARCADE_WSG, CARDSTARS_WSG, CARDSUNSET_WSG, CARDMIVS_WSG, CARDLEOPARD_WSG,
@@ -152,7 +152,7 @@ const trophyData_t atriumTrophies[] = {
     },
     {
         .title       = "SwadgePass Collector",
-        .description = "Load 10 SwadgePass profiles",
+        .description = "Find 10 SwadgePass profiles",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_PROGRESS,
         .difficulty  = TROPHY_DIFF_EASY,
@@ -162,7 +162,7 @@ const trophyData_t atriumTrophies[] = {
     },
     {
         .title       = "SwadgePass Social Butterfly",
-        .description = "Load 30 SwadgePass profiles",
+        .description = "FInd 30 SwadgePass profiles",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_PROGRESS,
         .difficulty  = TROPHY_DIFF_MEDIUM,
@@ -173,11 +173,11 @@ const trophyData_t atriumTrophies[] = {
 
     {
         .title       = "SwadgePass Influencer",
-        .description = "Load 50 SwadgePass profiles",
+        .description = "Find 100 SwadgePass profiles",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_PROGRESS,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 50,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 100,
         .hidden      = false,
         .identifier  = NULL,
     },
@@ -480,17 +480,17 @@ static void atriumEnterMode(void)
     }
 
     atr->numRemoteSwsn = i;
-    if (atr->numRemoteSwsn < 30)
+    if (atr->numRemoteSwsn <= 10)
     {
-        trophyUpdate(&atriumTrophyData.list[4], atr->numRemoteSwsn, true); // award trophy for loading 10 profiles
+        trophyUpdate(&atriumTrophyData.list[4], atr->numRemoteSwsn, true); // update count for 10 passes
     }
-    if (atr->numRemoteSwsn > 29 && atr->numRemoteSwsn < 50)
+    if (atr->numRemoteSwsn <= 30)
     {
-        trophyUpdate(&atriumTrophyData.list[5], atr->numRemoteSwsn, true); // award trophy for loading 30 profiles
+        trophyUpdate(&atriumTrophyData.list[5], atr->numRemoteSwsn, true); // count for 30 passes
     }
-    if (atr->numRemoteSwsn > 49)
+    if (atr->numRemoteSwsn <=100)
     {
-        trophyUpdate(&atriumTrophyData.list[6], atr->numRemoteSwsn, true); // award trophy for loading 50 profiles
+        trophyUpdate(&atriumTrophyData.list[6], atr->numRemoteSwsn, true); // count for 100 passes
     }
     atr->page       = 0;
     atr->totalPages = (atr->numRemoteSwsn / SONA_PER) + ((atr->numRemoteSwsn % SONA_PER) ? 1 : 0);
@@ -518,6 +518,7 @@ static void atriumEnterMode(void)
     {
         atr->created = 1;
         atr->state   = ATR_TITLE; // else go to title screen
+        loadProfileFromNVS(); //Immediately update the SP count when entering the mode for the local user
     }
 }
 
@@ -749,7 +750,7 @@ static void editProfile(buttonEvt_t* evt)
             {
                 if (atr->created == 0)
                 {
-                    // mark profile as created
+                   //prevent user from going back to title until they save
                 }
                 else
                 {
