@@ -71,7 +71,7 @@ typedef enum
     ENTITY_BOUNCE_PAD_DIAGONAL,
     ENTITY_LIFE_REFILL_SMALL,
     ENTITY_LIFE_REFILL_LARGE,
-    ENTITY_BOSS_SEVER_YAGATA,
+    ENTITY_BOSS_SEVER_YATAGA,
     ENTITY_MIXTAPE,
     ENTITY_BOSS_DOOR,
     ENTITY_SHRUBBLE_LV4,
@@ -303,7 +303,7 @@ void mg_updateBossDoor(mgEntity_t* self);
 
 void mg_bossDoorCollisionHandler(mgEntity_t* self, mgEntity_t* other);
 
-void mg_updateBossSeverYagata(mgEntity_t* self);
+void mg_updateBossSeverYataga(mgEntity_t* self);
 
 void mg_updateBossSmashGorilla(mgEntity_t* self);
 

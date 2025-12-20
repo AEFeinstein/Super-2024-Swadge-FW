@@ -1158,7 +1158,7 @@ void mg_bossRushLogic(mgEntity_t* self)
     }
     else if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_GRIND_PANGOLIN)
     {
-        nextBoss  = ENTITY_BOSS_SEVER_YAGATA;
+        nextBoss  = ENTITY_BOSS_SEVER_YATAGA;
         nextLevel = 3;
     }
     else if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_SEVER_YATAGA)
@@ -1209,7 +1209,7 @@ void mg_bossRushLogic(mgEntity_t* self)
             {
                 boss->y -= 100 << SUBPIXEL_RESOLUTION;
             }
-            else if (nextBoss == ENTITY_BOSS_SMASH_GORILLA || nextBoss == ENTITY_BOSS_SEVER_YAGATA)
+            else if (nextBoss == ENTITY_BOSS_SMASH_GORILLA || nextBoss == ENTITY_BOSS_SEVER_YATAGA)
             {
                 boss->y -= 10 << SUBPIXEL_RESOLUTION;
             }
@@ -1459,7 +1459,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_BOUNCIN_SCHMUCK:
         case ENTITY_SPIKY_MCGEE:
         case ENTITY_TURRET:
-        case ENTITY_BOSS_SEVER_YAGATA:
+        case ENTITY_BOSS_SEVER_YATAGA:
         case ENTITY_BOSS_TRASH_MAN:
         case ENTITY_BOSS_GRIND_PANGOLIN:
         {
@@ -4019,7 +4019,7 @@ uint8_t mg_crawlerGettInitialMoveState(int16_t angle, bool clockwise)
     }
 }
 
-void mg_updateBossSeverYagata(mgEntity_t* self)
+void mg_updateBossSeverYataga(mgEntity_t* self)
 {
     switch (self->state)
     {
