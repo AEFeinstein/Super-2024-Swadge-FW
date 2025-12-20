@@ -15,7 +15,7 @@ const cnfsFileIdx_t MG_BGMS[] = {
     BGM_BOSS_BIGMA_MID,         BGM_LEVEL_CLEAR_JINGLE_MID,   BGM_POST_FIGHT_MID,
     BGM_PRE_FIGHT_MID,          BGM_INTRO_STAGE_MID,          BGM_STAGE_SELECT_MID,
     BGM_NAME_ENTRY_MID,         MAXIMUM_HYPE_CREDITS_MID,     BGM_OVO_LIVES_MID,
-    BGM_THE_GAUNTLET_MID,       BGM_THE_FINAL_MEGAJAM_MID,
+    BGM_THE_GAUNTLET_MID,       BGM_THE_FINAL_MEGAJAM_MID,    BGM_LOOKS_LIKE_WE_MADE_IT_MID,
 };
 
 /*
@@ -295,7 +295,7 @@ const mgLeveldef_t leveldef[] = {
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_LEVEL_SELECT,
      .mainBgmIndex       = MG_BGM_STAGE_SELECT,
-     .bossBgmIndex       = MG_BGM_NULL,
+     .bossBgmIndex       = MG_BGM_LOOKS_LIKE_WE_MADE_IT, // Plays in level select after defeating hank
      .bgColors           = bgGradientMenu},
     {.filename           = DONUT_RAW,
      .timeLimit          = 180,

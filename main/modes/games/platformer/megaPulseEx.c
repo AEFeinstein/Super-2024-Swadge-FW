@@ -1982,7 +1982,15 @@ void changeStateLevelSelect(platformer_t* self)
     self->tilemap.mapOffsetY       = 0;
     self->entityManager.viewEntity = NULL;
 
-    mg_setBgm(&self->soundManager, MG_BGM_STAGE_SELECT);
+    if (self->unlockables.levelsCleared & (1 << 12))
+    {
+        // if hank is defeated, play this other song
+        mg_setBgm(&self->soundManager, MG_BGM_LOOKS_LIKE_WE_MADE_IT);
+    }
+    else
+    {
+        mg_setBgm(&self->soundManager, MG_BGM_STAGE_SELECT);
+    }
     globalMidiPlayerGet(MIDI_BGM)->loop = true;
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
     self->gameData.bgColors = bgGradientMenu;

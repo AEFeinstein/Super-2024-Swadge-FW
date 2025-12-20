@@ -111,6 +111,7 @@ typedef enum
     MG_BGM_OVO_LIVES,
     MG_BGM_THE_GAUNTLET,
     MG_BGM_THE_FINAL_MEGAJAM,
+    MG_BGM_LOOKS_LIKE_WE_MADE_IT,
 } mg_bgmEnum_t;
 
 typedef enum
