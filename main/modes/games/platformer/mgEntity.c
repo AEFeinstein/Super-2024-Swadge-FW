@@ -1468,6 +1468,12 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_BOSS_SEVER_YATAGA:
         case ENTITY_BOSS_TRASH_MAN:
         case ENTITY_BOSS_GRIND_PANGOLIN:
+        case ENTITY_BOSS_DEADEYE_CHIRPZI:
+        case ENTITY_BOSS_FLARE_GRYFFYN:
+        case ENTITY_BOSS_KINETIC_DONUT:
+        case ENTITY_BOSS_SMASH_GORILLA:
+        //case ENTITY_BOSS_DRAIN_BAT: //this one can teleport inside you AND shoot you. let's cut the player some slack.
+        case ENTITY_BOSS_BIGMA:
         {
             if (self->state == MG_PL_ST_MIC_DROP)
             {
