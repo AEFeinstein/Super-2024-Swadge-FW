@@ -5,15 +5,18 @@
 //==============================================================================
 
 // Note, must match order and size of mg_bgmEnum_t
-const cnfsFileIdx_t MG_BGMS[] = {BGM_DEADEYE_CHIRPZI_MID,    BGM_BOSS_DEADEYE_CHIRPZI_MID, BGM_DRAIN_BAT_MID,
-                                 BGM_BOSS_DRAIN_BAT_MID,     BGM_FLARE_GRYFFYN_MID,        BGM_BOSS_FLARE_GRIFFIN_MID,
-                                 BGM_GRIND_PANGOLIN_MID,     BGM_BOSS_GRIND_PANGOLIN_MID,  BGM_KINETIC_DONUT_MID,
-                                 BGM_BOSS_KINETIC_DONUT_MID, BGM_RIP_BARONESS_MID,         BGM_BOSS_HANK_WADDLE_MID,
-                                 BGM_SEVER_YAGATA_MID,       BGM_BOSS_SEVER_YAGATA_MID,    BGM_SMASH_GORILLA_MID,
-                                 BGM_BOSS_SMASH_GORILLA_MID, BGM_BOSS_TRASH_MAN_MID,       BGM_BIGMA_MID,
-                                 BGM_BOSS_BIGMA_MID,         BGM_LEVEL_CLEAR_JINGLE_MID,   BGM_POST_FIGHT_MID,
-                                 BGM_PRE_FIGHT_MID,          BGM_INTRO_STAGE_MID,          BGM_STAGE_SELECT_MID,
-                                 BGM_NAME_ENTRY_MID};
+const cnfsFileIdx_t MG_BGMS[] = {
+    BGM_DEADEYE_CHIRPZI_MID,    BGM_BOSS_DEADEYE_CHIRPZI_MID, BGM_DRAIN_BAT_MID,
+    BGM_BOSS_DRAIN_BAT_MID,     BGM_FLARE_GRYFFYN_MID,        BGM_BOSS_FLARE_GRIFFIN_MID,
+    BGM_GRIND_PANGOLIN_MID,     BGM_BOSS_GRIND_PANGOLIN_MID,  BGM_KINETIC_DONUT_MID,
+    BGM_BOSS_KINETIC_DONUT_MID, BGM_RIP_BARONESS_MID,         BGM_BOSS_HANK_WADDLE_MID,
+    BGM_SEVER_YATAGA_MID,       BGM_BOSS_SEVER_YATAGA_MID,    BGM_SMASH_GORILLA_MID,
+    BGM_BOSS_SMASH_GORILLA_MID, BGM_BOSS_TRASH_MAN_MID,       BGM_BIGMA_MID,
+    BGM_BOSS_BIGMA_MID,         BGM_LEVEL_CLEAR_JINGLE_MID,   BGM_POST_FIGHT_MID,
+    BGM_PRE_FIGHT_MID,          BGM_INTRO_STAGE_MID,          BGM_STAGE_SELECT_MID,
+    BGM_NAME_ENTRY_MID,         MAXIMUM_HYPE_CREDITS_MID,     BGM_OVO_LIVES_MID,
+    BGM_THE_GAUNTLET_MID,       BGM_THE_FINAL_MEGAJAM_MID,    BGM_LOOKS_LIKE_WE_MADE_IT_MID,
+};
 
 /*
 const int MG_1x2_TILE_COLLISION_OFFSETS_IN_PIXELS[]
@@ -292,7 +295,7 @@ const mgLeveldef_t leveldef[] = {
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_LEVEL_SELECT,
      .mainBgmIndex       = MG_BGM_STAGE_SELECT,
-     .bossBgmIndex       = MG_BGM_NULL,
+     .bossBgmIndex       = MG_BGM_LOOKS_LIKE_WE_MADE_IT, // Plays in level select after defeating hank
      .bgColors           = bgGradientMenu},
     {.filename           = DONUT_RAW,
      .timeLimit          = 180,
@@ -309,8 +312,8 @@ const mgLeveldef_t leveldef[] = {
     {.filename           = SEVER_RAW,
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_SEVER_YATAGA,
-     .mainBgmIndex       = MG_BGM_SEVER_YAGATA,
-     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
+     .mainBgmIndex       = MG_BGM_SEVER_YATAGA,
+     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YATAGA,
      .bgColors           = bgGradientCyan},
     {.filename           = DUMP_RAW,
      .timeLimit          = 180,
@@ -321,8 +324,8 @@ const mgLeveldef_t leveldef[] = {
     {.filename           = GAUNTLET_RAW,
      .timeLimit          = 240,
      .defaultWsgSetIndex = MG_WSGSET_BIGMA,
-     .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
-     .bossBgmIndex       = MG_BGM_BOSS_BIGMA,
+     .mainBgmIndex       = MG_BGM_THE_GAUNTLET,
+     .bossBgmIndex       = MG_BGM_BOSS_BIGMA, // not used, because no boss
      .bgColors           = bgGradientMenu},
     {.filename           = SMASH_RAW,
      .timeLimit          = 180,
@@ -351,25 +354,25 @@ const mgLeveldef_t leveldef[] = {
     {.filename           = INTRO_RAW, // 10
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_BIGMA,
-     .mainBgmIndex       = MG_INTRO_STAGE,
+     .mainBgmIndex       = MG_BGM_INTRO_STAGE,
      .bossBgmIndex       = MG_BGM_BOSS_BIGMA,
      .bgColors           = bgGradientBlue},
     {.filename           = BOSS_TEST_DONUT_RAW, // 11 This is actually used for the boss rush. DO NOT DELETE!
      .timeLimit          = 500,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
-     .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
+     .mainBgmIndex       = MG_BGM_THE_FINAL_MEGAJAM,
      .bossBgmIndex       = MG_BGM_BOSS_KINETIC_DONUT,
      .bgColors = bgGradientFinalShowdown}, // starts black to fit the script, then becomes colored with each boss.
     {.filename           = SHOWDOWN_RAW,   // Bigma2 & Hank fight (12)
      .timeLimit          = 200,
      .defaultWsgSetIndex = MG_WSGSET_HANK_WADDLE,
      .mainBgmIndex       = MG_BGM_PRE_FIGHT,
-     .bossBgmIndex       = MG_BGM_BOSS_BIGMA,
+     .bossBgmIndex       = MG_BGM_BOSS_HANK_WADDLE,
      .bgColors           = bgGradientFinalShowdown},
-    {.filename           = BOSS_TEST_ROOM_RAW,
+    {.filename           = BOSS_TEST_ROOM_RAW, // 13 It's just here for JVeg
      .timeLimit          = 180,
      .defaultWsgSetIndex = MG_WSGSET_KINETIC_DONUT,
      .mainBgmIndex       = MG_BGM_KINETIC_DONUT,
-     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YAGATA,
+     .bossBgmIndex       = MG_BGM_BOSS_SEVER_YATAGA,
      .bgColors           = bgGradientPurple},
 };

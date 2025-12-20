@@ -114,6 +114,11 @@ void mg_initializeEntity(mgEntity_t* self, mgEntityManager_t* entityManager, mgT
 
 void mg_updatePlayer(mgEntity_t* self)
 {
+    if (self->gameData->level == 1 && !self->gameData->kineticSkipped && self->x > 59770 && self->y < 15400)
+    {
+        self->gameData->kineticSkipped = true;
+        bossIntroCutscene(self->gameData);
+    }
     switch (self->state)
     {
         case MG_PL_ST_NORMAL:
@@ -1153,7 +1158,7 @@ void mg_bossRushLogic(mgEntity_t* self)
     }
     else if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_GRIND_PANGOLIN)
     {
-        nextBoss  = ENTITY_BOSS_SEVER_YAGATA;
+        nextBoss  = ENTITY_BOSS_SEVER_YATAGA;
         nextLevel = 3;
     }
     else if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_SEVER_YATAGA)
@@ -1184,17 +1189,17 @@ void mg_bossRushLogic(mgEntity_t* self)
     else if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_FLARE_GRYFFYN)
     {
         nextBoss  = 0;
-        nextLevel = 0;
+        nextLevel = 12;
     }
 
     if (isABoss)
     {
         // mg_loadMapFromFile((self->entityManager->tilemap), leveldef[11].filename,
         //                 self->entityManager);
+        self->gameData->bgColors = leveldef[nextLevel].bgColors;
         if (nextBoss > 0)
         {
             mg_loadWsgSet(self->entityManager->wsgManager, leveldef[nextLevel].defaultWsgSetIndex);
-            self->gameData->bgColors = leveldef[nextLevel].bgColors;
             mg_setBgm(self->soundManager, leveldef[nextLevel].bossBgmIndex);
             soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
             mgEntity_t* boss = mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX,
@@ -1204,7 +1209,7 @@ void mg_bossRushLogic(mgEntity_t* self)
             {
                 boss->y -= 100 << SUBPIXEL_RESOLUTION;
             }
-            else if (nextBoss == ENTITY_BOSS_SMASH_GORILLA || nextBoss == ENTITY_BOSS_SEVER_YAGATA)
+            else if (nextBoss == ENTITY_BOSS_SMASH_GORILLA || nextBoss == ENTITY_BOSS_SEVER_YATAGA)
             {
                 boss->y -= 10 << SUBPIXEL_RESOLUTION;
             }
@@ -1454,7 +1459,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_BOUNCIN_SCHMUCK:
         case ENTITY_SPIKY_MCGEE:
         case ENTITY_TURRET:
-        case ENTITY_BOSS_SEVER_YAGATA:
+        case ENTITY_BOSS_SEVER_YATAGA:
         case ENTITY_BOSS_TRASH_MAN:
         case ENTITY_BOSS_GRIND_PANGOLIN:
         {
@@ -2388,8 +2393,11 @@ void updateScrollLockRight(mgEntity_t* self)
     if (self->entityManager->bossEntity != NULL)
     {
         // Cutscene before the boss fight
-        mg_setBgm(self->soundManager, MG_BGM_PRE_FIGHT);
-        soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+        if (self->gameData->level != 11) // keep the megajam music rolling in the rush stage intro talk.
+        {
+            mg_setBgm(self->soundManager, MG_BGM_PRE_FIGHT);
+            soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+        }
         bossIntroCutscene(self->gameData);
     }
     else if (self->gameData->level == 5)
@@ -3136,7 +3144,11 @@ void killEnemy(mgEntity_t* target)
         if (target->gameData->level == 11)
         {
             // give some freaking help on boss rush, geeze
-            createPowerUp(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
+            // 50% chance
+            if ((esp_random() % 100) < 50)
+            {
+                createPowerUp(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
+            }
         }
     }
     else if ((esp_random() % 100) > 90)
@@ -4014,7 +4026,7 @@ uint8_t mg_crawlerGettInitialMoveState(int16_t angle, bool clockwise)
     }
 }
 
-void mg_updateBossSeverYagata(mgEntity_t* self)
+void mg_updateBossSeverYataga(mgEntity_t* self)
 {
     switch (self->state)
     {
@@ -4184,8 +4196,7 @@ void mg_updateBossSeverYagata(mgEntity_t* self)
     {
         if (self->gameData->level != 11)
         {
-            self->gameData->pauseCountdown = true;
-            self->spriteIndex              = MG_SP_BOSS_6;
+            self->spriteIndex  = MG_SP_BOSS_6;
             self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
             startOutroCutscene(self);
         }
@@ -5680,28 +5691,16 @@ void startOutroCutscene(mgEntity_t* self)
 {
     mg_deactivateAllEntitiesOfType(self->entityManager, ENTITY_WAVE_BALL); // so the player doesn't get hurt right after
                                                                            // the winning cutscene.
-    // Cutscene after the boss fight
-    mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
-    soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
-    bossOutroCutscene(self->gameData);
-    if (!self->gameData->cheatMode)
+    if (self->gameData->level != 7)
     {
-        uint8_t trophy = self->gameData->level;
-        if (trophy == 5 || trophy == 11)
-        {
-            // it's just the gauntlet. or boss rush.
-            return;
-        }
-        if (trophy == 10)
-        {
-            // The 10th level is the intro level with bigma.
-            trophy = 0;
-        }
-        if (trophy == 12)
-        {
-            // The 12th level is the final hank showdown
-            trophy = 5;
-        }
-        trophyUpdate(&platformerTrophies[trophy], 1, true);
+        // just don't pause the countdown on level 7 because then you can't try out the newly acquired Shoop Da Woop.
+        self->gameData->pauseCountdown = true;
     }
+    // Cutscene after the boss fight
+    if (self->gameData->level == 9) // I really liked this song earlier in development for sunny's reveal.
+    {
+        mg_setBgm(self->soundManager, MG_BGM_BOSS_DRAIN_BAT);
+        soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+    }
+    bossOutroCutscene(self->gameData);
 }

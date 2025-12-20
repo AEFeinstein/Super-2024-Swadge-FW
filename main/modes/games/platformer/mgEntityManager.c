@@ -314,7 +314,7 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
         case ENTITY_LIFE_REFILL_LARGE:
             createdEntity = createLifeRefillLarge(entityManager, x, y);
             break;
-        case ENTITY_BOSS_SEVER_YAGATA:
+        case ENTITY_BOSS_SEVER_YATAGA:
             // if it's greater than 11 (i.e.) final showdown just spawn something else instead
             // because I can't learn Tiled in two days.
             if (entityManager->playerEntity != NULL && entityManager->playerEntity->gameData->level > 11)
@@ -349,7 +349,7 @@ mgEntity_t* mg_createEntity(mgEntityManager_t* entityManager, uint8_t objectInde
             }
             else
             {
-                createdEntity = createBossSeverYagata(entityManager, x, y);
+                createdEntity = createBossSeverYataga(entityManager, x, y);
             }
             entityManager->bossSpawnX = x;
             entityManager->bossSpawnY = y;
@@ -2116,7 +2116,7 @@ mgEntity_t* createLifeRefillLarge(mgEntityManager_t* entityManager, uint16_t x, 
     return entity;
 }
 
-mgEntity_t* createBossSeverYagata(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+mgEntity_t* createBossSeverYataga(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
     mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
@@ -2142,11 +2142,11 @@ mgEntity_t* createBossSeverYagata(mgEntityManager_t* entityManager, uint16_t x, 
     entity->scoreValue           = 100;
     entity->hp                   = 30;
 
-    entity->type                 = ENTITY_BOSS_SEVER_YAGATA;
+    entity->type                 = ENTITY_BOSS_SEVER_YATAGA;
     entity->spriteIndex          = MG_SP_BOSS_0;
     entity->state                = -1;
     entity->stateTimer           = 0;
-    entity->updateFunction       = &mg_updateBossSeverYagata;
+    entity->updateFunction       = &mg_updateBossSeverYataga;
     entity->collisionHandler     = &mg_enemyCollisionHandler;
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
@@ -2294,6 +2294,12 @@ mgEntity_t* createBossDrainBat(mgEntityManager_t* entityManager, uint16_t x, uin
 
 mgEntity_t* createBossKineticDonut(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
+    // Boss skip if you have can of salsa in level 1.
+    if (entityManager->playerEntity != NULL && entityManager->playerEntity->gameData->level == 1
+        && entityManager->playerEntity->gameData->abilities & (1U << MG_CAN_OF_SALSA_ABILITY))
+    {
+        return createMixtape(entityManager, x, y);
+    }
     mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 
     if (entity == NULL)
@@ -2404,7 +2410,7 @@ mgEntity_t* createBossFlareGryffyn(mgEntityManager_t* entityManager, uint16_t x,
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
     entity->scoreValue           = 100;
-    entity->hp                   = 30;
+    entity->hp                   = 55;
 
     entity->type                 = ENTITY_BOSS_FLARE_GRYFFYN;
     entity->spriteIndex          = MG_SP_BOSS_0;

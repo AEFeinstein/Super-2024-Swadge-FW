@@ -185,7 +185,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Sever Yataga",
+        .title       = "Defeated Sever Yataga",
         .description = "Favorite genre: EDM",
         .image       = TROPHY_SEVER_YATAGA_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -201,7 +201,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Hank Waddle",
+        .title       = "Defeated Hank Waddle",
         .description = "Favorite genre: Silence",
         .image       = TROPHY_HANK_WADDLE_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -233,7 +233,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Flare Gryffyn",
+        .title       = "Defeated Flare Gryffyn",
         .description = "Favorite genre: Classic Rock",
         .image       = TROPHY_FLARE_GRYFFYN_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -387,7 +387,7 @@ void platformerEnterMode(void)
                          false, true, true);
         setMidiParams(platformer->gameData.cutscene, 2, 80, -2, 2000, true);
         // TrashMan
-        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Trash Man", 2,
+        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG, "Trash Man", 3,
                          false, true, true);
         setMidiParams(platformer->gameData.cutscene, 3, 36, -2, 250, false);
         /// AbilityUnlocked
@@ -425,7 +425,7 @@ void platformerEnterMode(void)
         // HankWaddle
         addCutsceneStyle(platformer->gameData.cutscene, c000, HANK_WADDLE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
                          "Hank Waddle", 2, false, true, true);
-        setMidiParams(platformer->gameData.cutscene, 12, 38, 1, 250, false);
+        setMidiParams(platformer->gameData.cutscene, 12, 38, 1, 250, true);
         // GrindPangolin
         addCutsceneStyle(platformer->gameData.cutscene, c310, GRIND_PANGOLIN_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
                          "Grind Pangolin", 1, false, true, true);
@@ -438,9 +438,9 @@ void platformerEnterMode(void)
         addCutsceneStyle(platformer->gameData.cutscene, c310, SMASH_GORILLA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
                          "Smash Gorilla", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 15, 29, -1, 250, false);
-        // SeverYagata
+        // SeverYataga
         addCutsceneStyle(platformer->gameData.cutscene, c310, SEVER_YATAGA_PORTRAIT_0_WSG, TEXTBOX_CORRUPTED_WSG,
-                         "Sever Yagata", 1, false, true, true);
+                         "Sever Yataga", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 16, 24, 1, 250, false);
         // Jasper
         addCutsceneStyle(platformer->gameData.cutscene, c000, JASPER_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Jasper", 1,
@@ -455,7 +455,7 @@ void platformerEnterMode(void)
                          true, true);
         setMidiParams(platformer->gameData.cutscene, 19, 38, 1, 250, false);
         // Sunny
-        addCutsceneStyle(platformer->gameData.cutscene, c541, SUNNY_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sunny", 1,
+        addCutsceneStyle(platformer->gameData.cutscene, c541, SUNNY_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG, "Sunny", 2,
                          true, true, true);
         setMidiParams(platformer->gameData.cutscene, 20, 81, 1, 100, true);
         // WarningMessage
@@ -469,13 +469,13 @@ void platformerEnterMode(void)
         // BlackScreen
         addCutsceneStyle(platformer->gameData.cutscene, c555, BLACK_PORTRAIT_WSG, TEXTBOX_SAWTOOTH_WSG, "", 1, false,
                          true, false);
-        setMidiParams(platformer->gameData.cutscene, 23, 11, 0, 100, true);
+        setMidiParams(platformer->gameData.cutscene, 23, 11, -1, 100, false);
 
         /////////////////////////
         // UNCORRUPTED VERSIONS//
         /////////////////////////
         //  TrashMan
-        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 2,
+        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 3,
                          false, true, true);
         setMidiParams(platformer->gameData.cutscene, 24, 36, -2, 250, false);
         // KineticDonut
@@ -506,14 +506,43 @@ void platformerEnterMode(void)
         addCutsceneStyle(platformer->gameData.cutscene, c310, SMASH_GORILLA_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
                          "Smash Gorilla", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 31, 29, -1, 250, false);
-        // SeverYagata
+        // SeverYataga
         addCutsceneStyle(platformer->gameData.cutscene, c310, SEVER_YATAGA_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG,
-                         "Sever Yagata", 1, false, true, true);
+                         "Sever Yataga", 1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 32, 11, 0, 100, true);
         // DrainBat
-        addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Drain Bat",
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DRAIN_BAT_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Battrice",
                          1, false, true, true);
         setMidiParams(platformer->gameData.cutscene, 33, 82, 2, 250, false);
+        // DeadeyeWithoutZip
+        addCutsceneStyle(platformer->gameData.cutscene, c000, DEADEYE_CHIRPZI_WITHOUT_ZIP_PORTRAIT_0_WSG,
+                         TEXTBOX_PULSE_WSG, "Cho", 1, true, true, true);
+        // reduce note length, because she just lost Zip.
+        setMidiParams(platformer->gameData.cutscene, 34, 17, 1, 100, false);
+
+        //////////////////////
+        // Random Schizz idk//
+        //////////////////////
+        // Sunny Flipped
+        addCutsceneStyle(platformer->gameData.cutscene, c541, SUNNY_FLIPPED_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG,
+                         "Sunny", 2, true, true, true);
+        setMidiParams(platformer->gameData.cutscene, 35, 81, 1, 100, true);
+        // SawtoothRevealed Flipped
+        addCutsceneStyle(platformer->gameData.cutscene, c541, SAWTOOTH_FLIPPED_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG,
+                         "Sawtooth", 2, true, true, true);
+        setMidiParams(platformer->gameData.cutscene, 36, 81, 1, 100, true);
+        // Sawtooth Flipped
+        addCutsceneStyle(platformer->gameData.cutscene, c541, SAWTOOTH_FLIPPED_PORTRAIT_0_WSG, TEXTBOX_SAWTOOTH_WSG,
+                         "Sawtooth", 2, true, true, true);
+        setMidiParams(platformer->gameData.cutscene, 37, 81, 1, 100, false);
+        // Hank Unrevealed
+        addCutsceneStyle(platformer->gameData.cutscene, c000, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "??????", 1,
+                         false, false, true);
+        setMidiParams(platformer->gameData.cutscene, 38, 38, 1, 250, true);
+        // CreditStyle
+        addCutsceneStyle(platformer->gameData.cutscene, c555, CREDIT_PORTRAIT_WSG, TEXTBOX_SAWTOOTH_WSG, "", 1, false,
+                         true, false);
+        setMidiParams(platformer->gameData.cutscene, 23, 11, -1, 100, false);
     }
 
     setFrameRateUs(16666);
@@ -1957,7 +1986,15 @@ void changeStateLevelSelect(platformer_t* self)
     self->tilemap.mapOffsetY       = 0;
     self->entityManager.viewEntity = NULL;
 
-    mg_setBgm(&self->soundManager, MG_BGM_STAGE_SELECT);
+    if (self->unlockables.levelsCleared & (1 << 12))
+    {
+        // if hank is defeated, play this other song
+        mg_setBgm(&self->soundManager, MG_BGM_LOOKS_LIKE_WE_MADE_IT);
+    }
+    else
+    {
+        mg_setBgm(&self->soundManager, MG_BGM_STAGE_SELECT);
+    }
     globalMidiPlayerGet(MIDI_BGM)->loop = true;
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
     self->gameData.bgColors = bgGradientMenu;
@@ -2024,6 +2061,10 @@ void updateLevelSelect(platformer_t* self)
                              || self->unlockables.levelsCleared == 0b11111111110
                              || self->unlockables.levelsCleared == 0b111111111110
                              || self->unlockables.levelsCleared == 0b1111111111110;
+        }
+        if (self->gameData.level == 1)
+        {
+            self->gameData.kineticSkipped = false;
         }
         if (self->gameData.level < 11 && !levelAvailable)
         {
@@ -2156,14 +2197,85 @@ void goToReadyScreen(void)
     platformer->update = &updateReadyScreen;
 }
 
+void startCreditMusic(void)
+{
+    globalMidiPlayerGet(MIDI_BGM)->paused = false;
+    mg_setBgm(&platformer->soundManager, MG_BGM_MAXIMUM_HYPE_CREDITS);
+    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+}
+
+void startPostFightMusic(void)
+{
+    if (!platformer->gameData.cheatMode)
+    {
+        uint8_t trophy = platformer->gameData.level;
+        if (trophy == 5 || trophy == 11)
+        {
+            // it's just the gauntlet. or boss rush.
+            return;
+        }
+        if (trophy == 10)
+        {
+            // The 10th level is the intro level with bigma.
+            trophy = 0;
+        }
+        if (trophy == 12)
+        {
+            // The 12th level is the final hank showdown
+            trophy = 5;
+        }
+        trophyUpdate(&platformerTrophies[trophy], 1, true);
+    }
+    globalMidiPlayerGet(MIDI_BGM)->paused = false;
+    mg_setBgm(&platformer->soundManager, MG_BGM_POST_FIGHT);
+    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+}
+
+void startHankMusic(void)
+{
+    globalMidiPlayerGet(MIDI_BGM)->paused = false;
+    mg_setBgm(&platformer->soundManager, MG_BGM_BOSS_HANK_WADDLE);
+    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+}
+
+void startTrashManMusic(void)
+{
+    globalMidiPlayerGet(MIDI_BGM)->paused = false;
+    mg_setBgm(&platformer->soundManager, MG_BGM_OVO_LIVES);
+    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+}
+
+void startMegajamMusic(void)
+{
+    globalMidiPlayerGet(MIDI_BGM)->paused = false;
+    mg_setBgm(&platformer->soundManager, MG_BGM_THE_FINAL_MEGAJAM);
+    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+}
+
+void stopMusic(void)
+{
+    globalMidiPlayerGet(MIDI_BGM)->paused = true;
+}
+
 // forward declared in mega_pulse_ex_typedef.h
 void initBossFight(void)
 {
+    if (platformer->gameData.level == 1 && platformer->gameData.kineticSkipped)
+    {
+        platformer->update = &updateReadyScreen;
+        return;
+    }
     if (platformer->gameData.level != 5)
     {
+        if (platformer->gameData.level == 11)
+        {
+            // make stage lights blue for kinetic donut at start of the boss rush
+            platformer->gameData.bgColors = leveldef[1].bgColors;
+        }
         platformer->entityManager.bossEntity->state = 0;
         mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
         soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
     }
+
     platformer->update = &updateReadyScreen;
 }

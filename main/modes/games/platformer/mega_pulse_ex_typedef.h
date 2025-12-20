@@ -91,20 +91,27 @@ typedef enum
     MG_BGM_KINETIC_DONUT,
     MG_BGM_BOSS_KINETIC_DONUT,
     MG_BGM_RIP_BARONESS,
+
     MG_BGM_BOSS_HANK_WADDLE,
-    MG_BGM_SEVER_YAGATA,
-    MG_BGM_BOSS_SEVER_YAGATA,
+    MG_BGM_SEVER_YATAGA,
+    MG_BGM_BOSS_SEVER_YATAGA,
     MG_BGM_SMASH_GORILLA,
     MG_BGM_BOSS_SMASH_GORILLA,
     MG_BGM_BOSS_TRASH_MAN,
+
     MG_BGM_BIGMA,
     MG_BGM_BOSS_BIGMA,
     MG_BGM_LEVEL_CLEAR_JINGLE,
     MG_BGM_POST_FIGHT,
     MG_BGM_PRE_FIGHT,
-    MG_INTRO_STAGE,
+    MG_BGM_INTRO_STAGE,
     MG_BGM_STAGE_SELECT,
-    MG_BGM_NAME_ENTRY
+    MG_BGM_NAME_ENTRY,
+    MG_BGM_MAXIMUM_HYPE_CREDITS,
+    MG_BGM_OVO_LIVES,
+    MG_BGM_THE_GAUNTLET,
+    MG_BGM_THE_FINAL_MEGAJAM,
+    MG_BGM_LOOKS_LIKE_WE_MADE_IT,
 } mg_bgmEnum_t;
 
 typedef enum
@@ -1156,6 +1163,12 @@ extern const trophyData_t platformerTrophies[];
 //==============================================================================
 
 extern void goToReadyScreen(void);
+extern void startCreditMusic(void);
+extern void startPostFightMusic(void);
+extern void startHankMusic(void);
+extern void startTrashManMusic(void);
 extern void initBossFight(void);
+extern void startMegajamMusic(void);
+extern void stopMusic(void);
 
 #endif

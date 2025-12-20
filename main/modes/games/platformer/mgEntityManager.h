@@ -104,7 +104,7 @@ mgEntity_t* createBouncepad(mgEntityManager_t* entityManager, uint16_t x, uint16
 mgEntity_t* createBouncepadDiagonal(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createLifeRefillSmall(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createLifeRefillLarge(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
-mgEntity_t* createBossSeverYagata(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createBossSeverYataga(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createBossSmashGorilla(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createBossGrindPangolin(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createBossDrainBat(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);

@@ -345,7 +345,7 @@ void mg_hashSpawnEntity(mgEntityManager_t* entityManager, mgEntitySpawnData_t* e
     // That's dumb, the other offset is unsinged.
     int16_t actualXOffset = 0;
     int16_t actualYOffset = 0;
-    if (entityManager->playerEntity != NULL && entitySpawnData->type == ENTITY_BOSS_SEVER_YAGATA)
+    if (entityManager->playerEntity != NULL && entitySpawnData->type == ENTITY_BOSS_SEVER_YATAGA)
     {
         switch (entityManager->playerEntity->gameData->level)
         {
