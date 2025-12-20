@@ -8,14 +8,40 @@
 // Functions
 //==============================================================================
 
-void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay,
-                        const sudokuTheme_t* theme, const sudokuDrawContext_t* context)
+int swadgedokuGetSquareSize(const sudokuGrid_t* game)
 {
     // Total space around the grid
-    int gridMargin = 1;
+    int gridMargin = GRID_MARGIN;
+    return (TFT_HEIGHT - gridMargin) / game->size;
+}
 
+void swadgedokuGetGridPos(int* gridX, int* gridY, const sudokuGrid_t* game)
+{
+    int maxSquareSize = swadgedokuGetSquareSize(game);
+
+    // Total size of the grid (add 1px for border)
+    int gridSize = game->size * maxSquareSize;
+
+    // Center the grid vertically
+    if (gridY)
+    {
+        *gridY = (TFT_HEIGHT - gridSize) / 2;
+    }
+
+    // Align the grid to the left to leave some space to the right for UI
+    if (gridX)
+    {
+        *gridX = (TFT_WIDTH - gridSize) / 2;
+    }
+}
+
+void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const sudokuOverlay_t* overlay,
+                        const sudokuTheme_t* theme, const sudokuDrawContext_t* context, sudokuShapeTag_t tagMask,
+                        sudokuOverlayOpt_t overlayMask)
+{
     // Max size of individual square
-    int maxSquareSize = (TFT_HEIGHT - gridMargin) / game->size;
+    int maxSquareSize = swadgedokuGetSquareSize(game);
+
     // Total size of the grid (add 1px for border)
     int gridSize = game->size * maxSquareSize;
 
@@ -82,13 +108,21 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
             sudokuOverlayOpt_t opts = OVERLAY_NONE;
             sudokuFlag_t flags      = game->flags[r * game->size + c];
 
+            // For some kinds of overlays, we need to skip drawing the actual digit/notes
+            bool skipSquare = false;
+
             if (flags & SF_VOID)
             {
                 fillColor = voidColor;
             }
             else if (overlay)
             {
-                opts = overlay->gridOpts[r * game->size + c];
+                opts = overlay->gridOpts[r * game->size + c] & overlayMask;
+
+                if (opts & OVERLAY_SKIP)
+                {
+                    skipSquare = true;
+                }
 
                 if (opts & OVERLAY_ERROR)
                 {
@@ -193,7 +227,7 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
             uint16_t squareVal = game->grid[r * game->size + c];
 
             // NOW! Draw the number, or the notes
-            if (NULL != notes && 0 == squareVal)
+            if (NULL != notes && 0 == squareVal && !skipSquare)
             {
                 // Draw notes
                 uint16_t squareNote = notes[r * game->size + c];
@@ -244,7 +278,7 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                     }
                 }
             }
-            else if (0 != squareVal)
+            else if (0 != squareVal && !skipSquare)
             {
                 // Draw number
                 char buf[16];
@@ -312,6 +346,12 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
         {
             const sudokuOverlayShape_t* shape = (sudokuOverlayShape_t*)node->val;
 
+            if (!(tagMask & shape->tag))
+            {
+                // Skip tags not in the mask
+                continue;
+            }
+
             switch (shape->type)
             {
                 case OVERLAY_RECT:
@@ -377,6 +417,87 @@ void swadgedokuDrawGame(const sudokuGrid_t* game, const uint16_t* notes, const s
                     }
 
                     drawText(&context->uiFont, shape->color, shape->text.val, x, y);
+                    break;
+                }
+
+                case OVERLAY_DIGIT:
+                {
+                    int c = shape->digit.pos.x / BOX_SIZE_SUBPOS;
+                    int r = shape->digit.pos.y / BOX_SIZE_SUBPOS;
+
+                    int x = gridX + c * maxSquareSize;
+                    int y = gridY + r * maxSquareSize;
+
+                    // Draw number
+                    char buf[16];
+                    if (shape->digit.digit)
+                    {
+                        snprintf(buf, sizeof(buf), "%X", shape->digit.digit);
+                    }
+                    else
+                    {
+                        buf[0] = 'X';
+                        buf[1] = '\0';
+                    }
+
+                    int textX = x + (maxSquareSize - textWidth(&context->gridFont, buf)) / 2;
+                    int textY = y + (maxSquareSize - context->gridFont.height) / 2;
+
+                    drawText(&context->gridFont, shape->color, buf, textX, textY);
+                    break;
+                }
+
+                case OVERLAY_NOTES_SHAPE:
+                {
+                    char buf[16];
+                    uint16_t squareNote = shape->notes.notes;
+                    int baseRoot        = 3;
+                    switch (game->base)
+                    {
+                        case 1:
+                            baseRoot = 1;
+                            break;
+
+                        case 2:
+                        case 3:
+                        case 4:
+                            baseRoot = 2;
+                            break;
+
+                        case 10:
+                        case 11:
+                        case 12:
+                        case 13:
+                        case 14:
+                        case 15:
+                        case 16:
+                            baseRoot = 4;
+                            break;
+                        default:
+                            break;
+                    }
+                    int miniSquareSize = maxSquareSize / baseRoot;
+
+                    int x = gridX + game->size * maxSquareSize;
+                    int y = gridY + game->size * maxSquareSize;
+
+                    for (int n = 0; n < game->base; n++)
+                    {
+                        if (squareNote & (1 << n))
+                        {
+                            snprintf(buf, sizeof(buf), "%X", n + 1);
+
+                            // TODO center?
+                            // int charW = textWidth(&context->noteFont, buf);
+
+                            int noteX = x + (n % baseRoot) * maxSquareSize / baseRoot
+                                        + (miniSquareSize - textWidth(&context->noteFont, buf)) / 2 + 1;
+                            int noteY = y + (n / baseRoot) * maxSquareSize / baseRoot
+                                        + (miniSquareSize - context->noteFont.height) / 2 + 2;
+
+                            drawText(&context->noteFont, shape->color, buf, noteX, noteY);
+                        }
+                    }
                     break;
                 }
             }
@@ -501,6 +622,75 @@ void addCrosshairOverlay(sudokuOverlay_t* overlay, int r, int c, int gridSize, b
             getOverlayPos(&bottomLine->line.p2.x, &bottomLine->line.p2.y, gridSize - 1, c, SUBPOS_S - 3);
 
             push(&overlay->shapes, bottomLine);
+        }
+    }
+}
+
+void addBoxHighlight(sudokuOverlay_t* overlay, const sudokuGrid_t* board, int box)
+{
+    sudokuOverlayShape_t* shape;
+
+    // Draw a colored border around this box
+    for (int row = 0; row < board->size; row++)
+    {
+        for (int col = 0; col < board->size; col++)
+        {
+            // The box of the square we're looking at
+            uint16_t thisBox = board->boxMap[row * board->size + col];
+
+            if (thisBox != box)
+            {
+                continue;
+            }
+
+            // north
+            if (row == 0 || board->boxMap[(row - 1) * board->size + col] != thisBox)
+            {
+                // Draw north border
+                shape        = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                shape->type  = OVERLAY_LINE;
+                shape->color = c050;
+                shape->tag   = ST_HINT;
+                getOverlayPos(&shape->line.p1.x, &shape->line.p1.y, row, col, SUBPOS_NW);
+                getOverlayPos(&shape->line.p2.x, &shape->line.p2.y, row, col, SUBPOS_NE);
+                push(&overlay->shapes, shape);
+            }
+            // east
+            if (col == (board->size - 1) || board->boxMap[row * board->size + col + 1] != thisBox)
+            {
+                // Draw east border
+                shape        = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                shape->type  = OVERLAY_LINE;
+                shape->color = c050;
+                shape->tag   = ST_HINT;
+                getOverlayPos(&shape->line.p1.x, &shape->line.p1.y, row, col, SUBPOS_NE);
+                getOverlayPos(&shape->line.p2.x, &shape->line.p2.y, row, col, SUBPOS_SE);
+                push(&overlay->shapes, shape);
+            }
+            // south
+            if (row == (board->size - 1) || board->boxMap[(row + 1) * board->size + col] != thisBox)
+            {
+                // Draw south border
+                shape        = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                shape->type  = OVERLAY_LINE;
+                shape->color = c050;
+                shape->tag   = ST_HINT;
+                getOverlayPos(&shape->line.p1.x, &shape->line.p1.y, row, col, SUBPOS_SW);
+                getOverlayPos(&shape->line.p2.x, &shape->line.p2.y, row, col, SUBPOS_SE);
+                push(&overlay->shapes, shape);
+            }
+            // west
+            if (col == 0 || board->boxMap[row * board->size + col - 1] != thisBox)
+            {
+                // Draw west border
+                shape        = heap_caps_malloc(sizeof(sudokuOverlayShape_t), MALLOC_CAP_8BIT);
+                shape->type  = OVERLAY_LINE;
+                shape->color = c050;
+                shape->tag   = ST_HINT;
+                getOverlayPos(&shape->line.p1.x, &shape->line.p1.y, row, col, SUBPOS_NW);
+                getOverlayPos(&shape->line.p2.x, &shape->line.p2.y, row, col, SUBPOS_SW);
+                push(&overlay->shapes, shape);
+            }
         }
     }
 }
