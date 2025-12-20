@@ -2257,6 +2257,11 @@ void stopMusic(void)
     globalMidiPlayerGet(MIDI_BGM)->paused = true;
 }
 
+void loseCanOfSalsa(void)
+{
+    platformer->gameData.abilities &= ~(1U << MG_CAN_OF_SALSA_ABILITY);
+}
+
 // forward declared in mega_pulse_ex_typedef.h
 void initBossFight(void)
 {

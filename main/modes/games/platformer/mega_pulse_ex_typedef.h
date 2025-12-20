@@ -1170,5 +1170,6 @@ extern void startTrashManMusic(void);
 extern void initBossFight(void);
 extern void startMegajamMusic(void);
 extern void stopMusic(void);
+extern void loseCanOfSalsa(void);
 
 #endif

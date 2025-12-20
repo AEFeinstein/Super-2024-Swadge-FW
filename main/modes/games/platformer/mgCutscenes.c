@@ -525,7 +525,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
                 addCutsceneLine(gameData->cutscene, Pulse, "Uh, yeah?", false, 0, NULL);
                 addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "GIMMIE.", false, -1, NULL);
                 addCutsceneLine(gameData->cutscene, Pulse, "Umm... sure?", false, 0, NULL);
-                addCutsceneLine(gameData->cutscene, SystemText, "PULSE tosses KINETIC DONUT the can. He rips it open and drinks it like a sports drink.", false, 0, NULL);
+                addCutsceneLine(gameData->cutscene, SystemText, "PULSE tosses KINETIC DONUT the can. He rips it open and drinks it like a sports drink.", false, 0, loseCanOfSalsa);
                 addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "OHHH you're a LIFESAVER! I think I was just hangry. My brain was stuck in \"party mode.\"", false, -1, NULL);
                 addCutsceneLine(gameData->cutscene, Pulse, "So... we're good?", false, 2, NULL);
                 addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "More than good. You fixed my vibe... Here - take this. Now go stick it to whoever cancelled lunch!", false, -1, startPostFightMusic);
