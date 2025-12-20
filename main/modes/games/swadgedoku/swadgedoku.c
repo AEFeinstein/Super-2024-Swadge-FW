@@ -122,7 +122,6 @@ typedef struct
     sudokuSettings_t settings;
 
     solverCache_t solverCache;
-    ;
 
     sudokuGrid_t solution;
     bool useSolution;
