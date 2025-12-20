@@ -1868,6 +1868,16 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 break;
             }
 
+            if (self->type == ENTITY_BOSS_FLARE_GRYFFYN && (self->state == 2 || self->state == 3))
+            {
+                other->xspeed = -other->xspeed;
+                other->yspeed = -64;
+                other->linkedEntity->shotsFired--;
+                other->linkedEntity = self;
+                soundPlaySfx(&self->soundManager->sndTally, MIDI_SFX);
+                break;
+            }
+
             switch (other->state)
             {
                 case 0:
