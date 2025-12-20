@@ -539,6 +539,10 @@ void platformerEnterMode(void)
         addCutsceneStyle(platformer->gameData.cutscene, c000, ABILITY_UNLOCKED_WSG, TEXTBOX_PULSE_WSG, "??????", 1,
                          false, false, true);
         setMidiParams(platformer->gameData.cutscene, 38, 38, 1, 250, true);
+        // CreditStyle
+        addCutsceneStyle(platformer->gameData.cutscene, c555, CREDIT_PORTRAIT_WSG, TEXTBOX_SAWTOOTH_WSG, "", 1, false,
+                         true, false);
+        setMidiParams(platformer->gameData.cutscene, 23, 11, -1, 100, false);
     }
 
     setFrameRateUs(16666);

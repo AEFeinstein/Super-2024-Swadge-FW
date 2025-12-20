@@ -42,6 +42,7 @@ typedef enum
     SawtoothPostRevealFlipped,
     SawtoothFlipped,
     HankUnrevealed,
+    CreditStyle,
 } cutsceneCharacters;
 
 static void setSongPitchesFromCurrentSong(mgGameData_t* gameData)
@@ -980,26 +981,26 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Bigma, "Maybe you'll find out someday. But until then...", true, 2, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "...LET'S FREAKIN' PARTY!!", false, 2, startCreditMusic);
             //cutscenes play BGM
-            addCutsceneLine(gameData->cutscene, BlackScreen, "THANK YOU FOR PLAYING PULSE 20X6!", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Producer, Boss Designer: Dac", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Firmware Leader: Adam Feinstein", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Hardware Leader: Emily Anthony", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Lead Programmer, Gameplay Designer, Enemy Artist, Boss Designer: Jon Vega", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Programmer, Quality Assurance, Gameplay Designer, Enemy Artist, Script Writer, Boss Designer: James Albracht", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "May Virginia Lynn Albracht rest in peace and never be forgotten.", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Reach out to james.albracht@magfest.org with LEGIT game job offers, plz.", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Music Composer, Lead Script Writer, Level Designer, Gameplay Designer: Joe Newman", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Midi Engineer: Dylan Whichard", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Cutscene Artist, Script Writer, Character Designer: Kaitie Lawson", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Player and Boss and Trophy Artist: Richard Lambert @azureine-edge.bsky.social", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Environment and Enemy Artist: Emma @objetdiscret.itch.io", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Boss Artist, Character Designer: Greg Lord", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Swadgeman (MAG-TV Trailer): JFrye and Producer Scott", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Trophy Engineer: Jeremy Stintzcum", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "\"Ovo Lives!\" Composer: Livingston Rampey", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Special thanks to you: THE STONE who SPLIT the future of MAGFest in two!", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Notify circuitboards@magfest.org if you want to volunteer on the swadge for next year!", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, BlackScreen, "Checkout coordinates on wplace.live lat:36.34, long:82.68", false, 0, startTrashManMusic);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "THANK YOU FOR PLAYING MEGA PULSE EX!", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Producer, Boss Designer: Dac", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Firmware Leader: Adam Feinstein", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Hardware Leader: Emily Anthony", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Lead Programmer, Gameplay Designer, Enemy Artist, Boss Designer: Jon Vega", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Programmer, Quality Assurance, Gameplay Designer, Enemy Artist, Script Writer, Boss Designer: James Albracht", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "May Virginia Lynn Albracht rest in peace and never be forgotten.", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Reach out to james.albracht@magfest.org with LEGIT game job offers, plz.", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Music Composer, Lead Script Writer, Level Designer, Gameplay Designer: Joe Newman", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Midi Engineer: Dylan Whichard", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Cutscene Artist, Script Writer, Character Designer: Kaitie Lawson", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Player and Boss and Trophy Artist: Richard Lambert @azureine-edge.bsky.social", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Environment and Enemy Artist: Emma @objetdiscret.itch.io", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Boss Artist, Character Designer: Greg Lord", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Swadgeman (MAG-TV Trailer): JFrye and Producer Scott", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Trophy Engineer: Jeremy Stintzcum", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "\"Ovo Lives!\" Composer: Livingston Rampey", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Special thanks to you: THE STONE who SPLIT the future of MAGFest in two!", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Notify circuitboards@magfest.org if you want to volunteer on the swadge for next year!", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Checkout coordinates on wplace.live lat:36.34, long:82.68", false, 0, startTrashManMusic);
 
             addCutsceneLine(gameData->cutscene, BlackScreen, "Starfield. Quiet. Peaceful. Suddenly - a Garbotnik industries craft hurtles past the camera, sparking and trailing smoke.", false, -1, NULL);
             addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "WHA-HAHA... I regret nothing...", false, 1, NULL);
