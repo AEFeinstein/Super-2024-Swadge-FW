@@ -8,9 +8,8 @@
 // DEFINES
 //---------------------------------------------------------------------------------//
 
-#define TFT_WIDTH             280
-#define TFT_HEIGHT            240
-
+#define TFT_WIDTH  280
+#define TFT_HEIGHT 240
 
 // Lobby
 #define SONA_PER            4
@@ -51,7 +50,6 @@ static const cnfsFileIdx_t uiImages[] = {
 static const cnfsFileIdx_t bgImages[] = {
     GAZEBO_WSG, ATRIUMPLANT_1_WSG, ARCADE_0_WSG, ARCADE_2_WSG, ARCADE_4_WSG, ARCADE_6_WSG, CONCERT_1_WSG, CONCERT_2_WSG,
 };
-
 
 static const cnfsFileIdx_t cardImages[] = {
     CARDSTAFF_WSG, CARDGEN_WSG,    CARDBLOSS_WSG, CARDBUBB_WSG,   CARDDINO_WSG, CARDMAGFEST_WSG, CARDMUSIC_WSG,
@@ -162,7 +160,7 @@ const trophyData_t atriumTrophies[] = {
     },
     {
         .title       = "SwadgePass Social Butterfly",
-        .description = "FInd 30 SwadgePass profiles",
+        .description = "Find 30 SwadgePass profiles",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_PROGRESS,
         .difficulty  = TROPHY_DIFF_MEDIUM,
@@ -260,7 +258,7 @@ typedef struct
     int8_t fact1;
     int8_t fact2;
     int8_t numPasses;      // Number of other unique passes encountered
-    int32_t packedProfile; // card select 0-3, fact0 4-7, fact1 8-11, fact2 12-15, team 16-20, numpasses 20-28
+    int32_t packedProfile; // card select 0-3, fact0 4-7, fact1 8-11, fact2 12-15, team 16-19, numpasses 20-28
 
     swadgesona_t swsn; // Swadgesona data
     int32_t points;
@@ -488,7 +486,7 @@ static void atriumEnterMode(void)
     {
         trophyUpdate(&atriumTrophyData.list[5], atr->numRemoteSwsn, true); // count for 30 passes
     }
-    if (atr->numRemoteSwsn <=100)
+    if (atr->numRemoteSwsn <= 100)
     {
         trophyUpdate(&atriumTrophyData.list[6], atr->numRemoteSwsn, true); // count for 100 passes
     }
@@ -518,7 +516,7 @@ static void atriumEnterMode(void)
     {
         atr->created = 1;
         atr->state   = ATR_TITLE; // else go to title screen
-        loadProfileFromNVS(); //Immediately update the SP count when entering the mode for the local user
+        loadProfileFromNVS();     // Immediately update the SP count when entering the mode for the local user
     }
 }
 
@@ -750,7 +748,8 @@ static void editProfile(buttonEvt_t* evt)
             {
                 if (atr->created == 0)
                 {
-                   //prevent user from going back to title until they save
+                    // prevent user from going back to title until they save
+                    // Nothing else to do here
                 }
                 else
                 {
@@ -1450,18 +1449,28 @@ void updateTeamScores(void)
             switch (atr->sonaList[idx].team)
             {
                 case 0:
+                {
                     redscore += atr->sonaList[idx].points;
+                    trophyUpdate(&atriumTrophyData.list[7], redscore, false); // update trophy for red team
                     break;
+                }
                 case 1:
+                {
                     bluescore += atr->sonaList[idx].points;
+                    trophyUpdate(&atriumTrophyData.list[8], bluescore, false); // update trophy for blue team
                     break;
+                }
                 case 2:
+                {
                     yellowscore += atr->sonaList[idx].points;
+                    trophyUpdate(&atriumTrophyData.list[9], yellowscore, false); // update trophy for yellow team
                     break;
+                }
                 default:
+                {
                     break;
+                }
             }
-            
         }
 
         int myteamscore = 0;
@@ -1486,15 +1495,14 @@ void updateTeamScores(void)
                 break;
             }
             default:
+            {
                 break;
+            }
         }
-        trophyUpdate(&atriumTrophyData.list[7], redscore, false);    // update trophy for red team
-        trophyUpdate(&atriumTrophyData.list[8], bluescore, false);   // update trophy for blue team
-        trophyUpdate(&atriumTrophyData.list[9], yellowscore, false); // update trophy for yellow team
 
         trophyUpdate(&atriumTrophyData.list[7 + myteam], myteamscore, true); // update and draw the player's team only
-        ESP_LOGI(ATR_TAG, "Team scores updated: Red=%d, Blue=%d, Yellow=%d, MyTeam=%" PRId32 " Score=%d\n", redscore, bluescore,
-               yellowscore, myteam, myteamscore);
+        ESP_LOGI(ATR_TAG, "Team scores updated: Red=%d, Blue=%d, Yellow=%d, MyTeam=%" PRId32 " Score=%d\n", redscore,
+                 bluescore, yellowscore, myteam, myteamscore);
     }
     atr->loadedTeams = true;
 }
