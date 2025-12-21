@@ -601,6 +601,7 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
 
             changeStateGame(platformer);
             // every level starts with a cutscene
+            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
             soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
             stageStartCutscene(&platformer->gameData);
             changeStateCutscene(platformer);
@@ -631,6 +632,7 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
 
                 changeStateGame(platformer);
                 // every level starts with a cutscene
+                midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
                 soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
                 stageStartCutscene(&platformer->gameData);
                 changeStateCutscene(platformer);
@@ -666,6 +668,7 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
 
             changeStateGame(platformer);
             // every level starts with a cutscene
+            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
             soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
             stageStartCutscene(&platformer->gameData);
             changeStateCutscene(platformer);
@@ -845,6 +848,7 @@ void updateGame(platformer_t* self)
 
         if (self->gameData.countdown < 10)
         {
+            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
             soundPlayBgm(&(self->soundManager.sndOuttaTime), BZR_STEREO);
         }
 
@@ -1062,6 +1066,7 @@ void updateTitleScreen(platformer_t* self)
             self->menuState          = 1;
             self->gameData.debugMode = true;
             mg_setBgm(&self->soundManager, MG_BGM_LEVEL_CLEAR_JINGLE);
+            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
             soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
             globalMidiPlayerGet(MIDI_BGM)->loop = false;
         }
@@ -1216,6 +1221,7 @@ void updateReadyScreen(platformer_t* self)
     {
         if (globalMidiPlayerGet(MIDI_BGM)->paused)
         {
+            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
             soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
         }
         self->update = &updateGame;
@@ -1305,6 +1311,7 @@ void changeStateGame(platformer_t* self)
 
     // self->gameData.changeBgm = MG_BGM_KINETIC_DONUT;
     mg_setBgm(&self->soundManager, leveldef[self->gameData.level].mainBgmIndex);
+    midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
     self->gameData.bgColors = leveldef[self->gameData.level].bgColors;
 
@@ -1368,6 +1375,7 @@ void detectBgmChange(platformer_t* self)
 
     if (mg_setBgm(&(self->soundManager), self->gameData.changeBgm))
     {
+        midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
         soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
     }
 
@@ -1387,6 +1395,7 @@ void changeStateDead(platformer_t* self)
     soundStop(true);
     mg_resetGameDataLeds(&self->gameData);
     globalMidiPlayerGet(MIDI_BGM)->loop = false;
+    midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     soundPlayBgm(&(self->soundManager.sndDie), BZR_STEREO);
     self->entityManager.viewEntity = NULL;
 
@@ -1457,6 +1466,7 @@ void changeStateGameOver(platformer_t* self)
     self->gameData.frameCount = 0;
     mg_resetGameDataLeds(&(self->gameData));
     globalMidiPlayerGet(MIDI_BGM)->loop = false;
+    midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     soundPlayBgm(&(self->soundManager.bgmGameOver), BZR_STEREO);
     self->update = &updateGameOver;
 }
@@ -1602,6 +1612,7 @@ void changeStateGameClear(platformer_t* self)
     self->update              = &updateGameClear;
     mg_resetGameDataLeds(&(self->gameData));
     mg_setBgm(&(self->soundManager), 0);
+    midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
 }
 
@@ -1805,6 +1816,7 @@ void changeStateNameEntry(platformer_t* self)
     }
 
     mg_setBgm(&(self->soundManager), MG_BGM_NAME_ENTRY);
+    midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
     self->menuSelection = self->gameData.initials[0];
     self->update        = &updateNameEntry;
@@ -1996,6 +2008,7 @@ void changeStateLevelSelect(platformer_t* self)
         mg_setBgm(&self->soundManager, MG_BGM_STAGE_SELECT);
     }
     globalMidiPlayerGet(MIDI_BGM)->loop = true;
+    midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
     self->gameData.bgColors = bgGradientMenu;
 
@@ -2075,8 +2088,21 @@ void updateLevelSelect(platformer_t* self)
             // Undo all level progress, but keep abilities.
             self->unlockables.levelsCleared = 0;
             savePlatformerUnlockables(self);
-            // Exit to the main menu
-            switchToSwadgeMode(&mainMenuMode);
+
+            writeNvs32(MG_abilitiesNVSKey, platformer->gameData.abilities);
+            mg_initializeGameDataFromTitleScreen(&(platformer->gameData));
+            platformer->gameData.level = 10;
+            mg_loadWsgSet(&(platformer->wsgManager), leveldef[platformer->gameData.level].defaultWsgSetIndex);
+            mg_loadMapFromFile(&(platformer->tilemap), leveldef[platformer->gameData.level].filename,
+                               &platformer->entityManager);
+
+            changeStateGame(platformer);
+            // every level starts with a cutscene
+            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+            soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+            stageStartCutscene(&platformer->gameData);
+            changeStateCutscene(platformer);
+            return;
         }
         else
         {
@@ -2086,6 +2112,7 @@ void updateLevelSelect(platformer_t* self)
 
             changeStateGame(platformer);
             // every level starts with a cutscene
+            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
             soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
             stageStartCutscene(&platformer->gameData);
             changeStateCutscene(platformer);
@@ -2201,6 +2228,7 @@ void startCreditMusic(void)
 {
     globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_MAXIMUM_HYPE_CREDITS);
+    midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
 
@@ -2228,6 +2256,7 @@ void startPostFightMusic(void)
     }
     globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_POST_FIGHT);
+    midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
 
@@ -2235,6 +2264,7 @@ void startHankMusic(void)
 {
     globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_BOSS_HANK_WADDLE);
+    midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
 
@@ -2242,6 +2272,7 @@ void startTrashManMusic(void)
 {
     globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_OVO_LIVES);
+    midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
 
@@ -2249,6 +2280,7 @@ void startMegajamMusic(void)
 {
     globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_THE_FINAL_MEGAJAM);
+    midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
 
@@ -2279,6 +2311,7 @@ void initBossFight(void)
         }
         platformer->entityManager.bossEntity->state = 0;
         mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
+        midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
         soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
     }
 

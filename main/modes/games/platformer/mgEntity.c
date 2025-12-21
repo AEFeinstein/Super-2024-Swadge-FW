@@ -1202,6 +1202,7 @@ void mg_bossRushLogic(mgEntity_t* self)
         {
             mg_loadWsgSet(self->entityManager->wsgManager, leveldef[nextLevel].defaultWsgSetIndex);
             mg_setBgm(self->soundManager, leveldef[nextLevel].bossBgmIndex);
+            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
             soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
             mgEntity_t* boss = mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX,
                                                self->entityManager->bossSpawnY);
@@ -1222,6 +1223,7 @@ void mg_bossRushLogic(mgEntity_t* self)
         else
         {
             mg_setBgm(self->soundManager, MG_BGM_POST_FIGHT);
+            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
             soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
         }
     }
@@ -1775,6 +1777,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         {
             soundStop(true);
             mg_setBgm(self->soundManager, MG_BGM_LEVEL_CLEAR_JINGLE);
+            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
             soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
             globalMidiPlayerGet(MIDI_BGM)->loop = false;
             self->visible                       = true;
@@ -2397,6 +2400,7 @@ void updateScrollLockRight(mgEntity_t* self)
         if (self->gameData->level != 11) // keep the megajam music rolling in the rush stage intro talk.
         {
             mg_setBgm(self->soundManager, MG_BGM_PRE_FIGHT);
+            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
             soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
         }
         bossIntroCutscene(self->gameData);
@@ -5701,6 +5705,7 @@ void startOutroCutscene(mgEntity_t* self)
     if (self->gameData->level == 9) // I really liked this song earlier in development for sunny's reveal.
     {
         mg_setBgm(self->soundManager, MG_BGM_BOSS_DRAIN_BAT);
+        midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
         soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
     }
     bossOutroCutscene(self->gameData);
