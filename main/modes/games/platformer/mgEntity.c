@@ -5162,7 +5162,7 @@ void mg_updateBossFlareGryffyn(mgEntity_t* self)
             }
                 
 
-            if(self->stateTimer > 300)
+            if(self->stateTimer > 328)
             {
                 self->stateTimer = 0;
                 self->state = (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120) ? 2 : 3;
