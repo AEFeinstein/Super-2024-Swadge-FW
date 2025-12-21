@@ -167,7 +167,7 @@ static void setSongPitchesFromCurrentSong(mgGameData_t* gameData)
         }
         case MG_BGM_OVO_LIVES:
         {
-            int16_t songPitches[] = {31, 34, 36, 37, 38, 41, 43, 54};
+            int16_t songPitches[] = {67, 70, 60, 61, 62, 65, 67, 78};
             setSongPitches(gameData->cutscene, songPitches);
             break;
         }
