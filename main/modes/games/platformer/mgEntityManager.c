@@ -2493,7 +2493,7 @@ mgEntity_t* createBossBigma(mgEntityManager_t* entityManager, uint16_t x, uint16
     entity->xMaxSpeed            = 132;
     entity->yMaxSpeed            = 132;
     entity->gravityEnabled       = true;
-    entity->gravity              = 1;
+    entity->gravity              = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
@@ -2509,7 +2509,7 @@ mgEntity_t* createBossBigma(mgEntityManager_t* entityManager, uint16_t x, uint16
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
-    entity->tileCollider         = &entityTileCollider_1x2;
+    entity->tileCollider         = &entityTileCollider_bigma;
 
     entity->drawHandler  = &mg_defaultEntityDrawHandler;
     entity->linkedEntity = NULL;
