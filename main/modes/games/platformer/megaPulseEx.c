@@ -2256,6 +2256,8 @@ void startPostFightMusic(void)
     }
     globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_POST_FIGHT);
+    int16_t songPitches[] = {62, 65, 67, 57, -1, -1, -1, -1};
+    setSongPitches(platformer->gameData.cutscene, songPitches);
     midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
@@ -2265,6 +2267,8 @@ void startHankMusic(void)
     globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_BOSS_HANK_WADDLE);
     midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+    int16_t songPitches[] = {67, 67, 67, 67, 67, 67, 67, 67};
+    setSongPitches(platformer->gameData.cutscene, songPitches);
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
 
@@ -2273,6 +2277,8 @@ void startTrashManMusic(void)
     globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_OVO_LIVES);
     midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+    int16_t songPitches[] = {31, 34, 36, 37, 38, 41, 43, 54};
+    setSongPitches(platformer->gameData.cutscene, songPitches);
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
 
@@ -2281,6 +2287,8 @@ void startMegajamMusic(void)
     globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_THE_FINAL_MEGAJAM);
     midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+    int16_t songPitches[] = {62, 62, 62, 62, 62, 62, 62, 62};
+    setSongPitches(platformer->gameData.cutscene, songPitches);
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
 
