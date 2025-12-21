@@ -114,7 +114,7 @@ void mg_initializeEntity(mgEntity_t* self, mgEntityManager_t* entityManager, mgT
 
 void mg_updatePlayer(mgEntity_t* self)
 {
-    if (self->gameData->level == 1 && !self->gameData->kineticSkipped && self->x > 59770 && self->y < 15400
+    if (self->gameData->level == 1 && !self->gameData->kineticSkipped && self->x > 59770  && self->x < 60000 && self->y < 15400
         && self->gameData->abilities & (1U << MG_CAN_OF_SALSA_ABILITY))
     {
         self->gameData->kineticSkipped = true;
