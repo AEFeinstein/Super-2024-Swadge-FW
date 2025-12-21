@@ -5330,10 +5330,19 @@ void mg_updateBossDeadeyeChirpzi(mgEntity_t* self)
             {
                 if(!self->falling)
                 {
-                    self->xspeed = -24;
-                    self->yspeed = -128;
-                    self->falling = true;
                     self->spriteIndex = MG_SP_BOSS_0;
+                
+                    if(!(esp_random() % 3))
+                    {
+                        self->stateTimer = 0;
+                        self->state = 1;
+                        break;
+                    } else 
+                    {
+                        self->xspeed = -24;
+                        self->yspeed = -128;
+                        self->falling = true;
+                    }
                 } 
                 else
                 {
@@ -5377,20 +5386,20 @@ void mg_updateBossDeadeyeChirpzi(mgEntity_t* self)
                 self->spriteIndex = MG_SP_BOSS_0;
             }
 
-            if(!(self->stateTimer % 30))
-            {
-                if (self->linkedEntity != NULL)
-                {
-                     int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->linkedEntity->y,
-                                            self->entityManager->playerEntity->x - self->linkedEntity->x);
-                    int16_t sin   = getSin1024(angle);
-                    int16_t cos   = getCos1024(angle);
+            // if(!(self->stateTimer % 30))
+            // {
+            //     if (self->linkedEntity != NULL)
+            //     {
+            //          int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->linkedEntity->y,
+            //                                 self->entityManager->playerEntity->x - self->linkedEntity->x);
+            //         int16_t sin   = getSin1024(angle);
+            //         int16_t cos   = getCos1024(angle);
 
-                    self->linkedEntity->xspeed = (32 * cos) / 1024;
-                    self->linkedEntity->yspeed = (32 * sin) / 1024;
-                    soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
-                }
-            }
+            //         self->linkedEntity->xspeed = (32 * cos) / 1024;
+            //         self->linkedEntity->yspeed = (32 * sin) / 1024;
+            //         soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+            //     }
+            // }
 
             //failsafe
             if (self->stateTimer > 360)
@@ -5412,10 +5421,19 @@ void mg_updateBossDeadeyeChirpzi(mgEntity_t* self)
             {
                 if(!self->falling)
                 {
-                    self->xspeed = 24;
-                    self->yspeed = -128;
                     self->spriteIndex = MG_SP_BOSS_0;
-                    self->falling = true;
+                
+                    if(!(esp_random() % 3))
+                    {
+                        self->stateTimer = 0;
+                        self->state = 1;
+                        break;
+                    } else 
+                    {
+                        self->xspeed = 24;
+                        self->yspeed = -128;
+                        self->falling = true;
+                    }
                 }
                 else
                 {
@@ -5460,20 +5478,20 @@ void mg_updateBossDeadeyeChirpzi(mgEntity_t* self)
                 self->spriteIndex = MG_SP_BOSS_0;
             }
 
-            if(!(self->stateTimer % 30))
-            {
-                if (self->linkedEntity != NULL)
-                {
-                     int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->linkedEntity->y,
-                                            self->entityManager->playerEntity->x - self->linkedEntity->x);
-                    int16_t sin   = getSin1024(angle);
-                    int16_t cos   = getCos1024(angle);
+            // if(!(self->stateTimer % 30))
+            // {
+            //     if (self->linkedEntity != NULL)
+            //     {
+            //          int16_t angle = getAtan2(self->entityManager->playerEntity->y - self->linkedEntity->y,
+            //                                 self->entityManager->playerEntity->x - self->linkedEntity->x);
+            //         int16_t sin   = getSin1024(angle);
+            //         int16_t cos   = getCos1024(angle);
 
-                    self->linkedEntity->xspeed = (32 * cos) / 1024;
-                    self->linkedEntity->yspeed = (32 * sin) / 1024;
-                    soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
-                }
-            }
+            //         self->linkedEntity->xspeed = (32 * cos) / 1024;
+            //         self->linkedEntity->yspeed = (32 * sin) / 1024;
+            //         soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+            //     }
+            // }
 
             //failsafe
             if (self->stateTimer > 360)
