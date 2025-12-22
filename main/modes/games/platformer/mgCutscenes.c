@@ -986,10 +986,11 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, CreditStyle, "Firmware Leader: Adam Feinstein", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Hardware Leader: Emily Anthony", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Lead Programmer, Gameplay Designer, Enemy Artist, Boss Designer: Jon Vega", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Music Composer, Lead Script Writer, Level Designer, Gameplay Designer: Joe Newman", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Contact: newmajoe on Discord. Special thanks to Allie, Lucy, and Sadie, also Dwelling of Duels.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Programmer, Quality Assurance, Gameplay Designer, Enemy Artist, Script Writer, Boss Designer: James Albracht", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "May Virginia Lynn Albracht rest in peace and never be forgotten.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Reach out to james.albracht@magfest.org with LEGIT game job offers, plz.", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, CreditStyle, "Music Composer, Lead Script Writer, Level Designer, Gameplay Designer: Joe Newman", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Midi Engineer: Dylan Whichard", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Cutscene Artist, Script Writer, Character Designer: Kaitie Lawson", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Player and Boss and Trophy Artist: Richard Lambert @azureine-edge.bsky.social", false, 0, NULL);
@@ -1009,7 +1010,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "... Is that my lunch?", false, 2, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, SystemText, "TRASH MAN WILL RETURN... In whatever sequel he can crash into.", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, SystemText, "Select New Game+ then play again with all your abilities!", false, -1, NULL);
+            addCutsceneLine(gameData->cutscene, SystemText, "Select New Game+ to keep your current abilities and play again or select Start Over from the main menu to delete all progress.", false, -1, NULL);
             //globalMidiUnpauseAll();
             break;
         }

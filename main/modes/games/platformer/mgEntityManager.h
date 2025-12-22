@@ -34,6 +34,7 @@ struct mgEntityManager_t
     mgEntity_t* viewEntity;
     mgEntity_t* playerEntity;
     mgEntity_t* bossEntity;
+    mgEntity_t* currentUpdating;
 
     uint16_t bossSpawnX; // Need to store to spawn more bosses in the boss rush.
     uint16_t bossSpawnY; // Need to store to spawn more bosses in the boss rush.

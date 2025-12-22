@@ -36,6 +36,7 @@ void mg_initializeEntityManager(mgEntityManager_t* entityManager, mgWsgManager_t
 
     entityManager->activeEntities = 0;
     entityManager->tilemap        = tilemap;
+    entityManager->currentUpdating = NULL;
 
     // entityManager->viewEntity = mg_createPlayer(entityManager, entityManager->tilemap->warps[0].x * 16,
     // entityManager->tilemap->warps[0].y * 16);
@@ -48,7 +49,9 @@ void mg_updateEntities(mgEntityManager_t* entityManager)
     {
         if (entityManager->entities[i].active)
         {
+            entityManager->currentUpdating = &(entityManager->entities[i]);
             entityManager->entities[i].updateFunction(&(entityManager->entities[i]));
+            entityManager->currentUpdating = NULL;
 
             if (&(entityManager->entities[i]) == entityManager->viewEntity)
             {
