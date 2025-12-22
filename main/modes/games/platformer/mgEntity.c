@@ -3171,6 +3171,23 @@ bool waspTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint
 
 void killEnemy(mgEntity_t* target)
 {
+    bool isABoss = (target->type == ENTITY_BOSS_BIGMA ||
+                    target->type == ENTITY_BOSS_KINETIC_DONUT ||
+                    target->type == ENTITY_BOSS_GRIND_PANGOLIN ||
+                    target->type == ENTITY_BOSS_SEVER_YATAGA ||
+                    target->type == ENTITY_BOSS_TRASH_MAN ||
+                    target->type == ENTITY_BOSS_SMASH_GORILLA ||
+                    target->type == ENTITY_BOSS_DEADEYE_CHIRPZI ||
+                    target->type == ENTITY_BOSS_DRAIN_BAT ||
+                    target->type == ENTITY_BOSS_FLARE_GRYFFYN ||
+                    target->type == ENTITY_BOSS_HANK_WADDLE);
+
+    if(target->type == ENTITY_BOSS_TRASH_MAN && target->gameData->level == 4)
+    {
+        //He gets launched to space from the cutscene.
+        target->yspeed = -target->yMaxSpeed;
+    }
+
     target->homeTileX          = 0;
     target->homeTileY          = 0;
     target->gravityEnabled     = true;
@@ -3183,9 +3200,7 @@ void killEnemy(mgEntity_t* target)
         target->spawnData                = NULL;
     }
 
-    // eh... that pretty much means it's a boss
-    if (target->entityManager->wsgManager->sprites[target->spriteIndex].wsg->w > 30
-        && target->entityManager->wsgManager->sprites[target->spriteIndex].wsg->h > 30)
+    if (isABoss)
     {
         if (target->gameData->level == 11)
         {

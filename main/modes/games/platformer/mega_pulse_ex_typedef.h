@@ -1188,7 +1188,6 @@ extern void startHankMusic(void);
 extern void startTrashManMusic(void);
 extern void initBossFight(void);
 extern void startMegajamMusic(void);
-extern void startCreditMusic(void);
 extern void stopMusic(void);
 extern void loseCanOfSalsa(void);
 

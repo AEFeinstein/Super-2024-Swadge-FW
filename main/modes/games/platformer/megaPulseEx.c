@@ -2232,11 +2232,11 @@ void goToReadyScreen(void)
 void startCreditMusic(void)
 {
     globalMidiPlayerGet(MIDI_BGM)->paused = false;
+    globalMidiPlayerGet(MIDI_BGM)->loop = true;
     mg_setBgm(&platformer->soundManager, MG_BGM_MAXIMUM_HYPE_CREDITS);
-    int16_t songPitches[]
-        = {62, 61, 60, 69, 62, 60, -1, -1}; // have 62 and 60 duplicated for some statistical weighting.
-    setSongPitches(platformer->gameData.cutscene, songPitches);
     midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+    int16_t songPitches[] = {62, 61, 60, 69, 62, 60, -1, -1};
+    setSongPitches(platformer->gameData.cutscene, songPitches);
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
 
@@ -2342,16 +2342,6 @@ void startMegajamMusic(void)
     mg_setBgm(&platformer->soundManager, MG_BGM_THE_FINAL_MEGAJAM);
     midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     int16_t songPitches[] = {62, 62, 62, 62, 62, 62, 62, 62};
-    setSongPitches(platformer->gameData.cutscene, songPitches);
-    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
-}
-
-void startCreditMusic(void)
-{
-    globalMidiPlayerGet(MIDI_BGM)->paused = false;
-    mg_setBgm(&platformer->soundManager, MG_BGM_MAXIMUM_HYPE_CREDITS);
-    midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
-    int16_t songPitches[] = {62, 61, 60, 69, 62, 60, -1, -1};
     setSongPitches(platformer->gameData.cutscene, songPitches);
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
