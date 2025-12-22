@@ -62,6 +62,12 @@ const mg_spriteDef_t drainBatAnimFrames[] = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG_SP_B
 const mg_spriteDef_t flareGryffynGuitarSpinFrames[]
     = {MG_SP_BOSS_2, MG_SP_BOSS_3, MG_SP_BOSS_4, MG_SP_BOSS_5};
 
+const mg_spriteDef_t smashGorillaStompFrames[]
+    = {MG_SP_BOSS_1, MG_SP_BOSS_3};
+
+const mg_spriteDef_t smashGorillaChargeFrames[]
+    = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG_SP_BOSS_2, MG_SP_BOSS_3};
+
 //==============================================================================
 // Functions Prototypes
 //==============================================================================
@@ -3424,6 +3430,16 @@ void mg_defaultEntityDrawHandler(mgEntity_t* self)
             self->spriteFlipHorizontal, self->spriteFlipVertical, self->spriteRotateAngle);
 }
 
+void mg_smashGorillaProjectileDrawHandler(mgEntity_t* self)
+{
+    drawWsg(self->entityManager->wsgManager->sprites[MG_SP_BOSS_5].wsg,
+            (self->x >> SUBPIXEL_RESOLUTION) - self->entityManager->wsgManager->sprites[self->spriteIndex].origin->x
+                - self->entityManager->tilemap->mapOffsetX,
+            (self->y >> SUBPIXEL_RESOLUTION) - self->entityManager->tilemap->mapOffsetY
+                - self->entityManager->wsgManager->sprites[self->spriteIndex].origin->y,
+            self->spriteFlipHorizontal, self->spriteFlipVertical, ((self->x >> 3) % 360));
+}
+
 void mg_hankDrawHandler(mgEntity_t* self)
 {
     /* Force Hank to draw using the fixed Hank origin so frame changes don't shift position */
@@ -4239,6 +4255,9 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
         default:
             // Idle
             self->stateTimer++;
+
+            self->spriteIndex = MG_SP_BOSS_0;
+
             if (self->stateTimer > 60)
             {
                 self->stateTimer = 0;
@@ -4248,6 +4267,7 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
                     default:
                         // To "Traverse - charge across"
                         self->state = 1;
+                        self->invincibilityFrames = 60;
 
                         if (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
                         {
@@ -4267,7 +4287,16 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
             }
             break;
         case 1:
+            self->stateTimer++;
             //"Traverse - charge across"
+            if(self->stateTimer < 60)
+            {
+                 self->spriteIndex = smashGorillaChargeFrames[(self->stateTimer >> 1) % 4];
+                break;
+            }
+
+
+            self->spriteIndex = smashGorillaChargeFrames[(self->stateTimer >> 2) % 4];
 
             // Move to other side of screen
             if (self->spriteFlipHorizontal)
@@ -4294,8 +4323,8 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
             }
 
             // failsafe
-            self->stateTimer++;
-            if (self->stateTimer > 180)
+            
+            if (self->stateTimer > 300)
             {
                 self->stateTimer = 0;
                 // To "Attack - Large ground projectiles"
@@ -4307,17 +4336,20 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
             //"Attack - Large ground projectiles"
             self->stateTimer++;
 
-            if (!(self->stateTimer % 20))
+            self->spriteIndex = smashGorillaStompFrames[(self->stateTimer >> 2) % 2];
+            self->spriteFlipHorizontal = (self->entityManager->playerEntity->x > self->x) ? false : true;
+
+            if (!(self->stateTimer % 30))
             {
                 // Launch projectiles toward player
                 mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
-                                                            TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+                                                            TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y) + 24);
                 if (createdEntity != NULL && self->entityManager->playerEntity != NULL)
                 {
-                    createdEntity->xspeed = (self->entityManager->playerEntity->x > self->x) ? 64 : -64;
+                    createdEntity->xspeed = (self->entityManager->playerEntity->x > self->x) ? 32 : -32;
                     createdEntity->yspeed = 0;
 
-                    // TODO: make sprite larger, change into rocks?
+                    createdEntity->drawHandler = &mg_smashGorillaProjectileDrawHandler;
 
                     createdEntity->linkedEntity = self;
                     soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
@@ -4337,6 +4369,7 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
                     case 1:
                         // To "Traverse - Dig and disappear"
                         self->state = 3;
+                        self->invincibilityFrames = 60;
                         break;
                 }
             }
@@ -4345,9 +4378,11 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
             //"Traverse - Dig and disappear"
             self->stateTimer++;
 
+            self->spriteIndex = smashGorillaStompFrames[(self->stateTimer) % 2];
+
             if (self->stateTimer > 60)
             {
-                self->visible    = false;
+                self->spriteIndex = MG_SP_BOSS_4;
                 self->stateTimer = 0;
                 // To "Traverse - Dig in from random location, track player"
                 self->state = 4;
@@ -4358,25 +4393,92 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
             //"Traverse - Dig in from random location, track player"
             self->stateTimer++;
 
-            if (self->entityManager->playerEntity == NULL || self->stateTimer > 600)
+            if (self->stateTimer > 600)
             {
                 self->visible    = true;
                 self->stateTimer = 0;
-
+                self->spriteIndex = MG_SP_BOSS_2;
+                self->yspeed = -127;
+                self->falling = true;
                 // To "Attack - Emerge, Launch rocks"
                 self->state = 5;
                 break;
+            } 
+            else if (self->stateTimer > 510)
+            {
+                self->xspeed = 0;
+                self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
+            }
+            else if (self->stateTimer < 510)
+            {
+                if( !(self->stateTimer % 2) ) 
+                {
+                    self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
+                }
+
+                if (!(self->stateTimer % 30))
+                {
+                    if (self->x < self->entityManager->playerEntity->x)
+                    {
+                        self->xspeed = 64;
+                    }
+                    else
+                    {
+                        self->xspeed = -64;
+                    }
+                }
             }
 
-            if (!(self->stateTimer % 20))
-            {
-                if (self->x < self->entityManager->playerEntity->x)
+            if(self->stateTimer == 570){
+                mgEntity_t* createdEntity;
+
+                for(uint8_t i = 0; i < 3; i++)
                 {
-                    self->xspeed = 64;
+                    createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
+                                                            TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y) + 24);
+                    if (createdEntity != NULL && self->entityManager->playerEntity != NULL)
+                    {
+                        int16_t angle = 120 - (i * 30);
+                        int16_t sin   = getSin1024(angle);
+                        int16_t cos   = getCos1024(angle);
+
+                        createdEntity->xspeed         = (127 * cos) / 1024;
+                        createdEntity->yspeed         = (127 * -sin) / 1024;
+                        createdEntity->gravityEnabled = true;
+                        createdEntity->falling = true;
+
+                        createdEntity->drawHandler = &mg_smashGorillaProjectileDrawHandler;
+
+                        createdEntity->linkedEntity = self;
+                        soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                    }
                 }
-                else
+            }
+            else if(self->stateTimer == 540){
+                self->xspeed = 0;
+
+                mgEntity_t* createdEntity;
+                
+                for(uint8_t i = 0; i < 2; i++)
                 {
-                    self->xspeed = -64;
+                    createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
+                                                            TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y) + 24);
+                    if (createdEntity != NULL && self->entityManager->playerEntity != NULL)
+                    {
+                        int16_t angle = 120 - (i * 60);
+                        int16_t sin   = getSin1024(angle);
+                        int16_t cos   = getCos1024(angle);
+
+                        createdEntity->xspeed         = (80 * cos) / 1024;
+                        createdEntity->yspeed         = (80 * -sin) / 1024;
+                        createdEntity->gravityEnabled = true;
+                        createdEntity->falling = true;
+
+                        createdEntity->drawHandler = &mg_smashGorillaProjectileDrawHandler;
+
+                        createdEntity->linkedEntity = self;
+                        soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                    }
                 }
             }
 
@@ -4384,32 +4486,38 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
         case 5:
             //"Attack - Emerge, launch rocks"
             self->stateTimer++;
-            self->yspeed = -64;
+            
 
-            if (!(self->stateTimer % 8))
+            if (self->stateTimer == 1)
             {
-                mgEntity_t* createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
-                                                            TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
-                if (createdEntity != NULL && self->entityManager->playerEntity != NULL)
+                mgEntity_t* createdEntity;
+                
+                for(uint8_t i = 0; i < 4; i++)
                 {
-                    int16_t angle = -60 + (esp_random() % 120);
-                    int16_t sin   = getSin1024(angle);
-                    int16_t cos   = getCos1024(angle);
+                    createdEntity = mg_createEntity(self->entityManager, ENTITY_WAVE_BALL,
+                                                            TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+                    if (createdEntity != NULL && self->entityManager->playerEntity != NULL)
+                    {
+                        int16_t angle = 120 - (i * 20);
+                        int16_t sin   = getSin1024(angle);
+                        int16_t cos   = getCos1024(angle);
 
-                    createdEntity->xspeed         = (80 * cos) / 1024;
-                    createdEntity->yspeed         = (80 * sin) / 1024;
-                    createdEntity->gravityEnabled = true;
+                        createdEntity->xspeed         = (144 * cos) / 1024;
+                        createdEntity->yspeed         = (144 * -sin) / 1024;
+                        createdEntity->gravityEnabled = true;
+                        createdEntity->falling = true;
 
-                    // TODO: make sprite larger, change into rocks?
+                        createdEntity->drawHandler = &mg_smashGorillaProjectileDrawHandler;
 
-                    createdEntity->linkedEntity = self;
-                    soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                        createdEntity->linkedEntity = self;
+                        soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
+                    }
                 }
             }
 
-            if (self->stateTimer > 30 && !self->falling)
+            if (self->stateTimer > 300 || !self->falling)
             {
-                self->stateTimer = 0;
+                self->stateTimer = 30;
                 // To Idle
                 self->state = 0;
                 break;

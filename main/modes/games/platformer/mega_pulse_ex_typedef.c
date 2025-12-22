@@ -91,16 +91,16 @@ const mg_EntityTileCollider_t entityTileCollider_sever_yataga
 
 // smash gorilla origin: 49, 35
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_smash_gorilla_bottomEdge
-    = {.collisionPoints = {{.x = -15, .y = 34}, {.x = 0, .y = 34}, {.x = 14, .y = 34}}, .size = 3};
+    = {.collisionPoints = {{.x = -14, .y = 34}, {.x = 0, .y = 34}, {.x = 13, .y = 34}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_smash_gorilla_topEdge
-    = {.collisionPoints = {{.x = -15, .y = -25}, {.x = 0, .y = -25}, {.x = 14, .y = -25}}, .size = 3};
+    = {.collisionPoints = {{.x = -14, .y = -25}, {.x = 0, .y = -25}, {.x = 13, .y = -25}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_smash_gorilla_rightEdge
-    = {.collisionPoints = {{.x = 14, .y = 34}, {.x = 14, .y = 0}, {.x = 14, .y = -25}}, .size = 3};
+    = {.collisionPoints = {{.x = 14, .y = 33}, {.x = 14, .y = 0}, {.x = 14, .y = -25}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_smash_gorilla_leftEdge
-    = {.collisionPoints = {{.x = -15, .y = 34}, {.x = -15, .y = 0}, {.x = -15, .y = -25}}, .size = 3};
+    = {.collisionPoints = {{.x = -15, .y = 33}, {.x = -15, .y = 0}, {.x = -15, .y = -25}}, .size = 3};
 
 const mg_EntityTileCollider_t entityTileCollider_smash_gorilla
     = {.bottomEdge = &mgTileCollisionOffsets_smash_gorilla_bottomEdge,
