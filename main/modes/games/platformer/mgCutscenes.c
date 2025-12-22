@@ -183,6 +183,12 @@ static void setSongPitchesFromCurrentSong(mgGameData_t* gameData)
             setSongPitches(gameData->cutscene, songPitches);
             break;
         }
+        case MG_BGM_SAWTOOTHS_THEME:
+        {
+            int16_t songPitches[] = {59, 60, 62, 64, 69, -1, -1, -1};
+            setSongPitches(gameData->cutscene, songPitches);
+            break;
+        }
         default:
         {
             break;
@@ -976,8 +982,8 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, BlackScreen, "The following day, PULSE and friends return to the wreckage to reflect on their adventure.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "Sunny... was he right about us?", true, 0, NULL);
             addCutsceneLine(gameData->cutscene, Sunny, "I... don't know.", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, Bigma, "Maybe you'll find out someday. But until then...", true, 2, NULL);
-            addCutsceneLine(gameData->cutscene, Pulse, "...LET'S FREAKIN' PARTY!!", false, 2, startCreditMusic);
+            addCutsceneLine(gameData->cutscene, Bigma, "Maybe you'll find out someday. But until then...", true, 2, startCreditMusic);
+            addCutsceneLine(gameData->cutscene, Pulse, "...LET'S FREAKIN' PARTY!!", false, 2, NULL);
             //cutscenes play BGM
             addCutsceneLine(gameData->cutscene, CreditStyle, "THANK YOU FOR PLAYING MEGA PULSE EX!", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Producer, Boss Designer: Dac", false, 0, NULL);

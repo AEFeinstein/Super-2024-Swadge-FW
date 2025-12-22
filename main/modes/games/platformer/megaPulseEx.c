@@ -225,7 +225,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Saved Bigma",//this has been moved to clearing the boss rush
+        .title       = "Saved Bigma", // this has been moved to clearing the boss rush
         .description = "Favorite genre: Corruption?",
         .image       = TROPHY_BIGMA_WSG, // need 36 x 36 boss images later
         .type        = TROPHY_TYPE_TRIGGER,
@@ -2342,6 +2342,16 @@ void startMegajamMusic(void)
     mg_setBgm(&platformer->soundManager, MG_BGM_THE_FINAL_MEGAJAM);
     midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     int16_t songPitches[] = {62, 62, 62, 62, 62, 62, 62, 62};
+    setSongPitches(platformer->gameData.cutscene, songPitches);
+    soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+}
+
+void startCreditMusic(void)
+{
+    globalMidiPlayerGet(MIDI_BGM)->paused = false;
+    mg_setBgm(&platformer->soundManager, MG_BGM_MAXIMUM_HYPE_CREDITS);
+    midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+    int16_t songPitches[] = {62, 61, 60, 69, 62, 60, -1, -1};
     setSongPitches(platformer->gameData.cutscene, songPitches);
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }

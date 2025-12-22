@@ -2492,7 +2492,7 @@ void updateExtraLife(mgEntity_t* self)
 {
     self->animationTimer++;
 
-    self->spriteIndex = MG_SP_EXTRA_LIFE_0 + ((self->animationTimer / 8)%8);
+    self->spriteIndex = MG_SP_EXTRA_LIFE_0 + ((self->animationTimer / 8) % 8);
 
     mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
@@ -6046,6 +6046,10 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
 
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
+        mg_setBgm(self->soundManager, BGM_CLIMAX_MID);
+        midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+        soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+        globalMidiPlayerGet(MIDI_BGM)->loop = false; // Climax should end in silence.
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
     }
@@ -6062,9 +6066,9 @@ void startOutroCutscene(mgEntity_t* self)
         self->gameData->pauseCountdown = true;
     }
     // Cutscene after the boss fight
-    if (self->gameData->level == 9) // I really liked this song earlier in development for sunny's reveal.
+    if (self->gameData->level == 9) // custom song from Joe for sawtooth reveal.
     {
-        mg_setBgm(self->soundManager, MG_BGM_BOSS_DRAIN_BAT);
+        mg_setBgm(self->soundManager, BGM_SAWTOOTHS_THEME_MID);
         midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
         soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
     }

@@ -703,11 +703,11 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_EXTRA_LIFE_1].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_1];
     self->sprites[MG_SP_EXTRA_LIFE_1].origin = &origin_8_8;
     self->sprites[MG_SP_EXTRA_LIFE_1].hitBox = &box_16_16;
-    
+
     self->sprites[MG_SP_EXTRA_LIFE_2].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_2];
     self->sprites[MG_SP_EXTRA_LIFE_2].origin = &origin_8_8;
     self->sprites[MG_SP_EXTRA_LIFE_2].hitBox = &box_16_16;
-    
+
     self->sprites[MG_SP_EXTRA_LIFE_3].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_3];
     self->sprites[MG_SP_EXTRA_LIFE_3].origin = &origin_8_8;
     self->sprites[MG_SP_EXTRA_LIFE_3].hitBox = &box_16_16;

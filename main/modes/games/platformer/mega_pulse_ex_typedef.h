@@ -112,6 +112,8 @@ typedef enum
     MG_BGM_THE_GAUNTLET,
     MG_BGM_THE_FINAL_MEGAJAM,
     MG_BGM_LOOKS_LIKE_WE_MADE_IT,
+    MG_BGM_SAWTOOTHS_THEME,
+    MG_BGM_CLIMAX,
 } mg_bgmEnum_t;
 
 typedef enum
@@ -1186,6 +1188,7 @@ extern void startHankMusic(void);
 extern void startTrashManMusic(void);
 extern void initBossFight(void);
 extern void startMegajamMusic(void);
+extern void startCreditMusic(void);
 extern void stopMusic(void);
 extern void loseCanOfSalsa(void);
 
