@@ -6086,7 +6086,7 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
 
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
-        mg_setBgm(self->soundManager, BGM_CLIMAX_MID);
+        mg_setBgm(self->soundManager, MG_BGM_CLIMAX);
         midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
         soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
         globalMidiPlayerGet(MIDI_BGM)->loop = false; // Climax should end in silence.
@@ -6108,7 +6108,7 @@ void startOutroCutscene(mgEntity_t* self)
     // Cutscene after the boss fight
     if (self->gameData->level == 9) // custom song from Joe for sawtooth reveal.
     {
-        mg_setBgm(self->soundManager, BGM_SAWTOOTHS_THEME_MID);
+        mg_setBgm(self->soundManager, MG_BGM_SAWTOOTHS_THEME);
         midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
         soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
     }
