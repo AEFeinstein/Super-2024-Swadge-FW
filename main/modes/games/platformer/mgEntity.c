@@ -5400,7 +5400,6 @@ void mg_updateBossDeadeyeChirpzi(mgEntity_t* self)
                     createdEntity->yspeed = (80 * sin) / 1024;
 
                     createdEntity->linkedEntity = self;
-                    self->linkedEntity          = createdEntity;
                     soundPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
                 }
             }
