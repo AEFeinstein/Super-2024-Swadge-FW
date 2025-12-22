@@ -319,7 +319,7 @@ const mgSprite_t mg_smashGorillaBossSpriteMetadataSet[] = {
     {
         .wsg    = NULL,
         .origin = &origin_smash_gorilla,
-        .hitBox = &box_smash_gorilla,
+        .hitBox = NULL,
     },
     {
         .wsg    = NULL,

@@ -91,16 +91,16 @@ const mg_EntityTileCollider_t entityTileCollider_sever_yataga
 
 // smash gorilla origin: 49, 35
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_smash_gorilla_bottomEdge
-    = {.collisionPoints = {{.x = -15, .y = 34}, {.x = 0, .y = 34}, {.x = 14, .y = 34}}, .size = 3};
+    = {.collisionPoints = {{.x = -14, .y = 34}, {.x = 0, .y = 34}, {.x = 13, .y = 34}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_smash_gorilla_topEdge
-    = {.collisionPoints = {{.x = -15, .y = -25}, {.x = 0, .y = -25}, {.x = 14, .y = -25}}, .size = 3};
+    = {.collisionPoints = {{.x = -14, .y = -25}, {.x = 0, .y = -25}, {.x = 13, .y = -25}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_smash_gorilla_rightEdge
-    = {.collisionPoints = {{.x = 14, .y = 34}, {.x = 14, .y = 0}, {.x = 14, .y = -25}}, .size = 3};
+    = {.collisionPoints = {{.x = 14, .y = 33}, {.x = 14, .y = 0}, {.x = 14, .y = -25}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_smash_gorilla_leftEdge
-    = {.collisionPoints = {{.x = -15, .y = 34}, {.x = -15, .y = 0}, {.x = -15, .y = -25}}, .size = 3};
+    = {.collisionPoints = {{.x = -15, .y = 33}, {.x = -15, .y = 0}, {.x = -15, .y = -25}}, .size = 3};
 
 const mg_EntityTileCollider_t entityTileCollider_smash_gorilla
     = {.bottomEdge = &mgTileCollisionOffsets_smash_gorilla_bottomEdge,
@@ -110,10 +110,10 @@ const mg_EntityTileCollider_t entityTileCollider_smash_gorilla
 
 // grind pangolin origin: 33, 28
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_bottomEdge
-    = {.collisionPoints = {{.x = -30, .y = 27}, {.x = 0, .y = 27}, {.x = 30, .y = 27}}, .size = 3};
+    = {.collisionPoints = {{.x = -29, .y = 27}, {.x = 0, .y = 27}, {.x = 29, .y = 27}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_topEdge
-    = {.collisionPoints = {{.x = -30, .y = -11}, {.x = 0, .y = -11}, {.x = 30, .y = -11}}, .size = 3};
+    = {.collisionPoints = {{.x = -29, .y = -11}, {.x = 0, .y = -11}, {.x = 29, .y = -11}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rightEdge
     = {.collisionPoints = {{.x = 30, .y = 25}, {.x = 30, .y = 0}, {.x = 30, .y = -11}}, .size = 3};
@@ -129,10 +129,10 @@ const mg_EntityTileCollider_t entityTileCollider_grind_pangolin
 
 // grind pangolin rolling origin: 19, 15
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_bottomEdge
-    = {.collisionPoints = {{.x = -10, .y = 15}, {.x = 0, .y = 15}, {.x = 10, .y = 15}}, .size = 3};
+    = {.collisionPoints = {{.x = -9, .y = 15}, {.x = 0, .y = 15}, {.x = 9, .y = 15}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_topEdge
-    = {.collisionPoints = {{.x = -10, .y = -15}, {.x = 0, .y = -15}, {.x = 10, .y = -15}}, .size = 3};
+    = {.collisionPoints = {{.x = -9, .y = -15}, {.x = 0, .y = -15}, {.x = 9, .y = -15}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_rightEdge
     = {.collisionPoints = {{.x = 10, .y = 14}, {.x = 10, .y = 0}, {.x = 10, .y = -15}}, .size = 3};
@@ -192,10 +192,10 @@ const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_top
     = {.collisionPoints = {{.x = -24, .y = -32}, {.x = 0, .y = -32}, {.x = 24, .y = -32}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_rightEdge
-    = {.collisionPoints = {{.x = 24, .y = 30}, {.x = 24, .y = 0}, {.x = 24, .y = -32}}, .size = 3};
+    = {.collisionPoints = {{.x = 24, .y = 29}, {.x = 24, .y = 0}, {.x = 24, .y = -32}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_flare_gryffyn_leftEdge
-    = {.collisionPoints = {{.x = -24, .y = 30}, {.x = -24, .y = 0}, {.x = -24, .y = -32}}, .size = 3};
+    = {.collisionPoints = {{.x = -24, .y = 29}, {.x = -24, .y = 0}, {.x = -24, .y = -32}}, .size = 3};
 
 const mg_EntityTileCollider_t entityTileCollider_flare_gryffyn
     = {.bottomEdge = &mgTileCollisionOffsets_flare_gryffyn_bottomEdge,
@@ -224,16 +224,16 @@ const mg_EntityTileCollider_t entityTileCollider_flare_gryffyn_jumping
 
 // deadeye chirpzi origin: 40, 34
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_deadeye_chirpzi_bottomEdge
-    = {.collisionPoints = {{.x = -17, .y = 33}, {.x = 0, .y = 33}, {.x = 16, .y = 33}}, .size = 3};
+    = {.collisionPoints = {{.x = -16, .y = 33}, {.x = 0, .y = 33}, {.x = 15, .y = 33}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_deadeye_chirpzi_topEdge
-    = {.collisionPoints = {{.x = -17, .y = -29}, {.x = 0, .y = -29}, {.x = 16, .y = -29}}, .size = 3};
+    = {.collisionPoints = {{.x = -16, .y = -29}, {.x = 0, .y = -29}, {.x = 15, .y = -29}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_deadeye_chirpzi_rightEdge
-    = {.collisionPoints = {{.x = 16, .y = 33}, {.x = 16, .y = 0}, {.x = 16, .y = -29}}, .size = 3};
+    = {.collisionPoints = {{.x = 16, .y = 32}, {.x = 16, .y = 0}, {.x = 16, .y = -29}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_deadeye_chirpzi_leftEdge
-    = {.collisionPoints = {{.x = -17, .y = 33}, {.x = -17, .y = 0}, {.x = -17, .y = -29}}, .size = 3};
+    = {.collisionPoints = {{.x = -17, .y = 32}, {.x = -17, .y = 0}, {.x = -17, .y = -29}}, .size = 3};
 
 const mg_EntityTileCollider_t entityTileCollider_deadeye_chirpzi
     = {.bottomEdge = &mgTileCollisionOffsets_deadeye_chirpzi_bottomEdge,
