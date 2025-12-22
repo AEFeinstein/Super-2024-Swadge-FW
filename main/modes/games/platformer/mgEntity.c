@@ -3173,20 +3173,15 @@ bool waspTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint
 
 void killEnemy(mgEntity_t* target)
 {
-    bool isABoss = (target->type == ENTITY_BOSS_BIGMA ||
-                    target->type == ENTITY_BOSS_KINETIC_DONUT ||
-                    target->type == ENTITY_BOSS_GRIND_PANGOLIN ||
-                    target->type == ENTITY_BOSS_SEVER_YATAGA ||
-                    target->type == ENTITY_BOSS_TRASH_MAN ||
-                    target->type == ENTITY_BOSS_SMASH_GORILLA ||
-                    target->type == ENTITY_BOSS_DEADEYE_CHIRPZI ||
-                    target->type == ENTITY_BOSS_DRAIN_BAT ||
-                    target->type == ENTITY_BOSS_FLARE_GRYFFYN ||
-                    target->type == ENTITY_BOSS_HANK_WADDLE);
+    bool isABoss = (target->type == ENTITY_BOSS_BIGMA || target->type == ENTITY_BOSS_KINETIC_DONUT
+                    || target->type == ENTITY_BOSS_GRIND_PANGOLIN || target->type == ENTITY_BOSS_SEVER_YATAGA
+                    || target->type == ENTITY_BOSS_TRASH_MAN || target->type == ENTITY_BOSS_SMASH_GORILLA
+                    || target->type == ENTITY_BOSS_DEADEYE_CHIRPZI || target->type == ENTITY_BOSS_DRAIN_BAT
+                    || target->type == ENTITY_BOSS_FLARE_GRYFFYN || target->type == ENTITY_BOSS_HANK_WADDLE);
 
-    if(target->type == ENTITY_BOSS_TRASH_MAN && target->gameData->level == 4)
+    if (target->type == ENTITY_BOSS_TRASH_MAN && target->gameData->level == 4)
     {
-        //He gets launched to space from the cutscene.
+        // He gets launched to space from the cutscene.
         target->yspeed = -target->yMaxSpeed;
     }
 
@@ -4786,17 +4781,17 @@ void mg_updateBossDrainBat(mgEntity_t* self)
                          * switch to real state 1. */
                         self->x           = TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48 + (esp_random() % 184));
                         self->y           = self->entityManager->playerEntity->y - 128;
-                        self->special1    = 1; /* store next real state */
+                        self->special1    = 1;  /* store next real state */
                         self->state       = 10; /* PRE-TELEPORT */
                         self->stateTimer  = 0;
                         self->spriteIndex = MG_SP_WARP_1;
                         break;
                     case 1:
-                        self->x     = (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
-                                          ? TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48)
-                                          : TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 232);
+                        self->x           = (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
+                                                ? TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48)
+                                                : TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 232);
                         self->y           = (TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetY + 48));
-                        self->special1    = 2; /* store next real state */
+                        self->special1    = 2;  /* store next real state */
                         self->state       = 10; /* PRE-TELEPORT */
                         self->stateTimer  = 0;
                         self->spriteIndex = MG_SP_WARP_1;
@@ -4931,8 +4926,8 @@ void mg_updateBossDrainBat(mgEntity_t* self)
             {
                 /* Appear now and switch to the previously intended state */
                 uint8_t nextState = (uint8_t)(self->special1);
-                self->state      = nextState;
-                self->stateTimer = 0;
+                self->state       = nextState;
+                self->stateTimer  = 0;
                 /* Ensure Drain Bat idle animation is set */
                 self->spriteIndex = drainBatAnimFrames[(self->stateTimer >> 3) % 5];
             }

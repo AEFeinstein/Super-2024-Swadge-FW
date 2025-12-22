@@ -2232,7 +2232,7 @@ void goToReadyScreen(void)
 void startCreditMusic(void)
 {
     globalMidiPlayerGet(MIDI_BGM)->paused = false;
-    globalMidiPlayerGet(MIDI_BGM)->loop = true;
+    globalMidiPlayerGet(MIDI_BGM)->loop   = true;
     mg_setBgm(&platformer->soundManager, MG_BGM_MAXIMUM_HYPE_CREDITS);
     midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     int16_t songPitches[] = {62, 61, 60, 69, 62, 60, -1, -1};
