@@ -110,10 +110,10 @@ const mg_EntityTileCollider_t entityTileCollider_smash_gorilla
 
 // grind pangolin origin: 33, 28
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_bottomEdge
-    = {.collisionPoints = {{.x = -30, .y = 27}, {.x = 0, .y = 27}, {.x = 30, .y = 27}}, .size = 3};
+    = {.collisionPoints = {{.x = -29, .y = 27}, {.x = 0, .y = 27}, {.x = 29, .y = 27}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_topEdge
-    = {.collisionPoints = {{.x = -30, .y = -11}, {.x = 0, .y = -11}, {.x = 30, .y = -11}}, .size = 3};
+    = {.collisionPoints = {{.x = -29, .y = -11}, {.x = 0, .y = -11}, {.x = 29, .y = -11}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rightEdge
     = {.collisionPoints = {{.x = 30, .y = 25}, {.x = 30, .y = 0}, {.x = 30, .y = -11}}, .size = 3};
@@ -129,10 +129,10 @@ const mg_EntityTileCollider_t entityTileCollider_grind_pangolin
 
 // grind pangolin rolling origin: 19, 15
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_bottomEdge
-    = {.collisionPoints = {{.x = -10, .y = 15}, {.x = 0, .y = 15}, {.x = 10, .y = 15}}, .size = 3};
+    = {.collisionPoints = {{.x = -9, .y = 15}, {.x = 0, .y = 15}, {.x = 9, .y = 15}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_topEdge
-    = {.collisionPoints = {{.x = -10, .y = -15}, {.x = 0, .y = -15}, {.x = 10, .y = -15}}, .size = 3};
+    = {.collisionPoints = {{.x = -9, .y = -15}, {.x = 0, .y = -15}, {.x = 9, .y = -15}}, .size = 3};
 
 const mg_EntityTileCollisionPointList_t mgTileCollisionOffsets_grind_pangolin_rolling_rightEdge
     = {.collisionPoints = {{.x = 10, .y = 14}, {.x = 10, .y = 0}, {.x = 10, .y = -15}}, .size = 3};
