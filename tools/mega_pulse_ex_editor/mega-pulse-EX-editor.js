@@ -1,6 +1,6 @@
 tiled.registerMapFormat("Mega Pulse EX", {
 	name: "Mega Pulse EX map format",
-	extension: "bin",
+	extension: "raw",
     /*read: (fileName) => {
         var file = new BinaryFile(fileName, BinaryFile.ReadOnly);
         var filePath = FileInfo.path(fileName);
