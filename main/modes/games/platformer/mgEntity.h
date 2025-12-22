@@ -83,7 +83,8 @@ typedef enum
     ENTITY_BOSS_FLARE_GRYFFYN,
     ENTITY_BOSS_DEADEYE_CHIRPZI,
     ENTITY_BOSS_BIGMA,
-    ENTITY_BOSS_HANK_WADDLE
+    ENTITY_BOSS_HANK_WADDLE,
+    ENTITY_EXTRA_LIFE,
 } mgEntityIndex_t;
 
 typedef enum
@@ -248,6 +249,7 @@ void updateScrollUnlock(mgEntity_t* self);
 void updateEntityDead(mgEntity_t* self);
 
 void updatePowerUp(mgEntity_t* self);
+void updateExtraLife(mgEntity_t* self);
 void update1up(mgEntity_t* self);
 void updateWarp(mgEntity_t* self);
 

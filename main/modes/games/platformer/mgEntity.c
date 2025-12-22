@@ -1629,6 +1629,13 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             mg_destroyEntity(other, false);
             break;
         }
+        case ENTITY_EXTRA_LIFE:
+        {
+            self->gameData->lives++;
+            soundPlaySfx(&(self->soundManager->sndPowerUp), BZR_LEFT);
+            mg_destroyEntity(other, false);
+            break;
+        }
         case ENTITY_1UP:
         {
             self->gameData->lives++;
@@ -2481,6 +2488,17 @@ void updatePowerUp(mgEntity_t* self)
     despawnWhenOffscreen(self);
 }
 
+void updateExtraLife(mgEntity_t* self)
+{
+    self->animationTimer++;
+
+    self->spriteIndex = MG_SP_EXTRA_LIFE_0 + ((self->animationTimer / 8)%8);
+
+    mg_moveEntityWithTileCollisions(self);
+    applyGravity(self);
+    despawnWhenOffscreen(self);
+}
+
 void update1up(mgEntity_t* self)
 {
     if (self->gameData->frameCount % 10 == 0)
@@ -3179,7 +3197,11 @@ void killEnemy(mgEntity_t* target)
             }
         }
     }
-    else if ((esp_random() % 100) > 90)
+    else if ((esp_random() % 100) < 2) // 2% chance
+    {
+        createExtraLife(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
+    }
+    else if ((esp_random() % 100) < 10) // 10% chance
     {
         createPowerUp(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
     }

@@ -65,6 +65,7 @@ mgEntity_t* createScrollLockDown(mgEntityManager_t* entityManager, uint16_t x, u
 mgEntity_t* createScrollUnlock(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createHitBlock(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createPowerUp(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
+mgEntity_t* createExtraLife(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createWarp(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createDustBunny(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);
 mgEntity_t* createWasp(mgEntityManager_t* entityManager, uint16_t x, uint16_t y);

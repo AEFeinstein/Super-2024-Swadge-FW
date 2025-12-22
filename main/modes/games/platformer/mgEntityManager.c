@@ -714,6 +714,44 @@ mgEntity_t* createPowerUp(mgEntityManager_t* entityManager, uint16_t x, uint16_t
     return entity;
 }
 
+mgEntity_t* createExtraLife(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = 0;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 4;
+    entity->falling              = true;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
+
+    entity->type                 = ENTITY_EXTRA_LIFE;
+    entity->spriteIndex          = MG_SP_EXTRA_LIFE_0;
+    entity->animationTimer       = 0;
+    entity->updateFunction       = &updateExtraLife;
+    entity->collisionHandler     = &powerUpCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+
+    entity->drawHandler = &mg_defaultEntityDrawHandler;
+    return entity;
+}
+
 mgEntity_t* createWarp(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
     mgEntity_t* entity = mg_findInactiveEntity(entityManager);

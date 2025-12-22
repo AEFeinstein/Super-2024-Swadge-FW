@@ -260,6 +260,14 @@ void mg_loadWsgs(mgWsgManager_t* self)
     loadWsg(PULSE_DOUBLE_JUMP_3_WSG, &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_3], false);
     loadWsg(PULSE_DOUBLE_JUMP_4_WSG, &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_4], false);
     loadWsg(PULSE_DOUBLE_JUMP_5_WSG, &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_5], false);
+    loadWsg(SPRITE_050_WSG, &self->wsgs[MG_WSG_EXTRA_LIFE_0], false);
+    loadWsg(SPRITE_051_WSG, &self->wsgs[MG_WSG_EXTRA_LIFE_1], false);
+    loadWsg(SPRITE_052_WSG, &self->wsgs[MG_WSG_EXTRA_LIFE_2], false);
+    loadWsg(SPRITE_053_WSG, &self->wsgs[MG_WSG_EXTRA_LIFE_3], false);
+    loadWsg(SPRITE_054_WSG, &self->wsgs[MG_WSG_EXTRA_LIFE_4], false);
+    loadWsg(SPRITE_055_WSG, &self->wsgs[MG_WSG_EXTRA_LIFE_5], false);
+    loadWsg(SPRITE_056_WSG, &self->wsgs[MG_WSG_EXTRA_LIFE_6], false);
+    loadWsg(SPRITE_057_WSG, &self->wsgs[MG_WSG_EXTRA_LIFE_7], false);
 }
 
 void mg_initializeSprites(mgWsgManager_t* self)
@@ -687,6 +695,38 @@ void mg_initializeSprites(mgWsgManager_t* self)
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_5].wsg    = &self->wsgs[MG_WSG_PLAYER_DOUBLE_JUMP_5];
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_5].origin = &origin_16_16;
     self->sprites[MG_SP_PLAYER_DOUBLE_JUMP_5].hitBox = &box_16_32;
+
+    self->sprites[MG_SP_EXTRA_LIFE_0].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_0];
+    self->sprites[MG_SP_EXTRA_LIFE_0].origin = &origin_8_8;
+    self->sprites[MG_SP_EXTRA_LIFE_0].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_EXTRA_LIFE_1].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_1];
+    self->sprites[MG_SP_EXTRA_LIFE_1].origin = &origin_8_8;
+    self->sprites[MG_SP_EXTRA_LIFE_1].hitBox = &box_16_16;
+    
+    self->sprites[MG_SP_EXTRA_LIFE_2].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_2];
+    self->sprites[MG_SP_EXTRA_LIFE_2].origin = &origin_8_8;
+    self->sprites[MG_SP_EXTRA_LIFE_2].hitBox = &box_16_16;
+    
+    self->sprites[MG_SP_EXTRA_LIFE_3].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_3];
+    self->sprites[MG_SP_EXTRA_LIFE_3].origin = &origin_8_8;
+    self->sprites[MG_SP_EXTRA_LIFE_3].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_EXTRA_LIFE_4].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_4];
+    self->sprites[MG_SP_EXTRA_LIFE_4].origin = &origin_8_8;
+    self->sprites[MG_SP_EXTRA_LIFE_4].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_EXTRA_LIFE_5].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_5];
+    self->sprites[MG_SP_EXTRA_LIFE_5].origin = &origin_8_8;
+    self->sprites[MG_SP_EXTRA_LIFE_5].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_EXTRA_LIFE_6].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_6];
+    self->sprites[MG_SP_EXTRA_LIFE_6].origin = &origin_8_8;
+    self->sprites[MG_SP_EXTRA_LIFE_6].hitBox = &box_16_16;
+
+    self->sprites[MG_SP_EXTRA_LIFE_7].wsg    = &self->wsgs[MG_WSG_EXTRA_LIFE_7];
+    self->sprites[MG_SP_EXTRA_LIFE_7].origin = &origin_8_8;
+    self->sprites[MG_SP_EXTRA_LIFE_7].hitBox = &box_16_16;
 }
 
 void mg_initializeTiles(mgWsgManager_t* self)
