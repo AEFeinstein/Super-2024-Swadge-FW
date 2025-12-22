@@ -59,6 +59,8 @@ const mg_spriteDef_t severYatagaFlyingFrames[] = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG
 
 const mg_spriteDef_t drainBatAnimFrames[] = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG_SP_BOSS_2, MG_SP_BOSS_3, MG_SP_BOSS_4};
 
+#define DRAIN_BAT_PRE_TELEPORT_FRAMES 120
+
 const mg_spriteDef_t flareGryffynGuitarSpinFrames[] = {MG_SP_BOSS_2, MG_SP_BOSS_3, MG_SP_BOSS_4, MG_SP_BOSS_5};
 
 const mg_spriteDef_t smashGorillaStompFrames[] = {MG_SP_BOSS_1, MG_SP_BOSS_3};
@@ -1475,7 +1477,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_BOSS_FLARE_GRYFFYN:
         case ENTITY_BOSS_KINETIC_DONUT:
         case ENTITY_BOSS_SMASH_GORILLA:
-        // case ENTITY_BOSS_DRAIN_BAT: //this one can teleport inside you AND shoot you. let's cut the player some
+        case ENTITY_BOSS_DRAIN_BAT:
         // slack.
         case ENTITY_BOSS_BIGMA:
         {
@@ -4780,16 +4782,24 @@ void mg_updateBossDrainBat(mgEntity_t* self)
                 {
                     case 0:
                     default:
-                        self->x     = TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48 + (esp_random() % 184));
-                        self->y     = self->entityManager->playerEntity->y - 128;
-                        self->state = 1;
+                        /* Jump target chosen; show warp (black hole) first so player can react, then
+                         * switch to real state 1. */
+                        self->x           = TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48 + (esp_random() % 184));
+                        self->y           = self->entityManager->playerEntity->y - 128;
+                        self->special1    = 1; /* store next real state */
+                        self->state       = 10; /* PRE-TELEPORT */
+                        self->stateTimer  = 0;
+                        self->spriteIndex = MG_SP_WARP_1;
                         break;
                     case 1:
                         self->x     = (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
                                           ? TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48)
                                           : TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 232);
-                        self->y     = (TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetY + 48));
-                        self->state = 2;
+                        self->y           = (TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetY + 48));
+                        self->special1    = 2; /* store next real state */
+                        self->state       = 10; /* PRE-TELEPORT */
+                        self->stateTimer  = 0;
+                        self->spriteIndex = MG_SP_WARP_1;
                         break;
                 }
             }
@@ -4905,6 +4915,26 @@ void mg_updateBossDrainBat(mgEntity_t* self)
             {
                 self->stateTimer = 0;
                 self->state      = 0;
+            }
+            break;
+
+        case 10:
+            /* Pre-teleport: draw warp/black-hole sprite for a few frames before appearing. */
+            self->stateTimer++;
+            if (self->stateTimer < DRAIN_BAT_PRE_TELEPORT_FRAMES)
+            {
+                /* Animate warp using warp frames */
+                self->spriteIndex = MG_SP_WARP_1 + ((self->stateTimer >> 2) % 3);
+                self->visible     = true;
+            }
+            else
+            {
+                /* Appear now and switch to the previously intended state */
+                uint8_t nextState = (uint8_t)(self->special1);
+                self->state      = nextState;
+                self->stateTimer = 0;
+                /* Ensure Drain Bat idle animation is set */
+                self->spriteIndex = drainBatAnimFrames[(self->stateTimer >> 3) % 5];
             }
             break;
     }
