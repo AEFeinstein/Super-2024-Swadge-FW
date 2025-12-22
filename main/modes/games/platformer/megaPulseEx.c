@@ -161,15 +161,7 @@ void drawLevelSelect(platformer_t* self);
 // Trophy definitions for platformer mode
 const trophyData_t platformerTrophies[] = {
     {
-        .title       = "Defeated Bigma",
-        .description = "Favorite genre: Corruption?",
-        .image       = TROPHY_BIGMA_WSG, // need 36 x 36 boss images later
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1, // For trigger type, set to one
-    },
-    {
-        .title       = "Defeated Kinetic Donut",
+        .title       = "Saved Kinetic Donut",
         .description = "Favorite genre: Funk",
         .image       = TROPHY_KINETIC_DONUT_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -177,7 +169,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Defeated Grind Pangolin",
+        .title       = "Saved Grind Pangolin",
         .description = "Favorite genre: Ska",
         .image       = TROPHY_GRIND_PANGOLIN_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -185,7 +177,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Defeated Sever Yataga",
+        .title       = "Saved Sever Yataga",
         .description = "Favorite genre: EDM",
         .image       = TROPHY_SEVER_YATAGA_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -193,7 +185,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Ember Demon (Actually Trash Man)",
+        .title       = "Saved Ember and Ovo",
         .description = "Favorite genre: Jazz",
         .image       = TROPHY_EMBER_DEMON_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -201,7 +193,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Defeated Smash Gorilla",
+        .title       = "Saved Smash Gorilla",
         .description = "Favorite genre: Salsa",
         .image       = TROPHY_SMASH_GORILLA_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -209,7 +201,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Defeated Deadeye Chirpzi",
+        .title       = "Saved Deadeye Chirpzi",
         .description = "Favorite genre: Metal",
         .image       = TROPHY_DEADEY_CHIRPZI_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -217,7 +209,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Defeated Drain Bat",
+        .title       = "Saved Drain Bat",
         .description = "Favorite genre: Classical",
         .image       = TROPHY_DRAIN_BAT_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -225,7 +217,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Defeated Flare Gryffyn",
+        .title       = "Saved Flare Gryffyn",
         .description = "Favorite genre: Classic Rock",
         .image       = TROPHY_FLARE_GRYFFYN_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -233,11 +225,19 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
+        .title       = "Saved Bigma",//this has been moved to clearing the boss rush
+        .description = "Favorite genre: Corruption?",
+        .image       = TROPHY_BIGMA_WSG, // need 36 x 36 boss images later
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
         .title       = "Defeated Hank Waddle",
         .description = "Favorite genre: Silence",
         .image       = TROPHY_HANK_WADDLE_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EXTREME,
+        .difficulty  = TROPHY_DIFF_MEDIUM,
         .maxVal      = 1,
     },
 };
@@ -2258,49 +2258,49 @@ void queueTrophy(void)
         platformer->gameData.trophyEarned = -1; // no trophy by default (handles the gauntlet and rush)
         switch (level)
         {
-            case 10: // intro
+            case 11: // boss rush is now counted as "saved bigma"
             {
-                platformer->gameData.trophyEarned = 0;
+                platformer->gameData.trophyEarned = 8;
                 break;
             }
             case 1:
             {
-                platformer->gameData.trophyEarned = 1;
+                platformer->gameData.trophyEarned = 0;
                 break;
             }
             case 2:
             {
-                platformer->gameData.trophyEarned = 2;
+                platformer->gameData.trophyEarned = 1;
                 break;
             }
             case 3:
             {
-                platformer->gameData.trophyEarned = 3;
+                platformer->gameData.trophyEarned = 2;
                 break;
             }
             case 4:
             {
-                platformer->gameData.trophyEarned = 4;
+                platformer->gameData.trophyEarned = 3;
                 break;
             }
             case 6:
             {
-                platformer->gameData.trophyEarned = 5;
+                platformer->gameData.trophyEarned = 4;
                 break;
             }
             case 7:
             {
-                platformer->gameData.trophyEarned = 6;
+                platformer->gameData.trophyEarned = 5;
                 break;
             }
             case 8:
             {
-                platformer->gameData.trophyEarned = 7;
+                platformer->gameData.trophyEarned = 6;
                 break;
             }
             case 9:
             {
-                platformer->gameData.trophyEarned = 8;
+                platformer->gameData.trophyEarned = 7;
                 break;
             }
             case 12: // hank
