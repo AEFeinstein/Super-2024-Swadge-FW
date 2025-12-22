@@ -771,7 +771,7 @@ void mgBuildMainMenu(platformer_t* self)
         self->menu = endSubMenu(self->menu);
     }
 
-    if (self->unlockables.levelsCleared)
+    if (self->unlockables.levelsCleared || self->gameData.abilities)
     {
         addSingleItemToMenu(self->menu, mgMenuContinue);
 
