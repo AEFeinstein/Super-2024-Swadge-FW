@@ -201,14 +201,6 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Defeated Hank Waddle",
-        .description = "Favorite genre: Silence",
-        .image       = TROPHY_HANK_WADDLE_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EXTREME,
-        .maxVal      = 1,
-    },
-    {
         .title       = "Defeated Smash Gorilla",
         .description = "Favorite genre: Salsa",
         .image       = TROPHY_SMASH_GORILLA_WSG,
@@ -238,6 +230,14 @@ const trophyData_t platformerTrophies[] = {
         .image       = TROPHY_FLARE_GRYFFYN_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Defeated Hank Waddle",
+        .description = "Favorite genre: Silence",
+        .image       = TROPHY_HANK_WADDLE_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
         .maxVal      = 1,
     },
 };
@@ -2013,6 +2013,11 @@ void changeStateLevelSelect(platformer_t* self)
     self->gameData.bgColors = bgGradientMenu;
 
     self->update = &updateLevelSelect;
+
+    if (self->gameData.trophyEarned >= 0)
+    {
+        trophyUpdate(&platformerTrophies[self->gameData.trophyEarned], 1, true);
+    }
 }
 
 void updateLevelSelect(platformer_t* self)
@@ -2237,32 +2242,78 @@ void startCreditMusic(void)
 
 void startPostFightMusic(void)
 {
-    if (!platformer->gameData.cheatMode)
-    {
-        uint8_t trophy = platformer->gameData.level;
-        if (trophy == 5 || trophy == 11)
-        {
-            // it's just the gauntlet. or boss rush.
-            return;
-        }
-        if (trophy == 10)
-        {
-            // The 10th level is the intro level with bigma.
-            trophy = 0;
-        }
-        if (trophy == 12)
-        {
-            // The 12th level is the final hank showdown
-            trophy = 5;
-        }
-        trophyUpdate(&platformerTrophies[trophy], 1, true);
-    }
     globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_POST_FIGHT);
     int16_t songPitches[] = {62, 65, 67, 57, -1, -1, -1, -1};
     setSongPitches(platformer->gameData.cutscene, songPitches);
     midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+}
+
+void queueTrophy(void)
+{
+    if (!platformer->gameData.cheatMode)
+    {
+        uint8_t level                     = platformer->gameData.level;
+        platformer->gameData.trophyEarned = -1; // no trophy by default (handles the gauntlet and rush)
+        switch (level)
+        {
+            case 10: // intro
+            {
+                platformer->gameData.trophyEarned = 0;
+                break;
+            }
+            case 1:
+            {
+                platformer->gameData.trophyEarned = 1;
+                break;
+            }
+            case 2:
+            {
+                platformer->gameData.trophyEarned = 2;
+                break;
+            }
+            case 3:
+            {
+                platformer->gameData.trophyEarned = 3;
+                break;
+            }
+            case 4:
+            {
+                platformer->gameData.trophyEarned = 4;
+                break;
+            }
+            case 6:
+            {
+                platformer->gameData.trophyEarned = 5;
+                break;
+            }
+            case 7:
+            {
+                platformer->gameData.trophyEarned = 6;
+                break;
+            }
+            case 8:
+            {
+                platformer->gameData.trophyEarned = 7;
+                break;
+            }
+            case 9:
+            {
+                platformer->gameData.trophyEarned = 8;
+                break;
+            }
+            case 12: // hank
+            {
+                platformer->gameData.trophyEarned = 9;
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+    }
 }
 
 void startHankMusic(void)

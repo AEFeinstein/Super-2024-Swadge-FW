@@ -712,9 +712,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
 
     gameData->changeState = MG_ST_CUTSCENE;
 
-    // cut the music
-    // mmm I don't like cutting the music.
-    // globalMidiPlayerGet(MIDI_BGM)->paused = true;
+    queueTrophy();
 
     /* clang-format off */
     switch (gameData->level)

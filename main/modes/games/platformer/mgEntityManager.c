@@ -34,8 +34,8 @@ void mg_initializeEntityManager(mgEntityManager_t* entityManager, mgWsgManager_t
         mg_initializeEntity(&(entityManager->entities[i]), entityManager, tilemap, gameData, soundManager);
     }
 
-    entityManager->activeEntities = 0;
-    entityManager->tilemap        = tilemap;
+    entityManager->activeEntities  = 0;
+    entityManager->tilemap         = tilemap;
     entityManager->currentUpdating = NULL;
 
     // entityManager->viewEntity = mg_createPlayer(entityManager, entityManager->tilemap->warps[0].x * 16,

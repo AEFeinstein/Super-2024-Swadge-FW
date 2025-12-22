@@ -3183,7 +3183,7 @@ void killEnemy(mgEntity_t* target)
     {
         createPowerUp(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
     }
-    
+
     /* If the killer is not the target itself (i.e. the boss wasn't currently running its own update),
      * run their update immediately so kills from other entities (player Mic Drop / Sure You Can) get one
      * extra frame of behavior. This avoids double-running when the boss is killed during its
@@ -3192,7 +3192,7 @@ void killEnemy(mgEntity_t* target)
     {
         target->updateFunction(target);
     }
-    
+
     target->updateFunction = &updateEntityDead;
 }
 
