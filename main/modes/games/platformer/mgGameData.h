@@ -81,6 +81,8 @@ typedef struct
 
     int8_t trophyEarned; // Set from a boss kill, then processed by levelSelect screen. Negative numbers means no trophy
                          // earned.
+
+    bool canGrabMixtape; //false so that cutscenes can play out before the mixtape activates a level ending.
 } mgGameData_t;
 
 //==============================================================================

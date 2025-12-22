@@ -59,7 +59,7 @@ const mg_spriteDef_t severYatagaFlyingFrames[] = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG
 
 const mg_spriteDef_t drainBatAnimFrames[] = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG_SP_BOSS_2, MG_SP_BOSS_3, MG_SP_BOSS_4};
 
-#define DRAIN_BAT_PRE_TELEPORT_FRAMES 120
+#define DRAIN_BAT_PRE_TELEPORT_FRAMES 60
 
 const mg_spriteDef_t flareGryffynGuitarSpinFrames[] = {MG_SP_BOSS_2, MG_SP_BOSS_3, MG_SP_BOSS_4, MG_SP_BOSS_5};
 
@@ -1156,9 +1156,15 @@ void mg_bossRushLogic(mgEntity_t* self)
     bool isABoss      = false;
     uint8_t nextBoss  = 0;
     uint8_t nextLevel = 0;
-
-    isABoss = self->spriteFlipVertical && self->entityManager->wsgManager->sprites[self->spriteIndex].wsg->w > 30
-              && self->entityManager->wsgManager->sprites[self->spriteIndex].wsg->h > 30;
+                
+    isABoss = (self->spriteIndex == MG_SP_BOSS_0 || 
+    self->spriteIndex == MG_SP_BOSS_1 || 
+    self->spriteIndex == MG_SP_BOSS_2 || 
+    self->spriteIndex == MG_SP_BOSS_3 || 
+    self->spriteIndex == MG_SP_BOSS_4 || 
+    self->spriteIndex == MG_SP_BOSS_5 || 
+    self->spriteIndex == MG_SP_BOSS_6 ||
+    self->spriteIndex == MG_SP_BOSS_7);
 
     if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_KINETIC_DONUT)
     {
@@ -1478,8 +1484,8 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_BOSS_KINETIC_DONUT:
         case ENTITY_BOSS_SMASH_GORILLA:
         case ENTITY_BOSS_DRAIN_BAT:
-        // slack.
         case ENTITY_BOSS_BIGMA:
+        case ENTITY_BOSS_HANK_WADDLE:
         {
             if (self->state == MG_PL_ST_MIC_DROP)
             {
@@ -1797,6 +1803,10 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         }
         case ENTITY_MIXTAPE:
         {
+            if(!self->gameData->canGrabMixtape)
+            {
+                break;
+            }
             soundStop(true);
             mg_setBgm(self->soundManager, MG_BGM_LEVEL_CLEAR_JINGLE);
             midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
@@ -4594,6 +4604,7 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
 
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
+        self->spriteIndex = 
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         // after defeating smash gorilla (level 6) create a bunch of power ups to try out can of salsa.
         for (int i = 1; i < 5; i++)
@@ -4783,6 +4794,7 @@ void mg_updateBossDrainBat(mgEntity_t* self)
                         self->y           = self->entityManager->playerEntity->y - 128;
                         self->special1    = 1;  /* store next real state */
                         self->state       = 10; /* PRE-TELEPORT */
+                        self->invincibilityFrames = DRAIN_BAT_PRE_TELEPORT_FRAMES;
                         self->stateTimer  = 0;
                         self->spriteIndex = MG_SP_WARP_1;
                         break;
@@ -4793,6 +4805,7 @@ void mg_updateBossDrainBat(mgEntity_t* self)
                         self->y           = (TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetY + 48));
                         self->special1    = 2;  /* store next real state */
                         self->state       = 10; /* PRE-TELEPORT */
+                        self->invincibilityFrames = DRAIN_BAT_PRE_TELEPORT_FRAMES;
                         self->stateTimer  = 0;
                         self->spriteIndex = MG_SP_WARP_1;
                         break;

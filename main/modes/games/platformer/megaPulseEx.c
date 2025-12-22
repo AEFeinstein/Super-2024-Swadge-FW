@@ -2226,6 +2226,7 @@ void drawLevelSelect(platformer_t* self)
 // forward declared in mega_pulse_ex_typedef.h
 void goToReadyScreen(void)
 {
+    platformer->gameData.canGrabMixtape = true;
     platformer->update = &updateReadyScreen;
 }
 
