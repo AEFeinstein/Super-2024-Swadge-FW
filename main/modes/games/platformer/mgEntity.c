@@ -5901,7 +5901,8 @@ void mg_updateBossBigma(mgEntity_t* self)
     if (self->type == ENTITY_DEAD && self->gameData->level != 11)
     {
         mg_deactivateAllEntities(self->entityManager, true);
-        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        
+        self->linkedEntity = createMixtape(self->entityManager, self->entityManager->bossSpawnX-100, self->entityManager->bossSpawnY-20);
         startOutroCutscene(self);
     }
     // despawnWhenOffscreen(self);
