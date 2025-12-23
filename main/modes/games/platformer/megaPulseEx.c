@@ -2229,6 +2229,11 @@ void drawLevelSelect(platformer_t* self)
 // forward declared in mega_pulse_ex_typedef.h
 void goToReadyScreen(void)
 {
+    if(platformer->entityManager.playerEntity != NULL && platformer->entityManager.playerEntity->hp <= 0)
+    {
+        //if the player and boss reached zero health at the same frame, give the win to the player.
+        platformer->entityManager.playerEntity->hp = 1;
+    }
     platformer->gameData.canGrabMixtape = true;
     platformer->update                  = &updateReadyScreen;
 }
