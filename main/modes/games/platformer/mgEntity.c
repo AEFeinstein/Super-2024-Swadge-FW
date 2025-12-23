@@ -1878,7 +1878,7 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 break;
             }
 
-            if (self->type == ENTITY_BOSS_GRIND_PANGOLIN && (self->state == 1 || self->state == 2 || self->state == 4))
+            if (self->type == ENTITY_BOSS_GRIND_PANGOLIN && (self->state == 1 || self->state == 2 || self->state == 4) && other->state != 2)//allows a fully charged shot to pierce.
             {
                 other->xspeed = -other->xspeed;
                 other->yspeed = -64;
