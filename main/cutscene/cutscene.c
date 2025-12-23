@@ -131,6 +131,7 @@ static void loadAndPlayCharacterSound(cutsceneStyle_t* style, cutscene_t* cutsce
     // End timbre initialization stuff
 
     midiPlayer_t* player = globalMidiPlayerGet(MIDI_SFX);
+    midiPlayerResetNewSong(player);
     midiPause(player, false);
 
     // midiControlChange(player, 13, MCC_BANK_LSB, 2);

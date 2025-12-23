@@ -161,7 +161,7 @@ void drawLevelSelect(platformer_t* self);
 // Trophy definitions for platformer mode
 const trophyData_t platformerTrophies[] = {
     {
-        .title       = "Saved Kinetic Donut",
+        .title       = "Cured Kinetic Donut",
         .description = "Favorite genre: Funk",
         .image       = TROPHY_KINETIC_DONUT_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -169,7 +169,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Saved Grind Pangolin",
+        .title       = "Cured Grind Pangolin",
         .description = "Favorite genre: Ska",
         .image       = TROPHY_GRIND_PANGOLIN_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -177,7 +177,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Saved Sever Yataga",
+        .title       = "Cured Sever Yataga",
         .description = "Favorite genre: EDM",
         .image       = TROPHY_SEVER_YATAGA_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -185,7 +185,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Saved Ember and Ovo",
+        .title       = "Cured Ember and Ovo",
         .description = "Favorite genre: Jazz",
         .image       = TROPHY_EMBER_DEMON_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -193,7 +193,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Saved Smash Gorilla",
+        .title       = "Cured Smash Gorilla",
         .description = "Favorite genre: Salsa",
         .image       = TROPHY_SMASH_GORILLA_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -201,7 +201,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Saved Deadeye Chirpzi",
+        .title       = "Cured Deadeye Chirpzi",
         .description = "Favorite genre: Metal",
         .image       = TROPHY_DEADEY_CHIRPZI_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -209,7 +209,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Saved Drain Bat",
+        .title       = "Cured Drain Bat",
         .description = "Favorite genre: Classical",
         .image       = TROPHY_DRAIN_BAT_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -217,7 +217,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Saved Flare Gryffyn",
+        .title       = "Cured Flare Gryffyn",
         .description = "Favorite genre: Classic Rock",
         .image       = TROPHY_FLARE_GRYFFYN_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -225,7 +225,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Saved Bigma", // this has been moved to clearing the boss rush
+        .title       = "Cured Bigma", // this has been moved to clearing the boss rush
         .description = "Favorite genre: Corruption?",
         .image       = TROPHY_BIGMA_WSG, // need 36 x 36 boss images later
         .type        = TROPHY_TYPE_TRIGGER,

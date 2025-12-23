@@ -406,7 +406,7 @@ void stageStartCutscene(mgGameData_t* gameData)
         case 4: // The Recycled Pit in the Inferno Arena (Trash Man fake our for Ember)
         {
             addCutsceneLine(gameData->cutscene, SystemText,
-                            "PULSE and SAWTOOTH teleport in. The air ripples with heatwaves and flies buzz.", false, 0, NULL);
+                            "PULSE and SAWTOOTH teleport in. The air ripples with heat waves and flies buzz.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "Ughh... what's that awful smell?", false, 4, NULL);
             addCutsceneLine(gameData->cutscene, SawtoothFlipped, "Check your coordinates. Something's not right.",
                             false, 1, NULL);
@@ -696,7 +696,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, HankWaddle, "You undermined EVERYTHING I built my career on!", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "Wait-so you turned into a villain over PAPERWORK?", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, HankWaddle, "NO! .... Yes. But also-you! All of you!", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, HankWaddle, "This entire scene is a time bomb of stolen aesthetics, derivative tropes, and flagrant disrespect for artistic integrity!", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, HankWaddle, "This entire scene is a time bomb of stolen aesthetics, derivative tropes, and blatant disrespect for intellectual property!", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, HankWaddle, "You and your... kind ... are a blight on this world!", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, HankWaddle, "And with my corruption program, I've shown the world just how destructive you all really are.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, HankWaddle, "I, HANK WADDLE, will finally be the one to right this wrong. ONCE AND FOR ALL!", false, 0, NULL);
@@ -736,7 +736,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Bigma, "This was just a warm-up, Pulse! Catch me on the big stage-if you can keep the beat.", false, 1, startPostFightMusic);
             addCutsceneLine(gameData->cutscene, Pulse, "...Now what? He's gone...", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, SawtoothFlipped, "Dont worry, while you two were fighting, I was remotely hacking Bigma's systems to get his encryption key.", false, 2, NULL);
-            addCutsceneLine(gameData->cutscene, SawtoothFlipped, "That'll do. I was also able to pause that blasted level timer count down.", false, 2, NULL);
+            addCutsceneLine(gameData->cutscene, SawtoothFlipped, "That'll do. I was also able to pause that blasted level timer countdown.", false, 2, NULL);
             addCutsceneLine(gameData->cutscene, SawtoothFlipped, "You should have some room to breathe after clearing a boss.", false, 2, NULL);
 
             break;
@@ -775,7 +775,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
         }
         case 7: // The Foundry of Echoes (Deadeye Chirpzi)
         {
-            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Urgghh... My head....I haven't blacked out like that since the afterparty in 2024...", true, -1, NULL);
+            addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Urgghh... My head....I haven't blacked out like that since the afterparty in 2024...", true, -1, stopMusic);
             addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Zip, you there, bud?", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, SystemText, "Zip glitches out, sparks shooting outward, and lets out a chirping noise.", false,-1, NULL);
             addCutsceneLine(gameData->cutscene, DeadeyeChirpziUncorrupted, "Hey, it's okay. You're safe now. It's over.", true, -1, NULL);
@@ -903,7 +903,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Ember, "Pfft. I'm not a vending machine. But take that. Maybe you can weaponize jazz.", false, -1, startPostFightMusic);
             unlockAbility(gameData, MG_OBNOXIOUS_NOODLING_ABILITY);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Obnoxious Noodling", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Tap A in the air to double-jump on a cloud of bad lyrics.", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Tap A in the air to double-jump on a cloud of bad liccs.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "... It honks with emotion.", false, 1, NULL);
             addCutsceneLine(gameData->cutscene, Ember, "You're welcome. I guess.", false, -1, NULL);
             break;
@@ -967,7 +967,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Bigma, "You think we're copies, but that's not the point. We're all echoes of what came before.", true, 2, NULL);
             addCutsceneLine(gameData->cutscene, HankWaddle, "What do you mean?", false, 1, NULL);
             addCutsceneLine(gameData->cutscene, SawtoothPostReveal, "The ones who inspired us - they were just riffing on the stuff they liked, too.", false, 3, NULL);
-            addCutsceneLine(gameData->cutscene, HankWaddle, "Then what are you?", false, 1, NULL);
+            addCutsceneLine(gameData->cutscene, HankWaddle, "Then what ARE you?", false, 1, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "We're something new.", false, 2, NULL);
             addCutsceneLine(gameData->cutscene, Bigma, "Something that couldn't exist without the past...", true, 1, NULL);
             addCutsceneLine(gameData->cutscene, Sunny, "...But doesn't need to live in it.", true, 1, NULL);
