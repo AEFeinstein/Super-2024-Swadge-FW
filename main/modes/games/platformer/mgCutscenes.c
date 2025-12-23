@@ -702,7 +702,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, HankWaddle, "I, HANK WADDLE, will finally be the one to right this wrong. ONCE AND FOR ALL!", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "... We kinda lost touch after that.", false, -1, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "We'll stop you just like we stopped BIGMA!", false, 1, NULL);
-            addCutsceneLine(gameData->cutscene, HankWaddle, "Oh... I was SO hoping you'd say that. Cue FINAL BATTLE MUSIC!", false, -1, NULL);
+            addCutsceneLine(gameData->cutscene, HankWaddle, "Oh... I was SO hoping you'd say that. Cue FINAL BATTLE MUSIC!", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, HankWaddle, "IT. IS. SO. ON!!", false, 0, NULL);
             break;
         }
@@ -975,7 +975,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "HANK, you're fired!!!!!!", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, HankWaddle, "No! No no no-if I go down, I'll take you with-AAAAUUUGHHHH!!!!", false, 1, NULL);
             //Sawtooth reverts to her masked voice (non-meow) to get s*&!t done
-            addCutsceneLine(gameData->cutscene, SawtoothFlipped, "EVERYBODY! We have to get out of here!", false, 3, stopMusic);
+            addCutsceneLine(gameData->cutscene, SawtoothFlipped, "EVERYBODY! We have to get out of here!", false, 3, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "After teleporting to safety, PULSE, SAWTOOTH, BIGMA, and the freed RemiXes watch HANK WADDLE's exploding facility from a distant           .    cliffside.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, BlackScreen, "The following day, PULSE and friends return to the wreckage to reflect on their adventure.", false, 0, NULL);
@@ -998,7 +998,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, CreditStyle, "Cutscene Artist, Script Writer, Character Designer: Kaitie Lawson", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Player and Boss and Trophy Artist: Richard Lambert @azureine-edge.bsky.social", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Environment and Enemy Artist: Emma @objetdiscret.itch.io", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, CreditStyle, "Boss Artist, Character Designer: Greg Lord", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Boss and Credits Artist, Character Designer: Greg Lord", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Swadgeman (MAG-TV Trailer): JFrye and Producer Scott", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Trophy Engineer: Jeremy Stintzcum", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "\"Ovo Lives!\" Composer: Livingston Rampey", false, 0, NULL);
