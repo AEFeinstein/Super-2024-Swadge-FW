@@ -1215,9 +1215,6 @@ void mg_bossRushLogic(mgEntity_t* self)
         if (nextBoss > 0)
         {
             mg_loadWsgSet(self->entityManager->wsgManager, leveldef[nextLevel].defaultWsgSetIndex);
-            mg_setBgm(self->soundManager, leveldef[nextLevel].bossBgmIndex);
-            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
-            soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
             mgEntity_t* boss = mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX,
                                                self->entityManager->bossSpawnY);
             boss->state      = 0;
