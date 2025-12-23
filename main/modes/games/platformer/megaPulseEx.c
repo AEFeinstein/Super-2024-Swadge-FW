@@ -237,7 +237,7 @@ const trophyData_t platformerTrophies[] = {
         .description = "Favorite genre: Silence",
         .image       = TROPHY_HANK_WADDLE_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
+        .difficulty  = TROPHY_DIFF_HARD,
         .maxVal      = 1,
     },
 };
