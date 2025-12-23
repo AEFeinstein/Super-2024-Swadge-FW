@@ -4598,8 +4598,7 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
 
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
-        self->spriteIndex = self->linkedEntity
-            = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         // after defeating smash gorilla (level 6) create a bunch of power ups to try out can of salsa.
         for (int i = 1; i < 5; i++)
         {
