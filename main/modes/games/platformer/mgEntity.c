@@ -59,6 +59,8 @@ const mg_spriteDef_t severYatagaFlyingFrames[] = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG
 
 const mg_spriteDef_t drainBatAnimFrames[] = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG_SP_BOSS_2, MG_SP_BOSS_3, MG_SP_BOSS_4};
 
+#define DRAIN_BAT_PRE_TELEPORT_FRAMES 60
+
 const mg_spriteDef_t flareGryffynGuitarSpinFrames[] = {MG_SP_BOSS_2, MG_SP_BOSS_3, MG_SP_BOSS_4, MG_SP_BOSS_5};
 
 const mg_spriteDef_t smashGorillaStompFrames[] = {MG_SP_BOSS_1, MG_SP_BOSS_3};
@@ -1155,8 +1157,10 @@ void mg_bossRushLogic(mgEntity_t* self)
     uint8_t nextBoss  = 0;
     uint8_t nextLevel = 0;
 
-    isABoss = self->spriteFlipVertical && self->entityManager->wsgManager->sprites[self->spriteIndex].wsg->w > 30
-              && self->entityManager->wsgManager->sprites[self->spriteIndex].wsg->h > 30;
+    isABoss = (self->spriteIndex == MG_SP_BOSS_0 || self->spriteIndex == MG_SP_BOSS_1
+               || self->spriteIndex == MG_SP_BOSS_2 || self->spriteIndex == MG_SP_BOSS_3
+               || self->spriteIndex == MG_SP_BOSS_4 || self->spriteIndex == MG_SP_BOSS_5
+               || self->spriteIndex == MG_SP_BOSS_6 || self->spriteIndex == MG_SP_BOSS_7);
 
     if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_KINETIC_DONUT)
     {
@@ -1207,9 +1211,6 @@ void mg_bossRushLogic(mgEntity_t* self)
         if (nextBoss > 0)
         {
             mg_loadWsgSet(self->entityManager->wsgManager, leveldef[nextLevel].defaultWsgSetIndex);
-            mg_setBgm(self->soundManager, leveldef[nextLevel].bossBgmIndex);
-            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
-            soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
             mgEntity_t* boss = mg_createEntity(self->entityManager, nextBoss, self->entityManager->bossSpawnX,
                                                self->entityManager->bossSpawnY);
             boss->state      = 0;
@@ -1475,9 +1476,9 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         case ENTITY_BOSS_FLARE_GRYFFYN:
         case ENTITY_BOSS_KINETIC_DONUT:
         case ENTITY_BOSS_SMASH_GORILLA:
-        // case ENTITY_BOSS_DRAIN_BAT: //this one can teleport inside you AND shoot you. let's cut the player some
-        // slack.
+        case ENTITY_BOSS_DRAIN_BAT:
         case ENTITY_BOSS_BIGMA:
+        case ENTITY_BOSS_HANK_WADDLE:
         {
             if (self->state == MG_PL_ST_MIC_DROP)
             {
@@ -1554,9 +1555,9 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 self->falling   = true;
             }
             else */
-            if (self->invincibilityFrames <= 0)
+            if (self->invincibilityFrames <= 0 && !(other->type == ENTITY_BOSS_DRAIN_BAT && other->state == 10))
             {
-                if (!self->gameData->cheatMode)
+                if (!self->gameData->cheatMode) // Drain bat's pre-teleport state doesn't hurt Pulse
                 {
                     // pulse takes damage (doubled if no plot armor)
                     self->hp -= 5 + (5 * !(self->gameData->abilities & (1U << MG_PLOT_ARMOR_ABILITY)));
@@ -1626,6 +1627,13 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             mg_scorePoints(self->gameData, 1000);
             soundPlaySfx(&(self->soundManager->sndPowerUp), BZR_LEFT);
             // mg_updateLedsHpMeter(self->entityManager, self->gameData);
+            mg_destroyEntity(other, false);
+            break;
+        }
+        case ENTITY_EXTRA_LIFE:
+        {
+            self->gameData->lives++;
+            soundPlaySfx(&(self->soundManager->sndPowerUp), BZR_LEFT);
             mg_destroyEntity(other, false);
             break;
         }
@@ -1788,6 +1796,10 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         }
         case ENTITY_MIXTAPE:
         {
+            if (!self->gameData->canGrabMixtape)
+            {
+                break;
+            }
             soundStop(true);
             mg_setBgm(self->soundManager, MG_BGM_LEVEL_CLEAR_JINGLE);
             midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
@@ -1862,7 +1874,8 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 break;
             }
 
-            if (self->type == ENTITY_BOSS_GRIND_PANGOLIN && (self->state == 1 || self->state == 2 || self->state == 4))
+            if (self->type == ENTITY_BOSS_GRIND_PANGOLIN && (self->state == 1 || self->state == 2 || self->state == 4)
+                && other->state != 2) // allows a fully charged shot to pierce.
             {
                 other->xspeed = -other->xspeed;
                 other->yspeed = -64;
@@ -2475,6 +2488,17 @@ void updatePowerUp(mgEntity_t* self)
             = ((self->entityManager->playerEntity->hp < 2) ? MG_SP_GAMING_1 : MG_SP_MUSIC_1) + ((self->spriteIndex + 1)
     % 3);
     }*/
+
+    mg_moveEntityWithTileCollisions(self);
+    applyGravity(self);
+    despawnWhenOffscreen(self);
+}
+
+void updateExtraLife(mgEntity_t* self)
+{
+    self->animationTimer++;
+
+    self->spriteIndex = MG_SP_EXTRA_LIFE_0 + ((self->animationTimer / 8) % 8);
 
     mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
@@ -3153,6 +3177,18 @@ bool waspTileCollisionHandler(mgEntity_t* self, uint8_t tileId, uint8_t tx, uint
 
 void killEnemy(mgEntity_t* target)
 {
+    bool isABoss = (target->type == ENTITY_BOSS_BIGMA || target->type == ENTITY_BOSS_KINETIC_DONUT
+                    || target->type == ENTITY_BOSS_GRIND_PANGOLIN || target->type == ENTITY_BOSS_SEVER_YATAGA
+                    || target->type == ENTITY_BOSS_TRASH_MAN || target->type == ENTITY_BOSS_SMASH_GORILLA
+                    || target->type == ENTITY_BOSS_DEADEYE_CHIRPZI || target->type == ENTITY_BOSS_DRAIN_BAT
+                    || target->type == ENTITY_BOSS_FLARE_GRYFFYN || target->type == ENTITY_BOSS_HANK_WADDLE);
+
+    if (target->type == ENTITY_BOSS_TRASH_MAN && target->gameData->level == 4)
+    {
+        // He gets launched to space from the cutscene.
+        target->yspeed = -target->yMaxSpeed;
+    }
+
     target->homeTileX          = 0;
     target->homeTileY          = 0;
     target->gravityEnabled     = true;
@@ -3165,9 +3201,7 @@ void killEnemy(mgEntity_t* target)
         target->spawnData                = NULL;
     }
 
-    // eh... that pretty much means it's a boss
-    if (target->entityManager->wsgManager->sprites[target->spriteIndex].wsg->w > 30
-        && target->entityManager->wsgManager->sprites[target->spriteIndex].wsg->h > 30)
+    if (isABoss)
     {
         if (target->gameData->level == 11)
         {
@@ -3179,9 +3213,22 @@ void killEnemy(mgEntity_t* target)
             }
         }
     }
-    else if ((esp_random() % 100) > 90)
+    else if ((esp_random() % 100) < 2) // 2% chance
+    {
+        createExtraLife(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
+    }
+    else if ((esp_random() % 100) < 10) // 10% chance
     {
         createPowerUp(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
+    }
+
+    /* If the killer is not the target itself (i.e. the boss wasn't currently running its own update),
+     * run their update immediately so kills from other entities (player Mic Drop / Sure You Can) get one
+     * extra frame of behavior. This avoids double-running when the boss is killed during its
+     * own update (e.g. by a wave ball that the boss collides with). */
+    if (target->entityManager->currentUpdating != target)
+    {
+        target->updateFunction(target);
     }
 
     target->updateFunction = &updateEntityDead;
@@ -4734,16 +4781,26 @@ void mg_updateBossDrainBat(mgEntity_t* self)
                 {
                     case 0:
                     default:
-                        self->x     = TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48 + (esp_random() % 184));
-                        self->y     = self->entityManager->playerEntity->y - 128;
-                        self->state = 1;
+                        /* Jump target chosen; show warp (black hole) first so player can react, then
+                         * switch to real state 1. */
+                        self->x        = TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48 + (esp_random() % 184));
+                        self->y        = self->entityManager->playerEntity->y - 128;
+                        self->special1 = 1;  /* store next real state */
+                        self->state    = 10; /* PRE-TELEPORT */
+                        self->invincibilityFrames = DRAIN_BAT_PRE_TELEPORT_FRAMES;
+                        self->stateTimer          = 0;
+                        self->spriteIndex         = MG_SP_WARP_1;
                         break;
                     case 1:
-                        self->x     = (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
-                                          ? TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48)
-                                          : TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 232);
-                        self->y     = (TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetY + 48));
-                        self->state = 2;
+                        self->x                   = (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
+                                                        ? TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48)
+                                                        : TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 232);
+                        self->y                   = (TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetY + 48));
+                        self->special1            = 2;  /* store next real state */
+                        self->state               = 10; /* PRE-TELEPORT */
+                        self->invincibilityFrames = DRAIN_BAT_PRE_TELEPORT_FRAMES;
+                        self->stateTimer          = 0;
+                        self->spriteIndex         = MG_SP_WARP_1;
                         break;
                 }
             }
@@ -4859,6 +4916,26 @@ void mg_updateBossDrainBat(mgEntity_t* self)
             {
                 self->stateTimer = 0;
                 self->state      = 0;
+            }
+            break;
+
+        case 10:
+            /* Pre-teleport: draw warp/black-hole sprite for a few frames before appearing. */
+            self->stateTimer++;
+            if (self->stateTimer < DRAIN_BAT_PRE_TELEPORT_FRAMES)
+            {
+                /* Animate warp using warp frames */
+                self->spriteIndex = MG_SP_WARP_1 + ((self->stateTimer >> 2) % 3);
+                self->visible     = true;
+            }
+            else
+            {
+                /* Appear now and switch to the previously intended state */
+                uint8_t nextState = (uint8_t)(self->special1);
+                self->state       = nextState;
+                self->stateTimer  = 0;
+                /* Ensure Drain Bat idle animation is set */
+                self->spriteIndex = drainBatAnimFrames[(self->stateTimer >> 3) % 5];
             }
             break;
     }
@@ -5821,9 +5898,12 @@ void mg_updateBossBigma(mgEntity_t* self)
 
     mg_detectEntityCollisions(self);
 
-    if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
+    if (self->type == ENTITY_DEAD && self->gameData->level != 11)
     {
-        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        mg_deactivateAllEntities(self->entityManager, true);
+
+        self->linkedEntity = createMixtape(self->entityManager, self->entityManager->bossSpawnX - 100,
+                                           self->entityManager->bossSpawnY - 20);
         startOutroCutscene(self);
     }
     // despawnWhenOffscreen(self);
@@ -6014,6 +6094,11 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
 
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
+        self->spriteIndex = MG_SP_BOSS_6; // hank is dead frame
+        mg_setBgm(self->soundManager, MG_BGM_CLIMAX);
+        midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+        soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
+        globalMidiPlayerGet(MIDI_BGM)->loop = false; // Climax should end in silence.
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         startOutroCutscene(self);
     }
@@ -6030,9 +6115,9 @@ void startOutroCutscene(mgEntity_t* self)
         self->gameData->pauseCountdown = true;
     }
     // Cutscene after the boss fight
-    if (self->gameData->level == 9) // I really liked this song earlier in development for sunny's reveal.
+    if (self->gameData->level == 9) // custom song from Joe for sawtooth reveal.
     {
-        mg_setBgm(self->soundManager, MG_BGM_BOSS_DRAIN_BAT);
+        mg_setBgm(self->soundManager, MG_BGM_SAWTOOTHS_THEME);
         midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
         soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
     }

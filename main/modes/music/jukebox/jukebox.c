@@ -288,6 +288,10 @@ static const jukeboxSong_t bgm_megaPulse[] = {
         .fIdx = BGM_FLARE_GRYFFYN_MID,
     },
     {
+        .name = "SAWTOOTH'S THEME",
+        .fIdx = BGM_SAWTOOTHS_THEME_MID,
+    },
+    {
         .name = "BOSS FLARE GRIFFIN",
         .fIdx = BGM_BOSS_FLARE_GRIFFIN_MID,
     },
@@ -306,6 +310,10 @@ static const jukeboxSong_t bgm_megaPulse[] = {
     {
         .name = "BOSS HANK WADDLE",
         .fIdx = BGM_BOSS_HANK_WADDLE_MID,
+    },
+    {
+        .name = "CLIMAX",
+        .fIdx = BGM_CLIMAX_MID,
     },
     {
         .name = "MAXIMUM HYPE CREDITS",

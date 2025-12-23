@@ -38,6 +38,7 @@ void mg_initializeGameData(mgGameData_t* gameData, mgSoundManager_t* soundManage
     gameData->inGameTimer          = 0;
     gameData->soundManager         = soundManager;
     gameData->bgColors             = bgGradientCyan;
+    gameData->trophyEarned         = -1;
 }
 
 void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)

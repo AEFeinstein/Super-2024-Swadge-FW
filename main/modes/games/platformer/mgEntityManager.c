@@ -34,8 +34,9 @@ void mg_initializeEntityManager(mgEntityManager_t* entityManager, mgWsgManager_t
         mg_initializeEntity(&(entityManager->entities[i]), entityManager, tilemap, gameData, soundManager);
     }
 
-    entityManager->activeEntities = 0;
-    entityManager->tilemap        = tilemap;
+    entityManager->activeEntities  = 0;
+    entityManager->tilemap         = tilemap;
+    entityManager->currentUpdating = NULL;
 
     // entityManager->viewEntity = mg_createPlayer(entityManager, entityManager->tilemap->warps[0].x * 16,
     // entityManager->tilemap->warps[0].y * 16);
@@ -48,7 +49,9 @@ void mg_updateEntities(mgEntityManager_t* entityManager)
     {
         if (entityManager->entities[i].active)
         {
+            entityManager->currentUpdating = &(entityManager->entities[i]);
             entityManager->entities[i].updateFunction(&(entityManager->entities[i]));
+            entityManager->currentUpdating = NULL;
 
             if (&(entityManager->entities[i]) == entityManager->viewEntity)
             {
@@ -702,6 +705,44 @@ mgEntity_t* createPowerUp(mgEntityManager_t* entityManager, uint16_t x, uint16_t
     entity->spriteIndex          = MG_SP_GAMING_1;
     entity->animationTimer       = 0;
     entity->updateFunction       = &updatePowerUp;
+    entity->collisionHandler     = &powerUpCollisionHandler;
+    entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &mg_defaultOverlapTileHandler;
+
+    entity->drawHandler = &mg_defaultEntityDrawHandler;
+    return entity;
+}
+
+mgEntity_t* createExtraLife(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = TO_SUBPIXEL_COORDS(x);
+    entity->y       = TO_SUBPIXEL_COORDS(y);
+
+    entity->xspeed               = 0;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 4;
+    entity->falling              = true;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
+
+    entity->type                 = ENTITY_EXTRA_LIFE;
+    entity->spriteIndex          = MG_SP_EXTRA_LIFE_0;
+    entity->animationTimer       = 0;
+    entity->updateFunction       = &updateExtraLife;
     entity->collisionHandler     = &powerUpCollisionHandler;
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
@@ -1414,7 +1455,8 @@ mgEntity_t* createCheckpoint(mgEntityManager_t* entityManager, uint16_t x, uint1
 
 mgEntity_t* createMixtape(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
+    mgEntity_t* entity               = mg_findInactiveEntity(entityManager);
+    entity->gameData->canGrabMixtape = entity->gameData->kineticSkipped; // will be set true by the cutscene ending
 
     if (entity == NULL)
     {

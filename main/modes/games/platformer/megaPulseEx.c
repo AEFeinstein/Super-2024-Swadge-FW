@@ -161,15 +161,7 @@ void drawLevelSelect(platformer_t* self);
 // Trophy definitions for platformer mode
 const trophyData_t platformerTrophies[] = {
     {
-        .title       = "Defeated Bigma",
-        .description = "Favorite genre: Corruption?",
-        .image       = TROPHY_BIGMA_WSG, // need 36 x 36 boss images later
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1, // For trigger type, set to one
-    },
-    {
-        .title       = "Defeated Kinetic Donut",
+        .title       = "Cured Kinetic Donut",
         .description = "Favorite genre: Funk",
         .image       = TROPHY_KINETIC_DONUT_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -177,7 +169,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Defeated Grind Pangolin",
+        .title       = "Cured Grind Pangolin",
         .description = "Favorite genre: Ska",
         .image       = TROPHY_GRIND_PANGOLIN_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -185,7 +177,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Defeated Sever Yataga",
+        .title       = "Cured Sever Yataga",
         .description = "Favorite genre: EDM",
         .image       = TROPHY_SEVER_YATAGA_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -193,7 +185,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Ember Demon (Actually Trash Man)",
+        .title       = "Cured Ember and Ovo",
         .description = "Favorite genre: Jazz",
         .image       = TROPHY_EMBER_DEMON_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -201,15 +193,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Defeated Hank Waddle",
-        .description = "Favorite genre: Silence",
-        .image       = TROPHY_HANK_WADDLE_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EXTREME,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Defeated Smash Gorilla",
+        .title       = "Cured Smash Gorilla",
         .description = "Favorite genre: Salsa",
         .image       = TROPHY_SMASH_GORILLA_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -217,7 +201,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Defeated Deadeye Chirpzi",
+        .title       = "Cured Deadeye Chirpzi",
         .description = "Favorite genre: Metal",
         .image       = TROPHY_DEADEY_CHIRPZI_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -225,7 +209,7 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Defeated Drain Bat",
+        .title       = "Cured Drain Bat",
         .description = "Favorite genre: Classical",
         .image       = TROPHY_DRAIN_BAT_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
@@ -233,11 +217,27 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Defeated Flare Gryffyn",
+        .title       = "Cured Flare Gryffyn",
         .description = "Favorite genre: Classic Rock",
         .image       = TROPHY_FLARE_GRYFFYN_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Cured Bigma", // this has been moved to clearing the boss rush
+        .description = "Favorite genre: Corruption?",
+        .image       = TROPHY_BIGMA_WSG, // need 36 x 36 boss images later
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1, // For trigger type, set to one
+    },
+    {
+        .title       = "Defeated Hank Waddle",
+        .description = "Favorite genre: Silence",
+        .image       = TROPHY_HANK_WADDLE_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
         .maxVal      = 1,
     },
 };
@@ -475,7 +475,7 @@ void platformerEnterMode(void)
         // UNCORRUPTED VERSIONS//
         /////////////////////////
         //  TrashMan
-        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 3,
+        addCutsceneStyle(platformer->gameData.cutscene, c515, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 3,
                          false, true, true);
         setMidiParams(platformer->gameData.cutscene, 24, 36, -2, 250, false);
         // KineticDonut
@@ -751,6 +751,9 @@ void changeStateMainMenu(platformer_t* self)
     self->gameData.frameCount  = 0;
     self->gameData.changeState = 0;
     self->update               = &mgUpdateMainMenu;
+    int32_t outVal             = 0;
+    readNvs32(MG_abilitiesNVSKey, &outVal);
+    self->gameData.abilities = outVal;
     mgBuildMainMenu(self);
 }
 
@@ -771,7 +774,7 @@ void mgBuildMainMenu(platformer_t* self)
         self->menu = endSubMenu(self->menu);
     }
 
-    if (self->unlockables.levelsCleared)
+    if (self->unlockables.levelsCleared || self->gameData.abilities)
     {
         addSingleItemToMenu(self->menu, mgMenuContinue);
 
@@ -2013,6 +2016,11 @@ void changeStateLevelSelect(platformer_t* self)
     self->gameData.bgColors = bgGradientMenu;
 
     self->update = &updateLevelSelect;
+
+    if (self->gameData.trophyEarned >= 0)
+    {
+        trophyUpdate(&platformerTrophies[self->gameData.trophyEarned], 1, true);
+    }
 }
 
 void updateLevelSelect(platformer_t* self)
@@ -2221,48 +2229,100 @@ void drawLevelSelect(platformer_t* self)
 // forward declared in mega_pulse_ex_typedef.h
 void goToReadyScreen(void)
 {
-    platformer->update = &updateReadyScreen;
+    if (platformer->entityManager.playerEntity != NULL && platformer->entityManager.playerEntity->hp <= 0)
+    {
+        // if the player and boss reached zero health at the same frame, give the win to the player.
+        platformer->entityManager.playerEntity->hp = 1;
+    }
+    platformer->gameData.canGrabMixtape = true;
+    platformer->update                  = &updateReadyScreen;
 }
 
 void startCreditMusic(void)
 {
     globalMidiPlayerGet(MIDI_BGM)->paused = false;
+    globalMidiPlayerGet(MIDI_BGM)->loop   = true;
     mg_setBgm(&platformer->soundManager, MG_BGM_MAXIMUM_HYPE_CREDITS);
-    int16_t songPitches[]
-        = {62, 61, 60, 69, 62, 60, -1, -1}; // have 62 and 60 duplicated for some statistical weighting.
-    setSongPitches(platformer->gameData.cutscene, songPitches);
     midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+    int16_t songPitches[] = {62, 61, 60, 69, 62, 60, -1, -1};
+    setSongPitches(platformer->gameData.cutscene, songPitches);
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
 }
 
 void startPostFightMusic(void)
 {
-    if (!platformer->gameData.cheatMode)
-    {
-        uint8_t trophy = platformer->gameData.level;
-        if (trophy == 5 || trophy == 11)
-        {
-            // it's just the gauntlet. or boss rush.
-            return;
-        }
-        if (trophy == 10)
-        {
-            // The 10th level is the intro level with bigma.
-            trophy = 0;
-        }
-        if (trophy == 12)
-        {
-            // The 12th level is the final hank showdown
-            trophy = 5;
-        }
-        trophyUpdate(&platformerTrophies[trophy], 1, true);
-    }
     globalMidiPlayerGet(MIDI_BGM)->paused = false;
     mg_setBgm(&platformer->soundManager, MG_BGM_POST_FIGHT);
     int16_t songPitches[] = {62, 65, 67, 57, -1, -1, -1, -1};
     setSongPitches(platformer->gameData.cutscene, songPitches);
     midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+}
+
+void queueTrophy(void)
+{
+    if (!platformer->gameData.cheatMode)
+    {
+        uint8_t level                     = platformer->gameData.level;
+        platformer->gameData.trophyEarned = -1; // no trophy by default (handles the gauntlet and rush)
+        switch (level)
+        {
+            case 11: // boss rush is now counted as "saved bigma"
+            {
+                platformer->gameData.trophyEarned = 8;
+                break;
+            }
+            case 1:
+            {
+                platformer->gameData.trophyEarned = 0;
+                break;
+            }
+            case 2:
+            {
+                platformer->gameData.trophyEarned = 1;
+                break;
+            }
+            case 3:
+            {
+                platformer->gameData.trophyEarned = 2;
+                break;
+            }
+            case 4:
+            {
+                platformer->gameData.trophyEarned = 3;
+                break;
+            }
+            case 6:
+            {
+                platformer->gameData.trophyEarned = 4;
+                break;
+            }
+            case 7:
+            {
+                platformer->gameData.trophyEarned = 5;
+                break;
+            }
+            case 8:
+            {
+                platformer->gameData.trophyEarned = 6;
+                break;
+            }
+            case 9:
+            {
+                platformer->gameData.trophyEarned = 7;
+                break;
+            }
+            case 12: // hank
+            {
+                platformer->gameData.trophyEarned = 9;
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+    }
 }
 
 void startHankMusic(void)
@@ -2320,10 +2380,13 @@ void initBossFight(void)
             // make stage lights blue for kinetic donut at start of the boss rush
             platformer->gameData.bgColors = leveldef[1].bgColors;
         }
+        else
+        {
+            mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
+            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+            soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+        }
         platformer->entityManager.bossEntity->state = 0;
-        mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
-        midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
-        soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
     }
 
     platformer->update = &updateReadyScreen;
