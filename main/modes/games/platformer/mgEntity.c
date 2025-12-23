@@ -6094,7 +6094,7 @@ void mg_updateBossHankWaddle(mgEntity_t* self)
 
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
-        self->spriteIndex = MG_SP_BOSS_7;//hank is dead frame
+        self->spriteIndex = MG_SP_BOSS_7; // hank is dead frame
         mg_setBgm(self->soundManager, MG_BGM_CLIMAX);
         midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
         soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
