@@ -5902,7 +5902,7 @@ void mg_updateBossBigma(mgEntity_t* self)
     {
         mg_deactivateAllEntities(self->entityManager, true);
         
-        self->linkedEntity = createMixtape(self->entityManager, self->entityManager->bossSpawnX-100, self->entityManager->bossSpawnY-20);
+        self->linkedEntity = createMixtape(self->entityManager, self->entityManager->bossSpawnX - 100, self->entityManager->bossSpawnY - 20);
         startOutroCutscene(self);
     }
     // despawnWhenOffscreen(self);
