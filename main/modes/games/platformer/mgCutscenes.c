@@ -526,6 +526,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
         {
             if(gameData->abilities & (1U << MG_CAN_OF_SALSA_ABILITY))
             {
+                queueTrophy();
                 addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Ugh... so hungry...", false, -1, NULL);
                 addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "WAIT - Is that a CAN OF SALSA you've got there? Is it chunky? Spicy? ZESTY CHIPOTLE?", false, -1, NULL);
                 addCutsceneLine(gameData->cutscene, Pulse, "Uh, yeah?", false, 0, NULL);
