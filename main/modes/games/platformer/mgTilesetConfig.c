@@ -653,28 +653,23 @@ const mgSprite_t mg_hankBossSpriteMetadataSet[] = {
     },
     {
         .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
+        .origin = &origin_hank,
+        .hitBox = &box_hank,
     },
     {
         .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
+        .origin = &origin_hank,
+        .hitBox = &box_hank,
     },
     {
         .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
+        .origin = &origin_hank,
+        .hitBox = &box_hank,
     },
     {
         .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
-    },
-    {
-        .wsg    = NULL,
-        .origin = NULL,
-        .hitBox = NULL,
+        .origin = &origin_hank,
+        .hitBox = &box_hank,
     },
     {
         .wsg    = NULL,

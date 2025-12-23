@@ -1195,8 +1195,8 @@ void mg_loadWsgSet(mgWsgManager_t* self, mgWsgSetIndex_t index)
                 }
 
                 self->sprites[MG_SP_BOSS_0 + i].wsg    = &self->wsgs[wsgIndex];
-                self->sprites[MG_SP_BOSS_0 + i].origin = mg_bigmaBossSpriteMetadataSet[i].origin;
-                self->sprites[MG_SP_BOSS_0 + i].hitBox = mg_bigmaBossSpriteMetadataSet[i].hitBox;
+                self->sprites[MG_SP_BOSS_0 + i].origin = mg_hankBossSpriteMetadataSet[i].origin;
+                self->sprites[MG_SP_BOSS_0 + i].hitBox = mg_hankBossSpriteMetadataSet[i].hitBox;
             }
             break;
     }
