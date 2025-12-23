@@ -1156,15 +1156,11 @@ void mg_bossRushLogic(mgEntity_t* self)
     bool isABoss      = false;
     uint8_t nextBoss  = 0;
     uint8_t nextLevel = 0;
-                
-    isABoss = (self->spriteIndex == MG_SP_BOSS_0 || 
-    self->spriteIndex == MG_SP_BOSS_1 || 
-    self->spriteIndex == MG_SP_BOSS_2 || 
-    self->spriteIndex == MG_SP_BOSS_3 || 
-    self->spriteIndex == MG_SP_BOSS_4 || 
-    self->spriteIndex == MG_SP_BOSS_5 || 
-    self->spriteIndex == MG_SP_BOSS_6 ||
-    self->spriteIndex == MG_SP_BOSS_7);
+
+    isABoss = (self->spriteIndex == MG_SP_BOSS_0 || self->spriteIndex == MG_SP_BOSS_1
+               || self->spriteIndex == MG_SP_BOSS_2 || self->spriteIndex == MG_SP_BOSS_3
+               || self->spriteIndex == MG_SP_BOSS_4 || self->spriteIndex == MG_SP_BOSS_5
+               || self->spriteIndex == MG_SP_BOSS_6 || self->spriteIndex == MG_SP_BOSS_7);
 
     if (self->entityManager->wsgManager->wsgSetIndex == MG_WSGSET_KINETIC_DONUT)
     {
@@ -1561,7 +1557,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             else */
             if (self->invincibilityFrames <= 0 && !(other->type == ENTITY_BOSS_DRAIN_BAT && other->state == 10))
             {
-                if (!self->gameData->cheatMode)//Drain bat's pre-teleport state doesn't hurt Pulse
+                if (!self->gameData->cheatMode) // Drain bat's pre-teleport state doesn't hurt Pulse
                 {
                     // pulse takes damage (doubled if no plot armor)
                     self->hp -= 5 + (5 * !(self->gameData->abilities & (1U << MG_PLOT_ARMOR_ABILITY)));
@@ -1800,7 +1796,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
         }
         case ENTITY_MIXTAPE:
         {
-            if(!self->gameData->canGrabMixtape)
+            if (!self->gameData->canGrabMixtape)
             {
                 break;
             }
@@ -1878,7 +1874,8 @@ void mg_enemyCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 break;
             }
 
-            if (self->type == ENTITY_BOSS_GRIND_PANGOLIN && (self->state == 1 || self->state == 2 || self->state == 4) && other->state != 2)//allows a fully charged shot to pierce.
+            if (self->type == ENTITY_BOSS_GRIND_PANGOLIN && (self->state == 1 || self->state == 2 || self->state == 4)
+                && other->state != 2) // allows a fully charged shot to pierce.
             {
                 other->xspeed = -other->xspeed;
                 other->yspeed = -64;
@@ -4601,8 +4598,8 @@ void mg_updateBossSmashGorilla(mgEntity_t* self)
 
     if (self->type == ENTITY_DEAD && self->linkedEntity == NULL && self->gameData->level != 11)
     {
-        self->spriteIndex = 
-        self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
+        self->spriteIndex = self->linkedEntity
+            = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
         // after defeating smash gorilla (level 6) create a bunch of power ups to try out can of salsa.
         for (int i = 1; i < 5; i++)
         {
@@ -4787,24 +4784,24 @@ void mg_updateBossDrainBat(mgEntity_t* self)
                     default:
                         /* Jump target chosen; show warp (black hole) first so player can react, then
                          * switch to real state 1. */
-                        self->x           = TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48 + (esp_random() % 184));
-                        self->y           = self->entityManager->playerEntity->y - 128;
-                        self->special1    = 1;  /* store next real state */
-                        self->state       = 10; /* PRE-TELEPORT */
+                        self->x        = TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48 + (esp_random() % 184));
+                        self->y        = self->entityManager->playerEntity->y - 128;
+                        self->special1 = 1;  /* store next real state */
+                        self->state    = 10; /* PRE-TELEPORT */
                         self->invincibilityFrames = DRAIN_BAT_PRE_TELEPORT_FRAMES;
-                        self->stateTimer  = 0;
-                        self->spriteIndex = MG_SP_WARP_1;
+                        self->stateTimer          = 0;
+                        self->spriteIndex         = MG_SP_WARP_1;
                         break;
                     case 1:
-                        self->x           = (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
-                                                ? TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48)
-                                                : TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 232);
-                        self->y           = (TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetY + 48));
-                        self->special1    = 2;  /* store next real state */
-                        self->state       = 10; /* PRE-TELEPORT */
+                        self->x                   = (TO_PIXEL_COORDS(self->x) > self->tilemap->mapOffsetX + 120)
+                                                        ? TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 48)
+                                                        : TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetX + 232);
+                        self->y                   = (TO_SUBPIXEL_COORDS(self->tilemap->mapOffsetY + 48));
+                        self->special1            = 2;  /* store next real state */
+                        self->state               = 10; /* PRE-TELEPORT */
                         self->invincibilityFrames = DRAIN_BAT_PRE_TELEPORT_FRAMES;
-                        self->stateTimer  = 0;
-                        self->spriteIndex = MG_SP_WARP_1;
+                        self->stateTimer          = 0;
+                        self->spriteIndex         = MG_SP_WARP_1;
                         break;
                 }
             }

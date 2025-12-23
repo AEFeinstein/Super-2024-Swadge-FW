@@ -1455,8 +1455,8 @@ mgEntity_t* createCheckpoint(mgEntityManager_t* entityManager, uint16_t x, uint1
 
 mgEntity_t* createMixtape(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    mgEntity_t* entity = mg_findInactiveEntity(entityManager);
-    entity->gameData->canGrabMixtape = entity->gameData->kineticSkipped;//will be set true by the cutscene ending
+    mgEntity_t* entity               = mg_findInactiveEntity(entityManager);
+    entity->gameData->canGrabMixtape = entity->gameData->kineticSkipped; // will be set true by the cutscene ending
 
     if (entity == NULL)
     {

@@ -751,7 +751,7 @@ void changeStateMainMenu(platformer_t* self)
     self->gameData.frameCount  = 0;
     self->gameData.changeState = 0;
     self->update               = &mgUpdateMainMenu;
-    int32_t outVal                 = 0;
+    int32_t outVal             = 0;
     readNvs32(MG_abilitiesNVSKey, &outVal);
     self->gameData.abilities = outVal;
     mgBuildMainMenu(self);
@@ -2230,7 +2230,7 @@ void drawLevelSelect(platformer_t* self)
 void goToReadyScreen(void)
 {
     platformer->gameData.canGrabMixtape = true;
-    platformer->update = &updateReadyScreen;
+    platformer->update                  = &updateReadyScreen;
 }
 
 void startCreditMusic(void)
