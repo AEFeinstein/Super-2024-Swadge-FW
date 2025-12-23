@@ -475,7 +475,7 @@ void platformerEnterMode(void)
         // UNCORRUPTED VERSIONS//
         /////////////////////////
         //  TrashMan
-        addCutsceneStyle(platformer->gameData.cutscene, c414, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 3,
+        addCutsceneStyle(platformer->gameData.cutscene, c515, OVO_PORTRAIT_0_WSG, TEXTBOX_OVO_WSG, "Trash Man", 3,
                          false, true, true);
         setMidiParams(platformer->gameData.cutscene, 24, 36, -2, 250, false);
         // KineticDonut
@@ -2229,9 +2229,9 @@ void drawLevelSelect(platformer_t* self)
 // forward declared in mega_pulse_ex_typedef.h
 void goToReadyScreen(void)
 {
-    if(platformer->entityManager.playerEntity != NULL && platformer->entityManager.playerEntity->hp <= 0)
+    if (platformer->entityManager.playerEntity != NULL && platformer->entityManager.playerEntity->hp <= 0)
     {
-        //if the player and boss reached zero health at the same frame, give the win to the player.
+        // if the player and boss reached zero health at the same frame, give the win to the player.
         platformer->entityManager.playerEntity->hp = 1;
     }
     platformer->gameData.canGrabMixtape = true;

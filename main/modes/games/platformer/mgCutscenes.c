@@ -527,10 +527,10 @@ void bossIntroCutscene(mgGameData_t* gameData)
             if(gameData->abilities & (1U << MG_CAN_OF_SALSA_ABILITY))
             {
                 queueTrophy();
-                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "Ugh... so hungry...", false, -1, NULL);
-                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "WAIT - Is that a CAN OF SALSA you've got there? Is it chunky? Spicy? ZESTY CHIPOTLE?", false, -1, NULL);
+                addCutsceneLine(gameData->cutscene, KineticDonut, "Ugh... so hungry...", false, -1, NULL);
+                addCutsceneLine(gameData->cutscene, KineticDonut, "WAIT - Is that a CAN OF SALSA you've got there? Is it chunky? Spicy? ZESTY CHIPOTLE?", false, -1, NULL);
                 addCutsceneLine(gameData->cutscene, Pulse, "Uh, yeah?", false, 0, NULL);
-                addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "GIMMIE.", false, -1, NULL);
+                addCutsceneLine(gameData->cutscene, KineticDonut, "GIMMIE.", false, -1, NULL);
                 addCutsceneLine(gameData->cutscene, Pulse, "Umm... sure?", false, 0, NULL);
                 addCutsceneLine(gameData->cutscene, SystemText, "PULSE tosses KINETIC DONUT the can. He rips it open and drinks it like a sports drink.", false, 0, loseCanOfSalsa);
                 addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "OHHH you're a LIFESAVER! I think I was just hangry. My brain was stuck in \"party mode.\"", false, -1, NULL);

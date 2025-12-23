@@ -534,10 +534,10 @@ void drawCutscene(cutscene_t* cutscene, font_t* font)
 
     if (cutscene->xOffset == 0)
     {
-        int16_t xOff = 20;
+        int16_t xOff = 18;
         int16_t yOff = 150;
         // drawRect(xOff, yOff, 92, 162, c520);
-        drawText(font, style->textColor, style->title, 20, 150);
+        drawText(font, style->textColor, style->title, xOff, yOff);
 
         xOff = 13;
         yOff = 174;
