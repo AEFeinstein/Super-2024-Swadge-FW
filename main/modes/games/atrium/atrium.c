@@ -163,8 +163,8 @@ const trophyData_t atriumTrophies[] = {
         .identifier  = NULL,
     },
     {
-        .title       = "SwadgePass Social Butterfly",
-        .description = "FInd 30 SwadgePass profiles",
+        .title       = "Social Butterfly",
+        .description = "Find 30 SwadgePass profiles",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_PROGRESS,
         .difficulty  = TROPHY_DIFF_MEDIUM,
@@ -262,8 +262,7 @@ typedef struct
     int8_t fact1;
     int8_t fact2;
     int8_t numPasses;      // Number of other unique passes encountered
-    int32_t packedProfile; // card select 0-3, fact0 4-7, fact1 8-11, fact2 12-15, team 16-20, numpasses 20-28
-
+    int32_t packedProfile; // card select 0-3, fact0 4-7, fact1 8-11, fact2 12-15, team 16-19, numpasses 20-28
     swadgesona_t swsn; // Swadgesona data
     int32_t points;
     int8_t team; // 0 = red, 1 = blue, 2 = yellow
@@ -484,6 +483,7 @@ static void atriumEnterMode(void)
     }
 
     atr->numRemoteSwsn = i;
+
 
         trophyUpdate(&atriumTrophyData.list[4], atr->numRemoteSwsn, true); // update count for 10 passes
     if (atr->numRemoteSwsn <= 30)
