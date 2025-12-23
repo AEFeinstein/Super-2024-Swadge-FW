@@ -1559,9 +1559,9 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 self->falling   = true;
             }
             else */
-            if (self->invincibilityFrames <= 0)
+            if (self->invincibilityFrames <= 0 && !(other->type == ENTITY_BOSS_DRAIN_BAT && other->state == 10))
             {
-                if (!self->gameData->cheatMode && !(other->type == ENTITY_BOSS_DRAIN_BAT && other->state == 10))//Drain bat's pre-teleport state doesn't hurt Pulse
+                if (!self->gameData->cheatMode)//Drain bat's pre-teleport state doesn't hurt Pulse
                 {
                     // pulse takes damage (doubled if no plot armor)
                     self->hp -= 5 + (5 * !(self->gameData->abilities & (1U << MG_PLOT_ARMOR_ABILITY)));
