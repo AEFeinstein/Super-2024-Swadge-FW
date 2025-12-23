@@ -2375,10 +2375,13 @@ void initBossFight(void)
             // make stage lights blue for kinetic donut at start of the boss rush
             platformer->gameData.bgColors = leveldef[1].bgColors;
         }
+        else
+        {
+            mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
+            midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+            soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+        }
         platformer->entityManager.bossEntity->state = 0;
-        mg_setBgm(&platformer->soundManager, leveldef[platformer->gameData.level].bossBgmIndex);
-        midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
-        soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
     }
 
     platformer->update = &updateReadyScreen;
