@@ -45,11 +45,14 @@ static const cnfsFileIdx_t sonaBodies[] = {
 static const cnfsFileIdx_t uiImages[] = {
     ARROWBUTTON_1_WSG, ARROWBUTTON_2_WSG, ABUTTON_1_WSG,   ABUTTON_2_WSG, BBUTTON_1_WSG,  BBUTTON_2_WSG, ATRIUMLOGO_WSG,
     KEEPON_WSG,        LOADING_1_WSG,     LOADING_2_WSG,   LOADING_3_WSG, LOADING_4_WSG,  LOADING_5_WSG, LOADING_6_WSG,
-    LOADING_7_WSG,     LOADING_8_WSG,     GOLD_TROPHY_WSG, ARROW_WSG,     CARDSELECT_WSG,
+    LOADING_7_WSG,     LOADING_8_WSG,     GOLD_TROPHY_WSG, ARROW_WSG,     CARDSELECT_WSG, ATRSAVE1_WSG, ATRSAVE2_WSG,
 };
 
 static const cnfsFileIdx_t bgImages[] = {
-    GAZEBO_WSG, ATRIUMPLANT_1_WSG, ARCADE_0_WSG, ARCADE_2_WSG, ARCADE_4_WSG, ARCADE_6_WSG, CONCERT_1_WSG, CONCERT_2_WSG,
+    GAZEBO_WSG, ATRIUMPLANT_1_WSG, ARCADEBOT_WSG, ARCADE_1_WSG, ARCADE_3_WSG, ARCADE_5_WSG,
+    ARCADE_7_WSG, ARCADE_9_WSG, ARCADE_11_WSG, CONCERTBOT_WSG, CONCERT_1_WSG,
+    CONCERT_3_WSG, CONCERT_5_WSG, CONCERT_7_WSG, CONCERT_9_WSG,
+    
 };
 
 
@@ -61,7 +64,6 @@ static const cnfsFileIdx_t cardImages[] = {
 static const cnfsFileIdx_t midiBGM[] = {
     ATRTHEME1_MID,
     ATRTHEME2_MID,
-    ATRVIBE_MID,
 };
 
 static const cnfsFileIdx_t midiSFX[] = {
@@ -151,7 +153,7 @@ const trophyData_t atriumTrophies[] = {
         .identifier  = NULL,
     },
     {
-        .title       = "SwadgePass Collector",
+        .title       = "Collector",
         .description = "Find 10 SwadgePass profiles",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_PROGRESS,
@@ -172,7 +174,7 @@ const trophyData_t atriumTrophies[] = {
     },
 
     {
-        .title       = "SwadgePass Influencer",
+        .title       = "Influencer",
         .description = "Find 100 SwadgePass profiles",
         .image       = NO_IMAGE_SET,
         .type        = TROPHY_TYPE_PROGRESS,
@@ -188,7 +190,7 @@ const trophyData_t atriumTrophies[] = {
         .image       = TEAMRED_WSG,
         .type        = TROPHY_TYPE_PROGRESS,
         .difficulty  = TROPHY_DIFF_EXTREME,
-        .maxVal      = 999999,
+        .maxVal      = 150000,
         .hidden      = false,
         .identifier  = NULL,
     },
@@ -198,7 +200,7 @@ const trophyData_t atriumTrophies[] = {
         .image       = TEAMBLUE_WSG,
         .type        = TROPHY_TYPE_PROGRESS,
         .difficulty  = TROPHY_DIFF_EXTREME,
-        .maxVal      = 999999,
+        .maxVal      = 150000,
         .hidden      = false,
         .identifier  = NULL,
     },
@@ -208,7 +210,7 @@ const trophyData_t atriumTrophies[] = {
         .image       = TEAMYELLOW_WSG,
         .type        = TROPHY_TYPE_PROGRESS,
         .difficulty  = TROPHY_DIFF_EXTREME,
-        .maxVal      = 999999,
+        .maxVal      = 150000,
         .hidden      = false,
         .identifier  = NULL,
     },
@@ -297,6 +299,8 @@ typedef struct
     bool shuffle;
     bool loadedProfs;
     bool drawnProfs;
+    bool loadedBodies;
+    bool animDirection;
     int8_t page;
     int8_t lastPage;
     int8_t remSwsn;
@@ -480,18 +484,14 @@ static void atriumEnterMode(void)
     }
 
     atr->numRemoteSwsn = i;
-    if (atr->numRemoteSwsn <= 10)
-    {
+
         trophyUpdate(&atriumTrophyData.list[4], atr->numRemoteSwsn, true); // update count for 10 passes
-    }
     if (atr->numRemoteSwsn <= 30)
-    {
         trophyUpdate(&atriumTrophyData.list[5], atr->numRemoteSwsn, true); // count for 30 passes
-    }
-    if (atr->numRemoteSwsn <=100)
-    {
         trophyUpdate(&atriumTrophyData.list[6], atr->numRemoteSwsn, true); // count for 100 passes
-    }
+
+        // I don't really need an if statement here so i just deleted it, it was causing more problems than it was solving
+
     atr->page       = 0;
     atr->totalPages = (atr->numRemoteSwsn / SONA_PER) + ((atr->numRemoteSwsn % SONA_PER) ? 1 : 0);
     atr->remSwsn    = atr->numRemoteSwsn % SONA_PER;
@@ -502,7 +502,7 @@ static void atriumEnterMode(void)
     atr->player       = globalMidiPlayerGet(MIDI_BGM);
     atr->player->loop = true;
     midiGmOn(atr->player);
-    globalMidiPlayerPlaySong(&atr->bgm[1], MIDI_BGM);
+    globalMidiPlayerPlaySong(&atr->bgm[0], MIDI_BGM);
     globalMidiPlayerSetVolume(MIDI_BGM, 13);
 
     // profile created yet?
@@ -563,6 +563,13 @@ static void atriumExitMode(void)
         freeWsg(&atr->bodies[idx]);
     }
 
+    for (int idx = 0; idx < 3; idx++)
+    {
+        freeWsg(&atr->teamElements[idx]);
+    }
+
+    freeWsg(&atr->loadedProfile.swsn.image);
+
     heap_caps_free(atr);
 }
 
@@ -581,10 +588,14 @@ static void atriumMainLoop(int64_t elapsedUs)
                     {
                         atr->state     = ATR_DISPLAY;
                         atr->loadAnims = 0;
+                        globalMidiPlayerPlaySong(&atr->bgm[1], MIDI_BGM); // change BGM
+                        globalMidiPlayerPlaySong(&atr->sfx[0], MIDI_SFX); // play choose sound
+                        
                     }
                     else if ((evt.button & PB_B))
                     {
                         atr->state = ATR_EDIT_PROFILE; // if B is pressed, go to edit profile view
+                        globalMidiPlayerPlaySong(&atr->sfx[0], MIDI_SFX); // play choose sound
                     }
                 }
             }
@@ -592,6 +603,7 @@ static void atriumMainLoop(int64_t elapsedUs)
             atr->loadedProfs = false;
             shuffleSonas();
             updateTeamScores();
+            
 
             break;
         }
@@ -618,6 +630,7 @@ static void atriumMainLoop(int64_t elapsedUs)
                         {
                             atr->page = 0;
                         }
+                        globalMidiPlayerPlaySong(&atr->sfx[1], MIDI_SFX); // play move sound
                     }
                     else if (evt.button & PB_RIGHT)
                     {
@@ -626,6 +639,7 @@ static void atriumMainLoop(int64_t elapsedUs)
                         {
                             atr->page = (atr->numRemoteSwsn - 1) / 4;
                         }
+                        globalMidiPlayerPlaySong(&atr->sfx[1], MIDI_SFX); // play move sound
                     }
                     else if (evt.button & PB_UP)
                     {
@@ -633,7 +647,9 @@ static void atriumMainLoop(int64_t elapsedUs)
                         {
                             atr->lbState--;
                             atr->loadAnims = 0;
+                            globalMidiPlayerPlaySong(&atr->sfx[1], MIDI_SFX); // play move sound
                         }
+                        
                     }
                     else if (evt.button & PB_DOWN)
                     {
@@ -641,16 +657,21 @@ static void atriumMainLoop(int64_t elapsedUs)
                         {
                             atr->lbState++;
                             atr->loadAnims = 0;
+                            globalMidiPlayerPlaySong(&atr->sfx[1], MIDI_SFX); // play move sound
                         }
+                        
                     }
                     else if (evt.button & PB_A)
                     {
                         atr->state     = ATR_SELECT;
                         atr->selection = 0;
+                        globalMidiPlayerPlaySong(&atr->sfx[0], MIDI_SFX); // play choose sound
                     }
                     else if (evt.button & PB_B)
                     {
                         atr->state = ATR_TITLE;
+                        globalMidiPlayerPlaySong(&atr->bgm[0], MIDI_BGM); // change BGM
+                        globalMidiPlayerPlaySong(&atr->sfx[0], MIDI_SFX); // play choose sound
                     }
                 }
             }
@@ -660,51 +681,53 @@ static void atriumMainLoop(int64_t elapsedUs)
         }
         case ATR_SELECT:
         {
+            int maxSelect;
+            if (atr->totalPages == atr->page + 1){
+                            maxSelect = atr->remSwsn -1;
+                            ESP_LOGI(ATR_TAG, "maxselect is %d",maxSelect);
+                        }
+                        else 
+                        {
+                            maxSelect = SONA_PER -1;
+                        }
+
             while (checkButtonQueueWrapper(&evt))
             {
-                if (evt.down) // if the button is pressed down on the title screen
+                if (evt.down) 
                 {
                     if ((evt.button & PB_A))
                     {
                         atr->state = ATR_PROFILE;
+                        globalMidiPlayerPlaySong(&atr->sfx[0], MIDI_SFX); // play choose sound
                     }
                     else if ((evt.button & PB_LEFT))
                     {
                         atr->selection--;
-                        if (atr->selection < 0)
-                        {
-                            if (atr->numRemoteSwsn % SONA_PER == 0)
-                            {
-                                atr->selection = SONA_PER - 1;
-                            }
-                            else
-                            {
-                                atr->selection = (atr->numRemoteSwsn % SONA_PER) - 1;
-                            }
+                        if(atr->selection < 0){
+                            atr->selection = maxSelect;
                         }
+                        globalMidiPlayerPlaySong(&atr->sfx[1], MIDI_SFX); // play move sound
+                    }
                     }
                     else if ((evt.button & PB_RIGHT))
                     {
                         atr->selection++;
-                        if (atr->selection > SONA_PER - 1)
+                        if(atr->selection >maxSelect)
                         {
-                            if (atr->numRemoteSwsn % SONA_PER == 0)
-                            {
-                                atr->selection = 0;
-                            }
-                            else
-                            {
-                                atr->selection = (atr->numRemoteSwsn % SONA_PER) - 1;
-                            }
+                            atr->selection = 0;
                         }
+                        globalMidiPlayerPlaySong(&atr->sfx[1], MIDI_SFX); // play move sound
                     }
+                        
                     else if ((evt.button & PB_B))
                     {
-                        atr->state     = ATR_DISPLAY; // if B is pressed, go to display view
+                        atr->state     = ATR_DISPLAY; // if B is pressed, go back to display view
                         atr->loadAnims = 0;
+                        globalMidiPlayerPlaySong(&atr->sfx[0], MIDI_SFX); // play choose sound
                     }
-                }
             }
+                
+            
             drawLobbies(&evt, elapsedUs);
             drawSonaSelector(evt, atr->selection);
 
@@ -755,6 +778,7 @@ static void editProfile(buttonEvt_t* evt)
                 else
                 {
                     atr->state = ATR_TITLE;
+                    globalMidiPlayerPlaySong(&atr->sfx[0], MIDI_SFX); // play choose sound
                 }
             }
             else if (evt->button & PB_A)
@@ -780,6 +804,7 @@ static void editProfile(buttonEvt_t* evt)
 
                     atr->drawSaved = true;
                     atr->created   = 1;
+                    globalMidiPlayerPlaySong(&atr->sfx[0], MIDI_SFX); // play choose sound
                 }
             }
             else if (evt->button & PB_UP)
@@ -789,6 +814,7 @@ static void editProfile(buttonEvt_t* evt)
                 {
                     atr->yloc = 0;
                 }
+                globalMidiPlayerPlaySong(&atr->sfx[1], MIDI_SFX); // play move sound
             }
             else if (evt->button & PB_DOWN)
             {
@@ -797,14 +823,17 @@ static void editProfile(buttonEvt_t* evt)
                 {
                     atr->yloc = 4;
                 }
+                globalMidiPlayerPlaySong(&atr->sfx[1], MIDI_SFX); // play move sound
             }
             else if (evt->button & PB_LEFT)
             {
                 drawEditUI(evt, atr->yloc, 1);
+                globalMidiPlayerPlaySong(&atr->sfx[1], MIDI_SFX); // play move sound
             }
             else if (evt->button & PB_RIGHT)
             {
                 drawEditUI(evt, atr->yloc, 0);
+                globalMidiPlayerPlaySong(&atr->sfx[1], MIDI_SFX); // play move sound
             }
         }
     }
@@ -891,6 +920,7 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
         case BG_ARCADE:
         {
             drawArcade(elapsedUs);
+            
             break;
         }
         case BG_CONCERT:
@@ -941,16 +971,17 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
 static void drawArcade(uint64_t elapsedUs)
 {
     atr->animTimer += elapsedUs;
-    if (atr->animTimer >= ANIM_TIMER_MS && atr->loadAnims < 20)
+    if (atr->animTimer >= ANIM_TIMER_MS*4 && atr->loadAnims < 20)
     {
         atr->animTimer = 0;
         atr->loadAnims++;
     }
 
     // Animations
-    if (atr->loadAnims < 4)
+    if (atr->loadAnims < 6)
     {
-        drawWsgSimple(&atr->backgroundImages[2 + (atr->loadAnims % 4)], 0, 0);
+        drawWsgSimple(&atr->backgroundImages[3 + (atr->loadAnims % 6)], 0, 0);
+        drawWsgSimple(&atr->backgroundImages[2], 0, TFT_HEIGHT - atr->backgroundImages[2].h);
     }
     else
     {
@@ -960,8 +991,37 @@ static void drawArcade(uint64_t elapsedUs)
 
 static void drawConcert(uint64_t elapsedUs)
 {
-    // Draw base BG
-    drawWsgSimple(&atr->backgroundImages[7], 0, 0);
+     atr->animTimer += elapsedUs;
+    if (atr->animTimer >= ANIM_TIMER_MS*5 && atr->loadAnims < 5 && atr->animDirection == false)
+    {
+        atr->animTimer = 0;
+        atr->loadAnims++;
+        
+    }
+    else if (atr->animTimer >= ANIM_TIMER_MS*5 && atr->loadAnims > 0 && atr->animDirection == true)
+    {
+        atr->animTimer = 0;
+        atr->loadAnims--;
+        
+    }
+    else if (atr->animTimer >= ANIM_TIMER_MS*100 && atr->loadAnims == 0)
+    {
+        atr->animDirection = !atr->animDirection;
+        atr->animTimer = 0;
+        atr->loadAnims++;        
+    }
+    else if (atr->animTimer >= ANIM_TIMER_MS*5 && atr->loadAnims == 5)
+    {
+        atr->animDirection = !atr->animDirection;
+        atr->animTimer = 0;  
+        atr->loadAnims--;      
+    }
+
+    // Animations
+    
+        drawWsgSimple(&atr->backgroundImages[10 + atr->loadAnims], 0, 0);
+        drawWsgSimple(&atr->backgroundImages[9], 0, TFT_HEIGHT - atr->backgroundImages[9].h);
+        
 }
 
 static void drawGazebo(uint64_t elapsedUs)
@@ -1006,8 +1066,9 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
             atr->bodyIdx[i] = rand() % ARRAY_SIZE(sonaBodies);
         }
         atr->loadedProfs = false; // reset loaded profiles to load new ones
-
+        
         ESP_LOGI(ATR_TAG, "Page changed from %" PRId8 " to %" PRId8 ", resetting loadedProfs", atr->lastPage, page);
+        atr->lastPage = page;
     }
 
     // Draw sonas
@@ -1028,6 +1089,12 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
     for (int i = 0; i < sonas; i++)
     {
         drawWsgSimple(&atr->sonaList[i + (page * 4)].swsn.image, 20 + (i * 60), 80); // draw the head
+        char buf[10] = {0};
+        snprintf(buf, sizeof(buf), "%d/%d", page+1,atr->totalPages);
+        drawRectFilled(TFT_WIDTH/2 - 40, 200, TFT_WIDTH/2 + 45, 220, c555); //page box
+        drawText(&atr->fonts[0], c000, "Page", TFT_WIDTH/2 - 36, 202); // draw the "Page" text
+        drawText(&atr->fonts[0], c000, buf, TFT_WIDTH/2 + 8, 202); // draw the page number
+        
 
         switch (atr->lbState)
         {
@@ -1113,7 +1180,7 @@ static void drawCard(userProfile_t profile, bool local)
     snprintf(factline2, sizeof(factline2) - 1, "%s%s", preambles[2], fact2[profile.fact2]);
 
     drawWsgSimple(&atr->backgroundImages[0], 0, 0);
-    drawWsgSimple(&atr->cards[profile.cardSelect], 0, 0 + 12); // draw the card
+    drawWsgSimple(&atr->cards[profile.cardSelect], 7, 7 + 12); // draw the card
     drawWsgSimple(&profile.swsn.image, SONALOC_X, SONALOC_Y);  // draw the sona image
 
     nameData_t username;
@@ -1150,34 +1217,37 @@ static void drawCard(userProfile_t profile, bool local)
 
 void drawEditSelection(buttonEvt_t* evt, int yloc)
 {
-    const int16_t text_yloc = 200;
+    const int16_t text_xloc = 130;
+    const int16_t text_yloc = 205;
     bool arrowEnabled[4]    = {true, true, true, true};
-    bool drawA              = false;
+    bool drawSave              = false;
+    
+    drawRectFilled(text_xloc - 2, text_yloc - 3,  TFT_WIDTH/2 +47+36, text_yloc + 16, c555);
     switch (yloc)
     {
         case 0:
         {
-            drawWsgSimple(&atr->uiElements[18], 0, 12); // card select
-            drawText(&atr->fonts[0], c000, editPromptText[0], 25, text_yloc);
+            drawWsgSimple(&atr->uiElements[18], 2, 14); // card select
+            drawText(&atr->fonts[0], c000, editPromptText[0], text_xloc+10, text_yloc);
             arrowEnabled[2] = false;
             break;
         }
         case 1:
         {
             drawWsg(&atr->uiElements[17], 90 - CARDTEXTPAD, 55, false, false, 270); // fact0
-            drawText(&atr->fonts[0], c000, editPromptText[1], 25, text_yloc);
+            drawText(&atr->fonts[0], c000, editPromptText[1], text_xloc+1, text_yloc);
             break;
         }
         case 2:
         {
             drawWsg(&atr->uiElements[17], 90 - CARDTEXTPAD, 68, false, false, 270); // fact1
-            drawText(&atr->fonts[0], c000, editPromptText[2], 25, text_yloc);
+            drawText(&atr->fonts[0], c000, editPromptText[2], text_xloc-1, text_yloc);
             break;
         }
         case 3:
         {
             drawWsg(&atr->uiElements[17], 90 - CARDTEXTPAD, 81, false, false, 270); // fact2
-            drawText(&atr->fonts[0], c000, editPromptText[3], 25, text_yloc);
+            drawText(&atr->fonts[0], c000, editPromptText[3], text_xloc+7, text_yloc);
             break;
         }
         case 4:
@@ -1185,12 +1255,12 @@ void drawEditSelection(buttonEvt_t* evt, int yloc)
             arrowEnabled[0] = false;
             arrowEnabled[1] = false;
             arrowEnabled[3] = false;
-            drawA           = true;
-            drawText(&atr->fonts[0], c000, editPromptText[4], 25, text_yloc);
+            drawSave           = true;
+            drawText(&atr->fonts[0], c000, editPromptText[4], text_xloc+13, text_yloc);
 
             if (atr->drawSaved)
             {
-                drawText(&atr->fonts[0], c000, editPromptText[5], 25, text_yloc + atr->fonts[0].height + 2);
+                drawText(&atr->fonts[0], c000, editPromptText[5], text_xloc-60, text_yloc + atr->fonts[0].height + 2);
             }
             break;
         }
@@ -1201,18 +1271,23 @@ void drawEditSelection(buttonEvt_t* evt, int yloc)
     }
 
     const int16_t angles[] = {180, 90, 270, 0};
-    int16_t xloc           = 140;
-    int16_t arr_yloc       = text_yloc + (atr->fonts[0].height - atr->uiElements[0].h) / 2;
-
-    if (drawA)
+    const int16_t offset = 35;
+    const int16_t xloc[]           = {75+offset, (TFT_WIDTH- atr->uiElements[0].w)/2+offset, (TFT_WIDTH- atr->uiElements[0].w)/2+offset, TFT_WIDTH - atr->uiElements[0].w - 75+offset};
+    const int16_t arr_yloc[]       = {text_yloc-2, text_yloc +18,
+                                      text_yloc - 20, text_yloc-2};
+    if(yloc !=4)
     {
-        drawWsgSimple(&atr->uiElements[2], xloc - atr->uiElements[2].w, arr_yloc);
+        drawWsgSimple(&atr->uiElements[20], xloc[0] - atr->uiElements[19].w, arr_yloc[0]);
+    }
+    
+    if (drawSave)
+    {
+        drawWsgSimple(&atr->uiElements[19], xloc[0] - atr->uiElements[19].w, arr_yloc[0]);
     }
 
     for (int16_t aIdx = 0; aIdx < ARRAY_SIZE(angles); aIdx++)
     {
-        drawWsg(arrowEnabled[aIdx] ? &atr->uiElements[0] : &atr->uiElements[1], xloc, arr_yloc, 0, 0, angles[aIdx]);
-        xloc += atr->uiElements[0].w;
+        arrowEnabled[aIdx] == true ? drawWsg(&atr->uiElements[0], xloc[aIdx], arr_yloc[aIdx], false, false, angles[aIdx]) : 0;
     }
 }
 
@@ -1234,7 +1309,7 @@ void drawEditUI(buttonEvt_t* evt, int yloc, bool direction)
             case 1:
             {
                 atr->loadedProfile.fact0++;
-                if (atr->loadedProfile.fact0 >= 7)
+                if (atr->loadedProfile.fact0 > 7)
                 {
                     atr->loadedProfile.fact0 = 0;
                 }
@@ -1243,7 +1318,7 @@ void drawEditUI(buttonEvt_t* evt, int yloc, bool direction)
             case 2:
             {
                 atr->loadedProfile.fact1++;
-                if (atr->loadedProfile.fact1 >= 7)
+                if (atr->loadedProfile.fact1 > 7)
                 {
                     atr->loadedProfile.fact1 = 0;
                 }
@@ -1252,7 +1327,7 @@ void drawEditUI(buttonEvt_t* evt, int yloc, bool direction)
             case 3:
             {
                 atr->loadedProfile.fact2++;
-                if (atr->loadedProfile.fact2 >= 7)
+                if (atr->loadedProfile.fact2 > 7)
                 {
                     atr->loadedProfile.fact2 = 0;
                 }
@@ -1355,14 +1430,24 @@ void loadProfiles(int maxProfiles, int page)
     else
     {
         ESP_LOGI(ATR_TAG, "Loading profiles: maxProfiles=%d, page=%d", maxProfiles, page);
+        if (atr->lastPage == page){
+
+        }
+        else {
+            atr->loadedBodies = false;
+        }
+
         for (int i = 0; i < maxProfiles; i++)
         {
             unpackProfileData(&atr->sonaList[page * 4 + i]);
             generateSwadgesonaImage(&atr->sonaList[page * 4 + i].swsn, false);
             ESP_LOGI(ATR_TAG, "Loaded profile %d for page %d", page * 4 + i, page);
+            if (atr->loadedBodies == false){
             atr->bodyIdx[i] = rand() % ARRAY_SIZE(sonaBodies);
+            }
         }
         atr->loadedProfs = true; // mark as loaded
+        atr->loadedBodies = true; //don't randomize bodies again
     }
 }
 
@@ -1370,6 +1455,9 @@ userProfile_t loadProfileFromNVS(void)
 {
     userProfile_t loadedProfile = {0};
     int8_t team                 = 0;
+    int32_t teamchecker         = 0;
+    
+
     if (!readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_CREATEDKEY,
                             &atr->created)) // check if profile created
 
@@ -1386,13 +1474,13 @@ userProfile_t loadProfileFromNVS(void)
         ESP_LOGI(ATR_TAG, "team rng is %" PRId8, team);
 
         loadedProfile.team = team;
+       
         ESP_LOGI(ATR_TAG, "assigned team is %" PRId8, loadedProfile.team);
 
         packProfileData(&loadedProfile);
         writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_PACKEDKEY, loadedProfile.packedProfile);
-        writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, TEAMKEY, loadedProfile.team);
         writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_CREATEDKEY, 1); // mark profile as created
-
+        writeNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, TEAMKEY, loadedProfile.team);
         ESP_LOGI(ATR_TAG, "New profile created with packedProfile=%" PRId32 "\n", loadedProfile.packedProfile);
         trophyUpdate(&atriumTrophyData.list[1 + team], 1, true); // award trophy for creating profile
         return loadedProfile;
@@ -1400,7 +1488,7 @@ userProfile_t loadProfileFromNVS(void)
 
     readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, ATRIUM_PACKEDKEY, &loadedProfile.packedProfile);
     readNamespaceNvs32(TROPHY_NVS_NAMESPACE, TROPHY_POINTS_NVS_KEY, &loadedProfile.points);
-    int32_t teamchecker = 0;
+    
     readNamespaceNvs32(ATRIUM_PROFILE_NVS_NAMESPACE, TEAMKEY, &teamchecker);
     unpackProfileData(&loadedProfile);
     ESP_LOGI(ATR_TAG, "Team from NVS is %" PRId32 " and team from packedProfile is %" PRId8, teamchecker,
