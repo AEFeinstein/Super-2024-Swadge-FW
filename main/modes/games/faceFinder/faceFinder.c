@@ -86,14 +86,6 @@ static const int32_t DanceDurationMult = 200;
 static const int32_t PenaltyMillis     = 3000000; // Milliseconds penalized from the timer on a wrong click
 const trophyData_t findingFacesModeTrophies[] = {
     {
-        .title       = "MANHUNT!",
-        .description = "Opened Mascot Madness for the first time.",
-        .image       = MMX_TROPHY_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EASY,
-        .maxVal      = 1, // For trigger type, set to one
-    },
-    {
         .title       = "Minute to Win It!",
         .description = "Have more than 60 seconds banked in time attack.",
         .image       = FINDER_TROPHY_TIME_60_WSG,
@@ -359,7 +351,6 @@ bool finderMainMenuCb(const char* label, bool selected, uint32_t value)
 }
 static void findingEnterMode(void)
 {
-    trophyUpdate(&findingFacesModeTrophies[0], 1, true);
     finder                = heap_caps_calloc(1, sizeof(finder_t), MALLOC_CAP_8BIT);
     finder->ibm           = getSysFont();
     finder->text          = c153;
@@ -475,27 +466,27 @@ static void findingMainLoop(int64_t elapsedUs)
                                 // Time attack score trophies: 1500, 3000, 6000, 12000 score
                                 if (finder->timer > 60000000)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[1], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[0], 1, true);
                                 }
                                 if (finder->timer > 120000000)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[2], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[1], 1, true);
                                 }
                                 if (finder->score >= 1500)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[3], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[2], 1, true);
                                 }
                                 if (finder->score >= 3000)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[4], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[3], 1, true);
                                 }
                                 if (finder->score >= 6000)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[5], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[4], 1, true);
                                 }
                                 if (finder->score >= 12000)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[6], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[5], 1, true);
                                 }
                             }
                             else
@@ -505,15 +496,15 @@ static void findingMainLoop(int64_t elapsedUs)
                                 // Zen mode trophies: 50, 69, 100 rounds
                                 if (finder->score >= 50)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[7], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[6], 1, true);
                                 }
                                 if (finder->score >= 69)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[8], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[7], 1, true);
                                 }
                                 if (finder->score >= 100)
                                 {
-                                    trophyUpdate(&findingFacesModeTrophies[9], 1, true);
+                                    trophyUpdate(&findingFacesModeTrophies[8], 1, true);
                                 }
                             }
                             finder->millisInstructing = TimePerInstruction;
