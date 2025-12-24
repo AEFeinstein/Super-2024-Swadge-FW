@@ -16,7 +16,7 @@
 #define SONA_PER            4
 #define MAX_SWADGESONA_IDXS (MAX_NUM_SWADGE_PASSES / SONA_PER) - (MAX_NUM_SWADGE_PASSES % SONA_PER) / SONA_PER
 #define ANIM_TIMER_MS       16667
-#define LOBBY_ARROW_Y       200
+#define LOBBY_ARROW_Y       TFT_HEIGHT/2
 
 // Profile
 #define CARDTEXTPAD 4
@@ -40,6 +40,7 @@
 static const cnfsFileIdx_t sonaBodies[] = {
     BODY_1_WSG, BODY_2_WSG, DAISY_WSG, FALLOUT_WSG, HANDSOME_WSG, KIRBY_WSG, LINK_WSG,   MARIO_WSG, PACMAN_WSG,
     PEACH_WSG,  RAYMAN_WSG, SANIC_WSG, SORA_WSG,    STAFF_WSG,    STEVE_WSG, STEVEN_WSG, WALDO_WSG, ZELDA_WSG,
+
 };
 
 static const cnfsFileIdx_t uiImages[] = {
@@ -304,6 +305,7 @@ typedef struct
     int8_t lastPage;
     int8_t remSwsn;
     int8_t totalPages;
+    int8_t selectedArrow;
     int8_t bodyIdx[SONA_PER];
 
     // BGM
@@ -324,6 +326,10 @@ typedef struct
     // SwadgePass Profile
     userProfile_t spProfile;
 
+    //LEDs
+    led_t leds[CONFIG_NUM_LEDS];
+    int8_t ledChase;
+
 } atrium_t;
 
 //---------------------------------------------------------------------------------//
@@ -336,8 +342,8 @@ static void atriumExitMode(void);
 static void atriumMainLoop(int64_t elapsedUs);
 
 // Editors
-static void editProfile(buttonEvt_t* evt);
-static void viewProfile(buttonEvt_t* evt);
+static void editProfile(buttonEvt_t* evt, uint64_t elapsedUs);
+static void viewProfile(buttonEvt_t* evt, uint64_t elapsedUs);
 
 // Draw
 static void drawAtriumTitle(uint64_t elapsedUs);
@@ -348,8 +354,8 @@ static void drawArcade(uint64_t elapsedUs);
 static void drawConcert(uint64_t elapsedUs);
 static void drawGazebo(uint64_t elapsedUs);
 static void drawGazeboForeground(uint64_t elapsedUs);
-static void drawLobbyArrows(void);
-static void drawCard(userProfile_t profile, bool local);
+static void drawLobbyArrows(int selected);
+static void drawCard(userProfile_t profile, bool local, uint64_t elapsedUs);
 void drawEditSelection(buttonEvt_t* evt, int yloc);
 void drawEditUI(buttonEvt_t* evt, int yloc, bool direction);
 void drawSonaSelector(buttonEvt_t evt, int selection);
@@ -361,6 +367,10 @@ userProfile_t loadProfileFromNVS(void);
 void packProfileData(userProfile_t* profile);
 void unpackProfileData(userProfile_t* profile);
 void updateTeamScores(void);
+
+//LEDS
+static void atrSetLeds(int team, uint64_t elapsedUs);
+static void atrClearLeds(void);
 
 //---------------------------------------------------------------------------------//
 // VARIABLES
@@ -486,7 +496,6 @@ static void atriumEnterMode(void)
 
 
         trophyUpdate(&atriumTrophyData.list[4], atr->numRemoteSwsn, true); // update count for 10 passes
-    if (atr->numRemoteSwsn <= 30)
         trophyUpdate(&atriumTrophyData.list[5], atr->numRemoteSwsn, true); // count for 30 passes
         trophyUpdate(&atriumTrophyData.list[6], atr->numRemoteSwsn, true); // count for 100 passes
 
@@ -603,6 +612,7 @@ static void atriumMainLoop(int64_t elapsedUs)
             atr->loadedProfs = false;
             shuffleSonas();
             updateTeamScores();
+            atrSetLeds(3, elapsedUs); 
             
 
             break;
@@ -610,6 +620,7 @@ static void atriumMainLoop(int64_t elapsedUs)
 
         case ATR_DISPLAY:
         {
+            atrClearLeds();
             // Handle input
             while (checkButtonQueueWrapper(&evt))
             {
@@ -620,7 +631,7 @@ static void atriumMainLoop(int64_t elapsedUs)
                 }
 
                 atr->lastPage = atr->page;
-
+                atr->selectedArrow = 0;
                 if (evt.down)
                 {
                     if (evt.button & PB_LEFT)
@@ -631,6 +642,7 @@ static void atriumMainLoop(int64_t elapsedUs)
                             atr->page = 0;
                         }
                         globalMidiPlayerPlaySong(&atr->sfx[1], MIDI_SFX); // play move sound
+                        atr->selectedArrow = 1;
                     }
                     else if (evt.button & PB_RIGHT)
                     {
@@ -640,6 +652,7 @@ static void atriumMainLoop(int64_t elapsedUs)
                             atr->page = (atr->numRemoteSwsn - 1) / 4;
                         }
                         globalMidiPlayerPlaySong(&atr->sfx[1], MIDI_SFX); // play move sound
+                        atr->selectedArrow = 4;
                     }
                     else if (evt.button & PB_UP)
                     {
@@ -649,6 +662,7 @@ static void atriumMainLoop(int64_t elapsedUs)
                             atr->loadAnims = 0;
                             globalMidiPlayerPlaySong(&atr->sfx[1], MIDI_SFX); // play move sound
                         }
+                        atr->selectedArrow = 3;
                         
                     }
                     else if (evt.button & PB_DOWN)
@@ -659,7 +673,7 @@ static void atriumMainLoop(int64_t elapsedUs)
                             atr->loadAnims = 0;
                             globalMidiPlayerPlaySong(&atr->sfx[1], MIDI_SFX); // play move sound
                         }
-                        
+                        atr->selectedArrow = 2;
                     }
                     else if (evt.button & PB_A)
                     {
@@ -729,20 +743,21 @@ static void atriumMainLoop(int64_t elapsedUs)
                 
             
             drawLobbies(&evt, elapsedUs);
+            atrSetLeds(atr->sonaList[((atr->page)*SONA_PER+atr->selection)].team, elapsedUs);
             drawSonaSelector(evt, atr->selection);
 
             break;
         }
         case ATR_PROFILE:
         {
-            viewProfile(&evt);
+            viewProfile(&evt, elapsedUs);
 
             break;
         }
         case ATR_EDIT_PROFILE:
         {
             // Draw the panel as it is
-            editProfile(&evt);
+            editProfile(&evt, elapsedUs);
 
             break;
         }
@@ -754,7 +769,7 @@ static void atriumMainLoop(int64_t elapsedUs)
 }
 
 // States
-static void editProfile(buttonEvt_t* evt)
+static void editProfile(buttonEvt_t* evt, uint64_t elapsedUs)
 {
     if (atr->loadedProfs == false)
     {
@@ -762,7 +777,7 @@ static void editProfile(buttonEvt_t* evt)
         atr->loadedProfs   = true;
     }
 
-    drawCard(atr->loadedProfile, true); // draw own profile
+    drawCard(atr->loadedProfile, true, elapsedUs); // draw own profile
     while (checkButtonQueueWrapper(evt))
     {
         if (evt->down)
@@ -840,11 +855,11 @@ static void editProfile(buttonEvt_t* evt)
     drawEditSelection(evt, atr->yloc);
 }
 
-static void viewProfile(buttonEvt_t* evt)
+static void viewProfile(buttonEvt_t* evt, uint64_t elapsedUs)
 {
     ESP_LOGD(ATR_TAG, "Viewing profile %d on page %" PRId8, atr->selection, atr->page);
     ESP_LOGD(ATR_TAG, "sonas name is %s", atr->sonaList[atr->page * SONA_PER + atr->selection].swsn.name.nameBuffer);
-    drawCard(atr->sonaList[atr->page * SONA_PER + atr->selection], false); // draw selected profile
+    drawCard(atr->sonaList[atr->page * SONA_PER + atr->selection], false, elapsedUs); // draw selected profile
 
     while (checkButtonQueueWrapper(evt))
     {
@@ -961,7 +976,11 @@ static void drawLobbies(buttonEvt_t* evt, uint64_t elapsedUs)
     else
     {
         // UI
-        drawLobbyArrows();
+        
+    
+        
+        ESP_LOGD(ATR_TAG, "Selected arrow: %" PRId8, atr->selectedArrow);
+        drawLobbyArrows(atr->selectedArrow);
         loadProfiles(SONA_PER, atr->page);
         drawSonas(atr->page, elapsedUs);
     }
@@ -1071,6 +1090,8 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
         atr->lastPage = page;
     }
 
+    
+
     // Draw sonas
     ESP_LOGD(ATR_TAG, "Drawing sonas for page %" PRId8 " and the remainder is %" PRId8, page, atr->remSwsn);
     ESP_LOGD(ATR_TAG, "Total pages: %" PRId8, atr->totalPages);
@@ -1091,9 +1112,9 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
         drawWsgSimple(&atr->sonaList[i + (page * 4)].swsn.image, 20 + (i * 60), 80); // draw the head
         char buf[10] = {0};
         snprintf(buf, sizeof(buf), "%d/%d", page+1,atr->totalPages);
-        drawRectFilled(TFT_WIDTH/2 - 40, 200, TFT_WIDTH/2 + 45, 220, c555); //page box
-        drawText(&atr->fonts[0], c000, "Page", TFT_WIDTH/2 - 36, 202); // draw the "Page" text
-        drawText(&atr->fonts[0], c000, buf, TFT_WIDTH/2 + 8, 202); // draw the page number
+        drawRectFilled(TFT_WIDTH/2 - 40, 202, TFT_WIDTH/2 + 45, 218, c555); //page box
+        drawText(&atr->fonts[0], c000, "Page", TFT_WIDTH/2 - 36, 203); // draw the "Page" text
+        drawText(&atr->fonts[0], c000, buf, TFT_WIDTH/2 + 10, 203); // draw the page number
         
 
         switch (atr->lbState)
@@ -1125,20 +1146,16 @@ static void drawSonas(int8_t page, uint64_t elapsedUs)
     }
 }
 
-static void drawLobbyArrows(void)
+static void drawLobbyArrows(int selected)
 {
     // Left, down, up, right
     const int16_t angles[] = {180, 90, 270, 0};
     bool arrowEnabled[4]   = {true, true, true, true};
-    int16_t xloc           = TFT_WIDTH / 5 - atr->uiElements[0].w / 2;
-
-    // TODO: change scale and positions
+    int16_t xloc[]           = {5, TFT_WIDTH / 2 - atr->uiElements[0].w/2, TFT_WIDTH / 2 - atr->uiElements[0].w/2, TFT_WIDTH - 5 - atr->uiElements[0].w};
+    int16_t yloc[]           = {LOBBY_ARROW_Y, 220, 20, LOBBY_ARROW_Y};
+    
     if (ATR_DISPLAY == atr->state)
     {
-        // Disable left and right
-        arrowEnabled[0] = false;
-        arrowEnabled[3] = false;
-
         if (atr->lbState == 0)
         {
             // Disable up
@@ -1156,16 +1173,29 @@ static void drawLobbyArrows(void)
         arrowEnabled[1] = false;
         arrowEnabled[2] = false;
     }
-
+    
+    if(atr->page == 0)
+    {
+        // Disable left
+        arrowEnabled[0] = false;
+    }
+    else if(atr->page == atr->totalPages -1)
+    {
+        // Disable right
+        arrowEnabled[3] = false;
+    }
+    selected--;
+    ESP_LOGI(ATR_TAG, "Drawing arrows with selected %d", selected);
     for (int16_t aIdx = 0; aIdx < ARRAY_SIZE(angles); aIdx++)
     {
-        drawWsg(&atr->uiElements[arrowEnabled[aIdx] ? 0 : 1], xloc, LOBBY_ARROW_Y, 0, 0, angles[aIdx]);
-        xloc += (TFT_WIDTH / 5);
+        (selected == aIdx) ? (arrowEnabled[aIdx] ? drawWsg(&atr->uiElements[1], xloc[aIdx], yloc[aIdx], 0, 0, angles[aIdx]) : 0) : (arrowEnabled[aIdx] ? drawWsg(&atr->uiElements[0], xloc[aIdx], yloc[aIdx], 0, 0, angles[aIdx]) : 0);
+        
     }
 }
 
-static void drawCard(userProfile_t profile, bool local)
+static void drawCard(userProfile_t profile, bool local, uint64_t elapsedUs)
 {
+    atrSetLeds(profile.team, elapsedUs);
     ESP_LOGD(ATR_TAG, "Drawing card with cardSelect %" PRId8 ", fact0 %" PRId8 ", fact1 %" PRId8 ", fact2 %" PRId8,
              profile.cardSelect, profile.fact0, profile.fact1, profile.fact2);
     // concat card info
@@ -1626,4 +1656,79 @@ void unpackProfileData(userProfile_t* profile)
            profile->cardSelect, profile->fact0, profile->fact1,
            profile->fact2, profile->numPasses, profile->team);
     /* clang-format on */
+}
+
+static void atrSetLeds(int team, uint64_t elapsedUs)
+{//TODO: test this on a pulse swadge
+    atr->animTimer += elapsedUs;
+    if (atr->animTimer >= ANIM_TIMER_MS*20 && atr->ledChase <=  CONFIG_NUM_LEDS)
+    {
+        atr->animTimer = 0;
+        atr->ledChase++;
+        atrClearLeds();
+    }
+    if (atr->ledChase > CONFIG_NUM_LEDS)
+    {
+        atr->ledChase = 0;
+        atrClearLeds();
+    }
+    ESP_LOGI(ATR_TAG, "Setting LEDs for team %" PRId8 " with ledChase %" PRId8 "", team, atr->ledChase);
+
+    switch(team){
+        case 0: // red
+            for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+            {
+                atr->leds[i].r = 255;
+                atr->leds[i].g = 0;
+                atr->leds[i].b = 0;
+            }
+            break;
+        case 1: // blue
+            for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+            {
+                atr->leds[i].r = 0;
+                atr->leds[i].g = 0;
+                atr->leds[i].b = 255;
+            }
+            break;
+        case 2: // yellow
+            for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+            {
+                atr->leds[i].r = 255;
+                atr->leds[i].g = 255;
+                atr->leds[i].b = 0;
+            }
+            break;
+        case 3: // green
+            for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+            {
+                atr->leds[i].r = 0;
+                atr->leds[i].g = 255;
+                atr->leds[i].b = 0;
+            }
+            break;
+        default: // off
+            for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+            {
+                atr->leds[i].r = 0;
+                atr->leds[i].g = 0;
+                atr->leds[i].b = 0;
+            }
+            break;
+    }
+    //LED chase
+    setLeds(atr->leds, atr->ledChase);
+    
+    
+}
+
+static void atrClearLeds(void)
+{
+    for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+    {
+        atr->leds[i].r = 0;
+        atr->leds[i].g = 0;
+        atr->leds[i].b = 0;
+    }
+    setLeds(atr->leds, CONFIG_NUM_LEDS);
 }
