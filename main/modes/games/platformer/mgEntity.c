@@ -1583,9 +1583,10 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                     self->state                 = MG_PL_ST_HURT;
                     self->stateTimer            = 20;
                     self->gameData->changeState = MG_ST_DEAD;
-                    self->gravityEnabled        = false; //All entities get deactivated anyway going to the ready screen. So this is ok.
-                    self->falling               = true;
-                    self->animationTimer        = 1;
+                    self->gravityEnabled
+                        = false; // All entities get deactivated anyway going to the ready screen. So this is ok.
+                    self->falling        = true;
+                    self->animationTimer = 1;
                 }
                 else
                 {
@@ -1779,15 +1780,16 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
 
                 if (!self->gameData->debugMode && self->hp <= 0)
                 {
-                    self->updateFunction        = &updatePlayerDead;
-                    self->type                  = ENTITY_DEAD;
-                    self->xspeed                = 0;
-                    self->yspeed                = -5;
-                    self->spriteIndex           = MG_SP_PLAYER_DEATH_0;
-                    self->gameData->changeState = MG_ST_DEAD; //All entities get deactivated anyway going to the ready screen. So this is ok.
-                    self->gravityEnabled        = false;
-                    self->falling               = true;
-                    self->animationTimer        = 1;
+                    self->updateFunction = &updatePlayerDead;
+                    self->type           = ENTITY_DEAD;
+                    self->xspeed         = 0;
+                    self->yspeed         = -5;
+                    self->spriteIndex    = MG_SP_PLAYER_DEATH_0;
+                    self->gameData->changeState
+                        = MG_ST_DEAD; // All entities get deactivated anyway going to the ready screen. So this is ok.
+                    self->gravityEnabled = false;
+                    self->falling        = true;
+                    self->animationTimer = 1;
                 }
                 else
                 {
