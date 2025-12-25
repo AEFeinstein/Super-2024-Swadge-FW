@@ -185,8 +185,8 @@ const trophyData_t platformerTrophies[] = {
         .maxVal      = 1,
     },
     {
-        .title       = "Cured Ember and Ovo",
-        .description = "Favorite genre: Jazz",
+        .title       = "Rescued Ember Demon",
+        .description = "But did Trash Man survive?",
         .image       = TROPHY_EMBER_DEMON_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_MEDIUM,
@@ -236,6 +236,14 @@ const trophyData_t platformerTrophies[] = {
         .title       = "Defeated Hank Waddle",
         .description = "Favorite genre: Silence",
         .image       = TROPHY_HANK_WADDLE_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Cured Trash Man",
+        .description = "Favorite genre: JAZZ",
+        .image       = TROPHY_TRASH_MAN_WSG,
         .type        = TROPHY_TYPE_TRIGGER,
         .difficulty  = TROPHY_DIFF_HARD,
         .maxVal      = 1,
@@ -542,7 +550,11 @@ void platformerEnterMode(void)
         // CreditStyle
         addCutsceneStyle(platformer->gameData.cutscene, c555, CREDIT_PORTRAIT_WSG, TEXTBOX_SAWTOOTH_WSG, "", 1, false,
                          true, false);
-        setMidiParams(platformer->gameData.cutscene, 23, 11, -1, 100, false);
+        setMidiParams(platformer->gameData.cutscene, 39, 11, -1, 100, false);
+        // Ember (no cage)
+        addCutsceneStyle(platformer->gameData.cutscene, c000, EMBER_FREE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Ember", 1, true,
+                         true, true);
+        setMidiParams(platformer->gameData.cutscene, 40, 82, 1, 250, false);
     }
 
     setFrameRateUs(16666);
@@ -2343,6 +2355,11 @@ void startTrashManMusic(void)
     int16_t songPitches[] = {67, 70, 60, 61, 62, 65, 67, 78};
     setSongPitches(platformer->gameData.cutscene, songPitches);
     soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
+}
+
+void getTrashManTrophy(void)
+{
+    trophyUpdate(&platformerTrophies[10], 1, true);
 }
 
 void startMegajamMusic(void)
