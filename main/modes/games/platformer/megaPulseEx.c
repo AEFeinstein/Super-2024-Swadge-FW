@@ -552,8 +552,8 @@ void platformerEnterMode(void)
                          true, false);
         setMidiParams(platformer->gameData.cutscene, 39, 11, -1, 100, false);
         // Ember (no cage)
-        addCutsceneStyle(platformer->gameData.cutscene, c000, EMBER_FREE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Ember", 1, true,
-                         true, true);
+        addCutsceneStyle(platformer->gameData.cutscene, c000, EMBER_FREE_PORTRAIT_0_WSG, TEXTBOX_PULSE_WSG, "Ember", 1,
+                         true, true, true);
         setMidiParams(platformer->gameData.cutscene, 40, 82, 1, 250, false);
     }
 
@@ -1420,7 +1420,7 @@ void changeStateDead(platformer_t* self)
 void updateDead(platformer_t* self)
 {
     self->gameData.frameCount++;
-    if (self->gameData.frameCount > 179)
+    if (self->gameData.frameCount > 200)
     {
         if (self->gameData.lives > 0)
         {
