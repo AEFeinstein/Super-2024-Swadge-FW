@@ -43,6 +43,7 @@ typedef enum
     SawtoothFlipped,
     HankUnrevealed,
     CreditStyle,
+    EmberFree,
 } cutsceneCharacters;
 
 static void setSongPitchesFromCurrentSong(mgGameData_t* gameData)
@@ -899,14 +900,14 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, Pulse, "Tell me about it.", false, 3, NULL);
             addCutsceneLine(gameData->cutscene, Ember, "Literal. Torture. Zero out of ten. Hell would not recommend.", false, -1, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "So... uh... you good?", false, 1, NULL);
-            addCutsceneLine(gameData->cutscene, Ember, "Been worse. Thanks for the assist.", false, -1, NULL);
+            addCutsceneLine(gameData->cutscene, EmberFree, "Been worse. Thanks for the assist.", false, -1, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "Do you want to, like, repay me with a power-up or something?", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, Ember, "Pfft. I'm not a vending machine. But take that. Maybe you can weaponize jazz.", false, -1, startPostFightMusic);
+            addCutsceneLine(gameData->cutscene, EmberFree, "Pfft. I'm not a vending machine. But take that. Maybe you can weaponize jazz.", false, -1, startPostFightMusic);
             unlockAbility(gameData, MG_OBNOXIOUS_NOODLING_ABILITY);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Obnoxious Noodling", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Tap A in the air to double-jump on a cloud of bad liccs.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, Pulse, "... It honks with emotion.", false, 1, NULL);
-            addCutsceneLine(gameData->cutscene, Ember, "You're welcome. I guess.", false, -1, NULL);
+            addCutsceneLine(gameData->cutscene, EmberFree, "You're welcome. I guess.", false, -1, NULL);
             break;
         }
         case 5: // The Overture Terminal (gauntlet)
@@ -960,7 +961,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             //Expedition 33 reference
             addCutsceneLine(gameData->cutscene, DeadeyeWithoutZip, "For those that come after!", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, SmashGorillaUncorrupted, "And everything that shaped us.", true, -1, NULL);
-            addCutsceneLine(gameData->cutscene, Ember, "Flaws and all, baby.", true, -1, NULL);
+            addCutsceneLine(gameData->cutscene, EmberFree, "Flaws and all, baby.", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, Jasper, "We're not afraid to carry the torch...", false, -1, NULL);
             addCutsceneLine(gameData->cutscene, Percy, "Or light new ones.", true, -1, NULL);
             addCutsceneLine(gameData->cutscene, FlareGryffynUncorrupted, "And maybe... even mend what was broken along the way.", true, -1, NULL);
@@ -996,7 +997,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, CreditStyle, "May Virginia Lynn Albracht rest in peace and never be forgotten.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Reach out to james.albracht@magfest.org with LEGIT game job offers, plz.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Midi Engineer: Dylan Whichard", false, 0, NULL);
-            addCutsceneLine(gameData->cutscene, CreditStyle, "Cutscene Artist, Script Writer, Character Designer: Kaitie Lawson", false, 0, NULL);
+            addCutsceneLine(gameData->cutscene, CreditStyle, "Cutscene Artist, Script Writer, Character Designer: Kaitie Muncie", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Player and Boss and Trophy Artist: Richard Lambert @azureine-edge.bsky.social", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Environment and Enemy Artist: Emma @objetdiscret.itch.io", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, CreditStyle, "Boss and Credits Artist, Character Designer: Greg Lord", false, 0, NULL);
@@ -1011,7 +1012,7 @@ void bossOutroCutscene(mgGameData_t* gameData)
             addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "WHA-HAHA... I regret nothing...", false, 1, NULL);
             addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "Note to self: recalibrate escape trajectory BEFORE launching dramatic exit.", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, SystemText, "Suddenly, a floating burrito wrapper hits him in the face.", false, -1, NULL);
-            addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "... Is that my lunch?", false, 2, NULL);
+            addCutsceneLine(gameData->cutscene, TrashManUncorrupted, "... Is that my lunch?", false, 2, getTrashManTrophy);
             addCutsceneLine(gameData->cutscene, BlackScreen, "", false, 0, NULL);
             addCutsceneLine(gameData->cutscene, SystemText, "TRASH MAN WILL RETURN... In whatever sequel he can crash into.", false, -1, NULL);
             addCutsceneLine(gameData->cutscene, SystemText, "Select New Game+ to keep your current abilities and play again or select Start Over from the main menu to delete all progress.", false, -1, NULL);

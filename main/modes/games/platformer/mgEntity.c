@@ -61,6 +61,9 @@ const mg_spriteDef_t drainBatAnimFrames[] = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG_SP_B
 
 #define DRAIN_BAT_PRE_TELEPORT_FRAMES 60
 
+// Wave ball animation update interval (in game frames). Larger = slower
+#define ANIM_TICK 8
+
 const mg_spriteDef_t flareGryffynGuitarSpinFrames[] = {MG_SP_BOSS_2, MG_SP_BOSS_3, MG_SP_BOSS_4, MG_SP_BOSS_5};
 
 const mg_spriteDef_t smashGorillaStompFrames[] = {MG_SP_BOSS_1, MG_SP_BOSS_3};
@@ -1572,15 +1575,18 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
 
                 if (!self->gameData->debugMode && self->hp <= 0)
                 {
-                    self->updateFunction        = &updateEntityDead;
+                    self->updateFunction        = &updatePlayerDead;
                     self->type                  = ENTITY_DEAD;
                     self->xspeed                = 0;
-                    self->yspeed                = -60;
+                    self->yspeed                = -5;
+                    self->spriteIndex           = MG_SP_PLAYER_DEATH_0;
                     self->state                 = MG_PL_ST_HURT;
                     self->stateTimer            = 20;
                     self->gameData->changeState = MG_ST_DEAD;
-                    self->gravityEnabled        = true;
-                    self->falling               = true;
+                    self->gravityEnabled
+                        = false; // All entities get deactivated anyway going to the ready screen. So this is ok.
+                    self->falling        = true;
+                    self->animationTimer = 1;
                 }
                 else
                 {
@@ -1774,14 +1780,16 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
 
                 if (!self->gameData->debugMode && self->hp <= 0)
                 {
-                    self->updateFunction        = &updateEntityDead;
-                    self->type                  = ENTITY_DEAD;
-                    self->xspeed                = 0;
-                    self->yspeed                = -60;
-                    self->spriteIndex           = MG_SP_PLAYER_HURT;
-                    self->gameData->changeState = MG_ST_DEAD;
-                    self->gravityEnabled        = true;
-                    self->falling               = true;
+                    self->updateFunction = &updatePlayerDead;
+                    self->type           = ENTITY_DEAD;
+                    self->xspeed         = 0;
+                    self->yspeed         = -5;
+                    self->spriteIndex    = MG_SP_PLAYER_DEATH_0;
+                    self->gameData->changeState
+                        = MG_ST_DEAD; // All entities get deactivated anyway going to the ready screen. So this is ok.
+                    self->gravityEnabled = false;
+                    self->falling        = true;
+                    self->animationTimer = 1;
                 }
                 else
                 {
@@ -2478,6 +2486,16 @@ void updateEntityDead(mgEntity_t* self)
     self->y += self->yspeed;
 
     despawnWhenOffscreen(self);
+}
+
+void updatePlayerDead(mgEntity_t* self)
+{
+    updateEntityDead(self);
+    if (self->spriteIndex < MG_SP_PLAYER_DEATH_8 && self->gameData->frameCount % ANIM_TICK == 0)
+    {
+        self->animationTimer++;
+        self->spriteIndex = MG_SP_PLAYER_DEATH_0 + self->animationTimer;
+    }
 }
 
 void updatePowerUp(mgEntity_t* self)
@@ -3345,9 +3363,9 @@ void updateWaveBall(mgEntity_t* self)
 {
     self->spriteRotateAngle = getAtan2(self->yspeed, self->xspeed);
 
-    self->animationTimer++;
-    if (self->gameData->frameCount % 2 == 0)
+    if (self->gameData->frameCount % ANIM_TICK == 0)
     {
+        self->animationTimer++;
         switch (self->state)
         {
             case 0:

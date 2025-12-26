@@ -247,6 +247,7 @@ void updateScrollLockDown(mgEntity_t* self);
 void updateScrollUnlock(mgEntity_t* self);
 
 void updateEntityDead(mgEntity_t* self);
+void updatePlayerDead(mgEntity_t* self);
 
 void updatePowerUp(mgEntity_t* self);
 void updateExtraLife(mgEntity_t* self);
