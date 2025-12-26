@@ -2385,12 +2385,11 @@ void loseCanOfSalsa(void)
 // forward declared in mega_pulse_ex_typedef.h
 void initBossFight(void)
 {
-    if (platformer->gameData.level == 1 && platformer->gameData.kineticSkipped)
+    if (platformer->gameData.level == 5 || (platformer->gameData.level == 1 && platformer->gameData.kineticSkipped))
     {
-        platformer->update = &updateReadyScreen;
-        return;
+        platformer->gameData.canGrabMixtape = true;
     }
-    if (platformer->gameData.level != 5)
+    else
     {
         if (platformer->gameData.level == 11)
         {
