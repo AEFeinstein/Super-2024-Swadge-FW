@@ -2385,7 +2385,7 @@ void loseCanOfSalsa(void)
 // forward declared in mega_pulse_ex_typedef.h
 void initBossFight(void)
 {
-    if(platformer->entityManager.bossEntity != NULL)
+    if (platformer->entityManager.bossEntity != NULL)
     {
         platformer->entityManager.bossEntity->state = 0;
     }
@@ -2394,7 +2394,7 @@ void initBossFight(void)
     {
         platformer->gameData.canGrabMixtape = true;
     }
-    else if(platformer->gameData.level == 1 && platformer->gameData.kineticSkipped)
+    else if (platformer->gameData.level == 1 && platformer->gameData.kineticSkipped)
     {
         platformer->gameData.canGrabMixtape = true;
         killEnemy(platformer->entityManager.bossEntity);

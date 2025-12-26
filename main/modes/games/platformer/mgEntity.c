@@ -3475,8 +3475,8 @@ void killPlayer(mgEntity_t* self)
     self->spriteIndex           = MG_SP_PLAYER_HURT;
     self->gameData->changeState = MG_ST_DEAD;
     self->falling               = true;
-    self->gravityEnabled = false;
-    self->animationTimer = 1;
+    self->gravityEnabled        = false;
+    self->animationTimer        = 1;
 }
 
 void mg_defaultEntityDrawHandler(mgEntity_t* self)
@@ -5193,7 +5193,7 @@ void mg_updateBossKineticDonut(mgEntity_t* self)
         mg_deactivateAllEntities(self->entityManager, true);
         self->active       = true;
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
-        if(!self->gameData->kineticSkipped)
+        if (!self->gameData->kineticSkipped)
         {
             startOutroCutscene(self);
         }
