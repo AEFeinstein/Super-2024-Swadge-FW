@@ -3474,13 +3474,15 @@ void killPlayer(mgEntity_t* self)
     self->hp = 0;
     mg_updateLedsHpMeter(self->entityManager, self->gameData);
 
-    self->updateFunction        = &updateEntityDead;
+    self->updateFunction        = &updatePlayerDead;
     self->type                  = ENTITY_DEAD;
     self->xspeed                = 0;
-    self->yspeed                = -60;
+    self->yspeed                = -5;
     self->spriteIndex           = MG_SP_PLAYER_HURT;
     self->gameData->changeState = MG_ST_DEAD;
     self->falling               = true;
+    self->gravityEnabled = false;
+    self->animationTimer = 1;
 }
 
 void mg_defaultEntityDrawHandler(mgEntity_t* self)
