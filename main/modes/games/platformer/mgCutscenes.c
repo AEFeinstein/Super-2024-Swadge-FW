@@ -537,6 +537,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
                 addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "OHHH you're a LIFESAVER! I think I was just hangry. My brain was stuck in \"party mode.\"", false, -1, NULL);
                 addCutsceneLine(gameData->cutscene, Pulse, "So... we're good?", false, 2, NULL);
                 addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "More than good. You fixed my vibe... Here - take this. Now go stick it to whoever cancelled lunch!", false, -1, startPostFightMusic);
+                unlockAbility(gameData, MG_DROP_THE_MIC_ABILITY);
                 addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Drop the Mic", false, 0, NULL);
                 addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Press down and A in the air.", false, 0, NULL);
                 addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Unleash a ground-pound sound attack with a mic drop!", false, 0, NULL);
