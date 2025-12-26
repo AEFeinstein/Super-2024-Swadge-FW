@@ -2336,11 +2336,10 @@ mgEntity_t* createBossDrainBat(mgEntityManager_t* entityManager, uint16_t x, uin
 
 mgEntity_t* createBossKineticDonut(mgEntityManager_t* entityManager, uint16_t x, uint16_t y)
 {
-    // Boss skip if you have can of salsa in level 1.
     if (entityManager->playerEntity != NULL && entityManager->playerEntity->gameData->level == 1
-        && entityManager->playerEntity->gameData->kineticSkipped)
+        && (entityManager->playerEntity->gameData->abilities & (1U << MG_CAN_OF_SALSA_ABILITY)))
     {
-        return createMixtape(entityManager, x, y);
+        entityManager->playerEntity->gameData->kineticSkipped = true;
     }
     mgEntity_t* entity = mg_findInactiveEntity(entityManager);
 

@@ -527,6 +527,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
         {
             if(gameData->abilities & (1U << MG_CAN_OF_SALSA_ABILITY))
             {
+                gameData->kineticSkipped = true;
                 queueTrophy();
                 addCutsceneLine(gameData->cutscene, KineticDonut, "Ugh... so hungry...", false, -1, NULL);
                 addCutsceneLine(gameData->cutscene, KineticDonut, "WAIT - Is that a CAN OF SALSA you've got there? Is it chunky? Spicy? ZESTY CHIPOTLE?", false, -1, NULL);
@@ -537,6 +538,7 @@ void bossIntroCutscene(mgGameData_t* gameData)
                 addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "OHHH you're a LIFESAVER! I think I was just hangry. My brain was stuck in \"party mode.\"", false, -1, NULL);
                 addCutsceneLine(gameData->cutscene, Pulse, "So... we're good?", false, 2, NULL);
                 addCutsceneLine(gameData->cutscene, KineticDonutUncorrupted, "More than good. You fixed my vibe... Here - take this. Now go stick it to whoever cancelled lunch!", false, -1, startPostFightMusic);
+                unlockAbility(gameData, MG_DROP_THE_MIC_ABILITY);
                 addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... PULSE receives: Drop the Mic", false, 0, NULL);
                 addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Press down and A in the air.", false, 0, NULL);
                 addCutsceneLine(gameData->cutscene, AbilityUnlocked, "........................................................... Unleash a ground-pound sound attack with a mic drop!", false, 0, NULL);

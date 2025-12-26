@@ -125,12 +125,6 @@ void mg_initializeEntity(mgEntity_t* self, mgEntityManager_t* entityManager, mgT
 
 void mg_updatePlayer(mgEntity_t* self)
 {
-    if (self->gameData->level == 1 && !self->gameData->kineticSkipped && self->x > 59770 && self->x < 60000
-        && self->y < 15400 && self->gameData->abilities & (1U << MG_CAN_OF_SALSA_ABILITY))
-    {
-        self->gameData->kineticSkipped = true;
-        bossIntroCutscene(self->gameData);
-    }
     switch (self->state)
     {
         case MG_PL_ST_NORMAL:
@@ -3474,13 +3468,15 @@ void killPlayer(mgEntity_t* self)
     self->hp = 0;
     mg_updateLedsHpMeter(self->entityManager, self->gameData);
 
-    self->updateFunction        = &updateEntityDead;
+    self->updateFunction        = &updatePlayerDead;
     self->type                  = ENTITY_DEAD;
     self->xspeed                = 0;
-    self->yspeed                = -60;
+    self->yspeed                = -5;
     self->spriteIndex           = MG_SP_PLAYER_HURT;
     self->gameData->changeState = MG_ST_DEAD;
     self->falling               = true;
+    self->gravityEnabled        = false;
+    self->animationTimer        = 1;
 }
 
 void mg_defaultEntityDrawHandler(mgEntity_t* self)
@@ -5197,7 +5193,10 @@ void mg_updateBossKineticDonut(mgEntity_t* self)
         mg_deactivateAllEntities(self->entityManager, true);
         self->active       = true;
         self->linkedEntity = createMixtape(self->entityManager, TO_PIXEL_COORDS(self->x), TO_PIXEL_COORDS(self->y));
-        startOutroCutscene(self);
+        if (!self->gameData->kineticSkipped)
+        {
+            startOutroCutscene(self);
+        }
     }
     despawnWhenOffscreen(self);
 }

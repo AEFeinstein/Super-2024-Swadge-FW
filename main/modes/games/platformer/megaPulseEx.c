@@ -2385,9 +2385,19 @@ void loseCanOfSalsa(void)
 // forward declared in mega_pulse_ex_typedef.h
 void initBossFight(void)
 {
-    if (platformer->gameData.level == 5 || (platformer->gameData.level == 1 && platformer->gameData.kineticSkipped))
+    if (platformer->entityManager.bossEntity != NULL)
+    {
+        platformer->entityManager.bossEntity->state = 0;
+    }
+
+    if (platformer->gameData.level == 5)
     {
         platformer->gameData.canGrabMixtape = true;
+    }
+    else if (platformer->gameData.level == 1 && platformer->gameData.kineticSkipped)
+    {
+        platformer->gameData.canGrabMixtape = true;
+        killEnemy(platformer->entityManager.bossEntity);
     }
     else
     {
@@ -2402,7 +2412,6 @@ void initBossFight(void)
             midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
             soundPlayBgm(&platformer->soundManager.currentBgm, BZR_STEREO);
         }
-        platformer->entityManager.bossEntity->state = 0;
     }
 
     platformer->update = &updateReadyScreen;
