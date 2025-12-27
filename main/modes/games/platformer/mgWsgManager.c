@@ -567,15 +567,15 @@ void mg_initializeSprites(mgWsgManager_t* self)
 
     self->sprites[MG_SP_TURRET_HORIZONTAL].wsg    = &self->wsgs[MG_WSG_TURRET_HORIZONTAL];
     self->sprites[MG_SP_TURRET_HORIZONTAL].origin = &origin_15_15;
-    self->sprites[MG_SP_TURRET_HORIZONTAL].hitBox = &box_24_24;
+    self->sprites[MG_SP_TURRET_HORIZONTAL].hitBox = &box_turret;
 
     self->sprites[MG_SP_TURRET_45DEG].wsg    = &self->wsgs[MG_WSG_TURRET_45DEG];
     self->sprites[MG_SP_TURRET_45DEG].origin = &origin_15_15;
-    self->sprites[MG_SP_TURRET_45DEG].hitBox = &box_24_24;
+    self->sprites[MG_SP_TURRET_45DEG].hitBox = &box_turret;
 
     self->sprites[MG_SP_TURRET_VERTICAL].wsg    = &self->wsgs[MG_WSG_TURRET_VERTICAL];
     self->sprites[MG_SP_TURRET_VERTICAL].origin = &origin_15_15;
-    self->sprites[MG_SP_TURRET_VERTICAL].hitBox = &box_24_24;
+    self->sprites[MG_SP_TURRET_VERTICAL].hitBox = &box_turret;
 
     self->sprites[MG_SP_LEMON_SHOT].wsg    = &self->wsgs[MG_WSG_LEMON_SHOT];
     self->sprites[MG_SP_LEMON_SHOT].origin = &origin_8_8;
