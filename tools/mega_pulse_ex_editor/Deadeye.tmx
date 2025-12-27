@@ -107,9 +107,13 @@
   <object id="333" template="templates/Shrubble (Lvl. 4).tx" x="480.169" y="823.709"/>
   <object id="334" template="templates/Spiky McGee.tx" x="237.085" y="707.361"/>
   <object id="335" template="templates/Spiky McGee.tx" x="307.061" y="706.151"/>
-  <object id="336" template="templates/Shrubble (Lvl. 4).tx" x="1112.23" y="967.357"/>
-  <object id="337" template="templates/Shrubble (Lvl. 4).tx" x="1224.32" y="823.189"/>
-  <object id="338" template="templates/Shrubble (Lvl. 4).tx" x="1192.47" y="695.476"/>
+  <object id="336" template="templates/Shrubble (Lvl. 4).tx" x="1112" y="968"/>
+  <object id="337" template="templates/Shrubble (Lvl. 4).tx" x="1224" y="824"/>
+  <object id="338" template="templates/Shrubble (Lvl. 4).tx" x="1192" y="696">
+   <properties>
+    <property name="moveClockwise" type="bool" value="false"/>
+   </properties>
+  </object>
   <object id="339" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="1023.74" y="1024.95" rotation="0"/>
   <object id="341" template="templates/Megaton Wasp.tx" x="2262.64" y="401.838"/>
   <object id="342" template="templates/Scroll Lock (Down).tx" x="1906.38" y="690.143"/>
