@@ -1624,7 +1624,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
             {
                 self->hp = 60;
             }
-            mg_scorePoints(self->gameData, 1000);
+            mg_scorePoints(self->gameData, 0);
             soundPlaySfx(&(self->soundManager->sndPowerUp), BZR_LEFT);
             // mg_updateLedsHpMeter(self->entityManager, self->gameData);
             mg_destroyEntity(other, false);
