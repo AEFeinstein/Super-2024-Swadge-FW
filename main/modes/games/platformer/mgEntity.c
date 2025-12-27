@@ -2979,6 +2979,7 @@ void updateWasp(mgEntity_t* self)
             break;
     }
 
+    self->spriteFlipHorizontal = (self->xspeed > 0) false : true;
     mg_updateInvincibilityFrames(self);
     despawnWhenOffscreen(self);
     mg_moveEntityWithTileCollisions(self);
@@ -3049,6 +3050,7 @@ void updateWaspL2(mgEntity_t* self)
             break;
     }
 
+    self->spriteFlipHorizontal = (self->xspeed > 0) false : true;
     despawnWhenOffscreen(self);
     mg_moveEntityWithTileCollisions(self);
     applyGravity(self);
@@ -3118,6 +3120,7 @@ void updateWaspL3(mgEntity_t* self)
             break;
     }
 
+    self->spriteFlipHorizontal = (self->xspeed > 0) false : true;
     mg_updateInvincibilityFrames(self);
     despawnWhenOffscreen(self);
     mg_moveEntityWithTileCollisions(self);
