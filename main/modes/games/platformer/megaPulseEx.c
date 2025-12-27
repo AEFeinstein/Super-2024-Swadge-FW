@@ -36,6 +36,7 @@
 #include "mainMenu.h"
 #include "fill.h"
 #include "cutscene.h"
+#include "highScores.h"
 
 //==============================================================================
 // Constants
@@ -91,7 +92,10 @@ struct platformer_t
 
     int32_t frameTimer;
 
-    platformerHighScores_t highScores;
+    //platformerHighScores_t highScores;
+    highScores_t highScores;
+    swadgesona_t sonas[NUM_PLATFORMER_HIGH_SCORES];
+
     platformerUnlockables_t unlockables;
     bool easterEgg;
 
@@ -133,7 +137,7 @@ void savePlatformerHighScores(platformer_t* self);
 void initializePlatformerUnlockables(platformer_t* self);
 void loadPlatformerUnlockables(platformer_t* self);
 void savePlatformerUnlockables(platformer_t* self);
-void drawPlatformerHighScores(font_t* font, platformerHighScores_t* highScores, mgGameData_t* gameData);
+void drawPlatformerHighScores(font_t* font, highScores_t* highScores, swadgesona_t* sonas, mgGameData_t* gameData);
 uint8_t getHighScoreRank(platformerHighScores_t* highScores, uint32_t newScore);
 void insertScoreIntoHighScores(platformerHighScores_t* highScores, uint32_t newScore, char newInitials[], uint8_t rank);
 void changeStateNameEntry(platformer_t* self);
@@ -153,6 +157,9 @@ static void mg_backgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 void changeStateLevelSelect(platformer_t* self);
 void updateLevelSelect(platformer_t* self);
 void drawLevelSelect(platformer_t* self);
+static void megaPulseAddToSwadgePassPacket(swadgePassPacket_t* packet);
+static int32_t megaPulseGetSwadgePassHighScore(const swadgePassPacket_t* packet);
+static void megaPulseSetSwadgePassHighScore(swadgePassPacket_t* packet, int32_t highScore);
 
 //==============================================================================
 // Variables
@@ -280,6 +287,7 @@ swadgeMode_t modePlatformer = {
     .fnBackgroundDrawCallback = mg_backgroundDrawCallback,
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
+    .fnAddToSwadgePassPacket  = megaPulseAddToSwadgePassPacket,
     .trophyData               = &platformerTrophyData, // This line activates the trophy for this mode
 };
 
@@ -299,7 +307,7 @@ static const char str_registrated[]  = "Your name registrated.";
 static const char str_do_your_best[] = "Do your best!";
 static const char str_pause[]        = "-Pause-";
 
-static const char KEY_SCORES[]  = "mg_scores";
+static const char KEY_SCORES[]  = "mg_scores_swps";
 static const char KEY_UNLOCKS[] = "mg_unlocks";
 
 static const char mgMenuNewGame[]            = "New Game";
@@ -351,13 +359,21 @@ void platformerEnterMode(void)
     platformer->btnState      = 0;
     platformer->prevBtnState  = 0;
 
-    loadPlatformerHighScores(platformer);
+    //loadPlatformerHighScores(platformer);
+    platformer->highScores.highScoreCount = NUM_PLATFORMER_HIGH_SCORES;
+    initHighScores(&platformer->highScores, KEY_SCORES);
     loadPlatformerUnlockables(platformer);
-    if (platformer->highScores.initials[0][0] == 'E' && platformer->highScores.initials[0][1] == 'F'
-        && platformer->highScores.initials[0][2] == 'V')
-    {
-        platformer->easterEgg = true;
-    }
+    // if (platformer->highScores.initials[0][0] == 'E' && platformer->highScores.initials[0][1] == 'F'
+    //     && platformer->highScores.initials[0][2] == 'V')
+    // {
+    //     platformer->easterEgg = true;
+    // }
+
+    list_t swadgePasses = {0};
+    // It's okay to get already-used passes, since the high score table only saves one per SP user.
+    getSwadgePasses(&swadgePasses, &platformer, true);
+    saveHighScoresFromSwadgePass(&platformer->highScores, KEY_SCORES, swadgePasses, megaPulseGetSwadgePassHighScore);
+    freeSwadgePasses(&swadgePasses);
 
     loadFont(MEGAMAX_JONES_FONT, &platformer->font, false);
     platformer->menuRenderer = initMenuMegaRenderer(NULL, NULL, NULL);
@@ -574,6 +590,7 @@ void platformerExitMode(void)
     mg_freeSoundManager(&(platformer->soundManager));
     mg_freeEntityManager(&(platformer->entityManager));
     deinitCutscene(platformer->gameData.cutscene);
+    freeHighScoreSonas(&platformer->highScores, &platformer->sonas);
     heap_caps_free(platformer);
 }
 
@@ -1704,18 +1721,18 @@ void drawGameClear(font_t* font, mgGameData_t* gameData)
 
 void initializePlatformerHighScores(platformer_t* self)
 {
-    self->highScores.scores[0] = 100000;
-    self->highScores.scores[1] = 80000;
-    self->highScores.scores[2] = 40000;
-    self->highScores.scores[3] = 20000;
-    self->highScores.scores[4] = 10000;
+    // self->highScores.scores[0] = 100000;
+    // self->highScores.scores[1] = 80000;
+    // self->highScores.scores[2] = 40000;
+    // self->highScores.scores[3] = 20000;
+    // self->highScores.scores[4] = 10000;
 
-    for (uint8_t i = 0; i < NUM_PLATFORMER_HIGH_SCORES; i++)
-    {
-        self->highScores.initials[i][0] = 'J' + i;
-        self->highScores.initials[i][1] = 'P' - i;
-        self->highScores.initials[i][2] = 'V' + i;
-    }
+    // for (uint8_t i = 0; i < NUM_PLATFORMER_HIGH_SCORES; i++)
+    // {
+    //     self->highScores.initials[i][0] = 'J' + i;
+    //     self->highScores.initials[i][1] = 'P' - i;
+    //     self->highScores.initials[i][2] = 'V' + i;
+    // }
 }
 
 void loadPlatformerHighScores(platformer_t* self)
@@ -1764,16 +1781,16 @@ void savePlatformerUnlockables(platformer_t* self)
     writeNvsBlob(KEY_UNLOCKS, &(self->unlockables), size);
 }
 
-void drawPlatformerHighScores(font_t* font, platformerHighScores_t* highScores, mgGameData_t* gameData)
+void drawPlatformerHighScores(font_t* font, highScores_t* highScores, swadgesona_t* sonas, mgGameData_t* gameData)
 {
-    drawText(font, c555, "RANK  SCORE  NAME", 48, 96);
+    drawText(font, c555, "RANK   SCORE   NAME", 8, 80);
     for (uint8_t i = 0; i < NUM_PLATFORMER_HIGH_SCORES; i++)
     {
-        char rowStr[32];
-        snprintf(rowStr, sizeof(rowStr) - 1, "%d   %06" PRIu32 "   %c%c%c", i + 1, highScores->scores[i],
-                 highScores->initials[i][0], highScores->initials[i][1], highScores->initials[i][2]);
+        char rowStr[64];
+        snprintf(rowStr, sizeof(rowStr) - 1, "%d %8.6" PRIu32 "  %s", i + 1, highScores->highScores[i].score, sonas[i].name.nameBuffer);
         drawText(font, (gameData->rank == i) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, rowStr,
-                 60, 128 + i * 16);
+                 32, 96 + i * 24);
+        drawWsgSimpleHalf(&(sonas[i].image), 4, 86 + i *24);
     }
 }
 
@@ -1814,7 +1831,7 @@ void insertScoreIntoHighScores(platformerHighScores_t* highScores, uint32_t newS
 
 void changeStateNameEntry(platformer_t* self)
 {
-    self->gameData.frameCount = 0;
+   /* self->gameData.frameCount = 0;
     uint8_t rank              = getHighScoreRank(&(self->highScores), self->gameData.score);
     self->gameData.rank       = rank;
     self->menuState           = 0;
@@ -1834,7 +1851,20 @@ void changeStateNameEntry(platformer_t* self)
     midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
     self->menuSelection = self->gameData.initials[0];
-    self->update        = &updateNameEntry;
+    self->update        = &updateNameEntry;*/
+
+    //Bypass for Swadgepass Scoring
+
+    self->menuSelection = 0;
+    if (self->gameData.debugMode)
+    {
+        changeStateShowHighScores(self);
+        return;
+    }
+
+    score_t scores[]         = {{.score = self->gameData.score, .spKey = {0}, .swadgesona = {0}}};
+    updateHighScores(&self->highScores, KEY_SCORES, scores, 1);
+    changeStateShowHighScores(self);
 }
 
 void updateNameEntry(platformer_t* self)
@@ -1922,6 +1952,8 @@ void drawNameEntry(font_t* font, mgGameData_t* gameData, uint8_t currentInitial)
 
 void changeStateShowHighScores(platformer_t* self)
 {
+    initHighScoreSonas(&self->highScores, &self->sonas);
+    
     self->gameData.frameCount = 0;
     self->update              = &updateShowHighScores;
 }
@@ -1943,7 +1975,7 @@ void updateShowHighScores(platformer_t* self)
     }
 
     drawShowHighScores(&(self->font), self->menuState);
-    drawPlatformerHighScores(&(self->font), &(self->highScores), &(self->gameData));
+    drawPlatformerHighScores(&(self->font), &(self->highScores), &(self->sonas), &(self->gameData));
 
     mg_updateLedsShowHighScores(&(self->gameData));
 }
@@ -2415,4 +2447,19 @@ void initBossFight(void)
     }
 
     platformer->update = &updateReadyScreen;
+}
+
+static void megaPulseAddToSwadgePassPacket(swadgePassPacket_t* packet)
+{
+    addHighScoreToSwadgePassPacket(KEY_SCORES, packet, megaPulseSetSwadgePassHighScore);
+}
+
+static int32_t megaPulseGetSwadgePassHighScore(const swadgePassPacket_t* packet)
+{
+    return packet->megaPulseEx.highScore;
+}
+
+static void megaPulseSetSwadgePassHighScore(swadgePassPacket_t* packet, int32_t highScore)
+{
+    packet->megaPulseEx.highScore = highScore;
 }
