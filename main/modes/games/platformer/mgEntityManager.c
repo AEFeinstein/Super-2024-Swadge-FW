@@ -1555,7 +1555,7 @@ mgEntity_t* createShrubbleLv4(mgEntityManager_t* entityManager, uint16_t x, uint
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
-    entity->scoreValue           = 150;
+    entity->scoreValue           = 200;
     entity->hp                   = 8;
 
     entity->type                 = ENTITY_SHRUBBLE_LV4;
@@ -1797,7 +1797,7 @@ mgEntity_t* createCharginSchmuck(mgEntityManager_t* entityManager, uint16_t x, u
     entity->spriteFlipHorizontal = (entityManager->playerEntity->x > x) ? false : true;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
-    entity->scoreValue           = 100;
+    entity->scoreValue           = 200;
     entity->hp                   = 12;
 
     entity->type                 = ENTITY_CHARGIN_SCHMUCK;
@@ -1876,7 +1876,7 @@ mgEntity_t* createTurret(mgEntityManager_t* entityManager, uint16_t x, uint16_t 
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
-    entity->scoreValue           = 100;
+    entity->scoreValue           = 300;
     entity->hp                   = 10;
 
     entity->type                 = ENTITY_TURRET;
@@ -2181,7 +2181,7 @@ mgEntity_t* createBossSeverYataga(mgEntityManager_t* entityManager, uint16_t x, 
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
-    entity->scoreValue           = 100;
+    entity->scoreValue           = 2000;
     entity->hp                   = 30;
 
     entity->type                 = ENTITY_BOSS_SEVER_YATAGA;
@@ -2225,7 +2225,7 @@ mgEntity_t* createBossSmashGorilla(mgEntityManager_t* entityManager, uint16_t x,
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
-    entity->scoreValue           = 100;
+    entity->scoreValue           = 2000;
     entity->hp                   = 54;
 
     entity->type                 = ENTITY_BOSS_SMASH_GORILLA;
@@ -2269,7 +2269,7 @@ mgEntity_t* createBossGrindPangolin(mgEntityManager_t* entityManager, uint16_t x
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
-    entity->scoreValue           = 100;
+    entity->scoreValue           = 2000;
     entity->hp                   = 30;
 
     entity->type                 = ENTITY_BOSS_GRIND_PANGOLIN;
@@ -2313,7 +2313,7 @@ mgEntity_t* createBossDrainBat(mgEntityManager_t* entityManager, uint16_t x, uin
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
-    entity->scoreValue           = 100;
+    entity->scoreValue           = 2000;
     entity->hp                   = 30;
 
     entity->type                 = ENTITY_BOSS_DRAIN_BAT;
@@ -2362,7 +2362,7 @@ mgEntity_t* createBossKineticDonut(mgEntityManager_t* entityManager, uint16_t x,
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
-    entity->scoreValue           = 100;
+    entity->scoreValue           = 2000;
     entity->hp                   = 30;
 
     entity->type                 = ENTITY_BOSS_KINETIC_DONUT;
@@ -2406,7 +2406,7 @@ mgEntity_t* createBossTrashMan(mgEntityManager_t* entityManager, uint16_t x, uin
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
-    entity->scoreValue           = 100;
+    entity->scoreValue           = 2000;
     entity->hp                   = 48;
 
     entity->type                 = ENTITY_BOSS_TRASH_MAN;
@@ -2450,7 +2450,7 @@ mgEntity_t* createBossFlareGryffyn(mgEntityManager_t* entityManager, uint16_t x,
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
-    entity->scoreValue           = 100;
+    entity->scoreValue           = 2000;
     entity->hp                   = 55;
 
     entity->type                 = ENTITY_BOSS_FLARE_GRYFFYN;
@@ -2494,7 +2494,7 @@ mgEntity_t* createBossDeadeyeChirpzi(mgEntityManager_t* entityManager, uint16_t 
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
-    entity->scoreValue           = 100;
+    entity->scoreValue           = 2000;
     entity->hp                   = 30;
 
     entity->type                 = ENTITY_BOSS_DEADEYE_CHIRPZI;
@@ -2538,7 +2538,7 @@ mgEntity_t* createBossBigma(mgEntityManager_t* entityManager, uint16_t x, uint16
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
-    entity->scoreValue           = 100;
+    entity->scoreValue           = 3000;
     entity->hp                   = 30;
 
     entity->type                 = ENTITY_BOSS_BIGMA;
@@ -2582,7 +2582,7 @@ mgEntity_t* createBossHankWaddle(mgEntityManager_t* entityManager, uint16_t x, u
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
-    entity->scoreValue           = 100;
+    entity->scoreValue           = 5000;
     entity->hp                   = 60;
 
     entity->type                 = ENTITY_BOSS_HANK_WADDLE;
