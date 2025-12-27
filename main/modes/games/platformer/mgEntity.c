@@ -3213,6 +3213,8 @@ void killEnemy(mgEntity_t* target)
         target->spawnData                = NULL;
     }
 
+    target->gameData->enemiesKilled++;
+
     if (isABoss)
     {
         if (target->gameData->level == 11)
@@ -3225,11 +3227,12 @@ void killEnemy(mgEntity_t* target)
             }
         }
     }
-    else if ((esp_random() % 100) < 2) // 2% chance
+    else if (target->scoreValue > 0 && (!target->gameData->enemiesKilled % 16) && (!target->gameData->extraLifeCollected)) // Every 16th enemy killed
     {
         createExtraLife(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
+        target->gameData->extraLifeCollected = true; //Prevent life farming
     }
-    else if ((esp_random() % 100) < 10) // 10% chance
+    else if (target->scoreValue > 0 && (!target->gameData->enemiesKilled % 8)) // Every 8th enemy killed
     {
         createPowerUp(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
     }

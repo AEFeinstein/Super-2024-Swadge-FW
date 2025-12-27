@@ -39,6 +39,7 @@ void mg_initializeGameData(mgGameData_t* gameData, mgSoundManager_t* soundManage
     gameData->soundManager         = soundManager;
     gameData->bgColors             = bgGradientCyan;
     gameData->trophyEarned         = -1;
+    gameData->enemiesKilled        = 0;
 }
 
 void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
@@ -64,6 +65,7 @@ void mg_initializeGameDataFromTitleScreen(mgGameData_t* gameData)
     gameData->inGameTimer          = 0;
     gameData->bgColors             = bgGradientCyan;
     gameData->customLevel          = false;
+    gameData->enemiesKilled        = 0;
     int32_t outVal                 = 0;
     readNvs32(MG_cheatModeNVSKey, &outVal);
     gameData->cheatMode = outVal;
@@ -112,14 +114,28 @@ void mg_updateLedsHpMeter(mgEntityManager_t* entityManager, mgGameData_t* gameDa
 
 void mg_scorePoints(mgGameData_t* gameData, uint16_t points)
 {
+    if(gameData->levelDeaths > 2)
+    {
+        gameData->score += points;
+        gameData->combo = 1;
+        gameData->comboTimer = 240;
+        return;
+    }
+
     gameData->combo++;
 
     uint32_t comboPoints = points * gameData->combo;
 
+    // Experimental
+    // if(gameData->comboTimer > 0)
+    // {
+    //     gameData->combo++;
+    // }
+
     gameData->score += comboPoints;
     gameData->comboScore = comboPoints;
 
-    gameData->comboTimer = (gameData->levelDeaths < 3) ? 240 : 1;
+    gameData->comboTimer = 240;
 }
 
 void addCoins(mgGameData_t* gameData, uint8_t coins)
@@ -144,7 +160,7 @@ void updateComboTimer(mgGameData_t* gameData)
     if (gameData->comboTimer < 0)
     {
         gameData->comboTimer = 0;
-        gameData->combo      = 0;
+        //gameData->combo      = 0;
     }
 }
 

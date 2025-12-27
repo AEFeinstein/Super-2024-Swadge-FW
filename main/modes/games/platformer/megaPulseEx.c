@@ -1524,6 +1524,7 @@ void changeStateLevelClear(platformer_t* self)
     self->gameData.levelDeaths          = 0;
     self->gameData.initialHp            = self->entityManager.playerEntity->hp;
     self->gameData.extraLifeCollected   = false;
+    self->gameData.enemiesKilled        = 0;
     mg_resetGameDataLeds(&(self->gameData));
     self->update = &updateLevelClear;
 }
