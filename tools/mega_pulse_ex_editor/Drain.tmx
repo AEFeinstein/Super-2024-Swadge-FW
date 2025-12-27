@@ -125,12 +125,12 @@
   <object id="254" template="templates/Shrubble.tx" x="344.276" y="280.164"/>
   <object id="257" template="templates/Shrubble.tx" x="472.528" y="279.489"/>
   <object id="259" template="templates/Dust Bunny.tx" x="786.996" y="339.316"/>
-  <object id="260" template="templates/Turret.tx" gid="1073742176" x="1152.65" y="435.764" rotation="181.145"/>
+  <object id="260" template="templates/Turret.tx" gid="352" x="1152" y="476" rotation="180"/>
   <object id="263" template="templates/Player.tx" x="67.4609" y="273"/>
   <object id="264" template="templates/Dust Bunny.tx" x="1927.66" y="1317.64"/>
   <object id="265" template="templates/Dust Bunny.tx" x="2089.79" y="1320.94"/>
-  <object id="266" template="templates/Turret.tx" gid="3221225824" x="2048.24" y="1291.1" rotation="0"/>
-  <object id="267" template="templates/Turret.tx" gid="3221225824" x="2368.12" y="1291.56" rotation="0"/>
+  <object id="266" template="templates/Turret.tx" gid="352" x="2048.24" y="1291.1" rotation="180"/>
+  <object id="267" template="templates/Turret.tx" gid="352" x="2368.12" y="1291.56" rotation="180"/>
   <object id="269" template="templates/Dust Bunny.tx" x="2254.61" y="1319.31"/>
   <object id="271" template="templates/Shrubble.tx" x="2730.33" y="1398.42"/>
   <object id="272" template="templates/Dust Bunny.tx" x="2488.09" y="1317.95"/>
@@ -143,7 +143,7 @@
   <object id="283" template="templates/Dust Bunny.tx" gid="2147483857" x="2924.89" y="1368.74" rotation="0"/>
   <object id="294" template="templates/Shrubble (Lvl. 4).tx" x="535.329" y="200.47" rotation="268.815"/>
   <object id="295" template="templates/Shrubble (Lvl. 4).tx" x="695.916" y="199.526" rotation="268.815"/>
-  <object id="296" template="templates/Turret.tx" gid="1073742176" x="804.135" y="198.085" rotation="180.36"/>
+  <object id="296" template="templates/Turret.tx" gid="352" x="804" y="236" rotation="180"/>
   <object id="297" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="944.286" y="288.628" rotation="0"/>
   <object id="298" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="1453.41" y="911.889" rotation="0"/>
   <object id="299" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="2207.64" y="1391.32" rotation="0"/>

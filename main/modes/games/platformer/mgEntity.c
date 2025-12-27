@@ -70,6 +70,10 @@ const mg_spriteDef_t smashGorillaStompFrames[] = {MG_SP_BOSS_1, MG_SP_BOSS_3};
 
 const mg_spriteDef_t smashGorillaChargeFrames[] = {MG_SP_BOSS_0, MG_SP_BOSS_1, MG_SP_BOSS_2, MG_SP_BOSS_3};
 
+const mg_spriteDef_t charginSchmuckAnimFrames[] = {MG_SP_CHARGIN_SCHMUCK_RUN1, MG_SP_CHARGIN_SCHMUCK_RUN2};
+
+const mg_spriteDef_t spikyMcGeeAnimFrames[] = {MG_SP_SPIKY_MCGEE, MG_SP_SPIKY_MCGEE_2};
+
 //==============================================================================
 // Functions Prototypes
 //==============================================================================
@@ -3554,13 +3558,202 @@ void mg_updateTurret(mgEntity_t* self)
 
                 if (self->entityManager->playerEntity != NULL)
                 {
-                    self->jumpPower = getAtan2(self->entityManager->playerEntity->y - self->y,
+                    self->jumpPower = getAtan2(self->y - self->entityManager->playerEntity->y,
                                                self->entityManager->playerEntity->x - self->x);
                 }
 
                 self->jumpPower = clampAngleTo8way(self->jumpPower);
 
-                self->state = 1;
+                switch(self->spriteRotateAngle)
+                {
+                    case 0:
+                    default:
+                        switch(self->jumpPower)
+                        {
+                            case 0:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 45:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 90:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_VERTICAL;
+                                //self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 135:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = true;
+                                self->state = 1;
+                                break;
+                            }
+                            case 180:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = true;
+                                self->state = 1;
+                                break;
+                            }
+                            default:
+                            {
+                                self->state = 0;
+                                self->stateTimer = 0;
+                                break;
+                            }
+                        }
+                        break;
+                    case 90:
+                        switch(self->jumpPower)
+                        {
+                            case 90:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 135:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 180:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_VERTICAL;
+                                //self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 225:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = true;
+                                self->state = 1;
+                                break;
+                            }
+                            case 270:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = true;
+                                self->state = 1;
+                                break;
+                            }
+                            default:
+                            {
+                                self->state = 0;
+                                self->stateTimer = 0;
+                                break;
+                            }
+                        }
+                        break;
+                    case 180:
+                        switch(self->jumpPower)
+                        {
+                            case 180:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 225:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 270:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_VERTICAL;
+                                //self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 315:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = true;
+                                self->state = 1;
+                                break;
+                            }
+                            case 0:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = true;
+                                self->state = 1;
+                                break;
+                            }
+                            default:
+                            {
+                                self->state = 0;
+                                self->stateTimer = 0;
+                                break;
+                            }
+                        }
+                        break;
+                    case 270:
+                        switch(self->jumpPower)
+                        {
+                            case 270:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 315:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 0:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_VERTICAL;
+                                //self->spriteFlipHorizontal = false;
+                                self->state = 1;
+                                break;
+                            }
+                            case 45:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_45DEG;
+                                self->spriteFlipHorizontal = true;
+                                self->state = 1;
+                                break;
+                            }
+                            case 90:
+                            {
+                                self->spriteIndex = MG_SP_TURRET_HORIZONTAL;
+                                self->spriteFlipHorizontal = true;
+                                self->state = 1;
+                                break;
+                            }
+                            default:
+                            {
+                                self->state = 0;
+                                self->stateTimer = 0;
+                                break;
+                            }
+                        }
+                        break;
+                }
+
+                
             }
             break;
         case 1 ... 3:
@@ -3576,7 +3769,7 @@ void mg_updateTurret(mgEntity_t* self)
                     int16_t cos = getCos1024(self->jumpPower);
 
                     createdEntity->xspeed = (64 * cos) / 1024;
-                    createdEntity->yspeed = (64 * sin) / 1024;
+                    createdEntity->yspeed = (64 * -sin) / 1024;
 
                     createdEntity->linkedEntity = self;
                     self->state++;
@@ -3657,6 +3850,8 @@ void mg_updateCharginSchmuck(mgEntity_t* self)
         case 1:
 
             self->stateTimer++;
+
+            self->spriteIndex = charginSchmuckAnimFrames[ (self->stateTimer >> 2) & 0b1];
 
             if (!(self->stateTimer % 10))
             {
@@ -6142,4 +6337,13 @@ void startOutroCutscene(mgEntity_t* self)
         soundPlayBgm(&self->soundManager->currentBgm, BZR_STEREO);
     }
     bossOutroCutscene(self->gameData);
+}
+
+void mg_updateSpikyMcGee(mgEntity_t* self)
+{
+    self->stateTimer++;
+    
+    self->spriteIndex = spikyMcGeeAnimFrames[ (self->stateTimer >> 4) & 0b1];
+    
+    despawnWhenOffscreen(self);
 }

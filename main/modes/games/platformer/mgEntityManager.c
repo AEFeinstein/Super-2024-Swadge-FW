@@ -1958,7 +1958,7 @@ mgEntity_t* createSpikyMcGee(mgEntityManager_t* entityManager, uint16_t x, uint1
 
     entity->type                 = ENTITY_SPIKY_MCGEE;
     entity->spriteIndex          = MG_SP_SPIKY_MCGEE;
-    entity->updateFunction       = &mg_updateDummy;
+    entity->updateFunction       = &mg_updateSpikyMcGee;
     entity->collisionHandler     = &mg_enemyCollisionHandler;
     entity->tileCollisionHandler = &mg_enemyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;

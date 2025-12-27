@@ -1103,6 +1103,11 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
     drawText(font, c000, livesStr, 6, 166);
     drawText(font, c555, livesStr, 4, 164);
 
+    if (gameData->cheatMode)
+    {
+        DRAW_FPS_COUNTER(platformer->font);
+    }
+
     if (gameData->comboTimer == 0)
     {
         return;
@@ -1111,6 +1116,7 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
     snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
     drawText(font, (gameData->comboTimer < 60) ? c030 : greenColors[(platformer->gameData.frameCount >> 3) % 4],
              scoreStr, 32, 16);
+    
 }
 
 void updateTitleScreen(platformer_t* self)

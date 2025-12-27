@@ -333,4 +333,6 @@ void crawlerSetMoveState(mgEntity_t* self, uint8_t state);
 
 uint8_t mg_crawlerGettInitialMoveState(int16_t angle, bool counterclockwise);
 
+void mg_updateSpikyMcGee(mgEntity_t* self);
+
 #endif

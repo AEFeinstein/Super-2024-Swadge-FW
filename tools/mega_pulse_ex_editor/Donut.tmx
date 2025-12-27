@@ -3,9 +3,8 @@
  <editorsettings>
   <export target="Super-2024-Swadge-FW-main 2/assets/platformer/levels/Donut.raw" format="Mega Pulse EX"/>
  </editorsettings>
- <tileset firstgid="1" source="./kinetic-donut-tileset.tsx"/>
- <tileset firstgid="199" source="./mg-entity-tileset.tsx"/>
- <tileset firstgid="364" source="./kinetic-donut-tileset.tsx"/>
+ <tileset firstgid="1" source="kinetic-donut-tileset.tsx"/>
+ <tileset firstgid="199" source="mg-entity-tileset.tsx"/>
  <layer id="1" name="tiles" width="255" height="70">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -70,7 +69,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,39,40,44,34,34,34,45,41,0,0,0,0,39,44,34,34,34,45,40,41,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,38,0,0,0,0,33,34,34,34,35,0,0,89,90,0,0,0,81,82,0,0,36,38,0,0,89,90,83,84,83,84,83,84,0,0,0,33,34,34,34,34,34,34,34,35,49,49,49,162,0,0,0,49,0,0,0,0,0,0,0,0,0,49,49,33,34,34,34,34,34,34,34,45,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,49,37,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,38,0,0,0,0,36,42,40,43,38,0,0,87,88,0,0,0,79,80,0,0,36,38,0,0,87,88,85,86,85,86,85,86,0,0,0,36,37,98,99,100,37,42,43,38,162,0,0,0,0,0,0,162,0,0,0,49,0,0,0,0,0,0,162,36,42,40,40,40,40,40,40,40,41,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,49,37,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,38,0,0,0,0,36,38,0,36,38,0,0,89,90,0,0,0,81,82,0,0,39,41,0,0,89,90,0,0,0,0,0,0,0,0,0,36,37,101,102,103,37,38,36,38,162,0,0,0,0,0,0,0,0,0,0,162,0,0,0,0,0,0,162,36,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,44,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,35,49,49,49,49,49,49,49,49,49,49,49,49,49,49,49,49,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,49,37,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,38,0,0,0,0,36,38,0,36,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,37,37,37,37,38,36,38,162,0,0,0,0,0,0,0,0,0,0,0,0,0,412,0,0,0,162,36,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,39,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,41,40,40,40,40,40,40,40,40,40,40,40,40,40,40,43,49,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,49,37,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,38,0,0,0,0,36,38,0,36,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,37,37,37,37,38,36,38,162,0,0,0,0,0,0,0,0,0,0,0,0,0,49,0,0,0,162,36,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,39,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,41,40,40,40,40,40,40,40,40,40,40,40,40,40,40,43,49,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,49,37,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,38,0,0,0,0,36,38,0,36,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,37,98,99,100,37,38,36,38,162,0,0,0,49,0,0,0,0,0,0,0,0,0,162,0,0,0,162,36,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,49,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,49,37,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,38,0,0,0,0,36,38,0,36,44,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,45,37,101,102,103,37,38,36,38,162,0,0,0,162,0,0,0,0,49,0,0,0,0,0,0,0,0,162,36,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,49,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,49,37,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,44,34,34,34,34,45,38,0,39,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,41,36,38,162,0,0,0,0,0,0,0,0,162,0,0,0,0,0,0,0,0,162,36,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,49,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,49,37,0,0,
@@ -81,337 +80,337 @@
 </data>
  </layer>
  <objectgroup id="2" name="entities">
-  <object id="339" template="./templates/Player.tx" x="441.126" y="753"/>
-  <object id="340" template="./templates/Warp Exit (Wall) .tx" x="295.986" y="735.757">
+  <object id="339" template="templates/Player.tx" x="441.126" y="753"/>
+  <object id="340" template="templates/Warp Exit (Wall) .tx" x="295.986" y="735.757">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="340"/>
    </properties>
   </object>
-  <object id="343" template="./templates/Warp Exit (Floor).tx" x="95.8342" y="855.131"/>
-  <object id="345" template="./templates/Warp Exit (Floor).tx" x="95.5161" y="608.062"/>
-  <object id="348" template="./templates/Warp Entrance (Wall).tx" x="1241.11" y="736.156">
+  <object id="343" template="templates/Warp Exit (Floor).tx" x="95.8342" y="855.131"/>
+  <object id="345" template="templates/Warp Exit (Floor).tx" x="95.5161" y="608.062"/>
+  <object id="348" template="templates/Warp Entrance (Wall).tx" x="1241.11" y="736.156">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="340"/>
    </properties>
   </object>
-  <object id="349" template="./templates/Warp Entrance (Wall).tx" x="1240.33" y="575.822">
+  <object id="349" template="templates/Warp Entrance (Wall).tx" x="1240.33" y="575.822">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="340"/>
    </properties>
   </object>
-  <object id="350" template="./templates/Warp Entrance (Floor).tx" x="975.836" y="891.936">
+  <object id="350" template="templates/Warp Entrance (Floor).tx" x="975.836" y="891.936">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="371"/>
    </properties>
   </object>
-  <object id="351" template="./templates/Warp Entrance (Floor).tx" x="975.97" y="382.611">
+  <object id="351" template="templates/Warp Entrance (Floor).tx" x="975.97" y="382.611">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="345"/>
    </properties>
   </object>
-  <object id="352" template="./templates/Shrubble (Lvl. 4).tx" x="936.054" y="552">
+  <object id="352" template="templates/Shrubble (Lvl. 4).tx" x="936.054" y="552">
    <properties>
     <property name="moveClockwise" type="bool" value="true"/>
    </properties>
   </object>
-  <object id="353" template="./templates/Shrubble (Lvl. 4).tx" x="1063.36" y="648.125" rotation="90">
+  <object id="353" template="templates/Shrubble (Lvl. 4).tx" x="1063.36" y="648.125" rotation="90">
    <properties>
     <property name="moveClockwise" type="bool" value="true"/>
    </properties>
   </object>
-  <object id="355" template="./templates/Shrubble (Lvl. 4).tx" gid="2147483859" x="871.606" y="649.249" rotation="-90">
+  <object id="355" template="templates/Shrubble (Lvl. 4).tx" gid="2147483859" x="871.606" y="649.249" rotation="-90">
    <properties>
     <property name="moveClockwise" type="bool" value="true"/>
    </properties>
   </object>
-  <object id="356" template="./templates/Dust Bunny.tx" x="565.486" y="727.982"/>
-  <object id="357" template="./templates/Dust Bunny.tx" x="662.983" y="696.566"/>
-  <object id="358" template="./templates/Bouncepad (45º).tx" x="766.11" y="719.173"/>
-  <object id="360" template="./templates/Bouncepad.tx" x="1533.05" y="477.354"/>
-  <object id="361" template="./templates/Dust Bunny.tx" x="1565.05" y="405.354"/>
-  <object id="362" template="./templates/Bouncepad.tx" x="1629.05" y="477.354"/>
-  <object id="363" template="./templates/Dust Bunny.tx" x="1693.05" y="373.354"/>
-  <object id="364" template="./templates/Bouncepad.tx" x="1757.05" y="477.354"/>
-  <object id="365" template="./templates/Dust Bunny.tx" x="1821.05" y="405.354"/>
-  <object id="366" template="./templates/Bouncepad.tx" x="1949.05" y="365.354"/>
-  <object id="367" template="./templates/Turret.tx" x="2022.79" y="387.761"/>
-  <object id="368" template="./templates/Bouncepad (45º).tx" x="2093.05" y="365.354"/>
-  <object id="369" template="./templates/Bouncepad.tx" x="1917.05" y="477.354"/>
-  <object id="370" template="./templates/Bouncepad.tx" x="1984.54" y="477.354"/>
-  <object id="371" template="./templates/Warp Exit (Floor).tx" x="1407.06" y="238.394"/>
-  <object id="372" template="./templates/Bouncepad.tx" x="2061.45" y="478.505"/>
-  <object id="374" template="./templates/Warp Entrance (Wall).tx" x="2535.36" y="592.995">
+  <object id="356" template="templates/Dust Bunny.tx" x="565.486" y="727.982"/>
+  <object id="357" template="templates/Dust Bunny.tx" x="662.983" y="696.566"/>
+  <object id="358" template="templates/Bouncepad (45º).tx" x="766.11" y="719.173"/>
+  <object id="360" template="templates/Bouncepad.tx" x="1533.05" y="477.354"/>
+  <object id="361" template="templates/Dust Bunny.tx" x="1565.05" y="405.354"/>
+  <object id="362" template="templates/Bouncepad.tx" x="1629.05" y="477.354"/>
+  <object id="363" template="templates/Dust Bunny.tx" x="1693.05" y="373.354"/>
+  <object id="364" template="templates/Bouncepad.tx" x="1757.05" y="477.354"/>
+  <object id="365" template="templates/Dust Bunny.tx" x="1821.05" y="405.354"/>
+  <object id="366" template="templates/Bouncepad.tx" x="1949.05" y="365.354"/>
+  <object id="367" template="templates/Turret.tx" x="2022.79" y="387.761"/>
+  <object id="368" template="templates/Bouncepad (45º).tx" x="2093.05" y="365.354"/>
+  <object id="369" template="templates/Bouncepad.tx" x="1917.05" y="477.354"/>
+  <object id="370" template="templates/Bouncepad.tx" x="1984.54" y="477.354"/>
+  <object id="371" template="templates/Warp Exit (Floor).tx" x="1407.06" y="238.394"/>
+  <object id="372" template="templates/Bouncepad.tx" x="2061.45" y="478.505"/>
+  <object id="374" template="templates/Warp Entrance (Wall).tx" x="2535.36" y="592.995">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="417"/>
    </properties>
   </object>
-  <object id="375" template="./templates/Warp Entrance (Wall).tx" x="2505.94" y="336.328">
+  <object id="375" template="templates/Warp Entrance (Wall).tx" x="2505.94" y="336.328">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="558"/>
    </properties>
   </object>
-  <object id="376" template="./templates/Warp Exit (Wall) .tx" x="2768.76" y="544.021"/>
-  <object id="377" template="./templates/Shrubble (Lvl. 4).tx" x="2920.02" y="487.527">
+  <object id="376" template="templates/Warp Exit (Wall) .tx" x="2768.76" y="544.021"/>
+  <object id="377" template="templates/Shrubble (Lvl. 4).tx" x="2920.02" y="487.527">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
     <property name="moveClockwise" type="bool" value="true"/>
    </properties>
   </object>
-  <object id="378" template="./templates/Shrubble (Lvl. 4).tx" gid="1073742035" x="2919.78" y="456.696" rotation="0">
+  <object id="378" template="templates/Shrubble (Lvl. 4).tx" gid="1073742035" x="2919.78" y="456.696" rotation="0">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
    </properties>
   </object>
-  <object id="379" template="./templates/Shrubble (Lvl. 4).tx" x="3112.4" y="486.208">
+  <object id="379" template="templates/Shrubble (Lvl. 4).tx" x="3112.4" y="486.208">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
    </properties>
   </object>
-  <object id="380" template="./templates/Shrubble (Lvl. 4).tx" gid="1073742035" x="3112.46" y="456.737" rotation="0">
+  <object id="380" template="templates/Shrubble (Lvl. 4).tx" gid="1073742035" x="3112.46" y="456.737" rotation="0">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
    </properties>
   </object>
-  <object id="381" template="./templates/Shrubble (Lvl. 4).tx" x="3097.34" y="469.494" rotation="89.8537">
+  <object id="381" template="templates/Shrubble (Lvl. 4).tx" x="3097.34" y="469.494" rotation="89.8537">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
    </properties>
   </object>
-  <object id="382" template="./templates/Shrubble (Lvl. 4).tx" x="3112.15" y="263.823">
+  <object id="382" template="templates/Shrubble (Lvl. 4).tx" x="3112.15" y="263.823">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
    </properties>
   </object>
-  <object id="384" template="./templates/Shrubble (Lvl. 4).tx" x="3096.93" y="240.238" rotation="90.2">
+  <object id="384" template="templates/Shrubble (Lvl. 4).tx" x="3096.93" y="240.238" rotation="90.2">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
    </properties>
   </object>
-  <object id="385" template="./templates/Shrubble (Lvl. 4).tx" x="3097.13" y="214.967" rotation="90.2">
+  <object id="385" template="templates/Shrubble (Lvl. 4).tx" x="3097.13" y="214.967" rotation="90.2">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
    </properties>
   </object>
-  <object id="386" template="./templates/Shrubble (Lvl. 4).tx" gid="2147483859" x="3127.39" y="231.619" rotation="-90.2">
+  <object id="386" template="templates/Shrubble (Lvl. 4).tx" gid="2147483859" x="3127.39" y="231.619" rotation="-90.2">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
    </properties>
   </object>
-  <object id="388" template="./templates/Shrubble (Lvl. 4).tx" gid="1073742035" x="3111.69" y="200.847" rotation="0">
+  <object id="388" template="templates/Shrubble (Lvl. 4).tx" gid="1073742035" x="3111.69" y="200.847" rotation="0">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
    </properties>
   </object>
-  <object id="389" template="./templates/Shrubble (Lvl. 4).tx" x="3112.47" y="727.54">
+  <object id="389" template="templates/Shrubble (Lvl. 4).tx" x="3112.47" y="727.54">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
    </properties>
   </object>
-  <object id="390" template="./templates/Shrubble (Lvl. 4).tx" gid="1073742035" x="3112.64" y="667.221" rotation="0">
+  <object id="390" template="templates/Shrubble (Lvl. 4).tx" gid="1073742035" x="3112.64" y="667.221" rotation="0">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
    </properties>
   </object>
-  <object id="391" template="./templates/Shrubble (Lvl. 4).tx" x="3256.17" y="488.273">
+  <object id="391" template="templates/Shrubble (Lvl. 4).tx" x="3256.17" y="488.273">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
    </properties>
   </object>
-  <object id="392" template="./templates/Shrubble (Lvl. 4).tx" gid="1073742035" x="3255.43" y="407.822" rotation="0"/>
-  <object id="393" template="./templates/Shrubble (Lvl. 4).tx" x="3240.35" y="431.654" rotation="90">
+  <object id="392" template="templates/Shrubble (Lvl. 4).tx" gid="1073742035" x="3255.43" y="407.822" rotation="0"/>
+  <object id="393" template="templates/Shrubble (Lvl. 4).tx" x="3240.35" y="431.654" rotation="90">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
    </properties>
   </object>
-  <object id="394" template="./templates/Shrubble (Lvl. 4).tx" x="3240.55" y="461.463" rotation="90">
+  <object id="394" template="templates/Shrubble (Lvl. 4).tx" x="3240.55" y="461.463" rotation="90">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
    </properties>
   </object>
-  <object id="395" template="./templates/Shrubble (Lvl. 4).tx" gid="2147483859" x="3271.51" y="438.639" rotation="-90">
+  <object id="395" template="templates/Shrubble (Lvl. 4).tx" gid="2147483859" x="3271.51" y="438.639" rotation="-90">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
    </properties>
   </object>
-  <object id="396" template="./templates/Shrubble (Lvl. 4).tx" gid="2147483859" x="3272" y="471.602" rotation="-90">
+  <object id="396" template="templates/Shrubble (Lvl. 4).tx" gid="2147483859" x="3272" y="471.602" rotation="-90">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
    </properties>
   </object>
-  <object id="397" template="./templates/Shrubble (Lvl. 4).tx" x="3097.06" y="695.957" rotation="90">
+  <object id="397" template="templates/Shrubble (Lvl. 4).tx" x="3097.06" y="695.957" rotation="90">
    <properties>
     <property name="baseSpeed_subPixelsPerFrame" type="int" value="12"/>
    </properties>
   </object>
-  <object id="398" template="./templates/Dust Bunny.tx" x="2839.22" y="565.299"/>
-  <object id="399" template="./templates/Dust Bunny.tx" x="2970.28" y="376.898"/>
-  <object id="400" template="./templates/Dust Bunny.tx" x="3062.94" y="375.851"/>
-  <object id="401" template="./templates/Dust Bunny.tx" x="3176.03" y="583.17"/>
-  <object id="402" template="./templates/Warp Entrance (Floor).tx" x="3022.3" y="216.682">
+  <object id="398" template="templates/Dust Bunny.tx" x="2839.22" y="565.299"/>
+  <object id="399" template="templates/Dust Bunny.tx" x="2970.28" y="376.898"/>
+  <object id="400" template="templates/Dust Bunny.tx" x="3062.94" y="375.851"/>
+  <object id="401" template="templates/Dust Bunny.tx" x="3176.03" y="583.17"/>
+  <object id="402" template="templates/Warp Entrance (Floor).tx" x="3022.3" y="216.682">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="410"/>
    </properties>
   </object>
-  <object id="403" template="./templates/Warp Entrance (Floor).tx" x="3023.03" y="709.287">
+  <object id="403" template="templates/Warp Entrance (Floor).tx" x="3023.03" y="709.287">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="518"/>
    </properties>
   </object>
-  <object id="404" template="./templates/Warp Entrance (Wall).tx" x="3286.27" y="559.71">
+  <object id="404" template="templates/Warp Entrance (Wall).tx" x="3286.27" y="559.71">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="376"/>
    </properties>
   </object>
-  <object id="405" template="./templates/Megaton Wasp.tx" x="1660.46" y="916.937"/>
-  <object id="406" template="./templates/Turret.tx" gid="2147484000" x="1824.37" y="707.895" rotation="0"/>
-  <object id="407" template="./templates/Dust Bunny (Lvl. 2).tx" x="1720.64" y="840.13"/>
-  <object id="408" template="./templates/Shrubble.tx" x="1831.5" y="840.13"/>
-  <object id="409" template="./templates/Shrubble.tx" x="1892.47" y="935.941"/>
-  <object id="410" template="./templates/Warp Entrance (Floor).tx" x="1456.96" y="1017.5"/>
-  <object id="411" template="./templates/Chargin' Schmuck.tx" gid="2147483999" x="1969.28" y="1008" rotation="0"/>
-  <object id="412" template="./templates/Warp Entrance (Wall).tx" x="2517.85" y="912.31">
+  <object id="405" template="templates/Megaton Wasp.tx" x="1660.46" y="916.937"/>
+  <object id="406" template="templates/Turret.tx" gid="2147484000" x="1824.37" y="707.895" rotation="0"/>
+  <object id="407" template="templates/Dust Bunny (Lvl. 2).tx" x="1720.64" y="840.13"/>
+  <object id="408" template="templates/Shrubble.tx" x="1831.5" y="840.13"/>
+  <object id="409" template="templates/Shrubble.tx" x="1892.47" y="935.941"/>
+  <object id="410" template="templates/Warp Entrance (Floor).tx" x="1456.96" y="1017.5"/>
+  <object id="411" template="templates/Chargin' Schmuck.tx" gid="2147483999" x="1969.28" y="1008" rotation="0"/>
+  <object id="412" template="templates/Warp Entrance (Wall).tx" x="2517.85" y="912.31">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="418"/>
    </properties>
   </object>
-  <object id="415" template="./templates/Scroll Lock (Right).tx" x="4020.71" y="968.602"/>
-  <object id="416" template="./templates/Scroll Lock (Down).tx" x="3416.71" y="1080.6"/>
-  <object id="417" template="./templates/Warp Exit (Wall) .tx" x="3350.5" y="944.033"/>
-  <object id="418" template="./templates/Warp Exit (Wall) .tx" x="3474.74" y="429.199"/>
-  <object id="419" template="./templates/Bouncepad.tx" x="2192.61" y="1070.06"/>
-  <object id="420" template="./templates/Bouncepad.tx" x="2223.55" y="1070.72"/>
-  <object id="421" template="./templates/Bouncepad.tx" x="2255.77" y="1071.09"/>
-  <object id="422" template="./templates/Bouncepad.tx" x="2286.55" y="1071.09"/>
-  <object id="423" template="./templates/Bouncepad.tx" x="2319.21" y="1070.34"/>
-  <object id="424" template="./templates/Bouncepad.tx" x="2352.62" y="1071.09"/>
-  <object id="425" template="./templates/Bouncepad.tx" x="2383.77" y="1070.71"/>
-  <object id="426" template="./templates/Bouncepad.tx" x="2416.06" y="1071.09"/>
-  <object id="427" template="./templates/Dust Bunny.tx" x="2312.31" y="951.087"/>
-  <object id="428" template="./templates/Dust Bunny.tx" x="2375.41" y="839.648"/>
-  <object id="429" template="./templates/Dust Bunny.tx" x="2279.64" y="1015.75"/>
-  <object id="430" template="./templates/Turret.tx" gid="1073742176" x="2287.14" y="796.593" rotation="0"/>
-  <object id="431" template="./templates/Warp Entrance (Floor).tx" x="3632.16" y="602.977">
+  <object id="415" template="templates/Scroll Lock (Right).tx" x="4020.71" y="968.602"/>
+  <object id="416" template="templates/Scroll Lock (Down).tx" x="3416.71" y="1080.6"/>
+  <object id="417" template="templates/Warp Exit (Wall) .tx" x="3350.5" y="944.033"/>
+  <object id="418" template="templates/Warp Exit (Wall) .tx" x="3474.74" y="429.199"/>
+  <object id="419" template="templates/Bouncepad.tx" x="2192.61" y="1070.06"/>
+  <object id="420" template="templates/Bouncepad.tx" x="2223.55" y="1070.72"/>
+  <object id="421" template="templates/Bouncepad.tx" x="2255.77" y="1071.09"/>
+  <object id="422" template="templates/Bouncepad.tx" x="2286.55" y="1071.09"/>
+  <object id="423" template="templates/Bouncepad.tx" x="2319.21" y="1070.34"/>
+  <object id="424" template="templates/Bouncepad.tx" x="2352.62" y="1071.09"/>
+  <object id="425" template="templates/Bouncepad.tx" x="2383.77" y="1070.71"/>
+  <object id="426" template="templates/Bouncepad.tx" x="2416.06" y="1071.09"/>
+  <object id="427" template="templates/Dust Bunny.tx" x="2312.31" y="951.087"/>
+  <object id="428" template="templates/Dust Bunny.tx" x="2375.41" y="839.648"/>
+  <object id="429" template="templates/Dust Bunny.tx" x="2279.64" y="1015.75"/>
+  <object id="430" template="templates/Turret.tx" gid="352" x="2287.14" y="796.593" rotation="180"/>
+  <object id="431" template="templates/Warp Entrance (Floor).tx" x="3632.16" y="602.977">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="446"/>
    </properties>
   </object>
-  <object id="432" template="./templates/Warp Entrance (Floor).tx" x="3728.03" y="601.295">
+  <object id="432" template="templates/Warp Entrance (Floor).tx" x="3728.03" y="601.295">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="444"/>
    </properties>
   </object>
-  <object id="433" template="./templates/Warp Entrance (Floor).tx" x="3825.58" y="600.454">
+  <object id="433" template="templates/Warp Entrance (Floor).tx" x="3825.58" y="600.454">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="445"/>
    </properties>
   </object>
-  <object id="434" template="./templates/Warp Entrance (Wall).tx" x="3975.28" y="288.932">
+  <object id="434" template="templates/Warp Entrance (Wall).tx" x="3975.28" y="288.932">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="418"/>
    </properties>
   </object>
-  <object id="435" template="./templates/Warp Entrance (Wall).tx" x="3975.28" y="447.397">
+  <object id="435" template="templates/Warp Entrance (Wall).tx" x="3975.28" y="447.397">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="418"/>
    </properties>
   </object>
-  <object id="436" template="./templates/Warp Entrance (Wall).tx" x="3480.78" y="271.634">
+  <object id="436" template="templates/Warp Entrance (Wall).tx" x="3480.78" y="271.634">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="437"/>
    </properties>
   </object>
-  <object id="437" template="./templates/Warp Exit (Wall) .tx" x="3350.7" y="834.031"/>
-  <object id="438" template="./templates/Warp Exit (Floor).tx" x="3632.79" y="551.825"/>
-  <object id="439" template="./templates/Warp Exit (Floor).tx" x="3728.49" y="551.825"/>
-  <object id="440" template="./templates/Warp Exit (Floor).tx" x="3823.42" y="552.597"/>
-  <object id="441" template="./templates/Warp Entrance (Floor).tx" x="3617.53" y="104.398">
+  <object id="437" template="templates/Warp Exit (Wall) .tx" x="3350.7" y="834.031"/>
+  <object id="438" template="templates/Warp Exit (Floor).tx" x="3632.79" y="551.825"/>
+  <object id="439" template="templates/Warp Exit (Floor).tx" x="3728.49" y="551.825"/>
+  <object id="440" template="templates/Warp Exit (Floor).tx" x="3823.42" y="552.597"/>
+  <object id="441" template="templates/Warp Entrance (Floor).tx" x="3617.53" y="104.398">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="438"/>
    </properties>
   </object>
-  <object id="442" template="./templates/Warp Entrance (Floor).tx" x="3728.83" y="103.488">
+  <object id="442" template="templates/Warp Entrance (Floor).tx" x="3728.83" y="103.488">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="440"/>
    </properties>
   </object>
-  <object id="443" template="./templates/Warp Entrance (Floor).tx" x="3823.3" y="102.647">
+  <object id="443" template="templates/Warp Entrance (Floor).tx" x="3823.3" y="102.647">
    <properties>
     <property name="linkedEntitySpawn" type="object" value="439"/>
    </properties>
   </object>
-  <object id="444" template="./templates/Warp Exit (Floor).tx" x="3615.84" y="168.352"/>
-  <object id="445" template="./templates/Warp Exit (Floor).tx" x="3728.51" y="169.896"/>
-  <object id="446" template="./templates/Warp Exit (Floor).tx" x="3824.22" y="167.581"/>
-  <object id="447" template="./templates/Shrubble (Lvl. 4).tx" x="3704.22" y="263"/>
-  <object id="448" template="./templates/Shrubble (Lvl. 4).tx" gid="1073742035" x="3720.53" y="456.19" rotation="0"/>
-  <object id="463" template="./templates/Scroll Lock (Up).tx" x="974.656" y="328.118"/>
-  <object id="464" template="./templates/Scroll Unlock (All Directions).tx" x="95.3643" y="600.31"/>
-  <object id="466" template="./templates/Scroll Unlock (All Directions).tx" x="327.471" y="730.588"/>
-  <object id="473" template="./templates/Scroll Lock (Up).tx" x="1407.62" y="168.75"/>
-  <object id="474" template="./templates/Scroll Unlock (All Directions).tx" x="1408.37" y="263.04"/>
-  <object id="477" template="./templates/Scroll Lock (Up).tx" x="3021.78" y="183.568"/>
-  <object id="478" template="./templates/Scroll Unlock (All Directions).tx" x="1457.38" y="1017.36"/>
-  <object id="479" template="./templates/Scroll Lock (Right).tx" x="3255.44" y="637.67"/>
-  <object id="480" template="./templates/Scroll Lock (Right).tx" x="4028.28" y="363.388"/>
-  <object id="482" template="./templates/Bouncepad.tx" x="79.8872" y="879.614"/>
-  <object id="483" template="./templates/Bouncepad.tx" x="111.073" y="879.187"/>
-  <object id="484" template="./templates/Bouncepad.tx" gid="1073742061" x="80.7152" y="612.358" rotation="0"/>
-  <object id="485" template="./templates/Bouncepad.tx" gid="1073742061" x="112.328" y="613.213" rotation="0"/>
-  <object id="486" template="./templates/Bouncepad.tx" x="960.783" y="412.679"/>
-  <object id="487" template="./templates/Bouncepad.tx" x="991.541" y="412.679"/>
-  <object id="488" template="./templates/Bouncepad.tx" gid="1073742061" x="960.355" y="865.089" rotation="0"/>
-  <object id="489" template="./templates/Bouncepad.tx" gid="1073742061" x="990.494" y="864.468" rotation="0"/>
-  <object id="494" template="./templates/Scroll Lock (Down).tx" x="973.684" y="947.368"/>
-  <object id="499" template="./templates/Bouncepad.tx" gid="1073742061" x="1390.51" y="211.799" rotation="0"/>
-  <object id="500" template="./templates/Bouncepad.tx" gid="1073742061" x="1423.01" y="210.84" rotation="0"/>
-  <object id="502" template="./templates/Scroll Lock (Right).tx" x="2551.1" y="461.252"/>
-  <object id="503" template="./templates/Bouncepad.tx" x="2463.3" y="353.048" rotation="90"/>
-  <object id="504" template="./templates/Bouncepad.tx" x="2462.94" y="321.634" rotation="90"/>
-  <object id="505" template="./templates/Bouncepad.tx" x="2504.03" y="606.814" rotation="90"/>
-  <object id="506" template="./templates/Bouncepad.tx" x="2503.17" y="576.395" rotation="90"/>
-  <object id="509" template="./templates/Bouncepad.tx" x="3007.65" y="258.585"/>
-  <object id="510" template="./templates/Bouncepad.tx" x="3038.41" y="258.585"/>
-  <object id="511" template="./templates/Bouncepad.tx" gid="1073742061" x="3009.5" y="670.66" rotation="0"/>
-  <object id="512" template="./templates/Bouncepad.tx" gid="1073742061" x="3039.64" y="670.039" rotation="0"/>
-  <object id="515" template="./templates/Bouncepad.tx" x="3251.11" y="575.846" rotation="90"/>
-  <object id="516" template="./templates/Bouncepad.tx" x="3250.03" y="543.686" rotation="90"/>
-  <object id="517" template="./templates/Warp Exit (Floor).tx" x="2638.9" y="663.776"/>
-  <object id="518" template="./templates/Warp Exit (Floor).tx" x="2638.58" y="416.707"/>
-  <object id="519" template="./templates/Scroll Unlock (All Directions).tx" x="2638.43" y="408.955"/>
-  <object id="520" template="./templates/Bouncepad.tx" x="2622.95" y="688.259"/>
-  <object id="521" template="./templates/Bouncepad.tx" x="2654.14" y="687.832"/>
-  <object id="522" template="./templates/Bouncepad.tx" gid="1073742061" x="2624.23" y="447.316" rotation="0"/>
-  <object id="523" template="./templates/Bouncepad.tx" gid="1073742061" x="2655.85" y="448.17" rotation="0"/>
-  <object id="524" template="./templates/Bouncepad.tx" x="2721.98" y="560.908" rotation="90"/>
-  <object id="525" template="./templates/Bouncepad.tx" x="2720.51" y="529.529" rotation="90"/>
-  <object id="526" template="./templates/Scroll Lock (Right).tx" x="3302.27" y="557.627"/>
-  <object id="527" template="./templates/Scroll Unlock (All Directions).tx" x="3474.59" y="430.72"/>
-  <object id="528" template="./templates/Bouncepad.tx" x="3936.32" y="272.707" rotation="90"/>
-  <object id="529" template="./templates/Bouncepad.tx" x="3936.81" y="303.97" rotation="90"/>
-  <object id="530" template="./templates/Bouncepad.tx" x="3935.06" y="432.758" rotation="90"/>
-  <object id="531" template="./templates/Bouncepad.tx" x="3935.55" y="464.021" rotation="90"/>
-  <object id="542" template="./templates/Bouncepad.tx" x="2480.61" y="927.279" rotation="90"/>
-  <object id="543" template="./templates/Bouncepad.tx" x="2479.12" y="895.854" rotation="90"/>
-  <object id="547" template="./templates/Bouncepad.tx" x="1199.37" y="561.18" rotation="90"/>
-  <object id="548" template="./templates/Bouncepad.tx" x="1199.37" y="591.575" rotation="90"/>
-  <object id="549" template="./templates/Bouncepad.tx" x="1201.66" y="721.519" rotation="90"/>
-  <object id="550" template="./templates/Bouncepad.tx" x="1201.66" y="751.914" rotation="90"/>
-  <object id="551" template="./templates/Bouncepad (45º).tx" x="179.473" y="723.251"/>
-  <object id="552" template="./templates/Bouncepad (45º).tx" x="178.708" y="753.482"/>
-  <object id="553" template="./templates/Bouncepad (45º).tx" x="3424.15" y="450.406"/>
-  <object id="554" template="./templates/Bouncepad (45º).tx" x="3423.39" y="416.73"/>
-  <object id="556" template="./templates/Scroll Unlock (All Directions).tx" x="2780.5" y="544.543"/>
-  <object id="557" template="./templates/Scroll Lock (Up).tx" x="3895.67" y="843.182"/>
-  <object id="558" template="./templates/Warp Exit (Wall) .tx" x="1497.82" y="911.777"/>
-  <object id="559" template="./templates/Bouncepad (45º).tx" gid="2147483884" x="3519.72" y="258.106" rotation="0"/>
-  <object id="560" template="./templates/Bouncepad (45º).tx" gid="2147483884" x="3518.24" y="287.717" rotation="0"/>
-  <object id="561" template="./templates/Bouncepad (45º).tx" gid="2147483884" x="3392.81" y="819.945" rotation="0"/>
-  <object id="562" template="./templates/Bouncepad (45º).tx" gid="2147483884" x="3392.81" y="848.297" rotation="0"/>
-  <object id="563" template="./templates/Checkpoint.tx" x="3578.36" y="961"/>
-  <object id="564" template="./templates/Checkpoint.tx" x="1540" y="929"/>
-  <object id="565" template="./templates/Bouncepad.tx" x="2160" y="1072"/>
-  <object id="566" template="./templates/Dust Bunny.tx" x="2200.29" y="999.049"/>
-  <object id="567" template="./templates/Kinetic Donut.tx" x="3984" y="1048"/>
+  <object id="444" template="templates/Warp Exit (Floor).tx" x="3615.84" y="168.352"/>
+  <object id="445" template="templates/Warp Exit (Floor).tx" x="3728.51" y="169.896"/>
+  <object id="446" template="templates/Warp Exit (Floor).tx" x="3824.22" y="167.581"/>
+  <object id="447" template="templates/Shrubble (Lvl. 4).tx" x="3704.22" y="263"/>
+  <object id="448" template="templates/Shrubble (Lvl. 4).tx" gid="1073742035" x="3720.53" y="456.19" rotation="0"/>
+  <object id="463" template="templates/Scroll Lock (Up).tx" x="974.656" y="328.118"/>
+  <object id="464" template="templates/Scroll Unlock (All Directions).tx" x="95.3643" y="600.31"/>
+  <object id="466" template="templates/Scroll Unlock (All Directions).tx" x="327.471" y="730.588"/>
+  <object id="473" template="templates/Scroll Lock (Up).tx" x="1407.62" y="168.75"/>
+  <object id="474" template="templates/Scroll Unlock (All Directions).tx" x="1408.37" y="263.04"/>
+  <object id="477" template="templates/Scroll Lock (Up).tx" x="3021.78" y="183.568"/>
+  <object id="478" template="templates/Scroll Unlock (All Directions).tx" x="1457.38" y="1017.36"/>
+  <object id="479" template="templates/Scroll Lock (Right).tx" x="3255.44" y="637.67"/>
+  <object id="480" template="templates/Scroll Lock (Right).tx" x="4028.28" y="363.388"/>
+  <object id="482" template="templates/Bouncepad.tx" x="79.8872" y="879.614"/>
+  <object id="483" template="templates/Bouncepad.tx" x="111.073" y="879.187"/>
+  <object id="484" template="templates/Bouncepad.tx" gid="1073742061" x="80.7152" y="612.358" rotation="0"/>
+  <object id="485" template="templates/Bouncepad.tx" gid="1073742061" x="112.328" y="613.213" rotation="0"/>
+  <object id="486" template="templates/Bouncepad.tx" x="960.783" y="412.679"/>
+  <object id="487" template="templates/Bouncepad.tx" x="991.541" y="412.679"/>
+  <object id="488" template="templates/Bouncepad.tx" gid="1073742061" x="960.355" y="865.089" rotation="0"/>
+  <object id="489" template="templates/Bouncepad.tx" gid="1073742061" x="990.494" y="864.468" rotation="0"/>
+  <object id="494" template="templates/Scroll Lock (Down).tx" x="973.684" y="947.368"/>
+  <object id="499" template="templates/Bouncepad.tx" gid="1073742061" x="1390.51" y="211.799" rotation="0"/>
+  <object id="500" template="templates/Bouncepad.tx" gid="1073742061" x="1423.01" y="210.84" rotation="0"/>
+  <object id="502" template="templates/Scroll Lock (Right).tx" x="2551.1" y="461.252"/>
+  <object id="503" template="templates/Bouncepad.tx" x="2463.3" y="353.048" rotation="90"/>
+  <object id="504" template="templates/Bouncepad.tx" x="2462.94" y="321.634" rotation="90"/>
+  <object id="505" template="templates/Bouncepad.tx" x="2504.03" y="606.814" rotation="90"/>
+  <object id="506" template="templates/Bouncepad.tx" x="2503.17" y="576.395" rotation="90"/>
+  <object id="509" template="templates/Bouncepad.tx" x="3007.65" y="258.585"/>
+  <object id="510" template="templates/Bouncepad.tx" x="3038.41" y="258.585"/>
+  <object id="511" template="templates/Bouncepad.tx" gid="1073742061" x="3009.5" y="670.66" rotation="0"/>
+  <object id="512" template="templates/Bouncepad.tx" gid="1073742061" x="3039.64" y="670.039" rotation="0"/>
+  <object id="515" template="templates/Bouncepad.tx" x="3251.11" y="575.846" rotation="90"/>
+  <object id="516" template="templates/Bouncepad.tx" x="3250.03" y="543.686" rotation="90"/>
+  <object id="517" template="templates/Warp Exit (Floor).tx" x="2638.9" y="663.776"/>
+  <object id="518" template="templates/Warp Exit (Floor).tx" x="2638.58" y="416.707"/>
+  <object id="519" template="templates/Scroll Unlock (All Directions).tx" x="2638.43" y="408.955"/>
+  <object id="520" template="templates/Bouncepad.tx" x="2622.95" y="688.259"/>
+  <object id="521" template="templates/Bouncepad.tx" x="2654.14" y="687.832"/>
+  <object id="522" template="templates/Bouncepad.tx" gid="1073742061" x="2624.23" y="447.316" rotation="0"/>
+  <object id="523" template="templates/Bouncepad.tx" gid="1073742061" x="2655.85" y="448.17" rotation="0"/>
+  <object id="524" template="templates/Bouncepad.tx" x="2721.98" y="560.908" rotation="90"/>
+  <object id="525" template="templates/Bouncepad.tx" x="2720.51" y="529.529" rotation="90"/>
+  <object id="526" template="templates/Scroll Lock (Right).tx" x="3302.27" y="557.627"/>
+  <object id="527" template="templates/Scroll Unlock (All Directions).tx" x="3474.59" y="430.72"/>
+  <object id="528" template="templates/Bouncepad.tx" x="3936.32" y="272.707" rotation="90"/>
+  <object id="529" template="templates/Bouncepad.tx" x="3936.81" y="303.97" rotation="90"/>
+  <object id="530" template="templates/Bouncepad.tx" x="3935.06" y="432.758" rotation="90"/>
+  <object id="531" template="templates/Bouncepad.tx" x="3935.55" y="464.021" rotation="90"/>
+  <object id="542" template="templates/Bouncepad.tx" x="2480.61" y="927.279" rotation="90"/>
+  <object id="543" template="templates/Bouncepad.tx" x="2479.12" y="895.854" rotation="90"/>
+  <object id="547" template="templates/Bouncepad.tx" x="1199.37" y="561.18" rotation="90"/>
+  <object id="548" template="templates/Bouncepad.tx" x="1199.37" y="591.575" rotation="90"/>
+  <object id="549" template="templates/Bouncepad.tx" x="1201.66" y="721.519" rotation="90"/>
+  <object id="550" template="templates/Bouncepad.tx" x="1201.66" y="751.914" rotation="90"/>
+  <object id="551" template="templates/Bouncepad (45º).tx" x="179.473" y="723.251"/>
+  <object id="552" template="templates/Bouncepad (45º).tx" x="178.708" y="753.482"/>
+  <object id="553" template="templates/Bouncepad (45º).tx" x="3424.15" y="450.406"/>
+  <object id="554" template="templates/Bouncepad (45º).tx" x="3423.39" y="416.73"/>
+  <object id="556" template="templates/Scroll Unlock (All Directions).tx" x="2780.5" y="544.543"/>
+  <object id="557" template="templates/Scroll Lock (Up).tx" x="3895.67" y="843.182"/>
+  <object id="558" template="templates/Warp Exit (Wall) .tx" x="1497.82" y="911.777"/>
+  <object id="559" template="templates/Bouncepad (45º).tx" gid="2147483884" x="3519.72" y="258.106" rotation="0"/>
+  <object id="560" template="templates/Bouncepad (45º).tx" gid="2147483884" x="3518.24" y="287.717" rotation="0"/>
+  <object id="561" template="templates/Bouncepad (45º).tx" gid="2147483884" x="3392.81" y="819.945" rotation="0"/>
+  <object id="562" template="templates/Bouncepad (45º).tx" gid="2147483884" x="3392.81" y="848.297" rotation="0"/>
+  <object id="563" template="templates/Checkpoint.tx" x="3578.36" y="961"/>
+  <object id="564" template="templates/Checkpoint.tx" x="1540" y="929"/>
+  <object id="565" template="templates/Bouncepad.tx" x="2160" y="1072"/>
+  <object id="566" template="templates/Dust Bunny.tx" x="2200.29" y="999.049"/>
+  <object id="567" template="templates/Kinetic Donut.tx" x="3984" y="1048"/>
  </objectgroup>
  <objectgroup id="3" name="Annotations">
   <object id="43" x="404.08" y="846.867" width="296" height="256"/>
