@@ -114,10 +114,10 @@ void mg_updateLedsHpMeter(mgEntityManager_t* entityManager, mgGameData_t* gameDa
 
 void mg_scorePoints(mgGameData_t* gameData, uint16_t points)
 {
-    if(gameData->levelDeaths > 2)
+    if (gameData->levelDeaths > 2)
     {
         gameData->score += points;
-        gameData->combo = 1;
+        gameData->combo      = 1;
         gameData->comboTimer = 240;
         return;
     }
@@ -160,7 +160,7 @@ void updateComboTimer(mgGameData_t* gameData)
     if (gameData->comboTimer < 0)
     {
         gameData->comboTimer = 0;
-        //gameData->combo      = 0;
+        // gameData->combo      = 0;
     }
 }
 

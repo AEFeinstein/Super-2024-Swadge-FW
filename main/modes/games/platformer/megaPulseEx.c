@@ -92,7 +92,7 @@ struct platformer_t
 
     int32_t frameTimer;
 
-    //platformerHighScores_t highScores;
+    // platformerHighScores_t highScores;
     highScores_t highScores;
     swadgesona_t sonas[NUM_PLATFORMER_HIGH_SCORES];
 
@@ -166,128 +166,126 @@ static void megaPulseSetSwadgePassHighScore(swadgePassPacket_t* packet, int32_t 
 //==============================================================================
 
 // Trophy definitions for platformer mode
-const trophyData_t platformerTrophies[] = {
-    {
-        .title       = "Cured Kinetic Donut",
-        .description = "Favorite genre: Funk",
-        .image       = TROPHY_KINETIC_DONUT_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Cured Grind Pangolin",
-        .description = "Favorite genre: Ska",
-        .image       = TROPHY_GRIND_PANGOLIN_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Cured Sever Yataga",
-        .description = "Favorite genre: EDM",
-        .image       = TROPHY_SEVER_YATAGA_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Rescued Ember Demon",
-        .description = "But did Trash Man survive?",
-        .image       = TROPHY_EMBER_DEMON_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Cured Smash Gorilla",
-        .description = "Favorite genre: Salsa",
-        .image       = TROPHY_SMASH_GORILLA_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Cured Deadeye Chirpzi",
-        .description = "Favorite genre: Metal",
-        .image       = TROPHY_DEADEY_CHIRPZI_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Cured Drain Bat",
-        .description = "Favorite genre: Classical",
-        .image       = TROPHY_DRAIN_BAT_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Cured Flare Gryffyn",
-        .description = "Favorite genre: Classic Rock",
-        .image       = TROPHY_FLARE_GRYFFYN_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_MEDIUM,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Cured Bigma", // this has been moved to clearing the boss rush
-        .description = "Favorite genre: Corruption?",
-        .image       = TROPHY_BIGMA_WSG, // need 36 x 36 boss images later
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EXTREME,
-        .maxVal      = 1, // For trigger type, set to one
-    },
-    {
-        .title       = "Defeated Hank Waddle",
-        .description = "Favorite genre: Silence",
-        .image       = TROPHY_HANK_WADDLE_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Cured Trash Man",
-        .description = "Favorite genre: JAZZ",
-        .image       = TROPHY_TRASH_MAN_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Mega Player",
-        .description = "Scored 4 million!",
-        .image       = SILVER_TROPHY_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Mega Player EX",
-        .description = "Scored 10 million!",
-        .image       = GOLD_TROPHY_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EXTREME,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "1 Credit Cleared!",
-        .description = "Clear in one session without Game Over!",
-        .image       = SILVER_TROPHY_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_HARD,
-        .maxVal      = 1,
-    },
-    {
-        .title       = "Not just fast, magFAST!",
-        .description = "1CC'd in 15 gameplay minutes!",
-        .image       = GOLD_TROPHY_WSG,
-        .type        = TROPHY_TYPE_TRIGGER,
-        .difficulty  = TROPHY_DIFF_EXTREME,
-        .maxVal      = 1,
-    }
-};
+const trophyData_t platformerTrophies[] = {{
+                                               .title       = "Cured Kinetic Donut",
+                                               .description = "Favorite genre: Funk",
+                                               .image       = TROPHY_KINETIC_DONUT_WSG,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_MEDIUM,
+                                               .maxVal      = 1,
+                                           },
+                                           {
+                                               .title       = "Cured Grind Pangolin",
+                                               .description = "Favorite genre: Ska",
+                                               .image       = TROPHY_GRIND_PANGOLIN_WSG,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_MEDIUM,
+                                               .maxVal      = 1,
+                                           },
+                                           {
+                                               .title       = "Cured Sever Yataga",
+                                               .description = "Favorite genre: EDM",
+                                               .image       = TROPHY_SEVER_YATAGA_WSG,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_MEDIUM,
+                                               .maxVal      = 1,
+                                           },
+                                           {
+                                               .title       = "Rescued Ember Demon",
+                                               .description = "But did Trash Man survive?",
+                                               .image       = TROPHY_EMBER_DEMON_WSG,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_MEDIUM,
+                                               .maxVal      = 1,
+                                           },
+                                           {
+                                               .title       = "Cured Smash Gorilla",
+                                               .description = "Favorite genre: Salsa",
+                                               .image       = TROPHY_SMASH_GORILLA_WSG,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_MEDIUM,
+                                               .maxVal      = 1,
+                                           },
+                                           {
+                                               .title       = "Cured Deadeye Chirpzi",
+                                               .description = "Favorite genre: Metal",
+                                               .image       = TROPHY_DEADEY_CHIRPZI_WSG,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_MEDIUM,
+                                               .maxVal      = 1,
+                                           },
+                                           {
+                                               .title       = "Cured Drain Bat",
+                                               .description = "Favorite genre: Classical",
+                                               .image       = TROPHY_DRAIN_BAT_WSG,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_MEDIUM,
+                                               .maxVal      = 1,
+                                           },
+                                           {
+                                               .title       = "Cured Flare Gryffyn",
+                                               .description = "Favorite genre: Classic Rock",
+                                               .image       = TROPHY_FLARE_GRYFFYN_WSG,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_MEDIUM,
+                                               .maxVal      = 1,
+                                           },
+                                           {
+                                               .title = "Cured Bigma", // this has been moved to clearing the boss rush
+                                               .description = "Favorite genre: Corruption?",
+                                               .image       = TROPHY_BIGMA_WSG, // need 36 x 36 boss images later
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_EXTREME,
+                                               .maxVal      = 1, // For trigger type, set to one
+                                           },
+                                           {
+                                               .title       = "Defeated Hank Waddle",
+                                               .description = "Favorite genre: Silence",
+                                               .image       = TROPHY_HANK_WADDLE_WSG,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_HARD,
+                                               .maxVal      = 1,
+                                           },
+                                           {
+                                               .title       = "Cured Trash Man",
+                                               .description = "Favorite genre: JAZZ",
+                                               .image       = TROPHY_TRASH_MAN_WSG,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_HARD,
+                                               .maxVal      = 1,
+                                           },
+                                           {
+                                               .title       = "Mega Player",
+                                               .description = "Scored 4 million!",
+                                               .image       = SILVER_TROPHY_WSG,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_HARD,
+                                               .maxVal      = 1,
+                                           },
+                                           {
+                                               .title       = "Mega Player EX",
+                                               .description = "Scored 10 million!",
+                                               .image       = GOLD_TROPHY_WSG,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_EXTREME,
+                                               .maxVal      = 1,
+                                           },
+                                           {
+                                               .title       = "1 Credit Cleared!",
+                                               .description = "Clear in one session without Game Over!",
+                                               .image       = SILVER_TROPHY_WSG,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_HARD,
+                                               .maxVal      = 1,
+                                           },
+                                           {
+                                               .title       = "Not just fast, magFAST!",
+                                               .description = "1CC'd in 15 gameplay minutes!",
+                                               .image       = GOLD_TROPHY_WSG,
+                                               .type        = TROPHY_TYPE_TRIGGER,
+                                               .difficulty  = TROPHY_DIFF_EXTREME,
+                                               .maxVal      = 1,
+                                           }};
 
 // Individual mode settings
 const trophySettings_t platformerTrophySettings = {
@@ -391,7 +389,7 @@ void platformerEnterMode(void)
     platformer->btnState      = 0;
     platformer->prevBtnState  = 0;
 
-    //loadPlatformerHighScores(platformer);
+    // loadPlatformerHighScores(platformer);
     platformer->highScores.highScoreCount = NUM_PLATFORMER_HIGH_SCORES;
     initHighScores(&platformer->highScores, KEY_SCORES);
     loadPlatformerUnlockables(platformer);
@@ -1116,7 +1114,6 @@ void drawPlatformerHud(font_t* font, mgGameData_t* gameData)
     snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
     drawText(font, (gameData->comboTimer < 60) ? c030 : greenColors[(platformer->gameData.frameCount >> 3) % 4],
              scoreStr, 32, 16);
-    
 }
 
 void updateTitleScreen(platformer_t* self)
@@ -1515,13 +1512,15 @@ void updateGameOver(platformer_t* self)
         }
 
         changeStateNameEntry(self);
-    } else if (self->gameData.frameCount == 60)
+    }
+    else if (self->gameData.frameCount == 60)
     {
         if (!self->gameData.cheatMode && !self->gameData.debugMode && self->gameData.score >= BIG_SCORE)
         {
             trophyUpdate(&platformerTrophies[11], 1, true);
         }
-    } else if (self->gameData.frameCount == 120)
+    }
+    else if (self->gameData.frameCount == 120)
     {
         if (!self->gameData.cheatMode && !self->gameData.debugMode && self->gameData.score >= BIGGER_SCORE)
         {
@@ -1655,9 +1654,9 @@ void updateLevelClear(platformer_t* self)
 
                 self->unlockables.levelsCleared |= (1 << self->gameData.level);
 
-                if(self->unlockables.levelsCleared == 0b1111111111110)
+                if (self->unlockables.levelsCleared == 0b1111111111110)
                 {
-                    //Beat the game!
+                    // Beat the game!
                     changeStateGameClear(self);
                     return;
                 }
@@ -1693,7 +1692,7 @@ void changeStateGameClear(platformer_t* self)
     mg_resetGameDataLeds(&(self->gameData));
     mg_setBgm(&(self->soundManager), 0);
     midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
-    //soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
+    // soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
 }
 
 void updateGameClear(platformer_t* self)
@@ -1717,14 +1716,14 @@ void updateGameClear(platformer_t* self)
         }
     }
 
-    if(!self->gameData.cheatMode && !self->gameData.debugMode)
+    if (!self->gameData.cheatMode && !self->gameData.debugMode)
     {
-        if(self->gameData.frameCount == 15 && !self->gameData.continuesUsed)
+        if (self->gameData.frameCount == 15 && !self->gameData.continuesUsed)
         {
             trophyUpdate(&platformerTrophies[13], 1, true);
         }
-        
-        if(self->gameData.frameCount == 45 && !self->gameData.continuesUsed && self->gameData.inGameTimer < FAST_TIME)
+
+        if (self->gameData.frameCount == 45 && !self->gameData.continuesUsed && self->gameData.inGameTimer < FAST_TIME)
         {
             trophyUpdate(&platformerTrophies[14], 1, true);
         }
@@ -1845,10 +1844,11 @@ void drawPlatformerHighScores(font_t* font, highScores_t* highScores, swadgesona
     for (uint8_t i = 0; i < NUM_PLATFORMER_HIGH_SCORES; i++)
     {
         char rowStr[64];
-        snprintf(rowStr, sizeof(rowStr) - 1, "%d%8.6" PRIu32 " %s", i + 1, (uint32_t) highScores->highScores[i].score, sonas[i].name.nameBuffer);
+        snprintf(rowStr, sizeof(rowStr) - 1, "%d%8.6" PRIu32 " %s", i + 1, (uint32_t)highScores->highScores[i].score,
+                 sonas[i].name.nameBuffer);
         drawText(font, (gameData->rank == i) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, rowStr,
                  32, 96 + i * 24);
-        drawWsgSimpleHalf(&(sonas[i].image), 4, 86 + i *24);
+        drawWsgSimpleHalf(&(sonas[i].image), 4, 86 + i * 24);
     }
 }
 
@@ -1889,29 +1889,29 @@ void insertScoreIntoHighScores(platformerHighScores_t* highScores, uint32_t newS
 
 void changeStateNameEntry(platformer_t* self)
 {
-   /* self->gameData.frameCount = 0;
-    uint8_t rank              = getHighScoreRank(&(self->highScores), self->gameData.score);
-    self->gameData.rank       = rank;
-    self->menuState           = 0;
-    self->menuSelection       = 0;
+    /* self->gameData.frameCount = 0;
+     uint8_t rank              = getHighScoreRank(&(self->highScores), self->gameData.score);
+     self->gameData.rank       = rank;
+     self->menuState           = 0;
+     self->menuSelection       = 0;
 
-    mg_resetGameDataLeds(&(self->gameData));
+     mg_resetGameDataLeds(&(self->gameData));
 
-    if (rank >= NUM_PLATFORMER_HIGH_SCORES || self->gameData.debugMode)
-    {
-        self->menuSelection = 0;
-        self->gameData.rank = NUM_PLATFORMER_HIGH_SCORES;
-        changeStateShowHighScores(self);
-        return;
-    }
+     if (rank >= NUM_PLATFORMER_HIGH_SCORES || self->gameData.debugMode)
+     {
+         self->menuSelection = 0;
+         self->gameData.rank = NUM_PLATFORMER_HIGH_SCORES;
+         changeStateShowHighScores(self);
+         return;
+     }
 
-    mg_setBgm(&(self->soundManager), MG_BGM_NAME_ENTRY);
-    midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
-    soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
-    self->menuSelection = self->gameData.initials[0];
-    self->update        = &updateNameEntry;*/
+     mg_setBgm(&(self->soundManager), MG_BGM_NAME_ENTRY);
+     midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
+     soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
+     self->menuSelection = self->gameData.initials[0];
+     self->update        = &updateNameEntry;*/
 
-    //Bypass for Swadgepass Scoring
+    // Bypass for Swadgepass Scoring
 
     self->menuSelection = 0;
     if (self->gameData.cheatMode || self->gameData.debugMode)
@@ -1920,7 +1920,7 @@ void changeStateNameEntry(platformer_t* self)
         return;
     }
 
-    score_t scores[]         = {{.score = self->gameData.score, .spKey = {0}, .swadgesona = {0}}};
+    score_t scores[] = {{.score = self->gameData.score, .spKey = {0}, .swadgesona = {0}}};
     updateHighScores(&self->highScores, KEY_SCORES, scores, 1);
     changeStateShowHighScores(self);
 }
@@ -2011,7 +2011,7 @@ void drawNameEntry(font_t* font, mgGameData_t* gameData, uint8_t currentInitial)
 void changeStateShowHighScores(platformer_t* self)
 {
     initHighScoreSonas(&self->highScores, &self->sonas);
-    
+
     self->gameData.frameCount = 0;
     self->update              = &updateShowHighScores;
 }
