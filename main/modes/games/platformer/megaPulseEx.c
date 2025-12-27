@@ -43,7 +43,7 @@
 //==============================================================================
 #define BIG_SCORE    4000000UL
 #define BIGGER_SCORE 10000000UL
-#define FAST_TIME    1500 // 25 minutes
+#define FAST_TIME    900 // 15 minutes
 
 const char platformerName[] = "Mega Pulse EX";
 
@@ -255,6 +255,38 @@ const trophyData_t platformerTrophies[] = {
         .difficulty  = TROPHY_DIFF_HARD,
         .maxVal      = 1,
     },
+    {
+        .title       = "Mega Player",
+        .description = "Scored 4 million!",
+        .image       = SILVER_TROPHY_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Mega Player EX",
+        .description = "Scored 10 million!",
+        .image       = GOLD_TROPHY_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "1 Credit Cleared!",
+        .description = "Clear in one session without Game Over!",
+        .image       = SILVER_TROPHY_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_HARD,
+        .maxVal      = 1,
+    },
+    {
+        .title       = "Not just fast, magFAST!",
+        .description = "1CC'd in 15 gameplay minutes!",
+        .image       = GOLD_TROPHY_WSG,
+        .type        = TROPHY_TYPE_TRIGGER,
+        .difficulty  = TROPHY_DIFF_EXTREME,
+        .maxVal      = 1,
+    }
 };
 
 // Individual mode settings
@@ -299,12 +331,12 @@ static const char str_get_ready[]    = "LET'S GOOOOOO!";
 static const char str_get_ready_2[]  = "WE'RE SO BACK!";
 static const char str_time_up[]      = "-Time Up!-";
 static const char str_game_over[]    = "IT'S SO OVER...";
-static const char str_well_done[]    = "Well done!";
+static const char str_well_done[]    = "STAGE CLEAR!";
 static const char str_congrats[]     = "Congratulations!";
 static const char str_initials[]     = "Enter your initials!";
 static const char str_hbd[]          = "Happy Birthday, Evelyn!";
 static const char str_registrated[]  = "Your name registrated.";
-static const char str_do_your_best[] = "Do your best!";
+static const char str_do_your_best[] = "MEGA PLAYERS";
 static const char str_pause[]        = "-Pause-";
 
 static const char KEY_SCORES[]  = "mg_scores_swps";
@@ -668,6 +700,7 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
             }
             else
             {
+                platformer->gameData.continuesUsed = true;
                 changeStateLevelSelect(platformer);
             }
         }
@@ -1470,23 +1503,24 @@ void updateGameOver(platformer_t* self)
     if (self->gameData.frameCount > 179)
     {
         // Handle unlockables
-
-        if (self->gameData.score >= BIG_SCORE)
-        {
-            self->unlockables.bigScore = true;
-        }
-
-        if (self->gameData.score >= BIGGER_SCORE)
-        {
-            self->unlockables.biggerScore = true;
-        }
-
         if (!self->gameData.debugMode)
         {
             savePlatformerUnlockables(self);
         }
 
         changeStateNameEntry(self);
+    } else if (self->gameData.frameCount == 60)
+    {
+        if (!self->gameData.cheatMode && !self->gameData.debugMode && self->gameData.score >= BIG_SCORE)
+        {
+            trophyUpdate(&platformerTrophies[11], 1, true);
+        }
+    } else if (self->gameData.frameCount == 120)
+    {
+        if (!self->gameData.cheatMode && !self->gameData.debugMode && self->gameData.score >= BIGGER_SCORE)
+        {
+            trophyUpdate(&platformerTrophies[12], 1, true);
+        }
     }
 
     drawGameOver(&(self->font), &(self->gameData));
@@ -1568,31 +1602,31 @@ void updateLevelClear(platformer_t* self)
             {
                 // Game Cleared!
 
-                if (!self->gameData.debugMode)
-                {
-                    // Determine achievements
-                    self->unlockables.gameCleared = true;
+                // if (!self->gameData.debugMode)
+                // {
+                //     // Determine achievements
+                //     self->unlockables.gameCleared = true;
 
-                    if (!self->gameData.continuesUsed)
-                    {
-                        self->unlockables.oneCreditCleared = true;
+                //     if (!self->gameData.continuesUsed)
+                //     {
+                //         self->unlockables.oneCreditCleared = true;
 
-                        if (self->gameData.inGameTimer < FAST_TIME)
-                        {
-                            self->unlockables.fastTime = true;
-                        }
-                    }
+                //         if (self->gameData.inGameTimer < FAST_TIME)
+                //         {
+                //             self->unlockables.fastTime = true;
+                //         }
+                //     }
 
-                    if (self->gameData.score >= BIG_SCORE)
-                    {
-                        self->unlockables.bigScore = true;
-                    }
+                //     if (self->gameData.score >= BIG_SCORE)
+                //     {
+                //         self->unlockables.bigScore = true;
+                //     }
 
-                    if (self->gameData.score >= BIGGER_SCORE)
-                    {
-                        self->unlockables.biggerScore = true;
-                    }
-                }
+                //     if (self->gameData.score >= BIGGER_SCORE)
+                //     {
+                //         self->unlockables.biggerScore = true;
+                //     }
+                // }
 
                 changeStateGameClear(self);
             }
@@ -1614,6 +1648,13 @@ void updateLevelClear(platformer_t* self)
                 }*/
 
                 self->unlockables.levelsCleared |= (1 << self->gameData.level);
+
+                if(self->unlockables.levelsCleared == 0b1111111111110)
+                {
+                    //Beat the game!
+                    changeStateGameClear(self);
+                    return;
+                }
 
                 changeStateLevelSelect(self);
             }
@@ -1646,17 +1687,14 @@ void changeStateGameClear(platformer_t* self)
     mg_resetGameDataLeds(&(self->gameData));
     mg_setBgm(&(self->soundManager), 0);
     midiPlayerResetNewSong(globalMidiPlayerGet(MIDI_BGM));
-    soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
+    //soundPlayBgm(&self->soundManager.currentBgm, BZR_STEREO);
 }
 
 void updateGameClear(platformer_t* self)
 {
-    // Clear the display
-    // fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-
     self->gameData.frameCount++;
 
-    if (self->gameData.frameCount > 450)
+    if (self->gameData.frameCount > 120)
     {
         if (self->gameData.lives > 0)
         {
@@ -1667,9 +1705,22 @@ void updateGameClear(platformer_t* self)
                 soundPlaySfx(&(self->soundManager.snd1up), BZR_STEREO);
             }
         }
-        else if (self->gameData.frameCount % 960 == 0)
+        else if (self->gameData.frameCount % 600 == 0)
         {
             changeStateGameOver(self);
+        }
+    }
+
+    if(!self->gameData.cheatMode && !self->gameData.debugMode)
+    {
+        if(self->gameData.frameCount == 15 && !self->gameData.continuesUsed)
+        {
+            trophyUpdate(&platformerTrophies[13], 1, true);
+        }
+        
+        if(self->gameData.frameCount == 45 && !self->gameData.continuesUsed && self->gameData.inGameTimer < FAST_TIME)
+        {
+            trophyUpdate(&platformerTrophies[14], 1, true);
         }
     }
 
@@ -1683,33 +1734,33 @@ void drawGameClear(font_t* font, mgGameData_t* gameData)
     drawPlatformerHud(font, gameData);
 
     char timeStr[32];
-    snprintf(timeStr, sizeof(timeStr) - 1, "in %06" PRIu32 " seconds!", gameData->inGameTimer);
+    snprintf(timeStr, sizeof(timeStr) - 1, "Clear Time: %06" PRIu32 "s", gameData->inGameTimer);
 
     drawText(font, yellowColors[(gameData->frameCount >> 3) % 4], str_congrats,
              (TFT_WIDTH - textWidth(font, str_congrats)) / 2, 48);
 
-    if (gameData->frameCount > 120)
-    {
-        drawText(font, c555, "You've completed your", 8, 80);
-        drawText(font, c555, "trip across Swadge Land", 8, 96);
-    }
+    // if (gameData->frameCount > 120)
+    // {
+    //     drawText(font, c555, "You've completed your", 8, 80);
+    //     drawText(font, c555, "trip across Swadge Land", 8, 96);
+    // }
 
-    if (gameData->frameCount > 180)
+    if (gameData->frameCount > 15)
     {
         drawText(font, (gameData->inGameTimer < FAST_TIME) ? cyanColors[(gameData->frameCount >> 3) % 4] : c555,
-                 timeStr, (TFT_WIDTH - textWidth(font, timeStr)) / 2, 112);
+                 timeStr, (TFT_WIDTH - textWidth(font, timeStr)) / 2, 80);
     }
 
-    if (gameData->frameCount > 300)
-    {
-        drawText(font, c555, "The Swadge staff", 8, 144);
-        drawText(font, c555, "thanks you for playing!", 8, 160);
-    }
+    // if (gameData->frameCount > 300)
+    // {
+    //     drawText(font, c555, "The Swadge staff", 8, 144);
+    //     drawText(font, c555, "thanks you for playing!", 8, 160);
+    // }
 
-    if (gameData->frameCount > 420)
+    if (gameData->frameCount > 60)
     {
         drawText(font, (gameData->lives > 0) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555,
-                 "Bonus 200000pts per life!", (TFT_WIDTH - textWidth(font, "Bonus 100000pts per life!")) / 2, 192);
+                 "Bonus 200000pts per life!", (TFT_WIDTH - textWidth(font, "Bonus 100000pts per life!")) / 2, 112);
     }
 
     /*
@@ -1784,11 +1835,11 @@ void savePlatformerUnlockables(platformer_t* self)
 
 void drawPlatformerHighScores(font_t* font, highScores_t* highScores, swadgesona_t* sonas, mgGameData_t* gameData)
 {
-    drawText(font, c555, "RANK   SCORE   NAME", 8, 80);
+    drawText(font, c555, "RANK   SCORE  NAME", 8, 80);
     for (uint8_t i = 0; i < NUM_PLATFORMER_HIGH_SCORES; i++)
     {
         char rowStr[64];
-        snprintf(rowStr, sizeof(rowStr) - 1, "%d %8.6" PRIu32 "  %s", i + 1, highScores->highScores[i].score, sonas[i].name.nameBuffer);
+        snprintf(rowStr, sizeof(rowStr) - 1, "%d%8.6" PRIu32 " %s", i + 1, (uint32_t) highScores->highScores[i].score, sonas[i].name.nameBuffer);
         drawText(font, (gameData->rank == i) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, rowStr,
                  32, 96 + i * 24);
         drawWsgSimpleHalf(&(sonas[i].image), 4, 86 + i *24);
@@ -1857,7 +1908,7 @@ void changeStateNameEntry(platformer_t* self)
     //Bypass for Swadgepass Scoring
 
     self->menuSelection = 0;
-    if (self->gameData.debugMode)
+    if (self->gameData.cheatMode || self->gameData.debugMode)
     {
         changeStateShowHighScores(self);
         return;

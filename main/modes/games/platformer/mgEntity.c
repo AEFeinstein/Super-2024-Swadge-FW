@@ -3230,7 +3230,7 @@ void killEnemy(mgEntity_t* target)
     else if (target->scoreValue > 0 && (!target->gameData->enemiesKilled % 16) && (!target->gameData->extraLifeCollected)) // Every 16th enemy killed
     {
         createExtraLife(target->entityManager, TO_PIXEL_COORDS(target->x), TO_PIXEL_COORDS(target->y));
-        target->gameData->extraLifeCollected = true; //Prevent life farming
+        target->gameData->extraLifeCollected = true; //Prevent farming lives in areas with infinite enemy spawn, if you don't collect the life right away
     }
     else if (target->scoreValue > 0 && (!target->gameData->enemiesKilled % 8)) // Every 8th enemy killed
     {
