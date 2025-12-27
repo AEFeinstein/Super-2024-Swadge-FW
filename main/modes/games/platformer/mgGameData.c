@@ -117,7 +117,7 @@ void mg_scorePoints(mgGameData_t* gameData, uint16_t points)
     if (gameData->levelDeaths > 2)
     {
         gameData->score += points;
-        gameData->combo      = 1;
+        gameData->combo      = 0;
         gameData->comboTimer = 240;
         return;
     }

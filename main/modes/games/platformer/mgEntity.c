@@ -1565,7 +1565,7 @@ void mg_playerCollisionHandler(mgEntity_t* self, mgEntity_t* other)
                 }
 
                 self->gameData->comboTimer = 0;
-                self->gameData->combo      = 1;
+                self->gameData->combo      = 0;
 
                 if (self->shotsFired < 0)
                 {
