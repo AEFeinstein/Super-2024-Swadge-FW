@@ -706,6 +706,7 @@ static bool mgMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             changeStateShowHighScores(platformer);
             platformer->gameData.btnState = 0;
+            platformer->gameData.prevBtnState = 0;
             deinitMenu(platformer->menu);
         }
         else if (label == mgMenuResetScores)
